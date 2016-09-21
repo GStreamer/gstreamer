@@ -250,7 +250,8 @@ convert_to_ntp (GstClockTime t)
 /* Create a copy of @buffer_in having the RTP extension */
 static GstBuffer *
 create_extension_buffer (GstBuffer * buffer_in, gboolean clean_point,
-    gboolean end_contiguous, gboolean discont, guint64 ntp_offset, guint8 cseq)
+    gboolean end_contiguous, gboolean discont, guint64 ntp_offset, guint8 cseq,
+    gboolean first_buffer)
 {
   GstBuffer *buffer_out;
   GstRTPBuffer rtpbuffer_out = GST_RTP_BUFFER_INIT;
@@ -273,6 +274,8 @@ create_extension_buffer (GstBuffer * buffer_in, gboolean clean_point,
           ntp_offset));
 
   /* C E D mbz */
+  if (first_buffer)
+    flags |= (1 << 5);
   if (clean_point)
     flags |= (1 << 7);
   if (end_contiguous)
@@ -304,7 +307,7 @@ do_one_buffer_test_apply (gboolean clean_point)
 
   buffer_in = create_rtp_buffer (TIMESTAMP, clean_point);
   buffer_out = create_extension_buffer (buffer_in, clean_point, FALSE, FALSE,
-      NTP_OFFSET, CSEQ);
+      NTP_OFFSET, CSEQ, TRUE);
 
   /* push initial events */
   gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
@@ -331,7 +334,7 @@ do_two_buffers_test_apply (gboolean end_contiguous)
 
   buffer_in = create_rtp_buffer (TIMESTAMP, FALSE);
   buffer_out = create_extension_buffer (buffer_in, FALSE, end_contiguous,
-      FALSE, NTP_OFFSET, CSEQ);
+      FALSE, NTP_OFFSET, CSEQ, TRUE);
 
   /* push initial events */
   gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
@@ -367,7 +370,7 @@ do_two_buffers_test_apply (gboolean end_contiguous)
 
   /* Last buffer always has the 'E' flag */
   buffer_out = create_extension_buffer (buffer_in, FALSE, TRUE, end_contiguous,
-      NTP_OFFSET, CSEQ);
+      NTP_OFFSET, CSEQ, FALSE);
   node = g_list_last (buffers);
   check_buffer_equal ((GstBuffer *) node->data, buffer_out);
   gst_buffer_unref (buffer_out);
@@ -546,12 +549,12 @@ GST_START_TEST (test_ntp_offset_event)
 
   /* push an ntp-offset event */
   fail_unless (gst_pad_push_event (mysrcpad,
-          create_ntp_offset_event (NTP_OFFSET, FALSE)));
+          create_ntp_offset_event (NTP_OFFSET, TRUE)));
 
   /* create and push the first buffer */
   buffer_in = create_rtp_buffer (TIMESTAMP, TRUE);
   buffer1_out = create_extension_buffer (buffer_in, TRUE, TRUE, FALSE,
-      NTP_OFFSET, 0);
+      NTP_OFFSET, 0, TRUE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer_in), GST_FLOW_OK);
 
   /* push a new ntp offset */
@@ -561,7 +564,7 @@ GST_START_TEST (test_ntp_offset_event)
   /* create and push a second buffer (last) */
   buffer_in = create_rtp_buffer (TIMESTAMP + 1, TRUE);
   buffer2_out = create_extension_buffer (buffer_in, TRUE, TRUE, TRUE,
-      2 * NTP_OFFSET, 0);
+      2 * NTP_OFFSET, 0, FALSE);
   fail_unless_equals_int (gst_pad_push (mysrcpad, buffer_in), GST_FLOW_OK);
 
   /* the first buffer should have been pushed now */
