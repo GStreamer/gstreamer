@@ -52,10 +52,16 @@ struct _GstWlWindow
 
   /* the size and position of the area_(sub)surface */
   GstVideoRectangle render_rectangle;
+
+  /* the size and position of the video_subsurface */
+  GstVideoRectangle video_rectangle;
+
   /* the size of the video in the buffers */
   gint video_width, video_height;
-  /* the size of the video_(sub)surface */
-  gint surface_width, surface_height;
+
+  /* this will be set when viewporter is available and black background has
+   * already been set on the area_subsurface */
+  gboolean no_border_update;
 };
 
 struct _GstWlWindowClass

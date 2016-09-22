@@ -102,11 +102,6 @@ static GstWlWindow *
 gst_wl_window_new_internal (GstWlDisplay * display)
 {
   GstWlWindow *window;
-  GstVideoInfo info;
-  GstBuffer *buf;
-  GstMapInfo mapinfo;
-  struct wl_buffer *wlbuf;
-  GstWlBuffer *gwlbuf;
   struct wl_region *region;
 
   window = g_object_new (GST_TYPE_WL_WINDOW, NULL);
@@ -131,30 +126,6 @@ gst_wl_window_new_internal (GstWlDisplay * display)
     window->video_viewport = wp_viewporter_get_viewport (display->viewporter,
         window->video_surface);
   }
-
-  /* draw the area_subsurface */
-  gst_video_info_set_format (&info,
-      /* we want WL_SHM_FORMAT_XRGB8888 */
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-      GST_VIDEO_FORMAT_xRGB,
-#else
-      GST_VIDEO_FORMAT_BGRx,
-#endif
-      1, 1);
-
-  buf = gst_buffer_new_allocate (gst_wl_shm_allocator_get (), info.size, NULL);
-  gst_buffer_map (buf, &mapinfo, GST_MAP_WRITE);
-  *((guint32 *) mapinfo.data) = 0;      /* paint it black */
-  gst_buffer_unmap (buf, &mapinfo);
-  wlbuf =
-      gst_wl_shm_memory_construct_wl_buffer (gst_buffer_peek_memory (buf, 0),
-      display, &info);
-  gwlbuf = gst_buffer_add_wl_buffer (buf, wlbuf, display);
-  gst_wl_buffer_attach (gwlbuf, window->area_surface);
-
-  /* at this point, the GstWlBuffer keeps the buffer
-   * alive and will free it on wl_buffer::release */
-  gst_buffer_unref (buf);
 
   /* do not accept input */
   region = wl_compositor_create_region (display->compositor);
@@ -261,7 +232,6 @@ gst_wl_window_resize_video_surface (GstWlWindow * window, gboolean commit)
 
   wl_subsurface_set_position (window->video_subsurface, res.x, res.y);
 
-
   if (commit) {
     wl_surface_damage (window->video_surface, 0, 0, res.w, res.h);
     wl_surface_commit (window->video_surface);
@@ -278,8 +248,7 @@ gst_wl_window_resize_video_surface (GstWlWindow * window, gboolean commit)
   }
 
   /* this is saved for use in wl_surface_damage */
-  window->surface_width = res.w;
-  window->surface_height = res.h;
+  window->video_rectangle = res;
 }
 
 void
@@ -300,8 +269,8 @@ gst_wl_window_render (GstWlWindow * window, GstWlBuffer * buffer,
   else
     wl_surface_attach (window->video_surface, NULL, 0, 0);
 
-  wl_surface_damage (window->video_surface, 0, 0, window->surface_width,
-      window->surface_height);
+  wl_surface_damage (window->video_surface, 0, 0, window->video_rectangle.w,
+      window->video_rectangle.h);
   wl_surface_commit (window->video_surface);
 
   if (G_UNLIKELY (info)) {
@@ -314,6 +283,53 @@ gst_wl_window_render (GstWlWindow * window, GstWlBuffer * buffer,
   }
 
   wl_display_flush (window->display->display);
+}
+
+/* Update the buffer used to draw black borders. When we have viewporter
+ * support, this is a scaled up 1x1 image, and without we need an black image
+ * the size of the rendering areay. */
+static void
+gst_wl_window_update_borders (GstWlWindow * window)
+{
+  GstVideoFormat format;
+  GstVideoInfo info;
+  gint width, height;
+  GstBuffer *buf;
+  struct wl_buffer *wlbuf;
+  GstWlBuffer *gwlbuf;
+
+  if (window->no_border_update)
+    return;
+
+  if (window->display->viewporter) {
+    width = height = 1;
+    window->no_border_update = TRUE;
+  } else {
+    width = window->render_rectangle.w;
+    height = window->render_rectangle.h;
+  }
+
+  /* we want WL_SHM_FORMAT_XRGB8888 */
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+  format = GST_VIDEO_FORMAT_xRGB;
+#else
+  format = GST_VIDEO_FORMAT_BGRx;
+#endif
+
+  /* draw the area_subsurface */
+  gst_video_info_set_format (&info, format, width, height);
+
+  buf = gst_buffer_new_allocate (gst_wl_shm_allocator_get (), info.size, NULL);
+  gst_buffer_memset (buf, 0, 0, info.size);
+  wlbuf =
+      gst_wl_shm_memory_construct_wl_buffer (gst_buffer_peek_memory (buf, 0),
+      window->display, &info);
+  gwlbuf = gst_buffer_add_wl_buffer (buf, wlbuf, window->display);
+  gst_wl_buffer_attach (gwlbuf, window->area_surface);
+
+  /* at this point, the GstWlBuffer keeps the buffer
+   * alive and will free it on wl_buffer::release */
+  gst_buffer_unref (buf);
 }
 
 void
@@ -334,6 +350,8 @@ gst_wl_window_set_render_rectangle (GstWlWindow * window, gint x, gint y,
   /* change the size of the area */
   if (window->area_viewport)
     wp_viewport_set_destination (window->area_viewport, w, h);
+
+  gst_wl_window_update_borders (window);
 
   if (window->video_width != 0) {
     wl_subsurface_set_sync (window->video_subsurface);
