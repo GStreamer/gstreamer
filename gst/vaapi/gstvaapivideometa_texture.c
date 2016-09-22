@@ -176,25 +176,33 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
       gst_vaapi_video_meta_get_surface_proxy (vmeta);
   GstVaapiSurface *const surface = gst_vaapi_surface_proxy_get_surface (proxy);
   GstVaapiDisplay *const dpy = GST_VAAPI_OBJECT_DISPLAY (surface);
+  GstVaapiTexture *texture = NULL;
 
   if (!gst_vaapi_display_has_opengl (dpy))
     return FALSE;
 
-  if (!meta_texture->texture ||
+  if (meta_texture->texture
       /* Check whether VA display changed */
-      GST_VAAPI_OBJECT_DISPLAY (meta_texture->texture) != dpy ||
+      && GST_VAAPI_OBJECT_DISPLAY (meta_texture->texture) == dpy
       /* Check whether texture id changed */
-      gst_vaapi_texture_get_id (meta_texture->texture) != texture_id[0]) {
+      && (gst_vaapi_texture_get_id (meta_texture->texture) == texture_id[0])) {
+    texture = meta_texture->texture;
+  }
+
+  if (!texture) {
     /* FIXME: should we assume target? */
-    GstVaapiTexture *const texture =
+    texture =
         gst_vaapi_texture_new_wrapped (dpy, texture_id[0],
         GL_TEXTURE_2D, meta_texture->gl_format, meta_texture->width,
         meta_texture->height);
-    gst_vaapi_texture_replace (&meta_texture->texture, texture);
-    if (!texture)
-      return FALSE;
-    gst_vaapi_texture_unref (texture);
   }
+
+  if (meta_texture->texture != texture) {
+    gst_vaapi_texture_replace (&meta_texture->texture, texture);
+  }
+
+  if (!texture)
+    return FALSE;
 
   gst_vaapi_texture_set_orientation_flags (meta_texture->texture,
       get_texture_orientation_flags (meta->texture_orientation));

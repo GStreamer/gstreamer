@@ -257,6 +257,9 @@ gst_vaapi_display_get_vendor_string (GstVaapiDisplay * display);
 gboolean
 gst_vaapi_display_has_opengl (GstVaapiDisplay * display);
 
+void
+gst_vaapi_display_reset_texture_map (GstVaapiDisplay * display);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DISPLAY_H */

@@ -232,14 +232,49 @@ gst_vaapi_display_egl_create_window (GstVaapiDisplay * display, GstVaapiID id,
   return gst_vaapi_window_egl_new (display, width, height);
 }
 
+static void
+ensure_texture_map (GstVaapiDisplayEGL * display)
+{
+  if (!display->texture_map)
+    display->texture_map = gst_vaapi_texture_map_new ();
+}
+
 static GstVaapiTexture *
 gst_vaapi_display_egl_create_texture (GstVaapiDisplay * display, GstVaapiID id,
     guint target, guint format, guint width, guint height)
 {
-  if (id != GST_VAAPI_ID_INVALID)
-    return gst_vaapi_texture_egl_new_wrapped (display, id, target, format,
-        width, height);
-  return gst_vaapi_texture_egl_new (display, target, format, width, height);
+  GstVaapiDisplayEGL *dpy = GST_VAAPI_DISPLAY_EGL (display);
+  GstVaapiTexture *texture;
+
+  if (id == GST_VAAPI_ID_INVALID)
+    return gst_vaapi_texture_egl_new (display, target, format, width, height);
+
+  ensure_texture_map (dpy);
+  if (!(texture = gst_vaapi_texture_map_lookup (dpy->texture_map, id))) {
+    if ((texture =
+            gst_vaapi_texture_egl_new_wrapped (display, id, target, format,
+                width, height))) {
+      gst_vaapi_texture_map_add (dpy->texture_map, texture, id);
+    }
+  }
+
+  return texture;
+}
+
+static GstVaapiTextureMap *
+gst_vaapi_display_egl_get_texture_map (GstVaapiDisplay * display)
+{
+  return GST_VAAPI_DISPLAY_EGL (display)->texture_map;
+}
+
+static void
+gst_vaapi_display_egl_finalize (GstVaapiDisplay * display)
+{
+  GstVaapiDisplayEGL *dpy = GST_VAAPI_DISPLAY_EGL (display);
+
+  if (dpy->texture_map)
+    gst_object_unref (dpy->texture_map);
+  GST_VAAPI_DISPLAY_EGL_GET_CLASS (display)->parent_finalize (display);
 }
 
 static void
@@ -253,6 +288,10 @@ gst_vaapi_display_egl_class_init (GstVaapiDisplayEGLClass * klass)
       "VA/EGL backend");
 
   gst_vaapi_display_class_init (dpy_class);
+
+  /* chain up destructor */
+  klass->parent_finalize = object_class->finalize;
+  object_class->finalize = (GDestroyNotify) gst_vaapi_display_egl_finalize;
 
   object_class->size = sizeof (GstVaapiDisplayEGL);
   dpy_class->display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
@@ -280,6 +319,7 @@ gst_vaapi_display_egl_class_init (GstVaapiDisplayEGLClass * klass)
       gst_vaapi_display_egl_create_window;
   dpy_class->create_texture = (GstVaapiDisplayCreateTextureFunc)
       gst_vaapi_display_egl_create_texture;
+  dpy_class->get_texture_map = gst_vaapi_display_egl_get_texture_map;
 }
 
 static inline const GstVaapiDisplayClass *

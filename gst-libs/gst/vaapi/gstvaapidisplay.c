@@ -32,6 +32,7 @@
 #include "gstvaapiutils.h"
 #include "gstvaapivalue.h"
 #include "gstvaapidisplay.h"
+#include "gstvaapitexturemap.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiworkarounds.h"
 #include "gstvaapiversion.h"
@@ -2148,4 +2149,29 @@ gst_vaapi_display_has_opengl (GstVaapiDisplay * display)
   klass = GST_VAAPI_DISPLAY_GET_CLASS (display);
   return (klass->display_type == GST_VAAPI_DISPLAY_TYPE_GLX ||
       klass->display_type == GST_VAAPI_DISPLAY_TYPE_EGL);
+}
+
+/**
+ * gst_vaapi_display_reset_texture_map:
+ * @display: a #GstVaapiDisplay
+ *
+ * Reset the internal #GstVaapiTextureMap if available.
+ *
+ * This function is thread safe.
+ */
+void
+gst_vaapi_display_reset_texture_map (GstVaapiDisplay * display)
+{
+  GstVaapiDisplayClass *klass;
+  GstVaapiTextureMap *map;
+
+  g_return_if_fail (display != NULL);
+
+  if (!gst_vaapi_display_has_opengl (display))
+    return;
+  klass = GST_VAAPI_DISPLAY_GET_CLASS (display);
+  if (!klass->get_texture_map)
+    return;
+  if ((map = klass->get_texture_map (display)))
+    gst_vaapi_texture_map_reset (map);
 }

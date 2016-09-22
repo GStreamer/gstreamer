@@ -25,6 +25,7 @@
 
 #include <gst/vaapi/gstvaapiutils_glx.h>
 #include <gst/vaapi/gstvaapidisplay_glx.h>
+#include <gst/vaapi/gstvaapitexturemap.h>
 #include "gstvaapidisplay_x11_priv.h"
 
 G_BEGIN_DECLS
@@ -53,6 +54,7 @@ struct _GstVaapiDisplayGLX
 {
   /*< private >*/
   GstVaapiDisplayX11 parent_instance;
+  GstVaapiTextureMap *texture_map;
 };
 
 /**
@@ -64,6 +66,7 @@ struct _GstVaapiDisplayGLXClass
 {
   /*< private >*/
   GstVaapiDisplayX11Class parent_class;
+  GDestroyNotify parent_finalize;
 };
 
 G_END_DECLS

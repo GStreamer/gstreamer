@@ -29,6 +29,7 @@
 #include <gst/vaapi/gstvaapidisplaycache.h>
 #include <gst/vaapi/gstvaapiwindow.h>
 #include <gst/vaapi/gstvaapitexture.h>
+#include <gst/vaapi/gstvaapitexturemap.h>
 #include "gstvaapiminiobject.h"
 
 G_BEGIN_DECLS
@@ -73,6 +74,8 @@ typedef GstVaapiWindow *(*GstVaapiDisplayCreateWindowFunc) (
 typedef GstVaapiTexture *(*GstVaapiDisplayCreateTextureFunc) (
     GstVaapiDisplay * display, GstVaapiID id, guint target, guint format,
     guint width, guint height);
+typedef GstVaapiTextureMap *(*GstVaapiDisplayGetTextureMapFunc) (
+    GstVaapiDisplay * display);
 
 typedef guintptr (*GstVaapiDisplayGetVisualIdFunc) (GstVaapiDisplay * display,
     GstVaapiWindow * window);
@@ -226,6 +229,7 @@ struct _GstVaapiDisplayClass
   GstVaapiDisplayGetColormapFunc get_colormap;
   GstVaapiDisplayCreateWindowFunc create_window;
   GstVaapiDisplayCreateTextureFunc create_texture;
+  GstVaapiDisplayGetTextureMapFunc get_texture_map;
 };
 
 /* Initialization types */

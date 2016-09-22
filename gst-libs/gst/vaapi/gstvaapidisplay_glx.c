@@ -50,13 +50,48 @@ gst_vaapi_display_glx_create_window (GstVaapiDisplay * display, GstVaapiID id,
       gst_vaapi_window_glx_new (display, width, height);
 }
 
+static void
+ensure_texture_map (GstVaapiDisplayGLX * display)
+{
+  if (!display->texture_map)
+    display->texture_map = gst_vaapi_texture_map_new ();
+}
+
 static GstVaapiTexture *
 gst_vaapi_display_glx_create_texture (GstVaapiDisplay * display, GstVaapiID id,
     guint target, guint format, guint width, guint height)
 {
-  return id != GST_VAAPI_ID_INVALID ?
-      gst_vaapi_texture_glx_new_wrapped (display, id, target, format) :
-      gst_vaapi_texture_glx_new (display, target, format, width, height);
+  GstVaapiTexture *texture;
+  GstVaapiDisplayGLX *dpy = GST_VAAPI_DISPLAY_GLX (display);
+
+  if (id == GST_VAAPI_ID_INVALID)
+    return gst_vaapi_texture_glx_new (display, target, format, width, height);
+
+  ensure_texture_map (dpy);
+  if (!(texture = gst_vaapi_texture_map_lookup (dpy->texture_map, id))) {
+    if ((texture =
+            gst_vaapi_texture_glx_new_wrapped (display, id, target, format))) {
+      gst_vaapi_texture_map_add (dpy->texture_map, texture, id);
+    }
+  }
+
+  return texture;
+}
+
+static GstVaapiTextureMap *
+gst_vaapi_display_glx_get_texture_map (GstVaapiDisplay * display)
+{
+  return GST_VAAPI_DISPLAY_GLX (display)->texture_map;
+}
+
+static void
+gst_vaapi_display_glx_finalize (GstVaapiDisplay * display)
+{
+  GstVaapiDisplayGLX *dpy = GST_VAAPI_DISPLAY_GLX (display);
+
+  if (dpy->texture_map)
+    gst_object_unref (dpy->texture_map);
+  GST_VAAPI_DISPLAY_GLX_GET_CLASS (display)->parent_finalize (display);
 }
 
 static void
@@ -68,10 +103,15 @@ gst_vaapi_display_glx_class_init (GstVaapiDisplayGLXClass * klass)
 
   gst_vaapi_display_x11_class_init (&klass->parent_class);
 
+  /* chain up destructor */
+  klass->parent_finalize = object_class->finalize;
+  object_class->finalize = (GDestroyNotify) gst_vaapi_display_glx_finalize;
+
   object_class->size = sizeof (GstVaapiDisplayGLX);
   dpy_class->display_type = GST_VAAPI_DISPLAY_TYPE_GLX;
   dpy_class->create_window = gst_vaapi_display_glx_create_window;
   dpy_class->create_texture = gst_vaapi_display_glx_create_texture;
+  dpy_class->get_texture_map = gst_vaapi_display_glx_get_texture_map;
 }
 
 static inline const GstVaapiDisplayClass *

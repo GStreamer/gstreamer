@@ -24,6 +24,7 @@
 #define GST_VAAPI_DISPLAY_EGL_PRIV_H
 
 #include <gst/vaapi/gstvaapiwindow.h>
+#include <gst/vaapi/gstvaapitexturemap.h>
 #include "gstvaapidisplay_egl.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiutils_egl.h"
@@ -79,6 +80,7 @@ struct _GstVaapiDisplayEGL
   EglDisplay *egl_display;
   EglContext *egl_context;
   guint gles_version;
+  GstVaapiTextureMap *texture_map;
 };
 
 /**
@@ -90,6 +92,7 @@ struct _GstVaapiDisplayEGLClass
 {
   /*< private >*/
   GstVaapiDisplayClass parent_class;
+  GDestroyNotify parent_finalize;
 };
 
 G_GNUC_INTERNAL
