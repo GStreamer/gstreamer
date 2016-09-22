@@ -1491,6 +1491,13 @@ _seek_current_stack (NleComposition * comp, GstEvent * event,
 
   GST_INFO_OBJECT (comp, "Seeking itself %" GST_PTR_FORMAT, event);
 
+  if (!peer) {
+    GST_ERROR_OBJECT (comp, "Can't seek because no pad available - "
+        "no children in the composition ready to be used, the duration is 0, "
+        "or not committed yet");
+    return FALSE;
+  }
+
   if (flush_downstream) {
     priv->flush_seqnum = gst_event_get_seqnum (event);
     GST_INFO_OBJECT (comp, "sending flushes downstream with seqnum %d",
