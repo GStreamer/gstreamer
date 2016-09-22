@@ -199,6 +199,15 @@ _gather_pad_negotiation_details (GstPad * pad, GString * str,
   gst_object_unref (next);
 }
 
+static void
+_incompatible_fields_info_set_found (StructureIncompatibleFieldsInfo * info)
+{
+  if (info->found == FALSE) {
+    g_string_append_printf (info->str, " for the following possible reasons:");
+    info->found = TRUE;
+  }
+}
+
 static gboolean
 _find_structure_incompatible_fields (GQuark field_id, const GValue * value,
     StructureIncompatibleFieldsInfo * info)
@@ -215,7 +224,7 @@ _find_structure_incompatible_fields (GQuark field_id, const GValue * value,
   filter_str = gst_value_serialize (filter_value);
 
   if (!gst_value_can_intersect (value, filter_value)) {
-    info->found = TRUE;
+    _incompatible_fields_info_set_found (info);
     g_string_append_printf (info->str,
         "\n    -> Field '%s' downstream value from structure %d '(%s)%s' can't intersect with"
         " filter value from structure number %d '(%s)%s' because of their types.",
@@ -232,7 +241,7 @@ _find_structure_incompatible_fields (GQuark field_id, const GValue * value,
     return TRUE;
   }
 
-  info->found = TRUE;
+  _incompatible_fields_info_set_found (info);
   g_string_append_printf (info->str,
       "\n    -> Field '%s' downstream value from structure %d '(%s)%s' can't intersect with"
       " filter value from structure number %d '(%s)%s'",
@@ -251,6 +260,7 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
     GString * str)
 {
   gint i, j;
+  gboolean found = FALSE;
   GstCaps *filter = gst_caps_copy (monitor->last_query_filter);
   GstCaps *possible_caps = gst_pad_query_caps (monitor->pad, NULL);
   const gchar *filter_name, *possible_name;
@@ -258,7 +268,7 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
 
   g_string_append_printf (str,
       "\n Caps negotiation failed starting from pad '%s'"
-      " as the QUERY_CAPS returned EMPTY caps for the following possible reasons:",
+      " as the QUERY_CAPS returned EMPTY caps",
       gst_validate_reporter_get_name (GST_VALIDATE_REPORTER (monitor)));
 
   for (i = 0; i < gst_caps_get_size (possible_caps); i++) {
@@ -270,13 +280,14 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
         .caps_struct_num = i,
         .filter_caps_struct_num = j,
         .str = str,
-        .found = FALSE
+        .found = found
       };
 
       info.filter = filter_struct = gst_caps_get_structure (filter, j);
       filter_name = gst_structure_get_name (filter_struct);
 
       if (g_strcmp0 (possible_name, filter_name)) {
+        _incompatible_fields_info_set_found (&info);
         g_string_append_printf (str,
             "\n    -> Downstream caps struct %d name '%s' differs from "
             "filter caps struct %d name '%s'",
@@ -287,7 +298,25 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
 
       gst_structure_foreach (possible_struct,
           (GstStructureForeachFunc) _find_structure_incompatible_fields, &info);
+
+      if (info.found)
+        found = TRUE;
     }
+  }
+
+  if (!found) {
+    gchar *filter_caps_str = gst_caps_to_string (filter);
+    gchar *possible_caps_str = gst_caps_to_string (possible_caps);
+
+    g_string_append_printf (str,
+        ". The exact reason could not be determined but"
+        " here are the gathered information:\n"
+        " - %s last query caps filter: %s\n"
+        " - %s possible caps (as returned by a query on it without filter): %s\n",
+        gst_validate_reporter_get_name (GST_VALIDATE_REPORTER (monitor)),
+        filter_caps_str,
+        gst_validate_reporter_get_name (GST_VALIDATE_REPORTER (monitor)),
+        possible_caps_str);
   }
 
   gst_caps_unref (possible_caps);
