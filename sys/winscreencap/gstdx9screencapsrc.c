@@ -202,10 +202,6 @@ gst_dx9screencapsrc_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_MONITOR:
-      if (g_value_get_int (value) >= GetSystemMetrics (SM_CMONITORS)) {
-        G_OBJECT_WARN_INVALID_PSPEC (object, "Monitor", prop_id, pspec);
-        break;
-      }
       src->monitor = g_value_get_int (value);
       break;
     case PROP_X_POS:
@@ -310,8 +306,13 @@ gst_dx9screencapsrc_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   RECT rect_dst;
   GstCaps *caps;
 
-  if (src->monitor >= IDirect3D9_GetAdapterCount (g_d3d9) ||
-      FAILED (IDirect3D9_GetAdapterDisplayMode (g_d3d9, src->monitor,
+  if (src->monitor >= IDirect3D9_GetAdapterCount (g_d3d9)) {
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+      ("Specified monitor with index %d not found", src->monitor), (NULL));
+    return NULL;
+  }
+
+  if (FAILED (IDirect3D9_GetAdapterDisplayMode (g_d3d9, src->monitor,
               &src->disp_mode))) {
     return NULL;
   }
@@ -381,6 +382,12 @@ gst_dx9screencapsrc_start (GstBaseSrc * bsrc)
   d3dpp.hDeviceWindow = GetDesktopWindow ();
   d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
   d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+
+  if (src->monitor >= IDirect3D9_GetAdapterCount (g_d3d9)) {
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+      ("Specified monitor with index %d not found", src->monitor), (NULL));
+    return FALSE;
+  }
 
   res = IDirect3D9_CreateDevice (g_d3d9, src->monitor, D3DDEVTYPE_HAL,
       GetDesktopWindow (), D3DCREATE_SOFTWARE_VERTEXPROCESSING,
