@@ -73,6 +73,7 @@ libgstvaapi_source_c =				\
 	gstvaapisurfacepool.c			\
 	gstvaapisurfaceproxy.c			\
 	gstvaapitexture.c			\
+	gstvaapitexturemap.c			\
 	gstvaapiutils.c				\
 	gstvaapiutils_core.c			\
 	gstvaapiutils_h264.c			\
@@ -105,6 +106,7 @@ libgstvaapi_source_h =				\
 	gstvaapisurfacepool.h			\
 	gstvaapisurfaceproxy.h			\
 	gstvaapitexture.h			\
+	gstvaapitexturemap.h			\
 	gstvaapitypes.h				\
 	gstvaapiutils_h264.h			\
 	gstvaapiutils_h265.h			\
