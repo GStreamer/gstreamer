@@ -34,9 +34,15 @@ typedef struct
 {
   enum wl_shm_format wl_format;
   GstVideoFormat gst_format;
-} wl_VideoFormat;
+} wl_ShmVideoFormat;
 
-static const wl_VideoFormat formats[] = {
+typedef struct
+{
+  guint wl_format;
+  GstVideoFormat gst_format;
+} wl_DmabufVideoFormat;
+
+static const wl_ShmVideoFormat shm_formats[] = {
 #if G_BYTE_ORDER == G_BIG_ENDIAN
   {WL_SHM_FORMAT_XRGB8888, GST_VIDEO_FORMAT_xRGB},
   {WL_SHM_FORMAT_ARGB8888, GST_VIDEO_FORMAT_ARGB},
@@ -77,16 +83,58 @@ static const wl_VideoFormat formats[] = {
   {WL_SHM_FORMAT_YUV444, GST_VIDEO_FORMAT_v308},
 };
 
+static const wl_DmabufVideoFormat dmabuf_formats[] = {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+  {DRM_FORMAT_XRGB8888, GST_VIDEO_FORMAT_xRGB},
+  {DRM_FORMAT_ARGB8888, GST_VIDEO_FORMAT_ARGB},
+  {DRM_FORMAT_XBGR8888, GST_VIDEO_FORMAT_xBGR},
+  {DRM_FORMAT_RGBX8888, GST_VIDEO_FORMAT_RGBx},
+  {DRM_FORMAT_BGRX8888, GST_VIDEO_FORMAT_BGRx},
+  {DRM_FORMAT_ABGR8888, GST_VIDEO_FORMAT_ABGR},
+  {DRM_FORMAT_RGBA8888, GST_VIDEO_FORMAT_RGBA},
+  {DRM_FORMAT_BGRA8888, GST_VIDEO_FORMAT_BGRA},
+  {DRM_FORMAT_RGB888, GST_VIDEO_FORMAT_RGB},
+  {DRM_FORMAT_BGR888, GST_VIDEO_FORMAT_BGR},
+#else
+  {DRM_FORMAT_XRGB8888, GST_VIDEO_FORMAT_BGRx},
+  {DRM_FORMAT_ARGB8888, GST_VIDEO_FORMAT_BGRA},
+  {DRM_FORMAT_XBGR8888, GST_VIDEO_FORMAT_RGBx},
+  {DRM_FORMAT_RGBX8888, GST_VIDEO_FORMAT_xBGR},
+  {DRM_FORMAT_BGRX8888, GST_VIDEO_FORMAT_xRGB},
+  {DRM_FORMAT_ABGR8888, GST_VIDEO_FORMAT_RGBA},
+  {DRM_FORMAT_RGBA8888, GST_VIDEO_FORMAT_ABGR},
+  {DRM_FORMAT_BGRA8888, GST_VIDEO_FORMAT_ARGB},
+  {DRM_FORMAT_RGB888, GST_VIDEO_FORMAT_BGR},
+  {DRM_FORMAT_BGR888, GST_VIDEO_FORMAT_RGB},
+#endif
+  {DRM_FORMAT_RGB565, GST_VIDEO_FORMAT_RGB16},
+  {DRM_FORMAT_YUYV, GST_VIDEO_FORMAT_YUY2},
+  {DRM_FORMAT_NV12, GST_VIDEO_FORMAT_NV12},
+};
+
 enum wl_shm_format
 gst_video_format_to_wl_shm_format (GstVideoFormat format)
 {
   guint i;
 
-  for (i = 0; i < G_N_ELEMENTS (formats); i++)
-    if (formats[i].gst_format == format)
-      return formats[i].wl_format;
+  for (i = 0; i < G_N_ELEMENTS (shm_formats); i++)
+    if (shm_formats[i].gst_format == format)
+      return shm_formats[i].wl_format;
 
   GST_WARNING ("wayland shm video format not found");
+  return -1;
+}
+
+gint
+gst_video_format_to_wl_dmabuf_format (GstVideoFormat format)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (dmabuf_formats); i++)
+    if (dmabuf_formats[i].gst_format == format)
+      return dmabuf_formats[i].wl_format;
+
+  GST_WARNING ("wayland dmabuf video format not found");
   return -1;
 }
 
@@ -95,11 +143,22 @@ gst_wl_shm_format_to_video_format (enum wl_shm_format wl_format)
 {
   guint i;
 
-  for (i = 0; i < G_N_ELEMENTS (formats); i++)
-    if (formats[i].wl_format == wl_format)
-      return formats[i].gst_format;
+  for (i = 0; i < G_N_ELEMENTS (shm_formats); i++)
+    if (shm_formats[i].wl_format == wl_format)
+      return shm_formats[i].gst_format;
 
-  GST_WARNING ("gst video format not found");
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+GstVideoFormat
+gst_wl_dmabuf_format_to_video_format (guint wl_format)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (dmabuf_formats); i++)
+    if (dmabuf_formats[i].wl_format == wl_format)
+      return dmabuf_formats[i].gst_format;
+
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
@@ -108,4 +167,11 @@ gst_wl_shm_format_to_string (enum wl_shm_format wl_format)
 {
   return gst_video_format_to_string
       (gst_wl_shm_format_to_video_format (wl_format));
+}
+
+const gchar *
+gst_wl_dmabuf_format_to_string (guint wl_format)
+{
+  return gst_video_format_to_string
+      (gst_wl_dmabuf_format_to_video_format (wl_format));
 }

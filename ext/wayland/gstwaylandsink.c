@@ -45,6 +45,7 @@
 #include "wlvideoformat.h"
 #include "wlbuffer.h"
 #include "wlshmallocator.h"
+#include "wllinuxdmabuf.h"
 
 #include <gst/wayland/wayland.h>
 #include <gst/video/videooverlay.h>
@@ -66,13 +67,17 @@ enum
 GST_DEBUG_CATEGORY (gstwayland_debug);
 #define GST_CAT_DEFAULT gstwayland_debug
 
+#define WL_VIDEO_FORMATS \
+    "{ BGRx, BGRA, RGBx, xBGR, xRGB, RGBA, ABGR, ARGB, RGB, BGR, " \
+    "RGB16, BGR16, YUY2, YVYU, UYVY, AYUV, NV12, NV21, NV16, " \
+    "YUV9, YVU9, Y41B, I420, YV12, Y42B, v308 }"
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
-        ("{ BGRx, BGRA, RGBx, xBGR, xRGB, RGBA, ABGR, ARGB, RGB, BGR, "
-            "RGB16, BGR16, YUY2, YVYU, UYVY, AYUV, NV12, NV21, NV16, "
-            "YUV9, YVU9, Y41B, I420, YV12, Y42B, v308 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (WL_VIDEO_FORMATS) ";"
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            WL_VIDEO_FORMATS))
     );
 
 static void gst_wayland_sink_get_property (GObject * object,
@@ -386,29 +391,43 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   sink = GST_WAYLAND_SINK (bsink);
 
   caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
+  caps = gst_caps_make_writable (caps);
 
   g_mutex_lock (&sink->display_lock);
 
   if (sink->display) {
-    GValue list = G_VALUE_INIT;
+    GValue shm_list = G_VALUE_INIT, dmabuf_list = G_VALUE_INIT;
     GValue value = G_VALUE_INIT;
     GArray *formats;
     gint i;
-    enum wl_shm_format fmt;
+    guint fmt;
 
-    g_value_init (&list, GST_TYPE_LIST);
+    g_value_init (&shm_list, GST_TYPE_LIST);
+    g_value_init (&dmabuf_list, GST_TYPE_LIST);
 
+    /* Add corresponding shm formats */
     formats = sink->display->shm_formats;
     for (i = 0; i < formats->len; i++) {
       g_value_init (&value, G_TYPE_STRING);
       fmt = g_array_index (formats, uint32_t, i);
       g_value_set_static_string (&value, gst_wl_shm_format_to_string (fmt));
-      gst_value_list_append_and_take_value (&list, &value);
+      gst_value_list_append_and_take_value (&shm_list, &value);
     }
 
-    caps = gst_caps_make_writable (caps);
     gst_structure_take_value (gst_caps_get_structure (caps, 0), "format",
-        &list);
+        &shm_list);
+
+    /* Add corresponding dmabuf formats */
+    formats = sink->display->dmabuf_formats;
+    for (i = 0; i < formats->len; i++) {
+      g_value_init (&value, G_TYPE_STRING);
+      fmt = g_array_index (formats, uint32_t, i);
+      g_value_set_static_string (&value, gst_wl_dmabuf_format_to_string (fmt));
+      gst_value_list_append_and_take_value (&dmabuf_list, &value);
+    }
+
+    gst_structure_take_value (gst_caps_get_structure (caps, 1), "format",
+        &dmabuf_list);
 
     GST_DEBUG_OBJECT (sink, "display caps: %" GST_PTR_FORMAT, caps);
   }
@@ -454,45 +473,52 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstWaylandSink *sink;
   GstBufferPool *newpool;
-  GstVideoInfo info;
-  enum wl_shm_format format;
-  GArray *formats;
-  gint i;
+  gboolean use_dmabuf;
+  GstVideoFormat format;
 
   sink = GST_WAYLAND_SINK (bsink);
 
   GST_DEBUG_OBJECT (sink, "set caps %" GST_PTR_FORMAT, caps);
 
   /* extract info from caps */
-  if (!gst_video_info_from_caps (&info, caps))
+  if (!gst_video_info_from_caps (&sink->video_info, caps))
     goto invalid_format;
 
-  format = gst_video_format_to_wl_shm_format (GST_VIDEO_INFO_FORMAT (&info));
-  if ((gint) format == -1)
-    goto invalid_format;
-
-  /* verify we support the requested format */
-  formats = sink->display->shm_formats;
-  for (i = 0; i < formats->len; i++) {
-    if (g_array_index (formats, uint32_t, i) == format)
-      break;
-  }
-
-  if (i >= formats->len)
-    goto unsupported_format;
-
-  /* store the video info */
-  sink->video_info = info;
+  format = GST_VIDEO_INFO_FORMAT (&sink->video_info);
   sink->video_info_changed = TRUE;
 
-  /* create a new pool for the new configuration */
-  newpool = gst_wayland_create_pool (sink, caps);
-  if (!newpool)
-    goto pool_failed;
+  use_dmabuf = gst_caps_features_contains (gst_caps_get_features (caps, 0),
+      GST_CAPS_FEATURE_MEMORY_DMABUF);
 
+  if (!use_dmabuf) {
+    /* shm - verify format support */
+    enum wl_shm_format format_shm = gst_video_format_to_wl_shm_format (format);
+    if ((gint) format_shm == -1)
+      goto invalid_format;
 
-  gst_object_replace ((GstObject **) & sink->pool, (GstObject *) newpool);
-  gst_object_unref (newpool);
+    if (!is_shm_format_supported (format_shm, sink->display))
+      goto unsupported_format;
+
+    /* create a new pool for the new configuration */
+    newpool = gst_wayland_create_pool (sink, caps);
+    if (!newpool)
+      goto pool_failed;
+
+    gst_object_replace ((GstObject **) & sink->pool, (GstObject *) newpool);
+    gst_object_unref (newpool);
+  } else {
+    /* dmabuf - verify format support */
+    gint format_dmabuf = gst_video_format_to_wl_dmabuf_format (format);
+    if (format_dmabuf == -1)
+      goto invalid_format;
+
+    if (!is_dmabuf_format_supported (format_dmabuf, sink->display))
+      goto unsupported_format;
+
+    /* No pool for dmabuf, this is under upstream element responsability */
+  }
+
+  sink->use_dmabuf = use_dmabuf;
 
   return TRUE;
 
@@ -505,7 +531,7 @@ invalid_format:
 unsupported_format:
   {
     GST_ERROR_OBJECT (sink, "Format %s is not available on the display",
-        gst_wl_shm_format_to_string (format));
+        gst_video_format_to_string (format));
     return FALSE;
   }
 pool_failed:
@@ -639,12 +665,21 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
     GST_LOG_OBJECT (sink, "buffer %p does not have a wl_buffer from our "
         "display, creating it", buffer);
 
-    /* FIXME check all memory when introducing DMA-Buf */
     mem = gst_buffer_peek_memory (buffer, 0);
 
     if (gst_is_fd_memory (mem)) {
       wbuf = gst_wl_shm_memory_construct_wl_buffer (mem, sink->display,
           &sink->video_info);
+    } else if (sink->display->dmabuf) {
+      guint i, nb_dmabuf = 0;
+
+      for (i = 0; i < gst_buffer_n_memory (buffer); i++)
+        if (gst_is_dmabuf_memory (gst_buffer_peek_memory (buffer, i)))
+          nb_dmabuf++;
+
+      if (nb_dmabuf && (nb_dmabuf == gst_buffer_n_memory (buffer)))
+        wbuf = gst_wl_linux_dmabuf_construct_wl_buffer (buffer, sink->display,
+            &sink->video_info);
     }
 
     if (wbuf) {
@@ -655,7 +690,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       GstVideoInfo src_info = sink->video_info;
 
       /* we don't know how to create a wl_buffer directly from the provided
-       * memory, so we have to copy the data to a memory that we know how
+       * memory, so we have to copy the data to shm memory that we know how
        * to handle... */
 
       GST_LOG_OBJECT (sink, "buffer %p cannot have a wl_buffer, "
@@ -690,9 +725,13 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
         wbuf = gst_wl_shm_memory_construct_wl_buffer (mem, sink->display,
             &sink->video_info);
         if (G_UNLIKELY (!wbuf))
-          goto no_wl_buffer;
+          goto no_wl_buffer_shm;
 
         gst_buffer_add_wl_buffer (to_render, wbuf, sink->display);
+      } else {
+        /* we cannot get a wl_buffer and if we do not have any pool to create
+         * one by ourself */
+        goto no_wl_buffer;
       }
 
       if (!gst_video_frame_map (&dst, &sink->video_info, to_render,
@@ -737,9 +776,15 @@ no_buffer:
     GST_WARNING_OBJECT (sink, "could not create buffer");
     goto done;
   }
-no_wl_buffer:
+no_wl_buffer_shm:
   {
     GST_ERROR_OBJECT (sink, "could not create wl_buffer out of wl_shm memory");
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+no_wl_buffer:
+  {
+    GST_ERROR_OBJECT (sink, "buffer %p cannot have a wl_buffer", buffer);
     ret = GST_FLOW_ERROR;
     goto done;
   }

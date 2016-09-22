@@ -1,6 +1,10 @@
 plugin_LTLIBRARIES = libgstwaylandsink.la
 
-BUILT_SOURCES = viewporter-protocol.c viewporter-client-protocol.h
+BUILT_SOURCES = \
+	viewporter-protocol.c \
+	viewporter-client-protocol.h \
+	linux-dmabuf-unstable-v1-protocol.c \
+	linux-dmabuf-unstable-v1-client-protocol.h
 
 libgstwaylandsink_la_SOURCES =  \
 	gstwaylandsink.c \
@@ -8,9 +12,12 @@ libgstwaylandsink_la_SOURCES =  \
 	wlbuffer.c \
 	wldisplay.c \
 	wlwindow.c \
-	wlvideoformat.c
+	wlvideoformat.c \
+	wllinuxdmabuf.c
 
-nodist_libgstwaylandsink_la_SOURCES = viewporter-protocol.c
+nodist_libgstwaylandsink_la_SOURCES = \
+	viewporter-protocol.c \
+	linux-dmabuf-unstable-v1-protocol.c
 
 libgstwaylandsink_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
                                $(WAYLAND_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS)
@@ -29,7 +36,8 @@ noinst_HEADERS = \
 	wlbuffer.h \
 	wldisplay.h \
 	wlwindow.h \
-	wlvideoformat.h
+	wlvideoformat.h \
+	wllinuxdmabuf.h
 
 CLEANFILES = $(BUILT_SOURCES)
 

@@ -1,9 +1,7 @@
 /* GStreamer Wayland video sink
  *
- * Copyright (C) 2011 Intel Corporation
- * Copyright (C) 2011 Sreerenj Balachandran <sreerenj.balachandran@intel.com>
- * Copyright (C) 2012 Wim Taymans <wim.taymans@gmail.com>
- * Copyright (C) 2014 Collabora Ltd.
+ * Copyright (C) 2016 STMicroelectronics SA
+ * Copyright (C) 2016 Fabien Dessenne <fabien.dessenne@st.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,22 +19,20 @@
  * Boston, MA 02110-1301 USA.
  */
 
-#ifndef __GST_WL_VIDEO_FORMAT_H__
-#define __GST_WL_VIDEO_FORMAT_H__
+#ifndef __GST_WL_LINUX_DMABUF_H__
+#define __GST_WL_LINUX_DMABUF_H__
 
-#include <wayland-client-protocol.h>
-#include <gst/video/video.h>
-#include <drm/drm_fourcc.h>
+#include "gstwaylandsink.h"
 
 G_BEGIN_DECLS
 
-enum wl_shm_format gst_video_format_to_wl_shm_format (GstVideoFormat format);
-gint gst_video_format_to_wl_dmabuf_format (GstVideoFormat format);
-GstVideoFormat gst_wl_shm_format_to_video_format (enum wl_shm_format wl_format);
-GstVideoFormat gst_wl_dmabuf_format_to_video_format (guint wl_format);
-const gchar *gst_wl_shm_format_to_string (enum wl_shm_format wl_format);
-const gchar *gst_wl_dmabuf_format_to_string (guint wl_format);
+#ifndef GST_CAPS_FEATURE_MEMORY_DMABUF
+#define GST_CAPS_FEATURE_MEMORY_DMABUF "memory:DMABuf"
+#endif
+
+struct wl_buffer * gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
+    GstWlDisplay * display, const GstVideoInfo * info);
 
 G_END_DECLS
 
-#endif
+#endif /* __GST_WL_LINUX_DMABUF_H__ */
