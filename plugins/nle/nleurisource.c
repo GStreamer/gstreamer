@@ -94,24 +94,40 @@ nle_urisource_class_init (NleURISourceClass * klass)
 }
 
 static void
+pad_added_cb (GstElement * element, GstPad * srcpad, GstPad * ghostpad)
+{
+  gst_ghost_pad_set_target (GST_GHOST_PAD (ghostpad), srcpad);
+}
+
+static void
 nle_urisource_init (NleURISource * urisource)
 {
-  GstElement *decodebin = NULL;
+  GstElement *bin, *decodebin = NULL;
+  GstPad *ghostpad;
 
   GST_OBJECT_FLAG_SET (urisource, NLE_OBJECT_SOURCE);
 
   /* We create a bin with source and decodebin within */
-  decodebin =
+  urisource->decodebin = decodebin =
       gst_element_factory_make ("uridecodebin", "internal-uridecodebin");
   g_object_set (decodebin, "expose-all-streams", FALSE, NULL);
 
-  gst_bin_add (GST_BIN (urisource), decodebin);
+  bin = gst_bin_new ("internal-bin");
+  gst_bin_add (GST_BIN (bin), decodebin);
+
+  ghostpad = gst_ghost_pad_new_no_target ("src", GST_PAD_SRC);
+  gst_element_add_pad (bin, ghostpad);
+
+  gst_bin_add (GST_BIN (urisource), bin);
+
+  g_signal_connect (decodebin, "pad-added", G_CALLBACK (pad_added_cb),
+      ghostpad);
 }
 
 static inline void
 nle_urisource_set_uri (NleURISource * fs, const gchar * uri)
 {
-  g_object_set (NLE_SOURCE (fs)->element, "uri", uri, NULL);
+  g_object_set (fs->decodebin, "uri", uri, NULL);
 }
 
 static void
@@ -138,8 +154,7 @@ nle_urisource_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_URI:
-      g_object_get_property ((GObject *) NLE_SOURCE (fs)->element, "uri",
-          value);
+      g_object_get_property ((GObject *) fs->decodebin, "uri", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -151,7 +166,7 @@ nle_urisource_get_property (GObject * object, guint prop_id,
 static gboolean
 nle_urisource_prepare (NleObject * object)
 {
-  NleSource *fs = (NleSource *) object;
+  NleURISource *fs = (NleURISource *) object;
 
   GST_DEBUG ("prepare");
 
@@ -159,7 +174,7 @@ nle_urisource_prepare (NleObject * object)
   if (!gst_caps_is_any (object->caps)) {
     GST_DEBUG_OBJECT (object, "Setting uridecodebin caps to %" GST_PTR_FORMAT,
         object->caps);
-    g_object_set (fs->element, "caps", object->caps, NULL);
+    g_object_set (fs->decodebin, "caps", object->caps, NULL);
   }
 
   return NLE_OBJECT_CLASS (parent_class)->prepare (object);

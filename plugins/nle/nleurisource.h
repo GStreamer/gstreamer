@@ -44,6 +44,7 @@ struct _NleURISource
   NleSource parent;
 
   gchar *uri;
+  GstElement *decodebin;
 };
 
 struct _NleURISourceClass
