@@ -207,6 +207,13 @@ error_create_proxy:
 }
 
 static void
+plugin_reset_texture_map (GstVaapiPluginBase * plugin)
+{
+  if (plugin->display)
+    gst_vaapi_display_reset_texture_map (plugin->display);
+}
+
+static void
 gst_vaapi_plugin_base_find_gl_context (GstVaapiPluginBase * plugin)
 {
   GstObject *gl_context;
@@ -278,6 +285,9 @@ gst_vaapi_plugin_base_open (GstVaapiPluginBase * plugin)
 void
 gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
 {
+  /* Release vaapi textures first if exist, which refs display object */
+  plugin_reset_texture_map (plugin);
+
   gst_vaapi_display_replace (&plugin->display, NULL);
   gst_object_replace (&plugin->gl_context, NULL);
 
@@ -704,6 +714,7 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
   if (outcaps && outcaps != plugin->srcpad_caps) {
     g_clear_object (&plugin->srcpad_allocator);
     gst_caps_replace (&plugin->srcpad_caps, outcaps);
+    plugin_reset_texture_map (plugin);
     if (!gst_video_info_from_caps (&plugin->srcpad_info, outcaps))
       return FALSE;
   }
