@@ -545,7 +545,10 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
 
   GST_LOG ("frame_redraw_cb");
 
-  g_atomic_int_set (&sink->redraw_pending, FALSE);
+  g_mutex_lock (&sink->render_lock);
+  sink->redraw_pending = FALSE;
+  g_mutex_unlock (&sink->render_lock);
+
   wl_callback_destroy (callback);
 }
 
@@ -565,7 +568,7 @@ render_last_buffer (GstWaylandSink * sink)
   wlbuffer = gst_buffer_get_wl_buffer (sink->last_buffer);
   surface = gst_wl_window_get_wl_surface (sink->window);
 
-  g_atomic_int_set (&sink->redraw_pending, TRUE);
+  sink->redraw_pending = TRUE;
   callback = wl_surface_frame (surface);
   wl_callback_add_listener (callback, &frame_callback_listener, sink);
 
@@ -603,7 +606,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   }
 
   /* drop buffers until we get a frame callback */
-  if (g_atomic_int_get (&sink->redraw_pending) == TRUE)
+  if (sink->redraw_pending)
     goto done;
 
   /* make sure that the application has called set_render_rectangle() */
@@ -847,7 +850,7 @@ gst_wayland_sink_expose (GstVideoOverlay * overlay)
   GST_DEBUG_OBJECT (sink, "expose");
 
   g_mutex_lock (&sink->render_lock);
-  if (sink->last_buffer && g_atomic_int_get (&sink->redraw_pending) == FALSE) {
+  if (sink->last_buffer && !sink->redraw_pending) {
     GST_DEBUG_OBJECT (sink, "redrawing last buffer");
     render_last_buffer (sink);
   }
