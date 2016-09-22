@@ -149,6 +149,9 @@ _check_pad_query_failures (GstPad * pad, GString * str,
   if (GST_IS_GHOST_PAD (pad)) {
     ghost_target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
 
+    if (!ghost_target)
+      return;
+
     pad = ghost_target;
   }
 
@@ -178,6 +181,10 @@ _gather_pad_negotiation_details (GstPad * pad, GString * str,
 
   _check_pad_query_failures (pad, str, last_query_caps_fail_monitor,
       last_refused_caps_monitor);
+
+  if (!peer)
+    return;
+
   _check_pad_query_failures (peer, str, last_query_caps_fail_monitor,
       last_refused_caps_monitor);
 
