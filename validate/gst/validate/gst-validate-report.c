@@ -134,7 +134,7 @@ generate_unwind_trace (void)
 
     unw_word_t offset;
     unw_get_proc_name (&cursor, name, sizeof (name), &offset);
-    g_string_append_printf (trace, "%s (0x%lx)\n", name, offset);
+    g_string_append_printf (trace, "%s (0x%lx)\n", name, (long) offset);
 #endif
   }
 
