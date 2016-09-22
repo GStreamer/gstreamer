@@ -433,6 +433,7 @@ _get_gl_context_for_thread_unlocked (GstGLDisplay * display, GThread * thread)
     if (!context) {
       /* remove dead contexts */
       g_weak_ref_clear (l->data);
+      g_free (l->data);
       display->priv->contexts = g_list_delete_link (display->priv->contexts, l);
       l = prev ? prev->next : display->priv->contexts;
       continue;
