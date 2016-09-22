@@ -46,11 +46,21 @@ static void
 handle_configure (void *data, struct wl_shell_surface *shell_surface,
     uint32_t edges, int32_t width, int32_t height)
 {
+  GstWlWindow *window = data;
+
+  GST_DEBUG ("Windows configure: edges %x, width = %i, height %i", edges,
+      width, height);
+
+  if (width == 0 || height == 0)
+    return;
+
+  gst_wl_window_set_render_rectangle (window, 0, 0, width, height);
 }
 
 static void
 handle_popup_done (void *data, struct wl_shell_surface *shell_surface)
 {
+  GST_DEBUG ("Window popup done.");
 }
 
 static const struct wl_shell_surface_listener shell_surface_listener = {
@@ -99,13 +109,14 @@ gst_wl_window_finalize (GObject * gobject)
 }
 
 static GstWlWindow *
-gst_wl_window_new_internal (GstWlDisplay * display)
+gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
 {
   GstWlWindow *window;
   struct wl_region *region;
 
   window = g_object_new (GST_TYPE_WL_WINDOW, NULL);
   window->display = g_object_ref (display);
+  window->render_lock = render_lock;
 
   window->area_surface = wl_compositor_create_surface (display->compositor);
   window->video_surface = wl_compositor_create_surface (display->compositor);
@@ -140,12 +151,13 @@ gst_wl_window_new_internal (GstWlDisplay * display)
 }
 
 GstWlWindow *
-gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info)
+gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+    GMutex * render_lock)
 {
   GstWlWindow *window;
   gint width;
 
-  window = gst_wl_window_new_internal (display);
+  window = gst_wl_window_new_internal (display, render_lock);
 
   /* go toplevel */
   window->shell_surface = wl_shell_get_shell_surface (display->shell,
@@ -172,10 +184,10 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info)
 
 GstWlWindow *
 gst_wl_window_new_in_surface (GstWlDisplay * display,
-    struct wl_surface * parent)
+    struct wl_surface * parent, GMutex * render_lock)
 {
   GstWlWindow *window;
-  window = gst_wl_window_new_internal (display);
+  window = gst_wl_window_new_internal (display, render_lock);
 
   /* embed in parent */
   window->area_subsurface =

@@ -41,6 +41,8 @@ struct _GstWlWindow
 {
   GObject parent_instance;
 
+  GMutex *render_lock;
+
   GstWlDisplay *display;
   struct wl_surface *area_surface;
   struct wl_subsurface *area_subsurface;
@@ -62,6 +64,7 @@ struct _GstWlWindow
   /* this will be set when viewporter is available and black background has
    * already been set on the area_subsurface */
   gboolean no_border_update;
+
 };
 
 struct _GstWlWindowClass
@@ -72,9 +75,9 @@ struct _GstWlWindowClass
 GType gst_wl_window_get_type (void);
 
 GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,
-        const GstVideoInfo * info);
+        const GstVideoInfo * info, GMutex * render_lock);
 GstWlWindow *gst_wl_window_new_in_surface (GstWlDisplay * display,
-        struct wl_surface * parent);
+        struct wl_surface * parent, GMutex * render_lock);
 
 GstWlDisplay *gst_wl_window_get_display (GstWlWindow * window);
 struct wl_surface *gst_wl_window_get_wl_surface (GstWlWindow * window);

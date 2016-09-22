@@ -600,8 +600,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 
     if (!sink->window) {
       /* if we were not provided a window, create one ourselves */
-      sink->window =
-          gst_wl_window_new_toplevel (sink->display, &sink->video_info);
+      sink->window = gst_wl_window_new_toplevel (sink->display,
+          &sink->video_info, &sink->render_lock);
     }
   }
 
@@ -806,7 +806,8 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
                 "an externally-supplied display handle. Consider providing a "
                 "display handle from your application with GstContext"));
       } else {
-        sink->window = gst_wl_window_new_in_surface (sink->display, surface);
+        sink->window = gst_wl_window_new_in_surface (sink->display, surface,
+            &sink->render_lock);
       }
     } else {
       GST_ERROR_OBJECT (sink, "Failed to find display handle, "
