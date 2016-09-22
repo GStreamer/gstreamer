@@ -436,7 +436,7 @@ gst_wayland_create_pool (GstWaylandSink * sink, GstCaps * caps)
   pool = gst_video_buffer_pool_new ();
 
   structure = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
+  gst_buffer_pool_config_set_params (structure, caps, size, 0, 0);
   gst_buffer_pool_config_set_allocator (structure, gst_wl_shm_allocator_get (),
       NULL);
 
@@ -520,8 +520,6 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
   GstCaps *caps;
   GstBufferPool *pool = NULL;
-  GstStructure *config;
-  guint size, min_bufs, max_bufs;
   gboolean need_pool;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
@@ -530,12 +528,7 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     pool = gst_wayland_create_pool (sink, caps);
 
   if (pool) {
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, NULL, &size, &min_bufs,
-        &max_bufs);
-    gst_query_add_allocation_pool (query, pool, size, min_bufs, max_bufs);
-
-    gst_structure_free (config);
+    gst_query_add_allocation_pool (query, pool, sink->video_info.size, 2, 0);
     g_object_unref (pool);
   }
 
@@ -666,9 +659,19 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 
       /* sink->pool always exists (created in set_caps), but it may not
        * be active if upstream is not using it */
-      if (!gst_buffer_pool_is_active (sink->pool) &&
-          !gst_buffer_pool_set_active (sink->pool, TRUE))
-        goto activate_failed;
+      if (!gst_buffer_pool_is_active (sink->pool)) {
+        GstStructure *config;
+        GstCaps *caps;
+        guint size = sink->video_info.size;
+
+        config = gst_buffer_pool_get_config (sink->pool);
+        gst_buffer_pool_config_get_params (config, &caps, &size, NULL, NULL);
+        gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+
+        /* This is a video pool, it should not fail with basic setings */
+        if (!gst_buffer_pool_set_active (sink->pool, TRUE))
+          goto activate_failed;
+      }
 
       ret = gst_buffer_pool_acquire_buffer (sink->pool, &to_render, NULL);
       if (ret != GST_FLOW_OK)
