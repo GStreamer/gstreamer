@@ -253,5 +253,5 @@ gst_dep = declare_dependency(link_with : libgst,
   include_directories : gst_incdirs,
   dependencies : [glib_dep, gobject_dep, gmodule_dep],
   # Everything that uses libgst needs this built to compile
-  sources : [gst_gen_sources, gstenum_h],
+  sources : gst_gen_sources,
 )
