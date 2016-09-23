@@ -397,17 +397,18 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     enum wl_shm_format fmt;
 
     g_value_init (&list, GST_TYPE_LIST);
-    g_value_init (&value, G_TYPE_STRING);
 
     formats = sink->display->shm_formats;
     for (i = 0; i < formats->len; i++) {
+      g_value_init (&value, G_TYPE_STRING);
       fmt = g_array_index (formats, uint32_t, i);
-      g_value_set_string (&value, gst_wl_shm_format_to_string (fmt));
-      gst_value_list_append_value (&list, &value);
+      g_value_set_static_string (&value, gst_wl_shm_format_to_string (fmt));
+      gst_value_list_append_and_take_value (&list, &value);
     }
 
     caps = gst_caps_make_writable (caps);
-    gst_structure_set_value (gst_caps_get_structure (caps, 0), "format", &list);
+    gst_structure_take_value (gst_caps_get_structure (caps, 0), "format",
+        &list);
 
     GST_DEBUG_OBJECT (sink, "display caps: %" GST_PTR_FORMAT, caps);
   }
