@@ -190,5 +190,6 @@ endif
 
 ges_dep = declare_dependency(link_with : libges,
   include_directories : [configinc],
-  sources : ges_gen_sources
+  sources : ges_gen_sources,
+  dependencies : libges_deps,
 )
