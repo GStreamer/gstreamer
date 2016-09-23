@@ -244,7 +244,7 @@ gst_avdtp_sink_event (GstBaseSink * basesink, GstEvent * event)
     gst_tag_list_foreach (taglist, gst_avdtp_sink_tag, self);
   }
 
-  return TRUE;
+  return GST_BASE_SINK_CLASS (parent_class)->event (basesink, event);
 }
 
 static gboolean
