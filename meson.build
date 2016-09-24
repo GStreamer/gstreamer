@@ -242,6 +242,7 @@ subdir('gst')
 subdir('sys')
 subdir('ext')
 subdir('tests')
+subdir('po')
 
 configure_file(input : 'config.h.meson',
   output : 'config.h',
