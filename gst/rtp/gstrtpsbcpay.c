@@ -157,6 +157,8 @@ gst_rtp_sbc_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
       bitpool, channel_mode);
 
   sbcpay->frame_length = frame_len;
+  sbcpay->frame_duration = ((blocks * subbands) * GST_SECOND) / rate;
+  sbcpay->last_timestamp = GST_CLOCK_TIME_NONE;
 
   gst_rtp_base_payload_set_options (payload, "audio", TRUE, "SBC", rate);
 
@@ -214,9 +216,12 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
       g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
   outbuf = gst_buffer_append (outbuf, paybuf);
 
-  /* FIXME: what about duration? */
-  GST_BUFFER_PTS (outbuf) = sbcpay->timestamp;
-  GST_DEBUG_OBJECT (sbcpay, "Pushing %d bytes", payload_length);
+  GST_BUFFER_PTS (outbuf) = sbcpay->last_timestamp;
+  GST_BUFFER_DURATION (outbuf) = frame_count * sbcpay->frame_duration;
+  GST_DEBUG_OBJECT (sbcpay, "Pushing %d bytes: %" GST_TIME_FORMAT,
+      payload_length, GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)));
+
+  sbcpay->last_timestamp += frame_count * sbcpay->frame_duration;
 
   return gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (sbcpay), outbuf);
 }
@@ -230,7 +235,19 @@ gst_rtp_sbc_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   /* FIXME check for negotiation */
 
   sbcpay = GST_RTP_SBC_PAY (payload);
-  sbcpay->timestamp = GST_BUFFER_PTS (buffer);
+
+  if (GST_BUFFER_IS_DISCONT (buffer)) {
+    /* Try to flush whatever's left */
+    gst_rtp_sbc_pay_flush_buffers (sbcpay);
+    /* Drop the rest */
+    gst_adapter_flush (sbcpay->adapter,
+        gst_adapter_available (sbcpay->adapter));
+    /* Reset timestamps */
+    sbcpay->last_timestamp = GST_CLOCK_TIME_NONE;
+  }
+
+  if (sbcpay->last_timestamp == GST_CLOCK_TIME_NONE)
+    sbcpay->last_timestamp = GST_BUFFER_PTS (buffer);
 
   gst_adapter_push (sbcpay->adapter, buffer);
 
@@ -347,7 +364,7 @@ gst_rtp_sbc_pay_init (GstRtpSBCPay * self)
 {
   self->adapter = gst_adapter_new ();
   self->frame_length = 0;
-  self->timestamp = 0;
+  self->last_timestamp = GST_CLOCK_TIME_NONE;
 
   self->min_frames = DEFAULT_MIN_FRAMES;
 }
