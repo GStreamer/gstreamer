@@ -1,0 +1,9 @@
+i18n = import('i18n')
+
+langs = [ 'af', 'az', 'bg', 'ca', 'cs', 'da', 'de', 'el',
+  'en_GB', 'eo', 'es', 'eu', 'fi', 'fr', 'gl', 'hr',
+ 'hu', 'id', 'it', 'ja', 'lt', 'lv', 'ms', 'mt',
+ 'nb', 'nl', 'or', 'pl', 'pt_BR', 'ro', 'ru', 'sk', 'sl',
+ 'sq', 'sr', 'sv', 'tr', 'uk', 'vi', 'zh_CN' ]
+
+i18n.gettext('gst-plugins-ugly-1.0', languages : langs)
