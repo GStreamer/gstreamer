@@ -229,9 +229,6 @@
 /* Have PTHREAD_PRIO_INHERIT. */
 #mesondefine HAVE_PTHREAD_PRIO_INHERIT
 
-/* Define to 1 if the system has the type `ptrdiff_t'. */
-#mesondefine HAVE_PTRDIFF_T
-
 /* Define if RDTSC is available */
 #mesondefine HAVE_RDTSC
 

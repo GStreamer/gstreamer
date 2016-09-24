@@ -183,10 +183,6 @@ if cc.has_function('clock_gettime', prefix : '#include <time.h>')
   cdata.set('HAVE_CLOCK_GETTIME', 1)
 endif
 
-if cc.has_type('ptrdiff_t')
-  cdata.set('HAVE_PTRDIFF_T')
-endif
-
 # We only want to use the __declspec(dllexport/import) dance in GST_EXPORT when
 # building with MSVC
 if cc.get_id() == 'msvc'
