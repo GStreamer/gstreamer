@@ -74,7 +74,6 @@ struct _GstAvdtpSinkClass
 GType gst_avdtp_sink_get_type (void);
 
 GstCaps *gst_avdtp_sink_get_device_caps (GstAvdtpSink * sink);
-gboolean gst_avdtp_sink_set_device_caps (GstAvdtpSink * sink, GstCaps * caps);
 
 guint gst_avdtp_sink_get_link_mtu (GstAvdtpSink * sink);
 

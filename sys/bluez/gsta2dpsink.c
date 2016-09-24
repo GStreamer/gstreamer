@@ -455,9 +455,6 @@ gst_a2dp_sink_init_dynamic_elements (GstA2dpSink * self, GstCaps * caps)
     g_free (mode);
   }
 
-  if (!gst_avdtp_sink_set_device_caps (self->sink, caps))
-    return FALSE;
-
   g_object_set (self->rtp, "mtu",
       gst_avdtp_sink_get_link_mtu (self->sink), NULL);
 

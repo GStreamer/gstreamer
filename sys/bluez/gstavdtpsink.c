@@ -427,21 +427,6 @@ gst_avdtp_sink_get_device_caps (GstAvdtpSink * sink)
   return gst_caps_copy (sink->dev_caps);
 }
 
-gboolean
-gst_avdtp_sink_set_device_caps (GstAvdtpSink * self, GstCaps * caps)
-{
-  GST_DEBUG_OBJECT (self, "setting device caps");
-  GST_AVDTP_SINK_MUTEX_LOCK (self);
-
-  if (self->stream_caps)
-    gst_caps_unref (self->stream_caps);
-  self->stream_caps = gst_caps_ref (caps);
-
-  GST_AVDTP_SINK_MUTEX_UNLOCK (self);
-
-  return TRUE;
-}
-
 guint
 gst_avdtp_sink_get_link_mtu (GstAvdtpSink * sink)
 {
