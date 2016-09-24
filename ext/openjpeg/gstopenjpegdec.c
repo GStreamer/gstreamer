@@ -208,29 +208,30 @@ reverse_rgb_channels (GstJPEG2000Sampling sampling)
 static void
 fill_frame_packed8_4 (GstVideoFrame * frame, opj_image_t * image)
 {
-  gint x, y, w, h;
+  gint x, y, w, h, c;
   guint8 *data_out, *tmp;
   const gint *data_in[4];
   gint dstride;
+  gint off[4];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
   data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
-  data_in[0] = image->comps[0].data;
-  data_in[1] = image->comps[1].data;
-  data_in[2] = image->comps[2].data;
-  data_in[3] = image->comps[3].data;
+  for (c = 0; c < 4; c++) {
+    data_in[c] = image->comps[c].data;
+    off[c] = 0x80 * image->comps[c].sgnd;
+  }
 
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
-      tmp[0] = *data_in[3];
-      tmp[1] = *data_in[0];
-      tmp[2] = *data_in[1];
-      tmp[3] = *data_in[2];
+      tmp[0] = off[3] + *data_in[3];
+      tmp[1] = off[0] + *data_in[0];
+      tmp[2] = off[1] + *data_in[1];
+      tmp[3] = off[2] + *data_in[2];
 
       tmp += 4;
       data_in[0]++;
@@ -245,35 +246,33 @@ fill_frame_packed8_4 (GstVideoFrame * frame, opj_image_t * image)
 static void
 fill_frame_packed16_4 (GstVideoFrame * frame, opj_image_t * image)
 {
-  gint x, y, w, h;
+  gint x, y, w, h, c;
   guint16 *data_out, *tmp;
   const gint *data_in[4];
   gint dstride;
-  gint shift[4];
+  gint shift[4], off[4];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
   data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
 
-  data_in[0] = image->comps[0].data;
-  data_in[1] = image->comps[1].data;
-  data_in[2] = image->comps[2].data;
-  data_in[3] = image->comps[3].data;
-
-  shift[0] = 16 - image->comps[0].prec;
-  shift[1] = 16 - image->comps[1].prec;
-  shift[2] = 16 - image->comps[2].prec;
-  shift[3] = 16 - image->comps[3].prec;
+  for (c = 0; c < 4; c++) {
+    data_in[c] = image->comps[c].data;
+    off[c] = (1 << (image->comps[c].prec - 1)) * image->comps[c].sgnd;
+    shift[c] =
+        MAX (MIN (GST_VIDEO_FRAME_COMP_DEPTH (frame, c) - image->comps[c].prec,
+            8), 0);
+  }
 
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
-      tmp[0] = *data_in[3] << shift[3];
-      tmp[1] = *data_in[0] << shift[0];
-      tmp[2] = *data_in[1] << shift[1];
-      tmp[3] = *data_in[2] << shift[2];
+      tmp[0] = off[3] + (*data_in[3] << shift[3]);
+      tmp[1] = off[0] + (*data_in[0] << shift[0]);
+      tmp[2] = off[1] + (*data_in[1] << shift[1]);
+      tmp[3] = off[2] + (*data_in[2] << shift[2]);
 
       tmp += 4;
       data_in[0]++;
@@ -288,27 +287,29 @@ fill_frame_packed16_4 (GstVideoFrame * frame, opj_image_t * image)
 static void
 fill_frame_packed8_3 (GstVideoFrame * frame, opj_image_t * image)
 {
-  gint x, y, w, h;
+  gint x, y, w, h, c;
   guint8 *data_out, *tmp;
   const gint *data_in[3];
   gint dstride;
+  gint off[3];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
   data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
-  data_in[0] = image->comps[0].data;
-  data_in[1] = image->comps[1].data;
-  data_in[2] = image->comps[2].data;
+  for (c = 0; c < 3; c++) {
+    data_in[c] = image->comps[c].data;
+    off[c] = 0x80 * image->comps[c].sgnd;
+  };
 
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
-      tmp[1] = *data_in[0];
-      tmp[2] = *data_in[1];
-      tmp[3] = *data_in[2];
+      tmp[1] = off[0] + *data_in[0];
+      tmp[2] = off[1] + *data_in[1];
+      tmp[3] = off[2] + *data_in[2];
 
       tmp += 4;
       data_in[0]++;
@@ -322,32 +323,32 @@ fill_frame_packed8_3 (GstVideoFrame * frame, opj_image_t * image)
 static void
 fill_frame_packed16_3 (GstVideoFrame * frame, opj_image_t * image)
 {
-  gint x, y, w, h;
+  gint x, y, w, h, c;
   guint16 *data_out, *tmp;
   const gint *data_in[3];
   gint dstride;
-  gint shift[3];
+  gint shift[3], off[3];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
   data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
 
-  data_in[0] = image->comps[0].data;
-  data_in[1] = image->comps[1].data;
-  data_in[2] = image->comps[2].data;
-
-  shift[0] = 16 - image->comps[0].prec;
-  shift[1] = 16 - image->comps[1].prec;
-  shift[2] = 16 - image->comps[2].prec;
+  for (c = 0; c < 3; c++) {
+    data_in[c] = image->comps[c].data;
+    off[c] = (1 << (image->comps[c].prec - 1)) * image->comps[c].sgnd;
+    shift[c] =
+        MAX (MIN (GST_VIDEO_FRAME_COMP_DEPTH (frame, c) - image->comps[c].prec,
+            8), 0);
+  }
 
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
-      tmp[1] = *data_in[0] << shift[0];
-      tmp[2] = *data_in[1] << shift[1];
-      tmp[3] = *data_in[2] << shift[2];
+      tmp[1] = off[0] + (*data_in[0] << shift[0]);
+      tmp[2] = off[1] + (*data_in[1] << shift[1]);
+      tmp[3] = off[2] + (*data_in[2] << shift[2]);
 
       tmp += 4;
       data_in[0]++;
@@ -365,6 +366,7 @@ fill_frame_planar8_1 (GstVideoFrame * frame, opj_image_t * image)
   guint8 *data_out, *tmp;
   const gint *data_in;
   gint dstride;
+  gint off;
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
@@ -372,12 +374,13 @@ fill_frame_planar8_1 (GstVideoFrame * frame, opj_image_t * image)
   dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
   data_in = image->comps[0].data;
+  off = 0x80 * image->comps[0].sgnd;
 
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
-      *tmp = *data_in;
+      *tmp = off + *data_in;
 
       tmp++;
       data_in++;
@@ -393,7 +396,7 @@ fill_frame_planar16_1 (GstVideoFrame * frame, opj_image_t * image)
   guint16 *data_out, *tmp;
   const gint *data_in;
   gint dstride;
-  gint shift;
+  gint shift, off;
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
@@ -402,13 +405,16 @@ fill_frame_planar16_1 (GstVideoFrame * frame, opj_image_t * image)
 
   data_in = image->comps[0].data;
 
-  shift = 16 - image->comps[0].prec;
+  off = (1 << (image->comps[0].prec - 1)) * image->comps[0].sgnd;
+  shift =
+      MAX (MIN (GST_VIDEO_FRAME_COMP_DEPTH (frame, 0) - image->comps[0].prec,
+          8), 0);
 
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
-      *tmp = *data_in << shift;
+      *tmp = off + (*data_in << shift);
 
       tmp++;
       data_in++;
@@ -423,7 +429,7 @@ fill_frame_planar8_3 (GstVideoFrame * frame, opj_image_t * image)
   gint c, x, y, w, h;
   guint8 *data_out, *tmp;
   const gint *data_in;
-  gint dstride;
+  gint dstride, off;
 
   for (c = 0; c < 3; c++) {
     w = GST_VIDEO_FRAME_COMP_WIDTH (frame, c);
@@ -431,12 +437,13 @@ fill_frame_planar8_3 (GstVideoFrame * frame, opj_image_t * image)
     dstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, c);
     data_out = GST_VIDEO_FRAME_COMP_DATA (frame, c);
     data_in = image->comps[c].data;
+    off = 0x80 * image->comps[c].sgnd;
 
     for (y = 0; y < h; y++) {
       tmp = data_out;
 
       for (x = 0; x < w; x++) {
-        *tmp = *data_in;
+        *tmp = off + *data_in;
         tmp++;
         data_in++;
       }
@@ -452,7 +459,7 @@ fill_frame_planar16_3 (GstVideoFrame * frame, opj_image_t * image)
   guint16 *data_out, *tmp;
   const gint *data_in;
   gint dstride;
-  gint shift;
+  gint shift, off;
 
   for (c = 0; c < 3; c++) {
     w = GST_VIDEO_FRAME_COMP_WIDTH (frame, c);
@@ -460,13 +467,16 @@ fill_frame_planar16_3 (GstVideoFrame * frame, opj_image_t * image)
     dstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, c) / 2;
     data_out = (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, c);
     data_in = image->comps[c].data;
-    shift = 16 - image->comps[c].prec;
+    off = (1 << (image->comps[c].prec - 1)) * image->comps[c].sgnd;
+    shift =
+        MAX (MIN (GST_VIDEO_FRAME_COMP_DEPTH (frame, c) - image->comps[c].prec,
+            8), 0);
 
     for (y = 0; y < h; y++) {
       tmp = data_out;
 
       for (x = 0; x < w; x++) {
-        *tmp = *data_in << shift;
+        *tmp = off + (*data_in << shift);
         tmp++;
         data_in++;
       }
@@ -478,37 +488,32 @@ fill_frame_planar16_3 (GstVideoFrame * frame, opj_image_t * image)
 static void
 fill_frame_planar8_3_generic (GstVideoFrame * frame, opj_image_t * image)
 {
-  gint x, y, w, h;
+  gint x, y, w, h, c;
   guint8 *data_out, *tmp;
   const gint *data_in[3];
   gint dstride;
-  gint dx[3], dy[3];
+  gint dx[3], dy[3], off[3];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
   data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
-  data_in[0] = image->comps[0].data;
-  data_in[1] = image->comps[1].data;
-  data_in[2] = image->comps[2].data;
-
-  dx[0] = image->comps[0].dx;
-  dx[1] = image->comps[1].dx;
-  dx[2] = image->comps[2].dx;
-
-  dy[0] = image->comps[0].dy;
-  dy[1] = image->comps[1].dy;
-  dy[2] = image->comps[2].dy;
+  for (c = 0; c < 3; c++) {
+    data_in[c] = image->comps[c].data;
+    dx[c] = image->comps[c].dx;
+    dy[c] = image->comps[c].dy;
+    off[c] = 0x80 * image->comps[c].sgnd;
+  }
 
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
       tmp[0] = 0xff;
-      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]];
-      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]];
-      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]];
+      tmp[1] = off[0] + data_in[0][((y / dy[0]) * w + x) / dx[0]];
+      tmp[2] = off[1] + data_in[1][((y / dy[1]) * w + x) / dx[1]];
+      tmp[3] = off[2] + data_in[2][((y / dy[2]) * w + x) / dx[2]];
       tmp += 4;
     }
     data_out += dstride;
@@ -518,40 +523,32 @@ fill_frame_planar8_3_generic (GstVideoFrame * frame, opj_image_t * image)
 static void
 fill_frame_planar8_4_generic (GstVideoFrame * frame, opj_image_t * image)
 {
-  gint x, y, w, h;
+  gint x, y, w, h, c;
   guint8 *data_out, *tmp;
   const gint *data_in[4];
   gint dstride;
-  gint dx[4], dy[4];
+  gint dx[4], dy[4], off[4];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
   data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
-  data_in[0] = image->comps[0].data;
-  data_in[1] = image->comps[1].data;
-  data_in[2] = image->comps[2].data;
-  data_in[3] = image->comps[3].data;
-
-  dx[0] = image->comps[0].dx;
-  dx[1] = image->comps[1].dx;
-  dx[2] = image->comps[2].dx;
-  dx[3] = image->comps[3].dx;
-
-  dy[0] = image->comps[0].dy;
-  dy[1] = image->comps[1].dy;
-  dy[2] = image->comps[2].dy;
-  dy[3] = image->comps[3].dy;
+  for (c = 0; c < 4; c++) {
+    data_in[c] = image->comps[c].data;
+    dx[c] = image->comps[c].dx;
+    dy[c] = image->comps[c].dy;
+    off[c] = 0x80 * image->comps[c].sgnd;
+  }
 
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
-      tmp[0] = data_in[3][((y / dy[3]) * w + x) / dx[3]];
-      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]];
-      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]];
-      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]];
+      tmp[0] = off[3] + data_in[3][((y / dy[3]) * w + x) / dx[3]];
+      tmp[1] = off[0] + data_in[0][((y / dy[0]) * w + x) / dx[0]];
+      tmp[2] = off[1] + data_in[1][((y / dy[1]) * w + x) / dx[1]];
+      tmp[3] = off[2] + data_in[2][((y / dy[2]) * w + x) / dx[2]];
       tmp += 4;
     }
     data_out += dstride;
@@ -561,41 +558,35 @@ fill_frame_planar8_4_generic (GstVideoFrame * frame, opj_image_t * image)
 static void
 fill_frame_planar16_3_generic (GstVideoFrame * frame, opj_image_t * image)
 {
-  gint x, y, w, h;
+  gint x, y, w, h, c;
   guint16 *data_out, *tmp;
   const gint *data_in[3];
   gint dstride;
-  gint dx[3], dy[3], shift[3];
+  gint dx[3], dy[3], shift[3], off[3];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
   data_out = (guint16 *) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
 
-  data_in[0] = image->comps[0].data;
-  data_in[1] = image->comps[1].data;
-  data_in[2] = image->comps[2].data;
-
-  dx[0] = image->comps[0].dx;
-  dx[1] = image->comps[1].dx;
-  dx[2] = image->comps[2].dx;
-
-  dy[0] = image->comps[0].dy;
-  dy[1] = image->comps[1].dy;
-  dy[2] = image->comps[2].dy;
-
-  shift[0] = 16 - image->comps[0].prec;
-  shift[1] = 16 - image->comps[1].prec;
-  shift[2] = 16 - image->comps[2].prec;
+  for (c = 0; c < 3; c++) {
+    dx[c] = image->comps[c].dx;
+    dy[c] = image->comps[c].dy;
+    data_in[c] = image->comps[c].data;
+    off[c] = (1 << (image->comps[c].prec - 1)) * image->comps[c].sgnd;
+    shift[c] =
+        MAX (MIN (GST_VIDEO_FRAME_COMP_DEPTH (frame, c) - image->comps[c].prec,
+            8), 0);
+  }
 
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
       tmp[0] = 0xff;
-      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]] << shift[0];
-      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]] << shift[1];
-      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]] << shift[2];
+      tmp[1] = off[0] + (data_in[0][((y / dy[0]) * w + x) / dx[0]] << shift[0]);
+      tmp[2] = off[1] + (data_in[1][((y / dy[1]) * w + x) / dx[1]] << shift[1]);
+      tmp[3] = off[2] + (data_in[2][((y / dy[2]) * w + x) / dx[2]] << shift[2]);
       tmp += 4;
     }
     data_out += dstride;
@@ -605,45 +596,35 @@ fill_frame_planar16_3_generic (GstVideoFrame * frame, opj_image_t * image)
 static void
 fill_frame_planar16_4_generic (GstVideoFrame * frame, opj_image_t * image)
 {
-  gint x, y, w, h;
+  gint x, y, w, h, c;
   guint16 *data_out, *tmp;
   const gint *data_in[4];
   gint dstride;
-  gint dx[4], dy[4], shift[4];
+  gint dx[4], dy[4], shift[4], off[4];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
   data_out = (guint16 *) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
 
-  data_in[0] = image->comps[0].data;
-  data_in[1] = image->comps[1].data;
-  data_in[2] = image->comps[2].data;
-  data_in[3] = image->comps[3].data;
-
-  dx[0] = image->comps[0].dx;
-  dx[1] = image->comps[1].dx;
-  dx[2] = image->comps[2].dx;
-  dx[3] = image->comps[3].dx;
-
-  dy[0] = image->comps[0].dy;
-  dy[1] = image->comps[1].dy;
-  dy[2] = image->comps[2].dy;
-  dy[3] = image->comps[3].dy;
-
-  shift[0] = 16 - image->comps[0].prec;
-  shift[1] = 16 - image->comps[1].prec;
-  shift[2] = 16 - image->comps[2].prec;
-  shift[3] = 16 - image->comps[3].prec;
+  for (c = 0; c < 4; c++) {
+    dx[c] = image->comps[c].dx;
+    dy[c] = image->comps[c].dy;
+    data_in[c] = image->comps[c].data;
+    off[c] = (1 << (image->comps[c].prec - 1)) * image->comps[c].sgnd;
+    shift[c] =
+        MAX (MIN (GST_VIDEO_FRAME_COMP_DEPTH (frame, c) - image->comps[c].prec,
+            8), 0);
+  }
 
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
-      tmp[0] = data_in[3][((y / dy[3]) * w + x) / dx[3]] << shift[3];
-      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]] << shift[0];
-      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]] << shift[1];
-      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]] << shift[2];
+      tmp[0] = off[3] + (data_in[3][((y / dy[3]) * w + x) / dx[3]] << shift[3]);
+      tmp[1] = off[0] + (data_in[0][((y / dy[0]) * w + x) / dx[0]] << shift[0]);
+      tmp[2] = off[1] + (data_in[1][((y / dy[1]) * w + x) / dx[1]] << shift[1]);
+      tmp[3] = off[2] + (data_in[2][((y / dy[2]) * w + x) / dx[2]] << shift[2]);
       tmp += 4;
     }
     data_out += dstride;
