@@ -136,5 +136,4 @@ libsinc = include_directories('gst-libs')
 
 subdir('gst')
 subdir('ext')
-# TODO
-#subdir('tests')
+subdir('tests')
