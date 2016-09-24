@@ -332,7 +332,7 @@ GST_START_TEST (videotimecode_dailyjam_todatetime)
   fail_unless (g_date_time_get_day_of_month (dt2) == 29);
   fail_unless (g_date_time_get_hour (dt2) == 11);
   fail_unless (g_date_time_get_minute (dt2) == 36);
-  fail_unless (g_date_time_get_seconds (dt2) == 53.04);
+  fail_unless_equals_float (g_date_time_get_seconds (dt2), 53.04);
 
   gst_video_time_code_free (tc1);
   g_date_time_unref (dt2);
