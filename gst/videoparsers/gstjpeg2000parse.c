@@ -188,6 +188,7 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   guint eoc_offset = 0;
   GstCaps *current_caps = NULL;
   GstStructure *current_caps_struct = NULL;
+  const gchar *colorspace_string = NULL;
   GstJPEG2000Colorspace colorspace = GST_JPEG2000_COLORSPACE_NONE;
   guint x0, y0, x1, y1;
   guint width = 0, height = 0;
@@ -196,6 +197,7 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   guint16 numcomps;
   guint16 compno;
   GstJPEG2000Sampling parsed_sampling = GST_JPEG2000_SAMPLING_NONE;
+  const gchar *sink_sampling_string = NULL;
   GstJPEG2000Sampling sink_sampling = GST_JPEG2000_SAMPLING_NONE;
   GstJPEG2000Sampling source_sampling = GST_JPEG2000_SAMPLING_NONE;
   guint magic_offset = 0;
@@ -337,12 +339,14 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     goto beach;
   }
 
-  colorspace =
-      gst_jpeg2000_colorspace_from_string (gst_structure_get_string
-      (current_caps_struct, "colorspace"));
-  sink_sampling =
-      gst_jpeg2000_sampling_from_string (gst_structure_get_string
-      (current_caps_struct, "sampling"));
+  colorspace_string = gst_structure_get_string
+      (current_caps_struct, "colorspace");
+  if (colorspace_string)
+    colorspace = gst_jpeg2000_colorspace_from_string (colorspace_string);
+  sink_sampling_string = gst_structure_get_string
+      (current_caps_struct, "sampling");
+  if (sink_sampling_string)
+    sink_sampling = gst_jpeg2000_sampling_from_string (sink_sampling_string);
 
   for (compno = 0; compno < numcomps; ++compno) {
 
