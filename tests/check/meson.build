@@ -41,7 +41,7 @@ base_tests = [
   [ 'elements/multifdsink' ],
   [ 'elements/multisocketsink' ],
   [ 'elements/playbin' ],
-  [ 'elements/playbin-complex' ],
+  [ 'elements/playbin-complex', not ogg_dep.found() ],
   [ 'elements/playsink' ],
   [ 'elements/streamsynchronizer' ],
   [ 'elements/subparse' ],
