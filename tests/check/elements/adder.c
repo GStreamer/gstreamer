@@ -1198,6 +1198,7 @@ GST_START_TEST (test_loop)
 
 GST_END_TEST;
 
+#if 0
 GST_START_TEST (test_flush_start_flush_stop)
 {
   GstPadTemplate *sink_template;
@@ -1255,7 +1256,7 @@ GST_START_TEST (test_flush_start_flush_stop)
 }
 
 GST_END_TEST;
-
+#endif
 
 static Suite *
 adder_suite (void)
@@ -1276,7 +1277,12 @@ adder_suite (void)
   tcase_add_test (tc_chain, test_duration_is_max);
   tcase_add_test (tc_chain, test_duration_unknown_overrides);
   tcase_add_test (tc_chain, test_loop);
+  /* This test is racy and occasionally fails in interesting ways
+   * https://bugzilla.gnome.org/show_bug.cgi?id=708891
+   * It's unlikely that it will ever be fixed for adder, works with audiomixer */
+#if 0
   tcase_add_test (tc_chain, test_flush_start_flush_stop);
+#endif
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
