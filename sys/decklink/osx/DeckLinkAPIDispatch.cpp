@@ -53,7 +53,7 @@ static CreateVideoConversionInstanceFunc	gCreateVideoConversionFunc	= NULL;
 static CreateDeckLinkDiscoveryInstanceFunc  gCreateDeckLinkDiscoveryFunc= NULL;
 
 
-void	InitDeckLinkAPI (void)
+static void	InitDeckLinkAPI (void)
 {
 	CFURLRef		bundleURL;
 
@@ -74,6 +74,7 @@ void	InitDeckLinkAPI (void)
 	}
 }
 
+#if 0
 bool		IsDeckLinkAPIPresent (void)
 {
 	// If the DeckLink API bundle was successfully loaded, return this knowledge to the caller
@@ -82,6 +83,7 @@ bool		IsDeckLinkAPIPresent (void)
 	
 	return false;
 }
+#endif
 
 IDeckLinkIterator*		CreateDeckLinkIteratorInstance (void)
 {
