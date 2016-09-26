@@ -3,7 +3,8 @@ bluez_sources = [
   'gsta2dpsink.c',
   'gstavdtpsink.c',
   'gstavdtpsrc.c',
-  'gstavdtputil.c'
+  'gstavdtputil.c',
+  'gstavrcputil.c',
 ]
 
 bluez_dep = dependency('bluez', version : '>= 5.0', required : false)
