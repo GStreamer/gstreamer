@@ -514,7 +514,6 @@ struct _GstPlayBin3
 
   /* Active stream collection */
   GstStreamCollection *collection;
-  guint collection_notify_id;
 };
 
 struct _GstPlayBin3Class
@@ -525,28 +524,8 @@ struct _GstPlayBin3Class
    * queue a new one for gapless playback */
   void (*about_to_finish) (GstPlayBin3 * playbin);
 
-  /* notify app that number of audio/video/text streams changed */
-  void (*video_changed) (GstPlayBin3 * playbin);
-  void (*audio_changed) (GstPlayBin3 * playbin);
-  void (*text_changed) (GstPlayBin3 * playbin);
-
-  /* notify app that the tags of audio/video/text streams changed */
-  void (*video_tags_changed) (GstPlayBin3 * playbin, gint stream);
-  void (*audio_tags_changed) (GstPlayBin3 * playbin, gint stream);
-  void (*text_tags_changed) (GstPlayBin3 * playbin, gint stream);
-
-  /* get audio/video/text tags for a stream */
-  GstTagList *(*get_video_tags) (GstPlayBin3 * playbin, gint stream);
-  GstTagList *(*get_audio_tags) (GstPlayBin3 * playbin, gint stream);
-  GstTagList *(*get_text_tags) (GstPlayBin3 * playbin, gint stream);
-
   /* get the last video sample and convert it to the given caps */
   GstSample *(*convert_sample) (GstPlayBin3 * playbin, GstCaps * caps);
-
-  /* get audio/video/text pad for a stream */
-  GstPad *(*get_video_pad) (GstPlayBin3 * playbin, gint stream);
-  GstPad *(*get_audio_pad) (GstPlayBin3 * playbin, gint stream);
-  GstPad *(*get_text_pad) (GstPlayBin3 * playbin, gint stream);
 };
 
 /* props */
@@ -556,11 +535,8 @@ struct _GstPlayBin3Class
 #define DEFAULT_FLAGS             GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_TEXT | \
                                   GST_PLAY_FLAG_SOFT_VOLUME | GST_PLAY_FLAG_DEINTERLACE | \
                                   GST_PLAY_FLAG_SOFT_COLORBALANCE
-#define DEFAULT_N_VIDEO           0
 #define DEFAULT_CURRENT_VIDEO     -1
-#define DEFAULT_N_AUDIO           0
 #define DEFAULT_CURRENT_AUDIO     -1
-#define DEFAULT_N_TEXT            0
 #define DEFAULT_CURRENT_TEXT      -1
 #define DEFAULT_AUTO_SELECT_STREAMS TRUE
 #define DEFAULT_SUBTITLE_ENCODING NULL
@@ -586,13 +562,6 @@ enum
   PROP_CURRENT_SUBURI,
   PROP_SOURCE,
   PROP_FLAGS,
-  PROP_N_VIDEO,
-  PROP_CURRENT_VIDEO,
-  PROP_N_AUDIO,
-  PROP_CURRENT_AUDIO,
-  PROP_N_TEXT,
-  PROP_CURRENT_TEXT,
-  PROP_AUTO_SELECT_STREAMS,
   PROP_SUBTITLE_ENCODING,
   PROP_AUDIO_SINK,
   PROP_VIDEO_SINK,
@@ -622,18 +591,6 @@ enum
 {
   SIGNAL_ABOUT_TO_FINISH,
   SIGNAL_CONVERT_SAMPLE,
-  SIGNAL_VIDEO_CHANGED,
-  SIGNAL_AUDIO_CHANGED,
-  SIGNAL_TEXT_CHANGED,
-  SIGNAL_VIDEO_TAGS_CHANGED,
-  SIGNAL_AUDIO_TAGS_CHANGED,
-  SIGNAL_TEXT_TAGS_CHANGED,
-  SIGNAL_GET_VIDEO_TAGS,
-  SIGNAL_GET_AUDIO_TAGS,
-  SIGNAL_GET_TEXT_TAGS,
-  SIGNAL_GET_VIDEO_PAD,
-  SIGNAL_GET_AUDIO_PAD,
-  SIGNAL_GET_TEXT_PAD,
   SIGNAL_SOURCE_SETUP,
   SIGNAL_ELEMENT_SETUP,
   LAST_SIGNAL
@@ -663,19 +620,8 @@ static void gst_play_bin3_set_context (GstElement * element,
 static gboolean gst_play_bin3_send_event (GstElement * element,
     GstEvent * event);
 
-static GstTagList *gst_play_bin3_get_video_tags (GstPlayBin3 * playbin,
-    gint stream);
-static GstTagList *gst_play_bin3_get_audio_tags (GstPlayBin3 * playbin,
-    gint stream);
-static GstTagList *gst_play_bin3_get_text_tags (GstPlayBin3 * playbin,
-    gint stream);
-
 static GstSample *gst_play_bin3_convert_sample (GstPlayBin3 * playbin,
     GstCaps * caps);
-
-static GstPad *gst_play_bin3_get_video_pad (GstPlayBin3 * playbin, gint stream);
-static GstPad *gst_play_bin3_get_audio_pad (GstPlayBin3 * playbin, gint stream);
-static GstPad *gst_play_bin3_get_text_pad (GstPlayBin3 * playbin, gint stream);
 
 static GstStateChangeReturn setup_next_source (GstPlayBin3 * playbin,
     GstState target);
@@ -689,10 +635,6 @@ static gint select_stream_cb (GstElement * decodebin,
     GstPlayBin3 * playbin);
 
 static void do_stream_selection (GstPlayBin3 * playbin);
-static void notify_tags_cb (GstStreamCollection * collection,
-    GstStream * stream, GParamSpec * pspec, GstPlayBin3 * playbin);
-static void notify_tags_for_stream (GstPlayBin3 * playbin,
-    GstStreamCollection * collection, GstStream * stream);
 
 static GstElementClass *parent_class;
 
@@ -831,81 +773,6 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
   g_object_class_install_property (gobject_klass, PROP_FLAGS,
       g_param_spec_flags ("flags", "Flags", "Flags to control behaviour",
           GST_TYPE_PLAY_FLAGS, DEFAULT_FLAGS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * GstPlayBin3:n-video
-   *
-   * Get the total number of available video streams.
-   */
-  g_object_class_install_property (gobject_klass, PROP_N_VIDEO,
-      g_param_spec_int ("n-video", "Number Video",
-          "Total number of video streams", 0, G_MAXINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstPlayBin3:current-video
-   *
-   * Get or set the currently playing video stream. By default the first video
-   * stream with data is played.
-   */
-  g_object_class_install_property (gobject_klass, PROP_CURRENT_VIDEO,
-      g_param_spec_int ("current-video", "Current Video",
-          "Currently playing video stream (-1 = auto)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstPlayBin3:n-audio
-   *
-   * Get the total number of available audio streams.
-   */
-  g_object_class_install_property (gobject_klass, PROP_N_AUDIO,
-      g_param_spec_int ("n-audio", "Number Audio",
-          "Total number of audio streams", 0, G_MAXINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstPlayBin3:current-audio
-   *
-   * Get or set the currently playing audio stream. By default the first audio
-   * stream with data is played.
-   */
-  g_object_class_install_property (gobject_klass, PROP_CURRENT_AUDIO,
-      g_param_spec_int ("current-audio", "Current audio",
-          "Currently playing audio stream (-1 = auto)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstPlayBin3:n-text
-   *
-   * Get the total number of available subtitle streams.
-   */
-  g_object_class_install_property (gobject_klass, PROP_N_TEXT,
-      g_param_spec_int ("n-text", "Number Text",
-          "Total number of text streams", 0, G_MAXINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstPlayBin3:current-text:
-   *
-   * Get or set the currently playing subtitle stream. By default the first
-   * subtitle stream with data is played.
-   */
-  g_object_class_install_property (gobject_klass, PROP_CURRENT_TEXT,
-      g_param_spec_int ("current-text", "Current Text",
-          "Currently playing text stream (-1 = auto)",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * GstPlayBin3::auto-select-streams:
-   *
-   * If TRUE the playbin will respond to stream-collection messages
-   * by sending a SELECT_STREAMS event to decodebin. Set to FALSE
-   * if the application will manage stream selection. This property
-   * will automatically be set to FALSE if playbin receives a select-streams
-   * event from the application, but setting it explicitly avoids any
-   * races where playbin mind send a select-streams event before the
-   * application.
-   */
-  g_object_class_install_property (gobject_klass, PROP_AUTO_SELECT_STREAMS,
-      g_param_spec_boolean ("auto-select-streams", "Automatic Select-Streams",
-          "Whether playbin should respond to stream-collection messags with select-streams events",
-          DEFAULT_AUTO_SELECT_STREAMS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_SUBTITLE_ENCODING,
@@ -1124,114 +991,6 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
       G_STRUCT_OFFSET (GstPlayBin3Class, about_to_finish), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
 
-  /**
-   * GstPlayBin3::video-changed
-   * @playbin: a #GstPlayBin3
-   *
-   * This signal is emitted whenever the number or order of the video
-   * streams has changed. The application will most likely want to select
-   * a new video stream.
-   *
-   * This signal is usually emitted from the context of a GStreamer streaming
-   * thread. You can use gst_message_new_application() and
-   * gst_element_post_message() to notify your application's main thread.
-   */
-  /* FIXME 0.11: turn video-changed signal into message? */
-  gst_play_bin3_signals[SIGNAL_VIDEO_CHANGED] =
-      g_signal_new ("video-changed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBin3Class, video_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
-  /**
-   * GstPlayBin3::audio-changed
-   * @playbin: a #GstPlayBin3
-   *
-   * This signal is emitted whenever the number or order of the audio
-   * streams has changed. The application will most likely want to select
-   * a new audio stream.
-   *
-   * This signal may be emitted from the context of a GStreamer streaming thread.
-   * You can use gst_message_new_application() and gst_element_post_message()
-   * to notify your application's main thread.
-   */
-  /* FIXME 0.11: turn audio-changed signal into message? */
-  gst_play_bin3_signals[SIGNAL_AUDIO_CHANGED] =
-      g_signal_new ("audio-changed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBin3Class, audio_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
-  /**
-   * GstPlayBin3::text-changed
-   * @playbin: a #GstPlayBin3
-   *
-   * This signal is emitted whenever the number or order of the text
-   * streams has changed. The application will most likely want to select
-   * a new text stream.
-   *
-   * This signal may be emitted from the context of a GStreamer streaming thread.
-   * You can use gst_message_new_application() and gst_element_post_message()
-   * to notify your application's main thread.
-   */
-  /* FIXME 0.11: turn text-changed signal into message? */
-  gst_play_bin3_signals[SIGNAL_TEXT_CHANGED] =
-      g_signal_new ("text-changed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBin3Class, text_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
-
-  /**
-   * GstPlayBin3::video-tags-changed
-   * @playbin: a #GstPlayBin3
-   * @stream: stream index with changed tags
-   *
-   * This signal is emitted whenever the tags of a video stream have changed.
-   * The application will most likely want to get the new tags.
-   *
-   * This signal may be emitted from the context of a GStreamer streaming thread.
-   * You can use gst_message_new_application() and gst_element_post_message()
-   * to notify your application's main thread.
-   */
-  gst_play_bin3_signals[SIGNAL_VIDEO_TAGS_CHANGED] =
-      g_signal_new ("video-tags-changed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBin3Class, video_tags_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
-
-  /**
-   * GstPlayBin3::audio-tags-changed
-   * @playbin: a #GstPlayBin3
-   * @stream: stream index with changed tags
-   *
-   * This signal is emitted whenever the tags of an audio stream have changed.
-   * The application will most likely want to get the new tags.
-   *
-   * This signal may be emitted from the context of a GStreamer streaming thread.
-   * You can use gst_message_new_application() and gst_element_post_message()
-   * to notify your application's main thread.
-   */
-  gst_play_bin3_signals[SIGNAL_AUDIO_TAGS_CHANGED] =
-      g_signal_new ("audio-tags-changed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBin3Class, audio_tags_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
-
-  /**
-   * GstPlayBin3::text-tags-changed
-   * @playbin: a #GstPlayBin3
-   * @stream: stream index with changed tags
-   *
-   * This signal is emitted whenever the tags of a text stream have changed.
-   * The application will most likely want to get the new tags.
-   *
-   * This signal may be emitted from the context of a GStreamer streaming thread.
-   * You can use gst_message_new_application() and gst_element_post_message()
-   * to notify your application's main thread.
-   */
-  gst_play_bin3_signals[SIGNAL_TEXT_TAGS_CHANGED] =
-      g_signal_new ("text-tags-changed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBin3Class, text_tags_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
 
   /**
    * GstPlayBin3::source-setup:
@@ -1274,54 +1033,6 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
       g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
-   * GstPlayBin3::get-video-tags
-   * @playbin: a #GstPlayBin3
-   * @stream: a video stream number
-   *
-   * Action signal to retrieve the tags of a specific video stream number.
-   * This information can be used to select a stream.
-   *
-   * Returns: a GstTagList with tags or NULL when the stream number does not
-   * exist.
-   */
-  gst_play_bin3_signals[SIGNAL_GET_VIDEO_TAGS] =
-      g_signal_new ("get-video-tags", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBin3Class, get_video_tags), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
-  /**
-   * GstPlayBin3::get-audio-tags
-   * @playbin: a #GstPlayBin3
-   * @stream: an audio stream number
-   *
-   * Action signal to retrieve the tags of a specific audio stream number.
-   * This information can be used to select a stream.
-   *
-   * Returns: a GstTagList with tags or NULL when the stream number does not
-   * exist.
-   */
-  gst_play_bin3_signals[SIGNAL_GET_AUDIO_TAGS] =
-      g_signal_new ("get-audio-tags", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBin3Class, get_audio_tags), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
-  /**
-   * GstPlayBin3::get-text-tags
-   * @playbin: a #GstPlayBin3
-   * @stream: a text stream number
-   *
-   * Action signal to retrieve the tags of a specific text stream number.
-   * This information can be used to select a stream.
-   *
-   * Returns: a GstTagList with tags or NULL when the stream number does not
-   * exist.
-   */
-  gst_play_bin3_signals[SIGNAL_GET_TEXT_TAGS] =
-      g_signal_new ("get-text-tags", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBin3Class, get_text_tags), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
-  /**
    * GstPlayBin3::convert-sample
    * @playbin: a #GstPlayBin3
    * @caps: the target format of the frame
@@ -1342,67 +1053,7 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
       G_STRUCT_OFFSET (GstPlayBin3Class, convert_sample), NULL, NULL,
       g_cclosure_marshal_generic, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
 
-  /**
-   * GstPlayBin3::get-video-pad
-   * @playbin: a #GstPlayBin3
-   * @stream: a video stream number
-   *
-   * Action signal to retrieve the stream-combiner sinkpad for a specific
-   * video stream.
-   * This pad can be used for notifications of caps changes, stream-specific
-   * queries, etc.
-   *
-   * Returns: a #GstPad, or NULL when the stream number does not exist.
-   */
-  gst_play_bin3_signals[SIGNAL_GET_VIDEO_PAD] =
-      g_signal_new ("get-video-pad", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBin3Class, get_video_pad), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_PAD, 1, G_TYPE_INT);
-  /**
-   * GstPlayBin3::get-audio-pad
-   * @playbin: a #GstPlayBin3
-   * @stream: an audio stream number
-   *
-   * Action signal to retrieve the stream-combiner sinkpad for a specific
-   * audio stream.
-   * This pad can be used for notifications of caps changes, stream-specific
-   * queries, etc.
-   *
-   * Returns: a #GstPad, or NULL when the stream number does not exist.
-   */
-  gst_play_bin3_signals[SIGNAL_GET_AUDIO_PAD] =
-      g_signal_new ("get-audio-pad", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBin3Class, get_audio_pad), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_PAD, 1, G_TYPE_INT);
-  /**
-   * GstPlayBin3::get-text-pad
-   * @playbin: a #GstPlayBin3
-   * @stream: a text stream number
-   *
-   * Action signal to retrieve the stream-combiner sinkpad for a specific
-   * text stream.
-   * This pad can be used for notifications of caps changes, stream-specific
-   * queries, etc.
-   *
-   * Returns: a #GstPad, or NULL when the stream number does not exist.
-   */
-  gst_play_bin3_signals[SIGNAL_GET_TEXT_PAD] =
-      g_signal_new ("get-text-pad", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBin3Class, get_text_pad), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_PAD, 1, G_TYPE_INT);
-
-  klass->get_video_tags = gst_play_bin3_get_video_tags;
-  klass->get_audio_tags = gst_play_bin3_get_audio_tags;
-  klass->get_text_tags = gst_play_bin3_get_text_tags;
-
   klass->convert_sample = gst_play_bin3_convert_sample;
-
-  klass->get_video_pad = gst_play_bin3_get_video_pad;
-  klass->get_audio_pad = gst_play_bin3_get_audio_pad;
-  klass->get_text_pad = gst_play_bin3_get_text_pad;
 
   gst_element_class_set_static_metadata (gstelement_klass,
       "Player Bin 3", "Generic/Bin/Player",
@@ -1716,8 +1367,6 @@ gst_play_bin3_init (GstPlayBin3 * playbin)
   /* assume we can create an input-selector */
   playbin->have_selector = TRUE;
 
-  playbin->do_stream_selections = DEFAULT_AUTO_SELECT_STREAMS;
-
   init_combiners (playbin);
 
   /* init groups */
@@ -1948,110 +1597,6 @@ get_group (GstPlayBin3 * playbin)
   return result;
 }
 
-static GstPad *
-gst_play_bin3_get_pad_of_type (GstPlayBin3 * playbin, gint stream_type,
-    gint stream)
-{
-  GstPad *sinkpad = NULL;
-
-  GST_PLAY_BIN3_LOCK (playbin);
-  if (playbin->combiner[stream_type].combiner == NULL) {
-    GST_DEBUG_OBJECT (playbin,
-        "get-pad of type %d w/o custom-combiner. Returning playsink pad",
-        stream_type);
-    sinkpad = playbin->combiner[stream_type].sinkpad;
-    if (sinkpad) {
-      sinkpad = gst_object_ref (sinkpad);
-      goto done;
-    }
-  }
-  if (stream < playbin->channels[stream_type]->len) {
-    sinkpad = g_ptr_array_index (playbin->channels[stream_type], stream);
-    gst_object_ref (sinkpad);
-  }
-
-done:
-  GST_PLAY_BIN3_UNLOCK (playbin);
-
-  return sinkpad;
-}
-
-static GstPad *
-gst_play_bin3_get_video_pad (GstPlayBin3 * playbin, gint stream)
-{
-  return gst_play_bin3_get_pad_of_type (playbin, PLAYBIN_STREAM_VIDEO, stream);
-}
-
-static GstPad *
-gst_play_bin3_get_audio_pad (GstPlayBin3 * playbin, gint stream)
-{
-  return gst_play_bin3_get_pad_of_type (playbin, PLAYBIN_STREAM_AUDIO, stream);
-}
-
-static GstPad *
-gst_play_bin3_get_text_pad (GstPlayBin3 * playbin, gint stream)
-{
-  return gst_play_bin3_get_pad_of_type (playbin, PLAYBIN_STREAM_TEXT, stream);
-}
-
-
-static GstTagList *
-get_tags (GstPlayBin3 * playbin, GstStreamType type, gint stream_num)
-{
-  GstTagList *result = NULL;
-  gint nb_streams = gst_stream_collection_get_size (playbin->collection);
-  gint i, cur_idx = 0;
-
-  /* Count the streams of the type we want to find the one numbered 'stream' */
-  for (i = 0; i < nb_streams; i++) {
-    GstStream *stream =
-        gst_stream_collection_get_stream (playbin->collection, i);
-    GstStreamType stream_type = gst_stream_get_stream_type (stream);
-    if (stream_type != type)
-      continue;
-    if (cur_idx == stream_num)
-      return gst_stream_get_tags (stream);
-    cur_idx++;
-  }
-
-  return result;
-}
-
-static GstTagList *
-gst_play_bin3_get_video_tags (GstPlayBin3 * playbin, gint stream)
-{
-  GstTagList *result;
-
-  GST_PLAY_BIN3_LOCK (playbin);
-  result = get_tags (playbin, GST_STREAM_TYPE_VIDEO, stream);
-  GST_PLAY_BIN3_UNLOCK (playbin);
-
-  return result;
-}
-
-static GstTagList *
-gst_play_bin3_get_audio_tags (GstPlayBin3 * playbin, gint stream)
-{
-  GstTagList *result;
-
-  GST_PLAY_BIN3_LOCK (playbin);
-  result = get_tags (playbin, GST_STREAM_TYPE_AUDIO, stream);
-  GST_PLAY_BIN3_UNLOCK (playbin);
-
-  return result;
-}
-
-static GstTagList *
-gst_play_bin3_get_text_tags (GstPlayBin3 * playbin, gint stream)
-{
-  GstTagList *result;
-
-  GST_PLAY_BIN3_LOCK (playbin);
-  result = get_tags (playbin, GST_STREAM_TYPE_TEXT, stream);
-  GST_PLAY_BIN3_UNLOCK (playbin);
-
-  return result;
-}
 
 static GstSample *
 gst_play_bin3_convert_sample (GstPlayBin3 * playbin, GstCaps * caps)
@@ -2338,20 +1883,6 @@ gst_play_bin3_set_property (GObject * object, guint prop_id,
         GST_SOURCE_GROUP_UNLOCK (playbin->curr_group);
       }
       break;
-    case PROP_CURRENT_VIDEO:
-      gst_play_bin3_set_current_video_stream (playbin, g_value_get_int (value));
-      break;
-    case PROP_CURRENT_AUDIO:
-      gst_play_bin3_set_current_audio_stream (playbin, g_value_get_int (value));
-      break;
-    case PROP_CURRENT_TEXT:
-      gst_play_bin3_set_current_text_stream (playbin, g_value_get_int (value));
-      break;
-    case PROP_AUTO_SELECT_STREAMS:
-      GST_PLAY_BIN3_LOCK (playbin);
-      playbin->do_stream_selections = g_value_get_boolean (value);
-      GST_PLAY_BIN3_UNLOCK (playbin);
-      break;
     case PROP_SUBTITLE_ENCODING:
       gst_play_bin3_set_encoding (playbin, g_value_get_string (value));
       break;
@@ -2539,75 +2070,6 @@ gst_play_bin3_get_property (GObject * object, guint prop_id, GValue * value,
     }
     case PROP_FLAGS:
       g_value_set_flags (value, gst_play_bin3_get_flags (playbin));
-      break;
-    case PROP_N_VIDEO:
-    {
-      gint n_video;
-
-      GST_PLAY_BIN3_LOCK (playbin);
-      n_video =
-          playbin->combiner[PLAYBIN_STREAM_VIDEO].
-          streams ? playbin->combiner[PLAYBIN_STREAM_VIDEO].streams->len : 0;
-      GST_PLAY_BIN3_UNLOCK (playbin);
-      g_value_set_int (value, n_video);
-      break;
-    }
-    case PROP_CURRENT_VIDEO:
-      GST_PLAY_BIN3_LOCK (playbin);
-      if (playbin->combiner[PLAYBIN_STREAM_VIDEO].current_stream != -1)
-        g_value_set_int (value,
-            playbin->combiner[PLAYBIN_STREAM_VIDEO].current_stream);
-      else
-        g_value_set_int (value, playbin->current_video);
-      GST_PLAY_BIN3_UNLOCK (playbin);
-      break;
-    case PROP_N_AUDIO:
-    {
-      gint n_audio;
-
-      GST_PLAY_BIN3_LOCK (playbin);
-      n_audio =
-          playbin->combiner[PLAYBIN_STREAM_AUDIO].
-          streams ? playbin->combiner[PLAYBIN_STREAM_AUDIO].streams->len : 0;
-      GST_PLAY_BIN3_UNLOCK (playbin);
-
-      g_value_set_int (value, n_audio);
-      break;
-    }
-    case PROP_CURRENT_AUDIO:
-      GST_PLAY_BIN3_LOCK (playbin);
-      if (playbin->combiner[PLAYBIN_STREAM_AUDIO].current_stream != -1)
-        g_value_set_int (value,
-            playbin->combiner[PLAYBIN_STREAM_AUDIO].current_stream);
-      else
-        g_value_set_int (value, playbin->current_audio);
-      GST_PLAY_BIN3_UNLOCK (playbin);
-      break;
-    case PROP_N_TEXT:
-    {
-      gint n_text;
-
-      GST_PLAY_BIN3_LOCK (playbin);
-      n_text =
-          playbin->combiner[PLAYBIN_STREAM_TEXT].
-          streams ? playbin->combiner[PLAYBIN_STREAM_TEXT].streams->len : 0;
-      GST_PLAY_BIN3_UNLOCK (playbin);
-      g_value_set_int (value, n_text);
-      break;
-    }
-    case PROP_CURRENT_TEXT:
-      GST_PLAY_BIN3_LOCK (playbin);
-      if (playbin->combiner[PLAYBIN_STREAM_TEXT].current_stream != -1)
-        g_value_set_int (value,
-            playbin->combiner[PLAYBIN_STREAM_TEXT].current_stream);
-      else
-        g_value_set_int (value, playbin->current_text);
-      GST_PLAY_BIN3_UNLOCK (playbin);
-      break;
-    case PROP_AUTO_SELECT_STREAMS:
-      GST_PLAY_BIN3_LOCK (playbin);
-      g_value_set_boolean (value, playbin->do_stream_selections);
-      GST_PLAY_BIN3_UNLOCK (playbin);
       break;
     case PROP_SUBTITLE_ENCODING:
       GST_PLAY_BIN3_LOCK (playbin);
@@ -3058,16 +2520,6 @@ static const gchar *blacklisted_mimes[] = {
 };
 
 static void
-notify_all_streams (GstPlayBin3 * playbin, GstStreamCollection * collection)
-{
-  gint i, nb_streams;
-  nb_streams = gst_stream_collection_get_size (collection);
-  for (i = 0; i < nb_streams; i++)
-    notify_tags_for_stream (playbin, collection,
-        gst_stream_collection_get_stream (collection, i));
-}
-
-static void
 gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
 {
   GstPlayBin3 *playbin = GST_PLAY_BIN3 (bin);
@@ -3136,16 +2588,8 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
       GST_PLAY_BIN3_LOCK (playbin);
       GST_DEBUG_OBJECT (playbin,
           "STREAM_COLLECTION: Got a collection from %" GST_PTR_FORMAT, src);
-      if (playbin->collection && playbin->collection_notify_id) {
-        g_signal_handler_disconnect (playbin->collection,
-            playbin->collection_notify_id);
-        playbin->collection_notify_id = 0;
-      }
       gst_object_replace ((GstObject **) & playbin->collection,
           (GstObject *) collection);
-      playbin->collection_notify_id =
-          g_signal_connect (collection, "stream-notify::tags",
-          (GCallback) notify_tags_cb, playbin);
       update_combiner_info (playbin);
       if (pstate)
         playbin->do_stream_selections = FALSE;
@@ -3154,7 +2598,6 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
         playbin->do_stream_selections = TRUE;
       GST_PLAY_BIN3_UNLOCK (playbin);
 
-      notify_all_streams (playbin, collection);
       gst_object_unref (collection);
     }
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAMS_SELECTED) {
@@ -3168,16 +2611,8 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
       GST_PLAY_BIN3_LOCK (playbin);
       GST_DEBUG_OBJECT (playbin,
           "STREAMS_SELECTED: Got a collection from %" GST_PTR_FORMAT, src);
-      if (playbin->collection && playbin->collection_notify_id) {
-        g_signal_handler_disconnect (playbin->collection,
-            playbin->collection_notify_id);
-        playbin->collection_notify_id = 0;
-      }
       gst_object_replace ((GstObject **) & playbin->collection,
           (GstObject *) collection);
-      playbin->collection_notify_id =
-          g_signal_connect (collection, "stream-notify::tags",
-          (GCallback) notify_tags_cb, playbin);
       update_combiner_info (playbin);
       len = gst_message_streams_selected_get_size (msg);
       for (i = 0; i < len; i++) {
@@ -3194,7 +2629,6 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
         playbin->do_stream_selections = TRUE;
       GST_PLAY_BIN3_UNLOCK (playbin);
 
-      notify_all_streams (playbin, collection);
       gst_object_unref (collection);
     }
   }
@@ -3373,65 +2807,6 @@ _decodebin_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
   return ret;
 }
 
-static gint
-find_index_for_stream_by_type (GstStreamCollection * collection,
-    GstStream * stream)
-{
-  gint nb_streams = gst_stream_collection_get_size (collection);
-  gint i, cur_idx = 0;
-  GstStreamType target_type = gst_stream_get_stream_type (stream);
-
-  /* Count the streams of the type we want to find the index of the one we want */
-  for (i = 0; i < nb_streams; i++) {
-    GstStream *cur_stream = gst_stream_collection_get_stream (collection, i);
-    if (stream == cur_stream)
-      return cur_idx;
-    if (gst_stream_get_stream_type (cur_stream) == target_type)
-      cur_idx++;
-  }
-
-  return -1;
-}
-
-static void
-notify_tags_for_stream (GstPlayBin3 * playbin, GstStreamCollection * collection,
-    GstStream * stream)
-{
-  GstStreamType stream_type = gst_stream_get_stream_type (stream);
-  gint stream_idx = find_index_for_stream_by_type (collection, stream);
-  gint signal;
-
-  GST_DEBUG_OBJECT (playbin, "Tags on stream %" GST_PTR_FORMAT
-      " with stream idx %d and type %d have changed",
-      stream, stream_idx, stream_type);
-
-  switch (stream_type) {
-    case GST_STREAM_TYPE_VIDEO:
-      signal = SIGNAL_VIDEO_TAGS_CHANGED;
-      break;
-    case GST_STREAM_TYPE_AUDIO:
-      signal = SIGNAL_AUDIO_TAGS_CHANGED;
-      break;
-    case GST_STREAM_TYPE_TEXT:
-      signal = SIGNAL_TEXT_TAGS_CHANGED;
-      break;
-    default:
-      signal = -1;
-      break;
-  }
-
-  if (signal >= 0)
-    g_signal_emit (G_OBJECT (playbin), gst_play_bin3_signals[signal], 0,
-        stream_idx);
-}
-
-static void
-notify_tags_cb (GstStreamCollection * collection, GstStream * stream,
-    GParamSpec * pspec, GstPlayBin3 * playbin)
-{
-  notify_tags_for_stream (playbin, collection, stream);
-}
-
 /* this function is called when a new pad is added to decodebin. We check the
  * type of the pad and add it to the combiner element
  */
@@ -3443,7 +2818,6 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
   GstSourceCombine *combine = NULL;
   GstStreamType stream_type;
   gint pb_stream_type = -1;
-  gboolean changed = FALSE;
   GstElement *custom_combiner = NULL;
   gulong event_probe_handler;
   gchar *pad_name;
@@ -3554,7 +2928,6 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
       /* store combiner pad so we can release it */
       g_object_set_data (G_OBJECT (pad), "playbin.sinkpad", sinkpad);
 
-      changed = TRUE;
       GST_DEBUG_OBJECT (playbin, "linked pad %s:%s to combiner %p",
           GST_DEBUG_PAD_NAME (pad), combine->combiner);
     } else {
@@ -3563,7 +2936,6 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
   } else {
     /* no combiner, don't configure anything, we'll link the new pad directly to
      * the sink. */
-    changed = FALSE;
     sinkpad = NULL;
 
     /* store the combiner for the pad */
@@ -3575,31 +2947,6 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
       _decodebin_event_probe, playbin, NULL);
   g_object_set_data (G_OBJECT (pad), "playbin.event_probe_id",
       ULONG_TO_POINTER (event_probe_handler));
-
-  if (changed) {
-    int signal;
-
-    switch (combine->type) {
-      case GST_PLAY_SINK_TYPE_VIDEO:
-      case GST_PLAY_SINK_TYPE_VIDEO_RAW:
-        signal = SIGNAL_VIDEO_CHANGED;
-        break;
-      case GST_PLAY_SINK_TYPE_AUDIO:
-      case GST_PLAY_SINK_TYPE_AUDIO_RAW:
-        signal = SIGNAL_AUDIO_CHANGED;
-        break;
-      case GST_PLAY_SINK_TYPE_TEXT:
-        signal = SIGNAL_TEXT_CHANGED;
-        break;
-      default:
-        signal = -1;
-    }
-
-    if (signal >= 0) {
-      g_signal_emit (G_OBJECT (playbin), gst_play_bin3_signals[signal], 0,
-          NULL);
-    }
-  }
 
   playbin->active_stream_types |= stream_type;
 
@@ -3649,7 +2996,6 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
   GstPad *peer;
   GstElement *combiner;
   GstSourceCombine *combine;
-  int signal = -1;
   gulong event_probe_handler;
 
   GST_DEBUG_OBJECT (playbin,
@@ -3687,23 +3033,6 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
     g_ptr_array_remove (combine->channels, peer);
     GST_DEBUG_OBJECT (playbin, "pad %p removed from array", peer);
 
-    /* get the correct type-changed signal */
-    switch (combine->type) {
-      case GST_PLAY_SINK_TYPE_VIDEO:
-      case GST_PLAY_SINK_TYPE_VIDEO_RAW:
-        signal = SIGNAL_VIDEO_CHANGED;
-        break;
-      case GST_PLAY_SINK_TYPE_AUDIO:
-      case GST_PLAY_SINK_TYPE_AUDIO_RAW:
-        signal = SIGNAL_AUDIO_CHANGED;
-        break;
-      case GST_PLAY_SINK_TYPE_TEXT:
-        signal = SIGNAL_TEXT_CHANGED;
-        break;
-      default:
-        signal = -1;
-    }
-
     if (!combine->channels->len && combine->combiner) {
       GST_DEBUG_OBJECT (playbin, "all combiner sinkpads removed");
       GST_DEBUG_OBJECT (playbin, "removing combiner %p", combine->combiner);
@@ -3722,9 +3051,6 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
   gst_object_unref (combiner);
 exit:
   GST_PLAY_BIN3_UNLOCK (playbin);
-
-  if (signal >= 0)
-    g_signal_emit (G_OBJECT (playbin), gst_play_bin3_signals[signal], 0, NULL);
 
   return;
 
