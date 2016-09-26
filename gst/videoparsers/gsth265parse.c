@@ -2047,9 +2047,10 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     off = 23;
     for (i = 0; i < data[22]; i++) {
       num_nals = GST_READ_UINT16_BE (data + off + 1);
+      off += 3;
       for (j = 0; j < num_nals; j++) {
         parseres = gst_h265_parser_identify_nalu_hevc (h265parse->nalparser,
-            data, off + 3, size, 2, &nalu);
+            data, off, size, 2, &nalu);
 
         if (parseres != GST_H265_PARSER_OK) {
           gst_buffer_unmap (codec_data, &map);
