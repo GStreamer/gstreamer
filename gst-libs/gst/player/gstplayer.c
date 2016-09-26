@@ -169,6 +169,7 @@ struct _GstPlayer
   GstState target_state, current_state;
   gboolean is_live, is_eos;
   GSource *tick_source, *ready_timeout_source;
+  GstClockTime cached_duration;
 
   gdouble rate;
 
@@ -741,10 +742,7 @@ gst_player_get_property (GObject * object, guint prop_id,
       break;
     }
     case PROP_DURATION:{
-      gint64 duration = 0;
-
-      gst_element_query_duration (self->playbin, GST_FORMAT_TIME, &duration);
-      g_value_set_uint64 (value, duration);
+      g_value_set_uint64 (value, self->cached_duration);
       GST_TRACE_OBJECT (self, "Returning duration=%" GST_TIME_FORMAT,
           GST_TIME_ARGS (g_value_get_uint64 (value)));
       break;
@@ -1486,6 +1484,8 @@ emit_duration_changed (GstPlayer * self, GstClockTime duration)
   GST_DEBUG_OBJECT (self, "Duration changed %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration));
 
+  self->cached_duration = duration;
+
   if (g_signal_handler_find (self, G_SIGNAL_MATCH_ID,
           signals[SIGNAL_DURATION_CHANGED], 0, NULL, NULL, NULL) != 0) {
     DurationChangedSignalData *data = g_new (DurationChangedSignalData, 1);
@@ -1593,6 +1593,8 @@ state_changed_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
       if (gst_element_query_duration (self->playbin, GST_FORMAT_TIME,
               &duration)) {
         emit_duration_changed (self, duration);
+      } else {
+        self->cached_duration = GST_CLOCK_TIME_NONE;
       }
     }
 
@@ -2905,6 +2907,7 @@ gst_player_stop_internal (GstPlayer * self, gboolean transient)
       GST_PLAYER_STATE_STOPPED ? GST_PLAYER_STATE_BUFFERING :
       GST_PLAYER_STATE_STOPPED);
   self->buffering = 100;
+  self->cached_duration = GST_CLOCK_TIME_NONE;
   g_mutex_lock (&self->lock);
   if (self->media_info) {
     g_object_unref (self->media_info);
