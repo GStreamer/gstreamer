@@ -590,12 +590,11 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
         " num frame samples: %d new leftover: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (aligned_missing_duration), samples,
         GST_TIME_ARGS (dec->leftover_plc_duration));
-  } else {
-    /* use maximum size (120 ms) as the number of returned samples is
-       not constant over the stream. */
-    samples = 120 * dec->sample_rate / 1000;
   }
 
+  /* use maximum size (120 ms) as the number of returned samples is
+     not constant over the stream. */
+  samples = 120 * dec->sample_rate / 1000;
   packet_size = samples * dec->n_channels * 2;
 
   outbuf =
