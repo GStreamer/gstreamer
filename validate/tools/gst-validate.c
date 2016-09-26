@@ -273,8 +273,8 @@ _register_playbin_actions (void)
         {NULL}
       },
       "Action to set a subtitle file to use on a playbin pipeline.\n"
-      "The subtitles file that will be used should will be specified\n"
-      "relatively to the playbin URI in use thanks to the subtitle-file\n"
+      "The subtitles file that will be used should be specified\n"
+      "relative to the playbin URI in use thanks to the subtitle-file\n"
       "action property. You can also specify a folder with subtitle-dir\n"
       "For example if playbin.uri='file://some/uri.mov\n"
       "and action looks like 'set-subtitle, subtitle-file=en.srt'\n"
