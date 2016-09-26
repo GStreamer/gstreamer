@@ -90,7 +90,7 @@ gst_dvb_base_bin_conf_set_property_from_string_array (GstElement * dvbbasebin,
   v = gst_dvb_base_bin_find_string_in_array (strings, str);
   if (v == -1) {
     GST_WARNING_OBJECT (dvbbasebin, "Unexpected value '%s' for property "
-        "'%s', using default: %d", str, property, default_value);
+        "'%s', using default: '%d'", str, property, default_value);
     v = default_value;
   }
 
@@ -356,10 +356,10 @@ load_error:
       (err->domain == G_KEY_FILE_ERROR
           && err->code == G_KEY_FILE_ERROR_NOT_FOUND)) {
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
-        _("Couldn't find DVB channel configuration file"));
+        _("Couldn't find channel configuration file"));
   } else {
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
-        _("Couldn't load DVB channel configuration file: %s"), err->message);
+        _("Couldn't load channel configuration file: '%s'"), err->message);
   }
   g_clear_error (&err);
   return FALSE;
@@ -368,7 +368,7 @@ unknown_channel:
   {
     /* FIXME: is channel name guaranteed to be ASCII or UTF-8? */
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
-        _("Couldn't find details for DVB channel %s"), channel_name);
+        _("Couldn't find details for channel '%s'"), channel_name);
     g_key_file_unref (keyfile);
     g_clear_error (&err);
     return FALSE;
@@ -378,7 +378,7 @@ no_properties:
   {
     /* FIXME: is channel name guaranteed to be ASCII or UTF-8? */
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
-        _("No properties for the DVB channel %s"), channel_name);
+        _("No properties for channel '%s'"), channel_name);
     g_key_file_unref (keyfile);
     g_clear_error (&err);
     return FALSE;
@@ -388,7 +388,7 @@ property_error:
   {
     /* FIXME: is channel name guaranteed to be ASCII or UTF-8? */
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
-        _("Failed to set properties for the DVB channel %s"), channel_name);
+        _("Failed to set properties for channel '%s'"), channel_name);
     g_key_file_unref (keyfile);
     g_clear_error (&err);
     return FALSE;
@@ -512,17 +512,17 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename,
 open_fail:
   if (err->code == G_FILE_ERROR_NOENT) {
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
-        _("Couldn't find DVB channel configuration file: %s"), err->message);
+        _("Couldn't find channel configuration file: '%s'"), err->message);
   } else {
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
-        _("Couldn't load DVB channel configuration file: %s"), err->message);
+        _("Couldn't load channel configuration file: '%s'"), err->message);
   }
   g_clear_error (&err);
   return NULL;
 
 no_channels:
   g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
-      _("DVB channel configuration file doesn't contain any channels"));
+      _("Channel configuration file doesn't contain any channels"));
   g_hash_table_unref (res);
   return NULL;
 }
@@ -800,7 +800,7 @@ unknown_channel:
   {
     /* FIXME: is channel name guaranteed to be ASCII or UTF-8? */
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
-        _("Couldn't find details for DVB channel %s"), channel_name);
+        _("Couldn't find details for channel '%s'"), channel_name);
     destroy_channels_hash (channels);
     return FALSE;
   }
