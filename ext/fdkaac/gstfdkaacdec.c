@@ -158,8 +158,8 @@ gst_fdkaacdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
 
   if ((err =
           aacDecoder_SetParam (self->dec, AAC_PCM_OUTPUT_INTERLEAVED,
-              0)) != AAC_DEC_OK) {
-    GST_ERROR_OBJECT (self, "Failed to set output channel mapping: %d", err);
+              1)) != AAC_DEC_OK) {
+    GST_ERROR_OBJECT (self, "Failed to set interleaved output: %d", err);
     return FALSE;
   }
 
