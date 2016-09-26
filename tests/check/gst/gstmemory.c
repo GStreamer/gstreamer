@@ -24,12 +24,6 @@
 # include "config.h"
 #endif
 
-#ifdef HAVE_VALGRIND_H
-# include <valgrind/valgrind.h>
-#else
-# define RUNNING_ON_VALGRIND FALSE
-#endif
-
 #include <gst/check/gstcheck.h>
 
 GST_START_TEST (test_submemory)
@@ -271,20 +265,6 @@ GST_START_TEST (test_try_new_and_alloc)
   gst_memory_unmap (mem, &info);
 
   gst_memory_unref (mem);
-
-#if 0
-  /* Disabled this part of the test, because it happily succeeds on 64-bit
-   * machines that have enough memory+swap, because the address space is large
-   * enough. There's not really any way to test the failure case except by
-   * allocating chunks of memory until it fails, which would suck. */
-
-  /* now this better fail (don't run in valgrind, it will abort
-   * or warn when passing silly arguments to malloc) */
-  if (!RUNNING_ON_VALGRIND) {
-    mem = gst_allocator_alloc (NULL, (guint) - 1, 0);
-    fail_unless (mem == NULL);
-  }
-#endif
 }
 
 GST_END_TEST;
