@@ -79,6 +79,11 @@ struct _GstVorbisEnc {
   gboolean         setup;
   gboolean         header_sent;
   gchar           *last_message;
+
+  int              long_size, short_size;
+  int              last_size;
+  int              vorbis_log2_num_modes;
+  int              vorbis_mode_sizes[256];
 };
 
 struct _GstVorbisEncClass {
