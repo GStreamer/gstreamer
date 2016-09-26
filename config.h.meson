@@ -436,3 +436,5 @@
 #mesondefine HAVE_ALARM
 #mesondefine HAVE_DECL_LOCALTIME_R
 #mesondefine HAVE_DECL_STRSIGNAL
+#mesondefine HAVE_GETRUSAGE
+#mesondefine HAVE_SYS_RESOURCE_H

@@ -120,6 +120,7 @@ check_headers = [['dlfcn.h','HAVE_DLFCN_H'],
   ['ucontext.h', 'HAVE_UCONTEXT_H'],
   ['unistd.h', 'HAVE_UNISTD_H'],
   ['valgrind/valgrind.h', 'HAVE_VALGRIND_VALGRIND_H'],
+  ['sys/resource.h', 'HAVE_SYS_RESOURCE_H'],
 ]
 
 if host_machine.system() == 'windows'
@@ -153,6 +154,11 @@ endif
 if cc.has_function('sigaction', prefix : '#include<signal.h>')
   cdata.set('HAVE_SIGACTION', 1)
 endif
+have_getrusage = cc.has_function('getrusage', prefix : '#include <sys/time.h>\n#include <sys/resource.h>')
+if have_getrusage
+  cdata.set('HAVE_GETRUSAGE', 1)
+endif
+
 if cc.has_function('fseeko', prefix : '#include<stdio.h>')
   cdata.set('HAVE_FSEEKO', 1)
 endif
@@ -243,6 +249,8 @@ if host_machine.system() == 'windows'
 else
     gio_dep = [dependency('gio-2.0'), dependency('gio-unix-2.0')]
 endif
+unwind_dep = dependency('libunwind', required : false)
+
 mathlib = cc.find_library('m', required : false)
 rt_lib = cc.find_library('rt', required : false) # clock_gettime
 

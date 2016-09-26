@@ -1,3 +1,2 @@
 subdir('elements')
-# FIXME: not implemented
-#subdir('tracers')
+subdir('tracers')
