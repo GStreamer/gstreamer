@@ -234,7 +234,6 @@ libs_gstnettimeprovider_LDADD = \
 VALGRIND_TO_FIX = \
 	gst/gstinfo \
 	gst/gsttracerrecord \
-	pipelines/parse-launch \
 	tools/gstinspect
 
 VALGRIND_IGNORE = \

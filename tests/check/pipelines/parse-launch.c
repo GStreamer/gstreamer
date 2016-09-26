@@ -22,11 +22,6 @@
 #  include "config.h"
 #endif
 
-#ifdef HAVE_VALGRIND_H
-# include <valgrind/valgrind.h>
-# include <valgrind/memcheck.h>
-#endif
-
 #include <gst/check/gstcheck.h>
 
 #define GST_TYPE_PARSE_TEST_ELEMENT (gst_parse_test_element_get_type())
@@ -397,19 +392,14 @@ static const gchar *leaking_failures[] = {
   NULL
 };
 
+/* These don't seem to leak any longer? */
 GST_START_TEST (leaking_fail_pipes)
 {
   const gchar **s;
 
   for (s = leaking_failures; *s != NULL; s++) {
-    /* Uncomment if you want to try fixing the leaks */
-#if 0
-    g_print ("Trying pipe: %s\n", *s);
+    GST_INFO ("Trying pipe: %s", *s);
     expected_fail_pipe (*s);
-#endif
-#ifdef HAVE_VALGRIND_H
-    VALGRIND_DO_LEAK_CHECK;
-#endif
   }
 }
 
