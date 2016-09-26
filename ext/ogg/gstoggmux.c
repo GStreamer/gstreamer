@@ -807,6 +807,7 @@ gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
   GstMapInfo map;
   ogg_packet packet;
   gboolean end_clip = TRUE;
+  GstAudioClippingMeta *meta;
 
   /* ensure messing with metadata is ok */
   buf = gst_buffer_make_writable (buf);
@@ -870,6 +871,21 @@ gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
     end_time =
         gst_ogg_stream_granule_to_time (&pad->map,
         pad->next_granule + duration);
+    meta = gst_buffer_get_audio_clipping_meta (buf);
+    if (meta && meta->end) {
+      if (meta->format == GST_FORMAT_DEFAULT) {
+        if (meta->end > duration) {
+          GST_WARNING_OBJECT (pad->collect.pad,
+              "Clip meta tries to clip more sample than exist in the buffer, clipping all");
+          duration = 0;
+        } else {
+          duration -= meta->end;
+        }
+      } else {
+        GST_WARNING_OBJECT (pad->collect.pad,
+            "Unsupported format in clip meta");
+      }
+    }
     if (end_time > pad->segment.stop
         && !GST_CLOCK_TIME_IS_VALID (gst_segment_to_running_time (&pad->segment,
                 GST_FORMAT_TIME, pad->segment.start + end_time))) {
