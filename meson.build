@@ -130,6 +130,7 @@ cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
 cdata.set('GST_LICENSE', '"LGPL"')
 cdata.set('PACKAGE', '"gst-plugins-good"')
 cdata.set('GETTEXT_PACKAGE', '"gst-plugins-good-1.0"')
+cdata.set('PACKAGE_NAME', '"GStreamer Good Plug-ins"')
 cdata.set('GST_PACKAGE_NAME', '"GStreamer Good Plug-ins"')
 cdata.set('GST_PACKAGE_ORIGIN', '"Unknown package origin"') # FIXME: make configurable
 
@@ -149,6 +150,8 @@ gstpbutils_dep = dependency('gstreamer-pbutils-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'pbutils_dep'])
 gstallocators_dep = dependency('gstreamer-allocators-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'allocators_dep'])
+gstapp_dep = dependency('gstreamer-app-1.0', version : gst_req,
+    fallback : ['gst-plugins-base', 'app_dep'])
 gstaudio_dep = dependency('gstreamer-audio-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'audio_dep'])
 gstfft_dep = dependency('gstreamer-fft-1.0', version : gst_req,
@@ -210,10 +213,6 @@ foreach d : deps
     cdata.set(confhname, 1)
   endif
 endforeach
-
-if cc.has_header('valgrind.h')
-  cdata.set('HAVE_VALGRIND', 1)
-endif
 
 gst_plugins_good_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')

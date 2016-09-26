@@ -33,9 +33,12 @@ if vpx_dep.found()
     if cc.links(link_code, args : ['-lvpx'])
       vpx_args += extra_define
       message('libvpx provides @0@ interface (@1@)'.format(f.get(3),f.get(1)))
+      have_vpx_feature = true
     else
       message('libvpx does not provide @0@ interface (@1@)'.format(f.get(3),f.get(1)))
+      have_vpx_feature = false
     endif
+    set_variable('have_' + f.get(3).to_lower().underscorify(), have_vpx_feature)
   endforeach
 
   if vpx_args.length() == 0
