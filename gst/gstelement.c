@@ -3152,8 +3152,11 @@ gst_element_set_context_default (GstElement * element, GstContext * context)
   const gchar *context_type;
   GList *l;
 
-  GST_OBJECT_LOCK (element);
+  g_return_if_fail (GST_IS_CONTEXT (context));
   context_type = gst_context_get_context_type (context);
+  g_return_if_fail (context_type != NULL);
+
+  GST_OBJECT_LOCK (element);
   for (l = element->contexts; l; l = l->next) {
     GstContext *tmp = l->data;
     const gchar *tmp_type = gst_context_get_context_type (tmp);
@@ -3190,6 +3193,7 @@ gst_element_set_context (GstElement * element, GstContext * context)
   GstElementClass *oclass;
 
   g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (GST_IS_CONTEXT (context));
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
