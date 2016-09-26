@@ -1590,8 +1590,10 @@ state_changed_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
       }
 
       check_video_dimensions_changed (self);
-      gst_element_query_duration (self->playbin, GST_FORMAT_TIME, &duration);
-      emit_duration_changed (self, duration);
+      if (gst_element_query_duration (self->playbin, GST_FORMAT_TIME,
+              &duration)) {
+        emit_duration_changed (self, duration);
+      }
     }
 
     if (new_state == GST_STATE_PAUSED
