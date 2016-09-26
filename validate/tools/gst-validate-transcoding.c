@@ -215,7 +215,7 @@ _execute_request_key_unit (GstValidateScenario * scenario,
   iter = gst_bin_iterate_recurse (GST_BIN (encodebin));
   if (!gst_iterator_find_custom (iter,
           (GCompareFunc) _find_video_encoder, &result, NULL)) {
-    g_error ("Could not find any video encode");
+    g_error ("Could not find any video encoder");
 
     goto fail;
   }
@@ -226,7 +226,7 @@ _execute_request_key_unit (GstValidateScenario * scenario,
 
   if (!encoder_srcpad) {
     GST_FIXME ("Implement weird encoder management");
-    g_error ("We do not handle encoder with not static srcpad");
+    g_error ("We do not handle encoders with no static srcpad");
 
     goto fail;
   }
@@ -266,7 +266,7 @@ _execute_request_key_unit (GstValidateScenario * scenario,
     pad = gst_element_get_static_pad (video_encoder, "sink");
     if (!pad) {
       GST_FIXME ("Implement weird encoder management");
-      g_error ("We do not handle encoder with not static sinkpad");
+      g_error ("We do not handle encoders with no static sinkpad");
 
       goto fail;
     }
@@ -286,13 +286,13 @@ _execute_request_key_unit (GstValidateScenario * scenario,
         (GstPadProbeCallback) _check_is_key_unit_cb,
         key_unit_data_ref (info), (GDestroyNotify) key_unit_data_unref);
   } else {
-    g_error ("request keyunit direction %s invalide (should be in"
+    g_error ("request keyunit direction %s invalid (should be in"
         " [downstrean, upstream]", direction);
 
     goto fail;
   }
 
-  gst_validate_printf (action, "Sendings a \"force key unit\" event %s\n",
+  gst_validate_printf (action, "Sending a \"force key unit\" event %s\n",
       direction);
 
   segment_query = gst_query_new_segment (GST_FORMAT_TIME);
@@ -519,7 +519,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
           && state == GST_STATE_NULL) {
         GST_VALIDATE_REPORT (GST_MESSAGE_SRC (message),
             SCENARIO_ACTION_EXECUTION_ISSUE,
-            "Force stopping a transcoding pipeline is not recommanded"
+            "Force stopping a transcoding pipeline is not recommended"
             " you should make sure to finalize it using a EOS event");
 
         gst_validate_printf (pipeline, "State change request NULL, "
