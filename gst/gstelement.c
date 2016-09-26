@@ -3163,7 +3163,7 @@ gst_element_set_context_default (GstElement * element, GstContext * context)
 
     /* Always store newest context but never replace
      * a persistent one by a non-persistent one */
-    if (strcmp (context_type, tmp_type) == 0 &&
+    if (g_strcmp0 (context_type, tmp_type) == 0 &&
         (gst_context_is_persistent (context) ||
             !gst_context_is_persistent (tmp))) {
       gst_context_replace ((GstContext **) & l->data, context);
