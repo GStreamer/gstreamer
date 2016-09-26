@@ -126,7 +126,8 @@ test_defines = [
 ]
 
 getpluginsdir = find_program('getpluginsdir')
-runcmd = run_command(getpluginsdir, 'gstreamer', 'gstreamer-1.0')
+runcmd = run_command(getpluginsdir, 'gstreamer', 'gstreamer-' + api_version,
+        'gst-plugins-base', 'gstreamer-plugins-base-' + api_version)
 if runcmd.returncode() == 0
   other_plugins_dir = runcmd.stdout().strip()
   message('Using GStreamer plug-ins in ' + other_plugins_dir)
