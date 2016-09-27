@@ -127,7 +127,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, "
-        "mpegversion = (int) {2, 4}, "
+        "mpegversion = (int) 4, "
         "rate = (int) { " SAMPLE_RATES " }, "
         "channels = (int) {1, 2, 3, 4, 5, 6, 8}, "
         "stream-format = (string) { adts, adif, raw }, "
@@ -296,11 +296,7 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     return FALSE;
   }
 
-  if (mpegversion == 4) {
-    aot = AOT_AAC_LC;
-  } else {
-    aot = AOT_MP2_AAC_LC;
-  }
+  aot = AOT_AAC_LC;
 
   if ((err = aacEncoder_SetParam (self->enc, AACENC_AOT, aot)) != AACENC_OK) {
     GST_ERROR_OBJECT (self, "Unable to set AOT %d: %d\n", aot, err);
