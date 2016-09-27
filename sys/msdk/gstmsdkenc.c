@@ -165,8 +165,8 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
     thiz->param.mfx.QPB = thiz->qpb;
   }
 
-  thiz->param.mfx.FrameInfo.Width = GST_ROUND_UP_16 (info->width);
-  thiz->param.mfx.FrameInfo.Height = GST_ROUND_UP_16 (info->height);
+  thiz->param.mfx.FrameInfo.Width = GST_ROUND_UP_32 (info->width);
+  thiz->param.mfx.FrameInfo.Height = GST_ROUND_UP_32 (info->height);
   thiz->param.mfx.FrameInfo.CropW = info->width;
   thiz->param.mfx.FrameInfo.CropH = info->height;
   thiz->param.mfx.FrameInfo.FrameRateExtN = info->fps_n;
@@ -224,9 +224,9 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
         sizeof (mfxFrameInfo));
   }
   if (GST_ROUND_UP_32 (info->width) != info->width
-      || GST_ROUND_UP_2 (info->height) != info->height) {
+      || GST_ROUND_UP_32 (info->height) != info->height) {
     guint width = GST_ROUND_UP_32 (info->width);
-    guint height = GST_ROUND_UP_2 (info->height);
+    guint height = GST_ROUND_UP_32 (info->height);
     gsize Y_size = width * height;
     gsize size = Y_size + (Y_size >> 1);
     for (i = 0; i < thiz->num_surfaces; i++) {
