@@ -21,7 +21,6 @@
  */
 
 #include "sysdeps.h"
-#include <gmodule.h>
 #include "gstvaapidisplay_egl.h"
 #include "gstvaapidisplay_egl_priv.h"
 #include "gstvaapiwindow.h"
