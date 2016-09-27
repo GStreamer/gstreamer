@@ -32,9 +32,10 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
+#include <mfxplugin.h>
+#include <mfxvp8.h>
 
 #include "gstmsdkvp8enc.h"
-#include "mfxvp8.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp8enc_debug);
 #define GST_CAT_DEFAULT gst_msdkvp8enc_debug
@@ -108,6 +109,21 @@ static gboolean
 gst_msdkvp8enc_configure (GstMsdkEnc * encoder)
 {
   GstMsdkVP8Enc *thiz = GST_MSDKVP8ENC (encoder);
+  mfxSession session;
+  mfxStatus status;
+
+  if (encoder->hardware) {
+    session = msdk_context_get_session (encoder->context);
+    status = MFXVideoUSER_Load (session, &MFX_PLUGINID_VP8E_HW, 1);
+    if (status < MFX_ERR_NONE) {
+      GST_ERROR_OBJECT (thiz, "Media SDK Plugin load failed (%s)",
+          msdk_status_to_string (status));
+      return FALSE;
+    } else if (status > MFX_ERR_NONE) {
+      GST_WARNING_OBJECT (thiz, "Media SDK Plugin load warning: %s",
+          msdk_status_to_string (status));
+    }
+  }
 
   encoder->param.mfx.CodecId = MFX_CODEC_VP8;
   encoder->param.mfx.CodecProfile = thiz->profile;
