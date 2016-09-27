@@ -1256,12 +1256,8 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
         }
 
         outsize = gst_adapter_available (rtph265depay->adapter);
-        if (outsize > 0) {
+        if (outsize > 0)
           outbuf = gst_adapter_take_buffer (rtph265depay->adapter, outsize);
-          outbuf =
-              gst_rtp_h265_depay_handle_nal (rtph265depay, outbuf, timestamp,
-              marker);
-        }
         break;
       }
       case 49:
