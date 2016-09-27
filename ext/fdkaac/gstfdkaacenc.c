@@ -406,6 +406,12 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     }
   }
 
+  if ((err = aacEncoder_SetParam (self->enc, AACENC_TRANSMUX,
+              transmux)) != AACENC_OK) {
+    GST_ERROR_OBJECT (self, "Unable to set transmux %d: %d", transmux, err);
+    return FALSE;
+  }
+
   if ((err = aacEncoder_SetParam (self->enc, AACENC_BITRATE,
               bitrate)) != AACENC_OK) {
     GST_ERROR_OBJECT (self, "Unable to set bitrate %d: %d", bitrate, err);
