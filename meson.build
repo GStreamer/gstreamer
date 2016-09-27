@@ -249,7 +249,6 @@ if host_machine.system() == 'windows'
 else
     gio_dep = [dependency('gio-2.0'), dependency('gio-unix-2.0')]
 endif
-unwind_dep = dependency('libunwind', required : false)
 
 mathlib = cc.find_library('m', required : false)
 rt_lib = cc.find_library('rt', required : false) # clock_gettime
