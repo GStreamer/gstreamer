@@ -905,8 +905,6 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
   GstMapInfo omap;
   gint outsize;
   GstBuffer *outbuf;
-  GstSegment *segment;
-  GstClockTime duration;
   guint64 trim_start = 0, trim_end = 0;
 
   guint max_payload_size;
@@ -931,26 +929,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
       GST_DEBUG_OBJECT (enc, "draining; adding silence samples");
       g_assert (bsize < bytes);
 
-      /* If encoding part of a frame, and we have no set stop time on
-       * the output segment, we update the segment stop time to reflect
-       * the last sample. This will let oggmux set the last page's
-       * granpos to tell a decoder the dummy samples should be clipped.
-       */
       input_samples = bsize / (enc->n_channels * 2);
-      segment = &GST_AUDIO_ENCODER_OUTPUT_SEGMENT (enc);
-      if (!GST_CLOCK_TIME_IS_VALID (segment->stop)) {
-        GST_DEBUG_OBJECT (enc,
-            "No stop time and partial frame, updating segment");
-        duration =
-            gst_util_uint64_scale_ceil (enc->consumed_samples + input_samples,
-            GST_SECOND, enc->sample_rate);
-        segment->stop = segment->start + duration;
-        GST_DEBUG_OBJECT (enc, "new output segment %" GST_SEGMENT_FORMAT,
-            segment);
-        gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (enc),
-            gst_event_new_segment (segment));
-      }
-
       diff =
           (enc->encoded_samples + frame_samples) - (enc->consumed_samples +
           input_samples);
