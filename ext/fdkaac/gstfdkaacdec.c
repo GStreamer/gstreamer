@@ -210,6 +210,11 @@ gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
   if ((err =
           aacDecoder_DecodeFrame (self->dec, (gint16 *) self->decode_buffer,
               self->decode_buffer_size, flags)) != AAC_DEC_OK) {
+    if (err == AAC_DEC_TRANSPORT_SYNC_ERROR) {
+      ret = GST_FLOW_OK;
+      outbuf = NULL;
+      goto finish;
+    }
     GST_AUDIO_DECODER_ERROR (self, 1, STREAM, DECODE, (NULL),
         ("decoding error: %d", err), ret);
     goto out;
@@ -383,6 +388,7 @@ gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
         GST_AUDIO_INFO_CHANNELS (&info), pos, gst_pos);
   }
 
+finish:
   ret = gst_audio_decoder_finish_frame (dec, outbuf, 1);
 
 out:
