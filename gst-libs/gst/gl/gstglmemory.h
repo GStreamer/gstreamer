@@ -78,6 +78,9 @@ struct _GstGLMemory
   gboolean                  texture_wrapped;
   guint                     unpack_length;
   guint                     tex_width;
+
+  /* <private> */
+  gpointer                  _padding[GST_PADDING];
 };
 
 typedef struct _GstGLVideoAllocationParams GstGLVideoAllocationParams;
@@ -93,6 +96,9 @@ struct _GstGLVideoAllocationParams
   GstVideoAlignment     *valign;
   GstGLTextureTarget     target;
   GstVideoGLTextureType  tex_type;
+
+  /* <private> */
+  gpointer               _padding[GST_PADDING];
 };
 
 gboolean        gst_gl_video_allocation_params_init_full        (GstGLVideoAllocationParams * params,
@@ -165,6 +171,9 @@ void            gst_gl_video_allocation_params_copy_data    (GstGLVideoAllocatio
 struct _GstGLMemoryAllocator
 {
   GstGLBaseMemoryAllocator parent;
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 };
 
 /**
@@ -179,6 +188,9 @@ struct _GstGLMemoryAllocatorClass
   GstGLBaseMemoryAllocatorMapFunction       map;
   GstGLBaseMemoryAllocatorCopyFunction      copy;
   GstGLBaseMemoryAllocatorUnmapFunction     unmap;
+
+  /* <private> */
+  gpointer                                  _padding[GST_PADDING];
 };
 
 #include <gst/gl/gstglbasememory.h>

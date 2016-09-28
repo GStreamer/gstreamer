@@ -52,6 +52,9 @@ struct _GstGLMemoryPBO
 
   /* <private> */
   GstGLBuffer          *pbo;
+
+  /* <private> */
+  gpointer                  _padding[GST_PADDING];
 };
 
 /**
@@ -84,6 +87,9 @@ gboolean      gst_gl_memory_pbo_copy_into_texture       (GstGLMemoryPBO *gl_mem,
 struct _GstGLMemoryPBOAllocator
 {
   GstGLMemoryAllocator parent;
+
+  /* <private> */
+  gpointer             _padding[GST_PADDING];
 };
 
 /**
@@ -94,6 +100,9 @@ struct _GstGLMemoryPBOAllocator
 struct _GstGLMemoryPBOAllocatorClass
 {
   GstGLMemoryAllocatorClass parent_class;
+
+  /* <private> */
+  gpointer                  _padding[GST_PADDING];
 };
 
 G_END_DECLS

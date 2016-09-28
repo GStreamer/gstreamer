@@ -85,6 +85,9 @@ struct _GstGLDisplayClass
   GstObjectClass object_class;
 
   guintptr (*get_handle)      (GstGLDisplay * display);
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 };
 
 GstGLDisplay *gst_gl_display_new (void);

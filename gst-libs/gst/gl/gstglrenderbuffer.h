@@ -69,6 +69,9 @@ struct _GstGLRenderbuffer
 
   /* <protected> */
   gboolean                  renderbuffer_wrapped;
+
+  /* <private> */
+  gpointer                  _padding[GST_PADDING];
 };
 
 /**
@@ -79,6 +82,9 @@ struct _GstGLRenderbuffer
 struct _GstGLRenderbufferAllocator
 {
   GstGLBaseMemoryAllocator parent;
+
+  /* <private> */
+  gpointer                  _padding[GST_PADDING];
 };
 
 /**
@@ -89,6 +95,9 @@ struct _GstGLRenderbufferAllocator
 struct _GstGLRenderbufferAllocatorClass
 {
   GstGLBaseMemoryAllocatorClass             parent_class;
+
+  /* <private> */
+  gpointer                  _padding[GST_PADDING];
 };
 
 #include <gst/gl/gstglbasememory.h>
@@ -100,6 +109,9 @@ typedef struct
   GstVideoGLTextureType renderbuffer_type;
   guint width;
   guint height;
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 } GstGLRenderbufferAllocationParams;
 
 GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_new           (GstGLContext * context,

@@ -112,6 +112,8 @@ struct _GstGLBaseMemory
 
   GDestroyNotify        notify;
   gpointer              user_data;
+
+  gpointer              _padding[GST_PADDING];
 };
 
 typedef struct _GstGLAllocationParams GstGLAllocationParams;
@@ -174,6 +176,9 @@ struct _GstGLAllocationParams
   gpointer                          wrapped_data;
   /* GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE only */
   gpointer                          gl_handle;
+
+  /* <private> */
+  gpointer                          _padding[GST_PADDING];
 };
 
 gboolean                gst_gl_allocation_params_init       (GstGLAllocationParams * params,
@@ -293,6 +298,8 @@ struct _GstGLBaseMemoryAllocator
   /*< private >*/
   GstAllocator parent;
   GstMemoryCopyFunction fallback_mem_copy;
+
+  gpointer _padding[GST_PADDING];
 };
 
 /**
@@ -315,13 +322,16 @@ struct _GstGLBaseMemoryAllocatorClass
 
   GstGLBaseMemoryAllocatorCreateFunction        create;
   GstGLBaseMemoryAllocatorMapFunction           map;
+  GstGLBaseMemoryAllocatorUnmapFunction         unmap;
+  GstGLBaseMemoryAllocatorCopyFunction          copy;
+  GstGLBaseMemoryAllocatorDestroyFunction       destroy;
 #if 0
   GstGLBaseMemoryAllocatorFlushFunction         flush;        /* make CPU writes visible to the GPU */
   GstGLBaseMemoryAllocatorInvalidateFunction    invalidate;   /* make GPU writes visible to the CPU */
 #endif
-  GstGLBaseMemoryAllocatorUnmapFunction         unmap;
-  GstGLBaseMemoryAllocatorCopyFunction          copy;
-  GstGLBaseMemoryAllocatorDestroyFunction       destroy;
+
+  /* <private> */
+  gpointer                                      _padding[GST_PADDING];
 };
 
 #include <gst/gl/gl.h>

@@ -81,6 +81,8 @@ struct _GstGLFilter
   GLuint             vertex_buffer;
   GLint              draw_attr_position_loc;
   GLint              draw_attr_texture_loc;
+
+  gpointer          _padding[GST_PADDING];
 };
 
 /**
@@ -114,6 +116,8 @@ struct _GstGLFilterClass
   /* useful to init and cleanup custom gl resources */
   void (*display_init_cb)       (GstGLFilter *filter);
   void (*display_reset_cb)      (GstGLFilter *filter);
+
+  gpointer                      _padding[GST_PADDING];
 };
 
 gboolean gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,

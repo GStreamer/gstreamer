@@ -51,6 +51,8 @@ struct _GstGLAsyncDebug
   GstGLAsyncDebugLogGetMessage callback;
   gpointer          user_data;
   GDestroyNotify    notify;
+
+  gpointer _padding[GST_PADDING];
 };
 
 GstGLAsyncDebug *   gst_gl_async_debug_new                      (void);

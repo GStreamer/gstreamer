@@ -76,6 +76,9 @@ struct _GstGLColorConvert
 struct _GstGLColorConvertClass
 {
   GstObjectClass object_class;
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 };
 
 /**
