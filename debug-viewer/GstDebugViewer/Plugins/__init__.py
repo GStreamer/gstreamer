@@ -22,7 +22,6 @@
 __all__ = ["_", "_N", "FeatureBase", "PluginBase"]
 
 import os.path
-from gettext import gettext as _
 
 def _N (s): return s
 

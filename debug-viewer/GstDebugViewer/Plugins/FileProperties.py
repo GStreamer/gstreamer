@@ -19,8 +19,11 @@
 
 """GStreamer Debug Viewer file properties plugin."""
 
-from GstDebugViewer.Plugins import *
 import logging
+
+from GstDebugViewer.Plugins import FeatureBase, PluginBase
+
+from gettext import gettext as _
 from gi.repository import Gtk
 
 class FilePropertiesSentinel (object):

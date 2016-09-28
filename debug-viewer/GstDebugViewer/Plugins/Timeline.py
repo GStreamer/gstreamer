@@ -23,8 +23,9 @@ import logging
 
 from GstDebugViewer import Common, Data
 from GstDebugViewer.GUI.colors import LevelColorThemeTango, ThreadColorThemeTango
-from GstDebugViewer.Plugins import *
+from GstDebugViewer.Plugins import FeatureBase, PluginBase
 
+from gettext import gettext as _
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -356,7 +357,7 @@ class VerticalTimelineWidget (Gtk.DrawingArea):
         self.queue_draw ()
 
         return False
-   
+
     def do_get_preferred_width (self):
 
         return 64, 64 # FIXME
@@ -533,7 +534,7 @@ class TimelineWidget (Gtk.DrawingArea):
         ctx.set_source_surface (self.__offscreen)
         ctx.rectangle (rect.x, rect.y, rect.width, rect.height)
         ctx.paint ()
-        
+
         self.__draw_position (ctx, clip = rect)
 
     def update (self, model):

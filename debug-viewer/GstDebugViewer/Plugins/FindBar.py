@@ -22,8 +22,9 @@
 import logging
 
 from GstDebugViewer import Common, Data, GUI
-from GstDebugViewer.Plugins import *
+from GstDebugViewer.Plugins import FeatureBase, PluginBase, _N
 
+from gettext import gettext as _
 from gi.repository import GObject, GLib
 from gi.repository import Gtk
 
