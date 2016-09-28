@@ -750,12 +750,14 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   splitmux->pads = NULL;
   SPLITMUX_SRC_PADS_UNLOCK (splitmux);
 
+  SPLITMUX_SRC_UNLOCK (splitmux);
   for (cur = g_list_first (pads_list); cur != NULL; cur = g_list_next (cur)) {
     SplitMuxSrcPad *tmp = (SplitMuxSrcPad *) (cur->data);
     gst_pad_stop_task (GST_PAD (tmp));
     gst_element_remove_pad (GST_ELEMENT (splitmux), GST_PAD (tmp));
   }
   g_list_free (pads_list);
+  SPLITMUX_SRC_LOCK (splitmux);
 
   g_free (splitmux->parts);
   splitmux->parts = NULL;
