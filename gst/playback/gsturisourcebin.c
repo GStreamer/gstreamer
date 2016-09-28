@@ -1861,16 +1861,15 @@ handle_new_pad (GstURISourceBin * urisrc, GstPad * srcpad, GstCaps * caps)
   urisrc->is_adaptive = IS_ADAPTIVE_MEDIA (media_type);
 
   if (urisrc->is_adaptive) {
-    GstElement *demux_elem;
     GstPad *sinkpad;
     GstPadLinkReturn link_res;
 
-    demux_elem = make_demuxer (urisrc, caps);
-    if (!demux_elem)
+    urisrc->demuxer = make_demuxer (urisrc, caps);
+    if (!urisrc->demuxer)
       goto no_demuxer;
-    gst_bin_add (GST_BIN_CAST (urisrc), demux_elem);
+    gst_bin_add (GST_BIN_CAST (urisrc), urisrc->demuxer);
 
-    sinkpad = gst_element_get_static_pad (demux_elem, "sink");
+    sinkpad = gst_element_get_static_pad (urisrc->demuxer, "sink");
     if (sinkpad == NULL)
       goto no_demuxer_sink;
 
@@ -1880,7 +1879,7 @@ handle_new_pad (GstURISourceBin * urisrc, GstPad * srcpad, GstCaps * caps)
     if (link_res != GST_PAD_LINK_OK)
       goto could_not_link;
 
-    gst_element_sync_state_with_parent (demux_elem);
+    gst_element_sync_state_with_parent (urisrc->demuxer);
   } else {
     OutputSlotInfo *slot;
 
