@@ -131,7 +131,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) { " SAMPLE_RATES " }, "
         "channels = (int) {1, 2, 3, 4, 5, 6, 8}, "
         "stream-format = (string) { adts, adif, raw }, "
-        "base-profile = (string) lc")
+        "base-profile = (string) lc, " "framed = (boolean) true")
     );
 
 GST_DEBUG_CATEGORY_STATIC (gst_fdkaacenc_debug);
@@ -438,6 +438,7 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   src_caps = gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, mpegversion,
       "channels", G_TYPE_INT, GST_AUDIO_INFO_CHANNELS (info),
+      "framed", G_TYPE_BOOLEAN, TRUE,
       "rate", G_TYPE_INT, GST_AUDIO_INFO_RATE (info), NULL);
 
   /* raw */
