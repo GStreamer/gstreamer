@@ -76,6 +76,11 @@ class FeatureBase (object):
 
 
 class PluginBase (object):
+    """
+    All plugins must implement a class called Plugin inheriting from PluginBase.
+    They should place a tuple of features they export into 'features'. Each
+    feature should be a subclass of FeatureBase.
+    """
 
     features = ()
 

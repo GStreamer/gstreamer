@@ -1101,7 +1101,7 @@ class TimelineState (Common.GUI.StateSection):
 
 class Plugin (PluginBase):
 
-    features = [TimelineFeature]
+    features = (TimelineFeature,)
 
     def __init__(self, app):
 

@@ -491,4 +491,4 @@ class FindBarFeature (FeatureBase):
 
 class Plugin (PluginBase):
 
-    features = [FindBarFeature]
+    features = (FindBarFeature,)

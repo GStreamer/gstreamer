@@ -62,4 +62,4 @@ class CategoryColorSentinel (object):
 
 class Plugin (PluginBase):
 
-    features = [ColorizeLevels, ColorizeCategories]
+    features = (ColorizeLevels, ColorizeCategories)
