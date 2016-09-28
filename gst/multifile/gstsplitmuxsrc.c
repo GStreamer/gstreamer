@@ -955,21 +955,23 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
         (GstPad *) (splitpad));
 
     if (splitmux->cur_part != next_part) {
-      GstSegment tmp;
-      /* If moving backward into a new part, set stop
-       * to -1 to ensure we play the entire file - workaround
-       * a bug in qtdemux that misses bits at the end */
-      gst_segment_copy_into (&splitmux->play_segment, &tmp);
-      if (tmp.rate < 0)
-        tmp.stop = -1;
+      if (!gst_splitmux_part_reader_is_active (splitpad->reader)) {
+        GstSegment tmp;
+        /* If moving backward into a new part, set stop
+         * to -1 to ensure we play the entire file - workaround
+         * a bug in qtdemux that misses bits at the end */
+        gst_segment_copy_into (&splitmux->play_segment, &tmp);
+        if (tmp.rate < 0)
+          tmp.stop = -1;
 
-      /* This is the first pad to move to the new part, activate it */
+        /* This is the first pad to move to the new part, activate it */
+        GST_DEBUG_OBJECT (splitpad,
+            "First pad to change part. Activating part %d with seg %"
+            GST_SEGMENT_FORMAT, next_part, &tmp);
+        if (!gst_splitmux_part_reader_activate (splitpad->reader, &tmp))
+          goto error;
+      }
       splitmux->cur_part = next_part;
-      GST_DEBUG_OBJECT (splitpad,
-          "First pad to change part. Activating part %d with seg %"
-          GST_SEGMENT_FORMAT, next_part, &tmp);
-      if (!gst_splitmux_part_reader_activate (splitpad->reader, &tmp))
-        goto error;
     }
     res = TRUE;
   }

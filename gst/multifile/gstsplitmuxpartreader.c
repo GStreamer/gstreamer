@@ -1185,6 +1185,18 @@ gst_splitmux_part_reader_activate (GstSplitMuxPartReader * reader,
   return TRUE;
 }
 
+gboolean
+gst_splitmux_part_reader_is_active (GstSplitMuxPartReader * part)
+{
+  gboolean ret;
+
+  SPLITMUX_PART_LOCK (part);
+  ret = part->active;
+  SPLITMUX_PART_UNLOCK (part);
+
+  return ret;
+}
+
 void
 gst_splitmux_part_reader_deactivate (GstSplitMuxPartReader * reader)
 {
