@@ -28,61 +28,67 @@ from GstDebugViewer import Common
 from GstDebugViewer.GUI.columns import ViewColumnManager
 from GstDebugViewer.GUI.window import Window
 
+
 class AppStateSection (Common.GUI.StateSection):
 
     _name = "state"
 
-    geometry = Common.GUI.StateInt4 ("window-geometry")
-    maximized = Common.GUI.StateBool ("window-maximized")
+    geometry = Common.GUI.StateInt4("window-geometry")
+    maximized = Common.GUI.StateBool("window-maximized")
 
-    column_order = Common.GUI.StateItemList ("column-order", ViewColumnManager)
-    columns_visible = Common.GUI.StateItemList ("columns-visible", ViewColumnManager)
+    column_order = Common.GUI.StateItemList("column-order", ViewColumnManager)
+    columns_visible = Common.GUI.StateItemList(
+        "columns-visible", ViewColumnManager)
 
-    zoom_level = Common.GUI.StateInt ("zoom-level")
+    zoom_level = Common.GUI.StateInt("zoom-level")
+
 
 class AppState (Common.GUI.State):
 
-    def __init__ (self, *a, **kw):
+    def __init__(self, *a, **kw):
 
-        Common.GUI.State.__init__ (self, *a, **kw)
+        Common.GUI.State.__init__(self, *a, **kw)
 
-        self.add_section_class (AppStateSection)
+        self.add_section_class(AppStateSection)
+
 
 class App (object):
 
-    def __init__ (self):
+    def __init__(self):
 
-        self.attach ()
+        self.attach()
 
-    def load_plugins (self):
+    def load_plugins(self):
 
         from GstDebugViewer import Plugins
 
-        plugin_classes = list (Plugins.load ([os.path.dirname (Plugins.__file__)]))
+        plugin_classes = list(
+            Plugins.load([os.path.dirname(Plugins.__file__)]))
         self.plugins = []
         for plugin_class in plugin_classes:
-            plugin = plugin_class (self)
-            self.plugins.append (plugin)
+            plugin = plugin_class(self)
+            self.plugins.append(plugin)
 
-    def iter_plugin_features (self):
+    def iter_plugin_features(self):
 
         for plugin in self.plugins:
             for feature in plugin.features:
                 yield feature
 
-    def attach (self):
+    def attach(self):
 
         config_home = Common.utils.XDG.CONFIG_HOME
 
-        state_filename = os.path.join (config_home, "gst-debug-viewer", "state")
+        state_filename = os.path.join(
+            config_home, "gst-debug-viewer", "state")
 
-        self.state = AppState (state_filename)
+        self.state = AppState(state_filename)
         self.state_section = self.state.sections["state"]
 
-        self.load_plugins ()
+        self.load_plugins()
 
         self.windows = []
-        
+
         # we override expander size because of:
         # https://bugzilla.gnome.org/show_bug.cgi?id=615985
         rcstring = """
@@ -91,39 +97,39 @@ class App (object):
             #GtkTreeView::vertical-separator = 0
             GtkWidget::focus-line-width = 0
         }
-        
+
         widget "*.log_view" style "no-expander-treeview-style"
         """
-        Gtk.rc_parse_string (rcstring)
+        Gtk.rc_parse_string(rcstring)
 
-        self.open_window ()
+        self.open_window()
 
-    def detach (self):
+    def detach(self):
 
         # TODO: If we take over deferred saving from the inspector, specify now
         # = True here!
-        self.state.save ()
+        self.state.save()
 
-    def run (self):
+    def run(self):
 
         try:
-            Common.Main.MainLoopWrapper (Gtk.main, Gtk.main_quit).run ()
+            Common.Main.MainLoopWrapper(Gtk.main, Gtk.main_quit).run()
         except:
             raise
         else:
-            self.detach ()
+            self.detach()
 
-    def open_window (self):
+    def open_window(self):
 
-        self.windows.append (Window (self))
+        self.windows.append(Window(self))
 
-    def close_window (self, window):
+    def close_window(self, window):
 
-        self.windows.remove (window)
+        self.windows.remove(window)
         if not self.windows:
             # GtkTreeView takes some time to go down for large files.  Let's block
             # until the window is hidden:
-            GObject.idle_add (Gtk.main_quit)
-            Gtk.main ()
+            GObject.idle_add(Gtk.main_quit)
+            Gtk.main()
 
-            Gtk.main_quit ()
+            Gtk.main_quit()

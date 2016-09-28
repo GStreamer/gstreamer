@@ -26,19 +26,20 @@ import gi
 
 from GstDebugViewer.GUI.app import App
 
-def main (options):
+
+def main(options):
 
     args = options["args"]
 
-    app = App ()
+    app = App()
 
     # TODO: Once we support more than one window, open one window for each
     # supplied filename.
     window = app.windows[0]
-    if len (args) > 0:
-        window.set_log_file (args[0])
+    if len(args) > 0:
+        window.set_log_file(args[0])
 
-    app.run ()
+    app.run()
 
 if __name__ == "__main__":
-    main ()
+    main()

@@ -68,6 +68,7 @@ def handle_exception(default_return):
 
 
 class GenericTreeModel(GObject.GObject, Gtk.TreeModel):
+
     """A base implementation of a Gtk.TreeModel for python.
 
     The GenericTreeModel eases implementing the Gtk.TreeModel interface in Python.
@@ -118,7 +119,8 @@ class GenericTreeModel(GObject.GObject, Gtk.TreeModel):
             it = stack.popleft()
             if it is not None:
                 yield self.get_user_data(it)
-            children = [self.iter_nth_child(it, i) for i in range(self.iter_n_children(it))]
+            children = [self.iter_nth_child(it, i)
+                        for i in range(self.iter_n_children(it))]
             stack.extendleft(reversed(children))
 
     def invalidate_iter(self, iter):

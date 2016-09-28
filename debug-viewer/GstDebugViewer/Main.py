@@ -27,40 +27,43 @@ Common = GstDebugViewer.Common
 
 GETTEXT_DOMAIN = "gst-debug-viewer"
 
-def main_version ():
+
+def main_version():
 
     from GstDebugViewer import version
 
     print "GStreamer Debug Viewer %s" % (version,)
 
+
 class Paths (Common.Main.PathsProgramBase):
 
     program_name = "gst-debug-viewer"
 
+
 class OptionParser (Common.Main.LogOptionParser):
 
-    def __init__ (self, options):
+    def __init__(self, options):
 
-        Common.Main.LogOptionParser.__init__ (self, options)
+        Common.Main.LogOptionParser.__init__(self, options)
 
         options["main"] = None
         options["args"] = []
 
-        self.add_option ("version", None, _("Display version and exit"))
+        self.add_option("version", None, _("Display version and exit"))
 
-    def get_parameter_string (self):
+    def get_parameter_string(self):
 
         return _("[FILENAME] - Display and analyze GStreamer debug log files")
 
-    def handle_parse_complete (self, remaining_args):
+    def handle_parse_complete(self, remaining_args):
 
         try:
             version = self.options["version"]
         except KeyError:
             pass
         else:
-            main_version ()
-            sys.exit (0)
+            main_version()
+            sys.exit(0)
 
         if self.options["main"] is None:
             from GstDebugViewer import GUI
@@ -68,11 +71,12 @@ class OptionParser (Common.Main.LogOptionParser):
 
         self.options["args"][:] = remaining_args
 
-def main ():
+
+def main():
 
     options = {}
-    parser = OptionParser (options)
+    parser = OptionParser(options)
 
-    Common.Main.main (option_parser = parser,
-                      gettext_domain = GETTEXT_DOMAIN,
-                      paths = Paths)
+    Common.Main.main(option_parser=parser,
+                     gettext_domain=GETTEXT_DOMAIN,
+                     paths=Paths)

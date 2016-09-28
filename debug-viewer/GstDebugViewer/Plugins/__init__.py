@@ -23,56 +23,62 @@ __all__ = ["_", "_N", "FeatureBase", "PluginBase"]
 
 import os.path
 
-def _N (s): return s
 
-def load (paths = ()):
+def _N(s):
+    return s
+
+
+def load(paths=()):
 
     for path in paths:
-        for plugin_module in _load_plugins (path):
+        for plugin_module in _load_plugins(path):
             yield plugin_module.Plugin
 
-def _load_plugins (path):
 
-    import imp, glob
+def _load_plugins(path):
 
-    files = glob.glob (os.path.join (path, "*.py"))
+    import imp
+    import glob
+
+    files = glob.glob(os.path.join(path, "*.py"))
 
     for filename in files:
 
-        name = os.path.basename (os.path.splitext (filename)[0])
+        name = os.path.basename(os.path.splitext(filename)[0])
         if name == "__init__":
             continue
-        fp, pathname, description = imp.find_module (name, [path])
-        module = imp.load_module (name, fp, pathname, description)
+        fp, pathname, description = imp.find_module(name, [path])
+        module = imp.load_module(name, fp, pathname, description)
         yield module
+
 
 class FeatureBase (object):
 
-    def __init__ (self, app):
+    def __init__(self, app):
 
         pass
 
-    def handle_attach_window (self, window):
+    def handle_attach_window(self, window):
 
         pass
 
-    def handle_attach_log_file (self, window, log_file):
+    def handle_attach_log_file(self, window, log_file):
 
         pass
 
-    def handle_detach_log_file (self, window, log_file):
+    def handle_detach_log_file(self, window, log_file):
 
         pass
 
-    def handle_detach_window (self, window):
+    def handle_detach_window(self, window):
 
         pass
+
 
 class PluginBase (object):
 
     features = ()
 
-    def __init__ (self, app):
+    def __init__(self, app):
 
         pass
-

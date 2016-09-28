@@ -26,38 +26,44 @@ from GstDebugViewer.Plugins import FeatureBase, PluginBase
 from gettext import gettext as _
 from gi.repository import Gtk
 
+
 class FilePropertiesSentinel (object):
 
     pass
+
 
 class FilePropertiesDialog (Gtk.Dialog):
 
     pass
 
+
 class FilePropertiesFeature (FeatureBase):
 
-    def __init__ (self, *a, **kw):
+    def __init__(self, *a, **kw):
 
-        self.action_group = Gtk.ActionGroup ("FilePropertiesActions")
-        self.action_group.add_actions ([("show-file-properties", Gtk.STOCK_PROPERTIES,
-                                         _("_Properties"), "<Ctrl>P")])
+        self.action_group = Gtk.ActionGroup("FilePropertiesActions")
+        self.action_group.add_actions(
+            [("show-file-properties", Gtk.STOCK_PROPERTIES,
+              _("_Properties"), "<Ctrl>P")])
 
-    def attach (self, window):
+    def attach(self, window):
 
         ui = window.ui_manager
-        ui.insert_action_group (self.action_group, 0)
+        ui.insert_action_group(self.action_group, 0)
 
-        self.merge_id = ui.new_merge_id ()
-        ui.add_ui (self.merge_id, "/menubar/FileMenu/FileMenuAdditions",
-                   "FileProperties", "show-file-properties",
-                   Gtk.UIManagerItemType.MENUITEM, False)
+        self.merge_id = ui.new_merge_id()
+        ui.add_ui(self.merge_id, "/menubar/FileMenu/FileMenuAdditions",
+                  "FileProperties", "show-file-properties",
+                  Gtk.UIManagerItemType.MENUITEM, False)
 
         handler = self.handle_action_activate
-        self.action_group.get_action ("show-file-properties").connect ("activate", handler)
+        self.action_group.get_action(
+            "show-file-properties").connect("activate", handler)
 
-    def handle_action_activate (self, action):
+    def handle_action_activate(self, action):
 
         pass
+
 
 class Plugin (PluginBase):
 

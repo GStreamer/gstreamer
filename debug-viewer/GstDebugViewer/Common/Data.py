@@ -23,42 +23,46 @@ import gi
 
 from gi.repository import GObject
 
+
 class Dispatcher (object):
 
-    def __call__ (self, iterator):
+    def __call__(self, iterator):
 
-        raise NotImplementedError ("derived classes must override this method")
+        raise NotImplementedError("derived classes must override this method")
 
-    def cancel (self):
+    def cancel(self):
 
         pass
 
+
 class DefaultDispatcher (Dispatcher):
 
-    def __call__ (self, iterator):
+    def __call__(self, iterator):
 
         for x in iterator:
             pass
 
+
 class GSourceDispatcher (Dispatcher):
 
-    def __init__ (self):
+    def __init__(self):
 
-        Dispatcher.__init__ (self)
+        Dispatcher.__init__(self)
 
         self.source_id = None
 
-    def __call__ (self, iterator):
+    def __call__(self, iterator):
 
         if self.source_id is not None:
-            GObject.source_remove (self.source_id)
+            GObject.source_remove(self.source_id)
 
-        self.source_id = GObject.idle_add (iterator.next, priority = GObject.PRIORITY_LOW)
+        self.source_id = GObject.idle_add(
+            iterator.next, priority=GObject.PRIORITY_LOW)
 
-    def cancel (self):
+    def cancel(self):
 
         if self.source_id is None:
             return
 
-        GObject.source_remove (self.source_id)
+        GObject.source_remove(self.source_id)
         self.source_id = None
