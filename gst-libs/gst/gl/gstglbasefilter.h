@@ -58,7 +58,7 @@ struct _GstGLBaseFilter
   GstCaps           *out_caps;
 
   /* <private> */
-  gpointer _padding[GST_PADDING];
+  gpointer           _padding[GST_PADDING];
 
   GstGLBaseFilterPrivate *priv;
 };

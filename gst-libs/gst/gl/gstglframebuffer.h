@@ -49,11 +49,13 @@ struct _GstGLFramebuffer
 {
   GstObject             object;
 
-  /* <private> */
   GstGLContext *context;
 
+  /* <private> */
   guint fbo_id;
   GArray *attachments;
+
+  gpointer          _padding[GST_PADDING];
 
   GstGLFramebufferPrivate  *priv;
 };
@@ -61,6 +63,8 @@ struct _GstGLFramebuffer
 struct _GstGLFramebufferClass
 {
   GstObjectClass object_class;
+
+  gpointer          _padding[GST_PADDING];
 };
 
 GstGLFramebuffer *      gst_gl_framebuffer_new                      (GstGLContext *context);

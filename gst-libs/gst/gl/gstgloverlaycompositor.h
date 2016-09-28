@@ -43,7 +43,10 @@ GType gst_gl_overlay_compositor_get_type (void);
 struct _GstGLOverlayCompositor
 {
   GstObject parent;
+
   GstGLContext *context;
+
+  /* <private> */
   guint last_window_width;
   guint last_window_height;
 
@@ -52,6 +55,8 @@ struct _GstGLOverlayCompositor
   GstGLShader *shader;
   GLint  position_attrib;
   GLint  texcoord_attrib;
+
+  gpointer _padding[GST_PADDING];
 };
 
 /**
@@ -61,6 +66,9 @@ struct _GstGLOverlayCompositor
 struct _GstGLOverlayCompositorClass
 {
   GstObjectClass object_class;
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 };
 
 GstGLOverlayCompositor *gst_gl_overlay_compositor_new (GstGLContext * context);

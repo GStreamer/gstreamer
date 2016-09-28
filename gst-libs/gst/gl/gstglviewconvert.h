@@ -70,12 +70,18 @@ struct _GstGLViewConvert
 
   GstGLFramebuffer *fbo;
 
+  /* <private> */
   GstGLViewConvertPrivate *priv;
+
+  gpointer _padding[GST_PADDING];
 };
 
 struct _GstGLViewConvertClass
 {
   GstObjectClass object_class;
+
+  /* <private> */
+  gpointer                  _padding[GST_PADDING];
 };
 
 GType gst_gl_view_convert_get_type (void);

@@ -59,11 +59,11 @@ typedef enum
  */
 struct _GstGLUpload
 {
-  /* <private> */
   GstObject        parent;
 
   GstGLContext    *context;
 
+  /* <private> */
   GstGLUploadPrivate *priv;
 
   gpointer _reserved[GST_PADDING];
@@ -77,6 +77,9 @@ struct _GstGLUpload
 struct _GstGLUploadClass
 {
   GstObjectClass object_class;
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 };
 
 GstCaps *     gst_gl_upload_get_input_template_caps (void);

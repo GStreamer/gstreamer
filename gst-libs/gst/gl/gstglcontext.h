@@ -69,7 +69,6 @@ typedef enum
  * Opaque #GstGLContext object
  */
 struct _GstGLContext {
-  /*< private >*/
   GstObject parent;
 
   GstGLDisplay *display;
@@ -77,9 +76,10 @@ struct _GstGLContext {
 
   GstGLFuncs *gl_vtable;
 
-  gpointer _reserved[GST_PADDING];
-
+  /*< private >*/
   GstGLContextPrivate *priv;
+
+  gpointer _reserved[GST_PADDING];
 };
 
 /**

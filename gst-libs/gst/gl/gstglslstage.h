@@ -39,11 +39,11 @@ G_BEGIN_DECLS
  */
 struct _GstGLSLStage
 {
-  /*< private >*/
   GstObject parent;
 
   GstGLContext *context;
 
+  /*< private >*/
   GstGLSLStagePrivate *priv;
 
   gpointer _padding[GST_PADDING];
@@ -56,8 +56,10 @@ struct _GstGLSLStage
  */
 struct _GstGLSLStageClass
 {
-  /*< private >*/
   GstObjectClass parent;
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 };
 
 GType          gst_glsl_stage_get_type          (void);

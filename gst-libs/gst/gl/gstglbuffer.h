@@ -74,6 +74,9 @@ struct _GstGLBufferAllocationParams
 
   guint                     gl_target;
   guint                     gl_usage;
+
+  /* <private> */
+  gpointer                  _padding[GST_PADDING];
 };
 
 GstGLBufferAllocationParams *   gst_gl_buffer_allocation_params_new     (GstGLContext * context,
@@ -90,6 +93,9 @@ GstGLBufferAllocationParams *   gst_gl_buffer_allocation_params_new     (GstGLCo
 struct _GstGLBufferAllocator
 {
   GstGLBaseMemoryAllocator parent;
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 };
 
 /**
@@ -100,6 +106,9 @@ struct _GstGLBufferAllocator
 struct _GstGLBufferAllocatorClass
 {
   GstGLBaseMemoryAllocatorClass parent_class;
+
+  /* <private> */
+  gpointer _padding[GST_PADDING];
 };
 
 #define GST_CAPS_FEATURE_MEMORY_GL_BUFFER "memory:GLBuffer"
