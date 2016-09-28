@@ -945,6 +945,28 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
   if (gst_splitmux_part_is_eos (splitmux->parts[splitpad->cur_part]))
     gst_splitmux_part_reader_deactivate (splitmux->parts[cur_part]);
 
+  if (splitmux->play_segment.rate >= 0.0) {
+    if (splitmux->play_segment.stop != -1) {
+      GstClockTime part_end =
+          gst_splitmux_part_reader_get_end_offset (splitmux->parts[cur_part]);
+      if (part_end >= splitmux->play_segment.stop) {
+        GST_DEBUG_OBJECT (splitmux,
+            "Stop position was within that part. Finishing");
+        next_part = -1;
+      }
+    }
+  } else {
+    if (splitmux->play_segment.start != -1) {
+      GstClockTime part_start =
+          gst_splitmux_part_reader_get_start_offset (splitmux->parts[cur_part]);
+      if (part_start >= splitmux->play_segment.start) {
+        GST_DEBUG_OBJECT (splitmux,
+            "Start position was within that part. Finishing");
+        next_part = -1;
+      }
+    }
+  }
+
   if (next_part != -1) {
     GST_DEBUG_OBJECT (splitmux, "At EOS on pad %" GST_PTR_FORMAT
         " moving to part %d", splitpad, next_part);
