@@ -82,8 +82,12 @@ nodist_libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio-enumtypes.h
 
 noinst_HEADERS = \
-	gstaudioutilsprivate.h \
-	audio-resampler-x86.h \
+	gstaudioutilsprivate.h 		\
+	audio-resampler-private.h 	\
+	audio-resampler-macros.h 	\
+	audio-resampler-x86.h 		\
+	audio-resampler-x86-sse.h	\
+	audio-resampler-x86-sse2.h	\
 	audio-resampler-neon.h
 
 libgstaudio_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
@@ -92,6 +96,50 @@ libgstaudio_@GST_API_VERSION@_la_LIBADD = \
   $(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
   $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(ORC_LIBS)
 libgstaudio_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+
+
+# Arch-specific bits
+
+noinst_LTLIBRARIES =
+
+if HAVE_X86
+# Don't use full GST_LT_LDFLAGS in LDFLAGS because we get things like
+# -version-info that cause a warning on private libs
+
+noinst_LTLIBRARIES += libaudio_resampler_sse.la
+libaudio_resampler_sse_la_SOURCES = audio-resampler-x86-sse.c
+libaudio_resampler_sse_la_CFLAGS = \
+	$(libgstaudio_@GST_API_VERSION@_la_CFLAGS) \
+	$(SSE_CFLAGS)
+libaudio_resampler_sse_la_LDFLAGS = \
+	$(GST_LIB_LDFLAGS) \
+	$(GST_ALL_LDFLAGS)
+libgstaudio_@GST_API_VERSION@_la_LIBADD += libaudio_resampler_sse.la
+
+noinst_LTLIBRARIES += libaudio_resampler_sse2.la
+libaudio_resampler_sse2_la_SOURCES = audio-resampler-x86-sse2.c
+libaudio_resampler_sse2_la_CFLAGS = \
+	$(libgstaudio_@GST_API_VERSION@_la_CFLAGS) \
+	$(SSE2_CFLAGS)
+libaudio_resampler_sse2_la_LDFLAGS = \
+	$(GST_LIB_LDFLAGS) \
+	$(GST_ALL_LDFLAGS)
+libgstaudio_@GST_API_VERSION@_la_LIBADD += libaudio_resampler_sse2.la
+
+noinst_LTLIBRARIES += libaudio_resampler_sse41.la
+libaudio_resampler_sse41_la_SOURCES = audio-resampler-x86-sse41.c
+libaudio_resampler_sse41_la_CFLAGS = \
+	$(libgstaudio_@GST_API_VERSION@_la_CFLAGS) \
+	$(SSE41_CFLAGS)
+libaudio_resampler_sse41_la_LDFLAGS = \
+	$(GST_LIB_LDFLAGS) \
+	$(GST_ALL_LDFLAGS)
+libgstaudio_@GST_API_VERSION@_la_LIBADD += libaudio_resampler_sse41.la
+
+endif
+
+
+# Introspection
 
 include $(top_srcdir)/common/gst-glib-gen.mak
 

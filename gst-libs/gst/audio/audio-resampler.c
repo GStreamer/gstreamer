@@ -30,98 +30,12 @@
 #endif
 
 #include "audio-resampler.h"
-
-/* Contains a collection of all things found in other resamplers:
- * speex (filter construction, optimizations), ffmpeg (fixed phase filter, blackman filter),
- * SRC (linear interpolation, fixed precomputed tables),...
- *
- *  Supports:
- *   - S16, S32, F32 and F64 formats
- *   - nearest, linear and cubic interpolation
- *   - sinc based interpolation with kaiser or blackman-nutall windows
- *   - fully configurable kaiser parameters
- *   - dynamic linear or cubic interpolation of filter table, this can
- *     use less memory but more CPU
- *   - full filter table, generated from optionally linear or cubic
- *     interpolation of filter table
- *   - fixed filter table size with nearest neighbour phase, optionally
- *     using a precomputed tables
- *   - dynamic samplerate changes
- *   - x86 and neon optimizations
- */
-typedef void (*ConvertTapsFunc) (gdouble * tmp_taps, gpointer taps,
-    gdouble weight, gint n_taps);
-typedef void (*InterpolateFunc) (gpointer o, const gpointer a, gint len,
-    const gpointer icoeff, gint astride);
-typedef void (*ResampleFunc) (GstAudioResampler * resampler, gpointer in[],
-    gsize in_len, gpointer out[], gsize out_len, gsize * consumed);
-typedef void (*DeinterleaveFunc) (GstAudioResampler * resampler,
-    gpointer * sbuf, gpointer in[], gsize in_frames);
+#include "audio-resampler-private.h"
+#include "audio-resampler-macros.h"
 
 #define MEM_ALIGN(m,a) ((gint8 *)((guintptr)((gint8 *)(m) + ((a)-1)) & ~((a)-1)))
 #define ALIGN 16
 #define TAPS_OVERREAD 16
-
-struct _GstAudioResampler
-{
-  GstAudioResamplerMethod method;
-  GstAudioResamplerFlags flags;
-  GstAudioFormat format;
-  GstStructure *options;
-  gint format_index;
-  gint channels;
-  gint in_rate;
-  gint out_rate;
-
-  gint bps;
-  gint ostride;
-
-  GstAudioResamplerFilterMode filter_mode;
-  guint filter_threshold;
-  GstAudioResamplerFilterInterpolation filter_interpolation;
-
-  gdouble cutoff;
-  gdouble kaiser_beta;
-  /* for cubic */
-  gdouble b, c;
-
-  /* temp taps */
-  gpointer tmp_taps;
-
-  /* oversampled main filter table */
-  gint oversample;
-  gint n_taps;
-  gpointer taps;
-  gpointer taps_mem;
-  gsize taps_stride;
-  gint n_phases;
-  gint alloc_taps;
-  gint alloc_phases;
-
-  /* cached taps */
-  gpointer *cached_phases;
-  gpointer cached_taps;
-  gpointer cached_taps_mem;
-  gsize cached_taps_stride;
-
-  ConvertTapsFunc convert_taps;
-  InterpolateFunc interpolate;
-  DeinterleaveFunc deinterleave;
-  ResampleFunc resample;
-
-  gint blocks;
-  gint inc;
-  gint samp_inc;
-  gint samp_frac;
-  gint samp_index;
-  gint samp_phase;
-  gint skip;
-
-  gpointer samples;
-  gsize samples_len;
-  gsize samples_avail;
-  gpointer *sbuf;
-};
 
 GST_DEBUG_CATEGORY_STATIC (audio_resampler_debug);
 #define GST_CAT_DEFAULT audio_resampler_debug
@@ -302,9 +216,6 @@ get_kaiser_tap (gdouble x, gint n_taps, gdouble Fc, gdouble beta)
   w = 2.0 * x / n_taps;
   return s * bessel (beta * sqrt (MAX (1 - w * w, 0)));
 }
-
-#define PRECISION_S16 15
-#define PRECISION_S32 31
 
 #define MAKE_CONVERT_TAPS_INT_FUNC(type, precision)                     \
 static void                                                             \
@@ -593,9 +504,7 @@ GET_TAPS_NEAREST_FUNC (gdouble);
 #define get_taps_gdouble_nearest get_taps_gdouble_nearest
 
 #define GET_TAPS_FULL_FUNC(type)                                                \
-static inline gpointer                                                          \
-get_taps_##type##_full (GstAudioResampler * resampler,                          \
-    gint *samp_index, gint *samp_phase, type icoeff[4])                         \
+DECL_GET_TAPS_FULL_FUNC(type)                                                   \
 {                                                                               \
   gpointer res;                                                                 \
   gint out_rate = resampler->out_rate;                                          \
@@ -659,9 +568,7 @@ GET_TAPS_FULL_FUNC (gfloat);
 GET_TAPS_FULL_FUNC (gdouble);
 
 #define GET_TAPS_INTERPOLATE_FUNC(type,inter)                   \
-static inline gpointer                                          \
-get_taps_##type##_##inter (GstAudioResampler * resampler,       \
-    gint *samp_index, gint *samp_phase, type icoeff[4])         \
+DECL_GET_TAPS_INTERPOLATE_FUNC (type, inter)                    \
 {                                                               \
   gpointer res;                                                 \
   gint out_rate = resampler->out_rate;                          \
@@ -852,67 +759,25 @@ inner_product_##type##_cubic_1_c (type * o, const type * a,     \
 INNER_PRODUCT_FLOAT_CUBIC_FUNC (gfloat);
 INNER_PRODUCT_FLOAT_CUBIC_FUNC (gdouble);
 
-#define MAKE_RESAMPLE_FUNC(type,inter,channels,arch)                            \
-static void                                                                     \
-resample_ ##type## _ ##inter## _ ##channels## _ ##arch (GstAudioResampler * resampler,      \
-    gpointer in[], gsize in_len,  gpointer out[], gsize out_len,                \
-    gsize * consumed)                                                           \
-{                                                                               \
-  gint c, di = 0;                                                               \
-  gint n_taps = resampler->n_taps;                                              \
-  gint blocks = resampler->blocks;                                              \
-  gint ostride = resampler->ostride;                                            \
-  gint taps_stride = resampler->taps_stride;                                    \
-  gint samp_index = 0;                                                          \
-  gint samp_phase = 0;                                                          \
-                                                                                \
-  for (c = 0; c < blocks; c++) {                                                \
-    type *ip = in[c];                                                           \
-    type *op = ostride == 1 ? out[c] : (type *)out[0] + c;                      \
-                                                                                \
-    samp_index = resampler->samp_index;                                         \
-    samp_phase = resampler->samp_phase;                                         \
-                                                                                \
-    for (di = 0; di < out_len; di++) {                                          \
-      type *ipp, icoeff[4], *taps;                                              \
-                                                                                \
-      ipp = &ip[samp_index * channels];                                         \
-                                                                                \
-      taps = get_taps_ ##type##_##inter                                         \
-              (resampler, &samp_index, &samp_phase, icoeff);                    \
-      inner_product_ ##type##_##inter##_##channels##_##arch                     \
-              (op, ipp, taps, n_taps, icoeff, taps_stride);                     \
-      op += ostride;                                                            \
-    }                                                                           \
-    if (in_len > samp_index)                                                    \
-      memmove (ip, &ip[samp_index * channels],                                  \
-          (in_len - samp_index) * sizeof(type) * channels);                     \
-  }                                                                             \
-  *consumed = samp_index - resampler->samp_index;                               \
-                                                                                \
-  resampler->samp_index = 0;                                                    \
-  resampler->samp_phase = samp_phase;                                           \
-}
+MAKE_RESAMPLE_FUNC_STATIC (gint16, nearest, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gint32, nearest, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gfloat, nearest, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gdouble, nearest, 1, c);
 
-MAKE_RESAMPLE_FUNC (gint16, nearest, 1, c);
-MAKE_RESAMPLE_FUNC (gint32, nearest, 1, c);
-MAKE_RESAMPLE_FUNC (gfloat, nearest, 1, c);
-MAKE_RESAMPLE_FUNC (gdouble, nearest, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gint16, full, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gint32, full, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gfloat, full, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gdouble, full, 1, c);
 
-MAKE_RESAMPLE_FUNC (gint16, full, 1, c);
-MAKE_RESAMPLE_FUNC (gint32, full, 1, c);
-MAKE_RESAMPLE_FUNC (gfloat, full, 1, c);
-MAKE_RESAMPLE_FUNC (gdouble, full, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gint16, linear, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gint32, linear, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gfloat, linear, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gdouble, linear, 1, c);
 
-MAKE_RESAMPLE_FUNC (gint16, linear, 1, c);
-MAKE_RESAMPLE_FUNC (gint32, linear, 1, c);
-MAKE_RESAMPLE_FUNC (gfloat, linear, 1, c);
-MAKE_RESAMPLE_FUNC (gdouble, linear, 1, c);
-
-MAKE_RESAMPLE_FUNC (gint16, cubic, 1, c);
-MAKE_RESAMPLE_FUNC (gint32, cubic, 1, c);
-MAKE_RESAMPLE_FUNC (gfloat, cubic, 1, c);
-MAKE_RESAMPLE_FUNC (gdouble, cubic, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gint16, cubic, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gint32, cubic, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gfloat, cubic, 1, c);
+MAKE_RESAMPLE_FUNC_STATIC (gdouble, cubic, 1, c);
 
 static ResampleFunc resample_funcs[] = {
   resample_gint16_nearest_1_c,

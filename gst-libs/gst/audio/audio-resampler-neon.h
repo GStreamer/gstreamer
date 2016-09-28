@@ -650,17 +650,17 @@ interpolate_gfloat_cubic_neon (gpointer op, const gpointer ap,
                     "q10", "q11", "q12", "q13", "q14", "q15", "memory");
 }
 
-MAKE_RESAMPLE_FUNC (gint16, full, 1, neon);
-MAKE_RESAMPLE_FUNC (gint16, linear, 1, neon);
-MAKE_RESAMPLE_FUNC (gint16, cubic, 1, neon);
+MAKE_RESAMPLE_FUNC_STATIC (gint16, full, 1, neon);
+MAKE_RESAMPLE_FUNC_STATIC (gint16, linear, 1, neon);
+MAKE_RESAMPLE_FUNC_STATIC (gint16, cubic, 1, neon);
 
-MAKE_RESAMPLE_FUNC (gint32, full, 1, neon);
-MAKE_RESAMPLE_FUNC (gint32, linear, 1, neon);
-MAKE_RESAMPLE_FUNC (gint32, cubic, 1, neon);
+MAKE_RESAMPLE_FUNC_STATIC (gint32, full, 1, neon);
+MAKE_RESAMPLE_FUNC_STATIC (gint32, linear, 1, neon);
+MAKE_RESAMPLE_FUNC_STATIC (gint32, cubic, 1, neon);
 
-MAKE_RESAMPLE_FUNC (gfloat, full, 1, neon);
-MAKE_RESAMPLE_FUNC (gfloat, linear, 1, neon);
-MAKE_RESAMPLE_FUNC (gfloat, cubic, 1, neon);
+MAKE_RESAMPLE_FUNC_STATIC (gfloat, full, 1, neon);
+MAKE_RESAMPLE_FUNC_STATIC (gfloat, linear, 1, neon);
+MAKE_RESAMPLE_FUNC_STATIC (gfloat, cubic, 1, neon);
 
 static void
 audio_resampler_check_neon (const gchar *option)
