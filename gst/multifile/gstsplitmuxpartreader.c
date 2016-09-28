@@ -994,7 +994,6 @@ gst_splitmux_part_reader_src_query (GstSplitMuxPartReader * part,
     return FALSE;
 
   ret = gst_pad_peer_query (target, query);
-  gst_object_unref (GST_OBJECT_CAST (target));
 
   if (ret == FALSE)
     goto out;
