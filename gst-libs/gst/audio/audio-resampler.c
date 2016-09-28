@@ -1450,7 +1450,6 @@ gst_audio_resampler_options_set_quality (GstAudioResamplerMethod method,
 
 /**
  * gst_audio_resampler_new:
- * @resampler: a #GstAudioResampler
  * @method: a #GstAudioResamplerMethod
  * @flags: #GstAudioResamplerFlags
  * @in_rate: input rate
@@ -1459,7 +1458,7 @@ gst_audio_resampler_options_set_quality (GstAudioResamplerMethod method,
  *
  * Make a new resampler.
  *
- * Returns: %TRUE on success
+ * Returns: (skip) (transfer full): %TRUE on success
  */
 GstAudioResampler *
 gst_audio_resampler_new (GstAudioResamplerMethod method,
