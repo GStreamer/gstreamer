@@ -4056,11 +4056,8 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
   if (ext_atoms_list)
     ste->extension_atoms = g_list_concat (ste->extension_atoms, ext_atoms_list);
 
-  /* QT spec has a pasp extension atom in stsd that can hold PAR */
-  if (context->flavor == ATOMS_TREE_FLAVOR_MOV) {
-    ste->extension_atoms = g_list_append (ste->extension_atoms,
-        build_pasp_extension (par_n, par_d));
-  }
+  ste->extension_atoms = g_list_append (ste->extension_atoms,
+      build_pasp_extension (par_n, par_d));
 
   return ste;
 }
