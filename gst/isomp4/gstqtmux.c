@@ -3302,13 +3302,15 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     sync = TRUE;
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (last_buf))) {
+  if (!GST_BUFFER_PTS_IS_VALID (last_buf))
+    goto no_pts;
+
+  if (GST_BUFFER_DTS_IS_VALID (last_buf)) {
     last_dts = gst_util_uint64_scale_round (GST_BUFFER_DTS (last_buf),
         atom_trak_get_timescale (pad->trak), GST_SECOND);
     pts_offset =
         (gint64) (gst_util_uint64_scale_round (GST_BUFFER_PTS (last_buf),
             atom_trak_get_timescale (pad->trak), GST_SECOND) - last_dts);
-
   } else {
     pts_offset = 0;
     last_dts = gst_util_uint64_scale_round (GST_BUFFER_PTS (last_buf),
@@ -3386,6 +3388,11 @@ fragmented_sample:
   {
     GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
         ("Audio buffer contains fragmented sample."));
+    goto bail;
+  }
+no_pts:
+  {
+    GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL), ("Buffer has no PTS."));
     goto bail;
   }
 not_negotiated:
