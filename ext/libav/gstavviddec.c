@@ -1037,16 +1037,16 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
     out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
   switch (context->chroma_sample_location) {
-    case 1:
+    case AVCHROMA_LOC_LEFT:
       out_info->chroma_site = GST_VIDEO_CHROMA_SITE_MPEG2;
       break;
-    case 2:
+    case AVCHROMA_LOC_CENTER:
       out_info->chroma_site = GST_VIDEO_CHROMA_SITE_JPEG;
       break;
-    case 3:
+    case AVCHROMA_LOC_TOPLEFT:
       out_info->chroma_site = GST_VIDEO_CHROMA_SITE_DV;
       break;
-    case 4:
+    case AVCHROMA_LOC_TOP:
       out_info->chroma_site = GST_VIDEO_CHROMA_SITE_V_COSITED;
       break;
     default:
