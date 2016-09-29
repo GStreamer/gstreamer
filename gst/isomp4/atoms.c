@@ -3919,7 +3919,7 @@ build_pasp_extension (gint par_width, gint par_height)
 }
 
 AtomInfo *
-build_fiel_extension_prores (const gchar * interlace_mode, gboolean tff)
+build_fiel_extension (GstVideoInterlaceMode mode, GstVideoFieldOrder order)
 {
   AtomData *atom_data = atom_data_new (FOURCC_fiel);
   guint8 *data;
@@ -3929,17 +3929,15 @@ build_fiel_extension_prores (const gchar * interlace_mode, gboolean tff)
   atom_data_alloc_mem (atom_data, 2);
   data = atom_data->data;
 
-  if (!g_strcmp0 (interlace_mode, "progressive")) {
+  if (mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
     interlace = 1;
     field_order = 0;
-  } else {
+  } else if (mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED) {
     interlace = 2;
-    if (!g_strcmp0 (interlace_mode, "interleaved"))
-      field_order = tff ? 9 : 14;
-    else if (!g_strcmp0 (interlace_mode, "mixed"))
-      field_order = tff ? 1 : 6;
-    else
-      g_assert_not_reached ();
+    field_order = order == GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST ? 9 : 14;
+  } else {
+    interlace = 0;
+    field_order = 0;
   }
 
   GST_WRITE_UINT8 (data, interlace);
@@ -4878,22 +4876,6 @@ build_mov_alac_extension (const GstBuffer * codec_data)
   alac = build_codec_data_extension (FOURCC_alac, codec_data);
 
   return build_mov_wave_extension (FOURCC_alac, NULL, alac, TRUE);
-}
-
-AtomInfo *
-build_fiel_extension (gint fields)
-{
-  AtomData *atom_data;
-  guint8 f = fields;
-
-  if (fields == 1) {
-    return NULL;
-  }
-
-  atom_data = atom_data_new_from_data (FOURCC_fiel, &f, 1);
-
-  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
-      atom_data_free);
 }
 
 AtomInfo *

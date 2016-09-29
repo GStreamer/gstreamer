@@ -4196,14 +4196,12 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     const GValue *cmap_array;
     const GValue *cdef_array;
     gint ncomp = 0;
-    gint fields = 1;
 
     if (strcmp (mimetype, "image/x-jpc") == 0) {
       qtpad->prepare_buf_func = gst_qt_mux_prepare_jpc_buffer;
     }
 
     gst_structure_get_int (structure, "num-components", &ncomp);
-    gst_structure_get_int (structure, "fields", &fields);
     cmap_array = gst_structure_get_value (structure, "component-map");
     cdef_array = gst_structure_get_value (structure, "channel-definitions");
 
@@ -4217,10 +4215,6 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
             build_jp2h_extension (width, height, colorspace, ncomp, cmap_array,
                 cdef_array)) != NULL) {
       ext_atom_list = g_list_append (ext_atom_list, ext_atom);
-
-      ext_atom = build_fiel_extension (fields);
-      if (ext_atom)
-        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
 
       ext_atom = build_jp2x_extension (codec_data);
       if (ext_atom)
@@ -4247,13 +4241,10 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   } else if (strcmp (mimetype, "video/x-prores") == 0) {
     const gchar *variant;
     const gchar *colorimetry_str;
-    const gchar *interlace_mode;
-    gboolean tff = TRUE;
     GstVideoColorimetry colorimetry;
 
     variant = gst_structure_get_string (structure, "variant");
     colorimetry_str = gst_structure_get_string (structure, "colorimetry");
-    interlace_mode = gst_structure_get_string (structure, "interlace-mode");
     if (!variant || !g_strcmp0 (variant, "standard"))
       entry.fourcc = FOURCC_apcn;
     else if (!g_strcmp0 (variant, "lt"))
@@ -4262,21 +4253,12 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       entry.fourcc = FOURCC_apch;
     else if (!g_strcmp0 (variant, "proxy"))
       entry.fourcc = FOURCC_apco;
-    if (!g_strcmp0 (interlace_mode, "interleaved") ||
-        !g_strcmp0 (interlace_mode, "mixed")) {
-      /* Assume top-fields-first if unspecified */
-      gst_structure_get_boolean (structure, "top-field-first", &tff);
-    }
 
     if (gst_video_colorimetry_from_string (&colorimetry, colorimetry_str)) {
       ext_atom = build_colr_extension (colorimetry);
       if (ext_atom)
         ext_atom_list = g_list_append (ext_atom_list, ext_atom);
     }
-
-    ext_atom = build_fiel_extension_prores (interlace_mode, tff);
-    if (ext_atom)
-      ext_atom_list = g_list_append (ext_atom_list, ext_atom);
 
     if (colorimetry_str == NULL) {
       /* TODO: Maybe implement better heuristics */
@@ -4289,6 +4271,42 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
 
   if (!entry.fourcc)
     goto refuse_caps;
+
+  if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT
+      || strcmp (mimetype, "image/x-j2c") == 0
+      || strcmp (mimetype, "image/x-jpc") == 0) {
+    const gchar *s;
+    GstVideoInterlaceMode interlace_mode;
+    GstVideoFieldOrder field_order;
+    gint fields = -1;
+
+    if (strcmp (mimetype, "image/x-j2c") == 0 ||
+        strcmp (mimetype, "image/x-jpc") == 0) {
+
+      fields = 1;
+      gst_structure_get_int (structure, "fields", &fields);
+    }
+
+    s = gst_structure_get_string (structure, "interlace-mode");
+    if (s)
+      interlace_mode = gst_video_interlace_mode_from_string (s);
+    else
+      interlace_mode =
+          (fields <=
+          1) ? GST_VIDEO_INTERLACE_MODE_PROGRESSIVE :
+          GST_VIDEO_INTERLACE_MODE_MIXED;
+
+    field_order = GST_VIDEO_FIELD_ORDER_UNKNOWN;
+    if (interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED) {
+      s = gst_structure_get_string (structure, "field-order");
+      if (s)
+        field_order = gst_video_field_order_from_string (s);
+    }
+
+    ext_atom = build_fiel_extension (interlace_mode, field_order);
+    if (ext_atom)
+      ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+  }
 
   /* ok, set the pad info accordingly */
   qtpad->fourcc = entry.fourcc;

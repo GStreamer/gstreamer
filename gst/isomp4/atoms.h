@@ -1043,8 +1043,7 @@ AtomInfo *   build_jp2h_extension        (gint width, gint height, const gchar *
                                           const GValue * cdef_array);
 
 AtomInfo *   build_jp2x_extension        (const GstBuffer * prefix);
-AtomInfo *   build_fiel_extension        (gint fields);
-AtomInfo *   build_fiel_extension_prores (const gchar * interlace_mode, gboolean tff);
+AtomInfo *   build_fiel_extension        (GstVideoInterlaceMode mode, GstVideoFieldOrder order);
 AtomInfo *   build_colr_extension        (GstVideoColorimetry colorimetry);
 AtomInfo *   build_ac3_extension         (guint8 fscod, guint8 bsid,
                                           guint8 bsmod, guint8 acmod,
