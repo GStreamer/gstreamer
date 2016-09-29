@@ -88,6 +88,7 @@ noinst_HEADERS = \
 	audio-resampler-x86.h 		\
 	audio-resampler-x86-sse.h	\
 	audio-resampler-x86-sse2.h	\
+	audio-resampler-x86-sse41.h	\
 	audio-resampler-neon.h
 
 libgstaudio_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
