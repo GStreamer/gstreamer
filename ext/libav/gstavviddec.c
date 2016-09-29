@@ -1012,6 +1012,7 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   GstVideoCodecState *output_state;
   gint fps_n, fps_d;
   GstClockTime latency;
+  GstStructure *in_s;
 
   if (!update_video_context (ffmpegdec, context, picture))
     return TRUE;
@@ -1036,21 +1037,124 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   else
     out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
-  switch (context->chroma_sample_location) {
-    case AVCHROMA_LOC_LEFT:
-      out_info->chroma_site = GST_VIDEO_CHROMA_SITE_MPEG2;
-      break;
-    case AVCHROMA_LOC_CENTER:
-      out_info->chroma_site = GST_VIDEO_CHROMA_SITE_JPEG;
-      break;
-    case AVCHROMA_LOC_TOPLEFT:
-      out_info->chroma_site = GST_VIDEO_CHROMA_SITE_DV;
-      break;
-    case AVCHROMA_LOC_TOP:
-      out_info->chroma_site = GST_VIDEO_CHROMA_SITE_V_COSITED;
-      break;
-    default:
-      break;
+  in_s = gst_caps_get_structure (ffmpegdec->input_state->caps, 0);
+
+  if (!gst_structure_has_field (in_s, "chroma-site")) {
+    switch (context->chroma_sample_location) {
+      case AVCHROMA_LOC_LEFT:
+        out_info->chroma_site = GST_VIDEO_CHROMA_SITE_MPEG2;
+        break;
+      case AVCHROMA_LOC_CENTER:
+        out_info->chroma_site = GST_VIDEO_CHROMA_SITE_JPEG;
+        break;
+      case AVCHROMA_LOC_TOPLEFT:
+        out_info->chroma_site = GST_VIDEO_CHROMA_SITE_DV;
+        break;
+      case AVCHROMA_LOC_TOP:
+        out_info->chroma_site = GST_VIDEO_CHROMA_SITE_V_COSITED;
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (!gst_structure_has_field (in_s, "colorimetry")
+      || in_info->colorimetry.primaries == GST_VIDEO_COLOR_PRIMARIES_UNKNOWN) {
+    switch (context->color_primaries) {
+      case AVCOL_PRI_BT709:
+        out_info->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+        break;
+      case AVCOL_PRI_BT470M:
+        out_info->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470M;
+        break;
+      case AVCOL_PRI_BT470BG:
+        out_info->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG;
+        break;
+      case AVCOL_PRI_SMPTE170M:
+        out_info->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
+        break;
+      case AVCOL_PRI_SMPTE240M:
+        out_info->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE240M;
+        break;
+      case AVCOL_PRI_FILM:
+        out_info->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_FILM;
+        break;
+      case AVCOL_PRI_BT2020:
+        out_info->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (!gst_structure_has_field (in_s, "colorimetry")
+      || in_info->colorimetry.transfer == GST_VIDEO_TRANSFER_UNKNOWN) {
+    switch (context->color_trc) {
+      case AVCOL_TRC_BT2020_10:
+      case AVCOL_TRC_BT709:
+      case AVCOL_TRC_SMPTE170M:
+        out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+        break;
+      case AVCOL_TRC_GAMMA22:
+        out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA22;
+        break;
+      case AVCOL_TRC_GAMMA28:
+        out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA28;
+        break;
+      case AVCOL_TRC_SMPTE240M:
+        out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE240M;
+        break;
+      case AVCOL_TRC_LINEAR:
+        out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA10;
+        break;
+      case AVCOL_TRC_LOG:
+        out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_LOG100;
+        break;
+      case AVCOL_TRC_LOG_SQRT:
+        out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_LOG316;
+        break;
+      case AVCOL_TRC_BT2020_12:
+        out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (!gst_structure_has_field (in_s, "colorimetry")
+      || in_info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN) {
+    switch (context->colorspace) {
+      case AVCOL_SPC_RGB:
+        out_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+        break;
+      case AVCOL_SPC_BT709:
+        out_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+        break;
+      case AVCOL_SPC_FCC:
+        out_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_FCC;
+        break;
+      case AVCOL_SPC_BT470BG:
+      case AVCOL_SPC_SMPTE170M:
+        out_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+        break;
+      case AVCOL_SPC_SMPTE240M:
+        out_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_SMPTE240M;
+        break;
+      case AVCOL_SPC_BT2020_NCL:
+        out_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (!gst_structure_has_field (in_s, "colorimetry")
+      || in_info->colorimetry.range == GST_VIDEO_COLOR_RANGE_UNKNOWN) {
+    if (context->color_range == AVCOL_RANGE_JPEG) {
+      out_info->colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+    } else {
+      out_info->colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+    }
   }
 
   /* try to find a good framerate */
