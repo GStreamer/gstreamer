@@ -670,7 +670,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 
         config = gst_buffer_pool_get_config (sink->pool);
         gst_buffer_pool_config_get_params (config, &caps, &size, NULL, NULL);
-        gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+        gst_buffer_pool_config_set_params (config, caps, size, 2, 0);
 
         /* This is a video pool, it should not fail with basic setings */
         if (!gst_buffer_pool_set_config (sink->pool, config) ||
