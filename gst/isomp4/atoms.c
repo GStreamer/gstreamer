@@ -3948,7 +3948,7 @@ build_fiel_extension (GstVideoInterlaceMode mode, GstVideoFieldOrder order)
 }
 
 AtomInfo *
-build_colr_extension (GstVideoColorimetry colorimetry)
+build_colr_extension (const GstVideoColorimetry * colorimetry, gboolean is_mp4)
 {
   AtomData *atom_data = atom_data_new (FOURCC_colr);
   guint8 *data;
@@ -3956,7 +3956,7 @@ build_colr_extension (GstVideoColorimetry colorimetry)
   guint16 transfer_function;
   guint16 matrix;
 
-  switch (colorimetry.primaries) {
+  switch (colorimetry->primaries) {
     case GST_VIDEO_COLOR_PRIMARIES_BT709:
       primaries = 1;
       break;
@@ -3967,13 +3967,16 @@ build_colr_extension (GstVideoColorimetry colorimetry)
     case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
       primaries = 6;
       break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT2020:
+      primaries = 9;
+      break;
     case GST_VIDEO_COLOR_PRIMARIES_UNKNOWN:
     default:
       primaries = 2;
       break;
   }
 
-  switch (colorimetry.transfer) {
+  switch (colorimetry->transfer) {
     case GST_VIDEO_TRANSFER_BT709:
       transfer_function = 1;
       break;
@@ -3986,7 +3989,7 @@ build_colr_extension (GstVideoColorimetry colorimetry)
       break;
   }
 
-  switch (colorimetry.matrix) {
+  switch (colorimetry->matrix) {
     case GST_VIDEO_COLOR_MATRIX_BT709:
       matrix = 1;
       break;
@@ -3996,21 +3999,32 @@ build_colr_extension (GstVideoColorimetry colorimetry)
     case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
       matrix = 7;
       break;
+    case GST_VIDEO_COLOR_MATRIX_BT2020:
+      matrix = 9;
+      break;
     case GST_VIDEO_COLOR_MATRIX_UNKNOWN:
     default:
       matrix = 2;
       break;
   }
 
-  atom_data_alloc_mem (atom_data, 10);
+  atom_data_alloc_mem (atom_data, 10 + (is_mp4 ? 1 : 0));
   data = atom_data->data;
 
   /* colour specification box */
-  GST_WRITE_UINT32_LE (data, FOURCC_nclc);
+  if (is_mp4)
+    GST_WRITE_UINT32_LE (data, FOURCC_nclx);
+  else
+    GST_WRITE_UINT32_LE (data, FOURCC_nclc);
 
   GST_WRITE_UINT16_BE (data + 4, primaries);
-  GST_WRITE_UINT16_BE (data + 6, transfer_function);    /* transfer function */
+  GST_WRITE_UINT16_BE (data + 6, transfer_function);
   GST_WRITE_UINT16_BE (data + 8, matrix);
+
+  if (is_mp4) {
+    GST_WRITE_UINT8 (data + 10,
+        colorimetry->range == GST_VIDEO_COLOR_RANGE_0_255 ? 0x80 : 0x00);
+  }
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);

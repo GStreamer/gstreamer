@@ -170,6 +170,7 @@ G_BEGIN_DECLS
 #define FOURCC_mp4v     GST_MAKE_FOURCC('m','p','4','v')
 #define FOURCC_name     GST_MAKE_FOURCC('n','a','m','e')
 #define FOURCC_nclc     GST_MAKE_FOURCC('n','c','l','c')
+#define FOURCC_nclx     GST_MAKE_FOURCC('n','c','l','x')
 #define FOURCC_opus     GST_MAKE_FOURCC('O','p','u','s')
 #define FOURCC_dops     GST_MAKE_FOURCC('d','O','p','s')
 #define FOURCC_pasp     GST_MAKE_FOURCC('p','a','s','p')

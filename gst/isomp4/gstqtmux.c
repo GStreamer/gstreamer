@@ -4240,11 +4240,8 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     entry.fourcc = fourcc;
   } else if (strcmp (mimetype, "video/x-prores") == 0) {
     const gchar *variant;
-    const gchar *colorimetry_str;
-    GstVideoColorimetry colorimetry;
 
     variant = gst_structure_get_string (structure, "variant");
-    colorimetry_str = gst_structure_get_string (structure, "colorimetry");
     if (!variant || !g_strcmp0 (variant, "standard"))
       entry.fourcc = FOURCC_apcn;
     else if (!g_strcmp0 (variant, "lt"))
@@ -4253,24 +4250,25 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       entry.fourcc = FOURCC_apch;
     else if (!g_strcmp0 (variant, "proxy"))
       entry.fourcc = FOURCC_apco;
-
-    if (gst_video_colorimetry_from_string (&colorimetry, colorimetry_str)) {
-      ext_atom = build_colr_extension (colorimetry);
-      if (ext_atom)
-        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
-    }
-
-    if (colorimetry_str == NULL) {
-      /* TODO: Maybe implement better heuristics */
-      GST_WARNING_OBJECT (qtmux,
-          "Colorimetry information not found in caps. The resulting file's "
-          "color information might be wrong");
-      colorimetry_str = height < 720 ? "bt601" : "bt709";
-    }
   }
 
   if (!entry.fourcc)
     goto refuse_caps;
+
+  if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT ||
+      qtmux_klass->format == GST_QT_MUX_FORMAT_MP4) {
+    const gchar *s;
+    GstVideoColorimetry colorimetry;
+
+    s = gst_structure_get_string (structure, "colorimetry");
+    if (s && gst_video_colorimetry_from_string (&colorimetry, s)) {
+      ext_atom =
+          build_colr_extension (&colorimetry,
+          qtmux_klass->format == GST_QT_MUX_FORMAT_MP4);
+      if (ext_atom)
+        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+    }
+  }
 
   if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT
       || strcmp (mimetype, "image/x-j2c") == 0
