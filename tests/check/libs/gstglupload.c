@@ -86,14 +86,21 @@ setup (void)
 }
 
 static void
-teardown (void)
+_check_gl_error (GstGLContext * context, gpointer data)
 {
   GLuint error = context->gl_vtable->GetError ();
   fail_if (error != GL_NONE, "GL error 0x%x encountered during processing\n",
       error);
+}
 
+static void
+teardown (void)
+{
   gst_object_unref (upload);
   gst_object_unref (window);
+
+  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _check_gl_error,
+      NULL);
   gst_object_unref (context);
   gst_object_unref (display);
   if (shader)
