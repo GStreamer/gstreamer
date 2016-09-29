@@ -28,7 +28,10 @@
 #pragma GCC target("sse4.1")
 #endif
 
-#if defined (HAVE_SMMINTRIN_H) && defined (HAVE_EMMINTRIN_H) && defined(__SSE4_1__)
+#if defined (__x86_64__) && \
+    defined (HAVE_SMMINTRIN_H) && defined (HAVE_EMMINTRIN_H) && \
+    defined (__SSE4_1__)
+
 #include <emmintrin.h>
 #include <smmintrin.h>
 

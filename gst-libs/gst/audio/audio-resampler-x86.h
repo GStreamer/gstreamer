@@ -57,7 +57,9 @@ audio_resampler_check_x86 (const gchar *option)
     GST_DEBUG ("SSE2 optimisations not enabled");
 #endif
   } else if (!strcmp (option, "sse41")) {
-#if defined (HAVE_SMMINTRIN_H) && defined (HAVE_EMMINTRIN_H) && HAVE_SSE41
+#if defined (__x86_64__) && \
+    defined (HAVE_SMMINTRIN_H) && defined (HAVE_EMMINTRIN_H) && \
+    HAVE_SSE41
     GST_DEBUG ("enable SSE41 optimisations");
     resample_gint32_full_1 = resample_gint32_full_1_sse41;
     resample_gint32_linear_1 = resample_gint32_linear_1_sse41;
