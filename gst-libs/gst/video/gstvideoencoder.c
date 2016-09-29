@@ -1571,6 +1571,7 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
   GstQuery *query = NULL;
   GstVideoCodecFrame *frame;
   GstCaps *prevcaps;
+  gchar *colorimetry;
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
@@ -1602,6 +1603,16 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
       gst_caps_set_simple (state->caps, "field-order", G_TYPE_STRING,
           gst_video_field_order_to_string (GST_VIDEO_INFO_FIELD_ORDER (info)),
           NULL);
+
+    colorimetry = gst_video_colorimetry_to_string (&info->colorimetry);
+    if (colorimetry)
+      gst_caps_set_simple (state->caps, "colorimetry", G_TYPE_STRING,
+          colorimetry, NULL);
+    g_free (colorimetry);
+
+    if (info->chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN)
+      gst_caps_set_simple (state->caps, "chroma-site", G_TYPE_STRING,
+          gst_video_chroma_to_string (info->chroma_site), NULL);
 
     if (GST_VIDEO_INFO_MULTIVIEW_MODE (info) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
       const gchar *caps_mview_mode =
