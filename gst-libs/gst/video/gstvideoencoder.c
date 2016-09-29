@@ -539,6 +539,8 @@ _new_output_state (GstCaps * caps, GstVideoCodecState * reference)
     tgt->fps_n = ref->fps_n;
     tgt->fps_d = ref->fps_d;
 
+    GST_VIDEO_INFO_FIELD_ORDER (tgt) = GST_VIDEO_INFO_FIELD_ORDER (ref);
+
     GST_VIDEO_INFO_MULTIVIEW_MODE (tgt) = GST_VIDEO_INFO_MULTIVIEW_MODE (ref);
     GST_VIDEO_INFO_MULTIVIEW_FLAGS (tgt) = GST_VIDEO_INFO_MULTIVIEW_FLAGS (ref);
   }
@@ -1592,6 +1594,14 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
     if (state->codec_data)
       gst_caps_set_simple (state->caps, "codec_data", GST_TYPE_BUFFER,
           state->codec_data, NULL);
+
+    gst_caps_set_simple (state->caps, "interlace-mode", G_TYPE_STRING,
+        gst_video_interlace_mode_to_string (info->interlace_mode), NULL);
+    if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED &&
+        GST_VIDEO_INFO_FIELD_ORDER (info) != GST_VIDEO_FIELD_ORDER_UNKNOWN)
+      gst_caps_set_simple (state->caps, "field-order", G_TYPE_STRING,
+          gst_video_field_order_to_string (GST_VIDEO_INFO_FIELD_ORDER (info)),
+          NULL);
 
     if (GST_VIDEO_INFO_MULTIVIEW_MODE (info) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
       const gchar *caps_mview_mode =
