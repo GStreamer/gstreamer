@@ -2426,6 +2426,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
   const GValue *par = NULL;
   const gchar *fmt;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+  const gchar *s;
 
   GST_DEBUG ("converting caps %" GST_PTR_FORMAT, caps);
   g_return_if_fail (gst_caps_get_size (caps) == 1);
@@ -2540,6 +2541,22 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
       break;
     default:
       break;
+  }
+
+  s = gst_structure_get_string (structure, "interlaced-mode");
+  if (s) {
+    if (strcmp (s, "progressive") == 0) {
+      context->field_order = AV_FIELD_PROGRESSIVE;
+    } else if (strcmp (s, "interleaved") == 0) {
+      s = gst_structure_get_string (structure, "field-order");
+      if (s) {
+        if (strcmp (s, "top-field-first") == 0) {
+          context->field_order = AV_FIELD_TT;
+        } else if (strcmp (s, "bottom-field-first") == 0) {
+          context->field_order = AV_FIELD_TB;
+        }
+      }
+    }
   }
 }
 
