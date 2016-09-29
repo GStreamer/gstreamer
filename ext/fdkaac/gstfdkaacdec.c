@@ -190,6 +190,7 @@ gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
   gboolean need_reorder;
 
   if (inbuf) {
+    gst_buffer_ref (inbuf);
     gst_buffer_map (inbuf, &imap, GST_MAP_READ);
     valid = size = imap.size;
 
@@ -198,10 +199,8 @@ gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
                 &valid)) != AAC_DEC_OK) {
       GST_AUDIO_DECODER_ERROR (self, 1, STREAM, DECODE, (NULL),
           ("filling error: %d", err), ret);
-      gst_buffer_unmap (inbuf, &imap);
       goto out;
     }
-    gst_buffer_unmap (inbuf, &imap);
 
     if (GST_BUFFER_IS_DISCONT (inbuf))
       flags |= AACDEC_INTR;
@@ -394,6 +393,11 @@ finish:
   ret = gst_audio_decoder_finish_frame (dec, outbuf, 1);
 
 out:
+
+  if (inbuf) {
+    gst_buffer_unmap (inbuf, &imap);
+    gst_buffer_unref (inbuf);
+  }
 
   return ret;
 }
