@@ -167,8 +167,8 @@ gst_fdkaacdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
 
   /* 8 channels * 2 bytes per sample * 2048 samples */
   if (!self->decode_buffer) {
-    self->decode_buffer_size = 8 * 2 * 2048;
-    self->decode_buffer = g_malloc (self->decode_buffer_size);
+    self->decode_buffer_size = 8 * 2048;
+    self->decode_buffer = g_new (gint16, self->decode_buffer_size);
   }
 
   return TRUE;
@@ -210,7 +210,7 @@ gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
   }
 
   if ((err =
-          aacDecoder_DecodeFrame (self->dec, (gint16 *) self->decode_buffer,
+          aacDecoder_DecodeFrame (self->dec, self->decode_buffer,
               self->decode_buffer_size, flags)) != AAC_DEC_OK) {
     if (err == AAC_DEC_TRANSPORT_SYNC_ERROR) {
       ret = GST_FLOW_OK;
@@ -406,7 +406,7 @@ gst_fdkaacdec_flush (GstAudioDecoder * dec, gboolean hard)
   if (self->dec) {
     AAC_DECODER_ERROR err;
     if ((err =
-            aacDecoder_DecodeFrame (self->dec, (gint16 *) self->decode_buffer,
+            aacDecoder_DecodeFrame (self->dec, self->decode_buffer,
                 self->decode_buffer_size, AACDEC_FLUSH)) != AAC_DEC_OK) {
       GST_ERROR_OBJECT (self, "flushing error: %d", err);
     }

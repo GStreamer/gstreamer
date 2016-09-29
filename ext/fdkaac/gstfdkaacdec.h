@@ -45,7 +45,7 @@ struct _GstFdkAacDec {
   GstAudioDecoder element;
 
   HANDLE_AACDECODER dec;
-  guint8 *decode_buffer;
+  gint16 *decode_buffer;
   gint decode_buffer_size;
 };
 
