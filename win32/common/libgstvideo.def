@@ -166,6 +166,9 @@ EXPORTS
 	gst_video_event_parse_downstream_force_key_unit
 	gst_video_event_parse_still_frame
 	gst_video_event_parse_upstream_force_key_unit
+	gst_video_field_order_from_string
+	gst_video_field_order_get_type
+	gst_video_field_order_to_string
 	gst_video_filter_get_type
 	gst_video_flags_get_type
 	gst_video_format_flags_get_type

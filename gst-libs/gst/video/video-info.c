@@ -274,6 +274,54 @@ gst_video_interlace_mode_from_string (const gchar * mode)
   return GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 }
 
+static const gchar *field_order[] = {
+  "unknown",
+  "top-field-first",
+  "bottom-field-first"
+};
+
+/**
+ * gst_video_field_order_to_string:
+ * @order: a #GstVideoFieldOrder
+ *
+ * Convert @order to its string representation.
+ *
+ * Returns: @order as a string or NULL if @order in invalid.
+ *
+ * Since: 1.12
+ */
+const gchar *
+gst_video_field_order_to_string (GstVideoFieldOrder order)
+{
+  if (((guint) order) >= G_N_ELEMENTS (field_order))
+    return NULL;
+
+  return field_order[order];
+}
+
+/**
+ * gst_video_field_order_from_string:
+ * @order: a field order
+ *
+ * Convert @order to a #GstVideoFieldOrder
+ *
+ * Returns: the #GstVideoFieldOrder of @order or
+ *    #GST_VIDEO_FIELD_ORDER_UNKNOWN when @order is not a valid
+ *    string representation for a #GstVideoFieldOrder.
+ *
+ * Since: 1.12
+ */
+GstVideoFieldOrder
+gst_video_field_order_from_string (const gchar * order)
+{
+  gint i;
+  for (i = 0; i < G_N_ELEMENTS (field_order); i++) {
+    if (g_str_equal (field_order[i], order))
+      return i;
+  }
+  return GST_VIDEO_FIELD_ORDER_UNKNOWN;
+}
+
 /**
  * gst_video_info_from_caps:
  * @info: a #GstVideoInfo
@@ -358,6 +406,13 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
     info->interlace_mode = gst_video_interlace_mode_from_string (s);
   else
     info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+
+  if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED &&
+      (s = gst_structure_get_string (structure, "field-order"))) {
+    GST_VIDEO_INFO_FIELD_ORDER (info) = gst_video_field_order_from_string (s);
+  } else {
+    GST_VIDEO_INFO_FIELD_ORDER (info) = GST_VIDEO_FIELD_ORDER_UNKNOWN;
+  }
 
   {
     if ((s = gst_structure_get_string (structure, "multiview-mode")))
@@ -530,6 +585,13 @@ gst_video_info_to_caps (GstVideoInfo * info)
 
   gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
       gst_video_interlace_mode_to_string (info->interlace_mode), NULL);
+
+  if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED &&
+      GST_VIDEO_INFO_FIELD_ORDER (info) != GST_VIDEO_FIELD_ORDER_UNKNOWN) {
+    gst_caps_set_simple (caps, "field-order", G_TYPE_STRING,
+        gst_video_field_order_to_string (GST_VIDEO_INFO_FIELD_ORDER (info)),
+        NULL);
+  }
 
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (info) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
     const gchar *caps_str = NULL;

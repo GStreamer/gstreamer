@@ -41,8 +41,8 @@
 
 G_DEFINE_INTERFACE (GstVideoOrientation, gst_video_orientation, 0)
 
-static void
-gst_video_orientation_default_init (GstVideoOrientationInterface *
+     static void
+         gst_video_orientation_default_init (GstVideoOrientationInterface *
     iface)
 {
   /* default virtual functions */
