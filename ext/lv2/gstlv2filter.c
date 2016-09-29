@@ -390,13 +390,18 @@ gst_lv2_filter_transform_data (GstLV2Filter * self,
   /* multi channel inputs */
   lv2_group = &lv2_class->in_group;
   samples = nframes / lv2_group->ports->len;
-  in = g_new0 (gfloat, nframes);
   GST_LOG_OBJECT (self, "in : samples=%u, nframes=%u, ports=%d", samples,
       nframes, lv2_group->ports->len);
 
-  if (lv2_group->ports->len > 1)
+  if (lv2_group->ports->len > 1) {
+    in = g_new0 (gfloat, nframes);
+    out = g_new0 (gfloat, samples * lv2_group->ports->len);
     gst_lv2_filter_deinterleave_data (lv2_group->ports->len, in,
         samples, (gfloat *) in_map->data);
+  } else {
+    in = (gfloat *) in_map->data;
+    out = (gfloat *) out_map->data;
+  }
 
   for (j = 0; j < lv2_group->ports->len; ++j) {
     lv2_port = &g_array_index (lv2_group->ports, GstLV2Port, j);
@@ -407,7 +412,7 @@ gst_lv2_filter_transform_data (GstLV2Filter * self,
   /* multi channel outputs */
   lv2_group = &lv2_class->out_group;
   out_samples = nframes / lv2_group->ports->len;
-  out = g_new0 (gfloat, samples * lv2_group->ports->len);
+
   GST_LOG_OBJECT (self, "out: samples=%u, nframes=%u, ports=%d", out_samples,
       nframes, lv2_group->ports->len);
   for (j = 0; j < lv2_group->ports->len; ++j) {
@@ -434,11 +439,12 @@ gst_lv2_filter_transform_data (GstLV2Filter * self,
 
   lilv_instance_run (self->lv2.instance, samples);
 
-  if (lv2_group->ports->len > 1)
+  if (lv2_group->ports->len > 1) {
     gst_lv2_filter_interleave_data (lv2_group->ports->len,
         (gfloat *) out_map->data, out_samples, out);
-  g_free (out);
-  g_free (in);
+    g_free (out);
+    g_free (in);
+  }
   g_free (cv);
 
   return GST_FLOW_OK;
