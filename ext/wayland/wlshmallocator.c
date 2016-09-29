@@ -131,7 +131,7 @@ gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem, GstWlDisplay * display,
     const GstVideoInfo * info)
 {
   gint width, height, stride;
-  gsize size;
+  gsize offset, size, memsize, maxsize;
   enum wl_shm_format format;
   struct wl_shm_pool *wl_pool;
   struct wl_buffer *wbuffer;
@@ -142,16 +142,18 @@ gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem, GstWlDisplay * display,
   size = GST_VIDEO_INFO_SIZE (info);
   format = gst_video_format_to_wl_shm_format (GST_VIDEO_INFO_FORMAT (info));
 
-  g_return_val_if_fail (gst_is_wl_shm_memory (mem), NULL);
-  g_return_val_if_fail (size <= mem->size, NULL);
+  memsize = gst_memory_get_sizes (mem, &offset, &maxsize);
+
+  g_return_val_if_fail (gst_is_fd_memory (mem), NULL);
+  g_return_val_if_fail (size <= memsize, NULL);
 
   GST_DEBUG_OBJECT (mem->allocator, "Creating wl_buffer of size %"
       G_GSSIZE_FORMAT " (%d x %d, stride %d), format %s", size, width, height,
       stride, gst_wl_shm_format_to_string (format));
 
   wl_pool = wl_shm_create_pool (display->shm, gst_fd_memory_get_fd (mem),
-      mem->size);
-  wbuffer = wl_shm_pool_create_buffer (wl_pool, 0, width, height, stride,
+      memsize);
+  wbuffer = wl_shm_pool_create_buffer (wl_pool, offset, width, height, stride,
       format);
   wl_shm_pool_destroy (wl_pool);
 

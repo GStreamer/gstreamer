@@ -642,7 +642,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
     /* FIXME check all memory when introducing DMA-Buf */
     mem = gst_buffer_peek_memory (buffer, 0);
 
-    if (gst_is_wl_shm_memory (mem)) {
+    if (gst_is_fd_memory (mem)) {
       wbuf = gst_wl_shm_memory_construct_wl_buffer (mem, sink->display,
           &sink->video_info);
     }
