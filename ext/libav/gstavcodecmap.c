@@ -2707,6 +2707,107 @@ gst_ffmpeg_videoinfo_to_context (GstVideoInfo * info, AVCodecContext * context)
   context->pix_fmt =
       gst_ffmpeg_videoformat_to_pixfmt_for_codec (GST_VIDEO_INFO_FORMAT (info),
       context->codec);
+
+  switch (info->chroma_site) {
+    case GST_VIDEO_CHROMA_SITE_MPEG2:
+      context->chroma_sample_location = AVCHROMA_LOC_LEFT;
+      break;
+    case GST_VIDEO_CHROMA_SITE_JPEG:
+      context->chroma_sample_location = AVCHROMA_LOC_CENTER;
+      break;
+    case GST_VIDEO_CHROMA_SITE_DV:
+      context->chroma_sample_location = AVCHROMA_LOC_TOPLEFT;
+      break;
+    case GST_VIDEO_CHROMA_SITE_V_COSITED:
+      context->chroma_sample_location = AVCHROMA_LOC_TOP;
+      break;
+    default:
+      break;
+  }
+
+  switch (info->colorimetry.primaries) {
+    case GST_VIDEO_COLOR_PRIMARIES_BT709:
+      context->color_primaries = AVCOL_PRI_BT709;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT470M:
+      context->color_primaries = AVCOL_PRI_BT470M;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT470BG:
+      context->color_primaries = AVCOL_PRI_BT470BG;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
+      context->color_primaries = AVCOL_PRI_SMPTE170M;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
+      context->color_primaries = AVCOL_PRI_SMPTE240M;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_FILM:
+      context->color_primaries = AVCOL_PRI_FILM;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT2020:
+      context->color_primaries = AVCOL_PRI_BT2020;
+      break;
+    default:
+      break;
+  }
+
+  switch (info->colorimetry.transfer) {
+    case GST_VIDEO_TRANSFER_BT709:
+      context->color_trc = AVCOL_TRC_BT709;
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA22:
+      context->color_trc = AVCOL_TRC_GAMMA22;
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA28:
+      context->color_trc = AVCOL_TRC_GAMMA28;
+      break;
+    case GST_VIDEO_TRANSFER_SMPTE240M:
+      context->color_trc = AVCOL_TRC_SMPTE240M;
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA10:
+      context->color_trc = AVCOL_TRC_LINEAR;
+      break;
+    case GST_VIDEO_TRANSFER_LOG100:
+      context->color_trc = AVCOL_TRC_LOG;
+      break;
+    case GST_VIDEO_TRANSFER_LOG316:
+      context->color_trc = AVCOL_TRC_LOG_SQRT;
+      break;
+    case GST_VIDEO_TRANSFER_BT2020_12:
+      context->color_trc = AVCOL_TRC_BT2020_12;
+      break;
+    default:
+      break;
+  }
+
+  switch (info->colorimetry.matrix) {
+    case GST_VIDEO_COLOR_MATRIX_RGB:
+      context->colorspace = AVCOL_SPC_RGB;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+      context->colorspace = AVCOL_SPC_BT709;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_FCC:
+      context->colorspace = AVCOL_SPC_FCC;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+      context->colorspace = AVCOL_SPC_BT470BG;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
+      context->colorspace = AVCOL_SPC_SMPTE240M;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT2020:
+      context->colorspace = AVCOL_SPC_BT2020_NCL;
+      break;
+    default:
+      break;
+  }
+
+  if (info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255) {
+    context->color_range = AVCOL_RANGE_JPEG;
+  } else {
+    context->color_range = AVCOL_RANGE_MPEG;
+  }
 }
 
 void
