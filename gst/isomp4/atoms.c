@@ -1596,6 +1596,9 @@ atom_info_list_copy_data (GList * ai, guint8 ** buffer, guint64 * size,
     ai = g_list_next (ai);
   }
 
+  /* append 0 as a terminator "length" to work around some broken software */
+  prop_copy_uint32 (0, buffer, size, offset);
+
   return *offset - original_offset;
 }
 
