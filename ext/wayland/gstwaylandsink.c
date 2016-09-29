@@ -437,7 +437,7 @@ gst_wayland_create_pool (GstWaylandSink * sink, GstCaps * caps)
   pool = gst_video_buffer_pool_new ();
 
   structure = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (structure, caps, size, 0, 0);
+  gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
   gst_buffer_pool_config_set_allocator (structure, gst_wl_shm_allocator_get (),
       NULL);
 
@@ -673,7 +673,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
         gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
 
         /* This is a video pool, it should not fail with basic setings */
-        if (!gst_buffer_pool_set_active (sink->pool, TRUE))
+        if (!gst_buffer_pool_set_config (sink->pool, config) ||
+            !gst_buffer_pool_set_active (sink->pool, TRUE))
           goto activate_failed;
       }
 
