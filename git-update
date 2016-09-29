@@ -58,7 +58,7 @@ def manifest_get_commits(manifest):
     return res
 
 
-def update_subprojects(manifest):
+def update_subprojects(manifest, no_interaction=False):
     if manifest:
         repos_commits = manifest_get_commits(manifest)
     else:
@@ -69,22 +69,50 @@ def update_subprojects(manifest):
         repo_dir = os.path.normpath(os.path.join(SCRIPTDIR, subprojects_dir, repo_name))
         if not os.path.exists(os.path.join(repo_dir, '.git')):
             continue
-
-        print("Updating %s..." % repo_name)
-        try:
-            revision = repos_commits.get(repo_name)
-            if revision:
-                git(["fetch"], repo_dir)
-                git(["checkout", revision], repo_dir)
-            else:
-                git(["pull", "--rebase"], repo_dir)
-        except Exception as e:
-            print("\nCould not rebase %s, please fix and try again\nerror:\n  %s" % (repo_dir, e))
+        revision = repos_commits.get(repo_name)
+        if not update_repo(repo_name, repo_dir, revision, no_interaction):
             return False
 
-        commit_message = git("show", repo_dir).split("\n")
-        print(u"  -> %s%s%s — %s" % (Colors.HEADER, commit_message[0][7:14], Colors.ENDC,
-                                       commit_message[4].strip()))
+    return True
+
+
+def update_repo(repo_name, repo_dir, revision, no_interaction, recurse_i=0):
+    print("Updating %s..." % repo_name)
+    try:
+        if revision:
+            git(["fetch"], repo_dir)
+            git(["checkout", revision], repo_dir)
+        else:
+            git(["pull", "--rebase"], repo_dir)
+    except Exception as e:
+        out = getattr(e, "output", b"").decode()
+        if not no_interaction:
+            print("====================================="
+                  "\n%sEntering a shell in %s to fix that"
+                  " just `exit` once done`"
+                  "\n=====================================" % (
+                        out, os.getcwd()))
+            try:
+                subprocess.check_call(os.environ.get("SHELL", "/bin/sh"),
+                                      cwd=repo_dir)
+            except:
+                # Result of subshell does not really matter
+                pass
+
+            if recurse_i < 3:
+                return update_repo(repo_name, repo_dir, revision, no_interaction,
+                                    recurse_i + 1)
+            return False
+        else:
+            print("\nCould not rebase %s, please fix and try again."
+                    " Error:\n\n%s %s" % (repo_dir, out, e))
+
+            return False
+
+
+    commit_message = git("show", repo_dir).split("\n")
+    print(u"  -> %s%s%s — %s" % (Colors.HEADER, commit_message[0][7:14], Colors.ENDC,
+                                    commit_message[4].strip()))
 
     return True
 
@@ -96,6 +124,10 @@ if __name__ == "__main__":
                         default=False,
                         action='store_true',
                         help="Do not output ansi colors.")
+    parser.add_argument("--no-interaction",
+                        default=False,
+                        action='store_true',
+                        help="Do not allow interaction with the user.")
     parser.add_argument("--manifest",
                         default=None,
                         help="Use a android repo manifest to sync repositories"
@@ -104,4 +136,5 @@ if __name__ == "__main__":
     if options.no_color:
         Colors.disable()
 
-    exit(not update_subprojects(options.manifest))
+    exit(not update_subprojects(options.manifest,
+                                options.no_interaction))
