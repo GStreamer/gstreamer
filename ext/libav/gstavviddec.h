@@ -47,6 +47,9 @@ struct _GstFFMpegVidDec
   gint pic_par_n;
   gint pic_par_d;
   gint pic_interlaced;
+  /* GST_VIDEO_BUFFER_FLAG_RFF | GST_VIDEO_BUFFER_FLAG_TFF */
+  gint pic_field_order;
+  gboolean pic_field_order_changed;
   /* current context */
   gint ctx_ticks;
   gint ctx_time_d;
