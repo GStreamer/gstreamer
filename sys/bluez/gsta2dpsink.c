@@ -222,7 +222,7 @@ gst_a2dp_sink_remove_dynamic_elements (GstA2dpSink * self)
 static GstStateChangeReturn
 gst_a2dp_sink_change_state (GstElement * element, GstStateChange transition)
 {
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstStateChangeReturn ret;
   GstA2dpSink *self = GST_A2DP_SINK (element);
 
   switch (transition) {
@@ -245,9 +245,6 @@ gst_a2dp_sink_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
