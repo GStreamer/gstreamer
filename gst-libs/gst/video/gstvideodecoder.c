@@ -670,6 +670,9 @@ _new_output_state (GstVideoFormat fmt, guint width, guint height,
     tgt->fps_n = ref->fps_n;
     tgt->fps_d = ref->fps_d;
     tgt->views = ref->views;
+
+    GST_VIDEO_INFO_FIELD_ORDER (tgt) = GST_VIDEO_INFO_FIELD_ORDER (ref);
+
     if (GST_VIDEO_INFO_MULTIVIEW_MODE (ref) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
       GST_VIDEO_INFO_MULTIVIEW_MODE (tgt) = GST_VIDEO_INFO_MULTIVIEW_MODE (ref);
       GST_VIDEO_INFO_MULTIVIEW_FLAGS (tgt) =
