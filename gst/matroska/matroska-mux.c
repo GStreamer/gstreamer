@@ -357,7 +357,6 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
  * Start of pad option handler code
  */
 #define DEFAULT_PAD_FRAME_DURATION TRUE
-#define DEFAULT_PAD_FRAME_DURATION_VP8 FALSE
 
 enum
 {
@@ -977,13 +976,6 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
 
   videocontext->pixel_width = width;
   videocontext->pixel_height = height;
-
-  /* set vp8 defaults or let user override it */
-  if (GST_MATROSKAMUX_PAD_CAST (pad)->frame_duration_user == FALSE
-      && (!strcmp (mimetype, "video/x-vp8")
-          || !strcmp (mimetype, "video/x-vp9")))
-    GST_MATROSKAMUX_PAD_CAST (pad)->frame_duration =
-        DEFAULT_PAD_FRAME_DURATION_VP8;
 
   if (GST_MATROSKAMUX_PAD_CAST (pad)->frame_duration
       && gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)
