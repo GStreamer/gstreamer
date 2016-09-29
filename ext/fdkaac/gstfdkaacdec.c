@@ -142,11 +142,13 @@ gst_fdkaacdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
 
     if ((err = aacDecoder_ConfigRaw (self->dec, &data, &size)) != AAC_DEC_OK) {
       gst_buffer_unmap (codec_data, &map);
+      gst_buffer_unref (codec_data);
       GST_ERROR_OBJECT (self, "Invalid codec_data: %d", err);
       return FALSE;
     }
 
     gst_buffer_unmap (codec_data, &map);
+    gst_buffer_unref (codec_data);
   }
 
   if ((err =
