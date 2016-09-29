@@ -80,9 +80,11 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
   gint64 timeout;
   ConstructBufferData data;
 
+  g_return_val_if_fail (gst_wl_display_check_format_for_dmabuf (display,
+          GST_VIDEO_INFO_FORMAT (info)), NULL);
+
   mem = gst_buffer_peek_memory (buf, 0);
   format = gst_video_format_to_wl_dmabuf_format (GST_VIDEO_INFO_FORMAT (info));
-  g_return_val_if_fail (is_dmabuf_format_supported (format, display), NULL);
 
   g_cond_init (&data.cond);
   g_mutex_init (&data.lock);
@@ -92,6 +94,10 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
   height = GST_VIDEO_INFO_HEIGHT (info);
   nplanes = GST_VIDEO_INFO_N_PLANES (info);
   nmem = gst_buffer_n_memory (buf);
+
+  GST_DEBUG_OBJECT (display, "Creating wl_buffer from DMABuf of size %"
+      G_GSSIZE_FORMAT " (%d x %d), format %s", info->size, width, height,
+      gst_wl_dmabuf_format_to_string (format));
 
   /* Creation and configuration of planes  */
   params = zwp_linux_dmabuf_v1_create_params (display->dmabuf);

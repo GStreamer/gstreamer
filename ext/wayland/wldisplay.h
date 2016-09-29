@@ -22,6 +22,7 @@
 #define __GST_WL_DISPLAY_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <wayland-client.h>
 #include "viewporter-client-protocol.h"
 #include "linux-dmabuf-unstable-v1-client-protocol.h"
@@ -82,10 +83,10 @@ GstWlDisplay *gst_wl_display_new_existing (struct wl_display * display,
 void gst_wl_display_register_buffer (GstWlDisplay * self, gpointer buf);
 void gst_wl_display_unregister_buffer (GstWlDisplay * self, gpointer buf);
 
-gboolean is_shm_format_supported (enum wl_shm_format format_shm,
-    GstWlDisplay * display);
-gboolean is_dmabuf_format_supported (guint format_dmabuf,
-    GstWlDisplay * display);
+gboolean gst_wl_display_check_format_for_shm (GstWlDisplay * display,
+    GstVideoFormat format);
+gboolean gst_wl_display_check_format_for_dmabuf (GstWlDisplay * display,
+    GstVideoFormat format);
 
 G_END_DECLS
 

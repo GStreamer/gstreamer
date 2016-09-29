@@ -146,9 +146,10 @@ gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem, GstWlDisplay * display,
 
   g_return_val_if_fail (gst_is_fd_memory (mem), NULL);
   g_return_val_if_fail (size <= memsize, NULL);
-  g_return_val_if_fail (is_shm_format_supported (format, display), NULL);
+  g_return_val_if_fail (gst_wl_display_check_format_for_shm (display,
+          GST_VIDEO_INFO_FORMAT (info)), NULL);
 
-  GST_DEBUG_OBJECT (mem->allocator, "Creating wl_buffer of size %"
+  GST_DEBUG_OBJECT (display, "Creating wl_buffer from SHM of size %"
       G_GSSIZE_FORMAT " (%d x %d, stride %d), format %s", size, width, height,
       stride, gst_wl_shm_format_to_string (format));
 

@@ -168,14 +168,20 @@ static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
 };
 
 gboolean
-is_shm_format_supported (enum wl_shm_format format_shm, GstWlDisplay * display)
+gst_wl_display_check_format_for_shm (GstWlDisplay * display,
+    GstVideoFormat format)
 {
+  enum wl_shm_format shm_fmt;
   GArray *formats;
   guint i;
 
+  shm_fmt = gst_video_format_to_wl_shm_format (format);
+  if (shm_fmt < 0)
+    return FALSE;
+
   formats = display->shm_formats;
   for (i = 0; i < formats->len; i++) {
-    if (g_array_index (formats, uint32_t, i) == format_shm)
+    if (g_array_index (formats, uint32_t, i) == shm_fmt)
       return TRUE;
   }
 
@@ -183,14 +189,22 @@ is_shm_format_supported (enum wl_shm_format format_shm, GstWlDisplay * display)
 }
 
 gboolean
-is_dmabuf_format_supported (guint format_dmabuf, GstWlDisplay * display)
+gst_wl_display_check_format_for_dmabuf (GstWlDisplay * display,
+    GstVideoFormat format)
 {
   GArray *formats;
-  guint i;
+  guint i, dmabuf_fmt;
+
+  if (!display->dmabuf)
+    return FALSE;
+
+  dmabuf_fmt = gst_video_format_to_wl_dmabuf_format (format);
+  if (dmabuf_fmt < 0)
+    return FALSE;
 
   formats = display->dmabuf_formats;
   for (i = 0; i < formats->len; i++) {
-    if (g_array_index (formats, uint32_t, i) == format_dmabuf)
+    if (g_array_index (formats, uint32_t, i) == dmabuf_fmt)
       return TRUE;
   }
 
