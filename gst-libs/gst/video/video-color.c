@@ -146,18 +146,43 @@ gst_video_colorimetry_from_string (GstVideoColorimetry * cinfo,
 gchar *
 gst_video_colorimetry_to_string (const GstVideoColorimetry * cinfo)
 {
+  return gst_video_colorimetry_to_string_full (cinfo, FALSE);
+}
+
+/**
+ * gst_video_colorimetry_to_string_full:
+ * @cinfo: a #GstVideoColorimetry
+ * @allow_unknown: Allow unknown fields
+ *
+ * Make a string representation of @cinfo. If @allow_unknown is TRUE,
+ * colorimetry is even returned if some but not all fields of @cinfo are
+ * UNKNOWN.
+ *
+ * Returns: a string representation of @cinfo.
+ *
+ * Since: 1.12
+ */
+gchar *
+gst_video_colorimetry_to_string_full (const GstVideoColorimetry * cinfo,
+    gboolean allow_unknown)
+{
   gint i;
+
+  if (IS_UNKNOWN (cinfo))
+    return NULL;
 
   for (i = 0; colorimetry[i].name; i++) {
     if (IS_EQUAL (&colorimetry[i], cinfo)) {
       return g_strdup (colorimetry[i].name);
     }
   }
-  if (!IS_UNKNOWN (cinfo)) {
-    return g_strdup_printf ("%d:%d:%d:%d", cinfo->range, cinfo->matrix,
-        cinfo->transfer, cinfo->primaries);
-  }
-  return NULL;
+
+  if (!allow_unknown && (!cinfo->range || !cinfo->matrix || !cinfo->transfer
+          || !cinfo->primaries))
+    return NULL;
+
+  return g_strdup_printf ("%d:%d:%d:%d", cinfo->range, cinfo->matrix,
+      cinfo->transfer, cinfo->primaries);
 }
 
 /**

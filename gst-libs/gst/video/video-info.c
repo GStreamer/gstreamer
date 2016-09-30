@@ -178,7 +178,7 @@ set_default_colorimetry (GstVideoInfo * info)
 }
 
 static gboolean
-validate_colorimetry (GstVideoInfo * info)
+validate_colorimetry (const GstVideoInfo * info)
 {
   const GstVideoFormatInfo *finfo = info->finfo;
 
@@ -571,6 +571,7 @@ gst_video_info_to_caps (GstVideoInfo * info)
   g_return_val_if_fail (info != NULL, NULL);
   g_return_val_if_fail (info->finfo != NULL, NULL);
   g_return_val_if_fail (info->finfo->format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
+  g_return_val_if_fail (info->finfo->format != GST_VIDEO_FORMAT_ENCODED, NULL);
 
   format = gst_video_format_to_string (info->finfo->format);
   g_return_val_if_fail (format != NULL, NULL);
@@ -644,7 +645,7 @@ gst_video_info_to_caps (GstVideoInfo * info)
         colorimetry.matrix);
     colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
   }
-  if ((color = gst_video_colorimetry_to_string (&colorimetry))) {
+  if ((color = gst_video_colorimetry_to_string_full (&colorimetry, FALSE))) {
     gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, color, NULL);
     g_free (color);
   }

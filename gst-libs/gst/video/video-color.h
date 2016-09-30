@@ -193,16 +193,17 @@ typedef struct {
 #define GST_VIDEO_COLORIMETRY_SRGB        "sRGB"
 #define GST_VIDEO_COLORIMETRY_BT2020      "bt2020"
 
-gboolean     gst_video_colorimetry_matches     (const GstVideoColorimetry *cinfo, const gchar *color);
-gboolean     gst_video_colorimetry_from_string (GstVideoColorimetry *cinfo, const gchar *color);
-gchar *      gst_video_colorimetry_to_string   (const GstVideoColorimetry *cinfo);
-gboolean     gst_video_colorimetry_is_equal    (const GstVideoColorimetry *cinfo, const GstVideoColorimetry *other);
+gboolean     gst_video_colorimetry_matches        (const GstVideoColorimetry *cinfo, const gchar *color);
+gboolean     gst_video_colorimetry_from_string    (GstVideoColorimetry *cinfo, const gchar *color);
+gchar *      gst_video_colorimetry_to_string      (const GstVideoColorimetry *cinfo);
+gchar *      gst_video_colorimetry_to_string_full (const GstVideoColorimetry *cinfo, gboolean allow_unknown);
+gboolean     gst_video_colorimetry_is_equal       (const GstVideoColorimetry *cinfo, const GstVideoColorimetry *other);
 
 /* compute offset and scale */
-void         gst_video_color_range_offsets     (GstVideoColorRange range,
-                                                const GstVideoFormatInfo *info,
-                                                gint offset[GST_VIDEO_MAX_COMPONENTS],
-                                                gint scale[GST_VIDEO_MAX_COMPONENTS]);
+void         gst_video_color_range_offsets        (GstVideoColorRange range,
+                                                   const GstVideoFormatInfo *info,
+                                                   gint offset[GST_VIDEO_MAX_COMPONENTS],
+                                                   gint scale[GST_VIDEO_MAX_COMPONENTS]);
 
 
 G_END_DECLS
