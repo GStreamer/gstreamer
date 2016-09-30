@@ -5,12 +5,11 @@
 # Roland Illig <roland.illig@gmx.de>, 2004.
 # Christian Kirbach <christian.kirbach@gmail.com>, 2009, 2010, 2011, 2012, 2013, 2015, 2016.
 #
-#: gst/parse/grammar.y:217 gst/parse/grammar.y:222
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-03-01 16:45+0200\n"
+"POT-Creation-Date: 2016-09-30 12:08+0300\n"
 "PO-Revision-Date: 2016-09-28 21:13+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -23,990 +22,856 @@ msgstr ""
 "X-Generator: Poedit 1.8.9\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
-#: gst/gst.c:244
 msgid "Print the GStreamer version"
 msgstr "Die Version von GStreamer ausgeben"
 
-#: gst/gst.c:246
 msgid "Make all warnings fatal"
 msgstr "Alle Warnungen wie Fehler behandeln"
 
-#: gst/gst.c:250
 msgid "Print available debug categories and exit"
 msgstr "Verfügbare Fehlerdiagnosekategorien ausgeben und Programm beenden"
 
-#: gst/gst.c:254
-msgid "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
-msgstr "Vorgegebene Fehlerdiagnosestufe von 1 (nur Fehler) bis 9 (Alles) oder 0 für keine Ausgabe"
+msgid ""
+"Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
+msgstr ""
+"Vorgegebene Fehlerdiagnosestufe von 1 (nur Fehler) bis 9 (Alles) oder 0 für "
+"keine Ausgabe"
 
-#: gst/gst.c:256
 msgid "LEVEL"
 msgstr "STUFE"
 
-#: gst/gst.c:258
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Durch Kommata getrennte Liste von Paaren »Kategorie_Name:Level«, um bestimmten Kategorien eigene Stufen  zuzuordnen. Beispiel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Durch Kommata getrennte Liste von Paaren »Kategorie_Name:Level«, um "
+"bestimmten Kategorien eigene Stufen  zuzuordnen. Beispiel: GST_AUTOPLUG:5,"
+"GST_ELEMENT_*:3"
 
-#: gst/gst.c:261
 msgid "LIST"
 msgstr "LISTE"
 
-#: gst/gst.c:263
 msgid "Disable colored debugging output"
 msgstr "Farbige Fehlerdiagnoseausgabe deaktivieren"
 
-#: gst/gst.c:267
-msgid "Changes coloring mode of the debug log. Possible modes: off, on, disable, auto, unix"
-msgstr "Den Farbmodus des Fehlerdiagnose-Protokolls ändern. Mögliche Modi: off (aus), on (an), disable (deaktiviert), auto und unix"
+msgid ""
+"Changes coloring mode of the debug log. Possible modes: off, on, disable, "
+"auto, unix"
+msgstr ""
+"Den Farbmodus des Fehlerdiagnose-Protokolls ändern. Mögliche Modi: off "
+"(aus), on (an), disable (deaktiviert), auto und unix"
 
-#: gst/gst.c:271
 msgid "Disable debugging"
 msgstr "Fehlerdiagnose deaktivieren"
 
-#: gst/gst.c:275
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Ausführliche Meldungen beim Laden von Plugins aktivieren"
 
-#: gst/gst.c:279
 msgid "Colon-separated paths containing plugins"
 msgstr "Durch Doppelpunkte getrennte Pfade zu den Plugins"
 
-#: gst/gst.c:279
 msgid "PATHS"
 msgstr "PFADE"
 
-#: gst/gst.c:282
-msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
-msgstr "Durch Kommata getrennte Liste von Plugins, die zusätzlich zu den Plugins in der Umgebungsvariable GST_PLUGIN_PATH geladen werden"
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Durch Kommata getrennte Liste von Plugins, die zusätzlich zu den Plugins in "
+"der Umgebungsvariable GST_PLUGIN_PATH geladen werden"
 
-#: gst/gst.c:284
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:287
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr "Verfolgen von Speicherzugriffsfehlern beim Laden von Plugins deaktivieren"
+msgstr ""
+"Verfolgen von Speicherzugriffsfehlern beim Laden von Plugins deaktivieren"
 
-#: gst/gst.c:292
 msgid "Disable updating the registry"
 msgstr "Aktualisieren der Registry deaktivieren"
 
-#: gst/gst.c:297
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Die Erstellung eines Hilfsprozesses beim Einlesen der Registry deaktivieren"
+msgstr ""
+"Die Erstellung eines Hilfsprozesses beim Einlesen der Registry deaktivieren"
 
-#: gst/gst.c:302
 msgid "GStreamer Options"
 msgstr "Optionen von GStreamer"
 
-#: gst/gst.c:303
 msgid "Show GStreamer Options"
 msgstr "Die Optionen von GStreamer anzeigen"
 
-#: gst/gst.c:892
 msgid "Unknown option"
 msgstr "Unbekannte Option"
 
-#: gst/gsterror.c:130
 msgid "GStreamer encountered a general core library error."
-msgstr "GStreamer hat einen allgemeinen Fehler in einer Kernbibliothek festgestellt."
+msgstr ""
+"GStreamer hat einen allgemeinen Fehler in einer Kernbibliothek festgestellt."
 
-#: gst/gsterror.c:132 gst/gsterror.c:174 gst/gsterror.c:198 gst/gsterror.c:240
-msgid "GStreamer developers were too lazy to assign an error code to this error."
-msgstr "Die Entwickler von GStreamer waren zu faul, diesem Fehler eine Nummer zu geben."
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr ""
+"Die Entwickler von GStreamer waren zu faul, diesem Fehler eine Nummer zu "
+"geben."
 
-#: gst/gsterror.c:135
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Interner GStreamer-Fehler: Code nicht implementiert."
 
-#: gst/gsterror.c:137
-msgid "GStreamer error: state change failed and some element failed to post a proper error message with the reason for the failure."
-msgstr "GStreamer-Fehler: Zustandswechsel schlug fehl und einige Elemente gaben keine richtige Fehlernachricht mit einer Ursachenbegründung."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
+"GStreamer-Fehler: Zustandswechsel schlug fehl und einige Elemente gaben "
+"keine richtige Fehlernachricht mit einer Ursachenbegründung."
 
-#: gst/gsterror.c:140
 msgid "Internal GStreamer error: pad problem."
 msgstr "Interner GStreamer-Fehler: Padding-Problem."
 
-#: gst/gsterror.c:142
 msgid "Internal GStreamer error: thread problem."
 msgstr "Interner GStreamer-Fehler: Thread-Problem."
 
-#: gst/gsterror.c:144
 msgid "GStreamer error: negotiation problem."
 msgstr "GStreamer-Fehler: Verhandlungsproblem."
 
-#: gst/gsterror.c:146
 msgid "Internal GStreamer error: event problem."
 msgstr "Interner GStreamer-Fehler: Ereignisproblem."
 
-#: gst/gsterror.c:148
 msgid "Internal GStreamer error: seek problem."
 msgstr "Interner GStreamer-Fehler: Suchlauf-Problem."
 
-#: gst/gsterror.c:150
 msgid "Internal GStreamer error: caps problem."
 msgstr "Interner GStreamer-Fehler: Fähigkeitsproblem."
 
-#: gst/gsterror.c:152
 msgid "Internal GStreamer error: tag problem."
 msgstr "Interner GStreamer-Fehler: Kennzeichnungsproblem."
 
-#: gst/gsterror.c:154
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Ihrer Installation von GStreamer fehlt ein Plugin."
 
-#: gst/gsterror.c:156
 msgid "GStreamer error: clock problem."
 msgstr "GStreamer-Fehler: Zeitproblem."
 
-#: gst/gsterror.c:158
-msgid "This application is trying to use GStreamer functionality that has been disabled."
-msgstr "Diese Anwendung versucht Funktionalität von GStreamer zu verwenden, die deaktiviert worden ist."
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
+msgstr ""
+"Diese Anwendung versucht Funktionalität von GStreamer zu verwenden, die "
+"deaktiviert worden ist."
 
-#: gst/gsterror.c:172
 msgid "GStreamer encountered a general supporting library error."
-msgstr "Internet GStreamer-Fehler: Problem mit der Unterstützungsbibliothek. Bitte schicken Sie einen Fehlerbericht."
+msgstr ""
+"Internet GStreamer-Fehler: Problem mit der Unterstützungsbibliothek. Bitte "
+"schicken Sie einen Fehlerbericht."
 
-#: gst/gsterror.c:177
 msgid "Could not initialize supporting library."
 msgstr "Die Unterstützungsbibliothek konnte nicht initialisiert werden."
 
-#: gst/gsterror.c:179
 msgid "Could not close supporting library."
 msgstr "Die Unterstützungsbibliothek konnte nicht geschlossen werden."
 
-#: gst/gsterror.c:181
 msgid "Could not configure supporting library."
 msgstr "Die Unterstützungsbibliothek konnte nicht konfiguriert werden."
 
-#: gst/gsterror.c:183
 msgid "Encoding error."
 msgstr "Fehler bei der Kodierung."
 
-#: gst/gsterror.c:196
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer hat einen allgemeinen Ressourcenfehler festgestellt."
 
-#: gst/gsterror.c:201
 msgid "Resource not found."
 msgstr "Ressource nicht gefunden."
 
-#: gst/gsterror.c:203
 msgid "Resource busy or not available."
 msgstr "Ressource in Benutzung oder nicht verfügbar."
 
-#: gst/gsterror.c:205
 msgid "Could not open resource for reading."
 msgstr "Die Ressource konnte nicht zum Lesen geöffnet werden."
 
-#: gst/gsterror.c:207
 msgid "Could not open resource for writing."
 msgstr "Die Ressource konnte nicht zum Schreiben geöffnet werden."
 
-#: gst/gsterror.c:209
 msgid "Could not open resource for reading and writing."
 msgstr "Die Ressource konnte nicht zum Lesen und Schreiben geöffnet werden."
 
-#: gst/gsterror.c:211
 msgid "Could not close resource."
 msgstr "Die Ressource konnte nicht geschlossen werden."
 
-#: gst/gsterror.c:213
 msgid "Could not read from resource."
 msgstr "Aus der Ressource konnte nicht gelesen werden."
 
-#: gst/gsterror.c:215
 msgid "Could not write to resource."
 msgstr "In die Ressource konnte nicht geschrieben werden."
 
-#: gst/gsterror.c:217
 msgid "Could not perform seek on resource."
 msgstr "In der Ressource konnte kein Suchlauf ausgeführt werden."
 
-#: gst/gsterror.c:219
 msgid "Could not synchronize on resource."
 msgstr "Die Ressource konnte nicht abgeglichen werden."
 
-#: gst/gsterror.c:221
 msgid "Could not get/set settings from/on resource."
-msgstr "Die Einstellungen konnten nicht aus der Ressource gelesen oder in die Ressource geschrieben werden."
+msgstr ""
+"Die Einstellungen konnten nicht aus der Ressource gelesen oder in die "
+"Ressource geschrieben werden."
 
-#: gst/gsterror.c:223
 msgid "No space left on the resource."
 msgstr "Kein Platz in der Ressource übrig."
 
-#: gst/gsterror.c:225
 msgid "Not authorized to access resource."
 msgstr "Keine Berechtigung zum Zugriff auf die Ressource."
 
-#: gst/gsterror.c:238
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer hat einen allgemeinen Datenstromfehler festgestellt."
 
-#: gst/gsterror.c:243
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr "Das Element kann diesen Datenstrom nicht verarbeiten. Bitte schicken Sie einen Fehlerbericht."
+msgstr ""
+"Das Element kann diesen Datenstrom nicht verarbeiten. Bitte schicken Sie "
+"einen Fehlerbericht."
 
-#: gst/gsterror.c:246
 msgid "Could not determine type of stream."
 msgstr "Die Art des Datenstroms konnte nicht ermittelt werden."
 
-#: gst/gsterror.c:248
 msgid "The stream is of a different type than handled by this element."
-msgstr "Der Datenstrom ist von einer anderen Art als der von diesem Element verarbeitete."
+msgstr ""
+"Der Datenstrom ist von einer anderen Art als der von diesem Element "
+"verarbeitete."
 
-#: gst/gsterror.c:251
 msgid "There is no codec present that can handle the stream's type."
-msgstr "Es ist kein Codec verfügbar, der diese Art von Datenströmen verarbeiten kann."
+msgstr ""
+"Es ist kein Codec verfügbar, der diese Art von Datenströmen verarbeiten kann."
 
-#: gst/gsterror.c:253
 msgid "Could not decode stream."
 msgstr "Der Datenstrom konnte nicht dekodiert werden."
 
-#: gst/gsterror.c:255
 msgid "Could not encode stream."
 msgstr "Der Datenstrom konnte nicht kodiert werden."
 
-#: gst/gsterror.c:257
 msgid "Could not demultiplex stream."
 msgstr "Der Datenstrom konnte nicht demultiplext werden."
 
-#: gst/gsterror.c:259
 msgid "Could not multiplex stream."
 msgstr "Der Datenstrom konnte nicht multiplext werden."
 
-#: gst/gsterror.c:261
 msgid "The stream is in the wrong format."
 msgstr "Der Datenstrom hat das falsche Format."
 
-#: gst/gsterror.c:263
 msgid "The stream is encrypted and decryption is not supported."
-msgstr "Der Datenstrom ist verschlüsselt, aber Entschlüsselung wird nicht unterstützt."
+msgstr ""
+"Der Datenstrom ist verschlüsselt, aber Entschlüsselung wird nicht "
+"unterstützt."
 
-#: gst/gsterror.c:265
-msgid "The stream is encrypted and can't be decrypted because no suitable key has been supplied."
-msgstr "Der Datenstrom ist verschlüsselt, kann aber nicht entschlüsselt werden, weil kein passender Schlüssel vorhanden ist."
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+"Der Datenstrom ist verschlüsselt, kann aber nicht entschlüsselt werden, weil "
+"kein passender Schlüssel vorhanden ist."
 
-#: gst/gsterror.c:305
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Keine Fehlermeldung für den Bereich %s."
 
-#: gst/gsterror.c:313
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Keine Standardfehlermeldung für den Bereich %s und Fehlercode %d."
 
-#: gst/gstpipeline.c:549
 msgid "Selected clock cannot be used in pipeline."
-msgstr "Der ausgewählte Referenztakt kann nicht in der Pipeline verwendet werden."
+msgstr ""
+"Der ausgewählte Referenztakt kann nicht in der Pipeline verwendet werden."
 
-#: gst/gstregistry.c:1694
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Fehler beim Schreiben des Zwischenspeichers der Registry nach %s: %s"
 
-#: gst/gsttaglist.c:107
 msgid "title"
 msgstr "Titel"
 
-#: gst/gsttaglist.c:107
 msgid "commonly used title"
 msgstr "Üblicher Titel"
 
-#: gst/gsttaglist.c:110
 msgid "title sortname"
 msgstr "Sortiername des Titels"
 
-#: gst/gsttaglist.c:110
 msgid "commonly used title for sorting purposes"
 msgstr "Üblicher Titel zu Sortierzwecken"
 
-#: gst/gsttaglist.c:113
 msgid "artist"
 msgstr "Künstler"
 
-#: gst/gsttaglist.c:114
 msgid "person(s) responsible for the recording"
 msgstr "Für die Aufnahme verantwortliche Person(en)"
 
-#: gst/gsttaglist.c:118
 msgid "artist sortname"
 msgstr "Sortiername des Künstlers"
 
-#: gst/gsttaglist.c:119
 msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "Für die Aufnahme verantwortliche Person(en) zu Sortierzwecken"
 
-#: gst/gsttaglist.c:122
 msgid "album"
 msgstr "Album"
 
-#: gst/gsttaglist.c:123
 msgid "album containing this data"
 msgstr "Album, das diese Daten enthält"
 
-#: gst/gsttaglist.c:126
 msgid "album sortname"
 msgstr "Sortiername des Albums"
 
-#: gst/gsttaglist.c:127
 msgid "album containing this data for sorting purposes"
 msgstr "Album, das diese Daten enthält, zu Sortierzwecken"
 
-#: gst/gsttaglist.c:130
 msgid "album artist"
 msgstr "Künstler des Albums"
 
-#: gst/gsttaglist.c:131
 msgid "The artist of the entire album, as it should be displayed"
 msgstr "Der Künstler des gesamten Albums, so wie er angezeigt werden soll"
 
-#: gst/gsttaglist.c:135
 msgid "album artist sortname"
 msgstr "Sortiername des Albenkünstlers"
 
-#: gst/gsttaglist.c:136
 msgid "The artist of the entire album, as it should be sorted"
 msgstr "Der Künstler des gesamten Albums, so wie er einsortiert werden soll"
 
-#: gst/gsttaglist.c:138
 msgid "date"
 msgstr "Datum"
 
-#: gst/gsttaglist.c:138
 msgid "date the data was created (as a GDate structure)"
 msgstr "Datum, an dem die Daten erzeugt wurden (als GDate-Struktur)"
 
-#: gst/gsttaglist.c:140
 msgid "datetime"
 msgstr "DatumUhrzeit"
 
-#: gst/gsttaglist.c:141
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "Datum und Uhrzeit, an denen die Daten erzeugt wurden (als GstDateTime-Struktur)"
+msgstr ""
+"Datum und Uhrzeit, an denen die Daten erzeugt wurden (als GstDateTime-"
+"Struktur)"
 
-#: gst/gsttaglist.c:145
 msgid "genre"
 msgstr "Genre"
 
-#: gst/gsttaglist.c:146
 msgid "genre this data belongs to"
 msgstr "Genre, zu dem diese Daten gehören"
 
-#: gst/gsttaglist.c:149
 msgid "comment"
 msgstr "Kommentar"
 
-#: gst/gsttaglist.c:150
 msgid "free text commenting the data"
 msgstr "Ein freier Text, der die Daten beschreibt"
 
-#: gst/gsttaglist.c:153
 msgid "extended comment"
 msgstr "Erweiterter Kommentar"
 
-#: gst/gsttaglist.c:154
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr "Ein beliebiger Text, der die Daten beschreibt, in der Form »Schlüssel=Wert« oder »Schlüssel[de]=Kommentar«"
+msgstr ""
+"Ein beliebiger Text, der die Daten beschreibt, in der Form »Schlüssel=Wert« "
+"oder »Schlüssel[de]=Kommentar«"
 
-#: gst/gsttaglist.c:158
 msgid "track number"
 msgstr "Titelnummer"
 
-#: gst/gsttaglist.c:159
 msgid "track number inside a collection"
 msgstr "Titelnummer innerhalb der Sammlung"
 
-#: gst/gsttaglist.c:162
 msgid "track count"
 msgstr "Anzahl der Titel"
 
-#: gst/gsttaglist.c:163
 msgid "count of tracks inside collection this track belongs to"
 msgstr "Anzahl der Titel in der Sammlung, zu der dieses Stück gehört"
 
-#: gst/gsttaglist.c:167
 msgid "disc number"
 msgstr "Nummer der Platte"
 
-#: gst/gsttaglist.c:168
 msgid "disc number inside a collection"
 msgstr "Nummer der Platte innerhalb der Sammlung"
 
-#: gst/gsttaglist.c:171
 msgid "disc count"
 msgstr "Anzahl der Platten"
 
-#: gst/gsttaglist.c:172
 msgid "count of discs inside collection this disc belongs to"
 msgstr "Anzahl der Platten innerhalb der Sammlung, zu der diese Platte gehört"
 
-#: gst/gsttaglist.c:176
 msgid "location"
 msgstr "Ort"
 
-#: gst/gsttaglist.c:176
-msgid "Origin of media as a URI (location, where the original of the file or stream is hosted)"
-msgstr "Ursprung des Mediums als URI (Ort, wo das Original der Datei oder des Datenstroms bereit steht)"
+msgid ""
+"Origin of media as a URI (location, where the original of the file or stream "
+"is hosted)"
+msgstr ""
+"Ursprung des Mediums als URI (Ort, wo das Original der Datei oder des "
+"Datenstroms bereit steht)"
 
-#: gst/gsttaglist.c:181
 msgid "homepage"
 msgstr "Internetseite"
 
-#: gst/gsttaglist.c:182
 msgid "Homepage for this media (i.e. artist or movie homepage)"
 msgstr "Internetseite dieses Mediums (z.B. Künstler oder Filmseite)"
 
-#: gst/gsttaglist.c:185
 msgid "description"
 msgstr "Beschreibung"
 
-#: gst/gsttaglist.c:186
 msgid "short text describing the content of the data"
 msgstr "Eine kurze Beschreibung des Inhalts"
 
-#: gst/gsttaglist.c:189
 msgid "version"
 msgstr "Version"
 
-#: gst/gsttaglist.c:189
 msgid "version of this data"
 msgstr "Version dieser Daten"
 
-#: gst/gsttaglist.c:191
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttaglist.c:193
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "International Standard Recording Code - siehe http://www.ifpi.org/isrc/"
+msgstr ""
+"International Standard Recording Code - siehe http://www.ifpi.org/isrc/"
 
-#: gst/gsttaglist.c:197
 msgid "organization"
 msgstr "Organisation"
 
-#: gst/gsttaglist.c:200
 msgid "copyright"
 msgstr "Copyright"
 
-#: gst/gsttaglist.c:200
 msgid "copyright notice of the data"
 msgstr "Copyrightangabe der Daten"
 
-#: gst/gsttaglist.c:202
 msgid "copyright uri"
 msgstr "Copyright-URI"
 
-#: gst/gsttaglist.c:203
 msgid "URI to the copyright notice of the data"
 msgstr "URI zu der Copyrightangabe der Daten"
 
-#: gst/gsttaglist.c:205
 msgid "encoded by"
 msgstr "codiert durch"
 
-#: gst/gsttaglist.c:205
 msgid "name of the encoding person or organization"
 msgstr "Der Name der codierenden Person oder Organisation"
 
-#: gst/gsttaglist.c:209
 msgid "contact"
 msgstr "Kontakt"
 
-#: gst/gsttaglist.c:209
 msgid "contact information"
 msgstr "Kontaktinformation"
 
-#: gst/gsttaglist.c:211
 msgid "license"
 msgstr "Lizenz"
 
-#: gst/gsttaglist.c:211
 msgid "license of data"
 msgstr "Lizenz der Daten"
 
-#: gst/gsttaglist.c:213
 msgid "license uri"
 msgstr "Lizenz-URI"
 
-#: gst/gsttaglist.c:214
 msgid "URI to the license of the data"
 msgstr "URI zur Lizenz der Daten"
 
-#: gst/gsttaglist.c:217
 msgid "performer"
 msgstr "Darsteller"
 
-#: gst/gsttaglist.c:218
 msgid "person(s) performing"
 msgstr "Die das Stück aufführende Person(en)"
 
-#: gst/gsttaglist.c:221
 msgid "composer"
 msgstr "Komponist"
 
-#: gst/gsttaglist.c:222
 msgid "person(s) who composed the recording"
 msgstr "Für die Aufnahme verantwortliche Person(en)"
 
-#: gst/gsttaglist.c:226
 msgid "conductor"
 msgstr "Dirigent"
 
-#: gst/gsttaglist.c:227
 msgid "conductor/performer refinement"
 msgstr "Detaillierung Dirigent/Darsteller"
 
-#: gst/gsttaglist.c:230
 msgid "duration"
 msgstr "Dauer"
 
-#: gst/gsttaglist.c:230
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "Länge des Stücks in GStreamer-Zeiteinheiten (Nanosekunden)"
 
-#: gst/gsttaglist.c:233
 msgid "codec"
 msgstr "Codec"
 
-#: gst/gsttaglist.c:234
 msgid "codec the data is stored in"
 msgstr "Datenformat, in dem die Daten gespeichert sind"
 
-#: gst/gsttaglist.c:237
 msgid "video codec"
 msgstr "Video-Codec"
 
-#: gst/gsttaglist.c:237
 msgid "codec the video data is stored in"
 msgstr "Datenformat, in dem die Videodaten gespeichert sind"
 
-#: gst/gsttaglist.c:240
 msgid "audio codec"
 msgstr "Audio-Codec"
 
-#: gst/gsttaglist.c:240
 msgid "codec the audio data is stored in"
 msgstr "Datenformat, in dem die Audiodaten gespeichert sind"
 
-#: gst/gsttaglist.c:243
 msgid "subtitle codec"
 msgstr "Untertitel-Codec"
 
-#: gst/gsttaglist.c:243
 msgid "codec the subtitle data is stored in"
 msgstr "Datenformat, in dem der Untertitel gespeichert sind"
 
 # Hier ist ein Containerformat wie AVI oder MPEG gemeint.
-#: gst/gsttaglist.c:245
 msgid "container format"
 msgstr "Containerformat"
 
-#: gst/gsttaglist.c:246
 msgid "container format the data is stored in"
 msgstr "Containerformat, in dem die Daten gespeichert sind"
 
-#: gst/gsttaglist.c:248
 msgid "bitrate"
 msgstr "Bitrate"
 
-#: gst/gsttaglist.c:248
 msgid "exact or average bitrate in bits/s"
 msgstr "Genaue oder durchschnittliche Bitrate in Bits/Sekunde"
 
-#: gst/gsttaglist.c:250
 msgid "nominal bitrate"
 msgstr "Normale Bitrate"
 
-#: gst/gsttaglist.c:250
 msgid "nominal bitrate in bits/s"
 msgstr "Bei variabler Bitrate eine mittlere Bitrate in Bits/Sekunde"
 
-#: gst/gsttaglist.c:252
 msgid "minimum bitrate"
 msgstr "Minimale Bitrate"
 
-#: gst/gsttaglist.c:252
 msgid "minimum bitrate in bits/s"
 msgstr "Minimale Bitrate in Bits/Sekunde"
 
-#: gst/gsttaglist.c:254
 msgid "maximum bitrate"
 msgstr "Maximale Bitrate"
 
-#: gst/gsttaglist.c:254
 msgid "maximum bitrate in bits/s"
 msgstr "Maximale Bitrate in Bits/Sekunde"
 
-#: gst/gsttaglist.c:257
 msgid "encoder"
 msgstr "Codierer"
 
-#: gst/gsttaglist.c:257
 msgid "encoder used to encode this stream"
 msgstr "Codierer für diesen Datenstrom"
 
-#: gst/gsttaglist.c:260
 msgid "encoder version"
 msgstr "Version des Codierers"
 
-#: gst/gsttaglist.c:261
 msgid "version of the encoder used to encode this stream"
 msgstr "Version des Codierers für diesen Datenstrom"
 
-#: gst/gsttaglist.c:263
 msgid "serial"
 msgstr "Seriennummer"
 
-#: gst/gsttaglist.c:263
 msgid "serial number of track"
 msgstr "Seriennummer des Titels"
 
 # http://www.audiohq.de/index.php?showtopic=23#Referenzlautstaerke
-#: gst/gsttaglist.c:265
 msgid "replaygain track gain"
 msgstr "Lautstärkeanpassung des Titelpegels"
 
-#: gst/gsttaglist.c:265
 msgid "track gain in db"
 msgstr "Pegelanpassung des Titels in dB"
 
-#: gst/gsttaglist.c:267
 msgid "replaygain track peak"
 msgstr "Lautstärkeanpassung des Spitzenpegels"
 
-#: gst/gsttaglist.c:267
 msgid "peak of the track"
 msgstr "Spitzenpegel des Titels"
 
-#: gst/gsttaglist.c:269
 msgid "replaygain album gain"
 msgstr "Lautstärkeanpassung des Albenpegels"
 
-#: gst/gsttaglist.c:269
 msgid "album gain in db"
 msgstr "Pegelanpassung des Albums in dB"
 
-#: gst/gsttaglist.c:271
 msgid "replaygain album peak"
 msgstr "Lautstärkeanpassung des Albenspitzenpegels"
 
-#: gst/gsttaglist.c:271
 msgid "peak of the album"
 msgstr "Spitzenpegel des Albums"
 
-#: gst/gsttaglist.c:273
 msgid "replaygain reference level"
 msgstr "Referenzpegel der Lautstärkeanpassung"
 
-#: gst/gsttaglist.c:274
 msgid "reference level of track and album gain values"
 msgstr "Referenzpegel für die Pegelanpassungen von Titel und Album"
 
-#: gst/gsttaglist.c:276
 msgid "language code"
 msgstr "Sprachcode"
 
-#: gst/gsttaglist.c:277
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
 msgstr "Sprachcode für diesen Strom nach ISO-639-1 oder ISO-639-2"
 
-#: gst/gsttaglist.c:280
 msgid "language name"
 msgstr "Sprachname"
 
-#: gst/gsttaglist.c:281
 msgid "freeform name of the language this stream is in"
 msgstr "Name der Sprache, in welcher der Datenstrom ist"
 
-#: gst/gsttaglist.c:283
 msgid "image"
 msgstr "Bild"
 
-#: gst/gsttaglist.c:283
 msgid "image related to this stream"
 msgstr "Bild für diesen Datenstrom"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
-#: gst/gsttaglist.c:287
 msgid "preview image"
 msgstr "Vorschaubild"
 
-#: gst/gsttaglist.c:287
 msgid "preview image related to this stream"
 msgstr "Vorschaubild für diesen Datenstrom"
 
-#: gst/gsttaglist.c:289
 msgid "attachment"
 msgstr "Anhang"
 
-#: gst/gsttaglist.c:289
 msgid "file attached to this stream"
 msgstr "An diesen Datenstrom angehangene Datei"
 
-#: gst/gsttaglist.c:292
 msgid "beats per minute"
 msgstr "Schläge pro Minute"
 
-#: gst/gsttaglist.c:293
 msgid "number of beats per minute in audio"
 msgstr "Anzahl der Schläge pro Minute im Hörstück"
 
-#: gst/gsttaglist.c:295
 msgid "keywords"
 msgstr "Schlagworte"
 
-#: gst/gsttaglist.c:295
 msgid "comma separated keywords describing the content"
 msgstr "Durch Komma getrennte Schlüsselwörter, die den Inhalt beschreiben"
 
-#: gst/gsttaglist.c:298
 msgid "geo location name"
 msgstr "geologischer Ort"
 
-#: gst/gsttaglist.c:299
-msgid "human readable descriptive location of where the media has been recorded or produced"
-msgstr "Lesbare Ortsbeschreibung, wo das Medium aufgezeichnet oder produziert wurde"
+msgid ""
+"human readable descriptive location of where the media has been recorded or "
+"produced"
+msgstr ""
+"Lesbare Ortsbeschreibung, wo das Medium aufgezeichnet oder produziert wurde"
 
-#: gst/gsttaglist.c:302
 msgid "geo location latitude"
 msgstr "geografischer Breitengrad"
 
-#: gst/gsttaglist.c:303
-msgid "geo latitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the equator, negative values for southern latitudes)"
-msgstr "geografischer Breitengrad des Ortes in Grad nach WGS84 (Null am Äquator, negative Werte für die südlichen Breitengrade), an dem das Medium aufgezeichnet oder produziert wurde"
+msgid ""
+"geo latitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the equator, negative values for "
+"southern latitudes)"
+msgstr ""
+"geografischer Breitengrad des Ortes in Grad nach WGS84 (Null am Äquator, "
+"negative Werte für die südlichen Breitengrade), an dem das Medium "
+"aufgezeichnet oder produziert wurde"
 
-#: gst/gsttaglist.c:307
 msgid "geo location longitude"
 msgstr "geografischer Längengrad"
 
-#: gst/gsttaglist.c:308
-msgid "geo longitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  negative values for western longitudes)"
-msgstr "geografischer Längengrad des Ortes in Grad nach WGS84 (Null für den Hauptmeridian durch Greenwich/Großbritannien, negative Werte für die westlichen Längengrade)"
+msgid ""
+"geo longitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
+"negative values for western longitudes)"
+msgstr ""
+"geografischer Längengrad des Ortes in Grad nach WGS84 (Null für den "
+"Hauptmeridian durch Greenwich/Großbritannien, negative Werte für die "
+"westlichen Längengrade)"
 
-#: gst/gsttaglist.c:312
 msgid "geo location elevation"
 msgstr "geografische Höhe"
 
-#: gst/gsttaglist.c:313
-msgid "geo elevation of where the media has been recorded or produced in meters according to WGS84 (zero is average sea level)"
-msgstr "geografische Höhe des Ortes in Metern nach WGS84 (Höhe Null entspricht dem Meeresspiegel)"
+msgid ""
+"geo elevation of where the media has been recorded or produced in meters "
+"according to WGS84 (zero is average sea level)"
+msgstr ""
+"geografische Höhe des Ortes in Metern nach WGS84 (Höhe Null entspricht dem "
+"Meeresspiegel)"
 
-#: gst/gsttaglist.c:316
 msgid "geo location country"
 msgstr "geografisches Land"
 
-#: gst/gsttaglist.c:317
 msgid "country (english name) where the media has been recorded or produced"
-msgstr "Das Land (englischer Name), in dem das Medium aufgezeichnet oder produziert wurde"
+msgstr ""
+"Das Land (englischer Name), in dem das Medium aufgezeichnet oder produziert "
+"wurde"
 
-#: gst/gsttaglist.c:320
 msgid "geo location city"
 msgstr "geografische Stadt"
 
-#: gst/gsttaglist.c:321
 msgid "city (english name) where the media has been recorded or produced"
-msgstr "Die Stadt (englischer Name), in der das Medium aufgezeichnet oder produziert wurde"
+msgstr ""
+"Die Stadt (englischer Name), in der das Medium aufgezeichnet oder produziert "
+"wurde"
 
-#: gst/gsttaglist.c:324
 msgid "geo location sublocation"
 msgstr "geografischer Ortsteil"
 
-#: gst/gsttaglist.c:325
-msgid "a location within a city where the media has been produced or created (e.g. the neighborhood)"
-msgstr "ein Ort innerhalb einer Stadt, an dem das Medium aufgezeichnet oder produziert wurde (z.B. der Stadtteil)"
+msgid ""
+"a location within a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr ""
+"ein Ort innerhalb einer Stadt, an dem das Medium aufgezeichnet oder "
+"produziert wurde (z.B. der Stadtteil)"
 
-#: gst/gsttaglist.c:328
 msgid "geo location horizontal error"
 msgstr "Geografischer horizontaler Fehler"
 
-#: gst/gsttaglist.c:329
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr "Erwarteter Fehler der horizontalen Positionsmessung (in Meter)"
 
-#: gst/gsttaglist.c:332
 msgid "geo location movement speed"
 msgstr "Geografische Bewegungsgeschwindigkeit"
 
-#: gst/gsttaglist.c:333
-msgid "movement speed of the capturing device while performing the capture in m/s"
-msgstr "Bewegungsgeschwindigkeit des Aufzeichnungsgeräts während der Aufzeichnung mit m/s"
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr ""
+"Bewegungsgeschwindigkeit des Aufzeichnungsgeräts während der Aufzeichnung "
+"mit m/s"
 
-#: gst/gsttaglist.c:336
 msgid "geo location movement direction"
 msgstr "Geografische Bewegungsrichtung"
 
-#: gst/gsttaglist.c:337
-msgid "indicates the movement direction of the device performing the capture of a media. It is represented as degrees in floating point representation, 0 means the geographic north, and increases clockwise"
-msgstr "Zeigt die Bewegungsrichtung des Aufzeichnungsgeräts während der Aufzeichnung eines Mediums an. Die Darstellung erfolgt in Grad als Fließkommazahl. 0 entspricht dem geografischen Norden und die Zahl wächst im Uhrzeigersinn"
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+"Zeigt die Bewegungsrichtung des Aufzeichnungsgeräts während der Aufzeichnung "
+"eines Mediums an. Die Darstellung erfolgt in Grad als Fließkommazahl. 0 "
+"entspricht dem geografischen Norden und die Zahl wächst im Uhrzeigersinn"
 
-#: gst/gsttaglist.c:342
 msgid "geo location capture direction"
 msgstr "Geografische Aufzeichnungsrichtung"
 
-#: gst/gsttaglist.c:343
-msgid "indicates the direction the device is pointing to when capturing  a media. It is represented as degrees in floating point  representation, 0 means the geographic north, and increases clockwise"
-msgstr "Zeigt die Richtung des Geräts während der Aufzeichnung eines Mediums an. Die Darstellung erfolgt in Grad als Fließkommazahl. 0 entspricht dem geografischen Norden und die Zahl wächst im Uhrzeigersinn"
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+"Zeigt die Richtung des Geräts während der Aufzeichnung eines Mediums an. Die "
+"Darstellung erfolgt in Grad als Fließkommazahl. 0 entspricht dem "
+"geografischen Norden und die Zahl wächst im Uhrzeigersinn"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
-#: gst/gsttaglist.c:349
 msgid "show name"
 msgstr "Name zeigen"
 
-#: gst/gsttaglist.c:350
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr "Name des TV/Podcast/der Serie, von dem das Medium stammt"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
-#: gst/gsttaglist.c:355
 msgid "show sortname"
 msgstr "Sortiername zeigen"
 
-#: gst/gsttaglist.c:356
-msgid "Name of the tv/podcast/series show the media is from, for sorting purposes"
-msgstr "Name des TV/Podcast/der Serie, von dem das Medium stammt, zum Sortieren"
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+"Name des TV/Podcast/der Serie, von dem das Medium stammt, zum Sortieren"
 
-#: gst/gsttaglist.c:359
 msgid "episode number"
 msgstr "Nummer der Folge"
 
-#: gst/gsttaglist.c:360
 msgid "The episode number in the season the media is part of"
 msgstr "Die Nummer der Folge in der Serie, von der das Medium ein Teil ist"
 
-#: gst/gsttaglist.c:363
 msgid "season number"
 msgstr "Nummer der Serie"
 
-#: gst/gsttaglist.c:364
 msgid "The season number of the show the media is part of"
 msgstr "Die Nummer der Serie der Sendung, von der das Medium ein Teil ist"
 
-#: gst/gsttaglist.c:367
 msgid "lyrics"
 msgstr "Liedtext"
 
-#: gst/gsttaglist.c:367
 msgid "The lyrics of the media, commonly used for songs"
 msgstr "Der Liedtext des Mediums, gewöhnlich für Lieder verwendet"
 
-#: gst/gsttaglist.c:370
 msgid "composer sortname"
 msgstr "Sortiername des Komponisten"
 
-#: gst/gsttaglist.c:371
 msgid "person(s) who composed the recording, for sorting purposes"
 msgstr "Für die Aufnahme verantwortliche Person(en), für Sortierzwecke"
 
-#: gst/gsttaglist.c:373
 msgid "grouping"
 msgstr "Gruppieren"
 
-#: gst/gsttaglist.c:374
-msgid "Groups related media that spans multiple tracks, like the different pieces of a concerto. It is a higher level than a track, but lower than an album"
-msgstr "Gruppenbezogenes Medium, das  mehrere Titel umfasst, ähnlich der verschiedenen Stücke eines Konzertes. Es ist eine Ebene höher als ein Titel, aber niedriger als ein Album"
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
+"Gruppenbezogenes Medium, das  mehrere Titel umfasst, ähnlich der "
+"verschiedenen Stücke eines Konzertes. Es ist eine Ebene höher als ein Titel, "
+"aber niedriger als ein Album"
 
-#: gst/gsttaglist.c:378
 msgid "user rating"
 msgstr "Benutzerbewertung"
 
-#: gst/gsttaglist.c:379
-msgid "Rating attributed by a user. The higher the rank, the more the user likes this media"
-msgstr "Bewertet durch einen Benutzer. Je höher die Bewertung, desto beliebter ist das Medium beim Benutzer"
+msgid ""
+"Rating attributed by a user. The higher the rank, the more the user likes "
+"this media"
+msgstr ""
+"Bewertet durch einen Benutzer. Je höher die Bewertung, desto beliebter ist "
+"das Medium beim Benutzer"
 
-#: gst/gsttaglist.c:382
 msgid "device manufacturer"
 msgstr "Gerätehersteller"
 
-#: gst/gsttaglist.c:383
 msgid "Manufacturer of the device used to create this media"
 msgstr "Der Hersteller des Geräts zur Erstellung dieses Mediums"
 
-#: gst/gsttaglist.c:385
 msgid "device model"
 msgstr "Gerätemodell"
 
-#: gst/gsttaglist.c:386
 msgid "Model of the device used to create this media"
 msgstr "Das Modell des Geräts zur Erstellung dieses Mediums"
 
-#: gst/gsttaglist.c:388
 msgid "application name"
 msgstr "Anwendungsname"
 
-#: gst/gsttaglist.c:389
 msgid "Application used to create the media"
 msgstr "Die zur Erstellung dieses Mediums verwendete Anwendung"
 
-#: gst/gsttaglist.c:391
 msgid "application data"
 msgstr "Anwendungsdaten"
 
-#: gst/gsttaglist.c:392
 msgid "Arbitrary application data to be serialized into the media"
 msgstr "Beliebige Anwendungsdaten zur Serialisierung in das Medium"
 
-#: gst/gsttaglist.c:394
 msgid "image orientation"
 msgstr "Bildorientierung"
 
-#: gst/gsttaglist.c:395
 msgid "How the image should be rotated or flipped before display"
 msgstr "Wie das Bild vor der Darstellung gedreht oder gespiegelt werden soll"
 
-#: gst/gsttaglist.c:398
 msgid "publisher"
 msgstr "Herausgeber"
 
-#: gst/gsttaglist.c:399
 msgid "Name of the label or publisher"
 msgstr "Name des Labels oder des Herausgebers"
 
-#: gst/gsttaglist.c:402
 msgid "interpreted-by"
 msgstr "interpreted-by"
 
-#: gst/gsttaglist.c:403
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr "Informationen über die Personen hinter einem Remix und ähnliche Interpretationen"
+msgstr ""
+"Informationen über die Personen hinter einem Remix und ähnliche "
+"Interpretationen"
 
-#: gst/gsttaglist.c:407
 msgid "midi-base-note"
 msgstr "midi-base-note"
 
-#: gst/gsttaglist.c:407
 msgid "Midi note number of the audio track."
 msgstr "Midi-Notenzahl der Tonspur."
 
-#: gst/gsttaglist.c:410
 msgid "private-data"
 msgstr "Private-Daten"
 
-#: gst/gsttaglist.c:410
 msgid "Private data"
 msgstr "Private Daten"
 
-#: gst/gsttaglist.c:450
 msgid ", "
 msgstr ", "
 
-#: gst/gsturi.c:655
 #, c-format
 msgid "No URI handler for the %s protocol found"
 msgstr "Es wurde kein Adress-Handler für das %s-Protokoll gefunden"
 
-#: gst/gsturi.c:830
 #, c-format
 msgid "URI scheme '%s' not supported"
 msgstr "Das Adressenschema »%s« wird nicht unterstützt"
 
-#: gst/gstutils.c:2424 tools/gst-launch.c:324
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FEHLER: Von Element %s: %s\n"
 
-#: gst/gstutils.c:2426 tools/gst-launch.c:326 tools/gst-launch.c:670
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -1015,399 +880,319 @@ msgstr ""
 "Zusätzliche Fehlerdiagnoseinformation:\n"
 "%s\n"
 
-#: gst/parse/grammar.y:216
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "Verknüpfung hat keine Quelle [sink=%s@%p]"
 
-#: gst/parse/grammar.y:221
 #, c-format
 msgid "link has no sink [source=%s@%p]"
 msgstr "Verknüpfung hat kein Ziel [sink=%s@%p]"
 
-#: gst/parse/grammar.y:412
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "Keine Eigenschaft »%s« im Element »%s«"
 
-#: gst/parse/grammar.y:453
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "Die Eigenschaft »%s« im Element »%s« konnte nicht auf »%s« gesetzt werden"
+msgstr ""
+"Die Eigenschaft »%s« im Element »%s« konnte nicht auf »%s« gesetzt werden"
 
-#: gst/parse/grammar.y:503
 msgid "Delayed linking failed."
 msgstr "Verzögertes Verknüpfen ist fehlgeschlagen."
 
-#: gst/parse/grammar.y:641
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s konnte nicht mit %s verknüpft werden"
 
-#: gst/parse/grammar.y:716
 #, c-format
 msgid "no element \"%s\""
 msgstr "Kein Element »%s«"
 
-#: gst/parse/grammar.y:777
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
 msgstr "unerwartete Referenz »%s« - wird ignoriert"
 
-#: gst/parse/grammar.y:783
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
 msgstr "unerwartete pad-Referenz »%s« - wird ignoriert"
 
-#: gst/parse/grammar.y:822
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "Die Fähigkeiten von »%s« konnten nicht ausgelesen werden"
 
-#: gst/parse/grammar.y:850
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "Kein Zielelement für URI »%s«"
 
-#: gst/parse/grammar.y:869
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "Kein Quellelement für URI »%s«"
 
-#: gst/parse/grammar.y:959
 msgid "syntax error"
 msgstr "Syntaxfehler"
 
-#: gst/parse/grammar.y:973
 msgid "bin"
 msgstr "Behälter"
 
-#: gst/parse/grammar.y:982
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "Leeren Behälter »%s« angegeben -- nicht erlaubt"
 
-#: gst/parse/grammar.y:992
 #, c-format
 msgid "no bin \"%s\", unpacking elements"
 msgstr "Kein Behälter »%s« - Elemente werden entpackt"
 
-#: gst/parse/grammar.y:1023
 msgid "empty pipeline not allowed"
 msgstr "Leere Leitung ist nicht erlaubt"
 
-#: libs/gst/base/gstbasesink.c:2853
 msgid "A lot of buffers are being dropped."
 msgstr "Es werden viele Puffer verworfen."
 
-#: libs/gst/base/gstbasesink.c:3381
 msgid "Internal data flow problem."
 msgstr "Internes Problem im Datenfluss."
 
-#: libs/gst/base/gstbasesink.c:4094
-msgid "Internal data stream error."
-msgstr "Interner Fehler im Datenstrom."
-
-#: libs/gst/base/gstbasesink.c:4104 libs/gst/base/gstbasesrc.c:2947
-#: libs/gst/base/gstbasesrc.c:2956 plugins/elements/gstdownloadbuffer.c:1349
-#: plugins/elements/gstqueue.c:966 plugins/elements/gstqueue.c:1515
-#: plugins/elements/gstqueue2.c:2486 plugins/elements/gstqueue2.c:2978
 msgid "Internal data flow error."
 msgstr "Interner Fehler im Datenfluss."
 
-#: libs/gst/base/gstbasesrc.c:2546
 msgid "Internal clock error."
 msgstr "Interner Zeitfehler"
 
-#: libs/gst/base/gstbasesrc.c:2574
 msgid "Failed to map buffer."
 msgstr "Pufferzuweisung schlug fehl."
 
-#: plugins/elements/gstcapsfilter.c:128
 msgid "Filter caps"
 msgstr "Filterfähigkeiten"
 
-#: plugins/elements/gstcapsfilter.c:129
-msgid "Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object."
-msgstr "Beschränkt die möglichen Filterfähigkeiten (NULL bedeutet ALLE). Setzen dieser Eigenschaft referenziert ein hinzugefügtes GstCaps-Objekt."
+msgid ""
+"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
+"property takes a reference to the supplied GstCaps object."
+msgstr ""
+"Beschränkt die möglichen Filterfähigkeiten (NULL bedeutet ALLE). Setzen "
+"dieser Eigenschaft referenziert ein hinzugefügtes GstCaps-Objekt."
 
-#: plugins/elements/gstcapsfilter.c:136
 msgid "Caps Change Mode"
 msgstr "Änderungsmodus der Fähigkeiten"
 
-#: plugins/elements/gstcapsfilter.c:137
 msgid "Filter caps change behaviour"
 msgstr "Änderungsmodus der Filterfähigkeiten"
 
-#: plugins/elements/gstdownloadbuffer.c:920 plugins/elements/gstqueue2.c:1643
 msgid "No Temp directory specified."
 msgstr "Kein temporärer Ordner angegeben."
 
-#: plugins/elements/gstdownloadbuffer.c:926 plugins/elements/gstqueue2.c:1649
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Die temporäre Datei »%s« konnte nicht angelegt werden."
 
-#: plugins/elements/gstdownloadbuffer.c:934 plugins/elements/gstfilesrc.c:534
-#: plugins/elements/gstqueue2.c:1657
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Die Datei »%s« konnte nicht zum Lesen geöffnet werden."
 
-#: plugins/elements/gstdownloadbuffer.c:1258 plugins/elements/gstqueue2.c:2064
 msgid "Error while writing to download file."
 msgstr "Fehler beim Schreiben in die Download-Datei."
 
-#: plugins/elements/gstfilesink.c:431
 msgid "No file name specified for writing."
 msgstr "Kein Dateiname zum Schreiben angegeben."
 
-#: plugins/elements/gstfilesink.c:437
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Datei »%s« konnte nicht zum Schreiben geöffnet werden."
 
-#: plugins/elements/gstfilesink.c:449
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fehler beim Schließen der Datei »%s«."
 
-#: plugins/elements/gstfilesink.c:618
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Fehler beim Durchsuchen der Daten »%s«."
 
-#: plugins/elements/gstfilesink.c:626 plugins/elements/gstfilesink.c:703
-#: plugins/elements/gstfilesink.c:738
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fehler beim Schreiben der Daten »%s«."
 
-#: plugins/elements/gstfilesrc.c:522
 msgid "No file name specified for reading."
 msgstr "Kein Dateiname zum Lesen angegeben."
 
-#: plugins/elements/gstfilesrc.c:543
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Informationen zu »%s« konnten nicht gelesen werden."
 
-#: plugins/elements/gstfilesrc.c:549
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "»%s« ist ein Ordner."
 
-#: plugins/elements/gstfilesrc.c:555
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Die Datei »%s« ist ein Socket."
 
-#: plugins/elements/gstidentity.c:659
 msgid "Failed after iterations as requested."
 msgstr "Nach dem Durchlaufen fehlgeschlagen. Wie gewünscht."
 
-#: plugins/elements/gsttypefindelement.c:200
 msgid "caps"
 msgstr "Fähigkeiten"
 
-#: plugins/elements/gsttypefindelement.c:201
 msgid "detected capabilities in stream"
 msgstr "Erkannte Fähigkeiten im Datenstrom"
 
-#: plugins/elements/gsttypefindelement.c:204
 msgid "minimum"
 msgstr "Minimum"
 
-#: plugins/elements/gsttypefindelement.c:209
 msgid "force caps"
 msgstr "Fähigkeiten erzwingen"
 
-#: plugins/elements/gsttypefindelement.c:210
 msgid "force caps without doing a typefind"
 msgstr "Fähigkeiten ohne Typensuche erzwingen"
 
-#: plugins/elements/gsttypefindelement.c:932
-#: plugins/elements/gsttypefindelement.c:954
 msgid "Stream doesn't contain enough data."
 msgstr "Der Datenstrom enthält nicht genug Daten."
 
-#: plugins/elements/gsttypefindelement.c:1074
 msgid "Stream contains no data."
 msgstr "Der Datenstrom enthält keine Daten."
 
-#: tools/gst-inspect.c:195
 msgid "Implemented Interfaces:\n"
 msgstr "Implementierte Schnittstellen:\n"
 
-#: tools/gst-inspect.c:281
 msgid "readable"
 msgstr "lesbar"
 
-#: tools/gst-inspect.c:290
 msgid "writable"
 msgstr "schreibbar"
 
-#: tools/gst-inspect.c:294
 msgid "deprecated"
 msgstr "veraltet"
 
-#: tools/gst-inspect.c:298
 msgid "controllable"
 msgstr "regelbar"
 
-#: tools/gst-inspect.c:302
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "änderbar in den Status NULL, BEREIT, PAUSIERT oder ABSPIELEN"
 
-#: tools/gst-inspect.c:304
 msgid "changeable only in NULL, READY or PAUSED state"
 msgstr "änderbar nur in den Status NULL, BEREIT oder PAUSIERT"
 
-#: tools/gst-inspect.c:306
 msgid "changeable only in NULL or READY state"
 msgstr "änderbar nur in den Status NULL oder BEREIT"
 
-#: tools/gst-inspect.c:910
 msgid "Blacklisted files:"
 msgstr "Dateien auf der schwarzen Liste:"
 
-#: tools/gst-inspect.c:922 tools/gst-inspect.c:1011
 msgid "Total count: "
 msgstr "Gesamtzahl: "
 
-#: tools/gst-inspect.c:923
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
 msgstr[0] "%d Datei auf der schwarzen Liste"
 msgstr[1] "%d Dateien auf der schwarzen Liste"
 
-#: tools/gst-inspect.c:1012
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d Plugin"
 msgstr[1] "%d Plugins"
 
-#: tools/gst-inspect.c:1015
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
 msgstr[0] "%d Eintrag in der schwarzen Liste"
 msgstr[1] "%d Einträge in der schwarzen Liste"
 
-#: tools/gst-inspect.c:1020
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d Merkmal"
 msgstr[1] "%d Merkmale"
 
-#: tools/gst-inspect.c:1469
 msgid "Print all elements"
 msgstr "Alle Elemente ausgeben"
 
-#: tools/gst-inspect.c:1471
 msgid "Print list of blacklisted files"
 msgstr "Dateien in der schwarzen Liste ausgeben"
 
-#: tools/gst-inspect.c:1473
 msgid ""
-"Print a machine-parsable list of features the specified plugin or all plugins provide.\n"
-"                                       Useful in connection with external automatic plugin installation mechanisms"
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
 msgstr ""
-"Eine maschinenlesbare Liste der Merkmale, die das angegebene oder alle Plugins bereit stellen.\n"
-"                                       Nützlich in Verbindung mit externen Mechanismen zur automatischen Installation von Plugins"
+"Eine maschinenlesbare Liste der Merkmale, die das angegebene oder alle "
+"Plugins bereit stellen.\n"
+"                                       Nützlich in Verbindung mit externen "
+"Mechanismen zur automatischen Installation von Plugins"
 
-#: tools/gst-inspect.c:1478
 msgid "List the plugin contents"
 msgstr "Die Inhalte des Plugins auflisten"
 
-#: tools/gst-inspect.c:1480
 msgid "Check if the specified element or plugin exists"
 msgstr "Prüfen Sie, ob das angegebene Element oder Plugin vorhanden ist"
 
-#: tools/gst-inspect.c:1483
-msgid "When checking if an element or plugin exists, also check that its version is at least the version specified"
-msgstr "Kontrollieren Sie beim Prüfen, ob ein Element oder Plugin vorhanden ist, ebenfalls, ob die Version mindestens der angegebenen entspricht."
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
+"Kontrollieren Sie beim Prüfen, ob ein Element oder Plugin vorhanden ist, "
+"ebenfalls, ob die Version mindestens der angegebenen entspricht."
 
-#: tools/gst-inspect.c:1487
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr "Unterstützte URI-Schemata mit den Elementen ausgeben, die sie implementieren"
+msgstr ""
+"Unterstützte URI-Schemata mit den Elementen ausgeben, die sie implementieren"
 
-#: tools/gst-inspect.c:1632
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Die Plugin-Datei konnte nicht geladen werden: %s\n"
 
-#: tools/gst-inspect.c:1637
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Kein solches Element oder Plugin »%s«\n"
 
-#: tools/gst-launch.c:251
 msgid "Index statistics"
 msgstr "Index-Statistiken"
 
-#: tools/gst-launch.c:551
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Nachricht #%u wurde von Element »%s« (%s) erhalten: "
 
-#: tools/gst-launch.c:555
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
 msgstr "Nachricht #%u wurde von Padding »%s:%s« (%s) erhalten: "
 
-#: tools/gst-launch.c:559
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
 msgstr "Nachricht #%u wurde von Objekt »%s« (%s) erhalten: "
 
-#: tools/gst-launch.c:563
 #, c-format
 msgid "Got message #%u (%s): "
 msgstr "Nachricht #%u (%s) wurde erhalten: "
 
-#: tools/gst-launch.c:595
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "EOS wurde von Element »%s« erhalten.\n"
 
-#: tools/gst-launch.c:604
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Element »%s«.\n"
 
-#: tools/gst-launch.c:607
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
 msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Padding »%s:%s«.\n"
 
-#: tools/gst-launch.c:610
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
 msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Objekt »%s«.\n"
 
-#: tools/gst-launch.c:613
 msgid "FOUND TAG\n"
 msgstr "KENNZEICHEN GEFUNDEN\n"
 
-#: tools/gst-launch.c:628
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
 msgstr "TOC GEFUNDEN: Gefunden durch Element »%s«.\n"
 
-#: tools/gst-launch.c:631
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
 msgstr "TOC GEFUNDEN: Gefunden durch Objekt »%s«.\n"
 
-#: tools/gst-launch.c:634
 msgid "FOUND TOC\n"
 msgstr "TOC GEFUNDEN\n"
 
-#: tools/gst-launch.c:651
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1416,190 +1201,155 @@ msgstr ""
 "INFO:\n"
 "%s\n"
 
-#: tools/gst-launch.c:668
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "WARNUNG: Von Element %s: %s\n"
 
-#: tools/gst-launch.c:703
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Vorgelaufen, auf Ende des Zwischenspeicherns warten …\n"
 
-#: tools/gst-launch.c:707
 msgid "Prerolled, waiting for progress to finish...\n"
 msgstr "Vorgelaufen, auf Ende des Zwischenspeicherns warten …\n"
 
-#: tools/gst-launch.c:719
 msgid "buffering..."
 msgstr "Zwischenspeichern läuft …"
 
-#: tools/gst-launch.c:730
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "Zwischenspeichern abgeschlossen, Leitung wird auf ABSPIELEN gesetzt …\n"
+msgstr ""
+"Zwischenspeichern abgeschlossen, Leitung wird auf ABSPIELEN gesetzt …\n"
 
-#: tools/gst-launch.c:738
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
 "Zwischenspeichern, Leitung wird auf PAUSIERT gesetzt …\n"
 "\n"
 
-#: tools/gst-launch.c:747
 msgid "Redistribute latency...\n"
 msgstr "Verzögerung neu verteilen …\n"
 
-#: tools/gst-launch.c:758
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Status wird auf %s gesetzt wie von %s gewünscht...\n"
 
-#: tools/gst-launch.c:774
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrupt: Leitung wird gestoppt ...\n"
 
-#: tools/gst-launch.c:803
 #, c-format
 msgid "Progress: (%s) %s\n"
 msgstr "Fortschritt: (%s) %s\n"
 
-#: tools/gst-launch.c:816
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "Fehlendes Element »%s«\n"
 
-#: tools/gst-launch.c:830
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Kontext von Element »%s« erhalten: %s=%s\n"
 
-#: tools/gst-launch.c:920
 msgid "Output tags (also known as metadata)"
 msgstr "Kennzeichen (auch bekannt als Metadaten) ausgeben"
 
-#: tools/gst-launch.c:922
 msgid "Output TOC (chapters and editions)"
 msgstr "TOC ausgeben (Kapitel und Editionen)"
 
-#: tools/gst-launch.c:924
 msgid "Output status information and property notifications"
 msgstr "Zustandsinformation und Eigenschaftsmitteilungen ausgeben"
 
-#: tools/gst-launch.c:926
 msgid "Do not print any progress information"
 msgstr "Keine Fortschrittsinformationen ausgeben"
 
-#: tools/gst-launch.c:928
 msgid "Output messages"
 msgstr "Ausgabenachrichten"
 
-#: tools/gst-launch.c:930
-msgid "Do not output status information for the specified property if verbose output is enabled (can be used multiple times)"
-msgstr "Keine Statusinformationen für die angegebene Eigenschaft ausgeben, wenn ausführliche Ausgabe eingeschaltet ist (kann mehrfach verwendet werden)"
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
+"Keine Statusinformationen für die angegebene Eigenschaft ausgeben, wenn "
+"ausführliche Ausgabe eingeschaltet ist (kann mehrfach verwendet werden)"
 
-#: tools/gst-launch.c:932
 msgid "PROPERTY-NAME"
 msgstr "EIGENSCHAFT-NAME"
 
-#: tools/gst-launch.c:934
 msgid "Do not install a fault handler"
 msgstr "Keine Routine zum Abfangen von Fehlern installieren"
 
-#: tools/gst-launch.c:936
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "EOS auf Quelle vor dem Beenden der Leitung erzwingen"
 
-#: tools/gst-launch.c:939
 msgid "Gather and print index statistics"
 msgstr "Index-Statistiken sammeln und ausgeben"
 
-#: tools/gst-launch.c:1004
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEHLER: Leitung konnte nicht konstruiert werden: %s.\n"
 
-#: tools/gst-launch.c:1008
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEHLER: Leitung konnte nicht konstruiert werden.\n"
 
-#: tools/gst-launch.c:1012
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WARNUNG: Fehlerhafte Leitung: %s\n"
 
-#: tools/gst-launch.c:1028
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEHLER: Das Element »Leitung« wurde nicht gefunden.\n"
 
-#: tools/gst-launch.c:1059 tools/gst-launch.c:1160
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Leitung wird auf PAUSIERT gesetzt ...\n"
 
-#: tools/gst-launch.c:1064
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FEHLER: Leitung möchte nicht pausiert werden.\n"
 
-#: tools/gst-launch.c:1069
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Leitung ist aktiv und erfordert keinen VORLAUF …\n"
 
-#: tools/gst-launch.c:1073
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Leitung läuft vor …\n"
 
-#: tools/gst-launch.c:1076 tools/gst-launch.c:1090
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FEHLER: Leitung läuft nicht vor.\n"
 
-#: tools/gst-launch.c:1083
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Leitung ist vorgelaufen …\n"
 
-#: tools/gst-launch.c:1096
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Leitung wird auf ABSPIELEN gesetzt ...\n"
 
-#: tools/gst-launch.c:1103
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEHLER: Leitung spielt nicht ab.\n"
 
-#: tools/gst-launch.c:1122
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS bei Beenden ist eingeschaltet -- EOS wird auf die Leitung erzwungen\n"
+msgstr ""
+"EOS bei Beenden ist eingeschaltet -- EOS wird auf die Leitung erzwungen\n"
 
-#: tools/gst-launch.c:1126
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
 msgstr "EOS bei Beenden ist eingeschaltet -- warten auf EOS nach dem Fehler\n"
 
-#: tools/gst-launch.c:1129
 msgid "Waiting for EOS...\n"
 msgstr "Auf EOS wird gewartet …\n"
 
-#: tools/gst-launch.c:1136
 msgid "EOS received - stopping pipeline...\n"
 msgstr "EOS erhalten - Leitung wird angehalten …\n"
 
-#: tools/gst-launch.c:1140
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
 msgstr "Interrupt beim Warten auf EOS - Leitung wird gestoppt ...\n"
 
-#: tools/gst-launch.c:1145
 msgid "An error happened while waiting for EOS\n"
 msgstr "Ein Fehler ist beim Warten auf EOS aufgetreten\n"
 
-#: tools/gst-launch.c:1156
 msgid "Execution ended after %"
 msgstr "Ausführung beendet nach %"
 
-#: tools/gst-launch.c:1172
 msgid "Setting pipeline to READY ...\n"
 msgstr "Leitung wird auf BEREIT gesetzt ...\n"
 
-#: tools/gst-launch.c:1184
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Leitung wird auf NULL gesetzt ...\n"
 
-#: tools/gst-launch.c:1188
 msgid "Freeing pipeline ...\n"
 msgstr "Leitung wird geleert ...\n"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Interner Fehler im Datenstrom."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Zustandsinformation der Art ART nicht ausgeben"
@@ -1635,7 +1385,9 @@ msgstr "Leitung wird geleert ...\n"
 #~ msgstr "WARNUNG: Zur Zeit wird nur ein Hauptelement unterstützt.\n"
 
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "FEHLER: Das Befehlszeilenargument »%d« konnte nicht ausgelesen werden: %s.\n"
+#~ msgstr ""
+#~ "FEHLER: Das Befehlszeilenargument »%d« konnte nicht ausgelesen werden: "
+#~ "%s.\n"
 
 #~ msgid "WARNING: element named '%s' not found.\n"
 #~ msgstr "WARNUNG: Element namens »%s« nicht gefunden.\n"
@@ -1650,7 +1402,8 @@ msgstr "Leitung wird geleert ...\n"
 #~ msgstr "Keine Routinen für SIGUSR1 und SIGUSR2 installieren"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Speicherzuordnungsverfolgung ausgeben (falls zur Kompilierzeit aktiviert)"
+#~ msgstr ""
+#~ "Speicherzuordnungsverfolgung ausgeben (falls zur Kompilierzeit aktiviert)"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Fehler beim erneuten Einlesen der Registry %s : %s"
@@ -1686,16 +1439,23 @@ msgstr "Leitung wird geleert ...\n"
 #~ msgstr "Zu benutzender Scheduler (Standard: »%s«)"
 
 #~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
-#~ msgstr "Internet GStreamer-Fehler: Schedulerproblem. Bitte schicken Sie einen Fehlerbericht."
+#~ msgstr ""
+#~ "Internet GStreamer-Fehler: Schedulerproblem. Bitte schicken Sie einen "
+#~ "Fehlerbericht."
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "Originalort der Datei als URI"
 
 #~ msgid "There is no element present to handle the stream's mime type %s."
-#~ msgstr "Es gibt kein Element, das den MIME-Typ »%s« dieses Datenstroms verarbeiten kann."
+#~ msgstr ""
+#~ "Es gibt kein Element, das den MIME-Typ »%s« dieses Datenstroms "
+#~ "verarbeiten kann."
 
-#~ msgid "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr "Konnte »%s« nicht so konvertieren, dass es zur Eigenschaft »%s« im Element »%s« passt"
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "Konnte »%s« nicht so konvertieren, dass es zur Eigenschaft »%s« im "
+#~ "Element »%s« passt"
 
 #~ msgid "Show plugin details"
 #~ msgstr "Plugindetails anzeigen"
