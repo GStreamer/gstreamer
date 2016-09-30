@@ -1664,6 +1664,31 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode,
           "video/x-prores", NULL);
+      if (context) {
+        switch (context->codec_tag) {
+          case GST_MAKE_FOURCC ('a', 'p', 'c', 'o'):
+            gst_caps_set_simple (caps, "variant", G_TYPE_STRING, "proxy", NULL);
+            break;
+          case GST_MAKE_FOURCC ('a', 'p', 'c', 's'):
+            gst_caps_set_simple (caps, "variant", G_TYPE_STRING, "lt", NULL);
+            break;
+          default:
+          case GST_MAKE_FOURCC ('a', 'p', 'c', 'n'):
+            gst_caps_set_simple (caps, "variant", G_TYPE_STRING, "standard",
+                NULL);
+            break;
+          case GST_MAKE_FOURCC ('a', 'p', 'c', 'h'):
+            gst_caps_set_simple (caps, "variant", G_TYPE_STRING, "hq", NULL);
+            break;
+          case GST_MAKE_FOURCC ('a', 'p', '4', 'h'):
+            gst_caps_set_simple (caps, "variant", G_TYPE_STRING, "4444", NULL);
+            break;
+          case GST_MAKE_FOURCC ('a', 'p', '4', 'x'):
+            gst_caps_set_simple (caps, "variant", G_TYPE_STRING, "4444xq",
+                NULL);
+            break;
+        }
+      }
       break;
 
     case AV_CODEC_ID_MIMIC:
