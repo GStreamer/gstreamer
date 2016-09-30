@@ -733,7 +733,6 @@ class Window (object):
         self.show_info(self.progress_dialog.widget)
         self.progress_dialog.handle_cancel = self.handle_filter_progress_dialog_cancel
         dispatcher = Common.Data.GSourceDispatcher()
-        self.filter_dispatcher = dispatcher
 
         # FIXME: Unsetting the model to keep e.g. the dispatched timeline
         # sentinel from collecting data while we filter idly, which slows

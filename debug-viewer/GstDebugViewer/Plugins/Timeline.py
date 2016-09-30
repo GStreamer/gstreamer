@@ -1059,19 +1059,13 @@ class TimelineFeature (FeatureBase):
 
         self.attached_windows = {}
 
-        handler = self.handle_show_action_toggled
         action = self.action_group.get_action("show-timeline")
         action.props.active = self.state.shown
-        action.connect("toggled", handler)
+        action.connect("toggled", self.handle_show_action_toggled)
 
     def handle_show_action_toggled(self, action):
 
-        show = action.props.active
-
-        if show:
-            self.state.shown = True
-        else:
-            self.state.shown = False
+        self.state.shown = action.props.active
 
     def handle_attach_window(self, window):
 
