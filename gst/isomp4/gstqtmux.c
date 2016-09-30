@@ -4318,9 +4318,40 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       qtmux->context, &entry, rate, ext_atom_list);
   if (strcmp (mimetype, "video/x-prores") == 0) {
     SampleTableEntryMP4V *mp4v = (SampleTableEntryMP4V *) qtpad->trak_ste;
+    const gchar *compressor = NULL;
     mp4v->spatial_quality = 0x3FF;
     mp4v->temporal_quality = 0;
     mp4v->vendor = FOURCC_appl;
+    mp4v->horizontal_resolution = 72 << 16;
+    mp4v->vertical_resolution = 72 << 16;
+    mp4v->depth = (entry.fourcc == FOURCC_ap4h
+        || entry.fourcc == FOURCC_ap4x) ? 32 : 24;
+
+    /* Set compressor name, required by some software */
+    switch (entry.fourcc) {
+      case FOURCC_apcn:
+        compressor = "Apple ProRes 422";
+        break;
+      case FOURCC_apcs:
+        compressor = "Apple ProRes 422 LT";
+        break;
+      case FOURCC_apch:
+        compressor = "Apple ProRes 422 HQ";
+        break;
+      case FOURCC_apco:
+        compressor = "Apple ProRes 422 Proxy";
+        break;
+      case FOURCC_ap4h:
+        compressor = "Apple ProRes 4444";
+        break;
+      case FOURCC_ap4x:
+        compressor = "Apple ProRes 4444 XQ";
+        break;
+    }
+    if (compressor) {
+      strcpy ((gchar *) mp4v->compressor + 1, compressor);
+      mp4v->compressor[0] = strlen (compressor);
+    }
 
     /* The 'clap' extension is also defined for MP4 but inventing values in
      * general seems a bit tricky for this one. We only write it for ProRes
