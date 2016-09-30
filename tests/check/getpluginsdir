@@ -16,10 +16,12 @@ for i in range(0, len(args), 2):
         res += ':' + path
     else:
         try:
-            res += ':' + subprocess.check_output(['pkg-config',
-                                                  '--variable=pluginsdir',
-                                                  pkg_name]).decode()
-        except subprocess.CalledProcessError:
-            exit(1)
+            res += ':' + subprocess.check_output([
+                'pkg-config', '--variable=pluginsdir',
+                pkg_name]).decode().replace("\n", "")
+        except subprocess.CalledProcessError as e:
+            # Probably means there is no .pc file for the module
+            # and it should hopefully no be too bad.
+            pass
 
 print(res.strip(":"))
