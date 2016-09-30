@@ -1,9 +1,308 @@
-=== release 1.9.2 ===
+=== release 1.9.90 ===
 
-2016-09-01  Sebastian Dröge <slomo@coaxion.net>
+2016-09-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.2
+	  releasing 1.9.90
+
+2016-09-23 20:41:04 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* docs/libs/meson.build:
+	* docs/meson.build:
+	* ges/meson.build:
+	  meson: Fix gtkdoc using new meson features
+
+2016-09-21 16:41:31 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/meson.build:
+	  meson: Fix installing configured files
+
+2016-08-13 19:54:22 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-docs.sgml:
+	* docs/libs/ges-sections.txt:
+	* ges/ges-uri-clip.c:
+	  uriclip: Remove some filesource leftovers
+	  Differential Revision: https://phabricator.freedesktop.org/D1329
+
+2016-08-13 21:09:53 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* tests/check/python/__init__.py:
+	* tests/check/python/common.py:
+	* tests/check/python/test_clip.py:
+	* tests/check/python/test_group.py:
+	* tests/check/python/test_timeline.py:
+	  tests_:python: Factor out common code
+	  Differential Revision: https://phabricator.freedesktop.org/D1328
+
+2016-09-17 09:46:59 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nle: Drop tags getting out of the composition
+	  Those tag are meaningless in for the new stream created by the composition
+	  First step toward fixing T3070
+	  Differential Revision: https://phabricator.freedesktop.org/D1327
+
+2016-08-11 15:12:07 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline.c:
+	* tests/check/python/test_group.py:
+	  timeline: Properly compute the end of groups when checking snapping
+	  Computation was not taking into account the fact that the start of
+	  the element being moved could be at the middle of a group and not
+	  necessarily at the start!
+	  Fixes T7544
+	  Reviewed-by: Alex Băluț <alexandru.balut@gmail.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1282
+
+2016-08-11 13:19:44 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-auto-transition.c:
+	* tests/check/python/test_group.py:
+	  ges: Handle moving groups with effects inside
+	  We were only concidering that we should let the group handle moving
+	  transitions when changing transitions but in fact as soon as a
+	  transition is happenning between two clips that are in a same group
+	  the group properly handles moving the transition, so let the
+	  group do its job.
+	  Fixes T7543
+	  Differential Revision: https://phabricator.freedesktop.org/D1281
+
+2016-08-11 10:54:08 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/effects.c:
+	* tests/check/ges/layer.c:
+	  ges: Deprecate GESTimelineElement::priority writability
+	  GESLayer is now responsible for setting clips priorites. Also
+	  GESClip top effects priorities are now set by the
+	  ges_clip_set_top_effect_index method, the user should never call
+	  ges_timeline_element_set_priority as it will anyway be overriden
+	  by GES itself.
+	  Differential Revision: https://phabricator.freedesktop.org/D1280
+
+2016-08-11 10:36:44 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-layer.c:
+	  layer: Handle operation priorities
+	  All operations should have higher priorites and sources should be
+	  on top of those. We now first set the operations priorities in
+	  a first pass and then stack sources on top of those.
+	  Differential Revision: https://phabricator.freedesktop.org/D1279
+
+2016-08-11 09:53:58 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-video-transition.c:
+	  ges: transition: Make crossfade fade out at the same time as it fade in
+	  Until now fade out was just fading in the new clip, but this is not
+	  correct and crossfade should at the same time fade out while fading
+	  in.
+	  Fixes https://phabricator.freedesktop.org/T3451
+	  Differential Revision: https://phabricator.freedesktop.org/D1278
+
+2016-08-11 09:42:32 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-internal.h:
+	* ges/ges-layer.c:
+	* ges/ges-timeline.c:
+	  layer: Make sure to resync priorities on commit
+	  In case effects have been added priorites might become wrong,
+	  but until the timeline is not commited, it does not matter.
+	  Make sure all priorities are correct before commiting compositions
+	  Differential Revision: https://phabricator.freedesktop.org/D1277
+
+2016-08-11 09:14:42 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-auto-transition.c:
+	* ges/ges-layer.c:
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/effects.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/project.c:
+	* tests/check/ges/test-utils.h:
+	* tests/check/ges/titles.c:
+	* tests/check/ges/uriclip.c:
+	* tests/check/python/test_clip.py:
+	  Finally move clip priority handling to GESLayer.
+	  Fix all tests as we now have 1 priority inside the layer
+	  dedicated to transitions (basically no source clip will
+	  ever have a priority of 0 inside a layer).
+	  Differential Revision: https://phabricator.freedesktop.org/D1276
+
+2016-08-11 08:54:23 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-clip.c:
+	* tests/check/ges/effects.c:
+	  clip: Make top effect priority inside the clip priority range
+	  And simplify the way we start computing children priority
+	  making min_priority already relative to the clip itself.
+	  Differential Revision: https://phabricator.freedesktop.org/D1275
+
+2016-08-11 07:54:42 -0400  Thibault Saunier <tsaunier@gnome.org>
+
+	* tests/check/ges/timelineedition.c:
+	  tests_: timelineedition: Fix test now that we ripple from start and not from end
+	  Differential Revision: https://phabricator.freedesktop.org/D1274
+
+2016-09-22 11:28:21 -0400  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Don't try to seek on an empty stack
+	  We would seek on a NULL pad then, which gives ugly assertions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771843
+
+2016-09-22 11:25:18 -0400  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nleurisource.c:
+	* plugins/nle/nleurisource.h:
+	  nleurisource: Always provide a srcpad
+	  By putting uridecodebin into a bin with a ghostpad. Without this,
+	  nlesource tries to get a srcpad too early (before uridecodebin added
+	  one) and everything fails miserably.
+	  This has to be fixed properly in nlesource at some point, by properly
+	  handling dynamically added pads. Currently they can only work if they
+	  are added in states <= READY, which is not the usual case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771843
+
+2016-09-21 18:23:56 -0400  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nlesource.c:
+	  nlesource: Fail prepare() if no valid source pad is found
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771792
+
+2016-09-14 14:32:19 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tools/utils.c:
+	  ges-launch: Be a bit more agressive sanitizing arguments
+	  Otherwise GstStructure might fail parsing some fields
+	  containing brackets
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771434
+
+2016-09-14 11:31:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Depend on gstreamer 1.9.2.1
+
+2016-09-06 14:27:38 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-group.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	* ges/ges-xml-formatter.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_group.py:
+	* tests/check/python/test_timeline.py:
+	  timeline: Make get_groups public
+	  Had to separate timeline_emit_group_added from timeline_add_group
+	  to avoid emitting group-added when the project is being loaded.
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1302
+
+2016-09-06 15:49:49 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* tests/check/python/test_group.py:
+	  tests_: Make sure child-removed is emitted when ungrouping
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1301
+
+2016-09-06 13:03:11 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Fix documentation
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1300
+
+2016-09-05 12:23:30 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* README:
+	  Remove obsolete dependency
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1299
+
+2016-09-10 20:52:38 +1000  Jan Schmidt <jan@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From b18d820 to f980fd9
+
+2016-09-10 09:58:37 +1000  Jan Schmidt <jan@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From f49c55e to b18d820
+
+2016-09-09 17:14:43 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/Makefile.am:
+	  tests: Move -DGES_TEST_FILES_PATH to common_cflags
+	  As it is needed to build the utils lib
+
+2016-09-09 16:42:13 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/test-utils.c:
+	* tests/check/meson.build:
+	  tests: Fix the way we get tests assets
+	  Using __FILE__ won't work properly with meson.
+
+2016-09-09 08:52:32 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/meson.build:
+	* tests/validate/geslaunch.py:
+	  test:validate: Handle new expected_failures Test argument
+
+2016-09-07 16:53:06 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	* tests/check/meson.build:
+	  meson: Do not build libges against libcheck
+
+2016-09-05 17:55:42 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/getpluginsdir:
+	* tests/check/meson.build:
+	  meson: Properly find where other GStreamer plugins are when using subprojects
+
+2016-09-05 14:54:53 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/validate/geslaunch.py:
+	  Revert "validate: Blacklist racy tests"
+	  This reverts commit ce35412ff260fbd6e07b374bc3ca677053c277e0.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769894 has been fixed
+
+2016-08-26 19:55:33 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	  meson: Handle building the gir file when used as subproject
+	  Add support for building GIR when used as subproject
+	  Add an option to disable GIR generation
+	  And bump version to 1.9.2
+
+2016-09-01 12:33:22 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.9.2 ===
+
+2016-09-01 12:33:13 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.9.2
 
 2016-08-25 15:04:54 -0300  Thibault Saunier <tsaunier@gnome.org>
 
