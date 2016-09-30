@@ -3169,8 +3169,6 @@ gst_player_set_uri (GstPlayer * self, const gchar * val)
  * @player: #GstPlayer instance
  * @uri: subtitle URI
  *
- * Returns: %TRUE or %FALSE
- *
  * Sets the external subtitle URI.
  */
 void
