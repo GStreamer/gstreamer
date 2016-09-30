@@ -1,9 +1,341 @@
-=== release 1.9.2 ===
+=== release 1.9.90 ===
 
-2016-09-01  Sebastian Dröge <slomo@coaxion.net>
+2016-09-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.2
+	  releasing 1.9.90
+
+2016-09-23 20:40:52 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/docs/validate/meson.build:
+	  meson: Fix gtkdoc using new meson features
+
+2016-09-28 21:19:29 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* debug-viewer/GstDebugViewer/Plugins/ColorizeRows.py:
+	* debug-viewer/GstDebugViewer/Plugins/FindBar.py:
+	* debug-viewer/GstDebugViewer/Plugins/Timeline.py:
+	* debug-viewer/GstDebugViewer/Plugins/__init__.py:
+	  debug-viewer: initialize all features from tuples
+	  Also add a first doc string about the plugin initialisation.
+
+2016-09-28 20:38:55 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* debug-viewer/GstDebugViewer/Common/Data.py:
+	* debug-viewer/GstDebugViewer/Common/GUI.py:
+	* debug-viewer/GstDebugViewer/Common/Main.py:
+	* debug-viewer/GstDebugViewer/Common/__init__.py:
+	* debug-viewer/GstDebugViewer/Common/generictreemodel.py:
+	* debug-viewer/GstDebugViewer/Common/utils.py:
+	* debug-viewer/GstDebugViewer/Data.py:
+	* debug-viewer/GstDebugViewer/GUI/__init__.py:
+	* debug-viewer/GstDebugViewer/GUI/app.py:
+	* debug-viewer/GstDebugViewer/GUI/colors.py:
+	* debug-viewer/GstDebugViewer/GUI/columns.py:
+	* debug-viewer/GstDebugViewer/GUI/filters.py:
+	* debug-viewer/GstDebugViewer/GUI/models.py:
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	* debug-viewer/GstDebugViewer/Main.py:
+	* debug-viewer/GstDebugViewer/Plugins/ColorizeRows.py:
+	* debug-viewer/GstDebugViewer/Plugins/FileProperties.py:
+	* debug-viewer/GstDebugViewer/Plugins/FindBar.py:
+	* debug-viewer/GstDebugViewer/Plugins/Timeline.py:
+	* debug-viewer/GstDebugViewer/Plugins/__init__.py:
+	  formatting: run autopep8 over all files
+	  We have a commit hook on the repo. Get all files to match the pep8 guidelines.
+
+2016-09-28 20:34:53 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* debug-viewer/GstDebugViewer/Plugins/FileProperties.py:
+	* debug-viewer/GstDebugViewer/Plugins/FindBar.py:
+	* debug-viewer/GstDebugViewer/Plugins/Timeline.py:
+	* debug-viewer/GstDebugViewer/Plugins/__init__.py:
+	  debug-viewer: cleanup imports in plugins
+	  Don't use * imports. Don't rely on package level imports.
+
+2016-09-21 16:41:45 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/meson.build:
+	* validate/tools/meson.build:
+	  meson: Fix installing configured files
+
+2016-09-21 16:14:59 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/docs/validate/envvariables.xml:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/validate.c:
+	  validate: Allow doting the pipeline on issue reporting
+	  And let the user configure on what level of issues to do it
+	  by setting the GST_VALIDATE_CONFIG env var.
+	  Always dot on critical issues.
+
+2016-09-21 16:00:18 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/docs/validate/envvariables.xml:
+	* validate/gst/validate/validate.c:
+	  validate: Allow passing a GST_VALIDATE_CONFIG as a string
+	  Instead of forcing user to put it in a file.
+	  We are simply using the GstCaps synthax to parse it.
+
+2016-09-21 15:48:57 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add a reference to the pipeline from each monitor
+	  That will allow us to add more flexibility regarding the way
+	  we report thing to the user and will allow us to properly make
+	  reports per pipeline.
+
+2016-09-21 14:10:53 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Minor fix in returncode check
+
+2016-09-21 14:07:29 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Always print trace for critical issues
+	  And take into account issue details level to generate backtrace.
+
+2016-09-21 12:26:17 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/tests/check/validate/reporting.c:
+	  validate: Add support for setting a report level for an issue type
+	  Until now we could set report levels to the monitor, this adds support
+	  for setting report level for the issue types too.
+
+2016-09-25 18:23:30 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate: transcoding: fix several error messages
+	  No encoders found, no static src/sink pads found and keyunit and force-stop
+	  error conditions.
+
+2016-09-25 18:03:45 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: fix grammar on subtitle-file action description
+
+2016-09-22 15:56:24 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Dump the infos about NNEs if we can not properly determine the problem
+	  It should anyway be pretty interesting pieces of information.
+
+2016-09-22 11:37:57 -0400  Javier Martinez Canillas <javier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: fix build warning in generate_unwind_trace()
+	  The unw_word_t type has different sizes for 32-bit and 64-bit, so using the
+	  %lx format specifier on a 32-bit CPU leads to the following compile warning:
+	  CC       libgstvalidate_1.0_la-gst-validate-report.lo
+	  gst-validate-report.c: In function 'generate_unwind_trace':
+	  gst-validate-report.c:137:36: error: format '%lx' expects argument of type 'long unsigned int', but argument 4 has type 'unw_word_t {aka unsigned int}' [-Werror=format=]
+	  g_string_append_printf (trace, "%s (0x%lx)\n", name, offset);
+	  Cast to long so the %lx fomart specifier can be always used.
+
+2016-09-22 12:36:29 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Avoid checking NULL pads when generating NNE reports
+
+2016-09-20 13:39:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: fix compiler warnings
+	  gst-validate-report.c: In function ‘generate_unwind_trace’:
+	  gst-validate-report.c:116:1: error: old-style function definition [-Werror=old-style-definition]
+	  generate_unwind_trace ()
+	  ^~~~~~~~~~~~~~~~~~~~~
+	  gst-validate-report.c:122:3: error: ISO C90 forbids mixed declarations and code [-Werror=declaration-after-statement]
+	  unw_cursor_t cursor;
+	  ^~~~~~~~~~~~
+
+2016-09-08 12:53:30 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/config.h.meson:
+	* validate/configure.ac:
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/meson.build:
+	* validate/meson.build:
+	  validate: Add backtraces in the reports
+	  Printing them when the reporting all the details only
+
+2016-09-14 11:31:47 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/configure.ac:
+	  configure: Depend on gstreamer 1.9.2.1
+
+2016-09-12 14:21:30 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Do not use unset sent_eos variable
+	  And rename class member to sent_eos_time as it is more accurate
+
+2016-09-09 12:09:45 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	* validate/tests/check/meson.build:
+	* validate/tests/getpluginsdir:
+	* validate/tests/launcher_tests/meson.build:
+	* validate/tests/meson.build:
+	  meson:validate:test: Properly set paths to run launcher based tests
+	  Adding a --validate-tools-path option to the launcher, allowing
+	  to pass it from meson.
+
+2016-09-08 12:52:24 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/config.h.meson:
+	* validate/gst/validate/meson.build:
+	* validate/meson.build:
+	  meson: Build GstValidate as a tracer
+	  And add version to the GStValidate shared library
+
+2016-09-07 17:24:53 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tests/launcher_tests/meson.build:
+	* validate/tests/launcher_tests/test_validate.py:
+	* validate/tests/meson.build:
+	  validate: tests: Add launcher based GstValidate tests
+	  First checking the new not negotiated error reporting code.
+
+2016-09-02 17:39:50 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate: launcher: Always clean all tests at the end
+	  Making sure that if an exception of anything happens we will
+	  properly clean all the tests, or at least try to.
+
+2016-09-02 17:37:24 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Allow specifying expected tests errors
+	  In the future instead of blacklisting tests we should define
+	  what error is expected, and this way when the bug is closed,
+	  we will notice, also, it will allow us to check GstValidate
+	  error reporting itself.
+
+2016-09-01 17:39:38 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/configure.ac:
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/meson.build:
+	* validate/gst/validate/validate.c:
+	* validate/launcher/baseclasses.py:
+	* validate/meson.build:
+	  validate: Pass information about GstValidate execution over a socket
+	  Instead of trying to parsing stdout, generate json messages and
+	  send them over a socket so that gst-validate-launcher can properly
+	  have informations about gst-validate subprocess execution.
+
+2016-08-28 20:37:05 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	  validate: Enhance not-negotiated errors reporting
+	  Keeping negotation information around and trying to figure
+	  out precisely why the elements could not negotied the caps
+	  when we get a NOT_NEGOTIATED error on the bus giving the
+	  user details about it.
+
+2016-09-07 10:59:22 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	* validate/meson.build:
+	* validate/tests/check/getpluginsdir:
+	* validate/tests/check/meson.build:
+	* validate/tests/meson.build:
+	  validate:meson: Add tests
+
+2016-09-06 16:21:05 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	* validate/launcher/reporters.py:
+	  validate:launcher: Use a xunit reporter only when explicitely specified
+
+2016-09-06 10:29:27 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validare: Enhance report message about wrong position
+
+2016-09-05 12:16:59 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Report error and exit when a testsuite could not load
+	  Otherwise the user might end up seeing a lot of meaningless logs about
+	  'removed' tests.
+
+2016-09-02 17:41:32 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: launcher: Fix the condition to check if we need an http server
+	  We could be checking if a string was in None
+	  And use gs_string_assign when assigning the first string
+	  without using printf like format.
+
+2016-09-02 16:24:47 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: Indent report details
+
+2016-08-14 16:03:44 -0700  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Wait for ASYNC_DONE to set async state change DONE
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=769894
+
+2016-09-05 12:23:35 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Bump version to 1.9.2
+	  And unify the name of the disable_introspection option
+
+2016-09-01 12:35:08 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/configure.ac:
+	  Back to development
+
+=== release 1.9.2 ===
+
+2016-09-01 12:35:00 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.9.2
 
 2016-09-01 03:39:18 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
 
