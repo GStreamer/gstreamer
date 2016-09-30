@@ -1,9 +1,94 @@
-=== release 1.9.2 ===
+=== release 1.9.90 ===
 
-2016-09-01  Sebastian Dröge <slomo@coaxion.net>
+2016-09-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.2
+	  releasing 1.9.90
+
+2016-09-30 11:44:22 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/id.po:
+	* po/sv.po:
+	  po: Update translations
+
+2016-09-29 12:39:34 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Set colorimetry and chroma-site information
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772159
+
+2016-09-24 09:08:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* po/meson.build:
+	  meson: hook up translations
+
+2016-09-24 08:59:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* tests/check/getpluginsdir:
+	* tests/check/meson.build:
+	* tests/meson.build:
+	  meson: hook up unit tests
+
+2016-09-14 11:30:58 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Depend on gstreamer 1.9.2.1
+
+2016-09-10 20:51:36 +1000  Jan Schmidt <jan@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From b18d820 to f980fd9
+
+2016-09-10 09:54:15 +1000  Jan Schmidt <jan@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From f49c55e to b18d820
+
+2016-09-05 12:22:56 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: Bump version to 1.9.2
+
+2016-09-01 12:28:57 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.9.2 ===
+
+2016-09-01 12:28:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.9.2
 
 2016-09-01 11:24:13 +0300  Sebastian Dröge <sebastian@centricular.com>
 
