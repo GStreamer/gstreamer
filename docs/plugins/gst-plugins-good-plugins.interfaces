@@ -6,6 +6,7 @@ GSocketAddress GSocketConnectable
 GdkPixbuf GIcon
 GdkPixbuf GIcon GLoadableIcon
 Gst3GPPMux GstTagSetter GstTagXmpWriter
+Gst3GPPMux GstTagSetter GstTagXmpWriter GstPreset
 GstALawEnc GstPreset
 GstApev2Mux GstTagSetter
 GstAspectRatioCrop GstChildProxy
@@ -35,6 +36,7 @@ GstHDV1394Src GstURIHandler GstPropertyProbe
 GstHalAudioSink GstChildProxy
 GstHalAudioSrc GstChildProxy
 GstISMLMux GstTagSetter GstTagXmpWriter
+GstISMLMux GstTagSetter GstTagXmpWriter GstPreset
 GstId3v2Mux GstTagSetter
 GstIirEqualizer GstChildProxy
 GstIirEqualizer GstChildProxy GstPreset
@@ -44,7 +46,9 @@ GstIirEqualizerNBands GstChildProxy
 GstIirEqualizerNBands GstChildProxy GstPreset
 GstJpegEnc GstPreset
 GstMJ2Mux GstTagSetter GstTagXmpWriter
+GstMJ2Mux GstTagSetter GstTagXmpWriter GstPreset
 GstMP4Mux GstTagSetter GstTagXmpWriter
+GstMP4Mux GstTagSetter GstTagXmpWriter GstPreset
 GstMatroskaMux GstTagSetter
 GstMatroskaMux GstTagSetter GstTocSetter
 GstMuLawEnc GstPreset
@@ -68,6 +72,7 @@ GstPulseSrc GstStreamVolume GstImplementsInterface GstMixer GstPropertyProbe
 GstPushFileSrc GstChildProxy GstURIHandler
 GstQTMoovRecover GstChildProxy
 GstQTMux GstTagSetter GstTagXmpWriter
+GstQTMux GstTagSetter GstTagXmpWriter GstPreset
 GstRTSPSrc GstChildProxy GstURIHandler
 GstRgVolume GstChildProxy
 GstRtpBin GstChildProxy

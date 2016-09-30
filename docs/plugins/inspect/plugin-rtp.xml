@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.9.2</version>
+  <version>1.9.90</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -1034,7 +1034,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw</details>
+          <details>audio/mpeg, mpegversion=(int)4, framed=(boolean){ false, true }, stream-format=(string)raw</details>
         </caps>
       </pads>
     </element>

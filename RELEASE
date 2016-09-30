@@ -1,13 +1,10 @@
 
-Release notes for GStreamer Good Plugins 1.9.2
+Release notes for GStreamer Good Plugins 1.9.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.9 release series, which marks the feature freeze for 1.10. The 1.9 release
-series is adding new features on top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series
-and is part of the API and ABI-stable 1.x release series of the GStreamer
-multimedia framework. The unstable 1.9 release series will lead to the stable
-1.10 release series in the next weeks. Any newly added API can still change
-until that point.
+The GStreamer team is pleased to announce the first release candidate of the
+stable 1.10 release series. The 1.10 release series is adding new features on
+top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and
+ABI-stable 1.x release series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -56,21 +53,17 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 753760 : rtph265: sync against latest spec
-      * 763038 : souphttpsrc: add http error code to element error messages
-      * 767900 : multipartmux is not clearing dts timestamp.
-      * 767950 : qtmux: Add support for writing timecode track
-      * 768440 : flvdemux: Create per-stream tag lists
-      * 768653 : rtph265pay: does not accept array_completeness=1 in codec_data
-      * 768739 : tests: fix bus leaks in -good tests
-      * 768787 : AG_GST_PKG_CONFIG_PATH is not called before using GST_PKG_CONFIG_PATH
-      * 769117 : Regression building master
-      * 769390 : wavparse: Add bitrate and container format tags
-      * 769664 : splitmuxsink: Add option to split at exactly max-size-time
-      * 770285 : rtpbin: fix typo in max-misorder-time property name
-      * 770292 : rtpbin: introduce max-streams property
-      * 770394 : rtph265pay does not set RTP marker bit
-      * 770526 : osxvideo: fatal error: 'QuickTime/QuickTime.h' file not found (macOS Sierra)
+      * 751559 : qtmux: Implement the preset interface.
+      * 766990 : multifilesink: 'buffer'-mode writes no longer atomic (regression)
+      * 769278 : aacparse: a few fixes and improvements for LOAS parsing
+      * 769757 : rtpjitterbuffer: Fix calculating next_seqnum when dropping old buffers from a full queue.
+      * 769768 : rtpjitterbuffer: lots of improvements around RTX
+      * 770951 : qtdemux: Crash with no cenc auxiliary offset available
+      * 771272 : jackaudiosink: hangs when jackd changes sample rate and/or buffer size
+      * 771278 : udpsrc: Compilation error on NetBSD
+      * 771395 : autodetect: Use gst_bin_set_suppressed_flags() API
+      * 772143 : qtmux: Don't calculate PTS offset and DTS with GST_CLOCK_TIME_NONE
+      * 772228 : tagschecking: Unit test fails because it sends untimestamped buffers to qtdemux
 
 ==== Download ====
 
@@ -107,32 +100,21 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Carlos Rafael Giani
-      * Edward Hervey
-      * Guillaume Desmottes
+      * Arun Raghavan
+      * Georg Lippitsch
       * Havard Graff
-      * Jan Alexander Steffens (heftig)
       * Jan Schmidt
-      * Jie Jiang
-      * Jonas Holmberg
-      * Josep Torra
-      * Luis de Bethencourt
-      * Mats Lindestam
-      * Mikhail Fludkov
+      * Mathieu Duponchelle
       * Nicolas Dufresne
-      * Nirbheek Chauhan
       * Olivier Crête
-      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
-      * Stefan Sauer
       * Stian Selnes
-      * Thiago Santos
       * Thibault Saunier
       * Thomas Bluemel
+      * Thomas Klausner
       * Thomas Scheuermann
       * Tim-Philipp Müller
-      * Ting-Wei Lan
       * Vincent Penquerc'h
-      * Vivia Nikolaidou
+      * Wonchul Lee
       * Xabier Rodriguez Calvar
  

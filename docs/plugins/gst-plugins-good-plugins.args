@@ -1015,7 +1015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.9.2"</DEFAULT>
+<DEFAULT>"GStreamer/1.9.90"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20654,7 +20654,7 @@
 <RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>RTX Delay Reorder</NICK>
-<BLURB>Sending retransmission event when this much reordering (-1 automatic).</BLURB>
+<BLURB>Sending retransmission event when this much reordering (0 disable, -1 automatic).</BLURB>
 <DEFAULT>3</DEFAULT>
 </ARG>
 
@@ -20766,6 +20766,26 @@
 <NICK>Sync on RFC7273 clock</NICK>
 <BLURB>Synchronize received streams to the RFC7273 clock (requires clock and offset to be provided).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::rtx-deadline</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTX Deadline (ms)</NICK>
+<BLURB>The deadline for a valid RTX request in milliseconds. (-1 automatic).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::rtx-stats-timeout</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTX Statistics Timeout</NICK>
+<BLURB>The time to wait for a retransmitted packet after it has been considered lost in order to collect statistics (ms).</BLURB>
+<DEFAULT>1000</DEFAULT>
 </ARG>
 
 <ARG>
