@@ -1,9 +1,64 @@
-=== release 1.9.2 ===
+=== release 1.9.90 ===
 
-2016-09-01  Sebastian Dröge <slomo@coaxion.net>
+2016-09-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.2
+	  releasing 1.9.90
+
+2016-09-14 15:18:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* pythondetector:
+	  meson: Add a workaround for finding the Python library on Fedora
+
+2016-09-14 11:42:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* pythondetector:
+	  meson: Fix pythondetector on Debian and use sysconfig for getting the ABIFLAGS too
+	  Paths like /usr/lib/python3.5/config-3.5m-x86_64-linux-gnu would not be
+	  detected by the old code, but it's all nicely stored in sysconfig so
+	  let's just use that.
+
+2016-09-14 11:31:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Depend on gstreamer 1.9.2.1
+
+2016-09-13 15:17:41 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* pythondetector:
+	  meson: Search python shared lib in lib64/ if it is a directory
+
+2016-09-05 12:52:46 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* plugin/gstpythonplugin.c:
+	  build: Remove unused variables
+
+2016-09-05 11:30:43 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* config.h.meson:
+	* gi/meson.build:
+	* gi/overrides/meson.build:
+	* meson.build:
+	* plugin/meson.build:
+	* pythondetector:
+	  Add support for Meson as alternative/parallel build system
+	  https://github.com/mesonbuild/meson
+
+2016-09-01 12:31:53 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.9.2 ===
+
+2016-09-01 12:31:42 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.9.2
 
 2016-07-06 13:54:19 +0300  Sebastian Dröge <sebastian@centricular.com>
 
