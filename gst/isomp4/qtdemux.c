@@ -13375,6 +13375,12 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           gst_caps_new_simple ("video/x-prores", "variant", G_TYPE_STRING,
           "4444", NULL);
       break;
+    case FOURCC_ap4x:
+      _codec ("Apple ProRes 4444 XQ");
+      caps =
+          gst_caps_new_simple ("video/x-prores", "variant", G_TYPE_STRING,
+          "4444xq", NULL);
+      break;
     case FOURCC_vc_1:
     case FOURCC_ovc1:
       _codec ("VC-1");
