@@ -54,3 +54,6 @@ gnome = import('gnome')
 gtkdoc = find_program('gtkdoc-scan', required : false)
 
 subdir('validate')
+
+python3 = find_program('python3')
+run_command(python3, '-c', 'import shutil; shutil.copy("hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")')

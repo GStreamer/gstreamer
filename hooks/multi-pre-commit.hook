@@ -15,7 +15,7 @@
 # commit. They are executed in the order in which they are listed.
 ###########################################################
 
-HOOKS="validate/common/hooks/pre-commit.hook validate/pre-commit-python.hook"
+HOOKS="hooks/pre-commit.hook hooks/pre-commit-python.hook"
 
 # exit on error
 set -e
