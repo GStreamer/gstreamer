@@ -4317,6 +4317,22 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     mp4v->spatial_quality = 0x3FF;
     mp4v->temporal_quality = 0;
     mp4v->vendor = FOURCC_appl;
+
+    /* The 'clap' extension is also defined for MP4 but inventing values in
+     * general seems a bit tricky for this one. We only write it for ProRes
+     * then, where it is a requirement.
+     *
+     * NTSC and PAL have special values, otherwise just take width and height
+     */
+    if (width == 720 && (height == 480 || height == 486))
+      ext_atom = build_clap_extension (704, 1, height, 1, 0, 1, 0, 1);
+    else if (width == 720 && height == 576)
+      ext_atom = build_clap_extension (768 * 54, 59, 576, 1, 0, 1, 0, 1);
+    else
+      ext_atom = build_clap_extension (width, 1, height, 1, 0, 1, 0, 1);
+
+    if (ext_atom)
+      mp4v->extension_atoms = g_list_append (mp4v->extension_atoms, ext_atom);
   }
 
   gst_object_unref (qtmux);

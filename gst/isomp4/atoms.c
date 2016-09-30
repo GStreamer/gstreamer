@@ -4030,6 +4030,29 @@ build_colr_extension (const GstVideoColorimetry * colorimetry, gboolean is_mp4)
       atom_data_free);
 }
 
+AtomInfo *
+build_clap_extension (gint width_n, gint width_d, gint height_n, gint height_d,
+    gint h_off_n, gint h_off_d, gint v_off_n, gint v_off_d)
+{
+  AtomData *atom_data = atom_data_new (FOURCC_clap);
+  guint8 *data;
+
+  atom_data_alloc_mem (atom_data, 32);
+  data = atom_data->data;
+
+  GST_WRITE_UINT32_BE (data, width_n);
+  GST_WRITE_UINT32_BE (data + 4, width_d);
+  GST_WRITE_UINT32_BE (data + 8, height_n);
+  GST_WRITE_UINT32_BE (data + 12, height_d);
+  GST_WRITE_UINT32_BE (data + 16, h_off_n);
+  GST_WRITE_UINT32_BE (data + 20, h_off_d);
+  GST_WRITE_UINT32_BE (data + 24, v_off_n);
+  GST_WRITE_UINT32_BE (data + 28, v_off_d);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
 SampleTableEntryMP4V *
 atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
     VisualSampleEntry * entry, guint32 scale, GList * ext_atoms_list)

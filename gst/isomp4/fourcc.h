@@ -174,6 +174,9 @@ G_BEGIN_DECLS
 #define FOURCC_opus     GST_MAKE_FOURCC('O','p','u','s')
 #define FOURCC_dops     GST_MAKE_FOURCC('d','O','p','s')
 #define FOURCC_pasp     GST_MAKE_FOURCC('p','a','s','p')
+#define FOURCC_colr     GST_MAKE_FOURCC('c','o','l','r')
+#define FOURCC_clap     GST_MAKE_FOURCC('c','l','a','p')
+#define FOURCC_fiel     GST_MAKE_FOURCC('f','i','e','l')
 #define FOURCC_pcst     GST_MAKE_FOURCC('p','c','s','t')
 #define FOURCC_pgap     GST_MAKE_FOURCC('p','g','a','p')
 #define FOURCC_pnot     GST_MAKE_FOURCC('p','n','o','t')
@@ -286,8 +289,6 @@ G_BEGIN_DECLS
 /* ISO Motion JPEG 2000 fourcc */
 #define FOURCC_cdef     GST_MAKE_FOURCC('c','d','e','f')
 #define FOURCC_cmap     GST_MAKE_FOURCC('c','m','a','p')
-#define FOURCC_colr     GST_MAKE_FOURCC('c','o','l','r')
-#define FOURCC_fiel     GST_MAKE_FOURCC('f','i','e','l')
 #define FOURCC_ihdr     GST_MAKE_FOURCC('i','h','d','r')
 #define FOURCC_jp2h     GST_MAKE_FOURCC('j','p','2','h')
 #define FOURCC_jp2x     GST_MAKE_FOURCC('j','p','2','x')
