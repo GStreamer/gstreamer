@@ -1,9 +1,219 @@
-=== release 1.9.2 ===
+=== release 1.9.90 ===
 
-2016-09-01  Sebastian Dröge <slomo@coaxion.net>
+2016-09-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.2
+	  releasing 1.9.90
+
+2016-03-04 16:35:11 +0900  Vineeth TM <vineeth.tm@samsung.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecodebin.c:
+	* gst/vaapi/gstvaapiencode_h264.c:
+	* gst/vaapi/gstvaapiencode_h265.c:
+	* gst/vaapi/gstvaapiencode_jpeg.c:
+	* gst/vaapi/gstvaapiencode_mpeg2.c:
+	* gst/vaapi/gstvaapiencode_vp8.c:
+	* gst/vaapi/gstvaapipostproc.c:
+	* gst/vaapi/gstvaapisink.c:
+	  vaapi: use new gst_element_class_add_static_pad_template()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763083
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2016-09-22 16:34:48 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: reset textures at negotiation/shutdown
+	  When caps reconfiguration is called, the new downstream frame size might be
+	  different. Thus, if the downstream caps change,the display's texture map is
+	  reset.
+	  In addition, during pipeline shutdown, textures in texture map have to be
+	  released, since each one have a reference to the GstVaapiDisplay object, which
+	  is a dangerous circular reference.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769293
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2016-09-22 16:34:38 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl_priv.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_glx.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_glx_priv.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_priv.h:
+	* gst/vaapi/gstvaapivideometa_texture.c:
+	  libs: display{egl,glx}: cache GstVaapiTextures
+	  instances when created and reuse
+	  This patch improves performance when glimagesink uploads a GL texture.
+	  It caches the GStVaapiTexture instances in GstVaapiDisplay{GLX,EGL}, using an
+	  instance of GstVaapiTextureMap, so our internal texture structure can be found
+	  by matching the GL texture id for each frame upload process, avoiding the
+	  internal texture structure creation and its following destruction.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769293
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2016-09-22 16:33:06 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst-libs/gst/vaapi/gstvaapitexturemap.c:
+	* gst-libs/gst/vaapi/gstvaapitexturemap.h:
+	  libs: vaapitexturemap: implement GstVaapiTextureMap
+	  Implement GstVaapiTextureMap object, which caches VAAPI textures, so them can be
+	  reused. Internally it is a hash table.
+	  Note that it is GstObject based rather than GstVaapiObject, as part of the future
+	  converstion to GstObject of most of the code.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769293
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2016-09-21 09:55:53 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  encoder: vp8: Increase the allocation size for coded buffer
+	  We are not getting enough compression for some streams and
+	  encoded frame end up with more size than allocated.
+	  Assuming a compression ratio of 4, which should be good enough
+	  for holding the frames.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771528
+
+2016-09-21 09:52:21 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  encoder: vp9: Fix refresh frame flag setting
+	  While doing the mode-1 referece picture selection,
+	  the circular buffer logic was not correctly setting the
+	  refresh frame flags as per VP9 spec.
+	  Make sure refresh_flag[0] get updated correclty after
+	  each cycle of GST_VP9_REF_FRAMES.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771507
+
+2016-09-14 18:42:09 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  vaapidecode: codec_data minimal size is 7
+	  When the format of a H.264 stream is AVC3, the SPS and PPS are inside the
+	  stream, not in the codec_data, so the size of codec_data might be 7.
+	  This patch reduces the minimal size of the codec_data buffer from 8 to 7.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771441
+
+2016-09-14 16:29:01 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: reset decoder hard when set_format()
+	  set_format() is called by upstream when the stream capabilites has changed.
+	  Before, if the new stream is compatible with the old one the VA decoder was
+	  not destroyed. Nonetheless, with this behavoir, the VA decoder ignores
+	  when the upstreamer parsers gets more details of the stream, such as the
+	  framerate. Hence, when the src caps are negotiates, the further sink caps
+	  updates are ignored.
+	  This patch forces the VA decoder destroying and recreation when set_format()
+	  is called.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770921
+
+2016-09-14 11:31:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Depend on gstreamer 1.9.2.1
+
+2016-09-09 12:03:37 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  Revert "vaapivideomemory: load VA Image when mapping to write"
+	  This reverts commit c67edea4aba35f16d9e97c78a0b49ad1b590b112.
+
+2016-09-10 20:52:21 +1000  Jan Schmidt <jan@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b18d820 to f980fd9
+
+2016-09-10 09:58:25 +1000  Jan Schmidt <jan@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From f49c55e to b18d820
+
+2016-09-08 16:16:09 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: set allocator's image size to sinkpad bufferpool
+	  Otherwise the buffer is always ditched by the bufferpool, losing performance.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771035
+
+2016-09-07 17:34:08 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurface.c:
+	  libs: surface: ensure composite overlay is not bigger
+	  Ensure the composition overlay rectangle (subtitles) is not bigger than
+	  the surface where it is going to be composited and rendered.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766978
+
+2016-09-07 17:51:23 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: load VA Image when mapping to write
+	  When calling gst_video_frame_map() with GST_MAP_WRITE flag, it doesn't call
+	  ensure_image_is_current(), which means it doesn't guarentee VAImage is valid
+	  in this case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766978
+
+2016-09-06 12:27:45 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: merge vc1 and wmv3 elements
+	  This patch merges vaapivc1dec and vaapiwmv3dec into a single
+	  vaapivc1dec. Also, removed the WMVA format, since it is not
+	  supported by libva.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=734093
+
+2016-09-06 11:19:05 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_vc1.c:
+	  decoder: vc1: fails only on advanced profile
+	  In commit 2eb4394 the frame coding mode was verified for progressive
+	  regardless the profile. But the FCM is only valid in the advanced
+	  profile. This patch checks for the advanced profile before verifying FCM for
+	  progressive.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769250
+
+2016-09-01 12:39:15 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapi.c:
+	  vaapi: DISPLAY envvar as dependency
+	  In a multiple video cards system, a X11 environment may have different VA
+	  capabilities. This patch tracks the DISPLAY environment variable to
+	  invalidates the GStreamer features cache. Also tracks WAYLAND_DISPLAY.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770357
+
+2016-08-26 14:55:17 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_vc1.c:
+	  decoder: vc1: Fail only on actual interlaced frames
+	  In the earlier patch:
+	  f31d9f3 decoder: vc1: Print error on interlaced content
+	  Decoding would error out if the interlace flag was set in the
+	  sequence bdu. This isn't quite right because a video can have this
+	  flag set and yet not have any interlaced pictures.
+	  Here instead we error out when either parsing a field bdu or
+	  decoding a frame bdu which has fcm set to anything other than
+	  progressive.
+	  Signed-off-by: Scott D Phillips <scott.d.phillips@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769250
+
+2016-09-01 12:34:48 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.9.2 ===
+
+2016-09-01 12:34:38 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.9.2
 
 2016-08-16 11:58:38 +0300  Scott D Phillips <scott.d.phillips@intel.com>
 
