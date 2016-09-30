@@ -1,9 +1,291 @@
-=== release 1.9.2 ===
+=== release 1.9.90 ===
 
-2016-09-01  Sebastian Dröge <slomo@coaxion.net>
+2016-09-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.2
+	  releasing 1.9.90
+
+2016-09-30 11:41:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/de.po:
+	  po: Update translations
+
+2016-09-27 18:00:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* plugins/tracers/meson.build:
+	  meson: tracers: signal availability of libunwind and backtrace() to code
+	  Not setting cdata here on purpose because of .. complications.
+
+2016-09-26 18:21:19 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* config.h.meson:
+	* meson.build:
+	* plugins/meson.build:
+	* plugins/tracers/meson.build:
+	  meson: Build tracers
+
+2016-09-23 20:40:39 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* docs/gst/meson.build:
+	* docs/libs/meson.build:
+	* docs/meson.build:
+	  meson: Fix gtkdoc using new meson features
+
+2016-09-26 12:14:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstbuffer.c:
+	* tests/check/gst/gstmemory.c:
+	* tests/check/gst/gstmeta.c:
+	  tests: remove unused valgrind stuff
+	  Code was also checking the wrong define anyway.
+
+2016-09-26 12:12:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/parse-launch.c:
+	  tests: parse-launch: looks clean nowadays, so re-enable for valgrind
+	  Also, the valgrind bits weren't hooked up properly anyway,
+	  checking the wrong define.
+
+2016-09-24 18:22:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* config.h.meson:
+	* meson.build:
+	  meson: remove incorrect and unneeded check for ptrdiff_t
+	  Need to include stddef.h for it, so this would've worked:
+	  if cc.has_type('ptrdiff_t', prefix: '#include <stddef.h>')
+
+2016-09-24 18:06:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/printf/meson.build:
+	  meson: fix internal printf for %ll format modifier on 32-bit systems
+	  gst/gstprintf unit test would fail on 32-bit x86 with:
+	  gstprintf.c:83:printf_I32_I64:0: 'str' (64-bit x value = b5a6978f) is not equal to '"64-bit x value = f1e2d3c4b5a6978f"'
+
+2016-09-23 04:19:47 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/meson.build:
+	  Revert "meson: Force gstenum_h to be built when using gst_dep"
+	  This reverts commit cfc565e2d88a8e7d656b68c5c2a1b7acb08cdb7f.
+	  The commit was redundant since gst_gen_sources already contains
+	  gstenum_h. We're still investigating why some people are still seeing
+	  a racy build failure.
+
+2016-09-23 00:28:53 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/meson.build:
+	  meson: Force gstenum_h to be built when using gst_dep
+	  This forces gstenumtypes.h to be built whenever something uses gst_dep
+	  as a subproject dependency. This is needed since gst/gst.h includes
+	  gstenumtypes.h
+	  Closes https://github.com/mesonbuild/meson/issues/714 which is not
+	  actually a Meson bug.
+
+2016-09-19 10:07:51 -0400  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: Add forgotten "git commit --amend" for last commit
+	  Need to cast away the const as g_queue_foreach() takes a non-const GQueue*
+
+2016-09-19 10:04:55 -0400  Kouhei Sutou <kou@clear-code.com>
+
+	* gst/gstbin.c:
+	  bin: When copying the sort iterator, also copy its internal queue
+	  Otherwise both iterators share the same references, the second one
+	  usually resulting in a crash when being freed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771649
+
+2016-09-11 15:28:43 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* tests/check/elements/queue2.c:
+	  queue2: Fix watermark test
+	  This carries over code for a similar test from multiqueue to ensure full
+	  control over the dataflow while testing. (The previous attempt was racy
+	  since the fill level changed without any thread sync with the test code.)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771210
+
+2016-09-11 15:26:26 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Update buffering if its enabled and low/high watermarks are changed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771210
+
+2016-09-15 17:38:49 +0530  Arun Raghavan <arun@arunraghavan.net>
+
+	* gst/gstmessage.c:
+	  message: Fix documentation for gst_message_new_duration()
+	  Seems like there was some documentation left over from when this was
+	  gst_message_new_duration().
+
+2016-09-12 17:41:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: Remove unused fields and always use the buffer timestamp difference for calculating the QoS proportion
+	  The buffer timestamps are only hints and more often than not have
+	  nothing to do with reality.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771306
+
+2016-09-08 12:58:54 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* configure.ac:
+	* gst/gstconfig.h.in:
+	* meson.build:
+	  gstconfig: Use __declspec when built with MinGW and linking with MSVC
+	  Earlier we were only using __declspec(dllexport/import) when we were
+	  built with MSVC because when built with MinGW and linking with MinGW we
+	  don't need it (and we get linker errors because of it).
+	  However, when we're built with MinGW and someone wants to link to us
+	  with MSVC, we still need the prototypes to have __declspec(dllimport)
+	  since MSVC cannot do auto-import like GCC can.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771029
+
+2016-09-12 17:07:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: Also don't *unset* element flags if they're in the suppressed flags
+	  Otherwise our bin might lose various flags that were explicitly set on
+	  it at arbitrary times.
+
+2016-09-10 11:59:11 -0300  Thiago Santos <thiagossantos@gmail.com>
+
+	* tests/check/gst/gstbin.c:
+	  tests: gstbin: add tests for suppressed flags
+	  Some simple tests to make sure it keeps working
+
+2016-09-02 17:39:17 +0900  Wonchul Lee <wonchul.lee@collabora.com>
+
+	* gst/gstbin.c:
+	* gst/gstbin.h:
+	* win32/common/libgstreamer.def:
+	  bin: Add setter and getter to suppress element flags
+	  Suppress-flags is for preventing propagation of child element's specific
+	  flag when it is added to the bin.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770627
+
+2016-09-10 20:50:48 +1000  Jan Schmidt <jan@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From b18d820 to f980fd9
+
+2015-11-13 16:00:02 +0000  Graham Leggett <minfrin@sharp.fm>
+
+	* gst/gst.c:
+	  gst: Ensure gst_value is initialised before gst_tag
+	  Otherwise GST_TYPE_FRACTION will work correctly in tags.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753922
+
+2016-09-09 11:46:11 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstutils.c:
+	  element: Reset the stop position to NONE in seek_simple()
+	  When using seek_simple() in combination with other kinds of seeks, this
+	  becomes problematic. seek_simple() does not reset the stop position to
+	  GST_CLOCK_TIME_NONE but keeps whatever a previous seek did. So for example
+	  when doing a seek_simple() after a rate=-1 seek, we would usually get
+	  assertions that start>stop (and stop being the old stop from the rate=1 seek).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771104
+
+2016-09-10 09:53:42 +1000  Jan Schmidt <jan@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From f49c55e to b18d820
+
+2016-09-09 09:36:40 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson:tests: Bump timeout to 3 minutes
+	  Basically we already have each test with a 20sec timeout,
+	  and testsuite can last more than the default 30secs from
+	  meson. 3 minutes is another arbitrary timeout but should
+	  be good enough.
+
+2016-09-08 15:19:38 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: Use the average durations based on timestamps for the QoS proportion when doing trickmodes
+	  The durations of the buffers are (usually) assuming that no frames are being
+	  dropped and are just the durations coming from the stream. However if we do
+	  trickmodes, frames are being dropped regularly especially if only key units
+	  are supposed to be played.
+	  Fixes completely bogus QoS proportion values in the above case.
+
+2016-09-05 18:07:49 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: Fix building with meson 0.34
+
+2016-08-26 20:06:59 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	  meson: Allow others to build GIR files when using GStreamer as subproject
+	  And add a way to disable the introspection and bump version to 1.9.2
+
+2016-09-05 11:11:29 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstconfig.h.in:
+	  gstconfig.h.in: Add another version of the SH4 #define and S390x
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770731
+
+2016-09-05 09:50:17 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstconfig.h.in:
+	  config: newer gcc doesn't know __ppc__ and __ppc64__ anymore
+	  __ppc__ and __ppc64__ are non-standard defines, we should use
+	  __powerpc__ and __powerpc64__ instead because newer gcc doesn't know
+	  them anymore.
+
+2016-09-04 20:39:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/gst-inspect.c:
+	  tools: gst-inspect: add * for pointer signal arguments where needed
+	  Print GObject argument properly with pointer marker:
+	  "client-added" :  void user_function (GstElement* object,
+	  GObject* arg0,
+	  gpointer user_data);
+	  instead of
+	  "client-added" :  void user_function (GstElement* object,
+	  GObject arg0,
+	  gpointer user_data);
+	  for gst-inspect-1.0 tcpserversink.
+
+2016-09-02 23:22:17 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/Makefile.am:
+	  tests: don't build misc subdir if both examples and benchmarks have been disabled
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770740
+
+2016-09-01 14:13:40 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstconfig.h.in:
+	  config: support System z
+
+2016-09-01 12:25:23 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.9.2 ===
+
+2016-09-01 12:24:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gstreamer-plugins.args:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstversion.h:
+	  Release 1.9.2
 
 2016-09-01 11:22:45 +0300  Sebastian Dröge <sebastian@centricular.com>
 

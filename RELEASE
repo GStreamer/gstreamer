@@ -1,13 +1,10 @@
 
-Release notes for GStreamer 1.9.2
+Release notes for GStreamer 1.9.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.9 release series, which marks the feature freeze for 1.10. The 1.9 release
-series is adding new features on top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series
-and is part of the API and ABI-stable 1.x release series of the GStreamer
-multimedia framework. The unstable 1.9 release series will lead to the stable
-1.10 release series in the next weeks. Any newly added API can still change
-until that point.
+The GStreamer team is pleased to announce the first release candidate of the
+stable 1.10 release series. The 1.10 release series is adding new features on
+top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and
+ABI-stable 1.x release series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -36,25 +33,14 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 631673 : add " redirect " message to core
-      * 756806 : message: Add extra information fields to error/warning/info messages
-      * 767857 : leaks tracer: list alive objects on demand and add 'checkpointing' support
-      * 767862 : leaks tracer: display creation stack trace of leaked objects
-      * 768301 : buffer: add explicit setters and getters for GstBufferFlags
-      * 768577 : element: clean up thread pool from gst_task_cleanup_all()
-      * 768578 : leaks: warn if object is destroyed while the tracer is disposing
-      * 768579 : improve some debug/log output
-      * 768776 : message: fix annotation of message parse API returning objects
-      * 768810 : core: add a couple of transfer annotations
-      * 768948 : collectpads: add g-i transfer annotations to peek/pop/read_buffer/take_buffer functions
-      * 768989 : leaks: update type filter later for unknown types
-      * 768995 : New API: StreamGroupDone event
-      * 769449 : queue2: Add higher-resolution low/high-watermark properties
-      * 770158 : element: Add API to more easily post messages about flowing issues
-      * 770161 : streams: notify tag update only when tags actually changed
-      * 770225 : multiqueue: High CPU usage  with multiple audio tracks in playbin3
-      * 770428 : docs: fix typo on stream selection
-      * 770628 : multiqueue: Add higher-resolution low/high-watermark properties
+      * 753922 : GValue types are registered after types that might use them (e.g. tags)
+      * 770731 : gstconfig.h: Need to add support for more platforms / PPC broken
+      * 770740 : No way to disable build of tests/misc
+      * 771104 : element: seek_simple() does not reset stop position
+      * 771210 : tests: new queue2: Add higher-resolution low/high-watermark properties unit test is flaky
+      * 771306 : basesink: Remove unused fields and always use the buffer timestamp difference for calculating the QoS proportion
+      * 771649 : gst_bin_sort_iterator_copy doesn't copy GstBinSortIterator::queue
+      * 771029 : MSVC can't link against autotools-build generated DLLs
 
 ==== Download ====
 
@@ -91,20 +77,16 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arjen Veenhuizen
-      * Aurélien Zanelli
+      * Arun Raghavan
       * Carlos Rafael Giani
-      * Edward Hervey
-      * Guillaume Desmottes
-      * Hoonhee Lee
+      * Graham Leggett
       * Jan Schmidt
-      * Josep Torra
-      * Miguel París Díaz
+      * Kouhei Sutou
       * Nirbheek Chauhan
       * Sebastian Dröge
-      * Stefan Sauer
+      * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
+      * Wim Taymans
       * Wonchul Lee
  
