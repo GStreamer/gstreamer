@@ -1,13 +1,10 @@
 
-Release notes for GStreamer Bad Plugins 1.9.2
+Release notes for GStreamer Bad Plugins 1.9.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.9 release series, which marks the feature freeze for 1.10. The 1.9 release
-series is adding new features on top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series
-and is part of the API and ABI-stable 1.x release series of the GStreamer
-multimedia framework. The unstable 1.9 release series will lead to the stable
-1.10 release series in the next weeks. Any newly added API can still change
-until that point.
+The GStreamer team is pleased to announce the first release candidate of the
+stable 1.10 release series. The 1.10 release series is adding new features on
+top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and
+ABI-stable 1.x release series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -61,45 +58,29 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 737173 : h264parse wrongly insert DISCONT flags when converting into AVC
-      * 741104 : dashdemux: add support for I frame based trick play
-      * 753751 : Dashdemux: returned seekable range for live streams is not usable
-      * 765314 : player: Add way to override HTTP (+RTSP, etc) user agent
-      * 767011 : rawparse: new rawaudioparse and rawvideoparse element which deprecate audioparse, unalignedaudioparse, and videoparse
-      * 767169 : adaptivedemux: avoid possible deadlock while destroying old  sources
-      * 767879 : Deadlock in WebKit when deleting the media player while HLS media was loaded
-      * 768160 : qtplugins: How to implement qmlglsrc.
-      * 768553 : Configure check for OpenGL is wrong on OS X.
-      * 768595 : lv2: Does not build with lilv 0.20
-      * 768602 : EGL_DMA_Buf: Wrong attribute list type for EGL 1.5
-      * 768696 : Mac OS X build warnings: -Werror gstjpeg2000parse.c
-      * 768771 : openh264: Fail to build with openh264 1.6.0
-      * 768838 : camerabinpreview: fix bus leak
-      * 768843 : bad: fix leaks in tests
-      * 769144 : player: move 'position-update-interval' setting to the config struct
-      * 769197 : fix simple-launch-lines test with no jpeg lib
-      * 769210 : GLMemory created by avfvideosrc and vtdec on iOS (EAGL/gles3) can't be mapped
-      * 769295 : Broken compilation on RPi  with latest rawaudioparse changes
-      * 769371 : glimagesink: Horizontal/vertical flip matrizes are swapped
-      * 769389 : aiffparse: Add bitrate and container format tags
-      * 769462 : glcolorconvert: _get_n_textures: code should not be reached
-      * 769553 : dashdemux: Fix sidx snap/keyframe seeks
-      * 769587 : hls, timecode: can't build debian package from git master, need to fix linking
-      * 769637 : rawparse: Unit test fixes and additions
-      * 769716 : x265enc enable aspect ratio
-      * 769797 : videoparse: format i420, invalid buffer size (regression)
-      * 769939 : gl: hang on joining thread
-      * 770030 : avfvideosrc: account for retina displays when capturing screens
-      * 770049 : vtdec: missing systemstream=false in mpeg decoder caps
-      * 770075 : adaptivedemux: fix stream exposure condition
-      * 770102 : daala: typo related compilation error
-      * 770282 : decklinkvideosink: " Failed to schedule frame " and Decklink Duo 2
-      * 770326 : gst-plugins-bad tarball lacks opensles.h
-      * 770408 : dashdemux: Add properties to select maximum allowed width/height and framerate
-      * 770523 : Build failure: fatal error: gst/gl/gstglconfig.h: No such file or directory
-      * 770587 : qtkitvideosrc: 'QTKit/QTKit.h' file not found (macOS Sierra)
-      * 769116 : Build failure with -O3 in Ubuntu 16.04
-      * 769580 : Fail to decode media on OSX because it's not supported by vtdec_hw but vtdec can play it
+      * 738079 : wayland: Destory the scaler interface while finalizing display object
+      * 761987 : waylandsink relies on wl_scaler
+      * 766018 : gl/dispmanx: Implements set_render_rectangle to adjust the position of window
+      * 767422 : kmssink: Uses scaled size to specify input buffer region
+      * 767671 : waylandsink: update from scaler protocol to viewporter protocol
+      * 768158 : waylandsink : memory leak of gst_wayland_sink_get_caps() and scaler of wldisplay
+      * 770146 : kmssink won't compile
+      * 770221 : rtponviftimestamp: Implement property " Immediate " 
+      * 770455 : fdkaacdec: asserts on HE-AAC v2 sample
+      * 770925 : qmlglsink: check qt_context_ first in GstQSGTexture::bind()
+      * 770933 : srtpenc: deadlock in create_session
+      * 771021 : Duplicate GL_CFLAGS in gst-libs/gst/gl/Makefile.am
+      * 771023 : tests/examples/gl/clutter/Makefile.am references deprecated variable $(GST_PLUGINS_GL_LIBS)
+      * 771198 : mpegtsdemux: Trying to set NULL string on field 'title' on taglist
+      * 771382 : dvbsuboverlay: map with READWRITE for overlay blend
+      * 771780 : build: add missing $(GST_PLUGINS_BASE_LIBS)
+      * 771794 : wayland/Makefile.am: add missing libs
+      * 771817 : dx9screencapsrc: throw error for invalid screen index
+      * 771871 : lv2 plugin doesn't do processing in case of mono sound
+      * 771970 : h265parse: Fix parsing of multiple NALs in the hvcC box
+      * 772067 : fdkaacenc: fix enc ! dec case
+      * 772108 : fdkaacenc: set framed=true on src caps
+      * 772186 : fdkaac: misc memory related fixes
 
 ==== Download ====
 
@@ -137,36 +118,29 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Alessandro Decina
-      * Alex Ashley
-      * Arnaud Vrac
-      * Bernhard Miller
-      * Carlos Rafael Giani
-      * Edward Hervey
+      * Alistair Buxton
+      * Arun Raghavan
       * Florian Zwoch
-      * Fredrik Fornwall
-      * Guillaume Desmottes
+      * Graham Leggett
+      * Gwang Yoon Hwang
       * Haihua Hu
       * Hyunjun Ko
       * Jan Schmidt
-      * Josep Torra
-      * Luis de Bethencourt
+      * Joakim Johansson
+      * Julien Isorce
+      * Kyungyong Kim
       * Martin Kelly
-      * Matej Knopp
       * Matthew Waters
-      * Michael Olbrich
       * Nicolas Dufresne
-      * Nirbheek Chauhan
-      * Philippe Renon
-      * Reynaldo H. Verdejo Pinochet
+      * Olivier Crête
+      * Philippe Normand
+      * Scott D Phillips
       * Sebastian Dröge
-      * Sergei Saveliev
-      * Song Bing
-      * Sreerenj Balachandran
-      * Stefan Sauer
+      * Sergey Mamonov
+      * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Vivia Nikolaidou
-      * Xabier Rodriguez Calvar
-      * xlazom00
+      * Víctor Manuel Jáquez Leal
+      * Wonchul Lee
  
