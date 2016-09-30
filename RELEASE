@@ -1,22 +1,21 @@
 
-Release notes for GStreamer RTSP Server Library 1.9.2
+Release notes for GStreamer RTSP Server Library 1.9.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.9 release series, which marks the feature freeze for 1.10. The 1.9 release
-series is adding new features on top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series
-and is part of the API and ABI-stable 1.x release series of the GStreamer
-multimedia framework. The unstable 1.9 release series will lead to the stable
-1.10 release series in the next weeks. Any newly added API can still change
-until that point.
+The GStreamer team is pleased to announce the first release candidate of the
+stable 1.10 release series. The 1.10 release series is adding new features on
+top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and
+ABI-stable 1.x release series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
+
 
   
 
 Bugs fixed in this release
      
-      * 755632 : Memory leak in handle_setup_request
+      * 750544 : RTSP server: crashes when accessing freed session in keep alive callback on shutdown
+      * 766612 : Does not take address pool configuration into account for sending unicast UDP
 
 ==== Download ====
 
@@ -53,9 +52,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Josep Torra
-      * Nikita Bobkov
+      * Ian Jamison
+      * Jan Schmidt
+      * Kseniia
       * Sebastian Dröge
-      * Stefan Sauer
-      * Tim-Philipp Müller
+      * Xavier Claessens
  
