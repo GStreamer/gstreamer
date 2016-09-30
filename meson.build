@@ -108,3 +108,6 @@ if build_machine.system() != 'windows'
 else
   message('Disabling gtk-doc while building on Windows')
 endif
+
+python3 = find_program('python3')
+run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
