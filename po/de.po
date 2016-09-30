@@ -1,692 +1,860 @@
-# German messages for gst-plugins-base 1.4.0
+# German messages for gst-plugins-base 1.7.90
 # Copyright © 2006 Karl Eichwalder
 # This file is distributed under the same license as the gst-plugins-base package.
 # Karl Eichwalder <ke@suse.de>, 2006.
 # Mario Blättermann <mariobl@gnome.org>, 2010.
-# Christian Kirbach <christian.kirbach@gmail.com>, 2009, 2010, 2011, 2012, 2013.
+# Christian Kirbach <christian.kirbach@gmail.com>, 2009, 2010, 2011, 2012, 2013, 2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.2\n"
+"Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-09-01 11:23+0300\n"
-"PO-Revision-Date: 2016-02-22 23:44+0100\n"
+"POT-Creation-Date: 2016-03-01 16:53+0200\n"
+"PO-Revision-Date: 2016-09-28 21:08+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.8.7\n"
+"X-Generator: Poedit 1.8.9\n"
 
+#: ext/alsa/gstalsasink.c:577
 msgid "Could not open device for playback in mono mode."
 msgstr "Gerät konnte nicht zur Wiedergabe in Mono geöffnet werden."
 
+#: ext/alsa/gstalsasink.c:579
 msgid "Could not open device for playback in stereo mode."
 msgstr "Gerät konnte nicht zur Wiedergabe in Stereo geöffnet werden."
 
+#: ext/alsa/gstalsasink.c:583
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Gerät konnte nicht zur Wiedergabe im %d-Kanalmodus geöffnet werden."
 
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. Es wird durch eine "
-"andere Anwendung verwendet."
+#: ext/alsa/gstalsasink.c:856
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. Es wird durch eine andere Anwendung verwendet."
 
+#: ext/alsa/gstalsasink.c:861
 msgid "Could not open audio device for playback."
 msgstr "Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden."
 
+#: ext/alsa/gstalsasink.c:1082
 msgid "Error outputting to audio device. The device has been disconnected."
 msgstr "Fehler bei Ausgabe aus dem Audio-Gerät. Das Gerät wurde getrennt."
 
+#: ext/alsa/gstalsasrc.c:440
 msgid "Could not open device for recording in mono mode."
 msgstr "Gerät konnte nicht zur Aufnahme in Mono geöffnet werden."
 
+#: ext/alsa/gstalsasrc.c:442
 msgid "Could not open device for recording in stereo mode."
 msgstr "Gerät konnte nicht zur Aufnahme in Stereo geöffnet werden."
 
+#: ext/alsa/gstalsasrc.c:446
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "Gerät konnte nicht zur Aufnahme im %d-Kanalmodus geöffnet werden."
 
-msgid ""
-"Could not open audio device for recording. Device is being used by another "
-"application."
-msgstr ""
-"Audio-Gerät konnte nicht zur Aufnahme geöffnet werden. Es wird durch eine "
-"andere Anwendung verwendet."
+#: ext/alsa/gstalsasrc.c:737
+msgid "Could not open audio device for recording. Device is being used by another application."
+msgstr "Audio-Gerät konnte nicht zur Aufnahme geöffnet werden. Es wird durch eine andere Anwendung verwendet."
 
+#: ext/alsa/gstalsasrc.c:742
 msgid "Could not open audio device for recording."
 msgstr "Audio-Gerät konnte nicht zur Aufnahme geöffnet werden."
 
+#: ext/alsa/gstalsasrc.c:996
 msgid "Error recording from audio device. The device has been disconnected."
 msgstr "Fehler bei Aufnahme vom Audio-Gerät. Das Gerät wurde getrennt."
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:277 ext/cdparanoia/gstcdparanoiasrc.c:283
 msgid "Could not open CD device for reading."
 msgstr "Das CD-Laufwerk konnte nicht zum Lesen geöffnet werden."
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:409
 msgid "Could not seek CD."
 msgstr "Suchvorgang auf der CD ist fehlgeschlagen."
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:417
 msgid "Could not read CD."
 msgstr "CD konnte nicht gelesen werden."
 
+#: ext/ogg/gstoggdemux.c:4859
+msgid "Internal data stream error."
+msgstr "Interner Fehler im Datenstrom."
+
+#: gst/encoding/gstencodebin.c:1585 gst/playback/gstplaybin2.c:3362
+#: gst/playback/gstplaysink.c:1483 gst/playback/gstplaysink.c:1500
+#: gst/playback/gstplaysink.c:1837 gst/playback/gstplaysink.c:1869
+#: gst/playback/gstplaysink.c:2449 gst/playback/gstplaysink.c:2498
+#: gst/playback/gstplaysink.c:2513 gst/playback/gstplaysink.c:2538
+#: gst/playback/gstplaysink.c:2570 gst/playback/gstplaysink.c:2718
+#: gst/playback/gstplaysink.c:2749 gst/playback/gstplaysink.c:3127
+#: gst/playback/gstplaysink.c:3136 gst/playback/gstplaysink.c:3145
+#: gst/playback/gstplaysink.c:3154 gst/playback/gstplaysink.c:3557
+#: gst/playback/gstplaysink.c:4431 gst/playback/gstplaysinkconvertbin.c:97
+#: gst/playback/gstplaysinkconvertbin.c:117
+#: gst/playback/gsturidecodebin.c:1490
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-"Das Element »%s« fehlt - überprüfen Sie Ihre Installation von GStreamer."
+msgstr "Das Element »%s« fehlt - überprüfen Sie Ihre Installation von GStreamer."
 
+#: gst/playback/gstdecodebin2.c:1881
 msgid "Could not determine type of stream"
 msgstr "Der Typ des Datenstroms konnte nicht bestimmt werden"
 
+#: gst/playback/gstdecodebin2.c:2839
 msgid "This appears to be a text file"
 msgstr "Dies scheint eine Textdatei zu sein"
 
+#: gst/playback/gstplaybin2.c:5407
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Das Element »uridecodebin« konnte nicht erstellt werden."
 
-#, fuzzy
-msgid "Could not create \"decodebin3\" element."
-msgstr "Das Element »decodebin2« konnte nicht erstellt werden."
-
-#, fuzzy
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Das Element »uridecodebin« konnte nicht erstellt werden."
-
+#: gst/playback/gstplaysink.c:1968
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Beide Elemente »autovideosink« und »%s« fehlen."
 
+#: gst/playback/gstplaysink.c:1972
 msgid "The autovideosink element is missing."
 msgstr "Das Element »autovideosink« fehlt."
 
+#: gst/playback/gstplaysink.c:1977
 #, c-format
 msgid "Configured videosink %s is not working."
 msgstr "Das konfigurierte Videoziel »%s« funktioniert nicht."
 
+#: gst/playback/gstplaysink.c:1981
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
 msgstr "Beide Elemente »autovideosink« und »%s« funktionieren nicht."
 
+#: gst/playback/gstplaysink.c:1985
 msgid "The autovideosink element is not working."
 msgstr "Das Element »autovideosink« funktioniert nicht."
 
+#: gst/playback/gstplaysink.c:2486
 msgid "Custom text sink element is not usable."
 msgstr "Das eigene Element des Textziels ist nicht verwendbar."
 
+#: gst/playback/gstplaysink.c:2864
 msgid "No volume control found"
 msgstr "Keine Lautstärkeregelung gefunden"
 
+#: gst/playback/gstplaysink.c:2894
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
 msgstr "Beide Elemente »autoaudiosink« und »%s« fehlen."
 
+#: gst/playback/gstplaysink.c:2898
 msgid "The autoaudiosink element is missing."
 msgstr "Das Element »autoaudiosink« fehlt."
 
+#: gst/playback/gstplaysink.c:2903
 #, c-format
 msgid "Configured audiosink %s is not working."
 msgstr "Das konfigurierte Audioziel »%s« funktioniert nicht."
 
+#: gst/playback/gstplaysink.c:2907
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
 msgstr "Beide Elemente »autoaudiosink« und »%s« funktionieren nicht."
 
+#: gst/playback/gstplaysink.c:2911
 msgid "The autoaudiosink element is not working."
 msgstr "Das Element »autoaudiosink« funktioniert nicht."
 
+#: gst/playback/gstplaysink.c:3230 gst/playback/gstplaysink.c:3235
 msgid "Can't play a text file without video or visualizations."
-msgstr ""
-"Es kann keine Textdatei ohne Video oder Visualisierungen abgespielt werden."
+msgstr "Es kann keine Textdatei ohne Video oder Visualisierungen abgespielt werden."
 
+#: gst/playback/gsturidecodebin.c:939
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "Für den Typ »%s« ist kein Decoder vorhanden."
 
+#: gst/playback/gsturidecodebin.c:1396
 msgid "No URI specified to play from."
 msgstr "Keine Adresse (URI) zum Abspielen angegeben."
 
+#: gst/playback/gsturidecodebin.c:1402
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Ungültige Adresse (URI) »%s«."
 
+#: gst/playback/gsturidecodebin.c:1409
 msgid "This stream type cannot be played yet."
 msgstr "Dieser Datenstrom kann noch nicht abgespielt werden."
 
+#: gst/playback/gsturidecodebin.c:1427
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Es ist kein URI-Handler für »%s« implementiert."
 
+#: gst/playback/gsturidecodebin.c:2300
 msgid "Source element is invalid."
 msgstr "Das Quellelement ist ungültig."
 
+#: gst/tcp/gsttcpclientsink.c:215
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Fehler beim Senden der Daten nach »%s:%d«."
 
+#: gst-libs/gst/audio/gstaudiobasesrc.c:866
 msgid "Can't record audio fast enough"
 msgstr "Der Ton kann nicht schnell genug aufgezeichnet werden"
 
+#: gst-libs/gst/audio/gstaudiocdsrc.c:1655
 msgid "This CD has no audio tracks"
 msgstr "Auf dieser CD befinden sich keine Audio-Titel"
 
+#: gst-libs/gst/pbutils/descriptions.c:92
 msgid "ID3 tag"
 msgstr "ID3-Kennzeichnung"
 
+#: gst-libs/gst/pbutils/descriptions.c:93
+#: gst-libs/gst/pbutils/descriptions.c:94
 msgid "APE tag"
 msgstr "APE-Kennzeichnung"
 
+#: gst-libs/gst/pbutils/descriptions.c:95
 msgid "ICY internet radio"
 msgstr "ICY Internet-Radio"
 
+#: gst-libs/gst/pbutils/descriptions.c:130
 msgid "Apple Lossless Audio (ALAC)"
 msgstr "Apple Lossless Audio (ALAC)"
 
+#: gst-libs/gst/pbutils/descriptions.c:146
 msgid "Free Lossless Audio Codec (FLAC)"
 msgstr "Free Lossless Audio Codec (FLAC)"
 
+#: gst-libs/gst/pbutils/descriptions.c:176
+#: gst-libs/gst/pbutils/descriptions.c:177
 msgid "Lossless True Audio (TTA)"
 msgstr "Lossless True Audio (TTA)"
 
+#: gst-libs/gst/pbutils/descriptions.c:185
 msgid "Windows Media Speech"
 msgstr "Windows Media Speech"
 
+#: gst-libs/gst/pbutils/descriptions.c:201
 msgid "CYUV Lossless"
 msgstr "CYUV verlustlos"
 
+#: gst-libs/gst/pbutils/descriptions.c:205
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
+#: gst-libs/gst/pbutils/descriptions.c:219
 msgid "Lossless MSZH"
 msgstr "verlustloses MSZH"
 
+#: gst-libs/gst/pbutils/descriptions.c:230
 msgid "Run-length encoding"
 msgstr "RLE-Codierung"
 
+#: gst-libs/gst/pbutils/descriptions.c:276
 msgid "Timed Text"
 msgstr "Zeitlich abgepasster Text"
 
+#: gst-libs/gst/pbutils/descriptions.c:280
 msgid "Subtitle"
 msgstr "Untertitel"
 
+#: gst-libs/gst/pbutils/descriptions.c:281
 msgid "MPL2 subtitle format"
 msgstr "Untertitel-Format MPL2"
 
+#: gst-libs/gst/pbutils/descriptions.c:282
 msgid "DKS subtitle format"
 msgstr "Untertitel-Format DKS"
 
+#: gst-libs/gst/pbutils/descriptions.c:283
 msgid "QTtext subtitle format"
 msgstr "Untertitel-Format QTtext"
 
+#: gst-libs/gst/pbutils/descriptions.c:284
 msgid "Sami subtitle format"
 msgstr "Untertitel-Format Sami"
 
+#: gst-libs/gst/pbutils/descriptions.c:285
 msgid "TMPlayer subtitle format"
 msgstr "Untertitel-Format TMPlayer"
 
+#: gst-libs/gst/pbutils/descriptions.c:289
 msgid "Kate subtitle format"
 msgstr "Untertitel-Format Kate"
 
-#, fuzzy
-msgid "WebVTT subtitle format"
-msgstr "Untertitel-Format Kate"
-
+#: gst-libs/gst/pbutils/descriptions.c:452
+#: gst-libs/gst/pbutils/descriptions.c:455
+#: gst-libs/gst/pbutils/descriptions.c:505
 msgid "Uncompressed video"
 msgstr "Unkomprimiertes Video"
 
+#: gst-libs/gst/pbutils/descriptions.c:460
 msgid "Uncompressed gray"
 msgstr "Unkomprimiertes Grau"
 
+#: gst-libs/gst/pbutils/descriptions.c:483
 #, c-format
 msgid "Uncompressed packed YUV %s"
 msgstr "Unkomprimiertes gepacktes YUV %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:485
 #, c-format
 msgid "Uncompressed semi-planar YUV %s"
 msgstr "Unkomprimiertes halbflaches YUV %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:487
 #, c-format
 msgid "Uncompressed planar YUV %s"
 msgstr "Unkomprimiertes flaches YUV %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:498
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Unkomprimiertes palletiertes %d-Bit %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:501
 #, c-format
 msgid "Uncompressed %d-bit %s"
 msgstr "Unkomprimiertes %d-Bit %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:583
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Version %d"
 
+#: gst-libs/gst/pbutils/descriptions.c:830
 msgid "Uncompressed audio"
 msgstr "Unkomprimiertes Audio"
 
+#: gst-libs/gst/pbutils/descriptions.c:836
 #, c-format
 msgid "Raw %d-bit %s audio"
 msgstr "Rohes %d-Bit %s Audio"
 
+#: gst-libs/gst/pbutils/descriptions.c:936
 msgid "Audio CD source"
 msgstr "Musik-CD-Quelle"
 
+#: gst-libs/gst/pbutils/descriptions.c:939
 msgid "DVD source"
 msgstr "DVD-Quelle"
 
+#: gst-libs/gst/pbutils/descriptions.c:942
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Real Time Streaming Protocol (RTSP)-Quelle"
 
+#: gst-libs/gst/pbutils/descriptions.c:946
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Microsoft Media Server (MMS)-Protokollquelle"
 
+#: gst-libs/gst/pbutils/descriptions.c:954
 #, c-format
 msgid "%s protocol source"
 msgstr "%s Protokollquelle"
 
+#: gst-libs/gst/pbutils/descriptions.c:1026
 #, c-format
 msgid "%s video RTP depayloader"
 msgstr "%s-Video RTP-Payload-Entnahme"
 
+#: gst-libs/gst/pbutils/descriptions.c:1028
 #, c-format
 msgid "%s audio RTP depayloader"
 msgstr "%s-Audio RTP-Payload-Entnahme"
 
+#: gst-libs/gst/pbutils/descriptions.c:1030
 #, c-format
 msgid "%s RTP depayloader"
 msgstr "%s-RTP-Payload-Entnahme"
 
+#: gst-libs/gst/pbutils/descriptions.c:1037
 #, c-format
 msgid "%s demuxer"
 msgstr "%s-Demuxer"
 
+#: gst-libs/gst/pbutils/descriptions.c:1039
 #, c-format
 msgid "%s decoder"
 msgstr "%s-Decoder"
 
+#: gst-libs/gst/pbutils/descriptions.c:1077
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "%s-Video RTP-Payloader"
 
+#: gst-libs/gst/pbutils/descriptions.c:1079
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "%s-Audio RTP-Payloader"
 
+#: gst-libs/gst/pbutils/descriptions.c:1081
 #, c-format
 msgid "%s RTP payloader"
 msgstr "%s-RTP-Payloader"
 
+#: gst-libs/gst/pbutils/descriptions.c:1088
 #, c-format
 msgid "%s muxer"
 msgstr "%s-Multiplexer"
 
+#: gst-libs/gst/pbutils/descriptions.c:1090
 #, c-format
 msgid "%s encoder"
 msgstr "%s-Encoder"
 
+#: gst-libs/gst/pbutils/descriptions.c:1122
 #, c-format
 msgid "GStreamer element %s"
 msgstr "GStreamer-Element %s"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:559
 msgid "Unknown source element"
 msgstr "Unbekanntes Quellelement"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:562
 msgid "Unknown sink element"
 msgstr "Unbekanntes Zielelement"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:565
 msgid "Unknown element"
 msgstr "Unbekanntes Element"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:568
 msgid "Unknown decoder element"
 msgstr "Unbekanntes Decoder-Element"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:571
 msgid "Unknown encoder element"
 msgstr "Unbekanntes Encoder-Element"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:576
 msgid "Plugin or element of unknown type"
 msgstr "Plugin oder Element unbekannten Typs"
 
+#: gst-libs/gst/tag/gsttagdemux.c:1259
 msgid "Failed to read tag: not enough data"
 msgstr "Lesen der Kennzeichnung schlug fehl: Nicht genug Daten"
 
+#: gst-libs/gst/tag/tags.c:79
 msgid "track ID"
 msgstr "Titelkennung"
 
+#: gst-libs/gst/tag/tags.c:79
 msgid "MusicBrainz track ID"
 msgstr "Titelkennung von MusicBrainz"
 
 # Hach, hier haben wir ja noch mehr »Interpreten«!
+#: gst-libs/gst/tag/tags.c:81
 msgid "artist ID"
 msgstr "Künstlerkennung"
 
+#: gst-libs/gst/tag/tags.c:81
 msgid "MusicBrainz artist ID"
 msgstr "Künstlerkennung von MusicBrainz"
 
+#: gst-libs/gst/tag/tags.c:83
 msgid "album ID"
 msgstr "Albenkennung"
 
+#: gst-libs/gst/tag/tags.c:83
 msgid "MusicBrainz album ID"
 msgstr "Albenkennung von MusicBrainz"
 
+#: gst-libs/gst/tag/tags.c:86
 msgid "album artist ID"
 msgstr "Kennung des Albenkünstlers"
 
+#: gst-libs/gst/tag/tags.c:86
 msgid "MusicBrainz album artist ID"
 msgstr "Kennung des Albenkünstlers von MusicBrainz"
 
+#: gst-libs/gst/tag/tags.c:88
 msgid "track TRM ID"
 msgstr "TRM-Kennung verfolgen"
 
+#: gst-libs/gst/tag/tags.c:88
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz-TRM-Kennung"
 
+#: gst-libs/gst/tag/tags.c:110
 msgid "capturing shutter speed"
 msgstr "Belichtungszeit"
 
+#: gst-libs/gst/tag/tags.c:111
 msgid "Shutter speed used when capturing an image, in seconds"
 msgstr "Belichtungszeit bei Aufnahme eines Bildes in Sekunden"
 
+#: gst-libs/gst/tag/tags.c:114
 msgid "capturing focal ratio"
 msgstr "Blendenwert"
 
+#: gst-libs/gst/tag/tags.c:115
 msgid "Focal ratio (f-number) used when capturing the image"
 msgstr "Der verwendete Blendenwert bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:118
 msgid "capturing focal length"
 msgstr "Brennweite"
 
+#: gst-libs/gst/tag/tags.c:119
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Die verwendete Brennweite des Objektivs bei Bildaufnahme in mm"
 
-#, fuzzy
-msgid "capturing 35 mm equivalent focal length"
-msgstr "Brennweite"
-
-#, fuzzy
-msgid ""
-"35 mm equivalent focal length of the lens used capturing the image, in mm"
-msgstr "Die verwendete Brennweite des Objektivs bei Bildaufnahme in mm"
-
+#: gst-libs/gst/tag/tags.c:122
 msgid "capturing digital zoom ratio"
 msgstr "Digitale Vergrößerung"
 
+#: gst-libs/gst/tag/tags.c:123
 msgid "Digital zoom ratio used when capturing an image"
 msgstr "Die verwendete digitale Vergrößerung bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:126
 msgid "capturing iso speed"
 msgstr "ISO-Empfindlichkeit"
 
+#: gst-libs/gst/tag/tags.c:127
 msgid "The ISO speed used when capturing an image"
 msgstr "Die verwendete ISO-Empfindlichkeit bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:130
 msgid "capturing exposure program"
 msgstr "Belichtungsprogramm"
 
+#: gst-libs/gst/tag/tags.c:131
 msgid "The exposure program used when capturing an image"
 msgstr "Das verwendete Belichtungsprogramm bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:134
 msgid "capturing exposure mode"
 msgstr "Belichtungsmodus der Aufnahme"
 
+#: gst-libs/gst/tag/tags.c:135
 msgid "The exposure mode used when capturing an image"
 msgstr "Der verwendete Belichtungsmodus bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:138
 msgid "capturing exposure compensation"
 msgstr "Belichtungskorrektur der Aufnahme"
 
+#: gst-libs/gst/tag/tags.c:139
 msgid "The exposure compensation used when capturing an image"
 msgstr "Der verwendete Belichtungskorrektur bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:142
 msgid "capturing scene capture type"
 msgstr "Motivwahl"
 
+#: gst-libs/gst/tag/tags.c:143
 msgid "The scene capture mode used when capturing an image"
 msgstr "Die verwendete Motivwahl bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:146
 msgid "capturing gain adjustment"
 msgstr "Anpassung der Aufnahmebelichtung"
 
 # »Gain adjustment« kenne ich eigentlich nur bei Audiodateien. Müsste sich hier um eine Anpassung der Belichtungswerte handeln.
+#: gst-libs/gst/tag/tags.c:147
 msgid "The overall gain adjustment applied on an image"
 msgstr "Die auf das Bild angewendete Anpassung der Belichtungswerte"
 
+#: gst-libs/gst/tag/tags.c:150
 msgid "capturing white balance"
 msgstr "Weißabgleich"
 
+#: gst-libs/gst/tag/tags.c:151
 msgid "The white balance mode set when capturing an image"
 msgstr "Der eingestellte Weißabgleich bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:154
 msgid "capturing contrast"
 msgstr "Kontrast"
 
+#: gst-libs/gst/tag/tags.c:155
 msgid "The direction of contrast processing applied when capturing an image"
 msgstr "Die Einstellung zur angewendeten Kontrastbearbeitung bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:159
 msgid "capturing saturation"
 msgstr "Sättigung"
 
+#: gst-libs/gst/tag/tags.c:160
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
-"Die Einstellung zur angewendeten Sättigungsbearbeitung bei Bildaufnahme"
+msgstr "Die Einstellung zur angewendeten Sättigungsbearbeitung bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:164
 msgid "capturing sharpness"
 msgstr "Schärfe"
 
+#: gst-libs/gst/tag/tags.c:165
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr "Die Einstellung zur angewendeten Schärfebearbeitung bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:169
 msgid "capturing flash fired"
 msgstr "Blitzauslösung"
 
+#: gst-libs/gst/tag/tags.c:170
 msgid "If the flash fired while capturing an image"
 msgstr "Gibt an, ob der Blitz bei der Bildaufnahme ausgelöst wurde"
 
+#: gst-libs/gst/tag/tags.c:173
 msgid "capturing flash mode"
 msgstr "Blitzmodus"
 
+#: gst-libs/gst/tag/tags.c:174
 msgid "The selected flash mode while capturing an image"
 msgstr "Der gewählte Blitzmodus bei Bildaufnahme"
 
+#: gst-libs/gst/tag/tags.c:177
 msgid "capturing metering mode"
 msgstr "Messmethode der Aufnahme"
 
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr ""
-"Die während der Bestimmung der Belichtungszeit eingesetzte Messmethode zur "
-"Aufnahme eines Bildes"
+#: gst-libs/gst/tag/tags.c:178
+msgid "The metering mode used while determining exposure for capturing an image"
+msgstr "Die während der Bestimmung der Belichtungszeit eingesetzte Messmethode zur Aufnahme eines Bildes"
 
+#: gst-libs/gst/tag/tags.c:182
 msgid "capturing source"
 msgstr "Aufnahmequelle"
 
+#: gst-libs/gst/tag/tags.c:183
 msgid "The source or type of device used for the capture"
 msgstr "Die Quelle oder der Gerätetyp, mit dem aufgenommen wird"
 
+#: gst-libs/gst/tag/tags.c:186
 msgid "image horizontal ppi"
 msgstr "Horizontale Bildauflösung"
 
+#: gst-libs/gst/tag/tags.c:187
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr "Horizontale Auflösung des Bildes oder Videos in ppi (Pixel pro Zoll)"
 
+#: gst-libs/gst/tag/tags.c:190
 msgid "image vertical ppi"
 msgstr "Vertikale Bildauflösung"
 
+#: gst-libs/gst/tag/tags.c:191
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Vertikale Auflösung des Bildes oder Videos in ppi (Pixel pro Zoll)"
 
+#: gst-libs/gst/tag/tags.c:194
 msgid "ID3v2 frame"
 msgstr "ID3v2-Rahmen"
 
+#: gst-libs/gst/tag/tags.c:194
 msgid "unparsed id3v2 tag frame"
 msgstr "unverarbeiteter ID3v2-Kennzeichnungsrahmen"
 
+#: gst-libs/gst/tag/tags.c:198
 msgid "musical-key"
 msgstr "musical-key"
 
+#: gst-libs/gst/tag/tags.c:198
 msgid "Initial key in which the sound starts"
 msgstr "Anfänglicher Schlüssel, in dem der Ton startet"
 
+#: tools/gst-device-monitor.c:154 tools/gst-play.c:1145
 msgid "Print version information and exit"
 msgstr "Versionsinformationen ausgeben und beenden"
 
-msgid ""
-"Don't exit after showing the initial device list, but wait for devices to "
-"added/removed."
-msgstr ""
-"Nicht nach dem Anzeigen der anfänglichen Geräteliste beenden, sondern auf "
-"das Hinzufügen/Entfernen von Geräten warten."
+#: tools/gst-device-monitor.c:156
+msgid "Don't exit after showing the initial device list, but wait for devices to added/removed."
+msgstr "Nicht nach dem Anzeigen der anfänglichen Geräteliste beenden, sondern auf das Hinzufügen/Entfernen von Geräten warten."
 
+#: tools/gst-play.c:275
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Lautstärke: %.0f%%"
 
+#: tools/gst-play.c:314
 msgid "Buffering..."
 msgstr "Zwischenspeichern …"
 
+#: tools/gst-play.c:335
 msgid "Clock lost, selecting a new one\n"
 msgstr "Uhrzeit verloren, es wird eine neue gewählt\n"
 
+#: tools/gst-play.c:365 tools/gst-play.c:411 tools/gst-play.c:765
+#: tools/gst-play.c:1049
 msgid "Reached end of play list."
 msgstr "Das Ende der Wiedergabeliste wurde erreicht."
 
+#: tools/gst-play.c:493
 msgid "Paused"
 msgstr "Angehalten"
 
+#: tools/gst-play.c:551
 #, c-format
 msgid "Now playing %s\n"
 msgstr "Momentan wird %s wiedergegeben\n"
 
+#: tools/gst-play.c:614
 #, c-format
 msgid "About to finish, preparing next title: %s"
 msgstr "Kurz vor dem Abschluss. Nächster Titel wird vorbereitet: %s"
 
+#: tools/gst-play.c:861
 #, c-format
 msgid "Playback rate: %.2f"
 msgstr "Wiedergabegeschwindigkeit: %.2f"
 
+#: tools/gst-play.c:865
 #, c-format
 msgid "Could not change playback rate to %.2f"
 msgstr "Wiedergabegeschwindigkeit konnte nicht auf %.2f geändert werden"
 
+#: tools/gst-play.c:989
 msgid "space"
 msgstr "Leertaste"
 
+#: tools/gst-play.c:989
 msgid "pause/unpause"
 msgstr "Anhalten/Fortsetzen"
 
+#: tools/gst-play.c:990
 msgid "q or ESC"
 msgstr "q oder ESC"
 
+#: tools/gst-play.c:990
 msgid "quit"
 msgstr "Beenden"
 
+#: tools/gst-play.c:991
 msgid "> or n"
-msgstr ""
+msgstr "> oder n"
 
+#: tools/gst-play.c:991
 msgid "play next"
 msgstr "Nächsten wiedergeben"
 
+#: tools/gst-play.c:992
 msgid "< or b"
-msgstr ""
+msgstr "< oder b"
 
+#: tools/gst-play.c:992
 msgid "play previous"
 msgstr "Vorherigen wiedergeben"
 
+#: tools/gst-play.c:993
 msgid "seek forward"
 msgstr "Vorspulen"
 
+#: tools/gst-play.c:994
 msgid "seek backward"
 msgstr "Zurückspulen"
 
+#: tools/gst-play.c:995
 msgid "volume up"
 msgstr "Lauter"
 
+#: tools/gst-play.c:996
 msgid "volume down"
 msgstr "Leiser"
 
+#: tools/gst-play.c:997
 msgid "increase playback rate"
 msgstr "Schneller wiedergeben"
 
+#: tools/gst-play.c:998
 msgid "decrease playback rate"
 msgstr "Langsamer wiedergeben"
 
+#: tools/gst-play.c:999
 msgid "change playback direction"
 msgstr "Wiedergaberichtung ändern"
 
+#: tools/gst-play.c:1000
 msgid "enable/disable trick modes"
 msgstr "Trickmodi einschalten/ausschalten"
 
+#: tools/gst-play.c:1001
 msgid "change audio track"
 msgstr "Audio-Titel wechseln"
 
+#: tools/gst-play.c:1002
 msgid "change video track"
 msgstr "Videl-Titel wechseln"
 
+#: tools/gst-play.c:1003
 msgid "change subtitle track"
 msgstr "Untertitel wechseln"
 
+#: tools/gst-play.c:1004
 msgid "seek to beginning"
 msgstr "An den Anfang springen"
 
+#: tools/gst-play.c:1005
 msgid "show keyboard shortcuts"
 msgstr "Tastenkombinationen anzeigen"
 
+#: tools/gst-play.c:1008
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktiver Modus - Tastatursteuerung:"
 
+#: tools/gst-play.c:1140
 msgid "Output status information and property notifications"
 msgstr "Zustandsinformation und Eigenschaftsmitteilungen ausgeben"
 
+#: tools/gst-play.c:1142
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr "Steuerung der Wiedergabe mittels der playbin-Eigenschaft »flags«"
 
+#: tools/gst-play.c:1147
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Zu verwendende Video-Ziel (Voreinstellung ist »autovideosink«)"
 
+#: tools/gst-play.c:1149
 msgid "Audio sink to use (default is autoaudiosink)"
 msgstr "Zu verwendende Audio-Ziel (Voreinstellung ist »autoaudiosink«)"
 
+#: tools/gst-play.c:1151
 msgid "Enable gapless playback"
 msgstr "Lückenlose Wiedergabe einschalten"
 
+#: tools/gst-play.c:1153
 msgid "Shuffle playlist"
 msgstr "Wiedergabeliste mischen"
 
+#: tools/gst-play.c:1156
 msgid "Disable interactive control via the keyboard"
 msgstr "Interaktive Steuerung via Tastatur deaktivieren"
 
+#: tools/gst-play.c:1158
 msgid "Volume"
 msgstr "Lautstärke"
 
+#: tools/gst-play.c:1160
 msgid "Playlist file containing input media files"
 msgstr "Datei mit Wiedergabeliste enthält Eingabe-Mediendateien"
 
+#: tools/gst-play.c:1162
 msgid "Do not print any output (apart from errors)"
 msgstr "Nichts ausgeben (außer Fehlermeldungen)"
 
+#: tools/gst-play.c:1233
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Aufruf: %s DATEI1|URI1 [DATEI2|URI2] [DATEI3|URI3] ..."
 
+#: tools/gst-play.c:1237
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
-"Sie müssen mindestens einen Dateinamen oder eine Adresse zur Wiedergabe "
-"angeben."
+msgstr "Sie müssen mindestens einen Dateinamen oder eine Adresse zur Wiedergabe angeben."
 
+#: tools/gst-play.c:1277
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Geben Sie »k« ein, um die Liste der Tastenkombinationen zu sehen.\n"
 
-#~ msgid "Internal data stream error."
-#~ msgstr "Interner Fehler im Datenstrom."
-
 #~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "Ein Plugin »%s« wird zum Abspielen dieses Datenstroms benötigt, ist aber "
-#~ "nicht installiert."
+#~ msgstr "Ein Plugin »%s« wird zum Abspielen dieses Datenstroms benötigt, ist aber nicht installiert."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "Unkomprimiertes %s YUV %s"
@@ -742,21 +910,11 @@ msgstr "Geben Sie »k« ein, um die Liste der Tastenkombinationen zu sehen.\n"
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "RTSP-Datenströme können noch nicht abgespielt werden."
 
-#~ msgid ""
-#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
-#~ "file or some other type of text file, or the media file was not "
-#~ "recognized."
-#~ msgstr ""
-#~ "Es wurde nur ein Datenstrom mit Untertiteln erkannt. Entweder laden Sie "
-#~ "eine Datei mit Untertiteln oder eine andere Art Textdatei oder die "
-#~ "Mediendatei wurde nicht erkannt."
+#~ msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
+#~ msgstr "Es wurde nur ein Datenstrom mit Untertiteln erkannt. Entweder laden Sie eine Datei mit Untertiteln oder eine andere Art Textdatei oder die Mediendatei wurde nicht erkannt."
 
-#~ msgid ""
-#~ "You do not have a decoder installed to handle this file. You might need "
-#~ "to install the necessary plugins."
-#~ msgstr ""
-#~ "Sie haben keinen Decoder für den Umgang mit dieser Datei installiert. Sie "
-#~ "sollten die erforderlichen Plugins installieren."
+#~ msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
+#~ msgstr "Sie haben keinen Decoder für den Umgang mit dieser Datei installiert. Sie sollten die erforderlichen Plugins installieren."
 
 #~ msgid "This is not a media file"
 #~ msgstr "Dies ist keine Mediendatei"
@@ -822,12 +980,10 @@ msgstr "Geben Sie »k« ein, um die Liste der Tastenkombinationen zu sehen.\n"
 #~ msgstr "Das Gerät »%s« wird bereits verwendet."
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr ""
-#~ "Das Gerät »%s« konnte nicht zum Lesen und Schreiben geöffnet werden."
+#~ msgstr "Das Gerät »%s« konnte nicht zum Lesen und Schreiben geöffnet werden."
 
 #~ msgid "Can't display both text subtitles and subpictures."
-#~ msgstr ""
-#~ "Es können nicht Untertiteltexte und Kleinbilder zugleich angezeigt werden."
+#~ msgstr "Es können nicht Untertiteltexte und Kleinbilder zugleich angezeigt werden."
 
 #~ msgid "No Temp directory specified."
 #~ msgstr "Kein temporärer Ordner angegeben."
@@ -840,6 +996,9 @@ msgstr "Geben Sie »k« ein, um die Liste der Tastenkombinationen zu sehen.\n"
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Interner Fehler im Datenstrom."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Das Element »decodebin2« konnte nicht erstellt werden."
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "Das Element »queue2« konnte nicht erstellt werden."
