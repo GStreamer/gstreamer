@@ -268,6 +268,10 @@ class SortHelper (object):
 
 
 class LineCache (Producer):
+    """
+    offsets: file position for each line
+    levels: the debug level for each line
+    """
 
     _lines_per_iteration = 50000
 
