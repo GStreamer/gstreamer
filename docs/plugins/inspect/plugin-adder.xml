@@ -3,7 +3,7 @@
   <description>Adds multiple streams</description>
   <filename>../../gst/adder/.libs/libgstadder.so</filename>
   <basename>libgstadder.so</basename>
-  <version>1.9.2</version>
+  <version>1.9.90</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

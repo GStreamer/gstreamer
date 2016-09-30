@@ -90,7 +90,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2016-09-01"
+#define GST_PACKAGE_RELEASE_DATETIME "2016-09-30"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -163,6 +163,14 @@
 /* Define if the GNU dcgettext() function is already present or preinstalled.
    */
 #undef HAVE_DCGETTEXT
+
+/* Define to 1 if you have the declaration of `__i386__', and to 0 if you
+   don't. */
+#undef HAVE_DECL___I386__
+
+/* Define to 1 if you have the declaration of `__x86_64__', and to 0 if you
+   don't. */
+#undef HAVE_DECL___X86_64__
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
@@ -260,6 +268,15 @@
 /* Define to 1 if you have the <smmintrin.h> header file. */
 #undef HAVE_SMMINTRIN_H
 
+/* SSE support is enabled */
+#undef HAVE_SSE
+
+/* SSE2 support is enabled */
+#undef HAVE_SSE2
+
+/* SSE4.1 support is enabled */
+#undef HAVE_SSE41
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
@@ -348,7 +365,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 1.9.2"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 1.9.90"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -357,7 +374,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.9.2"
+#define PACKAGE_VERSION "1.9.90"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -395,7 +412,7 @@
 #undef USE_TREMOLO
 
 /* Version number of package */
-#define VERSION "1.9.2"
+#define VERSION "1.9.90"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

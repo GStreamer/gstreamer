@@ -1,9 +1,339 @@
-=== release 1.9.2 ===
+=== release 1.9.90 ===
 
-2016-09-01  Sebastian Dröge <slomo@coaxion.net>
+2016-09-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.2
+	  releasing 1.9.90
+
+2016-09-30 11:42:21 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/de.po:
+	  po: Update translations
+
+2016-09-29 19:54:52 +0530  Arun Raghavan <arun@osg.samsung.com>
+
+	* gst-libs/gst/audio/Makefile.am:
+	  audio-resampler: Add a missing header to noinst_HEADERS
+
+2016-09-29 19:45:16 +0530  Arun Raghavan <arun@osg.samsung.com>
+
+	* gst-libs/gst/audio/audio-resampler-x86-sse41.c:
+	* gst-libs/gst/audio/audio-resampler-x86.h:
+	  audiorsample: Fix build on 32-bit x86
+	  Turns out _mm_cvtsi128_si64() isn't available on 32-bit, so only build
+	  SSE 4.1 optimisations on x86-64 for now.
+
+2016-09-28 17:37:38 +0530  Arun Raghavan <arun@osg.samsung.com>
+
+	* configure.ac:
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/audio/audio-resampler-macros.h:
+	* gst-libs/gst/audio/audio-resampler-neon.h:
+	* gst-libs/gst/audio/audio-resampler-private.h:
+	* gst-libs/gst/audio/audio-resampler-x86-sse.c:
+	* gst-libs/gst/audio/audio-resampler-x86-sse.h:
+	* gst-libs/gst/audio/audio-resampler-x86-sse2.c:
+	* gst-libs/gst/audio/audio-resampler-x86-sse2.h:
+	* gst-libs/gst/audio/audio-resampler-x86-sse41.c:
+	* gst-libs/gst/audio/audio-resampler-x86-sse41.h:
+	* gst-libs/gst/audio/audio-resampler-x86.h:
+	* gst-libs/gst/audio/audio-resampler.c:
+	  audioresample: Separate out CFLAGS used for SSE* code
+	  This makes sure that we only build files that need explicit SIMD support
+	  with the relevant CFLAGS. This allows the rest of the code to be built
+	  without, and specific SSE* code is only called after runtime checks for
+	  CPU features.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=729276
+
+2016-09-28 19:08:52 +0530  Arun Raghavan <arun@osg.samsung.com>
+
+	* gst-libs/gst/audio/audio-resampler.c:
+	  audioresample: Fix some gobject introspection warnings
+
+2016-09-26 10:01:08 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/playback/gstplaybin3.c:
+	  playbin3: Remove fallback properties/signals
+	  These can all be used via the GstStream API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769079
+
+2016-09-25 22:02:22 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  tests: playbin-complex test needs oggdemux
+
+2016-09-24 21:11:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/libs/videotimecode.c:
+	  tests: videotimecode: fix floating point comparisons
+	  Comparing floats for equality is not necessarily going to
+	  work reliably, so use fail_unless_equals_float() for this.
+	  Test would fail on x86 (Intel Atom x5-Z8300).
+
+2016-09-25 16:22:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/adder.c:
+	  tests: adder: disable racy flush_start_flush_stop test
+	  It's been broken for years, and it's unlikely it will ever
+	  be fixed for collectpads/adder now that there's audiomixer
+	  which works fine. So let's disable it, since all it does
+	  is that it creates noise that distracts from other failures.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708891
+
+2016-09-22 16:15:54 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/video/video-scaler.c:
+	  video-scaler: take number of bits into account when copying
+	  Copy twice the amount of pixels for 16 bits formats.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=747225
+
+2016-09-20 15:12:22 -0400  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: Correctly calculate group start times in reverse playback mode
+	  We have to calculate from the segment.stop, not the segment.start, as
+	  playback goes from stop to start. This fix works around another race
+	  condition in streamsynchronizer in my testcase.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=771479
+
+2016-09-20 17:31:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/examples/seek/stepping.c:
+	* tests/examples/seek/stepping2.c:
+	  examples: seek: fix build with MSVC
+	  Use G_PI instead of M_PI. Could also have defined
+	  _USE_MATH_DEFINES or included gst/math-compat.h but
+	  this seems simplest.
+
+2016-09-19 11:27:10 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/video/video-frame.c:
+	  doc: Add missing map flag to gst_video_frame_map()
+	  Add missing map flag, and also add unmap call.
+
+2016-09-17 12:42:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	  audiotestsrc: Fix segment boundary checking for reverse playback
+
+2016-09-14 16:51:30 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	  audiotestsrc: Don't adjust segment time in seek handler
+	  basesrc already did that very well for us, adjusting it again on top of
+	  that just breaks various non-standard seeks.
+
+2016-09-14 11:29:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Depend on gstreamer 1.9.2.1
+
+2016-09-14 10:14:18 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/video/video-overlay-composition.c:
+	  videooverlaycomposition: document required map flags
+	  Fix documentation for gst_video_overlay_composition_blend(). The video frame
+	  needs to be mapped with GST_MAP_READWRITE flag.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771382
+
+2016-09-12 18:37:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaysink.c:
+	* gst/playback/gsturidecodebin.c:
+	* gst/playback/gsturisourcebin.c:
+	  playback: Use new gst_bin_set_suppressed_flags() API instead of worrying about the flags in multiple places
+
+2016-09-10 20:50:56 +1000  Jan Schmidt <jan@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From b18d820 to f980fd9
+
+2016-09-10 10:05:28 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	* tests/check/elements/videoscale.c:
+	* tests/check/meson.build:
+	  tests: videoscale: split test into multiple ones
+	  The videoscale test takes eternities to run, that's not
+	  great. Split the test into multiple ones. That way they
+	  can be run in parallel. Reduces time to run all tests in
+	  -base from 29 secs to 12 secs when using meson/ninja.
+
+2016-09-10 09:53:49 +1000  Jan Schmidt <jan@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From f49c55e to b18d820
+
+2016-09-07 17:02:23 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson: Raise test timeout to 3 minutes
+	  The videoscale testsuite (with 50 tests) last almost 2 minutes here
+
+2016-09-07 14:24:54 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* tests/check/libs/video.c:
+	  video/test: Coding style fix
+
+2016-09-05 19:55:58 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/examples/overlay/meson.build:
+	  meson: Workaround the qt5 module not letting us now the preprocessor is not avalaible
+	  If moc-qt5 is not avalaible, meson breaks:
+	  https://github.com/mesonbuild/meson/issues/758
+
+2016-09-05 18:40:19 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/examples/overlay/meson.build:
+	  meson: tests: Do not pull qt5 as a hard dependency
+
+2016-09-05 17:43:13 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	* tests/check/getpluginsdir:
+	* tests/check/meson.build:
+	  meson: Properly find where GStreamer plugins are when using subprojects
+	  And fix building with meson 0.34
+
+2016-09-05 12:22:36 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: Bump version to 1.9.2
+
+2016-08-26 11:30:16 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: safety for failing to determine time length in push mode
+	  If we can't find a valid granule near the end of the file, we
+	  disable seeking. This guards against the whole file being then
+	  read and never going to PLAYING.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770314
+
+2016-08-26 11:27:17 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: increase EOS granpos detection chunk size
+	  This can be too small on some files to find a valid granule.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770314
+
+2016-09-04 21:41:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/examples/seek/meson.build:
+	  meson: fix joystick header check for jseek example
+
+2016-09-03 11:57:22 +1000  Jonathan Matthew <jonathan@d14n.org>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  pbutils: store missing-plugin structure in current_info->misc again
+	  This allows gst_discoverer_info_get_misc to work again, until it
+	  finally gets removed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770643
+
+2016-09-04 16:04:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/gst-play.c:
+	  tools: gst-play: cycle between video tracks without disabling video
+
+2016-09-01 17:56:24 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* win32/common/libgstrtp.def:
+	  win32: Update exports
+
+2016-09-01 22:48:40 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/video/video-frame.h:
+	  video-frame: Expand the range of caps for extended buffer flags
+	  The video buffer flags can be applied to encoded video streams,
+	  such as video/x-h264 marked up by a demuxer or parser.
+
+2016-09-01 13:07:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaybackutils.h:
+	  playback: Mark internal functions as G_GNUC_INTERNAL
+
+2016-09-01 14:47:02 +0900  Wonchul Lee <wonchul.lee@collabora.com>
+
+	* gst/playback/gstdecodebin2.c:
+	* gst/playback/gstplaybackutils.c:
+	* gst/playback/gstplaybackutils.h:
+	* gst/playback/gsturidecodebin.c:
+	* gst/playback/gsturisourcebin.c:
+	  playbackutils: Move compare_factories_func
+	  Move _decode_bin_compare_factories_func function to playbackutils
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770692
+
+2016-09-01 09:59:06 +0200  Havard Graff <havard.graff@gmail.com>
+
+	* gst-libs/gst/video/video-frame.h:
+	  video-frame: GST_VIDEO_BUFFER_FLAG are only valid for video/x-raw caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769771
+
+2016-09-01 09:57:33 +0200  Havard Graff <havard.graff@gmail.com>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	  rtpbuffer: Add buffer flag RETRANSMISSION
+	  Useful for elements to know if a buffer is a retransmitted RTP packet.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769771
+
+2016-09-01 12:38:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Require orc >= 0.4.24
+	  Needed for being able to compile video.orc
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770698
+
+2016-09-01 12:26:40 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.9.2 ===
+
+2016-09-01 12:26:20 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.signals:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	* win32/common/video-enumtypes.c:
+	* win32/common/video-enumtypes.h:
+	  Release 1.9.2
 
 2016-09-01 11:23:10 +0300  Sebastian Dröge <sebastian@centricular.com>
 

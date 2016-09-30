@@ -3,7 +3,7 @@
   <description>Resizes video</description>
   <filename>../../gst/videoscale/.libs/libgstvideoscale.so</filename>
   <basename>libgstvideoscale.so</basename>
-  <version>1.9.2</version>
+  <version>1.9.90</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

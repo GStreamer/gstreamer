@@ -1,13 +1,10 @@
 
-Release notes for GStreamer Base Plugins 1.9.2
+Release notes for GStreamer Base Plugins 1.9.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.9 release series, which marks the feature freeze for 1.10. The 1.9 release
-series is adding new features on top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series
-and is part of the API and ABI-stable 1.x release series of the GStreamer
-multimedia framework. The unstable 1.9 release series will lead to the stable
-1.10 release series in the next weeks. Any newly added API can still change
-until that point.
+The GStreamer team is pleased to announce the first release candidate of the
+stable 1.10 release series. The 1.10 release series is adding new features on
+top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and
+ABI-stable 1.x release series of the GStreamer multimedia framework.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -59,23 +56,12 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 761514 : riff: remove limits for sample rate and channel count
-      * 766419 : videotimecode: Added support for SMPTE time code metadata
-      * 767816 : Comparison of constant 64 with expression of type 'GstVideoFormat' is always false in Mac OS X
-      * 768495 : POTFILES.in is out of date
-      * 768525 : subparse: don't reset allowed tags
-      * 768687 : Rework video orientation
-      * 768718 : videoscale: fix leak in test
-      * 768811 : decodebin3/playbin3: fix leaks
-      * 768852 : appsink: add _try_pull_{sample,preroll} with timeout parameter
-      * 768990 : audioclock: use GST_STIME_FORMAT for the correct argument
-      * 769080 : decodebin3: fix collection refcounting
-      * 769270 : decodebin3/playbin3: fix ref handling
-      * 769298 : decodebin3: handle full removal of streams
-      * 769299 : ogg: check return values in gst_ogg_parse_new_stream
-      * 769303 : pbutils: Add more h264 scalable profiles
-      * 769624 : videorate: Does not support reverse playback
-      * 770053 : parsebin: sometimes sets global tags to stream
+      * 729276 : audioresample: Misdetected and/or misused intrinsics headers
+      * 769771 : rtpbuffer: Add buffer flag RETRANSMISSION
+      * 770314 : oggdemux: Does not go back to beginning point on EOS when determining stream length
+      * 770446 : pulsesrc, audiosrc: No audio captured with new GStreamer 1.8.2
+      * 770692 : playbackutils: Move compare_factories_func
+      * 770698 : video-orc.orc doesn't compile with orc 0.4.23
 
 ==== Download ====
 
@@ -113,29 +99,16 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Arun Raghavan
-      * Carlos Rafael Giani
-      * Duncan Palmer
       * Edward Hervey
-      * Guillaume Desmottes
+      * Havard Graff
       * Jan Schmidt
-      * Joan Pau Beltran
-      * Josep Torra
-      * Luis de Bethencourt
-      * Matej Knopp
-      * Michael Olbrich
-      * Nirbheek Chauhan
-      * Piotr Drąg
+      * Jonathan Matthew
+      * Nicolas Dufresne
       * Sebastian Dröge
-      * Sergio Torres Soldado
-      * Seungha Yang
-      * Sreerenj Balachandran
-      * Stefan Sauer
       * Thibault Saunier
-      * Thijs Vermeir
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Vivia Nikolaidou
       * Víctor Manuel Jáquez Leal
       * Wim Taymans
-      * Xabier Rodriguez Calvar
+      * Wonchul Lee
  
