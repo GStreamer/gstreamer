@@ -350,3 +350,6 @@ subdir('gst')
 subdir('sys')
 subdir('ext')
 subdir('pkgconfig')
+
+python3 = find_program('python3')
+run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
