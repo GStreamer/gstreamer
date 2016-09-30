@@ -193,10 +193,10 @@ typedef struct {
 #define GST_VIDEO_COLORIMETRY_SRGB        "sRGB"
 #define GST_VIDEO_COLORIMETRY_BT2020      "bt2020"
 
-gboolean     gst_video_colorimetry_matches     (GstVideoColorimetry *cinfo, const gchar *color);
+gboolean     gst_video_colorimetry_matches     (const GstVideoColorimetry *cinfo, const gchar *color);
 gboolean     gst_video_colorimetry_from_string (GstVideoColorimetry *cinfo, const gchar *color);
-gchar *      gst_video_colorimetry_to_string   (GstVideoColorimetry *cinfo);
-gboolean     gst_video_colorimetry_is_equal (const GstVideoColorimetry *cinfo, const GstVideoColorimetry *other);
+gchar *      gst_video_colorimetry_to_string   (const GstVideoColorimetry *cinfo);
+gboolean     gst_video_colorimetry_is_equal    (const GstVideoColorimetry *cinfo, const GstVideoColorimetry *other);
 
 /* compute offset and scale */
 void         gst_video_color_range_offsets     (GstVideoColorRange range,

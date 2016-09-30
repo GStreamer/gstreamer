@@ -144,7 +144,7 @@ gst_video_colorimetry_from_string (GstVideoColorimetry * cinfo,
  * Returns: a string representation of @cinfo.
  */
 gchar *
-gst_video_colorimetry_to_string (GstVideoColorimetry * cinfo)
+gst_video_colorimetry_to_string (const GstVideoColorimetry * cinfo)
 {
   gint i;
 
@@ -172,7 +172,8 @@ gst_video_colorimetry_to_string (GstVideoColorimetry * cinfo)
  * information in @info.
  */
 gboolean
-gst_video_colorimetry_matches (GstVideoColorimetry * cinfo, const gchar * color)
+gst_video_colorimetry_matches (const GstVideoColorimetry * cinfo,
+    const gchar * color)
 {
   const ColorimetryInfo *ci;
 
