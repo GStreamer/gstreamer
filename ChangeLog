@@ -1,9 +1,79 @@
-=== release 1.9.2 ===
+=== release 1.9.90 ===
 
-2016-09-01  Sebastian Dröge <slomo@coaxion.net>
+2016-09-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.2
+	  releasing 1.9.90
+
+2016-09-29 12:01:59 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Use enum instead of magic numbers for the chroma siting values
+
+2016-09-14 11:31:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Depend on gstreamer 1.9.2.1
+
+2016-09-14 11:20:48 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavvidenc.c:
+	  av: Cast AVContext::bit_rate to a guint before passing to varargs functions
+	  We expect it to be a int or uint, however it changed the type to a
+	  int64_t in later versions of ffmpeg. As such it would be passed as a 64
+	  bit value to varargs functions, while the consumer of the arguments
+	  assumes only 32 bits. This causes crashes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771092
+
+2016-09-10 20:52:01 +1000  Jan Schmidt <jan@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From b18d820 to f980fd9
+
+2016-09-10 09:58:11 +1000  Jan Schmidt <jan@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From f49c55e to b18d820
+
+2016-08-29 11:08:16 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* config.h.meson:
+	* configure.ac:
+	* ext/libav/meson.build:
+	* meson.build:
+	  build: Do not link plugin against lzma and bz2 if using system install
+	  And bump version to 1.9.2
+
+2016-09-02 16:55:46 +0100  Iain Lane <iain@orangesquash.org.uk>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  Only use AV_CODEC_ID_WRAPPED_AVFRAME on new enough libavcodecs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770753
+
+2016-09-01 12:31:21 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.9.2 ===
+
+2016-09-01 12:31:10 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.9.2
 
 2016-08-29 17:03:18 +0300  Sebastian Dröge <sebastian@centricular.com>
 
