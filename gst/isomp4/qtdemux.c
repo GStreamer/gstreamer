@@ -277,6 +277,7 @@ struct _QtDemuxStream
   /* Numerator/denominator framerate */
   gint fps_n;
   gint fps_d;
+  GstVideoColorimetry colorimetry;
   guint16 bits_per_sample;
   guint16 color_table_id;
   GstMemory *rgb8_palette;
@@ -7544,6 +7545,17 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
             GST_TYPE_FRACTION, stream->par_w, stream->par_h, NULL);
       }
 
+      /* Create incomplete colorimetry here if needed */
+      if (stream->colorimetry.range ||
+          stream->colorimetry.matrix ||
+          stream->colorimetry.transfer || stream->colorimetry.primaries) {
+        gchar *colorimetry =
+            gst_video_colorimetry_to_string_full (&stream->colorimetry, TRUE);
+        gst_caps_set_simple (stream->caps, "colorimetry", G_TYPE_STRING,
+            colorimetry, NULL);
+        g_free (colorimetry);
+      }
+
       if (stream->multiview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
         guint par_w = 1, par_h = 1;
 
@@ -9190,6 +9202,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GNode *wave;
   GNode *esds;
   GNode *pasp;
+  GNode *colr;
   GNode *tref;
   GNode *udta;
   GNode *svmi;
@@ -9622,6 +9635,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     esds = NULL;
     pasp = NULL;
+    colr = NULL;
     /* pick 'the' stsd child */
     if (!stream->protected)
       mp4v = qtdemux_tree_get_child_by_type (stsd, fourcc);
@@ -9631,6 +9645,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     if (mp4v) {
       esds = qtdemux_tree_get_child_by_type (mp4v, FOURCC_esds);
       pasp = qtdemux_tree_get_child_by_type (mp4v, FOURCC_pasp);
+      colr = qtdemux_tree_get_child_by_type (mp4v, FOURCC_colr);
     }
 
     if (pasp) {
@@ -9641,6 +9656,76 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     } else {
       stream->par_w = 0;
       stream->par_h = 0;
+    }
+
+    if (colr) {
+      const guint8 *colr_data = (const guint8 *) colr->data;
+      gint len = QT_UINT32 (colr_data);
+
+      if (len == 19 || len == 18) {
+        guint32 color_type = GST_READ_UINT32_LE (colr_data + 8);
+
+        if (color_type == FOURCC_nclx || color_type == FOURCC_nclc) {
+          guint16 primaries = GST_READ_UINT16_BE (colr_data + 12);
+          guint16 transfer_function = GST_READ_UINT16_BE (colr_data + 14);
+          guint16 matrix = GST_READ_UINT16_BE (colr_data + 16);
+          gboolean full_range = len == 19 ? colr_data[17] >> 7 : FALSE;
+
+          switch (primaries) {
+            case 1:
+              stream->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+              break;
+            case 5:
+              stream->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG;
+              break;
+            case 6:
+              stream->colorimetry.primaries =
+                  GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
+              break;
+            case 9:
+              stream->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+              break;
+            default:
+              break;
+          }
+
+          switch (transfer_function) {
+            case 1:
+              stream->colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+              break;
+            case 7:
+              stream->colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE240M;
+              break;
+            default:
+              break;
+          }
+
+          switch (matrix) {
+            case 1:
+              stream->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+              break;
+            case 6:
+              stream->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+              break;
+            case 7:
+              stream->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_SMPTE240M;
+              break;
+            case 9:
+              stream->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+              break;
+            default:
+              break;
+          }
+
+          stream->colorimetry.range =
+              full_range ? GST_VIDEO_COLOR_RANGE_0_255 :
+              GST_VIDEO_COLOR_RANGE_16_235;
+        } else {
+          GST_DEBUG_OBJECT (qtdemux, "Unsupported color type");
+        }
+      } else {
+        GST_WARNING_OBJECT (qtdemux, "Invalid colr atom size");
+      }
     }
 
     if (esds) {
