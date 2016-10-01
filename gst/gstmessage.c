@@ -2168,7 +2168,7 @@ gst_message_parse_qos_stats (GstMessage * message, GstFormat * format,
  * to perform actions triggered by a state change.
  *
  * @code contains a well defined string describing the action.
- * @test should contain a user visible string detailing the current action.
+ * @text should contain a user visible string detailing the current action.
  *
  * Returns: (transfer full): The new qos message.
  */
