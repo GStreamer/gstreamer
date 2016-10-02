@@ -57,8 +57,6 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-
-#include <gst/gst.h>
 #include <gst/video/video.h>
 
 #include "gstrpicamsrc.h"
@@ -135,8 +133,9 @@ enum
   PROP_ANNOTATION_TEXT_BG_COLOUR,
   PROP_INTRA_REFRESH_TYPE,
 #ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
-  PROP_VIDEO_DIRECTION
+  PROP_VIDEO_DIRECTION,
 #endif
+  PROP_JPEG_QUALITY
 };
 
 #define CAMERA_DEFAULT 0
@@ -158,6 +157,8 @@ enum
 #define EXPOSURE_MODE_DEFAULT GST_RPI_CAM_SRC_EXPOSURE_MODE_AUTO
 #define EXPOSURE_METERING_MODE_DEFAULT GST_RPI_CAM_SRC_EXPOSURE_METERING_MODE_AVERAGE
 
+#define DEFAULT_JPEG_QUALITY 50
+
 /*
    params->exposureMode = MMAL_PARAM_EXPOSUREMODE_AUTO;
    params->exposureMeterMode = MMAL_PARAM_EXPOSUREMETERINGMODE_AVERAGE;
@@ -172,8 +173,7 @@ enum
    params->roi.w = params->roi.h = 1.0;
 */
 
-#define RAW_AND_JPEG_CAPS \
-  GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ";" \
+#define JPEG_CAPS \
   "image/jpeg,"                                   \
   "width = " GST_VIDEO_SIZE_RANGE ","             \
   "height = " GST_VIDEO_SIZE_RANGE ","            \
@@ -186,6 +186,8 @@ enum
   "stream-format = (string) byte-stream, "  \
   "alignment = (string) nal, "               \
   "profile = (string) { baseline, main, high }"
+#define RAW_CAPS \
+  GST_VIDEO_CAPS_MAKE ("{ I420, RGB, BGR, RGBA }") /* FIXME: Map more raw formats */
 
 #ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
 #define gst_rpi_cam_src_reset_custom_orientation(src) { src->orientation = GST_VIDEO_ORIENTATION_CUSTOM; }
@@ -196,7 +198,7 @@ enum
 static GstStaticPadTemplate video_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ( /*RAW_AND_JPEG_CAPS "; " */ H264_CAPS)
+    GST_STATIC_CAPS ( H264_CAPS "; " JPEG_CAPS "; " RAW_CAPS)
     );
 
 
@@ -296,6 +298,10 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
       g_param_spec_int ("bitrate", "Bitrate",
           "Bitrate for encoding. 0 for VBR using quantisation-parameter", 0,
           BITRATE_HIGHEST, BITRATE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_JPEG_QUALITY,
+      g_param_spec_int ("jpeg-quality", "JPEG Quality",
+          "Quality setting for JPEG encode", 1, 100, DEFAULT_JPEG_QUALITY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_KEYFRAME_INTERVAL,
       g_param_spec_int ("keyframe-interval", "Keyframe Interface",
@@ -804,6 +810,10 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       src->capture_config.bitrate = g_value_get_int (value);
       src->capture_config.change_flags |= PROP_CHANGE_ENCODING;
       break;
+    case PROP_JPEG_QUALITY:
+      src->capture_config.jpegQuality = g_value_get_int (value);
+      src->capture_config.change_flags |= PROP_CHANGE_ENCODING;
+      break;
     case PROP_KEYFRAME_INTERVAL:
       src->capture_config.intraperiod = g_value_get_int (value);
       src->capture_config.change_flags |= PROP_CHANGE_ENCODING;
@@ -1012,6 +1022,9 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_BITRATE:
       g_value_set_int (value, src->capture_config.bitrate);
+      break;
+    case PROP_JPEG_QUALITY:
+      g_value_set_int (value, src->capture_config.jpegQuality);
       break;
     case PROP_KEYFRAME_INTERVAL:
       g_value_set_int (value, src->capture_config.intraperiod);
@@ -1267,16 +1280,41 @@ gst_rpi_cam_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
     return FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
-  profile_str = gst_structure_get_string (structure, "profile");
-  if (profile_str) {
-    if (g_str_equal (profile_str, "baseline"))
-      src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_BASELINE;
-    else if (g_str_equal (profile_str, "main"))
-      src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_MAIN;
-    else if (g_str_equal (profile_str, "high"))
-      src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_HIGH;
-    else
-      g_warning ("Unknown profile string in rpicamsrc caps: %s", profile_str);
+  if (gst_structure_has_name (structure, "video/x-h264")) {
+    src->capture_config.encoding = MMAL_ENCODING_H264;
+    profile_str = gst_structure_get_string (structure, "profile");
+    if (profile_str) {
+      if (g_str_equal (profile_str, "baseline"))
+        src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_BASELINE;
+      else if (g_str_equal (profile_str, "main"))
+        src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_MAIN;
+      else if (g_str_equal (profile_str, "high"))
+        src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_HIGH;
+      else
+        g_warning ("Unknown profile string in rpicamsrc caps: %s", profile_str);
+    }
+  }
+  else if (gst_structure_has_name (structure, "image/jpeg")) {
+    src->capture_config.encoding = MMAL_ENCODING_MJPEG;
+  }
+  else {
+    /* Raw caps */
+    switch (GST_VIDEO_INFO_FORMAT(&info)) {
+    case GST_VIDEO_FORMAT_I420:
+      src->capture_config.encoding = MMAL_ENCODING_I420;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+      src->capture_config.encoding = MMAL_ENCODING_RGB24;
+      break;
+    case GST_VIDEO_FORMAT_BGR:
+      src->capture_config.encoding = MMAL_ENCODING_BGR24;
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+      src->capture_config.encoding = MMAL_ENCODING_RGBA;
+      break;
+    default:
+      return FALSE;
+    }
   }
 
   src->capture_config.width = info.width;

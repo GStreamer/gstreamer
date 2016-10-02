@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Jan Schmidt <jan@centricular.com>
+ * Copyright (c) 2013-2016 Jan Schmidt <jan@centricular.com>
 Portions:
 Copyright (c) 2013, Broadcom Europe Ltd
 Copyright (c) 2013, James Hughes
@@ -269,6 +269,7 @@ void raspicapture_default_config(RASPIVID_CONFIG *config)
    config->demoInterval = 250; // ms
    config->immutableInput = 1;
    config->profile = MMAL_VIDEO_PROFILE_H264_HIGH;
+   config->encoding = MMAL_ENCODING_H264;
 
    config->bInlineHeaders = 0;
 
@@ -1119,9 +1120,6 @@ raspi_capture_set_format_and_start(RASPIVID_STATE *state)
 
    format = preview_port->format;
 
-   format->encoding = MMAL_ENCODING_OPAQUE;
-   format->encoding_variant = MMAL_ENCODING_I420;
-
    if(config->camera_parameters.shutter_speed > 6000000)
    {
         MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},
@@ -1147,6 +1145,8 @@ raspi_capture_set_format_and_start(RASPIVID_STATE *state)
    }
 
    format->encoding = MMAL_ENCODING_OPAQUE;
+   format->encoding_variant = MMAL_ENCODING_I420;
+
    format->es->video.width = VCOS_ALIGN_UP(config->width, 32);
    format->es->video.height = VCOS_ALIGN_UP(config->height, 16);
    format->es->video.crop.x = 0;
@@ -1165,9 +1165,7 @@ raspi_capture_set_format_and_start(RASPIVID_STATE *state)
    }
 
    // Set the encode format on the video  port
-
    format = video_port->format;
-   format->encoding_variant = MMAL_ENCODING_I420;
 
    if(config->camera_parameters.shutter_speed > 6000000)
    {
@@ -1182,7 +1180,16 @@ raspi_capture_set_format_and_start(RASPIVID_STATE *state)
         mmal_port_parameter_set(video_port, &fps_range.hdr);
    }
 
-   format->encoding = MMAL_ENCODING_OPAQUE;
+   /* If encoding, set opaque tunneling format */
+   if (state->encoder_component) {
+     format->encoding = MMAL_ENCODING_OPAQUE;
+     format->encoding_variant = MMAL_ENCODING_I420;
+   }
+   else {
+     format->encoding = config->encoding;
+     format->encoding_variant = config->encoding;
+   }
+
    format->es->video.width = VCOS_ALIGN_UP(config->width, 32);
    format->es->video.height = VCOS_ALIGN_UP(config->height, 16);
    format->es->video.crop.x = 0;
@@ -1279,6 +1286,10 @@ gboolean raspi_capture_request_i_frame(RASPIVID_STATE *state)
    MMAL_PORT_T *encoder_output = NULL;
    MMAL_STATUS_T status;
    MMAL_PARAMETER_BOOLEAN_T param = {{  MMAL_PARAMETER_VIDEO_REQUEST_I_FRAME, sizeof(param)}, 1};
+
+   if (state->encoder_component)
+     return TRUE;
+
    encoder_output = state->encoder_component->output[0];
    status = mmal_port_parameter_set(encoder_output, &param.hdr);
    if (status != MMAL_SUCCESS)
@@ -1302,15 +1313,24 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
    MMAL_COMPONENT_T *encoder = 0;
    MMAL_PORT_T *encoder_input = NULL, *encoder_output = NULL;
    MMAL_STATUS_T status;
-   MMAL_POOL_T *pool;
    RASPIVID_CONFIG *config = &state->config;
 
-   status = mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_ENCODER, &encoder);
+   gboolean encoded_format =
+     (config->encoding == MMAL_ENCODING_H264 ||
+      config->encoding == MMAL_ENCODING_MJPEG ||
+      config->encoding == MMAL_ENCODING_JPEG);
 
-   if (status != MMAL_SUCCESS)
-   {
-      vcos_log_error("Unable to create video encoder component");
-      goto error;
+   if (!encoded_format)
+     return MMAL_SUCCESS;
+
+   if (config->encoding == MMAL_ENCODING_JPEG)
+     status = mmal_component_create(MMAL_COMPONENT_DEFAULT_IMAGE_ENCODER, &encoder);
+   else
+     status = mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_ENCODER, &encoder);
+
+   if (status != MMAL_SUCCESS) {
+     vcos_log_error("Unable to create video encoder component");
+     goto error;
    }
 
    if (!encoder->input_num || !encoder->output_num)
@@ -1326,22 +1346,26 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
    // We want same format on input and output
    mmal_format_copy(encoder_output->format, encoder_input->format);
 
-   // Only supporting H264 at the moment
-   encoder_output->format->encoding = MMAL_ENCODING_H264;
+   // Configure desired encoding
+   encoder_output->format->encoding = config->encoding;
 
    encoder_output->format->bitrate = config->bitrate;
 
-   encoder_output->buffer_size = encoder_output->buffer_size_recommended;
+   if (config->encoding == MMAL_ENCODING_H264)
+     encoder_output->buffer_size = encoder_output->buffer_size_recommended;
+   else
+     encoder_output->buffer_size = 256<<10;
 
    if (encoder_output->buffer_size < encoder_output->buffer_size_min)
       encoder_output->buffer_size = encoder_output->buffer_size_min;
-
-   GST_DEBUG ("encoder buffer size is %u", (guint)encoder_output->buffer_size);
 
    encoder_output->buffer_num = encoder_output->buffer_num_recommended;
 
    if (encoder_output->buffer_num < encoder_output->buffer_num_min)
       encoder_output->buffer_num = encoder_output->buffer_num_min;
+
+   GST_DEBUG ("encoder wants %d buffers of size %u",
+       (guint)encoder_output->buffer_num, (guint)encoder_output->buffer_size);
 
    // We need to set the frame rate on output to 0, to ensure it gets
    // updated correctly from the input framerate when port connected
@@ -1350,9 +1374,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
 
    // Commit the port changes to the output port
    status = mmal_port_format_commit(encoder_output);
-
-   if (status != MMAL_SUCCESS)
-   {
+   if (status != MMAL_SUCCESS) {
       vcos_log_error("Unable to set format on video encoder output port");
       goto error;
    }
@@ -1370,7 +1392,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
 
    }
 
-   if (config->intraperiod != -1)
+   if (config->encoding == MMAL_ENCODING_H264 && config->intraperiod != -1)
    {
       MMAL_PARAMETER_UINT32_T param = {{ MMAL_PARAMETER_INTRAPERIOD, sizeof(param)}, config->intraperiod};
       status = mmal_port_parameter_set(encoder_output, &param.hdr);
@@ -1381,7 +1403,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
       }
    }
 
-   if (config->quantisationParameter)
+   if (config->encoding == MMAL_ENCODING_H264 && config->quantisationParameter)
    {
       MMAL_PARAMETER_UINT32_T param = {{ MMAL_PARAMETER_VIDEO_ENCODE_INITIAL_QUANT, sizeof(param)}, config->quantisationParameter};
       status = mmal_port_parameter_set(encoder_output, &param.hdr);
@@ -1409,6 +1431,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
 
    }
 
+   if (config->encoding == MMAL_ENCODING_H264)
    {
       MMAL_PARAMETER_VIDEO_PROFILE_T  param;
       param.hdr.id = MMAL_PARAMETER_PROFILE;
@@ -1440,14 +1463,16 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
    }
 
    //set INLINE VECTORS flag to request motion vector estimates
-   if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_ENCODE_INLINE_VECTORS, config->inlineMotionVectors) != MMAL_SUCCESS)
+   if (config->encoding == MMAL_ENCODING_H264 &&
+       mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_ENCODE_INLINE_VECTORS, config->inlineMotionVectors) != MMAL_SUCCESS)
    {
       vcos_log_error("failed to set INLINE VECTORS parameters");
       // Continue rather than abort..
    }
 
    // Adaptive intra refresh settings
-   if (config->intra_refresh_type != -1)
+   if (config->encoding == MMAL_ENCODING_H264 &&
+       config->intra_refresh_type != -1)
    {
       MMAL_PARAMETER_VIDEO_INTRA_REFRESH_T  param;
 
@@ -1476,6 +1501,23 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
       }
    }
 
+   if (config->encoding == MMAL_ENCODING_JPEG)
+   {
+      status = mmal_port_parameter_set_uint32(encoder_output, MMAL_PARAMETER_JPEG_Q_FACTOR, config->jpegQuality);
+      if (status != MMAL_SUCCESS) {
+         vcos_log_error("Unable to set JPEG quality");
+         goto error;
+      }
+
+#ifdef MMAL_PARAMETER_JPEG_RESTART_INTERVAL
+      status = mmal_port_parameter_set_uint32(encoder_output, MMAL_PARAMETER_JPEG_RESTART_INTERVAL, config->jpegRestartInterval);
+      if (status != MMAL_SUCCESS) {
+         vcos_log_error("Unable to set JPEG restart interval");
+         goto error;
+      }
+#endif
+   }
+
    //  Enable component
    status = mmal_component_enable(encoder);
 
@@ -1485,15 +1527,6 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
       goto error;
    }
 
-   /* Create pool of buffer headers for the output port to consume */
-   pool = mmal_port_pool_create(encoder_output, encoder_output->buffer_num, encoder_output->buffer_size);
-
-   if (!pool)
-   {
-      vcos_log_error("Failed to create buffer header pool for encoder output port %s", encoder_output->name);
-   }
-
-   state->encoder_pool = pool;
    state->encoder_component = encoder;
 
    if (config->verbose)
@@ -1635,10 +1668,11 @@ raspi_capture_start(RASPIVID_STATE *state)
   MMAL_PORT_T *preview_input_port = NULL;
   MMAL_PORT_T *encoder_input_port = NULL;
 
-  if ((status = create_encoder_component(state)) != MMAL_SUCCESS)
-  {
-     vcos_log_error("%s: Failed to create encode component", __func__);
-     return FALSE;
+  MMAL_POOL_T *pool;
+
+  if ((status = create_encoder_component(state)) != MMAL_SUCCESS) {
+    vcos_log_error("%s: Failed to create encode component", __func__);
+    return FALSE;
   }
 
   if (config->verbose)
@@ -1646,20 +1680,37 @@ raspi_capture_start(RASPIVID_STATE *state)
      dump_state(state);
   }
 
+  state->camera_video_port   = state->camera_component->output[MMAL_CAMERA_VIDEO_PORT];
+  state->camera_still_port   = state->camera_component->output[MMAL_CAMERA_CAPTURE_PORT];
+  camera_preview_port = state->camera_component->output[MMAL_CAMERA_PREVIEW_PORT];
+  preview_input_port  = state->preview_state.preview_component->input[0];
+
+  if (state->encoder_component) {
+    encoder_input_port  = state->encoder_component->input[0];
+    state->encoder_output_port = state->encoder_component->output[0];
+  } else {
+    state->encoder_output_port = state->camera_video_port;
+  }
+
   if ((status = raspi_capture_set_format_and_start(state)) != MMAL_SUCCESS) {
      return FALSE;
   }
 
+  GST_DEBUG ("Creating pool of %d buffers of size %d",
+      state->encoder_output_port->buffer_num, state->encoder_output_port->buffer_size);
+  /* Create pool of buffer headers for the output port to consume */
+  pool = mmal_port_pool_create(state->encoder_output_port,
+             state->encoder_output_port->buffer_num, state->encoder_output_port->buffer_size);
+  if (!pool)
+  {
+    vcos_log_error("Failed to create buffer header pool for encoder output port %s",
+         state->encoder_output_port->name);
+    return FALSE;
+  }
+  state->encoder_pool = pool;
+
   if (state->config.verbose)
      fprintf(stderr, "Starting component connection stage\n");
-
-  camera_preview_port = state->camera_component->output[MMAL_CAMERA_PREVIEW_PORT];
-  preview_input_port  = state->preview_state.preview_component->input[0];
-  encoder_input_port  = state->encoder_component->input[0];
-
-  state->camera_video_port   = state->camera_component->output[MMAL_CAMERA_VIDEO_PORT];
-  state->camera_still_port   = state->camera_component->output[MMAL_CAMERA_CAPTURE_PORT];
-  state->encoder_output_port = state->encoder_component->output[0];
 
   if (config->preview_parameters.wantPreview )
   {
@@ -1678,17 +1729,19 @@ raspi_capture_start(RASPIVID_STATE *state)
      }
   }
 
-  if (config->verbose)
-     fprintf(stderr, "Connecting camera stills port to encoder input port\n");
+  if (state->encoder_component) {
+    if (config->verbose)
+       fprintf(stderr, "Connecting camera video port to encoder input port\n");
 
-  // Now connect the camera to the encoder
-  status = connect_ports(state->camera_video_port, encoder_input_port, &state->encoder_connection);
-  if (status != MMAL_SUCCESS)
-  {
-    if (config->preview_parameters.wantPreview )
-      mmal_connection_destroy(state->preview_connection);
-    vcos_log_error("%s: Failed to connect camera video port to encoder input", __func__);
-    return FALSE;
+    // Now connect the camera to the encoder
+    status = connect_ports(state->camera_video_port, encoder_input_port, &state->encoder_connection);
+    if (status != MMAL_SUCCESS)
+    {
+      if (config->preview_parameters.wantPreview )
+        mmal_connection_destroy(state->preview_connection);
+      vcos_log_error("%s: Failed to connect camera video port to encoder input", __func__);
+      return FALSE;
+    }
   }
 
   // Set up our userdata - this is passed though to the callback where we need the information.
@@ -1788,13 +1841,13 @@ raspi_capture_stop(RASPIVID_STATE *state)
 
   if (config->preview_parameters.wantPreview )
      mmal_connection_destroy(state->preview_connection);
-  mmal_connection_destroy(state->encoder_connection);
 
   // Disable all our ports that are not handled by connections
   check_disable_port(state->camera_still_port);
   check_disable_port(state->encoder_output_port);
 
   if (state->encoder_component) {
+     mmal_connection_destroy(state->encoder_connection);
      mmal_component_disable(state->encoder_component);
      destroy_encoder_component(state);
   }
@@ -1847,7 +1900,7 @@ raspi_capture_update_config (RASPIVID_STATE *state, RASPIVID_CONFIG *config, gbo
   if (!dynamic)
     return;
 
-  if (config->change_flags & PROP_CHANGE_ENCODING) {
+  if (state->encoder_component && config->change_flags & PROP_CHANGE_ENCODING) {
     /* BITRATE or QUANT or KEY Interval, intra refresh */
     MMAL_COMPONENT_T *encoder = state->encoder_component;
     MMAL_PORT_T *encoder_output = encoder->output[0];
