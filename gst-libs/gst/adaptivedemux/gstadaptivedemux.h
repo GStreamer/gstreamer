@@ -167,6 +167,15 @@ struct _GstAdaptiveDemuxStream
   gint64 download_total_bytes;
   guint64 current_download_rate;
 
+  /* amount of data downloaded in current fragment (pre-queue2) */
+  guint64 fragment_bytes_downloaded;
+  /* bitrate of the previous fragment (pre-queue2) */
+  guint64 last_bitrate;
+  /* latency (request to first byte) and full download time (request to EOS)
+   * of previous fragment (pre-queue2) */
+  GstClockTime last_latency;
+  GstClockTime last_download_time;
+
   /* Average for the last fragments */
   guint64 moving_bitrate;
   guint moving_index;

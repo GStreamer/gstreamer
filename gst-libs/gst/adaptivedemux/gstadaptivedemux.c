@@ -1882,8 +1882,7 @@ gst_adaptive_demux_stream_update_current_bitrate (GstAdaptiveDemux * demux,
     return demux->connection_speed;
   }
 
-  g_object_get (stream->queue, "avg-in-rate", &fragment_bitrate, NULL);
-  fragment_bitrate *= 8;
+  fragment_bitrate = stream->last_bitrate;
   GST_DEBUG_OBJECT (demux, "Download bitrate is : %" G_GUINT64_FORMAT " bps",
       fragment_bitrate);
 
@@ -2353,6 +2352,58 @@ _src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   return gst_pad_peer_query (stream->pad, query);
 }
 
+static GstPadProbeReturn
+_uri_handler_probe (GstPad * pad, GstPadProbeInfo * info,
+    GstAdaptiveDemuxStream * stream)
+{
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+
+  if (GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_BUFFER) {
+    GstBuffer *buf = GST_PAD_PROBE_INFO_BUFFER (info);
+    if (stream->fragment_bytes_downloaded == 0) {
+      stream->last_latency =
+          gst_adaptive_demux_get_monotonic_time (stream->demux) -
+          (stream->download_start_time * GST_USECOND);
+      GST_DEBUG_OBJECT (pad,
+          "FIRST BYTE since download_start %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (stream->last_latency));
+    }
+    stream->fragment_bytes_downloaded += gst_buffer_get_size (buf);
+    GST_LOG_OBJECT (pad,
+        "Received buffer, size %" G_GUINT64_FORMAT " total %" G_GUINT64_FORMAT,
+        gst_buffer_get_size (buf), stream->fragment_bytes_downloaded);
+  } else if (GST_PAD_PROBE_INFO_TYPE (info) &
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) {
+    GstEvent *ev = GST_PAD_PROBE_INFO_EVENT (info);
+    GST_LOG_OBJECT (pad, "Received event %s %" GST_PTR_FORMAT,
+        GST_EVENT_TYPE_NAME (ev), ev);
+    switch (GST_EVENT_TYPE (ev)) {
+      case GST_EVENT_SEGMENT:
+        stream->fragment_bytes_downloaded = 0;
+        break;
+      case GST_EVENT_EOS:
+      {
+        stream->last_download_time =
+            gst_adaptive_demux_get_monotonic_time (stream->demux) -
+            (stream->download_start_time * GST_USECOND);
+        stream->last_bitrate =
+            gst_util_uint64_scale (stream->fragment_bytes_downloaded,
+            8 * GST_SECOND, stream->last_download_time);
+        GST_DEBUG_OBJECT (pad,
+            "EOS since download_start %" GST_TIME_FORMAT " bitrate %"
+            G_GUINT64_FORMAT " bps", GST_TIME_ARGS (stream->last_download_time),
+            stream->last_bitrate);
+        /* Calculate bitrate since URI request */
+      }
+        break;
+      default:
+        break;
+    }
+  }
+
+  return ret;
+}
+
 /* must be called with manifest_lock taken.
  * Can temporarily release manifest_lock
  */
@@ -2562,6 +2613,10 @@ gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
       stream->src = NULL;
       return FALSE;
     }
+
+    /* Add a downstream event and data probe */
+    gst_pad_add_probe (uri_handler_src, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+        (GstPadProbeCallback) _uri_handler_probe, stream, NULL);
 
     g_object_unref (queue_sink);
     g_object_unref (uri_handler_src);
