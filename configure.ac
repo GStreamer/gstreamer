@@ -675,17 +675,49 @@ AC_CHECK_FUNCS([posix_memalign])
 AC_CHECK_FUNCS([getpagesize])
 
 dnl Check for POSIX timers
-AC_CHECK_FUNCS(clock_gettime, [], [
+CLOCK_GETTIME_FOUND="no"
+AC_CHECK_FUNC(clock_gettime, [CLOCK_GETTIME_FOUND="yes"], [
   AC_CHECK_LIB(rt, clock_gettime, [
-    AC_DEFINE(HAVE_CLOCK_GETTIME, 1)
+    CLOCK_GETTIME_FOUND="yes"
     LIBS="$LIBS -lrt"
   ], [
     AC_CHECK_LIB(pthread, clock_gettime, [
-      AC_DEFINE(HAVE_CLOCK_GETTIME, 1)
+      CLOCK_GETTIME_FOUND="yes"
       LIBS="$LIBS -lpthread"
     ])
   ])
 ])
+
+# With XCode 8, clock_gettime will be incorrectly detected as being available
+# regardless of what version of OS X you target because the symbol is available
+# in the .tbd file as a weak symbol.
+# See: https://bugzilla.gnome.org/show_bug.cgi?id=772451
+#
+# We cannot simply do AC_CHECK_FUNCS with -Wl,-no_weak_imports because the
+# autoconf check does its own prototype declaration that doesn't trigger that
+# compiler flag.
+#
+# It's only starting from macOS 10.12, that clock_gettime is actually available,
+# so we can unconditionally disable it when targetting older versions.
+case "$host_os" in
+  darwin*)
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+#include <AvailabilityMacros.h>
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_12
+#error "Not compiling for OS X 10.12 or later"
+#endif
+    ]])], [], [
+    if test "$CLOCK_GETTIME_FOUND" = "yes"; then
+      AC_MSG_NOTICE([Disabling incorrectly detected clock_gettime on OS X])
+    fi
+    CLOCK_GETTIME_FOUND="no"
+    ])
+    ;;
+esac
+
+if test "$CLOCK_GETTIME_FOUND" = "yes"; then
+  AC_DEFINE(HAVE_CLOCK_GETTIME, 1, [Have clock_gettime])
+fi
 
 AC_CACHE_CHECK(for posix timers, gst_cv_posix_timers,
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
