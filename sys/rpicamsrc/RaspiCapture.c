@@ -1428,7 +1428,6 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
          vcos_log_error("Unable to set max QP");
          goto error;
       }
-
    }
 
    if (config->encoding == MMAL_ENCODING_H264)
@@ -1448,57 +1447,60 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
       }
    }
 
-
-   if (mmal_port_parameter_set_boolean(encoder_input, MMAL_PARAMETER_VIDEO_IMMUTABLE_INPUT, config->immutableInput) != MMAL_SUCCESS)
+   if (config->encoding != MMAL_ENCODING_JPEG)
    {
-      vcos_log_error("Unable to set immutable input flag");
-      // Continue rather than abort..
-   }
+     if (mmal_port_parameter_set_boolean(encoder_input, MMAL_PARAMETER_VIDEO_IMMUTABLE_INPUT, config->immutableInput) != MMAL_SUCCESS)
+     {
+        vcos_log_error("Unable to set immutable input flag");
+        // Continue rather than abort..
+     }
 
-   //set INLINE HEADER flag to generate SPS and PPS for every IDR if requested
-   if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_ENCODE_INLINE_HEADER, config->bInlineHeaders) != MMAL_SUCCESS)
-   {
-      vcos_log_error("failed to set INLINE HEADER FLAG parameters");
-      // Continue rather than abort..
-   }
+     //set INLINE HEADER flag to generate SPS and PPS for every IDR if requested
+     if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_ENCODE_INLINE_HEADER, config->bInlineHeaders) != MMAL_SUCCESS)
+     {
+        vcos_log_error("failed to set INLINE HEADER FLAG parameters");
+        // Continue rather than abort..
+     }
+  }
 
-   //set INLINE VECTORS flag to request motion vector estimates
-   if (config->encoding == MMAL_ENCODING_H264 &&
-       mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_ENCODE_INLINE_VECTORS, config->inlineMotionVectors) != MMAL_SUCCESS)
-   {
-      vcos_log_error("failed to set INLINE VECTORS parameters");
-      // Continue rather than abort..
-   }
+  if (config->encoding == MMAL_ENCODING_H264)
+  {
+     //set INLINE VECTORS flag to request motion vector estimates
+     if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_ENCODE_INLINE_VECTORS, config->inlineMotionVectors) != MMAL_SUCCESS)
+     {
+        vcos_log_error("failed to set INLINE VECTORS parameters");
+        // Continue rather than abort..
+     }
 
-   // Adaptive intra refresh settings
-   if (config->encoding == MMAL_ENCODING_H264 &&
-       config->intra_refresh_type != -1)
-   {
-      MMAL_PARAMETER_VIDEO_INTRA_REFRESH_T  param;
+     // Adaptive intra refresh settings
+     if (config->intra_refresh_type != -1)
+     {
+        MMAL_PARAMETER_VIDEO_INTRA_REFRESH_T  param;
 
-      /* Need to memset, apparently mmal_port_parameter_get()
-       * doesn't retrieve all parameters, causing random failures
-       * when we set it
-       */
-      memset (&param, 0, sizeof (MMAL_PARAMETER_VIDEO_INTRA_REFRESH_T));
+        /* Need to memset, apparently mmal_port_parameter_get()
+         * doesn't retrieve all parameters, causing random failures
+         * when we set it
+         */
+        memset (&param, 0, sizeof (MMAL_PARAMETER_VIDEO_INTRA_REFRESH_T));
 
-      param.hdr.id = MMAL_PARAMETER_VIDEO_INTRA_REFRESH;
-      param.hdr.size = sizeof(param);
+        param.hdr.id = MMAL_PARAMETER_VIDEO_INTRA_REFRESH;
+        param.hdr.size = sizeof(param);
 
-      // Get first so we don't overwrite anything unexpectedly
-      status = mmal_port_parameter_get(encoder_output, &param.hdr);
+        // Get first so we don't overwrite anything unexpectedly
+        status = mmal_port_parameter_get(encoder_output, &param.hdr);
 
-      param.refresh_mode = config->intra_refresh_type;
+        param.refresh_mode = config->intra_refresh_type;
 
-      //if (state->intra_refresh_type == MMAL_VIDEO_INTRA_REFRESH_CYCLIC_MROWS)
-      //   param.cir_mbs = 10;
+        //if (state->intra_refresh_type == MMAL_VIDEO_INTRA_REFRESH_CYCLIC_MROWS)
+        //   param.cir_mbs = 10;
 
-      status = mmal_port_parameter_set(encoder_output, &param.hdr);
-      if (status != MMAL_SUCCESS)
-      {
+        status = mmal_port_parameter_set(encoder_output, &param.hdr);
+        if (status != MMAL_SUCCESS)
+        {
          vcos_log_error("Unable to set H264 intra-refresh values");
-         goto error;
-      }
+           goto error;
+        }
+     }
    }
 
    if (config->encoding == MMAL_ENCODING_JPEG)
@@ -1506,14 +1508,14 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
       status = mmal_port_parameter_set_uint32(encoder_output, MMAL_PARAMETER_JPEG_Q_FACTOR, config->jpegQuality);
       if (status != MMAL_SUCCESS) {
          vcos_log_error("Unable to set JPEG quality");
-         goto error;
+         // Continue after warning
       }
 
 #ifdef MMAL_PARAMETER_JPEG_RESTART_INTERVAL
       status = mmal_port_parameter_set_uint32(encoder_output, MMAL_PARAMETER_JPEG_RESTART_INTERVAL, config->jpegRestartInterval);
       if (status != MMAL_SUCCESS) {
          vcos_log_error("Unable to set JPEG restart interval");
-         goto error;
+         // Continue after warning
       }
 #endif
    }

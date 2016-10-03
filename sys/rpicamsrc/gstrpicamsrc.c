@@ -250,10 +250,10 @@ gst_rpi_cam_src_sensor_mode_get_type (void)
     {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_1920x1080), "1920x1080 16:9 1-30fps",
         "1920x1080"},
     {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_2592x1944_FAST),
-          "2592x1944 4:3 1-15fps",
+          "2592x1944 4:3 1-15fps / 3240x2464 15fps w/ v.2 board",
         "2592x1944-fast"},
     {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_2592x1944_SLOW),
-        "2592x1944 4:3 0.1666-1fps", "2592x1944-slow"},
+        "2592x1944 4:3 0.1666-1fps / 3240x2464 15fps w/ v.2 board", "2592x1944-slow"},
     {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_1296x972), "1296x972 4:3 1-42fps",
         "1296x972"},
     {C_ENUM (GST_RPI_CAM_SRC_SENSOR_MODE_1296x730), "1296x730 16:9 1-49fps",
@@ -1254,14 +1254,26 @@ gst_rpi_cam_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (bsrc);
   GstCaps *caps;
+  gint i;
+
   caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
   if (src->capture_state == NULL)
     goto done;
   /* FIXME: Retrieve limiting parameters from the camera module, max width/height fps-range */
   caps = gst_caps_make_writable (caps);
-  gst_caps_set_simple (caps, "width", GST_TYPE_INT_RANGE, 1, 1920, "height",
-      GST_TYPE_INT_RANGE, 1, 1080, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
-      90, 1, NULL);
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+    if (gst_structure_has_name (s, "video/x-h264")) {
+       gst_caps_set_simple (caps, "width", GST_TYPE_INT_RANGE, 1, 1920, "height",
+           GST_TYPE_INT_RANGE, 1, 1080, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+           90, 1, NULL);
+    }
+    else {
+       gst_caps_set_simple (caps, "width", GST_TYPE_INT_RANGE, 1, 3240, "height",
+           GST_TYPE_INT_RANGE, 1, 2464, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+           90, 1, NULL);
+    }
+  }
 done:
   GST_DEBUG_OBJECT (src, "get_caps returning %" GST_PTR_FORMAT, caps);
   return caps;
@@ -1295,7 +1307,7 @@ gst_rpi_cam_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
     }
   }
   else if (gst_structure_has_name (structure, "image/jpeg")) {
-    src->capture_config.encoding = MMAL_ENCODING_MJPEG;
+    src->capture_config.encoding = MMAL_ENCODING_JPEG;
   }
   else {
     /* Raw caps */
