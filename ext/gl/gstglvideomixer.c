@@ -841,14 +841,20 @@ static void
 gst_gl_video_mixer_release_pad (GstElement * element, GstPad * p)
 {
   GstGLVideoMixerPad *pad = GST_GL_VIDEO_MIXER_PAD (p);
+
+  /* we call the base class first as this will remove the pad from
+   * the aggregator, thus stopping misc callbacks from being called,
+   * one of which (process_textures) will recreate the vertex_buffer
+   * if it is destroyed */
+  GST_ELEMENT_CLASS (g_type_class_peek_parent (G_OBJECT_GET_CLASS (element)))
+      ->release_pad (element, p);
+
   if (pad->vertex_buffer) {
     GstGLBaseMixer *mix = GST_GL_BASE_MIXER (element);
     gst_gl_context_thread_add (mix->context, (GstGLContextThreadFunc)
         _del_buffer, &pad->vertex_buffer);
     pad->vertex_buffer = 0;
   }
-  GST_ELEMENT_CLASS (g_type_class_peek_parent (G_OBJECT_GET_CLASS (element)))
-      ->release_pad (element, p);
 }
 
 static void
