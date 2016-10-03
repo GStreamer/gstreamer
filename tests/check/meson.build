@@ -33,25 +33,19 @@ test_defines = [
   '-DGST_USE_UNSTABLE_API',
 ]
 
-getpluginsdir = find_program('getpluginsdir')
-runcmd = run_command(getpluginsdir, 'gstreamer', 'gstreamer-' + apiversion,
-        'gst-plugins-base', 'gstreamer-plugins-base-' + apiversion,
-        'gst-plugins-good', 'gstreamer-plugins-good-' + apiversion,
-        'gst-plugins-bad', 'gstreamer-plugins-bad-' + apiversion)
-if runcmd.returncode() == 0
-    needed_plugins_dirs = runcmd.stdout().strip() + ':' + meson.build_root() + '/plugins/nle'
-    message('Using GStreamer plug-ins in ' + needed_plugins_dirs)
-else
-  error('Could not determine GStreamer core plugins directory for unit tests.')
-endif
+pluginsdirs = []
+if not meson.is_subproject()
+  pkgconfig = find_program('pkg-config')
+  runcmd = run_command(pkgconfig, '--variable=pluginsdir',
+      'gstreamer-' + apiversion, 'gstreamer-plugins-base-' + apiversion,
+      'gstreamer-plugins-bad-' + apiversion)
 
-test_env = [
-    'GST_PLUGIN_SYSTEM_PATH_1_0=',
-    'GST_PLUGIN_PATH_1_0=' + needed_plugins_dirs,
-    'GST_PLUGIN_SCANNER_1_0='+ meson.build_root() + '/libs/gst/helpers/gst-plugin-scanner',
-    'GST_STATE_IGNORE_ELEMENTS=',
-    'CK_DEFAULT_TIMEOUT=20',
-]
+  if runcmd.returncode() == 0
+      pluginsdirs = runcmd.stdout().split()
+  else
+    error('Could not determine GStreamer core plugins directory for unit tests.')
+  endif
+endif
 
 foreach t : ges_tests
   test_name = t.get(0)
@@ -62,15 +56,23 @@ foreach t : ges_tests
   endif
 
   if not skip_test
+    env = environment()
+    env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
+    env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
+    env.set('GST_STATE_IGNORE_ELEMENTS', '')
+    env.set('CK_DEFAULT_TIMEOUT', '20')
+    env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
+    foreach plugindir: pluginsdirs
+      env.append('GST_PLUGIN_PATH_1_0', plugindir)
+    endforeach
+
     exe = executable(test_name, '@0@.c'.format(test_name),
         'ges/test-utils.c', 'nle/common.c',
         c_args : ges_c_args + test_defines,
         include_directories : [configinc],
         dependencies : libges_deps + [gstcheck_dep, ges_dep],
     )
-    test(test_name, exe,
-      env: test_env + ['GST_REGISTRY=@0@/@1@.registry'.format(meson.current_build_dir(), test_name)]
-    )
+    test(test_name, exe, env: env)
   endif
 endforeach
 

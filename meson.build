@@ -1,6 +1,6 @@
 project('gst-editing-services', 'c',
   version : '1.9.90',
-  meson_version : '>= 0.33.0',
+  meson_version : '>= 0.35.0',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
                       'buildtype=debugoptimized' ])
