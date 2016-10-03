@@ -50,6 +50,7 @@ check_headers = [
   ['HAVE_INTTYPES_H', 'inttypes.h'],
   ['HAVE_MEMORY_H', 'memory.h'],
   ['HAVE_PROCESS_H', 'process.h'],
+  ['HAVE_SMMINTRIN_H', 'smmintrin.h'],
   ['HAVE_STDINT_H', 'stdint.h'],
   ['HAVE_STDLIB_H', 'stdlib.h'],
   ['HAVE_STRINGS_H', 'strings.h'],
@@ -173,6 +174,23 @@ if get_option('use_orc') != 'no'
   endif
 else
   core_conf.set('DISABLE_ORC', 1)
+endif
+
+# Used to build SSE* things in audio-resampler
+sse_args = '-msse'
+sse2_args = '-msse2'
+sse41_args = '-msse4.1'
+
+have_sse = cc.has_argument(sse_args)
+have_sse2 = cc.has_argument(sse2_args)
+have_sse41 = cc.has_argument(sse41_args)
+
+# FIXME: Meson should have a way for portably adding -fPIC when needed for use
+# with static libraries that are linked into shared libraries. Or, it should
+# add it by default with an option to turn it off if needed.
+pic_args = ['-fPIC']
+if host_machine.system() == 'windows'
+  pic_args = []
 endif
 
 subdir('gst-libs')

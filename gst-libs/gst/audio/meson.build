@@ -85,10 +85,53 @@ else
     configuration : configuration_data())
 endif
 
+simd_cargs = []
+simd_dependencies = []
+
+if have_sse
+  audio_resampler_sse = static_library('audio_resampler_sse',
+    [ 'audio-resampler-x86-sse.c' ],
+    c_args : gst_plugins_base_args + [sse_args] + [pic_args],
+    include_directories : [configinc, libsinc],
+    dependencies : [gst_base_dep],
+    install : false
+  )
+
+  simd_cargs += ['-DHAVE_SSE']
+  simd_dependencies += audio_resampler_sse
+endif
+
+if have_sse2
+  audio_resampler_sse2 = static_library('audio_resampler_sse2',
+    [ 'audio-resampler-x86-sse2.c' ],
+    c_args : gst_plugins_base_args + [sse2_args] + [pic_args],
+    include_directories : [configinc, libsinc],
+    dependencies : [gst_base_dep],
+    install : false
+  )
+
+  simd_cargs += ['-DHAVE_SSE2']
+  simd_dependencies += audio_resampler_sse2
+endif
+
+if have_sse41
+  audio_resampler_sse41 = static_library('audio_resampler_sse41',
+    [ 'audio-resampler-x86-sse41.c' ],
+    c_args : gst_plugins_base_args + [sse41_args] + [pic_args],
+    include_directories : [configinc, libsinc],
+    dependencies : [gst_base_dep],
+    install : false
+  )
+
+  simd_cargs += ['-DHAVE_SSE41']
+  simd_dependencies += audio_resampler_sse41
+endif
+
 gstaudio = library('gstaudio-@0@'.format(api_version),
   audio_src, gstaudio_h, gstaudio_c, orc_c, orc_h,
-  c_args: gst_plugins_base_args,
+  c_args : gst_plugins_base_args + simd_cargs,
   include_directories: [configinc, libsinc],
+  link_with : simd_dependencies,
   version : libversion,
   soversion : soversion,
   install : true,

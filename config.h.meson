@@ -245,6 +245,9 @@
 /* Define if RDTSC is available */
 #mesondefine HAVE_RDTSC
 
+/* Define to 1 if you have the <smmintrin.h> header file. */
+#mesondefine HAVE_SMMINTRIN_H
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #mesondefine HAVE_STDINT_H
 
