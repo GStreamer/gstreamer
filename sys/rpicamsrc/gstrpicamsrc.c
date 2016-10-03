@@ -78,6 +78,9 @@
 
 GST_DEBUG_CATEGORY (gst_rpi_cam_src_debug);
 
+/* comment out to use JPEG codec instead of MJPEG */
+// #define USE_JPEG_CODEC
+
 /* Filter signals and args */
 enum
 {
@@ -299,10 +302,12 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           "Bitrate for encoding. 0 for VBR using quantisation-parameter", 0,
           BITRATE_HIGHEST, BITRATE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#ifdef USE_JPEG_CODEC
   g_object_class_install_property (gobject_class, PROP_JPEG_QUALITY,
       g_param_spec_int ("jpeg-quality", "JPEG Quality",
           "Quality setting for JPEG encode", 1, 100, DEFAULT_JPEG_QUALITY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
   g_object_class_install_property (gobject_class, PROP_KEYFRAME_INTERVAL,
       g_param_spec_int ("keyframe-interval", "Keyframe Interface",
           "Interval (in frames) between I frames. -1 = automatic, 0 = single-keyframe",
@@ -1307,7 +1312,11 @@ gst_rpi_cam_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
     }
   }
   else if (gst_structure_has_name (structure, "image/jpeg")) {
+#ifdef USE_JPEG_CODEC
     src->capture_config.encoding = MMAL_ENCODING_JPEG;
+#else
+    src->capture_config.encoding = MMAL_ENCODING_MJPEG;
+#endif
   }
   else {
     /* Raw caps */
