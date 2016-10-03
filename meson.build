@@ -97,7 +97,6 @@ core_conf.set('GST_API_VERSION', '"@0@"'.format(api_version))
 core_conf.set('GST_INSTALL_PLUGINS_HELPER', '"/FIXME"')
 core_conf.set('GST_DATADIR', '"/FIXME"')
 core_conf.set('GST_LICENSE', '"LGPL"')
-core_conf.set('DISABLE_ORC', 1)
 # FIXME: These should be configure options
 core_conf.set('DEFAULT_VIDEOSINK', '"autovideosink"')
 core_conf.set('DEFAULT_AUDIOSINK', '"autoaudiosink"')
@@ -162,13 +161,18 @@ orcc_args = []
 if get_option('use_orc') != 'no'
   need_orc = get_option('use_orc') == 'yes'
   # Used by various libraries/elements that use Orc code
+  orc_dep = dependency('orc-0.4', version : '>= 0.4.17', required : need_orc)
   orcc = find_program('orcc', required : need_orc)
-  if orcc.found()
+  if orc_dep.found() and orcc.found()
     have_orcc = true
     orcc_args = [orcc, '--include', 'glib.h']
+    core_conf.set('HAVE_ORC', 1)
   else
     message('Orc Compiler not found, will use backup C code')
+    core_conf.set('DISABLE_ORC', 1)
   endif
+else
+  core_conf.set('DISABLE_ORC', 1)
 endif
 
 subdir('gst-libs')

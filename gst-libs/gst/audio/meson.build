@@ -92,7 +92,7 @@ gstaudio = library('gstaudio-@0@'.format(api_version),
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [tag_dep, gst_base_dep, libm],
+  dependencies : [tag_dep, gst_base_dep, orc_dep, libm],
   vs_module_defs: vs_module_defs_dir + 'libgstaudio.def',
 )
 # TODO: generate gir

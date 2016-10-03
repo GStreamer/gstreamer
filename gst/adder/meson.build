@@ -21,7 +21,7 @@ adder = library('gstadder',
   'gstadder.c', orc_c, orc_h,
   c_args: gst_plugins_base_args,
   include_directories: [configinc, libsinc],
-  dependencies : [audio_dep],
+  dependencies : [audio_dep, orc_dep],
   install : true,
   install_dir : plugins_install_dir,
 )

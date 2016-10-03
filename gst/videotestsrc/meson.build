@@ -21,7 +21,7 @@ gstvideotestsrc = library('gstvideotestsrc',
   'gstvideotestsrc.c', 'videotestsrc.c', orc_c, orc_h,
   c_args : gst_plugins_base_args,
   include_directories: [configinc, libsinc],
-  dependencies : glib_deps + [video_dep, gst_dep, gst_base_dep, libm],
+  dependencies : glib_deps + [video_dep, gst_dep, gst_base_dep, orc_dep, libm],
   install : true,
   install_dir : plugins_install_dir,
 )

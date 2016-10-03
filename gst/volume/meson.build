@@ -20,7 +20,7 @@ endif
 gstvolume = library('gstvolume', 'gstvolume.c', orc_c, orc_h,
   c_args : gst_plugins_base_args,
   include_directories: [configinc, libsinc],
-  dependencies : glib_deps + [audio_dep, gst_dep, gst_base_dep],
+  dependencies : glib_deps + [audio_dep, gst_dep, gst_base_dep, orc_dep],
   install : true,
   install_dir : plugins_install_dir,
 )
