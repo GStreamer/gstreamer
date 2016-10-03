@@ -95,7 +95,7 @@ AC_CHECK_LIB([rt], [timer_create, timer_settime, timer_delete])
 AM_CONDITIONAL(HAVE_TIMER_CREATE_SETTIME_DELETE, test "x$ac_cv_lib_rt_timer_create__timer_settime__timer_delete" = "xyes")
 
 dnl Allow for checking HAVE_CLOCK_GETTIME in automake files
-AM_CONDITIONAL(HAVE_CLOCK_GETTIME, test "x$ac_cv_func_clock_gettime" = "xyes")
+AM_CONDITIONAL(HAVE_CLOCK_GETTIME, test "x$HAVE_CLOCK_GETTIME" = "xyes")
 
 dnl Create _stdint.h in the top-level directory
 AX_CREATE_STDINT_H

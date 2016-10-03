@@ -2,7 +2,7 @@ project('gstreamer', 'c', 'cpp',
   version : '1.9.90',
   meson_version : '>= 0.33.0',
   default_options : [ 'warning_level=1',
-                      'c_std=gnu99',
+                      'c_std=c99',
                       'buildtype=debugoptimized' ])
 
 gst_version = meson.project_version()
@@ -185,8 +185,30 @@ endif
 if cc.has_function('getpagesize', prefix : '#include<unistd.h>')
   cdata.set('HAVE_GETPAGESIZE', 1)
 endif
+
+# With OS X 10.11.6 and XCode 8, clock_gettime will be incorrectly detected as
+# being available because the symbol is available in the .tbd file as a weak
+# symbol. See: https://github.com/Homebrew/homebrew-core/issues/3727#issue-170086273
+#
+# We cannot simply do cc.has_function with -Wl,-no_weak_imports because the
+# check does its own prototype decl that doesn't trigger that compiler flag.
+#
+# It's only starting from macOS 10.12, that clock_gettime is actually available,
+# so we can unconditionally disable it for older versions.
+for_osx_10_12_src = '''#include <AvailabilityMacros.h>
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_12
+#error "Not compiling for OS X 10.12 or later"
+#endif
+'''
+
 if cc.has_function('clock_gettime', prefix : '#include <time.h>')
-  cdata.set('HAVE_CLOCK_GETTIME', 1)
+  if host_machine.system() == 'darwin'
+    if cc.compiles(for_osx_10_12_src, name : 'minimum OS X version required >= 10.12')
+      cdata.set('HAVE_CLOCK_GETTIME', 1)
+    endif
+  else
+    cdata.set('HAVE_CLOCK_GETTIME', 1)
+  endif
 endif
 
 # We only want to use the __declspec(dllexport/import) dance in GST_EXPORT when
