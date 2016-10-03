@@ -491,6 +491,13 @@ gst_image_freeze_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       ret = TRUE;
       break;
     }
+    case GST_QUERY_LATENCY:
+      /* This will only return an accurate latency for the first buffer since
+       * all further buffers outputted by us are just copies of that one, and
+       * the latency is 0 in that case. However, latency changes are not
+       * straightforward, so let's do the conservative fix for now. */
+      ret = gst_pad_query_default (pad, parent, query);
+      break;
     default:
       ret = FALSE;
       break;
