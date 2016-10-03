@@ -17,6 +17,7 @@ else
 endif
 
 glib_req = '>= 2.40.0'
+orc_req = '>= 0.4.24'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
 api_version = '1.0'
@@ -162,7 +163,7 @@ orcc_args = []
 if get_option('use_orc') != 'no'
   need_orc = get_option('use_orc') == 'yes'
   # Used by various libraries/elements that use Orc code
-  orc_dep = dependency('orc-0.4', version : '>= 0.4.17', required : need_orc)
+  orc_dep = dependency('orc-0.4', version : orc_req, required : need_orc)
   orcc = find_program('orcc', required : need_orc)
   if orc_dep.found() and orcc.found()
     have_orcc = true
