@@ -43,6 +43,7 @@ distribution_get_type (void)
     static const GEnumValue values[] = {
       {DISTRIBUTION_UNIFORM, "uniform", "uniform"},
       {DISTRIBUTION_NORMAL, "normal", "normal"},
+      {DISTRIBUTION_GAMMA, "gamma", "gamma"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -226,20 +227,17 @@ get_random_value_uniform (GRand * rand_seed, gint32 min_value, gint32 max_value)
   return g_rand_int_range (rand_seed, min_value, max_value + 1);
 }
 
-/* Generate a value from a normal distributation with 95% confidense interval
- * between LOW and HIGH, using the Box-Muller transform. */
-static gint
-get_random_value_normal (GRand * rand_seed, gint32 low, gint32 high,
+/* Use the Box-Muller transform. */
+static gdouble
+random_value_normal (GRand * rand_seed, gdouble mu, gdouble sigma,
     NormalDistributionState * state)
 {
   gdouble u1, u2, t1, t2;
-  gdouble mu = (high + low) / 2.0;
-  gdouble sigma = (high - low) / (2 * 1.96);    /* 95% confidence interval */
 
   state->generate = !state->generate;
 
   if (!state->generate)
-    return round (state->z1 * sigma + mu);
+    return state->z1 * sigma + mu;
 
   do {
     u1 = g_rand_double (rand_seed);
@@ -251,7 +249,64 @@ get_random_value_normal (GRand * rand_seed, gint32 low, gint32 high,
   state->z0 = t1 * cos (t2);
   state->z1 = t1 * sin (t2);
 
-  return round (state->z0 * sigma + mu);
+  return state->z0 * sigma + mu;
+}
+
+/* Generate a value from a normal distributation with 95% confidense interval
+ * between LOW and HIGH */
+static gint
+get_random_value_normal (GRand * rand_seed, gint32 low, gint32 high,
+    NormalDistributionState * state)
+{
+  gdouble mu = (high + low) / 2.0;
+  gdouble sigma = (high - low) / (2 * 1.96);    /* 95% confidence interval */
+  gdouble z = random_value_normal (rand_seed, mu, sigma, state);
+
+  return round (z);
+}
+
+/* Marsaglia and Tsang's method */
+static gdouble
+random_value_gamma (GRand * rand_seed, gdouble a, gdouble b,
+    NormalDistributionState * state)
+{
+  const gdouble d = a - 1.0 / 3.0;
+  const gdouble c = 1.0 / sqrt (9 * d);
+  gdouble x, u, z, v;
+
+  if (a >= 1.0) {
+    while (TRUE) {
+      z = random_value_normal (rand_seed, 0.0, 1.0, state);
+      if (z > -1.0 / c) {
+        u = g_rand_double (rand_seed);
+        v = 1.0 + c * z;
+        v = v * v * v;
+        if (log (u) < (0.5 * z * z + d * (1 - v + log (v)))) {
+          x = d * v;
+          break;
+        }
+      }
+    }
+  } else {
+    u = g_rand_double (rand_seed);
+    x = random_value_gamma (rand_seed, a + 1, b, state) * pow (u, 1.0 / a);
+  }
+
+  return x * b;
+}
+
+static gint
+get_random_value_gamma (GRand * rand_seed, gint32 low, gint32 high,
+    NormalDistributionState * state)
+{
+  /* shape parameter 1.25 gives an OK simulation of wireless networks */
+  /* Find the scale parameter so that P(0 < x < high-low) < 0.95 */
+  /* We know: P(0 < x < R) < 0.95 for gamma(1.25, 1), R = 3.4640381 */
+  gdouble shape = 1.25;
+  gdouble scale = (high - low) / 3.4640381;
+  gdouble x = random_value_gamma (rand_seed, shape, scale, state);
+  /* Add offset so that low is the minimum possible value */
+  return round (x + low);
 }
 
 
@@ -274,6 +329,10 @@ gst_net_sim_delay_buffer (GstNetSim * netsim, GstBuffer * buf)
         break;
       case DISTRIBUTION_NORMAL:
         delay = get_random_value_normal (netsim->rand_seed, netsim->min_delay,
+            netsim->max_delay, &netsim->delay_state);
+        break;
+      case DISTRIBUTION_GAMMA:
+        delay = get_random_value_gamma (netsim->rand_seed, netsim->min_delay,
             netsim->max_delay, &netsim->delay_state);
         break;
       default:

@@ -49,7 +49,8 @@ typedef struct _GstNetSimClass GstNetSimClass;
 typedef enum
 {
   DISTRIBUTION_UNIFORM,
-  DISTRIBUTION_NORMAL
+  DISTRIBUTION_NORMAL,
+  DISTRIBUTION_GAMMA
 } GstNetSimDistribution;
 
 typedef struct
