@@ -8,5 +8,7 @@ gst_plugin_scanner = executable('gst-plugin-scanner',
   install: true,
 )
 
+gst_scanner_dir = meson.current_build_dir()
+
 # FIXME: gst-ptp-helper
 # FIXME: gst-completion-helper
