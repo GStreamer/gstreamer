@@ -52,3 +52,5 @@ executable('mklicensestables', 'mklicensestables.c',
   dependencies : [tag_dep, gst_base_dep],
   install : false,
 )
+
+gst_tag_dir = meson.current_source_dir()
