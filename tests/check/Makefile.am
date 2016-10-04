@@ -170,6 +170,12 @@ check_hlsdemux_m3u8 =
 check_hlsdemux =
 endif
 
+if USE_SRTP
+check_srtp = elements/srtp
+else
+check_srtp =
+endif
+
 if WITH_GST_PLAYER_TESTS
 check_player = libs/player
 else
@@ -299,6 +305,7 @@ check_PROGRAMS = \
 	$(check_gl) \
 	$(check_hlsdemux_m3u8) \
 	$(check_hlsdemux) \
+	$(check_srtp) \
 	$(check_player) \
 	$(EXPERIMENTAL_CHECKS)
 
