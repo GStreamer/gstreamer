@@ -121,18 +121,23 @@ test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_PLUGIN_LOADING_WHITELIST"',
-  '-DGST_TEST_FILES_PATH="' + meson.source_root() + '/tests/files"',
+  '-DGST_TEST_FILES_PATH="' + meson.current_source_dir() + '/../files"',
   '-DGST_USE_UNSTABLE_API',
 ]
 
-getpluginsdir = find_program('getpluginsdir')
-runcmd = run_command(getpluginsdir, 'gstreamer', 'gstreamer-' + api_version,
-        'gst-plugins-base', 'gstreamer-plugins-base-' + api_version)
-if runcmd.returncode() == 0
-  other_plugins_dir = runcmd.stdout().strip()
-  message('Using GStreamer plug-ins in ' + other_plugins_dir)
-else
-  error('Could not determine GStreamer plugins directory for unit tests.')
+pluginsdirs = [  ]
+# FIXME: Use if not gst_dep.is_internal() when avalaible as we only support the
+# case where GStreamer is another subproject here.
+if not meson.is_subproject()
+  pkgconfig = find_program('pkg-config')
+  runcmd = run_command(pkgconfig, '--variable=pluginsdir',
+      'gstreamer-' + apiversion, 'gstreamer-plugins-base-' + api_version)
+
+  if runcmd.returncode() == 0
+      pluginsdirs = runcmd.stdout().split()
+  else
+    error('Could not determine GStreamer core plugins directory for unit tests.')
+  endif
 endif
 
 # fake device drivers: we could run hardware element tests against dummy drivers
@@ -152,17 +157,6 @@ state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
  osssrc osssink osxaudiosink osxaudiosrc osxvideosrc osxvideosink
  pulsesink pulsesrc pulsemixer v4l2src'''
 
-# FIXME: WHITELIST should probably refer to core/base paths properly
-# (need to make this work right for the subproject case too)
-test_env = [
-  'GST_PLUGIN_SYSTEM_PATH_1_0=',
-  'GST_PLUGIN_PATH_1_0=' + meson.build_root() + '/gst:' + meson.build_root() + '/ext:' + meson.build_root() + '/sys:' + other_plugins_dir,
-  'GST_PLUGIN_LOADING_WHITELIST=gstreamer:gst-plugins-base:gst-plugins-good@' + meson.build_root(),
-  'GST_STATE_IGNORE_ELEMENTS=@0@'.format(state_ignore_elements),
-  'CK_DEFAULT_TIMEOUT=20',
-  'GSETTINGS_BACKEND=memory',
-]
-
 # FIXME: check, also + PTHREAD_CFLAGS
 test_deps = [gst_dep, gstbase_dep, gstnet_dep, gstcheck_dep, gstaudio_dep,
   gstvideo_dep, gstpbutils_dep, gstrtp_dep, gstrtsp_dep, gsttag_dep,
@@ -181,15 +175,26 @@ foreach t : good_tests
     skip_test = false
   endif
   if not skip_test
+    env = environment()
+    env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
+    env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
+    env.set('GST_STATE_IGNORE_ELEMENTS', state_ignore_elements)
+    env.set('CK_DEFAULT_TIMEOUT', '20')
+    env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-plugins-base',
+      'gst-plugins-good@' + meson.build_root(), separator=':')
+    env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
+    env.set('GSETTINGS_BACKEND', 'memory')
+
+    foreach plugindir: pluginsdirs
+      env.append('GST_PLUGIN_PATH_1_0', plugindir)
+    endforeach
+    env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
     exe = executable(test_name, '@0@.c'.format(test_name),
       include_directories : [configinc],
       c_args : ['-DHAVE_CONFIG_H=1' ] + test_defines,
       dependencies : [libm] + test_deps + extra_deps,
     )
-    test(test_name, exe,
-      env: test_env + ['GST_REGISTRY=@0@/@1@.registry'.format(meson.current_build_dir(), test_name)],
-      timeout: 3 * 60
-    )
+    test(test_name, exe, env: env, timeout: 3 * 60)
   endif
 endforeach
 
