@@ -5,6 +5,7 @@ libgstmsdk_la_SOURCES = \
 	gstmsdkh264enc.c \
 	gstmsdkh265dec.c \
 	gstmsdkh265enc.c \
+	gstmsdkmjpegenc.c \
 	gstmsdkmpeg2enc.c \
 	gstmsdkvp8enc.c \
 	gstmsdkdec.c \
@@ -20,6 +21,7 @@ noinst_HEADERS = \
 	gstmsdkh264enc.h \
 	gstmsdkh265dec.h \
 	gstmsdkh265enc.h \
+	gstmsdkmjpegenc.h \
 	gstmsdkmpeg2enc.h \
 	gstmsdkvp8enc.h \
 	gstmsdkdec.h \
