@@ -3479,6 +3479,12 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     if (G_UNLIKELY (late))
       goto dropped;
 
+    /* We are about to prepare the first frame, make sure we have prerolled
+     * already. This prevent nesting prepare/render calls. */
+    ret = gst_base_sink_do_preroll (basesink, obj);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto preroll_failed;
+
     if (!is_list) {
       if (bclass->prepare) {
         ret = bclass->prepare (basesink, GST_BUFFER_CAST (obj));
@@ -3638,6 +3644,11 @@ dropped:
       gst_element_post_message (GST_ELEMENT_CAST (basesink), qos_msg);
     }
     goto done;
+  }
+preroll_failed:
+  {
+    GST_DEBUG_OBJECT (basesink, "preroll failed: %s", gst_flow_get_name (ret));
+    return ret;
   }
 }
 
