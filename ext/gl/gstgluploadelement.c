@@ -62,10 +62,23 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-raw(ANY)"));
 
 static void
+gst_gl_upload_element_finalize (GObject * object)
+{
+  GstGLUploadElement *upload = GST_GL_UPLOAD_ELEMENT (object);
+
+  if (upload->upload)
+    gst_object_unref (upload->upload);
+  upload->upload = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_gl_upload_element_class_init (GstGLUploadElementClass * klass)
 {
   GstBaseTransformClass *bt_class = GST_BASE_TRANSFORM_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstCaps *upload_caps;
 
   bt_class->transform_caps = _gst_gl_upload_element_transform_caps;
@@ -91,6 +104,8 @@ gst_gl_upload_element_class_init (GstGLUploadElementClass * klass)
   gst_element_class_set_metadata (element_class,
       "OpenGL uploader", "Filter/Video",
       "Uploads data into OpenGL", "Matthew Waters <matthew@centricular.com>");
+
+  gobject_class->finalize = gst_gl_upload_element_finalize;
 }
 
 static void
