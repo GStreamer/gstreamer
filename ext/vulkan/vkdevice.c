@@ -544,11 +544,11 @@ gst_vulkan_device_run_context_query (GstElement * element,
     gst_query_parse_context (query, &context);
     if (context)
       gst_context_get_vulkan_device (context, device);
+
+    gst_query_unref (query);
   }
 
   GST_DEBUG_OBJECT (element, "found device %p", *device);
-
-  gst_query_unref (query);
 
   if (*device)
     return TRUE;
