@@ -35,12 +35,12 @@
 #include <X11/XKBlib.h>
 
 #define GST_GL_WINDOW_X11_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW_X11, GstGLWindowX11Private))
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_WINDOW_X11, GstGLWindowX11Private))
 
 #define GST_CAT_DEFAULT gst_gl_window_debug
 
 #define gst_gl_window_x11_parent_class parent_class
-G_DEFINE_TYPE (GstGLWindowX11, gst_gl_window_x11, GST_GL_TYPE_WINDOW);
+G_DEFINE_TYPE (GstGLWindowX11, gst_gl_window_x11, GST_TYPE_GL_WINDOW);
 
 /* X error trap */
 static int TrappedErrorCode = 0;
@@ -130,7 +130,7 @@ gst_gl_window_x11_new (GstGLDisplay * display)
     return NULL;
   }
 
-  return g_object_new (GST_GL_TYPE_WINDOW_X11, NULL);
+  return g_object_new (GST_TYPE_GL_WINDOW_X11, NULL);
 }
 
 gboolean

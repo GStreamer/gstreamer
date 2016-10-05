@@ -28,12 +28,16 @@ G_BEGIN_DECLS
 
 GST_EXPORT
 GType gst_gl_shader_get_type (void);
-#define GST_GL_TYPE_SHADER         (gst_gl_shader_get_type())
-#define GST_GL_SHADER(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_SHADER, GstGLShader))
-#define GST_GL_SHADER_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_GL_TYPE_SHADER, GstGLShaderClass))
-#define GST_IS_GL_SHADER(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_SHADER))
-#define GST_IS_GL_SHADER_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_SHADER))
-#define GST_GL_SHADER_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_SHADER, GstGLShaderClass))
+#define GST_TYPE_GL_SHADER         (gst_gl_shader_get_type())
+
+/* FIXME: remove this when moving to -base */
+G_DEPRECATED_FOR(GST_TYPE_GL_SHADER) \
+static inline GType GST_GL_TYPE_SHADER (void) { return GST_TYPE_GL_SHADER; }
+#define GST_GL_SHADER(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_SHADER, GstGLShader))
+#define GST_GL_SHADER_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_SHADER, GstGLShaderClass))
+#define GST_IS_GL_SHADER(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_SHADER))
+#define GST_IS_GL_SHADER_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_SHADER))
+#define GST_GL_SHADER_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_SHADER, GstGLShaderClass))
 
 struct _GstGLShader
 {

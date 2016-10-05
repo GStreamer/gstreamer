@@ -218,7 +218,7 @@ gboolean Pipeline::sync_bus_call (GstBus * bus, GstMessage * msg, Pipeline * p)
       } else if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
         GstContext *app_context = gst_context_new ("gst.gl.app_context", TRUE);
         GstStructure *s = gst_context_writable_structure (app_context);
-        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, p->context, NULL);
+        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, p->context, NULL);
         gst_element_set_context (GST_ELEMENT (msg->src), app_context);
       }
       break;

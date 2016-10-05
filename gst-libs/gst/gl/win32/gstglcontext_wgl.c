@@ -43,9 +43,9 @@ struct _GstGLContextWGLPrivate
 #define GST_CAT_DEFAULT gst_gl_context_debug
 
 #define gst_gl_context_wgl_parent_class parent_class
-G_DEFINE_TYPE (GstGLContextWGL, gst_gl_context_wgl, GST_GL_TYPE_CONTEXT);
+G_DEFINE_TYPE (GstGLContextWGL, gst_gl_context_wgl, GST_TYPE_GL_CONTEXT);
 #define GST_GL_CONTEXT_WGL_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_CONTEXT_WGL, GstGLContextWGLPrivate))
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_CONTEXT_WGL, GstGLContextWGLPrivate))
 
 static guintptr gst_gl_context_wgl_get_gl_context (GstGLContext * context);
 static void gst_gl_context_wgl_swap_buffers (GstGLContext * context);
@@ -103,7 +103,7 @@ gst_gl_context_wgl_new (GstGLDisplay * display)
     /* we require an win32 display handle to create WGL contexts */
     return NULL;
 
-  return g_object_new (GST_GL_TYPE_CONTEXT_WGL, NULL);
+  return g_object_new (GST_TYPE_GL_CONTEXT_WGL, NULL);
 }
 
 static HGLRC

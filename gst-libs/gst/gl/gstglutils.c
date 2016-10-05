@@ -398,7 +398,7 @@ gst_gl_handle_set_context (GstElement * element, GstContext * context,
     GstGLDisplay *context_display;
     GstGLDisplay *element_display;
 
-    if (gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT,
+    if (gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT,
             &context_replacement, NULL)) {
       context_display = gst_gl_context_get_display (context_replacement);
       element_display = display_replacement ? display_replacement : *display;
@@ -528,7 +528,7 @@ gst_gl_handle_context_query (GstElement * element, GstQuery * query,
       context = gst_context_new ("gst.gl.app_context", TRUE);
 
     s = gst_context_writable_structure (context);
-    gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, *other_context, NULL);
+    gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, *other_context, NULL);
     gst_query_set_context (query, context);
     gst_context_unref (context);
 

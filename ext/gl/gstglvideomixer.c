@@ -51,7 +51,7 @@
 #define GST_CAT_DEFAULT gst_gl_video_mixer_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define GST_GL_TYPE_VIDEO_MIXER_BACKGROUND (gst_gl_video_mixer_background_get_type())
+#define GST_TYPE_GL_VIDEO_MIXER_BACKGROUND (gst_gl_video_mixer_background_get_type())
 static GType
 gst_gl_video_mixer_background_get_type (void)
 {
@@ -417,7 +417,7 @@ gst_gl_video_mixer_bin_class_init (GstGLVideoMixerBinClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BIN_BACKGROUND,
       g_param_spec_enum ("background", "Background", "Background type",
-          GST_GL_TYPE_VIDEO_MIXER_BACKGROUND,
+          GST_TYPE_GL_VIDEO_MIXER_BACKGROUND,
           DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class, "OpenGL video_mixer bin",
@@ -875,7 +875,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BACKGROUND,
       g_param_spec_enum ("background", "Background", "Background type",
-          GST_GL_TYPE_VIDEO_MIXER_BACKGROUND,
+          GST_TYPE_GL_VIDEO_MIXER_BACKGROUND,
           DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_video_mixer_init_shader;

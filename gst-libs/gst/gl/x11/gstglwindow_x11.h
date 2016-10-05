@@ -28,12 +28,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_GL_TYPE_WINDOW_X11         (gst_gl_window_x11_get_type())
-#define GST_GL_WINDOW_X11(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_WINDOW_X11, GstGLWindowX11))
-#define GST_GL_WINDOW_X11_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_GL_TYPE_WINDOW_X11, GstGLWindowX11Class))
-#define GST_IS_GL_WINDOW_X11(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_WINDOW_X11))
-#define GST_IS_GL_WINDOW_X11_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_WINDOW_X11))
-#define GST_GL_WINDOW_X11_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_WINDOW_X11, GstGLWindowX11Class))
+#define GST_TYPE_GL_WINDOW_X11         (gst_gl_window_x11_get_type())
+GType gst_gl_window_x11_get_type     (void);
+#define GST_GL_WINDOW_X11(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_WINDOW_X11, GstGLWindowX11))
+#define GST_GL_WINDOW_X11_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_WINDOW_X11, GstGLWindowX11Class))
+#define GST_IS_GL_WINDOW_X11(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_WINDOW_X11))
+#define GST_IS_GL_WINDOW_X11_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_WINDOW_X11))
+#define GST_GL_WINDOW_X11_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_WINDOW_X11, GstGLWindowX11Class))
 
 typedef struct _GstGLWindowX11        GstGLWindowX11;
 typedef struct _GstGLWindowX11Private GstGLWindowX11Private;
@@ -91,8 +92,6 @@ struct _GstGLWindowX11Class {
   /*< private >*/
   gpointer _reserved[GST_PADDING_LARGE];
 };
-
-GType gst_gl_window_x11_get_type     (void);
 
 GstGLWindowX11 * gst_gl_window_x11_new (GstGLDisplay * display);
 

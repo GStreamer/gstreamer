@@ -56,7 +56,7 @@
 /* =============================================================*/
 
 #define GST_GL_WINDOW_COCOA_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW_COCOA, GstGLWindowCocoaPrivate))
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_WINDOW_COCOA, GstGLWindowCocoaPrivate))
 
 #define GST_CAT_DEFAULT gst_gl_window_cocoa_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -64,7 +64,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
 #define gst_gl_window_cocoa_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstGLWindowCocoa, gst_gl_window_cocoa, GST_GL_TYPE_WINDOW, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLWindowCocoa, gst_gl_window_cocoa, GST_TYPE_GL_WINDOW, DEBUG_INIT);
 static void gst_gl_window_cocoa_finalize (GObject * object);
 
 static gboolean gst_gl_window_cocoa_open (GstGLWindow *window, GError **err);
@@ -147,7 +147,7 @@ gst_gl_window_cocoa_new (GstGLDisplay * display)
     /* we require an cocoa display to create CGL windows */
     return NULL;
 
-  return g_object_new (GST_GL_TYPE_WINDOW_COCOA, NULL);
+  return g_object_new (GST_TYPE_GL_WINDOW_COCOA, NULL);
 }
 
 /* Must be called from the main thread */

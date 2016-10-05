@@ -101,7 +101,7 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_SHADER,
       g_param_spec_object ("shader", "Shader object",
-          "GstGLShader to use", GST_GL_TYPE_SHADER,
+          "GstGLShader to use", GST_TYPE_GL_SHADER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_VERTEX,
@@ -137,7 +137,7 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
   gst_gl_shader_signals[SIGNAL_CREATE_SHADER] =
       g_signal_new ("create-shader", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      GST_GL_TYPE_SHADER, 0);
+      GST_TYPE_GL_SHADER, 0);
 
   gst_element_class_set_metadata (element_class,
       "OpenGL fragment shader filter", "Filter/Effect",

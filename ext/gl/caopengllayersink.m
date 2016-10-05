@@ -216,7 +216,7 @@ gst_ca_opengl_layer_sink_class_init (GstCAOpenGLLayerSinkClass * klass)
       g_param_spec_object ("context",
           "OpenGL context",
           "Get OpenGL context",
-          GST_GL_TYPE_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_GL_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_LAYER,
       g_param_spec_pointer ("layer", "CAOpenGLLayer",
@@ -410,7 +410,7 @@ gst_ca_opengl_layer_sink_query (GstBaseSink * bsink, GstQuery * query)
           context = gst_context_new ("gst.gl.local_context", FALSE);
 
         s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT,
+        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT,
             ca_sink->context, NULL);
         gst_query_set_context (query, context);
         gst_context_unref (context);

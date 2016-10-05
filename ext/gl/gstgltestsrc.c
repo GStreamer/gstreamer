@@ -347,7 +347,7 @@ gst_gl_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
           context = gst_context_new ("gst.gl.local_context", FALSE);
 
         s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, src->context,
+        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, src->context,
             NULL);
         gst_query_set_context (query, context);
         gst_context_unref (context);
@@ -596,7 +596,7 @@ _find_local_gl_context (GstGLTestSrc * src)
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &src->context,
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &src->context,
           NULL);
     }
   }
@@ -605,7 +605,7 @@ _find_local_gl_context (GstGLTestSrc * src)
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &src->context,
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &src->context,
           NULL);
     }
   }

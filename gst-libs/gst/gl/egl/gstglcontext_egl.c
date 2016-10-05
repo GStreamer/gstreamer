@@ -65,7 +65,7 @@ static GstGLPlatform gst_gl_context_egl_get_gl_platform (GstGLContext *
 static gboolean gst_gl_context_egl_check_feature (GstGLContext * context,
     const gchar * feature);
 
-G_DEFINE_TYPE (GstGLContextEGL, gst_gl_context_egl, GST_GL_TYPE_CONTEXT);
+G_DEFINE_TYPE (GstGLContextEGL, gst_gl_context_egl, GST_TYPE_GL_CONTEXT);
 
 static void
 gst_gl_context_egl_class_init (GstGLContextEGLClass * klass)
@@ -106,7 +106,7 @@ gst_gl_context_egl_new (GstGLDisplay * display)
 {
   /* XXX: display type could theoretically be anything, as long as
    * eglGetDisplay supports it. */
-  return g_object_new (GST_GL_TYPE_CONTEXT_EGL, NULL);
+  return g_object_new (GST_TYPE_GL_CONTEXT_EGL, NULL);
 }
 
 const gchar *
@@ -620,7 +620,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   }
   egl->egl_major = egl_major;
   egl->egl_minor = egl_minor;
- 
+
   if (window)
     gst_object_unref (window);
 
@@ -823,12 +823,13 @@ gst_gl_context_egl_check_feature (GstGLContext * context, const gchar * feature)
   GstGLContextEGL *context_egl = GST_GL_CONTEXT_EGL (context);
 
   if (g_strcmp0 (feature, "EGL_KHR_image_base") == 0) {
-    if (GST_GL_CHECK_GL_VERSION (context_egl->egl_major, context_egl->egl_minor, 1, 5))
-      return context_egl->eglCreateImage != NULL &&
-        context_egl->eglDestroyImage != NULL;
+    if (GST_GL_CHECK_GL_VERSION (context_egl->egl_major, context_egl->egl_minor,
+            1, 5))
+      return context_egl->eglCreateImage != NULL
+          && context_egl->eglDestroyImage != NULL;
     else
       return context_egl->eglCreateImageKHR != NULL &&
-        context_egl->eglDestroyImage != NULL;
+          context_egl->eglDestroyImage != NULL;
   }
 
   return FALSE;

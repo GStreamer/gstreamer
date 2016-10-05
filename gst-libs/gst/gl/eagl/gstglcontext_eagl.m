@@ -56,9 +56,9 @@ struct _GstGLContextEaglPrivate
 };
 
 #define GST_GL_CONTEXT_EAGL_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_CONTEXT_EAGL, GstGLContextEaglPrivate))
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_CONTEXT_EAGL, GstGLContextEaglPrivate))
 
-G_DEFINE_TYPE (GstGLContextEagl, gst_gl_context_eagl, GST_GL_TYPE_CONTEXT);
+G_DEFINE_TYPE (GstGLContextEagl, gst_gl_context_eagl, GST_TYPE_GL_CONTEXT);
 
 static void
 gst_gl_context_eagl_class_init (GstGLContextEaglClass * klass)
@@ -97,7 +97,7 @@ GstGLContextEagl *
 gst_gl_context_eagl_new (GstGLDisplay * display)
 {
   /* there isn't actually a display type for eagl yet? */
-  return g_object_new (GST_GL_TYPE_CONTEXT_EAGL, NULL);
+  return g_object_new (GST_TYPE_GL_CONTEXT_EAGL, NULL);
 }
 
 void

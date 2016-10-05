@@ -123,7 +123,7 @@ gst_gl_display_class_init (GstGLDisplayClass * klass)
   gst_gl_display_signals[CREATE_CONTEXT] =
       g_signal_new ("create-context", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      GST_GL_TYPE_CONTEXT, 1, GST_GL_TYPE_CONTEXT);
+      GST_TYPE_GL_CONTEXT, 1, GST_TYPE_GL_CONTEXT);
 
   klass->get_handle = gst_gl_display_default_get_handle;
 

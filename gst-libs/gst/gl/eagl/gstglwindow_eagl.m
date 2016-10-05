@@ -30,7 +30,7 @@
 #include "gstglcontext_eagl.h"
 
 #define GST_GL_WINDOW_EAGL_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW_EAGL, GstGLWindowEaglPrivate))
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_WINDOW_EAGL, GstGLWindowEaglPrivate))
 
 #define GST_CAT_DEFAULT gst_gl_window_eagl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
   GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
 #define gst_gl_window_eagl_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLWindowEagl, gst_gl_window_eagl,
-    GST_GL_TYPE_WINDOW, DEBUG_INIT);
+    GST_TYPE_GL_WINDOW, DEBUG_INIT);
 static void gst_gl_window_eagl_finalize (GObject * object);
 
 static guintptr gst_gl_window_eagl_get_display (GstGLWindow * window);
@@ -104,7 +104,7 @@ GstGLWindowEagl *
 gst_gl_window_eagl_new (GstGLDisplay * display)
 {
   /* there isn't an eagl display type */
-  return g_object_new (GST_GL_TYPE_WINDOW_EAGL, NULL);
+  return g_object_new (GST_TYPE_GL_WINDOW_EAGL, NULL);
 }
 
 static guintptr

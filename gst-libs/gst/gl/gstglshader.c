@@ -38,7 +38,7 @@
 #endif
 
 #define GST_GL_SHADER_GET_PRIVATE(o)					\
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_SHADER, GstGLShaderPrivate))
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_SHADER, GstGLShaderPrivate))
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
 #define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))
@@ -233,7 +233,7 @@ _new_with_stages_va_list (GstGLContext * context, GError ** error,
 
   g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
 
-  shader = g_object_new (GST_GL_TYPE_SHADER, NULL);
+  shader = g_object_new (GST_TYPE_GL_SHADER, NULL);
   shader->context = gst_object_ref (context);
 
   while ((stage = va_arg (varargs, GstGLSLStage *))) {

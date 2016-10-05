@@ -255,7 +255,7 @@ gst_gl_image_sink_bin_class_init (GstGLImageSinkBinClass * klass)
           DEFAULT_IGNORE_ALPHA, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BIN_CONTEXT,
       g_param_spec_object ("context", "OpenGL context", "Get OpenGL context",
-          GST_GL_TYPE_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_GL_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BIN_PIXEL_ASPECT_RATIO,
       gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
           "The pixel aspect ratio of the device", 0, 1, G_MAXINT, 1, 1, 1,
@@ -290,12 +290,12 @@ gst_gl_image_sink_bin_class_init (GstGLImageSinkBinClass * klass)
   gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_DRAW] =
       g_signal_new ("client-draw", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 2,
-      GST_GL_TYPE_CONTEXT, GST_TYPE_SAMPLE);
+      GST_TYPE_GL_CONTEXT, GST_TYPE_SAMPLE);
 
   gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_RESHAPE] =
       g_signal_new ("client-reshape", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 3, GST_GL_TYPE_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
+      G_TYPE_BOOLEAN, 3, GST_TYPE_GL_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
 }
 
 #define GST_GLIMAGE_SINK_GET_LOCK(glsink) \
@@ -663,7 +663,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_CONTEXT,
       g_param_spec_object ("context", "OpenGL context", "Get OpenGL context",
-          GST_GL_TYPE_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_GL_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_HANDLE_EVENTS,
       g_param_spec_boolean ("handle-events", "Handle XEvents",
@@ -716,7 +716,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gst_glimage_sink_signals[CLIENT_DRAW_SIGNAL] =
       g_signal_new ("client-draw", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 2, GST_GL_TYPE_CONTEXT, GST_TYPE_SAMPLE);
+      G_TYPE_BOOLEAN, 2, GST_TYPE_GL_CONTEXT, GST_TYPE_SAMPLE);
 
   /**
    * GstGLImageSink::client-reshape:
@@ -733,7 +733,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gst_glimage_sink_signals[CLIENT_RESHAPE_SIGNAL] =
       g_signal_new ("client-reshape", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 3, GST_GL_TYPE_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
+      G_TYPE_BOOLEAN, 3, GST_TYPE_GL_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_glimage_sink_template);
@@ -1101,7 +1101,7 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
           context = gst_context_new ("gst.gl.local_context", FALSE);
 
         s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT,
+        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT,
             glimage_sink->context, NULL);
         gst_query_set_context (query, context);
         gst_context_unref (context);
