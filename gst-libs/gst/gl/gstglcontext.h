@@ -27,18 +27,22 @@
 
 G_BEGIN_DECLS
 
-#define GST_GL_TYPE_CONTEXT         (gst_gl_context_get_type())
-#define GST_GL_CONTEXT(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_CONTEXT, GstGLContext))
-#define GST_GL_CONTEXT_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_GL_TYPE_CONTEXT, GstGLContextClass))
-#define GST_IS_GL_CONTEXT(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_CONTEXT))
-#define GST_IS_GL_CONTEXT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_CONTEXT))
-#define GST_GL_CONTEXT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_CONTEXT, GstGLContextClass))
 GST_EXPORT
-GType gst_gl_context_get_type     (void);
+GType gst_gl_context_get_type       (void);
+#define GST_TYPE_GL_CONTEXT         (gst_gl_context_get_type())
 
-#define GST_GL_CONTEXT_ERROR (gst_gl_context_error_quark ())
+/* FIXME: remove this when moving to -base */
+G_DEPRECATED_FOR(GST_TYPE_GL_CONTEXT) \
+static inline GType GST_GL_TYPE_CONTEXT (void) { return GST_TYPE_GL_CONTEXT; }
+#define GST_GL_CONTEXT(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_CONTEXT, GstGLContext))
+#define GST_GL_CONTEXT_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_TYPE_GL_CONTEXT, GstGLContextClass))
+#define GST_IS_GL_CONTEXT(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_CONTEXT))
+#define GST_IS_GL_CONTEXT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_CONTEXT))
+#define GST_GL_CONTEXT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_CONTEXT, GstGLContextClass))
+
 GST_EXPORT
 GQuark gst_gl_context_error_quark (void);
+#define GST_GL_CONTEXT_ERROR (gst_gl_context_error_quark ())
 
 /**
  * GstGLContextThreadFunc:

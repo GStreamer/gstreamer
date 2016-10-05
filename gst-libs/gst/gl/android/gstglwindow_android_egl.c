@@ -37,7 +37,7 @@
 
 #define gst_gl_window_android_egl_parent_class parent_class
 G_DEFINE_TYPE (GstGLWindowAndroidEGL, gst_gl_window_android_egl,
-    GST_GL_TYPE_WINDOW);
+    GST_TYPE_GL_WINDOW);
 
 static guintptr gst_gl_window_android_egl_get_display (GstGLWindow * window);
 static guintptr gst_gl_window_android_egl_get_window_handle (GstGLWindow *
@@ -75,7 +75,7 @@ gst_gl_window_android_egl_new (GstGLDisplay * display)
 
   GST_DEBUG ("creating Android EGL window");
 
-  return g_object_new (GST_GL_TYPE_WINDOW_ANDROID_EGL, NULL);
+  return g_object_new (GST_TYPE_GL_WINDOW_ANDROID_EGL, NULL);
 }
 
 static void

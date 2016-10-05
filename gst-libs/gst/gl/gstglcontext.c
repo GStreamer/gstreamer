@@ -186,7 +186,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_debug);
 G_DEFINE_ABSTRACT_TYPE (GstGLContext, gst_gl_context, GST_TYPE_OBJECT);
 
 #define GST_GL_CONTEXT_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_CONTEXT, GstGLContextPrivate))
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_CONTEXT, GstGLContextPrivate))
 
 static void _init_debug (void);
 
@@ -229,16 +229,16 @@ typedef struct
   GstGLContextClass parent;
 } GstGLWrappedContextClass;
 
-#define GST_GL_TYPE_WRAPPED_CONTEXT (gst_gl_wrapped_context_get_type())
+#define GST_TYPE_GL_WRAPPED_CONTEXT (gst_gl_wrapped_context_get_type())
 GType gst_gl_wrapped_context_get_type (void);
 G_DEFINE_TYPE (GstGLWrappedContext, gst_gl_wrapped_context,
-    GST_GL_TYPE_CONTEXT);
+    GST_TYPE_GL_CONTEXT);
 
-#define GST_GL_WRAPPED_CONTEXT(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_WRAPPED_CONTEXT, GstGLWrappedContext))
-#define GST_GL_WRAPPED_CONTEXT_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_GL_TYPE_CONTEXT, GstGLContextClass))
-#define GST_IS_GL_WRAPPED_CONTEXT(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_WRAPPED_CONTEXT))
-#define GST_IS_GL_WRAPPED_CONTEXT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_WRAPPED_CONTEXT))
-#define GST_GL_WRAPPED_CONTEXT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_WRAPPED_CONTEXT, GstGLWrappedContextClass))
+#define GST_GL_WRAPPED_CONTEXT(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_WRAPPED_CONTEXT, GstGLWrappedContext))
+#define GST_GL_WRAPPED_CONTEXT_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_CONTEXT, GstGLContextClass))
+#define GST_IS_GL_WRAPPED_CONTEXT(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_WRAPPED_CONTEXT))
+#define GST_IS_GL_WRAPPED_CONTEXT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_WRAPPED_CONTEXT))
+#define GST_GL_WRAPPED_CONTEXT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_WRAPPED_CONTEXT, GstGLWrappedContextClass))
 
 GQuark
 gst_gl_context_error_quark (void)
@@ -394,7 +394,7 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   g_return_val_if_fail ((display_api & available_apis) != GST_GL_API_NONE,
       NULL);
 
-  context_wrap = g_object_new (GST_GL_TYPE_WRAPPED_CONTEXT, NULL);
+  context_wrap = g_object_new (GST_TYPE_GL_WRAPPED_CONTEXT, NULL);
 
   if (!context_wrap) {
     /* subclass returned a NULL context */

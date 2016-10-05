@@ -26,12 +26,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_GL_TYPE_WINDOW_EAGL         (gst_gl_window_eagl_get_type())
-#define GST_GL_WINDOW_EAGL(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_WINDOW_EAGL, GstGLWindowEagl))
-#define GST_GL_WINDOW_EAGL_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_GL_TYPE_WINDOW_EAGL, GstGLWindowEaglClass))
-#define GST_IS_GL_WINDOW_EAGL(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_WINDOW_EAGL))
-#define GST_IS_GL_WINDOW_EAGL_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_WINDOW_EAGL))
-#define GST_GL_WINDOW_EAGL_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_WINDOW_EAGL, GstGLWindowEaglClass))
+#define GST_TYPE_GL_WINDOW_EAGL         (gst_gl_window_eagl_get_type())
+#define GST_GL_WINDOW_EAGL(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_WINDOW_EAGL, GstGLWindowEagl))
+#define GST_GL_WINDOW_EAGL_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_WINDOW_EAGL, GstGLWindowEaglClass))
+#define GST_IS_GL_WINDOW_EAGL(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_WINDOW_EAGL))
+#define GST_IS_GL_WINDOW_EAGL_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_WINDOW_EAGL))
+#define GST_GL_WINDOW_EAGL_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_WINDOW_EAGL, GstGLWindowEaglClass))
 
 typedef struct _GstGLWindowEagl        GstGLWindowEagl;
 typedef struct _GstGLWindowEaglPrivate GstGLWindowEaglPrivate;

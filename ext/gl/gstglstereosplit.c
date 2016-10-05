@@ -427,7 +427,7 @@ _find_local_gl_context (GstGLStereoSplit * split)
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &split->context,
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &split->context,
           NULL);
     }
   }
@@ -436,7 +436,7 @@ _find_local_gl_context (GstGLStereoSplit * split)
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &split->context,
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &split->context,
           NULL);
     }
   }
@@ -647,7 +647,7 @@ stereosplit_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
           context = gst_context_new ("gst.gl.local_context", FALSE);
 
         s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, split->context,
+        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, split->context,
             NULL);
         gst_query_set_context (query, context);
         gst_context_unref (context);
@@ -705,7 +705,7 @@ stereosplit_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
           context = gst_context_new ("gst.gl.local_context", FALSE);
 
         s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, split->context,
+        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, split->context,
             NULL);
         gst_query_set_context (query, context);
         gst_context_unref (context);

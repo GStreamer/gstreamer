@@ -34,14 +34,14 @@ _find_local_gl_context (GstGLContextHelper * ctxh)
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &gl_context, NULL);
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &gl_context, NULL);
     }
   }
   if (!gl_context && gst_gl_run_query (ctxh->element, query, GST_PAD_SINK)) {
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &gl_context, NULL);
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &gl_context, NULL);
     }
   }
 

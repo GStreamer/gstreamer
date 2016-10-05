@@ -30,17 +30,25 @@
 
 G_BEGIN_DECLS
 
-#define GST_GL_TYPE_WINDOW         (gst_gl_window_get_type())
-#define GST_GL_WINDOW(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_WINDOW, GstGLWindow))
-#define GST_GL_WINDOW_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_GL_TYPE_WINDOW, GstGLWindowClass))
-#define GST_IS_GL_WINDOW(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_WINDOW))
-#define GST_IS_GL_WINDOW_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_WINDOW))
-#define GST_GL_WINDOW_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_WINDOW, GstGLWindowClass))
+GST_EXPORT
+GType gst_gl_window_get_type       (void);
+#define GST_TYPE_GL_WINDOW         (gst_gl_window_get_type())
+
+/* FIXME: remove this when moving to -base */
+G_DEPRECATED_FOR(GST_TYPE_GL_WINDOW) \
+static inline GType GST_GL_TYPE_WINDOW (void) { return GST_TYPE_GL_WINDOW; }
+#define GST_GL_WINDOW(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_WINDOW, GstGLWindow))
+#define GST_GL_WINDOW_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_TYPE_GL_WINDOW, GstGLWindowClass))
+#define GST_IS_GL_WINDOW(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_WINDOW))
+#define GST_IS_GL_WINDOW_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_WINDOW))
+#define GST_GL_WINDOW_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_WINDOW, GstGLWindowClass))
 
 #define GST_GL_WINDOW_LOCK(w) g_mutex_lock(&GST_GL_WINDOW(w)->lock)
 #define GST_GL_WINDOW_UNLOCK(w) g_mutex_unlock(&GST_GL_WINDOW(w)->lock)
 #define GST_GL_WINDOW_GET_LOCK(w) (&GST_GL_WINDOW(w)->lock)
 
+GST_EXPORT
+GQuark gst_gl_window_error_quark (void);
 #define GST_GL_WINDOW_ERROR (gst_gl_window_error_quark ())
 
 /**
@@ -146,11 +154,6 @@ struct _GstGLWindowClass {
   /*< private >*/
   gpointer _reserved[GST_PADDING];
 };
-
-GST_EXPORT
-GQuark gst_gl_window_error_quark (void);
-GST_EXPORT
-GType gst_gl_window_get_type     (void);
 
 GST_EXPORT
 GstGLWindow * gst_gl_window_new  (GstGLDisplay *display);

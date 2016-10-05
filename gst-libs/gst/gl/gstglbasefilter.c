@@ -118,7 +118,7 @@ gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
       g_param_spec_object ("context",
           "OpenGL context",
           "Get OpenGL context",
-          GST_GL_TYPE_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_GL_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   klass->supported_gl_api = GST_GL_API_ANY;
 }
@@ -200,7 +200,7 @@ _find_local_gl_context (GstGLBaseFilter * filter)
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &filter->context,
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &filter->context,
           NULL);
     }
   }
@@ -209,7 +209,7 @@ _find_local_gl_context (GstGLBaseFilter * filter)
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &filter->context,
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &filter->context,
           NULL);
     }
   }
@@ -267,7 +267,7 @@ gst_gl_base_filter_query (GstBaseTransform * trans, GstPadDirection direction,
           context = gst_context_new ("gst.gl.local_context", FALSE);
 
         s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, filter->context,
+        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, filter->context,
             NULL);
         gst_query_set_context (query, context);
         gst_context_unref (context);

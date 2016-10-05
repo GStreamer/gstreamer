@@ -157,7 +157,7 @@ _find_local_gl_context (GstGLBaseMixer * mix)
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &mix->context,
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &mix->context,
           NULL);
     }
   }
@@ -166,7 +166,7 @@ _find_local_gl_context (GstGLBaseMixer * mix)
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &mix->context,
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &mix->context,
           NULL);
     }
   }
@@ -317,7 +317,7 @@ gst_gl_base_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
           context = gst_context_new ("gst.gl.local_context", FALSE);
 
         s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, mix->context,
+        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, mix->context,
             NULL);
         gst_query_set_context (query, context);
         gst_context_unref (context);
@@ -416,7 +416,7 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
       g_param_spec_object ("context",
           "OpenGL context",
           "Get OpenGL context",
-          GST_GL_TYPE_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_GL_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /* Register the pad class */
   g_type_class_ref (GST_TYPE_GL_BASE_MIXER_PAD);
@@ -536,7 +536,7 @@ gst_gl_base_mixer_src_query (GstAggregator * agg, GstQuery * query)
           context = gst_context_new ("gst.gl.local_context", FALSE);
 
         s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, mix->context,
+        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, mix->context,
             NULL);
         gst_query_set_context (query, context);
         gst_context_unref (context);

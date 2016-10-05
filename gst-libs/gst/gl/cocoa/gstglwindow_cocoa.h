@@ -27,12 +27,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_GL_TYPE_WINDOW_COCOA         (gst_gl_window_cocoa_get_type())
-#define GST_GL_WINDOW_COCOA(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_WINDOW_COCOA, GstGLWindowCocoa))
-#define GST_GL_WINDOW_COCOA_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_GL_TYPE_WINDOW_COCOA, GstGLWindowCocoaClass))
-#define GST_IS_GL_WINDOW_COCOA(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_WINDOW_COCOA))
-#define GST_IS_GL_WINDOW_COCOA_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_WINDOW_COCOA))
-#define GST_GL_WINDOW_COCOA_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_WINDOW_COCOA, GstGLWindowCocoaClass))
+#define GST_TYPE_GL_WINDOW_COCOA         (gst_gl_window_cocoa_get_type())
+#define GST_GL_WINDOW_COCOA(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_WINDOW_COCOA, GstGLWindowCocoa))
+#define GST_GL_WINDOW_COCOA_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_WINDOW_COCOA, GstGLWindowCocoaClass))
+#define GST_IS_GL_WINDOW_COCOA(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_WINDOW_COCOA))
+#define GST_IS_GL_WINDOW_COCOA_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_WINDOW_COCOA))
+#define GST_GL_WINDOW_COCOA_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_WINDOW_COCOA, GstGLWindowCocoaClass))
 
 typedef struct _GstGLWindowCocoa        GstGLWindowCocoa;
 typedef struct _GstGLWindowCocoaPrivate GstGLWindowCocoaPrivate;

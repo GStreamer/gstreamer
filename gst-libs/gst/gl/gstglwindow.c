@@ -75,7 +75,7 @@ GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 G_DEFINE_ABSTRACT_TYPE (GstGLWindow, gst_gl_window, GST_TYPE_OBJECT);
 
 #define GST_GL_WINDOW_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW, GstGLWindowPrivate))
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_WINDOW, GstGLWindowPrivate))
 
 static void gst_gl_window_default_draw (GstGLWindow * window);
 static void gst_gl_window_default_run (GstGLWindow * window);
@@ -910,7 +910,7 @@ gst_gl_window_get_surface_dimensions (GstGLWindow * window, guint * width,
 
 GType gst_gl_dummy_window_get_type (void);
 
-G_DEFINE_TYPE (GstGLDummyWindow, gst_gl_dummy_window, GST_GL_TYPE_WINDOW);
+G_DEFINE_TYPE (GstGLDummyWindow, gst_gl_dummy_window, GST_TYPE_GL_WINDOW);
 
 static gboolean
 gst_gl_window_navigation_started (gpointer data)

@@ -27,12 +27,17 @@
 
 G_BEGIN_DECLS
 
-#define GST_GL_TYPE_CONTEXT_GLX         (gst_gl_context_glx_get_type())
-#define GST_GL_CONTEXT_GLX(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_CONTEXT_GLX, GstGLContextGLX))
-#define GST_GL_CONTEXT_GLX_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_GL_TYPE_CONTEXT_GLX, GstGLContextGLXClass))
-#define GST_IS_GL_CONTEXT_GLX(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_CONTEXT_GLX))
-#define GST_IS_GL_CONTEXT_GLX_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_CONTEXT_GLX))
-#define GST_GL_CONTEXT_GLX_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_CONTEXT_GLX, GstGLContextGLX_Class))
+#define GST_TYPE_GL_CONTEXT_GLX         (gst_gl_context_glx_get_type())
+GType gst_gl_context_glx_get_type     (void);
+
+/* FIXME: remove this when moving to -base */
+G_DEPRECATED_FOR(GST_TYPE_GL_CONTEXT_GLX) \
+static inline GType GST_GL_TYPE_CONTEXT_GLX (void) { return GST_TYPE_GL_CONTEXT_GLX; }
+#define GST_GL_CONTEXT_GLX(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_CONTEXT_GLX, GstGLContextGLX))
+#define GST_GL_CONTEXT_GLX_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_CONTEXT_GLX, GstGLContextGLXClass))
+#define GST_IS_GL_CONTEXT_GLX(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_CONTEXT_GLX))
+#define GST_IS_GL_CONTEXT_GLX_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_CONTEXT_GLX))
+#define GST_GL_CONTEXT_GLX_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_CONTEXT_GLX, GstGLContextGLX_Class))
 
 typedef struct _GstGLContextGLX        GstGLContextGLX;
 typedef struct _GstGLContextGLXClass   GstGLContextGLXClass;
@@ -56,8 +61,6 @@ struct _GstGLContextGLXClass {
   /*< private >*/
   gpointer _reserved[GST_PADDING];
 };
-
-GType gst_gl_context_glx_get_type     (void);
 
 GstGLContextGLX *   gst_gl_context_glx_new                  (GstGLDisplay * display);
 guintptr            gst_gl_context_glx_get_current_context  (void);

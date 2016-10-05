@@ -26,12 +26,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_GL_TYPE_CONTEXT_EAGL         (gst_gl_context_eagl_get_type())
-#define GST_GL_CONTEXT_EAGL(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_CONTEXT_EAGL, GstGLContextEagl))
-#define GST_GL_CONTEXT_EAGL_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_GL_TYPE_CONTEXT_EAGL, GstGLContextEaglClass))
-#define GST_IS_GL_CONTEXT_EAGL(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_CONTEXT_EAGL))
-#define GST_IS_GL_CONTEXT_EAGL_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_CONTEXT_EAGL))
-#define GST_GL_CONTEXT_EAGL_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_CONTEXT_EAGL, GstGLContextEaglClass))
+#define GST_TYPE_GL_CONTEXT_EAGL         (gst_gl_context_eagl_get_type())
+#define GST_GL_CONTEXT_EAGL(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_CONTEXT_EAGL, GstGLContextEagl))
+#define GST_GL_CONTEXT_EAGL_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_CONTEXT_EAGL, GstGLContextEaglClass))
+#define GST_IS_GL_CONTEXT_EAGL(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_CONTEXT_EAGL))
+#define GST_IS_GL_CONTEXT_EAGL_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_CONTEXT_EAGL))
+#define GST_GL_CONTEXT_EAGL_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_CONTEXT_EAGL, GstGLContextEaglClass))
 
 typedef struct _GstGLContextEagl        GstGLContextEagl;
 typedef struct _GstGLContextEaglPrivate GstGLContextEaglPrivate;

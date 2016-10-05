@@ -862,7 +862,7 @@ _upload_meta_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
 
   gl_context =
       gst_structure_new ("GstVideoGLTextureUploadMeta", "gst.gl.GstGLContext",
-      GST_GL_TYPE_CONTEXT, upload->upload->context, "gst.gl.context.handle",
+      GST_TYPE_GL_CONTEXT, upload->upload->context, "gst.gl.context.handle",
       G_TYPE_POINTER, handle, "gst.gl.context.type", G_TYPE_STRING, platform,
       "gst.gl.context.apis", G_TYPE_STRING, gl_apis, NULL);
   gst_query_add_allocation_meta (query,
