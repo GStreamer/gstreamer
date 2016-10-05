@@ -101,6 +101,7 @@ struct _GstGLWindowPrivate
   GMainLoop *navigation_loop;
   GMutex nav_lock;
   GCond nav_create_cond;
+  GCond nav_destroy_cond;
   gboolean nav_alive;
   GMutex sync_message_lock;
   GCond sync_message_cond;
@@ -335,12 +336,16 @@ gst_gl_window_finalize (GObject * object)
   GstGLWindowPrivate *priv = window->priv;
 
   GST_INFO ("quit navigation loop");
+
+  g_mutex_lock (&window->priv->nav_lock);
   if (window->priv->navigation_loop) {
     g_main_loop_quit (window->priv->navigation_loop);
     /* wait until navigation thread finished */
-    g_thread_join (window->priv->navigation_thread);
+    while (window->priv->nav_alive)
+      g_cond_wait (&window->priv->nav_destroy_cond, &window->priv->nav_lock);
     window->priv->navigation_thread = NULL;
   }
+  g_mutex_unlock (&window->priv->nav_lock);
 
   if (priv->loop)
     g_main_loop_unref (priv->loop);
@@ -353,6 +358,7 @@ gst_gl_window_finalize (GObject * object)
   g_mutex_clear (&window->lock);
   g_mutex_clear (&window->priv->nav_lock);
   g_cond_clear (&window->priv->nav_create_cond);
+  g_cond_clear (&window->priv->nav_destroy_cond);
   g_mutex_clear (&window->priv->sync_message_lock);
   g_cond_clear (&window->priv->sync_message_cond);
   gst_object_unref (window->display);
@@ -939,12 +945,17 @@ gst_gl_window_navigation_thread (GstGLWindow * window)
 
   g_main_loop_run (window->priv->navigation_loop);
 
+  g_mutex_lock (&window->priv->nav_lock);
   g_main_context_pop_thread_default (window->priv->navigation_context);
 
   g_main_loop_unref (window->priv->navigation_loop);
   g_main_context_unref (window->priv->navigation_context);
   window->priv->navigation_loop = NULL;
   window->priv->navigation_context = NULL;
+
+  window->priv->nav_alive = FALSE;
+  g_cond_signal (&window->priv->nav_destroy_cond);
+  g_mutex_unlock (&window->priv->nav_lock);
 
   GST_INFO ("navigation loop exited\n");
 
