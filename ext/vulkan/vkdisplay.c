@@ -284,8 +284,12 @@ gst_vulkan_display_create_window (GstVulkanDisplay * display)
   window = klass->create_window (display);
 
   if (window) {
+    GWeakRef *ref = g_new0 (GWeakRef, 1);
+
+    g_weak_ref_set (ref, window);
+
     GST_OBJECT_LOCK (display);
-    display->windows = g_list_prepend (display->windows, window);
+    display->windows = g_list_prepend (display->windows, ref);
     GST_OBJECT_UNLOCK (display);
   }
 
@@ -298,6 +302,31 @@ gst_vulkan_display_default_create_window (GstVulkanDisplay * display)
   return gst_vulkan_window_new (display);
 }
 
+static gint
+_compare_vulkan_window (GWeakRef * ref, GstVulkanWindow * window)
+{
+  GstVulkanWindow *other = g_weak_ref_get (ref);
+  gboolean equal = window == other;
+
+  gst_object_unref (other);
+
+  return !equal;
+}
+
+static GList *
+_find_window_list_item (GstVulkanDisplay * display, GstVulkanWindow * window)
+{
+  GList *l;
+
+  if (!window)
+    return NULL;
+
+  l = g_list_find_custom (display->windows, window,
+      (GCompareFunc) _compare_vulkan_window);
+
+  return l;
+}
+
 gboolean
 gst_vulkan_display_remove_window (GstVulkanDisplay * display,
     GstVulkanWindow * window)
@@ -306,9 +335,11 @@ gst_vulkan_display_remove_window (GstVulkanDisplay * display,
   GList *l;
 
   GST_OBJECT_LOCK (display);
-  l = g_list_find (display->windows, window);
+  l = _find_window_list_item (display, window);
   if (l) {
     display->windows = g_list_delete_link (display->windows, l);
+    g_weak_ref_clear (l->data);
+    g_free (l->data);
     ret = TRUE;
   }
   GST_OBJECT_UNLOCK (display);
