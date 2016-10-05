@@ -925,7 +925,7 @@ gst_validate_print_action (GstValidateAction * action, const gchar * message)
 }
 
 static void
-print_action_parametter (GString * string, GstValidateActionType * type,
+print_action_parameter (GString * string, GstValidateActionType * type,
     GstValidateActionParameter * param)
 {
   gint nw = 0;
@@ -1038,13 +1038,13 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       g_free (tmp);
 
       if (!IS_CONFIG_ACTION_TYPE (type->flags))
-        print_action_parametter (string, type, &playback_time_param);
+        print_action_parameter (string, type, &playback_time_param);
 
       if (type->parameters) {
         has_parameters = TRUE;
-        g_string_append_printf (string, "\n\n  Parametters:");
+        g_string_append_printf (string, "\n\n  Parameters:");
         for (i = 0; type->parameters[i].name; i++) {
-          print_action_parametter (string, type, &type->parameters[i]);
+          print_action_parameter (string, type, &type->parameters[i]);
         }
 
       }
