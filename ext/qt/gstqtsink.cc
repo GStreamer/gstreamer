@@ -262,7 +262,7 @@ gst_qt_sink_query (GstBaseSink * bsink, GstQuery * query)
           context = gst_context_new ("gst.gl.local_context", FALSE);
 
         s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_GL_TYPE_CONTEXT, qt_sink->context,
+        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, qt_sink->context,
             NULL);
         gst_query_set_context (query, context);
         gst_context_unref (context);
