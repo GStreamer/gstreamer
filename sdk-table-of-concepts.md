@@ -12,7 +12,6 @@ concepts is discussed.
 -   Discoverer: [Basic tutorial 9: Media information gathering]
 -   Elements: [Basic tutorial 2: GStreamer concepts]
 -   gst-discoverer-1.0: [Basic tutorial 10: GStreamer tools]
--   gst-inspect-1.0: [Basic tutorial 10: GStreamer tools], [gst-inspect-1.0]
 -   gst-launch-1.0: [Basic tutorial 10: GStreamer tools], [gst-launch-1.0]
 -   GUI: [Basic tutorial 5: GUI toolkit integration]
 -   Links: [Basic tutorial 2: GStreamer concepts]
@@ -36,7 +35,6 @@ concepts is discussed.
   [Basic tutorial 11: Debugging tools]: sdk-basic-tutorial-debugging-tools.md
   [Basic tutorial 9: Media information gathering]: sdk-basic-tutorial-media-information-gathering.md
   [Basic tutorial 10: GStreamer tools]: sdk-basic-tutorial-gstreamer-tools.md
-  [gst-inspect-1.0]: sdk-gst-inspect.md
   [gst-launch-1.0]: gst-launch.md
   [Basic tutorial 5: GUI toolkit integration]: sdk-basic-tutorial-toolkit-integration.md
   [Basic tutorial 3: Dynamic pipelines]: sdk-basic-tutorial-dynamic-pipelines.md
