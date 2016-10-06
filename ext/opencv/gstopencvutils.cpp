@@ -34,6 +34,7 @@ gst_opencv_parse_iplimage_params_from_caps (GstCaps * caps, gint * width,
   GstVideoInfo info;
   gint depth = 0;
   guint i;
+  gchar *caps_str;
 
   if (!gst_video_info_from_caps (&info, caps)) {
     GST_ERROR ("Failed to get the videoinfo from caps");
@@ -49,8 +50,10 @@ gst_opencv_parse_iplimage_params_from_caps (GstCaps * caps, gint * width,
   else if (GST_VIDEO_INFO_IS_GRAY (&info))
     *channels = 1;
   else {
+    caps_str = gst_caps_to_string (caps);
     g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
-        "Unsupported caps %s", gst_caps_to_string (caps));
+        "Unsupported caps %s", caps_str);
+    g_free (caps_str);
     return FALSE;
   }
 
