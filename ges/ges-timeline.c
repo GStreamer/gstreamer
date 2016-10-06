@@ -145,8 +145,9 @@ struct _MoveContext
   GESTrackElement *last_snaped2;
   GstClockTime *last_snap_ts;
 
-  /* Moving elements of the context between layers */
-  gboolean moving_to_layer;
+  /* Priority of the layer where we are moving current clip
+   * -1 if not moving any clip to a new layer. */
+  GESLayer *moving_to_layer;
 };
 
 struct _GESTimelinePrivate
@@ -700,7 +701,7 @@ ges_timeline_init (GESTimeline * self)
 /* Private methods */
 
 static inline GESContainer *
-get_toplevel_container (GESTrackElement * element)
+get_toplevel_container (gpointer element)
 {
   GESTimelineElement *ret =
       ges_timeline_element_get_toplevel_parent ((GESTimelineElement
@@ -830,24 +831,20 @@ _destroy_auto_transition_cb (GESAutoTransition * auto_transition,
     GESTimeline * timeline)
 {
   GESTimelinePrivate *priv = timeline->priv;
+  MoveContext *mv_ctx = &timeline->priv->movecontext;
   GESClip *transition = auto_transition->transition_clip;
   GESLayer *layer = ges_clip_get_layer (transition);
+  GESContainer *toplevel_prev =
+      get_toplevel_container (auto_transition->previous_clip), *toplevel_next =
+      get_toplevel_container (auto_transition->next_clip);
 
-  if (timeline->priv->movecontext.moving_to_layer) {
-    GESLayer *nlayer, *transition_layer =
-        ges_clip_get_layer (auto_transition->transition_clip),
-        *prev_clip_layer =
-        ges_clip_get_layer (auto_transition->previous_clip), *next_clip_layer =
-        ges_clip_get_layer (auto_transition->next_clip);
+  if (mv_ctx->moving_to_layer &&
+      g_hash_table_lookup (mv_ctx->toplevel_containers, toplevel_prev) &&
+      g_hash_table_lookup (mv_ctx->toplevel_containers, toplevel_next)) {
+    GESLayer *nlayer = mv_ctx->moving_to_layer;
 
-    nlayer =
-        next_clip_layer == transition_layer ? prev_clip_layer : next_clip_layer;
+    ges_clip_move_to_layer (transition, nlayer);
 
-    ges_clip_move_to_layer (auto_transition->transition_clip, nlayer);
-
-    g_object_unref (transition_layer);
-    g_object_unref (prev_clip_layer);
-    g_object_unref (next_clip_layer);
     return;
   }
 
@@ -1106,6 +1103,7 @@ init_movecontext (MoveContext * mv_ctx, gboolean first_init)
   mv_ctx->last_snaped1 = NULL;
   mv_ctx->last_snaped2 = NULL;
   mv_ctx->last_snap_ts = NULL;
+  mv_ctx->moving_to_layer = NULL;
 }
 
 static inline void
@@ -2129,7 +2127,6 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
       g_hash_table_size (mv_ctx->toplevel_containers), offset);
 
   mv_ctx->ignore_needs_ctx = TRUE;
-  mv_ctx->moving_to_layer = TRUE;
   timeline->priv->needs_rollback = FALSE;
   g_hash_table_iter_init (&iter, mv_ctx->toplevel_containers);
   while (g_hash_table_iter_next (&iter, (gpointer *) & key,
@@ -2147,6 +2144,7 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
         } while (ges_layer_get_priority (new_layer) < prio + offset);
       }
 
+      mv_ctx->moving_to_layer = new_layer;
       ret &= ges_clip_move_to_layer (GES_CLIP (key), new_layer);
     } else if (GES_IS_GROUP (value)) {
       guint32 last_prio = _PRIORITY (value) + offset +
@@ -2160,6 +2158,7 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
         } while (ges_layer_get_priority (new_layer) < last_prio);
       }
 
+      mv_ctx->moving_to_layer = NULL;
       _set_priority0 (GES_TIMELINE_ELEMENT (value), _PRIORITY (value) + offset);
     }
   }
@@ -2174,7 +2173,7 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
     timeline_context_to_layer (timeline, -offset);
     timeline->priv->rolling_back = FALSE;
   }
-  mv_ctx->moving_to_layer = FALSE;
+  mv_ctx->moving_to_layer = NULL;
 
   return ret;
 }
