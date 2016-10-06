@@ -540,7 +540,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     GstClockTime aligned_missing_duration;
     GstClockTime missing_duration = GST_BUFFER_DURATION (bufd);
 
-    if (!GST_CLOCK_TIME_IS_VALID (missing_duration)) {
+    if (!GST_CLOCK_TIME_IS_VALID (missing_duration) || missing_duration == 0) {
       if (GST_CLOCK_TIME_IS_VALID (dec->last_known_buffer_duration)) {
         missing_duration = dec->last_known_buffer_duration;
         GST_WARNING_OBJECT (dec,
