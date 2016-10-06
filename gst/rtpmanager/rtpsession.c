@@ -722,16 +722,15 @@ rtp_session_create_sources (RTPSession * sess)
 static void
 create_source_stats (gpointer key, RTPSource * source, GValueArray * arr)
 {
-  GValue value = G_VALUE_INIT;
+  GValue *value;
   GstStructure *s;
 
   g_object_get (source, "stats", &s, NULL);
 
-  g_value_init (&value, GST_TYPE_STRUCTURE);
-  gst_value_set_structure (&value, s);
-  g_value_array_append (arr, &value);
-  gst_structure_free (s);
-  g_value_unset (&value);
+  g_value_array_append (arr, NULL);
+  value = g_value_array_get_nth (arr, arr->n_values - 1);
+  g_value_init (value, GST_TYPE_STRUCTURE);
+  g_value_take_boxed (value, s);
 }
 
 static GstStructure *
