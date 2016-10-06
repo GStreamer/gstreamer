@@ -60,3 +60,16 @@ class TestTimeline(unittest.TestCase):
         mainloop.run()
         self.assertTrue(loaded_called)
         handle.assert_not_called()
+
+class TestEditing(common.GESSimpleTimelineTest):
+
+    def test_transition_disappears_when_moving_to_another_layer(self):
+        self.timeline.props.auto_transition = True
+        unused_clip1 = self.add_clip(0, 0, 100)
+        clip2 = self.add_clip(50, 0, 100)
+        self.assertEquals(len(self.layer.get_clips()), 4)
+
+        layer2 = self.timeline.append_layer()
+        clip2.edit([], layer2.get_priority(), GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, clip2.props.start)
+        self.assertEquals(len(self.layer.get_clips()), 1)
+        self.assertEquals(len(layer2.get_clips()), 1)

@@ -73,6 +73,7 @@ class TestCopyPaste(unittest.TestCase):
 
 
 class TestTitleClip(unittest.TestCase):
+
     def testGetPropertyNotInTrack(self):
         title_clip = GES.TitleClip.new()
         self.assertEqual(title_clip.props.text, "")
@@ -106,6 +107,7 @@ class TestTitleClip(unittest.TestCase):
 
 
 class TestTrackElements(unittest.TestCase):
+
     def test_add_to_layer_with_effect_remove_add(self):
         timeline = GES.Timeline.new_audio_video()
         self.assertEqual(len(timeline.get_tracks()), 2)
