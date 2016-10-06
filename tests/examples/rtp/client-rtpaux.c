@@ -163,10 +163,13 @@ request_pt_map (GstElement * rtpbin, guint session, guint pt,
     gpointer user_data)
 {
   SessionData *data = (SessionData *) user_data;
+  gchar *caps_str;
   g_print ("Looking for caps for pt %u in session %u, have %u\n", pt, session,
       data->sessionNum);
   if (session == data->sessionNum) {
-    g_print ("Returning %s\n", gst_caps_to_string (data->caps));
+    caps_str = gst_caps_to_string (data->caps);
+    g_print ("Returning %s\n", caps_str);
+    g_free (caps_str);
     return gst_caps_ref (data->caps);
   }
   return NULL;
