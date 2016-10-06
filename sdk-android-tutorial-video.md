@@ -21,7 +21,7 @@ Since Android does not provide a windowing system, a GStreamer video
 sink cannot create pop-up windows as it would do on a Desktop platform.
 Fortunately, the `VideoOverlay` interface allows providing video sinks with
 an already created window onto which they can draw, as we have seen in
-[](sdk-basic-tutorial-toolkit-integration).
+[](sdk-basic-tutorial-toolkit-integration.md).
 
 In this tutorial, a
 [SurfaceView](http://developer.android.com/reference/android/view/SurfaceView.html)
