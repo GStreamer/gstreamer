@@ -1046,3 +1046,5 @@ Most of the methods introduced in this tutorial, like `get_jni_env()`,
 tutorials with minimal modifications, so better get used to them\!
 
 As usual, it has been a pleasure having you here, and see you soon\!
+
+  [screenshot]: images/sdk-android-tutorial-a-running-pipeline-screenshot.png

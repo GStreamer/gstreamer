@@ -13,10 +13,7 @@ Pages to review:
 
 Screenshots:
  - Create new ones with the official GStreamer logo and not saying "0.10.36". Affected:
-   - Android tutorial 1
-   - Android tutorial 2
    - iOS tutorial 1
- - Fix filenames of all attachments to make sense
 
 Code:
  - Change logos to the official gstreamer logo
