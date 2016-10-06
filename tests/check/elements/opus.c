@@ -342,6 +342,7 @@ run_getcaps_check (GstCaps * filter, GstCaps * downstream_caps,
   GstElement *capsfilter;
   GstPad *sinkpad;
   GstCaps *result;
+  gchar *caps_str;
 
   opusdec = gst_element_factory_make ("opusdec", NULL);
   capsfilter = gst_element_factory_make ("capsfilter", NULL);
@@ -352,8 +353,9 @@ run_getcaps_check (GstCaps * filter, GstCaps * downstream_caps,
     g_object_set (capsfilter, "caps", downstream_caps, NULL);
   result = gst_pad_query_caps (sinkpad, filter);
   result = remove_extra_caps_fields (result);
+  caps_str = gst_caps_to_string (result);
   fail_unless (gst_caps_is_equal (expected_result, result),
-      "Unexpected output caps: %s", gst_caps_to_string (result));
+      "Unexpected output caps: %s", caps_str);
 
   if (filter)
     gst_caps_unref (filter);
@@ -364,6 +366,7 @@ run_getcaps_check (GstCaps * filter, GstCaps * downstream_caps,
   gst_object_unref (sinkpad);
   gst_object_unref (opusdec);
   gst_object_unref (capsfilter);
+  g_free (caps_str);
 }
 
 static void
