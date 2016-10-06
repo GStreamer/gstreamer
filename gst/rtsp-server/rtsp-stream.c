@@ -2759,6 +2759,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     /* be notified of caps changes */
     priv->caps_sig = g_signal_connect (priv->send_src[0], "notify::caps",
         (GCallback) caps_notify, stream);
+    priv->caps = gst_pad_get_current_caps (priv->send_src[0]);
   }
 
   priv->joined_bin = bin;
