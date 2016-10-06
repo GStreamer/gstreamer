@@ -50,7 +50,7 @@ There are 3 sets of files in GStreamer binaries:
     Modules](http://msdn.microsoft.com/en-us/library/windows/desktop/aa369820%28v=vs.85%29.aspx)
     files are **additional** files you can use to deploy GStreamer binaries
     alongside your application (see [Windows
-    deployment](Windows%2Bdeployment.html)).
+    deployment](sdk-windows-deployment.md)).
 
 Get  **the Runtime and Development files** installers appropriate for
 your architecture from here:

@@ -8,7 +8,7 @@ information becomes available, instead of having a monolithic pipeline
 defined at the beginning of your application.
 
 After this tutorial, you will have the necessary knowledge to start the
-[Playback tutorials](Playback+tutorials.html). The points reviewed
+[Playback tutorials](sdk-playback-tutorials.md). The points reviewed
 here will be:
 
   - How to attain finer control when linking elements.

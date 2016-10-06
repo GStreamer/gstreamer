@@ -420,7 +420,7 @@ It has been a pleasure having you here, and see you soon!
 
   [information]: images/icons/emoticons/information.png
   [Mac]: sdk-installing-on-mac-osx.md
-  [Windows]: Installing+on+Windows
+  [Windows]: sdk-installing-on-windows.md
   [Mac OS X]: sdk-installing-on-mac-osx.md#building-the-tutorials
   [1]: sdk-installing-on-windows.md#running-the-tutorials
   [iOS]: sdk-installing-for-ios-development.md#building-the-tutorials

@@ -456,16 +456,16 @@ int main(int argc, char *argv[]) {
 > ![Information](images/icons/emoticons/information.png)
 > Need help?
 >
-> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](Installing+on+Linux.html#InstallingonLinux-Build), [Mac OS X](Installing+on+Mac+OS+X.html#InstallingonMacOSX-Build) or [Windows](Installing+on+Windows.html#InstallingonWindows-Build), or use this specific command on Linux:
+> If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Build), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Build), or use this specific command on Linux:
 >
 > ``gcc basic-tutorial-5.c -o basic-tutorial-5 `pkg-config --cflags --libs  gstreamer-interfaces-1.0 gtk+-3.0 gstreamer-1.0``
 >
->If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](Installing+on+Linux.html#InstallingonLinux-Run), [Mac OS X](Installing+on+Mac+OS+X.html#InstallingonMacOSX-Run) or [Windows](Installing+on+Windows.html#InstallingonWindows-Run).
+>If you need help to run this code, refer to the **Running the tutorials** section for your platform: [Linux](sdk-installing-on-linux.md#InstallingonLinux-Run), [Mac OS X](sdk-installing-on-mac-osx.md#InstallingonMacOSX-Run) or [Windows](sdk-installing-on-windows.md#InstallingonWindows-Run).
 >
 > This tutorial opens a GTK+ window and displays a movie, with accompanying audio. The media is fetched from the Internet, so the window might take a few seconds to appear, depending on your connection speed. The Window has some GTK+ buttons to Pause, Stop and Play the movie, and a slider to show the current position of the stream, which can be dragged to change it. Also, information about the stream is shown on a column at the right edge of the window.
 >
 >
-> Bear in mind that there is no latency management (buffering), so on slow connections, the movie might stop after a few seconds. See how [Basic tutorial 12: Streaming](sdk-basic-tutorial-streaming.md) solves this issue.
+> Bear in mind that there is no latency management (buffering), so on slow connections, the movie might stop after a few seconds. See how [](sdk-basic-tutorial-streaming.md) solves this issue.
 >
 > Required libraries: `gstreamer-video-1.0 gtk+-3.0 gstreamer-1.0`
 
@@ -562,8 +562,7 @@ g_signal_connect (G_OBJECT (bus), "message::application", (GCallback)application
 gst_object_unref (bus);
 ```
 
-In [Playback tutorial 1: Playbin
-usage](sdk-playback-tutorial-playbin-usage.md), `gst_bus_add_watch()` is
+In [](sdk-playback-tutorial-playbin-usage.md), `gst_bus_add_watch()` is
 used to register a function that receives every message posted to the
 GStreamer bus. We can achieve a finer granularity by using signals
 instead, which allow us to register only to the messages we are
@@ -719,7 +718,7 @@ slider that allows seeking) can be very easily implemented thanks to
 GStreamer and GTK+ collaborating. If the slider has been dragged to a
 new position, tell GStreamer to seek to that position
 with `gst_element_seek_simple()` (as seen in [Basic tutorial 4: Time
-management](Basic+tutorial+4+Time+management.html)). The
+management](sdk-basic-tutorial-time-management.md)). The
 slider has been setup so its value represents seconds.
 
 It is worth mentioning that some performance (and responsiveness) can be
@@ -836,8 +835,7 @@ static void application_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
 ```
 
 Once me made sure it is the `tags-changed` message, we call the
-`analyze_streams` function, which is also used in [Playback tutorial 1:
-Playbin usage](Playback+tutorial+1+Playbin+usage.html) and is
+`analyze_streams` function, which is also used in [](sdk-playback-tutorial-playbin-usage.md) and is
 more detailed there. It basically recovers the tags from the stream and
 writes them in a text widget in the GUI.
 
@@ -858,8 +856,7 @@ If this media player is not good enough for you, try to change the text
 widget that displays the information about the streams into a proper
 list view (or tree view). Then, when the user selects a different
 stream, make GStreamer switch streams! To switch streams, you will need
-to read [Playback tutorial 1: Playbin
-usage](Playback+tutorial+1+Playbin+usage.html).
+to read [](sdk-playback-tutorial-playbin-usage.md).
 
 ## Conclusion
 

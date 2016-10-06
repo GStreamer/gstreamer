@@ -21,7 +21,7 @@ polluting it too much).
 
 Just open a terminal (or console window) and go to the `bin` directory
 of your GStreamer installation (Read again the [Installing
-GStreamer](sdk-installing.html) section to find our where this is),
+GStreamer](sdk-installing.md) section to find our where this is),
 and you are ready to start typing the commands given in this tutorial.
 
 
