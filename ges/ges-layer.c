@@ -618,6 +618,7 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
   }
 
   ges_layer_resync_priorities (layer);
+
   ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip),
       layer->timeline);
 

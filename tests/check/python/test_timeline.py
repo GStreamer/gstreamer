@@ -73,3 +73,15 @@ class TestEditing(common.GESSimpleTimelineTest):
         clip2.edit([], layer2.get_priority(), GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, clip2.props.start)
         self.assertEquals(len(self.layer.get_clips()), 1)
         self.assertEquals(len(layer2.get_clips()), 1)
+
+    def test_transition_moves_when_rippling_to_another_layer(self):
+        self.timeline.props.auto_transition = True
+        clip1 = self.add_clip(0, 0, 100)
+        clip2 = self.add_clip(50, 0, 100)
+        all_clips = self.layer.get_clips()
+        self.assertEquals(len(all_clips), 4)
+
+        layer2 = self.timeline.append_layer()
+        clip1.edit([], layer2.get_priority(), GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, clip1.props.start)
+        self.assertEquals(self.layer.get_clips(), [])
+        self.assertEquals(set(layer2.get_clips()), set(all_clips))
