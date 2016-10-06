@@ -978,6 +978,8 @@ static void
 check_caps_identical (GstCaps * a, GstCaps * b, const char *name)
 {
   int i;
+  gchar *caps_str_a;
+  gchar *caps_str_b;
 
   if (gst_caps_get_size (a) != gst_caps_get_size (b))
     goto fail;
@@ -995,8 +997,12 @@ check_caps_identical (GstCaps * a, GstCaps * b, const char *name)
   return;
 
 fail:
+  caps_str_a = gst_caps_to_string (a);
+  caps_str_b = gst_caps_to_string (b);
   fail ("%s caps (%s) is not equal to caps (%s)",
-      name, gst_caps_to_string (a), gst_caps_to_string (b));
+      name, caps_str_a, caps_str_b);
+  g_free (caps_str_a);
+  g_free (caps_str_b);
 }
 
 static void
