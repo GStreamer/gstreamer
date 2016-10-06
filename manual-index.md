@@ -14,7 +14,7 @@ new plugin modules. But because modularity and power often come at a
 cost of greater complexity, writing new applications is not always easy.
 
 This guide is intended to help you understand the GStreamer framework
-(version 1.9.0.1) so you can develop applications based on it. The first
+so you can develop applications based on it. The first
 chapters will focus on development of a simple audio player, with much
 effort going into helping you understand GStreamer concepts. Later
 chapters will go into more advanced topics related to media playback,

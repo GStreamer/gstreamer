@@ -12,7 +12,7 @@ cost of greater complexity (consider, for example,
 [CORBA](http://www.omg.org/)), writing new plugins is not always easy.
 
 This guide is intended to help you understand the GStreamer framework
-(version 1.9.0.1) so you can develop new plugins to extend the existing
+ so you can develop new plugins to extend the existing
 functionality. The guide addresses most issues by following the
 development of an example plugin - an audio filter plugin - written in
 C. However, the later parts of the guide also present some issues

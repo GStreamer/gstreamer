@@ -186,7 +186,6 @@ class Package(package.Package):
     shortdesc = 'GStreamer 1.0 codecs'
     longdesc = 'GStreamer 1.0 codecs'
     version = '1.9.0.1'
-    codename = 'Congo'
     url = "http://gstreamer.freedesktop.org"
     license = License.LGPL
     vendor = 'GStreamer Project'
