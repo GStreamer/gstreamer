@@ -90,7 +90,6 @@
 #undef gst_debug_add_log_function
 
 #ifndef GST_DISABLE_GST_DEBUG
-
 #ifdef HAVE_DLFCN_H
 #  include <dlfcn.h>
 #endif
@@ -127,8 +126,33 @@
 
 static char *gst_info_printf_pointer_extension_func (const char *format,
     void *ptr);
+#else /* GST_DISABLE_GST_DEBUG */
 
+#include <glib/gprintf.h>
 #endif /* !GST_DISABLE_GST_DEBUG */
+
+#ifdef HAVE_UNWIND
+/* No need for remote debugging so turn on the 'local only' optimizations in
+ * libunwind */
+#define UNW_LOCAL_ONLY
+
+#include <libunwind.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <unistd.h>
+#include <errno.h>
+
+#ifdef HAVE_DW
+#include <elfutils/libdwfl.h>
+#endif /* HAVE_DW */
+#endif /* HAVE_UNWIND */
+
+#ifdef HAVE_BACKTRACE
+#include <execinfo.h>
+#define BT_BUF_SIZE 100
+#endif /* HAVE_BACKTRACE */
 
 extern gboolean gst_is_initialized (void);
 
@@ -2253,7 +2277,6 @@ _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
  * fallback function that cleans up the format string and replaces all pointer
  * extension formats with plain %p. */
 #ifdef GST_DISABLE_GST_DEBUG
-#include <glib/gprintf.h>
 int
 __gst_info_fallback_vasprintf (char **result, char const *format, va_list args)
 {
@@ -2412,15 +2435,16 @@ __cyg_profile_func_exit (void *this_fn, void *call_site)
 }
 
 /**
- * gst_debug_print_stack_trace:
+ * gst_debug_get_stack_trace:
  *
- * If GST_ENABLE_FUNC_INSTRUMENTATION is defined a stacktrace is available for
- * gstreamer code, which can be printed with this function.
+ * If GST_ENABLE_FUNC_INSTRUMENTATION is defined or libunwind or
+ * glibc backtrace are present, a stack trace is return.
  */
-void
-gst_debug_print_stack_trace (void)
+gchar *
+gst_debug_get_stack_trace (void)
 {
   GSList *walk = stack_trace;
+  GString *trace = g_string_new (NULL);
   gint count = 0;
 
   if (walk)
@@ -2429,16 +2453,162 @@ gst_debug_print_stack_trace (void)
   while (walk) {
     gchar *name = (gchar *) walk->data;
 
-    g_print ("#%-2d %s\n", count++, name);
+    g_string_append (trace, "#%-2d %s\n", count++, name);
 
     walk = g_slist_next (walk);
   }
+
+  return g_string_free (trace, FALSE);
 }
+
 #else
+
+#ifdef HAVE_UNWIND
+#ifdef HAVE_DW
+static gboolean
+append_debug_info (GString * trace, const void *ip)
+{
+  Dwfl *dwfl;
+  Dwfl_Line *line;
+  Dwarf_Addr addr;
+  Dwfl_Module *module;
+  const gchar *function_name;
+  gchar *debuginfo_path = NULL;
+  Dwfl_Callbacks callbacks = {
+    .find_elf = dwfl_linux_proc_find_elf,
+    .find_debuginfo = dwfl_standard_find_debuginfo,
+    .debuginfo_path = &debuginfo_path,
+  };
+
+  dwfl = dwfl_begin (&callbacks);
+  if (!dwfl)
+    return FALSE;
+
+  if (dwfl_linux_proc_report (dwfl, getpid ()) != 0)
+    return FALSE;
+
+  if (dwfl_report_end (dwfl, NULL, NULL))
+    return FALSE;
+
+  addr = (uintptr_t) ip;
+  module = dwfl_addrmodule (dwfl, addr);
+  function_name = dwfl_module_addrname (module, addr);
+
+  g_string_append_printf (trace, "%s(", function_name ? function_name : "??");
+
+  line = dwfl_getsrc (dwfl, addr);
+  if (line != NULL) {
+    gint nline;
+    Dwarf_Addr addr;
+    const gchar *filename = dwfl_lineinfo (line, &addr,
+        &nline, NULL, NULL, NULL);
+
+    g_string_append_printf (trace, "%s:%d", strrchr (filename,
+            G_DIR_SEPARATOR) + 1, nline);
+  } else {
+    const gchar *eflfile = NULL;
+
+    dwfl_module_info (module, NULL, NULL, NULL, NULL, NULL, &eflfile, NULL);
+    g_string_append_printf (trace, "%s:%p", eflfile ? eflfile : "??", ip);
+  }
+
+  return TRUE;
+}
+#endif /* HAVE_DW */
+
+static gchar *
+generate_unwind_trace (void)
+{
+  unw_context_t uc;
+  unw_cursor_t cursor;
+  gboolean use_libunwind = TRUE;
+  GString *trace = g_string_new (NULL);
+
+  unw_getcontext (&uc);
+  unw_init_local (&cursor, &uc);
+
+  while (unw_step (&cursor) > 0) {
+#ifdef HAVE_DW
+    unw_word_t ip;
+
+    unw_get_reg (&cursor, UNW_REG_IP, &ip);
+    if (append_debug_info (trace, (void *) (ip - 4))) {
+      use_libunwind = FALSE;
+      g_string_append (trace, ")\n");
+    }
+#endif /* HAVE_DW */
+
+    if (use_libunwind) {
+      char name[32];
+
+      unw_word_t offset = 0;
+      unw_get_proc_name (&cursor, name, sizeof (name), &offset);
+      g_string_append_printf (trace, "%s (0x%" G_GSIZE_FORMAT ")\n", name,
+          (gsize) offset);
+    }
+  }
+
+  return g_string_free (trace, FALSE);
+}
+
+#endif /* HAVE_UNWIND */
+
+#ifdef HAVE_BACKTRACE
+static gchar *
+generate_backtrace_trace (void)
+{
+  int j, nptrs;
+  void *buffer[BT_BUF_SIZE];
+  char **strings;
+  GString *trace;
+
+  trace = g_string_new (NULL);
+  nptrs = backtrace (buffer, BT_BUF_SIZE);
+
+  strings = backtrace_symbols (buffer, nptrs);
+
+  if (!strings)
+    return NULL;
+
+  for (j = 0; j < nptrs; j++)
+    g_string_append_printf (trace, "%s\n", strings[j]);
+
+  return g_string_free (trace, FALSE);
+}
+#endif /* HAVE_BACKTRACE */
+
+gchar *
+gst_debug_get_stack_trace (void)
+{
+  gchar *trace = NULL;
+
+#ifdef HAVE_UNWIND
+  trace = generate_unwind_trace ();
+  if (trace)
+    return trace;
+#endif /* HAVE_UNWIND */
+
+#ifdef HAVE_BACKTRACE
+  trace = generate_backtrace_trace ();
+#endif /* HAVE_BACKTRACE */
+
+  return trace;
+}
+#endif /* GST_ENABLE_FUNC_INSTRUMENTATION */
+
+/**
+ * gst_debug_print_stack_trace:
+ *
+ * If GST_ENABLE_FUNC_INSTRUMENTATION is defined or libunwind or
+ * glibc backtrace are present, a stack trace is printed.
+ */
 void
 gst_debug_print_stack_trace (void)
 {
-  /* nothing because it's compiled out */
-}
+  gchar *trace = gst_debug_get_stack_trace ();
 
-#endif /* GST_ENABLE_FUNC_INSTRUMENTATION */
+  if (trace)
+    g_print ("%s\n", trace);
+
+  g_free (trace);
+}

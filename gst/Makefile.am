@@ -141,6 +141,8 @@ libgstreamer_@GST_API_VERSION@_la_CFLAGS =		\
 	-DGST_API_VERSION=\""$(GST_API_VERSION)"\" 	\
 	-DGST_DISABLE_DEPRECATED			\
 	$(VALGRIND_CFLAGS)				\
+	$(UNWIND_CFLAGS)				\
+	$(DW_CFLAGS)				\
 	$(GST_ALL_CFLAGS)
 
 libgstreamer_@GST_API_VERSION@_la_LIBADD =		\
@@ -149,6 +151,8 @@ libgstreamer_@GST_API_VERSION@_la_LIBADD =		\
 	$(GST_ALL_LIBS)					\
 	$(WIN32_LIBS)					\
 	$(SOCKET_LIBS)					\
+	$(UNWIND_LIBS)					\
+	$(DW_LIBS)					\
 	$(LIBM)
 
 libgstreamer_@GST_API_VERSION@_la_LDFLAGS =		\

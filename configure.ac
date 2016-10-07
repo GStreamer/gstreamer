@@ -828,6 +828,15 @@ AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
 dnl libunwind is optionally used by the leaks tracer
 PKG_CHECK_MODULES(UNWIND, libunwind, HAVE_UNWIND=yes, HAVE_UNWIND=no)
+if test "x$HAVE_UNWIND" = "xyes"; then
+  AC_DEFINE(HAVE_UNWIND, 1, [libunwind available])
+fi
+
+dnl libdw is optionally used to add source lines and numbers to backtraces
+PKG_CHECK_MODULES(DW, libdw, HAVE_DW=yes, HAVE_DW=no)
+if test "x$HAVE_DW" = "xyes"; then
+  AC_DEFINE(HAVE_DW, 1, [libdw available])
+fi
 
 dnl Check for backtrace() from libc
 AC_CHECK_FUNC(backtrace, [
@@ -835,10 +844,6 @@ AC_CHECK_FUNC(backtrace, [
     AC_DEFINE(HAVE_BACKTRACE,1,[Have backtrace])
   ], [], [])
 ])
-
-if test "x$HAVE_UNWIND" = "xyes"; then
-  AC_DEFINE(HAVE_UNWIND, 1, [libunwind available])
-fi
 
 dnl building of unit test libraries
 AC_ARG_ENABLE(check,
@@ -1161,6 +1166,7 @@ Configuration
 	Unit testing support       : ${BUILD_CHECK}
 	PTP clock support          : ${HAVE_PTP}
 	libunwind support          : ${HAVE_UNWIND}
+	libdw support              : ${HAVE_DW}
 
 	Debug                      : ${USE_DEBUG}
 	Profiling                  : ${USE_PROFILING}

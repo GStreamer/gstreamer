@@ -260,6 +260,27 @@ if cc.has_function('strsignal', prefix : '#include <string.h>')
   cdata.set('HAVE_DECL_STRSIGNAL', 1)
 endif
 
+unwind_dep = dependency('libunwind', required : false)
+dw_dep = dependency('libdw', required: false)
+if unwind_dep.found()
+  cdata.set('HAVE_UNWIND', 1)
+  if dw_dep.found()
+    cdata.set('HAVE_DW', 1)
+  else
+    message('Support for backtraces is partial only.')
+  endif
+else
+  if cc.has_function('backtrace')
+    cdata.set('HAVE_BACKTRACE', 1)
+  else
+      message('NO backtraces support.')
+  endif
+endif
+
+if cc.has_header('execinfo.h') and cc.has_function('backtrace', prefix : '#include <execinfo.h>')
+  cdata.set('HAVE_BACKTRACE', 1)
+endif
+
 configure_file(input : 'config.h.meson',
   output : 'config.h',
   configuration : cdata)

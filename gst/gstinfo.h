@@ -1564,6 +1564,7 @@ GST_TRACE (const char *format, ...)
 
 
 void gst_debug_print_stack_trace (void);
+gchar * gst_debug_get_stack_trace (void);
 
 G_END_DECLS
 
