@@ -264,9 +264,9 @@ leaks
 -----
 - track creation/destruction of GstObject and GstMiniObject
 - log those which are still alive when app is exiting and raise an error if any
-- If the GST_LEAKS_TRACER_SIG env variable is defined:
-  - log alive objects when receiving the SIGUSR1 signal.
-  - create a checkpoint and print a list of objects created and destroyed since
+- If the GST_LEAKS_TRACER_SIG env variable is defined the tracer will handle the following UNIX signals:
+  - SIGUSR1: log alive objects
+  - SIGUSR2: create a checkpoint and print a list of objects created and destroyed since
     the previous checkpoint.
 - If the GST_LEAKS_TRACER_STACK_TRACE env variable is defined log the creation
   stack trace of leaked objects. This may significantly increase memory
