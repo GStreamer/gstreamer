@@ -578,6 +578,163 @@ GST_START_TEST (test_lock)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GstMemory mem;
+  gpointer data;
+} MyOpaqueMemory;
+
+static GstMemory *
+_my_opaque_alloc (GstAllocator * allocator, gsize size,
+    GstAllocationParams * params)
+{
+  MyOpaqueMemory *mem = g_slice_new (MyOpaqueMemory);
+  gsize maxsize = size + params->prefix + params->padding;
+
+  gst_memory_init (GST_MEMORY_CAST (mem), params->flags, allocator, NULL,
+      maxsize, params->align, params->prefix, size);
+
+  mem->data = g_malloc (maxsize);
+
+  return (GstMemory *) mem;
+}
+
+static void
+_my_opaque_free (GstAllocator * allocator, GstMemory * mem)
+{
+  MyOpaqueMemory *mmem = (MyOpaqueMemory *) mem;
+
+  g_free (mmem->data);
+  g_slice_free (MyOpaqueMemory, mmem);
+}
+
+static gpointer
+_my_opaque_mem_map (MyOpaqueMemory * mem, gsize maxsize, GstMapFlags flags)
+{
+  /* the subclass is reponsible for logging any error, by design choice and for
+   * testing purpose MyOpaqueMemory never logs any trace */
+  return NULL;
+}
+
+static gboolean
+_my_opaque_mem_unmap (MyOpaqueMemory * mem)
+{
+  return FALSE;
+}
+
+static MyOpaqueMemory *
+_my_opaque_mem_share (MyOpaqueMemory * mem, gssize offset, gsize size)
+{
+  return NULL;
+}
+
+typedef struct
+{
+  GstAllocator parent;
+} MyOpaqueMemoryAllocator;
+
+typedef struct
+{
+  GstAllocatorClass parent_class;
+} MyOpaqueMemoryAllocatorClass;
+
+GType my_opaque_memory_allocator_get_type (void);
+G_DEFINE_TYPE (MyOpaqueMemoryAllocator, my_opaque_memory_allocator,
+    GST_TYPE_ALLOCATOR);
+
+static void
+my_opaque_memory_allocator_class_init (MyOpaqueMemoryAllocatorClass * klass)
+{
+  GstAllocatorClass *allocator_class;
+
+  allocator_class = (GstAllocatorClass *) klass;
+
+  allocator_class->alloc = _my_opaque_alloc;
+  allocator_class->free = _my_opaque_free;
+}
+
+static void
+my_opaque_memory_allocator_init (MyOpaqueMemoryAllocator * allocator)
+{
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+
+  alloc->mem_type = "MyOpaqueMemory";
+  alloc->mem_map = (GstMemoryMapFunction) _my_opaque_mem_map;
+  alloc->mem_unmap = (GstMemoryUnmapFunction) _my_opaque_mem_unmap;
+  alloc->mem_share = (GstMemoryShareFunction) _my_opaque_mem_share;
+}
+
+static void
+my_opaque_memory_init (void)
+{
+  GstAllocator *allocator;
+
+  allocator = g_object_new (my_opaque_memory_allocator_get_type (), NULL);
+
+  gst_allocator_register ("MyOpaqueMemory", allocator);
+}
+
+static void
+_custom_log_func (GstDebugCategory * category,
+    GstDebugLevel level, const gchar * file, const gchar * function,
+    gint line, GObject * object, GstDebugMessage * message, gpointer unused)
+{
+  const gchar *dbg_msg = gst_debug_message_get (message);
+  fail_unless (dbg_msg == NULL);
+}
+
+GST_START_TEST (test_no_error_and_no_warning_on_map_failure)
+{
+  GstAllocator *alloc;
+  GstMemory *mem;
+  GstMapInfo info;
+  gsize maxalloc;
+  gsize size, offset;
+  GstDebugLevel prev_debug_threshold;
+  gboolean prev_debug_is_active;
+
+  my_opaque_memory_init ();
+  alloc = gst_allocator_find ("MyOpaqueMemory");
+  mem = gst_allocator_alloc (alloc, 100, NULL);
+
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 100);
+
+  /* Prepare custom logging to capture any GST_ERROR and GST_WARNING. */
+  prev_debug_threshold = gst_debug_get_default_threshold ();
+  prev_debug_is_active = gst_debug_is_active ();
+  gst_debug_set_active (TRUE);
+  fail_unless (gst_debug_is_active ());
+  gst_debug_set_default_threshold (GST_LEVEL_WARNING);
+  fail_unless (gst_debug_get_default_threshold () == GST_LEVEL_WARNING);
+  gst_debug_remove_log_function (gst_debug_log_default);
+  gst_debug_add_log_function (_custom_log_func, NULL, NULL);
+
+  /* Ensure that the map does not log any error on failure. It has to fail
+   * because the custom opaque memory here is desgined to not be mappable. */
+  fail_if (gst_memory_map (mem, &info, GST_MAP_READ));
+  fail_if (info.data != NULL);
+  fail_if (info.size != 0);
+  fail_if (info.maxsize != 0);
+
+  fail_if (gst_memory_map (mem, &info, GST_MAP_WRITE));
+  fail_if (info.data != NULL);
+  fail_if (info.size != 0);
+  fail_if (info.maxsize != 0);
+
+  gst_memory_unref (mem);
+
+  /* Restore previous logging state. */
+  gst_debug_set_default_threshold (prev_debug_threshold);
+  gst_debug_add_log_function (gst_debug_log_default, NULL, NULL);
+  gst_debug_remove_log_function (_custom_log_func);
+  gst_debug_set_active (prev_debug_is_active);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_memory_suite (void)
 {
@@ -597,6 +754,7 @@ gst_memory_suite (void)
   tcase_add_test (tc_chain, test_map_resize);
   tcase_add_test (tc_chain, test_alloc_params);
   tcase_add_test (tc_chain, test_lock);
+  tcase_add_test (tc_chain, test_no_error_and_no_warning_on_map_failure);
 
   return s;
 }

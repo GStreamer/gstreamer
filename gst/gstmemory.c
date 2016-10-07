@@ -320,8 +320,9 @@ lock_failed:
   }
 error:
   {
-    /* something went wrong, restore the orginal state again */
-    GST_CAT_ERROR (GST_CAT_MEMORY, "mem %p: subclass map failed", mem);
+    /* something went wrong, restore the orginal state again
+     * it is up to the subclass to log an error if needed. */
+    GST_CAT_INFO (GST_CAT_MEMORY, "mem %p: subclass map failed", mem);
     gst_memory_unlock (mem, (GstLockFlags) flags);
     memset (info, 0, sizeof (GstMapInfo));
     return FALSE;
