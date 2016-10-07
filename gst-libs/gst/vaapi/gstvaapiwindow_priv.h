@@ -123,14 +123,14 @@ gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
 /* Inline reference counting for core libgstvaapi library */
 #ifdef IN_LIBGSTVAAPI_CORE
 #define gst_vaapi_window_ref_internal(window) \
-    ((gpointer)gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(window)))
+    ((gpointer)gst_vaapi_object_ref(GST_VAAPI_OBJECT(window)))
 
 #define gst_vaapi_window_unref_internal(window) \
-    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(window))
+    gst_vaapi_object_unref(GST_VAAPI_OBJECT(window))
 
 #define gst_vaapi_window_replace_internal(old_window_ptr, new_window) \
-    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)(old_window_ptr), \
-        GST_VAAPI_MINI_OBJECT(new_window))
+    gst_vaapi_object_replace((GstVaapiObject **)(old_window_ptr), \
+        GST_VAAPI_OBJECT(new_window))
 
 #undef  gst_vaapi_window_ref
 #define gst_vaapi_window_ref(window) \

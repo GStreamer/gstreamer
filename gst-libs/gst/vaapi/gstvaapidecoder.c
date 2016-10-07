@@ -576,7 +576,8 @@ void
 gst_vaapi_decoder_replace (GstVaapiDecoder ** old_decoder_ptr,
     GstVaapiDecoder * new_decoder)
 {
-  gst_vaapi_object_replace (old_decoder_ptr, new_decoder);
+  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) old_decoder_ptr,
+      GST_VAAPI_MINI_OBJECT (new_decoder));
 }
 
 /**

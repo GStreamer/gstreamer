@@ -138,14 +138,14 @@ gst_vaapi_texture_new_internal (const GstVaapiTextureClass * klass,
 /* Inline reference counting for core libgstvaapi library */
 #ifdef IN_LIBGSTVAAPI_CORE
 #define gst_vaapi_texture_ref_internal(texture) \
-  ((gpointer)gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (texture)))
+  ((gpointer)gst_vaapi_object_ref (GST_VAAPI_OBJECT (texture)))
 
 #define gst_vaapi_texture_unref_internal(texture) \
-  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (texture))
+  gst_vaapi_object_unref (GST_VAAPI_OBJECT (texture))
 
 #define gst_vaapi_texture_replace_internal(old_texture_ptr, new_texture) \
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **)(old_texture_ptr), \
-      GST_VAAPI_MINI_OBJECT (new_texture))
+  gst_vaapi_object_replace ((GstVaapiObject **)(old_texture_ptr), \
+      GST_VAAPI_OBJECT (new_texture))
 
 #undef  gst_vaapi_texture_ref
 #define gst_vaapi_texture_ref(texture) \
