@@ -730,7 +730,7 @@ gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
 
   if (packet->bytes > 0 && packet->packet[0] == '\001') {
     parse_vorbis_header_packet (vorbisenc, packet);
-  } else if (packet->bytes > 0 && packet->packet[0] == '\003') {
+  } else if (packet->bytes > 0 && packet->packet[0] == '\005') {
     parse_vorbis_codebooks_packet (vorbisenc, packet);
   }
 
