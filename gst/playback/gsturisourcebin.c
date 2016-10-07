@@ -968,7 +968,6 @@ pending_pad_blocked (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   if (caps == NULL)
     caps = gst_pad_query_caps (pad, NULL);
 
-  /* FIXME: Don't do buffering if use_buffering is FALSE */
   slot = get_output_slot (urisrc, FALSE, TRUE, caps);
 
   gst_caps_unref (caps);
@@ -1176,11 +1175,11 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
   } else {
     if (is_adaptive) {
       GST_LOG_OBJECT (urisrc, "Adding queue for adaptive streaming stream");
-      g_object_set (queue, "use-buffering", TRUE, "use-tags-bitrate", TRUE,
-          "use-rate-estimate", FALSE, NULL);
+      g_object_set (queue, "use-buffering", urisrc->use_buffering,
+          "use-tags-bitrate", TRUE, "use-rate-estimate", FALSE, NULL);
     } else {
       GST_LOG_OBJECT (urisrc, "Adding queue for buffering");
-      g_object_set (queue, "use-buffering", TRUE, NULL);
+      g_object_set (queue, "use-buffering", urisrc->use_buffering, NULL);
     }
     g_object_set (queue, "ring-buffer-max-size",
         urisrc->ring_buffer_max_size, NULL);
@@ -1768,6 +1767,7 @@ make_demuxer (GstURISourceBin * urisrc, GstCaps * caps)
 {
   GList *factories, *eligible, *cur;
   GstElement *demuxer = NULL;
+  GParamSpec *pspec;
 
   GST_LOG_OBJECT (urisrc, "making new adaptive demuxer");
 
@@ -1814,9 +1814,11 @@ make_demuxer (GstURISourceBin * urisrc, GstCaps * caps)
       "pad-removed", G_CALLBACK (pad_removed_cb), urisrc);
 
   /* Propagate connection-speed property */
-  /* FIXME: Check the property exists on the demuxer */
-  g_object_set (demuxer,
-      "connection-speed", urisrc->connection_speed / 1000, NULL);
+  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (demuxer),
+      "connection-speed");
+  if (pspec != NULL)
+    g_object_set (demuxer,
+        "connection-speed", urisrc->connection_speed / 1000, NULL);
 
   return demuxer;
 
