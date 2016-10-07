@@ -28,8 +28,7 @@ libgstcoretracers_la_CFLAGS = $(GST_OBJ_CFLAGS) \
   -DGST_USE_UNSTABLE_API
 libgstcoretracers_la_LIBADD = \
 	$(GST_PRINTF_LA) \
-	$(GST_OBJ_LIBS) \
-	$(UNWIND_LIBS)
+	$(GST_OBJ_LIBS)
 libgstcoretracers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcoretracers_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 

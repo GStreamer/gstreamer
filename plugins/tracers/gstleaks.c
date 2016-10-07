@@ -32,17 +32,6 @@
 #  include "config.h"
 #endif
 
-#ifdef HAVE_UNWIND
-/* No need for remote debugging so turn on the 'local only' optimizations in
- * libunwind */
-#define UNW_LOCAL_ONLY
-#include <libunwind.h>
-#endif /* HAVE_UNWIND */
-
-#ifdef HAVE_BACKTRACE
-#include <execinfo.h>
-#endif /* HAVE_BACKTRACE */
-
 #include "gstleaks.h"
 
 #ifdef G_OS_UNIX
@@ -215,81 +204,6 @@ mini_object_weak_cb (gpointer data, GstMiniObject * object)
   handle_object_destroyed (self, object);
 }
 
-#ifdef HAVE_UNWIND
-#define BT_NAME_SIZE 256
-static gchar *
-generate_unwind_trace (void)
-{
-  unw_context_t ctx;
-  unw_cursor_t cursor;
-  GString *trace;
-
-  if (unw_getcontext (&ctx))
-    return NULL;
-
-  if (unw_init_local (&cursor, &ctx))
-    return NULL;
-
-  trace = g_string_new (NULL);
-  while (unw_step (&cursor) > 0) {
-    char name[BT_NAME_SIZE];
-    unw_word_t offp;
-    int ret;
-
-    ret = unw_get_proc_name (&cursor, name, BT_NAME_SIZE, &offp);
-    /* -UNW_ENOMEM is returned if name has been truncated */
-    if (ret != 0 && ret != -UNW_ENOMEM)
-      break;
-
-    g_string_append_printf (trace, "%s\n", name);
-  }
-
-  return g_string_free (trace, FALSE);
-}
-#endif /* HAVE_UNWIND */
-
-#ifdef HAVE_BACKTRACE
-#define BT_BUF_SIZE 100
-static gchar *
-generate_backtrace_trace (void)
-{
-  int j, nptrs;
-  void *buffer[BT_BUF_SIZE];
-  char **strings;
-  GString *trace;
-
-  trace = g_string_new (NULL);
-  nptrs = backtrace (buffer, BT_BUF_SIZE);
-
-  strings = backtrace_symbols (buffer, nptrs);
-  if (!strings)
-    return NULL;
-
-  for (j = 0; j < nptrs; j++)
-    g_string_append_printf (trace, "%s\n", strings[j]);
-
-  return g_string_free (trace, FALSE);
-}
-#endif /* HAVE_BACKTRACE */
-
-static gchar *
-generate_trace (void)
-{
-  gchar *trace = NULL;
-
-#ifdef HAVE_UNWIND
-  trace = generate_unwind_trace ();
-  if (trace)
-    return trace;
-#endif /* HAVE_UNWIND */
-
-#ifdef HAVE_BACKTRACE
-  trace = generate_backtrace_trace ();
-#endif /* HAVE_BACKTRACE */
-
-  return trace;
-}
-
 static void
 handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
     gboolean gobject)
@@ -307,7 +221,7 @@ handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
 
   GST_OBJECT_LOCK (self);
   if (self->log_stack_trace) {
-    trace = generate_trace ();
+    trace = gst_debug_get_stack_trace ();
   }
 
   g_hash_table_insert (self->objects, object, trace);
@@ -350,7 +264,7 @@ gst_leaks_tracer_init (GstLeaksTracer * self)
     gchar *trace;
 
     /* Test if we can retrieve backtrace */
-    trace = generate_trace ();
+    trace = gst_debug_get_stack_trace ();
     if (trace) {
       self->log_stack_trace = TRUE;
       g_free (trace);
