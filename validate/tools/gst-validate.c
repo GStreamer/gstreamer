@@ -56,7 +56,7 @@ intr_handler (gpointer user_data)
   g_print ("interrupt received.\n");
 
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-      GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate.interupted");
+      GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate.interrupted");
 
   g_main_loop_quit (mainloop);
 
