@@ -68,11 +68,15 @@ class LogModelBase (Common.GUI.GenericTreeModel):
         line_cache = self.line_cache
         line_levels = self.line_levels
         COL_LEVEL = self.COL_LEVEL
+        COL_MESSAGE = self.COL_MESSAGE
+        access_offset = self.access_offset
 
         for i, offset in enumerate(self.line_offsets):
             ensure_cached(offset)
             row = line_cache[offset]
-            row[COL_LEVEL] = line_levels[i]  # FIXME
+            # adjust special rows
+            row[COL_LEVEL] = line_levels[i]
+            row[COL_MESSAGE] =  access_offset(offset + row[COL_MESSAGE])
             yield (row, offset,)
 
     def on_get_flags(self):
@@ -127,6 +131,7 @@ class LogModelBase (Common.GUI.GenericTreeModel):
         value = self.line_cache[line_offset][col_id]
         if col_id == self.COL_MESSAGE:
             message_offset = value
+            # TODO: correct the message offset to avodi the strip() calls
             value = self.access_offset(line_offset + message_offset).strip()
 
         return value
