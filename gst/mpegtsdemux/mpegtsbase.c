@@ -1164,9 +1164,10 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
      * we want to drop all previous observations (hard:TRUE) from
      * the packetizer */
     if (base->mode == BASE_MODE_PUSHING
-        && base->segment.format == GST_FORMAT_TIME)
+        && base->segment.format == GST_FORMAT_TIME) {
       mpegts_packetizer_flush (base->packetizer, TRUE);
-    else
+      mpegts_packetizer_clear (base->packetizer);
+    } else
       mpegts_packetizer_flush (base->packetizer, FALSE);
   }
 
