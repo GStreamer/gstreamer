@@ -278,8 +278,8 @@ static GstFlowReturn gst_queue2_chain_list (GstPad * pad, GstObject * parent,
 static GstFlowReturn gst_queue2_push_one (GstQueue2 * queue);
 static void gst_queue2_loop (GstPad * pad);
 
-static gboolean gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event);
+static GstFlowReturn gst_queue2_handle_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
 static gboolean gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
@@ -477,7 +477,7 @@ gst_queue2_init (GstQueue2 * queue)
       GST_DEBUG_FUNCPTR (gst_queue2_chain_list));
   gst_pad_set_activatemode_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue2_sink_activate_mode));
-  gst_pad_set_event_function (queue->sinkpad,
+  gst_pad_set_event_full_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue2_handle_sink_event));
   gst_pad_set_query_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue2_handle_sink_query));
@@ -2453,7 +2453,7 @@ no_item:
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
@@ -2584,7 +2584,9 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
       }
       break;
   }
-  return ret;
+  if (ret == FALSE)
+    return GST_FLOW_ERROR;
+  return GST_FLOW_OK;
 
   /* ERRORS */
 out_flushing:
@@ -2592,14 +2594,14 @@ out_flushing:
     GST_DEBUG_OBJECT (queue, "refusing event, we are flushing");
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     gst_event_unref (event);
-    return FALSE;
+    return GST_FLOW_FLUSHING;
   }
 out_eos:
   {
     GST_DEBUG_OBJECT (queue, "refusing event, we are EOS");
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     gst_event_unref (event);
-    return FALSE;
+    return GST_FLOW_EOS;
   }
 out_flow_error:
   {
@@ -2608,7 +2610,7 @@ out_flow_error:
         gst_flow_get_name (queue->srcresult));
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     gst_event_unref (event);
-    return FALSE;
+    return queue->srcresult;
   }
 }
 
