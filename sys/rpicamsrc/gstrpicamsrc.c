@@ -1342,6 +1342,13 @@ gst_rpi_cam_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   src->capture_config.height = info.height;
   src->capture_config.fps_n = info.fps_n;
   src->capture_config.fps_d = info.fps_d;
+
+  if (info.fps_n != 0 && info.fps_d != 0)
+    src->duration = gst_util_uint64_scale_int (GST_SECOND, info.fps_d,
+                        info.fps_n);
+  else
+    src->duration = GST_CLOCK_TIME_NONE;
+
   return TRUE;
 }
 
@@ -1407,9 +1414,11 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
 
   /* FIXME: Use custom allocator */
   ret = raspi_capture_fill_buffer (src->capture_state, buf, clock, base_time);
-  if (*buf)
+  if (*buf) {
     GST_LOG_OBJECT (src, "Made buffer of size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (*buf));
+    GST_BUFFER_DURATION (*buf) = src->duration;
+  }
 
   if (clock)
     gst_object_unref (clock);

@@ -86,6 +86,8 @@ struct _GstRpiCamSrc
 #ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
   GstVideoOrientationMethod orientation;
 #endif
+
+  GstClockTime duration;
 };
 
 struct _GstRpiCamSrcClass
