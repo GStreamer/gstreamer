@@ -1,7 +1,7 @@
 /*
  * camsession.h - GStreamer CAM (EN50221) Session Layer
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
  *
@@ -53,10 +53,10 @@ typedef enum
 struct _CamSL
 {
   CamTL *tl;
-  
+
   GHashTable *sessions;
   guint session_ids;
- 
+
   /* callbacks */
   CamReturn (*open_session_request) (CamSL *sl, CamSLSession *session,
     CamSLResourceStatus *status);
@@ -64,7 +64,7 @@ struct _CamSL
   CamReturn (*session_closed) (CamSL *sl, CamSLSession *session);
   CamReturn (*session_data) (CamSL *sl, CamSLSession *session,
     guint8 *data, guint length);
-  
+
   gpointer user_data;
 };
 
@@ -72,10 +72,10 @@ struct _CamSLSession
 {
   CamSL *sl;
   CamTLConnection *connection;
-  
+
   guint resource_id;
   guint16 session_nb;
-  
+
   CamSLSessionState state;
 
   gpointer user_data;
@@ -86,7 +86,7 @@ void cam_sl_destroy (CamSL *sl);
 
 CamReturn cam_sl_create_session (CamSL *sl, CamTLConnection *connection,
   guint resource_id, CamSLSession **session);
-CamReturn cam_sl_session_close (CamSLSession *session);  
+CamReturn cam_sl_session_close (CamSLSession *session);
 
 void cam_sl_calc_buffer_size (CamSL *sl,
   guint body_length, guint *buffer_size, guint *offset);

@@ -1,7 +1,7 @@
 /*
  * camconditionalaccess.h - CAM (EN50221) Conditional Access resource
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
  *

@@ -1,7 +1,7 @@
 /*
  * camresourcemanager.h - GStreamer CAM (EN50221) Resource Manager
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
  *

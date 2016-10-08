@@ -1,7 +1,7 @@
 /*
  * camutils.h - GStreamer CAM (EN50221) support
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
  *

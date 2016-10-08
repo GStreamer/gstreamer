@@ -1,7 +1,7 @@
 /*
  * camtransport.h - GStreamer CAM (EN50221) transport layer
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
  *
@@ -53,9 +53,9 @@ struct _CamTL
   guint connection_ids;
 
   GHashTable *connections;
-  
+
   guint expected_tpdus;
-  
+
   /* buffer containing module data */
   guint8 buffer [HOST_BUFFER_SIZE];
   /* number of bytes written in the buffer */
@@ -64,14 +64,14 @@ struct _CamTL
   guint8 *body;
   /* length of the body part */
   guint body_length;
-  
+
   /* callbacks */
   void (*request_connection) (CamTL *tl, CamTLConnection *connection);
   void (*connection_created) (CamTL *tl, CamTLConnection *connection);
   void (*connection_deleted) (CamTL *tl, CamTLConnection *connection);
   CamReturn (*connection_data) (CamTL *tl, CamTLConnection *connection,
     guint8 *data, guint length);
-  
+
   /* used by the upper layer to extend this layer */
   gpointer user_data;
 };

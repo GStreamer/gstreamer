@@ -1,7 +1,7 @@
 /*
  * camdevice.h - GStreamer hardware CAM interface
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
  *

@@ -1,7 +1,7 @@
 /*
  * camapplication.h - GStreamer CAM (EN50221) Application Layer
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
  *
@@ -78,7 +78,7 @@ void cam_al_calc_buffer_size (CamAL *al, guint body_length,
 void _cam_al_application_init (CamALApplication *application);
 void _cam_al_application_destroy (CamALApplication *application);
 
-CamReturn cam_al_application_write (CamALApplication *application, 
+CamReturn cam_al_application_write (CamALApplication *application,
   CamSLSession *session, guint tag, guint8 *buffer,
   guint buffer_size, guint body_length);
 #endif /* CAM_APPLICATION_LAYER_H */

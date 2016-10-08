@@ -1,7 +1,7 @@
 /*
  * camswclient.h - GStreamer softcam client
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
  *

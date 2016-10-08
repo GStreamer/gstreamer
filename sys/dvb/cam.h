@@ -1,7 +1,7 @@
 /*
- * cam.h - 
+ * cam.h
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
  *
