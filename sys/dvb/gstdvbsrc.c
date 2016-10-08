@@ -2,7 +2,7 @@
  * Copyright (C) 2006 Zaheer Abbas Merali <zaheerabbas at merali
  *                                         dot org>
  * Copyright (C) 2014 Samsung Electronics. All rights reserved.
- *     @Author: Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>
+ *     @Author: Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -627,7 +627,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
       "Digital Video Broadcast Source",
       "P2P-VCR, C-Lab, University of Paderborn, "
       "Zaheer Abbas Merali <zaheerabbas at merali dot org>\n"
-      "Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>");
+      "Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>");
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dvbsrc_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dvbsrc_stop);

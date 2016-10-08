@@ -5,7 +5,7 @@
  * 
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
- *   Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>
+ *   Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -342,7 +342,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
       "Source/Bin/Video",
       "Access descramble and split DVB streams",
       "Alessandro Decina <alessandro@nnva.org>\n"
-      "Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>");
+      "Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>");
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->set_property = dvb_base_bin_set_property;
