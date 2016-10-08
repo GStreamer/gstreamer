@@ -2473,7 +2473,7 @@ reset_properties (GstVaapiEncoderH264 * encoder)
     encoder->cts_offset = gst_util_uint64_scale (GST_SECOND,
         GST_VAAPI_ENCODER_FPS_D (encoder), GST_VAAPI_ENCODER_FPS_N (encoder));
   else
-    encoder->cts_offset = GST_CLOCK_TIME_NONE;
+    encoder->cts_offset = 0;
 
   /* init max_frame_num, max_poc */
   encoder->log2_max_frame_num =
