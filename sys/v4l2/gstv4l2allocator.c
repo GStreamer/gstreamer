@@ -1327,7 +1327,16 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator,
   } else {
     /* for capture, simply read the size */
     for (i = 0; i < group->n_mem; i++) {
-      gst_memory_resize (group->mem[i], 0, group->planes[i].bytesused);
+      if (G_LIKELY (group->planes[i].bytesused <= group->mem[i]->maxsize))
+        gst_memory_resize (group->mem[i], 0, group->planes[i].bytesused);
+      else {
+        GST_WARNING_OBJECT (allocator,
+            "v4l2 provided buffer that is too big for the memory it was "
+            "writing into.  v4l2 claims %" G_GUINT32_FORMAT " bytes used but "
+            "memory is only %" G_GSIZE_FORMAT "B.  This is probably a driver "
+            "bug.", group->planes[i].bytesused, group->mem[i]->maxsize);
+        gst_memory_resize (group->mem[i], 0, group->mem[i]->maxsize);
+      }
     }
   }
 
