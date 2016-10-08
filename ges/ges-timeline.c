@@ -973,9 +973,9 @@ _create_auto_transition_from_transitions (GESTimeline * timeline,
 }
 
 /* Create all transition that do not exist on @layer.
- * @get_auto_transition is called to check if a particular transition exists
- * if @ track is specified, we will create the transitions only for that particular
- * track */
+ * @get_auto_transition is called to check if a particular transition exists.
+ * If @track is specified, we will create the transitions only for that particular
+ * track. */
 static void
 _create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
     GESTrack * track, GESTrackElement * initiating_obj,
@@ -984,7 +984,8 @@ _create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
   guint32 layer_prio;
   GSequenceIter *iter;
   GESAutoTransition *transition;
-
+  GESContainer *toplevel_next;
+  MoveContext *mv_ctx = &timeline->priv->movecontext;
   GESTrack *ctrack = track;
   GList *entered = NULL;        /* List of TrackElement for wich we walk through the
                                  * "start" but not the "end" in the starts_ends list */
@@ -1001,8 +1002,8 @@ _create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
     guint *start_or_end = g_sequence_get (iter);
     GESTrackElement *next = g_hash_table_lookup (timeline->priv->by_object,
         start_or_end);
-    GESTimelineElement *toplevel =
-        ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT (next));
+    GESContainer *toplevel =
+        get_toplevel_container (GES_TIMELINE_ELEMENT (next));
 
     /* Only object that are in that layer and track */
     if (_ges_track_element_get_layer_priority (next) != layer_prio ||
@@ -1024,18 +1025,24 @@ _create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
       continue;
     }
 
+    toplevel_next = get_toplevel_container (next);
     for (tmp = entered; tmp; tmp = tmp->next) {
       gint64 transition_duration;
-
       GESTrackElement *prev = tmp->data;
+      GESContainer *toplevel_prev = get_toplevel_container (prev);
 
-      if (ctrack != ges_track_element_get_track (prev) ||
-          ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT (prev))
-          == toplevel)
+      /* If we are not in the same track, we do not create a transition */
+      if (ctrack != ges_track_element_get_track (prev))
         continue;
 
-      if (priv->movecontext.moving_trackelements &&
-          GES_TIMELINE_ELEMENT_START (next) > priv->movecontext.start)
+      /* If elements are in the same toplevel element, we do not create a transition */
+      if (get_toplevel_container (GES_TIMELINE_ELEMENT (prev)) == toplevel)
+        continue;
+
+      /* If the element is inside a container we are moving, we do not
+       * create a transition */
+      if (g_hash_table_lookup (mv_ctx->toplevel_containers, toplevel_prev) &&
+          g_hash_table_lookup (mv_ctx->toplevel_containers, toplevel_next))
         continue;
 
       transition_duration = (_START (prev) + _DURATION (prev)) - _START (next);
