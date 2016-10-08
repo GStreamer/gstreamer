@@ -236,6 +236,18 @@ gst_dvb_base_bin_conf_set_delsys (GstElement * dvbbasebin,
 }
 
 static gboolean
+gst_dvb_base_bin_conf_set_hierarchy (GstElement * dvbbasebin,
+    const gchar * property, GKeyFile * kf, const gchar * channel_name,
+    const gchar * key)
+{
+  const gchar *hierarchies[] = {
+    "NONE", "1", "2", "4", "AUTO", NULL
+  };
+  return gst_dvb_base_bin_conf_set_property_from_string_array (dvbbasebin,
+      property, kf, channel_name, key, hierarchies, 4);
+}
+
+static gboolean
 gst_dvb_base_bin_conf_set_modulation (GstElement * dvbbasebin,
     const gchar * property, GKeyFile * kf, const gchar * channel_name,
     const gchar * key)
@@ -264,6 +276,7 @@ GstDvbV5ChannelsConfToPropertyMap dvbv5_prop_map[] = {
   {"INVERSION", "inversion", gst_dvb_base_bin_conf_set_inversion},
   {"GUARD_INTERVAL", "guard", gst_dvb_base_bin_conf_set_guard},
   {"TRANSMISSION_MODE", "trans-mode", gst_dvb_base_bin_conf_set_trans_mode},
+  {"HIERARCHY", "hierarchy", gst_dvb_base_bin_conf_set_hierarchy},
   {"MODULATION", "modulation", gst_dvb_base_bin_conf_set_modulation},
   {"CODE_RATE_HP", "code-rate-hp", gst_dvb_base_bin_conf_set_code_rate},
   {"CODE_RATE_LP", "code-rate-lp", gst_dvb_base_bin_conf_set_code_rate},
