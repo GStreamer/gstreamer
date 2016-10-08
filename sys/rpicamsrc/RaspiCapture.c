@@ -1561,13 +1561,14 @@ static void destroy_encoder_component(RASPIVID_STATE *state)
       }
    }
 
+   // Get rid of any port buffers first
+   if (state->encoder_pool)
+   {
+      mmal_port_pool_destroy(state->encoder_output_port, state->encoder_pool);
+      state->encoder_pool = NULL;
+   }
+
    if (state->encoder_component) {
-      // Get rid of any port buffers first
-      if (state->encoder_pool)
-      {
-         mmal_port_pool_destroy(state->encoder_component->output[0], state->encoder_pool);
-         state->encoder_pool = NULL;
-      }
 
       mmal_component_destroy(state->encoder_component);
       state->encoder_component = NULL;
