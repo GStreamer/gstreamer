@@ -3109,10 +3109,13 @@ undo:
       GST_DEBUG_OBJECT (element,
           "Bin failed to change state, switching children back to %s",
           gst_element_state_get_name (current));
-      do {
+      while (TRUE) {
         ret =
             gst_iterator_foreach (it, &reset_state, GINT_TO_POINTER (current));
-      } while (ret == GST_ITERATOR_RESYNC);
+        if (ret != GST_ITERATOR_RESYNC)
+          break;
+        gst_iterator_resync (it);
+      }
       gst_iterator_free (it);
     }
     goto done;
