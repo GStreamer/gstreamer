@@ -248,8 +248,8 @@ do_stats (GstTracer * obj, guint64 ts)
   G_UNLOCK (_proc);
   cur_cpuload = (guint) gst_util_uint64_scale (dtproc / num_cpus,
       G_GINT64_CONSTANT (1000), dts);
-  gst_tracer_record_log (tr_proc, ts, MIN (avg_cpuload, 1000),
-      MIN (cur_cpuload, 1000), tproc);
+  gst_tracer_record_log (tr_proc, (guint64) getpid (), ts,
+      MIN (avg_cpuload, 1000), MIN (cur_cpuload, 1000), tproc);
   /* *INDENT-ON* */
 }
 
@@ -315,7 +315,7 @@ gst_rusage_tracer_class_init (GstRUsageTracerClass * klass)
           NULL),
       NULL);
   tr_proc = gst_tracer_record_new ("proc-rusage.class",
-      "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "process-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS,
           NULL),
