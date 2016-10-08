@@ -22,6 +22,7 @@
 import os.path
 
 from gi.repository import GObject
+from gi.repository import Gdk
 from gi.repository import Gtk
 
 from GstDebugViewer import Common
@@ -89,18 +90,36 @@ class App (object):
 
         self.windows = []
 
-        # we override expander size because of:
-        # https://bugzilla.gnome.org/show_bug.cgi?id=615985
-        rcstring = """
-        style "no-expander-treeview-style" {
-            GtkTreeView::expander_size = 1
-            #GtkTreeView::vertical-separator = 0
-            GtkWidget::focus-line-width = 0
+        # Apply custom widget stying
+        # TODO: check for dark theme
+        css = """
+        @define-color normal_bg_color #FFFFFF;
+        @define-color shade_bg_color shade(@normal_bg_color, 0.95);
+        #log_view row:nth-child(even) {
+            background-color: @normal_bg_color;
         }
-
-        widget "*.log_view" style "no-expander-treeview-style"
+        #log_view row:nth-child(odd) {
+            background-color: @shade_bg_color;
+        }
+        #log_view row:selected {
+            background-color: #4488FF;
+        }
+        #log_view {
+          -GtkTreeView-horizontal-separator: 0;
+          -GtkTreeView-vertical-separator: 1;
+          outline-width: 0;
+          outline-offset: 0;
+        }
         """
-        Gtk.rc_parse_string(rcstring)
+
+        style_provider = Gtk.CssProvider()
+        style_provider.load_from_data(css)
+
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            style_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
 
         self.open_window()
 
