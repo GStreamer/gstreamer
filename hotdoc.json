@@ -11,5 +11,6 @@
     ], 
     "project_name": "GStreamer Documentation",
     "sitemap": "sitemap.txt", 
-    "syntax_highlighting_activate": true
+    "syntax_highlighting_activate": true,
+    "devhelp_activate": true
 }
