@@ -36,6 +36,7 @@ change between releases.
 Only the API in libraries from GStreamer core and
 gst-plugins-base are guaranteed to be API and ABI stable
 
+|-|-|
 | GStreamer Bad Plugins Libraries Reference | <a href="/data/doc/gstreamer/head/gst-plugins-bad-libs/html/">HTML</a> |
 
 ## Plugin Modules
@@ -43,7 +44,6 @@ gst-plugins-base are guaranteed to be API and ABI stable
 |-|-|
 | Overview of all Plug-ins | <a href="plugins.html">HTML</a> |
 | GStreamer Core Plugins Reference | <a href="/data/doc/gstreamer/head/gstreamer-plugins/html/">HTML</a> |
-
 | GStreamer Base Plugins Reference | <a href="/data/doc/gstreamer/head/gst-plugins-base-plugins/html/">HTML</a> |
 | GStreamer Good Plugins Reference | <a href="/data/doc/gstreamer/head/gst-plugins-good-plugins/html/">HTML</a> |
 | GStreamer Ugly Plugins Reference | <a href="/data/doc/gstreamer/head/gst-plugins-ugly-plugins/html/">HTML</a> |
@@ -51,6 +51,7 @@ gst-plugins-base are guaranteed to be API and ABI stable
 
 ## Other modules
 
+|-|-|
 | GStreamer Editing Services Reference | <a href="/data/doc/gstreamer/head/gstreamer-editing-services/html/">HTML</a> |
 | GStreamer RTSP Server Reference | <a href="/data/doc/gstreamer/head/gst-rtsp-server/html/">HTML</a> |
 | GStreamer VAAPI Reference | <a href="/data/doc/gstreamer/head/gstreamer-vaapi-plugins/html/">HTML</a> |
@@ -60,7 +61,8 @@ gst-plugins-base are guaranteed to be API and ABI stable
 | GStreamer Non-Linear Multimedia Editing Plugins Reference (deprecated) | <a href="/data/doc/gstreamer/head/gnonlin/html/">HTML</a> |
 
 ## GStreamer Conference Videos and Slides
- * <a href="http://gstconf.ubicast.tv/channels/#gstreamer-conference-2015">GStreamer Conference 2015: Videos and Slides</a> <a href="/data/events/gstreamer-conference/2015/">(PDF slides)</a>
+
+* <a href="http://gstconf.ubicast.tv/channels/#gstreamer-conference-2015">GStreamer Conference 2015: Videos and Slides</a> <a href="/data/events/gstreamer-conference/2015/">(PDF slides)</a>
  * <a href="http://gstconf.ubicast.tv/channels/#gstreamer-conference-2014">GStreamer Conference 2014: Videos and Slides</a> <a href="/data/events/gstreamer-conference/2014/">(PDF slides)</a>
  * <a href="http://gstconf.ubicast.tv/channels/#gstreamer-conference-2013">GStreamer Conference 2013: Videos and Slides</a> <a href="/data/events/gstreamer-conference/2013/">(PDF slides)</a>
  * <a href="http://gstconf.ubicast.tv/channels/#gstreamer-conference-2012">GStreamer Conference 2012: Videos and Slides</a> <a href="/data/events/gstreamer-conference/2012/">(PDF slides)</a>
@@ -69,6 +71,7 @@ gst-plugins-base are guaranteed to be API and ABI stable
 
 
 ## GStreamer licensing advisory
+
 The GStreamer community provides the following licensing advisory for
 developers planing on or already using GStreamer for their applications:
 
@@ -76,8 +79,10 @@ developers planing on or already using GStreamer for their applications:
 
 
 ## GStreamer plugin module split-up
+
 <a href="/documentation/splitup.html">
 An explanation of the various plugin modules and how they were split up</a>
 
 ## RTP and RTSP support in GStreamer
+
 <a href="/documentation/rtp.html">RTSP and RTP component overview</a>
