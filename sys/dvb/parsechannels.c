@@ -274,8 +274,8 @@ gst_dvb_base_bin_conf_set_guard (GstElement * dvbbasebin,
     const gchar * key)
 {
   const gchar *guards[] = {
-    "32", "16", "8", "4", "auto",
-    "128", "19/128", "19/256",
+    "1/32", "1/16", "1/8", "1/4", "auto",
+    "1/128", "19/128", "19/256",
     "PN420", "PN595", "PN945", NULL
   };
   return gst_dvb_base_bin_conf_set_property_from_string_array (dvbbasebin,
