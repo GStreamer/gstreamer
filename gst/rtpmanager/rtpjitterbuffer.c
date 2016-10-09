@@ -688,91 +688,15 @@ queue_do_insert (RTPJitterBuffer * jbuf, GList * list, GList * item)
   queue->length++;
 }
 
-/**
- * rtp_jitter_buffer_insert:
- * @jbuf: an #RTPJitterBuffer
- * @item: an #RTPJitterBufferItem to insert
- * @head: TRUE when the head element changed.
- * @percent: the buffering percent after insertion
- * @base_time: base time of the pipeline
- *
- * Inserts @item into the packet queue of @jbuf. The sequence number of the
- * packet will be used to sort the packets. This function takes ownerhip of
- * @buf when the function returns %TRUE.
- *
- * When @head is %TRUE, the new packet was added at the head of the queue and
- * will be available with the next call to rtp_jitter_buffer_pop() and
- * rtp_jitter_buffer_peek().
- *
- * Returns: %FALSE if a packet with the same number already existed.
- */
-gboolean
-rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
-    gboolean * head, gint * percent, GstClockTime base_time)
+GstClockTime
+rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
+      guint32 rtptime, GstClockTime base_time)
 {
-  GList *list, *event = NULL;
-  guint32 rtptime;
   guint64 ext_rtptime;
-  guint16 seqnum;
-  GstClockTime gstrtptime, dts;
+  GstClockTime gstrtptime, pts;
   GstClock *media_clock, *pipeline_clock;
   guint64 media_clock_offset;
   gboolean rfc7273_mode;
-
-  g_return_val_if_fail (jbuf != NULL, FALSE);
-  g_return_val_if_fail (item != NULL, FALSE);
-
-  list = jbuf->packets->tail;
-
-  /* no seqnum, simply append then */
-  if (item->seqnum == -1)
-    goto append;
-
-  seqnum = item->seqnum;
-
-  /* loop the list to skip strictly larger seqnum buffers */
-  for (; list; list = g_list_previous (list)) {
-    guint16 qseq;
-    gint gap;
-    RTPJitterBufferItem *qitem = (RTPJitterBufferItem *) list;
-
-    if (qitem->seqnum == -1) {
-      /* keep a pointer to the first consecutive event if not already
-       * set. we will insert the packet after the event if we can't find
-       * a packet with lower sequence number before the event. */
-      if (event == NULL)
-        event = list;
-      continue;
-    }
-
-    qseq = qitem->seqnum;
-
-    /* compare the new seqnum to the one in the buffer */
-    gap = gst_rtp_buffer_compare_seqnum (seqnum, qseq);
-
-    /* we hit a packet with the same seqnum, notify a duplicate */
-    if (G_UNLIKELY (gap == 0))
-      goto duplicate;
-
-    /* seqnum > qseq, we can stop looking */
-    if (G_LIKELY (gap < 0))
-      break;
-
-    /* if we've found a packet with greater sequence number, cleanup the
-     * event pointer as the packet will be inserted before the event */
-    event = NULL;
-  }
-
-  /* if event is set it means that packets before the event had smaller
-   * sequence number, so we will insert our packet after the event */
-  if (event)
-    list = event;
-
-  dts = item->dts;
-  if (item->rtptime == -1)
-    goto append;
-
-  rtptime = item->rtptime;
 
   /* rtp time jumps are checked for during skew calculation, but bypassed
    * in other mode, so mind those here and reset jb if needed.
@@ -797,8 +721,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
   /* Return the last time if we got the same RTP timestamp again */
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&jbuf->ext_rtptime, rtptime);
   if (jbuf->last_rtptime != -1 && ext_rtptime == jbuf->last_rtptime) {
-    item->pts = jbuf->prev_out_time;
-    goto append;
+    return jbuf->prev_out_time;
   }
 
   /* keep track of the last extended rtptime */
@@ -906,12 +829,12 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
         external, rate_num, rate_denom);
 
     if (rtpsystime > base_time)
-      item->pts = rtpsystime - base_time;
+      pts = rtpsystime - base_time;
     else
-      item->pts = 0;
+      pts = 0;
 
     GST_DEBUG ("RFC7273 clock time %" GST_TIME_FORMAT ", out %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (item->pts));
+        GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (pts));
   } else if (rfc7273_mode && (jbuf->mode == RTP_JITTER_BUFFER_MODE_SLAVE
           || jbuf->mode == RTP_JITTER_BUFFER_MODE_SYNCED)
       && media_clock_offset != -1 && jbuf->rfc7273_sync) {
@@ -960,12 +883,12 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
     /* All this assumes that the pipeline has enough additional
      * latency to cover for the network delay */
     if (rtpsystime > base_time)
-      item->pts = rtpsystime - base_time;
+      pts = rtpsystime - base_time;
     else
-      item->pts = 0;
+      pts = 0;
 
     GST_DEBUG ("RFC7273 clock time %" GST_TIME_FORMAT ", out %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (item->pts));
+        GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (pts));
   } else {
     /* If we used the RFC7273 clock before and not anymore,
      * we need to resync it later again */
@@ -973,45 +896,123 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
 
     /* do skew calculation by measuring the difference between rtptime and the
      * receive dts, this function will return the skew corrected rtptime. */
-    item->pts = calculate_skew (jbuf, ext_rtptime, gstrtptime, dts);
+    pts = calculate_skew (jbuf, ext_rtptime, gstrtptime, dts);
   }
 
   /* check if timestamps are not going backwards, we can only check this if we
    * have a previous out time and a previous send_diff */
-  if (G_LIKELY (item->pts != -1 && jbuf->prev_out_time != -1
+  if (G_LIKELY (pts != -1 && jbuf->prev_out_time != -1
           && jbuf->prev_send_diff != -1)) {
     /* now check for backwards timestamps */
     if (G_UNLIKELY (
             /* if the server timestamps went up and the out_time backwards */
             (gstrtptime - jbuf->base_rtptime > jbuf->prev_send_diff
-                && item->pts < jbuf->prev_out_time) ||
+                && pts < jbuf->prev_out_time) ||
             /* if the server timestamps went backwards and the out_time forwards */
             (gstrtptime - jbuf->base_rtptime < jbuf->prev_send_diff
-                && item->pts > jbuf->prev_out_time) ||
+                && pts > jbuf->prev_out_time) ||
             /* if the server timestamps did not change */
             gstrtptime - jbuf->base_rtptime == jbuf->prev_send_diff)) {
       GST_DEBUG ("backwards timestamps, using previous time");
-      item->pts = jbuf->prev_out_time;
+      pts = jbuf->prev_out_time;
     }
   }
-  if (dts != -1 && item->pts + jbuf->delay < dts) {
+
+  if (dts != -1 && pts + jbuf->delay < dts) {
     /* if we are going to produce a timestamp that is later than the input
      * timestamp, we need to reset the jitterbuffer. Likely the server paused
      * temporarily */
     GST_DEBUG ("out %" GST_TIME_FORMAT " + %" G_GUINT64_FORMAT " < time %"
-        GST_TIME_FORMAT ", reset jitterbuffer", GST_TIME_ARGS (item->pts),
+        GST_TIME_FORMAT ", reset jitterbuffer", GST_TIME_ARGS (pts),
         jbuf->delay, GST_TIME_ARGS (dts));
     rtp_jitter_buffer_resync (jbuf, dts, gstrtptime, ext_rtptime, TRUE);
-    item->pts = dts;
+    pts = dts;
   }
 
-  jbuf->prev_out_time = item->pts;
+  jbuf->prev_out_time = pts;
   jbuf->prev_send_diff = gstrtptime - jbuf->base_rtptime;
 
   if (media_clock)
     gst_object_unref (media_clock);
   if (pipeline_clock)
     gst_object_unref (pipeline_clock);
+
+  return pts;
+}
+
+
+/**
+ * rtp_jitter_buffer_insert:
+ * @jbuf: an #RTPJitterBuffer
+ * @item: an #RTPJitterBufferItem to insert
+ * @head: TRUE when the head element changed.
+ * @percent: the buffering percent after insertion
+ *
+ * Inserts @item into the packet queue of @jbuf. The sequence number of the
+ * packet will be used to sort the packets. This function takes ownerhip of
+ * @buf when the function returns %TRUE.
+ *
+ * When @head is %TRUE, the new packet was added at the head of the queue and
+ * will be available with the next call to rtp_jitter_buffer_pop() and
+ * rtp_jitter_buffer_peek().
+ *
+ * Returns: %FALSE if a packet with the same number already existed.
+ */
+gboolean
+rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
+    gboolean * head, gint * percent)
+{
+  GList *list, *event = NULL;
+  guint16 seqnum;
+
+  g_return_val_if_fail (jbuf != NULL, FALSE);
+  g_return_val_if_fail (item != NULL, FALSE);
+
+  list = jbuf->packets->tail;
+
+  /* no seqnum, simply append then */
+  if (item->seqnum == -1)
+    goto append;
+
+  seqnum = item->seqnum;
+
+  /* loop the list to skip strictly larger seqnum buffers */
+  for (; list; list = g_list_previous (list)) {
+    guint16 qseq;
+    gint gap;
+    RTPJitterBufferItem *qitem = (RTPJitterBufferItem *) list;
+
+    if (qitem->seqnum == -1) {
+      /* keep a pointer to the first consecutive event if not already
+       * set. we will insert the packet after the event if we can't find
+       * a packet with lower sequence number before the event. */
+      if (event == NULL)
+        event = list;
+      continue;
+    }
+
+    qseq = qitem->seqnum;
+
+    /* compare the new seqnum to the one in the buffer */
+    gap = gst_rtp_buffer_compare_seqnum (seqnum, qseq);
+
+    /* we hit a packet with the same seqnum, notify a duplicate */
+    if (G_UNLIKELY (gap == 0))
+      goto duplicate;
+
+    /* seqnum > qseq, we can stop looking */
+    if (G_LIKELY (gap < 0))
+      break;
+
+    /* if we've found a packet with greater sequence number, cleanup the
+     * event pointer as the packet will be inserted before the event */
+    event = NULL;
+  }
+
+  /* if event is set it means that packets before the event had smaller
+   * sequence number, so we will insert our packet after the event */
+  if (event)
+    list = event;
 
 append:
   queue_do_insert (jbuf, list, (GList *) item);
