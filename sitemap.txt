@@ -4,6 +4,7 @@ index.md
 	        sdk-installing-for-ios-development.md
 	        sdk-installing-on-mac-osx.md
 	        sdk-installing-on-windows.md
+		sdk-installing-on-linux.md
 	        sdk-building-from-source-using-cerbero.md
         sdk-tutorials.md
 		sdk-basic-tutorials.md
