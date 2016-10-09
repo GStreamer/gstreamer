@@ -10,7 +10,7 @@ all about.
 
 | - | - |
 | Application Development Manual (Read this first) | [HTML](manual-index.md) |
-| Frequently Asked Questions |  [HTML](/data/doc/gstreamer/head/faq/html/index.html) \| [PDF](/data/doc/gstreamer/head/faq/faq.pdf) |
+| Frequently Asked Questions |  <a href="/data/doc/gstreamer/head/faq/html/index.html">HTML</a> \| <a href="/data/doc/gstreamer/head/faq/faq.pdf">PDF</PDF> |
 | Plugin Writer's Guide | [HTML](pwg-index.md) |
 | Core Reference | <a href="/data/doc/gstreamer/head/gstreamer/html/">HTML</a>  |
 | Core Libraries Reference | <a href="/data/doc/gstreamer/head/gstreamer-libs/html/">HTML</a> |
