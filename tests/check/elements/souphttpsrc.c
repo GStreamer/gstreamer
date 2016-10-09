@@ -36,7 +36,6 @@
 #define SoupStatus SoupKnownStatusCode
 #endif
 
-static guint http_port = 0, https_port = 0;
 
 gboolean redirect = TRUE;
 
@@ -53,8 +52,8 @@ static const char *realm = "SOUPHTTPSRC_REALM";
 static const char *basic_auth_path = "/basic_auth";
 static const char *digest_auth_path = "/digest_auth";
 
-static gboolean run_server (guint * http_port, guint * https_port);
-static void stop_server (void);
+static guint get_port_from_server (SoupServer * server);
+static SoupServer *run_server (gboolean use_https);
 
 static void
 handoff_cb (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
@@ -85,22 +84,24 @@ digest_auth_cb (SoupAuthDomain * domain, SoupMessage * msg,
   return NULL;
 }
 
-static int
-run_test (const char *format, ...)
+static gboolean
+run_test (gboolean use_https, const gchar * path, gint expected)
 {
   GstStateChangeReturn ret;
-
   GstElement *pipe, *src, *sink;
-
   GstBuffer *buf = NULL;
-
   GstMessage *msg;
-
   gchar *url;
+  gboolean res = FALSE;
+  SoupServer *server;
+  guint port;
 
-  va_list args;
-
-  int rc = -1;
+  server = run_server (use_https);
+  if (server == NULL) {
+    g_print ("Failed to start up %s server", use_https ? "HTTPS" : "HTTP");
+    /* skip this test */
+    return TRUE;
+  }
 
   pipe = gst_pipeline_new (NULL);
 
@@ -114,13 +115,9 @@ run_test (const char *format, ...)
   gst_bin_add (GST_BIN (pipe), sink);
   fail_unless (gst_element_link (src, sink));
 
-  if (http_port == 0) {
-    GST_DEBUG ("failed to start soup http server");
-  }
-  fail_unless (http_port != 0);
-  va_start (args, format);
-  g_vasprintf (&url, format, args);
-  va_end (args);
+  port = get_port_from_server (server);
+  url = g_strdup_printf ("%s://127.0.0.1:%u%s",
+      use_https ? "https" : "http", port, path);
   fail_unless (url != NULL);
   g_object_set (src, "location", url, NULL);
   g_free (url);
@@ -148,8 +145,8 @@ run_test (const char *format, ...)
       GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
     gchar *debug = NULL;
-
     GError *err = NULL;
+    gint rc = -1;
 
     gst_message_parse_error (msg, &err, &debug);
     GST_INFO ("error: %s", err->message);
@@ -170,6 +167,8 @@ run_test (const char *format, ...)
     g_error_free (err);
     g_free (debug);
     gst_message_unref (msg);
+    GST_DEBUG ("Got HTTP error %u, expected %u", rc, expected);
+    res = (rc == expected);
     goto done;
   }
   gst_message_unref (msg);
@@ -183,6 +182,7 @@ run_test (const char *format, ...)
      * it might be for lots of reasons (no network connection, whatever), we're
      * not interested in those */
     GST_DEBUG ("didn't manage to get data within 10 seconds, skipping test");
+    res = TRUE;
     goto done;
   }
 
@@ -191,34 +191,34 @@ run_test (const char *format, ...)
   /* first buffer should have a 0 offset */
   fail_unless (GST_BUFFER_OFFSET (buf) == 0);
   gst_buffer_unref (buf);
-  rc = 0;
+  res = (expected == 0);
 
 done:
 
   gst_element_set_state (pipe, GST_STATE_NULL);
   gst_object_unref (pipe);
-  return rc;
+  gst_object_unref (server);
+  return res;
 }
 
 GST_START_TEST (test_first_buffer_has_offset)
 {
-  fail_unless (run_test ("http://127.0.0.1:%u/", http_port) == 0);
+  fail_unless (run_test (FALSE, "/", 0));
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_not_found)
 {
-  fail_unless (run_test ("http://127.0.0.1:%u/404", http_port) == 404);
-  fail_unless (run_test ("http://127.0.0.1:%u/404-with-data",
-          http_port) == 404);
+  fail_unless (run_test (FALSE, "/404", 404));
+  fail_unless (run_test (FALSE, "/404-with-data", 404));
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_forbidden)
 {
-  fail_unless (run_test ("http://127.0.0.1:%u/403", http_port) == 403);
+  fail_unless (run_test (FALSE, "/403", 403));
 }
 
 GST_END_TEST;
@@ -226,7 +226,7 @@ GST_END_TEST;
 GST_START_TEST (test_redirect_no)
 {
   redirect = FALSE;
-  fail_unless (run_test ("http://127.0.0.1:%u/302", http_port) == 302);
+  fail_unless (run_test (FALSE, "/302", 302));
 }
 
 GST_END_TEST;
@@ -234,17 +234,14 @@ GST_END_TEST;
 GST_START_TEST (test_redirect_yes)
 {
   redirect = TRUE;
-  fail_unless (run_test ("http://127.0.0.1:%u/302", http_port) == 0);
+  fail_unless (run_test (FALSE, "/302", 0));
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_https)
 {
-  if (!https_port)
-    GST_INFO ("Failed to start an HTTPS server; let's just skip this test.");
-  else
-    fail_unless (run_test ("https://127.0.0.1:%u/", https_port) == 0);
+  fail_unless (run_test (TRUE, "/", 0));
 }
 
 GST_END_TEST;
@@ -252,96 +249,96 @@ GST_END_TEST;
 GST_START_TEST (test_cookies)
 {
   static const char *biscotti[] = { "delacre=yummie", "koekje=lu", NULL };
-  int rc;
+  gboolean res;
 
   cookies = biscotti;
-  rc = run_test ("http://127.0.0.1:%u/", http_port);
+  res = run_test (FALSE, "/", 0);
   cookies = NULL;
-  fail_unless (rc == 0);
+  fail_unless (res);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_good_user_basic_auth)
 {
-  int res;
+  gboolean res;
 
   user_id = good_user;
   user_pw = good_pw;
-  res = run_test ("http://127.0.0.1:%u%s", http_port, basic_auth_path);
+  res = run_test (FALSE, basic_auth_path, 0);
   GST_DEBUG ("Basic Auth user %s password %s res = %d", user_id, user_pw, res);
   user_id = user_pw = NULL;
-  fail_unless (res == 0);
+  fail_unless (res);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_bad_user_basic_auth)
 {
-  int res;
+  gboolean res;
 
   user_id = bad_user;
   user_pw = good_pw;
-  res = run_test ("http://127.0.0.1:%u%s", http_port, basic_auth_path);
+  res = run_test (FALSE, basic_auth_path, 401);
   GST_DEBUG ("Basic Auth user %s password %s res = %d", user_id, user_pw, res);
   user_id = user_pw = NULL;
-  fail_unless (res == 401);
+  fail_unless (res);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_bad_password_basic_auth)
 {
-  int res;
+  gboolean res;
 
   user_id = good_user;
   user_pw = bad_pw;
-  res = run_test ("http://127.0.0.1:%u%s", http_port, basic_auth_path);
+  res = run_test (FALSE, basic_auth_path, 401);
   GST_DEBUG ("Basic Auth user %s password %s res = %d", user_id, user_pw, res);
   user_id = user_pw = NULL;
-  fail_unless (res == 401);
+  fail_unless (res);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_good_user_digest_auth)
 {
-  int res;
+  gboolean res;
 
   user_id = good_user;
   user_pw = good_pw;
-  res = run_test ("http://127.0.0.1:%u%s", http_port, digest_auth_path);
+  res = run_test (FALSE, digest_auth_path, 0);
   GST_DEBUG ("Digest Auth user %s password %s res = %d", user_id, user_pw, res);
   user_id = user_pw = NULL;
-  fail_unless (res == 0);
+  fail_unless (res);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_bad_user_digest_auth)
 {
-  int res;
+  gboolean res;
 
   user_id = bad_user;
   user_pw = good_pw;
-  res = run_test ("http://127.0.0.1:%u%s", http_port, digest_auth_path);
+  res = run_test (FALSE, digest_auth_path, 401);
   GST_DEBUG ("Digest Auth user %s password %s res = %d", user_id, user_pw, res);
   user_id = user_pw = NULL;
-  fail_unless (res == 401);
+  fail_unless (res);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_bad_password_digest_auth)
 {
-  int res;
+  gboolean res;
 
   user_id = good_user;
   user_pw = bad_pw;
-  res = run_test ("http://127.0.0.1:%u%s", http_port, digest_auth_path);
+  res = run_test (FALSE, digest_auth_path, 401);
   GST_DEBUG ("Digest Auth user %s password %s res = %d", user_id, user_pw, res);
   user_id = user_pw = NULL;
-  fail_unless (res == 401);
+  fail_unless (res);
 }
 
 GST_END_TEST;
@@ -424,9 +421,6 @@ GST_START_TEST (test_icy_stream)
 
 GST_END_TEST;
 
-static SoupServer *server;      /* NULL */
-static SoupServer *ssl_server;  /* NULL */
-
 static Suite *
 souphttpsrc_suite (void)
 {
@@ -443,27 +437,19 @@ souphttpsrc_suite (void)
   tc_internet = tcase_create ("internet");
 
   suite_add_tcase (s, tc_chain);
-  if (run_server (&http_port, &https_port)) {
-    atexit (stop_server);
-    tcase_add_test (tc_chain, test_first_buffer_has_offset);
-    tcase_add_test (tc_chain, test_redirect_yes);
-    tcase_add_test (tc_chain, test_redirect_no);
-    tcase_add_test (tc_chain, test_not_found);
-    tcase_add_test (tc_chain, test_forbidden);
-    tcase_add_test (tc_chain, test_cookies);
-    tcase_add_test (tc_chain, test_good_user_basic_auth);
-    tcase_add_test (tc_chain, test_bad_user_basic_auth);
-    tcase_add_test (tc_chain, test_bad_password_basic_auth);
-    tcase_add_test (tc_chain, test_good_user_digest_auth);
-    tcase_add_test (tc_chain, test_bad_user_digest_auth);
-    tcase_add_test (tc_chain, test_bad_password_digest_auth);
-
-    if (ssl_server != NULL)
-      tcase_add_test (tc_chain, test_https);
-  } else {
-    g_print ("Skipping 12 souphttpsrc tests, couldn't start or connect to "
-        "local http server\n");
-  }
+  tcase_add_test (tc_chain, test_first_buffer_has_offset);
+  tcase_add_test (tc_chain, test_redirect_yes);
+  tcase_add_test (tc_chain, test_redirect_no);
+  tcase_add_test (tc_chain, test_not_found);
+  tcase_add_test (tc_chain, test_forbidden);
+  tcase_add_test (tc_chain, test_cookies);
+  tcase_add_test (tc_chain, test_good_user_basic_auth);
+  tcase_add_test (tc_chain, test_bad_user_basic_auth);
+  tcase_add_test (tc_chain, test_bad_password_basic_auth);
+  tcase_add_test (tc_chain, test_good_user_digest_auth);
+  tcase_add_test (tc_chain, test_bad_user_digest_auth);
+  tcase_add_test (tc_chain, test_bad_password_digest_auth);
+  tcase_add_test (tc_chain, test_https);
 
   suite_add_tcase (s, tc_internet);
   tcase_set_timeout (tc_internet, 250);
@@ -577,83 +563,72 @@ get_port_from_server (SoupServer * server)
   return port;
 }
 
-static gboolean
-run_server (guint * http_port, guint * https_port)
+static SoupServer *
+run_server (gboolean use_https)
 {
-  guint port = SOUP_ADDRESS_ANY_PORT;
-  guint ssl_port = SOUP_ADDRESS_ANY_PORT;
-  const char *ssl_cert_file = GST_TEST_FILES_PATH "/test-cert.pem";
-  const char *ssl_key_file = GST_TEST_FILES_PATH "/test-key.pem";
-  static int server_running = 0;
-  GSocketAddress *address;
-  GError *err = NULL;
+  SoupServer *server;
+  SoupServerListenOptions listen_flags;
+  guint port;
 
-  SoupAuthDomain *domain = NULL;
 
-  if (server_running)
-    return TRUE;
-
-  server_running = 1;
-
-  *http_port = *https_port = 0;
-
-  server = soup_server_new (NULL, NULL);
-  if (!server) {
-    GST_DEBUG ("Unable to create server");
-    return FALSE;
-  }
-  soup_server_add_handler (server, NULL, server_callback, NULL, NULL);
-  domain = soup_auth_domain_basic_new (SOUP_AUTH_DOMAIN_REALM, realm,
-      SOUP_AUTH_DOMAIN_BASIC_AUTH_CALLBACK, basic_auth_cb,
-      SOUP_AUTH_DOMAIN_ADD_PATH, basic_auth_path, NULL);
-  soup_server_add_auth_domain (server, domain);
-  g_object_unref (domain);
-  domain = soup_auth_domain_digest_new (SOUP_AUTH_DOMAIN_REALM, realm,
-      SOUP_AUTH_DOMAIN_DIGEST_AUTH_CALLBACK, digest_auth_cb,
-      SOUP_AUTH_DOMAIN_ADD_PATH, digest_auth_path, NULL);
-  soup_server_add_auth_domain (server, domain);
-  g_object_unref (domain);
-
-  address = g_inet_socket_address_new_from_string ("0.0.0.0", port);
-  soup_server_listen (server, address, 0, &err);
-  g_object_unref (address);
-  if (err) {
-    stop_server ();
-    g_clear_error (&err);
-    return FALSE;
-  }
-
-  *http_port = get_port_from_server (server);
-  GST_DEBUG ("HTTP server listening on port %u", *http_port);
-
-  if (ssl_cert_file && ssl_key_file) {
+  if (use_https) {
+    const char *ssl_cert_file = GST_TEST_FILES_PATH "/test-cert.pem";
+    const char *ssl_key_file = GST_TEST_FILES_PATH "/test-key.pem";
     GTlsBackend *backend = g_tls_backend_get_default ();
 
-    if (backend != NULL && g_tls_backend_supports_tls (backend)) {
-      ssl_server = soup_server_new (SOUP_SERVER_SSL_CERT_FILE, ssl_cert_file,
-          SOUP_SERVER_SSL_KEY_FILE, ssl_key_file, NULL);
-    } else {
+    if (backend == NULL || !g_tls_backend_supports_tls (backend)) {
       GST_INFO ("No TLS support");
+      return NULL;
     }
 
-    if (ssl_server) {
-      GST_INFO ("HTTPS server listening on port %u", *https_port);
-      soup_server_add_handler (ssl_server, NULL, server_callback, NULL, NULL);
-      address = g_inet_socket_address_new_from_string ("0.0.0.0", ssl_port);
-      soup_server_listen (ssl_server, address, SOUP_SERVER_LISTEN_HTTPS, &err);
-      g_object_unref (address);
+    server = soup_server_new (SOUP_SERVER_SSL_CERT_FILE, ssl_cert_file,
+        SOUP_SERVER_SSL_KEY_FILE, ssl_key_file, NULL);
+    listen_flags = SOUP_SERVER_LISTEN_HTTPS;
+  } else {
+    server = soup_server_new (NULL, NULL);
+    listen_flags = 0;
+  }
 
-      if (err) {
-        GST_ERROR ("Failed to start HTTPS server: %s", err->message);
-        stop_server ();
-        g_clear_error (&err);
-        return FALSE;
-      }
+  soup_server_add_handler (server, NULL, server_callback, NULL, NULL);
 
-      *https_port = get_port_from_server (ssl_server);
-      GST_DEBUG ("HTTPS server listening on port %u", *https_port);
+  {
+    SoupAuthDomain *domain;
+
+    domain = soup_auth_domain_basic_new (SOUP_AUTH_DOMAIN_REALM, realm,
+        SOUP_AUTH_DOMAIN_BASIC_AUTH_CALLBACK, basic_auth_cb,
+        SOUP_AUTH_DOMAIN_ADD_PATH, basic_auth_path, NULL);
+    soup_server_add_auth_domain (server, domain);
+    g_object_unref (domain);
+
+    domain = soup_auth_domain_digest_new (SOUP_AUTH_DOMAIN_REALM, realm,
+        SOUP_AUTH_DOMAIN_DIGEST_AUTH_CALLBACK, digest_auth_cb,
+        SOUP_AUTH_DOMAIN_ADD_PATH, digest_auth_path, NULL);
+    soup_server_add_auth_domain (server, domain);
+    g_object_unref (domain);
+  }
+
+  {
+    GSocketAddress *address;
+    GError *err = NULL;
+
+    address =
+        g_inet_socket_address_new_from_string ("0.0.0.0",
+        SOUP_ADDRESS_ANY_PORT);
+    soup_server_listen (server, address, listen_flags, &err);
+    g_object_unref (address);
+
+    if (err) {
+      GST_ERROR ("Failed to start %s server: %s",
+          use_https ? "HTTPS" : "HTTP", err->message);
+      g_object_unref (server);
+      g_error_free (err);
+      return NULL;
     }
   }
+
+  port = get_port_from_server (server);
+  GST_DEBUG ("%s server listening on port %u", use_https ? "HTTPS" : "HTTP",
+      port);
 
   /* check if we can connect to our local http server */
   {
@@ -662,48 +637,18 @@ run_server (guint * http_port, guint * https_port)
 
     client = g_socket_client_new ();
     g_socket_client_set_timeout (client, 2);
-    conn = g_socket_client_connect_to_host (client, "127.0.0.1", *http_port,
-        NULL, NULL);
+    conn =
+        g_socket_client_connect_to_host (client, "127.0.0.1", port, NULL, NULL);
     if (conn == NULL) {
-      GST_INFO ("Couldn't connect to http server 127.0.0.1:%u", *http_port);
+      GST_INFO ("Couldn't connect to 127.0.0.1:%u", port);
       g_object_unref (client);
-      stop_server ();
-      return FALSE;
+      g_object_unref (server);
+      return NULL;
     }
+
     g_object_unref (conn);
-
-    if (ssl_server == NULL)
-      goto skip_https_check;
-
-    conn = g_socket_client_connect_to_host (client, "127.0.0.1", *https_port,
-        NULL, NULL);
-    if (conn == NULL) {
-      GST_INFO ("Couldn't connect to https server 127.0.0.1:%u", *https_port);
-      g_object_unref (client);
-      stop_server ();
-      return FALSE;
-    }
-    g_object_unref (conn);
-
-  skip_https_check:
-
     g_object_unref (client);
   }
 
-  return TRUE;
-}
-
-static void
-stop_server (void)
-{
-  GST_INFO ("cleaning up");
-
-  if (server) {
-    g_object_unref (server);
-    server = NULL;
-  }
-  if (ssl_server) {
-    g_object_unref (ssl_server);
-    ssl_server = NULL;
-  }
+  return server;
 }
