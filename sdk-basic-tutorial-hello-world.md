@@ -135,6 +135,7 @@ expect much feedback.
 ``` c
     /* Start playing */
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
+```
 
 This line highlights another interesting concept: the state. Every
 GStreamer element has an associated state, which you can more or less
