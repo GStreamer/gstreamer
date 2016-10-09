@@ -37,6 +37,9 @@
 
 #include <linux/dvb/frontend.h>
 
+GST_DEBUG_CATEGORY_EXTERN (dvb_base_bin_debug);
+#define GST_CAT_DEFAULT dvb_base_bin_debug
+
 typedef enum
 {
   CHANNEL_CONF_FORMAT_NONE,
@@ -44,24 +47,110 @@ typedef enum
   CHANNEL_CONF_FORMAT_ZAP
 } GstDvbChannelConfFormat;
 
+typedef gboolean (*GstDvbV5ChannelsConfPropSetFunction) (GstElement *
+    dvbbasebin, const gchar * property, GKeyFile * kf,
+    const gchar * channel_name, const gchar * key);
+
+typedef struct
+{
+  const gchar *conf_property;
+  const gchar *elem_property;
+  GstDvbV5ChannelsConfPropSetFunction set_func;
+} GstDvbV5ChannelsConfToPropertyMap;
+
 static gboolean parse_and_configure_from_v5_conf_file (GstElement * dvbbasebin,
     const gchar * filename, const gchar * channel_name, GError ** error);
 static gboolean parse_and_configure_from_zap_conf_file (GstElement * dvbbasebin,
     const gchar * filename, const gchar * channel_name, GError ** error);
 static GstDvbChannelConfFormat detect_file_format (const gchar * filename);
 
+static gboolean gst_dvb_base_bin_conf_set_string (GstElement * dvbbasebin,
+    const gchar * property, GKeyFile * kf, const gchar * channel_name,
+    const gchar * key);
+static gboolean gst_dvb_base_bin_conf_set_uint (GstElement * dvbbasebin,
+    const gchar * property, GKeyFile * kf, const gchar * channel_name,
+    const gchar * key);
+static gboolean gst_dvb_base_bin_conf_set_int (GstElement * dvbbasebin,
+    const gchar * property, GKeyFile * kf, const gchar * channel_name,
+    const gchar * key);
+static gboolean gst_dvb_base_bin_conf_set_inversion (GstElement * dvbbasebin,
+    const gchar * property, GKeyFile * kf, const gchar * channel_name,
+    const gchar * key);
+static gboolean gst_dvb_base_bin_conf_set_guard (GstElement * dvbbasebin,
+    const gchar * property, GKeyFile * kf, const gchar * channel_name,
+    const gchar * key);
+static gboolean gst_dvb_base_bin_conf_set_trans_mode (GstElement * dvbbasebin,
+    const gchar * property, GKeyFile * kf, const gchar * channel_name,
+    const gchar * key);
+static gboolean gst_dvb_base_bin_conf_set_code_rate (GstElement * dvbbasebin,
+    const gchar * property, GKeyFile * kf, const gchar * channel_name,
+    const gchar * key);
+static gboolean gst_dvb_base_bin_conf_set_delsys (GstElement * dvbbasebin,
+    const gchar * property, GKeyFile * kf, const gchar * channel_name,
+    const gchar * key);
+static gboolean gst_dvb_base_bin_conf_set_hierarchy (GstElement * dvbbasebin,
+    const gchar * property, GKeyFile * kf, const gchar * channel_name,
+    const gchar * key);
+static gboolean gst_dvb_base_bin_conf_set_modulation (GstElement * dvbbasebin,
+    const gchar * property, GKeyFile * kf, const gchar * channel_name,
+    const gchar * key);
+static GHashTable *parse_channels_conf_from_file (GstElement * dvbbasebin,
+    const gchar * filename, GError ** error);
+static gboolean remove_channel_from_hash (gpointer key, gpointer value,
+    gpointer user_data);
+static void destroy_channels_hash (GHashTable * channels);
 
-GST_DEBUG_CATEGORY_EXTERN (dvb_base_bin_debug);
-#define GST_CAT_DEFAULT dvb_base_bin_debug
+GstDvbV5ChannelsConfToPropertyMap dvbv5_prop_map[] = {
+  {"SERVICE_ID", "program-numbers", gst_dvb_base_bin_conf_set_string},
+  {"FREQUENCY", "frequency", gst_dvb_base_bin_conf_set_uint},
+  {"BANDWIDTH_HZ", "bandwidth-hz", gst_dvb_base_bin_conf_set_uint},
+  {"INVERSION", "inversion", gst_dvb_base_bin_conf_set_inversion},
+  {"GUARD_INTERVAL", "guard", gst_dvb_base_bin_conf_set_guard},
+  {"TRANSMISSION_MODE", "trans-mode", gst_dvb_base_bin_conf_set_trans_mode},
+  {"HIERARCHY", "hierarchy", gst_dvb_base_bin_conf_set_hierarchy},
+  {"MODULATION", "modulation", gst_dvb_base_bin_conf_set_modulation},
+  {"CODE_RATE_HP", "code-rate-hp", gst_dvb_base_bin_conf_set_code_rate},
+  {"CODE_RATE_LP", "code-rate-lp", gst_dvb_base_bin_conf_set_code_rate},
+  {"ISDBT_LAYER_ENABLED", "isdbt-layer-enabled",
+      gst_dvb_base_bin_conf_set_uint},
+  {"ISDBT_PARTIAL_RECEPTION", "isdbt-partial-reception",
+      gst_dvb_base_bin_conf_set_int},
+  {"ISDBT_SOUND_BROADCASTING", "isdbt-sound-broadcasting",
+      gst_dvb_base_bin_conf_set_int},
+  {"ISDBT_SB_SUBCHANNEL_ID", "isdbt-sb-subchannel-id",
+      gst_dvb_base_bin_conf_set_int},
+  {"ISDBT_SB_SEGMENT_IDX", "isdbt-sb-segment-idx",
+      gst_dvb_base_bin_conf_set_int},
+  {"ISDBT_SB_SEGMENT_COUNT", "isdbt-sb-segment-count", gst_dvb_base_bin_conf_set_int},  /* Range in files start from 0, property starts from 1 */
+  {"ISDBT_LAYERA_FEC", "isdbt-layera-fec", gst_dvb_base_bin_conf_set_code_rate},
+  {"ISDBT_LAYERA_MODULATION", "isdbt-layera-modulation",
+      gst_dvb_base_bin_conf_set_modulation},
+  {"ISDBT_LAYERA_SEGMENT_COUNT", "isdbt-layera-segment-count",
+      gst_dvb_base_bin_conf_set_int},
+  {"ISDBT_LAYERA_TIME_INTERLEAVING", "isdbt-layera-time-interleaving",
+      gst_dvb_base_bin_conf_set_int},
+  {"ISDBT_LAYERB_FEC", "isdbt-layerb-fec", gst_dvb_base_bin_conf_set_code_rate},
+  {"ISDBT_LAYERB_MODULATION", "isdbt-layerb-modulation",
+      gst_dvb_base_bin_conf_set_modulation},
+  {"ISDBT_LAYERB_SEGMENT_COUNT", "isdbt-layerb-segment-count",
+      gst_dvb_base_bin_conf_set_int},
+  {"ISDBT_LAYERB_TIME_INTERLEAVING", "isdbt-layerb-time-interleaving",
+      gst_dvb_base_bin_conf_set_int},
+  {"ISDBT_LAYERC_FEC", "isdbt-layerc-fec", gst_dvb_base_bin_conf_set_code_rate},
+  {"ISDBT_LAYERC_MODULATION", "isdbt-layerc-modulation",
+      gst_dvb_base_bin_conf_set_modulation},
+  {"ISDBT_LAYERC_SEGMENT_COUNT", "isdbt-layerc-segment-count",
+      gst_dvb_base_bin_conf_set_int},
+  {"ISDBT_LAYERC_TIME_INTERLEAVING", "isdbt-layerc-time-interleaving",
+      gst_dvb_base_bin_conf_set_int},
+  {"DELIVERY_SYSTEM", "delsys", gst_dvb_base_bin_conf_set_delsys},
+  {NULL,}
+};
 
 /* TODO:
  * Store the channels hash table around instead of constantly parsing it
  * Detect when the file changed on disk
  */
-
-typedef gboolean (*GstDvbV5ChannelsConfPropSetFunction) (GstElement *
-    dvbbasebin, const gchar * property, GKeyFile * kf,
-    const gchar * channel_name, const gchar * key);
 
 static gint
 gst_dvb_base_bin_find_string_in_array (const gchar ** array, const gchar * str)
@@ -261,60 +350,6 @@ gst_dvb_base_bin_conf_set_modulation (GstElement * dvbbasebin,
   return gst_dvb_base_bin_conf_set_property_from_string_array (dvbbasebin,
       property, kf, channel_name, key, modulations, 6);
 }
-
-typedef struct
-{
-  const gchar *conf_property;
-  const gchar *elem_property;
-  GstDvbV5ChannelsConfPropSetFunction set_func;
-} GstDvbV5ChannelsConfToPropertyMap;
-
-GstDvbV5ChannelsConfToPropertyMap dvbv5_prop_map[] = {
-  {"SERVICE_ID", "program-numbers", gst_dvb_base_bin_conf_set_string},
-  {"FREQUENCY", "frequency", gst_dvb_base_bin_conf_set_uint},
-  {"BANDWIDTH_HZ", "bandwidth-hz", gst_dvb_base_bin_conf_set_uint},
-  {"INVERSION", "inversion", gst_dvb_base_bin_conf_set_inversion},
-  {"GUARD_INTERVAL", "guard", gst_dvb_base_bin_conf_set_guard},
-  {"TRANSMISSION_MODE", "trans-mode", gst_dvb_base_bin_conf_set_trans_mode},
-  {"HIERARCHY", "hierarchy", gst_dvb_base_bin_conf_set_hierarchy},
-  {"MODULATION", "modulation", gst_dvb_base_bin_conf_set_modulation},
-  {"CODE_RATE_HP", "code-rate-hp", gst_dvb_base_bin_conf_set_code_rate},
-  {"CODE_RATE_LP", "code-rate-lp", gst_dvb_base_bin_conf_set_code_rate},
-  {"ISDBT_LAYER_ENABLED", "isdbt-layer-enabled",
-      gst_dvb_base_bin_conf_set_uint},
-  {"ISDBT_PARTIAL_RECEPTION", "isdbt-partial-reception",
-      gst_dvb_base_bin_conf_set_int},
-  {"ISDBT_SOUND_BROADCASTING", "isdbt-sound-broadcasting",
-      gst_dvb_base_bin_conf_set_int},
-  {"ISDBT_SB_SUBCHANNEL_ID", "isdbt-sb-subchannel-id",
-      gst_dvb_base_bin_conf_set_int},
-  {"ISDBT_SB_SEGMENT_IDX", "isdbt-sb-segment-idx",
-      gst_dvb_base_bin_conf_set_int},
-  {"ISDBT_SB_SEGMENT_COUNT", "isdbt-sb-segment-count", gst_dvb_base_bin_conf_set_int},  /* Range in files start from 0, property starts from 1 */
-  {"ISDBT_LAYERA_FEC", "isdbt-layera-fec", gst_dvb_base_bin_conf_set_code_rate},
-  {"ISDBT_LAYERA_MODULATION", "isdbt-layera-modulation",
-      gst_dvb_base_bin_conf_set_modulation},
-  {"ISDBT_LAYERA_SEGMENT_COUNT", "isdbt-layera-segment-count",
-      gst_dvb_base_bin_conf_set_int},
-  {"ISDBT_LAYERA_TIME_INTERLEAVING", "isdbt-layera-time-interleaving",
-      gst_dvb_base_bin_conf_set_int},
-  {"ISDBT_LAYERB_FEC", "isdbt-layerb-fec", gst_dvb_base_bin_conf_set_code_rate},
-  {"ISDBT_LAYERB_MODULATION", "isdbt-layerb-modulation",
-      gst_dvb_base_bin_conf_set_modulation},
-  {"ISDBT_LAYERB_SEGMENT_COUNT", "isdbt-layerb-segment-count",
-      gst_dvb_base_bin_conf_set_int},
-  {"ISDBT_LAYERB_TIME_INTERLEAVING", "isdbt-layerb-time-interleaving",
-      gst_dvb_base_bin_conf_set_int},
-  {"ISDBT_LAYERC_FEC", "isdbt-layerc-fec", gst_dvb_base_bin_conf_set_code_rate},
-  {"ISDBT_LAYERC_MODULATION", "isdbt-layerc-modulation",
-      gst_dvb_base_bin_conf_set_modulation},
-  {"ISDBT_LAYERC_SEGMENT_COUNT", "isdbt-layerc-segment-count",
-      gst_dvb_base_bin_conf_set_int},
-  {"ISDBT_LAYERC_TIME_INTERLEAVING", "isdbt-layerc-time-interleaving",
-      gst_dvb_base_bin_conf_set_int},
-  {"DELIVERY_SYSTEM", "delsys", gst_dvb_base_bin_conf_set_delsys},
-  {NULL,}
-};
 
 static gboolean
 parse_and_configure_from_v5_conf_file (GstElement * dvbbasebin,
