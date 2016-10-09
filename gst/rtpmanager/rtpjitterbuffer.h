@@ -168,8 +168,7 @@ void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf)
 
 gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf,
                                                           RTPJitterBufferItem *item,
-                                                          gboolean *head, gint *percent,
-                                                          GstClockTime base_time);
+                                                          gboolean *head, gint *percent);
 
 void                  rtp_jitter_buffer_disable_buffering (RTPJitterBuffer *jbuf, gboolean disabled);
 
@@ -189,5 +188,8 @@ guint32               rtp_jitter_buffer_get_ts_diff      (RTPJitterBuffer *jbuf)
 void                  rtp_jitter_buffer_get_sync         (RTPJitterBuffer *jbuf, guint64 *rtptime,
                                                           guint64 *timestamp, guint32 *clock_rate,
                                                           guint64 *last_rtptime);
+
+GstClockTime          rtp_jitter_buffer_calculate_pts    (RTPJitterBuffer * jbuf, GstClockTime dts,
+                                                          guint32 rtptime, GstClockTime base_time);
 
 #endif /* __RTP_JITTER_BUFFER_H__ */
