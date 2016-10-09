@@ -25,7 +25,7 @@ in the SDK installation).
 
 **basic-tutorial-1.c**
 
-{{ examples/basic-tutorial-1.c }}
+{{ tutorials/basic-tutorial-1.c }}
 
 Compile it as described in [Installing on Linux], [Installing on Mac OS
 X] or [Installing on Windows]. If you get compilation errors,
