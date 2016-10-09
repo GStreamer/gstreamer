@@ -9,7 +9,7 @@
     "pkg_config_packages": [
         "gstreamer-1.0"
     ], 
-    "project_name": "gstdotcom", 
+    "project_name": "GStreamer Documentation",
     "sitemap": "sitemap.txt", 
     "syntax_highlighting_activate": true
 }
