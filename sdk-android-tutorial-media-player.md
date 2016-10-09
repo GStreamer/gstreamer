@@ -1,6 +1,6 @@
 # Android tutorial 4: A basic media player
 
-### Goal
+## Goal
 
 ![screenshot]
 
@@ -19,7 +19,7 @@ It also uses the knowledge gathered in the [](sdk-basic-tutorials.md) regarding:
   - How to use `playbin` to play any kind of media
   - How to handle network resilience problems
 
-### Introduction
+## Introduction
 
 From the previous tutorials, we already have almost all necessary pieces
 to build a media player. The most complex part is assembling a pipeline
@@ -41,7 +41,7 @@ the video sink is not forced to draw black borders around the clip.
 media content. You can still force the video surface to have a specific
 size if you really want to.
 
-### A basic media player \[Java code\]
+## A basic media player \[Java code\]
 
 **src/com/gst\_sdk\_tutorials/tutorial\_4/Tutorial4.java**
 
@@ -298,7 +298,7 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSee
 }
 ```
 
-#### Supporting arbitrary media URIs
+### Supporting arbitrary media URIs
 
 The C code provides the `nativeSetUri()` method so we can indicate the
 URI of the media to play. Since `playbin` will be taking care of
@@ -319,7 +319,7 @@ private void setMediaUri() {
 We call `setMediaUri()` in the `onGStreamerInitialized()` callback, once
 the pipeline is ready to accept commands.
 
-#### Reporting media size
+### Reporting media size
 
 Every time the size of the media changes (which could happen mid-stream,
 for some kind of streams), or when it is first detected, C code calls
@@ -349,7 +349,7 @@ the UI must be called from the main thread, and we are now in a
 callback from some GStreamer internal thread. Hence, the usage of
 [runOnUiThread()](http://developer.android.com/reference/android/app/Activity.html#runOnUiThread\(java.lang.Runnable\)).
 
-#### Refreshing the Seek Bar
+### Refreshing the Seek Bar
 
 [](sdk-basic-tutorial-toolkit-integration.md)
 has already shown how to implement a [Seek
@@ -404,7 +404,7 @@ private void updateTimeWidget () {
 }
 ```
 
-#### Seeking with the Seek Bar
+### Seeking with the Seek Bar
 
 To perform the second function of the [Seek
 Bar](http://developer.android.com/reference/android/widget/SeekBar.html) (allowing
@@ -479,7 +479,7 @@ desired playing state.
 This concludes the User interface part of this tutorial. Let’s review
 now the under-the-hood C code that allows this to work.
 
-### A basic media player \[C code\]
+## A basic media player \[C code\]
 
 **jni/tutorial-4.c**
 
@@ -1054,7 +1054,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 }
 ```
 
-#### Supporting arbitrary media URIs
+### Supporting arbitrary media URIs
 
 Java code will call `gst_native_set_uri()` whenever it wants to change
 the playing URI (in this tutorial the URI never changes, but it could):
@@ -1100,7 +1100,7 @@ not. Live sources must not use buffering (otherwise latency is
 introduced which is inacceptable for them), so we keep track of this
 information in the `is_live` variable.
 
-#### Reporting media size
+### Reporting media size
 
 Some codecs allow the media size (width and height of the video) to
 change during playback. For simplicity, this tutorial assumes that they
@@ -1152,7 +1152,7 @@ The helper functions `gst_video_format_parse_caps()` and
 manageable integers, which we pass to Java through
 its `onMediaSizeChanged()` callback.
 
-#### Refreshing the Seek Bar
+### Refreshing the Seek Bar
 
 To keep the UI updated, a GLib timer is installed in the
 `app_function()` that fires 4 times per second (or every 250ms), right
@@ -1201,7 +1201,7 @@ Bear in mind that all time-related measures returned by GStreamer are in
 nanoseconds, whereas, for simplicity, we decided to make the UI code
 work in milliseconds. 
 
-#### Seeking with the Seek Bar
+### Seeking with the Seek Bar
 
 The Java UI code already takes care of most of the complexity of seeking
 by dragging the thumb of the Seek Bar. From C code, we just need to
@@ -1215,7 +1215,7 @@ Bar can generate a very high number of seek requests in a short period
 of time, which is visually useless and will impair responsiveness. Let’s
 see how to overcome these problems.
 
-##### Delayed seeks
+#### Delayed seeks
 
 In
 `gst_native_set_position()`:
@@ -1255,7 +1255,7 @@ Once the pipeline moves from the READY to the PAUSED state, we check if
 there is a pending seek operation and execute it. The
 `desired_position` variable is reset inside `execute_seek()`.
 
-##### Seek throttling
+#### Seek throttling
 
 A seek is potentially a lengthy operation. The demuxer (the element
 typically in charge of seeking) needs to estimate the appropriate byte
@@ -1331,7 +1331,7 @@ The one-shot timer calls `delayed_seek_cb()`, which simply calls
 >
 > This is not a complete solution: the scheduled seek will still be executed, even though a more-recent seek has already been executed that should have cancelled it. However, it is a good tradeoff between functionality and simplicity.
 
-#### Network resilience
+### Network resilience
 
 [](sdk-basic-tutorial-streaming.md) has already
 shown how to adapt to the variable nature of the network bandwidth by
@@ -1373,7 +1373,7 @@ pipeline, which might be different to the current state, because
 buffering forces us to go to PAUSED. Once buffering is complete we set
 the pipeline to the `target_state`.
 
-### A basic media player \[Android.mk\]
+## A basic media player \[Android.mk\]
 
 The only line worth mentioning in the makefile
 is `GSTREAMER_PLUGINS`:
@@ -1388,7 +1388,7 @@ In which all plugins required for playback are loaded, because it is not
 known at build time what would be needed for an unspecified URI (again,
 in this tutorial the URI does not change, but it will in the next one).
 
-### Conclusion
+## Conclusion
 
 This tutorial has shown how to embed a `playbin` pipeline into an
 Android application. This, effectively, turns such application into a

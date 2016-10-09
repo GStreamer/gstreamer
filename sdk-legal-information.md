@@ -104,11 +104,11 @@ and on an aggregate basis only.
 
 ## Frequently Asked Questions
 
-##### What licenses are there?
+#### What licenses are there?
 
 GStreamer binaries containst software under various licenses. See above.
 
-##### How does this relate to the packaging system?
+#### How does this relate to the packaging system?
 
 The packaging is only a more convenient way to install software and
 decide what's good for you. GStreamer is meant to be modular, making use
@@ -128,7 +128,7 @@ reference, but we cannot guarantee that our selection is 100% correct,
 so it is up to the user to verify the actual licensing conditions before
 distributing works that utilize GStreamer.
 
-##### Can I / must I distribute GStreamer along with my application?
+#### Can I / must I distribute GStreamer along with my application?
 
 You surely can. All software is Free/Open Source software, and can be
 distributed freely. You are not **required** to distribute it. Only,
@@ -142,7 +142,7 @@ entire source code, you might want to include it (or the directories
 containing the source code) with your application as a safe way to
 comply with this requirement of the license.
 
-##### What happens when I modify the GStreamer's source code?
+#### What happens when I modify the GStreamer's source code?
 
 You are invited to do so, as the licenses (unless you are dealing with
 proprietary bits, but in that case you will not find the corresponding
@@ -157,7 +157,7 @@ to fork the code, if at all possible.  he Cerbero build system has a
 containing all of the complete corresponding machine readable source
 code that you are required to provide.
 
-##### How does licensing relate to software patents? What about software patents in general?
+#### How does licensing relate to software patents? What about software patents in general?
 
 This is a tricky question. We believe software patents should not exist,
 so that by distributing and using software on a general purpose machine
@@ -185,7 +185,7 @@ This is why GStreamer has taken a modular approach, so that you can use
 a Free plugins or a proprietary, patent royalty bearing, plugin for a
 given standard.
 
-##### What about static vs. dynamic linking and copyleft?
+#### What about static vs. dynamic linking and copyleft?
 
 We cannot provide one single answer to that question. Since copyright in
 software works as copyright in literature, static linking means
