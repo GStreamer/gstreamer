@@ -6,6 +6,40 @@ index.md
 	        sdk-installing-on-windows.md
 		sdk-installing-on-linux.md
 	        sdk-building-from-source-using-cerbero.md
+	manual-index.md
+		manual-introduction.md
+			manual-gstreamer.md
+			manual-motivation.md
+			manual-intro-basics.md
+		manual-building.md
+			manual-init.md
+			manual-elements.md
+			manual-bins.md
+			manual-bus.md
+			manual-pads.md
+			manual-data.md
+			manual-helloworld.md
+		manual-advanced.md
+			manual-queryevents.md
+			manual-metadata.md
+			manual-interfaces.md
+			manual-clocks.md
+			manual-buffering.md
+			manual-dparams.md
+			manual-threads.md
+			manual-autoplugging.md
+			manual-dataaccess.md
+		manual-highlevel.md
+			manual-playback-components.md
+		manual-appendices.md
+			manual-programs.md
+			manual-compiling.md
+			manual-checklist-element.md
+			manual-porting.md
+			manual-porting-1.0.md
+			manual-integration.md
+			manual-licensing.md
+			manual-quotes.md
         sdk-tutorials.md
 		sdk-basic-tutorials.md
 			sdk-basic-tutorial-hello-world.md
@@ -54,40 +88,6 @@ index.md
 		gst-inspect.md
 		gst-launch.md
 		ges-launch.md
-	manual-index.md
-		manual-introduction.md
-			manual-gstreamer.md
-			manual-motivation.md
-			manual-intro-basics.md
-		manual-building.md
-			manual-init.md
-			manual-elements.md
-			manual-bins.md
-			manual-bus.md
-			manual-pads.md
-			manual-data.md
-			manual-helloworld.md
-		manual-advanced.md
-			manual-queryevents.md
-			manual-metadata.md
-			manual-interfaces.md
-			manual-clocks.md
-			manual-buffering.md
-			manual-dparams.md
-			manual-threads.md
-			manual-autoplugging.md
-			manual-dataaccess.md
-		manual-highlevel.md
-			manual-playback-components.md
-		manual-appendices.md
-			manual-programs.md
-			manual-compiling.md
-			manual-checklist-element.md
-			manual-porting.md
-			manual-porting-1.0.md
-			manual-integration.md
-			manual-licensing.md
-			manual-quotes.md
 	pwg-index.md
 		pwg-introduction.md
 			pwg-intro-preface.md
