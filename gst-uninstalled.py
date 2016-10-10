@@ -128,6 +128,6 @@ if __name__ == "__main__":
             args.append("--noprofile")
 
     try:
-        exit(subprocess.run(args, env=get_subprocess_env(options)).returncode)
+        exit(subprocess.call(args, env=get_subprocess_env(options)))
     except subprocess.CalledProcessError as e:
         exit(e.returncode)
