@@ -599,7 +599,14 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
           mediasequence = val;
           have_mediasequence = TRUE;
         }
-      } else if (g_str_has_prefix (data_ext_x, "DISCONTINUITY")) {
+      } else if (g_str_has_prefix (data_ext_x, "DISCONTINUITY-SEQUENCE:")) {
+        if (int_from_string (data + 30, &data, &val)
+            && val != self->discont_sequence) {
+          self->discont_sequence = val;
+          discontinuity = TRUE;
+        }
+      } else if (g_str_has_prefix (data_ext_x, "DISCONTINUITY:")) {
+        self->discont_sequence++;
         discontinuity = TRUE;
       } else if (g_str_has_prefix (data_ext_x, "PROGRAM-DATE-TIME:")) {
         /* <YYYY-MM-DDThh:mm:ssZ> */
