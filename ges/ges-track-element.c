@@ -815,6 +815,8 @@ ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
   object->priv->track = track;
 
   if (object->priv->track) {
+    ges_track_element_set_track_type (object, track->type);
+
     g_object_set (object->priv->nleobject,
         "caps", ges_track_get_caps (object->priv->track), NULL);
   }

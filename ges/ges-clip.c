@@ -1623,7 +1623,7 @@ ges_clip_find_track_elements (GESClip * clip, GESTrack * track,
     tmptrack = ges_track_element_get_track (otmp);
     if (((track != NULL && tmptrack == track)) ||
         (track_type != GES_TRACK_TYPE_UNKNOWN
-            && tmptrack->type == track_type)) {
+            && ges_track_element_get_track_type (otmp) == track_type)) {
 
       foundElement = GES_TRACK_ELEMENT (tmp->data);
 
