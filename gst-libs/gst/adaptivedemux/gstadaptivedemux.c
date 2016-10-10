@@ -2370,7 +2370,7 @@ _uri_handler_probe (GstPad * pad, GstPadProbeInfo * info,
     }
     stream->fragment_bytes_downloaded += gst_buffer_get_size (buf);
     GST_LOG_OBJECT (pad,
-        "Received buffer, size %" G_GUINT64_FORMAT " total %" G_GUINT64_FORMAT,
+        "Received buffer, size %" G_GSIZE_FORMAT " total %" G_GUINT64_FORMAT,
         gst_buffer_get_size (buf), stream->fragment_bytes_downloaded);
   } else if (GST_PAD_PROBE_INFO_TYPE (info) &
       GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) {
