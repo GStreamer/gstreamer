@@ -640,6 +640,22 @@ class Window (object):
         self.pop_view_state()
         self.actions.show_hidden_lines.props.sensitive = True
 
+    def get_range(self):
+
+        view = self.log_view
+        model = view.get_model()
+        visible_range = view.get_visible_range()
+        if visible_range is None:
+            return None
+        start_path, end_path = visible_range
+        if not start_path or not end_path:
+            return None
+        ts1 = model.get_value(model.get_iter(start_path),
+                              model.COL_TIME)
+        ts2 = model.get_value(model.get_iter(end_path),
+                              model.COL_TIME)
+        return (ts1, ts2)
+
     @action
     def handle_show_hidden_lines_action_activate(self, action):
 

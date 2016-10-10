@@ -975,19 +975,10 @@ class AttachedWindow (object):
 
     def update_timeline_position(self):
 
-        view = self.window.log_view
-        model = view.get_model()
-        visible_range = view.get_visible_range()
+        visible_range = self.window.get_range()
         if visible_range is None:
             return
-        start_path, end_path = visible_range
-        if not start_path or not end_path:
-            return
-        ts1 = model.get_value(model.get_iter(start_path),
-                              model.COL_TIME)
-        ts2 = model.get_value(model.get_iter(end_path),
-                              model.COL_TIME)
-
+        ts1, ts2 = visible_range
         self.timeline.update_position(ts1, ts2)
 
     def handle_show_action_toggled(self, action):
