@@ -104,9 +104,7 @@
 
 #include "gstplay-enum.h"
 #include "gstplayback.h"
-
-/* Also used by gsturidecodebin.c */
-gint _parse_bin_compare_factories_func (gconstpointer p1, gconstpointer p2);
+#include "gstplaybackutils.h"
 
 /* generic templates */
 static GstStaticPadTemplate decoder_bin_sink_template =
@@ -877,34 +875,6 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
   g_type_class_ref (GST_TYPE_PARSE_PAD);
 }
 
-gint
-_parse_bin_compare_factories_func (gconstpointer p1, gconstpointer p2)
-{
-  GstPluginFeature *f1, *f2;
-  gboolean is_parser1, is_parser2;
-
-  f1 = (GstPluginFeature *) p1;
-  f2 = (GstPluginFeature *) p2;
-
-  is_parser1 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f1),
-      GST_ELEMENT_FACTORY_TYPE_PARSER);
-  is_parser2 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f2),
-      GST_ELEMENT_FACTORY_TYPE_PARSER);
-
-
-  /* We want all parsers first as we always want to plug parsers
-   * before decoders */
-  if (is_parser1 && !is_parser2)
-    return -1;
-  else if (!is_parser1 && is_parser2)
-    return 1;
-
-  /* And if it's a both a parser we first sort by rank
-   * and then by factory name */
-  return gst_plugin_feature_rank_compare_func (p1, p2);
-}
-
-/* Must be called with factories lock! */
 static void
 gst_parse_bin_update_factories_list (GstParseBin * parsebin)
 {
@@ -918,7 +888,8 @@ gst_parse_bin_update_factories_list (GstParseBin * parsebin)
         gst_element_factory_list_get_elements
         (GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
     parsebin->factories =
-        g_list_sort (parsebin->factories, _parse_bin_compare_factories_func);
+        g_list_sort (parsebin->factories,
+        gst_playback_utils_compare_factories_func);
     parsebin->factories_cookie = cookie;
   }
 }
