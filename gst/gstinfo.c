@@ -2398,71 +2398,6 @@ gst_info_strdup_printf (const gchar * format, ...)
   return ret;
 }
 
-#ifdef GST_ENABLE_FUNC_INSTRUMENTATION
-/* FIXME make this thread specific */
-static GSList *stack_trace = NULL;
-
-void
-__cyg_profile_func_enter (void *this_fn, void *call_site)
-    G_GNUC_NO_INSTRUMENT;
-     void __cyg_profile_func_enter (void *this_fn, void *call_site)
-{
-  gchar *name = _gst_debug_nameof_funcptr (this_fn);
-  gchar *site = _gst_debug_nameof_funcptr (call_site);
-
-  GST_CAT_DEBUG (GST_CAT_CALL_TRACE, "entering function %s from %s", name,
-      site);
-  stack_trace =
-      g_slist_prepend (stack_trace, g_strdup_printf ("%8p in %s from %p (%s)",
-          this_fn, name, call_site, site));
-
-  g_free (name);
-  g_free (site);
-}
-
-void
-__cyg_profile_func_exit (void *this_fn, void *call_site)
-    G_GNUC_NO_INSTRUMENT;
-     void __cyg_profile_func_exit (void *this_fn, void *call_site)
-{
-  gchar *name = _gst_debug_nameof_funcptr (this_fn);
-
-  GST_CAT_DEBUG (GST_CAT_CALL_TRACE, "leaving function %s", name);
-  g_free (stack_trace->data);
-  stack_trace = g_slist_delete_link (stack_trace, stack_trace);
-
-  g_free (name);
-}
-
-/**
- * gst_debug_get_stack_trace:
- *
- * If GST_ENABLE_FUNC_INSTRUMENTATION is defined or libunwind or
- * glibc backtrace are present, a stack trace is return.
- */
-gchar *
-gst_debug_get_stack_trace (void)
-{
-  GSList *walk = stack_trace;
-  GString *trace = g_string_new (NULL);
-  gint count = 0;
-
-  if (walk)
-    walk = g_slist_next (walk);
-
-  while (walk) {
-    gchar *name = (gchar *) walk->data;
-
-    g_string_append (trace, "#%-2d %s\n", count++, name);
-
-    walk = g_slist_next (walk);
-  }
-
-  return g_string_free (trace, FALSE);
-}
-
-#else
-
 #ifdef HAVE_UNWIND
 #ifdef HAVE_DW
 static gboolean
@@ -2494,7 +2429,7 @@ append_debug_info (GString * trace, const void *ip)
   module = dwfl_addrmodule (dwfl, addr);
   function_name = dwfl_module_addrname (module, addr);
 
-  g_string_append_printf (trace, "%s(", function_name ? function_name : "??");
+  g_string_append_printf (trace, "%s (", function_name ? function_name : "??");
 
   line = dwfl_getsrc (dwfl, addr);
   if (line != NULL) {
@@ -2577,6 +2512,12 @@ generate_backtrace_trace (void)
 }
 #endif /* HAVE_BACKTRACE */
 
+/**
+ * gst_debug_get_stack_trace:
+ *
+ * If libunwind or glibc backtrace are present, a stack trace
+ * is returned.
+ */
 gchar *
 gst_debug_get_stack_trace (void)
 {
@@ -2594,13 +2535,12 @@ gst_debug_get_stack_trace (void)
 
   return trace;
 }
-#endif /* GST_ENABLE_FUNC_INSTRUMENTATION */
 
 /**
  * gst_debug_print_stack_trace:
  *
- * If GST_ENABLE_FUNC_INSTRUMENTATION is defined or libunwind or
- * glibc backtrace are present, a stack trace is printed.
+ * If libunwind or glibc backtrace are present
+ * a stack trace is printed.
  */
 void
 gst_debug_print_stack_trace (void)
