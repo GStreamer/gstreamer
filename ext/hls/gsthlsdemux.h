@@ -83,7 +83,7 @@ struct _GstHLSTSReader
 
 struct _GstHLSDemuxStream
 {
-  GstAdaptiveDemux adaptive_demux_stream;
+  GstAdaptiveDemuxStream adaptive_demux_stream;
 
   GstHLSTSReaderType stream_type;
 
