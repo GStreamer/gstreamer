@@ -65,6 +65,7 @@ def get_subprocess_env(options):
         "%s/subprojects/gst-editing-services/tests/validate" % SCRIPTDIR)
     prepend_env_var(env, "PATH", os.path.normpath(
         "%s/subprojects/gst-devtools/validate/tools" % options.builddir))
+    prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'meson'))
     env["PATH"] += os.pathsep + PATH
     env["GST_VERSION"] = options.gst_version
     env["GST_PLUGIN_SYSTEM_PATH"] = ""

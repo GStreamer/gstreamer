@@ -1,0 +1,3 @@
+[submodule "meson"]
+	path = meson
+	url = https://github.com/mesonbuild/meson.git

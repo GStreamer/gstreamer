@@ -7,26 +7,22 @@ import sys
 import shutil
 import subprocess
 
+from common import git
+from common import Colors
+
 
 PROJECTNAME = "GStreamer 'all'"
 
 ROOTDIR = os.path.abspath(os.path.dirname(__file__))
-MAKEFILE_TMPL = """all:
-%(tab)scd %(build_dir)s && %(ninja)s -k 100; %(ninja)s
 
-install:
-%(tab)scd %(build_dir)s && DESTDIR="${DESTDIR}" %(ninja)s install
 
-check:
-%(tab)scd %(build_dir)s && %(ninja)s test
+def get_meson():
+    print("Updating meson submodule...", end='')
+    sys.stdout.flush()
+    git(['submodule', 'update', '--init'], ROOTDIR)
+    print("DONE")
 
-uninstalled:
-%(tab)scd %(build_dir)s && %(ninja)s uninstalled
-
-clean:
-%(tab)srm -Rf %(build_dir)s
-%(tab)srm Makefile
-"""
+    return os.path.join(ROOTDIR, 'meson', 'meson.py')
 
 
 def accept_command(commands):
@@ -42,19 +38,12 @@ def accept_command(commands):
 
 
 def get_configs(meson):
-     meson_version = subprocess.check_output([meson, '--version']).decode().strip()
-     if meson_version <= '0.33.0':
-         print("Disabling the introspection as support for the introspection with subproject was introduced in 0.34")
-         return ['-Dgstreamer:disable_introspection=true',
-                 '-Dgst-editing-services:disable_introspection=true',
-                 '-Dgst-devtools:disable_introspection=true']
-
      return ['-Dwerror=true']
 
 
 def configure_meson(args):
     """Configures meson and generate the Makefile."""
-    meson = accept_command(["meson", "meson.py"])
+    meson = get_meson()
     if not meson:
         print("Install mesonbuild to build %s: http://mesonbuild.com/\n"
               "You can simply install it with:\n"
@@ -78,11 +67,6 @@ def configure_meson(args):
         print("EXIT meson return %s" % e.returncode)
         exit(1)
 
-    with open(os.path.join(ROOTDIR, "Makefile"), "w") as makefile:
-        makefile.write(MAKEFILE_TMPL %
-                       {"build_dir": build_dir,
-                        "ninja": ninja,
-                        "tab": "	"})
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
