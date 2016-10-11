@@ -602,6 +602,8 @@ gst_decodebin3_init (GstDecodebin3 * dbin)
   g_mutex_init (&dbin->input_lock);
 
   dbin->caps = gst_static_caps_get (&default_raw_caps);
+
+  GST_OBJECT_FLAG_SET (dbin, GST_BIN_FLAG_STREAMS_AWARE);
 }
 
 static void

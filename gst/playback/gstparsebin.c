@@ -944,6 +944,8 @@ gst_parse_bin_init (GstParseBin * parse_bin)
 
   parse_bin->expose_allstreams = DEFAULT_EXPOSE_ALL_STREAMS;
   parse_bin->connection_speed = DEFAULT_CONNECTION_SPEED;
+
+  GST_OBJECT_FLAG_SET (parse_bin, GST_BIN_FLAG_STREAMS_AWARE);
 }
 
 static void
