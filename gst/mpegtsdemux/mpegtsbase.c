@@ -1397,8 +1397,7 @@ mpegts_base_loop (MpegTSBase * base)
 
 error:
   {
-    const gchar *reason = gst_flow_get_name (ret);
-    GST_DEBUG_OBJECT (base, "Pausing task, reason %s", reason);
+    GST_DEBUG_OBJECT (base, "Pausing task, reason %s", gst_flow_get_name (ret));
     if (ret == GST_FLOW_EOS) {
       if (!GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base,
               gst_event_new_eos ()))

@@ -2521,9 +2521,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     MpegTSBaseProgram * target_program)
 {
   GstFlowReturn res = GST_FLOW_OK;
-#ifndef GST_DISABLE_GST_DEBUG
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
-#endif
   GstBuffer *buffer = NULL;
   GstBufferList *buffer_list = NULL;
 
