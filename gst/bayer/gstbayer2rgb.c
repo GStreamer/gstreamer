@@ -286,42 +286,35 @@ static GstCaps *
 gst_bayer2rgb_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
+  GstBayer2RGB *bayer2rgb;
+  GstCaps *res_caps, *tmp_caps;
   GstStructure *structure;
-  GstCaps *newcaps;
-  GstStructure *newstruct;
+  guint i, caps_size;
 
-  GST_DEBUG_OBJECT (base, "transforming caps from %" GST_PTR_FORMAT, caps);
+  bayer2rgb = GST_BAYER2RGB (base);
 
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (direction == GST_PAD_SRC) {
-    newcaps = gst_caps_from_string ("video/x-bayer,"
-        "format=(string){bggr,grbg,gbrg,rggb}");
-  } else {
-    newcaps = gst_caps_new_empty_simple ("video/x-raw");
+  res_caps = gst_caps_copy (caps);
+  caps_size = gst_caps_get_size (res_caps);
+  for (i = 0; i < caps_size; i++) {
+    structure = gst_caps_get_structure (res_caps, i);
+    if (direction == GST_PAD_SINK) {
+      gst_structure_set_name (structure, "video/x-raw");
+      gst_structure_remove_field (structure, "format");
+    } else {
+      gst_structure_set_name (structure, "video/x-bayer");
+      gst_structure_remove_fields (structure, "format", "colorimetry",
+          "chroma-site", NULL);
+    }
   }
-  newstruct = gst_caps_get_structure (newcaps, 0);
-
-  gst_structure_set_value (newstruct, "width",
-      gst_structure_get_value (structure, "width"));
-  gst_structure_set_value (newstruct, "height",
-      gst_structure_get_value (structure, "height"));
-  gst_structure_set_value (newstruct, "framerate",
-      gst_structure_get_value (structure, "framerate"));
-
-  if (filter != NULL) {
-    GstCaps *icaps;
-
-    GST_DEBUG_OBJECT (base, "                filter %" GST_PTR_FORMAT, filter);
-
-    icaps = gst_caps_intersect_full (filter, newcaps, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (newcaps);
-    newcaps = icaps;
+  if (filter) {
+    tmp_caps = res_caps;
+    res_caps =
+        gst_caps_intersect_full (filter, tmp_caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp_caps);
   }
-
-  GST_DEBUG_OBJECT (base, "                  into %" GST_PTR_FORMAT, newcaps);
-
-  return newcaps;
+  GST_DEBUG_OBJECT (bayer2rgb, "transformed %" GST_PTR_FORMAT " into %"
+      GST_PTR_FORMAT, caps, res_caps);
+  return res_caps;
 }
 
 static gboolean
