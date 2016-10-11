@@ -263,7 +263,7 @@ gst_gl_window_dispmanx_egl_set_render_rectangle (GstGLWindow * window,
 {
   GstGLWindowDispmanxEGL *window_egl = GST_GL_WINDOW_DISPMANX_EGL (window);
   window_egl->render_rect.x = x;
-  window_egl->render_rect.y = x;
+  window_egl->render_rect.y = y;
   window_egl->render_rect.w = width;
   window_egl->render_rect.h = height;
 
