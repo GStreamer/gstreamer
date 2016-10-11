@@ -42,6 +42,9 @@ G_BEGIN_DECLS
  * GstBinFlags:
  * @GST_BIN_FLAG_NO_RESYNC: don't resync a state change when elements are
  *             added or linked in the bin (Since 1.0.5)
+ * @GST_BIN_FLAG_STREAMS_AWARE: Indicates whether the bin can handle elements
+ *             that add/remove source pads at any point in time without
+ *             first posting a no-more-pads signal (Since 1.10)
  * @GST_BIN_FLAG_LAST: the last enum in the series of flags for bins.
  * Derived classes can use this as first value in a list of flags.
  *
@@ -51,6 +54,7 @@ G_BEGIN_DECLS
  */
 typedef enum {
   GST_BIN_FLAG_NO_RESYNC	= (GST_ELEMENT_FLAG_LAST << 0),
+  GST_BIN_FLAG_STREAMS_AWARE	= (GST_ELEMENT_FLAG_LAST << 1),
   /* padding */
   GST_BIN_FLAG_LAST		= (GST_ELEMENT_FLAG_LAST << 5)
 } GstBinFlags;
