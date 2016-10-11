@@ -95,6 +95,9 @@ gst_gl_window_dispmanx_egl_init (GstGLWindowDispmanxEGL * window_egl)
   window_egl->native.element = 0;
   window_egl->native.width = 0;
   window_egl->native.height = 0;
+  window_egl->foreign.element = 0;
+  window_egl->foreign.width = 0;
+  window_egl->foreign.height = 0;
   window_egl->render_rect.x = 0;
   window_egl->render_rect.y = 0;
   window_egl->render_rect.w = 0;
@@ -122,7 +125,7 @@ gst_gl_window_dispmanx_egl_close (GstGLWindow * window)
 
   window_egl = GST_GL_WINDOW_DISPMANX_EGL (window);
 
-  if (window_egl->native.element) {
+  if (window_egl->native.element && window_egl->native.element != window_egl->foreign.element) {
     dispman_update = vc_dispmanx_update_start (0);
     vc_dispmanx_element_remove (dispman_update, window_egl->native.element);
     vc_dispmanx_update_submit_sync (dispman_update);
@@ -175,6 +178,21 @@ static void
 gst_gl_window_dispmanx_egl_set_window_handle (GstGLWindow * window,
     guintptr handle)
 {
+  GstGLWindowDispmanxEGL *window_egl = GST_GL_WINDOW_DISPMANX_EGL (window);
+  EGL_DISPMANX_WINDOW_T *foreign_window = (EGL_DISPMANX_WINDOW_T *)handle;
+  DISPMANX_UPDATE_HANDLE_T dispman_update;
+
+  GST_DEBUG_OBJECT (window, "set window handle with size %dx%d", foreign_window->width, foreign_window->height);
+
+  if (window_egl->native.element) {
+    dispman_update = vc_dispmanx_update_start (0);
+    vc_dispmanx_element_remove (dispman_update, window_egl->native.element);
+    vc_dispmanx_update_submit_sync (dispman_update);
+  }
+
+  window_egl->native.element = window_egl->foreign.element = foreign_window->element;
+  window_egl->native.width =  window_egl->foreign.width = foreign_window->width;
+  window_egl->native.height =  window_egl->foreign.height = foreign_window->height;
 }
 
 static void
