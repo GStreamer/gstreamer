@@ -278,8 +278,10 @@ gst_gl_window_dispmanx_egl_show (GstGLWindow * window)
   GstGLWindowDispmanxEGL *window_egl = GST_GL_WINDOW_DISPMANX_EGL (window);
 
   if (!window_egl->visible) {
-    window_resize (window_egl, window_egl->preferred_width,
-        window_egl->preferred_height, TRUE);
+    if (window_egl->render_rect.w <= 0 || window_egl->render_rect.h <= 0) {
+      window_resize (window_egl, window_egl->preferred_width,
+          window_egl->preferred_height, TRUE);
+    }
     window_egl->visible = TRUE;
   }
 }
