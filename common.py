@@ -34,11 +34,6 @@ class Colors:
 
 
 
-def git(args, repository_path):
-    if not isinstance(args, list):
-        args = [args]
-
-    return subprocess.check_output(["git"] + args, cwd=repository_path,
+def git(*args, repository_path='.'):
+    return subprocess.check_output(["git"] + list(args), cwd=repository_path,
                                    stderr=subprocess.STDOUT).decode()
-
-

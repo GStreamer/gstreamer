@@ -17,9 +17,9 @@ ROOTDIR = os.path.abspath(os.path.dirname(__file__))
 
 
 def get_meson():
-    print("Updating meson submodule...", end='')
+    print("Updating meson submodule... ", end='')
     sys.stdout.flush()
-    git(['submodule', 'update', '--init'], ROOTDIR)
+    git('submodule', 'update', '--init', repository_path=ROOTDIR)
     print("DONE")
 
     return os.path.join(ROOTDIR, 'meson', 'meson.py')

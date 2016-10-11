@@ -43,10 +43,10 @@ def update_repo(repo_name, repo_dir, revision, no_interaction, recurse_i=0):
     print("Updating %s..." % repo_name)
     try:
         if revision:
-            git(["fetch"], repo_dir)
-            git(["checkout", revision], repo_dir)
+            git("fetch", repository_path=repo_dir)
+            git("checkout", revision, repository_path=repo_dir)
         else:
-            git(["pull", "--rebase"], repo_dir)
+            git("pull", "--rebase", repository_path=repo_dir)
     except Exception as e:
         out = getattr(e, "output", b"").decode()
         if not no_interaction:
@@ -73,7 +73,7 @@ def update_repo(repo_name, repo_dir, revision, no_interaction, recurse_i=0):
             return False
 
 
-    commit_message = git("show", repo_dir).split("\n")
+    commit_message = git("show", repository_path=repo_dir).split("\n")
     print(u"  -> %s%s%s — %s" % (Colors.HEADER, commit_message[0][7:14], Colors.ENDC,
                                     commit_message[4].strip()))
 
