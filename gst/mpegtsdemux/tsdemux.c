@@ -281,6 +281,8 @@ enum
 
 /* mpegtsbase methods */
 static void
+gst_ts_demux_update_program (MpegTSBase * base, MpegTSBaseProgram * program);
+static void
 gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program);
 static void
 gst_ts_demux_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program);
@@ -385,6 +387,7 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
   ts_class->push_event = GST_DEBUG_FUNCPTR (push_event);
   ts_class->program_started = GST_DEBUG_FUNCPTR (gst_ts_demux_program_started);
   ts_class->program_stopped = GST_DEBUG_FUNCPTR (gst_ts_demux_program_stopped);
+  ts_class->update_program = GST_DEBUG_FUNCPTR (gst_ts_demux_update_program);
   ts_class->can_remove_program = gst_ts_demux_can_remove_program;
   ts_class->stream_added = gst_ts_demux_stream_added;
   ts_class->stream_removed = gst_ts_demux_stream_removed;
@@ -1826,6 +1829,34 @@ gst_ts_demux_can_remove_program (MpegTSBase * base, MpegTSBaseProgram * program)
   return TRUE;
 }
 
+static void
+gst_ts_demux_update_program (MpegTSBase * base, MpegTSBaseProgram * program)
+{
+  GstTSDemux *demux = GST_TS_DEMUX (base);
+  GList *tmp;
+
+  GST_DEBUG ("Updating program %d", program->program_number);
+  /* Emit collection message */
+  gst_element_post_message ((GstElement *) base,
+      gst_message_new_stream_collection ((GstObject *) base,
+          program->collection));
+
+  /* Add all streams, then fire no-more-pads */
+  for (tmp = program->stream_list; tmp; tmp = tmp->next) {
+    TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
+    if (!stream->pad) {
+      activate_pad_for_stream (demux, stream);
+      if (stream->sparse) {
+        /* force sending of pending sticky events which have been stored on the
+         * pad already and which otherwise would only be sent on the first buffer
+         * or serialized event (which means very late in case of subtitle streams),
+         * and playsink waits for stream-start or another serialized event */
+        GST_DEBUG_OBJECT (stream->pad, "sparse stream, pushing GAP event");
+        gst_pad_push_event (stream->pad, gst_event_new_gap (0, 0));
+      }
+    }
+  }
+}
 
 static void
 gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)

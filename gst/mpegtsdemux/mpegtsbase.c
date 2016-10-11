@@ -210,6 +210,11 @@ mpegts_base_reset (MpegTSBase * base)
   g_hash_table_foreach_remove (base->programs, (GHRFunc) remove_each_program,
       base);
 
+  base->streams_aware = GST_OBJECT_PARENT (base)
+      && GST_OBJECT_FLAG_IS_SET (GST_OBJECT_PARENT (base),
+      GST_BIN_FLAG_STREAMS_AWARE);
+  GST_DEBUG_OBJECT (base, "Streams aware : %d", base->streams_aware);
+
   if (klass->reset)
     klass->reset (base);
 }
@@ -590,6 +595,90 @@ mpegts_base_program_remove_stream (MpegTSBase * base,
   program->streams[pid] = NULL;
 }
 
+/* Check if pmtstream is already present in the program */
+static inline gboolean
+_stream_in_pmt (const GstMpegtsPMT * pmt, MpegTSBaseStream * stream)
+{
+  guint i, nbstreams = pmt->streams->len;
+
+  for (i = 0; i < nbstreams; i++) {
+    GstMpegtsPMTStream *pmt_stream = g_ptr_array_index (pmt->streams, i);
+
+    if (pmt_stream->pid == stream->pid &&
+        pmt_stream->stream_type == stream->stream_type)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static inline gboolean
+_pmt_stream_in_program (MpegTSBaseProgram * program,
+    GstMpegtsPMTStream * stream)
+{
+  MpegTSBaseStream *old_stream = program->streams[stream->pid];
+  if (!old_stream)
+    return FALSE;
+  return old_stream->stream_type == stream->stream_type;
+}
+
+static gboolean
+mpegts_base_update_program (MpegTSBase * base, MpegTSBaseProgram * program,
+    GstMpegtsSection * section, const GstMpegtsPMT * pmt)
+{
+  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+  const gchar *stream_id =
+      gst_stream_collection_get_upstream_id (program->collection);
+  GstStreamCollection *collection;
+  GList *tmp, *toremove;
+  guint i, nbstreams;
+
+  /* Create new collection */
+  collection = gst_stream_collection_new (stream_id);
+  gst_object_unref (program->collection);
+  program->collection = collection;
+
+  /* Replace section and pmt with the new one */
+  gst_mpegts_section_unref (program->section);
+  program->section = gst_mpegts_section_ref (section);
+  program->pmt = pmt;
+
+  /* Copy over gststream that still exist into the collection */
+  for (tmp = program->stream_list; tmp; tmp = tmp->next) {
+    MpegTSBaseStream *stream = (MpegTSBaseStream *) tmp->data;
+    if (_stream_in_pmt (pmt, stream)) {
+      gst_stream_collection_add_stream (program->collection,
+          gst_object_ref (stream->stream_object));
+    }
+  }
+
+  /* Add new streams (will also create and add gststream to the collection) */
+  nbstreams = pmt->streams->len;
+  for (i = 0; i < nbstreams; i++) {
+    GstMpegtsPMTStream *stream = g_ptr_array_index (pmt->streams, i);
+    if (!_pmt_stream_in_program (program, stream))
+      mpegts_base_program_add_stream (base, program, stream->pid,
+          stream->stream_type, stream);
+  }
+
+  /* Call subclass update */
+  if (klass->update_program)
+    klass->update_program (base, program);
+
+  /* Remove streams no longer present */
+  toremove = NULL;
+  for (tmp = program->stream_list; tmp; tmp = tmp->next) {
+    MpegTSBaseStream *stream = (MpegTSBaseStream *) tmp->data;
+    if (!_stream_in_pmt (pmt, stream))
+      toremove = g_list_prepend (toremove, stream);
+  }
+  for (tmp = toremove; tmp; tmp = tmp->next) {
+    MpegTSBaseStream *stream = (MpegTSBaseStream *) tmp->data;
+    mpegts_base_program_remove_stream (base, program, stream->pid);
+  }
+  return TRUE;
+}
+
 
 static gboolean
 _stream_is_private_section (GstMpegtsPMTStream * stream)
@@ -673,6 +762,68 @@ mpegts_base_is_same_program (MpegTSBase * base, MpegTSBaseProgram * oldprogram,
 
   GST_DEBUG ("Programs are equal");
   return TRUE;
+}
+
+/* Return TRUE if program is an update
+ *
+ * A program is equal if:
+ * * The program number is the same (will be if it enters this function)
+ * * AND The PMT PID is equal to the old one
+ * * AND It contains at least one stream from the previous program
+ *
+ * Changes that are acceptable are therefore:
+ * * New streams appearing
+ * * Old streams going away
+ * * PCR PID changing
+ *
+ * Unclear changes:
+ * * PMT PID being changed ?
+ * * Properties of elementary stream being changed ? (new tags ? metadata ?)
+ */
+static gboolean
+mpegts_base_is_program_update (MpegTSBase * base,
+    MpegTSBaseProgram * oldprogram, guint16 new_pmt_pid,
+    const GstMpegtsPMT * new_pmt)
+{
+  guint i, nbstreams;
+  MpegTSBaseStream *oldstream;
+
+  if (oldprogram->pmt_pid != new_pmt_pid) {
+    /* FIXME/CHECK: Can a program be updated by just changing its PID
+     * in the PAT ? */
+    GST_DEBUG ("Different pmt_pid (new:0x%04x, old:0x%04x)", new_pmt_pid,
+        oldprogram->pmt_pid);
+    return FALSE;
+  }
+
+  /* Check if at least one stream from the previous program is still present
+   * in the new program */
+
+  /* Check the streams */
+  nbstreams = new_pmt->streams->len;
+  for (i = 0; i < nbstreams; ++i) {
+    GstMpegtsPMTStream *stream = g_ptr_array_index (new_pmt->streams, i);
+
+    oldstream = oldprogram->streams[stream->pid];
+    if (!oldstream) {
+      GST_DEBUG ("New stream 0x%04x not present in old program", stream->pid);
+    } else if (oldstream->stream_type != stream->stream_type) {
+      GST_DEBUG
+          ("New stream 0x%04x has a different stream type (new:%d, old:%d)",
+          stream->pid, stream->stream_type, oldstream->stream_type);
+    } else if (!_stream_is_private_section (stream)) {
+      /* FIXME : We should actually be checking a bit deeper,
+       * especially for private streams (where the differentiation is
+       * done at the registration level) */
+      GST_DEBUG
+          ("Stream 0x%04x is identical (stream_type %d) ! Program is an update",
+          stream->pid, stream->stream_type);
+      return TRUE;
+    }
+  }
+
+  GST_DEBUG ("Program is not an update of the previous one");
+  return FALSE;
 }
 
 static void
@@ -929,6 +1080,14 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
   if (G_UNLIKELY (old_program == NULL))
     goto no_program;
 
+  if (base->streams_aware
+      && mpegts_base_is_program_update (base, old_program, section->pid, pmt)) {
+    GST_FIXME ("We are streams_aware and new program is an update");
+    /* The program is an update, and we can add/remove pads dynamically */
+    mpegts_base_update_program (base, old_program, section, pmt);
+    goto beach;
+  }
+
   if (G_UNLIKELY (mpegts_base_is_same_program (base, old_program, section->pid,
               pmt)))
     goto same_program;
@@ -956,14 +1115,18 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
     g_hash_table_insert (base->programs,
         GINT_TO_POINTER (program_number), program);
     initial_program = FALSE;
-  } else
+  } else {
+    GST_DEBUG ("Program update, re-using same program");
     program = old_program;
+  }
 
   /* activate program */
   /* Ownership of pmt_info is given to the program */
   mpegts_base_activate_program (base, program, section->pid, section, pmt,
       initial_program);
 
+beach:
+  GST_DEBUG ("Done activating program");
   return TRUE;
 
 no_program:
