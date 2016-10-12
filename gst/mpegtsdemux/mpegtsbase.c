@@ -328,6 +328,46 @@ mpegts_get_descriptor_from_program (MpegTSBaseProgram * program, guint8 tag)
   return gst_mpegts_find_descriptor (pmt->descriptors, tag);
 }
 
+static gchar *
+_get_upstream_id (GstElement * element, GstPad * sinkpad)
+{
+  gchar *upstream_id = gst_pad_get_stream_id (sinkpad);
+
+  if (!upstream_id) {
+    /* Try to create one from the upstream URI, else use a randome number */
+    GstQuery *query;
+    gchar *uri = NULL;
+
+    /* Try to generate one from the URI query and
+     * if it fails take a random number instead */
+    query = gst_query_new_uri ();
+    if (gst_element_query (element, query)) {
+      gst_query_parse_uri (query, &uri);
+    }
+
+    if (uri) {
+      GChecksum *cs;
+
+      /* And then generate an SHA256 sum of the URI */
+      cs = g_checksum_new (G_CHECKSUM_SHA256);
+      g_checksum_update (cs, (const guchar *) uri, strlen (uri));
+      g_free (uri);
+      upstream_id = g_strdup (g_checksum_get_string (cs));
+      g_checksum_free (cs);
+    } else {
+      /* Just get some random number if the URI query fails */
+      GST_FIXME_OBJECT (element, "Creating random stream-id, consider "
+          "implementing a deterministic way of creating a stream-id");
+      upstream_id =
+          g_strdup_printf ("%08x%08x%08x%08x", g_random_int (), g_random_int (),
+          g_random_int (), g_random_int ());
+    }
+
+    gst_query_unref (query);
+  }
+  return upstream_id;
+}
+
 static MpegTSBaseProgram *
 mpegts_base_new_program (MpegTSBase * base,
     gint program_number, guint16 pmt_pid)
@@ -345,7 +385,7 @@ mpegts_base_new_program (MpegTSBase * base,
   program->streams = g_new0 (MpegTSBaseStream *, 0x2000);
   program->patcount = 0;
 
-  upstream_id = gst_pad_get_stream_id (base->sinkpad);
+  upstream_id = _get_upstream_id ((GstElement *) base, base->sinkpad);
   stream_id = g_strdup_printf ("%s:%d", upstream_id, program_number);
   program->collection = gst_stream_collection_new (stream_id);
   g_free (stream_id);
