@@ -24,6 +24,7 @@
 #endif
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 #include <gst/video/video.h>
 #include <gst/app/app.h>
 
@@ -80,6 +81,7 @@ struct _GstVideoDecoderTester
 
   guint64 last_buf_num;
   guint64 last_kf_num;
+  gboolean set_output_state;
 };
 
 struct _GstVideoDecoderTesterClass
@@ -97,6 +99,7 @@ gst_video_decoder_tester_start (GstVideoDecoder * dec)
 
   dectester->last_buf_num = -1;
   dectester->last_kf_num = -1;
+  dectester->set_output_state = TRUE;
 
   return TRUE;
 }
@@ -122,10 +125,14 @@ static gboolean
 gst_video_decoder_tester_set_format (GstVideoDecoder * dec,
     GstVideoCodecState * state)
 {
-  GstVideoCodecState *res = gst_video_decoder_set_output_state (dec,
-      GST_VIDEO_FORMAT_GRAY8, TEST_VIDEO_WIDTH, TEST_VIDEO_HEIGHT, NULL);
+  GstVideoDecoderTester *dectester = (GstVideoDecoderTester *) dec;
 
-  gst_video_codec_state_unref (res);
+  if (dectester->set_output_state) {
+    GstVideoCodecState *res = gst_video_decoder_set_output_state (dec,
+        GST_VIDEO_FORMAT_GRAY8, TEST_VIDEO_WIDTH, TEST_VIDEO_HEIGHT, NULL);
+    gst_video_codec_state_unref (res);
+  }
+
   return TRUE;
 }
 
@@ -1073,6 +1080,75 @@ GST_START_TEST (videodecoder_query_caps_with_custom_getcaps)
 
 GST_END_TEST;
 
+static const gchar *test_default_caps[][2] = {
+  {
+    "video/x-test-custom",
+    "video/x-raw, format=I420, width=1280, height=720, framerate=0/1"
+  }, {
+    "video/x-test-custom, width=1000",
+    "video/x-raw, format=I420, width=1000, height=720, framerate=0/1"
+  }, {
+    "video/x-test-custom, height=500",
+    "video/x-raw, format=I420, width=1280, height=500, framerate=0/1"
+  }, {
+    "video/x-test-custom, framerate=10/1",
+    "video/x-raw, format=I420, width=1280, height=720, framerate=10/1"
+  }, {
+    "video/x-test-custom, pixel-aspect-ratio=2/1",
+    "video/x-raw, format=I420, width=1280, height=720, framerate=0/1,"
+    "pixel-aspect-ratio=2/1"
+  }
+};
+
+GST_START_TEST (videodecoder_default_caps_on_gap_before_buffer)
+{
+  GstVideoDecoderTester *dec =
+      g_object_new (GST_VIDEO_DECODER_TESTER_TYPE, NULL);
+  GstHarness *h =
+      gst_harness_new_with_element (GST_ELEMENT (dec), "sink", "src");
+  GstEvent *event;
+  GstCaps *caps1, *caps2;
+  GstVideoInfo info1, info2;
+
+  /* Don't set output state since we want trigger the default output caps */
+  dec->set_output_state = FALSE;
+  gst_harness_set_src_caps_str (h, test_default_caps[__i__][0]);
+
+  fail_unless (gst_harness_push_event (h, gst_event_new_gap (0, GST_SECOND)));
+
+  fail_unless_equals_int (gst_harness_events_received (h), 4);
+
+  event = gst_harness_pull_event (h);
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+  gst_event_unref (event);
+
+  event = gst_harness_pull_event (h);
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
+  gst_event_unref (event);
+
+  event = gst_harness_pull_event (h);
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
+  gst_event_unref (event);
+
+  event = gst_harness_pull_event (h);
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_GAP);
+  gst_event_unref (event);
+
+  caps1 = gst_pad_get_current_caps (h->sinkpad);
+  caps2 = gst_caps_from_string (test_default_caps[__i__][1]);
+  gst_video_info_from_caps (&info1, caps1);
+  gst_video_info_from_caps (&info2, caps2);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+
+  fail_unless (gst_video_info_is_equal (&info1, &info2));
+
+  gst_harness_teardown (h);
+  gst_object_unref (dec);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 gst_videodecoder_suite (void)
@@ -1095,6 +1171,9 @@ gst_videodecoder_suite (void)
   tcase_add_test (tc, videodecoder_backwards_playback);
   tcase_add_test (tc, videodecoder_backwards_buffer_after_segment);
   tcase_add_test (tc, videodecoder_flush_events);
+
+  tcase_add_loop_test (tc, videodecoder_default_caps_on_gap_before_buffer, 0,
+      G_N_ELEMENTS (test_default_caps));
 
   return s;
 }

@@ -1037,7 +1037,12 @@ gst_video_decoder_negotiate_default_caps (GstVideoDecoder * decoder)
 
   for (i = 0; i < caps_size; i++) {
     structure = gst_caps_get_structure (caps, i);
-    /* Random 1280x720@30 for fixation */
+    /* Random I420 1280x720@30 for fixation */
+    if (gst_structure_has_field (structure, "format"))
+      gst_structure_fixate_field_string (structure, "format", "I420");
+    else
+      gst_structure_set (structure, "format", G_TYPE_STRING, "I420", NULL);
+
     if (gst_structure_has_field (structure, "width"))
       gst_structure_fixate_field_nearest_int (structure, "width", 1280);
     else
