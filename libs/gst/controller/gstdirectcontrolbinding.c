@@ -24,8 +24,11 @@
  * @short_description: direct attachment for control sources
  *
  * A value mapping object that attaches control sources to gobject properties. It
- * will map the control values [0.0 ... 1.0] to the target property range. If a
- * control value is outside of the range, it will be clipped.
+ * will map the control values directly to the target property range. If a
+ * non-absolute direct control binding is used, the value range [0.0 ... 1.0]
+ * is mapped to full target property range, and all values outside the range
+ * will be clipped. An absolute control binding will not do any value
+ * transformations.
  */
 
 #include <glib-object.h>
@@ -508,7 +511,8 @@ gst_direct_control_binding_get_g_value_array (GstControlBinding * _self,
  * @cs: the control source
  *
  * Create a new control-binding that attaches the #GstControlSource to the
- * #GObject property.
+ * #GObject property. It will map the control source range [0.0 ... 1.0] to
+ * the full target property range, and clip all values outside this range.
  *
  * Returns: (transfer floating): the new #GstDirectControlBinding
  */
@@ -527,7 +531,8 @@ gst_direct_control_binding_new (GstObject * object, const gchar * property_name,
  * @cs: the control source
  *
  * Create a new control-binding that attaches the #GstControlSource to the
- * #GObject property.
+ * #GObject property. It will directly map the control source values to the
+ * target property range without any transformations.
  *
  * Returns: (transfer floating): the new #GstDirectControlBinding
  *
