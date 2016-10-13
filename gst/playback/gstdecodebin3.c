@@ -1596,6 +1596,7 @@ fail:
   }
 }
 
+/* Must be called with SELECTION_LOCK */
 static MultiQueueSlot *
 get_slot_for_input (GstDecodebin3 * dbin, DecodebinInputStream * input)
 {
