@@ -37,6 +37,9 @@
 #include "gstvaapisurface_egl.h"
 #include "gstvaapifilter.h"
 
+#define DEBUG 1
+#include "gstvaapidebug.h"
+
 #define GST_VAAPI_TEXTURE_EGL(texture) \
   ((GstVaapiTextureEGL *) (texture))
 

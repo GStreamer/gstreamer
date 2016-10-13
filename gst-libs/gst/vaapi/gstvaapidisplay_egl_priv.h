@@ -32,14 +32,16 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_IS_DISPLAY_EGL(display) \
-  ((display) != NULL && \
-   GST_VAAPI_DISPLAY_GET_CLASS_TYPE (display) == GST_VAAPI_DISPLAY_TYPE_EGL)
+    (G_TYPE_CHECK_INSTANCE_TYPE ((display), GST_TYPE_VAAPI_DISPLAY_EGL))
 
 #define GST_VAAPI_DISPLAY_EGL_CLASS(klass) \
-  ((GstVaapiDisplayEGLClass *)(klass))
+    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VAAPI_DISPLAY_EGL, GstVaapiDisplayEGLClass))
 
 #define GST_VAAPI_DISPLAY_EGL_GET_CLASS(obj) \
-  GST_VAAPI_DISPLAY_EGL_CLASS (GST_VAAPI_DISPLAY_GET_CLASS (obj))
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPI_DISPLAY_EGL, GstVaapiDisplayEGLClass))
+
+#define GST_VAAPI_DISPLAY_EGL_CAST(obj) \
+    ((GstVaapiDisplayEGL *)(obj))
 
 /**
  * GST_VAAPI_DISPLAY_EGL_DISPLAY:
@@ -50,7 +52,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DISPLAY_EGL_DISPLAY
 #define GST_VAAPI_DISPLAY_EGL_DISPLAY(display) \
-  (GST_VAAPI_DISPLAY_EGL (display)->egl_display)
+  (GST_VAAPI_DISPLAY_EGL_CAST (display)->egl_display)
 
 /**
  * GST_VAAPI_DISPLAY_EGL_CONTEXT:
@@ -92,7 +94,6 @@ struct _GstVaapiDisplayEGLClass
 {
   /*< private >*/
   GstVaapiDisplayClass parent_class;
-  GDestroyNotify parent_finalize;
 };
 
 G_GNUC_INTERNAL

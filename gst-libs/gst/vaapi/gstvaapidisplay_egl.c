@@ -35,7 +35,11 @@
 #include "gstvaapidisplay_wayland.h"
 #endif
 
-GST_DEBUG_CATEGORY (gst_debug_vaapidisplay_egl);
+#define DEBUG_VAAPI_DISPLAY 1
+#include "gstvaapidebug.h"
+
+G_DEFINE_TYPE (GstVaapiDisplayEGL, gst_vaapi_display_egl,
+    GST_TYPE_VAAPI_DISPLAY);
 
 /* ------------------------------------------------------------------------- */
 /* --- EGL backend implementation                                        --- */
@@ -90,11 +94,13 @@ ensure_context_is_wrapped (GstVaapiDisplayEGL * display, EGLContext gl_context)
 }
 
 static gboolean
-gst_vaapi_display_egl_bind_display (GstVaapiDisplayEGL * display,
-    const InitParams * params)
+gst_vaapi_display_egl_bind_display (GstVaapiDisplay * base_display,
+    gpointer native_params)
 {
   GstVaapiDisplay *native_display = NULL;
+  GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   EglDisplay *egl_display;
+  const InitParams *params = (InitParams *) native_params;
 
   if (params->display) {
 #if USE_X11
@@ -132,14 +138,16 @@ gst_vaapi_display_egl_bind_display (GstVaapiDisplayEGL * display,
 }
 
 static void
-gst_vaapi_display_egl_close_display (GstVaapiDisplayEGL * display)
+gst_vaapi_display_egl_close_display (GstVaapiDisplay * base_display)
 {
+  GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   gst_vaapi_display_replace (&display->display, NULL);
 }
 
 static void
-gst_vaapi_display_egl_lock (GstVaapiDisplayEGL * display)
+gst_vaapi_display_egl_lock (GstVaapiDisplay * base_display)
 {
+  GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   GstVaapiDisplayClass *const klass =
       GST_VAAPI_DISPLAY_GET_CLASS (display->display);
 
@@ -148,8 +156,9 @@ gst_vaapi_display_egl_lock (GstVaapiDisplayEGL * display)
 }
 
 static void
-gst_vaapi_display_egl_unlock (GstVaapiDisplayEGL * display)
+gst_vaapi_display_egl_unlock (GstVaapiDisplay * base_display)
 {
+  GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   GstVaapiDisplayClass *const klass =
       GST_VAAPI_DISPLAY_GET_CLASS (display->display);
 
@@ -158,8 +167,9 @@ gst_vaapi_display_egl_unlock (GstVaapiDisplayEGL * display)
 }
 
 static void
-gst_vaapi_display_egl_sync (GstVaapiDisplayEGL * display)
+gst_vaapi_display_egl_sync (GstVaapiDisplay * base_display)
 {
+  GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   GstVaapiDisplayClass *const klass =
       GST_VAAPI_DISPLAY_GET_CLASS (display->display);
 
@@ -170,8 +180,9 @@ gst_vaapi_display_egl_sync (GstVaapiDisplayEGL * display)
 }
 
 static void
-gst_vaapi_display_egl_flush (GstVaapiDisplayEGL * display)
+gst_vaapi_display_egl_flush (GstVaapiDisplay * base_display)
 {
+  GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   GstVaapiDisplayClass *const klass =
       GST_VAAPI_DISPLAY_GET_CLASS (display->display);
 
@@ -180,9 +191,10 @@ gst_vaapi_display_egl_flush (GstVaapiDisplayEGL * display)
 }
 
 static gboolean
-gst_vaapi_display_egl_get_display_info (GstVaapiDisplayEGL * display,
+gst_vaapi_display_egl_get_display_info (GstVaapiDisplay * base_display,
     GstVaapiDisplayInfo * info)
 {
+  GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   GstVaapiDisplayClass *const klass =
       GST_VAAPI_DISPLAY_GET_CLASS (display->display);
 
@@ -192,9 +204,10 @@ gst_vaapi_display_egl_get_display_info (GstVaapiDisplayEGL * display,
 }
 
 static void
-gst_vaapi_display_egl_get_size (GstVaapiDisplayEGL * display,
+gst_vaapi_display_egl_get_size (GstVaapiDisplay * base_display,
     guint * width_ptr, guint * height_ptr)
 {
+  GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   GstVaapiDisplayClass *const klass =
       GST_VAAPI_DISPLAY_GET_CLASS (display->display);
 
@@ -203,9 +216,10 @@ gst_vaapi_display_egl_get_size (GstVaapiDisplayEGL * display,
 }
 
 static void
-gst_vaapi_display_egl_get_size_mm (GstVaapiDisplayEGL * display,
+gst_vaapi_display_egl_get_size_mm (GstVaapiDisplay * base_display,
     guint * width_ptr, guint * height_ptr)
 {
+  GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   GstVaapiDisplayClass *const klass =
       GST_VAAPI_DISPLAY_GET_CLASS (display->display);
 
@@ -214,9 +228,10 @@ gst_vaapi_display_egl_get_size_mm (GstVaapiDisplayEGL * display,
 }
 
 static guintptr
-gst_vaapi_display_egl_get_visual_id (GstVaapiDisplayEGL * display,
+gst_vaapi_display_egl_get_visual_id (GstVaapiDisplay * base_display,
     GstVaapiWindow * window)
 {
+  GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   if (!ensure_context (display))
     return 0;
   return display->egl_context->config->visual_id;
@@ -267,71 +282,41 @@ gst_vaapi_display_egl_get_texture_map (GstVaapiDisplay * display)
 }
 
 static void
-gst_vaapi_display_egl_finalize (GstVaapiDisplay * display)
+gst_vaapi_display_egl_finalize (GObject * object)
 {
-  GstVaapiDisplayEGL *dpy = GST_VAAPI_DISPLAY_EGL (display);
+  GstVaapiDisplayEGL *dpy = GST_VAAPI_DISPLAY_EGL (object);
 
   if (dpy->texture_map)
     gst_object_unref (dpy->texture_map);
-  GST_VAAPI_DISPLAY_EGL_GET_CLASS (display)->parent_finalize (display);
+  G_OBJECT_CLASS (gst_vaapi_display_egl_parent_class)->finalize (object);
+}
+
+static void
+gst_vaapi_display_egl_init (GstVaapiDisplayEGL * display)
+{
 }
 
 static void
 gst_vaapi_display_egl_class_init (GstVaapiDisplayEGLClass * klass)
 {
-  GstVaapiMiniObjectClass *const object_class =
-      GST_VAAPI_MINI_OBJECT_CLASS (klass);
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstVaapiDisplayClass *const dpy_class = GST_VAAPI_DISPLAY_CLASS (klass);
 
-  GST_DEBUG_CATEGORY_INIT (gst_debug_vaapidisplay_egl, "vaapidisplay_egl", 0,
-      "VA/EGL backend");
-
-  gst_vaapi_display_class_init (dpy_class);
-
-  /* chain up destructor */
-  klass->parent_finalize = object_class->finalize;
-  object_class->finalize = (GDestroyNotify) gst_vaapi_display_egl_finalize;
-
-  object_class->size = sizeof (GstVaapiDisplayEGL);
+  object_class->finalize = gst_vaapi_display_egl_finalize;
   dpy_class->display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
-  dpy_class->bind_display = (GstVaapiDisplayBindFunc)
-      gst_vaapi_display_egl_bind_display;
-  dpy_class->close_display = (GstVaapiDisplayCloseFunc)
-      gst_vaapi_display_egl_close_display;
-  dpy_class->lock = (GstVaapiDisplayLockFunc)
-      gst_vaapi_display_egl_lock;
-  dpy_class->unlock = (GstVaapiDisplayUnlockFunc)
-      gst_vaapi_display_egl_unlock;
-  dpy_class->sync = (GstVaapiDisplaySyncFunc)
-      gst_vaapi_display_egl_sync;
-  dpy_class->flush = (GstVaapiDisplayFlushFunc)
-      gst_vaapi_display_egl_flush;
-  dpy_class->get_display = (GstVaapiDisplayGetInfoFunc)
-      gst_vaapi_display_egl_get_display_info;
-  dpy_class->get_size = (GstVaapiDisplayGetSizeFunc)
-      gst_vaapi_display_egl_get_size;
-  dpy_class->get_size_mm = (GstVaapiDisplayGetSizeMFunc)
-      gst_vaapi_display_egl_get_size_mm;
-  dpy_class->get_visual_id = (GstVaapiDisplayGetVisualIdFunc)
-      gst_vaapi_display_egl_get_visual_id;
-  dpy_class->create_window = (GstVaapiDisplayCreateWindowFunc)
-      gst_vaapi_display_egl_create_window;
-  dpy_class->create_texture = (GstVaapiDisplayCreateTextureFunc)
-      gst_vaapi_display_egl_create_texture;
+  dpy_class->bind_display = gst_vaapi_display_egl_bind_display;
+  dpy_class->close_display = gst_vaapi_display_egl_close_display;
+  dpy_class->lock = gst_vaapi_display_egl_lock;
+  dpy_class->unlock = gst_vaapi_display_egl_unlock;
+  dpy_class->sync = gst_vaapi_display_egl_sync;
+  dpy_class->flush = gst_vaapi_display_egl_flush;
+  dpy_class->get_display = gst_vaapi_display_egl_get_display_info;
+  dpy_class->get_size = gst_vaapi_display_egl_get_size;
+  dpy_class->get_size_mm = gst_vaapi_display_egl_get_size_mm;
+  dpy_class->get_visual_id = gst_vaapi_display_egl_get_visual_id;
+  dpy_class->create_window = gst_vaapi_display_egl_create_window;
+  dpy_class->create_texture = gst_vaapi_display_egl_create_texture;
   dpy_class->get_texture_map = gst_vaapi_display_egl_get_texture_map;
-}
-
-static inline const GstVaapiDisplayClass *
-gst_vaapi_display_egl_class (void)
-{
-  static GstVaapiDisplayEGLClass g_class;
-  static gsize g_class_init = FALSE;
-
-  if (g_once_init_enter (&g_class_init)) {
-    gst_vaapi_display_egl_class_init (&g_class);
-    g_once_init_leave (&g_class_init, TRUE);
-  }
-  return GST_VAAPI_DISPLAY_CLASS (&g_class);
 }
 
 /**
@@ -360,7 +345,7 @@ gst_vaapi_display_egl_new (GstVaapiDisplay * display, guint gles_version)
     params.display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
   }
   params.gles_version = gles_version;
-  return gst_vaapi_display_new (gst_vaapi_display_egl_class (),
+  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_EGL, NULL),
       GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, &params);
 }
 
@@ -391,7 +376,7 @@ gst_vaapi_display_egl_new_with_native_display (gpointer native_display,
   params.display = native_display;
   params.display_type = display_type;
   params.gles_version = gles_version;
-  return gst_vaapi_display_new (gst_vaapi_display_egl_class (),
+  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_EGL, NULL),
       GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, &params);
 }
 

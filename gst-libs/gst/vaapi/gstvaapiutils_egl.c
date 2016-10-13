@@ -23,6 +23,9 @@
 #include "sysdeps.h"
 #include "gstvaapiutils_egl.h"
 
+#define DEBUG 1
+#include "gstvaapidebug.h"
+
 typedef struct egl_message_s EglMessage;
 struct egl_message_s
 {

@@ -30,14 +30,16 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_IS_DISPLAY_WAYLAND(display) \
-  ((display) != NULL && \
-   GST_VAAPI_DISPLAY_VADISPLAY_TYPE (display) == GST_VAAPI_DISPLAY_TYPE_WAYLAND)
+    (G_TYPE_CHECK_INSTANCE_TYPE ((display), GST_TYPE_VAAPI_DISPLAY_WAYLAND))
 
 #define GST_VAAPI_DISPLAY_WAYLAND_CAST(display) \
     ((GstVaapiDisplayWayland *)(display))
 
 #define GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display) \
-    (&GST_VAAPI_DISPLAY_WAYLAND_CAST(display)->priv)
+    (GST_VAAPI_DISPLAY_WAYLAND_CAST(display)->priv)
+
+#define GST_VAAPI_DISPLAY_WAYLAND_GET_CLASS(obj) \
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPI_DISPLAY_WAYLAND, GstVaapiDisplayWaylandClass))
 
 typedef struct _GstVaapiDisplayWaylandPrivate   GstVaapiDisplayWaylandPrivate;
 typedef struct _GstVaapiDisplayWaylandClass     GstVaapiDisplayWaylandClass;
@@ -79,7 +81,7 @@ struct _GstVaapiDisplayWayland
   /*< private >*/
   GstVaapiDisplay parent_instance;
 
-  GstVaapiDisplayWaylandPrivate priv;
+  GstVaapiDisplayWaylandPrivate *priv;
 };
 
 /**

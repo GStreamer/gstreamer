@@ -31,17 +31,16 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_IS_DISPLAY_GLX(display) \
-  ((display) != NULL && \
-   GST_VAAPI_DISPLAY_GET_CLASS_TYPE (display) == GST_VAAPI_DISPLAY_TYPE_GLX)
+   (G_TYPE_CHECK_INSTANCE_TYPE ((display), GST_TYPE_VAAPI_DISPLAY_GLX))
 
 #define GST_VAAPI_DISPLAY_GLX_CAST(display) \
     ((GstVaapiDisplayGLX *)(display))
 
 #define GST_VAAPI_DISPLAY_GLX_CLASS(klass) \
-    ((GstVaapiDisplayGLXClass *)(klass))
+    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VAAPI_DISPLAY_GLX, GstVaapiDisplayGLXClass))
 
 #define GST_VAAPI_DISPLAY_GLX_GET_CLASS(obj) \
-    GST_VAAPI_DISPLAY_GLX_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPI_DISPLAY_GLX, GstVaapiDisplayGLXClass))
 
 typedef struct _GstVaapiDisplayGLXClass         GstVaapiDisplayGLXClass;
 
@@ -66,7 +65,6 @@ struct _GstVaapiDisplayGLXClass
 {
   /*< private >*/
   GstVaapiDisplayX11Class parent_class;
-  GDestroyNotify parent_finalize;
 };
 
 G_END_DECLS

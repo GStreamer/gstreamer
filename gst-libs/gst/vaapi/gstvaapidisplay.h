@@ -33,8 +33,11 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_DISPLAY                  (gst_vaapi_display_get_type ())
 #define GST_VAAPI_DISPLAY(obj) \
-    ((GstVaapiDisplay *)(obj))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DISPLAY, GstVaapiDisplay))
+#define GST_VAAPI_IS_DISPLAY(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_DISPLAY))
 
 /**
  * GST_VAAPI_DISPLAY_GET_CLASS_TYPE:
@@ -108,6 +111,9 @@ typedef enum
 
 GType
 gst_vaapi_display_type_get_type (void) G_GNUC_CONST;
+
+GType
+gst_vaapi_display_get_type (void) G_GNUC_CONST;
 
 gboolean
 gst_vaapi_display_type_is_compatible (GstVaapiDisplayType type1,
@@ -259,6 +265,10 @@ gst_vaapi_display_has_opengl (GstVaapiDisplay * display);
 
 void
 gst_vaapi_display_reset_texture_map (GstVaapiDisplay * display);
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDisplay, gst_vaapi_display_unref)
+#endif
 
 G_END_DECLS
 

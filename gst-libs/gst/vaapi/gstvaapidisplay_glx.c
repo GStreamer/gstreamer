@@ -38,8 +38,11 @@
 #include "gstvaapiwindow_glx.h"
 #include "gstvaapitexture_glx.h"
 
-#define DEBUG 1
+#define DEBUG_VAAPI_DISPLAY 1
 #include "gstvaapidebug.h"
+
+G_DEFINE_TYPE (GstVaapiDisplayGLX, gst_vaapi_display_glx,
+    GST_TYPE_VAAPI_DISPLAY_X11);
 
 static GstVaapiWindow *
 gst_vaapi_display_glx_create_window (GstVaapiDisplay * display, GstVaapiID id,
@@ -85,46 +88,31 @@ gst_vaapi_display_glx_get_texture_map (GstVaapiDisplay * display)
 }
 
 static void
-gst_vaapi_display_glx_finalize (GstVaapiDisplay * display)
+gst_vaapi_display_glx_finalize (GObject * object)
 {
-  GstVaapiDisplayGLX *dpy = GST_VAAPI_DISPLAY_GLX (display);
+  GstVaapiDisplayGLX *dpy = GST_VAAPI_DISPLAY_GLX (object);
 
   if (dpy->texture_map)
     gst_object_unref (dpy->texture_map);
-  GST_VAAPI_DISPLAY_GLX_GET_CLASS (display)->parent_finalize (display);
+  G_OBJECT_CLASS (gst_vaapi_display_glx_parent_class)->finalize (object);
+}
+
+static void
+gst_vaapi_display_glx_init (GstVaapiDisplayGLX * display)
+{
 }
 
 static void
 gst_vaapi_display_glx_class_init (GstVaapiDisplayGLXClass * klass)
 {
-  GstVaapiMiniObjectClass *const object_class =
-      GST_VAAPI_MINI_OBJECT_CLASS (klass);
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstVaapiDisplayClass *const dpy_class = GST_VAAPI_DISPLAY_CLASS (klass);
 
-  gst_vaapi_display_x11_class_init (&klass->parent_class);
-
-  /* chain up destructor */
-  klass->parent_finalize = object_class->finalize;
-  object_class->finalize = (GDestroyNotify) gst_vaapi_display_glx_finalize;
-
-  object_class->size = sizeof (GstVaapiDisplayGLX);
+  object_class->finalize = gst_vaapi_display_glx_finalize;
   dpy_class->display_type = GST_VAAPI_DISPLAY_TYPE_GLX;
   dpy_class->create_window = gst_vaapi_display_glx_create_window;
   dpy_class->create_texture = gst_vaapi_display_glx_create_texture;
   dpy_class->get_texture_map = gst_vaapi_display_glx_get_texture_map;
-}
-
-static inline const GstVaapiDisplayClass *
-gst_vaapi_display_glx_class (void)
-{
-  static GstVaapiDisplayGLXClass g_class;
-  static gsize g_class_init = FALSE;
-
-  if (g_once_init_enter (&g_class_init)) {
-    gst_vaapi_display_glx_class_init (&g_class);
-    g_once_init_leave (&g_class_init, TRUE);
-  }
-  return GST_VAAPI_DISPLAY_CLASS (&g_class);
 }
 
 /**
@@ -140,7 +128,7 @@ gst_vaapi_display_glx_class (void)
 GstVaapiDisplay *
 gst_vaapi_display_glx_new (const gchar * display_name)
 {
-  return gst_vaapi_display_new (gst_vaapi_display_glx_class (),
+  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_GLX, NULL),
       GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME, (gpointer) display_name);
 }
 
@@ -160,6 +148,6 @@ gst_vaapi_display_glx_new_with_display (Display * x11_display)
 {
   g_return_val_if_fail (x11_display != NULL, NULL);
 
-  return gst_vaapi_display_new (gst_vaapi_display_glx_class (),
+  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_GLX, NULL),
       GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, x11_display);
 }

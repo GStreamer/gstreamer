@@ -29,8 +29,9 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_DISPLAY_WAYLAND          (gst_vaapi_display_wayland_get_type ())
 #define GST_VAAPI_DISPLAY_WAYLAND(obj) \
-    ((GstVaapiDisplayWayland *)(obj))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DISPLAY_WAYLAND, GstVaapiDisplayWayland))
 
 typedef struct _GstVaapiDisplayWayland          GstVaapiDisplayWayland;
 
@@ -42,6 +43,9 @@ gst_vaapi_display_wayland_new_with_display (struct wl_display * wl_display);
 
 struct wl_display *
 gst_vaapi_display_wayland_get_display (GstVaapiDisplayWayland * display);
+
+GType
+gst_vaapi_display_wayland_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 

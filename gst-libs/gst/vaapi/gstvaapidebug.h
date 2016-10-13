@@ -30,4 +30,9 @@ GST_DEBUG_CATEGORY_EXTERN(gst_debug_vaapi);
 #define GST_CAT_DEFAULT gst_debug_vaapi
 #endif
 
+#if DEBUG_VAAPI_DISPLAY
+GST_DEBUG_CATEGORY_EXTERN(gst_debug_vaapi_display);
+#define GST_CAT_DEFAULT gst_debug_vaapi_display
+#endif
+
 #endif /* GST_VAAPI_DEBUG_H */

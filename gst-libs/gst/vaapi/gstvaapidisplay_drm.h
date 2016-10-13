@@ -27,8 +27,9 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_DISPLAY_DRM              (gst_vaapi_display_drm_get_type ())
 #define GST_VAAPI_DISPLAY_DRM(obj) \
-    ((GstVaapiDisplayDRM *)(obj))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DISPLAY_DRM, GstVaapiDisplayDRM))
 
 typedef struct _GstVaapiDisplayDRM              GstVaapiDisplayDRM;
 
@@ -44,6 +45,9 @@ gst_vaapi_display_drm_get_device (GstVaapiDisplayDRM * display);
 const gchar *
 gst_vaapi_display_drm_get_device_path (GstVaapiDisplayDRM *
     display);
+
+GType
+gst_vaapi_display_drm_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 

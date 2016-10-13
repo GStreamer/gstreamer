@@ -29,14 +29,16 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_IS_DISPLAY_DRM(display) \
-    ((display) != NULL && \
-     GST_VAAPI_DISPLAY_VADISPLAY_TYPE(display) == GST_VAAPI_DISPLAY_TYPE_DRM)
+    (G_TYPE_CHECK_INSTANCE_TYPE ((display), GST_TYPE_VAAPI_DISPLAY_DRM))
 
 #define GST_VAAPI_DISPLAY_DRM_CAST(display) \
     ((GstVaapiDisplayDRM *)(display))
 
+#define GST_VAAPI_DISPLAY_DRM_GET_CLASS(obj) \
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPI_DISPLAY_DRM, GstVaapiDisplayDRMClass))
+
 #define GST_VAAPI_DISPLAY_DRM_PRIVATE(display) \
-    (&GST_VAAPI_DISPLAY_DRM_CAST(display)->priv)
+    (GST_VAAPI_DISPLAY_DRM_CAST(display)->priv)
 
 typedef struct _GstVaapiDisplayDRMPrivate       GstVaapiDisplayDRMPrivate;
 typedef struct _GstVaapiDisplayDRMClass         GstVaapiDisplayDRMClass;
@@ -69,7 +71,7 @@ struct _GstVaapiDisplayDRM
   /*< private >*/
   GstVaapiDisplay parent_instance;
 
-  GstVaapiDisplayDRMPrivate priv;
+  GstVaapiDisplayDRMPrivate *priv;
 };
 
 /**

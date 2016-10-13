@@ -29,8 +29,9 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_DISPLAY_GLX              (gst_vaapi_display_glx_get_type ())
 #define GST_VAAPI_DISPLAY_GLX(obj) \
-    ((GstVaapiDisplayGLX *)(obj))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DISPLAY_GLX, GstVaapiDisplayGLX))
 
 typedef struct _GstVaapiDisplayGLX              GstVaapiDisplayGLX;
 
@@ -39,6 +40,9 @@ gst_vaapi_display_glx_new (const gchar * display_name);
 
 GstVaapiDisplay *
 gst_vaapi_display_glx_new_with_display (Display * x11_display);
+
+GType
+gst_vaapi_display_glx_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 

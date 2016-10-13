@@ -31,17 +31,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
-#define GST_VAAPI_TYPE_DISPLAY \
-  gst_vaapi_display_get_type ()
-
-/* *INDENT-OFF* */
-static GType gst_vaapi_display_get_type (void) G_GNUC_CONST;
-/* *INDENT-ON* */
-
-G_DEFINE_BOXED_TYPE (GstVaapiDisplay, gst_vaapi_display,
-    (GBoxedCopyFunc) gst_vaapi_display_ref,
-    (GBoxedFreeFunc) gst_vaapi_display_unref);
-
 static void
 _init_context_debug (void)
 {
@@ -65,7 +54,7 @@ gst_vaapi_video_context_set_display (GstContext * context,
 
   structure = gst_context_writable_structure (context);
   gst_structure_set (structure, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME,
-      GST_VAAPI_TYPE_DISPLAY, display, NULL);
+      GST_TYPE_VAAPI_DISPLAY, display, NULL);
 }
 
 GstContext *
@@ -91,7 +80,7 @@ gst_vaapi_video_context_get_display (GstContext * context,
 
   structure = gst_context_get_structure (context);
   return gst_structure_get (structure, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME,
-      GST_VAAPI_TYPE_DISPLAY, display_ptr, NULL);
+      GST_TYPE_VAAPI_DISPLAY, display_ptr, NULL);
 }
 
 static gboolean

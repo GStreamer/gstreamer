@@ -32,14 +32,16 @@
 G_BEGIN_DECLS
 
 #define GST_VAAPI_IS_DISPLAY_X11(display) \
-  ((display) != NULL && \
-   GST_VAAPI_DISPLAY_VADISPLAY_TYPE (display) == GST_VAAPI_DISPLAY_TYPE_X11)
+    (G_TYPE_CHECK_INSTANCE_TYPE ((display), GST_TYPE_VAAPI_DISPLAY_X11))
 
 #define GST_VAAPI_DISPLAY_X11_CAST(display) \
     ((GstVaapiDisplayX11 *)(display))
 
 #define GST_VAAPI_DISPLAY_X11_PRIVATE(display) \
-    (&GST_VAAPI_DISPLAY_X11_CAST(display)->priv)
+    (GST_VAAPI_DISPLAY_X11_CAST (display)->priv)
+
+#define GST_VAAPI_DISPLAY_X11_GET_CLASS(obj) \
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPI_DISPLAY_X11, GstVaapiDisplayX11Class))
 
 typedef struct _GstVaapiDisplayX11Private       GstVaapiDisplayX11Private;
 typedef struct _GstVaapiDisplayX11Class         GstVaapiDisplayX11Class;
@@ -97,22 +99,19 @@ struct _GstVaapiDisplayX11
   /*< private >*/
   GstVaapiDisplay parent_instance;
 
-  GstVaapiDisplayX11Private priv;
+  GstVaapiDisplayX11Private *priv;
 };
 
 /**
  * GstVaapiDisplayX11Class:
  *
- * VA/X11 display wrapper clas.
+ * VA/X11 display wrapper class.
  */
 struct _GstVaapiDisplayX11Class
 {
   /*< private >*/
   GstVaapiDisplayClass parent_class;
 };
-
-void
-gst_vaapi_display_x11_class_init (GstVaapiDisplayX11Class * klass);
 
 G_GNUC_INTERNAL
 GstVideoFormat

@@ -30,8 +30,9 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_DISPLAY_X11              (gst_vaapi_display_x11_get_type ())
 #define GST_VAAPI_DISPLAY_X11(obj) \
-    ((GstVaapiDisplayX11 *)(obj))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DISPLAY_X11, GstVaapiDisplayX11))
 
 typedef struct _GstVaapiDisplayX11              GstVaapiDisplayX11;
 
@@ -50,6 +51,9 @@ gst_vaapi_display_x11_get_screen (GstVaapiDisplayX11 * display);
 void
 gst_vaapi_display_x11_set_synchronous (GstVaapiDisplayX11 * display,
     gboolean synchronous);
+
+GType
+gst_vaapi_display_x11_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 

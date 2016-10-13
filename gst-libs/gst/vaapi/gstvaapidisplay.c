@@ -37,10 +37,20 @@
 #include "gstvaapiworkarounds.h"
 #include "gstvaapiversion.h"
 
-#define DEBUG 1
-#include "gstvaapidebug.h"
-
+/* Debug category for all vaapi libs */
 GST_DEBUG_CATEGORY (gst_debug_vaapi);
+
+/* Debug category for VaapiDisplay */
+GST_DEBUG_CATEGORY (gst_debug_vaapi_display);
+#define GST_CAT_DEFAULT gst_debug_vaapi_display
+
+#define _do_init \
+    G_ADD_PRIVATE (GstVaapiDisplay); \
+    GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi_display, \
+        "vaapidisplay", 0, "VA-API Display");
+
+G_DEFINE_TYPE_WITH_CODE (GstVaapiDisplay, gst_vaapi_display, GST_TYPE_OBJECT,
+    _do_init);
 
 /* Ensure those symbols are actually defined in the resulting libraries */
 #undef gst_vaapi_display_ref
@@ -117,7 +127,8 @@ libgstvaapi_init_once (void)
   GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi, "vaapi", 0, "VA-API helper");
 
   /* Dump gstreamer-vaapi version for debugging purposes */
-  GST_INFO ("gstreamer-vaapi version %s", GST_VAAPI_VERSION_ID);
+  GST_CAT_INFO (gst_debug_vaapi, "gstreamer-vaapi version %s",
+      GST_VAAPI_VERSION_ID);
 
   gst_vaapi_display_properties_init ();
 
@@ -947,6 +958,7 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
       return FALSE;
   }
 
+  GST_INFO_OBJECT (display, "new display addr=%p", display);
   g_free (priv->display_name);
   priv->display_name = g_strdup (info.display_name);
   return TRUE;
@@ -995,42 +1007,39 @@ gst_vaapi_display_unlock_default (GstVaapiDisplay * display)
 static void
 gst_vaapi_display_init (GstVaapiDisplay * display)
 {
-  GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
-  const GstVaapiDisplayClass *const dpy_class =
-      GST_VAAPI_DISPLAY_GET_CLASS (display);
+  GstVaapiDisplayPrivate *const priv =
+      gst_vaapi_display_get_instance_private (display);
 
+  display->priv = priv;
   priv->display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
   priv->par_n = 1;
   priv->par_d = 1;
 
   g_rec_mutex_init (&priv->mutex);
-
-  if (dpy_class->init)
-    dpy_class->init (display);
 }
 
 static void
-gst_vaapi_display_finalize (GstVaapiDisplay * display)
+gst_vaapi_display_finalize (GObject * object)
 {
+  GstVaapiDisplay *const display = GST_VAAPI_DISPLAY (object);
   GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
 
   gst_vaapi_display_destroy (display);
   g_rec_mutex_clear (&priv->mutex);
+
+  G_OBJECT_CLASS (gst_vaapi_display_parent_class)->finalize (object);
 }
 
 void
 gst_vaapi_display_class_init (GstVaapiDisplayClass * klass)
 {
-  GstVaapiMiniObjectClass *const object_class =
-      GST_VAAPI_MINI_OBJECT_CLASS (klass);
-  GstVaapiDisplayClass *const dpy_class = GST_VAAPI_DISPLAY_CLASS (klass);
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
 
   libgstvaapi_init_once ();
 
-  object_class->size = sizeof (GstVaapiDisplay);
-  object_class->finalize = (GDestroyNotify) gst_vaapi_display_finalize;
-  dpy_class->lock = gst_vaapi_display_lock_default;
-  dpy_class->unlock = gst_vaapi_display_unlock_default;
+  object_class->finalize = gst_vaapi_display_finalize;
+  klass->lock = gst_vaapi_display_lock_default;
+  klass->unlock = gst_vaapi_display_unlock_default;
 }
 
 static void
@@ -1102,31 +1111,12 @@ gst_vaapi_display_properties_init (void)
       "The display contrast value", 0.0, 2.0, 1.0, G_PARAM_READWRITE);
 }
 
-static inline const GstVaapiDisplayClass *
-gst_vaapi_display_class (void)
-{
-  static GstVaapiDisplayClass g_class;
-  static gsize g_class_init = FALSE;
-
-  if (g_once_init_enter (&g_class_init)) {
-    gst_vaapi_display_class_init (&g_class);
-    g_once_init_leave (&g_class_init, TRUE);
-  }
-  return &g_class;
-}
-
 GstVaapiDisplay *
-gst_vaapi_display_new (const GstVaapiDisplayClass * klass,
+gst_vaapi_display_new (GstVaapiDisplay * display,
     GstVaapiDisplayInitType init_type, gpointer init_value)
 {
-  GstVaapiDisplay *display;
+  g_return_val_if_fail (display != NULL, NULL);
 
-  display = (GstVaapiDisplay *)
-      gst_vaapi_mini_object_new0 (GST_VAAPI_MINI_OBJECT_CLASS (klass));
-  if (!display)
-    return NULL;
-
-  gst_vaapi_display_init (display);
   if (!gst_vaapi_display_create (display, init_type, init_value))
     goto error;
   return display;
@@ -1158,7 +1148,7 @@ gst_vaapi_display_new_with_display (VADisplay va_display)
   if (info)
     return gst_vaapi_display_ref_internal (info->display);
 
-  return gst_vaapi_display_new (gst_vaapi_display_class (),
+  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY, NULL),
       GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY, va_display);
 }
 
@@ -2124,7 +2114,7 @@ gst_vaapi_display_get_vendor_string (GstVaapiDisplay * display)
 
   if (!ensure_vendor_string (display))
     return NULL;
-  return display->priv.vendor_string;
+  return GST_VAAPI_DISPLAY_GET_PRIVATE (display)->vendor_string;
 }
 
 /**

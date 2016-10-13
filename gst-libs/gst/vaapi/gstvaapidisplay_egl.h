@@ -30,8 +30,9 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiDisplayEGL GstVaapiDisplayEGL;
 
+#define GST_TYPE_VAAPI_DISPLAY_EGL              (gst_vaapi_display_egl_get_type ())
 #define GST_VAAPI_DISPLAY_EGL(obj) \
-  ((GstVaapiDisplayEGL *)(obj))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DISPLAY_EGL, GstVaapiDisplayEGL))
 
 GstVaapiDisplay *
 gst_vaapi_display_egl_new (GstVaapiDisplay * display, guint gles_version);
@@ -49,6 +50,9 @@ gst_vaapi_display_egl_get_gl_context (GstVaapiDisplayEGL * display);
 gboolean
 gst_vaapi_display_egl_set_gl_context (GstVaapiDisplayEGL * display,
     EGLContext gl_context);
+
+GType
+gst_vaapi_display_egl_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 

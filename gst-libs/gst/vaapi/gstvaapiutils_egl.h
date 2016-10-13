@@ -29,9 +29,6 @@
 #include "egl_compat.h"
 #include "gstvaapiminiobject.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_debug_vaapidisplay_egl);
-#define GST_CAT_DEFAULT gst_debug_vaapidisplay_egl
-
 typedef union egl_handle_s                      EglHandle;
 typedef struct egl_object_s                     EglObject;
 typedef struct egl_object_class_s               EglObjectClass;
