@@ -459,11 +459,14 @@ do_post_message_pre (GstStatsTracer * self, guint64 ts, GstElement * elem,
 {
   GstElementStats *stats = get_element_stats (self, elem);
   const GstStructure *msg_s = gst_message_get_structure (msg);
+  GstStructure *s = msg_s ? msg_s : gst_structure_new_empty ("dummy");
 
   stats->last_ts = ts;
+  /* FIXME: work out whether using NULL instead of a dummy struct would work */
   gst_tracer_record_log (tr_message, (guint64) (guintptr) g_thread_self (), ts,
-      stats->index, GST_MESSAGE_TYPE_NAME (msg),
-      (msg_s ? msg_s : gst_structure_new_empty ("dummy")));
+      stats->index, GST_MESSAGE_TYPE_NAME (msg), s);
+  if (s != msg_s)
+    gst_structure_free (s);
 }
 
 static void
