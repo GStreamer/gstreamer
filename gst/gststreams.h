@@ -48,6 +48,10 @@ G_BEGIN_DECLS
  *
  * #GstStreamType describes a high level classification set for
  * flows of data in #GstStream objects.
+ *
+ * Note that this is a flag, and therefore users should not assume it
+ * will be a single value. Do not use the equality operator for checking
+ * whether a stream is of a certain type.
  */
 typedef enum {
   GST_STREAM_TYPE_UNKNOWN   = 1 << 0,
