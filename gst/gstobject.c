@@ -1140,7 +1140,7 @@ gst_object_sync_values (GstObject * object, GstClockTime timestamp)
  * gst_object_has_active_control_bindings:
  * @object: the object that has controlled properties
  *
- * Check if the @object has an active controlled properties.
+ * Check if the @object has active controlled properties.
  *
  * Returns: %TRUE if the object has active controlled properties
  */
