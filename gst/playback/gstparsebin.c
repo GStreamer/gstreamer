@@ -107,13 +107,13 @@
 #include "gstplaybackutils.h"
 
 /* generic templates */
-static GstStaticPadTemplate decoder_bin_sink_template =
+static GstStaticPadTemplate parse_bin_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static GstStaticPadTemplate decoder_bin_src_template =
+static GstStaticPadTemplate parse_bin_src_template =
 GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
@@ -184,10 +184,10 @@ struct _GstParseBinClass
 {
   GstBinClass parent_class;
 
-  /* signal fired when we found a pad that we cannot decode */
+  /* signal fired when we found a pad that we cannot parse */
   void (*unknown_type) (GstElement * element, GstPad * pad, GstCaps * caps);
 
-  /* signal fired to know if we continue trying to decode the given caps */
+  /* signal fired to know if we continue trying to parse the given caps */
     gboolean (*autoplug_continue) (GstElement * element, GstPad * pad,
       GstCaps * caps);
   /* signal fired to get a list of factories to try to autoplug */
@@ -397,7 +397,7 @@ struct _GstParseChain
                                  * once it can be exposed */
   GstParsePad *endpad;          /* Pad of this chain that could be exposed */
   gboolean deadend;             /* This chain is incomplete and can't be completed,
-                                   e.g. no suitable decoder could be found
+                                   e.g. no suitable parser could be found
                                    e.g. stream got EOS without buffers
                                  */
   gchar *deadend_details;
@@ -631,7 +631,7 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
    * @caps: The #GstCaps of the pad that cannot be resolved.
    *
    * This signal is emitted when a pad for which there is no further possible
-   * decoding is added to the ParseBin.
+   * parsing is added to the ParseBin.
    */
   gst_parse_bin_signals[SIGNAL_UNKNOWN_TYPE] =
       g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
@@ -798,7 +798,7 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
    * GstParseBin::drained
    * @bin: The ParseBin
    *
-   * This signal is emitted once ParseBin has finished decoding all the data.
+   * This signal is emitted once ParseBin has finished parsing all the data.
    */
   gst_parse_bin_signals[SIGNAL_DRAINED] =
       g_signal_new ("drained", G_TYPE_FROM_CLASS (klass),
@@ -823,9 +823,9 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
    *
    * Expose streams of unknown type.
    *
-   * If set to %FALSE, then only the streams that can be decoded to the final
+   * If set to %FALSE, then only the streams that can be parsed to the final
    * caps (see 'caps' property) will have a pad exposed. Streams that do not
-   * match those caps but could have been decoded will not have decoder plugged
+   * match those caps but could have been parsed will not have parser plugged
    * in internally and will not have a pad exposed.
    */
   g_object_class_install_property (gobject_klass, PROP_EXPOSE_ALL_STREAMS,
@@ -856,9 +856,9 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
   klass->autoplug_query = GST_DEBUG_FUNCPTR (gst_parse_bin_autoplug_query);
 
   gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&decoder_bin_sink_template));
+      gst_static_pad_template_get (&parse_bin_sink_template));
   gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&decoder_bin_src_template));
+      gst_static_pad_template_get (&parse_bin_src_template));
 
   gst_element_class_set_static_metadata (gstelement_klass,
       "Parse Bin", "Generic/Bin/Parser",
@@ -920,7 +920,7 @@ gst_parse_bin_init (GstParseBin * parse_bin)
     pad = gst_element_get_static_pad (parse_bin->typefind, "sink");
 
     /* get the pad template */
-    pad_tmpl = gst_static_pad_template_get (&decoder_bin_sink_template);
+    pad_tmpl = gst_static_pad_template_get (&parse_bin_sink_template);
 
     /* ghost the sink pad to ourself */
     gpad = gst_ghost_pad_new_from_template ("sink", pad, pad_tmpl);
@@ -1179,7 +1179,7 @@ static gboolean is_demuxer_element (GstElement * srcelement);
 static gboolean connect_pad (GstParseBin * parsebin, GstElement * src,
     GstParsePad * parsepad, GstPad * pad, GstCaps * caps,
     GValueArray * factories, GstParseChain * chain, gchar ** deadend_details);
-static GList *connect_element (GstParseBin * parsebin, GstParseElement * delem,
+static GList *connect_element (GstParseBin * parsebin, GstParseElement * pelem,
     GstParseChain * chain);
 static void expose_pad (GstParseBin * parsebin, GstElement * src,
     GstParsePad * parsepad, GstPad * pad, GstCaps * caps,
@@ -1397,7 +1397,7 @@ analyze_new_pad (GstParseBin * parsebin, GstElement * src, GstPad * pad,
   if (factories == NULL)
     goto expose_pad;
 
-  /* if the array is empty, we have a type for which we have no decoder */
+  /* if the array is empty, we have a type for which we have no parser */
   if (factories->n_values == 0) {
     /* if not we have a unhandled type with no compatible factories */
     g_value_array_free (factories);
@@ -1421,10 +1421,10 @@ analyze_new_pad (GstParseBin * parsebin, GstElement * src, GstPad * pad,
     GstCaps *filter_caps;
     gint i;
     GstPad *p;
-    GstParseElement *delem;
+    GstParseElement *pelem;
 
     g_assert (chain->elements != NULL);
-    delem = (GstParseElement *) chain->elements->data;
+    pelem = (GstParseElement *) chain->elements->data;
 
     filter_caps = gst_caps_new_empty ();
     for (i = 0; i < factories->n_values; i++) {
@@ -1459,17 +1459,17 @@ analyze_new_pad (GstParseBin * parsebin, GstElement * src, GstPad * pad,
     /* Append the parser caps to prevent any not-negotiated errors */
     filter_caps = gst_caps_merge (filter_caps, gst_caps_ref (caps));
 
-    delem->capsfilter = gst_element_factory_make ("capsfilter", NULL);
-    g_object_set (G_OBJECT (delem->capsfilter), "caps", filter_caps, NULL);
+    pelem->capsfilter = gst_element_factory_make ("capsfilter", NULL);
+    g_object_set (G_OBJECT (pelem->capsfilter), "caps", filter_caps, NULL);
     gst_caps_unref (filter_caps);
-    gst_element_set_state (delem->capsfilter, GST_STATE_PAUSED);
-    gst_bin_add (GST_BIN_CAST (parsebin), gst_object_ref (delem->capsfilter));
+    gst_element_set_state (pelem->capsfilter, GST_STATE_PAUSED);
+    gst_bin_add (GST_BIN_CAST (parsebin), gst_object_ref (pelem->capsfilter));
 
     parse_pad_set_target (parsepad, NULL);
-    p = gst_element_get_static_pad (delem->capsfilter, "sink");
+    p = gst_element_get_static_pad (pelem->capsfilter, "sink");
     gst_pad_link_full (pad, p, GST_PAD_LINK_CHECK_NOTHING);
     gst_object_unref (p);
-    p = gst_element_get_static_pad (delem->capsfilter, "src");
+    p = gst_element_get_static_pad (pelem->capsfilter, "src");
     parse_pad_set_target (parsepad, p);
     pad = p;
 
@@ -1749,7 +1749,7 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
   while (factories->n_values > 0) {
     GstAutoplugSelectResult ret;
     GstElementFactory *factory;
-    GstParseElement *delem;
+    GstParseElement *pelem;
     GstElement *element;
     GstPad *sinkpad;
     GParamSpec *pspec;
@@ -1777,10 +1777,10 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
      * FIXME: Only do this for fixed caps here. Non-fixed caps
      * can happen if a Parser/Converter was autoplugged before
      * this. We then assume that it will be able to convert to
-     * everything that the decoder would want.
+     * everything that the parser would want.
      *
      * A subset check will fail here because the parser caps
-     * will be generic and while the decoder will only
+     * will be generic and while the parser will only
      * support a subset of the parser caps.
      */
     if (gst_caps_is_fixed (caps)) {
@@ -1831,8 +1831,8 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
 
       CHAIN_MUTEX_LOCK (chain);
       for (l = chain->elements; l; l = l->next) {
-        GstParseElement *delem = (GstParseElement *) l->data;
-        GstElement *otherelement = delem->element;
+        GstParseElement *pelem = (GstParseElement *) l->data;
+        GstElement *otherelement = pelem->element;
 
         if (gst_element_get_factory (otherelement) == factory) {
           skip = TRUE;
@@ -2005,10 +2005,10 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
     GST_LOG_OBJECT (parsebin, "linked on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
     CHAIN_MUTEX_LOCK (chain);
-    delem = g_slice_new0 (GstParseElement);
-    delem->element = gst_object_ref (element);
-    delem->capsfilter = NULL;
-    chain->elements = g_list_prepend (chain->elements, delem);
+    pelem = g_slice_new0 (GstParseElement);
+    pelem->element = gst_object_ref (element);
+    pelem->capsfilter = NULL;
+    chain->elements = g_list_prepend (chain->elements, pelem);
     chain->demuxer = is_demuxer_element (element);
 
     /* If we plugging a parser, mark the chain as parsed */
@@ -2075,7 +2075,7 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
     }
 
     /* link this element further */
-    to_connect = connect_element (parsebin, delem, chain);
+    to_connect = connect_element (parsebin, pelem, chain);
 
     if ((is_simple_demuxer || is_parser_converter) && to_connect) {
       GList *l;
@@ -2084,7 +2084,7 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
         GstCaps *ocaps;
 
         ocaps = get_pad_caps (opad);
-        analyze_new_pad (parsebin, delem->element, opad, ocaps, chain);
+        analyze_new_pad (parsebin, pelem->element, opad, ocaps, chain);
         if (ocaps)
           gst_caps_unref (ocaps);
 
@@ -2209,7 +2209,7 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
         GstCaps *ocaps;
 
         ocaps = get_pad_caps (opad);
-        analyze_new_pad (parsebin, delem->element, opad, ocaps, chain);
+        analyze_new_pad (parsebin, pelem->element, opad, ocaps, chain);
         if (ocaps)
           gst_caps_unref (ocaps);
 
@@ -2254,10 +2254,10 @@ get_pad_caps (GstPad * pad)
 /* Returns a list of pads that can be connected to already and
  * connects to pad-added and related signals */
 static GList *
-connect_element (GstParseBin * parsebin, GstParseElement * delem,
+connect_element (GstParseBin * parsebin, GstParseElement * pelem,
     GstParseChain * chain)
 {
-  GstElement *element = delem->element;
+  GstElement *element = pelem->element;
   GList *pads;
   gboolean dynamic = FALSE;
   GList *to_connect = NULL;
@@ -2330,11 +2330,11 @@ connect_element (GstParseBin * parsebin, GstParseElement * delem,
   if (dynamic) {
     GST_LOG_OBJECT (parsebin, "Adding signals to element %s in chain %p",
         GST_ELEMENT_NAME (element), chain);
-    delem->pad_added_id = g_signal_connect (element, "pad-added",
+    pelem->pad_added_id = g_signal_connect (element, "pad-added",
         G_CALLBACK (pad_added_cb), chain);
-    delem->pad_removed_id = g_signal_connect (element, "pad-removed",
+    pelem->pad_removed_id = g_signal_connect (element, "pad-removed",
         G_CALLBACK (pad_removed_cb), chain);
-    delem->no_more_pads_id = g_signal_connect (element, "no-more-pads",
+    pelem->no_more_pads_id = g_signal_connect (element, "no-more-pads",
         G_CALLBACK (no_more_pads_cb), chain);
   }
 
@@ -2345,7 +2345,7 @@ connect_element (GstParseBin * parsebin, GstParseElement * delem,
 
 /* expose_pad:
  *
- * Expose the given pad on the chain as a decoded pad.
+ * Expose the given pad on the chain as a parsed pad.
  */
 static void
 expose_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
@@ -2376,7 +2376,7 @@ type_found (GstElement * typefind, guint probability,
   if (gst_structure_has_name (gst_caps_get_structure (caps, 0), "text/plain")) {
     GST_ELEMENT_ERROR (parse_bin, STREAM, WRONG_TYPE,
         (_("This appears to be a text file")),
-        ("ParseBin cannot decode plain text files"));
+        ("ParseBin cannot parse plain text files"));
     goto exit;
   }
 
@@ -2710,26 +2710,26 @@ gst_parse_chain_free_internal (GstParseChain * chain, gboolean hide)
   chain->pending_pads = NULL;
 
   for (l = chain->elements; l; l = l->next) {
-    GstParseElement *delem = l->data;
-    GstElement *element = delem->element;
+    GstParseElement *pelem = l->data;
+    GstElement *element = pelem->element;
 
-    if (delem->pad_added_id)
-      g_signal_handler_disconnect (element, delem->pad_added_id);
-    delem->pad_added_id = 0;
-    if (delem->pad_removed_id)
-      g_signal_handler_disconnect (element, delem->pad_removed_id);
-    delem->pad_removed_id = 0;
-    if (delem->no_more_pads_id)
-      g_signal_handler_disconnect (element, delem->no_more_pads_id);
-    delem->no_more_pads_id = 0;
+    if (pelem->pad_added_id)
+      g_signal_handler_disconnect (element, pelem->pad_added_id);
+    pelem->pad_added_id = 0;
+    if (pelem->pad_removed_id)
+      g_signal_handler_disconnect (element, pelem->pad_removed_id);
+    pelem->pad_removed_id = 0;
+    if (pelem->no_more_pads_id)
+      g_signal_handler_disconnect (element, pelem->no_more_pads_id);
+    pelem->no_more_pads_id = 0;
 
-    if (delem->capsfilter) {
-      if (GST_OBJECT_PARENT (delem->capsfilter) ==
+    if (pelem->capsfilter) {
+      if (GST_OBJECT_PARENT (pelem->capsfilter) ==
           GST_OBJECT_CAST (chain->parsebin))
-        gst_bin_remove (GST_BIN_CAST (chain->parsebin), delem->capsfilter);
+        gst_bin_remove (GST_BIN_CAST (chain->parsebin), pelem->capsfilter);
       if (!hide) {
         set_to_null =
-            g_list_append (set_to_null, gst_object_ref (delem->capsfilter));
+            g_list_append (set_to_null, gst_object_ref (pelem->capsfilter));
       }
     }
 
@@ -2746,15 +2746,15 @@ gst_parse_chain_free_internal (GstParseChain * chain, gboolean hide)
     SUBTITLE_UNLOCK (chain->parsebin);
 
     if (!hide) {
-      if (delem->capsfilter) {
-        gst_object_unref (delem->capsfilter);
-        delem->capsfilter = NULL;
+      if (pelem->capsfilter) {
+        gst_object_unref (pelem->capsfilter);
+        pelem->capsfilter = NULL;
       }
 
       gst_object_unref (element);
       l->data = NULL;
 
-      g_slice_free (GstParseElement, delem);
+      g_slice_free (GstParseElement, pelem);
     }
   }
   if (!hide) {
@@ -3574,7 +3574,7 @@ retry:
 #endif
     }
 
-    GST_INFO_OBJECT (parsepad, "added new decoded pad");
+    GST_INFO_OBJECT (parsepad, "added new parsed pad");
   }
 
   /* Unblock internal pads. The application should have connected stuff now
@@ -3634,7 +3634,7 @@ gst_parse_chain_expose (GstParseChain * chain, GList ** endpads,
         gchar *desc = gst_pb_utils_get_codec_description (chain->endcaps);
         gchar *caps_str = gst_caps_to_string (chain->endcaps);
         g_string_append_printf (missing_plugin_details,
-            "Missing decoder: %s (%s)\n", desc, caps_str);
+            "Missing parser: %s (%s)\n", desc, caps_str);
         g_free (caps_str);
         g_free (desc);
       }
@@ -4112,15 +4112,15 @@ gst_parse_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
   CHAIN_MUTEX_LOCK (parsepad->chain);
   if (!parsepad->exposed && !parsepad->parsebin->shutdown
       && !parsepad->chain->deadend && parsepad->chain->elements) {
-    GstParseElement *delem = parsepad->chain->elements->data;
+    GstParseElement *pelem = parsepad->chain->elements->data;
 
     ret = FALSE;
     GST_DEBUG_OBJECT (parsepad->parsebin,
         "calling autoplug-query for %s (element %s): %" GST_PTR_FORMAT,
-        GST_PAD_NAME (parsepad), GST_ELEMENT_NAME (delem->element), query);
+        GST_PAD_NAME (parsepad), GST_ELEMENT_NAME (pelem->element), query);
     g_signal_emit (G_OBJECT (parsepad->parsebin),
         gst_parse_bin_signals[SIGNAL_AUTOPLUG_QUERY], 0, parsepad,
-        delem->element, query, &ret);
+        pelem->element, query, &ret);
 
     if (ret)
       GST_DEBUG_OBJECT (parsepad->parsebin,
@@ -4148,8 +4148,8 @@ gst_parse_pad_new (GstParseBin * parsebin, GstParseChain * chain)
   GstProxyPad *ppad;
   GstPadTemplate *pad_tmpl;
 
-  GST_DEBUG_OBJECT (parsebin, "making new decodepad");
-  pad_tmpl = gst_static_pad_template_get (&decoder_bin_src_template);
+  GST_DEBUG_OBJECT (parsebin, "making new parsepad");
+  pad_tmpl = gst_static_pad_template_get (&parse_bin_src_template);
   parsepad =
       g_object_new (GST_TYPE_PARSE_PAD, "direction", GST_PAD_SRC,
       "template", pad_tmpl, NULL);
