@@ -1167,21 +1167,15 @@ update_combiner_info (GstPlayBin3 * playbin)
         gst_stream_collection_get_stream (playbin->collection, i);
     GstStreamType stype = gst_stream_get_stream_type (stream);
 
-    switch (stype) {
-      case GST_STREAM_TYPE_AUDIO:
-        g_ptr_array_add (playbin->combiner[PLAYBIN_STREAM_AUDIO].streams,
-            gst_object_ref (stream));
-        break;
-      case GST_STREAM_TYPE_VIDEO:
-        g_ptr_array_add (playbin->combiner[PLAYBIN_STREAM_VIDEO].streams,
-            gst_object_ref (stream));
-        break;
-      case GST_STREAM_TYPE_TEXT:
-        g_ptr_array_add (playbin->combiner[PLAYBIN_STREAM_TEXT].streams,
-            gst_object_ref (stream));
-        break;
-      default:
-        break;
+    if (stype & GST_STREAM_TYPE_AUDIO) {
+      g_ptr_array_add (playbin->combiner[PLAYBIN_STREAM_AUDIO].streams,
+          gst_object_ref (stream));
+    } else if (stype & GST_STREAM_TYPE_VIDEO) {
+      g_ptr_array_add (playbin->combiner[PLAYBIN_STREAM_VIDEO].streams,
+          gst_object_ref (stream));
+    } else if (stype & GST_STREAM_TYPE_TEXT) {
+      g_ptr_array_add (playbin->combiner[PLAYBIN_STREAM_TEXT].streams,
+          gst_object_ref (stream));
     }
   }
 
@@ -1198,20 +1192,14 @@ static void
 set_selected_stream (GstPlayBin3 * playbin, GstStream * stream)
 {
   GstSourceCombine *combine = NULL;
+  GstStreamType stype = gst_stream_get_stream_type (stream);
 
-  switch (gst_stream_get_stream_type (stream)) {
-    case GST_STREAM_TYPE_AUDIO:
-      combine = &playbin->combiner[PLAYBIN_STREAM_AUDIO];
-      break;
-    case GST_STREAM_TYPE_VIDEO:
-      combine = &playbin->combiner[PLAYBIN_STREAM_VIDEO];
-      break;
-    case GST_STREAM_TYPE_TEXT:
-      combine = &playbin->combiner[PLAYBIN_STREAM_TEXT];
-      break;
-    default:
-      break;
-  }
+  if (stype & GST_STREAM_TYPE_AUDIO)
+    combine = &playbin->combiner[PLAYBIN_STREAM_AUDIO];
+  else if (stype & GST_STREAM_TYPE_VIDEO)
+    combine = &playbin->combiner[PLAYBIN_STREAM_VIDEO];
+  else if (stype & GST_STREAM_TYPE_TEXT)
+    combine = &playbin->combiner[PLAYBIN_STREAM_TEXT];
 
   if (combine) {
     if (combine->combiner == NULL) {
@@ -2460,34 +2448,28 @@ do_stream_selection (GstPlayBin3 * playbin)
     gint pb_stream_type = -1;
     gboolean select_this = FALSE;
 
-    switch (stream_type) {
-      case GST_STREAM_TYPE_AUDIO:
-        pb_stream_type = PLAYBIN_STREAM_AUDIO;
-        /* Select the stream if it's the current one or if there's a custom selector */
-        select_this =
-            (nb_audio == playbin->current_audio ||
-            (playbin->current_audio == -1 && nb_audio == 0) ||
-            playbin->audio_stream_combiner != NULL);
-        nb_audio++;
-        break;
-      case GST_STREAM_TYPE_VIDEO:
-        pb_stream_type = PLAYBIN_STREAM_AUDIO;
-        select_this =
-            (nb_video == playbin->current_video ||
-            (playbin->current_video == -1 && nb_video == 0) ||
-            playbin->video_stream_combiner != NULL);
-        nb_video++;
-        break;
-      case GST_STREAM_TYPE_TEXT:
-        pb_stream_type = PLAYBIN_STREAM_TEXT;
-        select_this =
-            (nb_text == playbin->current_text ||
-            (playbin->current_text == -1 && nb_text == 0) ||
-            playbin->text_stream_combiner != NULL);
-        nb_text++;
-        break;
-      default:
-        break;
+    if (stream_type & GST_STREAM_TYPE_AUDIO) {
+      pb_stream_type = PLAYBIN_STREAM_AUDIO;
+      /* Select the stream if it's the current one or if there's a custom selector */
+      select_this =
+          (nb_audio == playbin->current_audio ||
+          (playbin->current_audio == -1 && nb_audio == 0) ||
+          playbin->audio_stream_combiner != NULL);
+      nb_audio++;
+    } else if (stream_type & GST_STREAM_TYPE_VIDEO) {
+      pb_stream_type = PLAYBIN_STREAM_AUDIO;
+      select_this =
+          (nb_video == playbin->current_video ||
+          (playbin->current_video == -1 && nb_video == 0) ||
+          playbin->video_stream_combiner != NULL);
+      nb_video++;
+    } else if (stream_type & GST_STREAM_TYPE_TEXT) {
+      pb_stream_type = PLAYBIN_STREAM_TEXT;
+      select_this =
+          (nb_text == playbin->current_text ||
+          (playbin->current_text == -1 && nb_text == 0) ||
+          playbin->text_stream_combiner != NULL);
+      nb_text++;
     }
     if (pb_stream_type < 0) {
       GST_DEBUG_OBJECT (playbin,
@@ -3070,19 +3052,12 @@ select_stream_cb (GstElement * decodebin, GstStreamCollection * collection,
   GstStreamType stype = gst_stream_get_stream_type (stream);
   GstElement *combiner = NULL;
 
-  switch (stype) {
-    case GST_STREAM_TYPE_AUDIO:
-      combiner = playbin->audio_stream_combiner;
-      break;
-    case GST_STREAM_TYPE_VIDEO:
-      combiner = playbin->video_stream_combiner;
-      break;
-    case GST_STREAM_TYPE_TEXT:
-      combiner = playbin->text_stream_combiner;
-      break;
-    default:
-      break;
-  }
+  if (stype & GST_STREAM_TYPE_AUDIO)
+    combiner = playbin->audio_stream_combiner;
+  else if (stype & GST_STREAM_TYPE_VIDEO)
+    combiner = playbin->video_stream_combiner;
+  else if (stype & GST_STREAM_TYPE_TEXT)
+    combiner = playbin->text_stream_combiner;
 
   if (combiner) {
     GST_DEBUG_OBJECT (playbin, "Got a combiner, requesting stream activation");

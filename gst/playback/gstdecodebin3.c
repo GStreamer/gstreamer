@@ -1796,7 +1796,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
       can_reuse_decoder = FALSE;
 
     if (can_reuse_decoder) {
-      if (output->type == GST_STREAM_TYPE_VIDEO && output->drop_probe_id == 0) {
+      if (output->type & GST_STREAM_TYPE_VIDEO && output->drop_probe_id == 0) {
         GST_DEBUG_OBJECT (dbin, "Adding keyframe-waiter probe");
         output->drop_probe_id =
             gst_pad_add_probe (slot->src_pad, GST_PAD_PROBE_TYPE_BUFFER,
@@ -1863,7 +1863,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
     }
     output->decoder_sink = gst_element_get_static_pad (output->decoder, "sink");
     output->decoder_src = gst_element_get_static_pad (output->decoder, "src");
-    if (output->type == GST_STREAM_TYPE_VIDEO) {
+    if (output->type & GST_STREAM_TYPE_VIDEO) {
       GST_DEBUG_OBJECT (dbin, "Adding keyframe-waiter probe");
       output->drop_probe_id =
           gst_pad_add_probe (slot->src_pad, GST_PAD_PROBE_TYPE_BUFFER,
@@ -2395,27 +2395,22 @@ create_output_stream (GstDecodebin3 * dbin, GstStreamType type)
   res->type = type;
   res->dbin = dbin;
 
-  switch (type) {
-    case GST_STREAM_TYPE_VIDEO:
-      templ = &video_src_template;
-      counter = &dbin->vpadcount;
-      prefix = "video";
-      break;
-    case GST_STREAM_TYPE_AUDIO:
-      templ = &audio_src_template;
-      counter = &dbin->apadcount;
-      prefix = "audio";
-      break;
-    case GST_STREAM_TYPE_TEXT:
-      templ = &text_src_template;
-      counter = &dbin->tpadcount;
-      prefix = "text";
-      break;
-    default:
-      templ = &src_template;
-      counter = &dbin->opadcount;
-      prefix = "src";
-      break;
+  if (type & GST_STREAM_TYPE_VIDEO) {
+    templ = &video_src_template;
+    counter = &dbin->vpadcount;
+    prefix = "video";
+  } else if (type & GST_STREAM_TYPE_AUDIO) {
+    templ = &audio_src_template;
+    counter = &dbin->apadcount;
+    prefix = "audio";
+  } else if (type & GST_STREAM_TYPE_TEXT) {
+    templ = &text_src_template;
+    counter = &dbin->tpadcount;
+    prefix = "text";
+  } else {
+    templ = &src_template;
+    counter = &dbin->opadcount;
+    prefix = "src";
   }
 
   pad_name = g_strdup_printf ("%s_%u", prefix, *counter);
