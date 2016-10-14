@@ -75,6 +75,10 @@ append_debug_info (GString * trace, const void *ip)
 {
 
   char *debuginfo_path = NULL;
+  Dwarf_Addr addr;
+  Dwfl_Module *module;
+  const char *function_name;
+  Dwfl_Line *line;
 
   Dwfl_Callbacks callbacks = {
     .find_elf = dwfl_linux_proc_find_elf,
@@ -83,20 +87,21 @@ append_debug_info (GString * trace, const void *ip)
   };
 
   Dwfl *dwfl = dwfl_begin (&callbacks);
+
   assert (dwfl != NULL);
 
   assert (dwfl_linux_proc_report (dwfl, getpid ()) == 0);
   assert (dwfl_report_end (dwfl, NULL, NULL) == 0);
 
-  Dwarf_Addr addr = (uintptr_t) ip;
+  addr = (uintptr_t) ip;
 
-  Dwfl_Module *module = dwfl_addrmodule (dwfl, addr);
+  module = dwfl_addrmodule (dwfl, addr);
 
-  const char *function_name = dwfl_module_addrname (module, addr);
+  function_name = dwfl_module_addrname (module, addr);
 
   g_string_append_printf (trace, "%s(", function_name ? function_name : "??");
 
-  Dwfl_Line *line = dwfl_getsrc (dwfl, addr);
+  line = dwfl_getsrc (dwfl, addr);
   if (line != NULL) {
     int nline;
     Dwarf_Addr addr;
