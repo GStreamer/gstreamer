@@ -51,13 +51,15 @@ libgstvalidate_@GST_API_VERSION@_la_SOURCES = $(source_c)
 libgstvalidate_@GST_API_VERSION@include_HEADERS = $(source_h)
 libgstvalidate_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS)\
 	$(JSON_GLIB_CFLAGS) $(GIO_CFLAGS) $(GST_PBUTILS_CFLAGS) \
+	$(DW_CFLAGS) \
 	-DGST_USE_UNSTABLE_API
 libgstvalidate_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
 	$(GST_LT_LDFLAGS) $(GIO_LDFLAGS) $(GST_PBUTILS_LDFAGS)
 libgstvalidate_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
 	$(GST_ALL_LIBS) $(GIO_LIBS) $(GST_PBUTILS_LIBS) \
-	$(JSON_GLIB_LIBS) $(GLIB_LIBS) $(LIBM) $(UNWIND_LIBS)
+	$(JSON_GLIB_LIBS) $(GLIB_LIBS) $(LIBM) $(UNWIND_LIBS) \
+	$(DW_LIBS)
 
 libgstvalidate_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/validate
 
