@@ -35,13 +35,11 @@
 #define TO_16(x) (((x)<<8) | (x))
 
 static unsigned char
-random_char (void)
+random_char (guint * state)
 {
-  static unsigned int state;
-
-  state *= 1103515245;
-  state += 12345;
-  return (state >> 16) & 0xff;
+  *state *= 1103515245;
+  *state += 12345;
+  return (*state >> 16) & 0xff;
 }
 
 enum
@@ -413,7 +411,7 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, GstVideoFrame * frame)
       p->color = &color;
 
       for (i = x1; i < w; i++) {
-        int y = random_char ();
+        int y = random_char (&v->random_state);
         p->tmpline_u8[i] = y;
       }
       videotestsrc_blend_line (v, p->tmpline + x1 * 4, p->tmpline_u8 + x1,
@@ -517,7 +515,7 @@ gst_video_test_src_snow (GstVideoTestSrc * v, GstVideoFrame * frame)
 
   for (j = 0; j < h; j++) {
     for (i = 0; i < w; i++) {
-      int y = random_char ();
+      int y = random_char (&v->random_state);
       p->tmpline_u8[i] = y;
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,

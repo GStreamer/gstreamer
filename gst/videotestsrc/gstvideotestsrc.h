@@ -174,6 +174,9 @@ struct _GstVideoTestSrc {
   gint horizontal_offset;
   gint horizontal_speed;
 
+  /* smpte & snow */
+  guint random_state;
+
   void (*make_image) (GstVideoTestSrc *v, GstVideoFrame *frame);
 
   /* temporary AYUV/ARGB scanline */

@@ -32,6 +32,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
@@ -522,6 +523,78 @@ GST_START_TEST (test_duration_query)
 
 GST_END_TEST;
 
+static gchar *
+get_buffer_checksum (GstBuffer *buf)
+{
+  GstMapInfo map = GST_MAP_INFO_INIT;
+  GChecksum *md5 = g_checksum_new (G_CHECKSUM_MD5);
+  gchar *ret;
+
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  g_checksum_update (md5, map.data, map.size);
+  gst_buffer_unmap (buf, &map);
+
+  ret = g_strdup (g_checksum_get_string (md5));
+  g_checksum_free (md5);
+
+  return ret;
+}
+
+GST_START_TEST (test_patterns_are_deterministic)
+{
+  GType type;
+  GEnumClass * enum_class;
+  gint num_patterns;
+  GstHarness *h[2];
+  const gint num_instances = G_N_ELEMENTS (h);
+  const gint num_frames = 2;
+
+  /* Create an element to register types used below */
+  gst_object_unref (gst_element_factory_make ("videotestsrc", NULL));
+
+  /* Find number of patterns to check */
+  type = g_type_from_name ("GstVideoTestSrcPattern");
+  fail_unless (type != 0);
+  enum_class = g_type_class_ref (type);
+  num_patterns = enum_class->n_values;
+  fail_unless (num_patterns > 0);
+  g_type_class_unref (enum_class);
+
+  /* For each pattern, make sure that all instances produce identical
+   * frames */
+  for (gint pattern = 0; pattern < num_patterns; pattern++) {
+
+    for (gint i = 0; i < G_N_ELEMENTS (h); i++) {
+      h[i] = gst_harness_new ("videotestsrc");
+      g_object_set (h[i]->element, "pattern", pattern, NULL);
+      gst_harness_set_blocking_push_mode (h[i]);
+      gst_harness_play (h[i]);
+    }
+
+    for (gint frame = 0; frame < num_frames; frame++) {
+      gchar *ref_checksum = NULL;
+
+      for (gint i = 0; i < num_instances; i++) {
+        GstBuffer *buffer = gst_harness_pull (h[i]);
+        gchar *checksum = get_buffer_checksum (buffer);
+
+        if (i == 0)
+          ref_checksum = g_strdup (checksum);
+
+        fail_unless_equals_string (ref_checksum, checksum);
+
+        g_free (checksum);
+        gst_buffer_unref (buffer);
+      }
+      g_free (ref_checksum);
+    }
+    for (gint i = 0; i < G_N_ELEMENTS (h); i++)
+      gst_harness_teardown (h[i]);
+  }
+}
+GST_END_TEST;
+
+
 
 /* FIXME: add tests for YUV formats */
 
@@ -544,6 +617,7 @@ videotestsrc_suite (void)
   tcase_add_test (tc_chain, test_rgb_formats);
   tcase_add_test (tc_chain, test_backward_playback);
   tcase_add_test (tc_chain, test_duration_query);
+  tcase_add_test (tc_chain, test_patterns_are_deterministic);
 
   return s;
 }

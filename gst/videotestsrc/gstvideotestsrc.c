@@ -304,6 +304,7 @@ gst_video_test_src_init (GstVideoTestSrc * src)
   src->foreground_color = DEFAULT_FOREGROUND_COLOR;
   src->background_color = DEFAULT_BACKGROUND_COLOR;
   src->horizontal_speed = DEFAULT_HORIZONTAL_SPEED;
+  src->random_state = 0;
 
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
