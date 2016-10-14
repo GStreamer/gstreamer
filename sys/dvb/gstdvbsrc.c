@@ -1984,7 +1984,7 @@ gst_dvbsrc_start (GstBaseSrc * bsrc)
     return FALSE;
   }
   if (!gst_dvbsrc_tune (src)) {
-    GST_ERROR_OBJECT (src, "Not able to lock on to the dvb channel");
+    GST_ERROR_OBJECT (src, "Not able to lock on channel");
     goto fail;
   }
   if (!gst_dvbsrc_open_dvr (src)) {
@@ -2078,8 +2078,8 @@ gst_dvbsrc_is_valid_trans_mode (guint delsys, guint mode)
       break;
 #endif
     default:
-      GST_FIXME ("No delsys/transmission-mode sanity checks implemented for "
-          "this delivery system");
+      GST_FIXME ("No transmission-mode sanity checks implemented for this "
+          "delivery system");
       return TRUE;
   }
   return FALSE;
@@ -2108,8 +2108,8 @@ gst_dvbsrc_is_valid_modulation (guint delsys, guint mod)
         return TRUE;
       break;
     default:
-      GST_FIXME ("No delsys/modulation sanity checks implemented for this "
-          "delivery system");
+      GST_FIXME ("No modulation sanity checks implemented for this delivery "
+          "system");
       return TRUE;
   }
   return FALSE;
@@ -2318,12 +2318,12 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
   /* If set, confirm the choosen delivery system is actually
    * supported by the hardware */
   if (object->delsys != SYS_UNDEFINED) {
-    GST_DEBUG_OBJECT (object, "Confirming delsys '%u' is supported",
+    GST_DEBUG_OBJECT (object, "Confirming delivery system '%u' is supported",
         object->delsys);
     if (!g_list_find (object->supported_delsys,
             GINT_TO_POINTER (object->delsys))) {
-      GST_WARNING_OBJECT (object, "Adapter does not support delsys '%u'",
-          object->delsys);
+      GST_WARNING_OBJECT (object, "Adapter does not support delivery system "
+          "'%u'", object->delsys);
       return FALSE;
     }
   }
