@@ -16,13 +16,15 @@ PROJECTNAME = "GStreamer 'all'"
 ROOTDIR = os.path.abspath(os.path.dirname(__file__))
 
 
-def get_meson():
-    print("Updating meson submodule... ", end='')
-    sys.stdout.flush()
-    git('submodule', 'update', '--init', repository_path=ROOTDIR)
-    print("DONE")
+def get_meson(update_meson):
+    meson = os.path.join(ROOTDIR, 'meson', 'meson.py')
+    if update_meson or not os.path.exists(meson):
+        print("Updating meson submodule... ", end='')
+        sys.stdout.flush()
+        git('submodule', 'update', '--init', repository_path=ROOTDIR)
+        print("DONE")
 
-    return os.path.join(ROOTDIR, 'meson', 'meson.py')
+    return meson
 
 
 def accept_command(commands):
@@ -38,12 +40,12 @@ def accept_command(commands):
 
 
 def get_configs(meson):
-     return ['-Dwerror=true']
+     return ['-D', 'werror=true']
 
 
-def configure_meson(args):
+def configure_meson(args, options):
     """Configures meson and generate the Makefile."""
-    meson = get_meson()
+    meson = get_meson(options.update_meson)
     if not meson:
         print("Install mesonbuild to build %s: http://mesonbuild.com/\n"
               "You can simply install it with:\n"
@@ -59,10 +61,11 @@ def configure_meson(args):
     build_dir = os.path.join(ROOTDIR, "build")
     shutil.rmtree(build_dir, True)
     os.mkdir(build_dir)
-    os.chdir(build_dir)
 
     try:
-        subprocess.check_call([meson, "../"] + args + get_configs(meson))
+        subprocess.check_call([meson, "../"] + args, cwd=build_dir)
+        subprocess.check_call([os.path.join(ROOTDIR, 'meson', 'mesonconf.py')]
+                              + get_configs(meson), cwd=build_dir)
     except subprocess.CalledProcessError as e:
         print("EXIT meson return %s" % e.returncode)
         exit(1)
@@ -73,6 +76,8 @@ if __name__ == "__main__":
     parser.add_argument("--no-reconfigure", action='store_true',
                         default=False, help='Avoid removing the build dir'
                        ' if not necessary.')
+    parser.add_argument("-u", "--update-meson", action='store_true',
+                        default=False, help='Do not update meson')
     options, args = parser.parse_known_args()
     if options.no_reconfigure:
         if os.path.exists(
@@ -81,4 +86,4 @@ if __name__ == "__main__":
             print("Not reconfiguring")
             exit(0)
 
-    configure_meson(args)
+    configure_meson(args, options)
