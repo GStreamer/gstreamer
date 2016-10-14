@@ -224,14 +224,18 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
     gst_buffer_unref (buffer);
 
     GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
-    GST_BUFFER_TIMESTAMP (ret) = timestamp;
+    if (ret) {
+      GST_BUFFER_TIMESTAMP (ret) = timestamp;
 
-    if (change_duration)
-      GST_BUFFER_DURATION (ret) = duration;
-    if (change_offset)
-      GST_BUFFER_OFFSET (ret) = offset;
-    if (change_offset_end)
-      GST_BUFFER_OFFSET_END (ret) = offset_end;
+      if (change_duration)
+        GST_BUFFER_DURATION (ret) = duration;
+      if (change_offset)
+        GST_BUFFER_OFFSET (ret) = offset;
+      if (change_offset_end)
+        GST_BUFFER_OFFSET_END (ret) = offset_end;
+    } else {
+      GST_ERROR ("copy_region failed");
+    }
   }
   return ret;
 }
