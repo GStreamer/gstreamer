@@ -10,6 +10,8 @@ meson and its "subproject" feature.
 We have an helper script to get started, will get the right [meson](http://mesonbuild.com/)
 version and get you ready to build. You can just get all GStreamer built running:
 
+NOTE: on fedora (and maybe other distributions) replace `ninja` with `ninja-build`
+
 ```
 ./configure && ninja -C build/
 ```
