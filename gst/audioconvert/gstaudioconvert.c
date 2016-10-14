@@ -302,41 +302,41 @@ gst_audio_convert_transform_caps (GstBaseTransform * btrans,
   return result;
 }
 
+/* Count the number of bits set
+ * Optimized for the common case, assuming that the number of channels
+ * (i.e. bits set) is small
+ */
 static gint
 n_bits_set (guint64 x)
 {
-  gint i;
-  gint c = 0;
-  guint64 y = 1;
+  gint c;
 
-  for (i = 0; i < 64; i++) {
-    if (x & y)
-      c++;
-    y <<= 1;
-  }
+  for (c = 0; x; c++)
+    x &= x - 1;
 
   return c;
 }
 
+/* Reduce the mask to the n_chans lowest set bits
+ *
+ * The algorithm clears the n_chans lowest set bits and subtracts the
+ * result from the original mask to get the desired mask.
+ * It is optimized for the common case where n_chans is a small
+ * number. In the worst case, however, it stops after 64 iterations.
+ */
 static guint64
 find_suitable_mask (guint64 mask, gint n_chans)
 {
-  guint64 intersection;
-  gint i;
+  guint64 x = mask;
 
-  i = 0;
+  for (; x && n_chans; n_chans--)
+    x &= x - 1;
 
-  g_assert (n_bits_set (mask) >= n_chans);
+  g_assert (x || n_chans == 0);
+  /* assertion fails if mask contained less bits than n_chans
+   * or n_chans was < 0 */
 
-  intersection = mask;
-  do {
-    intersection = intersection & ((~G_GUINT64_CONSTANT (0)) >> i);
-    i++;
-  } while (n_bits_set (intersection) > n_chans && i < 64);
-
-  if (i < 64)
-    return intersection;
-  return 0;
+  return mask - x;
 }
 
 static void
