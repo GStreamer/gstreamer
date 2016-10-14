@@ -62,6 +62,8 @@ struct _GstKMSSink {
   gboolean has_prime_import;
   gboolean has_async_page_flip;
 
+  gboolean modesetting_enabled;
+
   GstVideoInfo vinfo;
   GstCaps *allowed_caps;
   GstBufferPool *pool;

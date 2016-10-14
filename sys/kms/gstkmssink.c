@@ -137,6 +137,7 @@ find_crtc_for_connector (int fd, drmModeRes * res, drmModeConnector * conn,
   int crtc_id;
   drmModeEncoder *enc;
   drmModeCrtc *crtc;
+  guint32 crtcs_for_connector = 0;
 
   crtc_id = -1;
   for (i = 0; i < res->count_encoders; i++) {
@@ -149,6 +150,18 @@ find_crtc_for_connector (int fd, drmModeRes * res, drmModeConnector * conn,
       }
       drmModeFreeEncoder (enc);
     }
+  }
+
+  /* If no active crtc was found, pick the first possible crtc */
+  if (crtc_id == -1) {
+    for (i = 0; i < conn->count_encoders; i++) {
+      enc = drmModeGetEncoder (fd, conn->encoders[i]);
+      crtcs_for_connector |= enc->possible_crtcs;
+      drmModeFreeEncoder (enc);
+    }
+
+    if (crtcs_for_connector != 0)
+      crtc_id = res->crtcs[ffs (crtcs_for_connector) - 1];
   }
 
   if (crtc_id == -1)
@@ -241,6 +254,10 @@ find_main_monitor (int fd, drmModeRes * res)
   if (!conn)
     conn = find_first_used_connector (fd, res);
 
+  /* if no connector is used, grab the first one */
+  if (!conn)
+    conn = drmModeGetConnector (fd, res->connectors[0]);
+
   return conn;
 }
 
@@ -300,6 +317,51 @@ get_drm_caps (GstKMSSink * self)
       self->has_async_page_flip ? "✓" : "✗");
 
   return TRUE;
+}
+
+static gboolean
+configure_mode_setting (GstKMSSink * self, guint32 fb_id)
+{
+  gboolean ret;
+  drmModeConnector *conn;
+  int err;
+
+  ret = FALSE;
+  conn = NULL;
+
+  if (self->conn_id < 0)
+    goto bail;
+
+  GST_INFO_OBJECT (self, "configuring mode setting");
+
+  conn = drmModeGetConnector (self->fd, self->conn_id);
+  if (!conn)
+    goto connector_failed;
+
+  err = drmModeSetCrtc (self->fd, self->crtc_id, fb_id, 0, 0,
+      (uint32_t *) & self->conn_id, 1, &conn->modes[0]);
+  if (err)
+    goto modesetting_failed;
+
+  ret = TRUE;
+
+bail:
+  if (conn)
+    drmModeFreeConnector (conn);
+
+  return ret;
+
+  /* ERRORS */
+connector_failed:
+  {
+    GST_ERROR_OBJECT (self, "Could not find a valid monitor connector");
+    goto bail;
+  }
+modesetting_failed:
+  {
+    GST_ERROR_OBJECT (self, "Failed to set mode: %s", strerror (errno));
+    goto bail;
+  }
 }
 
 static gboolean
@@ -390,6 +452,12 @@ gst_kms_sink_start (GstBaseSink * bsink)
   crtc = find_crtc_for_connector (self->fd, res, conn, &self->pipe);
   if (!crtc)
     goto crtc_failed;
+
+  if (!crtc->mode_valid) {
+    GST_DEBUG_OBJECT (self, "crtc has no valid mode: enabling modesetting");
+    self->modesetting_enabled = TRUE;
+    universal_planes = TRUE;
+  }
 
 retry_find_plane:
   if (universal_planes &&
@@ -807,7 +875,7 @@ gst_kms_sink_sync (GstKMSSink * self)
     vbl.request.type |= self->pipe << DRM_VBLANK_HIGH_CRTC_SHIFT;
 
   waiting = TRUE;
-  if (!self->has_async_page_flip) {
+  if (!self->has_async_page_flip && !self->modesetting_enabled) {
     ret = drmWaitVBlank (self->fd, &vbl);
     if (ret)
       goto vblank_failed;
@@ -1038,6 +1106,7 @@ error_map_src_buffer:
 static GstFlowReturn
 gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
+  static gboolean setup = FALSE;
   gint ret;
   GstBuffer *buffer;
   guint32 fb_id;
@@ -1060,6 +1129,22 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     goto buffer_invalid;
 
   GST_TRACE_OBJECT (self, "displaying fb %d", fb_id);
+
+  if (self->modesetting_enabled) {
+    /* Use the current buffer object for configuring the mode, if the mode is
+     * not configured. Preferably the display mode should be set when
+     * configuring the pipeline (during set_caps), but we do not have a buffer
+     * object at that time. */
+    if (!setup) {
+      ret = configure_mode_setting (self, fb_id);
+      if (!ret)
+        goto modesetting_failed;
+      setup = TRUE;
+    }
+
+    self->buffer_id = fb_id;
+    goto sync_frame;
+  }
 
   if ((crop = gst_buffer_get_video_crop_meta (buffer))) {
     GstVideoInfo vinfo = self->vinfo;
@@ -1100,6 +1185,7 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   if (ret)
     goto set_plane_failed;
 
+sync_frame:
   /* Wait for the previous frame to complete redraw */
   if (!gst_kms_sink_sync (self))
     goto bail;
@@ -1116,6 +1202,11 @@ bail:
 buffer_invalid:
   {
     GST_ERROR_OBJECT (self, "invalid buffer: it doesn't have a fb id");
+    goto bail;
+  }
+modesetting_failed:
+  {
+    GST_ERROR_OBJECT (self, "failed to configure display mode");
     goto bail;
   }
 set_plane_failed:
