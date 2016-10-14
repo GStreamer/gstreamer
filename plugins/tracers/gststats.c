@@ -459,7 +459,8 @@ do_post_message_pre (GstStatsTracer * self, guint64 ts, GstElement * elem,
 {
   GstElementStats *stats = get_element_stats (self, elem);
   const GstStructure *msg_s = gst_message_get_structure (msg);
-  GstStructure *s = msg_s ? msg_s : gst_structure_new_empty ("dummy");
+  GstStructure *s =
+      msg_s ? (GstStructure *) msg_s : gst_structure_new_empty ("dummy");
 
   stats->last_ts = ts;
   /* FIXME: work out whether using NULL instead of a dummy struct would work */
