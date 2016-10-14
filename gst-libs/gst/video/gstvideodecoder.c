@@ -3956,6 +3956,27 @@ GstFlowReturn
 gst_video_decoder_allocate_output_frame (GstVideoDecoder *
     decoder, GstVideoCodecFrame * frame)
 {
+  return gst_video_decoder_allocate_output_frame_with_params (decoder, frame,
+      NULL);
+}
+
+/**
+ * gst_video_decoder_allocate_output_frame_with_params:
+ * @decoder: a #GstVideoDecoder
+ * @frame: a #GstVideoCodecFrame
+ * @params: a #GstBufferPoolAcquireParams
+ *
+ * Same as #gst_video_decoder_allocate_output_frame except it allows passing
+ * #GstBufferPoolAcquireParams to the sub call gst_buffer_pool_acquire_buffer.
+ *
+ * Returns: %GST_FLOW_OK if an output buffer could be allocated
+ *
+ * Since: 1.12
+ */
+GstFlowReturn
+gst_video_decoder_allocate_output_frame_with_params (GstVideoDecoder *
+    decoder, GstVideoCodecFrame * frame, GstBufferPoolAcquireParams * params)
+{
   GstFlowReturn flow_ret;
   GstVideoCodecState *state;
   int num_bytes;
@@ -3988,7 +4009,7 @@ gst_video_decoder_allocate_output_frame (GstVideoDecoder *
   GST_LOG_OBJECT (decoder, "alloc buffer size %d", num_bytes);
 
   flow_ret = gst_buffer_pool_acquire_buffer (decoder->priv->pool,
-      &frame->output_buffer, NULL);
+      &frame->output_buffer, params);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 

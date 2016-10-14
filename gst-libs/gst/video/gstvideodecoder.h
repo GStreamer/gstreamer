@@ -391,6 +391,9 @@ gsize          gst_video_decoder_get_pending_frame_size (GstVideoDecoder *decode
 
 GstBuffer     *gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder);
 
+GstFlowReturn  gst_video_decoder_allocate_output_frame_with_params (GstVideoDecoder *decoder,
+                                                                    GstVideoCodecFrame * frame,
+                                                                    GstBufferPoolAcquireParams *params);
 GstFlowReturn  gst_video_decoder_allocate_output_frame  (GstVideoDecoder *decoder,
 						         GstVideoCodecFrame *frame);
 
