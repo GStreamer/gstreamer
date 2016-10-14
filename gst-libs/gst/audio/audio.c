@@ -61,7 +61,7 @@ ensure_debug_category (void)
  *           the buffer should be clipped.
  * @rate: sample rate.
  * @bpf: size of one audio frame in bytes. This is the size of one sample
- * * channels.
+ * * channel.
  *
  * Clip the buffer to the given %GstSegment.
  *
