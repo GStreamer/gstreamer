@@ -1,3 +1,9 @@
+all:
+
+install:
+
+clean:
+
 HOTDOC ?= hotdoc
 prefix ?= /usr
 datadir ?= ${prefix}/share
@@ -20,11 +26,18 @@ gst_docs_HOTDOC_FLAGS = \
 	--conf-file hotdoc.json \
 	$(NULL)
 
-all:
+theme.stamp: less/variables.less
+	+make -C hotdoc_bootstrap_theme LESS_INCLUDE_PATH=$$PWD/less
+	@rm -rf hotdoc-private*
+	@touch theme.stamp
 
-install:
+clean_theme:
+	rm -f theme.stamp
+	+make -C hotdoc_bootstrap_theme clean
 
-clean:
+clean: clean_theme
+
+gst_docs_HOTDOC_EXTRA_DEPS = theme.stamp
 
 .PHONY: all install clean
 

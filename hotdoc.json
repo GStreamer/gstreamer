@@ -12,5 +12,7 @@
     "project_name": "GStreamer Documentation",
     "sitemap": "sitemap.txt", 
     "syntax_highlighting_activate": true,
-    "devhelp_activate": true
+    "devhelp_activate": true,
+    "html_theme": "hotdoc_bootstrap_theme/dist",
+    "html_extra_theme": "extra_theme"
 }

@@ -27,22 +27,26 @@ for *stable* automatic formatting.
 * We *experimentally* use the hotdoc C extension to include functions by
   name, follow the steps outlined [here](https://github.com/hotdoc/hotdoc_c_extension)
 
-* Optionally install the `hotdoc_syntax_highlighting_extension`:
+* We recompile and override hotdoc's default theme, which is a submodule of this project:
 
 ```
-pip install hotdoc-syntax-highlighting-extension
+git submodule update --init
 ```
 
-* Optionally install the `hotdoc_search_extension`:
+Follow the instructions outlined in the theme's README.md, you can dispense
+with the last step (building the theme):
 
 ```
-pip install hotdoc-search-extension
+cd hotdoc_bootstrap_theme
+sudo dnf install nodejs # On Fedora
+npm install && ./node_modules/bower/bin/bower install
+cd ..
 ```
 
 * Build the portal:
 
 ```
-hotdoc run
+make
 ```
 
 * And browse it:

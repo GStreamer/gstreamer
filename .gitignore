@@ -1,5 +1,7 @@
 /built_doc
 /hotdoc-private*
+/.hotdoc.d
+/*.stamp
 Debug
 Release
 ipch
