@@ -99,10 +99,10 @@ GST_START_TEST (test_buffer_clip_time_start_and_stop)
   ret = gst_audio_buffer_clip (buf, &s, 100, 1);
   fail_unless (ret != NULL);
 
-  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
-  fail_unless (GST_BUFFER_DURATION (ret) == 4 * GST_SECOND);
-  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
-  fail_unless (GST_BUFFER_OFFSET_END (ret) == 800);
+  fail_unless_equals_int64 (GST_BUFFER_TIMESTAMP (ret), 4 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (ret), 4 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET (ret), 400);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET_END (ret), 800);
   gst_buffer_map (ret, &map, GST_MAP_READ);
   fail_unless (map.data == data + 200);
   fail_unless (map.size == 400);
@@ -134,10 +134,10 @@ GST_START_TEST (test_buffer_clip_time_start)
   ret = gst_audio_buffer_clip (buf, &s, 100, 1);
   fail_unless (ret != NULL);
 
-  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
-  fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
-  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
-  fail_unless (GST_BUFFER_OFFSET_END (ret) == 1200);
+  fail_unless_equals_int64 (GST_BUFFER_TIMESTAMP (ret), 4 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (ret), 8 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET (ret), 400);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET_END (ret), 1200);
   gst_buffer_map (ret, &map, GST_MAP_READ);
   fail_unless (map.data == data + 200);
   fail_unless (map.size == 800);
@@ -169,10 +169,10 @@ GST_START_TEST (test_buffer_clip_time_stop)
   ret = gst_audio_buffer_clip (buf, &s, 100, 1);
   fail_unless (ret != NULL);
 
-  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 2 * GST_SECOND);
-  fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
-  fail_unless (GST_BUFFER_OFFSET (ret) == 200);
-  fail_unless (GST_BUFFER_OFFSET_END (ret) == 1000);
+  fail_unless_equals_int64 (GST_BUFFER_TIMESTAMP (ret), 2 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (ret), 8 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET (ret), 200);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET_END (ret), 1000);
   gst_buffer_map (ret, &map, GST_MAP_READ);
   fail_unless (map.data == data);
   fail_unless (map.size == 800);
@@ -226,10 +226,11 @@ GST_START_TEST (test_buffer_clip_time_start_and_stop_no_meta)
   ret = gst_audio_buffer_clip (buf, &s, 100, 1);
   fail_unless (ret != NULL);
 
-  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
-  fail_unless (GST_BUFFER_DURATION (ret) == GST_CLOCK_TIME_NONE);
-  fail_unless (GST_BUFFER_OFFSET (ret) == GST_BUFFER_OFFSET_NONE);
-  fail_unless (GST_BUFFER_OFFSET_END (ret) == GST_BUFFER_OFFSET_NONE);
+  fail_unless_equals_int64 (GST_BUFFER_TIMESTAMP (ret), 4 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (ret), GST_CLOCK_TIME_NONE);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET (ret), GST_BUFFER_OFFSET_NONE);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET_END (ret),
+      GST_BUFFER_OFFSET_NONE);
   gst_buffer_map (ret, &map, GST_MAP_READ);
   fail_unless (map.data == data + 200);
   fail_unless (map.size == 400);
@@ -267,6 +268,43 @@ GST_START_TEST (test_buffer_clip_time_no_timestamp)
 
 GST_END_TEST;
 
+GST_START_TEST (test_buffer_clip_time_handles_rounding)
+{
+  GstSegment s;
+  GstBuffer *buf;
+  GstBuffer *ret;
+  GstMapInfo map;
+  guint8 *data;
+  GstClockTime time_per_sample = GST_SECOND / 100;
+
+  /* Clip only stop */
+  buf = make_buffer (&data);
+  setup_segment (&s, GST_FORMAT_TIME, 2 * GST_SECOND, 10 * GST_SECOND,
+      2 * GST_SECOND);
+
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  /* the max duration that still converts back to the same size of samples */
+  GST_BUFFER_DURATION (buf) = 10 * GST_SECOND + (time_per_sample - 1);
+  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET_END (buf) = 1200;
+
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret != NULL);
+
+  fail_unless_equals_int64 (GST_BUFFER_TIMESTAMP (ret), 2 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (ret), 8 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET (ret), 200);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET_END (ret), 1000);
+  gst_buffer_map (ret, &map, GST_MAP_READ);
+  fail_unless (map.data == data);
+  fail_unless (map.size == 800);
+  gst_buffer_unmap (ret, &map);
+
+  gst_buffer_unref (ret);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_buffer_clip_samples_start_and_stop)
 {
   GstSegment s;
@@ -287,10 +325,10 @@ GST_START_TEST (test_buffer_clip_samples_start_and_stop)
   ret = gst_audio_buffer_clip (buf, &s, 100, 1);
   fail_unless (ret != NULL);
 
-  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
-  fail_unless (GST_BUFFER_DURATION (ret) == 4 * GST_SECOND);
-  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
-  fail_unless (GST_BUFFER_OFFSET_END (ret) == 800);
+  fail_unless_equals_int64 (GST_BUFFER_TIMESTAMP (ret), 4 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (ret), 4 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET (ret), 400);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET_END (ret), 800);
   gst_buffer_map (ret, &map, GST_MAP_READ);
   fail_unless (map.data == data + 200);
   fail_unless (map.size == 400);
@@ -321,10 +359,10 @@ GST_START_TEST (test_buffer_clip_samples_start)
   ret = gst_audio_buffer_clip (buf, &s, 100, 1);
   fail_unless (ret != NULL);
 
-  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
-  fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
-  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
-  fail_unless (GST_BUFFER_OFFSET_END (ret) == 1200);
+  fail_unless_equals_int64 (GST_BUFFER_TIMESTAMP (ret), 4 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (ret), 8 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET (ret), 400);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET_END (ret), 1200);
   gst_buffer_map (ret, &map, GST_MAP_READ);
   fail_unless (map.data == data + 200);
   fail_unless (map.size == 800);
@@ -355,10 +393,10 @@ GST_START_TEST (test_buffer_clip_samples_stop)
   ret = gst_audio_buffer_clip (buf, &s, 100, 1);
   fail_unless (ret != NULL);
 
-  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 2 * GST_SECOND);
-  fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
-  fail_unless (GST_BUFFER_OFFSET (ret) == 200);
-  fail_unless (GST_BUFFER_OFFSET_END (ret) == 1000);
+  fail_unless_equals_int64 (GST_BUFFER_TIMESTAMP (ret), 2 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (ret), 8 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET (ret), 200);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET_END (ret), 1000);
   gst_buffer_map (ret, &map, GST_MAP_READ);
   fail_unless (map.data == data);
   fail_unless (map.size == 800);
@@ -410,10 +448,11 @@ GST_START_TEST (test_buffer_clip_samples_start_and_stop_no_meta)
   ret = gst_audio_buffer_clip (buf, &s, 100, 1);
   fail_unless (ret != NULL);
 
-  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
-  fail_unless (GST_BUFFER_DURATION (ret) == GST_CLOCK_TIME_NONE);
-  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
-  fail_unless (GST_BUFFER_OFFSET_END (ret) == GST_BUFFER_OFFSET_NONE);
+  fail_unless_equals_int64 (GST_BUFFER_TIMESTAMP (ret), 4 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (ret), GST_CLOCK_TIME_NONE);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET (ret), 400);
+  fail_unless_equals_int64 (GST_BUFFER_OFFSET_END (ret),
+      GST_BUFFER_OFFSET_NONE);
   gst_buffer_map (ret, &map, GST_MAP_READ);
   fail_unless (map.data == data + 200);
   fail_unless (map.size == 400);
@@ -681,6 +720,7 @@ audio_suite (void)
   tcase_add_test (tc_chain, test_buffer_clip_time_outside);
   tcase_add_test (tc_chain, test_buffer_clip_time_start_and_stop_no_meta);
   tcase_add_test (tc_chain, test_buffer_clip_time_no_timestamp);
+  tcase_add_test (tc_chain, test_buffer_clip_time_handles_rounding);
   tcase_add_test (tc_chain, test_buffer_clip_samples_start_and_stop);
   tcase_add_test (tc_chain, test_buffer_clip_samples_start);
   tcase_add_test (tc_chain, test_buffer_clip_samples_stop);
