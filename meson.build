@@ -2,7 +2,6 @@ project('gst-libav', 'c', 'cpp',
   version : '1.9.2.1',
   meson_version : '>= 0.33.0',
   default_options : [ 'warning_level=1',
-                      'c_std=gnu99',
                       'buildtype=debugoptimized' ])
 
 gst_version = meson.project_version()
