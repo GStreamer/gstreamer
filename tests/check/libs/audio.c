@@ -213,14 +213,14 @@ GST_START_TEST (test_buffer_clip_time_start_and_stop_no_meta)
   GstMapInfo map;
   guint8 *data;
 
-  /* Clip start and end but don't touch duration and offset_end */
+  /* Clip start and end but don't touch duration, offset and offset_end */
   buf = make_buffer (&data);
   setup_segment (&s, GST_FORMAT_TIME, 4 * GST_SECOND, 8 * GST_SECOND,
       4 * GST_SECOND);
 
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
 
   ret = gst_audio_buffer_clip (buf, &s, 100, 1);
@@ -228,7 +228,7 @@ GST_START_TEST (test_buffer_clip_time_start_and_stop_no_meta)
 
   fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
   fail_unless (GST_BUFFER_DURATION (ret) == GST_CLOCK_TIME_NONE);
-  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
+  fail_unless (GST_BUFFER_OFFSET (ret) == GST_BUFFER_OFFSET_NONE);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == GST_BUFFER_OFFSET_NONE);
   gst_buffer_map (ret, &map, GST_MAP_READ);
   fail_unless (map.data == data + 200);
