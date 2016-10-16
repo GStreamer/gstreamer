@@ -34,6 +34,11 @@
 #include <QtQuick/QQuickWindow>
 #include <QOpenGLFramebufferObject>
 
+/* compatability definitions... */
+#ifndef GL_READ_FRAMEBUFFER
+#define GL_READ_FRAMEBUFFER 0x8CA8
+#endif
+
 /**
  * SECTION:
  *
