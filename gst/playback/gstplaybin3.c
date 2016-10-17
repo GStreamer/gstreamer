@@ -4523,6 +4523,7 @@ urisrc_pad_added (GstElement * urisrc, GstPad * pad, GstSourceGroup * group)
       sinkpad = NULL;
     }
   }
+  GST_SOURCE_GROUP_UNLOCK (group);
 
   if (sinkpad == NULL) {
     /* Auxiliary stream, request a new pad from decodebin */
@@ -4541,7 +4542,6 @@ urisrc_pad_added (GstElement * urisrc, GstPad * pad, GstSourceGroup * group)
     if (GST_PAD_LINK_FAILED (res))
       goto link_failed;
   }
-  GST_SOURCE_GROUP_UNLOCK (group);
   return;
 
 link_failed:
@@ -4549,7 +4549,6 @@ link_failed:
     GST_ERROR_OBJECT (playbin,
         "failed to link pad %s:%s to decodebin, reason %s (%d)",
         GST_DEBUG_PAD_NAME (pad), gst_pad_link_get_name (res), res);
-    GST_SOURCE_GROUP_UNLOCK (group);
     return;
   }
 }
