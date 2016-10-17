@@ -123,7 +123,10 @@ if __name__ == "__main__":
         exit(1)
 
     if not args:
-        args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
+        if os.name is 'nt':
+            args = [os.environ.get("COMSPEC", r"C:\WINDOWS\system32\cmd.exe")]
+        else:
+            args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
         if args[0] == "/bin/bash":
             args.append("--noprofile")
 
