@@ -11,7 +11,7 @@ if host_system == 'windows' and cc.has_header('d3d9.h')
     winscreencap_sources,
     c_args : gst_plugins_bad_args,
     include_directories : [configinc],
-    dependencies : [gstbase_dep] + winscreencap_dep,
+    dependencies : [gstbase_dep, gstvideo_dep] + winscreencap_dep,
     install : true,
     install_dir : plugins_install_dir,
   )
