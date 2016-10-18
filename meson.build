@@ -185,24 +185,32 @@ if cc.has_function('getpagesize', prefix : '#include<unistd.h>')
   cdata.set('HAVE_GETPAGESIZE', 1)
 endif
 
-# With OS X 10.11.6 and XCode 8, clock_gettime will be incorrectly detected as
-# being available because the symbol is available in the .tbd file as a weak
-# symbol. See: https://github.com/Homebrew/homebrew-core/issues/3727#issue-170086273
+# With XCode 8, clock_gettime will be incorrectly detected as being available
+# regardless of what version of OS X you target because the symbol is available
+# in the .tbd file as a weak symbol.
+# See: https://bugzilla.gnome.org/show_bug.cgi?id=772451 
 #
 # We cannot simply do cc.has_function with -Wl,-no_weak_imports because the
 # check does its own prototype decl that doesn't trigger that compiler flag.
 #
-# It's only starting from macOS 10.12, that clock_gettime is actually available,
-# so we can unconditionally disable it for older versions.
-for_osx_10_12_src = '''#include <AvailabilityMacros.h>
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_12
-#error "Not compiling for OS X 10.12 or later"
+# It's only starting from macOS 10.12 and iOS 10.0 that clock_gettime is
+# actually available, so we can unconditionally disable it for older versions.
+disable_clock_gettime_src = '''#include <AvailabilityMacros.h>
+#include <TargetConditionals.h>
+#if defined(TARGET_OS_MAC)
+#  if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_12
+#    error "Not compiling for OS X 10.12 or later"
+#  endif
+#else
+#  if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_10_0
+#    error "Not compiling for iOS 10.0 or later"
+#  endif
 #endif
 '''
 
 if cc.has_function('clock_gettime', prefix : '#include <time.h>')
   if host_machine.system() == 'darwin'
-    if cc.compiles(for_osx_10_12_src, name : 'minimum OS X version required >= 10.12')
+    if cc.compiles(disable_clock_gettime_src, name : 'target darwin/ios version has clock_gettime')
       cdata.set('HAVE_CLOCK_GETTIME', 1)
     endif
   else
