@@ -209,7 +209,7 @@ gl_include_header = '''
 # Desktop OpenGL checks
 gl_dep = unneeded_dep
 glx_dep = unneeded_dep
-if need_api_opengl != 'no' and need_platform_glx != 'no'
+if need_api_opengl != 'no' or need_platform_glx != 'no'
   gl_dep = dependency('GL', required : false)
   if not gl_dep.found()
 #    if host_machine.system() == 'windows'
