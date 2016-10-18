@@ -75,6 +75,7 @@ enum
   PROP_DRIVER_NAME = 1,
   PROP_CONNECTOR_ID,
   PROP_PLANE_ID,
+  PROP_FORCE_MODESETTING,
   PROP_N
 };
 
@@ -515,8 +516,8 @@ gst_kms_sink_start (GstBaseSink * bsink)
   if (!crtc)
     goto crtc_failed;
 
-  if (!crtc->mode_valid) {
-    GST_DEBUG_OBJECT (self, "crtc has no valid mode: enabling modesetting");
+  if (!crtc->mode_valid || self->modesetting_enabled) {
+    GST_DEBUG_OBJECT (self, "enabling modesetting");
     self->modesetting_enabled = TRUE;
     universal_planes = TRUE;
   }
@@ -1306,6 +1307,9 @@ gst_kms_sink_set_property (GObject * object, guint prop_id,
     case PROP_PLANE_ID:
       sink->plane_id = g_value_get_int (value);
       break;
+    case PROP_FORCE_MODESETTING:
+      sink->modesetting_enabled = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1329,6 +1333,9 @@ gst_kms_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PLANE_ID:
       g_value_set_int (value, sink->plane_id);
+      break;
+    case PROP_FORCE_MODESETTING:
+      g_value_set_boolean (value, sink->modesetting_enabled);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1424,6 +1431,18 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
    */
   g_properties[PROP_PLANE_ID] = g_param_spec_int ("plane-id",
       "Plane ID", "DRM plane id", -1, G_MAXINT32, -1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  /**
+   * kmssink:force-modesetting:
+   *
+   * If the output connector is already active, the sink automatically uses an
+   * overlay plane. Enforce mode setting in the kms sink and output to the
+   * base plane to override the automatic behavior.
+   */
+  g_properties[PROP_FORCE_MODESETTING] =
+      g_param_spec_boolean ("force-modesetting", "Force modesetting",
+      "When enabled, the sink try to configure the display mode", FALSE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   g_object_class_install_properties (gobject_class, PROP_N, g_properties);
