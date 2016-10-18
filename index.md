@@ -80,8 +80,7 @@ developers planing on or already using GStreamer for their applications:
 
 ## GStreamer plugin module split-up
 
-<a href="/documentation/splitup.html">
-An explanation of the various plugin modules and how they were split up</a>
+[An explanation of the various plugin modules and how they were split up](splitup.md)
 
 ## RTP and RTSP support in GStreamer
 
