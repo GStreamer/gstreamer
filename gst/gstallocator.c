@@ -210,6 +210,8 @@ gst_allocator_register (const gchar * name, GstAllocator * allocator)
       allocator, name);
 
   g_rw_lock_writer_lock (&lock);
+  /* The ref will never be released */
+  GST_OBJECT_FLAG_SET (allocator, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   g_hash_table_insert (allocators, (gpointer) name, (gpointer) allocator);
   g_rw_lock_writer_unlock (&lock);
 }
