@@ -697,14 +697,21 @@ AC_CHECK_FUNC(clock_gettime, [CLOCK_GETTIME_FOUND="yes"], [
 # autoconf check does its own prototype declaration that doesn't trigger that
 # compiler flag.
 #
-# It's only starting from macOS 10.12, that clock_gettime is actually available,
-# so we can unconditionally disable it when targetting older versions.
+# It's only starting from macOS 10.12 and iOS 10.0 that clock_gettime is
+# actually available, so we can unconditionally disable it for older versions.
 case "$host_os" in
   darwin*)
     AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #include <AvailabilityMacros.h>
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_12
-#error "Not compiling for OS X 10.12 or later"
+#include <TargetConditionals.h>
+#if defined(TARGET_OS_MAC)
+#  if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_12
+#    error "Not compiling for OS X 10.12 or later"
+#  endif
+#else
+#  if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_10_0
+#    error "Not compiling for iOS 10.0 or later"
+#  endif
 #endif
     ]])], [], [
     if test "$CLOCK_GETTIME_FOUND" = "yes"; then
