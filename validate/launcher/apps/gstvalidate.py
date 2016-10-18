@@ -825,6 +825,12 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             # hls known issues
             ("validate.hls.playback.seek_with_stop.*",
              "https://bugzilla.gnome.org/show_bug.cgi?id=753689"),
+            ("validate.hls.playback.reverse_playback.*",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=773159"),
+            ("validate.hls.playback.scrub_forward_seeking.*",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=773159"),
+            ("validate.hls.playback.fast_forward.*",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=773159"),
 
             # dash known issues
             ("validate.dash.media_check.*",
