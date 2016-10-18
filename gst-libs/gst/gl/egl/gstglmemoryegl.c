@@ -173,7 +173,7 @@ _gl_mem_create (GstGLMemoryEGL * gl_mem, GError ** error)
     }
 
     gl_mem->image = gst_egl_image_new_wrapped (context, image, 0, 0,
-        (GstEGLImageDestroyNotify) _destroy_egl_image, NULL);
+        NULL, (GstEGLImageDestroyNotify) _destroy_egl_image);
   } else {
     gl->ActiveTexture (GL_TEXTURE0 + gl_mem->mem.plane);
     gl->BindTexture (GL_TEXTURE_2D, gl_mem->mem.tex_id);
