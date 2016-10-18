@@ -20,16 +20,17 @@ Overview
 gstreamer-vaapi consists in a collection of VA-API based plugins for
 GStreamer and helper libraries.
 
-  * `vaapidecode' is used to decode JPEG, MPEG-2, MPEG-4:2, H.264 AVC,
-    H.264 MVC, VP8, VC-1, WMV3, HEVC videos to VA surfaces, depending
-    on the underlying hardware capabilities. This plugin is also able
-    to implicitly download the decoded surface to raw YUV buffers.
+  * `vaapi<CODEC>dec' is used to decode JPEG, MPEG-2, MPEG-4:2, H.264
+    AVC, H.264 MVC, VP8, VC-1, WMV3, HEVC videos to VA surfaces,
+    depending on the actual value of <CODEC> and the underlying
+    hardware capabilities.  This plugin is also able to implicitly
+    download the decoded surface to raw YUV buffers.
 
-  * `vaapiencode_<CODEC>' is used to encode into MPEG-2, H.264 AVC,
-    H.264 MVC, JPEG, VP8, HEVC videos, depending on the actual value
-    of <CODEC> (mpeg2, h264, etc.). By default, raw format bitstreams
-    are generated, so the result may be piped to a muxer.
-    e.g. qtmux for MP4 containers.
+  * `vaapi<CODEC>enc' is used to encode into MPEG-2, H.264 AVC, H.264
+    MVC, JPEG, VP8, HEVC videos, depending on the actual value of
+    <CODEC> (mpeg2, h264, etc.) and the hardware capabilities. By
+    default, raw format bitstreams are generated, so the result may be
+    piped to a muxer, e.g. qtmux for MP4 containers.
 
   * `vaapipostproc' is used to filter VA surfaces, for e.g. scaling,
     deinterlacing (bob, motion-adaptive, motion-compensated), noise
@@ -45,18 +46,20 @@ Features
 --------
 
   * VA-API support from 0.29 to 0.38
-  * JPEG, MPEG-2, MPEG-4, H.264 AVC, H.264 MVC, VP8, VC-1, HEVC and VP9 ad-hoc decoders
+  * JPEG, MPEG-2, MPEG-4, H.264 AVC, H.264 MVC, VP8, VC-1, HEVC and
+    VP9 ad-hoc decoders
   * MPEG-2, H.264 AVC,H.264 MVC, JPEG, VP8 and HEVC ad-hoc encoders
   * OpenGL rendering through VA/GLX or GLX texture-from-pixmap + FBO
   * Support for EGL backend
   * Support for the Wayland display server
   * Support for headless decode pipelines with VA/DRM
-  * Support for major HW video decoding solutions on Linux (AMD, Intel, NVIDIA)
+  * Support for major HW video decoding solutions on Linux (AMD,
+    Intel, NVIDIA)
   * Support for HW video encoding on Intel HD Graphics hardware
   * Support for VA Video Processing APIs (VA/VPP)
     - Scaling and color conversion
-    - Image enhancement filters: Sharpening, Noise Reductio, Color Balance,
-      Skin-Tone-Enhancement
+    - Image enhancement filters: Sharpening, Noise Reductio, Color
+      Balance, Skin-Tone-Enhancement
     - Advanced deinterlacing: Motion-Adaptive, Motion-Compensated
 
 
@@ -65,11 +68,10 @@ Requirements
 
 Software requirements
 
-  * GStreamer 1.4.x (up to including GStreamer 1.6):
-      libglib2.0-dev (>= 2.32)
-      libgstreamer1.0-dev (>= 1.4.0)
-      libgstreamer-plugins-base1.0-dev (>= 1.4.0)
-      libgstreamer-plugins-bad1.0-dev (>= 1.4.0)
+  * GStreamer 1.9.x:
+      libgstreamer1.0-dev (>= 1.9.x)
+      libgstreamer-plugins-base1.0-dev (>= 1.9.x)
+      libgstreamer-plugins-bad1.0-dev (>= 1.9.0)
 
   * Renderers:
       DRM: libva-dev (>= 1.1.0), libdrm-dev, libudev-dev
@@ -79,13 +81,13 @@ Software requirements
 
 Hardware requirements
 
-  * AMD platforms with UVD2 (XvBA supported)
   * Intel Eaglelake (G45)
-  * Intel Ironlake, Sandybridge, Ivybridge, Haswell and Broadwell (HD Graphics)
+  * Intel Ironlake, Sandybridge, Ivybridge, Haswell, Broadwell,
+    Skylake, etc. (HD Graphics)
   * Intel BayTrail, Braswell
   * Intel Poulsbo (US15W)
   * Intel Medfield or Cedar Trail
-  * NVIDIA platforms with PureVideo (VDPAU supported)
+  * Hardware supported by Mesa VA gallium state-tracker
 
 
 Usage
@@ -98,11 +100,11 @@ Usage
 
   * Play an H.264 video with an MP4 container in fullscreen mode
   $ gst-launch-1.0 -v filesrc location=/path/to/video.mp4 ! \
-      qtdemux ! vaapidecode ! vaapisink fullscreen=true
+      qtdemux ! vaapidecodebin ! vaapisink fullscreen=true
 
   * Play a raw MPEG-2 interlaced stream
   $ gst-launch-1.0 -v filesrc location=/path/to/mpeg2.bits ! \
-      mpegvideoparse ! vaapidecode ! vaapipostproc ! vaapisink
+      mpegvideoparse ! vaapimpeg2dec ! vaapipostproc ! vaapisink
 
   * Convert from one pixel format to another, while also downscaling
   $ gst-launch-1.0 -v filesrc location=/path/to/raw_video.yuv ! \
@@ -112,7 +114,7 @@ Usage
   * Encode a 1080p stream in raw I420 format into H.264
   $ gst-launch-1.0 -v filesrc location=/path/to/raw_video.yuv ! \
       videoparse format=i420 width=1920 height=1080 framerate=30/1 ! \
-      vaapiencode_h264 rate-control=cbr tune=high-compression ! \
+      vaapih264enc rate-control=cbr tune=high-compression ! \
       qtmux ! filesink location=/path/to/encoded_video.mp4
 
 
@@ -126,7 +128,7 @@ Sources
   <http://www.freedesktop.org/software/vaapi/releases/gstreamer-vaapi/>
 
   Git repository for work-in-progress changes is available at:
-  <https://github.com/01org/gstreamer-vaapi>
+  <https://cgit.freedesktop.org/gstreamer/gstreamer-vaapi>
 
 
 Reporting Bugs
