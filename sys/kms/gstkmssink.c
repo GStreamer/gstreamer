@@ -775,29 +775,6 @@ no_pool:
 }
 
 static void
-gst_kms_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
-    GstClockTime * start, GstClockTime * end)
-{
-  GstKMSSink *self;
-
-  self = GST_KMS_SINK (bsink);
-
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    *start = GST_BUFFER_TIMESTAMP (buf);
-    if (GST_BUFFER_DURATION_IS_VALID (buf))
-      *end = *start + GST_BUFFER_DURATION (buf);
-    else {
-      if (GST_VIDEO_INFO_FPS_N (&self->vinfo) > 0) {
-        *end = *start +
-            gst_util_uint64_scale_int (GST_SECOND,
-            GST_VIDEO_INFO_FPS_D (&self->vinfo),
-            GST_VIDEO_INFO_FPS_N (&self->vinfo));
-      }
-    }
-  }
-}
-
-static void
 sync_handler (gint fd, guint frame, guint sec, guint usec, gpointer data)
 {
   gboolean *waiting;
@@ -1257,7 +1234,6 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_kms_sink_set_caps);
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_kms_sink_get_caps);
   basesink_class->propose_allocation = gst_kms_sink_propose_allocation;
-  basesink_class->get_times = gst_kms_sink_get_times;
 
   videosink_class->show_frame = gst_kms_sink_show_frame;
 
