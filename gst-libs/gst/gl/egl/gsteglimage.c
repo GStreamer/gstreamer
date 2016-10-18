@@ -317,6 +317,6 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
 
   return gst_egl_image_new_wrapped (context, img, type,
       GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
-      (GstEGLImageDestroyNotify) _destroy_egl_image, NULL);
+      NULL, (GstEGLImageDestroyNotify) _destroy_egl_image);
 }
 #endif /* GST_GL_HAVE_DMABUF */
