@@ -191,7 +191,7 @@ else
 #    elif winsys == 'dispmanx'
 #      need_win_dispmanx = 'yes'
     else
-      error('Unsupported GL winsys provided ' + platform)
+      error('Unsupported GL winsys provided ' + winsys)
     endif
   endforeach
 endif
