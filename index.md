@@ -84,4 +84,4 @@ developers planing on or already using GStreamer for their applications:
 
 ## RTP and RTSP support in GStreamer
 
-<a href="/documentation/rtp.html">RTSP and RTP component overview</a>
+[RTSP and RTP component overview](rtp.md)
