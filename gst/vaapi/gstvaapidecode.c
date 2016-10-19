@@ -481,6 +481,16 @@ gst_vaapidecode_negotiate (GstVaapiDecode * decode)
   return TRUE;
 }
 
+static gboolean
+is_src_allocator_dmabuf (GstVaapiDecode * decode)
+{
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (decode);
+
+  if (!GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (plugin))
+    return FALSE;
+  return gst_vaapi_is_dmabuf_allocator (plugin->srcpad_allocator);
+}
+
 static GstFlowReturn
 gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
     GstVideoCodecFrame * out_frame)
@@ -491,6 +501,8 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
   GstFlowReturn ret;
   const GstVaapiRectangle *crop_rect;
   GstVaapiVideoMeta *meta;
+  GstBufferPoolAcquireParams *params = NULL;
+  GstVaapiVideoBufferPoolAcquireParams vaapi_params = { {0,}, };
   guint flags, out_flags = 0;
   gboolean alloc_renegotiate, caps_renegotiate;
 
@@ -522,14 +534,26 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
     gst_vaapi_surface_proxy_set_destroy_notify (proxy,
         (GDestroyNotify) gst_vaapidecode_release, gst_object_ref (decode));
 
-    ret = gst_video_decoder_allocate_output_frame (vdec, out_frame);
+    if (is_src_allocator_dmabuf (decode)) {
+      vaapi_params.proxy = gst_vaapi_surface_proxy_ref (proxy);
+      params = (GstBufferPoolAcquireParams *) & vaapi_params;
+    }
+
+    ret = gst_video_decoder_allocate_output_frame_with_params (vdec, out_frame,
+        params);
+    if (params)
+      gst_vaapi_surface_proxy_unref (vaapi_params.proxy);
     if (ret != GST_FLOW_OK)
       goto error_create_buffer;
 
-    meta = gst_buffer_get_vaapi_video_meta (out_frame->output_buffer);
-    if (!meta)
-      goto error_get_meta;
-    gst_vaapi_video_meta_set_surface_proxy (meta, proxy);
+    /* if not dmabuf is negotiated set the vaapi video meta in the
+     * proxy */
+    if (!params) {
+      meta = gst_buffer_get_vaapi_video_meta (out_frame->output_buffer);
+      if (!meta)
+        goto error_get_meta;
+      gst_vaapi_video_meta_set_surface_proxy (meta, proxy);
+    }
 
     flags = gst_vaapi_surface_proxy_get_flags (proxy);
     if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_CORRUPTED)
