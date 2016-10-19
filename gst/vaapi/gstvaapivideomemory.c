@@ -889,7 +889,8 @@ gst_vaapi_buffer_proxy_quark_get (void)
 }
 
 GstMemory *
-gst_vaapi_dmabuf_memory_new (GstAllocator * allocator, GstVaapiVideoMeta * meta)
+gst_vaapi_dmabuf_memory_new (GstAllocator * base_allocator,
+    GstVaapiVideoMeta * meta)
 {
   GstMemory *mem;
   GstVaapiDisplay *display;
@@ -899,11 +900,13 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * allocator, GstVaapiVideoMeta * meta)
   gint dmabuf_fd;
   const GstVideoInfo *vip;
   guint flags;
+  GstVaapiDmaBufAllocator *const allocator =
+      GST_VAAPI_DMABUF_ALLOCATOR_CAST (base_allocator);
 
   g_return_val_if_fail (allocator != NULL, NULL);
   g_return_val_if_fail (meta != NULL, NULL);
 
-  vip = gst_allocator_get_vaapi_video_info (allocator, &flags);
+  vip = gst_allocator_get_vaapi_video_info (base_allocator, &flags);
   if (!vip)
     return NULL;
 
@@ -934,7 +937,7 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * allocator, GstVaapiVideoMeta * meta)
   if (dmabuf_fd < 0 || (dmabuf_fd = dup (dmabuf_fd)) < 0)
     goto error_create_dmabuf_handle;
 
-  mem = gst_dmabuf_allocator_alloc (allocator, dmabuf_fd,
+  mem = gst_dmabuf_allocator_alloc (base_allocator, dmabuf_fd,
       gst_vaapi_buffer_proxy_get_size (dmabuf_proxy));
   if (!mem)
     goto error_create_dmabuf_memory;
@@ -982,19 +985,34 @@ error_create_dmabuf_memory:
 /* --- GstVaapiDmaBufAllocator                                          --- */
 /* ------------------------------------------------------------------------ */
 
+G_DEFINE_TYPE (GstVaapiDmaBufAllocator,
+    gst_vaapi_dmabuf_allocator, GST_TYPE_DMABUF_ALLOCATOR);
+
+static void
+gst_vaapi_dmabuf_allocator_class_init (GstVaapiDmaBufAllocatorClass * klass)
+{
+  _init_vaapi_video_memory_debug ();
+}
+
+static void
+gst_vaapi_dmabuf_allocator_init (GstVaapiDmaBufAllocator * allocator)
+{
+  GstAllocator *const base_allocator = GST_ALLOCATOR_CAST (allocator);
+
+  base_allocator->mem_type = GST_VAAPI_DMABUF_ALLOCATOR_NAME;
+}
+
 GstAllocator *
 gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
     const GstVideoInfo * vip, guint flags)
 {
-  GstAllocator *allocator = NULL;
+  GstVaapiDmaBufAllocator *allocator = NULL;
   GstVaapiSurface *surface = NULL;
   GstVaapiImage *image = NULL;
   GstVideoInfo alloc_info;
 
   g_return_val_if_fail (display != NULL, NULL);
   g_return_val_if_fail (vip != NULL, NULL);
-
-  _init_vaapi_video_memory_debug ();
 
   surface = gst_vaapi_surface_new_full (display, vip, flags);
   if (!surface)
@@ -1011,15 +1029,16 @@ gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
   gst_video_info_update_from_image (&alloc_info, image);
   gst_vaapi_image_unmap (image);
 
-  allocator = gst_dmabuf_allocator_new ();
+  allocator = g_object_new (GST_VAAPI_TYPE_DMABUF_ALLOCATOR, NULL);
   if (!allocator)
     goto error_no_allocator;
-  gst_allocator_set_vaapi_video_info (allocator, &alloc_info, flags);
+  gst_allocator_set_vaapi_video_info (GST_ALLOCATOR_CAST (allocator),
+      &alloc_info, flags);
 
 bail:
   gst_vaapi_object_replace (&image, NULL);
   gst_vaapi_object_replace (&surface, NULL);
-  return allocator;
+  return GST_ALLOCATOR_CAST (allocator);
 
   /* ERRORS */
 error_no_surface:
@@ -1168,7 +1187,7 @@ gst_vaapi_is_dmabuf_allocator (GstAllocator * allocator)
 
   g_return_val_if_fail (GST_IS_ALLOCATOR (allocator), FALSE);
 
-  if (g_strcmp0 (allocator->mem_type, GST_ALLOCATOR_DMABUF) != 0)
+  if (g_strcmp0 (allocator->mem_type, GST_VAAPI_DMABUF_ALLOCATOR_NAME) != 0)
     return FALSE;
   st = g_object_get_qdata (G_OBJECT (allocator), GST_VAAPI_VIDEO_INFO_QUARK);
   return (st != NULL);

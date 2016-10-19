@@ -35,6 +35,8 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiVideoMemory GstVaapiVideoMemory;
 typedef struct _GstVaapiVideoAllocator GstVaapiVideoAllocator;
 typedef struct _GstVaapiVideoAllocatorClass GstVaapiVideoAllocatorClass;
+typedef struct _GstVaapiDmaBufAllocator GstVaapiDmaBufAllocator;
+typedef struct _GstVaapiDmaBufAllocatorClass GstVaapiDmaBufAllocatorClass;
 
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiVideoMemory                                              --- */
@@ -219,6 +221,43 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * allocator,
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiDmaBufAllocator                                          --- */
 /* ------------------------------------------------------------------------ */
+
+#define GST_VAAPI_DMABUF_ALLOCATOR_CAST(allocator) \
+  ((GstVaapiDmaBufAllocator *) (allocator))
+
+#define GST_VAAPI_TYPE_DMABUF_ALLOCATOR \
+  (gst_vaapi_dmabuf_allocator_get_type ())
+#define GST_VAAPI_DMABUF_ALLOCATOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_VAAPI_TYPE_DMABUF_ALLOCATOR, \
+      GstVaapiDmaBufAllocator))
+#define GST_VAAPI_IS_DMABUF_ALLOCATOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_VAAPI_TYPE_DMABUF_ALLOCATOR))
+
+#define GST_VAAPI_DMABUF_ALLOCATOR_NAME          "GstVaapiDmaBufAllocator"
+
+/**
+ * GstVaapiDmaBufAllocator:
+ *
+ * A VA dmabuf memory allocator object.
+ */
+struct _GstVaapiDmaBufAllocator
+{
+  GstDmaBufAllocator parent_instance;
+};
+
+/**
+ * GstVaapiDmaBufoAllocatorClass:
+ *
+ * A VA dmabuf memory allocator class.
+ */
+struct _GstVaapiDmaBufAllocatorClass
+{
+  GstDmaBufAllocatorClass parent_class;
+};
+
+G_GNUC_INTERNAL
+GType
+gst_vaapi_dmabuf_allocator_get_type (void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GstAllocator *
