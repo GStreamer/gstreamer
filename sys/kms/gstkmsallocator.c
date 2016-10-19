@@ -320,8 +320,12 @@ gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
       bo_handles[i] = bo_handles[0];
 
     /* Get the bo pitch calculated by the kms driver.
-     * If it's defined, it will overwrite the video info's stride */
-    kms_bo_get_prop (kmsmem->bo, KMS_PITCH, &pitch);
+     * If it's defined, it will overwrite the video info's stride.
+     * Since the API is completely undefined for planar formats,
+     * only do this for interleaved formats.
+     */
+    if (num_planes == 1)
+      kms_bo_get_prop (kmsmem->bo, KMS_PITCH, &pitch);
   } else {
     for (i = 0; i < num_planes; i++)
       bo_handles[i] = kmsmem->gem_handle[i];
