@@ -539,6 +539,26 @@ error_create_allocator:
   }
 }
 
+static inline guint
+get_dmabuf_surface_allocation_flags ()
+{
+  /* @FIXME: fetch the real devices ids */
+  /* Pair vendor/device identifies an unique physical device. */
+  guint va_vendor_id = 0x00;
+  guint va_device_id = 0x00;
+  guint gl_vendor_id = 0x00;
+  guint gl_device_id = 0x00;
+
+  /* Requires linear memory only if fd export is done on a different
+   * device than the device where the fd is imported. */
+  gboolean same_physical_device = va_vendor_id == gl_vendor_id
+      && va_device_id == gl_device_id;
+
+  if (same_physical_device)
+    return 0;
+  return GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE;
+}
+
 static gboolean
 ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
     GstCaps * caps)
@@ -565,14 +585,12 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
     return TRUE;
 
   plugin->srcpad_allocator = NULL;
-
-  /* enable direct rendering if downstream requests raw video */
   if (caps && gst_caps_is_video_raw (caps)) {
     if (plugin->srcpad_can_dmabuf) {
       if (GST_IS_VIDEO_DECODER (plugin) || GST_IS_BASE_TRANSFORM (plugin)) {
         plugin->srcpad_allocator =
-            gst_vaapi_dmabuf_allocator_new (plugin->display, vinfo, 0,
-            GST_PAD_SRC);
+            gst_vaapi_dmabuf_allocator_new (plugin->display, vinfo,
+            get_dmabuf_surface_allocation_flags (), GST_PAD_SRC);
       }
     } else {
       usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
