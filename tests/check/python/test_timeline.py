@@ -132,3 +132,31 @@ class TestSnapping(GESSimpleTimelineTest):
         clip2.edit([], self.layer.get_priority(), GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE,
                    clip2.props.start - 1)
         self.assertEqual(clip2.props.start, split_position)
+
+
+class TestTransitions(GESSimpleTimelineTest):
+
+    def test_emission_order_for_transition_clip_added_signal(self):
+        self.timeline.props.auto_transition = True
+        unused_clip1 = self.add_clip(0, 0, 100)
+        clip2 = self.add_clip(100, 0, 100)
+
+        # Connect to signals to track in which order they are emitted.
+        signals = []
+
+        def clip_added_cb(layer, clip):
+            self.assertIsInstance(clip, GES.TransitionClip)
+            signals.append("clip-added")
+        self.layer.connect("clip-added", clip_added_cb)
+
+        def property_changed_cb(clip, pspec):
+            self.assertEqual(clip, clip2)
+            self.assertEqual(pspec.name, "start")
+            signals.append("notify::start")
+        clip2.connect("notify::start", property_changed_cb)
+
+        # Move clip2 to create a transition with clip1.
+        clip2.edit([], self.layer.get_priority(), GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 50)
+        # The clip-added signal is emitted twice, once for the video
+        # transition and once for the audio transition.
+        self.assertEqual(signals, ["notify::start", "clip-added", "clip-added"])
