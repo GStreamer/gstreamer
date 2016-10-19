@@ -2,3 +2,6 @@ option('use_orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto
 option('with_gl_api', type : 'string', value : 'auto', description : 'A comma separated list of opengl APIs to enable building against. Supported values are opengl and gles2.')
 option('with_gl_platform', type : 'string', value : 'auto', description : 'A comma separated list of opengl platforms to enable building against. Supported values are glx, egl, cgl, wgl and eagl')
 option('with_gl_winsys', type : 'string', value : 'auto', description : 'A comma separated list of opengl windows systems to enable building against. Supported values are x11, wayland, win32, cocoa, and dispmanx')
+option('with_egl_module_name', type : 'string', value : '', description : 'The file to pass to g_module_open to open the libEGL.so library (default: libEGL.so)')
+option('with_opengl_module_name', type : 'string', value : '', description : 'The file to pass to g_module_open to open the libGL.so library (default: libGL.so)')
+option('with_gles2_module_name', type : 'string', value : '', description : 'The file to pass to g_module_open to open the libGLESv2.so library (default: libGLESv2.so)')
