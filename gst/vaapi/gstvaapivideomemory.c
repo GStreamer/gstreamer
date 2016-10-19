@@ -992,6 +992,14 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * base_allocator,
   gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (mem),
       GST_VAAPI_BUFFER_PROXY_QUARK, dmabuf_proxy,
       (GDestroyNotify) gst_vaapi_buffer_proxy_unref);
+
+  /* When a VA surface is going to be filled by a VAAPI element
+   * (decoder or VPP), it has _not_ be marked as busy in the driver.
+   * Releasing the surface's derived image, held by the buffer proxy,
+   * the surface will be unmarked as busy. */
+  if (allocator->direction == GST_PAD_SRC)
+    gst_vaapi_buffer_proxy_release_data (dmabuf_proxy);
+
   return mem;
 
   /* ERRORS */
