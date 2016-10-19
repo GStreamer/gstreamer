@@ -25,7 +25,7 @@
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gstegl.h>
 
-#if defined (USE_EGL_RPI) && defined(__GNUC__)
+#if defined(__GNUC__)
 #ifndef __VCCOREVER__
 #define __VCCOREVER__ 0x04000000
 #endif
@@ -37,7 +37,7 @@
 
 #include <bcm_host.h>
 
-#if defined (USE_EGL_RPI) && defined(__GNUC__)
+#if defined(__GNUC__)
 #pragma GCC reset_options
 #pragma GCC diagnostic pop
 #endif

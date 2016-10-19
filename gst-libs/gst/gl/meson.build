@@ -105,12 +105,27 @@ gl_platform_deps = []
 gl_winsys_deps = []
 # other things we need.
 gl_misc_deps = []
+# Other preprocessor arguments
+gl_cpp_args = ['-DGST_USE_UNSTABLE_API']
 
 enabled_gl_apis = []
 enabled_gl_platforms = []
 enabled_gl_winsys = []
 
 # parse provided options
+libegl_module_name = get_option('with_egl_module_name')
+if libegl_module_name != ''
+  gl_cpp_args += ['-DGST_GL_LIBEGL_MODULE_NAME="@0@"'.format(libegl_module_name)]
+endif
+libgles2_module_name = get_option('with_gles2_module_name')
+if libgles2_module_name != ''
+  gl_cpp_args += ['-DGST_GL_LIBGLESV2_MODULE_NAME="@0@"'.format(libgles2_module_name)]
+endif
+libgl_module_name = get_option('with_opengl_module_name')
+if libgl_module_name != ''
+  gl_cpp_args += ['-DGST_GL_LIBGL_MODULE_NAME="@0@"'.format(libgl_module_name)]
+endif
+
 gl_apis_s = get_option ('with_gl_api')
 if gl_apis_s == 'auto'
   need_api_opengl = 'auto'
@@ -188,8 +203,8 @@ else
 #      need_win_cocoa = 'yes'
 #    elif winsys == 'eagl'
 #      need_win_eagl = 'yes'
-#    elif winsys == 'dispmanx'
-#      need_win_dispmanx = 'yes'
+    elif winsys == 'dispmanx'
+      need_win_dispmanx = 'yes'
     else
       error('Unsupported GL winsys provided ' + winsys)
     endif
@@ -210,7 +225,7 @@ gl_include_header = '''
 gl_dep = unneeded_dep
 glx_dep = unneeded_dep
 if need_api_opengl != 'no' or need_platform_glx != 'no'
-  gl_dep = dependency('GL', required : false)
+  gl_dep = dependency('gl', required : false)
   if not gl_dep.found()
 #    if host_machine.system() == 'windows'
 #      gl_dep = cc.find_library('opengl32', required : false)
@@ -253,7 +268,7 @@ endif
 # GLES2 checks
 gles2_dep = unneeded_dep
 if need_api_gles2 != 'no'
-  gles2_dep = dependency('GLESv2', required : false)
+  gles2_dep = dependency('glesv2', required : false)
   if not gles2_dep.found()
 #    if host_machine.system() == 'windows'
 #    elif host_machine.system() == 'darwin'
@@ -328,7 +343,7 @@ endif
 # EGL checks
 egl_dep = unneeded_dep
 if need_platform_egl != 'no'
-  egl_dep = dependency('EGL', required : false)
+  egl_dep = dependency('egl', required : false)
   if not egl_dep.found()
     egl_dep = cc.find_library('EGL', required : false)
 
@@ -446,6 +461,27 @@ if need_win_x11 != 'no'
   endif
 endif
 
+bcm_host_dep = unneeded_dep
+if need_win_dispmanx != 'no'
+  bcm_host_dep = dependency('bcm_host', required : false)
+  if bcm_host_dep.found()
+    if not egl_dep.found()
+      error('dispmanx requires the use of egl')
+    endif
+
+    gl_sources += [
+      'dispmanx/gstglwindow_dispmanx_egl.c'
+    ]
+
+    glconf.set('GST_GL_HAVE_WINDOW_DISPMANX', 1)
+    gl_winsys_deps += bcm_host_dep
+    enabled_gl_winsys += 'dispmanx'
+    gl_cpp_args += ['-DUSE_EGL_RPI']
+  elif need_win_dispmanx == 'yes'
+    error('Could not find dispmanx libraries')
+  endif
+endif
+
 # win32 checks
 if need_platform_wgl == 'yes'
   if need_win_win32 == 'no'
@@ -477,8 +513,7 @@ if host_machine.system() == 'darwin'
 endif
 
 # TODO: Add rest of gl config here.
-# --with-{egl,gles2,opengl}-module-name
-# rpi, arm-mali, iOS, OS X, win32 specific support
+# arm-mali, iOS, OS X, win32 specific support
 
 build_gstgl = true
 if gl_lib_deps.length() == 0
@@ -538,7 +573,7 @@ if build_gstgl
 
   gstgl = library('gstgl-' + api_version,
     gl_sources,
-    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+    c_args : gst_plugins_bad_args + gl_cpp_args,
     include_directories : [configinc, libsinc],
     version : libversion,
     soversion : soversion,
@@ -552,5 +587,5 @@ if build_gstgl
 
   gstgl_dep = declare_dependency(link_with : gstgl,
     include_directories : [libsinc],
-    dependencies : [gstbase_dep, gstvideo_dep])
+    dependencies : [gstbase_dep, gstvideo_dep] + gl_winsys_deps)
 endif

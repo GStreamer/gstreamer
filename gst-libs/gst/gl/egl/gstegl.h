@@ -23,7 +23,7 @@
 
 #include <gst/gl/gstglconfig.h>
 
-#if defined (USE_EGL_RPI) && defined(__GNUC__)
+#if GST_GL_HAVE_WINDOW_DISPMANX && defined(__GNUC__)
 #ifndef __VCCOREVER__
 #define __VCCOREVER__ 0x04000000
 #endif
@@ -41,7 +41,7 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-#if defined (USE_EGL_RPI) && defined(__GNUC__)
+#if GST_GL_HAVE_WINDOW_DISPMANX && defined(__GNUC__)
 #pragma GCC reset_options
 #pragma GCC diagnostic pop
 #endif

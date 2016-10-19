@@ -90,7 +90,7 @@
 extern GType gst_ca_opengl_layer_sink_bin_get_type (void);
 #endif
 
-#ifdef USE_EGL_RPI
+#if GST_GL_HAVE_WINDOW_DISPMANX
 extern void bcm_host_init (void);
 #endif
 
@@ -107,7 +107,7 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_gl_gstgl_debug, "gstopengl", 0, "gstopengl");
 
-#ifdef USE_EGL_RPI
+#if GST_GL_HAVE_WINDOW_DISPMANX
   GST_DEBUG ("Initialize BCM host");
   bcm_host_init ();
 #endif
@@ -236,7 +236,6 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_DEINTERLACE)) {
     return FALSE;
   }
-
 #if HAVE_JPEG
 #if HAVE_PNG
   if (!gst_element_register (plugin, "gloverlay",
