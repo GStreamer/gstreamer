@@ -14,10 +14,6 @@ We will learn:
 
 -   How to gather information regarding each stream.
 
-As a side note, even though its name is `playbin`, you can pronounce it
-“playbin”, since the original `playbin` element is deprecated and nobody
-should be using it.
-
 ## Introduction
 
 More often than not, multiple audio, video and subtitle streams can be
