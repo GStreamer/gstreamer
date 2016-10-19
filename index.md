@@ -75,7 +75,7 @@ gst-plugins-base are guaranteed to be API and ABI stable
 The GStreamer community provides the following licensing advisory for
 developers planing on or already using GStreamer for their applications:
 
-<a href="/documentation/licensing.html">GStreamer Licensing Advisory</a>
+[GStreamer Licensing Advisory and legal FAQ](sdk-legal-information.md)
 
 
 ## GStreamer plugin module split-up
