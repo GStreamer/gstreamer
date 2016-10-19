@@ -25,6 +25,7 @@
 
 #include <gst/video/gstvideopool.h>
 #include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapisurfaceproxy.h>
 
 G_BEGIN_DECLS
 
@@ -41,6 +42,7 @@ G_BEGIN_DECLS
 #define GST_VAAPI_IS_VIDEO_BUFFER_POOL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_VAAPI_TYPE_VIDEO_BUFFER_POOL))
 
+typedef struct _GstVaapiVideoBufferPoolAcquireParams GstVaapiVideoBufferPoolAcquireParams;
 typedef struct _GstVaapiVideoBufferPool GstVaapiVideoBufferPool;
 typedef struct _GstVaapiVideoBufferPoolClass GstVaapiVideoBufferPoolClass;
 typedef struct _GstVaapiVideoBufferPoolPrivate GstVaapiVideoBufferPoolPrivate;
@@ -82,6 +84,24 @@ typedef enum
   GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT = (1u << 1),
   GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD = (1u << 2),
 } GstVaapiVideoBufferPoolOption;
+
+/**
+ * GstVaapiVideoBufferPoolAcquireParams:
+ * @proxy: the #GstVaapiSurfaceProxy associated to the dmabuf-base
+ * memory
+ *
+ * Parameters passed to the gst_buffer_pool_acquire_buffer() function
+ * on a #GstVaapiVideoBufferPool, to control the allocation of the
+ * buffer.
+ *
+ * This is an extension of #GstBufferPoolAcquireParams
+ */
+struct _GstVaapiVideoBufferPoolAcquireParams
+{
+  GstBufferPoolAcquireParams parent_instance;
+
+  GstVaapiSurfaceProxy *proxy;
+};
 
 /**
  * GstVaapiVideoBufferPool:
