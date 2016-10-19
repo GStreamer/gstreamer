@@ -1065,7 +1065,9 @@ expand_allowed_srcpad_caps (GstVaapiPostproc * postproc, GstCaps * caps)
   }
   g_value_unset (&value);
 
-  if (GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (postproc)
+  if ((GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (postproc)
+          || !gst_vaapi_display_has_opengl (GST_VAAPI_PLUGIN_BASE_DISPLAY
+              (postproc)))
       && gl_upload_meta_idx > -1) {
     gst_caps_remove_structure (caps, gl_upload_meta_idx);
   }
