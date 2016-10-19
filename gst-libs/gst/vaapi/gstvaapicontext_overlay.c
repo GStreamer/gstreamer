@@ -120,9 +120,12 @@ overlay_rectangle_new (GstVideoOverlayRectangle * rect,
   render_rect->height = height;
   return overlay;
 
+  /* ERRORS */
 error:
-  overlay_rectangle_unref (overlay);
-  return NULL;
+  {
+    overlay_rectangle_unref (overlay);
+    return NULL;
+  }
 }
 
 static void
@@ -438,7 +441,10 @@ gst_vaapi_context_apply_composition (GstVaapiContext * context,
     return FALSE;
   return TRUE;
 
+  /* ERRORS */
 error:
-  gst_vaapi_context_overlay_reset (context);
-  return FALSE;
+  {
+    gst_vaapi_context_overlay_reset (context);
+    return FALSE;
+  }
 }

@@ -2091,11 +2091,15 @@ gst_vaapi_encoder_h265_encode (GstVaapiEncoder * base_encoder,
     goto error;
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
 error:
-  if (reconstruct)
-    gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder),
-        reconstruct);
-  return ret;
+  {
+    if (reconstruct)
+      gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder),
+          reconstruct);
+    return ret;
+  }
 }
 
 static GstVaapiEncoderStatus

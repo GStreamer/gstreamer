@@ -70,9 +70,12 @@ gst_vaapi_pixmap_new (const GstVaapiPixmapClass * pixmap_class,
     goto error;
   return pixmap;
 
+  /* ERRORS */
 error:
-  gst_vaapi_pixmap_unref_internal (pixmap);
-  return NULL;
+  {
+    gst_vaapi_pixmap_unref_internal (pixmap);
+    return NULL;
+  }
 }
 
 GstVaapiPixmap *
@@ -91,9 +94,12 @@ gst_vaapi_pixmap_new_from_native (const GstVaapiPixmapClass * pixmap_class,
     goto error;
   return pixmap;
 
+  /* ERRORS */
 error:
-  gst_vaapi_pixmap_unref_internal (pixmap);
-  return NULL;
+  {
+    gst_vaapi_pixmap_unref_internal (pixmap);
+    return NULL;
+  }
 }
 
 /**

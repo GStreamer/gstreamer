@@ -191,9 +191,12 @@ vpp_get_filters_unlocked (GstVaapiFilter * filter, guint * num_filters_ptr)
   *num_filters_ptr = num_filters;
   return filters;
 
+  /* ERRORS */
 error:
-  g_free (filters);
-  return NULL;
+  {
+    g_free (filters);
+    return NULL;
+  }
 }
 
 static VAProcFilterType *
@@ -238,9 +241,12 @@ vpp_get_filter_caps_unlocked (GstVaapiFilter * filter, VAProcFilterType type,
   *num_caps_ptr = num_caps;
   return caps;
 
+  /* ERRORS */
 error:
-  g_free (caps);
-  return NULL;
+  {
+    g_free (caps);
+    return NULL;
+  }
 }
 
 static gpointer
@@ -495,9 +501,12 @@ op_data_new (GstVaapiFilterOp op, GParamSpec * pspec)
   }
   return op_data;
 
+  /* ERRORS */
 error:
-  op_data_free (op_data);
-  return NULL;
+  {
+    op_data_free (op_data);
+    return NULL;
+  }
 }
 
 static inline gpointer
@@ -608,9 +617,12 @@ get_operations_default (void)
   }
   return ops;
 
+  /* ERRORS */
 error:
-  g_ptr_array_unref (ops);
-  return NULL;
+  {
+    g_ptr_array_unref (ops);
+    return NULL;
+  }
 }
 
 /* Get the ordered list of operations, based on VA/VPP queries */
@@ -675,12 +687,15 @@ get_operations_ordered (GstVaapiFilter * filter, GPtrArray * default_ops)
   g_ptr_array_unref (default_ops);
   return ops;
 
+  /* ERRORS */
 error:
-  g_free (filter_caps);
-  g_free (filters);
-  g_ptr_array_unref (ops);
-  g_ptr_array_unref (default_ops);
-  return NULL;
+  {
+    g_free (filter_caps);
+    g_free (filters);
+    g_ptr_array_unref (ops);
+    g_ptr_array_unref (default_ops);
+    return NULL;
+  }
 }
 #endif
 
@@ -1027,8 +1042,11 @@ ensure_formats (GstVaapiFilter * filter)
   g_free (surface_attribs);
   return TRUE;
 
+  /* ERRORS */
 error:
-  g_free (surface_attribs);
+  {
+    g_free (surface_attribs);
+  }
 #endif
   return FALSE;
 }
@@ -1175,9 +1193,12 @@ gst_vaapi_filter_new (GstVaapiDisplay * display)
     goto error;
   return filter;
 
+  /* ERRORS */
 error:
-  gst_vaapi_filter_unref (filter);
-  return NULL;
+  {
+    gst_vaapi_filter_unref (filter);
+    return NULL;
+  }
 #else
   GST_WARNING ("video processing is not supported, "
       "please consider an upgrade to VA-API >= 0.34");
@@ -1528,10 +1549,13 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
   vaapi_destroy_buffer (filter->va_display, &pipeline_param_buf_id);
   return GST_VAAPI_FILTER_STATUS_SUCCESS;
 
+  /* ERRORS */
 error:
-  deint_refs_clear_all (filter);
-  vaapi_destroy_buffer (filter->va_display, &pipeline_param_buf_id);
-  return GST_VAAPI_FILTER_STATUS_ERROR_OPERATION_FAILED;
+  {
+    deint_refs_clear_all (filter);
+    vaapi_destroy_buffer (filter->va_display, &pipeline_param_buf_id);
+    return GST_VAAPI_FILTER_STATUS_ERROR_OPERATION_FAILED;
+  }
 #endif
   return GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_OPERATION;
 }

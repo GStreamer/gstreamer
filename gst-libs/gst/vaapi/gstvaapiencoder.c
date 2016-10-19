@@ -579,6 +579,7 @@ is_chroma_type_supported (GstVaapiEncoder * encoder)
 
   return TRUE;
 
+  /* ERRORS */
 unsupported:
   {
     GST_ERROR ("We only support YUV 4:2:0 and YUV 4:2:2 for encoding. "
@@ -1132,9 +1133,12 @@ gst_vaapi_encoder_new (const GstVaapiEncoderClass * klass,
     goto error;
   return encoder;
 
+  /* ERRORS */
 error:
-  gst_vaapi_encoder_unref (encoder);
-  return NULL;
+  {
+    gst_vaapi_encoder_unref (encoder);
+    return NULL;
+  }
 }
 
 /** Returns a GType for the #GstVaapiEncoderTune set */

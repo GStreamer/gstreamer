@@ -99,9 +99,12 @@ gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
     goto error;
   return window;
 
+  /* ERRORS */
 error:
-  gst_vaapi_window_unref_internal (window);
-  return NULL;
+  {
+    gst_vaapi_window_unref_internal (window);
+    return NULL;
+  }
 }
 
 /**

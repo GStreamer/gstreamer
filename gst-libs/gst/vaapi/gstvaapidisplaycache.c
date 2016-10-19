@@ -82,9 +82,12 @@ cache_entry_new (const GstVaapiDisplayInfo * di)
   }
   return entry;
 
+  /* ERRORS */
 error:
-  cache_entry_free (entry);
-  return NULL;
+  {
+    cache_entry_free (entry);
+    return NULL;
+  }
 }
 
 static inline gboolean

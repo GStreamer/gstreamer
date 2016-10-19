@@ -651,6 +651,7 @@ ensure_packed_headers (GstVaapiEncoderJpeg * encoder,
 
   return TRUE;
 
+  /* ERRORS */
 error_create_packed_hdr:
   {
     GST_ERROR ("failed to create packed raw data header buffer");
@@ -688,11 +689,15 @@ gst_vaapi_encoder_jpeg_encode (GstVaapiEncoder * base_encoder,
         reconstruct);
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
 error:
-  if (reconstruct)
-    gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder),
-        reconstruct);
-  return ret;
+  {
+    if (reconstruct)
+      gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder),
+          reconstruct);
+    return ret;
+  }
 }
 
 static GstVaapiEncoderStatus

@@ -531,9 +531,12 @@ gst_vaapi_decoder_new (const GstVaapiDecoderClass * klass,
     goto error;
   return decoder;
 
+  /* ERRORS */
 error:
-  gst_vaapi_decoder_unref (decoder);
-  return NULL;
+  {
+    gst_vaapi_decoder_unref (decoder);
+    return NULL;
+  }
 }
 
 /**

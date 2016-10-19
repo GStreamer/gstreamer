@@ -156,9 +156,12 @@ GST_VAAPI_OBJECT_DEFINE_CLASS (GstVaapiSubpicture, gst_vaapi_subpicture)
     goto error;
   return subpicture;
 
+  /* ERRORS */
 error:
-  gst_vaapi_object_unref (subpicture);
-  return NULL;
+  {
+    gst_vaapi_object_unref (subpicture);
+    return NULL;
+  }
 }
 
 /**

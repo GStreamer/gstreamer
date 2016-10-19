@@ -344,9 +344,12 @@ gst_vaapi_surface_new (GstVaapiDisplay * display,
     goto error;
   return surface;
 
+  /* ERRORS */
 error:
-  gst_vaapi_object_unref (surface);
-  return NULL;
+  {
+    gst_vaapi_object_unref (surface);
+    return NULL;
+  }
 }
 
 /**
@@ -380,9 +383,12 @@ gst_vaapi_surface_new_full (GstVaapiDisplay * display,
     goto error;
   return surface;
 
+  /* ERRORS */
 error:
-  gst_vaapi_object_unref (surface);
-  return NULL;
+  {
+    gst_vaapi_object_unref (surface);
+    return NULL;
+  }
 }
 
 /**
@@ -443,9 +449,12 @@ gst_vaapi_surface_new_from_buffer_proxy (GstVaapiDisplay * display,
     goto error;
   return surface;
 
+  /* ERRORS */
 error:
-  gst_vaapi_object_unref (surface);
-  return NULL;
+  {
+    gst_vaapi_object_unref (surface);
+    return NULL;
+  }
 }
 
 /**

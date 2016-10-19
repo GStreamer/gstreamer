@@ -161,9 +161,12 @@ gst_vaapi_surface_pool_new_full (GstVaapiDisplay * display,
     goto error;
   return pool;
 
+  /* ERRORS */
 error:
-  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (pool));
-  return NULL;
+  {
+    gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (pool));
+    return NULL;
+  }
 }
 
 /**

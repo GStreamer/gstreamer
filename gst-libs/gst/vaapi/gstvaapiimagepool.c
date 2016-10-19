@@ -111,7 +111,10 @@ gst_vaapi_image_pool_new (GstVaapiDisplay * display, const GstVideoInfo * vip)
     goto error;
   return pool;
 
+  /* ERRORS */
 error:
-  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (pool));
-  return NULL;
+  {
+    gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (pool));
+    return NULL;
+  }
 }

@@ -472,9 +472,12 @@ egl_vtable_new (EglDisplay * display, guint gles_version)
     goto error;
   return vtable;
 
+  /* ERRORS */
 error:
-  egl_object_replace (&vtable, NULL);
-  return NULL;
+  {
+    egl_object_replace (&vtable, NULL);
+    return NULL;
+  }
 }
 
 static EglVTable *
@@ -596,9 +599,12 @@ done:
   g_cond_broadcast (&display->gl_thread_ready);
   return NULL;
 
+  /* ERRORS */
 error:
-  display->base.is_valid = FALSE;
-  goto done;
+  {
+    display->base.is_valid = FALSE;
+    goto done;
+  }
 }
 
 static gboolean
@@ -651,9 +657,12 @@ egl_display_new_full (gpointer handle, gboolean is_wrapped)
     goto error;
   return display;
 
+  /* ERRORS */
 error:
-  egl_object_unref (display);
-  return NULL;
+  {
+    egl_object_unref (display);
+    return NULL;
+  }
 }
 
 EglDisplay *
@@ -766,9 +775,12 @@ egl_config_new_with_attribs (EglDisplay * display, const EGLint * attribs)
     goto error;
   return config;
 
+  /* ERRORS */
 error:
-  egl_object_replace (&config, NULL);
-  return NULL;
+  {
+    egl_object_replace (&config, NULL);
+    return NULL;
+  }
 }
 
 static EglConfig *
@@ -1030,9 +1042,12 @@ do_egl_context_new (CreateContextArgs * args)
   args->context = ctx;
   return;
 
+  /* ERRORS */
 error:
-  egl_object_replace (&ctx, NULL);
-  args->context = NULL;
+  {
+    egl_object_replace (&ctx, NULL);
+    args->context = NULL;
+  }
 }
 
 EglContext *
@@ -1256,9 +1271,12 @@ egl_program_new (EglContext * ctx, const gchar * frag_shader_text,
     goto error;
   return program;
 
+  /* ERRORS */
 error:
-  egl_object_replace (&program, NULL);
-  return NULL;
+  {
+    egl_object_replace (&program, NULL);
+    return NULL;
+  }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1319,9 +1337,12 @@ egl_window_new (EglContext * ctx, gpointer native_window)
     goto error;
   return window;
 
+  /* ERRORS */
 error:
-  egl_object_replace (&window, NULL);
-  return NULL;
+  {
+    egl_object_replace (&window, NULL);
+    return NULL;
+  }
 }
 
 /* ------------------------------------------------------------------------- */

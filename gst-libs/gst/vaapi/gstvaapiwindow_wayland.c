@@ -198,10 +198,13 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
   }
   return TRUE;
 
+  /* ERRORS */
 error:
-  priv->sync_failed = TRUE;
-  GST_ERROR ("Error on dispatching events: %s", g_strerror (errno));
-  return FALSE;
+  {
+    priv->sync_failed = TRUE;
+    GST_ERROR ("Error on dispatching events: %s", g_strerror (errno));
+    return FALSE;
+  }
 }
 
 static void
@@ -433,19 +436,25 @@ vpp_convert (GstVaapiWindow * window,
 
   /* ERRORS */
 error_create_filter:
-  GST_WARNING ("failed to create VPP filter. Disabling");
-  priv->use_vpp = FALSE;
-  return NULL;
+  {
+    GST_WARNING ("failed to create VPP filter. Disabling");
+    priv->use_vpp = FALSE;
+    return NULL;
+  }
 error_unsupported_format:
-  GST_ERROR ("unsupported render target format %s",
-      gst_vaapi_video_format_to_string (priv->surface_format));
-  priv->use_vpp = FALSE;
-  return NULL;
+  {
+    GST_ERROR ("unsupported render target format %s",
+        gst_vaapi_video_format_to_string (priv->surface_format));
+    priv->use_vpp = FALSE;
+    return NULL;
+  }
 error_process_filter:
-  GST_ERROR ("failed to process surface %" GST_VAAPI_ID_FORMAT " (error %d)",
-      GST_VAAPI_ID_ARGS (GST_VAAPI_OBJECT_ID (surface)), status);
-  gst_vaapi_video_pool_put_object (priv->surface_pool, vpp_surface);
-  return NULL;
+  {
+    GST_ERROR ("failed to process surface %" GST_VAAPI_ID_FORMAT " (error %d)",
+        GST_VAAPI_ID_ARGS (GST_VAAPI_OBJECT_ID (surface)), status);
+    gst_vaapi_video_pool_put_object (priv->surface_pool, vpp_surface);
+    return NULL;
+  }
 }
 
 static gboolean

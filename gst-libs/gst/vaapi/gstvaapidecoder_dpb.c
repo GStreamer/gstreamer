@@ -94,9 +94,12 @@ dpb_new (guint max_pictures)
     goto error;
   return dpb;
 
+  /* ERRORS */
 error:
-  gst_vaapi_dpb_unref (dpb);
-  return NULL;
+  {
+    gst_vaapi_dpb_unref (dpb);
+    return NULL;
+  }
 }
 
 static gint

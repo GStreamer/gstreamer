@@ -426,9 +426,12 @@ ensure_sequence (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncPicture * picture)
   gst_vaapi_codec_object_replace (&sequence, NULL);
   return TRUE;
 
+  /* ERRORS */
 error:
-  gst_vaapi_codec_object_replace (&sequence, NULL);
-  return FALSE;
+  {
+    gst_vaapi_codec_object_replace (&sequence, NULL);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -570,11 +573,15 @@ gst_vaapi_encoder_mpeg2_encode (GstVaapiEncoder * base_encoder,
         reconstruct);
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
 error:
-  if (reconstruct)
-    gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder),
-        reconstruct);
-  return ret;
+  {
+    if (reconstruct)
+      gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder),
+          reconstruct);
+    return ret;
+  }
 }
 
 static GstVaapiEncoderStatus
@@ -715,8 +722,11 @@ gst_vaapi_encoder_mpeg2_reconfigure (GstVaapiEncoder * base_encoder)
     goto error;
   return set_context_info (base_encoder);
 
+  /* ERRORS */
 error:
-  return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  {
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
 }
 
 static gboolean

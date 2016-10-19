@@ -207,9 +207,12 @@ ensure_sequence (GstVaapiEncoderVP9 * encoder, GstVaapiEncPicture * picture)
   gst_vaapi_codec_object_replace (&sequence, NULL);
   return TRUE;
 
+  /* ERRORS */
 error:
-  gst_vaapi_codec_object_replace (&sequence, NULL);
-  return FALSE;
+  {
+    gst_vaapi_codec_object_replace (&sequence, NULL);
+    return FALSE;
+  }
 }
 
 static void
@@ -364,11 +367,15 @@ gst_vaapi_encoder_vp9_encode (GstVaapiEncoder * base_encoder,
   update_ref_list (encoder, picture, reconstruct);
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
 error:
-  if (reconstruct)
-    gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder),
-        reconstruct);
-  return ret;
+  {
+    if (reconstruct)
+      gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder),
+          reconstruct);
+    return ret;
+  }
 }
 
 static GstVaapiEncoderStatus

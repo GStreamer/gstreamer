@@ -357,16 +357,21 @@ gl_create_context (Display * dpy, int screen, GLContextState * parent)
   cs->visual = glXGetVisualFromFBConfig (cs->display, fbconfigs[n]);
   cs->context = glXCreateNewContext (cs->display,
       fbconfigs[n], GLX_RGBA_TYPE, parent ? parent->context : NULL, True);
-  if (cs->context)
-    goto end;
+  if (!cs->context)
+    goto error;
 
-error:
-  gl_destroy_context (cs);
-  cs = NULL;
 end:
   if (fbconfigs)
     XFree (fbconfigs);
   return cs;
+
+  /* ERRORS */
+error:
+  {
+    gl_destroy_context (cs);
+    cs = NULL;
+    goto end;
+  }
 }
 
 /**
@@ -890,9 +895,12 @@ gl_create_pixmap_object (Display * dpy, guint width, guint height)
   gl_unbind_texture (&pixo->old_texture);
   return pixo;
 
+  /* ERRORS */
 error:
-  gl_destroy_pixmap_object (pixo);
-  return NULL;
+  {
+    gl_destroy_pixmap_object (pixo);
+    return NULL;
+  }
 }
 
 /**
@@ -1042,9 +1050,12 @@ gl_create_framebuffer_object (GLenum target,
     goto error;
   return fbo;
 
+  /* ERRORS */
 error:
-  gl_destroy_framebuffer_object (fbo);
-  return NULL;
+  {
+    gl_destroy_framebuffer_object (fbo);
+    return NULL;
+  }
 }
 
 /**

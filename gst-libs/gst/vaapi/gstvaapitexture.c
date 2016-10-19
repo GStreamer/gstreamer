@@ -82,9 +82,12 @@ gst_vaapi_texture_new_internal (const GstVaapiTextureClass * klass,
     goto error;
   return texture;
 
+  /* ERRORS */
 error:
-  gst_vaapi_object_unref (texture);
-  return NULL;
+  {
+    gst_vaapi_object_unref (texture);
+    return NULL;
+  }
 }
 
 /**

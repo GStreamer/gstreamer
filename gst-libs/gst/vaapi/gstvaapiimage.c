@@ -258,9 +258,12 @@ GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiImage,
     goto error;
   return image;
 
+  /* ERRORS */
 error:
-  gst_vaapi_object_unref (image);
-  return NULL;
+  {
+    gst_vaapi_object_unref (image);
+    return NULL;
+  }
 }
 
 /**
@@ -297,9 +300,12 @@ gst_vaapi_image_new_with_image (GstVaapiDisplay * display, VAImage * va_image)
     goto error;
   return image;
 
+  /* ERRORS */
 error:
-  gst_vaapi_object_unref (image);
-  return NULL;
+  {
+    gst_vaapi_object_unref (image);
+    return NULL;
+  }
 }
 
 /**

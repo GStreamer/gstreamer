@@ -1144,12 +1144,14 @@ mvc_reset (GstVaapiDecoderH264 * decoder)
 
   /* ERRORS */
 error_allocate:
-  g_free (priv->prev_ref_frames);
-  priv->prev_ref_frames = NULL;
-  g_free (priv->prev_frames);
-  priv->prev_frames = NULL;
-  priv->prev_frames_alloc = 0;
-  return FALSE;
+  {
+    g_free (priv->prev_ref_frames);
+    priv->prev_ref_frames = NULL;
+    g_free (priv->prev_frames);
+    priv->prev_frames = NULL;
+    priv->prev_frames_alloc = 0;
+    return FALSE;
+  }
 }
 
 static GstVaapiDecoderStatus
@@ -1627,15 +1629,20 @@ decode_current_picture (GstVaapiDecoderH264 * decoder)
   gst_vaapi_picture_replace (&priv->current_picture, NULL);
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
+  /* ERRORS */
 error:
-  /* XXX: fix for cases where first field failed to be decoded */
-  gst_vaapi_picture_replace (&priv->current_picture, NULL);
-  return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  {
+    /* XXX: fix for cases where first field failed to be decoded */
+    gst_vaapi_picture_replace (&priv->current_picture, NULL);
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  }
 
 drop_frame:
-  priv->decoder_state = 0;
-  priv->pic_structure = GST_H264_SEI_PIC_STRUCT_FRAME;
-  return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+  {
+    priv->decoder_state = 0;
+    priv->pic_structure = GST_H264_SEI_PIC_STRUCT_FRAME;
+    return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+  }
 }
 
 static GstVaapiDecoderStatus
@@ -2990,8 +2997,10 @@ fill_picture_first_field_gap (GstVaapiDecoderH264 * decoder,
 
   /* ERRORS */
 error_allocate_field:
-  GST_ERROR ("failed to allocate missing field for current frame store");
-  return NULL;
+  {
+    GST_ERROR ("failed to allocate missing field for current frame store");
+    return NULL;
+  }
 }
 
 static gboolean
@@ -3033,11 +3042,15 @@ cleanup:
 
   /* ERRORS */
 error_exec_ref_pic_marking:
-  GST_ERROR ("failed to execute reference picture marking process");
-  goto cleanup;
+  {
+    GST_ERROR ("failed to execute reference picture marking process");
+    goto cleanup;
+  }
 error_dpb_add:
-  GST_ERROR ("failed to store lost picture into the DPB");
-  goto cleanup;
+  {
+    GST_ERROR ("failed to store lost picture into the DPB");
+    goto cleanup;
+  }
 }
 
 static GstVaapiPictureH264 *
@@ -3096,17 +3109,25 @@ fill_picture_other_field_gap (GstVaapiDecoderH264 * decoder,
 
   /* ERRORS */
 error_find_field:
-  GST_ERROR ("failed to find field with POC nearest to %d", f0->base.poc);
-  return NULL;
+  {
+    GST_ERROR ("failed to find field with POC nearest to %d", f0->base.poc);
+    return NULL;
+  }
 error_allocate_field:
-  GST_ERROR ("failed to allocate missing field for previous frame store");
-  return NULL;
+  {
+    GST_ERROR ("failed to allocate missing field for previous frame store");
+    return NULL;
+  }
 error_exec_ref_pic_marking:
-  GST_ERROR ("failed to execute reference picture marking process");
-  return NULL;
+  {
+    GST_ERROR ("failed to execute reference picture marking process");
+    return NULL;
+  }
 error_append_field:
-  GST_ERROR ("failed to add missing field into previous frame store");
-  return NULL;
+  {
+    GST_ERROR ("failed to add missing field into previous frame store");
+    return NULL;
+  }
 }
 
 static gboolean
@@ -3206,14 +3227,20 @@ cleanup:
 
   /* ERRORS */
 error_allocate_picture:
-  GST_ERROR ("failed to allocate lost picture");
-  goto cleanup;
+  {
+    GST_ERROR ("failed to allocate lost picture");
+    goto cleanup;
+  }
 error_exec_ref_pic_marking:
-  GST_ERROR ("failed to execute reference picture marking process");
-  goto cleanup;
+  {
+    GST_ERROR ("failed to execute reference picture marking process");
+    goto cleanup;
+  }
 error_dpb_add:
-  GST_ERROR ("failed to store lost picture into the DPB");
-  goto cleanup;
+  {
+    GST_ERROR ("failed to store lost picture into the DPB");
+    goto cleanup;
+  }
 }
 
 static gboolean
@@ -4307,8 +4334,10 @@ gst_vaapi_decoder_h264_decode_codec_data (GstVaapiDecoder * base_decoder,
   status = GST_VAAPI_DECODER_STATUS_SUCCESS;
 
 cleanup:
-  gst_vaapi_parser_info_h264_replace (&pi, NULL);
-  return status;
+  {
+    gst_vaapi_parser_info_h264_replace (&pi, NULL);
+    return status;
+  }
 }
 
 static GstVaapiDecoderStatus
@@ -4547,8 +4576,10 @@ gst_vaapi_decoder_h264_parse (GstVaapiDecoder * base_decoder,
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
 exit:
-  gst_vaapi_parser_info_h264_unref (pi);
-  return status;
+  {
+    gst_vaapi_parser_info_h264_unref (pi);
+    return status;
+  }
 }
 
 static GstVaapiDecoderStatus

@@ -357,9 +357,12 @@ gst_vaapi_window_glx_new (GstVaapiDisplay * display, guint width, guint height)
     goto error;
   return window;
 
+  /* ERRORS */
 error:
-  gst_vaapi_window_unref (window);
-  return NULL;
+  {
+    gst_vaapi_window_unref (window);
+    return NULL;
+  }
 }
 
 /**
@@ -394,9 +397,12 @@ gst_vaapi_window_glx_new_with_xid (GstVaapiDisplay * display, Window xid)
     goto error;
   return window;
 
+  /* ERRORS */
 error:
-  gst_vaapi_window_unref (window);
-  return NULL;
+  {
+    gst_vaapi_window_unref (window);
+    return NULL;
+  }
 }
 
 /**

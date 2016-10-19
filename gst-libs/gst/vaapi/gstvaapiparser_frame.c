@@ -98,9 +98,12 @@ gst_vaapi_parser_frame_new (guint width, guint height)
   frame->output_offset = 0;
   return frame;
 
+  /* ERRORS */
 error:
-  gst_vaapi_parser_frame_unref (frame);
-  return NULL;
+  {
+    gst_vaapi_parser_frame_unref (frame);
+    return NULL;
+  }
 }
 
 /**

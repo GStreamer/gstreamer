@@ -106,9 +106,12 @@ vaapi_create_buffer (VADisplay dpy, VAContextID ctx, int type, guint size,
   *buf_id_ptr = buf_id;
   return TRUE;
 
+  /* ERRORS */
 error:
-  vaapi_destroy_buffer (dpy, &buf_id);
-  return FALSE;
+  {
+    vaapi_destroy_buffer (dpy, &buf_id);
+    return FALSE;
+  }
 }
 
 /* Destroy VA buffer */

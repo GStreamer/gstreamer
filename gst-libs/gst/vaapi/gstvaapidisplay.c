@@ -1121,9 +1121,12 @@ gst_vaapi_display_new (GstVaapiDisplay * display,
     goto error;
   return display;
 
+  /* ERRORS */
 error:
-  gst_vaapi_display_unref_internal (display);
-  return NULL;
+  {
+    gst_vaapi_display_unref_internal (display);
+    return NULL;
+  }
 }
 
 /**

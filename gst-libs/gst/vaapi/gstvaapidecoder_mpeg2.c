@@ -559,14 +559,19 @@ decode_current_picture (GstVaapiDecoderMpeg2 * decoder)
   }
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
+  /* ERRORS */
 error:
-  /* XXX: fix for cases where first field failed to be decoded */
-  gst_vaapi_picture_replace (&priv->current_picture, NULL);
-  return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  {
+    /* XXX: fix for cases where first field failed to be decoded */
+    gst_vaapi_picture_replace (&priv->current_picture, NULL);
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  }
 
 drop_frame:
-  priv->state &= GST_MPEG_VIDEO_STATE_VALID_SEQ_HEADERS;
-  return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+  {
+    priv->state &= GST_MPEG_VIDEO_STATE_VALID_SEQ_HEADERS;
+    return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+  }
 }
 
 static GstVaapiDecoderStatus

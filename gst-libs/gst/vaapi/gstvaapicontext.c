@@ -368,9 +368,12 @@ gst_vaapi_context_new (GstVaapiDisplay * display,
     goto error;
   return context;
 
+  /* ERRORS */
 error:
-  gst_vaapi_object_unref (context);
-  return NULL;
+  {
+    gst_vaapi_object_unref (context);
+    return NULL;
+  }
 }
 
 /**

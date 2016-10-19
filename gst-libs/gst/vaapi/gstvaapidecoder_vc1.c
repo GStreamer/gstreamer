@@ -248,10 +248,13 @@ decode_current_picture (GstVaapiDecoderVC1 * decoder)
   }
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
+  /* ERRORS */
 error:
-  /* XXX: fix for cases where first field failed to be decoded */
-  gst_vaapi_picture_replace (&priv->current_picture, NULL);
-  return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  {
+    /* XXX: fix for cases where first field failed to be decoded */
+    gst_vaapi_picture_replace (&priv->current_picture, NULL);
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  }
 }
 
 static GstVaapiDecoderStatus

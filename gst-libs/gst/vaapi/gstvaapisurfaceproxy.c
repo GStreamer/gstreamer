@@ -102,9 +102,12 @@ gst_vaapi_surface_proxy_new (GstVaapiSurface * surface)
   gst_vaapi_surface_proxy_init_properties (proxy);
   return proxy;
 
+  /* ERRORS */
 error:
-  gst_vaapi_surface_proxy_unref (proxy);
-  return NULL;
+  {
+    gst_vaapi_surface_proxy_unref (proxy);
+    return NULL;
+  }
 }
 
 /**
@@ -140,9 +143,12 @@ gst_vaapi_surface_proxy_new_from_pool (GstVaapiSurfacePool * pool)
   gst_vaapi_surface_proxy_init_properties (proxy);
   return proxy;
 
+  /* ERRORS */
 error:
-  gst_vaapi_surface_proxy_unref (proxy);
-  return NULL;
+  {
+    gst_vaapi_surface_proxy_unref (proxy);
+    return NULL;
+  }
 }
 
 /**

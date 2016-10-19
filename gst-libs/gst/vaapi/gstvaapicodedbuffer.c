@@ -128,9 +128,12 @@ gst_vaapi_coded_buffer_new (GstVaapiContext * context, guint buf_size)
     goto error;
   return buf;
 
+  /* ERRORS */
 error:
-  gst_vaapi_object_unref (buf);
-  return NULL;
+  {
+    gst_vaapi_object_unref (buf);
+    return NULL;
+  }
 }
 
 /*

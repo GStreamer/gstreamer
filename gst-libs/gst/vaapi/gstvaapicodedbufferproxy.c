@@ -100,9 +100,12 @@ gst_vaapi_coded_buffer_proxy_new_from_pool (GstVaapiCodedBufferPool * pool)
   gst_vaapi_object_ref (proxy->buffer);
   return proxy;
 
+  /* ERRORS */
 error:
-  gst_vaapi_coded_buffer_proxy_unref (proxy);
-  return NULL;
+  {
+    gst_vaapi_coded_buffer_proxy_unref (proxy);
+    return NULL;
+  }
 }
 
 /**

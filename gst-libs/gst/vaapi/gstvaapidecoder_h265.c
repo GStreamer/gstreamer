@@ -1309,13 +1309,18 @@ decode_current_picture (GstVaapiDecoderH265 * decoder)
   gst_vaapi_picture_replace (&priv->current_picture, NULL);
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
+  /* ERRORS */
 error:
-  gst_vaapi_picture_replace (&priv->current_picture, NULL);
-  return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  {
+    gst_vaapi_picture_replace (&priv->current_picture, NULL);
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  }
 drop_frame:
-  priv->decoder_state = 0;
-  priv->pic_structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-  return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+  {
+    priv->decoder_state = 0;
+    priv->pic_structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+    return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+  }
 }
 
 static GstVaapiDecoderStatus
