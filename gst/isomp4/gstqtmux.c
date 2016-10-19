@@ -4366,6 +4366,11 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       entry.fourcc = FOURCC_ap4h;
     else if (!g_strcmp0 (variant, "4444xq"))
       entry.fourcc = FOURCC_ap4x;
+
+    if (!qtmux->interleave_time_set)
+      qtmux->interleave_time = 500 * GST_MSECOND;
+    if (!qtmux->interleave_bytes_set)
+      qtmux->interleave_bytes = width > 720 ? 4 * 1024 * 1024 : 2 * 1024 * 1024;
   }
 
   if (!entry.fourcc)
