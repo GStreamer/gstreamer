@@ -128,11 +128,11 @@ coverage-report:
 	done
 
 check:
-if HAVE_NOSETESTS
+if HAVE_NOSE2
 if WITH_PYTHON
-	GI_TYPELIB_PATH=$(top_srcdir)/ges/:${GI_TYPELIB_PATH} LD_LIBRARY_PATH=$(top_srcdir)/ges/.libs:${LD_LIBRARY_PATH} ${NOSETESTS} --verbose $(top_srcdir)/tests/check/python/test_*.py
+	GI_TYPELIB_PATH=$(top_srcdir)/ges/:${GI_TYPELIB_PATH} LD_LIBRARY_PATH=$(top_srcdir)/ges/.libs:${LD_LIBRARY_PATH} ${NOSE2} --verbose -s $(top_srcdir)/tests/check/python
 
 check-python:
-	GI_TYPELIB_PATH=$(top_srcdir)/ges/:${GI_TYPELIB_PATH} LD_LIBRARY_PATH=$(top_srcdir)/ges/.libs:${LD_LIBRARY_PATH} ${NOSETESTS} --verbose $(top_srcdir)/tests/check/python/test_*.py
+	GI_TYPELIB_PATH=$(top_srcdir)/ges/:${GI_TYPELIB_PATH} LD_LIBRARY_PATH=$(top_srcdir)/ges/.libs:${LD_LIBRARY_PATH} ${NOSE2} --verbose -s $(top_srcdir)/tests/check/python
 endif
 endif

@@ -184,20 +184,20 @@ if test "x$HAVE_UNISTD_H" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/festival//`
 fi
 
-dnl *** checks for nosetests ***
+dnl *** checks for nose2 ***
 
-AC_MSG_CHECKING(for nosetests)
-NOSETESTS=nosetests
-if $NOSETESTS 1>&AC_FD_CC 2>&AC_FD_CC
+AC_MSG_CHECKING(for nose2)
+NOSE2=nose2
+if $NOSE2 1>&AC_FD_CC 2>&AC_FD_CC
 then
-  HAVE_NOSETESTS=yes
+  HAVE_NOSE2=yes
   AC_MSG_RESULT(yes)
 else
-  HAVE_NOSETESTS=no
-  AC_MSG_RESULT(no nosetests)
+  HAVE_NOSE2=no
+  AC_MSG_RESULT(no nose2)
 fi
-AC_SUBST([NOSETESTS])
-AM_CONDITIONAL(HAVE_NOSETESTS, test "x$HAVE_NOSETESTS" = "xyes")
+AC_SUBST([NOSE2])
+AM_CONDITIONAL(HAVE_NOSE2, test "x$HAVE_NOSE2" = "xyes")
 
 dnl *** checks for types/defines ***
 

@@ -77,27 +77,31 @@ foreach t : ges_tests
 endforeach
 
 if build_gir
-  runtests = find_program('nosetests3', required : false)
-  # On some distros it doesn't have the '3' suffix
-  if not runtests.found()
-      runtests = find_program('nosetests', required : false)
-  endif
+  runtests = find_program('nose2', required : false)
 
   if runtests.found()
     testdir = '@0@/python/'.format(meson.current_source_dir())
 
     tests = [
-        ['Test clip', 'test_clip.py'],
-        ['Test timeline', 'test_timeline.py'],
-        ['Test groups', 'test_group.py']
+        ['Test clip', 'test_clip'],
+        ['Test timeline', 'test_timeline'],
+        ['Test groups', 'test_group']
     ]
 
     foreach i: tests
       env = environment()
       env.prepend('GI_TYPELIB_PATH', meson.current_build_dir() + '/../../ges/')
       env.prepend('LD_LIBRARY_PATH', meson.current_build_dir() + '/../../ges/')
-      args = ['--with-xunit', '--xunit-file=' + meson.current_build_dir() + i.get(0).underscorify() + '.xunit']
-      test(i.get(0), runtests, args: args + [testdir + '/' + i.get(1)], env: env)
+
+      args = ['--project-directory', meson.current_source_dir() + '/../..',
+              '--start-dir', meson.current_source_dir()]
+      xunitfile = '' + i.get(0).underscorify() + '.xunit'
+      config = configuration_data()
+      config.set('path', xunitfile)
+      configure_file(input : 'nose2-junit-xml.cfg.in', configuration : config, output : xunitfile + '.cfg')
+      args = args + ['--plugin', 'nose2.plugins.junitxml', '--config', meson.current_build_dir() + '/' + xunitfile + '.cfg']
+
+      test(i.get(0), runtests, args: args + ['python.' + i.get(1)], env: env)
     endforeach
   endif
 endif
