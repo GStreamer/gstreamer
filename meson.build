@@ -18,7 +18,7 @@ gst_dep = dependency('gstreamer-1.0', version : gst_req,
 gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_base_dep'])
 gmodule_dep = dependency('gmodule-2.0')
-pygobject_dep = dependency('pygobject-3.0 >= 3.0')
+pygobject_dep = dependency('pygobject-3.0', version : '>= 3.0')
 python_dep = dependency('python3')
 
 python = find_program('python3')
