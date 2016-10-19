@@ -336,3 +336,22 @@ gst_vaapi_buffer_proxy_get_size (GstVaapiBufferProxy * proxy)
   return 0;
 #endif
 }
+
+/**
+ * gst_vaapi_buffer_proxy_release_data:
+ * @proxy: a #GstVaapiBufferProxy
+ *
+ * Notifies the user to destroy the user's data, though the @proxy is
+ * not going to be destroyed.
+ **/
+void
+gst_vaapi_buffer_proxy_release_data (GstVaapiBufferProxy * proxy)
+{
+  g_return_if_fail (proxy != NULL);
+
+  if (proxy->destroy_func) {
+    proxy->destroy_func (proxy->destroy_data);
+    proxy->destroy_func = NULL;
+    proxy->destroy_data = NULL;
+  }
+}
