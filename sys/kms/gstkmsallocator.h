@@ -28,7 +28,6 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <libkms.h>
 
 G_BEGIN_DECLS
 
@@ -49,6 +48,8 @@ typedef struct _GstKMSAllocator GstKMSAllocator;
 typedef struct _GstKMSAllocatorClass GstKMSAllocatorClass;
 typedef struct _GstKMSAllocatorPrivate GstKMSAllocatorPrivate;
 typedef struct _GstKMSMemory GstKMSMemory;
+
+struct kms_bo;
 
 struct _GstKMSMemory
 {

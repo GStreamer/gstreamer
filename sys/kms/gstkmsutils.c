@@ -93,6 +93,57 @@ gst_drm_format_from_video (GstVideoFormat fmt)
   return 0;
 }
 
+guint32
+gst_drm_bpp_from_drm (guint32 drmfmt)
+{
+  guint32 bpp;
+
+  switch (drmfmt) {
+    case DRM_FORMAT_YUV420:
+    case DRM_FORMAT_YVU420:
+    case DRM_FORMAT_YUV422:
+    case DRM_FORMAT_NV12:
+    case DRM_FORMAT_NV21:
+    case DRM_FORMAT_NV16:
+      bpp = 8;
+      break;
+    case DRM_FORMAT_UYVY:
+    case DRM_FORMAT_YUYV:
+    case DRM_FORMAT_YVYU:
+      bpp = 16;
+      break;
+    default:
+      bpp = 32;
+      break;
+  }
+
+  return bpp;
+}
+
+guint32
+gst_drm_height_from_drm (guint32 drmfmt, guint32 height)
+{
+  guint32 ret;
+
+  switch (drmfmt) {
+    case DRM_FORMAT_YUV420:
+    case DRM_FORMAT_YVU420:
+    case DRM_FORMAT_YUV422:
+    case DRM_FORMAT_NV12:
+    case DRM_FORMAT_NV21:
+      ret = height * 3 / 2;
+      break;
+    case DRM_FORMAT_NV16:
+      ret = height * 2;
+      break;
+    default:
+      ret = height;
+      break;
+  }
+
+  return ret;
+}
+
 static GstStructure *
 gst_video_format_to_structure (GstVideoFormat format)
 {

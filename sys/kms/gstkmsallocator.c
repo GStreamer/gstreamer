@@ -27,9 +27,11 @@
 #include "config.h"
 #endif
 
+#include <drm.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <unistd.h>
 
 #include "gstkmsallocator.h"
@@ -40,10 +42,19 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #define GST_KMS_MEMORY_TYPE "KMSMemory"
 
+struct kms_bo
+{
+  void *ptr;
+  size_t size;
+  size_t offset;
+  size_t pitch;
+  unsigned handle;
+  unsigned int refs;
+};
+
 struct _GstKMSAllocatorPrivate
 {
   int fd;
-  struct kms_driver *driver;
 };
 
 #define parent_class gst_kms_allocator_parent_class
@@ -75,45 +86,45 @@ gst_kms_memory_get_fb_id (GstMemory * mem)
 }
 
 static gboolean
-ensure_kms_driver (GstKMSAllocator * alloc)
+check_fd (GstKMSAllocator * alloc)
 {
-  GstKMSAllocatorPrivate *priv;
-  int err;
-
-  priv = alloc->priv;
-
-  if (priv->driver)
-    return TRUE;
-
-  if (priv->fd < 0)
-    return FALSE;
-
-  err = kms_create (priv->fd, &priv->driver);
-  if (err) {
-    GST_ERROR_OBJECT (alloc, "Could not create KMS driver: %s",
-        strerror (-err));
-    return FALSE;
-  }
-
-  return TRUE;
+  return alloc->priv->fd > -1;
 }
 
 static void
 gst_kms_allocator_memory_reset (GstKMSAllocator * allocator, GstKMSMemory * mem)
 {
+  int err;
+  struct drm_mode_destroy_dumb arg = { 0, };
+
+  if (!check_fd (allocator))
+    return;
+
   if (mem->fb_id) {
     GST_DEBUG_OBJECT (allocator, "removing fb id %d", mem->fb_id);
     drmModeRmFB (allocator->priv->fd, mem->fb_id);
     mem->fb_id = 0;
   }
 
-  if (!ensure_kms_driver (allocator))
+  if (!mem->bo)
     return;
 
-  if (mem->bo) {
-    kms_bo_destroy (&mem->bo);
-    mem->bo = NULL;
+  if (mem->bo->ptr != NULL) {
+    GST_WARNING_OBJECT (allocator, "destroying mapped bo (refcount=%d)",
+        mem->bo->refs);
+    munmap (mem->bo->ptr, mem->bo->size);
+    mem->bo->ptr = NULL;
   }
+
+  arg.handle = mem->bo->handle;
+
+  err = drmIoctl (allocator->priv->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &arg);
+  if (err)
+    GST_WARNING_OBJECT (allocator,
+        "Failed to destroy dumb buffer object: %s %d", strerror (errno), errno);
+
+  g_free (mem->bo);
+  mem->bo = NULL;
 }
 
 static gboolean
@@ -121,26 +132,43 @@ gst_kms_allocator_memory_create (GstKMSAllocator * allocator,
     GstKMSMemory * kmsmem, GstVideoInfo * vinfo)
 {
   gint ret;
-  guint attrs[] = {
-    KMS_WIDTH, GST_VIDEO_INFO_WIDTH (vinfo),
-    KMS_HEIGHT, GST_VIDEO_INFO_HEIGHT (vinfo),
-    KMS_TERMINATE_PROP_LIST,
-  };
+  struct drm_mode_create_dumb arg = { 0, };
+  guint32 fmt;
 
   if (kmsmem->bo)
     return TRUE;
 
-  if (!ensure_kms_driver (allocator))
+  if (!check_fd (allocator))
     return FALSE;
 
-  ret = kms_bo_create (allocator->priv->driver, attrs, &kmsmem->bo);
-  if (ret) {
-    GST_ERROR_OBJECT (allocator, "Failed to create buffer object: %s (%d)",
-        strerror (-ret), ret);
+  kmsmem->bo = g_malloc0 (sizeof (*kmsmem->bo));
+  if (!kmsmem->bo)
     return FALSE;
-  }
+
+  fmt = gst_drm_format_from_video (GST_VIDEO_INFO_FORMAT (vinfo));
+  arg.bpp = gst_drm_bpp_from_drm (fmt);
+  arg.width = GST_VIDEO_INFO_WIDTH (vinfo);
+  arg.height = gst_drm_height_from_drm (fmt, GST_VIDEO_INFO_HEIGHT (vinfo));
+
+  ret = drmIoctl (allocator->priv->fd, DRM_IOCTL_MODE_CREATE_DUMB, &arg);
+  if (ret)
+    goto create_failed;
+
+  kmsmem->bo->handle = arg.handle;
+  kmsmem->bo->size = arg.size;
+  kmsmem->bo->pitch = arg.pitch;
 
   return TRUE;
+
+  /* ERRORS */
+create_failed:
+  {
+    GST_ERROR_OBJECT (allocator, "Failed to create buffer object: %s (%d)",
+        strerror (-ret), ret);
+    g_free (kmsmem->bo);
+    kmsmem->bo = NULL;
+    return FALSE;
+  }
 }
 
 static void
@@ -202,10 +230,7 @@ gst_kms_allocator_finalize (GObject * obj)
 
   alloc = GST_KMS_ALLOCATOR (obj);
 
-  if (alloc->priv->driver)
-    kms_destroy (&alloc->priv->driver);
-
-  if (alloc->priv->fd > -1)
+  if (check_fd (alloc))
     close (alloc->priv->fd);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
@@ -237,24 +262,46 @@ static gpointer
 gst_kms_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 {
   GstKMSMemory *kmsmem;
+  GstKMSAllocator *alloc;
   int err;
   gpointer out;
+  struct drm_mode_map_dumb arg = { 0, };
 
-  if (!ensure_kms_driver ((GstKMSAllocator *) mem->allocator))
+  alloc = (GstKMSAllocator *) mem->allocator;
+
+  if (!check_fd (alloc))
     return NULL;
 
   kmsmem = (GstKMSMemory *) mem;
   if (!kmsmem->bo)
     return NULL;
 
-  out = NULL;
-  err = kms_bo_map (kmsmem->bo, &out);
+  /* Reuse existing buffer object mapping if possible */
+  if (kmsmem->bo->ptr != NULL) {
+    goto out;
+  }
+
+  arg.handle = kmsmem->bo->handle;
+
+  err = drmIoctl (alloc->priv->fd, DRM_IOCTL_MODE_MAP_DUMB, &arg);
   if (err) {
-    GST_ERROR ("could not map memory: %s %d", strerror (-err), err);
+    GST_ERROR_OBJECT (alloc, "Failed to get offset of buffer object: %s %d",
+        strerror (-err), err);
     return NULL;
   }
 
-  return out;
+  out = mmap (0, kmsmem->bo->size,
+      PROT_READ | PROT_WRITE, MAP_SHARED, alloc->priv->fd, arg.offset);
+  if (out == MAP_FAILED) {
+    GST_ERROR_OBJECT (alloc, "Failed to map dumb buffer object: %s %d",
+        strerror (errno), errno);
+    return NULL;
+  }
+  kmsmem->bo->ptr = out;
+
+out:
+  g_atomic_int_inc (&kmsmem->bo->refs);
+  return kmsmem->bo->ptr;
 }
 
 static void
@@ -262,12 +309,17 @@ gst_kms_memory_unmap (GstMemory * mem)
 {
   GstKMSMemory *kmsmem;
 
-  if (!ensure_kms_driver ((GstKMSAllocator *) mem->allocator))
+  if (!check_fd ((GstKMSAllocator *) mem->allocator))
     return;
 
   kmsmem = (GstKMSMemory *) mem;
-  if (kmsmem->bo)
-    kms_bo_unmap (kmsmem->bo);
+  if (!kmsmem->bo)
+    return;
+
+  if (g_atomic_int_dec_and_test (&kmsmem->bo->refs)) {
+    munmap (kmsmem->bo->ptr, kmsmem->bo->size);
+    kmsmem->bo->ptr = NULL;
+  }
 }
 
 static void
@@ -315,7 +367,7 @@ gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
   fmt = gst_drm_format_from_video (GST_VIDEO_INFO_FORMAT (vinfo));
 
   if (kmsmem->bo) {
-    kms_bo_get_prop (kmsmem->bo, KMS_HANDLE, &bo_handles[0]);
+    bo_handles[0] = kmsmem->bo->handle;
     for (i = 1; i < num_planes; i++)
       bo_handles[i] = bo_handles[0];
 
@@ -325,7 +377,7 @@ gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
      * only do this for interleaved formats.
      */
     if (num_planes == 1)
-      kms_bo_get_prop (kmsmem->bo, KMS_PITCH, &pitch);
+      pitch = kmsmem->bo->pitch;
   } else {
     for (i = 0; i < num_planes; i++)
       bo_handles[i] = kmsmem->gem_handle[i];
