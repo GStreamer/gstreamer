@@ -51,9 +51,8 @@ under a different license or have other issues concerning patentability
 #### GPL code
 
 Part of the optional packages are under the GNU GPL
-[v2](http://www.gnu.org/licenses/old-licenses/gpl-2.0.html) or
-[v3](http://www.gnu.org/licenses/gpl-3.0.html). This means that you
-cannot link the GPL software in a program unless the same program is
+[v2](http://www.gnu.org/licenses/old-licenses/gpl-2.0.html). This means that
+you cannot link the GPL software in a program unless the same program is
 also under the GPL, but you are invited to seek competent advice on how
 this works in your precise case and design choices. GPL is called
 “strong copyleft” because the condition to distributed under the same
@@ -92,10 +91,6 @@ disclaiming liability: we invite you to read all of them. Should you
 need a warranty on the fact that software works as intended or have any
 kind of indemnification, you have the option to subscribe a software
 maintenance agreement with a company or entity that is in that business.
-Fluendo and Collabora, as well as some other companies, provide software
-maintenance agreements under certain conditions, you are invited to
-contact them in order to receive further details and discuss of the
-commercial terms.
 
 ## Data protection
 
@@ -106,7 +101,7 @@ and on an aggregate basis only.
 
 #### What licenses are there?
 
-GStreamer binaries containst software under various licenses. See above.
+GStreamer binaries contain software under various licenses. See above.
 
 #### How does this relate to the packaging system?
 
@@ -152,7 +147,7 @@ preserve the same license, of course). You might also consider to push
 your modifications upstream, so that they are merged into the main
 branch of development if they are worth it and will be maintained by
 the GStreamer project and not by you individually. We invite you not
-to fork the code, if at all possible.  he Cerbero build system has a
+to fork the code, if at all possible. The Cerbero build system has a
 "bundle-source" command that can help you create a source bundle
 containing all of the complete corresponding machine readable source
 code that you are required to provide.
@@ -164,7 +159,7 @@ so that by distributing and using software on a general purpose machine
 you would not violate any of them. But the inconvenient truth is that
 they do exist.
 
-Software patents are widely available in the USA. Despite they are
+Software patents are widely available in the USA. Even though they are
 formally prohibited in the European Union, they indeed are granted by
 the thousand by the European Patent Office, and also some national
 patent offices follow the same path. In other countries they are not
