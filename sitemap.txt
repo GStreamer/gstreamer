@@ -124,6 +124,5 @@ index.md
 			pwg-porting.md
 			pwg-porting-1_0.md
 			pwg-licensing-advisory.md
-	sdk-legal-information.md
 	splitup.md
 	rtp.md
