@@ -140,11 +140,13 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   GstVideoAlignment align;
   GstAllocator *allocator;
   gboolean ret, updated = FALSE;
+  guint size, min_buffers, max_buffers;
 
   GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
 
   caps = NULL;
-  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
+  if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
+          &max_buffers))
     goto error_invalid_config;
   if (!caps)
     goto error_no_caps;
@@ -176,6 +178,10 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
       if (!alloc_vip)
         goto error_create_allocator_info;
       priv->alloc_info = *alloc_vip;
+    }
+    if (GST_VIDEO_INFO_SIZE (&priv->alloc_info) != size) {
+      gst_buffer_pool_config_set_params (config, caps,
+          GST_VIDEO_INFO_SIZE (&priv->alloc_info), min_buffers, max_buffers);
     }
   }
   if (!priv->allocator)
