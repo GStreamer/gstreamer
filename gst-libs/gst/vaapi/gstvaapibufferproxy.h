@@ -95,6 +95,12 @@ gst_vaapi_buffer_proxy_get_size (GstVaapiBufferProxy * proxy);
 void
 gst_vaapi_buffer_proxy_release_data (GstVaapiBufferProxy * proxy);
 
+void
+gst_vaapi_buffer_proxy_set_mem (GstVaapiBufferProxy * proxy, GstMemory * mem);
+
+GstMemory *
+gst_vaapi_buffer_proxy_peek_mem (GstVaapiBufferProxy * proxy);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_BUFFER_PROXY_H */

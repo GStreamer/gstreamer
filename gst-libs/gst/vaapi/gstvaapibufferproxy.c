@@ -128,6 +128,11 @@ gst_vaapi_buffer_proxy_finalize (GstVaapiBufferProxy * proxy)
 {
   gst_vaapi_buffer_proxy_release_handle (proxy);
 
+  if (proxy->mem) {
+    gst_memory_unref (proxy->mem);
+    proxy->mem = NULL;
+  }
+
   /* Notify the user function that the object is now destroyed */
   if (proxy->destroy_func)
     proxy->destroy_func (proxy->destroy_data);
@@ -171,6 +176,7 @@ gst_vaapi_buffer_proxy_new (guintptr handle, guint type, gsize size,
   proxy->va_info.type = VAImageBufferType;
   proxy->va_info.mem_type = from_GstVaapiBufferMemoryType (proxy->type);
   proxy->va_info.mem_size = size;
+  proxy->mem = NULL;
   if (!proxy->va_info.mem_type)
     goto error_unsupported_mem_type;
   return proxy;
@@ -206,6 +212,7 @@ gst_vaapi_buffer_proxy_new_from_object (GstVaapiObject * object,
   proxy->destroy_data = data;
   proxy->type = type;
   proxy->va_buf = buf_id;
+  proxy->mem = NULL;
   memset (&proxy->va_info, 0, sizeof (proxy->va_info));
   proxy->va_info.mem_type = from_GstVaapiBufferMemoryType (proxy->type);
   if (!proxy->va_info.mem_type)
@@ -354,4 +361,37 @@ gst_vaapi_buffer_proxy_release_data (GstVaapiBufferProxy * proxy)
     proxy->destroy_func = NULL;
     proxy->destroy_data = NULL;
   }
+}
+
+/**
+ * gst_vaapi_buffer_proxy_set_mem:
+ * @proxy: a #GstVaapiBufferProxy
+ * @mem: a #GstMemory
+ *
+ * Relates @mem with @proxy, hence we later will know which memory
+ * correspond to processed surface.
+ *
+ * This is useful when a dmabuf-based memory is instantiated and
+ * associated with a surface.
+ **/
+void
+gst_vaapi_buffer_proxy_set_mem (GstVaapiBufferProxy * proxy, GstMemory * mem)
+{
+  gst_mini_object_replace ((GstMiniObject **) & proxy->mem,
+      GST_MINI_OBJECT (mem));
+}
+
+/**
+ * gst_vaapi_buffer_proxy_peek_mem:
+ * @proxy: a #GstVaapiBufferProxy
+ *
+ * This is useful when a dmabuf-based memory is instantiated and
+ * associated with a surface.
+ *
+ * Returns: (transfer none): the assigned #GstMemory to the @proxy.
+ **/
+GstMemory *
+gst_vaapi_buffer_proxy_peek_mem (GstVaapiBufferProxy * proxy)
+{
+  return proxy->mem;
 }
