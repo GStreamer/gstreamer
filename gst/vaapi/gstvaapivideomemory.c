@@ -56,6 +56,20 @@ _init_performance_debug (void)
 #endif
 }
 
+static void
+_init_vaapi_video_memory_debug (void)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (gst_debug_vaapivideomemory, "vaapivideomemory", 0,
+        "VA-API video memory allocator");
+    g_once_init_leave (&_init, 1);
+  }
+#endif
+}
+
 static inline void
 reset_image_usage (GstVaapiImageUsageFlags * flag)
 {
@@ -614,10 +628,8 @@ error_allocate_memory:
 #define GST_VAAPI_IS_VIDEO_ALLOCATOR_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_VAAPI_TYPE_VIDEO_ALLOCATOR))
 
-G_DEFINE_TYPE_WITH_CODE (GstVaapiVideoAllocator,
-    gst_vaapi_video_allocator, GST_TYPE_ALLOCATOR,
-    GST_DEBUG_CATEGORY_INIT (gst_debug_vaapivideomemory, "vaapivideomemory", 0,
-        "VA-API video memory allocator"));
+G_DEFINE_TYPE (GstVaapiVideoAllocator, gst_vaapi_video_allocator,
+    GST_TYPE_ALLOCATOR);
 
 static void
 gst_vaapi_video_allocator_free (GstAllocator * allocator, GstMemory * base_mem)
@@ -650,6 +662,8 @@ gst_vaapi_video_allocator_class_init (GstVaapiVideoAllocatorClass * klass)
 {
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstAllocatorClass *const allocator_class = GST_ALLOCATOR_CLASS (klass);
+
+  _init_vaapi_video_memory_debug ();
 
   object_class->finalize = gst_vaapi_video_allocator_finalize;
   allocator_class->free = gst_vaapi_video_allocator_free;
@@ -980,29 +994,55 @@ gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
   g_return_val_if_fail (display != NULL, NULL);
   g_return_val_if_fail (vip != NULL, NULL);
 
-  do {
-    surface = gst_vaapi_surface_new_full (display, vip, flags);
-    if (!surface)
-      break;
+  _init_vaapi_video_memory_debug ();
 
-    image = gst_vaapi_surface_derive_image (surface);
-    if (!image || !gst_vaapi_image_map (image))
-      break;
+  surface = gst_vaapi_surface_new_full (display, vip, flags);
+  if (!surface)
+    goto error_no_surface;
 
-    gst_video_info_set_format (&alloc_info, GST_VIDEO_INFO_FORMAT (vip),
-        GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
-    gst_video_info_update_from_image (&alloc_info, image);
-    gst_vaapi_image_unmap (image);
+  image = gst_vaapi_surface_derive_image (surface);
+  if (!image)
+    goto error_no_image;
+  if (!gst_vaapi_image_map (image))
+    goto error_map_failed;
 
-    allocator = gst_dmabuf_allocator_new ();
-    if (!allocator)
-      break;
-    gst_allocator_set_vaapi_video_info (allocator, &alloc_info, flags);
-  } while (0);
+  gst_video_info_set_format (&alloc_info, GST_VIDEO_INFO_FORMAT (vip),
+      GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
+  gst_video_info_update_from_image (&alloc_info, image);
+  gst_vaapi_image_unmap (image);
 
+  allocator = gst_dmabuf_allocator_new ();
+  if (!allocator)
+    goto error_no_allocator;
+  gst_allocator_set_vaapi_video_info (allocator, &alloc_info, flags);
+
+bail:
   gst_vaapi_object_replace (&image, NULL);
   gst_vaapi_object_replace (&surface, NULL);
   return allocator;
+
+  /* ERRORS */
+error_no_surface:
+  {
+    GST_ERROR ("failed to create a new surface");
+    goto bail;
+  }
+error_no_image:
+  {
+    GST_ERROR ("failed derive surface to image for format: %s",
+        GST_VIDEO_INFO_FORMAT_STRING (vip));
+    goto bail;
+  }
+error_map_failed:
+  {
+    GST_ERROR ("failed to map image");
+    goto bail;
+  }
+error_no_allocator:
+  {
+    GST_ERROR ("failed to create a new dmabuf allocator");
+    goto bail;
+  }
 }
 
 /* ------------------------------------------------------------------------ */
