@@ -233,6 +233,13 @@ gboolean
 gst_vaapi_surface_set_subpictures_from_composition (GstVaapiSurface * surface,
     GstVideoOverlayComposition * composition, gboolean propagate_context);
 
+void
+gst_vaapi_surface_set_buffer_proxy (GstVaapiSurface * surface,
+    GstVaapiBufferProxy * proxy);
+
+GstVaapiBufferProxy *
+gst_vaapi_surface_peek_buffer_proxy (GstVaapiSurface * surface);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_SURFACE_H */

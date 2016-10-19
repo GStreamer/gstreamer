@@ -1039,3 +1039,36 @@ gst_vaapi_surface_set_subpictures_from_composition (GstVaapiSurface * surface,
   }
   return TRUE;
 }
+
+/**
+ * gst_vaapi_surface_set_buffer_proxy:
+ * @surface: a #GstVaapiSurface
+ * @proxy: an external #GstVaapiBufferProxy
+ *
+ * Replaces the external buffer proxy in @surface with @proxy.
+ *
+ * This is useful when a dmabuf-based memory is instantiated in order
+ * to relate the generated buffer @proxy with the processed @surface.
+ **/
+void
+gst_vaapi_surface_set_buffer_proxy (GstVaapiSurface * surface,
+    GstVaapiBufferProxy * proxy)
+{
+  gst_vaapi_buffer_proxy_replace (&surface->extbuf_proxy, proxy);
+}
+
+/**
+ * gst_vaapi_surface_peek_buffer_proxy:
+ * @surface: a #GstVaapiSurface
+ *
+ * This is useful when a dmabuf-based memory is instantiated in order
+ * to relate the generated buffer @proxy with the processed @surface.
+ *
+ * Returns: (transfer none): the associated external
+ * #GstVaapiBufferProxy
+ **/
+GstVaapiBufferProxy *
+gst_vaapi_surface_peek_buffer_proxy (GstVaapiSurface * surface)
+{
+  return surface->extbuf_proxy;
+}
