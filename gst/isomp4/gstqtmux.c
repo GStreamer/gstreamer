@@ -268,6 +268,8 @@ enum
   PROP_DTS_METHOD,
 #endif
   PROP_DO_CTTS,
+  PROP_INTERLEAVE_BYTES,
+  PROP_INTERLEAVE_TIME,
 };
 
 /* some spare for header size as well */
@@ -287,6 +289,8 @@ enum
 #define DEFAULT_RESERVED_MAX_DURATION   GST_CLOCK_TIME_NONE
 #define DEFAULT_RESERVED_MOOV_UPDATE_PERIOD   GST_CLOCK_TIME_NONE
 #define DEFAULT_RESERVED_BYTES_PER_SEC_PER_TRAK 550
+#define DEFAULT_INTERLEAVE_BYTES 0
+#define DEFAULT_INTERLEAVE_TIME 0
 
 static void gst_qt_mux_finalize (GObject * object);
 
@@ -308,8 +312,8 @@ static void gst_qt_mux_release_pad (GstElement * element, GstPad * pad);
 static gboolean gst_qt_mux_sink_event (GstCollectPads * pads,
     GstCollectData * data, GstEvent * event, gpointer user_data);
 
-static GstFlowReturn gst_qt_mux_handle_buffer (GstCollectPads * pads,
-    GstCollectData * cdata, GstBuffer * buf, gpointer user_data);
+static GstFlowReturn gst_qt_mux_collected (GstCollectPads * pads,
+    gpointer user_data);
 static GstFlowReturn gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad,
     GstBuffer * buf);
 
@@ -479,6 +483,16 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           "Multiplier for converting reserved-max-duration into bytes of header to reserve, per second, per track",
           0, 10000, DEFAULT_RESERVED_BYTES_PER_SEC_PER_TRAK,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_INTERLEAVE_BYTES,
+      g_param_spec_uint64 ("interleave-bytes", "Interleave (bytes)",
+          "Interleave between streams in bytes",
+          0, G_MAXUINT64, DEFAULT_INTERLEAVE_BYTES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_INTERLEAVE_TIME,
+      g_param_spec_uint64 ("interleave-time", "Interleave (time)",
+          "Interleave between streams in nanoseconds",
+          0, G_MAXUINT64, DEFAULT_INTERLEAVE_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_qt_mux_request_new_pad);
@@ -601,6 +615,11 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
     }
   }
 
+  qtmux->current_pad = NULL;
+  qtmux->current_chunk_size = 0;
+  qtmux->current_chunk_duration = 0;
+  qtmux->current_chunk_offset = -1;
+
   qtmux->reserved_moov_size = 0;
   qtmux->last_moov_update = GST_CLOCK_TIME_NONE;
   qtmux->muxed_since_last_update = 0;
@@ -622,12 +641,12 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
 
   qtmux->sinkpads = NULL;
   qtmux->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_buffer_function (qtmux->collect,
-      GST_DEBUG_FUNCPTR (gst_qt_mux_handle_buffer), qtmux);
   gst_collect_pads_set_event_function (qtmux->collect,
       GST_DEBUG_FUNCPTR (gst_qt_mux_sink_event), qtmux);
   gst_collect_pads_set_clip_function (qtmux->collect,
       GST_DEBUG_FUNCPTR (gst_collect_pads_clip_running_time), qtmux);
+  gst_collect_pads_set_function (qtmux->collect,
+      GST_DEBUG_FUNCPTR (gst_qt_mux_collected), qtmux);
 
   /* properties set to default upon construction */
 
@@ -635,6 +654,8 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
   qtmux->reserved_moov_update_period = DEFAULT_RESERVED_MOOV_UPDATE_PERIOD;
   qtmux->reserved_bytes_per_sec_per_trak =
       DEFAULT_RESERVED_BYTES_PER_SEC_PER_TRAK;
+  qtmux->interleave_bytes = DEFAULT_INTERLEAVE_BYTES;
+  qtmux->interleave_time = DEFAULT_INTERLEAVE_TIME;
 
   /* always need this */
   qtmux->context =
@@ -3259,6 +3280,24 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     pad->total_duration += duration;
   }
 
+  if (qtmux->current_pad != pad || qtmux->current_chunk_offset == -1) {
+    GST_DEBUG_OBJECT (qtmux,
+        "Switching to next chunk for pad %s:%s: offset %" G_GUINT64_FORMAT
+        ", size %" G_GUINT64_FORMAT ", duration %" GST_TIME_FORMAT,
+        GST_DEBUG_PAD_NAME (pad->collect.pad), qtmux->current_chunk_offset,
+        qtmux->current_chunk_size,
+        GST_TIME_ARGS (qtmux->current_chunk_duration));
+    qtmux->current_pad = pad;
+    if (qtmux->current_chunk_offset == -1)
+      qtmux->current_chunk_offset = qtmux->mdat_size;
+    else
+      qtmux->current_chunk_offset += qtmux->current_chunk_size;
+    qtmux->current_chunk_size = 0;
+    qtmux->current_chunk_duration = 0;
+  }
+  qtmux->current_chunk_size += gst_buffer_get_size (last_buf);
+  qtmux->current_chunk_duration += duration;
+
   last_dts = gst_util_uint64_scale_round (pad->last_dts,
       atom_trak_get_timescale (pad->trak), GST_SECOND);
 
@@ -3317,7 +3356,8 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       pad->last_dts += duration;
     }
   }
-  chunk_offset = qtmux->mdat_size;
+
+  chunk_offset = qtmux->current_chunk_offset;
 
   GST_LOG_OBJECT (qtmux,
       "Pad (%s) dts updated to %" GST_TIME_FORMAT,
@@ -3355,15 +3395,14 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_PTS (last_buf)),
       (int) (last_dts), (int) (pts_offset));
 
-  /*
-   * Each buffer starts a new chunk, so we can assume the buffer
-   * duration is the chunk duration
-   */
-  if (GST_CLOCK_TIME_IS_VALID (duration) && (duration > qtmux->longest_chunk ||
-          !GST_CLOCK_TIME_IS_VALID (qtmux->longest_chunk))) {
-    GST_DEBUG_OBJECT (qtmux, "New longest chunk found: %" GST_TIME_FORMAT
-        ", pad %s", GST_TIME_ARGS (duration), GST_PAD_NAME (pad->collect.pad));
-    qtmux->longest_chunk = duration;
+  if (GST_CLOCK_TIME_IS_VALID (duration)
+      && (qtmux->current_chunk_duration > qtmux->longest_chunk
+          || !GST_CLOCK_TIME_IS_VALID (qtmux->longest_chunk))) {
+    GST_DEBUG_OBJECT (qtmux,
+        "New longest chunk found: %" GST_TIME_FORMAT ", pad %s",
+        GST_TIME_ARGS (qtmux->current_chunk_duration),
+        GST_PAD_NAME (pad->collect.pad));
+    qtmux->longest_chunk = qtmux->current_chunk_duration;
   }
 
   /* now we go and register this buffer/sample all over */
@@ -3392,7 +3431,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       ret =
           gst_qt_mux_register_and_push_sample (qtmux, pad, empty_buf, FALSE, 1,
           last_dts + scaled_duration, empty_duration_scaled,
-          gst_buffer_get_size (empty_buf), qtmux->mdat_size, sync, TRUE, 0);
+          gst_buffer_get_size (empty_buf), chunk_offset, sync, TRUE, 0);
     } else {
       /* our only case currently is tx3g subtitles, so there is no reason to fill this yet */
       g_assert_not_reached ();
@@ -3490,9 +3529,77 @@ gst_qt_pad_adjust_buffer_dts (GstQTMux * qtmux, GstQTPad * pad,
   }
 }
 
+static GstQTPad *
+find_best_pad (GstQTMux * qtmux, GstCollectPads * pads)
+{
+  GSList *walk;
+  GstQTPad *best_pad = NULL;
+
+  if (qtmux->current_pad &&
+      (qtmux->interleave_bytes != 0 || qtmux->interleave_time != 0) &&
+      (qtmux->interleave_bytes == 0
+          || qtmux->current_chunk_size <= qtmux->interleave_bytes)
+      && (qtmux->interleave_time == 0
+          || qtmux->current_chunk_duration <= qtmux->interleave_time)
+      && qtmux->mux_mode != GST_QT_MUX_MODE_FRAGMENTED
+      && qtmux->mux_mode != GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE) {
+    GstBuffer *tmp_buf =
+        gst_collect_pads_peek (pads, (GstCollectData *) qtmux->current_pad);
+
+    if (tmp_buf || qtmux->current_pad->last_buf) {
+      best_pad = qtmux->current_pad;
+      if (tmp_buf)
+        gst_buffer_unref (tmp_buf);
+      GST_DEBUG_OBJECT (qtmux, "Reusing pad %s:%s",
+          GST_DEBUG_PAD_NAME (best_pad->collect.pad));
+    }
+  } else {
+    if (qtmux->current_pad)
+      GST_DEBUG_OBJECT (qtmux, "Switching from pad %s:%s",
+          GST_DEBUG_PAD_NAME (qtmux->current_pad->collect.pad));
+    best_pad = qtmux->current_pad = NULL;
+  }
+
+  if (!best_pad) {
+    GstClockTime best_time = GST_CLOCK_TIME_NONE;
+
+    for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+      GstCollectData *cdata = (GstCollectData *) walk->data;
+      GstQTPad *qtpad = (GstQTPad *) cdata;
+      GstBuffer *tmp_buf;
+      GstClockTime timestamp;
+
+      tmp_buf = gst_collect_pads_peek (pads, cdata);
+      if (!tmp_buf) {
+        /* This one is newly EOS now, finish it for real */
+        if (qtpad->last_buf) {
+          timestamp = GST_BUFFER_DTS_OR_PTS (qtpad->last_buf);
+        } else {
+          continue;
+        }
+      } else {
+        timestamp = GST_BUFFER_DTS_OR_PTS (tmp_buf);
+      }
+
+      if (best_pad == NULL ||
+          !GST_CLOCK_TIME_IS_VALID (best_time) || timestamp < best_time) {
+        best_pad = qtpad;
+        best_time = timestamp;
+      }
+
+      if (tmp_buf)
+        gst_buffer_unref (tmp_buf);
+    }
+
+    GST_DEBUG_OBJECT (qtmux, "Choosing pad %s:%s",
+        GST_DEBUG_PAD_NAME (best_pad->collect.pad));
+  }
+
+  return best_pad;
+}
+
 static GstFlowReturn
-gst_qt_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
-    GstBuffer * buf, gpointer user_data)
+gst_qt_mux_collected (GstCollectPads * pads, gpointer user_data)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstQTMux *qtmux = GST_QT_MUX_CAST (user_data);
@@ -3508,12 +3615,17 @@ gst_qt_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
   if (G_UNLIKELY (qtmux->state == GST_QT_MUX_STATE_EOS))
     return GST_FLOW_EOS;
 
-  best_pad = (GstQTPad *) cdata;
+  best_pad = find_best_pad (qtmux, pads);
 
   /* clipping already converted to running time */
   if (best_pad != NULL) {
-    g_assert (buf);
-    gst_qt_pad_adjust_buffer_dts (qtmux, best_pad, cdata, &buf);
+    GstBuffer *buf = gst_collect_pads_pop (pads, (GstCollectData *) best_pad);
+
+    g_assert (buf || best_pad->last_buf);
+    if (buf)
+      gst_qt_pad_adjust_buffer_dts (qtmux, best_pad,
+          (GstCollectData *) best_pad, &buf);
+
     ret = gst_qt_mux_add_buffer (qtmux, best_pad, buf);
   } else {
     qtmux->state = GST_QT_MUX_STATE_EOS;
@@ -4582,6 +4694,12 @@ gst_qt_mux_release_pad (GstElement * element, GstPad * pad)
     }
   }
 
+  if (mux->current_pad && mux->current_pad->collect.pad == pad) {
+    mux->current_pad = NULL;
+    mux->current_chunk_size = 0;
+    mux->current_chunk_duration = 0;
+  }
+
   gst_collect_pads_remove_pad (mux->collect, pad);
 }
 
@@ -4735,6 +4853,12 @@ gst_qt_mux_get_property (GObject * object,
     case PROP_RESERVED_BYTES_PER_SEC:
       g_value_set_uint (value, qtmux->reserved_bytes_per_sec_per_trak);
       break;
+    case PROP_INTERLEAVE_BYTES:
+      g_value_set_uint64 (value, qtmux->interleave_bytes);
+      break;
+    case PROP_INTERLEAVE_TIME:
+      g_value_set_uint64 (value, qtmux->interleave_time);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -4811,6 +4935,14 @@ gst_qt_mux_set_property (GObject * object,
       break;
     case PROP_RESERVED_BYTES_PER_SEC:
       qtmux->reserved_bytes_per_sec_per_trak = g_value_get_uint (value);
+      break;
+    case PROP_INTERLEAVE_BYTES:
+      qtmux->interleave_bytes = g_value_get_uint64 (value);
+      qtmux->interleave_bytes_set = TRUE;
+      break;
+    case PROP_INTERLEAVE_TIME:
+      qtmux->interleave_time = g_value_get_uint64 (value);
+      qtmux->interleave_time_set = TRUE;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -2201,10 +2201,18 @@ atom_stsc_copy_data (AtomSTSC * stsc, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
   guint64 original_offset = *offset;
-  guint i;
+  guint i, len;
 
   if (!atom_full_copy_data (&stsc->header, buffer, size, offset)) {
     return 0;
+  }
+
+  /* Last two entries might be the same size here as we only merge once the
+   * next chunk is started */
+  if ((len = atom_array_get_len (&stsc->entries)) > 1 &&
+      ((atom_array_index (&stsc->entries, len - 1)).samples_per_chunk ==
+          (atom_array_index (&stsc->entries, len - 2)).samples_per_chunk)) {
+    stsc->entries.len--;
   }
 
   prop_copy_uint32 (atom_array_get_len (&stsc->entries), buffer, size, offset);
@@ -2894,7 +2902,6 @@ atom_wave_copy_data (AtomWAVE * wave, guint8 ** buffer,
 static void
 atom_stsc_add_new_entry (AtomSTSC * stsc, guint32 first_chunk, guint32 nsamples)
 {
-  STSCEntry nentry;
   gint len;
 
   if ((len = atom_array_get_len (&stsc->entries)) &&
@@ -2902,10 +2909,37 @@ atom_stsc_add_new_entry (AtomSTSC * stsc, guint32 first_chunk, guint32 nsamples)
           nsamples))
     return;
 
-  nentry.first_chunk = first_chunk;
-  nentry.samples_per_chunk = nsamples;
-  nentry.sample_description_index = 1;
-  atom_array_append (&stsc->entries, nentry, 128);
+  if ((len = atom_array_get_len (&stsc->entries)) > 1 &&
+      ((atom_array_index (&stsc->entries, len - 1)).samples_per_chunk ==
+          (atom_array_index (&stsc->entries, len - 2)).samples_per_chunk)) {
+    STSCEntry *nentry;
+
+    /* Merge last two entries as they have the same number of samples per chunk */
+    nentry = &atom_array_index (&stsc->entries, len - 1);
+    nentry->first_chunk = first_chunk;
+    nentry->samples_per_chunk = nsamples;
+    nentry->sample_description_index = 1;
+  } else {
+    STSCEntry nentry;
+
+    nentry.first_chunk = first_chunk;
+    nentry.samples_per_chunk = nsamples;
+    nentry.sample_description_index = 1;
+    atom_array_append (&stsc->entries, nentry, 128);
+  }
+}
+
+static void
+atom_stsc_update_entry (AtomSTSC * stsc, guint32 first_chunk, guint32 nsamples)
+{
+  gint len;
+
+  len = atom_array_get_len (&stsc->entries);
+  g_assert (len != 0);
+  g_assert (atom_array_index (&stsc->entries,
+          len - 1).first_chunk == first_chunk);
+
+  atom_array_index (&stsc->entries, len - 1).samples_per_chunk += nsamples;
 }
 
 static void
@@ -2949,12 +2983,22 @@ atom_stco64_get_entry_count (AtomSTCO64 * stco64)
   return atom_array_get_len (&stco64->entries);
 }
 
-static void
+/* returns TRUE if a new entry was added */
+static gboolean
 atom_stco64_add_entry (AtomSTCO64 * stco64, guint64 entry)
 {
+  guint32 len;
+
+  /* Only add a new entry if the chunk offset changed */
+  if ((len = atom_array_get_len (&stco64->entries)) &&
+      ((atom_array_index (&stco64->entries, len - 1)) == entry))
+    return FALSE;
+
   atom_array_append (&stco64->entries, entry, 256);
   if (entry > G_MAXUINT32)
     stco64->header.header.type = FOURCC_co64;
+
+  return TRUE;
 }
 
 void
@@ -3014,9 +3058,14 @@ atom_stbl_add_samples (AtomSTBL * stbl, guint32 nsamples, guint32 delta,
 {
   atom_stts_add_entry (&stbl->stts, nsamples, delta);
   atom_stsz_add_entry (&stbl->stsz, nsamples, size);
-  atom_stco64_add_entry (&stbl->stco64, chunk_offset);
-  atom_stsc_add_new_entry (&stbl->stsc,
-      atom_stco64_get_entry_count (&stbl->stco64), nsamples);
+  if (atom_stco64_add_entry (&stbl->stco64, chunk_offset)) {
+    atom_stsc_add_new_entry (&stbl->stsc,
+        atom_stco64_get_entry_count (&stbl->stco64), nsamples);
+  } else {
+    atom_stsc_update_entry (&stbl->stsc,
+        atom_stco64_get_entry_count (&stbl->stco64), nsamples);
+  }
+
   if (sync)
     atom_stbl_add_stss_entry (stbl);
   /* always store to arrange for consistent content */
