@@ -2016,7 +2016,7 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
   GESContainer *toplevel;
 
   /* We only work with GESSource-s and we check that we are not already moving
-   * element ourself*/
+   * the specified element ourself */
   if (GES_IS_SOURCE (element) == FALSE ||
       g_list_find (timeline->priv->movecontext.moving_trackelements, element))
     return FALSE;
@@ -2029,7 +2029,7 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
   top_end = _START (toplevel) + _DURATION (toplevel) + position_offset;
   cur = g_hash_table_lookup (timeline->priv->by_end, track_element);
 
-  GST_DEBUG_OBJECT (timeline, "Moving %" GST_PTR_FORMAT "to %"
+  GST_DEBUG_OBJECT (timeline, "Moving %" GST_PTR_FORMAT " to %"
       GST_TIME_FORMAT " (end %" GST_TIME_FORMAT ")", element,
       GST_TIME_ARGS (position), GST_TIME_ARGS (top_end));
 

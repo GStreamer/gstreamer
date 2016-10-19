@@ -656,10 +656,10 @@ ges_timeline_element_get_timeline (GESTimelineElement * self)
  * @self: a #GESTimelineElement
  * @start: the position in #GstClockTime
  *
- * Set the position of the object in its containing layer
+ * Set the position of the object in its containing layer.
  *
- * Note that if the timeline snap-distance property of the timeline containing
- * @self is set, @self will properly snap to its neighboors.
+ * Note that if the snapping-distance property of the timeline containing
+ * @self is set, @self will properly snap to the edges around @start.
  */
 void
 ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
@@ -678,7 +678,7 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
   toplevel_container = ges_timeline_element_get_toplevel_parent (self);
 
   if (((gint64) (_START (toplevel_container) + start - _START (self))) < 0) {
-    GST_INFO_OBJECT (self, "Can not move the object as it would imply its"
+    GST_INFO_OBJECT (self, "Can not move the object as it would imply its "
         "container to have a negative start value");
 
     gst_object_unref (toplevel_container);

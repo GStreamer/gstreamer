@@ -1340,7 +1340,7 @@ ges_track_element_copy_bindings (GESTrackElement * element,
  *  happen in, %NULL means that the edition is done in all the
  *  #GESLayers contained in the current timeline.
  *      FIXME: This is not implemented yet.
- * @mode: The #GESEditMode in which the editition will happen.
+ * @mode: The #GESEditMode in which the edition will happen.
  * @edge: The #GESEdge the edit should happen on.
  * @position: The position at which to edit @object (in nanosecond)
  *
@@ -1360,7 +1360,7 @@ ges_track_element_edit (GESTrackElement * object,
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
   if (G_UNLIKELY (!track)) {
-    GST_WARNING_OBJECT (object, "Trying to edit in %d mode but not in"
+    GST_WARNING_OBJECT (object, "Trying to edit in %d mode but not in "
         "any Track yet.", mode);
     return FALSE;
   }
@@ -1368,8 +1368,8 @@ ges_track_element_edit (GESTrackElement * object,
   timeline = GES_TIMELINE (ges_track_get_timeline (track));
 
   if (G_UNLIKELY (!timeline)) {
-    GST_WARNING_OBJECT (object, "Trying to edit in %d mode but not in"
-        "track %p no in any timeline yet.", mode, track);
+    GST_WARNING_OBJECT (object, "Trying to edit in %d mode but "
+        "track %p is not in any timeline yet.", mode, track);
     return FALSE;
   }
 
