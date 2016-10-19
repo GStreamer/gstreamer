@@ -108,4 +108,6 @@ gboolean             gst_audio_converter_samples         (GstAudioConverter * co
                                                           gpointer in[], gsize in_frames,
                                                           gpointer out[], gsize out_frames);
 
+gboolean             gst_audio_converter_supports_inplace (GstAudioConverter *convert);
+
 #endif /* __GST_AUDIO_CONVERTER_H__ */

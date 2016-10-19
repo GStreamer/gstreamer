@@ -80,6 +80,8 @@ typedef void (*AudioConvertFunc) (gpointer dst, const gpointer src, gint count);
 typedef gboolean (*AudioConvertSamplesFunc) (GstAudioConverter * convert,
     GstAudioConverterFlags flags, gpointer in[], gsize in_frames,
     gpointer out[], gsize out_frames);
+typedef void (*AudioConvertEndianFunc) (gpointer dst, const gpointer src,
+    gint count);
 
 /*                           int/int    int/float  float/int float/float
  *
@@ -113,6 +115,8 @@ struct _GstAudioConverter
   gpointer *out_data;
   gsize out_frames;
 
+  gboolean in_place;            /* the conversion can be done in place; returned by gst_audio_converter_supports_inplace() */
+
   /* unpack */
   gboolean in_default;
   gboolean unpack_ip;
@@ -136,6 +140,9 @@ struct _GstAudioConverter
   /* pack */
   gboolean out_default;
   AudioChain *chain_end;        /* NULL for empty chain or points to the last element in the chain */
+
+  /* endian swap */
+  AudioConvertEndianFunc swap_endian;
 
   AudioConvertSamplesFunc convert;
 };
@@ -826,6 +833,12 @@ converter_passthrough (GstAudioConverter * convert,
   AudioChain *chain;
   gsize samples;
 
+  /* in-place passthrough -> do nothing */
+  if (in == out) {
+    g_assert (convert->in_place);
+    return TRUE;
+  }
+
   chain = convert->chain_end;
 
   samples = in_frames * chain->inc;
@@ -840,6 +853,152 @@ converter_passthrough (GstAudioConverter * convert,
 
     for (i = 0; i < chain->blocks; i++)
       memcpy (out[i], in[i], bytes);
+  } else {
+    for (i = 0; i < chain->blocks; i++)
+      gst_audio_format_fill_silence (convert->in.finfo, out[i], samples);
+  }
+  return TRUE;
+}
+
+/* perform LE<->BE conversion on a block of @count 16-bit samples
+ * dst may equal src for in-place conversion
+ */
+static void
+converter_swap_endian_16 (gpointer dst, const gpointer src, gint count)
+{
+  guint16 *out = dst;
+  const guint16 *in = src;
+  gint i;
+
+  for (i = 0; i < count; i++)
+    out[i] = GUINT16_SWAP_LE_BE (in[i]);
+}
+
+/* perform LE<->BE conversion on a block of @count 24-bit samples
+ * dst may equal src for in-place conversion
+ *
+ * naive algorithm, which performs better with -O3 and worse with -O2
+ * than the commented out optimized algorithm below
+ */
+static void
+converter_swap_endian_24 (gpointer dst, const gpointer src, gint count)
+{
+  guint8 *out = dst;
+  const guint8 *in = src;
+  gint i;
+
+  count *= 3;
+
+  for (i = 0; i < count; i += 3) {
+    guint8 x = in[i + 0];
+    out[i + 0] = in[i + 2];
+    out[i + 1] = in[i + 1];
+    out[i + 2] = x;
+  }
+}
+
+/* the below code performs better with -O2 but worse with -O3 */
+#if 0
+/* perform LE<->BE conversion on a block of @count 24-bit samples
+ * dst may equal src for in-place conversion
+ *
+ * assumes that dst and src are 32-bit aligned
+ */
+static void
+converter_swap_endian_24 (gpointer dst, const gpointer src, gint count)
+{
+  guint32 *out = dst;
+  const guint32 *in = src;
+  guint8 *out8;
+  const guint8 *in8;
+  gint i;
+
+  /* first convert 24-bit samples in multiples of 4 reading 3x 32-bits in one cycle
+   *
+   * input:               A1 B1 C1 A2 , B2 C2 A3 B3 , C3 A4 B4 C4
+   * 32-bit endian swap:  A2 C1 B1 A1 , B3 A3 C2 B2 , C4 B4 A4 C3
+   *                      <--  x  -->   <--  y  --> , <--  z  -->
+   *
+   * desired output:      C1 B1 A1 C2 , B2 A2 C3 B3 , A3 C4 B4 A4
+   */
+  for (i = 0; i < count / 4; i++, in += 3, out += 3) {
+    guint32 x, y, z;
+
+    x = GUINT32_SWAP_LE_BE (in[0]);
+    y = GUINT32_SWAP_LE_BE (in[1]);
+    z = GUINT32_SWAP_LE_BE (in[2]);
+
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    out[0] = (x << 8) + ((y >> 8) & 0xff);
+    out[1] = (in[1] & 0xff0000ff) + ((x >> 8) & 0xff0000) + ((z << 8) & 0xff00);
+    out[2] = (z >> 8) + ((y << 8) & 0xff000000);
+#else
+    out[0] = (x >> 8) + ((y << 8) & 0xff000000);
+    out[1] = (in[1] & 0xff0000ff) + ((x << 8) & 0xff00) + ((z >> 8) & 0xff0000);
+    out[2] = (z << 8) + ((y >> 8) & 0xff);
+#endif
+  }
+
+  /* convert the remainder less efficiently */
+  for (out8 = (guint8 *) out, in8 = (const guint8 *) in, i = 0; i < (count & 3);
+      i++) {
+    guint8 x = in8[i + 0];
+    out8[i + 0] = in8[i + 2];
+    out8[i + 1] = in8[i + 1];
+    out8[i + 2] = x;
+  }
+}
+#endif
+
+/* perform LE<->BE conversion on a block of @count 32-bit samples
+ * dst may equal src for in-place conversion
+ */
+static void
+converter_swap_endian_32 (gpointer dst, const gpointer src, gint count)
+{
+  guint32 *out = dst;
+  const guint32 *in = src;
+  gint i;
+
+  for (i = 0; i < count; i++)
+    out[i] = GUINT32_SWAP_LE_BE (in[i]);
+}
+
+/* perform LE<->BE conversion on a block of @count 64-bit samples
+ * dst may equal src for in-place conversion
+ */
+static void
+converter_swap_endian_64 (gpointer dst, const gpointer src, gint count)
+{
+  guint64 *out = dst;
+  const guint64 *in = src;
+  gint i;
+
+  for (i = 0; i < count; i++)
+    out[i] = GUINT64_SWAP_LE_BE (in[i]);
+}
+
+/* the worker function to perform endian-conversion only
+ * assuming finfo and foutinfo have the same depth
+ */
+static gboolean
+converter_endian (GstAudioConverter * convert,
+    GstAudioConverterFlags flags, gpointer in[], gsize in_frames,
+    gpointer out[], gsize out_frames)
+{
+  gint i;
+  AudioChain *chain;
+  gsize samples;
+
+  chain = convert->chain_end;
+  samples = in_frames * chain->inc;
+
+  GST_LOG ("convert endian: %" G_GSIZE_FORMAT " / %" G_GSIZE_FORMAT " samples",
+      in_frames, samples);
+
+  if (in) {
+    for (i = 0; i < chain->blocks; i++)
+      convert->swap_endian (out[i], in[i], samples);
   } else {
     for (i = 0; i < chain->blocks; i++)
       gst_audio_format_fill_silence (convert->in.finfo, out[i], samples);
@@ -888,6 +1047,14 @@ converter_resample (GstAudioConverter * convert,
 
   return TRUE;
 }
+
+#define GST_AUDIO_FORMAT_IS_ENDIAN_CONVERSION(info1, info2) \
+		( \
+			!(((info1)->flags ^ (info2)->flags) & (~GST_AUDIO_FORMAT_FLAG_UNPACK)) && \
+			(info1)->endianness != (info2)->endianness && \
+			(info1)->width == (info2)->width && \
+			(info1)->depth == (info2)->depth \
+		)
 
 /**
  * gst_audio_converter_new: (skip)
@@ -950,18 +1117,50 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
   convert->chain_end = chain_pack (convert, prev);
 
   convert->convert = converter_generic;
+  convert->in_place = FALSE;
 
   /* optimize */
-  if (out_info->finfo->format == in_info->finfo->format
-      && convert->mix_passthrough) {
-    if (convert->resampler == NULL) {
-      GST_INFO
-          ("same formats, no resampler and passthrough mixing -> passthrough");
-      convert->convert = converter_passthrough;
-    } else {
-      if (is_intermediate_format (in_info->finfo->format)) {
-        GST_INFO ("same formats, and passthrough mixing -> only resampling");
-        convert->convert = converter_resample;
+  if (convert->mix_passthrough) {
+    if (out_info->finfo->format == in_info->finfo->format) {
+      if (convert->resampler == NULL) {
+        GST_INFO
+            ("same formats, no resampler and passthrough mixing -> passthrough");
+        convert->convert = converter_passthrough;
+        convert->in_place = TRUE;
+      } else {
+        if (is_intermediate_format (in_info->finfo->format)) {
+          GST_INFO ("same formats, and passthrough mixing -> only resampling");
+          convert->convert = converter_resample;
+        }
+      }
+    } else if (GST_AUDIO_FORMAT_IS_ENDIAN_CONVERSION (out_info->finfo,
+            in_info->finfo)) {
+      if (convert->resampler == NULL) {
+        GST_INFO ("no resampler, passthrough mixing -> only endian conversion");
+        convert->convert = converter_endian;
+        convert->in_place = TRUE;
+
+        switch (GST_AUDIO_INFO_BPS (in_info)) {
+          case 2:
+            GST_DEBUG ("initializing 16-bit endian conversion");
+            convert->swap_endian = converter_swap_endian_16;
+            break;
+          case 3:
+            GST_DEBUG ("initializing 24-bit endian conversion");
+            convert->swap_endian = converter_swap_endian_24;
+            break;
+          case 4:
+            GST_DEBUG ("initializing 32-bit endian conversion");
+            convert->swap_endian = converter_swap_endian_32;
+            break;
+          case 8:
+            GST_DEBUG ("initializing 64-bit endian conversion");
+            convert->swap_endian = converter_swap_endian_64;
+            break;
+          default:
+            GST_ERROR ("unsupported sample width for endian conversion");
+            g_assert_not_reached ();
+        }
       }
     }
   }
@@ -1128,4 +1327,19 @@ gst_audio_converter_samples (GstAudioConverter * convert,
     return TRUE;
   }
   return convert->convert (convert, flags, in, in_frames, out, out_frames);
+}
+
+/**
+ * gst_audio_converter_supports_inplace
+ * @convert: a #GstAudioConverter
+ *
+ * Returns whether the audio converter can perform the conversion in-place.
+ * The return value would be typically input to gst_base_transform_set_in_place()
+ *
+ * Returns: %TRUE when the conversion can be done in place.
+ */
+gboolean
+gst_audio_converter_supports_inplace (GstAudioConverter * convert)
+{
+  return convert->in_place;
 }

@@ -85,6 +85,8 @@ static gboolean gst_audio_convert_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_audio_convert_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
+static GstFlowReturn gst_audio_convert_transform_ip (GstBaseTransform * base,
+    GstBuffer * buf);
 static gboolean gst_audio_convert_transform_meta (GstBaseTransform * trans,
     GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 static GstFlowReturn gst_audio_convert_submit_input_buffer (GstBaseTransform *
@@ -176,6 +178,8 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_convert_set_caps);
   basetransform_class->transform =
       GST_DEBUG_FUNCPTR (gst_audio_convert_transform);
+  basetransform_class->transform_ip =
+      GST_DEBUG_FUNCPTR (gst_audio_convert_transform_ip);
   basetransform_class->transform_meta =
       GST_DEBUG_FUNCPTR (gst_audio_convert_transform_meta);
   basetransform_class->submit_input_buffer =
@@ -646,6 +650,7 @@ gst_audio_convert_set_caps (GstBaseTransform * base, GstCaps * incaps,
   GstAudioConvert *this = GST_AUDIO_CONVERT (base);
   GstAudioInfo in_info;
   GstAudioInfo out_info;
+  gboolean in_place;
 
   GST_DEBUG_OBJECT (base, "incaps %" GST_PTR_FORMAT ", outcaps %"
       GST_PTR_FORMAT, incaps, outcaps);
@@ -666,6 +671,9 @@ gst_audio_convert_set_caps (GstBaseTransform * base, GstCaps * incaps,
           this->dither,
           GST_AUDIO_CONVERTER_OPT_NOISE_SHAPING_METHOD,
           GST_TYPE_AUDIO_NOISE_SHAPING_METHOD, this->ns, NULL));
+
+  in_place = gst_audio_converter_supports_inplace (this->convert);
+  gst_base_transform_set_in_place (base, in_place);
 
   if (this->convert == NULL)
     goto no_converter;
@@ -693,6 +701,7 @@ no_converter:
   }
 }
 
+/* if called through gst_audio_convert_transform_ip() inbuf == outbuf */
 static GstFlowReturn
 gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -773,6 +782,12 @@ convert_error:
     ret = GST_FLOW_ERROR;
     goto done;
   }
+}
+
+static GstFlowReturn
+gst_audio_convert_transform_ip (GstBaseTransform * base, GstBuffer * buf)
+{
+  return gst_audio_convert_transform (base, buf, buf);
 }
 
 static gboolean
