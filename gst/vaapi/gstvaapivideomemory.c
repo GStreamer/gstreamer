@@ -825,6 +825,9 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * allocator, GstVaapiVideoMeta * meta)
   gst_vaapi_video_meta_set_surface_proxy (meta, proxy);
   gst_vaapi_surface_proxy_unref (proxy);
 
+  /* Need dup because GstDmabufMemory creates the GstFdMemory with flag
+   * GST_FD_MEMORY_FLAG_NONE. So when being freed it calls close on the fd
+   * because GST_FD_MEMORY_FLAG_DONT_CLOSE is not set. */
   dmabuf_fd = gst_vaapi_buffer_proxy_get_handle (dmabuf_proxy);
   if (dmabuf_fd < 0 || (dmabuf_fd = dup (dmabuf_fd)) < 0)
     goto error_create_dmabuf_handle;
