@@ -725,7 +725,7 @@ bail:
 
 GstAllocator *
 gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
-    const GstVideoInfo * vip, guint flags)
+    const GstVideoInfo * vip, guint surface_alloc_flags)
 {
   GstVaapiVideoAllocator *allocator;
 
@@ -740,7 +740,7 @@ gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
 
   allocator_configure_surface_info (display, allocator);
   allocator->surface_pool = gst_vaapi_surface_pool_new_full (display,
-      &allocator->surface_info, flags);
+      &allocator->surface_info, surface_alloc_flags);
   if (!allocator->surface_pool)
     goto error_create_surface_pool;
 

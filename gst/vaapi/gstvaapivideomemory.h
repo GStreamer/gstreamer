@@ -186,7 +186,7 @@ gst_vaapi_video_allocator_get_type (void) G_GNUC_CONST;
 G_GNUC_INTERNAL
 GstAllocator *
 gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
-    const GstVideoInfo * vip, guint flags);
+    const GstVideoInfo * vip, guint surface_alloc_flags);
 
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiDmaBufMemory                                             --- */
