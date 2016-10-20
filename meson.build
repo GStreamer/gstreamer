@@ -29,6 +29,14 @@ helpers_install_dir = libexecdir + '/gstreamer-1.0/'
 
 cc = meson.get_compiler('c')
 
+# FIXME: Meson should have a way for portably adding -fPIC when needed for use
+# with static libraries that are linked into shared libraries. Or, it should
+# add it by default with an option to turn it off if needed.
+pic_args = ['-fPIC']
+if host_machine.system() == 'windows'
+  pic_args = []
+endif
+
 # Ignore several spurious warnings for things gstreamer does very commonly
 # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
 # If a warning is harmless but hard to fix, use '/woXXXX' so it's shown once
