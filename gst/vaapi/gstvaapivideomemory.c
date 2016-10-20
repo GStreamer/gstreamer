@@ -692,12 +692,12 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
 
   surface = new_surface (display, vinfo);
   if (!surface)
-    goto bail;
+    goto error_no_surface;
   image = gst_vaapi_surface_derive_image (surface);
   if (!image)
-    goto bail;
+    goto error_no_derive_image;
   if (!gst_vaapi_image_map (image))
-    goto bail;
+    goto error_cannot_map;
 
   updated = gst_video_info_update_from_image (&allocator->surface_info, image);
 
@@ -711,10 +711,28 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
   gst_vaapi_image_unmap (image);
 
 bail:
-  if (surface)
-    gst_vaapi_object_unref (surface);
   if (image)
     gst_vaapi_object_unref (image);
+  if (surface)
+    gst_vaapi_object_unref (surface);
+  return;
+
+error_no_surface:
+  {
+    GST_ERROR_OBJECT (allocator, "Cannot create a VA Surface");
+    return;
+  }
+error_no_derive_image:
+  {
+    GST_ERROR_OBJECT (allocator,
+        "Cannot create a derived image from surface %p", surface);
+    goto bail;
+  }
+error_cannot_map:
+  {
+    GST_ERROR_OBJECT (allocator, "Cannot map VA derived image %p", image);
+    goto bail;
+  }
 }
 
 static inline void
