@@ -352,7 +352,8 @@ gst_vaapi_video_memory_reset_image (GstVaapiVideoMemory * mem)
     mem->image = NULL;
   }
 
-  /* Don't synchronize to surface, this shall have happened during unmaps */
+  /* Don't synchronize to surface, this shall have happened during
+   * unmaps */
   GST_VAAPI_VIDEO_MEMORY_FLAG_UNSET (mem,
       GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT);
 }
