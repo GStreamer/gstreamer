@@ -74,6 +74,7 @@ endif
 printf_lib = static_library('gstprintf',
     printf_sources,
     include_directories : [configinc],
-    c_args : printf_args + pic_args,
+    c_args : printf_args,
     install : false,
+    pic: true,
     dependencies : [glib_dep])

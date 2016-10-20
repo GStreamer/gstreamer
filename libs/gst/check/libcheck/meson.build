@@ -38,4 +38,5 @@ libcheck = static_library('check',
   libcheck_files,
   include_directories : [ configinc, internal_check_h_inc ],
   dependencies : [rt_lib, mathlib],
-  c_args: gst_c_args + pic_args)
+  c_args: gst_c_args,
+  pic: true)
