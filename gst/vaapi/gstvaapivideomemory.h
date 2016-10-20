@@ -94,6 +94,8 @@ typedef enum
  * GstVaapiImageUsageFlags:
  * @GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS: will use vaCreateImage +
  * va{Put,Get}Image when writing or reading onto the system memory.
+ * @GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_UPLOAD: will try to use
+ * vaDeriveImage when writing data from the system memory.
  * @GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER: will try to use
  * vaDeriveImage with reading data onto the system memory.
  *
@@ -101,6 +103,7 @@ typedef enum
  **/
 typedef enum {
   GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS,
+  GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_UPLOAD,
   GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER,
 } GstVaapiImageUsageFlags;
 

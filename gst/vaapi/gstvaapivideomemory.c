@@ -76,6 +76,12 @@ use_direct_rendering (GstVaapiImageUsageFlags flag)
   return flag == GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
 }
 
+static inline gboolean
+use_direct_uploading (GstVaapiImageUsageFlags flag)
+{
+  return flag == GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_UPLOAD;
+}
+
 static guchar *
 get_image_data (GstVaapiImage * image)
 {
@@ -707,7 +713,7 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
   const GstVideoInfo *vinfo;
   GstVaapiSurface *surface = NULL;
   GstVaapiImage *image = NULL;
-  gboolean updated, has_direct_rendering;
+  gboolean updated, has_direct_uploading, has_direct_rendering;
   GstVideoFormat fmt;
 
   vinfo = &allocator->video_info;
@@ -735,15 +741,22 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
 
   has_direct_rendering = updated && use_direct_rendering (req_usage_flag)
       && (GST_VAAPI_IMAGE_FORMAT (image) == GST_VIDEO_INFO_FORMAT (vinfo));
+  has_direct_uploading = updated && use_direct_uploading (req_usage_flag)
+      && (GST_VAAPI_IMAGE_FORMAT (image) == GST_VIDEO_INFO_FORMAT (vinfo));
 
   gst_vaapi_image_unmap (image);
 
   GST_INFO_OBJECT (allocator, "has %sdirect-rendering for %s surfaces",
       has_direct_rendering ? "" : "no ",
       GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info));
+  GST_INFO_OBJECT (allocator, "has %sdirect-uploading for %s surfaces",
+      has_direct_uploading ? "" : "no ",
+      GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info));
 
-  if (has_direct_rendering)
+  if (has_direct_rendering && !has_direct_uploading)
     allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
+  else if (!has_direct_rendering && has_direct_uploading)
+    allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_UPLOAD;
 
 bail:
   if (image)
