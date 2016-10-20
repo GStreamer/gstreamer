@@ -325,6 +325,11 @@ gst_video_meta_unmap_vaapi_memory (GstVideoMeta * meta, guint plane,
         GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
             GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT);
       }
+
+      if (!use_native_formats (mem->usage_flag)) {
+        gst_vaapi_video_meta_set_image (mem->meta, NULL);
+        gst_vaapi_video_memory_reset_image (mem);
+      }
     }
   }
   return TRUE;
