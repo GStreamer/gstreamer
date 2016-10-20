@@ -37,9 +37,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapivideomemory);
   gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (vip))
 #endif
 
-/* Defined if native VA surface formats are preferred over direct rendering */
-#define USE_NATIVE_FORMATS 1
-
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiVideoMemory                                              --- */
 /* ------------------------------------------------------------------------ */
@@ -60,11 +57,23 @@ _init_performance_debug (void)
 }
 
 static inline void
-reset_image_usage (gboolean * flag)
+reset_image_usage (GstVaapiImageUsageFlags * flag)
 {
   _init_performance_debug ();
   GST_CAT_INFO (CAT_PERFORMANCE, "derive image failed, fallbacking to copy");
-  *flag = FALSE;
+  *flag = GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
+}
+
+static inline gboolean
+use_native_formats (GstVaapiImageUsageFlags flag)
+{
+  return flag == GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
+}
+
+static inline gboolean
+use_direct_rendering (GstVaapiImageUsageFlags flag)
+{
+  return flag == GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
 }
 
 static guchar *
@@ -93,14 +102,14 @@ new_image (GstVaapiDisplay * display, const GstVideoInfo * vip)
 static gboolean
 ensure_image (GstVaapiVideoMemory * mem)
 {
-  if (!mem->image && mem->use_direct_rendering) {
+  if (!mem->image && !use_native_formats (mem->usage_flag)) {
     mem->image = gst_vaapi_surface_derive_image (mem->surface);
     if (!mem->image) {
-      reset_image_usage (&mem->use_direct_rendering);
+      reset_image_usage (&mem->usage_flag);
     } else if (gst_vaapi_surface_get_format (mem->surface) !=
         GST_VIDEO_INFO_FORMAT (mem->image_info)) {
       gst_vaapi_object_replace (&mem->image, NULL);
-      reset_image_usage (&mem->use_direct_rendering);
+      reset_image_usage (&mem->usage_flag);
     }
   }
 
@@ -119,7 +128,7 @@ ensure_image (GstVaapiVideoMemory * mem)
 static gboolean
 ensure_image_is_current (GstVaapiVideoMemory * mem)
 {
-  if (mem->use_direct_rendering)
+  if (!use_native_formats (mem->usage_flag))
     return TRUE;
 
   if (!GST_VAAPI_VIDEO_MEMORY_FLAG_IS_SET (mem,
@@ -134,13 +143,14 @@ ensure_image_is_current (GstVaapiVideoMemory * mem)
 }
 
 static GstVaapiSurface *
-new_surface (GstVaapiDisplay * display, const GstVideoInfo * vip)
+new_surface (GstVaapiDisplay * display, const GstVideoInfo * vip,
+    GstVaapiImageUsageFlags usage_flag)
 {
   GstVaapiSurface *surface;
   GstVaapiChromaType chroma_type;
 
   /* Try with explicit format first */
-  if (!USE_NATIVE_FORMATS &&
+  if (!use_native_formats (usage_flag) &&
       GST_VIDEO_INFO_FORMAT (vip) != GST_VIDEO_FORMAT_ENCODED) {
     surface = gst_vaapi_surface_new_with_format (display,
         GST_VIDEO_INFO_FORMAT (vip), GST_VIDEO_INFO_WIDTH (vip),
@@ -190,7 +200,7 @@ ensure_surface (GstVaapiVideoMemory * mem)
 static gboolean
 ensure_surface_is_current (GstVaapiVideoMemory * mem)
 {
-  if (mem->use_direct_rendering)
+  if (!use_native_formats (mem->usage_flag))
     return TRUE;
 
   if (!GST_VAAPI_VIDEO_MEMORY_FLAG_IS_SET (mem,
@@ -342,7 +352,7 @@ gst_vaapi_video_memory_new (GstAllocator * base_allocator,
   mem->meta = meta ? gst_vaapi_video_meta_ref (meta) : NULL;
   mem->map_type = 0;
   mem->map_count = 0;
-  mem->use_direct_rendering = allocator->has_direct_rendering;
+  mem->usage_flag = allocator->usage_flag;
 
   GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
       GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT);
@@ -366,7 +376,7 @@ gst_vaapi_video_memory_reset_image (GstVaapiVideoMemory * mem)
   GstVaapiVideoAllocator *const allocator =
       GST_VAAPI_VIDEO_ALLOCATOR_CAST (GST_MEMORY_CAST (mem)->allocator);
 
-  if (mem->use_direct_rendering)
+  if (!use_native_formats (mem->usage_flag))
     gst_vaapi_object_replace (&mem->image, NULL);
   else if (mem->image) {
     gst_vaapi_video_pool_put_object (allocator->image_pool, mem->image);
@@ -692,26 +702,27 @@ gst_video_info_update_from_image (GstVideoInfo * vip, GstVaapiImage * image)
 
 static inline void
 allocator_configure_surface_info (GstVaapiDisplay * display,
-    GstVaapiVideoAllocator * allocator)
+    GstVaapiVideoAllocator * allocator, GstVaapiImageUsageFlags req_usage_flag)
 {
   const GstVideoInfo *vinfo;
   GstVaapiSurface *surface = NULL;
   GstVaapiImage *image = NULL;
-  gboolean updated;
+  gboolean updated, has_direct_rendering;
   GstVideoFormat fmt;
 
   vinfo = &allocator->video_info;
+  allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
 
   fmt = gst_vaapi_video_format_get_best_native (GST_VIDEO_INFO_FORMAT (vinfo));
   gst_video_info_set_format (&allocator->surface_info, fmt,
       GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo));
 
   /* nothing to configure */
-  if (USE_NATIVE_FORMATS ||
-      GST_VIDEO_INFO_FORMAT (vinfo) == GST_VIDEO_FORMAT_ENCODED)
+  if (use_native_formats (req_usage_flag)
+      || GST_VIDEO_INFO_FORMAT (vinfo) == GST_VIDEO_FORMAT_ENCODED)
     return;
 
-  surface = new_surface (display, vinfo);
+  surface = new_surface (display, vinfo, req_usage_flag);
   if (!surface)
     goto error_no_surface;
   image = gst_vaapi_surface_derive_image (surface);
@@ -722,14 +733,17 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
 
   updated = gst_video_info_update_from_image (&allocator->surface_info, image);
 
-  allocator->has_direct_rendering = !USE_NATIVE_FORMATS && updated &&
-      (GST_VAAPI_IMAGE_FORMAT (image) == GST_VIDEO_INFO_FORMAT (vinfo));
-
-  GST_INFO ("has direct-rendering for %s surfaces: %s",
-      GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info),
-      allocator->has_direct_rendering ? "yes" : "no");
+  has_direct_rendering = updated && use_direct_rendering (req_usage_flag)
+      && (GST_VAAPI_IMAGE_FORMAT (image) == GST_VIDEO_INFO_FORMAT (vinfo));
 
   gst_vaapi_image_unmap (image);
+
+  GST_INFO_OBJECT (allocator, "has %sdirect-rendering for %s surfaces",
+      has_direct_rendering ? "" : "no ",
+      GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info));
+
+  if (has_direct_rendering)
+    allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
 
 bail:
   if (image)
@@ -763,7 +777,7 @@ allocator_configure_image_info (GstVaapiDisplay * display,
   GstVaapiImage *image = NULL;
   const GstVideoInfo *vinfo;
 
-  if (allocator->has_direct_rendering) {
+  if (!use_native_formats (allocator->usage_flag)) {
     allocator->image_info = allocator->surface_info;
     return;
   }
@@ -788,7 +802,8 @@ bail:
 
 GstAllocator *
 gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
-    const GstVideoInfo * vip, guint surface_alloc_flags)
+    const GstVideoInfo * vip, guint surface_alloc_flags,
+    GstVaapiImageUsageFlags req_usage_flag)
 {
   GstVaapiVideoAllocator *allocator;
 
@@ -801,7 +816,7 @@ gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
 
   allocator->video_info = *vip;
 
-  allocator_configure_surface_info (display, allocator);
+  allocator_configure_surface_info (display, allocator, req_usage_flag);
   allocator->surface_pool = gst_vaapi_surface_pool_new_full (display,
       &allocator->surface_info, surface_alloc_flags);
   if (!allocator->surface_pool)

@@ -91,6 +91,20 @@ typedef enum
 } GstVaapiVideoMemoryFlags;
 
 /**
+ * GstVaapiImageUsageFlags:
+ * @GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS: will use vaCreateImage +
+ * va{Put,Get}Image when writing or reading onto the system memory.
+ * @GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER: will try to use
+ * vaDeriveImage with reading data onto the system memory.
+ *
+ * Set the usage of GstVaapiImage in GstVaapiVideoMemory.
+ **/
+typedef enum {
+  GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS,
+  GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER,
+} GstVaapiImageUsageFlags;
+
+/**
  * GstVaapiVideoMemory:
  *
  * A VA video memory object holder, including VA surfaces, images and
@@ -109,7 +123,7 @@ struct _GstVaapiVideoMemory
   GstVaapiVideoMeta *meta;
   guint map_type;
   gint map_count;
-  gboolean use_direct_rendering;
+  GstVaapiImageUsageFlags usage_flag;
 };
 
 G_GNUC_INTERNAL
@@ -166,7 +180,7 @@ struct _GstVaapiVideoAllocator
   GstVaapiVideoPool *surface_pool;
   GstVideoInfo image_info;
   GstVaapiVideoPool *image_pool;
-  gboolean has_direct_rendering;
+  GstVaapiImageUsageFlags usage_flag;
 };
 
 /**
@@ -186,7 +200,8 @@ gst_vaapi_video_allocator_get_type (void) G_GNUC_CONST;
 G_GNUC_INTERNAL
 GstAllocator *
 gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
-    const GstVideoInfo * vip, guint surface_alloc_flags);
+    const GstVideoInfo * vip, guint surface_alloc_flags,
+    GstVaapiImageUsageFlags req_usage_flag);
 
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiDmaBufMemory                                             --- */

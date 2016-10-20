@@ -530,7 +530,8 @@ ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo)
         GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE);
   } else {
     plugin->sinkpad_allocator =
-        gst_vaapi_video_allocator_new (plugin->display, vinfo, 0);
+        gst_vaapi_video_allocator_new (plugin->display, vinfo, 0,
+        GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS);
   }
   return plugin->sinkpad_allocator != NULL;
 }
@@ -542,7 +543,8 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo)
     return TRUE;
 
   plugin->srcpad_allocator =
-      gst_vaapi_video_allocator_new (plugin->display, vinfo, 0);
+      gst_vaapi_video_allocator_new (plugin->display, vinfo, 0,
+      GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS);
   return plugin->srcpad_allocator != NULL;
 }
 
