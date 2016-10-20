@@ -16,15 +16,12 @@ PROJECTNAME = "GStreamer 'all'"
 ROOTDIR = os.path.abspath(os.path.dirname(__file__))
 
 
-def get_meson(update_meson):
+def get_meson():
     meson = os.path.join(ROOTDIR, 'meson', 'meson.py')
-    if update_meson or not os.path.exists(meson):
-        print("Updating meson submodule... ", end='')
-        sys.stdout.flush()
-        git('submodule', 'update', '--init', repository_path=ROOTDIR)
-        print("DONE")
+    if os.path.exists(meson):
+        return meson
 
-    return meson
+    return accept_command(["meson.py", "meson"])
 
 
 def accept_command(commands):
@@ -45,7 +42,7 @@ def get_configs(meson):
 
 def configure_meson(args, options):
     """Configures meson and generate the Makefile."""
-    meson = get_meson(options.update_meson)
+    meson = get_meson()
     if not meson:
         print("Install mesonbuild to build %s: http://mesonbuild.com/\n"
               "You can simply install it with:\n"
@@ -76,8 +73,6 @@ if __name__ == "__main__":
     parser.add_argument("--no-reconfigure", action='store_true',
                         default=False, help='Avoid removing the build dir'
                        ' if not necessary.')
-    parser.add_argument("-u", "--update-meson", action='store_true',
-                        default=False, help='Do not update meson')
     options, args = parser.parse_known_args()
     if options.no_reconfigure:
         if os.path.exists(
