@@ -26,8 +26,3 @@ Inside that environment you will find the GStreamer modules
 in subprojects/, you can simply hack in there and to rebuild you
 just need to rerun `ninja`.
 
-## Build a project based on GStreamer
-
-You can make your own project that uses GStreamer and all its
-components depend on `gst-all` making it Meson subproject
-of your own project.
