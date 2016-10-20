@@ -307,9 +307,12 @@ gst_vaapi_video_meta_new_from_pool (GstVaapiVideoPool * pool)
   set_display (meta, gst_vaapi_video_pool_get_display (pool));
   return meta;
 
+  /* ERRORS */
 error:
-  gst_vaapi_video_meta_unref (meta);
-  return NULL;
+  {
+    gst_vaapi_video_meta_unref (meta);
+    return NULL;
+  }
 }
 
 /**

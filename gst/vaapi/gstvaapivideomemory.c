@@ -436,29 +436,45 @@ gst_vaapi_video_memory_map (GstVaapiVideoMemory * mem, gsize maxsize,
 
   /* ERRORS */
 error_unsupported_map:
-  GST_ERROR ("unsupported map flags (0x%x)", flags);
-  return NULL;
+  {
+    GST_ERROR ("unsupported map flags (0x%x)", flags);
+    return NULL;
+  }
 error_unsupported_map_type:
-  GST_ERROR ("unsupported map type (%d)", mem->map_type);
-  return NULL;
+  {
+    GST_ERROR ("unsupported map type (%d)", mem->map_type);
+    return NULL;
+  }
 error_no_surface_proxy:
-  GST_ERROR ("failed to extract GstVaapiSurfaceProxy from video meta");
-  return NULL;
+  {
+    GST_ERROR ("failed to extract GstVaapiSurfaceProxy from video meta");
+    return NULL;
+  }
 error_no_surface:
-  GST_ERROR ("failed to extract VA surface from video buffer");
-  return NULL;
+  {
+    GST_ERROR ("failed to extract VA surface from video buffer");
+    return NULL;
+  }
 error_no_current_surface:
-  GST_ERROR ("failed to make surface current");
-  return NULL;
+  {
+    GST_ERROR ("failed to make surface current");
+    return NULL;
+  }
 error_no_image:
-  GST_ERROR ("failed to extract VA image from video buffer");
-  return NULL;
+  {
+    GST_ERROR ("failed to extract VA image from video buffer");
+    return NULL;
+  }
 error_no_current_image:
-  GST_ERROR ("failed to make image current");
-  return NULL;
+  {
+    GST_ERROR ("failed to make image current");
+    return NULL;
+  }
 error_map_image:
-  GST_ERROR ("failed to map VA image");
-  return NULL;
+  {
+    GST_ERROR ("failed to map VA image");
+    return NULL;
+  }
 }
 
 static void
@@ -482,8 +498,10 @@ gst_vaapi_video_memory_unmap (GstVaapiVideoMemory * mem)
 
   /* ERRORS */
 error_incompatible_map:
-  GST_ERROR ("incompatible map type (%d)", mem->map_type);
-  return;
+  {
+    GST_ERROR ("incompatible map type (%d)", mem->map_type);
+    return;
+  }
 }
 
 static GstVaapiVideoMemory *
@@ -518,14 +536,20 @@ gst_vaapi_video_memory_copy (GstVaapiVideoMemory * mem,
 
   /* ERRORS */
 error_no_current_surface:
-  GST_ERROR ("failed to make surface current");
-  return NULL;
+  {
+    GST_ERROR ("failed to make surface current");
+    return NULL;
+  }
 error_unsupported:
-  GST_ERROR ("failed to copy partial memory (unsupported operation)");
-  return NULL;
+  {
+    GST_ERROR ("failed to copy partial memory (unsupported operation)");
+    return NULL;
+  }
 error_allocate_memory:
-  GST_ERROR ("failed to allocate GstVaapiVideoMemory copy");
-  return NULL;
+  {
+    GST_ERROR ("failed to allocate GstVaapiVideoMemory copy");
+    return NULL;
+  }
 }
 
 static GstVaapiVideoMemory *

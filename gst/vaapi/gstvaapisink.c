@@ -1449,17 +1449,22 @@ done:
   gst_buffer_unref (buffer);
   return ret;
 
+  /* ERRORS */
 error:
-  GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
-      ("Internal error: could not render surface"), (NULL));
-  ret = GST_FLOW_ERROR;
-  goto done;
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
+        ("Internal error: could not render surface"), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 
 no_surface:
-  /* No surface or surface proxy. That's very bad! */
-  GST_WARNING_OBJECT (sink, "could not get surface");
-  ret = GST_FLOW_ERROR;
-  goto done;
+  {
+    /* No surface or surface proxy. That's very bad! */
+    GST_WARNING_OBJECT (sink, "could not get surface");
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 }
 
 static GstFlowReturn

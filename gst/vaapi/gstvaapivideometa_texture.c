@@ -143,9 +143,12 @@ meta_texture_new (void)
     goto error;
   return meta;
 
+  /* ERRORS */
 error:
-  meta_texture_free (meta);
-  return NULL;
+  {
+    meta_texture_free (meta);
+    return NULL;
+  }
 }
 
 static GstVaapiVideoMetaTexture *
@@ -237,9 +240,12 @@ gst_buffer_add_texture_upload_meta (GstBuffer * buffer)
     goto error;
   return TRUE;
 
+  /* ERRORS */
 error:
-  meta_texture_free (meta_texture);
-  return FALSE;
+  {
+    meta_texture_free (meta_texture);
+    return FALSE;
+  }
 }
 
 gboolean

@@ -340,8 +340,10 @@ _h265_convert_byte_stream_to_hvc (GstBuffer * buf)
   return TRUE;
 
 error:
-  gst_buffer_unmap (buf, &info);
-  return FALSE;
+  {
+    gst_buffer_unmap (buf, &info);
+    return FALSE;
+  }
 }
 
 static GstFlowReturn
