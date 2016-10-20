@@ -63,6 +63,8 @@ def configure_meson(args, options):
         subprocess.check_call([sys.executable, meson, "../"] + args, cwd=build_dir)
         subprocess.check_call([sys.executable, os.path.join(ROOTDIR, 'meson', 'mesonconf.py')]
                               + get_configs(meson), cwd=build_dir)
+        print("You can now build GStreamer and its various subprojects running:\n"
+            " $ ninja -C %s" % build_dir)
     except subprocess.CalledProcessError as e:
         print("EXIT meson return %s" % e.returncode)
         exit(1)
