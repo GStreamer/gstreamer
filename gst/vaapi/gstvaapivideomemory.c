@@ -28,6 +28,7 @@
 #include "gstvaapivideomemory.h"
 #include "gstvaapipluginutil.h"
 
+GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapivideomemory);
 #define GST_CAT_DEFAULT gst_debug_vaapivideomemory
 
@@ -44,6 +45,27 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapivideomemory);
 /* ------------------------------------------------------------------------ */
 
 static void gst_vaapi_video_memory_reset_image (GstVaapiVideoMemory * mem);
+
+static void
+_init_performance_debug (void)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
+    g_once_init_leave (&_init, 1);
+  }
+#endif
+}
+
+static inline void
+reset_image_usage (gboolean * flag)
+{
+  _init_performance_debug ();
+  GST_CAT_INFO (CAT_PERFORMANCE, "derive image failed, fallbacking to copy");
+  *flag = FALSE;
+}
 
 static guchar *
 get_image_data (GstVaapiImage * image)
@@ -74,12 +96,11 @@ ensure_image (GstVaapiVideoMemory * mem)
   if (!mem->image && mem->use_direct_rendering) {
     mem->image = gst_vaapi_surface_derive_image (mem->surface);
     if (!mem->image) {
-      GST_WARNING ("failed to derive image, fallbacking to copy");
-      mem->use_direct_rendering = FALSE;
+      reset_image_usage (&mem->use_direct_rendering);
     } else if (gst_vaapi_surface_get_format (mem->surface) !=
         GST_VIDEO_INFO_FORMAT (mem->image_info)) {
       gst_vaapi_object_replace (&mem->image, NULL);
-      mem->use_direct_rendering = FALSE;
+      reset_image_usage (&mem->use_direct_rendering);
     }
   }
 
