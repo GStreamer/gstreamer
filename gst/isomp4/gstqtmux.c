@@ -273,7 +273,7 @@ enum
 /* some spare for header size as well */
 #define MDAT_LARGE_FILE_LIMIT           ((guint64) 1024 * 1024 * 1024 * 2)
 
-#define DEFAULT_MOVIE_TIMESCALE         1800
+#define DEFAULT_MOVIE_TIMESCALE         0
 #define DEFAULT_TRAK_TIMESCALE          0
 #define DEFAULT_DO_CTTS                 TRUE
 #define DEFAULT_FAST_START              FALSE
@@ -402,8 +402,8 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_MOVIE_TIMESCALE,
       g_param_spec_uint ("movie-timescale", "Movie timescale",
-          "Timescale to use in the movie (units per second)",
-          1, G_MAXUINT32, DEFAULT_MOVIE_TIMESCALE,
+          "Timescale to use in the movie (units per second, 0 == default)",
+          0, G_MAXUINT32, DEFAULT_MOVIE_TIMESCALE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TRAK_TIMESCALE,
       g_param_spec_uint ("trak-timescale", "Track timescale",
@@ -2149,8 +2149,41 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   gst_segment_init (&segment, GST_FORMAT_BYTES);
   gst_pad_push_event (qtmux->srcpad, gst_event_new_segment (&segment));
 
-  /* initialize our moov recovery file */
   GST_OBJECT_LOCK (qtmux);
+
+  if (qtmux->timescale == 0) {
+    guint32 suggested_timescale = 0;
+    GSList *walk;
+
+    /* Calculate a reasonable timescale for the moov:
+     * If there is video, it is the biggest video track timescale or an even
+     * multiple of it if it's smaller than 1800.
+     * Otherwise it is 1800 */
+    for (walk = qtmux->sinkpads; walk; walk = g_slist_next (walk)) {
+      GstCollectData *cdata = (GstCollectData *) walk->data;
+      GstQTPad *qpad = (GstQTPad *) cdata;
+
+      if (!qpad->trak)
+        continue;
+
+      /* not video */
+      if (!qpad->trak->mdia.minf.vmhd)
+        continue;
+
+      suggested_timescale =
+          MAX (qpad->trak->mdia.mdhd.time_info.timescale, suggested_timescale);
+    }
+
+    if (suggested_timescale == 0)
+      suggested_timescale = 1800;
+
+    while (suggested_timescale < 1800)
+      suggested_timescale *= 2;
+
+    qtmux->timescale = suggested_timescale;
+  }
+
+  /* initialize our moov recovery file */
   if (qtmux->moov_recov_file_path) {
     gst_qt_mux_prepare_moov_recovery (qtmux);
   }
