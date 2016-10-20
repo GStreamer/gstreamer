@@ -775,7 +775,7 @@ gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
     goto error_create_image_pool;
 
   gst_allocator_set_vaapi_video_info (GST_ALLOCATOR_CAST (allocator),
-      &allocator->image_info, 0);
+      &allocator->image_info, surface_alloc_flags);
   return GST_ALLOCATOR_CAST (allocator);
 
   /* ERRORS */
