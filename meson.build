@@ -41,8 +41,22 @@ if get_option('enable_python')
     subprojects += ['gst-python']
 endif
 
+python3 = find_program('python3')
+symlink = '''
+import os
+
+os.symlink(os.path.join('@1@', 'subprojects', '@0@'),
+    os.path.join('@1@', '@0@'))
+'''
 foreach subproj: subprojects
     subproject(subproj, version: gst_version)
+
+    cmdres = run_command(python3, '-c', symlink.format(subproj, meson.current_source_dir()))
+    if cmdres.returncode() == 0
+       message('Created symlink to ' + subproj)
+    else
+       message('Could not create symlink to @0@'.format(subproj))
+    endif
 endforeach
 
 setenv = find_program('gst-uninstalled.py')
