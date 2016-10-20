@@ -12,8 +12,7 @@ subprojects = [
     'gst-plugins-ugly',
     'gst-plugins-bad',
     'gst-devtools',
-    'gst-editing-services',
-    'gst-python'
+    'gst-editing-services'
 ]
 
 # FIXME Remove that check once we have ffmpeg as a gst-libav subproject
@@ -38,6 +37,9 @@ else
     subprojects += gst_libav
 endif
 
+if get_option('enable_python')
+    subprojects += ['gst-python']
+endif
 
 foreach subproj: subprojects
     subproject(subproj, version: gst_version)
