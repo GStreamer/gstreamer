@@ -69,6 +69,7 @@ struct _GstKMSSink {
   GstBufferPool *pool;
   GstAllocator *allocator;
   GstBuffer *last_buffer;
+  GstMemory *tmp_kmsmem;
 
   gchar *devname;
 

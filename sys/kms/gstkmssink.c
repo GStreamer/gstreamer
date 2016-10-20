@@ -321,7 +321,7 @@ get_drm_caps (GstKMSSink * self)
 }
 
 static gboolean
-configure_mode_setting (GstKMSSink * self, guint32 fb_id)
+configure_mode_setting (GstKMSSink * self, GstVideoInfo * vinfo)
 {
   gboolean ret;
   drmModeConnector *conn;
@@ -329,16 +329,24 @@ configure_mode_setting (GstKMSSink * self, guint32 fb_id)
   drmModeFB *fb;
   gint i;
   drmModeModeInfo *mode;
+  guint32 fb_id;
+  GstKMSMemory *kmsmem;
 
   ret = FALSE;
   conn = NULL;
   fb = NULL;
   mode = NULL;
+  kmsmem = NULL;
 
   if (self->conn_id < 0)
     goto bail;
 
   GST_INFO_OBJECT (self, "configuring mode setting");
+
+  kmsmem = (GstKMSMemory *) gst_kms_allocator_bo_alloc (self->allocator, vinfo);
+  if (!kmsmem)
+    goto bo_failed;
+  fb_id = kmsmem->fb_id;
 
   conn = drmModeGetConnector (self->fd, self->conn_id);
   if (!conn)
@@ -363,6 +371,8 @@ configure_mode_setting (GstKMSSink * self, guint32 fb_id)
   if (err)
     goto modesetting_failed;
 
+  self->tmp_kmsmem = (GstMemory *) kmsmem;
+
   ret = TRUE;
 
 bail:
@@ -374,6 +384,12 @@ bail:
   return ret;
 
   /* ERRORS */
+bo_failed:
+  {
+    GST_ERROR_OBJECT (self,
+        "failed to allocate buffer object for mode setting");
+    goto bail;
+  }
 connector_failed:
   {
     GST_ERROR_OBJECT (self, "Could not find a valid monitor connector");
@@ -815,6 +831,9 @@ gst_kms_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     gst_object_unref (oldpool);
   }
 
+  if (self->modesetting_enabled && !configure_mode_setting (self, &vinfo))
+    goto modesetting_failed;
+
   self->vinfo = vinfo;
 
   GST_DEBUG_OBJECT (self, "negotiated caps = %" GST_PTR_FORMAT, caps);
@@ -846,6 +865,14 @@ no_pool:
     /* Already warned in create_pool */
     return FALSE;
   }
+
+modesetting_failed:
+  {
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (NULL),
+        ("failed to configure video mode"));
+    return FALSE;
+  }
+
 }
 
 static gboolean
@@ -1168,7 +1195,6 @@ error_map_src_buffer:
 static GstFlowReturn
 gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
-  static gboolean setup = FALSE;
   gint ret;
   GstBuffer *buffer;
   guint32 fb_id;
@@ -1193,17 +1219,6 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   GST_TRACE_OBJECT (self, "displaying fb %d", fb_id);
 
   if (self->modesetting_enabled) {
-    /* Use the current buffer object for configuring the mode, if the mode is
-     * not configured. Preferably the display mode should be set when
-     * configuring the pipeline (during set_caps), but we do not have a buffer
-     * object at that time. */
-    if (!setup) {
-      ret = configure_mode_setting (self, fb_id);
-      if (!ret)
-        goto modesetting_failed;
-      setup = TRUE;
-    }
-
     self->buffer_id = fb_id;
     goto sync_frame;
   }
@@ -1253,6 +1268,7 @@ sync_frame:
     goto bail;
 
   gst_buffer_replace (&self->last_buffer, buffer);
+  g_clear_pointer (&self->tmp_kmsmem, gst_memory_unref);
 
   res = GST_FLOW_OK;
 
@@ -1264,11 +1280,6 @@ bail:
 buffer_invalid:
   {
     GST_ERROR_OBJECT (self, "invalid buffer: it doesn't have a fb id");
-    goto bail;
-  }
-modesetting_failed:
-  {
-    GST_ERROR_OBJECT (self, "failed to configure display mode");
     goto bail;
   }
 set_plane_failed:
