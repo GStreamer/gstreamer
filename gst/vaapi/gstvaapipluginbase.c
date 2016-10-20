@@ -523,6 +523,8 @@ ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstCaps * caps,
     guint * size)
 {
   GstVideoInfo vinfo;
+  GstVaapiImageUsageFlags usage_flag =
+      GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
 
   if (!gst_video_info_from_caps (&vinfo, caps))
     goto error_invalid_caps;
@@ -536,11 +538,18 @@ ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstCaps * caps,
     plugin->sinkpad_allocator =
         gst_vaapi_dmabuf_allocator_new (plugin->display, &vinfo,
         GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE);
-  } else {
-    plugin->sinkpad_allocator =
-        gst_vaapi_video_allocator_new (plugin->display, &vinfo, 0,
-        GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS);
+    goto bail;
   }
+
+  /* enable direct upload if upstream requests raw video */
+  if (gst_caps_is_video_raw (caps)) {
+    usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_UPLOAD;
+    GST_INFO_OBJECT (plugin, "enabling direct upload in sink allocator");
+  }
+  plugin->sinkpad_allocator =
+      gst_vaapi_video_allocator_new (plugin->display, &vinfo, 0, usage_flag);
+
+bail:
   if (!plugin->sinkpad_allocator)
     goto error_create_allocator;
   return TRUE;
