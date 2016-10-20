@@ -65,6 +65,7 @@ gstaudio_c = custom_target('gstaudioenum_c',
   input : audio_mkenum_headers,
   depends : [gstaudio_h],
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+audio_gen_sources = [gstaudio_h]
 
 orcsrc = 'gstaudiopack'
 if have_orcc
@@ -127,6 +128,7 @@ if have_sse41
   simd_dependencies += audio_resampler_sse41
 endif
 
+gstaudio_deps = [tag_dep, gst_base_dep, orc_dep, libm]
 gstaudio = library('gstaudio-@0@'.format(api_version),
   audio_src, gstaudio_h, gstaudio_c, orc_c, orc_h,
   c_args : gst_plugins_base_args + simd_cargs,
@@ -135,12 +137,26 @@ gstaudio = library('gstaudio-@0@'.format(api_version),
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [tag_dep, gst_base_dep, orc_dep, libm],
+  dependencies : gstaudio_deps,
   vs_module_defs: vs_module_defs_dir + 'libgstaudio.def',
 )
-# TODO: generate gir
+
+if build_gir
+  audio_gen_sources += [gnome.generate_gir(gstaudio,
+    sources : audio_src + audio_headers + [gstaudio_c] + [gstaudio_h],
+    namespace : 'GstAudio',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-audio-1.0',
+    includes : ['Gst-1.0', 'GLib-2.0', 'GObject-2.0', 'GModule-2.0' ],
+    install : true,
+    extra_args : gir_init_section,
+    dependencies : gstaudio_deps
+  )]
+endif
 
 audio_dep = declare_dependency(link_with : gstaudio,
   include_directories : [libsinc],
-  dependencies : [gst_base_dep, tag_dep],
-  sources : [gstaudio_h])
+  dependencies : gstaudio_deps,
+  sources : audio_gen_sources)

@@ -36,6 +36,7 @@ gstrtp_enum_c = custom_target('gstrtp_enum_c',
   depends : [gstaudio_h, gstrtp_enum_h],
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
 
+gstrtp_deps = [audio_dep, gst_base_dep]
 gst_rtp = library('gstrtp-@0@'.format(api_version),
   rtp_sources, gstrtp_enum_c, gstrtp_enum_h,
   c_args : gst_plugins_base_args,
@@ -43,12 +44,28 @@ gst_rtp = library('gstrtp-@0@'.format(api_version),
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [audio_dep, gst_base_dep],
+  dependencies : gstrtp_deps,
   vs_module_defs: vs_module_defs_dir + 'libgstrtp.def',
 )
-# TODO: generate gir
+
+rtp_gen_sources = [gstrtp_enum_h]
+if build_gir
+  rtp_gen_sources += [gnome.generate_gir(gst_rtp,
+    sources : rtp_sources + rtp_headers + [gstrtp_enum_c] + [gstrtp_enum_h],
+    namespace : 'GstRtp',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-rtp-1.0',
+    includes : ['Gst-1.0', 'GstBase-1.0'],
+    install : true,
+    extra_args : gir_init_section,
+    dependencies : gstrtp_deps
+  )]
+endif
+
 
 rtp_dep = declare_dependency(link_with : gst_rtp,
   include_directories : [libsinc],
-  dependencies : [audio_dep, gst_base_dep],
-  sources : [gstrtp_enum_h])
+  dependencies : gstrtp_deps,
+  sources : rtp_gen_sources)

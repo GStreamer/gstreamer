@@ -38,6 +38,7 @@ gstrtsp_c = custom_target('gstrtspenum_c',
 
 winsock2 = cc.find_library('ws2_32', required : false)
 
+gstrtsp_deps = [gst_dep, gio_dep, libm, winsock2]
 gst_rtsp = library('gstrtsp-@0@'.format(api_version),
   rtsp_sources,
   gstrtsp_h, gstrtsp_c,
@@ -46,12 +47,27 @@ gst_rtsp = library('gstrtsp-@0@'.format(api_version),
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gst_dep, gio_dep, libm, winsock2],
+  dependencies : gstrtsp_deps,
   vs_module_defs: vs_module_defs_dir + 'libgstrtsp.def',
 )
-# TODO: generate gir
+
+rtsp_gen_sources = [gstrtsp_h]
+if build_gir
+  rtsp_gen_sources += [gnome.generate_gir(gst_rtsp,
+    sources : rtsp_sources + rtsp_headers + [gstrtsp_c] + [gstrtsp_h],
+    namespace : 'GstRtsp',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-rtsp-1.0',
+    includes : ['Gst-1.0', 'GstSdp-1.0', 'Gio-2.0'],
+    install : true,
+    extra_args : gir_init_section,
+    dependencies : gstrtsp_deps
+  )]
+endif
 
 rtsp_dep = declare_dependency(link_with : gst_rtsp,
   include_directories : [libsinc],
-  dependencies : [gst_dep, gio_dep],
-  sources : [gstrtsp_h])
+  dependencies : gstrtsp_deps,
+  sources : rtsp_gen_sources)

@@ -34,8 +34,24 @@ gstfft = library('gstfft-@0@'.format(api_version),
   dependencies : [gst_dep, libm],
   vs_module_defs: vs_module_defs_dir + 'libgstfft.def',
 )
-# TODO: generate gir
+
+fft_gen_sources  = []
+if build_gir
+  fft_gen_sources += [gnome.generate_gir(gstfft,
+    sources : fft_sources + fft_headers,
+    namespace : 'GstFft',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-fft-1.0',
+    includes : ['Gst-1.0'],
+    install : true,
+    extra_args : gir_init_section,
+    dependencies : [gst_dep, libm]
+  )]
+endif
 
 fft_dep = declare_dependency(link_with: gstfft,
   include_directories : [libsinc],
-  dependencies : [gst_dep])
+  dependencies : [gst_dep],
+  sources: fft_gen_sources)

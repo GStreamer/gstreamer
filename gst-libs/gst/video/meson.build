@@ -96,6 +96,7 @@ gstvideo_c = custom_target('gstvideoenum_c',
   input : video_mkenum_headers,
   depends : [gstvideo_h],
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+video_gen_sources = [gstvideo_h]
 
 orcsrc = 'video-orc'
 if have_orcc
@@ -116,6 +117,7 @@ else
     configuration : configuration_data())
 endif
 
+gstvideo_deps = [gst_base_dep, orc_dep, libm]
 gstvideo = library('gstvideo-@0@'.format(api_version),
   video_sources, gstvideo_h, gstvideo_c, orc_c, orc_h,
   c_args : gst_plugins_base_args,
@@ -123,12 +125,26 @@ gstvideo = library('gstvideo-@0@'.format(api_version),
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gst_base_dep, orc_dep, libm],
+  dependencies : gstvideo_deps,
   vs_module_defs: vs_module_defs_dir + 'libgstvideo.def',
 )
-# TODO: generate gir
+
+if build_gir
+  video_gen_sources += [gnome.generate_gir(gstvideo,
+    sources : video_sources + video_headers + [gstvideo_c] + [gstvideo_h],
+    namespace : 'GstVideo',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-video-1.0',
+    includes : ['Gst-1.0', 'GLib-2.0', 'GObject-2.0', 'GModule-2.0' ],
+    install : true,
+    extra_args : gir_init_section,
+    dependencies : gstvideo_deps
+  )]
+endif
 
 video_dep = declare_dependency(link_with : gstvideo,
   include_directories : [libsinc],
-  dependencies : [gst_base_dep],
-  sources : [gstvideo_h])
+  dependencies : gstvideo_deps,
+  sources : video_gen_sources)

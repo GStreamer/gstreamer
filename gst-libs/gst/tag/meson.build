@@ -22,6 +22,7 @@ tag_headers = [
 ]
 install_headers(tag_headers, subdir : 'gstreamer-1.0/gst/tag/')
 
+tag_deps = [gst_base_dep, libm]
 gsttag = library('gsttag-@0@'.format(api_version),
   tag_sources,
   c_args : gst_plugins_base_args,
@@ -29,14 +30,30 @@ gsttag = library('gsttag-@0@'.format(api_version),
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gst_base_dep, libm],
+  dependencies : tag_deps,
   vs_module_defs: vs_module_defs_dir + 'libgsttag.def',
 )
-# TODO: generate gir
+
+tag_gen_sources  = []
+if build_gir
+  tag_gen_sources += [gnome.generate_gir(gsttag,
+    sources : tag_sources + tag_headers,
+    namespace : 'GstTag',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-tag-1.0',
+    includes : ['Gst-1.0'],
+    install : true,
+    extra_args : gir_init_section,
+    dependencies : tag_deps
+  )]
+endif
 
 tag_dep = declare_dependency(link_with: gsttag,
   include_directories : [libsinc],
-  dependencies : [gst_base_dep])
+  dependencies : tag_deps,
+  sources: tag_gen_sources)
 
 # FIXME: iso-codes stuff
 # little program that reads iso_639.xml and outputs tables for us as fallback

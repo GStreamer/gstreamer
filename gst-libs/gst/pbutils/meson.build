@@ -51,6 +51,7 @@ gstpbutils_c = custom_target('gstpbutilsenum_c',
   depends : [gstaudio_h, gstvideo_h, gstpbutils_h],
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
 
+gstpbutils_deps = [video_dep, audio_dep, tag_dep]
 pbutils = library('gstpbutils-@0@'.format(api_version),
   pbutils_sources, gstpbutils_c, gstpbutils_h,
   c_args : gst_plugins_base_args,
@@ -58,12 +59,27 @@ pbutils = library('gstpbutils-@0@'.format(api_version),
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [video_dep, audio_dep, tag_dep],
+  dependencies : gstpbutils_deps,
   vs_module_defs: vs_module_defs_dir + 'libgstpbutils.def',
 )
-# TODO: generate gir
+
+pbutils_gen_sources = [gstpbutils_h]
+if build_gir
+  pbutils_gen_sources += [gnome.generate_gir(pbutils,
+    sources : pbutils_sources + pbutils_headers + [gstpbutils_h],
+    namespace : 'GstPbutils',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-pbutils-1.0',
+    includes : ['Gst-1.0', 'GstBase-1.0'],
+    install : true,
+    extra_args : gir_init_section,
+    dependencies : gstpbutils_deps
+  )]
+endif
 
 pbutils_dep = declare_dependency(link_with : pbutils,
   include_directories : [libsinc],
-  dependencies : [video_dep, audio_dep, tag_dep],
-  sources : [gstpbutils_h])
+  dependencies : gstpbutils_deps,
+  sources : pbutils_gen_sources)
