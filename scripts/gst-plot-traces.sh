@@ -1,7 +1,6 @@
 #!/bin/bash
 # dumps a gnuplot script to stdout that plot of the given log
 
-
 usage="\
 Usage:$0 [--title=<title>] [--log=<log>] [--format={png,pdf,ps,svg}] [--pagesize={a3,a4}]| gnuplot"
 
@@ -31,10 +30,15 @@ tmp=`mktemp -d`
 plot_width=1600
 plot_height=1200
 
+base=`basename "$log" ".log"`
+
 # filter log
-grep "proc-rusage," $log | cut -c154- | sed -e 's#ts=(guint64)##' -e 's#[a-z]*-cpuload=(uint)##g' -e 's#time=(guint64)##' -e 's#;##' -e 's#, # #g' | sort -n >$tmp/cpu_proc.dat
-grep "thread-rusage," $log | cut -c156- | sed -e 's#ts=(guint64)##' -e 's#thread-id=(uint)##g'  -e 's#[a-z]*-cpuload=(uint)##g' -e 's#time=(guint64)##' -e 's#;##' -e 's#, # #g' | sort -n >$tmp/cpu_threads.dat
-( cd $tmp; awk -F" " '{ print $1, $3, $4, $5 >"cpu_thread."$2".dat" }' cpu_threads.dat )
+grep "TRACE" $log | grep "GST_TRACER" >$tmp/trace.log
+log=$tmp/trace.log
+
+grep -o "proc-rusage,.*" $log | cut -c14- | sed  -e 's#process-id=(guint64)[0-9][0-9]*, ##' -e 's#ts=(guint64)##' -e 's#[a-z]*-cpuload=(uint)##g' -e 's#time=(guint64)##' -e 's#;##' -e 's#, # #g' >$tmp/cpu_proc.dat
+grep -o "thread-rusage,.*" $log | cut -c35- | sed -e 's#ts=(guint64)##' -e 's#thread-id=(uint)##g'  -e 's#[a-z]*-cpuload=(uint)##g' -e 's#time=(guint64)##' -e 's#;##' -e 's#, # #g' >$tmp/cpu_threads.dat
+( cd $tmp; awk -F" " '{ print $2, $3, $4, $5 >"cpu_thread."$1".dat" }' cpu_threads.dat )
 
 # configure output
 # http://en.wikipedia.org/wiki/Paper_size
@@ -52,7 +56,7 @@ case $format in
   svg) echo "set term svg size $plot_width,$plot_height font \"Sans,7\"";;
 esac
 cat <<EOF
-set output '$log.cpu.$format'
+set output '$base.cpu.$format'
 set xlabel "Time (ns)"
 set ylabel "Per-Mille"
 set grid
@@ -60,7 +64,7 @@ plot \\
   '$tmp/cpu_proc.dat' using 1:2 with lines title 'avg cpu', \\
   '' using 1:3 with lines title 'cur cpu'
 
-set output '$log.thread.$format'
+set output '$base.thread.$format'
 set xlabel "Time (ns)"
 set ylabel "Per-Mille"
 set grid
@@ -74,7 +78,7 @@ for file in $tmp/cpu_thread.*.dat ; do
   id=`echo $file | sed 's#.*cpu_thread.\([0-9]*\).dat#\1#'`
   cat <<EOF
   '$file' using 1:2 with lines title '$id avg cpu', \\
-  '' using 1:3 with lines title '$id  cur cpu', \\
+  '' using 1:3 with lines title '$id cur cpu', \\
 EOF
 done
 cat <<EOF

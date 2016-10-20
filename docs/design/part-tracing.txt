@@ -352,7 +352,7 @@ GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage" GST_DEBUG_FILE=trace.log gst
 gst-stats-1.0 trace.log
 - print some pipeline stats on exit
 
-GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage" GST_DEBUG_FILE=trace.log /usr/bin/gst-play-1.0 --interactive $HOME/Videos/movie.mp4
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage" GST_DEBUG_FILE=trace.log /usr/bin/gst-play-1.0 $HOME/Videos/movie.mp4
 ./scripts/gst-plot-traces.sh --format=png | gnuplot
 eog trace.log.*.png
 - get ts, average-cpuload, current-cpuload, time and plot
