@@ -3972,6 +3972,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   ReportData data = { GST_RTCP_BUFFER_INIT };
   GHashTable *table_copy;
   ReportOutput *output;
+  gboolean all_empty = FALSE;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
 
@@ -4035,6 +4036,9 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   if (!is_rtcp_time (sess, current_time, &data))
     goto done;
 
+  /* check if all the buffers are empty afer generation */
+  all_empty = TRUE;
+
   GST_DEBUG
       ("doing RTCP generation %u for %u sources, early %d, may suppress %d",
       sess->generation, data.num_to_report, data.is_early, data.may_suppress);
@@ -4085,8 +4089,8 @@ done:
 
     empty_buffer = gst_buffer_get_size (buffer) == 0;
 
-    if (empty_buffer)
-      GST_ERROR ("rtpsession: Trying to send an empty RTCP packet");
+    if (!empty_buffer)
+      all_empty = FALSE;
 
     if (sess->callbacks.send_rtcp &&
         !empty_buffer && (do_not_suppress || !data.may_suppress)) {
@@ -4120,6 +4124,10 @@ done:
     g_object_unref (source);
     g_slice_free (ReportOutput, output);
   }
+
+  if (all_empty)
+    GST_ERROR ("generated empty RTCP messages for all the sources");
+
   return result;
 }
 
