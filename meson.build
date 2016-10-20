@@ -185,14 +185,6 @@ have_sse = cc.has_argument(sse_args)
 have_sse2 = cc.has_argument(sse2_args)
 have_sse41 = cc.has_argument(sse41_args)
 
-# FIXME: Meson should have a way for portably adding -fPIC when needed for use
-# with static libraries that are linked into shared libraries. Or, it should
-# add it by default with an option to turn it off if needed.
-pic_args = ['-fPIC']
-if host_machine.system() == 'windows'
-  pic_args = []
-endif
-
 subdir('gst-libs')
 subdir('gst')
 subdir('ext')
