@@ -579,8 +579,10 @@ gst_vaapi_video_memory_is_span (GstVaapiVideoMemory * mem1,
 #define GST_VAAPI_IS_VIDEO_ALLOCATOR_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_VAAPI_TYPE_VIDEO_ALLOCATOR))
 
-G_DEFINE_TYPE (GstVaapiVideoAllocator,
-    gst_vaapi_video_allocator, GST_TYPE_ALLOCATOR);
+G_DEFINE_TYPE_WITH_CODE (GstVaapiVideoAllocator,
+    gst_vaapi_video_allocator, GST_TYPE_ALLOCATOR,
+    GST_DEBUG_CATEGORY_INIT (gst_debug_vaapivideomemory, "vaapivideomemory", 0,
+        "VA-API video memory allocator"));
 
 static void
 gst_vaapi_video_allocator_free (GstAllocator * allocator, GstMemory * mem)
@@ -605,9 +607,6 @@ gst_vaapi_video_allocator_class_init (GstVaapiVideoAllocatorClass * klass)
 {
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstAllocatorClass *const allocator_class = GST_ALLOCATOR_CLASS (klass);
-
-  GST_DEBUG_CATEGORY_INIT (gst_debug_vaapivideomemory,
-      "vaapivideomemory", 0, "VA-API video memory allocator");
 
   object_class->finalize = gst_vaapi_video_allocator_finalize;
   allocator_class->free = gst_vaapi_video_allocator_free;
