@@ -1,3 +1,6 @@
+gst_check_dep = dependency('gstreamer-check-1.0', version : gst_req,
+  fallback : ['gstreamer', 'gst_check_dep'])
+
 have_registry = true # FIXME not get_option('disable_registry')
 
 # name, condition when to skip the test and extra dependencies
