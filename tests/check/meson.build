@@ -1,3 +1,6 @@
+gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+  fallback : ['gstreamer', 'gst_check_dep'])
+
 # FIXME: use dependency('valgrind') once we have a method to get the includes
 if cc.has_header('valgrind/valgrind.h')
   cdata.set('HAVE_VALGRIND', 1)
