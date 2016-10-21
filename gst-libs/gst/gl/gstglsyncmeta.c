@@ -53,16 +53,11 @@ _default_set_sync_gl (GstGLSyncMeta * sync_meta, GstGLContext * context)
     }
     sync_meta->data =
         (gpointer) gl->FenceSync (GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-
-    if (gst_gl_context_is_shared (context))
-      /* if we only have a single context, the wait will flush for us */
-      gl->Flush ();
     GST_LOG ("setting sync object %p", sync_meta->data);
-  } else {
-    /* XXX: this a little over the top if the CPU is never going to
-     * access the data, however this is the legacy path, so... */
-    gl->Finish ();
   }
+
+  if (gst_gl_context_is_shared (context))
+    gl->Flush ();
 }
 
 static void
@@ -89,6 +84,8 @@ _default_wait_cpu_gl (GstGLSyncMeta * sync_meta, GstGLContext * context)
           gl->ClientWaitSync ((GLsync) sync_meta->data,
           GL_SYNC_FLUSH_COMMANDS_BIT, 1000000000 /* 1s */ );
     } while (res == GL_TIMEOUT_EXPIRED);
+  } else {
+    gl->Finish ();
   }
 }
 
