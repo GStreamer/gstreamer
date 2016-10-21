@@ -116,32 +116,26 @@ struct _GstAudioConverter
   /* unpack */
   gboolean in_default;
   gboolean unpack_ip;
-  AudioChain *unpack_chain;
 
   /* convert in */
   AudioConvertFunc convert_in;
-  AudioChain *convert_in_chain;
 
   /* channel mix */
   gboolean mix_passthrough;
   GstAudioChannelMixer *mix;
-  AudioChain *mix_chain;
 
   /* resample */
   GstAudioResampler *resampler;
-  AudioChain *resample_chain;
 
   /* convert out */
   AudioConvertFunc convert_out;
-  AudioChain *convert_out_chain;
 
   /* quant */
   GstAudioQuantize *quant;
-  AudioChain *quant_chain;
 
   /* pack */
   gboolean out_default;
-  AudioChain *pack_chain;
+  AudioChain *chain_end;        /* NULL for empty chain or points to the last element in the chain */
 
   AudioConvertSamplesFunc convert;
 };
@@ -598,7 +592,7 @@ chain_unpack (GstAudioConverter * convert)
       gst_audio_format_to_string (in->finfo->format),
       gst_audio_format_to_string (convert->current_format));
 
-  prev = convert->unpack_chain = audio_chain_new (NULL, convert);
+  prev = audio_chain_new (NULL, convert);
   prev->allow_ip = prev->finfo->width <= in->finfo->width;
   prev->pass_alloc = FALSE;
   audio_chain_set_make_func (prev, do_unpack, convert, NULL);
@@ -621,7 +615,7 @@ chain_convert_in (GstAudioConverter * convert, AudioChain * prev)
     convert->convert_in = (AudioConvertFunc) audio_orc_s32_to_double;
     convert->current_format = GST_AUDIO_FORMAT_F64;
 
-    prev = convert->convert_in_chain = audio_chain_new (prev, convert);
+    prev = audio_chain_new (prev, convert);
     prev->allow_ip = FALSE;
     prev->pass_alloc = FALSE;
     audio_chain_set_make_func (prev, do_convert_in, convert, NULL);
@@ -656,7 +650,7 @@ chain_mix (GstAudioConverter * convert, AudioChain * prev)
       in->channels, out->channels);
 
   if (!convert->mix_passthrough) {
-    prev = convert->mix_chain = audio_chain_new (prev, convert);
+    prev = audio_chain_new (prev, convert);
     prev->allow_ip = FALSE;
     prev->pass_alloc = FALSE;
     audio_chain_set_make_func (prev, do_mix, convert, NULL);
@@ -692,7 +686,7 @@ chain_resample (GstAudioConverter * convert, AudioChain * prev)
         gst_audio_resampler_new (method, flags, format, channels, in->rate,
         out->rate, convert->config);
 
-    prev = convert->resample_chain = audio_chain_new (prev, convert);
+    prev = audio_chain_new (prev, convert);
     prev->allow_ip = FALSE;
     prev->pass_alloc = FALSE;
     audio_chain_set_make_func (prev, do_resample, convert, NULL);
@@ -715,7 +709,7 @@ chain_convert_out (GstAudioConverter * convert, AudioChain * prev)
     convert->current_format = GST_AUDIO_FORMAT_S32;
 
     GST_INFO ("convert F64 to S32");
-    prev = convert->convert_out_chain = audio_chain_new (prev, convert);
+    prev = audio_chain_new (prev, convert);
     prev->allow_ip = TRUE;
     prev->pass_alloc = FALSE;
     audio_chain_set_make_func (prev, do_convert_out, convert, NULL);
@@ -769,7 +763,7 @@ chain_quantize (GstAudioConverter * convert, AudioChain * prev)
         gst_audio_quantize_new (dither, ns, 0, convert->current_format,
         out->channels, 1U << (32 - out_depth));
 
-    prev = convert->quant_chain = audio_chain_new (prev, convert);
+    prev = audio_chain_new (prev, convert);
     prev->allow_ip = TRUE;
     prev->pass_alloc = TRUE;
     audio_chain_set_make_func (prev, do_quantize, convert, NULL);
@@ -809,7 +803,7 @@ setup_allocators (GstAudioConverter * convert)
   }
   /* now walk backwards, we try to write into the dest samples directly
    * and keep track if the source needs to be writable */
-  for (chain = convert->pack_chain; chain; chain = chain->prev) {
+  for (chain = convert->chain_end; chain; chain = chain->prev) {
     chain->alloc_func = alloc_func;
     chain->alloc_data = convert;
     chain->allow_ip = allow_ip && chain->allow_ip;
@@ -832,7 +826,7 @@ converter_passthrough (GstAudioConverter * convert,
   AudioChain *chain;
   gsize samples;
 
-  chain = convert->pack_chain;
+  chain = convert->chain_end;
 
   samples = in_frames * chain->inc;
 
@@ -863,7 +857,7 @@ converter_generic (GstAudioConverter * convert,
   gint i;
   gsize produced;
 
-  chain = convert->pack_chain;
+  chain = convert->chain_end;
 
   convert->in_writable = flags & GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE;
   convert->in_data = in;
@@ -953,7 +947,7 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
   /* step 6, optional quantize */
   prev = chain_quantize (convert, prev);
   /* step 7, pack */
-  convert->pack_chain = chain_pack (convert, prev);
+  convert->chain_end = chain_pack (convert, prev);
 
   convert->convert = converter_generic;
 
@@ -993,20 +987,17 @@ unpositioned:
 void
 gst_audio_converter_free (GstAudioConverter * convert)
 {
+  AudioChain *chain;
+
   g_return_if_fail (convert != NULL);
 
-  if (convert->unpack_chain)
-    audio_chain_free (convert->unpack_chain);
-  if (convert->convert_in_chain)
-    audio_chain_free (convert->convert_in_chain);
-  if (convert->mix_chain)
-    audio_chain_free (convert->mix_chain);
-  if (convert->resample_chain)
-    audio_chain_free (convert->resample_chain);
-  if (convert->convert_out_chain)
-    audio_chain_free (convert->convert_out_chain);
-  if (convert->quant_chain)
-    audio_chain_free (convert->quant_chain);
+  /* walk the chain backwards and free all elements */
+  for (chain = convert->chain_end; chain;) {
+    AudioChain *prev = chain->prev;
+    audio_chain_free (chain);
+    chain = prev;
+  }
+
   if (convert->quant)
     gst_audio_quantize_free (convert->quant);
   if (convert->mix)
