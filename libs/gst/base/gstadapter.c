@@ -1568,7 +1568,7 @@ gst_adapter_prev_pts_at_offset (GstAdapter * adapter, gsize offset,
   }
 
   if (distance)
-    *distance = adapter->dts_distance + offset;
+    *distance = adapter->pts_distance + offset;
 
   return pts;
 }
