@@ -33,6 +33,9 @@ test_defines = [
   '-DGST_USE_UNSTABLE_API',
 ]
 
+gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+  fallback : ['gstreamer', 'gst_check_dep'])
+
 pluginsdirs = []
 if not meson.is_subproject()
   pkgconfig = find_program('pkg-config')
