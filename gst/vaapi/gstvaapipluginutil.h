@@ -119,6 +119,10 @@ gboolean
 gst_caps_has_vaapi_surface (GstCaps * caps);
 
 G_GNUC_INTERNAL
+gboolean
+gst_caps_is_video_raw (GstCaps * caps);
+
+G_GNUC_INTERNAL
 void
 gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
     guint width, guint height);

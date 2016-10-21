@@ -661,6 +661,21 @@ gst_caps_has_vaapi_surface (GstCaps * caps)
   return _gst_caps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE);
 }
 
+gboolean
+gst_caps_is_video_raw (GstCaps * caps)
+{
+  GstStructure *structure;
+
+  g_return_val_if_fail (caps != NULL, FALSE);
+
+  if (!gst_caps_is_fixed (caps))
+    return FALSE;
+  if (!_gst_caps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY))
+    return FALSE;
+  structure = gst_caps_get_structure (caps, 0);
+  return gst_structure_has_name (structure, "video/x-raw");
+}
+
 void
 gst_video_info_change_format (GstVideoInfo * vip, GstVideoFormat format,
     guint width, guint height)
