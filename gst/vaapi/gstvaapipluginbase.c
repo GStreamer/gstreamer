@@ -568,14 +568,23 @@ error_create_allocator:
 }
 
 static gboolean
-ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo)
+ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
+    GstCaps * caps)
 {
+  GstVaapiImageUsageFlags usage_flag =
+      GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
+
   if (!reset_allocator (plugin->srcpad_allocator, vinfo))
     return TRUE;
 
+  /* enable direct rendering if downstream requests raw video */
+  if (caps && gst_caps_is_video_raw (caps)) {
+    usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
+    GST_INFO_OBJECT (plugin, "enabling direct rendering in source allocator");
+  }
+
   plugin->srcpad_allocator =
-      gst_vaapi_video_allocator_new (plugin->display, vinfo, 0,
-      GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS);
+      gst_vaapi_video_allocator_new (plugin->display, vinfo, 0, usage_flag);
   if (!plugin->srcpad_allocator)
     goto error_create_allocator;
   return TRUE;
@@ -892,7 +901,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   }
 
   if (!pool) {
-    if (!ensure_srcpad_allocator (plugin, &vi))
+    if (!ensure_srcpad_allocator (plugin, &vi, caps))
       goto error;
     /* Update video size with allocator's image size */
     gst_allocator_get_vaapi_image_size (plugin->srcpad_allocator, &size);
