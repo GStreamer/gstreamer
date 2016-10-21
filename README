@@ -40,6 +40,7 @@ with the last step (building the theme):
 cd hotdoc_bootstrap_theme
 sudo dnf install nodejs # On Fedora
 sudo apt-get install nodejs nodejs-legacy npm # debian
+sudo pacman -S nodejs npm# arch
 npm install && ./node_modules/bower/bin/bower install
 cd ..
 ```
