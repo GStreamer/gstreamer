@@ -25,14 +25,16 @@ else
   endif
 endif
 
-gsthls = library('gsthls',
-  hls_sources,
-  c_args : gst_plugins_bad_args + hls_cargs,
-  link_args : noseh_link_args,
-  include_directories : [configinc],
-  dependencies : [gstpbutils_dep, gsttag_dep, gstvideo_dep,
-		  gstadaptivedemux_dep, gsturidownloader_dep,
-		  hls_crypto_dep],
-  install : true,
-  install_dir : plugins_install_dir,
-)
+if hls_crypto_dep.found()
+  gsthls = library('gsthls',
+    hls_sources,
+    c_args : gst_plugins_bad_args + hls_cargs,
+    link_args : noseh_link_args,
+    include_directories : [configinc],
+    dependencies : [gstpbutils_dep, gsttag_dep, gstvideo_dep,
+		    gstadaptivedemux_dep, gsturidownloader_dep,
+		    hls_crypto_dep],
+    install : true,
+    install_dir : plugins_install_dir,
+  )
+endif
