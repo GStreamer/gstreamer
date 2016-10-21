@@ -746,17 +746,15 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
 
   gst_vaapi_image_unmap (image);
 
-  GST_INFO_OBJECT (allocator, "has %sdirect-rendering for %s surfaces",
-      has_direct_rendering ? "" : "no ",
-      GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info));
-  GST_INFO_OBJECT (allocator, "has %sdirect-uploading for %s surfaces",
-      has_direct_uploading ? "" : "no ",
-      GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info));
-
-  if (has_direct_rendering && !has_direct_uploading)
+  if (has_direct_rendering && !has_direct_uploading) {
     allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
-  else if (!has_direct_rendering && has_direct_uploading)
+    GST_INFO_OBJECT (allocator, "has direct-rendering for %s surfaces",
+        GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info));
+  } else if (!has_direct_rendering && has_direct_uploading) {
     allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_UPLOAD;
+    GST_INFO_OBJECT (allocator, "has direct-uploading for %s surfaces",
+        GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info));
+  }
 
 bail:
   if (image)
