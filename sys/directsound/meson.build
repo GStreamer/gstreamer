@@ -4,7 +4,7 @@ directsoundsrc_sources = [
 ]
 
 if host_system == 'windows' and cc.has_header('dsound.h')
-  directsoundsrc_dep = [cc.find_library('dsound'), cc.find_library('winmm')]
+  directsoundsrc_dep = [cc.find_library('dsound'), cc.find_library('winmm'), cc.find_library('ole32')]
 
   gstdirectsoundsrc = library('gstdirectsoundsrc',
     directsoundsrc_sources,
