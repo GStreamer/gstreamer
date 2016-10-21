@@ -278,14 +278,24 @@ gst_decklink_audio_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   GST_DEBUG_OBJECT (self, "Setting caps %" GST_PTR_FORMAT, caps);
 
   if ((current_caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (bsrc)))) {
+    GstCaps *curcaps_cp;
+    GstStructure *cur_st, *caps_st;
+
     GST_DEBUG_OBJECT (self, "Pad already has caps %" GST_PTR_FORMAT, caps);
 
-    if (!gst_caps_is_equal (caps, current_caps)) {
-      GST_ERROR_OBJECT (self, "New caps are not equal to old caps");
+    curcaps_cp = gst_caps_make_writable (current_caps);
+    cur_st = gst_caps_get_structure (curcaps_cp, 0);
+    caps_st = gst_caps_get_structure (caps, 0);
+    gst_structure_remove_field (cur_st, "channel-mask");
+
+    if (!gst_structure_can_intersect (caps_st, cur_st)) {
+      GST_ERROR_OBJECT (self, "New caps are not compatible with old caps");
       gst_caps_unref (current_caps);
+      gst_caps_unref (curcaps_cp);
       return FALSE;
     } else {
       gst_caps_unref (current_caps);
+      gst_caps_unref (curcaps_cp);
       return TRUE;
     }
   }
