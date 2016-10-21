@@ -38,18 +38,6 @@ def get_subprocess_env(options):
                   "and try again." % (proj, projpath))
             exit(1)
 
-        envvars_file = os.path.join(projpath, os.path.basename(projpath) + "-uninstalled-envvars.py")
-        if os.path.exists(envvars_file):
-            envvars_env = {"envvars": {}}
-            with open(envvars_file) as f:
-                code = compile(f.read(), envvars_file, 'exec')
-                exec(code, None, envvars_env)
-            for var, value in envvars_env["envvars"].items():
-                if var.startswith("+"):
-                    prepend_env_var(env, var, value.strip("+"))
-                else:
-                    env[var] = value
-
         toolsdir = os.path.join(projpath, "tools")
         if os.path.exists(toolsdir):
             prepend_env_var(env, "PATH", toolsdir)
