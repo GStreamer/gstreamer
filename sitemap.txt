@@ -1,11 +1,11 @@
 index.md
-        sdk-installing.md
-	        sdk-installing-for-android-development.md
-	        sdk-installing-for-ios-development.md
-	        sdk-installing-on-mac-osx.md
-	        sdk-installing-on-windows.md
-		sdk-installing-on-linux.md
-	        sdk-building-from-source-using-cerbero.md
+        installing.md
+	        installing-for-android-development.md
+	        installing-for-ios-development.md
+	        installing-on-mac-osx.md
+	        installing-on-windows.md
+		installing-on-linux.md
+	        building-from-source-using-cerbero.md
 	manual-index.md
 		manual-introduction.md
 			manual-gstreamer.md
@@ -40,54 +40,54 @@ index.md
 			manual-integration.md
 			manual-licensing.md
 			manual-quotes.md
-        sdk-tutorials.md
-		sdk-basic-tutorials.md
-			sdk-basic-tutorial-hello-world.md
-			sdk-basic-tutorial-concepts.md
-			sdk-basic-tutorial-dynamic-pipelines.md
-			sdk-basic-tutorial-time-management.md
-			sdk-basic-tutorial-toolkit-integration.md
-			sdk-basic-tutorial-media-formats-and-pad-capabilities.md
-			sdk-basic-tutorial-multithreading-and-pad-availability.md
-			sdk-basic-tutorial-short-cutting-the-pipeline.md
-			sdk-basic-tutorial-media-information-gathering.md
-			sdk-basic-tutorial-gstreamer-tools.md
-			sdk-basic-tutorial-debugging-tools.md
-			sdk-basic-tutorial-streaming.md
-			sdk-basic-tutorial-playback-speed.md
-			sdk-basic-tutorial-handy-elements.md
-			sdk-basic-tutorial-platform-specific-elements.md
-		sdk-playback-tutorials.md
-			sdk-playback-tutorial-playbin-usage.md
-			sdk-playback-tutorial-subtitle-management.md
-			sdk-playback-tutorial-short-cutting-the-pipeline.md
-			sdk-playback-tutorial-progressive-streaming.md
-			sdk-playback-tutorial-color-balance.md
-			sdk-playback-tutorial-audio-visualization.md
-			sdk-playback-tutorial-custom-playbin-sinks.md
-			sdk-playback-tutorial-hardware-accelerated-video-decoding.md
-			sdk-playback-tutorial-digital-audio-pass-through.md
-		sdk-android-tutorials.md
-			sdk-android-tutorial-link-against-gstreamer.md
-			sdk-android-tutorial-a-running-pipeline.md
-			sdk-android-tutorial-video.md
-			sdk-android-tutorial-media-player.md
-			sdk-android-tutorial-a-complete-media-player.md
-		sdk-ios-tutorials.md
-			sdk-ios-tutorial-link-against-gstreamer.md
-			sdk-ios-tutorial-a-running-pipeline.md
-			sdk-ios-tutorial-video.md
-			sdk-ios-tutorial-a-basic-media-player.md
-			sdk-ios-tutorial-a-complete-media-player.md
-		sdk-table-of-concepts.md
-	sdk-deploying-your-application.md
-		sdk-mac-osx-deployment.md
-		sdk-windows-deployment.md
-		sdk-multiplatform-deployment-using-cerbero.md
+        tutorials.md
+		tutorials-basic.md
+			tutorial-basic-hello-world.md
+			tutorial-basic-concepts.md
+			tutorial-basic-dynamic-pipelines.md
+			tutorial-basic-time-management.md
+			tutorial-basic-toolkit-integration.md
+			tutorial-basic-media-formats-and-pad-capabilities.md
+			tutorial-basic-multithreading-and-pad-availability.md
+			tutorial-basic-short-cutting-the-pipeline.md
+			tutorial-basic-media-information-gathering.md
+			tutorial-basic-gstreamer-tools.md
+			tutorial-basic-debugging-tools.md
+			tutorial-basic-streaming.md
+			tutorial-basic-playback-speed.md
+			tutorial-basic-handy-elements.md
+			tutorial-basic-platform-specific-elements.md
+		tutorials-playback.md
+			tutorial-playback-playbin-usage.md
+			tutorial-playback-subtitle-management.md
+			tutorial-playback-short-cutting-the-pipeline.md
+			tutorial-playback-progressive-streaming.md
+			tutorial-playback-color-balance.md
+			tutorial-playback-audio-visualization.md
+			tutorial-playback-custom-playbin-sinks.md
+			tutorial-playback-hardware-accelerated-video-decoding.md
+			tutorial-playback-digital-audio-pass-through.md
+		tutorials-android.md
+			tutorial-android-link-against-gstreamer.md
+			tutorial-android-a-running-pipeline.md
+			tutorial-android-video.md
+			tutorial-android-media-player.md
+			tutorial-android-a-complete-media-player.md
+		tutorials-ios.md
+			tutorial-ios-link-against-gstreamer.md
+			tutorial-ios-a-running-pipeline.md
+			tutorial-ios-video.md
+			tutorial-ios-a-basic-media-player.md
+			tutorial-ios-a-complete-media-player.md
+		table-of-concepts.md
+	deploying-your-application.md
+		deploying-mac-osx.md
+		deploying-windows.md
+		deploying-multiplatform-using-cerbero.md
 	gstreamer-command-line-tools.md
-		gst-inspect.md
-		gst-launch.md
-		ges-launch.md
+		tool-gst-inspect.md
+		tool-gst-launch.md
+		tool-ges-launch.md
 	pwg-index.md
 		pwg-introduction.md
 			pwg-intro-preface.md
