@@ -468,7 +468,7 @@ gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
           "Attempt download buffering when buffering network streams",
           DEFAULT_DOWNLOAD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /**  
+  /**
    * GstURISourceBin::use-buffering:
    *
    * Perform buffering using a queue2 element, and emit BUFFERING
@@ -1277,7 +1277,7 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
 }
 
 /* called when we found a raw pad to expose. We set up a
- * padprobe to detect EOS before exposing the pad. 
+ * padprobe to detect EOS before exposing the pad.
  * Called with LOCK held. */
 static GstPad *
 create_output_pad (GstURISourceBin * urisrc, GstPad * pad)
