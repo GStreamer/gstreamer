@@ -249,6 +249,8 @@ static void expose_output_pad (GstURISourceBin * urisrc, GstPad * pad);
 static OutputSlotInfo *get_output_slot (GstURISourceBin * urisrc,
     gboolean do_download, gboolean is_adaptive, GstCaps * caps);
 static void free_output_slot (OutputSlotInfo * slot, GstURISourceBin * urisrc);
+static void free_output_slot_async (GstURISourceBin * urisrc,
+    OutputSlotInfo * slot);
 static GstPad *create_output_pad (GstURISourceBin * urisrc, GstPad * pad);
 static void remove_buffering_msgs (GstURISourceBin * bin, GstObject * src);
 
@@ -1257,12 +1259,7 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
     /* Otherwise it's time to send EOS and clean up this pad */
     gst_pad_push_event (slot->srcpad, gst_event_new_eos ());
 
-    /* FIXME: Can't clean the pad up from the streaming thread... */
-    urisrc->out_slots = g_slist_remove (urisrc->out_slots, slot);
-#if 0
-    free_output_slot (slot, urisrc);
-    slot = NULL;
-#endif
+    free_output_slot_async (urisrc, slot);
 
     /* FIXME: Only emit drained if all output pads are done and there's no
      * pending pads */
@@ -1342,15 +1339,23 @@ pad_removed_cb (GstElement * element, GstPad * pad, GstURISourceBin * urisrc)
   /* Send EOS to the output slot if the demuxer didn't already */
   if (info->output_slot) {
     if (!info->output_slot->is_eos) {
-      GstStructure *s;
-      GstEvent *event;
+      /* custom event cannot be posted to EOS pad */
+      if (GST_PAD_IS_EOS (info->output_slot->sinkpad)) {
+        GST_LOG_OBJECT (element,
+            "Pad %" GST_PTR_FORMAT " was removed with EOS.", pad);
+        free_output_slot_async (urisrc, info->output_slot);
+      } else {
+        GstStructure *s;
+        GstEvent *event;
 
-      GST_LOG_OBJECT (element,
-          "Pad %" GST_PTR_FORMAT " was removed without EOS. Sending.", pad);
+        GST_LOG_OBJECT (element,
+            "Pad %" GST_PTR_FORMAT " was removed without EOS. Sending.", pad);
 
-      s = gst_structure_new_empty ("urisourcebin-custom-eos");
-      event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
-      gst_pad_send_event (info->output_slot->sinkpad, event);
+        s = gst_structure_new_empty ("urisourcebin-custom-eos");
+        event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+        gst_pad_send_event (info->output_slot->sinkpad, event);
+
+      }
       info->output_slot->is_eos = TRUE;
     }
     /* After the pad goes away, the slot is free to reuse */
@@ -2014,6 +2019,23 @@ free_output_slot (OutputSlotInfo * slot, GstURISourceBin * urisrc)
   gst_element_remove_pad (GST_ELEMENT_CAST (urisrc), slot->srcpad);
 
   g_free (slot);
+}
+
+static void
+call_free_output_slot (GstURISourceBin * urisrc, OutputSlotInfo * slot)
+{
+  GST_LOG_OBJECT (urisrc, "free output slot in thread pool");
+  free_output_slot (slot, urisrc);
+}
+
+/* must be called with GST_URI_SOURCE_BIN_LOCK */
+static void
+free_output_slot_async (GstURISourceBin * urisrc, OutputSlotInfo * slot)
+{
+  GST_LOG_OBJECT (urisrc, "pushing output slot on thread pool to free");
+  urisrc->out_slots = g_slist_remove (urisrc->out_slots, slot);
+  gst_element_call_async (GST_ELEMENT_CAST (urisrc),
+      (GstElementCallAsyncFunc) call_free_output_slot, slot, NULL);
 }
 
 /* remove source and all related elements */
