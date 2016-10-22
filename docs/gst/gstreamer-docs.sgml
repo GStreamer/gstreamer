@@ -155,6 +155,10 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/api-index-deprecated.xml"><xi:fallback /></xi:include>
   </index>
   <index>
+    <title>Index of new API in 1.8</title>
+    <xi:include href="xml/api-index-1.8.xml"><xi:fallback /></xi:include>
+  </index>
+  <index>
     <title>Index of new API in 1.6</title>
     <xi:include href="xml/api-index-1.6.xml"><xi:fallback /></xi:include>
   </index>
