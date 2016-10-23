@@ -1343,7 +1343,13 @@ pad_removed_cb (GstElement * element, GstPad * pad, GstURISourceBin * urisrc)
       if (GST_PAD_IS_EOS (info->output_slot->sinkpad)) {
         GST_LOG_OBJECT (element,
             "Pad %" GST_PTR_FORMAT " was removed with EOS.", pad);
-        free_output_slot_async (urisrc, info->output_slot);
+        if (urisrc->pending_pads &&
+            link_pending_pad_to_output (urisrc, info->output_slot)) {
+          GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+          return;
+        } else {
+          free_output_slot_async (urisrc, info->output_slot);
+        }
       } else {
         GstStructure *s;
         GstEvent *event;
