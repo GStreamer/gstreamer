@@ -214,12 +214,12 @@ static void  add_missing_element(graph_t *graph,gchar *name){
 #define TRY_SETUP_LINK(l) G_STMT_START { \
    if( (!(l)->src.element) && (!(l)->src.name) ){ \
      SET_ERROR (graph->error, GST_PARSE_ERROR_LINK, _("link has no source [sink=%s@%p]"), \
-	(l)->sink.name ? (l)->sink.name : _(""), \
+	(l)->sink.name ? (l)->sink.name : "", \
 	(l)->sink.element); \
      gst_parse_free_link (l); \
    }else if( (!(l)->sink.element) && (!(l)->sink.name) ){ \
      SET_ERROR (graph->error, GST_PARSE_ERROR_LINK, _("link has no sink [source=%s@%p]"), \
-	(l)->src.name ? (l)->src.name :_(""), \
+	(l)->src.name ? (l)->src.name : "", \
 	(l)->src.element); \
      gst_parse_free_link (l); \
    }else{ \
