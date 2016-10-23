@@ -134,7 +134,7 @@ pluginsdirs = [  ]
 if not meson.is_subproject()
   pkgconfig = find_program('pkg-config')
   runcmd = run_command(pkgconfig, '--variable=pluginsdir',
-      'gstreamer-' + apiversion, 'gstreamer-plugins-base-' + api_version)
+      'gstreamer-' + api_version, 'gstreamer-plugins-base-' + api_version)
 
   if runcmd.returncode() == 0
       pluginsdirs = runcmd.stdout().split()
