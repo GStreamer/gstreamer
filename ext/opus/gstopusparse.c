@@ -280,7 +280,7 @@ packet_duration_opus (const guint8 * data, size_t len)
 
   gint64 duration;
   gint64 frame_duration;
-  gint nframes;
+  gint nframes = 0;
   guint8 toc;
 
   if (len < 1)
