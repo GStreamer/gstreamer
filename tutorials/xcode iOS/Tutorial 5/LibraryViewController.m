@@ -141,9 +141,10 @@ static NSString *CellIdentifier = @"CellIdentifier";
     [entries addObject:@"http://mirrorblender.top-ix.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_stereo.avi"];
 
     // Sintel
-    [entries addObject:@"http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/Sintel_Trailer1.480p.DivX_Plus_HD.mkv"];
-    [entries addObject:@"http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/sintel_trailer-480p.mp4"];
-    [entries addObject:@"http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/sintel_trailer-480p.ogv"];
+    // The ftp.nluug.nl links no longer work
+    // [entries addObject:@"http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/Sintel_Trailer1.480p.DivX_Plus_HD.mkv"];
+    // [entries addObject:@"http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/sintel_trailer-480p.mp4"];
+    // [entries addObject:@"http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/sintel_trailer-480p.ogv"];
     [entries addObject:@"http://mirrorblender.top-ix.org/movies/sintel-1024-surround.mp4"];
 
     // Tears of Steel
