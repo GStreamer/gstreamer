@@ -41,29 +41,15 @@
 GST_DEBUG_CATEGORY_STATIC (dmabuf_debug);
 #define GST_CAT_DEFAULT dmabuf_debug
 
-typedef struct
-{
-  GstFdAllocator parent;
-} GstDmaBufAllocator;
-
-typedef struct
-{
-  GstFdAllocatorClass parent_class;
-} GstDmaBufAllocatorClass;
-
-GType dmabuf_mem_allocator_get_type (void);
-G_DEFINE_TYPE (GstDmaBufAllocator, dmabuf_mem_allocator, GST_TYPE_FD_ALLOCATOR);
-
-#define GST_TYPE_DMABUF_ALLOCATOR   (dmabuf_mem_allocator_get_type())
-#define GST_IS_DMABUF_ALLOCATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DMABUF_ALLOCATOR))
+G_DEFINE_TYPE (GstDmaBufAllocator, gst_dmabuf_allocator, GST_TYPE_FD_ALLOCATOR);
 
 static void
-dmabuf_mem_allocator_class_init (GstDmaBufAllocatorClass * klass)
+gst_dmabuf_allocator_class_init (GstDmaBufAllocatorClass * klass)
 {
 }
 
 static void
-dmabuf_mem_allocator_init (GstDmaBufAllocator * allocator)
+gst_dmabuf_allocator_init (GstDmaBufAllocator * allocator)
 {
   GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
 
@@ -144,5 +130,7 @@ gst_dmabuf_memory_get_fd (GstMemory * mem)
 gboolean
 gst_is_dmabuf_memory (GstMemory * mem)
 {
-  return gst_memory_is_type (mem, GST_ALLOCATOR_DMABUF);
+  g_return_val_if_fail (mem != NULL, FALSE);
+
+  return GST_IS_DMABUF_ALLOCATOR (mem->allocator);
 }
