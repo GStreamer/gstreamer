@@ -258,8 +258,8 @@ HAVE_LIBAV_UNINSTALLED=1
 AC_ARG_WITH(system-libav,
             [AC_HELP_STRING([--with-system-libav], [use system Libav libraries])])
 
-HAVE_LZMA = "no"
-HAVE_BZ2 = "no"
+HAVE_LZMA="no"
+HAVE_BZ2="no"
 if test "x$with_system_libav" = "xyes"; then
   PKG_CHECK_MODULES(LIBAV, libavfilter libavformat libavcodec libavutil)
   PKG_CHECK_MODULES(SWSCALE, libswscale libavutil)
