@@ -130,6 +130,8 @@ GST_DEBUG_CATEGORY_STATIC (gstdvbsrc_debug);
 #define GST_CAT_DEFAULT (gstdvbsrc_debug)
 
 /**
+ * NUM_DTV_PROPS:
+ *
  * Can't be greater than DTV_IOCTL_MAX_MSGS but we are
  * not using more than 25 for the largest use case (ISDB-T).
  *
@@ -564,6 +566,8 @@ static gboolean gst_dvbsrc_is_valid_trans_mode (guint delsys, guint mode);
 static gboolean gst_dvbsrc_is_valid_bandwidth (guint delsys, guint bw);
 
 /**
+ * LOOP_WHILE_EINTR:
+ *
  * This loop should be safe enough considering:
  *
  * 1.- EINTR suggest the next ioctl might succeed
@@ -2489,11 +2493,9 @@ gst_dvbsrc_set_fe_params (GstDvbSrc * object, struct dtv_properties *props)
   /* first 3 entries are reserved */
   n = 3;
 
-  /**
-   * We are not dropping out but issuing a warning in case of wrong
+  /* We are not dropping out but issuing a warning in case of wrong
    * parameter combinations as failover behavior should be mandated
-   * by the driver. Worst case scenario it will just fail at tuning.
-   */
+   * by the driver. Worst case scenario it will just fail at tuning. */
 
   switch (object->delsys) {
     case SYS_DVBS:

@@ -515,10 +515,8 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename,
           g_hash_table_insert (params, g_strdup (satellite[j - 2]),
               g_strdup (fields[j]));
         }
-        /**
-         * Some ZAP format variations store freqs in MHz
-         * but we internally use kHz for DVB-S/S2.
-         */
+        /* Some ZAP format variations store freqs in MHz
+         * but we internally use kHz for DVB-S/S2. */
         if (strlen (fields[1]) < 6) {
           g_hash_table_insert (params, g_strdup ("frequency"),
               g_strdup_printf ("%d", atoi (fields[1]) * 1000));
@@ -600,16 +598,14 @@ parse_and_configure_from_zap_conf_file (GstElement * dvbbasebin,
   GHashTable *channels, *params;
   gchar *type;
 
-  /**
-   * Assumptions are made here about a format that is loosely
+  /* Assumptions are made here about a format that is loosely
    * defined. Particularly, we assume a given delivery system
    * out of counting the number of fields per line. dvbsrc has
    * smarter code to auto-detect a delivery system based on
    * known-correct combinations of parameters so if you ever
    * encounter cases where the delivery system is being
    * wrongly set here, just remove the offending
-   * g_object_set line and let dvbsrc work his magic out.
-   */
+   * g_object_set line and let dvbsrc work his magic out. */
 
   channels = parse_channels_conf_from_file (dvbbasebin, filename, error);
 
