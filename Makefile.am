@@ -35,6 +35,10 @@ EXTRA_DIST = \
 	configure.ac autogen.sh depcomp \
 	MAINTAINERS ABOUT-NLS RELEASE gstreamer.doap \
 	scripts/gst-uninstalled \
+	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/gstreamer-*" ) \
+	gst/gstenumtypes.c.template gst/gstenumtypes.h.template \
+	meson_options.txt config.h.meson  \
+	gst/parse/gen_lex.py.in gst/parse/gen_grammar.py.in \
 	$(win32)
 
 CLEANFILES = gst-element-check-@GST_API_VERSION@.m4
