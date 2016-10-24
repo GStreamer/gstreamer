@@ -128,7 +128,7 @@
 
 /* Required for other parts of in_pktinfo / in6_pktinfo but only
  * on non-Windows and can be included after glib.h */
-#ifndef G_OS_WIN32
+#ifndef G_PLATFORM_WIN32
 #include <netinet/ip.h>
 #endif
 
@@ -157,7 +157,7 @@ struct _GstIPPktinfoMessage
   GSocketControlMessage parent;
 
   guint ifindex;
-#ifndef G_OS_WIN32
+#ifndef G_PLATFORM_WIN32
 #ifndef __NetBSD__
   struct in_addr spec_dst;
 #endif
@@ -203,7 +203,7 @@ gst_ip_pktinfo_message_deserialize (gint level,
 
   message = g_object_new (GST_TYPE_IP_PKTINFO_MESSAGE, NULL);
   message->ifindex = pktinfo->ipi_ifindex;
-#ifndef G_OS_WIN32
+#ifndef G_PLATFORM_WIN32
 #ifndef __NetBSD__
   message->spec_dst = pktinfo->ipi_spec_dst;
 #endif
