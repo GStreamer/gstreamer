@@ -95,6 +95,8 @@
 
 #define STREAM_IS_EOS(s) (s->time_position == GST_CLOCK_TIME_NONE)
 
+#define ABSDIFF(x, y) ( (x) > (y) ? ((x) - (y)) : ((y) - (x)) )
+
 GST_DEBUG_CATEGORY (qtdemux_debug);
 
 typedef struct _QtDemuxSegment QtDemuxSegment;
@@ -251,6 +253,7 @@ struct _QtDemuxStream
   guint32 n_samples_moof;       /* sample count in a moof */
   guint64 duration_moof;        /* duration in timescale of a moof, used for figure out
                                  * the framerate of fragmented format stream */
+  guint64 duration_last_moof;
 
   guint32 offset_in_sample;     /* Offset in the current sample, used for
                                  * streams which have got exceedingly big
@@ -1842,6 +1845,7 @@ _create_stream (void)
   stream->protection_scheme_info = NULL;
   stream->n_samples_moof = 0;
   stream->duration_moof = 0;
+  stream->duration_last_moof = 0;
   g_queue_init (&stream->protection_scheme_event_queue);
   return stream;
 }
@@ -2374,6 +2378,7 @@ gst_qtdemux_stream_flush_samples_data (GstQTDemux * qtdemux,
 
   stream->n_samples_moof = 0;
   stream->duration_moof = 0;
+  stream->duration_last_moof = 0;
 }
 
 static void
@@ -3119,6 +3124,25 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
           stream->samples[stream->n_samples - 1].timestamp +
           stream->samples[stream->n_samples - 1].duration;
 
+      /* If this is a GST_FORMAT_BYTES stream and there's a significant
+       * difference (1 sec.) between decode_ts and timestamp, prefer the
+       * former */
+      if (!qtdemux->upstream_format_is_time
+          && ABSDIFF (decode_ts, timestamp) >
+          MAX (stream->duration_last_moof / 2,
+              GSTTIME_TO_QTSTREAMTIME (stream, GST_SECOND))) {
+        GST_INFO_OBJECT (qtdemux,
+            "decode_ts (%" GST_TIME_FORMAT ") and timestamp (%" GST_TIME_FORMAT
+            ") are significantly different (more than %" GST_TIME_FORMAT
+            "), using decode_ts",
+            GST_TIME_ARGS (QTSTREAMTIME_TO_GSTTIME (stream, decode_ts)),
+            GST_TIME_ARGS (QTSTREAMTIME_TO_GSTTIME (stream, timestamp)),
+            GST_TIME_ARGS (QTSTREAMTIME_TO_GSTTIME (stream,
+                    MAX (stream->duration_last_moof / 2,
+                        GSTTIME_TO_QTSTREAMTIME (stream, GST_SECOND)))));
+        timestamp = decode_ts;
+      }
+
       gst_ts = QTSTREAMTIME_TO_GSTTIME (stream, timestamp);
       GST_INFO_OBJECT (qtdemux, "first sample ts %" GST_TIME_FORMAT
           " (extends previous samples)", GST_TIME_ARGS (gst_ts));
@@ -3785,6 +3809,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
 
     /* initialise moof sample data */
     stream->n_samples_moof = 0;
+    stream->duration_last_moof = stream->duration_moof;
     stream->duration_moof = 0;
 
     /* Track Run node */
