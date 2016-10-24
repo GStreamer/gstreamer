@@ -351,6 +351,7 @@ gst_dvb_base_bin_conf_set_modulation (GstElement * dvbbasebin,
       property, kf, channel_name, key, modulations, 6);
 }
 
+/* FIXME: is channel_name guaranteed to be ASCII or UTF-8? */
 static gboolean
 parse_and_configure_from_v5_conf_file (GstElement * dvbbasebin,
     const gchar * filename, const gchar * channel_name, GError ** error)
@@ -416,7 +417,6 @@ load_error:
 
 unknown_channel:
   {
-    /* FIXME: is channel name guaranteed to be ASCII or UTF-8? */
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
         _("Couldn't find details for channel '%s'"), channel_name);
     g_key_file_unref (keyfile);
@@ -426,7 +426,6 @@ unknown_channel:
 
 no_properties:
   {
-    /* FIXME: is channel name guaranteed to be ASCII or UTF-8? */
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
         _("No properties for channel '%s'"), channel_name);
     g_key_file_unref (keyfile);
@@ -436,7 +435,6 @@ no_properties:
 
 property_error:
   {
-    /* FIXME: is channel name guaranteed to be ASCII or UTF-8? */
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         _("Failed to set properties for channel '%s'"), channel_name);
     g_key_file_unref (keyfile);
@@ -589,6 +587,7 @@ destroy_channels_hash (GHashTable * channels)
   g_hash_table_foreach_remove (channels, remove_channel_from_hash, NULL);
 }
 
+/* FIXME: is channel_name guaranteed to be ASCII or UTF-8? */
 static gboolean
 parse_and_configure_from_zap_conf_file (GstElement * dvbbasebin,
     const gchar * filename, const gchar * channel_name, GError ** error)
@@ -843,7 +842,6 @@ beach:
 
 unknown_channel:
   {
-    /* FIXME: is channel name guaranteed to be ASCII or UTF-8? */
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
         _("Couldn't find details for channel '%s'"), channel_name);
     destroy_channels_hash (channels);
