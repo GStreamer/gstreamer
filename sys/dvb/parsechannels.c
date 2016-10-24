@@ -94,7 +94,7 @@ static gboolean gst_dvb_base_bin_conf_set_hierarchy (GstElement * dvbbasebin,
 static gboolean gst_dvb_base_bin_conf_set_modulation (GstElement * dvbbasebin,
     const gchar * property, GKeyFile * kf, const gchar * channel_name,
     const gchar * key);
-static GHashTable *parse_channels_conf_from_file (GstElement * dvbbasebin,
+static GHashTable *parse_channels_conf_from_zap_file (GstElement * dvbbasebin,
     const gchar * filename, GError ** error);
 static gboolean remove_channel_from_hash (gpointer key, gpointer value,
     gpointer user_data);
@@ -445,10 +445,9 @@ property_error:
   }
 }
 
-/* this will do zap style channels.conf only for the moment */
 static GHashTable *
-parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename,
-    GError ** error)
+parse_channels_conf_from_zap_file (GstElement * dvbbasebin,
+    const gchar * filename, GError ** error)
 {
   gchar *contents;
   gchar **lines;
@@ -607,7 +606,7 @@ parse_and_configure_from_zap_conf_file (GstElement * dvbbasebin,
    * wrongly set here, just remove the offending
    * g_object_set line and let dvbsrc work his magic out. */
 
-  channels = parse_channels_conf_from_file (dvbbasebin, filename, error);
+  channels = parse_channels_conf_from_zap_file (dvbbasebin, filename, error);
 
   if (!channels)
     goto beach;
