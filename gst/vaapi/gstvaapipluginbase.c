@@ -519,21 +519,43 @@ reset_allocator (GstAllocator * allocator, GstVideoInfo * vinfo)
 }
 
 static gboolean
-ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo)
+ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstCaps * caps,
+    guint * size)
 {
-  if (!reset_allocator (plugin->sinkpad_allocator, vinfo))
+  GstVideoInfo vinfo;
+
+  if (!gst_video_info_from_caps (&vinfo, caps))
+    goto error_invalid_caps;
+  gst_video_info_force_nv12_if_encoded (&vinfo);
+  *size = GST_VIDEO_INFO_SIZE (&vinfo);
+
+  if (!reset_allocator (plugin->sinkpad_allocator, &vinfo))
     return TRUE;
 
   if (has_dmabuf_capable_peer (plugin, plugin->sinkpad)) {
     plugin->sinkpad_allocator =
-        gst_vaapi_dmabuf_allocator_new (plugin->display, vinfo,
+        gst_vaapi_dmabuf_allocator_new (plugin->display, &vinfo,
         GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE);
   } else {
     plugin->sinkpad_allocator =
-        gst_vaapi_video_allocator_new (plugin->display, vinfo, 0,
+        gst_vaapi_video_allocator_new (plugin->display, &vinfo, 0,
         GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS);
   }
-  return plugin->sinkpad_allocator != NULL;
+  if (!plugin->sinkpad_allocator)
+    goto error_create_allocator;
+  return TRUE;
+
+  /* ERRORS */
+error_invalid_caps:
+  {
+    GST_ERROR_OBJECT (plugin, "invalid caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+error_create_allocator:
+  {
+    GST_ERROR_OBJECT (plugin, "failed to create sink pad's allocator");
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -636,7 +658,6 @@ static gboolean
 ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
 {
   GstBufferPool *pool;
-  GstVideoInfo vi;
   guint size;
 
   /* video decoders don't use a buffer pool in the sink pad */
@@ -655,35 +676,20 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
     plugin->sinkpad_buffer_size = 0;
   }
 
-  if (!gst_video_info_from_caps (&vi, caps))
-    goto error_invalid_caps;
-  gst_video_info_force_nv12_if_encoded (&vi);
+  if (!ensure_sinkpad_allocator (plugin, caps, &size))
+    goto error;
 
-  if (!ensure_sinkpad_allocator (plugin, &vi))
-    goto error_create_allocator;
-
-  size = GST_VIDEO_INFO_SIZE (&vi);
   gst_allocator_get_vaapi_image_size (plugin->sinkpad_allocator, &size);
   pool = gst_vaapi_plugin_base_create_pool (plugin, caps, size, 0, 0,
       GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META, plugin->sinkpad_allocator);
   if (!pool)
-    goto error_create_pool;
+    goto error;
   plugin->sinkpad_buffer_pool = pool;
   plugin->sinkpad_buffer_size = size;
   return TRUE;
 
   /* ERRORS */
-error_invalid_caps:
-  {
-    GST_ERROR_OBJECT (plugin, "invalid caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-error_create_allocator:
-  {
-    GST_ERROR_OBJECT (plugin, "failed to create allocator");
-    return FALSE;
-  }
-error_create_pool:
+error:
   {
     /* error message already sent */
     return FALSE;
