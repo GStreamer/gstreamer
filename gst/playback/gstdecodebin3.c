@@ -1183,7 +1183,8 @@ handle_stream_collection (GstDecodebin3 * dbin,
     GST_DEBUG ("     caps  : %" GST_PTR_FORMAT, caps);
     if (taglist)
       gst_tag_list_unref (taglist);
-    gst_caps_unref (caps);
+    if (caps)
+      gst_caps_unref (caps);
   }
 #endif
 
