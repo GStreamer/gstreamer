@@ -4,8 +4,8 @@
 
 @interface VideoViewController () {
     GStreamerBackend *gst_backend;
-    int media_width;                /* Width of the clip */
-    int media_height;               /* height of the clip */
+    NSInteger media_width;                /* Width of the clip */
+    NSInteger media_height;               /* height of the clip */
     Boolean dragging_slider;        /* Whether the time slider is being dragged or not */
     Boolean is_local_media;         /* Whether this clip is stored locally or is being streamed */
     Boolean is_playing_desired;     /* Whether the user asked to go to PLAYING */
@@ -35,14 +35,14 @@
         NSUInteger minutes = (duration / 60) % 60;
         NSUInteger seconds = duration % 60;
 
-        duration_txt = [NSString stringWithFormat:@"%02u:%02u:%02u", hours, minutes, seconds];
+        duration_txt = [NSString stringWithFormat:@"%02lu:%02lu:%02lu", (unsigned long)hours, (unsigned long)minutes, (unsigned long)seconds];
     }
     if (position > 0) {
         NSUInteger hours = position / (60 * 60);
         NSUInteger minutes = (position / 60) % 60;
         NSUInteger seconds = position % 60;
 
-        position_txt = [NSString stringWithFormat:@"%02u:%02u:%02u", hours, minutes, seconds];
+        position_txt = [NSString stringWithFormat:@"%02lu:%02lu:%02lu", (unsigned long)hours, (unsigned long)minutes, (unsigned long)seconds];
     }
 
     NSString *text = [NSString stringWithFormat:@"%@ / %@",
