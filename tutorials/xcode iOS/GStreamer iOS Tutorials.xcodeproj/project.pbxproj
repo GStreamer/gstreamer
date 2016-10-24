@@ -1095,6 +1095,7 @@
 					"-framework",
 					AssetsLibrary,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-1";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1156,6 +1157,7 @@
 					"-framework",
 					AssetsLibrary,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-1";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1227,6 +1229,7 @@
 					"-weak_framework",
 					VideoToolBox,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-2";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1290,6 +1293,7 @@
 					"-weak_framework",
 					VideoToolBox,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-2";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1361,6 +1365,7 @@
 					"-weak_framework",
 					VideoToolBox,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-5";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1424,6 +1429,7 @@
 					"-weak_framework",
 					VideoToolBox,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-5";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1495,6 +1501,7 @@
 					"-weak_framework",
 					VideoToolBox,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-3";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1558,6 +1565,7 @@
 					"-weak_framework",
 					VideoToolBox,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-3";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1629,6 +1637,7 @@
 					"-weak_framework",
 					VideoToolBox,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-4";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1692,6 +1701,7 @@
 					"-weak_framework",
 					VideoToolBox,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-4";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
