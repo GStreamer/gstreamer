@@ -576,7 +576,16 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo)
   plugin->srcpad_allocator =
       gst_vaapi_video_allocator_new (plugin->display, vinfo, 0,
       GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS);
-  return plugin->srcpad_allocator != NULL;
+  if (!plugin->srcpad_allocator)
+    goto error_create_allocator;
+  return TRUE;
+
+  /* ERRORS */
+error_create_allocator:
+  {
+    GST_ERROR_OBJECT (plugin, "failed to create src pad's allocator");
+    return FALSE;
+  }
 }
 
 /**
@@ -884,13 +893,13 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
   if (!pool) {
     if (!ensure_srcpad_allocator (plugin, &vi))
-      goto error_create_allocator;
+      goto error;
     /* Update video size with allocator's image size */
     gst_allocator_get_vaapi_image_size (plugin->srcpad_allocator, &size);
     pool = gst_vaapi_plugin_base_create_pool (plugin, caps, size, min, max,
         pool_options, plugin->srcpad_allocator);
     if (!pool)
-      goto error_create_pool;
+      goto error;
   }
 
   if (update_pool)
@@ -919,12 +928,7 @@ error_ensure_display:
         plugin->display_type_req);
     return FALSE;
   }
-error_create_allocator:
-  {
-    GST_ERROR_OBJECT (plugin, "failed to create allocator");
-    return FALSE;
-  }
-error_create_pool:
+error:
   {
     /* error message already sent */
     return FALSE;
