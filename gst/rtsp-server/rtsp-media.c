@@ -3050,6 +3050,10 @@ finish_unprepare (GstRTSPMedia * media)
   g_rec_mutex_unlock (&priv->state_lock);
   set_state (media, GST_STATE_NULL);
   g_rec_mutex_lock (&priv->state_lock);
+
+  if (priv->status != GST_RTSP_MEDIA_STATUS_UNPREPARING)
+    return;
+
   remove_fakesink (priv);
 
   for (i = 0; i < priv->streams->len; i++) {
@@ -3168,6 +3172,7 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
     if (klass->unprepare)
       success = klass->unprepare (media);
   } else {
+    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_UNPREPARING);
     finish_unprepare (media);
   }
   g_rec_mutex_unlock (&priv->state_lock);
