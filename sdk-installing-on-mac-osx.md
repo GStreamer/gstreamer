@@ -11,16 +11,13 @@
 
 ## Prerequisites
 
-**FIXME: Those all need updating**
-
 To develop applications using the GStreamer SDK for OS X you will need
 OS X Snow Leopard (10.6) or later and
 [XCode 3.2.6](https://developer.apple.com/devcenter/mac/index.action) or
 later.
 
-The recommended system is [Mac OS X
-El Capitan](http://www.apple.com/macosx/) with
-[XCode 4](https://developer.apple.com/xcode/)
+The recommended system is [macOS Sierra](http://www.apple.com/macosx/) with
+[XCode 8](https://developer.apple.com/xcode/)
 
 ## Download and install the SDK
 
