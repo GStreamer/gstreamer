@@ -4178,6 +4178,7 @@ gst_rtsp_conninfo_close (GstRTSPSrc * src, GstRTSPConnInfo * info,
     GST_DEBUG_OBJECT (src, "freeing connection...");
     gst_rtsp_connection_free (info->connection);
     info->connection = NULL;
+    info->flushing = FALSE;
   }
   GST_RTSP_STATE_UNLOCK (src);
   return GST_RTSP_OK;
