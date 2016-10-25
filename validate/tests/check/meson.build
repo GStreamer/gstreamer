@@ -1,6 +1,3 @@
-gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
-  fallback : ['gstreamer', 'gst_check_dep'])
-
 # tests and condition when to skip the test
 validate_tests = [
   ['validate/padmonitor'],
