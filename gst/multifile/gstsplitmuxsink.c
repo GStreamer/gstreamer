@@ -1424,7 +1424,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
     ctx->is_reference = TRUE;
   }
 
-  res = gst_ghost_pad_new (gname, mq_sink);
+  res = gst_ghost_pad_new_from_template (gname, mq_sink, templ);
   g_object_set_qdata ((GObject *) (res), PAD_CONTEXT, ctx);
 
   mq_stream_ctx_ref (ctx);
