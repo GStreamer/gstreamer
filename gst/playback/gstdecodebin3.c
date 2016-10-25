@@ -74,7 +74,7 @@
  * Global design
  *
  * 1) From sink pad to elementary streams (GstParseBin)
- * 
+ *
  * The input sink pads are fed to GstParseBin. GstParseBin will feed them
  * through typefind. When the caps are detected (or changed) we recursively
  * figure out which demuxer, parser or depayloader is needed until we get to
@@ -1288,7 +1288,7 @@ get_output_for_slot (MultiQueueSlot * slot)
 
   /*
    * FIXME
-   * 
+   *
    * This method needs to be split into multiple parts
    *
    * 1) Figure out whether stream should be exposed or not

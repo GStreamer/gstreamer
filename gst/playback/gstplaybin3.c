@@ -3992,7 +3992,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
       ave_list = g_list_prepend (ave_list, NULL);
     }
 
-    /* if it is a decoder and we don't have a fixed sink, then find out 
+    /* if it is a decoder and we don't have a fixed sink, then find out
      * the matching audio/video sink from GstAVElements list */
     for (l = ave_list; l; l = l->next) {
       gboolean created_sink = FALSE;
@@ -4180,7 +4180,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   }
 
   /* remember the sink in the group now, the element is floating, we take
-   * ownership now 
+   * ownership now
    *
    * store the sink in the group, we will configure it later when we
    * reconfigure the sink */
