@@ -27,13 +27,10 @@ and you are ready to start typing the commands given in this tutorial.
 
 > ![Information](images/icons/emoticons/information.png)
 >
->On Linux, though, you can use the provided
->`/opt/gstreamer-sdk/bin/gst-sdk-shell` script to enter the
->GStreamer SDK shell environment, in which the <code>bin</code>
->directory is in the path. In this environment, you can use the
->GStreamer tools from any folder.
-
-**FIXME: What is this now? Just refer to /usr/bin of the distro??**
+> On Linux, you should use the GStreamer version installed with your
+> distribution, the tools should be installed with a package named `gstreamer1`
+> on Fedora style distributions, or `gstreamer1.0-tools` on Debian/Ubuntu style
+> distributions.
 
 In order to allow for multiple versions of GStreamer to coexists in the
 same system, these tools are versioned, this is, a GStreamer version
