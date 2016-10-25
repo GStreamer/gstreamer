@@ -1,5 +1,6 @@
 option('build_tools', type : 'boolean', value : true)
 option('poisoning', type : 'boolean', value : false)
+option('disable_gtkdoc', type : 'boolean', value : false)
 option('disable_examples', type : 'boolean', value : false)
 option('disable_registry', type : 'boolean', value : false)
 option('library_format', type : 'combo', choices : ['shared', 'static', 'both'], value : 'shared')
