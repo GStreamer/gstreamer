@@ -1292,7 +1292,7 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
   GstVideoDecoderClass *const vdec_class = GST_VIDEO_DECODER_CLASS (klass);
   GstPadTemplate *pad_template;
   GstVaapiDecoderMap *map;
-  gchar *name, *longname;
+  gchar *name, *longname, *description;
   GstCaps *caps;
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_vaapidecode,
@@ -1327,20 +1327,23 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
   if (map->codec) {
     name = g_ascii_strup (map->name, -1);
     longname = g_strdup_printf ("VA-API %s decoder", name);
+    description = g_strdup_printf ("A VA-API based %s video decoder", name);
     g_free (name);
   } else {
     longname = g_strdup ("VA-API decoder");
+    description = g_strdup (GST_PLUGIN_DESC);
   }
 
   element_class->set_context = gst_vaapi_base_set_context;
   gst_element_class_set_static_metadata (element_class, longname,
-      "Codec/Decoder/Video", GST_PLUGIN_DESC,
+      "Codec/Decoder/Video", description,
       "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, "
       "Halley Zhao <halley.zhao@intel.com>, "
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, "
       "Wind Yuan <feng.yuan@intel.com>");
 
   g_free (longname);
+  g_free (description);
 
   /* sink pad */
   caps = gst_caps_from_string (map->caps_str);
