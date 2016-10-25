@@ -56,7 +56,7 @@ There are 3 sets of files in GStreamer binaries:
 Get  **the Runtime and Development files** installers appropriate for
 your architecture from here:
 
-**FIXME: Add links **
+[https://gstreamer.freedesktop.org/data/pkg/windows/](https://gstreamer.freedesktop.org/data/pkg/windows/)
 
 Execute the installers and choose an installation folder. The suggested
 default is usually OK.
@@ -95,12 +95,11 @@ plugins are located.
 
 ### Building the tutorials
 
-The tutorial's code, along with project files and a solution file for
-Visual Studio 2010 are all included in the GStreamer binaries, in
-the `%GSTREAMER_ROOT_X86%``\share\gst-sdk\tutorials` folder.
 
-`%GSTREAMER_ROOT_X86%` is an environment variable that the installer
-defined for you, and points to the installation folder of GStreamer binaries.
+The tutorials code, along with project files and a solution file for
+Visual Studio 2010, are in the
+[gst-docs](https://cgit.freedesktop.org/gstreamer/gst-docs/) in the
+`tutorials` folder.
 
 In order to prevent accidental modification of the original code, and to
 make sure Visual Studio has the necessary permissions to write the

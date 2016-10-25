@@ -10,8 +10,11 @@ GStreamer library from Xcode using objective-C.
 
 ## Hello GStreamer!
 
-The code for this project can be found in the tutorials folder of
-**FIXME: where**. It was created using the GStreamer Single View
+The tutorials code are in the
+[gst-docs](https://cgit.freedesktop.org/gstreamer/gst-docs/) in the
+`tutorials/xcode iOS` folder.
+
+It was created using the GStreamer Single View
 Application template. The view contains only a `UILabel` that will be
 used to display the GStreamer's version to the user.
 

@@ -70,10 +70,14 @@ interact through [JNI][Java Native Interface].
 
 ### Building the tutorials
 
-There are a few Android-specific tutorials in the
-`$GSTREAMER_ROOT_ANDROID/share/gst-sdk/tutorials` folder. Each
-tutorial is a folder containing source code (in Java and C) and the
-resource files required to build a complete Android application.
+The tutorials code are in the
+[gst-docs](https://cgit.freedesktop.org/gstreamer/gst-docs/) in the
+`tutorials/` folder.
+
+There are a few Android-specific tutorials in the `tutorials/`
+folder. Each tutorial is a folder containing source code (in Java and
+C) and the resource files required to build a complete Android
+application.
 
 The rest of the GStreamer tutorials (basic and playback tutorials)
 cannot be run on Android without modification.

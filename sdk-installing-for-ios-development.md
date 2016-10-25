@@ -49,12 +49,12 @@ example.
 
 #### Building the tutorials
 
-GStreamer provides a few tutorials in the `xcode iOS` folder inside
-the `.dmg` file. Copy them out of the package and into a more suitable
-place. We recommend that you open the project in Xcode, take a look
-at the sources and build them. This should confirm that the installation
-works and give some insight on how simple it is to mix Objective-C and C
-code.
+The tutorials code are in the
+[gst-docs](https://cgit.freedesktop.org/gstreamer/gst-docs/) in the
+`tutorials/xcode iOS` folder. We recommend that you open the project
+in Xcode, take a look at the sources and build them. This should
+confirm that the installation works and give some insight on how
+simple it is to mix Objective-C and C code.
 
 #### Creating new projects
 

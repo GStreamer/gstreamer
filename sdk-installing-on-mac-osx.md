@@ -75,10 +75,10 @@ following [link](https://developer.apple.com/library/mac/#documentation/MacOSX/C
 
 ### Building the tutorials
 
-The tutorial's code, along with project files and a solution file for
-them all are included in the SDK. The source code and the XCode project
-files are located
-in `/Library/Frameworks/GStreamer.framework/Current/share/gst-sdk/tutorials.`
+The tutorials code, along with project files and a solution file for
+them all, are in the
+[gst-docs](https://cgit.freedesktop.org/gstreamer/gst-docs/) in the
+`tutorials` subdirectory.
 
 To start building the tutorials, create a new folder in your Documents
 directory and copy the

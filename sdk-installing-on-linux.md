@@ -46,13 +46,13 @@ the `configure` script from inside the `gst-sdk-shell` environment.
 #### Getting the tutorial's source code
 
 The source code for the tutorials can be copied and pasted from the
-tutorial pages into a text file, but, for convenience, it is also
-available in a GIT repository and distributed with the SDK.
+tutorial pages into a text file, but, for convenience, it is also available
+in a GIT repository in the `tutorials` subdirectory.
 
 The GIT repository can be cloned with:
 
 ```
-git clone git://anongit.freedesktop.org/gstreamer/gst-sdk-tutorials
+git clone git://anongit.freedesktop.org/gstreamer/gst-docs
 ```
 
 #### Building the tutorials
