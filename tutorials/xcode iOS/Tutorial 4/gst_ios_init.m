@@ -536,7 +536,7 @@ gst_ios_init (void)
   g_setenv ("XDG_DATA_HOME", resources_dir, TRUE);
   g_setenv ("FONTCONFIG_PATH", resources_dir, TRUE);
 
-  ca_certificates = g_build_filename (resources_dir, "ssl", "certs", "ca-certifcates.crt", NULL);
+  ca_certificates = g_build_filename (resources_dir, "ssl", "certs", "ca-certificates.crt", NULL);
   g_setenv ("CA_CERTIFICATES", ca_certificates, TRUE);
   g_free (ca_certificates);
     

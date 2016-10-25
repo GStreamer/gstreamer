@@ -12,6 +12,8 @@
 		63A43C571DBEBE770017F03D /* Images-4.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C561DBEBE770017F03D /* Images-4.xcassets */; };
 		63A43C591DBEBE850017F03D /* Images-5.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C581DBEBE850017F03D /* Images-5.xcassets */; };
 		63A43C5B1DBEBEC40017F03D /* Images-3.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C5A1DBEBEC40017F03D /* Images-3.xcassets */; };
+		63A43C5F1DBECF6C0017F03D /* ssl in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C5E1DBECF6C0017F03D /* ssl */; };
+		63A43C611DBED0600017F03D /* ssl in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C5C1DBECF5B0017F03D /* ssl */; };
 		C67B40CD172EBEA3008359CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CC172EBEA3008359CC /* UIKit.framework */; };
 		C67B40CF172EBEA3008359CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CE172EBEA3008359CC /* Foundation.framework */; };
 		C67B40D1172EBEA3008359CC /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D0172EBEA3008359CC /* CoreGraphics.framework */; };
@@ -99,6 +101,8 @@
 		63A43C561DBEBE770017F03D /* Images-4.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Images-4.xcassets"; sourceTree = "<group>"; };
 		63A43C581DBEBE850017F03D /* Images-5.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Images-5.xcassets"; sourceTree = "<group>"; };
 		63A43C5A1DBEBEC40017F03D /* Images-3.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Images-3.xcassets"; sourceTree = "<group>"; };
+		63A43C5C1DBECF5B0017F03D /* ssl */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ssl; sourceTree = "<group>"; };
+		63A43C5E1DBECF6C0017F03D /* ssl */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ssl; sourceTree = "<group>"; };
 		C67B40C9172EBEA3008359CC /* Tutorial 1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tutorial 1.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C67B40CC172EBEA3008359CC /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		C67B40CE172EBEA3008359CC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -393,6 +397,7 @@
 		C68B1D8E17465EB7004FD7D0 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				63A43C5C1DBECF5B0017F03D /* ssl */,
 				C68C527B174D11F0007A0729 /* fonts.conf */,
 				C68C527D174D11F0007A0729 /* Ubuntu-R.ttf */,
 				C68B1D8F17465EB7004FD7D0 /* Tutorial 5-Info.plist */,
@@ -463,6 +468,7 @@
 		C6EB8587173BEE5E00C3953D /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				63A43C5E1DBECF6C0017F03D /* ssl */,
 				C68C5281174D137B007A0729 /* fonts.conf */,
 				C68C5283174D137B007A0729 /* Ubuntu-R.ttf */,
 				C6EB8588173BEE5E00C3953D /* Tutorial 4-Info.plist */,
@@ -624,6 +630,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63A43C611DBED0600017F03D /* ssl in Resources */,
 				C68B1D9217465EB7004FD7D0 /* InfoPlist.strings in Resources */,
 				C68B1DA117465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard in Resources */,
 				C68B1DA417465EB7004FD7D0 /* MainStoryboard_iPad.storyboard in Resources */,
@@ -655,6 +662,7 @@
 				C6EB859D173BEE5E00C3953D /* MainStoryboard_iPad.storyboard in Resources */,
 				C68C5284174D137B007A0729 /* fonts.conf in Resources */,
 				63A43C571DBEBE770017F03D /* Images-4.xcassets in Resources */,
+				63A43C5F1DBECF6C0017F03D /* ssl in Resources */,
 				C68C5286174D137B007A0729 /* Ubuntu-R.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
