@@ -264,12 +264,21 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
 static void
 gst_splitmux_reset (GstSplitMuxSink * splitmux)
 {
-  if (splitmux->mq)
+  if (splitmux->mq) {
+    gst_element_set_locked_state (splitmux->mq, TRUE);
+    gst_element_set_state (splitmux->mq, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (splitmux), splitmux->mq);
-  if (splitmux->muxer)
+  }
+  if (splitmux->muxer) {
+    gst_element_set_locked_state (splitmux->muxer, TRUE);
+    gst_element_set_state (splitmux->muxer, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (splitmux), splitmux->muxer);
-  if (splitmux->active_sink)
+  }
+  if (splitmux->active_sink) {
+    gst_element_set_locked_state (splitmux->active_sink, TRUE);
+    gst_element_set_state (splitmux->active_sink, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (splitmux), splitmux->active_sink);
+  }
 
   splitmux->sink = splitmux->active_sink = splitmux->muxer = splitmux->mq =
       NULL;
@@ -1551,6 +1560,8 @@ create_elements (GstSplitMuxSink * splitmux)
               create_element (splitmux, "mp4mux", "muxer")) == NULL)
         goto fail;
     } else {
+      /* Ensure it's not in locked state (we might be reusing an old element) */
+      gst_element_set_locked_state (provided_muxer, FALSE);
       if (!gst_bin_add (GST_BIN (splitmux), provided_muxer)) {
         g_warning ("Could not add muxer element - splitmuxsink will not work");
         gst_object_unref (provided_muxer);
@@ -1627,6 +1638,8 @@ create_sink (GstSplitMuxSink * splitmux)
         goto fail;
       splitmux->active_sink = splitmux->sink;
     } else {
+      /* Ensure it's not in locked state (we might be reusing an old element) */
+      gst_element_set_locked_state (provided_sink, FALSE);
       if (!gst_bin_add (GST_BIN (splitmux), provided_sink)) {
         g_warning ("Could not add sink elements - splitmuxsink will not work");
         gst_object_unref (provided_sink);
