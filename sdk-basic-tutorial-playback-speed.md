@@ -34,11 +34,15 @@ In [](sdk-basic-tutorial-time-management.md) seek
 events have already been shown, using a helper function to hide their
 complexity. This tutorial explains a bit more how to use these events.
 
-Step Events are a more convenient way of changing the playback rate, due
-to the reduced number of parameters needed to create them; however,
-their implementation in GStreamer still needs a bit more polishing
-so Seek Events are used in this tutorial instead.
-**FIXME: Is that even true ???**
+Step Events are a more convenient way of changing the playback rate,
+due to the reduced number of parameters needed to create them;
+however, they have some downsides, so Seek Events are used in this
+tutorial instead. Step events only affect the sink (at the end of the
+pipeline), so they will only work if the rest of the pipeline can
+support going at a different speed, Seek events go all the way through
+the pipeline so every element can react to them. The upside of Step
+events is that they are much faster to act. Step events are also
+unable to change the playback direction.
 
 To use these events, they are created and then passed onto the pipeline,
 where they propagate upstream until they reach an element that can
