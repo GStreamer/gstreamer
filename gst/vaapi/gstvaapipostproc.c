@@ -344,7 +344,8 @@ should_deinterlace_buffer (GstVaapiPostproc * postproc, GstBuffer * buf)
         return TRUE;
       break;
     default:
-      GST_ERROR ("unhandled \"interlace-mode\", disabling deinterlacing");
+      GST_ERROR_OBJECT (postproc,
+          "unhandled \"interlace-mode\", disabling deinterlacing");
       break;
   }
   return FALSE;
@@ -373,12 +374,12 @@ create_output_buffer (GstVaapiPostproc * postproc)
   /* ERRORS */
 error_activate_pool:
   {
-    GST_ERROR ("failed to activate output video buffer pool");
+    GST_ERROR_OBJECT (postproc, "failed to activate output video buffer pool");
     return NULL;
   }
 error_create_buffer:
   {
-    GST_ERROR ("failed to create output video buffer");
+    GST_ERROR_OBJECT (postproc, "failed to create output video buffer");
     return NULL;
   }
 }
@@ -772,42 +773,43 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
   /* ERRORS */
 error_invalid_buffer:
   {
-    GST_ERROR ("failed to validate source buffer");
+    GST_ERROR_OBJECT (postproc, "failed to validate source buffer");
     return GST_FLOW_ERROR;
   }
 error_create_buffer:
   {
-    GST_ERROR ("failed to create output buffer");
+    GST_ERROR_OBJECT (postproc, "failed to create output buffer");
     return GST_FLOW_ERROR;
   }
 error_create_meta:
   {
-    GST_ERROR ("failed to create new output buffer meta");
+    GST_ERROR_OBJECT (postproc, "failed to create new output buffer meta");
     gst_buffer_replace (&fieldbuf, NULL);
     return GST_FLOW_ERROR;
   }
 error_create_proxy:
   {
-    GST_ERROR ("failed to create surface proxy from pool");
+    GST_ERROR_OBJECT (postproc, "failed to create surface proxy from pool");
     gst_buffer_replace (&fieldbuf, NULL);
     return GST_FLOW_ERROR;
   }
 error_op_deinterlace:
   {
-    GST_ERROR ("failed to apply deinterlacing filter");
+    GST_ERROR_OBJECT (postproc, "failed to apply deinterlacing filter");
     gst_buffer_replace (&fieldbuf, NULL);
     return GST_FLOW_NOT_SUPPORTED;
   }
 error_process_vpp:
   {
-    GST_ERROR ("failed to apply VPP filters (error %d)", status);
+    GST_ERROR_OBJECT (postproc, "failed to apply VPP filters (error %d)",
+        status);
     gst_buffer_replace (&fieldbuf, NULL);
     return GST_FLOW_ERROR;
   }
 error_push_buffer:
   {
     if (ret != GST_FLOW_FLUSHING)
-      GST_ERROR ("failed to push output buffer to video sink");
+      GST_ERROR_OBJECT (postproc, "failed to push output buffer to video sink");
     return GST_FLOW_ERROR;
   }
 }
@@ -873,18 +875,18 @@ gst_vaapipostproc_process (GstBaseTransform * trans, GstBuffer * inbuf,
   /* ERRORS */
 error_invalid_buffer:
   {
-    GST_ERROR ("failed to validate source buffer");
+    GST_ERROR_OBJECT (postproc, "failed to validate source buffer");
     return GST_FLOW_ERROR;
   }
 error_create_buffer:
   {
-    GST_ERROR ("failed to create output buffer");
+    GST_ERROR_OBJECT (postproc, "failed to create output buffer");
     return GST_FLOW_EOS;
   }
 error_push_buffer:
   {
     if (ret != GST_FLOW_FLUSHING)
-      GST_ERROR ("failed to push output buffer to video sink");
+      GST_ERROR_OBJECT (postproc, "failed to push output buffer to video sink");
     return GST_FLOW_EOS;
   }
 }
@@ -893,6 +895,7 @@ static GstFlowReturn
 gst_vaapipostproc_passthrough (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
+  GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
   GstVaapiVideoMeta *meta;
 
   /* No video processing needed, simply copy buffer metadata */
@@ -900,14 +903,14 @@ gst_vaapipostproc_passthrough (GstBaseTransform * trans, GstBuffer * inbuf,
   if (!meta)
     goto error_invalid_buffer;
 
-  append_output_buffer_metadata (GST_VAAPIPOSTPROC (trans), outbuf, inbuf,
+  append_output_buffer_metadata (postproc, outbuf, inbuf,
       GST_BUFFER_COPY_TIMESTAMPS);
   return GST_FLOW_OK;
 
   /* ERRORS */
 error_invalid_buffer:
   {
-    GST_ERROR ("failed to validate source buffer");
+    GST_ERROR_OBJECT (postproc, "failed to validate source buffer");
     return GST_FLOW_ERROR;
   }
 }
@@ -1071,7 +1074,7 @@ ensure_allowed_srcpad_caps (GstVaapiPostproc * postproc)
   /* Create initial caps from pad template */
   out_caps = gst_caps_from_string (gst_vaapipostproc_src_caps_str);
   if (!out_caps) {
-    GST_ERROR ("failed to create VA src caps");
+    GST_ERROR_OBJECT (postproc, "failed to create VA src caps");
     return FALSE;
   }
 
@@ -1194,7 +1197,7 @@ gst_vaapipostproc_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       ret = gst_vaapipostproc_process_vpp (trans, buf, outbuf);
       if (ret != GST_FLOW_NOT_SUPPORTED)
         goto done;
-      GST_WARNING ("unsupported VPP filters. Disabling");
+      GST_WARNING_OBJECT (postproc, "unsupported VPP filters. Disabling");
     }
 
     /* Only append picture structure meta data (top/bottom field) */
