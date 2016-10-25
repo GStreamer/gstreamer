@@ -36,8 +36,10 @@ gst_pbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_re
     fallback : ['gst-plugins-base', 'pbutils_dep'])
 gst_video_dep = dependency('gstreamer-video-' + apiversion, version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
-gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
-  fallback : ['gstreamer', 'gst_check_dep'])
+if host_machine.system() != 'windows'
+  gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+    fallback : ['gstreamer', 'gst_check_dep'])
+endif
 glib_dep = dependency('glib-2.0', version: glib_req)
 gio_dep = dependency('gio-2.0', version: glib_req)
 gmodule_dep = dependency('gmodule-2.0', version: glib_req)
