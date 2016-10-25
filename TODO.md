@@ -6,8 +6,6 @@ gstreamer.com content to hotdoc
 Pages to review:
  - [installing]
    - sdk-installing-on-windows.md
-   - sdk-installing-for-android-development.md
-     - Need to update/review the plugins list
 
 For-later pages:
  - sdk-qt-tutorials.md [tpm: this should all be rewritten from scratch with qmlglsink; QtGStreamer is outdated and unmaintained, we should not promote it]
