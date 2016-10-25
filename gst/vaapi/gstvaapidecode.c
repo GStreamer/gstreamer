@@ -219,7 +219,8 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
     return FALSE;
   }
 #if (USE_GLX || USE_EGL)
-  if (!GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (decode)) {
+  if (!GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (decode) &&
+      gst_vaapi_display_has_opengl (GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))) {
     out_caps = gst_caps_make_writable (out_caps);
     gst_caps_append (out_caps,
         gst_caps_from_string (GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS));
