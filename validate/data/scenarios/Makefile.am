@@ -24,7 +24,8 @@ scenarios_DATA = simple_seeks.scenario \
                  change_state_intensive.scenario\
                  play_15s.scenario \
                  switch_audio_track.scenario \
-                 setup_sink_props_max_lateness.scenario
+                 setup_sink_props_max_lateness.scenario \
+		 trick_mode_seeks.scenario
 
 EXTRA_DIST = simple_seeks.scenario \
              seek_forward.scenario \
