@@ -329,14 +329,12 @@ gst_gl_cocoa_draw_cb (GstGLWindowCocoa *window_cocoa)
   GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
   GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
 
-  if (gst_gl_window_is_running (window)) {
-    if (![priv->internal_win_id isClosed]) {
-     GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
+  if (window_cocoa->priv->internal_win_id && ![priv->internal_win_id isClosed]) {
+   GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
 
-      /* draw opengl scene in the back buffer */
-      if (window->draw)
-        window->draw (window->draw_data);
-    }
+    /* draw opengl scene in the back buffer */
+    if (window->draw)
+      window->draw (window->draw_data);
   }
 }
 
@@ -348,7 +346,7 @@ gst_gl_cocoa_resize_cb (GstGLNSView * view, guint width, guint height)
   GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
   GstGLContext *context = gst_gl_window_get_context (window);
 
-  if (gst_gl_window_is_running (window) && ![window_cocoa->priv->internal_win_id isClosed]) {
+  if (window_cocoa->priv->internal_win_id && ![window_cocoa->priv->internal_win_id isClosed]) {
     const GstGLFuncs *gl;
     NSRect bounds = [view bounds];
     NSRect visibleRect = [view visibleRect];

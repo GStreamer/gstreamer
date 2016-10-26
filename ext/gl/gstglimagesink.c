@@ -2326,89 +2326,86 @@ static gboolean
 gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
 {
   GstGLWindow *window;
-  gboolean alive;
   GstBuffer *old_stored_buffer[2], *old_sync;
+  gulong handler_id;
 
   window = gst_gl_context_get_window (gl_sink->context);
   if (!window)
     return FALSE;
 
-  if (gst_gl_window_is_running (window)) {
-    gulong handler_id =
-        g_signal_handler_find (GST_ELEMENT_PARENT (gl_sink), G_SIGNAL_MATCH_ID,
-        gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_DRAW], 0,
-        NULL, NULL, NULL);
+  handler_id =
+      g_signal_handler_find (GST_ELEMENT_PARENT (gl_sink), G_SIGNAL_MATCH_ID,
+      gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_DRAW], 0,
+      NULL, NULL, NULL);
 
-    if (G_UNLIKELY (!gl_sink->redisplay_shader) && (!handler_id
-            || !gl_sink->other_context)) {
-      gst_gl_window_send_message (window,
-          GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay), gl_sink);
+  if (G_UNLIKELY (!gl_sink->redisplay_shader) && (!handler_id
+          || !gl_sink->other_context)) {
+    gst_gl_window_send_message (window,
+        GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay), gl_sink);
 
-      /* if the shader is still null it means it failed to be useable */
-      if (G_UNLIKELY (!gl_sink->redisplay_shader)) {
-        gst_object_unref (window);
-        return FALSE;
-      }
-
-      gst_gl_window_set_preferred_size (window, GST_VIDEO_SINK_WIDTH (gl_sink),
-          GST_VIDEO_SINK_HEIGHT (gl_sink));
-      gst_gl_window_show (window);
-    }
-
-    /* Recreate the output texture if needed */
-    GST_GLIMAGE_SINK_LOCK (gl_sink);
-    if (gl_sink->window_resized) {
-      gl_sink->window_resized = FALSE;
-      GST_GLIMAGE_SINK_UNLOCK (gl_sink);
-      GST_DEBUG_OBJECT (gl_sink, "Sending reconfigure event on sinkpad.");
-      gst_pad_push_event (GST_BASE_SINK (gl_sink)->sinkpad,
-          gst_event_new_reconfigure ());
-      GST_GLIMAGE_SINK_LOCK (gl_sink);
-    }
-
-    if (gl_sink->output_mode_changed && gl_sink->input_buffer != NULL) {
-      GST_DEBUG ("Recreating output after mode/size change");
-      update_output_format (gl_sink);
-      prepare_next_buffer (gl_sink);
-    }
-
-    if (gl_sink->next_buffer == NULL) {
-      /* Nothing to display yet */
-      GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+    /* if the shader is still null it means it failed to be useable */
+    if (G_UNLIKELY (!gl_sink->redisplay_shader)) {
       gst_object_unref (window);
-      return TRUE;
+      return FALSE;
     }
 
-    /* Avoid to release the texture while drawing */
-    gl_sink->redisplay_texture = gl_sink->next_tex;
-    old_stored_buffer[0] = gl_sink->stored_buffer[0];
-    old_stored_buffer[1] = gl_sink->stored_buffer[1];
-    gl_sink->stored_buffer[0] = gst_buffer_ref (gl_sink->next_buffer);
-    if (gl_sink->next_buffer2)
-      gl_sink->stored_buffer[1] = gst_buffer_ref (gl_sink->next_buffer2);
-    else
-      gl_sink->stored_buffer[1] = NULL;
-
-    old_sync = gl_sink->stored_sync;
-    if (gl_sink->next_sync)
-      gl_sink->stored_sync = gst_buffer_ref (gl_sink->next_sync);
-    else
-      gl_sink->stored_sync = NULL;
-    gl_sink->stored_sync_meta = gl_sink->next_sync_meta;
-    GST_GLIMAGE_SINK_UNLOCK (gl_sink);
-
-    gst_buffer_replace (old_stored_buffer, NULL);
-    gst_buffer_replace (old_stored_buffer + 1, NULL);
-    if (old_sync)
-      gst_buffer_unref (old_sync);
-
-    /* Drawing is asynchronous: gst_gl_window_draw is not blocking
-     * It means that it does not wait for stuff to be executed in other threads
-     */
-    gst_gl_window_draw (window);
+    gst_gl_window_set_preferred_size (window, GST_VIDEO_SINK_WIDTH (gl_sink),
+        GST_VIDEO_SINK_HEIGHT (gl_sink));
+    gst_gl_window_show (window);
   }
-  alive = gst_gl_window_is_running (window);
+
+  /* Recreate the output texture if needed */
+  GST_GLIMAGE_SINK_LOCK (gl_sink);
+  if (gl_sink->window_resized) {
+    gl_sink->window_resized = FALSE;
+    GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+    GST_DEBUG_OBJECT (gl_sink, "Sending reconfigure event on sinkpad.");
+    gst_pad_push_event (GST_BASE_SINK (gl_sink)->sinkpad,
+        gst_event_new_reconfigure ());
+    GST_GLIMAGE_SINK_LOCK (gl_sink);
+  }
+
+  if (gl_sink->output_mode_changed && gl_sink->input_buffer != NULL) {
+    GST_DEBUG ("Recreating output after mode/size change");
+    update_output_format (gl_sink);
+    prepare_next_buffer (gl_sink);
+  }
+
+  if (gl_sink->next_buffer == NULL) {
+    /* Nothing to display yet */
+    GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+    gst_object_unref (window);
+    return TRUE;
+  }
+
+  /* Avoid to release the texture while drawing */
+  gl_sink->redisplay_texture = gl_sink->next_tex;
+  old_stored_buffer[0] = gl_sink->stored_buffer[0];
+  old_stored_buffer[1] = gl_sink->stored_buffer[1];
+  gl_sink->stored_buffer[0] = gst_buffer_ref (gl_sink->next_buffer);
+  if (gl_sink->next_buffer2)
+    gl_sink->stored_buffer[1] = gst_buffer_ref (gl_sink->next_buffer2);
+  else
+    gl_sink->stored_buffer[1] = NULL;
+
+  old_sync = gl_sink->stored_sync;
+  if (gl_sink->next_sync)
+    gl_sink->stored_sync = gst_buffer_ref (gl_sink->next_sync);
+  else
+    gl_sink->stored_sync = NULL;
+  gl_sink->stored_sync_meta = gl_sink->next_sync_meta;
+  GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+
+  gst_buffer_replace (old_stored_buffer, NULL);
+  gst_buffer_replace (old_stored_buffer + 1, NULL);
+  if (old_sync)
+    gst_buffer_unref (old_sync);
+
+  /* Drawing is asynchronous: gst_gl_window_draw is not blocking
+   * It means that it does not wait for stuff to be executed in other threads
+   */
+  gst_gl_window_draw (window);
   gst_object_unref (window);
 
-  return alive;
+  return TRUE;
 }

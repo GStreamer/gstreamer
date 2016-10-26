@@ -111,9 +111,10 @@ struct _GstGLWindow {
  * GstGLWindowClass:
  * @parent_class: Parent class
  * @get_display: Gets the current windowing system display connection
- * @set_window_handle: Set a window to render into
- * @get_window_handle: Gets the current window that this #GstGLWindow is
- *                     rendering into
+ * @set_window_handle: Set a window handle to render into
+ * @get_window_handle: Gets the current window handle that this #GstGLWindow is
+ *                     rendering into.  This may return a different value to
+ *                     what is passed into @set_window_handle
  * @draw: redraw the window with the specified dimensions
  * @run: run the mainloop
  * @quit: send a quit to the mainloop
@@ -185,8 +186,6 @@ GST_EXPORT
 void     gst_gl_window_run                  (GstGLWindow *window);
 GST_EXPORT
 void     gst_gl_window_quit                 (GstGLWindow *window);
-GST_EXPORT
-gboolean gst_gl_window_is_running           (GstGLWindow *window);
 GST_EXPORT
 void     gst_gl_window_send_message         (GstGLWindow *window,
                                              GstGLWindowCB callback,
