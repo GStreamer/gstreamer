@@ -85,8 +85,6 @@ struct _GstGLWindow {
   GstGLDisplay *display;
   GWeakRef      context_ref;
 
-  guintptr      external_gl_context;
-
   gboolean      is_drawing;
 
   GstGLWindowCB         draw;
