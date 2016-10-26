@@ -199,7 +199,22 @@ init_generated (GstDtlsCertificate * self)
     priv->private_key = NULL;
     return;
   }
+
+  /* XXX: RSA_generate_key is actually deprecated in 0.9.8 */
+#if OPENSSL_VERSION_NUMBER < 0x10100001L
   rsa = RSA_generate_key (2048, RSA_F4, NULL, NULL);
+#else
+  rsa = RSA_new ();
+  if (rsa != NULL) {
+    BIGNUM *e = BN_new ();
+    if (e != NULL && BN_set_word (e, RSA_F4)
+        && RSA_generate_key_ex (rsa, 2048, e, NULL)) {
+      RSA_free (rsa);
+      rsa = NULL;
+    }
+    BN_free (e);
+  }
+#endif
 
   if (!rsa) {
     GST_WARNING_OBJECT (self, "failed to generate RSA");
