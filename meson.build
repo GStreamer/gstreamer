@@ -29,8 +29,6 @@ endif
 
 if gst_libav.length() == 0
     message('WARNING: gst-libav not built as ffmpeg >= n3.1.2 not found on the system')
-else
-    subprojects += gst_libav
 endif
 
 if get_option('enable_python')
@@ -46,7 +44,7 @@ if not get_option('disable_gst_plugins_bad')
 endif
 
 if not get_option('disable_gst_libav')
-    subprojects += ['gst-libav']
+    subprojects += gst_libav
 endif
 
 if not get_option('disable_gst_devtools')
