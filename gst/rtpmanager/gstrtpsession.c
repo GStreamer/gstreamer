@@ -293,7 +293,7 @@ static GstFlowReturn gst_rtp_session_process_rtp (RTPSession * sess,
 static GstFlowReturn gst_rtp_session_send_rtp (RTPSession * sess,
     RTPSource * src, gpointer data, gpointer user_data);
 static GstFlowReturn gst_rtp_session_send_rtcp (RTPSession * sess,
-    RTPSource * src, GstBuffer * buffer, gboolean eos, gpointer user_data);
+    RTPSource * src, GstBuffer * buffer, gpointer user_data);
 static GstFlowReturn gst_rtp_session_sync_rtcp (RTPSession * sess,
     GstBuffer * buffer, gpointer user_data);
 static gint gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
@@ -1156,6 +1156,22 @@ rtcp_thread (GstRtpSession * rtpsession)
     GST_RTP_SESSION_UNLOCK (rtpsession);
     rtp_session_on_timeout (session, current_time, ntpnstime, running_time);
     GST_RTP_SESSION_LOCK (rtpsession);
+
+    if (!rtp_session_get_num_sources (session)) {
+      /* when no sources left in the session, all of the them have went
+       * BYE at some point and removed, we can send EOS to the
+       * pipeline. */
+      GstPad *rtcp_src = rtpsession->send_rtcp_src;
+
+      if (rtcp_src) {
+        gst_object_ref (rtcp_src);
+        GST_LOG_OBJECT (rtpsession, "sending EOS");
+        GST_RTP_SESSION_UNLOCK (rtpsession);
+        gst_pad_push_event (rtpsession->send_rtcp_src, gst_event_new_eos ());
+        GST_RTP_SESSION_LOCK (rtpsession);
+        gst_object_unref (rtcp_src);
+      }
+    }
   }
   /* mark the thread as stopped now */
   rtpsession->priv->thread_stopped = TRUE;
@@ -1413,11 +1429,10 @@ do_rtcp_events (GstRtpSession * rtpsession, GstPad * srcpad)
 }
 
 /* called when the session manager has an RTCP packet ready for further
- * sending. The eos flag is set when an EOS event should be sent downstream as
- * well. */
+ * sending. */
 static GstFlowReturn
 gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
-    GstBuffer * buffer, gboolean eos, gpointer user_data)
+    GstBuffer * buffer, gpointer user_data)
 {
   GstFlowReturn result;
   GstRtpSession *rtpsession;
@@ -1440,11 +1455,6 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
     GST_LOG_OBJECT (rtpsession, "sending RTCP");
     result = gst_pad_push (rtcp_src, buffer);
 
-    /* we have to send EOS after this packet */
-    if (eos) {
-      GST_LOG_OBJECT (rtpsession, "sending EOS");
-      gst_pad_push_event (rtcp_src, gst_event_new_eos ());
-    }
     gst_object_unref (rtcp_src);
   } else {
     GST_RTP_SESSION_UNLOCK (rtpsession);
@@ -2055,7 +2065,6 @@ gst_rtp_session_event_send_rtcp_src (GstPad * pad, GstObject * parent,
 
   return ret;
 }
-
 
 static gboolean
 gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstObject * parent,
