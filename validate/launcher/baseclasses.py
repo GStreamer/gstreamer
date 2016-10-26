@@ -1714,7 +1714,7 @@ class MediaDescriptor(Loggable):
                 scenario.get_min_media_duration())
             return False
 
-        for track_type in ['audio', 'subtitle']:
+        for track_type in ['audio', 'subtitle', 'video']:
             if self.get_num_tracks(track_type) < scenario.get_min_tracks(track_type):
                 self.debug("%s -- %s | At least %s %s track needed  < %s"
                            % (scenario, self.get_uri(), track_type,
