@@ -1371,6 +1371,9 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
 
   if (templ->name_template) {
     if (g_str_equal (templ->name_template, "video")) {
+      if (splitmux->have_video)
+        goto already_have_video;
+
       /* FIXME: Look for a pad template with matching caps, rather than by name */
       mux_template =
           gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
@@ -1454,12 +1457,20 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
   gst_object_unref (mq_sink);
   gst_object_unref (mq_src);
 
+  if (is_video)
+    splitmux->have_video = TRUE;
+
   gst_pad_set_active (res, TRUE);
   gst_element_add_pad (element, res);
+
   GST_SPLITMUX_UNLOCK (splitmux);
 
   return res;
 fail:
+  GST_SPLITMUX_UNLOCK (splitmux);
+  return NULL;
+already_have_video:
+  GST_DEBUG_OBJECT (splitmux, "video sink pad already requested");
   GST_SPLITMUX_UNLOCK (splitmux);
   return NULL;
 }
@@ -1506,6 +1517,11 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
   gst_object_unref (mqsink);
   gst_object_unref (mqsrc);
   gst_object_unref (muxpad);
+
+  if (GST_PAD_PAD_TEMPLATE (pad) &&
+      g_str_equal (GST_PAD_TEMPLATE_NAME_TEMPLATE (GST_PAD_PAD_TEMPLATE (pad)),
+          "video"))
+    splitmux->have_video = FALSE;
 
   gst_element_remove_pad (element, pad);
 

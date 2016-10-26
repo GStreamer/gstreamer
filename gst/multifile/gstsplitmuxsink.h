@@ -129,6 +129,8 @@ struct _GstSplitMuxSink {
 
   gboolean opening_first_fragment;
   gboolean switching_fragment;
+
+  gboolean have_video;
 };
 
 struct _GstSplitMuxSinkClass {
