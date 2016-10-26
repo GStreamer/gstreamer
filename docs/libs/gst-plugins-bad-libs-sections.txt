@@ -1770,6 +1770,9 @@ gst_player_config_get_position_update_interval
 gst_player_config_set_user_agent
 gst_player_config_get_user_agent
 
+gst_player_config_set_seek_accurate
+gst_player_config_get_seek_accurate
+
 <SUBSECTION Standard>
 GST_IS_PLAYER
 GST_IS_PLAYER_CLASS

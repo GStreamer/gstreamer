@@ -7,8 +7,10 @@ EXPORTS
 	gst_player_audio_info_get_type
 	gst_player_color_balance_type_get_name
 	gst_player_color_balance_type_get_type
+	gst_player_config_get_seek_accurate
 	gst_player_config_get_position_update_interval
 	gst_player_config_get_user_agent
+	gst_player_config_set_seek_accurate
 	gst_player_config_set_position_update_interval
 	gst_player_config_set_user_agent
 	gst_player_error_get_name

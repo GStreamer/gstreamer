@@ -85,6 +85,7 @@ typedef enum
 {
   CONFIG_QUARK_USER_AGENT = 0,
   CONFIG_QUARK_POSITION_INTERVAL_UPDATE,
+  CONFIG_QUARK_ACCURATE_SEEK,
 
   CONFIG_QUARK_MAX
 } ConfigQuarkId;
@@ -92,6 +93,7 @@ typedef enum
 static const gchar *_config_quark_strings[] = {
   "user-agent",
   "position-interval-update",
+  "accurate-seek",
 };
 
 GQuark _config_quark_table[CONFIG_QUARK_MAX];
@@ -267,6 +269,7 @@ gst_player_init (GstPlayer * self)
   /* *INDENT-OFF* */
   self->config = gst_structure_new_id (QUARK_CONFIG,
       CONFIG_QUARK (POSITION_INTERVAL_UPDATE), G_TYPE_UINT, DEFAULT_POSITION_UPDATE_INTERVAL_MS,
+      CONFIG_QUARK (ACCURATE_SEEK), G_TYPE_BOOLEAN, FALSE,
       NULL);
   /* *INDENT-ON* */
 
@@ -2970,6 +2973,7 @@ gst_player_seek_internal_locked (GstPlayer * self)
   GstStateChangeReturn state_ret;
   GstEvent *s_event;
   GstSeekFlags flags = 0;
+  gboolean accurate = FALSE;
 
   if (self->seek_source) {
     g_source_destroy (self->seek_source);
@@ -3004,6 +3008,14 @@ gst_player_seek_internal_locked (GstPlayer * self)
   self->is_eos = FALSE;
 
   flags |= GST_SEEK_FLAG_FLUSH;
+
+  accurate = gst_player_config_get_seek_accurate (self->config);
+
+  if (accurate) {
+    flags |= GST_SEEK_FLAG_ACCURATE;
+  } else {
+    flags &= ~GST_SEEK_FLAG_ACCURATE;
+  }
 
   if (rate != 1.0) {
     flags |= GST_SEEK_FLAG_TRICKMODE;
@@ -4201,4 +4213,52 @@ gst_player_config_get_position_update_interval (const GstStructure * config)
       CONFIG_QUARK (POSITION_INTERVAL_UPDATE), G_TYPE_UINT, &interval, NULL);
 
   return interval;
+}
+
+/**
+ * gst_player_config_set_seek_accurate:
+ * @player: #GstPlayer instance
+ * @accurate: accurate seek or not
+ *
+ * Enable or disable accurate seeking. When enabled, elements will try harder
+ * to seek as accurately as possible to the requested seek position. Generally
+ * it will be slower especially for formats that don't have any indexes or
+ * timestamp markers in the stream.
+ *
+ * If accurate seeking is disabled, elements will seek as close as the request
+ * position without slowing down seeking too much.
+ *
+ * Accurate seeking is disabled by default.
+ *
+ * Since: 1.12
+ */
+void
+gst_player_config_set_seek_accurate (GstPlayer * self, gboolean accurate)
+{
+  GstStructure *config = self->config;
+  g_return_if_fail (config != NULL);
+
+  gst_structure_id_set (config,
+      CONFIG_QUARK (ACCURATE_SEEK), G_TYPE_BOOLEAN, accurate, NULL);
+}
+
+/**
+ * gst_player_config_get_seek_accurate:
+ * @config: a #GstPlayer configuration
+ *
+ * Returns: %TRUE if accurate seeking is enabled
+ *
+ * Since 1.12
+ */
+gboolean
+gst_player_config_get_seek_accurate (const GstStructure * config)
+{
+  gboolean accurate = FALSE;
+
+  g_return_val_if_fail (config != NULL, FALSE);
+
+  gst_structure_id_get (config,
+      CONFIG_QUARK (ACCURATE_SEEK), G_TYPE_BOOLEAN, &accurate, NULL);
+
+  return accurate;
 }

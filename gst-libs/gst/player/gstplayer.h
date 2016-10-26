@@ -202,6 +202,9 @@ void           gst_player_config_set_position_update_interval  (GstStructure * c
                                                                 guint          interval);
 guint          gst_player_config_get_position_update_interval  (const GstStructure * config);
 
+void           gst_player_config_set_seek_accurate (GstPlayer * player, gboolean accurate);
+gboolean       gst_player_config_get_seek_accurate (const GstStructure * config);
+
 G_END_DECLS
 
 #endif /* __GST_PLAYER_H__ */
