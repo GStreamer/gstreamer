@@ -689,7 +689,8 @@ gst_rtp_h263_pay_gobfinder (GstRtpH263Pay * rtph263pay,
   range = (rtph263pay->data - current) + rtph263pay->available_data;
 
 
-  GST_DEBUG_OBJECT (rtph263pay, "Searching for next GOB, data:%p, len:%u, payload_len:%p,"
+  GST_DEBUG_OBJECT (rtph263pay,
+      "Searching for next GOB, data:%p, len:%u, payload_len:%p,"
       " current:%p, range:%u", rtph263pay->data, rtph263pay->available_data,
       boundry->end + 1, current, range);
 
@@ -700,16 +701,18 @@ gst_rtp_h263_pay_gobfinder (GstRtpH263Pay * rtph263pay,
   for (i = 3; i < range - 3; i++) {
     if ((current[i] == 0x0) &&
         (current[i + 1] == 0x0) && (current[i + 2] >> 7 == 0x1)) {
-      GST_LOG_OBJECT (rtph263pay, "GOB end found at: %p start: %p len: %u", current + i - 1,
-          boundry->end + 1, (guint) (current + i - boundry->end + 2));
-      gst_rtp_h263_pay_boundry_init (boundry, boundry->end + 1,
-          current + i - 1, 0, 0);
+      GST_LOG_OBJECT (rtph263pay, "GOB end found at: %p start: %p len: %u",
+          current + i - 1, boundry->end + 1,
+          (guint) (current + i - boundry->end + 2));
+      gst_rtp_h263_pay_boundry_init (boundry, boundry->end + 1, current + i - 1,
+          0, 0);
 
       return TRUE;
     }
   }
 
-  GST_DEBUG_OBJECT (rtph263pay, "Couldn't find any new GBSC in this frame, range:%u", range);
+  GST_DEBUG_OBJECT (rtph263pay,
+      "Couldn't find any new GBSC in this frame, range:%u", range);
 
   gst_rtp_h263_pay_boundry_init (boundry, boundry->end + 1,
       (guint8 *) (rtph263pay->data + rtph263pay->available_data - 1), 0, 0);
@@ -812,7 +815,8 @@ gst_rtp_h263_pay_decode_mcbpc_P (GstRtpH263Pay * rtph263pay, guint32 value)
  * decode CBPY and return index in table or -1 if not found
  */
 static gint
-gst_rtp_h263_pay_decode_cbpy (GstRtpH263Pay * rtph263pay, guint32 value, const guint8 cbpy_table[16][7])
+gst_rtp_h263_pay_decode_cbpy (GstRtpH263Pay * rtph263pay, guint32 value,
+    const guint8 cbpy_table[16][7])
 {
 
   gint i;
@@ -890,8 +894,9 @@ gst_rtp_h263_pay_decode_tcoef (GstRtpH263Pay * rtph263pay, guint32 value)
  */
 
 static gint
-gst_rtp_h263_pay_move_window_right (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * context, guint n,
-    guint rest_bits, guint8 ** orig_data, guint8 ** data_end)
+gst_rtp_h263_pay_move_window_right (GstRtpH263Pay * rtph263pay,
+    GstRtpH263PayContext * context, guint n, guint rest_bits,
+    guint8 ** orig_data, guint8 ** data_end)
 {
 
   GST_TRACE_OBJECT (rtph263pay,
@@ -948,8 +953,9 @@ gst_rtp_h263_pay_move_window_right (GstRtpH263Pay * rtph263pay, GstRtpH263PayCon
  * data must be placed on first MB byte
  */
 static GstRtpH263PayMB *
-gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * context,
-    GstRtpH263PayGob * gob, GstRtpH263PayMB * macroblock, guint mba)
+gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay,
+    GstRtpH263PayContext * context, GstRtpH263PayGob * gob,
+    GstRtpH263PayMB * macroblock, guint mba)
 {
   guint mb_type_index;
   guint cbpy_type_index;
@@ -967,8 +973,9 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
     mac->sbit = 0;
   }
 
-  GST_LOG_OBJECT (rtph263pay, "current_pos:%p, end:%p, rest_bits:%d, window:0x%08x",
-      mac->start, mac->end, macroblock->ebit, context->window);
+  GST_LOG_OBJECT (rtph263pay,
+      "current_pos:%p, end:%p, rest_bits:%d, window:0x%08x", mac->start,
+      mac->end, macroblock->ebit, context->window);
 
   if (context->piclayer->ptype_pictype == 0) {
     //We have an I frame
@@ -977,17 +984,19 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
     guint ind;
 
     //Step 2 decode MCBPC I
-    mb_type_index = gst_rtp_h263_pay_decode_mcbpc_I (rtph263pay, context->window);
+    mb_type_index =
+        gst_rtp_h263_pay_decode_mcbpc_I (rtph263pay, context->window);
 
     GST_TRACE_OBJECT (rtph263pay, "MCBPC index: %d", mb_type_index);
     if (mb_type_index == -1) {
-      GST_ERROR_OBJECT (rtph263pay, "MB index shouldn't be -1 in window: %08x", context->window);
+      GST_ERROR_OBJECT (rtph263pay, "MB index shouldn't be -1 in window: %08x",
+          context->window);
       goto beach;
     }
 
     mac->ebit =
-        gst_rtp_h263_pay_move_window_right (rtph263pay, context, mcbpc_I[mb_type_index][2],
-        mac->ebit, &mac->end, &gob->end);
+        gst_rtp_h263_pay_move_window_right (rtph263pay, context,
+        mcbpc_I[mb_type_index][2], mac->ebit, &mac->end, &gob->end);
 
     mac->mb_type = mcbpc_I[mb_type_index][5];
 
@@ -996,17 +1005,19 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
       return mac;
     }
     //Step 3 decode CBPY I
-    cbpy_type_index = gst_rtp_h263_pay_decode_cbpy (rtph263pay, context->window, cbpy_I);
+    cbpy_type_index =
+        gst_rtp_h263_pay_decode_cbpy (rtph263pay, context->window, cbpy_I);
 
     GST_TRACE_OBJECT (rtph263pay, "CBPY index: %d", cbpy_type_index);
     if (cbpy_type_index == -1) {
-      GST_ERROR_OBJECT (rtph263pay, "CBPY index shouldn't be -1 in window: %08x", context->window);
+      GST_ERROR_OBJECT (rtph263pay,
+          "CBPY index shouldn't be -1 in window: %08x", context->window);
       goto beach;
     }
 
     mac->ebit =
-        gst_rtp_h263_pay_move_window_right (rtph263pay, context, cbpy_I[cbpy_type_index][2],
-        mac->ebit, &mac->end, &gob->end);
+        gst_rtp_h263_pay_move_window_right (rtph263pay, context,
+        cbpy_I[cbpy_type_index][2], mac->ebit, &mac->end, &gob->end);
 
     //Step 4 decode rest of MB
     //MB type 1 and 4 have DQUANT - we store it for packaging purposes
@@ -1016,8 +1027,8 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
       mac->quant = (context->window >> 30);
 
       mac->ebit =
-          gst_rtp_h263_pay_move_window_right (rtph263pay, context, 2, mac->ebit, &mac->end,
-          &gob->end);
+          gst_rtp_h263_pay_move_window_right (rtph263pay, context, 2, mac->ebit,
+          &mac->end, &gob->end);
     }
     //Step 5 go trough the blocks - decode DC and TCOEF
     last = 0;
@@ -1025,8 +1036,8 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
 
       GST_TRACE_OBJECT (rtph263pay, "Decoding INTRADC and TCOEF, i:%d", i);
       mac->ebit =
-          gst_rtp_h263_pay_move_window_right (rtph263pay, context, 8, mac->ebit, &mac->end,
-          &gob->end);
+          gst_rtp_h263_pay_move_window_right (rtph263pay, context, 8, mac->ebit,
+          &mac->end, &gob->end);
 
       if (i > 3) {
         ind = mcbpc_I[mb_type_index][i - 1];
@@ -1036,12 +1047,13 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
 
       if (ind == 1) {
         while (last == 0) {
-          tcoef_type_index = gst_rtp_h263_pay_decode_tcoef (rtph263pay, context->window);
+          tcoef_type_index =
+              gst_rtp_h263_pay_decode_tcoef (rtph263pay, context->window);
 
           GST_TRACE_OBJECT (rtph263pay, "TCOEF index: %d", tcoef_type_index);
           if (tcoef_type_index == -1) {
-            GST_ERROR_OBJECT (rtph263pay, "TCOEF index shouldn't be -1 in window: %08x",
-                context->window);
+            GST_ERROR_OBJECT (rtph263pay,
+                "TCOEF index shouldn't be -1 in window: %08x", context->window);
             goto beach;
           }
           mac->ebit =
@@ -1075,29 +1087,31 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
     if ((context->window & 0x80000000) == 0x80000000) {
       //The MB is not coded
       mac->ebit =
-          gst_rtp_h263_pay_move_window_right (rtph263pay, context, 1, mac->ebit, &mac->end,
-          &gob->end);
+          gst_rtp_h263_pay_move_window_right (rtph263pay, context, 1, mac->ebit,
+          &mac->end, &gob->end);
       GST_TRACE_OBJECT (rtph263pay, "COOOOOOOOOOOD = 1");
 
       return mac;
     } else {
       //The MB is coded
       mac->ebit =
-          gst_rtp_h263_pay_move_window_right (rtph263pay, context, 1, mac->ebit, &mac->end,
-          &gob->end);
+          gst_rtp_h263_pay_move_window_right (rtph263pay, context, 1, mac->ebit,
+          &mac->end, &gob->end);
     }
 
     //Step 2 decode MCBPC P
-    mb_type_index = gst_rtp_h263_pay_decode_mcbpc_P (rtph263pay, context->window);
+    mb_type_index =
+        gst_rtp_h263_pay_decode_mcbpc_P (rtph263pay, context->window);
 
     GST_TRACE_OBJECT (rtph263pay, "MCBPC index: %d", mb_type_index);
     if (mb_type_index == -1) {
-      GST_ERROR_OBJECT (rtph263pay, "MB index shouldn't be -1 in window: %08x", context->window);
+      GST_ERROR_OBJECT (rtph263pay, "MB index shouldn't be -1 in window: %08x",
+          context->window);
       goto beach;
     }
     mac->ebit =
-        gst_rtp_h263_pay_move_window_right (rtph263pay, context, mcbpc_P[mb_type_index][2],
-        mac->ebit, &mac->end, &gob->end);
+        gst_rtp_h263_pay_move_window_right (rtph263pay, context,
+        mcbpc_P[mb_type_index][2], mac->ebit, &mac->end, &gob->end);
 
     mac->mb_type = mcbpc_P[mb_type_index][5];
 
@@ -1106,16 +1120,18 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
       return mac;
     }
     //Step 3 decode CBPY P
-    cbpy_type_index = gst_rtp_h263_pay_decode_cbpy (rtph263pay, context->window, cbpy_P);
+    cbpy_type_index =
+        gst_rtp_h263_pay_decode_cbpy (rtph263pay, context->window, cbpy_P);
 
     GST_TRACE_OBJECT (rtph263pay, "CBPY index: %d", cbpy_type_index);
     if (cbpy_type_index == -1) {
-      GST_ERROR_OBJECT (rtph263pay, "CBPY index shouldn't be -1 in window: %08x", context->window);
+      GST_ERROR_OBJECT (rtph263pay,
+          "CBPY index shouldn't be -1 in window: %08x", context->window);
       goto beach;
     }
     mac->ebit =
-        gst_rtp_h263_pay_move_window_right (rtph263pay, context, cbpy_P[cbpy_type_index][2],
-        mac->ebit, &mac->end, &gob->end);
+        gst_rtp_h263_pay_move_window_right (rtph263pay, context,
+        cbpy_P[cbpy_type_index][2], mac->ebit, &mac->end, &gob->end);
 
     //MB type 1 and 4 have DQUANT - we add it to MB object and jump over
     if (mcbpc_P[mb_type_index][5] == 4 || mcbpc_P[mb_type_index][5] == 1) {
@@ -1124,8 +1140,8 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
       mac->quant = context->window >> 30;
 
       mac->ebit =
-          gst_rtp_h263_pay_move_window_right (rtph263pay, context, 2, mac->ebit, &mac->end,
-          &gob->end);
+          gst_rtp_h263_pay_move_window_right (rtph263pay, context, 2, mac->ebit,
+          &mac->end, &gob->end);
     }
     //MB types < 3 have MVD1-4
     if (mcbpc_P[mb_type_index][5] < 3) {
@@ -1143,16 +1159,16 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
         mvd_type = gst_rtp_h263_pay_decode_mvd (rtph263pay, context->window);
 
         if (mvd_type == -1) {
-          GST_ERROR_OBJECT (rtph263pay, "MVD1-4 index shouldn't be -1 in window: %08x",
-              context->window);
+          GST_ERROR_OBJECT (rtph263pay,
+              "MVD1-4 index shouldn't be -1 in window: %08x", context->window);
           goto beach;
         }
         //set the MB mvd values
         mac->mvd[j] = mvd[mvd_type][3];
 
         mac->ebit =
-            gst_rtp_h263_pay_move_window_right (rtph263pay, context, mvd[mvd_type][2],
-            mac->ebit, &mac->end, &gob->end);
+            gst_rtp_h263_pay_move_window_right (rtph263pay, context,
+            mvd[mvd_type][2], mac->ebit, &mac->end, &gob->end);
       }
 
 
@@ -1165,8 +1181,8 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
       if (mcbpc_P[mb_type_index][5] > 2) {
         GST_TRACE_OBJECT (rtph263pay, "INTRADC coef: %d", i);
         mac->ebit =
-            gst_rtp_h263_pay_move_window_right (rtph263pay, context, 8, mac->ebit,
-            &mac->end, &gob->end);
+            gst_rtp_h263_pay_move_window_right (rtph263pay, context, 8,
+            mac->ebit, &mac->end, &gob->end);
       } else {
         GST_TRACE_OBJECT (rtph263pay, "INTRADC coef is not present");
       }
@@ -1184,12 +1200,13 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay, GstRtpH263PayContext * 
 
       if (ind == 1) {
         while (last == 0) {
-          tcoef_type_index = gst_rtp_h263_pay_decode_tcoef (rtph263pay, context->window);
+          tcoef_type_index =
+              gst_rtp_h263_pay_decode_tcoef (rtph263pay, context->window);
 
           GST_TRACE_OBJECT (rtph263pay, "TCOEF index: %d", tcoef_type_index);
           if (tcoef_type_index == -1) {
-            GST_ERROR_OBJECT (rtph263pay, "TCOEF index shouldn't be -1 in window: %08x",
-                context->window);
+            GST_ERROR_OBJECT (rtph263pay,
+                "TCOEF index shouldn't be -1 in window: %08x", context->window);
             goto beach;
           }
 
@@ -1340,7 +1357,8 @@ gst_rtp_h263_pay_A_fragment_push (GstRtpH263Pay * rtph263pay,
   pack->mode = GST_RTP_H263_PAYLOAD_HEADER_MODE_A;
   pack->outbuf = gst_rtp_buffer_new_allocate (pack->mode, 0, 0);
 
-  GST_DEBUG_OBJECT (rtph263pay, "Sending len:%d data to push function", pack->payload_len);
+  GST_DEBUG_OBJECT (rtph263pay, "Sending len:%d data to push function",
+      pack->payload_len);
 
   return gst_rtp_h263_pay_push (rtph263pay, context, pack);
 }
@@ -1443,8 +1461,8 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
     shift = 43;
 
     boundry.ebit =
-        gst_rtp_h263_pay_move_window_right (rtph263pay, context, shift, boundry.ebit,
-        &boundry.end, &gob->end);
+        gst_rtp_h263_pay_move_window_right (rtph263pay, context, shift,
+        boundry.ebit, &boundry.end, &gob->end);
 
     //We need PQUANT for mode B packages - so we store it
     gob->quant = context->window >> 27;
@@ -1455,8 +1473,8 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
     if (context->cpm == 1)
       shift += 2;
     boundry.ebit =
-        gst_rtp_h263_pay_move_window_right (rtph263pay, context, shift, boundry.ebit,
-        &boundry.end, &gob->end);
+        gst_rtp_h263_pay_move_window_right (rtph263pay, context, shift,
+        boundry.ebit, &boundry.end, &gob->end);
 
     GST_TRACE_OBJECT (rtph263pay, "window: 0x%08x", context->window);
 
@@ -1470,8 +1488,8 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
 
     //shift the last PEI field
     boundry.ebit =
-        gst_rtp_h263_pay_move_window_right (rtph263pay, context, 1, boundry.ebit,
-        &boundry.end, &gob->end);
+        gst_rtp_h263_pay_move_window_right (rtph263pay, context, 1,
+        boundry.ebit, &boundry.end, &gob->end);
 
   } else {
     //skipping GOBs 24 header bits + 5 GQUANT
@@ -1506,11 +1524,13 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
   mac = mac0 = gst_rtp_h263_pay_mb_new (&boundry, 0);
   for (mb = 0; mb < format_props[context->piclayer->ptype_srcformat][1]; mb++) {
 
-    GST_TRACE_OBJECT (rtph263pay, "================ START MB %d =================", mb);
+    GST_TRACE_OBJECT (rtph263pay,
+        "================ START MB %d =================", mb);
 
     //Find next macroblock boundaries
     ebit = mac->ebit;
-    if (!(mac = gst_rtp_h263_pay_B_mbfinder (rtph263pay, context, gob, mac, mb))) {
+    if (!(mac =
+            gst_rtp_h263_pay_B_mbfinder (rtph263pay, context, gob, mac, mb))) {
 
       GST_LOG_OBJECT (rtph263pay, "Error decoding MB - sbit: %d", 8 - ebit);
       GST_ERROR_OBJECT (rtph263pay, "Error decoding in GOB");
@@ -1539,16 +1559,19 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
       gob->end = mac->end;
       break;
     }
-    GST_DEBUG_OBJECT (rtph263pay, "Found MB: mba: %d start: %p end: %p len: %d sbit: %d ebit: %d",
+    GST_DEBUG_OBJECT (rtph263pay,
+        "Found MB: mba: %d start: %p end: %p len: %d sbit: %d ebit: %d",
         mac->mba, mac->start, mac->end, mac->length, mac->sbit, mac->ebit);
-    GST_TRACE_OBJECT (rtph263pay, "================ END MB %d =================", mb);
+    GST_TRACE_OBJECT (rtph263pay,
+        "================ END MB %d =================", mb);
   }
   gst_rtp_h263_pay_mb_destroy (mac0);
 
   mb = 0;
   first = 0;
   payload_len = boundry.end - boundry.start + 1;
-  GST_DEBUG_OBJECT (rtph263pay, "------------------------- NEW PACKAGE ----------------------");
+  GST_DEBUG_OBJECT (rtph263pay,
+      "------------------------- NEW PACKAGE ----------------------");
   while (mb < gob->nmacroblocs) {
     if (payload_len + gob->macroblocks[mb]->length < max_payload_size) {
 
@@ -1562,7 +1585,8 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
       //    first == mb - 1, payload_len);
 
       // FIXME: segfault if mb == 0 (first MB is larger than max_payload_size)
-      GST_DEBUG_OBJECT (rtph263pay, "Push B mode fragment from mb %d to %d", first, mb - 1);
+      GST_DEBUG_OBJECT (rtph263pay, "Push B mode fragment from mb %d to %d",
+          first, mb - 1);
       if (gst_rtp_h263_pay_B_fragment_push (rtph263pay, context, gob, first,
               mb - 1, &boundry)) {
         GST_ERROR_OBJECT (rtph263pay, "Oooops, there was an error sending");
@@ -1581,7 +1605,8 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
   /* Push rest */
   GST_DEBUG_OBJECT (rtph263pay, "Remainder first: %d, MB: %d", first, mb);
   if (payload_len != 0) {
-    GST_DEBUG_OBJECT (rtph263pay, "Push B mode fragment from mb %d to %d", first, mb - 1);
+    GST_DEBUG_OBJECT (rtph263pay, "Push B mode fragment from mb %d to %d",
+        first, mb - 1);
     if (gst_rtp_h263_pay_B_fragment_push (rtph263pay, context, gob, first,
             mb - 1, &boundry)) {
       GST_ERROR_OBJECT (rtph263pay, "Oooops, there was an error sending!");
@@ -1608,7 +1633,8 @@ gst_rtp_h263_send_entire_frame (GstRtpH263Pay * rtph263pay,
       rtph263pay->available_data, 0, 0, NULL, TRUE);
   pack->mode = GST_RTP_H263_PAYLOAD_HEADER_MODE_A;
 
-  GST_DEBUG_OBJECT (rtph263pay, "Available data: %d", rtph263pay->available_data);
+  GST_DEBUG_OBJECT (rtph263pay, "Available data: %d",
+      rtph263pay->available_data);
 
   pack->outbuf =
       gst_rtp_buffer_new_allocate (GST_RTP_H263_PAYLOAD_HEADER_MODE_A, 0, 0);
@@ -1658,7 +1684,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
   GST_DEBUG_OBJECT (rtph263pay, "CPM: %d", context->cpm);
 
-  GST_DEBUG_OBJECT (rtph263pay, "Payload length is: %d", rtph263pay->available_data);
+  GST_DEBUG_OBJECT (rtph263pay, "Payload length is: %d",
+      rtph263pay->available_data);
 
   /*
    * - MODE A - If normal, I and P frames,  -> mode A
@@ -1686,8 +1713,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
     gst_rtp_h263_pay_boundry_init (&bound, NULL, rtph263pay->data - 1, 0, 0);
     context->gobs =
-        (GstRtpH263PayGob **) g_malloc0 (format_props[context->
-            piclayer->ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
+        (GstRtpH263PayGob **) g_malloc0 (format_props[context->piclayer->
+            ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
 
 
     for (i = 0; i < format_props[context->piclayer->ptype_srcformat][0]; i++) {
@@ -1739,13 +1766,15 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
             GST_DEBUG_OBJECT (rtph263pay, "MODE B on GOB %d needed", i);
             if (!gst_rtp_h263_pay_mode_B_fragment (rtph263pay, context,
                     context->gobs[i])) {
-              GST_ERROR_OBJECT (rtph263pay, "There was an error fragmenting in mode B");
+              GST_ERROR_OBJECT (rtph263pay,
+                  "There was an error fragmenting in mode B");
               ret = GST_FLOW_ERROR;
               goto end;
             }
           } else {
             //IMPLEMENT C mode
-            GST_ERROR_OBJECT (rtph263pay, "MODE C on GOB %d needed, but not supported yet", i);
+            GST_ERROR_OBJECT (rtph263pay,
+                "MODE C on GOB %d needed, but not supported yet", i);
             /*if(!gst_rtp_h263_pay_mode_C_fragment(rtph263pay, context, context->gobs[i])) {
                ret = GST_FLOW_OK;
                GST_ERROR("There was an error fragmenting in mode C");
@@ -1774,7 +1803,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
       } else {
       payload_a_push:
-        GST_DEBUG_OBJECT (rtph263pay, "Pushing GOBS %d to %d because payload size is %d", first,
+        GST_DEBUG_OBJECT (rtph263pay,
+            "Pushing GOBS %d to %d because payload size is %d", first,
             first == i ? i : i - 1, payload_len);
         gst_rtp_h263_pay_A_fragment_push (rtph263pay, context, first,
             first == i ? i : i - 1);
@@ -1784,7 +1814,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
       continue;
 
     force_a:
-      GST_DEBUG_OBJECT (rtph263pay, "Pushing GOBS %d to %d because payload size is %d", first, i,
+      GST_DEBUG_OBJECT (rtph263pay,
+          "Pushing GOBS %d to %d because payload size is %d", first, i,
           payload_len);
       gst_rtp_h263_pay_A_fragment_push (rtph263pay, context, first, i);
       payload_len = 0;
@@ -1814,7 +1845,8 @@ gst_rtp_h263_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   GstFlowReturn ret;
 
   rtph263pay = GST_RTP_H263_PAY (payload);
-  GST_DEBUG_OBJECT (rtph263pay, "-------------------- NEW FRAME ---------------");
+  GST_DEBUG_OBJECT (rtph263pay,
+      "-------------------- NEW FRAME ---------------");
 
   rtph263pay->first_ts = GST_BUFFER_PTS (buffer);
 
@@ -1823,7 +1855,8 @@ gst_rtp_h263_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 
   /* we always encode and flush a full picture */
   ret = gst_rtp_h263_pay_flush (rtph263pay);
-  GST_DEBUG_OBJECT (rtph263pay, "-------------------- END FRAME ---------------");
+  GST_DEBUG_OBJECT (rtph263pay,
+      "-------------------- END FRAME ---------------");
 
   return ret;
 }
