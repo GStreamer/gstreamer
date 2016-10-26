@@ -19,19 +19,18 @@ ROOTDIR = os.path.abspath(os.path.dirname(__file__))
 def get_meson():
     meson = os.path.join(ROOTDIR, 'meson', 'meson.py')
     if os.path.exists(meson):
-        return meson
+        mesonconf = os.path.join(ROOTDIR, 'meson', 'mesonconf.py')
+        return meson, mesonconf
 
-    return accept_command(["meson.py", "meson"])
+    return accept_command(["meson.py", "meson"]), accept_command(["mesonconf.py", "mesonconf"])
 
 
 def accept_command(commands):
-    """Checks if @command --version works."""
+    """Search @commands and returns the first found absolute path."""
     for command in commands:
-        try:
-            subprocess.check_output([command, "--version"])
+        command = shutil.which(command)
+        if command:
             return command
-        except FileNotFoundError:
-            pass
 
     return None
 
@@ -42,7 +41,7 @@ def get_configs(meson):
 
 def configure_meson(args, options):
     """Configures meson and generate the Makefile."""
-    meson = get_meson()
+    meson, mesonconf = get_meson()
     if not meson:
         print("Install mesonbuild to build %s: http://mesonbuild.com/\n"
               "You can simply install it with:\n"
@@ -61,9 +60,8 @@ def configure_meson(args, options):
 
     try:
         subprocess.check_call([sys.executable, meson, "../"] + args, cwd=build_dir)
-        subprocess.check_call([sys.executable, os.path.join(ROOTDIR, 'meson', 'mesonconf.py')]
-                              + get_configs(meson), cwd=build_dir)
-        print("You can now build GStreamer and its various subprojects running:\n"
+        subprocess.check_call([sys.executable, mesonconf] + get_configs(meson), cwd=build_dir)
+        print("\nYou can now build GStreamer and its various subprojects running:\n"
             " $ ninja -C %s" % build_dir)
     except subprocess.CalledProcessError as e:
         print("EXIT meson return %s" % e.returncode)
