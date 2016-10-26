@@ -1,4 +1,4 @@
-# gst-all
+# gst-build
 
 GStreamer [meson](http://mesonbuild.com/) based repositories aggregrator
 
@@ -18,7 +18,7 @@ NOTE: on fedora (and maybe other distributions) replace `ninja` with `ninja-buil
 
 ## GStreamer uninstalled
 
-gst-all also contains a special `uninstalled` target that lets you enter
+gst-build also contains a special `uninstalled` target that lets you enter
 an uninstalled development environment where you will be able
 to work on GStreamer easily.
 
