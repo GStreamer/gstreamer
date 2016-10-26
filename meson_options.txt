@@ -1,1 +1,6 @@
 option('enable_python', type : 'boolean', value : false)
+option('disable_gst_libav', type : 'boolean', value : false)
+option('disable_gst_plugins_ugly', type : 'boolean', value : false)
+option('disable_gst_plugins_bad', type : 'boolean', value : false)
+option('disable_gst_devtools', type : 'boolean', value : false)
+option('disable_gst_editing_services', type : 'boolean', value : false)

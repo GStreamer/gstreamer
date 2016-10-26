@@ -9,10 +9,6 @@ subprojects = [
     'gstreamer',
     'gst-plugins-base',
     'gst-plugins-good',
-    'gst-plugins-ugly',
-    'gst-plugins-bad',
-    'gst-devtools',
-    'gst-editing-services'
 ]
 
 # FIXME Remove that check once we have ffmpeg as a gst-libav subproject
@@ -39,6 +35,26 @@ endif
 
 if get_option('enable_python')
     subprojects += ['gst-python']
+endif
+
+if not get_option('disable_gst_plugins_ugly')
+    subprojects += ['gst-plugins-ugly']
+endif
+
+if not get_option('disable_gst_plugins_bad')
+    subprojects += ['gst-plugins-bad']
+endif
+
+if not get_option('disable_gst_libav')
+    subprojects += ['gst-libav']
+endif
+
+if not get_option('disable_gst_devtools')
+    subprojects += ['gst-devtools']
+endif
+
+if not get_option('disable_gst_editing_services')
+    subprojects += ['gst-editing-services']
 endif
 
 python3 = find_program('python3')
