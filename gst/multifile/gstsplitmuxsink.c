@@ -359,14 +359,16 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (splitmux);
       if (splitmux->provided_sink)
         gst_object_unref (splitmux->provided_sink);
-      splitmux->provided_sink = g_value_dup_object (value);
+      splitmux->provided_sink = g_value_get_object (value);
+      gst_object_ref_sink (splitmux->provided_sink);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_MUXER:
       GST_OBJECT_LOCK (splitmux);
       if (splitmux->provided_muxer)
         gst_object_unref (splitmux->provided_muxer);
-      splitmux->provided_muxer = g_value_dup_object (value);
+      splitmux->provided_muxer = g_value_get_object (value);
+      gst_object_ref_sink (splitmux->provided_muxer);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     default:
@@ -1492,6 +1494,8 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
 
   /* Can release the context now */
   mq_stream_ctx_unref (ctx);
+  if (ctx == splitmux->reference_ctx)
+    splitmux->reference_ctx = NULL;
 
   /* Release and free the mq input */
   gst_element_release_request_pad (splitmux->mq, mqsink);
