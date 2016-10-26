@@ -1747,6 +1747,8 @@ done:
       gst_event_unref (http_headers_event);
 
     g_mutex_lock (&src->mutex);
+    /* Make sure the Range header is updated with the current position */
+    src->read_position = -1;
     gst_soup_http_src_destroy_input_stream (src);
     g_mutex_unlock (&src->mutex);
     if (ret == GST_FLOW_CUSTOM_ERROR)
