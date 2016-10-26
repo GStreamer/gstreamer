@@ -557,20 +557,6 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
 
   positioning_mode = overlay->positioning_mode;
 
-  if (positioning_mode == GST_GDK_PIXBUF_POSITIONING_PIXELS_ABSOLUTE) {
-    x = overlay->offset_x + (overlay->relative_x * overlay_meta->width);
-    y = overlay->offset_y + (overlay->relative_y * overlay_meta->height);
-  } else {
-    x = overlay->offset_x < 0 ?
-        video_width + overlay->offset_x - overlay_meta->width +
-        (overlay->relative_x * overlay_meta->width) :
-        overlay->offset_x + (overlay->relative_x * overlay_meta->width);
-    y = overlay->offset_y < 0 ?
-        video_height + overlay->offset_y - overlay_meta->height +
-        (overlay->relative_y * overlay_meta->height) :
-        overlay->offset_y + (overlay->relative_y * overlay_meta->height);
-  }
-
   width = overlay->overlay_width;
   if (width == 0)
     width = overlay_meta->width;
@@ -578,6 +564,20 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
   height = overlay->overlay_height;
   if (height == 0)
     height = overlay_meta->height;
+
+  if (positioning_mode == GST_GDK_PIXBUF_POSITIONING_PIXELS_ABSOLUTE) {
+    x = overlay->offset_x + (overlay->relative_x * width);
+    y = overlay->offset_y + (overlay->relative_y * height);
+  } else {
+    x = overlay->offset_x < 0 ?
+        video_width + overlay->offset_x - width +
+        (overlay->relative_x * video_width) :
+        overlay->offset_x + (overlay->relative_x * video_width);
+    y = overlay->offset_y < 0 ?
+        video_height + overlay->offset_y - height +
+        (overlay->relative_y * video_height) :
+        overlay->offset_y + (overlay->relative_y * video_height);
+  }
 
   GST_DEBUG_OBJECT (overlay, "overlay image dimensions: %d x %d, alpha=%.2f",
       overlay_meta->width, overlay_meta->height, overlay->alpha);
