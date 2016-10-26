@@ -55,6 +55,10 @@ if not get_option('disable_gst_editing_services')
     subprojects += ['gst-editing-services']
 endif
 
+if not get_option('disable_rtsp_server')
+    subprojects += ['gst-rtsp-server']
+endif
+
 python3 = find_program('python3')
 symlink = '''
 import os

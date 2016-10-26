@@ -1,0 +1,4 @@
+[wrap-git]
+directory=gst-rtsp-server
+url=git://anongit.freedesktop.org/gstreamer/gst-rtsp-server
+revision=master
