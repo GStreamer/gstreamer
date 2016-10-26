@@ -783,22 +783,6 @@ gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
 }
 
 /**
- * gst_gl_window_is_running:
- * @window: a #GstGLWindow
- *
- * Whether the runloop is running
- *
- * Since: 1.4
- */
-gboolean
-gst_gl_window_is_running (GstGLWindow * window)
-{
-  GstGLWindowPrivate *priv = window->priv;
-  return priv->alive && (!priv->loop
-      || g_main_loop_is_running (window->priv->loop));
-}
-
-/**
  * gst_gl_window_get_display:
  * @window: a #GstGLWindow
  *

@@ -363,11 +363,10 @@ draw_cb (gpointer data)
 {
   GstGLWindowX11 *window_x11 = data;
   GstGLWindow *window = GST_GL_WINDOW (window_x11);
+  guint width, height;
+  XWindowAttributes attr;
 
-  if (gst_gl_window_is_running (window)) {
-    guint width, height;
-    XWindowAttributes attr;
-
+  if (window_x11->internal_win_id) {
     XGetWindowAttributes (window_x11->device, window_x11->internal_win_id,
         &attr);
     GST_TRACE_OBJECT (window, "window size %ux%u", attr.width, attr.height);

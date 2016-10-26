@@ -897,12 +897,8 @@ gst_gl_context_set_window (GstGLContext * context, GstGLWindow * window)
   if (context->priv->alive)
     return FALSE;
 
-  if (window) {
-    if (gst_gl_window_is_running (window))
-      return FALSE;
-
+  if (window)
     g_weak_ref_set (&window->context_ref, context);
-  }
 
   if (context->window)
     gst_object_unref (context->window);
