@@ -54,62 +54,8 @@ G_BEGIN_DECLS
   ((driver_major) > (target_major) || \
    ((driver_major) == (target_major) && (driver_minor) >= (target_minor)))
 
-typedef struct _GstGLFeatureFunction GstGLFeatureFunction;
-
-struct _GstGLFeatureFunction
-{
-  /* The name of the function without the "EXT" or "ARB" suffix */
-  const char *name;
-  /* The offset in the context of where to store the function pointer */
-  unsigned int pointer_offset;
-};
-
-typedef struct _GstGLFeatureData GstGLFeatureData;
-
-struct _GstGLFeatureData
-{
-  /* name of the feature */
-  const char *feature_name;
-  /* Flags specifying which versions of GL the feature is available
-     in core in */
-  GstGLAPI gl_availability;
-  /* A minimum GL version which the functions should be defined in
-     without needing an extension. Set to 255, 255 if it's only
-     provided in an extension */
-  int min_gl_major, min_gl_minor;
-  /* A minimum GLES version which the functions should be defined in
-     without needing an extension. Set to 255, 255 if it's only
-     provided in an extension */
-  int min_gles_major, min_gles_minor;
-  /* \0 separated list of namespaces to try. Eg "EXT\0ARB\0" */
-  const char *namespaces;
-  /* \0 separated list of required extension names without the GL_EXT
-     or GL_ARB prefix. Any of the extensions must be available for the
-     feature to be considered available. If the suffix for an
-     extension is different from the namespace, you can specify it
-     with a ':' after the namespace */
-  const char *extension_names;
-  /* A list of functions required for this feature. Terminated with a
-     NULL name */
-  const GstGLFeatureFunction *functions;
-};
-
-GST_EXPORT gboolean
-gst_gl_check_extension (const char *name, const gchar * ext);
-
-G_GNUC_INTERNAL gboolean
-_gst_gl_feature_check (GstGLContext *context,
-                     const char *driver_prefix,
-                     const GstGLFeatureData *data,
-                     int gl_major,
-                     int gl_minor,
-                     const char *extensions_string);
-
-G_GNUC_INTERNAL void
-_gst_gl_feature_check_ext_functions (GstGLContext *context,
-                                   int gl_major,
-                                   int gl_minor,
-                                   const char *gl_extensions);
+GST_EXPORT
+gboolean gst_gl_check_extension (const char *name, const gchar * ext);
 
 G_END_DECLS
 
