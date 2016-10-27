@@ -783,6 +783,8 @@ no_vendor:
  * @codecs: a #GArray of #GstVaapiCodec
  * @codec: a #GstVaapiCodec to find in @codec
  *
+ * Search in the available @codecs for the specific @codec.
+ *
  * Returns: %TRUE if @codec is in @codecs
  **/
 gboolean

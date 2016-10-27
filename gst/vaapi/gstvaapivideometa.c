@@ -25,6 +25,8 @@
 /**
  * SECTION:gstvaapivideometa
  * @short_description: VA video meta for GStreamer
+ *
+ * Describes a #GstMeta for VA-base video buffers.
  */
 
 #include "gstcompat.h"

@@ -25,6 +25,9 @@
 /**
  * SECTION:gstvaapivideobuffer
  * @short_description: VA video buffer for GStreamer
+ *
+ * This functions creates and decorates a #GstBuffer that is going to
+ * be used by VA base gstreamer elements.
  */
 
 #include "gstcompat.h"
