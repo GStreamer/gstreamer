@@ -46,6 +46,7 @@
 
 #include "gl.h"
 #include "gstglcontext.h"
+#include "gstglfeature_private.h"
 
 #ifndef GL_NUM_EXTENSIONS
 #define GL_NUM_EXTENSIONS 0x0000821d

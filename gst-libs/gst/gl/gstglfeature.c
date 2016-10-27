@@ -26,6 +26,7 @@
 
 #include "gl.h"
 #include "gstglfeature.h"
+#include "gstglfeature_private.h"
 
 #define GST_CAT_DEFAULT gl_feature
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
