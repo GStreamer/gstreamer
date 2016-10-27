@@ -73,13 +73,6 @@ enum
   PROP_LAST
 };
 
-enum
-{
-  HAS_VPP_UNKNOWN,
-  HAS_VPP_NO,
-  HAS_VPP_YES
-};
-
 static GParamSpec *properties[PROP_LAST];
 
 /* Default templates */
@@ -350,7 +343,6 @@ error_adding_pad:
 static void
 gst_vaapi_decode_bin_init (GstVaapiDecodeBin * vaapidecbin)
 {
-  vaapidecbin->has_vpp = HAS_VPP_UNKNOWN;
   vaapidecbin->deinterlace_method = DEFAULT_DEINTERLACE_METHOD;
 
   gst_vaapi_decode_bin_configure (vaapidecbin);
