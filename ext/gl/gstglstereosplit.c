@@ -247,7 +247,8 @@ strip_mview_fields (GstCaps * incaps, GstVideoMultiviewFlags keep_flags)
     GstVideoMultiviewFlags flags, mask;
 
     gst_structure_remove_field (st, "multiview-mode");
-    if (gst_structure_get_flagset (st, "multiview-flags", &flags, &mask)) {
+    if (gst_structure_get_flagset (st, "multiview-flags", (guint*) &flags,
+        (guint*) &mask)) {
       flags &= keep_flags;
       mask = keep_flags;
       gst_structure_set (st, "multiview-flags",

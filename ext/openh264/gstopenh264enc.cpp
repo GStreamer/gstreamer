@@ -794,9 +794,9 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
       openh264enc->time_per_frame = (GST_SECOND / openh264enc->framerate);
       openh264enc->previous_timestamp = frame->pts;
     } else {
-      openh264enc->time_per_frame =
-          openh264enc->time_per_frame * 0.8 + (frame->pts -
-          openh264enc->previous_timestamp) * 0.2;
+      openh264enc->time_per_frame = (guint64)
+          (openh264enc->time_per_frame * 0.8 + (frame->pts -
+          openh264enc->previous_timestamp) * 0.2);
       openh264enc->previous_timestamp = frame->pts;
       if (openh264enc->frame_count % 10 == 0) {
         fps = GST_SECOND / (gdouble) openh264enc->time_per_frame;

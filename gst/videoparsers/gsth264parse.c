@@ -1829,7 +1829,8 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       /* Pass through or set output stereo/multiview config */
       if (s && gst_structure_has_field (s, "multiview-mode")) {
         caps_mview_mode = gst_structure_get_string (s, "multiview-mode");
-        gst_structure_get_flagset (s, "multiview-flags", &mview_flags, NULL);
+        gst_structure_get_flagset (s, "multiview-flags", (guint*) &mview_flags,
+            NULL);
       } else if (mview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
         if (gst_video_multiview_guess_half_aspect (mview_mode,
                 width, height, par_n, par_d)) {
