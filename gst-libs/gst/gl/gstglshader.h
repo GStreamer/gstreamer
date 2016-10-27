@@ -26,6 +26,7 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GType gst_gl_shader_get_type (void);
 #define GST_GL_TYPE_SHADER         (gst_gl_shader_get_type())
 #define GST_GL_SHADER(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_SHADER, GstGLShader))
@@ -51,60 +52,104 @@ struct _GstGLShaderClass {
   GstObjectClass parent_class;
 };
 
+GST_EXPORT
 GstGLShader * gst_gl_shader_new                     (GstGLContext *context);
+GST_EXPORT
 GstGLShader * gst_gl_shader_new_with_stages         (GstGLContext * context, GError ** error, ...);
+GST_EXPORT
 GstGLShader * gst_gl_shader_new_link_with_stages    (GstGLContext * context, GError ** error, ...);
+GST_EXPORT
 GstGLShader * gst_gl_shader_new_default             (GstGLContext * context, GError ** error);
 
+GST_EXPORT
 gboolean gst_gl_shader_attach                       (GstGLShader * shader, GstGLSLStage * stage);
+GST_EXPORT
 gboolean gst_gl_shader_attach_unlocked              (GstGLShader * shader, GstGLSLStage * stage);
 
+GST_EXPORT
 void     gst_gl_shader_detach                       (GstGLShader * shader, GstGLSLStage * stage);
+GST_EXPORT
 void     gst_gl_shader_detach_unlocked              (GstGLShader * shader, GstGLSLStage * stage);
 
+GST_EXPORT
 gboolean gst_gl_shader_compile_attach_stage         (GstGLShader * shader,
                                                      GstGLSLStage *stage,
                                                      GError ** error);
+GST_EXPORT
 gboolean gst_gl_shader_link                         (GstGLShader * shader, GError ** error);
+GST_EXPORT
 gboolean gst_gl_shader_is_linked                    (GstGLShader *shader);
 
+GST_EXPORT
 int gst_gl_shader_get_program_handle                (GstGLShader * shader);
 
+GST_EXPORT
 void gst_gl_shader_release                          (GstGLShader *shader);
+GST_EXPORT
 void gst_gl_shader_release_unlocked                 (GstGLShader * shader);
+GST_EXPORT
 void gst_gl_shader_use                              (GstGLShader *shader);
+GST_EXPORT
 void gst_gl_context_clear_shader                    (GstGLContext *context);
 
+GST_EXPORT
 void gst_gl_shader_set_uniform_1i           (GstGLShader *shader, const gchar *name, gint value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_1iv          (GstGLShader *shader, const gchar *name, guint count, gint *value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_1f           (GstGLShader *shader, const gchar *name, gfloat value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_1fv          (GstGLShader *shader, const gchar *name, guint count, gfloat *value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_2i           (GstGLShader *shader, const gchar *name, gint v0,     gint v1);
+GST_EXPORT
 void gst_gl_shader_set_uniform_2iv          (GstGLShader *shader, const gchar *name, guint count, gint *value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_2f           (GstGLShader *shader, const gchar *name, gfloat v0,   gfloat v1);
+GST_EXPORT
 void gst_gl_shader_set_uniform_2fv          (GstGLShader *shader, const gchar *name, guint count, gfloat *value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_3i           (GstGLShader *shader, const gchar *name, gint v0,     gint v1,       gint v2);
+GST_EXPORT
 void gst_gl_shader_set_uniform_3iv          (GstGLShader *shader, const gchar *name, guint count, gint * value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_3f           (GstGLShader *shader, const gchar *name, gfloat v0,   gfloat v1,     gfloat v2);
+GST_EXPORT
 void gst_gl_shader_set_uniform_3fv          (GstGLShader *shader, const gchar *name, guint count, gfloat *value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_4i           (GstGLShader *shader, const gchar *name, gint v0,     gint v1,       gint v2,   gint v3);
+GST_EXPORT
 void gst_gl_shader_set_uniform_4iv          (GstGLShader *shader, const gchar *name, guint count, gint *value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_4f           (GstGLShader *shader, const gchar *name, gfloat v0,   gfloat v1,     gfloat v2, gfloat v3);
+GST_EXPORT
 void gst_gl_shader_set_uniform_4fv          (GstGLShader *shader, const gchar *name, guint count, gfloat *value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_2fv   (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_3fv   (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_4fv   (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
 #if GST_GL_HAVE_OPENGL
+GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_2x4fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_3x2fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_3x4fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
 #endif
 
+GST_EXPORT
 gint gst_gl_shader_get_attribute_location  (GstGLShader *shader, const gchar *name);
+GST_EXPORT
 void gst_gl_shader_bind_attribute_location (GstGLShader * shader, guint index, const gchar * name);
+GST_EXPORT
 void gst_gl_shader_bind_frag_data_location (GstGLShader * shader, guint index, const gchar * name);
 
 G_END_DECLS

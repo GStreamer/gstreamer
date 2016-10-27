@@ -25,6 +25,7 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GQuark gst_glsl_error_quark (void);
 #define GST_GLSL_ERROR (gst_glsl_error_quark ())
 
@@ -70,23 +71,32 @@ typedef enum
   GST_GLSL_PROFILE_ANY = -1,
 } GstGLSLProfile;
 
+GST_EXPORT
 GstGLSLVersion gst_glsl_version_from_string         (const gchar * string);
+GST_EXPORT
 const gchar *  gst_glsl_version_to_string           (GstGLSLVersion version);
 
+GST_EXPORT
 GstGLSLProfile gst_glsl_profile_from_string         (const gchar * string);
+GST_EXPORT
 const gchar *  gst_glsl_profile_to_string           (GstGLSLProfile profile);
 
+GST_EXPORT
 gchar *        gst_glsl_version_profile_to_string   (GstGLSLVersion version,
                                                      GstGLSLProfile profile);
+GST_EXPORT
 gboolean       gst_glsl_version_profile_from_string (const gchar * string,
                                                      GstGLSLVersion * version,
                                                      GstGLSLProfile * profile);
 
+GST_EXPORT
 gboolean       gst_glsl_string_get_version_profile  (const gchar *s,
                                                      GstGLSLVersion * version,
                                                      GstGLSLProfile * profile);
 
+GST_EXPORT
 GstGLSLVersion gst_gl_version_to_glsl_version       (GstGLAPI gl_api, gint maj, gint min);
+GST_EXPORT
 gboolean       gst_gl_context_supports_glsl_profile_version (GstGLContext * context,
                                                              GstGLSLVersion version,
                                                              GstGLSLProfile profile);

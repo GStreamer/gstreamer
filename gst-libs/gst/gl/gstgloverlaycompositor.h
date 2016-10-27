@@ -33,6 +33,7 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GType gst_gl_overlay_compositor_get_type (void);
 
 /**
@@ -71,15 +72,20 @@ struct _GstGLOverlayCompositorClass
   gpointer _padding[GST_PADDING];
 };
 
+GST_EXPORT
 GstGLOverlayCompositor *gst_gl_overlay_compositor_new (GstGLContext * context);
 
+GST_EXPORT
 void gst_gl_overlay_compositor_free_overlays (GstGLOverlayCompositor * compositor);
 
+GST_EXPORT
 void gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
         GstBuffer * buf);
 
+GST_EXPORT
 void gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor);
 
+GST_EXPORT
 GstCaps * gst_gl_overlay_compositor_add_caps(GstCaps * caps);
 
 G_END_DECLS

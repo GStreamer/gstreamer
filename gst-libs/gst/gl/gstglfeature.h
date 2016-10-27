@@ -94,7 +94,7 @@ struct _GstGLFeatureData
   const GstGLFeatureFunction *functions;
 };
 
-gboolean
+GST_EXPORT gboolean
 gst_gl_check_extension (const char *name, const gchar * ext);
 
 G_GNUC_INTERNAL gboolean

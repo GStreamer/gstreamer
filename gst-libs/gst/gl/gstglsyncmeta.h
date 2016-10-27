@@ -49,16 +49,23 @@ struct _GstGLSyncMeta {
   void (*free_gl) (GstGLSyncMeta * sync, GstGLContext * context);
 };
 
+GST_EXPORT
 GType gst_gl_sync_meta_api_get_type (void);
+GST_EXPORT
 const GstMetaInfo * gst_gl_sync_meta_get_info (void);
 
 #define gst_buffer_get_gl_sync_meta(b) ((GstGLSyncMeta*)gst_buffer_get_meta((b),GST_GL_SYNC_META_API_TYPE))
 
+GST_EXPORT
 GstGLSyncMeta *     gst_buffer_add_gl_sync_meta         (GstGLContext * context, GstBuffer *buffer);
+GST_EXPORT
 GstGLSyncMeta *     gst_buffer_add_gl_sync_meta_full    (GstGLContext * context, GstBuffer * buffer,
                                                          gpointer data);
+GST_EXPORT
 void                gst_gl_sync_meta_set_sync_point     (GstGLSyncMeta * sync, GstGLContext * context);
+GST_EXPORT
 void                gst_gl_sync_meta_wait               (GstGLSyncMeta * sync, GstGLContext * context);
+GST_EXPORT
 void                gst_gl_sync_meta_wait_cpu           (GstGLSyncMeta * sync, GstGLContext * context);
 
 G_END_DECLS

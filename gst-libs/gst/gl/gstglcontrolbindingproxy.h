@@ -25,6 +25,7 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GType gst_gl_control_binding_proxy_get_type (void);
 #define GST_TYPE_GL_CONTROL_BINDING_PROXY  (gst_gl_control_binding_proxy_get_type())
 
@@ -44,11 +45,13 @@ struct _GstGLControlBindingProxyClass
   GstControlBindingClass parent_class;
 };
 
+GST_EXPORT
 GstControlBinding *     gst_gl_control_binding_proxy_new            (GstObject * object,
                                                                      const gchar * property_name,
                                                                      GstObject * ref_object,
                                                                      const gchar * ref_property_name);
 
+GST_EXPORT
 void                    gst_gl_object_add_control_binding_proxy     (GstObject * object,
                                                                      GstObject * ref_object,
                                                                      const gchar * prop);

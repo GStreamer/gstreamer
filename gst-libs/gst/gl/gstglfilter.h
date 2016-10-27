@@ -30,6 +30,7 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GType gst_gl_filter_get_type(void);
 #define GST_TYPE_GL_FILTER            (gst_gl_filter_get_type())
 #define GST_GL_FILTER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_FILTER,GstGLFilter))
@@ -120,16 +121,20 @@ struct _GstGLFilterClass
   gpointer                      _padding[GST_PADDING];
 };
 
+GST_EXPORT
 gboolean gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
                                        GstBuffer * outbuf);
 
+GST_EXPORT
 gboolean gst_gl_filter_render_to_target             (GstGLFilter *filter,
                                                      GstGLMemory * input,
                                                      GstGLMemory * output,
                                                      GstGLFilterRenderFunc func,
                                                      gpointer data);
 
+GST_EXPORT
 void gst_gl_filter_draw_fullscreen_quad             (GstGLFilter *filter);
+GST_EXPORT
 void gst_gl_filter_render_to_target_with_shader     (GstGLFilter * filter,
                                                      GstGLMemory * input,
                                                      GstGLMemory * output,
