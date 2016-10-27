@@ -1,10 +1,4 @@
 <SECTION>
-<FILE>element-vaapidecode</FILE>
-<TITLE>vaapidecode</TITLE>
-<SUBSECTION Standard>
-GstVaapiDecode
-GstVaapiDecodeClass
-</SECTION>
 
 <SECTION>
 <FILE>element-vaapijpegdec</FILE>
@@ -12,6 +6,70 @@ GstVaapiDecodeClass
 <SUBSECTION Standard>
 GstVaapiDecode_jpeg
 GstVaapiDecode_jpegClass
+</SECTION>
+
+<SECTION>
+<FILE>element-vaapimpeg2dec</FILE>
+<TITLE>vaapimpeg2dec</TITLE>
+<SUBSECTION Standard>
+GstVaapiDecode_mpeg2
+GstVaapiDecode_mpeg2Class
+</SECTION>
+
+<SECTION>
+<FILE>element-vaapimpeg4dec</FILE>
+<TITLE>vaapimpeg4dec</TITLE>
+<SUBSECTION Standard>
+GstVaapiDecode_mpeg4
+GstVaapiDecode_mpeg4Class
+</SECTION>
+
+<SECTION>
+<FILE>element-vaapih263dec</FILE>
+<TITLE>vaapih263dec</TITLE>
+<SUBSECTION Standard>
+GstVaapiDecode_h263
+GstVaapiDecode_h263Class
+</SECTION>
+
+<SECTION>
+<FILE>element-vaapih264dec</FILE>
+<TITLE>vaapih264dec</TITLE>
+<SUBSECTION Standard>
+GstVaapiDecode_h264
+GstVaapiDecode_h264Class
+</SECTION>
+
+<SECTION>
+<FILE>element-vaapih265dec</FILE>
+<TITLE>vaapih265dec</TITLE>
+<SUBSECTION Standard>
+GstVaapiDecode_h265
+GstVaapiDecode_h265Class
+</SECTION>
+
+<SECTION>
+<FILE>element-vaapivc1dec</FILE>
+<TITLE>vaapivc1dec</TITLE>
+<SUBSECTION Standard>
+GstVaapiDecode_vc1
+GstVaapiDecode_vc1Class
+</SECTION>
+
+<SECTION>
+<FILE>element-vaapivp8dec</FILE>
+<TITLE>vaapivp8dec</TITLE>
+<SUBSECTION Standard>
+GstVaapiDecode_vp8
+GstVaapiDecode_vp8Class
+</SECTION>
+
+<SECTION>
+<FILE>element-vaapivp9dec</FILE>
+<TITLE>vaapivp9dec</TITLE>
+<SUBSECTION Standard>
+GstVaapiDecode_vp9
+GstVaapiDecode_vp9Class
 </SECTION>
 
 <SECTION>
@@ -133,4 +191,19 @@ GST_VAAPIENCODE_VP8_GET_CLASS
 GstVaapiEncodeVP8
 GstVaapiEncodeVP8Class
 gst_vaapiencode_vp8_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-vaapivp9enc</FILE>
+<TITLE>vaapivp9enc</TITLE>
+<SUBSECTION Standard>
+GST_IS_VAAPIENCODE_VP9
+GST_IS_VAAPIENCODE_VP9_CLASS
+GST_TYPE_VAAPIENCODE_VP9
+GST_VAAPIENCODE_VP9
+GST_VAAPIENCODE_VP9_CLASS
+GST_VAAPIENCODE_VP9_GET_CLASS
+GstVaapiEncodeVP9
+GstVaapiEncodeVP9Class
+gst_vaapiencode_vp9_get_type
 </SECTION>

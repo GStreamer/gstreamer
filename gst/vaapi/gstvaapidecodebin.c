@@ -26,9 +26,9 @@
  * @short_description: A VA-API based video decoder with a
  * post-processor
  *
- * vaapidecodebin is similar #GstVaapiDecode, but it is composed by
- * the vaapidecode, a #GstQueue, and the #GstVaapiPostproc, if it is
- * available and functional in the setup.
+ * vaapidecodebin is similar vaapi{CODEC}dec, but it is composed by
+ * the unregistered vaapidecode, a #GstQueue, and the
+ * #GstVaapiPostproc, if it is available and functional in the setup.
  *
  * It offers the functionality of #GstVaapiDecode and the many options
  * of #GstVaapiPostproc.

@@ -11,8 +11,15 @@
 
   <chapter>
     <title>gstreamer-vaapi Elements</title>
-    <xi:include href="xml/element-vaapidecode.xml"/>
     <xi:include href="xml/element-vaapijpegdec.xml"/>
+    <xi:include href="xml/element-vaapimpeg2dec.xml"/>
+    <xi:include href="xml/element-vaapimpeg4dec.xml"/>
+    <xi:include href="xml/element-vaapih263dec.xml"/>
+    <xi:include href="xml/element-vaapih264dec.xml"/>
+    <xi:include href="xml/element-vaapih265dec.xml"/>
+    <xi:include href="xml/element-vaapivc1dec.xml"/>
+    <xi:include href="xml/element-vaapivp8dec.xml"/>
+    <xi:include href="xml/element-vaapivp9dec.xml"/>
     <xi:include href="xml/element-vaapidecodebin.xml"/>
     <xi:include href="xml/element-vaapipostproc.xml"/>
     <xi:include href="xml/element-vaapisink.xml"/>
@@ -21,6 +28,7 @@
     <xi:include href="xml/element-vaapijpegenc.xml"/>
     <xi:include href="xml/element-vaapimpeg2enc.xml"/>
     <xi:include href="xml/element-vaapivp8enc.xml"/>
+    <xi:include href="xml/element-vaapivp9enc.xml"/>
   </chapter>
 
   <chapter>
