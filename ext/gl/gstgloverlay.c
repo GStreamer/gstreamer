@@ -44,6 +44,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef _MSC_VER
+#define HAVE_BOOLEAN
+#endif
 #include <jpeglib.h>
 #include <png.h>
 
