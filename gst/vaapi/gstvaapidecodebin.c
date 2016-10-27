@@ -278,7 +278,7 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
       g_object_new (g_type_from_name ("GstVaapiDecode"), NULL);
 
   /* create the queue */
-  vaapidecbin->queue = gst_element_factory_make ("queue", NULL);
+  vaapidecbin->queue = gst_element_factory_make ("queue", "vaapi-queue");
   if (!vaapidecbin->queue) {
     missing_factory = "queue";
     goto error_element_missing;
