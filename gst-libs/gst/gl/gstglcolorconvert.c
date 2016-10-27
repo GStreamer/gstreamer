@@ -69,19 +69,19 @@ static gboolean _do_convert_draw (GstGLContext * context,
  * Y = [16..235] (of 255)
  * Cb/Cr = [16..240] (of 255)
  */
-static const gfloat from_yuv_bt601_offset[] = {-0.0625, -0.5, -0.5};
-static const gfloat from_yuv_bt601_rcoeff[] = {1.164, 0.000, 1.596};
-static const gfloat from_yuv_bt601_gcoeff[] = {1.164,-0.391,-0.813};
-static const gfloat from_yuv_bt601_bcoeff[] = {1.164, 2.018, 0.000};
+static const gfloat from_yuv_bt601_offset[] = {-0.0625f, -0.5f, -0.5f};
+static const gfloat from_yuv_bt601_rcoeff[] = {1.164f, 0.000f, 1.596f};
+static const gfloat from_yuv_bt601_gcoeff[] = {1.164f,-0.391f,-0.813f};
+static const gfloat from_yuv_bt601_bcoeff[] = {1.164f, 2.018f, 0.000f};
 
 /* BT. 709 standard with the following ranges:
  * Y = [16..235] (of 255)
  * Cb/Cr = [16..240] (of 255)
  */
-static const gfloat from_yuv_bt709_offset[] = {-0.0625, -0.5, -0.5};
-static const gfloat from_yuv_bt709_rcoeff[] = {1.164, 0.000, 1.787};
-static const gfloat from_yuv_bt709_gcoeff[] = {1.164,-0.213,-0.531};
-static const gfloat from_yuv_bt709_bcoeff[] = {1.164,2.112, 0.000};
+static const gfloat from_yuv_bt709_offset[] = {-0.0625f, -0.5f, -0.5f};
+static const gfloat from_yuv_bt709_rcoeff[] = {1.164f, 0.000f, 1.787f};
+static const gfloat from_yuv_bt709_gcoeff[] = {1.164f,-0.213f,-0.531f};
+static const gfloat from_yuv_bt709_bcoeff[] = {1.164f,2.112f, 0.000f};
 
 #define RGB_TO_YUV_COEFFICIENTS \
       "uniform vec3 offset;\n" \
@@ -94,19 +94,19 @@ static const gfloat from_yuv_bt709_bcoeff[] = {1.164,2.112, 0.000};
  * Y = [16..235] (of 255)
  * Cb/Cr = [16..240] (of 255)
  */
-static const gfloat from_rgb_bt601_offset[] = {0.0625, 0.5, 0.5};
-static const gfloat from_rgb_bt601_ycoeff[] = {0.256816, 0.504154, 0.0979137};
-static const gfloat from_rgb_bt601_ucoeff[] = {-0.148246, -0.29102, 0.439266};
-static const gfloat from_rgb_bt601_vcoeff[] = {0.439271, -0.367833, -0.071438};
+static const gfloat from_rgb_bt601_offset[] = {0.0625f, 0.5f, 0.5f};
+static const gfloat from_rgb_bt601_ycoeff[] = {0.256816f, 0.504154f, 0.0979137f};
+static const gfloat from_rgb_bt601_ucoeff[] = {-0.148246f, -0.29102f, 0.439266f};
+static const gfloat from_rgb_bt601_vcoeff[] = {0.439271f, -0.367833f, -0.071438f};
 
 /* BT. 709 standard with the following ranges:
  * Y = [16..235] (of 255)
  * Cb/Cr = [16..240] (of 255)
  */
-static const gfloat from_rgb_bt709_offset[] = {0.0625, 0.5, 0.5};
-static const gfloat from_rgb_bt709_ycoeff[] = { 0.182604, 0.614526, 0.061976 };
-static const gfloat from_rgb_bt709_ucoeff[] = { -0.100640, -0.338688, 0.439327 };
-static const gfloat from_rgb_bt709_vcoeff[] = { 0.440654, -0.400285, -0.040370 };
+static const gfloat from_rgb_bt709_offset[] = {0.0625f, 0.5f, 0.5f};
+static const gfloat from_rgb_bt709_ycoeff[] = {0.182604f, 0.614526f, 0.061976f};
+static const gfloat from_rgb_bt709_ucoeff[] = {-0.100640f, -0.338688f, 0.439327f};
+static const gfloat from_rgb_bt709_vcoeff[] = {0.440654f, -0.400285f, -0.040370f};
 
 /* GRAY16 to RGB conversion
  *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 

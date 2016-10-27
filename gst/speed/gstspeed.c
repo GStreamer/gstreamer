@@ -390,7 +390,7 @@ gst_speed_class_init (GstSpeedClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SPEED,
       g_param_spec_float ("speed", "speed", "speed",
-          0.1, 40.0, 1.0,
+          0.1f, 40.0, 1.0,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class, "Speed",

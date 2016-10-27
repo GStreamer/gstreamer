@@ -181,7 +181,7 @@ freeverb_allpass_init (freeverb_allpass * allpass)
   gfloat *buf = allpass->buffer;
 
   for (i = 0; i < len; i++) {
-    buf[i] = DC_OFFSET;         /* this is not 100 % correct. */
+    buf[i] = (gfloat) DC_OFFSET;         /* this is not 100 % correct. */
   }
 }
 
@@ -246,7 +246,7 @@ freeverb_comb_init (freeverb_comb * comb)
   gfloat *buf = comb->buffer;
 
   for (i = 0; i < len; i++) {
-    buf[i] = DC_OFFSET;         /* This is not 100 % correct. */
+    buf[i] = (gfloat) DC_OFFSET;         /* This is not 100 % correct. */
   }
 }
 
@@ -406,7 +406,7 @@ gst_freeverb_class_init (GstFreeverbClass * klass)
           G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DAMPING,
       g_param_spec_float ("damping", "Damping", "Damping of high frequencies",
-          0.0, 1.0, 0.2,
+          0.0, 1.0, 0.2f,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
           G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PAN_WIDTH,
@@ -720,8 +720,8 @@ gst_freeverb_transform_m2s_int (GstFreeverb * filter,
     }
 
     /* Remove the DC offset */
-    out_l1 -= DC_OFFSET;
-    out_r1 -= DC_OFFSET;
+    out_l1 -= (gfloat) DC_OFFSET;
+    out_r1 -= (gfloat) DC_OFFSET;
 
     /* Calculate output */
     out_l2 = out_l1 * priv->wet1 + out_r1 * priv->wet2 + input_2 * priv->dry;
@@ -767,8 +767,8 @@ gst_freeverb_transform_s2s_int (GstFreeverb * filter,
     }
 
     /* Remove the DC offset */
-    out_l1 -= DC_OFFSET;
-    out_r1 -= DC_OFFSET;
+    out_l1 -= (gfloat) DC_OFFSET;
+    out_r1 -= (gfloat) DC_OFFSET;
 
     /* Calculate output */
     out_l2 = out_l1 * priv->wet1 + out_r1 * priv->wet2 + input_2l * priv->dry;
@@ -816,8 +816,8 @@ gst_freeverb_transform_m2s_float (GstFreeverb * filter,
     }
 
     /* Remove the DC offset */
-    out_l1 -= DC_OFFSET;
-    out_r1 -= DC_OFFSET;
+    out_l1 -= (gfloat) DC_OFFSET;
+    out_r1 -= (gfloat) DC_OFFSET;
 
     /* Calculate output */
     out_l2 = out_l1 * priv->wet1 + out_r1 * priv->wet2 + input_2 * priv->dry;
@@ -861,8 +861,8 @@ gst_freeverb_transform_s2s_float (GstFreeverb * filter,
     }
 
     /* Remove the DC offset */
-    out_l1 -= DC_OFFSET;
-    out_r1 -= DC_OFFSET;
+    out_l1 -= (gfloat) DC_OFFSET;
+    out_r1 -= (gfloat) DC_OFFSET;
 
     /* Calculate output */
     out_l2 = out_l1 * priv->wet1 + out_r1 * priv->wet2 + input_2l * priv->dry;

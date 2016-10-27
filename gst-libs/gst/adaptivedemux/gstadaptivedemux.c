@@ -133,7 +133,7 @@ GST_DEBUG_CATEGORY (adaptivedemux_debug);
 #define MAX_DOWNLOAD_ERROR_COUNT 3
 #define DEFAULT_FAILED_COUNT 3
 #define DEFAULT_CONNECTION_SPEED 0
-#define DEFAULT_BITRATE_LIMIT 0.8
+#define DEFAULT_BITRATE_LIMIT 0.8f
 #define SRC_QUEUE_MAX_BYTES 20 * 1024 * 1024    /* For safety. Large enough to hold a segment. */
 #define NUM_LOOKBACK_FRAGMENTS 3
 

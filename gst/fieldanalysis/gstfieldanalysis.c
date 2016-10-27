@@ -1442,7 +1442,7 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
     /* compare the fields within the buffer, if the buffer exhibits combing it
      * could be interlaced or a mixed telecine frame */
     res0->f = filter->same_frame (filter, &history);
-    res0->t = res0->b = res0->t_b = res0->b_t = G_MAXINT64;
+    res0->t = res0->b = res0->t_b = res0->b_t = G_MAXFLOAT;
     if (filter->nframes == 1)
       GST_DEBUG_OBJECT (filter, "Scores: f %f, t , b , t_b , b_t ", res0->f);
     if (res0->f <= filter->frame_thresh) {

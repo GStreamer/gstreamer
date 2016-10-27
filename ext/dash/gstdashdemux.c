@@ -198,7 +198,7 @@ enum
 
 /* Default values for properties */
 #define DEFAULT_MAX_BUFFERING_TIME       30     /* in seconds */
-#define DEFAULT_BANDWIDTH_USAGE         0.8     /* 0 to 1     */
+#define DEFAULT_BANDWIDTH_USAGE         0.8f    /* 0 to 1     */
 #define DEFAULT_MAX_BITRATE               0     /* in bit/s  */
 #define DEFAULT_MAX_VIDEO_WIDTH           0
 #define DEFAULT_MAX_VIDEO_HEIGHT          0

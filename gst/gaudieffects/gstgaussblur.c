@@ -178,7 +178,7 @@ gst_gaussianblur_set_info (GstVideoFilter * filter, GstCaps * incaps,
 static void
 gst_gaussianblur_init (GstGaussianBlur * gb)
 {
-  gb->sigma = DEFAULT_SIGMA;
+  gb->sigma = (gfloat) DEFAULT_SIGMA;
   gb->cur_sigma = -1.0;
 }
 
