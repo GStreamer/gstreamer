@@ -5,10 +5,7 @@ subdir('gdk_pixbuf')
 subdir('jack')
 subdir('jpeg')
 # subdir('libcaca')
-# FIXME: dv plugin fails to link with msvc, wants pthread.lib
-if cc.get_id() != 'msvc'
-  subdir('dv')
-endif
+subdir('dv')
 subdir('libpng')
 # subdir('raw1394')
 subdir('pulse')
