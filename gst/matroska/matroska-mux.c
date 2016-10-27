@@ -89,8 +89,8 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define COMMON_VIDEO_CAPS \
-  "width = (int) [ 16, 4096 ], " \
-  "height = (int) [ 16, 4096 ] "
+  "width = (int) [ 16, MAX ], " \
+  "height = (int) [ 16, MAX ] "
 
 /* FIXME:
  * * require codec data, etc as needed
