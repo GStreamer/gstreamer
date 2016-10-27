@@ -102,7 +102,7 @@ gst_stereo_class_init (GstStereoClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_STEREO,
       g_param_spec_float ("stereo", "stereo", "stereo",
-          0.0, 1.0, 0.1,
+          0.0, 1.0, 0.1f,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_stereo_transform_ip);
@@ -112,7 +112,7 @@ static void
 gst_stereo_init (GstStereo * stereo)
 {
   stereo->active = TRUE;
-  stereo->stereo = 0.1;
+  stereo->stereo = 0.1f;
 }
 
 static GstFlowReturn
