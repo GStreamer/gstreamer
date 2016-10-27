@@ -519,6 +519,10 @@ gst_v4l2_object_destroy (GstV4l2Object * v4l2object)
     gst_caps_unref (v4l2object->probed_caps);
   }
 
+  if (v4l2object->extra_controls) {
+    gst_structure_free (v4l2object->extra_controls);
+  }
+
   g_free (v4l2object);
 }
 
