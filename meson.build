@@ -48,7 +48,11 @@ if not get_option('disable_gst_libav')
 endif
 
 if not get_option('disable_gst_devtools')
+  if dependency('json-glib-1.0', required : false).found()
     subprojects += ['gst-devtools']
+  else
+    message('WARNING: not building gst-devtools module, missing glib-json-1.0')
+  endif
 endif
 
 if not get_option('disable_gst_editing_services')
