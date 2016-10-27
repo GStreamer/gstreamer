@@ -106,7 +106,7 @@ gl_winsys_deps = []
 # other things we need.
 gl_misc_deps = []
 # Other preprocessor arguments
-gl_cpp_args = ['-DGST_USE_UNSTABLE_API']
+gl_cpp_args = ['-DGST_USE_UNSTABLE_API', '-DGST_EXPORTS']
 
 enabled_gl_apis = []
 enabled_gl_platforms = []
@@ -166,8 +166,8 @@ else
       need_platform_glx = 'yes'
 #    elif platform == 'cgl'
 #      need_platform_cgl = 'yes'
-#    elif platform == 'wgl'
-#      need_platform_wgl = 'yes'
+    elif platform == 'wgl'
+      need_platform_wgl = 'yes'
 #    elif platform == 'eagl'
 #      need_platform_eagl = 'yes'
     else
@@ -197,8 +197,8 @@ else
       need_win_x11 = 'yes'
     elif winsys == 'wayland'
       need_win_wayland = 'yes'
-#    elif winsys == 'win32'
-#      need_win_win32 = 'yes'
+    elif winsys == 'win32'
+      need_win_win32 = 'yes'
 #    elif winsys == 'cocoa'
 #      need_win_cocoa = 'yes'
 #    elif winsys == 'eagl'
@@ -227,13 +227,13 @@ glx_dep = unneeded_dep
 if need_api_opengl != 'no' or need_platform_glx != 'no'
   gl_dep = dependency('gl', required : false)
   if not gl_dep.found()
-#    if host_machine.system() == 'windows'
-#      gl_dep = cc.find_library('opengl32', required : false)
+    if host_machine.system() == 'windows'
+      gl_dep = cc.find_library('opengl32', required : false)
 #    elif host_machine.system() == 'darwin'
 #      gl_dep = cc.find_library('OpenGL', required : false)
-#    else
+    else
       gl_dep = cc.find_library('GL', required : false)
-#    endif
+    endif
 
     if not gl_dep.found() and need_api_opengl == 'yes'
       error ('Could not find requested OpenGL library')
@@ -257,6 +257,9 @@ if need_api_opengl != 'no' or need_platform_glx != 'no'
 #  include <OpenGL/gl3.h>
 # endif
 #else
+# if _MSC_VER
+#  include <windows.h>
+# endif
 # include <GL/gl.h>
 # if __WIN32__ || _WIN32
 #  include <GL/glext.h>
@@ -378,9 +381,9 @@ if need_platform_egl != 'no'
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 '''
+    enabled_gl_platforms += 'egl'
   endif
 
-  enabled_gl_platforms += 'egl'
 endif
 
 # wayland checks
@@ -490,19 +493,25 @@ if need_platform_wgl == 'yes'
 endif
 
 # XXX: untested
-#if need_platform_wgl != 'no' and need_win_win32 != 'no'
-#  gdi_dep = cc.find_library('gdi32', required : false)
-#
-#  if cc.has_header('GL/wglext.h') and gdi_dep.found() and gl_dep.found()
-#    gl_platform_deps += gdi_dep
-#    gl_sources += [
-#      'win32/gstglwindow_win32.c',
-#      'win32/gstglwindow_win32.c',
-#    ]
-#    enabled_gl_winsys += 'win32'
-#    enabled_gl_platforms += 'wgl'
-#  endif
-#endif
+if need_platform_wgl != 'no' and need_win_win32 != 'no'
+  gdi_dep = cc.find_library('gdi32', required : false)
+  # FIXME: Revert back to has_header once it gains prefix support
+  wglext_h = cc.has_header_symbol('GL/wglext.h', 'WGL_WGLEXT_VERSION',
+                                  prefix : '#include <windows.h>
+                                            #include <GL/gl.h>')
+
+  if wglext_h and gdi_dep.found() and gl_dep.found()
+    gl_platform_deps += gdi_dep
+    gl_sources += [
+      'win32/win32_message_source.c',
+      'win32/gstglwindow_win32.c',
+      'win32/gstglwindow_win32.c',
+    ]
+    enabled_gl_winsys += 'win32'
+    gl_winsys_deps += gdi_dep
+    enabled_gl_platforms += 'wgl'
+  endif
+endif
 
 if host_machine.system() == 'darwin'
   # FIXME: how to know if we're on iOS or OS X?
@@ -580,8 +589,8 @@ if build_gstgl
     install : true,
     dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep,
                     gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps],
-    # FIXME: This symbol list is generated on Linux, so this is wrong for Windows
-    vs_module_defs: vs_module_defs_dir + 'libgstgl.def',
+    # Don't need vs_module_defs for gstgl because we do symbol exporting in the
+    # function definitions via __declspec(dllexport/import)
   )
   # TODO: generate gir
 
