@@ -62,6 +62,9 @@
 #   include <OpenGL/gl3.h>
 #  endif
 # else
+#  if defined(_MSC_VER)
+#   include <windows.h>
+#  endif
 #  include <GL/gl.h>
 #  if defined(__WIN32__) || defined(_WIN32)
 #   include <GL/glext.h>
@@ -73,7 +76,7 @@
 #pragma GCC diagnostic pop
 #endif
 
-#ifdef WINAPI
+#if defined(WINAPI) && !defined(_MSC_VER)
 #define GSTGLAPI WINAPI
 #else
 #define GSTGLAPI
