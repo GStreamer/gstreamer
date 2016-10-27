@@ -168,19 +168,9 @@ gst_vaapi_decode_bin_set_property (GObject * object,
             vaapidecbin->deinterlace_method, NULL);
       break;
     case PROP_DISABLE_VPP:
-    {
-      gboolean disable_vpp;
-
-      disable_vpp = g_value_get_boolean (value);
-      if (!disable_vpp && !vaapidecbin->has_vpp)
-        GST_WARNING_OBJECT (vaapidecbin,
-            "Cannot enable VPP since the VA driver does not support it");
-      else
-        vaapidecbin->disable_vpp = disable_vpp;
-
       /* @TODO: Add run-time disabling support */
+      vaapidecbin->disable_vpp = g_value_get_boolean (value);
       break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -277,6 +267,12 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
   vaapidecbin->decoder =
       g_object_new (g_type_from_name ("GstVaapiDecode"), NULL);
 
+  if (vaapidecbin->disable_vpp) {
+    gst_bin_add (GST_BIN (vaapidecbin), vaapidecbin->decoder);
+    pad = gst_element_get_static_pad (vaapidecbin->decoder, "src");
+    goto bail;
+  }
+
   /* create the queue */
   vaapidecbin->queue = gst_element_factory_make ("queue", "vaapi-queue");
   if (!vaapidecbin->queue) {
@@ -303,17 +299,19 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
           vaapidecbin->postproc, NULL))
     goto error_link_pad;
 
-  /* create ghost pad sink */
-  pad = gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->decoder), "sink");
-  ghostpad = gst_ghost_pad_new_from_template ("sink", pad,
+  /* create ghost pad src */
+  pad = gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->postproc), "src");
+
+bail:
+  ghostpad = gst_ghost_pad_new_from_template ("src", pad,
       GST_PAD_PAD_TEMPLATE (pad));
   gst_object_unref (pad);
   if (!gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghostpad))
     goto error_adding_pad;
 
-  /* create ghost pad src */
-  pad = gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->postproc), "src");
-  ghostpad = gst_ghost_pad_new_from_template ("src", pad,
+  /* create ghost pad sink */
+  pad = gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->decoder), "sink");
+  ghostpad = gst_ghost_pad_new_from_template ("sink", pad,
       GST_PAD_PAD_TEMPLATE (pad));
   gst_object_unref (pad);
   if (!gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghostpad))
