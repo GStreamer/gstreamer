@@ -74,7 +74,7 @@ struct _GstAudioAggregatorPadPrivate
 G_DEFINE_TYPE (GstAudioAggregatorPad, gst_audio_aggregator_pad,
     GST_TYPE_AGGREGATOR_PAD);
 
-static gboolean
+static GstFlowReturn
 gst_audio_aggregator_pad_flush_pad (GstAggregatorPad * aggpad,
     GstAggregator * aggregator);
 
@@ -118,7 +118,7 @@ gst_audio_aggregator_pad_init (GstAudioAggregatorPad * pad)
 }
 
 
-static gboolean
+static GstFlowReturn
 gst_audio_aggregator_pad_flush_pad (GstAggregatorPad * aggpad,
     GstAggregator * aggregator)
 {
@@ -131,7 +131,7 @@ gst_audio_aggregator_pad_flush_pad (GstAggregatorPad * aggpad,
   gst_buffer_replace (&pad->priv->buffer, NULL);
   GST_OBJECT_UNLOCK (aggpad);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 
