@@ -954,8 +954,6 @@ gst_vaapidecode_finalize (GObject * object)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (object);
 
-  gst_caps_replace (&decode->allowed_sinkpad_caps, NULL);
-
   g_cond_clear (&decode->surface_ready);
   g_mutex_clear (&decode->surface_ready_mutex);
 
@@ -985,6 +983,7 @@ gst_vaapidecode_close (GstVideoDecoder * vdec)
 
   gst_vaapidecode_destroy (decode);
   gst_caps_replace (&decode->allowed_srcpad_caps, NULL);
+  gst_caps_replace (&decode->allowed_sinkpad_caps, NULL);
   gst_vaapi_plugin_base_close (GST_VAAPI_PLUGIN_BASE (decode));
   return TRUE;
 }
