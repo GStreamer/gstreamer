@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+<!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+]>
+<refentry id="gstreamer-vaapi-running">
+<refmeta>
+<refentrytitle>Running GStreamer VAAPI Applications</refentrytitle>
+</refmeta>
+
+<refnamediv>
+<refname>Running GStreamer VAAPI Applications</refname>
+<refpurpose>
+How to run GStreamer application with VAAPI elements.
+</refpurpose>
+</refnamediv>
+
+<refsect1>
+<title>Running GStreamer VAAPI Applications</title>
+
+<refsect2>
+<title>Environment variables</title>
+
+<para> 
+GStreamer-VAAPI inspects a few of environment variables to define it usage.
+</para>
+
+<formalpara id="GST_VAAPI_ALL_DRIVERS">
+  <title><envar>GST_VAAPI_ALL_DRIVERS</envar></title>
+
+  <para>
+This environment variable can be set, independently of its value, to disable
+the drivers white list. By default only intel and mesa va drivers are loaded
+if they are available. The rest are ignored. With this environment variable
+defined, all the available va drivers are loaded, even if they are deprecated.
+  </para>
+
+</formalpara>
+
+<formalpara id="LIBVA_DRIVER_NAME">
+  <title><envar>LIBVA_DRIVER_NAME</envar></title>
+
+  <para>
+This environment variable can be set with the drivers name to load. For
+example, intel's driver is <userinput>i915</userinput>, meanwhile mesa is
+<userinput>gallium</userinput>.
+  </para>
+
+</formalpara>
+
+<formalpara id="LIBVA_DRIVERS_PATH">
+  <title><envar>LIBVA_DRIVERS_PATH</envar></title>
+
+  <para>
+This environment variable can be set to a colon-separated list of paths (or a
+semicolon-separated list on Windows).  libva will scan these paths for va
+drivers.
+  </para>
+
+</formalpara>
+
+</refsect2>
+
+</refsect1>
+
+</refentry>

@@ -10,6 +10,11 @@
   </bookinfo>
 
   <chapter>
+    <title>gstremaer-vaapi Overview</title>
+    <xi:include href="running.xml"/>
+  </chapter>
+
+  <chapter>
     <title>gstreamer-vaapi Elements</title>
     <xi:include href="xml/element-vaapijpegdec.xml"/>
     <xi:include href="xml/element-vaapimpeg2dec.xml"/>
