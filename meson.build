@@ -188,15 +188,9 @@ endif
 deps = [
   ['gtk_dep','gtk+-3.0', '', ''],
   ['gtkx_dep','gtk+-x11-3.0', '', ''],
-  ['jack_dep','jack', '>=1.9.7', 'HAVE_JACK_1_9_7'],
   ['caca_dep','caca', '', ''],
-  ['libdv_dep','libdv', '>=0.100', ''],
   ['libraw1394_dep','libraw1394', '>=2.0.0', ''],
   ['libiec61883_dep','libiec61883', '>=1.0.0', ''],
-  ['libraw1394_dep','libraw1394', '>=1.1.0', ''],
-  ['shout_dep','shout', '>=2.0', ''],
-  ['taglib_dep','taglib', '>=1.5', ''],
-  ['wavpack_dep','wavpack', '>= 4.20', 'HAVE_WAVPACK'],
 ]
 
 foreach d : deps
