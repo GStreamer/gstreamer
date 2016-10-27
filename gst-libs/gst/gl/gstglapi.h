@@ -174,10 +174,14 @@ typedef struct _GstGLFuncs
 #undef GST_GL_EXT_FUNCTION
 #undef GST_GL_EXT_END
 
+GST_EXPORT
 gchar * gst_gl_api_to_string (GstGLAPI api);
+GST_EXPORT
 GstGLAPI gst_gl_api_from_string (const gchar * api_s);
 
+GST_EXPORT
 gchar * gst_gl_platform_to_string (GstGLPlatform platform);
+GST_EXPORT
 GstGLPlatform gst_gl_platform_from_string (const gchar * platform_s);
 
 G_END_DECLS
