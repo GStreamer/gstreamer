@@ -88,7 +88,7 @@ static GstCaps *gst_gl_view_convert_element_fixate_caps (GstBaseTransform *
 static GstFlowReturn
 gst_gl_view_convert_element_submit_input_buffer (GstBaseTransform * trans,
     gboolean is_discont, GstBuffer * input);
-static gboolean
+static GstFlowReturn
 gst_gl_view_convert_element_generate_output_buffer (GstBaseTransform * bt,
     GstBuffer ** outbuf);
 
