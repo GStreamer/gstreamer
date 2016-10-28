@@ -1574,14 +1574,16 @@ retry_failover_protection:
     GST_M3U8_CLIENT_UNLOCK (demux->client);
     gst_hls_demux_set_current_variant (demux, previous_variant);
     /*  Try a lower bitrate (or stop if we just tried the lowest) */
-    lowest_variant = demux->master->variants->data;
-    lowest_ivariant = demux->master->iframe_variants->data;
-    if (previous_variant->iframe && new_bandwidth == lowest_ivariant->bandwidth)
-      return FALSE;
-    if (!previous_variant->iframe && new_bandwidth == lowest_variant->bandwidth)
-      return FALSE;
-    else
-      return gst_hls_demux_change_playlist (demux, new_bandwidth - 1, changed);
+    if (previous_variant->iframe) {
+      lowest_ivariant = demux->master->iframe_variants->data;
+      if (new_bandwidth == lowest_ivariant->bandwidth)
+        return FALSE;
+    } else {
+      lowest_variant = demux->master->variants->data;
+      if (new_bandwidth == lowest_variant->bandwidth)
+        return FALSE;
+    }
+    return gst_hls_demux_change_playlist (demux, new_bandwidth - 1, changed);
   }
 
   return TRUE;
