@@ -168,7 +168,7 @@ start_server (gboolean set_shared_factory)
   /* use an address pool for multicast */
   pool = gst_rtsp_address_pool_new ();
   gst_rtsp_address_pool_add_range (pool,
-      "224.3.0.0", "224.3.0.10", 5000, 5010, 16);
+      "224.3.0.0", "224.3.0.10", 5500, 5510, 16);
   gst_rtsp_address_pool_add_range (pool, GST_RTSP_ADDRESS_POOL_ANY_IPV4,
       GST_RTSP_ADDRESS_POOL_ANY_IPV4, 6000, 6010, 0);
   gst_rtsp_media_factory_set_address_pool (factory, pool);

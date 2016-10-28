@@ -166,21 +166,21 @@ GST_START_TEST (test_get_multicast_address)
 
   pool = gst_rtsp_address_pool_new ();
   fail_unless (gst_rtsp_address_pool_add_range (pool,
-          "233.252.0.0", "233.252.0.0", 5000, 5001, 1));
+          "233.252.0.0", "233.252.0.0", 5100, 5101, 1));
   fail_unless (gst_rtsp_address_pool_add_range (pool,
-          "FF11:DB8::1", "FF11:DB8::1", 5002, 5003, 1));
+          "FF11:DB8::1", "FF11:DB8::1", 5102, 5103, 1));
   gst_rtsp_stream_set_address_pool (stream, pool);
 
   addr1 = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV4);
   fail_unless (addr1 != NULL);
   fail_unless_equals_string (addr1->address, "233.252.0.0");
-  fail_unless_equals_int (addr1->port, 5000);
+  fail_unless_equals_int (addr1->port, 5100);
   fail_unless_equals_int (addr1->n_ports, 2);
 
   addr2 = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV4);
   fail_unless (addr2 != NULL);
   fail_unless_equals_string (addr2->address, "233.252.0.0");
-  fail_unless_equals_int (addr2->port, 5000);
+  fail_unless_equals_int (addr2->port, 5100);
   fail_unless_equals_int (addr2->n_ports, 2);
 
   gst_rtsp_address_free (addr1);
@@ -189,13 +189,13 @@ GST_START_TEST (test_get_multicast_address)
   addr1 = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV6);
   fail_unless (addr1 != NULL);
   fail_unless (!g_ascii_strcasecmp (addr1->address, "FF11:DB8::1"));
-  fail_unless_equals_int (addr1->port, 5002);
+  fail_unless_equals_int (addr1->port, 5102);
   fail_unless_equals_int (addr1->n_ports, 2);
 
   addr2 = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV6);
   fail_unless (addr2 != NULL);
   fail_unless (!g_ascii_strcasecmp (addr2->address, "FF11:DB8::1"));
-  fail_unless_equals_int (addr2->port, 5002);
+  fail_unless_equals_int (addr2->port, 5102);
   fail_unless_equals_int (addr2->n_ports, 2);
 
   gst_rtsp_address_free (addr1);
@@ -237,7 +237,7 @@ GST_START_TEST (test_multicast_address_and_unicast_udp)
   pool = gst_rtsp_address_pool_new ();
   /* add a multicast addres to the address pool */
   fail_unless (gst_rtsp_address_pool_add_range (pool,
-          "233.252.0.0", "233.252.0.0", 5000, 5001, 1));
+          "233.252.0.0", "233.252.0.0", 5200, 5201, 1));
   gst_rtsp_stream_set_address_pool (stream, pool);
 
   fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
