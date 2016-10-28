@@ -80,7 +80,7 @@ ssl_locking_function (gint mode, gint lock_num, const gchar * file, gint line)
   reading = mode & CRYPTO_READ;
   lock = &ssl_locks[lock_num];
 
-  GST_LOG_OBJECT (NULL, "%s SSL lock for %s, thread=%p location=%s:%d",
+  GST_TRACE_OBJECT (NULL, "%s SSL lock for %s, thread=%p location=%s:%d",
       locking ? "locking" : "unlocking", reading ? "reading" : "writing",
       g_thread_self (), file, line);
 
