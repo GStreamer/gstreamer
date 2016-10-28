@@ -129,6 +129,7 @@ configexecincludedir = $(libdir)/gstreamer-@GST_API_VERSION@/include/gst/gl
 nodist_configexecinclude_HEADERS = $(built_sys_header_configure)
 
 libgstgl_@GST_API_VERSION@_la_CFLAGS = \
+	-DGST_EXPORTS \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_builddir)/gst-libs \
 	$(GST_PLUGINS_BASE_CFLAGS) \
