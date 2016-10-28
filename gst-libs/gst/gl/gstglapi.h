@@ -76,7 +76,7 @@
 #pragma GCC diagnostic pop
 #endif
 
-#if defined(WINAPI) && !defined(_MSC_VER)
+#if defined(WINAPI)
 #define GSTGLAPI WINAPI
 #else
 #define GSTGLAPI
