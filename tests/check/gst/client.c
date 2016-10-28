@@ -485,15 +485,15 @@ test_setup_response_200_multicast (GstRTSPClient * client,
 
   fail_unless (expected_transport != NULL);
 
-  fail_unless (gst_rtsp_message_get_type (response) ==
+  fail_unless_equals_int (gst_rtsp_message_get_type (response),
       GST_RTSP_MESSAGE_RESPONSE);
 
   fail_unless (gst_rtsp_message_parse_response (response, &code, &reason,
           &version)
       == GST_RTSP_OK);
-  fail_unless (code == GST_RTSP_STS_OK);
-  fail_unless (g_str_equal (reason, "OK"));
-  fail_unless (version == GST_RTSP_VERSION_1_0);
+  fail_unless_equals_int (code, GST_RTSP_STS_OK);
+  fail_unless_equals_string (reason, "OK");
+  fail_unless_equals_int (version, GST_RTSP_VERSION_1_0);
 
   fail_unless (gst_rtsp_message_get_header (response, GST_RTSP_HDR_CSEQ, &str,
           0) == GST_RTSP_OK);
@@ -502,7 +502,7 @@ test_setup_response_200_multicast (GstRTSPClient * client,
   fail_unless (gst_rtsp_message_get_header (response, GST_RTSP_HDR_TRANSPORT,
           &str, 0) == GST_RTSP_OK);
 
-  fail_unless (!strcmp (str, expected_transport));
+  fail_unless_equals_string (str, expected_transport);
 
   fail_unless (gst_rtsp_message_get_header (response, GST_RTSP_HDR_SESSION,
           &str, 0) == GST_RTSP_OK);
