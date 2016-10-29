@@ -608,6 +608,41 @@ GST_START_TEST (test_change_caps)
 GST_END_TEST;
 
 
+GST_START_TEST (test_not_negotiated)
+{
+  GstElement *pipeline, *src, *parse, *sink;
+  GstMessage *msg;
+
+  pipeline = gst_pipeline_new ("pipeline");
+  src = gst_element_factory_make ("fakesrc", NULL);
+  parse = gst_element_factory_make ("rawvideoparse", NULL);
+  sink = gst_element_factory_make ("appsink", NULL);
+  fail_unless (src != NULL && parse != NULL && sink != NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src, parse, sink, NULL);
+  gst_element_link_many (src, parse, sink, NULL);
+
+  gst_util_set_object_arg (G_OBJECT (src), "sizetype", "random");
+  gst_util_set_object_arg (G_OBJECT (src), "filltype", "random");
+
+  /* fakesrc pull mode is broken, it will create random-sized buffers */
+  gst_util_set_object_arg (G_OBJECT (src), "can-activate-pull", "false");
+
+  gst_util_set_object_arg (G_OBJECT (parse), "format", "rgb");
+
+  gst_util_set_object_arg (G_OBJECT (sink), "caps", "video/x-raw,format=I420");
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipeline),
+      GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR);
+
+  gst_message_unref (msg);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 rawvideoparse_suite (void)
 {
@@ -621,6 +656,7 @@ rawvideoparse_suite (void)
   tcase_add_test (tc_chain, test_push_with_no_framerate);
   tcase_add_test (tc_chain, test_computed_plane_strides);
   tcase_add_test (tc_chain, test_change_caps);
+  tcase_add_test (tc_chain, test_not_negotiated);
 
   return s;
 }
