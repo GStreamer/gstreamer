@@ -1469,6 +1469,16 @@ class _TestsLauncher(Loggable):
                 self.clean_tests()
 
             return False
+        elif self.options.n_runs:
+            res = True
+            for r in range(self.options.n_runs):
+                t = "Running iteration %d" % r
+                print("%s\n%s\n%s\n" % ("=" * len(t), t, "=" * len(t)))
+                if not self._run_tests():
+                    res = False
+                self.clean_tests()
+
+            return res
         else:
             return self._run_tests()
 

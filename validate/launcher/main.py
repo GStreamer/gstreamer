@@ -180,6 +180,7 @@ class LauncherConfig(Loggable):
         self.testsuites = []
         self.debug = False
         self.forever = False
+        self.n_runs = None
         self.fatal_error = False
         self.wanted_tests = []
         self.blacklisted_tests = []
@@ -377,6 +378,10 @@ Note that all testsuite should be inside python modules, so the directory should
     parser.add_argument("-f", "--forever", dest="forever",
                         action="store_true",
                         help="Keep running tests until one fails")
+    parser.add_argument("--n-runs", dest="n_runs", action='store',
+                        help="Number of runs, if the testsuites."
+                        " Meaning no failure will stop the testuite"
+                        " run meanwhile.", type=int),
     parser.add_argument("-F", "--fatal-error", dest="fatal_error",
                         action="store_true",
                         help="Stop on first fail")
