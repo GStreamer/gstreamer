@@ -64,8 +64,15 @@ if host_machine.system() != 'windows'
 endif
 gstcontroller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_controller_dep'])
-gstvalidate_dep = dependency('gst-validate-1.0', version : gst_req, required : false,
-  fallback : ['gst-devtools', 'validate_dep'])
+
+# gst-validate has a hard-dep on json-glib-1.0 so maintain optionality of it all
+# by only dragging it in as a fallback if we know we can satisfy the dependencies
+if dependency('json-glib-1.0').found()
+  gstvalidate_dep = dependency('gst-validate-1.0', version : gst_req, required : false,
+    fallback : ['gst-devtools', 'validate_dep'])
+else
+  gstvalidate_dep = dependency('gst-validate-1.0', vesion: gst_req, required : false)
+endif
 
 gio_dep = dependency('gio-2.0', version : glib_req)
 libxml_dep = dependency('libxml-2.0')
