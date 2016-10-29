@@ -590,8 +590,8 @@ gst_raw_base_parse_handle_frame (GstBaseParse * parse,
     new_caps_event = NULL;
   }
 
-  gst_base_parse_finish_frame (parse, frame, out_size + frame->overhead);
-
+  flow_ret =
+      gst_base_parse_finish_frame (parse, frame, out_size + frame->overhead);
 
   return flow_ret;
 
