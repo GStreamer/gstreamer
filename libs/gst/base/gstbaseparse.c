@@ -3184,9 +3184,17 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     av = gst_adapter_available (parse->priv->adapter);
 
     if (G_UNLIKELY (parse->priv->drain)) {
-      min_size = av;
-      GST_DEBUG_OBJECT (parse, "draining, data left: %d", min_size);
-      if (G_UNLIKELY (!min_size)) {
+      GST_DEBUG_OBJECT (parse, "draining, data left: %u, min %u", av, min_size);
+      /* pass all available data to subclass, not just the minimum,
+       * but never pass less than the minimum required to the subclass */
+      if (av >= min_size) {
+        min_size = av;
+        if (G_UNLIKELY (!min_size))
+          goto done;
+      } else if (av > 0) {
+        GST_DEBUG_OBJECT (parse, "draining, but not enough data available, "
+            "discarding %u bytes", av);
+        gst_adapter_clear (parse->priv->adapter);
         goto done;
       }
     }
