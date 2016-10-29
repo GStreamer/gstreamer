@@ -2108,6 +2108,16 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       }
       break;
 
+    case AV_CODEC_ID_OPUS:
+      /* Note that ffmpeg has no encoder yet, but just for safety. In the
+       * encoder case, we want to add things like samplerate, channels... */
+      if (!encode) {
+        /* FIXME: can ffmpeg handle multichannel Opus? */
+        caps = gst_caps_new_simple ("audio/x-opus",
+            "channel-mapping-family", G_TYPE_INT, 0, NULL);
+      }
+      break;
+
     case AV_CODEC_ID_S302M:
       caps = gst_caps_new_empty_simple ("audio/x-smpte-302m");
       break;
