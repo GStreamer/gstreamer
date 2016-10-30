@@ -313,9 +313,14 @@ gst_vaapi_window_wayland_destroy (GstVaapiWindow * window)
 {
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (window);
+  struct wl_display *const wl_display =
+      GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
 
   /* Wait for the last frame to complete redraw */
   gst_vaapi_window_wayland_sync (window);
+
+  if (priv->event_queue)
+    wl_display_roundtrip_queue (wl_display, priv->event_queue);
 
   if (priv->last_frame) {
     frame_state_free (priv->last_frame);
