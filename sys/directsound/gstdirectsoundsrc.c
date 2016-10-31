@@ -818,7 +818,7 @@ gst_directsound_src_mixer_find (GstDirectSoundSrc * dsoundsrc,
     if (mmres != MMSYSERR_NOERROR)
       continue;
 
-    mmres = mixerGetDevCaps (GPOINTER_TO_UINT (dsoundsrc->mixer),
+    mmres = mixerGetDevCaps ((UINT_PTR)dsoundsrc->mixer,
         mixer_caps, sizeof (MIXERCAPS));
 
     if (mmres != MMSYSERR_NOERROR) {
