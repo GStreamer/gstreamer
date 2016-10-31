@@ -59,6 +59,8 @@ G_BEGIN_DECLS
  */
 #define GST_ADAPTIVE_DEMUX_SINK_PAD(obj)        (((GstAdaptiveDemux *) (obj))->sinkpad)
 
+#define GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS(obj) ((((GstAdaptiveDemux*)(obj))->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) == GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
+
 #define GST_ADAPTIVE_DEMUX_STREAM_PAD(obj)      (((GstAdaptiveDemuxStream *) (obj))->pad)
 
 #define GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER(obj) (((GstAdaptiveDemuxStream *) (obj))->need_header)
