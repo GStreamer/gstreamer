@@ -89,10 +89,6 @@ struct _GstSoupHTTPSrc {
 
   GCancellable *cancellable;
   GInputStream *input_stream;
-  gboolean has_pollable_interface;
-  gboolean have_data;
-  GMainContext *poll_context;
-  GSource *poll_source;
 
   gint reduce_blocksize_count;
   gint increase_blocksize_count;
