@@ -1143,8 +1143,7 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
   }
 
   if (dashstream->moof_sync_samples
-      && GST_ADAPTIVE_DEMUX (dashdemux)->
-      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+      && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (dashdemux)) {
     GstDashStreamSyncSample *sync_sample =
         &g_array_index (dashstream->moof_sync_samples, GstDashStreamSyncSample,
         dashstream->current_sync_sample);
@@ -1368,9 +1367,8 @@ gst_dash_demux_stream_has_next_sync_sample (GstAdaptiveDemuxStream * stream)
 {
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
-  if (dashstream->moof_sync_samples
-      && GST_ADAPTIVE_DEMUX (stream->demux)->
-      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+  if (dashstream->moof_sync_samples &&
+      GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux)) {
     if (stream->demux->segment.rate > 0.0) {
       if (dashstream->current_sync_sample + 1 <
           dashstream->moof_sync_samples->len)
@@ -1407,9 +1405,8 @@ gst_dash_demux_stream_advance_sync_sample (GstAdaptiveDemuxStream * stream)
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
   gboolean fragment_finished = FALSE;
 
-  if (dashstream->moof_sync_samples
-      && GST_ADAPTIVE_DEMUX (stream->demux)->
-      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+  if (dashstream->moof_sync_samples &&
+      GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux)) {
     if (stream->demux->segment.rate > 0.0) {
       dashstream->current_sync_sample++;
       if (dashstream->current_sync_sample >= dashstream->moof_sync_samples->len) {
@@ -1483,9 +1480,8 @@ gst_dash_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream)
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
-  if (dashstream->moof_sync_samples
-      && GST_ADAPTIVE_DEMUX (dashdemux)->
-      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+  if (dashstream->moof_sync_samples &&
+      GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (dashdemux)) {
     if (gst_dash_demux_stream_has_next_sync_sample (stream))
       return TRUE;
   }
@@ -1508,9 +1504,8 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
   GST_DEBUG_OBJECT (stream->pad, "Advance fragment");
 
   /* If downloading only keyframes, switch to the next one or fall through */
-  if (dashstream->moof_sync_samples
-      && GST_ADAPTIVE_DEMUX (dashdemux)->
-      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+  if (dashstream->moof_sync_samples &&
+      GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (dashdemux)) {
     if (gst_dash_demux_stream_advance_sync_sample (stream))
       return GST_FLOW_OK;
   }
@@ -1576,7 +1571,7 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
   }
 
   /* get representation index with current max_bandwidth */
-  if ((base_demux->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) ||
+  if (GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (base_demux) ||
       ABS (base_demux->segment.rate) <= 1.0) {
     new_index =
         gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list, bitrate,
@@ -1987,7 +1982,7 @@ gst_dash_demux_stream_fragment_start (GstAdaptiveDemux * demux,
    * buffer. We need offsets to be consistent between moof and mdat
    */
   if (dashstream->is_isobmff && dashdemux->allow_trickmode_key_units
-      && (demux->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
+      && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (demux)
       && dashstream->active_stream->mimeType == GST_STREAM_VIDEO)
     stream->discont = TRUE;
 
@@ -2008,15 +2003,14 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
    * buffer. We need offsets to be consistent between moof and mdat
    */
   if (dashstream->is_isobmff && dashdemux->allow_trickmode_key_units
-      && (demux->segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
+      && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (demux)
       && dashstream->active_stream->mimeType == GST_STREAM_VIDEO)
     stream->discont = TRUE;
 
   /* Only handle fragment advancing specifically for SIDX if we're not
    * in key unit mode */
   if (!(dashstream->moof_sync_samples
-          && GST_ADAPTIVE_DEMUX (dashdemux)->
-          segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
+          && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (dashdemux))
       && gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)
       && dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
     /* fragment is advanced on data_received when byte limits are reached */
@@ -2046,8 +2040,7 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
    * random guess for the moof size
    */
   if (dashstream->is_isobmff
-      && (GST_ADAPTIVE_DEMUX (stream->demux)->
-          segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)
+      && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux)
       && dashstream->active_stream->mimeType == GST_STREAM_VIDEO
       && !stream->downloading_header && !stream->downloading_index
       && dashdemux->allow_trickmode_key_units) {
@@ -2120,8 +2113,7 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
      * trickmodes while doing chunked downloading. In that case
      * just download from here to the end now */
     if (dashstream->moof
-        && (GST_ADAPTIVE_DEMUX (stream->demux)->
-            segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS))
+        && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux))
       stream->fragment.chunk_size = -1;
     else
       stream->fragment.chunk_size = 0;
@@ -2584,8 +2576,7 @@ gst_dash_demux_handle_isobmff (GstAdaptiveDemux * demux,
      * reuse the data if the sync sample follows the moof */
     if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
         && gst_dash_demux_find_sync_samples (demux, stream) &&
-        GST_ADAPTIVE_DEMUX (stream->demux)->
-        segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+        GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux)) {
 
       if (dash_stream->first_sync_sample_after_moof) {
         /* If we're here, don't throw away data but collect sync
@@ -2651,9 +2642,7 @@ gst_dash_demux_handle_isobmff (GstAdaptiveDemux * demux,
   /* We're actually running in key-units trick mode */
   if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
       && dash_stream->moof_sync_samples
-      && GST_ADAPTIVE_DEMUX (stream->demux)->
-      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
-
+      && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux)) {
     if (dash_stream->current_sync_sample == -1) {
       /* We're doing chunked downloading and wait for finishing the current
        * chunk so we can jump to the first keyframe */
