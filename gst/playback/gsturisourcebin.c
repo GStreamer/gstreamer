@@ -52,16 +52,16 @@
 #include "gstplayback.h"
 #include "gstplaybackutils.h"
 
-#define GST_TYPE_URI_DECODE_BIN \
+#define GST_TYPE_URI_SOURCE_BIN \
   (gst_uri_source_bin_get_type())
 #define GST_URI_SOURCE_BIN(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_URI_DECODE_BIN,GstURISourceBin))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_URI_SOURCE_BIN,GstURISourceBin))
 #define GST_URI_SOURCE_BIN_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_URI_DECODE_BIN,GstURISourceBinClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_URI_SOURCE_BIN,GstURISourceBinClass))
 #define GST_IS_URI_SOURCE_BIN(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_URI_DECODE_BIN))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_URI_SOURCE_BIN))
 #define GST_IS_URI_SOURCE_BIN_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_URI_DECODE_BIN))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_URI_SOURCE_BIN))
 #define GST_URI_SOURCE_BIN_CAST(obj) ((GstURISourceBin *) (obj))
 
 typedef struct _GstURISourceBin GstURISourceBin;
@@ -2821,5 +2821,5 @@ gst_uri_source_bin_plugin_init (GstPlugin * plugin)
       "URI source element");
 
   return gst_element_register (plugin, "urisourcebin", GST_RANK_NONE,
-      GST_TYPE_URI_DECODE_BIN);
+      GST_TYPE_URI_SOURCE_BIN);
 }
