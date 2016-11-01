@@ -336,6 +336,8 @@ GObject
           GstId3Mux
         GstTeletextDec
         GstTimeCodeWait
+        GstTtmlParse
+        GstTtmlRender
         GstUvcH264MjpgDemux
         GstVideoDecoder
           GstLibde265Dec
@@ -463,6 +465,10 @@ GObject
         MXFMetadataEventTrack
         MXFMetadataStaticTrack
         MXFMetadataTimelineTrack
+  PangoContext
+  PangoFontMap
+    PangoFcFontMap
+      PangoCairoFcFontMap
 GInterface
   AtkImplementorIface
   GTypePlugin
@@ -477,3 +483,4 @@ GInterface
   GstWaylandVideo
   GtkBuildable
   MXFDescriptiveMetadataFrameworkInterface
+  PangoCairoFontMap

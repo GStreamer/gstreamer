@@ -1,13 +1,15 @@
 
-Release notes for GStreamer Bad Plugins 1.9.90
+Release notes for GStreamer Bad Plugins 1.10.0
 
-The GStreamer team is pleased to announce the first release candidate of the
-stable 1.10 release series. The 1.10 release series is adding new features on
-top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the new stable
+1.10 release series. The 1.10 release series is adding new features on top of
+the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
+the source release by the GStreamer project during the stable 1.10 release
+series.
 
 
 "That an accusation?"
@@ -58,29 +60,25 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 738079 : wayland: Destory the scaler interface while finalizing display object
-      * 761987 : waylandsink relies on wl_scaler
-      * 766018 : gl/dispmanx: Implements set_render_rectangle to adjust the position of window
-      * 767422 : kmssink: Uses scaled size to specify input buffer region
-      * 767671 : waylandsink: update from scaler protocol to viewporter protocol
-      * 768158 : waylandsink : memory leak of gst_wayland_sink_get_caps() and scaler of wldisplay
-      * 770146 : kmssink won't compile
-      * 770221 : rtponviftimestamp: Implement property " Immediate " 
-      * 770455 : fdkaacdec: asserts on HE-AAC v2 sample
-      * 770925 : qmlglsink: check qt_context_ first in GstQSGTexture::bind()
-      * 770933 : srtpenc: deadlock in create_session
-      * 771021 : Duplicate GL_CFLAGS in gst-libs/gst/gl/Makefile.am
-      * 771023 : tests/examples/gl/clutter/Makefile.am references deprecated variable $(GST_PLUGINS_GL_LIBS)
-      * 771198 : mpegtsdemux: Trying to set NULL string on field 'title' on taglist
-      * 771382 : dvbsuboverlay: map with READWRITE for overlay blend
-      * 771780 : build: add missing $(GST_PLUGINS_BASE_LIBS)
-      * 771794 : wayland/Makefile.am: add missing libs
-      * 771817 : dx9screencapsrc: throw error for invalid screen index
-      * 771871 : lv2 plugin doesn't do processing in case of mono sound
-      * 771970 : h265parse: Fix parsing of multiple NALs in the hvcC box
-      * 772067 : fdkaacenc: fix enc ! dec case
-      * 772108 : fdkaacenc: set framed=true on src caps
-      * 772186 : fdkaac: misc memory related fixes
+      * 758717 : bayer: pixel aspect ratio not forwarded when transforming caps
+      * 762717 : mpegtsmux: m2ts-mode crashes (abort)
+      * 769382 : qmlglsink: eglmemory memory leak on rpi
+      * 770528 : tsdemux: add support ATSC EAC3
+      * 770587 : qtkitvideosrc: 'QTKit/QTKit.h' file not found (macOS Sierra)
+      * 772330 : adaptivedemux: Improve bitrate estimation
+      * 772499 : opencv: Fix memory leak by gst_caps_to_string
+      * 772503 : gsttimidity: add support for timidity-0.2.x
+      * 772698 : dispmanx: set_render_rectangle functions is buggy
+      * 772699 : dispmanx: dispmanx_egl_show() should call window_resize() only when there is no render rect is set
+      * 772704 : hlsdemux: fix GstHLSDemuxStream type inheritance
+      * 772706 : adaptivedemux: fix buffer size print format
+      * 772742 : mpegtsdemux: Implement efficient program updates
+      * 773026 : qmlglsink build fails for rpi
+      * 773423 : cerbero: Build fixes on macOS Sierra and Xcode 8
+      * 773540 : dtls: port to OpenSSL 1.1.0
+      * 773635 : hlsdemux: don't try to access non-existant iframe variant
+      * 773720 : directsoundsrc: incorrect cast of WinAPI function argument
+      * 772608 : rpi/dispmanx: Implement gst_video_overlay_set_window_handle() for dispmanx window
 
 ==== Download ====
 
@@ -117,30 +115,25 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
-      * Alistair Buxton
+      * Arnaud Vrac
+      * Artem Martynovich
       * Arun Raghavan
-      * Florian Zwoch
-      * Graham Leggett
-      * Gwang Yoon Hwang
-      * Haihua Hu
-      * Hyunjun Ko
-      * Jan Schmidt
-      * Joakim Johansson
-      * Julien Isorce
-      * Kyungyong Kim
-      * Martin Kelly
+      * Daiki Ueno
+      * Edward Hervey
+      * Jimmy Ohn
+      * Joan Pau Beltran
       * Matthew Waters
-      * Nicolas Dufresne
-      * Olivier Crête
-      * Philippe Normand
+      * Michael Olbrich
+      * Munez
+      * Nirbheek Chauhan
+      * Reynaldo H. Verdejo Pinochet
       * Scott D Phillips
       * Sebastian Dröge
-      * Sergey Mamonov
+      * Sergey Borovkov
       * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Víctor Manuel Jáquez Leal
       * Wonchul Lee
+      * sezero
  

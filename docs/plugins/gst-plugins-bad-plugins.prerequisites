@@ -4,3 +4,4 @@ GstTagXmpWriter GstElement
 GstWaylandVideo GstVideoOverlay
 GtkBuildable GObject
 MXFDescriptiveMetadataFrameworkInterface MXFDescriptiveMetadata
+PangoCairoFontMap PangoFontMap
