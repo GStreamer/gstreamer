@@ -1,9 +1,76 @@
-=== release 1.9.90 ===
+=== release 1.10.0 ===
 
-2016-09-30  Sebastian Dröge <slomo@coaxion.net>
+2016-11-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.90
+	  releasing 1.10.0
+
+2016-10-28 18:38:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/rtspserver.c:
+	* tests/check/gst/stream.c:
+	  tests: try to avoid using the same ports in different tests
+	  Causes problems with client multicast tests otherwise if
+	  tests are run in parallel.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773640
+
+2016-10-28 17:50:59 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/client.c:
+	  tests: client: use fail_unless_equals_foo() for better failure reporting
+
+2016-09-26 11:16:04 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Session filter in unwatch session
+	  Call session filter with filter_session_media as paramer in
+	  client_unwatch_session if using drop_backlog = FALSE.
+	  In client_unwatch_session its allowed to grow the watchs backlog.
+	  If using drop_backlog = FALSE and the backlog is full it will cause
+	  a deadlock when setting session media state to NULL
+	  if the backlog is not allowed to grow.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771983
+
+2016-10-20 21:40:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: add fallbacks for gst modules
+	  For gst-all.
+
+2016-09-14 17:48:39 +0300  Nikita Bobkov <NikitaDBobkov@gmail.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Fix factory leaking in find_media() in error cases
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771488
+
+2016-10-06 11:47:50 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: Fix randomly missing streams from SDP with dynamic elements
+	  When using dynamic elements, gst_rtsp_stream_join_bin() is called from
+	  "pad-added" signal. In that case priv->srcpad could already have its caps,
+	  and they'll be sent to priv->send_src[0] pad. That means that when it
+	  connects "notify::caps" signal, that pad could already have received its
+	  caps and the signal won't be emitted anymore.
+	  In that case priv->caps stay to NULL and when building the SDP that stream
+	  gets ignored. Leading to missing video or audio when playing in client side.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772478
+
+2016-09-30 11:42:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.9.90 ===
+
+2016-09-30 13:04:12 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.9.90
 
 2016-09-17 13:17:19 +0100  Ian Jamison <ian.dev@arkver.com>
 
