@@ -33848,3 +33848,103 @@
 <DEFAULT>0</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>avmux_tta::maxdelay</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>maxdelay</NICK>
+<BLURB>Set the maximum demux-decode delay (in microseconds).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avmux_tta::preload</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>preload</NICK>
+<BLURB>Set the initial demux-decode delay (in microseconds).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avmux_ogv::maxdelay</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>maxdelay</NICK>
+<BLURB>Set the maximum demux-decode delay (in microseconds).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avmux_ogv::preload</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>preload</NICK>
+<BLURB>Set the initial demux-decode delay (in microseconds).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avmux_fifo::maxdelay</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>maxdelay</NICK>
+<BLURB>Set the maximum demux-decode delay (in microseconds).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avmux_fifo::preload</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>preload</NICK>
+<BLURB>Set the initial demux-decode delay (in microseconds).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_truehd::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Audio Bitrate.</BLURB>
+<DEFAULT>128000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_truehd::compliance</NAME>
+<TYPE>GstFFMpegCompliance</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Compliance</NICK>
+<BLURB>Adherence of the encoder to the specifications.</BLURB>
+<DEFAULT>Normal behavior</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_mlp::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit Rate</NICK>
+<BLURB>Target Audio Bitrate.</BLURB>
+<DEFAULT>128000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>avenc_mlp::compliance</NAME>
+<TYPE>GstFFMpegCompliance</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Compliance</NICK>
+<BLURB>Adherence of the encoder to the specifications.</BLURB>
+<DEFAULT>Normal behavior</DEFAULT>
+</ARG>
+

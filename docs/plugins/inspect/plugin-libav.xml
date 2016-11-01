@@ -3,7 +3,7 @@
   <description>All libav codecs and formats (local snapshot)</description>
   <filename>../../ext/libav/.libs/libgstlibav.so</filename>
   <basename>libgstlibav.so</basename>
-  <version>1.9.90</version>
+  <version>1.10.0</version>
   <license>LGPL</license>
   <source>gst-libav</source>
   <package>libav</package>
@@ -3665,7 +3665,7 @@
     </element>
     <element>
       <name>avdec_magicyuv</name>
-      <longname>libav MagicYUV Lossless Video decoder</longname>
+      <longname>libav MagicYUV video decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>libav magicyuv decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
@@ -8680,6 +8680,27 @@
       </pads>
     </element>
     <element>
+      <name>avenc_mlp</name>
+      <longname>libav MLP (Meridian Lossless Packing) encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav mlp encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channel-mask=(bitmask)0x0000000000000000, channels=(int)1, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000003, channels=(int)2, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000103, channels=(int)3, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000033, channels=(int)4, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x000000000000000b, channels=(int)3, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000007, channels=(int)3, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000107, channels=(int)4, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000037, channels=(int)5, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x000000000000000f, channels=(int)4, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x000000000000010f, channels=(int)5, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x000000000000003f, channels=(int)6, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-mlp, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_mp2</name>
       <longname>libav MP2 (MPEG audio layer 2) encoder</longname>
       <class>Codec/Encoder/Audio</class>
@@ -9415,6 +9436,27 @@
       </pads>
     </element>
     <element>
+      <name>avenc_truehd</name>
+      <longname>libav TrueHD encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav truehd encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channel-mask=(bitmask)0x0000000000000003, channels=(int)2, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x0000000000000037, channels=(int)5, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channel-mask=(bitmask)0x000000000000003f, channels=(int)6, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-true-hd, channels=(int)[ 1, 8 ], rate=(int)[ 4000, 96000 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_tta</name>
       <longname>libav TTA (True Audio) encoder</longname>
       <class>Codec/Encoder/Audio</class>
@@ -9446,7 +9488,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ RGB, RGBA, Y42B, I420 }</details>
+          <details>video/x-raw, format=(string){ RGB, RGBA, Y42B, I420, Y444 }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -10177,6 +10219,15 @@
       </pads>
     </element>
     <element>
+      <name>avmux_fifo</name>
+      <longname>libav FIFO queue pseudo-muxer muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav FIFO queue pseudo-muxer muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+      </pads>
+    </element>
+    <element>
       <name>avmux_filmstrip</name>
       <longname>libav Adobe Filmstrip muxer</longname>
       <class>Codec/Muxer</class>
@@ -10903,6 +10954,27 @@
       </pads>
     </element>
     <element>
+      <name>avmux_ogv</name>
+      <longname>libav Ogg Video muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav Ogg Video muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/x-vp8</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-ogv</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avmux_oma</name>
       <longname>libav Sony OpenMG audio muxer</longname>
       <class>Codec/Muxer</class>
@@ -11190,6 +11262,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-shockwave-flash</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_tta</name>
+      <longname>libav TTA (True Audio) muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav TTA (True Audio) muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-tta, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-ttafile</details>
         </caps>
       </pads>
     </element>

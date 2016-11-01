@@ -155,6 +155,7 @@ GObject
           avenc_g722
           avenc_g723_1
           avenc_g726
+          avenc_mlp
           avenc_mp2
           avenc_mp2fixed
           avenc_nellymoser
@@ -163,6 +164,7 @@ GObject
           avenc_s302m
           avenc_sonic
           avenc_sonicls
+          avenc_truehd
           avenc_tta
           avenc_wavpack
           avenc_wmav1
@@ -487,6 +489,7 @@ GObject
         avmux_dvd
         avmux_f4v
         avmux_ffm
+        avmux_fifo
         avmux_filmstrip
         avmux_flv
         avmux_gxf
@@ -517,6 +520,7 @@ GObject
         avmux_nut
         avmux_oga
         avmux_ogg
+        avmux_ogv
         avmux_oma
         avmux_opus
         avmux_psp
@@ -530,6 +534,7 @@ GObject
         avmux_spx
         avmux_svcd
         avmux_swf
+        avmux_tta
         avmux_uncodedframecrc
         avmux_vc1test
         avmux_vcd

@@ -1,9 +1,80 @@
-=== release 1.9.90 ===
+=== release 1.10.0 ===
 
-2016-09-30  Sebastian Dröge <slomo@coaxion.net>
+2016-11-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.90
+	  releasing 1.10.0
+
+2016-10-28 12:55:34 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.2
+
+2016-10-27 10:44:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: fix version
+
+2016-10-26 23:29:18 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	  avaudenc/dec: Allow compilation against ffmpeg < 3.2 again
+
+2016-10-26 23:17:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	  avaudenc/dec: Ignore S64BE/LE pseudo-codecs
+
+2016-10-26 23:10:57 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg 3.2 release branch
+	  Release 3.2.0 is planned tomorrow and we should keep track of the latest
+	  major version for 1.10 as we did in the past too.
+
+2016-10-24 10:30:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Fix shell syntax error
+	  Assignments must not have spaces around the '='
+
+2016-10-22 12:48:40 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.1.5
+
+2016-10-15 22:20:40 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Don't set c_std to gnu99
+	  Use the default for each compiler on every platform instead. This
+	  improves our compatibility with compilers that don't have gnu99 as
+	  a c_std.
+
+2016-10-06 14:25:17 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.1.4
+
+2016-09-30 11:35:41 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* hooks/pre-commit.hook:
+	* meson.build:
+	  meson: Setup pre-commit hooks when configuring
+
+=== release 1.9.90 ===
+
+2016-09-30 13:03:42 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.9.90
 
 2016-09-29 12:01:59 +0300  Sebastian Dröge <sebastian@centricular.com>
 

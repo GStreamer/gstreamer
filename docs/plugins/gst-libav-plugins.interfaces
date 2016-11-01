@@ -47,6 +47,7 @@ avenc_jpeg2000 GstPreset
 avenc_jpegls GstPreset
 avenc_ljpeg GstPreset
 avenc_mjpeg GstPreset
+avenc_mlp GstPreset
 avenc_mp2 GstPreset
 avenc_mp2fixed GstPreset
 avenc_mpeg1video GstPreset
@@ -86,6 +87,7 @@ avenc_sunrast GstPreset
 avenc_svq1 GstPreset
 avenc_targa GstPreset
 avenc_tiff GstPreset
+avenc_truehd GstPreset
 avenc_tta GstPreset
 avenc_utvideo GstPreset
 avenc_v308 GstPreset
@@ -126,6 +128,7 @@ avmux_dv GstTagSetter
 avmux_dvd GstTagSetter
 avmux_f4v GstTagSetter
 avmux_ffm GstTagSetter
+avmux_fifo GstTagSetter
 avmux_filmstrip GstTagSetter
 avmux_flv GstTagSetter
 avmux_gxf GstTagSetter
@@ -156,6 +159,7 @@ avmux_mxf_opatom GstTagSetter
 avmux_nut GstTagSetter
 avmux_oga GstTagSetter
 avmux_ogg GstTagSetter
+avmux_ogv GstTagSetter
 avmux_oma GstTagSetter
 avmux_opus GstTagSetter
 avmux_psp GstTagSetter
@@ -170,6 +174,7 @@ avmux_spdif GstTagSetter
 avmux_spx GstTagSetter
 avmux_svcd GstTagSetter
 avmux_swf GstTagSetter
+avmux_tta GstTagSetter
 avmux_uncodedframecrc GstTagSetter
 avmux_vc1test GstTagSetter
 avmux_vcd GstTagSetter
