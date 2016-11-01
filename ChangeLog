@@ -1,9 +1,186 @@
-=== release 1.9.90 ===
+=== release 1.10.0 ===
 
-2016-09-30  Sebastian Dröge <slomo@coaxion.net>
+2016-11-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.90
+	  releasing 1.10.0
+
+2016-10-27 17:13:48 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  vaapidecodebin: resurrect disable-vpp property
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773589
+
+2016-10-27 16:32:23 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  vaapidecodebin: name the internal queue
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773589
+
+2016-10-27 16:27:45 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	* gst/vaapi/gstvaapidecodebin.h:
+	  vaapidecodebin: remove unused variables
+	  Since vaapipostproc is only registered if the driver supports it, all the
+	  support for dynamic loading were removed. Though some leftovers remained.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773589
+
+2016-10-27 12:53:54 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gstreamer-vaapi-plugins-docs.xml.in:
+	* docs/plugins/running.xml:
+	  docs: document environment variables
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773544
+
+2016-10-27 12:31:49 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* docs/plugins/gstreamer-vaapi-plugins-docs.xml.in:
+	* docs/plugins/gstreamer-vaapi-plugins-sections.txt:
+	* gst/vaapi/Makefile.am:
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecodebin.c:
+	* gst/vaapi/gstvaapidecodedoc.c:
+	  docs: replace vaapidecode with each codec
+	  In the spirit of the codec split, this patch removes the documentation of
+	  vaapidecode and adds a page per each possible decoder.
+	  Nonetheless, only those available in the compilation system are going to be
+	  instrospected, because the rest are not registered.
+
+2016-10-27 11:06:06 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapivideobuffer.c:
+	* gst/vaapi/gstvaapivideometa.c:
+	  docs: add missing long descriptions
+
+2016-10-25 14:32:44 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: use GST_*_OBJECT when possible
+	  Since we can have several vaapipostproc operating in a pipeline, it is useful
+	  to know which one is generating the logging message.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773497
+
+2016-07-19 17:00:23 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecode.h:
+	  vaapidecode: rename member to allowed_sinkpad_caps
+	  vaapidecode has a member named allowed_caps, but this name is not enough
+	  explicit. This patch renames allowed_caps to allowed_sinkpad_caps.
+	  No functional changes were included.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773497
+
+2016-10-20 18:12:04 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	* gst/vaapi/gstvaapiencode_h265.c:
+	* gst/vaapi/gstvaapisink.c:
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideometa.c:
+	* gst/vaapi/gstvaapivideometa_texture.c:
+	  plugins: fix code style for errors
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773497
+
+2016-10-20 17:01:57 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: comment style
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773497
+
+2016-10-20 11:19:50 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: rename input parameter
+	  In order to clarify the use of flag as input parameter, it is renamed to
+	  surface_alloc_flag, since it is used when creating a VA surface with certain
+	  properties.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773497
+
+2016-10-25 19:22:03 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: rename element description
+	  So encoders and decoders have similar descriptions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773497
+
+2016-08-02 11:32:19 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  vaapiencode: h264, h265: rename codec name
+	  So encoder and decoders have the same codec name.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773497
+
+2016-07-29 15:17:33 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: simplify code
+	  Merge two lines of variable declarations.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773497
+
+2016-10-07 18:46:22 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder.c:
+	* gst-libs/gst/vaapi/gstvaapipixmap_priv.h:
+	* gst-libs/gst/vaapi/gstvaapitexture_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiwindow_priv.h:
+	  libs: minor correction for logical consistency
+	  GstVaapiDecode is a descendant of GstVaapiMiniObject, so, thought we should
+	  use its methods, even though it doesn't change functionality.
+	  GstVaapiPixmap, GstVaapiTexture and GstVaapiWindow are descendant of
+	  GstVaapiObject, hence its methods shall be used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772554
+
+2016-10-19 15:39:54 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: add explanation about the call 'dup (dmabuf_fd)'
+	  In short GstFdMemory is configured to call close when using
+	  GstDmabufMemory.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-09-02 16:42:45 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* configure.ac:
+	* gst-libs/gst/vaapi/Makefile.am:
+	  build: clean up the dlopen usage
+
+2016-10-08 14:33:59 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  encoder: h264,h265: fix regression in offset count
+	  In commit dc35dafa a bug was introduced because I assumed that
+	  GST_CLOCK_TIME_NONE is zero when is -1. This patch fixes that mistake.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772259
+
+2016-10-18 17:02:59 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* README:
+	  docs: update README
+
+2016-09-27 17:29:25 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	  libs: display: egl: remove unused header include
+	  The header gmodule.h is not used since the library dynamic loading for EGL
+	  display was removed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772599
+
+=== release 1.9.90 ===
+
+2016-09-30 13:05:20 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* common:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.9.90
 
 2016-03-04 16:35:11 +0900  Vineeth TM <vineeth.tm@samsung.com>
 
