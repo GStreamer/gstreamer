@@ -1,14 +1,15 @@
 
-Release notes for GStreamer Ugly Plugins 1.9.90
+Release notes for GStreamer Ugly Plugins 1.10.0
 
-The GStreamer team is pleased to announce the first release candidate of the
-stable 1.10 release series. The 1.10 release series is adding new features on
-top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the new stable
+1.10 release series. The 1.10 release series is adding new features on top of
+the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
-
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
+the source release by the GStreamer project during the stable 1.10 release
+series.
 
 
 "When you have to shoot, shoot.  Don't talk."
@@ -89,7 +90,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jan Schmidt
+      * Nirbheek Chauhan
+      * Scott D Phillips
       * Sebastian Dröge
       * Thibault Saunier
       * Tim-Philipp Müller

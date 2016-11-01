@@ -3,7 +3,7 @@
   <description>Demuxes and muxes audio and video in Microsofts ASF format</description>
   <filename>../../gst/asfdemux/.libs/libgstasf.so</filename>
   <basename>libgstasf.so</basename>
-  <version>1.9.90</version>
+  <version>1.10.0</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>

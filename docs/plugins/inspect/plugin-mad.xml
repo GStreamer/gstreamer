@@ -3,7 +3,7 @@
   <description>mp3 decoding based on the mad library</description>
   <filename>../../ext/mad/.libs/libgstmad.so</filename>
   <basename>libgstmad.so</basename>
-  <version>1.9.90</version>
+  <version>1.10.0</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
