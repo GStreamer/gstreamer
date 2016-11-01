@@ -1,21 +1,17 @@
 
-Release notes for GStreamer Editing Services 1.9.90
+Release notes for GStreamer Editing Services 1.10.0
 
-The GStreamer team is pleased to announce the first release candidate of the
-stable 1.10 release series. The 1.10 release series is adding new features on
-top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the new stable
+1.10 release series. The 1.10 release series is adding new features on top of
+the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
+the source release by the GStreamer project during the stable 1.10 release
+series.
 
   
-
-Bugs fixed in this release
-     
-      * 771434 : ges-launch cannot not load files with square brackets in the file name
-      * 771792 : nlesource: Fail prepare() if no valid source pad is found
-      * 771843 : nle: Fix nleurisource to actually work again
 
 ==== Download ====
 
@@ -52,8 +48,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alexandru Băluț
-      * Jan Schmidt
-      * Sebastian Dröge
+      * Nirbheek Chauhan
+      * Scott D Phillips
       * Thibault Saunier
+      * Tim-Philipp Müller
  

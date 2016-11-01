@@ -32,6 +32,15 @@ GStreamer library for creating audio and video editors
 
  <release>
   <Version>
+   <revision>1.10.0</revision>
+   <branch>master</branch>
+   <created>2016-11-01</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-editing-services/gst-editing-services-1.10.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.9.90</revision>
    <branch>master</branch>
    <created>2016-09-30</created>

@@ -1,9 +1,90 @@
-=== release 1.9.90 ===
+=== release 1.10.0 ===
 
-2016-09-30  Sebastian Dröge <slomo@coaxion.net>
+2016-11-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.90
+	  releasing 1.10.0
+
+2016-10-25 08:54:11 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* meson.build:
+	  meson: Don't depend on gstreamer-check-1.0 on windows
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773114
+
+2016-10-25 11:48:35 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* tests/check/meson.build:
+	  Revert "meson: move gstreamer-check-1.0 dependency to tests/check"
+	  This reverts commit 5665c2bfc9cae531c6dd9a75766d06a4af25ab9a.
+	  Does not actually work. See:
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773114#c31
+
+2016-10-21 05:49:18 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	* tests/check/meson.build:
+	  meson: move gstreamer-check-1.0 dependency to tests/check
+
+2016-10-17 09:34:27 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* meson.build:
+	  meson: mark gstreamer-check-1.0 as required: false
+
+2016-10-15 22:21:24 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Don't set c_std to gnu99
+	  Use the default for each compiler on every platform instead. This
+	  improves our compatibility with compilers that don't have gnu99 as
+	  a c_std.
+
+2016-10-03 17:44:04 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	* tests/check/getpluginsdir:
+	* tests/check/meson.build:
+	  meson: Use environment object to setup test environment variables
+	  Bump meson requirement to 0.35
+
+2016-10-11 00:59:47 +0200  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-track-element.c:
+	  track-element: Avoid dereferencing NULL pointer
+	  We set TrackElement track type very early when creating effects
+	  so it now uses that information to find TrackElement in clips
+	  by track type.
+	  Reviewed-by: Alex Băluț <alexandru.balut@gmail.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1370
+
+2016-09-13 12:31:54 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson: Add python tests
+
+2016-09-30 11:35:42 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* hooks/pre-commit.hook:
+	* meson.build:
+	* tests/check/getpluginsdir:
+	  meson: Setup pre commit hook and fix getpluginsdir for standalone case
+
+2016-09-30 14:56:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.9.90 ===
+
+2016-09-30 13:04:39 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.9.90
 
 2016-09-23 20:41:04 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
 
