@@ -1,13 +1,15 @@
 
-Release notes for GStreamer Good Plugins 1.9.90
+Release notes for GStreamer Good Plugins 1.10.0
 
-The GStreamer team is pleased to announce the first release candidate of the
-stable 1.10 release series. The 1.10 release series is adding new features on
-top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the new stable
+1.10 release series. The 1.10 release series is adding new features on top of
+the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
+the source release by the GStreamer project during the stable 1.10 release
+series.
 
 
 "Such ingratitude.  After all the times I've saved your life."
@@ -53,17 +55,15 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 751559 : qtmux: Implement the preset interface.
-      * 766990 : multifilesink: 'buffer'-mode writes no longer atomic (regression)
-      * 769278 : aacparse: a few fixes and improvements for LOAS parsing
-      * 769757 : rtpjitterbuffer: Fix calculating next_seqnum when dropping old buffers from a full queue.
-      * 769768 : rtpjitterbuffer: lots of improvements around RTX
-      * 770951 : qtdemux: Crash with no cenc auxiliary offset available
-      * 771272 : jackaudiosink: hangs when jackd changes sample rate and/or buffer size
-      * 771278 : udpsrc: Compilation error on NetBSD
-      * 771395 : autodetect: Use gst_bin_set_suppressed_flags() API
-      * 772143 : qtmux: Don't calculate PTS offset and DTS with GST_CLOCK_TIME_NONE
-      * 772228 : tagschecking: Unit test fails because it sends untimestamped buffers to qtdemux
+      * 762207 : flvmux: Ensure we fallback to DTS when clipping
+      * 772496 : tests: Fix memory leak by gst_caps_to_string()
+      * 772497 : waveform : Fix Memory leak by gst_caps_to_string
+      * 772644 : Fix level test in CK_FORK=no mode
+      * 772656 : Fix souphttpsrc tests without CK_FORK=no
+      * 773509 : souphttpsrc: connection loss / reconnect issues
+      * 773580 : v4l2object: fix extra-controls leak
+      * 773582 : matroskamux does not allow resolutions above 4096x4096
+      * 773643 : wavparse: crashes on invalid wav file
 
 ==== Download ====
 
@@ -100,21 +100,17 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arun Raghavan
-      * Georg Lippitsch
-      * Havard Graff
+      * Branko Subasic
+      * Gaurav Gupta
+      * Jan Alexander Steffens (heftig)
       * Jan Schmidt
-      * Mathieu Duponchelle
+      * Mark Nauwelaerts
+      * Michael Olbrich
       * Nicolas Dufresne
-      * Olivier Crête
+      * Nirbheek Chauhan
+      * Scott D Phillips
       * Sebastian Dröge
-      * Stian Selnes
       * Thibault Saunier
-      * Thomas Bluemel
-      * Thomas Klausner
-      * Thomas Scheuermann
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Wonchul Lee
-      * Xabier Rodriguez Calvar
+      * Tobias Schneider
  
