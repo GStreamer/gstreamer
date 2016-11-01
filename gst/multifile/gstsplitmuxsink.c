@@ -258,6 +258,8 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   splitmux->max_files = DEFAULT_MAX_FILES;
   splitmux->send_keyframe_requests = DEFAULT_SEND_KEYFRAME_REQUESTS;
 
+  splitmux->update_mux_start_time = FALSE;
+
   GST_OBJECT_FLAG_SET (splitmux, GST_ELEMENT_FLAG_SINK);
 }
 
@@ -642,10 +644,10 @@ request_next_keyframe (GstSplitMuxSink * splitmux)
       || splitmux->threshold_bytes != 0)
     return TRUE;
 
-  ev = gst_video_event_new_upstream_force_key_unit (splitmux->fragment_id *
+  ev = gst_video_event_new_upstream_force_key_unit (splitmux->mux_start_time +
       splitmux->threshold_time, TRUE, 0);
   GST_DEBUG_OBJECT (splitmux, "Requesting next keyframe at %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (splitmux->fragment_id * splitmux->threshold_time));
+      GST_TIME_ARGS (splitmux->mux_start_time + splitmux->threshold_time));
   return gst_pad_push_event (splitmux->reference_ctx->sinkpad, ev);
 }
 
@@ -772,12 +774,19 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
   complete_or_wait_on_out (splitmux, ctx);
 
+  if (splitmux->update_mux_start_time && ctx->is_reference) {
+    splitmux->mux_start_time = buf_info->run_ts;
+    splitmux->update_mux_start_time = FALSE;
+    if (request_next_keyframe (splitmux) == FALSE)
+      GST_WARNING_OBJECT (splitmux,
+          "Could not request a keyframe. Files may not split at the exact location they should");
+  }
+
   if (splitmux->muxed_out_time == GST_CLOCK_STIME_NONE ||
       splitmux->muxed_out_time < buf_info->run_ts)
     splitmux->muxed_out_time = buf_info->run_ts;
 
   splitmux->muxed_out_bytes += buf_info->buf_size;
-  splitmux->last_frame_duration = buf_info->duration;
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
@@ -858,9 +867,6 @@ start_next_fragment (GstSplitMuxSink * splitmux)
       (splitmux->reference_ctx->in_running_time > splitmux->muxed_out_time);
 
   /* Store the overflow parameters as the basis for the next fragment */
-  splitmux->mux_start_time = splitmux->muxed_out_time;
-  if (splitmux->last_frame_duration != GST_CLOCK_STIME_NONE)
-    splitmux->mux_start_time += splitmux->last_frame_duration;
   splitmux->mux_start_bytes = splitmux->muxed_out_bytes;
 
   GST_DEBUG_OBJECT (splitmux,
@@ -868,9 +874,6 @@ start_next_fragment (GstSplitMuxSink * splitmux)
       GST_STIME_ARGS (splitmux->max_out_running_time));
 
   send_fragment_opened_closed_msg (splitmux, TRUE);
-  if (request_next_keyframe (splitmux) == FALSE)
-    GST_WARNING_OBJECT (splitmux,
-        "Could not request a keyframe. Files may not split at the exact location they should");
 
   GST_SPLITMUX_BROADCAST (splitmux);
 }
@@ -967,6 +970,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
                   queued_time > splitmux->threshold_time)))) {
 
     splitmux->state = SPLITMUX_STATE_ENDING_FILE;
+    splitmux->update_mux_start_time = TRUE;
     GST_INFO_OBJECT (splitmux,
         "mq overflowed since last, draining out. max out TS is %"
         GST_STIME_FORMAT, GST_STIME_ARGS (splitmux->max_out_running_time));
@@ -1749,7 +1753,7 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
       splitmux->state = SPLITMUX_STATE_COLLECTING_GOP_START;
       splitmux->max_in_running_time = GST_CLOCK_STIME_NONE;
       splitmux->muxed_out_time = splitmux->mux_start_time =
-          splitmux->last_frame_duration = GST_CLOCK_STIME_NONE;
+          GST_CLOCK_STIME_NONE;
       splitmux->muxed_out_bytes = splitmux->mux_start_bytes = 0;
       splitmux->opening_first_fragment = TRUE;
       GST_SPLITMUX_UNLOCK (splitmux);

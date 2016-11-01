@@ -122,10 +122,10 @@ struct _GstSplitMuxSink {
   GstClockTimeDiff muxed_out_time;
   guint64 muxed_out_bytes;
   gboolean have_muxed_something;
+  gboolean update_mux_start_time;
 
   GstClockTimeDiff mux_start_time;
   guint64 mux_start_bytes;
-  GstClockTime last_frame_duration;
 
   gboolean opening_first_fragment;
   gboolean switching_fragment;
