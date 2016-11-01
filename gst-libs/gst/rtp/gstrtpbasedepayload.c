@@ -613,9 +613,6 @@ gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
     {
       GST_OBJECT_LOCK (filter);
       gst_event_copy_segment (event, &filter->segment);
-      if (filter->segment.format != GST_FORMAT_TIME)
-        GST_ERROR_OBJECT (filter,
-            "Non-TIME segments are not supported and will likely fail");
       GST_OBJECT_UNLOCK (filter);
 
       /* don't pass the event downstream, we generate our own segment including
@@ -720,11 +717,8 @@ create_segment_event (GstRTPBaseDepayload * filter, guint rtptime,
   if (position == -1)
     position = start;
 
-  if (G_LIKELY (filter->segment.format == GST_FORMAT_TIME))
-    running_time = gst_segment_to_running_time (&filter->segment,
-        GST_FORMAT_TIME, start);
-  else
-    running_time = 0;
+  running_time = gst_segment_to_running_time (&filter->segment,
+      GST_FORMAT_TIME, start);
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
   segment.rate = priv->play_speed;
