@@ -75,6 +75,7 @@ struct _GstNetSim
   gsize bucket_size;
   GstClockTime prev_time;
   NormalDistributionState delay_state;
+  gint64 last_ready_time;
 
   /* properties */
   gint min_delay;
@@ -86,6 +87,7 @@ struct _GstNetSim
   guint drop_packets;
   gint max_kbps;
   gint max_bucket_size;
+  gboolean allow_reordering;
 };
 
 struct _GstNetSimClass
