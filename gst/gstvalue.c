@@ -912,7 +912,8 @@ gst_value_transform_array_string (const GValue * src_value, GValue * dest_value)
 }
 
 static void
-gst_value_transform_g_value_array_string (const GValue * src_value, GValue * dest_value)
+gst_value_transform_g_value_array_string (const GValue * src_value,
+    GValue * dest_value)
 {
   _gst_value_transform_g_value_array_string (src_value, dest_value, "< ", " >");
 }
@@ -6733,7 +6734,7 @@ G_STMT_START {                                                          \
 
 /* These initial sizes are used for the tables
  * below, and save a couple of reallocs at startup */
-static const gint GST_VALUE_TABLE_DEFAULT_SIZE = 33;
+static const gint GST_VALUE_TABLE_DEFAULT_SIZE = 34;
 static const gint GST_VALUE_UNION_TABLE_DEFAULT_SIZE = 3;
 static const gint GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE = 10;
 static const gint GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE = 12;
