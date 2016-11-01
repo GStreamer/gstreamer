@@ -191,11 +191,11 @@ _is_valid_version_profile (GstGLSLVersion version, GstGLSLProfile profile)
     return profile == GST_GLSL_PROFILE_ES;
 
   /* required profile and no ES profile for normal GL contexts */
-  if (version >= GST_GLSL_VERSION_330)
+  if (version == GST_GLSL_VERSION_150 || version >= GST_GLSL_VERSION_330)
     return profile == GST_GLSL_PROFILE_NONE || profile == GST_GLSL_PROFILE_CORE
         || profile == GST_GLSL_PROFILE_COMPATIBILITY;
 
-  if (version <= GST_GLSL_VERSION_150)
+  if (version <= GST_GLSL_VERSION_140)
     return profile == GST_GLSL_PROFILE_NONE
         || profile == GST_GLSL_PROFILE_COMPATIBILITY;
 
@@ -213,7 +213,7 @@ gst_glsl_version_profile_to_string (GstGLSLVersion version,
 
   version_s = gst_glsl_version_to_string (version);
   /* no profiles in GL/ES <= 150 */
-  if (version <= GST_GLSL_VERSION_150)
+  if (version <= GST_GLSL_VERSION_140)
     profile_s = NULL;
   else
     profile_s = gst_glsl_profile_to_string (profile);
@@ -233,10 +233,10 @@ _fixup_version_profile (GstGLSLVersion * version, GstGLSLProfile * profile)
   if (*version == GST_GLSL_VERSION_100 || *version == GST_GLSL_VERSION_300
       || *version == GST_GLSL_VERSION_310 || *version == GST_GLSL_VERSION_320)
     *profile = GST_GLSL_PROFILE_ES;
-  else if (*version <= GST_GLSL_VERSION_150)
+  else if (*version <= GST_GLSL_VERSION_140)
     *profile = GST_GLSL_PROFILE_COMPATIBILITY;
   else if (*profile == GST_GLSL_PROFILE_NONE
-      && *version >= GST_GLSL_VERSION_330)
+      && (*version >= GST_GLSL_VERSION_150 || *version >= GST_GLSL_VERSION_330))
     *profile = GST_GLSL_PROFILE_CORE;
 }
 
@@ -324,7 +324,7 @@ gst_glsl_version_profile_from_string (const gchar * string,
     goto error;
   }
   /* got a profile when none was expected */
-  if (version <= GST_GLSL_VERSION_150 && profile != GST_GLSL_PROFILE_NONE) {
+  if (version <= GST_GLSL_VERSION_140 && profile != GST_GLSL_PROFILE_NONE) {
     GST_WARNING
         ("Found a profile (%s) with a version (%s) that does not support "
         "profiles", gst_glsl_version_to_string (version),
