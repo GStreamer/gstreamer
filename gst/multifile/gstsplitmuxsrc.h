@@ -58,6 +58,7 @@ struct _GstSplitMuxSrc
 
   GstClockTime total_duration;
   GstSegment play_segment;
+  guint32 segment_seqnum;
 };
 
 struct _GstSplitMuxSrcClass

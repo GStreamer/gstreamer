@@ -423,6 +423,8 @@ gst_splitmux_handle_event (GstSplitMuxSrc * splitmux,
       if (gst_splitmux_end_of_part (splitmux, splitpad))
         // Continuing to next part, drop the EOS
         goto drop_event;
+      if (splitmux->segment_seqnum)
+        gst_event_set_seqnum (event, splitmux->segment_seqnum);
       break;
     }
     case GST_EVENT_SEGMENT:{
@@ -465,6 +467,8 @@ gst_splitmux_handle_event (GstSplitMuxSrc * splitmux,
 
       gst_event_unref (event);
       event = gst_event_new_segment (&seg);
+      if (splitmux->segment_seqnum)
+        gst_event_set_seqnum (event, splitmux->segment_seqnum);
       splitpad->sent_segment = TRUE;
       break;
     }
@@ -1142,6 +1146,7 @@ splitmux_src_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       /* Everything is stopped, so update the play_segment */
       gst_segment_copy_into (&tmp, &splitmux->play_segment);
+      splitmux->segment_seqnum = seqnum;
 
       /* Work out where to start from now */
       for (i = 0; i < splitmux->num_parts; i++) {
