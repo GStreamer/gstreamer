@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-09-30 12:19+0300\n"
+"POT-Creation-Date: 2016-11-01 17:49+0200\n"
 "PO-Revision-Date: 2016-02-20 12:35+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -130,30 +130,32 @@ msgstr "Kan de afleversystemen van het frontend-apparaat \"%s\" niet opnoemen."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kan bestand \"%s\" niet openen om te lezen."
 
-msgid "Couldn't find DVB channel configuration file"
+#, fuzzy
+msgid "Couldn't find channel configuration file"
 msgstr "Kon het instellingenbestand van het DVB-kanaal niet vinden"
 
-#, c-format
-msgid "Couldn't load DVB channel configuration file: %s"
+#, fuzzy, c-format
+msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Kon het instellingenbestand \"%s\" van het DVB-kanaal niet laden"
 
-#, c-format
-msgid "Couldn't find details for DVB channel %s"
+#, fuzzy, c-format
+msgid "Couldn't find details for channel '%s'"
 msgstr "Kon de details voor het DVB-kanaal %s niet vinden"
 
 #, fuzzy, c-format
-msgid "No properties for the DVB channel %s"
+msgid "No properties for channel '%s'"
 msgstr "Kon de details voor het DVB-kanaal %s niet vinden"
 
 #, fuzzy, c-format
-msgid "Failed to set properties for the DVB channel %s"
+msgid "Failed to set properties for channel '%s'"
 msgstr "Kon de details voor het DVB-kanaal %s niet vinden"
 
 #, fuzzy, c-format
-msgid "Couldn't find DVB channel configuration file: %s"
+msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Kon het instellingenbestand van het DVB-kanaal niet vinden"
 
-msgid "DVB channel configuration file doesn't contain any channels"
+#, fuzzy
+msgid "Channel configuration file doesn't contain any channels"
 msgstr "Het instellingenbestand van het DVB-kanaal bevat geen kanalen"
 
 #~ msgid "Internal data flow error."

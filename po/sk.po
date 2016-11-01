@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-09-30 12:19+0300\n"
+"POT-Creation-Date: 2016-11-01 17:49+0200\n"
 "PO-Revision-Date: 2016-05-20 12:33+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -131,30 +131,32 @@ msgstr "Nepodarilo sa získať nastavenia od zariadenia \"%s\"."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."
 
-msgid "Couldn't find DVB channel configuration file"
+#, fuzzy
+msgid "Couldn't find channel configuration file"
 msgstr "Nepodarilo sa nájsť konfiguračný súbor DVB kanálu"
 
-#, c-format
-msgid "Couldn't load DVB channel configuration file: %s"
+#, fuzzy, c-format
+msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Nepodarilo sa načítať konfiguračný súbor DVB kanálu: %s"
 
-#, c-format
-msgid "Couldn't find details for DVB channel %s"
+#, fuzzy, c-format
+msgid "Couldn't find details for channel '%s'"
 msgstr "Nepodarilo sa nájsť podrobnosti o DVB kanáli %s"
 
 #, fuzzy, c-format
-msgid "No properties for the DVB channel %s"
+msgid "No properties for channel '%s'"
 msgstr "Nepodarilo sa nájsť podrobnosti o DVB kanáli %s"
 
 #, fuzzy, c-format
-msgid "Failed to set properties for the DVB channel %s"
+msgid "Failed to set properties for channel '%s'"
 msgstr "Nepodarilo sa nájsť podrobnosti o DVB kanáli %s"
 
 #, fuzzy, c-format
-msgid "Couldn't find DVB channel configuration file: %s"
+msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Nepodarilo sa nájsť konfiguračný súbor DVB kanálu"
 
-msgid "DVB channel configuration file doesn't contain any channels"
+#, fuzzy
+msgid "Channel configuration file doesn't contain any channels"
 msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
 
 #~ msgid "Internal data flow error."

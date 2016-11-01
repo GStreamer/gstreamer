@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-09-30 12:19+0300\n"
+"POT-Creation-Date: 2016-11-01 17:49+0200\n"
 "PO-Revision-Date: 2011-04-26 19:38+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -127,30 +127,30 @@ msgid "Could not open file \"%s\" for reading."
 msgstr "読み込み用にファイル \"%s\" を開くことができません。"
 
 #, fuzzy
-msgid "Couldn't find DVB channel configuration file"
+msgid "Couldn't find channel configuration file"
 msgstr "仮想ミックスチャンネル設定"
 
 #, fuzzy, c-format
-msgid "Couldn't load DVB channel configuration file: %s"
+msgid "Couldn't load channel configuration file: '%s'"
 msgstr "仮想ミックスチャンネル設定"
 
 #, c-format
-msgid "Couldn't find details for DVB channel %s"
+msgid "Couldn't find details for channel '%s'"
 msgstr ""
 
 #, c-format
-msgid "No properties for the DVB channel %s"
-msgstr ""
-
-#, c-format
-msgid "Failed to set properties for the DVB channel %s"
+msgid "No properties for channel '%s'"
 msgstr ""
 
 #, fuzzy, c-format
-msgid "Couldn't find DVB channel configuration file: %s"
+msgid "Failed to set properties for channel '%s'"
+msgstr "DVDデバイス '%s' のオープンに失敗しました。"
+
+#, fuzzy, c-format
+msgid "Couldn't find channel configuration file: '%s'"
 msgstr "仮想ミックスチャンネル設定"
 
-msgid "DVB channel configuration file doesn't contain any channels"
+msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
 
 #~ msgid "Internal data flow error."

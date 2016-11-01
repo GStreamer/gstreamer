@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-09-30 12:19+0300\n"
+"POT-Creation-Date: 2016-11-01 17:49+0200\n"
 "PO-Revision-Date: 2014-04-20 15:52+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -133,30 +133,32 @@ msgstr "Nevarēja saņemt iestatījumus no priekšējās ierīces “%s”."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nevarēja atvērt datni “%s” lasīšanai."
 
-msgid "Couldn't find DVB channel configuration file"
+#, fuzzy
+msgid "Couldn't find channel configuration file"
 msgstr "Nevarēja atrast DVB kanāla konfigurācijas datni"
 
-#, c-format
-msgid "Couldn't load DVB channel configuration file: %s"
+#, fuzzy, c-format
+msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Nevarēja ielādēt DVB kanāla konfigurācijas datni: %s"
 
-#, c-format
-msgid "Couldn't find details for DVB channel %s"
+#, fuzzy, c-format
+msgid "Couldn't find details for channel '%s'"
 msgstr "Nevarēja atrast sīkāku informāciju par DVB kanālu %s"
 
 #, fuzzy, c-format
-msgid "No properties for the DVB channel %s"
+msgid "No properties for channel '%s'"
 msgstr "Nevarēja atrast sīkāku informāciju par DVB kanālu %s"
 
 #, fuzzy, c-format
-msgid "Failed to set properties for the DVB channel %s"
+msgid "Failed to set properties for channel '%s'"
 msgstr "Nevarēja atrast sīkāku informāciju par DVB kanālu %s"
 
 #, fuzzy, c-format
-msgid "Couldn't find DVB channel configuration file: %s"
+msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Nevarēja atrast DVB kanāla konfigurācijas datni"
 
-msgid "DVB channel configuration file doesn't contain any channels"
+#, fuzzy
+msgid "Channel configuration file doesn't contain any channels"
 msgstr "DVB kanāla konfigurācijas datne nesatur nevienu kanālu"
 
 #~ msgid "Internal data flow error."

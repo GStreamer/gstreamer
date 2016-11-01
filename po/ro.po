@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-09-30 12:19+0300\n"
+"POT-Creation-Date: 2016-11-01 17:49+0200\n"
 "PO-Revision-Date: 2010-08-16 03:11+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -125,30 +125,30 @@ msgstr "Nu s-au putut obține configurările de la dispozitivul frontend „%s�
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nu s-a putut deschide fișierul „%s” pentru citire."
 
-msgid "Couldn't find DVB channel configuration file"
+msgid "Couldn't find channel configuration file"
 msgstr ""
 
 #, c-format
-msgid "Couldn't load DVB channel configuration file: %s"
+msgid "Couldn't load channel configuration file: '%s'"
 msgstr ""
 
 #, c-format
-msgid "Couldn't find details for DVB channel %s"
+msgid "Couldn't find details for channel '%s'"
 msgstr ""
 
 #, c-format
-msgid "No properties for the DVB channel %s"
+msgid "No properties for channel '%s'"
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Failed to set properties for channel '%s'"
+msgstr "Nu s-a putut deschide dispozitivul DVD „%s”."
 
 #, c-format
-msgid "Failed to set properties for the DVB channel %s"
+msgid "Couldn't find channel configuration file: '%s'"
 msgstr ""
 
-#, c-format
-msgid "Couldn't find DVB channel configuration file: %s"
-msgstr ""
-
-msgid "DVB channel configuration file doesn't contain any channels"
+msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
 
 #~ msgid "Internal data flow error."

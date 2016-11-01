@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-09-30 12:19+0300\n"
+"POT-Creation-Date: 2016-11-01 17:49+0200\n"
 "PO-Revision-Date: 2015-11-20 23:46+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -131,30 +131,32 @@ msgstr ""
 msgid "Could not open file \"%s\" for reading."
 msgstr "A fájl („%s”) nem nyitható meg olvasásra."
 
-msgid "Couldn't find DVB channel configuration file"
+#, fuzzy
+msgid "Couldn't find channel configuration file"
 msgstr "Nem található DVB-csatorna beállítófájl"
 
-#, c-format
-msgid "Couldn't load DVB channel configuration file: %s"
+#, fuzzy, c-format
+msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Nem sikerült betölteni a DVB-csatorna beállítófájlt: %s"
 
-#, c-format
-msgid "Couldn't find details for DVB channel %s"
+#, fuzzy, c-format
+msgid "Couldn't find details for channel '%s'"
 msgstr "Nem találhatók a(z) %s DVB-csatorna részletei"
 
 #, fuzzy, c-format
-msgid "No properties for the DVB channel %s"
+msgid "No properties for channel '%s'"
 msgstr "Nem találhatók a(z) %s DVB-csatorna részletei"
 
 #, fuzzy, c-format
-msgid "Failed to set properties for the DVB channel %s"
+msgid "Failed to set properties for channel '%s'"
 msgstr "Nem találhatók a(z) %s DVB-csatorna részletei"
 
 #, fuzzy, c-format
-msgid "Couldn't find DVB channel configuration file: %s"
+msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Nem található DVB-csatorna beállítófájl"
 
-msgid "DVB channel configuration file doesn't contain any channels"
+#, fuzzy
+msgid "Channel configuration file doesn't contain any channels"
 msgstr "A DVB-csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
 
 #~ msgid "Internal data flow error."

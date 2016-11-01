@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-09-30 12:19+0300\n"
+"POT-Creation-Date: 2016-11-01 17:49+0200\n"
 "PO-Revision-Date: 2011-09-05 12:50+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -128,30 +128,30 @@ msgstr "Non foi posíbel obter os axustes do dispositivo frontend «%s»."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Non foi posíbel abrir o ficheiro «%s» para ler."
 
-msgid "Couldn't find DVB channel configuration file"
+msgid "Couldn't find channel configuration file"
 msgstr ""
 
 #, c-format
-msgid "Couldn't load DVB channel configuration file: %s"
+msgid "Couldn't load channel configuration file: '%s'"
 msgstr ""
 
 #, c-format
-msgid "Couldn't find details for DVB channel %s"
+msgid "Couldn't find details for channel '%s'"
 msgstr ""
 
 #, c-format
-msgid "No properties for the DVB channel %s"
+msgid "No properties for channel '%s'"
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Failed to set properties for channel '%s'"
+msgstr "Produciuse un fallo ao abrir o dispositivo DVD «%s»."
 
 #, c-format
-msgid "Failed to set properties for the DVB channel %s"
+msgid "Couldn't find channel configuration file: '%s'"
 msgstr ""
 
-#, c-format
-msgid "Couldn't find DVB channel configuration file: %s"
-msgstr ""
-
-msgid "DVB channel configuration file doesn't contain any channels"
+msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
 
 #~ msgid "Internal data flow error."
