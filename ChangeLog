@@ -1,9 +1,390 @@
-=== release 1.9.90 ===
+=== release 1.10.0 ===
 
-2016-09-30  Sebastian Dröge <slomo@coaxion.net>
+2016-11-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.90
+	  releasing 1.10.0
+
+2016-11-01 17:38:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/nb.po:
+	  po: Update translations
+
+2016-11-01 17:36:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
+
+2016-10-25 12:21:07 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Add an option to explicitly disable gtk-doc
+	  Similar to how Autotools provides an option, default is 'enabled'.
+
+2016-10-24 11:45:38 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* libs/gst/base/gstcollectpads.c:
+	  Revert "collectpads: Assume PTS is equal DTS if PTS is missing"
+	  This reverts commit 9b0d42ceecb3198399d7e05e3d5f080a7ca27ca9.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762207
+
+2016-10-18 11:59:25 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/gstallocator.c:
+	  allocator: Mark registered allocator for leak
+
+2016-06-21 08:00:30 -0500  Andrew Eikum <aeikum@codeweavers.com>
+
+	* gst/gstmessage.h:
+	  gstmessage.h: Avoid gcc bit shift overflow compiler warning
+	  Avoids bit shift overflow warning with gcc6.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767882 (glib)
+	  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=71803 (gcc)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767883
+
+2016-10-23 22:11:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/parse/grammar.y:
+	  parse: fix erroneous use of _("")
+	  Fixes xgettext warnings when doing 'make update-po':
+	  gst/parse/grammar.y:217: warning: Empty msgid.  It is reserved by GNU gettext:
+	  gettext("") returns the header entry with
+	  meta information, not the empty string.
+
+2016-10-22 17:05:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	  docs: add index for API new in 1.10
+
+2016-10-22 17:05:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	  docs: add index for API new in 1.8
+
+2016-10-21 15:40:47 +0200  Jesper Larsen <knorr.jesper@gmail.com>
+
+	* libs/gst/base/gstadapter.c:
+	  adapter: Fix mix-up between DTS and PTS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773319
+
+2016-10-21 15:22:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  Revert "queue: Fix race when calculating cur_level.time"
+	  This reverts commit d03bd547809f849405a3f706920091d9b03147b0.
+	  It breaks the unit test, although it ensures that only correct values
+	  are used for calculations. Needs to be fixed up.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773096
+
+2016-10-20 17:19:25 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst/printf/meson.build:
+	* libs/gst/check/libcheck/meson.build:
+	* meson.build:
+	  Revert "meson: Use the new `pic` argument on static libs"
+	  This reverts commit a5752240a178c2c651ed10167025fad8b9c4e7bd.
+	  pic was added after 0.35 and will be present in 0.36 (meson
+	  documentation was wrong).
+
+2016-10-20 15:38:46 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst/printf/meson.build:
+	* libs/gst/check/libcheck/meson.build:
+	* meson.build:
+	  meson: Use the new `pic` argument on static libs
+	  We depend on meson 0.35 which makes it simpler to handle
+	  Removes a meson warning
+
+2016-09-14 14:23:56 +0200  Stian Selnes <stian@pexip.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Fix race when calculating cur_level.time
+	  On the first buffer, it's possible that sink_segment is set but
+	  src_segment has not been set yet. If this is the case, we should not
+	  calculate cur_level.time since sink_segment.position may be large and
+	  src_segment.position default is 0, with the resulting diff being larger
+	  than max-size-time, causing the queue to start leaking (if
+	  leaky=downstream).
+	  One potential consequence of this is that the segment event may be
+	  stored on the srcpad before the caps event is pushed downstream, causing
+	  a g_warning ("Sticky event misordering, got 'segment' before 'caps'").
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773096
+
+2016-09-27 00:00:30 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/gstelement.c:
+	  element: use g_strcmp0 in set_context
+	  It's NULL-safe while the libc implementation may not be.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771773
+
+2016-09-26 23:59:29 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/gstelement.c:
+	  element: check for invalid gstcontext's being provided to set_context
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771773
+
+2016-10-18 09:38:04 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* configure.ac:
+	* meson.build:
+	  build: Apply XCode 8 workaround for iOS too
+	  clock_gettime was also added for iOS 10.0, so don't use it if we're
+	  targetting an older version. That would've caused the symbol to not be
+	  found at runtime on older devices.
+
+2016-10-15 21:49:21 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Don't use c_std=c99
+	  Just use the default c_std used by the compiler. With GCC on Linux this
+	  is gnu89.
+	  Tons of errors related to time.h, signal.h, etc when using c99:
+	  FAILED: libs/gst/check/libcheck/check@sta/check_run.c.o
+	  cc  '-Ilibs/gst/check/libcheck/check@sta' '-fdiagnostics-color=always' '-I../libs/gst/check/libcheck' '-Ilibs/gst/check/libcheck' '-I.' '-I../.' '-Ilibs/gst/check/libcheck/..' '-I../libs/gst/check/libcheck/..' '-pipe' '-Wall' '-Winvalid-pch' '-std=c99' '-DHAVE_CONFIG_H' '-fPIC' '-O2' '-g' '-fPIC' '-MMD' '-MQ' 'libs/gst/check/libcheck/check@sta/check_run.c.o' '-MF' 'libs/gst/check/libcheck/check@sta/check_run.c.o.d' -o 'libs/gst/check/libcheck/check@sta/check_run.c.o' -c ../libs/gst/check/libcheck/check_run.c
+	  In file included from ../libs/gst/check/libcheck/check_run.c:21:0:
+	  ../libs/gst/check/libcheck/libcompat.h:167:18: warning: ‘struct itimerspec’ declared inside parameter list will not be visible outside of this definition or declaration
+	  const struct itimerspec *new_value, struct itimerspec *old_value);
+	  ^~~~~~~~~~
+	  ../libs/gst/check/libcheck/check_run.c:98:25: error: array type has incomplete element type ‘struct sigaction’
+	  static struct sigaction old_action[3];
+	  ^~~~~~~~~~
+	  ../libs/gst/check/libcheck/check_run.c:99:25: error: array type has incomplete element type ‘struct sigaction’
+	  static struct sigaction new_action[3];
+	  ^~~~~~~~~~
+	  [...]
+	  ninja: build stopped: subcommand failed.
+	  The change was originally made because gnu99 was causing issues on OS X.
+
+2016-10-14 11:59:24 +0200  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* plugins/tracers/gststats.c:
+	  stats: Fix warning
+
+2016-10-04 09:20:37 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* libs/gst/helpers/meson.build:
+	* meson.build:
+	* tests/check/meson.build:
+	  meson: Make use of new environment object and set plugin path to builddir
+	  - Properly set where to find gst-plugin-scanner
+	  - Use GST_LOADING_WHITELIST so that only core plugins are used
+	  Bump meson requirement to 0.35
+
+2016-10-13 18:20:58 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstcontrolbinding.c:
+	* gst/gstcontrolbinding.h:
+	  controlbinding: Store object in a thread-safe GWeakRef
+	  g_object_weak_ref() is not thread-safe.
+
+2016-10-13 18:02:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/controller/gstargbcontrolbinding.c:
+	  argbcontrolbinding: gst_object_replace() is transfer none
+
+2016-10-13 18:01:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* libs/gst/controller/gstdirectcontrolbinding.c:
+	  directcontrolbinding: Clarify in the documentation what the difference between absolute and not is
+
+2016-10-13 17:55:45 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstcontrolsource.c:
+	  controlsource: Remove misleading sentence from the documentation
+	  control sources are not required to return values between 0.0 and 1.0.
+	  This is completely up to the control binding that is used.
+
+2016-10-13 17:21:30 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstobject.c:
+	  object: Fix broken sentence structure in docs
+
+2016-10-13 12:18:12 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* plugins/tracers/gststats.c:
+	  tracers: fix structure leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772851
+
+2016-10-13 12:03:20 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/gststreams.h:
+	  streams: Extend GstStreamType documentation
+	  Users shouldn't assume it will be a single value since it's a flag.
+
+2016-10-03 20:22:53 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* configure.ac:
+	* m4/check-checks.m4:
+	* meson.build:
+	  build: Fix clock_gettime check with XCode 8
+	  With XCode 8, clock_gettime will be incorrectly detected as being
+	  available regardless of what OS X version we're targetting because the
+	  symbol is available in the .tbd library as a weak symbol.
+	  See: https://github.com/Homebrew/homebrew-core/issues/3727#issue-170086273
+	  It's only starting from macOS 10.12 that clock_gettime is actually
+	  available, so we can unconditionally disable it when targetting older
+	  versions. We cannot simply do AC_CHECK_FUNCS with -Wl,-no_weak_imports
+	  because the autoconf check does its own prototype declaration that
+	  doesn't trigger that compiler flag.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772451
+
+2016-10-11 12:12:57 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/gstbin.h:
+	  bin: Add a new GST_BIN_FLAG_STREAMS_AWARE flag
+	  This flag is to indicate to child elements that they can add and
+	  remove pads at any point in time without re-adding existing ones.
+	  Elements should post before-hand a GST_MESSAGE_STREAM_COLLECTION
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772741
+
+2016-10-10 10:59:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst/running.xml:
+	  docs: paths in env vars are separated by semicolons on windows
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772431
+
+2016-10-07 17:02:47 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* docs/design/part-tracing.txt:
+	  docs: fix GST_LEAKS_TRACER_SIG doc
+	  The documentation wasn't mentioning the SIGUSR2 signal.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772571
+
+2016-10-08 17:23:08 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: Fix iterator resync'ing
+	  When we get GST_ITERATOR_RESYNC, we need to call gst_iterator_resync()
+	  otherwise we will always get GST_ITERATOR_RESYNC (and that loop would
+	  run forever).
+
+2016-10-08 13:54:42 +0200  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Implement gst_event_full_func handling
+	  Same as we do for queue
+
+2016-10-08 13:20:58 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* plugins/tracers/gstrusage.c:
+	  tracer/rusage: fix format string args
+	  The format string contains a process id, but we did not provice one. This
+	  caused us to log garbage since all args got shifted.
+
+2016-10-01 16:47:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstmessage.c:
+	  message: Fix typo in gst_message_new_progress() docs
+	  test -> text
+
+2016-09-30 09:57:57 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* hooks/pre-commit.hook:
+	* meson.build:
+	  meson: Setup pre-commit hooks when configuring
+
+2016-09-30 11:38:37 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.9.90 ===
+
+2016-09-30 13:01:17 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.9.90
+
+2016-09-30 12:08:52 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2016-09-30 11:41:14 +0300  Sebastian Dröge <sebastian@centricular.com>
 
