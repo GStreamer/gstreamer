@@ -10118,7 +10118,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           const off_t min_size = compressor_offset + 32 + 2 + 2;
           GNode *jpeg;
           guint32 len;
-          guint16 color_table_id;
+          guint16 color_table_id = 0;
           gboolean ok;
 
           GST_DEBUG_OBJECT (qtdemux, "found jpeg");
