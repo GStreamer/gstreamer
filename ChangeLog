@@ -1,9 +1,362 @@
-=== release 1.9.90 ===
+=== release 1.10.0 ===
 
-2016-09-30  Sebastian Dröge <slomo@coaxion.net>
+2016-11-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.90
+	  releasing 1.10.0
+
+2016-10-25 08:52:52 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* meson.build:
+	  meson: Don't depend on gstreamer-check-1.0 on windows
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773114
+
+2016-10-24 19:13:22 +0000  Graham Leggett <minfrin@sharp.fm>
+
+	* gst/playback/gstdecodebin3.c:
+	  decodebin3: Fix assertion failure when unreffing NULL stream caps
+	  GStreamer-CRITICAL **: gst_mini_object_unref: assertion 'mini_object != NULL' failed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773441
+
+2016-10-25 11:46:38 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* tests/check/meson.build:
+	  Revert "meson: move gstreamer-check-1.0 dependency to tests/check"
+	  This reverts commit e3c7c17b9b0ff8efb81d23e135178a7be7eaeb1e.
+	  Does not actually work. See:
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773114#c31
+
+2016-10-24 00:28:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  meson: fix build outside of gst-all
+	  Unknown variable "apiversion".
+
+2016-10-21 00:32:15 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* meson.build:
+	* tests/check/meson.build:
+	  meson: move gstreamer-check-1.0 dependency to tests/check
+
+2016-10-20 17:17:54 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst-libs/gst/audio/meson.build:
+	* meson.build:
+	  Revert "meson: Use the new `pic` argument on static libs"
+	  This reverts commit e3c22605ae96ee1747020c4f367d49faf6916e14.
+	  pic was added after 0.35 and will be present in 0.36 (meson documentation
+	  was wrong).
+
+2016-10-20 15:48:34 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst-libs/gst/audio/meson.build:
+	* meson.build:
+	  meson: Use the new `pic` argument on static libs
+	  We depend on 0.35 already
+
+2016-10-14 14:23:38 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst-libs/gst/audio/audio.c:
+	  audio: don't deref NULL
+	  gst_buffer_copy_region() can return NULL when the buffer meta-data is invalid.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=772200
+
+2015-12-04 00:47:38 +1100  Havard Graff <havard.graff@gmail.com>
+
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	  audioencoder: Error-handling for pushing headers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773105
+
+2016-10-13 12:41:29 +0200  Stian Selnes <stian@pexip.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* tests/check/libs/videodecoder.c:
+	  videodecoder: Default caps sets format I420
+	  Also the format must be fixed on the default raw caps. If not
+	  gst_video_info_from_caps() will fail and
+	  gst_video_decoder_negotiate_default_caps() return FALSE.
+	  The test simulates the use case where a gap event is received before
+	  the first buffer causing the decoder to fall back to the default caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773103
+
+2016-05-06 16:30:57 +0200  Havard Graff <havard.graff@gmail.com>
+
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	  audioencoder: Plug buffer-leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773107
+
+2016-10-17 09:46:56 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst-libs/gst/audio/audio.c:
+	  audio: fix doc string again.
+	  There was a second '*' at the start of the line. Reword + reformat to make it
+	  obvious.
+
+2016-10-15 22:50:23 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* tests/check/libs/audio.c:
+	  tests: add another check for buffer clipping and improve tests
+	  Add a test that check that we handle time ranges (a range of time that maps to
+	  the same sample).
+	  Also update the other tests to use our check api to compare int64 values to get
+	  better output on failure.
+
+2016-10-15 21:54:40 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* tests/check/libs/audio.c:
+	  tests: clipping in TIME does not use the offset
+	  Simplify the test and test only what need to be tested.
+
+2016-10-15 21:30:22 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* tests/check/libs/audio.c:
+	  tests: cleanup libs/audio test
+	  Split large tests into small tests and name them specifically. Use helpers to
+	  avoid repetition. Make sure the order in the file is the same as we add the to
+	  the suite.
+
+2016-10-15 22:02:48 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Don't set c_std to gnu99
+	  Use the default for each compiler on every platform instead. This
+	  improves our compatibility with compilers that don't have gnu99 as
+	  a c_std.
+
+2016-10-15 21:46:27 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst-libs/gst/audio/meson.build:
+	  meson: Add missing audio-enumtypes.h dep in audio-resampler static libs
+	  Seen on the Jenkins CI:
+	  FAILED: subprojects/gst-plugins-base/gst-libs/gst/audio/audio_resampler_sse41@sta/audio-resampler-x86-sse41.c.o
+	  ccache cc  '-Isubprojects/gst-plugins-base/gst-libs/gst/audio/audio_resampler_sse41@sta' '-fdiagnostics-color=always' '-I../subprojects/gst-plugins-base/gst-libs/gst/audio' '-Isubprojects/gst-plugins-base/gst-libs/gst/audio' '-Isubprojects/gst-plugins-base/.' '-I../subprojects/gst-plugins-base/.' '-Isubprojects/gst-plugins-base/gst-libs' '-I../subprojects/gst-plugins-base/gst-libs' '-Isubprojects/gstreamer/libs' '-I../subprojects/gstreamer/libs' '-Isubprojects/gstreamer/.' '-I../subprojects/gstreamer/.' '-pipe' '-Wall' '-Winvalid-pch' '-DHAVE_CONFIG_H' '-msse4.1' '-fPIC' '-O0' '-g' '-fPIC' '-I/usr/include/glib-2.0' '-I/usr/lib/glib-2.0/include' '-pthread' '-Isubprojects/gstreamer/gst' '-MMD' '-MQ' 'subprojects/gst-plugins-base/gst-libs/gst/audio/audio_resampler_sse41@sta/audio-resampler-x86-sse41.c.o' '-MF' 'subprojects/gst-plugins-base/gst-libs/gst/audio/audio_resampler_sse41@sta/audio-resampler-x86-sse41.c.o.d' -o 'subprojects/gst-plugins-base/gst-libs/gst/audio/audio_resampler_sse41@sta/audio-resampler-x86-sse41.c.o' -c ../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-resampler-x86-sse41.c
+	  In file included from ../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-resampler.h:24:0,
+	  from ../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-resampler-private.h:23,
+	  from ../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-resampler-macros.h:25,
+	  from ../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-resampler-x86-sse41.h:23,
+	  from ../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-resampler-x86-sse41.c:24:
+	  ../subprojects/gst-plugins-base/gst-libs/gst/audio/audio.h:26:39: fatal error: gst/audio/audio-enumtypes.h: No such file or directory
+	  #include <gst/audio/audio-enumtypes.h>
+	  ^
+	  compilation terminated.
+
+2016-10-04 17:44:51 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst-libs/gst/tag/meson.build:
+	* meson.build:
+	* tests/check/getpluginsdir:
+	* tests/check/meson.build:
+	  meson: Make use of new environment object and set plugin path to builddir
+	  Workaround source_root being the root directory of all projects
+	  in the subproject case.
+	  Remove now unneeded getpluginsdir and define c++ tests in the same loop.
+	  Bump meson requirement to 0.35
+
+2016-10-14 14:21:28 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst-libs/gst/audio/audio.c:
+	  audio: fix typo in doc string
+
+2016-10-13 20:10:09 +0900  Seungha Yang <sh.yang@lge.com>
+
+	* gst/playback/gstdecodebin3-parse.c:
+	* gst/playback/gstdecodebin3.c:
+	  decodebin3: More SELECTION_LOCK when linking to slot
+	  Since there can be multiple parsebin in a decodebin3,
+	  linking parsebin with MultiQueueSlot should be protected also.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772855
+
+2016-10-13 11:42:28 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/playback/gstdecodebin3.c:
+	* gst/playback/gstplaybin3.c:
+	  playback: GstStreamType is a flag
+	  Therefor don't use equality
+
+2016-10-11 12:36:00 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/playback/gstdecodebin3.c:
+	* gst/playback/gstparsebin.c:
+	  playback: decodebin3 and parsebin are streams-aware
+	  Elements within can add/remove pads at anytime without complying
+	  with the fallback system.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772741
+
+2016-10-10 17:08:11 +0900  Wonchul Lee <chul0812@gmail.com>
+
+	* gst/playback/gstparsebin.c:
+	  parsebin: re-use existing compare_factories utils func
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772676
+
+2016-10-07 12:49:18 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/vorbis/gstvorbisenc.c:
+	  vorbisenc: correct codebooks packet identifier from 3 to 5
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768763
+
+2016-10-06 16:16:30 +0900  Jimmy Ohn <yongjin.ohn@lge.com>
+
+	* tests/check/elements/opus.c:
+	  opusdec: Fix memory leak in test code
+	  gst_caps_to_string function returned allocated memory.
+	  So, It should be free using g_free function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772500
+
+2016-10-06 16:24:05 +0900  Jimmy Ohn <yongjin.ohn@lge.com>
+
+	* tests/check/elements/videorate.c:
+	  videorate: Fix memory leakage in test code
+	  gst_caps_to_string function returned allocated memory.
+	  So, It should be free using g_free function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772501
+
+2016-09-27 09:24:08 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/opus/gstopusenc.c:
+	  opusenc: remove segment stop modification on eos
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768763
+
+2016-09-26 16:31:06 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ogg/gstoggmux.c:
+	  oggmux: take audio clip meta into account for buffer duration
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768763
+
+2016-09-26 16:25:14 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/vorbis/gstvorbisenc.c:
+	* ext/vorbis/gstvorbisenc.h:
+	  vorbisenc: strip after-eos samples from the end of the eos buffer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768763
+
+2016-09-30 14:54:24 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/video-color.c:
+	* gst-libs/gst/video/video-color.h:
+	  video-color: Mark some function arguments as const
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771376
+
+2016-10-03 08:56:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: require orc 0.4.24 here too
+	  Needed for some video stuff. Same requirement as in
+	  the autotools build.
+
+2016-10-03 10:59:37 +0530  Arun Raghavan <arun@osg.samsung.com>
+
+	* config.h.meson:
+	* gst-libs/gst/audio/meson.build:
+	* meson.build:
+	  meson: Enable SSE intrinsics in audio-resampler
+	  This files need to be built with the specific C flags for the
+	  corresponding processor optimisations.
+
+2016-10-03 10:58:09 +0530  Arun Raghavan <arun@osg.samsung.com>
+
+	* gst-libs/gst/audio/meson.build:
+	* gst-libs/gst/video/meson.build:
+	* gst/adder/meson.build:
+	* gst/videotestsrc/meson.build:
+	* gst/volume/meson.build:
+	* meson.build:
+	  meson: Enable Orc in build
+	  Top-level meson.build code updated from gst-plugins-good.
+
+2016-09-30 11:35:37 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* hooks/pre-commit.hook:
+	* meson.build:
+	* tests/check/getpluginsdir:
+	  meson: Setup pre commit hook and fix getpluginsdir for standalone case
+
+2016-09-30 11:41:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.9.90 ===
+
+2016-09-30 13:01:53 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.9.90
+
+2016-09-30 12:12:12 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2016-09-30 11:42:21 +0300  Sebastian Dröge <sebastian@centricular.com>
 

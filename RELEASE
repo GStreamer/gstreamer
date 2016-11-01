@@ -1,13 +1,15 @@
 
-Release notes for GStreamer Base Plugins 1.9.90
+Release notes for GStreamer Base Plugins 1.10.0
 
-The GStreamer team is pleased to announce the first release candidate of the
-stable 1.10 release series. The 1.10 release series is adding new features on
-top of the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the new stable
+1.10 release series. The 1.10 release series is adding new features on top of
+the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
+release series of the GStreamer multimedia framework.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
+the source release by the GStreamer project during the stable 1.10 release
+series.
 
 
 This module contains a set of reference plugins, base classes for other
@@ -56,12 +58,16 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 729276 : audioresample: Misdetected and/or misused intrinsics headers
-      * 769771 : rtpbuffer: Add buffer flag RETRANSMISSION
-      * 770314 : oggdemux: Does not go back to beginning point on EOS when determining stream length
-      * 770446 : pulsesrc, audiosrc: No audio captured with new GStreamer 1.8.2
-      * 770692 : playbackutils: Move compare_factories_func
-      * 770698 : video-orc.orc doesn't compile with orc 0.4.23
+      * 768763 : vorbisenc, opusenc reconfiguration broken
+      * 772500 : opusdec: Fix memory leak in test code
+      * 772501 : videorate: Fix memory leak in test code
+      * 772676 : parsebin: Use gst_playback_utils_compare_factories_func
+      * 772855 : decodebin3: Implement lock for multiqueue slot
+      * 773103 : videodecoder: Default caps sets format I420
+      * 773105 : audioencoder: Error-handling for pushing headers
+      * 773107 : audioencoder: Plug buffer-leak
+      * 773181 : x264enc refuses to negotiate I420 or baseline profiles!
+      * 773441 : decodebin3: GStreamer-CRITICAL **: gst_mini_object_unref: assertion 'mini_object != NULL' failed
 
 ==== Download ====
 
@@ -100,15 +106,17 @@ Contributors to this release
     
       * Arun Raghavan
       * Edward Hervey
+      * Graham Leggett
       * Havard Graff
-      * Jan Schmidt
-      * Jonathan Matthew
-      * Nicolas Dufresne
+      * Jimmy Ohn
+      * Nirbheek Chauhan
+      * Scott D Phillips
       * Sebastian Dröge
+      * Seungha Yang
+      * Stefan Sauer
+      * Stian Selnes
       * Thibault Saunier
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Víctor Manuel Jáquez Leal
-      * Wim Taymans
       * Wonchul Lee
  
