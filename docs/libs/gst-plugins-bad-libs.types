@@ -28,8 +28,11 @@ gst_insert_bin_get_type
 
 
 gst_gl_buffer_allocator_get_type
+gst_gl_base_memory_allocator_get_type
+gst_gl_allocation_params_get_type
 gst_gl_memory_allocator_get_type
 gst_gl_memory_pbo_allocator_get_type
+gst_gl_renderbuffer_allocator_get_type
 gst_gl_base_filter_get_type
 gst_gl_buffer_pool_get_type
 gst_gl_color_convert_get_type
@@ -39,6 +42,7 @@ gst_gl_filter_get_type
 gst_gl_framebuffer_get_type
 gst_gl_shader_get_type
 gst_glsl_stage_get_type
+gst_gl_overlay_compositor_get_type
 gst_gl_upload_get_type
 gst_gl_view_convert_get_type
 gst_gl_window_get_type
