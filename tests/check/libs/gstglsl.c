@@ -63,13 +63,21 @@ static const struct {GstGLSLProfile profile; const gchar * name;} glsl_profiles[
   {GST_GLSL_PROFILE_COMPATIBILITY, "compatibility"},
 };
 
-static const struct {GstGLSLVersion version; GstGLSLProfile profile; const gchar * name;} glsl_version_profiles[] = {
+struct version_profile_s
+{
+  GstGLSLVersion version;
+  GstGLSLProfile profile;
+  const gchar * name;
+};
+
+static const struct version_profile_s glsl_version_profiles_valid[] = {
   {GST_GLSL_VERSION_100, GST_GLSL_PROFILE_ES, "100"},
   {GST_GLSL_VERSION_110, GST_GLSL_PROFILE_COMPATIBILITY, "110"},
   {GST_GLSL_VERSION_120, GST_GLSL_PROFILE_COMPATIBILITY, "120"},
   {GST_GLSL_VERSION_130, GST_GLSL_PROFILE_COMPATIBILITY, "130"},
   {GST_GLSL_VERSION_140, GST_GLSL_PROFILE_COMPATIBILITY, "140"},
-  {GST_GLSL_VERSION_150, GST_GLSL_PROFILE_COMPATIBILITY, "150"},
+  {GST_GLSL_VERSION_150, GST_GLSL_PROFILE_CORE, "150 core"},
+  {GST_GLSL_VERSION_150, GST_GLSL_PROFILE_COMPATIBILITY, "150 compatibility"},
   {GST_GLSL_VERSION_300, GST_GLSL_PROFILE_ES, "300 es"},
   {GST_GLSL_VERSION_310, GST_GLSL_PROFILE_ES, "310 es"},
   {GST_GLSL_VERSION_320, GST_GLSL_PROFILE_ES, "320 es"},
@@ -89,6 +97,39 @@ static const struct {GstGLSLVersion version; GstGLSLProfile profile; const gchar
   {GST_GLSL_VERSION_450, GST_GLSL_PROFILE_COMPATIBILITY, "450 compatibility"},
 };
 
+/* combinations that produce different results between serializing/deserializing
+ * due to default values being imposed */
+static const struct version_profile_s glsl_version_profiles_valid_serialize[] = {
+  {GST_GLSL_VERSION_100, GST_GLSL_PROFILE_NONE, "100"},
+  {GST_GLSL_VERSION_110, GST_GLSL_PROFILE_NONE, "110"},
+  {GST_GLSL_VERSION_120, GST_GLSL_PROFILE_NONE, "120"},
+  {GST_GLSL_VERSION_130, GST_GLSL_PROFILE_NONE, "130"},
+  {GST_GLSL_VERSION_140, GST_GLSL_PROFILE_NONE, "140"},
+  {GST_GLSL_VERSION_150, GST_GLSL_PROFILE_NONE, "150"},
+  {GST_GLSL_VERSION_330, GST_GLSL_PROFILE_NONE, "330"},
+  {GST_GLSL_VERSION_400, GST_GLSL_PROFILE_NONE, "400"},
+  {GST_GLSL_VERSION_410, GST_GLSL_PROFILE_NONE, "410"},
+  {GST_GLSL_VERSION_420, GST_GLSL_PROFILE_NONE, "420"},
+  {GST_GLSL_VERSION_430, GST_GLSL_PROFILE_NONE, "430"},
+  {GST_GLSL_VERSION_440, GST_GLSL_PROFILE_NONE, "440"},
+  {GST_GLSL_VERSION_450, GST_GLSL_PROFILE_NONE, "450"},
+};
+static const struct version_profile_s glsl_version_profiles_valid_deserialize[] = {
+  {GST_GLSL_VERSION_100, GST_GLSL_PROFILE_ES, "100"},
+  {GST_GLSL_VERSION_110, GST_GLSL_PROFILE_COMPATIBILITY, "110"},
+  {GST_GLSL_VERSION_120, GST_GLSL_PROFILE_COMPATIBILITY, "120"},
+  {GST_GLSL_VERSION_130, GST_GLSL_PROFILE_COMPATIBILITY, "130"},
+  {GST_GLSL_VERSION_140, GST_GLSL_PROFILE_COMPATIBILITY, "140"},
+  {GST_GLSL_VERSION_150, GST_GLSL_PROFILE_CORE, "150"},
+  {GST_GLSL_VERSION_330, GST_GLSL_PROFILE_CORE, "330"},
+  {GST_GLSL_VERSION_400, GST_GLSL_PROFILE_CORE, "400"},
+  {GST_GLSL_VERSION_410, GST_GLSL_PROFILE_CORE, "410"},
+  {GST_GLSL_VERSION_420, GST_GLSL_PROFILE_CORE, "420"},
+  {GST_GLSL_VERSION_430, GST_GLSL_PROFILE_CORE, "430"},
+  {GST_GLSL_VERSION_440, GST_GLSL_PROFILE_CORE, "440"},
+  {GST_GLSL_VERSION_450, GST_GLSL_PROFILE_CORE, "450"},
+};
+
 static const gchar * invalid_deserialize_glsl[] = {
   "",
   " \t\r\n",
@@ -101,8 +142,6 @@ static const gchar * invalid_deserialize_glsl[] = {
   "100 core",
   "100 compatibility",
   "150 es",
-  "150 core",
-  "150 compatibility",
   "300 core",
   "300 compatibility",
   "310 core",
@@ -124,7 +163,6 @@ static const struct {GstGLSLVersion version; GstGLSLProfile profile;} invalid_se
   {GST_GLSL_VERSION_140, GST_GLSL_PROFILE_ES},
   {GST_GLSL_VERSION_140, GST_GLSL_PROFILE_CORE},
   {GST_GLSL_VERSION_150, GST_GLSL_PROFILE_ES},
-  {GST_GLSL_VERSION_150, GST_GLSL_PROFILE_CORE},
   {GST_GLSL_VERSION_300, GST_GLSL_PROFILE_NONE},
   {GST_GLSL_VERSION_300, GST_GLSL_PROFILE_CORE},
   {GST_GLSL_VERSION_300, GST_GLSL_PROFILE_COMPATIBILITY},
@@ -190,25 +228,53 @@ GST_START_TEST (test_serialization)
         gst_glsl_profile_to_string (profile));
   }
 
-  for (i = 0; i < G_N_ELEMENTS (glsl_version_profiles); i++) {
+  for (i = 0; i < G_N_ELEMENTS (glsl_version_profiles_valid); i++) {
     gchar *version_profile_s;
     GstGLSLVersion version;
     GstGLSLProfile profile;
 
     version_profile_s =
-        gst_glsl_version_profile_to_string (glsl_version_profiles[i].version,
-        glsl_version_profiles[i].profile);
+        gst_glsl_version_profile_to_string (glsl_version_profiles_valid
+        [i].version, glsl_version_profiles_valid[i].profile);
     fail_unless (g_strcmp0 (version_profile_s,
-            glsl_version_profiles[i].name) == 0, "%s != %s", version_profile_s,
-        glsl_version_profiles[i].name);
-    fail_unless (gst_glsl_version_profile_from_string (glsl_version_profiles
-            [i].name, &version, &profile), "Failed to parse %s",
-        glsl_version_profiles[i].name);
-    fail_unless (profile == glsl_version_profiles[i].profile
-        && version == glsl_version_profiles[i].version, "%s != %s %s",
-        glsl_version_profiles[i].name, gst_glsl_version_to_string (version),
+            glsl_version_profiles_valid[i].name) == 0, "%s != %s",
+        version_profile_s, glsl_version_profiles_valid[i].name);
+    fail_unless (gst_glsl_version_profile_from_string
+        (glsl_version_profiles_valid[i].name, &version, &profile),
+        "Failed to parse %s", glsl_version_profiles_valid[i].name);
+    fail_unless (profile == glsl_version_profiles_valid[i].profile
+        && version == glsl_version_profiles_valid[i].version, "%s != %s %s",
+        glsl_version_profiles_valid[i].name,
+        gst_glsl_version_to_string (version),
         gst_glsl_profile_to_string (profile));
     g_free (version_profile_s);
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (glsl_version_profiles_valid_serialize); i++) {
+    gchar *version_profile_s;
+
+    version_profile_s =
+        gst_glsl_version_profile_to_string
+        (glsl_version_profiles_valid_serialize[i].version,
+        glsl_version_profiles_valid_serialize[i].profile);
+    fail_unless (g_strcmp0 (version_profile_s,
+            glsl_version_profiles_valid_serialize[i].name) == 0, "%s != %s",
+        version_profile_s, glsl_version_profiles_valid_serialize[i].name);
+    g_free (version_profile_s);
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (glsl_version_profiles_valid_deserialize); i++) {
+    GstGLSLVersion version;
+    GstGLSLProfile profile;
+
+    fail_unless (gst_glsl_version_profile_from_string
+        (glsl_version_profiles_valid_deserialize[i].name, &version, &profile),
+        "Failed to parse %s", glsl_version_profiles_valid_deserialize[i].name);
+    fail_unless (profile == glsl_version_profiles_valid_deserialize[i].profile
+        && version == glsl_version_profiles_valid_deserialize[i].version,
+        "%s != %s %s", glsl_version_profiles_valid_deserialize[i].name,
+        gst_glsl_version_to_string (version),
+        gst_glsl_profile_to_string (profile));
   }
 
   /* failures */
