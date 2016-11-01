@@ -1,9 +1,38 @@
-=== release 1.9.90 ===
+=== release 1.10.0 ===
 
-2016-09-30  Sebastian Dröge <slomo@coaxion.net>
+2016-11-01  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.9.90
+	  releasing 1.10.0
+
+2016-10-19 14:47:01 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: use the version keyword argument for dependencies version
+
+2016-10-17 09:37:30 +0200  Marianna Smidth Buschle <msb@qtec.com>
+
+	* examples/plugins/python/identity.py:
+	  examples: Added identity example
+	  Created a simple BaseTransform element (identity)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772853
+
+2016-09-30 11:35:42 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* hooks/pre-commit.hook:
+	* meson.build:
+	  meson: Setup pre-commit hooks when configuring
+
+=== release 1.9.90 ===
+
+2016-09-30 13:04:26 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.9.90
 
 2016-09-14 15:18:17 +0200  Sebastian Dröge <sebastian@centricular.com>
 
