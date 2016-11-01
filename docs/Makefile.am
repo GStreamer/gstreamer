@@ -1,5 +1,5 @@
 if ENABLE_DOCBOOK
-SUBDIRS_DOCBOOK = faq manual pwg
+SUBDIRS_DOCBOOK = faq
 else
 SUBDIRS_DOCBOOK =
 endif
@@ -17,7 +17,7 @@ endif
 BUILT_SOURCES = version.entities
 
 SUBDIRS = design gst libs $(PLUGIN_DOCS_DIRS) $(SUBDIRS_DOCBOOK)
-DIST_SUBDIRS = design gst libs plugins faq manual pwg slides xsl
+DIST_SUBDIRS = design gst libs plugins faq slides xsl
 
 EXTRA_DIST = \
 	manuals.mak htmlinstall.mak \

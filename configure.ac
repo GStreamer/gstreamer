@@ -1057,7 +1057,6 @@ tests/examples/adapter/Makefile
 tests/examples/controller/Makefile
 tests/examples/stepping/Makefile
 tests/examples/helloworld/Makefile
-tests/examples/manual/Makefile
 tests/examples/memory/Makefile
 tests/examples/netclock/Makefile
 tests/examples/ptp/Makefile
@@ -1073,8 +1072,6 @@ docs/gst/Makefile
 docs/gst/gstreamer.types
 docs/libs/Makefile
 docs/plugins/Makefile
-docs/manual/Makefile
-docs/pwg/Makefile
 docs/slides/Makefile
 docs/xsl/Makefile
 docs/version.entities

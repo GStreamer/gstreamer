@@ -8,7 +8,6 @@ endif
 always_dirs = \
 	controller \
 	helloworld \
-	manual     \
 	memory   \
 	netclock \
 	ptp \
