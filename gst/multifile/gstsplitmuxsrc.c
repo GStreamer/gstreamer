@@ -548,7 +548,7 @@ gst_splitmux_pad_loop (GstPad * pad)
       /* Stop immediately on error or flushing */
       GST_INFO_OBJECT (splitpad, "Stopping due to pad_push() result %d", ret);
       gst_pad_pause_task (pad);
-      if (ret < GST_FLOW_EOS) {
+      if (ret < GST_FLOW_EOS || ret == GST_FLOW_NOT_LINKED) {
         GST_ELEMENT_FLOW_ERROR (splitmux, ret);
       }
     }
