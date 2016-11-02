@@ -464,15 +464,9 @@ gst_decklink_video_src_convert_to_external_clock (GstDecklinkVideoSrc * self,
       // according to our external clock.
       //
       // For the duration we just scale
-      if (internal > internal_timestamp) {
-        guint64 diff = internal - internal_timestamp;
-        diff = gst_util_uint64_scale (diff, rate_n, rate_d);
-        *timestamp = external - diff;
-      } else {
-        guint64 diff = internal_timestamp - internal;
-        diff = gst_util_uint64_scale (diff, rate_n, rate_d);
-        *timestamp = external + diff;
-      }
+      *timestamp =
+          gst_clock_adjust_with_calibration (NULL, internal_timestamp, internal,
+          external, rate_n, rate_d);
 
       GST_LOG_OBJECT (self,
           "Converted %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT " (external: %"
