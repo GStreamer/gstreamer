@@ -144,14 +144,16 @@ main (int argc, gchar ** argv)
     g_free (output);
   }
 
-  ret = gst_validate_runner_exit (runner, TRUE);
-  if (ret && expected_file) {
-    output = gst_validate_media_descriptor_writer_serialize (writer);
-    g_print ("Media info:\n%s\n", output);
-    g_free (output);
+out:
+  if (runner) {
+    ret = gst_validate_runner_exit (runner, TRUE);
+    if (ret && expected_file) {
+      output = gst_validate_media_descriptor_writer_serialize (writer);
+      g_print ("Media info:\n%s\n", output);
+      g_free (output);
+    }
   }
 
-out:
   g_free (output_file);
   g_free (expected_file);
 
