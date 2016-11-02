@@ -42,6 +42,11 @@ typedef struct _GstEGLImage GstEGLImage;
 typedef void (*GstEGLImageDestroyNotify) (GstEGLImage * image,
     gpointer data);
 
+/**
+ * GstEGLImage:
+ *
+ * Opaque #GstEGLImage struct.
+ */
 struct _GstEGLImage
 {
   GstMiniObject parent;
@@ -89,8 +94,8 @@ gst_egl_image_ref (GstEGLImage * image)
 }
 
 /**
- * gst_buffer_unref:
- * @buf: (transfer full): a #GstBuffer.
+ * gst_egl_image_unref:
+ * @image: (transfer full): a #GstEGLImage.
  *
  * Decreases the refcount of the image. If the refcount reaches 0, the image
  * with the associated metadata and memory will be freed.

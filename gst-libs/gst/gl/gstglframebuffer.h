@@ -40,19 +40,24 @@ typedef struct _GstGLFramebufferPrivate GstGLFramebufferPrivate;
 
 /**
  * GstGLFramebufferFunc:
- * @data: user data
+ * @stuff: user data
  *
- * callback definition for operating through a Framebuffer object
+ * callback definition for operating through a #GstGLFramebuffer object
  */
 typedef gboolean (*GstGLFramebufferFunc) (gpointer stuff);
 
+/**
+ * GstGLFramebuffer:
+ *
+ * Opaque #GstGLFramebuffer struct
+ */
 struct _GstGLFramebuffer
 {
+  /* <private> */
   GstObject             object;
 
   GstGLContext *context;
 
-  /* <private> */
   guint fbo_id;
   GArray *attachments;
 
@@ -61,8 +66,14 @@ struct _GstGLFramebuffer
   GstGLFramebufferPrivate  *priv;
 };
 
+/**
+ * GstGLFramebufferClass:
+ *
+ * Opaque #GstGLFramebufferClass struct
+ */
 struct _GstGLFramebufferClass
 {
+  /* <private> */
   GstObjectClass object_class;
 
   gpointer          _padding[GST_PADDING];
