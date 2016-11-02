@@ -728,6 +728,8 @@ gst_base_sink_get_sync (GstBaseSink * sink)
  * clock.
  *
  * Returns: %TRUE if the sink is configured to synchronize against the clock.
+ *
+ * Since: 1.12
  */
 void
 gst_base_sink_set_drop_out_of_segment (GstBaseSink * sink,
@@ -753,6 +755,8 @@ gst_base_sink_set_drop_out_of_segment (GstBaseSink * sink,
  * the current segment
  *
  * Returns: %TRUE if the sink is configured to synchronize against the clock.
+ *
+ * Since: 1.12
  */
 gboolean
 gst_base_sink_get_drop_out_of_segment (GstBaseSink * sink)

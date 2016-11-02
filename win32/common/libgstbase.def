@@ -53,6 +53,7 @@ EXPORTS
 	gst_base_parse_set_ts_at_offset
 	gst_base_sink_do_preroll
 	gst_base_sink_get_blocksize
+	gst_base_sink_get_drop_out_of_segment
 	gst_base_sink_get_last_sample
 	gst_base_sink_get_latency
 	gst_base_sink_get_max_bitrate
@@ -68,6 +69,7 @@ EXPORTS
 	gst_base_sink_query_latency
 	gst_base_sink_set_async_enabled
 	gst_base_sink_set_blocksize
+	gst_base_sink_set_drop_out_of_segment
 	gst_base_sink_set_last_sample_enabled
 	gst_base_sink_set_max_bitrate
 	gst_base_sink_set_max_lateness
