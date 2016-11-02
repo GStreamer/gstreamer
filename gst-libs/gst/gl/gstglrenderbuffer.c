@@ -39,6 +39,8 @@
  *
  * #GstGLRenderbuffer is created or wrapped through gst_gl_base_memory_alloc()
  * with #GstGLRenderbufferAllocationParams.
+ *
+ * Since: 1.10
  */
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
@@ -227,7 +229,7 @@ gst_gl_renderbuffer_allocator_init (GstGLRenderbufferAllocator * allocator)
  *
  * Returns: the configured width of @gl_mem
  *
- * Since: 1.8
+ * Since: 1.10
  */
 gint
 gst_gl_renderbuffer_get_width (GstGLRenderbuffer * gl_mem)
@@ -243,7 +245,7 @@ gst_gl_renderbuffer_get_width (GstGLRenderbuffer * gl_mem)
  *
  * Returns: the configured height of @gl_mem
  *
- * Since: 1.8
+ * Since: 1.10
  */
 gint
 gst_gl_renderbuffer_get_height (GstGLRenderbuffer * gl_mem)
@@ -259,7 +261,7 @@ gst_gl_renderbuffer_get_height (GstGLRenderbuffer * gl_mem)
  *
  * Returns: the #GstVideoGLTextureType of @gl_mem
  *
- * Since: 1.8
+ * Since: 1.10
  */
 GstVideoGLTextureType
 gst_gl_renderbuffer_get_type (GstGLRenderbuffer * gl_mem)
@@ -275,7 +277,7 @@ gst_gl_renderbuffer_get_type (GstGLRenderbuffer * gl_mem)
  *
  * Returns: the OpenGL renderbuffer handle of @gl_mem
  *
- * Since: 1.8
+ * Since: 1.10
  */
 guint
 gst_gl_renderbuffer_get_id (GstGLRenderbuffer * gl_mem)
@@ -291,7 +293,7 @@ gst_gl_renderbuffer_get_id (GstGLRenderbuffer * gl_mem)
  * Initializes the GL Base Texture allocator. It is safe to call this function
  * multiple times.  This must be called before any other GstGLRenderbuffer operation.
  *
- * Since: 1.4
+ * Since: 1.10
  */
 void
 gst_gl_renderbuffer_init_once (void)

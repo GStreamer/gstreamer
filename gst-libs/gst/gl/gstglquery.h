@@ -25,6 +25,12 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstGLQueryType:
+ * @GST_GL_QUERY_NONE: no query
+ * @GST_GL_QUERY_TIME_ELAPSED: query the time elapsed
+ * @GST_GL_QUERY_TIMESTAMP: query the current time
+ */
 typedef enum
 {
   GST_GL_QUERY_NONE,
@@ -32,6 +38,11 @@ typedef enum
   GST_GL_QUERY_TIMESTAMP,
 } GstGLQueryType;
 
+/**
+ * GstGLQuery:
+ *
+ * Opaque #GstGLQuery struct
+ */
 struct _GstGLQuery
 {
   /* <private> */
