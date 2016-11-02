@@ -7550,7 +7550,7 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
           stream->colorimetry.matrix ||
           stream->colorimetry.transfer || stream->colorimetry.primaries) {
         gchar *colorimetry =
-            gst_video_colorimetry_to_string_full (&stream->colorimetry, TRUE);
+            gst_video_colorimetry_to_string (&stream->colorimetry);
         gst_caps_set_simple (stream->caps, "colorimetry", G_TYPE_STRING,
             colorimetry, NULL);
         g_free (colorimetry);
