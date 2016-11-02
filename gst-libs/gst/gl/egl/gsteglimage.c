@@ -21,6 +21,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gsteglimage
+ * @short_description: EGLImage abstraction
+ * @title: GstEGLImage
+ * @see_also: #GstGLMemoryEGL, #GstGLContext
+ *
+ * #GstEGLImage represents and holds an #EGLImage handle.
+ *
+ * A #GstEGLImage can be created from a dmabuf with gst_egl_image_from_dmabuf()
+ * or #GstGLMemoryEGL provides a #GstAllocator to allocate #EGLImage's bound to
+ * and OpenGL texture.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -90,6 +103,12 @@ gst_egl_image_ensure_debug_category (void)
 #endif /* GST_DISABLE_GST_DEBUG */
 #endif /* GST_GL_HAVE_DMABUF */
 
+/**
+ * gst_egl_image_get_image:
+ * @image: a #GstEGLImage
+ *
+ * Returns: the #EGLImageKHR of @image
+ */
 EGLImageKHR
 gst_egl_image_get_image (GstEGLImage * image)
 {
@@ -98,6 +117,12 @@ gst_egl_image_get_image (GstEGLImage * image)
   return image->image;
 }
 
+/**
+ * gst_egl_image_get_orientation:
+ * @image: a #GstEGLImage
+ *
+ * Returns: the orientation of @image
+ */
 GstVideoGLTextureOrientation
 gst_egl_image_get_orientation (GstEGLImage * image)
 {
@@ -132,6 +157,17 @@ _gst_egl_image_copy (GstMiniObject * obj)
   return gst_mini_object_ref (obj);
 }
 
+/**
+ * gst_egl_image_new_wrapped:
+ * @context: a #GstGLContext (must be an EGL context)
+ * @image: the image to wrap
+ * @type: the #GstVideoGLTextureType
+ * @orientation: the #GstVideoGLTextureOrientation
+ * @user_data: user data
+ * @user_data_destroy: called when @user_data is no longer needed
+ *
+ * Returns: a new #GstEGLImage wrapping @image
+ */
 GstEGLImage *
 gst_egl_image_new_wrapped (GstGLContext * context, EGLImageKHR image,
     GstVideoGLTextureType type, GstVideoGLTextureOrientation orientation,
@@ -236,6 +272,16 @@ _destroy_egl_image (GstEGLImage * image, gpointer user_data)
   image->context->eglDestroyImage (image->context->egl_display, image->image);
 }
 
+/**
+ * gst_egl_image_from_dmabuf:
+ * @context: a #GstGLContext (must be an EGL context)
+ * @dmabuf: the DMA-Buf file descriptor
+ * @in_info: the #GstVideoInfo in @dmabuf
+ * @plane: the plane in @in_info to create and #GstEGLImage for
+ * @offset: the byte-offset in the data
+ *
+ * Returns: a #GstEGLImage wrapping @dmabuf or %NULL on failure
+ */
 GstEGLImage *
 gst_egl_image_from_dmabuf (GstGLContext * context,
     gint dmabuf, GstVideoInfo * in_info, gint plane, gsize offset)

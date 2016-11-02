@@ -18,6 +18,18 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstglquery
+ * @short_description: OpenGL query abstraction
+ * @title: GstGLQuery
+ * @see_also: 
+ *
+ * A #GstGLQuery represents and holds an OpenGL query object.  Various types of
+ * queries can be run or counters retrieved.
+ *
+ * Since: 1.10
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -110,6 +122,14 @@ _log_time (gpointer user_data)
   return gst_info_strdup_printf ("%" GST_TIME_FORMAT, GST_TIME_ARGS (result));
 }
 
+/**
+ * gst_gl_query_init:
+ * @query: a #GstGLQuery
+ * @context: a #GstGLContext
+ * @query_type: the #GstGLQueryType
+ *
+ * Since: 1.10
+ */
 void
 gst_gl_query_init (GstGLQuery * query, GstGLContext * context,
     GstGLQueryType query_type)
@@ -136,6 +156,14 @@ gst_gl_query_init (GstGLQuery * query, GstGLContext * context,
   query->debug.user_data = query;
 }
 
+/**
+ * gst_gl_query_unset:
+ * @query: a #GstGLQuery
+ *
+ * Free any dynamically allocated resources
+ *
+ * Since: 1.10
+ */
 void
 gst_gl_query_unset (GstGLQuery * query)
 {
@@ -159,6 +187,17 @@ gst_gl_query_unset (GstGLQuery * query)
   gst_object_unref (query->context);
 }
 
+/**
+ * gst_gl_query_new:
+ * @context: a #GstGLContext
+ * @query_type: the #GstGLQueryType to create
+ *
+ * Free with gst_gl_query_free()
+ *
+ * Returns: a new #GstGLQuery
+ *
+ * Since: 1.10
+ */
 GstGLQuery *
 gst_gl_query_new (GstGLContext * context, GstGLQueryType query_type)
 {
@@ -169,6 +208,14 @@ gst_gl_query_new (GstGLContext * context, GstGLQueryType query_type)
   return query;
 }
 
+/**
+ * gst_gl_query_free:
+ * @query: a #GstGLQuery
+ *
+ * Frees a #GstGLQuery
+ *
+ * Since: 1.10
+ */
 void
 gst_gl_query_free (GstGLQuery * query)
 {
@@ -178,6 +225,14 @@ gst_gl_query_free (GstGLQuery * query)
   g_free (query);
 }
 
+/**
+ * gst_gl_query_start:
+ * @query: a #GstGLQuery
+ *
+ * Start counting the query
+ *
+ * Since: 1.10
+ */
 void
 gst_gl_query_start (GstGLQuery * query)
 {
@@ -199,6 +254,14 @@ gst_gl_query_start (GstGLQuery * query)
   gl->BeginQuery (query->query_type, query->query_id);
 }
 
+/**
+ * gst_gl_query_end:
+ * @query: a #GstGLQuery
+ *
+ * End counting the query
+ *
+ * Since: 1.10
+ */
 void
 gst_gl_query_end (GstGLQuery * query)
 {
@@ -220,6 +283,14 @@ gst_gl_query_end (GstGLQuery * query)
   query->start_called = FALSE;
 }
 
+/**
+ * gst_gl_query_counter:
+ * @query: a #GstGLQuery
+ *
+ * Record the result of a counter
+ *
+ * Since: 1.10
+ */
 void
 gst_gl_query_counter (GstGLQuery * query)
 {
@@ -240,6 +311,14 @@ gst_gl_query_counter (GstGLQuery * query)
   gl->QueryCounter (query->query_id, query->query_type);
 }
 
+/**
+ * gst_gl_query_result:
+ * @query: a #GstGLQuery
+ *
+ * Returns: the result of the query
+ *
+ * Since: 1.10
+ */
 guint64
 gst_gl_query_result (GstGLQuery * query)
 {

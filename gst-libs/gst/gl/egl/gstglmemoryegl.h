@@ -53,13 +53,14 @@ GType gst_gl_memory_egl_allocator_get_type(void);
  */
 struct _GstGLMemoryEGL
 {
+  /* <private> */
   GstGLMemory mem;
 
   GstEGLImage *image;
 };
 
 /**
- * GST_GL_MEMORY_EGL_ALLOCATOR:
+ * GST_GL_MEMORY_EGL_ALLOCATOR_NAME:
  *
  * The name of the GL Memory EGL allocator
  */
@@ -75,22 +76,25 @@ GstVideoGLTextureOrientation gst_gl_memory_egl_get_orientation
                                                         (GstGLMemoryEGL * mem);
 
 /**
- * GstGLAllocator
+ * GstGLMemoryEGLAllocator
  *
- * Opaque #GstGLAllocator struct
+ * Opaque #GstGLMemoryEGLAllocator struct
  */
 struct _GstGLMemoryEGLAllocator
 {
+  /* <private> */
+
   GstGLMemoryAllocator parent;
 };
 
 /**
- * GstGLAllocatorClass:
+ * GstGLMemoryEGLAllocatorClass:
  *
- * The #GstGLAllocatorClass only contains private data
+ * The #GstGLMemoryEGLAllocatorClass only contains private data
  */
 struct _GstGLMemoryEGLAllocatorClass
 {
+  /* <private> */
   GstGLMemoryAllocatorClass parent_class;
 };
 

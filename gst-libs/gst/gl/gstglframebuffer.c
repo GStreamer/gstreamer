@@ -17,6 +17,27 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
+/**
+ * SECTION:gstglframebuffer
+ * @short_description: OpenGL framebuffer abstraction
+ * @title: GstGLFramebuffer
+ * @see_also: #GstGLBaseMemory, #GstGLMemory, #GstGLContext
+ *
+ * A #GstGLFramebuffer represents and holds an OpenGL framebuffer object with
+ * it's associated attachments.
+ *
+ * A #GstGLFramebuffer can be created with gst_gl_framebuffer_new() or
+ * gst_gl_framebuffer_new_with_default_depth() and bound with
+ * gst_gl_framebuffer_bind().  Other resources can be bound with
+ * gst_gl_framebuffer_attach()
+ *
+ * Note: OpenGL framebuffers are not shareable resources so cannot be used
+ * between multiple OpenGL contexts.
+ *
+ * Since: 1.10
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -139,6 +160,14 @@ gst_gl_framebuffer_finalize (GObject * object)
   G_OBJECT_CLASS (gst_gl_framebuffer_parent_class)->finalize (object);
 }
 
+/**
+ * gst_gl_framebuffer_new:
+ * @context: a #GstGLContext
+ *
+ * Returns: a new #GstGLFramebuffer
+ *
+ * Since: 1.10
+ */
 GstGLFramebuffer *
 gst_gl_framebuffer_new (GstGLContext * context)
 {
@@ -162,6 +191,16 @@ gst_gl_framebuffer_new (GstGLContext * context)
   return fb;
 }
 
+/**
+ * gst_gl_framebuffer_new_with_default_depth:
+ * @context: a #GstGLContext
+ * @width: width for the depth buffer
+ * @height: for the depth buffer
+ *
+ * Returns: a new #GstGLFramebuffer with a depth buffer of @width and @height
+ *
+ * Since: 1.10
+ */
 GstGLFramebuffer *
 gst_gl_framebuffer_new_with_default_depth (GstGLContext * context, guint width,
     guint height)
@@ -205,6 +244,20 @@ gst_gl_framebuffer_new_with_default_depth (GstGLContext * context, guint width,
   return fb;
 }
 
+/**
+ * gst_gl_framebuffer_draw_to_texture:
+ * @fb: a #GstGLFramebuffer
+ * @mem: the #GstGLMemory to draw to
+ * @func: the function to run
+ * @user_data: data to pass to @func
+ *
+ * Perform the steps necessary to have the output of a glDraw* command in
+ * @func update the contents of @mem.
+ *
+ * Returns: the result of executing @func
+ *
+ * Since: 1.10
+ */
 gboolean
 gst_gl_framebuffer_draw_to_texture (GstGLFramebuffer * fb, GstGLMemory * mem,
     GstGLFramebufferFunc func, gpointer user_data)
@@ -243,6 +296,14 @@ gst_gl_framebuffer_draw_to_texture (GstGLFramebuffer * fb, GstGLMemory * mem,
   return ret;
 }
 
+/**
+ * gst_gl_framebuffer_bind:
+ * @fb: a #GstGLFramebuffer
+ *
+ * Bind @fb into the current thread
+ *
+ * Since: 1.10
+ */
 void
 gst_gl_framebuffer_bind (GstGLFramebuffer * fb)
 {
@@ -257,6 +318,14 @@ gst_gl_framebuffer_bind (GstGLFramebuffer * fb)
   gl->BindFramebuffer (GL_FRAMEBUFFER, fb->fbo_id);
 }
 
+/**
+ * gst_gl_context_clear_framebuffer:
+ * @context: a #GstGLContext
+ *
+ * Unbind the current framebuffer
+ *
+ * Since: 1.10
+ */
 void
 gst_gl_context_clear_framebuffer (GstGLContext * context)
 {
@@ -362,6 +431,16 @@ _attach_renderbuffer (GstGLFramebuffer * fb, guint attachment_point,
   fb->attachments = g_array_append_val (fb->attachments, attach);
 }
 
+/**
+ * gst_gl_framebuffer_attach:
+ * @fb: a #GstGLFramebuffer
+ * @attachment_point: the OpenGL attachment point to bind @mem to
+ * @mem: the memory object to bind to @attachment_point
+ *
+ * attach @mem to @attachment_point
+ *
+ * Since: 1.10
+ */
 void
 gst_gl_framebuffer_attach (GstGLFramebuffer * fb, guint attachment_point,
     GstGLBaseMemory * mem)
@@ -396,6 +475,17 @@ gst_gl_framebuffer_attach (GstGLFramebuffer * fb, guint attachment_point,
   _update_effective_dimensions (fb);
 }
 
+/**
+ * gst_gl_framebuffer_get_effective_dimensions:
+ * @fb: a #GstGLFramebuffer
+ * @width: (out) (allow-none): output width
+ * @height: (out) (allow-none): output height
+ *
+ * Retreive the effective dimensions from the current attachments attached to
+ * @fb.
+ *
+ * Since: 1.10
+ */
 void
 gst_gl_framebuffer_get_effective_dimensions (GstGLFramebuffer * fb,
     guint * width, guint * height)
@@ -408,6 +498,14 @@ gst_gl_framebuffer_get_effective_dimensions (GstGLFramebuffer * fb,
     *height = fb->priv->effective_height;
 }
 
+/**
+ * gst_gl_context_check_framebuffer_status:
+ * @context: a #GstGLContext
+ *
+ * Returns: whether whether the current framebuffer is complete
+ *
+ * Since: 1.10
+ */
 gboolean
 gst_gl_context_check_framebuffer_status (GstGLContext * context)
 {
@@ -443,6 +541,14 @@ gst_gl_context_check_framebuffer_status (GstGLContext * context)
   return FALSE;
 }
 
+/**
+ * gst_gl_framebuffer_get_id:
+ * @fb: a #GstGLFramebuffer
+ *
+ * Returns: the OpenGL id for @fb
+ *
+ * Since: 1.10
+ */
 guint
 gst_gl_framebuffer_get_id (GstGLFramebuffer * fb)
 {
