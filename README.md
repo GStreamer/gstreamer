@@ -40,3 +40,32 @@ If your operating system handles symlinks, built modules source code will be ava
 at the root of `gst-build/` for example GStreamer core will be in `gstreamer/`. Otherwise
 they will be present in `subprojects/`. You can simply hack in there and to rebuild you
 just need to rerun `ninja -C build/`.
+
+
+## Add information about GStreamer development environment in your prompt line
+
+### Bash prompt
+
+We automatically handle `bash` and set `$PS1` accordingly
+
+### Zsh prompt
+
+In your `.zshrc`, you should add something like:
+
+```
+export PROMPT="$GST_ENV-$PROMPT"
+```
+
+### Using powerline
+
+In your powerline theme configuration file (by default in
+`{POWERLINE INSTALLATION DIR}/config_files/themes/shell/default.json`)
+you should add a new environment segment as follow:
+
+```
+{
+  "function": "powerline.segments.common.env.environment",
+  "args": { "variable": "GST_ENV" },
+  "priority": 50
+},
+```

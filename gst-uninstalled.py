@@ -4,7 +4,9 @@ import argparse
 import os
 import re
 import site
+import shutil
 import subprocess
+import tempfile
 
 
 SCRIPTDIR = os.path.abspath(os.path.dirname(__file__))
@@ -13,16 +15,6 @@ SCRIPTDIR = os.path.abspath(os.path.dirname(__file__))
 def prepend_env_var(env, var, value):
     env[var] = os.pathsep + value + os.pathsep + env.get(var, "")
     env[var] = env[var].replace(os.pathsep + os.pathsep, os.pathsep).strip(os.pathsep)
-
-
-def set_prompt_var(options, env):
-    ps1 = env.get("PS1")
-    if ps1:
-        env["PS1"] = "[gst-%s] %s" % (options.gst_version, ps1)
-
-    prompt = env.get("PROMPT")
-    if prompt:
-        env["PROMPT"] = "[gst-%s] %s" % (options.gst_version, prompt)
 
 
 def get_subprocess_env(options):
@@ -56,6 +48,7 @@ def get_subprocess_env(options):
     prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'meson'))
     env["PATH"] += os.pathsep + PATH
     env["GST_VERSION"] = options.gst_version
+    env["GST_ENV"] = 'gst-' + options.gst_version
     env["GST_PLUGIN_SYSTEM_PATH"] = ""
     env["GST_PLUGIN_SCANNER"] = os.path.normpath(
         "%s/subprojects/gstreamer/libs/gst/helpers/gst-plugin-scanner" % options.builddir)
@@ -89,9 +82,6 @@ def get_subprocess_env(options):
                 if has_typelib:
                     break
 
-
-    set_prompt_var(options, env)
-
     return env
 
 
@@ -115,8 +105,17 @@ if __name__ == "__main__":
             args = [os.environ.get("COMSPEC", r"C:\WINDOWS\system32\cmd.exe")]
         else:
             args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
-        if args[0] == "/bin/bash":
-            args.append("--noprofile")
+        if "bash" in args[0]:
+            bashrc = os.path.expanduser('~/.bashrc')
+            if os.path.exists(bashrc):
+                tmprc = tempfile.NamedTemporaryFile(mode='w')
+                with open(bashrc, 'r') as src:
+                    shutil.copyfileobj(src, tmprc)
+                tmprc.write('\nexport PS1="[gst-%s] $PS1"' % options.gst_version)
+                tmprc.flush()
+                # Let the GC remove the tmp file
+                args.append("--rcfile")
+                args.append(tmprc.name)
 
     try:
         exit(subprocess.call(args, env=get_subprocess_env(options)))
