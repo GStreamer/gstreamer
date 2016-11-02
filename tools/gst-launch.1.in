@@ -440,8 +440,8 @@ which allows you to view the .dot file directly without converting it first.
 \fBGST_REGISTRY\fR
 Path of the plugin registry file. Default is
 ~/.cache/gstreamer\-GST_API_VERSION/registry\-CPU.bin where CPU is the
-machine/cpu type GStreamer was compiled for, e.g. 'i486', 'i686', 'x86\-64',
-'ppc', etc. (check the output of "uname \-i" and "uname \-m" for details).
+machine/cpu type GStreamer was compiled for, e.g. 'i486', 'i686', 'x86\-64', 'ppc',
+etc. (check the output of "uname \-i" and "uname \-m" for details).
 .TP
 \fBGST_REGISTRY_UPDATE\fR
 Set to "no" to force GStreamer to assume that no plugins have changed,
