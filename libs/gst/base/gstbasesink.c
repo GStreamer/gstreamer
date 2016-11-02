@@ -723,11 +723,9 @@ gst_base_sink_get_sync (GstBaseSink * sink)
 /**
  * gst_base_sink_set_drop_out_of_segment:
  * @sink: the sink
+ * @drop_out_of_segment: drop buffers outside the segment
  *
- * Checks if @sink is currently configured to synchronize against the
- * clock.
- *
- * Returns: %TRUE if the sink is configured to synchronize against the clock.
+ * Configure @sink is to drop buffers which are outside the current segment
  *
  * Since: 1.12
  */
@@ -754,7 +752,8 @@ gst_base_sink_set_drop_out_of_segment (GstBaseSink * sink,
  * Checks if @sink is currently configured to drop buffers which are outside
  * the current segment
  *
- * Returns: %TRUE if the sink is configured to synchronize against the clock.
+ * Returns: %TRUE if the sink is configured to drop buffers outside the
+ * current segment.
  *
  * Since: 1.12
  */

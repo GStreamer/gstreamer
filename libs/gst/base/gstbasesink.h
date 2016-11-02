@@ -208,7 +208,7 @@ void            gst_base_sink_set_sync          (GstBaseSink *sink, gboolean syn
 gboolean        gst_base_sink_get_sync          (GstBaseSink *sink);
 
 /* Drop buffers which are out of segment */
-void            gst_base_sink_set_drop_out_of_segment (GstBaseSink *sink, gboolean drop_clipped);
+void            gst_base_sink_set_drop_out_of_segment (GstBaseSink *sink, gboolean drop_out_of_segment);
 gboolean        gst_base_sink_get_drop_out_of_segment (GstBaseSink *sink);
 
 /* dropping late buffers */
