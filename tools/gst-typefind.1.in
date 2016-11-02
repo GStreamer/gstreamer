@@ -1,6 +1,6 @@
 .TH GStreamer 1 "May 2003"
 .SH "NAME"
-gst\-typefind - print Media type of file
+gst\-typefind \- print Media type of file
 .SH "SYNOPSIS"
 .B  gst\-typefind <file>
 .SH "DESCRIPTION"

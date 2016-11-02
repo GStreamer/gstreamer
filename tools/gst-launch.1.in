@@ -209,7 +209,7 @@ and the type can have the following case-insensitive values:
 .br
 - \fBs\fR, \fBstr\fR or \fBstring\fR for strings
 .br
-- \fBfraction\fR for fractions (framerate, pixel-aspect-ratio)
+- \fBfraction\fR for fractions (framerate, pixel\-aspect\-ratio)
 .br
 - \fBl\fR or \fBlist\fR for lists
 .br
@@ -301,10 +301,10 @@ rips track 5 from the CD and converts it into a single mp3 file
 
 Using \fBgst\-inspect\fR(1), it is possible to discover settings like the above
 for cdparanoiasrc that will tell it to rip the entire cd or only tracks of it.
-Alternatively, you can use an URI and gst-launch will find an element (such as
+Alternatively, you can use an URI and gst\-launch will find an element (such as
 cdparanoia) that supports that protocol for you, e.g.:
 .B
-       gst\-launch cdda://5 ! lame vbr=new vbr-quality=6 ! filesink location=track5.mp3
+       gst\-launch cdda://5 ! lame vbr=new vbr\-quality=6 ! filesink location=track5.mp3
 
 .B
         gst\-launch pulsesrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=input.ogg
@@ -352,19 +352,19 @@ Play an AVI movie with an external text subtitle stream using playbin
 Stream video using RTP and network elements.
 
 .B
-        gst\-launch v4l2src ! video/x-raw,width=128,height=96,format=UYVY ! videoconvert ! ffenc_h263 ! video/x-h263 ! rtph263ppay pt=96 ! udpsink host=192.168.1.1 port=5000
+        gst\-launch v4l2src ! video/x\-raw,width=128,height=96,format=UYVY ! videoconvert ! ffenc_h263 ! video/x\-h263 ! rtph263ppay pt=96 ! udpsink host=192.168.1.1 port=5000
 .br
 This command would be run on the transmitter
 
 .B
-        gst\-launch udpsrc port=5000 ! application/x-rtp, clock-rate=90000,payload=96 ! rtph263pdepay queue-delay=0 ! ffdec_h263 ! xvimagesink
+        gst\-launch udpsrc port=5000 ! application/x\-rtp, clock\-rate=90000,payload=96 ! rtph263pdepay queue\-delay=0 ! ffdec_h263 ! xvimagesink
 .br
 Use this command on the receiver
 
 .B Diagnostic
 
 .B
-        gst\-launch -v fakesrc num-buffers=16 ! fakesink
+        gst\-launch \-v fakesrc num\-buffers=16 ! fakesink
 .br
 Generate a null stream and ignore it (and print out details).
 
@@ -407,12 +407,12 @@ automatically. To make this even easier, you can use the playbin element:
 These examples show you how to use filtered caps.
 
 .B
-        gst\-launch videotestsrc ! 'video/x-raw,format=YUY2;video/x-raw,format=YV12' ! xvimagesink
+        gst\-launch videotestsrc ! 'video/x\-raw,format=YUY2;video/x\-raw,format=YV12' ! xvimagesink
 .br
 Show a test image and use the YUY2 or YV12 video format for this.
 
 .B
-        gst\-launch pulsesrc !  'audio/x-raw,rate=[32000,64000],format={S16LE,S24LE,S32LE}' ! wavenc ! filesink location=recording.wav
+        gst\-launch pulsesrc !  'audio/x\-raw,rate=[32000,64000],format={S16LE,S24LE,S32LE}' ! wavenc ! filesink location=recording.wav
 .br
 record audio and write it to a .wav file. Force usage of signed 16 to 32 bit
 samples and a sample rate between 32kHz and 64KHz.
@@ -433,15 +433,15 @@ When this environment variable is set, coloured debug output is disabled.
 \fBGST_DEBUG_DUMP_DOT_DIR\fR
 When set to a filesystem path, store 'dot' files of pipeline graphs there.
 These can then later be converted into an image using the 'dot' utility from
-the graphviz set of tools, like this: dot foo.dot -Tsvg -o foo.svg (png or jpg
+the graphviz set of tools, like this: dot foo.dot \-Tsvg \-o foo.svg (png or jpg
 are also possible as output format). There is also a utility called 'xdot'
 which allows you to view the .dot file directly without converting it first.
 .TP
 \fBGST_REGISTRY\fR
 Path of the plugin registry file. Default is
-~/.cache/gstreamer-GST_API_VERSION/registry-CPU.bin where CPU is the
-machine/cpu type GStreamer was compiled for, e.g. 'i486', 'i686', 'x86-64',
-'ppc', etc. (check the output of "uname -i" and "uname -m" for details).
+~/.cache/gstreamer\-GST_API_VERSION/registry\-CPU.bin where CPU is the
+machine/cpu type GStreamer was compiled for, e.g. 'i486', 'i686', 'x86\-64',
+'ppc', etc. (check the output of "uname \-i" and "uname \-m" for details).
 .TP
 \fBGST_REGISTRY_UPDATE\fR
 Set to "no" to force GStreamer to assume that no plugins have changed,
@@ -481,7 +481,7 @@ a stack trace in the usual way.
 .
 .SH FILES
 .TP 8
-~/.cache/gstreamer-GST_API_VERSION/registry-*.bin
+~/.cache/gstreamer\-GST_API_VERSION/registry\-*.bin
 The plugin cache; can be deleted at any time, will be re-created
 automatically when it does not exist yet or plugins change. Based on
 XDG_CACHE_DIR, so may be in a different location than the one suggested.

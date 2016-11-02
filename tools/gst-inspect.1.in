@@ -1,6 +1,6 @@
 .TH GStreamer 1 "December 2005"
 .SH "NAME"
-gst\-inspect - print info about a GStreamer plugin or element
+gst\-inspect \- print info about a GStreamer plugin or element
 .SH "SYNOPSIS"
 .B  gst\-inspect [OPTION...] [PLUGIN|ELEMENT]
 .SH "DESCRIPTION"
