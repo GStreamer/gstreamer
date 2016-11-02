@@ -58,7 +58,6 @@ class Xvfb(VirtualFrameBufferServer):
                 print("DISPLAY set to %s" % self.display_id)
                 return True
             except subprocess.CalledProcessError:
-                os.environ["DISPLAY"] = cdisplay
                 pass
 
             if time.time() - start > timeout:
