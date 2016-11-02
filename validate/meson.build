@@ -1,6 +1,5 @@
 inc_dirs = include_directories('.')
 
-json_dep = dependency('json-glib-1.0')
 cdata = configuration_data()
 
 unwind_dep = dependency('libunwind', required : false)

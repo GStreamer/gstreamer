@@ -45,6 +45,8 @@ gio_dep = dependency('gio-2.0', version: glib_req)
 gmodule_dep = dependency('gmodule-2.0', version: glib_req)
 gtk_dep = dependency('gtk+-3.0', required: false)
 mathlib = cc.find_library('m', required : false)
+json_dep = dependency('json-glib-1.0',
+    fallback : ['json-glib', 'json_glib_dep'])
 
 gst_c_args = ['-DHAVE_CONFIG_H', '-DGST_USE_UNSTABLE_API']
 
