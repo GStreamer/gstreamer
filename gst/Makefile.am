@@ -181,6 +181,7 @@ gst_headers =			\
 	gstdevice.h		\
 	gstdeviceprovider.h	\
 	gstdeviceproviderfactory.h \
+	gstdynamictypefactory.h \
 	gstelementfactory.h	\
 	gsterror.h		\
 	gstevent.h		\
