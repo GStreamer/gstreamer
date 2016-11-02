@@ -228,7 +228,8 @@ gst_vaapi_window_egl_create (GstVaapiWindowEGL * window,
 
   g_return_val_if_fail (native_dpy_class != NULL, FALSE);
 
-  window->window = native_dpy_class->create_window (GST_VAAPI_DISPLAY (display),
+  window->window =
+      native_dpy_class->create_window (GST_VAAPI_DISPLAY (display->display),
       GST_VAAPI_ID_INVALID, *width, *height);
   if (!window->window)
     return FALSE;
