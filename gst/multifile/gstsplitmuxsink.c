@@ -289,11 +289,11 @@ gst_splitmux_sink_dispose (GObject * object)
 {
   GstSplitMuxSink *splitmux = GST_SPLITMUX_SINK (object);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-
   /* Calling parent dispose invalidates all child pointers */
   splitmux->sink = splitmux->active_sink = splitmux->muxer = splitmux->mq =
       NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -1479,7 +1479,7 @@ static void
 gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
 {
   GstSplitMuxSink *splitmux = (GstSplitMuxSink *) element;
-  GstPad *mqsink, *mqsrc, *muxpad;
+  GstPad *mqsink, *mqsrc = NULL, *muxpad = NULL;
   MqStreamCtx *ctx =
       (MqStreamCtx *) (g_object_get_qdata ((GObject *) (pad), PAD_CONTEXT));
 
@@ -1491,8 +1491,11 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
   GST_INFO_OBJECT (pad, "releasing request pad");
 
   mqsink = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-  mqsrc = mq_sink_to_src (splitmux->mq, mqsink);
-  muxpad = gst_pad_get_peer (mqsrc);
+  /* The ghostpad target might have disappeared during pipeline destruct */
+  if (mqsink)
+    mqsrc = mq_sink_to_src (splitmux->mq, mqsink);
+  if (mqsrc)
+    muxpad = gst_pad_get_peer (mqsrc);
 
   /* Remove the context from our consideration */
   splitmux->contexts = g_list_remove (splitmux->contexts, ctx);
@@ -1509,14 +1512,19 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
     splitmux->reference_ctx = NULL;
 
   /* Release and free the mq input */
-  gst_element_release_request_pad (splitmux->mq, mqsink);
+  if (mqsink) {
+    gst_element_release_request_pad (splitmux->mq, mqsink);
+    gst_object_unref (mqsink);
+  }
 
   /* Release and free the muxer input */
-  gst_element_release_request_pad (splitmux->muxer, muxpad);
+  if (muxpad) {
+    gst_element_release_request_pad (splitmux->muxer, muxpad);
+    gst_object_unref (muxpad);
+  }
 
-  gst_object_unref (mqsink);
-  gst_object_unref (mqsrc);
-  gst_object_unref (muxpad);
+  if (mqsrc)
+    gst_object_unref (mqsrc);
 
   if (GST_PAD_PAD_TEMPLATE (pad) &&
       g_str_equal (GST_PAD_TEMPLATE_NAME_TEMPLATE (GST_PAD_PAD_TEMPLATE (pad)),
