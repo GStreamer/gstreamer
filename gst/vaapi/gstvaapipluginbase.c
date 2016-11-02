@@ -46,7 +46,7 @@ plugin_set_display (GstVaapiPluginBase * plugin, GstVaapiDisplay * display)
         display_name, plugin->display_name);
     gst_vaapi_display_replace (&plugin->display, NULL);
   } else {
-    GST_INFO_OBJECT (plugin, "set display %p", display);
+    GST_INFO_OBJECT (plugin, "set display %" GST_PTR_FORMAT, display);
     gst_vaapi_display_replace (&plugin->display, display);
     plugin->display_type = gst_vaapi_display_get_display_type (display);
     gst_vaapi_plugin_base_set_display_name (plugin, display_name);
