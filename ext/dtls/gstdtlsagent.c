@@ -67,6 +67,7 @@ static void gst_dtls_agent_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
 const gchar *gst_dtls_agent_peek_id (GstDtlsAgent *);
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 static GRWLock *ssl_locks;
 
 static void
@@ -104,13 +105,12 @@ ssl_thread_id_function (void)
 {
   return (gulong) g_thread_self ();
 }
+#endif
 
 void
 _gst_dtls_init_openssl (void)
 {
   static gsize is_init = 0;
-  gint i;
-  gint num_locks;
 
   if (g_once_init_enter (&is_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_dtls_agent_debug, "dtlsagent", 0,
@@ -128,13 +128,19 @@ _gst_dtls_init_openssl (void)
     SSL_load_error_strings ();
     ERR_load_BIO_strings ();
 
-    num_locks = CRYPTO_num_locks ();
-    ssl_locks = g_new (GRWLock, num_locks);
-    for (i = 0; i < num_locks; ++i) {
-      g_rw_lock_init (&ssl_locks[i]);
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+    {
+      gint i;
+      gint num_locks;
+      num_locks = CRYPTO_num_locks ();
+      ssl_locks = g_new (GRWLock, num_locks);
+      for (i = 0; i < num_locks; ++i) {
+        g_rw_lock_init (&ssl_locks[i]);
+      }
+      CRYPTO_set_locking_callback (ssl_locking_function);
+      CRYPTO_set_id_callback (ssl_thread_id_function);
     }
-    CRYPTO_set_locking_callback (ssl_locking_function);
-    CRYPTO_set_id_callback (ssl_thread_id_function);
+#endif
 
     g_once_init_leave (&is_init, 1);
   }
@@ -170,7 +176,11 @@ gst_dtls_agent_init (GstDtlsAgent * self)
 
   ERR_clear_error ();
 
+#if OPENSSL_VERSION_NUMBER >= 0x1000200fL
+  priv->ssl_context = SSL_CTX_new (DTLS_method ());
+#else
   priv->ssl_context = SSL_CTX_new (DTLSv1_method ());
+#endif
   if (ERR_peek_error () || !priv->ssl_context) {
     char buf[512];
 
