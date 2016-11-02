@@ -20,6 +20,7 @@ gst_sources = [
   'gstdevice.c',
   'gstdeviceprovider.c',
   'gstdeviceproviderfactory.c',
+  'gstdynamictypefactory.c',
   'gstelement.c',
   'gstelementfactory.c',
   'gsterror.c',
