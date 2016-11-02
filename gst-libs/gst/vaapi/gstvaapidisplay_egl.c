@@ -103,15 +103,7 @@ gst_vaapi_display_egl_bind_display (GstVaapiDisplay * base_display,
   const InitParams *params = (InitParams *) native_params;
 
   if (params->display) {
-#if USE_X11
-    if (params->display_type == GST_VAAPI_DISPLAY_TYPE_X11)
-      native_display = gst_vaapi_display_x11_new_with_display (params->display);
-#endif
-#if USE_WAYLAND
-    if (params->display_type == GST_VAAPI_DISPLAY_TYPE_WAYLAND)
-      native_display =
-          gst_vaapi_display_wayland_new_with_display (params->display);
-#endif
+    native_display = params->display;
   } else {
 #if USE_X11
     native_display = gst_vaapi_display_x11_new (NULL);
@@ -125,7 +117,6 @@ gst_vaapi_display_egl_bind_display (GstVaapiDisplay * base_display,
     return FALSE;
 
   gst_vaapi_display_replace (&display->display, native_display);
-  gst_vaapi_display_unref (native_display);
 
   egl_display = egl_display_new (GST_VAAPI_DISPLAY_NATIVE (display->display));
   if (!egl_display)
@@ -338,7 +329,7 @@ gst_vaapi_display_egl_new (GstVaapiDisplay * display, guint gles_version)
   InitParams params;
 
   if (display) {
-    params.display = GST_VAAPI_DISPLAY_NATIVE (display);
+    params.display = display;
     params.display_type = GST_VAAPI_DISPLAY_VADISPLAY_TYPE (display);
   } else {
     params.display = NULL;
