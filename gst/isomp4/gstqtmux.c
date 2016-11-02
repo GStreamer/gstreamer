@@ -3591,8 +3591,12 @@ find_best_pad (GstQTMux * qtmux, GstCollectPads * pads)
         gst_buffer_unref (tmp_buf);
     }
 
-    GST_DEBUG_OBJECT (qtmux, "Choosing pad %s:%s",
-        GST_DEBUG_PAD_NAME (best_pad->collect.pad));
+    if (best_pad) {
+      GST_DEBUG_OBJECT (qtmux, "Choosing pad %s:%s",
+          GST_DEBUG_PAD_NAME (best_pad->collect.pad));
+    } else {
+      GST_DEBUG_OBJECT (qtmux, "No best pad: EOS");
+    }
   }
 
   return best_pad;
