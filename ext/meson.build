@@ -63,6 +63,7 @@ endif
 subdir('srtp')
 #subdir('teletextdec')
 #subdir('timidity')
+subdir('ttml')
 subdir('voaacenc')
 #subdir('voamrwbenc')
 subdir('vulkan')
