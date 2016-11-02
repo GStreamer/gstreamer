@@ -725,7 +725,7 @@ gst_base_sink_get_sync (GstBaseSink * sink)
  * @sink: the sink
  * @drop_out_of_segment: drop buffers outside the segment
  *
- * Configure @sink is to drop buffers which are outside the current segment
+ * Configure @sink to drop buffers which are outside the current segment
  *
  * Since: 1.12
  */
