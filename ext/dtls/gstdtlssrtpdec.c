@@ -171,8 +171,7 @@ gst_dtls_srtp_dec_init (GstDtlsSrtpDec * self)
         "failed to create srtp_dec, is the srtp plugin registered?");
     return;
   }
-  self->dtls_srtp_demux =
-      gst_element_factory_make ("dtlssrtpdemux", NULL);
+  self->dtls_srtp_demux = gst_element_factory_make ("dtlssrtpdemux", NULL);
   if (!self->dtls_srtp_demux) {
     GST_ERROR_OBJECT (self, "failed to create dtls_srtp_demux");
     return;
