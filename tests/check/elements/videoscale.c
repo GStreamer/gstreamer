@@ -1069,4 +1069,23 @@ videoscale_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (videoscale);
+/* NOTE:
+ * We need to do the filename dance below in order to avoid having
+ * multiple parallel tests (identified by VSCALE_TEST_GROUP) going
+ * to the same output xml file (when using GST_CHECK_XML) */
+int
+main (int argc, char **argv)
+{
+  Suite *s;
+
+  gst_check_init (&argc, &argv);
+  s = videoscale_suite ();
+#ifndef VSCALE_TEST_GROUP
+#define FULL_RUN_NAME __FILE__
+#else
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+#define FULL_RUN_NAME __FILE__ STR(VSCALE_TEST_GROUP)".c"
+#endif
+  return gst_check_run_suite (s, "videoscale", FULL_RUN_NAME);
+}
