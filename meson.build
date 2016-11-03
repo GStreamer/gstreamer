@@ -22,7 +22,7 @@ if libavfilter_dep.found()
     #else
     #error libav provider should be FFmpeg
     #endif'''
-    if cc.compiles(check_ffmpeg_src, name : 'whether libav is provided by FFmpeg')
+    if cc.compiles(check_ffmpeg_src, dependencies : libavfilter_dep, name : 'whether libav is provided by FFmpeg')
         gst_libav = ['gst-libav']
     endif
 endif
