@@ -2156,21 +2156,26 @@ reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   gboolean seqchange, timechange;
   guint16 oldseq;
-
-  seqchange = timer->seqnum != seqnum;
-  timechange = timer->timeout != timeout;
-
-  if (!seqchange && !timechange)
-    return;
+  GstClockTime new_timeout;
 
   oldseq = timer->seqnum;
+  new_timeout = timeout + delay;
+  seqchange = oldseq != seqnum;
+  timechange = timer->timeout != new_timeout;
+
+  if (!seqchange && !timechange) {
+    GST_DEBUG_OBJECT (jitterbuffer,
+        "No changes in seqnum (%d) and timeout (%" GST_TIME_FORMAT
+        "), skipping", oldseq, GST_TIME_ARGS (timer->timeout));
+    return;
+  }
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "replace timer %d for seqnum %d->%d timeout %" GST_TIME_FORMAT
       "->%" GST_TIME_FORMAT, timer->type, oldseq, seqnum,
-      GST_TIME_ARGS (timer->timeout), GST_TIME_ARGS (timeout + delay));
+      GST_TIME_ARGS (timer->timeout), GST_TIME_ARGS (new_timeout));
 
-  timer->timeout = timeout + delay;
+  timer->timeout = new_timeout;
   timer->seqnum = seqnum;
   if (reset) {
     GST_DEBUG_OBJECT (jitterbuffer, "reset rtx delay %" GST_TIME_FORMAT
