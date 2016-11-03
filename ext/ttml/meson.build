@@ -1,4 +1,4 @@
-libxml_dep = dependency('libxml-2.0', required : false)
+libxml_dep = dependency('libxml-2.0', version : '>= 2.9.2', required : false)
 pango_dep = dependency('pango', required : false)
 cairo_dep = dependency('cairo', required : false)
 pangocairo_dep = dependency('pangocairo', required : false)
