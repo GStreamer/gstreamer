@@ -28,7 +28,7 @@
 
 /**
  * SECTION:gstglbasefilter
- * @short_description: #GstBaseTransform subclass for transformin OpenGL resources
+ * @short_description: #GstBaseTransform subclass for transforming OpenGL resources
  * @title: GstGLBaseFilter
  * @see_also: #GstBaseTransform
  *

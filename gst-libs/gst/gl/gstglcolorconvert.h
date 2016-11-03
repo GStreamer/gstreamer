@@ -76,9 +76,9 @@ struct _GstGLColorConvert
  */
 struct _GstGLColorConvertClass
 {
+  /* <private> */
   GstObjectClass object_class;
 
-  /* <private> */
   gpointer _padding[GST_PADDING];
 };
 
@@ -117,12 +117,12 @@ GST_EXPORT
 GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context);
 
 GST_EXPORT
-GstCaps *   gst_gl_color_convert_transform_caps (GstGLContext * convert,
+GstCaps *   gst_gl_color_convert_transform_caps (GstGLContext * context,
                                                  GstPadDirection direction,
                                                  GstCaps * caps,
                                                  GstCaps * filter);
 GST_EXPORT
-GstCaps *   gst_gl_color_convert_fixate_caps    (GstGLContext * convert,
+GstCaps *   gst_gl_color_convert_fixate_caps    (GstGLContext * context,
                                                  GstPadDirection direction,
                                                  GstCaps * caps,
                                                  GstCaps * other);

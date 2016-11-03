@@ -29,9 +29,31 @@ G_BEGIN_DECLS
 #define GST_GL_SYNC_META_INFO     (gst_gl_sync_meta_get_info())
 typedef struct _GstGLSyncMeta GstGLSyncMeta;
 
+/**
+ * GST_BUFFER_POOL_OPTION_GL_SYNC_META:
+ *
+ * An option that can be activated on bufferpools to request OpenGL
+ * synchronization metadata on buffers from the pool.
+ */
 #define GST_BUFFER_POOL_OPTION_GL_SYNC_META "GstBufferPoolOptionGLSyncMeta"
 
-struct _GstGLSyncMeta {
+/**
+ * GstGLSyncMeta:
+ * @parent: the parent #GstMeta
+ * @context: the #GstGLContext used to allocate the meta
+ * @data: a custom data pointer for the implementation
+ * @set_sync: set a sync point in the OpenGL command stream
+ * @set_sync_gl: the same as @set_sync but called from @context's thread
+ * @wait: execute a wait on the previously set sync point into the OpenGL command stream
+ * @wait_gl: the same as @wait but called from @context's thread
+ * @wait_cpu: wait for the previously set sync point to pass from the CPU
+ * @wait_cpu_gl: the same as @wait_cpu but called from @context's thread
+ * @copy: copy @data into a new #GstGLSyncMeta
+ * @free: free @data
+ * @free_gl: free @data in @context's thread
+ */
+struct _GstGLSyncMeta
+{
   GstMeta parent;
 
   GstGLContext *context;
@@ -62,11 +84,11 @@ GST_EXPORT
 GstGLSyncMeta *     gst_buffer_add_gl_sync_meta_full    (GstGLContext * context, GstBuffer * buffer,
                                                          gpointer data);
 GST_EXPORT
-void                gst_gl_sync_meta_set_sync_point     (GstGLSyncMeta * sync, GstGLContext * context);
+void                gst_gl_sync_meta_set_sync_point     (GstGLSyncMeta * sync_meta, GstGLContext * context);
 GST_EXPORT
-void                gst_gl_sync_meta_wait               (GstGLSyncMeta * sync, GstGLContext * context);
+void                gst_gl_sync_meta_wait               (GstGLSyncMeta * sync_meta, GstGLContext * context);
 GST_EXPORT
-void                gst_gl_sync_meta_wait_cpu           (GstGLSyncMeta * sync, GstGLContext * context);
+void                gst_gl_sync_meta_wait_cpu           (GstGLSyncMeta * sync_meta, GstGLContext * context);
 
 G_END_DECLS
 

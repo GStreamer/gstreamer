@@ -31,13 +31,18 @@
 
 /**
  * SECTION:gstglcolorconvert
- * @short_description: an object that converts between color spaces/formats
+ * @short_description: convert between video color spaces and formats
  * @see_also: #GstGLUpload, #GstGLMemory, #GstGLBaseMemory
  *
  * #GstGLColorConvert is an object that converts between color spaces and/or
  * formats using OpenGL Shaders.
  *
- * A #GstGLColorConvert can be created with gst_gl_color_convert_new().
+ * A #GstGLColorConvert can be created with gst_gl_color_convert_new(), the
+ * configuration negotiated with gst_gl_color_convert_transform_caps() and the
+ * conversion performed with gst_gl_color_convert_perform().
+ *
+ * The glcolorconvertelement provides a GStreamer element that uses
+ * #GstGLColorConvert to convert between video formats and color spaces.
  */
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
@@ -464,6 +469,8 @@ gst_gl_color_convert_init (GstGLColorConvert * convert)
  * @context: a #GstGLContext
  *
  * Returns: a new #GstGLColorConvert object
+ *
+ * Since: 1.4
  */
 GstGLColorConvert *
 gst_gl_color_convert_new (GstGLContext * context)
@@ -731,6 +738,8 @@ _gst_gl_color_convert_set_caps_unlocked (GstGLColorConvert * convert,
  * @out_caps: output #GstCaps
  *
  * Initializes @convert with the information required for conversion.
+ *
+ * Since: 1.6
  */
 gboolean
 gst_gl_color_convert_set_caps (GstGLColorConvert * convert,
@@ -745,6 +754,17 @@ gst_gl_color_convert_set_caps (GstGLColorConvert * convert,
   return ret;
 }
 
+/**
+ * gst_gl_color_convert_decide_allocation:
+ * @convert: a #GstGLColorConvert
+ * @query: a completed ALLOCATION #GstQuery
+ *
+ * Provides an implementation of #GstBaseTransfromClass::decide_allocation()
+ *
+ * Returns: whether the allocation parameters were successfully chosen
+ *
+ * Since: 1.8
+ */
 gboolean
 gst_gl_color_convert_decide_allocation (GstGLColorConvert * convert,
     GstQuery * query)
@@ -926,8 +946,21 @@ gst_gl_color_convert_caps_transform_format_info (GstCaps * caps)
   return res;
 }
 
+/**
+ * gst_gl_color_convert_transform_caps:
+ * @context: a #GstGLContext to use for transforming @caps
+ * @direction: a #GstPadDirection
+ * @caps: (transfer none): the #GstCaps to transform
+ * @filter: (transfer none): a set of filter #GstCaps
+ *
+ * Provides an implementation of #GstBaseTransformClass::transform_caps()
+ *
+ * Returns: (transfer full): the converted #GstCaps
+ *
+ * Since: 1.6
+ */
 GstCaps *
-gst_gl_color_convert_transform_caps (GstGLContext * convert,
+gst_gl_color_convert_transform_caps (GstGLContext * context,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   caps = gst_gl_color_convert_caps_transform_format_info (caps);
@@ -1151,8 +1184,21 @@ gst_gl_color_convert_fixate_format_target (GstCaps * caps, GstCaps * result)
         gst_gl_texture_target_to_string (target), NULL);
 }
 
+/**
+ * gst_gl_color_convert_fixate_caps:
+ * @context: a #GstGLContext to use for transforming @caps
+ * @direction: a #GstPadDirection
+ * @caps: (transfer none): the #GstCaps of @direction
+ * @other: (transfer full): the #GstCaps to fixate
+ *
+ * Provides an implementation of #GstBaseTransformClass::fixate_caps()
+ *
+ * Returns: (transfer full): the fixated #GstCaps
+ *
+ * Since: 1.8
+ */
 GstCaps *
-gst_gl_color_convert_fixate_caps (GstGLContext * convert,
+gst_gl_color_convert_fixate_caps (GstGLContext * context,
     GstPadDirection direction, GstCaps * caps, GstCaps * other)
 {
   GstCaps *result;
@@ -1182,12 +1228,14 @@ gst_gl_color_convert_fixate_caps (GstGLContext * convert,
 /**
  * gst_gl_color_convert_perform:
  * @convert: a #GstGLColorConvert
- * @inbuf: the texture ids for input formatted according to in_info
+ * @inbuf: (transfer none): the #GstGLMemory filled #GstBuffer to convert
  *
  * Converts the data contained by @inbuf using the formats specified by the
- * #GstVideoInfo<!--  -->s passed to gst_gl_color_convert_set_caps() 
+ * #GstCaps passed to gst_gl_color_convert_set_caps() 
  *
- * Returns: a converted #GstBuffer or %NULL%
+ * Returns: (transfer full): a converted #GstBuffer or %NULL
+ *
+ * Since: 1.4
  */
 GstBuffer *
 gst_gl_color_convert_perform (GstGLColorConvert * convert, GstBuffer * inbuf)

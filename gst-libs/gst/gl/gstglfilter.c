@@ -20,6 +20,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstglfilter
+ * @short_description: GstBaseTransform subclass for dealing with RGBA textures
+ * @see_also: #GstBaseTransform, #GstGLContext, #GstGLFramebuffer
+ *
+ * #GstGLFilter helps to implement simple OpenGL filter elements taking a
+ * single input and producing a single output with a #GstGLFramebuffer
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -896,6 +905,8 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
  * automatic download if needed.
  *
  * Returns: whether the transformation succeeded
+ *
+ * Since: 1.4
  */
 gboolean
 gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
@@ -1023,6 +1034,8 @@ _glcb (gpointer data)
  * Transforms @input into @output using @func on through FBO.
  *
  * Returns: the return value of @func
+ *
+ * Since: 1.10
  */
 gboolean
 gst_gl_filter_render_to_target (GstGLFilter * filter, GstGLMemory * input,
@@ -1101,6 +1114,8 @@ _draw_with_shader_cb (GstGLFilter * filter, GstGLMemory * in_tex,
  * Transforms @input into @output using @shader with a FBO.
  *
  * See also: gst_gl_filter_render_to_target()
+ *
+ * Since: 1.4
  */
 /* attach target to a FBO, use shader, pass input as "tex" uniform to
  * the shader, render input to a quad */
@@ -1171,6 +1186,8 @@ _unbind_buffer (GstGLFilter * filter)
  * modifies is the necessary vertex/index buffers and, if necessary, a
  * Vertex Array Object for drawing a fullscreen quad.  Framebuffer state,
  * any shaders, viewport state, etc must be setup by the caller.
+ *
+ * Since: 1.10
  */
 void
 gst_gl_filter_draw_fullscreen_quad (GstGLFilter * filter)

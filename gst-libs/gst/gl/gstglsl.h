@@ -29,12 +29,46 @@ GST_EXPORT
 GQuark gst_glsl_error_quark (void);
 #define GST_GLSL_ERROR (gst_glsl_error_quark ())
 
+/**
+ * GstGLSLError:
+ * @GST_GLSL_ERROR_COMPILE: Compilation error occured
+ * @GST_GLSL_ERROR_LINK: Link error occured
+ * @GST_GLSL_ERROR_PROGRAM: General program error occured
+ *
+ * Compilation stage that caused an error
+ *
+ * Since: 1.8
+ */
 typedef enum {
   GST_GLSL_ERROR_COMPILE,
   GST_GLSL_ERROR_LINK,
   GST_GLSL_ERROR_PROGRAM,
 } GstGLSLError;
 
+/**
+ * GstGLSLVersion:
+ * @GST_GLSL_VERSION_NONE: no version
+ * @GST_GLSL_VERSION_100: #version 100 (only valid for ES)
+ * @GST_GLSL_VERSION_110: #version 110 (only valid for compatibility desktop GL)
+ * @GST_GLSL_VERSION_120: #version 120 (only valid for compatibility desktop GL)
+ * @GST_GLSL_VERSION_130: #version 130 (only valid for compatibility desktop GL)
+ * @GST_GLSL_VERSION_140: #version 140 (only valid for compatibility desktop GL)
+ * @GST_GLSL_VERSION_150: #version 150 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_300: #version 300 (only valid for ES)
+ * @GST_GLSL_VERSION_310: #version 310 (only valid for ES)
+ * @GST_GLSL_VERSION_320: #version 320 (only valid for ES)
+ * @GST_GLSL_VERSION_330: #version 330 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_400: #version 400 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_410: #version 410 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_420: #version 420 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_430: #version 430 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_440: #version 440 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_450: #version 450 (valid for compatibility/core desktop GL)
+ *
+ * GLSL version list
+ *
+ * Since: 1.8
+ */
 typedef enum
 {
   GST_GLSL_VERSION_NONE = 0,
@@ -55,10 +89,20 @@ typedef enum
   GST_GLSL_VERSION_430 = 430, /* GL */
   GST_GLSL_VERSION_440 = 440, /* GL */
   GST_GLSL_VERSION_450 = 450, /* GL */
-
-  GST_GLSL_VERSION_ANY = -1,
 } GstGLSLVersion;
 
+/**
+ * GstGLSLProfile:
+ * @GST_GLSL_PROFILE_NONE: no profile supported/available
+ * @GST_GLSL_PROFILE_ES: OpenGL|ES profile
+ * @GST_GLSL_PROFILE_CORE: OpenGL core profile
+ * @GST_GLSL_PROFILE_COMPATIBILITY: OpenGL compatibility profile
+ * @GST_GLSL_PROFILE_ANY: any OpenGL/OpenGL|ES profile
+ *
+ * GLSL profiles
+ *
+ * Since: 1.8
+ */
 typedef enum
 {
   /* XXX: maybe make GstGLAPI instead */

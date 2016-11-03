@@ -22,6 +22,8 @@
 
 /**
  * SECTION:gstglviewconvert
+ * @short_description: convert between steroscopic/multiview video formats
+ * @see_also: #GstGLColorConvert, #GstGLContext
  *
  * Convert stereoscopic/multiview video using fragment shaders.
  */
@@ -129,6 +131,7 @@ gst_gl_stereo_downmix_mode_get_type (void)
   return g_define_type_id__volatile;
 }
 
+/* *INDENT-OFF* */
 /* These match the order and number of DOWNMIX_ANAGLYPH_* modes */
 static GLfloat downmix_matrices[][2][9] = {
   {                             /* Green-Magenta Dubois */
@@ -152,6 +155,7 @@ static gfloat identity_matrix[] = {
   0.0f, 0.0f, 1.0f, 0.0f,
   0.0f, 0.0f, 0.0f, 1.0f,
 };
+/* *INDENT-ON* */
 
 #define glsl_OES_extension_string "#extension GL_OES_EGL_image_external : require \n"
 
@@ -327,12 +331,28 @@ gst_gl_view_convert_finalize (GObject * object)
   G_OBJECT_CLASS (gst_gl_view_convert_parent_class)->finalize (object);
 }
 
+/**
+ * gst_gl_view_convert_new:
+ *
+ * Returns: a new #GstGLViewConvert
+ *
+ * Since: 1.6
+ */
 GstGLViewConvert *
 gst_gl_view_convert_new (void)
 {
   return g_object_new (GST_TYPE_GL_VIEW_CONVERT, NULL);
 }
 
+/**
+ * gst_gl_view_convert_set_context:
+ * @viewconvert: a #GstGLViewConvert
+ * @context: the #GstGLContext to set
+ *
+ * Set @context on @viewconvert
+ *
+ * Since: 1.6
+ */
 void
 gst_gl_view_convert_set_context (GstGLViewConvert * viewconvert,
     GstGLContext * context)
@@ -398,6 +418,8 @@ _view_convert_set_format (GstGLViewConvert * viewconvert,
  * @out_caps: output #GstCaps
  *
  * Initializes @viewconvert with the information required for conversion.
+ *
+ * Since: 1.6
  */
 gboolean
 gst_gl_view_convert_set_caps (GstGLViewConvert * viewconvert,
@@ -1038,6 +1060,19 @@ _intersect_with_mview_modes (GstCaps * caps, const GValue * modes)
   return result;
 }
 
+/**
+ * gst_gl_view_convert_transform_caps:
+ * @viewconvert: a #GstGLViewConvert
+ * @direction: a #GstPadDirection
+ * @caps: (transfer none): the #GstCaps to transform
+ * @filter: (transfer none): a set of filter #GstCaps
+ *
+ * Provides an implementation of #GstBaseTransformClass::transform_caps()
+ *
+ * Returns: (transfer full): the converted #GstCaps
+ *
+ * Since: 1.6
+ */
 GstCaps *
 gst_gl_view_convert_transform_caps (GstGLViewConvert * viewconvert,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
@@ -1215,6 +1250,19 @@ _fixate_texture_target (GstGLViewConvert * viewconvert,
   return gst_caps_fixate (other);
 }
 
+/**
+ * gst_gl_view_convert_fixate_caps:
+ * @viewconvert: a #GstGLViewConvert
+ * @direction: a #GstPadDirection
+ * @caps: (transfer none): the #GstCaps of @direction
+ * @othercaps: (transfer full): the #GstCaps to fixate
+ *
+ * Provides an implementation of #GstBaseTransformClass::fixate_caps()
+ *
+ * Returns: (transfer full): the fixated #GstCaps
+ *
+ * Since: 1.6
+ */
 GstCaps *
 gst_gl_view_convert_fixate_caps (GstGLViewConvert * viewconvert,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
@@ -1295,6 +1343,15 @@ done:
   return othercaps;
 }
 
+/**
+ * gst_gl_view_convert_reset:
+ * @viewconvert: a #GstGLViewConvert
+ *
+ * Reset @viewconvert to the default state.  Further operation will require
+ * setting the caps with gst_gl_view_convert_set_caps().
+ *
+ * Since: 1.6
+ */
 void
 gst_gl_view_convert_reset (GstGLViewConvert * viewconvert)
 {
@@ -1368,6 +1425,18 @@ gst_gl_view_convert_get_property (GObject * object, guint prop_id,
   }
 }
 
+/**
+ * gst_gl_view_convert_perform:
+ * @viewconvert: a #GstGLViewConvert
+ * @inbuf: (transfer none): the #GstGLMemory filled #GstBuffer to convert
+ *
+ * Converts the data contained by @inbuf using the formats specified by the
+ * #GstCaps passed to gst_gl_view_convert_set_caps() 
+ *
+ * Returns: (transfer full): a converted #GstBuffer or %NULL
+ *
+ * Since: 1.6
+ */
 GstBuffer *
 gst_gl_view_convert_perform (GstGLViewConvert * viewconvert, GstBuffer * inbuf)
 {
@@ -2122,6 +2191,18 @@ out:
   return;
 }
 
+/**
+ * gst_gl_view_convert_submit_input_buffer:
+ * @viewconvert: a #GstGLViewConvert
+ * @is_discont: true if we have a discontinuity
+ * @input: (transfer full): a #GstBuffer
+ *
+ * Submit @input to be processed by @viewconvert
+ *
+ * Returns: a #GstFlowReturn
+ *
+ * Since: 1.6
+ */
 GstFlowReturn
 gst_gl_view_convert_submit_input_buffer (GstGLViewConvert * viewconvert,
     gboolean is_discont, GstBuffer * input)
@@ -2155,6 +2236,17 @@ gst_gl_view_convert_submit_input_buffer (GstGLViewConvert * viewconvert,
   return ret;
 }
 
+/**
+ * gst_gl_view_convert_get_output:
+ * @viewconvert: a #GstGLViewConvert
+ * @outbuf_ptr: (out): a #GstBuffer
+ *
+ * Retrieve the processed output buffer placing the output in @outbuf_ptr.
+ *
+ * Returns: a #GstFlowReturn
+ *
+ * Since: 1.6
+ */
 GstFlowReturn
 gst_gl_view_convert_get_output (GstGLViewConvert * viewconvert,
     GstBuffer ** outbuf_ptr)

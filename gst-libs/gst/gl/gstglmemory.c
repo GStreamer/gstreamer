@@ -260,6 +260,7 @@ _gl_tex_create (GstGLMemory * gl_mem, GError ** error)
  * @parent: (allow-none): the parent #GstMemory to initialize with
  * @context: the #GstGLContext to initialize with
  * @target: the #GstGLTextureTarget for this #GstGLMemory
+ * @tex_type: the #GstVideoGLTextureType for this #GstGLMemory
  * @params: (allow-none): the @GstAllocationParams to initialize with
  * @info: the #GstVideoInfo for this #GstGLMemory
  * @plane: the plane number (starting from 0) for this #GstGLMemory
@@ -1129,7 +1130,7 @@ gst_gl_video_allocation_params_init_full (GstGLVideoAllocationParams * params,
  * @plane: the video plane of @v_info to allocate
  * @valign: (allow-none): any #GstVideoAlignment applied to symem mappings of the texture
  * @target: the #GstGLTextureTarget for the created textures
- * @target: the #GstVideoGLTextureType for the created textures
+ * @tex_type: the #GstVideoGLTextureType for the created textures
  *
  * Returns: a new #GstGLVideoAllocationParams for allocating #GstGLMemory's
  *
@@ -1335,6 +1336,8 @@ gst_gl_video_allocation_params_copy_data (GstGLVideoAllocationParams * src_vid,
  * @buffer: a #GstBuffer to setup
  * @params: the #GstGLVideoAllocationParams to allocate with
  * @tex_types: (allow-none): a list of #GstVideoGLTextureType's to allocate with.
+ * @wrapped_data: a list of wrapped data pointers
+ * @n_wrapped_pointers: the number of elements in @tex_types and @wrapped_data
  *
  * Returns: whether the buffer was correctly setup
  *

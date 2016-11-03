@@ -1081,7 +1081,7 @@ gst_gl_display_egl_get_type
 
 <SECTION>
 <FILE>gstgldisplaywayland</FILE>
-<TITLE>GstGLDIsplayWayland</TITLE>
+<TITLE>GstGLDisplayWayland</TITLE>
 gst_gl_display_wayland_new
 gst_gl_display_wayland_new_with_display
 <SUBSECTION Standard>
@@ -1093,7 +1093,7 @@ GST_GL_DISPLAY_WAYLAND_CLASS
 
 <SECTION>
 <FILE>gstgldisplayx11</FILE>
-<TITLE>GstGLDIsplayX11</TITLE>
+<TITLE>GstGLDisplayX11</TITLE>
 gst_gl_display_x11_new
 gst_gl_display_x11_new_with_display
 <SUBSECTION Standard>
@@ -1525,11 +1525,10 @@ GST_GLSL_STAGE_GET_CLASS
 <FILE>gstglsyncmeta</FILE>
 <TITLE>GstGLSyncMeta</TITLE>
 GstGLSyncMeta
+gst_gl_sync_meta_get_info
 gst_buffer_add_gl_sync_meta
 gst_buffer_add_gl_sync_meta_full
 gst_buffer_get_gl_sync_meta
-gst_gl_sync_meta_api_get_type
-gst_gl_sync_meta_get_info
 gst_gl_sync_meta_set_sync_point
 gst_gl_sync_meta_wait
 gst_gl_sync_meta_wait_cpu
@@ -1537,6 +1536,7 @@ GST_BUFFER_POOL_OPTION_GL_SYNC_META
 <SUBSECTION Standard>
 GST_GL_SYNC_META_API_TYPE
 GST_GL_SYNC_META_INFO
+gst_gl_sync_meta_api_get_type
 </SECTION>
 
 <SECTION>
