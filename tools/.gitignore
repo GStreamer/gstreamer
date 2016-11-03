@@ -14,12 +14,3 @@ Makefile.in
 gst-inspect
 gst-launch
 gst-typefind
-gst-inspect.1
-gst-launch.1
-gst-typefind.1
-
-gst-inspect-?.?*
-gst-launch-?.?*
-gst-stats-?.?*
-gst-typefind-?.?*
-

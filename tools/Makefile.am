@@ -41,16 +41,4 @@ noinst_SCRIPTS = gst-indent
 noinst_HEADERS = tools.h
 
 EXTRA_DIST = \
-	$(noinst_SCRIPTS) \
-	gst-inspect.1.in \
-	gst-launch.1.in \
-	gst-typefind.1.in
-
-%-@GST_API_VERSION@.1: %.1.in
-	$(AM_V_GEN)sed \
-		-e s,gst-inspect,gst-inspect-@GST_API_VERSION@,g \
-		-e s,gst-launch,gst-launch-@GST_API_VERSION@,g \
-		-e s,gst-typefind,gst-typefind-@GST_API_VERSION@,g \
-		-e s,GST_API_VERSION,@GST_API_VERSION@,g \
-		$< >$@
-
+	$(noinst_SCRIPTS)
