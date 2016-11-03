@@ -81,7 +81,6 @@ if build_gir
                         'GLib-2.0',
                         'Gio-2.0',
                         'GModule-2.0',
-                        'GstVideo-' + apiversion,
                         'Gst-' + apiversion,
                         'GstPbutils-' + apiversion],
             install : true,
