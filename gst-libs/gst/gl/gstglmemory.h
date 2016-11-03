@@ -51,8 +51,7 @@ GType gst_gl_memory_allocator_get_type(void);
 
 /**
  * GstGLMemory:
- * @mem: the parent object
- * @context: the #GstGLContext to use for GL operations
+ * @mem: the parent #GstGLBaseMemory object
  * @tex_id: the GL texture id for this memory
  * @tex_target: the GL texture target for this memory
  * @tex_type: the texture type
@@ -88,6 +87,15 @@ typedef struct _GstGLVideoAllocationParams GstGLVideoAllocationParams;
 
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO (1 << 3)
 
+/**
+ * GstGLVideoAllocationParams:
+ * @parent: the parent #GstGLAllocationParams structure
+ * @v_info: the #GstVideoInfo to allocate
+ * @plane: the video plane index to allocate
+ * @valign: the #GstVideoAlignment to align the system representation to (may be %NULL for the default)
+ * @target: the #GstGLTextureTarget to allocate
+ * @tex_type: the #GstVideoGLTextureType to allocate
+ */
 struct _GstGLVideoAllocationParams
 {
   GstGLAllocationParams  parent;
@@ -178,21 +186,24 @@ void            gst_gl_video_allocation_params_copy_data    (GstGLVideoAllocatio
  */
 struct _GstGLMemoryAllocator
 {
+  /* <private> */
   GstGLBaseMemoryAllocator parent;
 
-  /* <private> */
   gpointer _padding[GST_PADDING];
 };
 
 /**
  * GstGLMemoryAllocatorClass:
- *
- * The #GstGLMemoryAllocatorClass only contains private data
+ * @map: provide a custom map implementation
+ * @copy: provide a custom copy implementation
+ * @unmap: provide a custom unmap implementation
  */
 struct _GstGLMemoryAllocatorClass
 {
+  /* <private> */
   GstGLBaseMemoryAllocatorClass             parent_class;
 
+  /* <public> */
   GstGLBaseMemoryAllocatorMapFunction       map;
   GstGLBaseMemoryAllocatorCopyFunction      copy;
   GstGLBaseMemoryAllocatorUnmapFunction     unmap;

@@ -223,6 +223,14 @@ gst_gl_display_new (void)
   return display;
 }
 
+/**
+ * gst_gl_display_get_handle:
+ * @display: a #GstGLDisplay
+ *
+ * Returns: the native handle for the display
+ *
+ * Since: 1.4
+ */
 guintptr
 gst_gl_display_get_handle (GstGLDisplay * display)
 {

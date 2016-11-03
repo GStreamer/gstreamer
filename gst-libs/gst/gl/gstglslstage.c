@@ -200,6 +200,8 @@ _ensure_shader (GstGLSLStage * stage)
  * @str: an array of strings concatted together to produce a shader
  *
  * Returns: (transfer full): a new #GstGLSLStage of the specified @type
+ *
+ * Since: 1.8
  */
 GstGLSLStage *
 gst_glsl_stage_new_with_strings (GstGLContext * context, guint type,
@@ -237,6 +239,8 @@ gst_glsl_stage_new_with_strings (GstGLContext * context, guint type,
  * @str: a shader string
  *
  * Returns: (transfer full): a new #GstGLSLStage of the specified @type
+ *
+ * Since: 1.8
  */
 GstGLSLStage *
 gst_glsl_stage_new_with_string (GstGLContext * context, guint type,
@@ -252,6 +256,8 @@ gst_glsl_stage_new_with_string (GstGLContext * context, guint type,
  * @type: the GL enum shader stage type
  *
  * Returns: (transfer full): a new #GstGLSLStage of the specified @type
+ *
+ * Since: 1.8
  */
 GstGLSLStage *
 gst_glsl_stage_new (GstGLContext * context, guint type)
@@ -265,6 +271,8 @@ gst_glsl_stage_new (GstGLContext * context, guint type)
  * @context: a #GstGLContext
  *
  * Returns: (transfer full): a new #GstGLSLStage with the default vertex shader
+ *
+ * Since: 1.8
  */
 GstGLSLStage *
 gst_glsl_stage_new_default_vertex (GstGLContext * context)
@@ -280,6 +288,8 @@ gst_glsl_stage_new_default_vertex (GstGLContext * context)
  * @context: a #GstGLContext
  *
  * Returns: (transfer full): a new #GstGLSLStage with the default fragment shader
+ *
+ * Since: 1.8
  */
 GstGLSLStage *
 gst_glsl_stage_new_default_fragment (GstGLContext * context)
@@ -299,6 +309,8 @@ gst_glsl_stage_new_default_fragment (GstGLContext * context)
  * @str: (transfer none): a GLSL shader string
  *
  * Replaces the current shader string with @str.
+ *
+ * Since: 1.8
  */
 gboolean
 gst_glsl_stage_set_strings (GstGLSLStage * stage, GstGLSLVersion version,
@@ -344,6 +356,8 @@ gst_glsl_stage_set_strings (GstGLSLStage * stage, GstGLSLVersion version,
  * @stage: a #GstGLSLStage
  *
  * Returns: The GL shader type for this shader stage
+ *
+ * Since: 1.8
  */
 guint
 gst_glsl_stage_get_shader_type (GstGLSLStage * stage)
@@ -358,6 +372,8 @@ gst_glsl_stage_get_shader_type (GstGLSLStage * stage)
  * @stage: a #GstGLSLStage
  *
  * Returns: The GL handle for this shader stage
+ *
+ * Since: 1.8
  */
 guint
 gst_glsl_stage_get_handle (GstGLSLStage * stage)
@@ -373,6 +389,8 @@ gst_glsl_stage_get_handle (GstGLSLStage * stage)
  * @stage: a #GstGLSLStage
  *
  * Returns: The GLSL version for the current shader stage
+ *
+ * Since: 1.8
  */
 GstGLSLVersion
 gst_glsl_stage_get_version (GstGLSLStage * stage)
@@ -387,6 +405,8 @@ gst_glsl_stage_get_version (GstGLSLStage * stage)
  * @stage: a #GstGLSLStage
  *
  * Returns: The GLSL profile for the current shader stage
+ *
+ * Since: 1.8
  */
 GstGLSLProfile
 gst_glsl_stage_get_profile (GstGLSLStage * stage)
@@ -503,6 +523,8 @@ _compile_shader (GstGLContext * context, struct compile *data)
  * @error: a #GError to use on failure
  *
  * Returns: whether the compilation suceeded
+ *
+ * Since: 1.8
  */
 gboolean
 gst_glsl_stage_compile (GstGLSLStage * stage, GError ** error)

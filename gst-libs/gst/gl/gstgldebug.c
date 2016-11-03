@@ -163,7 +163,6 @@ gst_gl_async_debug_unset (GstGLAsyncDebug * ad)
 
 /**
  * gst_gl_async_debug_new:
- * @ad: a #GstGLAsyncDebug
  *
  * Free with gst_gl_async_debug_free()
  *

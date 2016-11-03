@@ -18,6 +18,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstgloverlaycompositor
+ * @short_description: Composite multiple overlays using OpenGL
+ * @see_also: #GstGLMemory, #GstGLContext
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

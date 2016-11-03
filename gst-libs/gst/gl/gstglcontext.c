@@ -371,6 +371,10 @@ gst_gl_context_new (GstGLDisplay * display)
  *
  * Wraps an existing OpenGL context into a #GstGLContext.  
  *
+ * Note: The caller is responsible for ensuring that the OpenGL context
+ * represented by @handle stays alive while the returned #GstGLContext is
+ * active.
+ *
  * Returns: a #GstGLContext wrapping @handle
  *
  * Since: 1.4
@@ -493,6 +497,21 @@ gst_gl_context_get_current_gl_context (GstGLPlatform context_type)
   return handle;
 }
 
+/**
+ * gst_gl_context_get_proc_address_with_platform:
+ * @context_type: a #GstGLPlatform
+ * @gl_api: a #GstGLAPI
+ * @name: the name of the function to retrieve
+ *
+ * Attempts to use the @context_type specific GetProcAddress implementations
+ * to retreive @name.
+ *
+ * See also gst_gl_context_get_proc_address().
+ *
+ * Returns: a function pointer for @name, or %NULL
+ *
+ * Since: 1.6
+ */
 gpointer
 gst_gl_context_get_proc_address_with_platform (GstGLPlatform context_type,
     GstGLAPI gl_api, const gchar * name)
@@ -522,10 +541,10 @@ gst_gl_context_get_proc_address_with_platform (GstGLPlatform context_type,
 /**
  * gst_gl_context_get_current_gl_api:
  * @platform: the #GstGLPlatform to retrieve the API for
- * @major: (out): (allow-none): the major version
- * @minor: (out): (allow-none): the minor version
+ * @major: (out) (allow-none): the major version
+ * @minor: (out) (allow-none): the minor version
  *
- * If an error occurs, @major and @minor aren't modified and %GST_GL_API_NONE is
+ * If an error occurs, @major and @minor are not modified and %GST_GL_API_NONE is
  * returned.
  *
  * Returns: The version supported by the OpenGL context current in the calling
@@ -778,7 +797,17 @@ gst_gl_context_get_gl_api (GstGLContext * context)
  * Platform specfic functions (names starting 'egl', 'glX', 'wgl', etc) can also
  * be retrieved using this method.
  *
- * Returns: a function pointer or NULL
+ * Note: This function may return valid function pointers that may not be valid
+ * to call in @context.  The caller is responsible for ensuring that the
+ * returned function is a valid function to call in @context by either checking
+ * the OpenGL API and version or for an appropriate OpenGL extension.
+ *
+ * Note: On success, you need to cast the returned function pointer to the
+ * correct type to be able to call it correctly.  On 32-bit Windows, this will
+ * include the %GSTGLAPI identifier to use the correct calling convention.
+ * e.g. void (GSTGLAPI *PFN_glGetIntegerv) (GLenum name, GLint * ret)
+ *
+ * Returns: a function pointer or %NULL
  *
  * Since: 1.4
  */
@@ -799,6 +828,20 @@ gst_gl_context_get_proc_address (GstGLContext * context, const gchar * name)
   return ret;
 }
 
+/**
+ * gst_gl_context_default_get_proc_address:
+ * @gl_api: a #GstGLAPI
+ * @name: then function to get the address of
+ *
+ * A default implementation of the various GetProcAddress functions that looks
+ * for @name in the OpenGL shared libraries or in the current process.
+ *
+ * See also: gst_gl_context_get_proc_address()
+ *
+ * Returns: an address pointing to @name or %NULL
+ *
+ * Since: 1.4
+ */
 gpointer
 gst_gl_context_default_get_proc_address (GstGLAPI gl_api, const gchar * name)
 {
@@ -920,9 +963,9 @@ gst_gl_context_can_share (GstGLContext * context, GstGLContext * other_context)
  * @other_context: (allow-none): a #GstGLContext to share OpenGL objects with
  * @error: (allow-none): a #GError
  *
- * Creates an OpenGL context in the current thread with the specified
- * @other_context as a context to share shareable OpenGL objects with.  See the
- * OpenGL specification for what is shared between contexts.
+ * Creates an OpenGL context with the specified @other_context as a context
+ * to share shareable OpenGL objects with.  See the OpenGL specification for
+ * what is shared between OpenGL contexts.
  *
  * If an error occurs, and @error is not %NULL, then error will contain details
  * of the error and %FALSE will be returned.
@@ -1291,6 +1334,7 @@ gst_gl_context_destroy (GstGLContext * context)
 /**
  * gst_gl_context_fill_info:
  * @context: a #GstGLContext:
+ * @error: (allow-none): a #GError to fill on failure
  *
  * Fills @context's info (version, extensions, vtable, etc) from the GL
  * context in the current thread.  Typically used with wrapped contexts to
@@ -1434,7 +1478,7 @@ gst_gl_context_get_gl_platform (GstGLContext * context)
  * gst_gl_context_get_display:
  * @context: a #GstGLContext:
  *
- * Returns: the #GstGLDisplay associated with this @context
+ * Returns: (transfer full): the #GstGLDisplay associated with this @context
  *
  * Since: 1.4
  */
@@ -1567,8 +1611,11 @@ gst_gl_context_check_gl_version (GstGLContext * context, GstGLAPI api,
  * @context: a #GstGLContext
  * @feature: a platform specific feature
  *
- * Some features require that the context be created before it is possible to
- * determine their existence and so will fail if that is not the case.
+ * Check for an OpenGL @feature being supported.
+ *
+ * Note: Most features require that the context be created before it is
+ * possible to determine their existence and so will fail if that is not the
+ * case.
  *
  * Returns: Whether @feature is supported by @context
  *

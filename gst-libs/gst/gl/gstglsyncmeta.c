@@ -18,6 +18,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstglsyncmeta
+ * @short_description: synchronization primitives
+ * @see_also: #GstGLBaseMemory, #GstGLContext
+ *
+ * #GstGLSyncMeta provides the ability to synchronize the OpenGL command stream
+ * with the CPU or with other OpenGL contexts.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -112,6 +121,16 @@ _default_free_gl (GstGLSyncMeta * sync_meta, GstGLContext * context)
   }
 }
 
+/**
+ * gst_buffer_add_gl_sync_meta_full:
+ * @context: a #GstGLContext
+ * @buffer: a #GstBuffer
+ * @data: sync data to hold
+ *
+ * Returns: (transfer none): the #GstGLSyncMeta added to #GstBuffer
+ *
+ * Since: 1.8
+ */
 GstGLSyncMeta *
 gst_buffer_add_gl_sync_meta_full (GstGLContext * context, GstBuffer * buffer,
     gpointer data)
@@ -133,6 +152,15 @@ gst_buffer_add_gl_sync_meta_full (GstGLContext * context, GstBuffer * buffer,
   return meta;
 }
 
+/**
+ * gst_buffer_add_gl_sync_meta:
+ * @context: a #GstGLContext
+ * @buffer: a #GstBuffer
+ *
+ * Returns: (transfer none): the #GstGLSyncMeta added to #GstBuffer
+ *
+ * Since: 1.6
+ */
 GstGLSyncMeta *
 gst_buffer_add_gl_sync_meta (GstGLContext * context, GstBuffer * buffer)
 {
@@ -158,6 +186,15 @@ _set_sync_point (GstGLContext * context, GstGLSyncMeta * sync_meta)
   sync_meta->set_sync_gl (sync_meta, context);
 }
 
+/**
+ * gst_gl_sync_meta_set_sync_point:
+ * @sync_meta: a #GstGLSyncMeta
+ * @context: a #GstGLContext
+ *
+ * Set a sync point to possibly wait on at a later time.
+ *
+ * Since: 1.6
+ */
 void
 gst_gl_sync_meta_set_sync_point (GstGLSyncMeta * sync_meta,
     GstGLContext * context)
@@ -178,6 +215,16 @@ _wait (GstGLContext * context, GstGLSyncMeta * sync_meta)
   sync_meta->wait_gl (sync_meta, context);
 }
 
+/**
+ * gst_gl_sync_meta_wait:
+ * @sync_meta: a #GstGLSyncMeta
+ * @context: a #GstGLContext
+ *
+ * Insert a wait into @context's command stream ensuring all previous OpenGL
+ * commands before @sync_meta have completed.
+ *
+ * Since: 1.6
+ */
 void
 gst_gl_sync_meta_wait (GstGLSyncMeta * sync_meta, GstGLContext * context)
 {
@@ -197,6 +244,17 @@ _wait_cpu (GstGLContext * context, GstGLSyncMeta * sync_meta)
   sync_meta->wait_cpu_gl (sync_meta, context);
 }
 
+/**
+ * gst_gl_sync_meta_wait_cpu:
+ * @sync_meta: a #GstGLSyncMeta
+ * @context: a #GstGLContext
+ *
+ * Perform a wait so that the sync point has passed from the CPU's perspective
+ * What that means, is that all GL operations changing CPU-visible data before
+ * the sync point are now visible.
+ *
+ * Since: 1.8
+ */
 void
 gst_gl_sync_meta_wait_cpu (GstGLSyncMeta * sync_meta, GstGLContext * context)
 {

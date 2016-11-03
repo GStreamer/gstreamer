@@ -39,23 +39,25 @@ GType gst_gl_filter_get_type(void);
 #define GST_IS_GL_FILTER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_FILTER))
 #define GST_GL_FILTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_FILTER,GstGLFilterClass))
 
+/**
+ * GstGLFilterRenderFunc:
+ * @filter: the #GstGLFIlter
+ * @in_tex: the input #GstGLMemory to render
+ * @user_data: user data
+ *
+ * Returns: whether the render succeeded
+ *
+ * Since: 1.10
+ */
 typedef gboolean (*GstGLFilterRenderFunc) (GstGLFilter * filter, GstGLMemory * in_tex, gpointer user_data);
 
 /**
  * GstGLFilter:
- * @base_transform: parent #GstBaseTransform
- * @pool: the currently configured #GstBufferPool
- * @display: the currently configured #GstGLDisplay
+ * @parent: parent #GstGLBaseFilter
  * @in_info: the video info for input buffers
  * @out_info: the video info for output buffers
- * @fbo: GL Framebuffer object used for transformations
- * @depthbuffer: GL renderbuffer attached to @fbo
- * @upload: the object used for uploading data, if needed
- * @download: the object used for downloading data, if needed
- *
- * #GstGLFilter is a base class that provides the logic of getting the GL context
- * from downstream and automatic upload/download for non-#GstGLMemory
- * #GstBuffer<!--  -->s.
+ * @out_caps: the output #GstCaps
+ * @fbo: #GstGLFramebuffer object used for transformations
  */
 struct _GstGLFilter
 {
@@ -88,7 +90,7 @@ struct _GstGLFilter
 
 /**
  * GstGLFilterClass:
- * @base_transform_class: parent class
+ * @parent_class: parent #GstGLBaseFilterClass
  * @set_caps: mirror from #GstBaseTransform
  * @filter: perform operations on the input and output buffers.  In general,
  *          you should avoid using this method if at all possible. One valid
@@ -118,6 +120,7 @@ struct _GstGLFilterClass
   void (*display_init_cb)       (GstGLFilter *filter);
   void (*display_reset_cb)      (GstGLFilter *filter);
 
+  /* <private> */
   gpointer                      _padding[GST_PADDING];
 };
 

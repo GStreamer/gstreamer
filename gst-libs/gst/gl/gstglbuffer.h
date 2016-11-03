@@ -43,7 +43,6 @@ GType gst_gl_buffer_allocator_get_type(void);
 /**
  * GstGLBuffer:
  * @mem: the parent object
- * @context: the #GstGLContext to use for GL operations
  * @id: the buffer id for this memory
  * @target: the OpenGL target of this texture for binding purposes
  * @usage_hints: the OpenGL usage hints this buffer was created with

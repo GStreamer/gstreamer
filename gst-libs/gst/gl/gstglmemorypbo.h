@@ -49,12 +49,11 @@ GType gst_gl_memory_pbo_allocator_get_type(void);
  */
 struct _GstGLMemoryPBO
 {
+  /* <private> */
   GstGLMemory      mem;
 
-  /* <private> */
   GstGLBuffer          *pbo;
 
-  /* <private> */
   gpointer                  _padding[GST_PADDING];
 };
 

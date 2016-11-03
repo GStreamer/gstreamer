@@ -28,15 +28,17 @@
 
 /**
  * SECTION:gstglbufferpool
- * @short_description: buffer pool for #GstGLMemory objects
- * @see_also: #GstBufferPool, #GstGLMemory
+ * @short_description: buffer pool for #GstGLBaseMemory objects
+ * @see_also: #GstBufferPool, #GstGLBaseMemory, #GstGLMemory
  *
- * a #GstGLBufferPool is an object that allocates buffers with #GstGLMemory
+ * a #GstGLBufferPool is an object that allocates buffers with #GstGLBaseMemory
  *
  * A #GstGLBufferPool is created with gst_gl_buffer_pool_new()
  *
  * #GstGLBufferPool implements the VideoMeta buffer pool option 
- * #GST_BUFFER_POOL_OPTION_VIDEO_META
+ * %GST_BUFFER_POOL_OPTION_VIDEO_META, the VideoAligment buffer pool option
+ * %GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT as well as the OpenGL specific
+ * %GST_BUFFER_POOL_OPTION_GL_SYNC_META buffer pool option.
  */
 
 /* bufferpool */

@@ -17,6 +17,15 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
+/**
+ * SECTION:gstglapi
+ * @short_description: OpenGL API specific functionality
+ * @see_also: #GstGLDisplay, #GstGLContext
+ *
+ * Provides some helper API for dealing with OpenGL API's and platforms
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

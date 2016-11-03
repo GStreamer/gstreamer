@@ -18,6 +18,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstglformat
+ * @short_description: utilities for dealing with OpenGL formats
+ * @see_also: #GstGLBaseMemory, #GstGLMemory, #GstGLFramebuffer, #GstGLBuffer
+ *
+ * Some useful utilities for converting between various formats and OpenGL
+ * formats.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -333,7 +342,7 @@ gst_gl_texture_target_to_string (GstGLTextureTarget target)
 }
 
 /**
- * gst_gl_texture_target_to_string:
+ * gst_gl_texture_target_from_string:
  * @str: a string equivalant to one of the GST_GL_TEXTURE_TARGET_*_STR values
  *
  * Returns: the #GstGLTextureTarget represented by @str or

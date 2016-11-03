@@ -43,6 +43,12 @@ G_BEGIN_DECLS
 
 #define GST_GL_WINDOW_ERROR (gst_gl_window_error_quark ())
 
+/**
+ * GstGLWindowError:
+ * @GST_GL_WINDOW_ERROR_FAILED: failed for a unspecified reason
+ * @GST_GL_WINDOW_ERROR_OLD_LIBS: the implementation is too old
+ * @GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE: no such resource was found
+ */
 typedef enum
 {
   GST_GL_WINDOW_ERROR_FAILED,
@@ -108,13 +114,14 @@ struct _GstGLWindow {
  *                      not have been called.  Required to be reentrant.
  * @open: open the connection to the display
  * @close: close the connection to the display
- * @get_surface_dimensions: get the width and height of the surface we are
- *                          rendering into.
  * @handle_events: whether to handle 'extra' events from the windowing system.
  *                 Basic events like surface moves and resizes are still valid
  *                 things to listen for.
  * @set_preferred_size: request that the window change surface size.  The
  *                      implementation is free to ignore this information.
+ * @show: request that the window be shown to the user
+ * @set_render_rectangle: request a rectangle to render into.  See #GstVideoOverlay
+ * @queue_resize: request a resize to occur when possible
  */
 struct _GstGLWindowClass {
   GstObjectClass parent_class;

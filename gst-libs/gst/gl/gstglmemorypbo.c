@@ -37,9 +37,6 @@
  * #GstGLMemoryPBO is created or wrapped through gst_gl_base_memory_alloc()
  * with #GstGLVideoAllocationParams.
  *
- * #GstGLMemoryPBO is created through gst_gl_memory_pbo_alloc() or system memory can
- * be wrapped through gst_gl_memory_pbo_wrapped().
- *
  * Data is uploaded or downloaded from the GPU as is necessary.
  */
 
@@ -803,7 +800,7 @@ _upload_transfer (GstGLContext * context, GstGLMemoryPBO * gl_mem)
 }
 
 /**
- * gst_gl_memory_pbo_download_transfer:
+ * gst_gl_memory_pbo_upload_transfer:
  * @gl_mem: a #GstGLMemoryPBO
  *
  * Transfer the texture data from the PBO into the texture if necessary.
