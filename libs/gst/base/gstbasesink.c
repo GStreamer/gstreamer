@@ -3476,14 +3476,14 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
       }
     }
 
-    if (G_UNLIKELY (late))
-      goto dropped;
-
     /* We are about to prepare the first frame, make sure we have prerolled
      * already. This prevent nesting prepare/render calls. */
     ret = gst_base_sink_do_preroll (basesink, obj);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto preroll_failed;
+
+    if (G_UNLIKELY (late))
+      goto dropped;
 
     if (!is_list) {
       if (bclass->prepare) {
