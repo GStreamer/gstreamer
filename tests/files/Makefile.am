@@ -1,6 +1,7 @@
 
 EXTRA_DIST = \
 	audiotestsrc.flac \
+	audiotestsrc.wav \
 	gradient.j2k \
 	id3-407349-1.tag \
 	id3-407349-2.tag \
