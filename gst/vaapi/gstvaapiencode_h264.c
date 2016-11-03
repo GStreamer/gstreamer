@@ -340,6 +340,7 @@ _h264_convert_byte_stream_to_avc (GstBuffer * buf)
   gst_buffer_unmap (buf, &info);
   return TRUE;
 
+  /* ERRORS */
 error:
   {
     gst_buffer_unmap (buf, &info);

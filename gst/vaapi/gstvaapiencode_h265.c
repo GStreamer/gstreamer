@@ -339,6 +339,7 @@ _h265_convert_byte_stream_to_hvc (GstBuffer * buf)
   gst_buffer_unmap (buf, &info);
   return TRUE;
 
+  /* ERRORS */
 error:
   {
     gst_buffer_unmap (buf, &info);
