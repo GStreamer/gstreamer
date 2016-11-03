@@ -915,7 +915,7 @@ gst_gl_context_set_window (GstGLContext * context, GstGLWindow * window)
  * gst_gl_context_get_window:
  * @context: a #GstGLContext
  *
- * Returns: the currently set window
+ * Returns: (transfer full) (nullable): the currently set window
  *
  * Since: 1.4
  */
@@ -1509,7 +1509,7 @@ _gst_gl_context_thread_run_generic (RunGenericData * data)
 /**
  * gst_gl_context_thread_add:
  * @context: a #GstGLContext
- * @func: a #GstGLContextThreadFunc
+ * @func: (scope call): a #GstGLContextThreadFunc
  * @data: (closure): user data to call @func with
  *
  * Execute @func in the OpenGL thread of @context with @data
@@ -1645,7 +1645,7 @@ gst_gl_context_check_feature (GstGLContext * context, const gchar * feature)
  *
  * See also gst_gl_context_activate().
  *
- * Returns: the #GstGLContext active in the current thread or %NULL
+ * Returns: (transfer none): the #GstGLContext active in the current thread or %NULL
  *
  * Since: 1.6
  */

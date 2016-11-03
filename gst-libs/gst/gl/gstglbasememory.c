@@ -636,8 +636,8 @@ gst_gl_allocation_params_init (GstGLAllocationParams * params,
  * gst_gl_allocation_params_copy:
  * @src: the #GstGLAllocationParams to initialize
  *
- * Returns: a copy of the #GstGLAllocationParams specified by @src or %NULL on
- *          failure
+ * Returns: (transfer full): a copy of the #GstGLAllocationParams specified by
+ *          @src or %NULL on failure
  *
  * Since: 1.8
  */
