@@ -248,7 +248,7 @@ gst_gl_framebuffer_new_with_default_depth (GstGLContext * context, guint width,
  * gst_gl_framebuffer_draw_to_texture:
  * @fb: a #GstGLFramebuffer
  * @mem: the #GstGLMemory to draw to
- * @func: the function to run
+ * @func: (scope call): the function to run
  * @user_data: data to pass to @func
  *
  * Perform the steps necessary to have the output of a glDraw* command in
