@@ -1028,8 +1028,8 @@ _glcb (gpointer data)
  * @filter: a #GstGLFilter
  * @input: the input texture
  * @output: the output texture
- * @func: the function to transform @input into @output. called with @data
- * @data: the data associated with @func
+ * @func: (scope call): the function to transform @input into @output. called with @data
+ * @data: (allow-none): the data associated with @func
  *
  * Transforms @input into @output using @func on through FBO.
  *

@@ -1412,7 +1412,8 @@ gst_gl_memory_setup_buffer (GstGLMemoryAllocator * allocator,
  * gst_gl_memory_allocator_get_default:
  * @context: a #GstGLContext
  *
- * Returns: the default #GstGLMemoryAllocator supported by @context
+ * Returns: (transfer full): the default #GstGLMemoryAllocator supported by
+ *          @context
  *
  * Since: 1.8
  */

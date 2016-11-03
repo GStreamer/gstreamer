@@ -112,13 +112,13 @@ gst_gl_display_class_init (GstGLDisplayClass * klass)
   /**
    * GstGLDisplay::create-context:
    * @object: the #GstGLDisplay
-   * @context: other context to share resources with.
+   * @context: (transfer none): other context to share resources with.
    *
    * Overrides the @GstGLContext creation mechanism.
    * It can be called in any thread and it is emitted with
    * display's object lock held.
    *
-   * Returns: the new context.
+   * Returns: (transfer full): the new context.
    */
   gst_gl_display_signals[CREATE_CONTEXT] =
       g_signal_new ("create-context", G_TYPE_FROM_CLASS (klass),
@@ -378,9 +378,9 @@ gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display)
 /**
  * gst_gl_display_create_context:
  * @display: a #GstGLDisplay
- * @other_context: other #GstGLContext to share resources with.
- * @p_context: resulting #GstGLContext
- * @error: resulting #GError
+ * @other_context: (transfer none): other #GstGLContext to share resources with.
+ * @p_context: (transfer full) (out): resulting #GstGLContext
+ * @error: (allow-none): resulting #GError
  *
  * It requires the display's object lock to be held.
  *
@@ -397,8 +397,7 @@ gst_gl_display_create_context (GstGLDisplay * display,
 
   g_return_val_if_fail (display != NULL, FALSE);
   g_return_val_if_fail (p_context != NULL, FALSE);
-  g_return_val_if_fail (error != NULL, FALSE);
-  g_return_val_if_fail (*error == NULL, FALSE);
+  g_return_val_if_fail (error == NULL || *error != NULL, FALSE);
 
   g_signal_emit (display, gst_gl_display_signals[CREATE_CONTEXT], 0,
       other_context, &context);
