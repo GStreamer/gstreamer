@@ -109,7 +109,7 @@ gboolean                gst_gl_context_check_framebuffer_status     (GstGLContex
 GST_EXPORT
 gboolean                gst_gl_framebuffer_draw_to_texture          (GstGLFramebuffer * fb,
                                                                      GstGLMemory * mem,
-                                                                     GstGLFramebufferFunc cb,
+                                                                     GstGLFramebufferFunc func,
                                                                      gpointer user_data);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

@@ -22,6 +22,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstglmemoryegl
+ * @short_description: memory subclass for EGLImage's
+ * @see_also: #GstGLMemory, #GstGLAllocator, #GstGLBufferPool
+ *
+ * #GstGLMemoryEGL is created or wrapped through gst_gl_base_memory_alloc()
+ * with #GstGLVideoAllocationParams.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

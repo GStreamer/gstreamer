@@ -55,6 +55,17 @@ typedef void (*GstGLContextThreadFunc) (GstGLContext * context, gpointer data);
 #define GST_GL_CONTEXT_TYPE_WGL "gst.gl.context.WGL"
 #define GST_GL_CONTEXT_TYPE_EAGL "gst.gl.context.EAGL"
 
+/**
+ * GstGLContextError:
+ * @GST_GL_CONTEXT_ERROR_FAILED: Failed for an unspecified reason
+ * @GST_GL_CONTEXT_ERROR_WRONG_CONFIG: The configuration requested is not correct
+ * @GST_GL_CONTEXT_ERROR_WRONG_API: The OpenGL API requested is not correct
+ * @GST_GL_CONTEXT_ERROR_OLD_LIBS: The OpenGL libraries are too old
+ * @GST_GL_CONTEXT_ERROR_CREATE_CONTEXT: glXCreateContext (or similar) failed
+ * @GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE: A resource is not available
+ *
+ * OpenGL context errors.
+ */
 typedef enum
 {
   GST_GL_CONTEXT_ERROR_FAILED,
@@ -67,15 +78,18 @@ typedef enum
 
 /**
  * GstGLContext:
+ * @gl_vtable: a list of OpenGL function pointers
  *
  * Opaque #GstGLContext object
  */
 struct _GstGLContext {
+  /*< private >*/
   GstObject parent;
 
   GstGLDisplay *display;
   GstGLWindow  *window;
 
+  /*< public >*/
   GstGLFuncs *gl_vtable;
 
   /*< private >*/

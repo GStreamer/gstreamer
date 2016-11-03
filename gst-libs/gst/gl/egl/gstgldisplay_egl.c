@@ -69,10 +69,8 @@ gst_gl_display_egl_finalize (GObject * object)
 
 /**
  * gst_gl_display_egl_new:
- * @name: (allow-none): a display name
  *
- * Create a new #GstGLDisplayEGL from the x11 display name.  See XOpenDisplay()
- * for details on what is a valid name.
+ * Create a new #GstGLDisplayEGL using the default EGL_DEFAULT_DISPLAY.
  *
  * Returns: (transfer full): a new #GstGLDisplayEGL or %NULL
  */
@@ -95,9 +93,9 @@ gst_gl_display_egl_new (void)
 
 /**
  * gst_gl_display_egl_new_with_display:
- * @display: an existing, x11 display
+ * @display: an existing and connected EGLDisplay
  *
- * Creates a new display connection from a X11 Display.
+ * Creates a new display connection from a EGLDisplay.
  *
  * Returns: (transfer full): a new #GstGLDisplayEGL
  */
