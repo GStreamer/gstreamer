@@ -397,7 +397,7 @@ gst_gl_display_create_context (GstGLDisplay * display,
 
   g_return_val_if_fail (display != NULL, FALSE);
   g_return_val_if_fail (p_context != NULL, FALSE);
-  g_return_val_if_fail (error == NULL || *error != NULL, FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   g_signal_emit (display, gst_gl_display_signals[CREATE_CONTEXT], 0,
       other_context, &context);
