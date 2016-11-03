@@ -2372,6 +2372,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
         GST_TIME_ARGS (priv->packet_spacing), GST_TIME_ARGS (priv->avg_jitter));
 
     if (timer) {
+      timer->type = TIMER_TYPE_EXPECTED;
       reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected,
           delay, TRUE);
     } else {
