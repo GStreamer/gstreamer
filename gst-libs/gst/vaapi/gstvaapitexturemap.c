@@ -35,10 +35,11 @@
  *
  * Base class for API-dependent texture map.
  */
-struct _GstVaapiTextureMap {
+struct _GstVaapiTextureMap
+{
   GstObject parent_instance;
 
-  /*< private >*/
+  /*< private > */
   GHashTable *texture_map;
 };
 
@@ -47,7 +48,8 @@ struct _GstVaapiTextureMap {
  *
  * Base class for API-dependent texture map.
  */
-struct _GstVaapiTextureMapClass {
+struct _GstVaapiTextureMapClass
+{
   GstObjectClass parent_class;
 };
 
