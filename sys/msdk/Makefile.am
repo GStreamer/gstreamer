@@ -33,6 +33,7 @@ libgstmsdk_la_LIBADD = \
 
 if USE_MSDK_LIBVA
 libgstmsdk_la_SOURCES += \
+	msdk.c \
 	msdk_libva.c
 libgstmsdk_la_CFLAGS += \
 	$(LIBVA_DRM_CFLAGS)

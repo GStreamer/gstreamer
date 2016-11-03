@@ -1,5 +1,5 @@
 /* GStreamer Intel MSDK plugin
- * Copyright (c) 2016, Oblong Industries, Inc.
+ * Copyright (c) 2016, Intel Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,34 +29,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MSDK_H__
-#define __MSDK_H__
+#include "msdk.h"
 
-#include <string.h>
+MsdkContext *
+msdk_open_context (gboolean hardware)
+{
+  return (MsdkContext *) msdk_open_session (hardware);
+}
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include "mfxvideo.h"
+void
+msdk_close_context (MsdkContext * context)
+{
+  msdk_close_session ((mfxSession) context);
+}
 
-G_BEGIN_DECLS
-
-typedef struct _MsdkContext MsdkContext;
-
-mfxSession msdk_open_session (gboolean hardware);
-void msdk_close_session (mfxSession session);
-
-gboolean msdk_is_available (void);
-
-MsdkContext *msdk_open_context (gboolean hardware);
-void msdk_close_context (MsdkContext * context);
-mfxSession msdk_context_get_session (MsdkContext * context);
-
-mfxFrameSurface1 *msdk_get_free_surface (mfxFrameSurface1 * surfaces,
-    guint size);
-void msdk_frame_to_surface (GstVideoFrame * frame, mfxFrameSurface1 * surface);
-
-const gchar *msdk_status_to_string (mfxStatus status);
-
-G_END_DECLS
-
-#endif /* __MSDK_H__ */
+mfxSession
+msdk_context_get_session (MsdkContext * context)
+{
+  return (mfxSession) context;
+}

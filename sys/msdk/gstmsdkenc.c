@@ -38,10 +38,30 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
+#ifdef _WIN32
+#  include <malloc.h>
+#endif
 
 #include <stdlib.h>
 
 #include "gstmsdkenc.h"
+
+static inline void *
+_aligned_alloc (size_t alignment, size_t size)
+{
+#ifdef _WIN32
+  return _aligned_malloc (size, alignment);
+#else
+  void *out;
+  if (posix_memalign (&out, alignment, size) != 0)
+    out = NULL;
+  return out;
+#endif
+}
+
+#ifndef _WIN32
+#define _aligned_free free
+#endif
 
 static void gst_msdkenc_close_encoder (GstMsdkEnc * thiz);
 
@@ -231,8 +251,8 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
     gsize size = Y_size + (Y_size >> 1);
     for (i = 0; i < thiz->num_surfaces; i++) {
       mfxFrameSurface1 *surface = &thiz->surfaces[i];
-      mfxU8 *data;
-      if (posix_memalign ((void **) &data, 32, size) != 0) {
+      mfxU8 *data = _aligned_alloc (32, size);
+      if (!data) {
         GST_ERROR_OBJECT (thiz, "Memory allocation failed");
         goto failed;
       }
@@ -272,8 +292,9 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   thiz->num_tasks = thiz->param.AsyncDepth;
   thiz->tasks = g_new0 (MsdkEncTask, thiz->num_tasks);
   for (i = 0; i < thiz->num_tasks; i++) {
-    if (posix_memalign ((void **) &thiz->tasks[i].output_bitstream.Data, 32,
-            thiz->param.mfx.BufferSizeInKB * 1024) != 0) {
+    thiz->tasks[i].output_bitstream.Data = _aligned_alloc (32,
+        thiz->param.mfx.BufferSizeInKB * 1024);
+    if (!thiz->tasks[i].output_bitstream.Data) {
       GST_ERROR_OBJECT (thiz, "Memory allocation failed");
       goto failed;
     }
@@ -316,7 +337,7 @@ gst_msdkenc_close_encoder (GstMsdkEnc * thiz)
     for (i = 0; i < thiz->num_tasks; i++) {
       MsdkEncTask *task = &thiz->tasks[i];
       if (task->output_bitstream.Data) {
-        free (task->output_bitstream.Data);
+        _aligned_free (task->output_bitstream.Data);
       }
     }
   }
@@ -326,7 +347,7 @@ gst_msdkenc_close_encoder (GstMsdkEnc * thiz)
   for (i = 0; i < thiz->num_surfaces; i++) {
     mfxFrameSurface1 *surface = &thiz->surfaces[i];
     if (surface->Data.MemId)
-      free (surface->Data.MemId);
+      _aligned_free (surface->Data.MemId);
   }
   g_free (thiz->surfaces);
   thiz->surfaces = NULL;
