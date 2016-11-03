@@ -855,7 +855,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
     gst_query_parse_nth_allocation_meta (query, idx, &params);
     if (params) {
-      if (gst_structure_get (params, "gst.gl.GstGLContext", GST_GL_TYPE_CONTEXT,
+      if (gst_structure_get (params, "gst.gl.GstGLContext", GST_TYPE_GL_CONTEXT,
               &gl_context, NULL) && gl_context) {
         gst_vaapi_plugin_base_set_gl_context (plugin, gl_context);
         gst_object_unref (gl_context);

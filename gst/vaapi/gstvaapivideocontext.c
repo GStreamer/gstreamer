@@ -244,14 +244,14 @@ gst_vaapi_find_gl_local_context (GstElement * element,
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &gl_context, NULL);
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &gl_context, NULL);
     }
   }
   if (!gl_context && _gst_context_run_query (element, query, GST_PAD_SINK)) {
     gst_query_parse_context (query, &context);
     if (context) {
       s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_GL_TYPE_CONTEXT, &gl_context, NULL);
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &gl_context, NULL);
     }
   }
   gst_query_unref (query);
