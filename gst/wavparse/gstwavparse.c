@@ -1914,7 +1914,6 @@ gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
   }
 
   gst_pad_set_caps (wav->srcpad, wav->caps);
-  gst_caps_replace (&wav->caps, NULL);
 
   if (wav->start_segment) {
     GST_DEBUG_OBJECT (wav, "Send start segment event on newpad");
