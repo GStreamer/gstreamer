@@ -11,4 +11,7 @@ foreach tool : tools
     link_with: [printf_lib],
     c_args: gst_c_args,
   )
+
+  man_page = '@0@-1.0.1'.format(tool)
+  install_man(man_page)
 endforeach
