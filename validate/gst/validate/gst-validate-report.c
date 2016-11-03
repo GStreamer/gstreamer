@@ -690,11 +690,13 @@ gst_validate_report_init (void)
 void
 gst_validate_report_deinit (void)
 {
-  if (server_ostream)
+  if (server_ostream) {
     g_output_stream_close (server_ostream, NULL, NULL);
+    server_ostream = NULL;
+  }
+
   g_clear_object (&socket_client);
   g_clear_object (&server_connection);
-  g_clear_object (&server_ostream);
 }
 
 GstValidateIssue *
