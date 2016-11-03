@@ -25,7 +25,7 @@ check_ffmpeg_src = '''#include <libavcodec/avcodec.h>
 #error libav provider should be FFmpeg
 #endif'''
 
-if not cc.compiles(check_ffmpeg_src, name : 'libav is provided by FFmpeg')
+if not cc.compiles(check_ffmpeg_src, dependencies : libav_deps, name : 'libav is provided by FFmpeg')
     error('Uncompatible libavcodec found')
 endif
 
