@@ -33,7 +33,6 @@ Enable printout of errors while loading \fIGStreamer\fP plugins
 Add directories separated with ':' to the plugin search path
 .
 .SH "SEE ALSO"
-.BR gst\-feedback (1),
 .BR gst\-inspect (1),
 .BR gst\-launch (1)
 .SH "AUTHOR"
