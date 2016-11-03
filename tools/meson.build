@@ -1,23 +1,14 @@
-executable('gst-inspect-1.0',
-  'gst-inspect.c',
-  install: true,
-  dependencies : [glib_dep, gobject_dep, gmodule_dep, mathlib, gst_dep],
-  link_with: [printf_lib],
-  c_args: gst_c_args,
-)
+tools = [ 'gst-inspect', 'gst-launch','gst-typefind' ]
 
-executable('gst-launch-1.0',
-  'gst-launch.c',
-  install: true,
-  dependencies : [glib_dep, gobject_dep, gmodule_dep, mathlib, gst_dep],
-  link_with: [printf_lib],
-  c_args: gst_c_args,
-)
+foreach tool : tools
+  exe_name = '@0@-@1@'.format(tool, apiversion)
+  src_file = '@0@.c'.format(tool)
 
-executable('gst-typefind-1.0',
-  'gst-typefind.c',
-  install: true,
-  dependencies : [glib_dep, gobject_dep, gmodule_dep, mathlib, gst_dep],
-  link_with: [printf_lib],
-  c_args: gst_c_args,
-)
+  executable(exe_name,
+    src_file,
+    install: true,
+    dependencies : [glib_dep, gobject_dep, gmodule_dep, mathlib, gst_dep],
+    link_with: [printf_lib],
+    c_args: gst_c_args,
+  )
+endforeach
