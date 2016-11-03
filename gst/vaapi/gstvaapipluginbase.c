@@ -545,10 +545,27 @@ static gboolean
 ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
     GstCaps * caps)
 {
+  gboolean different_caps;
+  GstVideoInfo vi;
   GstVaapiImageUsageFlags usage_flag =
       GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
 
-  if (!reset_allocator (plugin->srcpad_allocator, vinfo))
+  /* the received caps are the "allocation caps" which may be
+   * different from the "negotiation caps". In this case, we should
+   * indicate the allocator to store the negotiation caps since they
+   * are the one should be used for frame mapping with GstVideoMeta */
+  different_caps = GST_IS_VIDEO_DECODER (plugin) && plugin->srcpad_caps &&
+      !gst_caps_is_strictly_equal (plugin->srcpad_caps, caps);
+
+  if (different_caps) {
+    vi = plugin->srcpad_info;
+    /* let's keep the size of the allocation info */
+    GST_VIDEO_INFO_SIZE (&vi) = GST_VIDEO_INFO_SIZE (vinfo);
+  } else {
+    vi = *vinfo;
+  }
+
+  if (!reset_allocator (plugin->srcpad_allocator, &vi))
     return TRUE;
 
   /* enable direct rendering if downstream requests raw video */
@@ -561,6 +578,10 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
       gst_vaapi_video_allocator_new (plugin->display, vinfo, 0, usage_flag);
   if (!plugin->srcpad_allocator)
     goto error_create_allocator;
+
+  if (different_caps)
+    gst_allocator_set_vaapi_video_info (plugin->srcpad_allocator, &vi, 0);
+
   return TRUE;
 
   /* ERRORS */
