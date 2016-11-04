@@ -13,7 +13,7 @@ libgstkmssink_la_CFLAGS = 			\
 	$(GST_VIDEO_CFLAGS)			\
 	$(GST_ALLOCATORS_CFLAGS)		\
 	$(GST_CFLAGS) 				\
-	$(DRM_CFLAGS) 				\
+	$(KMS_DRM_CFLAGS) 			\
 	$(NULL)
 
 libgstkmssink_la_LIBADD = 			\
@@ -22,7 +22,7 @@ libgstkmssink_la_LIBADD = 			\
 	$(GST_VIDEO_LIBS)			\
 	$(GST_ALLOCATORS_LIBS)			\
 	$(GST_LIBS) 				\
-	$(DRM_LIBS) 				\
+	$(KMS_DRM_LIBS) 			\
 	$(NULL)
 
 libgstkmssink_la_LDFLAGS = 			\
