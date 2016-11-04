@@ -30,8 +30,7 @@ libgstwaylandsink_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-$(GST_API_VERSION) \
 	-lgstallocators-$(GST_API_VERSION) \
-	$(WAYLAND_LIBS) \
-	$(WAYLAND_DRM_LIBS)
+	$(WAYLAND_LIBS)
 libgstwaylandsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstwaylandsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
