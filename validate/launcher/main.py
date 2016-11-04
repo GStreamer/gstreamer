@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Copyright (c) 2014,Thibault Saunier <thibault.saunier@collabora.com>
 #
@@ -18,20 +18,20 @@
 # Boston, MA 02110-1301, USA.
 import os
 import sys
-import utils
-import urlparse
-import loggable
+from . import utils
+import urllib.parse
+from . import loggable
 import argparse
 import tempfile
-import reporters
+from . import reporters
 import subprocess
 
 
-from loggable import Loggable
-from httpserver import HTTPServer
-from vfb_server import get_virual_frame_buffer_server
-from baseclasses import _TestsLauncher, ScenarioManager
-from utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors, Protocols, which
+from .loggable import Loggable
+from .httpserver import HTTPServer
+from .vfb_server import get_virual_frame_buffer_server
+from .baseclasses import _TestsLauncher, ScenarioManager
+from .utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors, Protocols, which
 
 
 LESS = "less"
@@ -264,7 +264,7 @@ class LauncherConfig(Loggable):
                    % self.redirect_logs, Colors.FAIL, True)
             return False
 
-        if urlparse.urlparse(self.dest).scheme == "":
+        if urllib.parse.urlparse(self.dest).scheme == "":
             self.dest = path2url(self.dest)
 
         if self.no_color:
@@ -506,7 +506,7 @@ Note that all testsuite should be inside python modules, so the directory should
     tests_launcher.add_options(parser)
 
     if _help_message == HELP and which(LESS):
-        tmpf = tempfile.NamedTemporaryFile()
+        tmpf = tempfile.NamedTemporaryFile(mode='r+')
 
         parser.print_help(file=tmpf)
         exit(os.system("%s %s" % (LESS, tmpf.name)))
@@ -560,17 +560,18 @@ Note that all testsuite should be inside python modules, so the directory should
     # Also happened here: https://cgit.freedesktop.org/gstreamer/gst-plugins-good/commit/tests/check/Makefile.am?id=8e2c1d1de56bddbff22170f8b17473882e0e63f9
     os.environ['GSETTINGS_BACKEND'] = "memory"
 
-    e = None
+    exception = None
     try:
         tests_launcher.run_tests()
     except Exception as e:
+        exception = e
         pass
     finally:
         tests_launcher.final_report()
         tests_launcher.clean_tests()
         httpsrv.stop()
         vfb_server.stop()
-        if e is not None:
-            raise
+        if exception is not None:
+            raise exception
 
     return 0

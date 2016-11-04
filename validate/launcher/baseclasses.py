@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Copyright (c) 2013,Thibault Saunier <thibault.saunier@collabora.com>
 #
@@ -24,22 +24,22 @@ import os
 import sys
 import re
 import copy
-import SocketServer
+import socketserver
 import struct
 import time
-import utils
+from . import utils
 import signal
-import urlparse
+import urllib.parse
 import subprocess
 import threading
-import Queue
-import reporters
-import ConfigParser
-import loggable
-from loggable import Loggable
+import queue
+from . import reporters
+import configparser
+from . import loggable
+from .loggable import Loggable
 import xml.etree.cElementTree as ET
 
-from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
+from .utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
     Protocols, look_for_file_in_source_dir, get_data_file
 
 # The factor by which we increase the hard timeout when running inside
@@ -208,8 +208,8 @@ class Test(Loggable):
                 self.process.communicate()
             else:
                 pname = subprocess.check_output(("readlink -e /proc/%s/exe"
-                                                 % self.process.pid).split(' ')).replace('\n', '')
-                raw_input("%sTimeout happened you can attach gdb doing: $gdb %s %d%s\n"
+                                                 % self.process.pid).decode().split(' ')).replace('\n', '')
+                input("%sTimeout happened you can attach gdb doing: $gdb %s %d%s\n"
                           "Press enter to continue" % (Colors.FAIL, pname, self.process.pid,
                                                        Colors.ENDC))
 
@@ -354,7 +354,7 @@ class Test(Loggable):
         for supp in self.get_valgrind_suppressions():
             vg_args.append(('suppressions', supp))
 
-        self.command = "valgrind %s %s" % (' '.join(map(lambda x: '--%s=%s' % (x[0], x[1]), vg_args)),
+        self.command = "valgrind %s %s" % (' '.join(['--%s=%s' % (x[0], x[1]) for x in vg_args]),
                                            self.command)
 
         # Tune GLib's memory allocator to be more valgrind friendly
@@ -387,7 +387,7 @@ class Test(Loggable):
         self.build_arguments()
         self.proc_env = self.get_subproc_env()
 
-        for var, value in self.extra_env_variables.items():
+        for var, value in list(self.extra_env_variables.items()):
             value = self.proc_env.get(var, '') + os.pathsep + value
             self.proc_env[var] = value.strip(os.pathsep)
             self.add_env_variable(var, self.proc_env[var])
@@ -428,7 +428,7 @@ class Test(Loggable):
         printc(message, Colors.FAIL)
 
         with open(logfile, 'r') as fin:
-            print fin.read()
+            print(fin.read())
 
     def _dump_log_files(self):
         printc("Dumping log files on failure\n", Colors.FAIL)
@@ -454,15 +454,15 @@ class Test(Loggable):
         return self.result
 
 
-class GstValidateListener(SocketServer.BaseRequestHandler):
+class GstValidateListener(socketserver.BaseRequestHandler):
     def handle(self):
         """Implements BaseRequestHandler handle method"""
         while True:
             raw_len = self.request.recv(4)
-            if raw_len == '':
+            if raw_len == b'':
                 return
             msglen = struct.unpack('>I', raw_len)[0]
-            msg = self.request.recv(msglen)
+            msg = self.request.recv(msglen).decode()
             if msg == '':
                 return
 
@@ -575,7 +575,7 @@ class GstValidateTest(Test):
         self.actions_infos.append(action_infos)
 
     def server_wrapper(self, ready):
-        self.server = SocketServer.TCPServer(('localhost', 0), GstValidateListener)
+        self.server = socketserver.TCPServer(('localhost', 0), GstValidateListener)
         self.server.socket.settimeout(0.0)
         self.server.test = self
         self.serverport = self.server.socket.getsockname()[1]
@@ -709,7 +709,7 @@ class GstValidateTest(Test):
         for key in ['bug', 'sometimes']:
             if key in expected_failure:
                 del expected_failure[key]
-        for key, value in report.items():
+        for key, value in list(report.items()):
             if key in expected_failure:
                 if not re.findall(expected_failure[key], value):
                     return False
@@ -826,7 +826,7 @@ class GstValidateEncodingTestInterface(object):
 
     def get_current_size(self):
         try:
-            size = os.stat(urlparse.urlparse(self.dest_file).path).st_size
+            size = os.stat(urllib.parse.urlparse(self.dest_file).path).st_size
         except OSError:
             return None
 
@@ -963,7 +963,7 @@ class TestsManager(Loggable):
         self.wanted_tests_patterns = []
         self.blacklisted_tests_patterns = []
         self._generators = []
-        self.queue = Queue.Queue()
+        self.queue = queue.Queue()
         self.jobs = []
         self.total_num_tests = 0
         self.starting_test_num = 0
@@ -979,7 +979,7 @@ class TestsManager(Loggable):
 
     def add_expected_issues(self, expected_failures):
         expected_failures_re = {}
-        for test_name_regex, failures in expected_failures.items():
+        for test_name_regex, failures in list(expected_failures.items()):
             regex = re.compile(test_name_regex)
             expected_failures_re[regex] = failures
             for test in self.tests:
@@ -989,7 +989,7 @@ class TestsManager(Loggable):
         self.expected_failures.update(expected_failures_re)
 
     def add_test(self, test):
-        for regex, failures in self.expected_failures.items():
+        for regex, failures in list(self.expected_failures.items()):
             if regex.findall(test.classname):
                 test.expected_failures.extend(failures)
 
@@ -1094,7 +1094,7 @@ class TestsManager(Loggable):
             # Check process every second for timeout
             try:
                 self.queue.get(timeout=1)
-            except Queue.Empty:
+            except queue.Empty:
                 pass
 
             for test in self.jobs:
@@ -1232,7 +1232,7 @@ class _TestsLauncher(Loggable):
             files = []
         for f in files:
             if f.endswith(".py"):
-                execfile(os.path.join(app_dir, f), env)
+                exec(compile(open(os.path.join(app_dir, f)).read(), os.path.join(app_dir, f), 'exec'), env)
 
     def _exec_apps(self, env):
         app_dirs = self._list_app_dirs()
@@ -1315,7 +1315,7 @@ class _TestsLauncher(Loggable):
         globals()["options"] = options
         c__file__ = __file__
         globals()["__file__"] = self.options.config
-        execfile(self.options.config, globals())
+        exec(compile(open(self.options.config).read(), self.options.config, 'exec'), globals())
         globals()["__file__"] = c__file__
 
     def set_settings(self, options, args):
@@ -1374,7 +1374,7 @@ class _TestsLauncher(Loggable):
                     and tester.check_testslist:
                 try:
                     testlist_file = open(os.path.splitext(testsuite.__file__)[0] + ".testslist",
-                                         'rw')
+                                         'r+')
 
                     know_tests = testlist_file.read().split("\n")
                     testlist_file.close()
@@ -1410,7 +1410,7 @@ class _TestsLauncher(Loggable):
                 return -1
 
             self.tests.extend(tests)
-        return sorted(list(self.tests))
+        return sorted(list(self.tests), key=lambda t: t.classname)
 
     def _run_tests(self):
         cur_test_num = 0
@@ -1458,7 +1458,7 @@ class NamedDic(object):
 
     def __init__(self, props):
         if props:
-            for name, value in props.iteritems():
+            for name, value in props.items():
                 setattr(self, name, value)
 
 
@@ -1562,7 +1562,7 @@ class ScenarioManager(Loggable):
         except subprocess.CalledProcessError:
             pass
 
-        config = ConfigParser.ConfigParser()
+        config = configparser.RawConfigParser()
         f = open(scenario_defs)
         config.readfp(f)
 
@@ -1582,7 +1582,8 @@ class ScenarioManager(Loggable):
                 name = section
                 path = None
 
-            scenarios.append(Scenario(name, config.items(section), path))
+            props = config.items(section)
+            scenarios.append(Scenario(name, props, path))
 
         if not scenario_paths:
             self.discovered = True
@@ -1744,7 +1745,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         self.media_xml.attrib["duration"]
         self.media_xml.attrib["seekable"]
 
-        self.set_protocol(urlparse.urlparse(urlparse.urlparse(self.get_uri()).scheme).scheme)
+        self.set_protocol(urllib.parse.urlparse(urllib.parse.urlparse(self.get_uri()).scheme).scheme)
 
     @staticmethod
     def new_from_uri(uri, verbose=False, full=False):
@@ -1808,7 +1809,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         return self.media_xml.attrib["uri"]
 
     def get_duration(self):
-        return long(self.media_xml.attrib["duration"])
+        return int(self.media_xml.attrib["duration"])
 
     def set_protocol(self, protocol):
         self.media_xml.attrib["protocol"] = protocol

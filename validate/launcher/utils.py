@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Copyright (c) 2013,Thibault Saunier <thibault.saunier@collabora.com>
 #
@@ -22,14 +22,14 @@ import config
 import os
 import re
 import sys
-import urllib
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 import subprocess
 
 from operator import itemgetter
 
 
-GST_SECOND = long(1000000000)
+GST_SECOND = int(1000000000)
 DEFAULT_TIMEOUT = 30
 DEFAULT_MAIN_DIR = os.path.join(os.path.expanduser("~"), "gst-validate")
 DEFAULT_GST_QA_ASSETS = os.path.join(DEFAULT_MAIN_DIR, "gst-integration-testsuites")
@@ -86,7 +86,7 @@ def mkdir(directory):
 
 
 def which(name, extra_path=None):
-    exts = filter(None, os.environ.get('PATHEXT', '').split(os.pathsep))
+    exts = [_f for _f in os.environ.get('PATHEXT', '').split(os.pathsep) if _f]
     path = os.environ.get('PATH', '')
     if extra_path:
         path = extra_path + os.pathsep + path
@@ -142,20 +142,20 @@ def launch_command(command, color=None, fails=False):
 
 
 def path2url(path):
-    return urlparse.urljoin('file:', urllib.pathname2url(path))
+    return urllib.parse.urljoin('file:', urllib.request.pathname2url(path))
 
 
 def url2path(url):
-    path = urlparse.urlparse(url).path
+    path = urllib.parse.urlparse(url).path
     if "win32" in sys.platform:
         if path[0] == '/':
             return path[1:]  # We need to remove the first '/' on windows
-    path = urllib.unquote(path)
+    path = urllib.parse.unquote(path)
     return path
 
 
 def isuri(string):
-    url = urlparse.urlparse(string)
+    url = urllib.parse.urlparse(string)
     if url.scheme != "" and url.scheme != "":
         return True
 
@@ -169,7 +169,7 @@ def touch(fname, times=None):
 
 def get_subclasses(klass, env):
     subclasses = []
-    for symb in env.iteritems():
+    for symb in env.items():
         try:
             if issubclass(symb[1], klass) and not symb[1] is klass:
                 subclasses.append(symb[1])
@@ -216,15 +216,15 @@ def get_data_file(subdir, name):
 
 
 def gsttime_from_tuple(stime):
-    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2])) * GST_SECOND + int(stime[3]))
+    return int((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2])) * GST_SECOND + int(stime[3]))
 
 timeregex = re.compile(r'(?P<_0>.+):(?P<_1>.+):(?P<_2>.+)\.(?P<_3>.+)')
 
 
 def parse_gsttimeargs(time):
-    stime = map(itemgetter(1), sorted(
-        timeregex.match(time).groupdict().items()))
-    return long((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2])) * GST_SECOND + int(stime[3]))
+    stime = list(map(itemgetter(1), sorted(
+        timeregex.match(time).groupdict().items())))
+    return int((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2])) * GST_SECOND + int(stime[3]))
 
 
 def get_duration(media_file):
@@ -232,7 +232,7 @@ def get_duration(media_file):
     duration = 0
     res = ''
     try:
-        res = subprocess.check_output([DISCOVERER_COMMAND, media_file])
+        res = subprocess.check_output([DISCOVERER_COMMAND, media_file]).decode()
     except subprocess.CalledProcessError:
         # gst-media-check returns !0 if seeking is not possible, we do not care
         # in that case.

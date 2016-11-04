@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Copyright (c) 2015,Thibault Saunier <tsaunier@gnome.org>
 #
@@ -19,7 +19,7 @@
 
 import os
 import time
-import loggable
+from . import loggable
 import subprocess
 
 
@@ -55,7 +55,7 @@ class Xvfb(VirtualFrameBufferServer):
                 os.environ["DISPLAY"] = self.display_id
                 subprocess.check_output(["xset", "q"],
                                         stderr=self._logsfile)
-                print("DISPLAY set to %s" % self.display_id)
+                print(("DISPLAY set to %s" % self.display_id))
                 return True
             except subprocess.CalledProcessError:
                 pass

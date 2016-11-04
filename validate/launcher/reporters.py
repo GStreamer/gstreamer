@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Copyright (c) 2013,Thibault Saunier <thibault.saunier@collabora.com>
 #
@@ -25,11 +25,11 @@ import time
 import codecs
 import datetime
 import tempfile
-from loggable import Loggable
+from .loggable import Loggable
 from xml.sax import saxutils
-from utils import Result, printc, Colors
+from .utils import Result, printc, Colors
 
-UNICODE_STRINGS = (type(unicode()) == type(str()))  # noqa
+UNICODE_STRINGS = (type(str()) == type(str()))  # noqa
 
 
 class UnknownResult(Exception):
@@ -91,14 +91,14 @@ class Reporter(Loggable):
         self.add_results(test)
 
     def final_report(self):
-        print "\n"
+        print("\n")
         printc("Final Report:", title=True)
         for test in sorted(self.results, key=lambda test: test.result):
             printc(test)
             if test.result != Result.PASSED:
-                print "\n"
+                print("\n")
 
-        print "\n"
+        print("\n")
         lenstat = (len("Statistics") + 1)
         printc("Statistics:\n%s" % (lenstat * "-"), Colors.OKBLUE)
         printc("\n%sTotal time spent: %s seconds\n" %
@@ -157,7 +157,7 @@ class XunitReporter(Reporter):
     def _quoteattr(self, attr):
         """Escape an XML attribute. Value can be unicode."""
         attr = xml_safe(attr)
-        if isinstance(attr, unicode) and not UNICODE_STRINGS:
+        if isinstance(attr, str) and not UNICODE_STRINGS:
             attr = attr.encode(self.encoding)
         return saxutils.quoteattr(attr)
 
@@ -175,10 +175,10 @@ class XunitReporter(Reporter):
         self.stats['total'] = (self.stats['timeout'] + self.stats['failures'] +
                                self.stats['passed'] + self.stats['skipped'])
 
-        xml_file.write(u'<?xml version="1.0" encoding="%(encoding)s"?>'
-                       u'<testsuite name="gst-validate-launcher" tests="%(total)d" '
-                       u'errors="%(timeout)d" failures="%(failures)d" '
-                       u'skip="%(skipped)d">' % self.stats)
+        xml_file.write('<?xml version="1.0" encoding="%(encoding)s"?>'
+                       '<testsuite name="gst-validate-launcher" tests="%(total)d" '
+                       'errors="%(timeout)d" failures="%(failures)d" '
+                       'skip="%(skipped)d">' % self.stats)
 
         tmp_xml_file = codecs.open(self.tmp_xml_file.name, 'r',
                                    self.encoding, 'replace')
@@ -186,7 +186,7 @@ class XunitReporter(Reporter):
         for l in tmp_xml_file:
             xml_file.write(l)
 
-        xml_file.write(u'</testsuite>')
+        xml_file.write('</testsuite>')
         xml_file.close()
         tmp_xml_file.close()
         os.remove(self.tmp_xml_file.name)

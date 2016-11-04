@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Copyright (c) 2014,Thibault Saunier <thibault.saunier@collabora.com>
 #
@@ -31,7 +31,7 @@ def _get_git_first_hash(path):
     cdir = os.path.abspath(os.curdir)
     try:
         os.chdir(path)
-        res = subprocess.check_output(['git', 'rev-list', '--max-parents=0', 'HEAD']).rstrip('\n')
+        res = subprocess.check_output(['git', 'rev-list', '--max-parents=0', 'HEAD']).decode().rstrip('\n')
     except (subprocess.CalledProcessError, OSError):
         res = ''
     finally:
@@ -48,7 +48,7 @@ def _in_devel():
 
 def _add_gst_launcher_path():
     if _in_devel():
-        print "Running with development path"
+        print("Running with development path")
         dir_ = os.path.dirname(os.path.abspath(__file__))
         root = os.path.split(dir_)[0]
     elif __file__.startswith(BUILDDIR):

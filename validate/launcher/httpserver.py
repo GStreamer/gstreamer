@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Copyright (c) 2013,Thibault Saunier <thibault.saunier@collabora.com>
 #
@@ -19,10 +19,10 @@
 
 import os
 import time
-import loggable
+from . import loggable
 import subprocess
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 logcat = "httpserver"
 
@@ -42,10 +42,10 @@ class HTTPServer(loggable.Loggable):
         start = time.time()
         while True:
             try:
-                response = urllib2.urlopen('http://127.0.0.1:%s' % (
+                response = urllib.request.urlopen('http://127.0.0.1:%s' % (
                     self.options.http_server_port))
                 return True
-            except urllib2.URLError as e:
+            except urllib.error.URLError as e:
                 pass
 
             if time.time() - start > timeout:
@@ -61,7 +61,7 @@ class HTTPServer(loggable.Loggable):
             if self._check_is_up(timeout=2):
                 return True
 
-            print "Starting Server"
+            print("Starting Server")
             try:
                 self.debug("Launching http server")
                 cmd = "%s %s %d %s" % (sys.executable, os.path.join(os.path.dirname(__file__),
@@ -85,14 +85,14 @@ class HTTPServer(loggable.Loggable):
                 time.sleep(1)
 
                 if self._check_is_up():
-                    print "Started"
+                    print("Started")
                     return True
                 else:
-                    print "Failed starting server"
+                    print("Failed starting server")
                     self._process.terminate()
                     self._process = None
             except OSError as ex:
-                print "Failed starting server"
+                print("Failed starting server")
                 self.warning(logcat, "Could not launch server %s" % ex)
 
         return False

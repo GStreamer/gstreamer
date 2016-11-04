@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Copyright (c) 2013,Thibault Saunier <thibault.saunier@collabora.com>
 #
@@ -19,9 +19,9 @@
 import argparse
 import os
 import time
-import urlparse
+import urllib.parse
 import subprocess
-import ConfigParser
+import configparser
 from launcher.loggable import Loggable
 
 from launcher.baseclasses import GstValidateTest, Test, \
@@ -338,7 +338,7 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
 
                 self.mixed_srcs[name] = tuple(srcs)
 
-        for name, srcs in self.mixed_srcs.iteritems():
+        for name, srcs in self.mixed_srcs.items():
             if isinstance(srcs, dict):
                 pipe_arguments = {
                     "mixer": self.mixer + " %s" % srcs["mixer_props"]}
@@ -454,7 +454,7 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
 
         extra_env_variables = extra_env_variables or {}
 
-        file_dur = long(media_descriptor.get_duration()) / GST_SECOND
+        file_dur = int(media_descriptor.get_duration()) / GST_SECOND
         if not media_descriptor.get_num_tracks("video"):
             self.debug("%s audio only file applying transcoding ratio."
                        "File 'duration' : %s" % (classname, file_dur))
@@ -490,8 +490,8 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
         self.dest_file = os.path.join(self.options.dest,
                                       self.classname.replace(".transcode.", os.sep).
                                       replace(".", os.sep))
-        mkdir(os.path.dirname(urlparse.urlsplit(self.dest_file).path))
-        if urlparse.urlparse(self.dest_file).scheme == "":
+        mkdir(os.path.dirname(urllib.parse.urlsplit(self.dest_file).path))
+        if urllib.parse.urlparse(self.dest_file).scheme == "":
             self.dest_file = path2url(self.dest_file)
 
         profile = self.get_profile()
@@ -647,7 +647,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                uri.startswith("http://127.0.0.1:8079/"):
                 uri = uri.replace("http://127.0.0.1:8079/",
                                   "http://127.0.0.1:%r/" % self.options.http_server_port, 1)
-            media_descriptor.set_protocol(urlparse.urlparse(uri).scheme)
+            media_descriptor.set_protocol(urllib.parse.urlparse(uri).scheme)
             for caps2, prot in GST_VALIDATE_CAPS_TO_PROTOCOL:
                 if caps2 == caps:
                     media_descriptor.set_protocol(prot)
@@ -660,7 +660,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                                NamedDic({"path": media_info,
                                          "media_descriptor": media_descriptor}),
                                special_scenarios))
-        except ConfigParser.NoOptionError as e:
+        except configparser.NoOptionError as e:
             self.debug("Exception: %s for %s", e, media_info)
 
     def _discover_file(self, uri, fpath):
