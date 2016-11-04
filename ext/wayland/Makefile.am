@@ -23,13 +23,15 @@ libgstwaylandsink_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
-	$(WAYLAND_CFLAGS)
+	$(WAYLAND_CFLAGS) \
+	$(WAYLAND_DRM_CFLAGS)
 libgstwaylandsink_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/wayland/libgstwayland-$(GST_API_VERSION).la \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-$(GST_API_VERSION) \
 	-lgstallocators-$(GST_API_VERSION) \
-	$(WAYLAND_LIBS)
+	$(WAYLAND_LIBS) \
+	$(WAYLAND_DRM_LIBS)
 libgstwaylandsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstwaylandsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
