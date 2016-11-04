@@ -50,7 +50,11 @@ json_dep = dependency('json-glib-1.0',
 
 gst_c_args = ['-DHAVE_CONFIG_H', '-DGST_USE_UNSTABLE_API']
 
-gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**); gst_init(NULL,NULL);' ]
+gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' + \
+    'g_setenv("GST_REGISTRY_1.0", "/no/way/this/exists.reg", TRUE);' + \
+    'g_setenv("GST_PLUGIN_PATH_1_0", "", TRUE);' + \
+    'g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", "", TRUE);' + \
+    'gst_init(NULL,NULL);' ]
 gir = find_program('g-ir-scanner', required : false)
 build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
 gnome = import('gnome')
