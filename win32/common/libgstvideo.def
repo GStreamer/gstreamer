@@ -107,6 +107,7 @@ EXPORTS
 	gst_video_decoder_add_to_frame
 	gst_video_decoder_allocate_output_buffer
 	gst_video_decoder_allocate_output_frame
+	gst_video_decoder_allocate_output_frame_with_params
 	gst_video_decoder_drop_frame
 	gst_video_decoder_finish_frame
 	gst_video_decoder_get_allocator
