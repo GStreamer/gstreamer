@@ -544,17 +544,6 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
       GST_BUFFER_FLAG_SET (out_frame->output_buffer,
           GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE);
     }
-
-    if (crop_rect) {
-      GstVideoCropMeta *const crop_meta =
-          gst_buffer_add_video_crop_meta (out_frame->output_buffer);
-      if (crop_meta) {
-        crop_meta->x = crop_rect->x;
-        crop_meta->y = crop_rect->y;
-        crop_meta->width = crop_rect->width;
-        crop_meta->height = crop_rect->height;
-      }
-    }
 #if (USE_GLX || USE_EGL)
     if (decode->has_texture_upload_meta)
       gst_buffer_ensure_texture_upload_meta (out_frame->output_buffer);
