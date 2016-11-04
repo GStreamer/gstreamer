@@ -1301,6 +1301,7 @@ GST_START_TEST (dash_mpdparser_contentProtection_no_value)
   const gchar *xml =
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     xmlns:mspr=\"urn:microsoft:playready\""
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <AdaptationSet>"
@@ -1309,6 +1310,9 @@ GST_START_TEST (dash_mpdparser_contentProtection_no_value)
       "	      <mas:MarlinContentIds>"
       "	        <mas:MarlinContentId>urn:marlin:kid:02020202020202020202020202020202</mas:MarlinContentId>"
       "       </mas:MarlinContentIds>"
+      "      </ContentProtection>"
+      "      <ContentProtection schemeIdUri=\"urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95\" value=\"MSPR 2.0\">"
+      "        <mspr:pro>dGVzdA==</mspr:pro>"
       "     </ContentProtection>" "</AdaptationSet></Period></MPD>";
 
   gboolean ret;
@@ -1321,7 +1325,7 @@ GST_START_TEST (dash_mpdparser_contentProtection_no_value)
   periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
   adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
   representationBase = adaptationSet->RepresentationBase;
-  assert_equals_int (g_list_length (representationBase->ContentProtection), 2);
+  assert_equals_int (g_list_length (representationBase->ContentProtection), 3);
   contentProtection =
       (GstDescriptorType *) g_list_nth (representationBase->ContentProtection,
       1)->data;

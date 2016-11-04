@@ -1734,6 +1734,43 @@ error:
 }
 
 static void
+gst_mpdparser_parse_content_protection_node (GList ** list, xmlNode * a_node)
+{
+  gchar *value = NULL;
+  if (gst_mpdparser_get_xml_prop_string (a_node, "value", &value)) {
+    if (!g_strcmp0 (value, "MSPR 2.0")) {
+      xmlNode *cur_node;
+      for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
+        if (cur_node->type == XML_ELEMENT_NODE) {
+          if (xmlStrcmp (cur_node->name, (xmlChar *) "pro") == 0) {
+            gsize decoded_len;
+            GstDescriptorType *new_descriptor;
+            new_descriptor = g_slice_new0 (GstDescriptorType);
+            *list = g_list_append (*list, new_descriptor);
+
+            gst_mpdparser_get_xml_prop_string_stripped (a_node, "schemeIdUri",
+                &new_descriptor->schemeIdUri);
+
+            gst_mpdparser_get_xml_node_content (cur_node,
+                &new_descriptor->value);
+            g_base64_decode_inplace (new_descriptor->value, &decoded_len);
+            *(new_descriptor->value + decoded_len) = '\0';
+            goto beach;
+          }
+        }
+      }
+    } else {
+      gst_mpdparser_parse_descriptor_type_node (list, a_node);
+    }
+  } else {
+    gst_mpdparser_parse_descriptor_type_node (list, a_node);
+  }
+beach:
+  if (value)
+    g_free (value);
+}
+
+static void
 gst_mpdparser_parse_representation_base_type (GstRepresentationBaseType **
     pointer, xmlNode * a_node)
 {
@@ -1788,7 +1825,7 @@ gst_mpdparser_parse_representation_base_type (GstRepresentationBaseType **
             (&representation_base->AudioChannelConfiguration, cur_node);
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "ContentProtection") == 0) {
-        gst_mpdparser_parse_descriptor_type_node
+        gst_mpdparser_parse_content_protection_node
             (&representation_base->ContentProtection, cur_node);
       }
     }

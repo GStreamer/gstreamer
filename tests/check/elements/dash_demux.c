@@ -1380,6 +1380,9 @@ testContentProtectionDashdemuxSendsEvent (GstAdaptiveDemuxTestEngine * engine,
     fail_if (str == NULL);
     str = strstr (value, "</ContentProtection>");
     fail_if (str == NULL);
+  } else if (g_strcmp0 (system_id, "9a04f079-9840-4286-ab92-e65be0885f95") == 0) {
+    fail_unless (g_strcmp0 (origin, "dash/mpd") == 0);
+    fail_unless (g_strcmp0 (value, "test") == 0);
   } else {
     fail ("unexpected content protection event '%s'", system_id);
   }
@@ -1412,6 +1415,7 @@ GST_START_TEST (testContentProtection)
       "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
       "<MPD xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
       "     xmlns=\"urn:mpeg:DASH:schema:MPD:2011\""
+      "     xmlns:mspr=\"urn:microsoft:playready\""
       "     xsi:schemaLocation=\"urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd\""
       "     profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\""
       "     type=\"static\""
@@ -1443,6 +1447,9 @@ GST_START_TEST (testContentProtection)
       "        <mas:MarlinContentIds>"
       "          <mas:MarlinContentId>urn:marlin:kid:02020202020202020202020202020202</mas:MarlinContentId>"
       "        </mas:MarlinContentIds>"
+      "      </ContentProtection>"
+      "      <ContentProtection schemeIdUri=\"urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95\" value=\"MSPR 2.0\">"
+      "        <mspr:pro>dGVzdA==</mspr:pro>"
       "      </ContentProtection>"
       "      <Representation id=\"242\""
       "                      codecs=\"vp9\""
@@ -1497,7 +1504,7 @@ GST_START_TEST (testContentProtection)
 
   gst_structure_get_uint (testData->countContentProtectionEvents, "video_00",
       &event_count);
-  fail_unless (event_count == 2);
+  fail_unless (event_count == 3);
 
   g_object_unref (testData);
   if (http_src_test_data.data)
