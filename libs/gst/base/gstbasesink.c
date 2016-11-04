@@ -2239,6 +2239,13 @@ no_clock:
  * against the clock it must unblock when going from PLAYING to the PAUSED state
  * and call this method before continuing to render the remaining data.
  *
+ * If the #GstBaseSinkClass.render() method can block on something else than
+ * the clock, it must also be ready to unblock immediately on
+ * the #GstBaseSinkClass.unlock() method and cause the
+ * #GstBaseSinkClass.render() method to immediately call this function.
+ * In this case, the subclass must be prepared to continue rendering where it
+ * left off if this function returns %GST_FLOW_OK.
+ *
  * This function will block until a state change to PLAYING happens (in which
  * case this function returns %GST_FLOW_OK) or the processing must be stopped due
  * to a state change to READY or a FLUSH event (in which case this function
