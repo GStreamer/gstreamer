@@ -193,7 +193,7 @@ fill_vectors (struct iovec *vecs, GstMapInfo * maps, guint n, GstBuffer * buf)
 GstFlowReturn
 gst_writev_buffers (GstObject * sink, gint fd, GstPoll * fdset,
     GstBuffer ** buffers, guint num_buffers, guint8 * mem_nums,
-    guint total_mem_num, guint64 * total_written, guint64 * cur_pos)
+    guint total_mem_num, guint64 * bytes_written, guint64 skip)
 {
   struct iovec *vecs;
   GstMapInfo *map_infos;
@@ -218,6 +218,13 @@ gst_writev_buffers (GstObject * sink, gint fd, GstPoll * fdset,
     guint n_vecs = total_mem_num;
 
     left = size;
+
+    if (skip) {
+      ret = skip;
+      errno = 0;
+      goto skip_first;
+    }
+
     do {
 #ifndef HAVE_WIN32
       if (fdset != NULL) {
@@ -239,11 +246,11 @@ gst_writev_buffers (GstObject * sink, gint fd, GstPoll * fdset,
       ret = gst_writev (fd, vecs, n_vecs, left);
 
       if (ret > 0) {
-        if (total_written)
-          *total_written += ret;
-        if (cur_pos)
-          *cur_pos += ret;
+        if (bytes_written)
+          *bytes_written += ret;
       }
+
+    skip_first:
 
       if (ret == left)
         break;

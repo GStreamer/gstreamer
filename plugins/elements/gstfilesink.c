@@ -662,7 +662,7 @@ gst_file_sink_render_buffers (GstFileSink * sink, GstBuffer ** buffers,
       num_buffers, total_mems, sink->current_pos);
 
   return gst_writev_buffers (GST_OBJECT_CAST (sink), fileno (sink->file), NULL,
-      buffers, num_buffers, mem_nums, total_mems, NULL, &sink->current_pos);
+      buffers, num_buffers, mem_nums, total_mems, &sink->current_pos, 0);
 }
 
 static GstFlowReturn

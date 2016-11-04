@@ -34,7 +34,7 @@ G_GNUC_INTERNAL
 GstFlowReturn  gst_writev_buffers (GstObject * sink, gint fd, GstPoll * fdset,
                                    GstBuffer ** buffers, guint num_buffers,
                                    guint8 * mem_nums, guint total_mem_num,
-                                   guint64 * total_written, guint64 * cur_pos);
+                                   guint64 * bytes_written, guint64 skip);
 
 G_END_DECLS
 
