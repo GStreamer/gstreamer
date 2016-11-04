@@ -409,6 +409,7 @@ EXPORTS
 	gst_debug_get_all_categories
 	gst_debug_get_color_mode
 	gst_debug_get_default_threshold
+	gst_debug_get_stack_trace
 	gst_debug_graph_details_get_type
 	gst_debug_is_active
 	gst_debug_is_colored
