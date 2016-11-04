@@ -146,6 +146,141 @@ create_rtp_buffer_with_timestamp (guint32 ssrc, guint8 payload_type,
   return ret;
 }
 
+static GstStructure *
+create_rtx_map (const gchar * name, guint key, guint value)
+{
+  gchar *key_str = g_strdup_printf ("%u", key);
+  GstStructure *s = gst_structure_new (name,
+      key_str, G_TYPE_UINT, value, NULL);
+  g_free (key_str);
+  return s;
+}
+
+GST_START_TEST (test_rtxsend_basic)
+{
+  const guint32 main_ssrc = 1234567;
+  const guint main_pt = 96;
+  const guint32 rtx_ssrc = 7654321;
+  const guint rtx_pt = 106;
+
+  GstHarness *h = gst_harness_new ("rtprtxsend");
+  GstStructure *ssrc_map =
+      create_rtx_map ("application/x-rtp-ssrc-map", main_ssrc, rtx_ssrc);
+  GstStructure *pt_map =
+      create_rtx_map ("application/x-rtp-pt-map", main_pt, rtx_pt);
+
+  g_object_set (h->element, "ssrc-map", ssrc_map, NULL);
+  g_object_set (h->element, "payload-type-map", pt_map, NULL);
+
+  gst_harness_set_src_caps_str (h, "application/x-rtp, "
+      "media = (string)video, payload = (int)96, "
+      "ssrc = (uint)1234567, clock-rate = (int)90000, "
+      "encoding-name = (string)RAW");
+
+  /* push a packet */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_buffer (main_ssrc, main_pt, 0)));
+
+  /* and check it came through */
+  pull_and_verify (h, FALSE, main_ssrc, main_pt, 0);
+
+  /* now request this packet as rtx */
+  gst_harness_push_upstream_event (h, create_rtx_event (main_ssrc, main_pt, 0));
+
+  /* and verify we got an rtx-packet for it */
+  pull_and_verify (h, TRUE, rtx_ssrc, rtx_pt, 0);
+
+  gst_structure_free (ssrc_map);
+  gst_structure_free (pt_map);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtxsend_disabled_enabled_disabled)
+{
+  const guint32 main_ssrc = 1234567;
+  const guint main_pt = 96;
+  const guint32 rtx_ssrc = 7654321;
+  const guint rtx_pt = 106;
+
+  GstHarness *h = gst_harness_new ("rtprtxsend");
+  GstStructure *ssrc_map =
+      create_rtx_map ("application/x-rtp-ssrc-map", main_ssrc, rtx_ssrc);
+  GstStructure *pt_map =
+      create_rtx_map ("application/x-rtp-pt-map", main_pt, rtx_pt);
+  GstStructure *empty_pt_map =
+      gst_structure_new_empty ("application/x-rtp-pt-map");
+
+  /* set ssrc-map, but not pt-map, making the element work in passthrough */
+  g_object_set (h->element, "ssrc-map", ssrc_map, NULL);
+
+  gst_harness_set_src_caps_str (h, "application/x-rtp, "
+      "media = (string)video, payload = (int)96, "
+      "ssrc = (uint)1234567, clock-rate = (int)90000, "
+      "encoding-name = (string)RAW");
+
+  /* push, pull, request-rtx, verify nothing arrives */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_buffer (main_ssrc, main_pt, 0)));
+  pull_and_verify (h, FALSE, main_ssrc, main_pt, 0);
+  gst_harness_push_upstream_event (h, create_rtx_event (main_ssrc, main_pt, 0));
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+  /* verify there is no task on the rtxsend srcpad */
+  fail_unless (GST_PAD_TASK (GST_PAD_PEER (h->sinkpad)) == NULL);
+
+  /* now enable rtx by setting the pt-map */
+  g_object_set (h->element, "payload-type-map", pt_map, NULL);
+
+  /* push, pull, request rtx, pull rtx */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_buffer (main_ssrc, main_pt, 1)));
+  pull_and_verify (h, FALSE, main_ssrc, main_pt, 1);
+  gst_harness_push_upstream_event (h, create_rtx_event (main_ssrc, main_pt, 1));
+  pull_and_verify (h, TRUE, rtx_ssrc, rtx_pt, 1);
+  /* verify there is a task on the rtxsend srcpad */
+  fail_unless (GST_PAD_TASK (GST_PAD_PEER (h->sinkpad)) != NULL);
+
+  /* now enable disable rtx agian by setting an empty pt-map */
+  g_object_set (h->element, "payload-type-map", empty_pt_map, NULL);
+
+  /* push, pull, request-rtx, verify nothing arrives */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, create_rtp_buffer (main_ssrc, main_pt, 2)));
+  pull_and_verify (h, FALSE, main_ssrc, main_pt, 2);
+  gst_harness_push_upstream_event (h, create_rtx_event (main_ssrc, main_pt, 2));
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+  /* verify the task is gone again */
+  fail_unless (GST_PAD_TASK (GST_PAD_PEER (h->sinkpad)) == NULL);
+
+  gst_structure_free (ssrc_map);
+  gst_structure_free (pt_map);
+  gst_structure_free (empty_pt_map);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtxsend_configured_not_playing_cleans_up)
+{
+  GstElement *rtxsend = gst_element_factory_make ("rtprtxsend", NULL);
+  GstStructure *ssrc_map =
+      create_rtx_map ("application/x-rtp-ssrc-map", 123, 96);
+  GstStructure *pt_map = create_rtx_map ("application/x-rtp-pt-map", 321, 106);
+
+  g_object_set (rtxsend, "ssrc-map", ssrc_map, NULL);
+  g_object_set (rtxsend, "payload-type-map", pt_map, NULL);
+  gst_structure_free (ssrc_map);
+  gst_structure_free (pt_map);
+
+  g_usleep (G_USEC_PER_SEC);
+
+  gst_object_unref (rtxsend);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_rtxreceive_empty_rtx_packet)
 {
   guint rtx_ssrc = 7654321;
@@ -787,6 +922,10 @@ rtprtx_suite (void)
   tcase_set_timeout (tc_chain, 120);
 
   suite_add_tcase (s, tc_chain);
+
+  tcase_add_test (tc_chain, test_rtxsend_basic);
+  tcase_add_test (tc_chain, test_rtxsend_disabled_enabled_disabled);
+  tcase_add_test (tc_chain, test_rtxsend_configured_not_playing_cleans_up);
 
   tcase_add_test (tc_chain, test_rtxreceive_empty_rtx_packet);
   tcase_add_test (tc_chain, test_rtxsend_rtxreceive);
