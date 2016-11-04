@@ -22,7 +22,7 @@
  *
  * The yadif element deinterlaces video, using the YADIF deinterlacing
  * filter copied from Libav.  This element only handles the simple case
- * of interlaced-mode=interleaved video instead of the more complex
+ * of interlace-mode=interleaved video instead of the more complex
  * inverse telecine and deinterlace cases that are handled by the
  * deinterlace element.
  *

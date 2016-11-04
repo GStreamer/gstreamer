@@ -355,7 +355,7 @@ GST_START_TEST (test_caps_query)
   gst_caps_unref (caps);
   gst_caps_unref (restriction_caps);
 
-  /* check that compositor proxies downstream interlaced-mode */
+  /* check that compositor proxies downstream interlace-mode */
   restriction_caps =
       gst_caps_from_string ("video/x-raw, interlace-mode=(string)interleaved");
   g_object_set (capsfilter, "caps", restriction_caps, NULL);
@@ -412,7 +412,7 @@ GST_START_TEST (test_caps_query_interlaced)
   fail_unless (gst_caps_can_intersect (caps, caps_mixed));
   gst_caps_unref (caps);
 
-  /* now set caps on the pad, it should restrict the interlaced-mode for
+  /* now set caps on the pad, it should restrict the interlace-mode for
    * future caps */
   caps = gst_caps_from_string ("video/x-raw, width=100, height=100, "
       "format=RGB, framerate=1/1, interlace-mode=progressive");
