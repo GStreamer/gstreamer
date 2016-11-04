@@ -235,7 +235,7 @@ typedef enum {
  * @GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST: bottom field is first
  *
  * Field order of interlaced content. This is only valid for
- * interlaced-mode=interleaved and not interlaced-mode=mixed. In the case of
+ * interlace-mode=interleaved and not interlace-mode=mixed. In the case of
  * mixed or GST_VIDEO_FIELD_ORDER_UNKOWN, the field order is signalled via
  * buffer flags.
  *
