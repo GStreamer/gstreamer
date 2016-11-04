@@ -239,7 +239,7 @@ gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
     goto error_incompatible_map;
 
   /* Map for writing */
-  if (++mem->map_count == 1) {
+  if (mem->map_count == 0) {
     if (!ensure_surface (mem))
       goto error_ensure_surface;
     if (!ensure_image (mem))
@@ -258,6 +258,7 @@ gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
       GST_VAAPI_VIDEO_MEMORY_FLAG_UNSET (mem,
           GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT);
   }
+  mem->map_count++;
 
   *data = gst_vaapi_image_get_plane (mem->image, plane);
   *stride = gst_vaapi_image_get_pitch (mem->image, plane);
