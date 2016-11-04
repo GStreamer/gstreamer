@@ -2568,7 +2568,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
       break;
   }
 
-  s = gst_structure_get_string (structure, "interlaced-mode");
+  s = gst_structure_get_string (structure, "interlace-mode");
   if (s) {
     if (strcmp (s, "progressive") == 0) {
       context->field_order = AV_FIELD_PROGRESSIVE;
