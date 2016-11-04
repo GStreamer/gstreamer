@@ -945,7 +945,7 @@ update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
   ffmpegdec->pic_par_d = picture->sample_aspect_ratio.den;
 
   /* Remember if we have interlaced content and the field order changed
-   * at least once. If that happens, we must be interlaced-mode=mixed
+   * at least once. If that happens, we must be interlace-mode=mixed
    */
   if (ffmpegdec->pic_field_order_changed ||
       (ffmpegdec->pic_field_order != pic_field_order &&
