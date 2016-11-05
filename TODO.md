@@ -5,10 +5,10 @@ gstreamer.com content to hotdoc
 
 Pages to review:
  - [installing]
-   - installing-on-windows.md
+   - installing/on-windows.md
 
 For-later pages:
- - tutorial-qt-tutorials.md [tpm: this should all be rewritten from scratch with qmlglsink; QtGStreamer is outdated and unmaintained, we should not promote it]
+ - tutorials/qt-tutorials.md [tpm: this should all be rewritten from scratch with qmlglsink; QtGStreamer is outdated and unmaintained, we should not promote it]
    - basic-media-player.md
    - qt-gstreamer-vs-c-gstreamer.md
    - using-appsink-appsrc-in-qt.md

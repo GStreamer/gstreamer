@@ -26,18 +26,18 @@ gst_docs_HOTDOC_FLAGS = \
 	--conf-file hotdoc.json \
 	$(NULL)
 
-theme.stamp: less/variables.less
-	+make -C hotdoc_bootstrap_theme LESS_INCLUDE_PATH=$$PWD/less
+theme/theme.stamp: theme/less/variables.less
+	+make -C theme/hotdoc_bootstrap_theme LESS_INCLUDE_PATH=$$PWD/theme/less
 	@rm -rf hotdoc-private*
-	@touch theme.stamp
+	@touch theme/theme.stamp
 
 clean_theme:
-	rm -f theme.stamp
-	+make -C hotdoc_bootstrap_theme clean
+	rm -f theme/theme.stamp
+	+make -C theme/hotdoc_bootstrap_theme clean
 
 clean: clean_theme
 
-gst_docs_HOTDOC_EXTRA_DEPS = theme.stamp
+gst_docs_HOTDOC_EXTRA_DEPS = theme/theme.stamp
 
 .PHONY: all install clean
 
