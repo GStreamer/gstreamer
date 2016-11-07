@@ -62,8 +62,6 @@ struct _GstQtSrc
   gboolean              default_fbo;
   gboolean              downstream_supports_affine_meta;
   gboolean              pending_image_orientation;
-  /* fps print support */
-  GstClockTime          run_time;
 };
 
 /**

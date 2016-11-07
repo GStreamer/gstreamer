@@ -145,8 +145,11 @@ gst_qt_src_set_property (GObject * object, guint prop_id,
       qt_src->qwindow =
           static_cast < QQuickWindow * >(g_value_get_pointer (value));
 
-      if (qt_src->window)
+      if (qt_src->window) {
         delete qt_src->window;
+        qt_src->window = NULL;
+      }
+
       if (qt_src->qwindow)
         qt_src->window = new QtGLWindow (NULL, qt_src->qwindow);
 
@@ -154,6 +157,8 @@ gst_qt_src_set_property (GObject * object, guint prop_id,
     }
     case PROP_DEFAULT_FBO:
       qt_src->default_fbo = g_value_get_boolean (value);
+      if (qt_src->window)
+        qt_window_use_default_fbo (qt_src->window, qt_src->default_fbo);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -508,7 +513,6 @@ gst_qt_src_change_state (GstElement * element, GstStateChange transition)
   GstQtSrc *qt_src = GST_QT_SRC (element);
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   QGuiApplication *app;
-  guint64 frames_rendered = 0;
 
   GST_DEBUG ("changing state: %s => %s",
       gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
@@ -553,18 +557,10 @@ gst_qt_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      qt_src->run_time = gst_element_get_start_time (GST_ELEMENT (qt_src));
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      qt_window_get_total_frames (qt_src->window, &frames_rendered);
-      if (qt_src->run_time > 0) {
-        GST_DEBUG ("qmlglsrc Total refresh frames (%ld), playing for (%"
-            GST_TIME_FORMAT "), fps (%.3f).\n", frames_rendered,
-            GST_TIME_ARGS (qt_src->run_time),
-            (gfloat) GST_SECOND * frames_rendered / qt_src->run_time);
-      }
       break;
     default:
       break;
