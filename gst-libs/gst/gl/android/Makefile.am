@@ -2,13 +2,10 @@
 
 noinst_LTLIBRARIES = libgstgl-android.la
 
-libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
-libgstglandroidincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl/android
-
 libgstgl_android_la_SOURCES = \
 	gstglwindow_android_egl.c
 
-libgstglandroidinclude_HEADERS = \
+noinst_HEADERS = \
 	gstglwindow_android_egl.h
 
 libgstgl_android_la_CFLAGS = \
