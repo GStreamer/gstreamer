@@ -3331,17 +3331,14 @@ register_codecs (GstPlugin * plugin)
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+amc_init (GstPlugin * plugin)
 {
   const gchar *ignore;
 
-  GST_DEBUG_CATEGORY_INIT (gst_amc_debug, "amc", 0, "android-media-codec");
-
-  if (!gst_amc_jni_initialize ())
-    return FALSE;
-
   gst_plugin_add_dependency_simple (plugin, NULL, "/etc", "media_codecs.xml",
       GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+
+  gst_amc_codec_info_quark = g_quark_from_static_string ("gst-amc-codec-info");
 
   if (!get_java_classes ())
     return FALSE;
@@ -3357,44 +3354,70 @@ plugin_init (GstPlugin * plugin)
   if (!scan_codecs (plugin))
     return FALSE;
 
-  gst_amc_codec_info_quark = g_quark_from_static_string ("gst-amc-codec-info");
-
   if (!register_codecs (plugin))
     return FALSE;
 
+  return TRUE;
+}
+
+static gboolean
+ahc_init (GstPlugin * plugin)
+{
   if (!gst_android_graphics_imageformat_init ()) {
     GST_ERROR ("Failed to init android image format");
-    goto failed_surfacetexture;
+    return FALSE;
   }
 
   if (!gst_android_hardware_camera_init ()) {
-    goto failed_graphics_imageformat;
-  }
-
-  if (!gst_android_hardware_sensor_init ()) {
-    goto failed_hardware_camera;
+    gst_android_graphics_imageformat_deinit ();
+    return FALSE;
   }
 
   if (!gst_element_register (plugin, "ahcsrc", GST_RANK_NONE, GST_TYPE_AHC_SRC)) {
     GST_ERROR ("Failed to register android camera source");
-    goto failed_hardware_sensor;
-  }
-
-  if (!gst_element_register (plugin, "ahssrc", GST_RANK_NONE, GST_TYPE_AHS_SRC)) {
-    GST_ERROR ("Failed to register android sensor source");
-    goto failed_hardware_sensor;
+    gst_android_hardware_camera_deinit ();
+    gst_android_graphics_imageformat_deinit ();
+    return FALSE;
   }
 
   return TRUE;
+}
 
-failed_hardware_sensor:
-  gst_android_hardware_sensor_deinit ();
-failed_hardware_camera:
-  gst_android_hardware_camera_deinit ();
-failed_graphics_imageformat:
-  gst_android_graphics_imageformat_deinit ();
-failed_surfacetexture:
-  return FALSE;
+static gboolean
+ahs_init (GstPlugin * plugin)
+{
+  if (!gst_android_hardware_sensor_init ())
+    return FALSE;
+
+  if (!gst_element_register (plugin, "ahssrc", GST_RANK_NONE, GST_TYPE_AHS_SRC)) {
+    GST_ERROR ("Failed to register android sensor source");
+    gst_android_hardware_sensor_deinit ();
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  gboolean init_ok = FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (gst_amc_debug, "amc", 0, "android-media-codec");
+
+  if (!gst_amc_jni_initialize ())
+    return FALSE;
+
+  if (amc_init (plugin))
+    init_ok = TRUE;
+
+  if (ahc_init (plugin))
+    init_ok = TRUE;
+
+  if (ahs_init (plugin))
+    init_ok = TRUE;
+
+  return init_ok;
 }
 
 void
