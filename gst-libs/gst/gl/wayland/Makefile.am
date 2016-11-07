@@ -12,6 +12,10 @@ noinst_HEADERS = \
 	gstglwindow_wayland_egl.h \
 	wayland_event_source.h
 
+libgstgl_waylandincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl/wayland
+libgstgl_waylandinclude_HEADERS = \
+	gstgldisplay_wayland.h
+
 libgstgl_wayland_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_builddir)/gst-libs \
