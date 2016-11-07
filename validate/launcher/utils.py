@@ -21,11 +21,17 @@
 import config
 import os
 import re
-import sys
-import urllib.request, urllib.parse, urllib.error
-import urllib.parse
+import shutil
 import subprocess
+import sys
+import tempfile
+import time
+import urllib.request
+import urllib.parse
+import urllib.error
+import urllib.parse
 
+from .loggable import Loggable
 from operator import itemgetter
 
 
@@ -250,3 +256,105 @@ def get_scenarios():
     GST_VALIDATE_COMMAND = "gst-validate-1.0"
     os.system("%s --scenarios-defs-output-file %s" % (GST_VALIDATE_COMMAND,
                                                       ))
+
+
+class BackTraceGenerator(Loggable):
+    __instance = None
+    _executable_regex = re.compile(r'Executable: (.*)\n')
+    _timestamp_regex = re.compile(r'Timestamp: .*\((\d*)s ago\)')
+
+    def __init__(self):
+        Loggable.__init__(self)
+
+        self.coredumpctl = shutil.which('coredumpctl')
+        self.gdb = shutil.which('gdb')
+
+    @classmethod
+    def get_default(cls):
+        if not cls.__instance:
+            cls.__instance = BackTraceGenerator()
+
+        return cls.__instance
+
+    def get_trace(self, test):
+        if not test.process.returncode:
+            return self.get_trace_on_running_process(test)
+
+        if self.coredumpctl:
+            return self.get_trace_from_systemd(test)
+
+        self.debug("coredumpctl not present, and it is the only"
+                   " supported way to get backtraces for now.")
+        return None
+
+    def get_trace_on_running_process(self, test):
+        if not self.gdb:
+            return "Can not generate stack trace as `gdb` is not" \
+                "installed."
+
+        gdb = ['gdb', '-ex', 't a a bt', '-batch',
+            '-p', str(test.process.pid)]
+
+        try:
+            return subprocess.check_output(
+                gdb, stderr=subprocess.STDOUT).decode()
+        except Exception as e:
+            return "Could not run `gdb` on process (pid: %d):\n%s" % (
+                test.process.pid, e)
+
+    def get_trace_from_systemd(self, test):
+        for ntry in range(10):
+            if ntry != 0:
+                # Loopping, it means we conceder the logs might not be ready yet.
+                time.sleep(1)
+
+            try:
+                info = subprocess.check_output(['coredumpctl', 'info',
+                                                str(test.process.pid)],
+                                               stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError:
+                # The trace might not be ready yet
+                time.sleep(1)
+                continue
+
+            info = info.decode()
+            try:
+                executable = BackTraceGenerator._executable_regex.findall(info)[0]
+            except IndexError:
+                self.debug("Backtrace could not be found yet, trying harder.")
+                # The trace might not be ready yet
+                continue
+
+            if executable != test.application:
+                self.debug("PID: %s -- executable %s != test application: %s" % (
+                    test.process.pid, executable, test.application))
+                # The trace might not be ready yet
+                continue
+
+            if not BackTraceGenerator._timestamp_regex.findall(info):
+                self.debug("Timestamp %s is more than 1min old",
+                           re.findall(r'Timestamp: .*', info))
+                # The trace might not be ready yet
+                continue
+
+            bt_all = None
+            if self.gdb:
+                try:
+                    tf = tempfile.NamedTemporaryFile()
+                    subprocess.check_output(['coredumpctl', 'dump',
+                                            str(test.process.pid), '--output=' +
+                                            tf.name], stderr=subprocess.STDOUT)
+
+                    gdb = ['gdb', '-ex', 't a a bt', '-ex', 'quit',
+                        test.application, tf.name]
+                    bt_all = subprocess.check_output(
+                        gdb, stderr=subprocess.STDOUT).decode()
+
+                    info += "\nThread apply all bt:\n\n%s" % (
+                        bt_all.replace('\n', '\n' + 15 * ' '))
+                except Exception as e:
+                    self.debug("Could not get backtrace from gdb: %s" % e)
+
+            return info
+
+        return None

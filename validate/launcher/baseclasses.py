@@ -30,6 +30,7 @@ import time
 from . import utils
 import signal
 import urllib.parse
+import tempfile
 import subprocess
 import threading
 import queue
@@ -40,7 +41,7 @@ from .loggable import Loggable
 import xml.etree.cElementTree as ET
 
 from .utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
-    Protocols, look_for_file_in_source_dir, get_data_file
+    Protocols, look_for_file_in_source_dir, get_data_file, BackTraceGenerator
 
 # The factor by which we increase the hard timeout when running inside
 # Valgrind
@@ -49,6 +50,10 @@ GDB_TIMEOUT_FACTOR = VALGRIND_TIMEOUT_FACTOR = 20
 VALGRIND_ERROR_CODE = 20
 
 VALIDATE_OVERRIDE_EXTENSION = ".override"
+COREDUMP_SIGNALS = [-signal.SIGQUIT, -signal.SIGILL, -signal.SIGABRT,
+    -signal.SIGFPE, -signal.SIGSEGV, -signal.SIGBUS, -signal.SIGSYS,
+    -signal.SIGTRAP, -signal.SIGXCPU, -signal.SIGXFSZ, -signal.SIGIOT,
+    139]
 
 
 class Test(Loggable):
@@ -196,22 +201,39 @@ class Test(Loggable):
         self.add_env_variable("LD_PRELOAD")
         self.add_env_variable("DISPLAY")
 
+    def add_stack_trace_to_logfile(self):
+        trace_gatherer = BackTraceGenerator.get_default()
+        stack_trace = trace_gatherer.get_trace(self)
+
+        if not stack_trace:
+            return
+
+        info = "\n\n== Segfault informations: == \n%s" % stack_trace
+        if self.options.redirect_logs:
+            print(info)
+        else:
+            with open(self.logfile, 'a') as f:
+                f.write(info)
+
     def set_result(self, result, message="", error=""):
         self.debug("Setting result: %s (message: %s, error: %s)" % (result,
                    message, error))
 
-        if result is Result.TIMEOUT and self.options.debug is True:
-            if self.options.gdb:
-                printc("Timeout, you should process <ctrl>c to get into gdb",
-                       Colors.FAIL)
-                # and wait here until gdb exits
-                self.process.communicate()
-            else:
-                pname = subprocess.check_output(("readlink -e /proc/%s/exe"
-                                                 % self.process.pid).decode().split(' ')).replace('\n', '')
-                input("%sTimeout happened you can attach gdb doing: $gdb %s %d%s\n"
+        if result is Result.TIMEOUT:
+            if self.options.debug is True:
+                if self.options.gdb:
+                    printc("Timeout, you should process <ctrl>c to get into gdb",
+                        Colors.FAIL)
+                    # and wait here until gdb exits
+                    self.process.communicate()
+                else:
+                    pname = subprocess.check_output(("readlink -e /proc/%s/exe"
+                                                    % self.process.pid).decode().split(' ')).replace('\n', '')
+                    input("%sTimeout happened you can attach gdb doing: $gdb %s %d%s\n"
                           "Press enter to continue" % (Colors.FAIL, pname, self.process.pid,
                                                        Colors.ENDC))
+            else:
+                self.add_stack_trace_to_logfile()
 
         self.result = result
         self.message = message
@@ -224,6 +246,10 @@ class Test(Loggable):
         self.debug("%s returncode: %s", self, self.process.returncode)
         if self.process.returncode == 0:
             self.set_result(Result.PASSED)
+        elif self.process.returncode in [-signal.SIGSEGV, -signal.SIGABRT, 139]:
+            result = Result.FAILED
+            msg = "Application segfaulted "
+            self.add_stack_trace_to_file()
         elif self.process.returncode == VALGRIND_ERROR_CODE:
             self.set_result(Result.FAILED, "Valgrind reported errors")
         else:
@@ -768,9 +794,10 @@ class GstValidateTest(Test):
 
         msg = ""
         result = Result.PASSED
-        if self.process.returncode == 139:
+        if self.process.returncode in COREDUMP_SIGNALS:
             result = Result.FAILED
             msg = "Application segfaulted "
+            self.add_stack_trace_to_logfile()
         elif self.process.returncode == VALGRIND_ERROR_CODE:
             msg = "Valgrind reported errors "
             result = Result.FAILED
