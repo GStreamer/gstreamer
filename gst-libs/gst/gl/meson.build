@@ -412,6 +412,9 @@ if need_win_wayland != 'no'
         'wayland/gstglwindow_wayland_egl.c',
         'wayland/wayland_event_source.c',
       ]
+      gl_wayland_headers += [
+        'wayland/gstgldisplay_wayland.h'
+      ]
       glconf.set('GST_GL_HAVE_WINDOW_WAYLAND', 1)
       gl_winsys_deps += [wayland_client_dep, wayland_cursor_dep, wayland_egl_dep]
       enabled_gl_winsys += 'wayland'
@@ -573,6 +576,7 @@ if build_gstgl
   install_headers(gl_egl_headers, subdir : 'gstreamer-1.0/gst/gl/egl')
   install_headers(gl_prototype_headers, subdir : 'gstreamer-1.0/gst/gl/glprototypes')
   install_headers(gl_x11_headers, subdir : 'gstreamer-1.0/gst/gl/x11')
+  install_headers(gl_wayland_headers, subdir : 'gstreamer-1.0/gst/gl/wayland')
 
   configure_file(input : 'gstglconfig.h.meson',
     output : 'gstglconfig.h',
