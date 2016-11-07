@@ -35,12 +35,15 @@
 
 #include <gst/gst.h>
 
+#include "gstmsdkh264dec.h"
 #include "gstmsdkh264enc.h"
 #include "gstmsdkh265enc.h"
 #include "gstmsdkmpeg2enc.h"
 #include "gstmsdkvp8enc.h"
 
+GST_DEBUG_CATEGORY (gst_msdkdec_debug);
 GST_DEBUG_CATEGORY (gst_msdkenc_debug);
+GST_DEBUG_CATEGORY (gst_msdkh264dec_debug);
 GST_DEBUG_CATEGORY (gst_msdkh264enc_debug);
 GST_DEBUG_CATEGORY (gst_msdkh265enc_debug);
 GST_DEBUG_CATEGORY (gst_msdkmpeg2enc_debug);
@@ -51,7 +54,10 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
 
+  GST_DEBUG_CATEGORY_INIT (gst_msdkdec_debug, "msdkdec", 0, "msdkdec");
   GST_DEBUG_CATEGORY_INIT (gst_msdkenc_debug, "msdkenc", 0, "msdkenc");
+  GST_DEBUG_CATEGORY_INIT (gst_msdkh264dec_debug, "msdkh264dec", 0,
+      "msdkh264dec");
   GST_DEBUG_CATEGORY_INIT (gst_msdkh264enc_debug, "msdkh264enc", 0,
       "msdkh264enc");
   GST_DEBUG_CATEGORY_INIT (gst_msdkh265enc_debug, "msdkh265enc", 0,
@@ -63,6 +69,9 @@ plugin_init (GstPlugin * plugin)
 
   if (!msdk_is_available ())
     return FALSE;
+
+  ret = gst_element_register (plugin, "msdkh264dec", GST_RANK_NONE,
+      GST_TYPE_MSDKH264DEC);
 
   ret = gst_element_register (plugin, "msdkh264enc", GST_RANK_NONE,
       GST_TYPE_MSDKH264ENC);

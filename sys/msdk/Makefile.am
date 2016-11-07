@@ -1,10 +1,12 @@
 plugin_LTLIBRARIES = libgstmsdk.la
 
 libgstmsdk_la_SOURCES = \
+	gstmsdkh264dec.c \
 	gstmsdkh264enc.c \
 	gstmsdkh265enc.c \
 	gstmsdkmpeg2enc.c \
 	gstmsdkvp8enc.c \
+	gstmsdkdec.c \
 	gstmsdkenc.c \
 	gstmsdk.c
 
@@ -13,10 +15,12 @@ nodist_EXTRA_libgstmsdk_la_SOURCES = not_present.cxx
 
 noinst_HEADERS = \
 	msdk.h \
+	gstmsdkh264dec.h \
 	gstmsdkh264enc.h \
 	gstmsdkh265enc.h \
 	gstmsdkmpeg2enc.h \
 	gstmsdkvp8enc.h \
+	gstmsdkdec.h \
 	gstmsdkenc.h
 
 libgstmsdk_la_CFLAGS = \
