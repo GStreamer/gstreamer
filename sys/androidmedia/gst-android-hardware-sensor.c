@@ -154,8 +154,6 @@ gst_ah_sensor_sensor_sizes_init (void)
 static void
 gst_ah_sensor_sensor_sizes_deinit (void)
 {
-  g_assert_nonnull (sensor_sizes);
-
   g_hash_table_unref (sensor_sizes);
   sensor_sizes = NULL;
 }
@@ -653,7 +651,8 @@ gst_android_hardware_sensor_deinit (void)
     org_freedesktop_gstreamer_androidmedia_gstahscallback.klass = NULL;
   }
 
-  gst_ah_sensor_sensor_sizes_deinit ();
+  if (sensor_sizes)
+    gst_ah_sensor_sensor_sizes_deinit ();
 }
 
 GstAHSensorManager *
