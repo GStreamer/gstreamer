@@ -121,6 +121,19 @@ static const GstAudioChannelPosition default_channel_order[64] = {
   GST_AUDIO_CHANNEL_POSITION_INVALID
 };
 
+/*
+ * Compares @channels audio channel positions @p1 and @p2 if they are equal.
+ * In other words, tells whether channel reordering is needed (unequal) or not (equal).
+ *
+ * Returns: %TRUE if the channel positions are equal, i.e. no reordering is needed.
+ */
+static gboolean
+gst_audio_channel_positions_equal (const GstAudioChannelPosition * p1,
+    const GstAudioChannelPosition * p2, gint channels)
+{
+  return memcmp (p1, p2, channels * sizeof (p1[0])) == 0;
+}
+
 static gboolean
 check_valid_channel_positions (const GstAudioChannelPosition * position,
     gint channels, gboolean enforce_order, guint64 * channel_mask_out)
@@ -211,7 +224,7 @@ gst_audio_reorder_channels (gpointer data, gsize size, GstAudioFormat format,
   if (size == 0)
     return TRUE;
 
-  if (memcmp (from, to, channels * sizeof (from[0])) == 0)
+  if (gst_audio_channel_positions_equal (from, to, channels))
     return TRUE;
 
   if (!gst_audio_get_channel_reorder_map (channels, from, to, reorder_map))
@@ -259,6 +272,9 @@ gst_audio_buffer_reorder_channels (GstBuffer * buffer,
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (gst_buffer_is_writable (buffer), FALSE);
+
+  if (gst_audio_channel_positions_equal (from, to, channels))
+    return TRUE;
 
   gst_buffer_map (buffer, &info, GST_MAP_READWRITE);
 
