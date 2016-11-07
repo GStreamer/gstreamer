@@ -19,12 +19,12 @@
 
 import os
 import sys
-import urlparse
+import urllib.parse
 import subprocess
-import utils
-from urllib import unquote
+from launcher import utils
+from urllib.parse import unquote
 import xml.etree.ElementTree as ET
-from baseclasses import GstValidateTest, TestsManager, ScenarioManager, MediaFormatCombination, \
+from launcher.baseclasses import GstValidateTest, TestsManager, ScenarioManager, MediaFormatCombination, \
     MediaDescriptor, GstValidateEncodingTestInterface
 
 GES_DURATION_TOLERANCE = utils.GST_SECOND / 2
@@ -54,7 +54,7 @@ def quote_uri(uri):
     Encode a URI/path according to RFC 2396, without touching the file:/// part.
     """
     # Split off the "file:///" part, if present.
-    parts = urlparse.urlsplit(uri, allow_fragments=False)
+    parts = urllib.parse.urlsplit(uri, allow_fragments=False)
     # Make absolutely sure the string is unquoted before quoting again!
     raw_path = unquote(parts.path)
     return utils.path2url(raw_path)
@@ -87,7 +87,7 @@ class XgesProjectDescriptor(MediaDescriptor):
 
         for l in self._root.iter():
             if l.tag == "timeline":
-                self._duration=long(l.attrib['metadatas'].split("duration=(guint64)")[1].split(" ")[0].split(";")[0])
+                self._duration=int(l.attrib['metadatas'].split("duration=(guint64)")[1].split(" ")[0].split(";")[0])
                 break
 
         if not self._duration:
@@ -175,7 +175,7 @@ class GESRenderTest(GESTest, GstValidateEncodingTestInterface):
         self.dest_file = path = os.path.join(self.options.dest,
                                              self.classname.replace(".render.", os.sep).
                                              replace(".", os.sep))
-        utils.mkdir(os.path.dirname(urlparse.urlsplit(self.dest_file).path))
+        utils.mkdir(os.path.dirname(urllib.parse.urlsplit(self.dest_file).path))
         if not utils.isuri(self.dest_file):
             self.dest_file = utils.path2url(self.dest_file)
 
@@ -219,7 +219,7 @@ class GESTestsManager(TestsManager):
 
     def init(self):
         try:
-            if "--set-scenario=" in subprocess.check_output([GES_LAUNCH_COMMAND, "--help"]):
+            if "--set-scenario=" in subprocess.check_output([GES_LAUNCH_COMMAND, "--help"]).decode():
 
                 return True
             else:
