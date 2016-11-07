@@ -269,14 +269,18 @@ gst_gl_effects_set_effect (GstGLEffects * effects, gint effect_type)
 }
 
 /* init resources that need a gl context */
-static void
-gst_gl_effects_init_gl_resources (GstGLFilter * filter)
+static gboolean
+gst_gl_effects_gl_start (GstGLBaseFilter * base_filter)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (filter);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
+  GstGLEffects *effects = GST_GL_EFFECTS (base_filter);
+  GstGLFilter *filter = GST_GL_FILTER (base_filter);
+  GstGLContext *context = base_filter->context;
   GstGLBaseMemoryAllocator *base_alloc;
   GstGLAllocationParams *params;
   gint i;
+
+  if (!GST_GL_BASE_FILTER_CLASS (parent_class)->gl_start (base_filter))
+    return FALSE;
 
   base_alloc = (GstGLBaseMemoryAllocator *)
       gst_gl_memory_allocator_get_default (context);
@@ -295,23 +299,28 @@ gst_gl_effects_init_gl_resources (GstGLFilter * filter)
 
   gst_object_unref (base_alloc);
   gst_gl_allocation_params_free (params);
+
+  return TRUE;
 }
 
 /* free resources that need a gl context */
 static void
-gst_gl_effects_reset_gl_resources (GstGLFilter * filter)
+gst_gl_effects_gl_stop (GstGLBaseFilter * base_filter)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (filter);
-  GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
+  GstGLEffects *effects = GST_GL_EFFECTS (base_filter);
+  const GstGLFuncs *gl = base_filter->context->gl_vtable;
   gint i = 0;
 
   for (i = 0; i < NEEDED_TEXTURES; i++) {
     gst_memory_unref (GST_MEMORY_CAST (effects->midtexture[i]));
   }
+
   for (i = 0; i < GST_GL_EFFECTS_N_CURVES; i++) {
     gl->DeleteTextures (1, &effects->curve[i]);
     effects->curve[i] = 0;
   }
+
+  GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base_filter);
 }
 
 static void
@@ -322,11 +331,10 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_effects_init_resources;
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_effects_reset_resources;
 
+  GST_GL_BASE_FILTER_CLASS (klass)->gl_start = gst_gl_effects_gl_start;
+  GST_GL_BASE_FILTER_CLASS (klass)->gl_stop = gst_gl_effects_gl_stop;
+
   GST_GL_FILTER_CLASS (klass)->filter_texture = gst_gl_effects_filter_texture;
-  GST_GL_FILTER_CLASS (klass)->display_init_cb =
-      gst_gl_effects_init_gl_resources;
-  GST_GL_FILTER_CLASS (klass)->display_reset_cb =
-      gst_gl_effects_reset_gl_resources;
   GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_effects_on_init_gl_context;
 
   klass->filter_descriptor = NULL;

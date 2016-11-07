@@ -113,7 +113,6 @@ static gboolean gst_gl_filter_decide_allocation (GstBaseTransform * trans,
     GstQuery * query);
 static gboolean gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     GstCaps * outcaps);
-static gboolean gst_gl_filter_gl_start (GstGLBaseFilter * filter);
 static void gst_gl_filter_gl_stop (GstGLBaseFilter * filter);
 static gboolean gst_gl_filter_gl_set_caps (GstGLBaseFilter * bt,
     GstCaps * incaps, GstCaps * outcaps);
@@ -142,7 +141,6 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
       gst_gl_filter_decide_allocation;
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_filter_get_unit_size;
 
-  GST_GL_BASE_FILTER_CLASS (klass)->gl_start = gst_gl_filter_gl_start;
   GST_GL_BASE_FILTER_CLASS (klass)->gl_stop = gst_gl_filter_gl_stop;
   GST_GL_BASE_FILTER_CLASS (klass)->gl_set_caps = gst_gl_filter_gl_set_caps;
 
@@ -199,28 +197,12 @@ gst_gl_filter_stop (GstBaseTransform * bt)
   return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (bt);
 }
 
-static gboolean
-gst_gl_filter_gl_start (GstGLBaseFilter * base_filter)
-{
-  GstGLFilter *filter = GST_GL_FILTER (base_filter);
-  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
-
-  if (filter_class->display_init_cb)
-    filter_class->display_init_cb (filter);
-
-  return TRUE;
-}
-
 static void
 gst_gl_filter_gl_stop (GstGLBaseFilter * base_filter)
 {
   GstGLFilter *filter = GST_GL_FILTER (base_filter);
-  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
+  GstGLContext *context = base_filter->context;
   const GstGLFuncs *gl = context->gl_vtable;
-
-  if (filter_class->display_reset_cb)
-    filter_class->display_reset_cb (filter);
 
   if (filter->vao) {
     gl->DeleteVertexArrays (1, &filter->vao);
@@ -245,6 +227,8 @@ gst_gl_filter_gl_stop (GstGLBaseFilter * base_filter)
   filter->default_shader = NULL;
   filter->draw_attr_position_loc = -1;
   filter->draw_attr_texture_loc = -1;
+
+  GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base_filter);
 }
 
 static GstCaps *
