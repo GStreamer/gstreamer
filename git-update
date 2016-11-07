@@ -107,5 +107,7 @@ if __name__ == "__main__":
     if options.no_color:
         Colors.disable()
 
+    if not update_repo('gst-build', SCRIPTDIR, None, options.no_interaction):
+        exit(1)
     exit(not update_subprojects(options.manifest,
                                 options.no_interaction))
