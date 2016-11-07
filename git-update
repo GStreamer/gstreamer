@@ -52,12 +52,20 @@ def update_repo(repo_name, repo_dir, revision, no_interaction, recurse_i=0):
         if not no_interaction:
             print("====================================="
                   "\n%sEntering a shell in %s to fix that"
-                  " just `exit` once done`"
+                  " just `exit 0` once done` or `exit 255`"
+                  " to skip update for that repository"
                   "\n=====================================" % (
-                        out, os.getcwd()))
+                        out, repo_dir))
             try:
-                subprocess.check_call(os.environ.get("SHELL", "/bin/sh"),
-                                      cwd=repo_dir)
+                if os.name is 'nt':
+                    shell = os.environ.get("COMSPEC", r"C:\WINDOWS\system32\cmd.exe")
+                else:
+                    shell = os.environ.get("SHELL", os.path.realpath("/bin/sh"))
+                subprocess.check_call(shell, cwd=repo_dir)
+            except subprocess.CalledProcessError as e:
+                if e.returncode == 255:
+                    print("Skipping '%s' update" % repo_name)
+                    return True
             except:
                 # Result of subshell does not really matter
                 pass
