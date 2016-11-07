@@ -365,7 +365,6 @@ if need_platform_egl != 'no'
     gl_egl_headers += [
       'egl/gstegl.h',
       'egl/gsteglimage.h',
-      'egl/gstglcontext_egl.h',
       'egl/gstgldisplay_egl.h',
       'egl/gstglmemoryegl.h',
     ]
