@@ -60,11 +60,15 @@ struct _GstGLDisplayWayland
 
   /* <private> */
   gboolean foreign_display;
+
+  gpointer _padding[GST_PADDING];
 };
 
 struct _GstGLDisplayWaylandClass
 {
   GstGLDisplayClass object_class;
+
+  gpointer _padding[GST_PADDING];
 };
 
 GstGLDisplayWayland *gst_gl_display_wayland_new (const gchar * name);

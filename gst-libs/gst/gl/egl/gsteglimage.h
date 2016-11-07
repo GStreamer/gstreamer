@@ -60,6 +60,8 @@ struct _GstEGLImage
   /* <private> */
   gpointer destroy_data;
   GstEGLImageDestroyNotify destroy_notify;
+
+  gpointer _padding[GST_PADDING];
 };
 
 GstEGLImage *             gst_egl_image_new_wrapped             (GstGLContext * context,

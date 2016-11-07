@@ -57,11 +57,15 @@ struct _GstGLDisplayX11
   gchar *name;
   Display *display;
   gboolean foreign_display;
+
+  gpointer _padding[GST_PADDING];
 };
 
 struct _GstGLDisplayX11Class
 {
   GstGLDisplayClass object_class;
+
+  gpointer _padding[GST_PADDING];
 };
 
 GstGLDisplayX11 *gst_gl_display_x11_new (const gchar * name);
