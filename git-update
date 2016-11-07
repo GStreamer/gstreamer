@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 
 from common import git
 from common import Colors
+from common import accept_command
 
 
 SCRIPTDIR = os.path.dirname(__file__)
@@ -51,8 +52,8 @@ def update_repo(repo_name, repo_dir, revision, no_interaction, recurse_i=0):
         out = getattr(e, "output", b"").decode()
         if not no_interaction:
             print("====================================="
-                  "\n%sEntering a shell in %s to fix that"
-                  " just `exit 0` once done` or `exit 255`"
+                  "\n%s\nEntering a shell in %s to fix that"
+                  " just `exit 0` once done, or `exit 255`"
                   " to skip update for that repository"
                   "\n=====================================" % (
                         out, repo_dir))
@@ -95,6 +96,10 @@ if __name__ == "__main__":
                         default=False,
                         action='store_true',
                         help="Do not output ansi colors.")
+    parser.add_argument("--builddir",
+                        default=None,
+                        help="Specifies the build directory where to"
+                        " invoke ninja after updating.")
     parser.add_argument("--no-interaction",
                         default=False,
                         action='store_true',
@@ -109,5 +114,17 @@ if __name__ == "__main__":
 
     if not update_repo('gst-build', SCRIPTDIR, None, options.no_interaction):
         exit(1)
-    exit(not update_subprojects(options.manifest,
-                                options.no_interaction))
+    if not update_subprojects(options.manifest, options.no_interaction):
+        exit(1)
+
+    if options.builddir:
+        ninja = accept_command(["ninja", "ninja-build"])
+        if not ninja:
+            print("Can't find ninja, other backends are not supported for rebuilding")
+            exit(1)
+
+        if not os.path.exists(os.path.join (options.builddir, 'build.ninja')):
+            print("Can't rebuild in %s as no build.ninja file found." % options.builddir)
+
+        print("Rebuilding all GStreamer modules.")
+        exit(subprocess.call([ninja, '-C', options.builddir]))

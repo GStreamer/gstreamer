@@ -28,18 +28,40 @@ NOTE: on fedora (and maybe other distributions) replace `ninja` with `ninja-buil
 
 # Development environment
 
+## Uninstalled environment
+
 gst-build also contains a special `uninstalled` target that lets you enter an
-uninstalled development environment where you will be able to work on GStreamer easily.
-You can get into that environment running:
+uninstalled development environment where you will be able to work on GStreamer
+easily. You can get into that environment running:
 
 ```
 ninja -C build/ uninstalled
 ```
 
-If your operating system handles symlinks, built modules source code will be available
-at the root of `gst-build/` for example GStreamer core will be in `gstreamer/`. Otherwise
-they will be present in `subprojects/`. You can simply hack in there and to rebuild you
-just need to rerun `ninja -C build/`.
+If your operating system handles symlinks, built modules source code will be
+available at the root of `gst-build/` for example GStreamer core will be in
+`gstreamer/`. Otherwise they will be present in `subprojects/`. You can simply
+hack in there and to rebuild you just need to rerun `ninja -C build/`.
+
+## Update git subprojects
+
+We added a special `update` target to update subprojects (it uses `git pull
+--rebase` meaning you should always make sure the branches you work on are
+following the right upstream branch, you can set it with `git branch
+--set-upstream-to origin/master` if you are working on `gst-build` master
+branch).
+
+Update all GStreamer modules and rebuild:
+
+```
+ninja -C build/ update
+```
+
+Update all GStreamer modules without rebuilding:
+
+```
+ninja -C build/ git-update
+```
 
 
 ## Add information about GStreamer development environment in your prompt line

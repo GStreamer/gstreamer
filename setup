@@ -9,6 +9,7 @@ import subprocess
 
 from common import git
 from common import Colors
+from common import accept_command
 
 
 PROJECTNAME = "GStreamer build"
@@ -23,16 +24,6 @@ def get_meson():
         return meson, mesonconf
 
     return accept_command(["meson.py", "meson"]), accept_command(["mesonconf.py", "mesonconf"])
-
-
-def accept_command(commands):
-    """Search @commands and returns the first found absolute path."""
-    for command in commands:
-        command = shutil.which(command)
-        if command:
-            return command
-
-    return None
 
 
 def get_configs(meson):

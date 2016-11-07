@@ -84,3 +84,8 @@ endforeach
 setenv = find_program('gst-uninstalled.py')
 run_target('uninstalled', command : [setenv, '--builddir=@0@'.format(meson.current_build_dir()),
            '--gst-version=@0@'.format(gst_branch)])
+
+update = find_program('git-update')
+run_target('git-update', command : [update])
+run_target('update', command : [update,
+    '--builddir=@0@'.format(meson.current_build_dir())])
