@@ -1556,6 +1556,12 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
     goto end;
   }
 
+  /* In key-frame trick mode don't change bitrates */
+  if (GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (demux)) {
+    GST_DEBUG_OBJECT (demux, "In key-frame trick mode, not changing bitrates");
+    goto end;
+  }
+
   /* retrieve representation list */
   if (active_stream->cur_adapt_set)
     rep_list = active_stream->cur_adapt_set->Representations;
