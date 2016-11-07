@@ -29,6 +29,7 @@
 #include "gstqsgtexture.h"
 #include "gstqtglutility.h"
 
+#include <QtCore/QDateTime>
 #include <QtCore/QRunnable>
 #include <QtGui/QGuiApplication>
 #include <QtQuick/QQuickWindow>
@@ -67,7 +68,9 @@ struct _QtGLWindowPrivate
   GstGLContext *other_context;
 
   /* frames that qmlview rendered in its gl thread */
-  guint64 frames_rendered;
+  quint64 frames_rendered;
+  quint64 start;
+  quint64 stop;
 };
 
 class InitQtGLContext : public QRunnable
@@ -141,6 +144,12 @@ QtGLWindow::beforeRendering()
 
   g_mutex_lock (&this->priv->lock);
 
+  static volatile gsize once = 0;
+  if (g_once_init_enter(&once)) {
+    this->priv->start = QDateTime::currentDateTime().toMSecsSinceEpoch();
+    g_once_init_leave(&once,1);
+  }
+
   if (!fbo && !this->priv->useDefaultFbo) {
 
     width = source->width();
@@ -152,6 +161,10 @@ QtGLWindow::beforeRendering()
           QOpenGLFramebufferObject::NoAttachment, GL_TEXTURE_2D, GL_RGBA));
 
     source->setRenderTarget(fbo.data());
+  } else if (this->priv->useDefaultFbo) {
+    GST_DEBUG ("use default fbo for render target");
+    fbo.reset(NULL);
+    source->setRenderTarget(NULL);
   }
 
   g_mutex_unlock (&this->priv->lock);
@@ -236,9 +249,14 @@ QtGLWindow::aboutToQuit()
   this->priv->quit = TRUE;
   g_cond_signal (&this->priv->update_cond);
 
-  g_mutex_unlock (&this->priv->lock);
+  this->priv->stop = QDateTime::currentDateTime().toMSecsSinceEpoch();
+  qint64 duration = this->priv->stop - this->priv->start;
+  float fps = ((float)this->priv->frames_rendered / duration * 1000);
 
-  GST_DEBUG("about to quit");
+  GST_DEBUG("about to quit, total refresh frames (%lld) in (%0.3f) seconds, fps: %0.3f",
+      this->priv->frames_rendered, (float)duration / 1000, fps);
+
+  g_mutex_unlock (&this->priv->lock);
 }
 
 void
@@ -359,18 +377,6 @@ qt_window_use_default_fbo (QtGLWindow * qt_window, gboolean useDefaultFbo)
 
   GST_DEBUG ("set to use default fbo %d", useDefaultFbo);
   qt_window->priv->useDefaultFbo = useDefaultFbo;
-
-  g_mutex_unlock (&qt_window->priv->lock);
-}
-
-void
-qt_window_get_total_frames (QtGLWindow * qt_window, guint64 *frames)
-{
-  g_return_if_fail (qt_window != NULL);
-
-  g_mutex_lock (&qt_window->priv->lock);
-
-  *frames = qt_window->priv->frames_rendered;
 
   g_mutex_unlock (&qt_window->priv->lock);
 }
