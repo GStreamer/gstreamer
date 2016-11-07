@@ -57,6 +57,8 @@ struct _GstGLMemoryEGL
   GstGLMemory mem;
 
   GstEGLImage *image;
+
+  gpointer _padding[GST_PADDING];
 };
 
 /**
@@ -85,6 +87,8 @@ struct _GstGLMemoryEGLAllocator
   /* <private> */
 
   GstGLMemoryAllocator parent;
+
+  gpointer _padding[GST_PADDING];
 };
 
 /**
@@ -96,6 +100,8 @@ struct _GstGLMemoryEGLAllocatorClass
 {
   /* <private> */
   GstGLMemoryAllocatorClass parent_class;
+
+  gpointer _padding[GST_PADDING];
 };
 
 G_END_DECLS

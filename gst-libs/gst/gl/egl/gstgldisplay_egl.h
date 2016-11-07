@@ -53,11 +53,15 @@ struct _GstGLDisplayEGL
   EGLDisplay display;
 
   gboolean foreign_display;
+
+  gpointer _padding[GST_PADDING];
 };
 
 struct _GstGLDisplayEGLClass
 {
   GstGLDisplayClass object_class;
+
+  gpointer _padding[GST_PADDING];
 };
 
 GstGLDisplayEGL *gst_gl_display_egl_new (void);
