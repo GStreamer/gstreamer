@@ -61,6 +61,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_overlay_debug, "gloverlay", 0, "gloverlay element");
 
+#define gst_gl_overlay_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLOverlay, gst_gl_overlay, GST_TYPE_GL_FILTER,
     DEBUG_INIT);
 
@@ -122,28 +123,26 @@ static const gchar *overlay_f_src =
 
 /* init resources that need a gl context */
 static gboolean
-gst_gl_overlay_init_gl_resources (GstGLFilter * filter)
+gst_gl_overlay_gl_start (GstGLBaseFilter * base_filter)
 {
-  GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
+  GstGLOverlay *overlay = GST_GL_OVERLAY (base_filter);
 
-  if (overlay->shader)
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
-        overlay->shader);
+  if (!GST_GL_BASE_FILTER_CLASS (parent_class)->gl_start (base_filter))
+    return FALSE;
 
-  return gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context,
-      overlay_v_src, overlay_f_src, &overlay->shader);
+  return gst_gl_context_gen_shader (base_filter->context, overlay_v_src,
+      overlay_f_src, &overlay->shader);
 }
 
 /* free resources that need a gl context */
 static void
-gst_gl_overlay_reset_gl_resources (GstGLFilter * filter)
+gst_gl_overlay_gl_stop (GstGLBaseFilter * base_filter)
 {
-  GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
-  const GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
+  GstGLOverlay *overlay = GST_GL_OVERLAY (base_filter);
+  const GstGLFuncs *gl = base_filter->context->gl_vtable;
 
   if (overlay->shader) {
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
-        overlay->shader);
+    gst_object_unref (overlay->shader);
     overlay->shader = NULL;
   }
 
@@ -176,6 +175,8 @@ gst_gl_overlay_reset_gl_resources (GstGLFilter * filter)
     gl->DeleteBuffers (1, &overlay->overlay_vbo);
     overlay->overlay_vbo = 0;
   }
+
+  GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base_filter);
 }
 
 static void
@@ -190,11 +191,11 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
   gobject_class->set_property = gst_gl_overlay_set_property;
   gobject_class->get_property = gst_gl_overlay_get_property;
 
+  GST_GL_BASE_FILTER_CLASS (klass)->gl_start = gst_gl_overlay_gl_start;
+  GST_GL_BASE_FILTER_CLASS (klass)->gl_stop = gst_gl_overlay_gl_stop;
+
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_overlay_set_caps;
   GST_GL_FILTER_CLASS (klass)->filter_texture = gst_gl_overlay_filter_texture;
-  GST_GL_FILTER_CLASS (klass)->display_reset_cb =
-      gst_gl_overlay_reset_gl_resources;
-  GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_overlay_init_gl_resources;
 
   GST_BASE_TRANSFORM_CLASS (klass)->before_transform =
       GST_DEBUG_FUNCPTR (gst_gl_overlay_before_transform);

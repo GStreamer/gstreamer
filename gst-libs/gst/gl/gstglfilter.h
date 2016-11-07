@@ -99,8 +99,6 @@ struct _GstGLFilter
  * @filter_texture: given @in_tex, transform it into @out_tex.  Not used
  *                  if @filter exists
  * @init_fbo: perform initialization when the Framebuffer object is created
- * @display_init_cb: execute arbitrary gl code on start
- * @display_reset_cb: execute arbitrary gl code at stop
  * @transform_internal_caps: Perform sub-class specific modifications of the
  *   caps to be processed between upload on input and before download for output.
  */
@@ -115,10 +113,6 @@ struct _GstGLFilterClass
 
   GstCaps *(*transform_internal_caps) (GstGLFilter *filter,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps);
-
-  /* useful to init and cleanup custom gl resources */
-  void (*display_init_cb)       (GstGLFilter *filter);
-  void (*display_reset_cb)      (GstGLFilter *filter);
 
   /* <private> */
   gpointer                      _padding[GST_PADDING];

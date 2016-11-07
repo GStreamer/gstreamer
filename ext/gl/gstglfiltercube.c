@@ -73,12 +73,10 @@ static void gst_gl_filter_cube_set_property (GObject * object, guint prop_id,
 static void gst_gl_filter_cube_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gl_filter_cube_stop (GstBaseTransform * trans);
-
 static gboolean gst_gl_filter_cube_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
-static void gst_gl_filter_cube_reset_gl (GstGLFilter * filter);
-static gboolean gst_gl_filter_cube_init_shader (GstGLFilter * filter);
+static gboolean gst_gl_filter_cube_gl_start (GstGLBaseFilter * filter);
+static void gst_gl_filter_cube_gl_stop (GstGLBaseFilter * filter);
 static gboolean _callback (gpointer stuff);
 static gboolean gst_gl_filter_cube_filter_texture (GstGLFilter * filter,
     GstGLMemory * in_tex, GstGLMemory * out_tex);
@@ -139,10 +137,9 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
   gobject_class->set_property = gst_gl_filter_cube_set_property;
   gobject_class->get_property = gst_gl_filter_cube_get_property;
 
-  GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_cube_stop;
+  GST_GL_BASE_FILTER_CLASS (klass)->gl_start = gst_gl_filter_cube_gl_start;
+  GST_GL_BASE_FILTER_CLASS (klass)->gl_stop = gst_gl_filter_cube_gl_stop;
 
-  GST_GL_FILTER_CLASS (klass)->init_fbo = gst_gl_filter_cube_init_shader;
-  GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_filter_cube_reset_gl;
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_filter_cube_set_caps;
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_filter_cube_filter_texture;
@@ -278,10 +275,10 @@ gst_gl_filter_cube_set_caps (GstGLFilter * filter, GstCaps * incaps,
 }
 
 static void
-gst_gl_filter_cube_reset_gl (GstGLFilter * filter)
+gst_gl_filter_cube_gl_stop (GstGLBaseFilter * base_filter)
 {
-  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
-  const GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
+  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (base_filter);
+  const GstGLFuncs *gl = base_filter->context->gl_vtable;
 
   if (cube_filter->vao) {
     gl->DeleteVertexArrays (1, &cube_filter->vao);
@@ -299,35 +296,17 @@ gst_gl_filter_cube_reset_gl (GstGLFilter * filter)
   }
 
   if (cube_filter->shader) {
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context,
-        cube_filter->shader);
-    cube_filter->shader = NULL;
-  }
-}
-
-static gboolean
-gst_gl_filter_cube_stop (GstBaseTransform * trans)
-{
-  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (trans);
-
-  /* blocking call, wait the opengl thread has destroyed the shader */
-  if (cube_filter->shader)
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (trans)->context,
-        cube_filter->shader);
-  cube_filter->shader = NULL;
-
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
-}
-
-static gboolean
-gst_gl_filter_cube_init_shader (GstGLFilter * filter)
-{
-  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
-
-  if (cube_filter->shader) {
     gst_object_unref (cube_filter->shader);
     cube_filter->shader = NULL;
   }
+
+  GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base_filter);
+}
+
+static gboolean
+gst_gl_filter_cube_gl_start (GstGLBaseFilter * filter)
+{
+  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
 
   /* blocking call, wait the opengl thread has compiled the shader */
   return gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context,

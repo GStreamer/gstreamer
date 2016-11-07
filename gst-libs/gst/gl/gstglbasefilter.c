@@ -89,6 +89,9 @@ static gboolean gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
 static void gst_gl_base_filter_gl_start (GstGLContext * context, gpointer data);
 static void gst_gl_base_filter_gl_stop (GstGLContext * context, gpointer data);
 
+static gboolean gst_gl_base_filter_default_gl_start (GstGLBaseFilter * filter);
+static void gst_gl_base_filter_default_gl_stop (GstGLBaseFilter * filter);
+
 static void
 gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
 {
@@ -121,6 +124,8 @@ gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
           GST_TYPE_GL_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   klass->supported_gl_api = GST_GL_API_ANY;
+  klass->gl_start = gst_gl_base_filter_default_gl_start;
+  klass->gl_stop = gst_gl_base_filter_default_gl_stop;
 }
 
 static void
@@ -320,6 +325,12 @@ gst_gl_base_filter_stop (GstBaseTransform * bt)
   return TRUE;
 }
 
+static gboolean
+gst_gl_base_filter_default_gl_start (GstGLBaseFilter * filter)
+{
+  return TRUE;
+}
+
 static void
 gst_gl_base_filter_gl_start (GstGLContext * context, gpointer data)
 {
@@ -329,13 +340,12 @@ gst_gl_base_filter_gl_start (GstGLContext * context, gpointer data)
   gst_gl_insert_debug_marker (filter->context,
       "starting element %s", GST_OBJECT_NAME (filter));
 
-  if (filter_class->gl_start) {
-    filter->priv->gl_result = filter_class->gl_start (filter);
-  } else {
-    filter->priv->gl_result = TRUE;
-  }
+  filter->priv->gl_result = filter_class->gl_start (filter);
+}
 
-  filter->priv->gl_started |= filter->priv->gl_result;
+static void
+gst_gl_base_filter_default_gl_stop (GstGLBaseFilter * filter)
+{
 }
 
 static void
@@ -347,10 +357,8 @@ gst_gl_base_filter_gl_stop (GstGLContext * context, gpointer data)
   gst_gl_insert_debug_marker (filter->context,
       "stopping element %s", GST_OBJECT_NAME (filter));
 
-  if (filter->priv->gl_started) {
-    if (filter_class->gl_stop)
-      filter_class->gl_stop (filter);
-  }
+  if (filter->priv->gl_started)
+    filter_class->gl_stop (filter);
 
   filter->priv->gl_started = FALSE;
 }
