@@ -439,7 +439,8 @@ if need_platform_glx == 'yes'
 endif
 
 if need_win_x11 != 'no'
-  if x11_dep.found()
+  xcb_dep = dependency('x11-xcb')
+  if x11_dep.found() and xcb_dep.found()
     gl_sources += [
       'x11/gstgldisplay_x11.c',
       'x11/gstglwindow_x11.c',
@@ -449,7 +450,7 @@ if need_win_x11 != 'no'
       'x11/gstgldisplay_x11.h',
     ]
     glconf.set('GST_GL_HAVE_WINDOW_X11', 1)
-    gl_winsys_deps += x11_dep
+    gl_winsys_deps += [x11_dep, xcb_dep]
     enabled_gl_winsys += 'x11'
 
     if need_platform_glx != 'no' and glx_dep.found()
