@@ -443,7 +443,7 @@ if need_win_x11 != 'no'
     gl_sources += [
       'x11/gstgldisplay_x11.c',
       'x11/gstglwindow_x11.c',
-      'x11/x11_event_source.c',
+      'x11/xcb_event_source.c',
     ]
     gl_x11_headers += [
       'x11/gstgldisplay_x11.h',
