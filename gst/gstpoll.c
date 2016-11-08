@@ -236,7 +236,9 @@ release_event (GstPoll * set)
   DWORD status;
   SetLastError (0);
   errno = 0;
-  if (status = WaitForSingleObject (set->wakeup_event, INFINITE)) {
+
+  status = WaitForSingleObject (set->wakeup_event, INFINITE);
+  if (status) {
     const gchar *reason = "unknown";
     gchar msg[1024] = "<unknown>";
     switch (status) {
