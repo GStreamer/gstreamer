@@ -28,7 +28,7 @@
 #include <GL/glx.h>
 
 #include <gst/video/video.h>
-#include <gst/gl/gstglmemory.h>
+#include <gst/gl/gl.h>
 
 #if GST_GL_HAVE_PLATFORM_GLX
 #include <QX11Info>
@@ -266,6 +266,8 @@ QGLRenderer::paintGL ()
     yrot += 0.2f;
     zrot += 0.4f;
 
+    glLoadIdentity();
+    glDisable(GL_DEPTH_TEST);
     glBindTexture (GL_TEXTURE_2D, 0);
 
     gst_video_frame_unmap (&v_frame);

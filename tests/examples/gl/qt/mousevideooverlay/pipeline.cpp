@@ -255,7 +255,11 @@ gboolean Pipeline::drawCallback (void * sink, void *context, GstSample * sample,
 	      glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
 	      glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
 	      glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
-    glEnd(); 
+    glEnd();
+
+    glLoadIdentity();
+    glDisable(GL_DEPTH_TEST);
+    glBindTexture (GL_TEXTURE_2D, 0);
 
     gst_video_frame_unmap (&v_frame);
 
