@@ -325,9 +325,14 @@ configure_mode_setting (GstKMSSink * self, guint32 fb_id)
   gboolean ret;
   drmModeConnector *conn;
   int err;
+  drmModeFB *fb;
+  gint i;
+  drmModeModeInfo *mode;
 
   ret = FALSE;
   conn = NULL;
+  fb = NULL;
+  mode = NULL;
 
   if (self->conn_id < 0)
     goto bail;
@@ -338,14 +343,30 @@ configure_mode_setting (GstKMSSink * self, guint32 fb_id)
   if (!conn)
     goto connector_failed;
 
+  fb = drmModeGetFB (self->fd, fb_id);
+  if (!fb)
+    goto framebuffer_failed;
+
+  for (i = 0; i < conn->count_modes; i++) {
+    if (conn->modes[i].vdisplay == fb->height &&
+        conn->modes[i].hdisplay == fb->width) {
+      mode = &conn->modes[i];
+      break;
+    }
+  }
+  if (!mode)
+    goto mode_failed;
+
   err = drmModeSetCrtc (self->fd, self->crtc_id, fb_id, 0, 0,
-      (uint32_t *) & self->conn_id, 1, &conn->modes[0]);
+      (uint32_t *) & self->conn_id, 1, mode);
   if (err)
     goto modesetting_failed;
 
   ret = TRUE;
 
 bail:
+  if (fb)
+    drmModeFreeFB (fb);
   if (conn)
     drmModeFreeConnector (conn);
 
@@ -355,6 +376,17 @@ bail:
 connector_failed:
   {
     GST_ERROR_OBJECT (self, "Could not find a valid monitor connector");
+    goto bail;
+  }
+framebuffer_failed:
+  {
+    GST_ERROR_OBJECT (self, "drmModeGetFB failed: %s (%d)",
+        strerror (errno), errno);
+    goto bail;
+  }
+mode_failed:
+  {
+    GST_ERROR_OBJECT (self, "cannot find appropriate mode");
     goto bail;
   }
 modesetting_failed:
