@@ -32,9 +32,6 @@
 
 /* OpenGL 2.0 for Embedded Systems */
 #if GST_GL_HAVE_GLES2
-#ifndef GL_GLEXT_PROTOTYPES
-#define GL_GLEXT_PROTOTYPES 1
-#endif
 # if GST_GL_HAVE_PLATFORM_EAGL
 #  include <OpenGLES/ES2/gl.h>
 #  include <OpenGLES/ES2/glext.h>
