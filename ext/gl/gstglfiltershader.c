@@ -29,7 +29,28 @@
  * |[
  * gst-launch-1.0 videotestsrc ! glupload ! glshader fragment="\"`cat myshader.frag`\"" ! glimagesink
  * ]|
- * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required. A #version header is required
+ * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
+ * Depending on the exact OpenGL version chosen and the exact requirements of
+ * the OpenGL implementation, a #version header may be required.
+ *
+ * The following is a simple OpenGL ES (also usable with OpenGL 3 core contexts)
+ * passthrough shader with the required inputs.
+ * |[
+ * #version 100
+ * #ifdef GL_ES
+ * precision mediump float;
+ * #endif
+ * varying vec2 v_texcoord;
+ * uniform sampler2D tex;
+ * uniform float time;
+ * uniform float width;
+ * uniform float height;
+ * 
+ * void main () {
+ *   gl_FragColor = texture2D( tex, v_texcoord );
+ * }
+ * ]|
+ *
  * </refsect2>
  */
 #ifdef HAVE_CONFIG_H
