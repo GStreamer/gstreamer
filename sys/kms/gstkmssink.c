@@ -397,12 +397,15 @@ modesetting_failed:
 }
 
 static gboolean
-ensure_allowed_caps (GstKMSSink * self, drmModePlane * plane, drmModeRes * res)
+ensure_allowed_caps (GstKMSSink * self, drmModeConnector * conn,
+    drmModePlane * plane, drmModeRes * res)
 {
-  GstCaps *out_caps, *caps;
-  int i;
+  GstCaps *out_caps, *tmp_caps, *caps;
+  int i, j;
   GstVideoFormat fmt;
   const gchar *format;
+  drmModeModeInfo *mode;
+  gint count_modes;
 
   if (self->allowed_caps)
     return TRUE;
@@ -411,23 +414,50 @@ ensure_allowed_caps (GstKMSSink * self, drmModePlane * plane, drmModeRes * res)
   if (!out_caps)
     return FALSE;
 
-  for (i = 0; i < plane->count_formats; i++) {
-    fmt = gst_video_format_from_drm (plane->formats[i]);
-    if (fmt == GST_VIDEO_FORMAT_UNKNOWN) {
-      GST_INFO_OBJECT (self, "ignoring format %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (plane->formats[i]));
-      continue;
+  if (conn && self->modesetting_enabled)
+    count_modes = conn->count_modes;
+  else
+    count_modes = 1;
+
+  for (i = 0; i < count_modes; i++) {
+    tmp_caps = gst_caps_new_empty ();
+    if (!tmp_caps)
+      return FALSE;
+
+    mode = NULL;
+    if (conn && self->modesetting_enabled)
+      mode = &conn->modes[i];
+
+    for (j = 0; j < plane->count_formats; j++) {
+      fmt = gst_video_format_from_drm (plane->formats[j]);
+      if (fmt == GST_VIDEO_FORMAT_UNKNOWN) {
+        GST_INFO_OBJECT (self, "ignoring format %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (plane->formats[j]));
+        continue;
+      }
+
+      format = gst_video_format_to_string (fmt);
+
+      if (mode) {
+        caps = gst_caps_new_simple ("video/x-raw",
+            "format", G_TYPE_STRING, format,
+            "width", G_TYPE_INT, mode->hdisplay,
+            "height", G_TYPE_INT, mode->vdisplay,
+            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+      } else {
+        caps = gst_caps_new_simple ("video/x-raw",
+            "format", G_TYPE_STRING, format,
+            "width", GST_TYPE_INT_RANGE, res->min_width, res->max_width,
+            "height", GST_TYPE_INT_RANGE, res->min_height, res->max_height,
+            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+      }
+      if (!caps)
+        continue;
+
+      tmp_caps = gst_caps_merge (tmp_caps, caps);
     }
 
-    format = gst_video_format_to_string (fmt);
-    caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, format,
-        "width", GST_TYPE_INT_RANGE, res->min_width, res->max_width,
-        "height", GST_TYPE_INT_RANGE, res->min_height, res->max_height,
-        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-    if (!caps)
-      continue;
-
-    out_caps = gst_caps_merge (out_caps, caps);
+    out_caps = gst_caps_merge (out_caps, gst_caps_simplify (tmp_caps));
   }
 
   self->allowed_caps = gst_caps_simplify (out_caps);
@@ -435,7 +465,7 @@ ensure_allowed_caps (GstKMSSink * self, drmModePlane * plane, drmModeRes * res)
   GST_DEBUG_OBJECT (self, "allowed caps = %" GST_PTR_FORMAT,
       self->allowed_caps);
 
-  return TRUE;
+  return (self->allowed_caps && !gst_caps_is_empty (self->allowed_caps));
 }
 
 static gboolean
@@ -507,8 +537,7 @@ retry_find_plane:
   if (!plane)
     goto plane_failed;
 
-  /* let's get the available color formats in plane */
-  if (!ensure_allowed_caps (self, plane, res))
+  if (!ensure_allowed_caps (self, conn, plane, res))
     goto bail;
 
   self->conn_id = conn->connector_id;
