@@ -46,7 +46,7 @@ def update_repo(repo_name, repo_dir, revision, no_interaction, recurse_i=0):
             git("fetch", repository_path=repo_dir)
             git("checkout", revision, repository_path=repo_dir)
         else:
-            git("pull", "--rebase", repository_path=repo_dir)
+            git("pull", "--rebase", "--autostash", repository_path=repo_dir)
     except Exception as e:
         out = getattr(e, "output", b"").decode()
         if not no_interaction:
