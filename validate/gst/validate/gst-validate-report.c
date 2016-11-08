@@ -25,13 +25,6 @@
 #  include "config.h"
 #endif
 
-#ifdef HAVE_UNWIND
-/* No need for remote debugging so turn on the 'local only' optimizations in
- * libunwind */
-#define UNW_LOCAL_ONLY
-#include <libunwind.h>
-#endif /* HAVE_UNWIND */
-
 
 #include <stdio.h>              /* fprintf */
 #include <glib/gstdio.h>
@@ -57,141 +50,6 @@ GSocketConnection *server_connection = NULL;
 GOutputStream *server_ostream = NULL;
 
 GType _gst_validate_report_type = 0;
-
-#ifdef HAVE_UNWIND
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <errno.h>
-#include <assert.h>
-
-#ifdef HAVE_DW
-#include <elfutils/libdwfl.h>
-#include <libunwind.h>
-static void
-append_debug_info (GString * trace, const void *ip)
-{
-
-  char *debuginfo_path = NULL;
-  Dwarf_Addr addr;
-  Dwfl_Module *module;
-  const char *function_name;
-  Dwfl_Line *line;
-
-  Dwfl_Callbacks callbacks = {
-    .find_elf = dwfl_linux_proc_find_elf,
-    .find_debuginfo = dwfl_standard_find_debuginfo,
-    .debuginfo_path = &debuginfo_path,
-  };
-
-  Dwfl *dwfl = dwfl_begin (&callbacks);
-
-  assert (dwfl != NULL);
-
-  assert (dwfl_linux_proc_report (dwfl, getpid ()) == 0);
-  assert (dwfl_report_end (dwfl, NULL, NULL) == 0);
-
-  addr = (uintptr_t) ip;
-
-  module = dwfl_addrmodule (dwfl, addr);
-
-  function_name = dwfl_module_addrname (module, addr);
-
-  g_string_append_printf (trace, "%s(", function_name ? function_name : "??");
-
-  line = dwfl_getsrc (dwfl, addr);
-  if (line != NULL) {
-    int nline;
-    Dwarf_Addr addr;
-    const char *filename = dwfl_lineinfo (line, &addr,
-        &nline, NULL, NULL, NULL);
-    g_string_append_printf (trace, "%s:%d", strrchr (filename, '/') + 1, nline);
-  } else {
-    const gchar *eflfile = NULL;
-
-    dwfl_module_info (module, NULL, NULL, NULL, NULL, NULL, &eflfile, NULL);
-    g_string_append_printf (trace, "%s:%p", eflfile ? eflfile : "??", ip);
-  }
-}
-#endif
-
-static gchar *
-generate_unwind_trace (void)
-{
-  unw_context_t uc;
-  unw_cursor_t cursor;
-  GString *trace = g_string_new (NULL);
-
-  unw_getcontext (&uc);
-  unw_init_local (&cursor, &uc);
-
-  while (unw_step (&cursor) > 0) {
-#ifdef HAVE_DW
-    unw_word_t ip;
-
-    unw_get_reg (&cursor, UNW_REG_IP, &ip);
-    append_debug_info (trace, (void *) (ip - 4));
-    g_string_append (trace, ")\n");
-#else
-    char name[32];
-
-    unw_word_t offset;
-    unw_get_proc_name (&cursor, name, sizeof (name), &offset);
-    g_string_append_printf (trace, "%s (0x%lx)\n", name, (long) offset);
-#endif
-  }
-
-  return g_string_free (trace, FALSE);
-}
-
-#endif /* HAVE_UNWIND */
-
-#ifdef HAVE_BACKTRACE
-#include <execinfo.h>
-#define BT_BUF_SIZE 100
-static gchar *
-generate_backtrace_trace (void)
-{
-  int j, nptrs;
-  void *buffer[BT_BUF_SIZE];
-  char **strings;
-  GString *trace;
-
-  trace = g_string_new (NULL);
-  nptrs = backtrace (buffer, BT_BUF_SIZE);
-
-  strings = backtrace_symbols (buffer, nptrs);
-
-  if (!strings)
-    return NULL;
-
-  for (j = 0; j < nptrs; j++)
-    g_string_append_printf (trace, "%s\n", strings[j]);
-
-  return g_string_free (trace, FALSE);
-}
-#endif /* HAVE_BACKTRACE */
-
-static gchar *
-generate_trace (void)
-{
-  gchar *trace = NULL;
-
-#ifdef HAVE_UNWIND
-  trace = generate_unwind_trace ();
-  if (trace)
-    return trace;
-#endif /* HAVE_UNWIND */
-
-#ifdef HAVE_BACKTRACE
-  trace = generate_backtrace_trace ();
-#endif /* HAVE_BACKTRACE */
-
-
-  return trace;
-}
 
 static JsonNode *
 gst_validate_report_serialize (GstValidateReport * report)
@@ -841,7 +699,7 @@ gst_validate_report_new (GstValidateIssue * issue,
       issue_type_details == GST_VALIDATE_SHOW_ALL ||
       gst_validate_report_check_abort (report) ||
       report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
-    report->trace = generate_trace ();
+    report->trace = gst_debug_get_stack_trace ();
 
   return report;
 }

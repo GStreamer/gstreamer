@@ -46,8 +46,7 @@ gstvalidate = shared_library('gstvalidate-1.0',
     install: true,
     c_args : [gst_c_args] + ['-D_GNU_SOURCE'],
     dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
-                    gst_pbutils_dep, mathlib, json_dep,
-                    unwind_dep, dw_dep])
+                    gst_pbutils_dep, mathlib, json_dep])
 
 gstvalidate = shared_library('gstvalidateplugin',
     sources: gstvalidate_sources,
@@ -56,8 +55,7 @@ gstvalidate = shared_library('gstvalidateplugin',
     c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE'],
     install_dir : '@0@/gstreamer-1.0'.format(get_option('libdir')),
     dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
-                    gst_pbutils_dep, mathlib, json_dep, unwind_dep,
-                    dw_dep])
+                    gst_pbutils_dep, mathlib, json_dep])
 
 validate_gen_sources = []
 if build_gir
