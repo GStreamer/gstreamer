@@ -808,9 +808,9 @@ error_process_vpp:
   }
 error_push_buffer:
   {
-    if (ret != GST_FLOW_FLUSHING)
-      GST_ERROR_OBJECT (postproc, "failed to push output buffer to video sink");
-    return GST_FLOW_ERROR;
+    GST_DEBUG_OBJECT (postproc, "gst_pad_push failed : %s",
+        gst_flow_get_name (ret));
+    return ret;
   }
 }
 
@@ -885,9 +885,9 @@ error_create_buffer:
   }
 error_push_buffer:
   {
-    if (ret != GST_FLOW_FLUSHING)
-      GST_ERROR_OBJECT (postproc, "failed to push output buffer to video sink");
-    return GST_FLOW_EOS;
+    GST_DEBUG_OBJECT (postproc, "gst_pad_push failed : %s",
+        gst_flow_get_name (ret));
+    return ret;
   }
 }
 
