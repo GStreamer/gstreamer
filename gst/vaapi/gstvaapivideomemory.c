@@ -294,6 +294,7 @@ gboolean
 gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
     GstMapInfo * info, gpointer * data, gint * stride, GstMapFlags flags)
 {
+  gboolean ret = FALSE;
   GstAllocator *allocator;
   GstVaapiVideoMemory *const mem =
       GST_VAAPI_VIDEO_MEMORY_CAST (gst_buffer_peek_memory (meta->buffer, 0));
@@ -303,13 +304,14 @@ gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
   g_return_val_if_fail (GST_VAAPI_IS_VIDEO_ALLOCATOR (allocator), FALSE);
   g_return_val_if_fail (mem->meta, FALSE);
 
+  g_mutex_lock (&mem->lock);
   if (mem->map_type && mem->map_type != GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR)
     goto error_incompatible_map;
 
   /* Map for writing */
   if (mem->map_count == 0) {
     if (!map_vaapi_memory (mem, flags))
-      return FALSE;
+      goto out;
     mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR;
   }
   mem->map_count++;
@@ -317,13 +319,17 @@ gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
   *data = gst_vaapi_image_get_plane (mem->image, plane);
   *stride = gst_vaapi_image_get_pitch (mem->image, plane);
   info->flags = flags;
-  return TRUE;
+  ret = TRUE;
+
+out:
+  g_mutex_unlock (&mem->lock);
+  return ret;
 
   /* ERRORS */
 error_incompatible_map:
   {
     GST_ERROR ("incompatible map type (%d)", mem->map_type);
-    return FALSE;
+    goto out;
   }
 }
 
@@ -342,6 +348,7 @@ gst_video_meta_unmap_vaapi_memory (GstVideoMeta * meta, guint plane,
   g_return_val_if_fail (mem->surface, FALSE);
   g_return_val_if_fail (mem->image, FALSE);
 
+  g_mutex_lock (&mem->lock);
   if (--mem->map_count == 0) {
     mem->map_type = 0;
 
@@ -349,6 +356,7 @@ gst_video_meta_unmap_vaapi_memory (GstVideoMeta * meta, guint plane,
     if (info->flags & GST_MAP_READWRITE)
       unmap_vaapi_memory (mem, info->flags);
   }
+  g_mutex_unlock (&mem->lock);
   return TRUE;
 }
 
@@ -381,6 +389,7 @@ gst_vaapi_video_memory_new (GstAllocator * base_allocator,
   mem->map_type = 0;
   mem->map_count = 0;
   mem->usage_flag = allocator->usage_flag;
+  g_mutex_init (&mem->lock);
 
   GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
       GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT);
@@ -395,6 +404,7 @@ gst_vaapi_video_memory_free (GstVaapiVideoMemory * mem)
   gst_vaapi_surface_proxy_replace (&mem->proxy, NULL);
   gst_vaapi_video_meta_replace (&mem->meta, NULL);
   gst_object_unref (GST_MEMORY_CAST (mem)->allocator);
+  g_mutex_clear (&mem->lock);
   g_slice_free (GstVaapiVideoMemory, mem);
 }
 
@@ -442,11 +452,12 @@ static gpointer
 gst_vaapi_video_memory_map (GstVaapiVideoMemory * mem, gsize maxsize,
     guint flags)
 {
-  gpointer data;
+  gpointer data = NULL;
 
   g_return_val_if_fail (mem, NULL);
   g_return_val_if_fail (mem->meta, NULL);
 
+  g_mutex_lock (&mem->lock);
   if (mem->map_count == 0) {
     switch (flags & GST_MAP_READWRITE) {
       case 0:
@@ -461,7 +472,7 @@ gst_vaapi_video_memory_map (GstVaapiVideoMemory * mem, gsize maxsize,
         break;
       case GST_MAP_READ:
         if (!map_vaapi_memory (mem, flags))
-          return NULL;
+          goto out;
         mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR;
         break;
       default:
@@ -484,39 +495,43 @@ gst_vaapi_video_memory_map (GstVaapiVideoMemory * mem, gsize maxsize,
       goto error_unsupported_map_type;
   }
   mem->map_count++;
+
+out:
+  g_mutex_unlock (&mem->lock);
   return data;
 
   /* ERRORS */
 error_unsupported_map:
   {
     GST_ERROR ("unsupported map flags (0x%x)", flags);
-    return NULL;
+    goto out;
   }
 error_unsupported_map_type:
   {
     GST_ERROR ("unsupported map type (%d)", mem->map_type);
-    return NULL;
+    goto out;
   }
 error_no_surface_proxy:
   {
     GST_ERROR ("failed to extract GstVaapiSurfaceProxy from video meta");
-    return NULL;
+    goto out;
   }
 error_no_current_surface:
   {
     GST_ERROR ("failed to make surface current");
-    return NULL;
+    goto out;
   }
 error_no_image:
   {
     GST_ERROR ("failed to extract VA image from video buffer");
-    return NULL;
+    goto out;
   }
 }
 
 static void
 gst_vaapi_video_memory_unmap_full (GstVaapiVideoMemory * mem, GstMapInfo * info)
 {
+  g_mutex_lock (&mem->lock);
   if (mem->map_count == 1) {
     switch (mem->map_type) {
       case GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE:
@@ -531,13 +546,16 @@ gst_vaapi_video_memory_unmap_full (GstVaapiVideoMemory * mem, GstMapInfo * info)
     mem->map_type = 0;
   }
   mem->map_count--;
+
+out:
+  g_mutex_unlock (&mem->lock);
   return;
 
   /* ERRORS */
 error_incompatible_map:
   {
     GST_ERROR ("incompatible map type (%d)", mem->map_type);
-    return;
+    goto out;
   }
 }
 

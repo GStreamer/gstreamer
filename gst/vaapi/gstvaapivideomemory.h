@@ -127,6 +127,7 @@ struct _GstVaapiVideoMemory
   guint map_type;
   gint map_count;
   GstVaapiImageUsageFlags usage_flag;
+  GMutex lock;
 };
 
 G_GNUC_INTERNAL
