@@ -49,7 +49,7 @@ if libtype != 'static'
       identifier_prefix : 'Gst',
       symbol_prefix : 'gst',
       export_packages : 'gstreamer-controller-1.0',
-      link_with : libgst_shared,
+      dependencies : [gst_dep],
       include_directories : [configinc, libsinc, privinc],
       includes : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0', 'Gst-1.0'],
       install : true,
