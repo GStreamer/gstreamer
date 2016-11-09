@@ -18,7 +18,11 @@
 # Boston, MA 02110-1301, USA.
 """ Some utilies. """
 
-import config
+try:
+    import config
+except ImportError:
+    from . import config
+
 import os
 import re
 import shutil
