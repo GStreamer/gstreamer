@@ -319,7 +319,7 @@ gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
   *data = gst_vaapi_image_get_plane (mem->image, plane);
   *stride = gst_vaapi_image_get_pitch (mem->image, plane);
   info->flags = flags;
-  ret = TRUE;
+  ret = (*data != NULL);
 
 out:
   g_mutex_unlock (&mem->lock);
