@@ -274,6 +274,22 @@ error_map_image:
   }
 }
 
+static inline void
+unmap_vaapi_memory (GstVaapiVideoMemory * mem, GstMapFlags flags)
+{
+  gst_vaapi_image_unmap (mem->image);
+
+  if (flags & GST_MAP_WRITE) {
+    GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
+        GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT);
+  }
+
+  if (!use_native_formats (mem->usage_flag)) {
+    gst_vaapi_video_meta_set_image (mem->meta, NULL);
+    gst_vaapi_video_memory_reset_image (mem);
+  }
+}
+
 gboolean
 gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
     GstMapInfo * info, gpointer * data, gint * stride, GstMapFlags flags)
@@ -330,19 +346,8 @@ gst_video_meta_unmap_vaapi_memory (GstVideoMeta * meta, guint plane,
     mem->map_type = 0;
 
     /* Unmap VA image used for read/writes */
-    if (info->flags & GST_MAP_READWRITE) {
-      gst_vaapi_image_unmap (mem->image);
-
-      if (info->flags & GST_MAP_WRITE) {
-        GST_VAAPI_VIDEO_MEMORY_FLAG_SET (mem,
-            GST_VAAPI_VIDEO_MEMORY_FLAG_IMAGE_IS_CURRENT);
-      }
-
-      if (!use_native_formats (mem->usage_flag)) {
-        gst_vaapi_video_meta_set_image (mem->meta, NULL);
-        gst_vaapi_video_memory_reset_image (mem);
-      }
-    }
+    if (info->flags & GST_MAP_READWRITE)
+      unmap_vaapi_memory (mem, info->flags);
   }
   return TRUE;
 }
@@ -510,7 +515,7 @@ error_no_image:
 }
 
 static void
-gst_vaapi_video_memory_unmap (GstVaapiVideoMemory * mem)
+gst_vaapi_video_memory_unmap_full (GstVaapiVideoMemory * mem, GstMapInfo * info)
 {
   if (mem->map_count == 1) {
     switch (mem->map_type) {
@@ -518,7 +523,7 @@ gst_vaapi_video_memory_unmap (GstVaapiVideoMemory * mem)
         gst_vaapi_surface_proxy_replace (&mem->proxy, NULL);
         break;
       case GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR:
-        gst_vaapi_image_unmap (mem->image);
+        unmap_vaapi_memory (mem, info->flags);
         break;
       default:
         goto error_incompatible_map;
@@ -652,8 +657,8 @@ gst_vaapi_video_allocator_init (GstVaapiVideoAllocator * allocator)
   base_allocator->mem_type = GST_VAAPI_VIDEO_MEMORY_NAME;
   base_allocator->mem_map = (GstMemoryMapFunction)
       gst_vaapi_video_memory_map;
-  base_allocator->mem_unmap = (GstMemoryUnmapFunction)
-      gst_vaapi_video_memory_unmap;
+  base_allocator->mem_unmap_full = (GstMemoryUnmapFullFunction)
+      gst_vaapi_video_memory_unmap_full;
   base_allocator->mem_copy = (GstMemoryCopyFunction)
       gst_vaapi_video_memory_copy;
   base_allocator->mem_share = (GstMemoryShareFunction)
