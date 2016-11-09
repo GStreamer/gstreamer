@@ -396,18 +396,6 @@ gst_vaapi_video_memory_new (GstAllocator * base_allocator,
   return GST_MEMORY_CAST (mem);
 }
 
-static void
-gst_vaapi_video_memory_free (GstVaapiVideoMemory * mem)
-{
-  mem->surface = NULL;
-  gst_vaapi_video_memory_reset_image (mem);
-  gst_vaapi_surface_proxy_replace (&mem->proxy, NULL);
-  gst_vaapi_video_meta_replace (&mem->meta, NULL);
-  gst_object_unref (GST_MEMORY_CAST (mem)->allocator);
-  g_mutex_clear (&mem->lock);
-  g_slice_free (GstVaapiVideoMemory, mem);
-}
-
 void
 gst_vaapi_video_memory_reset_image (GstVaapiVideoMemory * mem)
 {
@@ -626,9 +614,17 @@ G_DEFINE_TYPE_WITH_CODE (GstVaapiVideoAllocator,
         "VA-API video memory allocator"));
 
 static void
-gst_vaapi_video_allocator_free (GstAllocator * allocator, GstMemory * mem)
+gst_vaapi_video_allocator_free (GstAllocator * allocator, GstMemory * base_mem)
 {
-  gst_vaapi_video_memory_free (GST_VAAPI_VIDEO_MEMORY_CAST (mem));
+  GstVaapiVideoMemory *const mem = GST_VAAPI_VIDEO_MEMORY_CAST (base_mem);
+
+  mem->surface = NULL;
+  gst_vaapi_video_memory_reset_image (mem);
+  gst_vaapi_surface_proxy_replace (&mem->proxy, NULL);
+  gst_vaapi_video_meta_replace (&mem->meta, NULL);
+  gst_object_unref (GST_MEMORY_CAST (mem)->allocator);
+  g_mutex_clear (&mem->lock);
+  g_slice_free (GstVaapiVideoMemory, mem);
 }
 
 static void
