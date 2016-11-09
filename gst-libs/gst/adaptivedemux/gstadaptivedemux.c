@@ -1530,6 +1530,13 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
 
   /* Restart the demux */
   gst_adaptive_demux_start_tasks (demux);
+  if (gst_adaptive_demux_is_live (demux)) {
+    g_mutex_lock (&demux->priv->updates_timed_lock);
+    demux->priv->stop_updates_task = FALSE;
+    g_mutex_unlock (&demux->priv->updates_timed_lock);
+    /* Task to periodically update the manifest */
+    gst_task_start (demux->priv->updates_task);
+  }
   GST_MANIFEST_UNLOCK (demux);
   GST_API_UNLOCK (demux);
   gst_event_unref (event);
