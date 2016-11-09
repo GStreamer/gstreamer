@@ -222,6 +222,58 @@ ensure_surface_is_current (GstVaapiVideoMemory * mem)
   return TRUE;
 }
 
+static inline gboolean
+map_vaapi_memory (GstVaapiVideoMemory * mem, GstMapFlags flags)
+{
+  if (!ensure_surface (mem))
+    goto error_no_surface;
+  if (!ensure_image (mem))
+    goto error_no_image;
+
+  /* Load VA image from surface only for read flag since it returns
+   * raw pixels */
+  if ((flags & GST_MAP_READ) && !ensure_image_is_current (mem))
+    goto error_no_current_image;
+
+  if (!gst_vaapi_image_map (mem->image))
+    goto error_map_image;
+
+  /* Mark surface as dirty and expect updates from image */
+  if (flags & GST_MAP_WRITE)
+    GST_VAAPI_VIDEO_MEMORY_FLAG_UNSET (mem,
+        GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT);
+
+  return TRUE;
+
+error_no_surface:
+  {
+    const GstVideoInfo *const vip = mem->surface_info;
+    GST_ERROR ("failed to extract VA surface of size %ux%u and format %s",
+        GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip),
+        GST_VIDEO_INFO_FORMAT_STRING (vip));
+    return FALSE;
+  }
+error_no_image:
+  {
+    const GstVideoInfo *const vip = mem->image_info;
+    GST_ERROR ("failed to extract VA image of size %ux%u and format %s",
+        GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip),
+        GST_VIDEO_INFO_FORMAT_STRING (vip));
+    return FALSE;
+  }
+error_no_current_image:
+  {
+    GST_ERROR ("failed to make image current");
+    return FALSE;
+  }
+error_map_image:
+  {
+    GST_ERROR ("failed to map image %" GST_VAAPI_ID_FORMAT,
+        GST_VAAPI_ID_ARGS (gst_vaapi_image_get_id (mem->image)));
+    return FALSE;
+  }
+}
+
 gboolean
 gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
     GstMapInfo * info, gpointer * data, gint * stride, GstMapFlags flags)
@@ -240,23 +292,9 @@ gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
 
   /* Map for writing */
   if (mem->map_count == 0) {
-    if (!ensure_surface (mem))
-      goto error_ensure_surface;
-    if (!ensure_image (mem))
-      goto error_ensure_image;
-
-    // Load VA image from surface
-    if ((flags & GST_MAP_READ) && !ensure_image_is_current (mem))
-      goto error_no_current_image;
-
-    if (!gst_vaapi_image_map (mem->image))
-      goto error_map_image;
+    if (!map_vaapi_memory (mem, flags))
+      return FALSE;
     mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR;
-
-    // Mark surface as dirty and expect updates from image
-    if (flags & GST_MAP_WRITE)
-      GST_VAAPI_VIDEO_MEMORY_FLAG_UNSET (mem,
-          GST_VAAPI_VIDEO_MEMORY_FLAG_SURFACE_IS_CURRENT);
   }
   mem->map_count++;
 
@@ -269,33 +307,6 @@ gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
 error_incompatible_map:
   {
     GST_ERROR ("incompatible map type (%d)", mem->map_type);
-    return FALSE;
-  }
-error_ensure_surface:
-  {
-    const GstVideoInfo *const vip = mem->surface_info;
-    GST_ERROR ("failed to create %s surface of size %ux%u",
-        GST_VIDEO_INFO_FORMAT_STRING (vip),
-        GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
-    return FALSE;
-  }
-error_ensure_image:
-  {
-    const GstVideoInfo *const vip = mem->image_info;
-    GST_ERROR ("failed to create %s image of size %ux%u",
-        GST_VIDEO_INFO_FORMAT_STRING (vip),
-        GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
-    return FALSE;
-  }
-error_map_image:
-  {
-    GST_ERROR ("failed to map image %" GST_VAAPI_ID_FORMAT,
-        GST_VAAPI_ID_ARGS (gst_vaapi_image_get_id (mem->image)));
-    return FALSE;
-  }
-error_no_current_image:
-  {
-    GST_ERROR ("failed to make image current");
     return FALSE;
   }
 }
@@ -444,15 +455,8 @@ gst_vaapi_video_memory_map (GstVaapiVideoMemory * mem, gsize maxsize,
         mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE;
         break;
       case GST_MAP_READ:
-        // Only read flag set: return raw pixels
-        if (!ensure_surface (mem))
-          goto error_no_surface;
-        if (!ensure_image (mem))
-          goto error_no_image;
-        if (!ensure_image_is_current (mem))
-          goto error_no_current_image;
-        if (!gst_vaapi_image_map (mem->image))
-          goto error_map_image;
+        if (!map_vaapi_memory (mem, flags))
+          return NULL;
         mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR;
         break;
       default:
@@ -493,11 +497,6 @@ error_no_surface_proxy:
     GST_ERROR ("failed to extract GstVaapiSurfaceProxy from video meta");
     return NULL;
   }
-error_no_surface:
-  {
-    GST_ERROR ("failed to extract VA surface from video buffer");
-    return NULL;
-  }
 error_no_current_surface:
   {
     GST_ERROR ("failed to make surface current");
@@ -506,16 +505,6 @@ error_no_current_surface:
 error_no_image:
   {
     GST_ERROR ("failed to extract VA image from video buffer");
-    return NULL;
-  }
-error_no_current_image:
-  {
-    GST_ERROR ("failed to make image current");
-    return NULL;
-  }
-error_map_image:
-  {
-    GST_ERROR ("failed to map VA image");
     return NULL;
   }
 }
