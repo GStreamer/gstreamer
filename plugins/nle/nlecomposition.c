@@ -784,7 +784,7 @@ _free_action (gpointer udata, Action * action)
 }
 
 static void
-_add_action (NleComposition * comp, GCallback func,
+_add_action_locked (NleComposition * comp, GCallback func,
     gpointer data, gint priority)
 {
   Action *action;
@@ -798,7 +798,6 @@ _add_action (NleComposition * comp, GCallback func,
   action->priority = priority;
   g_closure_set_marshal ((GClosure *) action, g_cclosure_marshal_VOID__VOID);
 
-  ACTIONS_LOCK (comp);
   GST_INFO_OBJECT (comp, "Adding Action for function: %p:%s",
       action, GST_DEBUG_FUNCPTR_NAME (func));
 
@@ -811,23 +810,61 @@ _add_action (NleComposition * comp, GCallback func,
       g_list_length (priv->actions));
 
   SIGNAL_NEW_ACTION (comp);
+}
+
+static void
+_add_action (NleComposition * comp, GCallback func,
+    gpointer data, gint priority)
+{
+  ACTIONS_LOCK (comp);
+  _add_action_locked (comp, func, data, priority);
   ACTIONS_UNLOCK (comp);
 }
 
 static void
 _add_seek_action (NleComposition * comp, GstEvent * event)
 {
-  SeekData *seekd = g_slice_new0 (SeekData);
+  SeekData *seekd;
+  GList *tmp;
+  guint32 seqnum = gst_event_get_seqnum (event);
+
+  ACTIONS_LOCK (comp);
+  /* Check if this is our current seqnum */
+  if (seqnum == comp->priv->next_eos_seqnum) {
+    GST_DEBUG_OBJECT (comp, "Not adding Action, same seqnum as previous seek");
+    ACTIONS_UNLOCK (comp);
+    return;
+  }
+
+  /* Check if this seqnum is already queued up but not handled yet */
+  for (tmp = comp->priv->actions; tmp != NULL; tmp = tmp->next) {
+    Action *act = tmp->data;
+
+    if (ACTION_CALLBACK (act) == G_CALLBACK (_seek_pipeline_func)) {
+      SeekData *tmp_data = ((GClosure *) act)->data;
+
+      if (gst_event_get_seqnum (tmp_data->event) == seqnum) {
+        GST_DEBUG_OBJECT (comp,
+            "Not adding Action, same seqnum as previous seek");
+        ACTIONS_UNLOCK (comp);
+        return;
+      }
+    }
+  }
+
 
   GST_DEBUG_OBJECT (comp, "Adding Action");
 
+  seekd = g_slice_new0 (SeekData);
   seekd->comp = comp;
   seekd->event = event;
 
   comp->priv->next_eos_seqnum = 0;
   comp->priv->real_eos_seqnum = 0;
-  _add_action (comp, G_CALLBACK (_seek_pipeline_func), seekd,
+  _add_action_locked (comp, G_CALLBACK (_seek_pipeline_func), seekd,
       G_PRIORITY_DEFAULT);
+
+  ACTIONS_UNLOCK (comp);
 }
 
 static void
@@ -1531,7 +1568,7 @@ static gboolean
 seek_handling (NleComposition * comp, gint32 seqnum,
     NleUpdateStackReason update_stack_reason)
 {
-  GST_DEBUG_OBJECT (comp, "Seek hanlding update pipeline reason: %s",
+  GST_DEBUG_OBJECT (comp, "Seek handling update pipeline reason: %s",
       UPDATE_PIPELINE_REASONS[update_stack_reason]);
 
   if (have_to_update_pipeline (comp, update_stack_reason)) {
