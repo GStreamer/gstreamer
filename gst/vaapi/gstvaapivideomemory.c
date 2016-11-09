@@ -449,10 +449,10 @@ gst_vaapi_video_memory_sync (GstVaapiVideoMemory * mem)
 }
 
 static gpointer
-gst_vaapi_video_memory_map (GstVaapiVideoMemory * mem, gsize maxsize,
-    guint flags)
+gst_vaapi_video_memory_map (GstMemory * base_mem, gsize maxsize, guint flags)
 {
   gpointer data = NULL;
+  GstVaapiVideoMemory *const mem = GST_VAAPI_VIDEO_MEMORY_CAST (base_mem);
 
   g_return_val_if_fail (mem, NULL);
   g_return_val_if_fail (mem->meta, NULL);
@@ -529,8 +529,10 @@ error_no_image:
 }
 
 static void
-gst_vaapi_video_memory_unmap_full (GstVaapiVideoMemory * mem, GstMapInfo * info)
+gst_vaapi_video_memory_unmap_full (GstMemory * base_mem, GstMapInfo * info)
 {
+  GstVaapiVideoMemory *const mem = GST_VAAPI_VIDEO_MEMORY_CAST (base_mem);
+
   g_mutex_lock (&mem->lock);
   if (mem->map_count == 1) {
     switch (mem->map_type) {
@@ -559,10 +561,10 @@ error_incompatible_map:
   }
 }
 
-static GstVaapiVideoMemory *
-gst_vaapi_video_memory_copy (GstVaapiVideoMemory * mem,
-    gssize offset, gssize size)
+static GstMemory *
+gst_vaapi_video_memory_copy (GstMemory * base_mem, gssize offset, gssize size)
 {
+  GstVaapiVideoMemory *const mem = GST_VAAPI_VIDEO_MEMORY_CAST (base_mem);
   GstVaapiVideoMeta *meta;
   GstMemory *out_mem;
   gsize maxsize;
@@ -587,7 +589,7 @@ gst_vaapi_video_memory_copy (GstVaapiVideoMemory * mem,
   gst_vaapi_video_meta_unref (meta);
   if (!out_mem)
     goto error_allocate_memory;
-  return GST_VAAPI_VIDEO_MEMORY_CAST (out_mem);
+  return out_mem;
 
   /* ERRORS */
 error_no_current_surface:
@@ -657,12 +659,9 @@ gst_vaapi_video_allocator_init (GstVaapiVideoAllocator * allocator)
   GstAllocator *const base_allocator = GST_ALLOCATOR_CAST (allocator);
 
   base_allocator->mem_type = GST_VAAPI_VIDEO_MEMORY_NAME;
-  base_allocator->mem_map = (GstMemoryMapFunction)
-      gst_vaapi_video_memory_map;
-  base_allocator->mem_unmap_full = (GstMemoryUnmapFullFunction)
-      gst_vaapi_video_memory_unmap_full;
-  base_allocator->mem_copy = (GstMemoryCopyFunction)
-      gst_vaapi_video_memory_copy;
+  base_allocator->mem_map = gst_vaapi_video_memory_map;
+  base_allocator->mem_unmap_full = gst_vaapi_video_memory_unmap_full;
+  base_allocator->mem_copy = gst_vaapi_video_memory_copy;
 
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
