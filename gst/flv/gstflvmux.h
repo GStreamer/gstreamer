@@ -76,6 +76,7 @@ typedef struct _GstFlvMux {
   gboolean have_audio;
   gboolean have_video;
   gboolean streamable;
+  gchar *metadatacreator;
 
   GstTagList *tags;
   gboolean new_tags;

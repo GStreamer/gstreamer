@@ -49,11 +49,13 @@ GST_DEBUG_CATEGORY_STATIC (flvmux_debug);
 enum
 {
   PROP_0,
-  PROP_STREAMABLE
+  PROP_STREAMABLE,
+  PROP_METADATACREATOR
 };
 
 #define DEFAULT_STREAMABLE FALSE
 #define MAX_INDEX_ENTRIES 128
+#define DEFAULT_METADATACREATOR "GStreamer " PACKAGE_VERSION " FLV muxer"
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -194,6 +196,10 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
           "If set to true, the output should be as if it is to be streamed "
           "and hence no indexes written or duration written.",
           DEFAULT_STREAMABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_METADATACREATOR,
+      g_param_spec_string ("metadatacreator", "metadatacreator",
+          "The value of metadatacreator in the meta packet.",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_flv_mux_change_state);
   gstelement_class->request_new_pad =
@@ -222,6 +228,7 @@ gst_flv_mux_init (GstFlvMux * mux)
 
   /* property */
   mux->streamable = DEFAULT_STREAMABLE;
+  mux->metadatacreator = g_strdup (DEFAULT_METADATACREATOR);
 
   mux->new_tags = FALSE;
 
@@ -242,6 +249,7 @@ gst_flv_mux_finalize (GObject * object)
   GstFlvMux *mux = GST_FLV_MUX (object);
 
   gst_object_unref (mux->collect);
+  g_free (mux->metadatacreator);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -960,21 +968,18 @@ tags:
     }
   }
 
-  {
-    const gchar *s = "GStreamer FLV muxer";
+  _gst_buffer_new_and_alloc (2 + 15 + 1 + 2 + strlen (mux->metadatacreator),
+      &tmp, &data);
+  data[0] = 0;                  /* 15 bytes name */
+  data[1] = 15;
+  memcpy (&data[2], "metadatacreator", 15);
+  data[17] = 2;                 /* string */
+  data[18] = (strlen (mux->metadatacreator) >> 8) & 0xff;
+  data[19] = (strlen (mux->metadatacreator)) & 0xff;
+  memcpy (&data[20], mux->metadatacreator, strlen (mux->metadatacreator));
+  script_tag = gst_buffer_append (script_tag, tmp);
 
-    _gst_buffer_new_and_alloc (2 + 15 + 1 + 2 + strlen (s), &tmp, &data);
-    data[0] = 0;                /* 15 bytes name */
-    data[1] = 15;
-    memcpy (&data[2], "metadatacreator", 15);
-    data[17] = 2;               /* string */
-    data[18] = (strlen (s) >> 8) & 0xff;
-    data[19] = (strlen (s)) & 0xff;
-    memcpy (&data[20], s, strlen (s));
-    script_tag = gst_buffer_append (script_tag, tmp);
-
-    tags_written++;
-  }
+  tags_written++;
 
   {
     GTimeVal tv = { 0, };
@@ -1682,6 +1687,9 @@ gst_flv_mux_get_property (GObject * object,
     case PROP_STREAMABLE:
       g_value_set_boolean (value, mux->streamable);
       break;
+    case PROP_METADATACREATOR:
+      g_value_set_string (value, mux->metadatacreator);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1703,6 +1711,15 @@ gst_flv_mux_set_property (GObject * object,
       else
         gst_tag_setter_set_tag_merge_mode (GST_TAG_SETTER (mux),
             GST_TAG_MERGE_KEEP);
+      break;
+    case PROP_METADATACREATOR:
+      g_free (mux->metadatacreator);
+      if (!g_value_get_string (value)) {
+        GST_WARNING_OBJECT (mux, "metadatacreator property can not be NULL");
+        mux->metadatacreator = g_strdup (DEFAULT_METADATACREATOR);
+      } else {
+        mux->metadatacreator = g_value_dup_string (value);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
