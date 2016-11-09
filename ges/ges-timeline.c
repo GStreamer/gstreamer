@@ -410,7 +410,7 @@ ges_timeline_handle_message (GstBin * bin, GstMessage * message)
       if (g_strcmp0 (gst_structure_get_string (mstructure, "reason"), "Seek")) {
         GST_INFO_OBJECT (timeline,
             "A composition is starting an update because of %s"
-            " not concidering async", gst_structure_get_string (mstructure,
+            " not considering async", gst_structure_get_string (mstructure,
                 "reason"));
 
         goto forward;
@@ -429,7 +429,7 @@ ges_timeline_handle_message (GstBin * bin, GstMessage * message)
       if (g_strcmp0 (gst_structure_get_string (mstructure, "reason"), "Seek")) {
         GST_INFO_OBJECT (timeline,
             "A composition is done updating because of %s"
-            " not concidering async", gst_structure_get_string (mstructure,
+            " not considering async", gst_structure_get_string (mstructure,
                 "reason"));
 
         goto forward;
