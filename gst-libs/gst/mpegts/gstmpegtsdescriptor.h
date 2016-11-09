@@ -246,7 +246,7 @@ GType gst_mpegts_descriptor_get_type (void);
  * @tag_extension: the extended type (if @descriptor_tag is 0x7f)
  * @length: the length of the descriptor content (excluding tag/length field)
  * @data: the full descriptor data (including tag, extension, length). The first
- * two bytes are the @tag and @tag_extension.
+ * two bytes are the @tag and @length.
  *
  * Mpeg-TS descriptor (ISO/IEC 13818-1).
  */
