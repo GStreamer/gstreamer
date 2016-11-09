@@ -607,22 +607,6 @@ error_allocate_memory:
   }
 }
 
-static GstVaapiVideoMemory *
-gst_vaapi_video_memory_share (GstVaapiVideoMemory * mem,
-    gssize offset, gssize size)
-{
-  GST_FIXME ("unimplemented GstVaapiVideoAllocator::mem_share() hook");
-  return NULL;
-}
-
-static gboolean
-gst_vaapi_video_memory_is_span (GstVaapiVideoMemory * mem1,
-    GstVaapiVideoMemory * mem2, gsize * offset_ptr)
-{
-  GST_FIXME ("unimplemented GstVaapiVideoAllocator::mem_is_span() hook");
-  return FALSE;
-}
-
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiVideoAllocator                                           --- */
 /* ------------------------------------------------------------------------ */
@@ -679,10 +663,6 @@ gst_vaapi_video_allocator_init (GstVaapiVideoAllocator * allocator)
       gst_vaapi_video_memory_unmap_full;
   base_allocator->mem_copy = (GstMemoryCopyFunction)
       gst_vaapi_video_memory_copy;
-  base_allocator->mem_share = (GstMemoryShareFunction)
-      gst_vaapi_video_memory_share;
-  base_allocator->mem_is_span = (GstMemoryIsSpanFunction)
-      gst_vaapi_video_memory_is_span;
 
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
