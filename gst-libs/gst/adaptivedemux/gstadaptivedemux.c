@@ -3562,6 +3562,7 @@ gst_adaptive_demux_updates_loop (GstAdaptiveDemux * demux)
       }
     } else {
       GST_DEBUG_OBJECT (demux, "Updated playlist successfully");
+      demux->priv->update_failed_count = 0;
       next_update =
           gst_adaptive_demux_get_monotonic_time (demux) +
           klass->get_manifest_update_interval (demux) * GST_USECOND;
