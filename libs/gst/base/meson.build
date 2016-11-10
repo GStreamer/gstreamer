@@ -44,6 +44,8 @@ if libtype != 'shared'
   gst_base = gst_base_static
 endif
 
+gst_base_gen_sources = []
+
 if libtype != 'static'
   gst_base_shared = shared_library('gstbase-@0@'.format(apiversion),
     gst_base_sources,
@@ -57,7 +59,7 @@ if libtype != 'static'
   )
   gst_base = gst_base_shared
   if build_gir
-    gnome.generate_gir(gst_base_shared,
+    gst_base_gen_sources += [gnome.generate_gir(gst_base_shared,
       sources : gst_base_sources + gst_base_headers,
       namespace : 'GstBase',
       nsversion : apiversion,
@@ -69,13 +71,14 @@ if libtype != 'static'
       includes : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0', 'Gst-1.0'],
       install : true,
       extra_args : gir_init_section,
-    )
+    )]
   endif
 endif
 
 gst_base_dep = declare_dependency(link_with : gst_base,
   include_directories : [libsinc],
-  dependencies : [gst_dep])
+  dependencies : [gst_dep],
+  sources : gst_base_gen_sources)
 
 install_headers('base.h',
   'gstadapter.h',
