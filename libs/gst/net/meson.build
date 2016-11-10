@@ -51,7 +51,7 @@ if libtype != 'static'
       identifier_prefix : 'Gst',
       symbol_prefix : 'gst',
       export_packages : 'gstreamer-net-1.0',
-      dependencies : [gst_dep, gst_base_dep],
+      dependencies : [gst_base_dep],
       include_directories : [configinc, libsinc],
       includes : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0', 'Gio-2.0', 'Gst-1.0'],
       install : true,
@@ -62,4 +62,4 @@ endif
 
 gst_net_dep = declare_dependency(link_with : gst_net,
   include_directories : [libsinc],
-  dependencies : [gst_dep])
+  dependencies : [gst_base_dep])
