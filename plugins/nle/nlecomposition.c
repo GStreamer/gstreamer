@@ -105,6 +105,12 @@ typedef struct
   NleUpdateStackReason reason;
 } UpdateCompositionData;
 
+typedef struct _Action
+{
+  GCClosure closure;
+  gint priority;
+} Action;
+
 struct _NleCompositionPrivate
 {
   gboolean dispose_has_run;
@@ -161,6 +167,7 @@ struct _NleCompositionPrivate
   GMutex actions_lock;
   GCond actions_cond;
   GList *actions;
+  Action *current_action;
 
   gboolean running;
   gboolean initialized;
@@ -180,12 +187,6 @@ struct _NleCompositionPrivate
 
   NleUpdateStackReason updating_reason;
 };
-
-typedef struct _Action
-{
-  GCClosure closure;
-  gint priority;
-} Action;
 
 #define ACTION_CALLBACK(__action) (((GCClosure*) (__action))->callback)
 
@@ -379,14 +380,19 @@ _execute_actions (NleComposition * comp)
 
     lact = g_list_first (priv->actions);
     priv->actions = g_list_remove_link (priv->actions, lact);
+    priv->current_action = lact->data;
     ACTIONS_UNLOCK (comp);
 
     GST_INFO_OBJECT (comp, "Invoking %p:%s",
         lact->data, GST_DEBUG_FUNCPTR_NAME ((ACTION_CALLBACK (lact->data))));
     g_closure_invoke (lact->data, NULL, 1, params, NULL);
     g_value_unset (&params[0]);
+
+    ACTIONS_LOCK (comp);
     g_closure_unref (lact->data);
     g_list_free (lact);
+    priv->current_action = NULL;
+    ACTIONS_UNLOCK (comp);
 
     GST_LOG_OBJECT (comp, "remaining actions [%d]",
         g_list_length (priv->actions));
@@ -852,6 +858,20 @@ _add_seek_action (NleComposition * comp, GstEvent * event)
     }
   }
 
+  /* Check if this seqnum is currently being handled */
+  if (comp->priv->current_action) {
+    Action *act = comp->priv->current_action;
+    if (ACTION_CALLBACK (act) == G_CALLBACK (_seek_pipeline_func)) {
+      SeekData *tmp_data = ((GClosure *) act)->data;
+
+      if (gst_event_get_seqnum (tmp_data->event) == seqnum) {
+        GST_DEBUG_OBJECT (comp,
+            "Not adding Action, same seqnum as previous seek");
+        ACTIONS_UNLOCK (comp);
+        return;
+      }
+    }
+  }
 
   GST_DEBUG_OBJECT (comp, "Adding Action");
 
