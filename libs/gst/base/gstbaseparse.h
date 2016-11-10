@@ -308,6 +308,8 @@ void            gst_base_parse_set_min_frame_size (GstBaseParse    * parse,
 void            gst_base_parse_set_has_timing_info (GstBaseParse   * parse,
                                                     gboolean         has_timing);
 
+void            gst_base_parse_drain           (GstBaseParse * parse);
+
 void            gst_base_parse_set_syncable    (GstBaseParse * parse,
                                                 gboolean       syncable);
 

@@ -479,8 +479,6 @@ static gboolean gst_base_parse_sink_query_default (GstBaseParse * parse,
 static gboolean gst_base_parse_src_query_default (GstBaseParse * parse,
     GstQuery * query);
 
-static void gst_base_parse_drain (GstBaseParse * parse);
-
 static gint64 gst_base_parse_find_offset (GstBaseParse * parse,
     GstClockTime time, gboolean before, GstClockTime * _ts);
 static GstFlowReturn gst_base_parse_locate_time (GstBaseParse * parse,
@@ -2710,7 +2708,7 @@ exit:
  * match the current adapter size and calls chain method until the adapter
  * is emptied or chain returns with error.
  */
-static void
+void
 gst_base_parse_drain (GstBaseParse * parse)
 {
   guint avail;
