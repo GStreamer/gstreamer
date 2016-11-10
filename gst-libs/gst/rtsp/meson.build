@@ -60,10 +60,10 @@ if build_gir
     identifier_prefix : 'Gst',
     symbol_prefix : 'gst',
     export_packages : 'gstreamer-rtsp-1.0',
-    includes : ['Gst-1.0', 'Gio-2.0'],
+    includes : ['Gst-1.0', 'GstSdp-1.0', 'Gio-2.0'],
     install : true,
     extra_args : gir_init_section,
-    dependencies : gstrtsp_deps
+    dependencies : gstrtsp_deps + [sdp_dep]
   )]
 endif
 
