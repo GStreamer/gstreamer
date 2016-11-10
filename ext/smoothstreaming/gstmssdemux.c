@@ -138,6 +138,8 @@ gst_mss_demux_get_manifest_update_interval (GstAdaptiveDemux * demux);
 static GstFlowReturn
 gst_mss_demux_update_manifest_data (GstAdaptiveDemux * demux,
     GstBuffer * buffer);
+static gboolean gst_mss_demux_get_live_seek_range (GstAdaptiveDemux * demux,
+    gint64 * start, gint64 * stop);
 
 static void
 gst_mss_demux_class_init (GstMssDemuxClass * klass)
@@ -192,6 +194,8 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
       gst_mss_demux_stream_update_fragment_info;
   gstadaptivedemux_class->update_manifest_data =
       gst_mss_demux_update_manifest_data;
+  gstadaptivedemux_class->get_live_seek_range =
+      gst_mss_demux_get_live_seek_range;
 
   GST_DEBUG_CATEGORY_INIT (mssdemux_debug, "mssdemux", 0, "mssdemux plugin");
 }
@@ -658,4 +662,13 @@ gst_mss_demux_update_manifest_data (GstAdaptiveDemux * demux,
 
   gst_mss_manifest_reload_fragments (mssdemux->manifest, buffer);
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_mss_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
+    gint64 * stop)
+{
+  GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (demux);
+
+  return gst_mss_manifest_get_live_seek_range (mssdemux->manifest, start, stop);
 }

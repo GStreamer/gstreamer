@@ -42,6 +42,7 @@ GST_DEBUG_CATEGORY_EXTERN (mssdemux_debug);
 
 #define MSS_PROP_BITRATE              "Bitrate"
 #define MSS_PROP_DURATION             "d"
+#define MSS_PROP_DVR_WINDOW_LENGTH    "DVRWindowLength"
 #define MSS_PROP_LANGUAGE             "Language"
 #define MSS_PROP_NUMBER               "n"
 #define MSS_PROP_REPETITIONS          "r"
@@ -94,6 +95,7 @@ struct _GstMssManifest
   xmlNodePtr xmlrootnode;
 
   gboolean is_live;
+  gint64 dvr_window;
 
   GString *protection_system_id;
   gchar *protection_data;
@@ -328,6 +330,22 @@ gst_mss_manifest_new (GstBuffer * data)
   if (live_str) {
     manifest->is_live = g_ascii_strcasecmp (live_str, "true") == 0;
     xmlFree (live_str);
+  }
+
+  /* the entire file is always available for non-live streams */
+  if (!manifest->is_live) {
+    manifest->dvr_window = 0;
+  } else {
+    /* if 0, or non-existent, the length is infinite */
+    gchar *dvr_window_str = (gchar *) xmlGetProp (root,
+        (xmlChar *) MSS_PROP_DVR_WINDOW_LENGTH);
+    if (dvr_window_str) {
+      manifest->dvr_window = g_ascii_strtoull (dvr_window_str, NULL, 10);
+      xmlFree (dvr_window_str);
+      if (manifest->dvr_window <= 0) {
+        manifest->dvr_window = 0;
+      }
+    }
   }
 
   for (nodeiter = root->children; nodeiter; nodeiter = nodeiter->next) {
@@ -1405,4 +1423,70 @@ const gchar *
 gst_mss_stream_get_lang (GstMssStream * stream)
 {
   return stream->lang;
+}
+
+static GstClockTime
+gst_mss_manifest_get_dvr_window_length_clock_time (GstMssManifest * manifest)
+{
+  gint64 timescale;
+
+  /* the entire file is always available for non-live streams */
+  if (manifest->dvr_window == 0)
+    return GST_CLOCK_TIME_NONE;
+
+  timescale = gst_mss_manifest_get_timescale (manifest);
+  return (GstClockTime) gst_util_uint64_scale_round (manifest->dvr_window,
+      GST_SECOND, timescale);
+}
+
+static gboolean
+gst_mss_stream_get_live_seek_range (GstMssStream * stream, gint64 * start,
+    gint64 * stop)
+{
+  GList *l;
+  GstMssStreamFragment *fragment;
+  guint64 timescale = gst_mss_stream_get_timescale (stream);
+
+  g_return_val_if_fail (stream->active, FALSE);
+
+  /* XXX: assumes all the data in the stream is still available */
+  l = g_list_first (stream->fragments);
+  fragment = (GstMssStreamFragment *) l->data;
+  *start = gst_util_uint64_scale_round (fragment->time, GST_SECOND, timescale);
+
+  l = g_list_last (stream->fragments);
+  fragment = (GstMssStreamFragment *) l->data;
+  *stop = gst_util_uint64_scale_round (fragment->time + fragment->duration *
+      fragment->repetitions, GST_SECOND, timescale);
+
+  return TRUE;
+}
+
+gboolean
+gst_mss_manifest_get_live_seek_range (GstMssManifest * manifest, gint64 * start,
+    gint64 * stop)
+{
+  GSList *iter;
+  gboolean ret = FALSE;
+
+  for (iter = manifest->streams; iter; iter = g_slist_next (iter)) {
+    GstMssStream *stream = iter->data;
+
+    if (stream->active) {
+      /* FIXME: bound this correctly for multiple streams */
+      if (!(ret = gst_mss_stream_get_live_seek_range (stream, start, stop)))
+        break;
+    }
+  }
+
+  if (ret && gst_mss_manifest_is_live (manifest)) {
+    GstClockTime dvr_window =
+        gst_mss_manifest_get_dvr_window_length_clock_time (manifest);
+
+    if (GST_CLOCK_TIME_IS_VALID (dvr_window) && *stop - *start > dvr_window) {
+      *start = *stop - dvr_window;
+    }
+  }
+
+  return ret;
 }
