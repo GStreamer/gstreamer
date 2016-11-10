@@ -46,7 +46,7 @@
 #ifndef __GST_OPENCV_TEXT_OVERLAY_H__
 #define __GST_OPENCV_TEXT_OVERLAY_H__
 
-#include <gstopencvvideofilter.h>
+#include <gst/opencv/gstopencvvideofilter.h>
 #include <opencv2/core/core_c.h>
 #if (CV_MAJOR_VERSION >= 3)
 #include <opencv2/imgproc/imgproc_c.h>

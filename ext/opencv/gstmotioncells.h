@@ -45,7 +45,7 @@
 #ifndef __GST_MOTIONCELLS_H__
 #define __GST_MOTIONCELLS_H__
 
-#include <gstopencvvideofilter.h>
+#include <gst/opencv/gstopencvvideofilter.h>
 #include <opencv2/core/core_c.h>
 #include "motioncells_wrapper.h"
 

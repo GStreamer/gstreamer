@@ -3763,6 +3763,7 @@ gst-libs/gst/base/Makefile
 gst-libs/gst/player/Makefile
 gst-libs/gst/video/Makefile
 gst-libs/gst/audio/Makefile
+gst-libs/gst/opencv/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile

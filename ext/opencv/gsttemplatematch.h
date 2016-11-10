@@ -46,7 +46,7 @@
 #ifndef __GST_TEMPLATE_MATCH_H__
 #define __GST_TEMPLATE_MATCH_H__
 
-#include <gstopencvvideofilter.h>
+#include <gst/opencv/gstopencvvideofilter.h>
 
 #ifdef HAVE_HIGHGUI_H
 #include <highgui.h>            // includes highGUI definitions

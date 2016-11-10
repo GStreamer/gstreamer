@@ -46,7 +46,7 @@
 #ifndef __GST_SKIN_DETECT_H__
 #define __GST_SKIN_DETECT_H__
 
-#include <gstopencvvideofilter.h>
+#include <gst/opencv/gstopencvvideofilter.h>
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */

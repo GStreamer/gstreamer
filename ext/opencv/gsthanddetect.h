@@ -47,7 +47,7 @@
 
 #include <cv.h>
 
-#include "gstopencvvideofilter.h"
+#include <gst/opencv/gstopencvvideofilter.h>
 /* opencv */
 #include <opencv2/core/version.hpp>
 #ifdef HAVE_HIGHGUI_H

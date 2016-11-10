@@ -2,8 +2,6 @@ plugin_LTLIBRARIES = libgstopencv.la
 
 # sources used to compile this plug-in
 libgstopencv_la_SOURCES = gstopencv.cpp \
-			gstopencvvideofilter.cpp \
-			gstopencvutils.cpp \
 			gstcvdilate.cpp \
 			gstcvdilateerode.cpp \
 			gstcvequalizehist.cpp \
@@ -26,7 +24,10 @@ libgstopencv_la_SOURCES = gstopencv.cpp \
 			motioncells_wrapper.cpp \
 			MotionCells.cpp
 
-libgstopencv_la_CXXFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CXXFLAGS) $(OPENCV_CFLAGS) \
+libgstopencv_la_CXXFLAGS = \
+	-I$(top_srcdir)/gst-libs \
+	-I$(top_builddir)/gst-libs \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CXXFLAGS) $(OPENCV_CFLAGS) \
 	-DGST_HAAR_CASCADES_DIR=\"$(pkgdatadir)/@GST_API_VERSION@/opencv_haarcascades\"
 
 # flags used to compile this facedetect
@@ -39,14 +40,16 @@ libgstopencv_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
 	-DCV_INLINE="static inline" \
 	-DCV_NO_BACKWARD_COMPATIBILITY
 
-libgstopencv_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(OPENCV_LIBS) \
-			$(GSTPB_BASE_LIBS) -lgstvideo-$(GST_API_VERSION)
+libgstopencv_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/opencv/libgstopencv-$(GST_API_VERSION).la \
+	$(GST_LIBS) $(GST_BASE_LIBS) $(OPENCV_LIBS) \
+	$(GSTPB_BASE_LIBS) -lgstvideo-$(GST_API_VERSION)
 
 libgstopencv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstopencv_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 # headers we need but don't want installed
-noinst_HEADERS = gstopencvvideofilter.h gstopencvutils.h \
+noinst_HEADERS = \
 		gstcvdilateerode.h \
 		gstcvdilate.h \
 		gstcvequalizehist.h \

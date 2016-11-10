@@ -44,7 +44,7 @@
 #ifndef __GST_CV_LAPLACE_H__
 #define __GST_CV_LAPLACE_H__
 
-#include <gstopencvvideofilter.h>
+#include <gst/opencv/gstopencvvideofilter.h>
 
 G_BEGIN_DECLS
 

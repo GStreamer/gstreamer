@@ -51,7 +51,7 @@
 #include <gst/gst.h>
 #include <opencv2/core/version.hpp>
 #include <cv.h>
-#include "gstopencvvideofilter.h"
+#include <gst/opencv/gstopencvvideofilter.h>
 #include <opencv2/objdetect/objdetect.hpp>
 
 G_BEGIN_DECLS

@@ -58,7 +58,7 @@
 #  include <config.h>
 #endif
 
-#include "gstopencvutils.h"
+#include "gst/opencv/gstopencvutils.h"
 #include "gstcvsmooth.h"
 #include <opencv2/imgproc/imgproc.hpp>
 
