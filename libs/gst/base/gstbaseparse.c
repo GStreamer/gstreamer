@@ -2702,11 +2702,15 @@ exit:
   return ret;
 }
 
-/* gst_base_parse_drain:
+/**
+ * gst_base_parse_drain:
+ * @parse: a #GstBaseParse
  *
  * Drains the adapter until it is empty. It decreases the min_frame_size to
  * match the current adapter size and calls chain method until the adapter
  * is emptied or chain returns with error.
+ *
+ * Since: 1.12
  */
 void
 gst_base_parse_drain (GstBaseParse * parse)

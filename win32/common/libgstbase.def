@@ -32,6 +32,7 @@ EXPORTS
 	gst_adapter_unmap
 	gst_base_parse_add_index_entry
 	gst_base_parse_convert_default
+	gst_base_parse_drain
 	gst_base_parse_finish_frame
 	gst_base_parse_frame_free
 	gst_base_parse_frame_get_type
@@ -44,7 +45,6 @@ EXPORTS
 	gst_base_parse_set_duration
 	gst_base_parse_set_frame_rate
 	gst_base_parse_set_has_timing_info
-	gst_base_parse_drain
 	gst_base_parse_set_infer_ts
 	gst_base_parse_set_latency
 	gst_base_parse_set_min_frame_size
