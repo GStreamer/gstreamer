@@ -3845,11 +3845,11 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
       media, do_state);
 
   if (priv->target_state != state) {
-    if (do_state)
+    if (do_state) {
       media_set_pipeline_state_locked (media, state);
-
-    g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_NEW_STATE], 0, state,
-        NULL);
+      g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_NEW_STATE], 0, state,
+          NULL);
+    }
   }
 
   /* remember where we are */
