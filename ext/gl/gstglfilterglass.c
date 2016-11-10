@@ -42,6 +42,7 @@
 
 #include <math.h>
 #include "gstglfilterglass.h"
+#include "gstglutils.h"
 
 #define GST_CAT_DEFAULT gst_gl_filter_glass_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -181,12 +182,10 @@ gst_gl_filter_glass_reset (GstBaseTransform * trans)
 
   //blocking call, wait the opengl thread has destroyed the shader
   if (glass_filter->shader)
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (trans)->context,
-        glass_filter->shader);
+    gst_object_unref (glass_filter->shader);
   glass_filter->shader = NULL;
   if (glass_filter->passthrough_shader)
-    gst_gl_context_del_shader (GST_GL_BASE_FILTER (trans)->context,
-        glass_filter->passthrough_shader);
+    gst_object_unref (glass_filter->passthrough_shader);
   glass_filter->passthrough_shader = NULL;
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);

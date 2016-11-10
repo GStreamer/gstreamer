@@ -1357,7 +1357,7 @@ gst_gl_view_convert_reset (GstGLViewConvert * viewconvert)
 {
   g_return_if_fail (GST_IS_GL_VIEW_CONVERT (viewconvert));
   if (viewconvert->shader)
-    gst_gl_context_del_shader (viewconvert->context, viewconvert->shader);
+    gst_object_unref (viewconvert->shader);
   viewconvert->shader = NULL;
 
   if (viewconvert->fbo)
