@@ -436,10 +436,8 @@ static void
 gst_gl_effects_ghash_func_clean (gpointer key, gpointer value, gpointer data)
 {
   GstGLShader *shader = (GstGLShader *) value;
-  GstGLFilter *filter = (GstGLFilter *) data;
 
-  //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_context_del_shader (GST_GL_BASE_FILTER (filter)->context, shader);
+  gst_object_unref (shader);
 
   value = NULL;
 }

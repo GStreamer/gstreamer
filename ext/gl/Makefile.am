@@ -43,7 +43,8 @@ libgstopengl_la_SOURCES = \
 	gstgldeinterlace.c \
 	gstglstereomix.c \
 	gltestsrc.c \
-	gstgltestsrc.c
+	gstgltestsrc.c \
+	gstglutils.c
 
 noinst_HEADERS = \
 	gstglbasemixer.h \
@@ -69,7 +70,8 @@ noinst_HEADERS = \
 	gstgldeinterlace.h \
 	gstglviewconvert.h \
 	gltestsrc.h \
-	gstgltestsrc.h
+	gstgltestsrc.h \
+	gstglutils.h
 
 # full opengl required
 if USE_OPENGL

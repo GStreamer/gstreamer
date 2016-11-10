@@ -41,6 +41,7 @@
 
 #include "gstgloverlay.h"
 #include "effects/gstgleffectssources.h"
+#include "gstglutils.h"
 
 #include <stdio.h>
 #include <stdlib.h>

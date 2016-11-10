@@ -42,6 +42,7 @@ opengl_sources = [
   'gstglstereomix.c',
   'gltestsrc.c',
   'gstgltestsrc.c',
+  'gstglutils.c'
 ]
 
 if build_gstgl and gstgl_dep.found()

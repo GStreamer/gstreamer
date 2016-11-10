@@ -46,6 +46,7 @@
 
 #include <gst/gl/gstglapi.h>
 #include "gstglfiltercube.h"
+#include "gstglutils.h"
 
 #define GST_CAT_DEFAULT gst_gl_filter_cube_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
