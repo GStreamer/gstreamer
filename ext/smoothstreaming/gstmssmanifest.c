@@ -888,6 +888,7 @@ gst_mss_manifest_get_duration (GstMssManifest * manifest)
   gchar *duration;
   guint64 dur = -1;
 
+  /* try the property */
   duration =
       (gchar *) xmlGetProp (manifest->xmlrootnode,
       (xmlChar *) MSS_PROP_STREAM_DURATION);
@@ -895,6 +896,29 @@ gst_mss_manifest_get_duration (GstMssManifest * manifest)
     dur = g_ascii_strtoull (duration, NULL, 10);
     xmlFree (duration);
   }
+  /* else use the fragment list */
+  if (dur <= 0) {
+    guint64 max_dur = 0;
+    GSList *iter;
+
+    for (iter = manifest->streams; iter; iter = g_slist_next (iter)) {
+      GstMssStream *stream = iter->data;
+
+      if (stream->active) {
+        if (stream->fragments) {
+          GList *l = g_list_last (stream->fragments);
+          GstMssStreamFragment *fragment = (GstMssStreamFragment *) l->data;
+          guint64 frag_dur =
+              fragment->time + fragment->duration * fragment->repetitions;
+          max_dur = MAX (frag_dur, max_dur);
+        }
+      }
+    }
+
+    if (max_dur != 0)
+      dur = max_dur;
+  }
+
   return dur;
 }
 
