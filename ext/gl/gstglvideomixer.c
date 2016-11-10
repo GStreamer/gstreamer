@@ -47,6 +47,7 @@
 
 #include "gstglvideomixer.h"
 #include "gstglmixerbin.h"
+#include "gstglutils.h"
 
 #define GST_CAT_DEFAULT gst_gl_video_mixer_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -1129,11 +1130,11 @@ gst_gl_video_mixer_reset (GstGLMixer * mixer)
   GST_DEBUG_OBJECT (mixer, "context:%p", context);
 
   if (video_mixer->shader)
-    gst_gl_context_del_shader (context, video_mixer->shader);
+    gst_object_unref (video_mixer->shader);
   video_mixer->shader = NULL;
 
   if (video_mixer->checker)
-    gst_gl_context_del_shader (context, video_mixer->checker);
+    gst_object_unref (video_mixer->checker);
   video_mixer->checker = NULL;
 
   if (GST_GL_BASE_MIXER (mixer)->context)
@@ -1147,8 +1148,7 @@ gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mixer);
 
   if (video_mixer->shader)
-    gst_gl_context_del_shader (GST_GL_BASE_MIXER (mixer)->context,
-        video_mixer->shader);
+    gst_object_unref (video_mixer->shader);
 
   return gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
       gst_gl_shader_string_vertex_mat4_vertex_transform,

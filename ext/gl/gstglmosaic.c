@@ -45,6 +45,7 @@
 #endif
 
 #include "gstglmosaic.h"
+#include "gstglutils.h"
 
 #define GST_CAT_DEFAULT gst_gl_mosaic_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -177,8 +178,7 @@ gst_gl_mosaic_reset (GstGLMixer * mixer)
 
   //blocking call, wait the opengl thread has destroyed the shader
   if (mosaic->shader)
-    gst_gl_context_del_shader (GST_GL_BASE_MIXER (mixer)->context,
-        mosaic->shader);
+    gst_object_unref (mosaic->shader);
   mosaic->shader = NULL;
 }
 
