@@ -1224,6 +1224,7 @@ gst_vaapisink_stop (GstBaseSink * base_sink)
 {
   GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
 
+  gst_vaapisink_set_event_handling (sink, FALSE);
   gst_buffer_replace (&sink->video_buffer, NULL);
   gst_vaapi_window_replace (&sink->window, NULL);
 
@@ -1520,8 +1521,6 @@ gst_vaapisink_query (GstBaseSink * base_sink, GstQuery * query)
 static void
 gst_vaapisink_destroy (GstVaapiSink * sink)
 {
-  gst_vaapisink_set_event_handling (sink, FALSE);
-
   cb_channels_finalize (sink);
   gst_buffer_replace (&sink->video_buffer, NULL);
   gst_caps_replace (&sink->caps, NULL);
