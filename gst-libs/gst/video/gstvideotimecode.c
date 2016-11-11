@@ -273,7 +273,7 @@ gst_video_time_code_frames_since_daily_jam (const GstVideoTimeCode * tc)
 void
 gst_video_time_code_increment_frame (GstVideoTimeCode * tc)
 {
-  return gst_video_time_code_add_frames (tc, 1);
+  gst_video_time_code_add_frames (tc, 1);
 }
 
 /**

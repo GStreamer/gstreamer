@@ -289,7 +289,7 @@ gst_ogg_stream_update_stats (GstOggStream * pad, ogg_packet * packet)
   if (!mappers[pad->map].get_headers_func)
     return;
 
-  return mappers[pad->map].update_stats_func (pad, packet);
+  mappers[pad->map].update_stats_func (pad, packet);
 }
 
 /* some generic functions */
