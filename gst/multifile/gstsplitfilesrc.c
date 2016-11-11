@@ -545,7 +545,7 @@ cancelled:
   }
 }
 
-static guint
+static GstURIType
 gst_split_file_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
