@@ -310,6 +310,7 @@ gst_auto_detect_find_best (GstAutoDetect * self)
       ret = gst_element_set_state (el, GST_STATE_READY);
       if (ret == GST_STATE_CHANGE_SUCCESS) {
         GST_DEBUG_OBJECT (self, "This worked!");
+        gst_element_set_state (el, GST_STATE_NULL);
         choice = el;
         break;
       }
@@ -379,13 +380,12 @@ gst_auto_detect_detect (GstAutoDetect * self)
   }
 
   self->kid = kid;
-  /* Ensure the child is brought up to the right state to match the parent.
-   * Although it's currently always in READY and we're always doing NULL->READY.
-   */
-  if (GST_STATE (self->kid) < GST_STATE (self))
-    gst_element_set_state (self->kid, GST_STATE (self));
 
   gst_bin_add (GST_BIN (self), kid);
+
+  /* Ensure the child is brought up to the right state to match the parent. */
+  if (GST_STATE (self->kid) < GST_STATE (self))
+    gst_element_set_state (self->kid, GST_STATE (self));
 
   /* attach ghost pad */
   GST_DEBUG_OBJECT (self, "Re-assigning ghostpad");
