@@ -340,6 +340,7 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   gint width = 0, height = 0;
   gint fps_n, fps_d;
   gint par_n, par_d;
+  guint multiview_flags;
 
   g_return_val_if_fail (info != NULL, FALSE);
   g_return_val_if_fail (caps != NULL, FALSE);
@@ -421,8 +422,9 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
     else
       GST_VIDEO_INFO_MULTIVIEW_MODE (info) = GST_VIDEO_MULTIVIEW_MODE_NONE;
 
-    gst_structure_get_flagset (structure, "multiview-flags",
-        &GST_VIDEO_INFO_MULTIVIEW_FLAGS (info), NULL);
+    gst_structure_get_flagset (structure, "multiview-flags", &multiview_flags,
+        NULL);
+    GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) = multiview_flags;
 
     if (!gst_structure_get_int (structure, "views", &info->views))
       info->views = 1;
