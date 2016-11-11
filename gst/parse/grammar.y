@@ -583,6 +583,40 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
   return FALSE;
 }
 
+static gboolean
+gst_parse_element_can_do_caps (GstElement * e, GstPadDirection dir,
+    GstCaps * link_caps)
+{
+  gboolean can_do = FALSE;
+  GList *pads;
+
+  GST_OBJECT_LOCK (e);
+
+  pads = (dir == GST_PAD_SRC) ? e->srcpads : e->sinkpads;
+
+  while (!can_do && pads != NULL) {
+    GstPad *pad = pads->data;
+    GstCaps *caps;
+
+    caps = gst_pad_get_current_caps (pad);
+    if (caps == NULL)
+      caps = gst_pad_query_caps (pad, NULL);
+
+    can_do = gst_caps_can_intersect (caps, link_caps);
+
+    GST_TRACE ("can_do: %d for %" GST_PTR_FORMAT " and %" GST_PTR_FORMAT,
+        can_do, caps, link_caps);
+
+    gst_caps_unref (caps);
+
+    pads = pads->next;
+  }
+
+  GST_OBJECT_UNLOCK (e);
+
+  return can_do;
+}
+
 /*
  * performs a link and frees the struct. src and sink elements must be given
  * return values   0 - link performed
@@ -659,9 +693,40 @@ success:
   return 0;
 
 error:
-  SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
-      _("could not link %s to %s"), GST_ELEMENT_NAME (src),
-      GST_ELEMENT_NAME (sink));
+  if (link->caps != NULL) {
+    gboolean src_can_do_caps, sink_can_do_caps;
+    gchar *caps_str = gst_caps_to_string (link->caps);
+
+    src_can_do_caps =
+        gst_parse_element_can_do_caps (src, GST_PAD_SRC, link->caps);
+    sink_can_do_caps =
+        gst_parse_element_can_do_caps (sink, GST_PAD_SINK, link->caps);
+
+    if (!src_can_do_caps && sink_can_do_caps) {
+      SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
+          _("could not link %s to %s, %s can't handle caps %s"),
+          GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (sink),
+          GST_ELEMENT_NAME (src), caps_str);
+    } else if (src_can_do_caps && !sink_can_do_caps) {
+      SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
+          _("could not link %s to %s, %s can't handle caps %s"),
+          GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (sink),
+          GST_ELEMENT_NAME (sink), caps_str);
+    } else if (!src_can_do_caps && !sink_can_do_caps) {
+      SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
+          _("could not link %s to %s, neither element can handle caps %s"),
+          GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (sink), caps_str);
+    } else {
+      SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
+          _("could not link %s to %s with caps %s"),
+          GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (sink), caps_str);
+    }
+    g_free (caps_str);
+  } else {
+    SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
+        _("could not link %s to %s"), GST_ELEMENT_NAME (src),
+        GST_ELEMENT_NAME (sink));
+  }
   gst_parse_free_link (link);
   return -1;
 }
