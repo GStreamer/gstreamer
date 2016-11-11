@@ -2231,9 +2231,6 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     }
   }
 
-  stream->download_total_time +=
-      GST_TIME_AS_USECONDS (gst_adaptive_demux_get_monotonic_time (demux)) -
-      stream->download_chunk_start_time;
   stream->download_total_bytes += gst_buffer_get_size (buffer);
 
   GST_DEBUG_OBJECT (stream->pad, "Received buffer of size %" G_GSIZE_FORMAT,
@@ -2251,9 +2248,6 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     }
     g_mutex_unlock (&stream->fragment_download_lock);
   }
-
-  stream->download_chunk_start_time =
-      GST_TIME_AS_USECONDS (gst_adaptive_demux_get_monotonic_time (demux));
 
   if (ret != GST_FLOW_OK) {
     gboolean finished = FALSE;
@@ -2766,7 +2760,6 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
     if (G_LIKELY (stream->last_ret == GST_FLOW_OK)) {
       stream->download_start_time =
           GST_TIME_AS_USECONDS (gst_adaptive_demux_get_monotonic_time (demux));
-      stream->download_chunk_start_time = stream->download_start_time;
 
       /* src element is in state READY. Before we start it, we reset
        * download_finished
@@ -3725,8 +3718,7 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
               "fragment-stop-time", GST_TYPE_CLOCK_TIME,
               gst_util_get_timestamp (), "fragment-size", G_TYPE_UINT64,
               stream->download_total_bytes, "fragment-download-time",
-              GST_TYPE_CLOCK_TIME,
-              stream->download_total_time * GST_USECOND, NULL)));
+              GST_TYPE_CLOCK_TIME, stream->last_download_time, NULL)));
 
   /* Don't update to the end of the segment if in reverse playback */
   GST_ADAPTIVE_DEMUX_SEGMENT_LOCK (demux);
@@ -3754,7 +3746,7 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
     ret = GST_FLOW_EOS;
   }
 
-  stream->download_start_time = stream->download_chunk_start_time =
+  stream->download_start_time =
       GST_TIME_AS_USECONDS (gst_adaptive_demux_get_monotonic_time (demux));
 
   if (ret == GST_FLOW_OK) {

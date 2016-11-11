@@ -162,8 +162,6 @@ struct _GstAdaptiveDemuxStream
   gboolean starting_fragment;
   gboolean first_fragment_buffer;
   gint64 download_start_time;
-  gint64 download_chunk_start_time;
-  gint64 download_total_time;
   gint64 download_total_bytes;
   guint64 current_download_rate;
 
