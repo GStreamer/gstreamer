@@ -5,9 +5,15 @@ x264_sources = [
 x264_dep = dependency('x264', required : false)
 
 if x264_dep.found()
+  x264_libraries = get_option('x264_libraries')
+  x264_args = []
+  if x264_libraries != ''
+    x264_args += ['-DHAVE_X264_ADDITIONAL_LIBRARIES="@0@"'.format(x264_libraries)]
+  endif
+
   gstx264 = library('gstx264',
     x264_sources,
-    c_args : ugly_args,
+    c_args : ugly_args + x264_args,
     include_directories : [configinc],
     dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, x264_dep],
     install : true,

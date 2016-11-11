@@ -10,7 +10,8 @@ libgstx264_la_LIBADD = \
 	-lgstvideo-$(GST_API_VERSION) \
 	-lgstpbutils-$(GST_API_VERSION) \
 	$(GST_LIBS) \
-	$(X264_LIBS)
+	$(X264_LIBS) \
+	$(GMODULE_NO_EXPORT_LIBS)
 libgstx264_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstx264_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 

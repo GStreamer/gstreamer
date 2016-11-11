@@ -371,6 +371,17 @@ dnl *** x264 (MPEG-4 part 10/h.264/AVC encoder) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_X264, true)
 AG_GST_CHECK_FEATURE(X264, [x264 plug-in], x264, [
   AG_GST_PKG_CHECK_MODULES(X264, x264 >= 0.120)
+
+  dnl Paths to additional x264 library variants, e.g. 10/12 bit
+  AC_ARG_WITH([x264-libraries],
+    AS_HELP_STRING([--with-x264-libraries=PATHS], [Colon separated list of additional x264 library paths, e.g. for 10-bit version]),
+    [
+      if test "x$withval" != "x"
+      then
+        AC_DEFINE_UNQUOTED(HAVE_X264_ADDITIONAL_LIBRARIES, "$withval", [Additional x264 libraries])
+      fi
+    ], []
+  )
 ])
 
 else

@@ -1,6 +1,7 @@
 /* GStreamer H264 encoder plugin
  * Copyright (C) 2005 Michal Benes <michal.benes@itonis.tv>
  * Copyright (C) 2005 Josef Zlomek <josef.zlomek@itonis.tv>
+ * Copyright (C) 2016 Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -46,12 +47,14 @@ G_BEGIN_DECLS
 
 typedef struct _GstX264Enc GstX264Enc;
 typedef struct _GstX264EncClass GstX264EncClass;
+typedef struct _GstX264EncVTable GstX264EncVTable;
 
 struct _GstX264Enc
 {
   GstVideoEncoder element;
 
   /*< private >*/
+  GstX264EncVTable *vtable;
   x264_t *x264enc;
   x264_param_t x264param;
   gint current_byte_stream;
@@ -111,7 +114,7 @@ struct _GstX264Enc
   /* from the downstream caps */
   const gchar *peer_profile;
   gboolean peer_intra_profile;
-  const x264_level_t *peer_level;
+  gint peer_level_idc;
 };
 
 struct _GstX264EncClass

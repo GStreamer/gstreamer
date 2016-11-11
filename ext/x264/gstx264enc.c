@@ -2,6 +2,7 @@
  * Copyright (C) 2005 Michal Benes <michal.benes@itonis.tv>
  * Copyright (C) 2005 Josef Zlomek <josef.zlomek@itonis.tv>
  * Copyright (C) 2008 Mark Nauwelaerts <mnauw@users.sf.net>
+ * Copyright (C) 2016 Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -107,9 +108,241 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <gmodule.h>
 
 GST_DEBUG_CATEGORY_STATIC (x264_enc_debug);
 #define GST_CAT_DEFAULT x264_enc_debug
+
+struct _GstX264EncVTable
+{
+  GModule *module;
+
+  const int *x264_bit_depth;
+  const int *x264_chroma_format;
+  void (*x264_encoder_close) (x264_t *);
+  int (*x264_encoder_delayed_frames) (x264_t *);
+  int (*x264_encoder_encode) (x264_t *, x264_nal_t ** pp_nal, int *pi_nal,
+      x264_picture_t * pic_in, x264_picture_t * pic_out);
+  int (*x264_encoder_headers) (x264_t *, x264_nal_t ** pp_nal, int *pi_nal);
+  void (*x264_encoder_intra_refresh) (x264_t *);
+  int (*x264_encoder_maximum_delayed_frames) (x264_t *);
+  x264_t *(*x264_encoder_open) (x264_param_t *);
+  int (*x264_encoder_reconfig) (x264_t *, x264_param_t *);
+  const x264_level_t (*x264_levels)[];
+  void (*x264_param_apply_fastfirstpass) (x264_param_t *);
+  int (*x264_param_apply_profile) (x264_param_t *, const char *);
+  void (*x264_param_default) (x264_param_t *);
+  int (*x264_param_default_preset) (x264_param_t *, const char *preset,
+      const char *tune);
+  int (*x264_param_parse) (x264_param_t *, const char *name, const char *value);
+};
+
+static GstX264EncVTable default_vtable = {
+  NULL,
+  &x264_bit_depth,
+  &x264_chroma_format, x264_encoder_close, x264_encoder_delayed_frames,
+  x264_encoder_encode, x264_encoder_headers, x264_encoder_intra_refresh,
+  x264_encoder_maximum_delayed_frames, x264_encoder_open,
+  x264_encoder_reconfig, &x264_levels, x264_param_apply_fastfirstpass,
+  x264_param_apply_profile, x264_param_default, x264_param_default_preset,
+  x264_param_parse
+};
+
+static GstX264EncVTable *vtable_8bit = NULL, *vtable_10bit = NULL;
+static GstCaps *supported_sinkcaps = NULL;
+
+#define LOAD_SYMBOL(name) G_STMT_START { \
+  if (!g_module_symbol (module, #name, (gpointer *) &vtable->name)) { \
+    GST_ERROR ("Failed to load '" #name "' from '%s'", filename); \
+    goto error; \
+  } \
+} G_STMT_END;
+
+#ifdef HAVE_X264_ADDITIONAL_LIBRARIES
+static GstX264EncVTable *
+load_x264 (const gchar * filename)
+{
+  GModule *module;
+  GstX264EncVTable *vtable;
+
+  module = g_module_open (filename, G_MODULE_BIND_LOCAL);
+  if (!module) {
+    GST_ERROR ("Failed to load '%s'", filename);
+    return NULL;
+  }
+
+  vtable = g_new0 (GstX264EncVTable, 1);
+  vtable->module = module;
+
+  if (!g_module_symbol (module, G_STRINGIFY (x264_encoder_open),
+          (gpointer *) & vtable->x264_encoder_open)) {
+    GST_ERROR ("Failed to load '" G_STRINGIFY (x264_encoder_open)
+        "' from '%s'. Incompatible version?", filename);
+    goto error;
+  }
+
+  LOAD_SYMBOL (x264_bit_depth);
+  LOAD_SYMBOL (x264_chroma_format);
+  LOAD_SYMBOL (x264_encoder_close);
+  LOAD_SYMBOL (x264_encoder_delayed_frames);
+  LOAD_SYMBOL (x264_encoder_encode);
+  LOAD_SYMBOL (x264_encoder_headers);
+  LOAD_SYMBOL (x264_encoder_intra_refresh);
+  LOAD_SYMBOL (x264_encoder_maximum_delayed_frames);
+  LOAD_SYMBOL (x264_encoder_reconfig);
+  LOAD_SYMBOL (x264_levels);
+  LOAD_SYMBOL (x264_param_apply_fastfirstpass);
+  LOAD_SYMBOL (x264_param_apply_profile);
+  LOAD_SYMBOL (x264_param_default);
+  LOAD_SYMBOL (x264_param_default_preset);
+  LOAD_SYMBOL (x264_param_parse);
+
+  return vtable;
+
+error:
+  g_module_close (vtable->module);
+  g_free (vtable);
+  return NULL;
+}
+
+static void
+unload_x264 (GstX264EncVTable * vtable)
+{
+  if (vtable->module) {
+    g_module_close (vtable->module);
+    g_free (vtable);
+  }
+}
+#endif
+
+#undef LOAD_SYMBOL
+
+static gboolean
+gst_x264_enc_add_x264_chroma_format (GstStructure * s,
+    gboolean allow_420, gboolean allow_422, gboolean allow_444)
+{
+  GValue fmts = G_VALUE_INIT;
+  GValue fmt = G_VALUE_INIT;
+  gboolean ret = FALSE;
+
+  g_value_init (&fmts, GST_TYPE_LIST);
+  g_value_init (&fmt, G_TYPE_STRING);
+
+  if (vtable_8bit) {
+    gint chroma_format = *vtable_8bit->x264_chroma_format;
+
+    GST_INFO ("8-bit depth supported");
+
+    if ((chroma_format == 0 || chroma_format == X264_CSP_I444) && allow_444) {
+      g_value_set_string (&fmt, "Y444");
+      gst_value_list_append_value (&fmts, &fmt);
+    }
+
+    if ((chroma_format == 0 || chroma_format == X264_CSP_I422) && allow_422) {
+      g_value_set_string (&fmt, "Y42B");
+      gst_value_list_append_value (&fmts, &fmt);
+    }
+
+    if ((chroma_format == 0 || chroma_format == X264_CSP_I420) && allow_420) {
+      g_value_set_string (&fmt, "I420");
+      gst_value_list_append_value (&fmts, &fmt);
+      g_value_set_string (&fmt, "YV12");
+      gst_value_list_append_value (&fmts, &fmt);
+      g_value_set_string (&fmt, "NV12");
+      gst_value_list_append_value (&fmts, &fmt);
+    }
+  }
+
+  if (vtable_10bit) {
+    gint chroma_format = *vtable_10bit->x264_chroma_format;
+
+    GST_INFO ("10-bit depth supported");
+
+    if ((chroma_format == 0 || chroma_format == X264_CSP_I444) && allow_444) {
+      if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+        g_value_set_string (&fmt, "Y444_10LE");
+      else
+        g_value_set_string (&fmt, "Y444_10BE");
+
+      gst_value_list_append_value (&fmts, &fmt);
+    }
+
+    if ((chroma_format == 0 || chroma_format == X264_CSP_I422) && allow_422) {
+      if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+        g_value_set_string (&fmt, "I422_10LE");
+      else
+        g_value_set_string (&fmt, "I422_10BE");
+
+      gst_value_list_append_value (&fmts, &fmt);
+    }
+
+    if ((chroma_format == 0 || chroma_format == X264_CSP_I420) && allow_420) {
+      if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+        g_value_set_string (&fmt, "I420_10LE");
+      else
+        g_value_set_string (&fmt, "I420_10BE");
+
+      gst_value_list_append_value (&fmts, &fmt);
+    }
+  }
+
+  if (gst_value_list_get_size (&fmts) != 0) {
+    gst_structure_take_value (s, "format", &fmts);
+    ret = TRUE;
+  } else {
+    g_value_unset (&fmts);
+  }
+
+  g_value_unset (&fmt);
+
+  return ret;
+}
+
+static gboolean
+load_x264_libraries (void)
+{
+  if (*default_vtable.x264_bit_depth == 8) {
+    vtable_8bit = &default_vtable;
+  } else if (*default_vtable.x264_bit_depth == 10) {
+    vtable_10bit = &default_vtable;
+  }
+#ifdef HAVE_X264_ADDITIONAL_LIBRARIES
+  {
+    gchar **libraries = g_strsplit (HAVE_X264_ADDITIONAL_LIBRARIES, ":", -1);
+    gchar **p = libraries;
+
+    while (*p && (!vtable_8bit || !vtable_10bit)) {
+      GstX264EncVTable *vtable = load_x264 (*p);
+
+      if (vtable) {
+        if (!vtable_8bit && *vtable->x264_bit_depth == 8) {
+          vtable_8bit = vtable;
+        } else if (!vtable_10bit && *vtable->x264_bit_depth == 10) {
+          vtable_10bit = vtable;
+        } else {
+          unload_x264 (vtable);
+        }
+      }
+
+      p++;
+    }
+    g_strfreev (libraries);
+  }
+#endif
+
+  if (!vtable_8bit && !vtable_10bit)
+    return FALSE;
+
+  supported_sinkcaps = gst_caps_new_simple ("video/x-raw",
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+      "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
+
+  gst_x264_enc_add_x264_chroma_format (gst_caps_get_structure
+      (supported_sinkcaps, 0), TRUE, TRUE, TRUE);
+
+  return TRUE;
+}
 
 enum
 {
@@ -441,21 +674,6 @@ gst_x264_enc_mview_mode_to_frame_packing (GstVideoMultiviewMode mode)
   return -1;
 }
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS "I420, YV12, Y42B, Y444, NV12, I420_10LE, I422_10LE, Y444_10LE"
-#else
-#define FORMATS "I420, YV12, Y42B, Y444, NV12, I420_10BE, I422_10BE, Y444_10BE"
-#endif
-
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { " FORMATS " }, "
-        "framerate = (fraction) [0, MAX], "
-        "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ]")
-    );
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -523,108 +741,6 @@ gst_x264_enc_build_partitions (gint analyse)
 }
 
 static void
-set_value (GValue * val, gint count, ...)
-{
-  const gchar *fmt = NULL;
-  GValue sval = G_VALUE_INIT;
-  va_list ap;
-  gint i;
-
-  g_value_init (&sval, G_TYPE_STRING);
-
-  if (count > 1)
-    g_value_init (val, GST_TYPE_LIST);
-
-  va_start (ap, count);
-  for (i = 0; i < count; i++) {
-    fmt = va_arg (ap, const gchar *);
-    g_value_set_string (&sval, fmt);
-    if (count > 1) {
-      gst_value_list_append_value (val, &sval);
-    }
-  }
-  va_end (ap);
-
-  if (count == 1)
-    *val = sval;
-  else
-    g_value_unset (&sval);
-}
-
-static void
-gst_x264_enc_add_x264_chroma_format (GstStructure * s,
-    int x264_chroma_format_local)
-{
-  GValue fmt = G_VALUE_INIT;
-
-  if (x264_bit_depth == 8) {
-    GST_INFO ("This x264 build supports 8-bit depth");
-    if (x264_chroma_format_local == 0) {
-      set_value (&fmt, 5, "I420", "YV12", "Y42B", "Y444", "NV12");
-    } else if (x264_chroma_format_local == X264_CSP_I420) {
-      set_value (&fmt, 3, "I420", "YV12", "NV12");
-    } else if (x264_chroma_format_local == X264_CSP_I422) {
-      set_value (&fmt, 1, "Y42B");
-    } else if (x264_chroma_format_local == X264_CSP_I444) {
-      set_value (&fmt, 1, "Y444");
-    } else {
-      GST_ERROR ("Unsupported chroma format %d", x264_chroma_format_local);
-    }
-  } else if (x264_bit_depth == 10) {
-    GST_INFO ("This x264 build supports 10-bit depth");
-
-    if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
-      if (x264_chroma_format_local == 0) {
-        set_value (&fmt, 3, "I420_10LE", "I422_10LE", "Y444_10LE");
-      } else if (x264_chroma_format_local == X264_CSP_I420) {
-        set_value (&fmt, 1, "I420_10LE");
-      } else if (x264_chroma_format_local == X264_CSP_I422) {
-        set_value (&fmt, 1, "I422_10LE");
-      } else if (x264_chroma_format_local == X264_CSP_I444) {
-        set_value (&fmt, 1, "Y444_10LE");
-      } else {
-        GST_ERROR ("Unsupported chroma format %d", x264_chroma_format_local);
-      }
-    } else {
-      if (x264_chroma_format_local == 0) {
-        set_value (&fmt, 3, "I420_10BE", "I422_10BE", "Y444_10BE");
-      } else if (x264_chroma_format_local == X264_CSP_I420) {
-        set_value (&fmt, 1, "I420_10BE");
-      } else if (x264_chroma_format_local == X264_CSP_I422) {
-        set_value (&fmt, 1, "I422_10BE");
-      } else if (x264_chroma_format_local == X264_CSP_I444) {
-        set_value (&fmt, 1, "Y444_10BE");
-      } else {
-        GST_ERROR ("Unsupported chroma format %d", x264_chroma_format_local);
-      }
-    }
-  } else {
-    GST_ERROR ("Unsupported bit depth %d, we only support 8-bit and 10-bit",
-        x264_bit_depth);
-  }
-
-  if (G_VALUE_TYPE (&fmt) != G_TYPE_INVALID)
-    gst_structure_take_value (s, "format", &fmt);
-}
-
-static GstCaps *
-gst_x264_enc_get_supported_input_caps (void)
-{
-  GstCaps *caps;
-
-  caps = gst_caps_new_simple ("video/x-raw",
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
-      "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
-
-  gst_x264_enc_add_x264_chroma_format (gst_caps_get_structure (caps, 0),
-      x264_chroma_format);
-
-  GST_DEBUG ("returning %" GST_PTR_FORMAT, caps);
-  return caps;
-}
-
-static void
 check_formats (const gchar * str, gboolean * has_420, gboolean * has_422,
     gboolean * has_444)
 {
@@ -646,13 +762,12 @@ gst_x264_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
   GstCaps *filter_caps, *fcaps;
   gint i, j, k;
 
-  supported_incaps = gst_x264_enc_get_supported_input_caps ();
+  supported_incaps =
+      gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SINK_PAD (enc));
 
   /* Allow downstream to specify width/height/framerate/PAR constraints
    * and forward them upstream for video converters to handle
    */
-  if (!supported_incaps)
-    supported_incaps = gst_pad_get_pad_template_caps (enc->sinkpad);
   allowed = gst_pad_get_allowed_caps (enc->srcpad);
 
   if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
@@ -684,6 +799,7 @@ gst_x264_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
         gst_structure_set_value (s, "framerate", val);
       if ((val = gst_structure_get_value (allowed_s, "pixel-aspect-ratio")))
         gst_structure_set_value (s, "pixel-aspect-ratio", val);
+
       if ((val = gst_structure_get_value (allowed_s, "profile"))) {
         gboolean has_420 = FALSE;
         gboolean has_422 = FALSE;
@@ -702,14 +818,7 @@ gst_x264_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
           }
         }
 
-        if (has_444 && has_422 && has_420)
-          gst_x264_enc_add_x264_chroma_format (s, 0);
-        else if (has_444)
-          gst_x264_enc_add_x264_chroma_format (s, X264_CSP_I444);
-        else if (has_422)
-          gst_x264_enc_add_x264_chroma_format (s, X264_CSP_I422);
-        else if (has_420)
-          gst_x264_enc_add_x264_chroma_format (s, X264_CSP_I420);
+        gst_x264_enc_add_x264_chroma_format (s, has_420, has_422, has_444);
       }
 
       filter_caps = gst_caps_merge_structure (filter_caps, s);
@@ -748,10 +857,7 @@ gst_x264_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
     case GST_QUERY_ACCEPT_CAPS:{
       GstCaps *acceptable, *caps;
 
-      acceptable = gst_x264_enc_get_supported_input_caps ();
-      if (!acceptable) {
-        acceptable = gst_pad_get_pad_template_caps (pad);
-      }
+      acceptable = gst_pad_get_pad_template_caps (pad);
 
       gst_query_parse_accept_caps (query, &caps);
 
@@ -776,6 +882,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   GstElementClass *element_class;
   GstVideoEncoderClass *gstencoder_class;
   const gchar *partitions = NULL;
+  GstPadTemplate *sink_templ;
 
   x264enc_defaults = g_string_new ("");
 
@@ -1036,7 +1143,10 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       "Josef Zlomek <josef.zlomek@itonis.tv>, "
       "Mark Nauwelaerts <mnauw@users.sf.net>");
 
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
+  sink_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, supported_sinkcaps);
+
+  gst_element_class_add_pad_template (element_class, sink_templ);
   gst_element_class_add_static_pad_template (element_class, &src_factory);
 }
 
@@ -1120,13 +1230,6 @@ gst_x264_enc_init (GstX264Enc * encoder)
   encoder->psy_tune = ARG_PSY_TUNE_DEFAULT;
   encoder->tune = ARG_TUNE_DEFAULT;
   encoder->frame_packing = ARG_FRAME_PACKING_DEFAULT;
-
-  x264_param_default (&encoder->x264param);
-
-  /* log callback setup; part of parameters */
-  encoder->x264param.pf_log = gst_x264_enc_log_callback;
-  encoder->x264param.p_log_private = encoder;
-  encoder->x264param.i_log_level = X264_LOG_DEBUG;
 }
 
 typedef struct
@@ -1288,7 +1391,8 @@ gst_x264_enc_parse_options (GstX264Enc * encoder, const gchar * str)
     GStrv key_val = g_strsplit (kvpairs[i], "=", 2);
 
     parse_result =
-        x264_param_parse (&encoder->x264param, key_val[0], key_val[1]);
+        encoder->vtable->x264_param_parse (&encoder->x264param, key_val[0],
+        key_val[1]);
 
     if (parse_result == X264_PARAM_BAD_NAME) {
       GST_ERROR_OBJECT (encoder, "Bad name for option %s=%s",
@@ -1376,13 +1480,26 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   GST_OBJECT_LOCK (encoder);
 
+  if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) == 8)
+    encoder->vtable = vtable_8bit;
+  else if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) == 10)
+    encoder->vtable = vtable_10bit;
+
+  g_assert (encoder->vtable != NULL);
+
+  encoder->vtable->x264_param_default (&encoder->x264param);
+  /* log callback setup; part of parameters */
+  encoder->x264param.pf_log = gst_x264_enc_log_callback;
+  encoder->x264param.p_log_private = encoder;
+  encoder->x264param.i_log_level = X264_LOG_DEBUG;
+
   gst_x264_enc_build_tunings_string (encoder);
 
   /* set x264 parameters and use preset/tuning if present */
   GST_DEBUG_OBJECT (encoder, "Applying defaults with preset %s, tunings %s",
       encoder->speed_preset ? x264_preset_names[encoder->speed_preset - 1] : "",
       encoder->tunings && encoder->tunings->len ? encoder->tunings->str : "");
-  x264_param_default_preset (&encoder->x264param,
+  encoder->vtable->x264_param_default_preset (&encoder->x264param,
       encoder->speed_preset ? x264_preset_names[encoder->speed_preset -
           1] : NULL, encoder->tunings
       && encoder->tunings->len ? encoder->tunings->str : NULL);
@@ -1618,7 +1735,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     case 1:
       encoder->x264param.rc.b_stat_read = 0;
       encoder->x264param.rc.b_stat_write = 1;
-      x264_param_apply_fastfirstpass (&encoder->x264param);
+      encoder->vtable->x264_param_apply_fastfirstpass (&encoder->x264param);
       encoder->x264param.i_frame_reference = 1;
       encoder->x264param.analyse.b_transform_8x8 = 0;
       encoder->x264param.analyse.inter = 0;
@@ -1639,7 +1756,8 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   }
 
   if (encoder->peer_profile) {
-    if (x264_param_apply_profile (&encoder->x264param, encoder->peer_profile))
+    if (encoder->vtable->x264_param_apply_profile (&encoder->x264param,
+            encoder->peer_profile))
       GST_WARNING_OBJECT (encoder, "Bad downstream profile name: %s",
           encoder->peer_profile);
   }
@@ -1649,21 +1767,56 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     encoder->x264param.i_keyint_max = encoder->x264param.i_keyint_min = 1;
 
   /* Enforce level limits if they were in the caps */
-  if (encoder->peer_level) {
-    encoder->x264param.i_level_idc = encoder->peer_level->level_idc;
+  if (encoder->peer_level_idc != -1) {
+    gint i;
+    const x264_level_t *peer_level = NULL;
+
+    for (i = 0; (*encoder->vtable->x264_levels)[i].level_idc; i++) {
+      if (encoder->peer_level_idc ==
+          (*encoder->vtable->x264_levels)[i].level_idc) {
+        int mb_width = (info->width + 15) / 16;
+        int mb_height = (info->height + 15) / 16;
+        int mbs = mb_width * mb_height;
+
+        if ((*encoder->vtable->x264_levels)[i].frame_size < mbs ||
+            (*encoder->vtable->x264_levels)[i].frame_size * 8 <
+            mb_width * mb_width
+            || (*encoder->vtable->x264_levels)[i].frame_size * 8 <
+            mb_height * mb_height) {
+          GST_WARNING_OBJECT (encoder,
+              "Frame size larger than level %d allows",
+              encoder->peer_level_idc);
+          break;
+        }
+
+        if (info->fps_d && (*encoder->vtable->x264_levels)[i].mbps
+            < (gint64) mbs * info->fps_n / info->fps_d) {
+          GST_WARNING_OBJECT (encoder,
+              "Macroblock rate higher than level %d allows",
+              encoder->peer_level_idc);
+          break;
+        }
+
+        peer_level = &(*encoder->vtable->x264_levels)[i];
+        break;
+      }
+    }
+
+    if (!peer_level)
+      goto unlock_and_return;
+
+    encoder->x264param.i_level_idc = peer_level->level_idc;
 
     encoder->x264param.rc.i_bitrate = MIN (encoder->x264param.rc.i_bitrate,
-        encoder->peer_level->bitrate);
+        peer_level->bitrate);
     encoder->x264param.rc.i_vbv_max_bitrate =
-        MIN (encoder->x264param.rc.i_vbv_max_bitrate,
-        encoder->peer_level->bitrate);
+        MIN (encoder->x264param.rc.i_vbv_max_bitrate, peer_level->bitrate);
     encoder->x264param.rc.i_vbv_buffer_size =
-        MIN (encoder->x264param.rc.i_vbv_buffer_size, encoder->peer_level->cpb);
+        MIN (encoder->x264param.rc.i_vbv_buffer_size, peer_level->cpb);
     encoder->x264param.analyse.i_mv_range =
-        MIN (encoder->x264param.analyse.i_mv_range,
-        encoder->peer_level->mv_range);
+        MIN (encoder->x264param.analyse.i_mv_range, peer_level->mv_range);
 
-    if (encoder->peer_level->frame_only) {
+    if (peer_level->frame_only) {
       encoder->x264param.b_interlaced = FALSE;
       encoder->x264param.b_fake_interlaced = FALSE;
     }
@@ -1684,7 +1837,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   GST_OBJECT_UNLOCK (encoder);
 
-  encoder->x264enc = x264_encoder_open (&encoder->x264param);
+  encoder->x264enc = encoder->vtable->x264_encoder_open (&encoder->x264param);
   if (!encoder->x264enc) {
     GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
         ("Can not initialize x264 encoder."), (NULL));
@@ -1707,9 +1860,10 @@ static void
 gst_x264_enc_close_encoder (GstX264Enc * encoder)
 {
   if (encoder->x264enc != NULL) {
-    x264_encoder_close (encoder->x264enc);
+    encoder->vtable->x264_encoder_close (encoder->x264enc);
     encoder->x264enc = NULL;
   }
+  encoder->vtable = NULL;
 }
 
 static gboolean
@@ -1726,7 +1880,8 @@ gst_x264_enc_set_profile_and_level (GstX264Enc * encoder, GstCaps * caps)
   GstStructure *s2;
   const gchar *allowed_profile;
 
-  header_return = x264_encoder_headers (encoder->x264enc, &nal, &i_nal);
+  header_return =
+      encoder->vtable->x264_encoder_headers (encoder->x264enc, &nal, &i_nal);
   if (header_return < 0) {
     GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, ("Encode x264 header failed."),
         ("x264_encoder_headers return code=%d", header_return));
@@ -1812,7 +1967,8 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 
   /* Create avcC header. */
 
-  header_return = x264_encoder_headers (encoder->x264enc, &nal, &i_nal);
+  header_return =
+      encoder->vtable->x264_encoder_headers (encoder->x264enc, &nal, &i_nal);
   if (header_return < 0) {
     GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, ("Encode x264 header failed."),
         ("x264_encoder_headers return code=%d", header_return));
@@ -1974,7 +2130,8 @@ gst_x264_enc_set_latency (GstX264Enc * encoder)
   gint max_delayed_frames;
   GstClockTime latency;
 
-  max_delayed_frames = x264_encoder_maximum_delayed_frames (encoder->x264enc);
+  max_delayed_frames =
+      encoder->vtable->x264_encoder_maximum_delayed_frames (encoder->x264enc);
 
   if (info->fps_n) {
     latency = gst_util_uint64_scale_ceil (GST_SECOND * info->fps_d,
@@ -2002,7 +2159,6 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
   GstVideoInfo *info = &state->info;
   GstCaps *template_caps;
   GstCaps *allowed_caps = NULL;
-  gboolean level_ok = TRUE;
 
   /* If the encoder is initialized, do not reinitialize it again if not
    * necessary */
@@ -2030,7 +2186,7 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
 
   encoder->peer_profile = NULL;
   encoder->peer_intra_profile = FALSE;
-  encoder->peer_level = NULL;
+  encoder->peer_level_idc = -1;
 
   template_caps = gst_static_pad_template_get_caps (&src_factory);
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
@@ -2086,39 +2242,7 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
 
     level = gst_structure_get_string (s, "level");
     if (level) {
-      int level_idc = gst_codec_utils_h264_get_level_idc (level);
-
-      if (level_idc) {
-        gint i;
-
-        for (i = 0; x264_levels[i].level_idc; i++) {
-          if (level_idc == x264_levels[i].level_idc) {
-            int mb_width = (info->width + 15) / 16;
-            int mb_height = (info->height + 15) / 16;
-            int mbs = mb_width * mb_height;
-
-            if (x264_levels[i].frame_size < mbs ||
-                x264_levels[i].frame_size * 8 < mb_width * mb_width ||
-                x264_levels[i].frame_size * 8 < mb_height * mb_height) {
-              GST_WARNING_OBJECT (encoder,
-                  "Frame size larger than level %s allows", level);
-              level_ok = FALSE;
-              break;
-            }
-
-            if (info->fps_d && x264_levels[i].mbps
-                < (gint64) mbs * info->fps_n / info->fps_d) {
-              GST_WARNING_OBJECT (encoder,
-                  "Macroblock rate higher than level %s allows", level);
-              level_ok = FALSE;
-              break;
-            }
-
-            encoder->peer_level = &x264_levels[i];
-            break;
-          }
-        }
-      }
+      encoder->peer_level_idc = gst_codec_utils_h264_get_level_idc (level);
     }
 
     stream_format = gst_structure_get_string (s, "stream-format");
@@ -2139,9 +2263,6 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
   }
 
   gst_caps_unref (template_caps);
-
-  if (!level_ok)
-    return FALSE;
 
   if (!gst_x264_enc_init_encoder (encoder))
     return FALSE;
@@ -2175,8 +2296,12 @@ gst_x264_enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   if (!self->input_state)
     return FALSE;
 
+  if (self->vtable == NULL)
+    return FALSE;
+
   info = &self->input_state->info;
-  num_buffers = x264_encoder_maximum_delayed_frames (self->x264enc) + 1;
+  num_buffers =
+      self->vtable->x264_encoder_maximum_delayed_frames (self->x264enc) + 1;
 
   gst_query_add_allocation_pool (query, NULL, info->size, num_buffers, 0);
 
@@ -2265,7 +2390,8 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   GST_OBJECT_LOCK (encoder);
   if (encoder->reconfig) {
     encoder->reconfig = FALSE;
-    if (x264_encoder_reconfig (encoder->x264enc, &encoder->x264param) < 0)
+    if (encoder->vtable->x264_encoder_reconfig (encoder->x264enc,
+            &encoder->x264param) < 0)
       GST_WARNING_OBJECT (encoder, "Could not reconfigure");
     update_latency = TRUE;
   }
@@ -2274,7 +2400,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (input_frame)) {
       GST_INFO_OBJECT (encoder, "Forcing key frame");
       if (encoder->intra_refresh)
-        x264_encoder_intra_refresh (encoder->x264enc);
+        encoder->vtable->x264_encoder_intra_refresh (encoder->x264enc);
       else
         pic_in->i_type = X264_TYPE_IDR;
     }
@@ -2284,7 +2410,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   if (G_UNLIKELY (update_latency))
     gst_x264_enc_set_latency (encoder);
 
-  encoder_return = x264_encoder_encode (encoder->x264enc,
+  encoder_return = encoder->vtable->x264_encoder_encode (encoder->x264enc,
       &nal, i_nal, pic_in, &pic_out);
 
   if (encoder_return < 0) {
@@ -2356,12 +2482,15 @@ gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send)
     do {
       flow_ret = gst_x264_enc_encode_frame (encoder, NULL, NULL, &i_nal, send);
     } while (flow_ret == GST_FLOW_OK
-        && x264_encoder_delayed_frames (encoder->x264enc) > 0);
+        && encoder->vtable->x264_encoder_delayed_frames (encoder->x264enc) > 0);
 }
 
 static void
 gst_x264_enc_reconfig (GstX264Enc * encoder)
 {
+  if (!encoder->vtable)
+    return;
+
   switch (encoder->pass) {
     case GST_X264_ENC_PASS_QUAL:
       encoder->x264param.rc.f_rf_constant = encoder->quantizer;
@@ -2738,7 +2867,10 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (x264_enc_debug, "x264enc", 0,
       "h264 encoding element");
 
-  GST_INFO ("x264 build: %u", X264_BUILD);
+  GST_INFO ("linked against x264 build: %u", X264_BUILD);
+
+  if (!load_x264_libraries ())
+    return FALSE;
 
   return gst_element_register (plugin, "x264enc",
       GST_RANK_PRIMARY, GST_TYPE_X264_ENC);

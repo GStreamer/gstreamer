@@ -1,0 +1,2 @@
+option('x264_libraries', type : 'string', value : '', description : 'Colon separated list of additional x264 library paths, e.g. for 10-bit version')
+
