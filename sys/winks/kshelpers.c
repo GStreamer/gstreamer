@@ -22,6 +22,8 @@
 /* This plugin is from the era of Windows XP and uses APIs that have been
  * deprecated since then. Let's pretend we're Windows XP too so that Windows
  * lets us use that deprecated API. */
+#undef NTDDI_VERSION
+#undef _WIN32_WINNT
 #define NTDDI_VERSION NTDDI_WINXP
 #define _WIN32_WINNT _WIN32_WINNT_WINXP
 
