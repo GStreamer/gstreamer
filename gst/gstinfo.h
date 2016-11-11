@@ -413,6 +413,12 @@ gint    gst_info_vasprintf              (gchar ** result,
 gchar * gst_info_strdup_vprintf         (const gchar *format, va_list args) G_GNUC_PRINTF (1, 0);
 gchar * gst_info_strdup_printf          (const gchar *format, ...) G_GNUC_PRINTF (1, 2);
 
+void    gst_print                       (const gchar * format, ...) G_GNUC_PRINTF (1, 2);
+void    gst_println                     (const gchar * format, ...) G_GNUC_PRINTF (1, 2);
+
+void    gst_printerr                    (const gchar * format, ...) G_GNUC_PRINTF (1, 2);
+void    gst_printerrln                  (const gchar * format, ...) G_GNUC_PRINTF (1, 2);
+
 #ifndef GST_DISABLE_GST_DEBUG
 
 /* cast to void * avoids a warning with gcc 6

@@ -2438,7 +2438,7 @@ gst_info_strdup_vprintf (const gchar * format, va_list args)
  * @format: a printf style format string
  * @...: the printf arguments for @format
  *
- * Allocates, fills and returns a null terminated string from the printf style
+ * Allocates, fills and returns a 0-terminated string from the printf style
  * @format string and corresponding arguments.
  *
  * See gst_info_vasprintf() for when this function is required.
@@ -2460,6 +2460,146 @@ gst_info_strdup_printf (const gchar * format, ...)
   va_end (args);
 
   return ret;
+}
+
+/**
+ * gst_print:
+ * @format: a printf style format string
+ * @...: the printf arguments for @format
+ *
+ * Outputs a formatted message via the GLib print handler. The default print
+ * handler simply outputs the message to stdout.
+ *
+ * This function will not append a new-line character at the end, unlike
+ * gst_println() which will.
+ *
+ * All strings must be in ASCII or UTF-8 encoding.
+ *
+ * This function differs from g_print() in that it supports all the additional
+ * printf specifiers that are supported by GStreamer's debug logging system,
+ * such as #GST_PTR_FORMAT and #GST_SEGMENT_FORMAT.
+ *
+ * This function is primarily for printing debug output.
+ *
+ * Since: 1.12
+ */
+void
+gst_print (const gchar * format, ...)
+{
+  va_list args;
+  gchar *str;
+
+  va_start (args, format);
+  str = gst_info_strdup_vprintf (format, args);
+  va_end (args);
+
+  g_print ("%s", str);
+  g_free (str);
+}
+
+/**
+ * gst_println:
+ * @format: a printf style format string
+ * @...: the printf arguments for @format
+ *
+ * Outputs a formatted message via the GLib print handler. The default print
+ * handler simply outputs the message to stdout.
+ *
+ * This function will append a new-line character at the end, unlike
+ * gst_print() which will not.
+ *
+ * All strings must be in ASCII or UTF-8 encoding.
+ *
+ * This function differs from g_print() in that it supports all the additional
+ * printf specifiers that are supported by GStreamer's debug logging system,
+ * such as #GST_PTR_FORMAT and #GST_SEGMENT_FORMAT.
+ *
+ * This function is primarily for printing debug output.
+ *
+ * Since: 1.12
+ */
+void
+gst_println (const gchar * format, ...)
+{
+  va_list args;
+  gchar *str;
+
+  va_start (args, format);
+  str = gst_info_strdup_vprintf (format, args);
+  va_end (args);
+
+  g_print ("%s\n", str);
+  g_free (str);
+}
+
+/**
+ * gst_printerr:
+ * @format: a printf style format string
+ * @...: the printf arguments for @format
+ *
+ * Outputs a formatted message via the GLib error message handler. The default
+ * handler simply outputs the message to stderr.
+ *
+ * This function will not append a new-line character at the end, unlike
+ * gst_printerrln() which will.
+ *
+ * All strings must be in ASCII or UTF-8 encoding.
+ *
+ * This function differs from g_printerr() in that it supports the additional
+ * printf specifiers that are supported by GStreamer's debug logging system,
+ * such as #GST_PTR_FORMAT and #GST_SEGMENT_FORMAT.
+ *
+ * This function is primarily for printing debug output.
+ *
+ * Since: 1.12
+ */
+void
+gst_printerr (const gchar * format, ...)
+{
+  va_list args;
+  gchar *str;
+
+  va_start (args, format);
+  str = gst_info_strdup_vprintf (format, args);
+  va_end (args);
+
+  g_printerr ("%s", str);
+  g_free (str);
+}
+
+/**
+ * gst_printerrln:
+ * @format: a printf style format string
+ * @...: the printf arguments for @format
+ *
+ * Outputs a formatted message via the GLib error message handler. The default
+ * handler simply outputs the message to stderr.
+ *
+ * This function will append a new-line character at the end, unlike
+ * gst_printerr() which will not.
+ *
+ * All strings must be in ASCII or UTF-8 encoding.
+ *
+ * This function differs from g_printerr() in that it supports the additional
+ * printf specifiers that are supported by GStreamer's debug logging system,
+ * such as #GST_PTR_FORMAT and #GST_SEGMENT_FORMAT.
+ *
+ * This function is primarily for printing debug output.
+ *
+ * Since: 1.12
+ */
+void
+gst_printerrln (const gchar * format, ...)
+{
+  va_list args;
+  gchar *str;
+
+  va_start (args, format);
+  str = gst_info_strdup_vprintf (format, args);
+  va_end (args);
+
+  g_printerr ("%s\n", str);
+  g_free (str);
 }
 
 #ifdef HAVE_UNWIND

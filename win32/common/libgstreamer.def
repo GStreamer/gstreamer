@@ -1064,6 +1064,10 @@ EXPORTS
 	gst_preset_save_preset
 	gst_preset_set_app_dir
 	gst_preset_set_meta
+	gst_print
+	gst_printerr
+	gst_printerrln
+	gst_println
 	gst_progress_type_get_type
 	gst_protection_meta_api_get_type
 	gst_protection_meta_get_info

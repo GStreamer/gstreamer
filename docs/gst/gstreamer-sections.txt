@@ -1392,6 +1392,10 @@ gst_debug_bin_to_dot_file_with_ts
 gst_info_vasprintf
 gst_info_strdup_vprintf
 gst_info_strdup_printf
+gst_print
+gst_println
+gst_printerr
+gst_printerrln
 <SUBSECTION Standard>
 GST_TYPE_DEBUG_COLOR_FLAGS
 GST_TYPE_DEBUG_COLOR_MODE
