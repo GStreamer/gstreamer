@@ -729,7 +729,7 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
   gboolean updated, has_direct_uploading, has_direct_rendering;
   GstVideoFormat fmt;
 
-  vinfo = &allocator->video_info;
+  vinfo = &allocator->allocation_info;
   allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
 
   fmt = gst_vaapi_video_format_get_best_native (GST_VIDEO_INFO_FORMAT (vinfo));
@@ -806,7 +806,7 @@ allocator_configure_image_info (GstVaapiDisplay * display,
     return;
   }
 
-  vinfo = &allocator->video_info;
+  vinfo = &allocator->allocation_info;
   allocator->image_info = *vinfo;
   gst_video_info_force_nv12_if_encoded (&allocator->image_info);
 
@@ -838,7 +838,7 @@ gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
   if (!allocator)
     return NULL;
 
-  allocator->video_info = *vip;
+  allocator->allocation_info = *vip;
 
   allocator_configure_surface_info (display, allocator, req_usage_flag);
   allocator->surface_pool = gst_vaapi_surface_pool_new_full (display,

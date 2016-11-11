@@ -181,7 +181,7 @@ struct _GstVaapiVideoAllocator
   GstAllocator parent_instance;
 
   /*< private >*/
-  GstVideoInfo video_info;
+  GstVideoInfo allocation_info;
   GstVideoInfo surface_info;
   GstVaapiVideoPool *surface_pool;
   GstVideoInfo image_info;
