@@ -717,7 +717,7 @@ gst_d3dsurface_buffer_pool_release_buffer (GstBufferPool * bpool,
     return;
   }
 
-  return GST_BUFFER_POOL_CLASS
+  GST_BUFFER_POOL_CLASS
       (gst_d3dsurface_buffer_pool_parent_class)->release_buffer (bpool, buffer);
 }
 
