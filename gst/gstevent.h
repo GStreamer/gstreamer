@@ -501,7 +501,7 @@ GstEvent *      gst_event_new_select_streams    (GList *streams);
 void            gst_event_parse_select_streams  (GstEvent *event, GList **streams);
 
 /* stream-group-done event */
-GstEvent *      gst_event_new_stream_group_done (const guint group_id) G_GNUC_MALLOC;
+GstEvent *      gst_event_new_stream_group_done (guint group_id) G_GNUC_MALLOC;
 void            gst_event_parse_stream_group_done (GstEvent *event, guint *group_id);
 
 /* EOS event */
