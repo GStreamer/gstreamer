@@ -991,9 +991,16 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
       goto next;
     }
 
-    if (g_str_has_suffix (in_plugin->name, "_nvenc")) {
+    if (strstr (in_plugin->name, "nvenc")) {
       GST_DEBUG
           ("Ignoring nvenc encoder %s. We can't handle this outside of ffmpeg",
+          in_plugin->name);
+      goto next;
+    }
+
+    if (g_str_has_suffix (in_plugin->name, "_qsv")) {
+      GST_DEBUG
+          ("Ignoring qsv encoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
       goto next;
     }
