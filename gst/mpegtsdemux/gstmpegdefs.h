@@ -33,8 +33,8 @@
 #define SAFE_FOURCC_ARGS(a)				\
   ((guint8) ((a)>>24)),					\
     ((guint8) ((a) >> 16 & 0xff)),			\
-    ((guint8) a >> 8 & 0xff),				\
-    ((guint8) a & 0xff),				\
+    ((guint8) ((a) >> 8 & 0xff)),			\
+    ((guint8) ((a) & 0xff)),				\
     SAFE_CHAR((a)>>24),					\
     SAFE_CHAR((a) >> 16 & 0xff),			\
     SAFE_CHAR((a) >> 8 & 0xff),				\
