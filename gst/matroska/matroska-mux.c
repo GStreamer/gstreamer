@@ -943,6 +943,7 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstBuffer *codec_buf = NULL;
   gint width, height, pixel_width, pixel_height;
   gint fps_d, fps_n;
+  guint multiview_flags;
 
   mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
 
@@ -1008,8 +1009,9 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   if ((s = gst_structure_get_string (structure, "multiview-mode")))
     videocontext->multiview_mode =
         gst_video_multiview_mode_from_caps_string (s);
-  gst_structure_get_flagset (structure, "multiview-flags",
-      &videocontext->multiview_flags, NULL);
+  gst_structure_get_flagset (structure, "multiview-flags", &multiview_flags,
+      NULL);
+  videocontext->multiview_flags = multiview_flags;
 
 
 skip_details:
