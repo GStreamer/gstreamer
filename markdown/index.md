@@ -9,7 +9,7 @@ all about.
 ## General
 
  * [Application Development Manual (Read this first)](application-development/index.md)
- * <a href="/data/doc/gstreamer/head/faq/html/index.html">Frequently Asked Questions</a>
+ * [Frequently Asked Questions](frequently-asked-questions/index.md)
  * [](pwg/index.md)
  * <a href="/data/doc/gstreamer/head/gstreamer/html/">Core Reference</a>
  * <a href="/data/doc/gstreamer/head/gstreamer-libs/html/">Core Libraries Reference/a>

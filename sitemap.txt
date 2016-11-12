@@ -6,7 +6,7 @@ index.md
 	        installing/on-windows.md
 		installing/on-linux.md
 	        installing/building-from-source-using-cerbero.md
-	frequently-asked-questions/start.md
+	frequently-asked-questions/index.md
 		frequently-asked-questions/general.md
 		frequently-asked-questions/dependencies.md
 		frequently-asked-questions/getting.md
