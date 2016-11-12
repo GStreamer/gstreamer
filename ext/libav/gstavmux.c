@@ -928,6 +928,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
         (!strncmp (in_plugin->name, "crc", 3)) ||
         (!strncmp (in_plugin->name, "null", 4)) ||
         (!strncmp (in_plugin->name, "gif", 3)) ||
+        (!strncmp (in_plugin->name, "fifo", 4)) ||
         (!strncmp (in_plugin->name, "frame", 5)) ||
         (!strncmp (in_plugin->name, "image", 5)) ||
         (!strncmp (in_plugin->name, "mulaw", 5)) ||
