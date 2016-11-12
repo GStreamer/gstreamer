@@ -711,7 +711,7 @@ gst_m3u8_has_next_fragment (GstM3U8 * m3u8, gboolean forward)
     cur = m3u8_find_next_fragment (m3u8, forward);
   }
 
-  have_next = (forward && cur->next) || (!forward && cur->prev);
+  have_next = cur && ((forward && cur->next) || (!forward && cur->prev));
 
   GST_M3U8_UNLOCK (m3u8);
 
