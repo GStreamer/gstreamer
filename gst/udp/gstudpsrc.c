@@ -847,12 +847,18 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   gssize res;
   gsize offset;
   GSocketControlMessage **msgs = NULL;
+  GSocketControlMessage ***p_msgs;
   gint n_msgs = 0, i;
 
   udpsrc = GST_UDPSRC_CAST (psrc);
 
   if (!gst_udpsrc_ensure_mem (udpsrc))
     goto memory_alloc_error;
+
+  /* optimization: use messages only in multicast mode */
+  p_msgs =
+      (g_inet_address_get_is_multicast (g_inet_socket_address_get_address
+          (udpsrc->addr))) ? &msgs : NULL;
 
   /* Retrieve sender address unless we've been configured not to do so */
   p_saddr = (udpsrc->retrieve_sender_address) ? &saddr : NULL;
@@ -898,7 +904,7 @@ retry:
 
   res =
       g_socket_receive_message (udpsrc->used_socket, p_saddr, udpsrc->vec, 2,
-      &msgs, &n_msgs, &flags, udpsrc->cancellable, &err);
+      p_msgs, &n_msgs, &flags, udpsrc->cancellable, &err);
 
   if (G_UNLIKELY (res < 0)) {
     /* G_IO_ERROR_HOST_UNREACHABLE for a UDP socket means that a packet sent
@@ -923,44 +929,40 @@ retry:
 
   /* Retry if multicast and the destination address is not ours. We don't want
    * to receive arbitrary packets */
-  {
+  if (p_msgs) {
     GInetAddress *iaddr = g_inet_socket_address_get_address (udpsrc->addr);
     gboolean skip_packet = FALSE;
     gsize iaddr_size = g_inet_address_get_native_size (iaddr);
     const guint8 *iaddr_bytes = g_inet_address_to_bytes (iaddr);
 
-    if (g_inet_address_get_is_multicast (iaddr)) {
-
-      for (i = 0; i < n_msgs && !skip_packet; i++) {
+    for (i = 0; i < n_msgs && !skip_packet; i++) {
 #ifdef IP_PKTINFO
-        if (GST_IS_IP_PKTINFO_MESSAGE (msgs[i])) {
-          GstIPPktinfoMessage *msg = GST_IP_PKTINFO_MESSAGE (msgs[i]);
+      if (GST_IS_IP_PKTINFO_MESSAGE (msgs[i])) {
+        GstIPPktinfoMessage *msg = GST_IP_PKTINFO_MESSAGE (msgs[i]);
 
-          if (sizeof (msg->addr) == iaddr_size
-              && memcmp (iaddr_bytes, &msg->addr, sizeof (msg->addr)))
-            skip_packet = TRUE;
-        }
+        if (sizeof (msg->addr) == iaddr_size
+            && memcmp (iaddr_bytes, &msg->addr, sizeof (msg->addr)))
+          skip_packet = TRUE;
+      }
 #endif
 #ifdef IPV6_PKTINFO
-        if (GST_IS_IPV6_PKTINFO_MESSAGE (msgs[i])) {
-          GstIPV6PktinfoMessage *msg = GST_IPV6_PKTINFO_MESSAGE (msgs[i]);
+      if (GST_IS_IPV6_PKTINFO_MESSAGE (msgs[i])) {
+        GstIPV6PktinfoMessage *msg = GST_IPV6_PKTINFO_MESSAGE (msgs[i]);
 
-          if (sizeof (msg->addr) == iaddr_size
-              && memcmp (iaddr_bytes, &msg->addr, sizeof (msg->addr)))
-            skip_packet = TRUE;
-        }
+        if (sizeof (msg->addr) == iaddr_size
+            && memcmp (iaddr_bytes, &msg->addr, sizeof (msg->addr)))
+          skip_packet = TRUE;
+      }
 #endif
 #ifdef IP_RECVDSTADDR
-        if (GST_IS_IP_RECVDSTADDR_MESSAGE (msgs[i])) {
-          GstIPRecvdstaddrMessage *msg = GST_IP_RECVDSTADDR_MESSAGE (msgs[i]);
+      if (GST_IS_IP_RECVDSTADDR_MESSAGE (msgs[i])) {
+        GstIPRecvdstaddrMessage *msg = GST_IP_RECVDSTADDR_MESSAGE (msgs[i]);
 
-          if (sizeof (msg->addr) == iaddr_size
-              && memcmp (iaddr_bytes, &msg->addr, sizeof (msg->addr)))
-            skip_packet = TRUE;
-        }
-#endif
+        if (sizeof (msg->addr) == iaddr_size
+            && memcmp (iaddr_bytes, &msg->addr, sizeof (msg->addr)))
+          skip_packet = TRUE;
       }
-
+#endif
     }
 
     for (i = 0; i < n_msgs; i++) {
