@@ -274,6 +274,9 @@ parse_chain_output_probe (GstPad * pad, GstPadProbeInfo * info,
           }
         }
         break;
+      case GST_EVENT_FLUSH_STOP:
+        GST_DEBUG_OBJECT (pad, "Clear saw_eos flag");
+        input->saw_eos = FALSE;
       default:
         break;
     }
@@ -327,10 +330,11 @@ create_input_stream (GstDecodebin3 * dbin, GstStream * stream, GstPad * pad,
   res->pending_stream = gst_object_ref (stream);
   res->srcpad = pad;
 
-  /* Put probe on output source pad (for detecting EOS/STREAM_START) */
+  /* Put probe on output source pad (for detecting EOS/STREAM_START/FLUSH) */
   res->output_event_probe_id =
       gst_pad_add_probe (pad,
-      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM,
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM
+      | GST_PAD_PROBE_TYPE_EVENT_FLUSH,
       (GstPadProbeCallback) parse_chain_output_probe, res, NULL);
 
   /* Add to list of current input streams */
