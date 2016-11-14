@@ -825,20 +825,11 @@ error:
   }
 }
 
-GstAllocator *
-gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
-    const GstVideoInfo * vip, guint surface_alloc_flags,
-    GstVaapiImageUsageFlags req_usage_flag)
+static inline gboolean
+allocator_params_init (GstVaapiVideoAllocator * allocator,
+    GstVaapiDisplay * display, const GstVideoInfo * vip,
+    guint surface_alloc_flags, GstVaapiImageUsageFlags req_usage_flag)
 {
-  GstVaapiVideoAllocator *allocator;
-
-  g_return_val_if_fail (display != NULL, NULL);
-  g_return_val_if_fail (vip != NULL, NULL);
-
-  allocator = g_object_new (GST_VAAPI_TYPE_VIDEO_ALLOCATOR, NULL);
-  if (!allocator)
-    return NULL;
-
   allocator->allocation_info = *vip;
 
   allocator_configure_surface_info (display, allocator, req_usage_flag);
@@ -855,21 +846,43 @@ gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
 
   gst_allocator_set_vaapi_video_info (GST_ALLOCATOR_CAST (allocator),
       &allocator->image_info, surface_alloc_flags);
-  return GST_ALLOCATOR_CAST (allocator);
+
+  return TRUE;
 
   /* ERRORS */
 error_create_surface_pool:
   {
     GST_ERROR ("failed to allocate VA surface pool");
-    gst_object_unref (allocator);
-    return NULL;
+    return FALSE;
   }
 error_create_image_pool:
   {
     GST_ERROR ("failed to allocate VA image pool");
-    gst_object_unref (allocator);
+    return FALSE;
+  }
+}
+
+GstAllocator *
+gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
+    const GstVideoInfo * vip, guint surface_alloc_flags,
+    GstVaapiImageUsageFlags req_usage_flag)
+{
+  GstVaapiVideoAllocator *allocator;
+
+  g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (vip != NULL, NULL);
+
+  allocator = g_object_new (GST_VAAPI_TYPE_VIDEO_ALLOCATOR, NULL);
+  if (!allocator)
+    return NULL;
+
+  if (!allocator_params_init (allocator, display, vip, surface_alloc_flags,
+          req_usage_flag)) {
+    g_object_unref (allocator);
     return NULL;
   }
+
+  return GST_ALLOCATOR_CAST (allocator);
 }
 
 /* ------------------------------------------------------------------------ */
