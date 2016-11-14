@@ -2481,7 +2481,7 @@ gst_parent_buffer_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
-  if (g_once_init_enter (&meta_info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
     const GstMetaInfo *meta =
         gst_meta_register (gst_parent_buffer_meta_api_get_type (),
         "GstParentBufferMeta",
@@ -2489,7 +2489,7 @@ gst_parent_buffer_meta_get_info (void)
         (GstMetaInitFunction) _gst_parent_buffer_meta_init,
         (GstMetaFreeFunction) _gst_parent_buffer_meta_free,
         _gst_parent_buffer_meta_transform);
-    g_once_init_leave (&meta_info, meta);
+    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) meta);
   }
 
   return meta_info;

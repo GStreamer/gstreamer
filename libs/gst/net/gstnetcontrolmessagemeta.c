@@ -87,7 +87,7 @@ gst_net_control_message_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
-  if (g_once_init_enter (&meta_info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
     const GstMetaInfo *mi =
         gst_meta_register (GST_NET_CONTROL_MESSAGE_META_API_TYPE,
         "GstNetControlMessageMeta",
@@ -95,7 +95,7 @@ gst_net_control_message_meta_get_info (void)
         net_control_message_meta_init,
         net_control_message_meta_free,
         net_control_message_meta_transform);
-    g_once_init_leave (&meta_info, mi);
+    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
   }
   return meta_info;
 }
