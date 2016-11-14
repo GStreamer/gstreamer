@@ -2536,8 +2536,12 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
             (guint32) (1 * 65536.0));
       }
 
-      /* has shift */
-      if (has_gap || (qtpad->dts_adjustment > 0)) {
+      /* Always write an edit list for the whole track. In general this is not
+       * necessary except for the case of having a gap or DTS adjustment but
+       * it allows to give the whole track's duration in the usually more
+       * accurate media timescale
+       */
+      {
         GstClockTime ctts = 0;
         guint32 media_start;
 
