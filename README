@@ -37,12 +37,12 @@ Follow the instructions outlined in the theme's README.md, you can dispense
 with the last step (building the theme):
 
 ```
-cd hotdoc_bootstrap_theme
+cd theme/hotdoc_bootstrap_theme
 sudo dnf install nodejs # On Fedora
 sudo apt-get install nodejs nodejs-legacy npm # debian
-sudo pacman -S nodejs npm# arch
+sudo pacman -S nodejs npm # arch
 npm install && ./node_modules/bower/bin/bower install
-cd ..
+cd ../..
 ```
 
 * Build the portal:
@@ -54,5 +54,5 @@ make
 * And browse it:
 
 ```
-xdg-open build/html/index.html
+xdg-open built_doc/html/index.html
 ```
