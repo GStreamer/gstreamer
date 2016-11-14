@@ -19,8 +19,10 @@ boxes. On the one end, you might put something in, the element does
 something with it and something else comes out at the other side. For a
 decoder element, for example, you'd put in encoded data, and the element
 would output decoded data. In the next chapter (see [Pads and
-capabilities](manual/building/pads.md)), you will learn more about data input
+capabilities][pads]), you will learn more about data input
 and output in elements, and how you can set that up in your application.
+
+[pads]: application-development/building/pads.md
 
 ### Source elements
 
@@ -223,7 +225,7 @@ about their configuration or to configure the element. `gst-inspect` is
 a useful tool to query the properties of a particular element, it will
 also use property introspection to give a short explanation about the
 function of the property and about the parameter types and ranges it
-supports. See [gst-inspect](manual/appendix/checklist-element.md#gst-inspect) in
+supports. See [gst-inspect][checklist-gst-inspect] in
 the appendix for details about `gst-inspect`.
 
 For more information about `GObject` properties we recommend you read
@@ -238,6 +240,8 @@ also provides various `GObject` signals that can be used as a flexible
 callback mechanism. Here, too, you can use `gst-inspect` to see which
 signals a specific element supports. Together, signals and properties
 are the most basic way in which elements and applications interact.
+
+[checklist-gst-inspect]: application-development/appendix/checklist-element.md#gst-inspect
 
 ## More about element factories
 
@@ -308,8 +312,7 @@ plugins into memory. This can be used to provide a codec selection list
 for encoders, or it can be used for autoplugging purposes for media
 players. All current GStreamer-based media players and autopluggers work
 this way. We'll look closer at these features as we learn about `GstPad`
-and `GstCaps` in the next chapter: [Pads and
-capabilities](manual/building/pads.md)
+and `GstCaps` in the next chapter: [Pads and capabilities][pads]
 
 ## Linking elements
 
@@ -380,7 +383,9 @@ them, since adding an element to a bin will disconnect any already
 existing links. Also, you cannot directly link elements that are not in
 the same bin or pipeline; if you want to link elements or pads at
 different hierarchy levels, you will need to use ghost pads (more about
-ghost pads later, see [Ghost pads](manual/building/pads.md#ghost-pads)).
+ghost pads later, see [Ghost pads][ghostpads]
+
+[ghostpads]: application-development/building/pads.md#ghost-pads
 
 ## Element States
 
@@ -434,7 +439,7 @@ GStreamer will start threads that take this task on to them. GStreamer
 will also take care of switching messages from the pipeline's thread
 into the application's own thread, by using a
 [`GstBus`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstBus.html).
-See [Bus](manual/building/bus.md) for details.
+See [Bus][bus] for details.
 
 When you set a bin or pipeline to a certain target state, it will
 usually propagate the state change to all elements within the bin or
@@ -444,6 +449,8 @@ However, when adding elements dynamically to an already-running
 pipeline, e.g. from within a "pad-added" signal callback, you need to
 set it to the desired target state yourself using `gst_element_set_state
 ()` or `gst_element_sync_state_with_parent ()`.
+
+[bus]: application-development/building/bus.md
 
 1.  The code for this example is automatically extracted from the
     documentation and built under `tests/examples/manual` in the

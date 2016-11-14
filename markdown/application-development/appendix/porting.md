@@ -28,19 +28,17 @@ applications to GStreamer-0.10 in less than a day.
   - Applications should no longer use signal handlers to be notified of
     errors, end-of-stream and other similar pipeline events. Instead,
     they should use the `GstBus`, which has been discussed in
-    [Bus](manual/building/bus.md). The bus will take care that the messages will
+    [Bus][bus]. The bus will take care that the messages will
     be delivered in the context of a main loop, which is almost
     certainly the application's main thread. The big advantage of this
     is that applications no longer need to be thread-aware; they don't
-    need to use `g_idle_add
-                                            ()` in the signal handler and do the actual real work in the
-    idle-callback. GStreamer now does all that internally.
+    need to use `g_idle_add ()` in the signal handler and do the actual
+    real work in the idle-callback. GStreamer now does all that internally.
 
   - Related to this, `gst_bin_iterate ()` has been removed. Pipelines
     will iterate in their own thread, and applications can simply run a
     `GMainLoop` (or call the mainloop of their UI toolkit, such as
-    `gtk_main
-                                            ()`).
+    `gtk_main ()`).
 
   - State changes can be delayed (ASYNC). Due to the new fully threaded
     nature of GStreamer-0.10, state changes are not always immediate, in
@@ -62,17 +60,16 @@ applications to GStreamer-0.10 in less than a day.
     case in 0.10. In 0.10, queries and events can be sent to toplevel
     pipelines, and the pipeline will do the dispatching internally for
     you. This means less bookkeeping in your application. For a short
-    code example, see [Position tracking and
-    seeking](manual/advanced/queryevents.md). Related, seeking is now
-    threadsafe, and your video output will show the new video position's
-    frame while seeking, providing a better user experience.
+    code example, see [Position tracking and seeking][queries-and-events].
+    Related, seeking is now threadsafe, and your video output will show the new
+    video position's frame while seeking, providing a better user experience.
 
   - The `GstThread` object has been removed. Applications can now simply
     put elements in a pipeline with optionally some “queue” elements in
     between for buffering, and GStreamer will take care of creating
     threads internally. It is still possible to have parts of a pipeline
     run in different threads than others, by using the “queue” element.
-    See [Threads](manual/advanced/threads.md) for details.
+    See [Threads][threads] for details.
 
   - Filtered caps -\> capsfilter element (the pipeline syntax for
     gst-launch has not changed though).
@@ -88,3 +85,7 @@ applications to GStreamer-0.10 in less than a day.
     GOption command line option API that was added to GLib 2.6.
     `gst_init_get_option_group ()` is the new GOption-based equivalent
     to `gst_init_get_ptop_table ()`.
+
+[bus]: application-development/building/bus.md
+[threads]: application-development/advanced/threads.md
+[queries-and-sevents]: application-development/advanced/queryevents.md

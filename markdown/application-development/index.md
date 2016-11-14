@@ -64,30 +64,34 @@ large parts. Each part addresses a particular broad topic concerning
 GStreamer appliction development. The parts of this guide are laid out
 in the following order:
 
-[About GStreamer](manual/introduction/index.md) gives you an overview of
-GStreamer, it's design principles and foundations.
+[About GStreamer][about] gives you an overview of GStreamer, its design
+principles and foundations.
 
-[Building an Application](manual/building/index.md) covers the basics of
-GStreamer application programming. At the end of this part, you should
-be able to build your own audio player using GStreamer
+[Building an Application][app-building] covers the basics of GStreamer
+application programming. At the end of this part, you should be able to
+build your own audio player using GStreamer
 
-In [Advanced GStreamer concepts](manual/advanced/index.md), we will move on to
-advanced subjects which make GStreamer stand out of its competitors. We
-will discuss application-pipeline interaction using dynamic parameters
-and interfaces, we will discuss threading and threaded pipelines,
-scheduling and clocks (and synchronization). Most of those topics are
-not just there to introduce you to their API, but primarily to give a
-deeper insight in solving application programming problems with
-GStreamer and understanding their concepts.
+In [Advanced GStreamer concepts][advanced], we will move on to advanced
+subjects which make GStreamer stand out of its competitors. We will discuss
+application-pipeline interaction using dynamic parameters and interfaces, we
+will discuss threading and threaded pipelines, scheduling and clocks (and
+synchronization). Most of those topics are not just there to introduce you to
+their API, but primarily to give a deeper insight in solving application
+programming problems with GStreamer and understanding their concepts.
 
-Next, in [Higher-level interfaces for GStreamer
-applications](manual/advanced/index.md), we will go into higher-level
-programming APIs for GStreamer. You don't exactly need to know all the
-details from the previous parts to understand this, but you will need to
-understand basic GStreamer concepts nevertheless. We will, amongst
-others, discuss XML, playbin and autopluggers.
+Next, in [Higher-level interfaces for GStreamer applications][highlevel], we
+will go into higher-level programming APIs for GStreamer. You don't exactly
+need to know all the details from the previous parts to understand this, but
+you will need to understand basic GStreamer concepts nevertheless. We will,
+amongst others, discuss playbin and autopluggers.
 
-Finally in [Appendices](manual/appendix/index.md), you will find some random
+Finally in [Appendices][appendix], you will find some random
 information on integrating with GNOME, KDE, OS X or Windows, some
 debugging help and general tips to improve and simplify GStreamer
 programming.
+
+[about]: application-development/introduction/index.md
+[app-building]: application-development/building/index.md
+[advanced]: application-development/advanced/index.md
+[highlevel]: application-development/highlevel/index.md
+[appendix]: application-development/appendix/index.md

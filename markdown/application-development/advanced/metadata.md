@@ -18,12 +18,12 @@ using the GStreamer tagging system. Stream-info can be retrieved from a
 
 Stream information can most easily be read by reading it from a
 `GstPad`. This has already been discussed before in [Using capabilities
-for metadata](manual/building/pads.md#using-capabilities-for-metadata).
+for metadata](application-development/building/pads.md#using-capabilities-for-metadata).
 Therefore, we will skip it here. Note that this requires access to all
 pads of which you want stream information.
 
 Tag reading is done through a bus in GStreamer, which has been discussed
-previously in [Bus](manual/building/bus.md). You can listen for
+previously in [Bus](application-development/building/bus.md). You can listen for
 `GST_MESSAGE_TAG` messages and handle them as you wish.
 
 Note, however, that the `GST_MESSAGE_TAG` message may be fired multiple

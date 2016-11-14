@@ -4,7 +4,7 @@ title: Autoplugging
 
 # Autoplugging
 
-In [Your first application](manual/building/helloworld.md), you've learned to
+In [Your first application][helloworld], you've learned to
 build a simple media player for Ogg/Vorbis files. By using alternative
 elements, you are able to build media players for other media types,
 such as Ogg/Speex, MP3 or even video formats. However, you would rather
@@ -13,7 +13,7 @@ type of a stream and automatically generate the best possible pipeline
 by looking at all available elements in a system. This process is called
 autoplugging, and GStreamer contains high-quality autopluggers. If
 you're looking for an autoplugger, don't read any further and go to
-[Playback Components](manual/highlevel/playback-components.md). This chapter will
+[Playback Components][playback-components]. This chapter will
 explain the *concept* of autoplugging and typefinding. It will explain
 what systems GStreamer includes to dynamically detect the type of a
 media stream, and how to generate a pipeline of decoder elements to
@@ -29,19 +29,20 @@ Lastly, we will explain how autoplugging and the GStreamer registry can
 be used to setup a pipeline that will convert media from one mediatype
 to another, for example for media decoding.
 
+[helloworld]: application-development/building/helloworld.md
+[playback-components]: application-development/highlevel/playback-components.md
+
 ## Media types as a way to identify streams
 
 We have previously introduced the concept of capabilities as a way for
 elements (or, rather, pads) to agree on a media type when streaming data
-from one element to the next (see [Capabilities of a
-pad](manual/building/pads.md#capabilities-of-a-pad)). We have explained that a
-capability is a combination of a media type and a set of properties. For
-most container formats (those are the files that you will find on your
-hard disk; Ogg, for example, is a container format), no properties are
+from one element to the next (see [Capabilities of a pad][pad-caps])). We have
+explained that a capability is a combination of a media type and a set of
+properties. For most container formats (those are the files that you will find
+on your hard disk; Ogg, for example, is a container format), no properties are
 needed to describe the stream. Only a media type is needed. A full list
 of media types and accompanying properties can be found in [the Plugin
-Writer's
-Guide](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/section-types-definitions.html).
+Writer's Guide][pwg-type-defs].
 
 An element must associate a media type to its source and sink pads when
 it is loaded into the system. GStreamer knows about the different
@@ -49,18 +50,20 @@ elements and what type of data they expect and emit through the
 GStreamer registry. This allows for very dynamic and extensible element
 creation as we will see.
 
-In [Your first application](manual/building/helloworld.md), we've learned to
+In [Your first application][helloworld], we've learned to
 build a music player for Ogg/Vorbis files. Let's look at the media types
 associated with each pad in this pipeline. [The Hello world pipeline
 with media types](#the-hello-world-pipeline-with-media-types) shows what
 media type belongs to each pad in this pipeline.
 
-![The Hello world pipeline with media types](images/mime-world.png
-"fig:")
+![The Hello world pipeline with media types](images/mime-world.png "fig:")
 
 Now that we have an idea how GStreamer identifies known media streams,
 we can look at methods GStreamer uses to setup pipelines for media
 handling and for media type detection.
+
+[pad-caps]: application-development/building/pads.md#capabilities-of-a-pad
+[pwg-type-defs]: pwg/advanced/building-types.md
 
 ## Media stream type detection
 
@@ -183,5 +186,5 @@ decoding of the media stream will start right after.
 
 ## Dynamically autoplugging a pipeline
 
-See [Playback Components](manual/highlevel/playback-components.md) for using the
+See [Playback Components][playback-components] for using the
 high level object that you can use to dynamically construct pipelines.

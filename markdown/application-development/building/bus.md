@@ -108,9 +108,8 @@ of what they do and how to parse message-specific content.
     Information messages are for non-problem notifications. All those
     messages contain a `GError` with the main error type and message,
     and optionally a debug string. Both can be extracted using
-    `gst_message_parse_error
-                                            ()`, `_parse_warning ()` and `_parse_info ()`. Both error and debug
-    strings should be freed after use.
+    `gst_message_parse_error()`, `_parse_warning ()` and `_parse_info ()`.
+    Both error and debug strings should be freed after use.
 
   - End-of-stream notification: this is emitted when the stream has
     ended. The state of the pipeline will not change, but further media
@@ -123,9 +122,9 @@ of what they do and how to parse message-specific content.
     emitted multiple times for a pipeline (e.g. once for descriptive
     metadata such as artist name or song title, and another one for
     stream-information, such as samplerate and bitrate). Applications
-    should cache metadata internally. `gst_message_parse_tag
-                                            ()` should be used to parse the taglist, which should be
-    `gst_tag_list_unref ()`'ed when no longer needed.
+    should cache metadata internally. `gst_message_parse_tag()` should be
+    used to parse the taglist, which should be `gst_tag_list_unref ()`'ed
+    when no longer needed.
 
   - State-changes: emitted after a successful state change.
     `gst_message_parse_state_changed ()` can be used to parse the old
@@ -134,8 +133,7 @@ of what they do and how to parse message-specific content.
   - Buffering: emitted during caching of network-streams. One can
     manually extract the progress (in percent) from the message by
     extracting the “buffer-percent” property from the structure returned
-    by `gst_message_get_structure
-                                                    ()`. See also [Buffering](manual/advanced/buffering.md).
+    by `gst_message_get_structure()`. See also [Buffering][buffering]
 
   - Element messages: these are special messages that are unique to
     certain elements and usually represent additional features. The
@@ -153,3 +151,5 @@ of what they do and how to parse message-specific content.
     from some thread into the main thread. This is particularly useful
     when the application is making use of element signals (as those
     signals will be emitted in the context of the streaming thread).
+
+[buffering]: application-development/advanced/buffering.md

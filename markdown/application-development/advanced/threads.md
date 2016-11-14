@@ -349,8 +349,7 @@ situations where threads can be particularly useful:
   - Data buffering, for example when dealing with network streams or
     when recording data from a live stream such as a video or audio
     card. Short hickups elsewhere in the pipeline will not cause data
-    loss. See also [Stream
-    buffering](manual/advanced/buffering.md#stream-buffering) about network
+    loss. See also [Stream buffering][stream-buffering] about network
     buffering with queue2.
 
     ![Data buffering, from a networked
@@ -379,3 +378,5 @@ To use a queue (and therefore force the use of two distinct threads in
 the pipeline), one can simply create a “queue” element and put this in
 as part of the pipeline. GStreamer will take care of all threading
 details internally.
+
+[stream-buffering]: application-development/advanced/buffering.md#stream-buffering

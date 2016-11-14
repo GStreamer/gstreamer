@@ -4,12 +4,14 @@ title: Pads and capabilities
 
 # Pads and capabilities
 
-As we have seen in [Elements](manual/building/elements.md), the pads are the
+As we have seen in [Elements][elements], the pads are the
 element's interface to the outside world. Data streams from one
 element's source pad to another element's sink pad. The specific type of
 media that the element can handle will be exposed by the pad's
 capabilities. We will talk more on capabilities later in this chapter
 (see [Capabilities of a pad](#capabilities-of-a-pad)).
+
+[elements]: application-development/building/elements.md
 
 ## Pads
 
@@ -286,14 +288,15 @@ very useful for various purposes:
     “filtered caps” to set a specific (fixed or non-fixed) video size
     that should stream between two pads. You will see an example of
     filtered caps later in this manual, in [Manually adding or removing
-    data from/to a
-    pipeline](manual/advanced/dataaccess.md#manually-adding-or-removing-data-fromto-a-pipeline).
+    data from/to a pipeline][inserting-or-extracting-data].
     You can do caps filtering by inserting a capsfilter element into
     your pipeline and setting its “caps” property. Caps filters are
     often placed after converter elements like audioconvert,
     audioresample, videoconvert or videoscale to force those converters
     to convert data to a specific output format at a certain point in a
     stream.
+
+[inserting-or-extracting-data]: application-development/advanced/dataaccess.md#manually-adding-or-removing-data-fromto-a-pipeline
 
 ### Using capabilities for metadata
 

@@ -922,8 +922,9 @@ using *filtered caps*. You can set a filtered caps on a link by using
 the “capsfilter” element in between the two elements, and specifying a
 `GstCaps` as “caps” property on this element. It will then only allow
 types matching that specified capability set for negotiation. See also
-[Creating capabilities for
-filtering](manual/building/pads.md#creating-capabilities-for-filtering).
+[Creating capabilities for filtering][filter-caps].
+
+[filter-caps]: application-development/building/pads.md#creating-capabilities-for-filtering
 
 ### Changing format in a PLAYING pipeline
 

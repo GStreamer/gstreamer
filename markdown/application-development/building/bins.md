@@ -6,8 +6,10 @@ title: Bins
 
 A bin is a container element. You can add elements to a bin. Since a bin
 is an element itself, a bin can be handled in the same way as any other
-element. Therefore, the whole previous chapter
-([Elements](manual/building/elements.md)) applies to bins as well.
+element. Therefore, the whole previous chapter ([Elements][elements]) applies
+to bins as well.
+
+[elements]: application-development/building/elements.md
 
 ## What are bins
 

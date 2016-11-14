@@ -4,8 +4,7 @@ title: Interfaces
 
 # Interfaces
 
-In [Using an element as a
-GObject](manual/building/elements.md#using-an-element-as-a-gobject), you have
+In [Using an element as a GObject][element-object], you have
 learned how to use `GObject` properties as a simple way to do
 interaction between applications and elements. This method suffices for
 the simple'n'straight settings, but fails for anything more complicated
@@ -17,6 +16,8 @@ type.
 Most of the interfaces handled here will not contain any example code.
 See the API references for details. Here, we will just describe the
 scope and purpose of each interface.
+
+[element-object]: application-development/building/elements.md#using-an-element-as-a-gobject
 
 ## The URI interface
 

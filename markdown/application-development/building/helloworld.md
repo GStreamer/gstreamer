@@ -17,7 +17,7 @@ command-line audio player. For this, we will use only standard GStreamer
 components. The player will read a file specified on the command-line.
 Let's get started\!
 
-We've learned, in [Initializing GStreamer](manual/building/init.md), that the
+We've learned, in [Initializing GStreamer][gst-init], that the
 first thing to do in your application is to initialize GStreamer by
 calling `gst_init ()`. Also, make sure that the application includes
 `gst/gst.h` so all function names and objects are properly defined. Use
@@ -34,7 +34,7 @@ audio) and is called “oggdemux”. The second is a Vorbis audio decoder,
 it's conveniently called “vorbisdec”. Since “oggdemux” creates dynamic
 pads for each elementary stream, you'll need to set a “pad-added” event
 handler on the “oggdemux” element, like you've learned in [Dynamic (or
-sometimes) pads](manual/building/pads.md#dynamic-or-sometimes-pads), to link the
+sometimes) pads][dynamic-pads], to link the
 Ogg demuxer and the Vorbis decoder elements together. At last, we'll
 also need an audio output element, we will use “autoaudiosink”, which
 automatically detects your audio device.
@@ -42,10 +42,9 @@ automatically detects your audio device.
 The last thing left to do is to add all elements into a container
 element, a `GstPipeline`, and wait until we've played the whole song.
 We've previously learned how to add elements to a container bin in
-[Bins](manual/building/bins.md), and we've learned about element states in
-[Element States](manual/building/elements.md#element-states). We will also
-attach a message handler to the pipeline bus so we can retrieve errors
-and detect the end-of-stream.
+[Bins][bins], and we've learned about element states in
+[Element States][element-states]. We will also attach a message handler to
+the pipeline bus so we can retrieve errors and detect the end-of-stream.
 
 Let's now add all the code together to get our very first audio player:
 
@@ -205,6 +204,12 @@ as follows:
 
 ![The "hello world" pipeline](images/hello-world.png "fig:")
 
+[gst-init]: application-development/building/init.md
+[advanced]: application-development/advanced/index.md
+[dynamic-pads]: application-development/building/pads.md#dynamic-or-sometimes-pads
+[bins]: application-development/building/bins.md
+[element-states]: application-development/building/elements.md#element-states
+
 ## Compiling and Running helloworld.c
 
 To compile the helloworld example, use: `gcc -Wall
@@ -233,7 +238,7 @@ This concludes our first example. As you see, setting up a pipeline is
 very low-level but powerful. You will see later in this manual how you
 can create a more powerful media player with even less effort using
 higher-level interfaces. We will discuss all that in [Higher-level
-interfaces for GStreamer applications](manual/advanced/index.md). We will
+interfaces for GStreamer applications][advanced]. We will
 first, however, go more in-depth into more advanced GStreamer internals.
 
 It should be clear from the example that we can very easily replace the

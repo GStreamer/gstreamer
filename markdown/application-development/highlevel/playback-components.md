@@ -10,7 +10,7 @@ now) are targetted at media playback. The idea of each of these
 components is to integrate as closely as possible with a GStreamer
 pipeline, but to hide the complexity of media type detection and several
 other rather complex topics that have been discussed in [Advanced
-GStreamer concepts](manual/advanced/index.md).
+GStreamer concepts][advanced].
 
 We currently recommend people to use either playbin (see
 [Playbin](#playbin)) or decodebin (see [Decodebin](#decodebin)),
@@ -20,6 +20,8 @@ Decodebin is a more flexible autoplugger that could be used to add more
 advanced features, such as playlist support, crossfading of audio tracks
 and so on. Its programming interface is more low-level than that of
 playbin, though.
+
+[advanced]: application-development/advanced/index.md
 
 ## Playbin
 
@@ -255,7 +257,7 @@ given.
 Uridecodebin will also automatically insert buffering elements when the
 uri is a slow network source. The buffering element will post BUFFERING
 messages that the application needs to handle as explained in
-[Buffering](manual/advanced/buffering.md). The following properties can be used
+[Buffering][buffering]. The following properties can be used
 to configure the buffering method:
 
   - The buffer-size property allows you to configure a maximum size in
@@ -265,9 +267,8 @@ to configure the buffering method:
     in time for the buffer element. The time will be estimated based on
     the bitrate of the network.
 
-  - With the download property you can enable the download buffering
-    method as described in [Download
-    buffering](manual/advanced/buffering.md#download-buffering). Setting this
+  - With the download property you can enable the download buffering method
+    as described in [Download buffering][download-buffering]. Setting this
     option to TRUE will only enable download buffering for selected
     formats such as quicktime, flash video, avi and webm.
 
@@ -278,6 +279,9 @@ to configure the buffering method:
 URIDecodebin can be easily tested on the commandline, e.g. by using the
 command `gst-launch-1.0 uridecodebin uri=file:///file.ogg !
 ! audioconvert ! audioresample ! autoaudiosink`.
+
+[buffering]: application-development/advanced/buffering.md
+[download-buffering]: application-development/advanced/buffering.md#download-buffering
 
 ## Playsink
 
