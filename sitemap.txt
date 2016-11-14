@@ -6,6 +6,15 @@ index.md
 	        installing/on-windows.md
 		installing/on-linux.md
 	        installing/building-from-source-using-cerbero.md
+	frequently-asked-questions/start.md
+		frequently-asked-questions/general.md
+		frequently-asked-questions/dependencies.md
+		frequently-asked-questions/getting.md
+		frequently-asked-questions/using.md
+		frequently-asked-questions/troubleshooting.md
+		frequently-asked-questions/git.md
+		frequently-asked-questions/developing.md
+		frequently-asked-questions/legal.md
 	application-development/index.md
 		application-development/introduction/index.md
 			application-development/introduction/gstreamer.md
