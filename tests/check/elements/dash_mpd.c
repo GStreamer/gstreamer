@@ -5550,7 +5550,7 @@ GST_START_TEST (dash_mpdparser_xlink_period)
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "  <Period id=\"Period0\"" "duration=\"PT5S\"></Period>";
+      "  <Period id=\"Period0\" duration=\"PT5S\"></Period>";
 
   const gchar *xml_uri_front = "  <Period xlink:href=\"";
 
