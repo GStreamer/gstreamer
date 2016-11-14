@@ -44,7 +44,7 @@ endif
 if vorbisidec_dep.found()
   gstivorbisdec = library('gstivorbisdec',
     vorbisidec_sources,
-    c_args : gst_plugins_base_args,
+    c_args : gst_plugins_base_args + ['-DTREMOR'],
     link_args : noseh_link_args,
     include_directories: [configinc, libsinc],
     dependencies : glib_deps + [vorbisidec_dep, audio_dep, tag_dep, gst_dep, gst_base_dep],
