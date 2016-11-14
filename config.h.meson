@@ -58,6 +58,9 @@
 /* Define if static plugins should be built */
 #mesondefine GST_PLUGIN_BUILD_STATIC
 
+/* Define to enable probing of V4L2 devices */
+#mesondefine GST_V4L2_ENABLE_PROBE
+
 /* Define to enable aalib ASCII Art library (used by aasink). */
 #mesondefine HAVE_AALIB
 
