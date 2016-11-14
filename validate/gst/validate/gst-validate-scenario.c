@@ -2556,8 +2556,6 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         priv->buffering = FALSE;
       else
         priv->buffering = TRUE;
-
-      g_print ("%s %d%%  \r", "Buffering...", percent);
       break;
     }
     case GST_MESSAGE_STREAMS_SELECTED:

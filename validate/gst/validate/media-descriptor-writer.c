@@ -496,7 +496,6 @@ bus_callback (GstBus * bus, GstMessage * message,
       gint percent;
 
       gst_message_parse_buffering (message, &percent);
-      g_print ("%s %d%%  \r", "Buffering...", percent);
 
       /* no state management needed for live pipelines */
       if (percent == 100) {
