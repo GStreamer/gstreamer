@@ -805,9 +805,9 @@ allocator_configure_image_info (GstVaapiDisplay * display,
 
   image = new_image (display, &allocator->image_info);
   if (!image)
-    goto bail;
+    goto error;
   if (!gst_vaapi_image_map (image))
-    goto bail;
+    goto error;
 
   gst_video_info_update_from_image (&allocator->image_info, image);
   gst_vaapi_image_unmap (image);
@@ -815,6 +815,14 @@ allocator_configure_image_info (GstVaapiDisplay * display,
 bail:
   if (image)
     gst_vaapi_object_unref (image);
+  return;
+
+  /* ERRORS */
+error:
+  {
+    GST_ERROR_OBJECT (allocator, "Cannot create or map a VA image");
+    goto bail;
+  }
 }
 
 GstAllocator *
