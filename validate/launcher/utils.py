@@ -301,7 +301,7 @@ class BackTraceGenerator(Loggable):
 
         try:
             return subprocess.check_output(
-                gdb, stderr=subprocess.STDOUT).decode()
+                gdb, stderr=subprocess.STDOUT, timeout=30).decode()
         except Exception as e:
             return "Could not run `gdb` on process (pid: %d):\n%s" % (
                 test.process.pid, e)
