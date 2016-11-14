@@ -1089,7 +1089,7 @@ gst_ffmpeg_metadata_to_tag_list (AVDictionary * metadata)
      * header, without handling any variants. */
     ADD_TAG_MAPPING (tmp, "album", GST_TAG_ALBUM);
     ADD_TAG_MAPPING (tmp, "album_artist", GST_TAG_ALBUM_ARTIST);
-    ADD_TAG_MAPPING (tmp, "artist", GST_TAG_ALBUM_ARTIST);
+    ADD_TAG_MAPPING (tmp, "artist", GST_TAG_ARTIST);
     ADD_TAG_MAPPING (tmp, "comment", GST_TAG_COMMENT);
     ADD_TAG_MAPPING (tmp, "composer", GST_TAG_COMPOSER);
     ADD_TAG_MAPPING (tmp, "copyright", GST_TAG_COPYRIGHT);
