@@ -67,8 +67,10 @@ gstaudio_c = custom_target('gstaudioenum_c',
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
 audio_gen_sources = [gstaudio_h]
 
+gstaudio_deps = [tag_dep, gst_base_dep, libm]
 orcsrc = 'gstaudiopack'
 if have_orcc
+  gstaudio_deps += [orc_dep]
   orc_h = custom_target(orcsrc + '.h',
     input : orcsrc + '.orc',
     output : orcsrc + '.h',
@@ -128,7 +130,6 @@ if have_sse41
   simd_dependencies += audio_resampler_sse41
 endif
 
-gstaudio_deps = [tag_dep, gst_base_dep, orc_dep, libm]
 gstaudio = library('gstaudio-@0@'.format(api_version),
   audio_src, gstaudio_h, gstaudio_c, orc_c, orc_h,
   c_args : gst_plugins_base_args + simd_cargs,

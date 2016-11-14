@@ -1,5 +1,7 @@
+volume_deps = glib_deps + [audio_dep, gst_dep, gst_base_dep]
 orcsrc = 'gstvolumeorc'
 if have_orcc
+  volume_deps += [orc_dep]
   orc_h = custom_target(orcsrc + '.h',
     input : orcsrc + '.orc',
     output : orcsrc + '.h',
@@ -20,7 +22,7 @@ endif
 gstvolume = library('gstvolume', 'gstvolume.c', orc_c, orc_h,
   c_args : gst_plugins_base_args,
   include_directories: [configinc, libsinc],
-  dependencies : glib_deps + [audio_dep, gst_dep, gst_base_dep, orc_dep],
+  dependencies : volume_deps,
   install : true,
   install_dir : plugins_install_dir,
 )

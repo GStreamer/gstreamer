@@ -1,5 +1,7 @@
+adder_deps = [audio_dep]
 orcsrc = 'gstadderorc'
 if have_orcc
+  adder_deps += [orc_dep]
   orc_h = custom_target(orcsrc + '.h',
     input : orcsrc + '.orc',
     output : orcsrc + '.h',
@@ -21,7 +23,7 @@ adder = library('gstadder',
   'gstadder.c', orc_c, orc_h,
   c_args: gst_plugins_base_args,
   include_directories: [configinc, libsinc],
-  dependencies : [audio_dep, orc_dep],
+  dependencies : adder_deps,
   install : true,
   install_dir : plugins_install_dir,
 )

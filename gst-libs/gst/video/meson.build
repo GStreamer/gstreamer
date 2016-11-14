@@ -99,7 +99,9 @@ gstvideo_c = custom_target('gstvideoenum_c',
 video_gen_sources = [gstvideo_h]
 
 orcsrc = 'video-orc'
+gstvideo_deps = [gst_base_dep, libm]
 if have_orcc
+  gstvideo_deps += [orc_dep]
   orc_h = custom_target(orcsrc + '.h',
     input : orcsrc + '.orc',
     output : orcsrc + '.h',
@@ -117,7 +119,6 @@ else
     configuration : configuration_data())
 endif
 
-gstvideo_deps = [gst_base_dep, orc_dep, libm]
 gstvideo = library('gstvideo-@0@'.format(api_version),
   video_sources, gstvideo_h, gstvideo_c, orc_c, orc_h,
   c_args : gst_plugins_base_args,
