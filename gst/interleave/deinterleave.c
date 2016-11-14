@@ -638,7 +638,7 @@ gst_deinterleave_getcaps (GstPad * pad, GstObject * parent, GstCaps * filter)
         break;
       case GST_ITERATOR_RESYNC:
         gst_caps_unref (ret);
-        ret = gst_caps_new_empty ();
+        ret = gst_caps_new_any ();
         gst_iterator_resync (it);
         break;
     }
