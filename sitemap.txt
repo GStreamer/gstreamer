@@ -6,40 +6,40 @@ index.md
 	        installing/on-windows.md
 		installing/on-linux.md
 	        installing/building-from-source-using-cerbero.md
-	manual/index.md
-		manual/introduction/index.md
-			manual/introduction/gstreamer.md
-			manual/introduction/motivation.md
-			manual/introduction/basics.md
-		manual/building/index.md
-			manual/building/init.md
-			manual/building/elements.md
-			manual/building/bins.md
-			manual/building/bus.md
-			manual/building/pads.md
-			manual/building/data.md
-			manual/building/helloworld.md
-		manual/advanced/index.md
-			manual/advanced/queryevents.md
-			manual/advanced/metadata.md
-			manual/advanced/interfaces.md
-			manual/advanced/clocks.md
-			manual/advanced/buffering.md
-			manual/advanced/dparams.md
-			manual/advanced/threads.md
-			manual/advanced/autoplugging.md
-			manual/advanced/dataaccess.md
-		manual/highlevel/index.md
-			manual/highlevel/playback-components.md
-		manual/appendix/index.md
-			manual/appendix/programs.md
-			manual/appendix/compiling.md
-			manual/appendix/checklist-element.md
-			manual/appendix/porting.md
-			manual/appendix/porting-1.0.md
-			manual/appendix/integration.md
-			manual/appendix/licensing.md
-			manual/appendix/quotes.md
+	application-development/index.md
+		application-development/introduction/index.md
+			application-development/introduction/gstreamer.md
+			application-development/introduction/motivation.md
+			application-development/introduction/basics.md
+		application-development/building/index.md
+			application-development/building/init.md
+			application-development/building/elements.md
+			application-development/building/bins.md
+			application-development/building/bus.md
+			application-development/building/pads.md
+			application-development/building/data.md
+			application-development/building/helloworld.md
+		application-development/advanced/index.md
+			application-development/advanced/queryevents.md
+			application-development/advanced/metadata.md
+			application-development/advanced/interfaces.md
+			application-development/advanced/clocks.md
+			application-development/advanced/buffering.md
+			application-development/advanced/dparams.md
+			application-development/advanced/threads.md
+			application-development/advanced/autoplugging.md
+			application-development/advanced/dataaccess.md
+		application-development/highlevel/index.md
+			application-development/highlevel/playback-components.md
+		application-development/appendix/index.md
+			application-development/appendix/programs.md
+			application-development/appendix/compiling.md
+			application-development/appendix/checklist-element.md
+			application-development/appendix/porting.md
+			application-development/appendix/porting-1.0.md
+			application-development/appendix/integration.md
+			application-development/appendix/licensing.md
+			application-development/appendix/quotes.md
         tutorials/index.md
 		tutorials/basic/index.md
 			tutorials/basic/hello-world.md

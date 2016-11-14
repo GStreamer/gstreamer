@@ -113,7 +113,7 @@ the following order:
     in [Building a Test Application](pwg/building/testapp.md). We
     will just touch upon basics here. For full-blown application
     development, you should look at [the Application Development
-    Manual](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/manual/html/index.html).
+    Manual](application-development/index.md).
 
   - [Advanced Filter Concepts](pwg/advanced/index.md) - Information on
     advanced features of GStreamer plugin development.

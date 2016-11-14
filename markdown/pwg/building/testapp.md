@@ -18,7 +18,7 @@ can provide, such as seeking, events, interactivity and more. Writing
 your own small testing program is the easiest way to accomplish this.
 This section explains - in a few words - how to do that. For a complete
 application development guide, see the [Application Development
-Manual](../../manual/html/index.html).
+Manual](application-development/index.md).
 
 At the start, you need to initialize the GStreamer core library by
 calling `gst_init ()`. You can alternatively call

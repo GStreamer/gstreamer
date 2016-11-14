@@ -8,7 +8,7 @@ all about.
 
 ## General
 
- * [Application Development Manual (Read this first)](manual/index.md)
+ * [Application Development Manual (Read this first)](application-development/index.md)
  * <a href="/data/doc/gstreamer/head/faq/html/index.html">Frequently Asked Questions</a>
  * [](pwg/index.md)
  * <a href="/data/doc/gstreamer/head/gstreamer/html/">Core Reference</a>
