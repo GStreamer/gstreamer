@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2016-10-08 21:26+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -868,6 +868,18 @@ msgstr "kunne ikke sette egenskapen «%s» i elementet «%s» til «%s»"
 
 msgid "Delayed linking failed."
 msgstr "Forsinket linking feilet."
+
+#, fuzzy, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "kunne ikke lenke %s til %s"
+
+#, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "kunne ikke lenke %s til %s"
 
 #, c-format
 msgid "could not link %s to %s"

@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -1037,6 +1037,18 @@ msgid "Delayed linking failed."
 msgstr ""
 
 #, fuzzy, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "OYA Ihuza Kuri"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr "OYA Ihuza Ikigize: kugirango"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "OYA Ihuza Kuri"
+
+#, fuzzy, c-format
 msgid "could not link %s to %s"
 msgstr "OYA Ihuza Kuri"
 
@@ -1511,10 +1523,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "Oya Ikigize: Kuri Ihuza Kuri"
-
-#, fuzzy
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "OYA Ihuza Ikigize: kugirango"
 
 #, fuzzy
 #~ msgid "Print alloc trace (if enabled at compile time)"

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -896,6 +896,18 @@ msgstr ""
 msgid "Delayed linking failed."
 msgstr ""
 
+#, fuzzy, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "nu se poate lega %s la %s"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr "nu se poate lega elementul derivat pentru URI „%s”"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "nu se poate lega %s la %s"
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "nu se poate lega %s la %s"
@@ -1362,9 +1374,6 @@ msgstr "Se eliberează linia de asamblare...\n"
 
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "niciun element pentru a lega URI „%s” la"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "nu se poate lega elementul derivat pentru URI „%s”"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Afișează căile de alocare (dacă s-a activat la momentul compilării)"

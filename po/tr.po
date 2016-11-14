@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2015-01-10 21:06+0100\n"
 "Last-Translator: Volkan Gezer <volkangezer@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -860,6 +860,18 @@ msgstr "\"%2$s\" öğesindeki \"%1$s\" özelliğine \"%3$s\" değeri atanamadı"
 msgid "Delayed linking failed."
 msgstr ""
 
+#, fuzzy, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "%s, %s'a bağlanamadı"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr "\"%s\" URI'si için 'sink' öğesi bağlanamadı"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "%s, %s'a bağlanamadı"
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s, %s'a bağlanamadı"
@@ -1370,9 +1382,6 @@ msgstr "Boru hattı boşaltılıyor ...\n"
 
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "\"%s\" URI'sini belirtilene bağlayacak öğe yok:"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "\"%s\" URI'si için 'sink' öğesi bağlanamadı"
 
 #~ msgid "Show plugin details"
 #~ msgstr "Eklenti detaylarını göster"

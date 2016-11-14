@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -880,6 +880,18 @@ msgstr "elementin ”%2$s” ominaisuutta ”%1$s” ei voitu asettaa arvoon ”
 msgid "Delayed linking failed."
 msgstr ""
 
+#, fuzzy, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "elementtiä %s ei voitu linkittää elementtiin %s"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr "nieluelementtiä ei voitu linkittää URIlle ”%s”"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "elementtiä %s ei voitu linkittää elementtiin %s"
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "elementtiä %s ei voitu linkittää elementtiin %s"
@@ -1346,9 +1358,6 @@ msgstr "Vapautetaan liukuhihna...\n"
 
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "ei elementtiä, jota linkittää URIin ”%s”"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "nieluelementtiä ei voitu linkittää URIlle ”%s”"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Tulosta varausjälki (jos valittu käännöksen yhteydessä)"

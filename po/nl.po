@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2016-02-20 16:42+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -881,6 +881,18 @@ msgstr "kon eigenschap \"%s\" in element \"%s\" niet op \"%s\" instellen"
 msgid "Delayed linking failed."
 msgstr "Vertraagd koppelen is mislukt."
 
+#, fuzzy, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "kon %s niet verbinden met %s"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr "kon doelelement niet verbinden voor URI \"%s\""
+
+#, fuzzy, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "kon %s niet verbinden met %s"
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "kon %s niet verbinden met %s"
@@ -1343,9 +1355,6 @@ msgstr "Pijplijn wordt vrijgemaakt ...\n"
 
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "geen element om URI \"%s\" mee te verbinden"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "kon doelelement niet verbinden voor URI \"%s\""
 
 #~ msgid "maximum"
 #~ msgstr "maximum"

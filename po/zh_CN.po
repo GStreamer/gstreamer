@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2016-03-03 12:49+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -839,6 +839,18 @@ msgstr "无法设置组件“%2$s”中的属性“%1$s”为“%3$s”"
 msgid "Delayed linking failed."
 msgstr "延迟链接失败。"
 
+#, fuzzy, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "无法将 %s 链接到 %s"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr "无法连接 URI“%s”的消音组件"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "无法将 %s 链接到 %s"
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "无法将 %s 链接到 %s"
@@ -1289,9 +1301,6 @@ msgstr "释放管道资源 ...\n"
 
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "无组件让 URI“%s”来连接"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "无法连接 URI“%s”的消音组件"
 
 #~ msgid "maximum"
 #~ msgstr "最大"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2016-03-05 10:03+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -872,6 +872,18 @@ msgstr "не могу да поставим особину „%s“ у елем�
 msgid "Delayed linking failed."
 msgstr "Одложено повезивање није успело."
 
+#, fuzzy, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "не могу да вежем %s са %s"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr "не могу да вежем елемент усклађивања за адресу „%s“"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "не могу да вежем %s са %s"
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "не могу да вежем %s са %s"
@@ -1338,6 +1350,3 @@ msgstr "Ослобађам спојку низа...\n"
 
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "нема елемента за везивање адресе „%s“"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "не могу да вежем елемент усклађивања за адресу „%s“"

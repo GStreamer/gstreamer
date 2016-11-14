@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2016-03-05 08:41+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -873,6 +873,18 @@ msgstr "не удалось установить свойство «%s» эле�
 msgid "Delayed linking failed."
 msgstr "Ошибка при отложенной компоновке."
 
+#, fuzzy, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "не удалось соединить %s и %s"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr "не удалось соединить элемент-приёмник для URI «%s»"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "не удалось соединить %s и %s"
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "не удалось соединить %s и %s"
@@ -1337,9 +1349,6 @@ msgstr "Освобождение конвейера…\n"
 
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "нет элемента, который можно было бы присоединить к URI «%s»"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "не удалось соединить элемент-приёмник для URI «%s»"
 
 #~ msgid "maximum"
 #~ msgstr "максимум"

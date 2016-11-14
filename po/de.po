@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2016-09-28 21:13+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -900,6 +900,18 @@ msgstr ""
 msgid "Delayed linking failed."
 msgstr "Verzögertes Verknüpfen ist fehlgeschlagen."
 
+#, fuzzy, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "%s konnte nicht mit %s verknüpft werden"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr "Zielelement für URI »%s« nicht verknüpft werden"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "%s konnte nicht mit %s verknüpft werden"
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s konnte nicht mit %s verknüpft werden"
@@ -1365,9 +1377,6 @@ msgstr "Leitung wird geleert ...\n"
 
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "Kein Element, um URI »%s« zu verbinden"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "Zielelement für URI »%s« nicht verknüpft werden"
 
 #~ msgid "maximum"
 #~ msgstr "Maximum"

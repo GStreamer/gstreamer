@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -830,6 +830,18 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 
 msgid "Delayed linking failed."
+msgstr ""
+
+#, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr ""
+
+#, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr ""
+
+#, c-format
+msgid "could not link %s to %s with caps %s"
 msgstr ""
 
 #, c-format

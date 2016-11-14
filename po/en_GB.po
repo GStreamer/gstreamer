@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-14 17:54+0000\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -885,6 +885,18 @@ msgstr "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgid "Delayed linking failed."
 msgstr ""
 
+#, fuzzy, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "could not link %s to %s"
+
+#, fuzzy, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr "could not link sink element for URI \"%s\""
+
+#, fuzzy, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "could not link %s to %s"
+
 #, c-format
 msgid "could not link %s to %s"
 msgstr "could not link %s to %s"
@@ -1340,9 +1352,6 @@ msgstr "RUNNING pipeline ...\n"
 
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "no element to link URI \"%s\" to"
-
-#~ msgid "could not link sink element for URI \"%s\""
-#~ msgstr "could not link sink element for URI \"%s\""
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Print alloc trace (if enabled at compile time)"
