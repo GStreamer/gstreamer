@@ -476,16 +476,14 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
     }
 
     if (protected) {
-      gsize protection_data_len;
-      guchar *decoded_data =
-          g_base64_decode (protection_data, &protection_data_len);
       GstBuffer *protection_buffer =
-          gst_buffer_new_wrapped (decoded_data, protection_data_len);
+          gst_buffer_new_wrapped ((gpointer) protection_data,
+          strlen (protection_data));
       GstEvent *event =
           gst_event_new_protection (protection_system_id, protection_buffer,
           "smooth-streaming");
 
-      GST_LOG_OBJECT (stream, "Queuing Protection event on source pad");
+      GST_LOG_OBJECT (stream, "Queueing Protection event on source pad");
       gst_adaptive_demux_stream_queue_event ((GstAdaptiveDemuxStream *) stream,
           event);
       gst_buffer_unref (protection_buffer);
