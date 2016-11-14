@@ -9,7 +9,7 @@ is an element itself, a bin can be handled in the same way as any other
 element. Therefore, the whole previous chapter ([Elements][elements]) applies
 to bins as well.
 
-[elements]: application-development/building/elements.md
+[elements]: application-development/basics/elements.md
 
 ## What are bins
 

@@ -86,6 +86,6 @@ applications to GStreamer-0.10 in less than a day.
     `gst_init_get_option_group ()` is the new GOption-based equivalent
     to `gst_init_get_ptop_table ()`.
 
-[bus]: application-development/building/bus.md
+[bus]: application-development/basics/bus.md
 [threads]: application-development/advanced/threads.md
 [queries-and-sevents]: application-development/advanced/queryevents.md

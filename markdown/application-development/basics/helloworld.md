@@ -204,11 +204,11 @@ as follows:
 
 ![The "hello world" pipeline](images/hello-world.png "fig:")
 
-[gst-init]: application-development/building/init.md
+[gst-init]: application-development/basics/init.md
 [advanced]: application-development/advanced/index.md
-[dynamic-pads]: application-development/building/pads.md#dynamic-or-sometimes-pads
-[bins]: application-development/building/bins.md
-[element-states]: application-development/building/elements.md#element-states
+[dynamic-pads]: application-development/basics/pads.md#dynamic-or-sometimes-pads
+[bins]: application-development/basics/bins.md
+[element-states]: application-development/basics/elements.md#element-states
 
 ## Compiling and Running helloworld.c
 

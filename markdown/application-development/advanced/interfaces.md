@@ -17,7 +17,7 @@ Most of the interfaces handled here will not contain any example code.
 See the API references for details. Here, we will just describe the
 scope and purpose of each interface.
 
-[element-object]: application-development/building/elements.md#using-an-element-as-a-gobject
+[element-object]: application-development/basics/elements.md#using-an-element-as-a-gobject
 
 ## The URI interface
 

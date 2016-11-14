@@ -11,7 +11,7 @@ media that the element can handle will be exposed by the pad's
 capabilities. We will talk more on capabilities later in this chapter
 (see [Capabilities of a pad](#capabilities-of-a-pad)).
 
-[elements]: application-development/building/elements.md
+[elements]: application-development/basics/elements.md
 
 ## Pads
 

@@ -11,14 +11,14 @@ index.md
 			application-development/introduction/gstreamer.md
 			application-development/introduction/motivation.md
 			application-development/introduction/basics.md
-		application-development/building/index.md
-			application-development/building/init.md
-			application-development/building/elements.md
-			application-development/building/bins.md
-			application-development/building/bus.md
-			application-development/building/pads.md
-			application-development/building/data.md
-			application-development/building/helloworld.md
+		application-development/basics/index.md
+			application-development/basics/init.md
+			application-development/basics/elements.md
+			application-development/basics/bins.md
+			application-development/basics/bus.md
+			application-development/basics/pads.md
+			application-development/basics/data.md
+			application-development/basics/helloworld.md
 		application-development/advanced/index.md
 			application-development/advanced/queryevents.md
 			application-development/advanced/metadata.md

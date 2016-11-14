@@ -91,7 +91,7 @@ debugging help and general tips to improve and simplify GStreamer
 programming.
 
 [about]: application-development/introduction/index.md
-[app-building]: application-development/building/index.md
+[app-building]: application-development/basics/index.md
 [advanced]: application-development/advanced/index.md
 [highlevel]: application-development/highlevel/index.md
 [appendix]: application-development/appendix/index.md

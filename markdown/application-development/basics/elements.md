@@ -22,7 +22,7 @@ would output decoded data. In the next chapter (see [Pads and
 capabilities][pads]), you will learn more about data input
 and output in elements, and how you can set that up in your application.
 
-[pads]: application-development/building/pads.md
+[pads]: application-development/basics/pads.md
 
 ### Source elements
 
@@ -385,7 +385,7 @@ the same bin or pipeline; if you want to link elements or pads at
 different hierarchy levels, you will need to use ghost pads (more about
 ghost pads later, see [Ghost pads][ghostpads]
 
-[ghostpads]: application-development/building/pads.md#ghost-pads
+[ghostpads]: application-development/basics/pads.md#ghost-pads
 
 ## Element States
 
@@ -450,7 +450,7 @@ pipeline, e.g. from within a "pad-added" signal callback, you need to
 set it to the desired target state yourself using `gst_element_set_state
 ()` or `gst_element_sync_state_with_parent ()`.
 
-[bus]: application-development/building/bus.md
+[bus]: application-development/basics/bus.md
 
 1.  The code for this example is automatically extracted from the
     documentation and built under `tests/examples/manual` in the

@@ -29,7 +29,7 @@ Lastly, we will explain how autoplugging and the GStreamer registry can
 be used to setup a pipeline that will convert media from one mediatype
 to another, for example for media decoding.
 
-[helloworld]: application-development/building/helloworld.md
+[helloworld]: application-development/basics/helloworld.md
 [playback-components]: application-development/highlevel/playback-components.md
 
 ## Media types as a way to identify streams
@@ -62,7 +62,7 @@ Now that we have an idea how GStreamer identifies known media streams,
 we can look at methods GStreamer uses to setup pipelines for media
 handling and for media type detection.
 
-[pad-caps]: application-development/building/pads.md#capabilities-of-a-pad
+[pad-caps]: application-development/basics/pads.md#capabilities-of-a-pad
 [pwg-type-defs]: pwg/advanced/building-types.md
 
 ## Media stream type detection
