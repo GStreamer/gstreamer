@@ -621,13 +621,6 @@ error_allocate_memory:
 /* --- GstVaapiVideoAllocator                                           --- */
 /* ------------------------------------------------------------------------ */
 
-#define GST_VAAPI_VIDEO_ALLOCATOR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_VAAPI_TYPE_VIDEO_ALLOCATOR, \
-      GstVaapiVideoAllocatorClass))
-
-#define GST_VAAPI_IS_VIDEO_ALLOCATOR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_VAAPI_TYPE_VIDEO_ALLOCATOR))
-
 G_DEFINE_TYPE (GstVaapiVideoAllocator, gst_vaapi_video_allocator,
     GST_TYPE_ALLOCATOR);
 
