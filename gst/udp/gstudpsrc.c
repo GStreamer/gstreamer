@@ -864,6 +864,10 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   p_saddr = (udpsrc->retrieve_sender_address) ? &saddr : NULL;
 
 retry:
+  if (saddr != NULL) {
+    g_object_unref (saddr);
+    saddr = NULL;
+  }
 
   do {
     gint64 timeout;
@@ -896,11 +900,6 @@ retry:
       try_again = TRUE;
     }
   } while (G_UNLIKELY (try_again));
-
-  if (saddr != NULL) {
-    g_object_unref (saddr);
-    saddr = NULL;
-  }
 
   res =
       g_socket_receive_message (udpsrc->used_socket, p_saddr, udpsrc->vec, 2,
@@ -973,12 +972,6 @@ retry:
     if (skip_packet) {
       GST_DEBUG_OBJECT (udpsrc,
           "Dropping packet for a different multicast address");
-
-      if (saddr != NULL) {
-        g_object_unref (saddr);
-        saddr = NULL;
-      }
-
       goto retry;
     }
   }
