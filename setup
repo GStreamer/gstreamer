@@ -26,8 +26,8 @@ def get_meson():
     return accept_command(["meson.py", "meson"]), accept_command(["mesonconf.py", "mesonconf"])
 
 
-def get_configs(meson):
-     return ['-D', 'werror=true']
+def get_configs():
+     return ['--werror']
 
 
 def configure_meson(args, options):
@@ -50,8 +50,7 @@ def configure_meson(args, options):
     os.mkdir(build_dir)
 
     try:
-        subprocess.check_call([sys.executable, meson, "../"] + args, cwd=build_dir)
-        subprocess.check_call([sys.executable, mesonconf] + get_configs(meson), cwd=build_dir)
+        subprocess.check_call([sys.executable, meson, "../"] + args + get_configs(), cwd=build_dir)
         print("\nYou can now build GStreamer and its various subprojects running:\n"
             " $ ninja -C %s" % build_dir)
     except subprocess.CalledProcessError as e:
