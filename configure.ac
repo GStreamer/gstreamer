@@ -1075,8 +1075,6 @@ docs/gst/Makefile
 docs/gst/gstreamer.types
 docs/libs/Makefile
 docs/plugins/Makefile
-docs/slides/Makefile
-docs/xsl/Makefile
 docs/version.entities
 m4/Makefile
 pkgconfig/Makefile

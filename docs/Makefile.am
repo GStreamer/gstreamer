@@ -11,11 +11,9 @@ endif
 BUILT_SOURCES = version.entities
 
 SUBDIRS = design gst libs $(PLUGIN_DOCS_DIRS)
-DIST_SUBDIRS = design gst libs plugins slides xsl
+DIST_SUBDIRS = design gst libs plugins
 
-EXTRA_DIST = \
-	manuals.mak htmlinstall.mak \
-	image-png image-pdf image-eps url.entities version.entities.in list-ulink.xsl
+EXTRA_DIST = version.entities.in list-ulink.xsl
 
 upload:
 	@if test "x$(SUBDIRS)" != x; then for a in $(SUBDIRS); do cd $$a; make upload; cd ..; done; fi
