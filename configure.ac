@@ -466,7 +466,6 @@ dnl check for gobject-introspection
 GOBJECT_INTROSPECTION_CHECK([1.31.1])
 
 dnl check for documentation tools
-AG_GST_DOCBOOK_CHECK
 GTK_DOC_CHECK([1.12])
 AG_GST_PLUGIN_DOCS([1.12])
 
@@ -1072,7 +1071,6 @@ common/Makefile
 common/m4/Makefile
 docs/Makefile
 docs/design/Makefile
-docs/faq/Makefile
 docs/gst/Makefile
 docs/gst/gstreamer.types
 docs/libs/Makefile
@@ -1153,8 +1151,7 @@ Configuration
 	Package name               : ${GST_PACKAGE_NAME}
 	Package origin             : ${GST_PACKAGE_ORIGIN}
 
-	Documentation (manuals)    : ${enable_docbook}
-	Documentation (API)        : ${enable_gtk_doc}
+	API Documentation          : ${enable_gtk_doc}
 
 	Debug logging              : ${enable_gst_debug}
 	Tracing subsystem hooks    : ${enable_gst_tracer_hooks}

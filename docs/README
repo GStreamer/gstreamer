@@ -6,12 +6,16 @@ IMPORTANT
 Please make sure you've read and understood everything in this file
 before you try changing documentation.
 
+Some of the docbook-related bits in this README might be out of date now that
+quite a bit of the documentation has moved into the gst-docs repository.
+
 OVERVIEW
 ========
 
 GStreamer has two sets of documentation that we maintain:
 * API references, using gtk-doc (gstreamer, gstreamer-libs)
-* "books", using DocBook/XML (faq, manual, pwg)
+* FAQ / Application Development Manual / Plugin Writer's Guide / Tutorials -
+  these are maintained in markdown format and live in the gst-docs repository.
 
 DOCBOOK NOTES
 =============
@@ -99,7 +103,7 @@ SPELL CHECKING
 GTK-DOC NOTES
 =============
 
-* files under CVS control:
+* files under revision control:
   - Makefile.am
   - gstreamer-sections.txt
     describes which symbols later appear on one api-doc page

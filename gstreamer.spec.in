@@ -75,7 +75,6 @@ documentation.
   --with-package-origin='http://gstreamer.freedesktop.org' \
   --enable-debug \
   --enable-gtk-doc \
-  --enable-docbook \
   --enable-introspection=yes
 
 #make %{?_smp_mflags}
