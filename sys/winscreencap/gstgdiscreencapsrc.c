@@ -82,7 +82,6 @@ static gboolean gst_gdiscreencapsrc_set_caps (GstBaseSrc * bsrc,
 static GstCaps *gst_gdiscreencapsrc_get_caps (GstBaseSrc * bsrc,
     GstCaps * filter);
 static gboolean gst_gdiscreencapsrc_start (GstBaseSrc * bsrc);
-static gboolean gst_gdiscreencapsrc_stop (GstBaseSrc * bsrc);
 static gboolean gst_gdiscreencapsrc_unlock (GstBaseSrc * bsrc);
 
 static GstFlowReturn gst_gdiscreencapsrc_create (GstPushSrc * src,
@@ -112,7 +111,6 @@ gst_gdiscreencapsrc_class_init (GstGDIScreenCapSrcClass * klass)
   bs_class->get_caps = GST_DEBUG_FUNCPTR (gst_gdiscreencapsrc_get_caps);
   bs_class->set_caps = GST_DEBUG_FUNCPTR (gst_gdiscreencapsrc_set_caps);
   bs_class->start = GST_DEBUG_FUNCPTR (gst_gdiscreencapsrc_start);
-  bs_class->stop = GST_DEBUG_FUNCPTR (gst_gdiscreencapsrc_stop);
   bs_class->unlock = GST_DEBUG_FUNCPTR (gst_gdiscreencapsrc_unlock);
   bs_class->fixate = GST_DEBUG_FUNCPTR (gst_gdiscreencapsrc_fixate);
 
@@ -386,14 +384,6 @@ gst_gdiscreencapsrc_start (GstBaseSrc * bsrc)
   GstGDIScreenCapSrc *src = GST_GDISCREENCAPSRC (bsrc);
 
   src->frame_number = -1;
-
-  return TRUE;
-}
-
-static gboolean
-gst_gdiscreencapsrc_stop (GstBaseSrc * bsrc)
-{
-  GstGDIScreenCapSrc *src = GST_GDISCREENCAPSRC (bsrc);
 
   return TRUE;
 }
