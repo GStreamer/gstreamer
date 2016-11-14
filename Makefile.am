@@ -105,16 +105,6 @@ build-checks:
 	echo "'check' library not installed, skipping"
 endif
 
-# FIXME: this target should be run every time we do "make release"
-# find a way of automating that
-win32-update:
-	for f in gstversion.h gstenumtypes.c gstenumtypes.h; do \
-		cp $(top_builddir)/gst/$$f win32/common; done
-	$(top_srcdir)/tools/gst-indent win32/common/gstenumtypes.c
-	$(top_srcdir)/tools/gst-indent win32/common/gstenumtypes.c
-	cp $(top_builddir)/win32/common/config.h-new \
-		$(top_srcdir)/win32/common/config.h
-
 check-enum-gettypes: $(top_builddir)/gst/gstenumtypes.h
 	@echo 'Checking if all enum and flag _get_type() funcs are inited in gst_init()';                        \
 	FUNCS=`grep '_get_type (' gst/gstenumtypes.h | sed -e 's/^.*gst_/gst_/' -e 's/_get_type.*$$/_get_type/'`;\
@@ -164,6 +154,7 @@ gst-element-check-@GST_API_VERSION@.m4: gst-element-check.m4
 # cruft: plugins that have been merged or moved or renamed
 
 CRUFT_FILES = \
+	$(top_builddir)/win32/common/config.h-new \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
 	$(top_builddir)/common/m4/codeset.m4 \

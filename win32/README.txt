@@ -27,4 +27,6 @@ This works both natively on Windows or as cross-compile from Linux.
 Building with Visual Studio
 ---------------------------
 
-Building with Visual Studio is currently not supported.
+Building with Visual Studio is possible using the Meson-based build
+definitions, but there is currently no support for this in cerbero yet,
+so it's not for the faint-hearted.

@@ -1,10 +1,5 @@
 win32/MANIFEST
 win32/README.txt
-win32/common/config.h
-win32/common/gstconfig.h
-win32/common/gstenumtypes.c
-win32/common/gstenumtypes.h
-win32/common/gstversion.h
 win32/common/libgstbase.def
 win32/common/libgstcontroller.def
 win32/common/libgstnet.def
