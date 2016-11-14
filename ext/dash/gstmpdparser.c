@@ -4186,19 +4186,23 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
   return TRUE;
 }
 
+#define CUSTOM_WRAPPER_START "<custom_wrapper>"
+#define CUSTOM_WRAPPER_END "</custom_wrapper>"
+
 static GList *
 gst_mpd_client_fetch_external_period (GstMpdClient * client,
     GstPeriodNode * period_node, gboolean * error)
 {
   GstFragment *download;
+  GstAdapter *adapter;
   GstBuffer *period_buffer;
-  GstMapInfo map;
   GError *err = NULL;
   xmlDocPtr doc;
   GstUri *base_uri, *uri;
   gchar *query = NULL;
-  gchar *uri_string;
+  gchar *uri_string, *wrapper;
   GList *new_periods = NULL;
+  const gchar *data;
 
   *error = FALSE;
 
@@ -4248,34 +4252,65 @@ gst_mpd_client_fetch_external_period (GstMpdClient * client,
   period_buffer = gst_fragment_get_buffer (download);
   g_object_unref (download);
 
-  gst_buffer_map (period_buffer, &map, GST_MAP_READ);
+  /* external xml could have multiple period without root xmlNode.
+   * To avoid xml parsing error caused by no root node, wrapping it with
+   * custom root node */
+  adapter = gst_adapter_new ();
+
+  wrapper = g_new (gchar, strlen (CUSTOM_WRAPPER_START));
+  memcpy (wrapper, CUSTOM_WRAPPER_START, strlen (CUSTOM_WRAPPER_START));
+  gst_adapter_push (adapter,
+      gst_buffer_new_wrapped (wrapper, strlen (CUSTOM_WRAPPER_START)));
+
+  gst_adapter_push (adapter, period_buffer);
+
+  wrapper = g_strdup (CUSTOM_WRAPPER_END);
+  gst_adapter_push (adapter,
+      gst_buffer_new_wrapped (wrapper, strlen (CUSTOM_WRAPPER_END) + 1));
+
+  data = gst_adapter_map (adapter, gst_adapter_available (adapter));
 
   doc =
-      xmlReadMemory ((const gchar *) map.data, map.size, "noname.xml", NULL,
+      xmlReadMemory (data, gst_adapter_available (adapter), "noname.xml", NULL,
       XML_PARSE_NONET);
   if (doc) {
     xmlNode *root_element = xmlDocGetRootElement (doc);
-    if (root_element->type != XML_ELEMENT_NODE ||
-        xmlStrcmp (root_element->name, (xmlChar *) "Period") != 0) {
-      xmlFreeDoc (doc);
-      gst_buffer_unmap (period_buffer, &map);
-      gst_buffer_unref (period_buffer);
-      *error = TRUE;
-      return NULL;
-    }
+    xmlNode *iter;
 
-    gst_mpdparser_parse_period_node (&new_periods, root_element);
+    if (root_element->type != XML_ELEMENT_NODE)
+      goto error;
+
+    for (iter = root_element->children; iter; iter = iter->next) {
+      if (iter->type == XML_ELEMENT_NODE) {
+        if (xmlStrcmp (iter->name, (xmlChar *) "Period") == 0) {
+          gst_mpdparser_parse_period_node (&new_periods, iter);
+        } else {
+          goto error;
+        }
+      }
+    }
   } else {
     GST_ERROR ("Failed to parse period node XML");
-    gst_buffer_unmap (period_buffer, &map);
-    gst_buffer_unref (period_buffer);
+    gst_adapter_unmap (adapter);
+    gst_adapter_clear (adapter);
+    gst_object_unref (adapter);
     *error = TRUE;
     return NULL;
   }
-  gst_buffer_unmap (period_buffer, &map);
-  gst_buffer_unref (period_buffer);
+  xmlFreeDoc (doc);
+  gst_adapter_unmap (adapter);
+  gst_adapter_clear (adapter);
+  gst_object_unref (adapter);
 
   return new_periods;
+
+error:
+  xmlFreeDoc (doc);
+  gst_adapter_unmap (adapter);
+  gst_adapter_clear (adapter);
+  gst_object_unref (adapter);
+  *error = TRUE;
+  return NULL;
 }
 
 gboolean

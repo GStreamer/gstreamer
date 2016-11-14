@@ -29,6 +29,7 @@
 
 #include <gst/gst.h>
 #include <gst/uridownloader/gsturidownloader.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
