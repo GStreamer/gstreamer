@@ -44,9 +44,6 @@ We stick to some simple conventions for writing docbook documentation.
   - sections should also include the chapter name;
     for example in a chapter called chapter-example, a section would be
     called section-example-hello-world
-* there are currently comments of the form <!-- synchronize with PWG -->
-  in the docbook file. Please check the relevant section of the other manual
-  when updating.
 
 HOW IMAGES ARE HANDLED
 ----------------------
@@ -356,43 +353,9 @@ RANDOM THINGS I'VE LEARNED
   For now, we need to hack around it by copying xml to the build dir.
 
 
-(old) DOCUMENTATION BUILDING NOTES
-----------------------------------
-
-To build the GStreamer documentation you need the following installed (based on
-Red Hat packages).  These packages comes from rawhide and are the ones that
-will be in Red Hat 7.3/8.0
-
-Docbook stuff:
-sgml-common 
-xml-common 
-openjade (needs to be rebuilt from SRPM for Red Hat 7.2)
-tetex-dvips
-jadetex
-docbook-dtds      
-docbook-style-dsssl 
-docbook-style-xsl
-docbook-utils
-
-XML stuff:
-libxml2
-libxml2-python
-libxml2-devel
-libxslt
-libxslt-devel
-libxslt-python
-
-
-
-Gtkdoc:
-gtk-doc
-
-Other stuff:
-pdftops
-
 DEVHELP INTEGRATION
 -------------------
-Check http://www.imendio.com/projects/devhelp/
+Check https://wiki.gnome.org/Apps/Devhelp
 It's a really nice development app allowing you to look up API stuff
 from various gtk-doc'd libraries.  GStreamer is one of these ;)
 
