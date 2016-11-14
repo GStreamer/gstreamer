@@ -257,6 +257,12 @@ if cc.has_function('strsignal', prefix : '#include <string.h>')
   cdata.set('HAVE_DECL_STRSIGNAL', 1)
 endif
 
+# Platform deps; only ws2_32 and execinfo for now
+platform_deps = []
+if host_machine.system() == 'windows'
+  platform_deps = [cc.find_library('ws2_32')]
+endif
+
 unwind_dep = dependency('libunwind', required : false)
 dw_dep = dependency('libdw', required: false)
 if unwind_dep.found()
@@ -274,8 +280,16 @@ else
   endif
 endif
 
-if cc.has_header('execinfo.h') and cc.has_function('backtrace', prefix : '#include <execinfo.h>')
-  cdata.set('HAVE_BACKTRACE', 1)
+if cc.has_header('execinfo.h')
+  if cc.has_function('backtrace', prefix : '#include <execinfo.h>')
+    cdata.set('HAVE_BACKTRACE', 1)
+  else
+    execinfo_dep = cc.find_library('execinfo', required : false)
+    if execinfo_dep.found() and cc.has_function('backtrace', prefix : '#include <execinfo.h>', dependencies : execinfo_dep)
+      cdata.set('HAVE_BACKTRACE', 1)
+      platform_deps += execinfo_dep
+    endif
+  endif
 endif
 
 configure_file(input : 'config.h.meson',
@@ -299,12 +313,6 @@ endif
 
 mathlib = cc.find_library('m', required : false)
 rt_lib = cc.find_library('rt', required : false) # clock_gettime
-
-# Platform deps; only ws2_32 for now
-platform_deps = []
-if host_machine.system() == 'windows'
-  platform_deps = [cc.find_library('ws2_32')]
-endif
 
 gir = find_program('g-ir-scanner', required : false)
 gnome = import('gnome')
