@@ -1382,7 +1382,7 @@ testContentProtectionDashdemuxSendsEvent (GstAdaptiveDemuxTestEngine * engine,
     fail_if (str == NULL);
   } else if (g_strcmp0 (system_id, "9a04f079-9840-4286-ab92-e65be0885f95") == 0) {
     fail_unless (g_strcmp0 (origin, "dash/mpd") == 0);
-    fail_unless (g_strcmp0 (value, "test") == 0);
+    fail_unless (g_strcmp0 (value, "dGVzdA==") == 0);
   } else {
     fail ("unexpected content protection event '%s'", system_id);
   }
