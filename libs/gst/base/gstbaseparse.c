@@ -1711,6 +1711,14 @@ gst_base_parse_convert_default (GstBaseParse * parse,
     return TRUE;
   }
 
+  if (parse->segment.format != GST_FORMAT_BYTES) {
+    /* don't do byte format conversions if we're not really parsing
+     * a raw elementary stream, since we don't really have BYTES
+     * position / duration info */
+    if (src_format == GST_FORMAT_BYTES || dest_format == GST_FORMAT_BYTES);
+    goto no_slaved_conversions;
+  }
+
   /* need at least some frames */
   if (!parse->priv->framecount)
     goto no_framecount;
@@ -1774,7 +1782,12 @@ no_duration_bytes:
         G_GUINT64_FORMAT, duration, bytes);
     return FALSE;
   }
-
+no_slaved_conversions:
+  {
+    GST_DEBUG_OBJECT (parse,
+        "Can't do format conversions when upstream format is not BYTES");
+    return FALSE;
+  }
 }
 
 static void
@@ -4048,7 +4061,10 @@ gst_base_parse_src_query_default (GstBaseParse * parse, GstQuery * query)
       if (!res) {
         /* Fall back on interpreting segment */
         GST_OBJECT_LOCK (parse);
-        if (format == GST_FORMAT_BYTES) {
+        /* Only reply BYTES if upstream is in BYTES already, otherwise
+         * we're not in charge */
+        if (format == GST_FORMAT_BYTES
+            && parse->segment.format == GST_FORMAT_BYTES) {
           dest_value = parse->priv->offset;
           res = TRUE;
         } else if (format == parse->segment.format &&
@@ -4058,9 +4074,10 @@ gst_base_parse_src_query_default (GstBaseParse * parse, GstQuery * query)
           res = TRUE;
         }
         GST_OBJECT_UNLOCK (parse);
-        if (!res) {
+        if (!res && parse->segment.format == GST_FORMAT_BYTES) {
           /* no precise result, upstream no idea either, then best estimate */
-          /* priv->offset is updated in both PUSH/PULL modes */
+          /* priv->offset is updated in both PUSH/PULL modes, *iff* we're
+           * in charge of things */
           res = gst_base_parse_convert (parse,
               GST_FORMAT_BYTES, parse->priv->offset, format, &dest_value);
         }
