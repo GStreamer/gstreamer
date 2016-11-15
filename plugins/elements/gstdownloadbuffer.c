@@ -1434,9 +1434,13 @@ gst_download_buffer_handle_src_query (GstPad * pad, GstObject * parent,
       switch (format) {
         case GST_FORMAT_BYTES:
           peer_pos -= dlbuf->cur_level.bytes;
+          if (peer_pos < 0)     /* Clamp result to 0 */
+            peer_pos = 0;
           break;
         case GST_FORMAT_TIME:
           peer_pos -= dlbuf->cur_level.time;
+          if (peer_pos < 0)     /* Clamp result to 0 */
+            peer_pos = 0;
           break;
         default:
           GST_WARNING_OBJECT (dlbuf, "dropping query in %s format, don't "

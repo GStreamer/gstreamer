@@ -450,6 +450,8 @@ gst_type_find_handle_src_query (GstPad * pad, GstObject * parent,
       switch (format) {
         case GST_FORMAT_BYTES:
           peer_pos -= gst_adapter_available (typefind->adapter);
+          if (peer_pos < 0)     /* Clamp result to 0 */
+            peer_pos = 0;
           break;
         default:
           /* FIXME */
