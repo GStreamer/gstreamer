@@ -1711,12 +1711,12 @@ gst_base_parse_convert_default (GstBaseParse * parse,
     return TRUE;
   }
 
-  if (parse->segment.format != GST_FORMAT_BYTES) {
+  if (parse->priv->upstream_format != GST_FORMAT_BYTES) {
     /* don't do byte format conversions if we're not really parsing
      * a raw elementary stream, since we don't really have BYTES
      * position / duration info */
-    if (src_format == GST_FORMAT_BYTES || dest_format == GST_FORMAT_BYTES);
-    goto no_slaved_conversions;
+    if (src_format == GST_FORMAT_BYTES || dest_format == GST_FORMAT_BYTES)
+      goto no_slaved_conversions;
   }
 
   /* need at least some frames */
@@ -3669,6 +3669,8 @@ gst_base_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
     goto baseparse_push;
 
   parse->priv->push_stream_start = TRUE;
+  /* In pull mode, upstream is BYTES */
+  parse->priv->upstream_format = GST_FORMAT_BYTES;
 
   return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_base_parse_loop,
       sinkpad, NULL);
@@ -3707,6 +3709,7 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
       result = klass->stop (parse);
 
     parse->priv->pad_mode = GST_PAD_MODE_NONE;
+    parse->priv->upstream_format = GST_FORMAT_UNDEFINED;
   }
   GST_DEBUG_OBJECT (parse, "activate return: %d", result);
   return result;
@@ -4064,7 +4067,7 @@ gst_base_parse_src_query_default (GstBaseParse * parse, GstQuery * query)
         /* Only reply BYTES if upstream is in BYTES already, otherwise
          * we're not in charge */
         if (format == GST_FORMAT_BYTES
-            && parse->segment.format == GST_FORMAT_BYTES) {
+            && parse->priv->upstream_format == GST_FORMAT_BYTES) {
           dest_value = parse->priv->offset;
           res = TRUE;
         } else if (format == parse->segment.format &&
@@ -4074,7 +4077,7 @@ gst_base_parse_src_query_default (GstBaseParse * parse, GstQuery * query)
           res = TRUE;
         }
         GST_OBJECT_UNLOCK (parse);
-        if (!res && parse->segment.format == GST_FORMAT_BYTES) {
+        if (!res && parse->priv->upstream_format == GST_FORMAT_BYTES) {
           /* no precise result, upstream no idea either, then best estimate */
           /* priv->offset is updated in both PUSH/PULL modes, *iff* we're
            * in charge of things */
