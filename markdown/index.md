@@ -10,7 +10,7 @@ all about.
 
  * [Application Development Manual (Read this first)](application-development/index.md)
  * [Frequently Asked Questions](frequently-asked-questions/index.md)
- * [](pwg/index.md)
+ * [Plugin Writer's Guide](plugin-development/index.md)
  * <a href="/data/doc/gstreamer/head/gstreamer/html/">Core Reference</a>
  * <a href="/data/doc/gstreamer/head/gstreamer-libs/html/">Core Libraries Reference/a>
  * [Core Design Documentation](http://cgit.freedesktop.org/gstreamer/gstreamer/tree/docs/design/)
