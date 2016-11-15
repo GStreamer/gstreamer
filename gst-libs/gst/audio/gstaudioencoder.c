@@ -924,7 +924,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
         ret = gst_pad_push (enc->srcpad, tmpbuf);
         if (ret != GST_FLOW_OK) {
           GST_WARNING_OBJECT (enc, "pushing header returned %s",
-            gst_flow_get_name (ret));
+              gst_flow_get_name (ret));
           goto exit;
         }
       }
@@ -1896,6 +1896,14 @@ gst_audio_encoder_src_query_default (GstAudioEncoder * enc, GstQuery * query)
       }
 
       gst_query_parse_position (query, &req_fmt, NULL);
+
+      /* Refuse BYTES format queries. If it made sense to
+       *        * answer them, upstream would have already */
+      if (req_fmt == GST_FORMAT_BYTES) {
+        GST_LOG_OBJECT (enc, "Ignoring BYTES position query");
+        break;
+      }
+
       fmt = GST_FORMAT_TIME;
       if (!(res = gst_pad_peer_query_position (enc->sinkpad, fmt, &pos)))
         break;
@@ -1918,6 +1926,14 @@ gst_audio_encoder_src_query_default (GstAudioEncoder * enc, GstQuery * query)
       }
 
       gst_query_parse_duration (query, &req_fmt, NULL);
+
+      /* Refuse BYTES format queries. If it made sense to
+       *        * answer them, upstream would have already */
+      if (req_fmt == GST_FORMAT_BYTES) {
+        GST_LOG_OBJECT (enc, "Ignoring BYTES position query");
+        break;
+      }
+
       fmt = GST_FORMAT_TIME;
       if (!(res = gst_pad_peer_query_duration (enc->sinkpad, fmt, &dur)))
         break;
