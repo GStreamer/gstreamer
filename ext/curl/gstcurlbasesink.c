@@ -705,6 +705,21 @@ gst_curl_base_sink_transfer_set_common_options_unlocked (GstCurlBaseSink * sink)
         curl_easy_strerror (res));
     return FALSE;
   }
+  /* Time out in case transfer speed in bytes per second stay below
+   * CURLOPT_LOW_SPEED_LIMIT during CURLOPT_LOW_SPEED_TIME */
+  res = curl_easy_setopt (sink->curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set low speed limit: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
+  res = curl_easy_setopt (sink->curl, CURLOPT_LOW_SPEED_TIME,
+      (long)sink->timeout);
+  if (res != CURLE_OK) {
+    sink->error = g_strdup_printf ("failed to set low speed time: %s",
+        curl_easy_strerror (res));
+    return FALSE;
+  }
 
   GST_LOG ("common options set");
   return TRUE;
