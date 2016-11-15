@@ -181,6 +181,9 @@ struct _GstAdaptiveDemuxStream
   guint moving_index;
   guint64 *fragment_bitrates;
 
+  /* QoS data */
+  GstClockTime qos_earliest_time;
+
   GstAdaptiveDemuxStreamFragment fragment;
 
   guint download_error_count;

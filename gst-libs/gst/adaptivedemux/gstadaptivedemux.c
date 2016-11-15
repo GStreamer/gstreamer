@@ -1182,6 +1182,7 @@ gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
 
     stream->pending_segment = gst_event_new_segment (&stream->segment);
     gst_event_set_seqnum (stream->pending_segment, demux->priv->segment_seqnum);
+    stream->qos_earliest_time = GST_CLOCK_TIME_NONE;
 
     GST_DEBUG_OBJECT (demux,
         "Prepared segment %" GST_SEGMENT_FORMAT " for stream %p",
@@ -1298,6 +1299,7 @@ gst_adaptive_demux_stream_new (GstAdaptiveDemux * demux, GstPad * pad)
   stream->fragment_bitrates =
       g_malloc0 (sizeof (guint64) * NUM_LOOKBACK_FRAGMENTS);
   gst_pad_set_element_private (pad, stream);
+  stream->qos_earliest_time = GST_CLOCK_TIME_NONE;
 
   g_mutex_lock (&demux->priv->preroll_lock);
   stream->do_block = TRUE;
@@ -1738,6 +1740,7 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
       gst_event_unref (seg_evt);
       /* Make sure the first buffer after a seek has the discont flag */
       stream->discont = TRUE;
+      stream->qos_earliest_time = GST_CLOCK_TIME_NONE;
     }
 
     GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
@@ -1804,6 +1807,28 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
        * configure the latency */
       gst_event_unref (event);
       return TRUE;
+    }
+    case GST_EVENT_QOS:{
+      GstAdaptiveDemuxStream *stream;
+
+      GST_MANIFEST_LOCK (demux);
+      stream = gst_adaptive_demux_find_stream_for_pad (demux, pad);
+
+      if (stream) {
+        GstClockTimeDiff diff;
+        GstClockTime timestamp;
+
+        gst_event_parse_qos (event, NULL, NULL, &diff, &timestamp);
+        /* Only take into account lateness if late */
+        if (diff > 0)
+          stream->qos_earliest_time = timestamp + 2 * diff;
+        else
+          stream->qos_earliest_time = timestamp;
+        GST_DEBUG_OBJECT (stream->pad, "qos_earliest_time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (stream->qos_earliest_time));
+      }
+      GST_MANIFEST_UNLOCK (demux);
+      break;
     }
     default:
       break;
@@ -2049,6 +2074,7 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
 
     stream->download_error_count = 0;
     stream->need_header = TRUE;
+    stream->qos_earliest_time = GST_CLOCK_TIME_NONE;
   }
 }
 
