@@ -48,7 +48,7 @@ gstvalidate = shared_library('gstvalidate-1.0',
     dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
                     gst_pbutils_dep, mathlib, json_dep])
 
-gstvalidate = shared_library('gstvalidateplugin',
+gstvalidateplugin = shared_library('gstvalidateplugin',
     sources: gstvalidate_sources,
     include_directories : [inc_dirs],
     install: true,
