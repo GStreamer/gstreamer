@@ -459,7 +459,7 @@ add_text_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     GST_WARNING ("Empty list for tag %s, skipping", tag);
   }
 
-  g_free (strings);
+  g_free ((gchar **) strings);
 }
 
 static void

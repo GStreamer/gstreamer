@@ -307,7 +307,7 @@ gst_frei0r_get_property (f0r_instance_t * instance, GstFrei0rFuncTable * ftable,
       break;
     }
     case F0R_PARAM_STRING:{
-      const gchar *s;
+      gchar *s;
 
       if (instance)
         ftable->get_param_value (instance, &s, prop->prop_idx);
