@@ -2161,12 +2161,15 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
         goto exit;
       }
 
-      /* accept upstream's notion of segment and distribute along */
-      segment.format = GST_FORMAT_TIME;
-      segment.position = segment.time = segment.start;
-      segment.duration = demux->segment.duration;
-      segment.base = gst_segment_to_running_time (&demux->segment,
-          GST_FORMAT_TIME, demux->segment.position);
+      /* We shouldn't modify upstream driven TIME FORMAT segment */
+      if (!demux->upstream_format_is_time) {
+        /* accept upstream's notion of segment and distribute along */
+        segment.format = GST_FORMAT_TIME;
+        segment.position = segment.time = segment.start;
+        segment.duration = demux->segment.duration;
+        segment.base = gst_segment_to_running_time (&demux->segment,
+            GST_FORMAT_TIME, demux->segment.position);
+      }
 
       gst_segment_copy_into (&segment, &demux->segment);
       GST_DEBUG_OBJECT (demux, "Pushing newseg %" GST_SEGMENT_FORMAT, &segment);
