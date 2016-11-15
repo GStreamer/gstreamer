@@ -10,16 +10,21 @@ gst-inspect-1.0 (plug-in)
 ```
 
 and replace (plug-in) with the plug-in you think is missing. If this
-doesn't return any result, then you either don't have it or your
-registry cannot find it.
+doesn't return any result, then you either don't have it or it can't be
+found (which can easily happen if you have installed things from source).
 
 If you're not sure either way, then chances are good that you don't have
-it. You should get the plug-in and run gst-register to register it. How
-to get the plug-in depends on your distribution.
+it. You should get the plug-in and restart the application. How
+to get the plug-in depends on your distribution. Many applications
+and distributions nowadays support automatic plugin installation of
+missing plugins. Mayb also try playing your file with a different application
+if your application does not support installation of missing plugins.
 
   - if you run GStreamer using packages for your distribution, you
     should check what packages are available for your distribution and
-    see if any of the available packages contains the plug-in.
+    see if any of the available packages contains the plug-in. Make sure
+    you have the common plugin packages installed, such as gst-plugins-base,
+    gst-plugins-good, gst-plugins-ugly, gst-plugins-bad, and gst-libav.
 
   - if you run GStreamer from a source install, there's a good chance
     the plug-in didn't get built because you are missing an external
@@ -37,25 +42,12 @@ to get the plug-in depends on your distribution.
     why it doesn't get built if you're sure you have the library needed
     installed in a sane place.
 
-## I get an error that says something like (process:26626):
-GLib-GObject-WARNING \*\*: specified instance size for type
-\`DVDReadSrc' is smaller than the parent type's \`GstElement' instance
-size What's wrong ?
-
-If you run GStreamer from git uninstalled, it means that
-something changed in the core that requires a recompilation in the
-plugins. Recompile the plugins by doing "make clean && make".
-
-If you run GStreamer installed, it probably means that you run the
-plugins against a different (incompatible) version than they were
-compiled against, which ususally means that you run multiple
-installations of GStreamer. Remove the old ones and - if needed -
-recompile again to ensure that it is using the right version.
-
-Note that we strongly recommend using Debian or RPM packages, since you
-will not get such issues if you use provided packages.
-
 ## The GStreamer application I used stops with a segmentation fault. What can I do ?
+
+The first point of contact for any problems with a GStreamer application
+should be the developers of that application. They will be able to investigate
+whether the problem lies with the application or with GStreamer, and will pass
+on any issues to GStreamer developers if needed.
 
 There are two things you can do. If you compiled GStreamer with
 specific optimization compilation flags, you should try recompiling
@@ -110,15 +102,3 @@ To provide a backtrace, you should
     and paste of all this information should be included in your [bug
     report](#using-bugs-where).
 
-## On my system there is no gst-register command.
-
-Since GStreamer version 0.10 this is not needed anymore. The
-registry will be rebuilt automatically. If you suspect the registry is
-broken, just delete the `registry.*.xml` files under
-`$HOME/.gstreamer-1.X/` and run
-
-``` 
-  gst-inspect-1.0
-```
-
-to rebuild the registry.
