@@ -60,10 +60,19 @@ static gboolean
 ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
     GError ** error)
 {
+  GESUriClipAssetClass *uriasset_klass = NULL;
+
   if (ges_initialized) {
     GST_DEBUG ("already initialized ges");
     return TRUE;
   }
+
+  uriasset_klass = g_type_class_ref (GES_TYPE_URI_CLIP_ASSET);
+  if (!uriasset_klass->discoverer)
+    goto failed;
+
+  if (!uriasset_klass->sync_discoverer)
+    goto failed;
 
   /* register clip classes with the system */
 
@@ -94,10 +103,19 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   /* TODO: user-defined types? */
   ges_initialized = TRUE;
+  g_type_class_unref (uriasset_klass);
 
   GST_DEBUG ("GStreamer Editing Services initialized");
 
   return TRUE;
+
+failed:
+  if (uriasset_klass)
+    g_type_class_unref (uriasset_klass);
+
+  GST_ERROR ("Could not initialize GES.");
+
+  return FALSE;
 }
 
 /**
@@ -112,9 +130,8 @@ gboolean
 ges_init (void)
 {
   ges_init_pre (NULL, NULL, NULL, NULL);
-  ges_init_post (NULL, NULL, NULL, NULL);
 
-  return TRUE;
+  return ges_init_post (NULL, NULL, NULL, NULL);
 }
 
 #ifndef GST_DISABLE_OPTION_PARSING

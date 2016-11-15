@@ -184,6 +184,7 @@ _asset_proxied (GESAsset * self, const gchar * new_uri)
 static void
 ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
 {
+  GError *err;
   GstClockTime timeout;
   const gchar *timeout_str;
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -219,8 +220,20 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
   if (errno)
     timeout = DEFAULT_DISCOVERY_TIMEOUT;
 
-  klass->discoverer = gst_discoverer_new (timeout, NULL);
+  klass->discoverer = gst_discoverer_new (timeout, &err);
+  if (!klass->discoverer) {
+    GST_ERROR ("Could not create discoverer: %s", err->message);
+    g_error_free (err);
+    return;
+  }
+
   klass->sync_discoverer = gst_discoverer_new (timeout, NULL);
+  if (!klass->sync_discoverer) {
+    GST_ERROR ("Could not create discoverer: %s", err->message);
+    g_error_free (err);
+    return;
+  }
+
   g_signal_connect (klass->discoverer, "discovered",
       G_CALLBACK (discoverer_discovered_cb), NULL);
 
