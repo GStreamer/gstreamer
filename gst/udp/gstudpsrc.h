@@ -47,32 +47,32 @@ typedef struct _GstUDPSrcClass GstUDPSrcClass;
 struct _GstUDPSrc {
   GstPushSrc parent;
 
+  /* our sockets */
+  GSocket   *used_socket;	/* hot */
+  GInetSocketAddress *addr;	/* hot */
+
+  GCancellable *cancellable;	/* hot */
+
   /* properties */
+  gint       skip_first_bytes;	/* hot */
+  guint64    timeout;	/* hot */
+  gboolean   retrieve_sender_address;	/* hot */
   gchar     *address;
   gint       port;
   gchar     *multi_iface;
-  gint       ttl;
   GstCaps   *caps;
   gint       buffer_size;
-  guint64    timeout;
-  gint       skip_first_bytes;
   GSocket   *socket;
   gboolean   close_socket;
   gboolean   auto_multicast;
   gboolean   reuse;
   gboolean   loop;
-  gboolean   retrieve_sender_address;
 
   /* stats */
   guint      max_size;
 
-  /* our sockets */
-  GSocket   *used_socket;
-  GInetSocketAddress *addr;
   gboolean   external_socket;
-
   gboolean   made_cancel_fd;
-  GCancellable *cancellable;
 
   /* memory management */
   GstAllocator *allocator;
