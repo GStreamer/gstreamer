@@ -438,17 +438,6 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
 
   [self orderOut:window_cocoa->priv->internal_win_id];
 
-  if (window_cocoa->priv->external_view) {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    NSView *view = [window_cocoa->priv->internal_win_id contentView];
-
-    [window_cocoa->priv->external_view addSubview: view];
-    [view setFrame: [window_cocoa->priv->external_view bounds]];
-    [view setAutoresizingMask: NSViewWidthSizable|NSViewHeightSizable];
-
-    [pool release];
-  }
-
   return self;
 }
 
