@@ -1,5 +1,8 @@
 # GStreamer Legal Issues
 
+<!-- FIXME: this entire section seems out of date and a bit weird. No one
+     ever asks questions like that any more. Should be made more relevant -->
+
 This part of the FAQ is based on a series of questions we asked the FSF
 to understand how the GPL works and how patents affects the GPL. These
 questions were answered by the [FSF lawyers](http://www.fsf.org/), so we

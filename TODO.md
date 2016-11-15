@@ -13,6 +13,11 @@ For-later pages:
    - qt-gstreamer-vs-c-gstreamer.md
    - using-appsink-appsrc-in-qt.md
 
+Miscellaneous:
+ - internal refs are used but not defined? (e.g. #getting-gstreamer-source)
+ - faq/git.md should be renamed building.md and turned into general
+   building Q+A or (better) point to a page we have for all that by then
+ - faq/legal.md needs an overhaul, and be made more relevant
 
 Deleted pages:
  - 2012.11+Brahmaputra.markdown
