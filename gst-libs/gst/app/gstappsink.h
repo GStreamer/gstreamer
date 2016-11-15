@@ -117,7 +117,7 @@ guint           gst_app_sink_get_max_buffers  (GstAppSink *appsink);
 void            gst_app_sink_set_drop         (GstAppSink *appsink, gboolean drop);
 gboolean        gst_app_sink_get_drop         (GstAppSink *appsink);
 
-void            gst_app_sink_set_buffer_list_support  (GstAppSink *appsink, gboolean drop);
+void            gst_app_sink_set_buffer_list_support  (GstAppSink *appsink, gboolean enable_lists);
 gboolean        gst_app_sink_get_buffer_list_support  (GstAppSink *appsink);
 
 void            gst_app_sink_set_wait_on_eos  (GstAppSink *appsink, gboolean wait);

@@ -1245,14 +1245,18 @@ gst_app_sink_get_drop (GstAppSink * appsink)
 /**
  * gst_app_sink_set_buffer_list_support:
  * @appsink: a #GstAppSink
- * @buffer_list: enable or disable buffer list support
+ * @enable_lists: enable or disable buffer list support
  *
  * Instruct @appsink to enable or disable buffer list support.
  *
+ * For backwards-compatibility reasons applications need to opt in
+ * to indicate that they will be able to handle buffer lists.
+ *
+ * Since: 1.12
  */
 void
 gst_app_sink_set_buffer_list_support (GstAppSink * appsink,
-    gboolean buffer_list)
+    gboolean enable_lists)
 {
   GstAppSinkPrivate *priv;
 
@@ -1261,8 +1265,8 @@ gst_app_sink_set_buffer_list_support (GstAppSink * appsink,
   priv = appsink->priv;
 
   g_mutex_lock (&priv->mutex);
-  if (priv->buffer_lists_supported != buffer_list) {
-    priv->buffer_lists_supported = buffer_list;
+  if (priv->buffer_lists_supported != enable_lists) {
+    priv->buffer_lists_supported = enable_lists;
   }
   g_mutex_unlock (&priv->mutex);
 }
@@ -1275,6 +1279,7 @@ gst_app_sink_set_buffer_list_support (GstAppSink * appsink,
  *
  * Returns: %TRUE if @appsink supports buffer lists.
  *
+ * Since: 1.12
  */
 gboolean
 gst_app_sink_get_buffer_list_support (GstAppSink * appsink)
