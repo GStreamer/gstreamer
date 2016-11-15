@@ -2,8 +2,8 @@
 
 ## Ok, I've installed GStreamer. What can I do next ?
 
-First of all, verify that you have a working registry and that
-you can inspect it by typing
+First of all, verify that you have a working installation and that
+you can inspect plugins by typing
 
     $ gst-inspect-1.0 fakesrc
 
@@ -18,7 +18,7 @@ plug-ins that you really should have : fakesrc and fakesink. They do
 nothing except pass empty buffers. Type this at the command-line
     :
 
-    $ gst-launch-1.0 -v fakesrc silent=0 num-buffers=3 ! fakesink silent=0
+    $ gst-launch-1.0 -v fakesrc silent=false num-buffers=3 ! fakesink silent=false
 
 This will print out output that looks similar to this :
 
@@ -34,23 +34,29 @@ This will print out output that looks similar to this :
 (Some parts of output have been removed for clarity) If it looks
 similar, then GStreamer itself is running correctly.
 
+To get a test video displayed, try:
+
+    $ gst-launch-1.0 videotestsrc ! videoconvert ! autovideosink
+
+If `autovideosink` doesn't work, try an element that's specific for your
+operating system and windowing system, such as `ximagesink` or `glimagesink`
+or (on windows) `d3dvideosink`.
+
 ## Can my system play sound through GStreamer ?
 
 You can test this by trying to play a sine tone. For this, you
 need to link the audiotestsrc element to an output element that matches
 your hardware. A (non-complete) list of output plug-ins for audio is
 
-  - pulsesink for Pulseaudio output
+  - `pulsesink` for Pulseaudio output
 
-  - osssink for OSS output
+  - `alsasink` for ALSA output
 
-  - esdsink for ESound output
+  - `osssink` and `oss4sink` for OSS/OSSv4 output
 
-  - alsasink for ALSA output
+  - `jackaudiosink` for JACK output
 
-  - alsaspdifsink for ALSA S/PDIF output
-
-  - jackaudiosink for JACK output
+  - `autoaudiosink` for automatic audio output selection
 
 First of all, run gst-inspect-1.0 on the output plug-in you want to use
 to make sure you have it installed. For example, if you use Pulseaudio,
@@ -69,17 +75,6 @@ and see if you hear something. Make sure your volume is turned up, but
 also make sure it is not too loud and you are not wearing your
 headphones.
 
-In GNOME, you can configure audio output for most applications by
-running
-
-    $ gstreamer-properties
-
-which can also be found in the start menu (Applications -\> Preferences
--\> Multimedia Systems Selector). In KDE, there is not yet a shared way
-of setting audio output for all applications; however, applications such
-as Amarok allow you to specify an audio output in their preferences
-dialog.
-
 ## How can I see what GStreamer plugins I have on my system ?
 
 To do this you use the gst-inspect command-line tool, which comes
@@ -96,18 +91,17 @@ will give you information about the volume plugin.
 
 ## Where should I report bugs ?
 
-Bug management is now hosted on GNOME's Bugzilla at
-<http://bugzilla.gnome.org>, under the product GStreamer. Using bugzilla
-you can view past bug history, report new bugs, etc. Bugzilla requires
-you to make an account here, which might seem cumbersome, but allows us
-to at least have a chance at contacting you for further information, as
-we will most likely have to.
+Bugs are tracked in GNOME's Bugzilla at <http://bugzilla.gnome.org>, under
+the product GStreamer. Using bugzilla you can view past bug history, report
+new bugs, submit patches etc. Bugzilla requires you to create an account there,
+which might seem cumbersome, but allows us to at least have a chance at
+contacting you for further information, as we will often have to do.
 
 ## How should I report bugs ?
 
 When doing a bug report, you should at least describe
 
-  - your distribution
+  - your distribution, distribution version and GStreamer version
 
   - how you installed GStreamer (from git, source, packages, which ?)
 
@@ -120,10 +114,22 @@ provide us with the necessary gdb output. See
 ## How do I use the GStreamer command line interface ?
 
 You access the GStreamer command line interface using the command
-gst-launch. To decode an mp3 and play it through Pulseaudio, you could
-use
+`gst-launch-1.0`. To play a file you could just use
 
-    gst-launch-1.0 filesrc location=thesong.mp3 ! mad ! pulsesink
+
+    gst-play-1.0 song.mp3
+
+or
+
+    gst-launch-1.0 playbin uri=file:///path/to/song.mp3
+
+To decode an mp3 audio file and play it through Pulseaudio, you could also use
+
+    gst-launch-1.0 filesrc location=thesong.mp3 ! decodebin ! audioconvert ! pulsesink
+
+or
+
+    gst-launch-1.0 filesrc location=thesong.mp3 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! pulsesink
 
 . More examples can be found in the gst-launch man page.
 
@@ -143,8 +149,8 @@ Something more
     complicated:
 
     gst-launch-1.0 filesrc location=my-random-media-file.mpeg ! decodebin name=decoder
-       decoder. ! videoconvert ! xvimagesink
-       decoder. ! audioconvert ! pulsesink
+       decoder. ! queue ! videoconvert ! xvimagesink
+       decoder. ! queue ! audioconvert ! pulsesink
 
 We also have a basic media playing plugin that will take care of most
 things for you. This plugin is called playbin. Try
