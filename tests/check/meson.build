@@ -93,13 +93,15 @@ if build_gir
       env.prepend('GI_TYPELIB_PATH', meson.current_build_dir() + '/../../ges/')
       env.prepend('LD_LIBRARY_PATH', meson.current_build_dir() + '/../../ges/')
 
-      args = ['--project-directory', meson.current_source_dir() + '/../..',
-              '--start-dir', meson.current_source_dir()]
-      xunitfile = '' + i.get(0).underscorify() + '.xunit'
+      args = ['--start-dir', meson.current_source_dir()]
+      xunitfile = join_paths(meson.current_build_dir(), i.get(0).underscorify() + '.xunit')
       config = configuration_data()
       config.set('path', xunitfile)
-      configure_file(input : 'nose2-junit-xml.cfg.in', configuration : config, output : xunitfile + '.cfg')
-      args = args + ['--plugin', 'nose2.plugins.junitxml', '--config', meson.current_build_dir() + '/' + xunitfile + '.cfg']
+      cfg = '' + i.get(0).underscorify() + '.cfg'
+      configure_file(input : 'nose2-junit-xml.cfg.in', configuration : config,
+        output : cfg)
+      args = args + ['--plugin', 'nose2.plugins.junitxml', '--config',
+          join_paths(meson.current_build_dir(), cfg)]
 
       test(i.get(0), runtests, args: args + ['python.' + i.get(1)], env: env)
     endforeach
