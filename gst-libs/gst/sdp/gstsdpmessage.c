@@ -361,7 +361,7 @@ gst_sdp_message_copy (const GstSDPMessage * msg, GstSDPMessage ** copy)
 
     gst_sdp_message_add_time (cp, time->start, time->stop, repeat);
 
-    g_free (repeat);
+    g_free ((gchar **) repeat);
   }
 
   len = gst_sdp_message_zones_len (msg);
