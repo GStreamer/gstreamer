@@ -9,8 +9,7 @@ and shipping your applications and plugins.
 
 ## Embedding static elements in your application
 
-The [Plugin Writer's
-Guide](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.html)
+The [Plugin Writer's Guide](plugin-development/index.md)
 describes in great detail how to write elements for the GStreamer
 framework. In this section, we will solely discuss how to embed such
 elements statically in your application. This can be useful for

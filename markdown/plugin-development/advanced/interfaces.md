@@ -4,11 +4,10 @@ title: Interfaces
 
 # Interfaces
 
-Previously, in the chapter [Adding
-Properties](pwg/building/args.md), we have introduced the concept of
-GObject properties of controlling an element's behaviour. This is very
-powerful, but it has two big disadvantages: first of all, it is too
-generic, and second, it isn't dynamic.
+Previously, in the chapter [Adding Properties][plugin-properties], we have
+introduced the concept of GObject properties of controlling an element's
+behaviour. This is very powerful, but it has two big disadvantages: first of
+all, it is too generic, and second, it isn't dynamic.
 
 The first disadvantage is related to the customizability of the end-user
 interface that will be built to control the element. Some properties are
@@ -40,7 +39,9 @@ One important note: interfaces do *not* replace properties. Rather,
 interfaces should be built *next to* properties. There are two important
 reasons for this. First of all, properties can be more easily
 introspected. Second, properties can be specified on the commandline
-(`gst-launch`).
+(`gst-launch-1.0`).
+
+[plugin-properties]: plugin-development/building/args.md
 
 ## How to Implement Interfaces
 
@@ -124,7 +125,7 @@ WRITEME
 
 ## Video Overlay Interface
 
-The \#GstVideoOverlay interface is used for 2 main purposes :
+The `GstVideoOverlay` interface is used for 2 main purposes :
 
   - To get a grab on the Window where the video sink element is going to
     render. This is achieved by either being informed about the Window
@@ -133,8 +134,8 @@ The \#GstVideoOverlay interface is used for 2 main purposes :
     rendering.
 
   - To force a redrawing of the latest video frame the video sink
-    element displayed on the Window. Indeed if the \#GstPipeline is in
-    \#GST\_STATE\_PAUSED state, moving the Window around will damage its
+    element displayed on the Window. Indeed if the `GstPipeline` is in
+    `GST\_STATE\_PAUSED` state, moving the Window around will damage its
     content. Application developers will want to handle the Expose
     events themselves and force the video sink element to refresh the
     Window's content.

@@ -5,8 +5,8 @@ title: Writing a N-to-1 Element or Muxer
 # Writing a N-to-1 Element or Muxer
 
 N-to-1 elements have been previously mentioned and discussed in both
-[Request and Sometimes pads](pwg/advanced/request.md) and in
-[Different scheduling modes](pwg/advanced/scheduling.md). The main noteworthy
+[Request and Sometimes pads][request-pads] and in
+[Different scheduling modes][scheduling]. The main noteworthy
 thing about N-to-1 elements is that each pad is push-based in its own
 thread, and the N-to-1 element synchronizes those streams by
 expected-timestamp-based logic. This means it lets all streams wait
@@ -21,3 +21,6 @@ buffer from each input and giving you the one with earliest timestamp.
 If you need anything more difficult, such as "don't-grab-a-new-buffer
 until a given timestamp" or something like that, you'll need to do this
 yourself.
+
+[request-pads]: plugin-development/advanced/request.md
+[scheduling]: plugin-development/advanced/scheduling.md

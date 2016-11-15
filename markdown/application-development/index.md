@@ -27,7 +27,7 @@ but also at other forms of media processing (capture, editing, etc.).
 This book is about GStreamer from an application developer's point of
 view; it describes how to write a GStreamer application using the
 GStreamer libraries and tools. For an explanation about writing plugins,
-we suggest the [Plugin Writers Guide](pwg/index.md).
+we suggest the [Plugin Writer's Guide](plugin-development/index.md).
 
 Also check out the other documentation available on the [GStreamer web
 site](http://gstreamer.freedesktop.org/documentation/).

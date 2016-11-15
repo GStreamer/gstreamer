@@ -117,8 +117,7 @@ powerful and versatile custom bin like this: the playbin element.)
 
 Custom bins can be created with a plugin or from the application. You
 will find more information about creating custom bin in the [Plugin
-Writers
-Guide](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.html).
+Writer's Guide](plugin-development/index.md)
 
 Examples of such custom bins are the playbin and uridecodebin elements
 from[gst-plugins-base](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/index.html).

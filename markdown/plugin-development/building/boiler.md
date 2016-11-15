@@ -259,8 +259,8 @@ details on this.
 Pads are created from these static templates in the element's `_init ()`
 function using `gst_pad_new_from_static_template ()`. In order to create
 a new pad from this template using `gst_pad_new_from_static_template
-()`, you will need to declare the pad template as a global variable.
-More on this subject in [Specifying the pads](pwg/building/pads.md).
+()`, you will need to declare the pad template as a global variable. More on
+this subject in [Specifying the pads][pads].
 
     static GstStaticPadTemplate sink_factory = [..],
         src_factory = [..];
@@ -309,8 +309,9 @@ Values surrounded by curly brackets (“{” and “}”) are lists, values
 surrounded by square brackets (“\[” and “\]”) are ranges. Multiple sets
 of types are supported too, and should be separated by a semicolon
 (“;”). Later, in the chapter on pads, we will see how to use types
-to know the exact format of a stream: [Specifying the
-pads](pwg/building/pads.md).
+to know the exact format of a stream: [Specifying the pads][pads].
+
+[pads]: plugin-development/building/pads.md
 
 ## Constructor Functions
 

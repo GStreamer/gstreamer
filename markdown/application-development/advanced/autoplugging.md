@@ -63,7 +63,7 @@ we can look at methods GStreamer uses to setup pipelines for media
 handling and for media type detection.
 
 [pad-caps]: application-development/basics/pads.md#capabilities-of-a-pad
-[pwg-type-defs]: pwg/advanced/building-types.md
+[pwg-type-defs]: plugin-development/advanced/building-types.md
 
 ## Media stream type detection
 

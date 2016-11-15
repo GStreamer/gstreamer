@@ -172,8 +172,10 @@ WRITEME
 ### Caps
 
 The CAPS event contains the format description of the following buffers.
-See [Caps negotiation](pwg/advanced/negotiation.md) for more information
+See [Caps negotiation][caps-negotiation] for more information
 about negotiation.
+
+[caps-negotiation]: plugin-development/advanced/negotiation.md
 
 ### Segment
 
@@ -214,9 +216,8 @@ clipping, for example).
 Tagging events are being sent downstream to indicate the tags as parsed
 from the stream data. This is currently used to preserve tags during
 stream transcoding from one format to the other. Tags are discussed
-extensively in [Tagging (Metadata and
-Streaminfo)](pwg/advanced/tagging.md). Most elements will simply
-forward the event by calling `gst_pad_event_default ()`.
+extensively in [Tagging (Metadata and Streaminfo)][metadata]. Most elements
+will simply forward the event by calling `gst_pad_event_default ()`.
 
 The tag event is created using the function `gst_event_new_tag ()`, but
 more often elements will send a tag event downstream that will be
@@ -224,8 +225,10 @@ converted into a message on the bus by sink elements. All of these
 functions require a filled-in taglist as argument, which they will take
 ownership of.
 
-Elements parsing this event can use the function `gst_event_parse_tag
-()` to acquire the taglist that the event contains.
+Elements parsing this event can use the function `gst_event_parse_tag ()` to
+acquire the taglist that the event contains.
+
+[metadata]: plugin-development/advanced/tagging.md
 
 ### End of Stream (EOS)
 
@@ -306,8 +309,9 @@ running\_time is set back to 0.
 ### Quality Of Service (QOS)
 
 The QOS event contains a report about the current real-time performance
-of the stream. See more info in [Quality Of Service
-(QoS)](pwg/advanced/qos.md).
+of the stream. See more info in [Quality Of Service (QoS)][qos].
+
+[qos]: plugin-development/advanced/qos.md
 
 ### Seek Request
 

@@ -17,6 +17,7 @@ single output pad. The filter will, at first, simply pass media and
 event data from its sink pad to its source pad without modification. But
 by the end of this part of the guide, you will learn to add some more
 interesting functionality, including properties and signal handlers. And
-after reading the next part of the guide, [Advanced Filter
-Concepts](pwg/advanced/index.md), you will be able to add even more
-functionality to your plugins.
+after reading the next part of the guide, [Advanced Filter Concepts][advanced],
+you will be able to add even more functionality to your plugins.
+
+[advanced]: plugin-development/advanced/index.md

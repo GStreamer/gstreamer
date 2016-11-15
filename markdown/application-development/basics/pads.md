@@ -146,8 +146,7 @@ that can flow or currently flows through the pad by using capabilities.
 Here, we will briefly describe what capabilities are and how to use
 them, enough to get an understanding of the concept. For an in-depth
 look into capabilities and a list of all capabilities defined in
-GStreamer, see the [Plugin Writers
-Guide](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.html).
+GStreamer, see the [Plugin Writers Guide](plugin-development/index.md)
 
 Capabilities are attached to pad templates and to pads. For pad
 templates, it will describe the types of media that may stream over a

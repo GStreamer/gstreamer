@@ -89,7 +89,7 @@ large parts. Each part addresses a particular broad topic concerning
 GStreamer plugin development. The parts of this guide are laid out in
 the following order:
 
-  - [Building a Plugin](pwg/building/index.md) - Introduction to the
+  - [Building a Plugin][building] - Introduction to the
     structure of a plugin, using an example audio filter for
     illustration.
 
@@ -98,24 +98,22 @@ the following order:
     and setting up the basics so it can receive data from and send data
     to neighbour elements. The discussion begins by giving examples of
     generating the basic structures and registering an element in
-    [Constructing the Boilerplate](pwg/building/boiler.md). Then,
+    [Constructing the Boilerplate][boilerplate]. Then,
     you will learn how to write the code to get a basic filter plugin
-    working in [Specifying the pads](pwg/building/pads.md), [The
-    chain function](pwg/building/chainfn.md) and [What are
-    states?](pwg/building/statemanage-states.md).
+    working in [Specifying the pads][pads], [The chain function][chainfunc]
+    and [What are states?][states].
 
     After that, we will show some of the GObject concepts on how to make
     an element configurable for applications and how to do
     application-element interaction in [Adding
-    Properties](pwg/building/args.md) and
-    [Signals](pwg/building/signals.md). Next, you will learn to
+    Properties][properties] and [Signals][signals]. Next, you will learn to
     build a quick test application to test all that you've just learned
-    in [Building a Test Application](pwg/building/testapp.md). We
+    in [Building a Test Application][testapp]. We
     will just touch upon basics here. For full-blown application
     development, you should look at [the Application Development
     Manual](application-development/index.md).
 
-  - [Advanced Filter Concepts](pwg/advanced/index.md) - Information on
+  - [Advanced Filter Concepts][advanced] - Information on
     advanced features of GStreamer plugin development.
 
     After learning about the basic steps, you should be able to create a
@@ -127,19 +125,18 @@ the following order:
     order, most of them don't require knowledge from other sections.
 
     The first chapter, named [Different scheduling
-    modes](pwg/advanced/scheduling.md), will explain some of the basics of
+    modes][scheduling], will explain some of the basics of
     element scheduling. It is not very in-depth, but is mostly some sort
     of an introduction on why other things work as they do. Read this
     chapter if you're interested in GStreamer internals. Next, we will
     apply this knowledge and discuss another type of data transmission
-    than what you learned in [The chain
-    function](pwg/building/chainfn.md): [Different scheduling
-    modes](pwg/advanced/scheduling.md). Loop-based elements will give you
+    than what you learned in [The chain function][chainfunc]: [Different
+    scheduling modes][scheduling]. Loop-based elements will give you
     more control over input rate. This is useful when writing, for
     example, muxers or demuxers.
 
     Next, we will discuss media identification in GStreamer in [Types
-    and Properties](pwg/advanced/building-types.md). You will learn how to
+    and Properties][types]. You will learn how to
     define new media types and get to know a list of standard media
     types defined in GStreamer.
 
@@ -147,37 +144,34 @@ the following order:
     sometimes-pads, which are pads that are created dynamically, either
     because the application asked for it (request) or because the media
     stream requires it (sometimes). This will be in [Request and
-    Sometimes pads](pwg/advanced/request.md).
+    Sometimes pads][request-pads].
 
-    The next chapter, [Clocking](pwg/advanced/clock.md), will
+    The next chapter, [Clocking][clocks], will
     explain the concept of clocks in GStreamer. You need this
     information when you want to know how elements should achieve
     audio/video synchronization.
 
     The next few chapters will discuss advanced ways of doing
     application-element interaction. Previously, we learned on the
-    GObject-ways of doing this in [Adding
-    Properties](pwg/building/args.md) and
-    [Signals](pwg/building/signals.md). We will discuss dynamic
+    GObject-ways of doing this in [Adding Properties][properties] and
+    [Signals][signals]. We will discuss dynamic
     parameters, which are a way of defining element behaviour over time
-    in advance, in [Supporting Dynamic Parameters](pwg/advanced/dparams.md).
-    Next, you will learn about interfaces in
-    [Interfaces](pwg/advanced/interfaces.md). Interfaces are very
-    target- specific ways of application-element interaction, based on
-    GObject's GInterface. Lastly, you will learn about how metadata is
-    handled in GStreamer in [Tagging (Metadata and
-    Streaminfo)](pwg/advanced/tagging.md).
+    in advance, in [Supporting Dynamic Parameters][dynamic-params].
+    Next, you will learn about interfaces in [Interfaces][interfaces].
+    Interfaces are very target- specific ways of application-element
+    interaction, based on GObject's GInterface. Lastly, you will learn about
+    how metadata is handled in GStreamer in [Tagging (Metadata and
+    Streaminfo)][tagging].
 
-    The last chapter, [Events: Seeking, Navigation and
-    More](pwg/advanced/events.md), will discuss the concept of
-    events in GStreamer. Events are, on the one hand, another way of
-    doing application-element interaction. It takes care of seeking, for
-    example. On the other hand, it is also a way in which elements
+    The last chapter, [Events: Seeking, Navigation and More][events], will
+    discuss the concept of events in GStreamer. Events are another way of
+    doing application-element interaction. They take care of seeking, for
+    example. They are also yet another a way in which elements
     interact with each other, such as letting each other know about
     media stream discontinuities, forwarding tags inside a pipeline and
     so on.
 
-  - [Creating special element types](pwg/other/index.md) - Explanation of
+  - [Creating special element types][element-types] - Explanation of
     writing other plugin types.
 
     Because the first two parts of the guide use an audio filter as an
@@ -186,15 +180,12 @@ the following order:
     sources, sinks, and autopluggers. This part of the guide presents
     the issues that arise when working on these more specialized plugin
     types. The chapter starts with a special focus on elements that can
-    be written using a base-class ([Pre-made base
-    classes](pwg/other/base.md)), and later also goes into writing
-    special types of elements in [Writing a Demuxer or
-    Parser](pwg/other/oneton.md), [Writing a N-to-1 Element or
-    Muxer](pwg/other/ntoone.md) and [Writing a
-    Manager](pwg/other/manager.md).
+    be written using a base-class ([Pre-made base classes][base-classes]),
+    and later also goes into writing special types of elements in [Writing a
+    Demuxer or Parser][one-to-n], [Writing a N-to-1 Element or Muxer][n-to-one]
+    and [Writing a Manager][manager].
 
-  - [Appendices](pwg/appendix/index.md) - Further information for plugin
-    developers.
+  - [Appendices][appendix] - Further information for plugin developers.
 
     The appendices contain some information that stubbornly refuses to
     fit cleanly in other sections of the guide. Most of this section is
@@ -202,15 +193,11 @@ the following order:
 
 The remainder of this introductory part of the guide presents a short
 overview of the basic concepts involved in GStreamer plugin development.
-Topics covered include [Elements and
-Plugins](pwg/introduction/basics.md#elements-and-plugins),
-[Pads](pwg/introduction/basics.md#pads), [GstMiniObject, Buffers and
-Events](pwg/introduction/basics.md#gstminiobject-buffers-and-events) and
-[Media types and
-Properties](pwg/introduction/basics.md#media-types-and-properties). If you
-are already familiar with this information, you can use this short
-overview to refresh your memory, or you can skip to [Building a
-Plugin](pwg/building/index.md).
+Topics covered include [Elements and Plugins][intro-elements],
+[Pads][intro-pads], [GstMiniObject, Buffers and Events][intro-miniobjects]
+and [Media types and Properties][intro-mediatypes]. If you are already
+familiar with this information, you can use this short overview to
+refresh your memory, or you can skip to [Building a Plugin][building].
 
 As you can see, there a lot to learn, so let's get started\!
 
@@ -221,3 +208,31 @@ As you can see, there a lot to learn, so let's get started\!
   - Adding new media types to the registry along with typedetect
     functions. This will allow your plugin to operate on a completely
     new media type.
+
+[building]: plugin-development/building/index.md
+[boilerplate]: plugin-development/building/boiler.md
+[pads]: plugin-development/building/pads.md
+[chainfunc]: plugin-development/building/chainfn.md
+[states]: plugin-development/building/statemanage-states.md
+[properties]: plugin-development/building/args.md
+[signals]: plugin-development/building/signals.md
+[testapp]: plugin-development/building/testapp.md
+[advanced]: plugin-development/advanced/index.md
+[scheduling]: plugin-development/advanced/scheduling.md
+[types]: plugin-development/advanced/building-types.md
+[request-pads]: plugin-development/advanced/request.md
+[clocks]: plugin-development/advanced/clock.md
+[dynamic-params]: plugin-development/advanced/dparams.md
+[interfaces]: plugin-development/advanced/interfaces.md
+[tagging]: plugin-development/advanced/tagging.md
+[events]: plugin-development/advanced/events.md
+[element-types]: plugin-development/other/index.md
+[base-classes]: plugin-development/other/base.md
+[one-to-n]: plugin-development/other/oneton.md
+[n-to-one]: plugin-development/other/ntoone.md
+[manager]: plugin-development/other/manager.md
+[appendix]: plugin-development/appendix/index.md
+[intro-elements]: plugin-development/introduction/basics.md#elements-and-plugins
+[intro-pads]: plugin-development/introduction/basics.md#pads
+[intro-miniobjects]: plugin-development/introduction/basics.md#gstminiobject-buffers-and-events
+[intro-mediatypes]: plugin-development/introduction/basics.md#media-types-and-properties

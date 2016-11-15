@@ -126,8 +126,8 @@ Events may contain several of the following items:
   - The other contents of the event depend on the specific event type.
 
 Events will be discussed extensively in [Events: Seeking, Navigation and
-More](pwg/advanced/events.md). Until then, the only event that will
-be used is the *EOS* event, which is used to indicate the end-of-stream
+More](plugin-development/advanced/events.md). Until then, the only event that
+will be used is the *EOS* event, which is used to indicate the end-of-stream
 (usually end-of-file).
 
 See the *GStreamer Library Reference* for the current implementation
@@ -157,7 +157,7 @@ from a downstream peer through a GstBufferPool or GstAllocator. Elements
 can ask a GstBufferPool or GstAllocator from the downstream peer
 element. If downstream is able to provide these objects, upstream can
 use them to allocate buffers. See more in [Memory
-allocation](pwg/advanced/allocation.md).
+allocation](plugin-development/advanced/allocation.md).
 
 Many sink elements have accelerated methods for copying data to
 hardware, or have direct access to hardware. It is common for these
@@ -183,7 +183,7 @@ for ensuring that the parameters required to fully specify a format
 match up correctly when linking pads between elements. Each link that is
 made between elements has a specified type and optionally a set of
 properties. See more about caps negotiation in [Caps
-negotiation](pwg/advanced/negotiation.md).
+negotiation](plugin-development/advanced/negotiation.md).
 
 ### The Basic Types
 
@@ -192,7 +192,7 @@ of a few of the basic types used for buffers in GStreamer. The table
 contains the name ("media type") and a description of the type, the
 properties associated with the type, and the meaning of each property. A
 full list of supported types is included in [List of Defined
-Types](pwg/advanced/building-types.md#list-of-defined-types).
+Types](plugin-development/advanced/building-types.md#list-of-defined-types).
 
 <table>
 <caption>Table of Example Types</caption>

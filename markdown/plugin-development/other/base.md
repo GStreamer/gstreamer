@@ -136,11 +136,10 @@ videosink:
 
 ## Writing a source
 
-In the previous part, particularly [Providing random
-access](pwg/advanced/scheduling.md#providing-random-access), we have learned
-that some types of elements can provide random access. This applies most
-definitely to source elements reading from a randomly seekable location,
-such as file sources. However, other source elements may be better
+In the previous part, particularly [Providing random access][random-access],
+we have learned that some types of elements can provide random access. This
+applies most definitely to source elements reading from a randomly seekable
+location, such as file sources. However, other source elements may be better
 described as a live source element, such as a camera source, an audio
 card source and such; those are not seekable and do not provide
 byte-exact access. For all such use cases, GStreamer provides two base
@@ -168,6 +167,8 @@ limitations:
 It is possible to use special memory, such as X server memory pointers
 or `mmap ()`'ed memory areas, as data pointers in buffers returned from
 the `create()` virtual function.
+
+[random-access]: plugin-development/advanced/scheduling.md#providing-random-access
 
 ### Writing an audio source
 

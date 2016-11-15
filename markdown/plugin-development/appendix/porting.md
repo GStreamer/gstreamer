@@ -26,7 +26,7 @@ also need a rewrite, which will take about the same amount of time.
 
   - In 0.10, buffers have caps attached to them. Elements should
     allocate new buffers with `gst_pad_alloc_buffer ()`. See [Caps
-    negotiation](pwg/advanced/negotiation.md) for more details.
+    negotiation](plugin-development/advanced/negotiation.md) for more details.
 
   - Most functions returning an object or an object property have been
     changed to return its own reference rather than a constant reference
@@ -46,21 +46,21 @@ also need a rewrite, which will take about the same amount of time.
     some more work. Pads get assigned a scheduling mode, based on which
     they can either operate in random access-mode, in pipeline driving
     mode or in push-mode. all this is documented in detail in [Different
-    scheduling modes](pwg/advanced/scheduling.md). As a result of this, the
+    scheduling modes](plugin-development/advanced/scheduling.md). As a result of this, the
     bytestream object no longer exists. Elements requiring byte-level
     access should now use random access on their sinkpads.
 
   - Negotiation is asynchronous. This means that downstream negotiation
     is done as data comes in and upstream negotiation is done whenever
     renegotiation is required. All details are described in [Caps
-    negotiation](pwg/advanced/negotiation.md).
+    negotiation](plugin-development/advanced/negotiation.md).
 
   - For as far as possible, elements should try to use existing base
     classes in 0.10. Sink and source elements, for example, could derive
     from `GstBaseSrc` and `GstBaseSink`. Audio sinks or sources could
     even derive from audio-specific base classes. All existing base
     classes have been discussed in [Pre-made base
-    classes](pwg/other/base.md) and the next few chapters.
+    classes](plugin-development/other/base.md) and the next few chapters.
 
   - In 0.10, event handling and buffers are separated once again. This
     means that in order to receive events, one no longer has to set the
@@ -88,7 +88,7 @@ also need a rewrite, which will take about the same amount of time.
     need to be able to accept and process data already in the
     `GST_STATE_PAUSED` state now (i.e. when prerolling the pipeline).
     More details can be found in [What are
-    states?](pwg/building/statemanage-states.md).
+    states?](plugin-development/building/statemanage-states.md).
 
   - If your plugin's state change function hasn't been superseded by
     virtual start() and stop() methods of one of the new base classes,
