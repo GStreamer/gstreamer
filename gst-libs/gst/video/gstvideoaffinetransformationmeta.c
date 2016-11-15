@@ -84,7 +84,7 @@ gst_video_affine_transformation_meta_get_info (void)
 {
   static const GstMetaInfo *info = NULL;
 
-  if (g_once_init_enter (&info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & info)) {
     const GstMetaInfo *meta =
         gst_meta_register (GST_VIDEO_AFFINE_TRANSFORMATION_META_API_TYPE,
         "GstVideoAffineTransformationMeta",
@@ -92,7 +92,7 @@ gst_video_affine_transformation_meta_get_info (void)
         gst_video_affine_transformation_meta_init,
         NULL,
         gst_video_affine_transformation_meta_transform);
-    g_once_init_leave (&info, meta);
+    g_once_init_leave ((GstMetaInfo **) & info, (GstMetaInfo *) meta);
   }
   return info;
 }

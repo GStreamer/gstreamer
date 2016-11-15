@@ -189,13 +189,14 @@ gst_audio_downmix_meta_get_info (void)
 {
   static const GstMetaInfo *audio_downmix_meta_info = NULL;
 
-  if (g_once_init_enter (&audio_downmix_meta_info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & audio_downmix_meta_info)) {
     const GstMetaInfo *meta =
         gst_meta_register (GST_AUDIO_DOWNMIX_META_API_TYPE,
         "GstAudioDownmixMeta", sizeof (GstAudioDownmixMeta),
         gst_audio_downmix_meta_init, gst_audio_downmix_meta_free,
         gst_audio_downmix_meta_transform);
-    g_once_init_leave (&audio_downmix_meta_info, meta);
+    g_once_init_leave ((GstMetaInfo **) & audio_downmix_meta_info,
+        (GstMetaInfo *) meta);
   }
   return audio_downmix_meta_info;
 }
@@ -291,13 +292,14 @@ gst_audio_clipping_meta_get_info (void)
 {
   static const GstMetaInfo *audio_clipping_meta_info = NULL;
 
-  if (g_once_init_enter (&audio_clipping_meta_info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & audio_clipping_meta_info)) {
     const GstMetaInfo *meta =
         gst_meta_register (GST_AUDIO_CLIPPING_META_API_TYPE,
         "GstAudioClippingMeta", sizeof (GstAudioClippingMeta),
         gst_audio_clipping_meta_init, NULL,
         gst_audio_clipping_meta_transform);
-    g_once_init_leave (&audio_clipping_meta_info, meta);
+    g_once_init_leave ((GstMetaInfo **) & audio_clipping_meta_info,
+        (GstMetaInfo *) meta);
   }
   return audio_clipping_meta_info;
 }

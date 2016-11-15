@@ -128,12 +128,13 @@ gst_video_meta_get_info (void)
 {
   static const GstMetaInfo *video_meta_info = NULL;
 
-  if (g_once_init_enter (&video_meta_info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & video_meta_info)) {
     const GstMetaInfo *meta =
         gst_meta_register (GST_VIDEO_META_API_TYPE, "GstVideoMeta",
         sizeof (GstVideoMeta), (GstMetaInitFunction) gst_video_meta_init,
         (GstMetaFreeFunction) NULL, gst_video_meta_transform);
-    g_once_init_leave (&video_meta_info, meta);
+    g_once_init_leave ((GstMetaInfo **) & video_meta_info,
+        (GstMetaInfo *) meta);
   }
   return video_meta_info;
 }
@@ -457,13 +458,14 @@ gst_video_crop_meta_get_info (void)
 {
   static const GstMetaInfo *video_crop_meta_info = NULL;
 
-  if (g_once_init_enter (&video_crop_meta_info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & video_crop_meta_info)) {
     const GstMetaInfo *meta =
         gst_meta_register (GST_VIDEO_CROP_META_API_TYPE, "GstVideoCropMeta",
         sizeof (GstVideoCropMeta),
         (GstMetaInitFunction) gst_video_crop_meta_init,
         (GstMetaFreeFunction) NULL, gst_video_crop_meta_transform);
-    g_once_init_leave (&video_crop_meta_info, meta);
+    g_once_init_leave ((GstMetaInfo **) & video_crop_meta_info,
+        (GstMetaInfo *) meta);
   }
   return video_crop_meta_info;
 }
@@ -574,7 +576,7 @@ gst_video_gl_texture_upload_meta_get_info (void)
 {
   static const GstMetaInfo *info = NULL;
 
-  if (g_once_init_enter (&info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & info)) {
     const GstMetaInfo *meta =
         gst_meta_register (GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE,
         "GstVideoGLTextureUploadMeta",
@@ -582,7 +584,7 @@ gst_video_gl_texture_upload_meta_get_info (void)
         gst_video_gl_texture_upload_meta_init,
         gst_video_gl_texture_upload_meta_free,
         gst_video_gl_texture_upload_meta_transform);
-    g_once_init_leave (&info, meta);
+    g_once_init_leave ((GstMetaInfo **) & info, (GstMetaInfo *) meta);
   }
   return info;
 }
@@ -748,7 +750,7 @@ gst_video_region_of_interest_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
-  if (g_once_init_enter (&meta_info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
     const GstMetaInfo *mi =
         gst_meta_register (GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE,
         "GstVideoRegionOfInterestMeta",
@@ -756,7 +758,7 @@ gst_video_region_of_interest_meta_get_info (void)
         gst_video_region_of_interest_meta_init,
         gst_video_region_of_interest_meta_free,
         gst_video_region_of_interest_meta_transform);
-    g_once_init_leave (&meta_info, mi);
+    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
   }
   return meta_info;
 }
@@ -912,7 +914,7 @@ gst_video_time_code_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
-  if (g_once_init_enter (&meta_info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
     const GstMetaInfo *mi =
         gst_meta_register (GST_VIDEO_TIME_CODE_META_API_TYPE,
         "GstVideoTimeCodeMeta",
@@ -920,7 +922,7 @@ gst_video_time_code_meta_get_info (void)
         gst_video_time_code_meta_init,
         gst_video_time_code_meta_free,
         gst_video_time_code_meta_transform);
-    g_once_init_leave (&meta_info, mi);
+    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
   }
   return meta_info;
 }
