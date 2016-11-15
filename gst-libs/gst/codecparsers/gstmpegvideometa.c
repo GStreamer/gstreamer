@@ -114,13 +114,14 @@ gst_mpeg_video_meta_get_info (void)
 {
   static const GstMetaInfo *mpeg_video_meta_info = NULL;
 
-  if (g_once_init_enter (&mpeg_video_meta_info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & mpeg_video_meta_info)) {
     const GstMetaInfo *meta = gst_meta_register (GST_MPEG_VIDEO_META_API_TYPE,
         "GstMpegVideoMeta", sizeof (GstMpegVideoMeta),
         (GstMetaInitFunction) gst_mpeg_video_meta_init,
         (GstMetaFreeFunction) gst_mpeg_video_meta_free,
         (GstMetaTransformFunction) gst_mpeg_video_meta_transform);
-    g_once_init_leave (&mpeg_video_meta_info, meta);
+    g_once_init_leave ((GstMetaInfo **) & mpeg_video_meta_info,
+        (GstMetaInfo *) meta);
   }
 
   return mpeg_video_meta_info;
