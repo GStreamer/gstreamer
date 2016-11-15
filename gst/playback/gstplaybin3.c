@@ -2845,15 +2845,6 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
         g_object_class_find_property (G_OBJECT_GET_CLASS (combine->combiner),
         "active-pad") != NULL;
 
-    if (!custom_combiner) {
-      /* sync-mode=1, use clock */
-      if (combine->type == GST_PLAY_SINK_TYPE_TEXT)
-        g_object_set (combine->combiner, "sync-streams", TRUE,
-            "sync-mode", 1, "cache-buffers", TRUE, NULL);
-      else
-        g_object_set (combine->combiner, "sync-streams", TRUE, NULL);
-    }
-
     if (combine->has_active_pad)
       g_signal_connect (combine->combiner, "notify::active-pad",
           G_CALLBACK (combiner_active_pad_changed), playbin);
