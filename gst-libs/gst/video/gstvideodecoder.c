@@ -1615,6 +1615,13 @@ gst_video_decoder_src_query_default (GstVideoDecoder * dec, GstQuery * query)
         break;
       }
 
+      /* Refuse BYTES format queries. If it made sense to
+       * answer them, upstream would have already */
+      if (format == GST_FORMAT_BYTES) {
+        GST_LOG_OBJECT (dec, "Ignoring BYTES position query");
+        break;
+      }
+
       /* we start from the last seen time */
       time = dec->priv->last_timestamp_out;
       /* correct for the segment values */
