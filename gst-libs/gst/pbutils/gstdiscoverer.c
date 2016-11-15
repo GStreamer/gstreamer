@@ -393,7 +393,8 @@ gst_discoverer_dispose (GObject * obj)
 
     /* pipeline was set to NULL in _reset */
     gst_object_unref (dc->priv->pipeline);
-    gst_object_unref (dc->priv->bus);
+    if (dc->priv->bus)
+      gst_object_unref (dc->priv->bus);
 
     dc->priv->pipeline = NULL;
     dc->priv->uridecodebin = NULL;
