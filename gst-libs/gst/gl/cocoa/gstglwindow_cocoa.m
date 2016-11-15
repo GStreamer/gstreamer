@@ -197,6 +197,7 @@ gst_gl_window_cocoa_close (GstGLWindow *window)
 {
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
 
+  [[window_cocoa->priv->internal_win_id contentView] removeFromSuperview];
   [window_cocoa->priv->internal_win_id release];
   window_cocoa->priv->internal_win_id = nil;
 }
