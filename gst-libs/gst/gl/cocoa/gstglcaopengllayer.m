@@ -27,6 +27,22 @@
 #include "gstglcaopengllayer.h"
 #include "gstgl_cocoa_private.h"
 
+#define GST_CAT_DEFAULT gst_gl_ca_opengl_layer_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
+static void
+_init_debug (void)
+{
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT(gst_gl_ca_opengl_layer_debug, "glcaopengllayer",
+        0, "CAOpenGLLayer");
+
+    g_once_init_leave (&_init, 1);
+  }
+}
+
 @implementation GstGLCAOpenGLLayer
 - (void)dealloc {
   if (self->draw_notify)
@@ -50,6 +66,8 @@ _context_ready (gpointer data)
 
 - (id)initWithGstGLContext:(GstGLContextCocoa *)parent_gl_context {
   [super init];
+
+  _init_debug();
 
   GST_LOG ("init CAOpenGLLayer");
 
