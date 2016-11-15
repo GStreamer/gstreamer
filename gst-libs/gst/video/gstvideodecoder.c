@@ -1617,6 +1617,8 @@ gst_video_decoder_src_query_default (GstVideoDecoder * dec, GstQuery * query)
 
       /* Refuse BYTES format queries. If it made sense to
        * answer them, upstream would have already */
+      gst_query_parse_position (query, &format, NULL);
+
       if (format == GST_FORMAT_BYTES) {
         GST_LOG_OBJECT (dec, "Ignoring BYTES position query");
         break;
@@ -1632,7 +1634,6 @@ gst_video_decoder_src_query_default (GstVideoDecoder * dec, GstQuery * query)
           "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));
 
       /* and convert to the final format */
-      gst_query_parse_position (query, &format, NULL);
       if (!(res = gst_pad_query_convert (pad, GST_FORMAT_TIME, time,
                   format, &value)))
         break;
