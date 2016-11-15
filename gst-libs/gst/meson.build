@@ -10,8 +10,7 @@ subdir('interfaces')
 subdir('mpegts')
 subdir('player')
 subdir('video')
-
-# FIXME: port configure.ac logic
-#subdir('wayland')
-
+if use_wayland
+    subdir('wayland')
+endif
 subdir('gl')
