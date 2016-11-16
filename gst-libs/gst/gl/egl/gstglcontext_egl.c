@@ -832,7 +832,7 @@ gst_gl_context_egl_check_feature (GstGLContext * context, const gchar * feature)
           context_egl->eglDestroyImage != NULL;
   }
 
-  return FALSE;
+  return gst_gl_check_extension (feature, context_egl->egl_exts);
 }
 
 guintptr
