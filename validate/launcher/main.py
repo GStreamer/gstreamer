@@ -219,6 +219,7 @@ class LauncherConfig(Loggable):
         self.sync = False
         self.force_sync = False
         self.sync_all = False
+        self.check_bugs_status = False
 
     def cleanup(self):
         """
@@ -399,6 +400,11 @@ Note that all testsuite should be inside python modules, so the directory should
     parser.add_argument("-b", "--blacklisted-tests", dest="blacklisted_tests",
                         action="append",
                         help="Define the tests not to execute, it can be a regex.")
+    parser.add_argument("--check-bugs", dest="check_bugs_status",
+                        action="store_true",
+                        help="Check if the bug linked to blacklisted tests has"
+                        " been marked as resolved. (only work with bugzilla "
+                        "for the time being).")
     parser.add_argument("-L", "--list-tests",
                         dest="list_tests",
                         action="store_true",

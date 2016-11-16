@@ -31,12 +31,12 @@ import sys
 import tempfile
 import time
 import urllib.request
-import urllib.parse
 import urllib.error
 import urllib.parse
 
 from .loggable import Loggable
 from operator import itemgetter
+from xml.etree import ElementTree
 
 
 GST_SECOND = int(1000000000)
@@ -362,3 +362,72 @@ class BackTraceGenerator(Loggable):
             return info
 
         return None
+
+
+def check_bugs_resolution(bugs_definitions):
+    bugz = {}
+    regexes = {}
+    for regex, bug in bugs_definitions:
+        url = urllib.parse.urlparse(bug)
+        if "bugzilla" not in url.netloc:
+            printc("  + %s \n   --> bug: %s\n   --> Status: Not a bugzilla report\n" % (regex, bug),
+                   Colors.WARNING)
+            continue
+
+        query = urllib.parse.parse_qs(url.query)
+        _id = query.get('id')
+        if not _id:
+            printc("  + '%s' -- Can't check bug '%s'\n" % (regex, bug), Colors.WARNING)
+            continue
+
+        if isinstance(_id, list):
+            _id = _id[0]
+
+        regexes[_id] = (regex, bug)
+        url_parts = tuple(list(url)[:3] + ['', '', ''])
+        ids = bugz.get(url_parts, [])
+        ids.append(_id)
+        bugz[url_parts] = ids
+
+    res = True
+    for url_parts, ids in bugz.items():
+        url_parts = list(url_parts)
+        query = {'id': ','.join(ids)}
+        query['ctype'] = 'xml'
+        url_parts[4] = urllib.parse.urlencode(query)
+        try:
+            res = urllib.request.urlopen(urllib.parse.urlunparse(url_parts))
+        except Exception as e:
+            printc("  + Could not properly check bugs status for: %s (%s)\n"
+                   % (urllib.parse.urlunparse(url_parts), e), Colors.FAIL)
+            continue
+
+        root = ElementTree.fromstring(res.read())
+        bugs = root.findall('./bug')
+
+        if len(bugs) != len(ids):
+            printc("  + Could not properly check bugs status on server %s\n" %
+                   urllib.parse.urlunparse(url_parts), Colors.FAIL)
+            continue
+
+        for bugelem in bugs:
+            status = bugelem.findtext('./bug_status')
+            bugid = bugelem.findtext('./bug_id')
+            regex, bug = regexes[bugid]
+            desc = bugelem.findtext('./short_desc')
+
+            if not status:
+                printc("  + %s \n   --> bug: %s\n   --> Status: UNKNOWN\n" % (regex, bug),
+                       Colors.WARNING)
+                continue
+
+            if not status.lower() in ['new', 'verified']:
+                printc("  + %s \n   --> bug: #%s: '%s'\n   ==> Bug CLOSED already (status: %s)\n" % (
+                       regex, bugid, desc, status), Colors.WARNING)
+
+                res = False
+
+            printc("  + %s \n   --> bug: #%s: '%s'\n   --> Status: %s\n" % (
+                   regex, bugid, desc, status), Colors.OKGREEN)
+
+    return res

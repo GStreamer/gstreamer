@@ -41,7 +41,8 @@ from .loggable import Loggable
 import xml.etree.cElementTree as ET
 
 from .utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
-    Protocols, look_for_file_in_source_dir, get_data_file, BackTraceGenerator
+    Protocols, look_for_file_in_source_dir, get_data_file, BackTraceGenerator, \
+    check_bugs_resolution
 
 # The factor by which we increase the hard timeout when running inside
 # Valgrind
@@ -208,7 +209,7 @@ class Test(Loggable):
         if not stack_trace:
             return
 
-        info = "\n\n== Segfault informations: == \n%s" % stack_trace
+        info = "\n\n== Stack trace: == \n%s" % stack_trace
         if self.options.redirect_logs:
             print(info)
         else:
@@ -997,6 +998,7 @@ class TestsManager(Loggable):
         self.check_testslist = True
         self.all_tests = None
         self.expected_failures = {}
+        self.blacklisted_tests = []
 
     def init(self):
         return False
@@ -1058,12 +1060,7 @@ class TestsManager(Loggable):
                 self.blacklisted_tests_patterns.append(re.compile(pattern))
 
     def set_default_blacklist(self, default_blacklist):
-        msg = "\nCurrently 'hardcoded' %s blacklisted tests:\n\n" % self.name
-        for name, bug in default_blacklist:
-            self._add_blacklist(name)
-            msg += "  + %s \n   --> bug: %s\n" % (name, bug)
-
-        printc(msg, Colors.FAIL, True)
+        self.blacklisted_tests += default_blacklist
 
     def add_options(self, parser):
         """ Add more arguments. """
@@ -1088,6 +1085,23 @@ class TestsManager(Loggable):
         if options.blacklisted_tests:
             for patterns in options.blacklisted_tests:
                 self._add_blacklist(patterns)
+
+    def set_blacklists(self):
+        if self.blacklisted_tests:
+            printc("\nCurrently 'hardcoded' %s blacklisted tests:\n"
+                   "--------------------------------------------" % self.name,
+                   Colors.WARNING)
+
+        if self.options.check_bugs_status:
+            if not check_bugs_resolution(self.blacklisted_tests):
+                return False
+
+        for name, bug in self.blacklisted_tests:
+            self._add_blacklist(name)
+            if not self.options.check_bugs_status:
+                print("  + %s \n   --> bug: %s\n" % (name, bug))
+
+        return True
 
     def _check_blacklisted(self, test):
         for pattern in self.blacklisted_tests_patterns:
@@ -1380,6 +1394,11 @@ class _TestsLauncher(Loggable):
         if not options.config and options.testsuites:
             if self._setup_testsuites() is False:
                 return False
+
+        for tester in self.testers:
+            if not tester.set_blacklists():
+                return False
+
         return True
 
     def _check_tester_has_other_testsuite(self, testsuite, tester):
