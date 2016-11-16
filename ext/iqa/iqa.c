@@ -102,7 +102,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
 G_DEFINE_TYPE (GstIqa, gst_iqa, GST_TYPE_VIDEO_AGGREGATOR);
 
 #ifdef HAVE_DSSIM
-
 inline static unsigned char
 to_byte (float in)
 {
@@ -113,7 +112,7 @@ to_byte (float in)
   return in * 256.f;
 }
 
-static void
+static gboolean
 do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
     GstBuffer * outbuf, GstStructure * msg_structure, gchar * padname)
 {
@@ -138,9 +137,18 @@ do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
   dssim_set_save_ssim_maps (attr, 1, 1);
   if (ref->info.width != cmp->info.width ||
       ref->info.height != cmp->info.height) {
-    GST_WARNING_OBJECT (self,
-        "Cannot compare two images with a different geometry yet");
-    return;
+    GST_OBJECT_UNLOCK (self);
+
+    GST_ELEMENT_ERROR (self, STREAM, FAILED,
+        ("Video streams do not have the same sizes (add videoscale"
+            " and force the sizes to be equal on all sink pads.)"),
+        ("Reference width %d - compared width: %d. "
+            "Reference height %d - compared height: %d",
+            ref->info.width, cmp->info.width, ref->info.height,
+            cmp->info.height));
+
+    GST_OBJECT_LOCK (self);
+    return FALSE;
   }
 
   gst_buffer_map (ref->buffer, &ref_info, GST_MAP_READ);
@@ -198,21 +206,23 @@ do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
   dssim_dealloc_image (ref_image);
   dssim_dealloc_image (cmp_image);
   dssim_dealloc_attr (attr);
-}
-#else
-static void
-do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
-    GstBuffer * outbuf, GstStructure * msg_structure, gchar * padname)
-{
+
+  return TRUE;
 }
 #endif
 
-static void
+static gboolean
 compare_frames (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
     GstBuffer * outbuf, GstStructure * msg_structure, gchar * padname)
 {
-  if (self->do_dssim)
-    do_dssim (self, ref, cmp, outbuf, msg_structure, padname);
+#ifdef HAVE_DSSIM
+  if (self->do_dssim) {
+    if (!do_dssim (self, ref, cmp, outbuf, msg_structure, padname))
+      return FALSE;
+  }
+#endif
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -239,12 +249,16 @@ gst_iqa_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
       if (!ref_frame) {
         ref_frame = pad->aggregated_frame;
       } else {
+        gboolean res;
         gchar *padname = gst_pad_get_name (pad);
         GstVideoFrame *cmp_frame = pad->aggregated_frame;
 
-        compare_frames (self, ref_frame, cmp_frame, outbuf, msg_structure,
+        res = compare_frames (self, ref_frame, cmp_frame, outbuf, msg_structure,
             padname);
         g_free (padname);
+
+        if (!res)
+          goto failed;
       }
     }
   }
@@ -258,6 +272,11 @@ gst_iqa_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
       agg->segment.position, NULL);
   gst_element_post_message (GST_ELEMENT (self), m);
   return GST_FLOW_OK;
+
+failed:
+  GST_OBJECT_UNLOCK (vagg);
+
+  return GST_FLOW_ERROR;
 }
 
 static void
