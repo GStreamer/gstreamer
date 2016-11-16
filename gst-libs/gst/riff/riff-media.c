@@ -824,6 +824,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     case GST_MAKE_FOURCC ('V', 'M', 'n', 'c'):
       caps = gst_caps_new_simple ("video/x-vmnc",
           "version", G_TYPE_INT, 1, NULL);
+      if (strf && strf->bit_cnt != 0)
+        gst_caps_set_simple (caps, "bpp", G_TYPE_INT, strf->bit_cnt, NULL);
       if (codec_name)
         *codec_name = g_strdup ("VMWare NC Video");
       break;
