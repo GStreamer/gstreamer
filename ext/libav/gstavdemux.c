@@ -2028,8 +2028,9 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "swf") ||
         !strcmp (in_plugin->name, "voc") ||
         !strcmp (in_plugin->name, "pva") ||
-        !strcmp (in_plugin->name, "gif") || !strcmp (in_plugin->name, "vc1test")
-        )
+        !strcmp (in_plugin->name, "gif") ||
+        !strcmp (in_plugin->name, "vc1test") ||
+        !strcmp (in_plugin->name, "ivf"))
       register_typefind_func = FALSE;
 
     /* Set the rank of demuxers known to work to MARGINAL.
@@ -2066,7 +2067,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "yuv4mpegpipe") ||
         !strcmp (in_plugin->name, "pva") ||
         !strcmp (in_plugin->name, "mpc") ||
-        !strcmp (in_plugin->name, "mpc8") || !strcmp (in_plugin->name, "gif"))
+        !strcmp (in_plugin->name, "mpc8") ||
+        !strcmp (in_plugin->name, "gif") || !strcmp (in_plugin->name, "ivf"))
       rank = GST_RANK_MARGINAL;
     else {
       GST_DEBUG ("ignoring %s", in_plugin->name);
