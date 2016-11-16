@@ -42,9 +42,9 @@ teardown (void)
   gst_object_unref (display);
 }
 
-static GstGLMemory *gl_tex;
+static GstGLMemory *gl_tex, *gl_tex2;
 static GLuint vbo, vbo_indices, vao;
-static GstGLFramebuffer *fbo;
+static GstGLFramebuffer *fbo, *fbo2;
 static GstGLShader *shader;
 static GLint shader_attr_position_loc;
 static GLint shader_attr_texture_loc;
@@ -82,6 +82,9 @@ init (gpointer data)
   gl_tex =
       (GstGLMemory *) gst_gl_base_memory_alloc ((GstGLBaseMemoryAllocator *)
       allocator, (GstGLAllocationParams *) params);
+  gl_tex2 =
+      (GstGLMemory *) gst_gl_base_memory_alloc ((GstGLBaseMemoryAllocator *)
+      allocator, (GstGLAllocationParams *) params);
   gst_object_unref (allocator);
   gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
   fail_if (gl_tex == NULL, "failed to create texture");
@@ -106,6 +109,7 @@ deinit (gpointer data)
   gst_object_unref (fbo);
   gst_object_unref (shader);
   gst_memory_unref (GST_MEMORY_CAST (gl_tex));
+  gst_memory_unref (GST_MEMORY_CAST (gl_tex2));
 }
 
 static gboolean
@@ -194,6 +198,10 @@ init_blit (gpointer data)
     gl->BindBuffer (GL_ARRAY_BUFFER, 0);
     gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
   }
+  /* has to be called in the thread that is going to use the framebuffer */
+  fbo2 = gst_gl_framebuffer_new_with_default_depth (context, 320, 240);
+
+  fail_if (fbo2 == NULL, "failed to create framebuffer object");
 }
 
 static void
@@ -211,13 +219,14 @@ deinit_blit (gpointer data)
   if (vao)
     gl->DeleteVertexArrays (1, &vao);
   vao = 0;
+  gst_object_unref (fbo2);
+  fbo2 = NULL;
 }
 
-static void
-draw_render (gpointer data)
+static gboolean
+blit_tex (gpointer data)
 {
   GstGLContext *context = data;
-  GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
   const GstGLFuncs *gl = context->gl_vtable;
 
   gl->Clear (GL_COLOR_BUFFER_BIT);
@@ -240,7 +249,14 @@ draw_render (gpointer data)
   else
     _unbind_buffer (context);
 
-  context_class->swap_buffers (context);
+  return TRUE;
+}
+
+static void
+draw_render (gpointer data)
+{
+  gst_gl_framebuffer_draw_to_texture (fbo2, gl_tex2,
+      (GstGLFramebufferFunc) blit_tex, data);
 }
 
 GST_START_TEST (test_share)
@@ -379,7 +395,6 @@ GST_START_TEST (test_wrapped_context)
   fail_if (error != NULL, "Error creating secondary context %s\n",
       error ? error->message : "Unknown Error");
 
-  /* make the window visible */
   gst_gl_window_set_preferred_size (window, 320, 240);
   gst_gl_window_draw (window);
 
