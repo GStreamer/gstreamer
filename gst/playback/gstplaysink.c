@@ -856,6 +856,10 @@ gst_play_sink_set_sink (GstPlaySink * playsink, GstPlaySinkType type,
     GstElement * sink)
 {
   GstElement **elem = NULL, *old = NULL;
+#ifndef GST_DISABLE_GST_DEBUG
+  GstPad *sink_pad;
+  const gchar *sink_type = NULL;
+#endif
 
   GST_LOG ("Setting sink %" GST_PTR_FORMAT " as sink type %d", sink, type);
 
@@ -864,13 +868,22 @@ gst_play_sink_set_sink (GstPlaySink * playsink, GstPlaySinkType type,
     case GST_PLAY_SINK_TYPE_AUDIO:
     case GST_PLAY_SINK_TYPE_AUDIO_RAW:
       elem = &playsink->audio_sink;
+#ifndef GST_DISABLE_GST_DEBUG
+      sink_type = "audio";
+#endif
       break;
     case GST_PLAY_SINK_TYPE_VIDEO:
     case GST_PLAY_SINK_TYPE_VIDEO_RAW:
       elem = &playsink->video_sink;
+#ifndef GST_DISABLE_GST_DEBUG
+      sink_type = "video";
+#endif
       break;
     case GST_PLAY_SINK_TYPE_TEXT:
       elem = &playsink->text_sink;
+#ifndef GST_DISABLE_GST_DEBUG
+      sink_type = "text";
+#endif
       break;
     default:
       break;
@@ -882,6 +895,19 @@ gst_play_sink_set_sink (GstPlaySink * playsink, GstPlaySinkType type,
     *elem = sink;
   }
   GST_PLAY_SINK_UNLOCK (playsink);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  /* Check and warn if an application sets a sink with no 'sink' pad */
+  if (sink && elem) {
+    if ((sink_pad = gst_element_get_static_pad (sink, "sink")) != NULL) {
+      gst_object_unref (sink_pad);
+    } else {
+      GST_ELEMENT_WARNING (playsink, CORE, FAILED,
+          ("Application error - playback can't work"),
+          ("custom %s sink has no pad named \"sink\"", sink_type));
+    }
+  }
+#endif
 
   if (old) {
     /* Set the old sink to NULL if it is not used any longer */
