@@ -1097,7 +1097,15 @@ class TestsManager(Loggable):
 
         return False
 
+    def _check_whitelisted(self, test):
+        for pattern in self.wanted_tests_patterns:
+            if pattern.findall(test.classname):
+                return True
+
     def _is_test_wanted(self, test):
+        if self._check_whitelisted(test):
+            return True
+
         if self._check_blacklisted(test):
             return False
 
@@ -1109,10 +1117,6 @@ class TestsManager(Loggable):
 
         if not self.wanted_tests_patterns:
             return True
-
-        for pattern in self.wanted_tests_patterns:
-            if pattern.findall(test.classname):
-                return True
 
         return False
 
