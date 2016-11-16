@@ -174,7 +174,7 @@ gst_video_time_code_to_date_time (const GstVideoTimeCode * tc)
 guint64
 gst_video_time_code_nsec_since_daily_jam (const GstVideoTimeCode * tc)
 {
-  gdouble nsec;
+  guint64 frames, nsec;
 
   g_return_val_if_fail (gst_video_time_code_is_valid (tc), -1);
 
@@ -187,21 +187,10 @@ gst_video_time_code_nsec_since_daily_jam (const GstVideoTimeCode * tc)
     return -1;
   }
 
-  if ((tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_INTERLACED)
-      && tc->field_count == 1)
-    nsec =
-        gst_util_uint64_scale (GST_SECOND * tc->frames - 500 * GST_MSECOND,
-        tc->config.fps_d, tc->config.fps_n);
-  else
-    nsec =
-        gst_util_uint64_scale (GST_SECOND * tc->frames, tc->config.fps_d,
-        tc->config.fps_n);
-
-  /* hours <= 24 (daily jam required)
-   * minutes < 60
-   * seconds < 60
-   * this can't overflow */
-  nsec += GST_SECOND * (tc->seconds + (60 * (tc->minutes + 60 * tc->hours)));
+  frames = gst_video_time_code_frames_since_daily_jam (tc);
+  nsec =
+      gst_util_uint64_scale (frames, GST_SECOND * tc->config.fps_d,
+      tc->config.fps_n);
 
   return nsec;
 }
