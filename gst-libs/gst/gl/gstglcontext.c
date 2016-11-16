@@ -193,6 +193,8 @@ static void _init_debug (void);
 
 static gpointer gst_gl_context_create_thread (GstGLContext * context);
 static void gst_gl_context_finalize (GObject * object);
+static void gst_gl_context_default_get_gl_platform_version (GstGLContext *
+    context, gint * major, gint * minor);
 
 struct _GstGLContextPrivate
 {
@@ -285,6 +287,8 @@ gst_gl_context_class_init (GstGLContextClass * klass)
 
   klass->get_proc_address =
       GST_DEBUG_FUNCPTR (gst_gl_context_default_get_proc_address);
+  klass->get_gl_platform_version =
+      GST_DEBUG_FUNCPTR (gst_gl_context_default_get_gl_platform_version);
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_context_finalize;
 
@@ -1694,6 +1698,40 @@ gst_gl_context_set_shared_with (GstGLContext * context, GstGLContext * share)
     _context_share_group_unref (context->priv->sharegroup);
   context->priv->sharegroup =
       _context_share_group_ref (share->priv->sharegroup);
+}
+
+static void
+gst_gl_context_default_get_gl_platform_version (GstGLContext * context,
+    gint * major, gint * minor)
+{
+  if (major)
+    *major = 0;
+  if (minor)
+    *minor = 0;
+}
+
+/**
+ * gst_gl_context_get_gl_platform_version:
+ * @context: a #GstGLContext
+ * @major: (out): return for the major version
+ * @minor: (out): return for the minor version
+ *
+ * Get the version of the OpenGL platform (GLX, EGL, etc) used.  Only valid
+ * after a call to gst_gl_context_create_context().
+ */
+void
+gst_gl_context_get_gl_platform_version (GstGLContext * context, gint * major,
+    gint * minor)
+{
+  GstGLContextClass *context_class;
+
+  g_return_if_fail (GST_IS_GL_CONTEXT (context));
+  g_return_if_fail (major != NULL);
+  g_return_if_fail (minor != NULL);
+  context_class = GST_GL_CONTEXT_GET_CLASS (context);
+  g_return_if_fail (context_class->get_gl_platform_version != NULL);
+
+  context_class->get_gl_platform_version (context, major, minor);
 }
 
 static GstGLAPI

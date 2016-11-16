@@ -58,6 +58,8 @@ static gboolean gst_gl_context_glx_choose_format (GstGLContext *
 GstGLAPI gst_gl_context_glx_get_gl_api (GstGLContext * context);
 static GstGLPlatform gst_gl_context_glx_get_gl_platform (GstGLContext *
     context);
+static void gst_gl_context_glx_get_gl_platform_version (GstGLContext * context,
+    gint * major, gint * minor);
 
 struct _GstGLContextGLXPrivate
 {
@@ -97,6 +99,8 @@ gst_gl_context_glx_class_init (GstGLContextGLXClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_proc_address);
   context_class->get_current_context =
       GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_current_context);
+  context_class->get_gl_platform_version =
+      GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_gl_platform_version);
 }
 
 static void
@@ -471,4 +475,14 @@ guintptr
 gst_gl_context_glx_get_current_context (void)
 {
   return (guintptr) glXGetCurrentContext ();
+}
+
+static void
+gst_gl_context_glx_get_gl_platform_version (GstGLContext * context,
+    gint * major, gint * minor)
+{
+  GstGLContextGLX *context_glx = GST_GL_CONTEXT_GLX (context);
+
+  *major = context_glx->priv->glx_major;
+  *minor = context_glx->priv->glx_minor;
 }

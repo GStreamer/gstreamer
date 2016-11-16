@@ -64,6 +64,8 @@ static GstGLPlatform gst_gl_context_egl_get_gl_platform (GstGLContext *
     context);
 static gboolean gst_gl_context_egl_check_feature (GstGLContext * context,
     const gchar * feature);
+static void gst_gl_context_egl_get_gl_platform_version (GstGLContext * context,
+    gint * major, gint * minor);
 
 G_DEFINE_TYPE (GstGLContextEGL, gst_gl_context_egl, GST_TYPE_GL_CONTEXT);
 
@@ -93,6 +95,8 @@ gst_gl_context_egl_class_init (GstGLContextEGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_context_egl_check_feature);
   context_class->get_current_context =
       GST_DEBUG_FUNCPTR (gst_gl_context_egl_get_current_context);
+  context_class->get_gl_platform_version =
+      GST_DEBUG_FUNCPTR (gst_gl_context_egl_get_gl_platform_version);
 }
 
 static void
@@ -800,4 +804,14 @@ guintptr
 gst_gl_context_egl_get_current_context (void)
 {
   return (guintptr) eglGetCurrentContext ();
+}
+
+static void
+gst_gl_context_egl_get_gl_platform_version (GstGLContext * context,
+    gint * major, gint * minor)
+{
+  GstGLContextEGL *context_egl = GST_GL_CONTEXT_EGL (context);
+
+  *major = context_egl->egl_major;
+  *minor = context_egl->egl_minor;
 }
