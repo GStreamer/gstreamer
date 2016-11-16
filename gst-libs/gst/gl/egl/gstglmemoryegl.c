@@ -174,17 +174,10 @@ _gl_mem_egl_alloc (GstGLBaseMemoryAllocator * allocator,
   return mem;
 }
 
-static void
-_destroy_egl_image (GstEGLImage * image, gpointer user_data)
-{
-  image->context->eglDestroyImage (image->context->egl_display, image->image);
-}
-
 static gboolean
 _gl_mem_create (GstGLMemoryEGL * gl_mem, GError ** error)
 {
   GstGLContext *context = gl_mem->mem.mem.context;
-  GstGLContextEGL *ctx_egl = GST_GL_CONTEXT_EGL (context);
   const GstGLFuncs *gl = context->gl_vtable;
   GstGLBaseMemoryAllocatorClass *alloc_class;
 
@@ -200,21 +193,14 @@ _gl_mem_create (GstGLMemoryEGL * gl_mem, GError ** error)
     return FALSE;
 
   if (gl_mem->image == NULL) {
-    EGLImageKHR image = ctx_egl->eglCreateImageKHR (ctx_egl->egl_display,
-        ctx_egl->egl_context, EGL_GL_TEXTURE_2D_KHR,
-        (EGLClientBuffer) (guintptr) gl_mem->mem.tex_id, NULL);
+    gl_mem->image = gst_egl_image_from_texture (context,
+        (GstGLMemory *) gl_mem, NULL);
 
-    GST_TRACE ("Generating EGLImage handle:%p from a texture:%u",
-        gl_mem->image, gl_mem->mem.tex_id);
-
-    if (eglGetError () != EGL_SUCCESS) {
+    if (!gl_mem->image) {
       g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
           "Failed to create EGLImage");
       return FALSE;
     }
-
-    gl_mem->image = gst_egl_image_new_wrapped (context, image, 0, 0,
-        NULL, (GstEGLImageDestroyNotify) _destroy_egl_image);
   } else {
     gl->ActiveTexture (GL_TEXTURE0 + gl_mem->mem.plane);
     gl->BindTexture (GL_TEXTURE_2D, gl_mem->mem.tex_id);

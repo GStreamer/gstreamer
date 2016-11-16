@@ -557,27 +557,6 @@ gst_gl_context_egl_create_context (GstGLContext * context,
       goto failure;
     }
   }
-
-  /* EGLImage functions */
-  if (GST_GL_CHECK_GL_VERSION (egl_major, egl_minor, 1, 5)) {
-    egl->eglCreateImage = gst_gl_context_get_proc_address (context,
-        "eglCreateImage");
-    egl->eglDestroyImage = gst_gl_context_get_proc_address (context,
-        "eglDestroyImage");
-    if (egl->eglCreateImage == NULL || egl->eglDestroyImage == NULL) {
-      egl->eglCreateImage = NULL;
-      egl->eglDestroyImage = NULL;
-    }
-  } else if (gst_gl_check_extension ("EGL_KHR_image_base", egl->egl_exts)) {
-    egl->eglCreateImageKHR = gst_gl_context_get_proc_address (context,
-        "eglCreateImageKHR");
-    egl->eglDestroyImage = gst_gl_context_get_proc_address (context,
-        "eglDestroyImageKHR");
-    if (egl->eglCreateImageKHR == NULL || egl->eglDestroyImage == NULL) {
-      egl->eglCreateImageKHR = NULL;
-      egl->eglDestroyImage = NULL;
-    }
-  }
   egl->egl_major = egl_major;
   egl->egl_minor = egl_minor;
 
@@ -786,16 +765,6 @@ static gboolean
 gst_gl_context_egl_check_feature (GstGLContext * context, const gchar * feature)
 {
   GstGLContextEGL *context_egl = GST_GL_CONTEXT_EGL (context);
-
-  if (g_strcmp0 (feature, "EGL_KHR_image_base") == 0) {
-    if (GST_GL_CHECK_GL_VERSION (context_egl->egl_major, context_egl->egl_minor,
-            1, 5))
-      return context_egl->eglCreateImage != NULL
-          && context_egl->eglDestroyImage != NULL;
-    else
-      return context_egl->eglCreateImageKHR != NULL &&
-          context_egl->eglDestroyImage != NULL;
-  }
 
   return gst_gl_check_extension (feature, context_egl->egl_exts);
 }

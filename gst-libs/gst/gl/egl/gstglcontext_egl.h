@@ -68,12 +68,6 @@ struct _GstGLContextEGL
 
   const gchar *egl_exts;
 
-  EGLImageKHR (*eglCreateImageKHR) (EGLDisplay dpy, EGLContext ctx, EGLenum target,
-      EGLClientBuffer buffer, const EGLint *attrib_list);
-  EGLImageKHR (*eglCreateImage) (EGLDisplay dpy, EGLContext ctx, EGLenum target,
-      EGLClientBuffer buffer, const EGLAttrib *attrib_list);
-  EGLBoolean (*eglDestroyImage) (EGLDisplay dpy, EGLImageKHR image);
-
   /* Cached handle */
   EGLNativeWindowType window_handle;
 };

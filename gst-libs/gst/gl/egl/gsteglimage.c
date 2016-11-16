@@ -39,6 +39,7 @@
 #endif
 
 #include "gsteglimage.h"
+#include <gst/gl/egl/gstgldisplay_egl.h>
 #include <string.h>
 
 #if GST_GL_HAVE_DMABUF
@@ -176,7 +177,8 @@ gst_egl_image_new_wrapped (GstGLContext * context, EGLImageKHR image,
   GstEGLImage *img = NULL;
 
   g_return_val_if_fail (context != NULL, NULL);
-  g_return_val_if_fail (GST_IS_GL_CONTEXT_EGL (context), NULL);
+  g_return_val_if_fail ((gst_gl_context_get_gl_platform (context) &
+          GST_GL_PLATFORM_EGL) != 0, NULL);
   g_return_val_if_fail (image != EGL_NO_IMAGE_KHR, NULL);
 
   img = g_new0 (GstEGLImage, 1);
@@ -193,6 +195,165 @@ gst_egl_image_new_wrapped (GstGLContext * context, EGLImageKHR image,
   img->destroy_notify = user_data_destroy;
 
   return img;
+}
+
+static EGLImageKHR
+_gst_egl_image_create (GstGLContext * context, guint target,
+    EGLClientBuffer buffer, guintptr * attribs)
+{
+  EGLDisplay egl_display = EGL_DEFAULT_DISPLAY;
+  EGLContext egl_context = EGL_NO_CONTEXT;
+  EGLImageKHR img = EGL_NO_IMAGE_KHR;
+  GstGLDisplayEGL *display_egl;
+  gint plat_major, plat_minor;
+  guint attrib_len = 0;
+
+  gst_gl_context_get_gl_platform_version (context, &plat_major, &plat_minor);
+
+  display_egl = gst_gl_display_egl_from_gl_display (context->display);
+  if (!display_egl) {
+    GST_WARNING_OBJECT (context, "Failed to retrieve GstGLDisplayEGL from %"
+        GST_PTR_FORMAT, context->display);
+    return EGL_NO_IMAGE_KHR;
+  }
+  egl_display =
+      (EGLDisplay) gst_gl_display_get_handle (GST_GL_DISPLAY (display_egl));
+  gst_object_unref (display_egl);
+
+#if GST_GL_HAVE_DMABUF
+  if (target != EGL_LINUX_DMA_BUF_EXT)
+    egl_context = (EGLContext) gst_gl_context_get_gl_context (context);
+#endif
+
+  if (attribs)
+    while (attribs[attrib_len++] != EGL_NONE) {
+    }
+#ifdef EGL_VERSION_1_5
+  if (GST_GL_CHECK_GL_VERSION (plat_major, plat_minor, 1, 5)) {
+    EGLImageKHR (*gst_eglCreateImage) (EGLDisplay dpy, EGLContext ctx,
+        EGLenum target, EGLClientBuffer buffer, const EGLAttrib * attrib_list);
+    EGLAttrib *egl_attribs = NULL;
+    guint i;
+
+    gst_eglCreateImage = gst_gl_context_get_proc_address (context,
+        "eglCreateImage");
+    if (!gst_eglCreateImage) {
+      GST_ERROR_OBJECT (context, "\"eglCreateImage\" not exposed by the "
+          "implementation as required by EGL >= 1.5");
+      return EGL_NO_IMAGE_KHR;
+    }
+
+    if (attribs) {
+      egl_attribs = g_new0 (EGLAttrib, attrib_len);
+      for (i = 0; i < attrib_len; i++)
+        egl_attribs[i] = (EGLAttrib) attribs[i];
+    }
+
+    img = gst_eglCreateImage (egl_display, egl_context, target, buffer,
+        egl_attribs);
+
+    g_free (egl_attribs);
+  } else
+#endif
+  {
+    EGLImageKHR (*gst_eglCreateImageKHR) (EGLDisplay dpy, EGLContext ctx,
+        EGLenum target, EGLClientBuffer buffer, const EGLint * attrib_list);
+    EGLint *egl_attribs = NULL;
+    gint i;
+
+    gst_eglCreateImageKHR = gst_gl_context_get_proc_address (context,
+        "eglCreateImageKHR");
+    if (!gst_eglCreateImageKHR) {
+      GST_WARNING_OBJECT (context, "\"eglCreateImageKHR\" not exposed by the "
+          "implementation");
+      return EGL_NO_IMAGE_KHR;
+    }
+
+    if (attribs) {
+      egl_attribs = g_new0 (EGLint, attrib_len);
+      for (i = 0; i < attrib_len; i++)
+        egl_attribs[i] = (EGLint) attribs[i];
+    }
+
+    img = gst_eglCreateImageKHR (egl_display, egl_context, target, buffer,
+        egl_attribs);
+
+    g_free (egl_attribs);
+  }
+
+  return img;
+}
+
+static void
+_gst_egl_image_destroy (GstGLContext * context, EGLImageKHR image)
+{
+  EGLBoolean (*gst_eglDestroyImage) (EGLDisplay dpy, EGLImageKHR image);
+  EGLDisplay egl_display = EGL_DEFAULT_DISPLAY;
+  GstGLDisplayEGL *display_egl;
+
+  gst_eglDestroyImage = gst_gl_context_get_proc_address (context,
+      "eglDestroyImage");
+  if (!gst_eglDestroyImage) {
+    gst_eglDestroyImage = gst_gl_context_get_proc_address (context,
+        "eglDestroyImageKHR");
+    if (!gst_eglDestroyImage) {
+      GST_ERROR_OBJECT (context, "\"eglDestroyImage\" not exposed by the "
+          "implementation");
+      return;
+    }
+  }
+
+  display_egl = gst_gl_display_egl_from_gl_display (context->display);
+  if (!display_egl) {
+    GST_WARNING_OBJECT (context, "Failed to retrieve GstGLDisplayEGL from %"
+        GST_PTR_FORMAT, context->display);
+    return;
+  }
+  egl_display =
+      (EGLDisplay) gst_gl_display_get_handle (GST_GL_DISPLAY (display_egl));
+  gst_object_unref (display_egl);
+
+  if (!gst_eglDestroyImage (egl_display, image))
+    GST_WARNING_OBJECT (context, "eglDestroyImage failed");
+}
+
+static void
+_destroy_egl_image (GstEGLImage * image, gpointer user_data)
+{
+  _gst_egl_image_destroy (image->context, image->image);
+}
+
+/**
+ * gst_egl_image_from_texture:
+ * @context: a #GstGLContext (must be an EGL context)
+ * @gl_mem: a #GstGLMemory
+ * @attribs: additional attributes to add to the eglCreateImage() call.
+ *
+ * Returns: (transfer full): a #GstEGLImage wrapping @gl_mem or %NULL on failure
+ */
+GstEGLImage *
+gst_egl_image_from_texture (GstGLContext * context, GstGLMemory * gl_mem,
+    guintptr * attribs)
+{
+  EGLenum egl_target;
+  EGLImageKHR img;
+
+  if (gl_mem->tex_target != GST_GL_TEXTURE_TARGET_2D) {
+    GST_FIXME_OBJECT (context, "Only know how to create EGLImage's from 2D "
+        "textures");
+    return NULL;
+  }
+
+  egl_target = EGL_GL_TEXTURE_2D_KHR;
+
+  img = _gst_egl_image_create (context, egl_target,
+      (EGLClientBuffer) (guintptr) gl_mem->tex_id, attribs);
+  if (!img)
+    return NULL;
+
+  return gst_egl_image_new_wrapped (context, img, gl_mem->tex_type,
+      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
+      NULL, (GstEGLImageDestroyNotify) _destroy_egl_image);
 }
 
 #if GST_GL_HAVE_DMABUF
@@ -266,12 +427,6 @@ _drm_fourcc_from_info (GstVideoInfo * info, int plane)
   }
 }
 
-static void
-_destroy_egl_image (GstEGLImage * image, gpointer user_data)
-{
-  image->context->eglDestroyImage (image->context->egl_display, image->image);
-}
-
 /**
  * gst_egl_image_from_dmabuf:
  * @context: a #GstGLContext (must be an EGL context)
@@ -286,15 +441,11 @@ GstEGLImage *
 gst_egl_image_from_dmabuf (GstGLContext * context,
     gint dmabuf, GstVideoInfo * in_info, gint plane, gsize offset)
 {
-  GstGLContextEGL *ctx_egl = GST_GL_CONTEXT_EGL (context);
-  gint fourcc;
-  gint atti = 0;
-  EGLint attribs[13];
-#ifdef EGL_VERSION_1_5
-  EGLAttrib attribs_1_5[13];
-#endif
-  EGLImageKHR img = EGL_NO_IMAGE_KHR;
   GstVideoGLTextureType type;
+  guintptr attribs[13];
+  EGLImageKHR img;
+  gint atti = 0;
+  gint fourcc;
 
   fourcc = _drm_fourcc_from_info (in_info, plane);
   type =
@@ -306,55 +457,26 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
       GST_VIDEO_INFO_COMP_WIDTH (in_info, plane),
       GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane));
 
-#ifdef EGL_VERSION_1_5
-  if (GST_GL_CHECK_GL_VERSION (ctx_egl->egl_major, ctx_egl->egl_minor, 1, 5)) {
-    attribs_1_5[atti++] = EGL_WIDTH;
-    attribs_1_5[atti++] = GST_VIDEO_INFO_COMP_WIDTH (in_info, plane);
-    attribs_1_5[atti++] = EGL_HEIGHT;
-    attribs_1_5[atti++] = GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane);
-    attribs_1_5[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
-    attribs_1_5[atti++] = fourcc;
-    attribs_1_5[atti++] = EGL_DMA_BUF_PLANE0_FD_EXT;
-    attribs_1_5[atti++] = dmabuf;
-    attribs_1_5[atti++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
-    attribs_1_5[atti++] = offset;
-    attribs_1_5[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
-    attribs_1_5[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, plane);
-    attribs_1_5[atti] = EGL_NONE;
+  attribs[atti++] = EGL_WIDTH;
+  attribs[atti++] = GST_VIDEO_INFO_COMP_WIDTH (in_info, plane);
+  attribs[atti++] = EGL_HEIGHT;
+  attribs[atti++] = GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane);
+  attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
+  attribs[atti++] = fourcc;
+  attribs[atti++] = EGL_DMA_BUF_PLANE0_FD_EXT;
+  attribs[atti++] = dmabuf;
+  attribs[atti++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
+  attribs[atti++] = offset;
+  attribs[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
+  attribs[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, plane);
+  attribs[atti] = EGL_NONE;
 
-    for (int i = 0; i < atti; i++)
-      GST_LOG ("attr %i: %" G_GINTPTR_FORMAT, i, attribs_1_5[i]);
+  for (int i = 0; i < atti; i++)
+    GST_LOG ("attr %i: %" G_GINTPTR_FORMAT, i, attribs[i]);
 
-    g_assert (atti == 12);
+  g_assert (atti == 12);
 
-    img = ctx_egl->eglCreateImage (ctx_egl->egl_display, EGL_NO_CONTEXT,
-        EGL_LINUX_DMA_BUF_EXT, NULL, attribs_1_5);
-
-  } else
-#endif
-  {
-    attribs[atti++] = EGL_WIDTH;
-    attribs[atti++] = GST_VIDEO_INFO_COMP_WIDTH (in_info, plane);
-    attribs[atti++] = EGL_HEIGHT;
-    attribs[atti++] = GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane);
-    attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
-    attribs[atti++] = fourcc;
-    attribs[atti++] = EGL_DMA_BUF_PLANE0_FD_EXT;
-    attribs[atti++] = dmabuf;
-    attribs[atti++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
-    attribs[atti++] = offset;
-    attribs[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
-    attribs[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, plane);
-    attribs[atti] = EGL_NONE;
-
-    for (int i = 0; i < atti; i++)
-      GST_LOG ("attr %i: %08X", i, attribs[i]);
-
-    g_assert (atti == 12);
-
-    img = ctx_egl->eglCreateImageKHR (ctx_egl->egl_display, EGL_NO_CONTEXT,
-        EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
-  }
+  img = _gst_egl_image_create (context, EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
   if (!img) {
     GST_WARNING ("eglCreateImage failed: %s",
         gst_egl_get_error_string (eglGetError ()));
