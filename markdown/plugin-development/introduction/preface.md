@@ -209,14 +209,14 @@ As you can see, there a lot to learn, so let's get started\!
     functions. This will allow your plugin to operate on a completely
     new media type.
 
-[building]: plugin-development/building/index.md
-[boilerplate]: plugin-development/building/boiler.md
-[pads]: plugin-development/building/pads.md
-[chainfunc]: plugin-development/building/chainfn.md
-[states]: plugin-development/building/statemanage-states.md
-[properties]: plugin-development/building/args.md
-[signals]: plugin-development/building/signals.md
-[testapp]: plugin-development/building/testapp.md
+[building]: plugin-development/basics/index.md
+[boilerplate]: plugin-development/basics/boiler.md
+[pads]: plugin-development/basics/pads.md
+[chainfunc]: plugin-development/basics/chainfn.md
+[states]: plugin-development/basics/statemanage-states.md
+[properties]: plugin-development/basics/args.md
+[signals]: plugin-development/basics/signals.md
+[testapp]: plugin-development/basics/testapp.md
 [advanced]: plugin-development/advanced/index.md
 [scheduling]: plugin-development/advanced/scheduling.md
 [types]: plugin-development/advanced/building-types.md

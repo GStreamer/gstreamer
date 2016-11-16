@@ -311,7 +311,7 @@ of types are supported too, and should be separated by a semicolon
 (“;”). Later, in the chapter on pads, we will see how to use types
 to know the exact format of a stream: [Specifying the pads][pads].
 
-[pads]: plugin-development/building/pads.md
+[pads]: plugin-development/basics/pads.md
 
 ## Constructor Functions
 

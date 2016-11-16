@@ -41,7 +41,7 @@ reasons for this. First of all, properties can be more easily
 introspected. Second, properties can be specified on the commandline
 (`gst-launch-1.0`).
 
-[plugin-properties]: plugin-development/building/args.md
+[plugin-properties]: plugin-development/basics/args.md
 
 ## How to Implement Interfaces
 

@@ -88,7 +88,7 @@ also need a rewrite, which will take about the same amount of time.
     need to be able to accept and process data already in the
     `GST_STATE_PAUSED` state now (i.e. when prerolling the pipeline).
     More details can be found in [What are
-    states?](plugin-development/building/statemanage-states.md).
+    states?](plugin-development/basics/statemanage-states.md).
 
   - If your plugin's state change function hasn't been superseded by
     virtual start() and stop() methods of one of the new base classes,

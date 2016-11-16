@@ -1,8 +1,8 @@
 ---
-title: Building a Plugin
+title: The Basics of Writing a Plugin
 ...
 
-# Building a Plugin
+# Writing a Plugin
 
 You are now ready to learn how to build a plugin. In this part of the
 guide, you will learn how to apply basic GStreamer programming concepts

@@ -101,16 +101,16 @@ index.md
 		plugin-development/introduction/index.md
 			plugin-development/introduction/preface.md
 			plugin-development/introduction/basics.md
-		plugin-development/building/index.md
-			plugin-development/building/boiler.md
-			plugin-development/building/pads.md
-			plugin-development/building/chainfn.md
-			plugin-development/building/eventfn.md
-			plugin-development/building/queryfn.md
-			plugin-development/building/statemanage-states.md
-			plugin-development/building/args.md
-			plugin-development/building/signals.md
-			plugin-development/building/testapp.md
+		plugin-development/basics/index.md
+			plugin-development/basics/boiler.md
+			plugin-development/basics/pads.md
+			plugin-development/basics/chainfn.md
+			plugin-development/basics/eventfn.md
+			plugin-development/basics/queryfn.md
+			plugin-development/basics/statemanage-states.md
+			plugin-development/basics/args.md
+			plugin-development/basics/signals.md
+			plugin-development/basics/testapp.md
 		plugin-development/advanced/index.md
 			plugin-development/advanced/request.md
 			plugin-development/advanced/scheduling.md
