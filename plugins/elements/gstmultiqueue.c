@@ -1828,15 +1828,16 @@ next:
           GST_STIME_FORMAT, sq->groupid, GST_STIME_ARGS (sq->group_high_time),
           GST_STIME_ARGS (next_time));
 
-      if (mq->sync_by_running_time)
-        /* In this case we only need to wait if:
-         * 1) there is a time against which to wait
-         * 2) and either we have gone over the high_time or there is no
-         *   high_time */
-        should_wait = GST_CLOCK_STIME_IS_VALID (next_time) &&
-            (sq->group_high_time == GST_CLOCK_STIME_NONE
-            || next_time > sq->group_high_time);
-      else
+      if (mq->sync_by_running_time) {
+        if (sq->group_high_time == GST_CLOCK_STIME_NONE) {
+          should_wait = GST_CLOCK_STIME_IS_VALID (next_time) &&
+              (mq->high_time == GST_CLOCK_STIME_NONE
+              || next_time > mq->high_time);
+        } else {
+          should_wait = GST_CLOCK_STIME_IS_VALID (next_time) &&
+              next_time > sq->group_high_time;
+        }
+      } else
         should_wait = newid > mq->highid;
 
       while (should_wait && sq->srcresult == GST_FLOW_NOT_LINKED) {
@@ -1865,14 +1866,21 @@ next:
 
         GST_DEBUG_OBJECT (mq, "queue %d woken from sleeping for not-linked "
             "wakeup with newid %u, highid %u, next_time %" GST_STIME_FORMAT
-            ", high_time %" GST_STIME_FORMAT, sq->id, newid, mq->highid,
-            GST_STIME_ARGS (next_time), GST_STIME_ARGS (sq->group_high_time));
+            ", high_time %" GST_STIME_FORMAT " mq high_time %" GST_STIME_FORMAT,
+            sq->id, newid, mq->highid,
+            GST_STIME_ARGS (next_time), GST_STIME_ARGS (sq->group_high_time),
+            GST_STIME_ARGS (mq->high_time));
 
-        if (mq->sync_by_running_time)
-          should_wait = GST_CLOCK_STIME_IS_VALID (next_time) &&
-              (sq->group_high_time == GST_CLOCK_STIME_NONE
-              || next_time > sq->group_high_time);
-        else
+        if (mq->sync_by_running_time) {
+          if (sq->group_high_time == GST_CLOCK_STIME_NONE) {
+            should_wait = GST_CLOCK_STIME_IS_VALID (next_time) &&
+                (mq->high_time == GST_CLOCK_STIME_NONE
+                || next_time > mq->high_time);
+          } else {
+            should_wait = GST_CLOCK_STIME_IS_VALID (next_time) &&
+                next_time > sq->group_high_time;
+          }
+        } else
           should_wait = newid > mq->highid;
       }
 
@@ -2515,12 +2523,20 @@ wake_up_next_non_linked (GstMultiQueue * mq)
     /* Else figure out which singlequeue(s) need waking up */
     for (tmp = mq->queues; tmp; tmp = tmp->next) {
       GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
-      if (sq->srcresult == GST_FLOW_NOT_LINKED
-          && GST_CLOCK_STIME_IS_VALID (sq->group_high_time)
-          && GST_CLOCK_STIME_IS_VALID (sq->next_time)
-          && sq->next_time <= sq->group_high_time) {
-        GST_LOG_OBJECT (mq, "Waking up singlequeue %d", sq->id);
-        g_cond_signal (&sq->turn);
+      if (sq->srcresult == GST_FLOW_NOT_LINKED) {
+        GstClockTimeDiff high_time;
+
+        if (GST_CLOCK_STIME_IS_VALID (sq->group_high_time))
+          high_time = sq->group_high_time;
+        else
+          high_time = mq->high_time;
+
+        if (GST_CLOCK_STIME_IS_VALID (sq->next_time) &&
+            GST_CLOCK_STIME_IS_VALID (high_time)
+            && sq->next_time <= high_time) {
+          GST_LOG_OBJECT (mq, "Waking up singlequeue %d", sq->id);
+          g_cond_signal (&sq->turn);
+        }
       }
     }
   } else {
@@ -2649,19 +2665,20 @@ compute_high_time (GstMultiQueue * mq, guint groupid)
   else
     mq->high_time = highest;
 
-  GST_LOG_OBJECT (mq, "group count %d for groupid %u", group_count, groupid);
-  GST_LOG_OBJECT (mq,
-      "High time is now : %" GST_STIME_FORMAT ", lowest non-linked %"
-      GST_STIME_FORMAT, GST_STIME_ARGS (mq->high_time),
-      GST_STIME_ARGS (lowest));
-
   /* If there's only one stream of a given type, use the global high */
   if (group_count < 2)
-    res = mq->high_time;
+    res = GST_CLOCK_STIME_NONE;
   else if (group_high == GST_CLOCK_STIME_NONE)
     res = group_low;
   else
     res = group_high;
+
+  GST_LOG_OBJECT (mq, "group count %d for groupid %u", group_count, groupid);
+  GST_LOG_OBJECT (mq,
+      "MQ High time is now : %" GST_STIME_FORMAT ", group %d high time %"
+      GST_STIME_FORMAT ", lowest non-linked %" GST_STIME_FORMAT,
+      GST_STIME_ARGS (mq->high_time), groupid, GST_STIME_ARGS (mq->high_time),
+      GST_STIME_ARGS (lowest));
 
   for (tmp = mq->queues; tmp; tmp = tmp->next) {
     GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
