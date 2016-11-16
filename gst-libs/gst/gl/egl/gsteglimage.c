@@ -357,7 +357,7 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
   }
   if (!img) {
     GST_WARNING ("eglCreateImage failed: %s",
-        gst_gl_context_egl_get_error_string (eglGetError ()));
+        gst_egl_get_error_string (eglGetError ()));
     return NULL;
   }
 
