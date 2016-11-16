@@ -81,8 +81,6 @@ subdir('subenc')
 #subdir('vbidec')
 subdir('videofilters')
 subdir('videoframe_audiolevel')
-# did not work
-#subdir('videomeasure')
 subdir('videoparsers')
 subdir('videosignal')
 subdir('vmnc')
