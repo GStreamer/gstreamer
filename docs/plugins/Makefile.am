@@ -75,6 +75,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/dts/gstdtsdec.h \
 	$(top_srcdir)/ext/faac/gstfaac.h \
 	$(top_srcdir)/ext/faad/gstfaad.h \
+	$(top_srcdir)/ext/iqa/iqa.h \
 	$(top_srcdir)/ext/kate/gstkateenc.h \
 	$(top_srcdir)/ext/kate/gstkatedec.h \
 	$(top_srcdir)/ext/kate/gstkateparse.h \

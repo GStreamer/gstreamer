@@ -142,6 +142,12 @@ else
 GSM_DIR=
 endif
 
+if USE_IQA
+IQA_DIR = iqa
+else
+IQA_DIR =
+endif
+
 if USE_KATE
 KATE_DIR=kate
 else
@@ -457,6 +463,7 @@ SUBDIRS=\
 	$(FLUIDSYNTH_DIR) \
 	$(GSM_DIR) \
 	$(G729_DIR) \
+	$(IQA_DIR) \
 	$(KATE_DIR) \
 	$(LADSPA_DIR) \
 	$(LV2_DIR) \

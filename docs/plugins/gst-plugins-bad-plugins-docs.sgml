@@ -104,6 +104,7 @@
     <xi:include href="xml/element-glvideomixerelement.xml" />
     <xi:include href="xml/element-glvideomixer.xml" />
     <xi:include href="xml/element-glviewconvert.xml" />
+    <xi:include href="xml/element-iqa.xml" />
     <xi:include href="xml/element-jpegparse.xml" />
     <xi:include href="xml/element-kaleidoscope.xml" />
     <xi:include href="xml/element-liveadder.xml" />

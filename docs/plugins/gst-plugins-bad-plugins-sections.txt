@@ -2282,6 +2282,18 @@ gst_interlace_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-iqa</FILE>
+<TITLE>IQA</TITLE>
+Iqa
+<SUBSECTION Standard>
+IqaClass
+IQA
+GST_TYPE_IQA
+iqa_get_type
+gst_iqa_plugin_init
+</SECTION>
+
+<SECTION>
 <FILE>element-ivfparse</FILE>
 <TITLE>ivfparse</TITLE>
 GstIvfParse

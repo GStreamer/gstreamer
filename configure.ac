@@ -358,6 +358,23 @@ AC_SUBST(EXIF_LIBS)
 AC_SUBST(EXIF_CFLAGS)
 AM_CONDITIONAL(USE_EXIF, test "x$HAVE_EXIF" = "xyes")
 
+AG_GST_CHECK_FEATURE(IQA, [iqa], iqa , [
+  PKG_CHECK_MODULES(DSSIM, dssim, [
+    HAVE_DSSIM="yes"
+    HAVE_IQA="yes"
+  ], [
+    HAVE_DSSIM="no"
+    HAVE_IQA="no"
+  ])
+
+  AM_CONDITIONAL(HAVE_DSSIM, test "x$HAVE_DSSIM" = "xyes")
+  if test "x$HAVE_DSSIM" = "xyes"; then
+    AC_DEFINE(HAVE_DSSIM, 1, [Define if you have dssim library])
+  fi
+  AC_SUBST(DSSIM_LIBS)
+  AC_SUBST(DSSIM_CFLAGS)
+])
+
 dnl Orc
 ORC_CHECK([0.4.17])
 
@@ -3525,6 +3542,7 @@ AM_CONDITIONAL(USE_GSM, false)
 AM_CONDITIONAL(USE_GTK3, false)
 AM_CONDITIONAL(USE_GTK3_GL, false)
 AM_CONDITIONAL(USE_HLS, false)
+AM_CONDITIONAL(USE_IQA, false)
 AM_CONDITIONAL(USE_KATE, false)
 AM_CONDITIONAL(USE_KMS, false)
 AM_CONDITIONAL(USE_TIGER, false)
@@ -3846,6 +3864,7 @@ ext/flite/Makefile
 ext/fluidsynth/Makefile
 ext/gsm/Makefile
 ext/hls/Makefile
+ext/iqa/Makefile
 ext/kate/Makefile
 ext/ladspa/Makefile
 ext/lv2/Makefile
