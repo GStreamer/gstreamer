@@ -375,6 +375,14 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpBin::on-bundled-ssrc</NAME>
+<RETURNS>guint</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>

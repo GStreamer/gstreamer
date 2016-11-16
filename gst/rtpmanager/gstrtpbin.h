@@ -127,6 +127,8 @@ struct _GstRtpBinClass {
 
   void     (*on_new_sender_ssrc)      (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_sender_ssrc_active)   (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+
+  guint    (*on_bundled_ssrc)         (GstRtpBin *rtpbin, guint ssrc);
 };
 
 GType gst_rtp_bin_get_type (void);
