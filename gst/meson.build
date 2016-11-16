@@ -45,8 +45,6 @@ subdir('librfb')
 subdir('midi')
 #did not work
 #subdir('mixmatrix')
-#did not work
-#subdir('mpeg1sys')
 subdir('mpegdemux')
 subdir('mpegpsmux')
 subdir('mpegtsdemux')
