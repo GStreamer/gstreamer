@@ -1382,12 +1382,26 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
       mux_template =
           gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
           (splitmux->muxer), "video_%u");
+
+      /* Fallback to find sink pad templates named 'video' (flvmux) */
+      if (!mux_template) {
+        mux_template =
+            gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
+            (splitmux->muxer), "video");
+      }
       is_video = TRUE;
       name = NULL;
     } else {
       mux_template =
           gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
           (splitmux->muxer), templ->name_template);
+
+      /* Fallback to find sink pad templates named 'audio' (flvmux) */
+      if (!mux_template) {
+        mux_template =
+            gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
+            (splitmux->muxer), "audio");
+      }
     }
     if (mux_template == NULL) {
       /* Fallback to find sink pad templates named 'sink_%d' (mpegtsmux) */
