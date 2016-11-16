@@ -51,4 +51,7 @@
 typedef gintptr EGLAttrib;
 #endif
 
+GST_EXPORT
+const gchar *   gst_egl_get_error_string             (EGLint err);
+
 #endif /* _GST_EGL_H_ */
