@@ -74,6 +74,7 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gstcontrolbinding.xml" />
     <xi:include href="xml/gstcontrolsource.xml" />
     <xi:include href="xml/gstdatetime.xml" />
+    <xi:include href="xml/gstdynamictypefactory.xml" />
     <xi:include href="xml/gstelement.xml" />
     <xi:include href="xml/gstelementfactory.xml" />
     <xi:include href="xml/gsterror.xml" />

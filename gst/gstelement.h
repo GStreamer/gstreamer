@@ -429,7 +429,7 @@ G_STMT_START {                                                          \
             parentheses)
  * @debug:  debugging information for the message (format string and args
             enclosed in parentheses)
- * @args    optional name, type, value triplets, which will be stored
+ * @args:   optional name, type, value triplets, which will be stored
  *          in the associated GstStructure. NULL terminator required.
  *          Must be enclosed within parentheses.
  *
@@ -490,7 +490,7 @@ G_STMT_START {                                                          \
             parentheses)
  * @debug:  debugging information for the message (format string and args
             enclosed in parentheses)
- * @args    optional name, type, value triplets, which will be stored
+ * @args:   optional name, type, value triplets, which will be stored
  *          in the associated GstStructure. NULL terminator required.
  *          Must be enclosed within parentheses.
  *
@@ -551,7 +551,7 @@ G_STMT_START {                                                          \
             parentheses)
  * @debug:  debugging information for the message (format string and args
             enclosed in parentheses)
- * @args    optional name, type, value triplets, which will be stored
+ * @args:   optional name, type, value triplets, which will be stored
  *          in the associated GstStructure. NULL terminator required.
  *          Must be enclosed within parentheses.
  *
@@ -663,6 +663,7 @@ G_STMT_START {                                                          \
  * @numsinkpads: number of sink pads of the element.
  * @sinkpads: (element-type Gst.Pad): list of sink pads
  * @pads_cookie: updated whenever the a pad is added or removed
+ * @contexts: (element-type Gst.Context): list of contexts
  *
  * GStreamer element abstract base class.
  */

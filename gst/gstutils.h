@@ -330,14 +330,14 @@ static inline guint16 __gst_slow_read16_le (const guint8 * data) {
 /**
  * GST_WRITE_UINT64_BE:
  * @data: memory location
- * @num: value to store
+ * @val: value to store
  *
  * Store a 64 bit unsigned integer value in big endian format into the memory buffer.
  */
 /**
  * GST_WRITE_UINT64_LE:
  * @data: memory location
- * @num: value to store
+ * @val: value to store
  *
  * Store a 64 bit unsigned integer value in little endian format into the memory buffer.
  */
@@ -380,14 +380,14 @@ static inline guint16 __gst_slow_read16_le (const guint8 * data) {
 /**
  * GST_WRITE_UINT32_BE:
  * @data: memory location
- * @num: value to store
+ * @val: value to store
  *
  * Store a 32 bit unsigned integer value in big endian format into the memory buffer.
  */
 /**
  * GST_WRITE_UINT32_LE:
  * @data: memory location
- * @num: value to store
+ * @val: value to store
  *
  * Store a 32 bit unsigned integer value in little endian format into the memory buffer.
  */
@@ -452,14 +452,14 @@ static inline guint16 __gst_slow_read16_le (const guint8 * data) {
 /**
  * GST_WRITE_UINT16_BE:
  * @data: memory location
- * @num: value to store
+ * @val: value to store
  *
  * Store a 16 bit unsigned integer value in big endian format into the memory buffer.
  */
 /**
  * GST_WRITE_UINT16_LE:
  * @data: memory location
- * @num: value to store
+ * @val: value to store
  *
  * Store a 16 bit unsigned integer value in little endian format into the memory buffer.
  */

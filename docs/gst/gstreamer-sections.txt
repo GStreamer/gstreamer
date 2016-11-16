@@ -81,6 +81,9 @@ gst_bin_iterate_all_by_interface
 
 gst_bin_recalculate_latency
 
+gst_bin_get_suppressed_flags
+gst_bin_set_suppressed_flags
+
 <SUBSECTION>
 gst_bin_add_many
 gst_bin_remove_many
@@ -272,6 +275,7 @@ GST_TYPE_BUFFER_FLAGS
 GST_TYPE_BUFFER_COPY_FLAGS
 GST_BUFFER_CAST
 GST_PARENT_BUFFER_META_INFO
+GST_PARENT_BUFFER_META_API_TYPE
 GST_TYPE_PARENT_BUFFER_META_API_TYPE
 gst_parent_buffer_meta_get_info
 <SUBSECTION Private>
@@ -758,6 +762,7 @@ GST_TYPE_CONTROL_BINDING
 GST_CONTROL_BINDING_PSPEC
 <SUBSECTION Private>
 GstControlBindingConvert
+GstControlBindingPrivate
 gst_control_binding_get_type
 </SECTION>
 
@@ -783,6 +788,23 @@ GST_TYPE_CONTROL_SOURCE
 gst_control_source_get_type
 </SECTION>
 
+<SECTION>
+<FILE>gstdynamictypefactory</FILE>
+<TITLE>GstDynamicTypeFactory</TITLE>
+GstDynamicTypeFactory
+gst_dynamic_type_factory_load
+gst_dynamic_type_register
+<SUBSECTION Standard>
+GstDynamicTypeFactoryClass
+GST_TYPE_DYNAMIC_TYPE_FACTORY
+GST_DYNAMIC_TYPE_FACTORY
+GST_DYNAMIC_TYPE_CLASS
+GST_IS_DYNAMIC_TYPE_FACTORY
+GST_IS_DYNAMIC_TYPE_FACTORY_CLASS
+GST_DYNAMIC_TYPE_FACTORY_CAST
+<SUBSECTION Private>
+gst_dynamic_type_factory_get_type
+</SECTION>
 
 <SECTION>
 <FILE>gstelement</FILE>
@@ -950,6 +972,8 @@ GST_STATE_WAIT
 GST_STATE_WAIT_UNTIL
 GST_STATE_SIGNAL
 GST_STATE_BROADCAST
+
+GST_ELEMENT_MESSAGE_MAKE_DETAILS
 
 gst_element_get_type
 gst_element_flags_get_type
@@ -2858,6 +2882,7 @@ GST_TAG_COPYRIGHT
 GST_TAG_COPYRIGHT_URI
 GST_TAG_ENCODED_BY
 GST_TAG_COMPOSER
+GST_TAG_CONDUCTOR
 GST_TAG_CONTACT
 GST_TAG_LICENSE
 GST_TAG_LICENSE_URI

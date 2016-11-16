@@ -144,6 +144,10 @@ struct _GstBin {
  * @add_element: method to add an element to a bin
  * @remove_element: method to remove an element from a bin
  * @handle_message: method to handle a message from the children
+ * @deep_element_added: method called when an element was added somewhere
+ *     in the bin hierarchy
+ * @deep_element_removed: method called when an element was removed somewhere
+ *     in the bin hierarchy
  *
  * Subclasses can override the @add_element and @remove_element to
  * update the list of children in the bin.
@@ -152,7 +156,7 @@ struct _GstBin {
  * message handling.  @handle_message takes ownership of the message, just like
  * #gst_element_post_message.
  *
- * The @element_added_deep vfunc will be called when a new element has been
+ * The @deep_element_added vfunc will be called when a new element has been
  * added to any bin inside this bin, so it will also be called if a new child
  * was added to a sub-bin of this bin. #GstBin implementations that override
  * this message should chain up to the parent class implementation so the
