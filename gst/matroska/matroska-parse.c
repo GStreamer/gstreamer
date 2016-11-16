@@ -3011,8 +3011,13 @@ next:
 
   ret = gst_matroska_read_common_peek_id_length_push (&parse->common,
       GST_ELEMENT_CAST (parse), &id, &length, &needed);
-  if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_EOS))
+  if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_EOS)) {
+    if (parse->common.ebml_segment_length != G_MAXUINT64
+        && parse->common.offset >=
+        parse->common.ebml_segment_start + parse->common.ebml_segment_length)
+      ret = GST_FLOW_EOS;
     return ret;
+  }
 
   GST_LOG_OBJECT (parse, "Offset %" G_GUINT64_FORMAT ", Element id 0x%x, "
       "size %" G_GUINT64_FORMAT ", needed %d, available %d",
