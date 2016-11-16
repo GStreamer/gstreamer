@@ -11,8 +11,10 @@ EXPORTS
 	gst_rtsp_address_pool_new
 	gst_rtsp_address_pool_reserve_address
 	gst_rtsp_auth_add_basic
+	gst_rtsp_auth_add_digest
 	gst_rtsp_auth_check
 	gst_rtsp_auth_get_default_token
+	gst_rtsp_auth_get_supported_methods
 	gst_rtsp_auth_get_tls_authentication_mode
 	gst_rtsp_auth_get_tls_certificate
 	gst_rtsp_auth_get_tls_database
@@ -20,7 +22,9 @@ EXPORTS
 	gst_rtsp_auth_make_basic
 	gst_rtsp_auth_new
 	gst_rtsp_auth_remove_basic
+	gst_rtsp_auth_remove_digest
 	gst_rtsp_auth_set_default_token
+	gst_rtsp_auth_set_supported_methods
 	gst_rtsp_auth_set_tls_authentication_mode
 	gst_rtsp_auth_set_tls_certificate
 	gst_rtsp_auth_set_tls_database

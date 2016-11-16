@@ -62,9 +62,42 @@ struct _GstRTSPAuthPrivate
   GTlsDatabase *database;
   GTlsAuthenticationMode mode;
   GHashTable *basic;            /* protected by lock */
+  GHashTable *digest, *nonces;  /* protected by lock */
+  guint64 last_nonce_check;
   GstRTSPToken *default_token;
   GstRTSPMethod methods;
+  GstRTSPAuthMethod auth_methods;
 };
+
+typedef struct
+{
+  GstRTSPToken *token;
+  gchar *pass;
+} GstRTSPDigestEntry;
+
+typedef struct
+{
+  gchar *nonce;
+  gchar *ip;
+  guint64 timestamp;
+  gpointer client;
+} GstRTSPDigestNonce;
+
+static void
+gst_rtsp_digest_entry_free (GstRTSPDigestEntry * entry)
+{
+  gst_rtsp_token_unref (entry->token);
+  g_free (entry->pass);
+  g_free (entry);
+}
+
+static void
+gst_rtsp_digest_nonce_free (GstRTSPDigestNonce * nonce)
+{
+  g_free (nonce->nonce);
+  g_free (nonce->ip);
+  g_free (nonce);
+}
 
 enum
 {
@@ -92,6 +125,9 @@ static void gst_rtsp_auth_finalize (GObject * obj);
 static gboolean default_authenticate (GstRTSPAuth * auth, GstRTSPContext * ctx);
 static gboolean default_check (GstRTSPAuth * auth, GstRTSPContext * ctx,
     const gchar * check);
+static void default_generate_authenticate_header (GstRTSPAuth * auth,
+    GstRTSPContext * ctx);
+
 
 G_DEFINE_TYPE (GstRTSPAuth, gst_rtsp_auth, G_TYPE_OBJECT);
 
@@ -110,6 +146,7 @@ gst_rtsp_auth_class_init (GstRTSPAuthClass * klass)
 
   klass->authenticate = default_authenticate;
   klass->check = default_check;
+  klass->generate_authenticate_header = default_generate_authenticate_header;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_auth_debug, "rtspauth", 0, "GstRTSPAuth");
 
@@ -150,9 +187,14 @@ gst_rtsp_auth_init (GstRTSPAuth * auth)
 
   priv->basic = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
       (GDestroyNotify) gst_rtsp_token_unref);
+  priv->digest = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+      (GDestroyNotify) gst_rtsp_digest_entry_free);
+  priv->nonces = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+      (GDestroyNotify) gst_rtsp_digest_nonce_free);
 
   /* bitwise or of all methods that need authentication */
   priv->methods = 0;
+  priv->auth_methods = GST_RTSP_AUTH_BASIC;
 }
 
 static void
@@ -168,6 +210,8 @@ gst_rtsp_auth_finalize (GObject * obj)
   if (priv->database)
     g_object_unref (priv->database);
   g_hash_table_unref (priv->basic);
+  g_hash_table_unref (priv->digest);
+  g_hash_table_unref (priv->nonces);
   g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_rtsp_auth_parent_class)->finalize (obj);
@@ -469,8 +513,7 @@ gst_rtsp_auth_add_basic (GstRTSPAuth * auth, const gchar * basic,
  * @auth: a #GstRTSPAuth
  * @basic: (transfer none): the basic token
  *
- * Add a basic token for the default authentication algorithm that
- * enables the client with privileges from @authgroup.
+ * Removes @basic authentication token.
  */
 void
 gst_rtsp_auth_remove_basic (GstRTSPAuth * auth, const gchar * basic)
@@ -487,12 +530,216 @@ gst_rtsp_auth_remove_basic (GstRTSPAuth * auth, const gchar * basic)
   g_mutex_unlock (&priv->lock);
 }
 
+/**
+ * gst_rtsp_auth_add_digest:
+ * @auth: a #GstRTSPAuth
+ * @user: the digest user name
+ * @pass: the digest password
+ * @token: (transfer none): authorisation token
+ *
+ * Add a digest @user and @pass for the default authentication algorithm that
+ * enables the client with privileges listed in @token.
+ *
+ * Since: 1.12
+ */
+void
+gst_rtsp_auth_add_digest (GstRTSPAuth * auth, const gchar * user,
+    const gchar * pass, GstRTSPToken * token)
+{
+  GstRTSPAuthPrivate *priv;
+  GstRTSPDigestEntry *entry;
+
+  g_return_if_fail (GST_IS_RTSP_AUTH (auth));
+  g_return_if_fail (user != NULL);
+  g_return_if_fail (pass != NULL);
+  g_return_if_fail (GST_IS_RTSP_TOKEN (token));
+
+  priv = auth->priv;
+
+  entry = g_new0 (GstRTSPDigestEntry, 1);
+  entry->token = gst_rtsp_token_ref (token);
+  entry->pass = g_strdup (pass);
+
+  g_mutex_lock (&priv->lock);
+  g_hash_table_replace (priv->digest, g_strdup (user), entry);
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_auth_remove_digest:
+ * @auth: a #GstRTSPAuth
+ * @user: (transfer none): the digest user name
+ *
+ * Removes a digest user.
+ *
+ * Since: 1.12
+ */
+void
+gst_rtsp_auth_remove_digest (GstRTSPAuth * auth, const gchar * user)
+{
+  GstRTSPAuthPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_AUTH (auth));
+  g_return_if_fail (user != NULL);
+
+  priv = auth->priv;
+
+  g_mutex_lock (&priv->lock);
+  g_hash_table_remove (priv->digest, user);
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_auth_set_supported_methods:
+ * @auth: a #GstRTSPAuth
+ * @methods: supported methods
+ *
+ * Sets the supported authentication @methods for @auth.
+ *
+ * Since: 1.12
+ */
+void
+gst_rtsp_auth_set_supported_methods (GstRTSPAuth * auth,
+    GstRTSPAuthMethod methods)
+{
+  GstRTSPAuthPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_AUTH (auth));
+
+  priv = auth->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->auth_methods = methods;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_auth_get_supported_methods:
+ * @auth: a #GstRTSPAuth
+ *
+ * Gets the supported authentication methods of @auth.
+ *
+ * Returns: The supported authentication methods
+ *
+ * Since: 1.12
+ */
+GstRTSPAuthMethod
+gst_rtsp_auth_get_supported_methods (GstRTSPAuth * auth)
+{
+  GstRTSPAuthPrivate *priv;
+  GstRTSPAuthMethod methods;
+
+  g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), 0);
+
+  priv = auth->priv;
+
+  g_mutex_lock (&priv->lock);
+  methods = priv->auth_methods;
+  g_mutex_unlock (&priv->lock);
+
+  return methods;
+}
+
+typedef struct
+{
+  GstRTSPAuth *auth;
+  GstRTSPDigestNonce *nonce;
+} RemoveNonceData;
+
+static void
+remove_nonce (gpointer data, GObject * object)
+{
+  RemoveNonceData *remove_nonce_data = data;
+
+  g_mutex_lock (&remove_nonce_data->auth->priv->lock);
+  g_hash_table_remove (remove_nonce_data->auth->priv->nonces,
+      remove_nonce_data->nonce->nonce);
+  g_mutex_unlock (&remove_nonce_data->auth->priv->lock);
+
+  g_object_unref (remove_nonce_data->auth);
+  g_free (remove_nonce_data);
+}
+
+static gboolean
+default_digest_auth (GstRTSPAuth * auth, GstRTSPContext * ctx,
+    GstRTSPAuthParam ** param)
+{
+  const gchar *realm = NULL, *user = NULL, *nonce = NULL;
+  const gchar *response = NULL, *uri = NULL;
+  GstRTSPDigestNonce *nonce_entry = NULL;
+  GstRTSPDigestEntry *digest_entry;
+  gchar *expected_response = NULL;
+  gboolean ret = FALSE;
+
+  GST_DEBUG_OBJECT (auth, "check Digest auth");
+
+  if (!param)
+    return ret;
+
+  while (*param) {
+    if (!realm && strcmp ((*param)->name, "realm") == 0 && (*param)->value)
+      realm = (*param)->value;
+    else if (!user && strcmp ((*param)->name, "username") == 0
+        && (*param)->value)
+      user = (*param)->value;
+    else if (!nonce && strcmp ((*param)->name, "nonce") == 0 && (*param)->value)
+      nonce = (*param)->value;
+    else if (!response && strcmp ((*param)->name, "response") == 0
+        && (*param)->value)
+      response = (*param)->value;
+    else if (!uri && strcmp ((*param)->name, "uri") == 0 && (*param)->value)
+      uri = (*param)->value;
+
+    param++;
+  }
+
+  if (!realm || !user || !nonce || !response || !uri)
+    return FALSE;
+
+  g_mutex_lock (&auth->priv->lock);
+  digest_entry = g_hash_table_lookup (auth->priv->digest, user);
+  if (!digest_entry)
+    goto out;
+  nonce_entry = g_hash_table_lookup (auth->priv->nonces, nonce);
+  if (!nonce_entry)
+    goto out;
+
+  if (strcmp (nonce_entry->ip, gst_rtsp_connection_get_ip (ctx->conn)) != 0)
+    goto out;
+  if (nonce_entry->client && nonce_entry->client != ctx->client)
+    goto out;
+
+  expected_response =
+      gst_rtsp_generate_digest_auth_response (NULL,
+      gst_rtsp_method_as_text (ctx->method), "GStreamer RTSP Server", user,
+      digest_entry->pass, uri, nonce);
+  if (!expected_response || strcmp (response, expected_response) != 0)
+    goto out;
+
+  ctx->token = digest_entry->token;
+  ret = TRUE;
+
+out:
+  if (nonce_entry && !nonce_entry->client) {
+    RemoveNonceData *remove_nonce_data = g_new (RemoveNonceData, 1);
+
+    nonce_entry->client = ctx->client;
+    remove_nonce_data->nonce = nonce_entry;
+    remove_nonce_data->auth = g_object_ref (auth);
+    g_object_weak_ref (G_OBJECT (ctx->client), remove_nonce, remove_nonce_data);
+  }
+  g_mutex_unlock (&auth->priv->lock);
+
+  g_free (expected_response);
+
+  return ret;
+}
+
 static gboolean
 default_authenticate (GstRTSPAuth * auth, GstRTSPContext * ctx)
 {
   GstRTSPAuthPrivate *priv = auth->priv;
-  GstRTSPResult res;
-  gchar *authorization;
+  GstRTSPAuthCredential **credentials, **credential;
 
   GST_DEBUG_OBJECT (auth, "authenticate");
 
@@ -502,27 +749,38 @@ default_authenticate (GstRTSPAuth * auth, GstRTSPContext * ctx)
   ctx->token = priv->default_token;
   g_mutex_unlock (&priv->lock);
 
-  res =
-      gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_AUTHORIZATION,
-      &authorization, 0);
-  if (res < 0)
+  credentials =
+      gst_rtsp_message_parse_auth_credentials (ctx->request,
+      GST_RTSP_HDR_AUTHORIZATION);
+  if (!credentials)
     goto no_auth;
 
   /* parse type */
-  if (g_ascii_strncasecmp (authorization, "basic ", 6) == 0) {
-    GstRTSPToken *token;
+  credential = credentials;
+  while (*credential) {
+    if ((*credential)->scheme == GST_RTSP_AUTH_BASIC) {
+      GstRTSPToken *token;
 
-    GST_DEBUG_OBJECT (auth, "check Basic auth");
-    g_mutex_lock (&priv->lock);
-    if ((token = g_hash_table_lookup (priv->basic, &authorization[6]))) {
-      GST_DEBUG_OBJECT (auth, "setting token %p", token);
-      ctx->token = token;
+      GST_DEBUG_OBJECT (auth, "check Basic auth");
+      g_mutex_lock (&priv->lock);
+      if ((token =
+              g_hash_table_lookup (priv->basic,
+                  (*credential)->authorization))) {
+        GST_DEBUG_OBJECT (auth, "setting token %p", token);
+        ctx->token = token;
+        g_mutex_unlock (&priv->lock);
+        break;
+      }
+      g_mutex_unlock (&priv->lock);
+    } else if ((*credential)->scheme == GST_RTSP_AUTH_DIGEST) {
+      if (default_digest_auth (auth, ctx, (*credential)->params))
+        break;
     }
-    g_mutex_unlock (&priv->lock);
-  } else if (g_ascii_strncasecmp (authorization, "digest ", 7) == 0) {
-    GST_DEBUG_OBJECT (auth, "check Digest auth");
-    /* not implemented yet */
+
+    credential++;
   }
+
+  gst_rtsp_auth_credentials_free (credentials);
   return TRUE;
 
 no_auth:
@@ -533,15 +791,69 @@ no_auth:
 }
 
 static void
+default_generate_authenticate_header (GstRTSPAuth * auth, GstRTSPContext * ctx)
+{
+  if (auth->priv->auth_methods & GST_RTSP_AUTH_BASIC) {
+    gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
+        "Basic realm=\"GStreamer RTSP Server\"");
+  }
+
+  if (auth->priv->auth_methods & GST_RTSP_AUTH_DIGEST) {
+    GstRTSPDigestNonce *nonce;
+    gchar *nonce_value, *auth_header;
+
+    nonce_value =
+        g_strdup_printf ("%08x%08x", g_random_int (), g_random_int ());
+
+    auth_header =
+        g_strdup_printf
+        ("Digest realm=\"GStreamer RTSP Server\", nonce=\"%s\"", nonce_value);
+    gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
+        auth_header);
+    g_free (auth_header);
+
+    nonce = g_new0 (GstRTSPDigestNonce, 1);
+    nonce->nonce = g_strdup (nonce_value);
+    nonce->timestamp = g_get_monotonic_time ();
+    nonce->ip = g_strdup (gst_rtsp_connection_get_ip (ctx->conn));
+    g_mutex_lock (&auth->priv->lock);
+    g_hash_table_replace (auth->priv->nonces, nonce_value, nonce);
+
+    if (auth->priv->last_nonce_check == 0)
+      auth->priv->last_nonce_check = nonce->timestamp;
+
+    /* 30 second nonce timeout */
+    if (nonce->timestamp - auth->priv->last_nonce_check >= 30 * G_USEC_PER_SEC) {
+      GHashTableIter iter;
+      gpointer key, value;
+
+      g_hash_table_iter_init (&iter, auth->priv->nonces);
+      while (g_hash_table_iter_next (&iter, &key, &value)) {
+        GstRTSPDigestNonce *tmp = value;
+
+        if (nonce->timestamp - tmp->timestamp >= 30 * G_USEC_PER_SEC)
+          g_hash_table_iter_remove (&iter);
+      }
+      auth->priv->last_nonce_check = nonce->timestamp;
+    }
+
+    g_mutex_unlock (&auth->priv->lock);
+  }
+}
+
+static void
 send_response (GstRTSPAuth * auth, GstRTSPStatusCode code, GstRTSPContext * ctx)
 {
   gst_rtsp_message_init_response (ctx->response, code,
       gst_rtsp_status_as_text (code), ctx->request);
 
   if (code == GST_RTSP_STS_UNAUTHORIZED) {
-    /* we only have Basic for now */
-    gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
-        "Basic realm=\"GStreamer RTSP Server\"");
+    GstRTSPAuthClass *klass;
+
+    klass = GST_RTSP_AUTH_GET_CLASS (auth);
+
+    if (klass->generate_authenticate_header)
+      klass->generate_authenticate_header (auth, ctx);
   }
   gst_rtsp_client_send_message (ctx->client, ctx->session, ctx->response);
 }

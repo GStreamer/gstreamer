@@ -72,6 +72,7 @@ struct _GstRTSPAuthClass {
   gboolean           (*authenticate) (GstRTSPAuth *auth, GstRTSPContext *ctx);
   gboolean           (*check)        (GstRTSPAuth *auth, GstRTSPContext *ctx,
                                       const gchar *check);
+  void               (*generate_authenticate_header) (GstRTSPAuth *auth, GstRTSPContext *ctx);
   gboolean           (*accept_certificate) (GstRTSPAuth *auth,
                                             GTlsConnection *connection,
                                             GTlsCertificate *peer_cert,
@@ -99,6 +100,13 @@ GstRTSPToken *      gst_rtsp_auth_get_default_token (GstRTSPAuth *auth);
 void                gst_rtsp_auth_add_basic         (GstRTSPAuth *auth, const gchar * basic,
                                                      GstRTSPToken *token);
 void                gst_rtsp_auth_remove_basic      (GstRTSPAuth *auth, const gchar * basic);
+
+void                gst_rtsp_auth_add_digest        (GstRTSPAuth *auth, const gchar *user,
+                                                     const gchar *pass, GstRTSPToken *token);
+void                gst_rtsp_auth_remove_digest     (GstRTSPAuth *auth, const gchar *user);
+
+void                gst_rtsp_auth_set_supported_methods (GstRTSPAuth *auth, GstRTSPAuthMethod methods);
+GstRTSPAuthMethod   gst_rtsp_auth_get_supported_methods (GstRTSPAuth *auth);
 
 gboolean            gst_rtsp_auth_check             (const gchar *check);
 
