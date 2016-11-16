@@ -260,7 +260,7 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   gst_video_codec_state_unref (state);
 
   g_free (dec->imagedata);
-  dec->imagedata = g_malloc (dec->format.width * dec->format.height *
+  dec->imagedata = g_malloc0 (dec->format.width * dec->format.height *
       dec->format.bytes_per_pixel);
   GST_DEBUG_OBJECT (dec, "Allocated image data at %p", dec->imagedata);
 
@@ -790,6 +790,10 @@ vmnc_handle_packet (GstVMncDec * dec, const guint8 * data, int len,
             GST_WARNING_OBJECT (dec, "Rectangle out of range, type %d", r.type);
             return ERROR_INVALID;
           }
+        } else if (r.width > 16384 || r.height > 16384) {
+          GST_WARNING_OBJECT (dec, "Width or height too high: %ux%u", r.width,
+              r.height);
+          return ERROR_INVALID;
         }
 
         switch (r.type) {
