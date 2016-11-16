@@ -62,8 +62,6 @@ subdir('onvif')
 subdir('pcapparse')
 subdir('pnm')
 subdir('rawparse')
-#did not work
-#subdir('real')
 subdir('removesilence')
 #did not work
 #subdir('rtjpeg')
