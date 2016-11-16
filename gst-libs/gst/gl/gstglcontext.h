@@ -128,6 +128,7 @@ struct _GstGLContextClass {
   void          (*destroy_context)    (GstGLContext *context);
   void          (*swap_buffers)       (GstGLContext *context);
   gboolean      (*check_feature)      (GstGLContext *context, const gchar *feature);
+  void          (*get_gl_platform_version) (GstGLContext *context, gint *major, gint *minor);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
@@ -184,6 +185,8 @@ GST_EXPORT
 gboolean      gst_gl_context_check_gl_version (GstGLContext * context, GstGLAPI api, gint maj, gint min);
 GST_EXPORT
 gboolean      gst_gl_context_check_feature (GstGLContext *context, const gchar *feature);
+GST_EXPORT
+void          gst_gl_context_get_gl_platform_version (GstGLContext * context, gint * major, gint * minor);
 
 GST_EXPORT
 guintptr      gst_gl_context_get_current_gl_context     (GstGLPlatform context_type);
