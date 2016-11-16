@@ -52,7 +52,7 @@ card or render video pictures to an image sink.
 ## Managing filter state
 
 If at all possible, your element should derive from one of the new base
-classes ([Pre-made base classes](plugin-development/other/base.md)). There are
+classes ([Pre-made base classes](plugin-development/element-types/base.md)). There are
 ready-made general purpose base classes for different types of sources,
 sinks and filter/transformation elements. In addition to those,
 specialised base classes exist for audio and video elements and others.

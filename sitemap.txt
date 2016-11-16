@@ -123,11 +123,11 @@ index.md
 			plugin-development/advanced/dparams.md
 			plugin-development/advanced/interfaces.md
 			plugin-development/advanced/tagging.md
-		plugin-development/other/index.md
-			plugin-development/other/base.md
-			plugin-development/other/oneton.md
-			plugin-development/other/ntoone.md
-			plugin-development/other/manager.md
+		plugin-development/element-types/index.md
+			plugin-development/element-types/base.md
+			plugin-development/element-types/oneton.md
+			plugin-development/element-types/ntoone.md
+			plugin-development/element-types/manager.md
 		plugin-development/appendix/index.md
 			plugin-development/appendix/checklist-element.md
 			plugin-development/appendix/porting.md

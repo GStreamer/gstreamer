@@ -226,11 +226,11 @@ As you can see, there a lot to learn, so let's get started\!
 [interfaces]: plugin-development/advanced/interfaces.md
 [tagging]: plugin-development/advanced/tagging.md
 [events]: plugin-development/advanced/events.md
-[element-types]: plugin-development/other/index.md
-[base-classes]: plugin-development/other/base.md
-[one-to-n]: plugin-development/other/oneton.md
-[n-to-one]: plugin-development/other/ntoone.md
-[manager]: plugin-development/other/manager.md
+[element-types]: plugin-development/element-types/index.md
+[base-classes]: plugin-development/element-types/base.md
+[one-to-n]: plugin-development/element-types/oneton.md
+[n-to-one]: plugin-development/element-types/ntoone.md
+[manager]: plugin-development/element-types/manager.md
 [appendix]: plugin-development/appendix/index.md
 [intro-elements]: plugin-development/introduction/basics.md#elements-and-plugins
 [intro-pads]: plugin-development/introduction/basics.md#pads
