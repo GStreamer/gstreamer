@@ -1,9 +1,101 @@
-=== release 1.10.0 ===
+=== release 1.10.1 ===
 
-2016-11-01  Sebastian Dröge <slomo@coaxion.net>
+2016-11-17  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.0
+	  releasing 1.10.1
+
+2016-01-12 14:51:55 +0000  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/ges/timelineedition.c:
+	* tests/check/python/test_clip.py:
+	* tests/check/python/test_timeline.py:
+	  timeline: reimplement snap_to_position a bit more appropriately.
+	  It could yet be made be simpler, but it would require
+	  touching the rest of the timeline editing code.
+	  Fixes https://phabricator.freedesktop.org/T7587
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D657
+
+2016-11-09 11:48:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-timeline.c:
+	  ges-timeline: Fix typo in debug messages
+
+2016-10-08 10:43:07 +0200  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/python/test_timeline.py:
+	  timeline: Avoid creating extra transition when rippling clips
+	  In some cases when rippling clip we could get the algo lost because
+	  a transition existed between two clips (for example at the end of c1
+	  and at the begining of c2) but while rippling it would have required
+	  a transition at the end of c2 and beginning of c1, and we were properly
+	  not destroying the old one (as the two clips were in the moving context)
+	  but we were still creating the other transition in the end...
+	  Reviewed-by: Alex Băluț <alexandru.balut@gmail.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1362
+
+2016-10-07 15:31:40 +0200  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/python/test_timeline.py:
+	  timeline: Make sure transitions between rippled clips are never deleted
+	  Reviewed-by: Alex Băluț <alexandru.balut@gmail.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1361
+
+2016-10-06 19:14:57 +0200  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-layer.c:
+	* ges/ges-timeline.c:
+	* tests/check/python/test_timeline.py:
+	  timeline: Destroy transition if a neighbor is not being moved to a layer
+	  And make sure that we move the transition to the right layer, not trying
+	  to figure it out.
+	  Differential Revision: https://phabricator.freedesktop.org/D1360
+
+2016-11-04 14:41:13 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: Unset the plugin paths to generate the .gir files
+	  Avoiding problems when using subproject:
+	  'Failed to load plugin something.so file too short'
+
+2016-11-10 15:17:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Fix small remaining race in previous commit
+	  The seek action might currently be handled (in which case it is not in
+	  the actions list and the action lock is not locked), but not actually
+	  handled completely yet (the seqnum is not stored yet).
+	  To prevent this, we remember what the current action is that is being
+	  handled, and also compare to that.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774149
+
+2016-11-09 17:14:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: De-duplicate seek events based on their sequence number
+	  If there are e.g. multiple video sinks, we would get the same seek event
+	  multiple times. But we only want to handle it once.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774149
+
+2016-11-01 19:43:46 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.10.0 ===
+
+2016-11-01 18:12:35 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.10.0
 
 2016-10-25 08:54:11 -0700  Scott D Phillips <scott.d.phillips@intel.com>
 
