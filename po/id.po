@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:42+0200\n"
+"POT-Creation-Date: 2016-11-17 14:51+0200\n"
 "PO-Revision-Date: 2016-11-14 20:50+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -17,849 +17,654 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 
-#: ext/alsa/gstalsasink.c:577
 msgid "Could not open device for playback in mono mode."
 msgstr "Tak dapat membuka divais untuk putar kembali dalam mode mono."
 
-#: ext/alsa/gstalsasink.c:579
 msgid "Could not open device for playback in stereo mode."
 msgstr "Tak dapat membuka divais untuk putar kembali dalam mode stereo."
 
-#: ext/alsa/gstalsasink.c:583
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Tak dapat membuka divais untuk putar kembali dalam mode %d-kanal."
 
-#: ext/alsa/gstalsasink.c:856
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Tak dapat membuka divais audio untuk putar kembali. Divais sedang digunakan oleh aplikasi lain."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Tak dapat membuka divais audio untuk putar kembali. Divais sedang digunakan "
+"oleh aplikasi lain."
 
-#: ext/alsa/gstalsasink.c:861
 msgid "Could not open audio device for playback."
 msgstr "Tak dapat membuka divais audio untuk putar kembali."
 
-#: ext/alsa/gstalsasink.c:1074
 msgid "Error outputting to audio device. The device has been disconnected."
 msgstr "Galat saat mengarahkan keluaran ke divais audio. Divais telah diputus."
 
-#: ext/alsa/gstalsasrc.c:440
 msgid "Could not open device for recording in mono mode."
 msgstr "Tak dapat membuka divais untuk merekam dalam mode mono."
 
-#: ext/alsa/gstalsasrc.c:442
 msgid "Could not open device for recording in stereo mode."
 msgstr "Tak dapat membuka divais untuk merekam dalam mode stereo."
 
-#: ext/alsa/gstalsasrc.c:446
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "Tak dapat membuka divais untuk merekam dalam mode %d-kanal"
 
-#: ext/alsa/gstalsasrc.c:737
-msgid "Could not open audio device for recording. Device is being used by another application."
-msgstr "Tak dapat membuka divais audio untuk merekam. Divais sedang digunakan oleh aplikasi lain."
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr ""
+"Tak dapat membuka divais audio untuk merekam. Divais sedang digunakan oleh "
+"aplikasi lain."
 
-#: ext/alsa/gstalsasrc.c:742
 msgid "Could not open audio device for recording."
 msgstr "Tak dapat membuka divais audio untuk merekam."
 
-#: ext/alsa/gstalsasrc.c:988
 msgid "Error recording from audio device. The device has been disconnected."
 msgstr "Galat saat merekam dari divais audio. Divais telah diputus."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:277 ext/cdparanoia/gstcdparanoiasrc.c:283
 msgid "Could not open CD device for reading."
 msgstr "Tak dapat membuka divais CD untuk dibaca."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:409
 msgid "Could not seek CD."
 msgstr "Tak dapat mencari CD."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:417
 msgid "Could not read CD."
 msgstr "Tak dapat membaca CD."
 
-#: gst/encoding/gstencodebin.c:1590 gst/playback/gstplaybin2.c:3401
-#: gst/playback/gstplaysink.c:1480 gst/playback/gstplaysink.c:1493
-#: gst/playback/gstplaysink.c:1830 gst/playback/gstplaysink.c:1862
-#: gst/playback/gstplaysink.c:2442 gst/playback/gstplaysink.c:2491
-#: gst/playback/gstplaysink.c:2506 gst/playback/gstplaysink.c:2531
-#: gst/playback/gstplaysink.c:2563 gst/playback/gstplaysink.c:2711
-#: gst/playback/gstplaysink.c:2742 gst/playback/gstplaysink.c:3120
-#: gst/playback/gstplaysink.c:3129 gst/playback/gstplaysink.c:3138
-#: gst/playback/gstplaysink.c:3147 gst/playback/gstplaysink.c:3550
-#: gst/playback/gstplaysink.c:4424 gst/playback/gstplaysinkconvertbin.c:97
-#: gst/playback/gstplaysinkconvertbin.c:117
-#: gst/playback/gsturidecodebin.c:1489 gst/playback/gsturisourcebin.c:1620
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Elemen '%s' hilang - cek instalasi GStreamer anda."
 
-#: gst/playback/gstdecodebin2.c:1865 gst/playback/gstparsebin.c:1545
 msgid "Could not determine type of stream"
 msgstr "Tak dapat menentukan tipe arus"
 
-#: gst/playback/gstdecodebin2.c:2841 gst/playback/gstparsebin.c:2378
 msgid "This appears to be a text file"
 msgstr "Ini kelihatannya merupakan berkas teks"
 
-#: gst/playback/gstplaybin2.c:5446
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Tak dapat membuat elemen \"uridecodebin\"."
 
-#: gst/playback/gstplaybin3.c:4618
 msgid "Could not create \"decodebin3\" element."
 msgstr "Tak dapat membuat elemen \"decodebin3”."
 
-#: gst/playback/gstplaybin3.c:4864
 msgid "Could not create \"urisourcebin\" element."
 msgstr "Tak dapat membuat elemen \"urisourcebin\"."
 
-#: gst/playback/gstplaysink.c:1961
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Baik elemen autovideosink maupun %s hilang."
 
-#: gst/playback/gstplaysink.c:1965
 msgid "The autovideosink element is missing."
 msgstr "Elemen autovideosink hilang."
 
-#: gst/playback/gstplaysink.c:1970
 #, c-format
 msgid "Configured videosink %s is not working."
 msgstr "Videosink yang dikonfigurasi %s tidak bekerja."
 
-#: gst/playback/gstplaysink.c:1974
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
 msgstr "Baik elemen autovideosink maupun %s tidak bekerja."
 
-#: gst/playback/gstplaysink.c:1978
 msgid "The autovideosink element is not working."
 msgstr "Elemen autovideosink tidak bekerja."
 
-#: gst/playback/gstplaysink.c:2479
 msgid "Custom text sink element is not usable."
 msgstr "Elemen teks tenggelam suai tak dapat digunakan."
 
-#: gst/playback/gstplaysink.c:2857
 msgid "No volume control found"
 msgstr "Tak ada kontrol volume yang ditemukan"
 
-#: gst/playback/gstplaysink.c:2887
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
 msgstr "Baik elemen autoaudiosink maupun %s hilang."
 
-#: gst/playback/gstplaysink.c:2891
 msgid "The autoaudiosink element is missing."
 msgstr "Elemen autoaudiosink hilang."
 
-#: gst/playback/gstplaysink.c:2896
 #, c-format
 msgid "Configured audiosink %s is not working."
 msgstr "Audiosink yang dikonfigurasi %s tidak bekerja."
 
-#: gst/playback/gstplaysink.c:2900
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
 msgstr "Baik elemen autoaudiosink maupun %s tidak bekerja."
 
-#: gst/playback/gstplaysink.c:2904
 msgid "The autoaudiosink element is not working."
 msgstr "Elemen autoaudiosink tidak bekerja."
 
-#: gst/playback/gstplaysink.c:3223 gst/playback/gstplaysink.c:3228
 msgid "Can't play a text file without video or visualizations."
 msgstr "Tak dapat memutar berkas teks tanpa video atau visualisasi."
 
-#: gst/playback/gsturidecodebin.c:938
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "Tak ada pengawasandi yang tersedia untuk tipe '%s'."
 
-#: gst/playback/gsturidecodebin.c:1395 gst/playback/gsturisourcebin.c:1514
 msgid "No URI specified to play from."
 msgstr "Tak ada URI yang ditentukan untuk diputar."
 
-#: gst/playback/gsturidecodebin.c:1401 gst/playback/gsturisourcebin.c:1520
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "URI \"%s\" tidak sah."
 
-#: gst/playback/gsturidecodebin.c:1408 gst/playback/gsturisourcebin.c:1527
 msgid "This stream type cannot be played yet."
 msgstr "Tipe arus ini belum dapat dimainkan."
 
-#: gst/playback/gsturidecodebin.c:1426 gst/playback/gsturisourcebin.c:1545
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Tak ada penanganan URI yang diimplementasikan untuk \"%s\"."
 
-#: gst/playback/gsturidecodebin.c:2292 gst/playback/gsturisourcebin.c:2200
 msgid "Source element is invalid."
 msgstr "Elemen sumber tidak sah."
 
-#: gst/tcp/gsttcpclientsink.c:214
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Galat ketika mengirim data ke \"%s:%d\"."
 
-#: gst-libs/gst/audio/gstaudiobasesrc.c:866
 msgid "Can't record audio fast enough"
 msgstr "Tak dapat merekam audio cukup cepat"
 
-#: gst-libs/gst/audio/gstaudiocdsrc.c:1655
 msgid "This CD has no audio tracks"
 msgstr "CD ini tidak memiliki jalur audio"
 
-#: gst-libs/gst/pbutils/descriptions.c:92
 msgid "ID3 tag"
 msgstr "Tag ID3"
 
-#: gst-libs/gst/pbutils/descriptions.c:93
-#: gst-libs/gst/pbutils/descriptions.c:94
 msgid "APE tag"
 msgstr "Tag APE"
 
-#: gst-libs/gst/pbutils/descriptions.c:95
 msgid "ICY internet radio"
 msgstr "Radio internet ICY"
 
-#: gst-libs/gst/pbutils/descriptions.c:130
 msgid "Apple Lossless Audio (ALAC)"
 msgstr "Apple Lossless Audio (ALAC)"
 
-#: gst-libs/gst/pbutils/descriptions.c:146
 msgid "Free Lossless Audio Codec (FLAC)"
 msgstr "Free Lossless Audio Codec (FLAC)"
 
-#: gst-libs/gst/pbutils/descriptions.c:176
-#: gst-libs/gst/pbutils/descriptions.c:177
 msgid "Lossless True Audio (TTA)"
 msgstr "Lossless True Audio (TTA)"
 
-#: gst-libs/gst/pbutils/descriptions.c:185
 msgid "Windows Media Speech"
 msgstr "Windows Media Speech"
 
-#: gst-libs/gst/pbutils/descriptions.c:201
 msgid "CYUV Lossless"
 msgstr "CYUV Lossless"
 
-#: gst-libs/gst/pbutils/descriptions.c:205
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
-#: gst-libs/gst/pbutils/descriptions.c:219
 msgid "Lossless MSZH"
 msgstr "Lossless MSZH"
 
-#: gst-libs/gst/pbutils/descriptions.c:230
 msgid "Run-length encoding"
 msgstr "Penyandian sepanjang-jalan"
 
-#: gst-libs/gst/pbutils/descriptions.c:276
 msgid "Timed Text"
 msgstr "Teks Waktu"
 
-#: gst-libs/gst/pbutils/descriptions.c:280
 msgid "Subtitle"
 msgstr "Subjudul"
 
-#: gst-libs/gst/pbutils/descriptions.c:281
 msgid "MPL2 subtitle format"
 msgstr "Format subjudul MPL2"
 
-#: gst-libs/gst/pbutils/descriptions.c:282
 msgid "DKS subtitle format"
 msgstr "Format subjudul DKS"
 
-#: gst-libs/gst/pbutils/descriptions.c:283
 msgid "QTtext subtitle format"
 msgstr "Format subjudul QTtext"
 
-#: gst-libs/gst/pbutils/descriptions.c:284
 msgid "Sami subtitle format"
 msgstr "Format subjudul Sami"
 
-#: gst-libs/gst/pbutils/descriptions.c:285
 msgid "TMPlayer subtitle format"
 msgstr "Format subjudul TMPlayer"
 
-#: gst-libs/gst/pbutils/descriptions.c:289
 msgid "Kate subtitle format"
 msgstr "Format subjudul Kate"
 
-#: gst-libs/gst/pbutils/descriptions.c:290
 msgid "WebVTT subtitle format"
 msgstr "Format subjudul WebVTT"
 
-#: gst-libs/gst/pbutils/descriptions.c:453
-#: gst-libs/gst/pbutils/descriptions.c:456
-#: gst-libs/gst/pbutils/descriptions.c:506
 msgid "Uncompressed video"
 msgstr "Video tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:461
 msgid "Uncompressed gray"
 msgstr "Citra abu-abu tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:484
 #, c-format
 msgid "Uncompressed packed YUV %s"
 msgstr "YUV terkemas tak dikompresi %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:486
 #, c-format
 msgid "Uncompressed semi-planar YUV %s"
 msgstr "YUV semi-planar tak dikompresi %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:488
 #, c-format
 msgid "Uncompressed planar YUV %s"
 msgstr "YUV palanar tak dikompresi %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:499
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "%d-bit terpalet tak dikompresi %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:502
 #, c-format
 msgid "Uncompressed %d-bit %s"
 msgstr "%d tak dikompresi %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:584
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Versi %d"
 
-#: gst-libs/gst/pbutils/descriptions.c:831
 msgid "Uncompressed audio"
 msgstr "Audio tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:837
 #, c-format
 msgid "Raw %d-bit %s audio"
 msgstr "Audio %d-bita %s mentah"
 
-#: gst-libs/gst/pbutils/descriptions.c:937
 msgid "Audio CD source"
 msgstr "Sumber CD audio"
 
-#: gst-libs/gst/pbutils/descriptions.c:940
 msgid "DVD source"
 msgstr "Sumber DVD"
 
-#: gst-libs/gst/pbutils/descriptions.c:943
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Sumber Real Time Streaming Protocol (RTSP)"
 
-#: gst-libs/gst/pbutils/descriptions.c:947
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Sumber protokol Microsoft Media Server (MMS)"
 
-#: gst-libs/gst/pbutils/descriptions.c:955
 #, c-format
 msgid "%s protocol source"
 msgstr "%s sumber protokol"
 
-#: gst-libs/gst/pbutils/descriptions.c:1027
 #, c-format
 msgid "%s video RTP depayloader"
 msgstr "%s video RTP depayloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:1029
 #, c-format
 msgid "%s audio RTP depayloader"
 msgstr "%s audio RTP depayloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:1031
 #, c-format
 msgid "%s RTP depayloader"
 msgstr "%s RTP depayloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:1038
 #, c-format
 msgid "%s demuxer"
 msgstr "%s demuxer"
 
-#: gst-libs/gst/pbutils/descriptions.c:1040
 #, c-format
 msgid "%s decoder"
 msgstr "%s pengawasandi"
 
-#: gst-libs/gst/pbutils/descriptions.c:1078
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "%s video RTP payloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:1080
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "%s audio RTP payloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:1082
 #, c-format
 msgid "%s RTP payloader"
 msgstr "%s RTP payloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:1089
 #, c-format
 msgid "%s muxer"
 msgstr "%s muxer"
 
-#: gst-libs/gst/pbutils/descriptions.c:1091
 #, c-format
 msgid "%s encoder"
 msgstr "%s penyandi"
 
-#: gst-libs/gst/pbutils/descriptions.c:1123
 #, c-format
 msgid "GStreamer element %s"
 msgstr "Elemen GStreamer %s"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:566
 msgid "Unknown source element"
 msgstr "Elemen sumber tak diketahui"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:569
 msgid "Unknown sink element"
 msgstr "Elemen tenggelam tak diketahui"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:572
 msgid "Unknown element"
 msgstr "Elemen tak diketahui"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:575
 msgid "Unknown decoder element"
 msgstr "Elemen pengawasandi tak diketahui"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:578
 msgid "Unknown encoder element"
 msgstr "Elemen penyandi tak diketahui"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:583
 msgid "Plugin or element of unknown type"
 msgstr "Plugin atau elemen dari tipe yang tak diketahui"
 
-#: gst-libs/gst/tag/gsttagdemux.c:1271
 msgid "Failed to read tag: not enough data"
 msgstr "Gagal membaca tanda: tak cukup data"
 
-#: gst-libs/gst/tag/tags.c:79
 msgid "track ID"
 msgstr "ID jalur"
 
-#: gst-libs/gst/tag/tags.c:79
 msgid "MusicBrainz track ID"
 msgstr "ID jalur MusicBrainz"
 
-#: gst-libs/gst/tag/tags.c:81
 msgid "artist ID"
 msgstr "ID artis"
 
-#: gst-libs/gst/tag/tags.c:81
 msgid "MusicBrainz artist ID"
 msgstr "ID artis MusicBrainz"
 
-#: gst-libs/gst/tag/tags.c:83
 msgid "album ID"
 msgstr "ID album"
 
-#: gst-libs/gst/tag/tags.c:83
 msgid "MusicBrainz album ID"
 msgstr "ID album MusicBrainz"
 
-#: gst-libs/gst/tag/tags.c:86
 msgid "album artist ID"
 msgstr "ID artis album"
 
-#: gst-libs/gst/tag/tags.c:86
 msgid "MusicBrainz album artist ID"
 msgstr "ID artis album MusicBrainz"
 
-#: gst-libs/gst/tag/tags.c:88
 msgid "track TRM ID"
 msgstr "ID TRM jalur"
 
-#: gst-libs/gst/tag/tags.c:88
 msgid "MusicBrainz TRM ID"
 msgstr "ID TRM MusicBrainz"
 
-#: gst-libs/gst/tag/tags.c:110
 msgid "capturing shutter speed"
 msgstr "menangkap kecepatan rana"
 
-#: gst-libs/gst/tag/tags.c:111
 msgid "Shutter speed used when capturing an image, in seconds"
 msgstr "Kecepatan rana digunakan saat menangkap gambar, dalam detik"
 
-#: gst-libs/gst/tag/tags.c:114
 msgid "capturing focal ratio"
 msgstr "menangkap bukaan"
 
-#: gst-libs/gst/tag/tags.c:115
 msgid "Focal ratio (f-number) used when capturing the image"
 msgstr "Bukaan (angka-f) digunakan ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:118
 msgid "capturing focal length"
 msgstr "menangkap panjang fokal"
 
-#: gst-libs/gst/tag/tags.c:119
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Panjang fokal dari lensa digunakan ketika menangkap gambar, dalam mm"
 
-#: gst-libs/gst/tag/tags.c:123
 msgid "capturing 35 mm equivalent focal length"
 msgstr "menangkap panjang fokal setara 35 mm"
 
-#: gst-libs/gst/tag/tags.c:124
-msgid "35 mm equivalent focal length of the lens used capturing the image, in mm"
-msgstr "Panjang fokal setara 35 mm dari lensa digunakan ketika menangkap gambar, dalam mm"
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
+msgstr ""
+"Panjang fokal setara 35 mm dari lensa digunakan ketika menangkap gambar, "
+"dalam mm"
 
-#: gst-libs/gst/tag/tags.c:128
 msgid "capturing digital zoom ratio"
 msgstr "menangkap rasio pembesaran digital"
 
-#: gst-libs/gst/tag/tags.c:129
 msgid "Digital zoom ratio used when capturing an image"
 msgstr "Rasio pembesaran digital digunakan ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:132
 msgid "capturing iso speed"
 msgstr "menangkap kecepatan iso"
 
-#: gst-libs/gst/tag/tags.c:133
 msgid "The ISO speed used when capturing an image"
 msgstr "Kecepatan ISO digunakan menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:136
 msgid "capturing exposure program"
 msgstr "menangkap program pajanan"
 
-#: gst-libs/gst/tag/tags.c:137
 msgid "The exposure program used when capturing an image"
 msgstr "Program pajanan digunakan ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:140
 msgid "capturing exposure mode"
 msgstr "menangkap mode pajanan"
 
-#: gst-libs/gst/tag/tags.c:141
 msgid "The exposure mode used when capturing an image"
 msgstr "Mode pajanan digunakan ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:144
 msgid "capturing exposure compensation"
 msgstr "menangkap kompensasi pajanan"
 
-#: gst-libs/gst/tag/tags.c:145
 msgid "The exposure compensation used when capturing an image"
 msgstr "Kompensasi pajanan digunakan ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:148
 msgid "capturing scene capture type"
 msgstr "menangkap tipe pengambilan scene"
 
-#: gst-libs/gst/tag/tags.c:149
 msgid "The scene capture mode used when capturing an image"
 msgstr "Mode penangkapan scene digunakan ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:152
 msgid "capturing gain adjustment"
 msgstr "menangkap penyesuaian bati"
 
-#: gst-libs/gst/tag/tags.c:153
 msgid "The overall gain adjustment applied on an image"
 msgstr "Keseluruhan penyesuaian bati diterapkan pada gambar"
 
-#: gst-libs/gst/tag/tags.c:156
 msgid "capturing white balance"
 msgstr "menangkap white balance"
 
-#: gst-libs/gst/tag/tags.c:157
 msgid "The white balance mode set when capturing an image"
 msgstr "Pengaturan mode white balance ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:160
 msgid "capturing contrast"
 msgstr "menangkap kontras"
 
-#: gst-libs/gst/tag/tags.c:161
 msgid "The direction of contrast processing applied when capturing an image"
 msgstr "Arah pemrosesan kontras diterapkan ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:165
 msgid "capturing saturation"
 msgstr "menangkap saturasi"
 
-#: gst-libs/gst/tag/tags.c:166
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr "Arah pemrosesan saturasi diterapkan ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:170
 msgid "capturing sharpness"
 msgstr "menangkap ketajaman"
 
-#: gst-libs/gst/tag/tags.c:171
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr "Arah pemrosesan ketajaman diterapkan ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:175
 msgid "capturing flash fired"
 msgstr "menangkap blitz ditembakkan"
 
-#: gst-libs/gst/tag/tags.c:176
 msgid "If the flash fired while capturing an image"
 msgstr "Apakah blitz ditembakkan ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:179
 msgid "capturing flash mode"
 msgstr "menangkap mode blitz"
 
-#: gst-libs/gst/tag/tags.c:180
 msgid "The selected flash mode while capturing an image"
 msgstr "Mode blitz terpilih ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:183
 msgid "capturing metering mode"
 msgstr "menangkap mode meter"
 
-#: gst-libs/gst/tag/tags.c:184
-msgid "The metering mode used while determining exposure for capturing an image"
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
 msgstr "Mode meter digunakan untuk menentukan pajanan ketika menangkap gambar"
 
-#: gst-libs/gst/tag/tags.c:188
 msgid "capturing source"
 msgstr "menangkap sumber"
 
-#: gst-libs/gst/tag/tags.c:189
 msgid "The source or type of device used for the capture"
 msgstr "Sumber atau tipe divais digunakan untuk menangkap"
 
-#: gst-libs/gst/tag/tags.c:192
 msgid "image horizontal ppi"
 msgstr "ppi horizontal gambar"
 
-#: gst-libs/gst/tag/tags.c:193
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Kerapatan pixel horizontal yang diinginkan media (gambar/video) dalam ppi"
+msgstr ""
+"Kerapatan pixel horizontal yang diinginkan media (gambar/video) dalam ppi"
 
-#: gst-libs/gst/tag/tags.c:196
 msgid "image vertical ppi"
 msgstr "ppi vertikal gambar"
 
-#: gst-libs/gst/tag/tags.c:197
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Kerapatan pixel vertikal yang diinginkan media (gambar/video) dalam ppi"
+msgstr ""
+"Kerapatan pixel vertikal yang diinginkan media (gambar/video) dalam ppi"
 
-#: gst-libs/gst/tag/tags.c:200
 msgid "ID3v2 frame"
 msgstr "Rangka ID3v2"
 
-#: gst-libs/gst/tag/tags.c:200
 msgid "unparsed id3v2 tag frame"
 msgstr "rangka tag id3v3 tak diurai"
 
-#: gst-libs/gst/tag/tags.c:204
 msgid "musical-key"
 msgstr "kunci-musik"
 
-#: gst-libs/gst/tag/tags.c:204
 msgid "Initial key in which the sound starts"
 msgstr "Kunci awal dimana suara dimulai"
 
-#: tools/gst-device-monitor.c:156 tools/gst-play.c:1166
 msgid "Print version information and exit"
 msgstr "Cetak informasi versi lalu keluar"
 
-#: tools/gst-device-monitor.c:158
-msgid "Don't exit after showing the initial device list, but wait for devices to added/removed."
-msgstr "Jangan keluar setelah menampilkan senarai divais awal, tapi tunggu hingga divais ditambahkan/dihapus."
+msgid ""
+"Don't exit after showing the initial device list, but wait for devices to "
+"added/removed."
+msgstr ""
+"Jangan keluar setelah menampilkan senarai divais awal, tapi tunggu hingga "
+"divais ditambahkan/dihapus."
 
-#: tools/gst-play.c:275
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Volume: %.0f%%"
 
-#: tools/gst-play.c:314
 msgid "Buffering..."
 msgstr "Menyangga..."
 
-#: tools/gst-play.c:335
 msgid "Clock lost, selecting a new one\n"
 msgstr "Jam hilang, pilih yang baru\n"
 
-#: tools/gst-play.c:365 tools/gst-play.c:411 tools/gst-play.c:763
-#: tools/gst-play.c:1070
 msgid "Reached end of play list."
 msgstr "Mencapai akhir senarai putar."
 
-#: tools/gst-play.c:493
 msgid "Paused"
 msgstr "Jeda"
 
-#: tools/gst-play.c:551
 #, c-format
 msgid "Now playing %s\n"
 msgstr "Sekarang memutar %s\n"
 
-#: tools/gst-play.c:614
 #, c-format
 msgid "About to finish, preparing next title: %s"
 msgstr "Hampir selesai, menyiapkan judul berikutnya: %s"
 
-#: tools/gst-play.c:859
 #, c-format
 msgid "Playback rate: %.2f"
 msgstr "Kecepatan putar: %.2f"
 
-#: tools/gst-play.c:863
 #, c-format
 msgid "Could not change playback rate to %.2f"
 msgstr "Tak dapat mengubah kecepatan putar ke %.2f"
 
-#: tools/gst-play.c:1010
 msgid "space"
 msgstr "spasi"
 
-#: tools/gst-play.c:1010
 msgid "pause/unpause"
 msgstr "jeda/lanjut"
 
-#: tools/gst-play.c:1011
 msgid "q or ESC"
 msgstr "q atau ESC"
 
-#: tools/gst-play.c:1011
 msgid "quit"
 msgstr "keluar"
 
-#: tools/gst-play.c:1012
 msgid "> or n"
 msgstr "> atau n"
 
-#: tools/gst-play.c:1012
 msgid "play next"
 msgstr "putar berikutnya"
 
-#: tools/gst-play.c:1013
 msgid "< or b"
 msgstr "< atau b"
 
-#: tools/gst-play.c:1013
 msgid "play previous"
 msgstr "putar sebelumnya"
 
-#: tools/gst-play.c:1014
 msgid "seek forward"
 msgstr "mencari ke depan"
 
-#: tools/gst-play.c:1015
 msgid "seek backward"
 msgstr "mencari ke belakang"
 
-#: tools/gst-play.c:1016
 msgid "volume up"
 msgstr "volume naik"
 
-#: tools/gst-play.c:1017
 msgid "volume down"
 msgstr "volume turun"
 
-#: tools/gst-play.c:1018
 msgid "increase playback rate"
 msgstr "tingkatkan kecepatan putar"
 
-#: tools/gst-play.c:1019
 msgid "decrease playback rate"
 msgstr "turunkan kecepatan putar"
 
-#: tools/gst-play.c:1020
 msgid "change playback direction"
 msgstr "ubah arah putar"
 
-#: tools/gst-play.c:1021
 msgid "enable/disable trick modes"
 msgstr "aktifkan/nonaktifkan mode trik"
 
-#: tools/gst-play.c:1022
 msgid "change audio track"
 msgstr "ubah urutan audio"
 
-#: tools/gst-play.c:1023
 msgid "change video track"
 msgstr "ubah urutan video"
 
-#: tools/gst-play.c:1024
 msgid "change subtitle track"
 msgstr "ubah urutan subjudul"
 
-#: tools/gst-play.c:1025
 msgid "seek to beginning"
 msgstr "mencari ke awal"
 
-#: tools/gst-play.c:1026
 msgid "show keyboard shortcuts"
 msgstr "tampilkan jalan pintas papan ketik"
 
-#: tools/gst-play.c:1029
 msgid "Interactive mode - keyboard controls:"
 msgstr "Mode interaktif - kontrol papan ketik:"
 
-#: tools/gst-play.c:1161
 msgid "Output status information and property notifications"
 msgstr "Informasi status keluaran dan notifikasi properti"
 
-#: tools/gst-play.c:1163
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr "Kontrol properti ‘bendera’ playbin pengaturan perilaku putar"
 
-#: tools/gst-play.c:1168
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Sink video yang digunakan (standar adalah autovideosink)"
 
-#: tools/gst-play.c:1170
 msgid "Audio sink to use (default is autoaudiosink)"
 msgstr "Sink audio yang digunakan (standar adalah autoaudiosink)"
 
-#: tools/gst-play.c:1172
 msgid "Enable gapless playback"
 msgstr "Aktifkan putar balik tanpa jeda"
 
-#: tools/gst-play.c:1174
 msgid "Shuffle playlist"
 msgstr "Acak senarai putar"
 
-#: tools/gst-play.c:1177
 msgid "Disable interactive control via the keyboard"
 msgstr "Nonaktifkan kontrol interaktif via papan ketik"
 
-#: tools/gst-play.c:1179
 msgid "Volume"
 msgstr "Volume"
 
-#: tools/gst-play.c:1181
 msgid "Playlist file containing input media files"
 msgstr "Berkas senarai putar berisi masukan berkas media"
 
-#: tools/gst-play.c:1183
 msgid "Do not print any output (apart from errors)"
 msgstr "Jangan cetak keluaran apapun (selain galat)"
 
-#: tools/gst-play.c:1254
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Penggunaan: %s BERKAS1|URI1 [BERKAS2|URI2] [BERKAS3|URI3] ..."
 
-#: tools/gst-play.c:1258
 msgid "You must provide at least one filename or URI to play."
-msgstr "Anda harus menyediakan setidaknya satu nama berkas atau URI untuk diputar."
+msgstr ""
+"Anda harus menyediakan setidaknya satu nama berkas atau URI untuk diputar."
 
-#: tools/gst-play.c:1298
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Tekan ‘k’ untuk melihat daftar jalan pintas papan ketik.\n"
 
