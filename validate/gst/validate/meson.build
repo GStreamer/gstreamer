@@ -45,6 +45,7 @@ gstvalidate = shared_library('gstvalidate-1.0',
     include_directories : [inc_dirs],
     install: true,
     c_args : [gst_c_args] + ['-D_GNU_SOURCE'],
+    vs_module_defs: vs_module_defs_dir + 'libgstvalidate.def',
     dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
                     gst_pbutils_dep, mathlib, json_dep])
 
