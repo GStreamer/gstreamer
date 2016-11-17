@@ -104,23 +104,6 @@ gst_gl_memory_egl_get_display (GstGLMemoryEGL * mem)
       context)->egl_display;
 }
 
-/**
- * gst_gl_memory_egl_get_orientation:
- * @mem: a #GstGLMemoryEGL
- *
- * Returns: The orientation of @mem
- *
- * Since: 1.10
- */
-GstVideoGLTextureOrientation
-gst_gl_memory_egl_get_orientation (GstGLMemoryEGL * mem)
-{
-  g_return_val_if_fail (gst_is_gl_memory_egl (GST_MEMORY_CAST (mem)),
-      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL);
-
-  return gst_egl_image_get_orientation (_gl_mem_get_parent (mem)->image);
-}
-
 static GstMemory *
 _gl_mem_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params)

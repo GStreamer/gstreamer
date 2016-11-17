@@ -73,9 +73,6 @@ gboolean      gst_is_gl_memory_egl                      (GstMemory * mem);
 EGLImageKHR   gst_gl_memory_egl_get_image               (GstGLMemoryEGL * mem);
 EGLDisplay    gst_gl_memory_egl_get_display             (GstGLMemoryEGL * mem);
 
-GstVideoGLTextureOrientation gst_gl_memory_egl_get_orientation
-                                                        (GstGLMemoryEGL * mem);
-
 /**
  * GstGLMemoryEGLAllocator
  *

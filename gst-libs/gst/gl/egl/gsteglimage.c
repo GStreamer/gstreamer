@@ -115,21 +115,6 @@ gst_egl_image_get_image (GstEGLImage * image)
   return image->image;
 }
 
-/**
- * gst_egl_image_get_orientation:
- * @image: a #GstEGLImage
- *
- * Returns: the orientation of @image
- */
-GstVideoGLTextureOrientation
-gst_egl_image_get_orientation (GstEGLImage * image)
-{
-  g_return_val_if_fail (GST_IS_EGL_IMAGE (image),
-      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL);
-
-  return image->orientation;
-}
-
 static void
 _gst_egl_image_free_thread (GstGLContext * context, GstEGLImage * image)
 {
@@ -160,7 +145,6 @@ _gst_egl_image_copy (GstMiniObject * obj)
  * @context: a #GstGLContext (must be an EGL context)
  * @image: the image to wrap
  * @type: the #GstVideoGLTextureType
- * @orientation: the #GstVideoGLTextureOrientation
  * @user_data: user data
  * @user_data_destroy: called when @user_data is no longer needed
  *
@@ -168,8 +152,8 @@ _gst_egl_image_copy (GstMiniObject * obj)
  */
 GstEGLImage *
 gst_egl_image_new_wrapped (GstGLContext * context, EGLImageKHR image,
-    GstVideoGLTextureType type, GstVideoGLTextureOrientation orientation,
-    gpointer user_data, GstEGLImageDestroyNotify user_data_destroy)
+    GstVideoGLTextureType type, gpointer user_data,
+    GstEGLImageDestroyNotify user_data_destroy)
 {
   GstEGLImage *img = NULL;
 
@@ -186,7 +170,6 @@ gst_egl_image_new_wrapped (GstGLContext * context, EGLImageKHR image,
   img->context = gst_object_ref (context);
   img->image = image;
   img->type = type;
-  img->orientation = orientation;
 
   img->destroy_data = user_data;
   img->destroy_notify = user_data_destroy;
@@ -346,9 +329,8 @@ gst_egl_image_from_texture (GstGLContext * context, GstGLMemory * gl_mem,
   if (!img)
     return NULL;
 
-  return gst_egl_image_new_wrapped (context, img, gl_mem->tex_type,
-      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
-      NULL, (GstEGLImageDestroyNotify) _destroy_egl_image);
+  return gst_egl_image_new_wrapped (context, img, gl_mem->tex_type, NULL,
+      (GstEGLImageDestroyNotify) _destroy_egl_image);
 }
 
 #if GST_GL_HAVE_DMABUF
@@ -479,8 +461,7 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
     return NULL;
   }
 
-  return gst_egl_image_new_wrapped (context, img, type,
-      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
-      NULL, (GstEGLImageDestroyNotify) _destroy_egl_image);
+  return gst_egl_image_new_wrapped (context, img, type, NULL,
+      (GstEGLImageDestroyNotify) _destroy_egl_image);
 }
 #endif /* GST_GL_HAVE_DMABUF */
