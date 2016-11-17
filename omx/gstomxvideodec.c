@@ -659,9 +659,6 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
       }
       gl_mem = (GstGLMemoryEGL *) mem;
       buffers = g_list_append (buffers, buffer);
-      /* FIXME: replace with the affine transformation meta */
-      gl_mem->image->orientation =
-          GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_FLIP;
       images = g_list_append (images, gst_gl_memory_egl_get_image (gl_mem));
       if (egl_display == EGL_NO_DISPLAY)
         egl_display = gst_gl_memory_egl_get_display (gl_mem);
