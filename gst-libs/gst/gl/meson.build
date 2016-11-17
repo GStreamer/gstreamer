@@ -357,6 +357,7 @@ if need_platform_egl != 'no'
 
   if egl_dep.found()
     gl_sources += [
+      'egl/gstegl.c',
       'egl/gsteglimage.c',
       'egl/gstglcontext_egl.c',
       'egl/gstgldisplay_egl.c',
