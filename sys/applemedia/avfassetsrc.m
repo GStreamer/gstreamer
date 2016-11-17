@@ -246,6 +246,12 @@ gst_avf_asset_src_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY: {
       self->state = GST_AVF_ASSET_SRC_STATE_STOPPED;
+      if (!self->uri) {
+        GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+            ("\"uri\" property not set"), (NULL));
+        gst_avf_asset_src_stop_all (self);
+        return GST_STATE_CHANGE_FAILURE;
+      }
       self->reader = [[GstAVFAssetReader alloc] initWithURI:self->uri:&error];
       if (error) {
         GST_ELEMENT_ERROR (element, RESOURCE, FAILED, ("AVFAssetReader error"),
