@@ -19,10 +19,10 @@ libgstvulkan_wayland_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
-	$(WAYLAND_CFLAGS)
+	$(VULKAN_WAYLAND_CFLAGS)
 
 libgstvulkan_wayland_la_LIBADD = \
-	$(WAYLAND_LIBS)
+	$(VULKAN_WAYLAND_LIBS)
 
 libgstvulkan_wayland_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \
