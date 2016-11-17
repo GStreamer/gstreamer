@@ -9,6 +9,7 @@
 %option extra-type="GESStructureParser *"
 %option never-interactive
 %option noinput
+%option nounistd
 
 CLIP 		[ ]+\+clip[ ]+
 TEST_CLIP       [ ]+\+test-clip[ ]+

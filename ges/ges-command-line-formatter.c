@@ -23,6 +23,7 @@
 #include "ges/ges-structured-interface.h"
 #include "ges-structure-parser.h"
 #include "ges-internal.h"
+#define YY_NO_UNISTD_H
 #include "ges-parse-lex.h"
 
 struct _GESCommandLineFormatterPrivate
