@@ -1,15 +1,15 @@
 
-Release notes for GStreamer 1.10.0
+Release notes for GStreamer 1.10.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.10 release series. The 1.10 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.10 release series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.10 release
-series.
+This release only contains bugfixes and it is safe to update from 1.10.0. For a
+full list of bugfixes see Bugzilla.
+
+
+See /releases/1.10/ for the full release notes.
 
 
 This module, gstreamer, only contains core functionality.
@@ -35,13 +35,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 770627 : adaptivedemux: prevent to set source flag itself
-      * 772431 : Doc is wrong about GST_PLUGIN_PATH being colon separated - it's semicolon on Windows.
-      * 772571 : doc: fix GST_LEAKS_TRACER_SIG doc
-      * 772741 : bin: Add a new GST_BIN_FLAG_STREAMS_AWARE flag
-      * 772851 : tracers: fix structure leak
-      * 773114 : meson: fixes for windows build
-      * 773319 : adapter: mix-up between PTS and DTS
+      * 765662 : adapter: invalid returned distance when getting prev pts/dts at offset
+      * 773813 : Fails to build on GNU Hurd: missing mach/clock.h used by libcheck
+      * 774044 : meson: g-i: jhbuild build fails to pick up internal Gst-1.0 for GstBase-1.0.gir on Fedora24 without gstreamer1-devel
+      * 774108 : Two warnings while building with mingw64
 
 ==== Download ====
 
@@ -78,17 +75,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andrew Eikum
-      * Edward Hervey
       * Guillaume Desmottes
-      * Jesper Larsen
-      * Matthew Waters
-      * Nicolas Dufresne
+      * Jan Schmidt
+      * Nicolas Huet
       * Nirbheek Chauhan
       * Sebastian Dröge
-      * Stefan Sauer
-      * Stian Selnes
       * Thibault Saunier
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
+      * Victor Toso
  
