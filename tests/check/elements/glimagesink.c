@@ -3,6 +3,7 @@
  * Unit tests for glimagesink
  *
  * Copyright (C) 2014 Julien Isorce <j.isorce@samsung.com>
+ * Copyright (C) 2016 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -35,33 +36,12 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGBA"))
     );
 
-static GMainLoop *loop = NULL;
 static GstElement *sinkelement = NULL;
 static GstPad *srcpad = NULL;
-
-/* On OSX it's required to have a main loop running in the
- * main thread while using the display connection.
- * So the call that use this display connection needs to be
- * done in another thread.
- * On other platforms a direct call can be done. */
-
-#ifdef __APPLE__
-#define DO_CALL(func, data) G_STMT_START { \
-  GThread *thread = g_thread_new (NULL, \
-  (GThreadFunc) func, data); \
-  g_main_loop_run (loop); \
-  g_thread_join (thread); \
-  thread = NULL; \
-} G_STMT_END
-#else
-#define DO_CALL(func, data) func (data)
-#endif
 
 #define PAD_FUNC(name, type, param, check) \
   static gpointer do_##name##_func (type * param) { \
   fail_unless (gst_pad_##name (srcpad, param) == check); \
-  if (loop) \
-    g_main_loop_quit (loop); \
   return NULL; \
 }
 
@@ -69,6 +49,67 @@ static GstPad *srcpad = NULL;
 PAD_FUNC (peer_query, GstQuery, query, TRUE)
 PAD_FUNC (push, GstBuffer, buf, GST_FLOW_OK)
 /* *INDENT-ON* */
+
+/* On OSX it's required to have a main loop running in the
+ * main thread while using the display connection.
+ * So the call that use this display connection needs to be
+ * done in another thread.
+ * On other platforms a direct call can be done. */
+#ifdef __APPLE__
+static GMainLoop *loop;
+static GThread *thread;
+static GMutex lock;
+static GCond cond;
+
+static gboolean
+_unlock_mutex (gpointer * unused)
+{
+  g_cond_broadcast (&cond);
+  g_mutex_unlock (&lock);
+
+  return G_SOURCE_REMOVE;
+}
+
+static gpointer
+_thread_main (gpointer * unused)
+{
+  g_mutex_lock (&lock);
+  g_idle_add ((GSourceFunc) _unlock_mutex, NULL);
+
+  g_main_loop_run (loop);
+
+  g_main_loop_unref (loop);
+  loop = NULL;
+
+  return NULL;
+}
+
+static void
+_start_thread (void)
+{
+  loop = g_main_loop_new (NULL, FALSE);
+  g_mutex_init (&lock);
+  g_cond_init (&cond);
+
+  thread = g_thread_new ("GLOSXTestThread", (GThreadFunc) _thread_main, NULL);
+
+  g_mutex_lock (&lock);
+  while (!loop) {
+    g_cond_wait (&cond, &lock);
+  }
+  g_mutex_unlock (&lock);
+}
+
+static void
+_stop_thread (void)
+{
+  g_main_loop_quit (loop);
+  g_thread_join (thread);
+
+  g_mutex_clear (&lock);
+  g_cond_clear (&cond);
+}
+#endif
 
 static void
 setup_glimagesink (void)
@@ -113,7 +154,7 @@ GST_START_TEST (test_query_drain)
   const gint maxbuffers = 4;
 
 #ifdef __APPLE__
-  loop = g_main_loop_new (NULL, FALSE);
+  _start_thread ();
 #endif
 
   /* GstBaseSink handles the drain query as well. */
@@ -128,7 +169,7 @@ GST_START_TEST (test_query_drain)
    * and max nb buffers. For that just send an allocation
    * query and change the pool config. */
   query = gst_query_new_allocation (caps, TRUE);
-  DO_CALL (do_peer_query_func, query);
+  do_peer_query_func (query);
 
   fail_unless (gst_query_get_n_allocation_pools (query) == 1);
 
@@ -178,14 +219,14 @@ GST_START_TEST (test_query_drain)
   for (i = 0; i < 10 * maxbuffers; ++i) {
     fail_unless (gst_buffer_pool_acquire_buffer (pool, &buf,
             NULL) == GST_FLOW_OK);
-    DO_CALL (do_push_func, buf);
+    do_push_func (buf);
   }
 
   /* Claim back buffers to the upstream pool. This is the point
    * of this unit test, i.e. this test checks that glimagesink
    * releases the buffers it currently owns, upon drain query. */
   query = gst_query_new_drain ();
-  DO_CALL (do_peer_query_func, query);
+  do_peer_query_func (query);
   gst_query_unref (query);
 
   /* Transfer buffers back to the downstream pool to be release
@@ -209,8 +250,9 @@ GST_START_TEST (test_query_drain)
   fail_unless (gst_buffer_pool_set_active (pool, FALSE));
   gst_object_unref (pool);
 
-  if (loop)
-    g_main_loop_unref (loop);
+#ifdef __APPLE__
+  _stop_thread ();
+#endif
 }
 
 GST_END_TEST;
