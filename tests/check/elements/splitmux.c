@@ -192,6 +192,20 @@ GST_START_TEST (test_splitmuxsrc_format_location)
 
 GST_END_TEST;
 
+static gchar *
+check_format_location (GstElement * object,
+    guint fragment_id, GstSample * first_sample)
+{
+  GstBuffer *buf = gst_sample_get_buffer (first_sample);
+
+  /* Must have a buffer */
+  fail_if (buf == NULL);
+  GST_LOG ("New file - first buffer %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+  return NULL;
+}
+
 GST_START_TEST (test_splitmuxsink)
 {
   GstMessage *msg;
@@ -213,6 +227,8 @@ GST_START_TEST (test_splitmuxsink)
   fail_if (pipeline == NULL);
   sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
   fail_if (sink == NULL);
+  g_signal_connect (sink, "format-location-full",
+      (GCallback) check_format_location, NULL);
   dest_pattern = g_build_filename (tmpdir, "out%05d.ogg", NULL);
   g_object_set (G_OBJECT (sink), "location", dest_pattern, NULL);
   g_free (dest_pattern);

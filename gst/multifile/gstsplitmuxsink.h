@@ -82,6 +82,9 @@ typedef struct _MqStreamCtx
   GstPad *srcpad;
 
   gboolean out_blocked;
+
+  GstBuffer *cur_buffer;
+  GstEvent *pending_gap;
 } MqStreamCtx;
 
 struct _GstSplitMuxSink {
@@ -131,6 +134,9 @@ struct _GstSplitMuxSink {
   gboolean switching_fragment;
 
   gboolean have_video;
+
+  gboolean need_async_start;
+  gboolean async_pending;
 };
 
 struct _GstSplitMuxSinkClass {
