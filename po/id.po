@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:33+0200\n"
+"POT-Creation-Date: 2016-11-17 14:35+0200\n"
 "PO-Revision-Date: 2016-11-14 20:59+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -18,988 +18,834 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: gst/gst.c:243
 msgid "Print the GStreamer version"
 msgstr "Cetak versi GStreamer"
 
-#: gst/gst.c:245
 msgid "Make all warnings fatal"
 msgstr "Buat semua peringatan fatal"
 
-#: gst/gst.c:249
 msgid "Print available debug categories and exit"
 msgstr "Cetak kategori awakutu yang tersedia lalu keluar"
 
-#: gst/gst.c:253
-msgid "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
-msgstr "Level awakutu standar dari 1 (hanya galat) ke 9 (apapun) atau 0 untuk tak ada keluaran"
+msgid ""
+"Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
+msgstr ""
+"Level awakutu standar dari 1 (hanya galat) ke 9 (apapun) atau 0 untuk tak "
+"ada keluaran"
 
-#: gst/gst.c:255
 msgid "LEVEL"
 msgstr "LEVEL"
 
-#: gst/gst.c:257
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Senarai dipisahkan koma dari category_name:level dipasangkan untuk mengatur level spesifik untuk kategori individual. Misalnya: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Senarai dipisahkan koma dari category_name:level dipasangkan untuk mengatur "
+"level spesifik untuk kategori individual. Misalnya: GST_AUTOPLUG:5,"
+"GST_ELEMENT_*:3"
 
-#: gst/gst.c:260
 msgid "LIST"
 msgstr "SENARAI"
 
-#: gst/gst.c:262
 msgid "Disable colored debugging output"
 msgstr "Nonaktifkan keluaran awakutu berwarna"
 
-#: gst/gst.c:266
-msgid "Changes coloring mode of the debug log. Possible modes: off, on, disable, auto, unix"
-msgstr "Mengubah mode pewarnaan dari log awakutu. Mode yang mungkin: off (mati), on (nyala), disable (dinonaktifkan), auto (otomatis), unix"
+msgid ""
+"Changes coloring mode of the debug log. Possible modes: off, on, disable, "
+"auto, unix"
+msgstr ""
+"Mengubah mode pewarnaan dari log awakutu. Mode yang mungkin: off (mati), on "
+"(nyala), disable (dinonaktifkan), auto (otomatis), unix"
 
-#: gst/gst.c:270
 msgid "Disable debugging"
 msgstr "Nonaktifkan awakutu"
 
-#: gst/gst.c:274
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Mengaktifkan plugin verbose ketika memuat diagnosis"
 
-#: gst/gst.c:278
 msgid "Colon-separated paths containing plugins"
 msgstr "Alamat dipisahkan tanda titik dua berisi plugin"
 
-#: gst/gst.c:278
 msgid "PATHS"
 msgstr "ALAMAT"
 
-#: gst/gst.c:281
-msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
-msgstr "Senarai plugin dipisahkan oleh koma untuk pramuat sebagai tambahan dari senarai yang disimpan di lingkungan variabel GST_PLUGIN_PATH"
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Senarai plugin dipisahkan oleh koma untuk pramuat sebagai tambahan dari "
+"senarai yang disimpan di lingkungan variabel GST_PLUGIN_PATH"
 
-#: gst/gst.c:283
 msgid "PLUGINS"
 msgstr "PLUGIN"
 
-#: gst/gst.c:286
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Nonaktifkan penjebak galat segmentasi selama memuat plugin"
 
-#: gst/gst.c:291
 msgid "Disable updating the registry"
 msgstr "Nonaktifkan pemutakhiran registry"
 
-#: gst/gst.c:296
 msgid "Disable spawning a helper process while scanning the registry"
 msgstr "Nonaktifkan memaksa penolong proses ketika memindai registry"
 
-#: gst/gst.c:301
 msgid "GStreamer Options"
 msgstr "Opsi GStreamer"
 
-#: gst/gst.c:302
 msgid "Show GStreamer Options"
 msgstr "Tampilkan Opsi GStreamer"
 
-#: gst/gst.c:921
 msgid "Unknown option"
 msgstr "Opsi tak diketahui"
 
-#: gst/gsterror.c:130
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer menghadapi galat umum pustaka inti."
 
-#: gst/gsterror.c:132 gst/gsterror.c:174 gst/gsterror.c:198 gst/gsterror.c:240
-msgid "GStreamer developers were too lazy to assign an error code to this error."
-msgstr "Pengembang GStreamer terlalu malas untuk menulis kode galat untuk galat ini."
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr ""
+"Pengembang GStreamer terlalu malas untuk menulis kode galat untuk galat ini."
 
-#: gst/gsterror.c:135
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Galat GStreamer internal: kode belum diimplementasikan."
 
-#: gst/gsterror.c:137
-msgid "GStreamer error: state change failed and some element failed to post a proper error message with the reason for the failure."
-msgstr "Galat GStreamer: gagal mengubah kondisi dan beberapa elemen gagal untuk mengirim pesan galat yang benar dengan alasan bagi kegagalan."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
+"Galat GStreamer: gagal mengubah kondisi dan beberapa elemen gagal untuk "
+"mengirim pesan galat yang benar dengan alasan bagi kegagalan."
 
-#: gst/gsterror.c:140
 msgid "Internal GStreamer error: pad problem."
 msgstr "Galat GStreamer internal: masalah landasan."
 
-#: gst/gsterror.c:142
 msgid "Internal GStreamer error: thread problem."
 msgstr "Galat GStreamer internal: masalah benang."
 
-#: gst/gsterror.c:144
 msgid "GStreamer error: negotiation problem."
 msgstr "Galat GStreamer: masalah negosiasi."
 
-#: gst/gsterror.c:146
 msgid "Internal GStreamer error: event problem."
 msgstr "Galat GStreamer internal: masalah event."
 
-#: gst/gsterror.c:148
 msgid "Internal GStreamer error: seek problem."
 msgstr "Galat GStreamer internal: masalah pencarian."
 
-#: gst/gsterror.c:150
 msgid "Internal GStreamer error: caps problem."
 msgstr "Galat GStreamer internal: masalah huruf."
 
-#: gst/gsterror.c:152
 msgid "Internal GStreamer error: tag problem."
 msgstr "Galat GStreamer internal: masalah tag."
 
-#: gst/gsterror.c:154
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Instalasi GStreamer anda kehilangan plug-in."
 
-#: gst/gsterror.c:156
 msgid "GStreamer error: clock problem."
 msgstr "Galat GStreamer: masalah jam."
 
-#: gst/gsterror.c:158
-msgid "This application is trying to use GStreamer functionality that has been disabled."
-msgstr "Aplikasi ini mencoba untuk menggunakan fungsionalitas GStreamer yang telah dinonaktifkan."
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
+msgstr ""
+"Aplikasi ini mencoba untuk menggunakan fungsionalitas GStreamer yang telah "
+"dinonaktifkan."
 
-#: gst/gsterror.c:172
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer menghadapi galat umum pustaka pendukung."
 
-#: gst/gsterror.c:177
 msgid "Could not initialize supporting library."
 msgstr "Tak dapat menginisialisasi pustaka pendukung."
 
-#: gst/gsterror.c:179
 msgid "Could not close supporting library."
 msgstr "Tak dapat menutup pustaka pendukung."
 
-#: gst/gsterror.c:181
 msgid "Could not configure supporting library."
 msgstr "Tak dapat mengatur pustaka pendukung."
 
-#: gst/gsterror.c:183
 msgid "Encoding error."
 msgstr "Galat penyandian."
 
-#: gst/gsterror.c:196
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer menghadapi galat umum sumber daya."
 
-#: gst/gsterror.c:201
 msgid "Resource not found."
 msgstr "Sumber daya tak ditemukan."
 
-#: gst/gsterror.c:203
 msgid "Resource busy or not available."
 msgstr "Sumber daya sibuk atau tak tersedia."
 
-#: gst/gsterror.c:205
 msgid "Could not open resource for reading."
 msgstr "Tak dapat membuka sumber daya untuk dibaca."
 
-#: gst/gsterror.c:207
 msgid "Could not open resource for writing."
 msgstr "Tak dapat membuka sumber daya untuk ditulis."
 
-#: gst/gsterror.c:209
 msgid "Could not open resource for reading and writing."
 msgstr "Tak dapat membuka sumber daya untuk dibaca dan ditulis."
 
-#: gst/gsterror.c:211
 msgid "Could not close resource."
 msgstr "Tak dapat menutup sumber daya."
 
-#: gst/gsterror.c:213
 msgid "Could not read from resource."
 msgstr "Tak dapat membaca dari sumber daya."
 
-#: gst/gsterror.c:215
 msgid "Could not write to resource."
 msgstr "Tak dapat menulis ke sumber daya."
 
-#: gst/gsterror.c:217
 msgid "Could not perform seek on resource."
 msgstr "Tak dapat melakukan pencarian di sumber daya."
 
-#: gst/gsterror.c:219
 msgid "Could not synchronize on resource."
 msgstr "Tak dapat sinkronisasi di sumber daya."
 
-#: gst/gsterror.c:221
 msgid "Could not get/set settings from/on resource."
 msgstr "Tak bisa mendapatkan/mengatur pengaturan dari/di sumber daya."
 
-#: gst/gsterror.c:223
 msgid "No space left on the resource."
 msgstr "Tak ada ruang tersisa di sumber daya."
 
-#: gst/gsterror.c:225
 msgid "Not authorized to access resource."
 msgstr "Tak diizinkan untuk mengakses sumber daya."
 
-#: gst/gsterror.c:238
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer menghadapai galat arus umum."
 
-#: gst/gsterror.c:243
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr "Elemen tidak mengimplementasikan penanganan untuk arus ini. Silakan laporkan kutu."
+msgstr ""
+"Elemen tidak mengimplementasikan penanganan untuk arus ini. Silakan laporkan "
+"kutu."
 
-#: gst/gsterror.c:246
 msgid "Could not determine type of stream."
 msgstr "Tak dapat menentukan tipe arus."
 
-#: gst/gsterror.c:248
 msgid "The stream is of a different type than handled by this element."
-msgstr "Arus berasal dari tipe yang berbeda dari yang ditangani oleh elemen ini."
+msgstr ""
+"Arus berasal dari tipe yang berbeda dari yang ditangani oleh elemen ini."
 
-#: gst/gsterror.c:251
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Tidak ada codec saat ini yang dapat menangani tipe arus."
 
-#: gst/gsterror.c:253
 msgid "Could not decode stream."
 msgstr "Tak dapat mengawasandi arus."
 
-#: gst/gsterror.c:255
 msgid "Could not encode stream."
 msgstr "Tak dapat menyandi arus."
 
-#: gst/gsterror.c:257
 msgid "Could not demultiplex stream."
 msgstr "Tak dapat menyatukan arus."
 
-#: gst/gsterror.c:259
 msgid "Could not multiplex stream."
 msgstr "Tak dapat memperbanyak arus."
 
-#: gst/gsterror.c:261
 msgid "The stream is in the wrong format."
 msgstr "Arus berada dalam format yang salah."
 
-#: gst/gsterror.c:263
 msgid "The stream is encrypted and decryption is not supported."
 msgstr "Arus terenkripsi dan dekripsi tidak didukung."
 
-#: gst/gsterror.c:265
-msgid "The stream is encrypted and can't be decrypted because no suitable key has been supplied."
-msgstr "Arus terenkripsi dan tak dapat didekripsi karena tidak ada kunci yang disediakan."
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+"Arus terenkripsi dan tak dapat didekripsi karena tidak ada kunci yang "
+"disediakan."
 
-#: gst/gsterror.c:305
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Tak ada pesan galat untuk domain %s."
 
-#: gst/gsterror.c:313
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Tak ada pesan galat standar untuk domain %s dan kode %d."
 
-#: gst/gstpipeline.c:549
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Jam terpilih tak dapat digunakan dalam baris pipa."
 
-#: gst/gstregistry.c:1709
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Galat menulis tembolok registry ke %s: %s"
 
-#: gst/gsttaglist.c:107
 msgid "title"
 msgstr "judul"
 
-#: gst/gsttaglist.c:107
 msgid "commonly used title"
 msgstr "judul yang umum digunakan"
 
-#: gst/gsttaglist.c:110
 msgid "title sortname"
 msgstr "nama singkat judul"
 
-#: gst/gsttaglist.c:110
 msgid "commonly used title for sorting purposes"
 msgstr "judul yang umum digunakan untuk kepentingan pengurutan"
 
-#: gst/gsttaglist.c:113
 msgid "artist"
 msgstr "artis"
 
-#: gst/gsttaglist.c:114
 msgid "person(s) responsible for the recording"
 msgstr "orang yang bertanggungjawab terhadap rekaman"
 
-#: gst/gsttaglist.c:118
 msgid "artist sortname"
 msgstr "nama singkat artis"
 
-#: gst/gsttaglist.c:119
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr "orang yang bertanggungjawab terhadap rekaman untuk kepentingan pengurutan"
+msgstr ""
+"orang yang bertanggungjawab terhadap rekaman untuk kepentingan pengurutan"
 
-#: gst/gsttaglist.c:122
 msgid "album"
 msgstr "album"
 
-#: gst/gsttaglist.c:123
 msgid "album containing this data"
 msgstr "album yang berisi data ini"
 
-#: gst/gsttaglist.c:126
 msgid "album sortname"
 msgstr "nama singkat album"
 
-#: gst/gsttaglist.c:127
 msgid "album containing this data for sorting purposes"
 msgstr "album yang berisi data ini untuk kepentingan pengurutan"
 
-#: gst/gsttaglist.c:130
 msgid "album artist"
 msgstr "album artis"
 
-#: gst/gsttaglist.c:131
 msgid "The artist of the entire album, as it should be displayed"
 msgstr "Artis untuk semua album, seperti yang seharusnya ditampilkan"
 
-#: gst/gsttaglist.c:135
 msgid "album artist sortname"
 msgstr "album artis nama urut"
 
-#: gst/gsttaglist.c:136
 msgid "The artist of the entire album, as it should be sorted"
 msgstr "Artis untuk semua album, seperti yang seharusnya diurutkan"
 
-#: gst/gsttaglist.c:138
 msgid "date"
 msgstr "tanggal"
 
-#: gst/gsttaglist.c:138
 msgid "date the data was created (as a GDate structure)"
 msgstr "tanggal data dibuat (menurut struktur GDate)"
 
-#: gst/gsttaglist.c:140
 msgid "datetime"
 msgstr "tanggalwaktu"
 
-#: gst/gsttaglist.c:141
 msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "tanggal dan waktu data dibuat (menurut struktur GDateTime)"
 
-#: gst/gsttaglist.c:145
 msgid "genre"
 msgstr "genre"
 
-#: gst/gsttaglist.c:146
 msgid "genre this data belongs to"
 msgstr "genre asal data ini"
 
-#: gst/gsttaglist.c:149
 msgid "comment"
 msgstr "komentar"
 
-#: gst/gsttaglist.c:150
 msgid "free text commenting the data"
 msgstr "teks bebas untuk mengomentari data"
 
-#: gst/gsttaglist.c:153
 msgid "extended comment"
 msgstr "komentar diperpanjang"
 
-#: gst/gsttaglist.c:154
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr "teks bebas untuk mengomentari data dalam bentuk kunci=nilai atau kunci[en]=komentar"
+msgstr ""
+"teks bebas untuk mengomentari data dalam bentuk kunci=nilai atau "
+"kunci[en]=komentar"
 
-#: gst/gsttaglist.c:158
 msgid "track number"
 msgstr "nomor jalur"
 
-#: gst/gsttaglist.c:159
 msgid "track number inside a collection"
 msgstr "nomor jalur di dalam koleksi"
 
-#: gst/gsttaglist.c:162
 msgid "track count"
 msgstr "hitungan jalur"
 
-#: gst/gsttaglist.c:163
 msgid "count of tracks inside collection this track belongs to"
 msgstr "hitungan jalur di dalam koleksi asal jalur ini"
 
-#: gst/gsttaglist.c:167
 msgid "disc number"
 msgstr "nomor cakram"
 
-#: gst/gsttaglist.c:168
 msgid "disc number inside a collection"
 msgstr "nomor cakram di dalam koleksi"
 
-#: gst/gsttaglist.c:171
 msgid "disc count"
 msgstr "hitungan cakram"
 
-#: gst/gsttaglist.c:172
 msgid "count of discs inside collection this disc belongs to"
 msgstr "hitungan cakram di dalam koleksi asal cakram ini"
 
-#: gst/gsttaglist.c:176
 msgid "location"
 msgstr "lokasi"
 
-#: gst/gsttaglist.c:176
-msgid "Origin of media as a URI (location, where the original of the file or stream is hosted)"
-msgstr "Asal media dalam bentuk URI (lokasi, dimana berkas asal atau arus ditempatkan)"
+msgid ""
+"Origin of media as a URI (location, where the original of the file or stream "
+"is hosted)"
+msgstr ""
+"Asal media dalam bentuk URI (lokasi, dimana berkas asal atau arus "
+"ditempatkan)"
 
-#: gst/gsttaglist.c:181
 msgid "homepage"
 msgstr "laman"
 
-#: gst/gsttaglist.c:182
 msgid "Homepage for this media (i.e. artist or movie homepage)"
 msgstr "Laman untuk media ini (misalnya laman artis atau film)"
 
-#: gst/gsttaglist.c:185
 msgid "description"
 msgstr "keterangan"
 
-#: gst/gsttaglist.c:186
 msgid "short text describing the content of the data"
 msgstr "teks pendek yang menerangkan isi data"
 
-#: gst/gsttaglist.c:189
 msgid "version"
 msgstr "versi"
 
-#: gst/gsttaglist.c:189
 msgid "version of this data"
 msgstr "versi data ini"
 
-#: gst/gsttaglist.c:191
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttaglist.c:193
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "International Standard Recording Code - lihat http://www.ifpi.org/isrc/"
+msgstr ""
+"International Standard Recording Code - lihat http://www.ifpi.org/isrc/"
 
-#: gst/gsttaglist.c:197
 msgid "organization"
 msgstr "organisasi"
 
-#: gst/gsttaglist.c:200
 msgid "copyright"
 msgstr "hak cipta"
 
-#: gst/gsttaglist.c:200
 msgid "copyright notice of the data"
 msgstr "keterangan hak cipta data"
 
-#: gst/gsttaglist.c:202
 msgid "copyright uri"
 msgstr "uri hak cipta"
 
-#: gst/gsttaglist.c:203
 msgid "URI to the copyright notice of the data"
 msgstr "URI ke keterangan hak cipta data"
 
-#: gst/gsttaglist.c:205
 msgid "encoded by"
 msgstr "disandikan oleh"
 
-#: gst/gsttaglist.c:205
 msgid "name of the encoding person or organization"
 msgstr "nama penyandian orang atau organisasi"
 
-#: gst/gsttaglist.c:209
 msgid "contact"
 msgstr "kontak"
 
-#: gst/gsttaglist.c:209
 msgid "contact information"
 msgstr "informasi kontak"
 
-#: gst/gsttaglist.c:211
 msgid "license"
 msgstr "lisensi"
 
-#: gst/gsttaglist.c:211
 msgid "license of data"
 msgstr "lisensi data"
 
-#: gst/gsttaglist.c:213
 msgid "license uri"
 msgstr "uri lisensi"
 
-#: gst/gsttaglist.c:214
 msgid "URI to the license of the data"
 msgstr "URI ke lisensi data"
 
-#: gst/gsttaglist.c:217
 msgid "performer"
 msgstr "penampil"
 
-#: gst/gsttaglist.c:218
 msgid "person(s) performing"
 msgstr "orang yang tampil"
 
-#: gst/gsttaglist.c:221
 msgid "composer"
 msgstr "penyusun"
 
-#: gst/gsttaglist.c:222
 msgid "person(s) who composed the recording"
 msgstr "orang yang menyusun perekaman"
 
-#: gst/gsttaglist.c:226
 msgid "conductor"
 msgstr "konduktor"
 
-#: gst/gsttaglist.c:227
 msgid "conductor/performer refinement"
 msgstr "pemurnian konduktor/penampil"
 
-#: gst/gsttaglist.c:230
 msgid "duration"
 msgstr "durasi"
 
-#: gst/gsttaglist.c:230
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "panjang dalam unit waktu GStreamer (nanodetik)"
 
-#: gst/gsttaglist.c:233
 msgid "codec"
 msgstr "codec"
 
-#: gst/gsttaglist.c:234
 msgid "codec the data is stored in"
 msgstr "codec data tersimpan"
 
-#: gst/gsttaglist.c:237
 msgid "video codec"
 msgstr "codec video"
 
-#: gst/gsttaglist.c:237
 msgid "codec the video data is stored in"
 msgstr "codec data video tersimpan"
 
-#: gst/gsttaglist.c:240
 msgid "audio codec"
 msgstr "codec audio"
 
-#: gst/gsttaglist.c:240
 msgid "codec the audio data is stored in"
 msgstr "codec data audio tersimpan"
 
-#: gst/gsttaglist.c:243
 msgid "subtitle codec"
 msgstr "codec subjudul"
 
-#: gst/gsttaglist.c:243
 msgid "codec the subtitle data is stored in"
 msgstr "codec data subjudul tersimpan di"
 
-#: gst/gsttaglist.c:245
 msgid "container format"
 msgstr "format pembatasan"
 
-#: gst/gsttaglist.c:246
 msgid "container format the data is stored in"
 msgstr "format pembatasan data tersimpan"
 
-#: gst/gsttaglist.c:248
 msgid "bitrate"
 msgstr "bitrasi"
 
-#: gst/gsttaglist.c:248
 msgid "exact or average bitrate in bits/s"
 msgstr "bitrasi tepat atau rata-rata dalam bita/detik"
 
-#: gst/gsttaglist.c:250
 msgid "nominal bitrate"
 msgstr "bitrasi normal"
 
-#: gst/gsttaglist.c:250
 msgid "nominal bitrate in bits/s"
 msgstr "bitrasi nominal dalam bita/detik"
 
-#: gst/gsttaglist.c:252
 msgid "minimum bitrate"
 msgstr "bitrasi minimum"
 
-#: gst/gsttaglist.c:252
 msgid "minimum bitrate in bits/s"
 msgstr "bitrasi minimum dalam bita/detik"
 
-#: gst/gsttaglist.c:254
 msgid "maximum bitrate"
 msgstr "bitrasi maksimum"
 
-#: gst/gsttaglist.c:254
 msgid "maximum bitrate in bits/s"
 msgstr "bitrasi maksimum dalam bita/detik"
 
-#: gst/gsttaglist.c:257
 msgid "encoder"
 msgstr "penyandi"
 
-#: gst/gsttaglist.c:257
 msgid "encoder used to encode this stream"
 msgstr "penyandi yang digunakan untuk menyandi arus ini"
 
-#: gst/gsttaglist.c:260
 msgid "encoder version"
 msgstr "versi penyandi"
 
-#: gst/gsttaglist.c:261
 msgid "version of the encoder used to encode this stream"
 msgstr "versi penyandi yang digunakan untuk menyandi arus ini"
 
-#: gst/gsttaglist.c:263
 msgid "serial"
 msgstr "seri"
 
-#: gst/gsttaglist.c:263
 msgid "serial number of track"
 msgstr "nomor seri jalur"
 
-#: gst/gsttaglist.c:265
 msgid "replaygain track gain"
 msgstr "peraihan jalur peraihan putar ulang"
 
-#: gst/gsttaglist.c:265
 msgid "track gain in db"
 msgstr "peraihan jalur dalam db"
 
-#: gst/gsttaglist.c:267
 msgid "replaygain track peak"
 msgstr "puncak peraihan putar ulang jalur"
 
-#: gst/gsttaglist.c:267
 msgid "peak of the track"
 msgstr "puncak jalur"
 
-#: gst/gsttaglist.c:269
 msgid "replaygain album gain"
 msgstr "peraihan album peraihan putar ulang"
 
-#: gst/gsttaglist.c:269
 msgid "album gain in db"
 msgstr "peraihan album dalam db"
 
-#: gst/gsttaglist.c:271
 msgid "replaygain album peak"
 msgstr "puncak peraihan putar ulang album"
 
-#: gst/gsttaglist.c:271
 msgid "peak of the album"
 msgstr "puncak album"
 
-#: gst/gsttaglist.c:273
 msgid "replaygain reference level"
 msgstr "level referensi peraihan putar ulang"
 
-#: gst/gsttaglist.c:274
 msgid "reference level of track and album gain values"
 msgstr "level referensi nilai peraihan jalur dan album"
 
-#: gst/gsttaglist.c:276
 msgid "language code"
 msgstr "kode bahasa"
 
-#: gst/gsttaglist.c:277
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
 msgstr "kode bahasa arus ini, menganut ke ISO-639-1 atau ISO-639-2"
 
-#: gst/gsttaglist.c:280
 msgid "language name"
 msgstr "nama bahasa"
 
-#: gst/gsttaglist.c:281
 msgid "freeform name of the language this stream is in"
 msgstr "nama bebas dari bahasa tempat arus ini berada"
 
-#: gst/gsttaglist.c:283
 msgid "image"
 msgstr "gambar"
 
-#: gst/gsttaglist.c:283
 msgid "image related to this stream"
 msgstr "gambar yang berhubungan dengan arus ini"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
-#: gst/gsttaglist.c:287
 msgid "preview image"
 msgstr "gambar pratayang"
 
-#: gst/gsttaglist.c:287
 msgid "preview image related to this stream"
 msgstr "gambar pratayang yang berhubungan dengan arus ini"
 
-#: gst/gsttaglist.c:289
 msgid "attachment"
 msgstr "lampiran"
 
-#: gst/gsttaglist.c:289
 msgid "file attached to this stream"
 msgstr "berkas yang dilampirkan dalam arus ini"
 
-#: gst/gsttaglist.c:292
 msgid "beats per minute"
 msgstr "denyut per menit"
 
-#: gst/gsttaglist.c:293
 msgid "number of beats per minute in audio"
 msgstr "jumlah denyut per menit dalam audio"
 
-#: gst/gsttaglist.c:295
 msgid "keywords"
 msgstr "kata kunci"
 
-#: gst/gsttaglist.c:295
 msgid "comma separated keywords describing the content"
 msgstr "kata kunci yang dipisahkan koma menerangkan isi data"
 
-#: gst/gsttaglist.c:298
 msgid "geo location name"
 msgstr "nama lokasi geografis"
 
-#: gst/gsttaglist.c:299
-msgid "human readable descriptive location of where the media has been recorded or produced"
-msgstr "lokasi deskriptif dapat dibaca manusia dimana media telah direkam atau dihasilkan"
+msgid ""
+"human readable descriptive location of where the media has been recorded or "
+"produced"
+msgstr ""
+"lokasi deskriptif dapat dibaca manusia dimana media telah direkam atau "
+"dihasilkan"
 
-#: gst/gsttaglist.c:302
 msgid "geo location latitude"
 msgstr "lintang lokasi geografis"
 
-#: gst/gsttaglist.c:303
-msgid "geo latitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the equator, negative values for southern latitudes)"
-msgstr "lokasi lintang geografis tempat media direkam atau dihasilkan dalam derajat menurut WGS84 (nol pada khatulistiwa, nilai negatif untuk lintang selatan)"
+msgid ""
+"geo latitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the equator, negative values for "
+"southern latitudes)"
+msgstr ""
+"lokasi lintang geografis tempat media direkam atau dihasilkan dalam derajat "
+"menurut WGS84 (nol pada khatulistiwa, nilai negatif untuk lintang selatan)"
 
-#: gst/gsttaglist.c:307
 msgid "geo location longitude"
 msgstr "bujur lokasi geografis"
 
-#: gst/gsttaglist.c:308
-msgid "geo longitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  negative values for western longitudes)"
-msgstr "lokasi bujur geografis tempat media direkam atau dihasilkan dalam derajat menurut WGS84 (nol pada meridian utama di Greenwich/UK, nilai negatif untuk bujur timur)"
+msgid ""
+"geo longitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
+"negative values for western longitudes)"
+msgstr ""
+"lokasi bujur geografis tempat media direkam atau dihasilkan dalam derajat "
+"menurut WGS84 (nol pada meridian utama di Greenwich/UK, nilai negatif untuk "
+"bujur timur)"
 
-#: gst/gsttaglist.c:312
 msgid "geo location elevation"
 msgstr "ketinggian lokasi geografis"
 
-#: gst/gsttaglist.c:313
-msgid "geo elevation of where the media has been recorded or produced in meters according to WGS84 (zero is average sea level)"
-msgstr "ketinggian geografis tempat media direkam atau dihasilkan dalam meter menurut WGS84 (nol adalah permukaan laut rata-rata)"
+msgid ""
+"geo elevation of where the media has been recorded or produced in meters "
+"according to WGS84 (zero is average sea level)"
+msgstr ""
+"ketinggian geografis tempat media direkam atau dihasilkan dalam meter "
+"menurut WGS84 (nol adalah permukaan laut rata-rata)"
 
-#: gst/gsttaglist.c:316
 msgid "geo location country"
 msgstr "negara lokasi geografis"
 
-#: gst/gsttaglist.c:317
 msgid "country (english name) where the media has been recorded or produced"
-msgstr "negara (dalam bahasa Inggris) tempat media telah direkam atau dihasilkan"
+msgstr ""
+"negara (dalam bahasa Inggris) tempat media telah direkam atau dihasilkan"
 
-#: gst/gsttaglist.c:320
 msgid "geo location city"
 msgstr "kota lokasi geografis"
 
-#: gst/gsttaglist.c:321
 msgid "city (english name) where the media has been recorded or produced"
 msgstr "kota (dalam bahasa Inggris) tempat media telah direkam atau dihasilkan"
 
-#: gst/gsttaglist.c:324
 msgid "geo location sublocation"
 msgstr "sublokasi lokasi geografis"
 
-#: gst/gsttaglist.c:325
-msgid "a location within a city where the media has been produced or created (e.g. the neighborhood)"
-msgstr "lokasi di dalam kota tempat media dihasilkan atau dibuat (mis. lingkungan)"
+msgid ""
+"a location within a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr ""
+"lokasi di dalam kota tempat media dihasilkan atau dibuat (mis. lingkungan)"
 
-#: gst/gsttaglist.c:328
 msgid "geo location horizontal error"
 msgstr "galat horizontal lokasi geografis"
 
-#: gst/gsttaglist.c:329
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr "galat yang diharapkan dari pengukuran posisi horizontal (dalam meter)"
 
-#: gst/gsttaglist.c:332
 msgid "geo location movement speed"
 msgstr "kecepatan gerak lokasi geografis"
 
-#: gst/gsttaglist.c:333
-msgid "movement speed of the capturing device while performing the capture in m/s"
-msgstr "kecepatan gerak divais penangkap ketika melakukan penangkapan dalam m/d"
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr ""
+"kecepatan gerak divais penangkap ketika melakukan penangkapan dalam m/d"
 
-#: gst/gsttaglist.c:336
 msgid "geo location movement direction"
 msgstr "arah gerak lokasi geografis"
 
-#: gst/gsttaglist.c:337
-msgid "indicates the movement direction of the device performing the capture of a media. It is represented as degrees in floating point representation, 0 means the geographic north, and increases clockwise"
-msgstr "mengindikasikan arah gerak divais yang melakukan penangkapan media. Arah direpresentasikan sebagai derajat dalam representasi titik mengambang, 0 berarti utara geografis, dan meningkat searah jarum jam"
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+"mengindikasikan arah gerak divais yang melakukan penangkapan media. Arah "
+"direpresentasikan sebagai derajat dalam representasi titik mengambang, 0 "
+"berarti utara geografis, dan meningkat searah jarum jam"
 
-#: gst/gsttaglist.c:342
 msgid "geo location capture direction"
 msgstr "arah penangkapan lokasi geografis"
 
-#: gst/gsttaglist.c:343
-msgid "indicates the direction the device is pointing to when capturing  a media. It is represented as degrees in floating point  representation, 0 means the geographic north, and increases clockwise"
-msgstr "mengindikasikan arah divais menunjuk ketika menangkap media. Arah direpresentasikan sebagai derajat dalam representasi titik mengambang, 0 berarti utara geografis, dan meningkat searah jarum jam"
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+"mengindikasikan arah divais menunjuk ketika menangkap media. Arah "
+"direpresentasikan sebagai derajat dalam representasi titik mengambang, 0 "
+"berarti utara geografis, dan meningkat searah jarum jam"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
-#: gst/gsttaglist.c:349
 msgid "show name"
 msgstr "tampilkan nama"
 
-#: gst/gsttaglist.c:350
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr "Nama dari acara tv/podcast/serial media berasal"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
-#: gst/gsttaglist.c:355
 msgid "show sortname"
 msgstr "tampilkan nama singkat"
 
-#: gst/gsttaglist.c:356
-msgid "Name of the tv/podcast/series show the media is from, for sorting purposes"
-msgstr "Nama dari acara tv/podcast/serial media berasal, untuk tujuan pengurutan"
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+"Nama dari acara tv/podcast/serial media berasal, untuk tujuan pengurutan"
 
-#: gst/gsttaglist.c:359
 msgid "episode number"
 msgstr "jumlah episode"
 
-#: gst/gsttaglist.c:360
 msgid "The episode number in the season the media is part of"
 msgstr "Jumlah episode dalam semusim tempat media menjadi bagiannya"
 
-#: gst/gsttaglist.c:363
 msgid "season number"
 msgstr "jumlah musim"
 
-#: gst/gsttaglist.c:364
 msgid "The season number of the show the media is part of"
 msgstr "Jumlah musim dari acara tempat media menjadi bagiannya"
 
-#: gst/gsttaglist.c:367
 msgid "lyrics"
 msgstr "lirik"
 
-#: gst/gsttaglist.c:367
 msgid "The lyrics of the media, commonly used for songs"
 msgstr "Lirik dari media, umumnya digunakan untuk lagu"
 
-#: gst/gsttaglist.c:370
 msgid "composer sortname"
 msgstr "nama singkat komposer"
 
-#: gst/gsttaglist.c:371
 msgid "person(s) who composed the recording, for sorting purposes"
 msgstr "orang yang mengomposisi rekaman, untuk kepentingan pengurutan"
 
-#: gst/gsttaglist.c:373
 msgid "grouping"
 msgstr "pengelompokkan"
 
-#: gst/gsttaglist.c:374
-msgid "Groups related media that spans multiple tracks, like the different pieces of a concerto. It is a higher level than a track, but lower than an album"
-msgstr "Grup terkait media yang meliputi banyak jalur, seperti bagian yang berbeda dari sebuah konser. Ini adalah level yang lebih tinggi dari jalur, tapi lebih rendah dari album"
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
+"Grup terkait media yang meliputi banyak jalur, seperti bagian yang berbeda "
+"dari sebuah konser. Ini adalah level yang lebih tinggi dari jalur, tapi "
+"lebih rendah dari album"
 
-#: gst/gsttaglist.c:378
 msgid "user rating"
 msgstr "peringkat pengguna"
 
-#: gst/gsttaglist.c:379
-msgid "Rating attributed by a user. The higher the rank, the more the user likes this media"
-msgstr "Peringkat diatribusi oleh pengguna. Makin tinggi peringkat, makin suka pengguna terhadap media ini"
+msgid ""
+"Rating attributed by a user. The higher the rank, the more the user likes "
+"this media"
+msgstr ""
+"Peringkat diatribusi oleh pengguna. Makin tinggi peringkat, makin suka "
+"pengguna terhadap media ini"
 
-#: gst/gsttaglist.c:382
 msgid "device manufacturer"
 msgstr "manufaktur divais"
 
-#: gst/gsttaglist.c:383
 msgid "Manufacturer of the device used to create this media"
 msgstr "Manufaktur divais yang digunakan untuk menangkap media"
 
-#: gst/gsttaglist.c:385
 msgid "device model"
 msgstr "model divais"
 
-#: gst/gsttaglist.c:386
 msgid "Model of the device used to create this media"
 msgstr "Model divais yang digunakan untuk membuat media ini"
 
-#: gst/gsttaglist.c:388
 msgid "application name"
 msgstr "nama aplikasi"
 
-#: gst/gsttaglist.c:389
 msgid "Application used to create the media"
 msgstr "Aplikasi yang digunakan untuk membuat media"
 
-#: gst/gsttaglist.c:391
 msgid "application data"
 msgstr "data aplikasi"
 
-#: gst/gsttaglist.c:392
 msgid "Arbitrary application data to be serialized into the media"
 msgstr "Data aplikasi wajib yang akan diurutkan dalam media"
 
-#: gst/gsttaglist.c:394
 msgid "image orientation"
 msgstr "orientasi gambar"
 
-#: gst/gsttaglist.c:395
 msgid "How the image should be rotated or flipped before display"
 msgstr "Bagaimana gambar harus diputar atau dibalik sebelum ditampilkan"
 
-#: gst/gsttaglist.c:398
 msgid "publisher"
 msgstr "penerbit"
 
-#: gst/gsttaglist.c:399
 msgid "Name of the label or publisher"
 msgstr "Nama label atau penerbit"
 
-#: gst/gsttaglist.c:402
 msgid "interpreted-by"
 msgstr "diinterpretasi-oleh"
 
-#: gst/gsttaglist.c:403
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr "Informasi tentang orang di belakang suatu remix dan interpretasi yang serupa"
+msgstr ""
+"Informasi tentang orang di belakang suatu remix dan interpretasi yang serupa"
 
-#: gst/gsttaglist.c:407
 msgid "midi-base-note"
 msgstr "midi-base-note"
 
-#: gst/gsttaglist.c:407
 msgid "Midi note number of the audio track."
 msgstr "Nomor catatan midi dari jalur audio."
 
-#: gst/gsttaglist.c:410
 msgid "private-data"
 msgstr "data-privat"
 
-#: gst/gsttaglist.c:410
 msgid "Private data"
 msgstr "Data privat"
 
-#: gst/gsttaglist.c:450
 msgid ", "
 msgstr ", "
 
-#: gst/gsturi.c:655
 #, c-format
 msgid "No URI handler for the %s protocol found"
 msgstr "Tak ditemukan penangan URI bagi protokol %s"
 
-#: gst/gsturi.c:830
 #, c-format
 msgid "URI scheme '%s' not supported"
 msgstr "Skema URI '%s' tak didukung"
 
-#: gst/gstutils.c:2485 tools/gst-launch.c:325
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "GALAT: dari elemen %s: %s\n"
 
-#: gst/gstutils.c:2487 tools/gst-launch.c:327 tools/gst-launch.c:671
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -1008,388 +854,314 @@ msgstr ""
 "Info awakutu tambahan:\n"
 "%s\n"
 
-#: gst/parse/grammar.y:216
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "tautan tidak mempunyai sumber [sink=%s@%p]"
 
-#: gst/parse/grammar.y:221
 #, c-format
 msgid "link has no sink [source=%s@%p]"
 msgstr "tautan mempunyai buangan [source=%s@%p]"
 
-#: gst/parse/grammar.y:412
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "tak ada properti \"%s\" di elemen \"%s\""
 
-#: gst/parse/grammar.y:453
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "tak dapat mengatur properti \"%s\" di elemen \"%s\" ke \"%s\""
 
-#: gst/parse/grammar.y:503
 msgid "Delayed linking failed."
 msgstr "Jeda penautan gagal."
 
-#: gst/parse/grammar.y:641
 #, c-format
 msgid "could not link %s to %s"
 msgstr "tak dapat menautkan %s ke %s"
 
-#: gst/parse/grammar.y:716
 #, c-format
 msgid "no element \"%s\""
 msgstr "tak ada elemen \"%s\""
 
-#: gst/parse/grammar.y:777
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
 msgstr "referensi tak diharapkan \"%s\" - mengabaikan"
 
-#: gst/parse/grammar.y:783
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
 msgstr "referensi pad tak diharapkan \"%s\" - mengabaikan"
 
-#: gst/parse/grammar.y:822
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "tak dapat menguraikan huruf \"%s\""
 
-#: gst/parse/grammar.y:850
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "tak ada elemen buang untuk URI \"%s\""
 
-#: gst/parse/grammar.y:869
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "tak ada elemen sumber untuk URI \"%s\""
 
-#: gst/parse/grammar.y:959
 msgid "syntax error"
 msgstr "galat sintaksis"
 
-#: gst/parse/grammar.y:973
 msgid "bin"
 msgstr "tempat sampah"
 
-#: gst/parse/grammar.y:982
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "menentukan kotak sampah kosong \"%s\", tak diizinkan"
 
-#: gst/parse/grammar.y:992
 #, c-format
 msgid "no bin \"%s\", unpacking elements"
 msgstr "tak ada tempat sampah \"%s\", membongkar elemen"
 
-#: gst/parse/grammar.y:1023
 msgid "empty pipeline not allowed"
 msgstr "baris pipa kosong tak diizinkan"
 
-#: libs/gst/base/gstbasesink.c:2833
 msgid "A lot of buffers are being dropped."
 msgstr "Banyak penyangga yang didrop."
 
-#: libs/gst/base/gstbasesink.c:3332
 msgid "Internal data flow problem."
 msgstr "Masalah aliran data internal."
 
-#: libs/gst/base/gstbasesink.c:4043 libs/gst/base/gstbasesrc.c:2958
 msgid "Internal data flow error."
 msgstr "Galat aliran data internal."
 
-#: libs/gst/base/gstbasesrc.c:2550
 msgid "Internal clock error."
 msgstr "Galat jam internal."
 
-#: libs/gst/base/gstbasesrc.c:2578
 msgid "Failed to map buffer."
 msgstr "Gagal memetakan penyangga."
 
-#: plugins/elements/gstcapsfilter.c:128
 msgid "Filter caps"
 msgstr "Filter huruf"
 
-#: plugins/elements/gstcapsfilter.c:129
-msgid "Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object."
-msgstr "Larang kemampuan yang mungkin diizinkan (KOSONG berarti APAPUN). Pengaturan properti ini bersumber pada objek GstCaps yang disediakan."
+msgid ""
+"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
+"property takes a reference to the supplied GstCaps object."
+msgstr ""
+"Larang kemampuan yang mungkin diizinkan (KOSONG berarti APAPUN). Pengaturan "
+"properti ini bersumber pada objek GstCaps yang disediakan."
 
-#: plugins/elements/gstcapsfilter.c:136
 msgid "Caps Change Mode"
 msgstr "Mode Ubah Huruf"
 
-#: plugins/elements/gstcapsfilter.c:137
 msgid "Filter caps change behaviour"
 msgstr "Filter perilaku ubah huruf"
 
-#: plugins/elements/gstdownloadbuffer.c:920 plugins/elements/gstqueue2.c:1710
 msgid "No Temp directory specified."
 msgstr "Tak ada direktori Temp yang ditentukan."
 
-#: plugins/elements/gstdownloadbuffer.c:926 plugins/elements/gstqueue2.c:1716
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Tak bisa membuat berkas temp \"%s\"."
 
-#: plugins/elements/gstdownloadbuffer.c:934 plugins/elements/gstfilesrc.c:534
-#: plugins/elements/gstqueue2.c:1724
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Tak dapat membuka berkas \"%s\" untuk dibaca."
 
-#: plugins/elements/gstdownloadbuffer.c:1258 plugins/elements/gstqueue2.c:2144
 msgid "Error while writing to download file."
 msgstr "Galat ketika menulis ke berkas unduhan."
 
-#: plugins/elements/gstfilesink.c:431
 msgid "No file name specified for writing."
 msgstr "Tak ada nama berkas yang ditentukan untuk ditulis."
 
-#: plugins/elements/gstfilesink.c:437
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Tak dapat membuka berkas \"%s\" untuk ditulis."
 
-#: plugins/elements/gstfilesink.c:449
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Galat menulis berkas \"%s\"."
 
-#: plugins/elements/gstfilesink.c:618
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Galat ketika mencari di berkas \"%s\"."
 
-#: plugins/elements/gstfilesink.c:626 plugins/elements/gstfilesink.c:703
-#: plugins/elements/gstfilesink.c:738
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Galat ketika menulis ke berkas \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:522
 msgid "No file name specified for reading."
 msgstr "Tak ada nama yang ditentukan untuk dibaca."
 
-#: plugins/elements/gstfilesrc.c:543
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Tak bisa mendapatkan info di \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:549
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" adalah direktori."
 
-#: plugins/elements/gstfilesrc.c:555
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Berkas \"%s\" adalah soket."
 
-#: plugins/elements/gstidentity.c:659
 msgid "Failed after iterations as requested."
 msgstr "Gagal setelah pengulangan seperti yang diminta."
 
-#: plugins/elements/gsttypefindelement.c:252
 msgid "caps"
 msgstr "huruf"
 
-#: plugins/elements/gsttypefindelement.c:253
 msgid "detected capabilities in stream"
 msgstr "mendeteksi kemampuan dalam arus"
 
-#: plugins/elements/gsttypefindelement.c:256
 msgid "minimum"
 msgstr "minimum"
 
-#: plugins/elements/gsttypefindelement.c:261
 msgid "force caps"
 msgstr "paksa huruf"
 
-#: plugins/elements/gsttypefindelement.c:262
 msgid "force caps without doing a typefind"
 msgstr "paksa huruf tanpa melakukan pencarian tipe"
 
-#: plugins/elements/gsttypefindelement.c:982
-#: plugins/elements/gsttypefindelement.c:1004
 msgid "Stream doesn't contain enough data."
 msgstr "Arus tidak berisi cukup data."
 
-#: plugins/elements/gsttypefindelement.c:1124
 msgid "Stream contains no data."
 msgstr "Arus tidak berisi data."
 
-#: tools/gst-inspect.c:195
 msgid "Implemented Interfaces:\n"
 msgstr "Antarmuka Terimplementasi:\n"
 
-#: tools/gst-inspect.c:281
 msgid "readable"
 msgstr "dapat dibaca"
 
-#: tools/gst-inspect.c:290
 msgid "writable"
 msgstr "dapat ditulis"
 
-#: tools/gst-inspect.c:294
 msgid "deprecated"
 msgstr "usang"
 
-#: tools/gst-inspect.c:298
 msgid "controllable"
 msgstr "dapat dikendalikan"
 
-#: tools/gst-inspect.c:302
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "dapat diubah dalam kondisi NULL, READY, PAUSED atau PLAYING"
 
-#: tools/gst-inspect.c:304
 msgid "changeable only in NULL, READY or PAUSED state"
 msgstr "hanya dapat diubah dalam kondisi NULL, READY, atau PAUSED"
 
-#: tools/gst-inspect.c:306
 msgid "changeable only in NULL or READY state"
 msgstr "hanya dapat diubah dalam kondisi NULL atau READY"
 
-#: tools/gst-inspect.c:909
 msgid "Blacklisted files:"
 msgstr "Berkas yang dilarang:"
 
-#: tools/gst-inspect.c:921 tools/gst-inspect.c:1010
 msgid "Total count: "
 msgstr "Jumlah total: "
 
-#: tools/gst-inspect.c:922
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
 msgstr[0] "%d berkas terlarang"
 
-#: tools/gst-inspect.c:1011
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d plugin"
 
-#: tools/gst-inspect.c:1014
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
 msgstr[0] "%d entri terlarang"
 
-#: tools/gst-inspect.c:1019
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d fitur"
 
-#: tools/gst-inspect.c:1468
 msgid "Print all elements"
 msgstr "Cetak semua elemen"
 
-#: tools/gst-inspect.c:1470
 msgid "Print list of blacklisted files"
 msgstr "Cetak senarai dari berkas yang dilarang"
 
-#: tools/gst-inspect.c:1472
 msgid ""
-"Print a machine-parsable list of features the specified plugin or all plugins provide.\n"
-"                                       Useful in connection with external automatic plugin installation mechanisms"
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
 msgstr ""
-"Cetak senarai dapat dibaca mesin dari fitur plugin yang ditentukan atau semua plugin yang disediakan.\n"
-"                                       Berguna dalam koneksi dengan plugin otomatis eksternal dalam mekanisme instalasi"
+"Cetak senarai dapat dibaca mesin dari fitur plugin yang ditentukan atau "
+"semua plugin yang disediakan.\n"
+"                                       Berguna dalam koneksi dengan plugin "
+"otomatis eksternal dalam mekanisme instalasi"
 
-#: tools/gst-inspect.c:1477
 msgid "List the plugin contents"
 msgstr "Tampilkan isi plugin"
 
-#: tools/gst-inspect.c:1479
 msgid "Check if the specified element or plugin exists"
 msgstr "Klik bila elemen atau plugin yang dinyatakan ada"
 
-#: tools/gst-inspect.c:1482
-msgid "When checking if an element or plugin exists, also check that its version is at least the version specified"
-msgstr "Ketika memeriksa apakah suatu elemen atau plugin ada, juga periksa versinya paling tidak adalah versi yang dinyatakan"
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
+"Ketika memeriksa apakah suatu elemen atau plugin ada, juga periksa versinya "
+"paling tidak adalah versi yang dinyatakan"
 
-#: tools/gst-inspect.c:1486
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr "Cetak skema URI yang didukung, dengan elemen yang mengimplementasikannya"
+msgstr ""
+"Cetak skema URI yang didukung, dengan elemen yang mengimplementasikannya"
 
-#: tools/gst-inspect.c:1634
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Tak dapat membuat berkas plugin: %s\n"
 
-#: tools/gst-inspect.c:1639
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Tak ada elemen atau plugin '%s'\n"
 
-#: tools/gst-launch.c:252
 msgid "Index statistics"
 msgstr "Statistik indeks"
 
-#: tools/gst-launch.c:552
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Mendapat pesan #%u dari elemen \"%s\" (%s): "
 
-#: tools/gst-launch.c:556
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
 msgstr "Mendapat pesan #%u dari bantalan \"%s:%s\" (%s): "
 
-#: tools/gst-launch.c:560
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
 msgstr "Mendapat pesan #%u dari objek \"%s\" (%s): "
 
-#: tools/gst-launch.c:564
 #, c-format
 msgid "Got message #%u (%s): "
 msgstr "Mendapat Pesan #%u (%s): "
 
-#: tools/gst-launch.c:596
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Mendapat EOS dari elemen \"%s\".\n"
 
-#: tools/gst-launch.c:605
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
 
-#: tools/gst-launch.c:608
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
 msgstr "MENEMUKAN TAG      : ditemukan oleh bantalan \"%s:%s\".\n"
 
-#: tools/gst-launch.c:611
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
 msgstr "MENEMUKAN TAG      : ditemukan oleh objek \"%s\".\n"
 
-#: tools/gst-launch.c:614
 msgid "FOUND TAG\n"
 msgstr "MENEMUKAN TAG\n"
 
-#: tools/gst-launch.c:629
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
 msgstr "MENEMUKAN TOC      : ditemukan oleh elemen \"%s\".\n"
 
-#: tools/gst-launch.c:632
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
 msgstr "MENEMUKAN TOC      : ditemukan oleh objek \"%s\".\n"
 
-#: tools/gst-launch.c:635
 msgid "FOUND TOC\n"
 msgstr "MENEMUKAN TOC\n"
 
-#: tools/gst-launch.c:652
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1398,186 +1170,146 @@ msgstr ""
 "INFO:\n"
 "%s\n"
 
-#: tools/gst-launch.c:669
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "PERINGATAN: dari elemen %s: %s\n"
 
-#: tools/gst-launch.c:704
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Pragulung, menunggu hingga penyangga selesai...\n"
 
-#: tools/gst-launch.c:708
 msgid "Prerolled, waiting for progress to finish...\n"
 msgstr "Pragulung, menunggu kemajuan selesai...\n"
 
-#: tools/gst-launch.c:720
 msgid "buffering..."
 msgstr "menyangga..."
 
-#: tools/gst-launch.c:731
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Selesai menyangga, mengatur baris pipa ke MEMUTAR ...\n"
 
-#: tools/gst-launch.c:739
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Menyangga, mengatur baris pipa ke JEDA ...\n"
 
-#: tools/gst-launch.c:748
 msgid "Redistribute latency...\n"
 msgstr "Mendistribusikan ulang latency...\n"
 
-#: tools/gst-launch.c:759
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Mengatur tingkat ke %s seperti diminta oleh %s...\n"
 
-#: tools/gst-launch.c:775
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interupsi: Menghentikan baris pipa ...\n"
 
-#: tools/gst-launch.c:804
 #, c-format
 msgid "Progress: (%s) %s\n"
 msgstr "Kemajuan: (%s) %s\n"
 
-#: tools/gst-launch.c:817
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "Elemen kurang: %s\n"
 
-#: tools/gst-launch.c:831
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Mendapat konteks dari elemen '%s': %s=%s\n"
 
-#: tools/gst-launch.c:961
 msgid "Output tags (also known as metadata)"
 msgstr "Tag keluaran (juga dikenal sebagai metadata)"
 
-#: tools/gst-launch.c:963
 msgid "Output TOC (chapters and editions)"
 msgstr "TOC keluaran (bab dan edisi)"
 
-#: tools/gst-launch.c:965
 msgid "Output status information and property notifications"
 msgstr "Informasi status keluaran dan pemberitahuan properti"
 
-#: tools/gst-launch.c:967
 msgid "Do not print any progress information"
 msgstr "Jangan cetak informasi proses"
 
-#: tools/gst-launch.c:969
 msgid "Output messages"
 msgstr "Pesan keluaran"
 
-#: tools/gst-launch.c:971
-msgid "Do not output status information for the specified property if verbose output is enabled (can be used multiple times)"
-msgstr "Jangan keluarkan informasi status untuk properti yang ditentukan jika keluaran lengkap diaktifkan (dapat digunakan berkali-kali)"
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
+"Jangan keluarkan informasi status untuk properti yang ditentukan jika "
+"keluaran lengkap diaktifkan (dapat digunakan berkali-kali)"
 
-#: tools/gst-launch.c:973
 msgid "PROPERTY-NAME"
 msgstr "NAMA-PROPERTI"
 
-#: tools/gst-launch.c:975
 msgid "Do not install a fault handler"
 msgstr "Jangan instal penanganan galat"
 
-#: tools/gst-launch.c:977
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Paksa EOS pada sumber sebelum mematikan pemipaan"
 
-#: tools/gst-launch.c:980
 msgid "Gather and print index statistics"
 msgstr "Kumpulkan dan cetak statistik indeks"
 
-#: tools/gst-launch.c:1045
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "GALAT: baris pipa tak dapat dibangun: %s.\n"
 
-#: tools/gst-launch.c:1049
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "GALAT: baris pipa tak dapat dibangun.\n"
 
-#: tools/gst-launch.c:1053
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "PERINGATAN: baris pipa berisi galat: %s\n"
 
-#: tools/gst-launch.c:1069
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "GALAT: elemen 'baris pipa' tak ditemukan.\n"
 
-#: tools/gst-launch.c:1100 tools/gst-launch.c:1201
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Mengatur baris pipa ke JEDA ...\n"
 
-#: tools/gst-launch.c:1105
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "GALAT: Baris pipa tak ingin dijedakan.\n"
 
-#: tools/gst-launch.c:1110
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Baris pipa telah hidup dan tak membutuhkan PRAGULUNG ...\n"
 
-#: tools/gst-launch.c:1114
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Baris pipa PRAGULUNG ...\n"
 
-#: tools/gst-launch.c:1117 tools/gst-launch.c:1131
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "GALAT: baris pipa tak ingin dipragulung.\n"
 
-#: tools/gst-launch.c:1124
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Baris pipa telah PRAGULUNG ...\n"
 
-#: tools/gst-launch.c:1137
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Mengatur baris pipa ke PUTAR ...\n"
 
-#: tools/gst-launch.c:1144
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "GALAT: baris pipa tidak ingin diputar.\n"
 
-#: tools/gst-launch.c:1163
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "EOS pada matikan diaktifkan -- Paksa EOS pada pemipaan\n"
 
-#: tools/gst-launch.c:1167
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
 msgstr "EOS pada matikan diaktifkan -- menunggu EOS setelah Galat\n"
 
-#: tools/gst-launch.c:1170
 msgid "Waiting for EOS...\n"
 msgstr "Menunggu untuk EOS...\n"
 
-#: tools/gst-launch.c:1177
 msgid "EOS received - stopping pipeline...\n"
 msgstr "EOS diterima - menghentikan baris pipa...\n"
 
-#: tools/gst-launch.c:1181
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
 msgstr "Interupsi saat menunggu EOS - menghentikan baris pipa...\n"
 
-#: tools/gst-launch.c:1186
 msgid "An error happened while waiting for EOS\n"
 msgstr "Galat terjadi ketika menunggu EOS\n"
 
-#: tools/gst-launch.c:1197
 msgid "Execution ended after %"
 msgstr "Eksekusi berakhir setelah %"
 
-#: tools/gst-launch.c:1213
 msgid "Setting pipeline to READY ...\n"
 msgstr "Mengatur baris pipa ke SIAP ...\n"
 
-#: tools/gst-launch.c:1225
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Mengatur baris pipa ke KOSONG ...\n"
 
-#: tools/gst-launch.c:1229
 msgid "Freeing pipeline ...\n"
 msgstr "Membebaskan baris pipa ...\n"
 
