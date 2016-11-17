@@ -2552,11 +2552,14 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
           /* eat segment prefix */
           GST_READ_CHECK (gst_matroska_parse_take (parse, needed, &ebml));
           GST_DEBUG_OBJECT (parse,
-              "Found Segment start at offset %" G_GUINT64_FORMAT,
-              parse->common.offset);
+              "Found Segment start at offset %" G_GUINT64_FORMAT " with size %"
+              G_GUINT64_FORMAT, parse->common.offset, length);
           /* seeks are from the beginning of the segment,
            * after the segment ID/length */
           parse->common.ebml_segment_start = parse->common.offset;
+          if (length == 0)
+            length = G_MAXUINT64;
+          parse->common.ebml_segment_length = length;
           parse->common.state = GST_MATROSKA_READ_STATE_HEADER;
           gst_matroska_parse_accumulate_streamheader (parse, ebml.buf);
           break;
