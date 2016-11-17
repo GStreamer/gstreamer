@@ -479,6 +479,8 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
   /* Negotiate with downstream here */
   GST_DEBUG_OBJECT (vc1parse, "Renegotiating");
 
+  gst_pad_check_reconfigure (GST_BASE_PARSE_SRC_PAD (vc1parse));
+
   allowed_caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (vc1parse));
   if (allowed_caps && !gst_caps_is_empty (allowed_caps)
       && !gst_caps_is_any (allowed_caps)) {
@@ -502,6 +504,7 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
       GST_ERROR_OBJECT (vc1parse, "Empty caps, downstream doesn't support %s",
           parse_format_to_string (vc1parse->format));
       gst_caps_unref (tmp);
+      gst_pad_mark_reconfigure (GST_BASE_PARSE_SRC_PAD (vc1parse));
       return FALSE;
     }
 
@@ -537,6 +540,7 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
   } else if (gst_caps_is_empty (allowed_caps)) {
     GST_ERROR_OBJECT (vc1parse, "Empty caps");
     gst_caps_unref (allowed_caps);
+    gst_pad_mark_reconfigure (GST_BASE_PARSE_SRC_PAD (vc1parse));
     return FALSE;
   } else {
     GST_DEBUG_OBJECT (vc1parse, "Using input header/stream format");
@@ -547,8 +551,10 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
   if (allowed_caps)
     gst_caps_unref (allowed_caps);
 
-  if (!gst_vc1_parse_is_format_allowed (vc1parse))
+  if (!gst_vc1_parse_is_format_allowed (vc1parse)) {
+    gst_pad_mark_reconfigure (GST_BASE_PARSE_SRC_PAD (vc1parse));
     return FALSE;
+  }
 
   vc1parse->renegotiate = FALSE;
   vc1parse->update_caps = TRUE;
@@ -1175,7 +1181,11 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
       || gst_pad_check_reconfigure (GST_BASE_PARSE_SRC_PAD (parse))) {
     if (!gst_vc1_parse_renegotiate (vc1parse)) {
       GST_ERROR_OBJECT (vc1parse, "Failed to negotiate with downstream");
-      ret = GST_FLOW_NOT_NEGOTIATED;
+      gst_pad_mark_reconfigure (GST_BASE_PARSE_SRC_PAD (parse));
+      if (GST_PAD_IS_FLUSHING (GST_BASE_PARSE_SRC_PAD (parse)))
+        ret = GST_FLOW_FLUSHING;
+      else
+        ret = GST_FLOW_NOT_NEGOTIATED;
       goto done;
     }
   }
