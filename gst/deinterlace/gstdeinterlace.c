@@ -2061,11 +2061,16 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     caps = gst_pad_get_current_caps (self->sinkpad);
     if (caps != NULL) {
       if (!gst_deinterlace_setcaps (self, self->sinkpad, caps)) {
+        gst_pad_mark_reconfigure (self->srcpad);
         gst_caps_unref (caps);
-        return GST_FLOW_NOT_NEGOTIATED;
+        if (GST_PAD_IS_FLUSHING (self->srcpad))
+          return GST_FLOW_FLUSHING;
+        else
+          return GST_FLOW_NOT_NEGOTIATED;
       }
       gst_caps_unref (caps);
     } else {
+      gst_pad_mark_reconfigure (self->srcpad);
       return GST_FLOW_FLUSHING;
     }
   } else {
@@ -2788,6 +2793,7 @@ invalid_caps:
     if (peercaps)
       gst_caps_unref (peercaps);
     GST_ERROR_OBJECT (pad, "Invalid caps: %" GST_PTR_FORMAT, caps);
+    gst_pad_mark_reconfigure (self->srcpad);
     return FALSE;
   }
 set_caps_failed:
@@ -2797,6 +2803,7 @@ set_caps_failed:
       gst_caps_unref (peercaps);
     if (srccaps)
       gst_caps_unref (srccaps);
+    gst_pad_mark_reconfigure (self->srcpad);
     return FALSE;
   }
 no_bufferpool:
@@ -2804,6 +2811,7 @@ no_bufferpool:
     GST_ERROR_OBJECT (pad, "could not negotiate bufferpool");
     if (srccaps)
       gst_caps_unref (srccaps);
+    gst_pad_mark_reconfigure (self->srcpad);
     return FALSE;
   }
 }
