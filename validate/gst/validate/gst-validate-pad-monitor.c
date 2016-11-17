@@ -377,7 +377,7 @@ _check_field_type (GstValidatePadMonitor * monitor,
     return;
   }
 
-  memset (rejected_types, 0, sizeof (rejected_types));
+  memset ((gchar **) rejected_types, 0, sizeof (rejected_types));
   va_start (var_args, field);
   while ((type = va_arg (var_args, GType)) != 0) {
     if (gst_structure_has_field_typed (structure, field, type)) {

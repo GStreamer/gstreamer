@@ -796,7 +796,7 @@ main (int argc, gchar ** argv)
 #endif
 
   GError *err = NULL;
-  const gchar *scenario = NULL, *configs = NULL;
+  gchar *scenario = NULL, *configs = NULL;
   gboolean want_help = FALSE;
   gboolean list_scenarios = FALSE, inspect_action_type = FALSE;
 
