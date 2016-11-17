@@ -930,12 +930,16 @@ gst_ass_render_negotiate (GstAssRender * render, GstCaps * caps)
   gst_caps_unref (overlay_caps);
   gst_caps_unref (caps);
 
+  if (!ret)
+    gst_pad_mark_reconfigure (render->srcpad);
+
   return ret;
 
 no_format:
   {
     if (caps)
       gst_caps_unref (caps);
+    gst_pad_mark_reconfigure (render->srcpad);
     return FALSE;
   }
 }
@@ -1160,8 +1164,15 @@ gst_ass_render_chain_video (GstPad * pad, GstObject * parent,
   guint64 start, stop, clip_start = 0, clip_stop = 0;
   ASS_Image *ass_image;
 
-  if (gst_pad_check_reconfigure (render->srcpad))
-    gst_ass_render_negotiate (render, NULL);
+  if (gst_pad_check_reconfigure (render->srcpad)) {
+    if (!gst_ass_render_negotiate (render, NULL)) {
+      gst_pad_mark_reconfigure (render->srcpad);
+      if (GST_PAD_IS_FLUSHING (render->srcpad))
+        goto flushing;
+      else
+        goto not_negotiated;
+    }
+  }
 
   if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     goto missing_timestamp;
@@ -1378,6 +1389,13 @@ missing_timestamp:
     GST_WARNING_OBJECT (render, "buffer without timestamp, discarding");
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
+  }
+not_negotiated:
+  {
+    GST_ASS_RENDER_UNLOCK (render);
+    GST_DEBUG_OBJECT (render, "not negotiated");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 flushing:
   {
