@@ -17,6 +17,5 @@ gst/dvdspu/gstdvdspu.c
 gst-libs/gst/adaptivedemux/gstadaptivedemux.c
 gst/mpegtsdemux/mpegtsbase.c
 gst/nuvdemux/gstnuvdemux.c
-gst/videomeasure/gstvideomeasure_collector.c
 sys/dvb/gstdvbsrc.c
 sys/dvb/parsechannels.c
