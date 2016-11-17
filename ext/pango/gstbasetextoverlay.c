@@ -923,12 +923,16 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
   gst_caps_unref (overlay_caps);
   gst_caps_unref (caps);
 
+  if (!ret)
+    gst_pad_mark_reconfigure (overlay->srcpad);
+
   return ret;
 
 no_format:
   {
     if (caps)
       gst_caps_unref (caps);
+    gst_pad_mark_reconfigure (overlay->srcpad);
     return FALSE;
   }
 }
@@ -2211,8 +2215,16 @@ gst_base_text_overlay_push_frame (GstBaseTextOverlay * overlay,
   if (overlay->composition == NULL)
     goto done;
 
-  if (gst_pad_check_reconfigure (overlay->srcpad))
-    gst_base_text_overlay_negotiate (overlay, NULL);
+  if (gst_pad_check_reconfigure (overlay->srcpad)) {
+    if (!gst_base_text_overlay_negotiate (overlay, NULL)) {
+      gst_pad_mark_reconfigure (overlay->srcpad);
+      gst_buffer_unref (video_frame);
+      if (GST_PAD_IS_FLUSHING (overlay->srcpad))
+        return GST_FLOW_FLUSHING;
+      else
+        return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
 
   video_frame = gst_buffer_make_writable (video_frame);
 
