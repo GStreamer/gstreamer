@@ -630,21 +630,7 @@ nle_object_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
-  GST_DEBUG_OBJECT (element, "Calling parent change_state");
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  GST_DEBUG_OBJECT (element, "Return from parent change_state was %d", ret);
-
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    goto beach;
-
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      /* cleanup nleobject */
-      if (nle_object_cleanup (NLE_OBJECT (element)) == GST_STATE_CHANGE_FAILURE)
-        ret = GST_STATE_CHANGE_FAILURE;
-      break;
     case GST_STATE_CHANGE_NULL_TO_READY:
     {
       GstObject *parent = gst_object_get_parent (GST_OBJECT (element));
@@ -668,6 +654,25 @@ nle_object_change_state (GstElement * element, GstStateChange transition)
         ret = GST_STATE_CHANGE_FAILURE;
         goto beach;
       }
+      break;
+    default:
+      break;
+  }
+
+  GST_DEBUG_OBJECT (element, "Calling parent change_state");
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  GST_DEBUG_OBJECT (element, "Return from parent change_state was %d", ret);
+
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto beach;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* cleanup nleobject */
+      if (nle_object_cleanup (NLE_OBJECT (element)) == GST_STATE_CHANGE_FAILURE)
+        ret = GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
