@@ -203,6 +203,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   self->buffer_size = DEFAULT_BUFFER_SIZE;
   self->video_format = GST_DECKLINK_VIDEO_FORMAT_AUTO;
   self->timecode_format = bmdTimecodeRP188Any;
+  self->no_signal = FALSE;
 
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
@@ -579,6 +580,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   CaptureFrame *f;
   GstCaps *caps;
   gboolean caps_changed = FALSE;
+  BMDFrameFlags flags;
 
   g_mutex_lock (&self->lock);
   while (g_queue_is_empty (&self->current_frames) && !self->flushing) {
@@ -654,6 +656,21 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   f->frame->AddRef ();
   vf->input = self->input->input;
   vf->input->AddRef ();
+
+  flags = f->frame->GetFlags();
+  if (flags & bmdFrameHasNoInputSource) {
+    if (!self->no_signal) {
+      self->no_signal = TRUE;
+      GST_ELEMENT_WARNING (GST_ELEMENT (self), RESOURCE, READ, ("No signal"),
+          ("No input source was detected - video frames invalid"));
+    }
+  } else {
+    if (self->no_signal) {
+      self->no_signal = FALSE;
+      GST_ELEMENT_INFO (GST_ELEMENT (self), RESOURCE, READ, ("Signal found"),
+          ("Input source detected"));
+    }
+  }
 
   GST_BUFFER_TIMESTAMP (*buffer) = f->capture_time;
   GST_BUFFER_DURATION (*buffer) = f->capture_duration;
@@ -926,6 +943,7 @@ gst_decklink_video_src_change_state (GstElement * element,
       self->input->clock_epoch += self->input->clock_last_time;
       self->input->clock_last_time = 0;
       self->input->clock_offset = 0;
+      self->no_signal = FALSE;
       g_mutex_unlock (&self->input->lock);
 
       gst_decklink_video_src_stop (self);
