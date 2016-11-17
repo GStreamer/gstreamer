@@ -1,9 +1,70 @@
-=== release 1.10.0 ===
+=== release 1.10.1 ===
 
-2016-11-01  Sebastian Dröge <slomo@coaxion.net>
+2016-11-17  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.0
+	  releasing 1.10.1
+
+2016-11-11 11:40:09 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: finish event thread at stop()
+	  The thread that handles window's events should be finished during
+	  pipeline's shutdown, otherwise it will remain alive during pipeline
+	  re-activation, leading to unexpected problems.
+	  This patch fixes failures of intensive_state_change scenario of
+	  gst-validate
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774241
+
+2016-11-08 09:35:00 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: enhance debug message
+	  "gst_pad_push" is not a good description of the event.
+
+2016-11-08 10:05:32 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  postproc: honor gst_pad_push() return value
+	  Returning GST_FLOW_ERROR always when gst_pad_push fails might lead to
+	  deadlock during seek.
+	  This patch returns the same error of gst_pad_push() and log out the
+	  return value.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774030
+
+2016-11-04 12:55:23 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: increment map counter only if succeeded
+	  Previously the frame map counter increased independently if the map succeeded
+	  or not. This leaded to critical messages and crashes if the frame was unable
+	  to be mapped, but the counter increased.
+	  This patch increases the map counter only if the map operation occurred.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773939
+
+2016-10-27 11:25:55 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: ensure display when getting raw caps
+	  When running gst-discoverer-1.0, in certain media, vaapipostroc is stopped
+	  meanwhile it is transforming caps. The problem is that stop() calls
+	  gst_vaapi_plugin_base_close(), which nullifies the element's va display, but
+	  the va display is used in tranform_caps() when it is extracting the possible
+	  format conversions. This display disappearing generates warning messages.
+	  This patch holds a local reference of va display at ensure_allowed_raw_caps()
+	  hence it doesn't go away meanwhile it is used, even if the
+	  gst_vaapi_plugin_base_close() is called in other thread.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773593
+
+=== release 1.10.0 ===
+
+2016-11-01 18:19:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.10.0
 
 2016-10-27 17:13:48 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
 
