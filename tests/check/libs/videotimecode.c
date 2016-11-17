@@ -365,6 +365,144 @@ GST_START_TEST (videotimecode_dailyjam_compare)
 
 GST_END_TEST;
 
+GST_START_TEST (videotimecode_dailyjam_distance)
+{
+  GstVideoTimeCode *tc;
+  GDateTime *dt;
+
+  dt = g_date_time_new_utc (2016, 7, 29, 10, 32, 50);
+
+  tc = gst_video_time_code_new (50, 1, dt,
+      GST_VIDEO_TIME_CODE_FLAGS_NONE, 0, 0, 0, 0, 0);
+
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc), 0);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      0);
+
+  gst_video_time_code_add_frames (tc, 10);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      200 * GST_MSECOND);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      10);
+
+  gst_video_time_code_add_frames (tc, 40);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      1 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      50);
+
+  gst_video_time_code_add_frames (tc, 50);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      2 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      100);
+
+  gst_video_time_code_add_frames (tc, 58 * 50);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      60 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      60 * 50);
+
+  gst_video_time_code_add_frames (tc, 9 * 60 * 50);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      10 * 60 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      10 * 60 * 50);
+
+  gst_video_time_code_add_frames (tc, 20 * 60 * 50);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      30 * 60 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      30 * 60 * 50);
+
+  gst_video_time_code_add_frames (tc, 30 * 60 * 50);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      60 * 60 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      60 * 60 * 50);
+
+  gst_video_time_code_add_frames (tc, 9 * 60 * 60 * 50);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      10 * 60 * 60 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      10 * 60 * 60 * 50);
+
+  gst_video_time_code_free (tc);
+
+  /* Now test with drop-frame: while it is called "drop-frame", not actual
+   * frames are dropped but instead every once in a while timecodes are
+   * skipped. As such, every frame still has the same distance to its next
+   * frame. */
+  tc = gst_video_time_code_new (60000, 1001, dt,
+      GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, 0, 0, 0, 0, 0);
+
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc), 0);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      0);
+
+  gst_video_time_code_add_frames (tc, 10);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      gst_util_uint64_scale (10, G_GUINT64_CONSTANT (1001) * GST_SECOND,
+          60000));
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      10);
+
+  gst_video_time_code_add_frames (tc, 50);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      gst_util_uint64_scale (60, G_GUINT64_CONSTANT (1001) * GST_SECOND,
+          60000));
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      60);
+
+  gst_video_time_code_add_frames (tc, 60);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      gst_util_uint64_scale (120, G_GUINT64_CONSTANT (1001) * GST_SECOND,
+          60000));
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      120);
+
+  gst_video_time_code_add_frames (tc, 58 * 60);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      gst_util_uint64_scale (60 * 60, G_GUINT64_CONSTANT (1001) * GST_SECOND,
+          60000));
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      60 * 60);
+
+  gst_video_time_code_add_frames (tc, 9 * 60 * 60);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      gst_util_uint64_scale (10 * 60 * 60,
+          G_GUINT64_CONSTANT (1001) * GST_SECOND, 60000));
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      10 * 60 * 60);
+
+  gst_video_time_code_add_frames (tc, 20 * 60 * 60);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      gst_util_uint64_scale (30 * 60 * 60,
+          G_GUINT64_CONSTANT (1001) * GST_SECOND, 60000));
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      30 * 60 * 60);
+
+  gst_video_time_code_add_frames (tc, 30 * 60 * 60);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      gst_util_uint64_scale (60 * 60 * 60,
+          G_GUINT64_CONSTANT (1001) * GST_SECOND, 60000));
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      60 * 60 * 60);
+
+  gst_video_time_code_add_frames (tc, 9 * 60 * 60 * 60);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      gst_util_uint64_scale (10 * 60 * 60 * 60,
+          G_GUINT64_CONSTANT (1001) * GST_SECOND, 60000));
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      10 * 60 * 60 * 60);
+
+  gst_video_time_code_free (tc);
+
+  g_date_time_unref (dt);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videotimecode_suite (void)
 {
@@ -395,6 +533,7 @@ gst_videotimecode_suite (void)
 
   tcase_add_test (tc, videotimecode_dailyjam_todatetime);
   tcase_add_test (tc, videotimecode_dailyjam_compare);
+  tcase_add_test (tc, videotimecode_dailyjam_distance);
   return s;
 }
 
