@@ -10,7 +10,5 @@ subdir('interfaces')
 subdir('mpegts')
 subdir('player')
 subdir('video')
-if use_wayland
-    subdir('wayland')
-endif
+subdir('wayland')
 subdir('gl')
