@@ -1482,6 +1482,10 @@ gst_base_transform_reconfigure (GstBaseTransform * trans)
   }
 
 done:
+
+  if (!ret)
+    gst_pad_mark_reconfigure (trans->srcpad);
+
   return ret;
 }
 
@@ -1940,6 +1944,8 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       /* clear any pending reconfigure flag */
       gst_pad_check_reconfigure (trans->srcpad);
       ret = gst_base_transform_setcaps (trans, trans->sinkpad, caps);
+      if (!ret)
+        gst_pad_mark_reconfigure (trans->srcpad);
 
       forward = FALSE;
       break;
