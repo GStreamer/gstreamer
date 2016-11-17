@@ -1,15 +1,15 @@
 
-Release notes for GStreamer Base Plugins 1.10.0
+Release notes for GStreamer Base Plugins 1.10.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.10 release series. The 1.10 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.10 release series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.10 release
-series.
+This release only contains bugfixes and it is safe to update from 1.10.0. For a
+full list of bugfixes see Bugzilla.
+
+
+See /releases/1.10/ for the full release notes.
 
 
 This module contains a set of reference plugins, base classes for other
@@ -58,16 +58,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 768763 : vorbisenc, opusenc reconfiguration broken
-      * 772500 : opusdec: Fix memory leak in test code
-      * 772501 : videorate: Fix memory leak in test code
-      * 772676 : parsebin: Use gst_playback_utils_compare_factories_func
-      * 772855 : decodebin3: Implement lock for multiqueue slot
-      * 773103 : videodecoder: Default caps sets format I420
-      * 773105 : audioencoder: Error-handling for pushing headers
-      * 773107 : audioencoder: Plug buffer-leak
-      * 773181 : x264enc refuses to negotiate I420 or baseline profiles!
-      * 773441 : decodebin3: GStreamer-CRITICAL **: gst_mini_object_unref: assertion 'mini_object != NULL' failed
+      * 773131 : playbin3: Fix deadlock when adding multiple parsebin
+      * 774322 : playbin3: can't disable audio/video via flags property
+      * 774343 : decodebin3: Clear saw_eos flag of DecodebinInputStream by FLUSH event
+      * 727802 : md5 checksum is missing from flac files encoded with encodebin
 
 ==== Download ====
 
@@ -104,19 +98,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arun Raghavan
-      * Edward Hervey
-      * Graham Leggett
-      * Havard Graff
-      * Jimmy Ohn
-      * Nirbheek Chauhan
-      * Scott D Phillips
+      * Petr Kulhavy
       * Sebastian Dröge
       * Seungha Yang
-      * Stefan Sauer
-      * Stian Selnes
-      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Wonchul Lee
  

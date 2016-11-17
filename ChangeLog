@@ -1,9 +1,139 @@
-=== release 1.10.0 ===
+=== release 1.10.1 ===
 
-2016-11-01  Sebastian Dröge <slomo@coaxion.net>
+2016-11-17  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.0
+	  releasing 1.10.1
+
+2016-11-17 14:44:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/da.po:
+	* po/de.po:
+	* po/id.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: Update translations
+
+2016-11-16 20:48:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff: Extract bpp from the strf for vnmc
+	  Needed for avdec_vnmc to work.
+
+2016-11-13 13:15:38 +0900  Seungha Yang <sh.yang@lge.com>
+
+	* gst/playback/gstdecodebin3-parse.c:
+	  decodebin3: Clear saw_eos flag of DecodebinInputStream by FLUSH event
+	  Likewise how GstPad is doing, saw_eos flag of DecodebinInputStream
+	  must be cleared by FLUSH event.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774343
+
+2016-10-17 15:38:37 +0900  Wonchul Lee <wonchul.lee@collabora.com>
+
+	* gst/playback/gstplaybin3.c:
+	  playbin3: Fix deadlock when adding multiple parsebin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773131
+
+2016-11-07 12:01:16 +0100  Petr Kulhavy <brain@jikos.cz>
+
+	* gst-libs/gst/audio/audio-channels.c:
+	  audio-channels: map buffer read-write only if channels differ
+	  gst_audio_buffer_reorder_channels() was always mapping the buffer read-write
+	  regardless whether any reordering was needed.  If the from and to channel order
+	  is identical return immediately without remapping the buffer.
+	  Add a small helper function gst_audio_channel_positions_equal() which is used
+	  in both gst_audio_reorder_channels() and gst_audio_buffer_reorder_channels().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773833
+
+2016-11-01 19:42:32 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.10.0 ===
+
+2016-11-01 17:53:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.10.0
+
+2016-11-01 17:43:45 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2016-10-25 08:52:52 -0700  Scott D Phillips <scott.d.phillips@intel.com>
 

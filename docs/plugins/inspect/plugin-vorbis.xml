@@ -3,7 +3,7 @@
   <description>Vorbis plugin library</description>
   <filename>../../ext/vorbis/.libs/libgstvorbis.so</filename>
   <basename>libgstvorbis.so</basename>
-  <version>1.10.0</version>
+  <version>1.10.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
