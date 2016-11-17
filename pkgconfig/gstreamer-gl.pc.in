@@ -9,5 +9,5 @@ Description: Streaming media framework, OpenGL plugins libraries
 Version: @VERSION@
 Requires: gstreamer-base-@GST_API_VERSION@ gstreamer-@GST_API_VERSION@
 
-Libs: -L${libdir} -lgstgl-@GST_API_VERSION@ @GL_LIBS@
+Libs: -L${libdir} -lgstgl-@GST_API_VERSION@
 Cflags: -I${includedir} -I${libdir}/gstreamer-@GST_API_VERSION@/include @GL_CFLAGS@
