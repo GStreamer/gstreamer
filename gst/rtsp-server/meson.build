@@ -51,6 +51,7 @@ gst_rtsp_server = library('gstrtspserver-@0@'.format(api_version),
   soversion : soversion,
   install : true,
   dependencies : [gstrtsp_dep, gstrtp_dep, gstsdp_dep, gstnet_dep, gstapp_dep],
+  vs_module_defs: vs_module_defs_dir + 'libgstrtspserver.def'
 )
 
 gst_rtsp_server_dep = declare_dependency(link_with : gst_rtsp_server,

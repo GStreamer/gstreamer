@@ -16,11 +16,15 @@ SUBDIRS = 		\
 
 DIST_SUBDIRS = gst common pkgconfig docs examples tests
 
+# include before EXTRA_DIST for win32 assignment
+include $(top_srcdir)/common/win32.mak
+
 EXTRA_DIST = \
 	ChangeLog autogen.sh depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
 	gst-rtsp.spec docs/design/gst-rtp-server-design \
-	gst-rtsp-server.doap
+	gst-rtsp-server.doap \
+	$(win32)
 
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
