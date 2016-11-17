@@ -9,7 +9,7 @@ from common import Colors
 from common import accept_command
 
 
-SCRIPTDIR = os.path.dirname(__file__)
+SCRIPTDIR = os.path.normpath(os.path.dirname(__file__))
 
 
 def manifest_get_commits(manifest):
@@ -84,7 +84,7 @@ def update_repo(repo_name, repo_dir, revision, no_interaction, recurse_i=0):
 
 
     commit_message = git("show", repository_path=repo_dir).split("\n")
-    print(u"  -> %s%s%s — %s" % (Colors.HEADER, commit_message[0][7:14], Colors.ENDC,
+    print(u"  -> %s%s%s - %s" % (Colors.HEADER, commit_message[0][7:14], Colors.ENDC,
                                     commit_message[4].strip()))
 
     return True
