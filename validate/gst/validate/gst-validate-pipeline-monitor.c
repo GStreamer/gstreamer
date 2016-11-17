@@ -414,7 +414,7 @@ _bus_handler (GstBus * bus, GstMessage * message,
   GError *err = NULL;
   gchar *debug = NULL;
   const GstStructure *details = NULL;
-  GstFlowReturn error_flow = GST_FLOW_OK;
+  gint error_flow = GST_FLOW_OK;
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:

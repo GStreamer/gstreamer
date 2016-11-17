@@ -598,11 +598,11 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   const char *str_format, *str_flags, *str_start_type, *str_stop_type;
 
   gdouble rate = 1.0;
-  GstFormat format = GST_FORMAT_TIME;
+  guint format = GST_FORMAT_TIME;
   GstSeekFlags flags = 0;
-  GstSeekType start_type = GST_SEEK_TYPE_SET;
+  guint start_type = GST_SEEK_TYPE_SET;
   GstClockTime start;
-  GstSeekType stop_type = GST_SEEK_TYPE_SET;
+  guint stop_type = GST_SEEK_TYPE_SET;
   GstClockTime stop = GST_CLOCK_TIME_NONE;
 
   if (!gst_validate_action_get_clocktime (scenario, action, "start", &start))
@@ -651,7 +651,7 @@ _pause_action_restore_playing (GstValidateScenario * scenario)
 static GstValidateExecuteActionReturn
 _execute_set_state (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  GstState state;
+  guint state;
   const gchar *str_state;
 
   GstStateChangeReturn ret;
