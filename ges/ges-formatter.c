@@ -417,7 +417,7 @@ ges_formatter_get_default (void)
 {
   GList *assets, *tmp;
   GESAsset *ret = NULL;
-  GstRank tmprank, rank = GST_RANK_NONE;
+  guint tmprank, rank = GST_RANK_NONE;
 
   assets = ges_list_assets (GES_TYPE_FORMATTER);
   for (tmp = assets; tmp; tmp = tmp->next) {

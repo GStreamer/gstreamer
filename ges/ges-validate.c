@@ -234,8 +234,8 @@ _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
   gboolean res = FALSE;
 
   gint new_layer_priority = -1;
-  GESEdge edge = GES_EDGE_NONE;
-  GESEditMode mode = GES_EDIT_MODE_NORMAL;
+  guint edge = GES_EDGE_NONE;
+  guint mode = GES_EDIT_MODE_NORMAL;
 
   const gchar *edit_mode_str = NULL, *edge_str = NULL;
   const gchar *clip_name;
@@ -487,7 +487,7 @@ _set_control_source (GstValidateScenario * scenario, GstValidateAction * action)
     binding_type = g_strdup ("direct");
 
   if (source_type == NULL || !g_strcmp0 (source_type, "interpolation")) {
-    GstInterpolationMode mode;
+    guint mode;
 
     source = gst_interpolation_control_source_new ();
 
