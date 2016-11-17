@@ -3935,7 +3935,7 @@ gst_rtsp_client_send_message (GstRTSPClient * client, GstRTSPSession * session,
   return GST_RTSP_OK;
 }
 
-static GstRTSPResult
+static gboolean
 do_send_message (GstRTSPClient * client, GstRTSPMessage * message,
     gboolean close, gpointer user_data)
 {
@@ -3968,13 +3968,13 @@ do_send_message (GstRTSPClient * client, GstRTSPMessage * message,
     GST_DEBUG_OBJECT (client, "Resend due to backlog full");
   } while (ret != GST_RTSP_EINTR);
 
-  return ret;
+  return ret == GST_RTSP_OK;
 
   /* ERRORS */
 error:
   {
     GST_DEBUG_OBJECT (client, "got error %d", ret);
-    return ret;
+    return ret == GST_RTSP_OK;
   }
 }
 
