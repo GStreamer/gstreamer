@@ -1,15 +1,15 @@
 
-Release notes for GStreamer Bad Plugins 1.10.0
+Release notes for GStreamer Bad Plugins 1.10.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.10 release series. The 1.10 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.10 release series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.10 release
-series.
+This release only contains bugfixes and it is safe to update from 1.10.0. For a
+full list of bugfixes see Bugzilla.
+
+
+See /releases/1.10/ for the full release notes.
 
 
 "That an accusation?"
@@ -60,25 +60,11 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 758717 : bayer: pixel aspect ratio not forwarded when transforming caps
-      * 762717 : mpegtsmux: m2ts-mode crashes (abort)
-      * 769382 : qmlglsink: eglmemory memory leak on rpi
-      * 770528 : tsdemux: add support ATSC EAC3
-      * 770587 : qtkitvideosrc: 'QTKit/QTKit.h' file not found (macOS Sierra)
-      * 772330 : adaptivedemux: Improve bitrate estimation
-      * 772499 : opencv: Fix memory leak by gst_caps_to_string
-      * 772503 : gsttimidity: add support for timidity-0.2.x
-      * 772698 : dispmanx: set_render_rectangle functions is buggy
-      * 772699 : dispmanx: dispmanx_egl_show() should call window_resize() only when there is no render rect is set
-      * 772704 : hlsdemux: fix GstHLSDemuxStream type inheritance
-      * 772706 : adaptivedemux: fix buffer size print format
-      * 772742 : mpegtsdemux: Implement efficient program updates
-      * 773026 : qmlglsink build fails for rpi
-      * 773423 : cerbero: Build fixes on macOS Sierra and Xcode 8
-      * 773540 : dtls: port to OpenSSL 1.1.0
-      * 773635 : hlsdemux: don't try to access non-existant iframe variant
-      * 773720 : directsoundsrc: incorrect cast of WinAPI function argument
-      * 772608 : rpi/dispmanx: Implement gst_video_overlay_set_window_handle() for dispmanx window
+      * 773681 : directsoundsink: High cpu usage on windows x86
+      * 773313 : decklinkaudiosrc: Ignore channel-mask when checking set_caps compatibility
+      * 774287 : hls: gst_m3u8_has_next_fragment crash
+      * 774328 : dtlssrtpenc: criticals with gst-inspect-1.0 and state change unit test
+      * 774462 : glwindow: found memory leak of navigation_thread
 
 ==== Download ====
 
@@ -115,25 +101,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arnaud Vrac
-      * Artem Martynovich
-      * Arun Raghavan
-      * Daiki Ueno
-      * Edward Hervey
-      * Jimmy Ohn
-      * Joan Pau Beltran
+      * Haihua Hu
       * Matthew Waters
-      * Michael Olbrich
-      * Munez
-      * Nirbheek Chauhan
-      * Reynaldo H. Verdejo Pinochet
-      * Scott D Phillips
       * Sebastian Dröge
-      * Sergey Borovkov
-      * Thiago Santos
-      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Wonchul Lee
-      * sezero
+      * Vivia Nikolaidou
  
