@@ -4,6 +4,9 @@ libdir=@gllibdir@
 includedir=@abs_top_builddir@/gst-libs
 girdir=@abs_top_builddir@/gst-libs/gst/base
 typelibdir=@abs_top_builddir@/gst-libs/gst/base
+gl_platforms=@GL_PLATFORMS@
+gl_winsys=@GL_WINDOWS@
+gl_apis=@GL_APIS@
 
 Name: GStreamer OpenGL Plugins Libraries, Uninstalled
 Description: Streaming media framework, OpenGL plugins libraries, uninstalled

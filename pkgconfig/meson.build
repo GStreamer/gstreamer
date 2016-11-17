@@ -37,6 +37,9 @@ pkg_libs = [
 if build_gstgl
   pkgconf.set('gllibdir', join_paths(meson.build_root(), gstgl.outdir()))
   pkg_libs += 'gl'
+  pkgconf.set('GL_APIS', ' '.join(enabled_gl_apis))
+  pkgconf.set('GL_WINDOWS', ' '.join(enabled_gl_winsys))
+  pkgconf.set('GL_PLATFORMS', ' '.join(enabled_gl_platforms))
 endif
 
 if use_wayland
