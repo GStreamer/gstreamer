@@ -54,8 +54,6 @@ struct _GstEGLImage
   GstGLContext *context;
   EGLImageKHR image;
   GstVideoGLTextureType type;
-  /* FIXME: remove this and use the affine transformation meta instead */
-  GstVideoGLTextureOrientation orientation;
 
   /* <private> */
   gpointer destroy_data;
@@ -67,11 +65,9 @@ struct _GstEGLImage
 GstEGLImage *             gst_egl_image_new_wrapped             (GstGLContext * context,
                                                                  EGLImageKHR image,
                                                                  GstVideoGLTextureType type,
-                                                                 GstVideoGLTextureOrientation orientation,
                                                                  gpointer user_data,
                                                                  GstEGLImageDestroyNotify user_data_destroy);
 EGLImageKHR             gst_egl_image_get_image                 (GstEGLImage * image);
-GstVideoGLTextureOrientation gst_egl_image_get_orientation      (GstEGLImage * image);
 
 GstEGLImage *           gst_egl_image_from_texture              (GstGLContext * context,
                                                                  GstGLMemory * gl_mem,
