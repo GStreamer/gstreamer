@@ -1,15 +1,15 @@
 
-Release notes for GStreamer Good Plugins 1.10.0
+Release notes for GStreamer Good Plugins 1.10.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.10 release series. The 1.10 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.10 release series of your favourite cross-platform multimedia framework!
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.10 release
-series.
+This release only contains bugfixes and it is safe to update from 1.10.0. For a
+full list of bugfixes see Bugzilla.
+
+
+See /releases/1.10/ for the full release notes.
 
 
 "Such ingratitude.  After all the times I've saved your life."
@@ -55,15 +55,17 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 762207 : flvmux: Ensure we fallback to DTS when clipping
-      * 772496 : tests: Fix memory leak by gst_caps_to_string()
-      * 772497 : waveform : Fix Memory leak by gst_caps_to_string
-      * 772644 : Fix level test in CK_FORK=no mode
-      * 772656 : Fix souphttpsrc tests without CK_FORK=no
-      * 773509 : souphttpsrc: connection loss / reconnect issues
-      * 773580 : v4l2object: fix extra-controls leak
-      * 773582 : matroskamux does not allow resolutions above 4096x4096
-      * 773643 : wavparse: crashes on invalid wav file
+      * 769765 : v4l2: Sanitise buffer sizes provided by v4l2
+      * 770568 : rtspsrc: fails to connect when the 'control' attribute is omitted in a single media description
+      * 772610 : rtspsrc doesn't support redirect on play
+      * 773269 : rtpbin: avoid generating errors when rtcp messages are empty and check the queue is not empty
+      * 773512 : rtph263pay: Fix leak for B-fragments
+      * 773515 : rtph263ppay: Fix caps leak
+      * 773516 : rtph263depay: Don't drop mode b packets with picture start code
+      * 773784 : splitmuxsink: failed assertion on gst-launch-1.0 ^C
+      * 773861 : wavparse: element error is posted at EOS even though WAV file is OK
+      * 774507 : splitmuxsink: pad request fails for flvmux
+      * 774556 : Splitmuxsink crash (ver 1.10.0)
 
 ==== Download ====
 
@@ -100,17 +102,14 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Branko Subasic
-      * Gaurav Gupta
-      * Jan Alexander Steffens (heftig)
+      * Alejandro G. Castro
+      * Havard Graff
       * Jan Schmidt
-      * Mark Nauwelaerts
-      * Michael Olbrich
-      * Nicolas Dufresne
-      * Nirbheek Chauhan
-      * Scott D Phillips
+      * Matt Staples
+      * Petr Kulhavy
       * Sebastian Dröge
-      * Thibault Saunier
+      * Stian Selnes
       * Tim-Philipp Müller
-      * Tobias Schneider
+      * Vinod Kesti
+      * William Manley
  
