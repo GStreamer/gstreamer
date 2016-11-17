@@ -9,6 +9,7 @@
  * Copyright (C) <2013> Intel Corporation
  * Copyright (C) <2014> Centricular Ltd
  * Copyright (C) <2015> YouView TV Ltd.
+ * Copyright (C) <2016> British Broadcasting Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -7076,6 +7077,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       }
       case FOURCC_mp4a:
       case FOURCC_alac:
+      case FOURCC_fLaC:
       {
         guint32 version;
         guint32 offset;
@@ -7085,6 +7087,8 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
          * since a similar layout is used in other cases as well */
         if (fourcc == FOURCC_mp4a)
           min_size = 20;
+        else if (fourcc == FOURCC_fLaC)
+          min_size = 86;
         else
           min_size = 40;
 
@@ -10858,6 +10862,89 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               "samplesize", G_TYPE_INT, samplesize, NULL);
           break;
         }
+        case FOURCC_fLaC:
+        {
+          /* The codingname of the sample entry is 'fLaC' */
+          GNode *flac = qtdemux_tree_get_child_by_type (stsd, FOURCC_fLaC);
+
+          if (flac) {
+            /* The 'dfLa' box is added to the sample entry to convey
+               initializing information for the decoder. */
+            const GNode *dfla =
+                qtdemux_tree_get_child_by_type (flac, FOURCC_dfLa);
+
+            if (dfla) {
+              const guint32 len = QT_UINT32 (dfla->data);
+
+              /* Must contain at least dfLa box header (12),
+               * METADATA_BLOCK_HEADER (4), METADATA_BLOCK_STREAMINFO (34) */
+              if (len < 50) {
+                GST_DEBUG_OBJECT (qtdemux,
+                    "discarding dfla atom with unexpected len %d", len);
+              } else {
+                /* skip dfLa header to get the METADATA_BLOCKs */
+                const guint8 *metadata_blocks = (guint8 *) dfla->data + 12;
+                const guint32 metadata_blocks_len = len - 12;
+
+                gchar *stream_marker = g_strdup ("fLaC");
+                GstBuffer *block = gst_buffer_new_wrapped (stream_marker,
+                    strlen (stream_marker));
+
+                guint index = 0;
+                gboolean is_last = FALSE;
+
+                GValue array = G_VALUE_INIT;
+                GValue value = G_VALUE_INIT;
+
+                g_value_init (&array, GST_TYPE_ARRAY);
+                g_value_init (&value, GST_TYPE_BUFFER);
+
+                gst_value_set_buffer (&value, block);
+                gst_value_array_append_value (&array, &value);
+                g_value_reset (&value);
+
+                gst_buffer_unref (block);
+
+                while (is_last == FALSE && index < metadata_blocks_len) {
+                  /* add the METADATA_BLOCK_HEADER size to the signalled size */
+                  const guint block_size = 4 +
+                      (metadata_blocks[index + 1] << 16) +
+                      (metadata_blocks[index + 2] << 8) +
+                      metadata_blocks[index + 3];
+
+                  is_last = metadata_blocks[index] >> 7;
+
+                  block = gst_buffer_new_and_alloc (block_size);
+
+                  gst_buffer_fill (block, 0, &metadata_blocks[index],
+                      block_size);
+
+                  gst_value_set_buffer (&value, block);
+                  gst_value_array_append_value (&array, &value);
+                  g_value_reset (&value);
+
+                  gst_buffer_unref (block);
+
+                  index += block_size;
+                }
+
+                gst_structure_set_value (gst_caps_get_structure (stream->caps,
+                        0), "streamheader", &array);
+
+                g_value_unset (&value);
+                g_value_unset (&array);
+
+                /* The sample rate obtained from the stsd may not be accurate
+                 * since it cannot represent rates greater than 65535Hz, so
+                 * override that value with the sample rate from the
+                 * METADATA_BLOCK_STREAMINFO block */
+                stream->rate =
+                    (QT_UINT32 (metadata_blocks + 14) >> 12) & 0xFFFFF;
+              }
+            }
+          }
+          break;
+        }
         case FOURCC_sawb:
           /* Fallthrough! */
           amrwb = TRUE;
@@ -13614,6 +13701,11 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case FOURCC_alac:
       _codec ("Apple lossless audio");
       caps = gst_caps_new_empty_simple ("audio/x-alac");
+      break;
+    case FOURCC_fLaC:
+      _codec ("Free Lossless Audio Codec");
+      caps = gst_caps_new_simple ("audio/x-flac",
+          "framed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
     case GST_MAKE_FOURCC ('Q', 'c', 'l', 'p'):
       _codec ("QualComm PureVoice");
