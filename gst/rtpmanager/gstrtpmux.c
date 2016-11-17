@@ -439,7 +439,11 @@ gst_rtp_mux_chain_list (GstPad * pad, GstObject * parent,
     GstCaps *current_caps = gst_pad_get_current_caps (pad);
 
     if (!gst_rtp_mux_setcaps (pad, rtp_mux, current_caps)) {
-      ret = GST_FLOW_NOT_NEGOTIATED;
+      gst_pad_mark_reconfigure (rtp_mux->srcpad);
+      if (GST_PAD_IS_FLUSHING (rtp_mux->srcpad))
+        ret = GST_FLOW_FLUSHING;
+      else
+        ret = GST_FLOW_NOT_NEGOTIATED;
       gst_buffer_list_unref (bufferlist);
       goto out;
     }
@@ -519,7 +523,11 @@ gst_rtp_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GstCaps *current_caps = gst_pad_get_current_caps (pad);
 
     if (!gst_rtp_mux_setcaps (pad, rtp_mux, current_caps)) {
-      ret = GST_FLOW_NOT_NEGOTIATED;
+      gst_pad_mark_reconfigure (rtp_mux->srcpad);
+      if (GST_PAD_IS_FLUSHING (rtp_mux->srcpad))
+        ret = GST_FLOW_FLUSHING;
+      else
+        ret = GST_FLOW_NOT_NEGOTIATED;
       gst_buffer_unref (buffer);
       goto out;
     }
