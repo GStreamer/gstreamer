@@ -656,8 +656,16 @@ gst_rtp_base_payload_chain (GstPad * pad, GstObject * parent,
   if (!rtpbasepayload->priv->negotiated)
     goto not_negotiated;
 
-  if (gst_pad_check_reconfigure (GST_RTP_BASE_PAYLOAD_SRCPAD (rtpbasepayload)))
-    gst_rtp_base_payload_negotiate (rtpbasepayload);
+  if (gst_pad_check_reconfigure (GST_RTP_BASE_PAYLOAD_SRCPAD (rtpbasepayload))) {
+    if (!gst_rtp_base_payload_negotiate (rtpbasepayload)) {
+      gst_pad_mark_reconfigure (GST_RTP_BASE_PAYLOAD_SRCPAD (rtpbasepayload));
+      if (GST_PAD_IS_FLUSHING (GST_RTP_BASE_PAYLOAD_SRCPAD (rtpbasepayload))) {
+        goto flushing;
+      } else {
+        goto negotiate_failed;
+      }
+    }
+  }
 
   ret = rtpbasepayload_class->handle_buffer (rtpbasepayload, buffer);
 
@@ -678,6 +686,18 @@ not_negotiated:
             "Perhaps you need a parser or typefind element before the payloader"));
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+negotiate_failed:
+  {
+    GST_DEBUG_OBJECT (rtpbasepayload, "Not negotiated");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+flushing:
+  {
+    GST_DEBUG_OBJECT (rtpbasepayload, "we are flushing");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_FLUSHING;
   }
 }
 
@@ -827,7 +847,8 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
     if (gst_caps_is_empty (temp)) {
       gst_caps_unref (temp);
       gst_caps_unref (templ);
-      return FALSE;
+      res = FALSE;
+      goto out;
     }
 
     /* We prefer the pt, timestamp-offset, seqnum-offset from the
@@ -1069,6 +1090,11 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
   res = gst_pad_set_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload), srccaps);
   gst_caps_unref (srccaps);
   gst_caps_unref (templ);
+
+out:
+
+  if (!res)
+    gst_pad_mark_reconfigure (GST_RTP_BASE_PAYLOAD_SRCPAD (payload));
 
   return res;
 }
