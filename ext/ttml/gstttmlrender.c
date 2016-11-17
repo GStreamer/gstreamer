@@ -317,6 +317,8 @@ gst_ttml_render_negotiate (GstTtmlRender * render, GstCaps * caps)
 
   GST_DEBUG_OBJECT (render, "performing negotiation");
 
+  gst_pad_check_reconfigure (render->srcpad);
+
   if (!caps)
     caps = gst_pad_get_current_caps (render->video_sinkpad);
   else
@@ -402,12 +404,16 @@ gst_ttml_render_negotiate (GstTtmlRender * render, GstCaps * caps)
 
   gst_caps_unref (caps);
 
+  if (!ret)
+    gst_pad_mark_reconfigure (render->srcpad);
+
   return ret;
 
 no_format:
   {
     if (caps)
       gst_caps_unref (caps);
+    gst_pad_mark_reconfigure (render->srcpad);
     return FALSE;
   }
 }
@@ -730,8 +736,16 @@ gst_ttml_render_push_frame (GstTtmlRender * render, GstBuffer * video_frame)
     goto done;
   }
 
-  if (gst_pad_check_reconfigure (render->srcpad))
-    gst_ttml_render_negotiate (render, NULL);
+  if (gst_pad_check_reconfigure (render->srcpad)) {
+    if (!gst_ttml_render_negotiate (render, NULL)) {
+      gst_pad_mark_reconfigure (render->srcpad);
+      gst_buffer_unref (video_frame);
+      if (GST_PAD_IS_FLUSHING (render->srcpad))
+        return GST_FLOW_FLUSHING;
+      else
+        return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
 
   video_frame = gst_buffer_make_writable (video_frame);
 
