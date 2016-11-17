@@ -438,14 +438,14 @@ gst_frame_positioner_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
-  if (g_once_init_enter (&meta_info)) {
+  if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
     const GstMetaInfo *meta =
         gst_meta_register (gst_frame_positioner_meta_api_get_type (),
         "GstFramePositionerMeta",
         sizeof (GstFramePositionerMeta), gst_frame_positioner_meta_init,
         NULL,
         gst_frame_positioner_meta_transform);
-    g_once_init_leave (&meta_info, meta);
+    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) meta);
   }
   return meta_info;
 }
