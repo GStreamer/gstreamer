@@ -460,8 +460,7 @@ Note that all testsuite should be inside python modules, so the directory should
                            help="Main directory where to put files. Default is %s" % DEFAULT_MAIN_DIR)
     dir_group.add_argument("--testsuites-dir", dest="testsuites_dir",
                            help="Directory where to look for testsuites. Default is %s"
-                           " Note that GstValidate expect testsuite file to have .testsuite"
-                           " as an extension in this folder." % DEFAULT_TESTSUITES_DIR)
+                           % DEFAULT_TESTSUITES_DIR)
     dir_group.add_argument("-o", "--output-dir", dest="output_dir",
                            help="Directory where to store logs and rendered files. Default is MAIN_DIR")
     dir_group.add_argument("-l", "--logs-dir", dest="logsdir",
@@ -471,7 +470,7 @@ Note that all testsuite should be inside python modules, so the directory should
     dir_group.add_argument("-p", "--medias-paths", dest="user_paths", action="append",
                            help="Paths in which to look for media files")
     dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
-                           help="Paths where to clone the testuite to run "
+                           help="Paths where to clone the testuite to run."
                            " default is MAIN_DIR/gst-integration-testsuites")
     dir_group.add_argument("-rl", "--redirect-logs", dest="redirect_logs",
                            help="Redirect logs to 'stdout' or 'sdterr'.")
