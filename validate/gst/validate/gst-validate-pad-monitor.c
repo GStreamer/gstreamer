@@ -2299,13 +2299,13 @@ gst_validate_pad_monitor_activatemode_func (GstPad * pad, GstObject * parent,
   return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_validate_pad_get_range_func (GstPad * pad, GstObject * parent,
     guint64 offset, guint size, GstBuffer ** buffer)
 {
   GstValidatePadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "validate-monitor");
-  gboolean ret;
+  GstFlowReturn ret;
   ret = pad_monitor->getrange_func (pad, parent, offset, size, buffer);
   return ret;
 }
