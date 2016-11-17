@@ -302,6 +302,14 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
           GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG2_AAC_RAW :
           GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG4_AAC_RAW;
     info.bpf = 1;
+  } else if (g_str_equal (mimetype, "audio/x-flac")) {
+    /* extract the needed information from the cap */
+    if (!(gst_structure_get_int (structure, "rate", &info.rate)))
+      goto parse_error;
+
+    gst_structure_get_int (structure, "channels", &info.channels);
+    spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_FLAC;
+    info.bpf = 1;
   } else {
     goto parse_error;
   }
