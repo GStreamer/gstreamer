@@ -126,13 +126,6 @@ void          gst_gl_buffer_init_once (void);
 GST_EXPORT
 gboolean      gst_is_gl_buffer        (GstMemory * mem);
 
-GST_EXPORT
-GstGLBuffer * gst_gl_buffer_alloc     (GstGLContext * context,
-                                       guint gl_target,
-                                       guint gl_usage,
-                                       GstAllocationParams * params,
-                                       gsize maxsize);
-
 G_END_DECLS
 
 #endif /* _GST_GL_BUFFER_H_ */
