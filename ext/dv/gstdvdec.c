@@ -303,6 +303,7 @@ static gboolean
 gst_dvdec_src_negotiate (GstDVDec * dvdec)
 {
   GstCaps *othercaps;
+  gboolean ret;
 
   /* no PAR was specified in input, derive from encoded data */
   if (dvdec->need_par) {
@@ -343,14 +344,14 @@ gst_dvdec_src_negotiate (GstDVDec * dvdec)
   }
 
   othercaps = gst_video_info_to_caps (&dvdec->vinfo);
-  gst_pad_set_caps (dvdec->srcpad, othercaps);
+  ret = gst_pad_set_caps (dvdec->srcpad, othercaps);
 
   gst_dvdec_negotiate_pool (dvdec, othercaps, &dvdec->vinfo);
   gst_caps_unref (othercaps);
 
   dvdec->src_negotiated = TRUE;
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
@@ -478,7 +479,7 @@ gst_dvdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     caps = gst_pad_get_current_caps (dvdec->srcpad);
     if (!caps)
-      goto not_negotiated;
+      goto flushing;
 
     gst_dvdec_negotiate_pool (dvdec, caps, &dvdec->vinfo);
     gst_caps_unref (caps);
@@ -556,7 +557,16 @@ parse_header_error:
 not_negotiated:
   {
     GST_DEBUG_OBJECT (dvdec, "could not negotiate output");
-    ret = GST_FLOW_NOT_NEGOTIATED;
+    if (GST_PAD_IS_FLUSHING (dvdec->srcpad))
+      ret = GST_FLOW_FLUSHING;
+    else
+      ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
+flushing:
+  {
+    GST_DEBUG_OBJECT (dvdec, "have no current caps");
+    ret = GST_FLOW_FLUSHING;
     goto done;
   }
 no_buffer:
