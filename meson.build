@@ -1,6 +1,6 @@
 project('gst-devtools', 'c',
   version : '1.11.0.1',
-  meson_version : '>= 0.33.0',
+  meson_version : '>= 0.36.0',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
                       'buildtype=debugoptimized' ])
@@ -30,6 +30,25 @@ glib_req = '>= 2.40.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
 cc = meson.get_compiler('c')
+
+if cc.get_id() == 'msvc'
+  # Ignore several spurious warnings for things gstreamer does very commonly
+  # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
+  # If a warning is harmless but hard to fix, use '/woXXXX' so it's shown once
+  # NOTE: Only add warnings here if you are sure they're spurious
+  add_project_arguments(
+      '/wd4018', # implicit signed/unsigned conversion
+      '/wd4146', # unary minus on unsigned (beware INT_MIN)
+      '/wd4244', # lossy type conversion (e.g. double -> int)
+      '/wd4305', # truncating type conversion (e.g. double -> float)
+      language : 'c')
+  # Disable SAFESEH with MSVC for plugins and libs that use external deps that
+  # are built with MinGW
+  noseh_link_args = ['/SAFESEH:NO']
+else
+  noseh_link_args = []
+endif
+
 gst_dep = dependency('gstreamer-' + apiversion, version : gst_req,
     fallback : ['gstreamer', 'gst_dep'])
 gst_pbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_req,
