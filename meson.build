@@ -33,8 +33,13 @@ cc = meson.get_compiler('c')
 # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
 # If a warning is harmless but hard to fix, use '/woXXXX' so it's shown once
 # NOTE: Only add warnings here if you are sure they're spurious
-if cc.get_id() == 'msvc' and not meson.is_subproject()
-  add_global_arguments('/wd4018', '/wd4244', '/wd4996', language : 'c')
+if cc.get_id() == 'msvc'
+  add_project_arguments(
+      '/wd4018', # implicit signed/unsigned conversion
+      '/wd4146', # unary minus on unsigned (beware INT_MIN)
+      '/wd4244', # lossy type conversion (e.g. double -> int)
+      '/wd4305', # truncating type conversion (e.g. double -> float)
+      language : 'c')
 endif
 
 cdata = configuration_data()
