@@ -11,6 +11,8 @@ EXPORTS
 	gst_lfo_control_source_get_type
 	gst_lfo_control_source_new
 	gst_lfo_waveform_get_type
+	gst_proxy_control_binding_get_type
+	gst_proxy_control_binding_new
 	gst_timed_value_control_invalidate_cache
 	gst_timed_value_control_source_find_control_point_iter
 	gst_timed_value_control_source_get_all

@@ -30,6 +30,7 @@
 #include <gst/controller/gstlfocontrolsource.h>
 #include <gst/controller/gsttriggercontrolsource.h>
 #include <gst/controller/gstdirectcontrolbinding.h>
+#include <gst/controller/gstproxycontrolbinding.h>
 
 /* enum for text element */
 
@@ -1526,6 +1527,111 @@ GST_START_TEST (controller_trigger_tolerance)
 
 GST_END_TEST;
 
+GST_START_TEST (controller_proxy)
+{
+  GstControlBinding *cb, *cb2;
+  GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
+  GstElement *elem, *elem2;
+  GstClockTime time;
+  gint int1, int2;
+  GValue gval1 = G_VALUE_INIT, gval2 = G_VALUE_INIT;
+  GValue *val1, *val2;
+
+  elem = gst_element_factory_make ("testobj", NULL);
+  elem2 = gst_element_factory_make ("testobj", NULL);
+
+  /* proxy control binding from elem to elem2 */
+  cb = gst_proxy_control_binding_new (GST_OBJECT (elem), "int",
+      GST_OBJECT (elem2), "int");
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem), cb));
+
+  /* test that no proxy does nothing */
+  val1 = gst_control_binding_get_value (cb, 0);
+  fail_unless (val1 == NULL);
+  fail_if (gst_control_binding_get_value_array (cb, 0, 0, 1, &int1));
+  fail_if (gst_control_binding_get_g_value_array (cb, 0, 0, 1, &gval1));
+
+  /* new interpolation control source */
+  cs = gst_trigger_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
+
+  cb2 = gst_direct_control_binding_new (GST_OBJECT (elem2), "int", cs);
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem2), cb2));
+
+  /* set control values */
+  fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0));
+  fail_unless (gst_timed_value_control_source_set (tvcs, 1 * GST_SECOND, 1.0));
+
+  /* now pull in values for some timestamps */
+  time = 0 * GST_SECOND;
+  gst_object_sync_values (GST_OBJECT (elem), time);
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int, 0);
+  val1 = gst_control_binding_get_value (cb, time);
+  val2 = gst_control_binding_get_value (cb2, time);
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int,
+      g_value_get_int (val1));
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int,
+      g_value_get_int (val2));
+  fail_unless (gst_control_binding_get_value_array (cb, time, 0, 1, &int1));
+  fail_unless (gst_control_binding_get_value_array (cb2, time, 0, 1, &int2));
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int, int1);
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int, int2);
+  fail_unless (gst_control_binding_get_g_value_array (cb, time, 0, 1, &gval1));
+  fail_unless (gst_control_binding_get_g_value_array (cb2, time, 0, 1, &gval2));
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int,
+      g_value_get_int (&gval1));
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int,
+      g_value_get_int (&gval2));
+  g_value_unset (val1);
+  g_value_unset (val2);
+  g_free (val1);
+  g_free (val2);
+  g_value_unset (&gval1);
+  g_value_unset (&gval2);
+
+  time = 1 * GST_SECOND;
+  gst_object_sync_values (GST_OBJECT (elem), time);
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int, 100);
+  val1 = gst_control_binding_get_value (cb, time);
+  val2 = gst_control_binding_get_value (cb2, time);
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int,
+      g_value_get_int (val1));
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int,
+      g_value_get_int (val2));
+  fail_unless (gst_control_binding_get_value_array (cb, time, 0, 1, &int1));
+  fail_unless (gst_control_binding_get_value_array (cb2, time, 0, 1, &int2));
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int, int1);
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int, int2);
+  fail_unless (gst_control_binding_get_g_value_array (cb, time, 0, 1, &gval1));
+  fail_unless (gst_control_binding_get_g_value_array (cb2, time, 0, 1, &gval2));
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int,
+      g_value_get_int (&gval1));
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int,
+      g_value_get_int (&gval2));
+  g_value_unset (val1);
+  g_value_unset (val2);
+  g_free (val1);
+  g_free (val2);
+  g_value_unset (&gval1);
+  g_value_unset (&gval2);
+
+  /* test syncing on the original control binding */
+  time = 0 * GST_SECOND;
+  gst_object_sync_values (GST_OBJECT (elem2), time);
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int, 0);
+
+  time = 1 * GST_SECOND;
+  gst_object_sync_values (GST_OBJECT (elem2), time);
+  fail_unless_equals_int (GST_TEST_OBJ (elem2)->val_int, 100);
+
+  gst_object_unref (cs);
+  gst_object_unref (elem);
+  gst_object_unref (elem2);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 gst_controller_suite (void)
@@ -1560,6 +1666,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_lfo_triangle);
   tcase_add_test (tc, controller_trigger_exact);
   tcase_add_test (tc, controller_trigger_tolerance);
+  tcase_add_test (tc, controller_proxy);
 
   return s;
 }

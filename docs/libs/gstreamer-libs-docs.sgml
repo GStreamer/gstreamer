@@ -59,6 +59,7 @@
 
 			<xi:include href="xml/gstargbcontrolbinding.xml" />
 			<xi:include href="xml/gstdirectcontrolbinding.xml" />
+			<xi:include href="xml/gstproxycontrolbinding.xml" />
 
       <xi:include href="xml/gsttimedvaluecontrolsource.xml" />
       <xi:include href="xml/gstinterpolationcontrolsource.xml" />

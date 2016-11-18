@@ -52,6 +52,23 @@ GST_TYPE_DIRECT_CONTROL_BINDING
 gst_direct_control_binding_get_type
 </SECTION>
 
+<SECTION>
+<FILE>gstproxycontrolbinding</FILE>
+<TITLE>GstProxyControlBinding</TITLE>
+<INCLUDE>libs/controller/gstdirectcontrolbinding.h</INCLUDE>
+gst_proxy_control_binding_new
+<SUBSECTION Standard>
+GstProxyControlBinding
+GstProxyControlBindingClass
+GST_PROXY_CONTROL_BINDING
+GST_PROXY_CONTROL_BINDING_CLASS
+GST_PROXY_CONTROL_BINDING_GET_CLASS
+GST_IS_PROXY_CONTROL_BINDING
+GST_IS_PROXY_CONTROL_BINDING_CLASS
+GST_TYPE_PROXY_CONTROL_BINDING
+gst_proxy_control_binding_get_type
+</SECTION>
+
 # control source classes
 
 <SECTION>

@@ -3,6 +3,7 @@ gst_controller_sources = [
   'gstdirectcontrolbinding.c',
   'gsttimedvaluecontrolsource.c',
   'gstinterpolationcontrolsource.c',
+  'gstproxycontrolbinding.c',
   'gsttriggercontrolsource.c',
   'gstlfocontrolsource.c',
 ]
@@ -12,6 +13,7 @@ gst_controller_headers = [
   'gstdirectcontrolbinding.h',
   'gsttimedvaluecontrolsource.h',
   'gstinterpolationcontrolsource.h',
+  'gstproxycontrolbinding.h',
   'gsttriggercontrolsource.h',
   'gstlfocontrolsource.h',
   'controller.h',
