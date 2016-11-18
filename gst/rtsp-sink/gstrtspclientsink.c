@@ -2318,131 +2318,6 @@ gst_rtsp_auth_method_to_string (GstRTSPAuthMethod method)
 }
 #endif
 
-static const gchar *
-gst_rtsp_client_sink_skip_lws (const gchar * s)
-{
-  while (g_ascii_isspace (*s))
-    s++;
-  return s;
-}
-
-static const gchar *
-gst_rtsp_client_sink_unskip_lws (const gchar * s, const gchar * start)
-{
-  while (s > start && g_ascii_isspace (*(s - 1)))
-    s--;
-  return s;
-}
-
-static const gchar *
-gst_rtsp_client_sink_skip_commas (const gchar * s)
-{
-  /* The grammar allows for multiple commas */
-  while (g_ascii_isspace (*s) || *s == ',')
-    s++;
-  return s;
-}
-
-static const gchar *
-gst_rtsp_client_sink_skip_item (const gchar * s)
-{
-  gboolean quoted = FALSE;
-  const gchar *start = s;
-
-  /* A list item ends at the last non-whitespace character
-   * before a comma which is not inside a quoted-string. Or at
-   * the end of the string.
-   */
-  while (*s) {
-    if (*s == '"')
-      quoted = !quoted;
-    else if (quoted) {
-      if (*s == '\\' && *(s + 1))
-        s++;
-    } else {
-      if (*s == ',')
-        break;
-    }
-    s++;
-  }
-
-  return gst_rtsp_client_sink_unskip_lws (s, start);
-}
-
-static void
-gst_rtsp_decode_quoted_string (gchar * quoted_string)
-{
-  gchar *src, *dst;
-
-  src = quoted_string + 1;
-  dst = quoted_string;
-  while (*src && *src != '"') {
-    if (*src == '\\' && *(src + 1))
-      src++;
-    *dst++ = *src++;
-  }
-  *dst = '\0';
-}
-
-/* Extract the authentication tokens that the server provided for each method
- * into an array of structures and give those to the connection object.
- */
-static void
-gst_rtsp_client_sink_parse_digest_challenge (GstRTSPConnection * conn,
-    const gchar * header, gboolean * stale)
-{
-  GSList *list = NULL, *iter;
-  const gchar *end;
-  gchar *item, *eq, *name_end, *value;
-
-  g_return_if_fail (stale != NULL);
-
-  gst_rtsp_connection_clear_auth_params (conn);
-  *stale = FALSE;
-
-  /* Parse a header whose content is described by RFC2616 as
-   * "#something", where "something" does not itself contain commas,
-   * except as part of quoted-strings, into a list of allocated strings.
-   */
-  header = gst_rtsp_client_sink_skip_commas (header);
-  while (*header) {
-    end = gst_rtsp_client_sink_skip_item (header);
-    list = g_slist_prepend (list, g_strndup (header, end - header));
-    header = gst_rtsp_client_sink_skip_commas (end);
-  }
-  if (!list)
-    return;
-
-  list = g_slist_reverse (list);
-  for (iter = list; iter; iter = iter->next) {
-    item = iter->data;
-
-    eq = strchr (item, '=');
-    if (eq) {
-      name_end = (gchar *) gst_rtsp_client_sink_unskip_lws (eq, item);
-      if (name_end == item) {
-        /* That's no good... */
-        g_free (item);
-        continue;
-      }
-
-      *name_end = '\0';
-
-      value = (gchar *) gst_rtsp_client_sink_skip_lws (eq + 1);
-      if (*value == '"')
-        gst_rtsp_decode_quoted_string (value);
-    } else
-      value = NULL;
-
-    if (value && strcmp (item, "stale") == 0 && strcmp (value, "TRUE") == 0)
-      *stale = TRUE;
-    gst_rtsp_connection_set_auth_param (conn, item, value);
-    g_free (item);
-  }
-
-  g_slist_free (list);
-}
-
 /* Parse a WWW-Authenticate Response header and determine the
  * available authentication methods
  *
@@ -2452,24 +2327,47 @@ gst_rtsp_client_sink_parse_digest_challenge (GstRTSPConnection * conn,
  * At the moment, for Basic auth, we just do a minimal check and don't
  * even parse out the realm */
 static void
-gst_rtsp_client_sink_parse_auth_hdr (gchar * hdr, GstRTSPAuthMethod * methods,
-    GstRTSPConnection * conn, gboolean * stale)
+gst_rtsp_client_sink_parse_auth_hdr (GstRTSPMessage * response,
+    GstRTSPAuthMethod * methods, GstRTSPConnection * conn, gboolean * stale)
 {
-  gchar *start;
+  GstRTSPAuthCredential **credentials, **credential;
 
-  g_return_if_fail (hdr != NULL);
+  g_return_if_fail (response != NULL);
   g_return_if_fail (methods != NULL);
   g_return_if_fail (stale != NULL);
 
-  /* Skip whitespace at the start of the string */
-  for (start = hdr; start[0] != '\0' && g_ascii_isspace (start[0]); start++);
+  credentials =
+      gst_rtsp_message_parse_auth_credentials (response,
+      GST_RTSP_HDR_WWW_AUTHENTICATE);
+  if (!credentials)
+    return;
 
-  if (g_ascii_strncasecmp (start, "basic", 5) == 0)
-    *methods |= GST_RTSP_AUTH_BASIC;
-  else if (g_ascii_strncasecmp (start, "digest ", 7) == 0) {
-    *methods |= GST_RTSP_AUTH_DIGEST;
-    gst_rtsp_client_sink_parse_digest_challenge (conn, &start[7], stale);
+  credential = credentials;
+  while (*credential) {
+    if ((*credential)->scheme == GST_RTSP_AUTH_BASIC) {
+      *methods |= GST_RTSP_AUTH_BASIC;
+    } else if ((*credential)->scheme == GST_RTSP_AUTH_DIGEST) {
+      GstRTSPAuthParam **param = (*credential)->params;
+
+      *methods |= GST_RTSP_AUTH_DIGEST;
+
+      gst_rtsp_connection_clear_auth_params (conn);
+      *stale = FALSE;
+
+      while (*param) {
+        if (strcmp ((*param)->name, "stale") == 0
+            && g_ascii_strcasecmp ((*param)->value, "TRUE") == 0)
+          *stale = TRUE;
+        gst_rtsp_connection_set_auth_param (conn, (*param)->name,
+            (*param)->value);
+        param++;
+      }
+    }
+
+    credential++;
   }
+
+  gst_rtsp_auth_credentials_free (credentials);
 }
 
 /**
@@ -2497,16 +2395,12 @@ gst_rtsp_client_sink_setup_auth (GstRTSPClientSink * sink,
   GstRTSPResult auth_result;
   GstRTSPUrl *url;
   GstRTSPConnection *conn;
-  gchar *hdr;
   gboolean stale = FALSE;
 
   conn = sink->conninfo.connection;
 
   /* Identify the available auth methods and see if any are supported */
-  if (gst_rtsp_message_get_header (response, GST_RTSP_HDR_WWW_AUTHENTICATE,
-          &hdr, 0) == GST_RTSP_OK) {
-    gst_rtsp_client_sink_parse_auth_hdr (hdr, &avail_methods, conn, &stale);
-  }
+  gst_rtsp_client_sink_parse_auth_hdr (response, &avail_methods, conn, &stale);
 
   if (avail_methods == GST_RTSP_AUTH_NONE)
     goto no_auth_available;
