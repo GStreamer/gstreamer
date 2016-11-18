@@ -405,6 +405,14 @@ GstRTSPMethod      gst_rtsp_find_method        (const gchar *method);
 
 gboolean           gst_rtsp_header_allow_multiple (GstRTSPHeaderField field);
 
+gchar *            gst_rtsp_generate_digest_auth_response (const gchar *algorithm,
+                                                           const gchar *method,
+                                                           const gchar *realm,
+                                                           const gchar *username,
+                                                           const gchar *password,
+                                                           const gchar *uri,
+                                                           const gchar *nonce);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_DEFS_H__ */

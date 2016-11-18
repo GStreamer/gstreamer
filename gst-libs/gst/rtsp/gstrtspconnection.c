@@ -982,57 +982,6 @@ tunneling_failed:
 }
 
 static void
-auth_digest_compute_hex_urp (const gchar * username,
-    const gchar * realm, const gchar * password, gchar hex_urp[33])
-{
-  GChecksum *md5_context = g_checksum_new (G_CHECKSUM_MD5);
-  const gchar *digest_string;
-
-  g_checksum_update (md5_context, (const guchar *) username, strlen (username));
-  g_checksum_update (md5_context, (const guchar *) ":", 1);
-  g_checksum_update (md5_context, (const guchar *) realm, strlen (realm));
-  g_checksum_update (md5_context, (const guchar *) ":", 1);
-  g_checksum_update (md5_context, (const guchar *) password, strlen (password));
-  digest_string = g_checksum_get_string (md5_context);
-
-  memset (hex_urp, 0, 33);
-  memcpy (hex_urp, digest_string, strlen (digest_string));
-
-  g_checksum_free (md5_context);
-}
-
-static void
-auth_digest_compute_response (const gchar * method,
-    const gchar * uri, const gchar * hex_a1, const gchar * nonce,
-    gchar response[33])
-{
-  char hex_a2[33] = { 0, };
-  GChecksum *md5_context = g_checksum_new (G_CHECKSUM_MD5);
-  const gchar *digest_string;
-
-  /* compute A2 */
-  g_checksum_update (md5_context, (const guchar *) method, strlen (method));
-  g_checksum_update (md5_context, (const guchar *) ":", 1);
-  g_checksum_update (md5_context, (const guchar *) uri, strlen (uri));
-  digest_string = g_checksum_get_string (md5_context);
-  memcpy (hex_a2, digest_string, strlen (digest_string));
-
-  /* compute KD */
-  g_checksum_reset (md5_context);
-  g_checksum_update (md5_context, (const guchar *) hex_a1, strlen (hex_a1));
-  g_checksum_update (md5_context, (const guchar *) ":", 1);
-  g_checksum_update (md5_context, (const guchar *) nonce, strlen (nonce));
-  g_checksum_update (md5_context, (const guchar *) ":", 1);
-
-  g_checksum_update (md5_context, (const guchar *) hex_a2, 32);
-  digest_string = g_checksum_get_string (md5_context);
-  memset (response, 0, 33);
-  memcpy (response, digest_string, strlen (digest_string));
-
-  g_checksum_free (md5_context);
-}
-
-static void
 add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
 {
   switch (conn->auth_method) {
@@ -1056,7 +1005,7 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
       break;
     }
     case GST_RTSP_AUTH_DIGEST:{
-      gchar response[33], hex_urp[33];
+      gchar *response;
       gchar *auth_string, *auth_string2;
       gchar *realm;
       gchar *nonce;
@@ -1075,18 +1024,17 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
       if (realm == NULL || nonce == NULL)
         break;
 
-      auth_digest_compute_hex_urp (conn->username, realm, conn->passwd,
-          hex_urp);
-
       method = gst_rtsp_method_as_text (message->type_data.request.method);
       uri = message->type_data.request.uri;
 
-      /* Assume no qop, algorithm=md5, stale=false */
-      /* For algorithm MD5, a1 = urp. */
-      auth_digest_compute_response (method, uri, hex_urp, nonce, response);
-      auth_string = g_strdup_printf ("Digest username=\"%s\", "
+      response =
+          gst_rtsp_generate_digest_auth_response (NULL, method, realm,
+          conn->username, conn->passwd, uri, nonce);
+      auth_string =
+          g_strdup_printf ("Digest username=\"%s\", "
           "realm=\"%s\", nonce=\"%s\", uri=\"%s\", response=\"%s\"",
           conn->username, realm, nonce, uri, response);
+      g_free (response);
 
       opaque = (gchar *) g_hash_table_lookup (conn->auth_params, "opaque");
       if (opaque) {
