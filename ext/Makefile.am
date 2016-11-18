@@ -529,6 +529,7 @@ DIST_SUBDIRS = \
 	fluidsynth \
 	gsm \
 	hls \
+	iqa \
 	ladspa \
 	kate \
 	libde265 \
