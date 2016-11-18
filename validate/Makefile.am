@@ -20,11 +20,15 @@ supps_DATA = \
 	common/gst.supp \
 	data/gstvalidate.supp
 
+# include before EXTRA_DIST for win32 assignment
+include $(top_srcdir)/common/win32.mak
+
 EXTRA_DIST = \
 	ChangeLog autogen.sh depcomp \
 	COPYING \
 	common/gst.supp \
-	data/gstvalidate.supp
+	data/gstvalidate.supp \
+	$(win32)
 
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
