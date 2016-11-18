@@ -11377,13 +11377,12 @@ static GstFlowReturn
 qtdemux_expose_streams (GstQTDemux * qtdemux)
 {
   gint i;
-  GstFlowReturn ret = GST_FLOW_OK;
   GSList *oldpads = NULL;
   GSList *iter;
 
   GST_DEBUG_OBJECT (qtdemux, "exposing streams");
 
-  for (i = 0; ret == GST_FLOW_OK && i < qtdemux->n_streams; i++) {
+  for (i = 0; i < qtdemux->n_streams; i++) {
     QtDemuxStream *stream = qtdemux->streams[i];
     GstPad *oldpad = stream->pad;
     GstTagList *list;
@@ -11450,7 +11449,7 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
   }
 
   qtdemux->exposed = TRUE;
-  return ret;
+  return GST_FLOW_OK;
 }
 
 /* check if major or compatible brand is 3GP */
