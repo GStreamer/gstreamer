@@ -1,6 +1,6 @@
 project('gst-plugins-ugly', 'c',
   version : '1.11.0.1',
-  meson_version : '>= 0.35.0',
+  meson_version : '>= 0.36.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -23,6 +23,25 @@ api_version = '1.0'
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 cc = meson.get_compiler('c')
+
+if cc.get_id() == 'msvc'
+  # Ignore several spurious warnings for things gstreamer does very commonly
+  # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
+  # If a warning is harmless but hard to fix, use '/woXXXX' so it's shown once
+  # NOTE: Only add warnings here if you are sure they're spurious
+  add_project_arguments(
+      '/wd4018', # implicit signed/unsigned conversion
+      '/wd4146', # unary minus on unsigned (beware INT_MIN)
+      '/wd4244', # lossy type conversion (e.g. double -> int)
+      '/wd4305', # truncating type conversion (e.g. double -> float)
+      language : 'c')
+  # Disable SAFESEH with MSVC for plugins and libs that use external deps that
+  # are built with MinGW
+  noseh_link_args = ['/SAFESEH:NO']
+else
+  noseh_link_args = []
+endif
+
 cdata = configuration_data()
 check_headers = [
   ['HAVE_DLFCN_H', 'dlfcn.h'],
