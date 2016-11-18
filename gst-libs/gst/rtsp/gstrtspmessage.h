@@ -199,6 +199,27 @@ GstRTSPResult      gst_rtsp_message_steal_body      (GstRTSPMessage *msg,
                                                      guint8 **data,
                                                      guint *size);
 
+typedef struct _GstRTSPAuthCredential GstRTSPAuthCredential;
+typedef struct _GstRTSPAuthParam GstRTSPAuthParam;
+struct _GstRTSPAuthCredential {
+  GstRTSPAuthMethod scheme;
+
+  /* For Basic/Digest WWW-Authenticate and Digest
+   * Authorization */
+  GstRTSPAuthParam **params; /* NULL terminated */
+
+  /* For Basic Authorization */
+  gchar *authorization;
+};
+
+struct _GstRTSPAuthParam {
+  gchar *name;
+  gchar *value;
+};
+
+GstRTSPAuthCredential ** gst_rtsp_message_parse_auth_credentials (GstRTSPMessage * msg, GstRTSPHeaderField field);
+void                     gst_rtsp_auth_credentials_free (GstRTSPAuthCredential ** credentials);
+
 /* debug */
 GstRTSPResult      gst_rtsp_message_dump            (GstRTSPMessage *msg);
 

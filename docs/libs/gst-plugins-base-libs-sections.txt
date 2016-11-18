@@ -1682,6 +1682,12 @@ gst_rtsp_message_set_body
 gst_rtsp_message_take_body
 gst_rtsp_message_get_body
 gst_rtsp_message_steal_body
+
+GstRTSPAuthCredential
+GstRTSPAuthParam
+gst_rtsp_message_parse_auth_credentials
+gst_rtsp_auth_credentials_free
+
 gst_rtsp_message_dump
 </SECTION>
 

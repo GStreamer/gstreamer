@@ -652,6 +652,290 @@ GST_START_TEST (test_rtsp_message)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtsp_message_auth_credentials)
+{
+  GstRTSPMessage *msg;
+  GstRTSPResult res;
+  GstRTSPAuthCredential **credentials;
+  GstRTSPAuthCredential **credential;
+  GstRTSPAuthParam **param;
+
+  /* Simple basic auth, no params */
+  res = gst_rtsp_message_new_request (&msg, GST_RTSP_PLAY,
+      "rtsp://foo.bar:8554/test");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res =
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_WWW_AUTHENTICATE, "Basic");
+  credentials =
+      gst_rtsp_message_parse_auth_credentials (msg,
+      GST_RTSP_HDR_WWW_AUTHENTICATE);
+  fail_unless (credentials != NULL);
+
+  credential = credentials;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_BASIC);
+  param = (*credential)->params;
+  fail_unless (param == NULL);
+  credential++;
+  fail_unless (*credential == NULL);
+
+  gst_rtsp_auth_credentials_free (credentials);
+  res = gst_rtsp_message_free (msg);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  /* Simple basic auth, digest auth, no params */
+  res = gst_rtsp_message_new_request (&msg, GST_RTSP_PLAY,
+      "rtsp://foo.bar:8554/test");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res =
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_WWW_AUTHENTICATE,
+      "Basic Digest");
+  credentials =
+      gst_rtsp_message_parse_auth_credentials (msg,
+      GST_RTSP_HDR_WWW_AUTHENTICATE);
+  fail_unless (credentials != NULL);
+
+  credential = credentials;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_BASIC);
+  param = (*credential)->params;
+  fail_unless (param == NULL);
+  credential++;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_DIGEST);
+  param = (*credential)->params;
+  fail_unless (param == NULL);
+  credential++;
+  fail_unless (*credential == NULL);
+
+  gst_rtsp_auth_credentials_free (credentials);
+  res = gst_rtsp_message_free (msg);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  /* Simple basic auth */
+  res = gst_rtsp_message_new_request (&msg, GST_RTSP_PLAY,
+      "rtsp://foo.bar:8554/test");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res =
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_WWW_AUTHENTICATE,
+      "Basic foo=\"bar\", baz=foo");
+  credentials =
+      gst_rtsp_message_parse_auth_credentials (msg,
+      GST_RTSP_HDR_WWW_AUTHENTICATE);
+  fail_unless (credentials != NULL);
+
+  credential = credentials;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_BASIC);
+  param = (*credential)->params;
+  fail_unless (param != NULL);
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "foo");
+  fail_unless_equals_string ((*param)->value, "bar");
+  param++;
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "baz");
+  fail_unless_equals_string ((*param)->value, "foo");
+  param++;
+  fail_unless (*param == NULL);
+  credential++;
+  fail_unless (*credential == NULL);
+
+  gst_rtsp_auth_credentials_free (credentials);
+  res = gst_rtsp_message_free (msg);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  /* Two simple basic auth headers */
+  res = gst_rtsp_message_new_request (&msg, GST_RTSP_PLAY,
+      "rtsp://foo.bar:8554/test");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res =
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_WWW_AUTHENTICATE,
+      "Basic foo=\"bar\", baz=foo");
+  res =
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_WWW_AUTHENTICATE,
+      "Basic foo1=\"bar\", baz1=foo");
+  credentials =
+      gst_rtsp_message_parse_auth_credentials (msg,
+      GST_RTSP_HDR_WWW_AUTHENTICATE);
+  fail_unless (credentials != NULL);
+
+  credential = credentials;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_BASIC);
+  param = (*credential)->params;
+  fail_unless (param != NULL);
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "foo");
+  fail_unless_equals_string ((*param)->value, "bar");
+  param++;
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "baz");
+  fail_unless_equals_string ((*param)->value, "foo");
+  param++;
+  fail_unless (*param == NULL);
+  credential++;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_BASIC);
+  param = (*credential)->params;
+  fail_unless (param != NULL);
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "foo1");
+  fail_unless_equals_string ((*param)->value, "bar");
+  param++;
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "baz1");
+  fail_unless_equals_string ((*param)->value, "foo");
+  param++;
+  fail_unless (*param == NULL);
+  credential++;
+  fail_unless (*credential == NULL);
+
+  gst_rtsp_auth_credentials_free (credentials);
+  res = gst_rtsp_message_free (msg);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  /* Simple basic auth, digest auth in one header */
+  res = gst_rtsp_message_new_request (&msg, GST_RTSP_PLAY,
+      "rtsp://foo.bar:8554/test");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res =
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_WWW_AUTHENTICATE,
+      "Basic foo=\"bar\", baz=foo Digest foo1=\"bar\", baz1=foo");
+  credentials =
+      gst_rtsp_message_parse_auth_credentials (msg,
+      GST_RTSP_HDR_WWW_AUTHENTICATE);
+  fail_unless (credentials != NULL);
+
+  credential = credentials;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_BASIC);
+  param = (*credential)->params;
+  fail_unless (param != NULL);
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "foo");
+  fail_unless_equals_string ((*param)->value, "bar");
+  param++;
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "baz");
+  fail_unless_equals_string ((*param)->value, "foo");
+  param++;
+  fail_unless (*param == NULL);
+  credential++;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_DIGEST);
+  param = (*credential)->params;
+  fail_unless (param != NULL);
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "foo1");
+  fail_unless_equals_string ((*param)->value, "bar");
+  param++;
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "baz1");
+  fail_unless_equals_string ((*param)->value, "foo");
+  param++;
+  fail_unless (*param == NULL);
+  credential++;
+  fail_unless (*credential == NULL);
+
+  gst_rtsp_auth_credentials_free (credentials);
+  res = gst_rtsp_message_free (msg);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  /* Simple basic auth, digest auth in one header, with random commas and spaces */
+  res = gst_rtsp_message_new_request (&msg, GST_RTSP_PLAY,
+      "rtsp://foo.bar:8554/test");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res =
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_WWW_AUTHENTICATE,
+      "Basic     foo=\"bar\",, , baz=foo, Digest , foo1=\"bar\",, baz1=foo");
+  credentials =
+      gst_rtsp_message_parse_auth_credentials (msg,
+      GST_RTSP_HDR_WWW_AUTHENTICATE);
+  fail_unless (credentials != NULL);
+
+  credential = credentials;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_BASIC);
+  param = (*credential)->params;
+  fail_unless (param != NULL);
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "foo");
+  fail_unless_equals_string ((*param)->value, "bar");
+  param++;
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "baz");
+  fail_unless_equals_string ((*param)->value, "foo");
+  param++;
+  fail_unless (*param == NULL);
+  credential++;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_DIGEST);
+  param = (*credential)->params;
+  fail_unless (param != NULL);
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "foo1");
+  fail_unless_equals_string ((*param)->value, "bar");
+  param++;
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "baz1");
+  fail_unless_equals_string ((*param)->value, "foo");
+  param++;
+  fail_unless (*param == NULL);
+  credential++;
+  fail_unless (*credential == NULL);
+
+  gst_rtsp_auth_credentials_free (credentials);
+  res = gst_rtsp_message_free (msg);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  /* Simple basic auth */
+  res = gst_rtsp_message_new_request (&msg, GST_RTSP_PLAY,
+      "rtsp://foo.bar:8554/test");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res =
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_AUTHORIZATION,
+      "Basic foobarbaz");
+  credentials =
+      gst_rtsp_message_parse_auth_credentials (msg, GST_RTSP_HDR_AUTHORIZATION);
+  fail_unless (credentials != NULL);
+
+  credential = credentials;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_BASIC);
+  param = (*credential)->params;
+  fail_unless (param == NULL);
+  fail_unless_equals_string ((*credential)->authorization, "foobarbaz");
+  credential++;
+  fail_unless (*credential == NULL);
+
+  gst_rtsp_auth_credentials_free (credentials);
+  res = gst_rtsp_message_free (msg);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+
+  /* Simple digest auth */
+  res = gst_rtsp_message_new_request (&msg, GST_RTSP_PLAY,
+      "rtsp://foo.bar:8554/test");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res =
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_AUTHORIZATION,
+      "Digest foo=\"bar\" baz=foo");
+  credentials =
+      gst_rtsp_message_parse_auth_credentials (msg, GST_RTSP_HDR_AUTHORIZATION);
+  fail_unless (credentials != NULL);
+
+  credential = credentials;
+  fail_unless_equals_int ((*credential)->scheme, GST_RTSP_AUTH_DIGEST);
+  param = (*credential)->params;
+  fail_unless (param != NULL);
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "foo");
+  fail_unless_equals_string ((*param)->value, "bar");
+  param++;
+  fail_unless (*param != NULL);
+  fail_unless_equals_string ((*param)->name, "baz");
+  fail_unless_equals_string ((*param)->value, "foo");
+  param++;
+  fail_unless (*param == NULL);
+  credential++;
+  fail_unless (*credential == NULL);
+
+  gst_rtsp_auth_credentials_free (credentials);
+  res = gst_rtsp_message_free (msg);
+  fail_unless_equals_int (res, GST_RTSP_OK);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtsp_suite (void)
 {
@@ -668,6 +952,7 @@ rtsp_suite (void)
   tcase_add_test (tc_chain, test_rtsp_range_clock);
   tcase_add_test (tc_chain, test_rtsp_range_convert);
   tcase_add_test (tc_chain, test_rtsp_message);
+  tcase_add_test (tc_chain, test_rtsp_message_auth_credentials);
 
   return s;
 }
