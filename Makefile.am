@@ -11,12 +11,13 @@ SUBDIRS = ges tests tools common m4 pkgconfig docs bindings plugins $(EXAMPLES_S
 DIST_SUBDIRS = $(SUBDIRS)
 
 # include before EXTRA_DIST for win32 assignment
-#include $(top_srcdir)/common/win32.mak
+include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
 	gst-editing-services.spec depcomp \
 	AUTHORS COPYING NEWS README RELEASE \
-	ChangeLog autogen.sh gst-editing-services.doap
+	ChangeLog autogen.sh gst-editing-services.doap \
+	$(win32)
 
 DISTCLEANFILES = _stdint.h
 
