@@ -1606,6 +1606,9 @@ gst_aggregator_default_create_new_pad (GstAggregator * self,
   if (templ->direction != GST_PAD_SINK)
     goto not_sink;
 
+  if (templ->presence != GST_PAD_REQUEST)
+    goto not_request;
+
   GST_OBJECT_LOCK (self);
   if (req_name == NULL || strlen (req_name) < 6
       || !g_str_has_prefix (req_name, "sink_")) {
@@ -1630,7 +1633,12 @@ gst_aggregator_default_create_new_pad (GstAggregator * self,
   /* errors */
 not_sink:
   {
-    GST_WARNING_OBJECT (self, "request new pad that is not a SINK pad\n");
+    GST_WARNING_OBJECT (self, "request new pad that is not a SINK pad");
+    return NULL;
+  }
+not_request:
+  {
+    GST_WARNING_OBJECT (self, "request new pad that is not a REQUEST pad");
     return NULL;
   }
 }
