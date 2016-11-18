@@ -490,6 +490,7 @@ AG_GST_CHECK_PLUGIN(adpcmenc)
 AG_GST_CHECK_PLUGIN(aiff)
 AG_GST_CHECK_PLUGIN(videoframe_audiolevel)
 AG_GST_CHECK_PLUGIN(asfmux)
+AG_GST_CHECK_PLUGIN(audiobuffersplit)
 AG_GST_CHECK_PLUGIN(audiofxbad)
 AG_GST_CHECK_PLUGIN(audiomixer)
 AG_GST_CHECK_PLUGIN(compositor)
@@ -3678,6 +3679,7 @@ gst/adpcmenc/Makefile
 gst/aiff/Makefile
 gst/videoframe_audiolevel/Makefile
 gst/asfmux/Makefile
+gst/audiobuffersplit/Makefile
 gst/audiofxbad/Makefile
 gst/audiomixer/Makefile
 gst/audiovisualizers/Makefile

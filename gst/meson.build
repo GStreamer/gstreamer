@@ -5,6 +5,7 @@ subdir('aiff')
 subdir('asfmux')
 # not ported to 1.0
 #subdir('audiobuffer')
+subdir('audiobuffersplit')
 subdir('audiofxbad')
 subdir('audiomixer')
 subdir('audiovisualizers')
