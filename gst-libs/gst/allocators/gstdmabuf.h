@@ -81,11 +81,17 @@ typedef struct _GstDmaBufAllocatorClass GstDmaBufAllocatorClass;
 struct _GstDmaBufAllocator
 {
   GstFdAllocator parent;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstDmaBufAllocatorClass
 {
   GstFdAllocatorClass parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 
