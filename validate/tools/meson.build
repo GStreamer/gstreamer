@@ -32,3 +32,5 @@ configure_file(input : 'gst-validate-launcher.in',
                install_dir: get_option('bindir'),
                output : 'gst-validate-launcher',
                configuration : tmpconf)
+
+launcher = find_program(meson.current_build_dir() + '/gst-validate-launcher')
