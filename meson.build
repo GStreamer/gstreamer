@@ -46,8 +46,10 @@ rtspserver_incs = include_directories('gst/rtsp-server', '.')
 glib_dep = dependency('glib-2.0', version : glib_req)
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_dep'])
-gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
-  fallback : ['gstreamer', 'gst_check_dep'])
+if host_machine.system() != 'windows'
+  gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+    fallback : ['gstreamer', 'gst_check_dep'])
+endif
 gstrtsp_dep = dependency('gstreamer-rtsp-1.0', version : gst_req,
   fallback : ['gst-plugins-base', 'rtsp_dep'])
 gstrtp_dep = dependency('gstreamer-rtp-1.0', version : gst_req,
