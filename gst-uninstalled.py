@@ -8,6 +8,7 @@ import re
 import site
 import shutil
 import subprocess
+import sys
 import tempfile
 
 from common import get_meson
@@ -73,7 +74,7 @@ def get_subprocess_env(options):
         lib_path_envvar = 'LD_LIBRARY_PATH'
 
     meson, mesonconf, mesonintrospect = get_meson()
-    targets_s = subprocess.check_output([mesonintrospect, options.builddir, '--targets'])
+    targets_s = subprocess.check_output([sys.executable, mesonintrospect, options.builddir, '--targets'])
     targets = json.loads(targets_s.decode())
     for target in targets:
         filename = target['filename']
@@ -85,7 +86,7 @@ def get_subprocess_env(options):
             if target.get('type') != "shared library":
                 continue
 
-            if "lib/gstreamer-1.0" in os.path.normpath(target.get('install_filename')):
+            if os.path.normpath("lib/gstreamer-1.0") in os.path.normpath(target.get('install_filename')):
                 continue
 
             prepend_env_var(env, lib_path_envvar,
