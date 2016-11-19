@@ -1,6 +1,11 @@
 import argparse
+import os
 import shutil
 import subprocess
+
+
+ROOTDIR = os.path.abspath(os.path.dirname(__file__))
+
 
 class Colors:
     HEADER = '\033[95m'
@@ -47,3 +52,13 @@ def accept_command(commands):
             return command
 
     return None
+
+def get_meson():
+    meson = os.path.join(ROOTDIR, 'meson', 'meson.py')
+    if os.path.exists(meson):
+        mesonconf = os.path.join(ROOTDIR, 'meson', 'mesonconf.py')
+        mesonintrospect = os.path.join(ROOTDIR, 'meson', 'mesonintrospect.py')
+        return meson, mesonconf, mesonintrospect
+
+    return accept_command(["meson.py", "meson"]), accept_command(["mesonconf.py", "mesonconf"]), \
+        accept_command(["mesonintrospect.py", "mesonintrospect"])

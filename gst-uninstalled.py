@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import os
+import platform
 import re
 import site
 import shutil
 import subprocess
 import tempfile
 
+from common import get_meson
 
 SCRIPTDIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -59,7 +62,7 @@ def get_subprocess_env(options):
     env["GST_REGISTRY"] = os.path.normpath(options.builddir + "/registry.dat")
 
     filename = "meson.build"
-    sharedlib_reg = re.compile(r'\.so$|\.dylib$|\.dll$')
+    sharedlib_reg = re.compile(r'\.so|\.dylib|\.dll')
     typelib_reg = re.compile(r'.*\.typelib$')
 
     if os.name is 'nt':
@@ -69,23 +72,24 @@ def get_subprocess_env(options):
     else:
         lib_path_envvar = 'LD_LIBRARY_PATH'
 
-    for root, dirnames, filenames in os.walk(os.path.join(options.builddir,
-                                                          'subprojects')):
-        has_typelib = False
-        has_shared = False
-        for filename in filenames:
-            if typelib_reg.search(filename) and not has_typelib:
-                has_typelib = True
-                prepend_env_var(env, "GI_TYPELIB_PATH",
-                                os.path.join(options.builddir, root))
-                if has_shared:
-                    break
-            elif sharedlib_reg.search(filename) and not has_shared:
-                has_shared = True
-                prepend_env_var(env, lib_path_envvar,
-                                os.path.join(options.builddir, root))
-                if has_typelib:
-                    break
+    meson, mesonconf, mesonintrospect = get_meson()
+    targets_s = subprocess.check_output([mesonintrospect, options.builddir, '--targets'])
+    targets = json.loads(targets_s.decode())
+    for target in targets:
+        filename = target['filename']
+        root = os.path.dirname(filename)
+        if typelib_reg.search(filename):
+            prepend_env_var(env, "GI_TYPELIB_PATH",
+                            os.path.join(options.builddir, root))
+        elif sharedlib_reg.search(filename):
+            if target.get('type') != "shared library":
+                continue
+
+            if "lib/gstreamer-1.0" in os.path.normpath(target.get('install_filename')):
+                continue
+
+            prepend_env_var(env, lib_path_envvar,
+                            os.path.join(options.builddir, root))
 
     return env
 

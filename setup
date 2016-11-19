@@ -8,6 +8,7 @@ import shutil
 import subprocess
 
 from common import git
+from common import get_meson
 from common import Colors
 from common import accept_command
 
@@ -17,22 +18,13 @@ PROJECTNAME = "GStreamer build"
 ROOTDIR = os.path.abspath(os.path.dirname(__file__))
 
 
-def get_meson():
-    meson = os.path.join(ROOTDIR, 'meson', 'meson.py')
-    if os.path.exists(meson):
-        mesonconf = os.path.join(ROOTDIR, 'meson', 'mesonconf.py')
-        return meson, mesonconf
-
-    return accept_command(["meson.py", "meson"]), accept_command(["mesonconf.py", "mesonconf"])
-
-
 def get_configs():
      return ['--werror']
 
 
 def configure_meson(args, options):
     """Configures meson and generate the Makefile."""
-    meson, mesonconf = get_meson()
+    meson, mesonconf, mesonintrospect = get_meson()
     if not meson:
         print("Install mesonbuild to build %s: http://mesonbuild.com/\n"
               "You can simply install it with:\n"
