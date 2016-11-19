@@ -107,7 +107,7 @@ index.md
 			plugin-development/basics/chainfn.md
 			plugin-development/basics/eventfn.md
 			plugin-development/basics/queryfn.md
-			plugin-development/basics/statemanage-states.md
+			plugin-development/basics/states.md
 			plugin-development/basics/args.md
 			plugin-development/basics/signals.md
 			plugin-development/basics/testapp.md

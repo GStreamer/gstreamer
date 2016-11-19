@@ -213,7 +213,7 @@ As you can see, there a lot to learn, so let's get started\!
 [boilerplate]: plugin-development/basics/boiler.md
 [pads]: plugin-development/basics/pads.md
 [chainfunc]: plugin-development/basics/chainfn.md
-[states]: plugin-development/basics/statemanage-states.md
+[states]: plugin-development/basics/states.md
 [properties]: plugin-development/basics/args.md
 [signals]: plugin-development/basics/signals.md
 [testapp]: plugin-development/basics/testapp.md
