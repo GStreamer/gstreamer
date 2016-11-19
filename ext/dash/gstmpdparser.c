@@ -229,8 +229,7 @@ static GstUri *combine_urls (GstUri * base, GList * list, gchar ** query,
 static GList *gst_mpd_client_fetch_external_period (GstMpdClient * client,
     GstPeriodNode * period_node);
 static GList *gst_mpd_client_fetch_external_adaptation_set (GstMpdClient *
-    client, GstPeriodNode * period, GstAdaptationSetNode * adapt_set,
-    gboolean * error);
+    client, GstPeriodNode * period, GstAdaptationSetNode * adapt_set);
 
 struct GstMpdParserUtcTimingMethod
 {
@@ -3692,14 +3691,10 @@ gst_mpd_client_fetch_on_load_external_resources (GstMpdClient * client)
       if (adapt_set->xlink_href
           && adapt_set->actuate == GST_XLINK_ACTUATE_ON_LOAD) {
         GList *new_adapt_sets, *prev, *next;
-        gboolean error;
 
         new_adapt_sets =
             gst_mpd_client_fetch_external_adaptation_set (client, period,
-            adapt_set, &error);
-
-        if (!new_adapt_sets && error)
-          goto syntax_error;
+            adapt_set);
 
         prev = l->prev;
         period->AdaptationSets = g_list_delete_link (period->AdaptationSets, l);
@@ -4545,19 +4540,17 @@ syntax_error:
 
 static GList *
 gst_mpd_client_fetch_external_adaptation_set (GstMpdClient * client,
-    GstPeriodNode * period, GstAdaptationSetNode * adapt_set, gboolean * error)
+    GstPeriodNode * period, GstAdaptationSetNode * adapt_set)
 {
   GstFragment *download;
   GstBuffer *adapt_set_buffer;
   GstMapInfo map;
   GError *err = NULL;
-  xmlDocPtr doc;
+  xmlDocPtr doc = NULL;
   GstUri *base_uri, *uri;
   gchar *query = NULL;
   gchar *uri_string;
   GList *new_adapt_sets = NULL;
-
-  *error = FALSE;
 
   /* ISO/IEC 23009-1:2014 5.5.3 4)
    * Remove nodes that resolve to nothing when resolving
@@ -4567,7 +4560,6 @@ gst_mpd_client_fetch_external_adaptation_set (GstMpdClient * client,
   }
 
   if (!client->downloader) {
-    *error = TRUE;
     return NULL;
   }
 
@@ -4601,7 +4593,6 @@ gst_mpd_client_fetch_external_adaptation_set (GstMpdClient * client,
     GST_ERROR ("Failed to download external AdaptationSet node at '%s': %s",
         adapt_set->xlink_href, err->message);
     g_clear_error (&err);
-    *error = TRUE;
     return NULL;
   }
 
@@ -4613,31 +4604,35 @@ gst_mpd_client_fetch_external_adaptation_set (GstMpdClient * client,
   doc =
       xmlReadMemory ((const gchar *) map.data, map.size, "noname.xml", NULL,
       XML_PARSE_NONET);
+
+  gst_buffer_unmap (adapt_set_buffer, &map);
+  gst_buffer_unref (adapt_set_buffer);
+
+  /* NOTE: ISO/IEC 23009-1:2014 5.3.3.2 is saying that exactly one AdaptationSet
+   * in external xml is allowed */
   if (doc) {
     xmlNode *root_element = xmlDocGetRootElement (doc);
 
     if (root_element->type != XML_ELEMENT_NODE ||
         xmlStrcmp (root_element->name, (xmlChar *) "AdaptationSet") != 0) {
-      xmlFreeDoc (doc);
-      gst_buffer_unmap (adapt_set_buffer, &map);
-      gst_buffer_unref (adapt_set_buffer);
-      *error = TRUE;
-      return NULL;
+      goto error;
     }
 
     gst_mpdparser_parse_adaptation_set_node (&new_adapt_sets, root_element,
         period);
   } else {
-    GST_ERROR ("Failed to parse adaptation set node XML");
-    gst_buffer_unmap (adapt_set_buffer, &map);
-    gst_buffer_unref (adapt_set_buffer);
-    *error = TRUE;
-    return NULL;
+    goto error;
   }
-  gst_buffer_unmap (adapt_set_buffer, &map);
-  gst_buffer_unref (adapt_set_buffer);
+
+done:
+  if (doc)
+    xmlFreeDoc (doc);
 
   return new_adapt_sets;
+
+error:
+  GST_ERROR ("Failed to parse adaptation set node XML");
+  goto done;
 }
 
 static GList *
@@ -4656,7 +4651,6 @@ gst_mpd_client_get_adaptation_sets_for_period (GstMpdClient * client,
       /* advanced explicitely below */ ) {
     GstAdaptationSetNode *adapt_set = (GstAdaptationSetNode *) list->data;
     GList *new_adapt_sets = NULL, *prev, *next;
-    gboolean error;
 
     if (!adapt_set->xlink_href) {
       list = list->next;
@@ -4665,7 +4659,7 @@ gst_mpd_client_get_adaptation_sets_for_period (GstMpdClient * client,
 
     new_adapt_sets =
         gst_mpd_client_fetch_external_adaptation_set (client, period->period,
-        adapt_set, &error);
+        adapt_set);
 
     prev = list->prev;
     period->period->AdaptationSets =
