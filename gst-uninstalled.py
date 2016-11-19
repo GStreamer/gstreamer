@@ -59,8 +59,16 @@ def get_subprocess_env(options):
     env["GST_REGISTRY"] = os.path.normpath(options.builddir + "/registry.dat")
 
     filename = "meson.build"
-    sharedlib_reg = re.compile(r'\.so$|\.dylib$')
+    sharedlib_reg = re.compile(r'\.so$|\.dylib$|\.dll$')
     typelib_reg = re.compile(r'.*\.typelib$')
+
+    if os.name is 'nt':
+        lib_path_envvar = 'PATH'
+    elif platform.system() == 'Darwin':
+        lib_path_envvar = 'DYLD_LIBRARY_PATH'
+    else:
+        lib_path_envvar = 'LD_LIBRARY_PATH'
+
     for root, dirnames, filenames in os.walk(os.path.join(options.builddir,
                                                           'subprojects')):
         has_typelib = False
@@ -74,9 +82,7 @@ def get_subprocess_env(options):
                     break
             elif sharedlib_reg.search(filename) and not has_shared:
                 has_shared = True
-                prepend_env_var(env, "LD_LIBRARY_PATH",
-                                os.path.join(options.builddir, root))
-                prepend_env_var(env, "DYLD_LIBRARY_PATH",
+                prepend_env_var(env, lib_path_envvar,
                                 os.path.join(options.builddir, root))
                 if has_typelib:
                     break
