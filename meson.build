@@ -11,6 +11,14 @@ subprojects = [
     'gst-plugins-good',
 ]
 
+cc = meson.get_compiler('c')
+if not meson.is_subproject() and cc.get_id() == 'msvc'
+  # Make it possible to use msys2 built zlib
+  # which fails when not using the mingw toolchain as
+  # it uses unistd.h
+  add_global_arguments('-DZ_SOLO', language: 'c')
+endif
+
 # FIXME Remove that check once we have ffmpeg as a gst-libav subproject
 libavfilter_dep = dependency('libavfilter', version: '>= 6.47.100', required: false)
 gst_libav = []
