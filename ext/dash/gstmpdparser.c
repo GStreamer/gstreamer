@@ -227,7 +227,7 @@ static GstUri *combine_urls (GstUri * base, GList * list, gchar ** query,
     guint idx);
 
 static GList *gst_mpd_client_fetch_external_period (GstMpdClient * client,
-    GstPeriodNode * period_node, gboolean * error);
+    GstPeriodNode * period_node);
 static GList *gst_mpd_client_fetch_external_adaptation_set (GstMpdClient *
     client, GstPeriodNode * period, GstAdaptationSetNode * adapt_set,
     gboolean * error);
@@ -3637,13 +3637,8 @@ gst_mpd_client_fetch_on_load_external_resources (GstMpdClient * client)
 
     if (period->xlink_href && period->actuate == GST_XLINK_ACTUATE_ON_LOAD) {
       GList *new_periods, *prev, *next;
-      gboolean error;
 
-      new_periods =
-          gst_mpd_client_fetch_external_period (client, period, &error);
-
-      if (!new_periods && error)
-        goto syntax_error;
+      new_periods = gst_mpd_client_fetch_external_period (client, period);
 
       prev = l->prev;
       client->mpd_node->Periods =
@@ -4191,20 +4186,18 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
 
 static GList *
 gst_mpd_client_fetch_external_period (GstMpdClient * client,
-    GstPeriodNode * period_node, gboolean * error)
+    GstPeriodNode * period_node)
 {
   GstFragment *download;
   GstAdapter *adapter;
   GstBuffer *period_buffer;
   GError *err = NULL;
-  xmlDocPtr doc;
+  xmlDocPtr doc = NULL;
   GstUri *base_uri, *uri;
   gchar *query = NULL;
   gchar *uri_string, *wrapper;
   GList *new_periods = NULL;
   const gchar *data;
-
-  *error = FALSE;
 
   /* ISO/IEC 23009-1:2014 5.5.3 4)
    * Remove nodes that resolve to nothing when resolving
@@ -4215,7 +4208,6 @@ gst_mpd_client_fetch_external_period (GstMpdClient * client,
   }
 
   if (!client->downloader) {
-    *error = TRUE;
     return NULL;
   }
 
@@ -4245,7 +4237,6 @@ gst_mpd_client_fetch_external_period (GstMpdClient * client,
     GST_ERROR ("Failed to download external Period node at '%s': %s",
         period_node->xlink_href, err->message);
     g_clear_error (&err);
-    *error = TRUE;
     return NULL;
   }
 
@@ -4273,6 +4264,11 @@ gst_mpd_client_fetch_external_period (GstMpdClient * client,
   doc =
       xmlReadMemory (data, gst_adapter_available (adapter), "noname.xml", NULL,
       XML_PARSE_NONET);
+
+  gst_adapter_unmap (adapter);
+  gst_adapter_clear (adapter);
+  gst_object_unref (adapter);
+
   if (doc) {
     xmlNode *root_element = xmlDocGetRootElement (doc);
     xmlNode *iter;
@@ -4290,27 +4286,24 @@ gst_mpd_client_fetch_external_period (GstMpdClient * client,
       }
     }
   } else {
-    GST_ERROR ("Failed to parse period node XML");
-    gst_adapter_unmap (adapter);
-    gst_adapter_clear (adapter);
-    gst_object_unref (adapter);
-    *error = TRUE;
-    return NULL;
+    goto error;
   }
-  xmlFreeDoc (doc);
-  gst_adapter_unmap (adapter);
-  gst_adapter_clear (adapter);
-  gst_object_unref (adapter);
+
+done:
+  if (doc)
+    xmlFreeDoc (doc);
 
   return new_periods;
 
 error:
-  xmlFreeDoc (doc);
-  gst_adapter_unmap (adapter);
-  gst_adapter_clear (adapter);
-  gst_object_unref (adapter);
-  *error = TRUE;
-  return NULL;
+  GST_ERROR ("Failed to parse period node XML");
+
+  if (new_periods) {
+    g_list_free_full (new_periods,
+        (GDestroyNotify) gst_mpdparser_free_period_node);
+    new_periods = NULL;
+  }
+  goto done;
 }
 
 gboolean
@@ -4374,13 +4367,9 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client,
     /* Download external period */
     if (period_node->xlink_href) {
       GList *new_periods;
-      gboolean error = FALSE;
       GList *prev;
 
-      new_periods =
-          gst_mpd_client_fetch_external_period (client, period_node, &error);
-      if (!new_periods && error)
-        goto syntax_error;
+      new_periods = gst_mpd_client_fetch_external_period (client, period_node);
 
       prev = list->prev;
       client->mpd_node->Periods =
@@ -4449,15 +4438,10 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client,
       next_period_node = next->data;
 
       if (next_period_node->xlink_href) {
-        gboolean next_error;
         GList *new_periods;
 
         new_periods =
-            gst_mpd_client_fetch_external_period (client, next_period_node,
-            &next_error);
-
-        if (!new_periods && next_error)
-          goto syntax_error;
+            gst_mpd_client_fetch_external_period (client, next_period_node);
 
         client->mpd_node->Periods =
             g_list_delete_link (client->mpd_node->Periods, next);
