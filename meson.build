@@ -80,8 +80,6 @@ gnome = import('gnome')
 
 gtkdoc = find_program('gtkdoc-scan', required : false)
 
-vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
-
 subdir('validate')
 
 python3 = find_program('python3')

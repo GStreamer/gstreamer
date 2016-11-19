@@ -14,6 +14,8 @@ cdata.set('PACKAGE_NAME', '"GStreamer Validate"')
 cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
 configure_file(output : 'config.h', configuration : cdata)
 
+vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
+
 subdir('data')
 subdir('gst')
 subdir('launcher')
