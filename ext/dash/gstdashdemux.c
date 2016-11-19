@@ -2676,6 +2676,10 @@ gst_dash_demux_stream_free (GstAdaptiveDemuxStream * stream)
     g_object_unref (dash_stream->sidx_adapter);
   if (dash_stream->isobmff_adapter)
     g_object_unref (dash_stream->isobmff_adapter);
+  if (dash_stream->moof)
+    gst_isoff_moof_box_free (dash_stream->moof);
+  if (dash_stream->moof_sync_samples)
+    g_array_free (dash_stream->moof_sync_samples, TRUE);
 }
 
 static GstDashDemuxClockDrift *
