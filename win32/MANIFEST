@@ -1,8 +1,4 @@
 win32/MANIFEST
-win32/common/_stdint.h
-win32/common/config.h
-win32/common/gstrtsp-enumtypes.c
-win32/common/gstrtsp-enumtypes.h
 win32/common/libgstapp.def
 win32/common/libgstaudio.def
 win32/common/libgstpbutils.def
@@ -12,9 +8,3 @@ win32/common/libgstrtsp.def
 win32/common/libgstsdp.def
 win32/common/libgsttag.def
 win32/common/libgstvideo.def
-win32/common/audio-enumtypes.c
-win32/common/audio-enumtypes.h
-win32/common/pbutils-enumtypes.c
-win32/common/pbutils-enumtypes.h
-win32/common/video-enumtypes.c
-win32/common/video-enumtypes.h
