@@ -120,6 +120,7 @@ typedef struct {
 
   gint           index_id;
   gboolean is_raw;
+  gsize alignment;
 } GstAviStream;
 
 typedef enum {

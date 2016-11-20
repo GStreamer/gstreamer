@@ -1936,6 +1936,7 @@ gst_avi_demux_check_caps (GstAviDemux * avi, GstAviStream * stream,
   s = gst_caps_get_structure (caps, 0);
   if (gst_structure_has_name (s, "video/x-raw")) {
     stream->is_raw = TRUE;
+    stream->alignment = 32;
     if (!gst_structure_has_field (s, "pixel-aspect-ratio"))
       gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION,
           1, 1, NULL);
@@ -5137,6 +5138,44 @@ gst_avi_demux_find_next (GstAviDemux * avi, gfloat rate)
   return stream_num;
 }
 
+static GstBuffer *
+gst_avi_demux_align_buffer (GstAviDemux * demux,
+    GstBuffer * buffer, gsize alignment)
+{
+  GstMapInfo map;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+  if (map.size < sizeof (guintptr)) {
+    gst_buffer_unmap (buffer, &map);
+    return buffer;
+  }
+
+  if (((guintptr) map.data) & (alignment - 1)) {
+    GstBuffer *new_buffer;
+    GstAllocationParams params = { 0, alignment - 1, 0, 0, };
+
+    new_buffer = gst_buffer_new_allocate (NULL,
+        gst_buffer_get_size (buffer), &params);
+
+    /* Copy data "by hand", so ensure alignment is kept: */
+    gst_buffer_fill (new_buffer, 0, map.data, map.size);
+
+    gst_buffer_copy_into (new_buffer, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+    GST_DEBUG_OBJECT (demux,
+        "We want output aligned on %" G_GSIZE_FORMAT ", reallocated",
+        alignment);
+
+    gst_buffer_unmap (buffer, &map);
+    gst_buffer_unref (buffer);
+
+    return new_buffer;
+  }
+
+  gst_buffer_unmap (buffer, &map);
+  return buffer;
+}
+
 static GstFlowReturn
 gst_avi_demux_loop_data (GstAviDemux * avi)
 {
@@ -5256,6 +5295,8 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
         gst_buffer_get_size (buf), GST_TIME_ARGS (timestamp),
         GST_TIME_ARGS (duration), out_offset, out_offset_end);
 
+    if (stream->alignment > 1)
+      buf = gst_avi_demux_align_buffer (avi, buf, stream->alignment);
     ret = gst_pad_push (stream->pad, buf);
 
     /* mark as processed, we increment the frame and byte counters then
@@ -5545,6 +5586,9 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
           } else {
             GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
           }
+
+          if (stream->alignment > 1)
+            buf = gst_avi_demux_align_buffer (avi, buf, stream->alignment);
           res = gst_pad_push (stream->pad, buf);
           buf = NULL;
 
