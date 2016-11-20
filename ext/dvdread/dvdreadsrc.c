@@ -1363,7 +1363,7 @@ gst_dvd_read_src_make_clut_change_event (GstDvdReadSrc * src,
   }
 
   /* Create the DVD event and put the structure into it. */
-  return gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, structure);
+  return gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY, structure);
 }
 
 static gint64
