@@ -13,14 +13,10 @@ SUBDIRS = $(ALWAYS_SUBDIRS)
 
 DIST_SUBDIRS = $(ALWAYS_SUBDIRS)
 
-# include before EXTRA_DIST for win32 assignment
-include $(top_srcdir)/common/win32.mak
-
 EXTRA_DIST = \
 	gst-plugins-good.spec depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
-	ChangeLog gst-plugins-good.doap autogen.sh \
-	$(win32)
+	ChangeLog gst-plugins-good.doap autogen.sh
 
 DISTCLEANFILES = _stdint.h
 
@@ -49,15 +45,12 @@ build-checks:
 	true
 endif
 
-win32-update:
-	cp $(top_builddir)/win32/common/config.h-new \
-	    $(top_srcdir)/win32/common/config.h
-
 include $(top_srcdir)/common/coverage/lcov.mak
 
 # cruft: plugins that have been merged or moved or renamed
 
 CRUFT_FILES = \
+	$(top_builddir)/win32/common/config.h-new \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
 	$(top_builddir)/gst/median/.libs/*.{so,dll,DLL,dylib} \
