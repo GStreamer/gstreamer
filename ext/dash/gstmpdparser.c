@@ -3628,7 +3628,7 @@ gst_mpd_client_check_profiles (GstMpdClient * client)
   }
 }
 
-static gboolean
+static void
 gst_mpd_client_fetch_on_load_external_resources (GstMpdClient * client)
 {
   GList *l;
@@ -3761,12 +3761,6 @@ gst_mpd_client_fetch_on_load_external_resources (GstMpdClient * client)
 
     l = l->next;
   }
-
-  return TRUE;
-
-syntax_error:
-
-  return FALSE;
 }
 
 gboolean
@@ -3812,9 +3806,7 @@ gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
 
     if (ret) {
       gst_mpd_client_check_profiles (client);
-
-      if (!gst_mpd_client_fetch_on_load_external_resources (client))
-        return FALSE;
+      gst_mpd_client_fetch_on_load_external_resources (client);
     }
   }
 
