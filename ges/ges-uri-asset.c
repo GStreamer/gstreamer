@@ -33,6 +33,8 @@
 #include "ges-internal.h"
 #include "ges-track-element-asset.h"
 
+#define DEFAULT_DISCOVERY_TIMEOUT (60 * GST_SECOND)
+
 static GHashTable *parent_newparent_table = NULL;
 
 static void
@@ -206,6 +208,7 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
   g_object_class_install_property (object_class, PROP_DURATION,
       properties[PROP_DURATION]);
 
+  timeout = DEFAULT_DISCOVERY_TIMEOUT;
   errno = 0;
   timeout_str = g_getenv ("GES_DISCOVERY_TIMEOUT");
   if (timeout_str)
@@ -214,7 +217,7 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
     errno = 10;
 
   if (errno)
-    timeout = 60 * GST_SECOND;
+    timeout = DEFAULT_DISCOVERY_TIMEOUT;
 
   klass->discoverer = gst_discoverer_new (timeout, NULL);
   klass->sync_discoverer = gst_discoverer_new (timeout, NULL);
