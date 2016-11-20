@@ -293,6 +293,8 @@ struct _QtDemuxStream
   GstAllocator *allocator;
   GstAllocationParams params;
 
+  gsize alignment;
+
   /* when a discontinuity is pending */
   gboolean discont;
 
@@ -1842,6 +1844,7 @@ _create_stream (void)
   stream->protection_scheme_info = NULL;
   stream->n_samples_moof = 0;
   stream->duration_moof = 0;
+  stream->alignment = 1;
   g_queue_init (&stream->protection_scheme_event_queue);
   return stream;
 }
@@ -5097,6 +5100,44 @@ clipped:
   }
 }
 
+static GstBuffer *
+gst_qtdemux_align_buffer (GstQTDemux * demux,
+    GstBuffer * buffer, gsize alignment)
+{
+  GstMapInfo map;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+  if (map.size < sizeof (guintptr)) {
+    gst_buffer_unmap (buffer, &map);
+    return buffer;
+  }
+
+  if (((guintptr) map.data) & (alignment - 1)) {
+    GstBuffer *new_buffer;
+    GstAllocationParams params = { 0, alignment - 1, 0, 0, };
+
+    new_buffer = gst_buffer_new_allocate (NULL,
+        gst_buffer_get_size (buffer), &params);
+
+    /* Copy data "by hand", so ensure alignment is kept: */
+    gst_buffer_fill (new_buffer, 0, map.data, map.size);
+
+    gst_buffer_copy_into (new_buffer, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+    GST_DEBUG_OBJECT (demux,
+        "We want output aligned on %" G_GSIZE_FORMAT ", reallocated",
+        alignment);
+
+    gst_buffer_unmap (buffer, &map);
+    gst_buffer_unref (buffer);
+
+    return new_buffer;
+  }
+
+  gst_buffer_unmap (buffer, &map);
+  return buffer;
+}
+
 /* the input buffer metadata must be writable,
  * but time/duration etc not yet set and need not be preserved */
 static GstBuffer *
@@ -5218,6 +5259,8 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
     }
 
+    if (stream->alignment > 1)
+      buffer = gst_qtdemux_align_buffer (qtdemux, buffer, stream->alignment);
     gst_pad_push (stream->pad, buffer);
 
     stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
@@ -5320,6 +5363,9 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
         GST_ERROR_OBJECT (qtdemux, "failed to attach cenc metadata to buffer");
     }
   }
+
+  if (stream->alignment > 1)
+    buf = gst_qtdemux_align_buffer (qtdemux, buf, stream->alignment);
 
   ret = gst_pad_push (stream->pad, buf);
 
@@ -12864,6 +12910,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_empty_simple ("video/x-raw");
       gst_caps_set_simple (caps, "format", G_TYPE_STRING, "RGB8P", NULL);
       _codec ("Windows Raw RGB");
+      stream->alignment = 32;
       break;
     case FOURCC_raw_:
     {
@@ -13221,9 +13268,22 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     /* enable clipping for raw video streams */
     stream->need_clip = TRUE;
+    stream->alignment = 32;
   }
 
   return caps;
+}
+
+static guint
+round_up_pow2 (guint n)
+{
+  n = n - 1;
+  n = n | (n >> 1);
+  n = n | (n >> 2);
+  n = n | (n >> 4);
+  n = n | (n >> 8);
+  n = n | (n >> 16);
+  return n + 1;
 }
 
 static GstCaps *
@@ -13268,6 +13328,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, gst_audio_format_to_string (format),
           "layout", G_TYPE_STRING, "interleaved", NULL);
+      stream->alignment = GST_ROUND_UP_8 (depth);
+      stream->alignment = round_up_pow2 (stream->alignment);
       break;
     }
     case GST_MAKE_FOURCC ('f', 'l', '6', '4'):
@@ -13275,12 +13337,14 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "F64BE",
           "layout", G_TYPE_STRING, "interleaved", NULL);
+      stream->alignment = 8;
       break;
     case GST_MAKE_FOURCC ('f', 'l', '3', '2'):
       _codec ("Raw 32-bit floating-point audio");
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "F32BE",
           "layout", G_TYPE_STRING, "interleaved", NULL);
+      stream->alignment = 4;
       break;
     case FOURCC_in24:
       _codec ("Raw 24-bit PCM audio");
@@ -13289,12 +13353,14 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "S24BE",
           "layout", G_TYPE_STRING, "interleaved", NULL);
+      stream->alignment = 4;
       break;
     case GST_MAKE_FOURCC ('i', 'n', '3', '2'):
       _codec ("Raw 32-bit PCM audio");
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "S32BE",
           "layout", G_TYPE_STRING, "interleaved", NULL);
+      stream->alignment = 4;
       break;
     case FOURCC_ulaw:
       _codec ("Mu-law audio");
@@ -13469,6 +13535,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
             "format", G_TYPE_STRING, gst_audio_format_to_string (format),
             "layout", G_TYPE_STRING, (flags & FLAG_IS_NON_INTERLEAVED) ?
             "non-interleaved" : "interleaved", NULL);
+        stream->alignment = GST_ROUND_UP_8 (depth);
+        stream->alignment = round_up_pow2 (stream->alignment);
       } else {
         if (width == 0)
           width = 32;
@@ -13487,6 +13555,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
             "format", G_TYPE_STRING, gst_audio_format_to_string (format),
             "layout", G_TYPE_STRING, (flags & FLAG_IS_NON_INTERLEAVED) ?
             "non-interleaved" : "interleaved", NULL);
+        stream->alignment = width / 8;
       }
       break;
     }
