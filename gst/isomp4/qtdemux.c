@@ -10194,7 +10194,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                * to find one called field. Walk through them. */
               off_t offset = min_size;
               while (offset + 8 < len) {
-                guint32 size, tag;
+                guint32 size = 0, tag;
                 ok = gst_byte_reader_get_uint32_le (&br, &size);
                 ok &= gst_byte_reader_get_uint32_le (&br, &tag);
                 if (!ok || size < 8) {
