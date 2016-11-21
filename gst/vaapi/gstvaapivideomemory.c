@@ -1084,6 +1084,16 @@ flags_quark_get (void)
   return g_quark;
 }
 
+/**
+ * gst_allocator_get_vaapi_video_info:
+ * @allocator: a #GstAllocator
+ * @out_flags_ptr: (out): the stored flags
+ *
+ * Will get the @allocator qdata to fetch the flags and the
+ * #GstVideoInfo stored in it.
+ *
+ * Returns: the stored #GstVideoInfo
+ **/
 const GstVideoInfo *
 gst_allocator_get_vaapi_video_info (GstAllocator * allocator,
     guint * out_flags_ptr)
@@ -1111,6 +1121,17 @@ gst_allocator_get_vaapi_video_info (GstAllocator * allocator,
   return g_value_get_boxed (value);
 }
 
+/**
+ * gst_allocator_set_vaapi_video_info:
+ * @allocator: a #GstAllocator
+ * @vip: the #GstVideoInfo to store
+ * @flags: the flags to store
+ *
+ * Stores as GObject's qdata the @vip and the @flags in the
+ * allocator. This will "decorate" the allocator as a GstVaapi one.
+ *
+ * Returns: always %TRUE
+ **/
 gboolean
 gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
     const GstVideoInfo * vip, guint flags)
@@ -1127,6 +1148,16 @@ gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
   return TRUE;
 }
 
+/**
+ * gst_vaapi_is_dmabuf_allocator:
+ * @allocator: an #GstAllocator
+ *
+ * Checks if the allocator is DMABuf allocator with the GstVaapi
+ * decorator.
+ *
+ * Returns: %TRUE if @allocator is a DMABuf allocator type with
+ * GstVaapi decorator.
+ **/
 gboolean
 gst_vaapi_is_dmabuf_allocator (GstAllocator * allocator)
 {
