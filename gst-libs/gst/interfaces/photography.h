@@ -4,7 +4,6 @@
  *
  * photography.h: photography interface for digital imaging
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -109,32 +108,32 @@ G_BEGIN_DECLS
 #define MAX_WHITE_POINT_VALUES 4
 
 /* Interface property names */
-#define GST_PHOTOGRAPHY_PROP_WB_MODE      "white-balance-mode"
-#define GST_PHOTOGRAPHY_PROP_COLOR_TONE   "color-tone-mode"
-#define GST_PHOTOGRAPHY_PROP_SCENE_MODE   "scene-mode"
-#define GST_PHOTOGRAPHY_PROP_FLASH_MODE   "flash-mode"
-#define GST_PHOTOGRAPHY_PROP_NOISE_REDUCTION   "noise-reduction"
-#define GST_PHOTOGRAPHY_PROP_FOCUS_STATUS "focus-status"
-#define GST_PHOTOGRAPHY_PROP_CAPABILITIES "capabilities"
-#define GST_PHOTOGRAPHY_PROP_SHAKE_RISK   "shake-risk"
-#define GST_PHOTOGRAPHY_PROP_EV_COMP      "ev-compensation"
-#define GST_PHOTOGRAPHY_PROP_ISO_SPEED    "iso-speed"
-#define GST_PHOTOGRAPHY_PROP_APERTURE     "aperture"
-#define GST_PHOTOGRAPHY_PROP_EXPOSURE_TIME     "exposure-time"
+#define GST_PHOTOGRAPHY_PROP_WB_MODE            "white-balance-mode"
+#define GST_PHOTOGRAPHY_PROP_COLOR_TONE         "color-tone-mode"
+#define GST_PHOTOGRAPHY_PROP_SCENE_MODE         "scene-mode"
+#define GST_PHOTOGRAPHY_PROP_FLASH_MODE         "flash-mode"
+#define GST_PHOTOGRAPHY_PROP_NOISE_REDUCTION    "noise-reduction"
+#define GST_PHOTOGRAPHY_PROP_FOCUS_STATUS       "focus-status"
+#define GST_PHOTOGRAPHY_PROP_CAPABILITIES       "capabilities"
+#define GST_PHOTOGRAPHY_PROP_SHAKE_RISK         "shake-risk"
+#define GST_PHOTOGRAPHY_PROP_EV_COMP            "ev-compensation"
+#define GST_PHOTOGRAPHY_PROP_ISO_SPEED          "iso-speed"
+#define GST_PHOTOGRAPHY_PROP_APERTURE           "aperture"
+#define GST_PHOTOGRAPHY_PROP_EXPOSURE_TIME      "exposure-time"
 #define GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS \
-    "image-capture-supported-caps"
+                                                "image-capture-supported-caps"
 #define GST_PHOTOGRAPHY_PROP_IMAGE_PREVIEW_SUPPORTED_CAPS \
-    "image-preview-supported-caps"
-#define GST_PHOTOGRAPHY_PROP_FLICKER_MODE "flicker-mode"
-#define GST_PHOTOGRAPHY_PROP_FOCUS_MODE   "focus-mode"
-#define GST_PHOTOGRAPHY_PROP_ZOOM   "zoom"
-#define GST_PHOTOGRAPHY_PROP_COLOR_TEMPERATURE "color-temperature"
-#define GST_PHOTOGRAPHY_PROP_WHITE_POINT  "white-point"
-#define GST_PHOTOGRAPHY_PROP_ANALOG_GAIN  "analog-gain"
-#define GST_PHOTOGRAPHY_PROP_EXPOSURE_MODE     "exposure-mode"
-#define GST_PHOTOGRAPHY_PROP_LENS_FOCUS   "lens-focus"
-#define GST_PHOTOGRAPHY_PROP_MIN_EXPOSURE_TIME "min-exposure-time"
-#define GST_PHOTOGRAPHY_PROP_MAX_EXPOSURE_TIME "max-exposure-time"
+                                                "image-preview-supported-caps"
+#define GST_PHOTOGRAPHY_PROP_FLICKER_MODE       "flicker-mode"
+#define GST_PHOTOGRAPHY_PROP_FOCUS_MODE         "focus-mode"
+#define GST_PHOTOGRAPHY_PROP_ZOOM               "zoom"
+#define GST_PHOTOGRAPHY_PROP_COLOR_TEMPERATURE  "color-temperature"
+#define GST_PHOTOGRAPHY_PROP_WHITE_POINT        "white-point"
+#define GST_PHOTOGRAPHY_PROP_ANALOG_GAIN        "analog-gain"
+#define GST_PHOTOGRAPHY_PROP_EXPOSURE_MODE      "exposure-mode"
+#define GST_PHOTOGRAPHY_PROP_LENS_FOCUS         "lens-focus"
+#define GST_PHOTOGRAPHY_PROP_MIN_EXPOSURE_TIME  "min-exposure-time"
+#define GST_PHOTOGRAPHY_PROP_MAX_EXPOSURE_TIME  "max-exposure-time"
 
 /**
  * GstPhotography:
@@ -162,11 +161,11 @@ typedef struct _GstPhotography GstPhotography;
  */
 typedef enum
 {
-  GST_PHOTOGRAPHY_NOISE_REDUCTION_BAYER = ( 1<<0 ),
-  GST_PHOTOGRAPHY_NOISE_REDUCTION_YCC = ( 1<<1 ),
-  GST_PHOTOGRAPHY_NOISE_REDUCTION_TEMPORAL= ( 1<< 2),
-  GST_PHOTOGRAPHY_NOISE_REDUCTION_FIXED = (1 << 3),
-  GST_PHOTOGRAPHY_NOISE_REDUCTION_EXTRA = (1 << 4)
+  GST_PHOTOGRAPHY_NOISE_REDUCTION_BAYER    = (1 << 0),
+  GST_PHOTOGRAPHY_NOISE_REDUCTION_YCC      = (1 << 1),
+  GST_PHOTOGRAPHY_NOISE_REDUCTION_TEMPORAL = (1 << 2),
+  GST_PHOTOGRAPHY_NOISE_REDUCTION_FIXED    = (1 << 3),
+  GST_PHOTOGRAPHY_NOISE_REDUCTION_EXTRA    = (1 << 4)
 } GstPhotographyNoiseReduction;
 
 /**
@@ -337,22 +336,22 @@ typedef enum
  */
 typedef enum
 {
-  GST_PHOTOGRAPHY_CAPS_NONE = (0 << 0),
-  GST_PHOTOGRAPHY_CAPS_EV_COMP = (1 << 0),
-  GST_PHOTOGRAPHY_CAPS_ISO_SPEED = (1 << 1),
-  GST_PHOTOGRAPHY_CAPS_WB_MODE = (1 << 2),
-  GST_PHOTOGRAPHY_CAPS_TONE = (1 << 3),
-  GST_PHOTOGRAPHY_CAPS_SCENE = (1 << 4),
-  GST_PHOTOGRAPHY_CAPS_FLASH = (1 << 5),
-  GST_PHOTOGRAPHY_CAPS_ZOOM = (1 << 6),
-  GST_PHOTOGRAPHY_CAPS_FOCUS = (1 << 7),
-  GST_PHOTOGRAPHY_CAPS_APERTURE = (1 << 8),
-  GST_PHOTOGRAPHY_CAPS_EXPOSURE = (1 << 9),
-  GST_PHOTOGRAPHY_CAPS_SHAKE = (1 << 10),
-  GST_PHOTOGRAPHY_CAPS_WHITE_BALANCE = (1 << 11),
-  GST_PHOTOGRAPHY_CAPS_NOISE_REDUCTION = (1 << 12),
+  GST_PHOTOGRAPHY_CAPS_NONE              = (0 << 0),
+  GST_PHOTOGRAPHY_CAPS_EV_COMP           = (1 << 0),
+  GST_PHOTOGRAPHY_CAPS_ISO_SPEED         = (1 << 1),
+  GST_PHOTOGRAPHY_CAPS_WB_MODE           = (1 << 2),
+  GST_PHOTOGRAPHY_CAPS_TONE              = (1 << 3),
+  GST_PHOTOGRAPHY_CAPS_SCENE             = (1 << 4),
+  GST_PHOTOGRAPHY_CAPS_FLASH             = (1 << 5),
+  GST_PHOTOGRAPHY_CAPS_ZOOM              = (1 << 6),
+  GST_PHOTOGRAPHY_CAPS_FOCUS             = (1 << 7),
+  GST_PHOTOGRAPHY_CAPS_APERTURE          = (1 << 8),
+  GST_PHOTOGRAPHY_CAPS_EXPOSURE          = (1 << 9),
+  GST_PHOTOGRAPHY_CAPS_SHAKE             = (1 << 10),
+  GST_PHOTOGRAPHY_CAPS_WHITE_BALANCE     = (1 << 11),
+  GST_PHOTOGRAPHY_CAPS_NOISE_REDUCTION   = (1 << 12),
   GST_PHOTOGRAPHY_CAPS_FLICKER_REDUCTION = (1 << 13),
-  GST_PHOTOGRAPHY_CAPS_ALL = (~0)
+  GST_PHOTOGRAPHY_CAPS_ALL               = (~0)
 } GstPhotographyCaps;
 
 /**
@@ -457,6 +456,7 @@ typedef struct
   gfloat lens_focus;
   guint min_exposure_time;
   guint max_exposure_time;
+  /* FIXME: add padding? */
 } GstPhotographySettings;
 
 /**
@@ -470,8 +470,7 @@ typedef struct
  * will be of @configured_caps format, so this callback allows the application
  * to e.g. reconfigure capsfilters in pipeline if any.
  */
-typedef void (*GstPhotographyCapturePrepared) (gpointer data,
-    const GstCaps *configured_caps);
+typedef void (*GstPhotographyCapturePrepared) (gpointer data, const GstCaps *configured_caps);
 
 /**
  * GstPhotographyInterface:
@@ -510,54 +509,43 @@ typedef struct _GstPhotographyInterface
   GTypeInterface parent;
 
   /* virtual functions */
-  gboolean (*get_ev_compensation) (GstPhotography * photo, gfloat * ev_comp);
-  gboolean (*get_iso_speed) (GstPhotography * photo, guint * iso_speed);
-  gboolean (*get_aperture) (GstPhotography * photo, guint * aperture);
-  gboolean (*get_exposure) (GstPhotography * photo, guint32 * exposure);
-  gboolean (*get_white_balance_mode) (GstPhotography * photo,
-    GstPhotographyWhiteBalanceMode * wb_mode);
-  gboolean (*get_color_tone_mode) (GstPhotography * photo,
-    GstPhotographyColorToneMode * tone_mode);
-  gboolean (*get_scene_mode) (GstPhotography * photo,
-    GstPhotographySceneMode * scene_mode);
-  gboolean (*get_flash_mode) (GstPhotography * photo,
-    GstPhotographyFlashMode * flash_mode);
-  gboolean (*get_zoom) (GstPhotography * photo, gfloat * zoom);
-    gboolean (*get_flicker_mode) (GstPhotography * photo,
-    GstPhotographyFlickerReductionMode * flicker_mode);
-  gboolean (*get_focus_mode) (GstPhotography * photo,
-    GstPhotographyFocusMode * focus_mode);
+  gboolean (*get_ev_compensation)    (GstPhotography * photo, gfloat * ev_comp);
+  gboolean (*get_iso_speed)          (GstPhotography * photo, guint * iso_speed);
+  gboolean (*get_aperture)           (GstPhotography * photo, guint * aperture);
+  gboolean (*get_exposure)           (GstPhotography * photo, guint32 * exposure);
+  gboolean (*get_white_balance_mode) (GstPhotography * photo, GstPhotographyWhiteBalanceMode * wb_mode);
+  gboolean (*get_color_tone_mode)    (GstPhotography * photo, GstPhotographyColorToneMode * tone_mode);
+  gboolean (*get_scene_mode)         (GstPhotography * photo, GstPhotographySceneMode * scene_mode);
+  gboolean (*get_flash_mode)         (GstPhotography * photo, GstPhotographyFlashMode * flash_mode);
+  gboolean (*get_zoom)               (GstPhotography * photo, gfloat * zoom);
+  gboolean (*get_flicker_mode)       (GstPhotography * photo, GstPhotographyFlickerReductionMode * flicker_mode);
+  gboolean (*get_focus_mode)         (GstPhotography * photo, GstPhotographyFocusMode * focus_mode);
 
-  gboolean (*set_ev_compensation) (GstPhotography * photo, gfloat ev_comp);
-  gboolean (*set_iso_speed) (GstPhotography * photo, guint iso_speed);
-  gboolean (*set_aperture) (GstPhotography * photo, guint aperture);
-  gboolean (*set_exposure) (GstPhotography * photo, guint32 exposure);
-  gboolean (*set_white_balance_mode) (GstPhotography * photo,
-    GstPhotographyWhiteBalanceMode wb_mode);
-  gboolean (*set_color_tone_mode) (GstPhotography * photo,
-    GstPhotographyColorToneMode tone_mode);
-  gboolean (*set_scene_mode) (GstPhotography * photo,
-    GstPhotographySceneMode scene_mode);
-  gboolean (*set_flash_mode) (GstPhotography * photo,
-    GstPhotographyFlashMode flash_mode);
-  gboolean (*set_zoom) (GstPhotography * photo, gfloat zoom);
-  gboolean (*set_flicker_mode) (GstPhotography * photo,
-    GstPhotographyFlickerReductionMode flicker_mode);
-  gboolean (*set_focus_mode) (GstPhotography * photo,
-    GstPhotographyFocusMode focus_mode);
+  gboolean (*set_ev_compensation)    (GstPhotography * photo, gfloat ev_comp);
+  gboolean (*set_iso_speed)          (GstPhotography * photo, guint iso_speed);
+  gboolean (*set_aperture)           (GstPhotography * photo, guint aperture);
+  gboolean (*set_exposure)           (GstPhotography * photo, guint32 exposure);
+  gboolean (*set_white_balance_mode) (GstPhotography * photo, GstPhotographyWhiteBalanceMode wb_mode);
+  gboolean (*set_color_tone_mode)    (GstPhotography * photo, GstPhotographyColorToneMode tone_mode);
+  gboolean (*set_scene_mode)         (GstPhotography * photo, GstPhotographySceneMode scene_mode);
+  gboolean (*set_flash_mode)         (GstPhotography * photo, GstPhotographyFlashMode flash_mode);
+  gboolean (*set_zoom)               (GstPhotography * photo, gfloat zoom);
+  gboolean (*set_flicker_mode)       (GstPhotography * photo, GstPhotographyFlickerReductionMode flicker_mode);
+  gboolean (*set_focus_mode)         (GstPhotography * photo, GstPhotographyFocusMode focus_mode);
 
   GstPhotographyCaps (*get_capabilities) (GstPhotography * photo);
-  gboolean (*prepare_for_capture) (GstPhotography * photo,
-    GstPhotographyCapturePrepared func, GstCaps *capture_caps, gpointer user_data);
-  void (*set_autofocus) (GstPhotography * photo, gboolean on);
-  gboolean (*set_config) (GstPhotography * photo, GstPhotographySettings * config);
-  gboolean (*get_config) (GstPhotography * photo, GstPhotographySettings * config);
 
-  gboolean (*get_noise_reduction) (GstPhotography * photo,
-    GstPhotographyNoiseReduction * noise_reduction);
-  gboolean (*set_noise_reduction) (GstPhotography * photo,
-    GstPhotographyNoiseReduction noise_reduction);
+  gboolean (*prepare_for_capture)    (GstPhotography * photo, GstPhotographyCapturePrepared func, GstCaps *capture_caps, gpointer user_data);
 
+  void     (*set_autofocus)          (GstPhotography * photo, gboolean on);
+
+  gboolean (*set_config)             (GstPhotography * photo, GstPhotographySettings * config);
+  gboolean (*get_config)             (GstPhotography * photo, GstPhotographySettings * config);
+
+  gboolean (*get_noise_reduction)    (GstPhotography * photo, GstPhotographyNoiseReduction * noise_reduction);
+  gboolean (*set_noise_reduction)    (GstPhotography * photo, GstPhotographyNoiseReduction noise_reduction);
+
+  /* FIXME: remove padding, not needed for interfaces */
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 } GstPhotographyInterface;
@@ -566,62 +554,87 @@ GType gst_photography_get_type (void);
 
 /* virtual class function wrappers */
 gboolean gst_photography_get_ev_compensation (GstPhotography * photo,
-    gfloat * ev_comp);
-gboolean gst_photography_get_iso_speed (GstPhotography * photo,
-    guint * iso_speed);
-gboolean gst_photography_get_aperture (GstPhotography * photo,
-    guint * aperture);
-gboolean gst_photography_get_exposure (GstPhotography * photo,
-    guint32 * exposure);
+                                              gfloat * ev_comp);
+
+gboolean gst_photography_get_iso_speed       (GstPhotography * photo,
+                                              guint * iso_speed);
+
+gboolean gst_photography_get_aperture        (GstPhotography * photo,
+                                              guint * aperture);
+
+gboolean gst_photography_get_exposure        (GstPhotography * photo,
+                                              guint32 * exposure);
+
 gboolean gst_photography_get_white_balance_mode (GstPhotography * photo,
-    GstPhotographyWhiteBalanceMode * wb_mode);
+                                                 GstPhotographyWhiteBalanceMode * wb_mode);
+
 gboolean gst_photography_get_color_tone_mode (GstPhotography * photo,
-    GstPhotographyColorToneMode * tone_mode);
-gboolean gst_photography_get_scene_mode (GstPhotography * photo,
-    GstPhotographySceneMode * scene_mode);
-gboolean gst_photography_get_flash_mode (GstPhotography * photo,
-    GstPhotographyFlashMode * flash_mode);
+                                              GstPhotographyColorToneMode * tone_mode);
+
+gboolean gst_photography_get_scene_mode      (GstPhotography * photo,
+                                              GstPhotographySceneMode * scene_mode);
+
+gboolean gst_photography_get_flash_mode      (GstPhotography * photo,
+                                              GstPhotographyFlashMode * flash_mode);
+
 gboolean gst_photography_get_noise_reduction (GstPhotography * photo,
-    GstPhotographyNoiseReduction * noise_reduction);
-gboolean gst_photography_get_zoom (GstPhotography * photo, gfloat * zoom);
-gboolean gst_photography_get_flicker_mode (GstPhotography * photo,
-    GstPhotographyFlickerReductionMode *mode);
-gboolean gst_photography_get_focus_mode (GstPhotography * photo,
-    GstPhotographyFocusMode *mode);
+                                              GstPhotographyNoiseReduction * noise_reduction);
+
+gboolean gst_photography_get_zoom            (GstPhotography * photo, gfloat * zoom);
+
+gboolean gst_photography_get_flicker_mode    (GstPhotography * photo,
+                                              GstPhotographyFlickerReductionMode * mode);
+
+gboolean gst_photography_get_focus_mode      (GstPhotography * photo,
+                                              GstPhotographyFocusMode * mode);
 
 gboolean gst_photography_set_ev_compensation (GstPhotography * photo,
-    gfloat ev_comp);
-gboolean gst_photography_set_iso_speed (GstPhotography * photo,
-    guint iso_speed);
-gboolean gst_photography_set_aperture (GstPhotography * photo, guint aperture);
-gboolean gst_photography_set_exposure (GstPhotography * photo, guint exposure);
+                                              gfloat ev_comp);
+
+gboolean gst_photography_set_iso_speed       (GstPhotography * photo,
+                                              guint iso_speed);
+
+gboolean gst_photography_set_aperture        (GstPhotography * photo, guint aperture);
+
+gboolean gst_photography_set_exposure        (GstPhotography * photo, guint exposure);
+
 gboolean gst_photography_set_white_balance_mode (GstPhotography * photo,
-    GstPhotographyWhiteBalanceMode wb_mode);
+                                                 GstPhotographyWhiteBalanceMode wb_mode);
+
 gboolean gst_photography_set_color_tone_mode (GstPhotography * photo,
-    GstPhotographyColorToneMode tone_mode);
-gboolean gst_photography_set_scene_mode (GstPhotography * photo,
-    GstPhotographySceneMode scene_mode);
-gboolean gst_photography_set_flash_mode (GstPhotography * photo,
-    GstPhotographyFlashMode flash_mode);
+                                              GstPhotographyColorToneMode tone_mode);
+
+gboolean gst_photography_set_scene_mode      (GstPhotography * photo,
+                                              GstPhotographySceneMode scene_mode);
+
+gboolean gst_photography_set_flash_mode      (GstPhotography * photo,
+                                              GstPhotographyFlashMode flash_mode);
+
 gboolean gst_photography_set_noise_reduction (GstPhotography * photo,
-    GstPhotographyNoiseReduction noise_reduction);
-gboolean gst_photography_set_zoom (GstPhotography * photo, gfloat zoom);
-gboolean gst_photography_set_flicker_mode (GstPhotography * photo,
-    GstPhotographyFlickerReductionMode mode);
-gboolean gst_photography_set_focus_mode (GstPhotography * photo,
-    GstPhotographyFocusMode mode);
+                                              GstPhotographyNoiseReduction noise_reduction);
+
+gboolean gst_photography_set_zoom            (GstPhotography * photo, gfloat zoom);
+
+gboolean gst_photography_set_flicker_mode    (GstPhotography * photo,
+                                              GstPhotographyFlickerReductionMode mode);
+
+gboolean gst_photography_set_focus_mode      (GstPhotography * photo,
+                                              GstPhotographyFocusMode mode);
 
 GstPhotographyCaps gst_photography_get_capabilities (GstPhotography * photo);
 
 gboolean gst_photography_prepare_for_capture (GstPhotography * photo,
-    GstPhotographyCapturePrepared func, GstCaps *capture_caps, gpointer user_data);
+                                              GstPhotographyCapturePrepared func,
+                                              GstCaps *capture_caps,
+                                              gpointer user_data);
 
-void gst_photography_set_autofocus (GstPhotography * photo, gboolean on);
+gboolean gst_photography_set_config    (GstPhotography         * photo,
+                                        GstPhotographySettings * config);
 
-gboolean gst_photography_set_config (GstPhotography * photo,
-    GstPhotographySettings * config);
-gboolean gst_photography_get_config (GstPhotography * photo,
-    GstPhotographySettings * config);
+gboolean gst_photography_get_config    (GstPhotography         * photo,
+                                        GstPhotographySettings * config);
+
+void     gst_photography_set_autofocus (GstPhotography * photo, gboolean on);
 
 G_END_DECLS
 
