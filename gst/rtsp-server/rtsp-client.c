@@ -90,6 +90,9 @@ struct _GstRTSPClientPrivate
   guint sessions_cookie;
 
   gboolean drop_backlog;
+
+  guint rtsp_ctrl_timeout_id;
+  guint rtsp_ctrl_timeout_cnt;
 };
 
 static GMutex tunnels_lock;
@@ -102,6 +105,9 @@ static GHashTable *tunnels;     /* protected by tunnels_lock */
 #define DEFAULT_SESSION_POOL            NULL
 #define DEFAULT_MOUNT_POINTS            NULL
 #define DEFAULT_DROP_BACKLOG            TRUE
+
+#define RTSP_CTRL_CB_INTERVAL           1
+#define RTSP_CTRL_TIMEOUT_VALUE         60
 
 enum
 {
@@ -2141,6 +2147,47 @@ handle_keymgmt (GstRTSPClient * client, GstRTSPContext * ctx, gchar * keymgmt)
 }
 
 static gboolean
+rtsp_ctrl_timeout_cb (gpointer user_data)
+{
+  gboolean res = G_SOURCE_CONTINUE;
+  GstRTSPClient *client = (GstRTSPClient *) user_data;
+  GstRTSPClientPrivate *priv = client->priv;
+
+  priv->rtsp_ctrl_timeout_cnt += RTSP_CTRL_CB_INTERVAL;
+
+  if (priv->rtsp_ctrl_timeout_cnt > RTSP_CTRL_TIMEOUT_VALUE) {
+    GST_DEBUG ("rtsp control session timeout id=%u expired, closing client.",
+        priv->rtsp_ctrl_timeout_id);
+    g_mutex_lock (&priv->lock);
+    priv->rtsp_ctrl_timeout_id = 0;
+    priv->rtsp_ctrl_timeout_cnt = 0;
+    g_mutex_unlock (&priv->lock);
+    gst_rtsp_client_close (client);
+
+    res = G_SOURCE_REMOVE;
+  }
+
+  return res;
+}
+
+static void
+rtsp_ctrl_timeout_remove (GstRTSPClientPrivate * priv)
+{
+  g_mutex_lock (&priv->lock);
+
+  if (priv->rtsp_ctrl_timeout_id != 0) {
+    g_source_destroy (g_main_context_find_source_by_id (priv->watch_context,
+            priv->rtsp_ctrl_timeout_id));
+    GST_DEBUG ("rtsp control session removed timeout id=%u.",
+        priv->rtsp_ctrl_timeout_id);
+    priv->rtsp_ctrl_timeout_id = 0;
+    priv->rtsp_ctrl_timeout_cnt = 0;
+  }
+
+  g_mutex_unlock (&priv->lock);
+}
+
+static gboolean
 handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
   GstRTSPClientPrivate *priv = client->priv;
@@ -2255,6 +2302,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
     ctx->session = session;
   }
+
+  rtsp_ctrl_timeout_remove (priv);
 
   if (!klass->configure_client_media (client, media, stream, ctx))
     goto configure_media_failed_no_reply;
@@ -4242,6 +4291,7 @@ client_watch_notify (GstRTSPClient * client)
   GST_INFO ("client %p: watch destroyed", client);
   priv->watch = NULL;
   /* remove all sessions if the media says so and so drop the extra client ref */
+  rtsp_ctrl_timeout_remove (priv);
   gst_rtsp_client_session_filter (client, cleanup_session, &closed);
   if (closed)
     g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
@@ -4266,6 +4316,7 @@ guint
 gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
 {
   GstRTSPClientPrivate *priv;
+  GSource *timer_src;
   guint res;
 
   g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), 0);
@@ -4286,6 +4337,20 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
 
   GST_INFO ("client %p: attaching to context %p", client, context);
   res = gst_rtsp_watch_attach (priv->watch, context);
+
+  /* Setting up a timeout for the RTSP control channel until a session
+   * is up where it is handling timeouts. */
+  rtsp_ctrl_timeout_remove (priv);      /* removing old if any */
+  g_mutex_lock (&priv->lock);
+
+  timer_src = g_timeout_source_new_seconds (RTSP_CTRL_CB_INTERVAL);
+  g_source_set_callback (timer_src, rtsp_ctrl_timeout_cb, client, NULL);
+  priv->rtsp_ctrl_timeout_id = g_source_attach (timer_src, priv->watch_context);
+  g_source_unref (timer_src);
+  GST_DEBUG ("rtsp control setting up session timeout id=%u.",
+      priv->rtsp_ctrl_timeout_id);
+
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }
