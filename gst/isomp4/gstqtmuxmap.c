@@ -98,6 +98,13 @@
   "layout = (string) interleaved, " \
   COMMON_AUDIO_CAPS (2, MAX)
 
+#define PCM_CAPS_UNPOSITIONED \
+  "audio/x-raw, " \
+  "format = (string) { S32LE, S32BE, S24LE, S24BE, S16LE, S16BE, S8, U8 }, " \
+  "layout = (string) interleaved, " \
+  "channel-mask = (bitmask) 0, " \
+  COMMON_AUDIO_CAPS (16, MAX)
+
 #define MP3_CAPS \
   "audio/mpeg, " \
   "mpegversion = (int) 1, " \
@@ -177,6 +184,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             "video/x-dirac, "
             COMMON_VIDEO_CAPS "; " "video/x-qt-part, " COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (PCM_CAPS_FULL "; "
+            PCM_CAPS_UNPOSITIONED " ; "
             MP3_CAPS " ; "
             AAC_CAPS " ; "
             ADPCM_CAPS " ; "
