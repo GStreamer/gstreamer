@@ -1176,6 +1176,9 @@ create_and_configure_udpsources (GstElement * udpsrc_out[2],
   g_object_set (G_OBJECT (udpsrc_out[0]), "loop", FALSE, NULL);
   g_object_set (G_OBJECT (udpsrc_out[1]), "loop", FALSE, NULL);
 
+  g_object_set (G_OBJECT (udpsrc_out[0]), "close-socket", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsrc_out[1]), "close-socket", FALSE, NULL);
+
   ret = gst_element_set_state (udpsrc_out[0], GST_STATE_READY);
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto error;
