@@ -742,7 +742,6 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
   if (incaps && incaps != plugin->sinkpad_caps) {
     if (!gst_video_info_from_caps (&plugin->sinkpad_info, incaps))
       return FALSE;
-    g_clear_object (&plugin->sinkpad_allocator);
     gst_caps_replace (&plugin->sinkpad_caps, incaps);
     plugin->sinkpad_caps_is_raw = !gst_caps_has_vaapi_surface (incaps);
   }
