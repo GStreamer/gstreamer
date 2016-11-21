@@ -469,9 +469,9 @@ gst_vaapidecode_negotiate (GstVaapiDecode * decode)
     return FALSE;
   if (!gst_vaapidecode_update_src_caps (decode))
     return FALSE;
-  if (!gst_video_decoder_negotiate (vdec))
-    return FALSE;
   if (!gst_vaapi_plugin_base_set_caps (plugin, NULL, decode->srcpad_caps))
+    return FALSE;
+  if (!gst_video_decoder_negotiate (vdec))
     return FALSE;
 
   return TRUE;
