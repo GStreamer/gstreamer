@@ -149,7 +149,7 @@ struct _GstRTSPStreamPrivate
   gint dscp_qos;
 
   /* stream blocking */
-  gulong blocked_id;
+  gulong blocked_id[2];
   gboolean blocking;
 
   /* pt->caps map for RECORD streams */
@@ -3689,6 +3689,7 @@ gboolean
 gst_rtsp_stream_set_blocked (GstRTSPStream * stream, gboolean blocked)
 {
   GstRTSPStreamPrivate *priv;
+  int i;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
 
@@ -3697,18 +3698,22 @@ gst_rtsp_stream_set_blocked (GstRTSPStream * stream, gboolean blocked)
   g_mutex_lock (&priv->lock);
   if (blocked) {
     priv->blocking = FALSE;
-    if (priv->blocked_id == 0) {
-      priv->blocked_id = gst_pad_add_probe (priv->srcpad,
-          GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
-          GST_PAD_PROBE_TYPE_BUFFER_LIST, pad_blocking,
-          g_object_ref (stream), g_object_unref);
+    for (i = 0; i < 2; i++) {
+      if (priv->blocked_id[i] == 0) {
+        priv->blocked_id[i] = gst_pad_add_probe (priv->send_src[i],
+            GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
+            GST_PAD_PROBE_TYPE_BUFFER_LIST, pad_blocking,
+            g_object_ref (stream), g_object_unref);
+      }
     }
   } else {
-    if (priv->blocked_id != 0) {
-      gst_pad_remove_probe (priv->srcpad, priv->blocked_id);
-      priv->blocked_id = 0;
-      priv->blocking = FALSE;
+    for (i = 0; i < 2; i++) {
+      if (priv->blocked_id[i] != 0) {
+        gst_pad_remove_probe (priv->send_src[i], priv->blocked_id[i]);
+        priv->blocked_id[i] = 0;
+      }
     }
+    priv->blocking = FALSE;
   }
   g_mutex_unlock (&priv->lock);
 
