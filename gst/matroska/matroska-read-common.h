@@ -100,6 +100,11 @@ typedef struct _GstMatroskaReadCommon {
   /* push and pull mode */
   guint64                  offset;
 
+  guint64                  start_resync_offset;
+
+  /* state to restore after scanning for invalid data */
+  gint                     state_to_restore;
+
   /* push based mode usual suspects */
   GstAdapter              *adapter;
 

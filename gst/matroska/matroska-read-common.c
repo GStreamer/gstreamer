@@ -2947,6 +2947,8 @@ gst_matroska_read_common_reset (GstElement * element,
 
   gst_segment_init (&ctx->segment, GST_FORMAT_TIME);
   ctx->offset = 0;
+  ctx->start_resync_offset = -1;
+  ctx->state_to_restore = -1;
 
   if (ctx->cached_buffer) {
     if (ctx->cached_data) {

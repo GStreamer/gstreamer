@@ -77,6 +77,8 @@ GST_DEBUG_CATEGORY_STATIC (matroskaparse_debug);
     GST_DEBUG_OBJECT (parse, "Parsing " element " element " \
         " finished with '%s'", gst_flow_get_name (ret))
 
+#define INVALID_DATA_THRESHOLD (2 * 1024 * 1024)
+
 enum
 {
   PROP_0
@@ -2574,8 +2576,15 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
       break;
     case GST_MATROSKA_READ_STATE_SCANNING:
       if (id != GST_MATROSKA_ID_CLUSTER &&
-          id != GST_MATROSKA_ID_CLUSTERTIMECODE)
+          id != GST_MATROSKA_ID_CLUSTERTIMECODE) {
+        /* we need to skip byte per byte if we are scanning for a new cluster */
+        read = 1;
         goto skip;
+      } else {
+        GST_LOG_OBJECT (parse, "Resync done, new cluster found!");
+        parse->common.start_resync_offset = -1;
+        parse->common.state = parse->common.state_to_restore;
+      }
       /* fall-through */
     case GST_MATROSKA_READ_STATE_HEADER:
     case GST_MATROSKA_READ_STATE_DATA:
@@ -3017,9 +3026,36 @@ next:
   if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_EOS)) {
     if (parse->common.ebml_segment_length != G_MAXUINT64
         && parse->common.offset >=
-        parse->common.ebml_segment_start + parse->common.ebml_segment_length)
-      ret = GST_FLOW_EOS;
-    return ret;
+        parse->common.ebml_segment_start + parse->common.ebml_segment_length) {
+      return GST_FLOW_EOS;
+    } else {
+      /*
+       * parsing error: we need to flush a byte from the adapter if the id is
+       * not a cluster and so on until we found a new cluser or the
+       * INVALID_DATA_THRESHOLD is exceeded, we reuse gst_matroska_parse_parse_id
+       * setting the state to GST_MATROSKA_READ_STATE_SCANNING so the bytes
+       * are skipped until a new cluster is found
+       */
+      gint64 bytes_scanned;
+      if (parse->common.start_resync_offset == -1) {
+        parse->common.start_resync_offset = parse->common.offset;
+        parse->common.state_to_restore = parse->common.state;
+      }
+      bytes_scanned = parse->common.offset - parse->common.start_resync_offset;
+      if (bytes_scanned <= INVALID_DATA_THRESHOLD) {
+        GST_WARNING_OBJECT (parse,
+            "parse error, looking for next cluster, actual offset %"
+            G_GUINT64_FORMAT ", start resync offset %" G_GUINT64_FORMAT,
+            parse->common.offset, parse->common.start_resync_offset);
+        parse->common.state = GST_MATROSKA_READ_STATE_SCANNING;
+        ret = GST_FLOW_OK;
+      } else {
+        GST_WARNING_OBJECT (parse,
+            "unrecoverable parse error, next cluster not found and threshold "
+            "exceeded, bytes scanned %" G_GINT64_FORMAT, bytes_scanned);
+        return ret;
+      }
+    }
   }
 
   GST_LOG_OBJECT (parse, "Offset %" G_GUINT64_FORMAT ", Element id 0x%x, "
@@ -3094,7 +3130,8 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstObject * parent,
     }
     case GST_EVENT_EOS:
     {
-      if (parse->common.state != GST_MATROSKA_READ_STATE_DATA) {
+      if (parse->common.state != GST_MATROSKA_READ_STATE_DATA
+          && parse->common.state != GST_MATROSKA_READ_STATE_SCANNING) {
         gst_event_unref (event);
         GST_ELEMENT_ERROR (parse, STREAM, DEMUX,
             (NULL), ("got eos and didn't receive a complete header object"));
