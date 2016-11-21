@@ -699,22 +699,16 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
   }
 
   if (!ensure_sinkpad_allocator (plugin, caps, &size))
-    goto error;
+    return FALSE;
 
   pool = gst_vaapi_plugin_base_create_pool (plugin, caps, size, 0, 0,
       GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META, plugin->sinkpad_allocator);
   if (!pool)
-    goto error;
+    return FALSE;
+
   plugin->sinkpad_buffer_pool = pool;
   plugin->sinkpad_buffer_size = size;
   return TRUE;
-
-  /* ERRORS */
-error:
-  {
-    /* error message already sent */
-    return FALSE;
-  }
 }
 
 /**
