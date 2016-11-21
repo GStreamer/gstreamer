@@ -749,9 +749,15 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
   if (outcaps && outcaps != plugin->srcpad_caps) {
     if (!gst_video_info_from_caps (&plugin->srcpad_info, outcaps))
       return FALSE;
-    g_clear_object (&plugin->srcpad_allocator);
+    if (plugin->srcpad_buffer_pool
+        && !gst_vaapi_buffer_pool_caps_is_equal (plugin->srcpad_buffer_pool,
+            outcaps)) {
+      gst_buffer_pool_set_active (plugin->srcpad_buffer_pool, FALSE);
+      g_clear_object (&plugin->srcpad_buffer_pool);
+      g_clear_object (&plugin->srcpad_allocator);
+      plugin_reset_texture_map (plugin);
+    }
     gst_caps_replace (&plugin->srcpad_caps, outcaps);
-    plugin_reset_texture_map (plugin);
   }
 
   if (!ensure_sinkpad_buffer_pool (plugin, plugin->sinkpad_caps))
