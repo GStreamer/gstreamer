@@ -10936,7 +10936,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                 GstBuffer *block = gst_buffer_new_wrapped (stream_marker,
                     strlen (stream_marker));
 
-                guint index = 0;
+                guint32 index = 0;
+                guint32 remainder = 0;
+                guint32 block_size = 0;
                 gboolean is_last = FALSE;
 
                 GValue array = G_VALUE_INIT;
@@ -10951,12 +10953,21 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
                 gst_buffer_unref (block);
 
-                while (is_last == FALSE && index < metadata_blocks_len) {
+                /* check there's at least one METADATA_BLOCK_HEADER's worth
+                 * of data, and we haven't already finished parsing */
+                while (!is_last && ((index + 3) < metadata_blocks_len)) {
+                  remainder = metadata_blocks_len - index;
+
                   /* add the METADATA_BLOCK_HEADER size to the signalled size */
-                  const guint block_size = 4 +
+                  block_size = 4 +
                       (metadata_blocks[index + 1] << 16) +
                       (metadata_blocks[index + 2] << 8) +
                       metadata_blocks[index + 3];
+
+                  /* be careful not to read off end of box */
+                  if (block_size > remainder) {
+                    break;
+                  }
 
                   is_last = metadata_blocks[index] >> 7;
 
@@ -10974,8 +10985,16 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                   index += block_size;
                 }
 
-                gst_structure_set_value (gst_caps_get_structure (stream->caps,
-                        0), "streamheader", &array);
+                /* only append the metadata if we successfully read all of it */
+                if (is_last) {
+                  gst_structure_set_value (gst_caps_get_structure (stream->caps,
+                          0), "streamheader", &array);
+                } else {
+                  GST_WARNING_OBJECT (qtdemux,
+                      "discarding all METADATA_BLOCKs due to invalid "
+                      "block_size %d at idx %d, rem %d", block_size, index,
+                      remainder);
+                }
 
                 g_value_unset (&value);
                 g_value_unset (&array);
