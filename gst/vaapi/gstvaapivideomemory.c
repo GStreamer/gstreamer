@@ -1009,42 +1009,6 @@ gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
 /* --- GstVaapiVideoInfo = { GstVideoInfo, flags }                      --- */
 /* ------------------------------------------------------------------------ */
 
-static GstVideoInfo *
-gst_vaapi_video_info_copy (const GstVideoInfo * vip)
-{
-  GstVideoInfo *out_vip;
-
-  out_vip = g_slice_new (GstVideoInfo);
-  if (!out_vip)
-    return NULL;
-
-  gst_video_info_init (out_vip);
-  *out_vip = *vip;
-  return out_vip;
-}
-
-static void
-gst_vaapi_video_info_free (GstVideoInfo * vip)
-{
-  g_slice_free (GstVideoInfo, vip);
-}
-
-#define GST_VAAPI_TYPE_VIDEO_INFO gst_vaapi_video_info_get_type ()
-static GType
-gst_vaapi_video_info_get_type (void)
-{
-  static gsize g_type;
-
-  if (g_once_init_enter (&g_type)) {
-    GType type;
-    type = g_boxed_type_register_static ("GstVaapiVideoInfo",
-        (GBoxedCopyFunc) gst_vaapi_video_info_copy,
-        (GBoxedFreeFunc) gst_vaapi_video_info_free);
-    g_once_init_leave (&g_type, type);
-  }
-  return (GType) g_type;
-}
-
 #define GST_VAAPI_VIDEO_INFO_QUARK gst_vaapi_video_info_quark_get ()
 static GQuark
 gst_vaapi_video_info_quark_get (void)
@@ -1140,9 +1104,8 @@ gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
   g_return_val_if_fail (vip != NULL, FALSE);
 
   g_object_set_qdata_full (G_OBJECT (allocator), GST_VAAPI_VIDEO_INFO_QUARK,
-      gst_structure_new_id (GST_VAAPI_VIDEO_INFO_QUARK,
-          INFO_QUARK, GST_VAAPI_TYPE_VIDEO_INFO, vip,
-          FLAGS_QUARK, G_TYPE_UINT, flags, NULL),
+      gst_structure_new_id (GST_VAAPI_VIDEO_INFO_QUARK, INFO_QUARK,
+          GST_TYPE_VIDEO_INFO, vip, FLAGS_QUARK, G_TYPE_UINT, flags, NULL),
       (GDestroyNotify) gst_structure_free);
 
   return TRUE;
