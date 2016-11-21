@@ -559,8 +559,6 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
 
   if (different_caps) {
     vi = plugin->srcpad_info;
-    /* let's keep the size of the allocation info */
-    GST_VIDEO_INFO_SIZE (&vi) = GST_VIDEO_INFO_SIZE (vinfo);
   } else {
     vi = *vinfo;
   }
@@ -579,8 +577,23 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
   if (!plugin->srcpad_allocator)
     goto error_create_allocator;
 
-  if (different_caps)
-    gst_allocator_set_vaapi_video_info (plugin->srcpad_allocator, &vi, 0);
+  if (different_caps) {
+    guint i, flags = 0;
+    const GstVideoInfo *alloc_vi =
+        gst_allocator_get_vaapi_video_info (plugin->srcpad_allocator, &flags);
+    /* update the planes and the size with the allocator image info,
+     * but not the resolution */
+    if (alloc_vi) {
+      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (alloc_vi); i++) {
+        GST_VIDEO_INFO_PLANE_OFFSET (&vi, i) =
+            GST_VIDEO_INFO_PLANE_OFFSET (alloc_vi, i);
+        GST_VIDEO_INFO_PLANE_STRIDE (&vi, i) =
+            GST_VIDEO_INFO_PLANE_STRIDE (alloc_vi, i);
+      }
+      GST_VIDEO_INFO_SIZE (&vi) = GST_VIDEO_INFO_SIZE (alloc_vi);
+      gst_allocator_set_vaapi_video_info (plugin->srcpad_allocator, &vi, flags);
+    }
+  }
 
   return TRUE;
 
