@@ -701,7 +701,6 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
   if (!ensure_sinkpad_allocator (plugin, caps, &size))
     goto error;
 
-  gst_allocator_get_vaapi_image_size (plugin->sinkpad_allocator, &size);
   pool = gst_vaapi_plugin_base_create_pool (plugin, caps, size, 0, 0,
       GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META, plugin->sinkpad_allocator);
   if (!pool)
@@ -779,6 +778,7 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
       return FALSE;
     gst_query_add_allocation_pool (query, plugin->sinkpad_buffer_pool,
         plugin->sinkpad_buffer_size, 0, 0);
+    gst_query_add_allocation_param (query, plugin->sinkpad_allocator, NULL);
   }
 
   gst_query_add_allocation_meta (query, GST_VAAPI_VIDEO_META_API_TYPE, NULL);
@@ -812,7 +812,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   GstBufferPool *pool;
   GstVideoInfo vi;
   guint size, min, max, pool_options;
-  gboolean update_pool = FALSE;
+  gboolean update_pool = FALSE, update_allocator = FALSE;
 #if (USE_GLX || USE_EGL)
   guint idx;
 #endif
@@ -860,6 +860,9 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     goto error_invalid_caps;
   gst_video_info_force_nv12_if_encoded (&vi);
 
+  if (gst_query_get_n_allocation_params (query) > 0)
+    update_allocator = TRUE;
+
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
     update_pool = TRUE;
@@ -888,8 +891,6 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   if (!pool) {
     if (!ensure_srcpad_allocator (plugin, &vi, caps))
       goto error;
-    /* Update video size with allocator's image size */
-    gst_allocator_get_vaapi_image_size (plugin->srcpad_allocator, &size);
     pool = gst_vaapi_plugin_base_create_pool (plugin, caps, size, min, max,
         pool_options, plugin->srcpad_allocator);
     if (!pool)
@@ -900,6 +901,12 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  if (update_allocator)
+    gst_query_set_nth_allocation_param (query, 0, plugin->srcpad_allocator,
+        NULL);
+  else
+    gst_query_add_allocation_param (query, plugin->srcpad_allocator, NULL);
 
   g_clear_object (&plugin->srcpad_buffer_pool);
   plugin->srcpad_buffer_pool = pool;
