@@ -46,9 +46,12 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstvideofilter.h>
-#include <opencv2/core/core_c.h>
 
 G_BEGIN_DECLS
+
+/* forward declare opencv type to avoid exposing them in this API */
+typedef struct _IplImage IplImage;
+
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_OPENCV_VIDEO_FILTER \
   (gst_opencv_video_filter_get_type())
@@ -60,7 +63,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OPENCV_VIDEO_FILTER))
 #define GST_IS_OPENCV_VIDEO_FILTER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OPENCV_VIDEO_FILTER))
-#define GST_OPENCV_VIDEO_FILTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_OPENCV_VIDEO_FILTER,GstOpencvVideoFilterClass))
+#define GST_OPENCV_VIDEO_FILTER_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_OPENCV_VIDEO_FILTER,GstOpencvVideoFilterClass))
 #define GST_OPENCV_VIDEO_FILTER_CAST(obj) ((GstOpencvVideoFilter *) (obj))
 
 typedef struct _GstOpencvVideoFilter GstOpencvVideoFilter;

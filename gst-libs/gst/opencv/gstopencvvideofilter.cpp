@@ -50,6 +50,8 @@
 #include "gstopencvvideofilter.h"
 #include "gstopencvutils.h"
 
+#include <opencv2/core/core_c.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_opencv_video_filter_debug);
 #define GST_CAT_DEFAULT gst_opencv_video_filter_debug
 
