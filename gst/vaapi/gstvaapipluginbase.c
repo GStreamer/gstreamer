@@ -740,19 +740,19 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
     GstCaps * outcaps)
 {
   if (incaps && incaps != plugin->sinkpad_caps) {
-    g_clear_object (&plugin->sinkpad_allocator);
-    gst_caps_replace (&plugin->sinkpad_caps, incaps);
     if (!gst_video_info_from_caps (&plugin->sinkpad_info, incaps))
       return FALSE;
+    g_clear_object (&plugin->sinkpad_allocator);
+    gst_caps_replace (&plugin->sinkpad_caps, incaps);
     plugin->sinkpad_caps_is_raw = !gst_caps_has_vaapi_surface (incaps);
   }
 
   if (outcaps && outcaps != plugin->srcpad_caps) {
+    if (!gst_video_info_from_caps (&plugin->srcpad_info, outcaps))
+      return FALSE;
     g_clear_object (&plugin->srcpad_allocator);
     gst_caps_replace (&plugin->srcpad_caps, outcaps);
     plugin_reset_texture_map (plugin);
-    if (!gst_video_info_from_caps (&plugin->srcpad_info, outcaps))
-      return FALSE;
   }
 
   if (!ensure_sinkpad_buffer_pool (plugin, plugin->sinkpad_caps))
