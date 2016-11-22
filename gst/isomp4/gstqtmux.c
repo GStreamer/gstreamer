@@ -3184,34 +3184,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   last_buf = pad->last_buf;
 
-  /* DTS delta is used to calculate sample duration.
-   * If buffer has missing DTS, we take either segment start or
-   *  previous buffer end time, whichever is later.
-   * This must only be done for non sparse streams, sparse streams
-   * can have gaps between buffers (which is handled later by adding
-   * extra empty buffer with duration that fills the gap). */
-  if (!pad->sparse && buf && !GST_BUFFER_DTS_IS_VALID (buf)) {
-    GstClockTime last_buf_duration = last_buf
-        && GST_BUFFER_DURATION_IS_VALID (last_buf) ?
-        GST_BUFFER_DURATION (last_buf) : 0;
-
-    buf = gst_buffer_make_writable (buf);
-    GST_BUFFER_DTS (buf) = 0;   /* running-time 0 */
-
-    if (last_buf
-        && (GST_BUFFER_DTS (last_buf) + last_buf_duration) >
-        GST_BUFFER_DTS (buf)) {
-      GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (last_buf) + last_buf_duration;
-    }
-  }
-
   ret = gst_qt_mux_check_and_update_timecode (qtmux, pad, buf, ret);
-
-  if (last_buf && !buf && !GST_BUFFER_DURATION_IS_VALID (last_buf)) {
-    /* this is last buffer; there is no next buffer so we need valid number as duration */
-    last_buf = gst_buffer_make_writable (last_buf);
-    GST_BUFFER_DURATION (last_buf) = 0;
-  }
 
   if (last_buf == NULL) {
 #ifndef GST_DISABLE_GST_DEBUG
@@ -3227,8 +3200,9 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 #endif
     pad->last_buf = buf;
     goto exit;
-  } else
+  } else {
     gst_buffer_ref (last_buf);
+  }
 
   /* if this is the first buffer, store the timestamp */
   if (G_UNLIKELY (pad->first_ts == GST_CLOCK_TIME_NONE) && last_buf) {
