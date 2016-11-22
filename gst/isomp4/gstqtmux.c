@@ -2529,11 +2529,14 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
         lateness = gst_util_uint64_scale_round (diff,
             qtmux->timescale, GST_SECOND);
 
-        GST_DEBUG_OBJECT (qtmux, "Pad %s is a late stream by %" GST_TIME_FORMAT,
-            GST_PAD_NAME (qtpad->collect.pad), GST_TIME_ARGS (lateness));
+        if (lateness > 0) {
+          GST_DEBUG_OBJECT (qtmux,
+              "Pad %s is a late stream by %" GST_TIME_FORMAT,
+              GST_PAD_NAME (qtpad->collect.pad), GST_TIME_ARGS (lateness));
 
-        atom_trak_set_elst_entry (qtpad->trak, 0, lateness, (guint32) - 1,
-            (guint32) (1 * 65536.0));
+          atom_trak_set_elst_entry (qtpad->trak, 0, lateness, (guint32) - 1,
+              (guint32) (1 * 65536.0));
+        }
       }
 
       /* Always write an edit list for the whole track. In general this is not
