@@ -3242,8 +3242,11 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   /* duration actually means time delta between samples, so we calculate
    * the duration based on the difference in DTS or PTS, falling back
    * to DURATION if the other two don't exist, such as with the last
-   * sample before EOS. */
-  duration = GST_BUFFER_DURATION (last_buf);
+   * sample before EOS. Or use 0 if nothing else is available */
+  if (GST_BUFFER_DURATION_IS_VALID (last_buf))
+    duration = GST_BUFFER_DURATION (last_buf);
+  else
+    duration = 0;
   if (!pad->sparse) {
     if (last_buf && buf && GST_BUFFER_DTS_IS_VALID (buf)
         && GST_BUFFER_DTS_IS_VALID (last_buf))
@@ -3254,12 +3257,6 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   }
 
   gst_buffer_replace (&pad->last_buf, buf);
-
-  /* for computing the avg bitrate */
-  if (G_LIKELY (last_buf)) {
-    pad->total_bytes += gst_buffer_get_size (last_buf);
-    pad->total_duration += duration;
-  }
 
   if (qtmux->current_pad != pad || qtmux->current_chunk_offset == -1) {
     GST_DEBUG_OBJECT (qtmux,
@@ -3276,8 +3273,6 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     qtmux->current_chunk_size = 0;
     qtmux->current_chunk_duration = 0;
   }
-  qtmux->current_chunk_size += gst_buffer_get_size (last_buf);
-  qtmux->current_chunk_duration += duration;
 
   last_dts = gst_util_uint64_scale_round (pad->last_dts,
       atom_trak_get_timescale (pad->trak), GST_SECOND);
@@ -3295,13 +3290,13 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     if (GST_BUFFER_DURATION (last_buf) != GST_CLOCK_TIME_NONE) {
       nsamples = gst_util_uint64_scale_round (GST_BUFFER_DURATION (last_buf),
           atom_trak_get_timescale (pad->trak), GST_SECOND);
+      duration = GST_BUFFER_DURATION (last_buf);
     } else {
       nsamples = gst_buffer_get_size (last_buf) / sample_size;
+      duration =
+          gst_util_uint64_scale_round (nsamples, GST_SECOND,
+          atom_trak_get_timescale (pad->trak));
     }
-    if (nsamples > 0)
-      duration = GST_BUFFER_DURATION (last_buf) / nsamples;
-    else
-      duration = 0;
 
     /* timescale = samplerate */
     scaled_duration = 1;
@@ -3309,14 +3304,13 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   } else {
     nsamples = 1;
     sample_size = gst_buffer_get_size (last_buf);
-    if ((pad->last_buf && GST_BUFFER_DTS_IS_VALID (pad->last_buf))
+    if ((buf && GST_BUFFER_DTS_IS_VALID (buf))
         || GST_BUFFER_DTS_IS_VALID (last_buf)) {
       gint64 scaled_dts;
-      if (pad->last_buf && GST_BUFFER_DTS_IS_VALID (pad->last_buf)) {
-        pad->last_dts = GST_BUFFER_DTS (pad->last_buf);
+      if (buf && GST_BUFFER_DTS_IS_VALID (buf)) {
+        pad->last_dts = GST_BUFFER_DTS (buf);
       } else {
-        pad->last_dts = GST_BUFFER_DTS (last_buf) +
-            GST_BUFFER_DURATION (last_buf);
+        pad->last_dts = GST_BUFFER_DTS (last_buf) + duration;
       }
       if ((gint64) (pad->last_dts) < 0) {
         scaled_dts = -gst_util_uint64_scale_round (-pad->last_dts,
@@ -3337,6 +3331,14 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       pad->last_dts += duration;
     }
   }
+
+  /* for computing the avg bitrate */
+  if (G_LIKELY (last_buf)) {
+    pad->total_bytes += gst_buffer_get_size (last_buf);
+    pad->total_duration += duration;
+  }
+  qtmux->current_chunk_size += gst_buffer_get_size (last_buf);
+  qtmux->current_chunk_duration += duration;
 
   chunk_offset = qtmux->current_chunk_offset;
 
