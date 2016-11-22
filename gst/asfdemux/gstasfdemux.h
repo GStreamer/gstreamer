@@ -240,6 +240,8 @@ struct _GstASFDemux {
 
   /* parsing 3D */
   GstASF3DMode asf_3D_mode;
+
+  gboolean saw_file_header;
 };
 
 struct _GstASFDemuxClass {
