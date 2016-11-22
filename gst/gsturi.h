@@ -250,6 +250,7 @@ const gchar * gst_uri_get_query_value  (const GstUri * uri,
 GList * gst_uri_get_query_keys         (const GstUri * uri);
 const gchar * gst_uri_get_fragment     (const GstUri * uri);
 gboolean gst_uri_set_fragment          (GstUri * uri, const gchar * fragment);
+GHashTable * gst_uri_get_media_fragment_table  (const GstUri * uri);
 
 /**
  * gst_uri_copy:

@@ -3452,6 +3452,7 @@ gst_uri_query_has_key
 gst_uri_get_query_keys
 gst_uri_get_fragment
 gst_uri_set_fragment
+gst_uri_get_media_fragment_table
 <SUBSECTION Standard>
 GST_IS_URI
 GST_TYPE_URI

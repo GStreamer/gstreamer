@@ -1493,6 +1493,7 @@ EXPORTS
 	gst_uri_get_fragment
 	gst_uri_get_host
 	gst_uri_get_location
+	gst_uri_get_media_fragment_table
 	gst_uri_get_path
 	gst_uri_get_path_segments
 	gst_uri_get_path_string

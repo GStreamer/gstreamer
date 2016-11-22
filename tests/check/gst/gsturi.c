@@ -980,6 +980,80 @@ GST_START_TEST (test_url_get_set)
 
 GST_END_TEST;
 
+GST_START_TEST (test_url_get_media_fragment_table)
+{
+  GstUri *url;
+  gchar *val;
+  GHashTable *table;
+
+  /* Examples at https://www.w3.org/TR/media-frags/#processing-media-fragment-uri */
+
+  /* TEST "t=1" */
+  url = gst_uri_from_string ("http://foo/var/file#t=1");
+  table = gst_uri_get_media_fragment_table (url);
+  fail_unless (table);
+  fail_unless (g_hash_table_size (table) == 1);
+  fail_unless (g_hash_table_lookup_extended (table, "t", NULL,
+          (gpointer) & val));
+  fail_unless_equals_string ("1", val);
+  g_hash_table_unref (table);
+  gst_uri_unref (url);
+
+  /* NOTE: Media Fragments URI 1.0 (W3C) is saying that
+   * "Multiple occurrences of the same dimension: only the last valid occurrence
+   *  of a dimension (e.g. t=10 in #t=2&t=10) is interpreted and all previous
+   *  occurrences (valid or invalid) SHOULD be ignored by the user agent"
+   */
+  /* TEST "t=1&t=2" */
+  url = gst_uri_from_string ("http://foo/var/file#t=1&t=2");
+  table = gst_uri_get_media_fragment_table (url);
+  fail_unless (table);
+  fail_unless (g_hash_table_size (table) == 1);
+  fail_unless (g_hash_table_lookup_extended (table, "t", NULL,
+          (gpointer) & val));
+  fail_unless_equals_string ("2", val);
+  g_hash_table_unref (table);
+  gst_uri_unref (url);
+
+  /* TEST "a=b=c" */
+  url = gst_uri_from_string ("http://foo/var/file#a=b=c");
+  table = gst_uri_get_media_fragment_table (url);
+  fail_unless (table);
+  fail_unless (g_hash_table_size (table) == 1);
+  fail_unless (g_hash_table_lookup_extended (table, "a", NULL,
+          (gpointer) & val));
+  fail_unless_equals_string ("b=c", val);
+  g_hash_table_unref (table);
+  gst_uri_unref (url);
+
+  /* TEST "a&b=c" */
+  url = gst_uri_from_string ("http://foo/var/file#a&b=c");
+  table = gst_uri_get_media_fragment_table (url);
+  fail_unless (table);
+  fail_unless (g_hash_table_size (table) == 2);
+  fail_unless (g_hash_table_lookup_extended (table, "a", NULL,
+          (gpointer) & val));
+  fail_unless (val == NULL);
+  fail_unless (g_hash_table_lookup_extended (table, "b", NULL,
+          (gpointer) & val));
+  fail_unless_equals_string ("c", val);
+  g_hash_table_unref (table);
+  gst_uri_unref (url);
+
+  /* TEST "%74=%6ept%3A%310" */
+  url = gst_uri_from_string ("http://foo/var/file#%74=%6ept%3A%310");
+  table = gst_uri_get_media_fragment_table (url);
+  fail_unless (table);
+  fail_unless (g_hash_table_size (table) == 1);
+  fail_unless (g_hash_table_lookup_extended (table, "t", NULL,
+          (gpointer) & val));
+  fail_unless_equals_string ("npt:10", val);
+  g_hash_table_unref (table);
+  gst_uri_unref (url);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_uri_suite (void)
 {
@@ -1003,6 +1077,7 @@ gst_uri_suite (void)
   tcase_add_test (tc_chain, test_url_equality);
   tcase_add_test (tc_chain, test_url_constructors);
   tcase_add_test (tc_chain, test_url_get_set);
+  tcase_add_test (tc_chain, test_url_get_media_fragment_table);
 
   return s;
 }
