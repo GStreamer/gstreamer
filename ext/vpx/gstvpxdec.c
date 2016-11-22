@@ -482,9 +482,12 @@ gst_vpx_dec_release_buffer_cb (gpointer priv, vpx_codec_frame_buffer_t * fb)
 {
   struct Frame *frame = fb->priv;
 
+  /* We're sometimes called without a frame */
+  if (!frame)
+    return 0;
+
   GST_TRACE_OBJECT (priv, "Release buffer %p", frame->buffer);
 
-  g_assert (frame);
   gst_buffer_unmap (frame->buffer, &frame->info);
   gst_buffer_unref (frame->buffer);
   g_free (frame);
