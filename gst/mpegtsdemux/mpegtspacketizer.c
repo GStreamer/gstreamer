@@ -1051,9 +1051,10 @@ accumulate_data:
       res = section;
   }
 
-  /* FIXME : We need at least 8 bytes with current algorithm :(
+section_start:
+  /* FIXME : We need at least 3 bytes (or 8 for long packets) with current algorithm :(
    * We might end up losing sections that start across two packets (srsl...) */
-  if (data > packet->data_end - 8 || *data == 0xff) {
+  if (data > packet->data_end - 3 || *data == 0xff) {
     /* flush stuffing bytes and leave */
     mpegts_packetizer_clear_section (stream);
     goto out;
@@ -1062,8 +1063,6 @@ accumulate_data:
   /* We have more data to process ... */
   GST_DEBUG ("PID 0x%04x, More section present in packet (remaining bytes:%"
       G_GSIZE_FORMAT ")", stream->pid, (gsize) (packet->data_end - data));
-
-section_start:
   GST_MEMDUMP ("section_start", data, packet->data_end - data);
   data_start = data;
   /* Beginning of a new section */
@@ -1116,6 +1115,10 @@ section_start:
   data += 2;
 
   if (long_packet) {
+    /* Do we have enough data for a long packet? */
+    if (data > packet->data_end - 5)
+      goto out;
+
     /* subtable_extension (always present, we are in a long section) */
     /* subtable extension              : 16 bit */
     subtable_extension = GST_READ_UINT16_BE (data);
