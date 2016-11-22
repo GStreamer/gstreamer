@@ -1765,13 +1765,22 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
       demux->common.offset += length + needed;
       ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
           GST_ELEMENT_CAST (demux), &id, &length, &needed);
-      if (ret != GST_FLOW_OK)
+      if (ret != GST_FLOW_OK) {
+        /* we skipped one byte in the reader above, need to accomodate for
+         * that when resuming skipping from the reader instead of reading a
+         * new chunk */
+        newpos += 1;
         goto resume;
+      }
       GST_DEBUG_OBJECT (demux, "next element is %scluster",
           id == GST_MATROSKA_ID_CLUSTER ? "" : "not ");
       if (id == GST_MATROSKA_ID_CLUSTER)
         break;
-      /* not ok, resume */
+      /* not ok, resume
+       * we skipped one byte in the reader above, need to accomodate for
+       * that when resuming skipping from the reader instead of reading a
+       * new chunk */
+      newpos += 1;
       goto resume;
     } else {
       /* partial cluster id may have been in tail of buffer */
