@@ -3204,6 +3204,9 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     gst_buffer_ref (last_buf);
   }
 
+  if (!GST_BUFFER_PTS_IS_VALID (last_buf))
+    goto no_pts;
+
   /* if this is the first buffer, store the timestamp */
   if (G_UNLIKELY (pad->first_ts == GST_CLOCK_TIME_NONE) && last_buf) {
     if (GST_BUFFER_PTS_IS_VALID (last_buf)) {
@@ -3357,9 +3360,6 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
         GST_PAD_NAME (pad->collect.pad));
     sync = TRUE;
   }
-
-  if (!GST_BUFFER_PTS_IS_VALID (last_buf))
-    goto no_pts;
 
   if (GST_BUFFER_DTS_IS_VALID (last_buf)) {
     last_dts = gst_util_uint64_scale_round (GST_BUFFER_DTS (last_buf),
