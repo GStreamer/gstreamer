@@ -101,7 +101,6 @@ flx_set_palette_vector (FlxColorSpaceConverter * flxpal, guint start, guint num,
   } else {
     memcpy (&flxpal->palvec[start * 3], newpal, grab * 3);
   }
-
 }
 
 void
