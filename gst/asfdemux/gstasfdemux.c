@@ -448,6 +448,13 @@ gst_asf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         break;
       }
       flow = gst_asf_demux_push_complete_payloads (demux, TRUE);
+      if (!demux->activated_streams) {
+        /* If we still haven't got activated streams, the file is most likely corrupt */
+        GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE,
+            (_("This stream contains no data.")),
+            ("got eos and didn't receive a complete header object"));
+        break;
+      }
       if (flow < GST_FLOW_EOS || flow == GST_FLOW_NOT_LINKED) {
         GST_ELEMENT_FLOW_ERROR (demux, flow);
         break;
