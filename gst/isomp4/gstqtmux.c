@@ -3239,6 +3239,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     GST_ERROR ("decreasing DTS value %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
         GST_TIME_ARGS (GST_BUFFER_DTS (last_buf)));
+    buf = gst_buffer_make_writable (buf);
     GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (last_buf);
   }
 
@@ -3399,8 +3400,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     if (pad->create_empty_buffer) {
       GstBuffer *empty_buf;
       gint64 empty_duration =
-          GST_BUFFER_TIMESTAMP (buf) - (GST_BUFFER_TIMESTAMP (last_buf) +
-          duration);
+          GST_BUFFER_PTS (buf) - (GST_BUFFER_PTS (last_buf) + duration);
       gint64 empty_duration_scaled;
 
       empty_buf = pad->create_empty_buffer (pad, empty_duration);
