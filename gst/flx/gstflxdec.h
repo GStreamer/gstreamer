@@ -23,6 +23,8 @@
 #include <gst/gst.h>
 
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstbytereader.h>
+#include <gst/base/gstbytewriter.h>
 #include "flx_color.h"
 
 G_BEGIN_DECLS
@@ -45,7 +47,7 @@ struct _GstFlxDec {
 
   guint8 *delta_data, *frame_data;
   GstAdapter *adapter;
-  gulong size;
+  gsize size;
   GstFlxDecState state;
   gint64 frame_time;
   gint64 next_time;
