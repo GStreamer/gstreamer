@@ -319,7 +319,7 @@ flx_decode_brun (GstFlxDec * flxdec, guchar * data, guchar * dest)
       if (count > 0x7f) {
         /* literal run */
         count = 0x100 - count;
-        if ((glong) row - count < 0) {
+        if ((glong) row - (glong) count < 0) {
           GST_ERROR_OBJECT (flxdec, "Invalid BRUN packet detected.");
           return FALSE;
         }
@@ -329,7 +329,7 @@ flx_decode_brun (GstFlxDec * flxdec, guchar * data, guchar * dest)
           *dest++ = *data++;
 
       } else {
-        if ((glong) row - count < 0) {
+        if ((glong) row - (glong) count < 0) {
           GST_ERROR_OBJECT (flxdec, "Invalid BRUN packet detected.");
           return FALSE;
         }
