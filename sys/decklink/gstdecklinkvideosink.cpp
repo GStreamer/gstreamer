@@ -955,7 +955,8 @@ gst_decklink_video_sink_change_state (GstElement * element,
       gst_decklink_video_sink_stop (self);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:{
-      if (gst_decklink_video_sink_stop_scheduled_playback (self) == GST_STATE_CHANGE_FAILURE)
+      if (gst_decklink_video_sink_stop_scheduled_playback (self) ==
+          GST_STATE_CHANGE_FAILURE)
         ret = GST_STATE_CHANGE_FAILURE;
       break;
     }

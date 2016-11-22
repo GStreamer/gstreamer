@@ -196,25 +196,21 @@ struct _GstDecklinkInput {
   IDeckLinkInput *input;
   IDeckLinkConfiguration *config;
   IDeckLinkAttributes *attributes;
-  GstClock *clock;
-  GstClockTime clock_start_time, clock_offset, clock_last_time, clock_epoch;
-  gboolean started, clock_restart;
 
   /* Everything below protected by mutex */
   GMutex lock;
 
   /* Set by the video source */
-  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time, GstClockTime capture_duration, guint hours, guint minutes, guint seconds, guint frames, BMDTimecodeFlags bflags);
+  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time, GstClockTime stream_time, GstClockTime stream_duration, guint hours, guint minutes, guint seconds, guint frames, BMDTimecodeFlags bflags);
   /* Configured mode or NULL */
   const GstDecklinkMode *mode;
   BMDPixelFormat format;
 
   /* Set by the audio source */
-  void (*got_audio_packet) (GstElement *videosrc, IDeckLinkAudioInputPacket * packet, GstClockTime capture_time, gboolean discont);
+  void (*got_audio_packet) (GstElement *videosrc, IDeckLinkAudioInputPacket * packet, GstClockTime capture_time, GstClockTime packet_time);
 
   GstElement *audiosrc;
   gboolean audio_enabled;
-  gboolean audio_discont;
   GstElement *videosrc;
   gboolean video_enabled;
   void (*start_streams) (GstElement *videosrc);

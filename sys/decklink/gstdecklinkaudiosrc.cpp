@@ -57,7 +57,6 @@ typedef struct
 {
   IDeckLinkAudioInputPacket *packet;
   GstClockTime capture_time;
-  gboolean discont;
 } CapturePacket;
 
 static void
@@ -422,27 +421,13 @@ gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 static void
 gst_decklink_audio_src_got_packet (GstElement * element,
     IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
-    gboolean discont)
+    GstClockTime packet_time)
 {
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (element);
-  GstDecklinkVideoSrc *videosrc = NULL;
 
-  GST_LOG_OBJECT (self, "Got audio packet at %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (capture_time));
-
-  g_mutex_lock (&self->input->lock);
-  if (self->input->videosrc)
-    videosrc =
-        GST_DECKLINK_VIDEO_SRC_CAST (gst_object_ref (self->input->videosrc));
-  g_mutex_unlock (&self->input->lock);
-
-  if (videosrc) {
-    gst_decklink_video_src_convert_to_external_clock (videosrc, &capture_time,
-        NULL);
-    gst_object_unref (videosrc);
-    GST_LOG_OBJECT (self, "Actual timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (capture_time));
-  }
+  GST_LOG_OBJECT (self,
+      "Got audio packet at %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (capture_time), GST_TIME_ARGS (packet_time));
 
   g_mutex_lock (&self->lock);
   if (!self->flushing) {
@@ -457,8 +442,8 @@ gst_decklink_audio_src_got_packet (GstElement * element,
 
     p = (CapturePacket *) g_malloc0 (sizeof (CapturePacket));
     p->packet = packet;
-    p->capture_time = capture_time;
-    p->discont = discont;
+    p->capture_time =
+        capture_time != GST_CLOCK_TIME_NONE ? capture_time : packet_time;
     packet->AddRef ();
     g_queue_push_tail (&self->current_packets, p);
     g_cond_signal (&self->cond);
@@ -523,7 +508,6 @@ retry:
   ap->input->AddRef ();
 
   timestamp = p->capture_time;
-  discont = p->discont;
 
   // Jitter and discontinuity handling, based on audiobasesrc
   start_time = timestamp;
@@ -538,7 +522,7 @@ retry:
 
   duration = end_time - start_time;
 
-  if (discont || self->next_offset == (guint64) - 1) {
+  if (self->next_offset == (guint64) - 1) {
     discont = TRUE;
   } else {
     guint64 diff, max_sample_diff;
