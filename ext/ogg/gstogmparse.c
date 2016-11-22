@@ -277,7 +277,7 @@ gst_ogm_audio_parse_base_init (GstOgmParseClass * klass)
   GstCaps *caps = gst_riff_create_audio_template_caps ();
 
   gst_element_class_set_static_metadata (element_class,
-      "OGM audio stream parser", "Codec/Decoder/Audio",
+      "OGM audio stream parser", "Codec/Parser/Audio",
       "parse an OGM audio header and stream",
       "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 
@@ -296,7 +296,7 @@ gst_ogm_video_parse_base_init (GstOgmParseClass * klass)
   GstCaps *caps = gst_riff_create_video_template_caps ();
 
   gst_element_class_set_static_metadata (element_class,
-      "OGM video stream parser", "Codec/Decoder/Video",
+      "OGM video stream parser", "Codec/Parser/Video",
       "parse an OGM video header and stream",
       "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 
