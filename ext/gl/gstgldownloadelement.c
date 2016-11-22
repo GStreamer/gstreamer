@@ -79,7 +79,7 @@ gst_gl_download_element_class_init (GstGLDownloadElementClass * klass)
       &gst_gl_download_element_sink_pad_template);
 
   gst_element_class_set_metadata (element_class,
-      "OpenGL uploader", "Filter/Video",
+      "OpenGL downloader", "Filter/Video",
       "Downloads data from OpenGL", "Matthew Waters <matthew@centricular.com>");
 }
 
