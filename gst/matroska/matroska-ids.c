@@ -283,15 +283,18 @@ gst_matroska_parse_flac_stream_headers (gpointer codec_data,
   /* skip fLaC marker */
   off = 4;
 
-  /* FIXME: check size remaining */
-  while (off < codec_data_size) {
+  while (off < codec_data_size - 3) {
     len = GST_READ_UINT8 (pdata + off + 1) << 16;
     len |= GST_READ_UINT8 (pdata + off + 2) << 8;
     len |= GST_READ_UINT8 (pdata + off + 3);
 
     GST_DEBUG ("header packet: len=%u bytes, flags=0x%02x", len, pdata[off]);
 
-    /* FIXME: check size remaining */
+    if (off + len > codec_data_size) {
+      gst_buffer_list_unref (list);
+      return NULL;
+    }
+
     hdr = gst_buffer_new_wrapped (g_memdup (pdata + off, len + 4), len + 4);
     gst_buffer_list_add (list, hdr);
 
