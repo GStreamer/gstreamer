@@ -928,7 +928,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
   MpegTSPacketizerStream *stream;
   gboolean long_packet;
   guint8 pointer = 0, table_id;
-  guint16 subtable_extension = 0;
+  guint16 subtable_extension;
   gsize to_read;
   guint section_length;
   /* data points to the current read location
@@ -1052,6 +1052,12 @@ accumulate_data:
   }
 
 section_start:
+  subtable_extension = 0;
+  version_number = 0;
+  last_section_number = 0;
+  section_number = 0;
+  table_id = 0;
+
   /* FIXME : We need at least 3 bytes (or 8 for long packets) with current algorithm :(
    * We might end up losing sections that start across two packets (srsl...) */
   if (data > packet->data_end - 3 || *data == 0xff) {
