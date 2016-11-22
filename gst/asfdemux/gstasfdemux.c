@@ -1245,6 +1245,8 @@ parse_failed:
     if (buf)
       gst_buffer_unmap (buf, &map);
     gst_buffer_replace (&buf, NULL);
+    if (flow == ASF_FLOW_NEED_MORE_DATA)
+      flow = GST_FLOW_ERROR;
     *pflow = flow;
     return FALSE;
   }
