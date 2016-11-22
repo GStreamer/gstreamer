@@ -72,7 +72,8 @@ static const char gst_vaapipostproc_src_caps_str[] =
   GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS "; "
 #endif
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
-  GST_CAPS_INTERLACED_MODES;
+  GST_CAPS_INTERLACED_MODES "; "
+  GST_VAAPI_MAKE_DMABUF_CAPS;
 /* *INDENT-ON* */
 
 /* *INDENT-OFF* */
