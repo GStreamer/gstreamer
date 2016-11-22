@@ -1493,7 +1493,7 @@ gst_asf_demux_update_caps_from_payload (GstASFDemux * demux, AsfStream * stream)
 static gboolean
 gst_asf_demux_check_activate_streams (GstASFDemux * demux, gboolean force)
 {
-  guint i;
+  guint i, actual_streams = 0;
 
   if (demux->activated_streams)
     return TRUE;
@@ -1522,9 +1522,16 @@ gst_asf_demux_check_activate_streams (GstASFDemux * demux, gboolean force)
        * a stream, then we active it, or we don't, then we'll ignore it */
       GST_LOG_OBJECT (stream->pad, "is prerolled - activate!");
       gst_asf_demux_activate_stream (demux, stream);
+      actual_streams += 1;
     } else {
       GST_LOG_OBJECT (stream->pad, "no data, ignoring stream");
     }
+  }
+
+  if (actual_streams == 0) {
+    /* We don't have any streams activated ! */
+    GST_ERROR_OBJECT (demux, "No streams activated!");
+    return FALSE;
   }
 
   gst_asf_demux_release_old_pads (demux);
@@ -2078,7 +2085,7 @@ eos:
      * less data queued than required for preroll; force stream activation and
      * send any pending payloads before sending EOS */
     if (!demux->activated_streams)
-      gst_asf_demux_push_complete_payloads (demux, TRUE);
+      flow = gst_asf_demux_push_complete_payloads (demux, TRUE);
 
     /* we want to push an eos or post a segment-done in any case */
     if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
@@ -2105,9 +2112,14 @@ eos:
     }
 
     if (!(demux->segment.flags & GST_SEEK_FLAG_SEGMENT)) {
-      /* normal playback, send EOS to all linked pads */
-      GST_INFO_OBJECT (demux, "Sending EOS, at end of stream");
-      gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
+      if (demux->activated_streams) {
+        /* normal playback, send EOS to all linked pads */
+        GST_INFO_OBJECT (demux, "Sending EOS, at end of stream");
+        gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
+      } else {
+        GST_WARNING_OBJECT (demux, "EOS without exposed streams");
+        flow = GST_FLOW_EOS;
+      }
     }
     /* ... and fall through to pause */
   }
@@ -2119,7 +2131,10 @@ pause:
     gst_pad_pause_task (demux->sinkpad);
 
     /* For the error cases */
-    if (flow < GST_FLOW_EOS || flow == GST_FLOW_NOT_LINKED) {
+    if (flow == GST_FLOW_EOS && !demux->activated_streams) {
+      GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
+          ("This doesn't seem to be an ASF file"));
+    } else if (flow < GST_FLOW_EOS || flow == GST_FLOW_NOT_LINKED) {
       /* Post an error. Hopefully something else already has, but if not... */
       GST_ELEMENT_FLOW_ERROR (demux, flow);
       gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
