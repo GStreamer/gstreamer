@@ -3575,7 +3575,7 @@ gst_asf_demux_process_header (GstASFDemux * demux, guint8 * data, guint64 size)
   unknown = gst_asf_demux_get_uint8 (&data, &size);
 
   GST_INFO_OBJECT (demux, "object is a header with %u parts", num_objects);
-
+  demux->saw_file_header = FALSE;
   /* Loop through the header's objects, processing those */
   for (i = 0; i < num_objects; ++i) {
     GST_INFO_OBJECT (demux, "reading header part %u", i);
@@ -3584,6 +3584,11 @@ gst_asf_demux_process_header (GstASFDemux * demux, guint8 * data, guint64 size)
       GST_WARNING ("process_object returned %s", gst_asf_get_flow_name (ret));
       break;
     }
+  }
+  if (!demux->saw_file_header) {
+    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
+        ("Header does not have mandatory FILE section"));
+    return GST_FLOW_ERROR;
   }
 
   return ret;
@@ -3664,6 +3669,8 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   GST_INFO ("object is a file with %" G_GUINT64_FORMAT " data packets",
       packets_count);
   GST_INFO ("preroll = %" G_GUINT64_FORMAT, demux->preroll);
+
+  demux->saw_file_header = TRUE;
 
   return GST_FLOW_OK;
 
