@@ -35,6 +35,12 @@
 #include "gstav.h"
 #include "gstavutils.h"
 
+#ifdef GST_LIBAV_ENABLE_GPL
+#define LICENSE "GPL"
+#else
+#define LICENSE "LGPL"
+#endif
+
 GST_DEBUG_CATEGORY (ffmpeg_debug);
 GST_DEBUG_CATEGORY (CAT_PERFORMANCE);
 
@@ -176,10 +182,5 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     libav,
     "All libav codecs and formats (" LIBAV_SOURCE ")",
-    plugin_init, PACKAGE_VERSION,
-#ifdef GST_LIBAV_ENABLE_GPL
-    "GPL",
-#else
-    "LGPL",
-#endif
+    plugin_init, PACKAGE_VERSION, LICENSE,
     "libav", "http://www.libav.org")
