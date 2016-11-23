@@ -194,7 +194,7 @@ gst_gl_context_glx_create_context (GstGLContext * context,
   GstGLContextGLX *context_glx;
   GstGLWindow *window;
   GstGLWindowX11 *window_x11;
-  GstGLDisplay *display;
+  GstGLDisplay *display = NULL;
   gboolean create_context;
   const char *glx_exts;
   Display *device;
@@ -202,6 +202,14 @@ gst_gl_context_glx_create_context (GstGLContext * context,
 
   context_glx = GST_GL_CONTEXT_GLX (context);
   window = gst_gl_context_get_window (context);
+
+  if (!GST_IS_GL_WINDOW_X11 (window)) {
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
+        "Cannot create an GLX context from a non-X11 window");
+    goto failure;
+  }
+
   window_x11 = GST_GL_WINDOW_X11 (window);
   display = gst_gl_context_get_display (context);
 
@@ -217,6 +225,12 @@ gst_gl_context_glx_create_context (GstGLContext * context,
   }
 
   device = (Display *) gst_gl_display_get_handle (display);
+  if (!device) {
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE, "Invalid Display handle");
+    goto failure;
+  }
+
   glx_exts = glXQueryExtensionsString (device, DefaultScreen (device));
 
   create_context = gst_gl_check_extension ("GLX_ARB_create_context", glx_exts);
@@ -281,7 +295,8 @@ gst_gl_context_glx_create_context (GstGLContext * context,
 failure:
   if (window)
     gst_object_unref (window);
-  gst_object_unref (display);
+  if (display)
+    gst_object_unref (display);
 
   return FALSE;
 }
@@ -316,8 +331,21 @@ gst_gl_context_glx_choose_format (GstGLContext * context, GError ** error)
 
   context_glx = GST_GL_CONTEXT_GLX (context);
   window = gst_gl_context_get_window (context);
+
+  if (!GST_IS_GL_WINDOW_X11 (window)) {
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
+        "Cannot create an GLX context from a non-X11 window");
+    goto failure;
+  }
   window_x11 = GST_GL_WINDOW_X11 (window);
+
   device = (Display *) gst_gl_display_get_handle (window->display);
+  if (!device) {
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE, "Invalid Display handle");
+    goto failure;
+  }
 
   if (!glXQueryExtension (device, &error_base, &event_base)) {
     g_set_error (error, GST_GL_CONTEXT_ERROR,
