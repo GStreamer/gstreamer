@@ -82,8 +82,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/kate/gstkatetag.h \
 	$(top_srcdir)/ext/kate/gstkatetiger.h \
 	$(top_srcdir)/ext/ladspa/gstladspa.h \
-	$(top_srcdir)/ext/mimic/gstmimenc.h \
-	$(top_srcdir)/ext/mimic/gstmimdec.h \
 	$(top_srcdir)/ext/modplug/gstmodplug.h \
 	$(top_srcdir)/ext/mpeg2enc/gstmpeg2enc.hh \
 	$(top_srcdir)/ext/mplex/gstmplex.hh \

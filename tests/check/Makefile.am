@@ -132,12 +132,6 @@ else
 check_kate=
 endif
 
-if USE_MIMIC
-check_mimic=pipelines/mimic
-else
-check_mimic=
-endif
-
 if HAVE_ORC
 check_orc = orc/bayer orc/audiomixer orc/compositor
 else
@@ -288,7 +282,6 @@ check_PROGRAMS = \
 	elements/rtponviftimestamp \
 	elements/id3mux \
 	pipelines/mxf \
-	$(check_mimic) \
 	libs/mpegvideoparser \
 	libs/mpegts \
 	libs/h264parser \

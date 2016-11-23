@@ -196,12 +196,6 @@ else
 MPEG2ENC_DIR=
 endif
 
-if USE_MIMIC
-MIMIC_DIR=mimic
-else
-MIMIC_DIR=
-endif
-
 if USE_MPLEX
 MPLEX_DIR=mplex
 else
@@ -472,7 +466,6 @@ SUBDIRS=\
 	$(LIBVISUAL_DIR) \
 	$(MODPLUG_DIR) \
 	$(MPEG2ENC_DIR) \
-	$(MIMIC_DIR) \
 	$(MPLEX_DIR) \
 	$(MUSEPACK_DIR) \
 	$(NAS_DIR) \
@@ -542,7 +535,6 @@ DIST_SUBDIRS = \
 	gtk \
 	qt \
 	modplug \
-	mimic \
 	mpeg2enc \
 	mplex \
 	musepack \

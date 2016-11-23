@@ -59,7 +59,6 @@ BuildRequires: xvidcore-devel
 BuildRequires: libmms-devel
 BuildRequires: mjpegtools-devel
 BuildRequires: twolame-devel
-BuildRequires: libmimic-devel
 
 
 Obsoletes: gstreamer-plugins-flumpegdemux < 0.10.15-9
@@ -244,7 +243,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstgeometrictransform.so
 %{_libdir}/gstreamer-%{majorminor}/libgstid3tag.so
 %{_libdir}/gstreamer-%{majorminor}/libgstinterlace.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmimic.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegpsdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsmux.so

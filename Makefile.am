@@ -84,6 +84,7 @@ CRUFT_FILES = \
 	$(top_builddir)/tests/check/elements/selector \
 	$(top_builddir)/tests/check/elements/valve \
 	$(top_builddir)/tests/check/pipelines/metadata \
+	$(top_builddir)/tests/check/pipelines/mimic \
 	$(top_builddir)/tests/examples/jack/jack_client \
 	$(top_builddir)/tests/examples/scaletempo/scaletempo-demo \
 	$(top_builddir)/tests/examples/switch/switcher \
@@ -125,6 +126,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/ext/ivorbis \
 	$(top_srcdir)/ext/jack \
 	$(top_srcdir)/ext/metadata \
+	$(top_srcdir)/ext/mimic \
 	$(top_srcdir)/ext/mpg123 \
 	$(top_srcdir)/ext/swfdec \
 	$(top_srcdir)/ext/tarkin \
