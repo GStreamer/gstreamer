@@ -3547,6 +3547,7 @@ gst_util_guint64_to_gdouble
 gst_util_gdouble_to_guint64
 GST_TYPE_SEARCH_MODE
 gst_search_mode_get_type
+gst_calculate_linear_regression
 </SECTION>
 
 <SECTION>

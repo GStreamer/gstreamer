@@ -157,6 +157,7 @@ struct _GstClockPrivate
   gint time_index;
   GstClockTime timeout;
   GstClockTime *times;
+  GstClockTime *times_temp;
   GstClockID clockid;
 
   gint pre_count;
@@ -738,6 +739,8 @@ gst_clock_init (GstClock * clock)
   priv->time_index = 0;
   priv->timeout = DEFAULT_TIMEOUT;
   priv->times = g_new0 (GstClockTime, 4 * priv->window_size);
+  priv->times_temp =
+      priv->times + 2 * priv->window_size * sizeof (GstClockTime);
 
   /* clear floating flag */
   gst_object_ref_sink (clock);
@@ -770,6 +773,7 @@ gst_clock_finalize (GObject * object)
   }
   g_free (clock->priv->times);
   clock->priv->times = NULL;
+  clock->priv->times_temp = NULL;
   GST_CLOCK_SLAVE_UNLOCK (clock);
 
   g_mutex_clear (&clock->priv->slave_lock);
@@ -1420,8 +1424,8 @@ gst_clock_add_observation_unapplied (GstClock * clock, GstClockTime slave,
       "adding observation slave %" GST_TIME_FORMAT ", master %" GST_TIME_FORMAT,
       GST_TIME_ARGS (slave), GST_TIME_ARGS (master));
 
-  priv->times[(4 * priv->time_index)] = slave;
-  priv->times[(4 * priv->time_index) + 2] = master;
+  priv->times[(2 * priv->time_index)] = slave;
+  priv->times[(2 * priv->time_index) + 1] = master;
 
   priv->time_index++;
   if (G_UNLIKELY (priv->time_index == priv->window_size)) {
@@ -1433,8 +1437,8 @@ gst_clock_add_observation_unapplied (GstClock * clock, GstClockTime slave,
     goto filling;
 
   n = priv->filling ? priv->time_index : priv->window_size;
-  if (!_priv_gst_do_linear_regression (priv->times, n, &m_num, &m_denom, &b,
-          &xbase, r_squared))
+  if (!gst_calculate_linear_regression (priv->times, priv->times_temp, n,
+          &m_num, &m_denom, &b, &xbase, r_squared))
     goto invalid;
 
   GST_CLOCK_SLAVE_UNLOCK (clock);
@@ -1523,6 +1527,8 @@ gst_clock_set_property (GObject * object, guint prop_id,
       priv->window_size = g_value_get_int (value);
       priv->window_threshold = MIN (priv->window_threshold, priv->window_size);
       priv->times = g_renew (GstClockTime, priv->times, 4 * priv->window_size);
+      priv->times_temp =
+          priv->times + 2 * priv->window_size * sizeof (GstClockTime);
       /* restart calibration */
       priv->filling = TRUE;
       priv->time_index = 0;

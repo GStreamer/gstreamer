@@ -224,6 +224,7 @@ EXPORTS
 	gst_bus_sync_signal_handler
 	gst_bus_timed_pop
 	gst_bus_timed_pop_filtered
+	gst_calculate_linear_regression
 	gst_caps_append
 	gst_caps_append_structure
 	gst_caps_append_structure_full

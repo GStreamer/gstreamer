@@ -1055,6 +1055,12 @@ gboolean      gst_util_fraction_add             (gint a_n, gint a_d, gint b_n, g
                                                  gint *res_n, gint *res_d);
 gint          gst_util_fraction_compare         (gint a_n, gint a_d, gint b_n, gint b_d);
 
+gboolean      gst_calculate_linear_regression   (const GstClockTime * xy,
+                                                 GstClockTime * temp, guint n,
+                                                 GstClockTime * m_num, GstClockTime * m_denom,
+                                                 GstClockTime * b, GstClockTime * xbase,
+                                                 gdouble * r_squared);
+
 
 G_END_DECLS
 
