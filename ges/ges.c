@@ -68,7 +68,7 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   }
 
   uriasset_klass = g_type_class_ref (GES_TYPE_URI_CLIP_ASSET);
-  if (!uriasset_klass->discoverer)
+  if (!uriasset_klass || !uriasset_klass->discoverer)
     goto failed;
 
   if (!uriasset_klass->sync_discoverer)
