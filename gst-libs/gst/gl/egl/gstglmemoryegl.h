@@ -29,7 +29,6 @@
 #include <gst/video/video.h>
 
 #include <gst/gl/gl.h>
-#include <gst/gl/egl/gstglcontext_egl.h>
 #include <gst/gl/egl/gsteglimage.h>
 
 #include <gst/gl/gstglmemory.h>
