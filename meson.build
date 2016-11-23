@@ -57,7 +57,22 @@ libm = cc.find_library('m', required : false)
 
 configure_file(output : 'config.h', configuration : cdata)
 
-gst_libav_args = ['-DHAVE_CONFIG_H', '-Wno-deprecated-declarations']
+gst_libav_args = ['-DHAVE_CONFIG_H']
+if cc.get_id() != 'msvc'
+  gst_libav_args += ['-Wno-deprecated-declarations']
+else
+  # Ignore several spurious warnings for things gstreamer does very commonly
+  # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
+  # If a warning is harmless but hard to fix, use '/woXXXX' so it's shown once
+  # NOTE: Only add warnings here if you are sure they're spurious
+  add_project_arguments(
+      '/wd4018', # implicit signed/unsigned conversion
+      '/wd4146', # unary minus on unsigned (beware INT_MIN)
+      '/wd4244', # lossy type conversion (e.g. double -> int)
+      '/wd4305', # truncating type conversion (e.g. double -> float)
+      language : 'c')
+endif
+
 configinc = include_directories('.')
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 subdir('ext/libav/')
