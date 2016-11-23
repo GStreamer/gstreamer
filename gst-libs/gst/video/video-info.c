@@ -106,7 +106,7 @@ gst_video_info_new (void)
   return info;
 }
 
-static int fill_planes (GstVideoInfo * info);
+static gboolean fill_planes (GstVideoInfo * info);
 
 /**
  * gst_video_info_init:
@@ -205,13 +205,16 @@ validate_colorimetry (GstVideoInfo * info)
  * Note: This initializes @info first, no values are preserved. This function
  * does not set the offsets correctly for interlaced vertically
  * subsampled formats.
+ *
+ * Returns: %FALSE if the returned video info is invalid, e.g. because the
+ *   size of a frame can't be represented as a 32 bit integer (Since: 1.12)
  */
-void
+gboolean
 gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
     guint width, guint height)
 {
-  g_return_if_fail (info != NULL);
-  g_return_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN);
+  g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
 
   gst_video_info_init (info);
 
@@ -222,7 +225,7 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
 
   set_default_colorimetry (info);
 
-  fill_planes (info);
+  return fill_planes (info);
 }
 
 static const gchar *interlace_mode[] = {
@@ -461,7 +464,8 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
     set_default_colorimetry (info);
   }
 
-  fill_planes (info);
+  if (!fill_planes (info))
+    return FALSE;
 
   return TRUE;
 
@@ -667,13 +671,24 @@ gst_video_info_to_caps (GstVideoInfo * info)
   return caps;
 }
 
-static int
+static gboolean
 fill_planes (GstVideoInfo * info)
 {
   gsize width, height, cr_h;
+  gint bpp = 0, i;
 
   width = (gsize) info->width;
   height = (gsize) info->height;
+
+  /* Sanity check the resulting frame size for overflows */
+  for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++)
+    bpp += GST_VIDEO_INFO_COMP_DEPTH (info, i);
+  bpp = GST_ROUND_UP_8 (bpp) / 8;
+  if (GST_ROUND_UP_128 ((guint64) width) * ((guint64) height) * bpp >=
+      G_MAXUINT) {
+    GST_ERROR ("Frame size %ux%u would overflow", info->width, info->height);
+    return FALSE;
+  }
 
   switch (info->finfo->format) {
     case GST_VIDEO_FORMAT_YUY2:
@@ -959,9 +974,10 @@ fill_planes (GstVideoInfo * info)
     case GST_VIDEO_FORMAT_UNKNOWN:
       GST_ERROR ("invalid format");
       g_warning ("invalid format");
+      return FALSE;
       break;
   }
-  return 0;
+  return TRUE;
 }
 
 /**
@@ -1100,8 +1116,11 @@ done:
  *
  * Extra padding will be added to the right side when stride alignment padding
  * is required and @align will be updated with the new padding values.
+ *
+ * Returns: %FALSE if alignment could not be applied, e.g. because the
+ *   size of a frame can't be represented as a 32 bit integer (Since: 1.12)
  */
-void
+gboolean
 gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
 {
   const GstVideoFormatInfo *vinfo = info->finfo;
@@ -1153,7 +1172,9 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
 
     info->width = padded_width;
     info->height = padded_height;
-    fill_planes (info);
+
+    if (!fill_planes (info))
+      return FALSE;
 
     /* check alignment */
     aligned = TRUE;
@@ -1196,4 +1217,6 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
     info->offset[i] += (vedge * info->stride[i]) +
         (hedge * GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, comp));
   }
+
+  return TRUE;
 }

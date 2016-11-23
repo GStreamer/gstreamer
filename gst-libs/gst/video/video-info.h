@@ -368,7 +368,7 @@ void           gst_video_info_init        (GstVideoInfo *info);
 GstVideoInfo * gst_video_info_copy        (const GstVideoInfo *info);
 void           gst_video_info_free        (GstVideoInfo *info);
 
-void           gst_video_info_set_format  (GstVideoInfo *info, GstVideoFormat format,
+gboolean       gst_video_info_set_format  (GstVideoInfo *info, GstVideoFormat format,
                                            guint width, guint height);
 
 gboolean       gst_video_info_from_caps   (GstVideoInfo *info, const GstCaps  * caps);
@@ -385,7 +385,7 @@ gboolean       gst_video_info_is_equal    (const GstVideoInfo *info,
 
 #include <gst/video/video.h>
 
-void           gst_video_info_align       (GstVideoInfo * info, GstVideoAlignment * align);
+gboolean       gst_video_info_align       (GstVideoInfo * info, GstVideoAlignment * align);
 
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
