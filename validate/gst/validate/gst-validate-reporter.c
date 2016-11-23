@@ -135,6 +135,12 @@ gst_validate_reporter_get_reporting_level (GstValidateReporter * reporter)
   return ret;
 }
 
+/**
+ * gst_validate_reporter_get_pipeline:
+ * @reporter: The reporter to get the pipeline from
+ *
+ * Returns: (transfer full) (allow-none): The #GstPipeline
+ */
 GstPipeline *
 gst_validate_reporter_get_pipeline (GstValidateReporter * reporter)
 {
