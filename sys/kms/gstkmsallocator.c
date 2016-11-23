@@ -27,13 +27,15 @@
 #include "config.h"
 #endif
 
-#include <drm.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
+
+/* it needs to be below because is internal to libdrm */
+#include <drm.h>
 
 #include "gstkmsallocator.h"
 #include "gstkmsutils.h"
