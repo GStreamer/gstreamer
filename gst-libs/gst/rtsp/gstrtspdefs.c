@@ -543,7 +543,8 @@ auth_digest_compute_response_md5 (const gchar * method, const gchar * realm,
   g_checksum_update (md5_context, (const guchar *) ":", 1);
   g_checksum_update (md5_context, (const guchar *) password, strlen (password));
   digest_string = g_checksum_get_string (md5_context);
-  memcpy (hex_a1, digest_string, strlen (digest_string));
+  g_assert (strlen (digest_string) == 32);
+  memcpy (hex_a1, digest_string, 32);
   g_checksum_reset (md5_context);
 
   /* compute A2 */
@@ -551,7 +552,8 @@ auth_digest_compute_response_md5 (const gchar * method, const gchar * realm,
   g_checksum_update (md5_context, (const guchar *) ":", 1);
   g_checksum_update (md5_context, (const guchar *) uri, strlen (uri));
   digest_string = g_checksum_get_string (md5_context);
-  memcpy (hex_a2, digest_string, strlen (digest_string));
+  g_assert (strlen (digest_string) == 32);
+  memcpy (hex_a2, digest_string, 32);
 
   /* compute KD */
   g_checksum_reset (md5_context);
