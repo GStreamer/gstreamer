@@ -2808,6 +2808,8 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
                       opencv2/imgproc/imgproc_c.h \
                       opencv2/objdetect/objdetect.hpp \
                       opencv2/video/background_segm.hpp], [], [something_not_found=yes])
+    dnl check opencv_contrib headers (not always present in opencv distributions)
+    AC_CHECK_HEADERS([opencv2/bgsegm.hpp], [], [something_not_found=yes])
     CPPFLAGS=$OLD_CPPFLAGS
     AC_LANG([C])
 
