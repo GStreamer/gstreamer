@@ -108,8 +108,10 @@ check_functions = [
 # check token HAVE_WAVEFORM
 ]
 
+libm = cc.find_library('m', required : false)
+
 foreach f : check_functions
-  if cc.has_function(f.get(1), prefix : f.get(2))
+  if cc.has_function(f.get(1), prefix : f.get(2), dependencies : libm)
     cdata.set(f.get(0), 1)
   endif
 endforeach
@@ -170,7 +172,6 @@ gsttag_dep = dependency('gstreamer-tag-1.0', version : gst_req,
 gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
 
-libm = cc.find_library('m', required : false)
 zlib_dep = dependency('zlib')
 bz2lib = cc.find_library('bz2', required : false)
 gio_dep = dependency('gio-2.0', version : glib_req)
