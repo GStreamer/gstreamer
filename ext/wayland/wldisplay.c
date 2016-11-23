@@ -199,7 +199,7 @@ gst_wl_display_check_format_for_dmabuf (GstWlDisplay * display,
     return FALSE;
 
   dmabuf_fmt = gst_video_format_to_wl_dmabuf_format (format);
-  if (dmabuf_fmt < 0)
+  if (dmabuf_fmt == (guint) - 1)
     return FALSE;
 
   formats = display->dmabuf_formats;
