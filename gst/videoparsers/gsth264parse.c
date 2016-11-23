@@ -2583,6 +2583,10 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       off = nalu.offset + nalu.size;
     }
 
+    if (off >= size) {
+      gst_buffer_unmap (codec_data, &map);
+      goto avcc_too_small;
+    }
     num_pps = data[off];
     off++;
 
