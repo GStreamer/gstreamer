@@ -5163,6 +5163,8 @@ windows_icon_typefind (GstTypeFind * find, gpointer user_data)
   gint32 size, offset;
 
   datalen = gst_type_find_get_length (find);
+  if (datalen < 18)
+    return;
   if ((data = gst_type_find_peek (find, 0, 6)) == NULL)
     return;
 
