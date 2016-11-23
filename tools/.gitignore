@@ -11,6 +11,7 @@ Makefile.in
 *.da
 *.gcno
 
-gst-inspect
-gst-launch
-gst-typefind
+gst-inspect-?.0
+gst-launch-?.0
+gst-typefind-?.0
+gst-stats-?.0
