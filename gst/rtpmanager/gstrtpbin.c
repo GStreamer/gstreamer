@@ -689,6 +689,12 @@ new_bundled_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
     if (!target_session) {
       target_session = create_session (rtpbin, session_id);
     }
+    if (!target_session) {
+      /* create_session() warned already */
+      GST_RTP_BIN_DYN_UNLOCK (rtpbin);
+      return;
+    }
+
     if (!target_session->recv_rtp_sink) {
       recv_rtp_sink = complete_session_sink (rtpbin, target_session, FALSE);
     }
