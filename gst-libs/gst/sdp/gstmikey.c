@@ -2264,6 +2264,7 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_KEY_LEN, 1,
       &byte);
   /* only HMAC-SHA1 */
+  byte = 1;
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_ALG, 1,
       &byte);
   /* authentication key length */
@@ -2271,6 +2272,7 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_KEY_LEN, 1,
       &byte);
   /* we enable encryption on RTP and RTCP */
+  byte = 1;
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTP_ENC, 1,
       &byte);
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTCP_ENC, 1,
