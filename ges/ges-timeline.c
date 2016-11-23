@@ -1300,14 +1300,20 @@ ges_timeline_snap_position (GESTimeline * timeline,
     GESTrackElement *tmp_trackelement =
         g_hash_table_lookup (priv->by_object, iter_tc);
     GESContainer *tmp_container = get_toplevel_container (tmp_trackelement);
+    GstClockTimeDiff diff;
 
     if (tmp_container == container)
       continue;
 
-    if (ABS (timecode - *iter_tc) > smallest_offset)
+    if (timecode > *iter_tc)
+      diff = timecode - *iter_tc;
+    else
+      diff = *iter_tc - timecode;
+
+    if (diff > smallest_offset)
       break;
 
-    smallest_offset = ABS (timecode - *iter_tc);
+    smallest_offset = diff;
     ret = iter_tc;
   }
 
