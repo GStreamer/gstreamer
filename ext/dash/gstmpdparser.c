@@ -1630,7 +1630,6 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
         /* parse frees the segmenttimeline if any */
         gst_mpdparser_parse_segment_timeline_node
             (&mult_seg_base_type->SegmentTimeline, cur_node);
-        has_timeline = TRUE;
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "BitstreamSwitching") == 0) {
         /* parse frees the old url before setting the new one */
