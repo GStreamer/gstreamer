@@ -21,7 +21,9 @@
 #include "config.h"
 #endif
 #include "gstavutils.h"
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #ifdef __APPLE__
 #include <sys/sysctl.h>
 #endif

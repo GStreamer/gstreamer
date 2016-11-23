@@ -1,6 +1,6 @@
 project('gst-libav', 'c', 'cpp',
   version : '1.11.0.1',
-  meson_version : '>= 0.33.0',
+  meson_version : '>= 0.36.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -33,6 +33,13 @@ cdata = configuration_data()
 cdata.set('LIBAV_SOURCE', '"system install"')
 cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
 cdata.set('PACKAGE', '"gst-libav"')
+check_headers = [['unistd.h', 'HAVE_UNISTD_H']]
+
+foreach h : check_headers
+  if cc.has_header(h.get(0))
+    cdata.set(h.get(1), 1)
+  endif
+endforeach
 
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
@@ -48,9 +55,7 @@ gstpbutils_dep = dependency('gstreamer-pbutils-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'pbutils_dep'])
 libm = cc.find_library('m', required : false)
 
-configure_file(input : 'config.h.meson',
-  output : 'config.h',
-  configuration : cdata)
+configure_file(output : 'config.h', configuration : cdata)
 
 gst_libav_args = ['-DHAVE_CONFIG_H', '-Wno-deprecated-declarations']
 configinc = include_directories('.')
