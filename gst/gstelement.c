@@ -1026,8 +1026,11 @@ gst_element_is_valid_request_template_name (const gchar * templ_name,
       g_free (target);
     }
 
-    templ_name++;
-    name++;
+    /* otherwise we increment these from NULL to 1 */
+    if (next_specifier) {
+      templ_name++;
+      name++;
+    }
   } while (next_specifier);
 
   return TRUE;
