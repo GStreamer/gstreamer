@@ -137,6 +137,7 @@ ref_to_jurisdiction (const gchar * ref)
     bit <<= 1;
   }
   g_error ("Unknown jurisdiction '%s'\n", ref);
+  return JURISDICTION_GENERIC;
 }
 
 typedef enum
@@ -789,8 +790,8 @@ main (int argc, char **argv)
       /* no source license */
       if (license->titles == NULL)
         g_error ("License has no titles: %s\n", license->ref);
-      if (license->descriptions == NULL);
-      g_printerr ("License %s has no descriptions!\n", license->ref);
+      if (license->descriptions == NULL)
+        g_printerr ("License %s has no descriptions!\n", license->ref);
     }
   }
 
