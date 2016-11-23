@@ -2016,6 +2016,7 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       (value = gst_structure_get_value (str, "codec_data"))) {
     GstMapInfo map;
     guint8 *data;
+    guint num_nal_arrays;
 
     GST_DEBUG_OBJECT (h265parse, "have packetized h265");
     /* make note for optional split processing */
@@ -2044,8 +2045,15 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     GST_DEBUG_OBJECT (h265parse, "nal length size %u",
         h265parse->nal_length_size);
 
+    num_nal_arrays = data[22];
     off = 23;
-    for (i = 0; i < data[22]; i++) {
+
+    for (i = 0; i < num_nal_arrays; i++) {
+      if (off + 3 >= size) {
+        gst_buffer_unmap (codec_data, &map);
+        goto hvcc_too_small;
+      }
+
       num_nals = GST_READ_UINT16_BE (data + off + 1);
       off += 3;
       for (j = 0; j < num_nals; j++) {
