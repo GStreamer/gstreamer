@@ -3428,7 +3428,7 @@ gst_validate_action_get_scenario (GstValidateAction * action)
  *                         retrieved with #gst_plugin_get_name when the action type
  *                         is register inside a plugin.
  * @function: (scope notified): The function to be called to execute the action
- * @parameters: (allow-none) (array zero-terminated=1) (element-type GstValidate.ActionParameter): The #GstValidateActionParameter usable as parameter of the type
+ * @parameters: (allow-none) (array zero-terminated=1) (element-type GstValidateActionParameter): The #GstValidateActionParameter usable as parameter of the type
  * @description: A description of the new type
  * @flags: The #GstValidateActionTypeFlags to set on the new action type
  *
@@ -3473,7 +3473,7 @@ _free_action_types (GList * action_types)
  *        new implementation will be used and returned.
  * @type_name: The name of the new action type to add
  * @function: (scope notified): The function to be called to execute the action
- * @parameters: (allow-none) (array zero-terminated=1) (element-type GstValidate.ActionParameter): The #GstValidateActionParameter usable as parameter of the type
+ * @parameters: (allow-none) (array zero-terminated=1) (element-type GstValidateActionParameter): The #GstValidateActionParameter usable as parameter of the type
  * @description: A description of the new type
  * @flags: The #GstValidateActionTypeFlags to be set on the new action type
  *
@@ -3566,7 +3566,7 @@ gst_validate_list_action_types (void)
 /**
  * gst_validate_print_action_types:
  * @wanted_types: (array length=num_wanted_types): (optional):  List of types to be printed
- * @num_wanted_types: (optional): Length of @wanted_types
+ * @num_wanted_types: Length of @wanted_types
  *
  * Prints the action types details wanted in @wanted_types
  *
