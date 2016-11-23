@@ -175,11 +175,14 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
 
   g_return_if_fail (dest_buffer != NULL);
 
-  tmpbuf = g_malloc (dest_width * 8 * 4);
-
   gst_video_info_init (dest);
-  gst_video_info_set_format (dest, GST_VIDEO_INFO_FORMAT (src),
-      dest_width, dest_height);
+  if (!gst_video_info_set_format (dest, GST_VIDEO_INFO_FORMAT (src),
+          dest_width, dest_height)) {
+    g_warn_if_reached ();
+    return;
+  }
+
+  tmpbuf = g_malloc (dest_width * 8 * 4);
 
   *dest_buffer = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (dest));
 

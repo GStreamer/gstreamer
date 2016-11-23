@@ -739,7 +739,10 @@ gst_video_overlay_rectangle_new_raw (GstBuffer * pixels,
   rect->scaled_rectangles = NULL;
 
   gst_video_info_init (&rect->info);
-  gst_video_info_set_format (&rect->info, format, width, height);
+  if (!gst_video_info_set_format (&rect->info, format, width, height)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (rect));
+    return NULL;
+  }
   if (flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA)
     rect->info.flags |= GST_VIDEO_FLAG_PREMULTIPLIED_ALPHA;
 
@@ -1059,7 +1062,10 @@ gst_video_overlay_rectangle_convert (GstVideoInfo * src, GstBuffer * src_buffer,
   height = GST_VIDEO_INFO_HEIGHT (src);
 
   gst_video_info_init (dest);
-  gst_video_info_set_format (dest, dest_format, width, height);
+  if (!gst_video_info_set_format (dest, dest_format, width, height)) {
+    g_warn_if_reached ();
+    return;
+  }
 
   *dest_buffer = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (dest));
 

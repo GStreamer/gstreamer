@@ -270,7 +270,8 @@ gst_buffer_add_video_meta (GstBuffer * buffer,
   GstVideoMeta *meta;
   GstVideoInfo info;
 
-  gst_video_info_set_format (&info, format, width, height);
+  if (!gst_video_info_set_format (&info, format, width, height))
+    return NULL;
 
   meta =
       gst_buffer_add_video_meta_full (buffer, flags, format, width,

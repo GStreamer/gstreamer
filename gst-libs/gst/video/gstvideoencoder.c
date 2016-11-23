@@ -517,7 +517,11 @@ _new_output_state (GstCaps * caps, GstVideoCodecState * reference)
   state = g_slice_new0 (GstVideoCodecState);
   state->ref_count = 1;
   gst_video_info_init (&state->info);
-  gst_video_info_set_format (&state->info, GST_VIDEO_FORMAT_ENCODED, 0, 0);
+
+  if (!gst_video_info_set_format (&state->info, GST_VIDEO_FORMAT_ENCODED, 0, 0)) {
+    g_slice_free (GstVideoCodecState, state);
+    return NULL;
+  }
 
   state->caps = caps;
 
@@ -2275,6 +2279,8 @@ gst_video_encoder_set_output_state (GstVideoEncoder * encoder, GstCaps * caps,
   g_return_val_if_fail (caps != NULL, NULL);
 
   state = _new_output_state (caps, reference);
+  if (!state)
+    return NULL;
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   if (priv->output_state)

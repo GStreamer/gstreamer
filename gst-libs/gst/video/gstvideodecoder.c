@@ -640,7 +640,10 @@ _new_output_state (GstVideoFormat fmt, guint width, guint height,
   state = g_slice_new0 (GstVideoCodecState);
   state->ref_count = 1;
   gst_video_info_init (&state->info);
-  gst_video_info_set_format (&state->info, fmt, width, height);
+  if (!gst_video_info_set_format (&state->info, fmt, width, height)) {
+    g_slice_free (GstVideoCodecState, state);
+    return NULL;
+  }
 
   if (reference) {
     GstVideoInfo *tgt, *ref;
@@ -3466,6 +3469,8 @@ gst_video_decoder_set_output_state (GstVideoDecoder * decoder,
 
   /* Create the new output state */
   state = _new_output_state (fmt, width, height, reference);
+  if (!state)
+    return NULL;
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
