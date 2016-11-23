@@ -32,7 +32,6 @@ if !GST_DISABLE_PARSE
 manpages += gst-launch-@GST_API_VERSION@.1
 endif
 
-CLEANFILES = $(manpages) *.gcno *.gcda
 man_MANS = $(manpages)
 
 # developer helper tools, not meant for installation
