@@ -29,6 +29,7 @@
 
 #if GST_GL_HAVE_PLATFORM_EGL
 #include "egl/gstglmemoryegl.h"
+#include "egl/gstglcontext_egl.h"
 #endif
 
 #if GST_GL_HAVE_DMABUF

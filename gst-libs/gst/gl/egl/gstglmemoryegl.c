@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include <gst/gl/egl/gstglmemoryegl.h>
+#include <gst/gl/egl/gstglcontext_egl.h>
 
 static GstAllocator *_gl_memory_egl_allocator;
 
