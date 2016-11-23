@@ -1829,25 +1829,17 @@ gst_harness_take_all_data_as_bytes (GstHarness * h)
 void
 gst_harness_dump_to_file (GstHarness * h, const gchar * filename)
 {
-  GstHarnessPrivate *priv = h->priv;
-  FILE *fd;
-  GstBuffer *buf;
-  fd = fopen (filename, "wb");
-  g_assert (fd);
+  GError *err = NULL;
+  gpointer data;
+  gsize size;
 
-  while ((buf = g_async_queue_try_pop (priv->buffer_queue))) {
-    GstMapInfo info;
-    if (gst_buffer_map (buf, &info, GST_MAP_READ)) {
-      fwrite (info.data, 1, info.size, fd);
-      gst_buffer_unmap (buf, &info);
-    } else {
-      GST_ERROR ("failed to map buffer %p", buf);
-    }
-    gst_buffer_unref (buf);
+  data = gst_harness_take_all_data (h, &size);
+  if (!g_file_set_contents (filename, data ? data : "", size, &err)) {
+    g_error ("GstHarness: Failed to write data to file: %s", err->message);
+    g_clear_error (&err);
   }
-
-  fflush (fd);
-  fclose (fd);
+  g_free (data);
+  g_free (data);
 }
 
 /**
