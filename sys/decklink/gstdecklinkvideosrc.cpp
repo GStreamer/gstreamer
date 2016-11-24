@@ -59,6 +59,8 @@ capture_frame_free (void *data)
   CaptureFrame *frame = (CaptureFrame *) data;
 
   frame->frame->Release ();
+  if (frame->tc)
+    gst_video_time_code_free (frame->tc);
   g_free (frame);
 }
 
