@@ -733,7 +733,7 @@ class GstValidateTest(Test):
         return value
 
     def report_matches_expected_failure(self, report, expected_failure):
-        for key in ['bug', 'sometimes']:
+        for key in ['bug', 'bugs', 'sometimes']:
             if key in expected_failure:
                 del expected_failure[key]
         for key, value in list(report.items()):
@@ -1088,9 +1088,8 @@ class TestsManager(Loggable):
 
     def set_blacklists(self):
         if self.blacklisted_tests:
-            printc("\nCurrently 'hardcoded' %s blacklisted tests:\n"
-                   "--------------------------------------------" % self.name,
-                   Colors.WARNING)
+            printc("\nCurrently 'hardcoded' %s blacklisted tests:" %
+                   self.name, Colors.WARNING, title_char='-')
 
         if self.options.check_bugs_status:
             if not check_bugs_resolution(self.blacklisted_tests):
@@ -1102,6 +1101,33 @@ class TestsManager(Loggable):
                 print("  + %s \n   --> bug: %s\n" % (name, bug))
 
         return True
+
+    def check_expected_failures(self):
+        if not self.blacklisted_tests:
+            return True
+
+        if self.expected_failures:
+            printc("\nCurrently known failures in the %s testsuite:"
+                   % self.name, Colors.WARNING, title_char='-')
+
+        bugs_definitions = {}
+        for regex, failures in list(self.expected_failures.items()):
+            for failure in failures:
+                bugs = failure.get('bug')
+                if not bugs:
+                    bugs = failure.get('bugs')
+                if not bugs:
+                    printc('+ %s:\n  --> no bug reported associated with %s\n' % (
+                        regex.pattern, failure), Colors.WARNING)
+                    continue
+
+                if not isinstance(bugs, list):
+                    bugs = [bugs]
+                cbugs = bugs_definitions.get(regex.pattern, [])
+                bugs.extend([b for b in bugs if b not in cbugs])
+                bugs_definitions[regex.pattern] = bugs
+
+        return check_bugs_resolution(bugs_definitions.items())
 
     def _check_blacklisted(self, test):
         for pattern in self.blacklisted_tests_patterns:
@@ -1397,6 +1423,9 @@ class _TestsLauncher(Loggable):
 
         for tester in self.testers:
             if not tester.set_blacklists():
+                return False
+
+            if not tester.check_expected_failures():
                 return False
 
         return True

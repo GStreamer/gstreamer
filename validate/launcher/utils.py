@@ -127,15 +127,19 @@ def get_color_for_result(result):
     return color
 
 
-def printc(message, color="", title=False):
-    if title:
+def printc(message, color="", title=False, title_char=''):
+    if title or title_char:
         length = 0
         for l in message.split("\n"):
             if len(l) > length:
                 length = len(l)
         if length == 0:
             length = len(message)
-        message = length * '=' + "\n" + str(message) + "\n" + length * '='
+
+        if title is True:
+            message = length * title + "\n" + str(message) + "\n" + length * '='
+        else:
+            message = str(message) + "\n" + length * title_char
 
     if hasattr(message, "result") and color == '':
         color = get_color_for_result(message.result)
@@ -367,27 +371,32 @@ class BackTraceGenerator(Loggable):
 def check_bugs_resolution(bugs_definitions):
     bugz = {}
     regexes = {}
-    for regex, bug in bugs_definitions:
-        url = urllib.parse.urlparse(bug)
-        if "bugzilla" not in url.netloc:
-            printc("  + %s \n   --> bug: %s\n   --> Status: Not a bugzilla report\n" % (regex, bug),
-                   Colors.WARNING)
-            continue
+    for regex, bugs in bugs_definitions:
+        if isinstance(bugs, str):
+            bugs = [bugs]
 
-        query = urllib.parse.parse_qs(url.query)
-        _id = query.get('id')
-        if not _id:
-            printc("  + '%s' -- Can't check bug '%s'\n" % (regex, bug), Colors.WARNING)
-            continue
+        for bug in bugs:
+            url = urllib.parse.urlparse(bug)
 
-        if isinstance(_id, list):
-            _id = _id[0]
+            if "bugzilla" not in url.netloc:
+                printc("  + %s \n   --> bug: %s\n   --> Status: Not a bugzilla report\n" % (regex, bug),
+                    Colors.WARNING)
+                continue
 
-        regexes[_id] = (regex, bug)
-        url_parts = tuple(list(url)[:3] + ['', '', ''])
-        ids = bugz.get(url_parts, [])
-        ids.append(_id)
-        bugz[url_parts] = ids
+            query = urllib.parse.parse_qs(url.query)
+            _id = query.get('id')
+            if not _id:
+                printc("  + '%s' -- Can't check bug '%s'\n" % (regex, bug), Colors.WARNING)
+                continue
+
+            if isinstance(_id, list):
+                _id = _id[0]
+
+            regexes[_id] = (regex, bug)
+            url_parts = tuple(list(url)[:3] + ['', '', ''])
+            ids = bugz.get(url_parts, [])
+            ids.append(_id)
+            bugz[url_parts] = ids
 
     res = True
     for url_parts, ids in bugz.items():
