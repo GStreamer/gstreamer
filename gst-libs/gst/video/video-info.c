@@ -216,6 +216,9 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   g_return_val_if_fail (info != NULL, FALSE);
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
 
+  if (width > G_MAXINT || height > G_MAXINT)
+    return FALSE;
+
   gst_video_info_init (info);
 
   info->finfo = gst_video_format_get_info (format);

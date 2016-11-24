@@ -612,6 +612,47 @@ GST_START_TEST (test_video_formats)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_formats_overflow)
+{
+  GstVideoInfo vinfo;
+
+  gst_video_info_init (&vinfo);
+
+  fail_unless (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB, 32768,
+          32767));
+  /* fails due to simplification: we forbid some things that would in theory be fine.
+   * We assume a 128 byte alignment for the width currently
+   * fail_unless (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB, 32767, 32768));
+   */
+  fail_if (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB, 32768,
+          32768));
+
+  fail_if (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB,
+          G_MAXINT / 2, G_MAXINT));
+  fail_if (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB, G_MAXINT,
+          G_MAXINT / 2));
+  fail_if (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB,
+          G_MAXINT / 2, G_MAXINT / 2));
+  fail_if (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB, G_MAXINT,
+          G_MAXINT));
+  fail_if (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB,
+          G_MAXUINT / 2, G_MAXUINT));
+  fail_if (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB, G_MAXUINT,
+          G_MAXUINT / 2));
+  fail_if (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB,
+          G_MAXUINT / 2, G_MAXUINT / 2));
+  fail_if (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB, G_MAXUINT,
+          G_MAXUINT));
+
+  fail_unless (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB,
+          1073741824 - 128, 1));
+  fail_if (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_ARGB, 1073741824,
+          1));
+
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_video_formats_rgb)
 {
   GstVideoInfo vinfo;
@@ -2757,6 +2798,7 @@ video_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_video_formats);
+  tcase_add_test (tc_chain, test_video_formats_overflow);
   tcase_add_test (tc_chain, test_video_formats_rgb);
   tcase_add_test (tc_chain, test_video_formats_rgba_large_dimension);
   tcase_add_test (tc_chain, test_video_formats_all);
