@@ -2481,8 +2481,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     guint16 seqnum, GstClockTime pts, gint gap)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  GstClockTime duration, expected_pts, delay;
-  TimerType type;
+  GstClockTime duration, expected_pts;
   gboolean equidistant = priv->equidistant > 0;
 
   GST_DEBUG_OBJECT (jitterbuffer,
@@ -2554,17 +2553,14 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     expected_pts = pts;
   }
 
-  delay = 0;
-
   if (priv->do_retransmission) {
     TimerData *timer = find_timer (jitterbuffer, expected);
-
-    type = TIMER_TYPE_EXPECTED;
-    delay = get_rtx_delay (priv);
+    GstClockTime rtx_delay = get_rtx_delay (priv);
 
     /* if we had a timer for the first missing packet, update it. */
     if (timer && timer->type == TIMER_TYPE_EXPECTED) {
       GstClockTime timeout = timer->timeout;
+      GstClockTime delay = MAX (rtx_delay, pts - expected_pts);
 
       timer->duration = duration;
       if (timeout > (expected_pts + delay) && timer->num_rtx_retry == 0) {
@@ -2574,14 +2570,23 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
       expected++;
       expected_pts += duration;
     }
-  } else {
-    type = TIMER_TYPE_LOST;
-  }
 
-  while (gst_rtp_buffer_compare_seqnum (expected, seqnum) > 0) {
-    add_timer (jitterbuffer, type, expected, 0, expected_pts, delay, duration);
-    expected_pts += duration;
-    expected++;
+    while (gst_rtp_buffer_compare_seqnum (expected, seqnum) > 0) {
+      /* minimum delay the expected-timer has "waited" is the elapsed time
+       * since expected arrival of the missing packet */
+      GstClockTime delay = MAX (rtx_delay, pts - expected_pts);
+      add_timer (jitterbuffer, TIMER_TYPE_EXPECTED, expected, 0, expected_pts,
+          delay, duration);
+      expected_pts += duration;
+      expected++;
+    }
+  } else {
+    while (gst_rtp_buffer_compare_seqnum (expected, seqnum) > 0) {
+      add_timer (jitterbuffer, TIMER_TYPE_LOST, expected, 0, expected_pts, 0,
+          duration);
+      expected_pts += duration;
+      expected++;
+    }
   }
 }
 

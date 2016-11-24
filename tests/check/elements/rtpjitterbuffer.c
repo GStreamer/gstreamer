@@ -1296,13 +1296,91 @@ GST_START_TEST (test_rtx_expected_next)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtx_next_seqnum_disabled)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  gint latency_ms = 200;
+  guint next_seqnum, missing_seqnum;
+  GstTestClock *testclock;
+  GstClockTime timeout, last_rtx_request;
+  gint rtx_delay_ms;
+  const GstClockTime rtx_retry_timeout_ms = 40;
+
+  testclock = gst_harness_get_testclock (h);
+
+  g_object_set (h->element, "do-lost", TRUE, NULL);
+  g_object_set (h->element, "do-retransmission", TRUE, NULL);
+  g_object_set (h->element, "rtx-retry-period", 120, NULL);
+  g_object_set (h->element, "rtx-next-seqnum", FALSE, NULL);
+
+  next_seqnum = construct_deterministic_initial_state (h, latency_ms);
+
+  /* When rtx-next-seqnum is disabled there is no existing rtx-timer for
+   * @next_seqnum until there is a gap and it's missing. */
+
+  /* Check that we have no pending waits */
+  fail_unless_equals_int (0, gst_test_clock_peek_id_count (testclock));
+
+  /* Push next packet to create a gap and trigger rtx-timers */
+  missing_seqnum = next_seqnum;
+  next_seqnum += 1;
+  push_test_buffer (h, next_seqnum);
+
+  /* Now there should exist a rtx-timer for @next_seqnum, that will have a
+   * timeout of the expected arrival-time for that seqnum, and a delay equal
+   * to the elapsed time since the timeout and until now (which is the
+   * duration of one buffer, 20 ms). */
+  timeout = missing_seqnum * TEST_BUF_DURATION;
+  rtx_delay_ms = TEST_BUF_MS;
+
+  /* The first rtx-event is triggered immediately since the timeout + delay is
+   * less than "now" */
+  verify_rtx_event (h, missing_seqnum, timeout, rtx_delay_ms,
+      TEST_BUF_DURATION);
+  last_rtx_request = gst_clock_get_time (GST_CLOCK (testclock));
+  fail_unless_equals_int64 (last_rtx_request,
+      missing_seqnum * TEST_BUF_DURATION + rtx_delay_ms * GST_MSECOND);
+
+  /* now we wait for the next timeout, all following timers timeout in 40ms
+   * increments because this is rtx-retry-timeout */
+  rtx_delay_ms += rtx_retry_timeout_ms;
+  gst_harness_crank_single_clock_wait (h);
+  verify_rtx_event (h, missing_seqnum, timeout, rtx_delay_ms,
+      TEST_BUF_DURATION);
+  last_rtx_request = gst_clock_get_time (GST_CLOCK (testclock));
+  fail_unless_equals_int64 (last_rtx_request,
+      missing_seqnum * TEST_BUF_DURATION + rtx_delay_ms * GST_MSECOND);
+
+  /* And a third time... */
+  rtx_delay_ms += rtx_retry_timeout_ms;
+  gst_harness_crank_single_clock_wait (h);
+  verify_rtx_event (h, missing_seqnum, timeout, rtx_delay_ms,
+      TEST_BUF_DURATION);
+  last_rtx_request = gst_clock_get_time (GST_CLOCK (testclock));
+  fail_unless_equals_int64 (last_rtx_request,
+      missing_seqnum * TEST_BUF_DURATION + rtx_delay_ms * GST_MSECOND);
+
+  /* we should now receive a packet-lost-event for packet @missing_seqnum */
+  gst_harness_crank_single_clock_wait (h);
+  verify_lost_event (h, missing_seqnum, timeout, TEST_BUF_DURATION);
+
+  /* Finally pull out the next packet */
+  gst_buffer_unref (gst_harness_pull (h));
+
+  gst_object_unref (testclock);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_rtx_two_missing)
 {
   GstHarness *h = gst_harness_new ("rtpjitterbuffer");
   gint latency_ms = 200;
   guint next_seqnum;
   GstClockTime last_rtx_request, now;
-  gint rtx_delay_ms = 0.5 * TEST_BUF_MS;
+  gint rtx_delay_ms_0 = 0.5 * TEST_BUF_MS;
+  gint rtx_delay_ms_1 = 1.0 * TEST_BUF_MS;
 
   g_object_set (h->element, "do-retransmission", TRUE, NULL);
   next_seqnum = construct_deterministic_initial_state (h, latency_ms);
@@ -1327,10 +1405,10 @@ GST_START_TEST (test_rtx_two_missing)
    */
   gst_harness_crank_single_clock_wait (h);
   verify_rtx_event (h, 11, 11 * TEST_BUF_DURATION,
-      rtx_delay_ms, TEST_BUF_DURATION);
+      rtx_delay_ms_0, TEST_BUF_DURATION);
   last_rtx_request = gst_clock_get_time (GST_ELEMENT_CLOCK (h->element));
   fail_unless_equals_int64 (last_rtx_request,
-      11 * TEST_BUF_DURATION + rtx_delay_ms * GST_MSECOND);
+      11 * TEST_BUF_DURATION + rtx_delay_ms_0 * GST_MSECOND);
   gst_harness_wait_for_clock_id_waits (h, 1, 60);
 
   /* The next scheduled RTX for packet 11 is now at 230 + 40 = 270ms,
@@ -1360,19 +1438,25 @@ GST_START_TEST (test_rtx_two_missing)
    * There are however two problems, packet 11 we have already sent one RTX for
    * and its timeout is currently at 270ms, so we should not tamper with that,
    * and as for packet 12, 250ms has already expired, so we now expect to see
-   * an rtx-event being sent for packet 12 immediately:
+   * an rtx-event being sent for packet 12 immediately.
+   *
+   * Since the current time is 260 ms and packet 12 was expected at 240 ms,
+   * the delay of the rtx-event is 20 ms.
    */
   verify_rtx_event (h, 12, 12 * TEST_BUF_DURATION,
-      rtx_delay_ms, TEST_BUF_DURATION);
+      rtx_delay_ms_1, TEST_BUF_DURATION);
+  last_rtx_request = gst_clock_get_time (GST_ELEMENT_CLOCK (h->element));
+  fail_unless_equals_int64 (last_rtx_request,
+      12 * TEST_BUF_DURATION + rtx_delay_ms_1 * GST_MSECOND);
 
   /* and another crank will see the second RTX event being sent for packet 11 */
   gst_harness_crank_single_clock_wait (h);
-  rtx_delay_ms += 40;
+  rtx_delay_ms_0 += 40;
   verify_rtx_event (h, 11, 11 * TEST_BUF_DURATION,
-      rtx_delay_ms, TEST_BUF_DURATION);
+      rtx_delay_ms_0, TEST_BUF_DURATION);
   last_rtx_request = gst_clock_get_time (GST_ELEMENT_CLOCK (h->element));
   fail_unless_equals_int64 (last_rtx_request,
-      11 * TEST_BUF_DURATION + rtx_delay_ms * GST_MSECOND);
+      11 * TEST_BUF_DURATION + rtx_delay_ms_0 * GST_MSECOND);
 
   gst_harness_teardown (h);
 }
@@ -1557,7 +1641,8 @@ GST_START_TEST (test_rtx_duplicate_packet_updates_rtx_stats)
   gint latency_ms = 100;
   gint next_seqnum;
   GstClockTime now, rtx_request_6, rtx_request_7;
-  gint rtx_delay_ms = 0.5 * TEST_BUF_MS;
+  gint rtx_delay_ms_0 = 0.5 * TEST_BUF_MS;
+  gint rtx_delay_ms_1 = 1.0 * TEST_BUF_MS;
   gint i;
 
   g_object_set (h->element, "do-retransmission", TRUE, NULL);
@@ -1571,20 +1656,20 @@ GST_START_TEST (test_rtx_duplicate_packet_updates_rtx_stats)
   /* Wait for NACKs on 6 and 7 */
   gst_harness_crank_single_clock_wait (h);
   verify_rtx_event (h, 6, 6 * TEST_BUF_DURATION,
-      rtx_delay_ms, TEST_BUF_DURATION);
+      rtx_delay_ms_0, TEST_BUF_DURATION);
   rtx_request_6 = gst_clock_get_time (GST_ELEMENT_CLOCK (h->element));
   fail_unless_equals_int64 (rtx_request_6,
-      6 * TEST_BUF_DURATION + rtx_delay_ms * GST_MSECOND);
+      6 * TEST_BUF_DURATION + rtx_delay_ms_0 * GST_MSECOND);
 
   gst_harness_crank_single_clock_wait (h);
   verify_rtx_event (h,
-      7, 7 * TEST_BUF_DURATION, rtx_delay_ms, TEST_BUF_DURATION);
+      7, 7 * TEST_BUF_DURATION, rtx_delay_ms_1, TEST_BUF_DURATION);
   rtx_request_7 = gst_clock_get_time (GST_ELEMENT_CLOCK (h->element));
   fail_unless_equals_int64 (rtx_request_7,
-      7 * TEST_BUF_DURATION + rtx_delay_ms * GST_MSECOND);
+      7 * TEST_BUF_DURATION + rtx_delay_ms_1 * GST_MSECOND);
 
   /* Original packet 7 arrives */
-  now = 150 * GST_MSECOND;
+  now = 161 * GST_MSECOND;
   gst_harness_set_time (h, now);
   fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h,
           generate_test_buffer_full (now, 7, 7 * TEST_RTP_TS_DURATION)));
@@ -1605,7 +1690,7 @@ GST_START_TEST (test_rtx_duplicate_packet_updates_rtx_stats)
               "rtx-rtt", G_TYPE_UINT64, (guint64) 0, NULL)));
 
   /* Push RTX packet 7. Should be dropped as duplicate but update RTX stats. */
-  now = 160 * GST_MSECOND;
+  now = 162 * GST_MSECOND;
   gst_harness_set_time (h, now);
   fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h,
           generate_test_buffer_rtx (now, 7)));
@@ -2342,6 +2427,7 @@ rtpjitterbuffer_suite (void)
       test_loss_equidistant_spacing_with_parameter_packets);
 
   tcase_add_test (tc_chain, test_rtx_expected_next);
+  tcase_add_test (tc_chain, test_rtx_next_seqnum_disabled);
   tcase_add_test (tc_chain, test_rtx_two_missing);
   tcase_add_test (tc_chain, test_rtx_buffer_arrives_just_in_time);
   tcase_add_test (tc_chain, test_rtx_buffer_arrives_too_late);
