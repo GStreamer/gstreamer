@@ -6499,7 +6499,7 @@ mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
     return NULL;
   }
 
-  for (i = 0; i < _dm_schemes->len; i++) {
+  for (i = 0; _dm_schemes && i < _dm_schemes->len; i++) {
     _MXFDescriptiveMetadataScheme *data =
         &g_array_index (_dm_schemes, _MXFDescriptiveMetadataScheme, i);
 
