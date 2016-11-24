@@ -1873,14 +1873,20 @@ _set_current_group (MpegTSPCR * pcrtable,
 static inline void
 _append_group_values (PCROffsetGroup * group, PCROffset pcroffset)
 {
-  group->last_value++;
-  /* Resize values if needed */
-  if (G_UNLIKELY (group->nb_allocated == group->last_value)) {
-    group->nb_allocated += DEFAULT_ALLOCATED_OFFSET;
-    group->values =
-        g_realloc (group->values, group->nb_allocated * sizeof (PCROffset));
+  /* Only append if new values */
+  if (group->values[group->last_value].offset == pcroffset.offset &&
+      group->values[group->last_value].pcr == pcroffset.pcr) {
+    GST_DEBUG ("Same values, ignoring");
+  } else {
+    group->last_value++;
+    /* Resize values if needed */
+    if (G_UNLIKELY (group->nb_allocated == group->last_value)) {
+      group->nb_allocated += DEFAULT_ALLOCATED_OFFSET;
+      group->values =
+          g_realloc (group->values, group->nb_allocated * sizeof (PCROffset));
+    }
+    group->values[group->last_value] = pcroffset;
   }
-  group->values[group->last_value] = pcroffset;
 
   GST_DEBUG ("First PCR:%" GST_TIME_FORMAT " offset:%" G_GUINT64_FORMAT
       " PCR_offset:%" GST_TIME_FORMAT,
