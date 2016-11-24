@@ -341,6 +341,16 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
   return ret;
 }
 
+static gboolean
+remove_timecode_meta (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
+{
+  if (meta && *meta && (*meta)->info->api == GST_VIDEO_TIME_CODE_META_API_TYPE) {
+    *meta = NULL;
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     GstBuffer * buffer)
@@ -350,10 +360,13 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
 
   GST_OBJECT_LOCK (timecodestamper);
   if (gst_buffer_get_video_time_code_meta (buffer)
-      && timecodestamper->override_existing == FALSE) {
+      && !timecodestamper->override_existing) {
     GST_OBJECT_UNLOCK (timecodestamper);
     return GST_FLOW_OK;
+  } else if (timecodestamper->override_existing) {
+    gst_buffer_foreach_meta (buffer, remove_timecode_meta, NULL);
   }
+
   if (timecodestamper->source_clock != NULL) {
     if (timecodestamper->current_tc->hours == 0
         && timecodestamper->current_tc->minutes == 0
