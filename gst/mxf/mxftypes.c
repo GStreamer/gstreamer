@@ -351,7 +351,7 @@ mxf_uuid_array_parse (MXFUUID ** array, guint32 * count, const guint8 * data,
     return FALSE;
   }
 
-  if (16 * element_count < size) {
+  if (element_count > size / 16) {
     *array = NULL;
     *count = 0;
     return FALSE;
@@ -1167,7 +1167,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         tag_data += 4;
         tag_size -= 4;
 
-        if (tag_size < len * 6)
+        if (tag_size / 6 < len)
           goto error;
 
         segment->delta_entries = g_new (MXFDeltaEntry, len);
@@ -1216,7 +1216,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         tag_data += 4;
         tag_size -= 4;
 
-        if (tag_size < len * 11)
+        if (tag_size / 11 < len)
           goto error;
 
         segment->index_entries = g_new0 (MXFIndexEntry, len);
@@ -1289,9 +1289,11 @@ mxf_index_table_segment_reset (MXFIndexTableSegment * segment)
 
   g_return_if_fail (segment != NULL);
 
-  for (i = 0; i < segment->n_index_entries; i++) {
-    g_free (segment->index_entries[i].slice_offset);
-    g_free (segment->index_entries[i].pos_table);
+  if (segment->index_entries) {
+    for (i = 0; i < segment->n_index_entries; i++) {
+      g_free (segment->index_entries[i].slice_offset);
+      g_free (segment->index_entries[i].pos_table);
+    }
   }
 
   g_free (segment->index_entries);
@@ -1447,14 +1449,16 @@ mxf_primer_pack_parse (const MXFUL * ul, MXFPrimerPack * pack,
 
   n = GST_READ_UINT32_BE (data);
   data += 4;
+  size -= 4;
 
   GST_DEBUG ("  number of mappings = %u", n);
 
   if (GST_READ_UINT32_BE (data) != 18)
     goto error;
   data += 4;
+  size -= 4;
 
-  if (size < 8 + n * 18)
+  if (size / 18 < n)
     goto error;
 
   for (i = 0; i < n; i++) {
@@ -1618,10 +1622,13 @@ mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,
   *tag = GST_READ_UINT16_BE (data);
   *tag_size = GST_READ_UINT16_BE (data + 2);
 
-  if (size < 4 + *tag_size)
+  data += 4;
+  size -= 4;
+
+  if (size < *tag_size)
     return FALSE;
 
-  *tag_data = data + 4;
+  *tag_data = data;
 
   return TRUE;
 }

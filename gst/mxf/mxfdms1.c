@@ -3109,7 +3109,7 @@ mxf_dms1_shot_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
     tag_data += 8;
     tag_size -= 8;
 
-    if (tag_size < 4 * len)
+    if (tag_size / 4 < len)
       goto error;
 
     self->n_shot_track_ids = len;

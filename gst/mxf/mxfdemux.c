@@ -3556,11 +3556,18 @@ collect_index_table_segments (GstMXFDemux * demux)
 
     start = segment->index_start_position;
     end = start + segment->index_duration;
+    if (end > G_MAXINT / sizeof (GstMXFDemuxIndex)) {
+      demux->index_tables = g_list_remove (demux->index_tables, t);
+      g_array_free (t->offsets, TRUE);
+      g_free (t);
+      continue;
+    }
 
     if (t->offsets->len < end)
       g_array_set_size (t->offsets, end);
 
-    for (i = 0; i < segment->n_index_entries; i++) {
+    for (i = 0; i < segment->n_index_entries && start + i < t->offsets->len;
+        i++) {
       GstMXFDemuxIndex *index =
           &g_array_index (t->offsets, GstMXFDemuxIndex, start + i);
       guint64 offset = segment->index_entries[i].stream_offset;
