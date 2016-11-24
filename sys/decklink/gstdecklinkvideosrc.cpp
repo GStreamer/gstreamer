@@ -32,6 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_src_debug);
 #define DEFAULT_MODE (GST_DECKLINK_MODE_AUTO)
 #define DEFAULT_CONNECTION (GST_DECKLINK_CONNECTION_AUTO)
 #define DEFAULT_BUFFER_SIZE (5)
+#define DEFAULT_OUTPUT_STREAM_TIME (FALSE)
 
 enum
 {
@@ -41,13 +42,14 @@ enum
   PROP_DEVICE_NUMBER,
   PROP_BUFFER_SIZE,
   PROP_VIDEO_FORMAT,
-  PROP_TIMECODE_FORMAT
+  PROP_TIMECODE_FORMAT,
+  PROP_OUTPUT_STREAM_TIME
 };
 
 typedef struct
 {
   IDeckLinkVideoInputFrame *frame;
-  GstClockTime capture_time, capture_duration;
+  GstClockTime timestamp, duration;
   GstDecklinkModeEnum mode;
   BMDPixelFormat format;
   GstVideoTimeCode *tc;
@@ -178,6 +180,12 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property (gobject_class, PROP_OUTPUT_STREAM_TIME,
+      g_param_spec_boolean ("output-stream-time", "Output Stream Time",
+          "Output stream time directly instead of translating to pipeline clock",
+          DEFAULT_OUTPUT_STREAM_TIME,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   templ_caps = gst_decklink_mode_get_template_caps ();
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
@@ -203,6 +211,14 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   self->video_format = GST_DECKLINK_VIDEO_FORMAT_AUTO;
   self->timecode_format = bmdTimecodeRP188Any;
   self->no_signal = FALSE;
+  self->output_stream_time = DEFAULT_OUTPUT_STREAM_TIME;
+
+  self->window_size = 64;
+  self->times = g_new (GstClockTime, 4 * self->window_size);
+  self->times_temp = self->times + 2 * self->window_size;
+  self->window_fill = 0;
+  self->window_skip = 1;
+  self->window_skip_count = 0;
 
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
@@ -261,6 +277,9 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
           gst_decklink_timecode_format_from_enum ((GstDecklinkTimecodeFormat)
           g_value_get_enum (value));
       break;
+    case PROP_OUTPUT_STREAM_TIME:
+      self->output_stream_time = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -293,6 +312,9 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       g_value_set_enum (value,
           gst_decklink_timecode_format_to_enum (self->timecode_format));
       break;
+    case PROP_OUTPUT_STREAM_TIME:
+      g_value_set_boolean (value, self->output_stream_time);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -304,6 +326,8 @@ gst_decklink_video_src_finalize (GObject * object)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (object);
 
+  g_free (self->times);
+  self->times = NULL;
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
 
@@ -432,6 +456,117 @@ gst_decklink_video_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 }
 
 static void
+gst_decklink_video_src_update_time_mapping (GstDecklinkVideoSrc * self,
+    GstClockTime capture_time, GstClockTime stream_time)
+{
+  if (self->window_skip_count == 0) {
+    GstClockTime num, den, b, xbase;
+    gdouble r_squared;
+
+    self->times[2 * self->window_fill] = stream_time;
+    self->times[2 * self->window_fill + 1] = capture_time;
+
+    self->window_fill++;
+    self->window_skip_count++;
+    if (self->window_skip_count >= self->window_skip)
+      self->window_skip_count = 0;
+
+    if (self->window_fill >= self->window_size) {
+      guint fps =
+          ((gdouble) self->info.fps_n + self->info.fps_d -
+          1) / ((gdouble) self->info.fps_d);
+
+      /* Start by updating first every frame, once full every second frame,
+       * etc. until we update once every 4 seconds */
+      if (self->window_skip < 4 * fps)
+        self->window_skip *= 2;
+      if (self->window_skip >= 4 * fps)
+        self->window_skip = 4 * fps;
+
+      self->window_fill = 0;
+      self->window_filled = TRUE;
+    }
+
+    /* First sample ever, create some basic mapping to start */
+    if (!self->window_filled && self->window_fill == 1) {
+      self->current_time_mapping.xbase = stream_time;
+      self->current_time_mapping.b = capture_time;
+      self->current_time_mapping.num = 1;
+      self->current_time_mapping.den = 1;
+      self->next_time_mapping_pending = FALSE;
+    }
+
+    /* Only bother calculating anything here once we had enough measurements,
+     * i.e. let's take the window size as a start */
+    if (self->window_filled &&
+        gst_calculate_linear_regression (self->times, self->times_temp,
+            self->window_size, &num, &den, &b, &xbase, &r_squared)) {
+
+      GST_DEBUG_OBJECT (self,
+          "Calculated new time mapping: pipeline time = %lf * (stream time - %"
+          G_GUINT64_FORMAT ") + %" G_GUINT64_FORMAT " (%lf)",
+          ((gdouble) num) / ((gdouble) den), xbase, b, r_squared);
+
+      self->next_time_mapping.xbase = xbase;
+      self->next_time_mapping.b = b;
+      self->next_time_mapping.num = num;
+      self->next_time_mapping.den = den;
+      self->next_time_mapping_pending = TRUE;
+    }
+  } else {
+    self->window_skip_count++;
+    if (self->window_skip_count >= self->window_skip)
+      self->window_skip_count = 0;
+  }
+
+  if (self->next_time_mapping_pending) {
+    GstClockTime expected, new_calculated, diff, max_diff;
+
+    expected =
+        gst_clock_adjust_with_calibration (NULL, stream_time,
+        self->current_time_mapping.xbase, self->current_time_mapping.b,
+        self->current_time_mapping.num, self->current_time_mapping.den);
+    new_calculated =
+        gst_clock_adjust_with_calibration (NULL, stream_time,
+        self->next_time_mapping.xbase, self->next_time_mapping.b,
+        self->next_time_mapping.num, self->next_time_mapping.den);
+
+    if (new_calculated > expected)
+      diff = new_calculated - expected;
+    else
+      diff = expected - new_calculated;
+
+    /* At most 5% frame duration change per update */
+    max_diff =
+        gst_util_uint64_scale (GST_SECOND / 20, self->info.fps_d,
+        self->info.fps_n);
+
+    GST_DEBUG_OBJECT (self,
+        "New time mapping causes difference of %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (diff));
+    GST_DEBUG_OBJECT (self, "Maximum allowed per frame %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (max_diff));
+
+    if (diff > max_diff) {
+      /* adjust so that we move that much closer */
+      if (new_calculated > expected) {
+        self->current_time_mapping.b = expected + max_diff;
+        self->current_time_mapping.xbase = stream_time;
+      } else {
+        self->current_time_mapping.b = expected - max_diff;
+        self->current_time_mapping.xbase = stream_time;
+      }
+    } else {
+      self->current_time_mapping.xbase = self->next_time_mapping.xbase;
+      self->current_time_mapping.b = self->next_time_mapping.b;
+      self->current_time_mapping.num = self->next_time_mapping.num;
+      self->current_time_mapping.den = self->next_time_mapping.den;
+      self->next_time_mapping_pending = FALSE;
+    }
+  }
+}
+
+static void
 gst_decklink_video_src_got_frame (GstElement * element,
     IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
     GstClockTime capture_time, GstClockTime stream_time,
@@ -439,6 +574,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
     guint frames, BMDTimecodeFlags bflags)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
+  GstClockTime timestamp, duration;
 
   GST_LOG_OBJECT (self,
       "Got video frame at %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT " (%"
@@ -446,6 +582,25 @@ gst_decklink_video_src_got_frame (GstElement * element,
       GST_TIME_ARGS (stream_time), GST_TIME_ARGS (stream_duration));
 
   g_mutex_lock (&self->lock);
+
+  gst_decklink_video_src_update_time_mapping (self, capture_time, stream_time);
+  if (self->output_stream_time) {
+    timestamp = stream_time;
+    duration = stream_duration;
+  } else {
+    timestamp =
+        gst_clock_adjust_with_calibration (NULL, stream_time,
+        self->current_time_mapping.xbase, self->current_time_mapping.b,
+        self->current_time_mapping.num, self->current_time_mapping.den);
+    duration =
+        gst_util_uint64_scale (stream_duration, self->current_time_mapping.num,
+        self->current_time_mapping.den);
+  }
+
+  GST_LOG_OBJECT (self,
+      "Converted times to %" GST_TIME_FORMAT " (%"
+      GST_TIME_FORMAT ")", GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
+
   if (!self->flushing) {
     CaptureFrame *f;
     const GstDecklinkMode *bmode;
@@ -455,15 +610,14 @@ gst_decklink_video_src_got_frame (GstElement * element,
     while (g_queue_get_length (&self->current_frames) >= self->buffer_size) {
       f = (CaptureFrame *) g_queue_pop_head (&self->current_frames);
       GST_WARNING_OBJECT (self, "Dropping old frame at %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (f->capture_time));
+          GST_TIME_ARGS (f->timestamp));
       capture_frame_free (f);
     }
 
     f = (CaptureFrame *) g_malloc0 (sizeof (CaptureFrame));
     f->frame = frame;
-    f->capture_time =
-        capture_time != GST_CLOCK_TIME_NONE ? capture_time : stream_time;
-    f->capture_duration = stream_duration;
+    f->timestamp = timestamp;
+    f->duration = duration;
     f->mode = mode;
     f->format = frame->GetPixelFormat ();
     bmode = gst_decklink_get_mode (mode);
@@ -594,8 +748,8 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
     }
   }
 
-  GST_BUFFER_TIMESTAMP (*buffer) = f->capture_time;
-  GST_BUFFER_DURATION (*buffer) = f->capture_duration;
+  GST_BUFFER_TIMESTAMP (*buffer) = f->timestamp;
+  GST_BUFFER_DURATION (*buffer) = f->duration;
   gst_buffer_add_video_time_code_meta (*buffer, f->tc);
 
   GST_DEBUG_OBJECT (self,
@@ -750,6 +904,20 @@ gst_decklink_video_src_start_streams (GstElement * element)
           || GST_STATE_PENDING (self) == GST_STATE_PLAYING)) {
     GST_DEBUG_OBJECT (self, "Starting streams");
 
+    g_mutex_lock (&self->lock);
+    self->window_fill = 0;
+    self->window_filled = FALSE;
+    self->window_skip = 1;
+    self->window_skip_count = 0;
+    self->current_time_mapping.xbase = 0;
+    self->current_time_mapping.b = 0;
+    self->current_time_mapping.num = 1;
+    self->current_time_mapping.den = 1;
+    self->next_time_mapping.xbase = 0;
+    self->next_time_mapping.b = 0;
+    self->next_time_mapping.num = 1;
+    self->next_time_mapping.den = 1;
+    g_mutex_unlock (&self->lock);
     res = self->input->input->StartStreams ();
     if (res != S_OK) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED,

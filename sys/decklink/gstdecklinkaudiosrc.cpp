@@ -56,7 +56,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("src",
 typedef struct
 {
   IDeckLinkAudioInputPacket *packet;
-  GstClockTime capture_time;
+  GstClockTime timestamp;
 } CapturePacket;
 
 static void
@@ -424,10 +424,31 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     GstClockTime packet_time)
 {
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (element);
+  GstClockTime timestamp;
 
   GST_LOG_OBJECT (self,
       "Got audio packet at %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT,
       GST_TIME_ARGS (capture_time), GST_TIME_ARGS (packet_time));
+
+  g_mutex_lock (&self->input->lock);
+  if (self->input->videosrc) {
+    GstDecklinkVideoSrc *videosrc =
+        GST_DECKLINK_VIDEO_SRC_CAST (gst_object_ref (self->input->videosrc));
+
+    if (videosrc->output_stream_time)
+      timestamp = packet_time;
+    else
+      timestamp = gst_clock_adjust_with_calibration (NULL, packet_time,
+          videosrc->current_time_mapping.xbase,
+          videosrc->current_time_mapping.b, videosrc->current_time_mapping.num,
+          videosrc->current_time_mapping.den);
+  } else {
+    timestamp = capture_time;
+  }
+  g_mutex_unlock (&self->input->lock);
+
+  GST_LOG_OBJECT (self, "Converted times to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
 
   g_mutex_lock (&self->lock);
   if (!self->flushing) {
@@ -436,14 +457,13 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     while (g_queue_get_length (&self->current_packets) >= self->buffer_size) {
       p = (CapturePacket *) g_queue_pop_head (&self->current_packets);
       GST_WARNING_OBJECT (self, "Dropping old packet at %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (p->capture_time));
+          GST_TIME_ARGS (p->timestamp));
       capture_packet_free (p);
     }
 
     p = (CapturePacket *) g_malloc0 (sizeof (CapturePacket));
     p->packet = packet;
-    p->capture_time =
-        capture_time != GST_CLOCK_TIME_NONE ? capture_time : packet_time;
+    p->timestamp = timestamp;
     packet->AddRef ();
     g_queue_push_tail (&self->current_packets, p);
     g_cond_signal (&self->cond);
@@ -486,8 +506,7 @@ retry:
   sample_count = p->packet->GetSampleFrameCount ();
   data_size = self->info.bpf * sample_count;
 
-  if (p->capture_time == GST_CLOCK_TIME_NONE
-      && self->next_offset == (guint64) - 1) {
+  if (p->timestamp == GST_CLOCK_TIME_NONE && self->next_offset == (guint64) - 1) {
     GST_DEBUG_OBJECT (self,
         "Got packet without timestamp before initial "
         "timestamp after discont - dropping");
@@ -507,7 +526,7 @@ retry:
   ap->input = self->input->input;
   ap->input->AddRef ();
 
-  timestamp = p->capture_time;
+  timestamp = p->timestamp;
 
   // Jitter and discontinuity handling, based on audiobasesrc
   start_time = timestamp;
