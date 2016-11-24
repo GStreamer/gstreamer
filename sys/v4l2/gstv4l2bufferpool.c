@@ -1703,8 +1703,6 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
 
   GST_DEBUG_OBJECT (pool, "process buffer %p", buf);
 
-  g_return_val_if_fail (gst_buffer_pool_is_active (bpool), GST_FLOW_ERROR);
-
   if (GST_BUFFER_POOL_IS_FLUSHING (pool))
     return GST_FLOW_FLUSHING;
 
