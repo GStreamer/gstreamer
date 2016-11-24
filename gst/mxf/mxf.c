@@ -25,7 +25,7 @@
 #include "mxfquark.h"
 #include "mxfdemux.h"
 #include "mxfmux.h"
-#include "mxfdms1.h"
+/*#include "mxfdms1.h"*/
 #include "mxfaes-bwf.h"
 #include "mxfalaw.h"
 #include "mxfd10.h"
@@ -59,7 +59,7 @@ plugin_init (GstPlugin * plugin)
   mxf_init ();
   mxf_quark_initialize ();
   mxf_metadata_init_types ();
-  mxf_dms1_initialize ();
+/*  mxf_dms1_initialize ();*/
   mxf_aes_bwf_init ();
   mxf_alaw_init ();
   mxf_d10_init ();
