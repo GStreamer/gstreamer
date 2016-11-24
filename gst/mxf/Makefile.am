@@ -16,8 +16,7 @@ libgstmxf_la_SOURCES = \
 	mxfjpeg2000.c \
 	mxfd10.c \
 	mxfup.c \
-	mxfvc3.c \
-	mxfdms1.c
+	mxfvc3.c
 
 libgstmxf_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
@@ -50,5 +49,4 @@ noinst_HEADERS = \
 	mxfjpeg2000.h \
 	mxfd10.h \
 	mxfup.h \
-	mxfvc3.h \
-	mxfdms1.h
+	mxfvc3.h
