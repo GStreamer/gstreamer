@@ -684,8 +684,8 @@ fill_planes (GstVideoInfo * info)
   for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++)
     bpp += GST_VIDEO_INFO_COMP_DEPTH (info, i);
   bpp = GST_ROUND_UP_8 (bpp) / 8;
-  if (GST_ROUND_UP_128 ((guint64) width) * ((guint64) height) * bpp >=
-      G_MAXUINT) {
+  if (bpp > 0 && GST_ROUND_UP_128 ((guint64) width) * ((guint64) height) >=
+      G_MAXUINT / bpp) {
     GST_ERROR ("Frame size %ux%u would overflow", info->width, info->height);
     return FALSE;
   }
