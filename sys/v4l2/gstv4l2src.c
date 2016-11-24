@@ -873,6 +873,7 @@ alloc_failed:
   }
 error:
   {
+    gst_buffer_replace (buf, NULL);
     if (ret == GST_V4L2_FLOW_LAST_BUFFER) {
       GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
           ("Driver returned a buffer with no payload, this most likely "
