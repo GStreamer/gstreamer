@@ -2244,6 +2244,9 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m, GHashTable * metadata)
   d = MXF_METADATA_FILE_DESCRIPTOR (current);
 
   for (i = 0; i < package->n_tracks; i++) {
+    if (!package->tracks[i])
+      continue;
+
     if (!MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (d)) {
       if (d->linked_track_id == package->tracks[i]->track_id ||
           (d->linked_track_id == 0 && package->n_essence_tracks == 1 &&
@@ -3552,11 +3555,11 @@ mxf_metadata_dm_source_clip_handle_tag (MXFMetadataBase * metadata,
       if (GST_READ_UINT32_BE (tag_data + 4) != 4)
         goto error;
 
-      if (tag_size < 8 + 4 * len)
-        goto error;
-
       tag_data += 8;
       tag_size -= 8;
+
+      if (tag_size / 4 < len)
+        goto error;
 
       self->n_track_ids = len;
       self->track_ids = g_new0 (guint32, len);
@@ -3725,7 +3728,10 @@ mxf_metadata_dm_segment_handle_tag (MXFMetadataBase * metadata,
       if (GST_READ_UINT32_BE (tag_data + 4) != 4)
         goto error;
 
-      if (len * 4 + 8 < tag_size)
+      tag_data += 8;
+      tag_size -= 8;
+
+      if (len < tag_size / 4)
         goto error;
 
       self->n_track_ids = len;

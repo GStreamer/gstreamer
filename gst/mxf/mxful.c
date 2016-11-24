@@ -641,7 +641,7 @@ mxf_ul_array_parse (MXFUL ** array, guint32 * count, const guint8 * data,
     return FALSE;
   }
 
-  if (16 * element_count < size) {
+  if (element_count > size / 16) {
     *array = NULL;
     *count = 0;
     return FALSE;
