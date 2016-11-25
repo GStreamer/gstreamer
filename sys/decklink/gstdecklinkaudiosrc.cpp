@@ -436,6 +436,19 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     GstDecklinkVideoSrc *videosrc =
         GST_DECKLINK_VIDEO_SRC_CAST (gst_object_ref (self->input->videosrc));
 
+    if (videosrc->first_time == GST_CLOCK_TIME_NONE)
+      videosrc->first_time = packet_time;
+
+    if (videosrc->skip_first_time > 0
+        && packet_time - videosrc->first_time < videosrc->skip_first_time) {
+      GST_DEBUG_OBJECT (self,
+          "Skipping frame as requested: %" GST_TIME_FORMAT " < %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (packet_time),
+          GST_TIME_ARGS (videosrc->skip_first_time + videosrc->first_time));
+      g_mutex_unlock (&self->input->lock);
+      return;
+    }
+
     if (videosrc->output_stream_time)
       timestamp = packet_time;
     else

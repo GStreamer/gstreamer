@@ -33,6 +33,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_src_debug);
 #define DEFAULT_CONNECTION (GST_DECKLINK_CONNECTION_AUTO)
 #define DEFAULT_BUFFER_SIZE (5)
 #define DEFAULT_OUTPUT_STREAM_TIME (FALSE)
+#define DEFAULT_SKIP_FIRST_TIME (0)
 
 enum
 {
@@ -43,7 +44,8 @@ enum
   PROP_BUFFER_SIZE,
   PROP_VIDEO_FORMAT,
   PROP_TIMECODE_FORMAT,
-  PROP_OUTPUT_STREAM_TIME
+  PROP_OUTPUT_STREAM_TIME,
+  PROP_SKIP_FIRST_TIME
 };
 
 typedef struct
@@ -187,6 +189,12 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           DEFAULT_OUTPUT_STREAM_TIME,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_SKIP_FIRST_TIME,
+      g_param_spec_uint64 ("skip-first-time", "Skip First Time",
+          "Skip that much time of initial frames after starting", 0,
+          G_MAXUINT64, DEFAULT_SKIP_FIRST_TIME,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   templ_caps = gst_decklink_mode_get_template_caps ();
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
@@ -213,6 +221,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   self->timecode_format = bmdTimecodeRP188Any;
   self->no_signal = FALSE;
   self->output_stream_time = DEFAULT_OUTPUT_STREAM_TIME;
+  self->skip_first_time = DEFAULT_SKIP_FIRST_TIME;
 
   self->window_size = 64;
   self->times = g_new (GstClockTime, 4 * self->window_size);
@@ -281,6 +290,9 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
     case PROP_OUTPUT_STREAM_TIME:
       self->output_stream_time = g_value_get_boolean (value);
       break;
+    case PROP_SKIP_FIRST_TIME:
+      self->skip_first_time = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -315,6 +327,9 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_OUTPUT_STREAM_TIME:
       g_value_set_boolean (value, self->output_stream_time);
+      break;
+    case PROP_SKIP_FIRST_TIME:
+      g_value_set_uint64 (value, self->skip_first_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -583,6 +598,18 @@ gst_decklink_video_src_got_frame (GstElement * element,
       GST_TIME_ARGS (stream_time), GST_TIME_ARGS (stream_duration));
 
   g_mutex_lock (&self->lock);
+  if (self->first_time == GST_CLOCK_TIME_NONE)
+    self->first_time = stream_time;
+
+  if (self->skip_first_time > 0
+      && stream_time - self->first_time < self->skip_first_time) {
+    g_mutex_unlock (&self->lock);
+    GST_DEBUG_OBJECT (self,
+        "Skipping frame as requested: %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (stream_time),
+        GST_TIME_ARGS (self->skip_first_time + self->first_time));
+    return;
+  }
 
   gst_decklink_video_src_update_time_mapping (self, capture_time, stream_time);
   if (self->output_stream_time) {
@@ -907,6 +934,7 @@ gst_decklink_video_src_start_streams (GstElement * element)
     GST_DEBUG_OBJECT (self, "Starting streams");
 
     g_mutex_lock (&self->lock);
+    self->first_time = GST_CLOCK_TIME_NONE;
     self->window_fill = 0;
     self->window_filled = FALSE;
     self->window_skip = 1;

@@ -56,6 +56,7 @@ struct _GstDecklinkVideoSrc
   GstDecklinkConnectionEnum connection;
   gint device_number;
   gboolean output_stream_time;
+  GstClockTime skip_first_time;
 
   GstVideoInfo info;
   GstDecklinkVideoFormat video_format;
@@ -72,6 +73,8 @@ struct _GstDecklinkVideoSrc
   guint buffer_size;
 
   /* Protected by lock */
+  GstClockTime first_time;
+
   GstClockTime *times;
   GstClockTime *times_temp;
   guint window_size, window_fill;
