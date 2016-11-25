@@ -1,4 +1,4 @@
 [wrap-git]
 directory=gst-editing-services
-url=git://anongit.freedesktop.org/gstreamer/gst-editing-services
+url=https://anongit.freedesktop.org/git/gstreamer/gst-editing-services.git
 revision=master

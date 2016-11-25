@@ -1,4 +1,4 @@
 [wrap-git]
 directory=gst-plugins-good
-url=git://anongit.freedesktop.org/gstreamer/gst-plugins-good
+url=https://anongit.freedesktop.org/git/gstreamer/gst-plugins-good.git
 revision=master
