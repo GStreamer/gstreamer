@@ -1373,7 +1373,7 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
   OMX_ERRORTYPE err = OMX_ErrorNone;
 
   g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
-  g_return_val_if_fail (!port->tunneled, GST_OMX_ACQUIRE_BUFFER_ERROR);
+  g_return_val_if_fail (!port->tunneled, OMX_ErrorUndefined);
   g_return_val_if_fail (buf != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (buf->port == port, OMX_ErrorUndefined);
 
