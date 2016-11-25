@@ -418,49 +418,6 @@ gst_gl_window_x11_draw (GstGLWindow * window)
   gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
 }
 
-static inline const gchar *
-event_type_to_string (guint type)
-{
-  switch (type) {
-    case CreateNotify:
-      return "CreateNotify";
-    case ConfigureNotify:
-      return "ConfigureNotify";
-    case DestroyNotify:
-      return "DestroyNotify";
-    case MapNotify:
-      return "MapNotify";
-    case UnmapNotify:
-      return "UnmapNotify";
-    case Expose:
-      return "Expose";
-    case VisibilityNotify:
-      return "VisibilityNotify";
-    case PropertyNotify:
-      return "PropertyNotify";
-    case SelectionClear:
-      return "SelectionClear";
-    case SelectionNotify:
-      return "SelectionNotify";
-    case SelectionRequest:
-      return "SelectionRequest";
-    case ClientMessage:
-      return "ClientMessage";
-    case KeyPress:
-      return "KeyPress";
-    case KeyRelease:
-      return "KeyRelease";
-    case ButtonPress:
-      return "ButtonPress";
-    case ButtonRelease:
-      return "ButtonRelease";
-    case MotionNotify:
-      return "MotionNotify";
-    default:
-      return "unknown";
-  }
-}
-
 void
 gst_gl_window_x11_handle_events (GstGLWindow * window, gboolean handle_events)
 {
