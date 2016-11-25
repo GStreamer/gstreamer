@@ -1224,7 +1224,8 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         tag_data += 4;
         tag_size -= 4;
 
-        if (tag_size / 11 < len)
+        if (tag_size / (11 + 4 * segment->slice_count +
+                8 * segment->pos_table_count) < len)
           goto error;
 
         segment->index_entries = g_new0 (MXFIndexEntry, len);

@@ -1771,7 +1771,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
       index->offset = demux->offset - demux->run_in;
       index->keyframe = keyframe;
-    } else {
+    } else if (etrack->position < G_MAXINT) {
       GstMXFDemuxIndex index;
 
       index.offset = demux->offset - demux->run_in;
