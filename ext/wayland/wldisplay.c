@@ -176,7 +176,7 @@ gst_wl_display_check_format_for_shm (GstWlDisplay * display,
   guint i;
 
   shm_fmt = gst_video_format_to_wl_shm_format (format);
-  if (shm_fmt < 0)
+  if (shm_fmt == (enum wl_shm_format) -1)
     return FALSE;
 
   formats = display->shm_formats;

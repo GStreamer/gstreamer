@@ -416,7 +416,7 @@ gst_segmentation_transform_ip (GstVideoFilter * btrans, GstVideoFrame * frame)
         if (background_diff
             ((uchar *) filter->cvYUV->imageData + j * 3,
                 (codeBook *) & (filter->TcodeBook[j]), 3, minMod, maxMod)) {
-          filter->cvFG->imageData[j] = 255;
+          filter->cvFG->imageData[j] = (char) 255;
         } else {
           filter->cvFG->imageData[j] = 0;
         }
