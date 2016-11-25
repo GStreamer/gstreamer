@@ -2507,6 +2507,11 @@ gst_asf_demux_get_stream_audio (asf_stream_audio * audio, guint8 ** p_data,
   audio->word_size = gst_asf_demux_get_uint16 (p_data, p_size);
   /* Codec specific data size */
   audio->size = gst_asf_demux_get_uint16 (p_data, p_size);
+  if (audio->size > *p_size) {
+    GST_WARNING ("Corrupted audio codec_data (should be at least %u bytes, is %"
+        G_GUINT64_FORMAT " long)", audio->size, *p_size);
+    return FALSE;
+  }
   return TRUE;
 }
 
