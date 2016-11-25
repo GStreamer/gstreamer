@@ -757,20 +757,45 @@ gst_rtp_buffer_get_extension_bytes (GstRTPBuffer * rtp, guint16 * bits)
   return g_bytes_new (buf_data, 4 * buf_len);
 }
 
+static gboolean
+gst_rtp_buffer_map_payload (GstRTPBuffer * rtp)
+{
+  guint hlen, plen;
+  guint idx, length;
+  gsize skip;
+
+  if (rtp->map[2].memory != NULL)
+    return TRUE;
+
+  hlen = gst_rtp_buffer_get_header_len (rtp);
+  plen = gst_buffer_get_size (rtp->buffer) - hlen - rtp->size[3];
+
+  if (!gst_buffer_find_memory (rtp->buffer, hlen, plen, &idx, &length, &skip))
+    return FALSE;
+
+  if (!gst_buffer_map_range (rtp->buffer, idx, length, &rtp->map[2],
+          rtp->map[0].flags))
+    return FALSE;
+
+  rtp->data[2] = rtp->map[2].data + skip;
+  rtp->size[2] = plen;
+
+  return TRUE;
+}
+
 /* ensure header, payload and padding are in separate buffers */
 static void
 ensure_buffers (GstRTPBuffer * rtp)
 {
   guint i, pos;
-  gsize offset;
   gboolean changed = FALSE;
 
   /* make sure payload is mapped */
-  gst_rtp_buffer_get_payload (rtp);
+  gst_rtp_buffer_map_payload (rtp);
 
   for (i = 0, pos = 0; i < 4; i++) {
     if (rtp->size[i]) {
-      offset = rtp->map[i].data - (guint8 *) rtp->data[i];
+      gsize offset = (guint8 *) rtp->data[i] - rtp->map[i].data;
 
       if (offset != 0 || rtp->map[i].size != rtp->size[i]) {
         GstMemory *mem;
@@ -1140,25 +1165,11 @@ gst_rtp_buffer_get_payload_len (GstRTPBuffer * rtp)
 gpointer
 gst_rtp_buffer_get_payload (GstRTPBuffer * rtp)
 {
-  guint hlen, plen;
-  guint idx, length;
-  gsize skip;
-
   if (rtp->data[2])
     return rtp->data[2];
 
-  hlen = gst_rtp_buffer_get_header_len (rtp);
-  plen = gst_buffer_get_size (rtp->buffer) - hlen - rtp->size[3];
-
-  if (!gst_buffer_find_memory (rtp->buffer, hlen, plen, &idx, &length, &skip))
+  if (!gst_rtp_buffer_map_payload (rtp))
     return NULL;
-
-  if (!gst_buffer_map_range (rtp->buffer, idx, length, &rtp->map[2],
-          rtp->map[0].flags))
-    return NULL;
-
-  rtp->data[2] = rtp->map[2].data + skip;
-  rtp->size[2] = plen;
 
   return rtp->data[2];
 }
