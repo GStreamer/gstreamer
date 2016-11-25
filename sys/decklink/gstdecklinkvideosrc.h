@@ -57,6 +57,7 @@ struct _GstDecklinkVideoSrc
   gint device_number;
   gboolean output_stream_time;
   GstClockTime skip_first_time;
+  gboolean drop_no_signal_frames;
 
   GstVideoInfo info;
   GstDecklinkVideoFormat video_format;

@@ -34,6 +34,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_src_debug);
 #define DEFAULT_BUFFER_SIZE (5)
 #define DEFAULT_OUTPUT_STREAM_TIME (FALSE)
 #define DEFAULT_SKIP_FIRST_TIME (0)
+#define DEFAULT_DROP_NO_SIGNAL_FRAMES (FALSE)
 
 enum
 {
@@ -45,7 +46,8 @@ enum
   PROP_VIDEO_FORMAT,
   PROP_TIMECODE_FORMAT,
   PROP_OUTPUT_STREAM_TIME,
-  PROP_SKIP_FIRST_TIME
+  PROP_SKIP_FIRST_TIME,
+  PROP_DROP_NO_SIGNAL_FRAMES
 };
 
 typedef struct
@@ -195,6 +197,12 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           G_MAXUINT64, DEFAULT_SKIP_FIRST_TIME,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_DROP_NO_SIGNAL_FRAMES,
+      g_param_spec_boolean ("drop-no-signal-frames", "Drop No Signal Frames",
+          "Drop frames that are marked as having no input signal",
+          DEFAULT_DROP_NO_SIGNAL_FRAMES,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   templ_caps = gst_decklink_mode_get_template_caps ();
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
@@ -222,6 +230,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   self->no_signal = FALSE;
   self->output_stream_time = DEFAULT_OUTPUT_STREAM_TIME;
   self->skip_first_time = DEFAULT_SKIP_FIRST_TIME;
+  self->drop_no_signal_frames = DEFAULT_DROP_NO_SIGNAL_FRAMES;
 
   self->window_size = 64;
   self->times = g_new (GstClockTime, 4 * self->window_size);
@@ -293,6 +302,9 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
     case PROP_SKIP_FIRST_TIME:
       self->skip_first_time = g_value_get_uint64 (value);
       break;
+    case PROP_DROP_NO_SIGNAL_FRAMES:
+      self->drop_no_signal_frames = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -330,6 +342,9 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_SKIP_FIRST_TIME:
       g_value_set_uint64 (value, self->skip_first_time);
+      break;
+    case PROP_DROP_NO_SIGNAL_FRAMES:
+      g_value_set_boolean (value, self->drop_no_signal_frames);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -594,8 +609,11 @@ gst_decklink_video_src_got_frame (GstElement * element,
 
   GST_LOG_OBJECT (self,
       "Got video frame at %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT " (%"
-      GST_TIME_FORMAT ")", GST_TIME_ARGS (capture_time),
-      GST_TIME_ARGS (stream_time), GST_TIME_ARGS (stream_duration));
+      GST_TIME_FORMAT "), no signal: %d", GST_TIME_ARGS (capture_time),
+      GST_TIME_ARGS (stream_time), GST_TIME_ARGS (stream_duration), no_signal);
+
+  if (self->drop_no_signal_frames && no_signal)
+    return;
 
   g_mutex_lock (&self->lock);
   if (self->first_time == GST_CLOCK_TIME_NONE)

@@ -428,13 +428,19 @@ gst_decklink_audio_src_got_packet (GstElement * element,
   GstClockTime timestamp;
 
   GST_LOG_OBJECT (self,
-      "Got audio packet at %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (capture_time), GST_TIME_ARGS (packet_time));
+      "Got audio packet at %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT
+      ", no signal %d", GST_TIME_ARGS (capture_time),
+      GST_TIME_ARGS (packet_time), no_signal);
 
   g_mutex_lock (&self->input->lock);
   if (self->input->videosrc) {
     GstDecklinkVideoSrc *videosrc =
         GST_DECKLINK_VIDEO_SRC_CAST (gst_object_ref (self->input->videosrc));
+
+    if (videosrc->drop_no_signal_frames && no_signal) {
+      g_mutex_unlock (&self->input->lock);
+      return;
+    }
 
     if (videosrc->first_time == GST_CLOCK_TIME_NONE)
       videosrc->first_time = packet_time;
