@@ -723,13 +723,14 @@ public:
         IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
         GstClockTime capture_time, GstClockTime stream_time,
         GstClockTime stream_duration, guint hours, guint minutes, guint seconds,
-        guint frames, BMDTimecodeFlags bflags) = NULL;
+        guint frames, BMDTimecodeFlags bflags, gboolean no_signal) = NULL;
     void (*got_audio_packet) (GstElement * videosrc,
         IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
-        GstClockTime packet_time) = NULL;
+        GstClockTime packet_time, gboolean no_signal) = NULL;
     GstDecklinkModeEnum mode;
     GstClockTime capture_time = GST_CLOCK_TIME_NONE;
     GstClockTime base_time;
+    gboolean no_signal = FALSE;
     GstClock *clock = NULL;
     HRESULT res;
 
@@ -758,6 +759,15 @@ public:
         capture_time -= base_time;
       else
         capture_time = 0;
+    }
+
+    if (video_frame) {
+      BMDFrameFlags flags;
+
+      flags = video_frame->GetFlags ();
+      if (flags & bmdFrameHasNoInputSource) {
+        no_signal = TRUE;
+      }
     }
 
     if (got_video_frame && videosrc && video_frame) {
@@ -809,7 +819,7 @@ public:
 
       got_video_frame (videosrc, video_frame, mode, capture_time,
           stream_time, stream_duration, (guint8) hours, (guint8) minutes,
-          (guint8) seconds, (guint8) frames, bflags);
+          (guint8) seconds, (guint8) frames, bflags, no_signal);
     }
 
     if (got_audio_packet && audiosrc && audio_packet) {
@@ -821,7 +831,7 @@ public:
         packet_time = GST_CLOCK_TIME_NONE;
       }
       m_input->got_audio_packet (audiosrc, audio_packet, capture_time,
-          packet_time);
+          packet_time, no_signal);
     } else {
       if (!audio_packet)
         GST_DEBUG ("Received no audio packet at %" GST_TIME_FORMAT,

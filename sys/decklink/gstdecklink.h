@@ -201,13 +201,13 @@ struct _GstDecklinkInput {
   GMutex lock;
 
   /* Set by the video source */
-  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time, GstClockTime stream_time, GstClockTime stream_duration, guint hours, guint minutes, guint seconds, guint frames, BMDTimecodeFlags bflags);
+  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time, GstClockTime stream_time, GstClockTime stream_duration, guint hours, guint minutes, guint seconds, guint frames, BMDTimecodeFlags bflags, gboolean no_signal);
   /* Configured mode or NULL */
   const GstDecklinkMode *mode;
   BMDPixelFormat format;
 
   /* Set by the audio source */
-  void (*got_audio_packet) (GstElement *videosrc, IDeckLinkAudioInputPacket * packet, GstClockTime capture_time, GstClockTime packet_time);
+  void (*got_audio_packet) (GstElement *videosrc, IDeckLinkAudioInputPacket * packet, GstClockTime capture_time, GstClockTime packet_time, gboolean no_signal);
 
   GstElement *audiosrc;
   gboolean audio_enabled;

@@ -53,6 +53,7 @@ typedef struct
   GstDecklinkModeEnum mode;
   BMDPixelFormat format;
   GstVideoTimeCode *tc;
+  gboolean no_signal;
 } CaptureFrame;
 
 static void
@@ -571,7 +572,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
     IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
     GstClockTime capture_time, GstClockTime stream_time,
     GstClockTime stream_duration, guint hours, guint minutes, guint seconds,
-    guint frames, BMDTimecodeFlags bflags)
+    guint frames, BMDTimecodeFlags bflags, gboolean no_signal)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
   GstClockTime timestamp, duration;
@@ -620,6 +621,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
     f->duration = duration;
     f->mode = mode;
     f->format = frame->GetPixelFormat ();
+    f->no_signal = no_signal;
     bmode = gst_decklink_get_mode (mode);
     if (bmode->interlaced) {
       flags =
@@ -656,7 +658,6 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   CaptureFrame *f;
   GstCaps *caps;
   gboolean caps_changed = FALSE;
-  BMDFrameFlags flags;
 
   g_mutex_lock (&self->lock);
   while (g_queue_is_empty (&self->current_frames) && !self->flushing) {
@@ -733,8 +734,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   vf->input = self->input->input;
   vf->input->AddRef ();
 
-  flags = f->frame->GetFlags ();
-  if (flags & bmdFrameHasNoInputSource) {
+  if (f->no_signal) {
     if (!self->no_signal) {
       self->no_signal = TRUE;
       GST_ELEMENT_WARNING (GST_ELEMENT (self), RESOURCE, READ, ("No signal"),
@@ -748,6 +748,8 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
     }
   }
 
+  if (f->no_signal)
+    GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_GAP);
   GST_BUFFER_TIMESTAMP (*buffer) = f->timestamp;
   GST_BUFFER_DURATION (*buffer) = f->duration;
   gst_buffer_add_video_time_code_meta (*buffer, f->tc);

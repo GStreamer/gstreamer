@@ -57,6 +57,7 @@ typedef struct
 {
   IDeckLinkAudioInputPacket *packet;
   GstClockTime timestamp;
+  gboolean no_signal;
 } CapturePacket;
 
 static void
@@ -421,7 +422,7 @@ gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 static void
 gst_decklink_audio_src_got_packet (GstElement * element,
     IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
-    GstClockTime packet_time)
+    GstClockTime packet_time, gboolean no_signal)
 {
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (element);
   GstClockTime timestamp;
@@ -464,6 +465,7 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     p = (CapturePacket *) g_malloc0 (sizeof (CapturePacket));
     p->packet = packet;
     p->timestamp = timestamp;
+    p->no_signal = no_signal;
     packet->AddRef ();
     g_queue_push_tail (&self->current_packets, p);
     g_cond_signal (&self->cond);
@@ -594,6 +596,8 @@ retry:
         self->info.rate) - timestamp;
   }
 
+  if (p->no_signal)
+    GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_GAP);
   GST_BUFFER_TIMESTAMP (*buffer) = timestamp;
   GST_BUFFER_DURATION (*buffer) = duration;
 
