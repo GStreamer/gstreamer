@@ -1042,6 +1042,9 @@ gst_splitmux_part_reader_change_state (GstElement * element,
        * changing the states of things, and type finding can continue */
       SPLITMUX_PART_LOCK (reader);
       g_object_set (reader->src, "location", reader->path, NULL);
+      reader->prep_state = PART_STATE_PREPARING_COLLECT_STREAMS;
+      gst_splitmux_part_reader_set_flushing_locked (reader, FALSE);
+      reader->running = TRUE;
       SPLITMUX_PART_UNLOCK (reader);
       SPLITMUX_PART_TYPE_LOCK (reader);
       break;
@@ -1082,9 +1085,6 @@ gst_splitmux_part_reader_change_state (GstElement * element,
       SPLITMUX_PART_TYPE_UNLOCK (reader);
 
       SPLITMUX_PART_LOCK (reader);
-      reader->prep_state = PART_STATE_PREPARING_COLLECT_STREAMS;
-      gst_splitmux_part_reader_set_flushing_locked (reader, FALSE);
-      reader->running = TRUE;
 
       while (reader->prep_state == PART_STATE_PREPARING_COLLECT_STREAMS) {
         GST_LOG_OBJECT (reader, "Waiting to collect all output streams");
