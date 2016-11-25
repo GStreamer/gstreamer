@@ -2532,6 +2532,15 @@ gst_asf_demux_get_stream_video_format (asf_stream_video_format * fmt,
     return FALSE;
 
   fmt->size = gst_asf_demux_get_uint32 (p_data, p_size);
+  /* Sanity checks */
+  if (fmt->size < 40) {
+    GST_WARNING ("Corrupted asf_stream_video_format (size < 40)");
+    return FALSE;
+  }
+  if ((guint64) fmt->size - 4 > *p_size) {
+    GST_WARNING ("Corrupted asf_stream_video_format (codec_data is too small)");
+    return FALSE;
+  }
   fmt->width = gst_asf_demux_get_uint32 (p_data, p_size);
   fmt->height = gst_asf_demux_get_uint32 (p_data, p_size);
   fmt->planes = gst_asf_demux_get_uint16 (p_data, p_size);
@@ -2725,7 +2734,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
   gchar *str;
   gchar *name = NULL;
   gchar *codec_name = NULL;
-  gint size_left = video->size - 40;
+  guint64 size_left = video->size - 40;
   GstBuffer *streamheader = NULL;
   guint par_w = 1, par_h = 1;
 
@@ -2736,7 +2745,9 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
 
   /* Now try some gstreamer formatted MIME types (from gst_avi_demux_strf_vids) */
   if (size_left) {
-    GST_LOG ("Video header has %d bytes of codec specific data", size_left);
+    GST_LOG ("Video header has %" G_GUINT64_FORMAT
+        " bytes of codec specific data (vs %" G_GUINT64_FORMAT ")", size_left,
+        *p_size);
     g_assert (size_left <= *p_size);
     gst_asf_demux_get_buffer (&extradata, size_left, p_data, p_size);
   }
