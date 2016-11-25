@@ -896,7 +896,7 @@ gst_asf_demux_identify_guid (const ASFGuidHash * guids, ASFGuid * guid)
 typedef struct
 {
   AsfObjectID id;
-  guint32 size;
+  guint64 size;
 } AsfObject;
 
 
@@ -910,7 +910,6 @@ asf_demux_peek_object (GstASFDemux * demux, const guint8 * data,
     guint data_len, AsfObject * object, gboolean expect)
 {
   ASFGuid guid;
-  guint64 tmp_size;
 
   /* Callers should have made sure that data_len is big enough */
   g_assert (data_len >= ASF_OBJECT_HEADER_SIZE);
@@ -923,20 +922,20 @@ asf_demux_peek_object (GstASFDemux * demux, const guint8 * data,
   guid.v3 = GST_READ_UINT32_LE (data + 8);
   guid.v4 = GST_READ_UINT32_LE (data + 12);
 
-  tmp_size = GST_READ_UINT64_LE (data + 16);
-  if (tmp_size >= G_MAXUINT) {
-    GST_WARNING_OBJECT (demux,
-        "ASF Object size corrupted (greater than 32bit)");
-    return FALSE;
-  }
-  object->size = tmp_size;
-
   /* FIXME: make asf_demux_identify_object_guid() */
   object->id = gst_asf_demux_identify_guid (asf_object_guids, &guid);
   if (object->id == ASF_OBJ_UNDEFINED && expect) {
     GST_WARNING_OBJECT (demux, "Unknown object %08x-%08x-%08x-%08x",
         guid.v1, guid.v2, guid.v3, guid.v4);
   }
+
+  object->size = GST_READ_UINT64_LE (data + 16);
+  if (object->id != ASF_OBJ_DATA && object->size >= G_MAXUINT) {
+    GST_WARNING_OBJECT (demux,
+        "ASF Object size corrupted (greater than 32bit)");
+    return FALSE;
+  }
+
 
   return TRUE;
 }
@@ -1216,7 +1215,7 @@ gst_asf_demux_pull_headers (GstASFDemux * demux, GstFlowReturn * pflow)
   if (obj.id != ASF_OBJ_HEADER)
     goto wrong_type;
 
-  GST_LOG_OBJECT (demux, "header size = %u", obj.size);
+  GST_LOG_OBJECT (demux, "header size = %" G_GUINT64_FORMAT, obj.size);
 
   /* pull HEADER object */
   if (!gst_asf_demux_pull_data (demux, demux->base_offset, obj.size, &buf,
@@ -4402,7 +4401,7 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
 
   gst_asf_demux_push_obj (demux, obj.id);
 
-  GST_INFO ("%s: size %u", demux->objpath, obj.size);
+  GST_INFO ("%s: size %" G_GUINT64_FORMAT, demux->objpath, obj.size);
 
   switch (obj.id) {
     case ASF_OBJ_STREAM:
