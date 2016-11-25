@@ -616,10 +616,11 @@ mxf_ul_array_parse (MXFUL ** array, guint32 * count, const guint8 * data,
 
   g_return_val_if_fail (array != NULL, FALSE);
   g_return_val_if_fail (count != NULL, FALSE);
-  g_return_val_if_fail (data != NULL, FALSE);
 
   if (size < 8)
     return FALSE;
+
+  g_return_val_if_fail (data != NULL, FALSE);
 
   element_count = GST_READ_UINT32_BE (data);
   data += 4;
