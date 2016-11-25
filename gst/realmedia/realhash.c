@@ -292,7 +292,7 @@ gst_rtsp_ext_real_calc_response_and_checksum (char *response, char *chksum,
   /* calculate response */
   call_hash (field, buf, 64);
   memset (buf1, 0, 64);
-  *buf1 = 128;
+  *buf1 = (char) 128;
   memcpy (buf2, field + 16, 8);
   i = (LE_32 ((buf2)) >> 3) & 0x3f;
   if (i < 56)
