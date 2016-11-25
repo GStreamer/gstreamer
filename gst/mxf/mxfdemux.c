@@ -1304,6 +1304,9 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     return GST_FLOW_OK;
   }
 
+  if (gst_buffer_get_size (buffer) == 0)
+    return GST_FLOW_OK;
+
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   metadata =
       mxf_metadata_new (type, &demux->current_partition->primer, demux->offset,
