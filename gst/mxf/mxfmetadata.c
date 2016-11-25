@@ -149,8 +149,12 @@ mxf_metadata_base_parse (MXFMetadataBase * self, MXFPrimerPack * primer,
   const guint8 *tag_data;
 
   g_return_val_if_fail (MXF_IS_METADATA_BASE (self), FALSE);
-  g_return_val_if_fail (data != NULL, FALSE);
   g_return_val_if_fail (primer != NULL, FALSE);
+
+  if (size == 0)
+    return FALSE;
+
+  g_return_val_if_fail (data != NULL, FALSE);
 
   while (mxf_local_tag_parse (data, size, &tag, &tag_size, &tag_data)) {
     if (tag_size == 0 || tag == 0x0000)
