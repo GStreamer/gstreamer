@@ -295,7 +295,7 @@ very useful for various purposes:
     to convert data to a specific output format at a certain point in a
     stream.
 
-[inserting-or-extracting-data]: application-development/advanced/dataaccess.md#manually-adding-or-removing-data-fromto-a-pipeline
+[inserting-or-extracting-data]: application-development/advanced/pipeline-manipulation.md#manually-adding-or-removing-data-fromto-a-pipeline
 
 ### Using capabilities for metadata
 

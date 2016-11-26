@@ -37,7 +37,7 @@ index.md
 			application-development/advanced/dparams.md
 			application-development/advanced/threads.md
 			application-development/advanced/autoplugging.md
-			application-development/advanced/dataaccess.md
+			application-development/advanced/pipeline-manipulation.md
 		application-development/highlevel/index.md
 			application-development/highlevel/playback-components.md
 		application-development/appendix/index.md
