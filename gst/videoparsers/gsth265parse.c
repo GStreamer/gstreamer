@@ -883,8 +883,10 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
         *skipsize = size - 3;
         goto skip;
       default:
-        g_assert_not_reached ();
-        break;
+        /* should not really occur either */
+        GST_ELEMENT_ERROR (h265parse, STREAM, FORMAT,
+            ("Error parsing H.265 stream"), ("Invalid H.265 stream"));
+        goto invalid_stream;
     }
   }
 
