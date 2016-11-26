@@ -35,6 +35,9 @@ BRANCH="master"
 # set to "ssh" if you have a developer account and ssh access
 GIT_ACCESS="anongit"
 
+# extra clone options
+#CLONE_OPTS="--depth=1 --no-single-branch"
+
 # re-use and reference local master branch checkout if one already exists
 # (saves network bandwidth)
 REUSE_EXISTING_MASTER_CHECKOUT="true"
@@ -110,9 +113,9 @@ do
   fi
 
   if test "$GIT_ACCESS" = "ssh"; then
-    git clone $REF ssh://git.freedesktop.org/git/gstreamer/$m
+    git clone $CLONE_OPTS $REF ssh://git.freedesktop.org/git/gstreamer/$m
   else
-    git clone $REF git://anongit.freedesktop.org/gstreamer/$m
+    git clone $CLONE_OPTS $REF https://anongit.freedesktop.org/git/gstreamer/$m
   fi
 
   cd $m
