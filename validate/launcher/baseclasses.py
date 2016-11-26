@@ -570,7 +570,6 @@ class GstValidateTest(Test):
         # segment / seek
         self._sent_eos_time = None
 
-        self.validatelogs = None
         if scenario is None or scenario.name.lower() == "none":
             self.scenario = None
         else:
@@ -660,18 +659,9 @@ class GstValidateTest(Test):
         return self.position
 
     def get_subproc_env(self):
-        self.validatelogs = self.logfile + '.validate.logs'
-        logfiles = self.validatelogs
-        if self.options.redirect_logs:
-            logfiles += os.pathsep + \
-                self.options.redirect_logs.replace("<", '').replace(">", '')
-
         subproc_env = os.environ.copy()
 
-        utils.touch(self.validatelogs)
-        subproc_env["GST_VALIDATE_FILE"] = logfiles
         subproc_env["GST_VALIDATE_SERVER"] = "tcp://localhost:%s" % self.serverport
-        self.extra_logfiles.append(self.validatelogs)
 
         if 'GST_DEBUG' in os.environ and not self.options.redirect_logs:
             gstlogsfile = self.logfile + '.gstdebug'
@@ -726,9 +716,6 @@ class GstValidateTest(Test):
 
     def get_extra_log_content(self, extralog):
         value = Test.get_extra_log_content(self, extralog)
-
-        if extralog == self.validatelogs:
-            value = re.sub("<position:.*/>\r", "", value)
 
         return value
 
