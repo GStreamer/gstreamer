@@ -192,7 +192,7 @@ of a few of the basic types used for buffers in GStreamer. The table
 contains the name ("media type") and a description of the type, the
 properties associated with the type, and the meaning of each property. A
 full list of supported types is included in [List of Defined
-Types](plugin-development/advanced/building-types.md#list-of-defined-types).
+Types](plugin-development/advanced/media-types.md#list-of-defined-types).
 
 <table>
 <caption>Table of Example Types</caption>

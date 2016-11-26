@@ -42,7 +42,7 @@ properties. For most container formats (those are the files that you will find
 on your hard disk; Ogg, for example, is a container format), no properties are
 needed to describe the stream. Only a media type is needed. A full list
 of media types and accompanying properties can be found in [the Plugin
-Writer's Guide][pwg-type-defs].
+Writer's Guide][pwg-media-types].
 
 An element must associate a media type to its source and sink pads when
 it is loaded into the system. GStreamer knows about the different
@@ -63,7 +63,7 @@ we can look at methods GStreamer uses to setup pipelines for media
 handling and for media type detection.
 
 [pad-caps]: application-development/basics/pads.md#capabilities-of-a-pad
-[pwg-type-defs]: plugin-development/advanced/building-types.md
+[pwg-media-types]: plugin-development/advanced/media-types.md
 
 ## Media stream type detection
 

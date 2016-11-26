@@ -116,7 +116,7 @@ index.md
 			plugin-development/advanced/scheduling.md
 			plugin-development/advanced/negotiation.md
 			plugin-development/advanced/allocation.md
-			plugin-development/advanced/building-types.md
+			plugin-development/advanced/media-types.md
 			plugin-development/advanced/events.md
 			plugin-development/advanced/clock.md
 			plugin-development/advanced/qos.md

@@ -135,8 +135,8 @@ the following order:
     more control over input rate. This is useful when writing, for
     example, muxers or demuxers.
 
-    Next, we will discuss media identification in GStreamer in [Types
-    and Properties][types]. You will learn how to
+    Next, we will discuss media identification in GStreamer in [Media Types
+    and Properties][media-types]. You will learn how to
     define new media types and get to know a list of standard media
     types defined in GStreamer.
 
@@ -219,7 +219,7 @@ As you can see, there a lot to learn, so let's get started\!
 [testapp]: plugin-development/basics/testapp.md
 [advanced]: plugin-development/advanced/index.md
 [scheduling]: plugin-development/advanced/scheduling.md
-[types]: plugin-development/advanced/building-types.md
+[media-types]: plugin-development/advanced/media-types.md
 [request-pads]: plugin-development/advanced/request.md
 [clocks]: plugin-development/advanced/clock.md
 [dynamic-params]: plugin-development/advanced/dparams.md
