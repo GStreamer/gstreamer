@@ -30,7 +30,6 @@ import time
 from . import utils
 import signal
 import urllib.parse
-import tempfile
 import subprocess
 import threading
 import queue
@@ -251,9 +250,10 @@ class Test(Loggable):
         if self.process.returncode == 0:
             self.set_result(Result.PASSED)
         elif self.process.returncode in [-signal.SIGSEGV, -signal.SIGABRT, 139]:
-            result = Result.FAILED
-            msg = "Application segfaulted "
             self.add_stack_trace_to_file()
+            self.set_result(Result.FAILED,
+                            "Application segfaulted, returne code: %d" % (
+                                self.process.returncode))
         elif self.process.returncode == VALGRIND_ERROR_CODE:
             self.set_result(Result.FAILED, "Valgrind reported errors")
         else:
@@ -761,15 +761,45 @@ class GstValidateTest(Test):
 
         return ret, expected_failures, expected_retcode
 
+    def check_expected_timeout(self, expected_timeout):
+        msg = "Expected timeout happened. "
+        result = Result.PASSED
+        message = expected_timeout.get('message')
+        if message:
+            if not re.findall(message, self.message):
+                result = Result.FAILED
+                msg = "Expected timeout message: %s got %s " % (
+                    message, self.message)
+
+        expected_symbols = expected_timeout.get('stacktrace_symbols')
+        if expected_symbols:
+            trace_gatherer = BackTraceGenerator.get_default()
+            stack_trace = trace_gatherer.get_trace(self)
+
+            if stack_trace:
+                if not isinstance(expected_symbols, list):
+                    expected_symbols = [expected_symbols]
+
+                not_found_symbols = [s for s in expected_symbols
+                                     if s not in stack_trace]
+                if not_found_symbols:
+                    result = Result.TIMEOUT
+                    msg = "Expected symbols '%s' not found in stack trace " % (
+                        not_found_symbols)
+            else:
+                msg += "No stack trace available, could not verify symbols "
+
+        return result, msg
+
     def check_results(self):
-        if self.result is Result.FAILED or self.result is Result.PASSED or self.result is Result.TIMEOUT:
+        if self.result in [Result.FAILED, self.result is Result.PASSED]:
             return
 
         self.debug("%s returncode: %s", self, self.process.returncode)
 
         criticals, not_found_expected_failures, expected_returncode = self.check_reported_issues()
 
-        returncode_index = None
+        expected_timeout = None
         for i, f in enumerate(not_found_expected_failures):
             if len(f) == 1 and f.get("returncode"):
                 returncode = f['returncode']
@@ -777,15 +807,21 @@ class GstValidateTest(Test):
                     returncode = [expected_returncode]
                 if 'sometimes' in f:
                     returncode.append(0)
-                returncode_index = i
-                break
+            elif f.get("timeout"):
+                expected_timeout = f
 
         not_found_expected_failures = [f for f in not_found_expected_failures
                                        if not f.get('returncode')]
 
         msg = ""
         result = Result.PASSED
-        if self.process.returncode in COREDUMP_SIGNALS:
+        if self.result == Result.TIMEOUT:
+            if expected_timeout:
+                not_found_expected_failures.remove(expected_timeout)
+                result, msg = self.check_expected_timeout(expected_timeout)
+            else:
+                return
+        elif self.process.returncode in COREDUMP_SIGNALS:
             result = Result.FAILED
             msg = "Application segfaulted "
             self.add_stack_trace_to_logfile()
@@ -1093,7 +1129,7 @@ class TestsManager(Loggable):
         return True
 
     def check_expected_failures(self):
-        if not self.blacklisted_tests:
+        if not self.expected_failures or not self.options.check_bugs_status:
             return True
 
         if self.expected_failures:

@@ -137,7 +137,7 @@ def printc(message, color="", title=False, title_char=''):
             length = len(message)
 
         if title is True:
-            message = length * title + "\n" + str(message) + "\n" + length * '='
+            message = length * "=" + "\n" + str(message) + "\n" + length * '='
         else:
             message = str(message) + "\n" + length * title_char
 

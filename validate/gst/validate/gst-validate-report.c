@@ -414,7 +414,7 @@ gst_validate_send (JsonNode * root)
 
   if (!res) {
     if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_PENDING)) {
-      GST_ERROR ("Stream was busy, trying again later.");
+      GST_DEBUG ("Stream was busy, trying again later.");
 
       g_free (message);
       g_object_unref (jgen);
