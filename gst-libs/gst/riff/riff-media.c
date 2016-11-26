@@ -1732,6 +1732,11 @@ gst_riff_create_audio_caps (guint16 codec_id,
           *codec_name = g_strdup ("Ogg-AVI");
       }
 
+      if (caps == NULL) {
+        GST_WARNING ("Unknown WAVE_FORMAT_EXTENSIBLE audio format");
+        return NULL;
+      }
+
       if (strf != NULL) {
         /* If channel_mask == 0 and channels > 1 let's
          * assume default layout as some wav files don't have the
@@ -1750,10 +1755,6 @@ gst_riff_create_audio_caps (guint16 codec_id,
         rate_chan = FALSE;
       }
 
-      if (caps == NULL) {
-        GST_WARNING ("Unknown WAVE_FORMAT_EXTENSIBLE audio format");
-        return NULL;
-      }
       break;
     }
       /* can anything decode these? pitfdll? */
