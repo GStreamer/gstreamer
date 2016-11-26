@@ -1131,8 +1131,10 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
         goto skip;
         break;
       default:
-        g_assert_not_reached ();
-        break;
+        /* should not really occur either */
+        GST_ELEMENT_ERROR (h264parse, STREAM, FORMAT,
+            ("Error parsing H.264 stream"), ("Invalid H.264 stream"));
+        goto invalid_stream;
     }
   }
 
