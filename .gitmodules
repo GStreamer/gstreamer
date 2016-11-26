@@ -3,4 +3,4 @@
         url = https://anongit.freedesktop.org/git/gstreamer/common.git
 [submodule "gst-libs/ext/libav"]
         path = gst-libs/ext/libav
-        url = git://source.ffmpeg.org/ffmpeg.git
+        url = https://git.ffmpeg.org/ffmpeg.git
