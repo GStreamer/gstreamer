@@ -83,6 +83,7 @@ class Test(Loggable):
         self.thread = None
         self.queue = None
         self.duration = duration
+        self.stack_trace = None
         if expected_failures is None:
             self.expected_failures = []
         elif not isinstance(expected_failures, list):
@@ -212,6 +213,8 @@ class Test(Loggable):
         info = "\n\n== Stack trace: == \n%s" % stack_trace
         if self.options.redirect_logs:
             print(info)
+        elif self.options.xunit_file:
+            self.stack_trace = stack_trace
         else:
             with open(self.logfile, 'a') as f:
                 f.write(info)
