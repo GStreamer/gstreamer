@@ -26,6 +26,55 @@
 #include "gstopencvutils.h"
 #include <opencv2/core/core_c.h>
 
+/*
+The various opencv image containers or headers store the following information:
+- number of channels (usually 1, 3 or 4)
+- depth (8, 16, 32, 64...); all channels have the same depth.
+The channel layout (BGR vs RGB) is not stored...
+
+This gives us the following list of supported image formats:
+  CV_8UC1, CV_8UC2, CV_8UC3, CV_8UC4
+  CV_8SC1, CV_8SC2, CV_8SC3, CV_8SC4
+  CV_16UC1, CV_16UC2, CV_16UC3, CV_16UC4
+  CV_16SC1, CV_16SC2, CV_16SC3, CV_16SC4
+  CV_32SC1, CV_32SC2, CV_32SC3, CV_32SC4
+  CV_32FC1, CV_32FC2, CV_32FC3, CV_32FC4
+  CV_64FC1, CV_64FC2, CV_64FC3, CV_64FC4
+
+Where the first part of the format name is the depth followed by a digit
+representing the number of channels.
+Note that opencv supports more that 4 channels.
+
+The opencv algorithms don't all support all the image types.
+For example findChessboardCorners() supports only 8 bits formats
+(gray scale and color).
+
+And, typically, this algorithm will convert the image to gray scale before
+proceeding. It will do so with something like this:
+   cvtColor(srcImg, destImg, CV_BGR2GRAY);
+
+The conversion will work on any BGR format (BGR, BGRA, BGRx).
+The extra channel(s) will be ignored.
+It will also produce a result for any RGB format.
+The result will be "wrong" to the human eye and might affect some algorithms
+(not findChessboardCorners() afaik...).
+This is due to how RGB gets converted to gray where each color has a
+different weight.
+
+Another example is the 2D rendering API.
+It work with RGB but the colors will be wrong.
+
+Likewise other layouts like xBGR and ABGR formats will probably misbehave
+with most algorithms.
+
+The bad thing is that it is not possible to change the "default" BGR format.
+Safest is to not assume that RGB will work and always convert to BGR.
+
+That said, the current opencv gstreamer elements all accept BGR and RGB caps !
+Some have restrictions but if a format is supported then both BGR and RGB
+layouts will be supported.
+*/
+
 gboolean
 gst_opencv_parse_iplimage_params_from_caps (GstCaps * caps, gint * width,
     gint * height, gint * ipldepth, gint * channels, GError ** err)
