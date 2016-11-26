@@ -3068,7 +3068,11 @@ pause:
 
     if (flow == GST_FLOW_EOS) {
       /* perform EOS logic */
-      if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+      if (demux->src->len == 0) {
+        GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE,
+            ("This stream contains no data."),
+            ("got eos and didn't find any streams"));
+      } else if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gint64 stop;
         GstMessage *m;
         GstEvent *e;
@@ -4083,6 +4087,12 @@ gst_mxf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_EOS:{
       GstMXFDemuxPad *p = NULL;
       guint i;
+
+      if (demux->src->len == 0) {
+        GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE,
+            ("This stream contains no data."),
+            ("got eos and didn't find any streams"));
+      }
 
       for (i = 0; i < demux->essence_tracks->len; i++) {
         GstMXFDemuxEssenceTrack *t =
