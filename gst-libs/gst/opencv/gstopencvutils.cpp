@@ -26,17 +26,19 @@
 #include "gstopencvutils.h"
 #include <opencv2/core/core_c.h>
 
-
 gboolean
 gst_opencv_parse_iplimage_params_from_caps (GstCaps * caps, gint * width,
     gint * height, gint * ipldepth, gint * channels, GError ** err)
 {
   GstVideoInfo info;
+  gchar *caps_str;
 
   if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR ("Failed to get the videoinfo from caps");
+    caps_str = gst_caps_to_string (caps);
+    GST_ERROR ("Failed to get video info from caps %s", caps_str);
     g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
-        "No width/heighti/depth/channels in caps");
+        "Failed to get video info from caps %s", caps_str);
+    g_free (caps_str);
     return FALSE;
   }
 
@@ -48,35 +50,58 @@ gboolean
 gst_opencv_iplimage_params_from_video_info (GstVideoInfo * info, gint * width,
     gint * height, gint * ipldepth, gint * channels, GError ** err)
 {
-  gint depth = 0;
-  guint i;
+  GstVideoFormat format;
+  int cv_type;
+
+  format = GST_VIDEO_INFO_FORMAT (info);
+  if (!gst_opencv_cv_image_type_from_video_format (format, &cv_type, err)) {
+    return FALSE;
+  }
 
   *width = GST_VIDEO_INFO_WIDTH (info);
   *height = GST_VIDEO_INFO_HEIGHT (info);
-  if (GST_VIDEO_INFO_IS_RGB (info))
-    *channels = 3;
-  else if (GST_VIDEO_INFO_IS_GRAY (info))
-    *channels = 1;
-  else {
-    g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
-        "Unsupported video format %s",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
-    return FALSE;
+
+  *ipldepth = cvIplDepth (cv_type);
+  *channels = CV_MAT_CN (cv_type);
+
+  return TRUE;
+}
+
+gboolean
+gst_opencv_cv_image_type_from_video_format (GstVideoFormat format,
+    int * cv_type, GError ** err)
+{
+  const gchar *format_str;
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_GRAY8:
+      *cv_type = CV_8UC1;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+      *cv_type = CV_8UC3;
+      break;
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ABGR:
+      *cv_type = CV_8UC4;
+      break;
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+      *cv_type = CV_16UC1;
+      break;
+    default:
+      format_str = gst_video_format_to_string (format);
+      g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
+          "Unsupported video format %s", format_str);
+      return FALSE;
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++)
-    depth += GST_VIDEO_INFO_COMP_DEPTH (info, i);
-
-  if (depth / *channels == 8) {
-    /* TODO signdness? */
-    *ipldepth = IPL_DEPTH_8U;
-  } else if (depth / *channels == 16) {
-    *ipldepth = IPL_DEPTH_16U;
-  } else {
-    g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
-        "Unsupported depth/channels %d/%d", depth, *channels);
-    return FALSE;
-  }
   return TRUE;
 }
 
