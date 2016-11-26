@@ -1179,12 +1179,19 @@ gst_mpegts_section_new (guint16 pid, guint8 * data, gsize data_size)
   GstMpegtsSection *res = NULL;
   guint8 tmp;
   guint8 table_id;
-  guint16 section_length;
+  guint16 section_length = 0;
+
+  /* The smallest section ever is 3 bytes */
+  if (G_UNLIKELY (data_size < 3))
+    goto short_packet;
 
   /* Check for length */
   section_length = GST_READ_UINT16_BE (data + 1) & 0x0FFF;
   if (G_UNLIKELY (data_size < section_length + 3))
     goto short_packet;
+
+  GST_LOG ("data_size:%" G_GSIZE_FORMAT " section_length:%u",
+      data_size, section_length);
 
   /* Table id is in first byte */
   table_id = *data;
@@ -1200,6 +1207,13 @@ gst_mpegts_section_new (guint16 pid, guint8 * data, gsize data_size)
   /* section_length (already parsed) : 12 bit */
   res->section_length = section_length + 3;
   if (!res->short_section) {
+    /* A long packet needs to be at least 11 bytes long
+     * _ 3 for the bytes above
+     * _ 5 for the bytes below
+     * _ 4 for the CRC */
+    if (G_UNLIKELY (data_size < 11))
+      goto bad_long_packet;
+
     /* CRC is after section_length (-4 for the size of the CRC) */
     res->crc = GST_READ_UINT32_BE (res->data + res->section_length - 4);
     /* Skip to after section_length */
@@ -1227,6 +1241,13 @@ short_packet:
         ("PID 0x%04x section extends past provided data (got:%" G_GSIZE_FORMAT
         ", need:%d)", pid, data_size, section_length + 3);
     g_free (data);
+    return NULL;
+  }
+bad_long_packet:
+  {
+    GST_WARNING ("PID 0x%04x long section is too short (%" G_GSIZE_FORMAT
+        " bytes, need at least 11)", pid, data_size);
+    gst_mpegts_section_unref (res);
     return NULL;
   }
 }
