@@ -414,7 +414,7 @@ static gpointer
 _parse_pat (GstMpegtsSection * section)
 {
   GPtrArray *pat;
-  guint16 i = 0, nb_programs;
+  guint16 i, nb_programs;
   GstMpegtsPatProgram *program;
   guint8 *data, *end;
 
@@ -430,7 +430,9 @@ _parse_pat (GstMpegtsSection * section)
       g_ptr_array_new_full (nb_programs,
       (GDestroyNotify) _mpegts_pat_program_free);
 
-  while (data < end - 4) {
+  GST_LOG ("nb_programs %u", nb_programs);
+
+  for (i = 0; i < nb_programs; i++) {
     program = g_slice_new0 (GstMpegtsPatProgram);
     program->program_number = GST_READ_UINT16_BE (data);
     data += 2;
@@ -439,8 +441,6 @@ _parse_pat (GstMpegtsSection * section)
     data += 2;
 
     g_ptr_array_index (pat, i) = program;
-
-    i++;
   }
   pat->len = nb_programs;
 
