@@ -1,28 +1,28 @@
 ---
-title: Types and Properties
+title: Media Types and Properties
 ...
 
-# Types and Properties
+# Media Types and Properties
 
-There is a very large set of possible types that may be used to pass
+There is a very large set of possible media types that may be used to pass
 data between elements. Indeed, each new element that is defined may use
 a new data format (though unless at least one other element recognises
 that format, it will be most likely be useless since nothing will be
 able to link with it).
 
-In order for types to be useful, and for systems like autopluggers to
-work, it is necessary that all elements agree on the type definitions,
-and which properties are required for each type. The GStreamer framework
-itself simply provides the ability to define types and parameters, but
-does not fix the meaning of types and parameters, and does not enforce
-standards on the creation of new types. This is a matter for a policy to
+In order for media types to be useful, and for systems like autopluggers to
+work, it is necessary that all elements agree on the media type definitions,
+and which properties are required for each media type. The GStreamer framework
+itself simply provides the ability to define media types and parameters, but
+does not fix the meaning of media types and parameters, and does not enforce
+standards on the creation of new media types. This is a matter for a policy to
 decide, not technical systems to enforce.
 
 For now, the policy is simple:
 
-  - Do not create a new type if you could use one which already exists.
+  - Do not create a new media type if you could use one which already exists.
 
-  - If creating a new type, discuss it first with the other GStreamer
+  - If creating a new media type, discuss it first with the other GStreamer
     developers, on at least one of: IRC, mailing lists.
 
   - Try to ensure that the name for a new format is as unlikely to
@@ -33,9 +33,9 @@ For now, the policy is simple:
     or "audio/compressed" could exist and have a property indicating the
     type of compression used.
 
-  - Ensure that, when you do create a new type, you specify it clearly,
-    and get it added to the list of known types so that other developers
-    can use the type correctly when writing their elements.
+  - Ensure that, when you do create a new media type, you specify it clearly,
+    and get it added to the list of known media types so that other developers
+    can use the media type correctly when writing their elements.
 
 ## Building a Simple Format for Testing
 
@@ -116,7 +116,7 @@ functions.
 Autoplugging has been discussed in great detail in the Application
 Development Manual.
 
-## List of Defined Types
+## List of Defined Media Types
 
 Below is a list of all the defined types in GStreamer. They are split up
 in separate tables for audio, video, container, subtitle and other
