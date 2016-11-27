@@ -430,6 +430,43 @@ done:
   return ret;
 }
 
+static GstBuffer *
+gst_raw_base_parse_align_buffer (GstRawBaseParse * raw_base_parse,
+    gsize alignment, GstBuffer * buffer)
+{
+  GstMapInfo map;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+  if (map.size < sizeof (guintptr)) {
+    gst_buffer_unmap (buffer, &map);
+    return buffer;
+  }
+
+  if (((guintptr) map.data) & (alignment - 1)) {
+    GstBuffer *new_buffer;
+    GstAllocationParams params = { 0, alignment - 1, 0, 0, };
+
+    new_buffer = gst_buffer_new_allocate (NULL,
+        gst_buffer_get_size (buffer), &params);
+
+    /* Copy data "by hand", so ensure alignment is kept: */
+    gst_buffer_fill (new_buffer, 0, map.data, map.size);
+
+    gst_buffer_copy_into (new_buffer, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+    GST_DEBUG_OBJECT (raw_base_parse,
+        "We want output aligned on %" G_GSIZE_FORMAT ", reallocated",
+        alignment);
+
+    gst_buffer_unmap (buffer, &map);
+    gst_buffer_unref (buffer);
+
+    return new_buffer;
+  }
+
+  gst_buffer_unmap (buffer, &map);
+  return buffer;
+}
 
 static GstFlowReturn
 gst_raw_base_parse_handle_frame (GstBaseParse * parse,
@@ -442,6 +479,7 @@ gst_raw_base_parse_handle_frame (GstBaseParse * parse,
   guint64 buffer_duration;
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstEvent *new_caps_event = NULL;
+  gint alignment;
   GstRawBaseParse *raw_base_parse = GST_RAW_BASE_PARSE (parse);
   GstRawBaseParseClass *klass = GST_RAW_BASE_PARSE_GET_CLASS (parse);
 
@@ -565,6 +603,15 @@ gst_raw_base_parse_handle_frame (GstBaseParse * parse,
     frame->out_buffer = processed_data;
   } else {
     frame->out_buffer = NULL;
+  }
+
+  if (klass->get_alignment
+      && (alignment =
+          klass->get_alignment (raw_base_parse,
+              GST_RAW_BASE_PARSE_CONFIG_CURRENT)) != 1) {
+    frame->out_buffer =
+        gst_raw_base_parse_align_buffer (raw_base_parse, alignment,
+        gst_buffer_ref (frame->buffer));
   }
 
   /* Set the duration of the output buffer, or if none exists, of
