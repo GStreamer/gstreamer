@@ -15,6 +15,7 @@ index.md
 		frequently-asked-questions/git.md
 		frequently-asked-questions/developing.md
 		frequently-asked-questions/legal.md
+	contribute/index.md
 	application-development/index.md
 		application-development/introduction/index.md
 			application-development/introduction/gstreamer.md
