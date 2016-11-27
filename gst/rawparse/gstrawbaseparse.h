@@ -193,6 +193,9 @@ struct _GstRawBaseParseClass
 
   gint                  (*get_overhead_size)         (GstRawBaseParse * raw_base_parse,
                                                       GstRawBaseParseConfig config);
+
+  gint                  (*get_alignment)             (GstRawBaseParse * raw_base_parse,
+                                                      GstRawBaseParseConfig config);
 };
 
 

@@ -182,10 +182,11 @@ static GstRawVideoParseConfig
     * gst_raw_video_parse_get_config_ptr (GstRawVideoParse * raw_video_parse,
     GstRawBaseParseConfig config);
 
+static gint gst_raw_video_parse_get_alignment (GstRawBaseParse * raw_base_parse,
+    GstRawBaseParseConfig config);
+
 static void gst_raw_video_parse_init_config (GstRawVideoParseConfig * config);
 static void gst_raw_video_parse_update_info (GstRawVideoParseConfig * config);
-
-
 
 static void
 gst_raw_video_parse_class_init (GstRawVideoParseClass * klass)
@@ -236,6 +237,8 @@ gst_raw_video_parse_class_init (GstRawVideoParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_raw_video_parse_get_units_per_second);
   rawbaseparse_class->get_overhead_size =
       GST_DEBUG_FUNCPTR (gst_raw_video_parse_get_overhead_size);
+  rawbaseparse_class->get_alignment =
+      GST_DEBUG_FUNCPTR (gst_raw_video_parse_get_alignment);
 
   g_object_class_install_property (object_class,
       PROP_WIDTH,
@@ -929,6 +932,12 @@ gst_raw_video_parse_is_config_ready (GstRawBaseParse * raw_base_parse,
   return gst_raw_video_parse_get_config_ptr (raw_video_parse, config)->ready;
 }
 
+static gint
+gst_raw_video_parse_get_alignment (GstRawBaseParse * raw_base_parse,
+    GstRawBaseParseConfig config)
+{
+  return 32;
+}
 
 static gboolean
 gst_raw_video_parse_process (GstRawBaseParse * raw_base_parse,
