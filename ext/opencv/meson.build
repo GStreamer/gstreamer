@@ -36,7 +36,7 @@ else
   opencv_cargs += '-DOPENCV_PATH_NAME="OpenCv"'
 endif
 
-opencv_dep = dependency('opencv', version : '>= 2.3.0')
+opencv_dep = dependency('opencv', version : '>= 2.3.0', required : false)
 if opencv_dep.found()
   gstopencv = library('gstopencv',
     opencv_sources,
