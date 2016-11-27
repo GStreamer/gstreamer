@@ -767,11 +767,12 @@ gst_rtp_rtx_send_src_loop (GstRtpRtxSend * rtx)
     GST_LOG_OBJECT (rtx, "pushing rtx buffer %p", data->object);
 
     if (G_LIKELY (GST_IS_BUFFER (data->object))) {
-      gst_pad_push (rtx->srcpad, GST_BUFFER (data->object));
-
       GST_OBJECT_LOCK (rtx);
+      /* Update statistics just before pushing. */
       rtx->num_rtx_packets++;
       GST_OBJECT_UNLOCK (rtx);
+
+      gst_pad_push (rtx->srcpad, GST_BUFFER (data->object));
     } else if (GST_IS_EVENT (data->object)) {
       gst_pad_push_event (rtx->srcpad, GST_EVENT (data->object));
 
