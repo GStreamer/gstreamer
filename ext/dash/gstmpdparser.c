@@ -985,11 +985,11 @@ gst_mpdparser_parse_duration (const char *str, guint64 * value)
     goto error;
   }
   /* skip leading/trailing whitespace */
-  while (strchr (" \t", str[0])) {
+  while (g_ascii_isspace (str[0])) {
     str++;
     len--;
   }
-  while (len > 0 && strchr (" \t", str[len - 1]))
+  while (len > 0 && g_ascii_isspace (str[len - 1]))
     --len;
 
   /* read "P" for period */
