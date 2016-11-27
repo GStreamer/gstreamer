@@ -161,6 +161,8 @@ static gboolean gst_raw_audio_parse_is_unit_format_supported (GstRawBaseParse *
 static void gst_raw_audio_parse_get_units_per_second (GstRawBaseParse *
     raw_base_parse, GstFormat format, GstRawBaseParseConfig config,
     gsize * units_per_sec_n, gsize * units_per_sec_d);
+static gint gst_raw_audio_parse_get_alignment (GstRawBaseParse * raw_base_parse,
+    GstRawBaseParseConfig config);
 
 static gboolean gst_raw_audio_parse_is_using_sink_caps (GstRawAudioParse *
     raw_audio_parse);
@@ -228,6 +230,8 @@ gst_raw_audio_parse_class_init (GstRawAudioParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_raw_audio_parse_is_unit_format_supported);
   rawbaseparse_class->get_units_per_second =
       GST_DEBUG_FUNCPTR (gst_raw_audio_parse_get_units_per_second);
+  rawbaseparse_class->get_alignment =
+      GST_DEBUG_FUNCPTR (gst_raw_audio_parse_get_alignment);
 
   g_object_class_install_property (object_class,
       PROP_FORMAT,
@@ -669,6 +673,38 @@ gst_raw_audio_parse_is_config_ready (GstRawBaseParse * raw_base_parse,
   return gst_raw_audio_parse_get_config_ptr (raw_audio_parse, config)->ready;
 }
 
+static guint
+round_up_pow2 (guint n)
+{
+  n = n - 1;
+  n = n | (n >> 1);
+  n = n | (n >> 2);
+  n = n | (n >> 4);
+  n = n | (n >> 8);
+  n = n | (n >> 16);
+  return n + 1;
+}
+
+static gint
+gst_raw_audio_parse_get_alignment (GstRawBaseParse * raw_base_parse,
+    GstRawBaseParseConfig config)
+{
+  GstRawAudioParse *raw_audio_parse = GST_RAW_AUDIO_PARSE (raw_base_parse);
+  GstRawAudioParseConfig *config_ptr =
+      gst_raw_audio_parse_get_config_ptr (raw_audio_parse, config);
+  gint width;
+
+  if (config_ptr->format != GST_RAW_AUDIO_PARSE_FORMAT_PCM)
+    return 1;
+
+  width =
+      GST_AUDIO_FORMAT_INFO_WIDTH (gst_audio_format_get_info
+      (config_ptr->pcm_format)) / 8;
+  width = GST_ROUND_UP_8 (width);
+  width = round_up_pow2 (width);
+
+  return width;
+}
 
 static gboolean
 gst_raw_audio_parse_process (GstRawBaseParse * raw_base_parse,
