@@ -124,9 +124,9 @@ index.md
 			plugin-development/advanced/interfaces.md
 			plugin-development/advanced/tagging.md
 		plugin-development/element-types/index.md
-			plugin-development/element-types/base.md
-			plugin-development/element-types/oneton.md
-			plugin-development/element-types/ntoone.md
+			plugin-development/element-types/base-classes.md
+			plugin-development/element-types/one-to-n.md
+			plugin-development/element-types/n-to-one.md
 			plugin-development/element-types/manager.md
 		plugin-development/appendix/index.md
 			plugin-development/appendix/checklist-element.md

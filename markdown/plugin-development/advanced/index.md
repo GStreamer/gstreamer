@@ -1,8 +1,8 @@
 ---
-title: Advanced Filter Concepts
+title: Advanced Concepts
 ...
 
-# Advanced Filter Concepts
+# Advanced Concepts
 
 By now, you should be able to create basic filter elements that can
 receive and send data. This is the simple model that GStreamer stands

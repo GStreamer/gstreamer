@@ -60,7 +60,7 @@ also need a rewrite, which will take about the same amount of time.
     from `GstBaseSrc` and `GstBaseSink`. Audio sinks or sources could
     even derive from audio-specific base classes. All existing base
     classes have been discussed in [Pre-made base
-    classes](plugin-development/element-types/base.md) and the next few chapters.
+    classes](plugin-development/element-types/base-classes.md) and the next few chapters.
 
   - In 0.10, event handling and buffers are separated once again. This
     means that in order to receive events, one no longer has to set the
