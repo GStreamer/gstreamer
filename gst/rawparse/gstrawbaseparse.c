@@ -432,7 +432,7 @@ done:
 
 static GstBuffer *
 gst_raw_base_parse_align_buffer (GstRawBaseParse * raw_base_parse,
-    gsize alignment, GstBuffer * buffer)
+    gsize alignment, GstBuffer * buffer, gsize out_size)
 {
   GstMapInfo map;
 
@@ -440,32 +440,32 @@ gst_raw_base_parse_align_buffer (GstRawBaseParse * raw_base_parse,
 
   if (map.size < sizeof (guintptr)) {
     gst_buffer_unmap (buffer, &map);
-    return buffer;
+    return NULL;
   }
 
   if (((guintptr) map.data) & (alignment - 1)) {
     GstBuffer *new_buffer;
     GstAllocationParams params = { 0, alignment - 1, 0, 0, };
 
-    new_buffer = gst_buffer_new_allocate (NULL,
-        gst_buffer_get_size (buffer), &params);
+    new_buffer = gst_buffer_new_allocate (NULL, out_size, &params);
 
     /* Copy data "by hand", so ensure alignment is kept: */
-    gst_buffer_fill (new_buffer, 0, map.data, map.size);
+    gst_buffer_fill (new_buffer, 0, map.data, out_size);
 
-    gst_buffer_copy_into (new_buffer, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+    gst_buffer_copy_into (new_buffer, buffer, GST_BUFFER_COPY_METADATA, 0,
+        out_size);
     GST_DEBUG_OBJECT (raw_base_parse,
         "We want output aligned on %" G_GSIZE_FORMAT ", reallocated",
         alignment);
 
     gst_buffer_unmap (buffer, &map);
-    gst_buffer_unref (buffer);
 
     return new_buffer;
   }
 
   gst_buffer_unmap (buffer, &map);
-  return buffer;
+
+  return NULL;
 }
 
 static GstFlowReturn
@@ -609,9 +609,17 @@ gst_raw_base_parse_handle_frame (GstBaseParse * parse,
       && (alignment =
           klass->get_alignment (raw_base_parse,
               GST_RAW_BASE_PARSE_CONFIG_CURRENT)) != 1) {
-    frame->out_buffer =
+    GstBuffer *aligned_buffer;
+
+    aligned_buffer =
         gst_raw_base_parse_align_buffer (raw_base_parse, alignment,
-        gst_buffer_ref (frame->buffer));
+        frame->out_buffer ? frame->out_buffer : frame->buffer, out_size);
+
+    if (aligned_buffer) {
+      if (frame->out_buffer)
+        gst_buffer_unref (frame->out_buffer);
+      frame->out_buffer = aligned_buffer;
+    }
   }
 
   /* Set the duration of the output buffer, or if none exists, of
