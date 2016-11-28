@@ -1270,6 +1270,7 @@ GST_START_TEST (test_rate)
   /* cleanup */
   gst_pad_remove_probe (mysinkpad, probe);
   cleanup_videorate (videorate);
+  gst_buffer_unref (buf);
 }
 
 GST_END_TEST;
@@ -1389,6 +1390,7 @@ GST_START_TEST (test_query_position)
 
   /* cleanup */
   cleanup_videorate (videorate);
+  gst_buffer_unref (buf);
 }
 
 GST_END_TEST;
