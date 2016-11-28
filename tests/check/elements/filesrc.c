@@ -71,6 +71,9 @@ setup_filesrc (void)
 {
   GstElement *filesrc;
 
+  g_cond_init (&eos_cond);
+  g_mutex_init (&event_mutex);
+
   GST_DEBUG ("setup_filesrc");
   filesrc = gst_check_setup_element ("filesrc");
   mysinkpad = gst_check_setup_sink_pad (filesrc, &sinktemplate);
@@ -87,6 +90,9 @@ cleanup_filesrc (GstElement * filesrc)
   gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (filesrc);
   gst_check_teardown_element (filesrc);
+
+  g_mutex_clear (&event_mutex);
+  g_cond_clear (&eos_cond);
 }
 
 GST_START_TEST (test_seeking)
