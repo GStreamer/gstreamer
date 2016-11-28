@@ -24,3 +24,5 @@ project.properties
 gst_sdk
 .DS_Store
 xcuserdata
+/plugins-introspection/cache/
+/hotdoc_env/

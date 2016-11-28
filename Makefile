@@ -4,6 +4,8 @@ install:
 
 clean:
 
+BRANCH = 1.10
+
 HOTDOC ?= hotdoc
 prefix ?= /usr
 datadir ?= ${prefix}/share
@@ -60,3 +62,17 @@ BUILT_DOC_DIR = $(builddir)/built_doc/html/
 upload: all
 	rsync -rvaz -e ssh --links --delete $(BUILT_DOC_DIR) $(DOC_SERVER):$(DOC_BASE)
 	ssh $(DOC_SERVER) "chmod -R g+w $(DOC_BASE); chgrp -R gstreamer $(DOC_BASE)"
+
+include plugins-introspection/plugins-introspection.mak
+
+help:
+	@echo
+	@echo "  make                     -- Build or rebuild docs (markdown -> html)"
+	@echo
+	@echo "  make upload              -- Upload docs"
+	@echo
+	@echo "  make update-xml          -- Update local plugin module .xml files from git"
+	@echo "  make update-plugin-list  -- Rebuild local plugins.md list from .xml files"
+	@echo
+	@echo "  make clean-url-cache     -- Remove local url cache"
+	@echo
