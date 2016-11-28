@@ -106,6 +106,8 @@ static const GstNamesMap gstnames[] = {
 
 static GstFlowReturn gst_multipart_demux_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buf);
+static gboolean gst_multipart_demux_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
 
 static GstStateChangeReturn gst_multipart_demux_change_state (GstElement *
     element, GstStateChange transition);
@@ -179,6 +181,8 @@ gst_multipart_demux_init (GstMultipartDemux * multipart)
   gst_element_add_pad (GST_ELEMENT_CAST (multipart), multipart->sinkpad);
   gst_pad_set_chain_function (multipart->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multipart_demux_chain));
+  gst_pad_set_event_function (multipart->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_multipart_demux_event));
 
   multipart->adapter = gst_adapter_new ();
   multipart->boundary = DEFAULT_BOUNDARY;
@@ -569,6 +573,30 @@ multipart_find_boundary (GstMultipartDemux * multipart, gint * datalen)
   gst_adapter_unmap (multipart->adapter);
   multipart->scanpos = pos - data;
   return MULTIPART_NEED_MORE_DATA;
+}
+
+static gboolean
+gst_multipart_demux_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstMultipartDemux *multipart;
+
+  multipart = GST_MULTIPART_DEMUX (parent);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      if (!multipart->srcpads) {
+        GST_ELEMENT_ERROR (multipart, STREAM, WRONG_TYPE,
+            ("This stream contains no valid streams."),
+            ("Got EOS before adding any pads"));
+        gst_event_unref (event);
+        return FALSE;
+      } else {
+        return gst_pad_event_default (pad, parent, event);
+      }
+      break;
+    default:
+      return gst_pad_event_default (pad, parent, event);
+  }
 }
 
 static GstFlowReturn
