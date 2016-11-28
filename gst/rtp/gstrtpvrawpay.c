@@ -284,7 +284,10 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 
   rtpvrawpay = GST_RTP_VRAW_PAY (payload);
 
-  gst_video_frame_map (&frame, &rtpvrawpay->vinfo, buffer, GST_MAP_READ);
+  if (!gst_video_frame_map (&frame, &rtpvrawpay->vinfo, buffer, GST_MAP_READ)) {
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
+  }
 
   GST_LOG_OBJECT (rtpvrawpay, "new frame of %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (buffer));
