@@ -2,18 +2,16 @@
 
 ## Supported platforms
 
-* Windows XP
-* Windows Vista
 * Windows 7
 * Windows 8
+* Windows 8.1
 * Windows 10
 
 ## Prerequisites
 
-To develop applications using GStreamer for Windows you will
-need [Windows
-XP](http://windows.microsoft.com/en-US/windows/products/windows-xp) or
-later.
+To develop applications using GStreamer for Windows we recommend using
+[Windows 7](http://windows.microsoft.com/en-us/windows7/products/home)
+or later. Windows Vista may also work but it is not supported.
 
 GStreamer binaries includes C headers (`.h`) and library files (`.lib`)
 valid for any version of [Microsoft Visual
