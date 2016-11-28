@@ -27,6 +27,7 @@ libversion = '@0@.@1@.0'.format(soversion, gst_version_minor.to_int() * 100 + gs
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 cc = meson.get_compiler('c')
+cxx = meson.get_compiler('cpp')
 
 if cc.get_id() == 'msvc'
   # Ignore several spurious warnings for things gstreamer does very commonly
