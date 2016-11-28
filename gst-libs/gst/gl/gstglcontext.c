@@ -204,6 +204,7 @@ struct _GstGLContextPrivate
   /* conditions */
   GMutex render_lock;
   GCond create_cond;
+  GCond destroy_cond;
 
   gboolean created;
   gboolean alive;
@@ -275,6 +276,7 @@ gst_gl_context_init (GstGLContext * context)
   g_mutex_init (&context->priv->render_lock);
 
   g_cond_init (&context->priv->create_cond);
+  g_cond_init (&context->priv->destroy_cond);
   context->priv->created = FALSE;
 
   g_weak_ref_init (&context->priv->other_context_ref, NULL);
@@ -661,22 +663,20 @@ gst_gl_context_finalize (GObject * object)
     gst_gl_window_set_resize_callback (context->window, NULL, NULL, NULL);
     gst_gl_window_set_draw_callback (context->window, NULL, NULL, NULL);
 
+    g_mutex_lock (&context->priv->render_lock);
     if (context->priv->alive) {
       GST_INFO_OBJECT (context, "send quit gl window loop");
       gst_gl_window_quit (context->window);
 
       GST_INFO_OBJECT (context, "joining gl thread");
-      g_mutex_lock (&context->priv->render_lock);
-      if (context->priv->alive) {
-        GThread *t = context->priv->gl_thread;
-        g_mutex_unlock (&context->priv->render_lock);
-        g_thread_join (t);
-      } else {
-        g_mutex_unlock (&context->priv->render_lock);
-      }
+      while (context->priv->alive)
+        g_cond_wait (&context->priv->destroy_cond, &context->priv->render_lock);
       GST_INFO_OBJECT (context, "gl thread joined");
+
+      g_thread_unref (context->priv->gl_thread);
       context->priv->gl_thread = NULL;
     }
+    g_mutex_unlock (&context->priv->render_lock);
 
     gst_gl_window_set_close_callback (context->window, NULL, NULL, NULL);
     gst_object_unref (context->window);
@@ -695,6 +695,7 @@ gst_gl_context_finalize (GObject * object)
   g_mutex_clear (&context->priv->render_lock);
 
   g_cond_clear (&context->priv->create_cond);
+  g_cond_clear (&context->priv->destroy_cond);
 
   g_free (context->priv->gl_exts);
   g_weak_ref_clear (&context->priv->other_context_ref);
@@ -1291,6 +1292,7 @@ gst_gl_context_create_thread (GstGLContext * context)
   }
 
   context->priv->created = FALSE;
+  g_cond_signal (&context->priv->destroy_cond);
   g_mutex_unlock (&context->priv->render_lock);
 
   return NULL;
