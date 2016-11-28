@@ -1,0 +1,398 @@
+<plugins module_name="gstreamer">
+<plugin>
+  <name>coreelements</name>
+  <description>GStreamer core elements</description>
+  <filename>../../plugins/elements/.libs/libgstcoreelements.so</filename>
+  <basename>libgstcoreelements.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gstreamer</source>
+  <package>GStreamer source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>capsfilter</name>
+      <longname>CapsFilter</longname>
+      <class>Generic</class>
+      <description>Pass data without modification, limiting formats</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>concat</name>
+      <longname>Concat</longname>
+      <class>Generic</class>
+      <description>Concatenate multiple streams</description>
+      <author>Sebastian Dröge &lt;sebastian@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>downloadbuffer</name>
+      <longname>DownloadBuffer</longname>
+      <class>Generic</class>
+      <description>Download Buffer element</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>fakesink</name>
+      <longname>Fake Sink</longname>
+      <class>Sink</class>
+      <description>Black hole for data</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;, Mr. &apos;frag-me-more&apos; Vanderwingo &lt;wingo@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>fakesrc</name>
+      <longname>Fake Source</longname>
+      <class>Source</class>
+      <description>Push empty (no data) buffers around</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>fdsink</name>
+      <longname>Filedescriptor Sink</longname>
+      <class>Sink/File</class>
+      <description>Write data to a file descriptor</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>fdsrc</name>
+      <longname>Filedescriptor Source</longname>
+      <class>Source/File</class>
+      <description>Read from a file descriptor</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>filesink</name>
+      <longname>File Sink</longname>
+      <class>Sink/File</class>
+      <description>Write stream to a file</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>filesrc</name>
+      <longname>File Source</longname>
+      <class>Source/File</class>
+      <description>Read from arbitrary point in a file</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>funnel</name>
+      <longname>Funnel pipe fitting</longname>
+      <class>Generic</class>
+      <description>N-to-1 pipe fitting</description>
+      <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>identity</name>
+      <longname>Identity</longname>
+      <class>Generic</class>
+      <description>Pass data without modification</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>input-selector</name>
+      <longname>Input selector</longname>
+      <class>Generic</class>
+      <description>N-to-1 input stream selector</description>
+      <author>Julien Moutte &lt;julien@moutte.net&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>multiqueue</name>
+      <longname>MultiQueue</longname>
+      <class>Generic</class>
+      <description>Multiple data queue</description>
+      <author>Edward Hervey &lt;edward@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>output-selector</name>
+      <longname>Output selector</longname>
+      <class>Generic</class>
+      <description>1-to-N output stream selector</description>
+      <author>Stefan Kost &lt;stefan.kost@nokia.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>queue</name>
+      <longname>Queue</longname>
+      <class>Generic</class>
+      <description>Simple data queue</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>queue2</name>
+      <longname>Queue 2</longname>
+      <class>Generic</class>
+      <description>Simple data queue</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>streamiddemux</name>
+      <longname>Streamid Demux</longname>
+      <class>Generic</class>
+      <description>1-to-N output stream by stream-id</description>
+      <author>HoonHee Lee &lt;hoonhee.lee@lge.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>tee</name>
+      <longname>Tee pipe fitting</longname>
+      <class>Generic</class>
+      <description>1-to-N pipe fitting</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>typefind</name>
+      <longname>TypeFind</longname>
+      <class>Generic</class>
+      <description>Finds the media type of a stream</description>
+      <author>Benjamin Otte &lt;in7y118@public.uni-hamburg.de&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>valve</name>
+      <longname>Valve element</longname>
+      <class>Filter</class>
+      <description>Drops buffers and events or lets them through</description>
+      <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin></plugins>

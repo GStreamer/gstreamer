@@ -1,0 +1,734 @@
+<plugins module_name="gst-plugins-ugly">
+<plugin>
+  <name>a52dec</name>
+  <description>Decodes ATSC A/52 encoded audio streams</description>
+  <filename>../../ext/a52dec/.libs/libgsta52dec.so</filename>
+  <basename>libgsta52dec.so</basename>
+  <version>1.10.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>a52dec</name>
+      <longname>ATSC A/52 audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Decodes ATSC A/52 encoded audio streams</description>
+      <author>David I. Lehn &lt;dlehn@users.sourceforge.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-ac3; audio/ac3; audio/x-private1-ac3</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)interleaved, rate=(int)[ 4000, 96000 ], channels=(int)[ 1, 6 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>amrnb</name>
+  <description>Adaptive Multi-Rate Narrow-Band</description>
+  <filename>../../ext/amrnb/.libs/libgstamrnb.so</filename>
+  <basename>libgstamrnb.so</basename>
+  <version>1.10.1</version>
+  <license>unknown</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>amrnbdec</name>
+      <longname>AMR-NB audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Adaptive Multi-Rate Narrow-Band audio decoder</description>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/AMR, rate=(int)8000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)8000, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>amrnbenc</name>
+      <longname>AMR-NB audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>Adaptive Multi-Rate Narrow-Band audio encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)8000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/AMR, rate=(int)8000, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>amrwbdec</name>
+  <description>Adaptive Multi-Rate Wide-Band Decoder</description>
+  <filename>../../ext/amrwbdec/.libs/libgstamrwbdec.so</filename>
+  <basename>libgstamrwbdec.so</basename>
+  <version>1.10.1</version>
+  <license>unknown</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>amrwbdec</name>
+      <longname>AMR-WB audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Adaptive Multi-Rate Wideband audio decoder</description>
+      <author>Renato Araujo &lt;renato.filho@indt.org.br&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/AMR-WB, rate=(int)16000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)16000, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>asf</name>
+  <description>Demuxes and muxes audio and video in Microsofts ASF format</description>
+  <filename>../../gst/asfdemux/.libs/libgstasf.so</filename>
+  <basename>libgstasf.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>asfdemux</name>
+      <longname>ASF Demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demultiplexes ASF Streams</description>
+      <author>Owen Fraser-Green &lt;owen@discobabe.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-ms-asf</details>
+        </caps>
+        <caps>
+          <name>audio_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpasfdepay</name>
+      <longname>RTP ASF packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts ASF streams from RTP</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string){ application, video, audio }, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)X-ASF-PF</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-ms-asf</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtspwms</name>
+      <longname>WMS RTSP Extension</longname>
+      <class>Network/Extension/Protocol</class>
+      <description>Extends RTSP so that it can handle WMS setup</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>cdio</name>
+  <description>Read audio from audio CDs</description>
+  <filename>../../ext/cdio/.libs/libgstcdio.so</filename>
+  <basename>libgstcdio.so</basename>
+  <version>1.10.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>cdiocddasrc</name>
+      <longname>CD audio source (CDDA)</longname>
+      <class>Source/File</class>
+      <description>Read audio from CD using libcdio</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>dvdlpcmdec</name>
+  <description>Decode DVD LPCM frames into standard PCM</description>
+  <filename>../../gst/dvdlpcmdec/.libs/libgstdvdlpcmdec.so</filename>
+  <basename>libgstdvdlpcmdec.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dvdlpcmdec</name>
+      <longname>DVD LPCM Audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Decode DVD LPCM frames into standard PCM audio</description>
+      <author>Jan Schmidt &lt;jan@noraisin.net&gt;, Michael Smith &lt;msmith@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-private1-lpcm; audio/x-private2-lpcm; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 32000, 44100, 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ true, false }, mute=(boolean){ true, false }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S16BE, S24BE }, layout=(string)interleaved, rate=(int){ 32000, 44100, 48000, 96000 }, channels=(int)[ 1, 8 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>dvdread</name>
+  <description>Access a DVD with dvdread</description>
+  <filename>../../ext/dvdread/.libs/libgstdvdread.so</filename>
+  <basename>libgstdvdread.so</basename>
+  <version>1.10.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dvdreadsrc</name>
+      <longname>DVD Source</longname>
+      <class>Source/File/DVD</class>
+      <description>Access a DVD title/chapter/angle using libdvdread</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)2, systemstream=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>dvdsub</name>
+  <description>DVD subtitle parser and decoder</description>
+  <filename>../../gst/dvdsub/.libs/libgstdvdsub.so</filename>
+  <basename>libgstdvdsub.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dvdsubdec</name>
+      <longname>DVD subtitle decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>Decodes DVD subtitles into AYUV video frames</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>subpicture/x-dvd</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ AYUV, ARGB }, width=(int)720, height=(int)576, framerate=(fraction)0/1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>dvdsubparse</name>
+      <longname>DVD subtitle parser</longname>
+      <class>Codec/Parser/Subtitle</class>
+      <description>Parses and packetizes DVD subtitle streams</description>
+      <author>Mark Nauwelaerts &lt;mnauw@users.sourceforge.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>subpicture/x-dvd</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>subpicture/x-dvd, parsed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>lame</name>
+  <description>Encode MP3s with LAME</description>
+  <filename>../../ext/lame/.libs/libgstlame.so</filename>
+  <basename>libgstlame.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>lamemp3enc</name>
+      <longname>L.A.M.E. mp3 encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>High-quality free MP3 encoder</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)1; audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)2, channel-mask=(bitmask)0x0000000000000003</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)3, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>mad</name>
+  <description>mp3 decoding based on the mad library</description>
+  <filename>../../ext/mad/.libs/libgstmad.so</filename>
+  <basename>libgstmad.so</basename>
+  <version>1.10.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mad</name>
+      <longname>mad mp3 decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Uses mad code to decode mp3 streams</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ], rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S32LE, layout=(string)interleaved, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>mpeg2dec</name>
+  <description>LibMpeg2 decoder</description>
+  <filename>../../ext/mpeg2dec/.libs/libgstmpeg2dec.so</filename>
+  <basename>libgstmpeg2dec.so</basename>
+  <version>1.10.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mpeg2dec</name>
+      <longname>mpeg1 and mpeg2 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>Uses libmpeg2 to decode MPEG video streams</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], systemstream=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ YV12, I420, Y42B, Y444 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>mpg123</name>
+  <description>mp3 decoding based on the mpg123 library</description>
+  <filename>../../ext/mpg123/.libs/libgstmpg123.so</filename>
+  <basename>libgstmpg123.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mpg123audiodec</name>
+      <longname>mpg123 mp3 decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Decodes mp3 streams using the mpg123 library</description>
+      <author>Carlos Rafael Giani &lt;dv@pseudoterminal.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ], rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ], parsed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S16LE, U16LE, S32LE, U32LE, S24LE, U24LE, F32LE }, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>realmedia</name>
+  <description>RealMedia support plugins</description>
+  <filename>../../gst/realmedia/.libs/libgstrmdemux.so</filename>
+  <basename>libgstrmdemux.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>pnmsrc</name>
+      <longname>PNM packet receiver</longname>
+      <class>Source/Network</class>
+      <description>Receive data over the network via PNM</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/vnd.rn-realmedia</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rademux</name>
+      <longname>RealAudio Demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demultiplex a RealAudio file</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-pn-realaudio</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rdtdepay</name>
+      <longname>RDT packet parser</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts RealMedia from RDT packets</description>
+      <author>Lutz Mueller &lt;lutz at topfrose dot de&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rdt, media=(string)application, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)X-REAL-RDT</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/vnd.rn-realmedia</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rdtmanager</name>
+      <longname>RTP Decoder</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Accepts raw RTP and RTCP packets and sends them forward</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>recv_rtcp_sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtcp</details>
+        </caps>
+        <caps>
+          <name>recv_rtp_sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rdt</details>
+        </caps>
+        <caps>
+          <name>recv_rtp_src_%u_%u_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>application/x-rdt</details>
+        </caps>
+        <caps>
+          <name>rtcp_src_%u</name>
+          <direction>source</direction>
+          <presence>request</presence>
+          <details>application/x-rtcp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rmdemux</name>
+      <longname>RealMedia Demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demultiplex a RealMedia file into audio and video streams</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/vnd.rn-realmedia</details>
+        </caps>
+        <caps>
+          <name>audio_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtspreal</name>
+      <longname>RealMedia RTSP Extension</longname>
+      <class>Network/Extension/Protocol</class>
+      <description>Extends RTSP so that it can handle RealMedia setup</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>siddec</name>
+  <description>Uses libsidplay to decode .sid files</description>
+  <filename>../../ext/sidplay/.libs/libgstsid.so</filename>
+  <basename>libgstsid.so</basename>
+  <version>1.10.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>siddec</name>
+      <longname>Sid decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Use libsidplay to decode SID audio tunes</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-sid</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S16LE, U16LE, S8, U8 }, layout=(string)interleaved, rate=(int)[ 8000, 48000 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>twolame</name>
+  <description>Encode MP2s with TwoLAME</description>
+  <filename>../../ext/twolame/.libs/libgsttwolame.so</filename>
+  <basename>libgsttwolame.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>twolamemp2enc</name>
+      <longname>TwoLAME mp2 encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>High-quality free MP2 encoder</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ F32LE, S16LE }, layout=(string)interleaved, rate=(int){ 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)1; audio/x-raw, format=(string){ F32LE, S16LE }, layout=(string)interleaved, rate=(int){ 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)2, channel-mask=(bitmask)0x0000000000000003</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)2, rate=(int){ 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>x264</name>
+  <description>libx264-based H264 plugins</description>
+  <filename>../../ext/x264/.libs/libgstx264.so</filename>
+  <basename>libgstx264.so</basename>
+  <version>1.10.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>x264enc</name>
+      <longname>x264enc</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>H264 Encoder</description>
+      <author>Josef Zlomek &lt;josef.zlomek@itonis.tv&gt;, Mark Nauwelaerts &lt;mnauw@users.sf.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YV12, Y42B, Y444, NV12, I420_10LE, I422_10LE, Y444_10LE }, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 16, 2147483647 ], height=(int)[ 16, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-h264, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], stream-format=(string){ avc, byte-stream }, alignment=(string)au, profile=(string){ high-4:4:4, high-4:2:2, high-10, high, main, baseline, constrained-baseline, high-4:4:4-intra, high-4:2:2-intra, high-10-intra }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>xingmux</name>
+  <description>Add XING tags to mpeg audio files</description>
+  <filename>../../gst/xingmux/.libs/libgstxingmux.so</filename>
+  <basename>libgstxingmux.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>xingmux</name>
+      <longname>MP3 Xing muxer</longname>
+      <class>Formatter/Muxer/Metadata</class>
+      <description>Adds a Xing header to the beginning of a VBR MP3 file</description>
+      <author>Christophe Fergeau &lt;teuf@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin></plugins>

@@ -1,0 +1,1745 @@
+<plugins module_name="gst-plugins-base">
+<plugin>
+  <name>adder</name>
+  <description>Adds multiple streams</description>
+  <filename>../../gst/adder/.libs/libgstadder.so</filename>
+  <basename>libgstadder.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>adder</name>
+      <longname>Adder</longname>
+      <class>Generic/Audio</class>
+      <description>Add N audio channels together</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-raw, format=(string){ S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string){ interleaved, non-interleaved }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string){ interleaved, non-interleaved }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>alsa</name>
+  <description>ALSA plugin library</description>
+  <filename>../../ext/alsa/.libs/libgstalsa.so</filename>
+  <basename>libgstalsa.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>alsamidisrc</name>
+      <longname>AlsaMidi Source</longname>
+      <class>Source</class>
+      <description>Push ALSA MIDI sequencer events around</description>
+      <author>Antonio Ospite &lt;ao2@ao2.it&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-midi-event</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>alsasink</name>
+      <longname>Audio sink (ALSA)</longname>
+      <class>Sink/Audio</class>
+      <description>Output to a sound card via ALSA</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-ac3, framed=(boolean)true; audio/x-eac3, framed=(boolean)true; audio/x-dts, framed=(boolean)true, block-size=(int){ 512, 1024, 2048 }; audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)[ 1, 2 ], parsed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>alsasrc</name>
+      <longname>Audio source (ALSA)</longname>
+      <class>Source/Audio</class>
+      <description>Read from a sound card via ALSA</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>app</name>
+  <description>Elements used to communicate with applications</description>
+  <filename>../../gst/app/.libs/libgstapp.so</filename>
+  <basename>libgstapp.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>appsink</name>
+      <longname>AppSink</longname>
+      <class>Generic/Sink</class>
+      <description>Allow the application to get access to raw buffer</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>appsrc</name>
+      <longname>AppSrc</longname>
+      <class>Generic/Source</class>
+      <description>Allow the application to feed buffers to a pipeline</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>audioconvert</name>
+  <description>Convert audio to different formats</description>
+  <filename>../../gst/audioconvert/.libs/libgstaudioconvert.so</filename>
+  <basename>libgstaudioconvert.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>audioconvert</name>
+      <longname>Audio converter</longname>
+      <class>Filter/Converter/Audio</class>
+      <description>Convert audio to different formats</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>audiorate</name>
+  <description>Adjusts audio frames</description>
+  <filename>../../gst/audiorate/.libs/libgstaudiorate.so</filename>
+  <basename>libgstaudiorate.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>audiorate</name>
+      <longname>Audio rate adjuster</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Drops/duplicates/adjusts timestamps on audio samples to make a perfect stream</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string){ interleaved, non-interleaved }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string){ interleaved, non-interleaved }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>audioresample</name>
+  <description>Resamples audio</description>
+  <filename>../../gst/audioresample/.libs/libgstaudioresample.so</filename>
+  <basename>libgstaudioresample.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>audioresample</name>
+      <longname>Audio resampler</longname>
+      <class>Filter/Converter/Audio</class>
+      <description>Resamples audio</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string){ interleaved, non-interleaved }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string){ interleaved, non-interleaved }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>audiotestsrc</name>
+  <description>Creates audio test signals of given frequency and volume</description>
+  <filename>../../gst/audiotestsrc/.libs/libgstaudiotestsrc.so</filename>
+  <basename>libgstaudiotestsrc.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>audiotestsrc</name>
+      <longname>Audio test source</longname>
+      <class>Source/Audio</class>
+      <description>Creates audio test signals of given frequency and volume</description>
+      <author>Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE, S8, U8 }, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>cdparanoia</name>
+  <description>Read audio from CD in paranoid mode</description>
+  <filename>../../ext/cdparanoia/.libs/libgstcdparanoia.so</filename>
+  <basename>libgstcdparanoia.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>cdparanoiasrc</name>
+      <longname>CD Audio (cdda) Source, Paranoia IV</longname>
+      <class>Source/File</class>
+      <description>Read audio from CD in paranoid mode</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>encoding</name>
+  <description>various encoding-related elements</description>
+  <filename>../../gst/encoding/.libs/libgstencodebin.so</filename>
+  <basename>libgstencodebin.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>encodebin</name>
+      <longname>Encoder Bin</longname>
+      <class>Generic/Bin/Encoder</class>
+      <description>Convenience encoding/muxing element</description>
+      <author>Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>private_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>gio</name>
+  <description>GIO elements</description>
+  <filename>../../gst/gio/.libs/libgstgio.so</filename>
+  <basename>libgstgio.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>giosink</name>
+      <longname>GIO sink</longname>
+      <class>Sink/File</class>
+      <description>Write to any GIO-supported location</description>
+      <author>René Stadler &lt;mail@renestadler.de&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>giosrc</name>
+      <longname>GIO source</longname>
+      <class>Source/File</class>
+      <description>Read from any GIO-supported location</description>
+      <author>René Stadler &lt;mail@renestadler.de&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>giostreamsink</name>
+      <longname>GIO stream sink</longname>
+      <class>Sink</class>
+      <description>Write to any GIO stream</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>giostreamsrc</name>
+      <longname>GIO stream source</longname>
+      <class>Source</class>
+      <description>Read from any GIO stream</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>ivorbisdec</name>
+  <description>Vorbis Tremor decoder</description>
+  <filename>../../ext/vorbis/.libs/libgstivorbisdec.so</filename>
+  <basename>libgstivorbisdec.so</basename>
+  <version>1.4.0</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>ivorbisdec</name>
+      <longname>Vorbis audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>decode raw vorbis streams to integer audio</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;, Chris Lord &lt;chris@openedhand.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-vorbis</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 6 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>libvisual</name>
+  <description>libvisual visualization plugins</description>
+  <filename>../../ext/libvisual/.libs/libgstlibvisual.so</filename>
+  <basename>libgstlibvisual.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>libvisual_bumpscope</name>
+      <longname>libvisual Bumpscope plugin plugin v.0.0.1</longname>
+      <class>Visualization</class>
+      <description>Bumpscope visual plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, channels=(int){ 1, 2 }, rate=(int){ 8000, 11250, 22500, 32000, 44100, 48000, 96000 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>libvisual_corona</name>
+      <longname>libvisual libvisual corona plugin plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>Libvisual corona plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, channels=(int){ 1, 2 }, rate=(int){ 8000, 11250, 22500, 32000, 44100, 48000, 96000 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>libvisual_infinite</name>
+      <longname>libvisual infinite plugin plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>Infinite visual plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, channels=(int){ 1, 2 }, rate=(int){ 8000, 11250, 22500, 32000, 44100, 48000, 96000 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>libvisual_jakdaw</name>
+      <longname>libvisual Jakdaw plugin plugin v.0.0.1</longname>
+      <class>Visualization</class>
+      <description>jakdaw visual plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, channels=(int){ 1, 2 }, rate=(int){ 8000, 11250, 22500, 32000, 44100, 48000, 96000 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>libvisual_jess</name>
+      <longname>libvisual jess plugin plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>Jess visual plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, channels=(int){ 1, 2 }, rate=(int){ 8000, 11250, 22500, 32000, 44100, 48000, 96000 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>libvisual_lv_analyzer</name>
+      <longname>libvisual libvisual analyzer plugin v.1.0</longname>
+      <class>Visualization</class>
+      <description>Libvisual analyzer plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, channels=(int){ 1, 2 }, rate=(int){ 8000, 11250, 22500, 32000, 44100, 48000, 96000 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>libvisual_lv_scope</name>
+      <longname>libvisual libvisual scope plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>Libvisual scope plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, channels=(int){ 1, 2 }, rate=(int){ 8000, 11250, 22500, 32000, 44100, 48000, 96000 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>libvisual_oinksie</name>
+      <longname>libvisual oinksie plugin plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>Libvisual Oinksie visual plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, channels=(int){ 1, 2 }, rate=(int){ 8000, 11250, 22500, 32000, 44100, 48000, 96000 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>ogg</name>
+  <description>ogg stream manipulation (info about ogg: http://xiph.org)</description>
+  <filename>../../ext/ogg/.libs/libgstogg.so</filename>
+  <basename>libgstogg.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>oggaviparse</name>
+      <longname>Ogg AVI parser</longname>
+      <class>Codec/Parser</class>
+      <description>parse an ogg avi stream into pages (info about ogg: http://xiph.org)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-ogg-avi</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-vorbis</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>oggdemux</name>
+      <longname>Ogg demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>demux ogg streams (info about ogg: http://xiph.org)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/ogg; audio/ogg; video/ogg; application/kate</details>
+        </caps>
+        <caps>
+          <name>src_%08x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>oggmux</name>
+      <longname>Ogg muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>mux ogg streams (info about ogg: http://xiph.org)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-vorbis; audio/x-flac; audio/x-speex; audio/x-celt; application/x-ogm-audio; audio/x-opus</details>
+        </caps>
+        <caps>
+          <name>subtitle_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>text/x-cmml, encoded=(boolean)true; subtitle/x-kate; application/x-kate</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/x-theora; application/x-ogm-video; video/x-dirac; video/x-smoke; video/x-vp8; video/x-daala</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/ogg; audio/ogg; video/ogg</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>oggparse</name>
+      <longname>Ogg parser</longname>
+      <class>Codec/Parser</class>
+      <description>parse ogg streams into pages (info about ogg: http://xiph.org)</description>
+      <author>Michael Smith &lt;msmith@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/ogg</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/ogg</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ogmaudioparse</name>
+      <longname>OGM audio stream parser</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>parse an OGM audio header and stream</description>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-ogm-audio</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/ms-gsm; audio/mpeg, mpegversion=(int)1, layer=(int)3; audio/mpeg, mpegversion=(int)1, layer=(int)2; audio/x-raw, format=(string){ S8, U8, S16LE, U16LE, S24LE, U24LE, S32LE, U32LE }, layout=(string)interleaved; audio/x-vorbis; audio/x-ac3; audio/x-dts; audio/mpeg, mpegversion=(int)4; audio/x-alaw; audio/x-mulaw; audio/x-wms, bitrate=(int)[ 0, 2147483647 ], block_align=(int)[ 1, 2147483647 ]; audio/x-adpcm, layout=(string)microsoft, block_align=(int)[ 1, 2147483647 ]; audio/x-adpcm, layout=(string)dvi, block_align=(int)[ 1, 2147483647 ]; audio/x-truespeech; audio/x-wma, wmaversion=(int)1, bitrate=(int)[ 0, 2147483647 ], block_align=(int)[ 1, 2147483647 ]; audio/x-wma, wmaversion=(int)2, bitrate=(int)[ 0, 2147483647 ], block_align=(int)[ 1, 2147483647 ]; audio/x-wma, wmaversion=(int)3, bitrate=(int)[ 0, 2147483647 ], block_align=(int)[ 1, 2147483647 ]; audio/x-vnd.sony.atrac3; audio/x-raw, format=(string){ F32LE, F64LE }, layout=(string)interleaved; audio/x-voxware, voxwaretype=(int)117; audio/x-adpcm, layout=(string)dk4; audio/x-adpcm, layout=(string)dk3; audio/x-adpcm, layout=(string)dvi; audio/AMR; audio/AMR-WB; audio/x-siren; application/x-ogg-avi</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ogmtextparse</name>
+      <longname>OGM text stream parser</longname>
+      <class>Codec/Decoder/Subtitle</class>
+      <description>parse an OGM text header and stream</description>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-ogm-text</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>text/x-raw, format=(string)utf8</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ogmvideoparse</name>
+      <longname>OGM video stream parser</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>parse an OGM video header and stream</description>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-ogm-video</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-asus, asusversion=(int)1, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-asus, asusversion=(int)2, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-cirrus-logic-accupak, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-camstudio, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-compressed-yuv, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-raw, format=(string){ RGB8P, BGR, BGRx }, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-divx, divxversion=(int)3, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-divx, divxversion=(int)4, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-truemotion, trueversion=(int)1, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-dv, systemstream=(boolean)false, dvversion=(int)25, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-dv, systemstream=(boolean)false, dvversion=(int)50, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-divx, divxversion=(int)5, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-flash-video, flvversion=(int)1, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-vp6-flash, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h263, variant=(string)itu, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h263, variant=(string)lucent, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h264, variant=(string)itu, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-huffyuv, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-intel-h263, variant=(string)intel, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-raw, format=(string)I420, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-indeo, indeoversion=(int)3, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-indeo, indeoversion=(int)4, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-indeo, indeoversion=(int)5, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h263, variant=(string)lead, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h264, variant=(string)lead, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h263, variant=(string)microsoft, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; image/jpeg, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-msmpeg, msmpegversion=(int)42, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-msmpeg, msmpegversion=(int)43, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/mpeg, systemstream=(boolean)false, mpegversion=(int)1, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/mpeg, systemstream=(boolean)false, mpegversion=(int)2, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-msmpeg, msmpegversion=(int)41, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-mszh, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; image/png, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-rle, layout=(string)microsoft, depth=(int)[ 1, 64 ], framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-indeo, indeoversion=(int)2, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/sp5x, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-truemotion, trueversion=(int)2, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-camtasia, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-ultimotion, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-raw, format=(string)UYVY, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-ati-vcr, vcrversion=(int)1, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-ati-vcr, vcrversion=(int)2, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h263, variant=(string)vdolive, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h263, variant=(string)vivo, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-vmnc, version=(int)1, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-vp3, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h264, variant=(string)videosoft, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-wmv, wmvversion=(int)1, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-wmv, wmvversion=(int)2, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-wmv, wmvversion=(int)3, format=(string)WMV3, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-xan, wcversion=(int)4, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-raw, format=(string)YUY2, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-raw, format=(string)YVU9, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-zlib, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-cinepak, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h264, variant=(string)itu, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-msvideocodec, msvideoversion=(int)1, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-h263, variant=(string)xirlink, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-dirac, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-ffv, ffvversion=(int)1, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-kmvc, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-vp5, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-vp6, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-vp6-flash, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-vp7, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-vp8, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-mimic, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-apple-video, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-theora, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-fraps, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-aasc, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-raw, format=(string)YV12, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-loco, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-zmbv, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-raw, format=(string)v210, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-raw, format=(string)r210, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>opus</name>
+  <description>OPUS plugin library</description>
+  <filename>../../ext/opus/.libs/libgstopus.so</filename>
+  <basename>libgstopus.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>opusdec</name>
+      <longname>Opus audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>decode opus streams to audio</description>
+      <author>Vincent Penquerc&apos;h &lt;vincent.penquerch@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-opus, channel-mapping-family=(int)0; audio/x-opus, channel-mapping-family=(int)[ 1, 255 ], channels=(int)[ 1, 255 ], stream-count=(int)[ 1, 255 ], coupled-count=(int)[ 0, 255 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 48000, 24000, 16000, 12000, 8000 }, channels=(int)[ 1, 8 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>opusenc</name>
+      <longname>Opus audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>Encodes audio in Opus format</description>
+      <author>Vincent Penquerc&apos;h &lt;vincent.penquerch@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)48000, channels=(int)[ 1, 8 ]; audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int){ 8000, 12000, 16000, 24000 }, channels=(int)[ 1, 8 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-opus</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>pango</name>
+  <description>Pango-based text rendering and overlay</description>
+  <filename>../../ext/pango/.libs/libgstpango.so</filename>
+  <basename>libgstpango.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>clockoverlay</name>
+      <longname>Clock overlay</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Overlays the current clock time on a video stream</description>
+      <author>Tim-Philipp Müller &lt;tim@centricular.net&gt;</author>
+      <pads>
+        <caps>
+          <name>video_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(ANY), format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(ANY), format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>textoverlay</name>
+      <longname>Text overlay</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Adds text strings on top of a video buffer</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;, Zeeshan Ali &lt;zeeshan.ali@nokia.com&gt;</author>
+      <pads>
+        <caps>
+          <name>text_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>text/x-raw, format=(string){ pango-markup, utf8 }</details>
+        </caps>
+        <caps>
+          <name>video_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(ANY), format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(ANY), format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>textrender</name>
+      <longname>Text renderer</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Renders a text string to an image bitmap</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;, GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>text/x-raw, format=(string){ pango-markup, utf8 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ AYUV, ARGB }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>timeoverlay</name>
+      <longname>Time overlay</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Overlays buffer time stamps on a video stream</description>
+      <author>Tim-Philipp Müller &lt;tim@centricular.net&gt;</author>
+      <pads>
+        <caps>
+          <name>video_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(ANY), format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(ANY), format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>playback</name>
+  <description>various playback elements</description>
+  <filename>../../gst/playback/.libs/libgstplayback.so</filename>
+  <basename>libgstplayback.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>decodebin</name>
+      <longname>Decoder Bin</longname>
+      <class>Generic/Bin/Decoder</class>
+      <description>Autoplug and decode to raw media</description>
+      <author>Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>decodebin3</name>
+      <longname>Decoder Bin 3</longname>
+      <class>Generic/Bin/Decoder</class>
+      <description>Autoplug and decode to raw media</description>
+      <author>Edward Hervey &lt;edward@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>audio_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>text_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>parsebin</name>
+      <longname>Parse Bin</longname>
+      <class>Generic/Bin/Parser</class>
+      <description>Parse and de-multiplex to elementary stream</description>
+      <author>Jan Schmidt &lt;jan@centricular.com&gt;, Edward Hervey &lt;edward@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>playbin</name>
+      <longname>Player Bin 2</longname>
+      <class>Generic/Bin/Player</class>
+      <description>Autoplug and play media from an uri</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+      </pads>
+    </element>
+    <element>
+      <name>playbin3</name>
+      <longname>Player Bin 3</longname>
+      <class>Generic/Bin/Player</class>
+      <description>Autoplug and play media from an uri</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+      </pads>
+    </element>
+    <element>
+      <name>playsink</name>
+      <longname>Player Sink</longname>
+      <class>Generic/Bin/Sink</class>
+      <description>Convenience sink for multiple streams</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_raw_sink</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>audio_sink</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>text_sink</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_raw_sink</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_sink</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>streamsynchronizer</name>
+      <longname>Stream Synchronizer</longname>
+      <class>Generic</class>
+      <description>Synchronizes a group of streams to have equal durations and starting points</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>subtitleoverlay</name>
+      <longname>Subtitle Overlay</longname>
+      <class>Video/Overlay/Subtitle</class>
+      <description>Overlays a video stream with subtitles</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>subtitle_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>uridecodebin</name>
+      <longname>URI Decoder</longname>
+      <class>Generic/Bin/Decoder</class>
+      <description>Autoplug and decode an URI to raw media</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>urisourcebin</name>
+      <longname>URI reader</longname>
+      <class>Generic/Bin/Source</class>
+      <description>Download and buffer a URI as needed</description>
+      <author>Jan Schmidt &lt;jan@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>subparse</name>
+  <description>Subtitle parsing</description>
+  <filename>../../gst/subparse/.libs/libgstsubparse.so</filename>
+  <basename>libgstsubparse.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>ssaparse</name>
+      <longname>SSA Subtitle Parser</longname>
+      <class>Codec/Parser/Subtitle</class>
+      <description>Parses SSA subtitle streams</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-ssa; application/x-ass</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>text/x-raw, format=(string)pango-markup</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>subparse</name>
+      <longname>Subtitle parser</longname>
+      <class>Codec/Parser/Subtitle</class>
+      <description>Parses subtitle (.sub) files into text streams</description>
+      <author>Gustavo J. A. M. Carneiro &lt;gjc@inescporto.pt&gt;, GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-subtitle; application/x-subtitle-sami; application/x-subtitle-tmplayer; application/x-subtitle-mpl2; application/x-subtitle-dks; application/x-subtitle-qttext; application/x-subtitle-lrc; application/x-subtitle-vtt</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>text/x-raw, format=(string){ pango-markup, utf8 }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>tcp</name>
+  <description>transfer data over the network via TCP</description>
+  <filename>../../gst/tcp/.libs/libgsttcp.so</filename>
+  <basename>libgsttcp.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>multifdsink</name>
+      <longname>Multi filedescriptor sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data to multiple filedescriptors</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>multisocketsink</name>
+      <longname>Multi socket sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data to multiple sockets</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>socketsrc</name>
+      <longname>socket source</longname>
+      <class>Source/Network</class>
+      <description>Receive data from a socket</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, William Manley &lt;will@williammanley.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>tcpclientsink</name>
+      <longname>TCP client sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data as a client over the network via TCP</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>tcpclientsrc</name>
+      <longname>TCP client source</longname>
+      <class>Source/Network</class>
+      <description>Receive data as a client over the network via TCP</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>tcpserversink</name>
+      <longname>TCP server sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data as a server over the network via TCP</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>tcpserversrc</name>
+      <longname>TCP server source</longname>
+      <class>Source/Network</class>
+      <description>Receive data as a server over the network via TCP</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>theora</name>
+  <description>Theora plugin library</description>
+  <filename>../../ext/theora/.libs/libgsttheora.so</filename>
+  <basename>libgsttheora.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>theoradec</name>
+      <longname>Theora video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>decode raw theora streams to raw YUV video</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-theora</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, Y42B, Y444 }, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>theoraenc</name>
+      <longname>Theora video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>encode raw YUV video to a theora stream</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, Y42B, Y444 }, framerate=(fraction)[ 1/2147483647, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-theora, framerate=(fraction)[ 1/2147483647, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>theoraparse</name>
+      <longname>Theora video parser</longname>
+      <class>Codec/Parser/Video</class>
+      <description>parse raw theora streams</description>
+      <author>Andy Wingo &lt;wingo@pobox.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-theora</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-theora</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>typefindfunctions</name>
+  <description>default typefind functions</description>
+  <filename>../../gst/typefind/.libs/libgsttypefindfunctions.so</filename>
+  <basename>libgsttypefindfunctions.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+  </elements>
+</plugin><plugin>
+  <name>videoconvert</name>
+  <description>Colorspace conversion</description>
+  <filename>../../gst/videoconvert/.libs/libgstvideoconvert.so</filename>
+  <basename>libgstvideoconvert.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>videoconvert</name>
+      <longname>Colorspace converter</longname>
+      <class>Filter/Converter/Video</class>
+      <description>Converts video from one colorspace to another</description>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(ANY), format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(ANY), format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>videorate</name>
+  <description>Adjusts video frames</description>
+  <filename>../../gst/videorate/.libs/libgstvideorate.so</filename>
+  <basename>libgstvideorate.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>videorate</name>
+      <longname>Video rate adjuster</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Drops/duplicates/adjusts timestamps on video frames to make a perfect stream</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw(ANY); video/x-bayer(ANY); image/jpeg(ANY); image/png(ANY)</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw(ANY); video/x-bayer(ANY); image/jpeg(ANY); image/png(ANY)</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>videoscale</name>
+  <description>Resizes video</description>
+  <filename>../../gst/videoscale/.libs/libgstvideoscale.so</filename>
+  <basename>libgstvideoscale.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>videoscale</name>
+      <longname>Video scaler</longname>
+      <class>Filter/Converter/Video/Scaler</class>
+      <description>Resizes video</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(ANY), format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(ANY), format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>videotestsrc</name>
+  <description>Creates a test video stream</description>
+  <filename>../../gst/videotestsrc/.libs/libgstvideotestsrc.so</filename>
+  <basename>libgstvideotestsrc.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>videotestsrc</name>
+      <longname>Video test source</longname>
+      <class>Source/Video</class>
+      <description>Creates a test video stream</description>
+      <author>David A. Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, NV16, NV61, NV24, GRAY8, GRAY16_BE, GRAY16_LE, v308, IYU2, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE, Y444_10LE, Y444_10BE, GBR, GBR_10LE, GBR_10BE, NV12_64Z32, A420_10LE, A420_10BE, A422_10LE, A422_10BE, A444_10LE, A444_10BE, P010_10LE, P010_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-bayer, format=(string){ bggr, rggb, grbg, gbrg }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>volume</name>
+  <description>plugin for controlling audio volume</description>
+  <filename>../../gst/volume/.libs/libgstvolume.so</filename>
+  <basename>libgstvolume.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>volume</name>
+      <longname>Volume</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Set volume on audio/raw streams</description>
+      <author>Andy Wingo &lt;wingo@pobox.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ F32LE, F64LE, S8, S16LE, S24LE, S32LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ F32LE, F64LE, S8, S16LE, S24LE, S32LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>vorbis</name>
+  <description>Vorbis plugin library</description>
+  <filename>../../ext/vorbis/.libs/libgstvorbis.so</filename>
+  <basename>libgstvorbis.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>vorbisdec</name>
+      <longname>Vorbis audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>decode raw vorbis streams to float audio</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;, Chris Lord &lt;chris@openedhand.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-vorbis</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 256 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>vorbisenc</name>
+      <longname>Vorbis audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>Encodes audio in Vorbis format</description>
+      <author>Monty &lt;monty@xiph.org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)interleaved, rate=(int)[ 1, 200000 ], channels=(int)1; audio/x-raw, format=(string)F32LE, layout=(string)interleaved, rate=(int)[ 1, 200000 ], channels=(int)2, channel-mask=(bitmask)0x0000000000000003; audio/x-raw, format=(string)F32LE, layout=(string)interleaved, rate=(int)[ 1, 200000 ], channels=(int)3, channel-mask=(bitmask)0x0000000000000007; audio/x-raw, format=(string)F32LE, layout=(string)interleaved, rate=(int)[ 1, 200000 ], channels=(int)4, channel-mask=(bitmask)0x0000000000000033; audio/x-raw, format=(string)F32LE, layout=(string)interleaved, rate=(int)[ 1, 200000 ], channels=(int)5, channel-mask=(bitmask)0x0000000000000037; audio/x-raw, format=(string)F32LE, layout=(string)interleaved, rate=(int)[ 1, 200000 ], channels=(int)6, channel-mask=(bitmask)0x000000000000003f; audio/x-raw, format=(string)F32LE, layout=(string)interleaved, rate=(int)[ 1, 200000 ], channels=(int)7, channel-mask=(bitmask)0x0000000000000d0f; audio/x-raw, format=(string)F32LE, layout=(string)interleaved, rate=(int)[ 1, 200000 ], channels=(int)8, channel-mask=(bitmask)0x0000000000000c3f; audio/x-raw, format=(string)F32LE, layout=(string)interleaved, rate=(int)[ 1, 200000 ], channels=(int)[ 9, 255 ], channel-mask=(bitmask)0x0000000000000000</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-vorbis, rate=(int)[ 1, 200000 ], channels=(int)[ 1, 255 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>vorbisparse</name>
+      <longname>VorbisParse</longname>
+      <class>Codec/Parser/Audio</class>
+      <description>parse raw vorbis streams</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-vorbis</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-vorbis</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>vorbistag</name>
+      <longname>VorbisTag</longname>
+      <class>Formatter/Metadata</class>
+      <description>Retags vorbis streams</description>
+      <author>James Livingston &lt;doclivingston@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-vorbis</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-vorbis</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>ximagesink</name>
+  <description>X11 video output element based on standard Xlib calls</description>
+  <filename>../../sys/ximage/.libs/libgstximagesink.so</filename>
+  <basename>libgstximagesink.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>ximagesink</name>
+      <longname>Video sink</longname>
+      <class>Sink/Video</class>
+      <description>A standard X based videosink</description>
+      <author>Julien Moutte &lt;julien@moutte.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin><plugin>
+  <name>xvimagesink</name>
+  <description>XFree86 video output plugin using Xv extension</description>
+  <filename>../../sys/xvimage/.libs/libgstxvimagesink.so</filename>
+  <basename>libgstxvimagesink.so</basename>
+  <version>1.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>xvimagesink</name>
+      <longname>Video sink</longname>
+      <class>Sink/Video</class>
+      <description>A Xv based videosink</description>
+      <author>Julien Moutte &lt;julien@moutte.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin></plugins>
