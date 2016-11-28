@@ -124,6 +124,9 @@ static void gst_avi_demux_get_buffer_info (GstAviDemux * avi,
 static void gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf);
 static void gst_avi_demux_parse_strd (GstAviDemux * avi, GstBuffer * buf);
 
+static void parse_tag_value (GstAviDemux * avi, GstTagList * taglist,
+    const gchar * type, guint8 * ptr, guint tsize);
+
 /* GObject methods */
 
 #define gst_avi_demux_parent_class parent_class
@@ -2211,16 +2214,19 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
         g_free (stream->name);
 
         gst_buffer_map (sub, &map, GST_MAP_READ);
-        stream->name = g_strndup ((gchar *) map.data, map.size);
-        gst_buffer_unmap (sub, &map);
-        gst_buffer_unref (sub);
-        sub = NULL;
 
         if (avi->globaltags == NULL)
           avi->globaltags = gst_tag_list_new_empty ();
-        gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_REPLACE,
-            GST_TAG_TITLE, stream->name, NULL);
-        GST_DEBUG_OBJECT (avi, "stream name: %s", stream->name);
+        parse_tag_value (avi, avi->globaltags, GST_TAG_TITLE,
+            map.data, map.size);
+
+        if (gst_tag_list_get_string (avi->globaltags, GST_TAG_TITLE,
+                &stream->name))
+          GST_DEBUG_OBJECT (avi, "stream name: %s", stream->name);
+
+        gst_buffer_unmap (sub, &map);
+        gst_buffer_unref (sub);
+        sub = NULL;
         break;
       case GST_RIFF_IDIT:
         gst_avi_demux_parse_idit (avi, sub);
@@ -3804,8 +3810,9 @@ gst_avi_demux_parse_strd (GstAviDemux * avi, GstBuffer * buf)
           avi->globaltags = gst_tag_list_new_empty ();
 
         gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_APPEND,
-            GST_TAG_DEVICE_MANUFACTURER, "FUJIFILM",
-            GST_TAG_DEVICE_MODEL, ptr, NULL);
+            GST_TAG_DEVICE_MANUFACTURER, "FUJIFILM", NULL);
+        parse_tag_value (avi, avi->globaltags, GST_TAG_DEVICE_MODEL, ptr,
+            sub_size);
 
         while (ptr[sub_size] == '\0' && sub_size < left)
           sub_size++;
