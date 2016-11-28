@@ -227,7 +227,7 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
-  templ_caps = gst_decklink_mode_get_template_caps ();
+  templ_caps = gst_decklink_mode_get_template_caps (FALSE);
   templ_caps = gst_caps_make_writable (templ_caps);
   /* For output we support any framerate and only really care about timestamps */
   gst_caps_map_in_place (templ_caps, reset_framerate, NULL);
@@ -405,17 +405,17 @@ gst_decklink_video_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 
   if (self->mode == GST_DECKLINK_MODE_AUTO
       && self->video_format == GST_DECKLINK_VIDEO_FORMAT_AUTO)
-    mode_caps = gst_decklink_mode_get_template_caps ();
+    mode_caps = gst_decklink_mode_get_template_caps (FALSE);
   else if (self->video_format == GST_DECKLINK_VIDEO_FORMAT_AUTO)
-    mode_caps = gst_decklink_mode_get_caps_all_formats (self->mode);
+    mode_caps = gst_decklink_mode_get_caps_all_formats (self->mode, FALSE);
   else if (self->mode == GST_DECKLINK_MODE_AUTO)
     mode_caps =
         gst_decklink_pixel_format_get_caps (gst_decklink_pixel_format_from_type
-        (self->video_format));
+        (self->video_format), FALSE);
   else
     mode_caps =
         gst_decklink_mode_get_caps (self->mode,
-        gst_decklink_pixel_format_from_type (self->video_format));
+        gst_decklink_pixel_format_from_type (self->video_format), FALSE);
   mode_caps = gst_caps_make_writable (mode_caps);
   /* For output we support any framerate and only really care about timestamps */
   gst_caps_map_in_place (mode_caps, reset_framerate, NULL);

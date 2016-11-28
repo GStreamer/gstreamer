@@ -160,8 +160,8 @@ struct _GstDecklinkMode {
 const GstDecklinkMode * gst_decklink_get_mode (GstDecklinkModeEnum e);
 const GstDecklinkModeEnum gst_decklink_get_mode_enum_from_bmd (BMDDisplayMode mode);
 const BMDVideoConnection gst_decklink_get_connection (GstDecklinkConnectionEnum e);
-GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDPixelFormat f);
-GstCaps * gst_decklink_mode_get_template_caps (void);
+GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDPixelFormat f, gboolean input);
+GstCaps * gst_decklink_mode_get_template_caps (gboolean input);
 
 typedef struct _GstDecklinkOutput GstDecklinkOutput;
 struct _GstDecklinkOutput {
@@ -227,7 +227,7 @@ void                gst_decklink_release_nth_input (gint n, GstElement * src, gb
 
 const GstDecklinkMode * gst_decklink_find_mode_for_caps (GstCaps * caps);
 const GstDecklinkMode * gst_decklink_find_mode_and_format_for_caps (GstCaps * caps, BMDPixelFormat * format);
-GstCaps * gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e);
-GstCaps * gst_decklink_pixel_format_get_caps (BMDPixelFormat f);
+GstCaps * gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e, gboolean input);
+GstCaps * gst_decklink_pixel_format_get_caps (BMDPixelFormat f, gboolean input);
 
 #endif

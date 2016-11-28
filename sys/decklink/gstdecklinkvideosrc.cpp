@@ -203,7 +203,7 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           DEFAULT_DROP_NO_SIGNAL_FRAMES,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  templ_caps = gst_decklink_mode_get_template_caps ();
+  templ_caps = gst_decklink_mode_get_template_caps (TRUE);
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
   gst_caps_unref (templ_caps);
@@ -473,7 +473,7 @@ gst_decklink_video_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   format = self->caps_format;
   g_mutex_unlock (&self->lock);
 
-  mode_caps = gst_decklink_mode_get_caps (mode, format);
+  mode_caps = gst_decklink_mode_get_caps (mode, format, TRUE);
 
   if (filter) {
     caps =
@@ -703,6 +703,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   CaptureFrame *f;
   GstCaps *caps;
   gboolean caps_changed = FALSE;
+  const GstDecklinkMode *mode;
 
   g_mutex_lock (&self->lock);
   while (g_queue_is_empty (&self->current_frames) && !self->flushing) {
@@ -755,7 +756,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
   g_mutex_unlock (&self->lock);
   if (caps_changed) {
-    caps = gst_decklink_mode_get_caps (f->mode, f->format);
+    caps = gst_decklink_mode_get_caps (f->mode, f->format, TRUE);
     gst_video_info_from_caps (&self->info, caps);
     gst_base_src_set_caps (GST_BASE_SRC_CAST (bsrc), caps);
     gst_element_post_message (GST_ELEMENT_CAST (self),
@@ -798,6 +799,10 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   GST_BUFFER_TIMESTAMP (*buffer) = f->timestamp;
   GST_BUFFER_DURATION (*buffer) = f->duration;
   gst_buffer_add_video_time_code_meta (*buffer, f->tc);
+
+  mode = gst_decklink_get_mode (self->mode);
+  if (mode->interlaced && mode->tff)
+    GST_BUFFER_FLAG_SET (*buffer, GST_VIDEO_BUFFER_FLAG_TFF | GST_VIDEO_BUFFER_FLAG_INTERLACED);
 
   GST_DEBUG_OBJECT (self,
       "Outputting buffer %p with timestamp %" GST_TIME_FORMAT " and duration %"

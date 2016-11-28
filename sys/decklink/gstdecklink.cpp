@@ -194,8 +194,8 @@ gst_decklink_audio_connection_get_type (void)
 
 #define NTSC 10, 11, false, "bt601"
 #define PAL 12, 11, true, "bt601"
-#define HD 1, 1, false, "bt709"
-#define UHD 1, 1, false, "bt2020"
+#define HD 1, 1, true, "bt709"
+#define UHD 1, 1, true, "bt2020"
 
 static const GstDecklinkMode modes[] = {
   {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC},     // default is ntsc
@@ -467,7 +467,7 @@ gst_decklink_caps_get_pixel_format (GstCaps * caps, BMDPixelFormat * format)
 }
 
 static GstStructure *
-gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f)
+gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f, gboolean input)
 {
   const GstDecklinkMode *mode = &modes[e];
   GstStructure *s = gst_structure_new ("video/x-raw",
@@ -477,6 +477,13 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f)
       "interlace-mode", G_TYPE_STRING,
       mode->interlaced ? "interleaved" : "progressive",
       "framerate", GST_TYPE_FRACTION, mode->fps_n, mode->fps_d, NULL);
+
+  if (input && mode->interlaced) {
+    if (mode->tff)
+      gst_structure_set (s, "field-order", G_TYPE_STRING, "top-field-first", NULL);
+    else
+      gst_structure_set (s, "field-order", G_TYPE_STRING, "bottom-field-first", NULL);
+  }
 
   switch (f) {
     case bmdFormat8BitYUV:     /* '2vuy' */
@@ -509,19 +516,19 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f)
 }
 
 GstCaps *
-gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDPixelFormat f)
+gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDPixelFormat f, gboolean input)
 {
   GstCaps *caps;
 
   caps = gst_caps_new_empty ();
   caps =
-      gst_caps_merge_structure (caps, gst_decklink_mode_get_structure (e, f));
+      gst_caps_merge_structure (caps, gst_decklink_mode_get_structure (e, f, input));
 
   return caps;
 }
 
 GstCaps *
-gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e)
+gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e, gboolean input)
 {
   GstCaps *caps;
   guint i;
@@ -530,13 +537,13 @@ gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e)
   for (i = 1; i < G_N_ELEMENTS (formats); i++)
     caps =
         gst_caps_merge_structure (caps, gst_decklink_mode_get_structure (e,
-            formats[i].format));
+            formats[i].format, input));
 
   return caps;
 }
 
 GstCaps *
-gst_decklink_pixel_format_get_caps (BMDPixelFormat f)
+gst_decklink_pixel_format_get_caps (BMDPixelFormat f, gboolean input)
 {
   int i;
   GstCaps *caps;
@@ -544,7 +551,7 @@ gst_decklink_pixel_format_get_caps (BMDPixelFormat f)
 
   caps = gst_caps_new_empty ();
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
-    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i, f);
+    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i, f, input);
     caps = gst_caps_merge_structure (caps, s);
   }
 
@@ -552,7 +559,7 @@ gst_decklink_pixel_format_get_caps (BMDPixelFormat f)
 }
 
 GstCaps *
-gst_decklink_mode_get_template_caps (void)
+gst_decklink_mode_get_template_caps (gboolean input)
 {
   int i;
   GstCaps *caps;
@@ -561,7 +568,7 @@ gst_decklink_mode_get_template_caps (void)
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++)
     caps =
         gst_caps_merge (caps,
-        gst_decklink_mode_get_caps_all_formats ((GstDecklinkModeEnum) i));
+        gst_decklink_mode_get_caps_all_formats ((GstDecklinkModeEnum) i, input));
 
   return caps;
 }
@@ -578,7 +585,7 @@ gst_decklink_find_mode_and_format_for_caps (GstCaps * caps,
     return NULL;
 
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
-    mode_caps = gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, *format);
+    mode_caps = gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, *format, FALSE);
     if (gst_caps_can_intersect (caps, mode_caps)) {
       gst_caps_unref (mode_caps);
       return gst_decklink_get_mode ((GstDecklinkModeEnum) i);
@@ -937,10 +944,33 @@ init_devices (gpointer data)
       GST_WARNING ("selected device does not have input interface: 0x%08x",
           ret);
     } else {
+      IDeckLinkDisplayModeIterator *mode_iter;
+
       devices[i].input.device = decklink;
       devices[i].input.
           input->SetCallback (new GStreamerDecklinkInputCallback (&devices[i].
               input));
+
+      if ((ret =
+              devices[i].input.input->GetDisplayModeIterator (&mode_iter)) ==
+          S_OK) {
+        IDeckLinkDisplayMode *mode;
+
+        GST_DEBUG ("Input %d supports:", i);
+        while ((ret = mode_iter->Next (&mode)) == S_OK) {
+          const char *name;
+
+          mode->GetName (&name);
+          GST_DEBUG ("    %s mode: 0x%08x width: %ld height: %ld"
+              " fields: 0x%08x flags: 0x%08x", name,
+              (int) mode->GetDisplayMode (), mode->GetWidth (),
+              mode->GetHeight (), (int) mode->GetFieldDominance (),
+              (int) mode->GetFlags ());
+          mode->Release ();
+        }
+        mode_iter->Release ();
+      }
+      ret = S_OK;
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkOutput,
@@ -949,11 +979,34 @@ init_devices (gpointer data)
       GST_WARNING ("selected device does not have output interface: 0x%08x",
           ret);
     } else {
+      IDeckLinkDisplayModeIterator *mode_iter;
+
       devices[i].output.device = decklink;
       devices[i].output.clock =
           gst_decklink_clock_new ("GstDecklinkOutputClock");
       GST_DECKLINK_CLOCK_CAST (devices[i].output.clock)->output =
           &devices[i].output;
+
+      if ((ret =
+              devices[i].output.output->GetDisplayModeIterator (&mode_iter)) ==
+          S_OK) {
+        IDeckLinkDisplayMode *mode;
+
+        GST_DEBUG ("Output %d supports:", i);
+        while ((ret = mode_iter->Next (&mode)) == S_OK) {
+          const char *name;
+
+          mode->GetName (&name);
+          GST_DEBUG ("    %s mode: 0x%08x width: %ld height: %ld"
+              " fields: 0x%08x flags: 0x%08x", name,
+              (int) mode->GetDisplayMode (), mode->GetWidth (),
+              mode->GetHeight (), (int) mode->GetFieldDominance (),
+              (int) mode->GetFlags ());
+          mode->Release ();
+        }
+        mode_iter->Release ();
+      }
+      ret = S_OK;
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkConfiguration,
