@@ -1,6 +1,6 @@
 /* GStreamer unit test for dataurisrc
  *
- * Copyright (C) 2010 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2010, 2016 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -169,50 +169,351 @@ const gchar data_uri[] = "data:audio/ogg;base64,"
     "AWZeiL1v7LSgX1wHDrB3NhI3k3sSnaKJAAAAAAAAQOJJS94nzV+3/3r/2Ho5ub5tHN70XSuPfdZZ"
     "C/9eZOtqZc5Zfl8wP5ZenOT3hbWPpZeE6jzjkdY3f+GXCblaF41qKouT/N7UyQA=";
 
-GST_START_TEST (test_playbin)
+static GstPad *mysinkpad;
+
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+static gboolean have_eos;
+static GCond eos_cond;
+static GMutex event_mutex;
+
+static guchar *data;
+static gsize data_size;
+
+static gboolean
+event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstElement *playbin, *sink;
-  int loops = 2;
+  gboolean res = TRUE;
 
-  playbin = gst_element_factory_make ("playbin", NULL);
-  sink = gst_element_factory_make ("fakesink", NULL);
+  g_mutex_lock (&event_mutex);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    have_eos = TRUE;
+    GST_DEBUG ("signal EOS");
+    g_cond_broadcast (&eos_cond);
+  }
+  g_mutex_unlock (&event_mutex);
 
-  if (playbin == NULL || sink == NULL) {
-    GST_WARNING ("skipping test, no playbin or fakesink element(s)");
-    return;
+  gst_event_unref (event);
+
+  return res;
+}
+
+static GstElement *
+setup_dataurisrc (void)
+{
+  GstElement *dataurisrc;
+
+  g_cond_init (&eos_cond);
+  g_mutex_init (&event_mutex);
+  have_eos = FALSE;
+
+  dataurisrc = gst_check_setup_element ("dataurisrc");
+  mysinkpad = gst_check_setup_sink_pad (dataurisrc, &sinktemplate);
+  gst_pad_set_event_function (mysinkpad, event_func);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  return dataurisrc;
+}
+
+static void
+cleanup_dataurisrc (GstElement * dataurisrc)
+{
+  gst_check_drop_buffers ();
+  gst_pad_set_active (mysinkpad, FALSE);
+  gst_check_teardown_sink_pad (dataurisrc);
+  gst_check_teardown_element (dataurisrc);
+
+  g_cond_clear (&eos_cond);
+  g_mutex_clear (&event_mutex);
+}
+
+GST_START_TEST (test_dataurisrc_pull)
+{
+  GstFlowReturn flow;
+  GstBuffer *buf1, *buf2;
+  GstElement *src;
+  GstQuery *seeking_query;
+  GstPad *src_pad;
+  gboolean seekable = FALSE;
+  gint64 start = -1, stop = -1;
+
+  data = g_base64_decode (data_uri + 22, &data_size);
+  fail_unless (data != NULL);
+
+  src = setup_dataurisrc ();
+
+  g_object_set (src, "uri", data_uri, NULL);
+
+  fail_unless_equals_int (gst_element_set_state (src, GST_STATE_READY),
+      GST_STATE_CHANGE_SUCCESS);
+
+  /* get the source pad */
+  src_pad = gst_element_get_static_pad (src, "src");
+  fail_unless (src_pad != NULL);
+
+  /* activate the pad in pull mode */
+  fail_unless (gst_pad_activate_mode (src_pad, GST_PAD_MODE_PULL, TRUE));
+
+  /* now start playing */
+  fail_unless_equals_int (gst_element_set_state (src, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  /* Check that dataurisrc is seekable */
+  seeking_query = gst_query_new_seeking (GST_FORMAT_BYTES);
+  fail_unless (gst_element_query (src, seeking_query) == TRUE);
+  gst_query_parse_seeking (seeking_query, NULL, &seekable, &start, &stop);
+  fail_unless (seekable == TRUE);
+  fail_unless_equals_int64 (start, 0);
+  fail_unless_equals_int64 (stop, data_size);
+  gst_query_unref (seeking_query);
+
+  seeking_query = gst_query_new_seeking (GST_FORMAT_BYTES);
+  fail_unless (gst_pad_query (src_pad, seeking_query) == TRUE);
+  gst_query_parse_seeking (seeking_query, NULL, &seekable, &start, &stop);
+  fail_unless (seekable == TRUE);
+  fail_unless_equals_int64 (start, 0);
+  fail_unless_equals_int64 (stop, data_size);
+  gst_query_unref (seeking_query);
+
+  seeking_query = gst_query_new_seeking (GST_FORMAT_TIME);
+  fail_unless (gst_pad_query (src_pad, seeking_query) == FALSE);
+  gst_query_unref (seeking_query);
+
+  /* do some pulls */
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, 0, 100, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+  fail_unless (buf1 != NULL);
+  fail_unless_equals_int (gst_buffer_get_size (buf1), 100);
+  fail_unless (gst_buffer_memcmp (buf1, 0, data, 100) == 0);
+
+  buf2 = NULL;
+  flow = gst_pad_get_range (src_pad, 0, 50, &buf2);
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+  fail_unless (buf2 != NULL);
+  fail_unless_equals_int (gst_buffer_get_size (buf2), 50);
+  fail_unless (gst_buffer_memcmp (buf2, 0, data, 50) == 0);
+  gst_buffer_unref (buf2);
+  gst_buffer_unref (buf1);
+
+  /* read next 50 bytes */
+  buf2 = NULL;
+  flow = gst_pad_get_range (src_pad, 50, 50, &buf2);
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+  fail_unless (buf2 != NULL);
+  fail_unless_equals_int (gst_buffer_get_size (buf2), 50);
+  fail_unless (gst_buffer_memcmp (buf2, 0, data + 50, 50) == 0);
+  gst_buffer_unref (buf2);
+
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, 1, 100, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+  fail_unless (buf1 != NULL);
+  fail_unless_equals_int (gst_buffer_get_size (buf1), 100);
+  fail_unless (gst_buffer_memcmp (buf1, 0, data + 1, 100) == 0);
+  gst_buffer_unref (buf1);
+
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, 0, 999999, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+  fail_unless (buf1 != NULL);
+  fail_unless_equals_int (gst_buffer_get_size (buf1), data_size);
+  fail_unless (gst_buffer_memcmp (buf1, 0, data, data_size) == 0);
+  gst_buffer_unref (buf1);
+
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, 50, 999999, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+  fail_unless (buf1 != NULL);
+  fail_unless_equals_int (gst_buffer_get_size (buf1), data_size - 50);
+  fail_unless (gst_buffer_memcmp (buf1, 0, data + 50, data_size - 50) == 0);
+  gst_buffer_unref (buf1);
+
+  /* read 10 bytes at end-10 should give exactly 10 bytes */
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, data_size - 10, 10, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+  fail_unless (buf1 != NULL);
+  fail_unless_equals_int (gst_buffer_get_size (buf1), 10);
+  gst_buffer_unref (buf1);
+
+  /* read 20 bytes at end-10 should give exactly 10 bytes */
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, data_size - 10, 20, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+  fail_unless (buf1 != NULL);
+  fail_unless_equals_int (gst_buffer_get_size (buf1), 10);
+  gst_buffer_unref (buf1);
+
+  /* read 0 bytes at end-1 should return 0 bytes */
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, data_size - 1, 0, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+  fail_unless (buf1 != NULL);
+  fail_unless_equals_int (gst_buffer_get_size (buf1), 0);
+  gst_buffer_unref (buf1);
+
+  /* read 10 bytes at end-1 should return 1 byte */
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, stop - 1, 10, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+  fail_unless (buf1 != NULL);
+  fail_unless (gst_buffer_get_size (buf1) == 1);
+  gst_buffer_unref (buf1);
+
+  /* read 0 bytes at end should EOS */
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, data_size, 0, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_EOS);
+
+  /* read 10 bytes after end should EOS */
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, data_size, 10, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_EOS);
+
+  /* read 0 bytes after end should EOS */
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, data_size + 10, 0, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_EOS);
+
+  /* read 10 bytes after end should EOS too */
+  buf1 = NULL;
+  flow = gst_pad_get_range (src_pad, data_size + 10, 10, &buf1);
+  fail_unless_equals_int (flow, GST_FLOW_EOS);
+
+  fail_unless_equals_int (gst_element_set_state (src, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (src_pad);
+  cleanup_dataurisrc (src);
+  g_free (data);
+}
+
+GST_END_TEST;
+
+static GstBuffer *
+dataurisrc_wait_for_eos_and_get_data_buffer (void)
+{
+  GstBuffer *buf;
+
+  g_mutex_lock (&event_mutex);
+  while (!have_eos)
+    g_cond_wait (&eos_cond, &event_mutex);
+  g_mutex_unlock (&event_mutex);
+
+  buf = gst_buffer_new ();
+  while (buffers != NULL) {
+    buf = gst_buffer_append (buf, buffers->data);
+    buffers = g_list_delete_link (buffers, buffers);
   }
 
-  g_object_set (playbin, "uri", data_uri, "audio-sink", sink, NULL);
+  return buf;
+}
 
-  do {
-    GstMessage *msg;
+GST_START_TEST (test_dataurisrc_push)
+{
+  GstElement *src;
+  GstBuffer *buf;
 
-    /* not checking return val on purpose, should always get an error on bus */
-    gst_element_set_state (playbin, GST_STATE_PLAYING);
+  data = g_base64_decode (data_uri + 22, &data_size);
+  fail_unless (data != NULL);
 
-    msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (playbin),
-        GST_CLOCK_TIME_NONE, GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  src = setup_dataurisrc ();
 
-    GST_INFO ("message: %" GST_PTR_FORMAT, msg);
-    if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
-      GError *err = NULL;
+  g_object_set (src, "uri", data_uri, NULL);
 
-      gst_message_parse_error (msg, &err, NULL);
-      fail_unless (err->code == GST_CORE_ERROR_MISSING_PLUGIN ||
-          err->code == GST_STREAM_ERROR_CODEC_NOT_FOUND,
-          "Got unexpected error: %s", err->message);
-      g_error_free (err);
-    }
+  fail_unless_equals_int (gst_element_set_state (src, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
 
-    gst_message_unref (msg);
-    gst_element_set_state (playbin, GST_STATE_NULL);
+  /* Everything */
+  buf = dataurisrc_wait_for_eos_and_get_data_buffer ();
+  fail_unless_equals_int (gst_buffer_get_size (buf), data_size);
+  fail_unless (gst_buffer_memcmp (buf, 0, data, data_size) == 0);
+  gst_buffer_unref (buf);
 
-    --loops;
-    GST_INFO ("done, %d rounds left", loops);
-  } while (loops > 0);
+  /* 500 - 1000 */
+  have_eos = FALSE;
+  gst_pad_push_event (mysinkpad,
+      gst_event_new_seek (1.0, GST_FORMAT_BYTES, GST_SEEK_FLAG_FLUSH,
+          GST_SEEK_TYPE_SET, 500, GST_SEEK_TYPE_SET, 1000));
 
-  gst_element_set_state (playbin, GST_STATE_NULL);
-  gst_object_unref (playbin);
+  buf = dataurisrc_wait_for_eos_and_get_data_buffer ();
+  fail_unless_equals_int (gst_buffer_get_size (buf), 500);
+  fail_unless (gst_buffer_memcmp (buf, 0, data + 500, 500) == 0);
+  gst_buffer_unref (buf);
+
+  /* only start changed, stop kept the same (ie. 1000), so 1000-1000 now */
+  have_eos = FALSE;
+  gst_pad_push_event (mysinkpad,
+      gst_event_new_seek (1.0, GST_FORMAT_BYTES, GST_SEEK_FLAG_FLUSH,
+          GST_SEEK_TYPE_SET, 1000, GST_SEEK_TYPE_NONE, -1));
+
+  buf = dataurisrc_wait_for_eos_and_get_data_buffer ();
+  fail_unless_equals_int (gst_buffer_get_size (buf), 0);
+  gst_buffer_unref (buf);
+
+  /* 1000-end */
+  have_eos = FALSE;
+  gst_pad_push_event (mysinkpad,
+      gst_event_new_seek (1.0, GST_FORMAT_BYTES, GST_SEEK_FLAG_FLUSH,
+          GST_SEEK_TYPE_SET, 1000, GST_SEEK_TYPE_SET, -1));
+
+  buf = dataurisrc_wait_for_eos_and_get_data_buffer ();
+  fail_unless_equals_int (gst_buffer_get_size (buf), data_size - 1000);
+  fail_unless (gst_buffer_memcmp (buf, 0, data + 1000, data_size - 1000) == 0);
+  gst_buffer_unref (buf);
+
+  fail_unless_equals_int (gst_element_set_state (src, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
+  cleanup_dataurisrc (src);
+  g_free (data);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_dataurisrc_uri_iface)
+{
+  const gchar *const *protocols;
+  GstElement *src;
+  gchar *uri = NULL;
+
+  src = gst_element_factory_make ("dataurisrc", NULL);
+  fail_unless (gst_uri_handler_get_uri (GST_URI_HANDLER (src)) == NULL);
+  fail_unless_equals_int (gst_uri_handler_get_uri_type (GST_URI_HANDLER (src)),
+      GST_URI_SRC);
+  protocols = gst_uri_handler_get_protocols (GST_URI_HANDLER (src));
+  fail_unless (protocols != NULL && *protocols != NULL);
+#if GLIB_CHECK_VERSION (2, 44, 0)
+  fail_unless (g_strv_contains (protocols, "data"));
+#endif
+  fail_if (gst_uri_handler_set_uri (GST_URI_HANDLER (src), "file:///foo",
+          NULL));
+  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (src), data_uri, NULL));
+  g_object_get (src, "uri", &uri, NULL);
+  fail_unless_equals_string (uri, data_uri);
+  g_free (uri);
+  uri = gst_uri_handler_get_uri (GST_URI_HANDLER (src));
+  fail_unless (uri, data_uri);
+  g_free (uri);
+  gst_object_unref (src);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_dataurisrc_from_uri)
+{
+  GstElement *src, *sink;
+
+  sink = gst_element_make_from_uri (GST_URI_SINK, data_uri, NULL, NULL);
+  fail_unless (sink == NULL);
+
+  src = gst_element_make_from_uri (GST_URI_SRC, data_uri, NULL, NULL);
+  fail_unless (src != NULL);
+  gst_object_unref (src);
 }
 
 GST_END_TEST;
@@ -225,7 +526,10 @@ dataurisrc_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  tcase_add_test (tc_chain, test_playbin);
+  tcase_add_test (tc_chain, test_dataurisrc_pull);
+  tcase_add_test (tc_chain, test_dataurisrc_push);
+  tcase_add_test (tc_chain, test_dataurisrc_uri_iface);
+  tcase_add_test (tc_chain, test_dataurisrc_from_uri);
 
   return s;
 }
