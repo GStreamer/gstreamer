@@ -715,6 +715,11 @@ _parse_pmt (GstMpegtsSection * section)
     i += 1;
   }
 
+  /* Section length was longer than the actual content of the PMT */
+  if (data <= end - 4)
+    goto error;
+
+  /* Ensure we did not read after the end of our array */
   g_assert (data == end - 4);
 
   return (gpointer) pmt;
