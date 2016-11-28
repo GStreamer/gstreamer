@@ -1,5 +1,4 @@
-/* GStreamer
- *
+/* GStreamer data:// uri source element
  * Copyright (C) 2009 Igalia S.L
  * Copyright (C) 2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
@@ -462,16 +461,3 @@ gst_data_uri_src_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_uri = gst_data_uri_src_get_uri;
   iface->set_uri = gst_data_uri_src_set_uri;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "dataurisrc",
-      GST_RANK_PRIMARY, GST_TYPE_DATA_URI_SRC);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    dataurisrc,
-    "data: URI source",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

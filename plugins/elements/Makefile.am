@@ -5,6 +5,7 @@ libgstcoreelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_API_V
 libgstcoreelements_la_SOURCES =	\
 	gstcapsfilter.c		\
 	gstconcat.c		\
+	gstdataurisrc.c         \
 	gstdownloadbuffer.c     \
 	gstelements.c		\
 	gstelements_private.c	\
@@ -37,6 +38,7 @@ libgstcoreelements_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 noinst_HEADERS =		\
 	gstcapsfilter.h		\
 	gstconcat.h		\
+	gstdataurisrc.h         \
 	gstdownloadbuffer.h	\
 	gstelements_private.h	\
 	gstfakesink.h		\
