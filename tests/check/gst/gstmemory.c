@@ -725,6 +725,7 @@ GST_START_TEST (test_no_error_and_no_warning_on_map_failure)
   fail_if (info.maxsize != 0);
 
   gst_memory_unref (mem);
+  gst_object_unref (alloc);
 
   /* Restore previous logging state. */
   gst_debug_set_default_threshold (prev_debug_threshold);
