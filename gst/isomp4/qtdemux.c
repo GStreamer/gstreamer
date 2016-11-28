@@ -10166,9 +10166,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
            * page 92, "Video Sample Description", under table 3.1 */
           GstByteReader br;
 
-          const off_t compressor_offset =
-              16 + 4 + 4 * 3 + 2 * 2 + 2 * 4 + 4 + 2;
-          const off_t min_size = compressor_offset + 32 + 2 + 2;
+          const gint compressor_offset = 16 + 4 + 4 * 3 + 2 * 2 + 2 * 4 + 4 + 2;
+          const gint min_size = compressor_offset + 32 + 2 + 2;
           GNode *jpeg;
           guint32 len;
           guint16 color_table_id = 0;
@@ -10192,7 +10191,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             if (color_table_id != 0) {
               /* the spec says there can be concatenated chunks in the data, and we want
                * to find one called field. Walk through them. */
-              off_t offset = min_size;
+              gint offset = min_size;
               while (offset + 8 < len) {
                 guint32 size = 0, tag;
                 ok = gst_byte_reader_get_uint32_le (&br, &size);
