@@ -142,35 +142,12 @@ gst_gl_window_error_quark (void)
 static gboolean
 gst_gl_window_default_open (GstGLWindow * window, GError ** error)
 {
-  GstGLWindowPrivate *priv = window->priv;
-
-  if (g_main_context_get_thread_default ()) {
-    if (priv->main_context)
-      g_main_context_unref (priv->main_context);
-    if (priv->loop)
-      g_main_loop_unref (priv->loop);
-    priv->main_context = g_main_context_ref_thread_default ();
-    priv->loop = NULL;
-    priv->alive = TRUE;
-  } else {
-    g_main_context_push_thread_default (priv->main_context);
-  }
-
   return TRUE;
 }
 
 static void
 gst_gl_window_default_close (GstGLWindow * window)
 {
-  GstGLWindowPrivate *priv = window->priv;
-
-  if (!priv->loop) {
-    priv->alive = FALSE;
-    g_main_context_unref (priv->main_context);
-    priv->main_context = NULL;
-  } else {
-    g_main_context_pop_thread_default (priv->main_context);
-  }
 }
 
 static void
@@ -543,7 +520,29 @@ gst_gl_window_show (GstGLWindow * window)
 static void
 gst_gl_window_default_run (GstGLWindow * window)
 {
-  g_main_loop_run (window->priv->loop);
+  GstGLWindowPrivate *priv = window->priv;
+
+  if (g_main_context_get_thread_default ()) {
+    if (priv->main_context)
+      g_main_context_unref (priv->main_context);
+    if (priv->loop)
+      g_main_loop_unref (priv->loop);
+    priv->main_context = g_main_context_ref_thread_default ();
+    priv->loop = NULL;
+    priv->alive = TRUE;
+  } else {
+    g_main_context_push_thread_default (priv->main_context);
+  }
+
+  g_main_loop_run (priv->loop);
+
+  if (!priv->loop) {
+    priv->alive = FALSE;
+    g_main_context_unref (priv->main_context);
+    priv->main_context = NULL;
+  } else {
+    g_main_context_pop_thread_default (priv->main_context);
+  }
 }
 
 /**
