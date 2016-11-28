@@ -33,7 +33,7 @@
 
 static GstM3U8MediaFile *gst_m3u8_media_file_new (gchar * uri,
     gchar * title, GstClockTime duration, guint sequence);
-gchar *uri_join (const gchar * uri, const gchar * path);
+static gchar *uri_join (const gchar * uri, const gchar * path);
 
 GstM3U8 *
 gst_m3u8_new (void)
