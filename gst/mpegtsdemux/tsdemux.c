@@ -1870,6 +1870,7 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
   if (demux->requested_program_number == program->program_number ||
       (demux->requested_program_number == -1 && demux->program_number == -1)) {
     GList *tmp;
+    gboolean have_pads = FALSE;
 
     GST_LOG ("program %d started", program->program_number);
     demux->program_number = program->program_number;
@@ -1906,6 +1907,8 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
     for (tmp = program->stream_list; tmp; tmp = tmp->next) {
       TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
       activate_pad_for_stream (demux, stream);
+      if (stream->pad)
+        have_pads = TRUE;
     }
 
     /* If there was a previous program, now is the time to deactivate it
@@ -1915,6 +1918,16 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
       mpegts_base_deactivate_and_free_program (base, demux->previous_program);
       demux->previous_program = NULL;
     }
+
+    if (!have_pads) {
+      /* If we had no pads, this stream is likely corrupted or unsupported and
+       * there's not much we can do at this point */
+      GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE,
+          ("This stream contains no valid or supported streams."),
+          ("activating program but got no pads"));
+      return;
+    }
+
     /* If any of the stream is sparse, push a GAP event before anything else
      * This is done here, and not in activate_pad_for_stream() because pushing
      * a GAP event *is* considering data, and we want to ensure the (potential)
@@ -1930,6 +1943,7 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
         gst_pad_push_event (stream->pad, gst_event_new_gap (0, 0));
       }
     }
+
     gst_element_no_more_pads ((GstElement *) demux);
   }
 }
