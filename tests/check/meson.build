@@ -77,6 +77,7 @@ core_tests = [
   [ 'libs/queuearray.c' ],
   [ 'elements/capsfilter.c', not have_registry ],
   [ 'elements/concat.c', not have_registry ],
+  [ 'elements/dataurisrc.c', not have_registry ],
   [ 'elements/fakesrc.c', not have_registry ],
   [ 'elements/fdsrc.c', not have_registry ],
   [ 'elements/filesink.c', not have_registry ],

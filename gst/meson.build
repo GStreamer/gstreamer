@@ -11,7 +11,6 @@ gst_sources = [
   'gstcapsfeatures.c',
   'gstchildproxy.c',
   'gstclock.c',
-  'gstclock-linreg.c',
   'gstcontext.c',
   'gstcontrolbinding.c',
   'gstcontrolsource.c',
