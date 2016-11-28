@@ -1232,6 +1232,8 @@ gst_rtsp_auth_credentials_free (GstRTSPAuthCredential ** credentials)
       }
       g_free ((*p)->params);
     }
+    if ((*p)->authorization)
+      g_free ((*p)->authorization);
     g_free (*p);
     p++;
   }
