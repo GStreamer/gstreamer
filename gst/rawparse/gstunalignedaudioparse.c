@@ -26,10 +26,8 @@
 #include "gstunalignedaudioparse.h"
 #include "unalignedaudio.h"
 
-
 GST_DEBUG_CATEGORY (unaligned_audio_parse_debug);
 #define GST_CAT_DEFAULT unaligned_audio_parse_debug
-
 
 struct _GstUnalignedAudioParse
 {
@@ -37,12 +35,10 @@ struct _GstUnalignedAudioParse
   GstElement *inner_parser;
 };
 
-
 struct _GstUnalignedAudioParseClass
 {
   GstBinClass parent_class;
 };
-
 
 static GstStaticPadTemplate static_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -50,7 +46,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_UNALIGNED_RAW_AUDIO_CAPS)
     );
-
 
 static GstStaticPadTemplate static_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -60,11 +55,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         ", layout = (string) { interleaved, non-interleaved }")
     );
 
-
-
-
 G_DEFINE_TYPE (GstUnalignedAudioParse, gst_unaligned_audio_parse, GST_TYPE_BIN);
-
 
 static void
 gst_unaligned_audio_parse_class_init (GstUnalignedAudioParseClass * klass)
@@ -87,7 +78,6 @@ gst_unaligned_audio_parse_class_init (GstUnalignedAudioParseClass * klass)
       "Parse unaligned raw audio data",
       "Carlos Rafael Giani <dv@pseudoterminal.org>");
 }
-
 
 static void
 gst_unaligned_audio_parse_init (GstUnalignedAudioParse * unaligned_audio_parse)

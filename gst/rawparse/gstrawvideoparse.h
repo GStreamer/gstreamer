@@ -39,11 +39,9 @@ G_BEGIN_DECLS
 #define GST_IS_RAW_VIDEO_PARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_RAW_VIDEO_PARSE))
 
-
 typedef struct _GstRawVideoParseConfig GstRawVideoParseConfig;
 typedef struct _GstRawVideoParse GstRawVideoParse;
 typedef struct _GstRawVideoParseClass GstRawVideoParseClass;
-
 
 /* Contains information about the video frame format. */
 struct _GstRawVideoParseConfig
@@ -82,7 +80,6 @@ struct _GstRawVideoParseConfig
   gboolean custom_plane_strides;
 };
 
-
 struct _GstRawVideoParse
 {
   GstRawBaseParse parent;
@@ -103,15 +100,12 @@ struct _GstRawVideoParse
   GstRawVideoParseConfig *current_config;
 };
 
-
 struct _GstRawVideoParseClass
 {
   GstRawBaseParseClass parent_class;
 };
 
-
 GType gst_raw_video_parse_get_type (void);
-
 
 G_END_DECLS
 

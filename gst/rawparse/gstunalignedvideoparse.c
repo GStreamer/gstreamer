@@ -26,10 +26,8 @@
 #include "gstunalignedvideoparse.h"
 #include "unalignedvideo.h"
 
-
 GST_DEBUG_CATEGORY (unaligned_video_parse_debug);
 #define GST_CAT_DEFAULT unaligned_video_parse_debug
-
 
 struct _GstUnalignedVideoParse
 {
@@ -37,12 +35,10 @@ struct _GstUnalignedVideoParse
   GstElement *inner_parser;
 };
 
-
 struct _GstUnalignedVideoParseClass
 {
   GstBinClass parent_class;
 };
-
 
 static GstStaticPadTemplate static_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -51,7 +47,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_UNALIGNED_RAW_VIDEO_CAPS)
     );
 
-
 static GstStaticPadTemplate static_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -59,11 +54,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL))
     );
 
-
-
-
 G_DEFINE_TYPE (GstUnalignedVideoParse, gst_unaligned_video_parse, GST_TYPE_BIN);
-
 
 static void
 gst_unaligned_video_parse_class_init (GstUnalignedVideoParseClass * klass)
@@ -86,7 +77,6 @@ gst_unaligned_video_parse_class_init (GstUnalignedVideoParseClass * klass)
       "Parse unaligned raw video data",
       "Carlos Rafael Giani <dv@pseudoterminal.org>");
 }
-
 
 static void
 gst_unaligned_video_parse_init (GstUnalignedVideoParse * unaligned_video_parse)

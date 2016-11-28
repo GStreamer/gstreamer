@@ -39,13 +39,11 @@ G_BEGIN_DECLS
 #define GST_IS_RAW_AUDIO_PARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_RAW_AUDIO_PARSE))
 
-
 typedef enum _GstRawAudioParseFormat GstRawAudioParseFormat;
 
 typedef struct _GstRawAudioParseConfig GstRawAudioParseConfig;
 typedef struct _GstRawAudioParse GstRawAudioParse;
 typedef struct _GstRawAudioParseClass GstRawAudioParseClass;
-
 
 enum _GstRawAudioParseFormat
 {
@@ -53,7 +51,6 @@ enum _GstRawAudioParseFormat
   GST_RAW_AUDIO_PARSE_FORMAT_MULAW,
   GST_RAW_AUDIO_PARSE_FORMAT_ALAW
 };
-
 
 /* Contains information about the sample rate, format, and channel count to use. */
 struct _GstRawAudioParseConfig
@@ -94,7 +91,6 @@ struct _GstRawAudioParseConfig
   gboolean needs_channel_reordering;
 };
 
-
 struct _GstRawAudioParse
 {
   GstRawBaseParse parent;
@@ -115,16 +111,13 @@ struct _GstRawAudioParse
   GstRawAudioParseConfig *current_config;
 };
 
-
 struct _GstRawAudioParseClass
 {
   GstRawBaseParseClass parent_class;
 };
 
-
 GType gst_raw_audio_parse_get_type (void);
 GType gst_raw_audio_parse_format_get_type (void);
-
 
 G_END_DECLS
 

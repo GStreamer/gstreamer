@@ -83,10 +83,8 @@
 #include "gstrawaudioparse.h"
 #include "unalignedaudio.h"
 
-
 GST_DEBUG_CATEGORY_STATIC (raw_audio_parse_debug);
 #define GST_CAT_DEFAULT raw_audio_parse_debug
-
 
 enum
 {
@@ -99,20 +97,17 @@ enum
   PROP_CHANNEL_POSITIONS
 };
 
-
 #define DEFAULT_FORMAT         GST_RAW_AUDIO_PARSE_FORMAT_PCM
 #define DEFAULT_PCM_FORMAT     GST_AUDIO_FORMAT_S16
 #define DEFAULT_SAMPLE_RATE    44100
 #define DEFAULT_NUM_CHANNELS   2
 #define DEFAULT_INTERLEAVED    TRUE
 
-
 #define GST_RAW_AUDIO_PARSE_CAPS \
   GST_AUDIO_CAPS_MAKE(GST_AUDIO_FORMATS_ALL) \
   ", layout = (string) { interleaved, non-interleaved }; " \
   "audio/x-alaw, rate = (int) [ 1, MAX ], channels = (int) [ 1, MAX ]; " \
   "audio/x-mulaw, rate = (int) [ 1, MAX ], channels = (int) [ 1, MAX ]; "
-
 
 static GstStaticPadTemplate static_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -121,7 +116,6 @@ static GstStaticPadTemplate static_sink_template =
     GST_STATIC_CAPS (GST_UNALIGNED_RAW_AUDIO_CAPS "; " GST_RAW_AUDIO_PARSE_CAPS)
     );
 
-
 static GstStaticPadTemplate static_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -129,10 +123,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_RAW_AUDIO_PARSE_CAPS)
     );
 
-
 #define gst_raw_audio_parse_parent_class parent_class
 G_DEFINE_TYPE (GstRawAudioParse, gst_raw_audio_parse, GST_TYPE_RAW_BASE_PARSE);
-
 
 static void gst_raw_audio_parse_set_property (GObject * object, guint prop_id,
     GValue const *value, GParamSpec * pspec);
@@ -182,8 +174,6 @@ static gboolean gst_raw_audio_parse_caps_to_config (GstRawAudioParse *
     raw_audio_parse, GstCaps * caps, GstRawAudioParseConfig * config);
 static gboolean gst_raw_audio_parse_config_to_caps (GstRawAudioParse *
     raw_audio_parse, GstCaps ** caps, GstRawAudioParseConfig * config);
-
-
 
 static void
 gst_raw_audio_parse_class_init (GstRawAudioParseClass * klass)
@@ -295,7 +285,6 @@ gst_raw_audio_parse_class_init (GstRawAudioParseClass * klass)
       "Carlos Rafael Giani <dv@pseudoterminal.org>");
 }
 
-
 static void
 gst_raw_audio_parse_init (GstRawAudioParse * raw_audio_parse)
 {
@@ -311,7 +300,6 @@ gst_raw_audio_parse_init (GstRawAudioParse * raw_audio_parse)
   raw_audio_parse->properties_config.ready = TRUE;
   gst_raw_audio_parse_update_config_bpf (&(raw_audio_parse->properties_config));
 }
-
 
 static void
 gst_raw_audio_parse_set_property (GObject * object, guint prop_id,
@@ -506,7 +494,6 @@ gst_raw_audio_parse_set_property (GObject * object, guint prop_id,
   }
 }
 
-
 static void
 gst_raw_audio_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -587,7 +574,6 @@ gst_raw_audio_parse_get_property (GObject * object, guint prop_id,
   }
 }
 
-
 static gboolean
 gst_raw_audio_parse_stop (GstBaseParse * parse)
 {
@@ -602,7 +588,6 @@ gst_raw_audio_parse_stop (GstBaseParse * parse)
 
   return GST_BASE_PARSE_CLASS (parent_class)->stop (parse);
 }
-
 
 static gboolean
 gst_raw_audio_parse_set_current_config (GstRawBaseParse * raw_base_parse,
@@ -626,7 +611,6 @@ gst_raw_audio_parse_set_current_config (GstRawBaseParse * raw_base_parse,
   return TRUE;
 }
 
-
 static GstRawBaseParseConfig
 gst_raw_audio_parse_get_current_config (GstRawBaseParse * raw_base_parse)
 {
@@ -634,7 +618,6 @@ gst_raw_audio_parse_get_current_config (GstRawBaseParse * raw_base_parse)
   return gst_raw_audio_parse_is_using_sink_caps (raw_audio_parse) ?
       GST_RAW_BASE_PARSE_CONFIG_SINKCAPS : GST_RAW_BASE_PARSE_CONFIG_PROPERTIES;
 }
-
 
 static gboolean
 gst_raw_audio_parse_set_config_from_caps (GstRawBaseParse * raw_base_parse,
@@ -645,7 +628,6 @@ gst_raw_audio_parse_set_config_from_caps (GstRawBaseParse * raw_base_parse,
       gst_raw_audio_parse_get_config_ptr (raw_audio_parse, config));
 }
 
-
 static gboolean
 gst_raw_audio_parse_get_caps_from_config (GstRawBaseParse * raw_base_parse,
     GstRawBaseParseConfig config, GstCaps ** caps)
@@ -655,7 +637,6 @@ gst_raw_audio_parse_get_caps_from_config (GstRawBaseParse * raw_base_parse,
       gst_raw_audio_parse_get_config_ptr (raw_audio_parse, config));
 }
 
-
 static gsize
 gst_raw_audio_parse_get_config_frame_size (GstRawBaseParse * raw_base_parse,
     GstRawBaseParseConfig config)
@@ -663,7 +644,6 @@ gst_raw_audio_parse_get_config_frame_size (GstRawBaseParse * raw_base_parse,
   GstRawAudioParse *raw_audio_parse = GST_RAW_AUDIO_PARSE (raw_base_parse);
   return gst_raw_audio_parse_get_config_ptr (raw_audio_parse, config)->bpf;
 }
-
 
 static gboolean
 gst_raw_audio_parse_is_config_ready (GstRawBaseParse * raw_base_parse,
@@ -754,7 +734,6 @@ gst_raw_audio_parse_process (GstRawBaseParse * raw_base_parse,
   return TRUE;
 }
 
-
 static gboolean
 gst_raw_audio_parse_is_unit_format_supported (G_GNUC_UNUSED GstRawBaseParse *
     raw_base_parse, GstFormat format)
@@ -767,7 +746,6 @@ gst_raw_audio_parse_is_unit_format_supported (G_GNUC_UNUSED GstRawBaseParse *
       return FALSE;
   }
 }
-
 
 static void
 gst_raw_audio_parse_get_units_per_second (GstRawBaseParse * raw_base_parse,
@@ -794,14 +772,12 @@ gst_raw_audio_parse_get_units_per_second (GstRawBaseParse * raw_base_parse,
   }
 }
 
-
 static gboolean
 gst_raw_audio_parse_is_using_sink_caps (GstRawAudioParse * raw_audio_parse)
 {
   return raw_audio_parse->current_config ==
       &(raw_audio_parse->sink_caps_config);
 }
-
 
 static GstRawAudioParseConfig *
 gst_raw_audio_parse_get_config_ptr (GstRawAudioParse * raw_audio_parse,
@@ -822,7 +798,6 @@ gst_raw_audio_parse_get_config_ptr (GstRawAudioParse * raw_audio_parse,
   }
 }
 
-
 static void
 gst_raw_audio_parse_init_config (GstRawAudioParseConfig * config)
 {
@@ -838,7 +813,6 @@ gst_raw_audio_parse_init_config (GstRawAudioParseConfig * config)
   gst_raw_audio_parse_set_config_channels (config, config->num_channels, 0,
       TRUE);
 }
-
 
 static gboolean
 gst_raw_audio_parse_set_config_channels (GstRawAudioParseConfig * config,
@@ -864,7 +838,6 @@ gst_raw_audio_parse_set_config_channels (GstRawAudioParseConfig * config,
     return TRUE;
   }
 }
-
 
 static gboolean
 gst_raw_audio_parse_update_channel_reordering_flag (GstRawAudioParseConfig *
@@ -895,7 +868,6 @@ gst_raw_audio_parse_update_channel_reordering_flag (GstRawAudioParseConfig *
   }
 }
 
-
 static void
 gst_raw_audio_parse_update_config_bpf (GstRawAudioParseConfig * config)
 {
@@ -922,7 +894,6 @@ gst_raw_audio_parse_update_config_bpf (GstRawAudioParseConfig * config)
       g_assert_not_reached ();
   }
 }
-
 
 static gboolean
 gst_raw_audio_parse_caps_to_config (GstRawAudioParse * raw_audio_parse,
@@ -1034,7 +1005,6 @@ done:
   return ret;
 }
 
-
 static gboolean
 gst_raw_audio_parse_config_to_caps (GstRawAudioParse * raw_audio_parse,
     GstCaps ** caps, GstRawAudioParseConfig * config)
@@ -1101,9 +1071,6 @@ gst_raw_audio_parse_config_to_caps (GstRawAudioParse * raw_audio_parse,
 
   return ret;
 }
-
-
-
 
 GType
 gst_raw_audio_parse_format_get_type (void)

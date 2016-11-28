@@ -43,11 +43,9 @@ G_BEGIN_DECLS
 #define GST_RAW_BASE_PARSE_CONFIG_MUTEX_LOCK(obj)   g_mutex_lock(&(((GstRawBaseParse *)(obj))->config_mutex))
 #define GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK(obj) g_mutex_unlock(&(((GstRawBaseParse *)(obj))->config_mutex))
 
-
 typedef enum _GstRawBaseParseConfig GstRawBaseParseConfig;
 typedef struct _GstRawBaseParse GstRawBaseParse;
 typedef struct _GstRawBaseParseClass GstRawBaseParseClass;
-
 
 /**
  * GstRawBaseParseConfig:
@@ -63,7 +61,6 @@ enum _GstRawBaseParseConfig
   GST_RAW_BASE_PARSE_CONFIG_SINKCAPS,
   GST_RAW_BASE_PARSE_CONFIG_PROPERTIES
 };
-
 
 /**
  * GstRawBaseParse:
@@ -83,7 +80,6 @@ struct _GstRawBaseParse
   /* Mutex which protects access to and modifications on the configs. */
   GMutex config_mutex;
 };
-
 
 /**
  * GstRawBaseParseClass:
@@ -198,12 +194,9 @@ struct _GstRawBaseParseClass
                                                       GstRawBaseParseConfig config);
 };
 
-
 void gst_raw_base_parse_invalidate_src_caps (GstRawBaseParse * raw_base_parse);
 
-
 GType gst_raw_base_parse_get_type (void);
-
 
 G_END_DECLS
 
