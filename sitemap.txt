@@ -133,5 +133,6 @@ index.md
 			plugin-development/appendix/checklist-element.md
 			plugin-development/appendix/porting.md
 			plugin-development/appendix/licensing-advisory.md
+	plugins.md
 	splitup.md
 	rtp.md
