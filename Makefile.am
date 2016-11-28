@@ -31,7 +31,6 @@ DIST_SUBDIRS = pkgconfig \
 include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
-	gstreamer.spec gstreamer.spec.in \
 	gst-element-check.m4 \
 	configure.ac autogen.sh depcomp \
 	MAINTAINERS ABOUT-NLS RELEASE gstreamer.doap \

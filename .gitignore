@@ -17,7 +17,6 @@ gstreamer-[0-9]*
 gstreamer-config
 gstreamer.pc
 gstreamer-uninstalled.pc
-gstreamer.spec
 gst-element-check-*.m4
 libtool
 ltconfig
