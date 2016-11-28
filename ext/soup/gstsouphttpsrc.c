@@ -988,6 +988,9 @@ insert_http_header (const gchar * name, const gchar * value, gpointer user_data)
   GstStructure *headers = user_data;
   const GValue *gv;
 
+  if (!g_utf8_validate (name, -1, NULL) || !g_utf8_validate (value, -1, NULL))
+    return;
+
   gv = gst_structure_get_value (headers, name);
   if (gv && GST_VALUE_HOLDS_ARRAY (gv)) {
     GValue v = G_VALUE_INIT;
@@ -1035,13 +1038,30 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
     return;
 
   if (src->automatic_redirect && SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
-    src->redirection_uri = g_strdup (soup_message_headers_get_one
-        (msg->response_headers, "Location"));
-    src->redirection_permanent =
-        (msg->status_code == SOUP_STATUS_MOVED_PERMANENTLY);
-    GST_DEBUG_OBJECT (src, "%u redirect to \"%s\" (permanent %d)",
-        msg->status_code, src->redirection_uri, src->redirection_permanent);
-    return;
+    const gchar *location;
+
+    location = soup_message_headers_get_one (msg->response_headers, "Location");
+
+    if (location) {
+      if (!g_utf8_validate (location, -1, NULL)) {
+        GST_ELEMENT_ERROR_WITH_DETAILS (src, RESOURCE, SEEK,
+            (_("Corrupted HTTP response.")),
+            ("Location header is not valid UTF-8"),
+            ("http-status-code", G_TYPE_UINT, msg->status_code,
+                "http-redirection-uri", G_TYPE_STRING,
+                GST_STR_NULL (src->redirection_uri), NULL));
+        src->ret = GST_FLOW_ERROR;
+        return;
+      }
+
+      src->redirection_uri = g_strdup (location);
+
+      src->redirection_permanent =
+          (msg->status_code == SOUP_STATUS_MOVED_PERMANENTLY);
+      GST_DEBUG_OBJECT (src, "%u redirect to \"%s\" (permanent %d)",
+          msg->status_code, src->redirection_uri, src->redirection_permanent);
+      return;
+    }
   }
 
   if (msg->status_code == SOUP_STATUS_UNAUTHORIZED) {
@@ -1110,46 +1130,70 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
   if ((value =
           soup_message_headers_get_one (msg->response_headers,
               "icy-metaint")) != NULL) {
-    gint icy_metaint = atoi (value);
+    gint icy_metaint;
 
-    GST_DEBUG_OBJECT (src, "icy-metaint: %s (parsed: %d)", value, icy_metaint);
-    if (icy_metaint > 0) {
-      if (src->src_caps)
-        gst_caps_unref (src->src_caps);
+    if (g_utf8_validate (value, -1, NULL)) {
+      icy_metaint = atoi (value);
 
-      src->src_caps = gst_caps_new_simple ("application/x-icy",
-          "metadata-interval", G_TYPE_INT, icy_metaint, NULL);
+      GST_DEBUG_OBJECT (src, "icy-metaint: %s (parsed: %d)", value,
+          icy_metaint);
+      if (icy_metaint > 0) {
+        if (src->src_caps)
+          gst_caps_unref (src->src_caps);
 
-      gst_base_src_set_caps (GST_BASE_SRC (src), src->src_caps);
+        src->src_caps = gst_caps_new_simple ("application/x-icy",
+            "metadata-interval", G_TYPE_INT, icy_metaint, NULL);
+
+        gst_base_src_set_caps (GST_BASE_SRC (src), src->src_caps);
+      }
     }
   }
   if ((value =
           soup_message_headers_get_content_type (msg->response_headers,
               &params)) != NULL) {
-    GST_DEBUG_OBJECT (src, "Content-Type: %s", value);
-    if (g_ascii_strcasecmp (value, "audio/L16") == 0) {
+    if (!g_utf8_validate (value, -1, NULL)) {
+      GST_WARNING_OBJECT (src, "Content-Type is invalid UTF-8");
+    } else if (g_ascii_strcasecmp (value, "audio/L16") == 0) {
       gint channels = 2;
       gint rate = 44100;
       char *param;
 
-      if (src->src_caps)
+      GST_DEBUG_OBJECT (src, "Content-Type: %s", value);
+
+      if (src->src_caps) {
         gst_caps_unref (src->src_caps);
+        src->src_caps = NULL;
+      }
 
       param = g_hash_table_lookup (params, "channels");
-      if (param != NULL)
-        channels = atol (param);
+      if (param != NULL) {
+        guint64 val = g_ascii_strtoull (param, NULL, 10);
+        if (val < 64)
+          channels = val;
+        else
+          channels = 0;
+      }
 
       param = g_hash_table_lookup (params, "rate");
-      if (param != NULL)
-        rate = atol (param);
+      if (param != NULL) {
+        guint64 val = g_ascii_strtoull (param, NULL, 10);
+        if (val < G_MAXINT)
+          rate = val;
+        else
+          rate = 0;
+      }
 
-      src->src_caps = gst_caps_new_simple ("audio/x-unaligned-raw",
-          "format", G_TYPE_STRING, "S16BE",
-          "layout", G_TYPE_STRING, "interleaved",
-          "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL);
+      if (rate > 0 && channels > 0) {
+        src->src_caps = gst_caps_new_simple ("audio/x-unaligned-raw",
+            "format", G_TYPE_STRING, "S16BE",
+            "layout", G_TYPE_STRING, "interleaved",
+            "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL);
 
-      gst_base_src_set_caps (GST_BASE_SRC (src), src->src_caps);
+        gst_base_src_set_caps (GST_BASE_SRC (src), src->src_caps);
+      }
     } else {
+      GST_DEBUG_OBJECT (src, "Content-Type: %s", value);
+
       /* Set the Content-Type field on the caps */
       if (src->src_caps) {
         src->src_caps = gst_caps_make_writable (src->src_caps);
@@ -1166,30 +1210,36 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
   if ((value =
           soup_message_headers_get_one (msg->response_headers,
               "icy-name")) != NULL) {
-    g_free (src->iradio_name);
-    src->iradio_name = gst_soup_http_src_unicodify (value);
-    if (src->iradio_name) {
-      gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_ORGANIZATION,
-          src->iradio_name, NULL);
+    if (g_utf8_validate (value, -1, NULL)) {
+      g_free (src->iradio_name);
+      src->iradio_name = gst_soup_http_src_unicodify (value);
+      if (src->iradio_name) {
+        gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_ORGANIZATION,
+            src->iradio_name, NULL);
+      }
     }
   }
   if ((value =
           soup_message_headers_get_one (msg->response_headers,
               "icy-genre")) != NULL) {
-    g_free (src->iradio_genre);
-    src->iradio_genre = gst_soup_http_src_unicodify (value);
-    if (src->iradio_genre) {
-      gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_GENRE,
-          src->iradio_genre, NULL);
+    if (g_utf8_validate (value, -1, NULL)) {
+      g_free (src->iradio_genre);
+      src->iradio_genre = gst_soup_http_src_unicodify (value);
+      if (src->iradio_genre) {
+        gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_GENRE,
+            src->iradio_genre, NULL);
+      }
     }
   }
   if ((value = soup_message_headers_get_one (msg->response_headers, "icy-url"))
       != NULL) {
-    g_free (src->iradio_url);
-    src->iradio_url = gst_soup_http_src_unicodify (value);
-    if (src->iradio_url) {
-      gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_LOCATION,
-          src->iradio_url, NULL);
+    if (g_utf8_validate (value, -1, NULL)) {
+      g_free (src->iradio_url);
+      src->iradio_url = gst_soup_http_src_unicodify (value);
+      if (src->iradio_url) {
+        gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_LOCATION,
+            src->iradio_url, NULL);
+      }
     }
   }
   if (!gst_tag_list_is_empty (tag_list)) {
@@ -1298,6 +1348,14 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
   } else if (SOUP_STATUS_IS_CLIENT_ERROR (msg->status_code) ||
       SOUP_STATUS_IS_REDIRECTION (msg->status_code) ||
       SOUP_STATUS_IS_SERVER_ERROR (msg->status_code)) {
+    const gchar *reason_phrase;
+
+    reason_phrase = msg->reason_phrase;
+    if (reason_phrase && !g_utf8_validate (reason_phrase, -1, NULL)) {
+      GST_ERROR_OBJECT (src, "Invalid UTF-8 in reason");
+      reason_phrase = "(invalid)";
+    }
+
     /* Report HTTP error. */
 
     /* when content_size is unknown and we have just finished receiving
@@ -1316,8 +1374,8 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
      */
     if (msg->status_code == SOUP_STATUS_NOT_FOUND) {
       GST_ELEMENT_ERROR_WITH_DETAILS (src, RESOURCE, NOT_FOUND,
-          ("%s", msg->reason_phrase),
-          ("%s (%d), URL: %s, Redirect to: %s", msg->reason_phrase,
+          ("%s", reason_phrase),
+          ("%s (%d), URL: %s, Redirect to: %s", reason_phrase,
               msg->status_code, src->location,
               GST_STR_NULL (src->redirection_uri)),
           ("http-status-code", G_TYPE_UINT, msg->status_code,
@@ -1328,15 +1386,15 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
         || msg->status_code == SOUP_STATUS_FORBIDDEN
         || msg->status_code == SOUP_STATUS_PROXY_AUTHENTICATION_REQUIRED) {
       GST_ELEMENT_ERROR_WITH_DETAILS (src, RESOURCE, NOT_AUTHORIZED, ("%s",
-              msg->reason_phrase), ("%s (%d), URL: %s, Redirect to: %s",
-              msg->reason_phrase, msg->status_code, src->location,
+              reason_phrase), ("%s (%d), URL: %s, Redirect to: %s",
+              reason_phrase, msg->status_code, src->location,
               GST_STR_NULL (src->redirection_uri)), ("http-status-code",
               G_TYPE_UINT, msg->status_code, "http-redirect-uri", G_TYPE_STRING,
               GST_STR_NULL (src->redirection_uri), NULL));
     } else {
       GST_ELEMENT_ERROR_WITH_DETAILS (src, RESOURCE, OPEN_READ,
-          ("%s", msg->reason_phrase),
-          ("%s (%d), URL: %s, Redirect to: %s", msg->reason_phrase,
+          ("%s", reason_phrase),
+          ("%s (%d), URL: %s, Redirect to: %s", reason_phrase,
               msg->status_code, src->location,
               GST_STR_NULL (src->redirection_uri)),
           ("http-status-code", G_TYPE_UINT, msg->status_code,
