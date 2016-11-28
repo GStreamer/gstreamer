@@ -500,7 +500,6 @@ AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(camerabin2)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(coloreffects)
-AG_GST_CHECK_PLUGIN(dataurisrc)
 AG_GST_CHECK_PLUGIN(dccp)
 AG_GST_CHECK_PLUGIN(debugutils)
 AG_GST_CHECK_PLUGIN(dvbsuboverlay)
@@ -3688,7 +3687,6 @@ gst/bayer/Makefile
 gst/camerabin2/Makefile
 gst/cdxaparse/Makefile
 gst/coloreffects/Makefile
-gst/dataurisrc/Makefile
 gst/dccp/Makefile
 gst/debugutils/Makefile
 gst/dvbsuboverlay/Makefile

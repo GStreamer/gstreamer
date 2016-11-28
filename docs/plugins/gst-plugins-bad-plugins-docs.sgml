@@ -39,7 +39,6 @@
     <xi:include href="xml/element-cvlaplace.xml" />
     <xi:include href="xml/element-cvsmooth.xml" />
     <xi:include href="xml/element-cvsobel.xml" />
-    <xi:include href="xml/element-dataurisrc.xml" />
     <!--xi:include href="xml/element-dc1394.xml" /-->
     <xi:include href="xml/element-diffuse.xml" />
     <xi:include href="xml/element-dilate.xml" />
@@ -170,7 +169,6 @@
     <xi:include href="xml/plugin-camerabin.xml" />
     <xi:include href="xml/plugin-coloreffects.xml" />
     <xi:include href="xml/plugin-curl.xml" />
-    <xi:include href="xml/plugin-dataurisrc.xml" />
     <xi:include href="xml/plugin-debugutilsbad.xml" />
     <xi:include href="xml/plugin-dtsdec.xml" />
     <xi:include href="xml/plugin-dvb.xml" />

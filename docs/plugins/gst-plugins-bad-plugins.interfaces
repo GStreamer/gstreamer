@@ -22,7 +22,6 @@ GstCeltEnc GstPreset GstTagSetter
 GstCompositor GstChildProxy
 GstDaalaEnc GstPreset
 GstDashDemux GstChildProxy
-GstDataURISrc GstURIHandler
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 GstDfbVideoSink GstNavigation GstColorBalance
 GstDiracEnc GstPreset

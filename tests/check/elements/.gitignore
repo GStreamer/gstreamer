@@ -18,7 +18,6 @@ curlsmtpsink
 dash_demux
 dash_isoff
 dash_mpd
-dataurisrc
 faac
 faad
 gdpdepay

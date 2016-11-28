@@ -78,6 +78,7 @@ CRUFT_FILES = \
 	$(top_builddir)/tests/check/elements/{aac,ac3,amr,flac,mpegaudio,dca}parse \
 	$(top_builddir)/tests/check/elements/autocolorspace \
 	$(top_builddir)/tests/check/elements/capssetter \
+	$(top_builddir)/tests/check/elements/dataurisrc \
 	$(top_builddir)/tests/check/elements/imagefreeze \
 	$(top_builddir)/tests/check/elements/qtmux \
 	$(top_builddir)/tests/check/elements/rtpmux \
@@ -97,6 +98,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/aacparse \
 	$(top_srcdir)/gst/amrparse \
 	$(top_srcdir)/gst/camerabin \
+	$(top_srcdir)/gst/dataurisrc \
 	$(top_srcdir)/gst/flacparse \
 	$(top_srcdir)/gst/hls \
 	$(top_srcdir)/gst/imagefreeze \

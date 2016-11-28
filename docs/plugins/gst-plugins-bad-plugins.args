@@ -34009,16 +34009,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstDataURISrc::uri</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>URI</NICK>
-<BLURB>URI that should be used.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>frei0r-filter-primaries::factor</NAME>
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>

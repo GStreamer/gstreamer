@@ -197,7 +197,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstadpcmenc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstautoconvert.so
 %{_libdir}/gstreamer-%{majorminor}/libgstbayer.so
-%{_libdir}/gstreamer-%{majorminor}/libgstdataurisrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstjpegformat.so
 %{_libdir}/gstreamer-%{majorminor}/libgstliveadder.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpcapparse.so

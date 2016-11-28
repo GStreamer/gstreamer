@@ -121,7 +121,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audiovisualizers/gstwavescope.h \
 	$(top_srcdir)/gst/camerabin2/gstcamerabin2.h \
 	$(top_srcdir)/gst/coloreffects/gstcoloreffects.h \
-	$(top_srcdir)/gst/dataurisrc/gstdataurisrc.h \
 	$(top_srcdir)/gst/dccp/gstdccpclientsink.h \
 	$(top_srcdir)/gst/dccp/gstdccpclientsrc.h \
 	$(top_srcdir)/gst/dccp/gstdccpserversink.h \

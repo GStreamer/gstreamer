@@ -260,7 +260,6 @@ check_PROGRAMS = \
 	elements/audiomixer \
 	elements/asfmux \
 	elements/camerabin \
-	elements/dataurisrc \
 	elements/gdppay \
 	elements/gdpdepay \
 	elements/compositor \

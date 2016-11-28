@@ -16,7 +16,6 @@ subdir('camerabin2')
 #subdir('cdxaparse')
 subdir('coloreffects')
 subdir('compositor')
-subdir('dataurisrc')
 #did not work
 #subdir('dccp')
 subdir('debugutils')
