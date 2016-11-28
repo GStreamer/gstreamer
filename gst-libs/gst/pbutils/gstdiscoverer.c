@@ -47,6 +47,8 @@
 #include <gst/video/video.h>
 #include <gst/audio/audio.h>
 
+#include <string.h>
+
 #include "pbutils.h"
 #include "pbutils-private.h"
 
@@ -803,7 +805,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   GstStructure *caps_st;
   GstTagList *tags_st;
   const gchar *name;
-  int tmp;
+  gint tmp, tmp2;
   guint utmp;
 
   if (!st || !gst_structure_id_has_field (st, _CAPS_QUARK)) {
@@ -837,7 +839,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
 
       format = gst_audio_format_from_string (format_str);
       finfo = gst_audio_format_get_info (format);
-      info->depth = GST_AUDIO_FORMAT_INFO_DEPTH (finfo);
+      if (finfo)
+        info->depth = GST_AUDIO_FORMAT_INFO_DEPTH (finfo);
     }
 
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
@@ -869,26 +872,50 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   } else if (g_str_has_prefix (name, "video/") ||
       g_str_has_prefix (name, "image/")) {
     GstDiscovererVideoInfo *info;
-    GstVideoInfo vinfo;
+    const gchar *caps_str;
 
     info = (GstDiscovererVideoInfo *) make_info (parent,
         GST_TYPE_DISCOVERER_VIDEO_INFO, caps);
 
-    if (gst_video_info_from_caps (&vinfo, caps)) {
-      info->width = (guint) vinfo.width;
-      info->height = (guint) vinfo.height;
+    if (gst_structure_get_int (caps_st, "width", &tmp))
+      info->width = (guint) tmp;
+    if (gst_structure_get_int (caps_st, "height", &tmp))
+      info->height = (guint) tmp;
 
-      info->depth = vinfo.finfo->bits * vinfo.finfo->n_components;
-
-      info->par_num = vinfo.par_n;
-      info->par_denom = vinfo.par_d;
-
-      info->framerate_num = vinfo.fps_n;
-      info->framerate_denom = vinfo.fps_d;
-
-      info->interlaced =
-          vinfo.interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+    if (gst_structure_get_fraction (caps_st, "framerate", &tmp, &tmp2)) {
+      info->framerate_num = (guint) tmp;
+      info->framerate_denom = (guint) tmp2;
+    } else {
+      info->framerate_num = 0;
+      info->framerate_denom = 1;
     }
+
+    if (gst_structure_get_fraction (caps_st, "pixel-aspect-ratio", &tmp, &tmp2)) {
+      info->par_num = (guint) tmp;
+      info->par_denom = (guint) tmp2;
+    } else {
+      info->par_num = 1;
+      info->par_denom = 1;
+    }
+
+    /* FIXME: we only want to extract depth if raw video is what's in the
+     * container (i.e. not if there is a decoder involved) */
+    caps_str = gst_structure_get_string (caps_st, "format");
+    if (caps_str != NULL) {
+      const GstVideoFormatInfo *finfo;
+      GstVideoFormat format;
+
+      format = gst_video_format_from_string (caps_str);
+      finfo = gst_video_format_get_info (format);
+      if (finfo)
+        info->depth = finfo->bits * finfo->n_components;
+    }
+
+    caps_str = gst_structure_get_string (caps_st, "interlace-mode");
+    if (!caps_str || strcmp (caps_str, "progressive") == 0)
+      info->interlaced = FALSE;
+    else
+      info->interlaced = TRUE;
 
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
       gst_structure_id_get (st, _TAGS_QUARK, GST_TYPE_TAG_LIST, &tags_st, NULL);
