@@ -160,7 +160,7 @@ gst_data_uri_src_get_property (GObject * object,
 
   switch (prop_id) {
     case PROP_URI:
-      g_value_set_string (value,
+      g_value_take_string (value,
           gst_data_uri_src_get_uri (GST_URI_HANDLER (src)));
       break;
     default:
