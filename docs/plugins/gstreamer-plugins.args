@@ -1089,6 +1089,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstFakeSink::drop-out-of-segment</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop out-of-segment buffers</NICK>
+<BLURB>Drop and don't render / hand off out-of-segment buffers.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstCapsFilter::caps</NAME>
 <TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
@@ -1216,5 +1226,15 @@
 <NICK>Forward sticky events</NICK>
 <BLURB>Forward sticky events on stream changes.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDataURISrc::uri</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>URI</NICK>
+<BLURB>URI that should be used.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
