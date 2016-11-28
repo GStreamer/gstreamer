@@ -100,10 +100,10 @@ ssl_locking_function (gint mode, gint lock_num, const gchar * file, gint line)
   }
 }
 
-static gulong
-ssl_thread_id_function (void)
+static void
+ssl_thread_id_function (CRYPTO_THREADID * id)
 {
-  return (gulong) g_thread_self ();
+  CRYPTO_THREADID_set_pointer (id, g_thread_self ());
 }
 #endif
 
@@ -138,7 +138,7 @@ _gst_dtls_init_openssl (void)
         g_rw_lock_init (&ssl_locks[i]);
       }
       CRYPTO_set_locking_callback (ssl_locking_function);
-      CRYPTO_set_id_callback (ssl_thread_id_function);
+      CRYPTO_THREADID_set_callback (ssl_thread_id_function);
     }
 #endif
 
