@@ -911,10 +911,11 @@ gst_element_request_compatible_pad (GstElement * element,
   templ_new = gst_element_get_compatible_pad_template (element, templ);
   if (templ_new)
     pad = gst_element_get_pad_from_template (element, templ_new);
-
-  /* This can happen for non-request pads. No need to unref. */
-  if (pad && GST_PAD_PEER (pad))
+  /* This can happen for non-request pads. */
+  if (pad && GST_PAD_PEER (pad)) {
+    gst_object_unref (pad);
     pad = NULL;
+  }
 
   return pad;
 }
