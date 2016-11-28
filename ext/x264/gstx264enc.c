@@ -2264,6 +2264,12 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
 
   gst_caps_unref (template_caps);
 
+  if (GST_VIDEO_INFO_IS_INTERLACED (&state->info))
+    g_string_append_printf (encoder->option_string, ":interlaced=%d", TRUE);
+  else
+    g_string_append_printf (encoder->option_string, ":interlaced=%d",
+        encoder->interlaced);
+
   if (!gst_x264_enc_init_encoder (encoder))
     return FALSE;
 
@@ -2709,8 +2715,6 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       break;
     case ARG_INTERLACED:
       encoder->interlaced = g_value_get_boolean (value);
-      g_string_append_printf (encoder->option_string, ":interlaced=%d",
-          encoder->interlaced);
       break;
     case ARG_FRAME_PACKING:
       encoder->frame_packing = g_value_get_enum (value);
