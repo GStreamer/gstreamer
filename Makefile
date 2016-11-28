@@ -52,7 +52,7 @@ gst_docs_HOTDOC_EXTRA_DEPS = theme/theme.stamp
 # DOC_SERVER = people.freedesktop.org
 # DOC_BASE = public_html/gst-docs
 DOC_SERVER = gstreamer.freedesktop.org
-DOC_BASE = /srv/gstreamer.freedesktop.org/public_html/documentation2
+DOC_BASE = /srv/gstreamer.freedesktop.org/public_html/documentation
 
 # The local build directory with the generated HTML output
 BUILT_DOC_DIR = $(builddir)/built_doc/html/
