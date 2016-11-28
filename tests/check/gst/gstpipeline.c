@@ -615,7 +615,9 @@ GST_START_TEST (test_pipeline_reset_start_time)
   /* We waited 50ms, so the position should be now >= 50ms */
   fail_unless (gst_element_query_position (fakesink, GST_FORMAT_TIME,
           &position));
-  fail_unless (position >= 50 * GST_MSECOND);
+  fail_unless (position >= 50 * GST_MSECOND,
+      "Pipeline position is not at least 50millisecond (reported %"
+      G_GUINT64_FORMAT " nanoseconds)", position);
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
       GST_STATE_CHANGE_ASYNC);
