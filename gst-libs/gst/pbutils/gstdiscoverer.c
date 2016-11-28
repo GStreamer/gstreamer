@@ -816,6 +816,14 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   }
 
   gst_structure_id_get (st, _CAPS_QUARK, GST_TYPE_CAPS, &caps, NULL);
+
+  if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps)) {
+    GST_WARNING ("Couldn't find caps !");
+    if (caps)
+      gst_caps_unref (caps);
+    return make_info (parent, GST_TYPE_DISCOVERER_STREAM_INFO, NULL);
+  }
+
   caps_st = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (caps_st);
 
@@ -1033,9 +1041,19 @@ find_stream_for_node (GstDiscoverer * dc, const GstStructure * topology)
 static gboolean
 child_is_same_stream (const GstCaps * _parent, const GstCaps * child)
 {
-  GstCaps *parent = gst_caps_copy (_parent);
-  guint i, size = gst_caps_get_size (parent);
+  GstCaps *parent;
+  guint i, size;
   gboolean res;
+
+  if (_parent == child)
+    return TRUE;
+  if (!_parent)
+    return FALSE;
+  if (!child)
+    return FALSE;
+
+  parent = gst_caps_copy (_parent);
+  size = gst_caps_get_size (parent);
 
   for (i = 0; i < size; i++) {
     gst_structure_remove_field (gst_caps_get_structure (parent, i), "parsed");
@@ -1052,6 +1070,13 @@ child_is_raw_stream (const GstCaps * parent, const GstCaps * child)
 {
   const GstStructure *st1, *st2;
   const gchar *name1, *name2;
+
+  if (parent == child)
+    return TRUE;
+  if (!parent)
+    return FALSE;
+  if (!child)
+    return FALSE;
 
   st1 = gst_caps_get_structure (parent, 0);
   name1 = gst_structure_get_name (st1);
@@ -1130,7 +1155,8 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
           res->next = next;
           next->previous = res;
         }
-        gst_caps_unref (caps);
+        if (caps)
+          gst_caps_unref (caps);
       }
     }
 
