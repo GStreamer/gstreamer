@@ -130,6 +130,8 @@ gst_video_info_init (GstVideoInfo * info)
   info->par_n = 1;
   info->par_d = 1;
   GST_VIDEO_INFO_MULTIVIEW_MODE (info) = GST_VIDEO_MULTIVIEW_MODE_NONE;
+  GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+  GST_VIDEO_INFO_FIELD_ORDER (info) = GST_VIDEO_FIELD_ORDER_UNKNOWN;
 }
 
 #define MAKE_COLORIMETRY(r,m,t,p) {  \
@@ -428,9 +430,9 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
     else
       GST_VIDEO_INFO_MULTIVIEW_MODE (info) = GST_VIDEO_MULTIVIEW_MODE_NONE;
 
-    gst_structure_get_flagset (structure, "multiview-flags", &multiview_flags,
-        NULL);
-    GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) = multiview_flags;
+    if (gst_structure_get_flagset (structure, "multiview-flags",
+            &multiview_flags, NULL))
+      GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) = multiview_flags;
 
     if (!gst_structure_get_int (structure, "views", &info->views))
       info->views = 1;
