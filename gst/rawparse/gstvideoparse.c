@@ -40,13 +40,11 @@
 #include "gstvideoparse.h"
 #include "gstrawvideoparse.h"
 
-
 static GstStaticPadTemplate static_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
-
 
 static GstStaticPadTemplate static_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -54,7 +52,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw")
     );
-
 
 static void gst_video_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

@@ -109,10 +109,8 @@
 #include <string.h>
 #include "gstrawbaseparse.h"
 
-
 GST_DEBUG_CATEGORY_STATIC (raw_base_parse_debug);
 #define GST_CAT_DEFAULT raw_base_parse_debug
-
 
 enum
 {
@@ -120,17 +118,14 @@ enum
   PROP_USE_SINK_CAPS
 };
 
-
 #define DEFAULT_USE_SINK_CAPS  FALSE
 #define INITIAL_PARSER_CONFIG \
   ((DEFAULT_USE_SINK_CAPS) ? GST_RAW_BASE_PARSE_CONFIG_SINKCAPS : \
    GST_RAW_BASE_PARSE_CONFIG_PROPERTIES)
 
-
 #define gst_raw_base_parse_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstRawBaseParse, gst_raw_base_parse,
     GST_TYPE_BASE_PARSE);
-
 
 static void gst_raw_base_parse_finalize (GObject * object);
 static void gst_raw_base_parse_set_property (GObject * object, guint prop_id,
@@ -151,8 +146,6 @@ static gboolean gst_raw_base_parse_is_using_sink_caps (GstRawBaseParse *
     raw_base_parse);
 static gboolean gst_raw_base_parse_is_gstformat_supported (GstRawBaseParse *
     raw_base_parse, GstFormat format);
-
-
 
 static void
 gst_raw_base_parse_class_init (GstRawBaseParseClass * klass)
@@ -196,14 +189,12 @@ gst_raw_base_parse_class_init (GstRawBaseParseClass * klass)
       );
 }
 
-
 static void
 gst_raw_base_parse_init (GstRawBaseParse * raw_base_parse)
 {
   raw_base_parse->src_caps_set = FALSE;
   g_mutex_init (&(raw_base_parse->config_mutex));
 }
-
 
 static void
 gst_raw_base_parse_finalize (GObject * object)
@@ -214,7 +205,6 @@ gst_raw_base_parse_finalize (GObject * object)
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
-
 
 static void
 gst_raw_base_parse_set_property (GObject * object, guint prop_id,
@@ -291,7 +281,6 @@ gst_raw_base_parse_set_property (GObject * object, guint prop_id,
   }
 }
 
-
 static void
 gst_raw_base_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -311,7 +300,6 @@ gst_raw_base_parse_get_property (GObject * object, guint prop_id,
       break;
   }
 }
-
 
 static gboolean
 gst_raw_base_parse_start (GstBaseParse * parse)
@@ -338,7 +326,6 @@ gst_raw_base_parse_start (GstBaseParse * parse)
   return TRUE;
 }
 
-
 static gboolean
 gst_raw_base_parse_stop (GstBaseParse * parse)
 {
@@ -351,7 +338,6 @@ gst_raw_base_parse_stop (GstBaseParse * parse)
   return TRUE;
 }
 
-
 static gboolean
 gst_raw_base_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
 {
@@ -362,7 +348,6 @@ gst_raw_base_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
   g_assert (klass->set_config_from_caps);
   g_assert (klass->get_caps_from_config);
   g_assert (klass->get_config_frame_size);
-
 
   GST_RAW_BASE_PARSE_CONFIG_MUTEX_LOCK (raw_base_parse);
 
@@ -488,17 +473,14 @@ gst_raw_base_parse_handle_frame (GstBaseParse * parse,
   g_assert (klass->get_config_frame_size);
   g_assert (klass->get_units_per_second);
 
-
   /* We never skip any bytes this way. Instead, subclass takes care
    * of skipping any overhead (necessary, since the way it needs to
    * be skipped is completely subclass specific). */
   *skipsize = 0;
 
-
   /* The operations below access the current config. Protect
    * against race conditions by using the object lock. */
   GST_RAW_BASE_PARSE_CONFIG_MUTEX_LOCK (raw_base_parse);
-
 
   /* If the source pad caps haven't been set yet, or need to be
    * set again, do so now, BEFORE any buffers are pushed out */
@@ -543,7 +525,6 @@ gst_raw_base_parse_handle_frame (GstBaseParse * parse,
   frame_size =
       klass->get_config_frame_size (raw_base_parse,
       GST_RAW_BASE_PARSE_CONFIG_CURRENT);
-
 
   in_size = gst_buffer_get_size (frame->buffer);
 
@@ -636,7 +617,6 @@ gst_raw_base_parse_handle_frame (GstBaseParse * parse,
    * operations, so the lock can be released */
   GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (raw_base_parse);
 
-
   /* If any new caps have to be pushed downstrean, do so
    * *before* the frame is finished */
   if (G_UNLIKELY (new_caps_event != NULL)) {
@@ -649,7 +629,6 @@ gst_raw_base_parse_handle_frame (GstBaseParse * parse,
       gst_base_parse_finish_frame (parse, frame, out_size + frame->overhead);
 
   return flow_ret;
-
 
 config_not_ready:
   GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (raw_base_parse);
@@ -676,7 +655,6 @@ error_end:
   return flow_ret;
 }
 
-
 static gboolean
 gst_raw_base_parse_convert (GstBaseParse * parse, GstFormat src_format,
     gint64 src_value, GstFormat dest_format, gint64 * dest_value)
@@ -689,11 +667,9 @@ gst_raw_base_parse_convert (GstBaseParse * parse, GstFormat src_format,
   g_assert (klass->is_config_ready);
   g_assert (klass->get_units_per_second);
 
-
   /* The operations below access the current config. Protect
    * against race conditions by using the object lock. */
   GST_RAW_BASE_PARSE_CONFIG_MUTEX_LOCK (raw_base_parse);
-
 
   if (!klass->is_config_ready (raw_base_parse,
           GST_RAW_BASE_PARSE_CONFIG_CURRENT)) {
@@ -746,7 +722,6 @@ gst_raw_base_parse_convert (GstBaseParse * parse, GstFormat src_format,
   GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (raw_base_parse);
   return ret;
 
-
 config_not_ready:
   GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (raw_base_parse);
   GST_ELEMENT_ERROR (parse, STREAM, FORMAT,
@@ -754,7 +729,6 @@ config_not_ready:
           "upstream may not have pushed a caps event yet"), (NULL));
   return FALSE;
 }
-
 
 static gboolean
 gst_raw_base_parse_is_using_sink_caps (GstRawBaseParse * raw_base_parse)
@@ -766,7 +740,6 @@ gst_raw_base_parse_is_using_sink_caps (GstRawBaseParse * raw_base_parse)
       GST_RAW_BASE_PARSE_CONFIG_SINKCAPS;
 }
 
-
 static gboolean
 gst_raw_base_parse_is_gstformat_supported (GstRawBaseParse * raw_base_parse,
     GstFormat format)
@@ -776,10 +749,6 @@ gst_raw_base_parse_is_gstformat_supported (GstRawBaseParse * raw_base_parse,
   g_assert (klass->is_unit_format_supported);
   return klass->is_unit_format_supported (raw_base_parse, format);
 }
-
-
-
-
 
 /**
  * gst_raw_base_parse_invalidate_src_caps:

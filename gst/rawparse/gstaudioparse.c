@@ -42,13 +42,11 @@
 
 #include <string.h>
 
-
 static GstStaticPadTemplate static_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
-
 
 static GstStaticPadTemplate static_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
@@ -60,7 +58,6 @@ static GstStaticPadTemplate static_src_template =
         "audio/x-alaw, rate=(int)[1,MAX], channels=(int)[1,MAX]; "
         "audio/x-mulaw, rate=(int)[1,MAX], channels=(int)[1,MAX]")
     );
-
 
 typedef enum
 {
@@ -108,7 +105,6 @@ gst_audio_parse_format_get_type (void)
 
   return audio_parse_format_type;
 }
-
 
 #define gst_audio_parse_parent_class parent_class
 G_DEFINE_TYPE (GstAudioParse, gst_audio_parse, GST_TYPE_BIN);

@@ -86,10 +86,8 @@
 #include "gstrawvideoparse.h"
 #include "unalignedvideo.h"
 
-
 GST_DEBUG_CATEGORY_STATIC (raw_video_parse_debug);
 #define GST_CAT_DEFAULT raw_video_parse_debug
-
 
 enum
 {
@@ -106,7 +104,6 @@ enum
   PROP_FRAME_STRIDE
 };
 
-
 #define DEFAULT_WIDTH                 320
 #define DEFAULT_HEIGHT                240
 #define DEFAULT_FORMAT                GST_VIDEO_FORMAT_I420
@@ -118,10 +115,8 @@ enum
 #define DEFAULT_TOP_FIELD_FIRST       FALSE
 #define DEFAULT_FRAME_STRIDE          0
 
-
 #define GST_RAW_VIDEO_PARSE_CAPS \
         GST_VIDEO_CAPS_MAKE(GST_VIDEO_FORMATS_ALL) "; "
-
 
 static GstStaticPadTemplate static_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -130,7 +125,6 @@ static GstStaticPadTemplate static_sink_template =
     GST_STATIC_CAPS (GST_UNALIGNED_RAW_VIDEO_CAPS "; " GST_RAW_VIDEO_PARSE_CAPS)
     );
 
-
 static GstStaticPadTemplate static_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -138,10 +132,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_RAW_VIDEO_PARSE_CAPS)
     );
 
-
 #define gst_raw_video_parse_parent_class parent_class
 G_DEFINE_TYPE (GstRawVideoParse, gst_raw_video_parse, GST_TYPE_RAW_BASE_PARSE);
-
 
 static void gst_raw_video_parse_set_property (GObject * object, guint prop_id,
     GValue const *value, GParamSpec * pspec);
@@ -338,7 +330,6 @@ gst_raw_video_parse_class_init (GstRawVideoParseClass * klass)
       "Carlos Rafael Giani <dv@pseudoterminal.org>");
 }
 
-
 static void
 gst_raw_video_parse_init (GstRawVideoParse * raw_video_parse)
 {
@@ -355,7 +346,6 @@ gst_raw_video_parse_init (GstRawVideoParse * raw_video_parse)
   raw_video_parse->properties_config.top_field_first = DEFAULT_TOP_FIELD_FIRST;
   raw_video_parse->properties_config.frame_stride = DEFAULT_FRAME_STRIDE;
 }
-
 
 static void
 gst_raw_video_parse_set_property (GObject * object, guint prop_id,
@@ -653,7 +643,6 @@ gst_raw_video_parse_set_property (GObject * object, guint prop_id,
   }
 }
 
-
 static void
 gst_raw_video_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -773,7 +762,6 @@ gst_raw_video_parse_get_property (GObject * object, guint prop_id,
   }
 }
 
-
 static gboolean
 gst_raw_video_parse_stop (GstBaseParse * parse)
 {
@@ -788,7 +776,6 @@ gst_raw_video_parse_stop (GstBaseParse * parse)
 
   return GST_BASE_PARSE_CLASS (parent_class)->stop (parse);
 }
-
 
 static gboolean
 gst_raw_video_parse_set_current_config (GstRawBaseParse * raw_base_parse,
@@ -812,7 +799,6 @@ gst_raw_video_parse_set_current_config (GstRawBaseParse * raw_base_parse,
   return TRUE;
 }
 
-
 static GstRawBaseParseConfig
 gst_raw_video_parse_get_current_config (GstRawBaseParse * raw_base_parse)
 {
@@ -820,7 +806,6 @@ gst_raw_video_parse_get_current_config (GstRawBaseParse * raw_base_parse)
   return gst_raw_video_parse_is_using_sink_caps (raw_video_parse) ?
       GST_RAW_BASE_PARSE_CONFIG_SINKCAPS : GST_RAW_BASE_PARSE_CONFIG_PROPERTIES;
 }
-
 
 static gboolean
 gst_raw_video_parse_set_config_from_caps (GstRawBaseParse * raw_base_parse,
@@ -886,7 +871,6 @@ gst_raw_video_parse_set_config_from_caps (GstRawBaseParse * raw_base_parse,
   return config_ptr->ready;
 }
 
-
 static gboolean
 gst_raw_video_parse_get_caps_from_config (GstRawBaseParse * raw_base_parse,
     GstRawBaseParseConfig config, GstCaps ** caps)
@@ -902,7 +886,6 @@ gst_raw_video_parse_get_caps_from_config (GstRawBaseParse * raw_base_parse,
   return *caps != NULL;
 }
 
-
 static gsize
 gst_raw_video_parse_get_config_frame_size (GstRawBaseParse * raw_base_parse,
     GstRawBaseParseConfig config)
@@ -914,7 +897,6 @@ gst_raw_video_parse_get_config_frame_size (GstRawBaseParse * raw_base_parse,
       (gsize) (config_ptr->frame_stride));
 }
 
-
 static guint
 gst_raw_video_parse_get_max_frames_per_buffer (G_GNUC_UNUSED GstRawBaseParse *
     raw_base_parse, G_GNUC_UNUSED GstRawBaseParseConfig config)
@@ -922,7 +904,6 @@ gst_raw_video_parse_get_max_frames_per_buffer (G_GNUC_UNUSED GstRawBaseParse *
   /* We want exactly one frame per buffer */
   return 1;
 }
-
 
 static gboolean
 gst_raw_video_parse_is_config_ready (GstRawBaseParse * raw_base_parse,
@@ -995,7 +976,6 @@ gst_raw_video_parse_process (GstRawBaseParse * raw_base_parse,
   return TRUE;
 }
 
-
 static gboolean
 gst_raw_video_parse_is_unit_format_supported (G_GNUC_UNUSED GstRawBaseParse *
     raw_base_parse, GstFormat format)
@@ -1008,7 +988,6 @@ gst_raw_video_parse_is_unit_format_supported (G_GNUC_UNUSED GstRawBaseParse *
       return FALSE;
   }
 }
-
 
 static void
 gst_raw_video_parse_get_units_per_second (GstRawBaseParse * raw_base_parse,
@@ -1050,7 +1029,6 @@ gst_raw_video_parse_get_units_per_second (GstRawBaseParse * raw_base_parse,
   }
 }
 
-
 static gint
 gst_raw_video_parse_get_overhead_size (GstRawBaseParse * raw_base_parse,
     GstRawBaseParseConfig config)
@@ -1073,14 +1051,12 @@ gst_raw_video_parse_get_overhead_size (GstRawBaseParse * raw_base_parse,
   return (frame_size < frame_stride) ? (gint) (frame_stride - frame_size) : 0;
 }
 
-
 static gboolean
 gst_raw_video_parse_is_using_sink_caps (GstRawVideoParse * raw_video_parse)
 {
   return raw_video_parse->current_config ==
       &(raw_video_parse->sink_caps_config);
 }
-
 
 static GstRawVideoParseConfig *
 gst_raw_video_parse_get_config_ptr (GstRawVideoParse * raw_video_parse,
@@ -1100,7 +1076,6 @@ gst_raw_video_parse_get_config_ptr (GstRawVideoParse * raw_video_parse,
       return raw_video_parse->current_config;
   }
 }
-
 
 static void
 gst_raw_video_parse_init_config (GstRawVideoParseConfig * config)
@@ -1127,7 +1102,6 @@ gst_raw_video_parse_init_config (GstRawVideoParseConfig * config)
     config->plane_strides[i] = GST_VIDEO_INFO_PLANE_STRIDE (&(config->info), i);
   }
 }
-
 
 static void
 gst_raw_video_parse_update_info (GstRawVideoParseConfig * config)

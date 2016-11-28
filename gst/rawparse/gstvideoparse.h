@@ -50,7 +50,6 @@ struct _GstVideoParseClass
   GstBinClass parent_class;
 };
 
-
 GType gst_video_parse_get_type (void);
 
 #endif /*  __GST_VIDEO_PARSE_H__ */

@@ -49,7 +49,6 @@ struct _GstAudioParseClass
   GstBinClass parent_class;
 };
 
-
 GType gst_audio_parse_get_type (void);
 
 #endif /*  __GST_AUDIO_PARSE_H__ */
