@@ -548,7 +548,9 @@ got_subtitle_data (GstPad * pad, GstPadProbeInfo * info, GstDiscoverer * dc)
 {
 
   if (!(GST_IS_BUFFER (info->data) || (GST_IS_EVENT (info->data)
-              && GST_EVENT_TYPE ((GstEvent *) info->data) == GST_EVENT_GAP)))
+              && (GST_EVENT_TYPE ((GstEvent *) info->data) == GST_EVENT_GAP
+                  || GST_EVENT_TYPE ((GstEvent *) info->data) ==
+                  GST_EVENT_EOS))))
     return GST_PAD_PROBE_OK;
 
 
