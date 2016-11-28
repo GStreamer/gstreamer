@@ -931,6 +931,8 @@ _link_renderer (GstSubtitleOverlay * self, GstElement * renderer,
     sink = _get_video_pad (renderer);
     if (G_UNLIKELY (!sink)) {
       GST_WARNING_OBJECT (self, "Can't get video sink from renderer");
+      if (video_caps)
+        gst_caps_unref (video_caps);
       return FALSE;
     }
     allowed_caps = gst_pad_query_caps (sink, NULL);
