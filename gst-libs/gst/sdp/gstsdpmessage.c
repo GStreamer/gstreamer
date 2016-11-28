@@ -3331,8 +3331,8 @@ gst_sdp_media_add_rtcp_fb_attributes_from_media (const GstSDPMedia * media,
       gst_structure_set (s, key, G_TYPE_BOOLEAN, TRUE, NULL);
       GST_DEBUG ("adding caps: %s=TRUE", key);
       g_free (key);
-    } else
-      g_free (to_free);
+    }
+    g_free (to_free);
   }
   return GST_SDP_OK;
 }
