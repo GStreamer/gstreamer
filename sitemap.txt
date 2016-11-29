@@ -135,4 +135,5 @@ index.md
 			plugin-development/appendix/licensing-advisory.md
 	plugins.md
 	splitup.md
+	licensing.md
 	rtp.md
