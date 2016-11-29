@@ -4733,6 +4733,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
           }
 
           gst_object_unref (sinkpad);
+          gst_caps_unref (raw_caps);
           gst_caps_unref (caps);
         }
 
