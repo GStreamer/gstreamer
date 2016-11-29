@@ -1,11 +1,11 @@
 
-Release notes for GStreamer Good Plugins 1.10.1
+Release notes for GStreamer Good Plugins 1.10.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
-This release only contains bugfixes and it is safe to update from 1.10.0. For a
+This release only contains bugfixes and it is safe to update from 1.10.x. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -55,17 +55,12 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 769765 : v4l2: Sanitise buffer sizes provided by v4l2
-      * 770568 : rtspsrc: fails to connect when the 'control' attribute is omitted in a single media description
-      * 772610 : rtspsrc doesn't support redirect on play
-      * 773269 : rtpbin: avoid generating errors when rtcp messages are empty and check the queue is not empty
-      * 773512 : rtph263pay: Fix leak for B-fragments
-      * 773515 : rtph263ppay: Fix caps leak
-      * 773516 : rtph263depay: Don't drop mode b packets with picture start code
-      * 773784 : splitmuxsink: failed assertion on gst-launch-1.0 ^C
-      * 773861 : wavparse: element error is posted at EOS even though WAV file is OK
-      * 774507 : splitmuxsink: pad request fails for flvmux
-      * 774556 : Splitmuxsink crash (ver 1.10.0)
+      * 757292 : gdkpixbufoverlay: relative-x/y properties
+      * 774428 : qtdemux: Outputting unaligned raw audio/video buffers
+      * 774834 : flic decoder: Buffer overflow in flx_decode_delta_fli
+      * 774859 : flic decoder: Invalid memory read in flx_decode_chunks
+      * 774897 : flxdec: Unreferences itself one time too many on invalid files
+      * 775219 : avidemux: Ensure that tags are valid UTF-8 before adding them to the taglist
 
 ==== Download ====
 
@@ -102,14 +97,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alejandro G. Castro
-      * Havard Graff
-      * Jan Schmidt
-      * Matt Staples
-      * Petr Kulhavy
+      * Jagadish
+      * Matthew Waters
+      * Philipp Zabel
       * Sebastian Dröge
-      * Stian Selnes
       * Tim-Philipp Müller
-      * Vinod Kesti
-      * William Manley
  

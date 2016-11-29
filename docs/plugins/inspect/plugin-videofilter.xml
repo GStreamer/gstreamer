@@ -3,7 +3,7 @@
   <description>Video filters plugin</description>
   <filename>../../gst/videofilter/.libs/libgstvideofilter.so</filename>
   <basename>libgstvideofilter.so</basename>
-  <version>1.10.1</version>
+  <version>1.10.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
