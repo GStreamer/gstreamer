@@ -317,13 +317,14 @@ _priv_gst_in_valgrind (void)
 }
 
 static gchar *
-_replace_pattern_in_gst_debug_file_name (gchar * name, const char * token, guint val)
+_replace_pattern_in_gst_debug_file_name (gchar * name, const char *token,
+    guint val)
 {
-  gchar * token_start;
+  gchar *token_start;
   if ((token_start = strstr (name, token))) {
     gsize token_len = strlen (token);
-    gchar * name_prefix = name;
-    gchar * name_suffix = token_start + token_len;
+    gchar *name_prefix = name;
+    gchar *name_suffix = token_start + token_len;
     token_start[0] = '\0';
     name = g_strdup_printf ("%s%u%s", name_prefix, val, name_suffix);
     g_free (name_prefix);
@@ -2605,23 +2606,12 @@ gst_printerrln (const gchar * format, ...)
 #ifdef HAVE_UNWIND
 #ifdef HAVE_DW
 static gboolean
-append_debug_info (GString * trace, const void *ip)
+append_debug_info (GString * trace, Dwfl * dwfl, const void *ip)
 {
-  Dwfl *dwfl;
   Dwfl_Line *line;
   Dwarf_Addr addr;
   Dwfl_Module *module;
   const gchar *function_name;
-  gchar *debuginfo_path = NULL;
-  Dwfl_Callbacks callbacks = {
-    .find_elf = dwfl_linux_proc_find_elf,
-    .find_debuginfo = dwfl_standard_find_debuginfo,
-    .debuginfo_path = &debuginfo_path,
-  };
-
-  dwfl = dwfl_begin (&callbacks);
-  if (!dwfl)
-    return FALSE;
 
   if (dwfl_linux_proc_report (dwfl, getpid ()) != 0)
     return FALSE;
@@ -2663,17 +2653,30 @@ generate_unwind_trace (void)
   gboolean use_libunwind = TRUE;
   GString *trace = g_string_new (NULL);
 
+#ifdef HAVE_DW
+  Dwfl *dwfl;
+
+  Dwfl_Callbacks callbacks = {
+    .find_elf = dwfl_linux_proc_find_elf,
+    .find_debuginfo = dwfl_standard_find_debuginfo,
+  };
+
+  dwfl = dwfl_begin (&callbacks);
+#endif /* HAVE_DW */
+
   unw_getcontext (&uc);
   unw_init_local (&cursor, &uc);
 
   while (unw_step (&cursor) > 0) {
 #ifdef HAVE_DW
-    unw_word_t ip;
+    if (dwfl) {
+      unw_word_t ip;
 
-    unw_get_reg (&cursor, UNW_REG_IP, &ip);
-    if (append_debug_info (trace, (void *) (ip - 4))) {
-      use_libunwind = FALSE;
-      g_string_append (trace, ")\n");
+      unw_get_reg (&cursor, UNW_REG_IP, &ip);
+      if (append_debug_info (trace, dwfl, (void *) (ip - 4))) {
+        use_libunwind = FALSE;
+        g_string_append (trace, ")\n");
+      }
     }
 #endif /* HAVE_DW */
 
@@ -2686,6 +2689,10 @@ generate_unwind_trace (void)
           (gsize) offset);
     }
   }
+
+#ifdef HAVE_DW
+  dwfl_end (dwfl);
+#endif
 
   return g_string_free (trace, FALSE);
 }
