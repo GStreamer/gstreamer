@@ -21,7 +21,6 @@
 #include <ges/ges-uri-asset.h>
 #include <gst/pbutils/encoding-profile.h>
 #include <gst/pbutils/gstdiscoverer.h>
-#include <ges/ges-internal.h>
 
 static void
 asset_loaded_cb (GObject * source, GAsyncResult * res, GMainLoop * mainloop)
