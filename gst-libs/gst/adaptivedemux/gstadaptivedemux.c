@@ -291,6 +291,9 @@ gst_adaptive_demux_wait_until (GstClock * clock, GCond * cond, GMutex * mutex,
     GstClockTime end_time);
 static gboolean gst_adaptive_demux_clock_callback (GstClock * clock,
     GstClockTime time, GstClockID id, gpointer user_data);
+static gboolean
+gst_adaptive_demux_requires_periodical_playlist_update_default (GstAdaptiveDemux
+    * demux);
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -412,6 +415,9 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
   klass->data_received = gst_adaptive_demux_stream_data_received_default;
   klass->finish_fragment = gst_adaptive_demux_stream_finish_fragment_default;
   klass->update_manifest = gst_adaptive_demux_update_manifest_default;
+  klass->requires_periodical_playlist_update =
+      gst_adaptive_demux_requires_periodical_playlist_update_default;
+
 }
 
 static void
@@ -686,7 +692,9 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
             demux->priv->stop_updates_task = FALSE;
             g_mutex_unlock (&demux->priv->updates_timed_lock);
             /* Task to periodically update the manifest */
-            gst_task_start (demux->priv->updates_task);
+            if (demux_class->requires_periodical_playlist_update (demux)) {
+              gst_task_start (demux->priv->updates_task);
+            }
           }
         } else {
           /* no streams */
@@ -2125,6 +2133,13 @@ gst_adaptive_demux_stream_data_received_default (GstAdaptiveDemux * demux,
   return gst_adaptive_demux_stream_push_buffer (stream, buffer);
 }
 
+static gboolean
+gst_adaptive_demux_requires_periodical_playlist_update_default (GstAdaptiveDemux
+    * demux)
+{
+  return TRUE;
+}
+
 static GstFlowReturn
 _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
@@ -3338,7 +3353,15 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
       GST_DEBUG_OBJECT (stream->pad, "EOS, checking to stop download loop");
       /* we push the EOS after releasing the object lock */
       if (gst_adaptive_demux_is_live (demux)) {
-        if (gst_adaptive_demux_stream_wait_manifest_update (demux, stream)) {
+        GstAdaptiveDemuxClass *demux_class =
+            GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
+
+        /* this might be a fragment download error, refresh the manifest, just in case */
+        if (!demux_class->requires_periodical_playlist_update (demux)) {
+          ret = gst_adaptive_demux_update_manifest (demux);
+          break;
+        } else if (gst_adaptive_demux_stream_wait_manifest_update (demux,
+                stream)) {
           goto end;
         }
         gst_task_stop (stream->download_task);

@@ -459,6 +459,20 @@ struct _GstAdaptiveDemuxClass
    * selected period.
    */
   GstClockTime (*get_period_start_time) (GstAdaptiveDemux *demux);
+
+  /**
+   * requires_periodical_playlist_update:
+   * @demux: #GstAdaptiveDemux
+   *
+   * Some adaptive streaming protocols allow the client to download
+   * the playlist once and build up the fragment list based on the
+   * current fragment metadata. For those protocols the demuxer
+   * doesn't need to periodically refresh the playlist. This vfunc
+   * is relevant only for live playback scenarios.
+   *
+   * Return: %TRUE if the playlist needs to be refreshed periodically by the demuxer.
+   */
+  gboolean (*requires_periodical_playlist_update) (GstAdaptiveDemux * demux);
 };
 
 GType    gst_adaptive_demux_get_type (void);
