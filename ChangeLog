@@ -1,9 +1,72 @@
-=== release 1.10.1 ===
+=== release 1.10.2 ===
 
-2016-11-17  Sebastian Dröge <slomo@coaxion.net>
+2016-11-29  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.1
+	  releasing 1.10.2
+
+2016-10-19 15:33:41 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: GLTextureUpload if driver supports OpenGL
+	  Removes GstVideoGLTextureUploadMeta caps feature if the driver
+	  doesn't support opengl.
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772838
+
+2016-10-25 17:48:47 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: GLTextureUpload if driver supports OpenGL
+	  When the allowed source pad caps are generated, the GLTextureUpload caps are
+	  only inserted if the driver support OpenGL.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772838
+
+2016-11-04 16:26:18 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: guard GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS
+	  In commit 6d11a00 were introduced a regression when gstreamer-vaapi is
+	  compiled with out EGL/GLX support: it shall not support
+	  GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS.
+	  This patch guards the inclusion of GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS in the
+	  allowed src caps for vaapedecode if EGL/GLX.
+
+2016-07-19 16:40:10 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecode.h:
+	  vaapidecode: generate source pad caps
+	  Just as vaapipostproc, VA decoder's context can be queried to get the possible
+	  raw formats, so, the src caps can negotiate the exact caps that the context
+	  supports.
+
+2016-11-24 21:17:54 +0100  Dominique Leuenberger <dimstar@opensuse.org>
+
+	* gst-libs/gst/vaapi/Makefile.am:
+	  build: add LIBVA_WAYLAND_CFLAGS to libgstvaapiegl
+	  In case libva-wayland has its headers not installed in default
+	  locations (like /usr/include), the build fails to include "wayland-client.h":
+	  CC       libgstvaapi_egl_la-gstvaapiutils_egl.lo
+	  In file included from gstvaapidisplay_wayland.h:27:0,
+	  from gstvaapidisplay_egl.c:35:
+	  /usr/include/va/va_wayland.h:31:28: fatal error: wayland-client.h: No such file or directory
+	  #include <wayland-client.h>
+	  As we already passed VA_CLAGS, /usr/include/va/va_wayland.h could be found, but it is
+	  our fault not to instruct the system that we ALSO care for va_wayland. We correctly query
+	  for libva-wayland.pc in configure and use this in other places as well. It is thus only
+	  correct and consequent, to do it also at this spot.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773946
+
+=== release 1.10.1 ===
+
+2016-11-17 15:59:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.10.1
 
 2016-11-11 11:40:09 +0900  Hyunjun Ko <zzoon@igalia.com>
 
