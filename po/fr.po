@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-17 14:58+0200\n"
+"POT-Creation-Date: 2016-11-29 15:32+0200\n"
 "PO-Revision-Date: 2016-02-20 16:27+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -35,6 +35,9 @@ msgstr "Impossible de se connecter au serveur"
 
 msgid "No URL set."
 msgstr "Aucun URL défini."
+
+msgid "Corrupted HTTP response."
+msgstr ""
 
 msgid "Server does not support seeking."
 msgstr "Le serveur ne gère pas la recherche."

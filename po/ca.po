@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-17 14:58+0200\n"
+"POT-Creation-Date: 2016-11-29 15:32+0200\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -35,6 +35,9 @@ msgstr "No s'ha pogut connectar al servidor"
 
 msgid "No URL set."
 msgstr "No s'ha indicat cap URL."
+
+msgid "Corrupted HTTP response."
+msgstr ""
 
 msgid "Server does not support seeking."
 msgstr "El servidor no ademet les cerques."

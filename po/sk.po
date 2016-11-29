@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-17 14:58+0200\n"
+"POT-Creation-Date: 2016-11-29 15:32+0200\n"
 "PO-Revision-Date: 2016-05-20 12:31+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -33,6 +33,9 @@ msgstr "Nepodarilo sa pripojiť k serveru"
 
 msgid "No URL set."
 msgstr "Nebolo nastavené URL."
+
+msgid "Corrupted HTTP response."
+msgstr ""
 
 msgid "Server does not support seeking."
 msgstr "Server nepodporuje zmenu pozície"

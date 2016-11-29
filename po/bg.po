@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-17 14:58+0200\n"
+"POT-Creation-Date: 2016-11-29 15:32+0200\n"
 "PO-Revision-Date: 2016-02-21 21:03+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -34,6 +34,9 @@ msgstr "Не може да се осъществи връзка към сърв�
 
 msgid "No URL set."
 msgstr "Не е зададен адрес."
+
+msgid "Corrupted HTTP response."
+msgstr ""
 
 msgid "Server does not support seeking."
 msgstr "Сървърът не поддържа търсене."
