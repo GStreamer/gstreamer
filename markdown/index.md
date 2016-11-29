@@ -12,7 +12,7 @@ all about.
  * [Frequently Asked Questions](frequently-asked-questions/index.md)
  * [Plugin Writer's Guide](plugin-development/index.md)
  * <a href="/data/doc/gstreamer/head/gstreamer/html/">Core Reference</a>
- * <a href="/data/doc/gstreamer/head/gstreamer-libs/html/">Core Libraries Reference/a>
+ * <a href="/data/doc/gstreamer/head/gstreamer-libs/html/">Core Libraries Reference</a>
  * [Core Design Documentation](http://cgit.freedesktop.org/gstreamer/gstreamer/tree/docs/design/)
  * [GStreamer 0.10 to 1.0 porting guide](http://cgit.freedesktop.org/gstreamer/gstreamer/plain/docs/random/porting-to-1.0.txt)
 
