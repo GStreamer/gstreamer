@@ -98,6 +98,7 @@ gir_init_section = [ '--add-init-section=' + \
     'g_setenv("GST_REGISTRY_1.0", "/no/way/this/exists.reg", TRUE);' + \
     'g_setenv("GST_PLUGIN_PATH_1_0", "", TRUE);' + \
     'g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", "", TRUE);' + \
+    'g_setenv("GST_DEBUG", "0", TRUE);' + \
     'gst_init(NULL,NULL);' + \
     'ges_init();' ]
 
