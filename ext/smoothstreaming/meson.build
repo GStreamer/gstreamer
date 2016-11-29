@@ -1,6 +1,7 @@
 smoothstreaming_sources = [
   'gstmssdemux.c',
   'gstmssmanifest.c',
+  'gstmssfragmentparser.c',
   'gstsmoothstreaming-plugin.c',
 ]
 
