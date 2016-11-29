@@ -28,8 +28,8 @@
 #include <gst/video/gstvideopool.h>
 #include <gst/video/gstvideodecoder.h>
 #include <string.h>
-#include <schroedinger/schro.h>
 #include <math.h>
+#include <schroedinger/schro.h>
 #include "gstschroutils.h"
 
 #include <schroedinger/schroparse.h>

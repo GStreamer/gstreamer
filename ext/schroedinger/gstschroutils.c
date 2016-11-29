@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include "gstschroutils.h"
 
 //#define SCHRO_ENABLE_UNSTABLE_API
@@ -30,7 +31,6 @@
 #include <schroedinger/schro.h>
 #include <schroedinger/schrobitstream.h>
 #include <schroedinger/schrovirtframe.h>
-#include <math.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (schro_debug);

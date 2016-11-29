@@ -28,10 +28,10 @@
 #include <gst/video/gstvideoutils.h>
 #include <string.h>
 
+#include <math.h>
 #include <schroedinger/schro.h>
 #include <schroedinger/schrobitstream.h>
 #include <schroedinger/schrovirtframe.h>
-#include <math.h>
 #include "gstschroutils.h"
 
 GST_DEBUG_CATEGORY_EXTERN (schro_debug);
