@@ -1791,7 +1791,7 @@ restart:
     find_limits (mhsink, &usage, mhsink->bytes_min, mhsink->buffers_min,
         mhsink->time_min, &max, -1, -1, -1);
 
-    max_buffer_usage = MAX (max_buffer_usage, usage + 1);
+    max_buffer_usage = MAX (max_buffer_usage, usage);
     GST_LOG_OBJECT (sink, "extended queue to %d", max_buffer_usage);
   }
 
@@ -1840,7 +1840,7 @@ restart:
     gst_buffer_unref (old);
   }
   /* save for stats */
-  mhsink->buffers_queued = max_buffer_usage;
+  mhsink->buffers_queued = max_buffer_usage + 1;
   CLIENTS_UNLOCK (sink);
 
   /* and send a signal to thread if handle_set changed */
