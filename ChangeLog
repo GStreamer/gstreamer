@@ -1,9 +1,169 @@
-=== release 1.10.1 ===
+=== release 1.10.2 ===
 
-2016-11-17  Sebastian Dröge <slomo@coaxion.net>
+2016-11-29  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.1
+	  releasing 1.10.2
+
+2016-11-29 14:09:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/hr.po:
+	  po: Update translations
+
+2016-11-28 19:45:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  discoverer: Handle NULL/ANY/EMPTY caps without crashing
+
+2016-11-28 17:12:26 +0530  Garima Gaur <garima.g@samsung.com>
+
+	* gst/playback/gstsubtitleoverlay.c:
+	  subtitleoverlay: Fix caps memory leak when failing to get sinkpad from subtitle renderer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775224
+
+2016-11-28 10:04:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  discoverer: Also stop waiting for subtitles if we get EOS
+	  We're not going to get a buffer or GAP event anymore after EOS and would
+	  wait forever otherwise.
+
+2016-11-28 10:12:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  discoverer: Extract video information from caps manually without GstVideoInfo
+	  The caps might not be fixated (which is required by GstVideoInfo) and we
+	  would assert otherwise. However the caps often contain useful
+	  information in the already-fixed parts that we can use here.
+
+2016-11-26 13:53:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff-media: Check if caps are NULL before using them for the first time, not afterwards
+	  Otherwise we'll get a g_critical() before erroring out cleanly on
+	  https://samples.mplayerhq.hu/A-codecs/ATRAC3/SND0.AT3
+
+2016-11-17 10:16:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/libs/videotimecode.c:
+	  videotimecode: Add test for the calculations of distance from the daily jam
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774585
+
+2016-11-16 19:13:14 +0200  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* gst-libs/gst/video/gstvideotimecode.c:
+	  videotimecode: Fix incorrect nsec_since_daily_jam calculation
+	  For drop-frame timecodes, the nsec_since_daily_jam doesn't necessarily
+	  directly correspond to this many hours/minutes/seconds/frames. We have
+	  to get the frame count as per frames_since_daily_jam and then convert.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774585
+
+2016-11-23 13:48:06 +0100  Ulf Olsson <ulfo@axis.com>
+
+	* gst-libs/gst/sdp/gstmikey.c:
+	  mikey: Generate the correct SRTP policy
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774911
+
+2016-11-23 21:27:55 +1100  Matthew Waters <matthew@centricular.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: bounds check windows ico detection
+	  Fixes out of bounds read
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774902
+
+2016-11-20 14:52:08 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+2016-11-03 17:18:05 +0100  Edward Hervey <edward@centricular.com>
+
+	* tests/check/elements/videoscale.c:
+	  check: Fix corrupted xml check files
+	  By making sure each different videoscale check instance gets logged
+	  into different output file
+
+=== release 1.10.1 ===
+
+2016-11-17 15:52:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.10.1
+
+2016-11-17 14:54:51 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2016-11-17 14:44:49 +0200  Sebastian Dröge <sebastian@centricular.com>
 

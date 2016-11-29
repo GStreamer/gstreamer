@@ -3,7 +3,7 @@
   <description>Colorspace conversion</description>
   <filename>../../gst/videoconvert/.libs/libgstvideoconvert.so</filename>
   <basename>libgstvideoconvert.so</basename>
-  <version>1.10.1</version>
+  <version>1.10.2</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

@@ -3,7 +3,7 @@
   <description>GIO elements</description>
   <filename>../../gst/gio/.libs/libgstgio.so</filename>
   <basename>libgstgio.so</basename>
-  <version>1.10.1</version>
+  <version>1.10.2</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

@@ -3,7 +3,7 @@
   <description>X11 video output element based on standard Xlib calls</description>
   <filename>../../sys/ximage/.libs/libgstximagesink.so</filename>
   <basename>libgstximagesink.so</basename>
-  <version>1.10.1</version>
+  <version>1.10.2</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
