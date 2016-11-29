@@ -178,12 +178,12 @@ typedef enum
 
 /**
  * GstH264ParserResult:
- * @GST_H264_PARSER_OK: The parsing succeded
+ * @GST_H264_PARSER_OK: The parsing succeeded
  * @GST_H264_PARSER_BROKEN_DATA: The data to parse is broken
  * @GST_H264_PARSER_BROKEN_LINK: The link to structure needed for the parsing couldn't be found
- * @GST_H264_PARSER_ERROR: An error occured when parsing
- * @GST_H264_PARSER_NO_NAL: No nal found during the parsing
- * @GST_H264_PARSER_NO_NAL_END: Start of the nal found, but not the end.
+ * @GST_H264_PARSER_ERROR: An error occurred when parsing
+ * @GST_H264_PARSER_NO_NAL: No NAL unit found during the parsing
+ * @GST_H264_PARSER_NO_NAL_END: Start of the NAL unit found, but not the end.
  *
  * The result of parsing H264 data.
  */
@@ -249,7 +249,7 @@ typedef enum
  * GstH264SEIPicStructType:
  * @GST_H264_SEI_PIC_STRUCT_FRAME: Picture is a frame
  * @GST_H264_SEI_PIC_STRUCT_TOP_FIELD: Top field of frame
- * @GST_H264_SEI_PIC_STRUCT_BOTTOM_FIELD: Botom field of frame
+ * @GST_H264_SEI_PIC_STRUCT_BOTTOM_FIELD: Bottom field of frame
  * @GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM: Top bottom field of frame
  * @GST_H264_SEI_PIC_STRUCT_BOTTOM_TOP: bottom top field of frame
  * @GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM_TOP: top bottom top field of frame
@@ -358,18 +358,18 @@ struct _GstH264NalUnitExtensionMVC
  *  reference picture.
  * @type: A #GstH264NalUnitType
  * @idr_pic_flag: calculated idr_pic_flag
- * @size: The size of the nal unit starting from @offset, thus
+ * @size: The size of the NAL unit starting from @offset, thus
  *  including the header bytes. e.g. @type (nal_unit_type)
- * @offset: The offset of the actual start of the nal unit, thus
+ * @offset: The offset of the actual start of the NAL unit, thus
  *  including the header bytes
- * @sc_offset: The offset of the start code of the nal unit
- * @valid: If the nal unit is valid, which means it has
+ * @sc_offset: The offset of the start code of the NAL unit
+ * @valid: If the NAL unit is valid, which means it has
  * already been parsed
- * @data: The data from which the Nalu has been parsed
+ * @data: The data from which the NAL unit has been parsed
  * @header_bytes: The size of the NALU header in bytes (Since 1.6)
  * @extension_type: the extension type (Since 1.6)
  *
- * Structure defining the Nal unit headers
+ * Structure defining the NAL unit headers
  */
 struct _GstH264NalUnit
 {
@@ -403,7 +403,7 @@ struct _GstH264NalUnit
  * SchedSelIdx-th CPB
  * @cpb_size_value_minus1: is used together with cpb_size_scale to specify the
  * SchedSelIdx-th CPB size
- * @cbr_flag: Specifies if running in itermediate bitrate mode or constant
+ * @cbr_flag: Specifies if running in constant or intermittent bit rate mode
  * @initial_cpb_removal_delay_length_minus1: specifies the length in bits of
  * the cpb_removal_delay syntax element
  * @cpb_removal_delay_length_minus1: specifies the length in bits of the
@@ -461,8 +461,8 @@ struct _GstH264HRDParams
  * @fixed_frame_rate_flag: %TRUE indicates that the temporal distance between the HRD output times
  *  of any two consecutive pictures in output order is constrained as specified in the spec, %FALSE
  *  otherwise.
- * @nal_hrd_parameters_present_flag: %TRUE if nal hrd parameters present in the bitstream
- * @vcl_hrd_parameters_present_flag: %TRUE if nal vlc hrd parameters present in the bitstream
+ * @nal_hrd_parameters_present_flag: %TRUE if NAL HRD parameters exist in the bitstream
+ * @vcl_hrd_parameters_present_flag: %TRUE if VCL HRD parameters exist in the bitstream
  * @low_delay_hrd_flag: specifies the HRD operational mode
  * @pic_struct_present_flag: %TRUE specifies that picture timing SEI messages are present or not
  * @bitstream_restriction_flag: %TRUE specifies that the following coded video sequence bitstream restriction
