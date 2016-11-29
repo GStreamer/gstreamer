@@ -1,11 +1,11 @@
 
-Release notes for GStreamer 1.10.1
+Release notes for GStreamer 1.10.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
-This release only contains bugfixes and it is safe to update from 1.10.0. For a
+This release only contains bugfixes and it is safe to update from 1.10.x. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -32,13 +32,6 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 
   
-
-Bugs fixed in this release
-     
-      * 765662 : adapter: invalid returned distance when getting prev pts/dts at offset
-      * 773813 : Fails to build on GNU Hurd: missing mach/clock.h used by libcheck
-      * 774044 : meson: g-i: jhbuild build fails to pick up internal Gst-1.0 for GstBase-1.0.gir on Fedora24 without gstreamer1-devel
-      * 774108 : Two warnings while building with mingw64
 
 ==== Download ====
 
@@ -75,12 +68,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Guillaume Desmottes
+      * Edward Hervey
       * Jan Schmidt
-      * Nicolas Huet
-      * Nirbheek Chauhan
       * Sebastian Dröge
-      * Thibault Saunier
       * Tim-Philipp Müller
-      * Victor Toso
  

@@ -1,9 +1,77 @@
-=== release 1.10.1 ===
+=== release 1.10.2 ===
 
-2016-11-17  Sebastian Dröge <slomo@coaxion.net>
+2016-11-29  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.1
+	  releasing 1.10.2
+
+2016-11-29 14:08:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/hr.po:
+	  po: Update translations
+
+2016-11-28 13:48:16 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/gstutils.c:
+	  gstutils: Fix a pad leak
+	  When requesting a pad from a template and it's already linked, this
+	  means it was a static pad. Since we only want to return an *available*
+	  pad, we must return NULL ... but we must also remove the reference
+	  we got from getting that static pad.
+	  The "No need to unref" message (which wasn't true for quite some time)
+	  dates back from the very very very first commit introducing the 0.10
+	  features.
+
+2016-11-28 12:28:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstmessage.c:
+	  message: Ensure that the "debug" field of error/warning/info messages is valid UTF-8
+	  The caller might pass arbitrary data here that caused the error, and
+	  trying to set invalid UTF-8 in a GstStructure causes it to be not set at
+	  all. Later when trying to parse it, the field will not exist and the
+	  return value will point to invalid memory. Prevent this by storing NULL
+	  instead.
+	  Also print a g_warning(), the caller should never ever do this to begin
+	  with.
+
+2016-11-15 22:39:43 +1100  Jan Schmidt <jan@centricular.com>
+
+	* plugins/elements/gstdownloadbuffer.c:
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gstqueue2.c:
+	* plugins/elements/gsttypefindelement.c:
+	  queues: Don't return negative position queries.
+	  When subtracting queued data sizes from upstream queries
+	  in queue, queue2, downloadbuffer and typefind, clamp the
+	  result to not go negative, in case upstream returned
+	  a nonsense value that's too small (as could happen if
+	  upstream is estimating, or just broken)
+
+2016-11-20 14:51:32 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.10.1 ===
+
+2016-11-17 15:51:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.10.1
+
+2016-11-17 14:46:26 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/id.po:
+	* po/pl.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2016-11-17 14:42:21 +0200  Sebastian Dröge <sebastian@centricular.com>
 
