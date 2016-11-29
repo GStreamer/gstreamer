@@ -75,14 +75,16 @@ foreach h : check_headers
 endforeach
 
 check_functions = [
-  ['HAVE_DCGETTEXT', 'dcgettext'],
-  ['HAVE_GMTIME_R', 'gmtime_r'],
-  ['HAVE_LRINTF', 'lrintf'],
-  ['HAVE_MMAP', 'mmap'],
+  ['HAVE_DCGETTEXT', 'dcgettext', '#include<libintl.h>'],
+  ['HAVE_GMTIME_R', 'gmtime_r', '#include<time.h>'],
+  ['HAVE_LRINTF', 'lrintf', '#include<math.h>'],
+  ['HAVE_MMAP', 'mmap', '#include<sys/mman.h>'],
+  ['HAVE_LOG2', 'log2', '#include<math.h>'],
 ]
 
+libm = cc.find_library('m', required : false)
 foreach f : check_functions
-  if cc.has_function(f.get(1))
+  if cc.has_function(f.get(1), prefix : f.get(2), dependencies : libm)
     core_conf.set(f.get(0), 1)
   endif
 endforeach
@@ -115,7 +117,6 @@ if get_option('default_library') == 'static'
   gst_plugins_base_args += ['-DGST_STATIC_COMPILATION']
 endif
 
-libm = cc.find_library('m', required : false)
 # X11 checks are for sys/ and tests/
 x11_dep = dependency('x11', required : false)
 # GLib checks are for the entire project
