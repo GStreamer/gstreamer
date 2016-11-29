@@ -1,9 +1,78 @@
-=== release 1.10.1 ===
+=== release 1.10.2 ===
 
-2016-11-17  Sebastian Dröge <slomo@coaxion.net>
+2016-11-29  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.1
+	  releasing 1.10.2
+
+2016-11-02 12:43:54 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/vfb_server.py:
+	  validate:launcher: Do not try to set DISPLAY envvar to None
+
+2016-11-02 17:25:21 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tools/gst-validate-media-check.c:
+	  validate: media check: Always print runner infos when bailing out.
+
+2016-11-03 11:22:08 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/meson.build:
+	  validate: gir: We should not depend on GstVideo
+	  We do not depend on it at all in GstValidate itself
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773898
+
+2016-11-03 16:17:08 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: report: Do not unref an object where we do not own a ref
+	  g_io_stream_get_output_stream is transfer none
+
+2016-11-15 18:55:09 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/meson.build:
+	  validate: meson: Do not mixup gstvalidate lib and tracer plugin
+	  Even though it is mostly the same thing in the end
+
+2016-11-17 10:25:37 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* validate/gst/validate/validate.c:
+	  validate: Remove #include <unistd.h>
+	  It isn't needed and isn't present in non-posix environments like windows
+	  with MSVC or mingw.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774638
+
+2016-11-17 10:28:01 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: fix return type of get_range_func
+	  The return type of GstPadGetRangeFunction is GstFlowReturn
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774638
+
+2016-11-23 08:38:49 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-monitor-factory.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate: Fix GI warnings
+
+2016-11-20 14:56:13 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.10.1 ===
+
+2016-11-17 15:59:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.10.1
 
 2016-11-01 19:43:53 +0000  Tim-Philipp Müller <tim@centricular.com>
 
