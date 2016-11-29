@@ -711,7 +711,7 @@ class GstValidateTest(Test):
                 del expected_failure[key]
         for key, value in report.items():
             if key in expected_failure:
-                if not re.findall(expected_failure[key], value):
+                if not re.findall(expected_failure[key], str(value)):
                     return False
                 expected_failure.pop(key)
 
