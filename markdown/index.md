@@ -57,6 +57,7 @@ gst-plugins-base are guaranteed to be API and ABI stable
 
 ## GStreamer Conference Videos and Slides
 
+* <a href="http://gstconf.ubicast.tv/channels/#gstreamer-conference-2016">GStreamer Conference 2016: Videos and Slides</a> <a href="/data/events/gstreamer-conference/2016/">(PDF slides)</a>
 * <a href="http://gstconf.ubicast.tv/channels/#gstreamer-conference-2015">GStreamer Conference 2015: Videos and Slides</a> <a href="/data/events/gstreamer-conference/2015/">(PDF slides)</a>
  * <a href="http://gstconf.ubicast.tv/channels/#gstreamer-conference-2014">GStreamer Conference 2014: Videos and Slides</a> <a href="/data/events/gstreamer-conference/2014/">(PDF slides)</a>
  * <a href="http://gstconf.ubicast.tv/channels/#gstreamer-conference-2013">GStreamer Conference 2013: Videos and Slides</a> <a href="/data/events/gstreamer-conference/2013/">(PDF slides)</a>
