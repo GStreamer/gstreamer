@@ -10,7 +10,7 @@ gst_version_major = version_arr[0]
 gst_version_minor = version_arr[1]
 gst_version_micro = version_arr[2]
 if version_arr.length() == 4
-  gst_version_nano = version_arr[3]
+  gst_version_nano = version_arr[3].to_int()
 else
   gst_version_nano = 0
 endif
@@ -53,7 +53,6 @@ cdata.set('LOCALEDIR', '"@0@/@1@"'.format(prefix, get_option('localedir')))
 cdata.set('LIBDIR', '"@0@/@1@"'.format(prefix, get_option('libdir')))
 cdata.set('GST_API_VERSION', '"1.0"')
 cdata.set('GETTEXT_PACKAGE', '"gstreamer-1.0"')
-cdata.set('GST_LEVEL_DEFAULT', 'GST_LEVEL_NONE')
 cdata.set('GST_LICENSE', '"LGPL"')
 cdata.set('GST_PACKAGE_ORIGIN', '"Unknown package origin"')
 cdata.set('GST_PACKAGE_NAME', '"GStreamer source release"')
@@ -70,6 +69,13 @@ cdata.set('VERSION', '"@0@"'.format(gst_version))
 cdata.set('MEMORY_ALIGNMENT_MALLOC', 1)
 cdata.set('GST_PLUGIN_SCANNER_INSTALLED', '"@0@/@1@/gst-plugin-scanner"'.format(prefix, helpers_install_dir))
 cdata.set('GST_PTP_HELPER_INSTALLED', '"@0@/@1@/gst-ptp-helper"'.format(prefix, helpers_install_dir))
+
+if gst_version_nano > 0
+    # Have GST_ERROR message printed when running from git
+    cdata.set('GST_LEVEL_DEFAULT', 'GST_LEVEL_ERROR')
+else
+    cdata.set('GST_LEVEL_DEFAULT', 'GST_LEVEL_NONE')
+endif
 
 # These are only needed/used by the ABI tests
 host_defines = [
