@@ -736,7 +736,7 @@ public:
         GstClockTime packet_time, gboolean no_signal) = NULL;
     GstDecklinkModeEnum mode;
     GstClockTime capture_time = GST_CLOCK_TIME_NONE;
-    GstClockTime base_time;
+    GstClockTime base_time = 0;
     gboolean no_signal = FALSE;
     GstClock *clock = NULL;
     HRESULT res;
