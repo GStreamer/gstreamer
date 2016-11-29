@@ -1,11 +1,11 @@
 
-Release notes for GStreamer Ugly Plugins 1.10.1
+Release notes for GStreamer Ugly Plugins 1.10.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
-This release only contains bugfixes and it is safe to update from 1.10.0. For a
+This release only contains bugfixes and it is safe to update from 1.10.x. For a
 full list of bugfixes see Bugzilla.
 
 
@@ -55,6 +55,11 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
+Bugs fixed in this release
+     
+      * 774846 : asfdemux: Timeouts with corrupted files
+      * 775070 : asfdemux: ASF object size checks
+
 ==== Download ====
 
 You can find source releases of gst-plugins-ugly in the download
@@ -90,6 +95,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Edward Hervey
       * Sebastian Dröge
       * Tim-Philipp Müller
  
