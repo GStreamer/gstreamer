@@ -445,12 +445,15 @@ gst_vaapiencode_start (GstVideoEncoder * venc)
 }
 
 static gboolean
+gst_vaapiencode_stop (GstVideoEncoder * venc)
+{
+  return gst_vaapiencode_destroy (GST_VAAPIENCODE_CAST (venc));
+}
+
+static gboolean
 gst_vaapiencode_close (GstVideoEncoder * venc)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
-
-  gst_vaapiencode_destroy (encode);
-  gst_vaapi_plugin_base_close (GST_VAAPI_PLUGIN_BASE (encode));
+  gst_vaapi_plugin_base_close (GST_VAAPI_PLUGIN_BASE (venc));
   return TRUE;
 }
 
@@ -718,6 +721,7 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   venc_class->open = GST_DEBUG_FUNCPTR (gst_vaapiencode_open);
   venc_class->close = GST_DEBUG_FUNCPTR (gst_vaapiencode_close);
   venc_class->start = GST_DEBUG_FUNCPTR (gst_vaapiencode_start);
+  venc_class->stop = GST_DEBUG_FUNCPTR (gst_vaapiencode_stop);
   venc_class->set_format = GST_DEBUG_FUNCPTR (gst_vaapiencode_set_format);
   venc_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vaapiencode_handle_frame);
   venc_class->finish = GST_DEBUG_FUNCPTR (gst_vaapiencode_finish);
