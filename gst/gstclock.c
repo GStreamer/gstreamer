@@ -739,8 +739,7 @@ gst_clock_init (GstClock * clock)
   priv->time_index = 0;
   priv->timeout = DEFAULT_TIMEOUT;
   priv->times = g_new0 (GstClockTime, 4 * priv->window_size);
-  priv->times_temp =
-      priv->times + 2 * priv->window_size * sizeof (GstClockTime);
+  priv->times_temp = priv->times + 2 * priv->window_size;
 
   /* clear floating flag */
   gst_object_ref_sink (clock);
@@ -1527,8 +1526,7 @@ gst_clock_set_property (GObject * object, guint prop_id,
       priv->window_size = g_value_get_int (value);
       priv->window_threshold = MIN (priv->window_threshold, priv->window_size);
       priv->times = g_renew (GstClockTime, priv->times, 4 * priv->window_size);
-      priv->times_temp =
-          priv->times + 2 * priv->window_size * sizeof (GstClockTime);
+      priv->times_temp = priv->times + 2 * priv->window_size;
       /* restart calibration */
       priv->filling = TRUE;
       priv->time_index = 0;
