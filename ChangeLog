@@ -1,9 +1,49 @@
-=== release 1.10.1 ===
+=== release 1.10.2 ===
 
-2016-11-17  Sebastian Dröge <slomo@coaxion.net>
+2016-11-29  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.1
+	  releasing 1.10.2
+
+2016-11-21 23:29:56 +1100  Matthew Waters <matthew@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: block the output of rtpbin instead of the source pipeline
+	  85c52e194bcb81928b96614be0ae47d59eccb1ce introduced a more correct
+	  detection of the srtp rollover counter to add to the SDP.
+	  Unfortunately, it was incomplete for live pipelines where the logic
+	  blocks the source bin before creating the SDP and thus would never have
+	  the necessary informaiton to create a correct SDP with srtp encryption.
+	  Move the pad blocks to rtpbin's output pads instead so that the
+	  necessary information can be created before we need the information for
+	  the SDP.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770239
+
+2016-11-21 13:05:50 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Set close-socket FALSE on UDP src:es
+	  With this RTSP server can use the sockets independent on the udpsrc
+	  state.
+	  When the udp src is finalized it will unref socket and when g_socket
+	  is finalized the socket will be closed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765673
+
+2016-11-20 14:54:46 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.10.1 ===
+
+2016-11-17 15:58:08 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.10.1
 
 2016-11-01 19:43:38 +0000  Tim-Philipp Müller <tim@centricular.com>
 
