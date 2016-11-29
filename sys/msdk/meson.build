@@ -4,6 +4,7 @@ msdk_sources = [
   'gstmsdkenc.c',
   'gstmsdkh264dec.c',
   'gstmsdkh264enc.c',
+  'gstmsdkh265dec.c',
   'gstmsdkh265enc.c',
   'gstmsdkmpeg2enc.c',
   'gstmsdkvp8enc.c',
