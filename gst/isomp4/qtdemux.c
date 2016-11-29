@@ -10181,7 +10181,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             break;
 
           len = QT_UINT32 (jpeg->data);
-          GST_DEBUG_OBJECT (qtdemux, "Found jpeg: len %u, need %lu", len,
+          GST_DEBUG_OBJECT (qtdemux, "Found jpeg: len %u, need %d", len,
               min_size);
           if (len >= min_size) {
             gst_byte_reader_init (&br, jpeg->data, len);
