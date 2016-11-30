@@ -341,6 +341,7 @@ mpegpsmux_create_stream (MpegPsMux * mux, MpegPsPadData * ps_data, GstPad * pad)
   }
 
 beach:
+  gst_caps_unref (caps);
   return ret;
 }
 
