@@ -81,8 +81,6 @@
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstEGLImage, gst_egl_image);
 
-/* XXX: This is only used currently if dmabuf support is enabled */
-#if GST_GL_HAVE_DMABUF
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_egl_image_ensure_debug_category()
 
@@ -102,7 +100,6 @@ gst_egl_image_ensure_debug_category (void)
   return (GstDebugCategory *) cat_gonce;
 }
 #endif /* GST_DISABLE_GST_DEBUG */
-#endif /* GST_GL_HAVE_DMABUF */
 
 /**
  * gst_egl_image_get_image:
@@ -220,10 +217,8 @@ _gst_egl_image_create (GstGLContext * context, guint target,
       (EGLDisplay) gst_gl_display_get_handle (GST_GL_DISPLAY (display_egl));
   gst_object_unref (display_egl);
 
-#if GST_GL_HAVE_DMABUF
   if (target != EGL_LINUX_DMA_BUF_EXT)
     egl_context = (EGLContext) gst_gl_context_get_gl_context (context);
-#endif
 
   if (attribs)
     while (attribs[attrib_len++] != EGL_NONE) {
