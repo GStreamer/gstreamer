@@ -25,7 +25,7 @@
  * A tracing module tracking the lifetime of objects by logging those still
  * alive when program is exiting and raising a warning.
  * The type of objects tracked can be filtered using the parameters of the
- * tracer, for example: GST_TRACERS="leaks(GstEvent,GstMessage)"
+ * tracer, for example: GST_TRACERS=leaks(filters="GstEvent,GstMessage",print-traces=true)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -55,17 +55,34 @@ static GstTracerRecord *tr_removed = NULL;
 static GQueue instances = G_QUEUE_INIT;
 
 static void
-set_filtering (GstLeaksTracer * self)
+set_print_stack_trace (GstLeaksTracer * self, GstStructure * params)
 {
-  gchar *params;
-  GStrv tmp;
-  guint i;
+  gchar *trace;
+  gboolean check_stack_trace =
+      g_getenv ("GST_LEAKS_TRACER_STACK_TRACE") != NULL;
 
-  g_object_get (self, "params", &params, NULL);
-  if (!params)
+  if (!check_stack_trace && params)
+    gst_structure_get_boolean (params, "print-traces", &check_stack_trace);
+
+  if (!check_stack_trace)
     return;
 
-  tmp = g_strsplit (params, ",", -1);
+
+  /* Test if we can retrieve backtrace */
+  trace = gst_debug_get_stack_trace (0);
+  if (trace) {
+    self->log_stack_trace = TRUE;
+    g_free (trace);
+  } else {
+    g_warning ("Can't retrieve backtrace on this system");
+  }
+}
+
+static void
+set_filters (GstLeaksTracer * self, const gchar * filters)
+{
+  guint i;
+  GStrv tmp = g_strsplit (filters, ",", -1);
 
   self->filter = g_array_sized_new (FALSE, FALSE, sizeof (GType),
       g_strv_length (tmp));
@@ -94,7 +111,43 @@ set_filtering (GstLeaksTracer * self)
   }
 
   g_strfreev (tmp);
+}
+
+static void
+set_params_from_structure (GstLeaksTracer * self, GstStructure * params)
+{
+  const gchar *filters = gst_structure_get_string (params, "filters");
+
+  if (filters)
+    set_filters (self, filters);
+}
+
+static void
+set_params (GstLeaksTracer * self)
+{
+  gchar *params, *tmp;
+  GstStructure *params_struct = NULL;
+
+  g_object_get (self, "params", &params, NULL);
+  if (!params)
+    goto set_stacktrace;
+
+  tmp = g_strdup_printf ("leaks,%s", params);
+  params_struct = gst_structure_from_string (tmp, NULL);
+  g_free (tmp);
+
+  if (params_struct)
+    set_params_from_structure (self, params_struct);
+  else
+    set_filters (self, params);
+
   g_free (params);
+
+set_stacktrace:
+  set_print_stack_trace (self, params_struct);
+
+  if (params_struct)
+    gst_structure_free (params_struct);
 }
 
 static gboolean
@@ -221,7 +274,7 @@ handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
 
   GST_OBJECT_LOCK (self);
   if (self->log_stack_trace) {
-    trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
+    trace = gst_debug_get_stack_trace (0);
   }
 
   g_hash_table_insert (self->objects, object, trace);
@@ -260,19 +313,6 @@ gst_leaks_tracer_init (GstLeaksTracer * self)
 {
   self->objects = g_hash_table_new_full (NULL, NULL, NULL, g_free);
 
-  if (g_getenv ("GST_LEAKS_TRACER_STACK_TRACE")) {
-    gchar *trace;
-
-    /* Test if we can retrieve backtrace */
-    trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
-    if (trace) {
-      self->log_stack_trace = TRUE;
-      g_free (trace);
-    } else {
-      g_warning ("Can't retrieve backtrace on this system");
-    }
-  }
-
   g_queue_push_tail (&instances, self);
 }
 
@@ -282,7 +322,7 @@ gst_leaks_tracer_constructed (GObject * object)
   GstLeaksTracer *self = GST_LEAKS_TRACER (object);
   GstTracer *tracer = GST_TRACER (object);
 
-  set_filtering (self);
+  set_params (self);
 
   gst_tracing_register_hook (tracer, "mini-object-created",
       G_CALLBACK (mini_object_created_cb));
