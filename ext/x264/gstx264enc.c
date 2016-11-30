@@ -1822,6 +1822,18 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     }
   }
 
+  if (GST_VIDEO_INFO_IS_INTERLACED (info)) {
+    encoder->x264param.b_interlaced = TRUE;
+    if (GST_VIDEO_INFO_FIELD_ORDER (info) ==
+        GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST) {
+      encoder->x264param.b_tff = TRUE;
+    } else {
+      encoder->x264param.b_tff = FALSE;
+    }
+  } else {
+    encoder->x264param.b_interlaced = FALSE;
+  }
+
   /* Set 3D frame packing */
   if (encoder->frame_packing != GST_VIDEO_MULTIVIEW_MODE_NONE)
     encoder->x264param.i_frame_packing = encoder->frame_packing;
@@ -2263,12 +2275,6 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
   }
 
   gst_caps_unref (template_caps);
-
-  if (GST_VIDEO_INFO_IS_INTERLACED (&state->info))
-    g_string_append_printf (encoder->option_string, ":interlaced=%d", TRUE);
-  else
-    g_string_append_printf (encoder->option_string, ":interlaced=%d",
-        encoder->interlaced);
 
   if (!gst_x264_enc_init_encoder (encoder))
     return FALSE;
