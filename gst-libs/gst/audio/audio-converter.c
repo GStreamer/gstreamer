@@ -851,8 +851,14 @@ converter_passthrough (GstAudioConverter * convert,
 
     bytes = samples * (convert->in.bpf / convert->in.channels);
 
-    for (i = 0; i < chain->blocks; i++)
+    for (i = 0; i < chain->blocks; i++) {
+      if (out[i] == in[i]) {
+        g_assert (convert->in_place);
+        continue;
+      }
+
       memcpy (out[i], in[i], bytes);
+    }
   } else {
     for (i = 0; i < chain->blocks; i++)
       gst_audio_format_fill_silence (convert->in.finfo, out[i], samples);
