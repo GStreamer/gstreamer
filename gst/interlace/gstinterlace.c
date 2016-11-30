@@ -408,6 +408,11 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
     interlace->passthrough = FALSE;
     gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION,
         interlace->src_fps_n, interlace->src_fps_d, NULL);
+    if (interlace->pattern <= GST_INTERLACE_PATTERN_2_2) {
+      gst_caps_set_simple (othercaps, "field-order", G_TYPE_STRING,
+          interlace->top_field_first ? "top-field-first" : "bottom-field-first",
+          NULL);
+    }
   }
 
   ret = gst_pad_set_caps (interlace->srcpad, othercaps);
