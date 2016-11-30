@@ -232,6 +232,7 @@ gst_rtp_L16_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   GstBuffer *outbuf;
   gint payload_len;
   gboolean marker;
+  GstAudioInfo *info;
 
   rtpL16depay = GST_RTP_L16_DEPAY (depayload);
 
@@ -251,10 +252,15 @@ gst_rtp_L16_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   }
 
   outbuf = gst_buffer_make_writable (outbuf);
+  info = &rtpL16depay->info;
+
+  if (payload_len % info->bpf != 0)
+    goto wrong_payload_size;
+
   if (rtpL16depay->order &&
       !gst_audio_buffer_reorder_channels (outbuf,
-          rtpL16depay->info.finfo->format, rtpL16depay->info.channels,
-          rtpL16depay->info.position, rtpL16depay->order->pos)) {
+          info->finfo->format, info->channels,
+          info->position, rtpL16depay->order->pos)) {
     goto reorder_failed;
   }
 
@@ -267,6 +273,12 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpL16depay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
+    return NULL;
+  }
+wrong_payload_size:
+  {
+    GST_ELEMENT_WARNING (rtpL16depay, STREAM, DECODE,
+        ("Wrong Payload Size."), (NULL));
     return NULL;
   }
 reorder_failed:
