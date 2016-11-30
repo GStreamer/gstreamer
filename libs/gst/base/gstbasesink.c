@@ -4429,6 +4429,8 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
   }
 
   if (forward) {
+    GST_DEBUG_OBJECT (basesink, "sending event %p %" GST_PTR_FORMAT, event,
+        event);
     result = gst_pad_push_event (pad, event);
   } else {
     /* not forwarded, unref the event */
@@ -4437,8 +4439,7 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
 
   gst_object_unref (pad);
 
-  GST_DEBUG_OBJECT (basesink, "handled event %p %" GST_PTR_FORMAT ": %d", event,
-      event, result);
+  GST_DEBUG_OBJECT (basesink, "handled event: %d", result);
 
   return result;
 }
