@@ -555,7 +555,7 @@ retry_find_plane:
     goto plane_failed;
 
   if (!ensure_allowed_caps (self, conn, plane, res))
-    goto bail;
+    goto allowed_caps_failed;
 
   self->conn_id = conn->connector_id;
   self->crtc_id = crtc->crtc_id;
@@ -602,52 +602,67 @@ bail:
   /* ERRORS */
 open_failed:
   {
-    GST_ERROR_OBJECT (self, "Could not open DRM module %s: %s",
-        GST_STR_NULL (self->devname), strerror (errno));
+    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
+        ("Could not open DRM module %s", GST_STR_NULL (self->devname)),
+        ("reason: %s (%d)", strerror (errno), errno));
     return FALSE;
   }
 
 resources_failed:
   {
-    GST_ERROR_OBJECT (self, "drmModeGetResources failed: %s (%d)",
-        strerror (errno), errno);
+    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+        ("drmModeGetResources failed"),
+        ("reason: %s (%d)", strerror (errno), errno));
     goto bail;
   }
 
 connector_failed:
   {
-    GST_ERROR_OBJECT (self, "Could not find a valid monitor connector");
+    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+        ("Could not find a valid monitor connector"), (NULL));
     goto bail;
   }
 
 crtc_failed:
   {
-    GST_ERROR_OBJECT (self, "Could not find a crtc for connector");
+    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+        ("Could not find a crtc for connector"), (NULL));
     goto bail;
   }
 
 set_cap_failed:
   {
-    GST_ERROR_OBJECT (self, "Could not set universal planes capability bit");
+    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+        ("Could not set universal planes capability bit"), (NULL));
     goto bail;
   }
 
 plane_resources_failed:
   {
-    GST_ERROR_OBJECT (self, "drmModeGetPlaneResources failed: %s (%d)",
-        strerror (errno), errno);
+    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+        ("drmModeGetPlaneResources failed"),
+        ("reason: %s (%d)", strerror (errno), errno));
     goto bail;
   }
 
 plane_failed:
   {
     if (universal_planes) {
-      GST_ERROR_OBJECT (self, "Could not find a plane for crtc");
+      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+          ("Could not find a plane for crtc"), (NULL));
       goto bail;
     } else {
       universal_planes = TRUE;
       goto retry_find_plane;
     }
+  }
+
+allowed_caps_failed:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+        ("Could not get allowed GstCaps of device"),
+        ("driver does not provide mode settings configuration"));
+    goto bail;
   }
 }
 
