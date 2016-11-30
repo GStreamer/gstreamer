@@ -709,7 +709,7 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
 {
   GstFlowReturn ret;
   GstAudioConvert *this = GST_AUDIO_CONVERT (base);
-  GstMapInfo srcmap, dstmap;
+  GstMapInfo srcmap = { NULL, }, dstmap;
   gint insize, outsize;
   gboolean inbuf_writable;
   GstAudioConverterFlags flags;
@@ -726,18 +726,24 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   if (insize == 0 || outsize == 0)
     return GST_FLOW_OK;
 
-  inbuf_writable = gst_buffer_is_writable (inbuf)
-      && gst_buffer_n_memory (inbuf) == 1
-      && gst_memory_is_writable (gst_buffer_peek_memory (inbuf, 0));
-
   /* get src and dst data */
-  gst_buffer_map (inbuf, &srcmap,
-      inbuf_writable ? GST_MAP_READWRITE : GST_MAP_READ);
+  if (inbuf != outbuf) {
+    inbuf_writable = gst_buffer_is_writable (inbuf)
+        && gst_buffer_n_memory (inbuf) == 1
+        && gst_memory_is_writable (gst_buffer_peek_memory (inbuf, 0));
+
+    gst_buffer_map (inbuf, &srcmap,
+        inbuf_writable ? GST_MAP_READWRITE : GST_MAP_READ);
+  } else {
+    inbuf_writable = TRUE;
+  }
   gst_buffer_map (outbuf, &dstmap, GST_MAP_WRITE);
 
   /* check in and outsize */
-  if (srcmap.size < insize)
-    goto wrong_size;
+  if (inbuf != outbuf) {
+    if (srcmap.size < insize)
+      goto wrong_size;
+  }
   if (dstmap.size < outsize)
     goto wrong_size;
 
@@ -751,7 +757,7 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
     gpointer out[1] = { dstmap.data };
 
     if (!gst_audio_converter_samples (this->convert, flags,
-            in, samples, out, samples))
+            inbuf != outbuf ? in : out, samples, out, samples))
       goto convert_error;
   } else {
     /* Create silence buffer */
@@ -761,7 +767,8 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
 done:
   gst_buffer_unmap (outbuf, &dstmap);
-  gst_buffer_unmap (inbuf, &srcmap);
+  if (inbuf != outbuf)
+    gst_buffer_unmap (inbuf, &srcmap);
 
   return ret;
 
