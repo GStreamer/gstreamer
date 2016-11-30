@@ -1824,6 +1824,9 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   if (GST_VIDEO_INFO_IS_INTERLACED (info)) {
     encoder->x264param.b_interlaced = TRUE;
+    if (GST_VIDEO_INFO_INTERLACE_MODE (info) == GST_VIDEO_INTERLACE_MODE_MIXED) {
+      encoder->x264param.b_pic_struct = TRUE;
+    }
     if (GST_VIDEO_INFO_FIELD_ORDER (info) ==
         GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST) {
       encoder->x264param.b_tff = TRUE;
@@ -2360,6 +2363,24 @@ gst_x264_enc_handle_frame (GstVideoEncoder * video_enc,
   pic_in.i_type = X264_TYPE_AUTO;
   pic_in.i_pts = frame->pts;
   pic_in.opaque = GINT_TO_POINTER (frame->system_frame_number);
+
+  if (GST_VIDEO_INFO_INTERLACE_MODE (info) == GST_VIDEO_INTERLACE_MODE_MIXED) {
+    if ((fdata->vframe.flags & GST_VIDEO_FRAME_FLAG_INTERLACED) == 0) {
+      pic_in.i_pic_struct = PIC_STRUCT_PROGRESSIVE;
+    } else if ((fdata->vframe.flags & GST_VIDEO_FRAME_FLAG_RFF) != 0) {
+      if ((fdata->vframe.flags & GST_VIDEO_FRAME_FLAG_TFF) != 0) {
+        pic_in.i_pic_struct = PIC_STRUCT_TOP_BOTTOM_TOP;
+      } else {
+        pic_in.i_pic_struct = PIC_STRUCT_BOTTOM_TOP_BOTTOM;
+      }
+    } else {
+      if ((fdata->vframe.flags & GST_VIDEO_FRAME_FLAG_TFF) != 0) {
+        pic_in.i_pic_struct = PIC_STRUCT_TOP_BOTTOM;
+      } else {
+        pic_in.i_pic_struct = PIC_STRUCT_BOTTOM_TOP;
+      }
+    }
+  }
 
   ret = gst_x264_enc_encode_frame (encoder, &pic_in, frame, &i_nal, TRUE);
 
