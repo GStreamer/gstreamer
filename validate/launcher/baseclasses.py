@@ -1889,7 +1889,10 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         if verbose:
             printc("Result: Passed", Colors.OKGREEN)
 
-        return GstValidateMediaDescriptor(descriptor_path)
+        try:
+            return GstValidateMediaDescriptor(descriptor_path)
+        except FileNotFoundError:
+            return None
 
     def get_path(self):
         return self._xml_path
