@@ -186,6 +186,7 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_convert_submit_input_buffer);
 
   basetransform_class->passthrough_on_same_caps = TRUE;
+  basetransform_class->transform_ip_on_passthrough = FALSE;
 }
 
 static void
