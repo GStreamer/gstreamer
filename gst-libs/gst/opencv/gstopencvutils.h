@@ -36,6 +36,10 @@ gboolean gst_opencv_parse_iplimage_params_from_caps
     (GstCaps * caps, gint * width, gint * height, gint * depth,
     gint * channels, GError ** err);
 
+gboolean gst_opencv_iplimage_params_from_video_info
+    (GstVideoInfo * info, gint * width, gint * height, gint * depth,
+    gint * channels, GError ** err);
+
 GstCaps * gst_opencv_caps_from_cv_image_type (int cv_type);
 G_END_DECLS
 

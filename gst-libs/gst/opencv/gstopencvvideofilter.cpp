@@ -192,7 +192,7 @@ gst_opencv_video_filter_set_info (GstVideoFilter * trans, GstCaps * incaps,
   GError *in_err = NULL;
   GError *out_err = NULL;
 
-  if (!gst_opencv_parse_iplimage_params_from_caps (incaps, &in_width,
+  if (!gst_opencv_iplimage_params_from_video_info (in_info, &in_width,
           &in_height, &in_depth, &in_channels, &in_err)) {
     GST_WARNING_OBJECT (transform, "Failed to parse input caps: %s",
         in_err->message);
@@ -200,7 +200,7 @@ gst_opencv_video_filter_set_info (GstVideoFilter * trans, GstCaps * incaps,
     return FALSE;
   }
 
-  if (!gst_opencv_parse_iplimage_params_from_caps (outcaps, &out_width,
+  if (!gst_opencv_iplimage_params_from_video_info (out_info, &out_width,
           &out_height, &out_depth, &out_channels, &out_err)) {
     GST_WARNING_OBJECT (transform, "Failed to parse output caps: %s",
         out_err->message);
