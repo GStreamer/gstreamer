@@ -580,9 +580,9 @@ class GstValidateTest(Test):
 
     def stop_server(self):
         if self.server:
-            self.server.server_close()
             self.server.shutdown()
             self.server_thread.join()
+            self.server.server_close()
             self.server = None
 
     def kill_subprocess(self):
@@ -611,8 +611,6 @@ class GstValidateTest(Test):
         self.info("%s server port: %s" % (self, self.serverport))
         ready.set()
 
-        # Activate the server; this will keep running until you
-        # interrupt the program with Ctrl-C
         self.server.serve_forever()
 
     def test_start(self, queue):
