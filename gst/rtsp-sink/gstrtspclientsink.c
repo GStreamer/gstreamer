@@ -1559,8 +1559,10 @@ gst_rtsp_client_sink_cleanup (GstRTSPClientSink * sink)
       context->stream = NULL;
     }
 
-    if (context->srtcpparams)
+    if (context->srtcpparams) {
       gst_caps_unref (context->srtcpparams);
+      context->srtcpparams = NULL;
+    }
     g_free (context->conninfo.location);
     context->conninfo.location = NULL;
   }
