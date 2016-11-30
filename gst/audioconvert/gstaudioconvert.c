@@ -732,12 +732,14 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
         && gst_buffer_n_memory (inbuf) == 1
         && gst_memory_is_writable (gst_buffer_peek_memory (inbuf, 0));
 
-    gst_buffer_map (inbuf, &srcmap,
-        inbuf_writable ? GST_MAP_READWRITE : GST_MAP_READ);
+    if (!gst_buffer_map (inbuf, &srcmap,
+            inbuf_writable ? GST_MAP_READWRITE : GST_MAP_READ))
+      goto inmap_error;
   } else {
     inbuf_writable = TRUE;
   }
-  gst_buffer_map (outbuf, &dstmap, GST_MAP_WRITE);
+  if (!gst_buffer_map (outbuf, &dstmap, GST_MAP_WRITE))
+    goto outmap_error;
 
   /* check in and outsize */
   if (inbuf != outbuf) {
@@ -789,6 +791,20 @@ convert_error:
         (NULL), ("error while converting"));
     ret = GST_FLOW_ERROR;
     goto done;
+  }
+inmap_error:
+  {
+    GST_ELEMENT_ERROR (this, STREAM, FORMAT,
+        (NULL), ("failed to map input buffer"));
+    return GST_FLOW_ERROR;
+  }
+outmap_error:
+  {
+    GST_ELEMENT_ERROR (this, STREAM, FORMAT,
+        (NULL), ("failed to map output buffer"));
+    if (inbuf != outbuf)
+      gst_buffer_unmap (inbuf, &srcmap);
+    return GST_FLOW_ERROR;
   }
 }
 
