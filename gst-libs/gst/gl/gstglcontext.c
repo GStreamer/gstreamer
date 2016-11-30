@@ -1670,6 +1670,10 @@ gboolean
 gst_gl_context_is_shared (GstGLContext * context)
 {
   g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
+
+  if (!context->priv->sharegroup)
+    return FALSE;
+
   if (GST_IS_GL_WRAPPED_CONTEXT (context))
     g_return_val_if_fail (context->priv->active_thread, FALSE);
   else
