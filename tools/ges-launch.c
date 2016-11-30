@@ -91,6 +91,7 @@ main (int argc, gchar ** argv)
     ret = ges_launcher_get_exit_status (launcher);
 
   g_object_unref (launcher);
+  gst_deinit ();
 
   return ret;
 }
