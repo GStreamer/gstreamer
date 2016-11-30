@@ -282,6 +282,8 @@ struct _QtDemuxStream
   guint16 bits_per_sample;
   guint16 color_table_id;
   GstMemory *rgb8_palette;
+  guint interlace_mode;
+  guint field_order;
 
   /* audio info */
   gdouble rate;
@@ -7598,6 +7600,23 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
             GST_TYPE_FRACTION, stream->par_w, stream->par_h, NULL);
       }
 
+      if (stream->interlace_mode > 0) {
+        if (stream->interlace_mode == 1) {
+          gst_caps_set_simple (stream->caps, "interlace-mode", G_TYPE_STRING,
+              "progressive", NULL);
+        } else if (stream->interlace_mode == 2) {
+          gst_caps_set_simple (stream->caps, "interlace-mode", G_TYPE_STRING,
+              "interleaved", NULL);
+          if (stream->field_order == 9) {
+            gst_caps_set_simple (stream->caps, "field-order", G_TYPE_STRING,
+                "top-field-first", NULL);
+          } else if (stream->field_order == 14) {
+            gst_caps_set_simple (stream->caps, "field-order", G_TYPE_STRING,
+                "bottom-field-first", NULL);
+          }
+        }
+      }
+
       /* Create incomplete colorimetry here if needed */
       if (stream->colorimetry.range ||
           stream->colorimetry.matrix ||
@@ -9259,6 +9278,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GNode *tref;
   GNode *udta;
   GNode *svmi;
+  GNode *fiel;
 
   QtDemuxStream *stream = NULL;
   gboolean new_stream = FALSE;
@@ -9689,6 +9709,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     esds = NULL;
     pasp = NULL;
     colr = NULL;
+    fiel = NULL;
     /* pick 'the' stsd child */
     if (!stream->protected)
       mp4v = qtdemux_tree_get_child_by_type (stsd, fourcc);
@@ -9699,6 +9720,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       esds = qtdemux_tree_get_child_by_type (mp4v, FOURCC_esds);
       pasp = qtdemux_tree_get_child_by_type (mp4v, FOURCC_pasp);
       colr = qtdemux_tree_get_child_by_type (mp4v, FOURCC_colr);
+      fiel = qtdemux_tree_get_child_by_type (mp4v, FOURCC_fiel);
     }
 
     if (pasp) {
@@ -9709,6 +9731,16 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     } else {
       stream->par_w = 0;
       stream->par_h = 0;
+    }
+
+    if (fiel) {
+      const guint8 *fiel_data = (const guint8 *) fiel->data;
+      gint len = QT_UINT32 (fiel_data);
+
+      if (len == 10) {
+        stream->interlace_mode = GST_READ_UINT8 (fiel_data + 8);
+        stream->field_order = GST_READ_UINT8 (fiel_data + 9);
+      }
     }
 
     if (colr) {
