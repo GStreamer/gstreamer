@@ -1328,6 +1328,7 @@ GST_STR_NULL
 GST_DEBUG_PAD_NAME
 GST_FUNCTION
 GstLogFunction
+GstStackTraceFlags
 gst_debug_log
 gst_debug_log_valist
 gst_debug_message_get

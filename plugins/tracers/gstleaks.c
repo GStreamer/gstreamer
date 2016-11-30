@@ -221,7 +221,7 @@ handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
 
   GST_OBJECT_LOCK (self);
   if (self->log_stack_trace) {
-    trace = gst_debug_get_stack_trace ();
+    trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
   }
 
   g_hash_table_insert (self->objects, object, trace);
@@ -264,7 +264,7 @@ gst_leaks_tracer_init (GstLeaksTracer * self)
     gchar *trace;
 
     /* Test if we can retrieve backtrace */
-    trace = gst_debug_get_stack_trace ();
+    trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
     if (trace) {
       self->log_stack_trace = TRUE;
       g_free (trace);

@@ -2646,7 +2646,7 @@ append_debug_info (GString * trace, Dwfl * dwfl, const void *ip)
 #endif /* HAVE_DW */
 
 static gchar *
-generate_unwind_trace (void)
+generate_unwind_trace (GstStackTraceFlags flags)
 {
   unw_context_t uc;
   unw_cursor_t cursor;
@@ -2654,14 +2654,14 @@ generate_unwind_trace (void)
   GString *trace = g_string_new (NULL);
 
 #ifdef HAVE_DW
-  Dwfl *dwfl;
-
+  Dwfl *dwfl = NULL;
   Dwfl_Callbacks callbacks = {
     .find_elf = dwfl_linux_proc_find_elf,
     .find_debuginfo = dwfl_standard_find_debuginfo,
   };
 
-  dwfl = dwfl_begin (&callbacks);
+  if ((flags & GST_STACK_TRACE_SHOW_FULL))
+    dwfl = dwfl_begin (&callbacks);
 #endif /* HAVE_DW */
 
   unw_getcontext (&uc);
@@ -2691,7 +2691,8 @@ generate_unwind_trace (void)
   }
 
 #ifdef HAVE_DW
-  dwfl_end (dwfl);
+  if (dwfl)
+    dwfl_end (dwfl);
 #endif
 
   return g_string_free (trace, FALSE);
@@ -2725,26 +2726,35 @@ generate_backtrace_trace (void)
 
 /**
  * gst_debug_get_stack_trace:
+ * @flags: A set of #GstStackTraceFlags to determine how the stack
+ * trace should look like. Pass 0 to retrieve a minimal backtrace.
  *
  * If libunwind or glibc backtrace are present, a stack trace
  * is returned.
+ *
+ * Since: 1.12
  */
 gchar *
-gst_debug_get_stack_trace (void)
+gst_debug_get_stack_trace (GstStackTraceFlags flags)
 {
   gchar *trace = NULL;
+#ifdef HAVE_BACKTRACE
+  gboolean have_backtrace = TRUE;
+#else
+  gboolean have_backtrace = FALSE;
+#endif
 
 #ifdef HAVE_UNWIND
-  trace = generate_unwind_trace ();
-  if (trace)
-    return trace;
+  if ((flags & GST_STACK_TRACE_SHOW_FULL) || !have_backtrace)
+    trace = generate_unwind_trace (flags);
 #endif /* HAVE_UNWIND */
 
-#ifdef HAVE_BACKTRACE
-  trace = generate_backtrace_trace ();
-#endif /* HAVE_BACKTRACE */
+  if (trace)
+    return trace;
+  else if (have_backtrace)
+    return generate_backtrace_trace ();
 
-  return trace;
+  return NULL;
 }
 
 /**
@@ -2756,7 +2766,7 @@ gst_debug_get_stack_trace (void)
 void
 gst_debug_print_stack_trace (void)
 {
-  gchar *trace = gst_debug_get_stack_trace ();
+  gchar *trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
 
   if (trace)
     g_print ("%s\n", trace);

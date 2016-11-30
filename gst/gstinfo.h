@@ -176,6 +176,15 @@ typedef enum {
 } GstDebugColorFlags;
 
 /**
+ * GstStackTraceFlags:
+ * @GST_STACK_TRACE_SHOW_FULL: Try to retrieve as much information as
+ *                             possible when getting the stack trace
+ */
+typedef enum {
+    GST_STACK_TRACE_SHOW_FULL = 1 << 0
+} GstStackTraceFlags;
+
+/**
  * GstDebugColorMode:
  * @GST_DEBUG_COLOR_MODE_OFF: Do not use colors in logs.
  * @GST_DEBUG_COLOR_MODE_ON: Paint logs in a platform-specific way.
@@ -1570,7 +1579,7 @@ GST_TRACE (const char *format, ...)
 
 
 void gst_debug_print_stack_trace (void);
-gchar * gst_debug_get_stack_trace (void);
+gchar * gst_debug_get_stack_trace (GstStackTraceFlags flags);
 
 G_END_DECLS
 
