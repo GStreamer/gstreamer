@@ -2375,27 +2375,10 @@ _update_pipeline_func (NleComposition * comp, UpdateCompositionData * ucompo)
   _post_start_composition_update_done (comp, ucompo->seqnum, ucompo->reason);
 }
 
-static void
-_set_all_children_state (NleComposition * comp, GstState state)
-{
-  GList *tmp;
-
-  GST_DEBUG_OBJECT (comp, "Setting all children state to %s",
-      gst_element_state_get_name (state));
-
-  comp->priv->tearing_down_stack = TRUE;
-  gst_element_set_state (comp->priv->current_bin, state);
-  for (tmp = comp->priv->objects_start; tmp; tmp = tmp->next)
-    gst_element_set_state (tmp->data, state);
-
-  for (tmp = comp->priv->expandables; tmp; tmp = tmp->next)
-    gst_element_set_state (tmp->data, state);
-  comp->priv->tearing_down_stack = FALSE;
-}
-
 static GstStateChangeReturn
 nle_composition_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn res;
   NleComposition *comp = (NleComposition *) element;
 
   GST_DEBUG_OBJECT (comp, "%s => %s",
@@ -2419,23 +2402,39 @@ nle_composition_change_state (GstElement * element, GstStateChange transition)
 
       _remove_update_actions (comp);
       _remove_seek_actions (comp);
-      _set_all_children_state (comp, GST_STATE_READY);
-      nle_composition_reset (comp);
-
-      _start_task (comp);
+      _deactivate_stack (comp, TRUE);
+      comp->priv->tearing_down_stack = TRUE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       _stop_task (comp);
 
       _remove_update_actions (comp);
       _remove_seek_actions (comp);
-      _set_all_children_state (comp, GST_STATE_NULL);
+      comp->priv->tearing_down_stack = TRUE;
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      comp->priv->tearing_down_stack = FALSE;
+      nle_composition_reset (comp);
+
+      /* In READY we are still able to process actions. */
+      _start_task (comp);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_element_set_state (comp->priv->current_bin, GST_STATE_NULL);
+      comp->priv->tearing_down_stack = FALSE;
+      break;
+    default:
+      break;
+  }
+
+  return res;
 }
 
 static gint
