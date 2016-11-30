@@ -146,15 +146,6 @@ _check_pad_query_failures (GstPad * pad, GString * str,
   GstValidatePadMonitor *monitor;
   GstPad *ghost_target = NULL;
 
-  if (GST_IS_GHOST_PAD (pad)) {
-    ghost_target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-
-    if (!ghost_target)
-      return;
-
-    pad = ghost_target;
-  }
-
   monitor = g_object_get_data (G_OBJECT (pad), "validate-monitor");
 
   if (monitor->last_query_res && gst_caps_is_empty (monitor->last_query_res)) {
@@ -184,6 +175,25 @@ _gather_pad_negotiation_details (GstPad * pad, GString * str,
 
   if (!peer)
     return;
+
+  while (GST_IS_PROXY_PAD (peer)) {
+    GstPad *next_pad;
+
+    if (GST_IS_GHOST_PAD (peer)) {
+      next_pad = gst_pad_get_peer (peer);
+
+      if (next_pad == pad)
+        next_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (peer));
+    } else {
+      next_pad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (peer)));
+    }
+
+    if (!next_pad)
+      return;
+
+    gst_object_unref (peer);
+    peer = next_pad;
+  }
 
   _check_pad_query_failures (peer, str, last_query_caps_fail_monitor,
       last_refused_caps_monitor);
