@@ -545,12 +545,16 @@ GST_START_TEST (test_complex_operations)
   /* Add source1 */
   nle_composition_add (GST_BIN (comp), source1);
   check_start_stop_duration (comp, 0, 0, 0);
-  ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
+  /* If the composition already processed the source, the refcount
+   * might be 2 */
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (source1, "source1", 1, 2);
 
   /* Add source2 */
   nle_composition_add (GST_BIN (comp), source2);
   check_start_stop_duration (comp, 0, 0, 0);
-  ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
+  /* If the composition already processed the source, the refcount
+   * might be 2 */
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (source2, "source2", 1, 2);
 
   /* Add operaton */
   nle_composition_add (GST_BIN (comp), oper);
