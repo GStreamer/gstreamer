@@ -91,9 +91,9 @@ Please submit patches for GStreamer through [GNOME bugzilla][bugzilla]:
   existing bugs.
 
 - Once you have created a bug you can attach your patch(es) to the bug report,
-  see below for more details (you can add one attachment when you file the bug,
+  see below for more details. You can add one attachment when you file the bug,
   but if you have multiple things to attach you will have to do that after the
-  bug has been submitted).
+  bug has been submitted.
 
 - If your patch is for an enhancement (anything that is not supposed to work
   already, i.e. anything not a bug) or adds new API, please set your bug's
@@ -150,7 +150,7 @@ ideally against the tip of the master branch, but in many cases patches against
 a stable release will be acceptable as well if the plugin or code hasn't
 changed much since then. If a patch was prepared against an old branch and
 does not apply any longer to master you may be asked to provide an updated
-patch against.
+patch.
 
 If you have created a new plugin, please submit a patch that adds it to the
 gst-plugins-bad module, including `configure.ac` and the various `Makefile.am`
