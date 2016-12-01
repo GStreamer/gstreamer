@@ -6909,12 +6909,10 @@ qtdemux_inflate (void *z_buffer, guint z_length, guint * length)
       break;
     }
 
-    if (z.avail_out == 0) {
-      *length += 1024;
-      buffer = (guint8 *) g_realloc (buffer, *length);
-      z.next_out = (Bytef *) (buffer + z.total_out);
-      z.avail_out = 1024;
-    }
+    *length += 4096;
+    buffer = (guint8 *) g_realloc (buffer, *length);
+    z.next_out = (Bytef *) (buffer + z.total_out);
+    z.avail_out += 4096;
   } while (z.avail_in > 0);
 
   if (ret != Z_STREAM_END) {
