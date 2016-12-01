@@ -181,6 +181,8 @@ gst_rtp_sbc_depay_setcaps (GstRTPBaseDepayload * base, GstCaps * caps)
   }
 
   gst_caps_unref (outcaps);
+  if (oldcaps)
+     gst_caps_unref (oldcaps);
 
   return TRUE;
 
