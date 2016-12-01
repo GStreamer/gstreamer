@@ -106,25 +106,27 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
 
     do {
       result = inflate (&zstream, Z_NO_FLUSH);
-      if (result != Z_OK && result != Z_STREAM_END) {
-        GST_WARNING ("zlib decompression failed.");
-        g_free (new_data);
-        inflateEnd (&zstream);
+      if (result == Z_STREAM_END) {
+        break;
+      } else if (result != Z_OK) {
+        GST_WARNING ("inflate() returned %d", result);
         break;
       }
-      new_size += 4000;
+
+      new_size += 4096;
       new_data = g_realloc (new_data, new_size);
       zstream.next_out = (Bytef *) (new_data + zstream.total_out);
-      zstream.avail_out += 4000;
-    } while (zstream.avail_in != 0 && result != Z_STREAM_END);
+      zstream.avail_out += 4096;
+    } while (zstream.avail_in > 0);
 
     if (result != Z_STREAM_END) {
       ret = FALSE;
-      goto out;
+      g_free (new_data);
     } else {
       new_size = zstream.total_out;
-      inflateEnd (&zstream);
     }
+    inflateEnd (&zstream);
+
 #else
     GST_WARNING ("zlib encoded tracks not supported.");
     ret = FALSE;
@@ -157,25 +159,27 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
 
     do {
       result = BZ2_bzDecompress (&bzstream);
-      if (result != BZ_OK && result != BZ_STREAM_END) {
-        GST_WARNING ("bzip2 decompression failed.");
-        g_free (new_data);
-        BZ2_bzDecompressEnd (&bzstream);
+      if (result == BZ_STREAM_END) {
+        break;
+      } else if (result != BZ_OK) {
+        GST_WARNING ("BZ2_bzDecompress() returned %d", result);
         break;
       }
-      new_size += 4000;
+
+      new_size += 4096;
       new_data = g_realloc (new_data, new_size);
       bzstream.next_out = (char *) (new_data + bzstream.total_out_lo32);
-      bzstream.avail_out += 4000;
-    } while (bzstream.avail_in != 0 && result != BZ_STREAM_END);
+      bzstream.avail_out += 4096;
+    } while (bzstream.avail_in > 0);
 
     if (result != BZ_STREAM_END) {
       ret = FALSE;
-      goto out;
+      g_free (new_data);
     } else {
       new_size = bzstream.total_out_lo32;
-      BZ2_bzDecompressEnd (&bzstream);
     }
+    BZ2_bzDecompressEnd (&bzstream);
+
 #else
     GST_WARNING ("bzip2 encoded tracks not supported.");
     ret = FALSE;
@@ -198,7 +202,7 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
       result = lzo1x_decode (new_data, &out_size, data, &orig_size);
 
       if (orig_size > 0) {
-        new_size += 4000;
+        new_size += 4096;
         new_data = g_realloc (new_data, new_size);
       }
     } while (orig_size > 0 && result == LZO_OUTPUT_FULL);
