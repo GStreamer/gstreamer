@@ -2308,9 +2308,6 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           if (n && d)
             gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
                 n, d, NULL);
-          /* very local, not needed elsewhere */
-          g_free (vprp);
-          vprp = NULL;
         }
         caps = gst_avi_demux_check_caps (avi, stream, caps);
         tag_name = GST_TAG_VIDEO_CODEC;
@@ -2457,6 +2454,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
     gst_tag_list_add (stream->taglist, GST_TAG_MERGE_APPEND, tag_name,
         codec_name, NULL);
   }
+
+  g_free (vprp);
   g_free (codec_name);
   gst_buffer_unref (buf);
 
