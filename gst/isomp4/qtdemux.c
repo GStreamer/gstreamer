@@ -6878,50 +6878,55 @@ qtdemux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
 
 #ifdef HAVE_ZLIB
 static void *
-qtdemux_zalloc (void *opaque, unsigned int items, unsigned int size)
-{
-  return g_malloc (items * size);
-}
-
-static void
-qtdemux_zfree (void *opaque, void *addr)
-{
-  g_free (addr);
-}
-
-static void *
-qtdemux_inflate (void *z_buffer, guint z_length, guint length)
+qtdemux_inflate (void *z_buffer, guint z_length, guint * length)
 {
   guint8 *buffer;
-  z_stream *z;
+  z_stream z;
   int ret;
 
-  z = g_new0 (z_stream, 1);
-  z->zalloc = qtdemux_zalloc;
-  z->zfree = qtdemux_zfree;
-  z->opaque = NULL;
+  memset (&z, 0, sizeof (z));
+  z.zalloc = NULL;
+  z.zfree = NULL;
+  z.opaque = NULL;
 
-  z->next_in = z_buffer;
-  z->avail_in = z_length;
+  if ((ret = inflateInit (&z)) != Z_OK) {
+    GST_ERROR ("inflateInit() returned %d", ret);
+    return NULL;
+  }
 
-  buffer = (guint8 *) g_malloc (length);
-  ret = inflateInit (z);
-  while (z->avail_in > 0) {
-    if (z->avail_out == 0) {
-      length += 1024;
-      buffer = (guint8 *) g_realloc (buffer, length);
-      z->next_out = buffer + z->total_out;
-      z->avail_out = 1024;
-    }
-    ret = inflate (z, Z_SYNC_FLUSH);
-    if (ret != Z_OK)
+  z.next_in = z_buffer;
+  z.avail_in = z_length;
+
+  buffer = (guint8 *) g_malloc (*length);
+  z.avail_out = *length;
+  z.next_out = (Bytef *) buffer;
+  do {
+    ret = inflate (&z, Z_NO_FLUSH);
+    if (ret == Z_STREAM_END) {
       break;
-  }
+    } else if (ret != Z_OK) {
+      GST_WARNING ("inflate() returned %d", ret);
+      break;
+    }
+
+    if (z.avail_out == 0) {
+      *length += 1024;
+      buffer = (guint8 *) g_realloc (buffer, *length);
+      z.next_out = (Bytef *) (buffer + z.total_out);
+      z.avail_out = 1024;
+    }
+  } while (z.avail_in > 0);
+
   if (ret != Z_STREAM_END) {
-    g_warning ("inflate() returned %d", ret);
+    g_free (buffer);
+    buffer = NULL;
+    *length = 0;
+  } else {
+    *length = z.total_out;
   }
 
-  g_free (z);
+  inflateEnd (&z);
+
   return buffer;
 }
 #endif /* HAVE_ZLIB */
@@ -6974,13 +6979,15 @@ qtdemux_parse_moov (GstQTDemux * qtdemux, const guint8 * buffer, guint length)
 
         buf =
             (guint8 *) qtdemux_inflate ((guint8 *) cmvd->data + 12,
-            compressed_length, uncompressed_length);
+            compressed_length, &uncompressed_length);
 
-        qtdemux->moov_node_compressed = qtdemux->moov_node;
-        qtdemux->moov_node = g_node_new (buf);
+        if (buf) {
+          qtdemux->moov_node_compressed = qtdemux->moov_node;
+          qtdemux->moov_node = g_node_new (buf);
 
-        qtdemux_parse_node (qtdemux, qtdemux->moov_node, buf,
-            uncompressed_length);
+          qtdemux_parse_node (qtdemux, qtdemux->moov_node, buf,
+              uncompressed_length);
+        }
         break;
       }
 #endif /* HAVE_ZLIB */
