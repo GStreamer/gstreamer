@@ -2816,7 +2816,7 @@ gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg, GstCaps * caps,
   if (G_UNLIKELY (!caps))
     return NULL;
   if (G_UNLIKELY (!headers))
-    return NULL;
+    return caps;
 
   caps = gst_caps_make_writable (caps);
   structure = gst_caps_get_structure (caps, 0);
