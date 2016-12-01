@@ -7769,12 +7769,13 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
     if (stream->new_stream) {
       gchar *stream_id;
       GstEvent *event;
-      GstStreamFlags stream_flags;
+      GstStreamFlags stream_flags = GST_STREAM_FLAG_NONE;
 
       event =
           gst_pad_get_sticky_event (qtdemux->sinkpad, GST_EVENT_STREAM_START,
           0);
       if (event) {
+        gst_event_parse_stream_flags (event, &stream_flags);
         if (gst_event_parse_group_id (event, &qtdemux->group_id))
           qtdemux->have_group_id = TRUE;
         else
@@ -7792,11 +7793,13 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       event = gst_event_new_stream_start (stream_id);
       if (qtdemux->have_group_id)
         gst_event_set_group_id (event, qtdemux->group_id);
-      stream_flags = GST_STREAM_FLAG_NONE;
       if (stream->disabled)
         stream_flags |= GST_STREAM_FLAG_UNSELECT;
-      if (stream->sparse)
+      if (stream->sparse) {
         stream_flags |= GST_STREAM_FLAG_SPARSE;
+      } else {
+        stream_flags &= ~GST_STREAM_FLAG_SPARSE;
+      }
       gst_event_set_stream_flags (event, stream_flags);
       gst_pad_push_event (stream->pad, event);
       g_free (stream_id);
