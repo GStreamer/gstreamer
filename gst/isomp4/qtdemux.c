@@ -13215,6 +13215,24 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
 }
 
+static inline GstCaps *
+_get_unknown_codec_name (const gchar * type, guint32 fourcc)
+{
+  GstCaps *caps;
+  guint i;
+  char *s, fourstr[5];
+
+  g_snprintf (fourstr, 5, "%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+  for (i = 0; i < 4; i++) {
+    if (!g_ascii_isalnum (fourstr[i]))
+      fourstr[i] = '_';
+  }
+  s = g_strdup_printf ("%s/x-gst-fourcc-%s", type, g_strstrip (fourstr));
+  caps = gst_caps_new_empty_simple (s);
+  g_free (s);
+  return caps;
+}
+
 #define _codec(name) \
   do { \
     if (codec_name) { \
@@ -13617,12 +13635,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
     {
-      char *s, fourstr[5];
-
-      g_snprintf (fourstr, 5, "%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
-      s = g_strdup_printf ("video/x-gst-fourcc-%s", g_strstrip (fourstr));
-      caps = gst_caps_new_empty_simple (s);
-      g_free (s);
+      caps = _get_unknown_codec_name ("video", fourcc);
       break;
     }
   }
@@ -13938,12 +13951,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       /* ? */
     default:
     {
-      char *s, fourstr[5];
-
-      g_snprintf (fourstr, 5, "%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
-      s = g_strdup_printf ("audio/x-gst-fourcc-%s", g_strstrip (fourstr));
-      caps = gst_caps_new_empty_simple (s);
-      g_free (s);
+      caps = _get_unknown_codec_name ("audio", fourcc);
       break;
     }
   }
@@ -13999,12 +14007,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     default:
     {
-      char *s, fourstr[5];
-
-      g_snprintf (fourstr, 5, "%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
-      s = g_strdup_printf ("text/x-gst-fourcc-%s", g_strstrip (fourstr));
-      caps = gst_caps_new_empty_simple (s);
-      g_free (s);
+      caps = _get_unknown_codec_name ("text", fourcc);
       break;
     }
   }
