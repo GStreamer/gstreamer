@@ -1965,10 +1965,15 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       gst_buffer_unref (qtdemux->comp_brands);
     qtdemux->comp_brands = NULL;
     qtdemux->last_moov_offset = -1;
+    if (qtdemux->moov_node_compressed) {
+      g_node_destroy (qtdemux->moov_node_compressed);
+      if (qtdemux->moov_node)
+        g_free (qtdemux->moov_node->data);
+    }
+    qtdemux->moov_node_compressed = NULL;
     if (qtdemux->moov_node)
       g_node_destroy (qtdemux->moov_node);
     qtdemux->moov_node = NULL;
-    qtdemux->moov_node_compressed = NULL;
     if (qtdemux->tag_list)
       gst_mini_object_unref (GST_MINI_OBJECT_CAST (qtdemux->tag_list));
     qtdemux->tag_list = NULL;
@@ -4221,10 +4226,15 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       qtdemux_node_dump (qtdemux, qtdemux->moov_node);
 
       qtdemux_parse_tree (qtdemux);
+      if (qtdemux->moov_node_compressed) {
+        g_node_destroy (qtdemux->moov_node_compressed);
+        g_free (qtdemux->moov_node->data);
+      }
+      qtdemux->moov_node_compressed = NULL;
       g_node_destroy (qtdemux->moov_node);
+      qtdemux->moov_node = NULL;
       gst_buffer_unmap (moov, &map);
       gst_buffer_unref (moov);
-      qtdemux->moov_node = NULL;
       qtdemux->got_moov = TRUE;
 
       break;
@@ -6350,10 +6360,15 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             if (demux->got_moov && demux->fragmented) {
               GST_DEBUG_OBJECT (demux,
                   "Got a second moov, clean up data from old one");
+              if (demux->moov_node_compressed) {
+                g_node_destroy (demux->moov_node_compressed);
+                if (demux->moov_node)
+                  g_free (demux->moov_node->data);
+              }
+              demux->moov_node_compressed = NULL;
               if (demux->moov_node)
                 g_node_destroy (demux->moov_node);
               demux->moov_node = NULL;
-              demux->moov_node_compressed = NULL;
             } else {
               /* prepare newsegment to send when streaming actually starts */
               if (!demux->pending_newsegment) {
@@ -6393,6 +6408,11 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
               }
             }
 
+            if (demux->moov_node_compressed) {
+              g_node_destroy (demux->moov_node_compressed);
+              g_free (demux->moov_node->data);
+            }
+            demux->moov_node_compressed = NULL;
             g_node_destroy (demux->moov_node);
             demux->moov_node = NULL;
             GST_DEBUG_OBJECT (demux, "Finished parsing the header");
