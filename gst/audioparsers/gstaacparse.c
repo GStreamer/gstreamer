@@ -306,11 +306,12 @@ gst_aac_parse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
   if (value) {
     GstBuffer *buf = gst_value_get_buffer (value);
 
-    if (buf) {
+    if (buf && gst_buffer_get_size (buf) >= 2) {
       GstMapInfo map;
       guint sr_idx;
 
-      gst_buffer_map (buf, &map, GST_MAP_READ);
+      if (!gst_buffer_map (buf, &map, GST_MAP_READ))
+        return FALSE;
 
       sr_idx = ((map.data[0] & 0x07) << 1) | ((map.data[1] & 0x80) >> 7);
       aacparse->object_type = (map.data[0] & 0xf8) >> 3;
