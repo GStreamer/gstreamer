@@ -342,16 +342,72 @@ gst_vaapiencode_buffer_loop (GstVaapiEncode * encode)
   gst_pad_pause_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
 }
 
+static gboolean
+ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
+{
+  GstCaps *out_caps, *raw_caps = NULL;
+  GArray *formats = NULL;
+  gboolean ret = FALSE;
+
+  if (encode->allowed_sinkpad_caps)
+    return TRUE;
+  if (!encode->encoder)
+    return TRUE;
+
+  out_caps = gst_caps_from_string (GST_VAAPI_MAKE_SURFACE_CAPS);
+  if (!out_caps)
+    goto failed_create_va_caps;
+
+  formats = gst_vaapi_encoder_get_surface_formats (encode->encoder);
+  if (!formats)
+    goto failed_get_formats;
+
+  raw_caps = gst_vaapi_video_format_new_template_caps_from_list (formats);
+  if (!raw_caps)
+    goto failed_create_raw_caps;
+
+  out_caps = gst_caps_make_writable (out_caps);
+  gst_caps_append (out_caps, gst_caps_copy (raw_caps));
+  gst_caps_replace (&encode->allowed_sinkpad_caps, out_caps);
+  ret = TRUE;
+
+bail:
+  if (out_caps)
+    gst_caps_unref (out_caps);
+  if (raw_caps)
+    gst_caps_unref (raw_caps);
+  if (formats)
+    g_array_unref (formats);
+  return ret;
+
+failed_create_va_caps:
+  {
+    GST_WARNING_OBJECT (encode, "failed to create VA/GL sink caps");
+    return FALSE;
+  }
+failed_get_formats:
+  {
+    GST_WARNING_OBJECT (encode, "failed to get allowed surface formats");
+    goto bail;
+  }
+failed_create_raw_caps:
+  {
+    GST_WARNING_OBJECT (encode, "failed to create raw sink caps");
+    goto bail;
+  }
+}
+
 static GstCaps *
 gst_vaapiencode_get_caps (GstVideoEncoder * venc, GstCaps * filter)
 {
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (venc);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
   GstCaps *result;
 
-  result = gst_video_encoder_proxy_getcaps (venc, plugin->sinkpad_caps, filter);
+  ensure_allowed_sinkpad_caps (encode);
+  result = gst_video_encoder_proxy_getcaps (venc, encode->allowed_sinkpad_caps,
+      filter);
 
   GST_DEBUG_OBJECT (venc, "Returning sink caps %" GST_PTR_FORMAT, result);
-
   return result;
 }
 
@@ -367,6 +423,8 @@ gst_vaapiencode_destroy (GstVaapiEncode * encode)
     gst_video_codec_state_unref (encode->output_state);
     encode->output_state = NULL;
   }
+
+  gst_caps_replace (&encode->allowed_sinkpad_caps, NULL);
   gst_vaapi_encoder_replace (&encode->encoder, NULL);
   return TRUE;
 }

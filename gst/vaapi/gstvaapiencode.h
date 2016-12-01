@@ -59,6 +59,7 @@ struct _GstVaapiEncode
   gboolean need_codec_data;
   GstVideoCodecState *output_state;
   GPtrArray *prop_values;
+  GstCaps *allowed_sinkpad_caps;
 };
 
 struct _GstVaapiEncodeClass
