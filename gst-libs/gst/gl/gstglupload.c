@@ -579,7 +579,8 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   meta = gst_buffer_get_video_meta (buffer);
 
   /* dmabuf upload is only supported with EGL contexts. */
-  if (!GST_IS_GL_CONTEXT_EGL (dmabuf->upload->context))
+  if (gst_gl_context_get_gl_platform (dmabuf->upload->context) !=
+      GST_GL_PLATFORM_EGL)
     return FALSE;
 
   if (!gst_gl_context_check_feature (dmabuf->upload->context,
