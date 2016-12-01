@@ -1316,16 +1316,16 @@ void
 ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
     GParamSpec * pspec, GValue * value)
 {
-  GObject *child;
+  ChildPropHandler *handler;
 
   g_return_if_fail (GES_IS_TRACK_ELEMENT (self));
 
-  if (!ges_timeline_element_lookup_child (self, pspec->name, &child, &pspec))
+  handler = g_hash_table_lookup (self->priv->children_props, pspec);
+
+  if (!handler)
     goto not_found;
 
-  g_object_set_property (child, pspec->name, value);
-  gst_object_unref (child);
-  g_param_spec_unref (pspec);
+  g_object_set_property (handler->child, pspec->name, value);
 
   return;
 
