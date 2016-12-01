@@ -6936,10 +6936,15 @@ qtdemux_parse_moov (GstQTDemux * qtdemux, const guint8 * buffer, guint length)
     guint32 method;
     GNode *dcom;
     GNode *cmvd;
+    guint32 dcom_len;
 
     dcom = qtdemux_tree_get_child_by_type (cmov, FOURCC_dcom);
     cmvd = qtdemux_tree_get_child_by_type (cmov, FOURCC_cmvd);
     if (dcom == NULL || cmvd == NULL)
+      goto invalid_compression;
+
+    dcom_len = QT_UINT32 (dcom->data);
+    if (dcom_len < 12)
       goto invalid_compression;
 
     method = QT_FOURCC ((guint8 *) dcom->data + 8);
@@ -6949,9 +6954,14 @@ qtdemux_parse_moov (GstQTDemux * qtdemux, const guint8 * buffer, guint length)
         guint uncompressed_length;
         guint compressed_length;
         guint8 *buf;
+        guint32 cmvd_len;
+
+        cmvd_len = QT_UINT32 ((guint8 *) cmvd->data);
+        if (cmvd_len < 12)
+          goto invalid_compression;
 
         uncompressed_length = QT_UINT32 ((guint8 *) cmvd->data + 8);
-        compressed_length = QT_UINT32 ((guint8 *) cmvd->data + 4) - 12;
+        compressed_length = cmvd_len - 12;
         GST_LOG ("length = %u", uncompressed_length);
 
         buf =
