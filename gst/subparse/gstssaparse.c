@@ -195,6 +195,8 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
   }
 
   /* FIXME: parse initial section */
+  if (parse->ini)
+    g_free (parse->ini);
   parse->ini = g_strndup (ptr, left);
   GST_LOG_OBJECT (parse, "Init section:\n%s", parse->ini);
 
