@@ -625,10 +625,9 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
       tagsample =
           gst_tag_image_data_to_image_sample (data, datalen, image_type);
 
-      if (!tagsample)
+      if (!tagsample) {
         image_type = GST_TAG_IMAGE_TYPE_NONE;
-      else {
-        data = NULL;
+      } else {
         tagbuffer = gst_buffer_ref (gst_sample_get_buffer (tagsample));
         caps = gst_caps_ref (gst_sample_get_caps (tagsample));
         info = gst_structure_copy (gst_sample_get_info (tagsample));
