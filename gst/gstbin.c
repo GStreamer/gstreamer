@@ -1143,6 +1143,8 @@ gst_bin_do_deep_add_remove (GstBin * bin, gint sig_id, const gchar * sig_name,
         g_queue_foreach (&elements, (GFunc) g_object_unref, NULL);
         g_queue_clear (&elements);
       }
+      if (ires == GST_ITERATOR_RESYNC)
+        gst_iterator_resync (it);
     } while (ires == GST_ITERATOR_RESYNC);
     if (ires != GST_ITERATOR_ERROR) {
       GstElement *e;
@@ -1368,7 +1370,9 @@ no_state_recalc:
 
   /* unlink all linked pads */
   it = gst_element_iterate_pads (element);
-  gst_iterator_foreach (it, (GstIteratorForeachFunction) unlink_pads, NULL);
+  while (gst_iterator_foreach (it, (GstIteratorForeachFunction) unlink_pads,
+          NULL) == GST_ITERATOR_RESYNC)
+    gst_iterator_resync (it);
   gst_iterator_free (it);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "added element \"%s\"",
@@ -1809,7 +1813,9 @@ no_state_recalc:
 
   /* unlink all linked pads */
   it = gst_element_iterate_pads (element);
-  gst_iterator_foreach (it, (GstIteratorForeachFunction) unlink_pads, NULL);
+  while (gst_iterator_foreach (it, (GstIteratorForeachFunction) unlink_pads,
+          NULL) == GST_ITERATOR_RESYNC)
+    gst_iterator_resync (it);
   gst_iterator_free (it);
 
   GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, bin, "removed child \"%s\"",
