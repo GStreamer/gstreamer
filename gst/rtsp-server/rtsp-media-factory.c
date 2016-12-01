@@ -1414,7 +1414,9 @@ default_create_element (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
     goto no_launch;
 
   /* parse the user provided launch line */
-  element = gst_parse_launch (priv->launch, &error);
+  element =
+      gst_parse_launch_full (priv->launch, NULL, GST_PARSE_FLAG_PLACE_IN_BIN,
+      &error);
   if (element == NULL)
     goto parse_error;
 
