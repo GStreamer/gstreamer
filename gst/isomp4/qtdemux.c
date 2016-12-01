@@ -9718,9 +9718,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     if (pasp) {
       const guint8 *pasp_data = (const guint8 *) pasp->data;
+      gint len = QT_UINT32 (pasp_data);
 
-      stream->par_w = QT_UINT32 (pasp_data + 8);
-      stream->par_h = QT_UINT32 (pasp_data + 12);
+      if (len == 16) {
+        stream->par_w = QT_UINT32 (pasp_data + 8);
+        stream->par_h = QT_UINT32 (pasp_data + 12);
+      } else {
+        stream->par_w = 0;
+        stream->par_h = 0;
+      }
     } else {
       stream->par_w = 0;
       stream->par_h = 0;
