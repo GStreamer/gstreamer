@@ -11469,7 +11469,7 @@ qtdemux_tag_add_str_full (GstQTDemux * qtdemux, GstTagList * taglist,
   } else {
     len = QT_UINT32 (node->data);
     type = QT_UINT32 ((guint8 *) node->data + 4);
-    if ((type >> 24) == 0xa9) {
+    if ((type >> 24) == 0xa9 && len > 8 + 4) {
       gint str_len;
       gint lang_code;
 
@@ -11488,7 +11488,7 @@ qtdemux_tag_add_str_full (GstQTDemux * qtdemux, GstTagList * taglist,
       }
 
       offset = 12;
-      len = str_len + 8 + 4;    /* remove trailing strings that we don't use */
+      len = MIN (len, str_len + 8 + 4); /* remove trailing strings that we don't use */
       GST_DEBUG_OBJECT (qtdemux, "found international text tag");
 
       if (lang_code < 0x800) {  /* MAC encoded string */
