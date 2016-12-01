@@ -45,6 +45,11 @@
 # endif
 #endif
 
+/* If the component may signal EOS before it has finished pushing
+ * out all of its buffers. Happens with egl_render on the rpi.
+ */
+#define GST_OMX_HACK_SIGNALS_PREMATURE_EOS                            G_GUINT64_CONSTANT (0x0000000000000400)
+
 #include <OMX_Core.h>
 #include <OMX_Component.h>
 

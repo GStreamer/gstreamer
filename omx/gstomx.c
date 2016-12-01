@@ -1235,6 +1235,7 @@ gst_omx_port_acquire_buffer (GstOMXPort * port, GstOMXBuffer ** buf)
   GstOMXComponent *comp;
   OMX_ERRORTYPE err;
   GstOMXBuffer *_buf = NULL;
+  gint64 timeout = GST_CLOCK_TIME_NONE;
 
   g_return_val_if_fail (port != NULL, GST_OMX_ACQUIRE_BUFFER_ERROR);
   g_return_val_if_fail (!port->tunneled, GST_OMX_ACQUIRE_BUFFER_ERROR);
@@ -1250,6 +1251,11 @@ gst_omx_port_acquire_buffer (GstOMXPort * port, GstOMXBuffer ** buf)
 
 retry:
   gst_omx_component_handle_messages (comp);
+
+  /* If we are in the case where we waited for a buffer after EOS,
+   * make sure we don't do that again */
+  if (timeout != -1)
+    timeout = -2;
 
   /* Check if the component is in an error state */
   if ((err = comp->last_error) != OMX_ErrorNone) {
@@ -1322,8 +1328,15 @@ retry:
       goto done;
     }
 
-    ret = GST_OMX_ACQUIRE_BUFFER_EOS;
-    goto done;
+    if (comp->hacks & GST_OMX_HACK_SIGNALS_PREMATURE_EOS && timeout != -2) {
+      timeout = 33 * GST_MSECOND;
+
+      GST_DEBUG_OBJECT (comp->parent, "%s output port %u is EOS but waiting "
+          "in case it spits out more buffers", comp->name, port->index);
+    } else {
+      ret = GST_OMX_ACQUIRE_BUFFER_EOS;
+      goto done;
+    }
   }
 
   /* 
@@ -1339,7 +1352,8 @@ retry:
   if (g_queue_is_empty (&port->pending_buffers)) {
     GST_DEBUG_OBJECT (comp->parent, "Queue of %s port %u is empty",
         comp->name, port->index);
-    gst_omx_component_wait_message (comp, GST_CLOCK_TIME_NONE);
+    gst_omx_component_wait_message (comp,
+        timeout == -2 ? GST_CLOCK_TIME_NONE : timeout);
 
     /* And now check everything again and maybe get a buffer */
     goto retry;
@@ -2465,6 +2479,8 @@ gst_omx_parse_hacks (gchar ** hacks)
       hacks_flags |= GST_OMX_HACK_NO_COMPONENT_ROLE;
     else if (g_str_equal (*hacks, "no-disable-outport"))
       hacks_flags |= GST_OMX_HACK_NO_DISABLE_OUTPORT;
+    else if (g_str_equal (*hacks, "signals-premature-eos"))
+      hacks_flags |= GST_OMX_HACK_SIGNALS_PREMATURE_EOS;
     else
       GST_WARNING ("Unknown hack: %s", *hacks);
     hacks++;
