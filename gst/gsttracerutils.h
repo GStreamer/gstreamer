@@ -75,6 +75,10 @@ typedef enum /*< skip >*/
   GST_TRACER_QUARK_HOOK_MINI_OBJECT_DESTROYED,
   GST_TRACER_QUARK_HOOK_OBJECT_CREATED,
   GST_TRACER_QUARK_HOOK_OBJECT_DESTROYED,
+  GST_TRACER_QUARK_HOOK_MINI_OBJECT_REFFED,
+  GST_TRACER_QUARK_HOOK_MINI_OBJECT_UNREFFED,
+  GST_TRACER_QUARK_HOOK_OBJECT_REFFED,
+  GST_TRACER_QUARK_HOOK_OBJECT_UNREFFED,
   GST_TRACER_QUARK_MAX
 } GstTracerQuarkId;
 
@@ -592,6 +596,74 @@ typedef void (*GstTracerHookMiniObjectDestroyed) (GObject *self, GstClockTime ts
 }G_STMT_END
 
 /**
+ * GstTracerHookObjectUnreffed:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @object: the object being unreffed
+ * @refcount: the new refcount after unrefing @object
+ *
+ * Hook called when a #GstObject is being unreffed named
+ * "object-unreffed"
+ */
+typedef void (*GstTracerHookObjectUnreffed) (GObject *self, GstClockTime ts,
+    GstObject *object, gint new_refcount);
+#define GST_TRACER_OBJECT_UNREFFED(object, new_refcount) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_OBJECT_UNREFFED), \
+    GstTracerHookObjectUnreffed, (GST_TRACER_ARGS, object, new_refcount)); \
+}G_STMT_END
+
+/**
+ * GstTracerHookObjectReffed:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @object: the object being reffed
+ * @refcount: the new refcount after refing @object
+ *
+ * Hook called when a #GstObject is being reffed named
+ * "object-reffed".
+ */
+typedef void (*GstTracerHookObjectReffed) (GObject *self, GstClockTime ts,
+    GstObject *object, gint new_refcount);
+#define GST_TRACER_OBJECT_REFFED(object, new_refcount) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_OBJECT_REFFED), \
+    GstTracerHookObjectReffed, (GST_TRACER_ARGS, object, new_refcount)); \
+}G_STMT_END
+
+/**
+ * GstTracerHookMiniObjectUnreffed:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @object: the mini object being unreffed
+ * @refcount: the new refcount after unrefing @object
+ *
+ * Hook called when a #GstMiniObject is being unreffed named
+ * "mini-object-unreffed".
+ */
+typedef void (*GstTracerHookMiniObjectUnreffed) (GObject *self, GstClockTime ts,
+    GstMiniObject *object, gint new_refcount);
+#define GST_TRACER_MINI_OBJECT_UNREFFED(object, new_refcount) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_MINI_OBJECT_UNREFFED), \
+    GstTracerHookMiniObjectUnreffed, (GST_TRACER_ARGS, object, new_refcount)); \
+}G_STMT_END
+
+/**
+ * GstTracerHookMiniObjectReffed:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @object: the mini object being reffed
+ * @refcount: the new refcount after refing @object
+ *
+ * Hook called when a #GstMiniObject is being reffed named
+ * "mini-object-reffed".
+ */
+typedef void (*GstTracerHookMiniObjectReffed) (GObject *self, GstClockTime ts,
+    GstMiniObject *object, gint new_refcount);
+#define GST_TRACER_MINI_OBJECT_REFFED(object, new_refcount) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_MINI_OBJECT_REFFED), \
+    GstTracerHookMiniObjectReffed, (GST_TRACER_ARGS, object, new_refcount)); \
+}G_STMT_END
+
+/**
  * GstTracerHookObjectCreated:
  * @self: the tracer instance
  * @ts: the current timestamp
@@ -654,8 +726,12 @@ typedef void (*GstTracerHookObjectDestroyed) (GObject *self, GstClockTime ts,
 #define GST_TRACER_PAD_UNLINK_POST(srcpad, sinkpad, res)
 #define GST_TRACER_MINI_OBJECT_CREATED(object)
 #define GST_TRACER_MINI_OBJECT_DESTROYED(object)
+#define GST_TRACER_MINI_OBJECT_REFFED(object, new_refcount)
+#define GST_TRACER_MINI_OBJECT_UNREF(object, new_refcount)
 #define GST_TRACER_OBJECT_CREATED(object)
 #define GST_TRACER_OBJECT_DESTROYED(object)
+#define GST_TRACER_OBJECT_REFFED(object, new_refcount)
+#define GST_TRACER_OBJECT_UNREFFED(object, new_refcount)
 
 #endif /* GST_DISABLE_GST_TRACER_HOOKS */
 

@@ -55,7 +55,8 @@ static const gchar *_quark_strings[] = {
   "pad-link-pre", "pad-link-post", "pad-unlink-pre", "pad-unlink-post",
   "element-change-state-pre", "element-change-state-post",
   "mini-object-created", "mini-object-destroyed", "object-created",
-  "object-destroyed",
+  "object-destroyed", "mini-object-reffed", "mini-object-unreffed",
+  "object-reffed", "object-unreffed",
 };
 
 GQuark _priv_gst_tracer_quark_table[GST_TRACER_QUARK_MAX];

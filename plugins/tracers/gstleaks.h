@@ -68,6 +68,8 @@ struct _GstLeaksTracer {
   gint unhandled_filter_count;
   gboolean done;
 
+  gboolean check_refs;
+
   gboolean log_stack_trace;
 };
 

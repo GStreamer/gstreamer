@@ -344,6 +344,7 @@ gst_mini_object_ref (GstMiniObject * mini_object)
    g_return_val_if_fail (mini_object->refcount > 0, NULL);
    */
 
+  GST_TRACER_MINI_OBJECT_REFFED (mini_object, mini_object->refcount + 1);
   GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p ref %d->%d", mini_object,
       GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object),
       GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) + 1);
@@ -433,6 +434,7 @@ gst_mini_object_unref (GstMiniObject * mini_object)
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
     gboolean do_free;
 
+    GST_TRACER_MINI_OBJECT_UNREFFED (mini_object, mini_object->refcount);
     if (mini_object->dispose)
       do_free = mini_object->dispose (mini_object);
     else
@@ -453,6 +455,8 @@ gst_mini_object_unref (GstMiniObject * mini_object)
       if (mini_object->free)
         mini_object->free (mini_object);
     }
+  } else {
+    GST_TRACER_MINI_OBJECT_UNREFFED (mini_object, mini_object->refcount);
   }
 }
 

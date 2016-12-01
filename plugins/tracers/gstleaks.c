@@ -48,11 +48,44 @@ G_DEFINE_TYPE_WITH_CODE (GstLeaksTracer, gst_leaks_tracer,
     GST_TYPE_TRACER, _do_init);
 
 static GstTracerRecord *tr_alive;
+static GstTracerRecord *tr_refings;
 #ifdef G_OS_UNIX
 static GstTracerRecord *tr_added = NULL;
 static GstTracerRecord *tr_removed = NULL;
 #endif /* G_OS_UNIX */
 static GQueue instances = G_QUEUE_INIT;
+
+typedef struct
+{
+  gboolean reffed;
+  gchar *trace;
+  gint new_refcount;
+  GstClockTime ts;
+} ObjectRefingInfo;
+
+typedef struct
+{
+  gchar *creation_trace;
+
+  GList *refing_infos;
+} ObjectRefingInfos;
+
+static void
+object_refing_info_free (ObjectRefingInfo * refinfo)
+{
+  g_free (refinfo->trace);
+  g_free (refinfo);
+}
+
+static void
+object_refing_infos_free (ObjectRefingInfos * infos)
+{
+  g_list_free_full (infos->refing_infos,
+      (GDestroyNotify) object_refing_info_free);
+
+  g_free (infos->creation_trace);
+  g_free (infos);
+}
 
 static void
 set_print_stack_trace (GstLeaksTracer * self, GstStructure * params)
@@ -120,6 +153,7 @@ set_params_from_structure (GstLeaksTracer * self, GstStructure * params)
 
   if (filters)
     set_filters (self, filters);
+  gst_structure_get_boolean (params, "check-refs", &self->check_refs);
 }
 
 static void
@@ -261,11 +295,13 @@ static void
 handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
     gboolean gobject)
 {
-  gchar *trace = NULL;
+  ObjectRefingInfos *infos;
+
 
   if (!should_handle_object_type (self, type))
     return;
 
+  infos = g_malloc0 (sizeof (ObjectRefingInfos));
   if (gobject)
     g_object_weak_ref ((GObject *) object, object_weak_cb, self);
   else
@@ -273,11 +309,10 @@ handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
         mini_object_weak_cb, self);
 
   GST_OBJECT_LOCK (self);
-  if (self->log_stack_trace) {
-    trace = gst_debug_get_stack_trace (0);
-  }
+  if (self->log_stack_trace)
+    infos->creation_trace = gst_debug_get_stack_trace (0);
 
-  g_hash_table_insert (self->objects, object, trace);
+  g_hash_table_insert (self->objects, object, infos);
 
 #ifdef G_OS_UNIX
   if (self->added)
@@ -309,9 +344,74 @@ object_created_cb (GstTracer * tracer, GstClockTime ts, GstObject * object)
 }
 
 static void
+handle_object_reffed (GstLeaksTracer * self, gpointer object, gint new_refcount,
+    gboolean reffed, GstClockTime ts)
+{
+  ObjectRefingInfos *infos;
+  ObjectRefingInfo *refinfo;
+
+  if (!self->check_refs)
+    return;
+
+  GST_OBJECT_LOCK (self);
+  infos = g_hash_table_lookup (self->objects, object);
+  if (!infos)
+    goto out;
+
+  refinfo = g_malloc0 (sizeof (ObjectRefingInfo));
+  refinfo->ts = ts;
+  refinfo->new_refcount = new_refcount;
+  refinfo->reffed = reffed;
+  if (self->log_stack_trace)
+    refinfo->trace = gst_debug_get_stack_trace (0);
+
+  infos->refing_infos = g_list_prepend (infos->refing_infos, refinfo);
+
+out:
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
+object_reffed_cb (GstTracer * tracer, GstClockTime ts, GstObject * object,
+    gint new_refcount)
+{
+  GstLeaksTracer *self = GST_LEAKS_TRACER_CAST (tracer);
+
+  handle_object_reffed (self, object, new_refcount, TRUE, ts);
+}
+
+static void
+object_unreffed_cb (GstTracer * tracer, GstClockTime ts, GstObject * object,
+    gint new_refcount)
+{
+  GstLeaksTracer *self = GST_LEAKS_TRACER_CAST (tracer);
+
+  handle_object_reffed (self, object, new_refcount, FALSE, ts);
+}
+
+static void
+mini_object_reffed_cb (GstTracer * tracer, GstClockTime ts,
+    GstMiniObject * object, gint new_refcount)
+{
+  GstLeaksTracer *self = GST_LEAKS_TRACER_CAST (tracer);
+
+  handle_object_reffed (self, object, new_refcount, TRUE, ts);
+}
+
+static void
+mini_object_unreffed_cb (GstTracer * tracer, GstClockTime ts,
+    GstMiniObject * object, gint new_refcount)
+{
+  GstLeaksTracer *self = GST_LEAKS_TRACER_CAST (tracer);
+
+  handle_object_reffed (self, object, new_refcount, FALSE, ts);
+}
+
+static void
 gst_leaks_tracer_init (GstLeaksTracer * self)
 {
-  self->objects = g_hash_table_new_full (NULL, NULL, NULL, g_free);
+  self->objects = g_hash_table_new_full (NULL, NULL, NULL,
+      (GDestroyNotify) object_refing_infos_free);
 
   g_queue_push_tail (&instances, self);
 }
@@ -329,6 +429,17 @@ gst_leaks_tracer_constructed (GObject * object)
   gst_tracing_register_hook (tracer, "object-created",
       G_CALLBACK (object_created_cb));
 
+  if (self->check_refs) {
+    gst_tracing_register_hook (tracer, "object-reffed",
+        G_CALLBACK (object_reffed_cb));
+    gst_tracing_register_hook (tracer, "mini-object-reffed",
+        G_CALLBACK (mini_object_reffed_cb));
+    gst_tracing_register_hook (tracer, "mini-object-unreffed",
+        G_CALLBACK (mini_object_unreffed_cb));
+    gst_tracing_register_hook (tracer, "object-unreffed",
+        G_CALLBACK (object_unreffed_cb));
+  }
+
   /* We rely on weak pointers rather than (mini-)object-destroyed hooks so we
    * are notified of objects being destroyed even during the shuting down of
    * the tracing system. */
@@ -342,13 +453,13 @@ typedef struct
   const gchar *type_name;
   guint ref_count;
   gchar *desc;
-  const gchar *trace;
+  ObjectRefingInfos *infos;
 } Leak;
 
 /* The content of the returned Leak struct is valid until the self->objects
  * hash table has been modified. */
 static Leak *
-leak_new (gpointer obj, GType type, guint ref_count, const gchar * trace)
+leak_new (gpointer obj, GType type, guint ref_count, ObjectRefingInfos * infos)
 {
   Leak *leak = g_slice_new (Leak);
 
@@ -356,7 +467,7 @@ leak_new (gpointer obj, GType type, guint ref_count, const gchar * trace)
   leak->type_name = g_type_name (type);
   leak->ref_count = ref_count;
   leak->desc = gst_info_strdup_printf ("%" GST_PTR_FORMAT, obj);
-  leak->trace = trace;
+  leak->infos = infos;
 
   return leak;
 }
@@ -381,10 +492,10 @@ create_leaks_list (GstLeaksTracer * self)
 {
   GList *l = NULL;
   GHashTableIter iter;
-  gpointer obj, trace;
+  gpointer obj, infos;
 
   g_hash_table_iter_init (&iter, self->objects);
-  while (g_hash_table_iter_next (&iter, &obj, &trace)) {
+  while (g_hash_table_iter_next (&iter, &obj, &infos)) {
     GType type;
     guint ref_count;
 
@@ -402,7 +513,7 @@ create_leaks_list (GstLeaksTracer * self)
       ref_count = ((GstMiniObject *) obj)->refcount;
     }
 
-    l = g_list_prepend (l, leak_new (obj, type, ref_count, trace));
+    l = g_list_prepend (l, leak_new (obj, type, ref_count, infos));
   }
 
   /* Sort leaks by type name so they are grouped together making the output
@@ -416,7 +527,7 @@ create_leaks_list (GstLeaksTracer * self)
 static gboolean
 log_leaked (GstLeaksTracer * self)
 {
-  GList *leaks, *l;
+  GList *ref, *leaks, *l;
 
   leaks = create_leaks_list (self);
   if (!leaks)
@@ -426,7 +537,17 @@ log_leaked (GstLeaksTracer * self)
     Leak *leak = l->data;
 
     gst_tracer_record_log (tr_alive, leak->type_name, leak->obj, leak->desc,
-        leak->ref_count, leak->trace ? leak->trace : "");
+        leak->ref_count,
+        leak->infos->creation_trace ? leak->infos->creation_trace : "");
+
+    leak->infos->refing_infos = g_list_reverse (leak->infos->refing_infos);
+    for (ref = leak->infos->refing_infos; ref; ref = ref->next) {
+      ObjectRefingInfo *refinfo = (ObjectRefingInfo *) ref->data;
+
+      gst_tracer_record_log (tr_refings, refinfo->ts, leak->type_name,
+          leak->obj, refinfo->reffed ? "reffed" : "unreffed",
+          refinfo->new_refcount, refinfo->trace ? refinfo->trace : "");
+    }
   }
 
   g_list_free_full (leaks, (GDestroyNotify) leak_free);
@@ -473,6 +594,11 @@ gst_leaks_tracer_finalize (GObject * object)
   ((GObjectClass *) gst_leaks_tracer_parent_class)->finalize (object);
 }
 
+#define RECORD_FIELD_TYPE_TS \
+    "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value", \
+        "type", G_TYPE_GTYPE, GST_TYPE_CLOCK_TIME, \
+        "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS, \
+        NULL)
 #define RECORD_FIELD_TYPE_NAME \
     "type-name", GST_TYPE_STRUCTURE, gst_structure_new ("value", \
         "type", G_TYPE_GTYPE, G_TYPE_STRING, \
@@ -599,6 +725,11 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
   tr_alive = gst_tracer_record_new ("object-alive.class",
       RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, RECORD_FIELD_DESC,
       RECORD_FIELD_REF_COUNT, RECORD_FIELD_TRACE, NULL);
+  GST_OBJECT_FLAG_SET (tr_alive, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  tr_refings = gst_tracer_record_new ("object-refings.class",
+      RECORD_FIELD_TYPE_TS, RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS,
+      RECORD_FIELD_DESC, RECORD_FIELD_REF_COUNT, RECORD_FIELD_TRACE, NULL);
   GST_OBJECT_FLAG_SET (tr_alive, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 
   if (g_getenv ("GST_LEAKS_TRACER_SIG")) {
