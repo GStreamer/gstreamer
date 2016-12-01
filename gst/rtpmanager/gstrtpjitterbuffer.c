@@ -3757,7 +3757,9 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
             "retry", G_TYPE_UINT, num_rtx_retry, NULL));
   }
   item = alloc_item (event, ITEM_TYPE_LOST, -1, -1, seqnum, lost_packets, -1);
-  rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL);
+  if (!rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL))
+    /* Duplicate */
+    free_item (item);
 
   if (GST_CLOCK_TIME_IS_VALID (timer->rtx_last)) {
     /* Store info to update stats if the packet arrives too late */

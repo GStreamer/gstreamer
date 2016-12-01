@@ -1034,6 +1034,8 @@ append:
 duplicate:
   {
     GST_DEBUG ("duplicate packet %d found", (gint) seqnum);
+    if (G_LIKELY (head))
+      *head = FALSE;
     return FALSE;
   }
 }
