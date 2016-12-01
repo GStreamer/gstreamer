@@ -204,15 +204,13 @@ class XunitReporter(Reporter):
 
         stack_trace = ''
         if test.stack_trace:
-            stack_trace = '<message><![CDATA[%s]]></message>\n' \
-                '<stack-trace><![CDATA[%s]]></stack-trace>' % (
-                    self._quoteattr(test.message), escape_cdata(test.stack_trace))
+            stack_trace = '<![CDATA[%s]]>' % (escape_cdata(test.stack_trace))
         xml_file = codecs.open(self.tmp_xml_file.name, 'a',
                                self.encoding, 'replace')
         xml_file.write(self._forceUnicode(
             '<testcase classname=%(cls)s name=%(name)s time="%(taken).3f">'
-            '<failure type=%(errtype)s message=%(message)s>%(stacktrace)s'
-            '</failure>%(systemout)s</testcase>' %
+            '<error type=%(errtype)s message=%(message)s>%(stacktrace)s'
+            '</error>%(systemout)s</testcase>' %
             {'cls': self._quoteattr(test.get_classname()),
              'name': self._quoteattr(test.get_name()),
              'taken': test.time_taken,
