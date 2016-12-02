@@ -3451,7 +3451,7 @@ again:
     }
 
   flushing:
-    if (++stream->download_error_count <= MAX_DOWNLOAD_ERROR_COUNT) {
+    if (stream->download_error_count >= MAX_DOWNLOAD_ERROR_COUNT) {
       /* looks like there is no way of knowing when a live stream has ended
        * Have to assume we are falling behind and cause a manifest reload */
       GST_DEBUG_OBJECT (stream->pad, "Converting error of live stream to EOS");
