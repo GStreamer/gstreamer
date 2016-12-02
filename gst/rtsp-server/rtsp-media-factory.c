@@ -1467,7 +1467,9 @@ default_construct (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   /* create a new empty media */
-  media = g_object_new (media_gtype, "element", element, NULL);
+  media =
+      g_object_new (media_gtype, "element", element, "transport-mode",
+      factory->priv->transport_mode, NULL);
 
   gst_rtsp_media_collect_streams (media);
 
