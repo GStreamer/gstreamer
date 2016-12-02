@@ -103,8 +103,6 @@ static void gst_cv_sobel_set_property (GObject * object, guint prop_id,
 static void gst_cv_sobel_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_cv_sobel_handle_sink_event (GstPad * pad,
-    GstObject * parent, GstEvent * event);
 static GstFlowReturn gst_cv_sobel_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 static gboolean gst_cv_sobel_set_caps (GstOpencvVideoFilter * transform,
@@ -176,9 +174,6 @@ gst_cv_sobel_class_init (GstCvSobelClass * klass)
 static void
 gst_cv_sobel_init (GstCvSobel * filter)
 {
-  gst_pad_set_event_function (GST_BASE_TRANSFORM_SINK_PAD (filter),
-      GST_DEBUG_FUNCPTR (gst_cv_sobel_handle_sink_event));
-
   filter->x_order = DEFAULT_X_ORDER;
   filter->y_order = DEFAULT_Y_ORDER;
   filter->aperture_size = DEFAULT_APERTURE_SIZE;
@@ -196,54 +191,17 @@ gst_cv_sobel_set_caps (GstOpencvVideoFilter * transform,
 {
   GstCvSobel *filter = GST_CV_SOBEL (transform);
 
-  if (filter->cvGray)
-    cvReleaseImage (&filter->cvGray);
-
-  filter->cvGray =
-      cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
-
-  return TRUE;
-}
-
-static gboolean
-gst_cv_sobel_handle_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
-{
-  GstCvSobel *filter;
-  gint width, height;
-  GstStructure *structure;
-  gboolean res = TRUE;
-
-  filter = GST_CV_SOBEL (parent);
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-      gst_event_parse_caps (event, &caps);
-
-      structure = gst_caps_get_structure (caps, 0);
-      gst_structure_get_int (structure, "width", &width);
-      gst_structure_get_int (structure, "height", &height);
-
-      if (filter->cvSobel != NULL) {
-        cvReleaseImage (&filter->cvCSobel);
-        cvReleaseImage (&filter->cvGray);
-        cvReleaseImage (&filter->cvSobel);
-      }
-
-      filter->cvCSobel = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
-      filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
-      filter->cvSobel = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
-      break;
-    }
-    default:
-      break;
+  if (filter->cvSobel != NULL) {
+      cvReleaseImage (&filter->cvCSobel);
+      cvReleaseImage (&filter->cvGray);
+      cvReleaseImage (&filter->cvSobel);
   }
 
-  res = gst_pad_event_default (pad, parent, event);
+  filter->cvCSobel = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, in_channels);
+  filter->cvGray = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
+  filter->cvSobel = cvCreateImage (cvSize (out_width, out_height), IPL_DEPTH_8U, 1);
 
-  return res;
+  return TRUE;
 }
 
 static void
