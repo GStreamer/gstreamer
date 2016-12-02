@@ -433,6 +433,7 @@ itc_type_find (GstTypeFind * tf, gpointer unused)
   guint8 magic[8] = { 0x00, 0x00, 0x01, 0x1C, 0x69, 0x74, 0x63, 0x68 };
   guint8 preamble[4] = { 0x00, 0x00, 0x00, 0x02 };
   guint8 artwork_marker[8] = { 0x00, 0x00, 0x00, 0x00, 0x61, 0x72, 0x74, 0x77 };
+  guint8 item_marker[4] = { 0x69, 0x74, 0x65, 0x6D };
   GstTypeFindProbability itc_prob = GST_TYPE_FIND_NONE;
   int i;
 
@@ -461,7 +462,6 @@ itc_type_find (GstTypeFind * tf, gpointer unused)
   if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 8)))
     goto done;
 
-  /* Look for "artw" marker */
   if (memcmp (c.data, artwork_marker, 8))
     goto done;
 
@@ -478,6 +478,15 @@ itc_type_find (GstTypeFind * tf, gpointer unused)
   }
 
   itc_prob = GST_TYPE_FIND_NEARLY_CERTAIN;
+  data_scan_ctx_advance (tf, &c, 256);
+
+  if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 8)))
+    goto done;
+
+  if (memcmp (c.data + 4, item_marker, 4))
+    goto done;
+
+  itc_prob = GST_TYPE_FIND_MAXIMUM;
 
 done:
   gst_type_find_suggest (tf, itc_prob, ITC_CAPS);
