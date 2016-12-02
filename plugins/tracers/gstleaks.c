@@ -25,7 +25,7 @@
  * A tracing module tracking the lifetime of objects by logging those still
  * alive when program is exiting and raising a warning.
  * The type of objects tracked can be filtered using the parameters of the
- * tracer, for example: GST_TRACERS=leaks(filters="GstEvent,GstMessage",print-traces=true)
+ * tracer, for example: GST_TRACERS=leaks(filters="GstEvent,GstMessage",stack-traces-flags=full)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -88,27 +88,36 @@ object_refing_infos_free (ObjectRefingInfos * infos)
 }
 
 static void
-set_print_stack_trace (GstLeaksTracer * self, GstStructure * params)
+set_print_stack_trace_from_string (GstLeaksTracer * self, const gchar * str)
 {
   gchar *trace;
-  gboolean check_stack_trace =
-      g_getenv ("GST_LEAKS_TRACER_STACK_TRACE") != NULL;
-
-  if (!check_stack_trace && params)
-    gst_structure_get_boolean (params, "print-traces", &check_stack_trace);
-
-  if (!check_stack_trace)
-    return;
-
 
   /* Test if we can retrieve backtrace */
-  trace = gst_debug_get_stack_trace (0);
-  if (trace) {
-    self->log_stack_trace = TRUE;
-    g_free (trace);
-  } else {
-    g_warning ("Can't retrieve backtrace on this system");
-  }
+  trace = gst_debug_get_stack_trace (FALSE);
+  if (!trace)
+    return;
+
+  g_free (trace);
+
+  if (g_strcmp0 (str, "full") == 0)
+    self->trace_flags = GST_STACK_TRACE_SHOW_FULL;
+  else
+    self->trace_flags = 0;
+}
+
+static void
+set_print_stack_trace (GstLeaksTracer * self, GstStructure * params)
+{
+  const gchar *trace_flags = g_getenv ("GST_LEAKS_TRACER_STACK_TRACE");
+
+  self->trace_flags = -1;
+  if (!trace_flags && params)
+    trace_flags = gst_structure_get_string (params, "stack-traces-flags");
+
+  if (!trace_flags)
+    return;
+
+  set_print_stack_trace_from_string (self, trace_flags);
 }
 
 static void
@@ -309,8 +318,8 @@ handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
         mini_object_weak_cb, self);
 
   GST_OBJECT_LOCK (self);
-  if (self->log_stack_trace)
-    infos->creation_trace = gst_debug_get_stack_trace (0);
+  if ((gint) self->trace_flags != -1)
+    infos->creation_trace = gst_debug_get_stack_trace (self->trace_flags);
 
   g_hash_table_insert (self->objects, object, infos);
 
@@ -362,8 +371,8 @@ handle_object_reffed (GstLeaksTracer * self, gpointer object, gint new_refcount,
   refinfo->ts = ts;
   refinfo->new_refcount = new_refcount;
   refinfo->reffed = reffed;
-  if (self->log_stack_trace)
-    refinfo->trace = gst_debug_get_stack_trace (0);
+  if ((gint) self->trace_flags != -1)
+    refinfo->trace = gst_debug_get_stack_trace (self->trace_flags);
 
   infos->refing_infos = g_list_prepend (infos->refing_infos, refinfo);
 

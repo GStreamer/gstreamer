@@ -70,7 +70,7 @@ struct _GstLeaksTracer {
 
   gboolean check_refs;
 
-  gboolean log_stack_trace;
+  GstStackTraceFlags trace_flags;
 };
 
 struct _GstLeaksTracerClass {
