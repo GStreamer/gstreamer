@@ -4081,6 +4081,8 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint8 * data,
   data_start = data;
   obj_size = (guint) size;
 
+  esp.payload_extensions = NULL;
+
   if (size < 64)
     goto not_enough_data;
 
@@ -4133,8 +4135,6 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint8 * data,
 
   if (num_payload_ext > 0)
     esp.payload_extensions = g_new0 (AsfPayloadExtension, num_payload_ext + 1);
-  else
-    esp.payload_extensions = NULL;
 
   for (i = 0; i < num_payload_ext; ++i) {
     AsfPayloadExtension ext;
@@ -4236,12 +4236,16 @@ done:
     GST_WARNING_OBJECT (demux, "Ext. stream properties for unknown stream");
   }
 
+  if (!stream)
+    g_free (esp.payload_extensions);
+
   return GST_FLOW_OK;
 
   /* Errors */
 not_enough_data:
   {
     GST_WARNING_OBJECT (demux, "short read parsing ext stream props object!");
+    g_free (esp.payload_extensions);
     return GST_FLOW_OK;         /* not absolutely fatal */
   }
 expected_stream_object:
@@ -4249,11 +4253,13 @@ expected_stream_object:
     GST_WARNING_OBJECT (demux, "error parsing extended stream properties "
         "object: expected embedded stream object, but got %s object instead!",
         gst_asf_get_guid_nick (asf_object_guids, stream_obj.id));
+    g_free (esp.payload_extensions);
     return GST_FLOW_OK;         /* not absolutely fatal */
   }
 corrupted_stream:
   {
     GST_WARNING_OBJECT (demux, "Corrupted stream");
+    g_free (esp.payload_extensions);
     return GST_FLOW_ERROR;
   }
 }
