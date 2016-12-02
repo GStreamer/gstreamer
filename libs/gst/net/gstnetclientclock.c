@@ -1395,8 +1395,9 @@ gst_net_client_clock_new (const gchar * name, const gchar * remote_address,
   g_return_val_if_fail (remote_port <= G_MAXUINT16, NULL);
   g_return_val_if_fail (base_time != GST_CLOCK_TIME_NONE, NULL);
 
-  ret = g_object_new (GST_TYPE_NET_CLIENT_CLOCK, "address", remote_address,
-      "port", remote_port, "base-time", base_time, NULL);
+  ret =
+      g_object_new (GST_TYPE_NET_CLIENT_CLOCK, "name", name, "address",
+      remote_address, "port", remote_port, "base-time", base_time, NULL);
 
   return ret;
 }
@@ -1440,7 +1441,8 @@ gst_ntp_clock_new (const gchar * name, const gchar * remote_address,
   g_return_val_if_fail (remote_port <= G_MAXUINT16, NULL);
   g_return_val_if_fail (base_time != GST_CLOCK_TIME_NONE, NULL);
 
-  ret = g_object_new (GST_TYPE_NTP_CLOCK, "address", remote_address,
+  ret =
+      g_object_new (GST_TYPE_NTP_CLOCK, "name", name, "address", remote_address,
       "port", remote_port, "base-time", base_time, NULL);
 
   return ret;
