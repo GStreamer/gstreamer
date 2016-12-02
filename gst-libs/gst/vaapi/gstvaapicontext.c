@@ -181,13 +181,12 @@ context_create (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
-  VAConfigAttrib attribs[3], *attrib = attribs;
   VAContextID context_id;
   VASurfaceID surface_id;
   VAStatus status;
   GArray *surfaces = NULL;
   gboolean success = FALSE;
-  guint i, value, va_chroma_format;
+  guint i;
 
   if (!context->surfaces && !context_create_surfaces (context))
     goto cleanup;
@@ -206,6 +205,33 @@ context_create (GstVaapiContext * context)
     g_array_append_val (surfaces, surface_id);
   }
   g_assert (surfaces->len == context->surfaces->len);
+
+  GST_VAAPI_DISPLAY_LOCK (display);
+  status = vaCreateContext (GST_VAAPI_DISPLAY_VADISPLAY (display),
+      context->va_config, cip->width, cip->height, VA_PROGRESSIVE,
+      (VASurfaceID *) surfaces->data, surfaces->len, &context_id);
+  GST_VAAPI_DISPLAY_UNLOCK (display);
+  if (!vaapi_check_status (status, "vaCreateContext()"))
+    goto cleanup;
+
+  GST_DEBUG ("context 0x%08x", context_id);
+  GST_VAAPI_OBJECT_ID (context) = context_id;
+  success = TRUE;
+
+cleanup:
+  if (surfaces)
+    g_array_free (surfaces, TRUE);
+  return success;
+}
+
+static gboolean
+config_create (GstVaapiContext * context)
+{
+  const GstVaapiContextInfo *const cip = &context->info;
+  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
+  VAConfigAttrib attribs[3], *attrib = attribs;
+  VAStatus status;
+  guint value, va_chroma_format;
 
   /* Reset profile and entrypoint */
   if (!cip->profile || !cip->entrypoint)
@@ -289,22 +315,10 @@ context_create (GstVaapiContext * context)
   if (!vaapi_check_status (status, "vaCreateConfig()"))
     goto cleanup;
 
-  GST_VAAPI_DISPLAY_LOCK (display);
-  status = vaCreateContext (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      context->va_config, cip->width, cip->height, VA_PROGRESSIVE,
-      (VASurfaceID *) surfaces->data, surfaces->len, &context_id);
-  GST_VAAPI_DISPLAY_UNLOCK (display);
-  if (!vaapi_check_status (status, "vaCreateContext()"))
-    goto cleanup;
-
-  GST_DEBUG ("context 0x%08x", context_id);
-  GST_VAAPI_OBJECT_ID (context) = context_id;
-  success = TRUE;
-
+  return TRUE;
 cleanup:
-  if (surfaces)
-    g_array_free (surfaces, TRUE);
-  return success;
+  GST_WARNING ("Failed to create vaConfig");
+  return FALSE;
 }
 
 /** Updates config for encoding. Returns %TRUE if config changed */
@@ -383,6 +397,10 @@ gst_vaapi_context_new (GstVaapiDisplay * display,
     return NULL;
 
   gst_vaapi_context_init (context, cip);
+
+  if (!config_create (context))
+    goto error;
+
   if (!context_create (context))
     goto error;
   return context;
@@ -461,7 +479,7 @@ gst_vaapi_context_reset (GstVaapiContext * context,
     return FALSE;
   else if (grow_surfaces && !context_ensure_surfaces (context))
     return FALSE;
-  if (reset_config && !context_create (context))
+  if (reset_config && !(config_create (context) && context_create (context)))
     return FALSE;
   return TRUE;
 }
