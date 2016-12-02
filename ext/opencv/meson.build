@@ -31,6 +31,7 @@ libopencv2_headers = [
   'opencv2/imgproc/imgproc_c.h',
   'opencv2/objdetect/objdetect.hpp',
   'opencv2/video/background_segm.hpp',
+  'opencv2/bgsegm.hpp',
 ]
 
 gstopencv_cargs = ['-DGST_HAAR_CASCADES_DIR="@0@"']
