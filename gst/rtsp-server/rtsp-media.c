@@ -3375,7 +3375,7 @@ default_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp)
   }
 
   for (i = 0; i < medias_len; i++) {
-    const gchar *proto, *media_type;
+    const gchar *proto;
     const GstSDPMedia *sdp_media = gst_sdp_message_get_media (sdp, i);
     GstRTSPStream *stream;
     gint j, formats_len;
@@ -3394,16 +3394,12 @@ default_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp)
     }
 
     if (g_str_equal (proto, "RTP/AVP")) {
-      media_type = "application/x-rtp";
       profile = GST_RTSP_PROFILE_AVP;
     } else if (g_str_equal (proto, "RTP/SAVP")) {
-      media_type = "application/x-srtp";
       profile = GST_RTSP_PROFILE_SAVP;
     } else if (g_str_equal (proto, "RTP/AVPF")) {
-      media_type = "application/x-rtp";
       profile = GST_RTSP_PROFILE_AVPF;
     } else if (g_str_equal (proto, "RTP/SAVPF")) {
-      media_type = "application/x-srtp";
       profile = GST_RTSP_PROFILE_SAVPF;
     } else {
       GST_ERROR ("%p: unsupported profile '%s' for stream %d", media, proto, i);
@@ -3440,7 +3436,7 @@ default_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp)
       gst_sdp_media_attributes_to_caps (sdp_media, caps);
 
       s = gst_caps_get_structure (caps, 0);
-      gst_structure_set_name (s, media_type);
+      gst_structure_set_name (s, "application/x-rtp");
 
       gst_rtsp_stream_set_pt_map (stream, pt, caps);
       gst_caps_unref (caps);
