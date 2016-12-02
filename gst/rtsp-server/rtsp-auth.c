@@ -831,7 +831,8 @@ default_generate_authenticate_header (GstRTSPAuth * auth, GstRTSPContext * ctx)
       while (g_hash_table_iter_next (&iter, &key, &value)) {
         GstRTSPDigestNonce *tmp = value;
 
-        if (nonce->timestamp - tmp->timestamp >= 30 * G_USEC_PER_SEC)
+        if (!tmp->client
+            && nonce->timestamp - tmp->timestamp >= 30 * G_USEC_PER_SEC)
           g_hash_table_iter_remove (&iter);
       }
       auth->priv->last_nonce_check = nonce->timestamp;
