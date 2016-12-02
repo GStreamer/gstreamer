@@ -60,6 +60,7 @@ gboolean _gst_check_debug = FALSE;
 gboolean _gst_check_raised_critical = FALSE;
 gboolean _gst_check_raised_warning = FALSE;
 gboolean _gst_check_expecting_log = FALSE;
+gboolean _gst_check_list_tests = FALSE;
 
 static void gst_check_log_message_func
     (const gchar * log_domain, GLogLevelFlags log_level,
@@ -118,13 +119,40 @@ print_plugins (void)
   gst_plugin_list_free (plugins);
 }
 
-/* initialize GStreamer testing */
+/* gst_check_init:
+ * @argc: (inout) (allow-none): pointer to application's argc
+ * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
+ *
+ * Tnitialize GStreamer testing
+ *
+ * NOTE: Needs to be called before creating the testsuite
+ * so that the tests can be listed.
+ * */
 void
 gst_check_init (int *argc, char **argv[])
 {
   guint timeout_multiplier = 1;
+  GOptionContext *ctx;
+  GError *err = NULL;
+  GOptionEntry options[] = {
+    {"list-tests", 'l', 0, G_OPTION_ARG_NONE, &_gst_check_list_tests,
+        "List tests present in the testsuite", NULL},
+    {NULL}
+  };
 
-  gst_init (argc, argv);
+  ctx = g_option_context_new ("gst-check");
+  g_option_context_add_main_entries (ctx, options, NULL);
+  g_option_context_add_group (ctx, gst_init_get_option_group ());
+
+  if (!g_option_context_parse (ctx, argc, argv, &err)) {
+    if (err)
+      g_printerr ("Error initializing: %s\n", GST_STR_NULL (err->message));
+    else
+      g_printerr ("Error initializing: Unknown error!\n");
+    g_clear_error (&err);
+    g_option_context_free (ctx);
+  }
+  g_option_context_free (ctx);
 
   GST_DEBUG_CATEGORY_INIT (check_debug, "check", 0, "check regression tests");
 

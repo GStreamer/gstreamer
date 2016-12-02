@@ -47,6 +47,7 @@ extern gboolean _gst_check_threads_running;
 extern gboolean _gst_check_raised_critical;
 extern gboolean _gst_check_raised_warning;
 extern gboolean _gst_check_expecting_log;
+extern gboolean _gst_check_list_tests;
 
 /* global variables used in test methods */
 extern GList * buffers;
@@ -83,9 +84,9 @@ GstPad *gst_check_setup_sink_pad (GstElement * element,
     GstStaticPadTemplate * tmpl);
 GstPad *gst_check_setup_sink_pad_from_template (GstElement * element,
     GstPadTemplate * tmpl);
-GstPad * gst_check_setup_sink_pad_by_name (GstElement * element, 
+GstPad * gst_check_setup_sink_pad_by_name (GstElement * element,
           GstStaticPadTemplate * tmpl, const gchar *name);
-GstPad * gst_check_setup_sink_pad_by_name_from_template (GstElement * element, 
+GstPad * gst_check_setup_sink_pad_by_name_from_template (GstElement * element,
           GstPadTemplate * tmpl, const gchar *name);
 void gst_check_teardown_pad_by_name (GstElement * element, const gchar *name);
 void gst_check_teardown_src_pad (GstElement * element);
@@ -601,14 +602,19 @@ static inline void
 __gst_tcase_add_test (TCase * tc, TFun tf, const char * fname, int signal,
     int allowed_exit_value, int start, int end)
 {
-  if (_gst_check_run_test_func (fname)) {
-    _tcase_add_test (tc, tf, fname, signal, allowed_exit_value, start, end);
-  }
+    if (_gst_check_list_tests) {
+        g_print ("Test: %s\n", fname);
+        return;
+    }
+
+    if (_gst_check_run_test_func (fname)) {
+        _tcase_add_test (tc, tf, fname, signal, allowed_exit_value, start, end);
+    }
 }
 
 #define _tcase_add_test __gst_tcase_add_test
 
-/* A special variant to add broken tests. These are normally skipped, but can be 
+/* A special variant to add broken tests. These are normally skipped, but can be
  * forced to run via GST_CHECKS */
 #define tcase_skip_broken_test(chain,test_func) \
 G_STMT_START {                                                  \
