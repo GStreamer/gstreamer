@@ -389,8 +389,6 @@ gst_vaapi_context_new (GstVaapiDisplay * display,
 
   g_return_val_if_fail (cip->profile, NULL);
   g_return_val_if_fail (cip->entrypoint, NULL);
-  g_return_val_if_fail (cip->width > 0, NULL);
-  g_return_val_if_fail (cip->height > 0, NULL);
 
   context = gst_vaapi_object_new (gst_vaapi_context_class (), display);
   if (!context)
@@ -401,8 +399,18 @@ gst_vaapi_context_new (GstVaapiDisplay * display,
   if (!config_create (context))
     goto error;
 
+  /* this means we don't want to create a VAcontext */
+  if (cip->width == 0 && cip->height == 0)
+    goto done;
+
+  /* this is not valid */
+  if (cip->width == 0 || cip->height == 0)
+    goto error;
+
   if (!context_create (context))
     goto error;
+
+done:
   return context;
 
   /* ERRORS */
