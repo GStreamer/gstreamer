@@ -103,9 +103,6 @@ static void gst_cv_laplace_set_property (GObject * object, guint prop_id,
 static void gst_cv_laplace_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_cv_laplace_handle_sink_event (GstPad * pad,
-    GstObject * parent, GstEvent * event);
-
 static GstFlowReturn gst_cv_laplace_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
@@ -177,9 +174,6 @@ gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
 static void
 gst_cv_laplace_init (GstCvLaplace * filter)
 {
-  gst_pad_set_event_function (GST_BASE_TRANSFORM_SINK_PAD (filter),
-      GST_DEBUG_FUNCPTR (gst_cv_laplace_handle_sink_event));
-
   filter->aperture_size = DEFAULT_APERTURE_SIZE;
   filter->scale = DEFAULT_SCALE_FACTOR;
   filter->shift = DEFAULT_SHIFT;
@@ -196,12 +190,18 @@ gst_cv_laplace_cv_set_caps (GstOpencvVideoFilter * trans, gint in_width,
 {
   GstCvLaplace *filter = GST_CV_LAPLACE (trans);
 
-  if (filter->intermediary_img) {
-    cvReleaseImage (&filter->intermediary_img);
+  if (filter->intermediary_img != NULL) {
+      cvReleaseImage (&filter->intermediary_img);
+      cvReleaseImage (&filter->CLaplace);
+      cvReleaseImage (&filter->cvGray);
+      cvReleaseImage (&filter->Laplace);
   }
 
+  filter->CLaplace = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, in_channels);
   filter->intermediary_img =
       cvCreateImage (cvSize (out_width, out_height), IPL_DEPTH_16S, 1);
+  filter->cvGray = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
+  filter->Laplace = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
 
   return TRUE;
 }
@@ -260,51 +260,6 @@ gst_cv_laplace_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static gboolean
-gst_cv_laplace_handle_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
-{
-  GstCvLaplace *filter;
-  gint width, height;
-  GstStructure *structure;
-  gboolean res = TRUE;
-
-  filter = GST_CV_LAPLACE (parent);
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-      gst_event_parse_caps (event, &caps);
-
-      structure = gst_caps_get_structure (caps, 0);
-      gst_structure_get_int (structure, "width", &width);
-      gst_structure_get_int (structure, "height", &height);
-
-      if (filter->intermediary_img != NULL) {
-        cvReleaseImage (&filter->intermediary_img);
-        cvReleaseImage (&filter->CLaplace);
-        cvReleaseImage (&filter->cvGray);
-        cvReleaseImage (&filter->Laplace);
-      }
-
-      filter->CLaplace =
-          cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
-      filter->intermediary_img =
-          cvCreateImage (cvSize (width, height), IPL_DEPTH_16S, 1);
-      filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
-      filter->Laplace = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
-      break;
-    }
-    default:
-      break;
-  }
-
-  res = gst_pad_event_default (pad, parent, event);
-
-  return res;
 }
 
 static GstFlowReturn
