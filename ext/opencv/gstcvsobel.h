@@ -72,7 +72,6 @@ struct _GstCvSobel
   gint aperture_size;
   gboolean mask;
 
-  IplImage *cvCSobel;
   IplImage *cvGray;
   IplImage *cvSobel;
 };

@@ -116,7 +116,6 @@ gst_cv_sobel_finalize (GObject * obj)
   GstCvSobel *filter = GST_CV_SOBEL (obj);
 
   if (filter->cvSobel != NULL) {
-    cvReleaseImage (&filter->cvCSobel);
     cvReleaseImage (&filter->cvGray);
     cvReleaseImage (&filter->cvSobel);
   }
@@ -192,12 +191,10 @@ gst_cv_sobel_set_caps (GstOpencvVideoFilter * transform,
   GstCvSobel *filter = GST_CV_SOBEL (transform);
 
   if (filter->cvSobel != NULL) {
-      cvReleaseImage (&filter->cvCSobel);
       cvReleaseImage (&filter->cvGray);
       cvReleaseImage (&filter->cvSobel);
   }
 
-  filter->cvCSobel = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, in_channels);
   filter->cvGray = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
   filter->cvSobel = cvCreateImage (cvSize (out_width, out_height), IPL_DEPTH_8U, 1);
 
@@ -265,22 +262,17 @@ gst_cv_sobel_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img, GstBuffer * outbuf, IplImage * outimg)
 {
   GstCvSobel *filter = GST_CV_SOBEL (base);
-  GstMapInfo out_info;
 
   cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
   cvSobel (filter->cvGray, filter->cvSobel, filter->x_order, filter->y_order,
       filter->aperture_size);
 
-  cvZero (filter->cvCSobel);
+  cvZero (outimg);
   if (filter->mask) {
-    cvCopy (img, filter->cvCSobel, filter->cvSobel);
+    cvCopy (img, outimg, filter->cvSobel);
   } else {
-    cvCvtColor (filter->cvSobel, filter->cvCSobel, CV_GRAY2RGB);
+    cvCvtColor (filter->cvSobel, outimg, CV_GRAY2RGB);
   }
-
-  gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
-  memcpy (out_info.data, filter->cvCSobel->imageData,
-      gst_buffer_get_size (outbuf));
 
   return GST_FLOW_OK;
 }
