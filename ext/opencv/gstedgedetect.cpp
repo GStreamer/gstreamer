@@ -118,7 +118,6 @@ gst_edge_detect_finalize (GObject * obj)
   GstEdgeDetect *filter = GST_EDGE_DETECT (obj);
 
   if (filter->cvEdge != NULL) {
-    cvReleaseImage (&filter->cvCEdge);
     cvReleaseImage (&filter->cvGray);
     cvReleaseImage (&filter->cvEdge);
   }
@@ -249,12 +248,10 @@ gst_edge_detect_set_caps (GstOpencvVideoFilter * transform,
   GstEdgeDetect *filter = GST_EDGE_DETECT (transform);
 
   if (filter->cvEdge != NULL) {
-      cvReleaseImage (&filter->cvCEdge);
       cvReleaseImage (&filter->cvGray);
       cvReleaseImage (&filter->cvEdge);
   }
 
-  filter->cvCEdge = cvCreateImage (cvSize (out_width, out_height), IPL_DEPTH_8U, out_channels);
   filter->cvGray = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
   filter->cvEdge = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
 
@@ -266,22 +263,17 @@ gst_edge_detect_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img, GstBuffer * outbuf, IplImage * outimg)
 {
   GstEdgeDetect *filter = GST_EDGE_DETECT (base);
-  GstMapInfo out_info;
 
   cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
   cvCanny (filter->cvGray, filter->cvEdge, filter->threshold1,
       filter->threshold2, filter->aperture);
 
-  cvZero (filter->cvCEdge);
+  cvZero (outimg);
   if (filter->mask) {
-    cvCopy (img, filter->cvCEdge, filter->cvEdge);
+    cvCopy (img, outimg, filter->cvEdge);
   } else {
-    cvCvtColor (filter->cvEdge, filter->cvCEdge, CV_GRAY2RGB);
+    cvCvtColor (filter->cvEdge, outimg, CV_GRAY2RGB);
   }
-
-  gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
-  memcpy (out_info.data, filter->cvCEdge->imageData,
-      gst_buffer_get_size (outbuf));
 
   return GST_FLOW_OK;
 }

@@ -71,9 +71,12 @@ struct _GstEdgeDetect
 
   gboolean mask;
 
-  int threshold1, threshold2, aperture;
+  int threshold1;
+  int threshold2;
+  int aperture;
 
-  IplImage *cvEdge, *cvGray, *cvCEdge;
+  IplImage *cvEdge;
+  IplImage *cvGray;
 };
 
 struct _GstEdgeDetectClass
