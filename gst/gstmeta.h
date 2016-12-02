@@ -222,6 +222,13 @@ const GstMetaInfo *  gst_meta_get_info          (const gchar * impl);
 GST_API
 const gchar* const*  gst_meta_api_type_get_tags (GType api);
 
+GST_API
+guint64              gst_meta_get_seqnum        (const GstMeta * meta);
+
+GST_API
+gint                 gst_meta_compare_seqnum    (const GstMeta * meta1,
+                                                 const GstMeta * meta2);
+
 /* some default tags */
 
 GST_API GQuark _gst_meta_tag_memory;

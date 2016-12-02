@@ -133,14 +133,6 @@
 
 GType _gst_buffer_type = 0;
 
-typedef struct _GstMetaItem GstMetaItem;
-
-struct _GstMetaItem
-{
-  GstMetaItem *next;
-  GstMeta meta;
-};
-
 /* info->size will be sizeof(FooMeta) which contains a GstMeta at the beginning
  * too, and then there is again a GstMeta in GstMetaItem, so subtract one. */
 #define ITEM_SIZE(info) ((info)->size + sizeof (GstMetaItem) - sizeof (GstMeta))
@@ -172,6 +164,38 @@ typedef struct
   GstMetaItem *item;
 } GstBufferImpl;
 
+static gint64 meta_seq;         /* 0 *//* ATOMIC */
+
+/* TODO: use GLib's once https://gitlab.gnome.org/GNOME/glib/issues/1076 lands */
+#if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_8)
+static inline gint64
+gst_atomic_int64_inc (volatile gint64 * atomic)
+{
+  return __sync_fetch_and_add (atomic, 1);
+}
+#elif defined (G_PLATFORM_WIN32)
+#include <windows.h>
+static inline gint64
+gst_atomic_int64_inc (volatile gint64 * atomic)
+{
+  InterlockedExchangeAdd (atomic, 1);
+}
+#else
+#warning No 64-bit atomic int defined for this platform/toolchain!
+#define NO_64BIT_ATOMIC_INT_FOR_PLATFORM
+G_LOCK_DEFINE_STATIC (meta_seq);
+static inline gint64
+gst_atomic_int64_inc (volatile gint64 * atomic)
+{
+  gint64 ret;
+
+  G_LOCK (meta_seq);
+  ret = *atomic++;
+  G_UNLOCK (meta_seq);
+
+  return ret;
+}
+#endif
 
 static gboolean
 _is_span (GstMemory ** mem, gsize len, gsize * poffset, GstMemory ** parent)
@@ -454,6 +478,11 @@ void
 _priv_gst_buffer_initialize (void)
 {
   _gst_buffer_type = gst_buffer_get_type ();
+
+#ifdef NO_64BIT_ATOMIC_INT_FOR_PLATFORM
+  GST_CAT_WARNING (GST_CAT_PERFORMANCE,
+      "No 64-bit atomic int defined for this platform/toolchain!");
+#endif
 }
 
 /**
@@ -2253,6 +2282,8 @@ gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
   if (info->init_func)
     if (!info->init_func (result, params, buffer))
       goto init_failed;
+
+  item->seq_num = gst_atomic_int64_inc (&meta_seq);
 
   /* and add to the list of metadata */
   item->next = GST_BUFFER_META (buffer);

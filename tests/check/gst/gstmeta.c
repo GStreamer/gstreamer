@@ -633,6 +633,61 @@ GST_START_TEST (test_meta_iterate)
 
 GST_END_TEST;
 
+#define test_meta_compare_seqnum(a,b) \
+    gst_meta_compare_seqnum((GstMeta*)(a),(GstMeta*)(b))
+
+GST_START_TEST (test_meta_seqnum)
+{
+  GstMetaTest *meta1, *meta2, *meta3;
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_unless (buffer != NULL);
+
+  /* add some metadata */
+  meta1 = GST_META_TEST_ADD (buffer);
+  fail_unless (meta1 != NULL);
+  meta2 = GST_META_TEST_ADD (buffer);
+  fail_unless (meta2 != NULL);
+  meta3 = GST_META_TEST_ADD (buffer);
+  fail_unless (meta3 != NULL);
+
+  fail_unless (test_meta_compare_seqnum (meta1, meta2) < 0);
+  fail_unless (test_meta_compare_seqnum (meta2, meta3) < 0);
+  fail_unless (test_meta_compare_seqnum (meta1, meta3) < 0);
+
+  fail_unless_equals_int (test_meta_compare_seqnum (meta1, meta1), 0);
+  fail_unless_equals_int (test_meta_compare_seqnum (meta2, meta2), 0);
+  fail_unless_equals_int (test_meta_compare_seqnum (meta3, meta3), 0);
+
+  fail_unless (test_meta_compare_seqnum (meta2, meta1) > 0);
+  fail_unless (test_meta_compare_seqnum (meta3, meta2) > 0);
+  fail_unless (test_meta_compare_seqnum (meta3, meta1) > 0);
+
+  /* Check that gst_meta_compare_seqnum() works correctly as a GCompareFunc */
+  {
+    GList *list;
+
+    /* Make list: 3, 1, 2 */
+    list = g_list_prepend (NULL, meta2);
+    list = g_list_prepend (list, meta1);
+    list = g_list_prepend (list, meta3);
+
+    list = g_list_sort (list, (GCompareFunc) gst_meta_compare_seqnum);
+
+    fail_unless (g_list_nth_data (list, 0) == meta1);
+    fail_unless (g_list_nth_data (list, 1) == meta2);
+    fail_unless (g_list_nth_data (list, 2) == meta3);
+
+    g_list_free (list);
+  }
+
+  /* clean up */
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffermeta_suite (void)
 {
@@ -649,6 +704,7 @@ gst_buffermeta_suite (void)
   tcase_add_test (tc_chain, test_meta_foreach_remove_head_and_tail_of_three);
   tcase_add_test (tc_chain, test_meta_foreach_remove_several);
   tcase_add_test (tc_chain, test_meta_iterate);
+  tcase_add_test (tc_chain, test_meta_seqnum);
 
   return s;
 }

@@ -322,6 +322,8 @@ GST_META_TAG_MEMORY
 GST_META_TAG_MEMORY_STR
 gst_meta_register
 gst_meta_get_info
+gst_meta_get_seqnum
+gst_meta_compare_seqnum
 <SUBSECTION Standard>
 GST_META_CAST
 <SUBSECTION Private>

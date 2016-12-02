@@ -92,6 +92,14 @@ struct _GstPluginPrivate {
   GstStructure *cache_data;
 };
 
+/* Needed by GstMeta (to access meta seq) and GstBuffer (create/free/iterate) */
+typedef struct _GstMetaItem GstMetaItem;
+struct _GstMetaItem {
+  GstMetaItem *next;
+  guint64 seq_num;
+  GstMeta meta;
+};
+
 /* FIXME: could rename all priv_gst_* functions to __gst_* now */
 G_GNUC_INTERNAL  gboolean priv_gst_plugin_loading_have_whitelist (void);
 
