@@ -31,7 +31,6 @@ static GstCheckABIStruct list[] = {
   {"GstMessage", sizeof (GstMessage), 120},
   {"GstMeta", sizeof (GstMeta), 16},
   {"GstMetaTransformCopy", sizeof (GstMetaTransformCopy), 24},
-  {"GstMetaInfo", sizeof (GstMetaInfo), 80},
   {"GstMiniObject", sizeof (GstMiniObject), 64},
   {"GstObjectClass", sizeof (GstObjectClass), 184},
   {"GstObject", sizeof (GstObject), 88},
