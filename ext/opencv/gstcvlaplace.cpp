@@ -120,7 +120,6 @@ gst_cv_laplace_finalize (GObject * obj)
     cvReleaseImage (&filter->intermediary_img);
     cvReleaseImage (&filter->cvGray);
     cvReleaseImage (&filter->Laplace);
-    cvReleaseImage (&filter->CLaplace);
   }
 
   G_OBJECT_CLASS (gst_cv_laplace_parent_class)->finalize (obj);
@@ -192,12 +191,10 @@ gst_cv_laplace_cv_set_caps (GstOpencvVideoFilter * trans, gint in_width,
 
   if (filter->intermediary_img != NULL) {
       cvReleaseImage (&filter->intermediary_img);
-      cvReleaseImage (&filter->CLaplace);
       cvReleaseImage (&filter->cvGray);
       cvReleaseImage (&filter->Laplace);
   }
 
-  filter->CLaplace = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, in_channels);
   filter->intermediary_img =
       cvCreateImage (cvSize (out_width, out_height), IPL_DEPTH_16S, 1);
   filter->cvGray = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
@@ -267,7 +264,6 @@ gst_cv_laplace_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img, GstBuffer * outbuf, IplImage * outimg)
 {
   GstCvLaplace *filter = GST_CV_LAPLACE (base);
-  GstMapInfo out_info;
 
   g_assert (filter->intermediary_img);
 
@@ -276,16 +272,12 @@ gst_cv_laplace_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
   cvConvertScale (filter->intermediary_img, filter->Laplace, filter->scale,
       filter->shift);
 
-  cvZero (filter->CLaplace);
+  cvZero (outimg);
   if (filter->mask) {
-    cvCopy (img, filter->CLaplace, filter->Laplace);
+    cvCopy (img, outimg, filter->Laplace);
   } else {
-    cvCvtColor (filter->Laplace, filter->CLaplace, CV_GRAY2RGB);
+    cvCvtColor (filter->Laplace, outimg, CV_GRAY2RGB);
   }
-
-  gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
-  memcpy (out_info.data, filter->CLaplace->imageData,
-      gst_buffer_get_size (outbuf));
 
   return GST_FLOW_OK;
 }

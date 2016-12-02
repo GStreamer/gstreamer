@@ -75,7 +75,6 @@ struct _GstCvLaplace
   IplImage *intermediary_img;
   IplImage *cvGray;
   IplImage *Laplace;
-  IplImage *CLaplace;
 };
 
 struct _GstCvLaplaceClass
