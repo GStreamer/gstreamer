@@ -857,7 +857,6 @@ gst_motion_cells_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     cellscolor motioncellscolor;
     motioncellidx *motioncellsidx;
 
-    buf = gst_buffer_make_writable (buf);
     if (filter->firstframe) {
       setPrevFrame (img, filter->id);
       filter->firstframe = FALSE;

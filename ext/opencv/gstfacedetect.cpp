@@ -590,18 +590,9 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     vector < Rect > mouth;
     vector < Rect > nose;
     vector < Rect > eyes;
-    gboolean do_display = FALSE;
     gboolean post_msg = FALSE;
 
     Mat mtxOrg (cv::cvarrToMat (img));
-
-    if (filter->display) {
-      if (gst_buffer_is_writable (buf)) {
-        do_display = TRUE;
-      } else {
-        GST_LOG_OBJECT (filter, "Buffer is not writable, not drawing faces.");
-      }
-    }
 
     cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
 
@@ -719,7 +710,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         s = NULL;
       }
 
-      if (do_display) {
+      if (filter->display) {
         CvPoint center;
         Size axes;
         gdouble w, h;
