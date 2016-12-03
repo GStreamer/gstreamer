@@ -2277,6 +2277,49 @@ gst_buffer_iterate_meta (GstBuffer * buffer, gpointer * state)
 }
 
 /**
+ * gst_buffer_iterate_meta_filtered: (skip)
+ * @buffer: a #GstBuffer
+ * @state: an opaque state pointer
+ * @meta_api_type: only return #GstMeta of this type
+ *
+ * Retrieve the next #GstMeta of type @meta_api_type after the current one
+ * according to @state. If @state points to %NULL, the first metadata of
+ * type @meta_api_type is returned.
+ *
+ * @state will be updated with an opaque state pointer
+ *
+ * Returns: (transfer none) (nullable): The next #GstMeta of type
+ * @meta_api_type or %NULL when there are no more items.
+ *
+ * Since: 1.12
+ */
+GstMeta *
+gst_buffer_iterate_meta_filtered (GstBuffer * buffer, gpointer * state,
+    GType meta_api_type)
+{
+  GstMetaItem **meta;
+
+  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (state != NULL, NULL);
+
+  meta = (GstMetaItem **) state;
+  if (*meta == NULL)
+    /* state NULL, move to first item */
+    *meta = GST_BUFFER_META (buffer);
+  else
+    /* state !NULL, move to next item in list */
+    *meta = (*meta)->next;
+
+  while (*meta != NULL && (*meta)->meta.info->api != meta_api_type)
+    *meta = (*meta)->next;
+
+  if (*meta)
+    return &(*meta)->meta;
+  else
+    return NULL;
+}
+
+/**
  * gst_buffer_foreach_meta:
  * @buffer: a #GstBuffer
  * @func: (scope call): a #GstBufferForeachMetaFunc to call

@@ -254,6 +254,7 @@ gst_buffer_get_meta
 gst_buffer_add_meta
 gst_buffer_remove_meta
 gst_buffer_iterate_meta
+gst_buffer_iterate_meta_filtered
 GstBufferForeachMetaFunc
 gst_buffer_foreach_meta
 
