@@ -998,7 +998,7 @@ gst_decode_bin_update_factories_list (GstDecodebin3 * dbin)
 }
 
 /* Must be called with appropriate lock if list is a protected variable */
-static gboolean
+static const gchar *
 stream_in_list (GList * list, const gchar * sid)
 {
   GList *tmp;
@@ -1011,12 +1011,12 @@ stream_in_list (GList * list, const gchar * sid)
 #endif
 
   for (tmp = list; tmp; tmp = tmp->next) {
-    gchar *osid = (gchar *) tmp->data;
+    const gchar *osid = (gchar *) tmp->data;
     if (!g_strcmp0 (sid, osid))
-      return TRUE;
+      return osid;
   }
 
-  return FALSE;
+  return NULL;
 }
 
 static void
@@ -1192,22 +1192,22 @@ find_message_parsebin (GstDecodebin3 * dbin, GstElement * child)
   return input;
 }
 
-static gboolean
+static const gchar *
 stream_in_collection (GstDecodebin3 * dbin, gchar * sid)
 {
   guint i, len;
 
   if (dbin->collection == NULL)
-    return FALSE;
+    return NULL;
   len = gst_stream_collection_get_size (dbin->collection);
   for (i = 0; i < len; i++) {
     GstStream *stream = gst_stream_collection_get_stream (dbin->collection, i);
     const gchar *osid = gst_stream_get_stream_id (stream);
     if (!g_strcmp0 (sid, osid))
-      return TRUE;
+      return osid;
   }
 
-  return FALSE;
+  return NULL;
 }
 
 /* Call with INPUT_LOCK taken */
