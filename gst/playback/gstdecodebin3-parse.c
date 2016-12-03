@@ -567,8 +567,32 @@ parsebin_pad_removed_cb (GstElement * demux, GstPad * pad, DecodebinInput * inp)
   if (input) {
     GST_DEBUG_OBJECT (pad, "stream %p", input);
     if (inp->pending_pads == NULL) {
+      MultiQueueSlot *slot;
+
       GST_DEBUG_OBJECT (pad, "Remove input stream %p", input);
+
+      SELECTION_LOCK (dbin);
+      slot = get_slot_for_input (dbin, input);
+      SELECTION_UNLOCK (dbin);
+
       remove_input_stream (dbin, input);
+
+      SELECTION_LOCK (dbin);
+      if (slot && g_list_find (dbin->slots, slot) && slot->is_drained) {
+        /* if slot is still there and already drained, remove it in here */
+        if (slot->output) {
+          DecodebinOutputStream *output = slot->output;
+          GST_DEBUG_OBJECT (pad,
+              "Multiqueue was drained, Remove output stream");
+
+          dbin->output_streams = g_list_remove (dbin->output_streams, output);
+          free_output_stream (dbin, output);
+        }
+        GST_DEBUG_OBJECT (pad, "No pending pad, Remove multiqueue slot");
+        dbin->slots = g_list_remove (dbin->slots, slot);
+        free_multiqueue_slot_async (dbin, slot);
+      }
+      SELECTION_UNLOCK (dbin);
     } else {
       input->srcpad = NULL;
       if (input->input_buffer_probe_id)
