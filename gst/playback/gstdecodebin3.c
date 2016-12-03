@@ -625,7 +625,7 @@ gst_decodebin3_dispose (GObject * object)
     g_list_free (dbin->decoder_factories);
   if (dbin->decodable_factories)
     g_list_free (dbin->decodable_factories);
-  g_list_free (dbin->requested_selection);
+  g_list_free_full (dbin->requested_selection, g_free);
   g_list_free (dbin->active_selection);
   g_list_free (dbin->to_activate);
   g_list_free (dbin->pending_select_streams);
@@ -1088,10 +1088,12 @@ beach:
     if (dbin->requested_selection) {
       GST_FIXME_OBJECT (dbin,
           "Replacing non-NULL requested_selection, what should we do ??");
-      g_list_free (dbin->requested_selection);
+      g_list_free_full (dbin->requested_selection, g_free);
     }
-    dbin->requested_selection = tmp;
+    dbin->requested_selection =
+        g_list_copy_deep (tmp, (GCopyFunc) g_strdup, NULL);
     dbin->selection_updated = TRUE;
+    g_list_free (tmp);
   }
   SELECTION_UNLOCK (dbin);
 }
@@ -1356,6 +1358,7 @@ get_output_for_slot (MultiQueueSlot * slot)
   DecodebinOutputStream *output = NULL;
   const gchar *stream_id;
   GstCaps *caps;
+  gchar *id_in_list = NULL;
 
   /* If we already have a configured output, just use it */
   if (slot->output != NULL)
@@ -1406,7 +1409,8 @@ get_output_for_slot (MultiQueueSlot * slot)
 #endif
 
   /* 3. In default mode check if we should expose */
-  if (stream_in_list (dbin->requested_selection, stream_id)) {
+  id_in_list = (gchar *) stream_in_list (dbin->requested_selection, stream_id);
+  if (id_in_list) {
     /* Check if we can steal an existing output stream we could re-use.
      * that is:
      * * an output stream whose slot->stream is not in requested
@@ -1418,7 +1422,8 @@ get_output_for_slot (MultiQueueSlot * slot)
       dbin->to_activate =
           g_list_append (dbin->to_activate, (gchar *) stream_id);
       dbin->requested_selection =
-          g_list_remove (dbin->requested_selection, stream_id);
+          g_list_remove (dbin->requested_selection, id_in_list);
+      g_free (id_in_list);
       SELECTION_UNLOCK (dbin);
       gst_pad_add_probe (output->slot->src_pad, GST_PAD_PROBE_TYPE_IDLE,
           (GstPadProbeCallback) slot_unassign_probe, output->slot, NULL);
@@ -2130,7 +2135,7 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
       tsid = tmp->data;
       /* Pass target stream id to requested selection */
       dbin->requested_selection =
-          g_list_append (dbin->requested_selection, tmp->data);
+          g_list_append (dbin->requested_selection, g_strdup (tmp->data));
       dbin->to_activate = g_list_remove (dbin->to_activate, tmp->data);
       break;
     }
@@ -2328,17 +2333,20 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
   if (to_activate == NULL && pending_streams != NULL) {
     GST_DEBUG_OBJECT (dbin, "Stream switch requested for future collection");
     if (dbin->requested_selection)
-      g_list_free (dbin->requested_selection);
-    dbin->requested_selection = select_streams;
+      g_list_free_full (dbin->requested_selection, g_free);
+    dbin->requested_selection =
+        g_list_copy_deep (select_streams, (GCopyFunc) g_strdup, NULL);
     g_list_free (to_deactivate);
     g_list_free (pending_streams);
     to_deactivate = NULL;
   } else {
     if (dbin->requested_selection)
-      g_list_free (dbin->requested_selection);
-    dbin->requested_selection = future_request_streams;
+      g_list_free_full (dbin->requested_selection, g_free);
     dbin->requested_selection =
-        g_list_concat (dbin->requested_selection, pending_streams);
+        g_list_copy_deep (future_request_streams, (GCopyFunc) g_strdup, NULL);
+    dbin->requested_selection =
+        g_list_concat (dbin->requested_selection,
+        g_list_copy_deep (pending_streams, (GCopyFunc) g_strdup, NULL));
     if (dbin->to_activate)
       g_list_free (dbin->to_activate);
     dbin->to_activate = to_reassign;
