@@ -2403,8 +2403,10 @@ ghost_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
         gst_event_unref (event);
       }
       /* Finally handle the switch */
-      if (streams)
+      if (streams) {
         handle_stream_switch (dbin, streams, seqnum);
+        g_list_free_full (streams, g_free);
+      }
       ret = GST_PAD_PROBE_HANDLED;
     }
       break;
@@ -2450,8 +2452,10 @@ gst_decodebin3_send_event (GstElement * element, GstEvent * event)
     }
 #endif
     /* Finally handle the switch */
-    if (streams)
+    if (streams) {
       handle_stream_switch (dbin, streams, seqnum);
+      g_list_free_full (streams, g_free);
+    }
 
     gst_event_unref (event);
     return TRUE;

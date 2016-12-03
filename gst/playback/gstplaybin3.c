@@ -2371,7 +2371,14 @@ update_select_streams_event (GstPlayBin3 * playbin, GstEvent * event)
   }
 
   gst_event_unref (event);
-  return gst_event_new_select_streams (to_use);
+  event = gst_event_new_select_streams (to_use);
+
+  if (streams)
+    g_list_free_full (streams, g_free);
+  if (to_use)
+    g_list_free_full (to_use, g_free);
+
+  return event;
 }
 
 static gboolean
