@@ -502,6 +502,8 @@ static MultiQueueSlot *get_slot_for_input (GstDecodebin3 * dbin,
 static void link_input_to_slot (DecodebinInputStream * input,
     MultiQueueSlot * slot);
 static void free_multiqueue_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot);
+static void free_multiqueue_slot_async (GstDecodebin3 * dbin,
+    MultiQueueSlot * slot);
 
 /* FIXME: Really make all the parser stuff a self-contained helper object */
 #include "gstdecodebin3-parse.c"
@@ -1514,6 +1516,8 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
             dbin->output_streams = g_list_remove (dbin->output_streams, output);
             free_output_stream (dbin, output);
           }
+          dbin->slots = g_list_remove (dbin->slots, slot);
+          free_multiqueue_slot_async (dbin, slot);
           SELECTION_UNLOCK (dbin);
           ret = GST_PAD_PROBE_HANDLED;
         }
@@ -1532,6 +1536,8 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
                   g_list_remove (dbin->output_streams, output);
               free_output_stream (dbin, output);
             }
+            dbin->slots = g_list_remove (dbin->slots, slot);
+            free_multiqueue_slot_async (dbin, slot);
           }
           SELECTION_UNLOCK (dbin);
           ret = GST_PAD_PROBE_DROP;
@@ -2398,6 +2404,14 @@ free_multiqueue_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
   gst_object_replace ((GstObject **) & slot->src_pad, NULL);
   gst_object_replace ((GstObject **) & slot->active_stream, NULL);
   g_free (slot);
+}
+
+static void
+free_multiqueue_slot_async (GstDecodebin3 * dbin, MultiQueueSlot * slot)
+{
+  GST_LOG_OBJECT (dbin, "pushing multiqueue slot on thread pool to free");
+  gst_element_call_async (GST_ELEMENT_CAST (dbin),
+      (GstElementCallAsyncFunc) free_multiqueue_slot, slot, NULL);
 }
 
 /* Create a DecodebinOutputStream for a given type
