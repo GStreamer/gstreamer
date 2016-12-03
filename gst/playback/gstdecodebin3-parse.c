@@ -247,32 +247,28 @@ parse_chain_output_probe (GstPad * pad, GstPadProbeInfo * info,
       }
         break;
       case GST_EVENT_EOS:
-        /* FIXME : Make sure this makes sense ... */
-        if (TRUE) {
+        input->saw_eos = TRUE;
+        if (all_inputs_are_eos (input->dbin)) {
           GST_DEBUG_OBJECT (pad, "real input pad, marking as EOS");
-          input->saw_eos = TRUE;
           check_all_streams_for_eos (input->dbin);
-          ret = GST_PAD_PROBE_DROP;
         } else {
-          MultiQueueSlot *slot;
+          GstPad *peer = gst_pad_get_peer (input->srcpad);
+          if (peer) {
+            /* Send custom-eos event to multiqueue slot */
+            GstStructure *s;
+            GstEvent *event;
 
-          g_mutex_lock (&input->dbin->selection_lock);
-          slot = get_slot_for_input (input->dbin, input);
-          g_mutex_unlock (&input->dbin->selection_lock);
-
-          slot->drain_eos = input->drain_eos;
-
-          if (input->drain_eos) {
             GST_DEBUG_OBJECT (pad,
-                "Got EOS at end of input stream (drain_eos:%d) Dropping.",
-                input->drain_eos);
-            ret = GST_PAD_PROBE_DROP;
+                "Got EOS end of input stream, post custom-eos");
+            s = gst_structure_new_empty ("decodebin3-custom-eos");
+            event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+            gst_pad_send_event (peer, event);
+            gst_object_unref (peer);
           } else {
-            GST_DEBUG_OBJECT (pad,
-                "Got EOS at end of input stream (drain_eos:%d) Passing.",
-                input->drain_eos);
+            GST_FIXME_OBJECT (pad, "No peer, what should we do ?");
           }
         }
+        ret = GST_PAD_PROBE_DROP;
         break;
       case GST_EVENT_FLUSH_STOP:
         GST_DEBUG_OBJECT (pad, "Clear saw_eos flag");
