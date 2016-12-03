@@ -2339,6 +2339,7 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
     g_list_free (to_deactivate);
     g_list_free (pending_streams);
     to_deactivate = NULL;
+    pending_streams = NULL;
   } else {
     if (dbin->requested_selection)
       g_list_free_full (dbin->requested_selection, g_free);
@@ -2349,14 +2350,16 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
         g_list_copy_deep (pending_streams, (GCopyFunc) g_strdup, NULL));
     if (dbin->to_activate)
       g_list_free (dbin->to_activate);
-    dbin->to_activate = to_reassign;
+    dbin->to_activate = g_list_copy (to_reassign);
   }
 
   dbin->selection_updated = TRUE;
   SELECTION_UNLOCK (dbin);
 
-  if (unknown)
+  if (unknown) {
     GST_FIXME_OBJECT (dbin, "Got request for an unknown stream");
+    g_list_free (unknown);
+  }
 
   /* For all streams to deactivate, add an idle probe where we will do
    * the unassignment and switch over */
@@ -2365,6 +2368,19 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
     gst_pad_add_probe (slot->src_pad, GST_PAD_PROBE_TYPE_IDLE,
         (GstPadProbeCallback) slot_unassign_probe, slot, NULL);
   }
+
+  if (to_deactivate)
+    g_list_free (to_deactivate);
+  if (to_activate)
+    g_list_free (to_activate);
+  if (to_reassign)
+    g_list_free (to_reassign);
+  if (future_request_streams)
+    g_list_free (future_request_streams);
+  if (pending_streams)
+    g_list_free (pending_streams);
+  if (slots_to_reassign)
+    g_list_free (slots_to_reassign);
 
   return ret;
 }
