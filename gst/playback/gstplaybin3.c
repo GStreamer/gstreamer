@@ -2970,6 +2970,8 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
   GstElement *combiner;
   GstSourceCombine *combine;
   gulong event_probe_handler;
+  GstStreamType stream_type = GST_STREAM_TYPE_UNKNOWN;
+  gchar *pad_name;
 
   GST_DEBUG_OBJECT (playbin,
       "decoded pad %s:%s removed", GST_DEBUG_PAD_NAME (pad));
@@ -2983,10 +2985,23 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
     g_object_set_data (G_OBJECT (pad), "playbin.event_probe_id", NULL);
   }
 
+  pad_name = gst_object_get_name (GST_OBJECT (pad));
+
+  if (g_str_has_prefix (pad_name, "video")) {
+    stream_type = GST_STREAM_TYPE_VIDEO;
+  } else if (g_str_has_prefix (pad_name, "audio")) {
+    stream_type = GST_STREAM_TYPE_AUDIO;
+  } else if (g_str_has_prefix (pad_name, "text")) {
+    stream_type = GST_STREAM_TYPE_TEXT;
+  }
+
+  g_free (pad_name);
+
   if ((combine = g_object_get_data (G_OBJECT (pad), "playbin.combine"))) {
     g_assert (combine->combiner == NULL);
     g_assert (combine->srcpad == pad);
     source_combine_remove_pads (playbin, combine);
+    playbin->active_stream_types &= ~stream_type;
     goto exit;
   }
 
@@ -3013,6 +3028,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
       gst_element_set_state (combine->combiner, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (playbin), combine->combiner);
       combine->combiner = NULL;
+      playbin->active_stream_types &= ~stream_type;
     }
   }
 
@@ -3024,6 +3040,12 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
   gst_object_unref (combiner);
 exit:
   GST_PLAY_BIN3_UNLOCK (playbin);
+
+  if ((playbin->selected_stream_types & ~playbin->active_stream_types &
+          (GST_STREAM_TYPE_VIDEO | GST_STREAM_TYPE_AUDIO))
+      == 0) {
+    no_more_pads_cb (decodebin, playbin);
+  }
 
   return;
 
