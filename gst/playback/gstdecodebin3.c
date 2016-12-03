@@ -796,6 +796,24 @@ fail:
   return GST_PAD_LINK_REFUSED;
 }
 
+/* Drop duration query during _input_pad_unlink */
+static GstPadProbeReturn
+query_duration_drop_probe (GstPad * pad, GstPadProbeInfo * info,
+    DecodebinInput * input)
+{
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+
+  if (GST_IS_QUERY (GST_PAD_PROBE_INFO_DATA (info))) {
+    GstQuery *query = GST_PAD_PROBE_INFO_QUERY (info);
+    if (GST_QUERY_TYPE (query) == GST_QUERY_DURATION) {
+      GST_LOG_OBJECT (pad, "stop forwarding query duration");
+      ret = GST_PAD_PROBE_HANDLED;
+    }
+  }
+
+  return ret;
+}
+
 static void
 gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
 {
@@ -816,6 +834,9 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
 
   if (GST_OBJECT_PARENT (GST_OBJECT (input->parsebin)) == GST_OBJECT (dbin)) {
     GstStreamCollection *collection = NULL;
+    gulong probe_id = gst_pad_add_probe (input->parsebin_sink,
+        GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
+        (GstPadProbeCallback) query_duration_drop_probe, input, NULL);
 
     /* Clear stream-collection corresponding to current INPUT and post new
      * stream-collection message, if needed */
@@ -845,6 +866,7 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
     gst_element_set_state (input->parsebin, GST_STATE_NULL);
     g_signal_handler_disconnect (input->parsebin, input->pad_removed_sigid);
     g_signal_handler_disconnect (input->parsebin, input->pad_added_sigid);
+    gst_pad_remove_probe (input->parsebin_sink, probe_id);
     gst_object_unref (input->parsebin);
     gst_object_unref (input->parsebin_sink);
 
