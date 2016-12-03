@@ -126,6 +126,8 @@ static GstStaticPadTemplate subtitle_src_templ =
         "subpicture/x-pgs; subtitle/x-kate; " "application/x-subtitle-unknown")
     );
 
+static GQuark matroska_block_additional_quark;
+
 static GstFlowReturn gst_matroska_demux_parse_id (GstMatroskaDemux * demux,
     guint32 id, guint64 length, guint needed);
 
@@ -199,7 +201,9 @@ G_DEFINE_TYPE (GstMatroskaDemux, gst_matroska_demux, GST_TYPE_ELEMENT);
 #define _do_init \
   gst_riff_init (); \
   matroska_element_init (plugin); \
-  GST_DEBUG_CATEGORY_INIT (ebmlread_debug, "ebmlread", 0, "EBML stream helper class");
+  GST_DEBUG_CATEGORY_INIT (ebmlread_debug, "ebmlread", 0, "EBML stream helper class"); \
+  matroska_block_additional_quark = \
+      g_quark_from_static_string ("matroska-block-additional");
 
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (matroskademux, "matroskademux",
     GST_RANK_PRIMARY, GST_TYPE_MATROSKA_DEMUX, _do_init);
@@ -4233,6 +4237,104 @@ gst_matroska_demux_align_buffer (GstMatroskaDemux * demux,
   return buffer;
 }
 
+typedef struct
+{
+  guint8 *data;
+  gsize size;
+  guint64 id;
+} BlockAddition;
+
+static GstFlowReturn
+gst_matroska_demux_parse_blockmore (GstMatroskaDemux * demux,
+    GstEbmlRead * ebml, GQueue * additions)
+{
+  GstFlowReturn ret;
+  guint32 id;
+  guint64 block_id = 1;
+  guint64 datalen = 0;
+  guint8 *data = NULL;
+
+  ret = gst_ebml_read_master (ebml, &id);       /* GST_MATROSKA_ID_BLOCKMORE */
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  /* read all BlockMore sub-entries */
+  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+
+    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+      break;
+
+    switch (id) {
+      case GST_MATROSKA_ID_BLOCKADDID:
+        ret = gst_ebml_read_uint (ebml, &id, &block_id);
+        if (block_id == 0)
+          block_id = 1;
+        break;
+      case GST_MATROSKA_ID_BLOCKADDITIONAL:
+        g_free (data);
+        data = NULL;
+        datalen = 0;
+        ret = gst_ebml_read_binary (ebml, &id, &data, &datalen);
+        break;
+      default:
+        ret = gst_matroska_read_common_parse_skip (&demux->common, ebml,
+            "BlockMore", id);
+        break;
+    }
+  }
+
+  if (data != NULL && datalen > 0) {
+    BlockAddition *blockadd = g_new (BlockAddition, 1);
+
+    GST_LOG_OBJECT (demux, "BlockAddition %" G_GUINT64_FORMAT ": "
+        "%" G_GUINT64_FORMAT " bytes", block_id, datalen);
+    GST_MEMDUMP_OBJECT (demux, "BlockAdditional", data, datalen);
+    blockadd->data = data;
+    blockadd->size = datalen;
+    blockadd->id = block_id;
+    g_queue_push_tail (additions, blockadd);
+    GST_LOG_OBJECT (demux, "now %d pending block additions", additions->length);
+  }
+
+  return ret;
+}
+
+/* BLOCKADDITIONS
+ *  BLOCKMORE
+ *    BLOCKADDID
+ *    BLOCKADDITIONAL
+ */
+static GstFlowReturn
+gst_matroska_demux_parse_blockadditions (GstMatroskaDemux * demux,
+    GstEbmlRead * ebml, GQueue * additions)
+{
+  GstFlowReturn ret;
+  guint32 id;
+
+  ret = gst_ebml_read_master (ebml, &id);       /* GST_MATROSKA_ID_BLOCKADDITIONS */
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  /* read all BlockMore sub-entries */
+  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+
+    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+      break;
+
+    if (id == GST_MATROSKA_ID_BLOCKMORE) {
+      DEBUG_ELEMENT_START (demux, ebml, "BlockMore");
+      ret = gst_matroska_demux_parse_blockmore (demux, ebml, additions);
+      DEBUG_ELEMENT_STOP (demux, ebml, "BlockMore", ret);
+      if (ret != GST_FLOW_OK)
+        break;
+    } else {
+      GST_WARNING_OBJECT (demux, "Expected BlockMore, got %x", id);
+    }
+  }
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     GstEbmlRead * ebml, guint64 cluster_time, guint64 cluster_offset,
@@ -4254,6 +4356,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
   gint64 referenceblock = 0;
   gint64 offset;
   GstClockTime buffer_timestamp;
+  GQueue additions = G_QUEUE_INIT;
 
   offset = gst_ebml_read_get_offset (ebml);
 
@@ -4401,6 +4504,14 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         break;
       }
 
+      case GST_MATROSKA_ID_BLOCKADDITIONS:
+      {
+        DEBUG_ELEMENT_START (demux, ebml, "BlockAdditions");
+        ret = gst_matroska_demux_parse_blockadditions (demux, ebml, &additions);
+        DEBUG_ELEMENT_STOP (demux, ebml, "BlockAdditions", ret);
+        break;
+      }
+
       case GST_MATROSKA_ID_BLOCKDURATION:{
         ret = gst_ebml_read_uint (ebml, &id, &block_duration);
         GST_DEBUG_OBJECT (demux, "BlockDuration: %" G_GUINT64_FORMAT,
@@ -4462,7 +4573,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         break;
 
       case GST_MATROSKA_ID_BLOCKVIRTUAL:
-      case GST_MATROSKA_ID_BLOCKADDITIONS:
       case GST_MATROSKA_ID_REFERENCEPRIORITY:
       case GST_MATROSKA_ID_REFERENCEVIRTUAL:
       case GST_MATROSKA_ID_SLICES:
@@ -4862,6 +4972,31 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           stream->pos += GST_BUFFER_DURATION (sub);
       }
 
+      /* Attach BlockAdditions to buffer; we assume a single buffer per group
+       * in this case */
+      if (additions.length > 0) {
+        BlockAddition *blockadd;
+
+        if (laces > 2)
+          GST_FIXME_OBJECT (demux, "Fix block additions with laced buffers");
+
+        while ((blockadd = g_queue_pop_head (&additions))) {
+          if (blockadd->id == 1
+              && !strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8)) {
+            GST_TRACE_OBJECT (demux, "adding block addition %u as VP8 alpha "
+                "qdata to buffer %p, %u bytes", (guint) blockadd->id, buf,
+                (guint) blockadd->size);
+            gst_mini_object_set_qdata (GST_MINI_OBJECT (sub),
+                matroska_block_additional_quark,
+                g_bytes_new_take (blockadd->data, blockadd->size),
+                (GDestroyNotify) g_bytes_unref);
+          } else {
+            g_free (blockadd->data);
+          }
+          g_free (blockadd);
+        }
+      }
+
       ret = gst_pad_push (stream->pad, sub);
 
       if (demux->common.segment.rate < 0) {
@@ -4892,7 +5027,14 @@ done:
     gst_buffer_unref (buf);
   }
   g_free (lace_size);
+  {
+    BlockAddition *blockadd;
 
+    while ((blockadd = g_queue_pop_head (&additions))) {
+      g_free (blockadd->data);
+      g_free (blockadd);
+    }
+  }
   return ret;
 
   /* EXITS */
