@@ -506,6 +506,10 @@ static void free_multiqueue_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot);
 static void free_multiqueue_slot_async (GstDecodebin3 * dbin,
     MultiQueueSlot * slot);
 
+static GstStreamCollection *get_merged_collection (GstDecodebin3 * dbin);
+static void update_requested_selection (GstDecodebin3 * dbin,
+    GstStreamCollection * collection);
+
 /* FIXME: Really make all the parser stuff a self-contained helper object */
 #include "gstdecodebin3-parse.c"
 
@@ -811,6 +815,32 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
   }
 
   if (GST_OBJECT_PARENT (GST_OBJECT (input->parsebin)) == GST_OBJECT (dbin)) {
+    GstStreamCollection *collection = NULL;
+
+    /* Clear stream-collection corresponding to current INPUT and post new
+     * stream-collection message, if needed */
+    if (input->collection) {
+      gst_object_unref (input->collection);
+      input->collection = NULL;
+    }
+
+    collection = get_merged_collection (dbin);
+    if (collection && collection != dbin->collection) {
+      GstMessage *msg;
+      GST_DEBUG_OBJECT (dbin, "Update Stream Collection");
+
+      if (dbin->collection)
+        gst_object_unref (dbin->collection);
+      dbin->collection = collection;
+
+      msg =
+          gst_message_new_stream_collection ((GstObject *) dbin,
+          dbin->collection);
+
+      gst_element_post_message (GST_ELEMENT_CAST (dbin), msg);
+      update_requested_selection (dbin, dbin->collection);
+    }
+
     gst_bin_remove (GST_BIN (dbin), input->parsebin);
     gst_element_set_state (input->parsebin, GST_STATE_NULL);
     g_signal_handler_disconnect (input->parsebin, input->pad_removed_sigid);
@@ -1071,7 +1101,7 @@ get_merged_collection (GstDecodebin3 * dbin)
 
   if (!needs_merge) {
     GST_DEBUG_OBJECT (dbin, "No need to merge, returning %p", res);
-    return gst_object_ref (res);
+    return res ? gst_object_ref (res) : NULL;
   }
 
   /* We really need to create a new collection */
