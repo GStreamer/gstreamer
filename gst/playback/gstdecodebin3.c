@@ -484,6 +484,7 @@ static gboolean have_factory (GstDecodebin3 * dbin, GstCaps * caps,
 #endif
 
 static void free_input (GstDecodebin3 * dbin, DecodebinInput * input);
+static void free_input_async (GstDecodebin3 * dbin, DecodebinInput * input);
 static DecodebinInput *create_new_input (GstDecodebin3 * dbin, gboolean main);
 static gboolean set_input_group_id (DecodebinInput * input, guint32 * group_id);
 
@@ -812,6 +813,18 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
   if (GST_OBJECT_PARENT (GST_OBJECT (input->parsebin)) == GST_OBJECT (dbin)) {
     gst_bin_remove (GST_BIN (dbin), input->parsebin);
     gst_element_set_state (input->parsebin, GST_STATE_NULL);
+    g_signal_handler_disconnect (input->parsebin, input->pad_removed_sigid);
+    g_signal_handler_disconnect (input->parsebin, input->pad_added_sigid);
+    gst_object_unref (input->parsebin);
+    gst_object_unref (input->parsebin_sink);
+
+    input->parsebin = NULL;
+    input->parsebin_sink = NULL;
+
+    if (!input->is_main) {
+      dbin->other_inputs = g_list_remove (dbin->other_inputs, input);
+      free_input_async (dbin, input);
+    }
   }
   INPUT_UNLOCK (dbin);
   return;
@@ -837,6 +850,14 @@ free_input (GstDecodebin3 * dbin, DecodebinInput * input)
   if (input->collection)
     gst_object_unref (input->collection);
   g_free (input);
+}
+
+static void
+free_input_async (GstDecodebin3 * dbin, DecodebinInput * input)
+{
+  GST_LOG_OBJECT (dbin, "pushing input %p on thread pool to free", input);
+  gst_element_call_async (GST_ELEMENT_CAST (dbin),
+      (GstElementCallAsyncFunc) free_input, input, NULL);
 }
 
 /* Call with INPUT_LOCK taken */
