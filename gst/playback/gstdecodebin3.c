@@ -317,8 +317,6 @@ typedef struct _MultiQueueSlot
   /* id of the MQ src_pad event probe */
   gulong probe_id;
 
-  gboolean drain_eos;
-
   gboolean is_drained;
 
   DecodebinOutputStream *output;

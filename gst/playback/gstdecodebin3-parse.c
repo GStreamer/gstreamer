@@ -56,9 +56,6 @@ struct _DecodebinInputStream
   /* Whether we saw an EOS on input. This should be treated accordingly
    * when the stream is no longer used */
   gboolean saw_eos;
-  /* TRUE if the EOS being pushed is only for draining and does not represent
-   * the full media EOS */
-  gboolean drain_eos;
 };
 
 static void parsebin_pad_added_cb (GstElement * demux, GstPad * pad,
@@ -458,8 +455,7 @@ parsebin_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
   g_mutex_lock (&dbin->selection_lock);
   for (tmp = dbin->slots; tmp; tmp = tmp->next) {
     MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
-    GST_LOG_OBJECT (dbin, "Slot %d input:%p drain_eos:%d",
-        slot->id, slot->input, slot->drain_eos);
+    GST_LOG_OBJECT (dbin, "Slot %d input:%p", slot->id, slot->input);
     if (slot->input == NULL) {
       unused_slot =
           g_list_append (unused_slot, gst_object_ref (slot->sink_pad));
