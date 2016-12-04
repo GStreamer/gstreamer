@@ -65,22 +65,22 @@ typedef struct _GstRetinexClass GstRetinexClass;
 
 struct _GstRetinex
 {
-  GstVideoFilter element;
-  gint width, height;
+  GstOpencvVideoFilter parent;
   gint method;
   gint scales, current_scales;
 
   double *weights;
   double *sigmas;
 
-  IplImage *cvRGBin;
-  IplImage *cvRGBout;
-  IplImage *cvA, *cvB, *cvC, *cvD;
+  IplImage *cvA;
+  IplImage *cvB;
+  IplImage *cvC;
+  IplImage *cvD;
 };
 
 struct _GstRetinexClass
 {
-  GstVideoFilterClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_retinex_get_type (void);

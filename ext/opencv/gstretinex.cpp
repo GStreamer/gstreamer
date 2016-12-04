@@ -108,7 +108,7 @@ gst_retinex_method_get_type (void)
   return etype;
 }
 
-G_DEFINE_TYPE (GstRetinex, gst_retinex, GST_TYPE_VIDEO_FILTER);
+G_DEFINE_TYPE (GstRetinex, gst_retinex, GST_TYPE_OPENCV_VIDEO_FILTER);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -125,10 +125,11 @@ static void gst_retinex_set_property (GObject * object, guint prop_id,
 static void gst_retinex_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_retinex_transform_ip (GstBaseTransform * btrans,
-    GstBuffer * buf);
-static gboolean gst_retinex_set_caps (GstBaseTransform * btrans,
-    GstCaps * incaps, GstCaps * outcaps);
+static GstFlowReturn gst_retinex_transform_ip (GstOpencvVideoFilter * filter,
+    GstBuffer * buff, IplImage * img);
+static gboolean gst_retinex_set_caps (GstOpencvVideoFilter* btrans,
+     gint in_width, gint in_height, gint in_depth, gint in_channels,
+    gint out_width, gint out_height, gint out_depth, gint out_channels);
 
 static void gst_retinex_release_all_images (GstRetinex * filter);
 
@@ -141,12 +142,15 @@ gst_retinex_class_init (GstRetinexClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *btrans_class = (GstBaseTransformClass *) klass;
+  GstOpencvVideoFilterClass *cvbasefilter_class =
+      (GstOpencvVideoFilterClass *) klass;
 
   gobject_class->set_property = gst_retinex_set_property;
   gobject_class->get_property = gst_retinex_get_property;
 
-  btrans_class->transform_ip = gst_retinex_transform_ip;
-  btrans_class->set_caps = gst_retinex_set_caps;
+  cvbasefilter_class->cv_trans_ip_func = gst_retinex_transform_ip;
+  cvbasefilter_class->cv_set_caps = gst_retinex_set_caps;
+
   btrans_class->stop = gst_retinex_stop;
 
   g_object_class_install_property (gobject_class, PROP_METHOD,
@@ -225,42 +229,33 @@ gst_retinex_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* GstElement vmethod implementations */
-/* this function handles the link with other elements */
 static gboolean
-gst_retinex_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_retinex_set_caps (GstOpencvVideoFilter * filter, gint in_width, gint in_height,
+    gint in_depth, gint in_channels, gint out_width, gint out_height,
+    gint out_depth, gint out_channels)
 {
-  GstRetinex *retinex = GST_RETINEX (btrans);
+  GstRetinex *retinex = GST_RETINEX (filter);
   CvSize size;
-  GstVideoInfo info;
-  gst_video_info_from_caps (&info, incaps);
 
-  size = cvSize (info.width, info.height);
+  size = cvSize (in_width, in_height);
 
-  /* If cvRGB is already allocated, it means there's a cap modification,
-     so release first all the images.                                      */
-  if (NULL != retinex->cvRGBin)
+  if (retinex->cvA)
     gst_retinex_release_all_images (retinex);
 
-  retinex->cvRGBin = cvCreateImageHeader (size, IPL_DEPTH_8U, 3);
-  retinex->cvRGBout = cvCreateImageHeader (size, IPL_DEPTH_8U, 3);
-
-  retinex->cvA = cvCreateImage (size, IPL_DEPTH_32F, 3);
-  retinex->cvB = cvCreateImage (size, IPL_DEPTH_32F, 3);
-  retinex->cvC = cvCreateImage (size, IPL_DEPTH_32F, 3);
-  retinex->cvD = cvCreateImage (size, IPL_DEPTH_32F, 3);
+  retinex->cvA = cvCreateImage (size, IPL_DEPTH_32F, in_channels);
+  retinex->cvB = cvCreateImage (size, IPL_DEPTH_32F, in_channels);
+  retinex->cvC = cvCreateImage (size, IPL_DEPTH_32F, in_channels);
+  retinex->cvD = cvCreateImage (size, IPL_DEPTH_32F, in_channels);
 
   return TRUE;
 }
 
-/* Clean up */
 static gboolean
 gst_retinex_stop (GstBaseTransform * basesrc)
 {
   GstRetinex *filter = GST_RETINEX (basesrc);
 
-  if (filter->cvRGBin != NULL)
+  if (filter->cvA != NULL)
     gst_retinex_release_all_images (filter);
 
   g_free (filter->weights);
@@ -274,9 +269,6 @@ gst_retinex_stop (GstBaseTransform * basesrc)
 static void
 gst_retinex_release_all_images (GstRetinex * filter)
 {
-  cvReleaseImage (&filter->cvRGBin);
-  cvReleaseImage (&filter->cvRGBout);
-
   cvReleaseImage (&filter->cvA);
   cvReleaseImage (&filter->cvB);
   cvReleaseImage (&filter->cvC);
@@ -284,20 +276,15 @@ gst_retinex_release_all_images (GstRetinex * filter)
 }
 
 static GstFlowReturn
-gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
+gst_retinex_transform_ip (GstOpencvVideoFilter * filter, GstBuffer * buf,
+        IplImage * img)
 {
-  GstRetinex *retinex = GST_RETINEX (btrans);
-  GstMapInfo info;
+  GstRetinex *retinex = GST_RETINEX (filter);
   double sigma = 14.0;
   int gain = 128;
   int offset = 128;
   int filter_size;
   Mat icvD = cvarrToMat(retinex->cvD, false);
-
-  if (!gst_buffer_map (buf, &info, (GstMapFlags) GST_MAP_READWRITE)) {
-    return GST_FLOW_ERROR;
-  }
-  retinex->cvRGBin->imageData = (char *) info.data;
 
   /* Basic retinex restoration.  The image and a filtered image are converted
      to the log domain and subtracted.
@@ -305,14 +292,14 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
      where O is the output, H is a gaussian 2d filter and I is the input image. */
   if (METHOD_BASIC == retinex->method) {
     /*  Compute log image */
-    cvConvert (retinex->cvRGBin, retinex->cvA);
+    cvConvert (img, retinex->cvA);
     cvLog (retinex->cvA, retinex->cvB);
 
     /*  Compute log of blured image */
     filter_size = (int) floor (sigma * 6) / 2;
     filter_size = filter_size * 2 + 1;
 
-    cvConvert (retinex->cvRGBin, retinex->cvD);
+    cvConvert (img, retinex->cvD);
     GaussianBlur (icvD, icvD, Size (filter_size, filter_size), 0.0, 0.0);
     cvLog (retinex->cvD, retinex->cvC);
 
@@ -320,7 +307,7 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
     cvSub (retinex->cvB, retinex->cvC, retinex->cvA, NULL);
 
     /*  Restore */
-    cvConvertScale (retinex->cvA, retinex->cvRGBin, (float) gain,
+    cvConvertScale (retinex->cvA, img, (float) gain,
         (float) offset);
   }
   /* Multiscale retinex restoration.  The image and a set of filtered images are
@@ -349,7 +336,7 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
     }
 
     /*  Compute log image */
-    cvConvert (retinex->cvRGBin, retinex->cvA);
+    cvConvert (img, retinex->cvA);
     cvLog (retinex->cvA, retinex->cvB);
 
     /*  Filter at each scale */
@@ -357,7 +344,7 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
       filter_size = (int) floor (retinex->sigmas[i] * 6) / 2;
       filter_size = filter_size * 2 + 1;
 
-      cvConvert (retinex->cvRGBin, retinex->cvD);
+      cvConvert (img, retinex->cvD);
       GaussianBlur (icvD, icvD, Size (filter_size, filter_size), 0.0, 0.0);
       cvLog (retinex->cvD, retinex->cvC);
 
@@ -367,7 +354,7 @@ gst_retinex_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
     }
 
     /*  Restore */
-    cvConvertScale (retinex->cvB, retinex->cvRGBin, (float) gain,
+    cvConvertScale (retinex->cvB, img, (float) gain,
         (float) offset);
   }
 
