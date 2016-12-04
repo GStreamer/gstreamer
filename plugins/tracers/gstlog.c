@@ -162,7 +162,7 @@ static void
 do_post_message_pre (GstTracer * self, guint64 ts, GstElement * elem,
     GstMessage * msg)
 {
-  do_log (GST_CAT_EVENT,
+  do_log (GST_CAT_MESSAGE,
       "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", message=%"
       GST_PTR_FORMAT, GST_TIME_ARGS (ts), elem, msg);
 }
@@ -171,7 +171,7 @@ static void
 do_post_message_post (GstTracer * self, guint64 ts, GstElement * elem,
     gboolean res)
 {
-  do_log (GST_CAT_EVENT,
+  do_log (GST_CAT_MESSAGE,
       "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", res=%d",
       GST_TIME_ARGS (ts), elem, res);
 }
