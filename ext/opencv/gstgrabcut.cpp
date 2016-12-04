@@ -111,7 +111,7 @@ enum
 #define DEFAULT_TEST_MODE FALSE
 #define DEFAULT_SCALE 1.6
 
-G_DEFINE_TYPE (GstGrabcut, gst_grabcut, GST_TYPE_VIDEO_FILTER);
+G_DEFINE_TYPE (GstGrabcut, gst_grabcut, GST_TYPE_OPENCV_VIDEO_FILTER);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -128,11 +128,11 @@ static void gst_grabcut_set_property (GObject * object, guint prop_id,
 static void gst_grabcut_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_grabcut_transform_ip (GstVideoFilter * btrans,
-    GstVideoFrame * frame);
-static gboolean gst_grabcut_set_info (GstVideoFilter * filter,
-    GstCaps * incaps, GstVideoInfo * in_info,
-    GstCaps * outcaps, GstVideoInfo * out_info);
+static GstFlowReturn gst_grabcut_transform_ip (GstOpencvVideoFilter * filter,
+    GstBuffer * buf, IplImage * img);
+static gboolean gst_grabcut_set_caps (GstOpencvVideoFilter * filter,
+    gint in_width, gint in_height, gint in_depth, gint in_channels,
+    gint out_width, gint out_height, gint out_depth, gint out_channels);
 
 static void gst_grabcut_release_all_pointers (GstGrabcut * filter);
 
@@ -153,8 +153,9 @@ gst_grabcut_class_init (GstGrabcutClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstOpencvVideoFilterClass *cvbasefilter_class =
+      (GstOpencvVideoFilterClass *) klass;
   GstBaseTransformClass *btrans_class = (GstBaseTransformClass *) klass;
-  GstVideoFilterClass *video_class = (GstVideoFilterClass *) klass;
 
   gobject_class->set_property = gst_grabcut_set_property;
   gobject_class->get_property = gst_grabcut_get_property;
@@ -162,8 +163,8 @@ gst_grabcut_class_init (GstGrabcutClass * klass)
   btrans_class->stop = gst_grabcut_stop;
   btrans_class->passthrough_on_same_caps = TRUE;
 
-  video_class->transform_frame_ip = gst_grabcut_transform_ip;
-  video_class->set_info = gst_grabcut_set_info;
+  cvbasefilter_class->cv_trans_ip_func = gst_grabcut_transform_ip;
+  cvbasefilter_class->cv_set_caps = gst_grabcut_set_caps;
 
   g_object_class_install_property (gobject_class, PROP_TEST_MODE,
       g_param_spec_boolean ("test-mode", "test-mode",
@@ -200,7 +201,8 @@ gst_grabcut_init (GstGrabcut * filter)
 {
   filter->test_mode = DEFAULT_TEST_MODE;
   filter->scale = DEFAULT_SCALE;
-  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), FALSE);
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER (filter),
+      TRUE);
 }
 
 
@@ -245,20 +247,20 @@ gst_grabcut_get_property (GObject * object, guint prop_id,
 /* GstElement vmethod implementations */
 /* this function handles the link with other elements */
 static gboolean
-gst_grabcut_set_info (GstVideoFilter * filter,
-    GstCaps * incaps, GstVideoInfo * in_info,
-    GstCaps * outcaps, GstVideoInfo * out_info)
+gst_grabcut_set_caps (GstOpencvVideoFilter * filter, gint in_width,
+    gint in_height, gint in_depth, gint in_channels, gint out_width,
+    gint out_height, gint out_depth, gint out_channels)
 {
   GstGrabcut *grabcut = GST_GRABCUT (filter);
   CvSize size;
 
-  size = cvSize (in_info->width, in_info->height);
-  /* If cvRGBA is already allocated, it means there's a cap modification,
-     so release first all the images.                                      */
-  if (NULL != grabcut->cvRGBAin)
+  size = cvSize (in_width, in_height);
+
+  /* If cvRGB is already allocated, it means there's a cap modification,
+   * so release first all the images. */
+  if (!grabcut->cvRGBin)
     gst_grabcut_release_all_pointers (grabcut);
 
-  grabcut->cvRGBAin = cvCreateImageHeader (size, IPL_DEPTH_8U, 4);
   grabcut->cvRGBin = cvCreateImage (size, IPL_DEPTH_8U, 3);
 
   grabcut->cvA = cvCreateImage (size, IPL_DEPTH_8U, 1);
@@ -279,7 +281,7 @@ gst_grabcut_stop (GstBaseTransform * basesrc)
 {
   GstGrabcut *filter = GST_GRABCUT (basesrc);
 
-  if (filter->cvRGBAin != NULL)
+  if (filter->cvRGBin != NULL)
     gst_grabcut_release_all_pointers (filter);
 
   return TRUE;
@@ -288,7 +290,6 @@ gst_grabcut_stop (GstBaseTransform * basesrc)
 static void
 gst_grabcut_release_all_pointers (GstGrabcut * filter)
 {
-  cvReleaseImage (&filter->cvRGBAin);
   cvReleaseImage (&filter->cvRGBin);
 
   cvReleaseImage (&filter->cvA);
@@ -300,13 +301,14 @@ gst_grabcut_release_all_pointers (GstGrabcut * filter)
 }
 
 static GstFlowReturn
-gst_grabcut_transform_ip (GstVideoFilter * btrans, GstVideoFrame * frame)
+gst_grabcut_transform_ip (GstOpencvVideoFilter * filter, GstBuffer * buffer,
+        IplImage * img)
 {
-  GstGrabcut *gc = GST_GRABCUT (btrans);
+  GstGrabcut *gc = GST_GRABCUT (filter);
   gint alphapixels;
 
   GstVideoRegionOfInterestMeta *meta;
-  meta = gst_buffer_get_video_region_of_interest_meta (frame->buffer);
+  meta = gst_buffer_get_video_region_of_interest_meta (buffer);
   if (meta) {
     gc->facepos.x = (meta->x) - ((gc->scale - 1) * meta->w / 2);
     gc->facepos.y = (meta->y) - ((gc->scale - 1) * meta->h / 2);
@@ -316,11 +318,9 @@ gst_grabcut_transform_ip (GstVideoFilter * btrans, GstVideoFrame * frame)
     memset (&(gc->facepos), 0, sizeof (gc->facepos));
   }
 
-  gc->cvRGBAin->imageData = (char *) GST_VIDEO_FRAME_COMP_DATA (frame, 0);
-
   /*  normally input should be RGBA */
-  cvSplit (gc->cvRGBAin, gc->cvA, gc->cvB, gc->cvC, gc->cvD);
-  cvCvtColor (gc->cvRGBAin, gc->cvRGBin, CV_BGRA2BGR);
+  cvSplit (img, gc->cvA, gc->cvB, gc->cvC, gc->cvD);
+  cvCvtColor (img, gc->cvRGBin, CV_BGRA2BGR);
   compose_matrix_from_image (gc->grabcut_mask, gc->cvD);
 
   /*  Pass cvD to grabcut_mask for the graphcut stuff but that only if
@@ -355,10 +355,10 @@ gst_grabcut_transform_ip (GstVideoFilter * btrans, GstVideoFrame * frame)
     cvAnd (gc->grabcut_mask, gc->cvC, gc->cvC, NULL);
   }
 
-  cvMerge (gc->cvA, gc->cvB, gc->cvC, gc->cvD, gc->cvRGBAin);
+  cvMerge (gc->cvA, gc->cvB, gc->cvC, gc->cvD, img);
 
   if (gc->test_mode) {
-    cvRectangle (gc->cvRGBAin,
+    cvRectangle (img,
         cvPoint (gc->facepos.x, gc->facepos.y),
         cvPoint (gc->facepos.x + gc->facepos.width,
             gc->facepos.y + gc->facepos.height), CV_RGB (255, 0, 255), 1, 8, 0);

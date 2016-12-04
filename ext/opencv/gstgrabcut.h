@@ -47,6 +47,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
+#include <gst/opencv/gstopencvvideofilter.h>
 #include <opencv2/core/core_c.h>
 
 
@@ -77,13 +78,16 @@ struct grabcut_params
 
 struct _GstGrabcut
 {
-  GstVideoFilter element;
+  GstOpencvVideoFilter parent;
   gint width, height;
   gboolean test_mode;
   gdouble scale;                // grow multiplier to apply to input bbox
 
-  IplImage *cvRGBAin, *cvRGBin;
-  IplImage *cvA, *cvB, *cvC, *cvD;
+  IplImage *cvRGBin;
+  IplImage *cvA;
+  IplImage *cvB;
+  IplImage *cvC;
+  IplImage *cvD;
 
 
   CvMat *grabcut_mask;          // mask created by graphcut
@@ -93,7 +97,7 @@ struct _GstGrabcut
 
 struct _GstGrabcutClass
 {
-  GstVideoFilterClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_grabcut_get_type (void);
