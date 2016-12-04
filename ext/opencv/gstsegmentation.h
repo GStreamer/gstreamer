@@ -45,7 +45,7 @@
 #define __GST_SEGMENTATION_H__
 
 #include <gst/gst.h>
-#include <gst/video/gstvideofilter.h>
+#include <gst/opencv/gstopencvvideofilter.h>
 #include <opencv2/core/core_c.h>
 #include <opencv2/video/background_segm.hpp>
 #include <opencv2/core/version.hpp>
@@ -90,13 +90,12 @@ typedef struct code_book
 
 struct _GstSegmentation
 {
-  GstVideoFilter element;
+  GstOpencvVideoFilter element;
   gint method;
 
   gboolean test_mode;
   gint width, height;
 
-  IplImage *cvRGBA;
   IplImage *cvRGB;
   IplImage *cvYUV;
 
@@ -125,7 +124,7 @@ struct _GstSegmentation
 
 struct _GstSegmentationClass
 {
-  GstVideoFilterClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_segmentation_get_type (void);
