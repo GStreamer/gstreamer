@@ -5571,7 +5571,6 @@ error_response:
           src->conninfo.url->transports = transports;
 
         src->need_redirect = TRUE;
-        src->state = GST_RTSP_STATE_INIT;
         res = GST_RTSP_OK;
         break;
       }
