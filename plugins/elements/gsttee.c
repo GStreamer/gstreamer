@@ -971,8 +971,10 @@ gst_tee_pull_eos (GstTee * tee)
   GstIterator *iter;
 
   iter = gst_element_iterate_src_pads (GST_ELEMENT (tee));
-  gst_iterator_foreach (iter, (GstIteratorForeachFunction) gst_tee_push_eos,
-      tee);
+  while (gst_iterator_foreach (iter,
+          (GstIteratorForeachFunction) gst_tee_push_eos,
+          tee) == GST_ITERATOR_RESYNC)
+    gst_iterator_resync (iter);
   gst_iterator_free (iter);
 }
 
