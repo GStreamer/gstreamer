@@ -1643,7 +1643,7 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
     object->supported_delsys = g_list_append (object->supported_delsys,
         GINT_TO_POINTER (SYS_DVBC_ANNEX_B));
     gst_structure_set (adapter_structure, "dvb-c-b", G_TYPE_STRING,
-        "DVB-C ANNEX C", NULL);
+        "DVB-C ANNEX B", NULL);
   }
 
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DVBT)) {
