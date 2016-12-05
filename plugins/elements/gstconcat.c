@@ -800,10 +800,10 @@ gst_concat_change_state (GstElement * element, GstStateChange transition)
       self->current_start_offset = 0;
       self->last_stop = GST_CLOCK_TIME_NONE;
 
-      do {
-        res = gst_iterator_foreach (iter, reset_pad, NULL);
-      } while (res == GST_ITERATOR_RESYNC);
-
+      while ((res =
+              gst_iterator_foreach (iter, reset_pad,
+                  NULL)) == GST_ITERATOR_RESYNC)
+        gst_iterator_resync (iter);
       gst_iterator_free (iter);
 
       if (res == GST_ITERATOR_ERROR)
@@ -815,10 +815,10 @@ gst_concat_change_state (GstElement * element, GstStateChange transition)
       GstIteratorResult res;
 
       g_mutex_lock (&self->lock);
-      do {
-        res = gst_iterator_foreach (iter, unblock_pad, NULL);
-      } while (res == GST_ITERATOR_RESYNC);
-
+      while ((res =
+              gst_iterator_foreach (iter, unblock_pad,
+                  NULL)) == GST_ITERATOR_RESYNC)
+        gst_iterator_resync (iter);
       gst_iterator_free (iter);
       g_cond_broadcast (&self->cond);
       g_mutex_unlock (&self->lock);
