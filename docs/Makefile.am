@@ -10,8 +10,8 @@ endif
 
 BUILT_SOURCES = version.entities
 
-SUBDIRS = design gst libs $(PLUGIN_DOCS_DIRS)
-DIST_SUBDIRS = design gst libs plugins
+SUBDIRS = gst libs $(PLUGIN_DOCS_DIRS)
+DIST_SUBDIRS = gst libs plugins
 
 EXTRA_DIST = version.entities.in list-ulink.xsl
 
