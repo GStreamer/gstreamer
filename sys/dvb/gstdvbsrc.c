@@ -1746,13 +1746,14 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
     gst_structure_set (adapter_structure, "turbo", G_TYPE_STRING, "TURBO",
         NULL);
   }
-
+#if HAVE_V5_MINOR(6)
   if (gst_dvbsrc_check_delsys (&dvb_prop[0], SYS_DVBC_ANNEX_C)) {
     object->supported_delsys = g_list_append (object->supported_delsys,
         GINT_TO_POINTER (SYS_DVBC_ANNEX_C));
     gst_structure_set (adapter_structure, "dvb-c-c", G_TYPE_STRING,
         "DVB-C ANNEX C", NULL);
   }
+#endif
 
   GST_TRACE_OBJECT (object, "%s description: %" GST_PTR_FORMAT, adapter_name,
       adapter_structure);
