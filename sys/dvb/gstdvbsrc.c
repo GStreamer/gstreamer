@@ -2215,14 +2215,8 @@ gst_dvbsrc_output_frontend_stats (GstDvbSrc * src)
   gst_element_post_message (GST_ELEMENT (src), message);
 }
 
-struct diseqc_cmd
-{
-  struct dvb_diseqc_master_cmd cmd;
-  guint32 wait;
-};
-
 static void
-diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
+diseqc_send_msg (int fd, fe_sec_voltage_t v, struct dvb_diseqc_master_cmd *cmd,
     fe_sec_tone_mode_t t, fe_sec_mini_cmd_t b)
 {
   gint err;
@@ -2240,11 +2234,10 @@ diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
   }
 
   g_usleep (15 * 1000);
-  GST_LOG ("diseqc: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", cmd->cmd.msg[0],
-      cmd->cmd.msg[1], cmd->cmd.msg[2], cmd->cmd.msg[3], cmd->cmd.msg[4],
-      cmd->cmd.msg[5]);
+  GST_LOG ("diseqc: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", cmd->msg[0],
+      cmd->msg[1], cmd->msg[2], cmd->msg[3], cmd->msg[4], cmd->msg[5]);
 
-  LOOP_WHILE_EINTR (err, ioctl (fd, FE_DISEQC_SEND_MASTER_CMD, &cmd->cmd));
+  LOOP_WHILE_EINTR (err, ioctl (fd, FE_DISEQC_SEND_MASTER_CMD, cmd));
   if (err) {
     GST_ERROR ("Sending DiSEqC command failed");
     return;
@@ -2274,12 +2267,13 @@ diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
 static void
 diseqc (int secfd, int sat_no, int voltage, int tone)
 {
-  struct diseqc_cmd cmd = { {{0xe0, 0x10, 0x38, 0xf0, 0x00, 0x00}, 4}, 0 };
+  struct dvb_diseqc_master_cmd cmd =
+      { {0xe0, 0x10, 0x38, 0xf0, 0x00, 0x00}, 4 };
 
   /* param: high nibble: reset bits, low nibble set bits,
    * bits are: option, position, polarizaion, band
    */
-  cmd.cmd.msg[3] =
+  cmd.msg[3] =
       0xf0 | (((sat_no * 4) & 0x0f) | (tone == SEC_TONE_ON ? 1 : 0) |
       (voltage == SEC_VOLTAGE_13 ? 0 : 2));
   /* send twice because some DiSEqC switches do not respond correctly the
