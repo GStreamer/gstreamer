@@ -1726,11 +1726,19 @@ gst_tag_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* Ensure that nothing is in any of the streaming thread functions
+       * anymore. While the above has deactivated all pads, there is nothing
+       * preventing downstream from activating our srcpad again and calling the
+       * getrange() function. Although we're in READY!
+       */
+      GST_PAD_STREAM_LOCK (demux->priv->srcpad);
       gst_tag_demux_reset (demux);
+      GST_PAD_STREAM_UNLOCK (demux->priv->srcpad);
       break;
     default:
       break;
   }
+
   return ret;
 }
 
