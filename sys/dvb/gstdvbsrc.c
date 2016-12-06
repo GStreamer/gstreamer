@@ -2250,7 +2250,6 @@ diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
     return;
   }
 
-  g_usleep (cmd->wait * 1000);
   g_usleep (15 * 1000);
 
   LOOP_WHILE_EINTR (err, ioctl (fd, FE_DISEQC_SEND_BURST, b));
