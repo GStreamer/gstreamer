@@ -28,7 +28,7 @@ _gst_mandatory_argument ()
 {
 	if [[ "$prev" != "$command" ]]
 	then
-		COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
+		COMPREPLY=( $(compgen -W "$(gst-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
 	else
 		COMPREPLY=("$cur")
 	fi
