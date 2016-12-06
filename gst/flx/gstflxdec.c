@@ -812,8 +812,8 @@ gst_flxdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       }
 
       /* create delta and output frame */
-      flxdec->frame_data = g_malloc (flxdec->size);
-      flxdec->delta_data = g_malloc (flxdec->size);
+      flxdec->frame_data = g_malloc0 (flxdec->size);
+      flxdec->delta_data = g_malloc0 (flxdec->size);
 
       flxdec->state = GST_FLXDEC_PLAYING;
     }
