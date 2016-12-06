@@ -1067,7 +1067,6 @@ tools/Makefile
 common/Makefile
 common/m4/Makefile
 docs/Makefile
-docs/design/Makefile
 docs/gst/Makefile
 docs/gst/gstreamer.types
 docs/libs/Makefile
