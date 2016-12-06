@@ -60,7 +60,7 @@ DOC_BASE = /srv/gstreamer.freedesktop.org/public_html/documentation
 BUILT_DOC_DIR = $(builddir)/built_doc/html/
 
 upload: all
-	rsync -rvaz -e ssh --links --delete $(BUILT_DOC_DIR) $(DOC_SERVER):$(DOC_BASE)
+	rsync -rvaz -e ssh --links --delete $(BUILT_DOC_DIR) $(DOC_SERVER):$(DOC_BASE) || /bin/true
 	ssh $(DOC_SERVER) "chmod -R g+w $(DOC_BASE); chgrp -R gstreamer $(DOC_BASE)"
 
 include plugins-introspection/plugins-introspection.mak
