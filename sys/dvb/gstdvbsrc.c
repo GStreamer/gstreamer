@@ -2115,8 +2115,8 @@ gst_dvbsrc_is_valid_modulation (guint delsys, guint mod)
         return TRUE;
       break;
     default:
-      GST_FIXME ("No modulation sanity checks implemented for this delivery "
-          "system");
+      GST_FIXME ("No modulation sanity-checks implemented for delivery "
+          "system: '%d'", delsys);
       return TRUE;
   }
   return FALSE;
