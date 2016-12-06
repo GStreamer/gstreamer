@@ -785,7 +785,8 @@ vmnc_handle_packet (GstVMncDec * dec, const guint8 * data, int len,
                 r.type);
             return ERROR_INVALID;
           }
-          if (r.x + r.width > dec->format.width ||
+          if (r.x > dec->format.width || r.y > dec->format.height ||
+              r.x + r.width > dec->format.width ||
               r.y + r.height > dec->format.height) {
             GST_WARNING_OBJECT (dec, "Rectangle out of range, type %d", r.type);
             return ERROR_INVALID;
