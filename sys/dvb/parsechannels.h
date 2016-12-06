@@ -1,7 +1,7 @@
 /*
  * parsechannels.h - Parse channels.conf
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Zaheer Abbas Merali <zaheerabbas at merali dot org>
  *

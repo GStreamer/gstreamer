@@ -1,7 +1,7 @@
 /*
- * parsechannels.c - 
+ * parsechannels.c -
  * Copyright (C) 2008 Zaheer Abbas Merali
- * 
+ *
  * Authors:
  *   Zaheer Abbas Merali <zaheerabbas at merali dot org>
  *
