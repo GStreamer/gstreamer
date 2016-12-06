@@ -58,6 +58,22 @@ typedef enum
 static DRMDeviceType g_drm_device_type;
 static GMutex g_drm_device_type_lock;
 
+static gboolean
+supports_vaapi (int fd)
+{
+  gboolean ret;
+  VADisplay va_dpy;
+  int major, minor;
+
+  va_dpy = vaGetDisplayDRM (fd);
+  if (!va_dpy)
+    return FALSE;
+
+  ret = (vaInitialize (va_dpy, &major, &minor) == VA_STATUS_SUCCESS);
+  vaTerminate (va_dpy);
+  return ret;
+}
+
 /* Get default device path. Actually, the first match in the DRM subsystem */
 static const gchar *
 get_default_device_path (GstVaapiDisplay * display)
@@ -109,10 +125,12 @@ get_default_device_path (GstVaapiDisplay * display)
         continue;
       }
 
-      priv->device_path_default = g_strdup (devpath);
+      if (supports_vaapi (fd))
+        priv->device_path_default = g_strdup (devpath);
       close (fd);
       udev_device_unref (device);
-      break;
+      if (priv->device_path_default)
+        break;
     }
 
   end:
