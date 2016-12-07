@@ -2376,8 +2376,12 @@ AG_GST_CHECK_FEATURE(FBDEV, [linux framebuffer], fbdevsink, [
 dnl *** fdkaac ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FDK_AAC, true)
 AG_GST_CHECK_FEATURE(FDK_AAC, [fdkaac plugin], fdkaac, [
-  PKG_CHECK_MODULES(FDK_AAC, fdk-aac, HAVE_FDK_AAC="yes", [
-    HAVE_FDK_AAC="no"
+  PKG_CHECK_MODULES(FDK_AAC, fdk-aac >= 0.1.14, [
+    HAVE_FDK_AAC="yes",
+    HAVE_FDK_AAC_0_1_14="yes"
+    AC_DEFINE(HAVE_FDK_AAC_0_1_14 1, [Define if we have fdk-aac >= 0.1.14])
+  ],[
+    PKG_CHECK_MODULES(FDK_AAC, fdk-aac, HAVE_FDK_AAC="yes", HAVE_FDK_AAC="no")
   ])
 ])
 
