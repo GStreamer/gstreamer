@@ -361,7 +361,7 @@ little driver * <https://github.com/dkogan/feedgnuplot>
 
 ## Try it
 
-### Traces for buffer flow in TRACE level:
+### Traces for buffer flow, events and messages in TRACE level:
 
     GST_DEBUG="GST_TRACER:7,GST_BUFFER*:7,GST_EVENT:7,GST_MESSAGE:7"
     GST_TRACERS=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink -
