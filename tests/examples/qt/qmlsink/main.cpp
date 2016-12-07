@@ -39,40 +39,43 @@ int main(int argc, char *argv[])
 {
   int ret;
 
-  QGuiApplication app(argc, argv);
   gst_init (&argc, &argv);
 
-  GstElement *pipeline = gst_pipeline_new (NULL);
-  GstElement *src = gst_element_factory_make ("videotestsrc", NULL);
-  GstElement *glupload = gst_element_factory_make ("glupload", NULL);
-  /* the plugin must be loaded before loading the qml file to register the
-   * GstGLVideoItem qml item */
-  GstElement *sink = gst_element_factory_make ("qmlglsink", NULL);
+  {
+    QGuiApplication app(argc, argv);
 
-  g_assert (src && glupload && sink);
+    GstElement *pipeline = gst_pipeline_new (NULL);
+    GstElement *src = gst_element_factory_make ("videotestsrc", NULL);
+    GstElement *glupload = gst_element_factory_make ("glupload", NULL);
+    /* the plugin must be loaded before loading the qml file to register the
+     * GstGLVideoItem qml item */
+    GstElement *sink = gst_element_factory_make ("qmlglsink", NULL);
 
-  gst_bin_add_many (GST_BIN (pipeline), src, glupload, sink, NULL);
-  gst_element_link_many (src, glupload, sink, NULL);
+    g_assert (src && glupload && sink);
 
-  QQmlApplicationEngine engine;
-  engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    gst_bin_add_many (GST_BIN (pipeline), src, glupload, sink, NULL);
+    gst_element_link_many (src, glupload, sink, NULL);
 
-  QQuickItem *videoItem;
-  QQuickWindow *rootObject;
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 
-  /* find and set the videoItem on the sink */
-  rootObject = static_cast<QQuickWindow *> (engine.rootObjects().first());
-  videoItem = rootObject->findChild<QQuickItem *> ("videoItem");
-  g_assert (videoItem);
-  g_object_set(sink, "widget", videoItem, NULL);
+    QQuickItem *videoItem;
+    QQuickWindow *rootObject;
 
-  rootObject->scheduleRenderJob (new SetPlaying (pipeline),
-      QQuickWindow::BeforeSynchronizingStage);
+    /* find and set the videoItem on the sink */
+    rootObject = static_cast<QQuickWindow *> (engine.rootObjects().first());
+    videoItem = rootObject->findChild<QQuickItem *> ("videoItem");
+    g_assert (videoItem);
+    g_object_set(sink, "widget", videoItem, NULL);
 
-  ret = app.exec();
+    rootObject->scheduleRenderJob (new SetPlaying (pipeline),
+        QQuickWindow::BeforeSynchronizingStage);
 
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (pipeline);
+    ret = app.exec();
+
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_object_unref (pipeline);
+  }
 
   gst_deinit ();
 
