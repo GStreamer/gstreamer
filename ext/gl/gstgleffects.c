@@ -279,7 +279,7 @@ gst_gl_effects_init_gl_resources (GstGLFilter * filter)
   gint i;
 
   base_alloc = (GstGLBaseMemoryAllocator *)
-      gst_gl_memory_allocator_get_default (context);
+      gst_allocator_find (GST_GL_MEMORY_ALLOCATOR_NAME);
   params =
       (GstGLAllocationParams *) gst_gl_video_allocation_params_new (context,
       NULL, &filter->out_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D,
