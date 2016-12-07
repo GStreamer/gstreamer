@@ -588,6 +588,26 @@ unsupported:
   }
 }
 
+static void
+init_context_info (GstVaapiEncoder * encoder)
+{
+  GstVaapiContextInfo *const cip = &encoder->context_info;
+  const GstVaapiEncoderClassData *const cdata =
+      GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
+
+  cip->usage = GST_VAAPI_CONTEXT_USAGE_ENCODE;
+  cip->profile = encoder->profile;
+  if (cdata->codec == GST_VAAPI_CODEC_JPEG) {
+    cip->entrypoint = GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE;
+  } else {
+    if (cip->entrypoint != GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP)
+      cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  }
+  cip->width = 0;
+  cip->height = 0;
+  cip->ref_frames = encoder->num_ref_frames;
+}
+
 /* Updates video context */
 static gboolean
 set_context_info (GstVaapiEncoder * encoder)
@@ -596,20 +616,12 @@ set_context_info (GstVaapiEncoder * encoder)
   GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;
   const GstVideoFormat format =
       GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
-  const GstVaapiEncoderClassData *const cdata =
-      GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
 
-  cip->usage = GST_VAAPI_CONTEXT_USAGE_ENCODE;
-  cip->profile = encoder->profile;
-  if (cdata->codec != GST_VAAPI_CODEC_JPEG) {
-    if (cip->entrypoint != GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP)
-      cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
-  } else
-    cip->entrypoint = GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE;
+  init_context_info (encoder);
+
   cip->chroma_type = gst_vaapi_video_format_get_chroma_type (format);
   cip->width = GST_VAAPI_ENCODER_WIDTH (encoder);
   cip->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
-  cip->ref_frames = encoder->num_ref_frames;
 
   if (!is_chroma_type_supported (encoder))
     goto error_unsupported_format;
