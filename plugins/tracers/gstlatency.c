@@ -149,8 +149,11 @@ calculate_latency (GstElement * parent, GstPad * pad, guint64 ts)
       GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SINK)) {
     GstEvent *ev = g_object_get_qdata ((GObject *) pad, latency_probe_id);
 
-    log_latency (gst_event_get_structure (ev), pad, ts);
-    gst_event_unref (ev);
+    if (ev) {
+      g_object_set_qdata ((GObject *) pad, latency_probe_id, NULL);
+      log_latency (gst_event_get_structure (ev), pad, ts);
+      gst_event_unref (ev);
+    }
   }
 }
 
