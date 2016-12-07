@@ -291,6 +291,7 @@ gst_monoscope_src_negotiate (GstMonoscope * monoscope)
   /* and activate */
   gst_buffer_pool_set_active (pool, TRUE);
 
+  gst_query_unref (query);
   gst_caps_unref (target);
 
   return TRUE;
