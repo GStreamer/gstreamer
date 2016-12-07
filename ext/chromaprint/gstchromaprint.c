@@ -218,7 +218,7 @@ gst_chromaprint_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   chromaprint->nsamples += nsamples;
   chromaprint->duration = chromaprint->nsamples / rate;
 
-  chromaprint_feed (chromaprint->context, map_info.data,
+  chromaprint_feed (chromaprint->context, (gint16 *) map_info.data,
       map_info.size / sizeof (guint16));
 
   if (chromaprint->duration >= chromaprint->max_duration
