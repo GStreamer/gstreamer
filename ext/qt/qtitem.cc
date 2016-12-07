@@ -136,6 +136,8 @@ QtGLVideoItem::~QtGLVideoItem()
     gst_object_unref(this->priv->context);
   if (this->priv->other_context)
     gst_object_unref(this->priv->other_context);
+  if (this->priv->display)
+    gst_object_unref(this->priv->display);
   g_free (this->priv);
   this->priv = NULL;
 }
