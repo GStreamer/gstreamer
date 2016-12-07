@@ -173,6 +173,8 @@ gst_vaapi_encoder_get_buffer_with_timeout (GstVaapiEncoder * encoder,
 GstVaapiEncoderStatus
 gst_vaapi_encoder_flush (GstVaapiEncoder * encoder);
 
+GArray *
+gst_vaapi_encoder_get_surface_formats (GstVaapiEncoder * encoder);
 G_END_DECLS
 
 #endif /* GST_VAAPI_ENCODER_H */

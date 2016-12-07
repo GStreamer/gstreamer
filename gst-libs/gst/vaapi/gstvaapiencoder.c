@@ -1153,6 +1153,35 @@ error:
   }
 }
 
+static gboolean
+gst_vaapi_encoder_ensure_context_config (GstVaapiEncoder * encoder)
+{
+  GstVaapiContextInfo *const cip = &encoder->context_info;
+
+  if (encoder->context)
+    return TRUE;
+
+  init_context_info (encoder);
+  encoder->context = gst_vaapi_context_new (encoder->display, cip);
+  return (encoder->context != NULL);
+}
+
+/**
+ * gst_vaapi_encoder_get_surface_formats:
+ * @encoder: a #GstVaapiEncoder instances
+ *
+ * Fetches the valid surface formats for the current VAConfig
+ *
+ * Returns: a #GArray of valid formats for the current VAConfig
+ **/
+GArray *
+gst_vaapi_encoder_get_surface_formats (GstVaapiEncoder * encoder)
+{
+  if (!gst_vaapi_encoder_ensure_context_config (encoder))
+    return NULL;
+  return gst_vaapi_context_get_surface_formats (encoder->context);
+}
+
 /** Returns a GType for the #GstVaapiEncoderTune set */
 GType
 gst_vaapi_encoder_tune_get_type (void)
