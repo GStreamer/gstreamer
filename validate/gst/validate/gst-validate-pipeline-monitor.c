@@ -320,7 +320,7 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
 
     g_string_append_printf (str,
         ". The exact reason could not be determined but"
-        " here are the gathered information:\n"
+        " here is the gathered information:\n"
         " - %s last query caps filter: %s\n"
         " - %s possible caps (as returned by a query on it without filter): %s\n",
         gst_validate_reporter_get_name (GST_VALIDATE_REPORTER (monitor)),
