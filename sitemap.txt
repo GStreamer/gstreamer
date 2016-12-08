@@ -141,6 +141,7 @@ index.md
 		design/MT-refcounting.md
 		design/TODO.md
 		design/activation.md
+		design/audiosinks.md
 		design/buffer.md
 		design/buffering.md
 		design/bufferpool.md
@@ -149,10 +150,12 @@ index.md
 		design/context.md
 		design/controller.md
 		design/conventions.md
+		design/decodebin.md
 		design/dynamic.md
 		design/element-sink.md
 		design/element-source.md
 		design/element-transform.md
+		design/encoding.md
 		design/events.md
 		design/framestep.md
 		design/gstbin.md
@@ -162,8 +165,13 @@ index.md
 		design/gstobject.md
 		design/gstpipeline.md
 		design/draft-klass.md
+		design/interlaced-video.md
+		design/keyframe-force.md
 		design/latency.md
 		design/live-source.md
+		design/mediatype-audio-raw.md
+		design/mediatype-text-raw.md
+		design/mediatype-video-raw.md
 		design/memory.md
 		design/messages.md
 		design/meta.md
@@ -171,7 +179,9 @@ index.md
 		design/miniobject.md
 		design/missing-plugins.md
 		design/negotiation.md
+		design/orc-integration.md
 		design/overview.md
+		design/playbin.md
 		design/preroll.md
 		design/probes.md
 		design/progress.md
@@ -186,9 +196,11 @@ index.md
 		design/sparsestreams.md
 		design/standards.md
 		design/states.md
+		design/stereo-multiview-video.md
 		design/stream-selection.md
 		design/stream-status.md
 		design/streams.md
+		design/subtitle-overlays.md
 		design/synchronisation.md
 		design/draft-tagreading.md
 		design/toc.md
