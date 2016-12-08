@@ -274,7 +274,9 @@ gst_dvbsrc_code_rate_get_type (void)
     {FEC_AUTO, "AUTO", "auto"},
     {FEC_3_5, "3/5", "3/5"},
     {FEC_9_10, "9/10", "9/10"},
+#if HAVE_V5_MINOR(7)
     {FEC_2_5, "2/5", "2/5"},
+#endif
     {0, NULL, NULL},
   };
 
