@@ -7225,6 +7225,8 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_apcn:
       case FOURCC_apco:
       case FOURCC_ap4h:
+      case FOURCC_xvid:
+      case FOURCC_XVID:
       {
         const guint8 *buf;
         guint32 version;
@@ -10021,6 +10023,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         case FOURCC_MP4V:
         case FOURCC_fmp4:
         case FOURCC_FMP4:
+        case FOURCC_xvid:
+        case FOURCC_XVID:
         {
           GNode *glbl;
 
@@ -13404,6 +13408,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('A', 'V', 'm', 'p'): /* AVID IMX PAL */
     case GST_MAKE_FOURCC ('m', 'p', 'g', '2'): /* AVID IMX PAL */
     case GST_MAKE_FOURCC ('m', 'p', '2', 'v'): /* AVID IMX PAL */
+    case GST_MAKE_FOURCC ('m', '2', 'v', '1'):
       _codec ("MPEG-2 video");
       caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
@@ -13458,12 +13463,13 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     case GST_MAKE_FOURCC ('3', 'I', 'V', '1'):
     case GST_MAKE_FOURCC ('3', 'I', 'V', '2'):
-    case GST_MAKE_FOURCC ('X', 'V', 'I', 'D'):
-    case GST_MAKE_FOURCC ('x', 'v', 'i', 'd'):
+    case FOURCC_XVID:
+    case FOURCC_xvid:
     case FOURCC_FMP4:
+    case FOURCC_fmp4:
     case GST_MAKE_FOURCC ('U', 'M', 'P', '4'):
-      caps = gst_caps_new_simple ("video/mpeg",
-          "mpegversion", G_TYPE_INT, 4, NULL);
+      caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 4,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       _codec ("MPEG-4");
       break;
 
@@ -13780,6 +13786,12 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("MPEG-1 layer 3");
       /* MPEG layer 3, CBR & VBR (QT4.1 and later) */
       caps = gst_caps_new_simple ("audio/mpeg", "layer", G_TYPE_INT, 3,
+          "mpegversion", G_TYPE_INT, 1, NULL);
+      break;
+    case GST_MAKE_FOURCC ('.', 'm', 'p', '2'):
+      _codec ("MPEG-1 layer 2");
+      /* MPEG layer 2 */
+      caps = gst_caps_new_simple ("audio/mpeg", "layer", G_TYPE_INT, 2,
           "mpegversion", G_TYPE_INT, 1, NULL);
       break;
     case 0x20736d:
