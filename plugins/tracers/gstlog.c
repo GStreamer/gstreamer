@@ -273,7 +273,7 @@ do_bin_remove_post (GstTracer * self, guint64 ts, GstBin * bin, gboolean res)
 }
 
 static void
-do_pad_link_pre (GstTracer * self, guint64 ts, GstPad * src, GstElement * sink)
+do_pad_link_pre (GstTracer * self, guint64 ts, GstPad * src, GstPad * sink)
 {
   do_log (GST_CAT_PADS,
       "%" GST_TIME_FORMAT ", src=%" GST_PTR_FORMAT ", sink=%" GST_PTR_FORMAT,
@@ -281,7 +281,7 @@ do_pad_link_pre (GstTracer * self, guint64 ts, GstPad * src, GstElement * sink)
 }
 
 static void
-do_pad_link_post (GstTracer * self, guint64 ts, GstPad * src, GstElement * sink,
+do_pad_link_post (GstTracer * self, guint64 ts, GstPad * src, GstPad * sink,
     GstPadLinkReturn res)
 {
   do_log (GST_CAT_PADS,
