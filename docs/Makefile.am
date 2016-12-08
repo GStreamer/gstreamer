@@ -8,8 +8,8 @@ else
 PLUGIN_DOCS_DIRS = plugins
 endif
 
-SUBDIRS = design libs $(PLUGIN_DOCS_DIRS)
-DIST_SUBDIRS = design libs plugins
+SUBDIRS = libs $(PLUGIN_DOCS_DIRS)
+DIST_SUBDIRS = libs plugins
 
 EXTRA_DIST = \
         version.entities.in

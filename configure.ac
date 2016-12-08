@@ -960,7 +960,6 @@ tests/files/Makefile
 tests/icles/Makefile
 tests/icles/playback/Makefile
 docs/Makefile
-docs/design/Makefile
 docs/libs/Makefile
 docs/plugins/Makefile
 docs/version.entities

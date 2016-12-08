@@ -79,6 +79,7 @@ CRUFT_FILES = \
 	$(top_builddir)/tools/gst-discoverer
 
 CRUFT_DIRS = \
+	$(top_srcdir)/docs/design \
 	$(top_srcdir)/docs/plugins/tmpl \
 	$(top_srcdir)/ext/gio \
 	$(top_srcdir)/gst/gdp \
