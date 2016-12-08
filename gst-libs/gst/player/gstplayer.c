@@ -70,12 +70,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_player_debug);
 GQuark
 gst_player_error_quark (void)
 {
-  static GQuark quark;
-
-  if (!quark)
-    quark = g_quark_from_static_string ("gst-player-error-quark");
-
-  return quark;
+  return g_quark_from_static_string ("gst-player-error-quark");
 }
 
 static GQuark QUARK_CONFIG;
