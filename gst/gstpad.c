@@ -2443,6 +2443,8 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
   g_return_val_if_fail (GST_PAD_IS_SINK (sinkpad),
       GST_PAD_LINK_WRONG_DIRECTION);
 
+  GST_TRACER_PAD_LINK_PRE (srcpad, sinkpad);
+
   /* Notify the parent early. See gst_pad_unlink for details. */
   if (G_LIKELY ((parent = GST_ELEMENT_CAST (gst_pad_get_parent (srcpad))))) {
     if (G_LIKELY (GST_IS_ELEMENT (parent))) {
@@ -2531,6 +2533,7 @@ done:
     gst_object_unref (parent);
   }
 
+  GST_TRACER_PAD_LINK_POST (srcpad, sinkpad, result);
   return result;
 
   /* ERRORS */
@@ -2576,13 +2579,7 @@ link_failed:
 GstPadLinkReturn
 gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
 {
-  GstPadLinkReturn ret;
-
-  GST_TRACER_PAD_LINK_PRE (srcpad, sinkpad);
-  ret = gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_DEFAULT);
-  GST_TRACER_PAD_LINK_POST (srcpad, sinkpad, ret);
-
-  return ret;
+  return gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_DEFAULT);
 }
 
 static void
