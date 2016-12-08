@@ -247,6 +247,9 @@ gst_vaapi_plugin_base_init (GstVaapiPluginBase * plugin,
   if (!(GST_OBJECT_FLAGS (plugin) & GST_ELEMENT_FLAG_SINK))
     plugin->srcpad = gst_element_get_static_pad (GST_ELEMENT (plugin), "src");
   gst_video_info_init (&plugin->srcpad_info);
+
+  plugin->enable_direct_rendering =
+      (g_getenv ("GST_VAAPI_ENABLE_DIRECT_RENDERING") != NULL);
 }
 
 void
@@ -592,7 +595,7 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
             gst_vaapi_dmabuf_allocator_new (plugin->display, vinfo,
             get_dmabuf_surface_allocation_flags (), GST_PAD_SRC);
       }
-    } else {
+    } else if (plugin->enable_direct_rendering) {
       usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
       GST_INFO_OBJECT (plugin, "enabling direct rendering in source allocator");
     }
