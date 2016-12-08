@@ -3115,6 +3115,164 @@ GST_START_TEST (test_stepped_int_range_ops)
 
 GST_END_TEST;
 
+GST_START_TEST (test_structure_basic)
+{
+  GstStructure *s1, *s2;
+  GValue v1 = G_VALUE_INIT, v2 = G_VALUE_INIT;
+
+  /* sanity test */
+  s1 = gst_structure_from_string ("foo,bar=1", NULL);
+  g_value_init (&v1, GST_TYPE_STRUCTURE);
+  gst_value_set_structure (&v1, s1);
+  fail_unless (gst_structure_is_equal (s1, gst_value_get_structure (&v1)));
+
+  s2 = gst_structure_copy (s1);
+  g_value_init (&v2, GST_TYPE_STRUCTURE);
+  gst_value_set_structure (&v2, s2);
+
+  /* can do everything but subtract */
+  fail_unless (gst_value_can_compare (&v1, &v2));
+  fail_unless (gst_value_can_intersect (&v1, &v2));
+  fail_unless (!gst_value_can_subtract (&v1, &v2));
+  fail_unless (gst_value_can_union (&v1, &v2));
+
+  gst_structure_free (s1);
+  gst_structure_free (s2);
+  g_value_unset (&v1);
+  g_value_unset (&v2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_structure_single_ops)
+{
+  static const struct
+  {
+    const gchar *str1;
+    gboolean is_fixed;
+    gboolean can_fixate;
+  } single_struct[] = {
+    {
+    "foo,bar=(int)1", TRUE, TRUE}, {
+  "foo,bar=(int)[1,2]", FALSE, TRUE},};
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (single_struct); i++) {
+    GstStructure *s1 = gst_structure_from_string (single_struct[i].str1, NULL);
+    GValue v1 = G_VALUE_INIT;
+    GValue v2 = G_VALUE_INIT;
+
+    fail_unless (s1 != NULL);
+
+    GST_DEBUG ("checking structure %" GST_PTR_FORMAT, s1);
+
+    g_value_init (&v1, GST_TYPE_STRUCTURE);
+    gst_value_set_structure (&v1, s1);
+
+    fail_unless (gst_value_is_fixed (&v1) == single_struct[i].is_fixed);
+    fail_unless (gst_value_fixate (&v2, &v1) == single_struct[i].can_fixate);
+    if (single_struct[i].can_fixate)
+      g_value_unset (&v2);
+
+    g_value_unset (&v1);
+    gst_structure_free (s1);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_structure_ops)
+{
+  struct
+  {
+    const gchar *str1;
+    const gchar *str2;
+    const gchar *op;
+    gint ret;
+    GType str_type;
+    const gchar *str_result;
+  } comparisons[] = {
+    /* *INDENT-OFF* */
+    {"foo,bar=(int)1", "foo,bar=(int)1", "compare", GST_VALUE_EQUAL, 0, NULL},
+    {"foo,bar=(int)1", "foo,bar=(int)1", "is_subset", TRUE, 0, NULL},
+    {"foo,bar=(int)1", "foo,bar=(int)1", "intersect", TRUE, GST_TYPE_STRUCTURE, "foo,bar=(int)1"},
+    {"foo,bar=(int)1", "foo,bar=(int)1", "union", TRUE, GST_TYPE_STRUCTURE, "foo,bar=(int)1"},
+    {"foo,bar=(int)[1,2]", "foo,bar=(int)1", "compare", GST_VALUE_UNORDERED, 0, NULL},
+    {"foo,bar=(int)[1,2]", "foo,bar=(int)1", "is_subset", FALSE, 0, NULL},
+    {"foo,bar=(int)[1,2]", "foo,bar=(int)1", "intersect", TRUE, GST_TYPE_STRUCTURE, "foo,bar=(int)1"},
+    {"foo,bar=(int)[1,2]", "foo,bar=(int)1", "union", TRUE, GST_TYPE_STRUCTURE, "foo,bar=(int)[1,2]"},
+    {"foo,bar=(int)1", "foo,bar=(int)[1,2]", "compare", GST_VALUE_UNORDERED, 0, NULL},
+    {"foo,bar=(int)1", "foo,bar=(int)[1,2]", "is_subset", TRUE, 0, NULL},
+    {"foo,bar=(int)1", "foo,bar=(int)[1,2]", "intersect", TRUE, GST_TYPE_STRUCTURE, "foo,bar=(int)1"},
+    {"foo,bar=(int)1", "foo,bar=(int)[1,2]", "union", TRUE, GST_TYPE_STRUCTURE, "foo,bar=(int)[1,2]"},
+    {"foo,bar=(int)1", "foo,bar=(int)2", "compare", GST_VALUE_UNORDERED, 0, NULL},
+    {"foo,bar=(int)1", "foo,bar=(int)2", "is_subset", FALSE, 0, NULL},
+    {"foo,bar=(int)1", "foo,bar=(int)2", "intersect", FALSE, 0, NULL},
+    {"foo,bar=(int)1", "foo,bar=(int)2", "union", TRUE, GST_TYPE_STRUCTURE, "foo,bar=(int)[1,2]"},
+    {"foo,bar=(int)1", "baz,bar=(int)1", "compare", GST_VALUE_UNORDERED, 0, NULL},
+    {"foo,bar=(int)1", "baz,bar=(int)1", "is_subset", FALSE, 0, NULL},
+    {"foo,bar=(int)1", "baz,bar=(int)1", "intersect", FALSE, 0, NULL},
+#if 0
+    /* deserializing lists is not implemented (but this should still work!) */
+    {"foo,bar=(int)1", "baz,bar=(int)1", "union", TRUE, G_TYPE_LIST, "{foo,bar=(int)1;, baz,bar=(int)1;}"},
+#endif
+    /* *INDENT-ON* */
+  };
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (comparisons); i++) {
+    GstStructure *s1 = gst_structure_from_string (comparisons[i].str1, NULL);
+    GstStructure *s2 = gst_structure_from_string (comparisons[i].str2, NULL);
+    GValue v1 = G_VALUE_INIT, v2 = G_VALUE_INIT, v3 = G_VALUE_INIT;
+
+    fail_unless (s1 != NULL);
+    fail_unless (s2 != NULL);
+
+    GST_DEBUG ("checking %s with structure1 %" GST_PTR_FORMAT " structure2 %"
+        GST_PTR_FORMAT " is %d, %s", comparisons[i].op, s1, s2,
+        comparisons[i].ret, comparisons[i].str_result);
+
+    g_value_init (&v1, GST_TYPE_STRUCTURE);
+    gst_value_set_structure (&v1, s1);
+    g_value_init (&v2, GST_TYPE_STRUCTURE);
+    gst_value_set_structure (&v2, s2);
+
+    if (g_strcmp0 (comparisons[i].op, "compare") == 0) {
+      fail_unless (gst_value_compare (&v1, &v2) == comparisons[i].ret);
+    } else if (g_strcmp0 (comparisons[i].op, "is_subset") == 0) {
+      fail_unless (gst_value_is_subset (&v1, &v2) == comparisons[i].ret);
+    } else {
+      if (g_strcmp0 (comparisons[i].op, "intersect") == 0) {
+        fail_unless (gst_value_intersect (&v3, &v1, &v2) == comparisons[i].ret);
+      } else if (g_strcmp0 (comparisons[i].op, "union") == 0) {
+        fail_unless (gst_value_union (&v3, &v1, &v2) == comparisons[i].ret);
+      }
+      if (comparisons[i].ret) {
+        GValue result = G_VALUE_INIT;
+        gchar *str;
+
+        str = gst_value_serialize (&v3);
+        GST_LOG ("result %s", str);
+        g_free (str);
+
+        g_value_init (&result, comparisons[i].str_type);
+        fail_unless (gst_value_deserialize (&result,
+                comparisons[i].str_result));
+        fail_unless (gst_value_compare (&result, &v3) == GST_VALUE_EQUAL);
+        g_value_unset (&v3);
+        g_value_unset (&result);
+      }
+    }
+
+    gst_structure_free (s1);
+    gst_structure_free (s2);
+    g_value_unset (&v1);
+    g_value_unset (&v2);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_value_suite (void)
 {
@@ -3160,6 +3318,9 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_stepped_int_range_parsing);
   tcase_add_test (tc_chain, test_stepped_int_range_ops);
   tcase_add_test (tc_chain, test_flagset);
+  tcase_add_test (tc_chain, test_structure_basic);
+  tcase_add_test (tc_chain, test_structure_single_ops);
+  tcase_add_test (tc_chain, test_structure_ops);
 
   return s;
 }

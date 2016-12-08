@@ -327,7 +327,8 @@ gst_type_is_fixed (GType type)
   /* our fundamental types that are certainly not fixed */
   if (type == GST_TYPE_INT_RANGE || type == GST_TYPE_DOUBLE_RANGE ||
       type == GST_TYPE_INT64_RANGE ||
-      type == GST_TYPE_LIST || type == GST_TYPE_FRACTION_RANGE) {
+      type == GST_TYPE_LIST || type == GST_TYPE_FRACTION_RANGE ||
+      type == GST_TYPE_STRUCTURE) {
     return FALSE;
   }
   /* other (boxed) types that are fixed */
@@ -3550,6 +3551,21 @@ gst_value_is_subset_flagset_flagset (const GValue * value1,
   return TRUE;
 }
 
+static gboolean
+gst_value_is_subset_structure_structure (const GValue * value1,
+    const GValue * value2)
+{
+  const GstStructure *s1, *s2;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_STRUCTURE (value1), FALSE);
+  g_return_val_if_fail (GST_VALUE_HOLDS_STRUCTURE (value2), FALSE);
+
+  s1 = gst_value_get_structure (value1);
+  s2 = gst_value_get_structure (value2);
+
+  return gst_structure_is_subset (s1, s2);
+}
+
 /**
  * gst_value_is_subset:
  * @value1: a #GValue
@@ -3574,6 +3590,9 @@ gst_value_is_subset (const GValue * value1, const GValue * value2)
   } else if (GST_VALUE_HOLDS_FLAG_SET (value1) &&
       GST_VALUE_HOLDS_FLAG_SET (value2)) {
     return gst_value_is_subset_flagset_flagset (value1, value2);
+  } else if (GST_VALUE_HOLDS_STRUCTURE (value1)
+      && GST_VALUE_HOLDS_STRUCTURE (value2)) {
+    return gst_value_is_subset_structure_structure (value1, value2);
   }
 
   /*
@@ -3771,6 +3790,81 @@ gst_value_union_flagset_flagset (GValue * dest, const GValue * src1,
   }
 
   return TRUE;
+}
+
+/* iterating over the result taking the union with the other structure's value */
+static gboolean
+structure_field_union_into (GQuark field_id, GValue * val, gpointer user_data)
+{
+  GstStructure *other = user_data;
+  const GValue *other_value;
+  GValue res_value = G_VALUE_INIT;
+
+  other_value = gst_structure_id_get_value (other, field_id);
+  /* no value in the other struct, just keep this value */
+  if (!other_value)
+    return TRUE;
+
+  if (!gst_value_union (&res_value, val, other_value))
+    return FALSE;
+
+  g_value_unset (val);
+  gst_value_init_and_copy (val, &res_value);
+  return TRUE;
+}
+
+/* iterating over the other source structure adding missing values */
+static gboolean
+structure_field_union_from (GQuark field_id, const GValue * other_val,
+    gpointer user_data)
+{
+  GstStructure *result = user_data;
+  const GValue *result_value;
+
+  result_value = gst_structure_id_get_value (result, field_id);
+  if (!result_value)
+    gst_structure_id_set_value (result, field_id, other_val);
+
+  return TRUE;
+}
+
+static gboolean
+gst_value_union_structure_structure (GValue * dest, const GValue * src1,
+    const GValue * src2)
+{
+  const GstStructure *s1, *s2;
+  GstStructure *result;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_STRUCTURE (src1), FALSE);
+  g_return_val_if_fail (GST_VALUE_HOLDS_STRUCTURE (src2), FALSE);
+
+  s1 = gst_value_get_structure (src1);
+  s2 = gst_value_get_structure (src2);
+
+  /* Can't join two structures with different names into a single structure */
+  if (!gst_structure_has_name (s1, gst_structure_get_name (s2))) {
+    gst_value_list_concat (dest, src1, src2);
+    return TRUE;
+  }
+
+  result = gst_structure_copy (s1);
+  ret =
+      gst_structure_map_in_place (result, structure_field_union_into,
+      (gpointer) s2);
+  if (!ret)
+    goto out;
+  ret =
+      gst_structure_foreach (s2, structure_field_union_from, (gpointer) result);
+
+  if (ret) {
+    g_value_init (dest, GST_TYPE_STRUCTURE);
+    gst_value_set_structure (dest, result);
+  }
+
+out:
+  gst_structure_free (result);
+  return ret;
 }
 
 /****************
@@ -4149,6 +4243,29 @@ gst_value_intersect_flagset_flagset (GValue * dest,
     dest->data[1].v_uint = m1 | m2;
   }
 
+  return TRUE;
+}
+
+static gboolean
+gst_value_intersect_structure_structure (GValue * dest,
+    const GValue * src1, const GValue * src2)
+{
+  const GstStructure *s1, *s2;
+  GstStructure *d1;
+
+  s1 = gst_value_get_structure (src1);
+  s2 = gst_value_get_structure (src2);
+
+  d1 = gst_structure_intersect (s1, s2);
+  if (!d1)
+    return FALSE;
+
+  if (dest) {
+    g_value_init (dest, GST_TYPE_STRUCTURE);
+    gst_value_set_structure (dest, d1);
+  }
+
+  gst_structure_free (d1);
   return TRUE;
 }
 
@@ -4695,7 +4812,6 @@ gst_value_subtract_fraction_range_fraction_range (GValue * dest,
   }
   return TRUE;
 }
-
 
 /**************
  * comparison *
@@ -5305,6 +5421,8 @@ gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
   /* special cases */
   if (mtype == GST_TYPE_LIST || stype == GST_TYPE_LIST)
     return TRUE;
+  if (mtype == GST_TYPE_STRUCTURE || stype == GST_TYPE_STRUCTURE)
+    return FALSE;
 
   len = gst_value_subtract_funcs->len;
   for (i = 0; i < len; i++) {
@@ -5491,6 +5609,13 @@ gst_value_deserialize (GValue * dest, const gchar * src)
   return FALSE;
 }
 
+static gboolean
+structure_field_is_fixed (GQuark field_id, const GValue * val,
+    gpointer user_data)
+{
+  return gst_value_is_fixed (val);
+}
+
 /**
  * gst_value_is_fixed:
  * @value: the #GValue to check
@@ -5532,6 +5657,9 @@ gst_value_is_fixed (const GValue * value)
   } else if (GST_VALUE_HOLDS_FLAG_SET (value)) {
     /* Flagsets are only fixed if there are no 'don't care' bits */
     return (gst_value_get_flagset_mask (value) == GST_FLAG_SET_MASK_EXACT);
+  } else if (GST_VALUE_HOLDS_STRUCTURE (value)) {
+    return gst_structure_foreach (gst_value_get_structure (value),
+        structure_field_is_fixed, NULL);
   }
   return gst_type_is_fixed (type);
 }
@@ -5606,6 +5734,19 @@ gst_value_fixate (GValue * dest, const GValue * src)
     flags = gst_value_get_flagset_flags (src);
     g_value_init (dest, G_VALUE_TYPE (src));
     gst_value_set_flagset (dest, flags, GST_FLAG_SET_MASK_EXACT);
+    return TRUE;
+  } else if (GST_VALUE_HOLDS_STRUCTURE (src)) {
+    const GstStructure *str = (GstStructure *) gst_value_get_structure (src);
+    GstStructure *kid;
+
+    if (!str)
+      return FALSE;
+
+    kid = gst_structure_copy (str);
+    gst_structure_fixate (kid);
+    g_value_init (dest, GST_TYPE_STRUCTURE);
+    gst_value_set_structure (dest, kid);
+    gst_structure_free (kid);
     return TRUE;
   } else {
     return FALSE;
@@ -6771,9 +6912,10 @@ G_STMT_START {                                                          \
 
 /* These initial sizes are used for the tables
  * below, and save a couple of reallocs at startup */
+
 static const gint GST_VALUE_TABLE_DEFAULT_SIZE = 35;
-static const gint GST_VALUE_UNION_TABLE_DEFAULT_SIZE = 3;
-static const gint GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE = 10;
+static const gint GST_VALUE_UNION_TABLE_DEFAULT_SIZE = 4;
+static const gint GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE = 11;
 static const gint GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE = 12;
 
 void
@@ -6905,6 +7047,8 @@ _priv_gst_value_initialize (void)
       gst_value_intersect_fraction_range_fraction_range);
   gst_value_register_intersect_func (GST_TYPE_FLAG_SET, GST_TYPE_FLAG_SET,
       gst_value_intersect_flagset_flagset);
+  gst_value_register_intersect_func (GST_TYPE_STRUCTURE, GST_TYPE_STRUCTURE,
+      gst_value_intersect_structure_structure);
 
   gst_value_register_subtract_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_subtract_int_int_range);
@@ -6945,6 +7089,8 @@ _priv_gst_value_initialize (void)
       gst_value_union_int_range_int_range);
   gst_value_register_union_func (GST_TYPE_FLAG_SET, GST_TYPE_FLAG_SET,
       gst_value_union_flagset_flagset);
+  gst_value_register_union_func (GST_TYPE_STRUCTURE, GST_TYPE_STRUCTURE,
+      gst_value_union_structure_structure);
 
 #if GST_VERSION_NANO == 1
   /* If building from git master, check starting array sizes matched actual size
