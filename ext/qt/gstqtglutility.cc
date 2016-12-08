@@ -83,10 +83,10 @@ gst_qt_get_gl_display ()
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_WINDOW_ANDROID
   if (QString::fromUtf8 ("android") == app->platformName())
-    display = (GstGLDisplay *) gst_gl_display_egl_new ();
+    display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (eglGetDisplay(EGL_DEFAULT_DISPLAY));
 #elif GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
   if (QString::fromUtf8("eglfs") == app->platformName())
-    display = (GstGLDisplay *) gst_gl_display_egl_new ();
+    display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (eglGetDisplay(EGL_DEFAULT_DISPLAY));
 #endif
 
 #if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
