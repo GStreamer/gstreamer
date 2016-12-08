@@ -64,6 +64,12 @@
   "alignment = (string) au, " \
   COMMON_VIDEO_CAPS
 
+#define H265_CAPS \
+  "video/x-h265, " \
+  "stream-format = (string) { hvc1, hev1 }, " \
+  "alignment = (string) au, " \
+  COMMON_VIDEO_CAPS
+
 #define MPEG4V_CAPS \
   "video/mpeg, " \
   "mpegversion = (int) 4, "\
@@ -173,6 +179,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             PRORES_CAPS "; "
             H263_CAPS "; "
             H264_CAPS "; "
+            H265_CAPS "; "
             SVQ_CAPS "; "
             "video/x-dv, "
             "systemstream = (boolean) false, "
@@ -202,7 +209,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "MP4",
         "GstMP4Mux",
         GST_STATIC_CAPS ("video/quicktime, variant = (string) iso"),
-        GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";"
+        GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";" H265_CAPS ";"
             "video/x-mp4-part," COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (MP123_CAPS "; "
             AAC_CAPS " ; " AC3_CAPS " ; " ALAC_CAPS " ; " OPUS_CAPS),
