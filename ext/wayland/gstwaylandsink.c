@@ -349,6 +349,9 @@ gst_wayland_sink_change_state (GstElement * element, GstStateChange transition)
        */
       if (sink->display && !sink->window) {     /* -> the window was toplevel */
         g_clear_object (&sink->display);
+        g_mutex_lock (&sink->render_lock);
+        sink->redraw_pending = FALSE;
+        g_mutex_unlock (&sink->render_lock);
       }
       g_mutex_unlock (&sink->display_lock);
       g_clear_object (&sink->pool);
@@ -617,8 +620,10 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   }
 
   /* drop buffers until we get a frame callback */
-  if (sink->redraw_pending)
+  if (sink->redraw_pending) {
+    GST_LOG_OBJECT (sink, "buffer %p dropped (redraw pending)", buffer);
     goto done;
+  }
 
   /* make sure that the application has called set_render_rectangle() */
   if (G_UNLIKELY (sink->window->render_rectangle.w == 0))
