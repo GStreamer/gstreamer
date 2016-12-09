@@ -1274,7 +1274,6 @@ gst_type_find_element_activate_sink (GstPad * pad, GstObject * parent)
 {
   GstQuery *query;
   gboolean pull_mode;
-  GstSchedulingFlags sched_flags;
 
   query = gst_query_new_scheduling ();
 
@@ -1283,10 +1282,8 @@ gst_type_find_element_activate_sink (GstPad * pad, GstObject * parent)
     goto typefind_push;
   }
 
-  gst_query_parse_scheduling (query, &sched_flags, NULL, NULL, NULL);
-
-  pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL)
-      && ((sched_flags & GST_SCHEDULING_FLAG_SEEKABLE) != 0);
+  pull_mode = gst_query_has_scheduling_mode_with_flags (query,
+      GST_PAD_MODE_PULL, GST_SCHEDULING_FLAG_SEEKABLE);
 
   gst_query_unref (query);
 
