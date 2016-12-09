@@ -12,25 +12,25 @@ CFILES =\
 	check_print.c	\
 	check_run.c	\
 	check_str.c	\
-	libcompat.c
+	libcompat/libcompat.c
 
 if !HAVE_ALARM
-CFILES += alarm.c
+CFILES += libcompat/alarm.c
 endif
 
 if !HAVE_CLOCK_GETTIME
-CFILES += clock_gettime.c
+CFILES += libcompat/clock_gettime.c
 endif
 
 if !HAVE_STRSIGNAL
-CFILES += strsignal.c
+CFILES += libcompat/strsignal.c
 endif
 
 if !HAVE_TIMER_CREATE_SETTIME_DELETE
 CFILES +=\
-	timer_create.c	\
-	timer_settime.c	\
-	timer_delete.c
+	libcompat/timer_create.c	\
+	libcompat/timer_settime.c	\
+	libcompat/timer_delete.c
 endif
 
 HFILES =\
@@ -42,7 +42,7 @@ HFILES =\
 	check_pack.h	\
 	check_print.h	\
 	check_str.h	\
-	libcompat.h
+	libcompat/libcompat.h
 
 noinst_HEADERS = $(HFILES)
 
