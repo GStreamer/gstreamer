@@ -11,6 +11,12 @@ those in the lib/ directory upstream.
 lib/snprintf.c was omitted since we don't run on any platforms that don't
 provide snprintf and the upstream implementation is ~2000 lines.
 
+lib/malloc.c and lib/realloc.c were omitted since we were doing fine without
+them and it does a #define malloc rpl_malloc on Android because the malloc
+shipped with Bionic is not GNU-compliant. rpl_malloc is provided by libcheck,
+but not everything in gstreamer links against libcheck. We also don't care
+about this.
+
 Steps to sync with upstream:
 
 1. Clone libcheck from the above git repository

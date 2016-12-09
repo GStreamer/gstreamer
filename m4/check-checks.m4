@@ -18,11 +18,6 @@ AC_SUBST(CHECK_VERSION)
 dnl Checks for header files and declarations
 AC_CHECK_HEADERS([unistd.h sys/wait.h sys/time.h], [], [], [AC_INCLUDES_DEFAULT])
 
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
-AM_CONDITIONAL(HAVE_MALLOC, test "x$ac_cv_func_malloc" = "xyes")
-AM_CONDITIONAL(HAVE_REALLOC, test "x$ac_cv_func_realloc" = "xyes")
-
 dnl Check for localtime_r()
 AC_CHECK_FUNCS([localtime_r])
 AM_CONDITIONAL(HAVE_LOCALTIME_R, test "x$ac_cv_func_localtime_r" = "xyes")

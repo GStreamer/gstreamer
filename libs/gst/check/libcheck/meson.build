@@ -27,14 +27,6 @@ if not cdata.has('HAVE_DECL_LOCALTIME_R')
   libcheck_files += ['libcompat/localtime_r.c']
 endif
 
-if not cdata.has('HAVE_MALLOC')
-  libcheck_files += ['libcompat/malloc.c']
-endif
-
-if not cdata.has('HAVE_REALLOC')
-  libcheck_files += ['libcompat/realloc.c']
-endif
-
 if not cdata.has('HAVE_DECL_STRSIGNAL')
   libcheck_files += ['libcompat/strsignal.c']
 endif
@@ -68,6 +60,6 @@ libcheck = static_library('check',
   dependencies : [rt_lib, mathlib],
   c_args: gst_c_args +
 	  # Don't want libcompat to think we don't have these and substitute
-	  # replacements since we don't check for or define these.
-	  ['-DHAVE_VSNPRINTF', '-DHAVE_SNPRINTF'],
+	  # replacements since we don't check for or define these. See libcompat.h
+	  ['-DHAVE_VSNPRINTF', '-DHAVE_SNPRINTF', '-DHAVE_MALLOC', '-DHAVE_REALLOC'],
   pic: true)

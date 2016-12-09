@@ -30,28 +30,9 @@ if !HAVE_LOCALTIME_R
 CFILES += libcompat/localtime_r.c
 endif
 
-if !HAVE_MALLOC
-CFILES += libcompat/malloc.c
-endif
-
-if !HAVE_REALLOC
-CFILES += libcompat/realloc.c
-endif
-
 if !HAVE_STRSIGNAL
 CFILES += libcompat/strsignal.c
 endif
-
-# If either vsnprintf or snprintf is unavailable
-# XXX: Commented out because none of our supported platforms need it yet and the
-#      check is a bit involved. No use slowing everyone down for this yet.
-#if !HAVE_VSNPRINTF
-#CFILES += libcompat/snprintf.c
-#else
-#if !HAVE_SNPRINTF
-#CFILES += libcompat/snprintf.c
-#endif
-#endif
 
 if !HAVE_STRDUP
 CFILES += libcompat/strdup.c
@@ -95,5 +76,5 @@ libcheckinternal_la_CFLAGS	+= -D_GNU_SOURCE
 endif
 
 # Don't want libcompat to think we don't have these and substitute replacements
-# See the commented-out vsnprintf/snprintf CFILES stuff above
-libcheckinternal_la_CFLAGS	+= -DHAVE_SNPRINTF -DHAVE_VSNPRINTF
+# See libcompat/libcompat.h
+libcheckinternal_la_CFLAGS	+= -DHAVE_SNPRINTF -DHAVE_VSNPRINTF -DHAVE_MALLOC -DHAVE_REALLOC
