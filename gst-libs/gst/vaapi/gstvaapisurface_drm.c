@@ -45,12 +45,16 @@ gst_vaapi_surface_get_drm_buf_handle (GstVaapiSurface * surface, guint type)
 
   /* ERRORS */
 error_derive_image:
-  GST_ERROR ("failed to extract image handle from surface");
-  return NULL;
+  {
+    GST_ERROR ("failed to extract image handle from surface");
+    return NULL;
+  }
 error_alloc_export_buffer:
-  GST_ERROR ("failed to allocate export buffer proxy");
-  gst_vaapi_object_unref (image);
-  return NULL;
+  {
+    GST_ERROR ("failed to allocate export buffer proxy");
+    gst_vaapi_object_unref (image);
+    return NULL;
+  }
 }
 
 /**
