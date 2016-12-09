@@ -53,6 +53,7 @@ id3v2_ensure_debug_category (void)
 
 #endif /* GST_DISABLE_GST_DEBUG */
 
+/* Synch safe uints have 28 bits (256MB max) available. */
 guint
 id3v2_read_synch_uint (const guint8 * data, guint size)
 {
@@ -398,33 +399,16 @@ convert_fid_to_v240 (gchar * frame_id)
 
 /* add unknown or unhandled ID3v2 frames to the taglist as binary blobs */
 static void
-id3v2_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
+id3v2_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work,
+    guint8 * frame_data, guint frame_size)
 {
   GstBuffer *blob;
   GstSample *sample;
-  guint8 *frame_data;
 #if 0
   GstCaps *caps;
   gchar *media_type;
 #endif
-  guint frame_size, header_size;
   guint i;
-
-  switch (ID3V2_VER_MAJOR (work->hdr.version)) {
-    case 1:
-    case 2:
-      header_size = 3 + 3;
-      break;
-    case 3:
-    case 4:
-      header_size = 4 + 4 + 2;
-      break;
-    default:
-      g_return_if_reached ();
-  }
-
-  frame_data = work->hdr.frame_data - header_size;
-  frame_size = size + header_size;
 
   blob = gst_buffer_new_and_alloc (frame_size);
   gst_buffer_fill (blob, 0, frame_data, frame_size);
@@ -595,7 +579,9 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
         GST_LOG ("Extracted frame with id %s", frame_id);
       } else {
         GST_LOG ("Failed to extract frame with id %s", frame_id);
-        id3v2_add_id3v2_frame_blob_to_taglist (work, frame_size);
+        /* Rewind the frame data / size to pass the header too */
+        id3v2_add_id3v2_frame_blob_to_taglist (work,
+            work->hdr.frame_data - frame_hdr_size, frame_hdr_size + frame_size);
       }
     }
     work->hdr.frame_data += frame_size;
