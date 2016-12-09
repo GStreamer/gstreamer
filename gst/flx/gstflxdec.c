@@ -190,17 +190,27 @@ gst_flxdec_sink_event_handler (GstPad * pad, GstObject * parent,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
     {
-      GstSegment segment;
-
-      gst_event_copy_segment (event, &segment);
-      if (segment.format != GST_FORMAT_TIME) {
+      gst_event_copy_segment (event, &flxdec->segment);
+      if (flxdec->segment.format != GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (flxdec, "generating TIME segment");
-        gst_segment_init (&segment, GST_FORMAT_TIME);
+        gst_segment_init (&flxdec->segment, GST_FORMAT_TIME);
         gst_event_unref (event);
-        event = gst_event_new_segment (&segment);
+        event = gst_event_new_segment (&flxdec->segment);
       }
-      /* fall-through */
+
+      if (gst_pad_has_current_caps (flxdec->srcpad)) {
+        ret = gst_pad_event_default (pad, parent, event);
+      } else {
+        flxdec->need_segment = TRUE;
+        gst_event_unref (event);
+        ret = TRUE;
+      }
+      break;
     }
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&flxdec->segment, GST_FORMAT_UNDEFINED);
+      ret = gst_pad_event_default (pad, parent, event);
+      break;
     default:
       ret = gst_pad_event_default (pad, parent, event);
       break;
@@ -784,6 +794,12 @@ gst_flxdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       gst_pad_set_caps (flxdec->srcpad, caps);
       gst_caps_unref (caps);
 
+      if (flxdec->need_segment) {
+        gst_pad_push_event (flxdec->srcpad,
+            gst_event_new_segment (&flxdec->segment));
+        flxdec->need_segment = FALSE;
+      }
+
       /* zero means 8 */
       if (flxh->depth == 0)
         flxh->depth = 8;
@@ -932,6 +948,8 @@ gst_flxdec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (flxdec->adapter);
       flxdec->state = GST_FLXDEC_READ_HEADER;
+      gst_segment_init (&flxdec->segment, GST_FORMAT_UNDEFINED);
+      flxdec->need_segment = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;

@@ -41,7 +41,10 @@ typedef struct _GstFlxDec  GstFlxDec;
 struct _GstFlxDec {
   GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
+
+  GstSegment segment;
+  gboolean need_segment;
 
   gboolean active, new_meta;
 
