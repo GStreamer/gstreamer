@@ -80,6 +80,30 @@ gnome = import('gnome')
 
 gtkdoc = find_program('gtkdoc-scan', required : false)
 
+if gst_dep.type_name() == 'internal'
+    gst_proj = subproject('gstreamer')
+
+    if gst_proj.get_variable('disable_gst_debug')
+        message('GStreamer debug system is disabled')
+        add_project_arguments('-Wno-unused', language: 'c')
+    else
+        message('GStreamer debug system is enabled')
+    endif
+else
+    # We can't check that in the case of subprojects as we won't
+    # be able to build against an internal dependency (which is not built yet)
+    if not cc.compiles('''
+#include <gst/gstconfig.h>
+#ifdef GST_DISABLE_GST_DEBUG
+#error "debugging disabled, make compiler fail"
+#endif''' , dependencies: gst_dep)
+        message('GStreamer debug system is disabled')
+        add_global_arguments('-Wno-unused', language: 'c')
+    else
+        message('GStreamer debug system is enabled')
+    endif
+endif
+
 subdir('validate')
 
 python3 = find_program('python3')
