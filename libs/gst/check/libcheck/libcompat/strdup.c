@@ -20,20 +20,9 @@
 
 #include "libcompat.h"
 
-#if !defined(localtime_r)
-
-struct tm *
-localtime_r (const time_t * clock, struct tm *result)
+char *
+strdup (const char *str CK_ATTRIBUTE_UNUSED)
 {
-  struct tm *now = localtime (clock);
-
-  if (now == NULL) {
-    return NULL;
-  } else {
-    *result = *now;
-  }
-
-  return result;
+  assert (0);
+  return NULL;
 }
-
-#endif /* !defined(localtime_r) */

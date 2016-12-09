@@ -441,3 +441,11 @@
 #mesondefine HAVE_UNWIND
 #mesondefine HAVE_DW
 #mesondefine HAVE_BACKTRACE
+#mesondefine HAVE_MALLOC
+#mesondefine HAVE_REALLOC
+#mesondefine HAVE_GETTIMEOFDAY
+#mesondefine HAVE_GETLINE
+#mesondefine STRUCT_TIMESPEC_DEFINITION_MISSING
+#mesondefine STRUCT_ITIMERSPEC_DEFINITION_MISSING
+#mesondefine clockid_t
+#mesondefine timer_t

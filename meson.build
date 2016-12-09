@@ -152,6 +152,8 @@ if cc.has_function('gmtime_r', prefix : '#include<time.h>')
 endif
 if cc.has_function('localtime_r', prefix : '#include<time.h>')
   cdata.set('HAVE_LOCALTIME_R', 1)
+  # Needed by libcheck
+  cdata.set('HAVE_DECL_LOCALTIME_R', 1)
 endif
 if cc.has_function('sigaction', prefix : '#include<signal.h>')
   cdata.set('HAVE_SIGACTION', 1)
@@ -230,19 +232,20 @@ else
 endif
 
 # -------------------------------------------------------------------------------------
-# config.h things needed by libcheck (FIXME: move into the libcheck meson.build) (tpm)
+# config.h things needed by libcheck
 # -------------------------------------------------------------------------------------
-# FIXME: check if it is _getpid or getpid on windows (tpm)
 if cc.has_function('getpid', prefix : '#include <sys/types.h>\n#include <unistd.h>')
   cdata.set('HAVE_GETPID', 1)
 elif cc.has_function('_getpid', prefix : '#include <process.h>')
-  cdata.set('HAVE__GETPID', 1)
+  cdata.set('HAVE__GETPID', 1) # Windows (MSVC)
 endif
-# FIXME: check for _strdup() but how/where and with what includes? (windows?) (tpm)
 if cc.has_function('strdup', prefix : '#include <string.h>')
   cdata.set('HAVE_DECL_STRDUP', 1)
 elif cc.has_function('_strdup', prefix : '#include <string.h>')
-  cdata.set('HAVE__STRDUP', 1)
+  cdata.set('HAVE__STRDUP', 1) # Windows (MSVC)
+endif
+if cc.has_function('getline', prefix : '#include <stdio.h>')
+  cdata.set('HAVE_GETLINE', 1)
 endif
 if cc.has_function('mkstemp', prefix : '#include <stdlib.h>')
   cdata.set('HAVE_MKSTEMP', 1)
@@ -256,11 +259,26 @@ endif
 if cc.has_function('alarm', prefix : '#include <unistd.h>')
   cdata.set('HAVE_ALARM', 1)
 endif
-if cc.has_function('localtime_r', prefix : '#include <time.h>')
-  cdata.set('HAVE_DECL_LOCALTIME_R', 1)
+if cc.has_function('gettimeofday', prefix : '#include <sys/time.h>')
+  cdata.set('HAVE_GETTIMEOFDAY', 1)
 endif
 if cc.has_function('strsignal', prefix : '#include <string.h>')
   cdata.set('HAVE_DECL_STRSIGNAL', 1)
+endif
+# Check for availability of types
+if not cc.has_type('clockid_t', prefix : '#include <time.h>')
+  cdata.set('clockid_t', 'int')
+endif
+if not cc.has_type('timer_t', prefix : '#include <time.h>')
+  cdata.set('timer_t', 'int')
+endif
+if not cc.has_members('struct timespec', 'tv_sec', 'tv_nsec',
+		      prefix : '#include <time.h>')
+  cdata.set('STRUCT_TIMESPEC_DEFINITION_MISSING', 1)
+endif
+if not cc.has_members('struct itimerspec', 'it_interval', 'it_value',
+		      prefix : '#include <time.h>')
+  cdata.set('STRUCT_ITIMERSPEC_DEFINITION_MISSING', 1)
 endif
 
 # Platform deps; only ws2_32 and execinfo for now
@@ -318,7 +336,9 @@ else
 endif
 
 mathlib = cc.find_library('m', required : false)
-rt_lib = cc.find_library('rt', required : false) # clock_gettime
+# Needed for timer_create/settime/delete
+# Also provides clock_gettime in glibc < 2.17
+rt_lib = cc.find_library('rt', required : false)
 
 gir = find_program('g-ir-scanner', required : false)
 gnome = import('gnome')

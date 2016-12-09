@@ -19,21 +19,38 @@
  */
 
 #include "libcompat.h"
+#include <stdio.h>
 
-#if !defined(localtime_r)
+#define INITIAL_SIZE 16
+#define DELIMITER '\n'
 
-struct tm *
-localtime_r (const time_t * clock, struct tm *result)
+ssize_t
+getline (char **lineptr, size_t * n, FILE * stream)
 {
-  struct tm *now = localtime (clock);
+  ssize_t written = 0;
+  int character;
 
-  if (now == NULL) {
-    return NULL;
-  } else {
-    *result = *now;
+  if (*lineptr == NULL || *n < INITIAL_SIZE) {
+    free (*lineptr);
+    *lineptr = (char *) malloc (INITIAL_SIZE);
+    *n = INITIAL_SIZE;
   }
 
-  return result;
-}
+  while ((character = fgetc (stream)) != EOF) {
+    written += 1;
+    if (written >= *n) {
+      *n = *n * 2;
+      *lineptr = realloc (*lineptr, *n);
+    }
 
-#endif /* !defined(localtime_r) */
+    (*lineptr)[written - 1] = character;
+
+    if (character == DELIMITER) {
+      break;
+    }
+  }
+
+  (*lineptr)[written] = '\0';
+
+  return written;
+}

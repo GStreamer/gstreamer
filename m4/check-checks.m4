@@ -6,8 +6,8 @@ AC_DEFUN([AG_GST_CHECK_CHECKS],
 AC_MSG_NOTICE([Running check unit test framework checks now...])
 
 CHECK_MAJOR_VERSION=0
-CHECK_MINOR_VERSION=9
-CHECK_MICRO_VERSION=14
+CHECK_MINOR_VERSION=10
+CHECK_MICRO_VERSION=0
 CHECK_VERSION=$CHECK_MAJOR_VERSION.$CHECK_MINOR_VERSION.$CHECK_MICRO_VERSION
 
 AC_SUBST(CHECK_MAJOR_VERSION)
@@ -18,7 +18,18 @@ AC_SUBST(CHECK_VERSION)
 dnl Checks for header files and declarations
 AC_CHECK_HEADERS([unistd.h sys/wait.h sys/time.h], [], [], [AC_INCLUDES_DEFAULT])
 
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
+AM_CONDITIONAL(HAVE_MALLOC, test "x$ac_cv_func_malloc" = "xyes")
+AM_CONDITIONAL(HAVE_REALLOC, test "x$ac_cv_func_realloc" = "xyes")
+
+dnl Check for localtime_r()
 AC_CHECK_FUNCS([localtime_r])
+AM_CONDITIONAL(HAVE_LOCALTIME_R, test "x$ac_cv_func_localtime_r" = "xyes")
+
+dnl Check for gettimeofday()
+AC_CHECK_FUNCS([gettimeofday])
+AM_CONDITIONAL(HAVE_GETTIMEOFDAY, test "x$ac_cv_func_gettimeofday" = "xyes")
 
 dnl Check for getpid() and _getpid()
 AC_CHECK_FUNCS([getpid _getpid])
@@ -26,6 +37,11 @@ AC_CHECK_FUNCS([getpid _getpid])
 dnl Check for strdup() and _strdup()
 AC_CHECK_DECLS([strdup])
 AC_CHECK_FUNCS([_strdup])
+AM_CONDITIONAL(HAVE_STRDUP, test "x$ac_cv_have_decl_strdup" = "xyes" -o "x$ac_cv_func__strdup" = "xyes")
+
+dnl Check for getline()
+AC_CHECK_FUNCS([getline])
+AM_CONDITIONAL(HAVE_GETLINE, test "x$ac_cv_func_getline" = "xyes")
 
 dnl Check for mkstemp
 AC_CHECK_FUNCS([mkstemp])
@@ -69,9 +85,9 @@ AC_CHECK_MEMBERS([struct itimerspec.it_interval, struct itimerspec.it_value],
 #endif /* HAVE_PTHREAD */
 ])
 
-dnl Check if types timer_t/clockid_t are defined. If not, we need to define
-dnl it in libs/gst/check/libcheck/ibcompat.h. Note the optional inclusion of
-dnl pthread.h. On MinGW(-w64), the pthread.h file contains the
+dnl Check if types timer_t/clockid_t are defined. If not, we need to define it
+dnl in libs/gst/check/libcheck/libcompat/libcompat.h. Note the optional
+dnl inclusion of pthread.h. On MinGW(-w64), the pthread.h file contains the
 dnl timer_t/clockid_t definitions.
 AC_CHECK_TYPE(timer_t, [], [
     AC_DEFINE([timer_t], [int], [timer_t])

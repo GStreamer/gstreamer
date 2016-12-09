@@ -18,22 +18,24 @@
  * MA 02110-1301, USA.
  */
 
+/*
+ * AC_FUNC_MALLOC in configure defines malloc to rpl_malloc if
+ * malloc (0) is NULL to provide GNU compatibility
+ */
+
 #include "libcompat.h"
 
-#if !defined(localtime_r)
+/* malloc has been defined to rpl_malloc, so first undo that */
+#undef malloc
 
-struct tm *
-localtime_r (const time_t * clock, struct tm *result)
+/* this gives us the real malloc to use below */
+void *malloc (size_t n);
+
+/* force malloc(0) to return a valid pointer */
+void *
+rpl_malloc (size_t n)
 {
-  struct tm *now = localtime (clock);
-
-  if (now == NULL) {
-    return NULL;
-  } else {
-    *result = *now;
-  }
-
-  return result;
+  if (n == 0)
+    n = 1;
+  return malloc (n);
 }
-
-#endif /* !defined(localtime_r) */
