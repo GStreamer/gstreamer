@@ -458,10 +458,12 @@ set_display_res:
 }
 
 static gboolean
-gst_vaapidecode_negotiate (GstVideoDecoder * vdec)
+gst_vaapidecode_negotiate (GstVaapiDecode * decode)
 {
-  GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
+  GstVideoDecoder *const vdec = GST_VIDEO_DECODER (decode);
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (vdec);
+
+  GST_DEBUG_OBJECT (decode, "Input codec state changed, doing renegotiation");
 
   if (!gst_vaapi_plugin_base_set_caps (plugin, decode->sinkpad_caps, NULL))
     return FALSE;
@@ -469,7 +471,7 @@ gst_vaapidecode_negotiate (GstVideoDecoder * vdec)
     return FALSE;
   if (!gst_vaapi_plugin_base_set_caps (plugin, NULL, decode->srcpad_caps))
     return FALSE;
-  if (!GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (vdec))
+  if (!gst_video_decoder_negotiate (vdec))
     return FALSE;
 
   return TRUE;
@@ -507,8 +509,8 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
 
     if (gst_pad_needs_reconfigure (GST_VIDEO_DECODER_SRC_PAD (vdec))
         || alloc_renegotiate || caps_renegotiate) {
-      GST_INFO_OBJECT (decode, "input codec state changed: renegotiating");
-      if (!gst_video_decoder_negotiate (vdec))
+
+      if (!gst_vaapidecode_negotiate (decode))
         return GST_FLOW_ERROR;
     }
 
@@ -1308,7 +1310,6 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
   vdec_class->sink_query = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_query);
   vdec_class->getcaps = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_getcaps);
   vdec_class->sink_event = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_event);
-  vdec_class->negotiate = GST_DEBUG_FUNCPTR (gst_vaapidecode_negotiate);
 
   map = (GstVaapiDecoderMap *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
       GST_VAAPI_DECODE_PARAMS_QDATA);
