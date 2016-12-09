@@ -24,7 +24,10 @@
 #include <mach/clock.h>
 #include <mach/mach.h>
 #include <mach/mach_time.h>
-#include <CoreServices/CoreServices.h>
+#include <TargetConditionals.h>
+# if TARGET_OS_MAC
+#  include <CoreServices/CoreServices.h>
+# endif
 #include <unistd.h>
 #endif
 
