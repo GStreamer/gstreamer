@@ -25,7 +25,8 @@
 #include <mach/mach.h>
 #include <mach/mach_time.h>
 #include <TargetConditionals.h>
-# if TARGET_OS_MAC
+/* CoreServices.h is only available on macOS */
+# if TARGET_OS_MAC && !TARGET_OS_IPHONE
 #  include <CoreServices/CoreServices.h>
 # endif
 #include <unistd.h>
