@@ -6,7 +6,7 @@ gst_tracers_sources = [
 ]
 
 if not disable_gst_debug
-  gst_tracers_source += ['gstlog.c']
+  gst_tracers_sources += ['gstlog.c']
 endif
 
 if have_getrusage
