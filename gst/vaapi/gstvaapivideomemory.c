@@ -771,18 +771,17 @@ bail:
 
 error_no_surface:
   {
-    GST_ERROR_OBJECT (allocator, "Cannot create a VA Surface");
+    GST_ERROR ("Cannot create a VA Surface");
     return;
   }
 error_no_derive_image:
   {
-    GST_ERROR_OBJECT (allocator,
-        "Cannot create a derived image from surface %p", surface);
+    GST_ERROR ("Cannot create a derived image from surface %p", surface);
     goto bail;
   }
 error_cannot_map:
   {
-    GST_ERROR_OBJECT (allocator, "Cannot map VA derived image %p", image);
+    GST_ERROR ("Cannot map VA derived image %p", image);
     goto bail;
   }
 }
@@ -805,9 +804,9 @@ allocator_configure_image_info (GstVaapiDisplay * display,
 
   image = new_image (display, &allocator->image_info);
   if (!image)
-    goto error;
+    goto error_no_image;
   if (!gst_vaapi_image_map (image))
-    goto error;
+    goto error_cannot_map;
 
   gst_video_info_update_from_image (&allocator->image_info, image);
   gst_vaapi_image_unmap (image);
@@ -818,9 +817,14 @@ bail:
   return;
 
   /* ERRORS */
-error:
+error_no_image:
   {
-    GST_ERROR_OBJECT (allocator, "Cannot create or map a VA image");
+    GST_ERROR ("Cannot create VA image");
+    return;
+  }
+error_cannot_map:
+  {
+    GST_ERROR ("Failed to map VA image %p", image);
     goto bail;
   }
 }
