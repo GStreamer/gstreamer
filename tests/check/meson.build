@@ -30,7 +30,7 @@ core_tests = [
   [ 'gst/gstobject.c' ],
   [ 'gst/gstpad.c', not have_registry ],
   [ 'gst/gstparamspecs.c' ],
-  [ 'gst/gstprintf.c', not have_debug ],
+  [ 'gst/gstprintf.c', disable_gst_debug],
   [ 'gst/gstpipeline.c', not have_registry ],
   [ 'gst/gstpoll.c' ],
   [ 'gst/gstplugin.c', not have_registry ],

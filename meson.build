@@ -316,6 +316,12 @@ if cc.has_header('execinfo.h')
   endif
 endif
 
+disable_gst_debug = get_option('disable_gst_debug')
+if get_option('disable_gst_debug')
+    cdata.set('GST_DISABLE_GST_DEBUG_DEFINE', '#define GST_DISABLE_GST_DEBUG 1')
+  add_project_arguments(['-Wno-unused'], language: 'c')
+endif
+
 configure_file(input : 'config.h.meson',
   output : 'config.h',
   configuration : cdata)
