@@ -7215,77 +7215,53 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_apcn:
       case FOURCC_apco:
       case FOURCC_ap4h:
+      case FOURCC_H264:
+      case FOURCC_avc1:
+      case FOURCC_avc3:
+      case FOURCC_H265:
+      case FOURCC_hvc1:
+      case FOURCC_hev1:
+      case FOURCC_mjp2:
+      case FOURCC_encv:
       {
-        const guint8 *buf;
         guint32 version;
-        int tlen;
+        guint32 str_len;
 
         /* codec_data is contained inside these atoms, which all have
          * the same format. */
+        /* video sample description size is 86 bytes without extension.
+         * node_length have to be bigger than 86 bytes because video sample
+         * description can include extenstions such as esds, fiel, glbl, etc. */
+        if (node_length < 86) {
+          GST_WARNING_OBJECT (qtdemux, "%" GST_FOURCC_FORMAT
+              " sample description length too short (%u < 86)",
+              GST_FOURCC_ARGS (fourcc), node_length);
+          break;
+        }
 
         GST_DEBUG_OBJECT (qtdemux, "parsing in %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (fourcc));
+
+        /* version (2 bytes) : this is set to 0, unless a compressor has changed
+         *              its data format.
+         * revision level (2 bytes) : must be set to 0. */
         version = QT_UINT32 (buffer + 16);
         GST_DEBUG_OBJECT (qtdemux, "version %08x", version);
-        if (1 || version == 0x00000000) {
-          buf = buffer + 0x32;
 
-          /* FIXME Quicktime uses PASCAL string while
-           * the iso format uses C strings. Check the file
-           * type before attempting to parse the string here. */
-          tlen = QT_UINT8 (buf);
-          GST_DEBUG_OBJECT (qtdemux, "tlen = %d", tlen);
-          buf++;
-          GST_DEBUG_OBJECT (qtdemux, "string = %.*s", tlen, (char *) buf);
-          /* the string has a reserved space of 32 bytes so skip
-           * the remaining 31 */
-          buf += 31;
-          buf += 4;             /* and 4 bytes reserved */
+        /* compressor name : PASCAL string and informative purposes
+         * first byte : the number of bytes to be displayed.
+         *              it has to be less than 32 because it is reserved
+         *              space of 32 bytes total including itself. */
+        str_len = QT_UINT8 (buffer + 50);
+        if (str_len < 32)
+          GST_DEBUG_OBJECT (qtdemux, "compressorname = %.*s", str_len,
+              (char *) buffer + 51);
+        else
+          GST_WARNING_OBJECT (qtdemux,
+              "compressorname length too big (%u > 31)", str_len);
 
-          GST_MEMDUMP_OBJECT (qtdemux, "mp4v", buf, end - buf);
-
-          qtdemux_parse_container (qtdemux, node, buf, end);
-        }
-        break;
-      }
-      case FOURCC_H264:
-      {
-        GST_MEMDUMP_OBJECT (qtdemux, "H264", buffer, end - buffer);
-        qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
-        break;
-      }
-      case FOURCC_avc1:
-      {
-        GST_MEMDUMP_OBJECT (qtdemux, "avc1", buffer, end - buffer);
-        qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
-        break;
-      }
-      case FOURCC_avc3:
-      {
-        GST_MEMDUMP_OBJECT (qtdemux, "avc3", buffer, end - buffer);
-        qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
-        break;
-      }
-      case FOURCC_H265:
-      {
-        GST_MEMDUMP_OBJECT (qtdemux, "H265", buffer, end - buffer);
-        qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
-        break;
-      }
-      case FOURCC_hvc1:
-      {
-        GST_MEMDUMP_OBJECT (qtdemux, "hvc1", buffer, end - buffer);
-        qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
-        break;
-      }
-      case FOURCC_hev1:
-      {
-        GST_MEMDUMP_OBJECT (qtdemux, "hev1", buffer, end - buffer);
-        qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
-        break;
-      }
-      case FOURCC_mjp2:
-      {
+        GST_MEMDUMP_OBJECT (qtdemux, "video sample description", buffer,
+            end - buffer);
         qtdemux_parse_container (qtdemux, node, buffer + 86, end);
         break;
       }
@@ -7306,6 +7282,12 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       {
         guint32 version;
         guint32 offset;
+
+        if (length < 16) {
+          GST_LOG_OBJECT (qtdemux, "skipping small %" GST_FOURCC_FORMAT " box",
+              GST_FOURCC_ARGS (fourcc));
+          break;
+        }
 
         version = QT_UINT32 (buffer + 12);
         GST_DEBUG_OBJECT (qtdemux, "parsing XiTh atom version 0x%08x", version);
@@ -7331,11 +7313,6 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_uuid:
       {
         qtdemux_parse_uuid (qtdemux, buffer, end - buffer);
-        break;
-      }
-      case FOURCC_encv:
-      {
-        qtdemux_parse_container (qtdemux, node, buffer + 86, end);
         break;
       }
       case FOURCC_enca:
