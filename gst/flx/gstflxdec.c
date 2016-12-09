@@ -902,10 +902,9 @@ gst_flxdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     }
   }
 
+need_more_data:
   gst_buffer_unmap (input, &map_info);
   gst_buffer_unref (input);
-
-need_more_data:
   return res;
 
   /* ERRORS */
@@ -914,8 +913,8 @@ parse_error:
       ("%s", "Failed to parse stream"), (NULL));
 unmap_input_error:
   gst_buffer_unmap (input, &map_info);
-  gst_buffer_unref (input);
 error:
+  gst_buffer_unref (input);
   return GST_FLOW_ERROR;
 }
 
