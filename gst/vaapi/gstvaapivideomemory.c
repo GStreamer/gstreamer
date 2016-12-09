@@ -712,14 +712,46 @@ gst_video_info_update_from_image (GstVideoInfo * vip, GstVaapiImage * image)
   return TRUE;
 }
 
+static gboolean
+gst_video_info_update_from_surface (GstVideoInfo * vip,
+    GstVaapiSurface * surface)
+{
+  GstVaapiImage *image;
+  gboolean ret;
+
+  ret = FALSE;
+  image = gst_vaapi_surface_derive_image (surface);
+  if (!image)
+    goto error_no_derive_image;
+  if (!gst_vaapi_image_map (image))
+    goto error_cannot_map;
+  ret = gst_video_info_update_from_image (vip, image);
+  gst_vaapi_image_unmap (image);
+
+bail:
+  gst_vaapi_object_unref (image);
+  return ret;
+
+  /* ERRORS */
+error_no_derive_image:
+  {
+    GST_ERROR ("Cannot create a VA derived image from surface %p", surface);
+    return FALSE;
+  }
+error_cannot_map:
+  {
+    GST_ERROR ("Cannot map VA derived image %p", image);
+    goto bail;
+  }
+}
+
 static inline void
 allocator_configure_surface_info (GstVaapiDisplay * display,
     GstVaapiVideoAllocator * allocator, GstVaapiImageUsageFlags req_usage_flag)
 {
   const GstVideoInfo *vinfo;
+  GstVideoInfo *sinfo;
   GstVaapiSurface *surface = NULL;
-  GstVaapiImage *image = NULL;
-  gboolean updated, has_direct_uploading, has_direct_rendering;
   GstVideoFormat fmt;
 
   vinfo = &allocator->allocation_info;
@@ -737,34 +769,28 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
   surface = new_surface (display, vinfo, req_usage_flag);
   if (!surface)
     goto error_no_surface;
-  image = gst_vaapi_surface_derive_image (surface);
-  if (!image)
-    goto error_no_derive_image;
-  if (!gst_vaapi_image_map (image))
-    goto error_cannot_map;
 
-  updated = gst_video_info_update_from_image (&allocator->surface_info, image);
+  sinfo = &allocator->surface_info;
+  if (!gst_video_info_update_from_surface (sinfo, surface))
+    goto bail;
 
-  has_direct_rendering = updated && use_direct_rendering (req_usage_flag)
-      && (GST_VAAPI_IMAGE_FORMAT (image) == GST_VIDEO_INFO_FORMAT (vinfo));
-  has_direct_uploading = updated && use_direct_uploading (req_usage_flag)
-      && (GST_VAAPI_IMAGE_FORMAT (image) == GST_VIDEO_INFO_FORMAT (vinfo));
+  /* if not the same format, don't use derived images */
+  if (GST_VIDEO_INFO_FORMAT (sinfo) != GST_VIDEO_INFO_FORMAT (vinfo))
+    goto bail;
 
-  gst_vaapi_image_unmap (image);
-
-  if (has_direct_rendering && !has_direct_uploading) {
+  if (use_direct_rendering (req_usage_flag)
+      && !use_direct_uploading (req_usage_flag)) {
     allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
     GST_INFO_OBJECT (allocator, "has direct-rendering for %s surfaces",
-        GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info));
-  } else if (!has_direct_rendering && has_direct_uploading) {
+        GST_VIDEO_INFO_FORMAT_STRING (sinfo));
+  } else if (!use_direct_rendering (req_usage_flag)
+      && use_direct_uploading (req_usage_flag)) {
     allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_UPLOAD;
     GST_INFO_OBJECT (allocator, "has direct-uploading for %s surfaces",
-        GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info));
+        GST_VIDEO_INFO_FORMAT_STRING (sinfo));
   }
 
 bail:
-  if (image)
-    gst_vaapi_object_unref (image);
   if (surface)
     gst_vaapi_object_unref (surface);
   return;
@@ -773,16 +799,6 @@ error_no_surface:
   {
     GST_ERROR ("Cannot create a VA Surface");
     return;
-  }
-error_no_derive_image:
-  {
-    GST_ERROR ("Cannot create a derived image from surface %p", surface);
-    goto bail;
-  }
-error_cannot_map:
-  {
-    GST_ERROR ("Cannot map VA derived image %p", image);
-    goto bail;
   }
 }
 
@@ -1026,59 +1042,47 @@ gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
 {
   GstVaapiDmaBufAllocator *allocator = NULL;
   GstVaapiSurface *surface = NULL;
-  GstVaapiImage *image = NULL;
   GstVideoInfo alloc_info;
+  GstAllocator *base_allocator;
 
   g_return_val_if_fail (display != NULL, NULL);
   g_return_val_if_fail (vip != NULL, NULL);
 
-  surface = gst_vaapi_surface_new_full (display, vip, flags);
-  if (!surface)
-    goto error_no_surface;
-
-  image = gst_vaapi_surface_derive_image (surface);
-  if (!image)
-    goto error_no_image;
-  if (!gst_vaapi_image_map (image))
-    goto error_map_failed;
-
-  gst_video_info_set_format (&alloc_info, GST_VIDEO_INFO_FORMAT (vip),
-      GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
-  gst_video_info_update_from_image (&alloc_info, image);
-  gst_vaapi_image_unmap (image);
-
   allocator = g_object_new (GST_VAAPI_TYPE_DMABUF_ALLOCATOR, NULL);
   if (!allocator)
     goto error_no_allocator;
-  gst_allocator_set_vaapi_video_info (GST_ALLOCATOR_CAST (allocator),
-      &alloc_info, flags);
 
-bail:
-  gst_vaapi_object_replace (&image, NULL);
+  base_allocator = GST_ALLOCATOR_CAST (allocator);
+
+  gst_video_info_set_format (&alloc_info, GST_VIDEO_INFO_FORMAT (vip),
+      GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
+  surface = gst_vaapi_surface_new_full (display, vip, flags);
+  if (!surface)
+    goto error_no_surface;
+  if (!gst_video_info_update_from_surface (&alloc_info, surface))
+    goto fail;
   gst_vaapi_object_replace (&surface, NULL);
-  return GST_ALLOCATOR_CAST (allocator);
+
+  gst_allocator_set_vaapi_video_info (base_allocator, &alloc_info, flags);
+
+  return base_allocator;
 
   /* ERRORS */
-error_no_surface:
+fail:
   {
-    GST_ERROR ("failed to create a new surface");
-    goto bail;
-  }
-error_no_image:
-  {
-    GST_ERROR ("failed derive surface to image for format: %s",
-        GST_VIDEO_INFO_FORMAT_STRING (vip));
-    goto bail;
-  }
-error_map_failed:
-  {
-    GST_ERROR ("failed to map image");
-    goto bail;
+    gst_vaapi_object_replace (&surface, NULL);
+    gst_object_replace ((GstObject **) & base_allocator, NULL);
+    return NULL;
   }
 error_no_allocator:
   {
     GST_ERROR ("failed to create a new dmabuf allocator");
-    goto bail;
+    return NULL;
+  }
+error_no_surface:
+  {
+    GST_ERROR ("failed to create a new surface");
+    goto fail;
   }
 }
 
