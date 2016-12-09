@@ -14,14 +14,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
  */
 
 #ifndef ERROR_H
 #define ERROR_H
 
-#include "libcompat.h"
+#include "libcompat/libcompat.h"
 #include <setjmp.h>
 
 extern jmp_buf error_jmp_buffer;

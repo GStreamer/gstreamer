@@ -14,12 +14,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
  */
 
 #ifndef CHECK_LIST_H
 #define CHECK_LIST_H
+
+#include <stdbool.h>
 
 typedef struct List List;
 
@@ -51,6 +53,9 @@ void check_list_advance (List * lp);
 void check_list_free (List * lp);
 
 void check_list_apply (List * lp, void (*fp) (void *));
+
+/* Return true if the list contains the value, false otherwise */
+bool check_list_contains (List * lp, void *val);
 
 
 #endif /* CHECK_LIST_H */

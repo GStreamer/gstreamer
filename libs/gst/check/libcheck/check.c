@@ -14,11 +14,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
  */
 
-#include "libcompat.h"
+#include "libcompat/libcompat.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -51,6 +51,8 @@
 int check_major_version = CHECK_MAJOR_VERSION;
 int check_minor_version = CHECK_MINOR_VERSION;
 int check_micro_version = CHECK_MICRO_VERSION;
+
+const char* current_test_name = NULL;
 
 static int non_pass (int val);
 static Fixture *fixture_create (SFun fun, int ischecked);
@@ -108,6 +110,7 @@ suite_free (Suite * s)
   free (s);
 }
 
+
 TCase *
 tcase_create (const char *name)
 {
@@ -150,10 +153,48 @@ tcase_create (const char *name)
   tc->ch_sflst = check_list_create ();
   tc->unch_tflst = check_list_create ();
   tc->ch_tflst = check_list_create ();
+  tc->tags = check_list_create ();
 
   return tc;
 }
 
+/*
+ * Helper function to create a list of tags from
+ * a space separated string.
+ */
+List *
+tag_string_to_list (const char *tags_string)
+{
+  List *list;
+  char *tags;
+  char *tag;
+
+  list = check_list_create ();
+
+  if (NULL == tags_string) {
+    return list;
+  }
+
+  tags = strdup (tags_string);
+  tag = strtok (tags, " ");
+  while (tag) {
+    check_list_add_end (list, strdup (tag));
+    tag = strtok (NULL, " ");
+  }
+  free (tags);
+  return list;
+}
+
+void
+tcase_set_tags (TCase * tc, const char *tags_orig)
+{
+  /* replace any pre-existing list */
+  if (tc->tags) {
+    check_list_apply (tc->tags, free);
+    check_list_free (tc->tags);
+  }
+  tc->tags = tag_string_to_list (tags_orig);
+}
 
 static void
 tcase_free (TCase * tc)
@@ -163,20 +204,44 @@ tcase_free (TCase * tc)
   check_list_apply (tc->ch_sflst, free);
   check_list_apply (tc->unch_tflst, free);
   check_list_apply (tc->ch_tflst, free);
+  check_list_apply (tc->tags, free);
   check_list_free (tc->tflst);
   check_list_free (tc->unch_sflst);
   check_list_free (tc->ch_sflst);
   check_list_free (tc->unch_tflst);
   check_list_free (tc->ch_tflst);
-
+  check_list_free (tc->tags);
   free (tc);
+}
+
+unsigned int
+tcase_matching_tag (TCase * tc, List * check_for)
+{
+
+  if (NULL == check_for) {
+    return 0;
+  }
+
+  for (check_list_front (check_for); !check_list_at_end (check_for);
+      check_list_advance (check_for)) {
+    for (check_list_front (tc->tags); !check_list_at_end (tc->tags);
+        check_list_advance (tc->tags)) {
+      if (0 == strcmp ((const char *) check_list_val (tc->tags),
+              (const char *) check_list_val (check_for))) {
+        return 1;
+      }
+    }
+  }
+  return 0;
 }
 
 void
 suite_add_tcase (Suite * s, TCase * tc)
 {
-  if (s == NULL || tc == NULL)
+  if (s == NULL || tc == NULL || check_list_contains (s->tclst, tc)) {
     return;
+  }
+
   check_list_add_end (s->tclst, tc);
 }
 
@@ -268,15 +333,23 @@ tcase_set_timeout (TCase * tc, double timeout)
   eprintf
       ("This version does not support timeouts, as fork is not supported",
       __FILE__, __LINE__);
+  /* Ignoring, as Check is not compiled with fork support. */
 #endif /* HAVE_FORK */
 }
 
 void
-tcase_fn_start (const char *fname CK_ATTRIBUTE_UNUSED, const char *file,
-    int line)
+tcase_fn_start (const char *fname, const char *file, int line)
 {
   send_ctx_info (CK_CTX_TEST);
   send_loc_info (file, line);
+ 
+  current_test_name = fname;
+}
+
+const char *
+tcase_name ()
+{
+  return current_test_name;
 }
 
 void
@@ -291,17 +364,26 @@ _ck_assert_failed (const char *file, int line, const char *expr, ...)
   const char *msg;
   va_list ap;
   char buf[BUFSIZ];
+  const char *to_send;
 
   send_loc_info (file, line);
 
   va_start (ap, expr);
   msg = (const char *) va_arg (ap, char *);
 
-  if (msg == NULL)
-    msg = expr;
-  vsnprintf (buf, BUFSIZ, msg, ap);
+  /*
+   * If a message was passed, format it with vsnprintf.
+   * Otherwise, print the expression as is.
+   */
+  if (msg != NULL) {
+    vsnprintf (buf, BUFSIZ, msg, ap);
+    to_send = buf;
+  } else {
+    to_send = expr;
+  }
+
   va_end (ap);
-  send_failure_info (buf);
+  send_failure_info (to_send);
   if (cur_fork_status () == CK_FORK) {
 #if defined(HAVE_FORK) && HAVE_FORK==1
     _exit (1);

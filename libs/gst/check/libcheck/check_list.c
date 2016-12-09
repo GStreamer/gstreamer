@@ -14,11 +14,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
  */
 
-#include "libcompat.h"
+#include "libcompat/libcompat.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -149,4 +149,16 @@ check_list_apply (List * lp, void (*fp) (void *))
   for (check_list_front (lp); !check_list_at_end (lp); check_list_advance (lp))
     fp (check_list_val (lp));
 
+}
+
+bool
+check_list_contains (List * lp, void *val)
+{
+  for (check_list_front (lp); !check_list_at_end (lp); check_list_advance (lp)) {
+    if (check_list_val (lp) == val) {
+      return true;
+    }
+  }
+
+  return false;
 }

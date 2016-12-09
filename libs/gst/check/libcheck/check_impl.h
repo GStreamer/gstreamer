@@ -1,6 +1,6 @@
 /*
  * Check: a unit test framework for C
- * Copyright (C) 2001,2002 Arien Malec
+ * Copyright (C) 2001, 2002 Arien Malec
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,8 +14,8 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
  */
 
 #ifndef CHECK_IMPL_H
@@ -65,6 +65,7 @@ struct TCase
   List *unch_tflst;
   List *ch_sflst;
   List *ch_tflst;
+  List *tags;
 };
 
 typedef struct TestStats
@@ -133,5 +134,8 @@ void set_fork_status (enum fork_status fstat);
 enum fork_status cur_fork_status (void);
 
 clockid_t check_get_clockid (void);
+
+unsigned int tcase_matching_tag (TCase * tc, List * check_for);
+List *tag_string_to_list (const char *tags_string);
 
 #endif /* CHECK_IMPL_H */

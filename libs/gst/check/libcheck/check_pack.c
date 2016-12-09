@@ -14,11 +14,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
  */
 
-#include "libcompat.h"
+#include "libcompat/libcompat.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -471,6 +471,8 @@ punpack (FILE * fdes)
     /* Parse one message */
     n = get_result (buf, rmsg);
     nparse -= n;
+    if (nparse < 0)
+      eprintf ("Error in call to get_result", __FILE__, __LINE__ - 3);
     /* Move remaining data in buffer to the beginning */
     memmove (buf, buf + n, nparse);
     /* If EOF has not been seen */

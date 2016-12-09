@@ -1,6 +1,6 @@
 /*
  * Check: a unit test framework for C
- * Copyright (C) 2001 2002, Arien Malec
+ * Copyright (C) 2001, 2002 Arien Malec
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,11 +14,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
  */
 
-#include "libcompat.h"
+#include "libcompat/libcompat.h"
 
 #include <sys/types.h>
 #include <stdlib.h>
@@ -174,7 +174,12 @@ construct_test_result (RcvMsg * rmsg, int waserror)
   tr = tr_create ();
 
   if (rmsg->msg != NULL || waserror) {
-    tr->ctx = rmsg->lastctx;
+    if (rmsg->failctx != CK_CTX_INVALID) {
+      tr->ctx = rmsg->failctx;
+    } else {
+      tr->ctx = rmsg->lastctx;
+    }
+
     tr->msg = rmsg->msg;
     rmsg->msg = NULL;
     tr_set_loc_by_ctx (tr, tr->ctx, rmsg);
@@ -257,7 +262,9 @@ open_tmp_file (char **name)
   if (!tmp_dir) {
     tmp_dir = ".";
   }
+
   *name = ck_strdup_printf ("%s/check_XXXXXX", tmp_dir);
+
   if (-1 < (fd = mkstemp (*name))) {
     file = fdopen (fd, "w+b");
     if (0 == unlink (*name) || NULL == file) {

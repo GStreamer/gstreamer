@@ -14,11 +14,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
  */
 
-#include "libcompat.h"
+#include "libcompat/libcompat.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -95,32 +95,48 @@ srunner_fprint_results (FILE * file, SRunner * sr, enum print_output print_mode)
 void
 fprint_xml_esc (FILE * file, const char *str)
 {
+  /* The valid XML characters are as follows:
+   *   #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+   * Characters that are outside of ASCII must be encoded. Further, the
+   * following special characters:
+   *   " ' < > &
+   * must be encoded. We assume that the incoming string may be a multibyte
+   * character.
+   */
+
   for (; *str != '\0'; str++) {
+    char next = *str;
 
-    switch (*str) {
-
-        /* handle special characters that must be escaped */
-      case '"':
-        fputs ("&quot;", file);
-        break;
-      case '\'':
-        fputs ("&apos;", file);
-        break;
-      case '<':
-        fputs ("&lt;", file);
-        break;
-      case '>':
-        fputs ("&gt;", file);
-        break;
-      case '&':
-        fputs ("&amp;", file);
-        break;
-
-        /* regular characters, print as is */
-      default:
-        fputc (*str, file);
-        break;
+    /* handle special characters that must be escaped */
+    if (next == '"' || next == '\'' || next == '<' || next == '>'
+        || next == '&') {
+      switch (next) {
+        case '"':
+          fputs ("&quot;", file);
+          break;
+        case '\'':
+          fputs ("&apos;", file);
+          break;
+        case '<':
+          fputs ("&lt;", file);
+          break;
+        case '>':
+          fputs ("&gt;", file);
+          break;
+        case '&':
+          fputs ("&amp;", file);
+          break;
+      }
     }
+    /* printable ASCII */
+    else if (next >= ' ' && next <= '~') {
+      fputc (next, file);
+    }
+    /* Non-printable character */
+    else if (next == 0x9 || next == 0xA || next == 0xD || next >= 0x20) {
+      fprintf (file, "&#x%X;", next);
+    }
+    /* If it did not get printed, it is not a valid XML character */
   }
 }
 
