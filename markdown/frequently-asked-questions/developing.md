@@ -175,6 +175,10 @@ attached individually to a bug report or feature request in
 [bugzilla](http://bugzilla.gnome.org). Please don't send patches to the
 mailing list, they will likely get lost there.
 
+See [How to submit patches][submit-patches] for more details.
+
+[submit-patches]: contribute/index.md#how-to-submit-patches
+
 ## I have translated one of the module .po files into a new language. How do I get it included?
 
 GStreamer translations are uniformly managed through the
