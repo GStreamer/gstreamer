@@ -189,6 +189,7 @@ index.md
 		design/qos.md
 		design/query.md
 		design/relations.md
+		design/rtp.md
 		design/scheduling.md
 		design/seeking.md
 		design/segments.md
