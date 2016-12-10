@@ -1133,7 +1133,7 @@ get_buffering_level (GstSingleQueue * sq)
     buffering_level = 0;
     if (sq->max_size.time > 0) {
       tmp =
-          gst_util_uint64_scale_int (sq->cur_time,
+          gst_util_uint64_scale (sq->cur_time,
           MAX_BUFFERING_LEVEL, sq->max_size.time);
       buffering_level = MAX (buffering_level, tmp);
     }
