@@ -283,7 +283,7 @@ main (int argc, gchar ** argv)
     return 1;
   }
 
-  g_object_set (data->pipeline, "uri", uri, "auto-select-streams", FALSE, NULL);
+  g_object_set (data->pipeline, "uri", uri, NULL);
   g_free (uri);
 
 #if 0
