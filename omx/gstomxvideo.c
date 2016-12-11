@@ -45,6 +45,7 @@ gst_omx_video_get_format_from_omx (OMX_COLOR_FORMATTYPE omx_colorformat)
       format = GST_VIDEO_FORMAT_I420;
       break;
     case OMX_COLOR_FormatYUV420SemiPlanar:
+    case OMX_COLOR_FormatYUV420PackedSemiPlanar:
       format = GST_VIDEO_FORMAT_NV12;
       break;
     case OMX_COLOR_FormatYUV422SemiPlanar:
@@ -74,6 +75,9 @@ gst_omx_video_get_format_from_omx (OMX_COLOR_FORMATTYPE omx_colorformat)
       break;
     case OMX_COLOR_Format16bitBGR565:
       format = GST_VIDEO_FORMAT_BGR16;
+      break;
+    case OMX_COLOR_Format24bitBGR888:
+      format = GST_VIDEO_FORMAT_BGR;
       break;
     default:
       format = GST_VIDEO_FORMAT_UNKNOWN;
