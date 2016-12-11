@@ -699,6 +699,7 @@ gst_scaletempo_start (GstBaseTransform * trans)
 
   gst_segment_init (&scaletempo->in_segment, GST_FORMAT_UNDEFINED);
   gst_segment_init (&scaletempo->out_segment, GST_FORMAT_UNDEFINED);
+  scaletempo->reinit_buffers = TRUE;
 
   return TRUE;
 }
@@ -718,6 +719,7 @@ gst_scaletempo_stop (GstBaseTransform * trans)
   scaletempo->buf_pre_corr = NULL;
   g_free (scaletempo->table_window);
   scaletempo->table_window = NULL;
+  scaletempo->reinit_buffers = TRUE;
 
   return TRUE;
 }
