@@ -526,6 +526,18 @@ gst_ttml_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_unref (event);
       break;
     }
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      gst_event_unref (event);
+
+      caps = gst_ttml_parse_get_src_caps (self);
+      event = gst_event_new_caps (caps);
+      gst_caps_unref (caps);
+
+      ret = gst_pad_push_event (self->srcpad, event);
+      break;
+    }
     default:
       ret = gst_pad_event_default (pad, parent, event);
       break;
