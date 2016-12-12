@@ -1267,6 +1267,8 @@ retry:
 
   /* Check if the port is flushing */
   if (port->flushing) {
+    GST_DEBUG_OBJECT (comp->parent, "Component %s port %d is flushing",
+        comp->name, port->index);
     ret = GST_OMX_ACQUIRE_BUFFER_FLUSHING;
     goto done;
   }
@@ -1292,6 +1294,8 @@ retry:
     /* Only if this port needs to be reconfigured too notify
      * the caller about it */
     if (port->settings_cookie != port->configured_settings_cookie) {
+      GST_DEBUG_OBJECT (comp->parent,
+          "Component %s port %d needs reconfiguring", comp->name, port->index);
       ret = GST_OMX_ACQUIRE_BUFFER_RECONFIGURE;
       goto done;
     }
@@ -1314,6 +1318,8 @@ retry:
       goto done;
     }
 
+    GST_DEBUG_OBJECT (comp->parent, "Component %s port %d needs reconfiguring",
+        comp->name, port->index);
     ret = GST_OMX_ACQUIRE_BUFFER_RECONFIGURE;
     goto done;
   }
@@ -1334,6 +1340,8 @@ retry:
       GST_DEBUG_OBJECT (comp->parent, "%s output port %u is EOS but waiting "
           "in case it spits out more buffers", comp->name, port->index);
     } else {
+      GST_DEBUG_OBJECT (comp->parent, "Component %s port %d signalled EOS",
+          comp->name, port->index);
       ret = GST_OMX_ACQUIRE_BUFFER_EOS;
       goto done;
     }
