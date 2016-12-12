@@ -2534,7 +2534,7 @@ gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
 
         stream->src = NULL;
         GST_DEBUG_OBJECT (demux, "Failed to re-use old source element: %s",
-            err->message);
+            err ? err->message : "Unknown error");
         g_clear_error (&err);
         gst_object_unref (stream->src_srcpad);
         stream->src_srcpad = NULL;
