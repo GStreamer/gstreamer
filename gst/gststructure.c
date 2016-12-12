@@ -1821,6 +1821,8 @@ gst_structure_get_abbrs (gint * n_abbrs)
       {"sample", GST_TYPE_SAMPLE}
       ,
       {"taglist", GST_TYPE_TAG_LIST}
+      ,
+      {"type", G_TYPE_GTYPE}
     };
     _num = G_N_ELEMENTS (dyn_abbrs);
     /* permanently allocate and copy the array now */
@@ -1982,7 +1984,9 @@ priv__gst_structure_append_template_to_gstring (GQuark field_id,
     g_string_append (s, "%" GST_WRAPPED_PTR_FORMAT);
   } else if (g_type_is_a (type, G_TYPE_ENUM)
       || g_type_is_a (type, G_TYPE_FLAGS)) {
-    g_string_append (s, "%i");
+    g_string_append_len (s, "%i", 2);
+  } else if (type == G_TYPE_GTYPE) {
+    g_string_append_len (s, "%s", 2);
   } else if (type == G_TYPE_POINTER) {
     g_string_append_len (s, "%p", 2);
   } else {

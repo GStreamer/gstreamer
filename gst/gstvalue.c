@@ -3427,6 +3427,38 @@ gst_value_deserialize_gflags (GValue * dest, const gchar * s)
   return res;
 }
 
+/*********
+ * gtype *
+ *********/
+
+static gint
+gst_value_compare_gtype (const GValue * value1, const GValue * value2)
+{
+  if (value1->data[0].v_pointer == value2->data[0].v_pointer)
+    return GST_VALUE_EQUAL;
+  return GST_VALUE_UNORDERED;
+}
+
+static gchar *
+gst_value_serialize_gtype (const GValue * value)
+{
+  return g_strdup (g_type_name (g_value_get_gtype (value)));
+}
+
+static gboolean
+gst_value_deserialize_gtype (GValue * dest, const gchar * s)
+{
+  GType t = g_type_from_name (s);
+  gboolean ret = TRUE;
+
+  if (t == G_TYPE_INVALID)
+    ret = FALSE;
+  if (ret) {
+    g_value_set_gtype (dest, t);
+  }
+  return ret;
+}
+
 /****************
  * subset *
  ****************/
@@ -6739,7 +6771,7 @@ G_STMT_START {                                                          \
 
 /* These initial sizes are used for the tables
  * below, and save a couple of reallocs at startup */
-static const gint GST_VALUE_TABLE_DEFAULT_SIZE = 34;
+static const gint GST_VALUE_TABLE_DEFAULT_SIZE = 35;
 static const gint GST_VALUE_UNION_TABLE_DEFAULT_SIZE = 3;
 static const gint GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE = 10;
 static const gint GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE = 12;
@@ -6803,6 +6835,8 @@ _priv_gst_value_initialize (void)
   REGISTER_SERIALIZATION_CONST (G_TYPE_ULONG, ulong);
 
   REGISTER_SERIALIZATION_CONST (G_TYPE_UCHAR, uchar);
+
+  REGISTER_SERIALIZATION (G_TYPE_GTYPE, gtype);
 
   g_value_register_transform_func (GST_TYPE_INT_RANGE, G_TYPE_STRING,
       gst_value_transform_int_range_string);

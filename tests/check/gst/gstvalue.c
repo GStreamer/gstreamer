@@ -489,6 +489,51 @@ GST_START_TEST (test_deserialize_flags)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deserialize_gtype)
+{
+  GValue value = { 0 };
+  const char *strings[] = {
+    "gchararray",
+    "gint",
+  };
+  GType results[] = {
+    G_TYPE_STRING,
+    G_TYPE_INT,
+  };
+  int i;
+
+  g_value_init (&value, G_TYPE_GTYPE);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_unless (gst_value_deserialize (&value, strings[i]),
+        "could not deserialize %s (%d)", strings[i], i);
+    fail_unless (g_value_get_gtype (&value) == results[i],
+        "resulting value is %" G_GSIZE_FORMAT ", not %" G_GSIZE_FORMAT
+        ", for string %s (%d)",
+        g_value_get_gtype (&value), results[i], strings[i], i);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_deserialize_gtype_failures)
+{
+  GValue value = { 0 };
+  const char *strings[] = {
+    "-",                        /* not a gtype */
+  };
+  int i;
+
+  g_value_init (&value, G_TYPE_GTYPE);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_if (gst_value_deserialize (&value, strings[i]),
+        "deserialized %s (%d), while it should have failed", strings[i], i);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_deserialize_bitmask)
 {
   GValue value = { 0 };
@@ -3087,6 +3132,8 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_guint64);
   tcase_add_test (tc_chain, test_deserialize_guchar);
   tcase_add_test (tc_chain, test_deserialize_gstfraction);
+  tcase_add_test (tc_chain, test_deserialize_gtype);
+  tcase_add_test (tc_chain, test_deserialize_gtype_failures);
   tcase_add_test (tc_chain, test_deserialize_bitmask);
   tcase_add_test (tc_chain, test_serialize_flags);
   tcase_add_test (tc_chain, test_deserialize_flags);
