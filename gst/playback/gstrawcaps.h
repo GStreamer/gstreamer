@@ -28,7 +28,7 @@ G_BEGIN_DECLS
 #define DEFAULT_RAW_CAPS \
     "video/x-raw(ANY); " \
     "audio/x-raw(ANY); " \
-    "text/x-raw; " \
+    "text/x-raw(ANY); " \
     "subpicture/x-dvd; " \
     "subpicture/x-dvb; " \
     "subpicture/x-xsub; " \
@@ -37,4 +37,3 @@ G_BEGIN_DECLS
 G_END_DECLS
 
 #endif /* __GST_RAW_CAPS__ */
-
