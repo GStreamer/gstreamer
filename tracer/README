@@ -1,0 +1,78 @@
+# Add a python api for tracer analyzers
+
+The python framework will parse the tracer log and aggregate information.
+the tool writer will subclass from the Analyzer class and override method like:
+
+  'pad_push_buffer_pre'
+
+There is one method for each hook. Each of those methods will receive the parse
+log line. In addition the framework will offer some extra api to allow to e.g.
+write:
+
+  pad.name()             # pad name
+  pad.parent().name()    # element name
+  pad.peer().parent()    # peer element
+  pad.parent().state()   # element state
+
+If we don't have full loging, we'd like to print a warning once, but make this
+non fatal if possible. E.g. if we don't have logging for
+element_{add,remove}_pad, we might not be able to provide pad.parent().
+
+A tool can replay the log multiple times. If it does, it won't work in
+'streaming' mode though. Streaming mode can offer live stats.
+
+## TODO
+Do we want to provide classes like GstBin, GstElement, GstPad, ... to aggregate
+info. We'd need to also provide a way to e.g. add a GstLogAnalyzer that knows
+about data from the log tracer and populates the classes. We need to be able to
+build a pipeline of analyzers, e.g. the analyzer calls GstLogAnalzer in its
+catch-all handler and then processes some events individually.
+
+Parse the tracer classes. Add helper that for numeric values extract them, and
+aggregate min/max/avg. Consider other statistical information (std. deviation)
+and provide a rolling average for live view.
+
+Think of how analyzer classes can be combined:
+- we'd like to build tools that import other analyzer classes and chain the
+  processing.
+
+## Examples
+### Sequence chart generator (mscgen)
+
+1.) Write file header
+
+2.) collect element order
+Replay the log and use pad_link_pre to collect pad->peer_pad relationship.
+Build a sequence of element names and write to msc file.
+
+3.) collect event processing
+Replay the log and use pad_push_event_pre to output message lines to mscfile.
+
+4.) write footer and run the tool.
+
+## Latency stats
+
+1.) collect per sink-latencies and for each sink per source latencies
+Calculate min, max, avg. Consider streaming interface, where we update the stats
+e.g. once a sec
+
+2.) in non-streaming mode write final statistic
+
+## cpu load stats
+
+Like latency stats, for cpu load. Process cpu load + per thread cpu load.
+
+## top
+
+Combine various stats tools into one.
+
+# Improve tracers
+## log
+* the log tracer logs args and results into misc categories
+* issues
+  * not easy/reliable to detect its output among other trace output
+  * not easy to match pre/post lines
+  * uses own do_log method, instead of gst_tracer_record_log
+    * if we also log structures, we need to log the 'function' as the
+      structure-name, also fields would be key=(type)val, instead of key=value
+    * if we switch to gst_tracer_record_log, we'd need to register 27 formats :/
