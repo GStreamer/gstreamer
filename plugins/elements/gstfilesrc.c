@@ -236,7 +236,8 @@ gst_file_src_finalize (GObject * object)
 }
 
 static gboolean
-gst_file_src_set_location (GstFileSrc * src, const gchar * location)
+gst_file_src_set_location (GstFileSrc * src, const gchar * location,
+    GError ** err)
 {
   GstState state;
 
@@ -272,6 +273,10 @@ wrong_state:
   {
     g_warning ("Changing the `location' property on filesrc when a file is "
         "open is not supported.");
+    if (err)
+      g_set_error (err, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
+          "Changing the `location' property on filesrc when a file is "
+          "open is not supported.");
     GST_OBJECT_UNLOCK (src);
     return FALSE;
   }
@@ -289,7 +294,7 @@ gst_file_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOCATION:
-      gst_file_src_set_location (src, g_value_get_string (value));
+      gst_file_src_set_location (src, g_value_get_string (value), NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -621,7 +626,7 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
     /* Special case for "file://" as this is used by some applications
      *  to test with gst_element_make_from_uri if there's an element
      *  that supports the URI protocol. */
-    gst_file_src_set_location (src, NULL);
+    gst_file_src_set_location (src, NULL, NULL);
     return TRUE;
   }
 
@@ -650,7 +655,7 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
     memmove (location, location + 1, strlen (location + 1) + 1);
 #endif
 
-  ret = gst_file_src_set_location (src, location);
+  ret = gst_file_src_set_location (src, location, err);
 
 beach:
   if (location)
