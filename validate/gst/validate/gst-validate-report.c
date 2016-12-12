@@ -699,7 +699,7 @@ gst_validate_report_new (GstValidateIssue * issue,
       issue_type_details == GST_VALIDATE_SHOW_ALL ||
       gst_validate_report_check_abort (report) ||
       report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
-    report->trace = gst_debug_get_stack_trace ();
+    report->trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
 
   return report;
 }
