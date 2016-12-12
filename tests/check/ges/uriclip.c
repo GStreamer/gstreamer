@@ -286,9 +286,11 @@ main (int argc, char **argv)
 {
   int nf;
 
-  Suite *s = ges_suite ();
+  Suite *s;
 
   gst_check_init (&argc, &argv);
+
+  s = ges_suite ();
 
   av_uri = ges_test_get_audio_video_uri ();
   image_uri = ges_test_get_image_uri ();
