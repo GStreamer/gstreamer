@@ -323,7 +323,7 @@ main (int argc, char *argv[])
 
 
 
-``` c
+```
 
 Note that this program likely needs root permissions in order to create
 real-time threads. When the thread can't be created, the state change
