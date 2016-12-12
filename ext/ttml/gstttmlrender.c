@@ -2151,8 +2151,14 @@ gst_ttml_render_render_text_region (GstTtmlRender * render,
     }
 
     tmp = region_image;
-    region_image = gst_ttml_render_rendered_image_combine (region_image,
-        blocks_image);
+    if (region_image || blocks_image) {
+      region_image =
+          gst_ttml_render_rendered_image_combine (region_image, blocks_image);
+    } else {
+      GST_CAT_DEBUG (ttmlrender_debug, "Nothing to render");
+      return NULL;
+    }
+
     if (tmp)
       gst_ttml_render_rendered_image_free (tmp);
     gst_ttml_render_rendered_image_free (blocks_image);
@@ -2326,8 +2332,10 @@ wait_for_text_buf:
           g_assert (region != NULL);
           composition = gst_ttml_render_render_text_region (render, region,
               render->text_buffer);
-          render->compositions = g_list_append (render->compositions,
-              composition);
+          if (composition) {
+            render->compositions = g_list_append (render->compositions,
+                composition);
+          }
         }
         render->need_render = FALSE;
       }
