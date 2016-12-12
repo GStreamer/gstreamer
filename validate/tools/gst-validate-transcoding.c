@@ -44,7 +44,7 @@
 
 static gint ret = 0;
 static GMainLoop *mainloop;
-static GstElement *pipeline, *encodebin;
+static GstElement *pipeline, *encodebin, *sink;
 static GstEncodingProfile *encoding_profile = NULL;
 static gboolean eos_on_shutdown = FALSE;
 static gboolean force_reencoding = FALSE;
@@ -474,6 +474,20 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       GstState target_state = GST_STATE_PLAYING;
       gboolean monitor_handles_state;
 
+      GParamSpec *spec =
+          g_object_class_find_property (G_OBJECT_GET_CLASS (sink), "sync");
+
+      if (spec) {
+        gboolean sync;
+
+        /* Never do buffering if the sink is not synchronizing on the clock */
+        g_object_get (sink, "sync", &sync, NULL);
+        if (!sync)
+          return TRUE;
+      } else {
+        return TRUE;
+      }
+
       g_object_get (monitor, "handles-states", &monitor_handles_state, NULL);
       if (monitor_handles_state && GST_IS_VALIDATE_BIN_MONITOR (monitor)) {
         target_state =
@@ -574,7 +588,7 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstElement * encodebin)
 static void
 create_transcoding_pipeline (gchar * uri, gchar * outuri)
 {
-  GstElement *src, *sink;
+  GstElement *src;
 
   pipeline = gst_pipeline_new ("encoding-pipeline");
   src = gst_element_factory_make ("uridecodebin", NULL);
