@@ -489,6 +489,10 @@ gst_gme_dec_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_adapter_clear (dec->adapter);
+      if (dec->player) {
+        gme_delete (dec->player);
+        dec->player = NULL;
+      }
       break;
     default:
       break;
