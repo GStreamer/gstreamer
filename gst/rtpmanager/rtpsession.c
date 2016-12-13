@@ -3019,6 +3019,10 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   if (created)
     on_new_sender_ssrc (sess, source);
 
+  if (!source->internal)
+    /* FIXME: Send GstRTPCollision upstream  */
+    goto collision;
+
   prevsender = RTP_SOURCE_IS_SENDER (source);
   oldrate = source->bitrate;
 
@@ -3041,6 +3045,15 @@ invalid_packet:
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     RTP_SESSION_UNLOCK (sess);
     GST_DEBUG ("invalid RTP packet received");
+    return GST_FLOW_OK;
+  }
+collision:
+  {
+    g_object_unref (source);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
+    RTP_SESSION_UNLOCK (sess);
+    GST_WARNING ("non-internal source with same ssrc %08x, drop packet",
+        pinfo.ssrc);
     return GST_FLOW_OK;
   }
 }

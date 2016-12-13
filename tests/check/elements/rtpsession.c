@@ -889,6 +889,48 @@ GST_START_TEST (test_receive_pli_no_sender_ssrc)
 
 GST_END_TEST;
 
+static void
+add_rtcp_sdes_packet (GstBuffer * gstbuf, guint32 ssrc, const char *cname)
+{
+  GstRTCPPacket packet;
+  GstRTCPBuffer buffer = GST_RTCP_BUFFER_INIT;
+
+  gst_rtcp_buffer_map (gstbuf, GST_MAP_READWRITE, &buffer);
+
+  fail_unless (gst_rtcp_buffer_add_packet (&buffer, GST_RTCP_TYPE_SDES,
+          &packet) == TRUE);
+  fail_unless (gst_rtcp_packet_sdes_add_item (&packet, ssrc) == TRUE);
+  fail_unless (gst_rtcp_packet_sdes_add_entry (&packet, GST_RTCP_SDES_CNAME,
+          strlen (cname), (const guint8 *) cname));
+
+  gst_rtcp_buffer_unmap (&buffer);
+}
+
+GST_START_TEST (test_ssrc_collision_when_sending)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf = gst_rtcp_buffer_new (1400);
+
+/* Push SDES with identical SSRC as what we will use for sending RTP,
+   establishing this as a non-internal SSRC */
+  add_rtcp_sdes_packet (buf, 0x12345678, "test@foo.bar");
+  session_harness_recv_rtcp (h, buf);
+
+  /* Push RTP buffer making our internal SSRC=0x12345678 */
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_send_rtp (h, generate_test_buffer (0, 0x12345678)));
+
+  /* Verify the packet we just sent is not being boomeranged back to us
+     as a received packet! */
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->recv_rtp_h));
+
+  /* FIXME: verify a Collision event coming upstream! */
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_illegal_rtcp_fb_packet)
 {
   SessionHarness *h = session_harness_new ();
@@ -1007,6 +1049,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_receive_rtcp_app_packet);
   tcase_add_test (tc_chain, test_dont_lock_on_stats);
   tcase_add_test (tc_chain, test_ignore_suspicious_bye);
+  tcase_add_test (tc_chain, test_ssrc_collision_when_sending);
   tcase_add_test (tc_chain, test_illegal_rtcp_fb_packet);
   tcase_add_test (tc_chain, test_feedback_rtcp_race);
   tcase_add_test (tc_chain, test_receive_regular_pli);
