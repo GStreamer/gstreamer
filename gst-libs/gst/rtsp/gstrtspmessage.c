@@ -1186,6 +1186,8 @@ parse_auth_credentials (GPtrArray * auth_credentials, const gchar * header,
  * Parses the credentials given in a WWW-Authenticate or Authorization header.
  *
  * Returns: %NULL-terminated array of GstRTSPAuthCredential or %NULL.
+ *
+ * Since: 1.12
  */
 GstRTSPAuthCredential **
 gst_rtsp_message_parse_auth_credentials (GstRTSPMessage * msg,
@@ -1211,6 +1213,81 @@ gst_rtsp_message_parse_auth_credentials (GstRTSPMessage * msg,
   return (GstRTSPAuthCredential **) g_ptr_array_free (auth_credentials, FALSE);
 }
 
+static GstRTSPAuthParam *
+gst_rtsp_auth_param_copy (GstRTSPAuthParam * param)
+{
+  GstRTSPAuthParam *copy;
+
+  if (param == NULL)
+    return NULL;
+
+  copy = g_new0 (GstRTSPAuthParam, 1);
+  copy->name = g_strdup (param->name);
+  copy->value = g_strdup (param->value);
+
+  return copy;
+}
+
+static void
+gst_rtsp_auth_param_free (GstRTSPAuthParam * param)
+{
+  if (param != NULL) {
+    g_free (param->name);
+    g_free (param->value);
+    g_free (param);
+  }
+}
+
+G_DEFINE_BOXED_TYPE (GstRTSPAuthParam, gst_rtsp_auth_param,
+    (GBoxedCopyFunc) gst_rtsp_auth_param_copy,
+    (GBoxedFreeFunc) gst_rtsp_auth_param_free);
+
+static void
+gst_rtsp_auth_credential_free (GstRTSPAuthCredential * credential)
+{
+  GstRTSPAuthParam **p;
+
+  if (credential == NULL)
+    return;
+
+  for (p = credential->params; p != NULL && *p != NULL; ++p)
+    gst_rtsp_auth_param_free (*p);
+
+  g_free (credential->params);
+  g_free (credential->authorization);
+  g_free (credential);
+}
+
+static GstRTSPAuthCredential *
+gst_rtsp_auth_credential_copy (GstRTSPAuthCredential * cred)
+{
+  GstRTSPAuthCredential *copy;
+
+  if (cred == NULL)
+    return NULL;
+
+  copy = g_new0 (GstRTSPAuthCredential, 1);
+  copy->scheme = cred->scheme;
+  if (cred->params) {
+    guint i, n_params = g_strv_length ((gchar **) cred->params);
+
+    copy->params = g_new0 (GstRTSPAuthParam *, n_params + 1);
+    for (i = 0; i < n_params; ++i)
+      copy->params[i] = gst_rtsp_auth_param_copy (cred->params[i]);
+  }
+  copy->authorization = g_strdup (cred->authorization);
+  return copy;
+}
+
+/**
+ * gst_rtsp_auth_credentials_free:
+ * @credentials: a %NULL-terminated array of #GstRTSPAuthCredential
+ *
+ * Free a %NULL-terminated array of credentials returned from
+ * gst_rtsp_message_parse_auth_credentials().
+ *
+ * Since: 1.12
+ */
 void
 gst_rtsp_auth_credentials_free (GstRTSPAuthCredential ** credentials)
 {
@@ -1219,24 +1296,12 @@ gst_rtsp_auth_credentials_free (GstRTSPAuthCredential ** credentials)
   if (!credentials)
     return;
 
-  p = credentials;
-  while (*p) {
-    GstRTSPAuthParam **param = (*p)->params;
-
-    if (param) {
-      while (*param) {
-        g_free ((*param)->name);
-        g_free ((*param)->value);
-        g_free (*param);
-        param++;
-      }
-      g_free ((*p)->params);
-    }
-    if ((*p)->authorization)
-      g_free ((*p)->authorization);
-    g_free (*p);
-    p++;
-  }
+  for (p = credentials; p != NULL && *p != NULL; ++p)
+    gst_rtsp_auth_credential_free (*p);
 
   g_free (credentials);
 }
+
+G_DEFINE_BOXED_TYPE (GstRTSPAuthCredential, gst_rtsp_auth_credential,
+    (GBoxedCopyFunc) gst_rtsp_auth_credential_copy,
+    (GBoxedFreeFunc) gst_rtsp_auth_credential_free);

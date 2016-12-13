@@ -201,6 +201,7 @@ GstRTSPResult      gst_rtsp_message_steal_body      (GstRTSPMessage *msg,
 
 typedef struct _GstRTSPAuthCredential GstRTSPAuthCredential;
 typedef struct _GstRTSPAuthParam GstRTSPAuthParam;
+
 struct _GstRTSPAuthCredential {
   GstRTSPAuthMethod scheme;
 
@@ -219,6 +220,14 @@ struct _GstRTSPAuthParam {
 
 GstRTSPAuthCredential ** gst_rtsp_message_parse_auth_credentials (GstRTSPMessage * msg, GstRTSPHeaderField field);
 void                     gst_rtsp_auth_credentials_free (GstRTSPAuthCredential ** credentials);
+
+#define GST_TYPE_RTSP_AUTH_CREDENTIAL gst_rtsp_auth_credential_get_type()
+
+GType                    gst_rtsp_auth_credential_get_type (void);
+
+#define GST_TYPE_RTSP_AUTH_PARAM gst_rtsp_auth_param_get_type()
+
+GType                    gst_rtsp_auth_param_get_type (void);
 
 /* debug */
 GstRTSPResult      gst_rtsp_message_dump            (GstRTSPMessage *msg);

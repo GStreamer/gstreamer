@@ -936,6 +936,37 @@ GST_START_TEST (test_rtsp_message_auth_credentials)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtsp_message_auth_credentials_boxed)
+{
+  GstRTSPAuthCredential **credentials, *credentials2;
+  GstRTSPAuthParam *param2;
+  GstRTSPMessage *msg;
+  GstRTSPResult res;
+
+  res = gst_rtsp_message_new_request (&msg, GST_RTSP_PLAY,
+      "rtsp://foo.bar:8554/test");
+  fail_unless_equals_int (res, GST_RTSP_OK);
+  res =
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_WWW_AUTHENTICATE,
+      "Basic foo=\"bar\", baz=foo");
+  res =
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_WWW_AUTHENTICATE,
+      "Basic foo1=\"bar\", baz1=foo");
+  credentials =
+      gst_rtsp_message_parse_auth_credentials (msg,
+      GST_RTSP_HDR_WWW_AUTHENTICATE);
+
+  credentials2 = g_boxed_copy (GST_TYPE_RTSP_AUTH_CREDENTIAL, credentials[0]);
+  gst_rtsp_auth_credentials_free (credentials);
+  gst_rtsp_message_free (msg);
+
+  param2 = g_boxed_copy (GST_TYPE_RTSP_AUTH_PARAM, credentials2->params[0]);
+  g_boxed_free (GST_TYPE_RTSP_AUTH_CREDENTIAL, credentials2);
+  g_boxed_free (GST_TYPE_RTSP_AUTH_PARAM, param2);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtsp_suite (void)
 {
@@ -953,6 +984,7 @@ rtsp_suite (void)
   tcase_add_test (tc_chain, test_rtsp_range_convert);
   tcase_add_test (tc_chain, test_rtsp_message);
   tcase_add_test (tc_chain, test_rtsp_message_auth_credentials);
+  tcase_add_test (tc_chain, test_rtsp_message_auth_credentials_boxed);
 
   return s;
 }
