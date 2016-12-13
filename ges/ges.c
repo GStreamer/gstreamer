@@ -191,7 +191,7 @@ ges_init_get_option_group (void)
   };
 
   group = g_option_group_new ("GES", "GStreamer Editing Services Options",
-      "Show GStreamer Options", NULL, NULL);
+      "Show GES Options", NULL, NULL);
   g_option_group_set_parse_hooks (group, (GOptionParseFunc) ges_init_pre,
       (GOptionParseFunc) ges_init_post);
   g_option_group_add_entries (group, ges_args);
