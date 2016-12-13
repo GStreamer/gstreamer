@@ -11,3 +11,5 @@ executable('ges-launch-@0@'.format(apiversion),
     c_args : [ges_tool_args],
     dependencies : deps
 )
+
+install_man('ges-launch-1.0.1')

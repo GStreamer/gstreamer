@@ -6,3 +6,7 @@ LDADD = $(top_builddir)/ges/libges-@GST_API_VERSION@.la $(GST_PBUTILS_LIBS) $(GS
 noinst_HEADERS = ges-validate.h ges-launcher.h utils.h
 
 ges_launch_@GST_API_VERSION@_SOURCES = ges-validate.c ges-launch.c ges-launcher.c utils.c
+
+man_MANS = ges-launch-1.0.1
+
+EXTRA_DIST = ges-launch-1.0.1
