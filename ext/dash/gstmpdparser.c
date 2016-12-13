@@ -2238,7 +2238,9 @@ gst_mpdparser_parse_utctiming_node (GList ** list, xmlNode * a_node)
 
   GST_LOG ("attributes of UTCTiming node:");
   if (gst_mpdparser_get_xml_prop_string (a_node, "schemeIdUri", &method)) {
-    for (int i = 0; gst_mpdparser_utc_timing_methods[i].name; ++i) {
+    int i;
+
+    for (i = 0; gst_mpdparser_utc_timing_methods[i].name; ++i) {
       if (g_ascii_strncasecmp (gst_mpdparser_utc_timing_methods[i].name,
               method, strlen (gst_mpdparser_utc_timing_methods[i].name)) == 0) {
         new_timing->method = gst_mpdparser_utc_timing_methods[i].method;
@@ -4107,7 +4109,9 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
   /* clip duration of segments to stop at period end */
   if (stream->segments && stream->segments->len) {
     if (GST_CLOCK_TIME_IS_VALID (PeriodEnd)) {
-      for (guint n = 0; n < stream->segments->len; ++n) {
+      guint n;
+
+      for (n = 0; n < stream->segments->len; ++n) {
         GstMediaSegment *media_segment =
             g_ptr_array_index (stream->segments, n);
         if (media_segment) {

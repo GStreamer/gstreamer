@@ -2853,13 +2853,15 @@ gst_dash_demux_parse_http_head (GstDashDemuxClockDrift * clock_drift,
       &hour, &minute, &second, zone);
   if (ret == 7) {
     gchar *z = zone;
-    for (int i = 1; months[i]; ++i) {
+    gint i;
+
+    for (i = 1; months[i]; ++i) {
       if (g_ascii_strncasecmp (months[i], monthstr, strlen (months[i])) == 0) {
         month = i;
         break;
       }
     }
-    for (int i = 0; timezones[i].name && !parsed_tz; ++i) {
+    for (i = 0; timezones[i].name && !parsed_tz; ++i) {
       if (g_ascii_strncasecmp (timezones[i].name, z,
               strlen (timezones[i].name)) == 0) {
         tzoffset = timezones[i].tzoffset;
