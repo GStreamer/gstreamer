@@ -1487,7 +1487,9 @@ restart:
       upload->priv->method->perform (upload->priv->method_impl, buffer,
       &outbuf);
   if (ret == GST_GL_UPLOAD_UNSHARED_GL_CONTEXT) {
-    for (int i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
+    gint i;
+
+    for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
       if (upload_methods[i] == &_raw_data_upload) {
         upload->priv->method = &_raw_data_upload;
         upload->priv->method_impl = upload->priv->upload_impl[i];
