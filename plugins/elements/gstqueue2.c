@@ -3509,6 +3509,10 @@ gst_queue2_src_activate_push (GstPad * pad, GstObject * parent, gboolean active)
 
     /* step 2, make sure streaming finishes */
     result = gst_pad_stop_task (pad);
+
+    GST_QUEUE2_MUTEX_LOCK (queue);
+    gst_queue2_locked_flush (queue, FALSE, FALSE);
+    GST_QUEUE2_MUTEX_UNLOCK (queue);
   }
 
   return result;
