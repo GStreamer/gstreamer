@@ -63,6 +63,7 @@
  *   DTV_ISDBS_TS_ID_LEGACY (was DVB_ISDBS_TS_ID)
  *   DTV_DVBT2_PLP_ID_LEGACY (was DVB_DVBT2_PLP_ID)
  *   NO_STREAM_ID_FILTER
+ *   DTV_STREAM_ID
  *   INTERLEAVING_AUTO
  *
  * Minor 7 (DTMB Support)
@@ -116,12 +117,10 @@
 #define SYS_DVBC_ANNEX_A SYS_DVBC_ANNEX_AC
 #endif
 
-/* NO_STREAM_ID_FILTER introduced in minor 8 */
+/* NO_STREAM_ID_FILTER & DTV_STREAMID introduced in minor 8 */
 #ifndef NO_STREAM_ID_FILTER
 #define NO_STREAM_ID_FILTER    (~0U)
 #endif
-
-/* DTV_STREAM_ID introduced in minor 8 (redefine) */
 #ifndef DTV_STREAM_ID
 #define DTV_STREAM_ID DTV_ISDBS_TS_ID
 #endif
