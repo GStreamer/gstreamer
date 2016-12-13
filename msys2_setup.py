@@ -6,6 +6,7 @@ import itertools
 import os
 import re
 import sys
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -97,7 +98,7 @@ class Msys2Configurer(GstBuildConfigurer):
                 'gst-devtools', 'gstreamer', 'gst-plugins-base',
                 'gst-editing-services']]
 
-    def setup(self):
+    def setup(self, args):
         if not os.path.exists(self.options.msys2_path):
             print("msys2 not found in %s. Please make sure to install"
                   " (from http://msys2.github.io/) specify --msys2-path"
@@ -111,8 +112,7 @@ class Msys2Configurer(GstBuildConfigurer):
         os.environ['PKG_CONFIG_PATH'] = os.environ.get(
             'PKG_CONFIG_PATH', '') + ':/mingw64/lib/pkgconfig:/mingw64/share/pkgconfig'
 
-        subprocess.check_call(
-            ['pacman', '-S', '--needed'] + self.DEPENDENCIES, env=os.environ)
+        subprocess.check_call(['pacman', '-S', '--needed', '--noconfirm'] + self.DEPENDENCIES)
         source_path = os.path.abspath(os.path.curdir)
 
         print('Making sure meson is present in root folder... ', end='')
@@ -131,11 +131,15 @@ class Msys2Configurer(GstBuildConfigurer):
             if not self.configure_meson():
                 return False
 
-        print("Getting into msys2 environment")
         try:
-            subprocess.call([sys.executable,
-                             os.path.join(source_path, 'gst-uninstalled.py'),
-                             '--builddir', os.path.join(source_path, 'build')])
+            if not args:
+                print("Getting into msys2 environment", flush=True)
+                subprocess.check_call([sys.executable,
+                                os.path.join(source_path, 'gst-uninstalled.py'),
+                                '--builddir', os.path.join(source_path, 'build')])
+            else:
+                print("Running %s" ' '.join(args), flush=True)
+                res = subprocess.check_call(args)
         except subprocess.CalledProcessError as e:
             return False
 
@@ -158,6 +162,10 @@ if __name__ == "__main__":
                         help="Where to find msys2 root directory."
                         "(deactivates msys if unset)",
                         default="C:\msys64")
+
+    parser.add_argument("-c", "--command", dest="command",
+                        help="Command to run instead of entering environment.",
+                        default="")
     options, args = parser.parse_known_args()
 
     if not shutil.which('cl'):
@@ -168,5 +176,4 @@ if __name__ == "__main__":
 
     configurer = Msys2Configurer(options, args)
 
-    exit(not configurer.setup())
-
+    exit(not configurer.setup(shlex.split(options.command)))
