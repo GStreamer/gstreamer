@@ -2722,6 +2722,8 @@ generate_backtrace_trace (void)
 
   return g_string_free (trace, FALSE);
 }
+#else
+#define generate_backtrace_trace() NULL
 #endif /* HAVE_BACKTRACE */
 
 /**
