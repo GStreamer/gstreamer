@@ -54,7 +54,9 @@ static GstAdaptiveDemuxTestOutputStream *
 getTestOutputDataByAppsink (GstAdaptiveDemuxTestEnginePrivate * priv,
     GstAppSink * appsink)
 {
-  for (guint i = 0; i < priv->engine.output_streams->len; ++i) {
+  guint i;
+
+  for (i = 0; i < priv->engine.output_streams->len; ++i) {
     GstAdaptiveDemuxTestOutputStream *state;
     state = g_ptr_array_index (priv->engine.output_streams, i);
     if (state->appsink == appsink) {
@@ -70,7 +72,9 @@ static GstAdaptiveDemuxTestOutputStream *
 getTestOutputDataByPad (GstAdaptiveDemuxTestEnginePrivate * priv,
     GstPad * pad, gboolean abort_if_not_found)
 {
-  for (guint i = 0; i < priv->engine.output_streams->len; ++i) {
+  guint i;
+
+  for (i = 0; i < priv->engine.output_streams->len; ++i) {
     GstAdaptiveDemuxTestOutputStream *stream;
     stream = g_ptr_array_index (priv->engine.output_streams, i);
     if (stream->internal_pad == pad || stream->pad == pad) {

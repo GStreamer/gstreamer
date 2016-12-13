@@ -443,8 +443,9 @@ static void
 add_interlaced_mode_to_caps (GstCaps * caps, const gchar * mode)
 {
   GstStructure *s;
+  gint i;
 
-  for (gint i = 0; i < gst_caps_get_size (caps); i++) {
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
     s = gst_caps_get_structure (caps, i);
     gst_structure_set (s, "interlace-mode", G_TYPE_STRING, mode, NULL);
   }

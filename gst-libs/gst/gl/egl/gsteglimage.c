@@ -441,6 +441,7 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
   EGLImageKHR img;
   gint atti = 0;
   gint fourcc;
+  gint i;
 
   fourcc = _drm_fourcc_from_info (in_info, plane);
   type =
@@ -466,7 +467,7 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
   attribs[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, plane);
   attribs[atti] = EGL_NONE;
 
-  for (int i = 0; i < atti; i++)
+  for (i = 0; i < atti; i++)
     GST_LOG ("attr %i: %" G_GINTPTR_FORMAT, i, attribs[i]);
 
   g_assert (atti == 12);

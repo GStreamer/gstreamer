@@ -234,6 +234,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     gboolean swapchain_ext_found = FALSE;
     gboolean winsys_ext_found = FALSE;
     const gchar *winsys_ext_name;
+    uint32_t i;
 
     display_type = gst_vulkan_display_choose_type (instance);
 
@@ -245,7 +246,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     }
 
     /* TODO: allow outside selection */
-    for (uint32_t i = 0; i < instance_extension_count; i++) {
+    for (i = 0; i < instance_extension_count; i++) {
       GST_TRACE_OBJECT (instance, "checking instance extension %s",
           instance_extensions[i].extensionName);
 

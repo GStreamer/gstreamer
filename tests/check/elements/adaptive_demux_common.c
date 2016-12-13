@@ -157,6 +157,7 @@ gst_adaptive_demux_test_check_received_data (GstAdaptiveDemuxTestEngine *
   guint64 streamOffset;
   GstAdaptiveDemuxTestCase *testData = GST_ADAPTIVE_DEMUX_TEST_CASE (user_data);
   GstAdaptiveDemuxTestExpectedOutput *testOutputStreamData;
+  guint64 i;
 
   fail_unless (stream != NULL);
   fail_unless (engine->pipeline != NULL);
@@ -198,7 +199,7 @@ gst_adaptive_demux_test_check_received_data (GstAdaptiveDemuxTestEngine *
   gst_buffer_map (buffer, &info, GST_MAP_READ);
 
   pattern = streamOffset - streamOffset % sizeof (pattern);
-  for (guint64 i = 0; i != info.size; ++i) {
+  for (i = 0; i != info.size; ++i) {
     guint received = info.data[i];
     guint expected;
 

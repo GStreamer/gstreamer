@@ -682,6 +682,7 @@ _gst_libde265_return_image (GstVideoDecoder * decoder,
   GstVideoFrame outframe;
   GstVideoCodecFrame *out_frame;
   int frame_number;
+  int plane;
 
   ref = (struct GstLibde265FrameRef *) de265_get_image_plane_user_data (img, 0);
   if (ref != NULL) {
@@ -731,7 +732,7 @@ _gst_libde265_return_image (GstVideoDecoder * decoder,
     return GST_FLOW_ERROR;
   }
 
-  for (int plane = 0; plane < 3; plane++) {
+  for (plane = 0; plane < 3; plane++) {
     int width = de265_get_image_width (img, plane);
     int height = de265_get_image_height (img, plane);
     int srcstride = width;

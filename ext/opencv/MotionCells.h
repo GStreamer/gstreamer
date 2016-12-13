@@ -214,8 +214,10 @@ private:
 
   bool getIsNonZero (IplImage * img)
   {
-    for (int lin = 0; lin < img->height; lin++)
-      for (int col = 0; col < img->width; col++) {
+    int lin, col;
+
+    for (lin = 0; lin < img->height; lin++)
+      for (col = 0; col < img->width; col++) {
         if ((((uchar *) (img->imageData + img->widthStep * lin))[col]) > 0)
           return true;
       }
@@ -224,15 +226,17 @@ private:
 
   void setMotionCells (int p_frameWidth, int p_frameHeight)
   {
+    int i, j;
+
     m_cellwidth = (double) p_frameWidth / (double) m_gridx;
     m_cellheight = (double) p_frameHeight / (double) m_gridy;
     m_pCells = new Cell *[m_gridy];
-    for (int i = 0; i < m_gridy; i++)
+    for (i = 0; i < m_gridy; i++)
       m_pCells[i] = new Cell[m_gridx];
 
     //init cells
-    for (int i = 0; i < m_gridy; i++)
-      for (int j = 0; j < m_gridx; j++) {
+    for (i = 0; i < m_gridy; i++)
+      for (j = 0; j < m_gridx; j++) {
         m_pCells[i][j].MotionArea = 0;
         m_pCells[i][j].CellArea = 0;
         m_pCells[i][j].MotionPercent = 0;

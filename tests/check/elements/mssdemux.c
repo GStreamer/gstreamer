@@ -44,9 +44,10 @@ gst_mssdemux_http_src_start (GstTestHTTPSrc * src,
 {
   const GstMssDemuxTestInputData *input =
       (const GstMssDemuxTestInputData *) user_data;
+  guint i;
 
 
-  for (guint i = 0; input[i].uri; ++i) {
+  for (i = 0; input[i].uri; ++i) {
     if (strcmp (input[i].uri, uri) == 0) {
       input_data->context = (gpointer) & input[i];
       input_data->size = input[i].size;
@@ -78,11 +79,12 @@ gst_mssdemux_http_src_create (GstTestHTTPSrc * src,
   } else {
     GstMapInfo info;
     guint pattern;
+    guint64 i;
 
     pattern = offset - offset % sizeof (pattern);
 
     gst_buffer_map (buf, &info, GST_MAP_WRITE);
-    for (guint64 i = 0; i < length; ++i) {
+    for (i = 0; i < length; ++i) {
       gchar pattern_byte_to_write = (offset + i) % sizeof (pattern);
       if (pattern_byte_to_write == 0) {
         pattern = offset + i;

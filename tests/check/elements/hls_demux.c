@@ -85,14 +85,16 @@ setup_test_variables (const gchar * funcname,
   GByteArray *mpeg_ts = NULL;
 
   if (segment_size) {
+    guint itd, otd;
+
     mpeg_ts = generate_transport_stream ((segment_size));
     fail_unless (mpeg_ts != NULL);
-    for (guint itd = 0; inputTestData[itd].uri; ++itd) {
+    for (itd = 0; inputTestData[itd].uri; ++itd) {
       if (g_str_has_suffix (inputTestData[itd].uri, ".ts")) {
         inputTestData[itd].payload = mpeg_ts->data;
       }
     }
-    for (guint otd = 0; outputTestData[otd].name; ++otd) {
+    for (otd = 0; outputTestData[otd].name; ++otd) {
       outputTestData[otd].expected_data = mpeg_ts->data;
       engineTestData->output_streams =
           g_list_append (engineTestData->output_streams, &outputTestData[otd]);
@@ -181,9 +183,10 @@ gst_hlsdemux_test_src_start (GstTestHTTPSrc * src,
   const GstHlsDemuxTestCase *test_case =
       (const GstHlsDemuxTestCase *) user_data;
   guint fail_count = 0;
+  guint i;
 
   GST_DEBUG ("src_start %s", uri);
-  for (guint i = 0; test_case->input[i].uri; ++i) {
+  for (i = 0; test_case->input[i].uri; ++i) {
     if (strcmp (test_case->input[i].uri, uri) == 0) {
       gst_hlsdemux_test_set_input_data (test_case, &test_case->input[i],
           input_data);
@@ -316,6 +319,7 @@ GST_START_TEST (testMasterPlaylist)
     {NULL, 0, NULL}
   };
   const GValue *requests;
+  guint i;
   TESTCASE_INIT_BOILERPLATE (segment_size);
 
   http_src_callbacks.src_start = gst_hlsdemux_test_src_start;
@@ -333,7 +337,7 @@ GST_START_TEST (testMasterPlaylist)
   fail_unless (requests != NULL);
   assert_equals_uint64 (gst_value_array_get_size (requests),
       sizeof (inputTestData) / sizeof (inputTestData[0]) - 1);
-  for (guint i = 0; inputTestData[i].uri; ++i) {
+  for (i = 0; inputTestData[i].uri; ++i) {
     const GValue *uri;
     uri = gst_value_array_get_value (requests, i);
     fail_unless (uri != NULL);

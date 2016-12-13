@@ -565,11 +565,13 @@ gst_test_http_src_set_property (GObject * object, guint prop_id,
     case PROP_KEEP_ALIVE:
       src->keep_alive = g_value_get_boolean (value);
       break;
-    case PROP_METHOD:
+    case PROP_METHOD:{
+      guint i;
+
       g_free (src->http_method_name);
       src->http_method_name = g_value_dup_string (value);
       src->http_method = METHOD_INVALID;
-      for (guint i = 0; gst_test_http_src_methods[i].name; ++i) {
+      for (i = 0; gst_test_http_src_methods[i].name; ++i) {
         if (strcmp (gst_test_http_src_methods[i].name,
                 src->http_method_name) == 0) {
           src->http_method = gst_test_http_src_methods[i].method;
@@ -581,6 +583,7 @@ gst_test_http_src_set_property (GObject * object, guint prop_id,
          trying to open a connection.
        */
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

@@ -2572,7 +2572,9 @@ GST_START_TEST (dash_mpdparser_template_parsing)
   };
 
   guint count = sizeof (testUrl) / sizeof (testUrl[0]);
-  for (int i = 0; i < count; i++) {
+  gint i;
+
+  for (i = 0; i < count; i++) {
     result =
         gst_mpdparser_build_URL_from_template (testUrl[i].urlTemplate, id,
         number, bandwidth, time);
@@ -3412,6 +3414,7 @@ GST_START_TEST (dash_mpdparser_get_audio_languages)
 
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
+  gint i;
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
   assert_equals_int (ret, TRUE);
@@ -3428,7 +3431,7 @@ GST_START_TEST (dash_mpdparser_get_audio_languages)
 
   /* setup streaming from all adaptation sets */
   adaptationSetsCount = gst_mpdparser_get_nb_adaptationSet (mpdclient);
-  for (int i = 0; i < adaptationSetsCount; i++) {
+  for (i = 0; i < adaptationSetsCount; i++) {
     adapt_set = (GstAdaptationSetNode *) g_list_nth_data (adaptationSets, i);
     fail_if (adapt_set == NULL);
     ret = gst_mpd_client_setup_streaming (mpdclient, adapt_set);
@@ -3463,6 +3466,7 @@ setup_mpd_client (const gchar * xml)
   guint adaptationSetsCount;
   gboolean ret;
   GstMpdClient *mpdclient = gst_mpd_client_new ();
+  gint i;
 
   ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
   assert_equals_int (ret, TRUE);
@@ -3479,7 +3483,7 @@ setup_mpd_client (const gchar * xml)
 
   /* setup streaming from all adaptation sets */
   adaptationSetsCount = gst_mpdparser_get_nb_adaptationSet (mpdclient);
-  for (int i = 0; i < adaptationSetsCount; i++) {
+  for (i = 0; i < adaptationSetsCount; i++) {
     adapt_set = (GstAdaptationSetNode *) g_list_nth_data (adaptationSets, i);
     fail_if (adapt_set == NULL);
     ret = gst_mpd_client_setup_streaming (mpdclient, adapt_set);

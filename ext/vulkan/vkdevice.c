@@ -230,7 +230,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
     goto error;
   }
 
-  for (uint32_t i = 0; i < device_extension_count; i++) {
+  for (i = 0; i < device_extension_count; i++) {
     GST_TRACE_OBJECT (device, "checking device extension %s",
         device_extensions[i].extensionName);
     if (!strcmp (VK_KHR_SWAPCHAIN_EXTENSION_NAME,

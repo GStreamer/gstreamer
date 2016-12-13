@@ -40,7 +40,9 @@ static inline guint
 msdk_get_free_surface_index (mfxFrameSurface1 * surfaces, guint size)
 {
   if (surfaces) {
-    for (guint i = 0; i < size; i++) {
+    guint i;
+
+    for (i = 0; i < size; i++) {
       if (!surfaces[i].Data.Locked)
         return i;
     }
@@ -53,9 +55,10 @@ mfxFrameSurface1 *
 msdk_get_free_surface (mfxFrameSurface1 * surfaces, guint size)
 {
   guint idx = INVALID_INDEX;
+  guint i;
 
   /* Poll the pool for a maximum of 20 milisecnds */
-  for (guint i = 0; i < 2000; i++) {
+  for (i = 0; i < 2000; i++) {
     idx = msdk_get_free_surface_index (surfaces, size);
 
     if (idx != INVALID_INDEX)
@@ -74,6 +77,7 @@ msdk_frame_to_surface (GstVideoFrame * frame, mfxFrameSurface1 * surface)
   guint8 *src, *dst;
   guint sstride, dstride;
   guint width, height;
+  guint i;
 
   if (!surface->Data.MemId) {
     surface->Data.Y = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
@@ -90,7 +94,7 @@ msdk_frame_to_surface (GstVideoFrame * frame, mfxFrameSurface1 * surface)
   dst = surface->Data.Y;
   dstride = surface->Data.Pitch;
 
-  for (guint i = 0; i < height; i++) {
+  for (i = 0; i < height; i++) {
     memcpy (dst, src, width);
     src += sstride;
     dst += dstride;
@@ -102,7 +106,7 @@ msdk_frame_to_surface (GstVideoFrame * frame, mfxFrameSurface1 * surface)
   sstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1);
   dst = surface->Data.UV;
 
-  for (guint i = 0; i < height; i++) {
+  for (i = 0; i < height; i++) {
     memcpy (dst, src, width);
     src += sstride;
     dst += dstride;
