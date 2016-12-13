@@ -524,7 +524,7 @@ GST_START_TEST (test_duration_query)
 GST_END_TEST;
 
 static gchar *
-get_buffer_checksum (GstBuffer *buf)
+get_buffer_checksum (GstBuffer * buf)
 {
   GstMapInfo map = GST_MAP_INFO_INIT;
   GChecksum *md5 = g_checksum_new (G_CHECKSUM_MD5);
@@ -543,11 +543,12 @@ get_buffer_checksum (GstBuffer *buf)
 GST_START_TEST (test_patterns_are_deterministic)
 {
   GType type;
-  GEnumClass * enum_class;
+  GEnumClass *enum_class;
   gint num_patterns;
   GstHarness *h[2];
   const gint num_instances = G_N_ELEMENTS (h);
   const gint num_frames = 2;
+  gint pattern, i, frame;
 
   /* Create an element to register types used below */
   gst_object_unref (gst_element_factory_make ("videotestsrc", NULL));
@@ -562,19 +563,19 @@ GST_START_TEST (test_patterns_are_deterministic)
 
   /* For each pattern, make sure that all instances produce identical
    * frames */
-  for (gint pattern = 0; pattern < num_patterns; pattern++) {
+  for (pattern = 0; pattern < num_patterns; pattern++) {
 
-    for (gint i = 0; i < G_N_ELEMENTS (h); i++) {
+    for (i = 0; i < G_N_ELEMENTS (h); i++) {
       h[i] = gst_harness_new ("videotestsrc");
       g_object_set (h[i]->element, "pattern", pattern, NULL);
       gst_harness_set_blocking_push_mode (h[i]);
       gst_harness_play (h[i]);
     }
 
-    for (gint frame = 0; frame < num_frames; frame++) {
+    for (frame = 0; frame < num_frames; frame++) {
       gchar *ref_checksum = NULL;
 
-      for (gint i = 0; i < num_instances; i++) {
+      for (i = 0; i < num_instances; i++) {
         GstBuffer *buffer = gst_harness_pull (h[i]);
         gchar *checksum = get_buffer_checksum (buffer);
 
@@ -588,10 +589,11 @@ GST_START_TEST (test_patterns_are_deterministic)
       }
       g_free (ref_checksum);
     }
-    for (gint i = 0; i < G_N_ELEMENTS (h); i++)
+    for (i = 0; i < G_N_ELEMENTS (h); i++)
       gst_harness_teardown (h[i]);
   }
 }
+
 GST_END_TEST;
 
 

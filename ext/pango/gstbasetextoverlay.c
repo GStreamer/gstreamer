@@ -1638,8 +1638,9 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
       guint num_overlays =
           gst_video_overlay_composition_n_rectangles
           (overlay->upstream_composition);
+      guint i;
 
-      for (guint i = 0; i < num_overlays; i++) {
+      for (i = 0; i < num_overlays; i++) {
         GstVideoOverlayRectangle *rectangle;
         rectangle =
             gst_video_overlay_composition_get_rectangle
