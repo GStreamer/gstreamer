@@ -2408,7 +2408,8 @@ gst_multi_queue_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
            * pushed. If it is, we don't need to wait for the condition
            * variable, otherwise we wait for the condition variable to
            * be signaled. */
-          if (sq->last_handled_query != query)
+          while (!sq->flushing && sq->srcresult == GST_FLOW_OK
+              && sq->last_handled_query != query)
             g_cond_wait (&sq->query_handled, &mq->qlock);
           res = sq->last_query;
           sq->last_handled_query = NULL;
