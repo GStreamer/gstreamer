@@ -25,6 +25,8 @@ GST_START_TEST (test_encode_lag_in_frames)
 {
   GstHarness *h = gst_harness_new_parse ("vp9enc lag-in-frames=5 cpu-used=8 "
       "deadline=1");
+  gint i;
+
   gst_harness_add_src_parse (h, "videotestsrc is-live=true pattern=black ! "
       "capsfilter caps=\"video/x-raw,width=320,height=240,framerate=25/1\"",
       TRUE);
@@ -40,7 +42,7 @@ GST_START_TEST (test_encode_lag_in_frames)
   fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
   fail_unless_equals_int (gst_harness_buffers_received (h), 20);
 
-  for (gint i = 0; i < 20; i++) {
+  for (i = 0; i < 20; i++) {
     GstBuffer *buffer = gst_harness_pull (h);
 
     if (i == 0)

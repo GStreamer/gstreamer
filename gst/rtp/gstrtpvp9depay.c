@@ -174,8 +174,10 @@ gst_rtp_vp9_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
   }
 
   if (p_bit && f_bit) {
+    gint i;
+
     /* At least one P_DIFF|N, up to three times */
-    for (gint i = 0; i < 3; i++) {
+    for (i = 0; i < 3; i++) {
       guint p_diff, n_bit;
 
       if (G_UNLIKELY (size < hdrsize + 1))
