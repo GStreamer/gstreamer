@@ -130,7 +130,7 @@ tool that processes the log.
 ## tracer event classes
 
 Most tracers will log some kind of *events* : a data transfer, an event,
-a message, a query or a measurement. Every tracers should describe the
+a message, a query or a measurement. Every tracer should describe the
 data format. This way tools that process tracer logs can show the data
 in a meaningful way without having to know about the tracer plugin.
 
@@ -165,113 +165,106 @@ gst_tracer_record_new ("thread-rusage.class",
 ```
 
 
-A few ideas that are not yet in the above spec: - it would be nice to
-describe the unit of values - putting it into the description is not
-flexible though, e.g. time would be a guint64 but a ui would reformat it
-to e.g. h:m:s.ms - other units are e.g.: percent, per-mille, or kbit/s -
-we’d like to have some metadata on scopes - e.g. we’d like to log the
-thread-names, so that a UI can show that instead of thread-ids - the
-stats tracer logs *new-element* and *new-pad* messages - they add a
-unique *ix* to each instance as the memory ptr can be reused for new
-instances, the data is attached to the objects as qdata - the latency
-tracer would like to also reference this metadata - right now we log the
-classes as structures - this is important so that the log is self
-contained - it would be nice to add them to the registry, so that
-gst-inspect can show them
+A few ideas that are not yet in the above spec:
 
-We could also consider to add each value as a READABLE gobject property.
-The property has name/description. We could use qdata for scope and
-flags (or have some new property flags). We would also need a new
-"notify" signal, so that value-change notifications would include a
+- it would be nice to describe the unit of values
+    - putting it into the description is not flexible though, e.g. time
+      would be a guint64 but a ui would reformat it to e.g. h:m:s.ms
+    - other units are e.g.: percent, per-mille, or kbit/s
+- we’d like to have some metadata on scopes
+    - e.g. we’d like to log the thread-names, so that a UI can show
+      that instead of thread-ids
+    - the stats tracer logs *new-element* and *new-pad* messages
+    - they add a unique *ix* to each instance as the memory ptr can be
+      reused for new instances, the data is attached to the objects as qdata
+    - the latency tracer would like to also reference this metadata
+
+Right now we log the classes as structures, this is important so that the log
+is self contained. It would be nice to add them to the registry, so that
+gst-inspect can show them. We could also consider to add each value as a
+READONLY gobject property. The property has name/description. We could use
+qdata for scope and flags (or have some new property flags). We would also
+need a new "notify" signal, so that value-change notifications would include a
 time-stamp. This way the tracers would not needs to be aware of the
 logging. The core tracer would register the notify handlers and emit the
 log. Or we just add a gst_tracer_class_install_event() and that
 mimics the g_object_class_install_property().
 
-Frontends can: - do an events over time histogram - plot curves of
-values over time or deltas - show gauges - collect statistics (min, max,
-avg, …)
-
-We can have some under gstreamer/plugins/tracers/
+Frontends can:
+- do an events over time histogram
+- plot curves of values over time or deltas
+- show gauges
+- collect statistics (min, max, avg, …)
 
 ## latency
 
-  - register to buffer and event flow
-
-  - send custom event on buffer flow at source elements
-
-  - catch events on event transfer at sink elements
+- register to buffer and event flow
+- send custom event on buffer flow at source elements
+- catch events on event transfer at sink elements
 
 ## meminfo (not yet implemented)
 
-    - register to an interval-timer hook.
-    - call mallinfo() and log memory usage
-
-    rusage
-
-  - register to an interval-timer hook.
-
-  - call getrusage() and log resource usage
+- register to an interval-timer hook.
+- call mallinfo() and log memory usage rusage
+- register to an interval-timer hook.
+- call getrusage() and log resource usage
 
 ## dbus (not yet implemented)
 
-    - provide a dbus iface to announce applications that are traced
-    - tracing UIs can use the dbus iface to find the channels where logging and
-      tracing is getting logged to
-    - one would start the tracing UI first and when the application is started with
-      tracing activated, the dbus plugin will announce the new application,
-      upon which the tracing UI can start reading from the log channels, this avoid
-      missing some data
+- provide a dbus iface to announce applications that are traced
+- tracing UIs can use the dbus iface to find the channels where logging and
+  tracing is getting logged to
+- one would start the tracing UI first and when the application is started with
+  tracing activated, the dbus plugin will announce the new application,
+  upon which the tracing UI can start reading from the log channels, this avoid
+  missing some data
 
 ## topology (not yet implemented)
 
-  - register to pipeline topology hooks
-
-  - tracing UIs can show a live pipeline graph
+- register to pipeline topology hooks
+- tracing UIs can show a live pipeline graph
 
 ## stats
 
-  - register to buffer, event, message and query flow
-
-  - tracing apps can do e.g. statistics
+- register to buffer, event, message and query flow
+- tracing apps can do e.g. statistics
 
 ## refcounts (not yet implemented)
 
-    - log ref-counts of objects
-    - just logging them outside of glib/gobject would still make it hard to detect
-      issues though
+- log ref-counts of objects
+- just logging them outside of glib/gobject would still make it hard to detect
+  issues though
 
 ## opengl (not yet implemented)
 
-  - upload/download times
-
-  - there is not hardware agnostic way to get e.g. memory usage info (gl
-    extensions)
+- upload/download times
+- there is not hardware agnostic way to get e.g. memory usage info (gl
+extensions)
 
 ## memory (not yet implemented)
 
-    - trace live instance (and pointer to the memory)
-    - use an atexit handler to dump leaked instance
-    https://bugzilla.gnome.org/show_bug.cgi?id=756760#c6
+- trace live instance (and pointer to the memory)
+- use an atexit handler to dump leaked instance
+  https://bugzilla.gnome.org/show_bug.cgi?id=756760#c6
 
 ## leaks
 
-  - track creation/destruction of GstObject and GstMiniObject
+- track creation/destruction of GstObject and GstMiniObject
 
-  - log those which are still alive when app is exiting and raise an
-    error if any
+- log those which are still alive when app is exiting and raise an
+  error if any
 
-  - If the GST_LEAKS_TRACER_SIG env variable is defined the tracer
-    will handle the following UNIX signals:
+- If the GST_LEAKS_TRACER_SIG env variable is defined the tracer
+  will handle the following UNIX signals:
 
-  - SIGUSR1: log alive objects
+- SIGUSR1: log alive objects
 
-  - SIGUSR2: create a checkpoint and print a list of objects created and
-    destroyed since the previous checkpoint.
+- SIGUSR2: create a checkpoint and print a list of objects created and
+  destroyed since the previous checkpoint.
 
-  - If the GST_LEAKS_TRACER_STACK_TRACE env variable is defined log
-    the creation stack trace of leaked objects. This may significantly
-    increase memory consumption.
+- If the GST_LEAKS_TRACER_STACK_TRACE env variable is defined log
+  the creation stack trace of leaked objects. This may significantly
+  increase memory consumption.
 
 ## gst-debug-viewer
 
