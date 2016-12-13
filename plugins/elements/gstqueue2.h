@@ -102,6 +102,7 @@ struct _GstQueue2
 
   GCond query_handled;
   gboolean last_query; /* result of last serialized query */
+  GstQuery *last_handled_query;
 
   GstQueue2Size cur_level;       /* currently in the queue */
   GstQueue2Size max_level;       /* max. amount of data allowed in the queue */

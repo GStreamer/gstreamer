@@ -135,6 +135,7 @@ struct _GstQueue {
 
   GCond query_handled;
   gboolean last_query;
+  GstQuery *last_handled_query;
 
   gboolean flush_on_eos; /* flush on EOS */
 };

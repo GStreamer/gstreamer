@@ -2642,7 +2642,10 @@ gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
                 GST_QUEUE2_ITEM_TYPE_QUERY);
 
             STATUS (queue, queue->sinkpad, "wait for QUERY");
-            g_cond_wait (&queue->query_handled, &queue->qlock);
+            while (queue->sinkresult == GST_FLOW_OK &&
+                queue->last_handled_query != query)
+              g_cond_wait (&queue->query_handled, &queue->qlock);
+            queue->last_handled_query = NULL;
             if (queue->sinkresult != GST_FLOW_OK)
               goto out_flushing;
             res = queue->last_query;
@@ -2970,6 +2973,7 @@ next:
     GstQuery *query = GST_QUERY_CAST (data);
 
     GST_LOG_OBJECT (queue->srcpad, "Peering query %p", query);
+    queue->last_handled_query = query;
     queue->last_query = gst_pad_peer_query (queue->srcpad, query);
     GST_LOG_OBJECT (queue->srcpad, "Peered query");
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
