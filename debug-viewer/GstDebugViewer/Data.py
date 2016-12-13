@@ -176,8 +176,7 @@ def default_log_line_regex_():
 
 def default_log_line_regex():
 
-    expressions = default_log_line_regex_()
-    return re.compile("".join(expressions))
+    return re.compile("".join(default_log_line_regex_()))
 
 
 class Producer (object):
