@@ -3077,12 +3077,13 @@ gst_pad_query_accept_caps_default (GstPad * pad, GstQuery * query)
 
   gst_query_parse_accept_caps (query, &caps);
   if (!allowed) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, pad,
-        "fallback ACCEPT_CAPS query, consider implementing a specialized version");
-    if (GST_PAD_IS_ACCEPT_TEMPLATE (pad))
+    if (GST_PAD_IS_ACCEPT_TEMPLATE (pad)) {
       allowed = gst_pad_get_pad_template_caps (pad);
-    else
+    } else {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, pad,
+          "fallback ACCEPT_CAPS query, consider implementing a specialized version");
       allowed = gst_pad_query_caps (pad, caps);
+    }
   }
 
   if (allowed) {
