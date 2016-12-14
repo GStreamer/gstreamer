@@ -1165,11 +1165,31 @@ get_all_targets (gchar * topdir, const gchar * categoryname)
 static guint
 compare_targets (const GstEncodingTarget * ta, const GstEncodingTarget * tb)
 {
-  if (!g_strcmp0 (ta->name, tb->name)
-      && !g_strcmp0 (ta->category, tb->category))
+  if (g_strcmp0 (ta->name, tb->name)
+      || g_strcmp0 (ta->category, tb->category))
     return -1;
 
   return 0;
+}
+
+static GList *
+merge_targets (GList * res, GList * extra)
+{
+  GList *tmp;
+
+  /* FIXME : We should merge the system-wide profiles into the user-locals
+   * instead of stopping at identical target names */
+  for (tmp = extra; tmp; tmp = tmp->next) {
+    GstEncodingTarget *target = (GstEncodingTarget *) tmp->data;
+    if (g_list_find_custom (res, target, (GCompareFunc) compare_targets))
+      gst_encoding_target_unref (target);
+    else
+      res = g_list_append (res, target);
+  }
+
+  g_list_free (extra);
+
+  return res;
 }
 
 /**
@@ -1185,34 +1205,35 @@ compare_targets (const GstEncodingTarget * ta, const GstEncodingTarget * tb)
 GList *
 gst_encoding_list_all_targets (const gchar * categoryname)
 {
-  GList *res;
-  GList *tmp1, *tmp2;
+  GList *res = NULL;
   gchar *topdir;
+  gchar **encoding_target_dirs;
+
+  const gchar *envvar = g_getenv ("GST_ENCODING_TARGET_PATH");
+  if (envvar) {
+    gint i;
+
+    encoding_target_dirs = g_strsplit (envvar, G_SEARCHPATH_SEPARATOR_S, -1);
+    for (i = 0; encoding_target_dirs[i]; i++)
+      res =
+          merge_targets (res, get_all_targets (encoding_target_dirs[i],
+              categoryname));
+
+    g_strfreev (encoding_target_dirs);
+  }
 
   /* Get user-locals */
   topdir =
       g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
       GST_ENCODING_TARGET_DIRECTORY, NULL);
-  res = get_all_targets (topdir, categoryname);
+  res = merge_targets (res, get_all_targets (topdir, categoryname));
   g_free (topdir);
 
   /* Get system-wide */
   topdir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
       GST_ENCODING_TARGET_DIRECTORY, NULL);
-  tmp1 = get_all_targets (topdir, categoryname);
+  res = merge_targets (res, get_all_targets (topdir, categoryname));
   g_free (topdir);
-
-  /* Merge system-wide targets */
-  /* FIXME : We should merge the system-wide profiles into the user-locals
-   * instead of stopping at identical target names */
-  for (tmp2 = tmp1; tmp2; tmp2 = tmp2->next) {
-    GstEncodingTarget *target = (GstEncodingTarget *) tmp2->data;
-    if (g_list_find_custom (res, target, (GCompareFunc) compare_targets))
-      gst_encoding_target_unref (target);
-    else
-      res = g_list_append (res, target);
-  }
-  g_list_free (tmp1);
 
   return res;
 }
