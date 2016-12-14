@@ -2296,9 +2296,9 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * @session: the session
    * @ssrc: the sender SSRC
    *
-   * Since: 1.8
-   *
    * Notify of a new sender SSRC that entered @session.
+   *
+   * Since: 1.8
    */
   gst_rtp_bin_signals[SIGNAL_ON_NEW_SENDER_SSRC] =
       g_signal_new ("on-new-sender-ssrc", G_TYPE_FROM_CLASS (klass),
@@ -2311,9 +2311,9 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * @session: the session
    * @ssrc: the sender SSRC
    *
-   * Since: 1.8
-   *
    * Notify of a sender SSRC that is active, i.e., sending RTCP.
+   *
+   * Since: 1.8
    */
   gst_rtp_bin_signals[SIGNAL_ON_SENDER_SSRC_ACTIVE] =
       g_signal_new ("on-sender-ssrc-active", G_TYPE_FROM_CLASS (klass),
