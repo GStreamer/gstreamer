@@ -32,7 +32,7 @@ DIST_SUBDIRS = 			\
 include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
-	gst-plugins-base.spec depcomp \
+	depcomp \
 	AUTHORS COPYING COPYING.LIB NEWS README RELEASE REQUIREMENTS \
 	ChangeLog gst-plugins-base.doap autogen.sh $(win32)
 
@@ -65,6 +65,7 @@ check: check-exports
 # cruft: plugins that have been merged or moved or renamed
 
 CRUFT_FILES = \
+	$(top_builddir)/gst-plugins-base.spec \
 	$(top_builddir)/win32/common/config.h-new \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \

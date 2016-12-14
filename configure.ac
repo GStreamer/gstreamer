@@ -869,7 +869,6 @@ $MKDIR_P tests/check/orc
 
 AC_CONFIG_FILES(
 Makefile
-gst-plugins-base.spec
 gst/Makefile
 gst/adder/Makefile
 gst/app/Makefile
