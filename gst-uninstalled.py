@@ -24,22 +24,7 @@ def prepend_env_var(env, var, value):
 def get_subprocess_env(options):
     env = os.environ.copy()
 
-    PATH = env.get("PATH", "")
-    subprojects_path = os.path.join(options.builddir, "subprojects")
-    for proj in os.listdir(subprojects_path):
-        projpath = os.path.join(subprojects_path, proj)
-        if not os.path.exists(projpath):
-            print("Subproject %s does not exist in %s.,\n"
-                  " Make sure to build everything properly "
-                  "and try again." % (proj, projpath))
-            exit(1)
-
-        toolsdir = os.path.join(projpath, "tools")
-        if os.path.exists(toolsdir):
-            prepend_env_var(env, "PATH", toolsdir)
-
-        prepend_env_var(env, "GST_PLUGIN_PATH", projpath)
-
+    prepend_env_var(env, "GST_PLUGIN_PATH", options.builddir)
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(SCRIPTDIR, 'subprojects',
                                                          'gst-python', 'plugin'))
     env["CURRENT_GST"] = os.path.normpath(SCRIPTDIR)
@@ -52,7 +37,6 @@ def get_subprocess_env(options):
     prepend_env_var(env, "PATH", os.path.normpath(
         "%s/subprojects/gst-devtools/validate/tools" % options.builddir))
     prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'meson'))
-    env["PATH"] += os.pathsep + PATH
     env["GST_VERSION"] = options.gst_version
     env["GST_ENV"] = 'gst-' + options.gst_version
     env["GST_PLUGIN_SYSTEM_PATH"] = ""
@@ -62,7 +46,6 @@ def get_subprocess_env(options):
         "%s/subprojects/gstreamer/libs/gst/helpers/gst-ptp-helper" % options.builddir)
     env["GST_REGISTRY"] = os.path.normpath(options.builddir + "/registry.dat")
 
-    filename = "meson.build"
     sharedlib_reg = re.compile(r'\.so|\.dylib|\.dll')
     typelib_reg = re.compile(r'.*\.typelib$')
 
@@ -76,6 +59,7 @@ def get_subprocess_env(options):
     meson, mesonconf, mesonintrospect = get_meson()
     targets_s = subprocess.check_output([sys.executable, mesonintrospect, options.builddir, '--targets'])
     targets = json.loads(targets_s.decode())
+    paths = set()
     for target in targets:
         filename = target['filename']
         root = os.path.dirname(filename)
@@ -91,6 +75,11 @@ def get_subprocess_env(options):
 
             prepend_env_var(env, lib_path_envvar,
                             os.path.join(options.builddir, root))
+        elif target.get('type') == 'executable' and target.get('installed'):
+            paths.add(os.path.join(options.builddir, root))
+
+    for p in paths:
+        prepend_env_var(env, 'PATH', p)
 
     return env
 
