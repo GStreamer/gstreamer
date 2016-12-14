@@ -41,6 +41,7 @@
 #include "gstsegmentation.h"
 #include "gstgrabcut.h"
 #include "gstdisparity.h"
+#include "gstdewarp.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -97,6 +98,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_disparity_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_dewarp_plugin_init (plugin))
     return FALSE;
 
   return TRUE;

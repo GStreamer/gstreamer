@@ -22,7 +22,8 @@ libgstopencv_la_SOURCES = gstopencv.cpp \
 			gstgrabcut.cpp \
 			gstdisparity.cpp \
 			motioncells_wrapper.cpp \
-			MotionCells.cpp
+			MotionCells.cpp \
+			gstdewarp.cpp
 
 libgstopencv_la_CXXFLAGS = \
 	-I$(top_srcdir)/gst-libs \
@@ -70,7 +71,8 @@ noinst_HEADERS = \
 		gstdisparity.h \
 		gstmotioncells.h \
 		motioncells_wrapper.h \
-		MotionCells.h
+		MotionCells.h \
+		gstdewarp.h
 
 opencv_haarcascadesdir = $(pkgdatadir)/$(GST_API_VERSION)/opencv_haarcascades
 opencv_haarcascades_DATA = fist.xml palm.xml
