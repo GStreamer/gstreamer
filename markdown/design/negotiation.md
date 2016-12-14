@@ -28,7 +28,7 @@ the CAPS query. The list of supported caps can be used to choose an
 appropriate GstCaps for the data transfer. The CAPS query works
 recursively, elements should take their peers into consideration when
 constructing the possible caps. Because the result caps can be very
-large, the filter can be used to restrict the caps. Only the caps that
+large, a filter can be used to restrict the caps. Only the caps that
 match the filter will be returned as the result caps. The order of the
 filter caps gives the order of preference of the caller and should be
 taken into account for the returned caps.
