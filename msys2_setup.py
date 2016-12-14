@@ -150,6 +150,8 @@ class Msys2Configurer(GstBuildConfigurer):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument("--no-error", action='store_true',
+                        default=False, help="Do not error out on warnings")
     parser.add_argument("--reconfigure", action='store_true',
                         default=False, help='Force a full reconfiguration'
                         ' meaning the build/ folder is removed.'
