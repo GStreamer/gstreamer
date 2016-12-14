@@ -292,7 +292,9 @@ gst_vaapi_decode_bin_class_init (GstVaapiDecodeBinClass * klass)
 static gboolean
 gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
 {
-  GstPad *queue_srcpad, *bin_srcpad, *vpp_sinkpad, *vpp_srcpad;
+  GstElement *capsfilter;
+  GstCaps *caps;
+  GstPad *queue_srcpad, *bin_srcpad, *capsfilter_sinkpad, *vpp_srcpad;
   gboolean res;
 
   g_object_set (G_OBJECT (vaapidecbin->queue),
@@ -305,6 +307,15 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
 
   GST_INFO_OBJECT (vaapidecbin, "enabling VPP");
 
+  /* capsfilter to avoid negotiation with vaapidecode */
+  caps = gst_caps_from_string
+      ("video/x-raw(memory:VASurface), format=(string)NV12");
+  if (!caps)
+    goto error_cannot_set_caps;
+  capsfilter = gst_element_factory_make ("capsfilter", NULL);
+  g_object_set (capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
   /* create the postproc */
   vaapidecbin->postproc = gst_element_factory_make ("vaapipostproc", NULL);
   if (!vaapidecbin->postproc)
@@ -312,7 +323,14 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
   g_object_set (G_OBJECT (vaapidecbin->postproc), "deinterlace-method",
       vaapidecbin->deinterlace_method, NULL);
 
-  gst_bin_add (GST_BIN (vaapidecbin), vaapidecbin->postproc);
+  gst_bin_add_many (GST_BIN (vaapidecbin), capsfilter, vaapidecbin->postproc,
+      NULL);
+
+  if (!gst_element_link (capsfilter, vaapidecbin->postproc))
+    goto error_sync_state;
+
+  if (!gst_element_sync_state_with_parent (capsfilter))
+    goto error_sync_state;
   if (!gst_element_sync_state_with_parent (vaapidecbin->postproc))
     goto error_sync_state;
 
@@ -324,9 +342,9 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
 
   /* link decoder and queue */
   queue_srcpad = gst_element_get_static_pad (vaapidecbin->queue, "src");
-  vpp_sinkpad = gst_element_get_static_pad (vaapidecbin->postproc, "sink");
-  res = (gst_pad_link (queue_srcpad, vpp_sinkpad) == GST_PAD_LINK_OK);
-  gst_object_unref (vpp_sinkpad);
+  capsfilter_sinkpad = gst_element_get_static_pad (capsfilter, "sink");
+  res = (gst_pad_link (queue_srcpad, capsfilter_sinkpad) == GST_PAD_LINK_OK);
+  gst_object_unref (capsfilter_sinkpad);
   gst_object_unref (queue_srcpad);
   if (!res)
     goto error_link_pad;
@@ -342,6 +360,13 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
 
   return TRUE;
 
+  /* ERRORS */
+error_cannot_set_caps:
+  {
+    GST_ELEMENT_ERROR (vaapidecbin, CORE, PAD,
+        ("Failed to configure caps for VA Surfaces."), (NULL));
+    return FALSE;
+  }
 error_vpp_missing:
   {
     post_missing_element_message (vaapidecbin, "vaapipostproc");
