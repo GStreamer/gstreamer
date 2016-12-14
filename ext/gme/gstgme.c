@@ -162,7 +162,11 @@ gst_gme_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         forward = TRUE;
       }
       break;
+    case GST_EVENT_CAPS:
+    case GST_EVENT_SEGMENT:
+      break;
     default:
+      forward = TRUE;
       break;
   }
   if (forward)
