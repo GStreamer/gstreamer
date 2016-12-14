@@ -31,10 +31,12 @@ class Msys2Configurer(GstBuildConfigurer):
                     'mingw-w64-x86_64-python3',
                     'mingw-w64-x86_64-json-glib']
     LIBNAME_EXCEPTIONS = {
-        'zlib1.lib': 'z.lib',
+        r'^zlib1.lib$': 'z.lib',
+        r'^nettle-.*': 'nettle.lib',
+        r'^hogweed-.*': 'hogweed.lib',
         # Fancy, but it seems to be the correct way to do it
-        'eay32.lib': 'crypto.lib',
-        'ssleay32.lib': 'ssl.lib',
+        r'^eay32.lib$': 'crypto.lib',
+        r'^ssleay32.lib$': 'ssl.lib',
     }
 
     def get_libname(self, dll_name):
@@ -46,7 +48,7 @@ class Msys2Configurer(GstBuildConfigurer):
         return lib_name
 
     def make_lib(self, lib, dll, dll_name):
-        print('%s... ' % os.path.basename(lib), end='')
+        print('%s... ' % os.path.basename(lib), end='', flush=True)
         try:
             os.remove(lib)
         except FileNotFoundError:
@@ -82,9 +84,9 @@ class Msys2Configurer(GstBuildConfigurer):
         if os.path.exists(lib) and os.stat(dll).st_mtime_ns < os.stat(lib).st_mtime_ns:
             return
 
-        print('Generating .lib file for %s ...' % os.path.basename(dll), end='')
+        print('Generating .lib file for %s ...' % os.path.basename(dll), end='', flush=True)
         self.make_lib(lib, dll, dll_name)
-        print('DONE')
+        print('DONE', flush=True)
 
     def make_libs(self):
         base = os.path.join(self.options.msys2_path, 'mingw64', 'bin')
@@ -102,7 +104,7 @@ class Msys2Configurer(GstBuildConfigurer):
         if not os.path.exists(self.options.msys2_path):
             print("msys2 not found in %s. Please make sure to install"
                   " (from http://msys2.github.io/) specify --msys2-path"
-                  " if you did not install in the default directory.")
+                  " if you did not install in the default directory.", flush=True)
             return False
 
         for path in ['mingw64/bin', 'bin', 'usr/bin']:
@@ -115,19 +117,19 @@ class Msys2Configurer(GstBuildConfigurer):
         subprocess.check_call(['pacman', '-S', '--needed', '--noconfirm'] + self.DEPENDENCIES)
         source_path = os.path.abspath(os.path.curdir)
 
-        print('Making sure meson is present in root folder... ', end='')
+        print('Making sure meson is present in root folder... ', end='', flush=True)
         if not os.path.isdir(os.path.join(source_path, 'meson')):
-            print('\nCloning meson')
+            print('\nCloning meson', flush=True)
             git('clone', self.MESON_GIT, repository_path=source_path)
         else:
-            print('\nDONE')
+            print('\nDONE', flush=True)
 
-        print("Making libs")
+        print("Making libs", flush=True)
         self.make_libs()
+        print("Done making .lib files.", flush=True)
         if not os.path.exists(os.path.join(source_path, 'build', 'build.ninja')) or \
                 self.options.reconfigure:
-            print("Done making .lib files.")
-            print("Running meson")
+            print("Running meson", flush=True)
             if not self.configure_meson():
                 return False
 
@@ -155,7 +157,7 @@ if __name__ == "__main__":
                         ' make sure meson is rerun but the build folder'
                         ' is kept.')
     if os.name != 'nt':
-        print("Using this script outside windows does not make sense.")
+        print("Using this script outside windows does not make sense.", flush=True)
         exit(1)
 
     parser.add_argument("-m", "--msys2-path", dest="msys2_path",
@@ -171,7 +173,7 @@ if __name__ == "__main__":
     if not shutil.which('cl'):
         print("Can not find MSVC on windows,"
                 " make sure you are in a 'Visual Studio"
-                " Native Tools Command Prompt'")
+                " Native Tools Command Prompt'", flush=True)
         exit(1)
 
     configurer = Msys2Configurer(options, args)
