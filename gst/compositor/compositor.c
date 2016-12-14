@@ -283,6 +283,14 @@ gst_compositor_pad_set_info (GstVideoAggregatorPad * pad,
 
   cpad->convert = NULL;
 
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (current_info) !=
+      GST_VIDEO_MULTIVIEW_MODE_NONE
+      && GST_VIDEO_INFO_MULTIVIEW_MODE (current_info) !=
+      GST_VIDEO_MULTIVIEW_MODE_MONO) {
+    GST_FIXME_OBJECT (pad, "Multiview support is not implemented yet");
+    return FALSE;
+  }
+
   colorimetry = gst_video_colorimetry_to_string (&(current_info->colorimetry));
   chroma = gst_video_chroma_to_string (current_info->chroma_site);
 
