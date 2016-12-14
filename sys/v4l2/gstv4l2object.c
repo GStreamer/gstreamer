@@ -2171,9 +2171,8 @@ gst_v4l2_object_add_interlace_mode (GstV4l2Object * v4l2object,
     gst_value_list_append_and_take_value (&interlace_formats, &interlace_enum);
   }
 
-  gst_v4l2src_value_simplify (&interlace_formats);
-
-  if (gst_value_list_get_size (&interlace_formats) > 0)
+  if (gst_v4l2src_value_simplify (&interlace_formats)
+      || gst_value_list_get_size (&interlace_formats) > 0)
     gst_structure_take_value (s, "interlace-mode", &interlace_formats);
   else
     GST_WARNING_OBJECT (v4l2object, "Failed to determine interlace mode");
