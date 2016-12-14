@@ -46,6 +46,20 @@ static const GstMetaInfo *gst_meta_test_get_info (void);
 #define GST_META_TEST_GET(buf) ((GstMetaTest *)gst_buffer_get_meta(buf,GST_META_TEST_API_TYPE))
 #define GST_META_TEST_ADD(buf) ((GstMetaTest *)gst_buffer_add_meta(buf,GST_META_TEST_INFO,NULL))
 
+typedef struct
+{
+  GstMeta meta;
+} GstMetaFoo;
+
+static GType gst_meta_foo_api_get_type (void);
+#define GST_META_FOO_API_TYPE (gst_meta_foo_api_get_type())
+
+static const GstMetaInfo *gst_meta_foo_get_info (void);
+#define GST_META_FOO_INFO (gst_meta_foo_get_info())
+
+#define GST_META_FOO_GET(buf) ((GstMetaFoo *)gst_buffer_get_meta(buf,GST_META_FOO_API_TYPE))
+#define GST_META_FOO_ADD(buf) ((GstMetaFoo *)gst_buffer_add_meta(buf,GST_META_FOO_INFO,NULL))
+
 #if 0
 /* unused currently. This is a user function to fill the metadata with default
  * values. We don't call this from the init function because the user is mostly
@@ -131,6 +145,20 @@ gst_meta_test_api_get_type (void)
   return type;
 }
 
+static gboolean
+foo_init_func (GstMeta * meta, gpointer params, GstBuffer * buffer)
+{
+  GST_DEBUG ("init called on buffer %p, foo meta %p", buffer, meta);
+  return TRUE;
+}
+
+static void
+foo_free_func (GstMeta * meta, GstBuffer * buffer)
+{
+  GST_DEBUG ("free called on buffer %p, foo meta %p", buffer, meta);
+}
+
+
 static const GstMetaInfo *
 gst_meta_test_get_info (void)
 {
@@ -144,6 +172,50 @@ gst_meta_test_get_info (void)
     g_once_init_leave (&meta_test_info, mi);
   }
   return meta_test_info;
+}
+
+static gboolean
+foo_transform_func (GstBuffer * transbuf, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GST_DEBUG ("transform %s called from buffer %p to %p, meta %p",
+      g_quark_to_string (type), buffer, transbuf, meta);
+
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    GST_META_FOO_ADD (transbuf);
+  } else {
+    /* return FALSE, if transform type is not supported */
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static GType
+gst_meta_foo_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] = { NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstMetaFooAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
+static const GstMetaInfo *
+gst_meta_foo_get_info (void)
+{
+  static const GstMetaInfo *meta_foo_info = NULL;
+
+  if (g_once_init_enter (&meta_foo_info)) {
+    const GstMetaInfo *mi = gst_meta_register (GST_META_FOO_API_TYPE,
+        "GstMetaFoo",
+        sizeof (GstMetaFoo),
+        foo_init_func, foo_free_func, foo_transform_func);
+    g_once_init_leave (&meta_foo_info, mi);
+  }
+  return meta_foo_info;
 }
 
 GST_START_TEST (test_meta_test)
@@ -242,6 +314,104 @@ GST_START_TEST (test_meta_locked)
 
 GST_END_TEST;
 
+GST_START_TEST (test_meta_iterate)
+{
+  GstBuffer *buffer;
+  GstMeta *m1, *m2, *m3, *m_found;
+  GList *metas;
+  gpointer state;
+
+  /* buffer with single meta */
+  buffer = gst_buffer_new_and_alloc (4);
+  m1 = (GstMeta *) GST_META_TEST_ADD (buffer);
+  fail_unless (m1 != NULL);
+
+  state = NULL;
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) != NULL);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
+
+  state = NULL;
+  fail_unless (gst_buffer_iterate_meta_filtered (buffer, &state,
+          GST_META_TEST_API_TYPE) != NULL);
+  fail_unless (gst_buffer_iterate_meta_filtered (buffer, &state,
+          GST_META_TEST_API_TYPE) == NULL);
+
+  state = NULL;
+  fail_unless (gst_buffer_iterate_meta_filtered (buffer, &state,
+          GST_META_FOO_API_TYPE) == NULL);
+
+  state = NULL;
+  fail_unless (gst_buffer_iterate_meta_filtered (buffer, &state,
+          GST_META_TEST_API_TYPE) != NULL);
+  fail_unless (gst_buffer_iterate_meta_filtered (buffer, &state,
+          GST_META_TEST_API_TYPE) == NULL);
+
+  /* buffer with multiple metas */
+  m2 = (GstMeta *) GST_META_FOO_ADD (buffer);
+  fail_unless (m2 != NULL);
+  m3 = (GstMeta *) GST_META_TEST_ADD (buffer);
+  fail_unless (m3 != NULL);
+
+  /* create a list with metas, we don't know what order buffer_iterate has */
+  metas = g_list_prepend (g_list_prepend (g_list_prepend (NULL, m1), m2), m3);
+
+  state = NULL;
+  m_found = gst_buffer_iterate_meta (buffer, &state);
+  fail_unless (m_found != NULL);
+  metas = g_list_remove (metas, m_found);
+  m_found = gst_buffer_iterate_meta (buffer, &state);
+  fail_unless (m_found != NULL);
+  metas = g_list_remove (metas, m_found);
+  m_found = gst_buffer_iterate_meta (buffer, &state);
+  fail_unless (m_found != NULL);
+  metas = g_list_remove (metas, m_found);
+
+  /* should only have 3 metas, so the 4th time we should get NULL back */
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
+
+  /* list should be empty now, we should have seen each meta once */
+  fail_unless (metas == NULL);
+
+  /* same test as above with iterate_filtered */
+
+  /* create a list with metas, we don't know what order buffer_iterate has */
+  metas = g_list_prepend (g_list_prepend (g_list_prepend (NULL, m1), m2), m3);
+
+  state = NULL;
+  m_found =
+      gst_buffer_iterate_meta_filtered (buffer, &state, GST_META_TEST_API_TYPE);
+  fail_unless (m_found != NULL);
+  metas = g_list_remove (metas, m_found);
+  m_found =
+      gst_buffer_iterate_meta_filtered (buffer, &state, GST_META_TEST_API_TYPE);
+  fail_unless (m_found != NULL);
+  metas = g_list_remove (metas, m_found);
+
+  /* should only have 2 Test metas, so now we should get NULL back */
+  fail_unless (gst_buffer_iterate_meta_filtered (buffer, &state,
+          GST_META_TEST_API_TYPE) == NULL);
+
+  /* but there should also still be a Foo meta */
+  fail_unless_equals_int (g_list_length (metas), 1);
+  fail_unless (metas->data == m2);
+  metas = g_list_remove (metas, m2);
+
+  state = NULL;
+  m_found =
+      gst_buffer_iterate_meta_filtered (buffer, &state, GST_META_FOO_API_TYPE);
+  fail_unless (m_found == m2);
+
+  /* only have 1 Foo meta, so now we should get NULL back */
+  fail_unless (gst_buffer_iterate_meta_filtered (buffer, &state,
+          GST_META_FOO_API_TYPE) == NULL);
+
+  gst_buffer_unref (buffer);
+
+
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffermeta_suite (void)
 {
@@ -251,6 +421,7 @@ gst_buffermeta_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_meta_test);
   tcase_add_test (tc_chain, test_meta_locked);
+  tcase_add_test (tc_chain, test_meta_iterate);
 
   return s;
 }
