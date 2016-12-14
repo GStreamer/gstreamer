@@ -711,6 +711,7 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   *exit_status = 0;
 
   if (!g_option_context_parse (ctx, &argc, &argv, &error)) {
+    gst_init (NULL, NULL);
     g_printerr ("Error initializing: %s\n", error->message);
     g_option_context_free (ctx);
     g_error_free (error);
