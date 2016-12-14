@@ -1343,7 +1343,7 @@ retry:
       GST_DEBUG_OBJECT (comp->parent, "Component %s port %d signalled EOS",
           comp->name, port->index);
       ret = GST_OMX_ACQUIRE_BUFFER_EOS;
-      port->eos = FALSE
+      port->eos = FALSE;
       goto done;
     }
   }
