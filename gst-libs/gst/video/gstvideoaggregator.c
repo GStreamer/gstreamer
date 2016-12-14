@@ -796,8 +796,6 @@ gst_video_aggregator_update_src_caps (GstVideoAggregator * vagg)
         GstVideoAggregatorPad *pad = GST_VIDEO_AGGREGATOR_PAD (l->data);
 
         if (!vaggpad_klass->set_info (pad, vagg, &pad->info, &vagg->info)) {
-          GST_OBJECT_UNLOCK (vagg);
-
           return FALSE;
         }
       }
