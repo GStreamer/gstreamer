@@ -409,6 +409,12 @@ gst_dshowvideodec_base_init (gpointer klass)
 
   gst_element_class_add_pad_template (element_class, src);
   gst_element_class_add_pad_template (element_class, sink);
+
+  if (sinkcaps)
+    gst_caps_unref(sinkcaps);
+
+  if (srccaps)
+    gst_caps_unref(srccaps);
 }
 
 static void

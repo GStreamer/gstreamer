@@ -360,6 +360,9 @@ gst_vdp_decoder_class_init (GstVdpDecoderClass * klass)
 
   gst_element_class_add_pad_template (element_class, src_template);
 
+  if (src_caps)
+    gst_caps_unref (src_caps);
+
   g_object_class_install_property (object_class,
       PROP_DISPLAY, g_param_spec_string ("display", "Display", "X Display name",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
