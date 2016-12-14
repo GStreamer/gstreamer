@@ -85,6 +85,7 @@ struct _GstGLWindow {
   GstGLDisplay *display;
   GWeakRef      context_ref;
 
+  /*< protected >*/
   gboolean      is_drawing;
 
   GstGLWindowCB         draw;
@@ -98,6 +99,8 @@ struct _GstGLWindow {
   GDestroyNotify        resize_notify;
 
   gboolean              queue_resize;
+
+  GMainContext         *main_context; /* default main_context */
 
   /*< private >*/
   GstGLWindowPrivate *priv;

@@ -87,7 +87,6 @@ static void gst_gl_window_default_send_message_async (GstGLWindow * window,
 
 struct _GstGLWindowPrivate
 {
-  GMainContext *main_context;
   GMainLoop *loop;
 
   guint surface_width;
@@ -168,8 +167,8 @@ gst_gl_window_init (GstGLWindow * window)
   g_mutex_init (&window->priv->sync_message_lock);
   g_cond_init (&window->priv->sync_message_cond);
 
-  priv->main_context = g_main_context_new ();
-  priv->loop = g_main_loop_new (priv->main_context, FALSE);
+  window->main_context = g_main_context_new ();
+  priv->loop = g_main_loop_new (window->main_context, FALSE);
 }
 
 static void
@@ -294,8 +293,9 @@ gst_gl_window_finalize (GObject * object)
   if (priv->loop)
     g_main_loop_unref (priv->loop);
 
-  if (priv->main_context)
-    g_main_context_unref (priv->main_context);
+  if (window->main_context)
+    g_main_context_unref (window->main_context);
+  window->main_context = NULL;
 
   g_weak_ref_clear (&window->context_ref);
 
@@ -484,27 +484,11 @@ gst_gl_window_default_run (GstGLWindow * window)
 {
   GstGLWindowPrivate *priv = window->priv;
 
-  if (g_main_context_get_thread_default ()) {
-    if (priv->main_context)
-      g_main_context_unref (priv->main_context);
-    if (priv->loop)
-      g_main_loop_unref (priv->loop);
-    priv->main_context = g_main_context_ref_thread_default ();
-    priv->loop = NULL;
-    priv->alive = TRUE;
-  } else {
-    g_main_context_push_thread_default (priv->main_context);
-  }
+  g_main_context_push_thread_default (window->main_context);
 
   g_main_loop_run (priv->loop);
 
-  if (!priv->loop) {
-    priv->alive = FALSE;
-    g_main_context_unref (priv->main_context);
-    priv->main_context = NULL;
-  } else {
-    g_main_context_pop_thread_default (priv->main_context);
-  }
+  g_main_context_pop_thread_default (window->main_context);
 }
 
 /**
@@ -664,7 +648,7 @@ gst_gl_window_default_send_message_async (GstGLWindow * window,
   message->data = data;
   message->destroy = destroy;
 
-  g_main_context_invoke (priv->main_context, (GSourceFunc) _run_message_async,
+  g_main_context_invoke (window->main_context, (GSourceFunc) _run_message_async,
       message);
 }
 

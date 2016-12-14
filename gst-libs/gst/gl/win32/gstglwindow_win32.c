@@ -120,8 +120,7 @@ gst_gl_window_win32_open (GstGLWindow * window, GError ** error)
   window_win32->msg_source = win32_message_source_new (window_win32);
   g_source_set_callback (window_win32->msg_source, (GSourceFunc) msg_cb,
       NULL, NULL);
-  g_source_attach (window_win32->msg_source,
-      g_main_context_get_thread_default ());
+  g_source_attach (window_win32->msg_source, window->main_context);
 
   return TRUE;
 }

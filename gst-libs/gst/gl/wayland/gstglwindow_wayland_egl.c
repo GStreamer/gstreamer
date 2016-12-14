@@ -408,7 +408,7 @@ gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
   if (!GST_GL_WINDOW_CLASS (parent_class)->open (window, error))
     return FALSE;
 
-  g_source_attach (window_egl->wl_source, g_main_context_get_thread_default ());
+  g_source_attach (window_egl->wl_source, window->main_context);
 
   return TRUE;
 }
