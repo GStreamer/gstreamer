@@ -998,6 +998,30 @@ static GstCaps *
 _update_caps (GstVideoAggregator * vagg, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *ret;
+  GList *l;
+
+  GST_OBJECT_LOCK (vagg);
+  for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
+    GstVideoAggregatorPad *vaggpad = l->data;
+
+    if (!vaggpad->info.finfo)
+      continue;
+
+    if (GST_VIDEO_INFO_FORMAT (&vaggpad->info) == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+
+    if (GST_VIDEO_INFO_MULTIVIEW_MODE (&vaggpad->info) !=
+        GST_VIDEO_MULTIVIEW_MODE_NONE
+        && GST_VIDEO_INFO_MULTIVIEW_MODE (&vaggpad->info) !=
+        GST_VIDEO_MULTIVIEW_MODE_MONO) {
+      GST_FIXME_OBJECT (vaggpad, "Multiview support is not implemented yet");
+      GST_OBJECT_UNLOCK (vagg);
+      return NULL;
+    }
+
+  }
+
+  GST_OBJECT_UNLOCK (vagg);
 
   if (filter) {
     ret = gst_caps_intersect (caps, filter);
