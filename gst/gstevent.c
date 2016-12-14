@@ -580,7 +580,7 @@ gst_event_parse_flush_stop (GstEvent * event, gboolean * reset_time)
 
 /**
  * gst_event_new_select_streams:
- * @streams: (element-type gchar) (transfer none): the list of streams to
+ * @streams: (element-type utf8) (transfer none): the list of streams to
  * activate
  *
  * Allocate a new select-streams event.
@@ -624,7 +624,7 @@ gst_event_new_select_streams (GList * streams)
 /**
  * gst_event_parse_select_streams:
  * @event: The event to parse
- * @streams: (out) (element-type gchar) (transfer full): the streams
+ * @streams: (out) (element-type utf8) (transfer full): the streams
  *
  * Parse the SELECT_STREAMS event and retrieve the contained streams.
  *
