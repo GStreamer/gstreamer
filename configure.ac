@@ -1085,7 +1085,6 @@ docs/plugins/Makefile
 docs/version.entities
 pkgconfig/Makefile
 pkgconfig/gstreamer-plugins-good-uninstalled.pc
-gst-plugins-good.spec
 )
 AC_OUTPUT
 

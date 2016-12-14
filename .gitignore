@@ -9,7 +9,6 @@ config.guess
 config.sub
 config.rpath
 configure
-gst-plugins-good.spec
 libtool
 stamp-h
 stamp-h.in

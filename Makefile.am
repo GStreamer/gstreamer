@@ -14,7 +14,7 @@ SUBDIRS = $(ALWAYS_SUBDIRS)
 DIST_SUBDIRS = $(ALWAYS_SUBDIRS)
 
 EXTRA_DIST = \
-	gst-plugins-good.spec depcomp \
+	depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
 	ChangeLog gst-plugins-good.doap autogen.sh
 
@@ -50,6 +50,7 @@ include $(top_srcdir)/common/coverage/lcov.mak
 # cruft: plugins that have been merged or moved or renamed
 
 CRUFT_FILES = \
+	$(top_builddir)/gst-plugins-good.spec \
 	$(top_builddir)/win32/common/config.h-new \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
