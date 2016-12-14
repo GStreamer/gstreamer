@@ -8685,8 +8685,9 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
     gint i, count, entry_size;
     guint64 time;
     GstClockTime stime;
-    guint8 *buffer;
+    const guint8 *buffer;
     guint8 version;
+    guint32 size;
 
     GST_DEBUG_OBJECT (qtdemux, "looking for edit list");
     if (!(elst = qtdemux_tree_get_child_by_type (edts, FOURCC_elst)))
@@ -8694,10 +8695,21 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     buffer = elst->data;
 
+    size = QT_UINT32 (buffer);
+    /* version, flags, n_segments */
+    if (size < 16) {
+      GST_WARNING_OBJECT (qtdemux, "Invalid edit list");
+      goto done;
+    }
     version = QT_UINT8 (buffer + 8);
     entry_size = (version == 1) ? 20 : 12;
 
     n_segments = QT_UINT32 (buffer + 12);
+
+    if (size < 16 + n_segments * entry_size) {
+      GST_WARNING_OBJECT (qtdemux, "Invalid edit list");
+      goto done;
+    }
 
     /* we might allocate a bit too much, at least allocate 1 segment */
     stream->segments = g_new (QtDemuxSegment, MAX (n_segments, 1));
@@ -8706,6 +8718,7 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
     time = 0;
     stime = 0;
     count = 0;
+    buffer += 16;
     for (i = 0; i < n_segments; i++) {
       guint64 duration;
       guint64 media_time;
@@ -8715,13 +8728,13 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
       GstClockTime media_start = GST_CLOCK_TIME_NONE;
 
       if (version == 1) {
-        media_time = QT_UINT64 (buffer + 24 + i * entry_size);
-        duration = QT_UINT64 (buffer + 16 + i * entry_size);
+        media_time = QT_UINT64 (buffer + 8);
+        duration = QT_UINT64 (buffer);
         if (media_time == G_MAXUINT64)
           time_valid = FALSE;
       } else {
-        media_time = QT_UINT32 (buffer + 20 + i * entry_size);
-        duration = QT_UINT32 (buffer + 16 + i * entry_size);
+        media_time = QT_UINT32 (buffer + 4);
+        duration = QT_UINT32 (buffer);
         if (media_time == G_MAXUINT32)
           time_valid = FALSE;
       }
@@ -8761,8 +8774,7 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
         segment->media_start = GST_CLOCK_TIME_NONE;
         segment->media_stop = GST_CLOCK_TIME_NONE;
       }
-      rate_int =
-          QT_UINT32 (buffer + ((version == 1) ? 32 : 24) + i * entry_size);
+      rate_int = QT_UINT32 (buffer + ((version == 1) ? 16 : 8));
 
       if (rate_int <= 1) {
         /* 0 is not allowed, some programs write 1 instead of the floating point
@@ -8792,6 +8804,8 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
             GST_TIME_ARGS (qtdemux->segment.stop));
         qtdemux->segment.stop = segment->stop_time;
       }
+
+      buffer += entry_size;
     }
     GST_DEBUG_OBJECT (qtdemux, "found %d segments", count);
     stream->n_segments = count;
