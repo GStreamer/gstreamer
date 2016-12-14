@@ -7,7 +7,7 @@ SUBDIRS = \
 include $(top_srcdir)/common/win32.mak
 	
 EXTRA_DIST = \
-	gst-plugins-ugly.spec depcomp \
+	depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
 	ChangeLog gst-plugins-ugly.doap autogen.sh \
 	$(win32)
@@ -44,6 +44,7 @@ include $(top_srcdir)/common/coverage/lcov.mak
 # cruft: plugins that have been merged or moved or renamed
 
 CRUFT_FILES = \
+	$(top_builddir)/gst-plugins-ugly.spec \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool
 

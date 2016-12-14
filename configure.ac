@@ -496,7 +496,6 @@ m4/Makefile
 po/Makefile.in
 pkgconfig/Makefile
 pkgconfig/gstreamer-plugins-ugly-uninstalled.pc
-gst-plugins-ugly.spec
 )
 
 dnl Create the config.h file for Visual Studio builds
