@@ -108,6 +108,11 @@ def format_ts(ts):
     s = (ts / sec)
     return '{:02d}.{:02d}.{:010.7f}'.format(h,m,s)
 
+def is_time_field(f):
+    # TODO: need proper units
+    return (f.endswith('/time') or f.endswith('-dts') or f.endswith('-pts') or
+        f.endswith('-duration'))
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
@@ -127,8 +132,7 @@ if __name__ == '__main__':
             mi = tv.get('min', '-')
             ma = tv.get('max', '-')
             avg = tv['sum']/tv['num']
-            # TODO: need proper units
-            if tk.endswith('/time') or tk.endswith('-dts') or tk.endswith('-pts'):
+            if is_time_field(tk):
                 if mi != '-':
                     mi = format_ts(mi)
                 if ma != '-':
