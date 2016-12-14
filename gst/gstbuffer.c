@@ -2242,7 +2242,7 @@ gst_buffer_remove_meta (GstBuffer * buffer, GstMeta * meta)
 }
 
 /**
- * gst_buffer_iterate_meta:
+ * gst_buffer_iterate_meta: (skip)
  * @buffer: a #GstBuffer
  * @state: an opaque state pointer
  *
