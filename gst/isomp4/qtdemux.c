@@ -7301,8 +7301,15 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
             offset = 0;
             break;
         }
-        if (offset)
+        if (offset) {
+          if (length < offset) {
+            GST_WARNING_OBJECT (qtdemux,
+                "skipping too small %" GST_FOURCC_FORMAT " box",
+                GST_FOURCC_ARGS (fourcc));
+            break;
+          }
           qtdemux_parse_container (qtdemux, node, buffer + offset, end);
+        }
         break;
       }
       case FOURCC_in24:
