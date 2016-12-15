@@ -882,6 +882,21 @@ gst_amc_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
     return FALSE;
   }
 
+  if (gst_structure_has_name (s, "audio/mpeg")) {
+    gint mpegversion;
+    const gchar *stream_format;
+
+    if (!gst_structure_get_int (s, "mpegversion", &mpegversion))
+      mpegversion = -1;
+    stream_format = gst_structure_get_string (s, "stream-format");
+
+    if (mpegversion == 4 && g_strcmp0 (stream_format, "adts") == 0) {
+      gst_amc_format_set_int (format, "is-adts", 1, &err);
+      if (err)
+        GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+    }
+  }
+
   /* FIXME: These buffers needs to be valid until the codec is stopped again */
   g_list_foreach (self->codec_datas, (GFunc) gst_buffer_unref, NULL);
   g_list_free (self->codec_datas);
