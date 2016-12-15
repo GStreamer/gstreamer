@@ -209,6 +209,7 @@ EXPORTS
 	gst_bus_disable_sync_message_emission
 	gst_bus_enable_sync_message_emission
 	gst_bus_flags_get_type
+	gst_bus_get_pollfd
 	gst_bus_get_type
 	gst_bus_have_pending
 	gst_bus_new

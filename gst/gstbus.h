@@ -149,6 +149,10 @@ void                    gst_bus_set_flushing            (GstBus * bus, gboolean 
 /* synchronous dispatching */
 void                    gst_bus_set_sync_handler        (GstBus * bus, GstBusSyncHandler func,
                                                          gpointer user_data, GDestroyNotify notify);
+
+/* asynchronous message notifications */
+void                    gst_bus_get_pollfd              (GstBus * bus, GPollFD *fd);
+
 /* GSource based dispatching */
 GSource *               gst_bus_create_watch            (GstBus * bus);
 guint                   gst_bus_add_watch_full          (GstBus * bus,

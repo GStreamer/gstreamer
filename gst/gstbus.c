@@ -761,6 +761,31 @@ no_replace:
   }
 }
 
+/**
+ * gst_bus_get_pollfd:
+ * @bus: A #GstBus
+ * @fd: A GPollFD to fill
+ *
+ * Gets the file descriptor from the bus which can be used to get notified about
+ * messages being available with functions like g_poll(), and allows integration
+ * into other event loops based on file descriptors.
+ * Whenever a message is available, the %POLLIN / %G_IO_IN event is set.
+ *
+ * Warning: NEVER read or write anything to the returned fd but only use it
+ * for getting notifications via g_poll() or similar and then use the normal
+ * GstBus API, e.g. gst_bus_pop().
+ *
+ * Since: 1.14
+ */
+void
+gst_bus_get_pollfd (GstBus * bus, GPollFD * fd)
+{
+  g_return_if_fail (GST_IS_BUS (bus));
+  g_return_if_fail (bus->priv->poll != NULL);
+
+  *fd = bus->priv->pollfd;
+}
+
 /* GSource for the bus
  */
 typedef struct

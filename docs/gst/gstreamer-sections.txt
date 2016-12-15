@@ -134,6 +134,7 @@ gst_bus_timed_pop_filtered
 gst_bus_set_flushing
 gst_bus_set_sync_handler
 gst_bus_sync_signal_handler
+gst_bus_get_pollfd
 gst_bus_create_watch
 gst_bus_add_watch_full
 gst_bus_add_watch
