@@ -139,6 +139,11 @@ gst_vaapi_get_surface_formats (GstVaapiDisplay * display, VAConfigID config)
     g_array_append_val (formats, fmt);
   }
 
+  if (formats->len == 0) {
+    g_array_unref (formats);
+    formats = NULL;
+  }
+
   g_free (surface_attribs);
   return formats;
 
@@ -149,5 +154,4 @@ error:
   }
 #endif
   return NULL;
-
 }
