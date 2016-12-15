@@ -1394,7 +1394,7 @@ parse_encoding_profile (const gchar * value)
 
       presence = g_ascii_strtoll (strpresence_v[1], &endptr, 10);
       if (endptr == strpresence_v[1]) {
-        g_printerr ("Wrong presence %s\n", strpresence_v[1]);
+        GST_ERROR ("Wrong presence %s\n", strpresence_v[1]);
 
         return NULL;
       }

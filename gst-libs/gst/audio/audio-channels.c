@@ -312,7 +312,7 @@ gst_audio_check_valid_channel_positions (const GstAudioChannelPosition *
  * @position: (array length=channels): The %GstAudioChannelPositions
  * @channels: The number of channels.
  * @force_order: Only consider the GStreamer channel order.
- * @channel_mask: (array): the output channel mask
+ * @channel_mask: (out): the output channel mask
  *
  * Convert the @position array of @channels channels to a bitmask.
  *
