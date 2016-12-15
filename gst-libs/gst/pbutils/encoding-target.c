@@ -526,7 +526,8 @@ parse_encoding_profile (GKeyFile * in, gchar * parentprofilename,
 {
   GstEncodingProfile *sprof = NULL;
   gchar **parent;
-  gchar *proftype, *format, *preset, *restriction, *pname, *description;
+  gchar *proftype, *format, *preset, *restriction, *pname, *description,
+      *locale;
   GstCaps *formatcaps = NULL;
   GstCaps *restrictioncaps = NULL;
   gboolean variableframerate;
@@ -564,21 +565,11 @@ parse_encoding_profile (GKeyFile * in, gchar * parentprofilename,
 
   pname = g_key_file_get_value (in, profilename, "name", NULL);
 
-  /* First try to get localized description */
-  {
-    gchar *locale;
-
-    locale = get_locale ();
-    if (locale != NULL) {
-      /* will try to fall back to untranslated string if no translation found */
-      description = g_key_file_get_locale_string (in, profilename,
-          "description", locale, NULL);
-      g_free (locale);
-    } else {
-      description =
-          g_key_file_get_string (in, profilename, "description", NULL);
-    }
-  }
+  locale = get_locale ();
+  /* will try to fall back to untranslated string if no translation found */
+  description = g_key_file_get_locale_string (in, profilename,
+      "description", locale, NULL);
+  g_free (locale);
 
   /* Note: a missing description is normal for non-container profiles */
   if (description == NULL) {
