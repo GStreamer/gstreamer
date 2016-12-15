@@ -2360,6 +2360,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     chain->demuxer = is_demuxer_element (element);
     chain->adaptive_demuxer = is_adaptive_demuxer_element (element);
 
+    is_decoder = strstr (gst_element_factory_get_metadata (factory,
+            GST_ELEMENT_METADATA_KLASS), "Decoder") != NULL;
+
     /* For adaptive streaming demuxer we insert a multiqueue after
      * this demuxer.
      * Now for the case where we have a container stream inside these
@@ -2375,7 +2378,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     if (chain->parent && chain->parent->parent) {
       GstDecodeChain *parent_chain = chain->parent->parent;
 
-      if (parent_chain->adaptive_demuxer)
+      if (parent_chain->adaptive_demuxer && (is_parser || is_decoder))
         chain->demuxer = TRUE;
     }
 
@@ -2385,8 +2388,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
      * the parser or decoder - not elsewhere, otherwise we won't have
      * timestamps.
      */
-    is_decoder = strstr (gst_element_factory_get_metadata (factory,
-            GST_ELEMENT_METADATA_KLASS), "Decoder") != NULL;
 
     if (!chain->parent && (is_parser || is_decoder) && dbin->use_buffering) {
       chain->demuxer = TRUE;
