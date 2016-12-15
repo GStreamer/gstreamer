@@ -408,6 +408,8 @@ gst_encoding_profile_class_init (GstEncodingProfileClass * klass)
 const gchar *
 gst_encoding_profile_get_name (GstEncodingProfile * profile)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), NULL);
+
   return profile->name;
 }
 
@@ -420,6 +422,8 @@ gst_encoding_profile_get_name (GstEncodingProfile * profile)
 const gchar *
 gst_encoding_profile_get_description (GstEncodingProfile * profile)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), NULL);
+
   return profile->description;
 }
 
@@ -433,6 +437,8 @@ gst_encoding_profile_get_description (GstEncodingProfile * profile)
 GstCaps *
 gst_encoding_profile_get_format (GstEncodingProfile * profile)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), NULL);
+
   return (profile->format ? gst_caps_ref (profile->format) : NULL);
 }
 
@@ -446,6 +452,8 @@ gst_encoding_profile_get_format (GstEncodingProfile * profile)
 const gchar *
 gst_encoding_profile_get_preset (GstEncodingProfile * profile)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), NULL);
+
   return profile->preset;
 }
 
@@ -458,6 +466,8 @@ gst_encoding_profile_get_preset (GstEncodingProfile * profile)
 const gchar *
 gst_encoding_profile_get_preset_name (GstEncodingProfile * profile)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), NULL);
+
   return profile->preset_name;
 }
 
@@ -471,6 +481,8 @@ gst_encoding_profile_get_preset_name (GstEncodingProfile * profile)
 guint
 gst_encoding_profile_get_presence (GstEncodingProfile * profile)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), 0);
+
   return profile->presence;
 }
 
@@ -502,6 +514,9 @@ gst_encoding_profile_is_enabled (GstEncodingProfile * profile)
 GstCaps *
 gst_encoding_profile_get_restriction (GstEncodingProfile * profile)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), NULL);
+
+
   return (profile->restriction ? gst_caps_ref (profile->restriction) : NULL);
 }
 
@@ -516,6 +531,8 @@ gst_encoding_profile_get_restriction (GstEncodingProfile * profile)
 void
 gst_encoding_profile_set_name (GstEncodingProfile * profile, const gchar * name)
 {
+  g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
+
   g_free (profile->name);
   profile->name = g_strdup (name);
 }
@@ -532,6 +549,8 @@ void
 gst_encoding_profile_set_description (GstEncodingProfile * profile,
     const gchar * description)
 {
+  g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
+
   g_free (profile->description);
   profile->description = g_strdup (description);
 }
@@ -546,6 +565,8 @@ gst_encoding_profile_set_description (GstEncodingProfile * profile,
 void
 gst_encoding_profile_set_format (GstEncodingProfile * profile, GstCaps * format)
 {
+  g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
+
   if (profile->format)
     gst_caps_unref (profile->format);
   profile->format = gst_caps_ref (format);
@@ -561,6 +582,8 @@ gst_encoding_profile_set_format (GstEncodingProfile * profile, GstCaps * format)
 gboolean
 gst_encoding_profile_get_allow_dynamic_output (GstEncodingProfile * profile)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), FALSE);
+
   return profile->allow_dynamic_output;
 }
 
@@ -577,6 +600,8 @@ void
 gst_encoding_profile_set_allow_dynamic_output (GstEncodingProfile * profile,
     gboolean allow_dynamic_output)
 {
+  g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
+
   profile->allow_dynamic_output = allow_dynamic_output;
 }
 
@@ -593,6 +618,8 @@ void
 gst_encoding_profile_set_preset (GstEncodingProfile * profile,
     const gchar * preset)
 {
+  g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
+
   g_free (profile->preset);
   profile->preset = g_strdup (preset);
 }
@@ -608,6 +635,8 @@ void
 gst_encoding_profile_set_preset_name (GstEncodingProfile * profile,
     const gchar * preset_name)
 {
+  g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
+
   g_free (profile->preset_name);
   profile->preset_name = g_strdup (preset_name);
 }
@@ -623,6 +652,8 @@ gst_encoding_profile_set_preset_name (GstEncodingProfile * profile,
 void
 gst_encoding_profile_set_presence (GstEncodingProfile * profile, guint presence)
 {
+  g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
+
   profile->presence = presence;
 }
 
@@ -655,6 +686,9 @@ void
 gst_encoding_profile_set_restriction (GstEncodingProfile * profile,
     GstCaps * restriction)
 {
+  g_return_if_fail (GST_IS_CAPS (restriction));
+  g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
+
   if (profile->restriction)
     gst_caps_unref (profile->restriction);
   profile->restriction = restriction;
@@ -717,6 +751,8 @@ const GList *
 gst_encoding_container_profile_get_profiles (GstEncodingContainerProfile *
     profile)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_CONTAINER_PROFILE (profile), NULL);
+
   return profile->encodingprofiles;
 }
 
@@ -761,6 +797,8 @@ gst_encoding_video_profile_class_init (GstEncodingVideoProfileClass * klass)
 guint
 gst_encoding_video_profile_get_pass (GstEncodingVideoProfile * prof)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_VIDEO_PROFILE (prof), 0);
+
   return prof->pass;
 }
 
@@ -774,6 +812,8 @@ gboolean
 gst_encoding_video_profile_get_variableframerate (GstEncodingVideoProfile *
     prof)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_VIDEO_PROFILE (prof), FALSE);
+
   return prof->variableframerate;
 }
 
@@ -789,6 +829,8 @@ gst_encoding_video_profile_get_variableframerate (GstEncodingVideoProfile *
 void
 gst_encoding_video_profile_set_pass (GstEncodingVideoProfile * prof, guint pass)
 {
+  g_return_if_fail (GST_IS_ENCODING_VIDEO_PROFILE (prof));
+
   prof->pass = pass;
 }
 
@@ -806,6 +848,8 @@ void
 gst_encoding_video_profile_set_variableframerate (GstEncodingVideoProfile *
     prof, gboolean variableframerate)
 {
+  g_return_if_fail (GST_IS_ENCODING_VIDEO_PROFILE (prof));
+
   prof->variableframerate = variableframerate;
 }
 
@@ -1065,6 +1109,9 @@ gst_encoding_audio_profile_new (GstCaps * format, const gchar * preset,
 gboolean
 gst_encoding_profile_is_equal (GstEncodingProfile * a, GstEncodingProfile * b)
 {
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (a), FALSE);
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (b), FALSE);
+
   return (_compare_encoding_profiles (a, b) == 0);
 }
 
@@ -1087,6 +1134,8 @@ gst_encoding_profile_get_input_caps (GstEncodingProfile * profile)
   GQuark out_name;
   guint i, len;
   GstCaps *fcaps;
+
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), NULL);
 
   if (GST_IS_ENCODING_CONTAINER_PROFILE (profile)) {
     GstCaps *res = gst_caps_new_empty ();
@@ -1152,6 +1201,8 @@ gst_encoding_profile_has_format (GstEncodingProfile * profile,
   GstCaps *caps;
   gboolean ret;
 
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), FALSE);
+
   caps = gst_encoding_profile_get_format (profile);
   ret = gst_structure_has_name (gst_caps_get_structure (caps, 0), media_type);
   gst_caps_unref (caps);
@@ -1163,6 +1214,8 @@ static gboolean
 gst_encoding_container_profile_has_video (GstEncodingContainerProfile * profile)
 {
   const GList *l;
+
+  g_return_val_if_fail (GST_IS_ENCODING_CONTAINER_PROFILE (profile), FALSE);
 
   for (l = profile->encodingprofiles; l != NULL; l = l->next) {
     if (GST_IS_ENCODING_VIDEO_PROFILE (l->data))
