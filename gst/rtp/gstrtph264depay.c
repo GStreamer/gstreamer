@@ -299,7 +299,6 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
       len += 2 + gst_buffer_get_size (g_ptr_array_index (rtph264depay->pps, i));
 
     codec_data = gst_buffer_new_and_alloc (len);
-    g_debug ("alloc_len: %u", len);
     gst_buffer_map (codec_data, &map, GST_MAP_READWRITE);
     data = map.data;
 
