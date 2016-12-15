@@ -280,7 +280,8 @@ do_element_stats (GstElementStats * stats, GstElementStats * peer_stats,
 static void
 do_buffer_stats (GstStructure * s)
 {
-  guint64 ts, buffer_pts, buffer_dur;
+  guint64 ts;
+  guint64 buffer_pts = GST_CLOCK_TIME_NONE, buffer_dur = GST_CLOCK_TIME_NONE;
   guint pad_ix, elem_ix, peer_elem_ix;
   guint size;
   GstBufferFlags buffer_flags;
@@ -293,9 +294,9 @@ do_buffer_stats (GstStructure * s)
       "element-ix", G_TYPE_UINT, &elem_ix,
       "peer-element-ix", G_TYPE_UINT, &peer_elem_ix,
       "buffer-size", G_TYPE_UINT, &size,
-      "buffer-pts", G_TYPE_UINT64, &buffer_pts,
-      "buffer-duration", G_TYPE_UINT64, &buffer_dur,
       "buffer-flags", GST_TYPE_BUFFER_FLAGS, &buffer_flags, NULL);
+  gst_structure_get_uint64 (s, "buffer-pts", &buffer_pts);
+  gst_structure_get_uint64 (s, "buffer-duration", &buffer_dur);
   last_ts = MAX (last_ts, ts);
   if (!(pad_stats = get_pad_stats (pad_ix))) {
     GST_WARNING ("no pad stats found for ix=%u", pad_ix);

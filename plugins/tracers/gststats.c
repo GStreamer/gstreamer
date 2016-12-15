@@ -251,12 +251,15 @@ do_buffer_stats (GstStatsTracer * self, GstPad * this_pad,
   GstElementStats *this_elem_stats = get_element_stats (self, this_elem);
   GstElement *that_elem = get_real_pad_parent (that_pad);
   GstElementStats *that_elem_stats = get_element_stats (self, that_elem);
+  GstClockTime pts = GST_BUFFER_PTS (buf);
+  GstClockTime dts = GST_BUFFER_DTS (buf);
+  GstClockTime dur = GST_BUFFER_DURATION (buf);
 
   gst_tracer_record_log (tr_buffer, (guint64) (guintptr) g_thread_self (),
       elapsed, this_pad_stats->index, this_elem_stats->index,
       that_pad_stats->index, that_elem_stats->index, gst_buffer_get_size (buf),
-      GST_BUFFER_PTS (buf), GST_BUFFER_DTS (buf), GST_BUFFER_DURATION (buf),
-      GST_BUFFER_FLAGS (buf));
+      GST_CLOCK_TIME_IS_VALID (pts), pts, GST_CLOCK_TIME_IS_VALID (dts), dts,
+      GST_CLOCK_TIME_IS_VALID (dur), dur, GST_BUFFER_FLAGS (buf));
 }
 
 static void
@@ -556,18 +559,21 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
       "buffer-pts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING, "presentation timestamp of the buffer in ns",
+          "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_OPTIONAL,
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
       "buffer-dts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING, "decoding timestamp of the buffer in ns",
+          "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_OPTIONAL,
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
       "buffer-duration", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING, "duration of the buffer in ns",
+          "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_OPTIONAL,
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
