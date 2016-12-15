@@ -641,7 +641,6 @@ static void
 gst_gl_window_default_send_message_async (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
 {
-  GstGLWindowPrivate *priv = window->priv;
   GstGLAsyncMessage *message = g_slice_new (GstGLAsyncMessage);
 
   message->callback = callback;
