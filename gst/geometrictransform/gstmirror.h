@@ -66,7 +66,7 @@ typedef struct _GstMirror GstMirror;
 typedef struct _GstMirrorClass GstMirrorClass;
 
 /**
- * GstColorEffectsPreset:
+ * GstMirrorMode:
  * @GST_MIRROR_MODE_LEFT: Split horizontally and reflect left into right
  * @GST_MIRROR_MODE_RIGHT: Split horizontally and reflect right into left
  * @GST_MIRROR_MODE_TOP: Split horizontally and reflect top into bottom
