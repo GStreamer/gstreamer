@@ -11,7 +11,6 @@ ges_tests = [
     ['ges/titles'],
     ['ges/transition'],
     ['ges/overlays'],
-    ['ges/text_properties'],
     ['ges/mixers'],
     ['ges/group'],
     ['ges/project'],
