@@ -51,6 +51,7 @@ LIBGSTCHECK_EXPORTED_VARS = \
 	_gst_check_raised_critical \
 	_gst_check_raised_warning \
 	_gst_check_expecting_log \
+	_gst_check_list_tests \
 	buffers \
 	check_cond \
 	check_debug \
