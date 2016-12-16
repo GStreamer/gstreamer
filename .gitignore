@@ -8,7 +8,6 @@ config.guess
 config.sub
 config.rpath
 configure
-gst-plugins-bad.spec
 gstreamer-libs-uninstalled*.pc
 gstreamer-libs*.pc
 gstreamer-play-uninstalled*.pc

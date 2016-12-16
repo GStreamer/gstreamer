@@ -12,7 +12,7 @@ DIST_SUBDIRS = \
 include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
-	gst-plugins-bad.spec depcomp \
+	depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
 	ChangeLog gst-plugins-bad.doap autogen.sh \
 	$(win32)
@@ -50,6 +50,7 @@ check: check-exports
 # cruft: plugins that have been merged or moved or renamed
 
 CRUFT_FILES = \
+	$(top_builddir)/gst-plugins-bad.spec \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
 	$(top_builddir)/ext/alsaspdif/.libs/*.{so,dll,DLL,dylib} \
