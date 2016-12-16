@@ -1204,7 +1204,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   sgroup->profile = sprof;
 
   /* NOTE for people reading this code:
-   * 
+   *
    * We construct the group starting by the furthest downstream element
    * and making our way up adding/syncing/linking as we go.
    *
@@ -1881,7 +1881,7 @@ create_elements_and_pads (GstEncodeBin * ebin)
 
     /* 2. Ghost the muxer source pad */
 
-    /* FIXME : We should figure out if it's a static/request/dyamic pad, 
+    /* FIXME : We should figure out if it's a static/request/dyamic pad,
      * but for the time being let's assume it's a static pad :) */
     muxerpad = gst_element_get_static_pad (muxer, "src");
     if (G_UNLIKELY (muxerpad == NULL))

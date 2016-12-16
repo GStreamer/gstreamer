@@ -22,114 +22,102 @@
  * SECTION:encoding-profile
  * @short_description: Encoding profile library
  *
- * <refsect2>
- * <para>
  * Functions to create and handle encoding profiles.
- * </para>
- * <para>
- * Encoding profiles describe the media types and settings one wishes to use for
- * an encoding process. The top-level profiles are commonly
+ *
+ * Encoding profiles describe the media types and settings one wishes to use
+ * for an encoding process. The top-level profiles are commonly
  * #GstEncodingContainerProfile(s) (which contains a user-readable name and
  * description along with which container format to use). These, in turn,
  * reference one or more #GstEncodingProfile(s) which indicate which encoding
  * format should be used on each individual streams.
- * </para>
- * <para>
- * #GstEncodingProfile(s) can be provided to the 'encodebin' element, which will take
- * care of selecting and setting up the required elements to produce an output stream
- * conforming to the specifications of the profile.
- * </para>
- * <para>
- * Unlike other systems, the encoding profiles do not specify which #GstElement to use
- * for the various encoding and muxing steps, but instead relies on specifying the format
- * one wishes to use.
- * </para>
- * <para>
- * Encoding profiles can be created at runtime by the application or loaded from (and saved
- * to) file using the #GstEncodingTarget API.
- * </para>
- * </refsect2>
  *
- * <refsect2 id="gst-validate-transcoding--encoding-profile">
- *    <title>The encoding profile serialization format</title>
- *    <para>This is the serialization format of a <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link>.</para>
- *    <para>
- *      Internally the transcoding application uses <link linkend="GstEncodeBin"><type>GstEncodeBin</type></link>. <command>gst-validate-transcoding-&GST_API_VERSION;</command> uses its own
- *      serialization format to describe the <link linkend="GstEncodeBin--profile"><type>GstEncodeBin.profile</type></link>
- *     property of the encodebin.
- *    </para>
- *    <para>
- *        The simplest serialized profile looks like:
- *    </para>
- *    <informalexample>
- *      <programlisting>muxer_source_caps:videoencoder_source_caps:audioencoder_source_caps</programlisting>
- *    </informalexample>
- *     <para>
- *         For example to encode a stream into a WebM container, with an OGG audio stream and a VP8 video stream,
- *         the serialized <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link> will look like:
- *     </para>
- *     <informalexample>
- *       <programlisting>video/webm:video/x-vp8:audio/x-vorbis</programlisting>
- *     </informalexample>
- *    <para>
- *        You can also set the preset name of the encoding profile using the caps+preset_name syntax as in:
- *    </para>
- *    <informalexample>
- *      <programlisting>video/webm:video/x-vp8+youtube-preset:audio/x-vorbis</programlisting>
- *    </informalexample>
- *    <para>
- *        Moreover, you can set the <link linkend="gst-encoding-profile-set-presence">presence</link> property of an
- *        encoding profile using the <code>|presence</code> syntax as in:
- *    </para>
- *    <informalexample>
- *       <programlisting>video/webm:video/x-vp8|1:audio/x-vorbis</programlisting>
- *    </informalexample>
- *    <para>
- *      This field allows you to specify how many times maximum a <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link> can be used inside an encodebin.
- *    </para>
- *    <para>
- *      You can also use the <code>restriction_caps->encoded_format_caps</code> syntax to specify the
- *      <link linked="gst-encoding-profile-get-restriction">restriction caps</link>
- *      to be set on a <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link>. It corresponds to the
- *      restriction <link linkend="GstCaps"><type>GstCaps</type></link> to apply before
- *      the encoder that will be used in the profile. The fields present in restriction
- *      caps are properties of the raw stream (that is, before encoding), such as height
- *      and width for video and depth and sampling rate for audio. This property does not
- *      make sense for muxers.
- *    </para>
- *    <para>
- *        To force a video stream to be encoded with a Full HD resolution (using WebM as the container format,
- *        VP8 as the video codec and Vorbis as the audio codec), you should use:
- *    </para>
- *    <informalexample>
- *      <programlisting>video/webm:video/x-raw,width=1920,height=1080->video/x-vp8:audio/x-vorbis</programlisting>
- *    </informalexample>
- *  <refsect3>
- *    <title>Some serialized encoding formats examples:</title>
- *    <para>
- *      MP3 audio and H264 in MP4:
- *    </para>
- *    <informalexample>
- *      <programlisting>video/quicktime,variant=iso:video/x-h264:audio/mpeg,mpegversion=1,layer=3</programlisting>
- *    </informalexample>
- *    <para>
- *      Vorbis and theora in OGG:
- *    </para>
- *    <informalexample>
- *      <programlisting>application/ogg:video/x-theora:audio/x-vorbis</programlisting>
- *    </informalexample>
- *     <para>
- *      AC3 and H264 in MPEG-TS:
- *    </para>
- *    <informalexample>
- *      <programlisting>video/mpegts:video/x-h264:audio/x-ac3</programlisting>
- *    </informalexample>
- *  </refsect3>
- * </refsect2>
- * <refsect2>
- * <title>Example: Creating a profile</title>
- * <para>
+ * #GstEncodingProfile(s) can be provided to the 'encodebin' element, which
+ * will take care of selecting and setting up the required elements to produce
+ * an output stream conforming to the specifications of the profile.
+ *
+ * Unlike other systems, the encoding profiles do not specify which #GstElement
+ * to use for the various encoding and muxing steps, but instead relies on
+ * specifying the format one wishes to use.
+ *
+ * Encoding profiles can be created at runtime by the application or loaded
+ * from (and saved to) file using the #GstEncodingTarget API.
+ *
+ * # The encoding profile serialization format
+ *
+ * This is the serialization format of a #GstEncodingProfile The simplest
+ * serialized profile looks like:
+ *
  * |[
+ *   muxer_source_caps:videoencoder_source_caps:audioencoder_source_caps
+ * ]|
+ *
+ * For example to encode a stream into a WebM container, with an OGG audio
+ * stream and a VP8 video stream, the serialized #GstEncodingProfilewill look
+ * like:
+ *
+ * |[
+ *   video/webm:video/x-vp8:audio/x-vorbis
+ * ]|
+ *
+ * You can also set the preset name of the encoding profile using the
+ * caps+preset_name syntax as in:
+ *
+ * |[
+ *   video/webm:video/x-vp8+youtube-preset:audio/x-vorbis
+ * ]|
+ *
+ * Moreover, you can set the `presence` property of an
+ * encoding profile using the `|presence` syntax as in:
+ *
+ *  |[
+ *   video/webm:video/x-vp8|1:audio/x-vorbis
+ * ]|
+ *
+ * This field allows specifies the maximum number of times a
+ * #GstEncodingProfile can be used inside an encodebin. If 0, it is not a
+ * mandatory stream.
+ *
+ * You can also use the `restriction_caps->encoded_format_caps` syntax to
+ * specify the restriction caps to be set on a #GstEncodingProfile
+ *
+ * It corresponds to the restriction #GstCaps to apply before the encoder that
+ * will be used in the profile. The fields present in restriction caps are
+ * properties of the raw stream (that is, before encoding), such as height and
+ * width for video and depth and sampling rate for audio. This property does
+ * not make sense for muxers. See #gst_encoding_profile_get_restriction for
+ * more details.
+ *
+ * To force a video stream to be encoded with a Full HD resolution (using WebM
+ * as the container format, VP8 as the video codec and Vorbis as the audio
+ * codec), you should use:
+ *
+ * |[
+ *   video/webm:video/x-raw,width=1920,height=1080->video/x-vp8:audio/x-vorbis
+ * ]|
+*
+ * ## Some serialized encoding formats examples:
+ *
+ * MP3 audio and H264 in MP4:
+ *
+ * |[
+ *   video/quicktime,variant=iso:video/x-h264:audio/mpeg,mpegversion=1,layer=3
+ * ]|
+ *
+ * Vorbis and theora in OGG:
+ *
+ * |[
+ *   application/ogg:video/x-theora:audio/x-vorbis
+ * ]|
+ *
+ * AC3 and H264 in MPEG-TS:
+ *
+ * |[
+ *   video/mpegts:video/x-h264:audio/x-ac3
+ * ]|
+ *
+ * # Example: Creating a profile
+ *
+ * |[<!-- language="c" -->
  * #include <gst/pbutils/encoding-profile.h>
  * ...
  * GstEncodingProfile *
@@ -159,12 +147,10 @@
  *
  *
  * ]|
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Example: Using an encoder preset with a profile</title>
- * <para>
- * |[
+ *
+ * # Example: Using an encoder preset with a profile
+ *
+ * |[ <!-- language="c" -->
  * #include <gst/pbutils/encoding-profile.h>
  * ...
  * GstEncodingProfile *
@@ -204,12 +190,10 @@
  *
  *
  * ]|
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Example: Listing categories, targets and profiles</title>
- * <para>
- * |[
+ *
+ * # Example: Listing categories, targets and profiles
+ *
+ * |[ <!-- language="C" -->
  * #include <gst/pbutils/encoding-profile.h>
  * ...
  * GstEncodingProfile *prof;
@@ -238,8 +222,6 @@
  *
  * ...
  * ]|
- * </para>
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
