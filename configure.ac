@@ -487,7 +487,6 @@ AC_CONFIG_FILES(
 Makefile
 common/Makefile
 common/m4/Makefile
-gst-libav.spec
 ext/Makefile
 ext/libav/Makefile
 ext/libswscale/Makefile

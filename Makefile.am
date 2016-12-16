@@ -5,7 +5,7 @@ SUBDIRS = $(LIBAV_SUBDIRS) $(COMMON_SUBDIRS) pkgconfig
 DIST_SUBDIRS = $(COMMON_SUBDIRS) gst-libs pkgconfig
 
 EXTRA_DIST = \
-	gst-libav.spec depcomp autogen.sh \
+	depcomp autogen.sh \
 	AUTHORS COPYING NEWS README ChangeLog gst-libav.doap
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
@@ -32,6 +32,7 @@ build-checks:
 endif
 
 CRUFT_FILES = \
+	$(top_builddir)/gst-libav.spec \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
 	$(top_builddir)/common/m4/libtool.m4 \
