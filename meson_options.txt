@@ -4,3 +4,4 @@ option('use_orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto
 option('disable_introspection',
         type : 'boolean', value : false,
         description : 'Whether to disable the introspection generation')
+option('disable_gtkdoc', type : 'boolean', value : false)
