@@ -123,7 +123,7 @@ print_plugins (void)
  * @argc: (inout) (allow-none): pointer to application's argc
  * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
  *
- * Tnitialize GStreamer testing
+ * Initialize GStreamer testing
  *
  * NOTE: Needs to be called before creating the testsuite
  * so that the tests can be listed.
