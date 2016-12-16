@@ -14,7 +14,7 @@ DIST_SUBDIRS = $(SUBDIRS)
 include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
-	gst-editing-services.spec depcomp \
+	depcomp \
 	AUTHORS COPYING NEWS README RELEASE \
 	ChangeLog autogen.sh gst-editing-services.doap \
 	$(win32)
@@ -54,8 +54,9 @@ endif
 
 # cruft: plugins that have been merged or moved or renamed
 CRUFT_FILES = \
- $(top_builddir)/common/shave \
- $(top_builddir)/common/shave-libtool
+	$(top_builddir)/gst-editing-services.spec \
+	$(top_builddir)/common/shave \
+	$(top_builddir)/common/shave-libtool
 
 include $(top_srcdir)/common/cruft.mak
 

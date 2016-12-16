@@ -36,7 +36,6 @@ log
 /config.sub
 /configure
 /depcomp
-/gst-editing-services.spec
 /install-sh
 /libtool
 /ltmain.sh
