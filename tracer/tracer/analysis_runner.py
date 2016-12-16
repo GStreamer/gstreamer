@@ -28,11 +28,14 @@ class AnalysisRunner(object):
         return (not event[Parser.F_LINE] and not event[Parser.F_FILENAME])
 
     def run(self):
-        for event in self.log:
-            # check if it is a tracer.class or tracer event
-            if self.is_tracer_class(event):
-                self.handle_tracer_class(event)
-            elif self.is_tracer_entry(event):
-                self.handle_tracer_entry(event)
-            #else:
-            #    print("unhandled:", repr(event))
+        try:
+            for event in self.log:
+                # check if it is a tracer.class or tracer event
+                if self.is_tracer_class(event):
+                    self.handle_tracer_class(event)
+                elif self.is_tracer_entry(event):
+                    self.handle_tracer_entry(event)
+                #else:
+                #    print("unhandled:", repr(event))
+        except StopIteration:
+            pass
