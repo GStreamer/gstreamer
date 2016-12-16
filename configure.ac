@@ -356,7 +356,6 @@ dnl *** output files ***
 dnl keep this alphabetic per directory, please
 AC_CONFIG_FILES([
 Makefile
-gst-rtsp.spec
 common/Makefile
 common/m4/Makefile
 gst/Makefile

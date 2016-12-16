@@ -34,7 +34,6 @@ ltmain.sh
 missing
 stamp-h1
 tags
-gst-rtsp.spec
 stamp-h.in
 .dirstamp
 

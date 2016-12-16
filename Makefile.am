@@ -22,13 +22,13 @@ include $(top_srcdir)/common/win32.mak
 EXTRA_DIST = \
 	ChangeLog autogen.sh depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
-	gst-rtsp.spec docs/design/gst-rtp-server-design \
+	docs/design/gst-rtp-server-design \
 	gst-rtsp-server.doap \
 	$(win32)
 
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
-DISTCLEANFILES = _stdint.h gst-rtsp.spec
+DISTCLEANFILES = _stdint.h
 
 include $(top_srcdir)/common/release.mak
 include $(top_srcdir)/common/po.mak
@@ -52,6 +52,7 @@ endif
 
 # cruft: plugins that have been merged or moved or renamed
 CRUFT_FILES = \
+	$(top_builddir)/gst-rtsp.spec \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
 	$(top_builddir)/common/m4/codeset.m4 \
