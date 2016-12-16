@@ -25,3 +25,5 @@ gstisomp4 = library('gstisomp4',
   install : true,
   install_dir : plugins_install_dir,
 )
+
+install_data(sources: 'GstQTMux.prs', install_dir: presetdir)

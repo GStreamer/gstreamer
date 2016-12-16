@@ -57,4 +57,6 @@ if vpx_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
+
+  install_data(sources: ['GstVP8Enc.prs'], install_dir: presetdir)
 endif

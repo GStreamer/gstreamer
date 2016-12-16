@@ -262,6 +262,8 @@ else
     endif
 endif
 
+presetdir = join_paths(get_option('datadir'), 'gstreamer-' + api_version, 'presets')
+
 subdir('gst')
 subdir('sys')
 subdir('ext')
