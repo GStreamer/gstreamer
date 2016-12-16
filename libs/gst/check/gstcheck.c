@@ -150,7 +150,6 @@ gst_check_init (int *argc, char **argv[])
     else
       g_printerr ("Error initializing: Unknown error!\n");
     g_clear_error (&err);
-    g_option_context_free (ctx);
   }
   g_option_context_free (ctx);
 
