@@ -43,4 +43,4 @@ class TestParser(unittest.TestCase):
         sys.stdin = TRACER_LOG_DATA
         with Parser('-') as log:
             event = next(log)
-            self.assertEquals(len(event), 10)
+            self.assertEqual(len(event), 10)

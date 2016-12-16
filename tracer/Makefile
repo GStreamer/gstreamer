@@ -9,4 +9,4 @@ logs/trace.latency.log:
 	  gst-launch-1.0 -q audiotestsrc num-buffers=10 wave=silence ! audioconvert ! autoaudiosink
 
 check: $(TEST_DATA)
-	python3 -m unittest discover tracer
+	python3 -m unittest discover tracer "*_test.py"
