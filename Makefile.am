@@ -39,10 +39,6 @@ build-checks:
 	true
 endif
 
-win32-update:
-	cp $(top_builddir)/win32/common/config.h-new \
-	    $(top_srcdir)/win32/common/config.h
-
 include $(top_srcdir)/common/coverage/lcov.mak
 
 check: check-exports
@@ -50,6 +46,7 @@ check: check-exports
 # cruft: plugins that have been merged or moved or renamed
 
 CRUFT_FILES = \
+	$(top_builddir)/win32/common/config.h-new \
 	$(top_builddir)/gst-plugins-bad.spec \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \

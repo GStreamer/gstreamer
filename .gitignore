@@ -80,8 +80,6 @@ Build
 *.log
 *.trs
 
-/win32/common/config.h-new
-
 /sys/bluez/bluez.c
 /sys/bluez/bluez.h
 
