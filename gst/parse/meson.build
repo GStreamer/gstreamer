@@ -1,11 +1,5 @@
 cc = meson.get_compiler('c')
 
-py3 = find_program('python3', required : false)
-if not py3.found()
-  # Maybe 'python' is Python 3
-  py3 = find_program('python')
-endif
-
 # Find flex, configure lex generator
 flex_cdata = configuration_data()
 

@@ -364,6 +364,13 @@ if libtype == 'static'
   gst_c_args += ['-DGST_STATIC_COMPILATION']
 endif
 
+# Used in gst/parse/meson.build and below
+py3 = find_program('python3', required : false)
+if not py3.found()
+  # Maybe 'python' is Python 3
+  py3 = find_program('python')
+endif
+
 subdir('gst')
 subdir('libs')
 subdir('plugins')
@@ -384,5 +391,4 @@ else
   endif
 endif
 
-python3 = find_program('python3')
-run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
+run_command(py3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
