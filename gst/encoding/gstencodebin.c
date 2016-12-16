@@ -1140,8 +1140,12 @@ _post_missing_plugin_message (GstEncodeBin * ebin, GstEncodingProfile * prof)
   GstCaps *format;
   format = gst_encoding_profile_get_format (prof);
 
-  GST_ERROR_OBJECT (ebin, "Couldn't create encoder for format %" GST_PTR_FORMAT,
-      format);
+  GST_ERROR_OBJECT (ebin,
+      "Couldn't create encoder with preset %s and preset name %s"
+      " for format %" GST_PTR_FORMAT,
+      GST_STR_NULL (gst_encoding_profile_get_preset (prof)),
+      GST_STR_NULL (gst_encoding_profile_get_preset_name (prof)), format);
+
   /* missing plugin support */
   gst_element_post_message (GST_ELEMENT_CAST (ebin),
       gst_missing_encoder_message_new (GST_ELEMENT_CAST (ebin), format));
