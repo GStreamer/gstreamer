@@ -1374,11 +1374,11 @@ combo_search (const gchar * pname)
   /* Splitup */
   split = g_strsplit (pname, "/", 3);
   split_length = g_strv_length (split);
-  if (split_length != 2 && split_length != 3)
+  if (split_length > 3)
     return NULL;
 
-  res = gst_encoding_profile_find (split[0], split[1],
-      split_length == 3 ? split[2] : NULL);
+  res = gst_encoding_profile_find (split[0],
+      split_length == 2 ? split[1] : NULL, split_length == 3 ? split[2] : NULL);
 
   g_strfreev (split);
 
