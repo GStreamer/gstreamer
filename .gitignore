@@ -1,6 +1,5 @@
 Makefile
 Makefile.in
-gst-python.spec
 aclocal.m4
 autoregen.sh
 compile
