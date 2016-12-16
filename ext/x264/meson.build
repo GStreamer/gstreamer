@@ -19,4 +19,6 @@ if x264_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
+
+  install_data(sources: 'GstX264Enc.prs', install_dir: presetdir)
 endif

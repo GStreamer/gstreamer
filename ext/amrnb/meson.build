@@ -9,4 +9,5 @@ if amrnb_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
+  install_data(sources: 'GstAmrnbEnc.prs', install_dir: presetdir)
 endif
