@@ -4439,15 +4439,22 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   /* Now at the last element */
   if ((chain->elements || !chain->active_group) &&
       (chain->endpad || chain->deadend)) {
+    GstPad *srcpad;
+
     s = gst_structure_new_id_empty (topology_structure_name);
     gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, chain->endcaps,
         NULL);
 
     if (chain->endpad) {
       gst_structure_id_set (u, topology_pad, GST_TYPE_PAD, chain->endpad, NULL);
+
+      srcpad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (chain->endpad));
       gst_structure_id_set (u, topology_element_srcpad, GST_TYPE_PAD,
-          chain->endpad, NULL);
+          srcpad, NULL);
+
+      gst_object_unref (srcpad);
     }
+
     gst_structure_id_set (s, topology_next, GST_TYPE_STRUCTURE, u, NULL);
     gst_structure_free (u);
     u = s;
