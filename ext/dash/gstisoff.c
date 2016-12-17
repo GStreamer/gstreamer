@@ -379,74 +379,47 @@ gst_isoff_parse_sidx_entry (GstSidxBoxEntry * entry, GstByteReader * reader)
 }
 
 GstIsoffParserResult
-gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buffer,
-    guint * consumed)
+gst_isoff_sidx_parser_parse (GstSidxParser * parser,
+    GstByteReader * reader, guint * consumed)
 {
   GstIsoffParserResult res = GST_ISOFF_PARSER_OK;
-  GstByteReader reader;
-  GstMapInfo info;
   gsize remaining;
-  guint32 fourcc;
-
-  if (!gst_buffer_map (buffer, &info, GST_MAP_READ)) {
-    *consumed = 0;
-    return GST_ISOFF_PARSER_ERROR;
-  }
-
-  gst_byte_reader_init (&reader, info.data, info.size);
 
   switch (parser->status) {
     case GST_ISOFF_SIDX_PARSER_INIT:
-      if (!gst_isoff_parse_box_header (&reader, &fourcc, NULL, NULL,
-              &parser->size))
-        break;
-
-      if (fourcc != GST_ISOFF_FOURCC_SIDX) {
-        res = GST_ISOFF_PARSER_UNEXPECTED;
-        gst_byte_reader_set_pos (&reader, 0);
-        break;
-      }
-
-      if (parser->size == 0) {
-        res = GST_ISOFF_PARSER_ERROR;
-        gst_byte_reader_set_pos (&reader, 0);
-        break;
-      }
-
       /* Try again once we have enough data for the FullBox header */
-      if (gst_byte_reader_get_remaining (&reader) < 4) {
-        gst_byte_reader_set_pos (&reader, 0);
+      if (gst_byte_reader_get_remaining (reader) < 4) {
+        gst_byte_reader_set_pos (reader, 0);
         break;
       }
-      parser->sidx.version = gst_byte_reader_get_uint8_unchecked (&reader);
-      parser->sidx.flags = gst_byte_reader_get_uint24_le_unchecked (&reader);
+      parser->sidx.version = gst_byte_reader_get_uint8_unchecked (reader);
+      parser->sidx.flags = gst_byte_reader_get_uint24_le_unchecked (reader);
 
       parser->status = GST_ISOFF_SIDX_PARSER_HEADER;
 
     case GST_ISOFF_SIDX_PARSER_HEADER:
-      remaining = gst_byte_reader_get_remaining (&reader);
+      remaining = gst_byte_reader_get_remaining (reader);
       if (remaining < 12 + (parser->sidx.version == 0 ? 8 : 16)) {
         break;
       }
 
-      parser->sidx.ref_id = gst_byte_reader_get_uint32_be_unchecked (&reader);
-      parser->sidx.timescale =
-          gst_byte_reader_get_uint32_be_unchecked (&reader);
+      parser->sidx.ref_id = gst_byte_reader_get_uint32_be_unchecked (reader);
+      parser->sidx.timescale = gst_byte_reader_get_uint32_be_unchecked (reader);
       if (parser->sidx.version == 0) {
         parser->sidx.earliest_pts =
-            gst_byte_reader_get_uint32_be_unchecked (&reader);
+            gst_byte_reader_get_uint32_be_unchecked (reader);
         parser->sidx.first_offset =
-            gst_byte_reader_get_uint32_be_unchecked (&reader);
+            gst_byte_reader_get_uint32_be_unchecked (reader);
       } else {
         parser->sidx.earliest_pts =
-            gst_byte_reader_get_uint64_be_unchecked (&reader);
+            gst_byte_reader_get_uint64_be_unchecked (reader);
         parser->sidx.first_offset =
-            gst_byte_reader_get_uint64_be_unchecked (&reader);
+            gst_byte_reader_get_uint64_be_unchecked (reader);
       }
       /* skip 2 reserved bytes */
-      gst_byte_reader_skip_unchecked (&reader, 2);
+      gst_byte_reader_skip_unchecked (reader, 2);
       parser->sidx.entries_count =
-          gst_byte_reader_get_uint16_be_unchecked (&reader);
+          gst_byte_reader_get_uint16_be_unchecked (reader);
 
       GST_LOG ("Timescale: %" G_GUINT32_FORMAT, parser->sidx.timescale);
       GST_LOG ("Earliest pts: %" G_GUINT64_FORMAT, parser->sidx.earliest_pts);
@@ -469,13 +442,13 @@ gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buffer,
         GstSidxBoxEntry *entry =
             &parser->sidx.entries[parser->sidx.entry_index];
 
-        remaining = gst_byte_reader_get_remaining (&reader);
+        remaining = gst_byte_reader_get_remaining (reader);
         if (remaining < 12)
           break;
 
         entry->offset = parser->cumulative_entry_size;
         entry->pts = parser->cumulative_pts;
-        gst_isoff_parse_sidx_entry (entry, &reader);
+        gst_isoff_parse_sidx_entry (entry, reader);
         entry->duration = gst_util_uint64_scale_int_round (entry->duration,
             GST_SECOND, parser->sidx.timescale);
         parser->cumulative_entry_size += entry->size;
@@ -500,7 +473,54 @@ gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buffer,
       break;
   }
 
-  *consumed = gst_byte_reader_get_pos (&reader);
+  *consumed = gst_byte_reader_get_pos (reader);
+
+  return res;
+}
+
+GstIsoffParserResult
+gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buffer,
+    guint * consumed)
+{
+  GstIsoffParserResult res = GST_ISOFF_PARSER_OK;
+  GstByteReader reader;
+  GstMapInfo info;
+  guint32 fourcc;
+
+  if (!gst_buffer_map (buffer, &info, GST_MAP_READ)) {
+    *consumed = 0;
+    return GST_ISOFF_PARSER_ERROR;
+  }
+
+  gst_byte_reader_init (&reader, info.data, info.size);
+
+  if (parser->status == GST_ISOFF_SIDX_PARSER_INIT) {
+    if (!gst_isoff_parse_box_header (&reader, &fourcc, NULL, NULL,
+            &parser->size))
+      goto done;
+
+    if (fourcc != GST_ISOFF_FOURCC_SIDX) {
+      res = GST_ISOFF_PARSER_UNEXPECTED;
+      gst_byte_reader_set_pos (&reader, 0);
+      goto done;
+    }
+
+    if (parser->size == 0) {
+      res = GST_ISOFF_PARSER_ERROR;
+      gst_byte_reader_set_pos (&reader, 0);
+      goto done;
+    }
+
+    /* Try again once we have enough data for the FullBox header */
+    if (gst_byte_reader_get_remaining (&reader) < 4) {
+      gst_byte_reader_set_pos (&reader, 0);
+      goto done;
+    }
+  }
+
+  res = gst_isoff_sidx_parser_parse (parser, &reader, consumed);
+
+done:
   gst_buffer_unmap (buffer, &info);
   return res;
 }

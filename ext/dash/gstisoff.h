@@ -187,6 +187,7 @@ typedef struct _GstSidxParser
 
 void gst_isoff_sidx_parser_init (GstSidxParser * parser);
 void gst_isoff_sidx_parser_clear (GstSidxParser * parser);
+GstIsoffParserResult gst_isoff_sidx_parser_parse (GstSidxParser * parser, GstByteReader * reader, guint * consumed);
 GstIsoffParserResult gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buf, guint * consumed);
 
 G_END_DECLS
