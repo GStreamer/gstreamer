@@ -97,18 +97,18 @@ gst_qt_src_class_init (GstQtSrcClass * klass)
   gobject_class->finalize = gst_qt_src_finalize;
 
   gst_element_class_set_metadata (gstelement_class, "Qt Video Source",
-      "Source/Video", "A video src the grab window from a qml view",
+      "Source/Video", "A video src that captures a window from a QML view",
       "Multimedia Team <shmmmw@freescale.com>");
 
   g_object_class_install_property (gobject_class, PROP_WINDOW,
       g_param_spec_pointer ("window", "QQuickWindow",
-          "The QQuickWindow to place in the object heirachy",
+          "The QQuickWindow to place in the object hierarchy",
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_DEFAULT_FBO,
       g_param_spec_boolean ("use-default-fbo",
-          "If use default fbo",
-          "When set TRUE, it will not create new fbo for qml render thread",
+          "Whether to use default FBO",
+          "When set it will not create a new FBO for the QML render thread",
           FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_add_pad_template (gstelement_class,
