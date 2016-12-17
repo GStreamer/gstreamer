@@ -163,21 +163,16 @@ configure_file(input : 'gstversion.h.in',
   install_dir : 'include/gstreamer-1.0/gst',
   configuration : cdata)
 
-mkenums = find_program('build_mkenum.py')
-glib_mkenums = find_program('glib-mkenums')
+gst_enums = gnome.mkenums('gstenumtypes',
+  sources : gst_headers,
+  h_template : 'gstenumtypes.h.template',
+  c_template : 'gstenumtypes.c.template',
+  install_header : true,
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst'))
 
-gstenum_h = custom_target('gstenum_h',
-  output : 'gstenumtypes.h',
-  input : gst_headers,
-  install : true,
-  install_dir : 'include/gstreamer-1.0/gst',
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+gstenum_h = gst_enums[0]
+gstenum_c = gst_enums[1]
 
-gstenum_c = custom_target('gstenum_c',
-  output : 'gstenumtypes.c',
-  input : gst_headers,
-  depends : [gstenum_h],
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
 
 subdir('parse')
 subdir('printf')
