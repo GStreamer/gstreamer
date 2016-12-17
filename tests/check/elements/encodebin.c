@@ -1081,6 +1081,38 @@ GST_START_TEST (test_encodebin_missing_plugin_messages)
 
 GST_END_TEST;
 
+GST_START_TEST (test_encodebin_fallback_profiles_on_failure)
+{
+  GstElement *ebin;
+  GstPad *sinkpad = NULL;
+  GstCaps *vorbiscaps;
+  GstEncodingProfile *profile, *vorbis_profile;
+
+  ebin = gst_element_factory_make ("encodebin", NULL);
+
+  /* Create a ogg profile with a vorbis sub profile
+   * that can't be 'instanciated' because its preset is set
+   * to nowaythispresetexists. */
+  profile = create_ogg_vorbis_profile (0, "nowaythispresetexists");
+  vorbis_profile = create_vorbis_only_profile ();
+  gst_encoding_container_profile_add_profile (GST_ENCODING_CONTAINER_PROFILE
+      (profile), vorbis_profile);
+  set_profile (ebin, profile);
+
+  /* Check if the audio sink pad can be created, meaning
+   * that the first profile with a 'nowaythispresetexists'
+   * preset has been skipped. */
+  vorbiscaps = gst_caps_from_string ("audio/x-vorbis");
+  g_signal_emit_by_name (ebin, "request-pad", vorbiscaps, &sinkpad);
+  _caps_match (sinkpad, "audio/x-raw;audio/x-vorbis");
+  gst_element_release_request_pad (ebin, sinkpad);
+  gst_object_unref (sinkpad);
+
+  gst_object_unref (ebin);
+};
+
+GST_END_TEST;
+
 static Suite *
 encodebin_suite (void)
 {
@@ -1107,6 +1139,7 @@ encodebin_suite (void)
   tcase_add_test (tc_chain, test_encodebin_reuse);
   tcase_add_test (tc_chain, test_encodebin_named_requests);
   tcase_add_test (tc_chain, test_encodebin_missing_plugin_messages);
+  tcase_add_test (tc_chain, test_encodebin_fallback_profiles_on_failure);
 
   return s;
 }
