@@ -4368,7 +4368,7 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
 
 static GstCaps *
 _gst_element_get_linked_caps (GstElement * src, GstElement * sink,
-    GstPad ** srcpad)
+    GstElement * capsfilter, GstPad ** srcpad)
 {
   GstIterator *it;
   GstElement *parent;
@@ -4385,12 +4385,9 @@ _gst_element_get_linked_caps (GstElement * src, GstElement * sink,
         peer = gst_pad_get_peer (pad);
         if (peer) {
           parent = gst_pad_get_parent_element (peer);
-          if (parent == sink) {
+          if (parent == sink || (capsfilter != NULL && parent == capsfilter)) {
             caps = gst_pad_get_current_caps (pad);
-            if (srcpad) {
-              gst_object_ref (pad);
-              *srcpad = pad;
-            }
+            *srcpad = gst_object_ref (pad);
             done = TRUE;
           }
 
@@ -4478,7 +4475,7 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   l = (chain->elements && chain->elements->next) ? chain->elements : NULL;
   for (; l && l->next; l = l->next) {
     GstDecodeElement *delem, *delem_next;
-    GstElement *elem, *elem_next;
+    GstElement *elem, *capsfilter, *elem_next;
     GstCaps *caps;
     GstPad *srcpad;
 
@@ -4486,9 +4483,10 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
     elem = delem->element;
     delem_next = l->next->data;
     elem_next = delem_next->element;
+    capsfilter = delem_next->capsfilter;
     srcpad = NULL;
 
-    caps = _gst_element_get_linked_caps (elem_next, elem, &srcpad);
+    caps = _gst_element_get_linked_caps (elem_next, elem, capsfilter, &srcpad);
 
     if (caps) {
       s = gst_structure_new_id_empty (topology_structure_name);
