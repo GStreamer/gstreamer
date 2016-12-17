@@ -57,6 +57,7 @@ GST_DEBUG_CATEGORY_STATIC (discoverer_debug);
 
 static GQuark _CAPS_QUARK;
 static GQuark _TAGS_QUARK;
+static GQuark _ELEMENT_SRCPAD_QUARK;
 static GQuark _TOC_QUARK;
 static GQuark _STREAM_ID_QUARK;
 static GQuark _MISSING_PLUGIN_QUARK;
@@ -139,6 +140,7 @@ _do_init (void)
   GST_DEBUG_CATEGORY_INIT (discoverer_debug, "discoverer", 0, "Discoverer");
 
   _CAPS_QUARK = g_quark_from_static_string ("caps");
+  _ELEMENT_SRCPAD_QUARK = g_quark_from_static_string ("element-srcpad");
   _TAGS_QUARK = g_quark_from_static_string ("tags");
   _TOC_QUARK = g_quark_from_static_string ("toc");
   _STREAM_ID_QUARK = g_quark_from_static_string ("stream-id");
@@ -804,19 +806,28 @@ static GstDiscovererStreamInfo *
 collect_information (GstDiscoverer * dc, const GstStructure * st,
     GstDiscovererStreamInfo * parent)
 {
-  GstCaps *caps;
+  GstPad *srcpad;
+  GstCaps *caps = NULL;
   GstStructure *caps_st;
   GstTagList *tags_st;
   const gchar *name;
   gint tmp, tmp2;
   guint utmp;
 
-  if (!st || !gst_structure_id_has_field (st, _CAPS_QUARK)) {
+  if (!st || (!gst_structure_id_has_field (st, _CAPS_QUARK)
+          && !gst_structure_id_has_field (st, _ELEMENT_SRCPAD_QUARK))) {
     GST_WARNING ("Couldn't find caps !");
     return make_info (parent, GST_TYPE_DISCOVERER_STREAM_INFO, NULL);
   }
 
-  gst_structure_id_get (st, _CAPS_QUARK, GST_TYPE_CAPS, &caps, NULL);
+  if (gst_structure_id_get (st, _ELEMENT_SRCPAD_QUARK, GST_TYPE_PAD, &srcpad,
+          NULL)) {
+    caps = gst_pad_get_current_caps (srcpad);
+    gst_object_unref (srcpad);
+  }
+  if (!caps) {
+    gst_structure_id_get (st, _CAPS_QUARK, GST_TYPE_CAPS, &caps, NULL);
+  }
 
   if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps)) {
     GST_WARNING ("Couldn't find caps !");
@@ -1130,6 +1141,8 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
       /* FIXME : aggregate with information from main streams */
       GST_DEBUG ("Coudn't find 'next' ! might be the last entry");
     } else {
+      GstPad *srcpad;
+
       st = (GstStructure *) gst_value_get_structure (nval);
 
       GST_DEBUG ("next is a structure %" GST_PTR_FORMAT, st);
@@ -1137,7 +1150,16 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
       if (!parent)
         parent = res;
 
-      if (gst_structure_id_get (st, _CAPS_QUARK, GST_TYPE_CAPS, &caps, NULL)) {
+      if (gst_structure_id_get (st, _ELEMENT_SRCPAD_QUARK, GST_TYPE_PAD,
+              &srcpad, NULL)) {
+        caps = gst_pad_get_current_caps (srcpad);
+        gst_object_unref (srcpad);
+      }
+      if (!caps) {
+        gst_structure_id_get (st, _CAPS_QUARK, GST_TYPE_CAPS, &caps, NULL);
+      }
+
+      if (caps) {
         if (child_is_same_stream (parent->caps, caps)) {
           /* We sometimes get an extra sub-stream from the parser. If this is
            * the case, we just replace the parent caps with this stream's caps
@@ -1156,8 +1178,7 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
           res->next = next;
           next->previous = res;
         }
-        if (caps)
-          gst_caps_unref (caps);
+        gst_caps_unref (caps);
       }
     }
 
@@ -1172,9 +1193,18 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
     guint i, len;
     GstDiscovererContainerInfo *cont;
     GstTagList *tags;
+    GstPad *srcpad;
 
-    if (!gst_structure_id_get (topology, _CAPS_QUARK,
-            GST_TYPE_CAPS, &caps, NULL))
+    if (gst_structure_id_get (topology, _ELEMENT_SRCPAD_QUARK, GST_TYPE_PAD,
+            &srcpad, NULL)) {
+      caps = gst_pad_get_current_caps (srcpad);
+      gst_object_unref (srcpad);
+    }
+    if (!caps) {
+      gst_structure_id_get (topology, _CAPS_QUARK, GST_TYPE_CAPS, &caps, NULL);
+    }
+
+    if (!caps)
       GST_WARNING ("Couldn't find caps !");
 
     len = gst_value_list_get_size (nval);
