@@ -105,12 +105,12 @@ gst_qt_sink_class_init (GstQtSinkClass * klass)
   gobject_class->get_property = gst_qt_sink_get_property;
 
   gst_element_class_set_metadata (gstelement_class, "Qt Video Sink",
-      "Sink/Video", "A video sink the renders to a QQuickItem",
+      "Sink/Video", "A video sink that renders to a QQuickItem",
       "Matthew Waters <matthew@centricular.com>");
 
   g_object_class_install_property (gobject_class, PROP_WIDGET,
       g_param_spec_pointer ("widget", "QQuickItem",
-          "The QQuickItem to place in the object heirachy",
+          "The QQuickItem to place in the object hierarchy",
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
