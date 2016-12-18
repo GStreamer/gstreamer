@@ -1243,7 +1243,9 @@ mpegts_base_get_tags_from_eit (MpegTSBase * base, GstMpegtsSection * section)
 
           if (gst_mpegts_descriptor_parse_dvb_short_event (desc, NULL, &name,
                   &text)) {
-            program->tags = gst_tag_list_new_empty ();
+            if (!program->tags)
+              program->tags = gst_tag_list_new_empty ();
+
             if (name) {
               gst_tag_list_add (program->tags, GST_TAG_MERGE_APPEND,
                   GST_TAG_TITLE, name, NULL);
