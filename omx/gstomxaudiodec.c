@@ -990,18 +990,18 @@ gst_omx_audio_dec_flush (GstAudioDecoder * decoder, gboolean hard)
     gst_omx_component_get_state (self->dec, GST_CLOCK_TIME_NONE);
   }
 
-  /* 1) Wait until the srcpad loop is stopped,
+  /* 1) Flush the ports */
+  GST_DEBUG_OBJECT (self, "flushing ports");
+  gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, TRUE);
+  gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
+
+  /* 2) Wait until the srcpad loop is stopped,
    * unlock GST_AUDIO_DECODER_STREAM_LOCK to prevent deadlocks
    * caused by using this lock from inside the loop function */
   GST_AUDIO_DECODER_STREAM_UNLOCK (self);
   gst_pad_stop_task (GST_AUDIO_DECODER_SRC_PAD (decoder));
   GST_DEBUG_OBJECT (self, "Flushing -- task stopped");
   GST_AUDIO_DECODER_STREAM_LOCK (self);
-
-  /* 2) Flush the ports */
-  GST_DEBUG_OBJECT (self, "flushing ports");
-  gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, TRUE);
-  gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
 
   /* 3) Resume components */
   gst_omx_component_set_state (self->dec, OMX_StateExecuting);
