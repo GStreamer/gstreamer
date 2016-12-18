@@ -243,8 +243,7 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
       goto not_enough_data;     /* Invalid frame size */
     work.hdr.frame_data_size = read_size - ID3V2_HDR_SIZE - 10;
   } else {
-    if (read_size < ID3V2_HDR_SIZE)
-      goto not_enough_data;     /* Invalid frame size */
+    g_assert (read_size >= ID3V2_HDR_SIZE);     /* checked above */
     work.hdr.frame_data_size = read_size - ID3V2_HDR_SIZE;
   }
 
