@@ -1093,7 +1093,7 @@ GST_START_TEST (test_encodebin_fallback_profiles_on_failure)
   /* Create a ogg profile with a vorbis sub profile
    * that can't be 'instanciated' because its preset is set
    * to nowaythispresetexists. */
-  profile = create_ogg_vorbis_profile (0, "nowaythispresetexists");
+  profile = create_ogg_vorbis_profile (0, (gchar *) "nowaythispresetexists");
   vorbis_profile = create_vorbis_only_profile ();
   gst_encoding_container_profile_add_profile (GST_ENCODING_CONTAINER_PROFILE
       (profile), vorbis_profile);
