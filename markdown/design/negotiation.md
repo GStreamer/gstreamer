@@ -211,8 +211,6 @@ contain buffers with different types.
 
 ### Pull-mode negotiation
 
-#### Rationale
-
 A pipeline in pull mode has different negotiation needs than one
 activated in push mode. Push mode is optimized for two use cases:
 
