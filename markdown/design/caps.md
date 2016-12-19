@@ -43,10 +43,10 @@ in "A".
 A structure "a" is the subset of a structure "b" if it has the same
 structure name, the same caps features and each field in "b" either does not
 exist in "a", or the value of the field in "a" is a subset of the value of the
-field in "b". "a" must not have additional fields that are not in "b".  Fields
+field in "b". "a" must not have additional fields that are not in "b". Fields
 that are in "b" but not in "a" (aka, an empty field) are always a subset.
 This is different to the intuitive mathematical definition as an empty field
-is defined to contain all possible values.  This means that the empty field is
+is defined to contain all possible values. This means that the empty field is
 always a superset of any other field.
 
 EMPTY caps are a subset of every other caps. Every caps are a subset of
