@@ -72,12 +72,12 @@ The seek event contains:
     duration. It can also be relative to the previously configured stop
     value.
 
-See also gst\_event\_new\_seek().
+See also `gst_event_new_seek()`.
 
 ### Send the seek event
 
 Send the new seek event to the pipeline with
-gst\_element\_send\_event().
+`gst_element_send_event()`.
 
 By default the pipeline will send the event to all sink elements. By
 default an element will forward the event upstream on all sinkpads.
@@ -100,7 +100,7 @@ rate conversions. The applied rate will be set to the rate that will be
 applied by the server. This is done to insure that the position
 reporting performed in the sink is aware of the trick mode.
 
-When the seek succeeds, the \_send\_event() function will return TRUE.
+When the seek succeeds, the `_send_event()` function will return TRUE.
 
 ## Server side trickmode
 
