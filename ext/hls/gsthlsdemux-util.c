@@ -265,13 +265,15 @@ gst_hlsdemux_tsreader_find_pcrs_mpegts (GstHLSTSReader * r,
 
 static gboolean
 gst_hlsdemux_tsreader_find_pcrs_id3 (GstHLSTSReader * r,
-    GstBuffer * buffer, GstClockTime * first_pcr, GstClockTime * last_pcr)
+    GstBuffer ** buffer_out, GstClockTime * first_pcr, GstClockTime * last_pcr,
+    GstTagList ** tags)
 {
   GstMapInfo info;
   guint32 tag_size;
   gsize size;
   GstTagList *taglist;
   GstSample *priv_data = NULL;
+  GstBuffer *buffer = *buffer_out;
   GstBuffer *tag_buf;
   guint64 pts;
 
@@ -297,10 +299,17 @@ gst_hlsdemux_tsreader_find_pcrs_id3 (GstHLSTSReader * r,
    * not try and read again */
   r->have_id3 = TRUE;
 
+  *buffer_out =
+      gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, tag_size, -1);
+
   /* Parse the tag */
   taglist = gst_tag_list_from_id3v2_tag (buffer);
-  if (taglist == NULL)
+  if (taglist == NULL) {
+    gst_buffer_unref (buffer);
     return TRUE;                /* Invalid tag, stop trying */
+  }
+
+  *tags = taglist;
 
   /* Extract the timestamps */
   if (!gst_tag_list_get_sample (taglist, GST_TAG_PRIVATE_DATA, &priv_data))
@@ -330,19 +339,22 @@ gst_hlsdemux_tsreader_find_pcrs_id3 (GstHLSTSReader * r,
 out:
   if (priv_data)
     gst_sample_unref (priv_data);
-
-  gst_tag_list_unref (taglist);
+  gst_buffer_unref (buffer);
 
   return TRUE;
 }
 
 gboolean
 gst_hlsdemux_tsreader_find_pcrs (GstHLSTSReader * r,
-    GstBuffer * buffer, GstClockTime * first_pcr, GstClockTime * last_pcr)
+    GstBuffer ** buffer, GstClockTime * first_pcr, GstClockTime * last_pcr,
+    GstTagList ** tags)
 {
+  *tags = NULL;
+
   if (r->rtype == GST_HLS_TSREADER_MPEGTS)
-    return gst_hlsdemux_tsreader_find_pcrs_mpegts (r, buffer, first_pcr,
+    return gst_hlsdemux_tsreader_find_pcrs_mpegts (r, *buffer, first_pcr,
         last_pcr);
 
-  return gst_hlsdemux_tsreader_find_pcrs_id3 (r, buffer, first_pcr, last_pcr);
+  return gst_hlsdemux_tsreader_find_pcrs_id3 (r, buffer, first_pcr, last_pcr,
+      tags);
 }

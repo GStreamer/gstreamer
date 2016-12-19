@@ -154,8 +154,8 @@ struct _GstHLSDemuxClass
 void gst_hlsdemux_tsreader_init (GstHLSTSReader *r);
 void gst_hlsdemux_tsreader_set_type (GstHLSTSReader *r, GstHLSTSReaderType rtype);
 
-gboolean gst_hlsdemux_tsreader_find_pcrs (GstHLSTSReader *r, GstBuffer *buffer,
-    GstClockTime *first_pcr, GstClockTime *last_pcr);
+gboolean gst_hlsdemux_tsreader_find_pcrs (GstHLSTSReader *r, GstBuffer **buffer,
+    GstClockTime *first_pcr, GstClockTime *last_pcr, GstTagList **tags);
 
 GType gst_hls_demux_get_type (void);
 

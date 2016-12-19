@@ -767,6 +767,7 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   GstMapInfo info;
   GstClockTime first_pcr, last_pcr;
+  GstTagList *tags;
 
   if (buffer == NULL)
     return GST_FLOW_OK;
@@ -832,12 +833,16 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
     hls_stream->pending_pcr_buffer = NULL;
   }
 
-  if (!gst_hlsdemux_tsreader_find_pcrs (&hls_stream->tsreader, buffer,
-          &first_pcr, &last_pcr)
+  if (!gst_hlsdemux_tsreader_find_pcrs (&hls_stream->tsreader, &buffer,
+          &first_pcr, &last_pcr, &tags)
       && !at_eos) {
     // Store this buffer for later
     hls_stream->pending_pcr_buffer = buffer;
     return GST_FLOW_OK;
+  }
+
+  if (tags) {
+    gst_adaptive_demux_stream_set_tags (stream, tags);
   }
 
   if (buffer) {
