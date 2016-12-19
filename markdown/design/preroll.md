@@ -3,7 +3,7 @@
 A sink element can only complete the state change to `PAUSED` after a
 buffer has been queued on the input pad or pads. This process is called
 prerolling and is needed to fill the pipeline with buffers so that the
-transition to `PLAYING` goes as fast as possible with no visual delay for
+transition to `PLAYING` goes as fast as possible, with no visual delay for
 the user.
 
 Preroll is also crucial in maintaining correct audio and video
@@ -15,13 +15,13 @@ EOS message. While waiting, the sink will wait for the preroll cond to
 be signalled.
 
 Several things can happen that require the preroll cond to be signalled.
-This include state changes or flush events. The prerolling is
+These include state changes or flush events. The prerolling is
 implemented in sinks (see [element-sink](design/element-sink.md)
 
 ## Committing the state
 
 When going to `PAUSED` and `PLAYING` a buffer should be queued in the pad.
-We also make this requirement for going to `PLAYING` since a flush event
+We also make this a requirement for going to `PLAYING` since a flush event
 in the `PAUSED` state could unqueue the buffer again.
 
 The state is commited in the following conditions:
@@ -30,8 +30,8 @@ The state is commited in the following conditions:
 - an GAP event is received on a sinkpad.
 - an EOS event is received on a sinkpad.
 
-We require the state change to be commited in EOS as well since an EOS
-means by definition that no buffer is going to arrive anymore.
+We require the state change to be commited in EOS as well, since an EOS
+, by definition, means no buffer is going to arrive anymore.
 
 After the state is commited, a blocking wait should be performed for the
 next event. Some sinks might render the preroll buffer before starting
