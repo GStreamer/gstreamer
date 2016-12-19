@@ -27,17 +27,17 @@ GStreamer. An application links elements together on pads to construct a
 pipeline. Below is an example of an ogg/vorbis playback pipeline.
 
 ```
-    +-----------------------------------------------------------+
-    |    ----------> downstream ------------------->            |
-    |                                                           |
-    | pipeline                                                  |
-    | +---------+   +----------+   +-----------+   +----------+ |
-    | | filesrc |   | oggdemux |   | vorbisdec |   | alsasink | |
-    | |        src-sink       src-sink        src-sink        | |
-    | +---------+   +----------+   +-----------+   +----------+ |
-    |                                                           |
-    |    <---------< upstream <-------------------<             |
-    +-----------------------------------------------------------+
++-----------------------------------------------------------+
+|    ----------> downstream ------------------->            |
+|                                                           |
+| pipeline                                                  |
+| +---------+   +----------+   +-----------+   +----------+ |
+| | filesrc |   | oggdemux |   | vorbisdec |   | alsasink | |
+| |        src-sink       src-sink        src-sink        | |
+| +---------+   +----------+   +-----------+   +----------+ |
+|                                                           |
+|    <---------< upstream <-------------------<             |
++-----------------------------------------------------------+
 ```
 
 The filesrc element reads data from a file on disk. The oggdemux element
@@ -298,13 +298,13 @@ Below is a simple mp3 playback pipeline that we constructed. We will use
 this pipeline in further examples.
 
 ```
-    +-------------------------------------------+
-    | pipeline                                  |
-    | +---------+   +----------+   +----------+ |
-    | | filesrc |   | mp3dec   |   | alsasink | |
-    | |        src-sink       src-sink        | |
-    | +---------+   +----------+   +----------+ |
-    +-------------------------------------------+
++-------------------------------------------+
+| pipeline                                  |
+| +---------+   +----------+   +----------+ |
+| | filesrc |   | mp3dec   |   | alsasink | |
+| |        src-sink       src-sink        | |
+| +---------+   +----------+   +----------+ |
++-------------------------------------------+
 ```
 
 ## Pipeline clock
