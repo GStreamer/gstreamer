@@ -25,9 +25,9 @@ activation function of the pad.
 Because the core does not know in which mode to activate a pad (PUSH or
 PULL), it delegates that choice to a method on the pad, activate(). The
 activate() function of a pad should choose whether to operate in PUSH or
-PULL mode. Once the choice is made, it should call ``activate_mode()`` with
+PULL mode. Once the choice is made, it should call `activate_mode()` with
 the selected activation mode. The default activate() function will call
-`activate_mode()` with ``#GST_PAD_MODE_PUSH``, as it is the default
+`activate_mode()` with `#GST_PAD_MODE_PUSH`, as it is the default
 mechanism for data flow. A sink pad that supports either mode of
 operation might call `activate_mode(PULL)` if the SCHEDULING query
 upstream contains the `#GST_PAD_MODE_PULL` scheduling mode, and
@@ -39,7 +39,7 @@ fakesink, which is the most downstream element. The core will call
 `activate()` on fakesink’s sink pad. For fakesink to go into PULL mode, it
 needs to implement a custom activate() function that will call
 `activate_mode(PULL)` on its sink pad (because the default is to use PUSH
-mode). activate_mode(PULL) is then responsible for starting the task
+mode). `activate_mode(PULL)` is then responsible for starting the task
 that pulls from fakesrc:src. Clearly, fakesrc needs to be notified that
 fakesrc is about to pull on its src pad, even though the pipeline has
 not yet changed fakesrc’s state. For this reason, GStreamer will first
@@ -68,7 +68,7 @@ needs no further activation. Otherwise it should be in PUSH mode, which
 is the choice of the default activation function.
 
 So, in the PUSH case, the default activation function chooses PUSH mode,
-which calls `activate_mode(PUSH),` which will then start a task on the
+which calls `activate_mode(PUSH)`, which will then start a task on the
 source pad and begin pushing. In this way PUSH scheduling is a bit
 easier, because it follows the order of state changes in a pipeline.
 fakesink is already in PAUSED with an active sink pad by the time
