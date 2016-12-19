@@ -33,23 +33,23 @@ match the filter will be returned as the result caps. The order of the
 filter caps gives the order of preference of the caller and should be
 taken into account for the returned caps.
 
-* **`filter`** (in) GST_TYPE_CAPS (default NULL): - a GstCaps to filter the results against
-* **`caps`** (out) GST_TYPE_CAPS (default NULL): - the result caps
+* **`filter`** (in) `GST_TYPE_CAPS` (default NULL): - a GstCaps to filter the results against
+* **`caps`** (out) `GST_TYPE_CAPS` (default NULL): - the result caps
 
 A pad can ask the peer pad if it supports a given caps. It does this
-with the ACCEPT\_CAPS query. The caps must be fixed. The ACCEPT\_CAPS
+with the `ACCEPT_CAPS` query. The caps must be fixed. The `ACCEPT_CAPS`
 query is not required to work recursively, it can simply return TRUE if
 a subsequent CAPS event with those caps would return success.
 
-* **`caps`** (in) GST_TYPE_CAPS: - a GstCaps to check, must be fixed
-* **`result`** (out) G_TYPE_BOOLEAN (default FALSE): - TRUE if the caps are accepted
+* **`caps`** (in) `GST_TYPE_CAPS`: - a GstCaps to check, must be fixed
+* **`result`** (out) `G_TYPE_BOOLEAN` (default FALSE): - TRUE if the caps are accepted
 
 ## Events
 
 When a media format is negotiated, peer elements are notified of the
 GstCaps with the CAPS event. The caps must be fixed.
 
-* **`caps`** GST_TYPE_CAPS: - the negotiated GstCaps, must be fixed
+* **`caps`** `GST_TYPE_CAPS`: - the negotiated GstCaps, must be fixed
 
 ## Operation
 
@@ -77,7 +77,7 @@ an event to describe the contents of the following buffer.
 CAPS event before processing the following buffers. If the data type
 in the caps event is not acceptable, the element should refuse the
 event. The element should also refuse the next buffers by returning
-an appropriate GST\_FLOW\_NOT\_NEGOTIATED return value from the
+an appropriate `GST_FLOW_NOT_NEGOTIATED` return value from the
 chain function.
 
 - Downstream elements can request a format change of the stream by
