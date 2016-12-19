@@ -278,7 +278,7 @@ An example of a non serialized event is the FLUSH event.
 ## Pipeline construction
 
 The application starts by creating a Pipeline element using
-`gst_pipeline_new ()`. Elements are added to and removed from the
+`gst_pipeline_new()`. Elements are added to and removed from the
 pipeline with `gst_bin_add()` and `gst_bin_remove()`.
 
 After adding the elements, the pads of an element can be retrieved with
@@ -385,10 +385,10 @@ Alsasink is now also capable of providing a clock to the pipeline.
 
 Since alsasink is now in the PAUSED state it blocks while receiving the
 first buffer. This effectively blocks both mp3dec and filesrc in their
-gst\_pad\_push().
+`gst_pad_push()`.
 
 Since all elements now return SUCCESS from the
-gst\_element\_get\_state() function, the pipeline can be put in the
+`gst_element_get_state()` function, the pipeline can be put in the
 PLAYING state.
 
 Before going to PLAYING, the pipeline select a clock and samples the
@@ -478,7 +478,7 @@ becomes unusable for sending more data.
 when mp3dec leaves its `_chain()` function.
 * filesrc to READY:    the pads are deactivated and the thread is paused.
 
-The upstream elements finish their chain() function because the
+The upstream elements finish their `_chain()` function because the
 downstream element returned an error code (FLUSHING) from the `_push()`
 functions. These error codes are eventually returned to the element that
 started the streaming thread (filesrc), which pauses the thread and
