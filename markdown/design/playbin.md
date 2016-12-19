@@ -1,7 +1,7 @@
 # playbin
 
 The purpose of this element is to decode and render the media contained
-in a given generic uri. The element extends GstPipeline and is typically
+in a given generic uri. The element extends `GstPipeline` and is typically
 used in playback situations.
 
 Required features:
