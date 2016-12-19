@@ -21,8 +21,8 @@ or intersecting.
 # Fixating
 
 Caps are fixed if they only contain a single structure and this
-structure is fixed. A structure is fixed if none of the fields of the
-structure is an unfixed type, for example a range, list or array.
+structure is fixed. A structure is fixed if none of its fields
+is of an unfixed type, for example a range, list or array.
 
 For fixating caps only the first structure is kept as the order of
 structures is meant to express the preferences for the different
