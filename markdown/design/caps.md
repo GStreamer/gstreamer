@@ -18,7 +18,7 @@ or intersecting.
 
 ## Operations
 
-# Fixating
+### Fixating
 
 Caps are fixed if they only contain a single structure and this
 structure is fixed. A structure is fixed if none of its fields
@@ -34,7 +34,7 @@ arbitrary value that is a subset of the unfixed field’s values.
 EMPTY caps are fixed caps and ANY caps are not. Caps with ANY caps
 features are not fixed.
 
-# Subset
+### Subset
 
 One caps "A" is a subset of another caps "B" if for each structure in
 "A" there exists a structure in "B" that is a superset of the structure
@@ -52,14 +52,14 @@ always a superset of any other field.
 EMPTY caps are a subset of every other caps. Every caps are a subset of
 ANY caps.
 
-# Equality
+### Equality
 
 Caps "A" and "B" are equal if "A" is a subset of "B" and "B" is a subset
 of "A". This means that both caps are expressing the same possibilities
 but their structures can still be different if they contain unfixed
 fields.
 
-# Intersection
+### Intersection
 
 The intersection of caps "A" and caps "B" are the caps that contain the
 intersection of all their structures with each other.
@@ -74,7 +74,7 @@ value.
 The intersection with ANY caps is always the other caps and the
 intersection with EMPTY caps is always EMPTY.
 
-# Union
+### Union
 
 The union of caps "A" and caps "B" are the caps that contain the union
 of all their structures with each other.
@@ -88,7 +88,7 @@ contained in the union.
 The union with ANY caps is always ANY and the union with EMPTY caps is
 always the other caps.
 
-# Subtraction
+### Subtraction
 
 The subtraction of caps "A" from caps "B" is the most generic subset of
 "B" that has an empty intersection with "A" but only contains structures
@@ -96,7 +96,7 @@ with names and caps features that are existing in "B".
 
 ## Basic Rules
 
-# Semantics of caps and their usage
+### Semantics of caps and their usage
 
 A caps can contain multiple structures, in which case any of the
 structures would be acceptable. The structures are in the preferred
@@ -131,7 +131,7 @@ detect that something else can be used. The special ANY caps features
 can be used to specify that any caps feature would be accepted, for
 example if the buffer memory is not touched at all.
 
-# Compatibility of caps
+### Compatibility of caps
 
 Pads can be linked when the caps of both pads are compatible. This is
 the case when their intersection is not empty.
