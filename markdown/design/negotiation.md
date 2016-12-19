@@ -21,7 +21,7 @@ There are 4 queries/events used in caps negotiation:
 3) `GST_EVENT_CAPS`: configure format (downstream)
 4) `GST_EVENT_RECONFIGURE`: inform upstream of possibly new caps
 
-# Queries
+## Queries
 
 A pad can ask the peer pad for its supported GstCaps. It does this with
 the CAPS query. The list of supported caps can be used to choose an
@@ -57,7 +57,7 @@ GStreamer’s two scheduling modes, push mode and pull mode, lend
 themselves to different mechanisms to achieve this goal. As it is more
 common we describe push mode negotiation first.
 
-## Push-mode negotiation
+### Push-mode negotiation
 
 Push-mode negotiation happens when elements want to push buffers and
 need to decide on the format. This is called downstream negotiation
@@ -135,7 +135,7 @@ One possible implementation in pseudo code:
 endif
 ```
 
-# Negotiate allocator/bufferpool with the ALLOCATION query
+#### Negotiate allocator/bufferpool with the ALLOCATION query
 
     buffer = gst_buffer_new_allocate (NULL, size, 0);
     # fill buffer and push
@@ -171,9 +171,9 @@ push buffer  |---------------->| Process buffer of type B
              |                 |
 ```
 
-# Use case:
+#### Use cases:
 
-## `videotestsrc ! xvimagesink`
+##### `videotestsrc ! xvimagesink`
 
 * Who decides what format to use?
     - src pad always decides, by convention. sinkpad can suggest a format
@@ -201,7 +201,7 @@ push buffer  |---------------->| Process buffer of type B
     bufferpool. The sink will put the new new preferred format high in the list
     of caps it returns from its caps query.
 
-## `videotestsrc ! queue ! xvimagesink`
+##### `videotestsrc ! queue ! xvimagesink`
 
 - queue proxies all accept and caps queries to the other peer pad.
 - queue proxies the bufferpool
@@ -209,9 +209,9 @@ push buffer  |---------------->| Process buffer of type B
 - queue stores CAPS event in the queue. This means that the queue can
 contain buffers with different types.
 
-## Pull-mode negotiation
+### Pull-mode negotiation
 
-### Rationale
+#### Rationale
 
 A pipeline in pull mode has different negotiation needs than one
 activated in push mode. Push mode is optimized for two use cases:
@@ -277,7 +277,7 @@ happens.
 The time to do capsnego, then, is after the SCHEDULING query has
 succeeded, but before the sink has spawned the pulling thread.
 
-### Mechanism
+#### Mechanism
 
 The sink determines that the upstream elements support pull based
 scheduling by doing a SCHEDULING query.
@@ -310,7 +310,7 @@ applications that expect ASYNC return values from sinks but it also
 allows us to perform the remainder of the negotiation outside of the
 context of the pulling thread.
 
-## Patterns
+### Patterns
 
 We can identify 3 patterns in negotiation:
 
