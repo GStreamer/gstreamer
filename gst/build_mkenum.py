@@ -37,8 +37,14 @@ argn = 1
 for arg in sys.argv[1:]:
     cmd.append(arg)
     argn += 1
-    if arg.endswith('glib-mkenums'):
+    arg = arg.lower()
+    if arg.endswith('glib-mkenums.pl') or arg.endswith('glib-mkenums'):
         break
+
+# In Windows make sure to run through interpreter because there is no shebang
+if sys.platform.startswith('win') and argn == 2:
+    cmd = ['perl'] + cmd
+
 ofilename = sys.argv[argn]
 headers = sys.argv[argn + 1:]
 
