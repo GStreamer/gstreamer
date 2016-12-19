@@ -1352,10 +1352,9 @@ _get_position (GstValidateScenario * scenario,
 
 static gboolean
 _check_position (GstValidateScenario * scenario, GstValidateAction * act,
-    GstClockTime * position)
+    GstClockTime * position, gdouble * rate)
 {
   GstQuery *query;
-  gdouble rate;
 
   GstClockTime start_with_tolerance, stop_with_tolerance;
   GstValidateScenarioPrivate *priv = scenario->priv;
@@ -1393,15 +1392,15 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
 
   query = gst_query_new_segment (GST_FORMAT_DEFAULT);
   if (gst_element_query (GST_ELEMENT (scenario->pipeline), query))
-    gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
+    gst_query_parse_segment (query, rate, NULL, NULL, NULL);
   gst_query_unref (query);
 
   if (priv->seeked_in_pause && priv->seek_flags & GST_SEEK_FLAG_ACCURATE) {
-    if ((rate > 0 && (*position >= priv->segment_start + priv->seek_pos_tol ||
+    if ((*rate > 0 && (*position >= priv->segment_start + priv->seek_pos_tol ||
                 *position < ((priv->segment_start <
                         priv->seek_pos_tol) ? 0 : priv->segment_start -
                     priv->seek_pos_tol)))
-        || (rate < 0 && (*position > priv->segment_start + priv->seek_pos_tol
+        || (*rate < 0 && (*position > priv->segment_start + priv->seek_pos_tol
                 || *position < ((priv->segment_start <
                         priv->seek_pos_tol) ? 0 : priv->segment_start -
                     priv->seek_pos_tol)))) {
@@ -1782,7 +1781,7 @@ execute_next_action (GstValidateScenario * scenario)
     }
   }
 
-  if (!_check_position (scenario, act, &position))
+  if (!_check_position (scenario, act, &position, &rate))
     return G_SOURCE_CONTINUE;
 
   if (!_should_execute_action (scenario, act, position, rate)) {
