@@ -297,6 +297,7 @@ provide or consume can be retrieved with `gst_pad_get_caps()`.
 Below is a simple mp3 playback pipeline that we constructed. We will use
 this pipeline in further examples.
 
+```
     +-------------------------------------------+
     | pipeline                                  |
     | +---------+   +----------+   +----------+ |
@@ -304,6 +305,7 @@ this pipeline in further examples.
     | |        src-sink       src-sink        | |
     | +---------+   +----------+   +----------+ |
     +-------------------------------------------+
+```
 
 ## Pipeline clock
 
