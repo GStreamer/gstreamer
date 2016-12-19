@@ -15,7 +15,8 @@ components:
 ## A GstClock
 
 This object provides a counter that represents the current time in
-nanoseconds. This value is called the absolute\_time.
+nanoseconds. This value is called the absolute\_time. A `GstClock`
+always counts time upwards and does not necessarily start at 0.
 
 Different sources exist for this counter:
 
@@ -36,9 +37,6 @@ In GStreamer any element can provide a `GstClock` object that can be used
 in the pipeline. The `GstPipeline` object will select a clock from all the
 providers and will distribute it to all other elements (see
 [gstpipeline](design/gstpipeline.md)).
-
-A `GstClock` always counts time upwards and does not necessarily start at
-0.
 
 While it is possible, it is not recommended to create a clock derived
 from the contents of a stream (for example, create a clock from the PCR
