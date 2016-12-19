@@ -3,12 +3,12 @@
 This document outlines the techniques used for doing synchronised
 playback of multiple streams.
 
-Synchronisation in a GstPipeline is achieved using the following 3
+Synchronisation in a `GstPipeline` is achieved using the following 3
 components:
 
-  - a GstClock, which is global for all elements in a GstPipeline.
+  - a `GstClock`, which is global for all elements in a `GstPipeline`.
 
-  - Timestamps on a GstBuffer.
+  - Timestamps on a `GstBuffer`.
 
   - the SEGMENT event preceding the buffers.
 
@@ -19,10 +19,10 @@ nanoseconds. This value is called the absolute\_time.
 
 Different sources exist for this counter:
 
-  - the system time (with g\_get\_current\_time() and with microsecond
+  - the system time (with `g_get_current_time()` and with microsecond
     accuracy)
 
-  - monotonic time (with g\_get\_monotonic\_time () with microsecond
+  - monotonic time (with `g_get_monotonic_time()` with microsecond
     accuracy)
 
   - an audio device (based on number of samples played)
@@ -32,12 +32,12 @@ Different sources exist for this counter:
 
   - …
 
-In GStreamer any element can provide a GstClock object that can be used
-in the pipeline. The GstPipeline object will select a clock from all the
+In GStreamer any element can provide a `GstClock` object that can be used
+in the pipeline. The `GstPipeline` object will select a clock from all the
 providers and will distribute it to all other elements (see
 [gstpipeline](design/gstpipeline.md)).
 
-A GstClock always counts time upwards and does not necessarily start at
+A `GstClock` always counts time upwards and does not necessarily start at
 0.
 
 While it is possible, it is not recommended to create a clock derived
@@ -84,14 +84,14 @@ clock. This value is monotonically increasing at the rate of the clock.
 
 ## Timestamps
 
-The GstBuffer timestamps and the preceding SEGMENT event (See
+The `GstBuffer` timestamps and the preceding SEGMENT event (See
 [streams](design/streams.md)) define a transformation of the buffer timestamps to
 running\_time as follows:
 
 The following notation is used:
 
-**B**: GstBuffer
-    - B.timestamp = buffer timestamp (GST_BUFFER_PTS or GST_BUFFER_DTS)
+**B**: `GstBuffer`
+    - B.timestamp = buffer timestamp (`GST_BUFFER_PTS` or `GST_BUFFER_DTS`)
 
 **S**:  SEGMENT event preceding the buffers.
     - S.start: start field in the SEGMENT event. This is the lowest allowed
