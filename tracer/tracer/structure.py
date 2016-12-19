@@ -14,16 +14,13 @@ class Structure(object):
 
     def __init__(self, text):
         self.text = text
-        self.name = None
-        self.types = {}
-        self.values = {}
-        self.pos = 0
-        self._parse(self.text)
+        self.name, self.types, self.values = Structure._parse(text)
 
     def __repr__(self):
         return self.text
 
-    def _find_eos(self, s):
+    @staticmethod
+    def _find_eos(s):
         # find next '"' without preceeding '\'
         l = 0
         #logger.debug("find_eos: '%s'", s)
@@ -37,7 +34,10 @@ class Structure(object):
             #logger.debug("...     : '%s'", s)
         return -1
 
-    def _parse(self, s):
+    @staticmethod
+    def _parse(s):
+        types = {}
+        values = {}
         scan = True
         #logger.debug("===: '%s'", s)
         # parse id
@@ -45,28 +45,23 @@ class Structure(object):
         if p == -1:
             p = s.index(';')
             scan = False
-        self.name = s[:p]
+        name = s[:p]
         # parse fields
         while scan:
             s = s[(p + 2):]  # skip 'name, ' / 'value, '
-            self.pos += p + 2
             #logger.debug("...: '%s'", s)
             p = s.index('=')
             k = s[:p]
             if not s[p + 1] == '(':
-                self.pos += p + 1
                 raise ValueError
             s = s[(p + 2):]  # skip 'key=('
-            self.pos += p + 2
             p = s.index(')')
             t = s[:p]
             s = s[(p + 1):]  # skip 'type)'
-            self.pos += p + 1
 
             if s[0] == '"':
                 s = s[1:]  # skip '"'
-                self.pos += 1
-                p = self._find_eos(s)
+                p = Structure._find_eos(s)
                 if p == -1:
                     raise ValueError
                 v = s[:(p - 1)]
@@ -89,6 +84,6 @@ class Structure(object):
                 v = v[1:-1]
             elif t in INT_TYPES:
                 v = int(v)
-            self.types[k] = t
-            self.values[k] = v
-        self.pos += p + 1
+            types[k] = t
+            values[k] = v
+        return (name, types, values)
