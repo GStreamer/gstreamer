@@ -734,7 +734,7 @@ request_pad_for_stream (GstEncodeBin * encodebin, GType ptype,
 {
   StreamGroup *sgroup = NULL;
   GList *not_found_encoder_profs = NULL, *tmp;
-  GstEncodingProfile *sprof;
+  GstEncodingProfile *sprof = NULL;
 
   GST_DEBUG_OBJECT (encodebin, "name:%s caps:%" GST_PTR_FORMAT, name, caps);
 
