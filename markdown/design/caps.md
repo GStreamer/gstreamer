@@ -24,9 +24,9 @@ Caps are fixed if they only contain a single structure and this
 structure is fixed. A structure is fixed if none of its fields
 is of an unfixed type, for example a range, list or array.
 
-For fixating caps only the first structure is kept as the order of
-structures is meant to express the preferences for the different
-structures. Afterwards, each unfixed field of this structure is set to
+For fixating caps only the first structure is kept, as the order in
+which they appear is meant to express their precedence.
+Afterwards, each unfixed field of this structure is set to
 the value that makes most sense for the media format by the element or
 pad implementation and then every remaining unfixed field is set to an
 arbitrary value that is a subset of the unfixed field’s values.
