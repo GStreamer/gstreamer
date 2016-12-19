@@ -2,7 +2,7 @@
 
 This document describes the design of the memory objects.
 
-GstMemory objects are usually added to GstBuffer objects and contain the
+`GstMemory` objects are usually added to `GstBuffer` objects and contain the
 multimedia data passed around in the pipeline.
 
 ## Requirements
@@ -15,9 +15,9 @@ multimedia data passed around in the pipeline.
 `GstMemory` manages a memory region. The accessible part of the managed region is
 defined by an offset relative to the start of the region and a size. This
 means that the managed region can be larger than what is visible to the user of
-GstMemory API.
+`GstMemory` API.
 
-Schematically, GstMemory has a pointer to a memory region of _maxsize_. The area
+Schematically, `GstMemory` has a pointer to a memory region of _maxsize_. The area
 starting from `offset` and `size` is accessible.
 
 ```
@@ -43,8 +43,8 @@ The offset and size can be changed with:
 
 ## Allocators
 
-GstMemory objects are created by allocators. Allocators are a subclass
-of GstObject and can be subclassed to make custom allocators.
+`GstMemory` objects are created by allocators. Allocators are a subclass
+of `GstObject` and can be subclassed to make custom allocators.
 
 ``` c
 struct _GstAllocator {
@@ -60,7 +60,7 @@ struct _GstAllocator {
 };
 ```
 
-The allocator class has 2 virtual methods. One to create a GstMemory,
+The allocator class has 2 virtual methods. One to create a `GstMemory`,
 another to free it again.
 
 ``` c
@@ -76,7 +76,7 @@ struct _GstAllocatorClass {
 Allocators are refcounted. It is also possible to register the allocator to the
 GStreamer system. This way, the allocator can be retrieved by name.
 
-After an allocator is created, new GstMemory can be created with
+After an allocator is created, new `GstMemory` can be created with
 
 ``` c
     GstMemory * gst_allocator_alloc (const GstAllocator * allocator,
@@ -84,18 +84,18 @@ After an allocator is created, new GstMemory can be created with
                                      GstAllocationParams *params);
 ```
 
-GstAllocationParams contain extra info such as flags, alignment, prefix and
+`GstAllocationParams` contain extra info such as flags, alignment, prefix and
 padding.
 
-The GstMemory object is a refcounted object that must be freed with
-gst_memory_unref ().
+The `GstMemory` object is a refcounted object that must be freed with
+`gst_memory_unref()`.
 
-The GstMemory keeps a ref to the allocator that allocated it. Inside the
-allocator are the most common GstMemory operations listed. Custom
-GstAllocator implementations must implement the various operations on
+The `GstMemory` keeps a ref to the allocator that allocated it. Inside the
+allocator are the most common `GstMemory` operations listed. Custom
+`GstAllocator` implementations must implement the various operations on
 the memory they allocate.
 
-It is also possible to create a new GstMemory object that wraps existing
+It is also possible to create a new `GstMemory` object that wraps existing
 memory with:
 
 ``` c
@@ -108,7 +108,7 @@ memory with:
 
 ## Lifecycle
 
-GstMemory extends from GstMiniObject and therefore uses its lifecycle
+`GstMemory` extends from `GstMiniObject` and therefore uses its lifecycle
 management (See [miniobject](design/miniobject.md)).
 
 ## Data Access
@@ -118,7 +118,7 @@ call. This allows the implementation to monitor the access patterns or set up
 the required memory mappings when needed.
 
 The access of the memory object is controlled with the locking mechanism on
-GstMiniObject (See [miniobject](design/miniobject.md)).
+`GstMiniObject` (See [miniobject](design/miniobject.md)).
 
 Mapping a memory region requires the caller to specify the access method: READ
 and/or WRITE. Mapping a memory region will first try to get a lock on the
@@ -145,11 +145,11 @@ is valid until the last unmap call is done.
 When the final reference on a memory object is dropped, all outstanding
 mappings should have been unmapped.
 
-Resizing a GstMemory does not influence any current mappings in any way.
+Resizing a `GstMemory` does not influence any current mappings in any way.
 
 ## Copy
 
-A GstMemory copy can be made with the `gst_memory_copy()` call. Normally,
+A `GstMemory` copy can be made with the `gst_memory_copy()` call. Normally,
 allocators will implement a custom version of this function to make a copy of
 the same kind of memory as the original one.
 
@@ -161,5 +161,5 @@ block.
 
 ## Share
 
-A memory region can be shared between GstMemory object with the
+A memory region can be shared between `GstMemory` object with the
 `gst_memory_share()` operation.
