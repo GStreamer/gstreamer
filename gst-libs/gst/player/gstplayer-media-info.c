@@ -791,3 +791,65 @@ gst_player_media_info_get_image_sample (const GstPlayerMediaInfo * info)
 
   return info->image_sample;
 }
+
+/**
+ * gst_player_media_info_get_number_of_streams:
+ * @info: a #GstPlayerMediaInfo
+ *
+ * Returns: number of total streams.
+ * Since: 1.12
+ */
+guint
+gst_player_media_info_get_number_of_streams (const GstPlayerMediaInfo * info)
+{
+  g_return_val_if_fail (GST_IS_PLAYER_MEDIA_INFO (info), 0);
+
+  return g_list_length (info->stream_list);
+}
+
+/**
+ * gst_player_media_info_get_number_of_video_streams:
+ * @info: a #GstPlayerMediaInfo
+ *
+ * Returns: number of video streams.
+ * Since: 1.12
+ */
+guint
+gst_player_media_info_get_number_of_video_streams (const GstPlayerMediaInfo *
+    info)
+{
+  g_return_val_if_fail (GST_IS_PLAYER_MEDIA_INFO (info), 0);
+
+  return g_list_length (info->video_stream_list);
+}
+
+/**
+ * gst_player_media_info_get_number_of_audio_streams:
+ * @info: a #GstPlayerMediaInfo
+ *
+ * Returns: number of audio streams.
+ * Since: 1.12
+ */
+guint
+gst_player_media_info_get_number_of_audio_streams (const GstPlayerMediaInfo *
+    info)
+{
+  g_return_val_if_fail (GST_IS_PLAYER_MEDIA_INFO (info), 0);
+
+  return g_list_length (info->audio_stream_list);
+}
+
+/**
+ * gst_player_media_info_get_number_of_subtitle_streams:
+ * @info: a #GstPlayerMediaInfo
+ *
+ * Returns: number of subtitle streams.
+ * Since: 1.12
+ */
+guint gst_player_media_info_get_number_of_subtitle_streams
+    (const GstPlayerMediaInfo * info)
+{
+  g_return_val_if_fail (GST_IS_PLAYER_MEDIA_INFO (info), 0);
+
+  return g_list_length (info->subtitle_stream_list);
+}

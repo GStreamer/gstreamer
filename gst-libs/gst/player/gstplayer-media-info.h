@@ -175,11 +175,19 @@ GstClockTime  gst_player_media_info_get_duration
                 (const GstPlayerMediaInfo *info);
 GList*        gst_player_media_info_get_stream_list
                 (const GstPlayerMediaInfo *info);
+guint         gst_player_media_info_get_number_of_streams
+                (const GstPlayerMediaInfo *info);
 GList*        gst_player_get_video_streams
+                (const GstPlayerMediaInfo *info);
+guint         gst_player_media_info_get_number_of_video_streams
                 (const GstPlayerMediaInfo *info);
 GList*        gst_player_get_audio_streams
                 (const GstPlayerMediaInfo *info);
+guint         gst_player_media_info_get_number_of_audio_streams
+                (const GstPlayerMediaInfo *info);
 GList*        gst_player_get_subtitle_streams
+                (const GstPlayerMediaInfo *info);
+guint         gst_player_media_info_get_number_of_subtitle_streams
                 (const GstPlayerMediaInfo *info);
 GstTagList*   gst_player_media_info_get_tags
                 (const GstPlayerMediaInfo *info);
