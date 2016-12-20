@@ -129,6 +129,9 @@ class Stats(Analyzer):
                     data['max'] = max(dv, data['max'])
 
     def report(self):
+        # headline
+        print("%-45s: %30s: %16s/%16s/%16s" % (
+            'scope', 'value', 'min','avg','max'))
         # iterate scopes
         for sk,sv in self.data.items():
             # iterate tracers
@@ -136,17 +139,15 @@ class Stats(Analyzer):
                 mi = tv.get('min', '-')
                 ma = tv.get('max', '-')
                 avg = tv['sum']/tv['num']
+                if mi == ma:
+                    mi = ma = '-'
                 if is_time_field(tk):
                     if mi != '-':
                         mi = format_ts(mi)
                     if ma != '-':
                         ma = format_ts(ma)
                     avg = format_ts(avg)
-                if mi == ma:
-                    print("%-45s: Avg %30s: %s" % (sk, tk, avg))
-                else:
-                    print("%-45s: Min/Avg/Max %30s: %s, %s, %s" %
-                        (sk, tk, mi, avg, ma))
+                print("%-45s: %30s: %16s/%16s/%16s" % (sk, tk, mi, avg, ma))
 
 class ListClasses(Analyzer):
 
@@ -166,7 +167,7 @@ def format_ts(ts):
     h = int(ts // (sec * 60 * 60))
     m = int((ts // (sec * 60)) % 60)
     s = (ts / sec)
-    return '{:02d}.{:02d}.{:010.7f}'.format(h,m,s)
+    return '{:02d}:{:02d}:{:010.7f}'.format(h,m,s)
 
 def is_time_field(f):
     # TODO: need proper units
