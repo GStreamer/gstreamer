@@ -1,40 +1,34 @@
 # Add a python api for tracer analyzers
 
 The python framework will parse the tracer log and aggregate information.
-the tool writer will subclass from the Analyzer class and override method like:
+the tool writer will subclass from the Analyzer class and override methods:
 
-  'pad_push_buffer_pre'
+  'handle_tracer_class(self, entry)'
+  'handle_tracer_entry(self, entry)'
 
-There is one method for each hook. Each of those methods will receive the parse
-log line. In addition the framework will offer some extra api to allow to e.g.
-write:
+Each of those is optional. The entry field is the parsed log line. In most cases
+the tools will parse the structure contained in event[Parser.F_MESSAGE].
+
+A tool will use an AnalysisRunner to chain one or more analyzers and iterate the
+log. A tool can also replay the log multiple times. If it does, it won't work in
+'streaming' mode though (streaming mode can offer live stats).
+
+## TODO
+### gst shadow types
+Do we want to provide classes like GstBin, GstElement, GstPad, ... to aggregate
+info. One way to get them would be to have a GstLogAnalyzer that knows
+about data from the log tracer and populates the classes. Tools then can
+do e.g.
 
   pad.name()             # pad name
   pad.parent().name()    # element name
   pad.peer().parent()    # peer element
   pad.parent().state()   # element state
 
-If we don't have full loging, we'd like to print a warning once, but make this
-non fatal if possible. E.g. if we don't have logging for
-element_{add,remove}_pad, we might not be able to provide pad.parent().
-
-A tool can replay the log multiple times. If it does, it won't work in
-'streaming' mode though. Streaming mode can offer live stats.
-
-## TODO
-Do we want to provide classes like GstBin, GstElement, GstPad, ... to aggregate
-info. We'd need to also provide a way to e.g. add a GstLogAnalyzer that knows
-about data from the log tracer and populates the classes. We need to be able to
-build a pipeline of analyzers, e.g. the analyzer calls GstLogAnalzer in its
-catch-all handler and then processes some events individually.
-
-Parse the tracer classes. Add helper that for numeric values extract them, and
-aggregate min/max/avg. Consider other statistical information (std. deviation)
-and provide a rolling average for live view.
-
-Think of how analyzer classes can be combined:
-- we'd like to build tools that import other analyzer classes and chain the
-  processing.
+### improve class handling
+We already parse the tracer classes. Add helpers that for numeric values that
+extract them, and aggregate min/max/avg. Consider other statistical information
+(std. deviation) and provide a rolling average for live view.
 
 ## Examples
 ### Sequence chart generator (mscgen)
