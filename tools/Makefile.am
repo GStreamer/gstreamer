@@ -31,6 +31,7 @@ templatedeps = \
 EXTRA_DIST = \
 	gst-element-maker \
 	gst-app-maker \
+	gst-project-maker \
 	$(templatefiles) \
 	$(templatedeps) \
 	gst-element-maker-test.sh
