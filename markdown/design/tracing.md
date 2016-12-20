@@ -254,6 +254,29 @@ extensions)
 - log those which are still alive when app is exiting and raise an
   error if any
 
+- The tracer takes several parameters in a GstStructure like syntax (without the structure name):
+    - check-refs (boolean): Whether to also track object ref and unref operations
+        example: GST_TRACERS=leaks(check-refs=true) COMMAND
+    - stack-traces-flags: Flags to use when generating stack trace (does not generate stack trace
+      if not set), valid values are “full” to retrieve as much information as possible in the
+      backtrace, or “none” for a simple backtrace (usually does not contain line number or source files).
+      This may significantly increase memory consumption. (You can also set the `GST_LEAKS_TRACER_STACK_TRACE`
+      environment variable for that).
+    - filters: (string): A comma separated list of object types to trace (make sure to enclose in
+      quotation marks)
+
+**Run the leaks tracer on all GstProxyPad objects logging the references with a full backtraces**
+
+```
+GST_TRACERS=leaks(stack-traces-flags=full,filters=”GstProxyPad”,check-refs=true) COMMAND
+```
+
+**Run the leaks tracer on all (mini)objects logging the references with less complete backtraces**
+
+```
+GST_TRACERS=leaks(stack-traces-flags=fast,check-refs=true) COMMAND
+```
+
 - If the GST_LEAKS_TRACER_SIG env variable is defined the tracer
   will handle the following UNIX signals:
 
@@ -261,10 +284,6 @@ extensions)
 
 - SIGUSR2: create a checkpoint and print a list of objects created and
   destroyed since the previous checkpoint.
-
-- If the GST_LEAKS_TRACER_STACK_TRACE env variable is defined log
-  the creation stack trace of leaked objects. This may significantly
-  increase memory consumption.
 
 ## gst-debug-viewer
 
