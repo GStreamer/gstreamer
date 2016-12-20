@@ -37,7 +37,11 @@ def _log_line_regex():
 
 
 class Parser(object):
-    '''Helper to parse a tracer log'''
+    """
+    Helper to parse a tracer log.
+
+    Implements context manager and iterator.
+    """
 
     # record fields
     F_TIME = 0

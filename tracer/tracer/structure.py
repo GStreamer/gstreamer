@@ -10,7 +10,14 @@ INT_TYPES = "".join(
 )
 
 class Structure(object):
-    '''Gst Structure parser.'''
+    """
+    Gst Structure parser.
+
+    Has publicly accesible members representing the structure data:
+    name -- the structure name
+    types -- a dictionary keyed by the field name
+    values -- a dictionary keyed by the field name
+    """
 
     def __init__(self, text):
         self.text = text

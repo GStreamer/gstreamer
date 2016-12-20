@@ -2,7 +2,11 @@ from tracer.parser import Parser
 from tracer.structure import Structure
 
 class AnalysisRunner(object):
-    '''Iterate over a log and dispatch to a set of analyzers'''
+    """
+    Runs several Analyzers over a log.
+
+    Iterates log using a Parser and dispatches to a set of analyzers.
+    """
 
     def __init__(self, log):
         self.log = log
