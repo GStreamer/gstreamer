@@ -2,14 +2,7 @@ import os
 import re
 import sys
 
-# new tracer class
-# 0:00:00.041536066  1788      0x14b2150 TRACE             GST_TRACER gsttracerrecord.c:110:gst_tracer_record_build_format: latency.class, src=(structure)"scope\,\ type\=\(GType\)NULL\,\ related-to\=\(GstTracerValueScope\)GST_TRACER_VALUE_SCOPE_PAD\;", sink=(structure)"scope\,\ type\=\(GType\)NULL\,\ related-to\=\(GstTracerValueScope\)GST_TRACER_VALUE_SCOPE_PAD\;", time=(structure)"value\,\ type\=\(GType\)NULL\,\ description\=\(string\)\"time\\\ it\\\ took\\\ for\\\ the\\\ buffer\\\ to\\\ go\\\ from\\\ src\\\ to\\\ sink\\\ ns\"\,\ flags\=\(GstTracerValueFlags\)GST_TRACER_VALUE_FLAGS_AGGREGATED\,\ min\=\(guint64\)0\,\ max\=\(guint64\)18446744073709551615\;";
 
-# tracer log entry
-# 0:00:00.079422574  7664      0x238ac70 TRACE             GST_TRACER :0:: thread-rusage, thread-id=(guint64)37268592, ts=(guint64)79416000, average-cpuload=(uint)1000, current-cpuload=(uint)1000, time=(guint64)79418045;
-
-# from log tracer
-# 0:00:00.460486001 18356      0x21de780 TRACE       GST_ELEMENT_PADS :0:do_element_add_pad:<GstBaseSink@0x429e880> 0:00:00.460483603, key=val, ...
 def _log_line_regex():
 
     # "0:00:00.777913000  "

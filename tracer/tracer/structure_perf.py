@@ -10,37 +10,49 @@ NESTED_STRUCTURE = r'latency.class, src=(structure)"scope\,\ type\=\(type\)gchar
 NAT_STRUCTURE = Structure(PLAIN_STRUCTURE)
 GI_STRUCTURE = Gst.Structure.from_string(PLAIN_STRUCTURE)[0]
 
+
 # native python impl
 
 def nat_parse_plain():
     s = Structure(PLAIN_STRUCTURE)
 
+
 def nat_parse_nested():
     s = Structure(NESTED_STRUCTURE)
+
 
 def nat_get_name():
     return NAT_STRUCTURE.name
 
+
 def nat_get_value():
     return NAT_STRUCTURE.values['thread-id']
+
 
 # gstreamer impl via gi
 
 def gi_parse_plain():
     s = Gst.Structure.from_string(PLAIN_STRUCTURE)[0]
 
+
 def gi_parse_nested():
     s = Gst.Structure.from_string(NESTED_STRUCTURE)[0]
+
 
 def gi_get_name():
     return GI_STRUCTURE.get_name()
 
+
 def gi_get_value():
     return GI_STRUCTURE.get_value('thread-id')
+
+
+# perf test
 
 def perf(method, n, flavor):
     t = timeit.timeit(method + '()', 'from __main__ import ' + method, number=n)
     print("%6s: %lf s, (%lf calls/s)" % (flavor, t, (n/t)))
+
 
 if __name__ == '__main__':
     import argparse

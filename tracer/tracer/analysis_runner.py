@@ -1,6 +1,7 @@
 from tracer.parser import Parser
 from tracer.structure import Structure
 
+
 class AnalysisRunner(object):
     """
     Runs several Analyzers over a log.
@@ -25,8 +26,8 @@ class AnalysisRunner(object):
 
     def is_tracer_class(self, event):
         return (event[Parser.F_FILENAME] == 'gsttracerrecord.c' and
-                    event[Parser.F_CATEGORY] == 'GST_TRACER' and
-                    '.class' in event[Parser.F_MESSAGE])
+                event[Parser.F_CATEGORY] == 'GST_TRACER' and
+                '.class' in event[Parser.F_MESSAGE])
 
     def is_tracer_entry(self, event):
         return (not event[Parser.F_LINE] and not event[Parser.F_FILENAME])
