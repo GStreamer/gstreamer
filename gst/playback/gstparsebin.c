@@ -2102,8 +2102,7 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
     GST_PAD_STREAM_LOCK (sinkpad);
 
     if ((gst_element_set_state (element,
-                GST_STATE_PAUSED)) == GST_STATE_CHANGE_FAILURE ||
-        !send_sticky_events (parsebin, pad)) {
+                GST_STATE_PAUSED)) == GST_STATE_CHANGE_FAILURE) {
       GstParseElement *dtmp = NULL;
       GstElement *tmp = NULL;
       GstMessage *error_msg;
@@ -2183,6 +2182,7 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
 
       continue;
     } else {
+      send_sticky_events (parsebin, pad);
       /* Everything went well, the spice must flow now */
       GST_PAD_STREAM_UNLOCK (sinkpad);
     }
