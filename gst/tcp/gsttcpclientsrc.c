@@ -31,7 +31,9 @@
  * nc -l -p 3000
  * # client:
  * gst-launch-1.0 tcpclientsrc port=3000 ! fdsink fd=2
- * ]| everything you type in the server is shown on the client
+ * ]| everything you type in the server is shown on the client.
+ * If you want to detect network failures and/or limit the time your tcp client
+ * keeps waiting for data from server setting a timeout value can be useful.
  * </refsect2>
  */
 
@@ -47,6 +49,7 @@ GST_DEBUG_CATEGORY_STATIC (tcpclientsrc_debug);
 #define GST_CAT_DEFAULT tcpclientsrc_debug
 
 #define MAX_READ_SIZE                   4 * 1024
+#define TCP_DEFAULT_TIMEOUT             0
 
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
@@ -59,7 +62,8 @@ enum
 {
   PROP_0,
   PROP_HOST,
-  PROP_PORT
+  PROP_PORT,
+  PROP_TIMEOUT
 };
 
 #define gst_tcp_client_src_parent_class parent_class
@@ -109,6 +113,19 @@ gst_tcp_client_src_class_init (GstTCPClientSrcClass * klass)
           TCP_HIGHEST_PORT, TCP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstTCPClientSrc::timeout;
+   *
+   * Value in seconds to timeout a blocking I/O (0 = No timeout).
+   *
+   * Since: 1.12
+   */
+  g_object_class_install_property (gobject_class, PROP_TIMEOUT,
+      g_param_spec_uint ("timeout", "timeout",
+          "Value in seconds to timeout a blocking I/O. 0 = No timeout. ", 0,
+          G_MAXUINT, TCP_DEFAULT_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -133,6 +150,7 @@ gst_tcp_client_src_init (GstTCPClientSrc * this)
 {
   this->port = TCP_DEFAULT_PORT;
   this->host = g_strdup (TCP_DEFAULT_HOST);
+  this->timeout = TCP_DEFAULT_TIMEOUT;
   this->socket = NULL;
   this->cancellable = g_cancellable_new ();
 
@@ -317,6 +335,9 @@ gst_tcp_client_src_set_property (GObject * object, guint prop_id,
     case PROP_PORT:
       tcpclientsrc->port = g_value_get_int (value);
       break;
+    case PROP_TIMEOUT:
+      tcpclientsrc->timeout = g_value_get_uint (value);
+      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -336,6 +357,9 @@ gst_tcp_client_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PORT:
       g_value_set_int (value, tcpclientsrc->port);
+      break;
+    case PROP_TIMEOUT:
+      g_value_set_uint (value, tcpclientsrc->timeout);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -390,6 +414,8 @@ gst_tcp_client_src_start (GstBaseSrc * bsrc)
       G_SOCKET_PROTOCOL_TCP, &err);
   if (!src->socket)
     goto no_socket;
+
+  g_socket_set_timeout (src->socket, src->timeout);
 
   GST_DEBUG_OBJECT (src, "opened receiving client socket");
   GST_OBJECT_FLAG_SET (src, GST_TCP_CLIENT_SRC_OPEN);

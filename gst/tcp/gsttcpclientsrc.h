@@ -55,6 +55,7 @@ struct _GstTCPClientSrc {
   /* server information */
   int port;
   gchar *host;
+  guint timeout;
 
   /* socket */
   GSocket *socket;
