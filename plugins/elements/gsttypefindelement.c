@@ -558,6 +558,7 @@ gst_type_find_element_src_event (GstPad * pad, GstObject * parent,
 
   if (typefind->mode != MODE_NORMAL) {
     /* need to do more? */
+    GST_LOG_OBJECT (typefind, "Still typefinding. Not passing event upstream");
     gst_event_unref (event);
     return FALSE;
   }
@@ -783,6 +784,8 @@ gst_type_find_element_setcaps (GstTypeFindElement * typefind, GstCaps * caps)
   if (gst_caps_is_any (caps))
     return TRUE;
 
+  /* Set to MODE_NORMAL before emitting have-type, in case it triggers a seek */
+  typefind->mode = MODE_NORMAL;
   gst_type_find_element_emit_have_type (typefind, GST_TYPE_FIND_MAXIMUM, caps);
 
   /* Shortcircuit typefinding if we get caps */
@@ -967,6 +970,8 @@ gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
 
   /* probability is good enough too, so let's make it known ... emiting this
    * signal calls our object handler which sets the caps. */
+  /* Set to MODE_NORMAL before emitting have-type, in case it triggers a seek */
+  typefind->mode = MODE_NORMAL;
   gst_type_find_element_emit_have_type (typefind, probability, caps);
 
   /* .. and send out the accumulated data */
@@ -1158,8 +1163,9 @@ gst_type_find_element_loop (GstPad * pad)
     }
 
     GST_DEBUG ("Emiting found caps %" GST_PTR_FORMAT, found_caps);
-    gst_type_find_element_emit_have_type (typefind, probability, found_caps);
+    /* Set to MODE_NORMAL before emitting have-type, in case it triggers a seek */
     typefind->mode = MODE_NORMAL;
+    gst_type_find_element_emit_have_type (typefind, probability, found_caps);
     gst_caps_unref (found_caps);
   } else if (typefind->mode == MODE_NORMAL) {
     GstBuffer *outbuf = NULL;
