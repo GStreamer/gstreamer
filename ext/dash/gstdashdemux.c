@@ -700,7 +700,9 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
         gst_adaptive_demux_stream_new (GST_ADAPTIVE_DEMUX_CAST (demux), srcpad);
     stream->active_stream = active_stream;
     s = gst_caps_get_structure (caps, 0);
-    stream->is_isobmff = gst_structure_has_name (s, "video/quicktime");
+    stream->is_isobmff =
+        gst_structure_has_name (s, "video/quicktime") ||
+        gst_structure_has_name (s, "audio/x-m4a");
     stream->first_sync_sample_always_after_moof = TRUE;
     if (stream->is_isobmff)
       stream->isobmff_adapter = gst_adapter_new ();
@@ -1158,7 +1160,9 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
         &fragment);
 
     stream->fragment.uri = fragment.uri;
-    if (isombff && dashstream->sidx_index != 0) {
+    /* If mpd does not specify indexRange (i.e., null index_uri),
+     * sidx entries may not be available until download it */
+    if (isombff && dashstream->sidx_index != 0 && SIDX (dashstream)->entries) {
       GstSidxBoxEntry *entry = SIDX_CURRENT_ENTRY (dashstream);
       stream->fragment.range_start =
           dashstream->sidx_base_offset + entry->offset;
@@ -2034,6 +2038,7 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
     GstDashDemuxStream * dash_stream, GstBuffer * buffer)
 {
   GstAdaptiveDemuxStream *stream = (GstAdaptiveDemuxStream *) dash_stream;
+  GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   gsize available;
   guint index_header_or_data;
   GstMapInfo map;
@@ -2148,6 +2153,32 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
               (size + dash_stream->moof_average_size + 3) / 4;
       } else {
         dash_stream->moof_average_size = size;
+      }
+    } else if (dash_stream->isobmff_parser.current_fourcc ==
+        GST_ISOFF_FOURCC_SIDX &&
+        gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
+      GstByteReader sub_reader;
+      GstIsoffParserResult res;
+      guint dummy;
+
+      dash_stream->sidx_base_offset = buffer_offset +
+          gst_byte_reader_get_pos (&reader) - header_size + size;
+
+      gst_byte_reader_get_sub_reader (&reader, &sub_reader, size - header_size);
+
+      res =
+          gst_isoff_sidx_parser_parse (&dash_stream->sidx_parser, &sub_reader,
+          &dummy);
+
+      if (res == GST_ISOFF_PARSER_DONE) {
+        if (GST_CLOCK_TIME_IS_VALID (dash_stream->pending_seek_ts)) {
+          /* FIXME, preserve seek flags */
+          gst_dash_demux_stream_sidx_seek (dash_stream,
+              demux->segment.rate >= 0, 0, dash_stream->pending_seek_ts, NULL);
+          dash_stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
+        } else {
+          SIDX (dash_stream)->entry_index = dash_stream->sidx_index;
+        }
       }
     } else {
       gst_byte_reader_skip (&reader, size - header_size);
@@ -2402,10 +2433,16 @@ gst_dash_demux_handle_isobmff_buffer (GstAdaptiveDemux * demux,
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstFlowReturn ret = GST_FLOW_OK;
 
-  if (dashdemux->allow_trickmode_key_units) {
+  /* Parsing isobmff
+   * - TRICKMODE_KEY_UNITS can be supported and it's video stream
+   * - Or, it's On-Demand profile but index_uri for this stream (whatever video/audio)
+   *   is not available, and sidx box was not parsed yet */
+  if ((dashdemux->allow_trickmode_key_units &&
+          dash_stream->active_stream->mimeType == GST_STREAM_VIDEO) ||
+      (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
+          dash_stream->sidx_parser.status != GST_ISOFF_SIDX_PARSER_FINISHED)) {
     if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
       buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
-
       if (buffer
           && (ret =
               gst_adaptive_demux_stream_push_buffer (stream,
