@@ -13,7 +13,7 @@ BAD_TYPE2 = r'foo, bar=(int'
 EMPTY_STRUCTURE = r'foo;'
 
 SINGLE_VALUE_STRUCTURE = r'foo, key=(string)"value";'
-MISC_TYPES_STRUCTURE = r'foo, key1=(string)"value", key2=(int)5, key3=(boolean)true;'
+MISC_TYPES_STRUCTURE = r'foo, key1=(string)"value", key2=(int)5, key3=(boolean)1;'
 
 NESTED_STRUCTURE = r'foo, nested=(structure)"bar\,\ key1\=\(int\)0\,\ key2\=\(int\)5\;";'
 
@@ -77,6 +77,10 @@ class TestStructure(unittest.TestCase):
     def test_parses_int_value(self):
         structure = Structure(MISC_TYPES_STRUCTURE)
         self.assertEqual(structure.values['key2'], 5)
+
+    def test_parses_boolean_value(self):
+        structure = Structure(MISC_TYPES_STRUCTURE)
+        self.assertEqual(structure.values['key3'], True)
 
     def test_parses_nested_structure(self):
         structure = Structure(NESTED_STRUCTURE)

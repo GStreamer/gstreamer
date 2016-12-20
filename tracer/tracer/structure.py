@@ -90,6 +90,8 @@ class Structure(object):
                 v = Structure(v)
             elif t == 'string' and v[0] == '"':
                 v = v[1:-1]
+            elif t == 'boolean':
+                v = (v == '1')
             elif t in INT_TYPES:
                 v = int(v)
             types[k] = t
