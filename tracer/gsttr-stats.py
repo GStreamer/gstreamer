@@ -63,8 +63,6 @@ class Stats(Analyzer):
                 record['scope'][k] = v
             elif v.name == 'value':
                 # skip non numeric and those without min/max
-                # TODO: skip them only if flags != AGGREGATED
-                # - if flag is AGGREGATED, don't calc average
                 if (v.values['type'] in _NUMERIC_TYPES and
                       'min' in v.values and 'max' in v.values):
                     # TODO only for debugging
@@ -113,22 +111,28 @@ class Stats(Analyzer):
                 key = entry_name + "/" + vk
                 data = scope.get(key)
                 if not data:
-                    data = {
-                        'num': 0,
-                        'sum': 0,
-                    }
-                    if 'max' in vv.values and 'min' in vv.values:
-                        data['min'] = int(vv.values['max'])
-                        data['max'] = int(vv.values['min'])
+                    data = { 'num': 0 }
+                    if not '_FLAGS_AGGREGATED' in vv.values.get('flags', ''):
+                        data['sum'] = 0
+                        if 'max' in vv.values and 'min' in vv.values:
+                            data['min'] = int(vv.values['max'])
+                            data['max'] = int(vv.values['min'])
+                    else:
+                        # aggregated: don't average, collect first value
+                        data['min'] = int(s.values[vk])
                     scope[key] = data
                 # update min/max/sum and count via value
                 dv = int(s.values[vk])
                 data['num'] += 1
-                data['sum'] += dv
-                if 'min' in data:
-                    data['min'] = min(dv, data['min'])
-                if 'max' in data:
-                    data['max'] = max(dv, data['max'])
+                if 'sum' in data:
+                    data['sum'] += dv
+                    if 'min' in data:
+                        data['min'] = min(dv, data['min'])
+                    if 'max' in data:
+                        data['max'] = max(dv, data['max'])
+                else:
+                    # aggregated: collect last value
+                    data['max'] = dv
 
     def report(self):
         # headline
@@ -140,7 +144,10 @@ class Stats(Analyzer):
             for tk,tv in sv.items():
                 mi = tv.get('min', '-')
                 ma = tv.get('max', '-')
-                avg = tv['sum']/tv['num']
+                if 'sum' in tv:
+                    avg = tv['sum']/tv['num']
+                else:
+                    avg = '-'
                 if mi == ma:
                     mi = ma = '-'
                 if is_time_field(tk):
@@ -148,7 +155,8 @@ class Stats(Analyzer):
                         mi = format_ts(mi)
                     if ma != '-':
                         ma = format_ts(ma)
-                    avg = format_ts(avg)
+                    if avg != '-':
+                        avg = format_ts(avg)
                 print("%-45s: %30s: %16s/%16s/%16s" % (sk, tk, mi, avg, ma))
 
 class ListClasses(Analyzer):
