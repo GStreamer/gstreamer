@@ -107,6 +107,8 @@ class Stats(Analyzer):
                 # skip optional fields
                 if not vk in s.values:
                     continue
+                if not s.values.get('have-' + vk, True):
+                    continue
 
                 key = entry_name + "/" + vk
                 data = scope.get(key)
