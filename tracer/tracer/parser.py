@@ -73,9 +73,11 @@ class Parser(object):
         return self
 
     def __next__(self):
+        log_regex = self.log_regex
+        data = self.data
         while True:
-            line = next(self.data)
-            match = self.log_regex.match(line)
+            line = next(data)
+            match = log_regex.match(line)
             if match:
                 g = list(match.groups())
                 g[Parser.F_PID] = int(g[Parser.F_PID])
