@@ -72,8 +72,8 @@ typedef enum
  * @GST_TRACER_VALUE_FLAGS_OPTIONAL: the value is optional. When using this flag
  *   one need to have an additional boolean arg before this value in the
  *   var-args list passed to  gst_tracer_record_log().
- * @GST_TRACER_VALUE_FLAGS_AGGREGATED: the value is combined since the start of
- *   tracing
+ * @GST_TRACER_VALUE_FLAGS_AGGREGATED: the value is a combined figure, since the
+ *   start of tracing. Examples are averages or timestamps.
  *
  * Flag that describe the value. These flags help applications processing the
  * logs to understand the values.
