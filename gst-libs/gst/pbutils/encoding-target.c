@@ -179,6 +179,10 @@ validate_name (const gchar * name)
     /* if an hyphen, continue */
     if (name[i] == '-')
       continue;
+    /* if an ';', continue (list delimiter) */
+    if (name[i] == ';') {
+      continue;
+    }
     /* remaining should only be ascii letters */
     if (!g_ascii_isalpha (name[i]))
       return FALSE;
@@ -861,6 +865,32 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
     target = gst_encoding_target_subload (tldir, category, lfilename, error);
     g_free (tldir);
   }
+
+  if (!target) {
+    GList *tmp, *targets = gst_encoding_list_all_targets (NULL);
+
+    for (tmp = targets; tmp; tmp = tmp->next) {
+      gint i;
+      GstEncodingTarget *tmptarget = tmp->data;
+      gchar **names = g_strsplit (tmptarget->name, ";", -1);
+
+      for (i = 0; names[i]; i++) {
+        if (!g_strcmp0 (names[i], lname) && (!category ||
+                !g_strcmp0 (tmptarget->category, category))) {
+          target = gst_object_ref (tmptarget);
+
+          break;
+        }
+      }
+      g_strfreev (names);
+
+      if (target)
+        break;
+    }
+
+    g_list_free_full (targets, gst_object_unref);
+  }
+
 
 done:
   g_free (lfilename);
