@@ -352,8 +352,21 @@ static void
 gst_rusage_tracer_init (GstRUsageTracer * self)
 {
   GstTracer *tracer = GST_TRACER (self);
+  gint i;
+  const gchar *hooks[] = { "pad-push-pre", "pad-push-post", "pad-push-list-pre",
+    "pad-push-list-post", "pad-pull-range-pre", "pad-pull-range-post",
+    "pad-push-event-pre", "pad-push-event-post", "pad-query-pre",
+    "pad-query-post", "element-post-message-pre", "element-post-message-post",
+    "element-query-pre", "element-query-post", "element-new", "element-add-pad",
+    "element-remove-pad", "element-change-state-pre",
+    "element-change-state-post", "bin-add-pre", "bin-add-post",
+    "bin-remove-pre", "bin-remove-post", "pad-link-pre", "pad-link-post",
+    "pad-unlink-pre", "pad-unlink-post"
+  };
 
-  gst_tracing_register_hook (tracer, NULL, G_CALLBACK (do_stats));
+  for (i = 0; i < G_N_ELEMENTS (hooks); i++) {
+    gst_tracing_register_hook (tracer, hooks[i], G_CALLBACK (do_stats));
+  }
 
   self->threads = g_hash_table_new_full (NULL, NULL, NULL, free_thread_stats);
   self->tvs_proc = make_trace_values (GST_SECOND);
