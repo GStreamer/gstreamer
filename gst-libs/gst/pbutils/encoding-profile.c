@@ -954,6 +954,7 @@ _compare_encoding_profiles (const GstEncodingProfile * a,
   if ((G_TYPE_FROM_INSTANCE (a) != G_TYPE_FROM_INSTANCE (b)) ||
       !_gst_caps_is_equal_safe (a->format, b->format) ||
       (g_strcmp0 (a->preset, b->preset) != 0) ||
+      (g_strcmp0 (a->preset_name, b->preset_name) != 0) ||
       (g_strcmp0 (a->name, b->name) != 0) ||
       (g_strcmp0 (a->description, b->description) != 0))
     return -1;
