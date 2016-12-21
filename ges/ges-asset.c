@@ -690,7 +690,7 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
     if (asset->priv->proxies) {
       GESAsset *old_proxy = GES_ASSET (asset->priv->proxies->data);
 
-      GES_ASSET (asset->priv->proxies->data)->priv->proxy_target = NULL;
+      old_proxy->priv->proxy_target = NULL;
       g_object_notify_by_pspec (G_OBJECT (old_proxy),
           _properties[PROP_PROXY_TARGET]);
     }
