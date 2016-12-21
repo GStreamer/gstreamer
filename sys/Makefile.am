@@ -16,12 +16,6 @@ else
 APPLE_MEDIA_DIR=
 endif
 
-if USE_AVC
-AVC_DIR=avc
-else
-AVC_DIR=
-endif
-
 if USE_BLUEZ
 BLUEZ_DIR=bluez
 else
@@ -76,24 +70,6 @@ else
 DVB_DIR=
 endif
 
-# if USE_DXR3
-# DXR3_DIR=dxr3
-# else
-# DXR3_DIR=
-# endif
-
-if USE_LINSYS
-LINSYS_DIR=linsys
-else
-LINSYS_DIR=
-endif
-
-if USE_PVR
-PVR_DIR=pvr2d
-else
-PVR_DIR=
-endif
-
 if USE_SHM
 SHM_DIR=shm
 else
@@ -104,18 +80,6 @@ if USE_OPENSLES
 OPENSLES_DIR=opensles
 else
 OPENSLES_DIR=
-endif
-
-# if USE_QCAM
-# QCAM_DIR=qcam
-# else
-# QCAM_DIR=
-# endif
-
-if USE_WININET
-WININET_DIR=wininet
-else
-WININET_DIR=
 endif
 
 if USE_VCD
@@ -160,10 +124,10 @@ else
 MSDK_DIR=
 endif
 
-SUBDIRS = $(ACM_DIR) $(ANDROID_MEDIA_DIR) $(APPLE_MEDIA_DIR) $(AVC_DIR) $(BLUEZ_DIR) $(D3DVIDEOSINK_DIR) $(DECKLINK_DIR) $(DIRECTSOUND_DIR) $(WINKS_DIR) $(DVB_DIR) $(FBDEV_DIR) $(KMS_DIR) $(LINSYS_DIR) $(OPENSLES_DIR) $(PVR_DIR) $(SHM_DIR) $(UVCH264_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR) $(WINSCREENCAP_DIR) $(WASAPI_DIR) $(NVENC_DIR) $(TINYALSA_DIR) $(MSDK_DIR)
+SUBDIRS = $(ACM_DIR) $(ANDROID_MEDIA_DIR) $(APPLE_MEDIA_DIR) $(BLUEZ_DIR) $(D3DVIDEOSINK_DIR) $(DECKLINK_DIR) $(DIRECTSOUND_DIR) $(WINKS_DIR) $(DVB_DIR) $(FBDEV_DIR) $(KMS_DIR) $(OPENSLES_DIR) $(SHM_DIR) $(UVCH264_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR) $(WINSCREENCAP_DIR) $(WASAPI_DIR) $(NVENC_DIR) $(TINYALSA_DIR) $(MSDK_DIR)
 
-DIST_SUBDIRS = acmenc acmmp3dec androidmedia applemedia avc bluez d3dvideosink decklink directsound dvb linsys fbdev kms dshowdecwrapper dshowsrcwrapper dshowvideosink \
-		opensles pvr2d shm uvch264 vcd vdpau wasapi wininet winks winscreencap \
+DIST_SUBDIRS = acmenc acmmp3dec androidmedia applemedia bluez d3dvideosink decklink directsound dvb fbdev kms dshowdecwrapper dshowsrcwrapper dshowvideosink \
+		opensles shm uvch264 vcd vdpau wasapi winks winscreencap \
 		nvenc tinyalsa msdk
 
 include $(top_srcdir)/common/parallel-subdirs.mak

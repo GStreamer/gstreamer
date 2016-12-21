@@ -72,7 +72,6 @@ check_headers = [
   ['HAVE_SYS_UTSNAME_H', 'sys/utsname.h'],
   ['HAVE_UNISTD_H', 'unistd.h'],
   ['HAVE_WINDOWS_H', 'windows.h'],
-  ['HAVE_WININET_H', 'wininet.h'],
   ['HAVE_WINSOCK2_H', 'winsock2.h'],
   ['HAVE_WS2TCPIP_H', 'ws2tcpip.h'],
 ]
@@ -128,8 +127,6 @@ check_functions = [
 # check token HAVE_FAAC
 # check token HAVE_FAAD
 # check token HAVE_FBDEV
-# check token HAVE_FIONREAD_IN_SYS_FILIO
-# check token HAVE_FIONREAD_IN_SYS_IOCTL
 # check token HAVE_FLITE
 # check token HAVE_FLUIDSYNTH
   ['HAVE_GETPAGESIZE', 'getpagesize'],

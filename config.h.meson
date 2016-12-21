@@ -94,9 +94,6 @@
 /* Define to enable Android Media (used by androidmedia). */
 #mesondefine HAVE_ANDROID_MEDIA
 
-/* Define to enable AirPort Express Wireless sink (used by apexsink). */
-#mesondefine HAVE_APEXSINK
-
 /* Define to enable Apple video (used by applemedia). */
 #mesondefine HAVE_APPLE_MEDIA
 
@@ -229,12 +226,6 @@
 /* Define to 1 if you have the <fcntl.h> header file. */
 #mesondefine HAVE_FCNTL_H
 
-/* FIONREAD ioctl found in sys/filio.h */
-#mesondefine HAVE_FIONREAD_IN_SYS_FILIO
-
-/* FIONREAD ioctl found in sys/ioclt.h */
-#mesondefine HAVE_FIONREAD_IN_SYS_IOCTL
-
 /* Define to enable Flite plugin (used by flite). */
 #mesondefine HAVE_FLITE
 
@@ -322,12 +313,6 @@
 /* Define if libusb 1.x is installed */
 #mesondefine HAVE_LIBUSB
 
-/* Define to enable libvisual visualization library (used by libvisual). */
-#mesondefine HAVE_LIBVISUAL
-
-/* Define to enable Linear Systems SDI plugin (used by linsys). */
-#mesondefine HAVE_LINSYS
-
 /* Define if we have liblrdf */
 #mesondefine HAVE_LRDF
 
@@ -363,9 +348,6 @@
 
 /* Define to enable MythTV client plugins (used by mythtvsrc). */
 #mesondefine HAVE_MYTHTV
-
-/* Define to enable nas plug-in (used by nassink). */
-#mesondefine HAVE_NAS
 
 /* Define to enable neon http client plugins (used by neonhttpsrc). */
 #mesondefine HAVE_NEON
@@ -454,9 +436,6 @@
 /* Define to enable Schroedinger video codec (used by schro). */
 #mesondefine HAVE_SCHRO
 
-/* Define to enable SDL plug-in (used by sdlvideosink sdlaudiosink). */
-#mesondefine HAVE_SDL
-
 /* Define to enable POSIX shared memory source and sink (used by shm). */
 #mesondefine HAVE_SHM
 
@@ -465,9 +444,6 @@
 
 /* Define to enable sndfile plug-in (used by sfdec sfenc). */
 #mesondefine HAVE_SNDFILE
-
-/* Define to enable sndio audio (used by sndio). */
-#mesondefine HAVE_SNDIO
 
 /* Define to enable soundtouch plug-in (used by soundtouch). */
 #mesondefine HAVE_SOUNDTOUCH
@@ -523,9 +499,6 @@
 /* Define if libtiger is available */
 #mesondefine HAVE_TIGER
 
-/* Define to enable timidity midi soft synth plugin (used by timidity). */
-#mesondefine HAVE_TIMIDITY
-
 /* Define to 1 if you have the <unistd.h> header file. */
 #mesondefine HAVE_UNISTD_H
 
@@ -574,12 +547,6 @@
 /* Define to 1 if you have the <windows.h> header file. */
 #mesondefine HAVE_WINDOWS_H
 
-/* Define to enable Windows internet library (used by wininet). */
-#mesondefine HAVE_WININET
-
-/* Define to 1 if you have the <wininet.h> header file. */
-#mesondefine HAVE_WININET_H
-
 /* Define to enable Winks plug-in (used by winks). */
 #mesondefine HAVE_WINKS
 
@@ -595,9 +562,6 @@
 /* Define if you have X11 library */
 #mesondefine HAVE_X11
 
-/* Define to enable xvid plugins (used by xvid). */
-#mesondefine HAVE_XVID
-
 /* Define to enable ZBar barcode detector (used by zbar). */
 #mesondefine HAVE_ZBAR
 
@@ -606,9 +570,6 @@
 
 /* library dir */
 #mesondefine LIBDIR
-
-/* directory in which the detected libvisual's plugins are located */
-#mesondefine LIBVISUAL_PLUGINSBASEDIR
 
 /* gettext locale dir */
 #mesondefine LOCALEDIR
@@ -667,9 +628,6 @@
 
 /* the target CPU */
 #mesondefine TARGET_CPU
-
-/* Define location of timidity.cfg */
-#mesondefine TIMIDITY_CFG
 
 /* Use Mali FB EGL platform */
 #mesondefine USE_EGL_MALI_FB

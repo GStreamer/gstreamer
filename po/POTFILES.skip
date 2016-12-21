@@ -1,8 +1,5 @@
 ext/sndfile/gstsfsink.c
 ext/sndfile/gstsfsrc.c
-sys/dxr3/dxr3audiosink.c
-sys/dxr3/dxr3spusink.c
-sys/dxr3/dxr3videosink.c
 tests/examples/camerabin2/gst-camera2.ui
 tests/examples/uvch264/boolean_property.glade
 tests/examples/uvch264/enum_property.glade

@@ -10,12 +10,6 @@ else
 VOAMRWBENC_DIR =
 endif
 
-if USE_APEXSINK
-APEXSINK_DIR = apexsink
-else
-APEXSINK_DIR =
-endif
-
 if USE_BS2B
 BS2B_DIR=bs2b
 else
@@ -178,12 +172,6 @@ else
 LIBMMS_DIR=
 endif
 
-if USE_LIBVISUAL
-LIBVISUAL_DIR=libvisual
-else
-LIBVISUAL_DIR=
-endif
-
 if USE_MODPLUG
 MODPLUG_DIR=modplug
 else
@@ -206,12 +194,6 @@ if USE_MUSEPACK
 MUSEPACK_DIR=musepack
 else
 MUSEPACK_DIR=
-endif
-
-if USE_NAS
-NAS_DIR=nas
-else
-NAS_DIR=
 endif
 
 if USE_NEON
@@ -274,18 +256,12 @@ else
 RSVG_DIR=
 endif
 
-if USE_TIMIDITY
-TIMIDITY_DIR=timidity
-endif
-
 if USE_WILDMIDI
-TIMIDITY_DIR=timidity
+WILDMIDI_DIR=wildmidi
 endif
 
 if !USE_WILDMIDI
-if !USE_TIMIDITY
-TIMIDITY_DIR=
-endif
+WILDMIDI_DIR=
 endif
 
 if USE_FLUIDSYNTH
@@ -304,12 +280,6 @@ else
 SCHRO_DIR=
 endif
 
-if USE_SDL
-SDL_DIR=sdl
-else
-SDL_DIR=
-endif
-
 if USE_SMOOTHSTREAMING
 SMOOTHSTREAMING_DIR = smoothstreaming
 else
@@ -326,12 +296,6 @@ if USE_SNDFILE
 SNDFILE_DIR=sndfile
 else
 SNDFILE_DIR=
-endif
-
-if USE_SNDIO
-SNDIO_DIR = sndio
-else
-SNDIO_DIR =
 endif
 
 if USE_SOUNDTOUCH
@@ -368,12 +332,6 @@ if USE_TELETEXTDEC
 TELETEXTDEC_DIR=teletextdec
 else
 TELETEXTDEC_DIR=
-endif
-
-if USE_XVID
-XVID_DIR=xvid
-else
-XVID_DIR=
 endif
 
 if USE_ZBAR
@@ -434,7 +392,6 @@ SUBDIRS=\
 	$(VOAACENC_DIR) \
 	$(ASSRENDER_DIR) \
 	$(VOAMRWBENC_DIR) \
-	$(APEXSINK_DIR) \
 	$(AUDIOFILE_DIR) \
 	$(BS2B_DIR) \
 	$(BZ2_DIR) \
@@ -463,12 +420,10 @@ SUBDIRS=\
 	$(LV2_DIR) \
 	$(LIBDE265_DIR) \
 	$(LIBMMS_DIR) \
-	$(LIBVISUAL_DIR) \
 	$(MODPLUG_DIR) \
 	$(MPEG2ENC_DIR) \
 	$(MPLEX_DIR) \
 	$(MUSEPACK_DIR) \
-	$(NAS_DIR) \
 	$(NEON_DIR) \
 	$(OFA_DIR) \
 	$(OPENAL_DIR) \
@@ -481,19 +436,16 @@ SUBDIRS=\
 	$(RSVG_DIR) \
 	$(SBC_DIR) \
 	$(SCHRO_DIR) \
-	$(SDL_DIR) \
 	$(SMOOTHSTREAMING_DIR) \
 	$(SMOOTHWAVE_DIR) \
 	$(SNDFILE_DIR) \
-	$(SNDIO_DIR) \
 	$(SOUNDTOUCH_DIR) \
 	$(SPANDSP_DIR) \
 	$(GME_DIR) \
 	$(SPC_DIR) \
 	$(SRTP_DIR) \
 	$(TELETEXTDEC_DIR) \
-	$(TIMIDITY_DIR) \
-	$(XVID_DIR) \
+	$(WILDMIDI_DIR) \
 	$(ZBAR_DIR) \
 	$(RTMP_DIR) \
 	$(HLS_DIR) \
@@ -506,7 +458,6 @@ SUBDIRS=\
 
 DIST_SUBDIRS = \
 	assrender \
-	apexsink \
 	bs2b \
 	bz2 \
 	chromaprint \
@@ -527,7 +478,6 @@ DIST_SUBDIRS = \
 	kate \
 	libde265 \
 	libmms \
-	libvisual \
 	lv2 \
 	daala \
 	dts \
@@ -538,7 +488,6 @@ DIST_SUBDIRS = \
 	mpeg2enc \
 	mplex \
 	musepack \
-	nas \
 	neon \
 	ofa \
 	openal \
@@ -552,20 +501,17 @@ DIST_SUBDIRS = \
 	resindvd \
 	sbc \
 	schroedinger \
-	sdl \
 	smoothstreaming \
 	sndfile \
-	sndio \
 	soundtouch \
 	spandsp \
 	spc \
 	srtp \
 	gme \
 	teletextdec \
-	timidity \
+	wildmidi \
 	voaacenc \
 	voamrwbenc \
-	xvid \
 	zbar \
 	rtmp \
 	webp \

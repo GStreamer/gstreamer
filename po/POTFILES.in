@@ -4,8 +4,6 @@ ext/opencv/gsttemplatematch.cpp
 ext/resindvd/resindvdsrc.c
 ext/smoothstreaming/gstmssdemux.c
 ext/sndfile/gstsfdec.c
-ext/sndio/sndiosink.c
-ext/sndio/sndiosrc.c
 gst/aiff/aiffparse.c
 gst/asfmux/gstasfmux.c
 gst/camerabin2/camerabingeneral.c
@@ -16,6 +14,5 @@ gst/camerabin2/gstwrappercamerabinsrc.c
 gst/dvdspu/gstdvdspu.c
 gst-libs/gst/adaptivedemux/gstadaptivedemux.c
 gst/mpegtsdemux/mpegtsbase.c
-gst/nuvdemux/gstnuvdemux.c
 sys/dvb/gstdvbsrc.c
 sys/dvb/parsechannels.c

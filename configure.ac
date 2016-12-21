@@ -164,15 +164,7 @@ AX_CREATE_STDINT_H
 AC_CHECK_HEADERS([pthread.h], HAVE_PTHREAD_H=yes)
 AM_CONDITIONAL(HAVE_PTHREAD_H, test "x$HAVE_PTHREAD_H" = "xyes")
 
-if test "x$HAVE_PTHREAD_H" != "xyes"; then
-  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/dccp//`
-fi
-
 dnl *** checks for types/defines ***
-
-dnl Check for FIONREAD ioctl declaration
-dnl used in gst/dccp
-GST_CHECK_FIONREAD
 
 dnl *** checks for structures ***
 
@@ -467,21 +459,6 @@ dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
 
 dnl *** plug-ins to include ***
-dnl Non ported plugins (non-dependant, then dependant)
-dnl Make sure you have a space before and after all plugins
-GST_PLUGINS_NONPORTED=" cdxaparse \
- dccp faceoverlay \
- hdvparse \
- mve nuvdemux \
- patchdetect \
- sdi tta \
- linsys \
- apexsink \
- nas sdl timidity \
- wininet \
- xvid sndio libvisual"
-
-AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(accurip)
@@ -498,13 +475,10 @@ AG_GST_CHECK_PLUGIN(audiovisualizers)
 AG_GST_CHECK_PLUGIN(autoconvert)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(camerabin2)
-AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(coloreffects)
-AG_GST_CHECK_PLUGIN(dccp)
 AG_GST_CHECK_PLUGIN(debugutils)
 AG_GST_CHECK_PLUGIN(dvbsuboverlay)
 AG_GST_CHECK_PLUGIN(dvdspu)
-AG_GST_CHECK_PLUGIN(faceoverlay)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(fieldanalysis)
 AG_GST_CHECK_PLUGIN(freeverb)
@@ -512,7 +486,6 @@ AG_GST_CHECK_PLUGIN(frei0r)
 AG_GST_CHECK_PLUGIN(gaudieffects)
 AG_GST_CHECK_PLUGIN(geometrictransform)
 AG_GST_CHECK_PLUGIN(gdp)
-AG_GST_CHECK_PLUGIN(hdvparse)
 AG_GST_CHECK_PLUGIN(id3tag)
 AG_GST_CHECK_PLUGIN(inter)
 AG_GST_CHECK_PLUGIN(interlace)
@@ -526,17 +499,13 @@ AG_GST_CHECK_PLUGIN(mpegdemux)
 AG_GST_CHECK_PLUGIN(mpegtsdemux)
 AG_GST_CHECK_PLUGIN(mpegtsmux)
 AG_GST_CHECK_PLUGIN(mpegpsmux)
-AG_GST_CHECK_PLUGIN(mve)
 AG_GST_CHECK_PLUGIN(mxf)
 AG_GST_CHECK_PLUGIN(netsim)
-AG_GST_CHECK_PLUGIN(nuvdemux)
 AG_GST_CHECK_PLUGIN(onvif)
-AG_GST_CHECK_PLUGIN(patchdetect)
 AG_GST_CHECK_PLUGIN(pcapparse)
 AG_GST_CHECK_PLUGIN(pnm)
 AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(removesilence)
-AG_GST_CHECK_PLUGIN(sdi)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(segmentclip)
 AG_GST_CHECK_PLUGIN(siren)
@@ -545,7 +514,6 @@ AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(subenc)
 AG_GST_CHECK_PLUGIN(stereo)
 AG_GST_CHECK_PLUGIN(timecode)
-AG_GST_CHECK_PLUGIN(tta)
 AG_GST_CHECK_PLUGIN(videofilters)
 AG_GST_CHECK_PLUGIN(videoparsers)
 AG_GST_CHECK_PLUGIN(videosignal)
@@ -598,13 +566,6 @@ AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
 if test "x$HAVE_WINSOCK2_H" = "xyes"; then
   WINSOCK2_LIBS="-lws2_32"
   AC_SUBST(WINSOCK2_LIBS)
-fi
-
-if test "x$HAVE_PTHREAD_H" = "xyes"; then
-  DCCP_LIBS="$DCCP_LIBS $PTHREAD_LIBS"
-  AC_SUBST(DCCP_LIBS)
-else
-  AG_GST_DISABLE_PLUGIN(dccp)
 fi
 
 dnl *** opengl ***
@@ -2098,24 +2059,6 @@ AG_GST_CHECK_FEATURE(VOAACENC, [vo-aacenc library], vo-aacenc, [
   AG_GST_PKG_CHECK_MODULES(VOAACENC, vo-aacenc >= 0.1.0)
 ])
 
-dnl *** apexsink ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_APEXSINK, true)
-AG_GST_CHECK_FEATURE(APEXSINK, [AirPort Express Wireless sink], apexsink, [
-  PKG_CHECK_MODULES(APEXSINK, [ openssl >= 0.9.5  libcrypto ], [
-    HAVE_APEXSINK="yes"
-    saved_LIBS="$LIBS"
-    LIBS=""
-    AC_SEARCH_LIBS(socket, [socket], [ ], [ APEXSINK="no" ])
-    AC_SEARCH_LIBS(gethostbyname, [nsl], [ ], [ APEXSINK="no" ])
-    APEXSINK_LIBS="$APEXSINK_LIBS $LIBS"
-    LIBS="$saved_LIBS"
-    AC_SUBST(APEXSINK_CFLAGS)
-    AC_SUBST(APEXSINK_LIBS)
-  ], [
-    APEXSINK="no"
-  ])
-])
-
 dnl *** bs2b ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_BS2B, true)
 AG_GST_CHECK_FEATURE(BS2B, [bs2b], bs2b, [
@@ -2525,19 +2468,6 @@ AG_GST_CHECK_FEATURE(TTML, [TTML plugin], ttml, [
   fi
 ])
 
-dnl *** linsys ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LINSYS, true)
-AG_GST_CHECK_FEATURE(LINSYS, [Linear Systems SDI plugin], linsys, [
-  case "$host" in
-    *-*linux*)
-      HAVE_LINSYS=yes
-      ;;
-    *)
-      HAVE_LINSYS=no
-      ;;
-  esac
-])
-
 dnl *** modplug ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MODPLUG, true)
 AG_GST_CHECK_FEATURE(MODPLUG, modplug, modplug, [
@@ -2745,21 +2675,6 @@ AG_GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
     ], [HAVE_MUSEPACK="no"])])
 ])
 
-dnl *** nas ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_NAS, true)
-AG_GST_CHECK_FEATURE(NAS, [nas plug-in], nassink, [
-  HAVE_NAS="no"
-  if test "x$HAVE_X" = "xyes"; then
-    save_cppflags=$CFLAGS
-    CPPFLAGS="$CPPFLAGS $X_CFLAGS"
-    AG_GST_CHECK_LIBHEADER(NAS, audio, AuOpenServer, $X_LIBS, audio/audiolib.h,
-      NAS_LIBS="$X_LIBS -laudio" NAS_CFLAGS="$X_CFLAGS")
-    CPPFLAGS="$save_cppflags"
-  fi
-  AC_SUBST(NAS_CFLAGS)
-  AC_SUBST(NAS_LIBS)
-])
-
 dnl *** neon ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
 AG_GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
@@ -2900,20 +2815,6 @@ AG_GST_CHECK_FEATURE(OPUS, [opus], opus, [
   AC_SUBST(OPUS_CFLAGS)
   AC_SUBST(OPUS_LIBS)
 ])
-
-dnl *** pvr ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_PVR, true)
-AG_GST_CHECK_FEATURE(PVR, [pvrvideosink], pvr, [
-  PKG_CHECK_MODULES([PVR], [libtimemmgr], HAVE_PVR=yes, HAVE_PVR=no)
-  AC_SUBST(PVR_CFLAGS)
-  AC_SUBST(PVR_LIBS)
-])
-
- AC_ARG_WITH([pvr-external-headers],
-              AS_HELP_STRING([--with-pvr-external-headers],[Use system installed PVR2D headers]),
-              [AS_IF([test "x$with_pvr_external_headers" = "xno"],
-                     [PVR_CFLAGS="$PVR_CFLAGS -I\$(srcdir)/pvr_includes"])],
-              [PVR_CFLAGS="$PVR_CFLAGS -I\$(srcdir)/pvr_includes"])
 
 dnl *** rsvg ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RSVG, true)
@@ -3077,50 +2978,6 @@ AG_GST_CHECK_FEATURE(VULKAN, [Vulkan elements], vulkan, [
   ], [])
 ])
 
-dnl *** libvisual ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
-AG_GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization library], libvisual, [
-  AG_GST_PKG_CHECK_MODULES(LIBVISUAL, libvisual-0.4 >= 0.4.0)
-  if test x$HAVE_LIBVISUAL = xyes; then
-    LIBVIS_PLUGINSDIR="`$PKG_CONFIG --variable=pluginsbasedir libvisual-0.4`"
-  fi
-  AC_MSG_NOTICE([libvisual pluginsdir: $LIBVIS_PLUGINSDIR])
-  if test x$LIBVIS_PLUGINSDIR != x; then
-    AC_DEFINE_UNQUOTED(LIBVISUAL_PLUGINSBASEDIR,
-        "$LIBVIS_PLUGINSDIR",
-        [directory in which the detected libvisual's plugins are located])
-  fi
-])
-
-dnl *** timidity ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_TIMIDITY, true)
-AG_GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
-  PKG_CHECK_MODULES(TIMIDITY, libtimidity, [
-    HAVE_TIMIDITY="yes",
-	AC_MSG_CHECKING([for timidity.cfg])
-	timidity_cfg=""
-	if test -r /etc/timidity.cfg; then
-	  timidity_cfg=/etc/timidity.cfg
-	elif test -r /etc/timidity/timidity.cfg; then
-	  timidity_cfg=/etc/timidity/timidity.cfg
-	elif test -r /usr/share/timidity/timidity.cfg; then
-	  timidity_cfg=/usr/share/timidity/timidity.cfg
-	elif test -r /usr/local/share/timidity/timidity.cfg; then
-	  timidity_cfg=/usr/local/share/timidity/timidity.cfg
-	fi
-	if test "x$timidity_cfg" != "x"; then
-	  AC_MSG_RESULT($timidity_cfg)
-      AC_DEFINE_UNQUOTED(TIMIDITY_CFG, "$timidity_cfg", [Define location of timidity.cfg])
-	else
-	  AC_MSG_RESULT([not found])
-	fi
-  ], [
-    HAVE_TIMIDITY="no"
-  ])
-  AC_SUBST(TIMIDITY_CFLAGS)
-  AC_SUBST(TIMIDITY_LIBS)
-])
-
 dnl *** teletextdec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TELETEXTDEC, true)
 AG_GST_CHECK_FEATURE(TELETEXTDEC, [Teletext decoder], teletextdec, [
@@ -3147,12 +3004,6 @@ AG_GST_CHECK_FEATURE(WILDMIDI, [wildmidi midi soft synth plugin], wildmidi, [
   fi
   AC_SUBST(WILDMIDI_CFLAGS)
   AC_SUBST(WILDMIDI_LIBS)
-])
-
-dnl *** SDL ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
-AG_GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink sdlaudiosink, [
-    AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
 ])
 
 dnl **** Smooth Streaming ****
@@ -3247,36 +3098,6 @@ AG_GST_CHECK_FEATURE(GME, [gme decoder], gme, [
   fi
 ])
 
-dnl *** XVID ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
-AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
-  HAVE_XVID=no
-  AC_CHECK_HEADER(xvid.h, [
-    OLD_LIBS="$LIBS"
-    LIBS="$PTHREAD_LIBS $LIBM"
-    AC_CHECK_LIB(xvidcore, xvid_encore, [
-      AC_CHECK_LIB(xvidcore, xvid_decore, [
-        AC_CHECK_LIB(xvidcore, xvid_global, [
-          AC_MSG_CHECKING([for up-to-date XviD API version])
-          AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <xvid.h>]], [[
-              #if XVID_API_MAJOR(XVID_API) != 4
-              #error "Incompatible XviD API version"
-              #endif
-	      #if XVID_API_MAJOR(XVID_API) == 4 && XVID_API_MINOR(XVID_API) < 3
-              #error "Incompatible XviD API version"
-	      #endif
-          ]])],[ AC_MSG_RESULT(yes)
-            XVID_LIBS="-lxvidcore $LIBM"
-            AC_SUBST(XVID_LIBS)
-            HAVE_XVID=yes
-          ],[AC_MSG_RESULT(no) ])
-        ], )
-      ], )
-    ], )
-    LIBS="$OLD_LIBS"
-  ], )
-])
-
 dnl *** dvb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVB, true)
 AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
@@ -3293,16 +3114,6 @@ AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
       HAVE_DVB="no"
     ])
   ], [HAVE_DVB="no"])
-])
-
-dnl *** wininet ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_WININET, true)
-AG_GST_CHECK_FEATURE(WININET, [Windows internet library], wininet, [
-  AC_MSG_CHECKING([Checking for windows internet support])
-  AC_CHECK_HEADERS([windows.h wininet.h],
-      [HAVE_WININET="yes"], [HAVE_WININET="no"],
-      [AC_INCLUDES_DEFAULT
-#include <windows.h>])
 ])
 
 dnl *** acm ***
@@ -3397,19 +3208,6 @@ AG_GST_CHECK_FEATURE(SPANDSP, [Spandsp], spandsp, [
 ])
 AC_SUBST(SPANDSP_CFLAGS)
 AC_SUBST(SPANDSP_LIBS)
-
-dnl *** sndio ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SNDIO, true)
-AG_GST_CHECK_FEATURE(SNDIO, [sndio audio], sndio, [
-  AC_CHECK_HEADER(sndio.h, HAVE_SNDIO="yes", HAVE_SNDIO="no")
-  if test "x$HAVE_SNDIO" = "xyes"; then
-    AC_CHECK_LIB(sndio, sio_open, HAVE_SNDIO="yes", HAVE_SNDIO="no")
-    if test "x$HAVE_SNDIO" = "xyes"; then
-      SNDIO_LIBS=-lsndio
-      AC_SUBST(SNDIO_LIBS)
-    fi
-  fi
-])
 
 dnl *** hls-crypto ***
 AC_ARG_WITH([hls-crypto],
@@ -3509,7 +3307,6 @@ dnl but we still need to set the conditionals
 AM_CONDITIONAL(USE_ASSRENDER, false)
 AM_CONDITIONAL(USE_VOAMRWBENC, false)
 AM_CONDITIONAL(USE_VOAACENC, false)
-AM_CONDITIONAL(USE_APEXSINK, false)
 AM_CONDITIONAL(USE_BS2B, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CHROMAPRINT, false)
@@ -3544,12 +3341,10 @@ AM_CONDITIONAL(USE_LADSPA, false)
 AM_CONDITIONAL(USE_LV2, false)
 AM_CONDITIONAL(USE_LIBDE265, false)
 AM_CONDITIONAL(USE_LIBMMS, false)
-AM_CONDITIONAL(USE_LINSYS, false)
 AM_CONDITIONAL(USE_MODPLUG, false)
 AM_CONDITIONAL(USE_MPEG2ENC, false)
 AM_CONDITIONAL(USE_MPLEX, false)
 AM_CONDITIONAL(USE_MUSEPACK, false)
-AM_CONDITIONAL(USE_NAS, false)
 AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_OFA, false)
 AM_CONDITIONAL(USE_OPENAL, false)
@@ -3558,12 +3353,8 @@ AM_CONDITIONAL(USE_OPENEXR, false)
 AM_CONDITIONAL(USE_OPENJPEG, false)
 AM_CONDITIONAL(USE_OPENNI2, false)
 AM_CONDITIONAL(USE_OPUS, false)
-AM_CONDITIONAL(USE_PVR, false)
 AM_CONDITIONAL(USE_QT, false)
-AM_CONDITIONAL(USE_LIBVISUAL, false)
-AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
-AM_CONDITIONAL(USE_SDL, false)
 AM_CONDITIONAL(USE_SMOOTHSTREAMING, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
@@ -3571,9 +3362,7 @@ AM_CONDITIONAL(USE_SPANDSP, false)
 AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_SRTP, false)
 AM_CONDITIONAL(USE_GME, false)
-AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_DVB, false)
-AM_CONDITIONAL(USE_WININET, false)
 AM_CONDITIONAL(USE_ACM, false)
 AM_CONDITIONAL(USE_VDPAU, false)
 AM_CONDITIONAL(USE_SBC, false)
@@ -3582,7 +3371,6 @@ AM_CONDITIONAL(USE_ZBAR, false)
 AM_CONDITIONAL(USE_RSVG, false)
 AM_CONDITIONAL(USE_RTMP, false)
 AM_CONDITIONAL(USE_TELETEXTDEC, false)
-AM_CONDITIONAL(USE_SNDIO, false)
 AM_CONDITIONAL(USE_UVCH264, false)
 AM_CONDITIONAL(USE_WEBP, false)
 AM_CONDITIONAL(USE_WEBRTCDSP, false)
@@ -3690,13 +3478,10 @@ gst/audiovisualizers/Makefile
 gst/autoconvert/Makefile
 gst/bayer/Makefile
 gst/camerabin2/Makefile
-gst/cdxaparse/Makefile
 gst/coloreffects/Makefile
-gst/dccp/Makefile
 gst/debugutils/Makefile
 gst/dvbsuboverlay/Makefile
 gst/dvdspu/Makefile
-gst/faceoverlay/Makefile
 gst/festival/Makefile
 gst/fieldanalysis/Makefile
 gst/freeverb/Makefile
@@ -3704,7 +3489,6 @@ gst/frei0r/Makefile
 gst/gaudieffects/Makefile
 gst/geometrictransform/Makefile
 gst/gdp/Makefile
-gst/hdvparse/Makefile
 gst/id3tag/Makefile
 gst/inter/Makefile
 gst/interlace/Makefile
@@ -3719,17 +3503,13 @@ gst/mpegtsdemux/Makefile
 gst/mpegtsmux/Makefile
 gst/mpegtsmux/tsmux/Makefile
 gst/mpegpsmux/Makefile
-gst/mve/Makefile
 gst/mxf/Makefile
 gst/netsim/Makefile
-gst/nuvdemux/Makefile
 gst/onvif/Makefile
-gst/patchdetect/Makefile
 gst/pcapparse/Makefile
 gst/pnm/Makefile
 gst/rawparse/Makefile
 gst/removesilence/Makefile
-gst/sdi/Makefile
 gst/sdp/Makefile
 gst/segmentclip/Makefile
 gst/siren/Makefile
@@ -3737,7 +3517,6 @@ gst/smooth/Makefile
 gst/speed/Makefile
 gst/subenc/Makefile
 gst/stereo/Makefile
-gst/tta/Makefile
 gst/timecode/Makefile
 gst/videofilters/Makefile
 gst/videoparsers/Makefile
@@ -3787,7 +3566,6 @@ sys/dshowvideosink/Makefile
 sys/dvb/Makefile
 sys/fbdev/Makefile
 sys/kms/Makefile
-sys/linsys/Makefile
 sys/msdk/Makefile
 sys/nvenc/Makefile
 sys/opensles/Makefile
@@ -3796,9 +3574,7 @@ sys/tinyalsa/Makefile
 sys/uvch264/Makefile
 sys/vcd/Makefile
 sys/vdpau/Makefile
-sys/pvr2d/Makefile
 sys/wasapi/Makefile
-sys/wininet/Makefile
 sys/winks/Makefile
 sys/winscreencap/Makefile
 tests/Makefile
@@ -3835,7 +3611,6 @@ tests/icles/Makefile
 ext/voamrwbenc/Makefile
 ext/voaacenc/Makefile
 ext/assrender/Makefile
-ext/apexsink/Makefile
 ext/bs2b/Makefile
 ext/bz2/Makefile
 ext/chromaprint/Makefile
@@ -3861,13 +3636,11 @@ ext/ladspa/Makefile
 ext/lv2/Makefile
 ext/libde265/Makefile
 ext/libmms/Makefile
-ext/libvisual/Makefile
 ext/Makefile
 ext/modplug/Makefile
 ext/mpeg2enc/Makefile
 ext/mplex/Makefile
 ext/musepack/Makefile
-ext/nas/Makefile
 ext/neon/Makefile
 ext/ofa/Makefile
 ext/openal/Makefile
@@ -3883,23 +3656,20 @@ ext/resindvd/Makefile
 ext/rtmp/Makefile
 ext/sbc/Makefile
 ext/schroedinger/Makefile
-ext/sdl/Makefile
 ext/smoothstreaming/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile
 ext/spandsp/Makefile
-ext/sndio/Makefile
 ext/srtp/Makefile
 ext/teletextdec/Makefile
 ext/gme/Makefile
 ext/spc/Makefile
-ext/timidity/Makefile
+ext/wildmidi/Makefile
 ext/vulkan/Makefile
 ext/vulkan/xcb/Makefile
 ext/vulkan/wayland/Makefile
 ext/webp/Makefile
 ext/x265/Makefile
-ext/xvid/Makefile
 ext/zbar/Makefile
 ext/dtls/Makefile
 ext/webrtcdsp/Makefile

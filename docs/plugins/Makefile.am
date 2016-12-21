@@ -103,10 +103,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/rtmp/gstrtmpsink.h \
 	$(top_srcdir)/ext/spandsp/gstspanplc.h \
 	$(top_srcdir)/ext/spandsp/gstdtmfdetect.h \
-	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
-	$(top_srcdir)/ext/sdl/sdlvideosink.h \
-	$(top_srcdir)/ext/timidity/gsttimidity.h \
-	$(top_srcdir)/ext/timidity/gstwildmidi.h \
+	$(top_srcdir)/ext/wildmidi/gstwildmidi.h \
 	$(top_srcdir)/ext/voaacenc/gstvoaacenc.h \
 	$(top_srcdir)/ext/voamrwbenc/gstvoamrwbenc.h \
 	$(top_srcdir)/ext/webrtcdsp/gstwebrtcdsp.h \
@@ -121,10 +118,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audiovisualizers/gstwavescope.h \
 	$(top_srcdir)/gst/camerabin2/gstcamerabin2.h \
 	$(top_srcdir)/gst/coloreffects/gstcoloreffects.h \
-	$(top_srcdir)/gst/dccp/gstdccpclientsink.h \
-	$(top_srcdir)/gst/dccp/gstdccpclientsrc.h \
-	$(top_srcdir)/gst/dccp/gstdccpserversink.h \
-	$(top_srcdir)/gst/dccp/gstdccpserversrc.h \
 	$(top_srcdir)/gst/debugutils/fpsdisplaysink.h \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
 	$(top_srcdir)/gst/festival/gstfestival.h \
@@ -156,7 +149,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/mpegtsmux/mpegtsmux.h \
 	$(top_srcdir)/gst/mxf/mxfdemux.h \
 	$(top_srcdir)/gst/mxf/mxfmux.h \
-	$(top_srcdir)/gst/nuvdemux/gstnuvdemux.h \
 	$(top_srcdir)/gst/pcapparse/gstpcapparse.h \
 	$(top_srcdir)/gst/rawparse/gstaudioparse.h \
 	$(top_srcdir)/gst/rawparse/gstvideoparse.h \

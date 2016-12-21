@@ -14,11 +14,11 @@ AM_TESTS_ENVIRONMENT += \
 	GST_PLUGIN_SYSTEM_PATH_1_0=				\
 	GST_PLUGIN_PATH_1_0=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(GST_PLUGINS_LIBAV_DIR):$(GST_PLUGINS_UGLY_DIR):$(GST_PLUGINS_GOOD_DIR):$(GST_PLUGINS_BASE_DIR):$(GST_PLUGINS_DIR) \
 	GST_PLUGIN_LOADING_WHITELIST="gstreamer@$(GST_PLUGINS_DIR):gst-plugins-base@$(GSTPB_PLUGINS_DIR):gst-plugins-good:gst-plugins-ugly:gst-libav:gst-plugins-bad@$(top_builddir)" \
-	GST_STATE_IGNORE_ELEMENTS="apexsink avdtpsrc camerabin dc1394src \
-	    dccpclientsrc dccpclientsink dccpserversrc dccpserversink decklinksrc \
+	GST_STATE_IGNORE_ELEMENTS="avdtpsrc camerabin dc1394src \
+	    decklinksrc \
 	    decklinksink dtlssrtpdec dtlssrtpenc dvbsrc dvbbasebin dfbvideosink festival fluidsynth \
-	    linsyssdisrc linsyssdisink nassink kmssink \
-	    rsndvdbin sdlaudiosink sdlvideosink vcdsrc rfbsrc vdpauyuvvideo vdpauvideoyuv \
+	    kmssink \
+	    rsndvdbin vcdsrc rfbsrc vdpauyuvvideo vdpauvideoyuv \
 	    vdpaumpegdec vdpaumpeg4dec vdpauh264dec vdpauvideopostprocess vdpausink neonhttpsrc"
 
 plugindir = $(libdir)/gstreamer-@GST_API_VERSION@
@@ -118,12 +118,6 @@ if USE_X265
 check_x265enc=elements/x265enc
 else
 check_x265enc=
-endif
-
-if USE_TIMIDITY
-check_timidity=elements/timidity
-else
-check_timidity=
 endif
 
 if USE_KATE
@@ -247,7 +241,6 @@ check_PROGRAMS = \
 	$(check_mplex)     \
 	$(check_mssdemux) \
 	$(check_ofa)        \
-	$(check_timidity)  \
 	$(check_kate)  \
 	$(check_opencv) \
 	$(check_curl) \
@@ -445,9 +438,6 @@ elements_camerabin_SOURCES = elements/camerabin.c
 elements_jifmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(EXIF_CFLAGS) $(AM_CFLAGS)
 elements_jifmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) $(GST_CHECK_LIBS) $(EXIF_LIBS) $(LDADD)
 elements_jifmux_SOURCES = elements/jifmux.c
-
-elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
 elements_kate_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)

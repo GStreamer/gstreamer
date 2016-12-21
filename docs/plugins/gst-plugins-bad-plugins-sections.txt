@@ -836,62 +836,6 @@ gst_dc1394_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-dccpclientsink</FILE>
-<TITLE>dccpclientsink</TITLE>
-GstDCCPClientSink
-<SUBSECTION Standard>
-GstDCCPClientSinkClass
-GST_DCCP_CLIENT_SINK
-GST_DCCP_CLIENT_SINK_CLASS
-GST_IS_DCCP_CLIENT_SINK
-GST_IS_DCCP_CLIENT_SINK_CLASS
-GST_TYPE_DCCP_CLIENT_SINK
-gst_dccp_client_sink_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-dccpclientsrc</FILE>
-<TITLE>dccpclientsrc</TITLE>
-GstDCCPClientSrc
-<SUBSECTION Standard>
-GstDCCPClientSrcClass
-GST_DCCP_CLIENT_SRC
-GST_DCCP_CLIENT_SRC_CLASS
-GST_IS_DCCP_CLIENT_SRC
-GST_IS_DCCP_CLIENT_SRC_CLASS
-GST_TYPE_DCCP_CLIENT_SRC
-gst_dccp_client_src_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-dccpserversink</FILE>
-<TITLE>dccpserversink</TITLE>
-GstDCCPServerSink
-<SUBSECTION Standard>
-GstDCCPServerSinkClass
-GST_DCCP_SERVER_SINK
-GST_DCCP_SERVER_SINK_CLASS
-GST_IS_DCCP_SERVER_SINK
-GST_IS_DCCP_SERVER_SINK_CLASS
-GST_TYPE_DCCP_SERVER_SINK
-gst_dccp_server_sink_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-dccpserversrc</FILE>
-<TITLE>dccpserversrc</TITLE>
-GstDCCPServerSrc
-<SUBSECTION Standard>
-GstDCCPServerSrcClass
-GST_DCCP_SERVER_SRC
-GST_DCCP_SERVER_SRC_CLASS
-GST_IS_DCCP_SERVER_SRC
-GST_IS_DCCP_SERVER_SRC_CLASS
-GST_TYPE_DCCP_SERVER_SRC
-gst_dccp_server_src_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-debugspy</FILE>
 <TITLE>debugspy</TITLE>
 GstDebugSpy
@@ -2818,21 +2762,6 @@ gst_net_sim_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-nuvdemux</FILE>
-<TITLE>nuvdemux</TITLE>
-GstNuvDemux
-<SUBSECTION Standard>
-GstNuvDemuxClass
-GstNuvDemuxState
-GST_NUV_DEMUX
-GST_NUV_DEMUX_CLASS
-GST_IS_NUV_DEMUX
-GST_IS_NUV_DEMUX_CLASS
-GST_TYPE_NUV_DEMUX
-gst_nuv_demux_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-neonhttpsrc</FILE>
 <TITLE>neonhttpsrc</TITLE>
 GstNeonhttpSrc
@@ -3294,37 +3223,6 @@ GST_IS_RTP_ONVIF_TIMESTAMP_CLASS
 GST_TYPE_RTP_ONVIF_TIMESTAMP
 <SUBSECTION Private>
 gst_rtp_onvif_timestamp_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-sdlaudiosink</FILE>
-<TITLE>sdlaudiosink</TITLE>
-GstSDLAudioSink
-<SUBSECTION Standard>
-GstSDLAudioSinkClass
-GST_SDLAUDIOSINK
-GST_SDLAUDIOSINK_CLASS
-GST_IS_SDLAUDIOSINK
-GST_IS_SDLAUDIOSINK_CLASS
-GST_TYPE_SDLAUDIOSINK
-gst_sdlaudio_sink_get_type
-<SUBSECTION Private>
-gstsdl_semaphore
-</SECTION>
-
-<SECTION>
-<FILE>element-sdlvideosink</FILE>
-<TITLE>sdlvideosink</TITLE>
-GstSDLVideoSink
-<SUBSECTION Standard>
-GstSDLVideoSinkFlags
-GstSDLVideoSinkClass
-GST_SDLVIDEOSINK
-GST_SDLVIDEOSINK_CLASS
-GST_IS_SDLVIDEOSINK
-GST_IS_SDLVIDEOSINK_CLASS
-GST_TYPE_SDLVIDEOSINK
-gst_sdlvideosink_get_type
 </SECTION>
 
 <SECTION>
@@ -3839,20 +3737,6 @@ GST_IS_TONE_GENERATE_SRC_CLASS
 GST_TYPE_TONE_GENERATE_SRC
 <SUBSECTION Private>
 gst_tone_generate_src_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-timidity</FILE>
-<TITLE>timidity</TITLE>
-GstTimidity
-<SUBSECTION Standard>
-GstTimidityClass
-GST_TIMIDITY
-GST_TIMIDITY_CLASS
-GST_IS_TIMIDITY
-GST_IS_TIMIDITY_CLASS
-GST_TYPE_TIMIDITY
-gst_timidity_get_type
 </SECTION>
 
 <SECTION>
