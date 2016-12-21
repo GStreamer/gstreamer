@@ -72,6 +72,17 @@ G_BEGIN_DECLS
 #define GST_ENCODING_CATEGORY_CAPTURE           "capture"
 
 /**
+ * GST_ENCODING_CATEGORY_FILE_EXTENSION:
+ *
+ * #GstEncodingTarget category for file extensions.
+ * The name of the target will be the name of the file extensions possible
+ * for a particular target. Those targets are defining like 'default' formats
+ * usually used for a particular file extension.
+ */
+
+#define GST_ENCODING_CATEGORY_FILE_EXTENSION    "file-extension"
+
+/**
  * GstEncodingTarget:
  *
  * Collection of #GstEncodingProfile for a specific target or use-case.
