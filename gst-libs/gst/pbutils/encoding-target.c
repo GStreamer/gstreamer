@@ -792,7 +792,9 @@ gst_encoding_target_subload (gchar * path, const gchar * category,
 
 /**
  * gst_encoding_target_load:
- * @name: the name of the #GstEncodingTarget to load.
+ * @name: the name of the #GstEncodingTarget to load (automatically
+ * converted to lower case internally as capital letters are not
+ * valid for target names).
  * @category: (allow-none): the name of the target category, like
  * #GST_ENCODING_CATEGORY_DEVICE. Can be %NULL
  * @error: If an error occured, this field will be filled in.
@@ -810,19 +812,23 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
     GError ** error)
 {
   gint i;
-  gchar *lfilename, *tldir, **encoding_target_dirs;
+  gchar *p, *lname, *lfilename, *tldir, **encoding_target_dirs;
   const gchar *envvar;
   GstEncodingTarget *target = NULL;
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  if (!validate_name (name))
+  p = lname = g_str_to_ascii (name, NULL);
+  for (; *p; ++p)
+    *p = g_ascii_tolower (*p);
+
+  if (!validate_name (lname))
     goto invalid_name;
 
   if (category && !validate_name (category))
     goto invalid_category;
 
-  lfilename = g_strdup_printf ("%s" GST_ENCODING_TARGET_SUFFIX, name);
+  lfilename = g_strdup_printf ("%s" GST_ENCODING_TARGET_SUFFIX, lname);
 
   envvar = g_getenv ("GST_ENCODING_TARGET_PATH");
   if (envvar) {
@@ -858,18 +864,19 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
 
 done:
   g_free (lfilename);
+  g_free (lname);
 
   return target;
 
 invalid_name:
   {
     GST_ERROR ("Invalid name for encoding target : '%s'", name);
-    return NULL;
+    goto done;
   }
 invalid_category:
   {
     GST_ERROR ("Invalid name for encoding category : '%s'", category);
-    return NULL;
+    goto done;
   }
 }
 
