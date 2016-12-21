@@ -576,7 +576,7 @@ test_audio_info (GstPlayerMediaInfo * media_info)
   gint i = 0;
   GList *list;
 
-  for (list = gst_player_get_audio_streams (media_info);
+  for (list = gst_player_media_info_get_audio_streams (media_info);
       list != NULL; list = list->next) {
     GstPlayerStreamInfo *stream = (GstPlayerStreamInfo *) list->data;
     GstPlayerAudioInfo *audio_info = (GstPlayerAudioInfo *) stream;
@@ -615,7 +615,7 @@ test_video_info (GstPlayerMediaInfo * media_info)
 {
   GList *list;
 
-  for (list = gst_player_get_video_streams (media_info);
+  for (list = gst_player_media_info_get_video_streams (media_info);
       list != NULL; list = list->next) {
     gint fps_d, fps_n;
     guint par_d, par_n;
@@ -644,7 +644,7 @@ test_subtitle_info (GstPlayerMediaInfo * media_info)
 {
   GList *list;
 
-  for (list = gst_player_get_subtitle_streams (media_info);
+  for (list = gst_player_media_info_get_subtitle_streams (media_info);
       list != NULL; list = list->next) {
     GstPlayerStreamInfo *stream = (GstPlayerStreamInfo *) list->data;
     GstPlayerSubtitleInfo *sub = (GstPlayerSubtitleInfo *) stream;
@@ -680,15 +680,15 @@ test_media_info_object (GstPlayer * player, GstPlayerMediaInfo * media_info)
   fail_unless (list != NULL);
   fail_unless_equals_int (g_list_length (list), 10);
 
-  list = gst_player_get_video_streams (media_info);
+  list = gst_player_media_info_get_video_streams (media_info);
   fail_unless (list != NULL);
   fail_unless_equals_int (g_list_length (list), 1);
 
-  list = gst_player_get_audio_streams (media_info);
+  list = gst_player_media_info_get_audio_streams (media_info);
   fail_unless (list != NULL);
   fail_unless_equals_int (g_list_length (list), 2);
 
-  list = gst_player_get_subtitle_streams (media_info);
+  list = gst_player_media_info_get_subtitle_streams (media_info);
   fail_unless (list != NULL);
   fail_unless_equals_int (g_list_length (list), 7);
 
@@ -1007,7 +1007,7 @@ END_TEST;
 static gboolean
 has_subtitle_stream (TestPlayerState * new_state)
 {
-  if (gst_player_get_subtitle_streams (new_state->media_info))
+  if (gst_player_media_info_get_subtitle_streams (new_state->media_info))
     return TRUE;
 
   return FALSE;
