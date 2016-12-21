@@ -33,7 +33,7 @@ locking and refcounting.
 
 #### object creation
 
-The application creates two object and holds a pointer
+The application creates two objects and holds a pointer
 to them. The objects are initially FLOATING with a refcount of 1.
 
 ```
@@ -215,7 +215,7 @@ if (child->parent != NULL) {
 
 Since the `_unparent()` method unrefs the child object, it is possible that
 the child pointer is invalid after this function. If the parent wants to
-perform other actions on the child (such as signal emmision) it should
+perform other actions on the child (such as signal emission) it should
 `_ref()` the child first.
 
 ## single-reffed relation
@@ -434,7 +434,7 @@ object. Again we need to ref the object before releasing the lock.
 #### destroying the unreffed relationship
 
 Because of the lock order we need to be careful when destroying this
-Relation.
+relation.
 
 When only a reference to object1 is held:
 
@@ -447,7 +447,7 @@ When only a reference to object1 is held:
             UNLOCK (object1);
 ```
 
-When only a reference to object2 is held we need to get a handle to the
+When only a reference to object2 is held, we need to get a handle to the
 other object fist so that we can lock it first. There is a window where
 we need to release all locks and the relation could be invalid. To solve
 this we check the relation after grabbing both locks and retry if the
