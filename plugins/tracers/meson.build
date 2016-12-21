@@ -9,7 +9,7 @@ if not disable_gst_debug
   gst_tracers_sources += ['gstlog.c']
 endif
 
-if have_getrusage
+if cdata.has('HAVE_GETRUSAGE')
   gst_tracers_sources += ['gstrusage.c']
 endif
 

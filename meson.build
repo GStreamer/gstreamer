@@ -101,126 +101,81 @@ endforeach
 # FIXME: should really be called HOST_CPU or such
 cdata.set('TARGET_CPU', '"@0@"'.format(host_machine.cpu()))
 
-check_headers = [['dlfcn.h','HAVE_DLFCN_H'],
-  ['inttypes.h', 'HAVE_INTTYPES_H'],
-  ['memory.h', 'HAVE_MEMORY_H'],
-  ['poll.h', 'HAVE_POLL_H'],
-  ['stdint.h', 'HAVE_STDINT_H'],
-  ['stdio_ext.h', 'HAVE_STDIO_EXT_H'],
-  ['strings.h', 'HAVE_STRINGS_H'],
-  ['string.h', 'HAVE_STRING_H'],
-  ['sys/param.h', 'HAVE_SYS_PARAM_H'],
-  ['sys/poll.h', 'HAVE_SYS_POLL_H'],
-  ['sys/prctl.h', 'HAVE_SYS_PRCTL_H'],
-  ['sys/socket.h', 'HAVE_SYS_SOCKET_H'],
-  ['sys/stat.h', 'HAVE_SYS_STAT_H'],
-  ['sys/times.h', 'HAVE_SYS_TIMES_H'],
-  ['sys/time.h', 'HAVE_SYS_TIME_H'],
-  ['sys/types.h', 'HAVE_SYS_TYPES_H'],
-  ['sys/utsname.h', 'HAVE_SYS_UTSNAME_H'],
-  ['sys/wait.h', 'HAVE_SYS_WAIT_H'],
-  ['ucontext.h', 'HAVE_UCONTEXT_H'],
-  ['unistd.h', 'HAVE_UNISTD_H'],
-  ['valgrind/valgrind.h', 'HAVE_VALGRIND_VALGRIND_H'],
-  ['sys/resource.h', 'HAVE_SYS_RESOURCE_H'],
+check_headers = [
+  'dlfcn.h',
+  'inttypes.h',
+  'memory.h',
+  'poll.h',
+  'stdint.h',
+  'stdio_ext.h',
+  'strings.h',
+  'string.h',
+  'sys/param.h',
+  'sys/poll.h',
+  'sys/prctl.h',
+  'sys/socket.h',
+  'sys/stat.h',
+  'sys/times.h',
+  'sys/time.h',
+  'sys/types.h',
+  'sys/utsname.h',
+  'sys/wait.h',
+  'ucontext.h',
+  'unistd.h',
+  'valgrind/valgrind.h',
+  'sys/resource.h',
 ]
 
 if host_machine.system() == 'windows'
-  check_headers += [ ['winsock2.h', 'HAVE_WINSOCK2_H'] ]
+  check_headers += ['winsock2.h']
 endif
 
 foreach h : check_headers
-  if cc.has_header(h.get(0))
-    cdata.set(h.get(1), 1)
+  if cc.has_header(h)
+    define = 'HAVE_' + h.underscorify().to_upper()
+    cdata.set(define, 1)
   endif
 endforeach
 
-gmtoff_src = '''#include <time.h>
-int main(void) {
-  struct tm t;
-  t.tm_gmtoff = 0;
-  return 0;
-}
-'''
-
-if cc.compiles(gmtoff_src, name : 'tm_gmtoff from time.h')
+if cc.has_member('struct tm', 'tm_gmtoff', prefix : '#include <time.h>')
   cdata.set('HAVE_TM_GMTOFF', 1)
 endif
 
-if cc.has_function('gmtime_r', prefix : '#include<time.h>')
-  cdata.set('HAVE_GMTIME_R', 1)
-endif
+check_functions = [
+  'gmtime_r',
+  'sigaction',
+  'getrusage',
+  'fseeko',
+  'ftello',
+  'fsetpos',
+  'fgetpos',
+  'poll',
+  'pselect',
+  'getpagesize',
+  'clock_gettime',
+  # These are needed by libcheck
+  'getline',
+  'mkstemp',
+  'alarm',
+  'gettimeofday',
+]
+
+foreach f : check_functions
+  if cc.has_function(f)
+    define = 'HAVE_' + f.underscorify().to_upper()
+    cdata.set(define, 1)
+  endif
+endforeach
+
+cdata.set('HAVE_MMAP', 1)
 if cc.has_function('localtime_r', prefix : '#include<time.h>')
   cdata.set('HAVE_LOCALTIME_R', 1)
   # Needed by libcheck
   cdata.set('HAVE_DECL_LOCALTIME_R', 1)
 endif
-if cc.has_function('sigaction', prefix : '#include<signal.h>')
-  cdata.set('HAVE_SIGACTION', 1)
-endif
-have_getrusage = cc.has_function('getrusage', prefix : '#include <sys/time.h>\n#include <sys/resource.h>')
-if have_getrusage
-  cdata.set('HAVE_GETRUSAGE', 1)
-endif
-
-if cc.has_function('fseeko', prefix : '#include<stdio.h>')
-  cdata.set('HAVE_FSEEKO', 1)
-endif
-if cc.has_function('ftello', prefix : '#include<stdio.h>')
-  cdata.set('HAVE_FTELLO', 1)
-endif
-if cc.has_function('fsetpos', prefix : '#include<stdio.h>')
-  cdata.set('HAVE_FSETPOS', 1)
-endif
-if cc.has_function('fgetpos', prefix : '#include<stdio.h>')
-  cdata.set('HAVE_FGETPOS', 1)
-endif
-if cc.has_function('poll', prefix : '#include<poll.h>')
-  cdata.set('HAVE_POLL', 1)
-endif
-if cc.has_function('pselect', prefix : '#include<sys/select.h>')
-  cdata.set('HAVE_PSELECT', 1)
-endif
-cdata.set('HAVE_MMAP', 1)
 
 if cc.has_function('posix_memalign', prefix : '#include<stdlib.h>')
   cdata.set('HAVE_POSIX_MEMALIGN', 1)
-endif
-if cc.has_function('getpagesize', prefix : '#include<unistd.h>')
-  cdata.set('HAVE_GETPAGESIZE', 1)
-endif
-
-# With XCode 8, clock_gettime will be incorrectly detected as being available
-# regardless of what version of OS X you target because the symbol is available
-# in the .tbd file as a weak symbol.
-# See: https://bugzilla.gnome.org/show_bug.cgi?id=772451 
-#
-# We cannot simply do cc.has_function with -Wl,-no_weak_imports because the
-# check does its own prototype decl that doesn't trigger that compiler flag.
-#
-# It's only starting from macOS 10.12 and iOS 10.0 that clock_gettime is
-# actually available, so we can unconditionally disable it for older versions.
-disable_clock_gettime_src = '''#include <AvailabilityMacros.h>
-#include <TargetConditionals.h>
-#if defined(TARGET_OS_MAC)
-#  if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_12
-#    error "Not compiling for OS X 10.12 or later"
-#  endif
-#else
-#  if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_10_0
-#    error "Not compiling for iOS 10.0 or later"
-#  endif
-#endif
-'''
-
-if cc.has_function('clock_gettime', prefix : '#include <time.h>')
-  if host_machine.system() == 'darwin'
-    if cc.compiles(disable_clock_gettime_src, name : 'target darwin/ios version has clock_gettime')
-      cdata.set('HAVE_CLOCK_GETTIME', 1)
-    endif
-  else
-    cdata.set('HAVE_CLOCK_GETTIME', 1)
-  endif
 endif
 
 # We only want to use the __declspec(dllexport/import) dance in GST_EXPORT when
@@ -244,23 +199,11 @@ if cc.has_function('strdup', prefix : '#include <string.h>')
 elif cc.has_function('_strdup', prefix : '#include <string.h>')
   cdata.set('HAVE__STRDUP', 1) # Windows (MSVC)
 endif
-if cc.has_function('getline', prefix : '#include <stdio.h>')
-  cdata.set('HAVE_GETLINE', 1)
-endif
-if cc.has_function('mkstemp', prefix : '#include <stdlib.h>')
-  cdata.set('HAVE_MKSTEMP', 1)
-endif
 if host_machine.system() != 'windows'
   cdata.set('HAVE_FORK', 1)
 else
   # libcheck requires HAVE_FORK to be 0 when fork() is not available
   cdata.set('HAVE_FORK', 0)
-endif
-if cc.has_function('alarm', prefix : '#include <unistd.h>')
-  cdata.set('HAVE_ALARM', 1)
-endif
-if cc.has_function('gettimeofday', prefix : '#include <sys/time.h>')
-  cdata.set('HAVE_GETTIMEOFDAY', 1)
 endif
 if cc.has_function('strsignal', prefix : '#include <string.h>')
   cdata.set('HAVE_DECL_STRSIGNAL', 1)
