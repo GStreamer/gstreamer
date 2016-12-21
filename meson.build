@@ -15,6 +15,8 @@ else
   gst_version_nano = 0
 endif
 
+host_system = host_machine.system()
+
 apiversion = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
@@ -40,6 +42,10 @@ if cc.get_id() == 'msvc'
       '/wd4244', # lossy type conversion (e.g. double -> int)
       '/wd4305', # truncating type conversion (e.g. double -> float)
       language : 'c')
+elif cc.has_argument('-Wl,-Bsymbolic-functions')
+  # FIXME: Add an option for this if people ask for it
+  add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
+  # FIXME: Add FATAL_WARNINGS from configure.ac
 endif
 
 cdata = configuration_data()
@@ -171,6 +177,51 @@ if cc.has_function('localtime_r', prefix : '#include<time.h>')
   cdata.set('HAVE_DECL_LOCALTIME_R', 1)
 endif
 
+if cc.links('''#include <pthread.h>
+							 int main() {
+								 pthread_setname_np("example");
+							 }''', name : 'pthread_setname_np(const char*)')
+	cdata.set('HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID', 1)
+endif
+
+# Check for posix timers and the monotonic clock
+time_prefix = '#include <time.h>\n'
+if cdata.has('HAVE_UNISTD_H')
+  time_prefix += '#include <unistd.h>'
+endif
+
+posix_timers_src = time_prefix + '''
+#if !defined(_POSIX_TIMERS) || _POSIX_TIMERS < 0 || !defined(CLOCK_REALTIME)
+#error Either _POSIX_TIMERS or CLOCK_REALTIME not defined
+#endif
+'''
+if cc.compiles(posix_timers_src, prefix : time_prefix, name : 'posix timers from time.h')
+  cdata.set('HAVE_POSIX_TIMERS', 1)
+endif
+
+monotonic_clock_src = time_prefix + '''
+#if !defined(_POSIX_MONOTONIC_CLOCK) || _POSIX_MONOTONIC_CLOCK < 0 || !defined(CLOCK_MONOTONIC)
+#error Either _POSIX_MONOTONIC_CLOCK or CLOCK_MONOTONIC not defined
+#endif
+'''
+if cc.compiles(monotonic_clock_src, prefix : time_prefix, name : 'monotonic clock from time.h')
+  cdata.set('HAVE_MONOTONIC_CLOCK', 1)
+endif
+
+# Check for __uint128_t (gcc) by checking for 128-bit division
+uint128_t_src = '''int main() {
+static __uint128_t v1 = 100;
+static __uint128_t v2 = 10;
+static __uint128_t u;
+u = v1 / v2;
+}'''
+if cc.compiles(uint128_t_src, name : '__uint128_t available')
+  cdata.set('HAVE_UINT128_T', 1)
+endif
+
+# All supported platforms have long long now
+cdata.set('HAVE_LONG_LONG', 1)
+
 # We only want to use the __declspec(dllexport/import) dance in GST_EXPORT when
 # building with MSVC
 if cc.get_id() == 'msvc'
@@ -182,14 +233,15 @@ endif
 # -------------------------------------------------------------------------------------
 # config.h things needed by libcheck
 # -------------------------------------------------------------------------------------
-if cc.has_function('getpid', prefix : '#include <sys/types.h>\n#include <unistd.h>')
+if cc.has_function('getpid')
   cdata.set('HAVE_GETPID', 1)
-elif cc.has_function('_getpid', prefix : '#include <process.h>')
-  cdata.set('HAVE__GETPID', 1) # Windows (MSVC)
+elif host_system == 'windows' and cc.has_function('_getpid')
+  cdata.set('HAVE_PROCESS_H', 1) # Used by gstreamer too
+  cdata.set('HAVE__GETPID', 1)
 endif
-if cc.has_function('strdup', prefix : '#include <string.h>')
+if cc.has_function('strdup')
   cdata.set('HAVE_DECL_STRDUP', 1)
-elif cc.has_function('_strdup', prefix : '#include <string.h>')
+elif host_system == 'windows' and cc.has_function('_strdup')
   cdata.set('HAVE__STRDUP', 1) # Windows (MSVC)
 endif
 if host_machine.system() != 'windows'
@@ -198,7 +250,7 @@ else
   # libcheck requires HAVE_FORK to be 0 when fork() is not available
   cdata.set('HAVE_FORK', 0)
 endif
-if cc.has_function('strsignal', prefix : '#include <string.h>')
+if cc.has_function('strsignal')
   cdata.set('HAVE_DECL_STRSIGNAL', 1)
 endif
 # Check for availability of types
@@ -257,6 +309,18 @@ if get_option('disable_gst_debug')
     cdata.set('GST_DISABLE_GST_DEBUG_DEFINE', '#define GST_DISABLE_GST_DEBUG 1')
   add_project_arguments(['-Wno-unused'], language: 'c')
 endif
+
+# Used by the gstutils test
+gmp_dep = cc.find_library('gmp', required : false)
+cdata.set('HAVE_GMP', gmp_dep.found())
+gsl_dep = cc.find_library('gsl', required : false)
+gslcblas_dep = cc.find_library('gslcblas', required : false)
+cdata.set('HAVE_GSL', gsl_dep.found() and gslcblas_dep.found())
+test_deps = [gmp_dep, gsl_dep, gslcblas_dep]
+
+# Used by gstinfo.c
+dl_dep = cc.find_library('dl', required : false)
+cdata.set('HAVE_DLADDR', cc.has_function('dladdr', dependencies : dl_dep))
 
 configure_file(input : 'config.h.meson',
   output : 'config.h',

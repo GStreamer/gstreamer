@@ -133,7 +133,7 @@ foreach t : core_tests
         c_args : gst_c_args + test_defines,
         cpp_args : gst_c_args + test_defines,
         include_directories : [configinc],
-        dependencies : glib_deps + gst_deps,
+        dependencies : test_deps + glib_deps + gst_deps,
     )
 
     env = environment()
