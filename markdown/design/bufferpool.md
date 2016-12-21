@@ -171,13 +171,13 @@ When the pool is in the inactive state, `gst_buffer_pool_acquire_buffer()` will
 return `GST_FLOW_FLUSHING` immediately.
 
 Extra parameters can be given to the `gst_buffer_pool_acquire_buffer()` method to
-influence the allocation decision. `GST_BUFFER_POOL_FLAG_KEY_UNIT` and
-`GST_BUFFER_POOL_FLAG_DISCONT` serve as hints.
+influence the allocation decision. `GST_BUFFER_POOL_ACQUIRE_FLAG_KEY_UNIT` and
+`GST_BUFFER_POOL_ACQUIRE_FLAG_DISCONT` serve as hints.
 
 When the bufferpool is configured with a maximum number of buffers, allocation
 will block when all buffers are outstanding until a buffer is returned to the
 pool. This behaviour can be changed by specifying the
-`GST_BUFFER_POOL_FLAG_DONTWAIT` flag in the parameters. With this flag set,
+`GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT` flag in the parameters. With this flag set,
 allocation will return `GST_FLOW_EOS` when the pool is empty.
 
 ## Renegotiation
@@ -292,7 +292,7 @@ preallocated in the pool.
 * videotestsrc acquires a buffer from the configured pool on its srcpad and
 pushes this into the queue. When videotestsrc has acquired and pushed 3 frames,
 the next call to `gst_buffer_pool_acquire_buffer()` will block (assuming the
-GST_BUFFER_POOL_FLAG_DONTWAIT is not specified).
+`GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT` is not specified).
 
 * When the queue has pushed out a buffer and the sink has rendered it, the
 refcount of the buffer reaches 0 and the buffer is recycled in the pool. This
