@@ -43,9 +43,11 @@ When drawing pictures the following conventions apply:
 
 Objects are drawn with a box like:
 
-    +------+
-    |      |
-    +------+
+```
++------+
+|      |
++------+
+```
 
 ### pointers
 
@@ -59,7 +61,9 @@ a pointer to an object.
 
 an invalid pointer, this is a pointer that should not be used.
 
-    *-//->
+```
+*-//->
+```
 
 ### elements
 
@@ -72,7 +76,9 @@ sink       src
 
 ### pad links
 
-    -----+    +---
-         |    |
-        src--sink
-    -----+    +---
+```
+-----+    +---
+     |    |
+    src--sink
+-----+    +---
+```
