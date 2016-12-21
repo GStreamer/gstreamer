@@ -1214,7 +1214,18 @@ gst_vaapisink_display_changed (GstVaapiPluginBase * plugin)
 static gboolean
 gst_vaapisink_start (GstBaseSink * base_sink)
 {
-  return gst_vaapisink_ensure_display (GST_VAAPISINK_CAST (base_sink));
+  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (base_sink);
+
+  if (!gst_vaapisink_ensure_display (sink))
+    return FALSE;
+
+  /* Ensures possible raw caps earlier to avoid race conditions at
+   * get_caps() */
+  if (!gst_vaapi_plugin_base_get_allowed_raw_caps (plugin))
+    return FALSE;
+
+  return TRUE;
 }
 
 static gboolean
