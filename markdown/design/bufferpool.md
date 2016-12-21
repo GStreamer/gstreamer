@@ -12,8 +12,8 @@ to negotiate buffer metadata between themselves.
 
 ## Requirements
 
-- Provide a GstBufferPool base class to help the efficient
-implementation of a list of reusable GstBuffer objects.
+- Provide a `GstBufferPool` base class to help the efficient
+implementation of a list of reusable `GstBuffer` objects.
 
 - Let upstream elements initiate the negotiation of a bufferpool and
 its configuration. Allow downstream elements provide bufferpool
@@ -60,7 +60,7 @@ After a particular media format has been negotiated between two pads (using the
 CAPS event), they must agree on how to allocate buffers.
 
 The srcpad will always take the initiative to negotiate the allocation
-properties. It starts with creating a GST_QUERY_ALLOCATION with the negotiated
+properties. It starts with creating a `GST_QUERY_ALLOCATION` with the negotiated
 caps.
 
 The srcpad can set the need-pool flag to TRUE in the query to optionally make the
@@ -80,11 +80,11 @@ different sizes and can't be allocated from a pool.
 
 The allocation query has the following fields:
 
-* (in) **`caps`**, GST_TYPE_CAPS: the caps that was negotiated
+* (in) **`caps`**, `GST_TYPE_CAPS`: the caps that was negotiated
 
-* (in) **`need-pool`**, G_TYPE_BOOLEAN: if a GstBufferPool is requested
+* (in) **`need-pool`**, `G_TYPE_BOOLEAN`: if a `GstBufferPool` is requested
 
-* (out) **`pool`**, G_TYPE_ARRAY of structure: an array of pool configurations:
+* (out) **`pool`**, `G_TYPE_ARRAY` of structure: an array of pool configurations:
 
 `` c
     struct {
@@ -98,7 +98,7 @@ The allocation query has the following fields:
 Use `gst_query_parse_nth_allocation_pool()` to get the values.
 
 The allocator can contain multiple pool configurations. If need-pool
-was TRUE, the pool member might contain a GstBufferPool when the
+was TRUE, the pool member might contain a `GstBufferPool` when the
 downstream element can provide one.
 
 Size contains the size of the bufferpool's buffers and is never 0.
@@ -113,7 +113,7 @@ acceptable.
 The pool can then be configured with the suggested min and max amount of
 buffers or a downstream element might choose different values.
 
-* (out) **`allocator`**, G_TYPE_ARRAY of structure: an array of allocator parameters that can be used.
+* (out) **`allocator`**, `G_TYPE_ARRAY` of structure: an array of allocator parameters that can be used.
 
 ``` c
     struct {
@@ -129,7 +129,7 @@ parameters to allocate memory for the downstream element.
 
 It is also possible to configure the allocator in a provided pool.
 
-* (out) **`metadata`**, G_TYPE_ARRAY of structure: an array of metadata params that can be accepted.
+* (out) **`metadata`**, `G_TYPE_ARRAY` of structure: an array of metadata params that can be accepted.
 
 ``` c
     struct {
@@ -291,7 +291,7 @@ preallocated in the pool.
 
 * videotestsrc acquires a buffer from the configured pool on its srcpad and
 pushes this into the queue. When videotestsrc has acquired and pushed 3 frames,
-the next call to gst_buffer_pool_acquire_buffer() will block (assuming the
+the next call to `gst_buffer_pool_acquire_buffer()` will block (assuming the
 GST_BUFFER_POOL_FLAG_DONTWAIT is not specified).
 
 * When the queue has pushed out a buffer and the sink has rendered it, the
