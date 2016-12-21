@@ -10,7 +10,7 @@ Together with the ALLOCATION query, elements can negotiate allocation
 properties and bufferpools between themselves. This also allows elements
 to negotiate buffer metadata between themselves.
 
-# Requirements
+## Requirements
 
 - Provide a GstBufferPool base class to help the efficient
 implementation of a list of reusable GstBuffer objects.
@@ -36,7 +36,7 @@ important when a new element, that can provide a bufferpool, is
 dynamically linked
 downstream.
 
-# GstBufferPool
+## GstBufferPool
 
 The bufferpool object manages a list of buffers with the same properties such
 as size, padding and alignment.
@@ -54,7 +54,7 @@ free algorithms of the buffers from the pool. This should allow for
 different allocation strategies such as using shared memory or hardware
 mapped memory.
 
-# Negotiation
+## Negotiation
 
 After a particular media format has been negotiated between two pads (using the
 CAPS event), they must agree on how to allocate buffers.
@@ -76,7 +76,7 @@ the peer pad as usual.
 The allocation query can also return an allocator object when the buffers are of
 different sizes and can't be allocated from a pool.
 
-# Allocation query
+## Allocation query
 
 The allocation query has the following fields:
 
@@ -147,7 +147,7 @@ with the metadata that contains metadata-specific options.
 Some bufferpools have options to enable metadata on the buffers
 allocated by the pool.
 
-# Allocating from pool
+## Allocating from pool
 
 Buffers are allocated from the pool of a pad:
 
@@ -180,14 +180,14 @@ pool. This behaviour can be changed by specifying the
 `GST_BUFFER_POOL_FLAG_DONTWAIT` flag in the parameters. With this flag set,
 allocation will return `GST_FLOW_EOS` when the pool is empty.
 
-# Renegotiation
+## Renegotiation
 
 Renegotiation of the bufferpool might need to be performed when the
 configuration of the pool changes. Changes can be in the buffer size
 (because of a caps change), alignment or number of
         buffers.
 
-## Downstream
+### Downstream
 
 When the upstream element wants to negotiate a new format, it might need
 to renegotiate a new bufferpool configuration with the downstream element.
@@ -205,7 +205,7 @@ The element that wants to renegotiate a new bufferpool uses exactly the same
 algorithm as when it first started. It will negotiate caps first then use the
 ALLOCATION query to get and configure the new pool.
 
-## upstream
+### upstream
 
 When a downstream element wants to negotiate a new format, it will send a
 RECONFIGURE event upstream. This instructs upstream to renegotiate both
@@ -220,7 +220,7 @@ A RECONFIGURE event tags each pad it travels on as needing reconfiguration.
 The next buffer allocation will then require the renegotiation or
 reconfiguration of a pool.
 
-# Shutting down
+## Shutting down
 
 In push mode, a source pad is responsible for setting the pool to the
 inactive state when streaming stops. The inactive state will unblock any pending
@@ -232,9 +232,9 @@ shutting down so that the peer `_get_range()` function can unblock.
 In the inactive state, all the buffers that are returned to the pool will
 automatically be freed by the pool and new allocations will fail.
 
-# Use cases
+## Use cases
 
-## - `videotestsrc ! xvimagesink`
+### - `videotestsrc ! xvimagesink`
 
 * Before videotestsrc can output a buffer, it needs to negotiate caps and
 a bufferpool with the downstream peer pad.
@@ -271,7 +271,7 @@ the pool member.
 this will cause further allocations to fail and currently allocated buffers to
 be freed. videotestsrc will then free the pool and stop streaming.
 
-## - ``videotestsrc ! queue ! myvideosink``
+### - ``videotestsrc ! queue ! myvideosink``
 
 * In this second use case we have a videosink that can at most allocate 3 video
 buffers.
@@ -307,7 +307,7 @@ bufferpool.
 to inactive. This causes any pending (blocked) acquire to return with
 a FLUSHING result and causes the streaming thread to pause.
 
-## - `.. ! myvideodecoder ! queue ! fakesink`
+### - `.. ! myvideodecoder ! queue ! fakesink`
 
 * In this case, the myvideodecoder requires buffers to be aligned to 128 bytes
 and padded with 4096 bytes. The pipeline starts out with the decoder linked to
@@ -334,7 +334,7 @@ the old bufferpool.
 * The new bufferpool is set as the new bufferpool for the srcpad and sinkpad of
 the queue and set to the active state.
 
-## - `.. ! myvideodecoder ! queue ! myvideosink `
+### - `.. ! myvideodecoder ! queue ! myvideosink `
 
 * myvideodecoder has negotiated a bufferpool with the downstream myvideosink to
 handle buffers of size 320x240. It has now detected a change in the video
@@ -354,7 +354,7 @@ dimension.
 can choose to use the current pool (which has buffers that are larger than the
 required size) or it can choose to renegotiate a new bufferpool.
 
-## - `.. ! myvideodecoder ! videoscale ! myvideosink`
+### - `.. ! myvideodecoder ! videoscale ! myvideosink`
 
 * myvideosink is providing a bufferpool for upstream elements and wants to
 change the resolution.
