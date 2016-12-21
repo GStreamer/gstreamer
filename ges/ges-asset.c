@@ -725,6 +725,8 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
     GST_ERROR_OBJECT (asset,
         "Trying to use %s as a proxy, but it is already proxying %s",
         proxy->priv->id, proxy->priv->proxy_target->priv->id);
+
+    return FALSE;
   }
 
   if (g_list_find (proxy->priv->proxies, asset)) {
