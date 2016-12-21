@@ -658,12 +658,7 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
   [broken_poll="no (cross compiling)"])
 AC_MSG_RESULT($broken_poll)
 
-dnl check for mmap()
-AC_FUNC_MMAP
-AM_CONDITIONAL(HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" = "xyes")
-
-dnl check for posix_memalign(), getpagesize()
-AC_CHECK_FUNCS([posix_memalign])
+dnl check for getpagesize()
 AC_CHECK_FUNCS([getpagesize])
 
 dnl Check for POSIX timers

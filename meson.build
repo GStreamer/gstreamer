@@ -147,8 +147,6 @@ check_functions = [
   'getrusage',
   'fseeko',
   'ftello',
-  'fsetpos',
-  'fgetpos',
   'poll',
   'pselect',
   'getpagesize',
@@ -167,15 +165,10 @@ foreach f : check_functions
   endif
 endforeach
 
-cdata.set('HAVE_MMAP', 1)
 if cc.has_function('localtime_r', prefix : '#include<time.h>')
   cdata.set('HAVE_LOCALTIME_R', 1)
   # Needed by libcheck
   cdata.set('HAVE_DECL_LOCALTIME_R', 1)
-endif
-
-if cc.has_function('posix_memalign', prefix : '#include<stdlib.h>')
-  cdata.set('HAVE_POSIX_MEMALIGN', 1)
 endif
 
 # We only want to use the __declspec(dllexport/import) dance in GST_EXPORT when
