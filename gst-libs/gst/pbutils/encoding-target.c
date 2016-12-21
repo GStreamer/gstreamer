@@ -27,50 +27,7 @@
 #include <string.h>
 #include "encoding-target.h"
 
-/*
- * File format
- *
- * GKeyFile style.
- *
- * [GStreamer Encoding Target]
- * name : <name>
- * category : <category>
- * description : <description> #translatable
- *
- * [profile-<profile1name>]
- * name : <name>
- * description : <description> #optional
- * format : <format>
- * preset : <preset>
- *
- * [streamprofile-<id>]
- * parent : <encodingprofile.name>[,<encodingprofile.name>..]
- * type : <type> # "audio", "video", "text"
- * format : <format>
- * preset : <preset>
- * restriction : <restriction>
- * presence : <presence>
- * pass : <pass>
- * variableframerate : <variableframerate>
- *  */
-
-/*
- * Location of profile files
- *
- * $GST_DATADIR/gstreamer-GST_API_VERSION/encoding-profile
- * $HOME/gstreamer-GST_API_VERSION/encoding-profile
- *
- * There also is a GST_ENCODING_TARGET_PATH environment variable
- * defining a list of folder containing encoding target files.
- *
- * Naming convention
- *   $(target.category)/$(target.name).gep
- *
- * Naming restrictions:
- *  lowercase ASCII letter for the first character
- *  Same for all other characters + numerics + hyphens
- */
-
+/* Documented in encoding-profile.c */
 
 #define GST_ENCODING_TARGET_HEADER "GStreamer Encoding Target"
 #define GST_ENCODING_TARGET_DIRECTORY "encoding-profiles"
