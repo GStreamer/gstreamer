@@ -1,6 +1,6 @@
 # Clocks
 
-The GstClock returns a monotonically increasing time with the method
+The `GstClock` returns a monotonically increasing time with the method
 `_get_time()`. Its accuracy and base time depends on the specific clock
 implementation but time is always expressed in nanoseconds. Since the
 baseline of the clock is undefined, the clock time returned is not
@@ -9,8 +9,8 @@ times. The time reported by the clock is called the `absolute_time`.
 
 ## Clock Selection
 
-To synchronize the different elements, the GstPipeline is responsible
-for selecting and distributing a global GstClock for all the elements in
+To synchronize the different elements, the `GstPipeline` is responsible
+for selecting and distributing a global `GstClock` for all the elements in
 it.
 
 This selection happens whenever the pipeline goes to PLAYING. Whenever
@@ -36,11 +36,11 @@ to PLAYING and is described in [states](design/states.md).
 The clock supports periodic and single shot clock notifications both
 synchronous and asynchronous.
 
-One first needs to create a GstClockID for the periodic or single shot
+One first needs to create a `GstClockID` for the periodic or single shot
 notification using `_clock_new_single_shot_id()` or
 `_clock_new_periodic_id()`.
 
-To perform a blocking wait for the specific time of the GstClockID use
+To perform a blocking wait for the specific time of the `GstClockID` use
 the `gst_clock_id_wait()`. To receive a callback when the specific time
 is reached in the clock use `gstclock_id_wait_async()`. Both these
 calls can be interrupted with the `gst_clock_id_unschedule()` call. If
@@ -51,14 +51,14 @@ The async callbacks can happen from any thread, either provided by the
 core or from a streaming thread. The application should be prepared for
 this.
 
-A GstClockID that has been unscheduled cannot be used again for any wait
+A `GstClockID` that has been unscheduled cannot be used again for any wait
 operation.
 
 It is possible to perform a blocking wait on the same ID from multiple
 threads. However, registering the same ID for multiple async
 notifications is not possible, the callback will only be called once.
 
-None of the wait operations unref the GstClockID, the owner is
+None of the wait operations unref the `GstClockID`, the owner is
 responsible for unreffing the ids itself. This holds true for both
 periodic and single shot notifications. The reason being that the owner
 of the ClockID has to keep a handle to the ID to unblock the wait on
@@ -72,7 +72,7 @@ that provided the clock is not PLAYING.
 
 ## Clock implementations
 
-The GStreamer core provides a GstSystemClock based on the system time.
+The GStreamer core provides a `GstSystemClock` based on the system time.
 Asynchronous callbacks are scheduled from an internal thread.
 
 Clock implementers are encouraged to subclass this systemclock as it
