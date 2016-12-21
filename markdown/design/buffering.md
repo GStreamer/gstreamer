@@ -25,14 +25,16 @@ timeshifting.
 
 - the possibility for the application to do more complex buffering
 
-Some use cases:
+## Some use cases
 
-  - Stream buffering:
+### Stream buffering
 
-        +---------+     +---------+     +-------+
-        | httpsrc |     | buffer  |     | demux |
-        |        src - sink      src - sink     ....
-        +---------+     +---------+     +-------+
+```
++---------+     +---------+     +-------+
+| httpsrc |     | buffer  |     | demux |
+|        src - sink      src - sink     ....
++---------+     +---------+     +-------+
+```
 
 In this case we are reading from a slow network source into a buffer element
 (such as queue2).
@@ -63,15 +65,16 @@ Seeking in the stream requires the seek to happen in the network source.
 It is mostly desirable when the total duration of the file is not known, such
 as in live streaming or when efficient seeking is not possible/required.
 
-  - Incremental download
+### Incremental download
 
-        +---------+     +---------+     +-------+
-        | httpsrc |     | buffer  |     | demux |
-        |        src - sink      src - sink     ....
-        +---------+     +----|----+     +-------+
-                             V
-                            file
-
+```
++---------+     +---------+     +-------+
+| httpsrc |     | buffer  |     | demux |
+|        src - sink      src - sink     ....
++---------+     +----|----+     +-------+
+                     V
+                    file
+```
 In this case, we know the server is streaming a fixed length file to the
 client. The application can choose to download the file to disk. The buffer
 element will provide a push or pull based srcpad to the demuxer to navigate in
@@ -90,14 +93,16 @@ The application can use the `BUFFERING` query to get the estimated download time
 and match this time to the current/remaining playback time to control when
 playback should start to have a non-interrupted playback experience.
 
-  - Timeshifting
+### Timeshifting
 
-        +---------+     +---------+     +-------+
-        | httpsrc |     | buffer  |     | demux |
-        |        src - sink      src - sink     ....
-        +---------+     +----|----+     +-------+
-                             V
-                         file-ringbuffer
+```
++---------+     +---------+     +-------+
+| httpsrc |     | buffer  |     | demux |
+|        src - sink      src - sink     ....
++---------+     +----|----+     +-------+
+                     V
+              file-ringbuffer
+```
 
 In this mode, a fixed size ringbuffer is kept to download the server content.
 This allows for seeking in the buffered data. Depending on the size of the
@@ -108,7 +113,7 @@ This mode is suitable for all live streams.
 As with the incremental download mode, buffering messages are emitted along
 with an indication that timeshifting download is in progress.
 
-  - Live buffering
+### Live buffering
 
 In live pipelines we usually introduce some latency between the capture and
 the playback elements. This latency can be introduced by a queue (such as a
@@ -129,7 +134,7 @@ The `BUFFERING` message should be intercepted and acted upon by the
 application. The message contains at least one field that is sufficient
 for basic functionality:
 
-* **`buffer-percent`**, G_TYPE_INT: between 0 and 100
+* **`buffer-percent`**, `G_TYPE_INT`: between 0 and 100
 
 Several more clever ways of dealing with the buffering messages can be
 used when in incremental or timeshifting download mode. For this purpose
@@ -140,16 +145,16 @@ additional fields are added to the buffering message:
 alternatives. This field can be used to let the application have more control
 over the buffering process.
 
-* **`avg-in-rate`**, G_TYPE_INT: Average input buffering speed in bytes/second.
+* **`avg-in-rate`**, `G_TYPE_INT`: Average input buffering speed in bytes/second.
 -1 is unknown. This is the average number of bytes per second that is received
 on the buffering element input (sink) pads. It is a measurement of the network
 speed in most cases.
 
-* **`avg-out-rate`**, G_TYPE_INT: Average consumption speed in bytes/second. -1
+* **`avg-out-rate`**, `G_TYPE_INT`: Average consumption speed in bytes/second. -1
 is unknown. This is the average number of bytes per second that is consumed by
 the downstream element of the buffering element.
 
-* **`buffering-left`**, G_TYPE_INT64: Estimated time that buffering will take
+* **`buffering-left`**, `G_TYPE_INT64`: Estimated time that buffering will take
 in milliseconds. -1 is unknown. This is measured based on the avg-in-rate and
 the filled level of the queue. The application can use this hint to update the
 GUI about the estimated remaining time that buffering will take.
@@ -190,36 +195,38 @@ In addition to all the fields present in the buffering message, the
 available downloaded range in a specific format and the estimated time
 to complete:
 
-* **`busy`**, G_TYPE_BOOLEAN: if buffering was busy. This flag allows the
+* **`busy`**, `G_TYPE_BOOLEAN`: if buffering was busy. This flag allows the
 application to pause the pipeline by using the query only.
 
-* **`format`**, GST_TYPE_FORMAT: the format of the "start" and "stop" values
+* **`format`**, `GST_TYPE_FORMAT`: the format of the "start" and "stop" values
 below
 
-* **`start`**, G_TYPE_INT64, -1 unknown: the start position of the available
+* **`start`**, `G_TYPE_INT64`, -1 unknown: the start position of the available
 data. If there are multiple ranges, this field contains the start position of
 the currently downloading range.
 
-* **`stop`**, G_TYPE_INT64, -1 unknown: the stop position of the available
+* **`stop`**, `G_TYPE_INT64`, -1 unknown: the stop position of the available
 data. If there are multiple ranges, this field contains the stop position of
 the currently downloading range.
 
-* **`estimated-total`**, G_TYPE_INT64: gives the estimated download time in
+* **`estimated-total`**, `G_TYPE_INT64`: gives the estimated download time in
 milliseconds. -1 unknown. When the size of the downloaded file is known, this
 value will contain the latest estimate of the remaining download time of the
 currently downloading range. This value is usually only filled for the
 "download" buffering mode. The application can use this information to estimate
 the amount of remaining time to download till the end of the file.
 
-* **`buffering-ranges`**, G_TYPE_ARRAY of GstQueryBufferingRange: contains
+* **`buffering-ranges`**, `G_TYPE_ARRAY` of `GstQueryBufferingRange`: contains
 optionally the downloaded areas in the format given above. One of the ranges
 contains the same start/stop position as above:
 
+```
     typedef struct
     {
       gint64 start;
       gint64 stop;
     } GstQueryBufferingRange;
+```
 
 For the `download` and `timeshift` buffering-modes, the start and stop
 positions specify the ranges where efficient seeking in the downloaded
@@ -233,7 +240,7 @@ oldest and newest item (expressed in `format`) in the buffer.
 
 Some defaults for common elements:
 
-A GstBaseSrc with random access replies to the `BUFFERING` query with:
+A `GstBaseSrc` with random access replies to the `BUFFERING` query with:
 
     "buffer-percent" = 100
     "buffering-mode" = "stream"
@@ -246,7 +253,7 @@ A GstBaseSrc with random access replies to the `BUFFERING` query with:
     "estimated-total" = 0
     "buffering-ranges" = NULL
 
-A GstBaseSrc in push mode replies to the `BUFFERING` query with:
+A `GstBaseSrc` in push mode replies to the `BUFFERING` query with:
 
     "buffer-percent" = 100
     "buffering-mode" = "stream"
