@@ -2534,6 +2534,20 @@ gst_dash_demux_handle_isobmff_buffer (GstAdaptiveDemux * demux,
     GST_BUFFER_OFFSET (buffer) = dash_stream->isobmff_parser.current_offset;
     dash_stream->isobmff_parser.current_offset += gst_buffer_get_size (buffer);
     GST_BUFFER_OFFSET_END (buffer) = dash_stream->isobmff_parser.current_offset;
+  } else if (gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
+    guint64 offset;
+
+    /* Drain adapter */
+    gst_adapter_push (dash_stream->isobmff_adapter, buffer);
+
+    buffer =
+        gst_adapter_take_buffer (dash_stream->isobmff_adapter,
+        gst_adapter_available (dash_stream->isobmff_adapter));
+
+    /* Set buffer offset based on the last parser's offset */
+    offset = dash_stream->isobmff_parser.current_offset;
+    GST_BUFFER_OFFSET (buffer) = offset;
+    GST_BUFFER_OFFSET_END (buffer) = offset + gst_buffer_get_size (buffer);
   }
 
   return gst_adaptive_demux_stream_push_buffer (stream, buffer);
