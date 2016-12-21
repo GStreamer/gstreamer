@@ -211,9 +211,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_to_from_string)
 {
-  GstCaps *caps1, *caps2;
   GstStructure *st1, *st2;
-  gchar *str, *res1, *res2;
+  gchar *str;
 
   /* test escaping/unescaping */
   st1 = gst_structure_new ("FooBar-123/0_1", "num", G_TYPE_INT, 9173,
@@ -223,21 +222,12 @@ GST_START_TEST (test_to_from_string)
   g_free (str);
 
   fail_unless (st2 != NULL);
+  fail_unless (gst_structure_is_equal (st1, st2),
+      "Structures did not match:\n\tStructure 1: %" GST_PTR_FORMAT
+      "\n\tStructure 2: %" GST_PTR_FORMAT "\n", st1, st2);
 
-  /* need to put structures into caps to compare */
-  caps1 = gst_caps_new_empty ();
-  gst_caps_append_structure (caps1, st1);
-  caps2 = gst_caps_new_empty ();
-  gst_caps_append_structure (caps2, st2);
-  res1 = gst_caps_to_string (caps1);
-  res2 = gst_caps_to_string (caps2);
-  fail_unless (gst_caps_is_equal (caps1, caps2),
-      "Structures did not match:\n\tStructure 1: %s\n\tStructure 2: %s\n",
-      res1, res2);
-  gst_caps_unref (caps1);
-  gst_caps_unref (caps2);
-  g_free (res1);
-  g_free (res2);
+  gst_structure_free (st1);
+  gst_structure_free (st2);
 }
 
 GST_END_TEST;
@@ -300,9 +290,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_string_properties)
 {
-  GstCaps *caps1, *caps2;
   GstStructure *st1, *st2;
-  gchar *str, *res1, *res2;
+  gchar *str;
 
   /* test escaping/unescaping */
   st1 = gst_structure_new ("RandomStructure", "prop1", G_TYPE_STRING, "foo",
@@ -313,21 +302,12 @@ GST_START_TEST (test_string_properties)
   g_free (str);
 
   fail_unless (st2 != NULL);
+  fail_unless (gst_structure_is_equal (st1, st2),
+      "Structures did not match:\n\tStructure 1: %" GST_PTR_FORMAT
+      "\n\tStructure 2: %" GST_PTR_FORMAT "\n", st1, st2);
 
-  /* need to put structures into caps to compare */
-  caps1 = gst_caps_new_empty ();
-  gst_caps_append_structure (caps1, st1);
-  caps2 = gst_caps_new_empty ();
-  gst_caps_append_structure (caps2, st2);
-  res1 = gst_caps_to_string (caps1);
-  res2 = gst_caps_to_string (caps2);
-  fail_unless (gst_caps_is_equal (caps1, caps2),
-      "Structures did not match:\n\tStructure 1: %s\n\tStructure 2: %s\n",
-      res1, res2);
-  gst_caps_unref (caps1);
-  gst_caps_unref (caps2);
-  g_free (res1);
-  g_free (res2);
+  gst_structure_free (st1);
+  gst_structure_free (st2);
 }
 
 GST_END_TEST;
