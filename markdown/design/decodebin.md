@@ -22,8 +22,8 @@
 
 The goal is to reach 'target' caps (by default raw media).
 
-This is done by using the GstCaps of a source pad and finding the
-available demuxers/decoders GstElement that can be linked to that pad.
+This is done by using the `GstCaps` of a source pad and finding the
+available demuxers/decoders `GstElement` that can be linked to that pad.
 
 The process starts with the source pad of typefind and stops when no
 more non-target caps are left. It is commonly done while pre-rolling,
@@ -32,28 +32,28 @@ but can also happen whenever a new pad appears on any element.
 Once a target caps has been found, that pad is ghosted and the
 'pad-added' signal is emitted.
 
-If no compatible elements can be found for a GstCaps, the pad is ghosted
+If no compatible elements can be found for a `GstCaps`, the pad is ghosted
 and the 'unknown-type' signal is emitted.
 
 ### Assisted auto-plugging
 
-When starting the auto-plugging process for a given GstCaps, two signals
+When starting the auto-plugging process for a given `GstCaps`, two signals
 are emitted in the following way in order to allow the application/user
 to assist or fine-tune the process.
 
  - **'autoplug-continue'**:
 
         gboolean user_function (GstElement * decodebin, GstPad *pad, GstCaps * caps)
-    
-    This signal is fired at the very beginning with the source pad GstCaps. If
+
+    This signal is fired at the very beginning with the source pad `GstCaps`. If
     the callback returns TRUE, the process continues normally. If the
-    callback returns FALSE, then the GstCaps are considered as a target caps
+    callback returns FALSE, then the `GstCaps` are considered as a target caps
     and the autoplugging process stops.
 
   - **'autoplug-factories'**:
-    
+
         GValueArray user_function (GstElement* decodebin, GstPad* pad, GstCaps* caps);
-    
+
     Get a list of elementfactories for @pad with @caps. This function is
     used to instruct decodebin2 of the elements it should try to
     autoplug. The default behaviour when this function is not overriden
@@ -61,16 +61,16 @@ to assist or fine-tune the process.
     sorted by rank.
 
   - **'autoplug-select'**:
-    
+
         gint user_function (GstElement* decodebin, GstPad* pad, GstCaps*caps, GValueArray* factories);
-    
+
     This signal is fired once autoplugging has got a list of compatible
-    GstElementFactory. The signal is emitted with the GstCaps of the
+    `GstElementFactory`. The signal is emitted with the `GstCaps` of the
     source pad and a pointer on the GValueArray of compatible factories.
-    
+
     The callback should return the index of the elementfactory in
     @factories that should be tried next.
-    
+
     If the callback returns -1, the autoplugging process will stop as if
     no compatible factories were found.
 
@@ -79,7 +79,7 @@ first factory of the list.
 
 ### Target Caps
 
-The target caps are a read/write GObject property of decodebin.
+The target caps are a read/write `GObject` property of decodebin.
 
 By default the target caps are:
 
@@ -111,7 +111,7 @@ Streams belonging to the same group/chain of a media file.
 
 The DecodeGroup contains:
 
- - a GstMultiQueue to which all streams of a the media group are connected.
+ - a `GstMultiQueue` to which all streams of the media group are connected.
 
  - the eventual decoders which are autoplugged in order to produce the
    requested target pads.
@@ -136,57 +136,57 @@ Multiple input-output data queue.
 few differences:
 
   - Multiple streams handling.
-    
+
     The element handles queueing data on more than one stream at once.
     To achieve such a feature it has request sink pads (sink\_%u) and
     'sometimes' src pads (src\_%u).
-    
+
     When requesting a given sinkpad, the associated srcpad for that
     stream will be created. Ex: requesting sink\_1 will generate src\_1.
 
   - Non-starvation on multiple streams.
-    
+
     If more than one stream is used with the element, the streams'
     queues will be dynamically grown (up to a limit), in order to ensure
     that no stream is risking data starvation. This guarantees that at
     any given time there are at least N bytes queued and available for
     each individual stream.
-    
+
     If an EOS event comes through a srcpad, the associated queue should
     be considered as 'not-empty' in the queue-size-growing algorithm.
 
   - Non-linked srcpads graceful handling.
-    
-    A GstTask is started for all srcpads when going to
-    GST\_STATE\_PAUSED.
-    
+
+    A `GstTask` is started for all srcpads when going to
+    `GST_STATE_PAUSED`.
+
     The task are blocking against a GCondition which will be fired in
     two different cases:
-    
+
     - When the associated queue has received a buffer.
-    
+
     - When the associated queue was previously declared as 'not-linked'
       and the first buffer of the queue is scheduled to be pushed
       synchronously in relation to the order in which it arrived globally
       in the element (see 'Synchronous data pushing' below).
-    
-    When woken up by the GCondition, the GstTask will try to push the
-    next GstBuffer/GstEvent on the queue. If pushing the
-    GstBuffer/GstEvent returns GST\_FLOW\_NOT\_LINKED, then the
+
+    When woken up by the GCondition, the `GstTask` will try to push the
+    next `GstBuffer`/`GstEvent` on the queue. If pushing the
+    `GstBuffer`/`GstEvent` returns `GST_FLOW_NOT_LINKED`, then the
     associated queue is marked as 'not-linked'. If pushing the
-    GstBuffer/GstEvent succeeded the queue will no longer be marked as
+    `GstBuffer`/`GstEvent` succeeded the queue will no longer be marked as
     'not-linked'.
-    
-    If pushing on all srcpads returns GstFlowReturn different from
-    GST\_FLOW\_OK, then all the srcpads' tasks are stopped and
-    subsequent pushes on sinkpads will return GST\_FLOW\_NOT\_LINKED.
+
+    If pushing on all srcpads returns `GstFlowReturn` different from
+    `GST_FLOW_OK`, then all the srcpads' tasks are stopped and
+    subsequent pushes on sinkpads will return `GST_FLOW_NOT_LINKED`.
 
   - Synchronous data pushing for non-linked pads.
-    
+
     In order to better support dynamic switching between streams, the
     multiqueue (unlike the current GStreamer queue) continues to push
     buffers on non-linked pads rather than shutting down.
-    
+
     In addition, to prevent a non-linked stream from very quickly
     consuming all available buffers and thus 'racing ahead' of the other
     streams, the element must ensure that buffers and inlined events for
@@ -224,7 +224,7 @@ accordingly, if conversion is needed at all.
 
 In an auto-plugging context this is not so straight-forward though,
 because elements are plugged incrementally and not before the previous
-element has processes some data and decided what it will output exactly
+element has processed some data and decided what it will output exactly
 (unless the template caps are completely fixed, then it can continue
 right away, this is not always the case here though, see below). A
 parser will thus have to decide on *some* output format so auto-plugging
