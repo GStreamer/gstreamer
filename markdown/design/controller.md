@@ -7,8 +7,8 @@ property updates at processing time.
 ## Element view
 
 Elements don’t need to do much. They need to: - mark object properties
-that can be changed while processing with GST\_PARAM\_CONTROLLABLE -
-call gst\_object\_sync\_values (self, timestamp) in the processing
+that can be changed while processing with `GST_PARAM_CONTROLLABLE` -
+call `gst_object_sync_values (self, timestamp)` in the processing
 function before accessing the parameters.
 
 All ordered property types can be automated (int, double, boolean,
@@ -19,8 +19,8 @@ text property based on timestamps.
 ## Application view
 
 Applications need to setup the property automation. For that they need
-to create a GstControlSource and attach it to a property using
-GstControlBinding. Various control-sources and control-bindings exist.
+to create a `GstControlSource` and attach it to a property using
+`GstControlBinding`. Various control-sources and control-bindings exist.
 All control sources produce control value sequences in the form of
 gdouble values. The control bindings map them to the value range and
 type of the bound property.
@@ -31,14 +31,14 @@ scale and convert the control values to the target property type and
 range.
 
 One can create complex control-curves by using a
-GstInterpolationControlSource. This allows the classic user editable
+`GstInterpolationControlSource`. This allows the classic user editable
 control-curve (often seen in audio/video editors). Another way is to use
-computed control curves. GstLFOControlSource can generate various
+computed control curves. `GstLFOControlSource` can generate various
 repetitive signals. Those can be made more complex by chaining the
 control sources. One can attach another control-source to e.g. modulate
-the frequency of the first GstLFOControlSource.
+the frequency of the first `GstLFOControlSource`.
 
-In most cases GstControlBindingDirect will be the binding to be used.
+In most cases `GstDirectControlBinding` will be the binding to be used.
 Other control bindings are there to handle special cases, such as having
 1-4 control- sources and combine their values into a single guint to
 control a rgba-color property.
