@@ -353,11 +353,11 @@ object1 and object2.
 Which yields the following initial state again:
 
 ```
-             +---------+        +---------+
-        *--->| object1 |   *--->| object2 |
-             |      *  |        |         |
-             |        1|        |        1|
-             +---------+        +---------+
+     +---------+        +---------+
+*--->| object1 |   *--->| object2 |
+     |      *  |        |         |
+     |        1|        |        1|
+     +---------+        +---------+
 ```
 
 ## unreffed relation
