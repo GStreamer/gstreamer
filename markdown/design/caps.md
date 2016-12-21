@@ -1,10 +1,10 @@
 # Caps
 
 Caps are lightweight refcounted objects describing media types. They are
-composed of an array of GstStructures plus, optionally, a
-GstCapsFeatures set for the GstStructure.
+composed of an array of `GstStructure` plus, optionally, a
+`GstCapsFeatures` set for the `GstStructure`.
 
-Caps are exposed on GstPadTemplates to describe all possible types a
+Caps are exposed on `GstPadTemplates` to describe all possible types a
 given pad can handle. They are also stored in the registry along with a
 description of the element.
 
