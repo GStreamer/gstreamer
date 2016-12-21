@@ -197,6 +197,16 @@ const gchar*  gst_player_media_info_get_container_format
                 (const GstPlayerMediaInfo *info);
 GstSample*    gst_player_media_info_get_image_sample
                 (const GstPlayerMediaInfo *info);
+
+#ifndef GST_DISABLE_DEPRECATED
+GList*        gst_player_get_video_streams
+                (const GstPlayerMediaInfo *info);
+GList*        gst_player_get_audio_streams
+                (const GstPlayerMediaInfo *info);
+GList*        gst_player_get_subtitle_streams
+                (const GstPlayerMediaInfo *info);
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_PLAYER_MEDIA_INFO_H */

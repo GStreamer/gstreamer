@@ -18,6 +18,7 @@ EXPORTS
 	gst_player_error_quark
 	gst_player_g_main_context_signal_dispatcher_get_type
 	gst_player_g_main_context_signal_dispatcher_new
+	gst_player_get_audio_streams
 	gst_player_get_audio_video_offset
 	gst_player_get_color_balance
 	gst_player_get_config
@@ -33,9 +34,11 @@ EXPORTS
 	gst_player_get_pipeline
 	gst_player_get_position
 	gst_player_get_rate
+	gst_player_get_subtitle_streams
 	gst_player_get_subtitle_uri
 	gst_player_get_type
 	gst_player_get_uri
+	gst_player_get_video_streams
 	gst_player_get_volume
 	gst_player_has_color_balance
 	gst_player_media_info_get_audio_streams
