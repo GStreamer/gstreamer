@@ -2366,7 +2366,8 @@ get_from_tags (GstPlayer * self, GstPlayerMediaInfo * media_info,
 
   /* if global tag does not exit then try video and audio streams */
   GST_DEBUG_OBJECT (self, "trying video tags");
-  for (l = gst_player_get_video_streams (media_info); l != NULL; l = l->next) {
+  for (l = gst_player_media_info_get_video_streams (media_info); l != NULL;
+      l = l->next) {
     GstTagList *tags;
 
     tags = gst_player_stream_info_get_tags ((GstPlayerStreamInfo *) l->data);
@@ -2378,7 +2379,8 @@ get_from_tags (GstPlayer * self, GstPlayerMediaInfo * media_info,
   }
 
   GST_DEBUG_OBJECT (self, "trying audio tags");
-  for (l = gst_player_get_audio_streams (media_info); l != NULL; l = l->next) {
+  for (l = gst_player_media_info_get_audio_streams (media_info); l != NULL;
+      l = l->next) {
     GstTagList *tags;
 
     tags = gst_player_stream_info_get_tags ((GstPlayerStreamInfo *) l->data);

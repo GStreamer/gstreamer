@@ -675,14 +675,14 @@ gst_player_media_info_get_stream_list (const GstPlayerMediaInfo * info)
 }
 
 /**
- * gst_player_get_video_streams:
+ * gst_player_media_info_get_video_streams:
  * @info: a #GstPlayerMediaInfo
  *
  * Returns: (transfer none) (element-type GstPlayerVideoInfo): A #GList of
  * matching #GstPlayerVideoInfo.
  */
 GList *
-gst_player_get_video_streams (const GstPlayerMediaInfo * info)
+gst_player_media_info_get_video_streams (const GstPlayerMediaInfo * info)
 {
   g_return_val_if_fail (GST_IS_PLAYER_MEDIA_INFO (info), NULL);
 
@@ -690,14 +690,14 @@ gst_player_get_video_streams (const GstPlayerMediaInfo * info)
 }
 
 /**
- * gst_player_get_subtitle_streams:
+ * gst_player_media_info_get_subtitle_streams:
  * @info: a #GstPlayerMediaInfo
  *
  * Returns: (transfer none) (element-type GstPlayerSubtitleInfo): A #GList of
  * matching #GstPlayerSubtitleInfo.
  */
 GList *
-gst_player_get_subtitle_streams (const GstPlayerMediaInfo * info)
+gst_player_media_info_get_subtitle_streams (const GstPlayerMediaInfo * info)
 {
   g_return_val_if_fail (GST_IS_PLAYER_MEDIA_INFO (info), NULL);
 
@@ -705,14 +705,14 @@ gst_player_get_subtitle_streams (const GstPlayerMediaInfo * info)
 }
 
 /**
- * gst_player_get_audio_streams:
+ * gst_player_media_info_get_audio_streams:
  * @info: a #GstPlayerMediaInfo
  *
  * Returns: (transfer none) (element-type GstPlayerAudioInfo): A #GList of
  * matching #GstPlayerAudioInfo.
  */
 GList *
-gst_player_get_audio_streams (const GstPlayerMediaInfo * info)
+gst_player_media_info_get_audio_streams (const GstPlayerMediaInfo * info)
 {
   g_return_val_if_fail (GST_IS_PLAYER_MEDIA_INFO (info), NULL);
 
