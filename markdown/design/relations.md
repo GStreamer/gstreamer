@@ -110,21 +110,21 @@ after parent updates ref_pointer to child.
 ```
 
 - only one parent is able to \_sink the same object because the
-\_set\_parent() method is atomic.
+`_set_parent()` method is atomic.
 
-- since only one parent is able to \_set\_parent() the object, only
+- since only one parent is able to `_set_parent()` the object, only
 one will add a reference to the object.
 
 - since the parent can hold multiple references to children, we don’t
 need to lock the parent when locking the child. Many threads can
-call \_set\_parent() on the children with the same parent, the
+call `_set_parent()` on the children with the same parent, the
 parent can then add all those to its lists.
 
 > Note: that the signal is emitted before the parent has added the
 > element to its internal data structures. This is not a problem
 > since the parent usually has his own signal to inform the app that
 > the child was reffed. One possible solution would be to update the
-> internal structure first and then perform a rollback if the \_set_parent()
+> internal structure first and then perform a rollback if the `_set_parent()`
 > failed. This is not a good solution as iterators might grab the
 > 'half-added' child too soon.
 
@@ -167,7 +167,7 @@ parent can then add all those to its lists.
         parent so it cannot be disposed. The parent will use its internal
         data structures to locate the child element and will return a
         reference to it with an incremented refcount. The requester should
-        \_unref() the child after usage.
+        `_unref()` the child after usage.
 
    * destroying the parent-child relationship
 
