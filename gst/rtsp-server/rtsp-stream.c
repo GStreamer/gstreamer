@@ -2462,6 +2462,7 @@ create_sender_part (GstRTSPStream * stream, GstBin * bin, GstState state)
       }
     } else if (is_tcp) {
       /* only appsink needed, link it to the session */
+      gst_bin_add (bin, priv->appsink[i]);
       pad = gst_element_get_static_pad (priv->appsink[i], "sink");
       gst_pad_link (priv->send_src[i], pad);
       gst_object_unref (pad);
