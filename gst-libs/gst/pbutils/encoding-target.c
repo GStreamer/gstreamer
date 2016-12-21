@@ -816,7 +816,7 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
     GError ** error)
 {
   gint i;
-  gchar *p, *lname, *lfilename, *tldir, **encoding_target_dirs;
+  gchar *p, *lname, *lfilename = NULL, *tldir, **encoding_target_dirs;
   const gchar *envvar;
   GstEncodingTarget *target = NULL;
 

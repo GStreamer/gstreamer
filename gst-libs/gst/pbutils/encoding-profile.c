@@ -1548,6 +1548,46 @@ parse_encoding_profile (const gchar * value)
   return res;
 }
 
+static GstEncodingProfile *
+profile_from_string (const gchar * string)
+{
+  GstEncodingProfile *profile;
+  gchar *filename_end;
+
+  profile = combo_search (string);
+
+  if (profile)
+    return profile;
+
+  filename_end = g_strrstr (string, ".gep");
+  if (filename_end) {
+    GstEncodingTarget *target;
+    gchar *profilename = NULL, *filename;
+
+    if (filename_end[4] == ':')
+      profilename = g_strdup (&filename_end[5]);
+
+    if (filename_end[4] == '\0' || profilename) {
+      filename = g_strndup (string, filename_end - string + strlen (".gep"));
+
+      target = gst_encoding_target_load_from_file (filename, NULL);
+      if (target) {
+        profile = gst_encoding_target_get_profile (target,
+            profilename ? profilename : "default");
+        gst_encoding_target_unref (target);
+      }
+
+      g_free (profilename);
+      g_free (filename);
+    }
+  }
+
+  if (!profile)
+    profile = parse_encoding_profile (string);
+
+  return profile;
+}
+
 /* GValue transform function */
 static void
 string_to_profile_transform (const GValue * src_value, GValue * dest_value)
@@ -1557,7 +1597,7 @@ string_to_profile_transform (const GValue * src_value, GValue * dest_value)
 
   profilename = g_value_get_string (src_value);
 
-  profile = combo_search (profilename);
+  profile = profile_from_string (profilename);
 
   if (profile)
     g_value_take_object (dest_value, (GObject *) profile);
@@ -1568,10 +1608,7 @@ gst_encoding_profile_deserialize_valfunc (GValue * value, const gchar * s)
 {
   GstEncodingProfile *profile;
 
-  profile = combo_search (s);
-
-  if (!profile)
-    profile = parse_encoding_profile (s);
+  profile = profile_from_string (s);
 
   if (profile) {
     g_value_take_object (value, (GObject *) profile);
