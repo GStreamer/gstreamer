@@ -751,6 +751,7 @@ dvb_base_bin_request_new_pad (GstElement * element,
 
   pad_name = gst_pad_get_name (pad);
   ghost = gst_ghost_pad_new (pad_name, pad);
+  gst_object_unref (pad);
   g_free (pad_name);
   gst_element_add_pad (element, ghost);
 

@@ -878,6 +878,7 @@ gst_sdp_demux_stream_configure_udp_sink (GstSDPDemux * demux,
   if (pad) {
     sinkpad = gst_element_get_static_pad (stream->udpsink, "sink");
     gst_pad_link (pad, sinkpad);
+    gst_object_unref (pad);
     gst_object_unref (sinkpad);
   } else {
     /* not very fatal, we just won't be able to send RTCP */
