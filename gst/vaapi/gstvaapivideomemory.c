@@ -745,7 +745,7 @@ error_cannot_map:
   }
 }
 
-static inline void
+static inline gboolean
 allocator_configure_surface_info (GstVaapiDisplay * display,
     GstVaapiVideoAllocator * allocator, GstVaapiImageUsageFlags req_usage_flag)
 {
@@ -758,13 +758,16 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
   allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
 
   fmt = gst_vaapi_video_format_get_best_native (GST_VIDEO_INFO_FORMAT (vinfo));
+  if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+    goto error_invalid_format;
+
   gst_video_info_set_format (&allocator->surface_info, fmt,
       GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo));
 
   /* nothing to configure */
   if (use_native_formats (req_usage_flag)
       || GST_VIDEO_INFO_FORMAT (vinfo) == GST_VIDEO_FORMAT_ENCODED)
-    return;
+    return TRUE;
 
   surface = new_surface (display, vinfo, req_usage_flag);
   if (!surface)
@@ -793,25 +796,33 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
 bail:
   if (surface)
     gst_vaapi_object_unref (surface);
-  return;
+  return TRUE;
 
+  /* ERRORS */
+error_invalid_format:
+  {
+    GST_ERROR ("Cannot handle format %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (vinfo)));
+    return FALSE;
+  }
 error_no_surface:
   {
     GST_ERROR ("Cannot create a VA Surface");
-    return;
+    return FALSE;
   }
 }
 
-static inline void
+static inline gboolean
 allocator_configure_image_info (GstVaapiDisplay * display,
     GstVaapiVideoAllocator * allocator)
 {
   GstVaapiImage *image = NULL;
   const GstVideoInfo *vinfo;
+  gboolean ret = FALSE;
 
   if (!use_native_formats (allocator->usage_flag)) {
     allocator->image_info = allocator->surface_info;
-    return;
+    return TRUE;
   }
 
   vinfo = &allocator->allocation_info;
@@ -826,17 +837,18 @@ allocator_configure_image_info (GstVaapiDisplay * display,
 
   gst_video_info_update_from_image (&allocator->image_info, image);
   gst_vaapi_image_unmap (image);
+  ret = TRUE;
 
 bail:
   if (image)
     gst_vaapi_object_unref (image);
-  return;
+  return ret;
 
   /* ERRORS */
 error_no_image:
   {
     GST_ERROR ("Cannot create VA image");
-    return;
+    return ret;
   }
 error_cannot_map:
   {
@@ -852,13 +864,15 @@ allocator_params_init (GstVaapiVideoAllocator * allocator,
 {
   allocator->allocation_info = *vip;
 
-  allocator_configure_surface_info (display, allocator, req_usage_flag);
+  if (!allocator_configure_surface_info (display, allocator, req_usage_flag))
+    return FALSE;
   allocator->surface_pool = gst_vaapi_surface_pool_new_full (display,
       &allocator->surface_info, surface_alloc_flags);
   if (!allocator->surface_pool)
     goto error_create_surface_pool;
 
-  allocator_configure_image_info (display, allocator);
+  if (!allocator_configure_image_info (display, allocator))
+    return FALSE;
   allocator->image_pool = gst_vaapi_image_pool_new (display,
       &allocator->image_info);
   if (!allocator->image_pool)
