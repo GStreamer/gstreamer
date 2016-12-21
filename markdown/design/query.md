@@ -54,7 +54,7 @@ not supported.
 
 **`GST_QUERY_CONVERT`**: convert format/value to another format/value pair.
 
-**`GST_QUERY_FORMATS`**: return list of supported formats that can be used for GST_QUERY_CONVERT.
+**`GST_QUERY_FORMATS`**: return list of supported formats that can be used for `GST_QUERY_CONVERT`.
 
 **`GST_QUERY_BUFFERING`**: query available media for efficient seeking (See [buffering](design/buffering.md))
 
