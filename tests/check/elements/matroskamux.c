@@ -311,11 +311,14 @@ GST_START_TEST (test_block_group)
   GstCaps *caps;
   int num_buffers;
   int i;
-  guint8 data0[] = { 0xa0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07,
-    0xa1, 0x85,
-    0x81, 0x00, 0x01, 0x00
+  guint8 data0[] = { 0x1f, 0x43, 0xb6, 0x75, 0x01, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xe7, 0x81, 0x01
   };
-  guint8 data1[] = { 0x42 };
+  guint8 data1[] = { 0xab, 0x81, 0x1f };
+  guint8 data2[] = { 0xa0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x07, 0xa1, 0x85, 0x81, 0x00, 0x00, 0x00
+  };
+  guint8 data3[] = { 0x42 };
 
   matroskamux = setup_matroskamux (&srcac3template);
 
@@ -353,7 +356,7 @@ GST_START_TEST (test_block_group)
 
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   num_buffers = g_list_length (buffers);
-  fail_unless (num_buffers >= 2);
+  fail_unless (num_buffers >= 4);
 
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
@@ -366,6 +369,12 @@ GST_START_TEST (test_block_group)
         break;
       case 1:
         check_buffer_data (outbuffer, data1, sizeof (data1));
+        break;
+      case 2:
+        check_buffer_data (outbuffer, data2, sizeof (data2));
+        break;
+      case 3:
+        check_buffer_data (outbuffer, data3, sizeof (data3));
         break;
       default:
         break;
