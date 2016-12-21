@@ -191,6 +191,40 @@ start_server (gboolean set_shared_factory)
   GST_DEBUG ("rtsp server listening on port %d", test_port);
 }
 
+static void
+start_tcp_server (void)
+{
+  GstRTSPMountPoints *mounts;
+  gchar *service;
+  GstRTSPMediaFactory *factory;
+
+  mounts = gst_rtsp_server_get_mount_points (server);
+
+  factory = gst_rtsp_media_factory_new ();
+
+  gst_rtsp_media_factory_set_protocols (factory, GST_RTSP_LOWER_TRANS_TCP);
+  gst_rtsp_media_factory_set_launch (factory,
+      "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
+  gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
+  g_object_unref (mounts);
+
+  /* set port to any */
+  gst_rtsp_server_set_service (server, "0");
+
+  /* attach to default main context */
+  source_id = gst_rtsp_server_attach (server, NULL);
+  fail_if (source_id == 0);
+
+  /* get port */
+  service = gst_rtsp_server_get_service (server);
+  test_port = atoi (service);
+  fail_unless (test_port != 0);
+  g_free (service);
+
+  GST_DEBUG ("rtsp server listening on port %d", test_port);
+
+}
+
 /* start the testing rtsp server for RECORD mode */
 static GstRTSPMediaFactory *
 start_record_server (const gchar * launch_line)
@@ -296,6 +330,7 @@ static GstRTSPMessage *
 read_response (GstRTSPConnection * conn)
 {
   GstRTSPMessage *response = NULL;
+  GstRTSPMsgType type;
 
   if (gst_rtsp_message_new (&response) != GST_RTSP_OK) {
     GST_DEBUG ("failed to create response object");
@@ -306,8 +341,8 @@ read_response (GstRTSPConnection * conn)
     gst_rtsp_message_free (response);
     return NULL;
   }
-  fail_unless (gst_rtsp_message_get_type (response) ==
-      GST_RTSP_MESSAGE_RESPONSE);
+  type = gst_rtsp_message_get_type (response);
+  fail_unless (type == GST_RTSP_MESSAGE_RESPONSE || type == GST_RTSP_MESSAGE_DATA);
   return response;
 }
 
@@ -325,6 +360,7 @@ do_request_full (GstRTSPConnection * conn, GstRTSPMethod method,
   GstRTSPMessage *response;
   GstRTSPStatusCode code;
   gchar *value;
+  GstRTSPMsgType msg_type;
 
   /* create request */
   request = create_request (conn, method, control);
@@ -351,6 +387,19 @@ do_request_full (GstRTSPConnection * conn, GstRTSPMethod method,
 
   /* read response */
   response = read_response (conn);
+  fail_unless (response != NULL);
+
+  msg_type = gst_rtsp_message_get_type (response);
+
+  if (msg_type == GST_RTSP_MESSAGE_DATA) {
+    do {
+      gst_rtsp_message_free (response);
+      response = read_response (conn);
+      msg_type = gst_rtsp_message_get_type (response);
+    } while (msg_type == GST_RTSP_MESSAGE_DATA);
+  }
+
+  fail_unless (msg_type == GST_RTSP_MESSAGE_RESPONSE);
 
   /* check status line */
   gst_rtsp_message_parse_response (response, &code, NULL, NULL);
@@ -1099,6 +1148,76 @@ GST_START_TEST (test_play)
 
   do_test_play (NULL);
 
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_play_tcp)
+{
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  const gchar *audio_control;
+  GstRTSPRange client_ports = { 0 };
+  gchar *session = NULL;
+  GstRTSPTransport *video_transport = NULL;
+  GstRTSPTransport *audio_transport = NULL;
+
+  start_tcp_server ();
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  /* send DESCRIBE request */
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get control strings from DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+  sdp_media = gst_sdp_message_get_media (sdp_message, 1);
+  audio_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports (&client_ports);
+
+  /* send SETUP request for the first media */
+  fail_unless (do_setup_full (conn, video_control, GST_RTSP_LOWER_TRANS_TCP,
+          &client_ports, NULL, &session, &video_transport,
+          NULL) == GST_RTSP_STS_OK);
+
+  /* check response from SETUP */
+  fail_unless (video_transport->trans == GST_RTSP_TRANS_RTP);
+  fail_unless (video_transport->profile == GST_RTSP_PROFILE_AVP);
+  fail_unless (video_transport->lower_transport == GST_RTSP_LOWER_TRANS_TCP);
+  fail_unless (video_transport->mode_play);
+  gst_rtsp_transport_free (video_transport);
+
+  /* send SETUP request for the second media */
+  fail_unless (do_setup_full (conn, audio_control, GST_RTSP_LOWER_TRANS_TCP,
+          &client_ports, NULL, &session, &audio_transport,
+          NULL) == GST_RTSP_STS_OK);
+
+  /* check response from SETUP */
+  fail_unless (audio_transport->trans == GST_RTSP_TRANS_RTP);
+  fail_unless (audio_transport->profile == GST_RTSP_PROFILE_AVP);
+  fail_unless (audio_transport->lower_transport == GST_RTSP_LOWER_TRANS_TCP);
+  fail_unless (audio_transport->mode_play);
+  gst_rtsp_transport_free (audio_transport);
+
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
+        session)== GST_RTSP_STS_OK);
+
+  /* send TEARDOWN request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session) == GST_RTSP_STS_OK);
+
+  /* clean up and iterate so the clean-up can finish */
+  g_free (session);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
   stop_server ();
   iterate ();
 }
@@ -1992,6 +2111,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_setup_with_require_header);
   tcase_add_test (tc, test_setup_non_existing_stream);
   tcase_add_test (tc, test_play);
+  tcase_add_test (tc, test_play_tcp);
   tcase_add_test (tc, test_play_without_session);
   tcase_add_test (tc, test_bind_already_in_use);
   tcase_add_test (tc, test_play_multithreaded);
