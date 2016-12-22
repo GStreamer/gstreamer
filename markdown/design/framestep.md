@@ -32,16 +32,15 @@ short segments of data in PLAYING.
 
 ## Use Cases
 
-* frame stepping in video only pipeline in PAUSED
+### video only pipeline in PAUSED
 
 ```
-    .-----.    .-------.              .------.    .-------.
-    | src |    | demux |    .-----.   | vdec |    | vsink |
-    |    src->sink    src1->|queue|->sink   src->sink     |
-    '-----'    '-------'    '-----'   '------'    '-------'
-``````
+.-----.    .-------.              .------.    .-------.
+| src |    | demux |    .-----.   | vdec |    | vsink |
+|    src->sink    src1->|queue|->sink   src->sink     |
+'-----'    '-------'    '-----'   '------'    '-------'
+```
 
-*
   - app sets the pipeline to PAUSED to block on the preroll picture
 
   - app seeks to required position in the stream. This can be done
@@ -55,20 +54,19 @@ short segments of data in PLAYING.
   - sink posts `STEP_DONE` with amount of frames stepped and
     corresponding time interval.
 
-* frame stepping in audio/video pipeline in PAUSED
+### audio/video pipeline in PAUSED
 
 ```
-    .-----.    .-------.              .------.    .-------.
-    | src |    | demux |    .-----.   | vdec |    | vsink |
-    |    src->sink    src1->|queue|->sink   src->sink     |
-    '-----'    |       |    '-----'   '------'    '-------'
-               |       |              .------.    .-------.
-               |       |    .-----.   | adec |    | asink |
-               |      src2->|queue|->sink   src->sink     |
-               '-------'    '-----'   '------'    '-------'
+.-----.    .-------.              .------.    .-------.
+| src |    | demux |    .-----.   | vdec |    | vsink |
+|    src->sink    src1->|queue|->sink   src->sink     |
+'-----'    |       |    '-----'   '------'    '-------'
+           |       |              .------.    .-------.
+           |       |    .-----.   | adec |    | asink |
+           |      src2->|queue|->sink   src->sink     |
+           '-------'    '-----'   '------'    '-------'
 ```
 
-*
   - app sets the pipeline to PAUSED to block on the preroll picture
 
   - app seeks to required position in the stream. This can be done
@@ -88,7 +86,7 @@ short segments of data in PLAYING.
     there needs to be enough queueing in the pipeline to compensate
     for the accumulated audio.
 
-- frame stepping in audio/video pipeline in PLAYING
+### audio/video pipeline in PLAYING
 
   - app sets the pipeline to PAUSED to block on the preroll picture
 
@@ -116,23 +114,22 @@ short segments of data in PLAYING.
 A new `GST_EVENT_STEP` event is introduced to start the step operation.
 The step event is created with the following fields in the structure:
 
-* **`format`** GST_TYPE_FORMAT: The format of the step units
+* **`format`** `GST_TYPE_FORMAT`: The format of the step units
 
-* **`amount`** G_TYPE_UINT64: The amount of units to step. A 0 amount
+* **`amount`** `G_TYPE_UINT64`: The amount of units to step. A 0 amount
 immediately completes and can be used to cancel the current step and resume
 normal non-stepping behaviour to the end of the segment. A -1 amount steps
 until the end of the segment.
 
-* **`rate`** G_TYPE_DOUBLE: The rate at which the frames should be stepped in
+* **`rate`** `G_TYPE_DOUBLE`: The rate at which the frames should be stepped in
 PLAYING mode. 1.0 is the normal playback speed and direction of the segment,
 2.0 is double speed. A speed of 0.0 is not allowed. When performing a flushing
 step, the speed is not relevant. Note that we don't allow negative rates here,
 use a seek with a negative rate first to reverse the playback direction.
 
-* **`flush`** G_TYPE_BOOLEAN: when flushing is TRUE, the step is performed
+* **`flush`** `G_TYPE_BOOLEAN`: when flushing is TRUE, the step is performed
 immediately:
 
-*
   - In the PAUSED state the pipeline loses the PAUSED state, the
     requested amount of data is skipped and the pipeline prerolls again
     when a non-intermediate step completes. When the pipeline was
@@ -156,14 +153,14 @@ immediately:
     operation, the step operation will be performed from the position of
     the last PAUSED state.
 
-* **`intermediate`** G_TYPE_BOOLEAN: Signal that this step operation is an
+* **`intermediate`** `G_TYPE_BOOLEAN`: Signal that this step operation is an
 intermediate step, part of a series of step operations. It is mostly
 interesting for stepping in the PAUSED state because the sink will only perform
 a preroll after a non-intermediate step operation completes. Intermediate steps
 are useful to flush out data from other sinks in order to not cause excessive
 queueing. In the PLAYING state the intermediate flag has no visual effect. In
 all states, the intermediate flag is passed to the corresponding
-GST_MESSAGE_STEP_DONE.
+`GST_MESSAGE_STEP_DONE`.
 
 The application will create a STEP event to start or stop the stepping
 operation. Both stepping in PAUSED and PLAYING can be performed by means
@@ -191,15 +188,15 @@ fields.
 
 * **`active`**: If the step was queued or activated.
 
-* **`format`** GST_TYPE_FORMAT: The format of the step units that queued/activated.
+* **`format`** `GST_TYPE_FORMAT`: The format of the step units that queued/activated.
 
-* **`amount`** G_TYPE_UINT64: The amount of units that were queued/activated.
+* **`amount`** `G_TYPE_UINT64`: The amount of units that were queued/activated.
 
-* **`rate`** G_TYPE_DOUBLE: The rate and direction at which the frames were queued/activated.
+* **`rate`** `G_TYPE_DOUBLE`: The rate and direction at which the frames were queued/activated.
 
-* **`flush`** G_TYPE_BOOLEAN: If the queued/activated frames will be flushed.
+* **`flush`** `G_TYPE_BOOLEAN`: If the queued/activated frames will be flushed.
 
-* **`intermediate`** G_TYPE_BOOLEAN: If this is an intermediate step operation
+* **`intermediate`** `G_TYPE_BOOLEAN`: If this is an intermediate step operation
 that queued/activated.
 
 The `STEP_START` message is emitted 2 times:
@@ -218,13 +215,13 @@ possible moment.
 A new `GST_MESSAGE_STEP_DONE` message is created. It contains the
 following fields:
 
-* **`format`** GST_TYPE_FORMAT: The format of the step units that completed.
-* **`amount`** G_TYPE_UINT64: The amount of units that were stepped.
-* **`rate`** G_TYPE_DOUBLE: The rate and direction at which the frames were stepped.
-* **`flush`** G_TYPE_BOOLEAN: If the stepped frames were flushed.
-* **`intermediate`** G_TYPE_BOOLEAN: If this is an intermediate step operation that completed.
-* **`duration`** G_TYPE_UINT64: The total duration of the stepped units in `GST_FORMAT_TIME`.
-* **`eos`** G_TYPE_BOOLEAN: The step ended because of EOS.
+* **`format`** `GST_TYPE_FORMAT`: The format of the step units that completed.
+* **`amount`** `G_TYPE_UINT64`: The amount of units that were stepped.
+* **`rate`** `G_TYPE_DOUBLE`: The rate and direction at which the frames were stepped.
+* **`flush`** `G_TYPE_BOOLEAN`: If the stepped frames were flushed.
+* **`intermediate`** `G_TYPE_BOOLEAN`: If this is an intermediate step operation that completed.
+* **`duration`** `G_TYPE_UINT64`: The total duration of the stepped units in `GST_FORMAT_TIME`.
+* **`eos`** `G_TYPE_BOOLEAN`: The step ended because of EOS.
 
 The message is emitted by the element that performs the step operation.
 The purpose is to return the duration in `GST_FORMAT_TIME` of the
