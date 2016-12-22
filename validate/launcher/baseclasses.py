@@ -1527,6 +1527,12 @@ class _TestsLauncher(Loggable):
             self.tests.extend(tests)
         return sorted(list(self.tests), key=lambda t: t.classname)
 
+    def _tester_needed(self, tester):
+        for testsuite in self.options.testsuites:
+            if tester.name in testsuite.TEST_MANAGER:
+                return True
+        return False
+
     def _run_tests(self):
         cur_test_num = 0
 
@@ -1534,11 +1540,14 @@ class _TestsLauncher(Loggable):
             total_num_tests = 1
             self.all_tests = []
             for tester in self.testers:
-                self.all_tests.extend(tester.list_tests())
+                if self._tester_needed(tester):
+                    self.all_tests.extend(tester.list_tests())
         total_num_tests = len(self.all_tests)
 
         self.reporter.init_timer()
         for tester in self.testers:
+            if not self._tester_needed(tester):
+                continue
             res = tester.run_tests(cur_test_num, total_num_tests)
             cur_test_num += len(tester.list_tests())
             if res != Result.PASSED and (self.options.forever or

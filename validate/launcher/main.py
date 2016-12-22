@@ -536,12 +536,12 @@ Note that all testsuite should be inside python modules, so the directory should
     ScenarioManager().config = options
     if not tests_launcher.set_settings(options, []):
         exit(1)
-    if tests_launcher.list_tests() == -1:
-        printc("\nFailling as tests have been removed/added "
-               " (--fail-on-testlist-change)", Colors.FAIL)
-        exit(1)
-
     if options.list_tests:
+        if tests_launcher.list_tests() == -1:
+            printc("\nFailling as tests have been removed/added "
+                " (--fail-on-testlist-change)", Colors.FAIL)
+            exit(1)
+
         l = tests_launcher.tests
         for test in l:
             printc(test)
