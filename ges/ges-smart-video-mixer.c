@@ -184,10 +184,19 @@ could_not_add:
 static void
 _release_pad (GstElement * element, GstPad * pad)
 {
+  GstPad *peer;
   GST_DEBUG_OBJECT (element, "Releasing pad %" GST_PTR_FORMAT, pad);
 
   LOCK (element);
   g_hash_table_remove (GES_SMART_MIXER (element)->pads_infos, pad);
+  peer = gst_pad_get_peer (pad);
+  if (peer) {
+    gst_pad_unlink (peer, pad);
+
+    gst_object_unref (peer);
+  }
+  gst_pad_set_active (pad, FALSE);
+  gst_element_remove_pad (element, pad);
   UNLOCK (element);
 }
 

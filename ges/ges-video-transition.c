@@ -62,6 +62,9 @@ struct _GESVideoTransitionPrivate
   GstPad *mixer_sinka;
   GstPad *mixer_sinkb;
 
+  GstPad *mixer_ghosta;
+  GstPad *mixer_ghostb;
+
   /* This is in case the smpte doesn't exist yet */
   gint pending_border_value;
   gboolean pending_inverted;
@@ -84,7 +87,7 @@ static GParamSpec *properties[PROP_LAST];
 
 static GObject *link_element_to_mixer_with_smpte (GstBin * bin,
     GstElement * element, GstElement * mixer, gint type,
-    GstElement ** smpteref, GESVideoTransitionPrivate * priv);
+    GstElement ** smpteref, GESVideoTransitionPrivate * priv, GstPad ** ghost);
 
 static void
 ges_video_transition_duration_changed (GESTrackElement * self,
@@ -243,7 +246,7 @@ ges_video_transition_dispose (GObject * object)
     priv->smpte_control_source = NULL;
   }
 
-  release_mixer (&priv->mixer, &priv->mixer_sinka, &priv->mixer_sinkb);
+  release_mixer (&priv->mixer, &priv->mixer_ghosta, &priv->mixer_ghostb);
 
   g_signal_handlers_disconnect_by_func (GES_TRACK_ELEMENT (self),
       duration_changed_cb, NULL);
@@ -352,11 +355,12 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   priv->mixer_sinka =
       (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva,
-      mixer, GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR, NULL, priv);
+      mixer, GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR, NULL, priv,
+      &priv->mixer_ghosta);
   priv->mixer_sinkb =
       (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
       mixer, GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR, &priv->smpte,
-      priv);
+      priv, &priv->mixer_ghostb);
   g_object_set (priv->mixer_sinka, "zorder", 0, NULL);
   g_object_set (priv->mixer_sinkb, "zorder", 1, NULL);
 
@@ -409,9 +413,9 @@ ges_video_transition_create_element (GESTrackElement * object)
 static GObject *
 link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
     GstElement * mixer, gint type, GstElement ** smpteref,
-    GESVideoTransitionPrivate * priv)
+    GESVideoTransitionPrivate * priv, GstPad ** ghost)
 {
-  GstPad *srcpad, *sinkpad, *mixerpad;
+  GstPad *srcpad, *mixerpad;
   GstElement *smptealpha = gst_element_factory_make ("smptealpha", NULL);
 
   g_object_set (G_OBJECT (smptealpha),
@@ -427,8 +431,8 @@ link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
   }
 
   srcpad = gst_element_get_static_pad (smptealpha, "src");
-  sinkpad = ges_smart_mixer_get_mixer_pad (GES_SMART_MIXER (mixer), &mixerpad);
-  gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+  *ghost = ges_smart_mixer_get_mixer_pad (GES_SMART_MIXER (mixer), &mixerpad);
+  gst_pad_link_full (srcpad, *ghost, GST_PAD_LINK_CHECK_NOTHING);
   gst_object_unref (srcpad);
 
   return G_OBJECT (mixerpad);
@@ -445,7 +449,7 @@ ges_video_transition_update_control_source (GstTimedValueControlSource * ts,
 
 static void
 ges_video_transition_update_control_sources (GESVideoTransition * self,
-        GESVideoStandardTransitionType type)
+    GESVideoStandardTransitionType type)
 {
   GESVideoTransitionPrivate *priv = self->priv;
   guint64 duration =
