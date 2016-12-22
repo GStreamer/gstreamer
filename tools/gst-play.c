@@ -1194,6 +1194,8 @@ main (int argc, char **argv)
 #endif
 
   g_set_prgname ("gst-play-" GST_API_VERSION);
+  /* Ensure XInitThreads() is called if/when needed */
+  g_setenv ("GST_GL_XINITTHREADS", "1", TRUE);
 
   ctx = g_option_context_new ("FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ...");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
