@@ -1348,21 +1348,35 @@ class _TestsLauncher(Loggable):
         for tester in self.testers:
             tester.add_options(parser)
 
-    def _load_testsuites(self):
-        testsuites = []
-        for testsuite in self.options.testsuites:
-            if not os.path.isabs(testsuite):
-                testsuite = os.path.join(self.options.testsuites_dir, testsuite + ".py")
-
+    def _load_testsuite(self, testsuites):
+        exceptions = []
+        for testsuite in testsuites:
             try:
                 sys.path.insert(0, os.path.dirname(testsuite))
-                module = __import__(os.path.basename(testsuite).replace(".py", ""))
+                return (__import__(os.path.basename(testsuite).replace(".py", "")), None)
             except Exception as e:
-                printc("Could not load testsuite: %s, reason: %s"
-                       % (testsuite, e), Colors.FAIL)
+                exceptions.append("Could not load %s: %s" % (testsuite, e))
                 continue
             finally:
                 sys.path.remove(os.path.dirname(testsuite))
+
+        return (None, exceptions)
+
+    def _load_testsuites(self):
+        testsuites = []
+        for testsuite in self.options.testsuites:
+            if os.path.isabs(testsuite):
+                loaded_module = self._load_testsuite([testsuite])
+            else:
+                possible_testsuites_paths = [os.path.join(d, testsuite + ".py")
+                              for d in self.options.testsuites_dirs]
+                loaded_module = self._load_testsuite(possible_testsuites_paths)
+
+            module = loaded_module[0]
+            if not loaded_module[0]:
+                printc("Could not load testsuite: %s, reasons: %s" % (
+                    testsuite, loaded_module[1]), Colors.FAIL)
+                continue
 
             testsuites.append(module)
             if not hasattr(module, "TEST_MANAGER"):

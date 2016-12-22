@@ -140,7 +140,7 @@ QA_ASSETS = "gst-integration-testsuites"
 MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "git://anongit.freedesktop.org/gstreamer/gst-integration-testsuites"
 OLD_DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.com/thiblahute/gst-integration-testsuites.git"
-DEFAULT_TESTSUITES_DIR = os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")
+DEFAULT_TESTSUITES_DIRS = [os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")]
 
 
 def download_assets(options):
@@ -206,7 +206,7 @@ class LauncherConfig(Loggable):
         # paths passed with --media-path, and not defined by a testsuite
         self.user_paths = []
         self.paths = []
-        self.testsuites_dir = DEFAULT_TESTSUITES_DIR
+        self.testsuites_dirs = DEFAULT_TESTSUITES_DIRS
 
         self.clone_dir = None
 
@@ -296,9 +296,9 @@ class LauncherConfig(Loggable):
 
         if (self.main_dir != DEFAULT_MAIN_DIR or
                 self.clone_dir != QA_ASSETS) and \
-                self.testsuites_dir == DEFAULT_TESTSUITES_DIR:
-            self.testsuites_dir = os.path.join(self.main_dir, self.clone_dir,
-                                               "testsuites")
+                self.testsuites_dirs in DEFAULT_TESTSUITES_DIRS:
+            self.testsuites_dirs.insert(0, os.path.join(self.main_dir, self.clone_dir,
+                                               "testsuites"))
         if self.valgrind:
             try:
                 subprocess.check_output("valgrind --help", shell=True)
@@ -337,6 +337,8 @@ def main(libsdir):
         _help_message = HELP
     else:
         _help_message = "Use --help for the full help"
+
+    DEFAULT_TESTSUITES_DIRS.append(os.path.join(libsdir, "testsuites"))
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
@@ -458,9 +460,9 @@ Note that all testsuite should be inside python modules, so the directory should
                         help=("Path to xml file to store the xunit report in."))
     dir_group.add_argument("-M", "--main-dir", dest="main_dir",
                            help="Main directory where to put files. Default is %s" % DEFAULT_MAIN_DIR)
-    dir_group.add_argument("--testsuites-dir", dest="testsuites_dir",
+    dir_group.add_argument("--testsuites-dir", dest="testsuites_dirs", action='append',
                            help="Directory where to look for testsuites. Default is %s"
-                           % DEFAULT_TESTSUITES_DIR)
+                           % DEFAULT_TESTSUITES_DIRS)
     dir_group.add_argument("-o", "--output-dir", dest="output_dir",
                            help="Directory where to store logs and rendered files. Default is MAIN_DIR")
     dir_group.add_argument("-l", "--logs-dir", dest="logsdir",
