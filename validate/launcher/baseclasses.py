@@ -1169,7 +1169,13 @@ class TestsManager(Loggable):
     def _check_whitelisted(self, test):
         for pattern in self.wanted_tests_patterns:
             if pattern.findall(test.classname):
+                if self._check_blacklisted(test):
+                    # If explicitly white listed that specific test
+                    # bypass the blacklisting
+                    if pattern.pattern != test.classname:
+                        return False
                 return True
+        return False
 
     def _is_test_wanted(self, test):
         if self._check_whitelisted(test):
