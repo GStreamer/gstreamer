@@ -170,8 +170,8 @@ gst_enums = gnome.mkenums('gstenumtypes',
   install_header : true,
   install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst'))
 
-gstenum_h = gst_enums[0]
-gstenum_c = gst_enums[1]
+gstenum_h = gst_enums[1]
+gstenum_c = gst_enums[0]
 
 
 subdir('parse')
