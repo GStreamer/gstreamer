@@ -38,9 +38,9 @@
  * for gst_preset_save_preset() and gst_preset_delete_preset() to %NULL.
  * Applications can use gst_preset_is_editable() to check for that.
  *
- * The default implementation supports presets located in a system directory, 
+ * The default implementation supports presets located in a system directory,
  * application specific directory and in the users home directory. When getting
- * a list of presets individual presets are read and overlaid in 1) system, 
+ * a list of presets individual presets are read and overlaid in 1) system,
  * 2) application and 3) user order. Whenever an earlier entry is newer, the
  * later entries will be updated. Since 1.8 you can also provide extra paths
  * where to find presets through the GST_PRESET_PATH environment variable.
@@ -285,7 +285,7 @@ preset_open_and_parse_header (GstPreset * preset, const gchar * preset_path,
   /* ERRORS */
 load_error:
   {
-    GST_WARNING_OBJECT (preset, "Unable to read preset file %s: %s",
+    GST_INFO_OBJECT (preset, "Unable to read preset file %s: %s",
         preset_path, error->message);
     g_error_free (error);
     g_key_file_free (in);
@@ -670,7 +670,7 @@ gst_preset_default_load_preset (GstPreset * preset, const gchar * name)
     /* check if we have a settings for this element property */
     if (!(str = g_key_file_get_value (presets, name, props[i], NULL))) {
       /* the element has a property but the parameter is not in the keyfile */
-      GST_WARNING_OBJECT (preset, "parameter '%s' not in preset", props[i]);
+      GST_INFO_OBJECT (preset, "parameter '%s' not in preset", props[i]);
       continue;
     }
 
@@ -1207,7 +1207,7 @@ gst_preset_get_meta (GstPreset * preset, const gchar * name, const gchar * tag,
  * @app_dir: the application specific preset dir
  *
  * Sets an extra directory as an absolute path that should be considered when
- * looking for presets. Any presets in the application dir will shadow the 
+ * looking for presets. Any presets in the application dir will shadow the
  * system presets.
  *
  * Returns: %TRUE for success, %FALSE if the dir already has been set
