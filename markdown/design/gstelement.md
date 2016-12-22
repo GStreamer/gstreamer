@@ -5,11 +5,11 @@ as it defines the structure of the pipeline. Elements include sources,
 filters, sinks, and containers (Bins). They may be an intrinsic part of
 the core GStreamer library, or may be loaded from a plugin. In some
 cases they’re even fabricated from completely different systems (see the
-LADSPA plugin). They are generally created from a GstElementFactory,
+LADSPA plugin). They are generally created from a `GstElementFactory`,
 which will be covered in another chapter, but for the intrinsic types
 they can be created with specific functions.
 
-Elements contains GstPads (also covered in another chapter), which are
+Elements contains `GstPads` (also covered in another chapter), which are
 subsequently used to connect the Elements together to form a pipeline
 capable of passing and processing data. They have a parent, which must
 be another Element. This allows deeply nested pipelines, and the
@@ -28,24 +28,24 @@ parentage or name of an element is changed.
 
 ## Pads
 
-GstPads are the property of a given GstElement. They provide the
+`GstPads` are the property of a given `GstElement`. They provide the
 connection capability, with allowing arbitrary structure in the graph.
 For any Element but a source or sink, there will be at least 2 Pads
-owned by the Element. These pads are stored in a single GList within the
+owned by the Element. These pads are stored in a single `GList` within the
 Element. Several counters are kept in order to allow quicker
 determination of the type and properties of a given Element.
 
-Pads may be added to an element with `_add_pad.` Retrieval is via
+Pads may be added to an element with `_add_pad()`. Retrieval is done via
 `_get_static_pad()`, which operates on the name of the Pad (the unique
 key). This means that all Pads owned by a given Element must have unique
-names. A pointer to the GList of pads may be obtained with
-`_iterate_pads`.
+names. A pointer to the `GList` of pads may be obtained with
+`_iterate_pads()`.
 
 `gst_element_add_pad(element,pads)`: Sets the element as the parent of
 the pad, then adds the pad to the element’s list of pads, keeping the
 counts of total, src, and sink pads up to date. Emits the `new_pad`
 signal with the pad as argument. Fails if either the element or pad are
-either NULL or not what they claim to be. Should fail if the pad already
+NULL or not what they claim to be. Should fail if the pad already
 has a parent. Should fail if the pad is already owned by the element.
 Should fail if there’s already a pad by that name in the list of pads.
 
