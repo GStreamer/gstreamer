@@ -77,19 +77,24 @@ class Stats(Analyzer):
         if event[Parser.F_FUNCTION]:
             return
 
-        try:
-            s = Structure(event[Parser.F_MESSAGE])
-        except ValueError:
-            logger.warning("failed to parse: '%s'", event[Parser.F_MESSAGE])
+        msg = event[Parser.F_MESSAGE]
+        p = msg.find(',')
+        if p == -1:
             return
-        entry_name = s.name
 
+        entry_name = msg[:p]
         if self.classes:
             if not any([fnmatch(entry_name, c) for c in self.classes]):
                 return
 
         record = self.records.get(entry_name)
         if not record:
+            return
+
+        try:
+            s = Structure(msg)
+        except ValueError:
+            logger.warning("failed to parse: '%s'", msg)
             return
 
         # aggregate event based on class
