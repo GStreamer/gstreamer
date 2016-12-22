@@ -853,7 +853,7 @@ GstValidateReportingDetails
 gst_validate_runner_get_default_reporting_details (GstValidateRunner * runner)
 {
   g_return_val_if_fail (GST_IS_VALIDATE_RUNNER (runner),
-      GST_VALIDATE_REPORT_LEVEL_UNKNOWN);
+      GST_VALIDATE_SHOW_UNKNOWN);
 
   return runner->priv->default_level;
 }
