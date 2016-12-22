@@ -46,6 +46,7 @@ from .utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
 # The factor by which we increase the hard timeout when running inside
 # Valgrind
 GDB_TIMEOUT_FACTOR = VALGRIND_TIMEOUT_FACTOR = 20
+TIMEOUT_FACTOR = float(os.environ.get("TIMEOUT_FACTOR", 1))
 # The error reported by valgrind when detecting errors
 VALGRIND_ERROR_CODE = 20
 
@@ -70,8 +71,11 @@ class Test(Loggable):
         @hard_timeout: Max time the test can take in absolute
         """
         Loggable.__init__(self)
-        self.timeout = timeout
-        self.hard_timeout = hard_timeout
+        self.timeout = timeout * TIMEOUT_FACTOR
+        if hard_timeout:
+            self.hard_timeout = hard_timeout * TIMEOUT_FACTOR
+        else:
+            self.hard_timeout = hard_timeout
         self.classname = classname
         self.options = options
         self.application = application_name
