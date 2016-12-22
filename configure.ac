@@ -2885,7 +2885,7 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
         HAVE_QT_WINDOWING="no"
         QT_VERSION="`$PKG_CONFIG --modversion Qt5Core`"
         QPA_INCLUDE_PATH=`$PKG_CONFIG --variable=includedir Qt5Core`/QtGui/${QT_VERSION}/QtGui
-        AS_IF([test -f "$QPA_INCLUDE_PATH/qpa/qplatformnativeinterface.h"], [
+        AS_IF([test -f "$PKG_CONFIG_SYSROOT_DIR/$QPA_INCLUDE_PATH/qpa/qplatformnativeinterface.h"], [
           QT_CFLAGS="$QT_CFLAGS -I$QPA_INCLUDE_PATH"
           HAVE_QT_QPA_HEADER="yes"
         ], [AC_MSG_NOTICE([Cannot find QPA])])
