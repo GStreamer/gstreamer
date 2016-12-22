@@ -73,15 +73,14 @@ A transform can operate in the following modes:
 
 - *passthrough*: The element will not make changes to the buffers, buffers are
 pushed straight through, caps on both sides need to be the same. The element
-can optionally implement a transform_ip() function to take a look at the data,
+can optionally implement a `transform_ip()` function to take a look at the data,
 the buffer does not have to be writable.
 
 - *in-place*: Changes can be made to the input buffer directly to obtain the
-output buffer. The transform must implement a transform_ip() function.
+output buffer. The transform must implement a `transform_ip()` function.
 
 - *copy-transform*: The transform is performed by copying and transforming the
-input buffer to a new output buffer. The transform must implement a transform()
-function.
+input buffer to a new output buffer. The transform must implement a `transform()` function.
 
 When no `transform()` function is provided, only in-place and passthrough
 operation is allowed, this means that source and destination caps must
@@ -144,7 +143,7 @@ transform, by default.
 
 If no `set_caps()` is defined, we don’t care about caps. In that case we
 also assume nothing is going to write to the buffer and we don’t enforce
-a writable buffer for the `transform_ip` function, when present.
+a writable buffer for the `transform_ip()` function, when present.
 
 One common function that we need for the transform element is to find
 the best transform from one format (src) to another (dest). Some
@@ -172,22 +171,22 @@ The `find_transform()` function goes like this:
   - if the original caps are a subset of the transforms, try to see if
     the the caps are acceptable for the peer. If this is possible, we
     can perform passthrough and make src == dest. This is performed by
-    simply calling gst\_pad\_peer\_accept\_caps().
+    simply calling `gst_pad_peer_query_accept_caps()`.
 
   - if the caps are not fixed, we need to fixate it, start by taking the
     peer caps and intersect with them.
 
-  - for each of the transformed caps retrieved with transform\_caps():
+  - for each of the transformed caps retrieved with `transform_caps()`:
 
-  - try to fixate the caps with fixate\_caps()
+  - try to fixate the caps with `fixate_caps()`
 
   - if the caps are fixated, check if the peer accepts them with
-  `_peer_accept_caps()`, if the peer accepts, we have found a dest caps.
+  `_peer_query_accept_caps()`, if the peer accepts, we have found a dest caps.
 
   - if we run out of caps, we fail to find a transform.
 
   - if we found a destination caps, configure the transform with
-    set\_caps().
+    `set_caps()`.
 
 After this negotiation process, the transform element is usually in a
 steady state. We can identify these steady states:
@@ -322,6 +321,6 @@ a size.
 
 - `get_unit_size()`: When the input size and output size are always
 a multiple of each other (audio conversion, ..) we can define a more simple
-get_unit_size() function. The transform will use this function to get the
+`get_unit_size()` function. The transform will use this function to get the
 same amount of units in the source and destination buffers. For performance
 reasons, the mapping between caps and size is kept in a cache.
