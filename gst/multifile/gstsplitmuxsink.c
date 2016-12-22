@@ -1818,6 +1818,9 @@ find_sink (GstElement * e)
   if (!GST_IS_BIN (e))
     return e;
 
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (e), "location") != NULL)
+    return e;
+
   iter = gst_bin_iterate_sinks (GST_BIN (e));
   while (!done) {
     switch (gst_iterator_next (iter, &data)) {
