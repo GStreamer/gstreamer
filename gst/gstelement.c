@@ -345,6 +345,7 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
   g_return_if_fail (GST_PAD_PAD_TEMPLATE (pad) == NULL ||
       GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (pad)) ==
       GST_PAD_REQUEST);
+  g_return_if_fail (GST_PAD_PARENT (pad) == element);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
