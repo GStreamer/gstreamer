@@ -20,6 +20,7 @@ import argparse
 import os
 import time
 import urllib.parse
+import shlex
 import subprocess
 import configparser
 from launcher.loggable import Loggable
@@ -411,10 +412,10 @@ class GstValidateLaunchTest(GstValidateTest):
 
     def build_arguments(self):
         GstValidateTest.build_arguments(self)
-        self.add_arguments(self.pipeline_desc)
+        self.add_arguments(*shlex.split(self.pipeline_desc))
         if self.media_descriptor is not None and self.media_descriptor.get_path():
             self.add_arguments(
-                "--set-media-info", '"' + self.media_descriptor.get_path() + '"')
+                "--set-media-info", self.media_descriptor.get_path())
 
 
 class GstValidateMediaCheckTest(GstValidateTest):
@@ -437,8 +438,7 @@ class GstValidateMediaCheckTest(GstValidateTest):
 
     def build_arguments(self):
         Test.build_arguments(self)
-        self.add_arguments(self._uri, "--expected-results",
-                           '"' + self._media_info_path + '"')
+        self.add_arguments(self._uri, "--expected-results", self._media_info_path)
 
 
 class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterface):
@@ -500,7 +500,7 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
     def build_arguments(self):
         GstValidateTest.build_arguments(self)
         self.set_rendering_info()
-        self.add_arguments(self.uri, '"' + self.dest_file + '"')
+        self.add_arguments(self.uri, self.dest_file)
 
     def get_current_value(self):
         if self.scenario:

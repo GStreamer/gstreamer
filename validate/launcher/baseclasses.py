@@ -75,7 +75,7 @@ class Test(Loggable):
         self.classname = classname
         self.options = options
         self.application = application_name
-        self.command = ""
+        self.command = []
         self.reporter = reporter
         self.process = None
         self.proc_env = None
@@ -115,7 +115,7 @@ class Test(Loggable):
             if self.result in [Result.FAILED, Result.TIMEOUT]:
                 string += " '%s'\n" \
                           "       You can reproduce with: %s %s\n" \
-                    % (self.message, self._env_variable, self.command)
+                    % (self.message, self._env_variable, ' '.join(self.command))
 
                 if not self.options.redirect_logs:
                     string += "       You can find logs in:\n" \
@@ -146,7 +146,7 @@ class Test(Loggable):
                 res += " "
             value = self.proc_env.get(var, None)
             if value:
-                res += "%s=%s" % (var, value)
+                res += "%s='%s'" % (var, value)
 
         return res
 
@@ -195,8 +195,7 @@ class Test(Loggable):
         return self.classname.split('.')[-1]
 
     def add_arguments(self, *args):
-        for arg in args:
-            self.command += " " + arg
+        self.command += args
 
     def build_arguments(self):
         self.add_env_variable("LD_PRELOAD")
@@ -345,10 +344,9 @@ class Test(Loggable):
             res = self.process.poll()
 
     def thread_wrapper(self):
-        self.process = subprocess.Popen("exec " + self.command,
+        self.process = subprocess.Popen(self.command,
                                         stderr=self.out,
                                         stdout=self.out,
-                                        shell=True,
                                         env=self.proc_env)
         self.process.wait()
         if self.result is not Result.TIMEOUT:
@@ -361,31 +359,32 @@ class Test(Loggable):
         if self.hard_timeout is not None:
             self.hard_timeout *= GDB_TIMEOUT_FACTOR
         self.timeout *= GDB_TIMEOUT_FACTOR
-        self.command = "gdb -ex run -ex quit --args %s" % self.command
+        self.command = ["gdb", "-ex", "run", "-ex", "quit",
+                        "--args"] + self.command
 
     def use_valgrind(self):
         vglogsfile = self.logfile + '.valgrind'
         self.extra_logfiles.append(vglogsfile)
 
-        vg_args = [
-            ('trace-children', 'yes'),
-            ('tool', 'memcheck'),
-            ('leak-check', 'full'),
-            ('leak-resolution', 'high'),
-            # TODO: errors-for-leak-kinds should be set to all instead of definite
-            #       and all false positives should be added to suppression files.
-            ('errors-for-leak-kinds', 'definite'),
-            ('num-callers', '20'),
-            ('log-file', '"' + vglogsfile + '"'),
-            ('error-exitcode', str(VALGRIND_ERROR_CODE)),
-            ('gen-suppressions', 'all'),
-        ]
+        vg_args = []
+
+        for o, v in [('trace-children', 'yes'),
+                ('tool', 'memcheck'),
+                ('leak-check', 'full'),
+                ('leak-resolution', 'high'),
+                # TODO: errors-for-leak-kinds should be set to all instead of definite
+                #       and all false positives should be added to suppression files.
+                ('errors-for-leak-kinds', 'definite'),
+                ('num-callers', '20'),
+                ('log-file', vglogsfile),
+                ('error-exitcode', str(VALGRIND_ERROR_CODE)),
+                ('gen-suppressions', 'all')]:
+            vg_args.append("--%s=%s" % (o, v))
 
         for supp in self.get_valgrind_suppressions():
-            vg_args.append(('suppressions', supp))
+            vg_args.append("--suppressions=%s" % supp)
 
-        self.command = "valgrind %s %s" % (' '.join(['--%s=%s' % (x[0], x[1]) for x in vg_args]),
-                                           self.command)
+        self.command = ["valgrind"] + vg_args + self.command
 
         # Tune GLib's memory allocator to be more valgrind friendly
         self.proc_env['G_DEBUG'] = 'gc-friendly'
@@ -412,7 +411,7 @@ class Test(Loggable):
         self.open_logfile()
 
         self.queue = queue
-        self.command = "%s " % (self.application)
+        self.command = [self.application]
         self._starting_time = time.time()
         self.build_arguments()
         self.proc_env = self.get_subproc_env()
@@ -430,7 +429,7 @@ class Test(Loggable):
 
         message = "Launching: %s%s\n" \
                   "    Command: '%s %s'\n" % (Colors.ENDC, self.classname,
-                                              self._env_variable, self.command)
+                                              self._env_variable, ' '.join(self.command))
         if not self.options.redirect_logs:
             message += "    Logs:\n" \
                        "         - %s" % (self.logfile)
@@ -441,7 +440,7 @@ class Test(Loggable):
                            "Test name: %s\n"
                            "Command: '%s'\n"
                            "=================\n\n"
-                           % (self.classname, self.command))
+                           % (self.classname, ' '.join(self.command)))
             self.out.flush()
 
         printc(message, Colors.OKBLUE)
@@ -888,7 +887,7 @@ class GstValidateEncodingTestInterface(object):
     def _get_profile_full(self, muxer, venc, aenc, video_restriction=None,
                           audio_restriction=None, audio_presence=0,
                           video_presence=0):
-        ret = "\""
+        ret = ""
         if muxer:
             ret += muxer
         ret += ":"
@@ -906,7 +905,6 @@ class GstValidateEncodingTestInterface(object):
             if audio_presence:
                 ret = ret + '|' + str(audio_presence)
 
-        ret += "\""
         return ret.replace("::", ":")
 
     def get_profile(self, video_restriction=None, audio_restriction=None):
