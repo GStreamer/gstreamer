@@ -30,7 +30,7 @@ Events other than EOS do not complete the preroll stage.
 
 ## sink overview
 
-  - TODO: PREROLL\_LOCK can be removed and we can safely use the STREAM\_LOCK.
+  - TODO: `PREROLL_LOCK` can be removed and we can safely use the `STREAM_LOCK`.
 
 ``````
   # Commit the state. We return TRUE if we can continue
