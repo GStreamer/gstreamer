@@ -33,6 +33,14 @@ Print help synopsis and available FLAGS
 .B  \-a, \-\-print\-all
 Print all plugins and elements
 .TP 8
+.B  \-\-types=Element/Types
+Allow inspecting only elements that match all the element types filtered
+in this slash (\'/\') separated list of element types. Those types correspond to
+what is also called \'klass\' which is a string describing the type of
+element, like \'Decoder\', \'Audio\', \'Encoder\' etc... This options
+implies that only elements will be printed (not typefind functions or
+tracers).
+.TP 8
 .B  \-\-print\-plugin\-auto\-install\-info
 Print a machine-parsable list of features the specified plugin provides.
 Useful in connection with external automatic plugin installation mechanisms.

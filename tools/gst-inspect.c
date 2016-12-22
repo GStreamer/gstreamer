@@ -926,10 +926,21 @@ print_blacklist (void)
 }
 
 static void
-print_element_list (gboolean print_all)
+print_element_list (gboolean print_all, gchar * ftypes)
 {
   int plugincount = 0, featurecount = 0, blacklistcount = 0;
   GList *plugins, *orig_plugins;
+  gchar **types = NULL;
+
+  if (ftypes) {
+    gint i;
+
+    types = g_strsplit (ftypes, "/", -1);
+    for (i = 0; types[i]; i++)
+      *types[i] = g_ascii_toupper (*types[i]);
+
+  }
+
 
   orig_plugins = plugins = gst_registry_get_plugin_list (gst_registry_get ());
   while (plugins) {
@@ -957,9 +968,27 @@ print_element_list (gboolean print_all)
       featurecount++;
 
       if (GST_IS_ELEMENT_FACTORY (feature)) {
+        const gchar *klass;
         GstElementFactory *factory;
 
         factory = GST_ELEMENT_FACTORY (feature);
+        if (types) {
+          gint i;
+          gboolean all_found = TRUE;
+
+          klass =
+              gst_element_factory_get_metadata (factory,
+              GST_ELEMENT_METADATA_KLASS);
+          for (i = 0; types[i]; i++) {
+            if (!strstr (klass, types[i])) {
+              all_found = FALSE;
+              break;
+            }
+          }
+
+          if (!all_found)
+            goto next;
+        }
         if (print_all)
           print_element_info (factory, TRUE);
         else
@@ -971,6 +1000,8 @@ print_element_list (gboolean print_all)
         GstTypeFindFactory *factory;
         const gchar *const *extensions;
 
+        if (types)
+          goto next;
         factory = GST_TYPE_FIND_FACTORY (feature);
         if (!print_all)
           g_print ("%s: %s: ", gst_plugin_get_name (plugin),
@@ -992,6 +1023,8 @@ print_element_list (gboolean print_all)
             g_print ("no extensions\n");
         }
       } else {
+        if (types)
+          goto next;
         if (!print_all)
           n_print ("%s:  %s (%s)\n", gst_plugin_get_name (plugin),
               GST_OBJECT_NAME (feature), g_type_name (G_OBJECT_TYPE (feature)));
@@ -1005,6 +1038,7 @@ print_element_list (gboolean print_all)
   }
 
   gst_plugin_list_free (orig_plugins);
+  g_strfreev (types);
 
   g_print ("\n");
   g_print (_("Total count: "));
@@ -1462,6 +1496,7 @@ main (int argc, char *argv[])
   guint minver_maj = GST_VERSION_MAJOR;
   guint minver_min = GST_VERSION_MINOR;
   guint minver_micro = 0;
+  gchar *types = NULL;
 #ifndef GST_DISABLE_OPTION_PARSING
   GOptionEntry options[] = {
     {"print-all", 'a', 0, G_OPTION_ARG_NONE, &print_all,
@@ -1475,6 +1510,9 @@ main (int argc, char *argv[])
               "installation mechanisms"), NULL},
     {"plugin", '\0', 0, G_OPTION_ARG_NONE, &plugin_name,
         N_("List the plugin contents"), NULL},
+    {"types", 't', 0, G_OPTION_ARG_STRING, &types,
+        N_("A slashes ('/') separated list of types of elements (also known "
+              "as klass) to list. (unordered)"), NULL},
     {"exists", '\0', 0, G_OPTION_ARG_NONE, &check_exists,
         N_("Check if the specified element or plugin exists"), NULL},
     {"atleast-version", '\0', 0, G_OPTION_ARG_STRING, &min_version,
@@ -1582,7 +1620,7 @@ main (int argc, char *argv[])
       if (print_aii)
         print_all_plugin_automatic_install_info ();
       else
-        print_element_list (print_all);
+        print_element_list (print_all, types);
     }
   } else {
     /* else we try to get a factory */
