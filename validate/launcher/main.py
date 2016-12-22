@@ -21,6 +21,7 @@ import sys
 from . import utils
 import urllib.parse
 from . import loggable
+import multiprocessing
 import argparse
 import tempfile
 from . import reporters
@@ -200,7 +201,7 @@ class LauncherConfig(Loggable):
         self.output_dir = None
         self.logsdir = None
         self.redirect_logs = False
-        self.num_jobs = 1
+        self.num_jobs = multiprocessing.cpu_count()
         self.dest = None
         self._using_default_paths = False
         # paths passed with --media-path, and not defined by a testsuite
@@ -477,7 +478,8 @@ Note that all testsuite should be inside python modules, so the directory should
     dir_group.add_argument("-rl", "--redirect-logs", dest="redirect_logs",
                            help="Redirect logs to 'stdout' or 'sdterr'.")
     dir_group.add_argument("-j", "--jobs", dest="num_jobs",
-                           help="Number of tests to execute simultaneously",
+                           help="Number of tests to execute simultaneously"
+                           " (Defaults to number of cores of the processor)",
                            type=int)
 
     http_server_group = parser.add_argument_group(
