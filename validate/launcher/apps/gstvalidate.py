@@ -682,9 +682,15 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 self.info("%s not present. Use --generate-media-info", media_info)
                 return True
 
+            include_frames = 0
+            if self.options.update_media_info:
+                include_frames = 2
+            elif self.options.generate_info_full:
+                include_frames = 1
+
             media_descriptor = GstValidateMediaDescriptor.new_from_uri(
                 uri, True,
-                self.options.generate_info_full)
+                include_frames)
             if media_descriptor:
                 self._add_media(media_descriptor, uri)
             else:

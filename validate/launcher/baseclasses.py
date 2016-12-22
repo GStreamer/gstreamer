@@ -1896,15 +1896,32 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         self.set_protocol(urllib.parse.urlparse(urllib.parse.urlparse(self.get_uri()).scheme).scheme)
 
     @staticmethod
-    def new_from_uri(uri, verbose=False, full=False):
+    def new_from_uri(uri, verbose=False, include_frames=False):
+        """
+            include_frames = 0 # Never
+            include_frames = 1 # always
+            include_frames = 2 # if previous file included them
+
+        """
         media_path = utils.url2path(uri)
+
         descriptor_path = "%s.%s" % (
             media_path, GstValidateMediaDescriptor.MEDIA_INFO_EXT)
+        if include_frames == 2:
+            try:
+                media_xml = ET.parse(descriptor_path).getroot()
+                frames = media_xml.findall('streams/stream/frame')
+                include_frames = bool(frames)
+            except FileNotFoundError:
+                pass
+        else:
+            include_frames = bool(include_frames)
+
         args = GstValidateMediaDescriptor.DISCOVERER_COMMAND.split(" ")
         args.append(uri)
 
         args.extend(["--output-file", descriptor_path])
-        if full:
+        if include_frames:
             args.extend(["--full"])
 
         if verbose:
