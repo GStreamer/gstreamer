@@ -1562,7 +1562,14 @@ class _TestsLauncher(Loggable):
 
     def run_tests(self):
         if self.options.forever:
-            while self._run_tests():
+            r = 1
+            while True:
+                t = "Running iteration %d" % r
+                print("%s\n%s\n%s\n" % ("=" * len(t), t, "=" * len(t)))
+
+                if not self._run_tests():
+                    break
+                r += 1
                 self.clean_tests()
 
             return False
