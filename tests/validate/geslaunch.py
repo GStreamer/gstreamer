@@ -146,7 +146,7 @@ class GESTest(GstValidateTest):
         GstValidateTest.build_arguments(self)
 
         if self.options.mute:
-            self.add_arguments(" --mute")
+            self.add_arguments("--mute")
 
         self.set_sample_paths()
         self.add_arguments("-l", self.project.get_uri())
