@@ -252,6 +252,9 @@ class LauncherConfig(Loggable):
             # Allow -l stdout/stderr to work like -rl stdout/stderr
             self.redirect_logs = self.logsdir
             self.logsdir = None
+        if self.verbose:
+            self.redirect_logs = 'stdout'
+            self.logsdir = None
         if self.logsdir is None:
             self.logsdir = os.path.join(self.output_dir, "logs")
         if self.dest is None:
@@ -477,6 +480,9 @@ Note that all testsuite should be inside python modules, so the directory should
                            " default is MAIN_DIR/gst-integration-testsuites")
     dir_group.add_argument("-rl", "--redirect-logs", dest="redirect_logs",
                            help="Redirect logs to 'stdout' or 'sdterr'.")
+    dir_group.add_argument("-v", "--verbose", dest="verbose",
+                           default=False, action='store_true',
+                           help="Redirect logs to stdout.")
     dir_group.add_argument("-j", "--jobs", dest="num_jobs",
                            help="Number of tests to execute simultaneously"
                            " (Defaults to number of cores of the processor)",
