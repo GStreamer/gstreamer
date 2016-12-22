@@ -38,7 +38,7 @@ Let’s look at some example sources.
     [buffering](design/buffering.md)).
 
   - audio source: pausing the audio capture will lead to lost data. this
-    source is therefore definatly live. In addition, an audio source
+    source is therefore definitely live. In addition, an audio source
     will produce data at a fixed rate (the samplerate). Also depending
     on the buffersize, this source will introduce a latency (see
     [latency](design/latency.md)).
@@ -91,12 +91,12 @@ before the source’s state change function is called.
 
 ## Source base classes
 
-GstBaseSrc:
+`GstBaseSrc`:
 
 This base class provides an implementation of a random access source and
 is very well suited for file reader like sources.
 
-GstPushSrc:
+`GstPushSrc`:
 
 Base class for block-based sources. This class is mostly useful for
 elements that cannot do random access, or at least very slowly. The
@@ -109,7 +109,7 @@ based mode automatically.
 
 The subclass should extend the methods from the baseclass in addition to
 the create method. If the source is seekable, it needs to override
-GstBaseSrc::event() in addition to GstBaseSrc::is\_seekable() in order
+`GstBaseSrc::event()` in addition to `GstBaseSrc::is_seekable()` in order
 to retrieve the seek offset, which is the offset of the next buffer to
 be requested.
 
@@ -123,10 +123,12 @@ is allowed to only timestamp the first buffer (as 0).
 
 Live sources only produce data in the PLAYING state, when the clock is
 running. They should timestamp each buffer they produce with the current
-running\_time of the pipeline, which is expressed as:
+`running_time` of the pipeline, which is expressed as:
 
-    absolute_time - base_time
+```
+absolute_time - base_time
+```
 
-With absolute\_time the time obtained from the global pipeline with
-gst\_clock\_get\_time() and base\_time being the time of that clock when
+With `absolute_time` being the time obtained from the global pipeline with
+`gst_clock_get_time()` and `base_time` being the time of that clock when
 the pipeline was last set to PLAYING.
