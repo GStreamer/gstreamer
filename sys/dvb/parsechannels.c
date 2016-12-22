@@ -901,8 +901,8 @@ set_properties_for_channel (GstElement * dvbbasebin,
     case CHANNEL_CONF_FORMAT_DVBV5:
       if (!parse_and_configure_from_v5_conf_file (dvbbasebin, filename,
               channel_name, error)) {
-        GST_WARNING_OBJECT (dvbbasebin, "Could not parse libdvbv5 channel "
-            "configuration file '%s'", filename);
+        GST_WARNING_OBJECT (dvbbasebin, "Problem finding information for "
+            "channel '%s' in configuration file '%s'", channel_name, filename);
       } else {
         GST_INFO_OBJECT (dvbbasebin, "Parsed libdvbv5 channel configuration "
             "file");
@@ -912,8 +912,8 @@ set_properties_for_channel (GstElement * dvbbasebin,
     case CHANNEL_CONF_FORMAT_ZAP:
       if (!parse_and_configure_from_zap_conf_file (dvbbasebin, filename,
               channel_name, error)) {
-        GST_WARNING_OBJECT (dvbbasebin, "Could not parse ZAP channel "
-            "configuration file '%s'", filename);
+        GST_WARNING_OBJECT (dvbbasebin, "Problem finding information for "
+            "channel '%s' in configuration file '%s'", channel_name, filename);
       } else {
         GST_INFO_OBJECT (dvbbasebin, "Parsed ZAP channel configuration file");
         ret = TRUE;
