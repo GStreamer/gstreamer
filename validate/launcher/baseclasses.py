@@ -155,6 +155,9 @@ class Test(Loggable):
         return res
 
     def open_logfile(self):
+        if self.out:
+            return
+
         path = os.path.join(self.options.logsdir,
                             self.classname.replace(".", os.sep))
         mkdir(os.path.dirname(path))
@@ -355,6 +358,13 @@ class Test(Loggable):
         self.process.wait()
         if self.result is not Result.TIMEOUT:
             self.queue.put(None)
+
+    def get_valgrind_suppression_file(self, subdir, name):
+        p = get_data_file(subdir, name)
+        if p:
+            return p
+
+        self.error("Could not find any %s file" % name)
 
     def get_valgrind_suppressions(self):
         return [self.get_valgrind_suppression_file('data', 'gstvalidate.supp')]
@@ -852,13 +862,6 @@ class GstValidateTest(Test):
                                                            Colors.ENDC)
 
         self.set_result(result, msg.strip())
-
-    def get_valgrind_suppression_file(self, subdir, name):
-        p = get_data_file(subdir, name)
-        if p:
-            return p
-
-        self.error("Could not find any %s file" % name)
 
     def get_valgrind_suppressions(self):
         result = super(GstValidateTest, self).get_valgrind_suppressions()

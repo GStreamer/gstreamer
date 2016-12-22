@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+# -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
 #
-# Copyright (c) 2015,Thibault Saunier <thibault.saunier@collabora.com>
+# Copyright (c) 2016,Thibault Saunier <thibault.saunier@osg.samsung.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,12 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
-LIBDIR = '@LIBDIR@'
-DATADIR = '@DATADIR@'
-BUILDDIR = '@BUILDDIR@'
-GST_VALIDATE_TESTSUITE_VERSION = '@GST_VALIDATE_TESTSUITE_VERSION@'
+"""
+GStreamer unit tests
+"""
+
+TEST_MANAGER = "check"
+
+
+def setup_tests(test_manager, options):
+    return True
