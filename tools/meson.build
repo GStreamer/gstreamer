@@ -9,7 +9,8 @@ endif
 executable('ges-launch-@0@'.format(apiversion),
     'ges-validate.c', 'ges-launch.c', 'ges-launcher.c', 'utils.c',
     c_args : [ges_tool_args],
-    dependencies : deps
+    dependencies : deps,
+    install: true
 )
 
 install_man('ges-launch-1.0.1')
