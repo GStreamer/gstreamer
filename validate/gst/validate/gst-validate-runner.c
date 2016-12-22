@@ -487,6 +487,9 @@ gst_validate_runner_new (void)
 GstValidateReportingDetails
 gst_validate_runner_get_default_reporting_level (GstValidateRunner * runner)
 {
+  g_return_val_if_fail (GST_IS_VALIDATE_RUNNER (runner),
+      GST_VALIDATE_SHOW_UNKNOWN);
+
   return runner->priv->default_level;
 }
 
@@ -503,8 +506,12 @@ gst_validate_runner_get_reporting_level_for_name (GstValidateRunner * runner,
     const gchar * name)
 {
   GList *tmp;
-  gchar *fixed_name = g_strdup (name);
+  gchar *fixed_name;
 
+  g_return_val_if_fail (GST_IS_VALIDATE_RUNNER (runner),
+      GST_VALIDATE_SHOW_UNKNOWN);
+
+  fixed_name = g_strdup (name);
   _replace_double_colons (fixed_name);
   for (tmp = runner->priv->report_pattern_levels; tmp; tmp = tmp->next) {
     PatternLevel *pattern_level = (PatternLevel *) tmp->data;
@@ -606,6 +613,8 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
 {
   GstValidateReportingDetails details, reporter_details, issue_type_details;
 
+  g_return_if_fail (GST_IS_VALIDATE_RUNNER (runner));
+
   gst_validate_send (json_boxed_serialize (GST_MINI_OBJECT_TYPE (report),
           report));
   gst_validate_runner_maybe_dot_pipeline (runner, report);
@@ -668,7 +677,7 @@ gst_validate_runner_get_reports_count (GstValidateRunner * runner)
   GList *tmp;
   guint l;
 
-  g_return_val_if_fail (runner != NULL, 0);
+  g_return_val_if_fail (GST_IS_VALIDATE_RUNNER (runner), 0);
 
   GST_VALIDATE_RUNNER_LOCK (runner);
   l = g_list_length (runner->priv->reports);
@@ -765,6 +774,8 @@ gst_validate_runner_printf (GstValidateRunner * runner)
   int ret = 0;
   GList *criticals = NULL;
 
+  g_return_val_if_fail (GST_IS_VALIDATE_RUNNER (runner), 1);
+
   criticals = _do_report_synthesis (runner);
   reports = gst_validate_runner_get_reports (runner);
   for (tmp = reports; tmp; tmp = tmp->next) {
@@ -803,6 +814,8 @@ gst_validate_runner_exit (GstValidateRunner * runner, gboolean print_result)
 {
   gint ret = 0;
 
+  g_return_val_if_fail (GST_IS_VALIDATE_RUNNER (runner), 1);
+
   g_signal_emit (runner, _signals[STOPPING_SIGNAL], 0);
 
   if (print_result) {
@@ -839,6 +852,9 @@ gst_validate_deinit_runner (void)
 GstValidateReportingDetails
 gst_validate_runner_get_default_reporting_details (GstValidateRunner * runner)
 {
+  g_return_val_if_fail (GST_IS_VALIDATE_RUNNER (runner),
+      GST_VALIDATE_REPORT_LEVEL_UNKNOWN);
+
   return runner->priv->default_level;
 }
 
