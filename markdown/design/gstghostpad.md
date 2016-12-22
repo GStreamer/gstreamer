@@ -6,65 +6,67 @@ element.
 
 ## Some design requirements
 
-- Must look like a real GstPad on both sides.
+- Must look like a real `GstPad` on both sides.
 - target of Ghostpad must be changeable
 - target can be initially NULL
 
-- a GhostPad is implemented using a private GstProxyPad class:
+- a GhostPad is implemented using a private `GstProxyPad` class:
 
 ```
-    GstProxyPad
-    (------------------)
-    | GstPad           |
-    |------------------|
-    | GstPad *target   |
-    (------------------)
-    | GstPad *internal |
-    (------------------)
+GstProxyPad
+(------------------)
+| GstPad           |
+|------------------|
+| GstPad *target   |
+(------------------)
+| GstPad *internal |
+(------------------)
 
-    GstGhostPad
-    (------------------)   -\
-    | GstPad           |    |
-    |------------------|    |
-    | GstPad *target   |     > GstProxyPad
-    |------------------|    |
-    | GstPad *internal |    |
-    |------------------|   -/
-    | <private data>   |
-    (------------------)
+GstGhostPad
+(------------------)   -\
+| GstPad           |    |
+|------------------|    |
+| GstPad *target   |     > GstProxyPad
+|------------------|    |
+| GstPad *internal |    |
+|------------------|   -/
+| <private data>   |
+(------------------)
 ```
 
-A GstGhostPad (X) is _always_ created together with a GstProxyPad (Y).
-The internal pad pointers are set to point to the eachother. The
-GstProxyPad pairs have opposite directions, the GstGhostPad has the same
+A `GstGhostPad` (X) is _always_ created together with a `GstProxyPad` (Y).
+The internal pad pointers are set to point to eachother. The
+`GstProxyPad` pairs have opposite directions, the `GstGhostPad` has the same
 direction as the (future) ghosted pad (target).
 
-    (- X --------)
-    |            |
-    | target *   |
-    |------------|
-    | internal *----+
-    (------------)  |
-      ^             V
-      |  (- Y --------)
-      |  |            |
-      |  | target *   |
-      |  |------------|
-      +----* internal |
-         (------------)
+```
+(- X --------)
+|            |
+| target *   |
+|------------|
+| internal *----+
+(------------)  |
+  ^             V
+  |  (- Y --------)
+  |  |            |
+  |  | target *   |
+  |  |------------|
+  +----* internal |
+     (------------)
 
-    Which we will abbreviate to:
+Which we will abbreviate to:
 
-    (- X --------)
-    |            |
-    | target *--------->//
+(- X --------)
+|            |
+| target *--------->//
+(------------)
+     |
+    (- Y --------)
+    | target *----->//
     (------------)
-         |
-        (- Y --------)
-        | target *----->//
-        (------------)
+```
 
-The GstGhostPad (X) is also set as the parent of the GstProxyPad (Y).
+The `GstGhostPad` (X) is also set as the parent of the `GstProxyPad` (Y).
 
 The target is a pointer to the internal pads peer. It is an optimisation to
 quickly get to the peer of a ghostpad without having to dereference the
@@ -75,7 +77,9 @@ is modified.
 
 ## Creating a ghostpad with a target:
 
-    gst_ghost_pad_new (char *name, GstPad *target)
+```
+gst_ghost_pad_new (char *name, GstPad *target)
+```
 
 1) create new GstGhostPad X + GstProxyPad Y
 2) X name set to @name
@@ -129,14 +133,14 @@ gst_ghost_pad_new_no_target (char *name, GstPadDirection dir)
 ```
 gst_ghost_pad_set_target (char *name, GstPad *newtarget)
 
-    (- X --------)
-    |            |
-    | target *--------->//
+(- X --------)
+|            |
+| target *--------->//
+(------------)
+     |
+    (- Y --------)
+    | target *----->//
     (------------)
-         |
-        (- Y --------)
-        | target *----->//
-        (------------)
 ```
 
 1) assert direction of newtarget == X direction
@@ -209,7 +213,7 @@ gst_ghost_pad_set_target (char *name, GstPad *newtarget)
 -------)
 ```
 
-X is a sink GstGhostPad without a target. The internal GstProxyPad Y has
+X is a sink `GstGhostPad` without a target. The internal `GstProxyPad` Y has
 the same direction as the src pad (peer).
 
 1) link function is called
