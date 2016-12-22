@@ -5,7 +5,7 @@ notify elements of various events.
 
 Events are received on pads using the event function. Some events should
 be interleaved with the data stream so they require taking the
-STREAM_LOCK, others don’t.
+`STREAM_LOCK`, others don’t.
 
 Different types of events exist to implement various functionalities.
 
@@ -28,7 +28,7 @@ Different types of events exist to implement various functionalities.
   > not yet implemented, under investigation, might be needed to do
     still frames in DVD.
 
-# src pads
+## src pads
 
 A `gst_pad_push_event()` on a srcpad will first store the sticky event
 in the sticky array before sending the event to the peer pad. If there
@@ -38,9 +38,9 @@ is returned.
 Flushing pads will refuse the events and will not store the sticky
 events.
 
-# sink pads
+## sink pads
 
-A `gst_pad_send_event()`i on a sinkpad will call the event function on
+A `gst_pad_send_event()` on a sinkpad will call the event function on
 the pad. If the event function returns success, the sticky event is
 stored in the sticky event array and the event is marked for update.
 
@@ -53,7 +53,7 @@ This ensures that the event function is never called for flushing pads
 and that the sticky array only contains events for which the event
 function returned success.
 
-# pad link
+## pad link
 
 When linking pads, the srcpad sticky events are marked for update when
 they are different from the sinkpad events. The next buffer push will
@@ -68,18 +68,18 @@ seek event.
 
 Flushing happens in two stages.
 
-1) a source element sends the FLUSH_START event to the downstream peer element.
+1) a source element sends the `FLUSH_START` event to the downstream peer element.
    The downstream element starts rejecting buffers from the upstream elements. It
    sends the flush event further downstream and discards any buffers it is
    holding as well as return from the chain function as soon as possible.
    This makes sure that all upstream elements get unblocked.
-   This event is not synchronized with the STREAM_LOCK and can be done in the
+   This event is not synchronized with the `STREAM_LOCK` and can be done in the
    application thread.
 
-2) a source element sends the FLUSH_STOP event to indicate
+2) a source element sends the `FLUSH_STOP` event to indicate
    that the downstream element can accept buffers again. The downstream
    element sends the flush event to its peer elements. After this step dataflow
-   continues. The FLUSH_STOP call is synchronized with the STREAM_LOCK so any
+   continues. The `FLUSH_STOP` call is synchronized with the `STREAM_LOCK` so any
    data used by the chain function can safely freed here if needed. Any
    pending EOS events should be discarded too.
 
@@ -91,8 +91,8 @@ events to the upstream pads in the same way to make sure that the
 pullrange function unlocks and any pending buffers are cleared in the
 upstream elements.
 
-A `FLUSH_START` may instruct the pipeline to distribute a new base_time
-to elements so that the running_time is reset to 0. (see
+A `FLUSH_START` may instruct the pipeline to distribute a new `base_time`
+to elements so that the `running_time` is reset to 0. (see
 [clocks](design/clocks.md) and [synchronisation](design/synchronisation.md)).
 
 ## EOS
@@ -123,7 +123,7 @@ event to the upstream element but returns `GST_FLOW_EOS`, causing the
 source element to stop sending data.
 
 An element that sends EOS on a pad should stop sending data on that pad.
-Source elements typically pause() their task for that purpose.
+Source elements typically `pause()` their task for that purpose.
 
 By default, a GstBin collects all EOS messages from all its sinks before
 posting the EOS message to its parent.
@@ -224,26 +224,26 @@ serialized.
 The general flow of executing the seek with FLUSH is as follows:
 
 1) unblock the streaming threads, they could be blocked in a chain
-   function. This is done by sending a FLUSH_START on all srcpads or by pausing
+   function. This is done by sending a `FLUSH_START` on all srcpads or by pausing
    the streaming task, depending on the seek FLUSH flag.
    The flush will make sure that all downstream elements unlock and
    that control will return to this element chain/loop function.
-   We cannot lock the STREAM_LOCK before doing this since it might
+   We cannot lock the `STREAM_LOCK` before doing this since it might
    cause a deadlock.
 
-2) acquire the STREAM_LOCK. This will work since the chain/loop function
+2) acquire the `STREAM_LOCK`. This will work since the chain/loop function
    was unlocked/paused in step 1).
 
-3) perform the seek. since the STREAM_LOCK is held, the streaming thread
+3) perform the seek. since the `STREAM_LOCK` is held, the streaming thread
    will wait for the seek to complete. Most likely, the stream thread
    will pause because the peer elements are flushing.
 
-4) send a FLUSH_STOP event to all peer elements to allow streaming again.
+4) send a `FLUSH_STOP` event to all peer elements to allow streaming again.
 
 5) create a SEGMENT event to signal the new buffer timestamp base time.
    This event must be queued to be sent by the streaming thread.
 
-6) start stopped tasks and unlock the STREAM_LOCK, dataflow will continue
+6) start stopped tasks and unlock the `STREAM_LOCK`, dataflow will continue
    now from the new position.
 
 More information about the different seek types can be found in
