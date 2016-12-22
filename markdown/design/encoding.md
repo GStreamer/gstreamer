@@ -1,4 +1,4 @@
-## Encoding and Muxing
+# Encoding and Muxing
 
 ## Problems this proposal attempts to solve
 
@@ -19,7 +19,7 @@
 
 1.  Convenience encoding element
 
-    Create a convenience GstBin for encoding and muxing several streams,
+    Create a convenience `GstBin` for encoding and muxing several streams,
     hereafter called 'EncodeBin'.
 
     This element will only contain one single property, which is a profile.
@@ -38,13 +38,13 @@ Create a helper library to:
 
 ### Proposed API
 
-EncodeBin is a GstBin subclass.
+EncodeBin is a `GstBin` subclass.
 
-It implements the GstTagSetter interface, by which it will proxy the
+It implements the `GstTagSetter` interface, by which it will proxy the
 calls to the muxer.
 
 Only two introspectable property (i.e. usable without extra API):
- - A GstEncodingProfile
+ - A `GstEncodingProfile`
  - The name of the profile to use
 
 When a profile is selected, encodebin will:
@@ -61,6 +61,7 @@ Whenever a request pad is created, encodebin will:
 This allows reducing the code to the minimum for applications wishing to
 encode a source for a given profile:
 
+```
     encbin = gst_element_factory_make ("encodebin, NULL);
     g_object_set (encbin, "profile", "N900/H264 HQ", NULL);
     gst_element_link (encbin, filesink);
@@ -68,6 +69,7 @@ encode a source for a given profile:
     vsrcpad = gst_element_get_src_pad (source, "src1");
     vsinkpad = gst_element_get_request\_pad (encbin, "video\_%u");
     gst_pad_link (vsrcpad, vsinkpad);
+```
 
 ### Explanation of the Various stages in EncodeBin
 
@@ -94,7 +96,7 @@ The streams fed to EncodeBin can be of various types:
 1)  Transform raw video feed (optional)
 
 Here we modify the various fundamental properties of a raw video stream
-to be compatible with the intersection of: \* The encoder GstCaps and \*
+to be compatible with the intersection of: \* The encoder `GstCaps` and \*
 The specified "Stream Restriction" of the profile/target
 
 The fundamental properties that can be modified are: \* width/height
@@ -120,7 +122,7 @@ This is roughly the same as for raw video, expect for (1)
 1)  Transform raw audo feed (optional)
 
 We modify the various fundamental properties of a raw audio stream to be
-compatible with the intersection of: \* The encoder GstCaps and \* The
+compatible with the intersection of: \* The encoder `GstCaps` and \* The
 specified "Stream Restriction" of the profile/target
 
 The fundamental properties that can be modifier are: \* Number of
@@ -221,6 +223,7 @@ A Stream Profile consists of:
 The representation used here is XML only as an example. No decision is
 made as to which formatting to use for storing targets and profiles.
 
+```
 <gst-encoding-target>
       <name>Nokia N900</name>
       <category>Consumer Device</category>
@@ -257,6 +260,7 @@ made as to which formatting to use for storing targets and profiles.
         </stream-profile>
       </streams>  
     </gst-encoding-profile>
+```
 
 ### API
 
@@ -298,13 +302,13 @@ There can be more than one choice of presets to be done for an element
 This means that one can not currently describe the full configuration of
 an element with a single string but with many.
 
-The proposal here is to extend the GstPreset API to be able to set all
+The proposal here is to extend the `GstPreset` API to be able to set all
 presets using one string and a well-known separator ('/').
 
 This change only requires changes in the core preset handling code.
 
-This would allow doing the following: gst\_preset\_load\_preset
-(h264enc, "pass:1/profile:baseline/quality:high");
+This would allow doing the following: `gst_preset_load_preset
+(h264enc, "pass:1/profile:baseline/quality:high")`
 
 ### Points to be determined
 
@@ -324,7 +328,7 @@ to have some profiles limited to their own usage.
 ## Helper library for profiles
 
 These helper methods could also be added to existing libraries (like
-GstPreset, GstPbUtils, ..).
+`GstPreset`, GstPbUtils, ..).
 
 The various API proposed are in the accompanying gstprofile.h file.
 
