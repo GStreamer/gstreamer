@@ -1022,6 +1022,7 @@ static void
 gst_dvbsrc_init (GstDvbSrc * object)
 {
   int i = 0;
+  const gchar *adapter;
 
   GST_DEBUG_OBJECT (object, "Kernel DVB API version %d.%d", DVB_API_VERSION,
       DVB_API_VERSION_MINOR);
@@ -1044,7 +1045,13 @@ gst_dvbsrc_init (GstDvbSrc * object)
   object->pids[0] = 8192;
   object->pids[1] = G_MAXUINT16;
   object->dvb_buffer_size = DEFAULT_DVB_BUFFER_SIZE;
-  object->adapter_number = DEFAULT_ADAPTER;
+
+  adapter = g_getenv ("GST_DVB_ADAPTER");
+  if (adapter)
+    object->adapter_number = atoi (adapter);
+  else
+    object->adapter_number = DEFAULT_ADAPTER;
+
   object->frontend_number = DEFAULT_FRONTEND;
   object->diseqc_src = DEFAULT_DISEQC_SRC;
   object->send_diseqc = (DEFAULT_DISEQC_SRC != -1);

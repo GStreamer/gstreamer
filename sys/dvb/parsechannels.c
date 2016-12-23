@@ -885,17 +885,12 @@ set_properties_for_channel (GstElement * dvbbasebin,
 {
   gboolean ret = FALSE;
   gchar *filename;
-  const gchar *adapter;
 
   filename = g_strdup (g_getenv ("GST_DVB_CHANNELS_CONF"));
   if (filename == NULL) {
     filename = g_build_filename (g_get_user_config_dir (),
         "gstreamer-" GST_API_VERSION, "dvb-channels.conf", NULL);
   }
-
-  adapter = g_getenv ("GST_DVB_ADAPTER");
-  if (adapter)
-    g_object_set (dvbbasebin, "adapter", atoi (adapter), NULL);
 
   switch (detect_file_format (filename)) {
     case CHANNEL_CONF_FORMAT_DVBV5:
