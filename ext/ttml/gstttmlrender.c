@@ -2164,11 +2164,12 @@ gst_ttml_render_render_text_region (GstTtmlRender * render,
     gst_ttml_render_rendered_image_free (blocks_image);
   }
 
-  GST_CAT_DEBUG (ttmlrender_debug, "Height of rendered region: %u",
-      region_image->height);
-
-  ret = gst_ttml_render_compose_overlay (region_image);
-  gst_ttml_render_rendered_image_free (region_image);
+  if (region_image) {
+    GST_CAT_DEBUG (ttmlrender_debug, "Height of rendered region: %u",
+        region_image->height);
+    ret = gst_ttml_render_compose_overlay (region_image);
+    gst_ttml_render_rendered_image_free (region_image);
+  }
   return ret;
 }
 
@@ -2324,17 +2325,18 @@ wait_for_text_buf:
         }
 
         subtitle_meta = gst_buffer_get_subtitle_meta (render->text_buffer);
-        g_assert (subtitle_meta != NULL);
-
-        for (i = 0; i < subtitle_meta->regions->len; ++i) {
-          GstVideoOverlayComposition *composition;
-          region = g_ptr_array_index (subtitle_meta->regions, i);
-          g_assert (region != NULL);
-          composition = gst_ttml_render_render_text_region (render, region,
-              render->text_buffer);
-          if (composition) {
-            render->compositions = g_list_append (render->compositions,
-                composition);
+        if (!subtitle_meta) {
+          GST_CAT_WARNING (ttmlrender_debug, "Failed to get subtitle meta.");
+        } else {
+          for (i = 0; i < subtitle_meta->regions->len; ++i) {
+            GstVideoOverlayComposition *composition;
+            region = g_ptr_array_index (subtitle_meta->regions, i);
+            composition = gst_ttml_render_render_text_region (render, region,
+                render->text_buffer);
+            if (composition) {
+              render->compositions = g_list_append (render->compositions,
+                  composition);
+            }
           }
         }
         render->need_render = FALSE;

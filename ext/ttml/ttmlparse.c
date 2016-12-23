@@ -1513,9 +1513,7 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
   TtmlElement *element;
   GNode *node;
 
-  element = tree->data;
-  g_assert (element->type == TTML_ELEMENT_TYPE_REGION);
-
+  element = tree->data;         /* Region element */
   region_style = gst_subtitle_style_set_new ();
   ttml_update_style_set (region_style, element->style_set, cellres_x,
       cellres_y);
@@ -1525,9 +1523,7 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
   if (!node)
     return region;
 
-  g_assert (node->next == NULL);
-  element = node->data;
-  g_assert (element->type == TTML_ELEMENT_TYPE_BODY);
+  element = node->data;         /* Body element */
   block_color =
       ttml_parse_colorstring (ttml_style_set_get_attr (element->style_set,
           "backgroundColor"));
@@ -1537,7 +1533,12 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
     GstSubtitleColor div_color;
 
     element = node->data;
-    g_assert (element->type == TTML_ELEMENT_TYPE_DIV);
+    if (element->type != TTML_ELEMENT_TYPE_DIV) {
+      GST_CAT_WARNING (ttmlparse_debug,
+          "Ignoring %s child of body element: only a div is allowed here.",
+          ttml_get_element_type_string (element));
+      continue;
+    }
     div_color =
         ttml_parse_colorstring (ttml_style_set_get_attr (element->style_set,
             "backgroundColor"));
@@ -1550,7 +1551,12 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
       GstSubtitleColor p_color;
 
       element = p_node->data;
-      g_assert (element->type == TTML_ELEMENT_TYPE_P);
+      if (element->type != TTML_ELEMENT_TYPE_P) {
+        GST_CAT_WARNING (ttmlparse_debug,
+            "Ignoring %s child of div element: only a p is allowed here.",
+            ttml_get_element_type_string (element));
+        continue;
+      }
       p_color =
           ttml_parse_colorstring (ttml_style_set_get_attr (element->style_set,
               "backgroundColor"));
@@ -1561,7 +1567,6 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
           cellres_y);
       block_style->background_color = block_color;
       block = gst_subtitle_block_new (block_style);
-      g_assert (block != NULL);
 
       for (content_node = p_node->children; content_node;
           content_node = content_node->next) {
@@ -1581,19 +1586,21 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
                 || element->type == TTML_ELEMENT_TYPE_ANON_SPAN) {
               ttml_add_element (block, element, buf, cellres_x, cellres_y);
             } else {
-              GST_CAT_ERROR (ttmlparse_debug,
-                  "Element type not allowed at this level of document.");
+              GST_CAT_WARNING (ttmlparse_debug,
+                  "Ignoring illegally positioned %s element.",
+                  ttml_get_element_type_string (element));
             }
           }
         } else {
-          GST_CAT_ERROR (ttmlparse_debug,
-              "Element type not allowed at this level of document.");
+          GST_CAT_WARNING (ttmlparse_debug,
+              "Ignoring illegally positioned %s element.",
+              ttml_get_element_type_string (element));
         }
       }
 
       gst_subtitle_region_add_block (region, block);
       GST_CAT_DEBUG (ttmlparse_debug,
-          "Added block to region; there are now %u blocks" " in the region.",
+          "Added block to region; there are now %u blocks in the region.",
           gst_subtitle_region_get_block_count (region));
     }
   }
@@ -1628,7 +1635,8 @@ ttml_attach_scene_metadata (GList * scenes, guint cellres_x, guint cellres_y)
 
       region = ttml_create_subtitle_region (tree, scene->buf, cellres_x,
           cellres_y);
-      g_ptr_array_add (regions, region);
+      if (region)
+        g_ptr_array_add (regions, region);
     }
 
     gst_buffer_add_subtitle_meta (scene->buf, regions);
