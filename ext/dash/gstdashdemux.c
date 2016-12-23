@@ -2172,6 +2172,13 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
           &dummy);
 
       if (res == GST_ISOFF_PARSER_DONE) {
+        guint64 first_offset = dash_stream->sidx_parser.sidx.first_offset;
+        if (first_offset) {
+          GST_LOG_OBJECT (stream->pad,
+              "non-zero sidx first offset %" G_GUINT64_FORMAT, first_offset);
+          dash_stream->sidx_base_offset += first_offset;
+        }
+
         if (GST_CLOCK_TIME_IS_VALID (dash_stream->pending_seek_ts)) {
           /* FIXME, preserve seek flags */
           gst_dash_demux_stream_sidx_seek (dash_stream,
