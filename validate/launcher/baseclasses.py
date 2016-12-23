@@ -1177,17 +1177,25 @@ class TestsManager(Loggable):
                 return True
         return False
 
+    def _check_duration(self, test):
+        if test.duration > 0 and int(self.options.long_limit) < int(test.duration):
+            self.info("Not activating %s as its duration (%d) is superior"
+                      " than the long limit (%d)" % (test, test.duration,
+                                                     int(self.options.long_limit)))
+            return False
+
+        return True
+
     def _is_test_wanted(self, test):
         if self._check_whitelisted(test):
+            if not self._check_duration(test):
+                return False
             return True
 
         if self._check_blacklisted(test):
             return False
 
-        if test.duration > 0 and int(self.options.long_limit) < int(test.duration):
-            self.info("Not activating %s as its duration (%d) is superior"
-                      " than the long limit (%d)" % (test, test.duration,
-                                                     int(self.options.long_limit)))
+        if not self._check_duration(test):
             return False
 
         if not self.wanted_tests_patterns:
