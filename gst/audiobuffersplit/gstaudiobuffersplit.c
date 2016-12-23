@@ -220,6 +220,7 @@ gst_audio_buffer_split_change_state (GstElement * element,
       self->resync_time = GST_CLOCK_TIME_NONE;
       self->current_offset = -1;
       self->accumulated_error = 0;
+      self->samples_per_buffer = 0;
       break;
     default:
       break;
@@ -251,6 +252,9 @@ gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force)
 
   rate = GST_AUDIO_INFO_RATE (&self->info);
   bpf = GST_AUDIO_INFO_BPF (&self->info);
+
+  if (self->samples_per_buffer == 0)
+    return GST_FLOW_NOT_NEGOTIATED;
 
   size = self->samples_per_buffer * bpf;
 
