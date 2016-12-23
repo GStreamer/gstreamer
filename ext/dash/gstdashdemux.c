@@ -1124,7 +1124,8 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
   if (GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER (stream) && isombff) {
     gst_dash_demux_stream_update_headers_info (stream);
     dashstream->sidx_base_offset = stream->fragment.index_range_end + 1;
-    if (dashstream->sidx_index != 0) {
+    /* sidx entries may not be available in here */
+    if (dashstream->sidx_index != 0 && SIDX (dashstream)->entries) {
       /* request only the index to be downloaded as we need to reposition the
        * stream to a subsegment */
       return GST_FLOW_OK;
