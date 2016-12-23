@@ -608,126 +608,21 @@ create_transcoding_pipeline (gchar * uri, gchar * outuri)
 }
 
 static gboolean
-_parse_encoding_profile (const gchar * option_name, const gchar * value,
+_parse_encoding_profile (const gchar * option_name, const gchar * profile_desc,
     gpointer udata, GError ** error)
 {
-  GstCaps *caps;
-  char *preset_name = NULL;
-  gchar **restriction_format, **preset_v;
+  GValue value = G_VALUE_INIT;
 
-  guint i, presence = 0;
-  GstCaps *restrictioncaps = NULL;
-  gchar **strpresence_v, **strcaps_v = g_strsplit (value, ":", 0);
+  g_value_init (&value, GST_TYPE_ENCODING_PROFILE);
 
-  if (strcaps_v[0] && *strcaps_v[0]) {
-    caps = gst_caps_from_string (strcaps_v[0]);
-    if (caps == NULL) {
-      g_printerr ("Could not parse caps %s", strcaps_v[0]);
-      return FALSE;
-    }
-    encoding_profile =
-        GST_ENCODING_PROFILE (gst_encoding_container_profile_new
-        ("User profile", "User profile", caps, NULL));
-    gst_caps_unref (caps);
-  } else {
-    encoding_profile = NULL;
+  if (!gst_value_deserialize (&value, profile_desc)) {
+    g_value_reset (&value);
+
+    return FALSE;
   }
 
-  for (i = 1; strcaps_v[i] && *strcaps_v[i]; i++) {
-    GstEncodingProfile *profile = NULL;
-    gchar *strcaps, *strpresence;
-
-    restriction_format = g_strsplit (strcaps_v[i], "->", 0);
-    if (restriction_format[1]) {
-      restrictioncaps = gst_caps_from_string (restriction_format[0]);
-      strcaps = g_strdup (restriction_format[1]);
-    } else {
-      restrictioncaps = NULL;
-      strcaps = g_strdup (restriction_format[0]);
-    }
-    g_strfreev (restriction_format);
-
-    preset_v = g_strsplit (strcaps, "+", 0);
-    if (preset_v[1]) {
-      strpresence = preset_v[1];
-      g_free (strcaps);
-      strcaps = g_strdup (preset_v[0]);
-    } else {
-      strpresence = preset_v[0];
-    }
-
-    strpresence_v = g_strsplit (strpresence, "|", 0);
-    if (strpresence_v[1]) {     /* We have a presence */
-      gchar *endptr;
-
-      if (preset_v[1]) {        /* We have preset and presence */
-        preset_name = g_strdup (strpresence_v[0]);
-      } else {                  /* We have a presence but no preset */
-        g_free (strcaps);
-        strcaps = g_strdup (strpresence_v[0]);
-      }
-
-      presence = strtoll (strpresence_v[1], &endptr, 10);
-      if (endptr == strpresence_v[1]) {
-        g_printerr ("Wrong presence %s\n", strpresence_v[1]);
-
-        return FALSE;
-      }
-    } else {                    /* We have no presence */
-      if (preset_v[1]) {        /* Not presence but preset */
-        preset_name = g_strdup (preset_v[1]);
-        g_free (strcaps);
-        strcaps = g_strdup (preset_v[0]);
-      }                         /* Else we have no presence nor preset */
-    }
-    g_strfreev (strpresence_v);
-    g_strfreev (preset_v);
-
-    GST_DEBUG ("Creating preset with restrictions: %" GST_PTR_FORMAT
-        ", caps: %s, preset %s, presence %d", restrictioncaps, strcaps,
-        preset_name ? preset_name : "none", presence);
-
-    caps = gst_caps_from_string (strcaps);
-    g_free (strcaps);
-    if (caps == NULL) {
-      g_warning ("Could not create caps for %s", strcaps_v[i]);
-
-      return FALSE;
-    }
-
-    if (g_str_has_prefix (strcaps_v[i], "audio/")) {
-      profile = GST_ENCODING_PROFILE (gst_encoding_audio_profile_new (caps,
-              preset_name, restrictioncaps, presence));
-    } else if (g_str_has_prefix (strcaps_v[i], "video/") ||
-        g_str_has_prefix (strcaps_v[i], "image/")) {
-      profile = GST_ENCODING_PROFILE (gst_encoding_video_profile_new (caps,
-              preset_name, restrictioncaps, presence));
-    }
-
-    g_free (preset_name);
-    gst_caps_unref (caps);
-    if (restrictioncaps)
-      gst_caps_unref (restrictioncaps);
-
-    if (profile == NULL) {
-      g_warning ("No way to create a preset for caps: %s", strcaps_v[i]);
-
-      return FALSE;
-    }
-
-    if (encoding_profile) {
-      if (gst_encoding_container_profile_add_profile
-          (GST_ENCODING_CONTAINER_PROFILE (encoding_profile),
-              profile) == FALSE) {
-        g_warning ("Can not create a preset for caps: %s", strcaps_v[i]);
-
-        return FALSE;
-      }
-    } else {
-      encoding_profile = profile;
-    }
-  }
-  g_strfreev (strcaps_v);
+  encoding_profile = g_value_dup_object (&value);
+  g_value_reset (&value);
 
   return TRUE;
 }
