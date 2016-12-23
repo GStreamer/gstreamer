@@ -1451,7 +1451,7 @@ gst_encoding_profile_find (const gchar * targetname, const gchar * profilename,
 static GstEncodingProfile *
 combo_search (const gchar * pname)
 {
-  GstEncodingProfile *res;
+  GstEncodingProfile *res = NULL;
   gchar **split;
   gint split_length;
 
@@ -1478,7 +1478,7 @@ get_profile_format_from_possible_factory_name (const gchar * factory_desc,
   GList *tmp;
   GstCaps *caps = NULL, *tmpcaps = gst_caps_from_string (factory_desc);
   GstStructure *tmpstruct;
-  GstElementFactory *fact;
+  GstElementFactory *fact = NULL;
 
   *new_factory_name = NULL;
   if (gst_caps_get_size (tmpcaps) != 1)
