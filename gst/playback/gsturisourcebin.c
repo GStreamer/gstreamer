@@ -122,7 +122,7 @@ struct _GstURISourceBin
   gboolean use_buffering;
 
   GstElement *source;
-  GstElement *typefind;
+  GList *typefinds;             /* list of typefind element */
 
   GstElement *demuxer;          /* Adaptive demuxer if any */
   GSList *out_slots;
@@ -1986,12 +1986,11 @@ setup_streaming (GstURISourceBin * urisrc)
   if (!gst_element_link_pads (urisrc->source, NULL, typefind, "sink"))
     goto could_not_link;
 
-  urisrc->typefind = typefind;
+  urisrc->typefinds = g_list_append (urisrc->typefinds, typefind);
 
   /* connect a signal to find out when the typefind element found
    * a type */
-  g_signal_connect (urisrc->typefind, "have-type",
-      G_CALLBACK (type_found), urisrc);
+  g_signal_connect (typefind, "have-type", G_CALLBACK (type_found), urisrc);
 
   return TRUE;
 
@@ -2068,11 +2067,19 @@ remove_source (GstURISourceBin * urisrc)
     gst_bin_remove (GST_BIN_CAST (urisrc), source);
     urisrc->source = NULL;
   }
-  if (urisrc->typefind) {
+  if (urisrc->typefinds) {
+    GList *iter, *next;
     GST_DEBUG_OBJECT (urisrc, "removing old typefind element");
-    gst_element_set_state (urisrc->typefind, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (urisrc), urisrc->typefind);
-    urisrc->typefind = NULL;
+    for (iter = urisrc->typefinds; iter; iter = next) {
+      GstElement *typefind = iter->data;
+
+      next = g_list_next (iter);
+
+      gst_element_set_state (typefind, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (urisrc), typefind);
+    }
+
+    urisrc->typefinds = NULL;
   }
 
   GST_URI_SOURCE_BIN_LOCK (urisrc);
@@ -2805,8 +2812,15 @@ gst_uri_source_bin_change_state (GstElement * element,
 
       /* And now sync the states of everything we added */
       g_slist_foreach (urisrc->out_slots, (GFunc) sync_slot_queue, NULL);
-      if (urisrc->typefind)
-        ret = gst_element_set_state (urisrc->typefind, GST_STATE_PAUSED);
+      if (urisrc->typefinds) {
+        GList *iter;
+        for (iter = urisrc->typefinds; iter; iter = iter->next) {
+          GstElement *typefind = iter->data;
+          ret = gst_element_set_state (typefind, GST_STATE_PAUSED);
+          if (ret == GST_STATE_CHANGE_FAILURE)
+            goto setup_failed;
+        }
+      }
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto setup_failed;
       if (urisrc->source)
