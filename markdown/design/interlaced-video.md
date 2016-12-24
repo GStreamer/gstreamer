@@ -20,12 +20,12 @@ Possible states:
      field that can be used for telecine pulldown
 
 Note: It can be seen that the difference between the plain interlaced
-and telecine states is that in the telecine state, buffers containing
+and telecine states is that in the latter, buffers containing
 two fields may be progressive.
 
 Tools for identification:
- - GstVideoInfo
-  - GstVideoInterlaceMode - enum `GST_VIDEO_INTERLACE_MODE_...`
+ - `GstVideoInfo`
+  - `GstVideoInterlaceMode` - enum `GST_VIDEO_INTERLACE_MODE_...`
    - PROGRESSIVE
    - INTERLEAVED
    - MIXED
