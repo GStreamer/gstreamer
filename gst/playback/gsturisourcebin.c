@@ -123,7 +123,6 @@ struct _GstURISourceBin
 
   GstElement *source;
   GstElement *typefind;
-  guint have_type_id;           /* have-type signal id from typefind */
 
   GstElement *demuxer;          /* Adaptive demuxer if any */
   GSList *out_slots;
@@ -1991,8 +1990,7 @@ setup_streaming (GstURISourceBin * urisrc)
 
   /* connect a signal to find out when the typefind element found
    * a type */
-  urisrc->have_type_id =
-      g_signal_connect (urisrc->typefind, "have-type",
+  g_signal_connect (urisrc->typefind, "have-type",
       G_CALLBACK (type_found), urisrc);
 
   return TRUE;
