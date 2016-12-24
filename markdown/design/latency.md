@@ -50,13 +50,15 @@ An audio capture/playback pipeline.
 * asrc: audio source, provides a clock
 * asink audio sink, provides a clock
 
-        .--------------------------.
-        | pipeline                 |
-        | .------.      .-------.  |
-        | | asrc |      | asink |  |
-        | |     src -> sink     |  |
-        | '------'      '-------'  |
-        '--------------------------'
+```
+.--------------------------.
+| pipeline                 |
+| .------.      .-------.  |
+| | asrc |      | asink |  |
+| |     src -> sink     |  |
+| '------'      '-------'  |
+'--------------------------'
+```
 
 * *NULL→READY*:
     * asink: *NULL→READY*: probes device, returns `SUCCESS`
@@ -116,17 +118,19 @@ have them played back synchronized again.
 * vsrc: video source
 * vsink video sink
 
-        .--------------------------.
-        | pipeline                 |
-        | .------.      .-------.  |
-        | | asrc |      | asink |  |
-        | |     src -> sink     |  |
-        | '------'      '-------'  |
-        | .------.      .-------.  |
-        | | vsrc |      | vsink |  |
-        | |     src -> sink     |  |
-        | '------'      '-------'  |
-        '--------------------------'
+```
+.--------------------------.
+| pipeline                 |
+| .------.      .-------.  |
+| | asrc |      | asink |  |
+| |     src -> sink     |  |
+| '------'      '-------'  |
+| .------.      .-------.  |
+| | vsrc |      | vsink |  |
+| |     src -> sink     |  |
+| '------'      '-------'  |
+'--------------------------'
+```
 
 The state changes happen in the same way as example 1. Both sinks end up with
 pending state of `PLAYING` and a return value of ASYNC until they receive the
@@ -146,17 +150,19 @@ sample to play.
 An example of the combination of a non-live (file) and a live source (vsrc)
 connected to live sinks (vsink, sink).
 
-        .--------------------------.
-        | pipeline                 |
-        | .------.      .-------.  |
-        | | file |      | sink  |  |
-        | |     src -> sink     |  |
-        | '------'      '-------'  |
-        | .------.      .-------.  |
-        | | vsrc |      | vsink |  |
-        | |     src -> sink     |  |
-        | '------'      '-------'  |
-        '--------------------------'
+```
+.--------------------------.
+| pipeline                 |
+| .------.      .-------.  |
+| | file |      | sink  |  |
+| |     src -> sink     |  |
+| '------'      '-------'  |
+| .------.      .-------.  |
+| | vsrc |      | vsink |  |
+| |     src -> sink     |  |
+| '------'      '-------'  |
+'--------------------------'
+```
 
 The state changes happen in the same way as example 1. Except sink will be
 able to preroll (commit its state to PAUSED).
@@ -174,17 +180,19 @@ should be configured in the element before it can go to PLAYING.
 An example of the combination of a non-live and a live source. The non-live
 source is connected to a live sink and the live source to a non-live sink.
 
-        .--------------------------.
-        | pipeline                 |
-        | .------.      .-------.  |
-        | | file |      | sink  |  |
-        | |     src -> sink     |  |
-        | '------'      '-------'  |
-        | .------.      .-------.  |
-        | | vsrc |      | files |  |
-        | |     src -> sink     |  |
-        | '------'      '-------'  |
-        '--------------------------'
+```
+.--------------------------.
+| pipeline                 |
+| .------.      .-------.  |
+| | file |      | sink  |  |
+| |     src -> sink     |  |
+| '------'      '-------'  |
+| .------.      .-------.  |
+| | vsrc |      | files |  |
+| |     src -> sink     |  |
+| '------'      '-------'  |
+'--------------------------'
+```
 
 The state changes happen in the same way as example 3. Sink will be
 able to preroll (commit its state to PAUSED). files will not be able to
