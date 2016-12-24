@@ -744,7 +744,54 @@ GST_START_TEST (test_id3v2_priv_tag)
   gst_tag_list_unref (tags);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
+static GstTagList *
+parse_id3v2_tag_from_data (const guint8 * id3v2, gsize id3v2_size)
+{
+  GstTagList *tags;
+  GstBuffer *buf;
+
+  GST_MEMDUMP ("id3v2 tag", id3v2, id3v2_size);
+
+  buf = gst_buffer_new_allocate (NULL, id3v2_size, NULL);
+  gst_buffer_fill (buf, 0, id3v2, id3v2_size);
+  tags = gst_tag_list_from_id3v2_tag (buf);
+  gst_buffer_unref (buf);
+
+  return tags;
+}
+
+GST_START_TEST (test_id3v2_extended_header)
+{
+  const guint8 id3v2_exthdr[] = {
+    0x49, 0x44, 0x33, 0x03, 0x00, 0x40, 0x00, 0x00, 0x00, 0x1b,
+    0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x54, 0x50, 0x45, 0x31, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00,
+    0x00, 0x47, 0x65, 0x6f, 0x72, 0x67, 0x65
+  };
+  const guint8 id3v2_no_exthdr[] = {
+    0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11,
+    0x54, 0x50, 0x45, 0x31, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00,
+    0x00, 0x47, 0x65, 0x6f, 0x72, 0x67, 0x65
+  };
+  GstTagList *tags;
+
+  tags = parse_id3v2_tag_from_data (id3v2_exthdr, sizeof (id3v2_exthdr));
+  fail_if (tags == NULL, "Failed to parse ID3 tag with extension header");
+  GST_LOG ("tags: %" GST_PTR_FORMAT, tags);
+  fail_unless_equals_int (gst_tag_list_n_tags (tags), 1);
+  gst_tag_list_unref (tags);
+
+  tags = parse_id3v2_tag_from_data (id3v2_no_exthdr, sizeof (id3v2_no_exthdr));
+  fail_if (tags == NULL, "Failed to parse ID3 tag without extension header");
+  GST_LOG ("tags: %" GST_PTR_FORMAT, tags);
+  fail_unless_equals_int (gst_tag_list_n_tags (tags), 1);
+  gst_tag_list_unref (tags);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_language_utils)
 {
   gchar **lang_codes, **c;
@@ -1864,6 +1911,7 @@ tag_suite (void)
   tcase_add_test (tc_chain, test_id3_tags);
   tcase_add_test (tc_chain, test_id3v1_utf8_tag);
   tcase_add_test (tc_chain, test_id3v2_priv_tag);
+  tcase_add_test (tc_chain, test_id3v2_extended_header);
   tcase_add_test (tc_chain, test_language_utils);
   tcase_add_test (tc_chain, test_license_utils);
   tcase_add_test (tc_chain, test_xmp_formatting);
