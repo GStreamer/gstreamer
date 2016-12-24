@@ -792,6 +792,37 @@ GST_START_TEST (test_id3v2_extended_header)
 
 GST_END_TEST;
 
+GST_START_TEST (test_id3v2_string_list_utf16)
+{
+  const guint8 id3v2[] = {
+    0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
+    0x43, 0x4f, 0x4d, 0x4d, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00,
+    0x01, 0x65, 0x6e, 0x67, 0xff, 0xfe, 0x00, 0x00, 0xff, 0xfe,
+    0x4e, 0x00, 0x61, 0x00, 0x69, 0x00, 0x6d, 0x00, 0x20, 0x00,
+    0x4d, 0x00, 0x50, 0x00, 0x33, 0x00, 0x20, 0x00, 0x4d, 0x00,
+    0x75, 0x00, 0x73, 0x00, 0x69, 0x00, 0x63, 0x00, 0x20, 0x00,
+    0x4c, 0x00, 0x69, 0x00, 0x62, 0x00, 0x72, 0x00, 0x61, 0x00,
+    0x72, 0x00, 0x79, 0x00
+  };
+  GstTagList *tags;
+  gchar *comment = NULL;
+
+  tags = parse_id3v2_tag_from_data (id3v2, sizeof (id3v2));
+  fail_if (tags == NULL,
+      "Failed to parse ID3 tag with UTF-16 strings and BOMs");
+
+  GST_LOG ("tags: %" GST_PTR_FORMAT, tags);
+
+  gst_tag_list_get_string (tags, GST_TAG_COMMENT, &comment);
+  fail_unless (comment != NULL, "Expected comment tag");
+  GST_MEMDUMP ("comment string UTF-8", (guint8 *) comment, strlen (comment));
+  fail_unless_equals_string (comment, "Naim MP3 Music Library");
+  g_free (comment);
+  gst_tag_list_unref (tags);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_language_utils)
 {
   gchar **lang_codes, **c;
@@ -1912,6 +1943,7 @@ tag_suite (void)
   tcase_add_test (tc_chain, test_id3v1_utf8_tag);
   tcase_add_test (tc_chain, test_id3v2_priv_tag);
   tcase_add_test (tc_chain, test_id3v2_extended_header);
+  tcase_add_test (tc_chain, test_id3v2_string_list_utf16);
   tcase_add_test (tc_chain, test_language_utils);
   tcase_add_test (tc_chain, test_license_utils);
   tcase_add_test (tc_chain, test_xmp_formatting);
