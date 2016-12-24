@@ -1,15 +1,15 @@
 # Latency
 
 The latency is the time it takes for a sample captured at timestamp 0 to
-reach the sink. This time is measured against the clock in the pipeline.
+reach the sink. This time is measured against the pipeline's clock.
 For pipelines where the only elements that synchronize against the clock
-are the sinks, the latency is always 0 since no other element is
+are the sinks, the latency is always 0, since no other element is
 delaying the buffer.
 
 For pipelines with live sources, a latency is introduced, mostly because
 of the way a live source works. Consider an audio source, it will start
 capturing the first sample at time 0. If the source pushes buffers with
-44100 samples at a time at 44100Hz it will have collected the buffer at
+44100 samples at a time at 44100Hz, it will have collected the buffer at
 second 1. Since the timestamp of the buffer is 0 and the time of the
 clock is now \>= 1 second, the sink will drop this buffer because it is
 too late. Without any latency compensation in the sink, all buffers will
@@ -33,7 +33,7 @@ The situation becomes more complex in the presence of:
 
 To perform the needed latency corrections in the above scenarios, we
 must develop an algorithm to calculate a global latency for the
-pipeline. The algorithm must be extensible so that it can optimize the
+pipeline. This algorithm must be extensible, so that it can optimize the
 latency at runtime. It must also be possible to disable or tune the
 algorithm based on specific application needs (required minimal
 latency).
@@ -165,7 +165,7 @@ In this case sink will have no latency but vsink will. The total latency
 should be that of vsink.
 
 Note that because of the presence of a live source (vsrc), the pipeline can be
-set to playing before sink is able to preroll. Without compensation for the
+set to playing before the sink is able to preroll. Without compensation for the
 live source, this might lead to synchronisation problems because the latency
 should be configured in the element before it can go to PLAYING.
 
@@ -201,11 +201,11 @@ prerolled.
 
 ## State Changes
 
-A Sink is never set to `PLAYING` before it is prerolled. In order to do
-this, the pipeline (at the GstBin level) keeps track of all elements
+A sink is never set to `PLAYING` before it is prerolled. In order to do
+this, the pipeline (at the `GstBin` level) keeps track of all elements
 that require preroll (the ones that return ASYNC from the state change).
-These elements posted a `ASYNC_START` message without a matching
-`ASYNC_DONE` message.
+These elements posted an `ASYNC_START` message without a matching
+`ASYNC_DONE` one.
 
 The pipeline will not change the state of the elements that are still
 doing an ASYNC state change.
@@ -228,11 +228,11 @@ currently used for going from `PAUSED→PLAYING` in a non-live pipeline).
 
 The pipeline latency is queried with the LATENCY query.
 
-* **`live`** G_TYPE_BOOLEAN (default FALSE): - if a live element is found upstream
+* **`live`** `G_TYPE_BOOLEAN` (default FALSE): - if a live element is found upstream
 
-* **`min-latency`** G_TYPE_UINT64 (default 0, must not be NONE): - the minimum
+* **`min-latency`** `G_TYPE_UINT64` (default 0, must not be NONE): - the minimum
 latency in the pipeline, meaning the minimum time downstream elements
-synchronizing to the clock have to wait until they can be sure that all data
+synchronizing to the clock have to wait until they can be sure all data
 for the current running time has been received.
 
 Elements answering the latency query and introducing latency must
@@ -240,23 +240,23 @@ set this to the maximum time for which they will delay data, while
 considering upstream's minimum latency. As such, from an element's
 perspective this is *not* its own minimum latency but its own
 maximum latency.
-Considering upstream's minimum latency in general means that the
+Considering upstream's minimum latency generally means that the
 element's own value is added to upstream's value, as this will give
 the overall minimum latency of all elements from the source to the
 current element:
 
     min_latency = upstream_min_latency + own_min_latency
 
-* **`max-latency`** G_TYPE_UINT64 (default 0, NONE meaning infinity): - the
+* **`max-latency`** `G_TYPE_UINT64` (default 0, NONE meaning infinity): - the
 maximum latency in the pipeline, meaning the maximum time an element
 synchronizing to the clock is allowed to wait for receiving all data for the
 current running time. Waiting for a longer time will result in data loss,
-overruns and underruns of buffers and in general breaks synchronized data flow
+buffer overruns and underruns and, in general, breaks synchronized data flow
 in the pipeline.
 
 Elements answering the latency query should set this to the maximum
 time for which they can buffer upstream data without blocking or
-dropping further data. For an element this value will generally be
+dropping further data. For an element, this value will generally be
 its own minimum latency, but might be bigger than that if it can
 buffer more data. As such, queue elements can be used to increase
 the maximum latency.
@@ -302,7 +302,7 @@ sources with a limited amount of internal buffers that can be used.
 The latency in the pipeline is configured with the LATENCY event, which
 contains the following fields:
 
-* **`latency`** G_TYPE_UINT64: the configured latency in the pipeline
+* **`latency`** `G_TYPE_UINT64`: the configured latency in the pipeline
 
 ## Latency compensation
 
@@ -316,7 +316,7 @@ the global latency as follows:
 - sources set their minimum and maximum latency
 - other elements add their own values as described above
 - latency = MAX (all min latencies)
-- if MIN (all max latencies) \< latency we have an impossible
+- if MIN (all max latencies) \< latency, we have an impossible
 situation and we must generate an error indicating that this
 pipeline cannot be played. This usually means that there is not
 enough buffering in some chain of the pipeline. A queue can be added
@@ -326,6 +326,7 @@ The sinks gather this information with a LATENCY query upstream.
 Intermediate elements pass the query upstream and add the amount of
 latency they add to the result.
 
+```
 ex1: sink1: \[20 - 20\] sink2: \[33 - 40\]
 
     MAX (20, 33) = 33
@@ -335,6 +336,7 @@ ex2: sink1: \[20 - 50\] sink2: \[33 - 40\]
 
     MAX (20, 33) = 33
     MIN (50, 40) = 40 >= 33 -> latency = 33
+```
 
 The latency is set on the pipeline by sending a LATENCY event to the
 sinks in the pipeline. This event configures the total latency on the
@@ -385,7 +387,7 @@ before doing this.
 
 ## Dynamically adjusting latency
 
-An element that want to change the latency in the pipeline can do this
+An element that wants to change the latency in the pipeline can do this
 by posting a LATENCY message on the bus. This message instructs the
 pipeline to:
 
@@ -396,14 +398,14 @@ pipeline to:
     event.
 
 A use case where the latency in a pipeline can change could be a network
-element that observes an increased inter packet arrival jitter or
+element that observes an increased inter-packet arrival jitter or
 excessive packet loss and decides to increase its internal buffering
 (and thus the latency). The element must post a LATENCY message and
 perform the additional latency adjustments when it receives the LATENCY
 event from the downstream peer element.
 
-In a similar way can the latency be decreased when network conditions
-are improving again.
+In a similar way, the latency can be decreased when network conditions
+improve.
 
-Latency adjustments will introduce glitches in playback in the sinks and
+Latency adjustments will introduce playback glitches in the sinks and
 must only be performed in special conditions.
