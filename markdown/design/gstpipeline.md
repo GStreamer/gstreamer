@@ -1,9 +1,9 @@
 # GstPipeline
 
-A GstPipeline is usually a toplevel bin and provides all of its children
+A `GstPipeline` is usually a toplevel bin and provides all of its children
 with a clock.
 
-A GstPipeline also provides a toplevel GstBus (see [gstbus](design/gstbus.md))
+A `GstPipeline` also provides a toplevel `GstBus` (see [gstbus](design/gstbus.md))
 
 The pipeline also calculates the running\_time based on the selected
 clock (see also clocks.txt and [synchronisation](design/synchronisation.md)).
@@ -14,7 +14,7 @@ pipeline. (See also [latency](design/latency.md)).
 ## State changes
 
 In addition to the normal state change procedure of its parent class
-GstBin, the pipeline performs the following actions during a state
+`GstBin`, the pipeline performs the following actions during a state
 change:
 
 - NULL → READY:
@@ -39,15 +39,15 @@ flushing seek.
 
 ## Clock selection
 
-Since all of the children of a GstPipeline must use the same clock, the
-pipeline must select a clock. This clock selection happens when the
+Since all of the children of a `GstPipeline` must use the same clock, the
+pipeline must select one. This clock selection happens when the
 pipeline goes to the PLAYING state.
 
 The default clock selection algorithm works as follows:
 
 - If the application selected a clock, use that clock. (see below)
 
-- Use the clock of most upstream element that can provide a clock.
+- Use the clock of the most upstream element that can provide one.
 This selection is performed by iterating the element starting from
 the sinks going upstream.
   - since this selection procedure happens in the PAUSED→PLAYING
@@ -57,7 +57,7 @@ the sinks going upstream.
     yet be prerolled and the selection process will select the clock
     of a more upstream element.
 
-- use GstSystemClock, this only happens when no element provides a
+- use `GstSystemClock`, this only happens when no element provides a
 usable clock.
 
 The application can influence this clock selection with two methods:
@@ -73,7 +73,7 @@ auto- matic clock selection algorithm described above.
 
 ## GstBus
 
-A GstPipeline provides a GstBus to the application. The bus can be
+A `GstPipeline` provides a `GstBus` to the application. The bus can be
 retrieved with `gst_pipeline_get_bus()` and can then be used to
 retrieve messages posted by the elements in the pipeline (see
 [gstbus](design/gstbus.md)).
