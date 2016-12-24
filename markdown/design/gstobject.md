@@ -1,38 +1,37 @@
 # GstObject
 
-The base class for the entire GStreamer hierarchy is the GstObject.
+The base class for the entire GStreamer hierarchy is the `GstObject`.
 
 ## Parentage
 
 A pointer is available to store the current parent of the object. This
 is one of the two fundamental requirements for a hierarchical system
-such as GStreamer (for the other, read up on GstBin). Three functions
+such as GStreamer (for the other, read up on `GstBin`). Three functions
 are provided: `_set_parent()`, `_get_parent()`, and `_unparent()`. The
 third is required because there is an explicit check in `_set_parent()`:
 an object must not already have a parent if you wish to set one. You
 must unparent the object first. This allows for new additions later.
 
-  - GstObject’s that can be parented: GstElement (inside a bin) GstPad (inside
-  an element)
+  - `GstObject`’s that can be parented: `GstElement` (inside a bin) `GstPad` (inside an element)
 
 ## Naming
 
 - names of objects cannot be changed when they are parented
 - names of objects should be unique across parent
-    - set_name() can fail because of this
-    - as can gst_element_add_pad()/gst_bin_add_element()
-- gst_object_set_name() only changes the object’s name
+    - `set_name()` can fail because of this
+    - as can `gst_element_add_pad()`/`gst_bin_add_element()`
+- `gst_object_set_name()` only changes the object’s name
 - objects also have a name_prefix that is used to prefix the object
 name during debugging and identification
-- there are object-specific set_name’s() which also set the
+- there are object-specific `set_name()` which also set the
 name_prefix on the object. This is useful for debugging purposes to
 give the object a more identifiable name. Typically a parent will
-call _set_name_prefix on children, taking a lock on them to do
+call `_set_name_prefix()` on children, taking a lock on them to do
 so.
 
 ## Locking
 
-The GstObject contains the necessary primitives to lock the object in a
+The `GstObject` contains the necessary primitives to lock the object in a
 thread-safe manner. This will be used to provide general thread-safety
 as needed. However, this lock is generic, i.e. it covers the whole
 object.
@@ -40,7 +39,7 @@ object.
 The object LOCK is a very lowlevel lock that should only be held to
 access the object properties for short periods of code.
 
-All members of the GstObject structure marked as `/**< public >**/ /*
+All members of the `GstObject` structure marked as `/**< public >**/ /*
 with LOCK */` are protected by this lock. These members can only be
 accessed for reading or writing while the lock is held. All members
 should be copied or reffed if they are used after releasing the LOCK.
@@ -52,7 +51,7 @@ simultaneously. "The lock is voluntary and cooperative".
 
 This lock will ideally be used for parentage, flags and naming, which is
 reasonable, since they are the only possible things to protect in the
-GstObject.
+`GstObject`.
 
 ## Locking order
 
@@ -69,11 +68,11 @@ defined.
 
 ## Path Generation
 
-Due to the base nature of the GstObject, it becomes the only reasonable
-place to put this particular function (_get_path_string). It will
-generate a string describing the parent hierarchy of a given GstObject.
+Due to the base nature of the `GstObject`, it becomes the only reasonable
+place to put this particular function (`_get_path_string()`). It will
+generate a string describing the parent hierarchy of a given `GstObject`.
 
 ## Flags
 
 Each object in the GStreamer object hierarchy can have flags associated
-with it, which are used to describe a state or a feature of the object.
+with it, which are used to describe its state or a features.
