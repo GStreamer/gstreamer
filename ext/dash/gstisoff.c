@@ -26,6 +26,9 @@
 #include <gst/base/gstbytereader.h>
 
 #include <string.h>
+#include "gstdash_debug.h"
+
+#define GST_CAT_DEFAULT gst_dash_demux_debug
 
 /* gst_isoff_parse_box:
  * @reader:
