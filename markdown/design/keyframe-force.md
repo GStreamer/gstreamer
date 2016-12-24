@@ -58,7 +58,7 @@ The information passed in the event consists of:
  - **"running-time"** (`G_TYPE_UINT64`): the running time of the stream when
    the event was triggered.
 
- - **"all-headers"**  (`G_TYPE_BOOLEAN`): Send all headers, including
+ - **"all-headers"** (`G_TYPE_BOOLEAN`): Send all headers, including
    those in the caps or those sent at the start of the stream.
 
  - **...**: optional other data fields.
@@ -72,14 +72,14 @@ Elements understanding the event should behave as follows:
 1)  The video encoder receives the event before the next frame. Upon
     reception of the event it schedules to encode the next frame as a
     keyframe. Before pushing out the encoded keyframe it must push the
-    GstForceKeyUnit event downstream.
+    `GstForceKeyUnit` event downstream.
 
-2)  The muxer receives the GstForceKeyUnit event and flushes out its
+2)  The muxer receives the `GstForceKeyUnit` event and flushes out its
     current state, preparing to produce data that can be used as a
     keyunit. Before pushing out the new data it pushes the
-    GstForceKeyUnit event downstream.
+    `GstForceKeyUnit` event downstream.
 
-3)  The application receives the GstForceKeyUnit on a sink padprobe of
+3)  The application receives the `GstForceKeyUnit` on a sink padprobe of
     the sink and reconfigures the sink to make it perform new actions
     after receiving the next buffer.
 
@@ -88,10 +88,10 @@ Elements understanding the event should behave as follows:
 When using RTP packets can get lost or receivers can be added at any
 time, they may request a new key frame.
 
-An downstream element sends an upstream "GstForceKeyUnit" event up the
+An downstream element sends an upstream `GstForceKeyUnit` event up the
 pipeline.
 
 When an element produces some kind of key unit in output, but has no
 such concept in its input (like an encoder that takes raw frames), it
 consumes the event (doesn't pass it upstream), and instead sends a
-downstream GstForceKeyUnit event and a new keyframe.
+downstream `GstForceKeyUnit` event and a new keyframe.
