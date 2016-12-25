@@ -8,7 +8,8 @@ def _log_line_regex():
     # "0:00:00.777913000  "
     TIME = r"(\d+:\d\d:\d\d\.\d+)\s+"
     # "DEBUG             "
-    LEVEL = "([A-Z]+)\s+"
+    #LEVEL = "([A-Z]+)\s+"
+    LEVEL = "(TRACE)\s+"
     # "0x8165430 "
     THREAD = r"(0x[0-9a-f]+)\s+"
       # "GST_REFCOUNTING ", "flacdec "
@@ -54,14 +55,10 @@ class Parser(object):
         self.file = None
 
     def __enter__(self):
-        def __is_tracer(line):
-            return 'TRACE' in line
-
         if self.filename != '-':
             self.file = open(self.filename, 'rt')
         else:
             self.file = sys.stdin
-        self.data = filter(__is_tracer, self.file)
         return self
 
     def __exit__(self, *args):
@@ -74,7 +71,7 @@ class Parser(object):
 
     def __next__(self):
         log_regex = self.log_regex
-        data = self.data
+        data = self.file
         while True:
             line = next(data)
             match = log_regex.match(line)

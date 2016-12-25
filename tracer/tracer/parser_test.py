@@ -26,12 +26,12 @@ class TestParser(unittest.TestCase):
             self.assertIsNotNone(log.file)
 
     def test___enter___with_stdin(self):
-        sys.stdin = TEXT_DATA
+        sys.stdin = iter(TEXT_DATA)
         with Parser('-') as log:
             self.assertIsNotNone(log.file)
 
     def test_random_text_reports_none(self):
-        sys.stdin = TEXT_DATA
+        sys.stdin = iter(TEXT_DATA)
         with Parser('-') as log:
             with self.assertRaises(StopIteration):
                 next(log)
@@ -41,7 +41,7 @@ class TestParser(unittest.TestCase):
             self.assertIsNotNone(next(log))
 
     def test_trace_log_parsed(self):
-        sys.stdin = TRACER_LOG_DATA
+        sys.stdin = iter(TRACER_LOG_DATA)
         with Parser('-') as log:
             event = next(log)
             self.assertEqual(len(event), 10)

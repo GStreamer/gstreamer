@@ -1,6 +1,7 @@
-from tracer.parser import Parser
-from tracer.structure import Structure
-
+try:
+    from tracer.parser import Parser
+except:
+    from parser import Parser
 
 class AnalysisRunner(object):
     """
@@ -36,10 +37,10 @@ class AnalysisRunner(object):
         try:
             for event in self.log:
                 # check if it is a tracer.class or tracer event
-                if self.is_tracer_class(event):
-                    self.handle_tracer_class(event)
-                elif self.is_tracer_entry(event):
+                if self.is_tracer_entry(event):
                     self.handle_tracer_entry(event)
+                elif self.is_tracer_class(event):
+                    self.handle_tracer_class(event)
                 #else:
                 #    print("unhandled:", repr(event))
         except StopIteration:
