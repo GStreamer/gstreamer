@@ -2,18 +2,18 @@
 
 **audio/x-raw**
 
- - **format**, G\_TYPE\_STRING, mandatory The format of the audio samples, see
+ - **format**, `G_TYPE_STRING`: Mandatory. The format of the audio samples, see
    the Formats section for a list of valid sample formats.
 
- - **rate**, G\_TYPE\_INT, mandatory The samplerate of the audio
+ - **rate**, `G_TYPE_INT`: Mandatory. The samplerate of the audio
 
- - **channels**, G\_TYPE\_INT, mandatory The number of channels
+ - **channels**, `G_TYPE_INT`: Mandatory. The number of channels
 
- - **channel-mask**, GST\_TYPE\_BITMASK, mandatory for more than 2 channels
+ - **channel-mask**, `GST_TYPE_BITMASK`: Mandatory for more than 2 channels
    Bitmask of channel positions present. May be omitted for mono and
    stereo. May be set to 0 to denote that the channels are unpositioned.
 
- - **layout**, G\_TYPE\_STRING, mandatory The layout of channels within a
+ - **layout**, `G_TYPE_STRING`: Mandatory. The layout of channels within a
    buffer. Possible values are "interleaved" (for LRLRLRLR) and
    "non-interleaved" (LLLLRRRR)
 
