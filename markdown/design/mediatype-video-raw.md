@@ -2,23 +2,23 @@
 
 **video/x-raw**
 
- - **width**, G\_TYPE\_INT, mandatory The width of the image in pixels.
+ - **width**, `G_TYPE_INT`: Mandatory. The width of the image in pixels.
 
- - **height**, G\_TYPE\_INT, mandatory The height of the image in pixels
+ - **height**, `G_TYPE_INT`: Mandatory. The height of the image in pixels
 
- - **framerate**, GST\_TYPE\_FRACTION, default 0/1 The framerate of the video
+ - **framerate**, `GST_TYPE_FRACTION`: Default 0/1. The framerate of the video,
    0/1 for variable framerate
 
- - **max-framerate**, GST\_TYPE\_FRACTION, default as framerate For variable
-   framerates this would be the maximum framerate that is expected. This
-   value is only valid when the framerate is 0/1
+ - **max-framerate**, `GST_TYPE_FRACTION`: Default as framerate. For variable
+   framerates this would be the maximum expected framerate. This
+   value is only valid when the framerate is set to "variable" (0/1)
 
- - **views**, G\_TYPE\_INT, default 1 The number of views for multiview video.
-   Each buffer contains multiple GstVideoMeta buffers that describe each
+ - **views**, `G_TYPE_INT`: Default 1. The number of views for multiview video.
+   Each buffer contains multiple `GstVideoMeta` buffers that describe each
    view. use the frame id to get access to the different views.
 
- - **interlace-mode**, G\_TYPE\_STRING, default progressive The interlace mode.
-   The following values are possible:
+ - **interlace-mode**, `G_TYPE_STRING`: Default progressive. The interlace
+   mode. The following values are possible:
 
    - *"progressive"*: all frames are progressive
 
@@ -28,7 +28,7 @@
    - *"mixed"*: progressive and interleaved frames, extra buffer flags
      describe the frame and fields.
 
-   - *"fields"*: 2 fields are stored in one buffer, use the frame ID
+   - *"fields"*: 2 fields are stored in one buffer. Use the frame ID
      to get access to the required field. For multiview (the
      'views' property > 1) the fields of view N can be found at
      frame ID (N * 2) and (N * 2) + 1.
@@ -37,24 +37,24 @@
      must be prepared for this. This mode requires multiple
      GstVideoMeta metadata to describe the fields.
 
- - **chroma-site**, G\_TYPE\_STRING, default UNKNOWN The chroma siting of the
+ - **chroma-site**, `G_TYPE_STRING`: Default UNKNOWN. The chroma siting of the
    video frames.
 
    - *"jpeg"*: `GST_VIDEO_CHROMA_SITE_JPEG`
    - *"mpeg2"*: `GST_VIDEO_CHROMA_SITE_MPEG2`
    - *"dv"*: `GST_VIDEO_CHROMA_SITE_DV`
 
- - **colorimetry**, G\_TYPE\_STRING, default UNKNOWN The colorimetry of the
-   video frames predefined colorimetry is given with the following values:
+ - **colorimetry**, `G_TYPE_STRING`: Default UNKNOWN. The colorimetry of the
+   video frames. Predefined colorimetry is given with the following values:
 
    - *"bt601"*
    - *"bt709"*
    - *"smpte240m"*
 
- - **pixel-aspect-ratio**, GST\_TYPE\_FRACTION, default 1/1 The pixel aspect
+ - **pixel-aspect-ratio**, `GST_TYPE_FRACTION`: Default 1/1. The pixel aspect
    ration of the video
 
- - **format**, G\_TYPE\_STRING, mandatory The format of the video, see the
+ - **format**, `G_TYPE_STRING`: Mandatory. The format of the video. See the
    Formats section for a list of valid format strings.
 
 ## Metadata
