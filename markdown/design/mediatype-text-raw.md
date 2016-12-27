@@ -2,7 +2,7 @@
 
 **text/x-raw**
 
- - **format**, G\_TYPE\_STRING, mandatory The format of the text, see the
+ - **format**, `G_TYPE_STRING`: Mandatory. The format of the text. See the
    Formats section for a list of valid format strings.
 
 ## Metadata
