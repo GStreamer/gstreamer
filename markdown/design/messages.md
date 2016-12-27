@@ -3,13 +3,13 @@
 Messages are refcounted lightweight objects to signal the application of
 pipeline events.
 
-Messages are implemented as a subclass of GstMiniObject with a generic
-GstStructure as the content. This allows for writing custom messages
+Messages are implemented as a subclass of `GstMiniObject` with a generic
+`GstStructure` as the content. This allows for writing custom messages
 without requiring an API change while allowing a wide range of different
 types of messages.
 
 Messages are posted by objects in the pipeline and are passed to the
-application using the GstBus (See also [gstbus](design/gstbus.md)
+application using the `GstBus` (See also [gstbus](design/gstbus.md)
 and [gstpipeline](design/gstpipeline.md)).
 
 ## Message types
@@ -29,7 +29,7 @@ some other non fatal event. The pipeline continues streaming after a warning.
 **`GST_MESSAGE_INFO`**: An element produced an informational message.
 
 **`GST_MESSAGE_TAG`**: An element decoded metadata about the stream. The
-message carries a GstTagList with the tag information.
+message carries a `GstTagList` with the tag information.
 
 **`GST_MESSAGE_BUFFERING`**: An element is buffering data and that could
 potentially take some time. This message is typically emitted by elements that
@@ -74,7 +74,7 @@ element's documentation
 
 **`GST_MESSAGE_SEGMENT_START`**: An element started playback of a new
 segment. This message is not forwarded to applications but is used internally
-to schedule SEGMENT_DONE messages.
+to schedule `SEGMENT_DONE` messages.
 
 **`GST_MESSAGE_SEGMENT_DONE`**: An element or bin completed playback of
 a segment. This message is only posted on the bus if a SEGMENT seek is
@@ -98,7 +98,7 @@ the state of the pipeline they are in. A typical use case would be an audio
 sink that requests the pipeline to pause in order to play a higher priority
 stream.
 
-**`GST_MESSAGE_STEP_START`**: A Stepping operation has started.
+**`GST_MESSAGE_STEP_START`**: A stepping operation has started.
 
 **`GST_MESSAGE_QOS`**: A buffer was dropped or an element changed its
 processing strategy for Quality of Service reasons.
