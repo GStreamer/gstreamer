@@ -516,6 +516,7 @@ gst_dx9screencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
     if (ret == GST_CLOCK_UNSCHEDULED) {
       /* Got woken up by the unlock function */
       GST_OBJECT_UNLOCK (src);
+      gst_object_unref (clock);
       return GST_FLOW_FLUSHING;
     }
     GST_OBJECT_UNLOCK (src);
@@ -554,6 +555,8 @@ gst_dx9screencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
       IDirect3DDevice9_GetFrontBufferData (src->d3d9_device, 0, src->surface);
   if (FAILED (hres)) {
     GST_DEBUG_OBJECT (src, "DirectX::GetBackBuffer failed.");
+    if (clock != NULL)
+      gst_object_unref (clock);
     return GST_FLOW_ERROR;
   }
 
@@ -591,6 +594,8 @@ gst_dx9screencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
       D3DLOCK_NO_DIRTY_UPDATE | D3DLOCK_NOSYSLOCK | D3DLOCK_READONLY);
   if (FAILED (hres)) {
     GST_DEBUG_OBJECT (src, "DirectX::LockRect failed.");
+    if (clock != NULL)
+      gst_object_unref (clock);
     return GST_FLOW_ERROR;
   }
 
