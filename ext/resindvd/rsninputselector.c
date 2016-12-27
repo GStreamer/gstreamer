@@ -695,6 +695,7 @@ gst_input_selector_wait_running_time (RsnInputSelector * sel,
           cur_running_time -= base_time;
         else
           cur_running_time = 0;
+        gst_object_unref (clock);
       }
     } else {
       GstSegment *active_seg;
@@ -814,6 +815,7 @@ gst_input_selector_cleanup_old_cached_buffers (RsnInputSelector * sel,
         cur_running_time -= base_time;
       else
         cur_running_time = 0;
+      gst_object_unref (clock);
     }
   } else {
     GstPad *active_sinkpad;

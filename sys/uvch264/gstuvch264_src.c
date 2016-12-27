@@ -2544,6 +2544,8 @@ error_remove:
   gst_bin_remove (GST_BIN (self), self->v4l2_src);
 
 error:
+  if (v4l2_clock)
+    gst_object_unref (v4l2_clock);
   if (self->v4l2_src)
     gst_object_unref (self->v4l2_src);
   self->v4l2_src = NULL;
