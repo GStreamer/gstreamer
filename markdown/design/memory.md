@@ -61,7 +61,7 @@ struct _GstAllocator {
 ```
 
 The allocator class has 2 virtual methods. One to create a `GstMemory`,
-another to free it again.
+another to free it.
 
 ``` c
 struct _GstAllocatorClass {
@@ -127,7 +127,7 @@ fail when WRITE access is requested on a non-writable memory object (it has
 an exclusive counter > 1, the memory is already locked in an incompatible
 access mode or the memory is marked readonly).
 
-After the data has been accessed in the object, the unmap call must be
+After the data has been accessed in the object, the `unmap()` call must be
 performed, which will unlock the memory again.
 
 It is allowed to recursively map multiple times with the same or narrower
@@ -151,15 +151,14 @@ Resizing a `GstMemory` does not influence any current mappings in any way.
 
 A `GstMemory` copy can be made with the `gst_memory_copy()` call. Normally,
 allocators will implement a custom version of this function to make a copy of
-the same kind of memory as the original one.
-
-This is what the fallback version of the copy function does, albeit slower
-than what a custom implementation could do.
+the same kind of memory as the original one. This is what the fallback version
+of the copy function does, albeit slower than what a custom implementation
+could do.
 
 The copy operation is only required to copy the visible range of the memory
 block.
 
 ## Share
 
-A memory region can be shared between `GstMemory` object with the
+A memory region can be shared between `GstMemory` objects with the
 `gst_memory_share()` operation.
