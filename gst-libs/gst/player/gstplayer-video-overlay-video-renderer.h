@@ -41,6 +41,7 @@ typedef struct _GstPlayerVideoOverlayVideoRendererClass
 
 GType gst_player_video_overlay_video_renderer_get_type (void);
 GstPlayerVideoRenderer * gst_player_video_overlay_video_renderer_new (gpointer window_handle);
+GstPlayerVideoRenderer * gst_player_video_overlay_video_renderer_new_with_sink (gpointer window_handle, GstElement * video_sink);
 void gst_player_video_overlay_video_renderer_set_window_handle (GstPlayerVideoOverlayVideoRenderer * self, gpointer window_handle);
 gpointer gst_player_video_overlay_video_renderer_get_window_handle (GstPlayerVideoOverlayVideoRenderer * self);
 

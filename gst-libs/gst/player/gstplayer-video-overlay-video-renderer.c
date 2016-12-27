@@ -40,6 +40,8 @@ struct _GstPlayerVideoOverlayVideoRenderer
   GstVideoOverlay *video_overlay;
   gpointer window_handle;
   gint x, y, width, height;
+
+  GstElement *video_sink;       /* configured video sink, or NULL      */
 };
 
 struct _GstPlayerVideoOverlayVideoRendererClass
@@ -55,6 +57,7 @@ enum
 {
   VIDEO_OVERLAY_VIDEO_RENDERER_PROP_0,
   VIDEO_OVERLAY_VIDEO_RENDERER_PROP_WINDOW_HANDLE,
+  VIDEO_OVERLAY_VIDEO_RENDERER_PROP_VIDEO_SINK,
   VIDEO_OVERLAY_VIDEO_RENDERER_PROP_LAST
 };
 
@@ -81,6 +84,9 @@ gst_player_video_overlay_video_renderer_set_property (GObject * object,
         gst_video_overlay_set_window_handle (self->video_overlay,
             (guintptr) self->window_handle);
       break;
+    case VIDEO_OVERLAY_VIDEO_RENDERER_PROP_VIDEO_SINK:
+      self->video_sink = gst_object_ref_sink (g_value_get_object (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -98,6 +104,9 @@ gst_player_video_overlay_video_renderer_get_property (GObject * object,
     case VIDEO_OVERLAY_VIDEO_RENDERER_PROP_WINDOW_HANDLE:
       g_value_set_pointer (value, self->window_handle);
       break;
+    case VIDEO_OVERLAY_VIDEO_RENDERER_PROP_VIDEO_SINK:
+      g_value_set_object (value, self->video_sink);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -112,6 +121,9 @@ gst_player_video_overlay_video_renderer_finalize (GObject * object)
 
   if (self->video_overlay)
     gst_object_unref (self->video_overlay);
+
+  if (self->video_sink)
+    gst_object_unref (self->video_sink);
 
   G_OBJECT_CLASS
       (gst_player_video_overlay_video_renderer_parent_class)->finalize (object);
@@ -135,6 +147,12 @@ static void
       "Window handle to embed the video into",
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
 
+  video_overlay_video_renderer_param_specs
+      [VIDEO_OVERLAY_VIDEO_RENDERER_PROP_VIDEO_SINK] =
+      g_param_spec_object ("video-sink", "Video Sink",
+      "the video output element to use (NULL = default sink)",
+      GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class,
       VIDEO_OVERLAY_VIDEO_RENDERER_PROP_LAST,
       video_overlay_video_renderer_param_specs);
@@ -145,6 +163,7 @@ static void
     (GstPlayerVideoOverlayVideoRenderer * self)
 {
   self->x = self->y = self->width = self->height = -1;
+  self->video_sink = NULL;
 }
 
 static GstElement *gst_player_video_overlay_video_renderer_create_video_sink
@@ -168,7 +187,7 @@ static GstElement *gst_player_video_overlay_video_renderer_create_video_sink
     gst_video_overlay_set_render_rectangle (self->video_overlay, self->x,
         self->y, self->width, self->height);
 
-  return NULL;
+  return self->video_sink;
 }
 
 static void
@@ -190,6 +209,23 @@ gst_player_video_overlay_video_renderer_new (gpointer window_handle)
 {
   return g_object_new (GST_TYPE_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER,
       "window-handle", window_handle, NULL);
+}
+
+/**
+ * gst_player_video_overlay_video_renderer_new_with_sink:
+ * @window_handle: (allow-none): Window handle to use or %NULL
+ * @video_sink: (transfer floating): the custom video_sink element to be set for the video renderer
+ *
+ * Returns: (transfer full):
+ *
+ * Since 1.12
+ */
+GstPlayerVideoRenderer *
+gst_player_video_overlay_video_renderer_new_with_sink (gpointer window_handle,
+    GstElement * video_sink)
+{
+  return g_object_new (GST_TYPE_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER,
+      "window-handle", window_handle, "video-sink", video_sink, NULL);
 }
 
 /**
