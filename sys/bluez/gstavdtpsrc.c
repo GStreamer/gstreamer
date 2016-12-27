@@ -232,6 +232,7 @@ gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
       value = gst_structure_get_value (structure, "mpegversion");
       if (!value || !G_VALUE_HOLDS_INT (value)) {
         GST_ERROR_OBJECT (avdtpsrc, "Failed to get mpegversion");
+        gst_caps_unref (caps);
         return NULL;
       }
       gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT,
@@ -240,6 +241,7 @@ gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
       value = gst_structure_get_value (structure, "channels");
       if (!value || !G_VALUE_HOLDS_INT (value)) {
         GST_ERROR_OBJECT (avdtpsrc, "Failed to get channels");
+        gst_caps_unref (caps);
         return NULL;
       }
       gst_caps_set_simple (caps, "channels", G_TYPE_INT,
@@ -248,6 +250,7 @@ gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
       value = gst_structure_get_value (structure, "base-profile");
       if (!value || !G_VALUE_HOLDS_STRING (value)) {
         GST_ERROR_OBJECT (avdtpsrc, "Failed to get base-profile");
+        gst_caps_unref (caps);
         return NULL;
       }
       gst_caps_set_simple (caps, "base-profile", G_TYPE_STRING,
@@ -261,6 +264,7 @@ gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
     value = gst_structure_get_value (structure, "rate");
     if (!value || !G_VALUE_HOLDS_INT (value)) {
       GST_ERROR_OBJECT (avdtpsrc, "Failed to get sample rate");
+      gst_caps_unref (caps);
       return NULL;
     }
     rate = g_value_get_int (value);
