@@ -2783,6 +2783,12 @@ gst_base_parse_send_buffers (GstBaseParse * parse)
     if (first) {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       first = FALSE;
+    } else {
+      /* likewise, subsequent buffers should never have DISCONT
+       * according to the "reverse fragment protocol", or such would
+       * confuse a downstream decoder
+       * (could be DISCONT due to aggregating upstream fragments by parsing) */
+      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
     }
 
     /* iterate output queue an push downstream */
