@@ -98,7 +98,8 @@ static gboolean gst_avi_demux_handle_src_query (GstPad * pad,
 static gboolean gst_avi_demux_src_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
-static gboolean gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment);
+static gboolean gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment,
+    GstSeekFlags flags);
 static gboolean gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad,
     GstEvent * event);
 static gboolean gst_avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad,
@@ -4307,7 +4308,7 @@ skipping_done:
   gst_avi_demux_expose_streams (avi, FALSE);
 
   /* do initial seek to the default segment values */
-  gst_avi_demux_do_seek (avi, &avi->segment);
+  gst_avi_demux_do_seek (avi, &avi->segment, 0);
 
   /* create initial NEWSEGMENT event */
   if (avi->seg_event)
@@ -4439,7 +4440,8 @@ gst_avi_demux_move_stream (GstAviDemux * avi, GstAviStream * stream,
  * Do the actual seeking.
  */
 static gboolean
-gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
+gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment,
+    GstSeekFlags flags)
 {
   GstClockTime seek_time;
   gboolean keyframe, before, after;
@@ -4447,9 +4449,9 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   GstAviStream *stream;
 
   seek_time = segment->position;
-  keyframe = ! !(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
-  before = ! !(segment->flags & GST_SEEK_FLAG_SNAP_BEFORE);
-  after = ! !(segment->flags & GST_SEEK_FLAG_SNAP_AFTER);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
+  after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
 
   GST_DEBUG_OBJECT (avi, "seek to: %" GST_TIME_FORMAT
       " keyframe seeking:%d, %s", GST_TIME_ARGS (seek_time), keyframe,
@@ -4614,7 +4616,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   }
   /* do the seek, seeksegment.position contains the new position, this
    * actually never fails. */
-  gst_avi_demux_do_seek (avi, &seeksegment);
+  gst_avi_demux_do_seek (avi, &seeksegment, flags);
 
   if (flush) {
     GstEvent *fevent = gst_event_new_flush_stop (TRUE);
