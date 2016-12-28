@@ -34,7 +34,7 @@ Some examples of metadata:
 
   - We should be able to negotiate metadata between elements
 
-# Use cases
+## Use cases
 
 - **Video planes**: Video data is sometimes allocated in non-contiguous planes
 for the Y and the UV data. We need to be able to specify the data on a buffer
@@ -52,7 +52,7 @@ blitting the image on the screen with little overhead.
 
 ## GstMeta
 
-A GstMeta is a structure as follows:
+A `GstMeta` is a structure as follows:
 
 ``` c
 struct _GstMeta {
@@ -61,7 +61,7 @@ struct _GstMeta {
 };
 ```
 
-The purpose of the this structure is to serve as a common header for all
+The purpose of this structure is to serve as a common header for all
 metadata information that we can attach to a buffer. Specific metadata,
 such as timing metadata, will have this structure as the first field.
 For example:
@@ -81,7 +81,7 @@ Or another example for the video memory regions that consists of both
 fields and methods.
 
 ``` c
-    #define GST_VIDEO_MAX_PLANES 4
+#define GST_VIDEO_MAX_PLANES 4
 
 struct GstMetaVideo {
   GstMeta       meta;
@@ -110,14 +110,14 @@ gpointer gst_meta_video_map   (GstMetaVideo *meta, guint plane, gpointer * data,
 gboolean gst_meta_video_unmap (GstMetaVideo *meta, guint plane, gpointer data);
 ```
 
-GstMeta derived structures define the API of the metadata. The API can
+`GstMeta` derived structures define the API of the metadata. The API can
 consist of fields and/or methods. It is possible to have different
-implementations for the same GstMeta structure.
+implementations for the same `GstMeta` structure.
 
-The implementation of the GstMeta API would typically add more fields to
+The implementation of the `GstMeta` API would typically add more fields to
 the public structure that allow it to implement the API.
 
-GstMetaInfo will point to more information about the metadata and looks
+`GstMetaInfo` will point to more information about the metadata and looks
 like this:
 
 ``` c
@@ -132,39 +132,39 @@ struct _GstMetaInfo {
 };
 ```
 
-api will contain a GType of the metadata API. A repository of registered
+api will contain a `GType` of the metadata API. A repository of registered
 MetaInfo will be maintained by the core. We will register some common
 metadata structures in core and some media specific info for
 audio/video/text in -base. Plugins can register additional custom
 metadata.
 
-For each implementation of api, there will thus be a unique GstMetaInfo.
+For each implementation of api, there will thus be a unique `GstMetaInfo`.
 In the case of metadata with a well defined API, the implementation
 specific init function will setup the methods in the metadata structure.
-A unique GType will be made for each implementation and stored in the
+A unique `GType` will be made for each implementation and stored in the
 type field.
 
 Along with the metadata description we will have functions to
-initialize/free (and/or refcount) a specific GstMeta instance. We also
+initialize/free (and/or refcount) a specific `GstMeta` instance. We also
 have the possibility to add a custom transform function that can be used
 to modify the metadata when a transformation happens.
 
 There are no explicit methods to serialize and deserialize the metadata.
-Since each type has a GType, we can reuse the GValue transform functions
+Since each type has a `GType`, we can reuse the `GValue` transform functions
 for this.
 
-The purpose of the separate MetaInfo is to not have to carry the
+The purpose of the separate `MetaInfo` is to not have to carry the
 free/init functions in each buffer instance but to define them globally.
 We still want quick access to the info so we need to make the buffer
 metadata point to the info.
 
-Technically we could also specify the field and types in the MetaInfo
+Technically we could also specify the field and types in the `MetaInfo`
 and provide a generic API to retrieve the metadata fields without the
 need for a header file. We will not do this yet.
 
-Allocation of the GstBuffer structure will result in the allocation of a
-memory region of a customizable size (512 bytes). Only the first sizeof
-(GstBuffer) bytes of this region will initially be used. The remaining
+Allocation of the `GstBuffer` structure will result in the allocation of a
+memory region of a customizable size (512 bytes). Only the first `sizeof
+(GstBuffer)` bytes of this region will initially be used. The remaining
 bytes will be part of the free metadata region of the buffer. Different
 implementations are possible and are invisible in the API or ABI.
 
@@ -205,7 +205,7 @@ GstMetaVideoImpl      |  |     ...                             | |
 
 ## API examples
 
-Buffers are created using the normal gst\_buffer\_new functions. The
+Buffers are created using the normal `gst_buffer_new()` functions. The
 standard fields are initialized as usual. A memory area that is bigger
 than the structure size is allocated for the buffer metadata.
 
@@ -216,10 +216,10 @@ than the structure size is allocated for the buffer metadata.
 After creating a buffer, the application can set caps and add metadata
 information.
 
-To add or retrieve metadata, a handle to a GstMetaInfo structure needs
+To add or retrieve metadata, a handle to a `GstMetaInfo` structure needs
 to be obtained. This defines the implementation and API of the metadata.
 Usually, a handle to this info structure can be obtained by calling a
-public `_get\_info()` method from a shared library (for shared metadata).
+public `_get_info()` method from a shared library (for shared metadata).
 
 The following defines can usually be found in the shared .h file.
 
@@ -230,7 +230,7 @@ The following defines can usually be found in the shared .h file.
 
 Adding metadata to a buffer can be done with the
 `gst_buffer_add_meta()` call. This function will create new metadata
-based on the implementation specified by the GstMetaInfo. It is also
+based on the implementation specified by the `GstMetaInfo`. It is also
 possible to pass a generic pointer to the `add_meta()` function that can
 contain parameters to initialize the new metadata fields.
 
@@ -304,28 +304,28 @@ NONE in the MetaTiming structures.
 The init/free functions can also be used to implement refcounting for a metadata
 structure. This can be useful when a structure is shared between buffers.
 
-When the free_size of the GstBuffer is exhausted, we will allocate new memory
+When the `free_size` of the `GstBuffer` is exhausted, we will allocate new memory
 for each newly added Meta and use the next pointers to point to this. It
 is expected that this does not occur often and we might be able to optimize
 this transparently in the future.
 
 ### free
 
-When a GstBuffer is freed, we potentially might have to call a custom free
+When a `GstBuffer` is freed, we potentially might have to call a custom `free()`
 function on the metadata info. In the case of the Memory metadata, we need to
-call the associated free function to free the memory.
+call the associated `free()` function to free the memory.
 
-When freeing a GstBuffer, the custom buffer free function will iterate all of
+When freeing a `GstBuffer`, the custom buffer free function will iterate all of
 the metadata in the buffer and call the associated free functions in the
-MetaInfo associated with the entries. Usually, this function will be NULL.
+`MetaInfo` associated with the entries. Usually, this function will be NULL.
 
 ## Serialization
 
-When buffer should be sent over the wire or be serialized in GDP, we
+When a buffer should be sent over the wire or be serialized in GDP, we
 need a way to perform custom serialization and deserialization on the
 metadata.
 
-for this we can use the GValue transform functions.
+for this we can use the `GValue` transform functions.
 
 ## Transformations
 
@@ -357,15 +357,15 @@ implement the actions needed to update the metadata of the subbuffer.
 
 It might not make sense for some metadata to work with subbuffers. For
 example when we take a subbuffer of a buffer with a video frame, the
-GstMetaVideo simply becomes invalid and is removed from the new
+`GstMetaVideo` simply becomes invalid and is removed from the new
 subbuffer.
 
 ## Relationship with GstCaps
 
-The difference between GstCaps, used in negotiation, and the metadata is
+The difference between `GstCaps`, used in negotiation, and the metadata is
 not clearly defined.
 
-We would like to think of the GstCaps containing the information needed
+We would like to think of the `GstCaps` containing the information needed
 to functionally negotiate the format between two elements. The Metadata
 should then only contain variables that can change between each buffer.
 
