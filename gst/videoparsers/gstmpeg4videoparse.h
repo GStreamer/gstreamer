@@ -52,7 +52,6 @@ struct _GstMpeg4VParse {
   gint vop_offset;
   gboolean vo_found;
   gboolean config_found;
-  gboolean intra_frame;
   gboolean update_caps;
   gboolean sent_codec_tag;
 
