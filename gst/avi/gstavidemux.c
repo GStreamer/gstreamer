@@ -4499,13 +4499,15 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment,
     seek_time = stream->current_timestamp;
     GST_DEBUG_OBJECT (avi, "keyframe adjusted to %" GST_TIME_FORMAT,
         GST_TIME_ARGS (seek_time));
+    /* the seek time is always the position ... */
+    segment->position = seek_time;
+    /* ... and start and stream time when going forwards,
+     * otherwise only stop time */
+    if (segment->rate > 0.0)
+      segment->start = segment->time = seek_time;
+    else
+      segment->stop = seek_time;
   }
-
-  /* the seek time is also the position and stream time when going
-   * forwards */
-  segment->position = seek_time;
-  if (segment->rate > 0.0)
-    segment->time = seek_time;
 
   /* now set DISCONT and align the other streams */
   for (i = 0; i < avi->num_streams; i++) {
