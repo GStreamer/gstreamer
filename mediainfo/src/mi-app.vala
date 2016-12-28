@@ -29,7 +29,7 @@ public class MediaInfo.App : Window
 
   public App (string? directory_or_uri) {
     GLib.Object (type :  WindowType.TOPLEVEL);
-    
+
     if (directory_or_uri != null) {
       if (FileUtils.test (directory_or_uri, FileTest.IS_DIR)) {
         directory = directory_or_uri;
@@ -66,7 +66,7 @@ public class MediaInfo.App : Window
 
     info = new Info ();
     paned.pack2 (info, true, true);
-    
+
     realize.connect ( () => {
       debug ("realized");
       if (uri != null) {
@@ -103,12 +103,11 @@ public class MediaInfo.App : Window
     // -> dialog with text entry (pre-file with clipboard content)
     // -> discover that uri and clear selection in browser
 
-    item = new ImageMenuItem.from_stock (Stock.QUIT, accel_group);
+    item = new Gtk.MenuItem.with_label (_("Quit"));
     sub_menu.append (item);
     item.activate.connect (Gtk.main_quit);
 
     item = new Gtk.MenuItem.with_label (_("View"));
-    //item.set_accel_path ("<GstMi-Main>/MainMenu/View");
     menu_bar.append (item);
 
     sub_menu = new Gtk.Menu ();
@@ -131,7 +130,7 @@ public class MediaInfo.App : Window
     sub_menu = new Gtk.Menu ();
     item.set_submenu (sub_menu);
 
-    item = new ImageMenuItem.from_stock (Stock.ABOUT, accel_group);
+    item = new Gtk.MenuItem.with_label (_("About"));
     sub_menu.append (item);
     item.activate.connect (on_about_clicked);
 

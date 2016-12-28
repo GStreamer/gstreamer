@@ -176,7 +176,7 @@ public class MediaInfo.Info : Box
 
     table = new Table (8, 3, false);
     info_area.add_with_viewport (table);
-    
+
     /* TODO(ensonic): add a 'Source' box ? maybe only for streams?
     Transport: {file, http, rtsp, ....} as wikilink
     Size: (in bytes)
@@ -280,7 +280,7 @@ public class MediaInfo.Info : Box
 
     table.attach (toc_entries, 0, 3, row, row+1, fill_exp, 0, 0, 1);
     row++;
-    
+
     // TODO: add message list widget
 
     // set up the gstreamer components
@@ -327,25 +327,25 @@ public class MediaInfo.Info : Box
       }
 
       debug ("Discovering '%s'", uri);
-      if (true) {
-        /* sync API */
+      /*if (true) {*/
+        // sync API
         try {
           process_new_uri (dc.discover_uri (uri));
         } catch (Error e) {
           // we're failing here when there are missing container plugins
           debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
         }
-      } else {
+      /*} else {
         // TODO(ensonic): this breaks when discovering 'too quickly'
-        /* async API */
+        // async API
         dc.stop();
         dc.start();
         dc.discover_uri_async (uri);
-      }
+      }*/
     }
     return (res);
   }
-  
+
   private void on_uri_discovered (DiscovererInfo info, Error e) {
     if (e != null) {
       debug ("Failed to extract metadata from %s: %s: %s", info.get_uri(), e.domain.to_string (), e.message);
@@ -354,7 +354,7 @@ public class MediaInfo.Info : Box
       process_new_uri (info);
     }
   }
-  
+
   private void process_new_uri (DiscovererInfo? info) {
     GLib.List<DiscovererStreamInfo> l;
     DiscovererStreamInfo sinfo;
@@ -380,7 +380,7 @@ public class MediaInfo.Info : Box
       duration.set_text ("");
       return;
     }
-    
+
     // prepare file from preview
     ((GLib.Object)pb).set_property ("uri", info.get_uri());
     pb.set_state (State.PAUSED);
@@ -412,11 +412,11 @@ public class MediaInfo.Info : Box
       if ((nick != "container") && (nick != "unknown")) {
         continue;
       }
-    
+
       if (toc == null) {
         toc = sinfo.get_toc();
       }
-      
+
       nb.append_page (describe_container_stream (sinfo), new Label (@"container $six"));
       six++;
     }
@@ -432,7 +432,7 @@ public class MediaInfo.Info : Box
     for (int i = 0; i < num_video_streams; i++) {
       sinfo = l.nth_data (i);
       debug("video[%d]=%s", i, sinfo.get_stream_id());
-      
+
       if (toc == null) {
         toc = sinfo.get_toc();
       }
@@ -509,19 +509,19 @@ public class MediaInfo.Info : Box
   }
 
   // signal handlers
-  
+
   private bool on_preview_configured (Gdk.EventConfigure event) {
     if (overlay != null)
       overlay.expose();
     return false;
-  }  
+  }
 
   private void on_element_sync_message (Gst.Bus bus, Message message) {
     if (Video.is_video_overlay_prepare_window_handle_message (message)) {
       Gdk.Window window = preview.get_window ();
       debug ("prepare overlay: %p", window);
       overlay = message.src as Gst.Video.Overlay;
-      overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (window));
+      overlay.set_window_handle ((uint*) ((Gdk.X11.Window) window).get_xid ());
       debug ("prepared overlay");
     }
   }
@@ -578,12 +578,12 @@ public class MediaInfo.Info : Box
       }
     }
   }
-  
+
   private void on_toc_entry_changed (TreeView view) {
     TreeSelection sel = view.get_selection ();
     if (sel == null)
       return;
-    
+
     TreeModel model;
     TreeIter iter;
     if (sel.get_selected (out model, out iter)) {
@@ -595,30 +595,31 @@ public class MediaInfo.Info : Box
       }
     }
   }
-  
+
   // helpers
-  
+
   private Widget describe_container_stream (DiscovererStreamInfo sinfo) {
     Table table = new Table (2, 4, false);
 
     uint row = 0;
     add_table_rows_for_caps (table, row, "Format:", sinfo.get_caps ());
     row+=2;
-    
+
+    // gchar ** get_missing_elements_installer_details()
     if (add_table_row_for_structure (table, row, sinfo.get_misc ())) {
       row++;
     }
     if (add_table_row_for_taglist (table, row, sinfo.get_tags ())) {
       row++;
     }
-    
+
     return (Widget)table;
   }
 
   private Widget describe_video_stream (DiscovererStreamInfo sinfo) {
     DiscovererVideoInfo vinfo = (DiscovererVideoInfo)sinfo;
     Table table = new Table (2, 8, false);
-    
+
     Gdk.Point res = {
       (int)((DiscovererVideoInfo)sinfo).get_width(),
       (int)((DiscovererVideoInfo)sinfo).get_height()
@@ -629,7 +630,7 @@ public class MediaInfo.Info : Box
     uint row = 0;
     add_table_rows_for_caps (table, row, "Codec:", sinfo.get_caps ());
     row+=2;
-    
+
     add_table_row_for_bitrates (table, row, vinfo.get_bitrate(), vinfo.get_max_bitrate());
     row++;
 
@@ -725,7 +726,7 @@ public class MediaInfo.Info : Box
   private Widget describe_subtitle_stream (DiscovererStreamInfo sinfo) {
     DiscovererSubtitleInfo tinfo = (DiscovererSubtitleInfo) sinfo;
     Table table = new Table (2, 5, false);
-    
+
     uint row = 0;
     add_table_rows_for_caps (table, row, "Codec:", sinfo.get_caps ());
     row+=2;
@@ -748,7 +749,7 @@ public class MediaInfo.Info : Box
       nb.remove_page (-1);
     }
   }
-  
+
   private void set_wikilink (Label label, Caps caps) {
     string str = get_codec_description (caps);
     string wikilink = wikilinks[str];
@@ -794,17 +795,17 @@ public class MediaInfo.Info : Box
     label.set_alignment (0.0f, 0.5f);
     label.set_selectable (true);
     label.set_use_markup (true);
-    set_wikilink (label, caps); 
+    set_wikilink (label, caps);
     table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
   }
-  
+
   private void add_table_row_for_bitrates (Table table, uint row, uint br, uint mbr) {
     string str;
-    
+
     if (br == mbr) {
       mbr = 0; // no point in printing this as a range
     }
-    
+
     if (mbr != 0) {
       str = "%.2f ... %.2f kbit/second".printf (br/1024.0, mbr/1024.0);
     } else {
@@ -816,7 +817,7 @@ public class MediaInfo.Info : Box
     }
     add_table_row_for_string (table, row, "Bitrate:", str);
   }
-  
+
   private void add_table_row_for_string (Table table, uint row, string title, string? str) {
     AttachOptions fill = AttachOptions.FILL;
     AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
@@ -866,12 +867,12 @@ public class MediaInfo.Info : Box
     table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
     return true;
   }
-  
+
   // get stream index where streams are orderd by stream_id
   private int get_stream_index (DiscovererStreamInfo sinfo, ArrayList<string> sids) {
     string sid = sinfo.get_stream_id ();
     int six = 0;
-    
+
     for (six = 0; six <  sids.size; six++) {
       if (strcmp (sid, sids[six]) <= 0)
         break;
@@ -929,7 +930,7 @@ public class MediaInfo.Info : Box
 
     return str;
   }
-  
+
   private string format_time(ClockTime t) {
     if (t == Gst.CLOCK_TIME_NONE)
       return "unknown";
@@ -940,7 +941,7 @@ public class MediaInfo.Info : Box
       (uint) ((t / SECOND) % 60),
       (uint) ((t) % SECOND));
   }
-    
+
   private void build_toc_info_for_entry (TreeStore s, TocEntry e, TreeIter? p) {
     TreeIter iter;
     int64 start, stop;
@@ -952,12 +953,12 @@ public class MediaInfo.Info : Box
     }
     if (stop != Gst.CLOCK_TIME_NONE) {
       str += "- %s ".printf(format_time((ClockTime)stop));
-    }    
+    }
     str += TocEntryType.get_nick(e.get_entry_type());
-    
+
     s.append(out iter, p);
     s.set(iter, 0, str, 1, start, 2, stop, -1);
-    
+
     unowned GLib.List<TocEntry> entries = e.get_sub_entries ();
     if (entries != null) {
       foreach (TocEntry se in entries) {
@@ -965,17 +966,17 @@ public class MediaInfo.Info : Box
       }
     }
   }
-  
+
   private TreeStore? build_toc_info (Toc? t) {
     if (t == null)
       return null;
-    
+
     TreeStore s = new TreeStore(3, typeof (string), typeof (int64), typeof (int64));
     unowned GLib.List<TocEntry> entries = t.get_entries ();
     foreach (TocEntry e in entries) {
       build_toc_info_for_entry (s, e, null);
     }
-    
+
     return s;
   }
 }
