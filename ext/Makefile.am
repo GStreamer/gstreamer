@@ -34,12 +34,6 @@ else
 LAME_DIR =
 endif
 
-if USE_MAD
-MAD_DIR = mad
-else
-MAD_DIR =
-endif
-
 if USE_MPEG2DEC
 MPEG2DEC_DIR = mpeg2dec
 else
@@ -77,7 +71,6 @@ SUBDIRS = \
 	$(CDIO_DIR) \
 	$(DVDREAD_DIR) \
 	$(LAME_DIR) \
-	$(MAD_DIR) \
 	$(MPEG2DEC_DIR) \
 	$(MPG123_DIR) \
 	$(SIDPLAY_DIR) \
@@ -91,7 +84,6 @@ DIST_SUBDIRS = \
 	cdio \
 	dvdread \
 	lame \
-	mad \
 	mpeg2dec \
 	mpg123 \
 	sidplay \

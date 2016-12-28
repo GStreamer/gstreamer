@@ -93,20 +93,6 @@ gst_lamemp3enc_register
 </SECTION>
 
 <SECTION>
-<FILE>element-mad</FILE>
-<TITLE>mad</TITLE>
-GstMad
-<SUBSECTION Standard>
-GstMadClass
-GST_MAD
-GST_MAD_CLASS
-GST_IS_MAD
-GST_IS_MAD_CLASS
-GST_TYPE_MAD
-gst_mad_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-mpg123audiodec</FILE>
 <TITLE>mpg123audiodec</TITLE>
 GstMpg123AudioDec

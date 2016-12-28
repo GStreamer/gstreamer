@@ -4,7 +4,6 @@ subdir('amrwbdec')
 subdir('cdio')
 subdir('dvdread')
 subdir('lame')
-subdir('mad')
 subdir('mpeg2dec')
 subdir('mpg123')
 #subdir('sidplay') # FIXME

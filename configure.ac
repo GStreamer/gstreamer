@@ -19,7 +19,7 @@ dnl check if this is a release version
 AS_NANO(GST_GIT="no", GST_GIT="yes")
 
 dnl can autoconf find the source ?
-AC_CONFIG_SRCDIR([ext/mad/gstmad.c])
+AC_CONFIG_SRCDIR([gst/asfdemux/gstasfdemux.c])
 
 dnl define the output header for config
 AC_CONFIG_HEADERS(config.h)
@@ -319,23 +319,6 @@ AG_GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
   ])
 ])
 
-dnl *** mad ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
-AG_GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
-
-  dnl check with pkg-config first
-  AG_GST_PKG_CHECK_MODULES(MAD, mad >= 0.15)
-  MAD_LIBS="$MAD_LIBS"
-  if test "x$HAVE_MAD" = "xno"; then
-    dnl fall back to oldskool detection
-    AC_CHECK_HEADER(mad.h, [
-      AC_CHECK_LIB(mad, mad_decoder_finish,
-        HAVE_MAD="yes" MAD_LIBS="-lmad")
-    ])
-  fi
-])
-AC_SUBST(MAD_LIBS)
-
 dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
 AG_GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
@@ -395,7 +378,6 @@ AM_CONDITIONAL(USE_AMRWB, false)
 AM_CONDITIONAL(USE_CDIO, false)
 AM_CONDITIONAL(USE_DVDREAD, false)
 AM_CONDITIONAL(USE_LAME, false)
-AM_CONDITIONAL(USE_MAD, false)
 AM_CONDITIONAL(USE_MPEG2DEC, false)
 AM_CONDITIONAL(USE_MPG123, false)
 AM_CONDITIONAL(USE_SIDPLAY, false)
@@ -480,7 +462,6 @@ ext/amrwbdec/Makefile
 ext/cdio/Makefile
 ext/dvdread/Makefile
 ext/lame/Makefile
-ext/mad/Makefile
 ext/mpeg2dec/Makefile
 ext/mpg123/Makefile
 ext/sidplay/Makefile

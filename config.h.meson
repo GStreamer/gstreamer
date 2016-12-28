@@ -160,9 +160,6 @@
 /* Define to enable lame mp3 encoder library (used by lame). */
 #mesondefine HAVE_LAME
 
-/* Define to enable mad mp3 decoder (used by mad). */
-#mesondefine HAVE_MAD
-
 /* Define to 1 if you have the <malloc.h> header file. */
 #mesondefine HAVE_MALLOC_H
 
