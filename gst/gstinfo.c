@@ -239,6 +239,8 @@ dladdr (void *address, Dl_info * dl)
 #endif /* __sgi__ */
 #endif
 
+static const gchar *_gst_debug_filter = NULL;
+
 static void gst_debug_reset_threshold (gpointer category, gpointer unused);
 static void gst_debug_reset_all_thresholds (void);
 
@@ -461,9 +463,9 @@ _priv_gst_debug_init (void)
   if (env)
     gst_debug_set_color_mode_from_string (env);
 
-  env = g_getenv ("GST_DEBUG");
-  if (env) {
-    gst_debug_set_threshold_from_string (env, FALSE);
+  _gst_debug_filter = g_getenv ("GST_DEBUG");
+  if (_gst_debug_filter) {
+    gst_debug_set_threshold_from_string (_gst_debug_filter, FALSE);
   }
 }
 
@@ -1721,6 +1723,11 @@ _gst_debug_category_new (const gchar * name, guint color,
   }
   g_mutex_unlock (&__cat_mutex);
 
+  /* ensure the filter is applied to categories registered after _debug_init */
+  if (_gst_debug_filter) {
+    gst_debug_set_threshold_from_string (_gst_debug_filter, FALSE);
+  }
+
   return cat;
 }
 
@@ -1990,8 +1997,15 @@ gst_debug_set_threshold_from_string (const gchar * list, gboolean reset)
         const gchar *category;
 
         if (parse_debug_category (values[0], &category)
-            && parse_debug_level (values[1], &level))
+            && parse_debug_level (values[1], &level)) {
           gst_debug_set_threshold_for_name (category, level);
+
+          /* bump min-level anyway to allow the category to be registered in the
+           * future still */
+          if (level > _gst_debug_min) {
+            _gst_debug_min = level;
+          }
+        }
       }
 
       g_strfreev (values);
