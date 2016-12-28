@@ -18,8 +18,7 @@ gst_mi_SOURCES = \
 	mi-info.vala \
 	mi-preview.vala
 
-gst_mi_LDADD = \
-	$(MI_LIBS) -lgstinterfaces-0.10 -lgstpbutils-0.10
+gst_mi_LDADD = $(MI_LIBS)
 
 pixmapsdir = $(pkgdatadir)/ui/icons
 pixmaps_DATA = gst-mi.png
