@@ -575,7 +575,8 @@ flushing:
 }
 
 static gboolean
-gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part)
+gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
+    GstSeekFlags extra_flags)
 {
   GList *cur;
 
@@ -583,7 +584,7 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part)
 
   splitmux->cur_part = part;
   if (!gst_splitmux_part_reader_activate (splitmux->parts[part],
-          &splitmux->play_segment))
+          &splitmux->play_segment, extra_flags))
     return FALSE;
 
   SPLITMUX_SRC_PADS_LOCK (splitmux);
@@ -693,7 +694,7 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
   GST_INFO_OBJECT (splitmux,
       "All parts prepared. Total duration %" GST_TIME_FORMAT
       " Activating first part", GST_TIME_ARGS (total_duration));
-  ret = gst_splitmux_src_activate_part (splitmux, 0);
+  ret = gst_splitmux_src_activate_part (splitmux, 0, GST_SEEK_FLAG_NONE);
   if (ret == FALSE)
     goto failed_first_part;
 done:
@@ -996,7 +997,8 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
         GST_DEBUG_OBJECT (splitpad,
             "First pad to change part. Activating part %d with seg %"
             GST_SEGMENT_FORMAT, next_part, &tmp);
-        if (!gst_splitmux_part_reader_activate (splitpad->reader, &tmp))
+        if (!gst_splitmux_part_reader_activate (splitpad->reader, &tmp,
+                GST_SEEK_FLAG_NONE))
           goto error;
       }
       splitmux->cur_part = next_part;
@@ -1168,7 +1170,7 @@ splitmux_src_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
           GST_TIME_FORMAT, GST_TIME_ARGS (position),
           i, GST_TIME_ARGS (position - part_start));
 
-      ret = gst_splitmux_src_activate_part (splitmux, i);
+      ret = gst_splitmux_src_activate_part (splitmux, i, flags);
       SPLITMUX_SRC_UNLOCK (splitmux);
     }
     default:
