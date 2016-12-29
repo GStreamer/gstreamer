@@ -3,7 +3,7 @@
 Probes are callbacks that can be installed by the application and will notify
 the application about the states of the dataflow.
 
-# Requirements
+## Requirements
 
 Applications should be able to monitor and control the dataflow on pads.
 We identify the following types:
@@ -22,9 +22,9 @@ We identify the following types:
     performed by the application
     thread.
 
-# Overview
+## Overview
 
-The function gst_pad_add_probe() is used to add a probe to a pad. It accepts a
+The function `gst_pad_add_probe()` is used to add a probe to a pad. It accepts a
 probe type mask and a callback.
 
 ``` c
@@ -36,7 +36,7 @@ probe type mask and a callback.
 ```
 
 The function returns a gulong that uniquely identifies the probe and that can
-be used to remove the probe with gst_pad_remove_probe():
+be used to remove the probe with `gst_pad_remove_probe()`:
 
 ``` c
     void    gst_pad_remove_probe (GstPad *pad, gulong id);
@@ -100,14 +100,14 @@ typedef enum
 } GstPadProbeReturn;
 ```
 
-`GST_PAD_PROBE_OK` is the normal return value.  DROP will drop the item that is
-currently being probed. GST_PAD_PROBE_REMOVE the currently executing probe from the
+`GST_PAD_PROBE_OK` is the normal return value. DROP will drop the item that is
+currently being probed. `GST_PAD_PROBE_REMOVE` the currently executing probe from the
 list of probes.
 
 `GST_PAD_PROBE_PASS` is relevant for blocking probes and will temporarily unblock the
 pad and let the item trough, it will then block again on the next item.
 
-# Blocking probes
+## Blocking probes
 
 Blocking probes are probes with BLOCK or IDLE flags set. They will always
 block the dataflow and trigger the callback according to the following rules:
@@ -127,19 +127,19 @@ When the BLOCK flag is set, the probe callback will be called when new data
 arrives on the pad and right before the pad goes into the blocking state. This
 callback is thus only called when there is new data on the pad.
 
-The blocking probe is removed with gst_pad_remove_probe() or when the probe
-callback return GST_PAD_PROBE_REMOVE. In both cases, and if this was the last
+The blocking probe is removed with `gst_pad_remove_probe()` or when the probe
+callback return `GST_PAD_PROBE_REMOVE`. In both cases, and if this was the last
 blocking probe on the pad, the pad is unblocked and dataflow can continue.
 
-# Non-Blocking probes
+## Non-Blocking probes
 
 Non-blocking probes or DATA probes are probes triggered when data is flowing
 over the pad. The are called after the blocking probes are run and always with
 data.
 
-# Push dataflow
+## Push dataflow
 
-Push probes have the GST\_PAD\_PROBE\_TYPE\_PUSH flag set in the
+Push probes have the `GST_PAD_PROBE_TYPE_PUSH` flag set in the
 callbacks.
 
 In push based scheduling, the blocking probe is called first with the
@@ -194,7 +194,7 @@ gst_pad_push_event() |                               |
                      |                               |
 ```
 
-# Pull dataflow
+## Pull dataflow
 
 Pull probes have the `GST_PAD_PROBE_TYPE_PULL` flag set in the
 callbacks.
@@ -250,9 +250,9 @@ do BLOCK probes <-O                               O
                   |                               |
 ```
 
-# Queries
+## Queries
 
-Query probes have the GST_PAD_PROBE_TYPE_QUERY_* flag set in the
+Query probes have the `GST_PAD_PROBE_TYPE_QUERY_*` flag set in the
 callbacks.
 
 ```
@@ -290,9 +290,9 @@ For queries, the PUSH ProbeType is set when the query is traveling to
 the object that will answer the query and the PULL type is set when the
 query contains the answer.
 
-# Use-cases
+## Use-cases
 
-## Prerolling a partial pipeline
+### Prerolling a partial pipeline
 
 ```
     .---------.      .---------.                .----------.
@@ -325,7 +325,7 @@ prerolled pipeline:
 
   - connect other elements and unblock the blocked pads.
 
-## dynamically switching an element in a PLAYING pipeline
+### dynamically switching an element in a PLAYING pipeline
 
 ```
  .----------.      .----------.      .----------.
