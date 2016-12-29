@@ -15,12 +15,12 @@ on a specific pad and travels up or downstream.
 
 ## Implementation
 
-  - GstQuery extends GstMiniObject and contains a GstStructure (see
-    GstMessage)
+  - `GstQuery` extends `GstMiniObject` and contains a `GstStructure` (see
+    `GstMessage`)
 
   - some standard query types are defined below
 
-  - methods to create and parse the results in the GstQuery.
+  - methods to create and parse the results in the `GstQuery`.
 
   - define pad
         method:
@@ -36,7 +36,7 @@ not supported.
 
 ## Query types
 
-**`GST_QUERY_POSITION`**: get info on current position of the stream in stream_time.
+**`GST_QUERY_POSITION`**: get info on current position of the stream in `stream_time`.
 
 **`GST_QUERY_DURATION`**: get info on the total duration of the stream.
 
