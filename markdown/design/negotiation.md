@@ -23,9 +23,9 @@ There are 4 queries/events used in caps negotiation:
 
 ## Queries
 
-A pad can ask the peer pad for its supported GstCaps. It does this with
+A pad can ask the peer pad for its supported `GstCaps`. It does this with
 the CAPS query. The list of supported caps can be used to choose an
-appropriate GstCaps for the data transfer. The CAPS query works
+appropriate `GstCaps` for the data transfer. The CAPS query works
 recursively, elements should take their peers into consideration when
 constructing the possible caps. Because the result caps can be very
 large, a filter can be used to restrict the caps. Only the caps that
@@ -33,7 +33,7 @@ match the filter will be returned as the result caps. The order of the
 filter caps gives the order of preference of the caller and should be
 taken into account for the returned caps.
 
-* **`filter`** (in) `GST_TYPE_CAPS` (default NULL): - a GstCaps to filter the results against
+* **`filter`** (in) `GST_TYPE_CAPS` (default NULL): - a `GstCaps` to filter the results against
 * **`caps`** (out) `GST_TYPE_CAPS` (default NULL): - the result caps
 
 A pad can ask the peer pad if it supports a given caps. It does this
@@ -41,15 +41,15 @@ with the `ACCEPT_CAPS` query. The caps must be fixed. The `ACCEPT_CAPS`
 query is not required to work recursively, it can simply return TRUE if
 a subsequent CAPS event with those caps would return success.
 
-* **`caps`** (in) `GST_TYPE_CAPS`: - a GstCaps to check, must be fixed
+* **`caps`** (in) `GST_TYPE_CAPS`: - a `GstCaps` to check, must be fixed
 * **`result`** (out) `G_TYPE_BOOLEAN` (default FALSE): - TRUE if the caps are accepted
 
 ## Events
 
 When a media format is negotiated, peer elements are notified of the
-GstCaps with the CAPS event. The caps must be fixed.
+`GstCaps` with the CAPS event. The caps must be fixed.
 
-* **`caps`** `GST_TYPE_CAPS`: - the negotiated GstCaps, must be fixed
+* **`caps`** `GST_TYPE_CAPS`: - the negotiated `GstCaps`, must be fixed
 
 ## Operation
 
@@ -70,7 +70,7 @@ negotiation.
 
 The basics of negotiation are as follows:
 
-- GstCaps (see [caps](design/caps.md)) are refcounted before they are pushed as
+- `GstCaps` (see [caps](design/caps.md)) are refcounted before they are pushed as
 an event to describe the contents of the following buffer.
 
 - An element should reconfigure itself to the new format received as a
@@ -137,11 +137,12 @@ endif
 
 #### Negotiate allocator/bufferpool with the ALLOCATION query
 
+```
     buffer = gst_buffer_new_allocate (NULL, size, 0);
     # fill buffer and push
+```
 
 The general flow for a sink pad starting a renegotiation.
-
 
 ```
             src              sink
@@ -177,7 +178,7 @@ push buffer  |---------------->| Process buffer of type B
 
 * Who decides what format to use?
     - src pad always decides, by convention. sinkpad can suggest a format
-    by putting it high in the caps query result GstCaps.
+    by putting it high in the caps query result `GstCaps`.
     - since the src decides, it can always choose something that it can do,
     so this step can only fail if the sinkpad stated it could accept
     something while later on it couldn't.
@@ -315,7 +316,7 @@ We can identify 3 patterns in negotiation:
 * Fixed : Can't choose the output format
     - Caps encoded in the stream
     - A video/audio decoder
-    - usually uses gst_pad_use_fixed_caps()
+    - usually uses `gst_pad_use_fixed_caps()`
 
 * Transform
     - Caps not modified (passthrough)
