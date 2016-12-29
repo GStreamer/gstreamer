@@ -9,7 +9,7 @@ We only discuss playback pipelines for now.
 
 A three step process:
 
-1\) GStreamer level
+# GStreamer level
 
 Elements will use a "missing-plugin" element message to report
 missing plugins, with the following fields set:
@@ -22,19 +22,19 @@ missing plugins, with the following fields set:
 
 * **`name`**: (string) { ANY } ex: "MMS protocol handler",..
 
-## missing uri handler
+### missing uri handler
 
 ex. mms://foo.bar/file.asf
 
 When no protocol handler is installed for mms://, the application will not be
-able to instantiate an element for that uri (gst_element_make_from_uri()
+able to instantiate an element for that uri (`gst_element_make_from_uri()`
 returns NULL).
 
-Playbin will post a "missing-plugin" element message with the type set to
+Playbin will post a `missing-plugin` element message with the type set to
 "urisource", detail set to "mms". Optionally the friendly name can be filled
 in as well.
 
-## missing typefind function
+### missing typefind function
 
 We don't recognize the type of the file, this should normally not happen
 because all the typefinders are in the basic GStreamer installation.
@@ -44,32 +44,32 @@ type (and needed plugin) on the server. We don't explore this option in this
 document yet, but the proposal is flexible enough to accommodate this in the
 future should the need arise.
 
-## missing demuxer
+### missing demuxer
 
 Typically after running typefind on the data we determine the type of the
-file. If there is no plugin found for the type, a "missing-plugin" element
+file. If there is no plugin found for the type, a `missing-plugin` element
 message is posted by decodebin with the following fields: Type set to
 "decoder", detail set to the caps for witch no plugin was found. Optionally
 the friendly name can be filled in as well.
 
-## missing decoder
+### missing decoder
 
 The demuxer will dynamically create new pads with specific caps while it
 figures out the contents of the container format. Decodebin tries to find the
 decoders for these formats in the registry. If there is no decoder found, a
-"missing-plugin" element message is posted by decodebin with the following
+`missing-plugin` element message is posted by decodebin with the following
 fields: Type set to "decoder", detail set to the caps for which no plugin
 was found. Optionally the friendly name can be filled in as well. There is
 no distinction made between the missing demuxer and decoder at the
 application level.
 
-## missing element
+### missing element
 
 Decodebin and playbin will create a set of helper elements when they set up
 their decoding pipeline. These elements are typically colorspace, sample rate,
 audio sinks,... Their presence on the system is required for the functionality
 of decodebin. It is typically a package dependency error if they are not
-present but in case of a corrupted system the following "missing-plugin"
+present but in case of a corrupted system the following `missing-plugin`
 element message will be emitted: type set to "element", detail set to the
 element factory name and the friendly name optionally set to a description
 of the element's functionality in the decoding pipeline.
@@ -78,15 +78,15 @@ Except for reporting the missing plugins, no further policy is enforced at the
 GStreamer level. It is up to the application to decide whether a missing
 plugin constitutes a problem or not.
 
-# Application level
+## Application level
 
-The application's job is to listen for the "missing-plugin" element messages
+The application's job is to listen for the `missing-plugin` element messages
 and to decide on a policy to handle them. Following cases exist:
 
-## partially missing plugins
+### partially missing plugins
 
 The application will be able to complete a state change to PAUSED but there
-will be a "missing-plugin" element message on the GstBus.
+will be a `missing-plugin` element message on the `GstBus`.
 
 This means that it will be possible to play back part of the media file but not
 all of it.
@@ -102,30 +102,30 @@ application, this is not a problem but a video player might want to decide on:
     the audio part.
   - …
 
-## completely unplayable stream
+### completely unplayable stream
 
 The application will receive an ERROR message from GStreamer informing it that
 playback stopped (before it could reach PAUSED). This happens because none of
 the streams is connected to a decoder. The error code and domain should be one
 of the following in this case:
 
-   - `GST_CORE_ERROR_MISSING_PLUGIN` (domain: GST_CORE_ERROR)
-   - `GST_STREAM_ERROR_CODEC_NOT_FOUND` (domain: GST_STREAM_ERROR)
+   - `GST_CORE_ERROR_MISSING_PLUGIN` (domain: `GST_CORE_ERROR`)
+   - `GST_STREAM_ERROR_CODEC_NOT_FOUND` (domain: `GST_STREAM_ERROR`)
 
-The application can then see that there are a set of "missing-plugin" element
-messages on the GstBus and can decide to trigger the download procedure. It
+The application can then see that there are a set of `missing-plugin` element
+messages on the `GstBus` and can decide to trigger the download procedure. It
 does that as described in the following section.
 
-"missing-plugin" element messages can be identified using the function
-gst_is_missing_plugin_message().
+`missing-plugin` element messages can be identified using the function
+`gst_is_missing_plugin_message()`.
 
-# Plugin download stage
+## Plugin download stage
 
 At this point the application has
-  - collected one or more "missing-plugin" element messages
+  - collected one or more `missing-plugin` element messages
   - made a decision that additional plugins should be installed
 
-It will call a GStreamer utility function to convert each "missing-plugin"
+It will call a GStreamer utility function to convert each `missing-plugin`
 message into an identifier string describing the missing capability. This is
 done using the function `gst_missing_plugin_message_get_installer_detail()`.
 
@@ -135,9 +135,9 @@ documentation there (`libgstbaseutils`, part of `gst-plugins-base`) for more
 details.
 
 When new plugins have been installed, the application will have to initiate
-a re-scan of the GStreamer plugin registry using gst_update_registry().
+a re-scan of the GStreamer plugin registry using `gst_update_registry()`.
 
-# Format of the (UTF-8) string ID passed to the external installer system
+### Format of the (UTF-8) string ID passed to the external installer system
 
 The string is made up of several fields, separated by '|' characters.
 The fields are:
@@ -162,15 +162,15 @@ plugin install mechanism in the same way.
 
 - identifier string for the required component, e.g.
 
-- urisource-(PROTOCOL_REQUIRED) e.g. `urisource-http` or `urisource-mms`
+- urisource-(`PROTOCOL_REQUIRED`) e.g. `urisource-http` or `urisource-mms`
 
-- element-(ELEMENT_REQUIRED), e.g. `element-videoconvert`
+- element-(`ELEMENT_REQUIRED`), e.g. `element-videoconvert`
 
-- decoder-(CAPS_REQUIRED) e.g. `decoder-audio/x-vorbis` or
+- decoder-(`CAPS_REQUIRED`) e.g. `decoder-audio/x-vorbis` or
 `decoder-application/ogg` or `decoder-audio/mpeg, mpegversion=(int)4` or
 `decoder-video/mpeg, systemstream=(boolean)true, mpegversion=(int)2`
 
-- encoder-(CAPS_REQUIRED) e.g. `encoder-audio/x-vorbis`
+- encoder-(`CAPS_REQUIRED`) e.g. `encoder-audio/x-vorbis`
 
 - optional further fields not yet specified
 
@@ -190,19 +190,19 @@ caps in a unified and consistent way.
 `gst_missing_plugin_message_get_installer_detail()` on a given missing-plugin
 message.
 
-# Using missing-plugin messages for error reporting:
+### Using missing-plugin messages for error reporting:
 
 Missing-plugin messages are also useful for error reporting purposes, either in
 the case where the application does not support libgimme-codec, or the external
 installer is not available or not able to install the required plugins.
 
 When creating error messages, applications may use the function
-gst_missing_plugin_message_get_description() to obtain a possibly translated
+`gst_missing_plugin_message_get_description()` to obtain a possibly translated
 description from each missing-plugin message (e.g. "Matroska demuxer" or
 "Theora video depayloader"). This can be used to report to the user exactly
 what it is that is missing.
 
-# Notes for packagers
+## Notes for packagers
 
 An easy way to introspect plugin .so files is:
 
@@ -252,6 +252,6 @@ distro specific `gst-install-plugins-helper` can't resolve a request for e.g.
 `element-bml-sonicverb` it can forward the request to
 `gst-install-bml-plugins-helper` (bml is the buzz machine loader).
 
-# Further references:
+## Further references:
 
 <http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-libs/html/gstreamer-base-utils.html>
