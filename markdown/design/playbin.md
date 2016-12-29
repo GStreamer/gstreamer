@@ -61,6 +61,6 @@ Required features:
 
 ## Gapless playback feature
 
-playbin has an "about-to-finish" signal. The application should
+playbin has an `about-to-finish` signal. The application should
 configure a new uri (and optional suburi) in the callback. When the
 current media finishes, this new media will be played next.
