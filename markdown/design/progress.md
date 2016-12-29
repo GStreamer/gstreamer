@@ -38,7 +38,7 @@ We allow for the following scenarios:
 The main reason for adding these extra progress notifications is
 twofold:
 
-### to give the application more information of what is going on
+### To give the application more information of what is going on
 
 When there are well defined progress information codes, applications
 can let the user know about the status of the progress. We anticipate to
@@ -96,7 +96,7 @@ operations currently block the state change function for an indefinite amount
 of time and while they are blocking cannot be canceled.
 
 Instead, a thread would be started to perform these operations asynchronously
-and the state change would complete with the usual NO_PREROLL return value.
+and the state change would complete with the usual `NO_PREROLL` return value.
 Before starting the thread a PROGRESS message would be posted to mark the
 start of the async operation.
 
@@ -130,30 +130,31 @@ A new `PROGRESS` message will be created.
 
 The following fields will be contained in the message:
 
-- **`type`**, GST_TYPE_PROGRESS_TYPE: a set of types to define the type of progress
-    * GST_PROGRESS_TYPE_START: A new task is started in the background
-    * GST_PROGRESS_TYPE_CONTINUE: The previous tasks completed and a new one
+- **`type`**, `GST_TYPE_PROGRESS_TYPE`: A set of types to define the type of progress
+    * `GST_PROGRESS_TYPE_START`: A new task is started in the background
+    * `GST_PROGRESS_TYPE_CONTINUE`: The previous tasks completed and a new one
     continues. This is done so that the application can follow a set of
     continuous tasks and react to COMPLETE only when the element completely
-    finished. * GST_PROGRESS_TYPE_CANCELED: A task is canceled by the user.
-    * GST_PROGRESS_TYPE_ERROR: A task stopped because of an error. In case of
+    finished.
+    * `GST_PROGRESS_TYPE_CANCELED`: A task is canceled by the user.
+    * `GST_PROGRESS_TYPE_ERROR`: A task stopped because of an error. In case of
     an error, an error message will have been posted before.
-    * GST_PROGRESS_TYPE_COMPLETE: A task completed successfully.
+    * `GST_PROGRESS_TYPE_COMPLETE`: A task completed successfully.
 
-- **`code`**, G_TYPE_STRING: A generic extensible string that can be used to
+- **`code`**, `G_TYPE_STRING`: A generic extensible string that can be used to
 programmatically determine the action that is in progress. Some standard
 predefined codes will be defined.
 
-- **`text`**, G_TYPE_STRING: A user visible string detailing the action.
+- **`text`**, `G_TYPE_STRING`: A user visible string detailing the action.
 
-- **`percent`**, G_TYPE_INT: between 0 and 100 Progress of the action as
+- **`percent`**, `G_TYPE_INT`: between 0 and 100 Progress of the action as
 a percentage, the following values are allowed:
-    - GST_PROGRESS_TYPE_START always has a 0% value.
-    - GST_PROGRESS_TYPE_CONTINUE have a value between 0 and 100
-    - GST_PROGRESS_TYPE_CANCELED, GST_PROGRESS_TYPE_ERROR and
-    GST_PROGRESS_TYPE_COMPLETE always have a 100% value.
+    - `GST_PROGRESS_TYPE_START` always has a 0% value.
+    - `GST_PROGRESS_TYPE_CONTINUE` have a value between 0 and 100
+    - `GST_PROGRESS_TYPE_CANCELED`, `GST_PROGRESS_TYPE_ERROR` and
+    `GST_PROGRESS_TYPE_COMPLETE` always have a 100% value.
 
-- **`timeout`**, G_TYPE_INT in milliseconds: The timeout of the async
+- **`timeout`**, `G_TYPE_INT` in milliseconds: The timeout of the async
 operation. -1 if unknown/unlimited.. This field can be interesting to the
 application when it wants to display some sort of progress indication.
 
