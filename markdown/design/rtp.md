@@ -56,38 +56,38 @@ gtk-doc of rtprtxreceive for an example.
 
 If rtpauxreceive is set for session, i, j, k then it has to call
 rtpbin::"set-aux-receive" 3 times giving those ids and this aux element.
-It has to be done before requesting the recv\_rtp\_sink\_i,
-recv\_rtp\_sink\_j, recv\_rtp\_sink\_k. For a concrete case
+It has to be done before requesting the `recv_rtp_sink_i`,
+`recv_rtp_sink_j`, `recv_rtp_sink_k`. For a concrete case
 rtprtxreceive, if the user wants it for session i, then it has to call
 rtpbin::"set-aux-receive" one time giving i and this aux element. Then
-the user can request recv\_rtp\_sink\_i pad.
+the user can request `recv_rtp_sink_i` pad.
 
 Calling rtpbin::"set-aux-receive" does not create the session. It add
 the given session id and aux element to a hashtable(key:session id,
 value: aux element). Then when the user ask for
-rtpbin.recv\_rtp\_sink\_i, rtpbin lookup if there is an aux element for
+`rtpbin.recv_rtp_sink_i`, rtpbin lookup if there is an aux element for
 this i session id. If yes it requests a sink pad to this aux element and
-links it with the recv\_rtp\_src pad of the new gstrtpsession. rtpbin
+links it with the `recv_rtp_src` pad of the new gstrtpsession. rtpbin
 also checks that this aux element is connected only one time to
 ssrcdemux. Because rtpauxreceive has only one source pad. Each call to
-request rtpbin.recv\_rtp\_sink\_k will also creates
-rtpbin.recv\_rtp\_src\_k\_ssrc\_pt as usual. So that the user have it
+request `rtpbin.recv_rtp_sink_k` will also creates
+`rtpbin.recv_rtp_src_k_ssrc_pt` as usual. So that the user have it
 when then it requests rtpbin. (from gst-launch) or using
-on\_rtpbinreceive\_pad\_added callback from an application.
+`on_rtpbinreceive_pad_added` callback from an application.
 
 ### Requesting the rtpbin's pads on the pipeline sender side
 
 For the sender this is similar but a bit more complicated to implement.
-When the user asks for rtpbin.send\_rtp\_sink\_i, rtpbin will lookup in
+When the user asks for `rtpbin.send_rtp_sink_i`, rtpbin will lookup in
 its second map (key:session id, value: aux send element). If there is
 one aux element, then it will set the sink pad of this aux sender
-element to be the ghost pad rtpbin.send\_rtp\_sink\_i that the user
+element to be the ghost pad `rtpbin.send_rtp_sink_i` that the user
 asked. rtpbin will also request a src pad of this aux element to connect
-it to gstrtpsession\_i. It will automatically create
-rtpbin.send\_rtp\_src\_i the usuall way. Then if the user asks
-rtpbin.send\_rtp\_src\_k, then rtpbin will also lookup in that map and
+it to `gstrtpsession_i`. It will automatically create
+`rtpbin.send_rtp_src_i` the usuall way. Then if the user asks
+`rtpbin.send_rtp_src_k`, then rtpbin will also lookup in that map and
 request another source pad of the aux element and connect it to the new
-gstrtpsession\_k.
+`gstrtpsession_k`.
 
 # RTP collision design
 
@@ -105,7 +105,7 @@ collided SSRC are placed upstream from the gstrtpsession.
 
 ## rtppayloader
 
-When handling a GstRTPCollision event, the rtppayloader has to choose
+When handling a `GstRTPCollision` event, the rtppayloader has to choose
 another ssrc.
 
 ## BYE only the corresponding source, not the whole session.
@@ -134,7 +134,7 @@ gstrtpsession element when it receives a NACK from the network.
 ### Basic mechanism
 
 rtprtxsend keeps a history of rtp packets that it has already sent. When
-it receives the event GstRTPRetransmissionRequest from the downstream
+it receives the event `GstRTPRetransmissionRequest` from the downstream
 gstrtpsession element, it loopkup the requested seqnum in its stored
 packets. If the packet is present in its history, it will create a RTX
 packet according to RFC 4588. Then this rtx packet is pushed to its src
@@ -160,8 +160,8 @@ master stream.
 
 ### Retransmission ssrc and seqnum
 
-To choose rtx\_ssrc it randomly selects a number between 0 and 2^32-1
-until it is different than master\_ssrc. rtx\_seqnum is randomly
+To choose `rtx_ssrc` it randomly selects a number between 0 and 2^32-1
+until it is different than `master_ssrc`. `rtx_seqnum` is randomly
 selected between 0 and 2^16-1
 
 ### Deeper in the stored buffer history
@@ -181,17 +181,17 @@ buffer into a GQueue to its tail. Before to send the current master
 stream packet, rtprtxsend sends all the buffers which are in this
 GQueue. Taking care of converting them to rtx packets. This way, rtx
 packets are sent in the same order they have been requested.
-(g\_list\_foreach traverse the queue from head to tail) The GQueue is
-cleared between sending 2 master stream packets. So for this GQueue to
+(`g_list_foreach` traverse the queue from head to tail) The `GQueue` is
+cleared between sending 2 master stream packets. So for this `GQueue` to
 contain more than one element, it means that rtprtxsend receives more
 than one rtx request between sending 2 master packets.
 
 ### Collision
 
-When handling a GstRTPCollision event, if the ssrc is its rtx ssrc then
+When handling a `GstRTPCollision` event, if the ssrc is its rtx ssrc then
 rtprtxsend clear its history and its pending retransmission queue. Then
-it chooses a rtx\_ssrc until it's different than master ssrc. If the
-GstRTPCollision event does not contain its rtx ssrc, for example its
+it chooses a `rtx_ssrc` until it's different than master ssrc. If the
+`GstRTPCollision` event does not contain its rtx ssrc, for example its
 master ssrc or other, then it just forwards the event to upstream. So
 that it can be handled by the rtppayloader.
 
@@ -212,7 +212,7 @@ a given time. If bad luck then the association is delayed to the next
 rtx request.
 
 The algorithm also needs to know if a given packet is a rtx packet or
-not. To know this information there is the rtx-payload-types property.
+not. To know this information there is the `rtx-payload-types` property.
 For now the user as to configure it but later it will be automatically
 retreive this information from SDP. It needs to know if the current
 packet is rtx or not in order to know if it can extract the OSN from the
@@ -232,7 +232,7 @@ and src pad.
 
 ### Deeper in the association algorithm
 
-When it receives a GstRTPRetransmissionRequest event it will remember
+When it receives a `GstRTPRetransmissionRequest` event it will remember
 the ssrc and the seqnum from this request.
 
 On incoming packets, if the packet has its ssrc already associated then
