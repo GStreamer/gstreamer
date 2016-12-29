@@ -196,7 +196,7 @@ export GST_PTP_HELPER=$GST/gstreamer/libs/gst/helpers/.libs/gst-ptp-helper
 # this still doesn't make it work for the uninstalled case, since man goes
 # look for a man directory "nearby" instead of the directory I'm telling it to
 export MANPATH=$GST/gstreamer/tools:$GST_PREFIX/share/man:$GST/gst-editing-services/docs/man/:$MANPATH
-if [ -z "$PYTHON" ]; then PYTHON="python"; fi
+if [ -z "$PYTHON" ]; then PYTHON="python3"; fi
 pythonver=`$PYTHON -c "import sys; print (sys.version[:3])"`
 pythonsites=`$PYTHON -c "import site; print(':'.join(site.getsitepackages()))"`
 export PYTHONPATH="${PYTHONPATH}:${pythonsites}:${GST}/gst-python"
