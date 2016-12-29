@@ -26,8 +26,9 @@ locking and refcounting.
     - creation/destruction requires two unnested locks and 1 refcount.
 
 ### usage in GStreamer
-    * GstBin -> GstElement
-    * GstElement -> GstRealPad
+
+    * `GstBin` -> `GstElement`
+    * `GstElement` -> `GstRealPad`
 
 ### lifecycle
 
@@ -99,7 +100,7 @@ after `_set_parent()` returns TRUE:
       +---------+            +-------+
 ```
 
-after parent updates ref_pointer to child.
+after parent updates `ref_pointer` to child.
 
 ```
       +---------+        +-------+
@@ -109,7 +110,7 @@ after parent updates ref_pointer to child.
       +---------+        +-------+
 ```
 
-- only one parent is able to \_sink the same object because the
+- only one parent is able to `_sink` the same object because the
 `_set_parent()` method is atomic.
 
 - since only one parent is able to `_set_parent()` the object, only
@@ -241,12 +242,14 @@ perform other actions on the child (such as signal emission) it should
 
 ### usage
 
+```
         GstRealPad -> GstCaps
         GstBuffer -> GstCaps
         GstEvent -> GstCaps
         GstEvent -> GstObject
         GstMessage -> GstCaps
         GstMessage -> GstObject
+```
 
 ### lifecycle
 
@@ -387,7 +390,7 @@ of the other object.
 existance of the objects, If one of the objects is disposed, so is
 the link.
 
-    GstRealPad <-> GstRealPad (srcpad lock taken first)
+    `GstRealPad` <-> `GstRealPad` (srcpad lock taken first)
 
 ### lifecycle
 
