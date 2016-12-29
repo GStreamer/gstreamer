@@ -66,15 +66,15 @@ fast.
 Special techniques are necessary to ensure the consistency of compound shared
 objects. As mentioned above, shared objects need to have a reference count of
 1 if they are to be modified. Implicit in this assumption is that all parts of
-the shared object belong only to the object. For example, a GstStructure in
-one GstCaps object should not belong to any other GstCaps object. This
+the shared object belong only to the object. For example, a `GstStructure` in
+one `GstCaps` object should not belong to any other `GstCaps` object. This
 condition suggests a parent-child relationship: structures can only be added
 to parent object if they do not already have a parent object.
 
 In addition, these substructures must not be modified while more than one code
 segment has a reference on the parent object. For example, if the user creates
-a GstStructure, adds it to a GstCaps, and the GstCaps is then referenced by
-other code segments, the GstStructure should then become immutable, so that
+a `GstStructure`, adds it to a `GstCaps`, and the `GstCaps` is then referenced by
+other code segments, the `GstStructure` should then become immutable, so that
 changes to that data structure do not affect other parts of the code. This
 means that the child is only mutable when the parent's reference count is 1,
 as well as when the child structure has no parent.
@@ -102,7 +102,7 @@ All readers and writers acquire the lock before accessing the object. Only one
 thread is allowed access the protected structures at a time.
 
 Object locking is used for all objects extending from GstObject such as
-GstElement, GstPad.
+`GstElement`, `GstPad`.
 
 Object locking can be done with recursive locks or regular mutexes. Object
 locks in GStreamer are implemented with mutexes which cause deadlocks when
@@ -149,7 +149,7 @@ internal consistency when multiple threads call API function on the object.
 
 For objects that extend the GStreamer base object class this lock can be
 obtained with the macros `GST_OBJECT_LOCK()` and `GST_OBJECT_UNLOCK()`. For other object that do
-not extend from the base GstObject class these macros can be different.
+not extend from the base `GstObject` class these macros can be different.
 
 ### refcounting
 
@@ -217,10 +217,11 @@ held.
 
 **Example**:
 
-in GstPad there is a public property `direction`. It can be found in the
+in `GstPad` there is a public property `direction`. It can be found in the
 section marked as public and requiring the LOCK to be held. There exists
 also a macro to access the property.
 
+```
     struct _GstRealPad {
     ...
     /*< public >*/ /* with LOCK */
@@ -230,12 +231,15 @@ also a macro to access the property.
     };
 
     #define GST_RPAD_DIRECTION(pad)      (GST_REAL_PAD_CAST(pad)->direction)
+```
 
 Accessing the property is therefore allowed with the following code example:
 
+```
     GST_OBJECT_LOCK (pad);
     direction = GST_RPAD_DIRECTION (pad);
     GST_OBJECT_UNLOCK (pad);
+```
 
 ### Property lifetime
 
@@ -291,7 +295,7 @@ to access object properties.
 **Example**:
 
 Accessing the name of an object makes a copy of the name. The caller of the
-function should g_free() the name after usage.
+function should `g_free()` the name after usage.
 
 ```  c
     GST_OBJECT_LOCK (object)
@@ -390,7 +394,7 @@ decide if we are still iterating the right list.
 
 ### GstIterator
 
-GstIterator provides an easier way of retrieving elements in a concurrent
+`GstIterator` provides an easier way of retrieving elements in a concurrent
 list. The following code example is equivalent to the previous example.
 
 **Example**:
