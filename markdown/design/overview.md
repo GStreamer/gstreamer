@@ -109,7 +109,7 @@ it will first go through the intermediate PAUSED state.
 An element state change to PAUSED will activate the pads of the element.
 First the source pads are activated, then the sinkpads. When the pads
 are activated, the pad activate function is called. Some pads will start
-a thread (GstTask) or some other mechanism to start producing or
+a thread (`GstTask`) or some other mechanism to start producing or
 consuming data.
 
 The PAUSED state is special as it is used to preroll data in the
@@ -173,12 +173,12 @@ A pipeline is a special bin subclass that provides the following
 features to its children:
 
 - Select and manage a global clock for all its children.
-- Manage running\_time based on the selected clock. Running\_time is
+- Manage `running_time` based on the selected clock. Running\_time is
 the elapsed time the pipeline spent in the PLAYING state and is used
 for synchronisation.
 - Manage latency in the pipeline.
 - Provide means for elements to comunicate with the application by the
-GstBus.
+`GstBus`.
 - Manage the global state of the elements such as Errors and
 end-of-stream.
 
@@ -392,10 +392,10 @@ Since all elements now return SUCCESS from the
 PLAYING state.
 
 Before going to PLAYING, the pipeline select a clock and samples the
-current time of the clock. This is the base\_time. It then distributes
+current time of the clock. This is the `base_time`. It then distributes
 this time to all elements. Elements can then synchronize against the
-clock using the buffer running\_time
-base\_time (See also [synchronisation](design/synchronisation.md)).
+clock using the buffer `running_time`
+`base_time` (See also [synchronisation](design/synchronisation.md)).
 
 The following chain of state changes then takes place:
 
@@ -509,7 +509,7 @@ number to a timestamp, for example.
 When the seek event reaches an element that will perform the seek
 operation, that element performs the following steps.
 
-1) send a FLUSH_START event to all downstream and upstream peer elements.
+1) send a `FLUSH_START` event to all downstream and upstream peer elements.
 2) make sure the streaming thread is not running. The streaming thread will
    always stop because of step 1).
 3) perform the seek operation
@@ -541,7 +541,7 @@ sample in the sinks. The application can wait for this preroll to
 complete by performing a `_get_state()` on the pipeline.
 
 The last step in the seek operation is then to adjust the stream
-running_time of the pipeline to 0 and to set the pipeline back to
+`running_time` of the pipeline to 0 and to set the pipeline back to
 PLAYING.
 
 The sequence of events in our mp3 playback example.
