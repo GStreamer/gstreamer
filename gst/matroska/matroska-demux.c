@@ -2174,13 +2174,19 @@ next:
   }
 
 finish:
-  if (keyunit) {
+  if (keyunit && seeksegment.rate > 0) {
     GST_DEBUG_OBJECT (demux, "seek to key unit, adjusting segment start from %"
         GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
         GST_TIME_ARGS (seeksegment.start), GST_TIME_ARGS (entry->time));
     seeksegment.start = MAX (entry->time, demux->stream_start_time);
     seeksegment.position = seeksegment.start;
     seeksegment.time = seeksegment.start - demux->stream_start_time;
+  } else if (keyunit) {
+    GST_DEBUG_OBJECT (demux, "seek to key unit, adjusting segment stop from %"
+        GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (seeksegment.stop), GST_TIME_ARGS (entry->time));
+    seeksegment.stop = MAX (entry->time, demux->stream_start_time);
+    seeksegment.position = seeksegment.stop;
   }
 
   if (demux->streaming) {
