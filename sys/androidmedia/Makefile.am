@@ -27,7 +27,8 @@ noinst_HEADERS = \
 	gst-android-graphics-imageformat.h \
 	gst-android-hardware-camera.h \
 	gst-android-hardware-sensor.h \
-	gstjniutils.h
+	gstjniutils.h \
+	gstsensors.h
 
 libgstandroidmedia_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
@@ -56,3 +57,6 @@ androidmedia_java_classes_DATA = \
 	org/freedesktop/gstreamer/androidmedia/GstAhcCallback.java \
 	org/freedesktop/gstreamer/androidmedia/GstAhsCallback.java \
 	org/freedesktop/gstreamer/androidmedia/GstAmcOnFrameAvailableListener.java
+
+# Make sure the .java files end up in the tarball
+EXTRA_DIST = $(androidmedia_java_classes_DATA)
