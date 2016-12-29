@@ -1157,13 +1157,13 @@ parse_failed:
 }
 
 /* find the index of the keyframe needed to decode the sample at @index
- * of stream @str.
+ * of stream @str, or of a subsequent keyframe (depending on @next)
  *
  * Returns the index of the keyframe.
  */
 static guint32
 gst_qtdemux_find_keyframe (GstQTDemux * qtdemux, QtDemuxStream * str,
-    guint32 index)
+    guint32 index, gboolean next)
 {
   guint32 new_index = index;
 
@@ -1178,22 +1178,40 @@ gst_qtdemux_find_keyframe (GstQTDemux * qtdemux, QtDemuxStream * str,
     goto beach;
   }
 
-  /* else go back until we have a keyframe */
-  while (TRUE) {
+  /* else search until we have a keyframe */
+  while (new_index < str->n_samples) {
+    if (next && !qtdemux_parse_samples (qtdemux, str, new_index))
+      goto parse_failed;
+
     if (str->samples[new_index].keyframe)
       break;
 
     if (new_index == 0)
       break;
 
-    new_index--;
+    if (next)
+      new_index++;
+    else
+      new_index--;
+  }
+
+  if (new_index == str->n_samples) {
+    GST_DEBUG_OBJECT (qtdemux, "no next keyframe");
+    new_index = -1;
   }
 
 beach:
-  GST_DEBUG_OBJECT (qtdemux, "searching for keyframe index before index %u "
-      "gave %u", index, new_index);
+  GST_DEBUG_OBJECT (qtdemux, "searching for keyframe index %s index %u "
+      "gave %u", next ? "after" : "before", index, new_index);
 
   return new_index;
+
+  /* ERRORS */
+parse_failed:
+  {
+    GST_LOG_OBJECT (qtdemux, "Parsing of index %u failed!", new_index);
+    return -1;
+  }
 }
 
 /* find the segment for @time_position for @stream
@@ -1262,7 +1280,7 @@ gst_qtdemux_move_stream (GstQTDemux * qtdemux, QtDemuxStream * str,
 
 static void
 gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
-    gboolean use_sparse, gint64 * key_time, gint64 * key_offset)
+    gboolean use_sparse, gboolean next, gint64 * key_time, gint64 * key_offset)
 {
   guint64 min_offset;
   gint64 min_byte_offset = -1;
@@ -1321,9 +1339,18 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
         GST_TIME_ARGS (media_start), index, str->samples[index].offset,
         empty_segment);
 
+    /* shift to next frame if we are looking for next keyframe */
+    if (next && QTSAMPLE_PTS (str, &str->samples[index]) < media_start &&
+        index < str->stbl_index)
+      index++;
+
     if (!empty_segment) {
       /* find previous keyframe */
-      kindex = gst_qtdemux_find_keyframe (qtdemux, str, index);
+      kindex = gst_qtdemux_find_keyframe (qtdemux, str, index, next);
+
+      /* we will settle for one before if none found after */
+      if (next && kindex == -1)
+        kindex = gst_qtdemux_find_keyframe (qtdemux, str, index, FALSE);
 
       /* if the keyframe is at a different position, we need to update the
        * requested seek time */
@@ -1346,7 +1373,8 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
           /* this keyframe is inside the segment, convert back to
            * segment time */
           seg_time = (media_time - seg->media_start) + seg->time;
-          if (seg_time < min_offset)
+          if ((!next && (seg_time < min_offset)) ||
+              (next && (seg_time > min_offset)))
             min_offset = seg_time;
         }
       }
@@ -1427,7 +1455,9 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   /* find reasonable corresponding BYTE position,
    * also try to mind about keyframes, since we can not go back a bit for them
    * later on */
-  gst_qtdemux_adjust_seek (qtdemux, cur, FALSE, &key_cur, &byte_cur);
+  /* determining @next here based on SNAP_BEFORE/SNAP_AFTER should
+   * mostly just work, but let's not yet boldly go there  ... */
+  gst_qtdemux_adjust_seek (qtdemux, cur, FALSE, FALSE, &key_cur, &byte_cur);
 
   if (byte_cur == -1)
     goto abort_seek;
@@ -1511,8 +1541,16 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
    * possibly flushing upstream */
   if ((flags & GST_SEEK_FLAG_KEY_UNIT) && !qtdemux->fragmented) {
     gint64 min_offset;
+    gboolean next, before, after;
 
-    gst_qtdemux_adjust_seek (qtdemux, desired_offset, TRUE, &min_offset, NULL);
+    before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
+    after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
+    next = after && !before;
+    if (segment->rate < 0)
+      next = !next;
+
+    gst_qtdemux_adjust_seek (qtdemux, desired_offset, TRUE, next, &min_offset,
+        NULL);
     GST_DEBUG_OBJECT (qtdemux, "keyframe seek, align to %"
         GST_TIME_FORMAT, GST_TIME_ARGS (min_offset));
     desired_offset = min_offset;
@@ -4366,7 +4404,7 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
    * that. For audio streams we do an arbitrary jump in the past (10 samples) */
   if (ref_str->subtype == FOURCC_vide) {
     k_index = gst_qtdemux_find_keyframe (qtdemux, ref_str,
-        ref_str->from_sample - 1);
+        ref_str->from_sample - 1, FALSE);
   } else {
     if (ref_str->from_sample >= 10)
       k_index = ref_str->from_sample - 10;
@@ -4467,7 +4505,7 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
           GST_TIME_ARGS (seg_time), index);
 
       /* find previous keyframe */
-      k_index = gst_qtdemux_find_keyframe (qtdemux, str, index);
+      k_index = gst_qtdemux_find_keyframe (qtdemux, str, index, FALSE);
     }
 
     /* Remember until where we want to go */
@@ -4719,7 +4757,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   }
 
   /* find keyframe of the target index */
-  kf_index = gst_qtdemux_find_keyframe (qtdemux, stream, index);
+  kf_index = gst_qtdemux_find_keyframe (qtdemux, stream, index, FALSE);
 
 /* *INDENT-OFF* */
 /* indent does stupid stuff with stream->samples[].timestamp */
