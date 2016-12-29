@@ -66,18 +66,18 @@ typedef enum {
 
 *
     * **`_SEEKABLE`**: the offset of a pull operation can be specified, if this
-    flag is false, the offset should be -1,
+    flag is false, the offset should be -1.
 
-    * **` _SEQUENTIAL`**: suggest sequential access to the data. If`` _SEEKABLE`` is
-    specified, seeks are allowed but should be avoided. This is common for network
-    streams.
+    * **`_SEQUENTIAL`**: suggest sequential access to the data. If `_SEEKABLE`
+    is specified, seeks are allowed but should be avoided. This is common for
+    network streams.
 
     * **`_BANDWIDTH_LIMITED`**: suggest the element supports buffering data for
-    downstream to cope with bandwidth limitations. If this flag is on the
-    downstream element might ask for more data than necessary for normal playback.
-    This use-case is interesting for on-disk buffering scenarios for instance. Seek
-    operations might be slow as well so downstream elements should take this into
-    consideration.
+    downstream to cope with bandwidth limitations. If this flag is on, the
+    downstream element might ask for more data than necessary for normal
+    playback. This use-case is interesting for on-disk buffering scenarios for
+    instance. Seek operations might be slow as well so downstream elements
+    should take this into consideration.
 
 * (out) **`minsize`**: `G_TYPE_INT` (default 1): the suggested minimum size of pull requests
 * (out) **`maxsize`**: `G_TYPE_INT` (default -1, unlimited): the suggested maximum size of pull requests
@@ -243,4 +243,4 @@ When activating the pads:
     has to operate in chain mode.
 
   - identity chan only work chain based and so filesrc creates a thread
-    to push data to identity.
+    to push data to it.
