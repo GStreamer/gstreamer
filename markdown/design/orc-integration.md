@@ -29,7 +29,7 @@ libgstximagesink\_la\_LIBADD. Then, in the source file, add:
 \#ifdef HAVE\_ORC \#include <orc/orc.h> \#else \#define
 orc\_memcpy(a,b,c) memcpy(a,b,c) \#endif
 
-Then switch relevant uses of memcpy() to orc\_memcpy().
+Then switch relevant uses of `memcpy()` to `orc_memcpy()`.
 
 The above example works whether or not Orc is enabled at compile time.
 
@@ -38,16 +38,20 @@ The above example works whether or not Orc is enabled at compile time.
 The following lines are added near the top of Makefile.am for plugins
 that use Orc code in .orc files (this is for the volume plugin):
 
-ORC\_BASE=volume include $(top\_srcdir)/common/orc.mk
+```
+ORC_BASE=volume include $(top_srcdir)/common/orc.mk
+```
 
 Also add the generated source file to the plugin build:
 
-nodist\_libgstvolume\_la\_SOURCES = $(ORC\_SOURCES)
+```
+nodist_libgstvolume_la_SOURCES = $(ORC_SOURCES)
+```
 
-And of course, add $(ORC\_CFLAGS) to libgstvolume\_la\_CFLAGS, and
-$(ORC\_LIBS) to libgstvolume\_la\_LIBADD.
+And of course, add `$(ORC_CFLAGS)` to `libgstvolume_la_CFLAGS`, and
+`$(ORC_LIBS)` to `libgstvolume_la_LIBADD`.
 
-The value assigned to ORC\_BASE does not need to be related to the name
+The value assigned to `ORC_BASE` does not need to be related to the name
 of the plugin.
 
 ## Advanced Usage
