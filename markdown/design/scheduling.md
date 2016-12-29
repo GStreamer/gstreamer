@@ -20,7 +20,7 @@ producer produces a constant stream of data.
 ## Pulling
 
 Pads that operate in pulling mode can only pull data from a pad that
-exposes the pull\_range function. In this case, the sink pad exposes a
+exposes the `pull_range()` function. In this case, the sink pad exposes a
 loop function that will be called repeatedly until the task is stopped.
 
 After pulling data from the peer pad, the loop function will typically
@@ -28,7 +28,7 @@ call the push function to push the result to the peer sinkpad.
 
 ## Deciding the scheduling mode
 
-When a pad is activated, the \_activate() function is called. The pad
+When a pad is activated, the `_activate()` function is called. The pad
 can then choose to activate itself in push or pull mode depending on
 upstream capabilities.
 
@@ -38,23 +38,23 @@ is no activate function for the pad.
 ## The chain function
 
 The chain function will be called when a upstream element performs a
-\_push() on the pad. The upstream element can be another chain based
+`_push()` on the pad. The upstream element can be another chain based
 element or a pushing source.
 
 ## The getrange function
 
 The getrange function is called when a peer pad performs a
-\_pull\_range() on the pad. This downstream pad can be a pulling element
-or another \_pull\_range() based element.
+`_pull_range()` on the pad. This downstream pad can be a pulling element
+or another `_pull_range()` based element.
 
 ## Scheduling Query
 
 A sinkpad can ask the upstream srcpad for its scheduling attributes. It
-does this with the SCHEDULING query.
+does this with the `SCHEDULING` query.
 
-* (out) **`modes`**: G_TYPE_ARRAY (default NULL): an array of GST_TYPE_PAD_MODE enums. Contains all the supported scheduling modes.
+* (out) **`modes`**: `G_TYPE_ARRAY` (default NULL): an array of `GST_TYPE_PAD_MODE` enums. Contains all the supported scheduling modes.
 
-* (out) **`flags`**, GST_TYPE_SCHEDULING_FLAGS (default 0):
+* (out) **`flags`**, `GST_TYPE_SCHEDULING_FLAGS` (default 0):
 
 ```c
 typedef enum {
@@ -79,16 +79,16 @@ typedef enum {
     operations might be slow as well so downstream elements should take this into
     consideration.
 
-* (out) **`minsize`**: G_TYPE_INT (default 1): the suggested minimum size of pull requests
-* (out) **`maxsize`**: G_TYPE_INT (default -1, unlimited): the suggested maximum size of pull requests
-* (out) **`align`**: G_TYPE_INT (default 0): the suggested alignment for the pull requests.
+* (out) **`minsize`**: `G_TYPE_INT` (default 1): the suggested minimum size of pull requests
+* (out) **`maxsize`**: `G_TYPE_INT` (default -1, unlimited): the suggested maximum size of pull requests
+* (out) **`align`**: `G_TYPE_INT` (default 0): the suggested alignment for the pull requests.
 
 ## Plug-in techniques
 
 ### Multi-sink elements
 
 Elements with multiple sinks can either expose a loop function on each
-of the pads to actively pull\_range data or they can expose a chain
+of the pads to actively `pull_range` data or they can expose a chain
 function on each pad.
 
 Implementing a chain function is usually easy and allows for all
@@ -98,7 +98,7 @@ possible scheduling methods.
 
 If the chain based sink wants to wait for one of the pads to receive a buffer, just
 implement the action to perform in the chain function. Be aware that the action could
-be performed in different threads and possibly simultaneously so grab the STREAM_LOCK.
+be performed in different threads and possibly simultaneously so grab the `STREAM_LOCK`.
 
 # Collect pads
 
@@ -168,11 +168,11 @@ by the pads:
 * (c) - (c): impossible
 
 ```
-    +---------+    +------------+    +-----------+
-    | filesrc |    | mp3decoder |    | audiosink |
-    |        src--sink         src--sink         |
-    +---------+    +------------+    +-----------+
-            (l-g) (c)           ()   (c)
++---------+    +------------+    +-----------+
+| filesrc |    | mp3decoder |    | audiosink |
+|        src--sink         src--sink         |
++---------+    +------------+    +-----------+
+        (l-g) (c)           ()   (c)
 ```
 
 When activating the pads:
@@ -184,11 +184,11 @@ When activating the pads:
     created to call the srcpad loop function.
 
 ```
-    +---------+    +------------+    +----------+
-    | filesrc |    | avidemuxer |    | fakesink |
-    |        src--sink         src--sink        |
-    +---------+    +------------+    +----------+
-            (l-g) (l)          ()   (c)
++---------+    +------------+    +----------+
+| filesrc |    | avidemuxer |    | fakesink |
+|        src--sink         src--sink        |
++---------+    +------------+    +----------+
+        (l-g) (l)          ()   (c)
 ```
 
   - fakesink has a chain function and the peer pad has no loop function,
@@ -198,11 +198,11 @@ When activating the pads:
     created to call the sinkpad loop function.
 
 ```
-    +---------+    +----------+    +------------+    +----------+
-    | filesrc |    | identity |    | avidemuxer |    | fakesink |
-    |        src--sink       src--sink         src--sink        |
-    +---------+    +----------+    +------------+    +----------+
-            (l-g) (c)        ()   (l)          ()   (c)
++---------+    +----------+    +------------+    +----------+
+| filesrc |    | identity |    | avidemuxer |    | fakesink |
+|        src--sink       src--sink         src--sink        |
++---------+    +----------+    +------------+    +----------+
+        (l-g) (c)        ()   (l)          ()   (c)
 ```
 
   - fakesink has a chain function and the peer pad has no loop function,
@@ -212,11 +212,11 @@ When activating the pads:
     pipeline is not schedulable.
 
 ```
-    +---------+    +----------+    +------------+    +----------+
-    | filesrc |    | identity |    | avidemuxer |    | fakesink |
-    |        src--sink       src--sink         src--sink        |
-    +---------+    +----------+    +------------+    +----------+
-            (l-g) (c-l)      (g)  (l)          ()   (c)
++---------+    +----------+    +------------+    +----------+
+| filesrc |    | identity |    | avidemuxer |    | fakesink |
+|        src--sink       src--sink         src--sink        |
++---------+    +----------+    +------------+    +----------+
+        (l-g) (c-l)      (g)  (l)          ()   (c)
 ```
 
   - fakesink has a chain function and the peer pad has no loop function,
@@ -229,11 +229,11 @@ When activating the pads:
     avidemux to getrange data from filesrc.
 
 ```
-    +---------+    +----------+    +------------+    +----------+
-    | filesrc |    | identity |    | oggdemuxer |    | fakesink |
-    |        src--sink       src--sink         src--sink        |
-    +---------+    +----------+    +------------+    +----------+
-            (l-g) (c)        ()   (l-c)        ()   (c)
++---------+    +----------+    +------------+    +----------+
+| filesrc |    | identity |    | oggdemuxer |    | fakesink |
+|        src--sink       src--sink         src--sink        |
++---------+    +----------+    +------------+    +----------+
+        (l-g) (c)        ()   (l-c)        ()   (c)
 ```
 
   - fakesink has a chain function and the peer pad has no loop function,
