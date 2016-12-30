@@ -2039,11 +2039,19 @@ gst_structure_to_string (const GstStructure * structure)
 }
 
 /*
- * r will still point to the string. if end == next, the string will not be
+ * gst_structure_parse_string:
+ * @s: string to parse
+ * @end: out-pointer to char behind end of string
+ * @next: out-pointer to start of unread data
+ * @unescape: @TRUE if the substring is escaped.
+ *
+ * Find the end of a sub-string. If end == next, the string will not be
  * null-terminated. In all other cases it will be.
- * end = pointer to char behind end of string, next = pointer to start of
- * unread data.
- * THIS FUNCTION MODIFIES THE STRING AND DETECTS INSIDE A NONTERMINATED STRING
+ *
+ * Note: This function modifies the string in @s (if unescape == @TRUE).
+ *
+ * Returns: @TRUE if a sub-string was found and @FALSE if the string is not
+ * terminated.
  */
 static gboolean
 gst_structure_parse_string (gchar * s, gchar ** end, gchar ** next,
@@ -2055,14 +2063,13 @@ gst_structure_parse_string (gchar * s, gchar ** end, gchar ** next,
     return FALSE;
 
   if (*s != '"') {
-    int ret;
-
-    ret = gst_structure_parse_simple_string (s, end);
+    int ret = gst_structure_parse_simple_string (s, end);
     *next = *end;
 
     return ret;
   }
 
+  /* Find the closing quotes */
   if (unescape) {
     w = s;
     s++;
@@ -2080,7 +2087,6 @@ gst_structure_parse_string (gchar * s, gchar ** end, gchar ** next,
     }
     s++;
   } else {
-    /* Find the closing quotes */
     s++;
     while (*s != '"') {
       if (G_UNLIKELY (*s == 0))
