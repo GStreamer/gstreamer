@@ -2904,11 +2904,6 @@ atom_stsc_add_new_entry (AtomSTSC * stsc, guint32 first_chunk, guint32 nsamples)
 {
   gint len;
 
-  if ((len = atom_array_get_len (&stsc->entries)) &&
-      ((atom_array_index (&stsc->entries, len - 1)).samples_per_chunk ==
-          nsamples))
-    return;
-
   if ((len = atom_array_get_len (&stsc->entries)) > 1 &&
       ((atom_array_index (&stsc->entries, len - 1)).samples_per_chunk ==
           (atom_array_index (&stsc->entries, len - 2)).samples_per_chunk)) {
