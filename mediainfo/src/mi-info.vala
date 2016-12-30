@@ -175,7 +175,7 @@ public class MediaInfo.Info : Box
     pack_start (info_area, true, true, 0);
 
     table = new Table (8, 3, false);
-    info_area.add_with_viewport (table);
+    info_area.add (table);
 
     /* TODO(ensonic): add a 'Source' box ? maybe only for streams?
     Transport: {file, http, rtsp, ....} as wikilink
