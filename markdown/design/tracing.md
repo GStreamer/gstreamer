@@ -4,7 +4,7 @@ This subsystem will provide a mechanism to get structured tracing info
 from GStreamer applications. This can be used for post-run analysis as
 well as for live introspection.
 
-# Use cases
+## Use cases
 
   - I’d like to get statistics from a running application.
 
@@ -16,12 +16,12 @@ well as for live introspection.
   - I’d like to know about ref-counts of parts in the pipeline to find
     ref-count issues.
 
-# Non use-cases
+## Non use-cases
 
   - Some element in the pipeline does not play along the rules, find out
     which one. This could be done with generic tests.
 
-# Design
+## Design
 
 The system brings the following new items: core hooks: probes in the
 core api, that will expose internal state when tracing is in use
@@ -31,29 +31,29 @@ log tracing front-ends: applications that consume logs from tracers
 Like the logging, the tracer hooks can be compiled out and if not use a
 local condition to check if active.
 
-Certain GStreamer core function (such as gst_pad_push or
-gst_element_add_pad) will call into the tracer subsystem to dispatch
+Certain GStreamer core function (such as `gst_pad_push()` or
+`gst_element_add_pad()`) will call into the tracer subsystem to dispatch
 into active tracing modules. Developers will be able to select a list of
 plugins by setting an environment variable, such as
-GST_TRACERS="meminfo;dbus". One can also pass parameters to plugins:
-GST_TRACERS="log(events,buffers);stats(all)". When then plugins are
+`GST_TRACERS="meminfo;dbus"`. One can also pass parameters to plugins:
+`GST_TRACERS="log(events,buffers);stats(all)"`. When then plugins are
 loaded, we’ll add them to certain hooks according to which they are
 interested in.
 
-Right now tracing info is logged as GstStructures to the TRACE level.
-Idea: Another env var GST_TRACE_CHANNEL could be used to send the
+Right now tracing info is logged as `GstStructures` to the TRACE level.
+Idea: Another env var `GST_TRACE_CHANNEL` could be used to send the
 tracing to a file or a socket. See
 <https://bugzilla.gnome.org/show_bug.cgi?id=733188> for discussion on
 these environment variables.
 
-# Hook api
+## Hook api
 
-We’ll wrap interesting api calls with two macros, e.g. gst_pad_push():
-
-GstFlowReturn gst_pad_push (GstPad * pad, GstBuffer * buffer) {
-GstFlowReturn res;
+We’ll wrap interesting api calls with two macros, e.g. `gst_pad_push()`:
 
 ``` c
+GstFlowReturn gst_pad_push (GstPad * pad, GstBuffer * buffer) {
+  GstFlowReturn res;
+
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -82,13 +82,14 @@ but this is mostly about logging traces - it is linux specific :/
 In addition to api hooks we should also provide timer hooks. Interval
 timers are useful to get e.g. resource usage snapshots. Also absolute
 timers might make sense. All this could be implemented with a clock
-thread. We can use another env-var GST_TRACE_TIMERS="100ms,75ms" to
+thread. We can use another env-var `GST_TRACE_TIMERS="100ms,75ms"` to
 configure timers and then pass them to the tracers like,
-GST_TRACERS="rusage(timer=100ms);meminfo(timer=75ms)". Maybe we can
-create them ad-hoc and avoid the GST_TRACE_TIMERS var.
+`GST_TRACERS="rusage(timer=100ms);meminfo(timer=75ms)"`. Maybe we can
+create them ad-hoc and avoid the `GST_TRACE_TIMERS` var.
 
-Hooks (* already implemented)
+Hooks (\* already implemented)
 
+```
 * gst_bin_add
 * gst_bin_remove
 * gst_element_add_pad
@@ -102,6 +103,7 @@ Hooks (* already implemented)
 * gst_pad_push_list
 * gst_pad_push_event
 * gst_pad_unlink
+```
 
 ## Tracer api
 
@@ -110,7 +112,7 @@ Tracers are plugin features. They have a simple api:
 class init Here the tracers describe the data the will emit.
 
 instance init Tracers attach handlers to one or more hooks using
-gst_tracing_register_hook(). In case the are configurable, they can
+`gst_tracing_register_hook()`. In case the are configurable, they can
 read the options from the *params* property. This is the extra detail
 from the environment var.
 
@@ -122,8 +124,8 @@ the execution too much. Most trace plugins will log data to a trace
 channel.
 
 instance destruction Tracers can output results and release data. This
-would ideally be done at the end of the applications, but gst_deinit()
-is not mandatory. gst_tracelib was using a gcc_destructor. Ideally
+would ideally be done at the end of the applications, but `gst_deinit()`
+is not mandatory. `gst_tracelib` was using a `gcc_destructor`. Ideally
 tracer modules log data as they have them and leave aggregation to a
 tool that processes the log.
 
@@ -138,7 +140,7 @@ One way would be to introspect the data from the plugin. This has the
 disadvantage that the postprocessing app needs to load the plugins or
 talk to the gstreamer registry. An alternative is to also log the format
 description into the log. Right now we’re logging several nested
-GstStructure from the `tracer_class_init()` function (except in the
+`GstStructure` from the `tracer_class_init()` function (except in the
 log tracer).
 
 ```
@@ -187,8 +189,8 @@ qdata for scope and flags (or have some new property flags). We would also
 need a new "notify" signal, so that value-change notifications would include a
 time-stamp. This way the tracers would not needs to be aware of the
 logging. The core tracer would register the notify handlers and emit the
-log. Or we just add a gst_tracer_class_install_event() and that
-mimics the g_object_class_install_property().
+log. Or we just add a `gst_tracer_class_install_event()` and that
+mimics the `g_object_class_install_property()`.
 
 Frontends can:
 - do an events over time histogram
@@ -205,9 +207,9 @@ Frontends can:
 ## meminfo (not yet implemented)
 
 - register to an interval-timer hook.
-- call mallinfo() and log memory usage rusage
+- call `mallinfo()` and log memory usage rusage
 - register to an interval-timer hook.
-- call getrusage() and log resource usage
+- call `getrusage()` and log resource usage
 
 ## dbus (not yet implemented)
 
@@ -249,14 +251,14 @@ extensions)
 
 ## leaks
 
-- track creation/destruction of GstObject and GstMiniObject
+- track creation/destruction of `GstObject` and `GstMiniObject`
 
 - log those which are still alive when app is exiting and raise an
   error if any
 
-- The tracer takes several parameters in a GstStructure like syntax (without the structure name):
+- The tracer takes several parameters in a `GstStructure` like syntax (without the structure name):
     - check-refs (boolean): Whether to also track object ref and unref operations
-        example: GST_TRACERS=leaks(check-refs=true) COMMAND
+        example: `GST_TRACERS=leaks(check-refs=true)` COMMAND
     - stack-traces-flags: Flags to use when generating stack trace (does not generate stack trace
       if not set), valid values are “full” to retrieve as much information as possible in the
       backtrace, or “none” for a simple backtrace (usually does not contain line number or source files).
@@ -265,7 +267,7 @@ extensions)
     - filters: (string): A comma separated list of object types to trace (make sure to enclose in
       quotation marks)
 
-**Run the leaks tracer on all GstProxyPad objects logging the references with a full backtraces**
+**Run the leaks tracer on all `GstProxyPad` objects logging the references with a full backtraces**
 
 ```
 GST_TRACERS=leaks(stack-traces-flags=full,filters=”GstProxyPad”,check-refs=true) COMMAND
@@ -277,7 +279,7 @@ GST_TRACERS=leaks(stack-traces-flags=full,filters=”GstProxyPad”,check-refs=t
 GST_TRACERS=leaks(stack-traces-flags=fast,check-refs=true) COMMAND
 ```
 
-- If the GST_LEAKS_TRACER_SIG env variable is defined the tracer
+- If the `GST_LEAKS_TRACER_SIG` env variable is defined the tracer
   will handle the following UNIX signals:
 
 - SIGUSR1: log alive objects
@@ -315,21 +317,21 @@ little driver * <https://github.com/dkogan/feedgnuplot>
 
   - worse performance (we’re writing two logs at the same time)
 
-  - need to be careful when people to GST_DEBUG_CHANNEL=stderr and
+  - need to be careful when people to `GST_DEBUG_CHANNEL=stderr` and
     GST_TRACE_CHANNEL=stderr (use a shared channel, but what about the
     formats?)
 
   - debug log
 
-  - the tracer subsystem would need to log the GST_TRACE at a level
+  - the tracer subsystem would need to log the `GST_TRACE` at a level
     that is active
 
-  - should the tracer call gst_debug_category_set_threshold() to
+  - should the tracer call `gst_debug_category_set_threshold()` to
     ensure things work, even though the levels don’t make a lot of sense
     here
 
-  - make logging a tracer (a hook in gst_debug_log_valist, move
-    gst_debug_log_default() to the tracer module)
+  - make logging a tracer (a hook in `gst_debug_log_valist()`, move
+    `gst_debug_log_default()` to the tracer module)
 
   - log all debug log to the tracer log, some of the current logging
     statements can be replaced by generic logging as shown in the
@@ -346,72 +348,86 @@ little driver * <https://github.com/dkogan/feedgnuplot>
     intervals?
 
   - can we add a tracer module that registers the timer hook? then we
-    could do GST_TRACER="timer(10ms);rusage" right now the tracer hooks
+    could do `GST_TRACER="timer(10ms);rusage"` right now the tracer hooks
     are defined as an enum though.
 
   - when connecting to a running app, we can’t easily get the *current*
     state if logging is using a socket, as past events are not
     explicitly stored, we could determine the current topology and emit
-    events with GST_CLOCK_TIME_NONE as ts to indicate that the events
+    events with `GST_CLOCK_TIME_NONE` as ts to indicate that the events
     are synthetic.
 
   - we need stable ids for scopes (threads, elements, pads)
 
   - the address can be reused
 
-  - we can use gst_util_seqnum_next()
+  - we can use `gst_util_seqnum_next()`
 
-  - something like gst_object_get_path_string() won’t work as
+  - something like `gst_object_get_path_string()` won’t work as
     objects are initially without parent
 
   - right now the tracing-hooks are enabled/disabled from configure with
-    --{enable,disable}-gst-tracer-hooks The tracer code and the plugins
+    `--{enable,disable}-gst-tracer-hooks` The tracer code and the plugins
     are still built though. We should add a
-    --{enable,disable}-gst-tracer to disabled the whole system,
-    allthough this is a bit confusing with the --{enable,disable}-trace
+    `--{enable,disable}-gst-tracer` to disabled the whole system,
+    allthough this is a bit confusing with the `--{enable,disable}-trace`
     option we have already.
 
 ## Try it
 
 ### Traces for buffer flow, events and messages in TRACE level:
 
-    GST_DEBUG="GST_TRACER:7,GST_BUFFER*:7,GST_EVENT:7,GST_MESSAGE:7"
-    GST_TRACERS=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink -
+```
+GST_DEBUG="GST_TRACER:7,GST_BUFFER*:7,GST_EVENT:7,GST_MESSAGE:7"
+GST_TRACERS=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink -
+```
 
 ### Print some pipeline stats on exit:
 
-    GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage"
-    GST_DEBUG_FILE=trace.log gst-launch-1.0 fakesrc num-buffers=10
-    sizetype=fixed ! queue ! fakesink && gst-stats-1.0 trace.log
+```
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage"
+GST_DEBUG_FILE=trace.log gst-launch-1.0 fakesrc num-buffers=10
+sizetype=fixed ! queue ! fakesink && gst-stats-1.0 trace.log
+```
 
 ### get ts, average-cpuload, current-cpuload, time and plot
 
-    GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage"
-    GST_DEBUG_FILE=trace.log /usr/bin/gst-play-1.0 $HOME/Videos/movie.mp4 &&
-    ./scripts/gst-plot-traces.sh --format=png | gnuplot eog trace.log.*.png
+```
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage"
+GST_DEBUG_FILE=trace.log /usr/bin/gst-play-1.0 $HOME/Videos/movie.mp4 &&
+./scripts/gst-plot-traces.sh --format=png | gnuplot eog trace.log.*.png
+```
 
 ### print processing latencies
 
-    GST_DEBUG="GST_TRACER:7" GST_TRACERS=latency gst-launch-1.0 \
-    audiotestsrc num-buffers=10 ! audioconvert ! volume volume=0.7 ! \
-    autoaudiosink
+```
+GST_DEBUG="GST_TRACER:7" GST_TRACERS=latency gst-launch-1.0 \
+audiotestsrc num-buffers=10 ! audioconvert ! volume volume=0.7 ! \
+autoaudiosink
+```
 
 ### Raise a warning if a leak is detected
 
-    GST_TRACERS="leaks" gst-launch-1.0 videotestsrc num-buffers=10 !
-    fakesink
+```
+GST_TRACERS="leaks" gst-launch-1.0 videotestsrc num-buffers=10 !
+fakesink
+```
 
 ### check if any GstEvent or GstMessage is leaked and raise a warning
 
-    GST_DEBUG="GST_TRACER:7" GST_TRACERS="leaks(GstEvent,GstMessage)"
-    gst-launch-1.0 videotestsrc num-buffers=10 ! fakesink
+```
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="leaks(GstEvent,GstMessage)"
+gst-launch-1.0 videotestsrc num-buffers=10 ! fakesink
+```
 
-# Performance
+## Performance
 
-    run ./tests/benchmarks/tracing.sh <tracer(s)> <media>
+```
+run ./tests/benchmarks/tracing.sh <tracer(s)> <media>
 
-    egrep -c "(proc|thread)-rusage" trace.log 658618 grep -c
-    "gst_tracer_log_trace" trace.log 823351
+egrep -c "(proc|thread)-rusage" trace.log 658618 grep -c
+"gst_tracer_log_trace" trace.log 823351
+```
 
 - we can optimize most of it by using quarks in structures or
 eventually avoid structures totally
