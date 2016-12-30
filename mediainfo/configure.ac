@@ -16,9 +16,10 @@ AC_PROG_INSTALL
 AC_PROG_INTLTOOL([0.35])
 PKG_PROG_PKG_CONFIG
 
-pkg_modules="gee-1.0 gtk+-3.0 >= 3.0.0 gstreamer-1.0 >= 1.1.0 gstreamer-plugins-base-1.0 >= 1.1.0 gstreamer-pbutils-1.0 >= 1.1.0 gstreamer-video-1.0 >= 1.1.0"
-MI_PACKAGES="--pkg gee-1.0 --pkg gtk+-3.0 --pkg gdk-x11-3.0 --pkg gstreamer-1.0 --pkg gstreamer-pbutils-1.0 --pkg gstreamer-video-1.0"
-PKG_CHECK_MODULES(MI, [$pkg_modules])
+pkg_modules="gee-0.8 gtk+-3.0 >= 3.0.0 gstreamer-1.0 >= 1.1.0 gstreamer-plugins-base-1.0 >= 1.1.0 gstreamer-pbutils-1.0 >= 1.1.0 gstreamer-video-1.0 >= 1.1.0"
+MI_PACKAGES="--pkg gee-0.8 --pkg gtk+-3.0 --pkg gdk-x11-3.0 --pkg gstreamer-1.0 --pkg gstreamer-pbutils-1.0 --pkg gstreamer-video-1.0"
+PKG_CHECK_MODULES([MI], [$pkg_modules])
+
 AC_SUBST(MI_CFLAGS)
 AC_SUBST(MI_LIBS)
 AC_SUBST(MI_PACKAGES)
