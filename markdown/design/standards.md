@@ -1,7 +1,7 @@
 # Ownership of dynamic objects
 
 Any object-oriented system or language that doesn’t have automatic
-garbage collection has many potential pitfalls as far as the pointers
+garbage collection has many potential pitfalls as far as pointers
 go. Therefore, some standards must be adhered to as far as who owns
 what.
 
@@ -9,7 +9,7 @@ what.
 
 Arguments passed into a function are owned by the caller, and the
 function will make a copy of the string for its own internal use. The
-string should be const gchar \*. Strings returned from a function are
+string should be `const gchar *`. Strings returned from a function are
 always a copy of the original and should be freed after usage by the
 caller.
 
@@ -25,10 +25,10 @@ ex:
 
 Objects passed into a function are owned by the caller, any additional
 reference held to the object after leaving the function should increase
-the refcount of that object.
+its refcount.
 
 Objects returned from a function are owned by the caller. This means
-that the called should \_free() or \_unref() the object after usage.
+that the caller should `_free()` or `_unref()` the objects after usage.
 
 ex:
 
@@ -42,9 +42,9 @@ ex:
 
 ## Iterators
 
-When retrieving multiple objects from an object an iterator should be
+When retrieving multiple objects from an object, an iterator should be
 used. The iterator allows you to access the objects one after another
-while making sure that the set of objects retrieved remains consistent.
+while making sure that the retrieved set of objects remains consistent.
 
 Each object retrieved from an iterator has its refcount increased or is
 a copy of the original. In any case the object should be unreffed or
