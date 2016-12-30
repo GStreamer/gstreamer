@@ -106,7 +106,7 @@ Multiple possible solutions come to mind:
     accommodate all the different cases and formats one would end up
     with quite convoluted/tricky API.
     
-    (Of course there could also be a GstFancyVideoBuffer that provides
+    (Of course there could also be a `GstFancyVideoBuffer` that provides
     an abstraction for such video accelerated objects and that could
     provide an API to add overlays to it in a generic way, but in the
     end this is just a less generic variant of (c), and it is not clear
@@ -221,7 +221,7 @@ overlay in the middle of the pipeline has other advantages:
     
     We need to pass the overlay pixels from the overlay element to the
     sink somehow. Whatever the exact mechanism, let's assume we pass a
-    refcounted GstVideoOverlayComposition struct or object.
+    refcounted `GstVideoOverlayComposition` struct or object.
     
     A composition is made up of one or more overlays/rectangles.
     
@@ -234,7 +234,8 @@ overlay in the middle of the pipeline has other advantages:
     cases such as e.g. logo overlays or so. It is not designed for
     full-fledged video stream mixing
         though.
-    
+
+```
         // Note: don't mind the exact implementation details, they'll be hidden
         
         // FIXME: might be confusing in 0.11 though since GstXOverlay was
@@ -353,6 +354,7 @@ overlay in the middle of the pipeline has other advantages:
          } else {
            video_buffer_attach_composition (logoverlay->cached_composition);
          }
+```
     
     FIXME: also add some API to modify render position/dimensions of a
     rectangle (probably requires creation of new rectangle, unless we
@@ -375,8 +377,9 @@ overlay in the middle of the pipeline has other advantages:
     if e.g. a screnshotter gets the last buffer via the last-buffer
     property of basesink, it would get an image without the subtitles on
     top. This could probably be fixed by re-implementing the property in
-    GstVideoSink though. Playbin2 could handle this internally as well).
-    
+    `GstVideoSink` though. Playbin2 could handle this internally as well).
+
+```
         void
         gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp
                                              GstBuffer                  * video_buf)
@@ -411,6 +414,7 @@ overlay in the middle of the pipeline has other advantages:
                  gst_buffer_unref (pixels);
           }
         }
+```
 
 3)  Flatten all rectangles in a composition
     
@@ -427,8 +431,8 @@ overlay in the middle of the pipeline has other advantages:
 
 4)  query support for the new video composition mechanism
         
-    This is handled via GstMeta and an ALLOCATION query - we can simply
-    query whether downstream supports the GstVideoOverlayComposition meta.
+    This is handled via `GstMeta` and an ALLOCATION query - we can simply
+    query whether downstream supports the `GstVideoOverlayComposition` meta.
     
     There appears to be no issue with downstream possibly not being
     linked yet at the time when an overlay would want to do such a
@@ -518,6 +522,7 @@ our new API for non-raw video.
 TEST: should these look (roughly) alike (note text distortion) - needs
 fixing in textoverlay
 
+```
     gst-launch-1.0 \
        videotestsrc ! video/x-raw,width=640,height=480,pixel-aspect-ratio=1/1 \
          ! textoverlay text=Hello font-desc=72 ! xvimagesink \
@@ -525,3 +530,4 @@ fixing in textoverlay
          ! textoverlay text=Hello font-desc=72 ! xvimagesink \
        videotestsrc ! video/x-raw,width=640,height=240,pixel-aspect-ratio=1/2 \
          ! textoverlay text=Hello font-desc=72 ! xvimagesink
+```
