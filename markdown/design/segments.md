@@ -26,25 +26,28 @@ pushing a segment event containing the start time, stop time and rate of
 the segment. The purpose of this segment is to inform downstream
 elements of the requested segment positions. Some elements might produce
 buffers that fall outside of the segment and that might therefore be
-discarded or
-    clipped.
+discarded or clipped.
 
-## Use case: FLUSHING seek
+## Use cases
 
+### FLUSHING seek
+
+```
 ex. `filesrc ! avidemux ! videodecoder ! videosink`
+```
 
 When doing a seek in this pipeline for a segment 1 to 5 seconds, avidemux
 will perform the seek.
 
-Avidemux starts by sending a FLUSH_START event downstream and upstream. This
-will cause its streaming task to PAUSED because \_pad_pull_range() and
-\_pad_push() will return FLUSHING. It then waits for the STREAM_LOCK,
+Avidemux starts by sending a `FLUSH_START` event downstream and upstream. This
+will cause its streaming task to `PAUSED` because `_pad_pull_range()` and
+`_pad_push()` will return `FLUSHING`. It then waits for the `STREAM_LOCK`,
 which will be unlocked when the streaming task pauses. At this point no
-streaming is happening anymore in the pipeline and a FLUSH_STOP is sent
+streaming is happening anymore in the pipeline and a `FLUSH_STOP` is sent
 upstream and downstream.
 
 When avidemux starts playback of the segment from second 1 to 5, it pushes
-out a segment with 1 and 5 as start and stop times. The stream_time in
+out a segment with 1 and 5 as start and stop times. The `stream_time` in
 the segment is also 1 as this is the position we seek to.
 
 The video decoder stores these values internally and forwards them to the
@@ -65,25 +68,25 @@ The video sink receives a frame of timestamp 1. It takes the start value of
 the previous segment and aplies the following (simplified) formula:
 
 ```
-    render_time = BUFFER_TIMESTAMP - segment_start + element->base_time
+render_time = BUFFER_TIMESTAMP - segment_start + element->base_time
 ```
 
-It then syncs against the clock with this render_time. Note that
-BUFFER_TIMESTAMP is always >= segment_start or else it would fall outside of
+It then syncs against the clock with this `render_time`. Note that
+`BUFFER_TIMESTAMP` is always >= `segment_start` or else it would fall outside of
 the configure segment.
 
 Videosink reports its current position as (simplified):
 
 ```
-    current_position = clock_time - element->base_time + segment_time
+current_position = clock_time - element->base_time + segment_time
 ```
 
-See [synchronisation](design/synchronisation.md) for a more detailed and accurate explanation of
-synchronisation and position reporting.
+See [synchronisation](design/synchronisation.md) for a more detailed and
+accurate explanation of synchronisation and position reporting.
 
-Since after a flushing seek the stream_time is reset to 0, the new buffer
-will be rendered immediately after the seek and the current_position will be
-the stream_time of the seek that was performed.
+Since after a flushing seek the `stream_time` is reset to 0, the new buffer
+will be rendered immediately after the seek and the `current_position` will be
+the `stream_time` of the seek that was performed.
 
 The stop time is important when the video format contains B frames. The
 video decoder receives a P frame first, which it can decode but not push yet.
@@ -92,17 +95,17 @@ followed by the previously decoded P frame. If the P frame is outside of the
 segment, the decoder knows it should not send the P frame.
 
 Avidemux stops sending data after pushing a frame with timestamp 5 and
-returns GST_FLOW_EOS from the chain function to make the upstream
+returns `GST_FLOW_EOS` from the chain function to make the upstream
 elements perform the EOS logic.
 
-## Use case: live stream
+### Live stream
 
-## Use case: segment looping
+### Segment looping
 
 Consider the case of a wav file with raw audio.
 
 ```
-    filesrc ! wavparse ! alsasink
+filesrc ! wavparse ! alsasink
 ```
 
 FIXME!
