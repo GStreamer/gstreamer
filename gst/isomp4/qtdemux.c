@@ -124,8 +124,10 @@ struct _QtDemuxSample
 
 /* timestamp is the DTS */
 #define QTSAMPLE_DTS(stream,sample) (QTSTREAMTIME_TO_GSTTIME((stream), (sample)->timestamp))
-/* timestamp + offset is the PTS */
+/* timestamp + offset + cslg_shift is the outgoing PTS */
 #define QTSAMPLE_PTS(stream,sample) (QTSTREAMTIME_TO_GSTTIME((stream), (sample)->timestamp + (stream)->cslg_shift + (sample)->pts_offset))
+/* timestamp + offset is the PTS used for internal seek calcuations */
+#define QTSAMPLE_PTS_NO_CSLG(stream,sample) (QTSTREAMTIME_TO_GSTTIME((stream), (sample)->timestamp + (sample)->pts_offset))
 /* timestamp + duration - dts is the duration */
 #define QTSAMPLE_DUR_DTS(stream, sample, dts) (QTSTREAMTIME_TO_GSTTIME ((stream), (sample)->timestamp + (sample)->duration) - (dts))
 
@@ -1340,8 +1342,8 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
         empty_segment);
 
     /* shift to next frame if we are looking for next keyframe */
-    if (next && QTSAMPLE_PTS (str, &str->samples[index]) < media_start &&
-        index < str->stbl_index)
+    if (next && QTSAMPLE_PTS_NO_CSLG (str, &str->samples[index]) < media_start
+        && index < str->stbl_index)
       index++;
 
     if (!empty_segment) {
@@ -1358,7 +1360,7 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
         index = kindex;
 
         /* get timestamp of keyframe */
-        media_time = QTSAMPLE_PTS (str, &str->samples[kindex]);
+        media_time = QTSAMPLE_PTS_NO_CSLG (str, &str->samples[kindex]);
         GST_DEBUG_OBJECT (qtdemux,
             "keyframe at %u with time %" GST_TIME_FORMAT " at offset %"
             G_GUINT64_FORMAT, kindex, GST_TIME_ARGS (media_time),
