@@ -1840,7 +1840,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
        * floating reference ourselves already */
       gst_object_unref (chain->filter);
       if (prev) {
-        if (!gst_element_link_pads_full (prev, "src", chain->filter, "sink",
+        if (!gst_element_link_pads_full (prev, "src", chain->filter, NULL,
                 GST_PAD_LINK_CHECK_TEMPLATE_CAPS)) {
           goto link_failed;
         }
@@ -2721,7 +2721,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
        * floating reference ourselves already */
       gst_object_unref (chain->filter);
       if (prev) {
-        if (!gst_element_link_pads_full (prev, "src", chain->filter, "sink",
+        if (!gst_element_link_pads_full (prev, "src", chain->filter, NULL,
                 GST_PAD_LINK_CHECK_TEMPLATE_CAPS)) {
           goto link_failed;
         }
