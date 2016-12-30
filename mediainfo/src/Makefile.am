@@ -1,6 +1,6 @@
 bin_PROGRAMS = gst-mi
-
-INCLUDES = \
+ 
+AM_CPPFLAGS = \
 	-include config.h \
 	$(MI_CFLAGS) \
 	-DG_LOG_DOMAIN=\"gst-mi\" \
@@ -8,7 +8,7 @@ INCLUDES = \
 	-DPKGDATADIR=\""$(pkgdatadir)"\" \
 	-DPKGLIBDIR=\""$(pkglibdir)"\"
 
-VALAFLAGS = \
+AM_VALAFLAGS = \
 	--vapidir=$(top_srcdir)/vapi --pkg config \
 	@MI_PACKAGES@
 

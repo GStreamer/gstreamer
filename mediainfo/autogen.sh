@@ -12,7 +12,8 @@ test -n "$srcdir" || srcdir=$(dirname "$0")
 test -n "$srcdir" || srcdir=.
 (
   cd "$srcdir" &&
-  AUTOPOINT='intltoolize --automake -c -f' autoreconf -fivm
+  AUTOPOINT='intltoolize --automake -c -f' autoreconf -fiv &&
+  test -f "po/Makefile.in.in" || intltoolize -c -f
 ) || exit
 test -n "$NOCONFIGURE" || "$srcdir/configure" "$@"
 
