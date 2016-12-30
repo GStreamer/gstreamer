@@ -1,17 +1,17 @@
 # Streams
 
-    This document describes the objects that are passed from element to
-    element in the streaming thread.
+This document describes the objects that are passed from element to
+element in the streaming thread.
 
 ## Stream objects
 
 The following objects are to be expected in the streaming thread:
 
   - events
-  - STREAM_START (START)
-  - SEGMENT (SEGMENT)
-  - EOS * (EOS)
-  - TAG (T)
+  - `STREAM_START` (START)
+  - `SEGMENT` (SEGMENT)
+  - `EOS` * (EOS)
+  - `TAG` (T)
   - buffers * (B)
 
 Objects marked with * need to be synchronised to the clock in sinks and
@@ -37,19 +37,19 @@ more buffers are to be processed after the EOS event.
 
 2) **`SEGMENT`**, rate, start/stop, time
    - marks valid buffer timestamp range (start, stop)
-   - marks stream_time of buffers (time). This is the stream time of buffers
+   - marks `stream_time` of buffers (time). This is the stream time of buffers
      with a timestamp of S.start.
    - marks playback rate (rate). This is the required playback rate.
-   - marks applied rate (applied_rate). This is the already applied playback
+   - marks applied rate (`applied_rate`). This is the already applied playback
      rate. (See also [trickmodes](design/trickmodes.md))
-   - marks running_time of buffers. This is the time used to synchronize
+   - marks `running_time` of buffers. This is the time used to synchronize
      against the clock.
 
 3) **N buffers**
-   - displayable buffers are between start/stop of the SEGMENT (S). Buffers
+   - displayable buffers are between start/stop of the `SEGMENT` (S). Buffers
      outside the segment range should be dropped or clipped.
 
-   - running_time:
+   - `running_time`:
 
 ```
         if (S.rate > 0.0)
@@ -62,7 +62,7 @@ more buffers are to be processed after the EOS event.
     against the clock (See also
     [synchronisation](design/synchronisation.md)).
 
-  - stream_time:
+  - `stream_time`:
     *  current position in stream between 0 and duration.
 
 ```
@@ -71,12 +71,12 @@ more buffers are to be processed after the EOS event.
 
 
 4) **`EOS`**
-   - marks the end of data, nothing is to be expected after EOS, elements
-     should refuse more data and return GST_FLOW_EOS. A FLUSH_STOP
-     event clears the EOS state of an element.
+   - marks the end of data, nothing is to be expected after `EOS`, elements
+     should refuse more data and return `GST_FLOW_EOS`. A `FLUSH_STOP`
+     event clears the `EOS` state of an element.
 
 ## Elements
 
-These events are generated typically either by the GstBaseSrc class for
+These events are generated typically either by the `GstBaseSrc` class for
 sources operating in push mode, or by a parser/demuxer operating in
 pull-mode and pushing parsed/demuxed data downstream.
