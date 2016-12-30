@@ -50,7 +50,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch autovideosrc ! videoconvert ! faceoverlay location=/path/to/gnome-video-effects/pixmaps/bow.svg x=-5 y=-15 w=0.3 h=0.1 ! videoconvert ! autovideosink
+ * gst-launch-1.0 autovideosrc ! videoconvert ! faceoverlay location=/path/to/gnome-video-effects/pixmaps/bow.svg x=0.5 y=0.5 w=0.7 h=0.7 ! videoconvert ! autovideosink
  * ]|
  * </refsect2>
  */
@@ -81,16 +81,15 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-yuv")
-    );
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{RGB}")));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-yuv")
-    );
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{BGRA}")));
 
-GST_BOILERPLATE (GstFaceOverlay, gst_face_overlay, GstBin, GST_TYPE_BIN);
+#define gst_face_overlay_parent_class parent_class
+G_DEFINE_TYPE (GstFaceOverlay, gst_face_overlay, GST_TYPE_BIN);
 
 static void gst_face_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -276,21 +275,6 @@ gst_face_overlay_message_handler (GstBin * bin, GstMessage * message)
 }
 
 static void
-gst_face_overlay_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_static_metadata (element_class,
-      "faceoverlay",
-      "Filter/Editor/Video",
-      "Overlays SVG graphics over a detected face in a video stream",
-      "Laura Lucas Alday <lauralucas@gmail.com>");
-
-  gst_element_class_add_static_pad_template (element_class, &src_factory);
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
-}
-
-static void
 gst_face_overlay_class_init (GstFaceOverlayClass * klass)
 {
   GObjectClass *gobject_class;
@@ -325,6 +309,17 @@ gst_face_overlay_class_init (GstFaceOverlayClass * klass)
           "Specify image height relative to face height.", 0, G_MAXFLOAT, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_static_metadata (gstelement_class,
+      "faceoverlay",
+      "Filter/Editor/Video",
+      "Overlays SVG graphics over a detected face in a video stream",
+      "Laura Lucas Alday <lauralucas@gmail.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
   gstbin_class->handle_message =
       GST_DEBUG_FUNCPTR (gst_face_overlay_message_handler);
   gstelement_class->change_state =
@@ -332,7 +327,7 @@ gst_face_overlay_class_init (GstFaceOverlayClass * klass)
 }
 
 static void
-gst_face_overlay_init (GstFaceOverlay * filter, GstFaceOverlayClass * gclass)
+gst_face_overlay_init (GstFaceOverlay * filter)
 {
   GstPadTemplate *tmpl;
 
