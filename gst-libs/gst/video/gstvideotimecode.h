@@ -113,6 +113,7 @@ GstVideoTimeCode * gst_video_time_code_new          (guint                    fp
                                                      guint                    frames,
                                                      guint                    field_count);
 GstVideoTimeCode * gst_video_time_code_new_empty    (void);
+GstVideoTimeCode * gst_video_time_code_new_from_string    (const gchar * tc_str);
 void gst_video_time_code_free                       (GstVideoTimeCode       * tc);
 
 GstVideoTimeCode * gst_video_time_code_copy         (const GstVideoTimeCode * tc);

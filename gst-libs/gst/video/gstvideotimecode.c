@@ -18,10 +18,37 @@
  */
 
 #include "gstvideotimecode.h"
+#include "stdio.h"
 
-G_DEFINE_BOXED_TYPE (GstVideoTimeCode, gst_video_time_code,
+static void
+gst_video_time_code_gvalue_to_string (const GValue * tc_val, GValue * str_val);
+static void
+gst_video_time_code_gvalue_from_string (const GValue * str_val,
+    GValue * tc_val);
+static gboolean gst_video_time_code_deserialize (GValue * dest,
+    const gchar * tc_str);
+static gchar *gst_video_time_code_serialize (const GValue * val);
+
+static void
+_init (GType type)
+{
+  static GstValueTable table =
+      { 0, (GstValueCompareFunc) gst_video_time_code_compare,
+    (GstValueSerializeFunc) gst_video_time_code_serialize,
+    (GstValueDeserializeFunc) gst_video_time_code_deserialize
+  };
+
+  table.type = type;
+  gst_value_register (&table);
+  g_value_register_transform_func (type, G_TYPE_STRING,
+      (GValueTransform) gst_video_time_code_gvalue_to_string);
+  g_value_register_transform_func (G_TYPE_STRING, type,
+      (GValueTransform) gst_video_time_code_gvalue_from_string);
+}
+
+G_DEFINE_BOXED_TYPE_WITH_CODE (GstVideoTimeCode, gst_video_time_code,
     (GBoxedCopyFunc) gst_video_time_code_copy,
-    (GBoxedFreeFunc) gst_video_time_code_free);
+    (GBoxedFreeFunc) gst_video_time_code_free, _init (g_define_type_id));
 
 /**
  * gst_video_time_code_is_valid:
@@ -514,6 +541,83 @@ gst_video_time_code_new_empty (void)
   gst_video_time_code_clear (tc);
   return tc;
 }
+
+static void
+gst_video_time_code_gvalue_from_string (const GValue * str_val, GValue * tc_val)
+{
+  const gchar *tc_str = g_value_get_string (str_val);
+  GstVideoTimeCode *tc;
+
+  tc = gst_video_time_code_new_from_string (tc_str);
+  g_value_take_boxed (tc_val, tc);
+}
+
+static void
+gst_video_time_code_gvalue_to_string (const GValue * tc_val, GValue * str_val)
+{
+  const GstVideoTimeCode *tc = g_value_get_boxed (tc_val);
+  gchar *tc_str;
+
+  tc_str = gst_video_time_code_to_string (tc);
+  g_value_take_string (str_val, tc_str);
+}
+
+static gchar *
+gst_video_time_code_serialize (const GValue * val)
+{
+  GstVideoTimeCode *tc = g_value_get_boxed (val);
+  return gst_video_time_code_to_string (tc);
+}
+
+static gboolean
+gst_video_time_code_deserialize (GValue * dest, const gchar * tc_str)
+{
+  GstVideoTimeCode *tc = gst_video_time_code_new_from_string (tc_str);
+
+  if (tc == NULL || !gst_video_time_code_is_valid (tc))
+    return FALSE;
+
+  g_value_take_boxed (dest, tc);
+  return TRUE;
+}
+
+/**
+ * gst_video_time_code_new_from_string:
+ * @tc_str: The string that represents the #GstVideoTimeCode
+ *
+ * Returns: a new #GstVideoTimeCode from the given string
+ *
+ * Since: 1.12
+ */
+GstVideoTimeCode *
+gst_video_time_code_new_from_string (const gchar * tc_str)
+{
+  GstVideoTimeCode *tc;
+  guint hours, minutes, seconds, frames;
+
+  if (sscanf (tc_str, "%02u:%02u:%02u:%02u", &hours, &minutes, &seconds,
+          &frames)
+      == 4
+      || sscanf (tc_str, "%02u:%02u:%02u;%02u", &hours, &minutes, &seconds,
+          &frames)
+      == 4
+      || sscanf (tc_str, "%02u:%02u:%02u.%02u", &hours, &minutes, &seconds,
+          &frames)
+      == 4
+      || sscanf (tc_str, "%02u:%02u:%02u,%02u", &hours, &minutes, &seconds,
+          &frames)
+      == 4) {
+    tc = gst_video_time_code_new (0, 1, NULL, GST_VIDEO_TIME_CODE_FLAGS_NONE,
+        hours, minutes, seconds, frames, 0);
+
+    return tc;
+  } else {
+    GST_ERROR ("Warning: Could not parse timecode %s. "
+        "Please input a timecode in the form 00:00:00:00", tc_str);
+    return NULL;
+  }
+}
+
 
 /**
  * gst_video_time_code_init:
