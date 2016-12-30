@@ -503,6 +503,44 @@ GST_START_TEST (videotimecode_dailyjam_distance)
 
 GST_END_TEST;
 
+GST_START_TEST (videotimecode_serialize_deserialize)
+{
+  const gchar *str = "01:02:03:04";
+  gchar *str2;
+  GstVideoTimeCode *tc;
+  GValue v = G_VALUE_INIT;
+  GValue v2 = G_VALUE_INIT;
+
+  g_value_init (&v, G_TYPE_STRING);
+  g_value_init (&v2, GST_TYPE_VIDEO_TIME_CODE);
+
+  fail_unless (gst_value_deserialize (&v2, str));
+  tc = g_value_get_boxed (&v2);
+  str2 = gst_video_time_code_to_string (tc);
+  fail_unless_equals_string (str, str2);
+  g_free (str2);
+
+  g_value_set_string (&v, str);
+
+  g_value_transform (&v, &v2);
+  str2 = gst_value_serialize (&v2);
+  fail_unless_equals_string (str, str2);
+  g_free (str2);
+
+  tc = g_value_get_boxed (&v2);
+  str2 = gst_video_time_code_to_string (tc);
+  fail_unless_equals_string (str, str2);
+  g_free (str2);
+
+  g_value_transform (&v2, &v);
+  str2 = (gchar *) g_value_get_string (&v);
+  fail_unless_equals_string (str, str2);
+  g_value_unset (&v2);
+  g_value_unset (&v);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videotimecode_suite (void)
 {
@@ -534,6 +572,7 @@ gst_videotimecode_suite (void)
   tcase_add_test (tc, videotimecode_dailyjam_todatetime);
   tcase_add_test (tc, videotimecode_dailyjam_compare);
   tcase_add_test (tc, videotimecode_dailyjam_distance);
+  tcase_add_test (tc, videotimecode_serialize_deserialize);
   return s;
 }
 
