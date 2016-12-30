@@ -45,7 +45,7 @@ this section:
 > the ones active, or present in the pipeline as pads. Think HLS/DASH
 > alternate streams.
 
-Use case examples:
+## Example use cases
 
 1) Playing an MPEG-TS multi-program stream, we want to tell the
  app that there are multiple programs that could be extracted
@@ -89,97 +89,104 @@ FIXME - need some use cases indicating what alternate streams in
 ## Design Overview
 
 Stream selection in GStreamer is implemented in several parts:
-1) Objects describing streams : GstStream
-2) Objects describing a collection of streams : GstStreamCollection
+1) Objects describing streams : `GstStream`
+2) Objects describing a collection of streams : `GstStreamCollection`
 3) Events from the app allowing selection and activation of some streams:
-   GST_EVENT_SELECT_STREAMS
+   `GST_EVENT_SELECT_STREAMS`
 4) Messages informing the user/application about the available
-   streams and current status:
-   GST_MESSAGE_STREAM_COLLECTION
-   GST_MESSAGE_STREAMS_SELECTED
+   streams and current status: `GST_MESSAGE_STREAM_COLLECTION` and
+   `GST_MESSAGE_STREAMS_SELECTED`
 
 ##  GstStream objects
 
-* API: GstStream
-* API: gst_stream_new(..)
-* API: gst_stream_get_\*(...)
-* API: gst_stream_set_\*()
-* API: gst_event_set_stream(...)
-* API: gst_event_parse_stream(...)
+```
+API:
 
-GstStream objects are a high-level convenience object containing
+GstStream
+gst_stream_new(..)
+gst_stream_get_\*(...)
+gst_stream_set_\*()
+gst_event_set_stream(...)
+gst_event_parse_stream(...)
+```
+
+`GstStream` objects are a high-level convenience object containing
 information regarding a possible data stream that can be exposed by
 GStreamer elements.
 
 They are mostly the aggregation of information present in other
-GStreamer components (STREAM_START, CAPS, TAGS event) but are not
-tied to the presence of a GstPad, and for some use-cases provide
+GStreamer components (`STREAM_START`, `CAPS`, `TAGS` events) but are not
+tied to the presence of a `GstPad`, and for some use-cases provide
 information that the existing components don't provide.
 
-The various properties of a GstStream object are:
-  - stream_id (from the STREAM_START event)
-  - flags (from the STREAM_START event)
+The various properties of a `GstStream` object are:
+  - stream_id (from the `STREAM_START` event)
+  - flags (from the `STREAM_START` event)
   - caps
   - tags
   - type (high-level type of stream: Audio, Video, Container,...)
 
-GstStream objects can be subclassed so that they can be re-used by
+`GstStream` objects can be subclassed so that they can be re-used by
 elements already using the notion of stream (which is common for
 example in demuxers).
 
 Elements that create GstStream should also set it on the
-GST_EVENT_STREAM_START event of the relevant pad. This helps
+`GST_EVENT_STREAM_START` event of the relevant pad. This helps
 downstream elements to have all information in one location.
 
 ## Exposing collections of streams
 
-* API: GstStreamCollection
-* API: gst_stream_collection_new(...)
-* API: gst_stream_collection_add_stream(...)
-* API: gst_stream_collection_get_size(...)
-* API: gst_stream_collection_get_stream(...)
-* API: GST_MESSAGE_STREAM_COLLECTION
-* API: gst_message_new_stream_collection(...)
-* API: gst_message_parse_stream_collection(...)
-* API: GST_EVENT_STREAM_COLLECTION
-* API: gst_event_new_stream_collection(...)
-* API: gst_event_parse_stream_collection(...)
+```
+API:
+
+GstStreamCollection
+gst_stream_collection_new(...)
+gst_stream_collection_add_stream(...)
+gst_stream_collection_get_size(...)
+gst_stream_collection_get_stream(...)
+GST_MESSAGE_STREAM_COLLECTION
+gst_message_new_stream_collection(...)
+gst_message_parse_stream_collection(...)
+GST_EVENT_STREAM_COLLECTION
+gst_event_new_stream_collection(...)
+gst_event_parse_stream_collection(...)
+```
 
 Elements that create new streams (such as demuxers) or can create
 new streams (like the HLS/DASH alternative streams) can list the
 streams they can make available with the GstStreamCollection object.
 
-Other elements that might generate GstStreamCollections are the
+Other elements that might generate `GstStreamCollections` are the
 DVD-VM, which handles internal switching of tracks, or parsebin and
 decodebin3 when it aggregates and presents multiple internal stream
 sources as a single configurable collection.
 
-The GstStreamCollection object is a flat listing of GstStream objects.
+The `GstStreamCollection` object is a flat listing of `GstStream` objects.
 
-The various properties of a GstStreamCollection are:
+The various properties of a `GstStreamCollection` are:
   - 'identifier'
       - the identifier of the collection (unique name)
       - Generated from the 'upstream stream id' (or stream ids, plural)
-  - the list of GstStreams in the collection.
+  - the list of `GstStreams` in the collection.
   - (Not implemented) : Flags -
-      For now, the only flag is 'INFORMATIONAL' - used by container parsers to
+      For now, the only flag is `INFORMATIONAL` - used by container parsers to
       publish information about detected streams without allowing selection of
       the streams.
   - (Not implemented yet) : The relationship between the various streams
     This specifies which streams are exclusive (can not be selected at the
-    same time), are related (such as LINKED_VIEW or ENHANCEMENT), or need to
+    same time), are related (such as `LINKED_VIEW` or `ENHANCEMENT`), or need to
     be selected together.
 
 An element will inform outside components about that collection via:
 
-* a GST_MESSAGE_STREAM_COLLECTION message on the bus.
-* a GST_EVENT_STREAM_COLLECTION on each source pads.
+* a `GST_MESSAGE_STREAM_COLLECTION` message on the bus.
+* a `GST_EVENT_STREAM_COLLECTION` on each source pads.
 
 Applications and container bin elements can listen and collect the
 various stream collections to know the full range of streams
 available within a bin/pipeline.
 
-Once posted on the bus, a GstStreamCollection is immutable. It is
+Once posted on the bus, a `GstStreamCollection` is immutable. It is
 updated by subsequent messages with a matching identifier.
 
 If the element that provided the collection goes away, there is no way
@@ -189,7 +196,7 @@ containing that element (such as parsebin or decodebin3) informs that
 the next collection is a replacement of the former one.
 
 The mutual exclusion and relationship lists use stream-ids
-rather than GstStream references in order to avoid circular
+rather than `GstStream` references in order to avoid circular
 referencing problems.
 
 ### Usage from elements
@@ -200,8 +207,8 @@ appropriate information (stream id, flag, tags, caps, ...).
 
 The demuxer then creates a GstStreamCollection object in which it
 will put the list of GstStream it can expose.  That collection is
-then both posted on the bus (via a GST_MESSAGE_COLLECTION) and on
-each pad (via a GST_EVENT_STREAM_COLLECTION).
+then both posted on the bus (via a `GST_MESSAGE_COLLECTION`) and on
+each pad (via a `GST_EVENT_STREAM_COLLECTION`).
 
 That new collection must be posted on the bus *before* the changes
 are made available. i.e. before pads corresponding to that selection
@@ -214,11 +221,11 @@ decodebin3 will automatically create those if not provided.
 ### Usage from application
 
 Applications can know what streams are available by listening to the
-GST_MESSAGE_STREAM_COLLECTION messages posted on the bus.
+`GST_MESSAGE_STREAM_COLLECTION` messages posted on the bus.
 
 The application can list the available streams per-type (such as all
 the audio streams, or all the video streams) by iterating the
-streams available in the collection by GST_STREAM_TYPE.
+streams available in the collection by `GST_STREAM_TYPE`.
 
 The application will also be able to use these stream information to
 decide which streams should be activated or not (see the stream
@@ -226,27 +233,31 @@ selection event below).
 
 ### Backwards compatibility
 
-Not all demuxers will create the various GstStream and
-GstStreamCollection objects. In order to remain backwards
+Not all demuxers will create the various `GstStream` and
+`GstStreamCollection` objects. In order to remain backwards
 compatible, a parent bin (parsebin in decodebin3) will create the
-GstStream and GstStreamCollection based on the pads being
+`GstStream` and `GstStreamCollection` based on the pads being
 added/removed from an element.
 
 This allows providing stream listing/selection for any demuxer-like
-element even if it doesn't implement the GstStreamCollection usage.
+element even if it doesn't implement the `GstStreamCollection` usage.
 
 ## Stream selection event
 
-* API: GST_EVENT_SELECT_STREAMS
-* API: gst_event_new_select_streams(...)
-* API: gst_event_parse_select_streams(...)
+```
+API:
 
- Stream selection events are generated by the application and
- sent into the pipeline to configure the streams.
+GST_EVENT_SELECT_STREAMS
+gst_event_new_select_streams(...)
+gst_event_parse_select_streams(...)
+```
+
+Stream selection events are generated by the application and sent into the
+pipeline to configure the streams.
 
 The event carries:
-  * List of GstStreams to activate - a subset of the GstStreamCollection
-  * (Not implemented) - List of GstStreams to be kept discarded - a
+  * List of `GstStreams` to activate - a subset of the `GstStreamCollection`
+  * (Not implemented) - List of `GstStreams` to be kept discarded - a
     subset of streams for which hot-swapping will not be desired,
     allowing elements (such as decodebin3, demuxers, ...) to not parse or
     buffer those streams at all.
@@ -265,21 +276,21 @@ generic fashion which streams it wants in output:
 
 From the point of view of the application, those two use-cases are
 treated identically.  The streams are all available through the
-GstStreamCollection posted on the bus, and it will select a subset.
+`GstStreamCollection` posted on the bus, and it will select a subset.
 
 The application can select the streams it wants by creating a
-GST_EVENT_SELECT_STREAMS event with the list of stream-id of the
+`GST_EVENT_SELECT_STREAMS` event with the list of stream-id of the
 streams it wants. That event is then sent on the pipeline,
 eventually traveling all the way upstream from each sink.
 
 In some cases, selecting one stream may trigger the availability of
-other dependent streams, resulting in new GstStreamCollection
+other dependent streams, resulting in new `GstStreamCollection`
 messages. This can happen in the case where choosing a different DVB
 channel would create a new single-program collection.
 
 ### Usage in elements
 
-Elements that receive the GST_EVENT_SELECT_STREAMS event and that
+Elements that receive the `GST_EVENT_SELECT_STREAMS` event and that
 can activate/deactivate streams need to look at the list of
 stream-id contained in the event and decide if they need to do some
 action.
@@ -347,15 +358,15 @@ Initial setup. 1 video stream, 2 audio streams.
 When parsing the initial PAT/PMT, the demuxer will:
 1) create the various GstStream objects for each stream.
 2) create the GstStreamCollection for that initial PMT
-3) post the GST_MESSAGE_STREAM_COLLECTION Decodebin will intercept that message
-and know what the demuxer will be exposing.
+3) post the `GST_MESSAGE_STREAM_COLLECTION` Decodebin will intercept that
+message and know what the demuxer will be exposing.
 4) The demuxer creates the various pads and sends the corresponding
-STREAM_START event (with the same stream-id as the corresponding
-GstStream objects), CAPS event, and TAGS event.
+`STREAM_START` event (with the same stream-id as the corresponding
+`GstStream` objects), `CAPS` event, and `TAGS` event.
 
   * parsebin will add all relevant parsers and expose those streams.
 
-  * Decodebin will be able to correlate, based on STREAM_START event
+  * Decodebin will be able to correlate, based on `STREAM_START` event
 stream-id, what pad corresponds to which stream. It links each stream
 from parsebin to multiqueue.
 
@@ -365,21 +376,21 @@ will pick a stream of each for which it will complete the
 auto-plugging (finding a decoder and then exposing that stream as a
 source ghostpad.
 
-> Note: If the demuxer doesn't create/post the GstStreamCollection,
+> Note: If the demuxer doesn't create/post the `GstStreamCollection`,
 > parsebin will create it on itself, as explained in section 2.3
 > above.
 
 ### Changing the active selection from the application
 
 The user wants to change the audio track. The application received
-the GST_MESSAGE_STREAM_COLLECTION containing the list of available
+the `GST_MESSAGE_STREAM_COLLECTION` containing the list of available
 streams. For clarity, we will assume those stream-ids are
 "video-main", "audio-english" and "audio-french".
 
 The user prefers to use the french soundtrack (which it knows based
-on the language tag contained in the GstStream objects).
+on the language tag contained in the `GstStream` objects).
 
-The application will create and send a GST_EVENT_SELECT_STREAM event
+The application will create and send a `GST_EVENT_SELECT_STREAM` event
 containing the list of streams: "video-main", "audio-french".
 
 That event gets sent on the pipeline, the sinks send it upstream and
@@ -396,7 +407,7 @@ but sees that it needs to deactivate "audio-english" and activate
 "audio-french".
 
 It unlinks the multiqueue source pad connected to the audiodec. Then
-it queries audiodec, using the GST_QUERY_ACCEPT_CAPS, whether it can
+it queries audiodec, using the `GST_QUERY_ACCEPT_CAPS`, whether it can
 accept as-is the caps from the "audio-french" stream.
 1) If it does, the multiqueue source pad corresponding to
    "audio-french" is linked to the decoder.
@@ -410,7 +421,7 @@ pad as the previous audio stream.
 Note:
 The default behaviour would be to only expose one stream of each
 type. But nothing prevents decodebin from outputting more/less of
-each type if the GST_EVENT_SELECT_STREAM event specifies that. This
+each type if the `GST_EVENT_SELECT_STREAM` event specifies that. This
 allows covering more use-case than the simple playback one.
 Such examples could be :
   * Wanting just a video stream or just an audio stream
@@ -423,14 +434,14 @@ Such examples could be :
 At some point in time, a PMT change happens. Let's assume a change
 in video-codec and/or PID.
 
-The demuxer creates a new GstStream for the changed/new stream,
+The demuxer creates a new `GstStream` for the changed/new stream,
 creates a new GstStreamCollection for the updated PMT and posts it.
 
-Decodebin sees the new GstStreamCollection message.
+Decodebin sees the new `GstStreamCollection` message.
 
 The demuxer (and parsebin) then adds and removes pads.
-1) decodebin will match the new pads to GstStream in the "new"
-  GstStreamCollection the same way it did for the initial pads in
+1) decodebin will match the new pads to `GstStream` in the "new"
+  `GstStreamCollection` the same way it did for the initial pads in
   section 4.2 above.
 2) decodebin will see whether the new stream can re-use a multiqueue
   slot used by a stream of the same type no longer present (it
@@ -474,7 +485,10 @@ a collection containing
 
 The user might want to use the korean audio track instead of the
 default english one.
+
+```
   => SELECT_STREAMS ("video", "kor")
+```
 
 1) decodebin3 receives and sends the event further upstream
 2) tsdemux sees that "video" is part of its current upstream,
@@ -511,20 +525,20 @@ Initially tsdemux exposes the first program present (default)
 ```
 
 At some point the user wants to switch to ITV (of which we do not
-know the topology at this point in time. A SELECT_STREAMS event
+know the topology at this point in time. A `SELECT_STREAMS` event
 is sent with "ITV" in it and the pointer to the Collection1.
 1) The event travels up the pipeline until tsdemux receives it
    and begins the switch.
 2) tsdemux publishes a new 'Collection 2a/ITV' and marks 'Collection 2/BBC'
    as replaced.
-2a) App may send a SELECT_STREAMS event configuring which demuxer output
+2a) App may send a `SELECT_STREAMS` event configuring which demuxer output
    streams should be selected (parsed)
 3) tsdemux adds/removes pads as needed (flushing pads as it removes them?)
 4) Decodebin feeds new pad streams through existing parsers/decoders as
    needed. As data from the new collection arrives out each decoder,
-   decodebin sends new GstStreamCollection messages to the app so it
+   decodebin sends new `GstStreamCollection` messages to the app so it
    can know that the new streams are now switchable at that level.
-4a) As new GstStreamCollections are published, the app may override
+4a) As new `GstStreamCollections` are published, the app may override
    the default decodebin stream selection to expose more/fewer streams.
    The default is to decode and output 1 stream of each type.
 
@@ -545,9 +559,9 @@ Final state:
 
 - Add missing implementation
 
-  - Add flags to GstStreamCollection
+  - Add flags to `GstStreamCollection`
 
-  - Add mutual-exclusion and relationship API to GstStreamCollection
+  - Add mutual-exclusion and relationship API to `GstStreamCollection`
 
 - Add helper API to figure out whether a collection is a replacement
 of another or a completely new one. This will require a more generic
@@ -556,8 +570,8 @@ another or not.
 
 ### OPEN QUESTIONS
 
-- Is a FLUSHING flag for stream-selection required or not ? This would
-make the handler of the SELECT\_STREAMS event send FLUSH START/STOP
+- Is a `FLUSHING` flag for stream-selection required or not ? This would
+make the handler of the `SELECT_STREAMS` event send `FLUSH START/STOP`
 before switching to the other streams. This is tricky when dealing
 where situations where we keep some streams and only switch some
 others. Do we flush all streams ? Do we only flush the new streams,
