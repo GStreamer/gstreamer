@@ -1186,7 +1186,8 @@ gst_auto_convert_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     GST_WARNING_OBJECT (autoconvert,
         "Got upstream event while no element was selected," "forwarding.");
     ret = gst_pad_push_event (autoconvert->sinkpad, event);
-  }
+  } else
+    gst_event_unref (event);
 
   return ret;
 }
