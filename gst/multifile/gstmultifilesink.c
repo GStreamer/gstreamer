@@ -171,6 +171,8 @@ static gboolean gst_multi_file_sink_open_next_file (GstMultiFileSink *
     multifilesink);
 static void gst_multi_file_sink_close_file (GstMultiFileSink * multifilesink,
     GstBuffer * buffer);
+static void gst_multi_file_sink_add_old_file (GstMultiFileSink * multifilesink,
+    gchar * fn);
 static void gst_multi_file_sink_ensure_max_files (GstMultiFileSink *
     multifilesink);
 static gboolean gst_multi_file_sink_event (GstBaseSink * sink,
@@ -334,8 +336,6 @@ gst_multi_file_sink_init (GstMultiFileSink * multifilesink)
   multifilesink->max_files = DEFAULT_MAX_FILES;
   multifilesink->max_file_size = DEFAULT_MAX_FILE_SIZE;
   multifilesink->max_file_duration = DEFAULT_MAX_FILE_DURATION;
-  multifilesink->files = NULL;
-  multifilesink->n_files = 0;
 
   multifilesink->aggregate_gops = DEFAULT_AGGREGATE_GOPS;
   multifilesink->gop_adapter = NULL;
@@ -352,8 +352,6 @@ gst_multi_file_sink_finalize (GObject * object)
   GstMultiFileSink *sink = GST_MULTI_FILE_SINK (object);
 
   g_free (sink->filename);
-  g_slist_foreach (sink->files, (GFunc) g_free, NULL);
-  g_slist_free (sink->files);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -453,6 +451,8 @@ gst_multi_file_sink_start (GstBaseSink * bsink)
   sink->potential_next_gop = NULL;
   sink->file_pts = GST_CLOCK_TIME_NONE;
 
+  g_queue_init (&sink->old_files);
+
   return TRUE;
 }
 
@@ -489,6 +489,9 @@ gst_multi_file_sink_stop (GstBaseSink * sink)
   }
 
   multifilesink->force_key_unit_count = -1;
+
+  g_queue_foreach (&multifilesink->old_files, (GFunc) g_free, NULL);
+  g_queue_clear (&multifilesink->old_files);
 
   return TRUE;
 }
@@ -624,10 +627,10 @@ gst_multi_file_sink_write_buffer (GstMultiFileSink * multifilesink,
       if (!ret)
         goto write_error;
 
-      multifilesink->files = g_slist_append (multifilesink->files, filename);
-      multifilesink->n_files += 1;
-
       gst_multi_file_sink_post_message (multifilesink, buffer, filename);
+
+      gst_multi_file_sink_add_old_file (multifilesink, filename);
+
       multifilesink->index++;
 
       break;
@@ -976,19 +979,33 @@ gst_multi_file_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   return TRUE;
 }
 
+/* Takes ownership of the filename string */
+static void
+gst_multi_file_sink_add_old_file (GstMultiFileSink * multifilesink, gchar * fn)
+{
+  /* Only add file to the list if a max_files limit is set, otherwise we never
+   * prune the list and memory just builds up until the pipeline is stopped. */
+  if (multifilesink->max_files > 0) {
+    g_queue_push_tail (&multifilesink->old_files, fn);
+  } else {
+    g_free (fn);
+  }
+}
+
 static void
 gst_multi_file_sink_ensure_max_files (GstMultiFileSink * multifilesink)
 {
-  char *filename;
+  guint max_files = multifilesink->max_files;
 
-  while (multifilesink->max_files &&
-      multifilesink->n_files >= multifilesink->max_files) {
-    filename = multifilesink->files->data;
+  if (max_files == 0)
+    return;
+
+  while (g_queue_get_length (&multifilesink->old_files) >= max_files) {
+    gchar *filename;
+
+    filename = g_queue_pop_head (&multifilesink->old_files);
     g_remove (filename);
     g_free (filename);
-    multifilesink->files = g_slist_delete_link (multifilesink->files,
-        multifilesink->files);
-    multifilesink->n_files -= 1;
   }
 }
 
@@ -1090,6 +1107,7 @@ gst_multi_file_sink_open_next_file (GstMultiFileSink * multifilesink)
   g_return_val_if_fail (multifilesink->file == NULL, FALSE);
 
   gst_multi_file_sink_ensure_max_files (multifilesink);
+
   filename = g_strdup_printf (multifilesink->filename, multifilesink->index);
   multifilesink->file = g_fopen (filename, "wb");
   if (multifilesink->file == NULL) {
@@ -1099,13 +1117,7 @@ gst_multi_file_sink_open_next_file (GstMultiFileSink * multifilesink)
 
   GST_INFO_OBJECT (multifilesink, "opening file %s", filename);
 
-  /* Only add file to the list if max_files > 0, otherwise this leaks memory */
-  if (multifilesink->max_files) {
-    multifilesink->files = g_slist_append (multifilesink->files, filename);
-    multifilesink->n_files += 1;
-  } else {
-    g_free (filename);
-  }
+  gst_multi_file_sink_add_old_file (multifilesink, filename);
 
   multifilesink->cur_file_size = 0;
   return TRUE;

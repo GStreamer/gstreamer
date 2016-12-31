@@ -85,9 +85,9 @@ struct _GstMultiFileSink
   gboolean post_messages;
   GstMultiFileSinkNext next_file;
   FILE *file;
+
   guint max_files;
-  GSList *files;
-  guint n_files;
+  GQueue old_files;        /* keep track of old files for max_files handling */
 
   gint64 next_segment;
 
