@@ -1571,6 +1571,13 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
   switch (event->type) {
     case GST_EVENT_SEEK:
     {
+      guint32 seqnum = gst_event_get_seqnum (event);
+      if (seqnum == demux->priv->segment_seqnum) {
+        GST_LOG_OBJECT (pad,
+            "Drop duplicated SEEK event seqnum %" G_GUINT32_FORMAT, seqnum);
+        gst_event_unref (event);
+        return TRUE;
+      }
       return gst_adaptive_demux_handle_seek_event (demux, pad, event);
     }
     case GST_EVENT_RECONFIGURE:{
