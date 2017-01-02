@@ -45,6 +45,11 @@ android {
     }
 }
 
+afterEvaluate {
+    compileDebugJavaWithJavac.dependsOn 'externalNativeBuildDebug'
+    compileReleaseJavaWithJavac.dependsOn 'externalNativeBuildRelease'
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
