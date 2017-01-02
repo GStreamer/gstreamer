@@ -2774,6 +2774,8 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
       case GST_RTCP_TYPE_RTPFB:
         switch (fbtype) {
           case GST_RTCP_RTPFB_TYPE_NACK:
+            if (src)
+              src->stats.recv_nack_count++;
             rtp_session_process_nack (sess, sender_ssrc, media_ssrc,
                 fci_data, fci_length, current_time);
             break;
@@ -3526,6 +3528,7 @@ session_nack (const gchar * key, RTPSource * source, ReportData * data)
 
   rtp_source_clear_nacks (source);
   data->may_suppress = FALSE;
+  source->stats.sent_nack_count += n_nacks;
 }
 
 /* perform cleanup of sources that timed out */
