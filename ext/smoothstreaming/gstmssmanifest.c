@@ -425,8 +425,8 @@ gst_mss_stream_free (GstMssStream * stream)
   xmlFree (stream->lang);
   g_regex_unref (stream->regex_position);
   g_regex_unref (stream->regex_bitrate);
-  g_free (stream);
   gst_mss_fragment_parser_clear (&stream->fragment_parser);
+  g_free (stream);
 }
 
 void
