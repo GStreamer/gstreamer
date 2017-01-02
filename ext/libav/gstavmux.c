@@ -269,17 +269,20 @@ gst_ffmpegmux_base_init (gpointer g_class)
   /* pad templates */
   srctempl = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, srccaps);
   gst_element_class_add_pad_template (element_class, srctempl);
+  gst_caps_unref (srccaps);
 
   if (audiosinkcaps) {
     audiosinktempl = gst_pad_template_new ("audio_%u",
         GST_PAD_SINK, GST_PAD_REQUEST, audiosinkcaps);
     gst_element_class_add_pad_template (element_class, audiosinktempl);
+    gst_caps_unref (audiosinkcaps);
   }
 
   if (videosinkcaps) {
     videosinktempl = gst_pad_template_new ("video_%u",
         GST_PAD_SINK, GST_PAD_REQUEST, videosinkcaps);
     gst_element_class_add_pad_template (element_class, videosinktempl);
+    gst_caps_unref (videosinkcaps);
   }
 
 beach:

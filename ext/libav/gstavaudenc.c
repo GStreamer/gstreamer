@@ -124,6 +124,9 @@ gst_ffmpegaudenc_base_init (GstFFMpegAudEncClass * klass)
   gst_element_class_add_pad_template (element_class, srctempl);
   gst_element_class_add_pad_template (element_class, sinktempl);
 
+  gst_caps_unref (sinkcaps);
+  gst_caps_unref (srccaps);
+
   klass->in_plugin = in_plugin;
   klass->srctempl = srctempl;
   klass->sinktempl = sinktempl;

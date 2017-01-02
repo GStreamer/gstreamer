@@ -217,6 +217,8 @@ gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass)
   gst_element_class_add_pad_template (element_class, audiosrctempl);
   gst_element_class_add_pad_template (element_class, sinktempl);
 
+  gst_caps_unref (sinkcaps);
+
   klass->in_plugin = in_plugin;
   klass->videosrctempl = videosrctempl;
   klass->audiosrctempl = audiosrctempl;
