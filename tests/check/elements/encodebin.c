@@ -1107,6 +1107,7 @@ GST_START_TEST (test_encodebin_fallback_profiles_on_failure)
   _caps_match (sinkpad, "audio/x-raw;audio/x-vorbis");
   gst_element_release_request_pad (ebin, sinkpad);
   gst_object_unref (sinkpad);
+  gst_caps_unref (vorbiscaps);
 
   gst_object_unref (ebin);
 };
