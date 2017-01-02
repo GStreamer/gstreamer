@@ -1004,8 +1004,10 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       break;
   }
-  if (ret == FALSE)
+  if (ret == FALSE) {
+    GST_ERROR_OBJECT (queue, "Failed to push event");
     return GST_FLOW_ERROR;
+  }
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -1452,7 +1454,7 @@ next:
   /* ERRORS */
 no_item:
   {
-    GST_CAT_LOG_OBJECT (queue_dataflow, queue,
+    GST_CAT_ERROR_OBJECT (queue_dataflow, queue,
         "exit because we have no item in the queue");
     return GST_FLOW_ERROR;
   }
