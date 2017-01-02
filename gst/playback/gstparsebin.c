@@ -4355,12 +4355,23 @@ gst_parse_bin_handle_message (GstBin * bin, GstMessage * msg)
 
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ERROR:{
-      GST_OBJECT_LOCK (parsebin);
-      drop = (g_list_find (parsebin->filtered, GST_MESSAGE_SRC (msg)) != NULL);
-      if (drop)
-        parsebin->filtered_errors =
-            g_list_prepend (parsebin->filtered_errors, gst_message_ref (msg));
-      GST_OBJECT_UNLOCK (parsebin);
+      /* Don't pass errors when shutting down. Sometimes,
+       * elements can generate spurious errors because we set the
+       * output pads to flushing, and they can't detect that if they
+       * send an event at exactly the wrong moment */
+      DYN_LOCK (parsebin);
+      drop = parsebin->shutdown;
+      DYN_UNLOCK (parsebin);
+
+      if (!drop) {
+        GST_OBJECT_LOCK (parsebin);
+        drop =
+            (g_list_find (parsebin->filtered, GST_MESSAGE_SRC (msg)) != NULL);
+        if (drop)
+          parsebin->filtered_errors =
+              g_list_prepend (parsebin->filtered_errors, gst_message_ref (msg));
+        GST_OBJECT_UNLOCK (parsebin);
+      }
       break;
     }
     default:

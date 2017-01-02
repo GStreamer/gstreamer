@@ -5390,12 +5390,22 @@ gst_decode_bin_handle_message (GstBin * bin, GstMessage * msg)
   gboolean drop = FALSE;
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
-    GST_OBJECT_LOCK (dbin);
-    drop = (g_list_find (dbin->filtered, GST_MESSAGE_SRC (msg)) != NULL);
-    if (drop)
-      dbin->filtered_errors =
-          g_list_prepend (dbin->filtered_errors, gst_message_ref (msg));
-    GST_OBJECT_UNLOCK (dbin);
+    /* Don't pass errors when shutting down. Sometimes,
+     * elements can generate spurious errors because we set the
+     * output pads to flushing, and they can't detect that if they
+     * send an event at exactly the wrong moment */
+    DYN_LOCK (dbin);
+    drop = dbin->shutdown;
+    DYN_UNLOCK (dbin);
+
+    if (!drop) {
+      GST_OBJECT_LOCK (dbin);
+      drop = (g_list_find (dbin->filtered, GST_MESSAGE_SRC (msg)) != NULL);
+      if (drop)
+        dbin->filtered_errors =
+            g_list_prepend (dbin->filtered_errors, gst_message_ref (msg));
+      GST_OBJECT_UNLOCK (dbin);
+    }
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_BUFFERING) {
     gint perc, msg_perc;
     gint smaller_perc = 100;
