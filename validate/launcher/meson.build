@@ -2,7 +2,6 @@ _launcherdir = get_option('libdir') + '/gst-validate-launcher/python/launcher/'
 
 launcher_configure = configuration_data()
 launcher_configure.set('GST_VALIDATE_TESTSUITE_VERSION', '"@0@"'.format(TESTUITE_VERSION))
-launcher_configure.set('BUILDDIR', meson.build_root())
 configure_file(input : 'config.py.in',
   output : 'config.py',
   install_dir: _launcherdir,
@@ -22,4 +21,3 @@ install_data(sources: _sources,
              install_dir: _launcherdir)
 
 subdir('apps')
-subdir('testsuites')

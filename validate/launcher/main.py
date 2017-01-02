@@ -200,7 +200,6 @@ class LauncherConfig(Loggable):
         self.main_dir = utils.DEFAULT_MAIN_DIR
         self.output_dir = None
         self.logsdir = None
-        self.privatedir = None
         self.redirect_logs = False
         self.num_jobs = multiprocessing.cpu_count()
         self.dest = None
@@ -260,14 +259,11 @@ class LauncherConfig(Loggable):
             self.logsdir = os.path.join(self.output_dir, "logs")
         if self.dest is None:
             self.dest = os.path.join(self.output_dir, "rendered")
-        self.privatedir = os.path.join(self.output_dir, "launcher-private")
 
         if not os.path.exists(self.dest):
             os.makedirs(self.dest)
         if not os.path.exists(self.logsdir):
             os.makedirs(self.logsdir)
-        if not os.path.exists(self.privatedir):
-            os.makedirs(self.privatedir)
 
         if self.redirect_logs not in ['stdout', 'stderr', False]:
             printc("Log redirection (%s) must be either 'stdout' or 'stderr'."

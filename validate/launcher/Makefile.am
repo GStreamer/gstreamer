@@ -1,8 +1,7 @@
 launcherdir = $(libdir)/gst-validate-launcher/python/launcher/
 
 SUBDIRS = \
-	apps \
-	testsuites
+	apps
 
 launcher_PYTHON = \
 	baseclasses.py  \

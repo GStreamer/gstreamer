@@ -342,7 +342,6 @@ po/Makefile.in
 tools/Makefile
 launcher/Makefile
 launcher/apps/Makefile
-launcher/testsuites/Makefile
 docs/Makefile
 docs/version.entities
 docs/validate/Makefile
