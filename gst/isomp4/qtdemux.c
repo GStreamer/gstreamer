@@ -6052,6 +6052,9 @@ gst_qtdemux_check_seekability (GstQTDemux * demux)
   if (demux->upstream_size)
     return;
 
+  if (demux->upstream_format_is_time)
+    return;
+
   query = gst_query_new_seeking (GST_FORMAT_BYTES);
   if (!gst_pad_peer_query (demux->sinkpad, query)) {
     GST_DEBUG_OBJECT (demux, "seeking query failed");
