@@ -45,10 +45,9 @@ def git(*args, repository_path='.'):
                                    stderr=subprocess.STDOUT).decode()
 
 def accept_command(commands):
-    """Search @commands and returns the first found absolute path."""
+    """Search @commands and returns the first found command"""
     for command in commands:
-        command = shutil.which(command)
-        if command:
+        if shutil.which(command):
             return command
 
     return None
