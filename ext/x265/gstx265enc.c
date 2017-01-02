@@ -55,8 +55,6 @@ enum
   PROP_TUNE
 };
 
-static GString *x265enc_defaults;
-
 #define PROP_BITRATE_DEFAULT            (2 * 1024)
 #define PROP_QP_DEFAULT                 -1
 #define PROP_OPTION_STRING_DEFAULT      ""
@@ -344,8 +342,6 @@ gst_x265_enc_class_init (GstX265EncClass * klass)
   GstElementClass *element_class;
   GstVideoEncoderClass *gstencoder_class;
 
-  x265enc_defaults = g_string_new ("");
-
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
   gstencoder_class = GST_VIDEO_ENCODER_CLASS (klass);
@@ -541,6 +537,8 @@ gst_x265_enc_finalize (GObject * object)
   encoder->input_state = NULL;
 
   gst_x265_enc_close_encoder (encoder);
+
+  g_string_free (encoder->option_string_prop, TRUE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
