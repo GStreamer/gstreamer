@@ -1593,7 +1593,7 @@ gst_uvc_h264_src_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
           GST_TIME_FORMAT, all_headers, count, GST_TIME_ARGS (ts),
           GST_TIME_ARGS (running_time), GST_TIME_ARGS (stream_time));
       downstream = gst_video_event_new_downstream_force_key_unit (ts,
-          running_time, stream_time, all_headers, count);
+          stream_time, running_time, all_headers, count);
       gst_pad_push_event (self->vidsrc, downstream);
       gst_event_replace (&self->key_unit_event, NULL);
     }
