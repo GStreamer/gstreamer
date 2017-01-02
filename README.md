@@ -63,6 +63,19 @@ Update all GStreamer modules without rebuilding:
 ninja -C build/ git-update
 ```
 
+## Run tests
+
+You can easily run the test of all the components:
+
+```
+mesontest -C build
+```
+
+Or to run a specific test:
+
+```
+mesontest -C build/ gst/gstbuffer
+```
 
 ## Add information about GStreamer development environment in your prompt line
 
