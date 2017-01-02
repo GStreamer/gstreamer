@@ -272,37 +272,6 @@ GST_END_TEST;
  *      * Pull-mode & EOS
  */
 
-#if 0
-int
-main (int argc, char **argv)
-{
-  int nf;
-  GstCaps *caps;
-
-  Suite *s = amrnb_parse_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  /* init test context */
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-  gst_caps_unref (caps);
-
-  s = amrwb_parse_suite ();
-  sr = srunner_create (s);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf += srunner_ntests_failed (sr);
-  srunner_free (sr);
-  gst_caps_unref (caps);
-
-  return nf;
-}
-#endif
-
 static Suite *
 amrparse_suite (void)
 {
