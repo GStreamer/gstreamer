@@ -454,10 +454,7 @@ main (int argc, char **argv)
 
   ctx_suite = "h264parse_to_bs_nal";
   s = h264parse_suite ();
-  sr = srunner_create (s);
-  srunner_run_all (sr, CK_NORMAL);
-  nf += srunner_ntests_failed (sr);
-  srunner_free (sr);
+  nf += gst_check_run_suite (s, ctx_suite, __FILE__ "_to_bs_nal.c");
 
   /* setup and tweak to handle bs au output */
   ctx_suite = "h264parse_to_bs_au";
@@ -466,10 +463,7 @@ main (int argc, char **argv)
   ctx_discard = 0;
 
   s = h264parse_suite ();
-  sr = srunner_create (s);
-  srunner_run_all (sr, CK_NORMAL);
-  nf += srunner_ntests_failed (sr);
-  srunner_free (sr);
+  nf += gst_check_run_suite (s, ctx_suite, __FILE__ "_to_bs_au.c");
 
   /* setup and tweak to handle avc au output */
   ctx_suite = "h264parse_to_avc_au";
@@ -493,10 +487,7 @@ main (int argc, char **argv)
   ctx_codec_data = TRUE;
 
   s = h264parse_suite ();
-  sr = srunner_create (s);
-  srunner_run_all (sr, CK_NORMAL);
-  nf += srunner_ntests_failed (sr);
-  srunner_free (sr);
+  nf += gst_check_run_suite (s, ctx_suite, __FILE__ "_to_avc3_au.c");
 
   /* setup and tweak to handle avc packetized input */
   h264_codec_data = h264_avc_codec_data;
@@ -517,10 +508,7 @@ main (int argc, char **argv)
   ctx_verify_buffer = verify_buffer_packetized;
 
   s = h264parse_packetized_suite ();
-  sr = srunner_create (s);
-  srunner_run_all (sr, CK_NORMAL);
-  nf += srunner_ntests_failed (sr);
-  srunner_free (sr);
+  nf += gst_check_run_suite (s, ctx_suite, __FILE__ "_packetized.c");
 
   return nf;
 }

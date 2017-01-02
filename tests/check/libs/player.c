@@ -1720,22 +1720,4 @@ player_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int number_failed;
-  Suite *s;
-  SRunner *sr;
-
-  gst_check_init (&argc, &argv);
-
-  s = player_suite ();
-  sr = srunner_create (s);
-
-  srunner_run_all (sr, CK_NORMAL);
-
-  number_failed = srunner_ntests_failed (sr);
-
-  srunner_free (sr);
-  return (number_failed == 0) ? 0 : -1;
-}
+GST_CHECK_MAIN (player)
