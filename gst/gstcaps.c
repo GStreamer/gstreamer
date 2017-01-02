@@ -423,12 +423,14 @@ gst_static_caps_get (GstStaticCaps * static_caps)
 
     *caps = gst_caps_from_string (string);
 
+    /* convert to string */
+    if (G_UNLIKELY (*caps == NULL)) {
+      g_critical ("Could not convert static caps \"%s\"", string);
+      goto done;
+    }
+
     /* Caps generated from static caps are usually leaked */
     GST_MINI_OBJECT_FLAG_SET (*caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
-
-    /* convert to string */
-    if (G_UNLIKELY (*caps == NULL))
-      g_critical ("Could not convert static caps \"%s\"", string);
 
     GST_CAT_TRACE (GST_CAT_CAPS, "created %p from string %s", static_caps,
         string);
