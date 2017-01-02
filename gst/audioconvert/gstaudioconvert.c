@@ -673,11 +673,11 @@ gst_audio_convert_set_caps (GstBaseTransform * base, GstCaps * incaps,
           GST_AUDIO_CONVERTER_OPT_NOISE_SHAPING_METHOD,
           GST_TYPE_AUDIO_NOISE_SHAPING_METHOD, this->ns, NULL));
 
-  in_place = gst_audio_converter_supports_inplace (this->convert);
-  gst_base_transform_set_in_place (base, in_place);
-
   if (this->convert == NULL)
     goto no_converter;
+
+  in_place = gst_audio_converter_supports_inplace (this->convert);
+  gst_base_transform_set_in_place (base, in_place);
 
   this->in_info = in_info;
   this->out_info = out_info;
