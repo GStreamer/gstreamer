@@ -1306,8 +1306,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
    * FIXME : figure out what max-size to use for the input queue */
   sgroup->inqueue = gst_element_factory_make ("queue", NULL);
   g_object_set (sgroup->inqueue, "max-size-buffers",
-      (guint32) ebin->queue_buffers_max, "max-size-bytes",
-      (guint32) ebin->queue_bytes_max, "max-size-time",
+      (guint) ebin->queue_buffers_max, "max-size-bytes",
+      (guint) ebin->queue_bytes_max, "max-size-time",
       (guint64) ebin->queue_time_max, "silent", TRUE, NULL);
 
   gst_bin_add (GST_BIN (ebin), sgroup->inqueue);
