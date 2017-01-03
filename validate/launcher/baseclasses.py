@@ -1540,6 +1540,9 @@ class _TestsLauncher(Loggable):
 
     def list_tests(self):
         for tester in self.testers:
+            if not self._tester_needed(tester):
+                continue
+
             tests = tester.list_tests()
             if self._check_defined_tests(tester, tests) and \
                     self.options.fail_on_testlist_change:
