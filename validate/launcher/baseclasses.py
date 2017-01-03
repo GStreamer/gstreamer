@@ -339,7 +339,10 @@ class Test(Loggable):
         while res is None:
             try:
                 self.debug("Subprocess is still alive, sending KILL signal")
-                self.process.send_signal(signal.SIGKILL)
+                if utils.is_windows():
+                    subprocess.call(['taskkill', '/F', '/T', '/PID', str(self.process.pid)])
+                else:
+                    self.process.send_signal(signal.SIGKILL)
                 time.sleep(1)
             except OSError:
                 pass

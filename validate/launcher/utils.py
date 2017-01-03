@@ -24,6 +24,7 @@ except ImportError:
     from . import config
 
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -157,6 +158,11 @@ def launch_command(command, color=None, fails=False):
 
 def path2url(path):
     return urllib.parse.urljoin('file:', urllib.request.pathname2url(path))
+
+
+def is_windows():
+    platname = platform.system().lower()
+    return platname == 'windows' or 'mingw' in platname
 
 
 def url2path(url):
