@@ -2963,6 +2963,13 @@ gst_v4l2_object_extrapolate_info (GstV4l2Object * v4l2object,
         "stride %d, offset %" G_GSIZE_FORMAT, i, stride, info->stride[i],
         info->offset[i]);
   }
+
+  /* Update the image size according the amount of data we are going to
+   * read/write. This workaround bugs in driver where the sizeimage provided
+   * by TRY/S_FMT represent the buffer length (maximum size) rather then the expected
+   * bytesused (buffer size). */
+  if (offs < info->size)
+    info->size = offs;
 }
 
 static void
