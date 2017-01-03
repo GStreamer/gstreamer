@@ -487,7 +487,8 @@ gst_decklink_caps_get_pixel_format (GstCaps * caps, BMDPixelFormat * format)
 }
 
 static GstStructure *
-gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f, gboolean input)
+gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f,
+    gboolean input)
 {
   const GstDecklinkMode *mode = &modes[e];
   GstStructure *s = gst_structure_new ("video/x-raw",
@@ -500,9 +501,11 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f, gboole
 
   if (input && mode->interlaced) {
     if (mode->tff)
-      gst_structure_set (s, "field-order", G_TYPE_STRING, "top-field-first", NULL);
+      gst_structure_set (s, "field-order", G_TYPE_STRING, "top-field-first",
+          NULL);
     else
-      gst_structure_set (s, "field-order", G_TYPE_STRING, "bottom-field-first", NULL);
+      gst_structure_set (s, "field-order", G_TYPE_STRING, "bottom-field-first",
+          NULL);
   }
 
   switch (f) {
@@ -536,13 +539,15 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f, gboole
 }
 
 GstCaps *
-gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDPixelFormat f, gboolean input)
+gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDPixelFormat f,
+    gboolean input)
 {
   GstCaps *caps;
 
   caps = gst_caps_new_empty ();
   caps =
-      gst_caps_merge_structure (caps, gst_decklink_mode_get_structure (e, f, input));
+      gst_caps_merge_structure (caps, gst_decklink_mode_get_structure (e, f,
+          input));
 
   return caps;
 }
@@ -588,7 +593,8 @@ gst_decklink_mode_get_template_caps (gboolean input)
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++)
     caps =
         gst_caps_merge (caps,
-        gst_decklink_mode_get_caps_all_formats ((GstDecklinkModeEnum) i, input));
+        gst_decklink_mode_get_caps_all_formats ((GstDecklinkModeEnum) i,
+            input));
 
   return caps;
 }
@@ -605,7 +611,8 @@ gst_decklink_find_mode_and_format_for_caps (GstCaps * caps,
     return NULL;
 
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
-    mode_caps = gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, *format, FALSE);
+    mode_caps =
+        gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, *format, FALSE);
     if (gst_caps_can_intersect (caps, mode_caps)) {
       gst_caps_unref (mode_caps);
       return gst_decklink_get_mode ((GstDecklinkModeEnum) i);
