@@ -51,10 +51,9 @@ TIMEOUT_FACTOR = float(os.environ.get("TIMEOUT_FACTOR", 1))
 VALGRIND_ERROR_CODE = 20
 
 VALIDATE_OVERRIDE_EXTENSION = ".override"
-COREDUMP_SIGNALS = [-signal.SIGQUIT, -signal.SIGILL, -signal.SIGABRT,
-    -signal.SIGFPE, -signal.SIGSEGV, -signal.SIGBUS, -signal.SIGSYS,
-    -signal.SIGTRAP, -signal.SIGXCPU, -signal.SIGXFSZ, -signal.SIGIOT,
-    139]
+COREDUMP_SIGNALS = [-getattr(signal, s) for s in [
+    'SIGQUIT', 'SIGILL', 'SIGABRT', 'SIGFPE', 'SIGSEGV', 'SIGBUS', 'SIGSYS',
+    'SIGTRAP', 'SIGXCPU', 'SIGXFSZ', 'SIGIOT'] if hasattr(signal, s)] + [139]
 
 
 class Test(Loggable):
