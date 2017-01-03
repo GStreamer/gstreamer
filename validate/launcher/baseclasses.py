@@ -620,7 +620,7 @@ class GstValidateTest(Test):
 
     def server_wrapper(self, ready):
         self.server = socketserver.TCPServer(('localhost', 0), GstValidateListener)
-        self.server.socket.settimeout(0.0)
+        self.server.socket.settimeout(None)
         self.server.test = self
         self.serverport = self.server.socket.getsockname()[1]
         self.info("%s server port: %s" % (self, self.serverport))
