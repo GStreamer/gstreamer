@@ -111,6 +111,14 @@ typedef enum {
 GType gst_decklink_audio_connection_get_type (void);
 
 typedef enum {
+  GST_DECKLINK_AUDIO_CHANNELS_2 = 2,
+  GST_DECKLINK_AUDIO_CHANNELS_8 = 8,
+  GST_DECKLINK_AUDIO_CHANNELS_16 = 16
+} GstDecklinkAudioChannelsEnum;
+#define GST_TYPE_DECKLINK_AUDIO_CHANNELS (gst_decklink_audio_channels_get_type ())
+GType gst_decklink_audio_channels_get_type (void);
+
+typedef enum {
   GST_DECKLINK_VIDEO_FORMAT_AUTO,
   GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV, /* bmdFormat8BitYUV */
   GST_DECKLINK_VIDEO_FORMAT_10BIT_YUV, /* bmdFormat10BitYUV */

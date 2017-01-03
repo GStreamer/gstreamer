@@ -34,6 +34,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_audio_src_debug);
 
 #define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
 #define DEFAULT_DISCONT_WAIT          (1 * GST_SECOND)
+#define DEFAULT_CHANNELS              (GST_DECKLINK_AUDIO_CHANNELS_2)
 
 enum
 {
@@ -42,7 +43,8 @@ enum
   PROP_DEVICE_NUMBER,
   PROP_ALIGNMENT_THRESHOLD,
   PROP_DISCONT_WAIT,
-  PROP_BUFFER_SIZE
+  PROP_BUFFER_SIZE,
+  PROP_CHANNELS,
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -50,6 +52,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS
     ("audio/x-raw, format={S16LE,S32LE}, channels=2, rate=48000, "
+        "layout=interleaved;"
+        "audio/x-raw, format={S16LE,S32LE}, channels={8,16}, channel-mask=(bitmask)0, rate=48000, "
         "layout=interleaved")
     );
 
@@ -171,6 +175,13 @@ gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)
           G_MAXINT, DEFAULT_BUFFER_SIZE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_CHANNELS,
+      g_param_spec_enum ("channels", "Channels",
+          "Audio channels",
+          GST_TYPE_DECKLINK_AUDIO_CHANNELS, DEFAULT_CHANNELS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   gst_element_class_add_static_pad_template (element_class, &sink_template);
 
   gst_element_class_set_static_metadata (element_class, "Decklink Audio Source",
@@ -188,6 +199,7 @@ gst_decklink_audio_src_init (GstDecklinkAudioSrc * self)
   self->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
   self->discont_wait = DEFAULT_DISCONT_WAIT;
   self->buffer_size = DEFAULT_BUFFER_SIZE;
+  self->channels = DEFAULT_CHANNELS;
 
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
@@ -221,6 +233,9 @@ gst_decklink_audio_src_set_property (GObject * object, guint property_id,
     case PROP_BUFFER_SIZE:
       self->buffer_size = g_value_get_uint (value);
       break;
+    case PROP_CHANNELS:
+      self->channels = (GstDecklinkAudioChannelsEnum) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -248,6 +263,9 @@ gst_decklink_audio_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_BUFFER_SIZE:
       g_value_set_uint (value, self->buffer_size);
+      break;
+    case PROP_CHANNELS:
+      g_value_set_enum (value, self->channels);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -383,7 +401,7 @@ gst_decklink_audio_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   }
 
   ret = self->input->input->EnableAudioInput (bmdAudioSampleRate48kHz,
-      sample_depth, 2);
+      sample_depth, self->info.channels);
   if (ret != S_OK) {
     GST_WARNING_OBJECT (self, "Failed to enable audio input: 0x%08x", ret);
     return FALSE;
@@ -401,13 +419,22 @@ gst_decklink_audio_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 static GstCaps *
 gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 {
+  GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (bsrc);
   GstCaps *caps;
 
   // We don't support renegotiation
   caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (bsrc));
 
-  if (!caps)
-    caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
+  if (!caps) {
+    GstCaps *channel_filter, *templ;
+    templ = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
+    channel_filter =
+        gst_caps_new_simple ("audio/x-raw", "channels", G_TYPE_INT,
+        self->channels, NULL);
+    caps = gst_caps_intersect (channel_filter, templ);
+    gst_caps_unref (channel_filter);
+    gst_caps_unref (templ);
+  }
 
   if (filter) {
     GstCaps *tmp =

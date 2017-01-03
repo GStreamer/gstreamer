@@ -192,6 +192,26 @@ gst_decklink_audio_connection_get_type (void)
   return (GType) id;
 }
 
+GType
+gst_decklink_audio_channels_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue connections[] = {
+    {GST_DECKLINK_AUDIO_CHANNELS_2, "2 Channels", "2"},
+    {GST_DECKLINK_AUDIO_CHANNELS_8, "8 Channels", "8"},
+    {GST_DECKLINK_AUDIO_CHANNELS_16, "16 Channels", "16"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp =
+        g_enum_register_static ("GstDecklinkAudioChannels", connections);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
 #define NTSC 10, 11, false, "bt601"
 #define PAL 12, 11, true, "bt601"
 #define HD 1, 1, true, "bt709"
