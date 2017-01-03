@@ -4,4 +4,5 @@ SUBDIRS =
 
 apps_PYTHON = \
 	__init__.py \
-	gstvalidate.py
+	gstvalidate.py \
+	gstcheck.py

@@ -17,7 +17,6 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import argparse
-import config
 import os
 import pickle
 import platform
@@ -25,6 +24,7 @@ import shutil
 import threading
 import concurrent.futures as conc
 
+from launcher import config
 from launcher.utils import printc, Colors
 
 
