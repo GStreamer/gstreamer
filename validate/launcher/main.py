@@ -299,10 +299,10 @@ class LauncherConfig(Loggable):
             return False
 
         if (self.main_dir != DEFAULT_MAIN_DIR or
-                self.clone_dir != QA_ASSETS) and \
-                self.testsuites_dirs in DEFAULT_TESTSUITES_DIRS:
-            self.testsuites_dirs.insert(0, os.path.join(self.main_dir, self.clone_dir,
-                                               "testsuites"))
+                self.clone_dir != QA_ASSETS):
+            local_clone_dir = os.path.join(self.main_dir, self.clone_dir, "testsuites")
+            if not local_clone_dir in self.testsuites_dirs:
+                self.testsuites_dirs.insert(0, local_clone_dir)
         if self.valgrind:
             try:
                 subprocess.check_output("valgrind --help", shell=True)
