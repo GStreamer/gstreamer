@@ -1233,12 +1233,14 @@ gst_vdp_vpp_class_init (GstVdpVideoPostProcessClass * klass)
   src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
       src_caps);
   gst_element_class_add_pad_template (gstelement_class, src_template);
+  gst_caps_unref (src_caps);
 
   /* SINK PAD */
   sink_caps = gst_vdp_video_buffer_get_caps (FALSE, 0);
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       sink_caps);
   gst_element_class_add_pad_template (gstelement_class, sink_template);
+  gst_caps_unref (sink_caps);
 }
 
 static void

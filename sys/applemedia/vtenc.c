@@ -194,6 +194,7 @@ gst_vtenc_base_init (GstVTEncClass * klass)
   src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
       src_caps);
   gst_element_class_add_pad_template (element_class, src_template);
+  gst_caps_unref (src_caps);
 }
 
 static void
