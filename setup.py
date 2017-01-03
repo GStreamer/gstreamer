@@ -54,7 +54,7 @@ class GstBuildConfigurer:
             subprocess.check_call(
                 [sys.executable, meson, "../"] + self.args + self.get_configs(), cwd=build_dir)
             print("\nYou can now build GStreamer and its various subprojects running:\n"
-                  " $ {} -C {!r}".format(ninja, build_dir))
+                  " $ ninja -C %s" % build_dir)
         except subprocess.CalledProcessError:
             return False
 
