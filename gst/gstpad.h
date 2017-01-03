@@ -538,8 +538,9 @@ typedef enum
  *        non-blocking probes).
  * @GST_PAD_PROBE_DROP: drop data in data probes. For push mode this means that
  *        the data item is not sent downstream. For pull mode, it means that
- *        the data item is not passed upstream. In both cases, no more probes
- *        are called and #GST_FLOW_OK or %TRUE is returned to the caller.
+ *        the data item is not passed upstream. In both cases, no other probes
+ *        are called for this item and #GST_FLOW_OK or %TRUE is returned to the
+ *        caller.
  * @GST_PAD_PROBE_REMOVE: remove this probe.
  * @GST_PAD_PROBE_PASS: pass the data item in the block probe and block on the
  *        next item.
