@@ -497,6 +497,29 @@ gst_amc_jni_detach_current_thread (void *env)
   }
 }
 
+static JavaVM *
+get_application_java_vm (void)
+{
+  GModule *module = NULL;
+  JavaVM *(*get_java_vm) (void);
+  JavaVM *vm = NULL;
+
+  module = g_module_open (NULL, G_MODULE_BIND_LOCAL);
+
+  if (!module) {
+    return NULL;
+  }
+
+  if (g_module_symbol (module, "gst_android_get_java_vm",
+          (gpointer *) & get_java_vm) && get_java_vm) {
+    vm = get_java_vm ();
+  }
+
+  g_module_close (module);
+
+  return vm;
+}
+
 static gboolean
 check_nativehelper (void)
 {
@@ -660,6 +683,12 @@ gst_amc_jni_initialize_java_vm (void)
 
   if (java_vm) {
     GST_DEBUG ("Java VM already provided by the application");
+    return initialize_classes ();
+  }
+
+  java_vm = get_application_java_vm ();
+  if (java_vm) {
+    GST_DEBUG ("Java VM successfully requested from the application");
     return initialize_classes ();
   }
 
