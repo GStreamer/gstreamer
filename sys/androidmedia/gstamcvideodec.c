@@ -328,6 +328,8 @@ caps_to_mime (GstCaps * caps)
     return "video/hevc";
   } else if (strcmp (name, "video/x-vp8") == 0) {
     return "video/x-vnd.on2.vp8";
+  } else if (strcmp (name, "video/x-vp9") == 0) {
+    return "video/x-vnd.on2.vp9";
   } else if (strcmp (name, "video/x-divx") == 0) {
     return "video/mp4v-es";
   }
