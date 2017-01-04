@@ -83,6 +83,7 @@ def get_subprocess_env(options):
 
     presets = set()
     encoding_targets = set()
+    pkg_dirs = set()
     if '--installed' in subprocess.check_output([mesonintrospect, '-h']).decode():
         installed_s = subprocess.check_output([sys.executable, mesonintrospect,
                                                options.builddir, '--installed'])
@@ -92,11 +93,20 @@ def get_subprocess_env(options):
             elif path.endswith('.gep'):
                 encoding_targets.add(
                     os.path.abspath(os.path.join(os.path.dirname(path), '..')))
+            elif path.endswith('.pc'):
+                # Is there a -uninstalled pc file for this file?
+                uninstalled = "{0}-uninstalled.pc".format(path[:-3])
+                if os.path.exists(uninstalled):
+                    pkg_dirs.add(os.path.dirname(path))
+
         for p in presets:
             prepend_env_var(env, 'GST_PRESET_PATH', p)
 
         for t in encoding_targets:
             prepend_env_var(env, 'GST_ENCODING_TARGET_PATH', t)
+
+        for pkg_dir in pkg_dirs:
+            prepend_env_var(env, "PKG_CONFIG_PATH", pkg_dir)
 
     return env
 
