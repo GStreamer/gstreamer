@@ -7,6 +7,21 @@ pkgconf.set('includedir', '${prefix}/@0@'.format(get_option('includedir')))
 pkgconf.set('GST_API_VERSION', api_version)
 pkgconf.set('VERSION', gst_version)
 
+# needed for generating -uninstalled.pc files
+pkgconf.set('abs_top_builddir', join_paths(meson.current_build_dir(), '..'))
+pkgconf.set('abs_top_srcdir', join_paths(meson.current_source_dir(), '..'))
+pkgconf.set('audiolibdir', join_paths(meson.build_root(), gstbadaudio.outdir()))
+pkgconf.set('baselibdir', join_paths(meson.build_root(), gstbadbase.outdir()))
+pkgconf.set('videolibdir', join_paths(meson.build_root(), gstbadvideo.outdir()))
+pkgconf.set('codecparserslibdir', join_paths(meson.build_root(), gstcodecparsers.outdir()))
+pkgconf.set('gllibdir', join_paths(meson.build_root(), gstgl.outdir()))
+pkgconf.set('insertbinlibdir', join_paths(meson.build_root(), gstinsertbin.outdir()))
+pkgconf.set('mpegtslibdir', join_paths(meson.build_root(), gstmpegts.outdir()))
+pkgconf.set('playerlibdir', join_paths(meson.build_root(), gstplayer.outdir()))
+pkgconf.set('waylandlibdir', join_paths(meson.build_root(), gstwayland.outdir()))
+pkgconf.set('basecamerabinsrclibdir', join_paths(meson.build_root(), gstbasecamerabin.outdir()))
+pkgconf.set('photographylibdir', join_paths(meson.build_root(), gstphotography.outdir()))
+
 pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
 
 pkg_libs = [
@@ -25,7 +40,6 @@ if build_gstgl
   pkg_libs += 'gl'
 endif
 
-# FIXME: -uninstalled.pc files (if still needed?)
 foreach p : pkg_libs
   infile = 'gstreamer-@0@.pc.in'.format(p)
   outfile = 'gstreamer-@0@-@1@.pc'.format(p, api_version)
@@ -33,4 +47,10 @@ foreach p : pkg_libs
     output : outfile,
     configuration : pkgconf,
     install_dir : pkg_install_dir)
+
+  infile = 'gstreamer-@0@-uninstalled.pc.in'.format(p)
+  outfile = 'gstreamer-@0@-@1@-uninstalled.pc'.format(p, api_version)
+  configure_file(input : infile,
+    output : outfile,
+    configuration : pkgconf)
 endforeach

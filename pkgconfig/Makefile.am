@@ -35,7 +35,21 @@ cp_verbose_0 = @echo "  CP     $@";
 %-@GST_API_VERSION@.pc: %.pc
 	$(cp_verbose_0)cp $< $@
 %-@GST_API_VERSION@-uninstalled.pc: %-uninstalled.pc
-	$(cp_verbose_0)cp $< $@
+### the uninstalled libdir is depend of the build system used so set it here
+### rather than hardcoding it in the file directly.
+	$(AM_V_GEN) sed \
+		-e "s|[@]audiolibdir[@]|$(abs_top_builddir)/gst-libs/gst/audio/.libs|" \
+		-e "s|[@]baselibdir[@]|$(abs_top_builddir)/gst-libs/gst/base/.libs|" \
+		-e "s|[@]videolibdir[@]|$(abs_top_builddir)/gst-libs/gst/video/.libs|" \
+		-e "s|[@]codecparserslibdir[@]|$(abs_top_builddir)/gst-libs/gst/codecparsers/.libs|" \
+		-e "s|[@]gllibdir[@]|$(abs_top_builddir)/gst-libs/gst/gl/.libs|" \
+		-e "s|[@]insertbinlibdir[@]|$(abs_top_builddir)/gst-libs/gst/insertbin/.libs|" \
+		-e "s|[@]mpegtslibdir[@]|$(abs_top_builddir)/gst-libs/gst/mpegts/.libs|" \
+		-e "s|[@]playerlibdir[@]|$(abs_top_builddir)/gst-libs/gst/player/.libs|" \
+		-e "s|[@]waylandlibdir[@]|$(abs_top_builddir)/gst-libs/gst/wayland/.libs|" \
+		-e "s|[@]basecamerabinsrclibdir[@]|$(abs_top_builddir)/gst-libs/gst/basecamerabinsrc/.libs|" \
+		-e "s|[@]photographylibdir[@]|$(abs_top_builddir)/gst-libs/gst/interfaces/.libs|" \
+		$< > $@.tmp && mv $@.tmp $@
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(pcverfiles)

@@ -1,7 +1,7 @@
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst-libs/gst/insertbin/.libs
-includedir=${pcfiledir}/../gst-libs
+libdir=@insertbinlibdir@
+includedir=@abs_top_srcdir@/gst-libs
 
 Name: GStreamer Insert Bin, Uninstalled
 Description: Bin to automatically and insertally link elements, uninstalled

@@ -1,6 +1,6 @@
 prefix=
 exec_prefix=
-libdir=@abs_top_builddir@/gst-libs/gst/gl/.libs
+libdir=@gllibdir@
 includedir=@abs_top_builddir@/gst-libs
 girdir=@abs_top_builddir@/gst-libs/gst/base
 typelibdir=@abs_top_builddir@/gst-libs/gst/base

@@ -1,6 +1,6 @@
 prefix=
 exec_prefix=
-libdir=@abs_top_builddir@/gst-libs/gst/audio/.libs
+libdir=@audiolibdir@
 includedir=@abs_top_srcdir@/gst-libs
 
 Name: GStreamer bad audio library, uninstalled

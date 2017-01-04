@@ -1,6 +1,6 @@
 prefix=
 exec_prefix=
-libdir=@abs_top_builddir@/gst-libs/gst/video/.libs
+libdir=@videolibdir@
 includedir=@abs_top_builddir@/gst-libs
 girdir=@abs_top_builddir@/gst-libs/gst/video
 typelibdir=@abs_top_builddir@/gst-libs/gst/video
