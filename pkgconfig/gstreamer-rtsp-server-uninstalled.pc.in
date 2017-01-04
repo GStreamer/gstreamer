@@ -1,7 +1,7 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=@abs_top_builddir@/gst/rtsp-server/.libs
+libdir=@rtspserverlibdir@
 includedir=@abs_top_builddir@
 
 Name: gst-rtsp-server

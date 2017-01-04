@@ -10,7 +10,11 @@ all-local: $(pcfiles) $(pcfiles_uninstalled)
 %-@GST_API_VERSION@.pc: %.pc
 	cp $< $@
 %-@GST_API_VERSION@-uninstalled.pc: %-uninstalled.pc
-	cp $< $@
+### the uninstalled libdir is depend of the build system used so set it here
+### rather than hardcoding it in the file directly.
+	$(AM_V_GEN) sed \
+		-e "s|[@]rtspserverlibdir[@]|$(abs_top_builddir)/gst/rtsp-server/.libs|" \
+		$< > $@.tmp && mv $@.tmp $@
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(pcfiles)
