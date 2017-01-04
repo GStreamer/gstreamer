@@ -36,7 +36,21 @@ cp_verbose_0 = @echo "  CP     $@";
 %-@GST_API_VERSION@.pc: %.pc
 	$(cp_verbose_0)cp $< $@
 %-@GST_API_VERSION@-uninstalled.pc: %-uninstalled.pc
-	$(cp_verbose_0)cp $< $@
+### the uninstalled libdir is depend of the build system used so set it here
+### rather than hardcoding it in the file directly.
+	$(AM_V_GEN) sed \
+		-e "s|[@]allocatorslibdir[@]|$(abs_top_builddir)/gst-libs/gst/allocators/.libs|" \
+		-e "s|[@]audiolibdir[@]|$(abs_top_builddir)/gst-libs/gst/audio/.libs|" \
+		-e "s|[@]applibdir[@]|$(abs_top_builddir)/gst-libs/gst/app/.libs|" \
+		-e "s|[@]fftlibdir[@]|$(abs_top_builddir)/gst-libs/gst/fft/.libs|" \
+		-e "s|[@]pbutilslibdir[@]|$(abs_top_builddir)/gst-libs/gst/pbutils/.libs|" \
+		-e "s|[@]rifflibdir[@]|$(abs_top_builddir)/gst-libs/gst/riff/.libs|" \
+		-e "s|[@]rtplibdir[@]|$(abs_top_builddir)/gst-libs/gst/rtp/.libs|" \
+		-e "s|[@]rtsplibdir[@]|$(abs_top_builddir)/gst-libs/gst/rtsp/.libs|" \
+		-e "s|[@]sdplibdir[@]|$(abs_top_builddir)/gst-libs/gst/sdp/.libs|" \
+		-e "s|[@]taglibdir[@]|$(abs_top_builddir)/gst-libs/gst/tag/.libs|" \
+		-e "s|[@]videolibdir[@]|$(abs_top_builddir)/gst-libs/gst/video/.libs|" \
+		$< > $@.tmp && mv $@.tmp $@
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(pcverfiles)
