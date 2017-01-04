@@ -31,7 +31,15 @@ cp_verbose_0 = @echo "  CP     $@";
 %-@GST_API_VERSION@.pc: %.pc
 	$(cp_verbose_0)cp $< $@
 %-@GST_API_VERSION@-uninstalled.pc: %-uninstalled.pc
-	$(cp_verbose_0)cp $< $@
+### the uninstalled libdir is depend of the build system used so set it here
+### rather than hardcoding it in the file directly.
+	$(AM_V_GEN) sed \
+		-e "s|[@]gstlibdir[@]|$(abs_top_builddir)/gst/.libs|" \
+		-e "s|[@]checklibdir[@]|$(abs_top_builddir)/libs/gst/check/.libs|" \
+		-e "s|[@]baselibdir[@]|$(abs_top_builddir)/libs/gst/base/.libs|" \
+		-e "s|[@]netlibdir[@]|$(abs_top_builddir)/libs/gst/net/.libs|" \
+		-e "s|[@]controllerlibdir[@]|$(abs_top_builddir)/libs/gst/controller/.libs|" \
+		$< > $@.tmp && mv $@.tmp $@
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(pcfiles)

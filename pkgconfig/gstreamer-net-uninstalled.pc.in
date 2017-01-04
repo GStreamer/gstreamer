@@ -1,7 +1,7 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=@abs_top_builddir@/libs/gst/net/.libs
+libdir=@netlibdir@
 includedir=
 girdir=@abs_top_builddir@/libs/gst/net
 typelibdir=@abs_top_builddir@/libs/gst/net
