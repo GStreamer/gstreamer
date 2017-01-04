@@ -1,7 +1,7 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=@abs_top_builddir@/ges/.libs
+libdir=@geslibdir@
 includedir=@abs_top_builddir@
 
 Name: gst-editing-services
