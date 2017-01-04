@@ -1283,12 +1283,13 @@ gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
     GstCaps * out_caps)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
-  gboolean caps_changed = FALSE;
+  gboolean sink_caps_changed = FALSE;
+  gboolean src_caps_changed = FALSE;
   GstVideoInfo vinfo;
   gboolean ret = FALSE;
 
   g_mutex_lock (&postproc->postproc_lock);
-  if (!gst_vaapipostproc_update_sink_caps (postproc, caps, &caps_changed))
+  if (!gst_vaapipostproc_update_sink_caps (postproc, caps, &sink_caps_changed))
     goto done;
   /* HACK: This is a workaround to deal with the va-intel-driver for non-native
    * formats while doing advanced deinterlacing. The format of reference surfaces must
@@ -1302,10 +1303,11 @@ gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
         "Advanced deinterlacing requires the native video formats used by the driver internally");
     goto done;
   }
-  if (!gst_vaapipostproc_update_src_caps (postproc, out_caps, &caps_changed))
+  if (!gst_vaapipostproc_update_src_caps (postproc, out_caps,
+          &src_caps_changed))
     goto done;
 
-  if (caps_changed) {
+  if (sink_caps_changed || src_caps_changed) {
     gst_vaapipostproc_destroy (postproc);
     if (!gst_vaapipostproc_create (postproc))
       goto done;
@@ -1319,13 +1321,20 @@ gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
 
   postproc->same_caps = gst_caps_is_equal (caps, out_caps);
 
-  /* set passthrough according to caps changes or filter changes */
-  gst_vaapipostproc_set_passthrough (trans);
+  if (!src_caps_changed) {
+    /* set passthrough according to caps changes or filter changes */
+    gst_vaapipostproc_set_passthrough (trans);
+  }
 
   ret = TRUE;
 
 done:
   g_mutex_unlock (&postproc->postproc_lock);
+
+  /* Updates the srcpad caps and send the caps downstream */
+  if (ret && src_caps_changed)
+    gst_base_transform_update_src_caps (trans, out_caps);
+
   return ret;
 }
 
