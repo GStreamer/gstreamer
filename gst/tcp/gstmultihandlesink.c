@@ -348,8 +348,8 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TIME_MIN,
       g_param_spec_int64 ("time-min", "Time min",
-          "min number of time to queue (-1 = as little as possible)", -1,
-          G_MAXINT64, DEFAULT_TIME_MIN,
+          "min amount of time to queue (in nanoseconds) "
+          "(-1 = as little as possible)", -1, G_MAXINT64, DEFAULT_TIME_MIN,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BUFFERS_MIN,
       g_param_spec_int ("buffers-min", "Buffers min",
@@ -383,7 +383,7 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TIME_QUEUED,
       g_param_spec_uint64 ("time-queued", "Time queued",
-          "Number of time currently queued", 0, G_MAXUINT64, 0,
+          "Amount of time currently queued (in nanoseconds)", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 #endif
 
