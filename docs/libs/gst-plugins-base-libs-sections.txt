@@ -2308,6 +2308,7 @@ gst_encoding_profile_is_equal
 gst_encoding_profile_is_enabled
 gst_encoding_profile_get_input_caps
 gst_encoding_profile_get_type_nick
+gst_encoding_profile_copy
 <SUBSECTION container>
 GstEncodingContainerProfile
 gst_encoding_container_profile_new

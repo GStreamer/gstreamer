@@ -355,6 +355,8 @@ struct _GstEncodingProfile
 struct _GstEncodingProfileClass
 {
   GObjectClass parent_class;
+
+  void (*copy) (GstEncodingProfile * self, GstEncodingProfile * copy);
 };
 
 enum
@@ -816,11 +818,27 @@ gst_encoding_container_profile_finalize (GObject * object)
 }
 
 static void
+gst_encoding_container_profile_copy (GstEncodingProfile * profile,
+    GstEncodingProfile * copy_profile)
+{
+  GstEncodingContainerProfile *self = GST_ENCODING_CONTAINER_PROFILE (profile),
+      *copy = GST_ENCODING_CONTAINER_PROFILE (copy_profile);
+  GList *tmp;
+
+  for (tmp = self->encodingprofiles; tmp; tmp = tmp->next) {
+    gst_encoding_container_profile_add_profile (copy,
+        gst_encoding_profile_copy (tmp->data));
+  }
+}
+
+static void
 gst_encoding_container_profile_class_init (GstEncodingContainerProfileClass * k)
 {
   GObjectClass *gobject_class = (GObjectClass *) k;
 
   gobject_class->finalize = gst_encoding_container_profile_finalize;
+
+  ((GstEncodingProfileClass *) k)->copy = gst_encoding_container_profile_copy;
 }
 
 /**
@@ -858,6 +876,17 @@ G_DEFINE_TYPE (GstEncodingVideoProfile, gst_encoding_video_profile,
     GST_TYPE_ENCODING_PROFILE);
 
 static void
+gst_encoding_video_profile_copy (GstEncodingProfile * profile,
+    GstEncodingProfile * copy_profile)
+{
+  GstEncodingVideoProfile *self = GST_ENCODING_VIDEO_PROFILE (profile),
+      *copy = GST_ENCODING_VIDEO_PROFILE (copy_profile);
+
+  copy->pass = self->pass;
+  copy->variableframerate = self->variableframerate;
+}
+
+static void
 gst_encoding_video_profile_init (GstEncodingVideoProfile * prof)
 {
   /* Nothing to initialize */
@@ -866,6 +895,7 @@ gst_encoding_video_profile_init (GstEncodingVideoProfile * prof)
 static void
 gst_encoding_video_profile_class_init (GstEncodingVideoProfileClass * klass)
 {
+  ((GstEncodingProfileClass *) klass)->copy = gst_encoding_video_profile_copy;
 }
 
 /**
@@ -1902,4 +1932,34 @@ gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)
   }
 
   return (GstEncodingProfile *) profile;
+}
+
+/**
+ * gst_encoding_profile_copy:
+ * @self: The #GstEncodingProfile to copy
+ *
+ * Makes a deep copy of @self
+ *
+ * Returns: (transfer full): The copy of @self
+ *
+ * Since 1.12
+ */
+GstEncodingProfile *
+gst_encoding_profile_copy (GstEncodingProfile * self)
+{
+  GstEncodingProfileClass *klass =
+      (GstEncodingProfileClass *) G_OBJECT_GET_CLASS (self);
+  GstEncodingProfile *copy =
+      common_creation (G_OBJECT_TYPE (self), self->format, self->preset,
+      self->name, self->description, self->restriction, self->presence);
+
+  copy->enabled = self->enabled;
+  copy->allow_dynamic_output = self->allow_dynamic_output;
+  gst_encoding_profile_set_preset_name (copy, self->preset_name);
+  gst_encoding_profile_set_description (copy, self->description);
+
+  if (klass->copy)
+    klass->copy (self, copy);
+
+  return copy;
 }

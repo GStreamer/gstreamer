@@ -188,6 +188,7 @@ void     gst_encoding_video_profile_set_variableframerate (GstEncodingVideoProfi
                                                            gboolean variableframerate);
 
 GstEncodingProfile * gst_encoding_profile_from_discoverer (GstDiscovererInfo *info);
+GstEncodingProfile * gst_encoding_profile_copy (GstEncodingProfile *self);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingAudioProfile, gst_object_unref)
