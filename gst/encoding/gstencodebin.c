@@ -2032,23 +2032,24 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
   if (sgroup->restriction_sid != 0)
     g_signal_handler_disconnect (sgroup->profile, sgroup->restriction_sid);
 
-  if (ebin->muxer) {
-    /* outqueue - Muxer */
-    tmppad = gst_element_get_static_pad (sgroup->outqueue, "src");
-    pad = gst_pad_get_peer (tmppad);
+  if (sgroup->outqueue) {
+    if (ebin->muxer) {
+      /* outqueue - Muxer */
+      tmppad = gst_element_get_static_pad (sgroup->outqueue, "src");
+      pad = gst_pad_get_peer (tmppad);
 
-    if (pad) {
-      /* Remove muxer request sink pad */
-      gst_pad_unlink (tmppad, pad);
-      if (GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (pad)) ==
-          GST_PAD_REQUEST)
-        gst_element_release_request_pad (ebin->muxer, pad);
-      gst_object_unref (pad);
+      if (pad) {
+        /* Remove muxer request sink pad */
+        gst_pad_unlink (tmppad, pad);
+        if (GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (pad)) ==
+            GST_PAD_REQUEST)
+          gst_element_release_request_pad (ebin->muxer, pad);
+        gst_object_unref (pad);
+      }
+      gst_object_unref (tmppad);
     }
-    gst_object_unref (tmppad);
-  }
-  if (sgroup->outqueue)
     gst_element_set_state (sgroup->outqueue, GST_STATE_NULL);
+  }
 
   if (sgroup->formatter) {
     /* capsfilter - formatter - outqueue */
@@ -2056,13 +2057,16 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
     gst_element_set_state (sgroup->outfilter, GST_STATE_NULL);
     gst_element_unlink (sgroup->formatter, sgroup->outqueue);
     gst_element_unlink (sgroup->outfilter, sgroup->formatter);
-  } else {
+  } else if (sgroup->outfilter) {
     /* Capsfilter - outqueue */
     gst_element_set_state (sgroup->outfilter, GST_STATE_NULL);
     gst_element_unlink (sgroup->outfilter, sgroup->outqueue);
   }
-  gst_element_set_state (sgroup->outqueue, GST_STATE_NULL);
-  gst_bin_remove (GST_BIN (ebin), sgroup->outqueue);
+
+  if (sgroup->outqueue) {
+    gst_element_set_state (sgroup->outqueue, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (ebin), sgroup->outqueue);
+  }
 
   /* streamcombiner - parser - capsfilter */
   if (sgroup->parser) {
