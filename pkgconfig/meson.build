@@ -11,7 +11,6 @@ pkgconf.set('VERSION', gst_version)
 pkgconf.set('abs_top_builddir', join_paths(meson.current_build_dir(), '..'))
 pkgconf.set('abs_top_srcdir', join_paths(meson.current_source_dir(), '..'))
 pkgconf.set('gstlibdir', join_paths(meson.build_root(), libgst.outdir()))
-pkgconf.set('checklibdir', join_paths(meson.build_root(), gst_check.outdir()))
 pkgconf.set('baselibdir', join_paths(meson.build_root(), gst_base.outdir()))
 pkgconf.set('controllerlibdir', join_paths(meson.build_root(), gst_controller.outdir()))
 pkgconf.set('netlibdir', join_paths(meson.build_root(), gst_net.outdir()))
@@ -19,11 +18,15 @@ pkgconf.set('netlibdir', join_paths(meson.build_root(), gst_net.outdir()))
 pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
 
 pkg_files = ['gstreamer-base',
-  'gstreamer-check',
   'gstreamer-controller',
   'gstreamer-net',
   'gstreamer'
 ]
+
+if host_machine.system() != 'windows'
+    pkgconf.set('checklibdir', join_paths(meson.build_root(), gst_check.outdir()))
+    pkg_files += ['gstreamer-check']
+endif
 
 foreach p : pkg_files
   infile = p + '.pc.in'
