@@ -3536,6 +3536,11 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
               "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/opus") == 0) {
+          tmp = gst_structure_new ("audio/x-opus",
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
         } else if (strcmp (type->mime, "audio/flac") == 0) {
           tmp = gst_structure_new ("audio/x-flac",
               "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,

@@ -156,6 +156,8 @@ caps_to_mime (GstCaps * caps)
     return "audio/g711-mlaw";
   } else if (strcmp (name, "audio/x-vorbis") == 0) {
     return "audio/vorbis";
+  } else if (strcmp (name, "audio/x-opus") == 0) {
+    return "audio/opus";
   }
 
   return NULL;
