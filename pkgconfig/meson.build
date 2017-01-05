@@ -14,7 +14,6 @@ pkgconf.set('audiolibdir', join_paths(meson.build_root(), gstbadaudio.outdir()))
 pkgconf.set('baselibdir', join_paths(meson.build_root(), gstbadbase.outdir()))
 pkgconf.set('videolibdir', join_paths(meson.build_root(), gstbadvideo.outdir()))
 pkgconf.set('codecparserslibdir', join_paths(meson.build_root(), gstcodecparsers.outdir()))
-pkgconf.set('gllibdir', join_paths(meson.build_root(), gstgl.outdir()))
 pkgconf.set('insertbinlibdir', join_paths(meson.build_root(), gstinsertbin.outdir()))
 pkgconf.set('mpegtslibdir', join_paths(meson.build_root(), gstmpegts.outdir()))
 pkgconf.set('playerlibdir', join_paths(meson.build_root(), gstplayer.outdir()))
@@ -37,6 +36,7 @@ pkg_libs = [
 
 # XXX: requires the meson.build to be parsed/executed after gst-libs/gl/meson.build
 if build_gstgl
+  pkgconf.set('gllibdir', join_paths(meson.build_root(), gstgl.outdir()))
   pkg_libs += 'gl'
 endif
 
