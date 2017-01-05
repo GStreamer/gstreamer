@@ -44,6 +44,10 @@ if cc.get_id() == 'msvc'
   # are built with MinGW
   noseh_link_args = ['/SAFESEH:NO']
 else
+  if cxx.has_argument('-Wno-non-virtual-dtor')
+    add_project_arguments('-Wno-non-virtual-dtor', language: 'cpp')
+  endif
+
   noseh_link_args = []
 endif
 
