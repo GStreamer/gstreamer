@@ -7,7 +7,7 @@
 subdir('bluez')
 #subdir('cdrom')
 subdir('d3dvideosink')
-#subdir('decklink')
+subdir('decklink')
 subdir('directsound')
 #subdir('dshowdecwrapper')
 #subdir('dshowsrcwrapper')
