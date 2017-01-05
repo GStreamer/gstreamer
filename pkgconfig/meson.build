@@ -17,7 +17,6 @@ pkgconf.set('codecparserslibdir', join_paths(meson.build_root(), gstcodecparsers
 pkgconf.set('insertbinlibdir', join_paths(meson.build_root(), gstinsertbin.outdir()))
 pkgconf.set('mpegtslibdir', join_paths(meson.build_root(), gstmpegts.outdir()))
 pkgconf.set('playerlibdir', join_paths(meson.build_root(), gstplayer.outdir()))
-pkgconf.set('waylandlibdir', join_paths(meson.build_root(), gstwayland.outdir()))
 pkgconf.set('basecamerabinsrclibdir', join_paths(meson.build_root(), gstbasecamerabin.outdir()))
 pkgconf.set('photographylibdir', join_paths(meson.build_root(), gstphotography.outdir()))
 
