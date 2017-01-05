@@ -26,7 +26,7 @@ if libdl.found() and have_pthread_h
 endif
 
 if build_decklink
-  decklink = library('decklink',
+  decklink = library('gstdecklink',
     decklink_sources,
     cpp_args : gst_plugins_bad_args + [ '-DGST_USE_UNSTABLE_API' ],
     link_args : decklink_ldflags + noseh_link_args,
