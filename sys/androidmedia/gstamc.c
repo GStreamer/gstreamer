@@ -3561,6 +3561,11 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
         for (j = 0; j < type->n_color_formats; j++) {
           GstVideoFormat format;
 
+          /* Skip here without a warning, this is special and handled
+           * in the decoder when doing rendering to a surface */
+          if (type->color_formats[j] == COLOR_FormatAndroidOpaque)
+            continue;
+
           format =
               gst_amc_color_format_to_video_format (codec_info,
               type->mime, type->color_formats[j]);
