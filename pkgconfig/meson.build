@@ -40,6 +40,11 @@ if build_gstgl
   pkg_libs += 'gl'
 endif
 
+if use_wayland
+    pkgconf.set('waylandlibdir', join_paths(meson.build_root(), gstwayland.outdir()))
+    pkg_libs += 'wayland'
+endif
+
 foreach p : pkg_libs
   infile = 'gstreamer-@0@.pc.in'.format(p)
   outfile = 'gstreamer-@0@-@1@.pc'.format(p, api_version)
