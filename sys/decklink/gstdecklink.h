@@ -209,7 +209,7 @@ struct _GstDecklinkInput {
   GMutex lock;
 
   /* Set by the video source */
-  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time, GstClockTime stream_time, GstClockTime stream_duration, guint hours, guint minutes, guint seconds, guint frames, BMDTimecodeFlags bflags, gboolean no_signal);
+  void (*got_video_frame) (GstElement *videosrc, IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode, GstClockTime capture_time, GstClockTime stream_time, GstClockTime stream_duration, IDeckLinkTimecode *dtc, gboolean no_signal);
   /* Configured mode or NULL */
   const GstDecklinkMode *mode;
   BMDPixelFormat format;

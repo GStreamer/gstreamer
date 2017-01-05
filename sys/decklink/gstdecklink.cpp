@@ -756,8 +756,8 @@ public:
     void (*got_video_frame) (GstElement * videosrc,
         IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
         GstClockTime capture_time, GstClockTime stream_time,
-        GstClockTime stream_duration, guint hours, guint minutes, guint seconds,
-        guint frames, BMDTimecodeFlags bflags, gboolean no_signal) = NULL;
+        GstClockTime stream_duration, IDeckLinkTimecode *dtc, gboolean
+        no_signal) = NULL;
     void (*got_audio_packet) (GstElement * videosrc,
         IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
         GstClockTime packet_time, gboolean no_signal) = NULL;
@@ -808,10 +808,6 @@ public:
       BMDTimeValue stream_time = GST_CLOCK_TIME_NONE;
       BMDTimeValue stream_duration = GST_CLOCK_TIME_NONE;
       IDeckLinkTimecode *dtc;
-      uint8_t hours, minutes, seconds, frames;
-      BMDTimecodeFlags bflags;
-
-      hours = minutes = seconds = frames = bflags = 0;
 
       res =
           video_frame->GetStreamTime (&stream_time, &stream_duration,
@@ -833,27 +829,12 @@ public:
         if (res != S_OK) {
           GST_DEBUG_OBJECT (videosrc, "Failed to get timecode: 0x%08x", res);
           dtc = NULL;
-        } else {
-          res = dtc->GetComponents (&hours, &minutes, &seconds, &frames);
-          if (res != S_OK) {
-            GST_ERROR ("Could not get components for timecode %p: 0x%08x", dtc,
-                res);
-            hours = 0;
-            minutes = 0;
-            seconds = 0;
-            frames = 0;
-            bflags = 0;
-          } else {
-            GST_DEBUG_OBJECT (videosrc, "Got timecode %02d:%02d:%02d:%02d",
-                hours, minutes, seconds, frames);
-            bflags = dtc->GetFlags ();
-          }
         }
       }
 
+      /* passing dtc reference */
       got_video_frame (videosrc, video_frame, mode, capture_time,
-          stream_time, stream_duration, (guint8) hours, (guint8) minutes,
-          (guint8) seconds, (guint8) frames, bflags, no_signal);
+          stream_time, stream_duration, dtc, no_signal);
     }
 
     if (got_audio_packet && audiosrc && audio_packet) {

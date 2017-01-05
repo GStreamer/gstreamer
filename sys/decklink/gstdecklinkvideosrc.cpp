@@ -601,8 +601,8 @@ static void
 gst_decklink_video_src_got_frame (GstElement * element,
     IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
     GstClockTime capture_time, GstClockTime stream_time,
-    GstClockTime stream_duration, guint hours, guint minutes, guint seconds,
-    guint frames, BMDTimecodeFlags bflags, gboolean no_signal)
+    GstClockTime stream_duration, IDeckLinkTimecode *dtc,
+    gboolean no_signal)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
   GstClockTime timestamp, duration;
@@ -667,23 +667,42 @@ gst_decklink_video_src_got_frame (GstElement * element,
     f->mode = mode;
     f->format = frame->GetPixelFormat ();
     f->no_signal = no_signal;
-    bmode = gst_decklink_get_mode (mode);
-    if (bmode->interlaced) {
-      flags =
-          (GstVideoTimeCodeFlags) (flags |
-          GST_VIDEO_TIME_CODE_FLAGS_INTERLACED);
-      if (bflags & bmdTimecodeFieldMark)
-        field_count = 2;
-      else
-        field_count = 1;
+    if (dtc != NULL) {
+      uint8_t hours, minutes, seconds, frames;
+      BMDTimecodeFlags bflags;
+      HRESULT res;
+
+      res = dtc->GetComponents (&hours, &minutes, &seconds, &frames);
+      if (res != S_OK) {
+        GST_ERROR ("Could not get components for timecode %p: 0x%08x", dtc,
+            res);
+        f->tc = NULL;
+      } else {
+        bflags = dtc->GetFlags ();
+        GST_DEBUG_OBJECT (self, "Got timecode %02d:%02d:%02d:%02d",
+                hours, minutes, seconds, frames);
+        bmode = gst_decklink_get_mode (mode);
+        if (bmode->interlaced) {
+          flags =
+              (GstVideoTimeCodeFlags) (flags |
+              GST_VIDEO_TIME_CODE_FLAGS_INTERLACED);
+          if (bflags & bmdTimecodeFieldMark)
+            field_count = 2;
+          else
+            field_count = 1;
+        }
+        if (bflags & bmdTimecodeIsDropFrame)
+          flags =
+              (GstVideoTimeCodeFlags) (flags |
+              GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
+        f->tc =
+            gst_video_time_code_new (bmode->fps_n, bmode->fps_d, NULL, flags, hours,
+            minutes, seconds, frames, field_count);
+      }
+      dtc->Release ();
+    } else {
+      f->tc = NULL;
     }
-    if (bflags & bmdTimecodeIsDropFrame)
-      flags =
-          (GstVideoTimeCodeFlags) (flags |
-          GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
-    f->tc =
-        gst_video_time_code_new (bmode->fps_n, bmode->fps_d, NULL, flags, hours,
-        minutes, seconds, frames, field_count);
 
     frame->AddRef ();
     g_queue_push_tail (&self->current_frames, f);
@@ -798,7 +817,8 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
     GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_GAP);
   GST_BUFFER_TIMESTAMP (*buffer) = f->timestamp;
   GST_BUFFER_DURATION (*buffer) = f->duration;
-  gst_buffer_add_video_time_code_meta (*buffer, f->tc);
+  if (f->tc != NULL)
+    gst_buffer_add_video_time_code_meta (*buffer, f->tc);
 
   mode = gst_decklink_get_mode (self->mode);
   if (mode->interlaced && mode->tff)
