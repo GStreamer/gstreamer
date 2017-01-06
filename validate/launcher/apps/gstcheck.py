@@ -31,10 +31,14 @@ from launcher.utils import printc, Colors
 class MesonTest(Test):
 
     def __init__(self, name, options, reporter, test, child_env=None):
+        ref_env = os.environ
         if child_env is None:
-            child_env = dict()
+            child_env = {}
+        else:
+            ref_env.update(child_env)
+
         if not isinstance(test.env, dict):
-            test.env = test.env.get_env(child_env)
+            test.env = test.env.get_env(ref_env)
         child_env.update(test.env)
         if len(test.extra_paths) > 0:
             child_env['PATH'] = child_env['PATH'] + \

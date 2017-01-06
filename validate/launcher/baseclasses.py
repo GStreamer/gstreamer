@@ -255,7 +255,7 @@ class Test(Loggable):
         if self.process.returncode == 0:
             self.set_result(Result.PASSED)
         elif self.process.returncode in [-signal.SIGSEGV, -signal.SIGABRT, 139]:
-            self.add_stack_trace_to_file()
+            self.add_stack_trace_to_logfile()
             self.set_result(Result.FAILED,
                             "Application segfaulted, returne code: %d" % (
                                 self.process.returncode))
