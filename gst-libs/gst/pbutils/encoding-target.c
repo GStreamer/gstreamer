@@ -1079,7 +1079,7 @@ gst_encoding_list_available_categories (void)
     else
       g_free (name);
   }
-  g_free (tmp1);
+  g_list_free (tmp1);
 
   return res;
 }
