@@ -185,6 +185,8 @@ struct _GstAdaptiveDemuxStream
 
   /* TODO check if used */
   gboolean eos;
+
+  gboolean do_block; /* TRUE if stream should block on preroll */
 };
 
 /**
@@ -207,6 +209,7 @@ struct _GstAdaptiveDemux
   GstUriDownloader *downloader;
 
   GList *streams;
+  GList *prepared_streams;
   GList *next_streams;
 
   GstSegment segment;
