@@ -295,8 +295,13 @@ gst_gdk_pixbuf_overlay_set_property (GObject * object, guint property_id,
 
       if (overlay->pixbuf != NULL)
         g_object_unref (overlay->pixbuf);
-      overlay->pixbuf = g_object_ref (pixbuf);
-      gst_gdk_pixbuf_overlay_set_pixbuf (overlay, g_object_ref (pixbuf));
+      if (pixbuf) {
+        overlay->pixbuf = g_object_ref (pixbuf);
+        gst_gdk_pixbuf_overlay_set_pixbuf (overlay, g_object_ref (pixbuf));
+      } else {
+        overlay->pixbuf = NULL;
+        gst_buffer_replace (&overlay->pixels, NULL);
+      }
       break;
     }
     case PROP_OFFSET_X:
