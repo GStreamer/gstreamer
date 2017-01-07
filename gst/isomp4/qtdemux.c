@@ -3135,7 +3135,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
       /* If this is a GST_FORMAT_BYTES stream and there's a significant
        * difference (1 sec.) between decode_ts and timestamp, prefer the
        * former */
-      if (!qtdemux->upstream_format_is_time
+      if (decode_ts != 0 && !qtdemux->upstream_format_is_time
           && ABSDIFF (decode_ts, timestamp) >
           MAX (stream->duration_last_moof / 2,
               GSTTIME_TO_QTSTREAMTIME (stream, GST_SECOND))) {
