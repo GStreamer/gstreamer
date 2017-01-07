@@ -2848,6 +2848,7 @@ init:
       pad->tfra = atom_tfra_new (qtmux->context, atom_trak_get_id (pad->trak));
       atom_mfra_add_tfra (qtmux->mfra, pad->tfra);
     }
+    atom_traf_set_base_decode_time (pad->traf, dts);
   }
 
   /* add buffer and metadata */

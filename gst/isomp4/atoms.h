@@ -761,6 +761,13 @@ typedef struct _AtomTFHD
   guint32 default_sample_flags;
 } AtomTFHD;
 
+typedef struct _AtomTFDT
+{
+  AtomFull header;
+
+  guint64 base_media_decode_time;
+} AtomTFDT;
+
 typedef struct _TRUNSampleEntry
 {
   guint32 sample_duration;
@@ -797,6 +804,8 @@ typedef struct _AtomTRAF
   Atom header;
 
   AtomTFHD tfhd;
+
+  AtomTFDT tfdt;
 
   /* list of AtomTRUN */
   GList *truns;
@@ -948,6 +957,7 @@ void       atom_moof_free              (AtomMOOF *moof);
 guint64    atom_moof_copy_data         (AtomMOOF *moof, guint8 **buffer, guint64 *size, guint64* offset);
 AtomTRAF * atom_traf_new               (AtomsContext * context, guint32 track_ID);
 void       atom_traf_free              (AtomTRAF * traf);
+void       atom_traf_set_base_decode_time (AtomTRAF * traf, guint64 base_decode_time);
 void       atom_traf_add_samples       (AtomTRAF * traf, guint32 delta,
                                         guint32 size, gboolean sync, gint64 pts_offset,
                                         gboolean sdtp_sync);

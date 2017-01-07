@@ -4302,6 +4302,26 @@ atom_tfhd_copy_data (AtomTFHD * tfhd, guint8 ** buffer, guint64 * size,
 }
 
 static guint64
+atom_tfdt_copy_data (AtomTFDT * tfdt, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+
+  if (!atom_full_copy_data (&tfdt->header, buffer, size, offset)) {
+    return 0;
+  }
+
+  /* 32-bit time if version == 0 else 64-bit: */
+  if (tfdt->header.version == 0)
+    prop_copy_uint32 (tfdt->base_media_decode_time, buffer, size, offset);
+  else
+    prop_copy_uint64 (tfdt->base_media_decode_time, buffer, size, offset);
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
+}
+
+static guint64
 atom_trun_copy_data (AtomTRUN * trun, guint8 ** buffer, guint64 * size,
     guint64 * offset, guint32 * data_offset)
 {
@@ -4382,6 +4402,9 @@ atom_traf_copy_data (AtomTRAF * traf, guint8 ** buffer, guint64 * size,
   if (!atom_tfhd_copy_data (&traf->tfhd, buffer, size, offset)) {
     return 0;
   }
+  if (!atom_tfdt_copy_data (&traf->tfdt, buffer, size, offset)) {
+    return 0;
+  }
 
   walker = g_list_first (traf->truns);
   while (walker != NULL) {
@@ -4452,6 +4475,15 @@ atom_tfhd_init (AtomTFHD * tfhd, guint32 track_ID)
   tfhd->default_sample_duration = 0;
   tfhd->default_sample_size = 0;
   tfhd->default_sample_flags = 0;
+}
+
+static void
+atom_tfdt_init (AtomTFDT * tfdt)
+{
+  guint8 flags[3] = { 0, 0, 0 };
+  atom_full_init (&tfdt->header, FOURCC_tfdt, 0, 0, 0, flags);
+
+  tfdt->base_media_decode_time = 0;
 }
 
 static void
@@ -4528,6 +4560,7 @@ static void
 atom_traf_init (AtomTRAF * traf, AtomsContext * context, guint32 track_ID)
 {
   atom_header_set (&traf->header, FOURCC_traf, 0, 0);
+  atom_tfdt_init (&traf->tfdt);
   atom_tfhd_init (&traf->tfhd, track_ID);
   traf->truns = NULL;
 
@@ -4542,6 +4575,15 @@ atom_traf_new (AtomsContext * context, guint32 track_ID)
 
   atom_traf_init (traf, context, track_ID);
   return traf;
+}
+
+void
+atom_traf_set_base_decode_time (AtomTRAF * traf, guint64 base_decode_time)
+{
+  traf->tfdt.base_media_decode_time = base_decode_time;
+  /* If we need to write a 64-bit tfdt, set the atom version */
+  if (base_decode_time > G_MAXUINT32)
+    traf->tfdt.header.version = 1;
 }
 
 static void
