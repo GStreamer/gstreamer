@@ -1065,6 +1065,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstURISourceBin *urisrc = GST_URI_SOURCE_BIN (user_data);
   ChildSrcPadInfo *child_info;
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
 
   if (!(child_info =
           g_object_get_data (G_OBJECT (pad), "urisourcebin.srcpadinfo")))
@@ -1079,22 +1080,28 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
   if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info))) {
     GstEvent *ev = GST_PAD_PROBE_INFO_EVENT (info);
-    if (GST_EVENT_TYPE (ev) == GST_EVENT_EOS && urisrc->pending_pads) {
+    if (GST_EVENT_TYPE (ev) == GST_EVENT_EOS) {
+      GstEvent *event;
+      GstStructure *s;
+
       GST_LOG_OBJECT (urisrc, "EOS on pad %" GST_PTR_FORMAT, pad);
-      if (!link_pending_pad_to_output (urisrc, child_info->output_slot)) {
-        GstEvent *event;
-        GstStructure *s;
 
-        /* Mark that we fed an EOS to this slot */
-        child_info->output_slot->is_eos = TRUE;
+      /* never forward actual EOS to slot */
+      ret = GST_PAD_PROBE_DROP;
 
-        /* Actually feed a custom EOS event to avoid marking pads as EOSed */
-        s = gst_structure_new_empty ("urisourcebin-custom-eos");
-        event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
-        gst_pad_send_event (child_info->output_slot->sinkpad, event);
+      if ((urisrc->pending_pads &&
+              link_pending_pad_to_output (urisrc, child_info->output_slot))) {
+        GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+        goto done;
       }
-      GST_URI_SOURCE_BIN_UNLOCK (urisrc);
-      return GST_PAD_PROBE_HANDLED;
+
+      /* Mark that we fed an EOS to this slot */
+      child_info->output_slot->is_eos = TRUE;
+
+      /* Actually feed a custom EOS event to avoid marking pads as EOSed */
+      s = gst_structure_new_empty ("urisourcebin-custom-eos");
+      event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+      gst_pad_send_event (child_info->output_slot->sinkpad, event);
     } else if (GST_EVENT_TYPE (ev) == GST_EVENT_CAPS) {
       GstCaps *caps;
       gst_event_parse_caps (ev, &caps);
@@ -1104,7 +1111,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
 
 done:
-  return GST_PAD_PROBE_OK;
+  return ret;
 }
 
 /* Called with lock held */
@@ -1244,20 +1251,17 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
     OutputSlotInfo *slot;
     GST_DEBUG_OBJECT (pad, "we received EOS");
 
-    /* Check the slot is still unlinked - maybe it got
-     * re-linked and we should drop this EOS */
     GST_URI_SOURCE_BIN_LOCK (urisrc);
-    slot = g_object_get_data (G_OBJECT (pad), "urisourcebin.slotinfo");
-    if (slot && slot->linked_info) {
-      GST_DEBUG_OBJECT (pad,
-          "EOS pad was re-linked to pending pad, so removing EOS status");
-      slot->is_eos = FALSE;
-      GST_URI_SOURCE_BIN_UNLOCK (urisrc);
-      return GST_PAD_PROBE_HANDLED;
-    }
 
-    /* Otherwise it's time to send EOS and clean up this pad */
+    slot = g_object_get_data (G_OBJECT (pad), "urisourcebin.slotinfo");
+
     gst_pad_push_event (slot->srcpad, gst_event_new_eos ());
+
+    if (slot && slot->linked_info) {
+      /* Do not clear output slot yet */
+      GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+      return GST_PAD_PROBE_DROP;
+    }
 
     free_output_slot_async (urisrc, slot);
 
@@ -1266,7 +1270,7 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
     g_signal_emit (urisrc, gst_uri_source_bin_signals[SIGNAL_DRAINED], 0, NULL);
 
     GST_URI_SOURCE_BIN_UNLOCK (urisrc);
-    return GST_PAD_PROBE_HANDLED;
+    return GST_PAD_PROBE_DROP;
   }
   /* never drop events */
   return GST_PAD_PROBE_OK;
@@ -1338,35 +1342,28 @@ pad_removed_cb (GstElement * element, GstPad * pad, GstURISourceBin * urisrc)
 
   /* Send EOS to the output slot if the demuxer didn't already */
   if (info->output_slot) {
-    if (!info->output_slot->is_eos) {
-      /* custom event cannot be posted to EOS pad */
-      if (GST_PAD_IS_EOS (info->output_slot->sinkpad)) {
-        GST_LOG_OBJECT (element,
-            "Pad %" GST_PTR_FORMAT " was removed with EOS.", pad);
-        if (urisrc->pending_pads &&
-            link_pending_pad_to_output (urisrc, info->output_slot)) {
-          GST_URI_SOURCE_BIN_UNLOCK (urisrc);
-          return;
-        } else {
-          free_output_slot_async (urisrc, info->output_slot);
-        }
-      } else {
-        GstStructure *s;
-        GstEvent *event;
+    GstStructure *s;
+    GstEvent *event;
+    OutputSlotInfo *slot;
 
-        GST_LOG_OBJECT (element,
-            "Pad %" GST_PTR_FORMAT " was removed without EOS. Sending.", pad);
-
-        s = gst_structure_new_empty ("urisourcebin-custom-eos");
-        event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
-        gst_pad_send_event (info->output_slot->sinkpad, event);
-
-      }
-      info->output_slot->is_eos = TRUE;
+    if (!info->output_slot->is_eos && urisrc->pending_pads &&
+        link_pending_pad_to_output (urisrc, info->output_slot)) {
+      GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+      return;
     }
-    /* After the pad goes away, the slot is free to reuse */
+
+    slot = info->output_slot;
+
+    info->output_slot->is_eos = TRUE;
     info->output_slot->linked_info = NULL;
     info->output_slot = NULL;
+
+    GST_LOG_OBJECT (element,
+        "Pad %" GST_PTR_FORMAT " was removed without EOS. Sending.", pad);
+
+    s = gst_structure_new_empty ("urisourcebin-custom-eos");
+    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+    gst_pad_send_event (slot->sinkpad, event);
   } else {
     GST_LOG_OBJECT (urisrc, "Removed pad has no output slot");
   }
