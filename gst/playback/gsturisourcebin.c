@@ -934,8 +934,8 @@ new_demuxer_pad_added_cb (GstElement * element, GstPad * pad,
       gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
       pending_pad_blocked, urisrc, NULL);
   info->event_probe_id =
-      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-      demux_pad_events, urisrc, NULL);
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM |
+      GST_PAD_PROBE_TYPE_EVENT_FLUSH, demux_pad_events, urisrc, NULL);
 }
 
 static GstPadProbeReturn
@@ -1066,6 +1066,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstURISourceBin *urisrc = GST_URI_SOURCE_BIN (user_data);
   ChildSrcPadInfo *child_info;
   GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+  GstEvent *ev = GST_PAD_PROBE_INFO_EVENT (info);
 
   if (!(child_info =
           g_object_get_data (G_OBJECT (pad), "urisourcebin.srcpadinfo")))
@@ -1078,9 +1079,9 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     goto done;
   }
 
-  if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info))) {
-    GstEvent *ev = GST_PAD_PROBE_INFO_EVENT (info);
-    if (GST_EVENT_TYPE (ev) == GST_EVENT_EOS) {
+  switch (GST_EVENT_TYPE (ev)) {
+    case GST_EVENT_EOS:
+    {
       GstEvent *event;
       GstStructure *s;
 
@@ -1102,12 +1103,23 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       s = gst_structure_new_empty ("urisourcebin-custom-eos");
       event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
       gst_pad_send_event (child_info->output_slot->sinkpad, event);
-    } else if (GST_EVENT_TYPE (ev) == GST_EVENT_CAPS) {
+    }
+      break;
+    case GST_EVENT_CAPS:
+    {
       GstCaps *caps;
       gst_event_parse_caps (ev, &caps);
       gst_caps_replace (&child_info->cur_caps, caps);
     }
+      break;
+    case GST_EVENT_STREAM_START:
+    case GST_EVENT_FLUSH_STOP:
+      child_info->output_slot->is_eos = FALSE;
+      break;
+    default:
+      break;
   }
+
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
 
 done:
