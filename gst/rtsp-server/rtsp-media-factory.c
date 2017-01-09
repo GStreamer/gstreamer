@@ -156,7 +156,7 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
    * default prepare vmethod.
    *
    * The pipeline description should return a GstBin as the toplevel element
-   * which can be accomplished by enclosing the dscription with brackets '('
+   * which can be accomplished by enclosing the description with brackets '('
    * ')'.
    *
    * The description should return a pipeline with payloaders named pay0, pay1,
@@ -504,7 +504,7 @@ gst_rtsp_media_factory_add_role (GstRTSPMediaFactory * factory,
  * default prepare vmethod.
  *
  * The pipeline description should return a GstBin as the toplevel element
- * which can be accomplished by enclosing the dscription with brackets '('
+ * which can be accomplished by enclosing the description with brackets '('
  * ')'.
  *
  * The description should return a pipeline with payloaders named pay0, pay1,
