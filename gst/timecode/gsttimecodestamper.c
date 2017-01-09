@@ -57,13 +57,15 @@ enum
   PROP_OVERRIDE_EXISTING,
   PROP_DROP_FRAME,
   PROP_SOURCE_CLOCK,
-  PROP_DAILY_JAM
+  PROP_DAILY_JAM,
+  PROP_POST_MESSAGES
 };
 
 #define DEFAULT_OVERRIDE_EXISTING FALSE
 #define DEFAULT_DROP_FRAME FALSE
 #define DEFAULT_SOURCE_CLOCK NULL
 #define DEFAULT_DAILY_JAM NULL
+#define DEFAULT_POST_MESSAGES FALSE
 
 static GstStaticPadTemplate gst_timecodestamper_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -129,6 +131,10 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
           "Daily jam",
           "The daily jam of the timecode",
           G_TYPE_DATE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_POST_MESSAGES,
+      g_param_spec_boolean ("post-messages", "Post element message",
+          "Post element message containing the current timecode",
+          DEFAULT_POST_MESSAGES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_timecodestamper_sink_template));
@@ -150,6 +156,7 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
   timecodestamper->source_clock = DEFAULT_SOURCE_CLOCK;
   timecodestamper->current_tc = gst_video_time_code_new_empty ();
   timecodestamper->current_tc->config.latest_daily_jam = DEFAULT_DAILY_JAM;
+  timecodestamper->post_messages = DEFAULT_POST_MESSAGES;
 }
 
 static void
@@ -195,6 +202,9 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
       timecodestamper->current_tc->config.latest_daily_jam =
           g_value_dup_boxed (value);
       break;
+    case PROP_POST_MESSAGES:
+      timecodestamper->post_messages = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -220,6 +230,9 @@ gst_timecodestamper_get_property (GObject * object, guint prop_id,
     case PROP_DAILY_JAM:
       g_value_set_boxed (value,
           timecodestamper->current_tc->config.latest_daily_jam);
+      break;
+    case PROP_POST_MESSAGES:
+      g_value_set_boolean (value, timecodestamper->post_messages);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -357,12 +370,15 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
 {
   GstTimeCodeStamper *timecodestamper = GST_TIME_CODE_STAMPER (vfilter);
   GstClockTime ref_time;
+  GstVideoTimeCodeMeta *tc_meta;
+  GstVideoTimeCode *tc;
 
   GST_OBJECT_LOCK (timecodestamper);
-  if (gst_buffer_get_video_time_code_meta (buffer)
-      && !timecodestamper->override_existing) {
+  tc_meta = gst_buffer_get_video_time_code_meta (buffer);
+  if (tc_meta && !timecodestamper->override_existing) {
     GST_OBJECT_UNLOCK (timecodestamper);
-    return GST_FLOW_OK;
+    tc = gst_video_time_code_copy (&tc_meta->tc);
+    goto beach;
   } else if (timecodestamper->override_existing) {
     gst_buffer_foreach_meta (buffer, remove_timecode_meta, NULL);
   }
@@ -410,7 +426,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
         gst_video_time_code_nsec_since_daily_jam (timecodestamper->current_tc);
     ref_time =
         gst_segment_to_stream_time (&vfilter->segment, GST_FORMAT_TIME,
-        buffer->pts);
+        GST_BUFFER_PTS (buffer));
     if (timecode_time != GST_CLOCK_TIME_NONE && ref_time != GST_CLOCK_TIME_NONE
         && ((timecode_time > ref_time && timecode_time - ref_time > GST_SECOND)
             || (ref_time > timecode_time
@@ -426,7 +442,32 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     }
   }
   gst_buffer_add_video_time_code_meta (buffer, timecodestamper->current_tc);
+  tc = gst_video_time_code_copy (timecodestamper->current_tc);
   gst_video_time_code_increment_frame (timecodestamper->current_tc);
   GST_OBJECT_UNLOCK (timecodestamper);
+
+beach:
+  if (timecodestamper->post_messages) {
+    GstClockTime stream_time, running_time, duration;
+    GstStructure *s;
+    GstMessage *msg;
+
+    running_time =
+        gst_segment_to_running_time (&vfilter->segment, GST_FORMAT_TIME,
+        GST_BUFFER_PTS (buffer));
+    stream_time =
+        gst_segment_to_stream_time (&vfilter->segment, GST_FORMAT_TIME,
+        GST_BUFFER_PTS (buffer));
+    duration =
+        gst_util_uint64_scale_int (GST_SECOND, timecodestamper->vinfo.fps_d,
+        timecodestamper->vinfo.fps_n);
+    s = gst_structure_new ("timecodestamper", "timestamp", G_TYPE_UINT64,
+        GST_BUFFER_PTS (buffer), "stream-time", G_TYPE_UINT64, stream_time,
+        "running-time", G_TYPE_UINT64, running_time, "duration", G_TYPE_UINT64,
+        duration, "timecode", GST_TYPE_VIDEO_TIME_CODE, tc, NULL);
+    msg = gst_message_new_element (GST_OBJECT (timecodestamper), s);
+    gst_element_post_message (GST_ELEMENT (timecodestamper), msg);
+  }
+  gst_video_time_code_free (tc);
   return GST_FLOW_OK;
 }
