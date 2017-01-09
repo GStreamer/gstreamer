@@ -799,8 +799,7 @@ bail:
   /* ERRORS */
 error_invalid_format:
   {
-    GST_ERROR ("Cannot handle format %s",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (vinfo)));
+    GST_ERROR ("Cannot handle format %s", GST_VIDEO_INFO_FORMAT_STRING (vinfo));
     return FALSE;
   }
 error_no_surface:
@@ -997,8 +996,8 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * base_allocator,
 error_create_surface:
   {
     GST_ERROR ("failed to create VA surface (format:%s size:%ux%u)",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (vip)),
-        GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
+        GST_VIDEO_INFO_FORMAT_STRING (vip), GST_VIDEO_INFO_WIDTH (vip),
+        GST_VIDEO_INFO_HEIGHT (vip));
     return NULL;
   }
 error_create_surface_proxy:
