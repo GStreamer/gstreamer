@@ -856,10 +856,10 @@ error_cannot_map:
 
 static inline gboolean
 allocator_params_init (GstVaapiVideoAllocator * allocator,
-    GstVaapiDisplay * display, const GstVideoInfo * vip,
+    GstVaapiDisplay * display, const GstVideoInfo * alloc_info,
     guint surface_alloc_flags, GstVaapiImageUsageFlags req_usage_flag)
 {
-  allocator->allocation_info = *vip;
+  allocator->allocation_info = *alloc_info;
 
   if (!allocator_configure_surface_info (display, allocator, req_usage_flag))
     return FALSE;
@@ -895,20 +895,20 @@ error_create_image_pool:
 
 GstAllocator *
 gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
-    const GstVideoInfo * vip, guint surface_alloc_flags,
+    const GstVideoInfo * alloc_info, guint surface_alloc_flags,
     GstVaapiImageUsageFlags req_usage_flag)
 {
   GstVaapiVideoAllocator *allocator;
 
   g_return_val_if_fail (display != NULL, NULL);
-  g_return_val_if_fail (vip != NULL, NULL);
+  g_return_val_if_fail (alloc_info != NULL, NULL);
 
   allocator = g_object_new (GST_VAAPI_TYPE_VIDEO_ALLOCATOR, NULL);
   if (!allocator)
     return NULL;
 
-  if (!allocator_params_init (allocator, display, vip, surface_alloc_flags,
-          req_usage_flag)) {
+  if (!allocator_params_init (allocator, display, alloc_info,
+          surface_alloc_flags, req_usage_flag)) {
     g_object_unref (allocator);
     return NULL;
   }
