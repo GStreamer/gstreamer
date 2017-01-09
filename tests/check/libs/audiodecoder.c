@@ -157,7 +157,9 @@ gst_audio_decoder_tester_handle_frame (GstAudioDecoder * dec,
   if ((tester->delay_decoding && tester->prev_buf != NULL) ||
       !tester->delay_decoding) {
     gsize buf_num = tester->delay_decoding ? 2 : 1;
-    for (gint i = 0; i != buf_num; ++i) {
+    gint i;
+
+    for (i = 0; i != buf_num; ++i) {
       GstBuffer *cur_buf = buf_num == 1 || i != 0 ? buffer : tester->prev_buf;
       gst_buffer_map (cur_buf, &map, GST_MAP_READ);
 
