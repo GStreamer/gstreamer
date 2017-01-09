@@ -490,7 +490,7 @@ _audiodecoder_flush_events (gboolean send_buffers)
       gst_event_unref (segment_event);
     }
 
-    for (int i = 0; i < NUM_BUFFERS / 10; i++) {
+    for (i = 0; i < NUM_BUFFERS / 10; i++) {
       GstEvent *tag_event = gst_harness_pull_event (h);
       fail_unless (GST_EVENT_TYPE (tag_event) == GST_EVENT_TAG);
       gst_event_unref (tag_event);
