@@ -943,23 +943,25 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * base_allocator,
   GstVaapiSurfaceProxy *proxy;
   GstVaapiBufferProxy *dmabuf_proxy;
   gint dmabuf_fd;
-  const GstVideoInfo *vip;
-  guint flags;
+  const GstVideoInfo *surface_info;
+  guint surface_alloc_flags;
   GstVaapiDmaBufAllocator *const allocator =
       GST_VAAPI_DMABUF_ALLOCATOR_CAST (base_allocator);
 
   g_return_val_if_fail (allocator != NULL, NULL);
   g_return_val_if_fail (meta != NULL, NULL);
 
-  vip = gst_allocator_get_vaapi_video_info (base_allocator, &flags);
-  if (!vip)
+  surface_info = gst_allocator_get_vaapi_video_info (base_allocator,
+      &surface_alloc_flags);
+  if (!surface_info)
     return NULL;
 
   display = gst_vaapi_video_meta_get_display (meta);
   if (!meta)
     return NULL;
 
-  surface = gst_vaapi_surface_new_full (display, vip, flags);
+  surface = gst_vaapi_surface_new_full (display, surface_info,
+      surface_alloc_flags);
   if (!surface)
     goto error_create_surface;
 
@@ -996,8 +998,9 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * base_allocator,
 error_create_surface:
   {
     GST_ERROR ("failed to create VA surface (format:%s size:%ux%u)",
-        GST_VIDEO_INFO_FORMAT_STRING (vip), GST_VIDEO_INFO_WIDTH (vip),
-        GST_VIDEO_INFO_HEIGHT (vip));
+        GST_VIDEO_INFO_FORMAT_STRING (surface_info),
+        GST_VIDEO_INFO_WIDTH (surface_info),
+        GST_VIDEO_INFO_HEIGHT (surface_info));
     return NULL;
   }
 error_create_surface_proxy:
@@ -1049,15 +1052,15 @@ gst_vaapi_dmabuf_allocator_init (GstVaapiDmaBufAllocator * allocator)
 
 GstAllocator *
 gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
-    const GstVideoInfo * vip, guint flags)
+    const GstVideoInfo * alloc_info, guint surface_alloc_flags)
 {
   GstVaapiDmaBufAllocator *allocator = NULL;
   GstVaapiSurface *surface = NULL;
-  GstVideoInfo alloc_info;
+  GstVideoInfo surface_info;
   GstAllocator *base_allocator;
 
   g_return_val_if_fail (display != NULL, NULL);
-  g_return_val_if_fail (vip != NULL, NULL);
+  g_return_val_if_fail (alloc_info != NULL, NULL);
 
   allocator = g_object_new (GST_VAAPI_TYPE_DMABUF_ALLOCATOR, NULL);
   if (!allocator)
@@ -1065,16 +1068,18 @@ gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
 
   base_allocator = GST_ALLOCATOR_CAST (allocator);
 
-  gst_video_info_set_format (&alloc_info, GST_VIDEO_INFO_FORMAT (vip),
-      GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
-  surface = gst_vaapi_surface_new_full (display, vip, flags);
+  gst_video_info_set_format (&surface_info, GST_VIDEO_INFO_FORMAT (alloc_info),
+      GST_VIDEO_INFO_WIDTH (alloc_info), GST_VIDEO_INFO_HEIGHT (alloc_info));
+  surface = gst_vaapi_surface_new_full (display, alloc_info,
+      surface_alloc_flags);
   if (!surface)
     goto error_no_surface;
-  if (!gst_video_info_update_from_surface (&alloc_info, surface))
+  if (!gst_video_info_update_from_surface (&surface_info, surface))
     goto fail;
   gst_vaapi_object_replace (&surface, NULL);
 
-  gst_allocator_set_vaapi_video_info (base_allocator, &alloc_info, flags);
+  gst_allocator_set_vaapi_video_info (base_allocator, &surface_info,
+      surface_alloc_flags);
 
   return base_allocator;
 

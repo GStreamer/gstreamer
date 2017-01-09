@@ -262,7 +262,7 @@ gst_vaapi_dmabuf_allocator_get_type (void) G_GNUC_CONST;
 G_GNUC_INTERNAL
 GstAllocator *
 gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
-    const GstVideoInfo * vip, guint flags);
+    const GstVideoInfo * alloc_info, guint surface_alloc_flags);
 
 G_GNUC_INTERNAL
 const GstVideoInfo *
