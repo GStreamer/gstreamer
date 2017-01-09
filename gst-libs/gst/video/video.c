@@ -133,8 +133,8 @@ gst_video_guess_framerate (GstClockTime duration, gint * dest_n, gint * dest_d)
   /* Use a limited precision conversion by default for more sensible results,
    * unless the frame duration is absurdly small (high speed cameras?) */
   if (duration > 100000) {
-    best_n = 10000;
-    best_d = duration / 100000;
+    best_n = GST_SECOND / 10000;
+    best_d = duration / 10000;
   } else {
     best_n = GST_SECOND;
     best_d = duration;
