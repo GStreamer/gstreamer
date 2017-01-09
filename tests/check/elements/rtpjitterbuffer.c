@@ -542,6 +542,7 @@ construct_deterministic_initial_state (GstHarness * h, gint latency_ms)
 {
   guint next_seqnum = latency_ms / TEST_BUF_MS + 1;
   guint seqnum;
+  gint i;
 
   g_assert (latency_ms % TEST_BUF_MS == 0);
 
@@ -589,7 +590,7 @@ construct_deterministic_initial_state (GstHarness * h, gint latency_ms)
   }
 
   /* drop GstEventStreamStart & GstEventCaps & GstEventSegment */
-  for (gint i = 0; i < 3; i++)
+  for (i = 0; i < 3; i++)
     gst_event_unref (gst_harness_pull_event (h));
 
   /* drop reconfigure event */
