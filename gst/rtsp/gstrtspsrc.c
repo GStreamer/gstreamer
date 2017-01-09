@@ -5045,11 +5045,11 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
   if (old == CMD_RECONNECT) {
     GST_DEBUG_OBJECT (src, "ignore, we were reconnecting");
     cmd = CMD_RECONNECT;
-  } else if(old == CMD_CLOSE) {
+  } else if (old == CMD_CLOSE) {
     /* our CMD_CLOSE might have interrutped CMD_LOOP. gst_rtspsrc_loop
-    * will send a CMD_WAIT which would cancel our pending CMD_CLOSE (if
-    * still pending). We just avoid it here by making sure CMD_CLOSE is
-    * still the pending command. */
+     * will send a CMD_WAIT which would cancel our pending CMD_CLOSE (if
+     * still pending). We just avoid it here by making sure CMD_CLOSE is
+     * still the pending command. */
     GST_DEBUG_OBJECT (src, "ignore, we were closing");
     cmd = CMD_CLOSE;
   } else if (old != CMD_WAIT) {

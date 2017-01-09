@@ -690,7 +690,7 @@ queue_do_insert (RTPJitterBuffer * jbuf, GList * list, GList * item)
 
 GstClockTime
 rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
-      guint32 rtptime, GstClockTime base_time)
+    guint32 rtptime, GstClockTime base_time)
 {
   guint64 ext_rtptime;
   GstClockTime gstrtptime, pts;
