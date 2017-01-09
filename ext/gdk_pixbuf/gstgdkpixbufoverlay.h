@@ -63,6 +63,9 @@ struct _GstGdkPixbufOverlay
   gdouble                      relative_x;
   gdouble                      relative_y;
 
+  gdouble                      coef_x;
+  gdouble                      coef_y;
+
   GstGdkPixbufPositioningMode  positioning_mode;
 
   gint                         overlay_width;

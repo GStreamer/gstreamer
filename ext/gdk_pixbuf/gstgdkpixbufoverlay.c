@@ -86,6 +86,8 @@ enum
   PROP_OFFSET_Y,
   PROP_RELATIVE_X,
   PROP_RELATIVE_Y,
+  PROP_COEF_X,
+  PROP_COEF_Y,
   PROP_OVERLAY_WIDTH,
   PROP_OVERLAY_HEIGHT,
   PROP_ALPHA
@@ -185,13 +187,15 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
   g_object_class_install_property (gobject_class, PROP_RELATIVE_X,
       g_param_spec_double ("relative-x", "Relative X Offset",
           "Horizontal offset of overlay image in fractions of video image "
-          "width, from top-left corner of video image", 0.0, 1.0, 0.0,
+          "width, from top-left corner of video image"
+          " (in relative positioning)", -1.0, 1.0, 0.0,
           GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
           | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RELATIVE_Y,
       g_param_spec_double ("relative-y", "Relative Y Offset",
           "Vertical offset of overlay image in fractions of video image "
-          "height, from top-left corner of video image", 0.0, 1.0, 0.0,
+          "height, from top-left corner of video image"
+          " (in relative positioning)", -1.0, 1.0, 0.0,
           GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
           | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_OVERLAY_WIDTH,
@@ -240,6 +244,45 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
           GST_TYPE_GDK_PIXBUF_POSITIONING_MODE, DEFAULT_POSITIONING_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* FIXME the following actually act as a RELATIVE_X/RELATIVE_Y,
+   * but those were already slightly mutated/abused with ABSOLUTE positioning,
+   * so let's keep that and follow suit
+   * Suffice it to say all that could do with cleanup (2.0 ??) */
+  /**
+   * GstGdkPixbufOverlay:coef-x:
+   *
+   * In absolute positioning mode, the x coordinate of overlay image's
+   * top-left corner is now given by
+   * offset-x + (relative-x * overlay_width) + (coef-x * video_width).
+   * This allows to align the image absolutely and relatively
+   * to any edge or center position.
+   *
+   * Since: 1.12
+   */
+  g_object_class_install_property (gobject_class, PROP_COEF_X,
+      g_param_spec_double ("coef-x", "Relative X Offset",
+          "Horizontal offset of overlay image in fractions of video image "
+          "width, from top-left corner of video image (absolute positioning)",
+          -1.0, 1.0, 0.0, GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING
+          | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstGdkPixbufOverlay:coef-y:
+   *
+   * In absolute positioning mode, the y coordinate of overlay image's
+   * top-left corner is now given by
+   * offset-y + (relative-y * overlay_height) + (coef-y * video_height).
+   * This allows to align the image absolutely and relatively
+   * to any edge or center position.
+   *
+   * Since: 1.12
+   */
+  g_object_class_install_property (gobject_class, PROP_COEF_Y,
+      g_param_spec_double ("coef-y", "Relative Y Offset",
+          "Vertical offset of overlay image in fractions of video image "
+          "height, from top-left corner of video image (absolute positioning)",
+          -1.0, 1.0, 0.0, GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING
+          | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
 
@@ -259,6 +302,9 @@ gst_gdk_pixbuf_overlay_init (GstGdkPixbufOverlay * overlay)
 
   overlay->relative_x = 0.0;
   overlay->relative_y = 0.0;
+
+  overlay->coef_x = 0.0;
+  overlay->coef_y = 0.0;
 
   overlay->positioning_mode = DEFAULT_POSITIONING_MODE;
 
@@ -320,6 +366,14 @@ gst_gdk_pixbuf_overlay_set_property (GObject * object, guint property_id,
       overlay->relative_y = g_value_get_double (value);
       overlay->update_composition = TRUE;
       break;
+    case PROP_COEF_X:
+      overlay->coef_x = g_value_get_double (value);
+      overlay->update_composition = TRUE;
+      break;
+    case PROP_COEF_Y:
+      overlay->coef_y = g_value_get_double (value);
+      overlay->update_composition = TRUE;
+      break;
     case PROP_OVERLAY_WIDTH:
       overlay->overlay_width = g_value_get_int (value);
       overlay->update_composition = TRUE;
@@ -370,6 +424,12 @@ gst_gdk_pixbuf_overlay_get_property (GObject * object, guint property_id,
       break;
     case PROP_RELATIVE_Y:
       g_value_set_double (value, overlay->relative_y);
+      break;
+    case PROP_COEF_X:
+      g_value_set_double (value, overlay->coef_x);
+      break;
+    case PROP_COEF_Y:
+      g_value_set_double (value, overlay->coef_y);
       break;
     case PROP_OVERLAY_WIDTH:
       g_value_set_int (value, overlay->overlay_width);
@@ -561,6 +621,7 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
   overlay_meta = gst_buffer_get_video_meta (overlay->pixels);
 
   positioning_mode = overlay->positioning_mode;
+  GST_DEBUG_OBJECT (overlay, "overlay positioning mode %d", positioning_mode);
 
   width = overlay->overlay_width;
   if (width == 0)
@@ -571,8 +632,10 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
     height = overlay_meta->height;
 
   if (positioning_mode == GST_GDK_PIXBUF_POSITIONING_PIXELS_ABSOLUTE) {
-    x = overlay->offset_x + (overlay->relative_x * width);
-    y = overlay->offset_y + (overlay->relative_y * height);
+    x = overlay->offset_x + (overlay->relative_x * width) +
+        (overlay->coef_x * video_width);
+    y = overlay->offset_y + (overlay->relative_y * height) +
+        (overlay->coef_y * video_height);
   } else {
     x = overlay->offset_x < 0 ?
         video_width + overlay->offset_x - width +
@@ -586,9 +649,11 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
 
   GST_DEBUG_OBJECT (overlay, "overlay image dimensions: %d x %d, alpha=%.2f",
       overlay_meta->width, overlay_meta->height, overlay->alpha);
-  GST_DEBUG_OBJECT (overlay, "properties: x,y: %d,%d (%g%%,%g%%) - WxH: %dx%d",
+  GST_DEBUG_OBJECT (overlay, "properties: x,y: %d,%d "
+      "(%g%%,%g%%) coef (%g%%,%g%%) - WxH: %dx%d",
       overlay->offset_x, overlay->offset_y,
       overlay->relative_x * 100.0, overlay->relative_y * 100.0,
+      overlay->coef_x * 100.0, overlay->coef_y * 100.0,
       overlay->overlay_height, overlay->overlay_width);
   GST_DEBUG_OBJECT (overlay, "overlay rendered: %d x %d @ %d,%d (onto %d x %d)",
       width, height, x, y, video_width, video_height);
