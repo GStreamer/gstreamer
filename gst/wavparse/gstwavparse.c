@@ -2445,7 +2445,8 @@ gst_wavparse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     {
       GstClockTime dur;
 
-      gst_adapter_clear (wav->adapter);
+      if (wav->adapter)
+        gst_adapter_clear (wav->adapter);
       wav->discont = TRUE;
       dur = wav->segment.duration;
       gst_segment_init (&wav->segment, wav->segment.format);
