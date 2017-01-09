@@ -665,7 +665,7 @@ void
 ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
 {
   GESTimelineElementClass *klass;
-  GESTimelineElement *toplevel_container;
+  GESTimelineElement *toplevel_container, *parent;
 
   g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
 
@@ -676,9 +676,15 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
       GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)), GST_TIME_ARGS (start));
 
   toplevel_container = ges_timeline_element_get_toplevel_parent (self);
+  parent = self->parent;
 
-  if (((gint64) (_START (toplevel_container) + start - _START (self))) < 0) {
-    GST_INFO_OBJECT (self, "Can not move the object as it would imply its "
+  /* FIXME This should not belong to GESTimelineElement */
+  if (toplevel_container &&
+      ((gint64) (_START (toplevel_container) + start - _START (self))) < 0 &&
+      parent
+      && GES_CONTAINER (parent)->children_control_mode == GES_CHILDREN_UPDATE) {
+    GST_INFO_OBJECT (self,
+        "Can not move the object as it would imply its "
         "container to have a negative start value");
 
     gst_object_unref (toplevel_container);

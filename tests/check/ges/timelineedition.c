@@ -1024,18 +1024,18 @@ GST_START_TEST (test_groups)
   g_list_free (clips);
 
   fail_unless (GES_IS_GROUP (group));
-  CHECK_OBJECT_PROPS (c, 0, 0, 10);
-  CHECK_OBJECT_PROPS (c1, 10, 0, 10);
-  CHECK_OBJECT_PROPS (c2, 20, 0, 10);
+  DEEP_CHECK (c, 0, 0, 10);
+  DEEP_CHECK (c1, 10, 0, 10);
+  DEEP_CHECK (c2, 20, 0, 10);
   CHECK_OBJECT_PROPS (group, 0, 0, 30);
 
   c3 = ges_layer_add_asset (layer, asset, 30, 0, 20, GES_TRACK_TYPE_UNKNOWN);
   c4 = ges_layer_add_asset (layer1, asset, 40, 0, 20, GES_TRACK_TYPE_UNKNOWN);
   c5 = ges_layer_add_asset (layer2, asset, 50, 0, 20, GES_TRACK_TYPE_UNKNOWN);
 
-  CHECK_OBJECT_PROPS (c3, 30, 0, 20);
-  CHECK_OBJECT_PROPS (c4, 40, 0, 20);
-  CHECK_OBJECT_PROPS (c5, 50, 0, 20);
+  DEEP_CHECK (c3, 30, 0, 20);
+  DEEP_CHECK (c4, 40, 0, 20);
+  DEEP_CHECK (c5, 50, 0, 20);
   check_layer (c, 0);
   check_layer (c1, 1);
   check_layer (c2, 1);
@@ -1046,12 +1046,12 @@ GST_START_TEST (test_groups)
   fail_unless (ges_container_edit (GES_CONTAINER (c), NULL, -1,
           GES_EDIT_MODE_RIPPLE, GES_EDGE_NONE, 10) == TRUE);
 
-  CHECK_OBJECT_PROPS (c, 10, 0, 10);
-  CHECK_OBJECT_PROPS (c1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (c2, 30, 0, 10);
-  CHECK_OBJECT_PROPS (c3, 40, 0, 20);
-  CHECK_OBJECT_PROPS (c4, 50, 0, 20);
-  CHECK_OBJECT_PROPS (c5, 60, 0, 20);
+  DEEP_CHECK (c, 10, 0, 10);
+  DEEP_CHECK (c1, 20, 0, 10);
+  DEEP_CHECK (c2, 30, 0, 10);
+  DEEP_CHECK (c3, 40, 0, 20);
+  DEEP_CHECK (c4, 50, 0, 20);
+  DEEP_CHECK (c5, 60, 0, 20);
   check_layer (c, 0);
   check_layer (c1, 1);
   check_layer (c2, 1);
@@ -1061,12 +1061,12 @@ GST_START_TEST (test_groups)
 
   fail_unless (ges_container_edit (GES_CONTAINER (c), NULL, 1,
           GES_EDIT_MODE_RIPPLE, GES_EDGE_NONE, 10) == TRUE);
-  CHECK_OBJECT_PROPS (c, 10, 0, 10);
-  CHECK_OBJECT_PROPS (c1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (c2, 30, 0, 10);
-  CHECK_OBJECT_PROPS (c3, 40, 0, 20);
-  CHECK_OBJECT_PROPS (c4, 50, 0, 20);
-  CHECK_OBJECT_PROPS (c5, 60, 0, 20);
+  DEEP_CHECK (c, 10, 0, 10);
+  DEEP_CHECK (c1, 20, 0, 10);
+  DEEP_CHECK (c2, 30, 0, 10);
+  DEEP_CHECK (c3, 40, 0, 20);
+  DEEP_CHECK (c4, 50, 0, 20);
+  DEEP_CHECK (c5, 60, 0, 20);
   check_layer (c, 1);
   check_layer (c1, 2);
   check_layer (c2, 2);
@@ -1076,12 +1076,12 @@ GST_START_TEST (test_groups)
 
   fail_unless (ges_container_edit (GES_CONTAINER (c1), NULL, 2,
           GES_EDIT_MODE_RIPPLE, GES_EDGE_END, 40) == TRUE);
-  CHECK_OBJECT_PROPS (c, 10, 0, 10);
-  CHECK_OBJECT_PROPS (c1, 20, 0, 20);
-  CHECK_OBJECT_PROPS (c2, 40, 0, 10);
-  CHECK_OBJECT_PROPS (c3, 50, 0, 20);
-  CHECK_OBJECT_PROPS (c4, 60, 0, 20);
-  CHECK_OBJECT_PROPS (c5, 70, 0, 20);
+  DEEP_CHECK (c, 10, 0, 10);
+  DEEP_CHECK (c1, 20, 0, 20);
+  DEEP_CHECK (c2, 40, 0, 10);
+  DEEP_CHECK (c3, 50, 0, 20);
+  DEEP_CHECK (c4, 60, 0, 20);
+  DEEP_CHECK (c5, 70, 0, 20);
   check_layer (c, 1);
   check_layer (c1, 2);
   check_layer (c2, 2);
@@ -1091,12 +1091,12 @@ GST_START_TEST (test_groups)
 
   fail_unless (ges_container_edit (GES_CONTAINER (c1), NULL, 2,
           GES_EDIT_MODE_RIPPLE, GES_EDGE_END, 30) == TRUE);
-  CHECK_OBJECT_PROPS (c, 10, 0, 10);
-  CHECK_OBJECT_PROPS (c1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (c2, 30, 0, 10);
-  CHECK_OBJECT_PROPS (c3, 40, 0, 20);
-  CHECK_OBJECT_PROPS (c4, 50, 0, 20);
-  CHECK_OBJECT_PROPS (c5, 60, 0, 20);
+  DEEP_CHECK (c, 10, 0, 10);
+  DEEP_CHECK (c1, 20, 0, 10);
+  DEEP_CHECK (c2, 30, 0, 10);
+  DEEP_CHECK (c3, 40, 0, 20);
+  DEEP_CHECK (c4, 50, 0, 20);
+  DEEP_CHECK (c5, 60, 0, 20);
   check_layer (c, 1);
   check_layer (c1, 2);
   check_layer (c2, 2);
@@ -1106,12 +1106,12 @@ GST_START_TEST (test_groups)
 
   fail_unless (ges_container_edit (GES_CONTAINER (c), NULL, 0,
           GES_EDIT_MODE_RIPPLE, GES_EDGE_NONE, 0) == TRUE);
-  CHECK_OBJECT_PROPS (c, 0, 0, 10);
-  CHECK_OBJECT_PROPS (c1, 10, 0, 10);
-  CHECK_OBJECT_PROPS (c2, 20, 0, 10);
-  CHECK_OBJECT_PROPS (c3, 30, 0, 20);
-  CHECK_OBJECT_PROPS (c4, 40, 0, 20);
-  CHECK_OBJECT_PROPS (c5, 50, 0, 20);
+  DEEP_CHECK (c, 0, 0, 10);
+  DEEP_CHECK (c1, 10, 0, 10);
+  DEEP_CHECK (c2, 20, 0, 10);
+  DEEP_CHECK (c3, 30, 0, 20);
+  DEEP_CHECK (c4, 40, 0, 20);
+  DEEP_CHECK (c5, 50, 0, 20);
   check_layer (c, 0);
   check_layer (c1, 1);
   check_layer (c2, 1);
@@ -1121,12 +1121,12 @@ GST_START_TEST (test_groups)
 
   fail_unless (ges_container_edit (GES_CONTAINER (c2), NULL, -1,
           GES_EDIT_MODE_ROLL, GES_EDGE_END, 40) == TRUE);
-  CHECK_OBJECT_PROPS (c, 0, 0, 10);
-  CHECK_OBJECT_PROPS (c1, 10, 0, 10);
-  CHECK_OBJECT_PROPS (c2, 20, 0, 20);
-  CHECK_OBJECT_PROPS (c3, 40, 10, 10);
-  CHECK_OBJECT_PROPS (c4, 40, 0, 20);
-  CHECK_OBJECT_PROPS (c5, 50, 0, 20);
+  DEEP_CHECK (c, 0, 0, 10);
+  DEEP_CHECK (c1, 10, 0, 10);
+  DEEP_CHECK (c2, 20, 0, 20);
+  DEEP_CHECK (c3, 40, 10, 10);
+  DEEP_CHECK (c4, 40, 0, 20);
+  DEEP_CHECK (c5, 50, 0, 20);
   CHECK_OBJECT_PROPS (group, 0, 0, 40);
   check_layer (c, 0);
   check_layer (c1, 1);
