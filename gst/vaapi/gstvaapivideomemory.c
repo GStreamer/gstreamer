@@ -172,9 +172,7 @@ new_surface (GstVaapiDisplay * display, const GstVideoInfo * vip,
   /* Try with explicit format first */
   if (!use_native_formats (usage_flag) &&
       GST_VIDEO_INFO_FORMAT (vip) != GST_VIDEO_FORMAT_ENCODED) {
-    surface = gst_vaapi_surface_new_with_format (display,
-        GST_VIDEO_INFO_FORMAT (vip), GST_VIDEO_INFO_WIDTH (vip),
-        GST_VIDEO_INFO_HEIGHT (vip));
+    surface = gst_vaapi_surface_new_full (display, vip, 0);
     if (surface)
       return surface;
   }
