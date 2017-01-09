@@ -725,6 +725,47 @@ GST_START_TEST (test_video_formats_rgba_large_dimension)
 
 GST_END_TEST;
 
+GST_START_TEST (test_guess_framerate)
+{
+  /* Check some obvious exact framerates */
+  gint fps_n, fps_d;
+  fail_unless (gst_video_guess_framerate (GST_SECOND / 24, &fps_n, &fps_d));
+  fail_unless (fps_n == 24 && fps_d == 1);
+
+  fail_unless (gst_video_guess_framerate (GST_SECOND / 30, &fps_n, &fps_d));
+  fail_unless (fps_n == 30 && fps_d == 1);
+
+  fail_unless (gst_video_guess_framerate (GST_SECOND / 25, &fps_n, &fps_d));
+  fail_unless (fps_n == 25 && fps_d == 1);
+
+  /* Some NTSC rates: */
+  fail_unless (gst_video_guess_framerate (GST_SECOND * 1001 / 30000, &fps_n,
+          &fps_d));
+  fail_unless (fps_n == 30000 && fps_d == 1001);
+
+  fail_unless (gst_video_guess_framerate (GST_SECOND * 1001 / 24000, &fps_n,
+          &fps_d));
+  fail_unless (fps_n == 24000 && fps_d == 1001);
+
+  fail_unless (gst_video_guess_framerate (GST_SECOND * 1001 / 60000, &fps_n,
+          &fps_d));
+  fail_unless (fps_n == 60000 && fps_d == 1001);
+
+  /* Check some high FPS, low durations */
+  fail_unless (gst_video_guess_framerate (GST_SECOND / 9000, &fps_n, &fps_d));
+  fail_unless (fps_n == 9000 && fps_d == 1);
+  fail_unless (gst_video_guess_framerate (GST_SECOND / 10000, &fps_n, &fps_d));
+  fail_unless (fps_n == 10000 && fps_d == 1);
+  fail_unless (gst_video_guess_framerate (GST_SECOND / 11000, &fps_n, &fps_d));
+  fail_unless (fps_n == 11000 && fps_d == 1);
+  fail_unless (gst_video_guess_framerate (GST_SECOND / 20000, &fps_n, &fps_d));
+  fail_unless (fps_n == 20000 && fps_d == 1);
+  fail_unless (gst_video_guess_framerate (GST_SECOND / 100000, &fps_n, &fps_d));
+  fail_unless (fps_n == 100000 && fps_d == 1);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_dar_calc)
 {
   guint display_ratio_n, display_ratio_d;
@@ -2803,6 +2844,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_formats_rgba_large_dimension);
   tcase_add_test (tc_chain, test_video_formats_all);
   tcase_add_test (tc_chain, test_video_formats_pack_unpack);
+  tcase_add_test (tc_chain, test_guess_framerate);
   tcase_add_test (tc_chain, test_dar_calc);
   tcase_add_test (tc_chain, test_parse_caps_rgb);
   tcase_add_test (tc_chain, test_parse_caps_multiview);
