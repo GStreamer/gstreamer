@@ -47,6 +47,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/sdp/gstsdpmessage.h>
 
+/* *INDENT-OFF* */
 static const gchar *sdp = "v=0\r\n"
     "o=- 123456 0 IN IP4 127.0.0.1\r\n"
     "s=TestSessionToCopy\r\n"
@@ -59,7 +60,9 @@ static const gchar *sdp = "v=0\r\n"
     "a=sendrecv\r\n"
     "m=video 6565 RTP/AVP 98\r\n"
     "a=rtpmap:98 VP8/90000\r\n"
-    "a=sendrecv\r\n" "m=audio 4545 RTP/AVP 14\r\n" "a=sendrecv\r\n"
+    "a=sendrecv\r\n"
+    "m=audio 4545 RTP/AVP 14\r\n"
+    "a=sendrecv\r\n"
     "m=audio 1010 TCP 14\r\n";
 
 static const gchar caps_video_string1[] =
@@ -120,7 +123,8 @@ static const gchar *sdp_rtcp_fb_all = "v=0\r\n"
     "a=rtcp-fb:* nack pli\r\n"
     "a=rtcp-fb:100 ccm fir\r\n"
     "a=rtpmap:101 VP9/90000\r\n"
-    "a=rtcp-fb:101 ccm fir\r\n" "a=rtpmap:102 H264/90000\r\n";
+    "a=rtcp-fb:101 ccm fir\r\n"
+    "a=rtpmap:102 H264/90000\r\n";
 
 static const gchar caps_video_rtcp_fb_all_pt_100[] =
     "application/x-unknown, media=(string)video, payload=(int)100, "
@@ -139,6 +143,7 @@ static const gchar caps_video_rtcp_fb_all_pt_102[] =
     "clock-rate=(int)90000, encoding-name=(string)H264, "
     "rtcp-fb-nack=(boolean)true, rtcp-fb-nack-pli=(boolean)true";
 
+/* *INDENT-ON* */
 
 GST_START_TEST (boxed)
 {

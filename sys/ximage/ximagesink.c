@@ -1641,7 +1641,7 @@ gst_x_image_sink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
   if (xwindow) {
     ximagesink->xwindow = xwindow;
     /* Update the window geometry, possibly generating a reconfigure event. */
-    gst_x_image_sink_xwindow_update_geometry(ximagesink);
+    gst_x_image_sink_xwindow_update_geometry (ximagesink);
   }
 
   g_mutex_unlock (&ximagesink->flow_lock);

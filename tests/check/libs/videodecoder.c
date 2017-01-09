@@ -1082,22 +1082,17 @@ GST_END_TEST;
 
 static const gchar *test_default_caps[][2] = {
   {
-    "video/x-test-custom",
-    "video/x-raw, format=I420, width=1280, height=720, framerate=0/1"
-  }, {
-    "video/x-test-custom, width=1000",
-    "video/x-raw, format=I420, width=1000, height=720, framerate=0/1"
-  }, {
-    "video/x-test-custom, height=500",
-    "video/x-raw, format=I420, width=1280, height=500, framerate=0/1"
-  }, {
-    "video/x-test-custom, framerate=10/1",
-    "video/x-raw, format=I420, width=1280, height=720, framerate=10/1"
-  }, {
-    "video/x-test-custom, pixel-aspect-ratio=2/1",
-    "video/x-raw, format=I420, width=1280, height=720, framerate=0/1,"
-    "pixel-aspect-ratio=2/1"
-  }
+        "video/x-test-custom",
+      "video/x-raw, format=I420, width=1280, height=720, framerate=0/1"}, {
+        "video/x-test-custom, width=1000",
+      "video/x-raw, format=I420, width=1000, height=720, framerate=0/1"}, {
+        "video/x-test-custom, height=500",
+      "video/x-raw, format=I420, width=1280, height=500, framerate=0/1"}, {
+        "video/x-test-custom, framerate=10/1",
+      "video/x-raw, format=I420, width=1280, height=720, framerate=10/1"}, {
+        "video/x-test-custom, pixel-aspect-ratio=2/1",
+      "video/x-raw, format=I420, width=1280, height=720, framerate=0/1,"
+        "pixel-aspect-ratio=2/1"}
 };
 
 GST_START_TEST (videodecoder_default_caps_on_gap_before_buffer)
