@@ -385,6 +385,47 @@ GST_START_TEST (test_allocate_udp_ports_client_settings)
 
 GST_END_TEST;
 
+GST_START_TEST (test_tcp_transport)
+{
+  GstPad *srcpad;
+  GstElement *pay;
+  GstRTSPStream *stream;
+  GstBin *bin;
+  GstElement *rtpbin;
+  GstRTSPRange server_port;
+
+  srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  gst_pad_set_active (srcpad, TRUE);
+  pay = gst_element_factory_make ("rtpgstpay", "testpayloader");
+  fail_unless (pay != NULL);
+  stream = gst_rtsp_stream_new (0, pay, srcpad);
+  fail_unless (stream != NULL);
+  gst_object_unref (pay);
+  gst_object_unref (srcpad);
+  rtpbin = gst_element_factory_make ("rtpbin", "testrtpbin");
+  fail_unless (rtpbin != NULL);
+  bin = GST_BIN (gst_bin_new ("testbin"));
+  fail_unless (bin != NULL);
+  fail_unless (gst_bin_add (bin, rtpbin));
+
+  /* TCP transport */
+  gst_rtsp_stream_set_protocols (stream, GST_RTSP_LOWER_TRANS_TCP);
+  fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
+
+  /* port that the server will use to receive RTCP makes only sense in the UDP
+   * case so verify that the received server port is 0 in the TCP case */
+  gst_rtsp_stream_get_server_port (stream, &server_port, G_SOCKET_FAMILY_IPV4);
+  fail_unless_equals_int (server_port.min, 0);
+  fail_unless_equals_int (server_port.max, 0);
+
+  fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
+  gst_object_unref (bin);
+  gst_object_unref (stream);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspstream_suite (void)
 {
@@ -398,6 +439,7 @@ rtspstream_suite (void)
   tcase_add_test (tc, test_multicast_address_and_unicast_udp);
   tcase_add_test (tc, test_allocate_udp_ports_multicast);
   tcase_add_test (tc, test_allocate_udp_ports_client_settings);
+  tcase_add_test (tc, test_tcp_transport);
 
   return s;
 }
