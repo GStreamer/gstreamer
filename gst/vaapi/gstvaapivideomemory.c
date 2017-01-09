@@ -957,7 +957,7 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * base_allocator,
     return NULL;
 
   display = gst_vaapi_video_meta_get_display (meta);
-  if (!meta)
+  if (!display)
     return NULL;
 
   surface = gst_vaapi_surface_new_full (display, surface_info,
