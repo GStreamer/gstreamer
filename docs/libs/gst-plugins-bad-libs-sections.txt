@@ -788,7 +788,6 @@ GstGLFeatureFunction
 GstGLBuffer
 gst_gl_buffer_init_once
 gst_is_gl_buffer
-gst_gl_buffer_alloc
 GstGLBufferAllocationParams
 GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_BUFFER
 gst_gl_buffer_allocation_params_new
@@ -1149,7 +1148,6 @@ GstGLBaseFilterPrivate
 <TITLE>GstEGLImage</TITLE>
 gst_egl_image_from_dmabuf
 gst_egl_image_get_image
-gst_egl_image_get_orientation
 gst_egl_image_new_wrapped
 gst_egl_image_ref
 gst_egl_image_unref
@@ -1327,7 +1325,6 @@ GstGLMemoryEGL
 gst_gl_memory_egl_init_once
 gst_gl_memory_egl_get_display
 gst_gl_memory_egl_get_image
-gst_gl_memory_egl_get_orientation
 gst_is_gl_memory_egl
 <SUBSECTION Standard>
 GST_GL_MEMORY_EGL_CAST
@@ -1586,8 +1583,6 @@ gst_gl_value_set_texture_target_from_mask
 gst_gl_get_affine_transformation_meta_as_ndc
 gst_gl_multiply_matrix4
 gst_gl_check_extension
-gst_gl_context_gen_shader
-gst_gl_context_del_shader
 </SECTION>
 
 <SECTION>
@@ -1631,7 +1626,6 @@ GstGLWindow
 GstGLWindowClass
 gst_gl_window_new
 gst_gl_window_draw
-gst_gl_window_is_running
 gst_gl_window_quit
 gst_gl_window_run
 gst_gl_window_get_context
