@@ -541,6 +541,49 @@ GST_START_TEST (videotimecode_serialize_deserialize)
 
 GST_END_TEST;
 
+GST_START_TEST (videotimecode_interval)
+{
+  GstVideoTimeCode *tc, *tc2;
+  GstVideoTimeCodeInterval *tc_diff;
+  int i;
+
+  tc = gst_video_time_code_new (25, 1, NULL, 0, 1, 2, 3, 4, 0);
+  tc_diff = gst_video_time_code_interval_new (1, 1, 1, 1);
+  tc2 = gst_video_time_code_add_interval (tc, tc_diff);
+  fail_unless_equals_int (tc2->hours, 2);
+  fail_unless_equals_int (tc2->minutes, 3);
+  fail_unless_equals_int (tc2->seconds, 4);
+  fail_unless_equals_int (tc2->frames, 5);
+  fail_unless_equals_int (tc2->config.fps_n, tc->config.fps_n);
+  fail_unless_equals_int (tc2->config.fps_d, tc->config.fps_d);
+  gst_video_time_code_free (tc2);
+  gst_video_time_code_interval_free (tc_diff);
+
+  gst_video_time_code_init (tc, 30000, 1001, NULL,
+      GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, 0, 0, 0, 0, 0);
+  tc_diff = gst_video_time_code_interval_new (0, 1, 0, 0);
+  for (i = 1; i <= 9; i++) {
+    tc2 = gst_video_time_code_add_interval (tc, tc_diff);
+    fail_unless_equals_int (tc2->hours, 0);
+    fail_unless_equals_int (tc2->minutes, i);
+    fail_unless_equals_int (tc2->seconds, 0);
+    fail_unless_equals_int (tc2->frames, 2);
+    gst_video_time_code_free (tc);
+    tc = gst_video_time_code_copy (tc2);
+    gst_video_time_code_free (tc2);
+  }
+  tc2 = gst_video_time_code_add_interval (tc, tc_diff);
+  fail_unless_equals_int (tc2->hours, 0);
+  fail_unless_equals_int (tc2->minutes, 10);
+  fail_unless_equals_int (tc2->seconds, 0);
+  fail_unless_equals_int (tc2->frames, 0);
+  gst_video_time_code_free (tc2);
+  gst_video_time_code_free (tc);
+  gst_video_time_code_interval_free (tc_diff);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videotimecode_suite (void)
 {
@@ -573,6 +616,7 @@ gst_videotimecode_suite (void)
   tcase_add_test (tc, videotimecode_dailyjam_compare);
   tcase_add_test (tc, videotimecode_dailyjam_distance);
   tcase_add_test (tc, videotimecode_serialize_deserialize);
+  tcase_add_test (tc, videotimecode_interval);
   return s;
 }
 
