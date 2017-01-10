@@ -316,7 +316,7 @@ struct _GstGLBaseMemoryAllocator
 /**
  * GstGLBaseMemoryAllocatorClass:
  * @parent_class: the parent class
- * @alloc: a #GstGLBaseMemoryAllocatorAllocFunctions
+ * @alloc: a #GstGLBaseMemoryAllocatorAllocFunction
  * @create: a #GstGLBaseMemoryAllocatorCreateFunction
  * @map: a #GstGLBaseMemoryAllocatorMapFunction
  * @unmap: a #GstGLBaseMemoryAllocatorUnmapFunction
