@@ -34,6 +34,8 @@
 /* Default debug category is from the subclass */
 #define GST_CAT_DEFAULT (plugin->debug_category)
 
+#define BUFFER_POOL_SINK_MIN_BUFFERS 2
+
 /* GstVideoContext interface */
 static void
 plugin_set_display (GstVaapiPluginBase * plugin, GstVaapiDisplay * display)
@@ -714,7 +716,9 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
   if (!ensure_sinkpad_allocator (plugin, caps, &size))
     return FALSE;
 
-  pool = gst_vaapi_plugin_base_create_pool (plugin, caps, size, 0, 0,
+  pool =
+      gst_vaapi_plugin_base_create_pool (plugin, caps, size,
+      BUFFER_POOL_SINK_MIN_BUFFERS, 0,
       GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META, plugin->sinkpad_allocator);
   if (!pool)
     return FALSE;
@@ -789,7 +793,7 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
     if (!ensure_sinkpad_buffer_pool (plugin, caps))
       return FALSE;
     gst_query_add_allocation_pool (query, plugin->sinkpad_buffer_pool,
-        plugin->sinkpad_buffer_size, 0, 0);
+        plugin->sinkpad_buffer_size, BUFFER_POOL_SINK_MIN_BUFFERS, 0);
     gst_query_add_allocation_param (query, plugin->sinkpad_allocator, NULL);
   }
 
