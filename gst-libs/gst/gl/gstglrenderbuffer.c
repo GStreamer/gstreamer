@@ -334,6 +334,11 @@ gst_is_gl_renderbuffer (GstMemory * mem)
       GST_TYPE_GL_RENDERBUFFER_ALLOCATOR);
 }
 
+G_DEFINE_BOXED_TYPE (GstGLRenderbufferAllocationParams,
+    gst_gl_renderbuffer_allocation_params,
+    (GBoxedCopyFunc) gst_gl_allocation_params_copy,
+    (GBoxedFreeFunc) gst_gl_allocation_params_free);
+
 static void
 _gst_gl_rb_alloc_params_free_data (GstGLRenderbufferAllocationParams * params)
 {

@@ -83,6 +83,11 @@ struct _GstGLMemory
   gpointer                  _padding[GST_PADDING];
 };
 
+
+#define GST_TYPE_GL_VIDEO_ALLOCATION_PARAMS (gst_gl_video_allocation_params_get_type())
+GST_EXPORT
+GType gst_gl_video_allocation_params_get_type (void);
+
 typedef struct _GstGLVideoAllocationParams GstGLVideoAllocationParams;
 
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO (1 << 3)

@@ -102,6 +102,9 @@ struct _GstGLRenderbufferAllocatorClass
 
 #include <gst/gl/gstglbasememory.h>
 
+GType gst_gl_renderbuffer_allocation_params_get_type (void);
+#define GST_TYPE_RENDERBUFFER_ALLOCATION_PARAMS (gst_gl_renderbuffer_allocation_params_get_type)
+
 typedef struct
 {
   GstGLAllocationParams parent;

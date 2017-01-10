@@ -1043,6 +1043,10 @@ gst_is_gl_memory (GstMemory * mem)
       GST_TYPE_GL_MEMORY_ALLOCATOR);
 }
 
+G_DEFINE_BOXED_TYPE (GstGLVideoAllocationParams, gst_gl_video_allocation_params,
+    (GBoxedCopyFunc) gst_gl_allocation_params_copy,
+    (GBoxedFreeFunc) gst_gl_allocation_params_free);
+
 static void
 _gst_gl_video_allocation_params_set_video_alignment (GstGLVideoAllocationParams
     * params, GstVideoAlignment * valign)

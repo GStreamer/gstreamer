@@ -29,6 +29,10 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_GL_BASE_MEMORY (gst_gl_base_memory_get_type())
+GST_EXPORT
+GType gst_gl_base_memory_get_type(void);
+
 #define GST_TYPE_GL_BASE_MEMORY_ALLOCATOR (gst_gl_base_memory_allocator_get_type())
 GST_EXPORT
 GType gst_gl_base_memory_allocator_get_type(void);

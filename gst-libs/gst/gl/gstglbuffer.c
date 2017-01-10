@@ -345,6 +345,11 @@ _gst_gl_buffer_allocation_params_free_data (GstGLBufferAllocationParams *
   gst_gl_allocation_params_free_data (&params->parent);
 }
 
+G_DEFINE_BOXED_TYPE (GstGLBufferAllocationParams,
+    gst_gl_buffer_allocation_params,
+    (GBoxedCopyFunc) gst_gl_allocation_params_copy,
+    (GBoxedFreeFunc) gst_gl_allocation_params_free);
+
 /**
  * gst_gl_buffer_allocation_params_new:
  * @context: a #GstGLContext
