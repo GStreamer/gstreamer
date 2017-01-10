@@ -48,6 +48,7 @@ private Q_SLOTS:
     void beforeRendering ();
     void afterRendering ();
     void onSceneGraphInitialized ();
+    void onSceneGraphInvalidated ();
     void aboutToQuit();
 
 private:
