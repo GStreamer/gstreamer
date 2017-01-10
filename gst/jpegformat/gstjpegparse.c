@@ -871,6 +871,7 @@ gst_jpeg_parse_sink_event (GstBaseParse * bparse, GstEvent * event)
       parse->priv->last_offset = 0;
       parse->priv->last_entropy_len = 0;
       parse->priv->last_resync = FALSE;
+      res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (bparse, event);
       break;
     case GST_EVENT_TAG:{
       if (gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (parse)))
