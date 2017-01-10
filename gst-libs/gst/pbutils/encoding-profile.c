@@ -583,7 +583,7 @@ gst_encoding_profile_set_allow_dynamic_output (GstEncodingProfile * profile,
 /**
  * gst_encoding_profile_set_preset:
  * @profile: a #GstEncodingProfile
- * @preset: the element preset to use
+ * @preset: (nullable): the element preset to use
  *
  * Sets the name of the #GstElement that implements the #GstPreset interface
  * to use for the profile.
