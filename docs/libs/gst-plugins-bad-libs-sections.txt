@@ -1982,6 +1982,9 @@ gst_player_set_audio_video_offset
 gst_player_get_rate
 gst_player_set_rate
 
+GstPlayerSnapshotFormat
+gst_player_get_video_snapshot
+
 GstPlayerSignalDispatcher
 GstPlayerSignalDispatcherInterface
 

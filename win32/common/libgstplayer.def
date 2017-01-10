@@ -38,6 +38,7 @@ EXPORTS
 	gst_player_get_subtitle_uri
 	gst_player_get_type
 	gst_player_get_uri
+	gst_player_get_video_snapshot
 	gst_player_get_video_streams
 	gst_player_get_volume
 	gst_player_has_color_balance

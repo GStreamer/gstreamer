@@ -205,6 +205,18 @@ guint          gst_player_config_get_position_update_interval  (const GstStructu
 void           gst_player_config_set_seek_accurate (GstPlayer * player, gboolean accurate);
 gboolean       gst_player_config_get_seek_accurate (const GstStructure * config);
 
+typedef enum
+{
+  GST_PLAYER_THUMBNAIL_RAW_NATIVE = 0,
+  GST_PLAYER_THUMBNAIL_RAW_xRGB,
+  GST_PLAYER_THUMBNAIL_RAW_BGRx,
+  GST_PLAYER_THUMBNAIL_JPG,
+  GST_PLAYER_THUMBNAIL_PNG
+} GstPlayerSnapshotFormat;
+
+GstSample * gst_player_get_video_snapshot (GstPlayer * player,
+    GstPlayerSnapshotFormat format, GstStructure * config);
+
 G_END_DECLS
 
 #endif /* __GST_PLAYER_H__ */

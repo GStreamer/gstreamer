@@ -4259,3 +4259,100 @@ gst_player_config_get_seek_accurate (const GstStructure * config)
 
   return accurate;
 }
+
+/**
+ * gst_player_get_video_snapshot:
+ * @player: #GstPlayer instance
+ * @format: output format of the video snapshot
+ * @config: (allow-none): Additional configuration
+ *
+ * Get a snapshot of the currently selected video stream, if any. The format can be
+ * selected with @format and optional configuration is possible with @config
+ * Currently supported settings are:
+ * - width, height of type G_TYPE_INT
+ * - pixel-aspect-ratio of type GST_TYPE_FRACTION
+ *  Except for GST_PLAYER_THUMBNAIL_RAW_NATIVE format, if no config is set, pixel-aspect-ratio would be 1/1
+ *
+ * Returns: (transfer full):  Current video snapshot sample or %NULL on failure
+ *
+ * Since 1.12
+ */
+GstSample *
+gst_player_get_video_snapshot (GstPlayer * self,
+    GstPlayerSnapshotFormat format, GstStructure * config)
+{
+  gint video_tracks = 0;
+  GstSample *sample = NULL;
+  GstCaps *caps = NULL;
+  gint width = -1;
+  gint height = -1;
+  gint par_n = 1;
+  gint par_d = 1;
+  g_return_val_if_fail (GST_IS_PLAYER (self), NULL);
+
+  g_object_get (self->playbin, "n-video", &video_tracks, NULL);
+  if (video_tracks == 0) {
+    GST_DEBUG_OBJECT (self, "total video track num is 0");
+    return NULL;
+  }
+
+  switch (format) {
+    case GST_PLAYER_THUMBNAIL_RAW_xRGB:
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "xRGB", NULL);
+      break;
+    case GST_PLAYER_THUMBNAIL_RAW_BGRx:
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "BGRx", NULL);
+      break;
+    case GST_PLAYER_THUMBNAIL_JPG:
+      caps = gst_caps_new_empty_simple ("image/jpeg");
+      break;
+    case GST_PLAYER_THUMBNAIL_PNG:
+      caps = gst_caps_new_empty_simple ("image/png");
+      break;
+    case GST_PLAYER_THUMBNAIL_RAW_NATIVE:
+    default:
+      caps = gst_caps_new_empty_simple ("video/x-raw");
+      break;
+  }
+
+  if (NULL != config) {
+    if (!gst_structure_get_int (config, "width", &width))
+      width = -1;
+    if (!gst_structure_get_int (config, "height", &height))
+      height = -1;
+    if (!gst_structure_get_fraction (config, "pixel-aspect-ratio", &par_n,
+            &par_d)) {
+      if (format != GST_PLAYER_THUMBNAIL_RAW_NATIVE) {
+        par_n = 1;
+        par_d = 1;
+      } else {
+        par_n = 0;
+        par_d = 0;
+      }
+    }
+  }
+
+  if (width > 0 && height > 0) {
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height, NULL);
+  }
+
+  if (format != GST_PLAYER_THUMBNAIL_RAW_NATIVE) {
+    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        par_n, par_d, NULL);
+  } else if (NULL != config && par_n != 0 && par_d != 0) {
+    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        par_n, par_d, NULL);
+  }
+
+  g_signal_emit_by_name (self->playbin, "convert-sample", caps, &sample);
+  gst_caps_unref (caps);
+  if (!sample) {
+    GST_WARNING_OBJECT (self, "Failed to retrieve or convert video frame");
+    return NULL;
+  }
+
+  return sample;
+}
