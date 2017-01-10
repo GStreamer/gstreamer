@@ -367,8 +367,6 @@ compare_frames (GstValidateMediaDescriptor * ref,
   CHECK_FRAME_FIELD (dts, "%" G_GUINT64_FORMAT);
   CHECK_FRAME_FIELD (duration, "%" G_GUINT64_FORMAT);
   CHECK_FRAME_FIELD (running_time, "%" G_GUINT64_FORMAT);
-  CHECK_FRAME_FIELD (offset, "%" G_GUINT64_FORMAT);
-  CHECK_FRAME_FIELD (offset_end, "%" G_GUINT64_FORMAT);
   CHECK_FRAME_FIELD (is_keyframe, "%d");
 
   return TRUE;
