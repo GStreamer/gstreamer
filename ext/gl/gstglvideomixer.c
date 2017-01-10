@@ -44,6 +44,7 @@
 #endif
 
 #include <gst/video/gstvideoaffinetransformationmeta.h>
+#include <gst/controller/gstproxycontrolbinding.h>
 
 #include "gstglvideomixer.h"
 #include "gstglmixerbin.h"
@@ -338,39 +339,27 @@ _create_video_mixer_input (GstGLMixerBin * self, GstPad * mixer_pad)
     gst_object_unref (input);
     return NULL;
   }
-
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "zorder");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "xpos");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "ypos");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "width");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "height");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "alpha");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "blend-equation-rgb");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "blend-equation-alpha");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "blend-function-src-rgb");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "blend-function-src-alpha");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "blend-function-dst-rgb");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "blend-function-dst-alpha");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "blend-constant-color-red");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "blend-constant-color-green");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "blend-constant-color-blue");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (mixer_pad),
-      GST_OBJECT (input), "blend-constant-color-alpha");
+#define ADD_BINDING(obj,ref,prop) \
+    gst_object_add_control_binding (GST_OBJECT (obj), \
+        gst_proxy_control_binding_new (GST_OBJECT (obj), prop, \
+            GST_OBJECT (ref), prop));
+  ADD_BINDING (mixer_pad, input, "zorder");
+  ADD_BINDING (mixer_pad, input, "xpos");
+  ADD_BINDING (mixer_pad, input, "ypos");
+  ADD_BINDING (mixer_pad, input, "width");
+  ADD_BINDING (mixer_pad, input, "height");
+  ADD_BINDING (mixer_pad, input, "alpha");
+  ADD_BINDING (mixer_pad, input, "blend-equation-rgb");
+  ADD_BINDING (mixer_pad, input, "blend-equation-alpha");
+  ADD_BINDING (mixer_pad, input, "blend-function-src-rgb");
+  ADD_BINDING (mixer_pad, input, "blend-function-src-alpha");
+  ADD_BINDING (mixer_pad, input, "blend-function-dst-rgb");
+  ADD_BINDING (mixer_pad, input, "blend-function-dst-alpha");
+  ADD_BINDING (mixer_pad, input, "blend-constant-color-red");
+  ADD_BINDING (mixer_pad, input, "blend-constant-color-green");
+  ADD_BINDING (mixer_pad, input, "blend-constant-color-blue");
+  ADD_BINDING (mixer_pad, input, "blend-constant-color-alpha");
+#undef ADD_BINDING
 
   input->mixer_pad = mixer_pad;
 
