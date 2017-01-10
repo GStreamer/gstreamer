@@ -60,6 +60,10 @@ struct _GstGLBuffer
 
 typedef struct _GstGLBufferAllocationParams GstGLBufferAllocationParams;
 
+#define GST_TYPE_GL_BUFFER_ALLOCATION_PARAMS (gst_gl_buffer_allocation_params_get_type())
+GST_EXPORT
+GType gst_gl_buffer_allocation_params_get_type (void);
+
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_BUFFER (1 << 4)
 
 /**
