@@ -137,7 +137,7 @@ struct _GstGLWindowClass {
   GstObjectClass parent_class;
 
   guintptr (*get_display)        (GstGLWindow *window);
-  void     (*set_window_handle)  (GstGLWindow *window, guintptr id);
+  void     (*set_window_handle)  (GstGLWindow *window, guintptr handle);
   guintptr (*get_window_handle)  (GstGLWindow *window);
   void     (*draw)               (GstGLWindow *window);
   void     (*run)                (GstGLWindow *window);
