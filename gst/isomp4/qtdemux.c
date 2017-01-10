@@ -6550,10 +6550,23 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
           GST_DEBUG_OBJECT (demux, "Parsing [sidx]");
           qtdemux_parse_sidx (demux, data, demux->neededbytes);
         } else {
-          GST_WARNING_OBJECT (demux,
-              "Unknown fourcc while parsing header : %" GST_FOURCC_FORMAT,
-              GST_FOURCC_ARGS (fourcc));
-          /* Let's jump that one and go back to initial state */
+          switch (fourcc) {
+            case FOURCC_styp:
+              /* [styp] is like a [ftyp], but in fragment header. We ignore it for now
+               * FALLTHROUGH */
+            case FOURCC_free:
+              /* [free] is a padding atom */
+              GST_DEBUG_OBJECT (demux,
+                  "Skipping fourcc while parsing header : %" GST_FOURCC_FORMAT,
+                  GST_FOURCC_ARGS (fourcc));
+              break;
+            default:
+              GST_WARNING_OBJECT (demux,
+                  "Unknown fourcc while parsing header : %" GST_FOURCC_FORMAT,
+                  GST_FOURCC_ARGS (fourcc));
+              /* Let's jump that one and go back to initial state */
+              break;
+          }
         }
         gst_adapter_unmap (demux->adapter);
         data = NULL;

@@ -220,6 +220,7 @@ G_BEGIN_DECLS
 #define FOURCC_stss     GST_MAKE_FOURCC('s','t','s','s')
 #define FOURCC_stsz     GST_MAKE_FOURCC('s','t','s','z')
 #define FOURCC_stts     GST_MAKE_FOURCC('s','t','t','s')
+#define FOURCC_styp     GST_MAKE_FOURCC('s','t','y','p')
 #define FOURCC_subp     GST_MAKE_FOURCC('s','u','b','p')
 #define FOURCC_subt     GST_MAKE_FOURCC('s','u','b','t')
 #define FOURCC_text     GST_MAKE_FOURCC('t','e','x','t')
