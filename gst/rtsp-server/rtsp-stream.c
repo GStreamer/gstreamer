@@ -1531,8 +1531,8 @@ gst_rtsp_stream_get_server_port (GstRTSPStream * stream,
   }
 
   g_mutex_lock (&priv->lock);
-  if (family == G_SOCKET_FAMILY_IPV4 && priv->server_addr_v4) {
-    if (server_port) {
+  if (family == G_SOCKET_FAMILY_IPV4) {
+    if (server_port && priv->server_addr_v4) {
       server_port->min = priv->server_addr_v4->port;
       server_port->max =
           priv->server_addr_v4->port + priv->server_addr_v4->n_ports - 1;
