@@ -2554,12 +2554,12 @@ gst_adaptive_demux_stream_update_source (GstAdaptiveDemuxStream * stream,
     GObjectClass *gobject_class;
     gchar *internal_name, *bin_name;
 
-    /* Our src consists of a bin containing uri_handler -> queue2 . The
-     * purpose of the queue2 is to allow the uri_handler to download an
+    /* Our src consists of a bin containing uri_handler -> queue . The
+     * purpose of the queue is to allow the uri_handler to download an
      * entire fragment without blocking, so we can accurately measure the
      * download bitrate. */
 
-    queue = gst_element_factory_make ("queue2", NULL);
+    queue = gst_element_factory_make ("queue", NULL);
     if (queue == NULL)
       return FALSE;
 
