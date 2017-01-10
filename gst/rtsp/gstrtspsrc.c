@@ -1339,7 +1339,10 @@ find_stream_by_id (GstRTSPStream * stream, gint * id)
 static gint
 find_stream_by_channel (GstRTSPStream * stream, gint * channel)
 {
-  if (stream->channel[0] == *channel || stream->channel[1] == *channel)
+  /* ignore unconfigured channels here (e.g., those that
+   * were explicitly skipped during SETUP) */
+  if ((stream->channelpad[0] != NULL) &&
+      (stream->channel[0] == *channel || stream->channel[1] == *channel))
     return 0;
 
   return -1;
