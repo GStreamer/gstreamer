@@ -413,7 +413,7 @@ gst_gl_display_get_handle_type (GstGLDisplay * display)
 /**
  * gst_context_set_gl_display:
  * @context: a #GstContext
- * @display: resulting #GstGLDisplay
+ * @display: (transfer none): resulting #GstGLDisplay
  *
  * Sets @display on @context
  *
@@ -439,7 +439,7 @@ gst_context_set_gl_display (GstContext * context, GstGLDisplay * display)
 /**
  * gst_context_get_gl_display:
  * @context: a #GstContext
- * @display: resulting #GstGLDisplay
+ * @display: (transfer full): resulting #GstGLDisplay
  *
  * Returns: Whether @display was in @context
  *
