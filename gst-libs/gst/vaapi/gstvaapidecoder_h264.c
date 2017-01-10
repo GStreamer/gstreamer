@@ -3258,10 +3258,17 @@ init_picture (GstVaapiDecoderH264 * decoder,
   picture->frame_num = priv->frame_num;
   picture->frame_num_wrap = priv->frame_num;
   picture->output_flag = TRUE;  /* XXX: conformant to Annex A only */
-  base_picture->pts = GST_VAAPI_DECODER_CODEC_FRAME (decoder)->pts;
-  base_picture->type = GST_VAAPI_PICTURE_TYPE_NONE;
-  base_picture->view_id = pi->view_id;
-  base_picture->voc = pi->voc;
+
+  /* If it's a cloned picture, it has some assignments from parent
+   * picture already.  In addition, base decoder doesn't set valid pts
+   * to the frame corresponding to cloned picture.
+   */
+  if (G_LIKELY (!base_picture->parent_picture)) {
+    base_picture->pts = GST_VAAPI_DECODER_CODEC_FRAME (decoder)->pts;
+    base_picture->type = GST_VAAPI_PICTURE_TYPE_NONE;
+    base_picture->view_id = pi->view_id;
+    base_picture->voc = pi->voc;
+  }
 
   /* Initialize extensions */
   switch (pi->nalu.extension_type) {
