@@ -134,7 +134,7 @@ gboolean gst_gl_display_add_context (GstGLDisplay * display,
 
 GstGLWindow *   gst_gl_display_create_window    (GstGLDisplay * display);
 gboolean        gst_gl_display_remove_window    (GstGLDisplay * display, GstGLWindow * window);
-GstGLWindow *   gst_gl_display_find_window      (GstGLDisplay * display, gpointer data, GCompareFunc compar_func);
+GstGLWindow *   gst_gl_display_find_window      (GstGLDisplay * display, gpointer data, GCompareFunc compare_func);
 
 G_END_DECLS
 

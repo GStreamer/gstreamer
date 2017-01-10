@@ -521,7 +521,7 @@ gst_gl_display_create_context (GstGLDisplay * display,
  *
  * It requires the display's object lock to be held.
  *
- * Returns: a new #GstGLWindow for @display or %NULL.
+ * Returns: (transfer full): a new #GstGLWindow for @display or %NULL.
  */
 GstGLWindow *
 gst_gl_display_create_window (GstGLDisplay * display)
@@ -576,14 +576,15 @@ gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
 /**
  * gst_gl_display_find_window:
  * @display: a #GstGLDisplay
- * @data: some data to pass to @compare_func
- * @compare_func: a comparison function to run
+ * @data: (closure): some data to pass to @compare_func
+ * @compare_func: (scope call): a comparison function to run
  *
  * Execute @compare_func over the list of windows stored by @display.  The
  * first argment to @compare_func is the #GstGLWindow being checked and the
  * second argument is @data.
  *
- * Returns: The first #GstGLWindow that causes a match from @compare_func
+ * Returns: (transfer none): The first #GstGLWindow that causes a match
+ *          from @compare_func
  *
  * Since: 1.12
  */
