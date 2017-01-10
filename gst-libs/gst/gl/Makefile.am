@@ -33,8 +33,7 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstglsyncmeta.c \
 	gstglviewconvert.c \
 	gstgloverlaycompositor.c \
-	gstglquery.c \
-	gstglcontrolbindingproxy.c
+	gstglquery.c
 
 libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
 libgstgl_@GST_API_VERSION@include_HEADERS = \
@@ -65,7 +64,6 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglviewconvert.h \
 	gstgloverlaycompositor.h \
 	gstglquery.h \
-	gstglcontrolbindingproxy.h \
 	gstgl_fwd.h \
 	gstgl_enums.h \
 	gl.h
