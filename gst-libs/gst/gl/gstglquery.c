@@ -188,7 +188,7 @@ gst_gl_query_unset (GstGLQuery * query)
 }
 
 /**
- * gst_gl_query_new:
+ * gst_gl_query_new: (skip)
  * @context: a #GstGLContext
  * @query_type: the #GstGLQueryType to create
  *
