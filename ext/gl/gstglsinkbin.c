@@ -24,6 +24,7 @@
 
 #include <gst/video/videooverlay.h>
 #include <gst/video/navigation.h>
+#include <gst/controller/gstproxycontrolbinding.h>
 
 #include "gstglsinkbin.h"
 
@@ -248,14 +249,15 @@ gst_gl_sink_bin_init (GstGLSinkBin * self)
     gst_object_unref (pad);
   }
 
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (self->balance),
-      GST_OBJECT (self), "contrast");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (self->balance),
-      GST_OBJECT (self), "brightness");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (self->balance),
-      GST_OBJECT (self), "hue");
-  gst_gl_object_add_control_binding_proxy (GST_OBJECT (self->balance),
-      GST_OBJECT (self), "saturation");
+#define ADD_BINDING(obj,ref,prop) \
+    gst_object_add_control_binding (GST_OBJECT (obj), \
+        gst_proxy_control_binding_new (GST_OBJECT (obj), prop, \
+            GST_OBJECT (ref), prop));
+  ADD_BINDING (self->balance, self, "contrast");
+  ADD_BINDING (self->balance, self, "brightness");
+  ADD_BINDING (self->balance, self, "hue");
+  ADD_BINDING (self->balance, self, "saturation");
+#undef ADD_BINDING
 
   if (!res) {
     GST_WARNING_OBJECT (self, "Failed to add/connect the necessary machinery");

@@ -108,7 +108,7 @@ if build_gstgl and gstgl_dep.found()
     link_args : noseh_link_args,
     include_directories : [configinc],
     dependencies : [gstgl_dep, gstbadvideo_dep, gstbadbase_dep, gstvideo_dep,
-                    gstbase_dep, libm] + optional_deps,
+                    gstbase_dep, gstcontroller_dep, libm] + optional_deps,
     install : true,
     install_dir : plugins_install_dir,
   )

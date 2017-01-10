@@ -128,6 +128,7 @@ libgstopengl_la_OBJCFLAGS = \
 	$(GST_OBJCFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_CONTROLLER_CFLAGS) \
 	$(GL_OBJCFLAGS)
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
@@ -138,6 +139,7 @@ libgstopengl_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_CONTROLLER_CFLAGS) \
 	$(GL_CFLAGS) \
 	$(LIBPNG_CFLAGS) \
 	$(GRAPHENE_CFLAGS)
@@ -149,6 +151,7 @@ libgstopengl_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
 	-lgstpbutils-$(GST_API_VERSION) \
+	$(GST_CONTROLLER_LIBS) \
 	$(GL_LIBS) \
 	$(LIBPNG_LIBS) \
 	$(JPEG_LIBS) \
