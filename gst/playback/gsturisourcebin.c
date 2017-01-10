@@ -1901,6 +1901,13 @@ handle_new_pad (GstURISourceBin * urisrc, GstPad * srcpad, GstCaps * caps)
       goto could_not_link;
 
     gst_element_sync_state_with_parent (urisrc->demuxer);
+  } else if (!urisrc->is_stream) {
+    GstPad *pad;
+    /* We don't need slot here, expose immediately */
+    GST_URI_SOURCE_BIN_LOCK (urisrc);
+    pad = create_output_pad (urisrc, srcpad);
+    expose_output_pad (urisrc, pad);
+    GST_URI_SOURCE_BIN_UNLOCK (urisrc);
   } else {
     OutputSlotInfo *slot;
 
@@ -1968,11 +1975,11 @@ type_found (GstElement * typefind, guint probability,
   gst_object_unref (GST_OBJECT (srcpad));
 }
 
-/* setup a streaming source. This will first plug a typefind element to the
+/* setup typefind for any source. This will first plug a typefind element to the
  * source. After we find the type, we decide to whether to plug an adaptive
- * demuxer, or just link through queue2 and expose the data. */
+ * demuxer, or just link through queue2 (if needed) and expose the data */
 static gboolean
-setup_streaming (GstURISourceBin * urisrc)
+setup_typefind (GstURISourceBin * urisrc, GstPad * srcpad)
 {
   GstElement *typefind;
 
@@ -1983,8 +1990,20 @@ setup_streaming (GstURISourceBin * urisrc)
 
   gst_bin_add (GST_BIN_CAST (urisrc), typefind);
 
-  if (!gst_element_link_pads (urisrc->source, NULL, typefind, "sink"))
-    goto could_not_link;
+  if (!srcpad) {
+    if (!gst_element_link_pads (urisrc->source, NULL, typefind, "sink"))
+      goto could_not_link;
+  } else {
+    GstPad *sinkpad = gst_element_get_static_pad (typefind, "sink");
+    GstPadLinkReturn ret;
+
+    ret = gst_pad_link (srcpad, sinkpad);
+    gst_object_unref (sinkpad);
+    if (ret != GST_PAD_LINK_OK)
+      goto could_not_link;
+  }
+
+  gst_element_sync_state_with_parent (typefind);
 
   urisrc->typefinds = g_list_append (urisrc->typefinds, typefind);
 
@@ -2106,9 +2125,11 @@ source_new_pad (GstElement * element, GstPad * pad, GstURISourceBin * urisrc)
       GST_DEBUG_PAD_NAME (pad), GST_ELEMENT_NAME (element));
   caps = gst_pad_get_current_caps (pad);
   if (caps == NULL)
-    caps = gst_pad_query_caps (pad, NULL);
-  handle_new_pad (urisrc, pad, caps);
-  gst_caps_unref (caps);
+    setup_typefind (urisrc, pad);
+  else {
+    handle_new_pad (urisrc, pad, caps);
+    gst_caps_unref (caps);
+  }
 }
 
 static gboolean
@@ -2191,7 +2212,7 @@ setup_source (GstURISourceBin * urisrc)
     if (urisrc->is_stream) {
       GST_DEBUG_OBJECT (urisrc, "Setting up streaming");
       /* do the stream things here */
-      if (!setup_streaming (urisrc))
+      if (!setup_typefind (urisrc, NULL))
         goto streaming_failed;
     } else {
       GstIterator *pads_iter;
@@ -2215,18 +2236,15 @@ setup_source (GstURISourceBin * urisrc)
             break;
           case GST_ITERATOR_OK:
             pad = g_value_get_object (&item);
-            /* no streaming source, expose pads directly */
-            GST_URI_SOURCE_BIN_LOCK (urisrc);
-            pad = create_output_pad (urisrc, pad);
-            GST_URI_SOURCE_BIN_UNLOCK (urisrc);
-            expose_output_pad (urisrc, pad);
+            if (!setup_typefind (urisrc, pad)) {
+              gst_iterator_free (pads_iter);
+              goto streaming_failed;
+            }
             g_value_reset (&item);
             break;
         }
       }
       gst_iterator_free (pads_iter);
-      gst_element_no_more_pads (GST_ELEMENT_CAST (urisrc));
-      do_async_done (urisrc);
     }
   }
   return TRUE;
