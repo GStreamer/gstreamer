@@ -2813,6 +2813,11 @@ atom_trak_copy_data (AtomTRAK * trak, guint8 ** buffer, guint64 * size,
   if (!atom_tkhd_copy_data (&trak->tkhd, buffer, size, offset)) {
     return 0;
   }
+  if (trak->tapt) {
+    if (!trak->tapt->copy_data_func (trak->tapt->atom, buffer, size, offset)) {
+      return 0;
+    }
+  }
   if (trak->edts) {
     if (!atom_edts_copy_data (trak->edts, buffer, size, offset)) {
       return 0;
@@ -4092,6 +4097,39 @@ build_clap_extension (gint width_n, gint width_d, gint height_n, gint height_d,
   GST_WRITE_UINT32_BE (data + 20, h_off_d);
   GST_WRITE_UINT32_BE (data + 24, v_off_n);
   GST_WRITE_UINT32_BE (data + 28, v_off_d);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
+AtomInfo *
+build_tapt_extension (gint clef_width, gint clef_height, gint prof_width,
+    gint prof_height, gint enof_width, gint enof_height)
+{
+  AtomData *atom_data = atom_data_new (FOURCC_tapt);
+  guint8 *data;
+
+  atom_data_alloc_mem (atom_data, 60);
+  data = atom_data->data;
+
+  GST_WRITE_UINT32_BE (data, 20);
+  GST_WRITE_UINT32_LE (data + 4, FOURCC_clef);
+  GST_WRITE_UINT32_BE (data + 8, 0);
+  GST_WRITE_UINT32_BE (data + 12, clef_width);
+  GST_WRITE_UINT32_BE (data + 16, clef_height);
+
+  GST_WRITE_UINT32_BE (data + 20, 20);
+  GST_WRITE_UINT32_LE (data + 24, FOURCC_prof);
+  GST_WRITE_UINT32_BE (data + 28, 0);
+  GST_WRITE_UINT32_BE (data + 32, prof_width);
+  GST_WRITE_UINT32_BE (data + 36, prof_height);
+
+  GST_WRITE_UINT32_BE (data + 40, 20);
+  GST_WRITE_UINT32_LE (data + 44, FOURCC_enof);
+  GST_WRITE_UINT32_BE (data + 48, 0);
+  GST_WRITE_UINT32_BE (data + 52, enof_width);
+  GST_WRITE_UINT32_BE (data + 56, enof_height);
+
 
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);

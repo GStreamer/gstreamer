@@ -4415,6 +4415,43 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       ext_atom_list = g_list_append (ext_atom_list, ext_atom);
   }
 
+
+  if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT) {
+    /* The 'clap' extension is also defined for MP4 but inventing values in
+     * general seems a bit tricky for this one. We only write it for MOV
+     * then, where it is a requirement.
+     * The same goes for the 'tapt' extension, just that it is not defined for
+     * MP4 and only for MOV
+     *
+     * NTSC and PAL have special values, otherwise just take width and height
+     */
+    if (width == 720 && (height == 480 || height == 486)) {
+      ext_atom = build_clap_extension (704, 1, height, 1, 0, 1, 0, 1);
+      if (ext_atom)
+        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+
+    } else if (width == 720 && height == 576) {
+      ext_atom = build_clap_extension (768 * 54, 59, 576, 1, 0, 1, 0, 1);
+      if (ext_atom)
+        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+    } else {
+      ext_atom = build_clap_extension (width, 1, height, 1, 0, 1, 0, 1);
+      if (ext_atom)
+        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+    }
+
+    if (par_num != par_den) {
+      gint clef_width =
+          gst_util_uint64_scale (width, par_num * G_GUINT64_CONSTANT (65536),
+          par_den);
+
+      ext_atom =
+          build_tapt_extension (clef_width, height << 16, clef_width,
+          height << 16, width << 16, height << 16);
+      qtpad->trak->tapt = ext_atom;
+    }
+  }
+
   /* ok, set the pad info accordingly */
   qtpad->fourcc = entry.fourcc;
   qtpad->sync = sync;
@@ -4457,22 +4494,6 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       strcpy ((gchar *) mp4v->compressor + 1, compressor);
       mp4v->compressor[0] = strlen (compressor);
     }
-
-    /* The 'clap' extension is also defined for MP4 but inventing values in
-     * general seems a bit tricky for this one. We only write it for ProRes
-     * then, where it is a requirement.
-     *
-     * NTSC and PAL have special values, otherwise just take width and height
-     */
-    if (width == 720 && (height == 480 || height == 486))
-      ext_atom = build_clap_extension (704, 1, height, 1, 0, 1, 0, 1);
-    else if (width == 720 && height == 576)
-      ext_atom = build_clap_extension (768 * 54, 59, 576, 1, 0, 1, 0, 1);
-    else
-      ext_atom = build_clap_extension (width, 1, height, 1, 0, 1, 0, 1);
-
-    if (ext_atom)
-      mp4v->extension_atoms = g_list_append (mp4v->extension_atoms, ext_atom);
   }
 
   gst_object_unref (qtmux);
