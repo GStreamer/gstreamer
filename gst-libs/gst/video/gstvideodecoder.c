@@ -3052,7 +3052,8 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
   gst_video_decoder_release_frame (decoder, frame);
   frame = NULL;
 
-  if (decoder->output_segment.rate < 0.0) {
+  if (decoder->output_segment.rate < 0.0
+      && !(decoder->output_segment.flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS)) {
     GST_LOG_OBJECT (decoder, "queued frame");
     priv->output_queued = g_list_prepend (priv->output_queued, output_buffer);
   } else {
