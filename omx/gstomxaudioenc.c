@@ -334,7 +334,7 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
 
     GST_DEBUG_OBJECT (self, "Setting output caps: %" GST_PTR_FORMAT, caps);
 
-    if (!gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (self), caps)) {
+    if (!gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (self), caps)) {
       gst_caps_unref (caps);
       if (buf)
         gst_omx_port_release_buffer (self->enc_out_port, buf);
