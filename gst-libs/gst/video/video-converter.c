@@ -2880,8 +2880,18 @@ convert_I420_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   gint l1, l2;
+  gint h2;
 
-  for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
+  /* I420 has half as many chroma lines, as such we have to
+   * always merge two into one. For non-interlaced these are
+   * the two next to each other, for interlaced one is skipped
+   * in between. */
+  if (interlaced)
+    h2 = GST_ROUND_DOWN_4 (height);
+  else
+    h2 = GST_ROUND_DOWN_2 (height);
+
+  for (i = 0; i < h2; i += 2) {
     GET_LINE_OFFSETS (interlaced, i, l1, l2);
 
     video_orc_convert_I420_YUY2 (FRAME_GET_LINE (dest, l1),
@@ -2892,10 +2902,12 @@ convert_I420_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
         FRAME_GET_V_LINE (src, i >> 1), (width + 1) / 2);
   }
 
-  /* now handle last line */
-  if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->tmpline, height - 1, width);
+  /* now handle last lines. For interlaced these are up to 3 */
+  if (h2 != height) {
+    for (i = h2; i < height; i++) {
+      UNPACK_FRAME (src, convert->tmpline, i, convert->in_x, width);
+      PACK_FRAME (dest, convert->tmpline, i, width);
+    }
   }
 }
 
@@ -2908,8 +2920,18 @@ convert_I420_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   gint l1, l2;
+  gint h2;
 
-  for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
+  /* I420 has half as many chroma lines, as such we have to
+   * always merge two into one. For non-interlaced these are
+   * the two next to each other, for interlaced one is skipped
+   * in between. */
+  if (interlaced)
+    h2 = GST_ROUND_DOWN_4 (height);
+  else
+    h2 = GST_ROUND_DOWN_2 (height);
+
+  for (i = 0; i < h2; i += 2) {
     GET_LINE_OFFSETS (interlaced, i, l1, l2);
 
     video_orc_convert_I420_UYVY (FRAME_GET_LINE (dest, l1),
@@ -2920,10 +2942,12 @@ convert_I420_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
         FRAME_GET_V_LINE (src, i >> 1), (width + 1) / 2);
   }
 
-  /* now handle last line */
-  if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->tmpline, height - 1, width);
+  /* now handle last lines. For interlaced these are up to 3 */
+  if (h2 != height) {
+    for (i = h2; i < height; i++) {
+      UNPACK_FRAME (src, convert->tmpline, i, convert->in_x, width);
+      PACK_FRAME (dest, convert->tmpline, i, width);
+    }
   }
 }
 
@@ -2937,8 +2961,18 @@ convert_I420_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   guint8 alpha = MIN (convert->alpha_value, 255);
   gint l1, l2;
+  gint h2;
 
-  for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
+  /* I420 has half as many chroma lines, as such we have to
+   * always merge two into one. For non-interlaced these are
+   * the two next to each other, for interlaced one is skipped
+   * in between. */
+  if (interlaced)
+    h2 = GST_ROUND_DOWN_4 (height);
+  else
+    h2 = GST_ROUND_DOWN_2 (height);
+
+  for (i = 0; i < h2; i += 2) {
     GET_LINE_OFFSETS (interlaced, i, l1, l2);
 
     video_orc_convert_I420_AYUV (FRAME_GET_LINE (dest, l1),
@@ -2949,12 +2983,14 @@ convert_I420_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
         alpha, width);
   }
 
-  /* now handle last line */
-  if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
-    if (alpha != 0xff)
-      convert_set_alpha_u8 (convert, convert->tmpline, width);
-    PACK_FRAME (dest, convert->tmpline, height - 1, width);
+  /* now handle last lines. For interlaced these are up to 3 */
+  if (h2 != height) {
+    for (i = h2; i < height; i++) {
+      UNPACK_FRAME (src, convert->tmpline, i, convert->in_x, width);
+      if (alpha != 0xff)
+        convert_set_alpha_u8 (convert, convert->tmpline, width);
+      PACK_FRAME (dest, convert->tmpline, i, width);
+    }
   }
 }
 
@@ -2967,8 +3003,18 @@ convert_YUY2_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   gint l1, l2;
+  gint h2;
 
-  for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
+  /* I420 has half as many chroma lines, as such we have to
+   * always merge two into one. For non-interlaced these are
+   * the two next to each other, for interlaced one is skipped
+   * in between. */
+  if (interlaced)
+    h2 = GST_ROUND_DOWN_4 (height);
+  else
+    h2 = GST_ROUND_DOWN_2 (height);
+
+  for (i = 0; i < h2; i += 2) {
     GET_LINE_OFFSETS (interlaced, i, l1, l2);
 
     video_orc_convert_YUY2_I420 (FRAME_GET_Y_LINE (dest, l1),
@@ -2978,10 +3024,12 @@ convert_YUY2_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
         FRAME_GET_LINE (src, l1), FRAME_GET_LINE (src, l2), (width + 1) / 2);
   }
 
-  /* now handle last line */
-  if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->tmpline, height - 1, width);
+  /* now handle last lines. For interlaced these are up to 3 */
+  if (h2 != height) {
+    for (i = h2; i < height; i++) {
+      UNPACK_FRAME (src, convert->tmpline, i, convert->in_x, width);
+      PACK_FRAME (dest, convert->tmpline, i, width);
+    }
   }
 }
 
@@ -3067,8 +3115,18 @@ convert_UYVY_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   gint l1, l2;
+  gint h2;
 
-  for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
+  /* I420 has half as many chroma lines, as such we have to
+   * always merge two into one. For non-interlaced these are
+   * the two next to each other, for interlaced one is skipped
+   * in between. */
+  if (interlaced)
+    h2 = GST_ROUND_DOWN_4 (height);
+  else
+    h2 = GST_ROUND_DOWN_2 (height);
+
+  for (i = 0; i < h2; i += 2) {
     GET_LINE_OFFSETS (interlaced, i, l1, l2);
 
     video_orc_convert_UYVY_I420 (FRAME_GET_COMP_LINE (dest, 0, l1),
@@ -3078,10 +3136,12 @@ convert_UYVY_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
         FRAME_GET_LINE (src, l1), FRAME_GET_LINE (src, l2), (width + 1) / 2);
   }
 
-  /* now handle last line */
-  if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline, height - 1, convert->in_x, width);
-    PACK_FRAME (dest, convert->tmpline, height - 1, width);
+  /* now handle last lines. For interlaced these are up to 3 */
+  if (h2 != height) {
+    for (i = h2; i < height; i++) {
+      UNPACK_FRAME (src, convert->tmpline, i, convert->in_x, width);
+      PACK_FRAME (dest, convert->tmpline, i, width);
+    }
   }
 }
 
