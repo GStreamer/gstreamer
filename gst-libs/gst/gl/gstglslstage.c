@@ -27,6 +27,19 @@
 #include "gstglslstage.h"
 #include "gstglsl_private.h"
 
+#ifndef GL_GEOMETRY_SHADER
+#define GL_GEOMETRY_SHADER        0x8DD9
+#endif
+#ifndef GL_COMPUTE_SHADER
+#define GL_COMPUTE_SHADER         0x91B9
+#endif
+#ifndef GL_TESS_CONTROL_SHADER
+#define GL_TESS_CONTROL_SHADER    0x8E88
+#endif
+#ifndef GL_TESS_EVALUATION_SHADER
+#define GL_TESS_EVALUATION_SHADER 0x8E87
+#endif
+
 /**
  * SECTION:gstglslstage
  * @short_description: object for dealing with OpenGL shader stages
@@ -130,18 +143,10 @@ _is_valid_shader_type (GLenum type)
   switch (type) {
     case GL_VERTEX_SHADER:
     case GL_FRAGMENT_SHADER:
-#ifdef GL_TESS_CONTROL_SHADER
     case GL_TESS_CONTROL_SHADER:
-#endif
-#ifdef GL_TESS_EVALUATION_SHADER
     case GL_TESS_EVALUATION_SHADER:
-#endif
-#ifdef GL_GEOMETRY_SHADER
     case GL_GEOMETRY_SHADER:
-#endif
-#ifdef GL_COMPUTE_SHADER
     case GL_COMPUTE_SHADER:
-#endif
       return TRUE;
     default:
       return FALSE;
@@ -156,22 +161,14 @@ _shader_type_to_string (GLenum type)
       return "vertex";
     case GL_FRAGMENT_SHADER:
       return "fragment";
-#ifdef GL_TESS_CONTROL_SHADER
     case GL_TESS_CONTROL_SHADER:
       return "tesselation control";
-#endif
-#ifdef GL_TESS_EVALUATION_SHADER
     case GL_TESS_EVALUATION_SHADER:
       return "tesselation evaluation";
-#endif
-#ifdef GL_GEOMETRY_SHADER
     case GL_GEOMETRY_SHADER:
       return "geometry";
-#endif
-#ifdef GL_COMPUTE_SHADER
     case GL_COMPUTE_SHADER:
       return "compute";
-#endif
     default:
       return "unknown";
   }
