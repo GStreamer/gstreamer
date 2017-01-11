@@ -1049,6 +1049,8 @@ link_pending_pad_to_output (GstURISourceBin * urisrc, OutputSlotInfo * slot)
       out_info->output_slot = slot;
       slot->linked_info = out_info;
       res = TRUE;
+      urisrc->pending_pads =
+          g_list_remove (urisrc->pending_pads, out_info->demux_src_pad);
     } else {
       GST_ERROR_OBJECT (urisrc,
           "Failed to link new demuxer pad to the output slot we tried");
