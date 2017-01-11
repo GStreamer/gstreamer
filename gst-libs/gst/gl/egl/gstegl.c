@@ -20,6 +20,12 @@
 
 #include <gst/gl/egl/gstegl.h>
 
+/**
+ * gst_egl_get_error_string:
+ * @err: an EGL error code
+ *
+ * Returns: the short string representation of @err
+ */
 const gchar *
 gst_egl_get_error_string (EGLint err)
 {
