@@ -844,6 +844,9 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
 
   if (tags) {
     gst_adaptive_demux_stream_set_tags (stream, tags);
+    /* run typefind again on the trimmed buffer */
+    hls_stream->do_typefind = TRUE;
+    return gst_hls_demux_handle_buffer (demux, stream, buffer, at_eos);
   }
 
   if (buffer) {
