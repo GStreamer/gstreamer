@@ -83,6 +83,7 @@ G_BEGIN_DECLS
   g_clear_error (&err); \
 } G_STMT_END
 
+/* DEPRECATED */
 #define GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT GST_FLOW_CUSTOM_SUCCESS_1
 
 typedef struct _GstAdaptiveDemuxStreamFragment GstAdaptiveDemuxStreamFragment;
