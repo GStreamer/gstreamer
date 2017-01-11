@@ -4416,40 +4416,61 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   }
 
 
-  if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT) {
+  if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT &&
+      width > 640 && width <= 1052 && height >= 480 && height <= 576) {
     /* The 'clap' extension is also defined for MP4 but inventing values in
-     * general seems a bit tricky for this one. We only write it for MOV
-     * then, where it is a requirement.
+     * general seems a bit tricky for this one. We only write it for
+     * SD resolution in MOV, where it is a requirement.
      * The same goes for the 'tapt' extension, just that it is not defined for
      * MP4 and only for MOV
-     *
-     * NTSC and PAL have special values, otherwise just take width and height
      */
-    if (width == 720 && (height == 480 || height == 486)) {
-      ext_atom = build_clap_extension (704, 1, height, 1, 0, 1, 0, 1);
-      if (ext_atom)
-        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+    gint dar_num, dar_den;
+    gint clef_width, clef_height, prof_width;
+    gint clap_width_n, clap_width_d, clap_height;
+    gint cdiv;
+    double approx_dar;
 
-    } else if (width == 720 && height == 576) {
-      ext_atom = build_clap_extension (768 * 54, 59, 576, 1, 0, 1, 0, 1);
-      if (ext_atom)
-        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+    /* First, guess display aspect ratio based on pixel aspect ratio,
+     * width and height. We assume that display aspect ratio is either
+     * 4:3 or 16:9
+     */
+    approx_dar = (gdouble) (width * par_num) / (height * par_den);
+    if (approx_dar > 11.0 / 9 && approx_dar < 14.0 / 9) {
+      dar_num = 4;
+      dar_den = 3;
+    } else if (approx_dar > 15.0 / 9 && approx_dar < 18.0 / 9) {
+      dar_num = 16;
+      dar_den = 9;
     } else {
-      ext_atom = build_clap_extension (width, 1, height, 1, 0, 1, 0, 1);
-      if (ext_atom)
-        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+      dar_num = width * par_num;
+      dar_den = height * par_den;
+      cdiv = gst_util_greatest_common_divisor (dar_num, dar_den);
+      dar_num /= cdiv;
+      dar_den /= cdiv;
     }
 
-    if (par_num != par_den) {
-      gint clef_width =
-          gst_util_uint64_scale (width, par_num * G_GUINT64_CONSTANT (65536),
-          par_den);
+    /* Then, calculate clean-aperture values (clap and clef)
+     * using the guessed DAR.
+     */
+    clef_height = clap_height = (height == 486 ? 480 : height);
+    clef_width = gst_util_uint64_scale (clef_height,
+        dar_num * G_GUINT64_CONSTANT (65536), dar_den);
+    prof_width = gst_util_uint64_scale (width,
+        par_num * G_GUINT64_CONSTANT (65536), par_den);
+    clap_width_n = clap_height * dar_num * par_den;
+    clap_width_d = dar_den * par_num;
+    cdiv = gst_util_greatest_common_divisor (clap_width_n, clap_width_d);
+    clap_width_n /= cdiv;
+    clap_width_d /= cdiv;
 
-      ext_atom =
-          build_tapt_extension (clef_width, height << 16, clef_width,
-          height << 16, width << 16, height << 16);
-      qtpad->trak->tapt = ext_atom;
-    }
+    ext_atom = build_tapt_extension (clef_width, clef_height << 16, prof_width,
+        height << 16, width << 16, height << 16);
+    qtpad->trak->tapt = ext_atom;
+
+    ext_atom = build_clap_extension (clap_width_n, clap_width_d,
+        clap_height, 1, 0, 1, 0, 1);
+    if (ext_atom)
+      ext_atom_list = g_list_append (ext_atom_list, ext_atom);
   }
 
   /* ok, set the pad info accordingly */
