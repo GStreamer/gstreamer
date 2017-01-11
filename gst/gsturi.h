@@ -28,10 +28,6 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <gst/gstelement.h>
-#include <gst/gstconfig.h>
-
-#include "gstminiobject.h"
 
 G_BEGIN_DECLS
 
@@ -99,6 +95,10 @@ typedef enum {
  */
 typedef struct _GstURIHandler GstURIHandler;
 typedef struct _GstURIHandlerInterface GstURIHandlerInterface;
+
+#include <gst/gstelement.h>
+#include <gst/gstconfig.h>
+#include "gstminiobject.h"
 
 /**
  * GstURIHandlerInterface:

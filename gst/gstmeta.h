@@ -24,7 +24,6 @@
 #define __GST_META_H__
 
 #include <glib.h>
-#include <gst/gstbuffer.h>
 
 G_BEGIN_DECLS
 
@@ -105,6 +104,8 @@ struct _GstMeta {
   GstMetaFlags       flags;
   const GstMetaInfo *info;
 };
+
+#include <gst/gstbuffer.h>
 
 /**
  * GstMetaInitFunction:

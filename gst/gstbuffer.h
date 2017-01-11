@@ -35,6 +35,8 @@ GST_EXPORT GType _gst_buffer_type;
 typedef struct _GstBuffer GstBuffer;
 typedef struct _GstBufferPool GstBufferPool;
 
+#include <gst/gstmeta.h>
+
 #define GST_TYPE_BUFFER                         (_gst_buffer_type)
 #define GST_IS_BUFFER(obj)                      (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_BUFFER))
 #define GST_BUFFER_CAST(obj)                    ((GstBuffer *)(obj))

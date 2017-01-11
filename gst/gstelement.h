@@ -24,6 +24,10 @@
 #ifndef __GST_ELEMENT_H__
 #define __GST_ELEMENT_H__
 
+#include <glib.h>
+
+G_BEGIN_DECLS
+
 /* gstelement.h and gstelementfactory.h include eachother */
 typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;
@@ -51,22 +55,6 @@ typedef enum {
   GST_STATE_PLAYING             = 4
 } GstState;
 
-
-#include <gst/gstconfig.h>
-#include <gst/gstobject.h>
-#include <gst/gstpad.h>
-#include <gst/gstbus.h>
-#include <gst/gstclock.h>
-#include <gst/gstelementfactory.h>
-#include <gst/gstplugin.h>
-#include <gst/gstpluginfeature.h>
-#include <gst/gstiterator.h>
-#include <gst/gstmessage.h>
-#include <gst/gstquery.h>
-#include <gst/gsttaglist.h>
-
-G_BEGIN_DECLS
-
 #define GST_TYPE_ELEMENT                (gst_element_get_type ())
 #define GST_IS_ELEMENT(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_ELEMENT))
 #define GST_IS_ELEMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_ELEMENT))
@@ -84,7 +72,7 @@ G_BEGIN_DECLS
  *                               cannot produce data in %GST_STATE_PAUSED.
  *                               This typically happens with live sources.
  *
- * The possible return values from a state change function such as 
+ * The possible return values from a state change function such as
  * gst_element_set_state(). Only @GST_STATE_CHANGE_FAILURE is a real failure.
  */
 typedef enum {
@@ -93,6 +81,20 @@ typedef enum {
   GST_STATE_CHANGE_ASYNC               = 2,
   GST_STATE_CHANGE_NO_PREROLL          = 3
 } GstStateChangeReturn;
+
+#include <gst/gstconfig.h>
+#include <gst/gstobject.h>
+#include <gst/gstpad.h>
+#include <gst/gstbus.h>
+#include <gst/gstclock.h>
+#include <gst/gstelementfactory.h>
+#include <gst/gstplugin.h>
+#include <gst/gstpluginfeature.h>
+#include <gst/gstiterator.h>
+#include <gst/gstmessage.h>
+#include <gst/gstquery.h>
+#include <gst/gsttaglist.h>
+#include <gst/gstcontext.h>
 
 /* NOTE: this probably should be done with an #ifdef to decide
  * whether to safe-cast or to just do the non-checking cast.

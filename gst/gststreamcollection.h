@@ -26,7 +26,6 @@
 #define __GST_STREAM_COLLECTION_H__
 
 #include <gst/gstobject.h>
-#include <gst/gststreams.h>
 
 G_BEGIN_DECLS
 
@@ -41,6 +40,9 @@ G_BEGIN_DECLS
 typedef struct _GstStreamCollection GstStreamCollection;
 typedef struct _GstStreamCollectionClass GstStreamCollectionClass;
 typedef struct _GstStreamCollectionPrivate GstStreamCollectionPrivate;
+
+#include <gst/gststreamcollection.h>
+#include <gst/gststreams.h>
 
 /**
  * GstStreamCollection:

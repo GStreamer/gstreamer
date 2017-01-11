@@ -216,6 +216,9 @@ typedef enum {
 #include <gst/gstsegment.h>
 #include <gst/gstmessage.h>
 #include <gst/gstcontext.h>
+#include <gst/gststreams.h>
+#include <gst/gsttoc.h>
+#include <gst/gststreamcollection.h>
 
 G_BEGIN_DECLS
 

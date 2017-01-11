@@ -22,6 +22,8 @@
 #ifndef __GST_MESSAGE_H__
 #define __GST_MESSAGE_H__
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 typedef struct _GstMessage GstMessage;
@@ -180,6 +182,7 @@ typedef enum
 #include <gst/gstquery.h>
 #include <gst/gsttoc.h>
 #include <gst/gstdevice.h>
+#include <gst/gststreams.h>
 #include <gst/gststreamcollection.h>
 
 GST_EXPORT GType _gst_message_type;
@@ -336,6 +339,8 @@ struct _GstMessage
   GMutex          lock;                 /* lock and cond for async delivery */
   GCond           cond;
 };
+
+#include <gst/gstquery.h>
 
 GType           gst_message_get_type            (void);
 
