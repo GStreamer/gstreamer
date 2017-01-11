@@ -1061,7 +1061,7 @@ gst_gl_display_get_gl_api_unlocked
 
 <SECTION>
 <FILE>gstgldisplaycocoa</FILE>
-<TITLE>GstGLDIsplayCocoa</TITLE>
+<TITLE>GstGLDisplayCocoa</TITLE>
 gst_gl_display_cocoa_new
 <SUBSECTION Standard>
 gst_gl_display_cocoa_get_type
@@ -1072,7 +1072,7 @@ GST_GL_DISPLAY_COCOA_CLASS
 
 <SECTION>
 <FILE>gstgldisplayegl</FILE>
-<TITLE>GstGLDIsplayEGL</TITLE>
+<TITLE>GstGLDisplayEGL</TITLE>
 gst_gl_display_egl_new
 gst_gl_display_egl_new_with_egl_display
 gst_gl_display_egl_from_gl_display
@@ -1721,7 +1721,7 @@ gst_gl_window_dispmanx_egl_create_window
 
 <SECTION>
 <FILE>gstglwindoweagl</FILE>
-<TITLE>GstGLWindowEAGL</TITLE>
+<TITLE>GstGLWindowEagl</TITLE>
 <SUBSECTION Standard>
 GST_IS_GL_WINDOW_EAGL
 GST_IS_GL_WINDOW_EAGL_CLASS
@@ -1731,8 +1731,8 @@ GST_GL_WINDOW_EAGL_CLASS
 GST_GL_WINDOW_EAGL_GET_CLASS
 gst_gl_window_eagl_get_type
 <SUBSECTION Private>
-GstGLWindowEAGL
-GstGLWindowEAGLClass
+GstGLWindowEagl
+GstGLWindowEaglClass
 gst_gl_window_eagl_new
 </SECTION>
 
