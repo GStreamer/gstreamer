@@ -25,6 +25,10 @@
 #include <X11/Xlib.h>
 #endif
 
+#ifndef GL_GEOMETRY_SHADER
+#define GL_GEOMETRY_SHADER 0x8DD9
+#endif
+
 static GMainLoop *loop;
 
 static const gchar *vert = "#version 330\n\
