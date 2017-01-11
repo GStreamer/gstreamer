@@ -2841,8 +2841,6 @@ gst_uri_source_bin_change_state (GstElement * element,
             goto setup_failed;
         }
       }
-      if (ret == GST_STATE_CHANGE_FAILURE)
-        goto setup_failed;
       if (urisrc->source)
         ret = gst_element_set_state (urisrc->source, GST_STATE_PAUSED);
       if (ret == GST_STATE_CHANGE_FAILURE)
