@@ -88,6 +88,8 @@ GstEGLImage *           gst_egl_image_from_dmabuf               (GstGLContext * 
                                                                  GstVideoInfo * in_info,
                                                                  gint plane,
                                                                  gsize offset);
+GST_EXPORT
+gboolean                gst_egl_image_export_dmabuf             (GstEGLImage *image, int *fd, gint *stride, gsize *offset);
 #endif
 
 /**
