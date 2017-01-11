@@ -64,7 +64,7 @@
 /**
  * GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_EXTERNAL_OES:
  *
- * String used for %GST_GL_TEXTURE_TARGET_ESTERNAL_OES as a #GstBufferPool pool option
+ * String used for %GST_GL_TEXTURE_TARGET_EXTERNAL_OES as a #GstBufferPool pool option
  */
 #define GST_BUFFER_POOL_OPTION_GL_TEXTURE_TARGET_EXTERNAL_OES "GstBufferPoolOptionGLTextureTargetExternalOES"
 

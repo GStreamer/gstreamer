@@ -1262,7 +1262,7 @@ gst_gl_video_allocation_params_new_wrapped_gl_handle (GstGLContext * context,
  * @plane: the video plane @tex_id represents
  * @valign: (allow-none): any #GstVideoAlignment applied to symem mappings of @tex_id
  * @target: the #GstGLTextureTarget for @tex_id
- * @tex_type: the #GstGLTextureType for @tex_id
+ * @tex_type: the #GstVideoGLTextureType for @tex_id
  * @tex_id: the GL texture to wrap
  * @user_data: (allow-none): user data to call @notify with
  * @notify: (allow-none): a #GDestroyNotify
