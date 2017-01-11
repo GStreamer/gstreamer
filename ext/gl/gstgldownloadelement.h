@@ -45,6 +45,8 @@ struct _GstGLDownloadElement
   GstGLBaseFilter  parent;
 
   gboolean do_pbo_transfers;
+  GstAllocator * dmabuf_allocator;
+  gboolean add_videometa;
 };
 
 struct _GstGLDownloadElementClass

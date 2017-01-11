@@ -469,4 +469,63 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
   return gst_egl_image_new_wrapped (context, img, format, NULL,
       (GstEGLImageDestroyNotify) _destroy_egl_image);
 }
+
+gboolean
+gst_egl_image_export_dmabuf (GstEGLImage * image, int *fd, gint * stride,
+    gsize * offset)
+{
+  EGLBoolean (*gst_eglExportDMABUFImageQueryMESA) (EGLDisplay dpy,
+      EGLImageKHR image, int *fourcc, int *num_planes,
+      EGLuint64KHR * modifiers);
+  EGLBoolean (*gst_eglExportDMABUFImageMESA) (EGLDisplay dpy, EGLImageKHR image,
+      int *fds, EGLint * strides, EGLint * offsets);
+  GstGLDisplayEGL *display_egl;
+  EGLDisplay egl_display = EGL_DEFAULT_DISPLAY;
+  int num_planes = 0;
+  int egl_fd = 0;
+  EGLint egl_stride = 0;
+  EGLint egl_offset = 0;
+
+  gst_eglExportDMABUFImageQueryMESA =
+      gst_gl_context_get_proc_address (image->context,
+      "eglExportDMABUFImageQueryMESA");
+  gst_eglExportDMABUFImageMESA =
+      gst_gl_context_get_proc_address (image->context,
+      "eglExportDMABUFImageMESA");
+
+  if (!gst_eglExportDMABUFImageQueryMESA || !gst_eglExportDMABUFImageMESA)
+    return FALSE;
+
+  display_egl =
+      (GstGLDisplayEGL *) gst_gl_display_egl_from_gl_display (image->
+      context->display);
+  if (!display_egl) {
+    GST_WARNING_OBJECT (image->context,
+        "Failed to retrieve GstGLDisplayEGL from %" GST_PTR_FORMAT,
+        image->context->display);
+    return FALSE;
+  }
+  egl_display =
+      (EGLDisplay) gst_gl_display_get_handle (GST_GL_DISPLAY (display_egl));
+  gst_object_unref (display_egl);
+
+  if (!gst_eglExportDMABUFImageQueryMESA (egl_display, image->image,
+          NULL, &num_planes, NULL))
+    return FALSE;
+
+  /* Don't allow multi-plane dmabufs */
+  if (num_planes > 1)
+    return FALSE;
+
+  if (!gst_eglExportDMABUFImageMESA (egl_display, image->image, &egl_fd,
+          &egl_stride, &egl_offset))
+    return FALSE;
+
+  *fd = egl_fd;
+  *stride = egl_stride;
+  *offset = egl_offset;
+
+  return TRUE;
+}
+
 #endif /* GST_GL_HAVE_DMABUF */
