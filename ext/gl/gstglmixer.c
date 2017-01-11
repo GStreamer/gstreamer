@@ -220,15 +220,21 @@ static GstCaps *
 _update_caps (GstVideoAggregator * vagg, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *tmp;
+  guint i, n;
 
   if (filter) {
     tmp = gst_caps_intersect (caps, filter);
   } else {
-    tmp = caps;
+    tmp = gst_caps_copy (caps);
   }
 
-  return gst_gl_caps_replace_all_caps_features (tmp,
-      GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  n = gst_caps_get_size (tmp);
+  for (i = 0; i < n; i++) {
+    gst_caps_set_features (tmp, i,
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+  }
+
+  return tmp;
 }
 
 static GstCaps *
