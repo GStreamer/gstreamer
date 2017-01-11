@@ -1093,6 +1093,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
       if ((urisrc->pending_pads &&
               link_pending_pad_to_output (urisrc, child_info->output_slot))) {
+        /* Found a new source pad to give this slot data - no need to send EOS */
         GST_URI_SOURCE_BIN_UNLOCK (urisrc);
         goto done;
       }
@@ -1268,15 +1269,17 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
 
     slot = g_object_get_data (G_OBJECT (pad), "urisourcebin.slotinfo");
 
-    gst_pad_push_event (slot->srcpad, gst_event_new_eos ());
+    if (slot) {
+      if (slot->linked_info) {
+        /* Do not clear output slot yet. A new input was
+         * connected. We should just drop this EOS */
+        GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+        return GST_PAD_PROBE_DROP;
+      }
 
-    if (slot && slot->linked_info) {
-      /* Do not clear output slot yet */
-      GST_URI_SOURCE_BIN_UNLOCK (urisrc);
-      return GST_PAD_PROBE_DROP;
+      gst_pad_push_event (slot->srcpad, gst_event_new_eos ());
+      free_output_slot_async (urisrc, slot);
     }
-
-    free_output_slot_async (urisrc, slot);
 
     /* FIXME: Only emit drained if all output pads are done and there's no
      * pending pads */
@@ -1361,14 +1364,17 @@ pad_removed_cb (GstElement * element, GstPad * pad, GstURISourceBin * urisrc)
 
     if (!info->output_slot->is_eos && urisrc->pending_pads &&
         link_pending_pad_to_output (urisrc, info->output_slot)) {
+      /* Found a new source pad to give this slot data - no need to send EOS */
       GST_URI_SOURCE_BIN_UNLOCK (urisrc);
       return;
     }
 
+    /* Unlink this pad from its output slot and send a fake EOS event to drain the
+     * queue */
     slot = info->output_slot;
+    slot->is_eos = TRUE;
+    slot->linked_info = NULL;
 
-    info->output_slot->is_eos = TRUE;
-    info->output_slot->linked_info = NULL;
     info->output_slot = NULL;
 
     GST_LOG_OBJECT (element,
