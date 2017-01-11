@@ -63,13 +63,12 @@ supports_vaapi (int fd)
 {
   gboolean ret;
   VADisplay va_dpy;
-  int major, minor;
 
   va_dpy = vaGetDisplayDRM (fd);
   if (!va_dpy)
     return FALSE;
 
-  ret = (vaInitialize (va_dpy, &major, &minor) == VA_STATUS_SUCCESS);
+  ret = vaapi_initialize (va_dpy);
   vaTerminate (va_dpy);
   return ret;
 }

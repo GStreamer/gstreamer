@@ -30,6 +30,11 @@
 #include <glib.h>
 #include <va/va.h>
 
+/** calls vaInitialize() redirecting the logging mechanism */
+G_GNUC_INTERNAL
+gboolean
+vaapi_initialize (VADisplay dpy);
+
 /** Check VA status for success or print out an error */
 G_GNUC_INTERNAL
 gboolean

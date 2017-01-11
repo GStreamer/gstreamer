@@ -900,8 +900,6 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
   GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
   const GstVaapiDisplayClass *const klass =
       GST_VAAPI_DISPLAY_GET_CLASS (display);
-  gint major_version, minor_version;
-  VAStatus status;
   GstVaapiDisplayInfo info;
   const GstVaapiDisplayInfo *cached_info = NULL;
 
@@ -947,10 +945,8 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
   }
 
   if (!priv->parent) {
-    status = vaInitialize (priv->display, &major_version, &minor_version);
-    if (!vaapi_check_status (status, "vaInitialize()"))
+    if (!vaapi_initialize (priv->display))
       return FALSE;
-    GST_DEBUG ("VA-API version %d.%d", major_version, minor_version);
   }
 
   if (!cached_info) {
