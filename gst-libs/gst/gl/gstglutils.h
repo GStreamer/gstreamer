@@ -47,9 +47,6 @@ gsize gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align
 GST_EXPORT
 gsize gst_gl_get_plane_start (GstVideoInfo * info, GstVideoAlignment * valign,
     guint plane);
-GST_EXPORT
-GstCaps * gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
-    const gchar * feature_name);
 
 GST_EXPORT
 gboolean gst_gl_value_set_texture_target_from_mask (GValue * value,

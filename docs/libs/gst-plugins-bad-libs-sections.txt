@@ -1618,7 +1618,6 @@ GstGLUploadPrivate
 gst_gl_handle_set_context
 gst_gl_handle_context_query
 gst_gl_context_check_framebuffer_status
-gst_gl_caps_replace_all_caps_features
 gst_gl_ensure_element_data
 gst_gl_get_plane_data_size
 gst_gl_get_plane_start

@@ -490,22 +490,6 @@ gst_gl_get_plane_start (GstVideoInfo * info, GstVideoAlignment * valign,
   return (GST_VIDEO_INFO_PLANE_OFFSET (info, plane)) - plane_start;
 }
 
-GstCaps *
-gst_gl_caps_replace_all_caps_features (const GstCaps * caps,
-    const gchar * feature_name)
-{
-  GstCaps *tmp = gst_caps_copy (caps);
-  guint n = gst_caps_get_size (tmp);
-  guint i = 0;
-
-  for (i = 0; i < n; i++) {
-    gst_caps_set_features (tmp, i,
-        gst_caps_features_from_string (feature_name));
-  }
-
-  return tmp;
-}
-
 /**
  * gst_gl_value_get_texture_target_mask:
  * @value: an initialized #GValue of type G_TYPE_STRING
