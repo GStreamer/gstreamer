@@ -44,7 +44,9 @@ enum
 {
   PROP_0,
   PROP_MAX_SIZE_TIME,
-  PROP_MAX_SIZE_PACKETS
+  PROP_MAX_SIZE_PACKETS,
+  PROP_REQUESTS,
+  PROP_FULFILLED_REQUESTS,
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -101,6 +103,16 @@ gst_rtp_rtx_queue_class_init (GstRTPRtxQueueClass * klass)
           DEFAULT_MAX_SIZE_PACKETS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_REQUESTS,
+      g_param_spec_uint ("requests", "Requests",
+          "Total number of retransmission requests", 0, G_MAXUINT,
+          0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_FULFILLED_REQUESTS,
+      g_param_spec_uint ("fulfilled-requests", "Fulfilled Requests",
+          "Number of fulfilled retransmission requests", 0, G_MAXUINT,
+          0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
   gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
@@ -122,6 +134,8 @@ gst_rtp_rtx_queue_reset (GstRTPRtxQueue * rtx, gboolean full)
   g_list_foreach (rtx->pending, (GFunc) gst_buffer_unref, NULL);
   g_list_free (rtx->pending);
   rtx->pending = NULL;
+  rtx->n_requests = 0;
+  rtx->n_fulfilled_requests = 0;
   g_mutex_unlock (&rtx->lock);
 }
 
@@ -224,6 +238,7 @@ gst_rtp_rtx_queue_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         data.rtx = rtx;
         data.seqnum = seqnum;
         data.found = FALSE;
+        rtx->n_requests += 1;
         g_queue_foreach (rtx->queue, (GFunc) push_seqnum, &data);
         g_mutex_unlock (&rtx->lock);
 
@@ -244,6 +259,7 @@ gst_rtp_rtx_queue_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 static void
 do_push (GstBuffer * buffer, GstRTPRtxQueue * rtx)
 {
+  rtx->n_fulfilled_requests += 1;
   gst_pad_push (rtx->srcpad, buffer);
 }
 
@@ -332,6 +348,12 @@ gst_rtp_rtx_queue_get_property (GObject * object,
       break;
     case PROP_MAX_SIZE_PACKETS:
       g_value_set_uint (value, rtx->max_size_packets);
+      break;
+    case PROP_REQUESTS:
+      g_value_set_uint (value, rtx->n_requests);
+      break;
+    case PROP_FULFILLED_REQUESTS:
+      g_value_set_uint (value, rtx->n_fulfilled_requests);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

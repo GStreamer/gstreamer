@@ -58,6 +58,10 @@ struct _GstRTPRtxQueue
 
   guint max_size_time;
   guint max_size_packets;
+
+  /* Statistics */
+  guint n_requests;
+  guint n_fulfilled_requests;
 };
 
 struct _GstRTPRtxQueueClass
