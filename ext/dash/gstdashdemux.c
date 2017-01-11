@@ -724,6 +724,8 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     stream->index = i;
     stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
     stream->sidx_position = GST_CLOCK_TIME_NONE;
+    /* Set a default average keyframe download time of a quarter of a second */
+    stream->average_download_time = 250 * GST_MSECOND;
     if (active_stream->cur_adapt_set &&
         active_stream->cur_adapt_set->RepresentationBase &&
         active_stream->cur_adapt_set->RepresentationBase->ContentProtection) {
@@ -1502,6 +1504,29 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
 
   GST_DEBUG_OBJECT (stream->pad, "Advance fragment");
+
+  /* Update statistics */
+  if (dashstream->moof_sync_samples &&
+      GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (dashdemux)) {
+    if (GST_CLOCK_TIME_IS_VALID (stream->last_download_time)) {
+      if (GST_CLOCK_TIME_IS_VALID (dashstream->average_download_time)) {
+        /* We go up more aggresively than we go down */
+        if (stream->last_download_time > dashstream->average_download_time)
+          dashstream->average_download_time =
+              (dashstream->average_download_time +
+              stream->last_download_time) / 2;
+        else
+          dashstream->average_download_time =
+              (3 * dashstream->average_download_time +
+              stream->last_download_time) / 4;
+      } else
+        dashstream->average_download_time = stream->last_download_time;
+      GST_DEBUG_OBJECT (stream->pad,
+          "Download time %" GST_TIME_FORMAT " %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (stream->last_download_time),
+          GST_TIME_ARGS (dashstream->average_download_time));
+    }
+  }
 
   /* If downloading only keyframes, switch to the next one or fall through */
   if (dashstream->moof_sync_samples &&

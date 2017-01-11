@@ -98,6 +98,9 @@ struct _GstDashDemuxStream
   guint64 keyframe_average_size;
   guint64 keyframe_average_distance;
   gboolean first_sync_sample_after_moof, first_sync_sample_always_after_moof;
+
+  /* Average keyframe download time (only in trickmode-key-units) */
+  GstClockTime average_download_time;
 };
 
 /**
