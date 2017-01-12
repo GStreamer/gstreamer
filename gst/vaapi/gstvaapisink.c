@@ -574,10 +574,8 @@ gst_vaapisink_video_overlay_expose (GstVideoOverlay * overlay)
 {
   GstVaapiSink *const sink = GST_VAAPISINK (overlay);
 
-  if (sink->video_buffer) {
-    gst_vaapisink_reconfigure_window (sink);
-    gst_vaapisink_show_frame (GST_VIDEO_SINK_CAST (sink), sink->video_buffer);
-  }
+  gst_vaapisink_reconfigure_window (sink);
+  gst_vaapisink_show_frame (GST_VIDEO_SINK_CAST (sink), NULL);
 }
 
 static void
@@ -1363,11 +1361,19 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
   GstVaapiSurfaceProxy *proxy;
   GstVaapiSurface *surface;
   GstBuffer *buffer;
+  GstBuffer *old_buf;
   guint flags;
   GstVaapiRectangle *surface_rect = NULL;
   GstVaapiRectangle tmp_rect;
   GstFlowReturn ret;
   gint32 view_id;
+
+  if (!src_buffer) {
+    if (sink->video_buffer)
+      src_buffer = sink->video_buffer;
+    else
+      return GST_FLOW_OK;
+  }
 
   GstVideoCropMeta *const crop_meta =
       gst_buffer_get_video_crop_meta (src_buffer);
@@ -1439,9 +1445,13 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
     g_signal_emit (sink, gst_vaapisink_signals[HANDOFF_SIGNAL], 0, buffer);
 
   /* Retain VA surface until the next one is displayed */
-  /* Need to release the lock for the duration, otherwise a deadlock is possible */
+  old_buf = sink->video_buffer;
+  sink->video_buffer = gst_buffer_ref (buffer);
+  /* Need to release the lock while releasing old buffer, otherwise a
+   * deadlock is possible */
   gst_vaapi_display_unlock (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
-  gst_buffer_replace (&sink->video_buffer, buffer);
+  if (old_buf)
+    gst_buffer_unref (old_buf);
   gst_vaapi_display_lock (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
 
   ret = GST_FLOW_OK;
