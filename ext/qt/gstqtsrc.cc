@@ -283,10 +283,6 @@ gst_qt_src_query (GstBaseSrc * bsrc, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
-      const gchar *context_type;
-      GstContext *context, *old_context;
-      gboolean ret;
-
       if (!qt_window_is_scenegraph_initialized (qt_src->window))
         return FALSE;
 
@@ -295,37 +291,9 @@ gst_qt_src_query (GstBaseSrc * bsrc, GstQuery * query)
         qt_src->qt_context = qt_window_get_qt_context (qt_src->window);
       }
 
-      ret = gst_gl_handle_context_query ((GstElement *) qt_src, query,
-          &qt_src->display, &qt_src->qt_context);
-
-      if (qt_src->display)
-        gst_gl_display_filter_gl_api (qt_src->display,
-            gst_gl_context_get_gl_api (qt_src->qt_context));
-
-      gst_query_parse_context_type (query, &context_type);
-
-      if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
-        GstStructure *s;
-
-        gst_query_parse_context (query, &old_context);
-
-        if (old_context)
-          context = gst_context_copy (old_context);
-        else
-          context = gst_context_new ("gst.gl.app_context", FALSE);
-
-        s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT,
-            qt_src->qt_context, NULL);
-        gst_query_set_context (query, context);
-        gst_context_unref (context);
-
-        ret = qt_src->qt_context != NULL;
-      }
-      GST_LOG_OBJECT (qt_src, "context query of type %s %i", context_type, ret);
-
-      if (ret)
-        return ret;
+      if (gst_gl_handle_context_query ((GstElement *) qt_src, query,
+          qt_src->display, qt_src->context, qt_src->qt_context))
+        return TRUE;
 
       /* fallthrough */
     }
@@ -340,31 +308,9 @@ gst_qt_src_query (GstBaseSrc * bsrc, GstQuery * query)
 static gboolean
 _find_local_gl_context (GstQtSrc * qt_src)
 {
-  GstQuery *query;
-  GstContext *context;
-  const GstStructure *s;
-
-  if (qt_src->context)
+  if (gst_gl_query_local_gl_context (GST_ELEMENT (qt_src), GST_PAD_SRC,
+      &qt_src->context))
     return TRUE;
-
-  query = gst_query_new_context ("gst.gl.local_context");
-  if (!qt_src->context
-      && gst_gl_run_query (GST_ELEMENT (qt_src), query, GST_PAD_SRC)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &qt_src->context,
-          NULL);
-    }
-  }
-
-  GST_DEBUG_OBJECT (qt_src, "found local context %p", qt_src->context);
-
-  gst_query_unref (query);
-
-  if (qt_src->context)
-    return TRUE;
-
   return FALSE;
 }
 
