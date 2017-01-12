@@ -35,6 +35,7 @@
 
 #include "gl.h"
 #include "gstglutils.h"
+#include "gstglutils_private.h"
 
 #if GST_GL_HAVE_WINDOW_X11
 #include <gst/gl/x11/gstgldisplay_x11.h>
@@ -49,6 +50,24 @@
 #define USING_GLES2(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0))
 #define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
 
+#ifndef GST_DISABLE_GST_DEBUG
+GST_DEBUG_CATEGORY_STATIC (gst_gl_utils_debug);
+static GstDebugCategory *
+_init_gl_utils_debug_category (void)
+{
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (gst_gl_utils_debug, "glutils", 0,
+        "OpenGL Utilities");
+    g_once_init_leave (&_init, 1);
+  }
+
+  return gst_gl_utils_debug;
+}
+
+#define GST_CAT_DEFAULT _init_gl_utils_debug_category()
+#endif
 
 static gboolean
 gst_gl_display_found (GstElement * element, GstGLDisplay * display)
@@ -349,21 +368,24 @@ gst_gl_handle_set_context (GstElement * element, GstContext * context,
 
 gboolean
 gst_gl_handle_context_query (GstElement * element, GstQuery * query,
-    GstGLDisplay ** display, GstGLContext ** other_context)
+    GstGLDisplay * display, GstGLContext * gl_context,
+    GstGLContext * other_context)
 {
-  gboolean res = FALSE;
   const gchar *context_type;
   GstContext *context, *old_context;
 
-  g_return_val_if_fail (element != NULL, FALSE);
-  g_return_val_if_fail (query != NULL, FALSE);
-  g_return_val_if_fail (display != NULL, FALSE);
-  g_return_val_if_fail (other_context != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
+  g_return_val_if_fail (display == NULL || GST_IS_GL_DISPLAY (display), FALSE);
+  g_return_val_if_fail (gl_context == NULL
+      || GST_IS_GL_CONTEXT (gl_context), FALSE);
+  g_return_val_if_fail (other_context == NULL
+      || GST_IS_GL_CONTEXT (other_context), FALSE);
 
+  GST_LOG_OBJECT (element, "handle context query %" GST_PTR_FORMAT, query);
   gst_query_parse_context_type (query, &context_type);
 
-  if (g_strcmp0 (context_type, GST_GL_DISPLAY_CONTEXT_TYPE) == 0) {
-
+  if (display && g_strcmp0 (context_type, GST_GL_DISPLAY_CONTEXT_TYPE) == 0) {
     gst_query_parse_context (query, &old_context);
 
     if (old_context)
@@ -371,16 +393,17 @@ gst_gl_handle_context_query (GstElement * element, GstQuery * query,
     else
       context = gst_context_new (GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
 
-    gst_context_set_gl_display (context, *display);
+    gst_context_set_gl_display (context, display);
     gst_query_set_context (query, context);
     gst_context_unref (context);
+    GST_DEBUG_OBJECT (element, "successfully set %" GST_PTR_FORMAT
+        " on %" GST_PTR_FORMAT, display, query);
 
-    res = *display != NULL;
+    return TRUE;
   }
 #if GST_GL_HAVE_WINDOW_X11
-  else if (g_strcmp0 (context_type, "gst.x11.display.handle") == 0) {
+  else if (display && g_strcmp0 (context_type, "gst.x11.display.handle") == 0) {
     GstStructure *s;
-    Display *x11_display = NULL;
 
     gst_query_parse_context (query, &old_context);
 
@@ -389,24 +412,29 @@ gst_gl_handle_context_query (GstElement * element, GstQuery * query,
     else
       context = gst_context_new ("gst.x11.display.handle", TRUE);
 
-    if (*display
-        && ((*display)->type & GST_GL_DISPLAY_TYPE_X11) ==
-        GST_GL_DISPLAY_TYPE_X11)
-      x11_display = (Display *) gst_gl_display_get_handle (*display);
+    if (gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_X11) {
+      Display *x11_display = (Display *) gst_gl_display_get_handle (display);
 
-    s = gst_context_writable_structure (context);
-    gst_structure_set (s, "display", G_TYPE_POINTER, x11_display, NULL);
+      if (x11_display) {
+        s = gst_context_writable_structure (context);
+        gst_structure_set (s, "display", G_TYPE_POINTER, x11_display, NULL);
 
-    gst_query_set_context (query, context);
-    gst_context_unref (context);
+        gst_query_set_context (query, context);
+        gst_context_unref (context);
 
-    res = x11_display != NULL;
+        GST_DEBUG_OBJECT (element, "successfully set x11 display %p (from %"
+            GST_PTR_FORMAT ") on %" GST_PTR_FORMAT, x11_display, display,
+            query);
+
+        return TRUE;
+      }
+    }
   }
 #endif
 #if GST_GL_HAVE_WINDOW_WAYLAND
-  else if (g_strcmp0 (context_type, "GstWaylandDisplayHandleContextType") == 0) {
+  else if (display
+      && g_strcmp0 (context_type, "GstWaylandDisplayHandleContextType") == 0) {
     GstStructure *s;
-    struct wl_display *wayland_display = NULL;
 
     gst_query_parse_context (query, &old_context);
 
@@ -415,22 +443,27 @@ gst_gl_handle_context_query (GstElement * element, GstQuery * query,
     else
       context = gst_context_new ("GstWaylandDisplayHandleContextType", TRUE);
 
-    if (*display
-        && ((*display)->type & GST_GL_DISPLAY_TYPE_WAYLAND) ==
-        GST_GL_DISPLAY_TYPE_WAYLAND)
-      wayland_display =
-          (struct wl_display *) gst_gl_display_get_handle (*display);
+    if (gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_WAYLAND) {
+      struct wl_display *wayland_display =
+          (struct wl_display *) gst_gl_display_get_handle (display);
 
-    s = gst_context_writable_structure (context);
-    gst_structure_set (s, "display", G_TYPE_POINTER, wayland_display, NULL);
+      if (wayland_display) {
+        s = gst_context_writable_structure (context);
+        gst_structure_set (s, "display", G_TYPE_POINTER, wayland_display, NULL);
 
-    gst_query_set_context (query, context);
-    gst_context_unref (context);
+        gst_query_set_context (query, context);
+        gst_context_unref (context);
 
-    res = wayland_display != NULL;
+        GST_DEBUG_OBJECT (element, "successfully set wayland display %p (from %"
+            GST_PTR_FORMAT ") on %" GST_PTR_FORMAT, wayland_display, display,
+            query);
+
+        return TRUE;
+      }
+    }
   }
 #endif
-  else if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
+  else if (other_context && g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
     GstStructure *s;
 
     gst_query_parse_context (query, &old_context);
@@ -441,14 +474,65 @@ gst_gl_handle_context_query (GstElement * element, GstQuery * query,
       context = gst_context_new ("gst.gl.app_context", TRUE);
 
     s = gst_context_writable_structure (context);
-    gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, *other_context, NULL);
+    gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, other_context, NULL);
     gst_query_set_context (query, context);
     gst_context_unref (context);
 
-    res = *other_context != NULL;
+    GST_DEBUG_OBJECT (element, "successfully set application GL context %"
+        GST_PTR_FORMAT " on %" GST_PTR_FORMAT, other_context, query);
+
+    return TRUE;
+  } else if (gl_context
+      && g_strcmp0 (context_type, "gst.gl.local_context") == 0) {
+    GstStructure *s;
+
+    gst_query_parse_context (query, &old_context);
+
+    if (old_context)
+      context = gst_context_copy (old_context);
+    else
+      context = gst_context_new ("gst.gl.local_context", TRUE);
+
+    s = gst_context_writable_structure (context);
+    gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, gl_context, NULL);
+    gst_query_set_context (query, context);
+    gst_context_unref (context);
+
+    GST_DEBUG_OBJECT (element, "successfully set GL context %"
+        GST_PTR_FORMAT " on %" GST_PTR_FORMAT, gl_context, query);
+
+    return TRUE;
   }
 
-  return res;
+  return FALSE;
+}
+
+gboolean
+gst_gl_query_local_gl_context (GstElement * element, GstPadDirection direction,
+    GstGLContext ** context_ptr)
+{
+  GstQuery *query;
+  GstContext *context;
+  const GstStructure *s;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (context_ptr != NULL, FALSE);
+
+  if (*context_ptr)
+    return TRUE;
+
+  query = gst_query_new_context ("gst.gl.local_context");
+  if (gst_gl_run_query (GST_ELEMENT (element), query, direction)) {
+    gst_query_parse_context (query, &context);
+    if (context) {
+      s = gst_context_get_structure (context);
+      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, context_ptr, NULL);
+    }
+  }
+
+  gst_query_unref (query);
+
+  return *context_ptr != NULL;
 }
 
 gsize
@@ -471,8 +555,6 @@ gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
   return plane_size;
 }
 
-/* find the difference between the start of the plane and where the video
- * data starts in the plane */
 gsize
 gst_gl_get_plane_start (GstVideoInfo * info, GstVideoAlignment * valign,
     guint plane)

@@ -98,37 +98,9 @@ gst_gtk_gl_sink_query (GstBaseSink * bsink, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
-      const gchar *context_type;
-      GstContext *context, *old_context;
-
-      res = gst_gl_handle_context_query ((GstElement *) gtk_sink, query,
-          &gtk_sink->display, &gtk_sink->gtk_context);
-
-      if (gtk_sink->display)
-        gst_gl_display_filter_gl_api (gtk_sink->display, GST_GL_API_OPENGL3);
-
-      gst_query_parse_context_type (query, &context_type);
-
-      if (g_strcmp0 (context_type, "gst.gl.local_context") == 0) {
-        GstStructure *s;
-
-        gst_query_parse_context (query, &old_context);
-
-        if (old_context)
-          context = gst_context_copy (old_context);
-        else
-          context = gst_context_new ("gst.gl.local_context", FALSE);
-
-        s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, gtk_sink->context,
-            NULL);
-        gst_query_set_context (query, context);
-        gst_context_unref (context);
-
-        res = gtk_sink->context != NULL;
-      }
-      GST_LOG_OBJECT (gtk_sink, "context query of type %s %i", context_type,
-          res);
+      if (gst_gl_handle_context_query ((GstElement *) gtk_sink, query,
+              gtk_sink->display, gtk_sink->context, gtk_sink->gtk_context))
+        return TRUE;
       break;
     }
     default:
