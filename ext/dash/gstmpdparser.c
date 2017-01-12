@@ -3912,7 +3912,6 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
   GstStreamPeriod *stream_period;
   GList *rep_list;
   GstClockTime PeriodStart, PeriodEnd, start_time, duration;
-  GstMediaSegment *last_media_segment;
   guint i;
   guint64 start;
 
@@ -4142,13 +4141,15 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
         }
       }
     }
+#ifndef GST_DISABLE_GST_DEBUG
     if (stream->segments->len > 0) {
-      last_media_segment =
+      GstMediaSegment *last_media_segment =
           g_ptr_array_index (stream->segments, stream->segments->len - 1);
       GST_LOG ("Built a list of %d segments", last_media_segment->number);
     } else {
       GST_LOG ("All media segments were clipped");
     }
+#endif
   }
 
   g_free (stream->baseURL);
