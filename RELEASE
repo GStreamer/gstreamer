@@ -1,15 +1,20 @@
 
-Release notes for GStreamer Base Plugins 1.10.0
+Release notes for GStreamer Base Plugins 1.11.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.10 release series. The 1.10 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the unstable
+1.11 release series. The 1.11 release series is adding new features on top of
+the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.11 release series
+will lead to the stable 1.12 release series in the next weeks. Any newly added
+API can still change until that point.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.10 release
-series.
+Full release notes will be provided at some point during the 1.11 release
+cycle, highlighting all the new features, bugfixes, performance optimizations
+and other important changes.
+
+
+Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
 
 
 This module contains a set of reference plugins, base classes for other
@@ -58,16 +63,44 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 768763 : vorbisenc, opusenc reconfiguration broken
-      * 772500 : opusdec: Fix memory leak in test code
-      * 772501 : videorate: Fix memory leak in test code
-      * 772676 : parsebin: Use gst_playback_utils_compare_factories_func
-      * 772855 : decodebin3: Implement lock for multiqueue slot
-      * 773103 : videodecoder: Default caps sets format I420
-      * 773105 : audioencoder: Error-handling for pushing headers
-      * 773107 : audioencoder: Plug buffer-leak
-      * 773181 : x264enc refuses to negotiate I420 or baseline profiles!
-      * 773441 : decodebin3: GStreamer-CRITICAL **: gst_mini_object_unref: assertion 'mini_object != NULL' failed
+      * 678301 : audioringbuffer: introspection fixes and API clean up for bindings
+      * 699077 : videorate: add " rate " property to modify clip speed
+      * 744191 : encodebin: Need more buffers in output queue for better performance
+      * 749567 : tcpclientsrc: add timeout property
+      * 752052 : appsrc: Initialize min and max vars in get_property() for fix compiler warnings
+      * 756628 : audioclock: Add run time type check safety
+      * 758259 : discoverer: Add support to dump dot files
+      * 759358 : Add GST_CAPS_FEATURE_MEMORY_DMABUF " memory:DMABuf " 
+      * 765796 : rtp depayloaders output bad segment events when input stream is a non time segment
+      * 767450 : video-format: Add VYUY a packed 4:2:2 format
+      * 769698 : sdp: add support for rtcp-fb attributes
+      * 770355 : id3v2: Fix parsing extended header and string lists in UTF-16
+      * 771376 : video: Add top-field-first / bottom-field-first information to raw video caps if interlaced-mode=interleaved & proxy colorimetry in compressed caps too
+      * 772445 : urisourcebin: minor enhancements
+      * 772550 : urisourcebin: Fix minor typo and some FIXME list
+      * 772832 : parsebin: Rename variables include 'decode' to 'parse'
+      * 772864 : audioconvert: mask calculation optimization
+      * 773073 : audioconvert: endian conversion optimization
+      * 773102 : videotestsrc: Make snow deterministic
+      * 773165 : videodecoder: add _allocate_output_frame_with_params() to pass custom GstBufferPoolAcquireParams [API]
+      * 773341 : urisourcebin: Cleanup unused output slot
+      * 773944 : meson: Generate girs
+      * 774445 : meson: vorbis: Add -DTREMOR to flags for gstivorbisdec
+      * 774454 : playbin3: remove dead code
+      * 774484 : videodecoder, audiodecoder: parse format before checking in src_query_default
+      * 774588 : video-info: Catch overflows in the video frame size calculation
+      * 774728 : Subtitle showing as rectangular box in android platform
+      * 774878 : tag: fix some warnings in mklicensestables
+      * 774959 : rtpbuffer: fix ensure_buffers
+      * 775310 : playbin: Fix caps memory leak in usage of gst_static_caps_get() API
+      * 775369 : Audio distortion since commit 010b954 (regression)
+      * 775917 : tests: Do not use 'auto-select-streams' property in playbin3 test app
+      * 776038 : audioringbuffer: do not require 4 byte multiples for encoded audio
+      * 776188 : encodebin: Fallback to other profile if we fail with one
+      * 776447 : videotimecode: New GstVideoTimeCodeDiff type, ability to add to a GstVideoTimeCode
+      * 776458 : urisourcebin: Always configure typefind
+      * 777009 : urisourcebin: Never push actual EOS event to slot
+      * 772764 : GstVideoTimeCode lacks GstValue functions
 
 ==== Download ====
 
@@ -105,18 +138,41 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Arun Raghavan
+      * Carlos Rafael Giani
+      * Changbok Chea
       * Edward Hervey
-      * Graham Leggett
-      * Havard Graff
-      * Jimmy Ohn
-      * Nirbheek Chauhan
+      * Evan Nemerson
+      * Garima Gaur
+      * Guillaume Desmottes
+      * Jan Alexander Steffens (heftig)
+      * Jan Schmidt
+      * Joris Valette
+      * Julien Isorce
+      * Marcin Kolny
+      * Mark Nauwelaerts
+      * Matthew Waters
+      * Miguel Paris
+      * Nicola Murino
+      * Nicolas Dechesne
+      * Nicolas Dufresne
+      * Patricia Muscalu
+      * Petr Kulhavy
+      * Reynaldo H. Verdejo Pinochet
       * Scott D Phillips
       * Sebastian Dröge
       * Seungha Yang
-      * Stefan Sauer
+      * Song Bing
       * Stian Selnes
+      * Stuart Weaver
       * Thibault Saunier
+      * Thomas Bluemel
       * Tim-Philipp Müller
+      * Tobias Mueller
+      * Tomasz Zajac
+      * Ulf Olsson
       * Vincent Penquerc'h
+      * Vineeth TM
+      * Vivia Nikolaidou
       * Wonchul Lee
+      * hoonhee.lee
  

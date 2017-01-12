@@ -1389,6 +1389,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstAppSink::buffer-list</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer List</NICK>
+<BLURB>Use buffer lists.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstVolume::mute</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -1689,6 +1699,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstVideoRate::rate</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Rate</NICK>
+<BLURB>Factor of speed for frame displaying.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioConvert::dithering</NAME>
 <TYPE>GstAudioDitherMethod</TYPE>
 <RANGE></RANGE>
@@ -1786,6 +1806,16 @@
 <NICK>Port</NICK>
 <BLURB>The port to receive packets from.</BLURB>
 <DEFAULT>4953</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPClientSrc::timeout</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>timeout</NICK>
+<BLURB>Value in seconds to timeout a blocking I/O. 0 = No timeout. .</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>

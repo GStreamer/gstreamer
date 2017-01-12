@@ -3,7 +3,7 @@
   <description>ogg stream manipulation (info about ogg: http://xiph.org)</description>
   <filename>../../ext/ogg/.libs/libgstogg.so</filename>
   <basename>libgstogg.so</basename>
-  <version>1.10.0</version>
+  <version>1.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -108,7 +108,7 @@
     <element>
       <name>ogmaudioparse</name>
       <longname>OGM audio stream parser</longname>
-      <class>Codec/Decoder/Audio</class>
+      <class>Codec/Parser/Audio</class>
       <description>parse an OGM audio header and stream</description>
       <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
       <pads>
@@ -150,7 +150,7 @@
     <element>
       <name>ogmvideoparse</name>
       <longname>OGM video stream parser</longname>
-      <class>Codec/Decoder/Video</class>
+      <class>Codec/Parser/Video</class>
       <description>parse an OGM video header and stream</description>
       <author>GStreamer maintainers &lt;gstreamer-devel@lists.freedesktop.org&gt;</author>
       <pads>
