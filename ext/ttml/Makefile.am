@@ -22,7 +22,8 @@ libgstttmlsubs_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	-lgstvideo-$(GST_API_VERSION) \
-	$(TTML_LIBS)
+	$(TTML_LIBS) \
+	$(LIBM)
 
 libgstttmlsubs_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstttmlsubs_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
