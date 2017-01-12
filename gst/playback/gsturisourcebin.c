@@ -1996,6 +1996,9 @@ setup_typefind (GstURISourceBin * urisrc, GstPad * srcpad)
   if (!typefind)
     goto no_typefind;
 
+  /* Make sure the bin doesn't set the typefind running yet */
+  gst_element_set_locked_state (typefind, TRUE);
+
   gst_bin_add (GST_BIN_CAST (urisrc), typefind);
 
   if (!srcpad) {
@@ -2011,13 +2014,15 @@ setup_typefind (GstURISourceBin * urisrc, GstPad * srcpad)
       goto could_not_link;
   }
 
-  gst_element_sync_state_with_parent (typefind);
-
   urisrc->typefinds = g_list_append (urisrc->typefinds, typefind);
 
   /* connect a signal to find out when the typefind element found
    * a type */
   g_signal_connect (typefind, "have-type", G_CALLBACK (type_found), urisrc);
+
+  /* Now it can start */
+  gst_element_set_locked_state (typefind, FALSE);
+  gst_element_sync_state_with_parent (typefind);
 
   return TRUE;
 
