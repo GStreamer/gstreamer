@@ -10125,6 +10125,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
              * than its own fourcc */
             gst_caps_set_simple (stream->caps, "seqh", GST_TYPE_BUFFER, seqh,
                 NULL);
+            gst_buffer_unref (seqh);
           }
 
           GST_DEBUG_OBJECT (qtdemux, "found codec_data in stsd");
