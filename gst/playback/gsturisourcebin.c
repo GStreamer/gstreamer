@@ -1085,6 +1085,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     {
       GstEvent *event;
       GstStructure *s;
+      guint32 seqnum = gst_event_get_seqnum (ev);
 
       GST_LOG_OBJECT (urisrc, "EOS on pad %" GST_PTR_FORMAT, pad);
 
@@ -1104,6 +1105,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       /* Actually feed a custom EOS event to avoid marking pads as EOSed */
       s = gst_structure_new_empty ("urisourcebin-custom-eos");
       event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+      gst_event_set_seqnum (event, seqnum);
       gst_pad_send_event (child_info->output_slot->sinkpad, event);
     }
       break;
@@ -1270,6 +1272,9 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
     slot = g_object_get_data (G_OBJECT (pad), "urisourcebin.slotinfo");
 
     if (slot) {
+      GstEvent *eos;
+      guint32 seqnum;
+
       if (slot->linked_info) {
         /* Do not clear output slot yet. A new input was
          * connected. We should just drop this EOS */
@@ -1277,7 +1282,10 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
         return GST_PAD_PROBE_DROP;
       }
 
-      gst_pad_push_event (slot->srcpad, gst_event_new_eos ());
+      seqnum = gst_event_get_seqnum (event);
+      eos = gst_event_new_eos ();
+      gst_event_set_seqnum (eos, seqnum);
+      gst_pad_push_event (slot->srcpad, eos);
       free_output_slot_async (urisrc, slot);
     }
 
