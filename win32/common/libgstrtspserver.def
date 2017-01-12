@@ -197,6 +197,7 @@ EXPORTS
 	gst_rtsp_session_get_sessionid
 	gst_rtsp_session_get_timeout
 	gst_rtsp_session_get_type
+	gst_rtsp_session_is_expired
 	gst_rtsp_session_is_expired_usec
 	gst_rtsp_session_manage_media
 	gst_rtsp_session_media_alloc_channels
@@ -212,6 +213,7 @@ EXPORTS
 	gst_rtsp_session_media_set_state
 	gst_rtsp_session_media_set_transport
 	gst_rtsp_session_new
+	gst_rtsp_session_next_timeout
 	gst_rtsp_session_next_timeout_usec
 	gst_rtsp_session_pool_cleanup
 	gst_rtsp_session_pool_create

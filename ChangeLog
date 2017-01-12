@@ -1,9 +1,247 @@
-=== release 1.10.0 ===
+=== release 1.11.1 ===
 
-2016-11-01  Sebastian Dröge <slomo@coaxion.net>
+2017-01-12  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.0
+	  releasing 1.11.1
+
+2017-01-10 08:34:50 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: corrected if-statement in _get_server_port()
+	  This bug was accidentally introduced while fixing a segfault
+	  in _get_server_port() function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776345
+
+2017-01-09 14:12:05 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/stream.c:
+	  rtsp-stream: fixed segmenation fault in _get_server_port()
+	  Calling function gst_rtsp_stream_get_server_port() results in
+	  segmenation fault in the RTP/RTSP/TCP case.
+	  Port that the server will use to receive RTCP makes only
+	  sense in the UDP case, however the function should handle
+	  the TCP case in a nicer way.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776345
+
+2017-01-09 12:22:40 +0300  Aleksandr Slobodeniuk <alenuke@yandex.ru>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  dosc: Fix a little typo
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777037
+
+2017-01-04 16:20:54 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-rtsp-server-uninstalled.pc.in:
+	* pkgconfig/meson.build:
+	  meson: generate pkg-config -uninstalled pc files
+	  Generating those files is useful for users building the GStreamer stack
+	  using meson and having to link it to another project which is still
+	  using the autotools.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776810
+
+2017-01-04 16:11:08 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* pkgconfig/gstreamer-rtsp-server-uninstalled.pc.in:
+	  pkgconfig: fix -uninstalled pc file
+	  pcfiledir was never defined so the paths were wrong.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776867
+
+2016-12-21 13:41:50 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/rtspserver.c:
+	  rtsp-stream: Fixed TCP transport case
+	  Make sure that the appsink element is actually added to
+	  the bin before trying to link it with the elements in it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776343
+
+2016-12-16 17:26:04 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* Makefile.am:
+	* configure.ac:
+	* gst-rtsp.spec.in:
+	  Remove generated .spec file
+	  Likely extremely bitrotten, and we should not ship this anyway.
+
+2016-12-03 08:21:02 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From f980fd9 to 39ac2f5
+
+2016-12-02 15:40:09 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: Fix pt map caps
+	  Since decryption is handled within rtpbin, all outcoming stream
+	  caps will be application/x-rtp (i.e. regular rtp)
+	  Fixes RECORD with SRTP streams
+
+2016-12-02 15:38:04 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  media-factory: Create media objects with the proper transport mode
+	  The function called immediately afterwards (collect_streams()) will
+	  need it to work properly
+
+2016-12-02 14:36:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	  rtsp-auth: Don't remove digest-auth nonces that already/still have a client connected
+
+2016-12-01 18:04:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  rtsp-media-factory: Don't create a pipeline for the media pipeline string
+	  We're going to put a pipeline into a pipeline otherwise, which is not
+	  exactly ideal.
+
+2016-10-25 15:41:28 +0300  Kseniia Vasilchuk <vasilchukkseniia@gmail.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  media: Fix race condition around finish_unprepare() if called multiple time
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755329
+
+2016-11-30 14:06:36 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Don't leave stale pointer after unref
+	  Fix a warning on shutdown - don't keep a pointer to an
+	  alread-unreffed object.
+
+2016-11-26 11:24:50 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitmodules:
+	  common: use https protocol for common submodule
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775110
+
+2016-11-21 23:29:56 +1100  Matthew Waters <matthew@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: block the output of rtpbin instead of the source pipeline
+	  85c52e194bcb81928b96614be0ae47d59eccb1ce introduced a more correct
+	  detection of the srtp rollover counter to add to the SDP.
+	  Unfortunately, it was incomplete for live pipelines where the logic
+	  blocks the source bin before creating the SDP and thus would never have
+	  the necessary informaiton to create a correct SDP with srtp encryption.
+	  Move the pad blocks to rtpbin's output pads instead so that the
+	  necessary information can be created before we need the information for
+	  the SDP.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=770239
+
+2016-11-21 16:02:39 +0100  Dag Gullberg <dagg@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: add IDLE timeout, before session exists
+	  The RTSP server will not timeout an idle RTSP connection
+	  (note this is different from doing timeout on a RTSP
+	  session).
+	  At least for Apache this is a problem when running RTSP over
+	  HTTPS since it uses one of the threads (there is a rather
+	  limited number) that are available for handling requests.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771830
+
+2016-11-23 09:45:08 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	  .gitignore more
+
+2016-11-21 13:05:50 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Set close-socket FALSE on UDP src:es
+	  With this RTSP server can use the sockets independent on the udpsrc
+	  state.
+	  When the udp src is finalized it will unref socket and when g_socket
+	  is finalized the socket will be closed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=765673
+
+2016-11-18 17:47:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Move to new helper function to parse authentication responses
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774416
+
+2016-11-16 08:42:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/Makefile.am:
+	* examples/test-auth-digest.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	* win32/common/libgstrtspserver.def:
+	  rtsp-auth: Add support for Digest authentication
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774416
+
+2016-11-17 09:41:53 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* Makefile.am:
+	* gst/rtsp-server/meson.build:
+	* meson.build:
+	* tests/check/meson.build:
+	* win32/MANIFEST:
+	* win32/common/libgstrtspserver.def:
+	  Enable building with MSVC
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774640
+
+2016-11-18 20:23:14 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: gstreamer gst_check_dep does not exist on windows
+
+2016-11-17 09:43:37 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: update do_send_message to match type GstRTSPClientSendFunc
+	  This type mismatch fails building with MSVC
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774640
+
+2016-11-11 14:42:08 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  rtsp-sdp: Fix indentation
+
+2016-11-10 05:16:00 +0000  Neha Arora <arora.neha@samsung.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Only signal "new-state" if the state has actually changed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774173
+
+2016-08-24 11:39:13 +0200  Branko Subasic <branko@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  client: emit signal in the beginning of each rtsp request
+	  These signals let the application validate the requests, configure the
+	  media/stream in a certain way and also generate error status code in
+	  case of error or bad request.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758062
+
+2016-11-01 18:10:35 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.11.0 ===
+
+2016-11-01 18:53:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.10.0 ===
+
+2016-11-01 18:06:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.10.0
 
 2016-10-28 18:38:01 +0100  Tim-Philipp Müller <tim@centricular.com>
 
