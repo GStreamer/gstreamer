@@ -3,7 +3,7 @@
   <description>OpenGL plugin</description>
   <filename>../../ext/gl/.libs/libgstopengl.so</filename>
   <basename>libgstopengl.so</basename>
-  <version>1.10.0</version>
+  <version>1.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -117,7 +117,7 @@ Matthew Waters &lt;matthew@centricular.com&gt;</author>
     </element>
     <element>
       <name>gldownload</name>
-      <longname>OpenGL uploader</longname>
+      <longname>OpenGL downloader</longname>
       <class>Filter/Video</class>
       <description>Downloads data from OpenGL</description>
       <author>Matthew Waters &lt;matthew@centricular.com&gt;</author>

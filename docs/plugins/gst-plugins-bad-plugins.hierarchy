@@ -32,6 +32,7 @@ GObject
         GstAiffParse
         GstAsfMux
         GstAssRender
+        GstAudioBufferSplit
         GstAudioDecoder
           ADPCMDec
           GstDtsDec
@@ -98,6 +99,7 @@ GObject
               GstGtkGLSink
               GstGtkSink
             GstInterVideoSink
+            GstKMSSink
             GstQtSink
             GstWaylandSink
         GstBaseSrc
@@ -217,27 +219,8 @@ GObject
               GstPerspective
               GstRotate
               GstSquare
-            GstGrabcut
-            GstOpencvVideoFilter
-              GstCvDilateErode
-                GstCvDilate
-                GstCvErode
-              GstCvEqualizeHist
-              GstCvLaplace
-              GstCvSmooth
-              GstCvSobel
-              GstEdgeDetect
-              GstFaceBlur
-              GstFaceDetect
-              GstHanddetect
-              GstMotioncells
-              GstOpencvTextOverlay
-              GstSkinDetect
-              GstTemplateMatch
-            GstRetinex
             GstRsvgOverlay
             GstSceneChange
-            GstSegmentation
             GstSimpleVideoMark
             GstSimpleVideoMarkDetect
             GstSmooth
@@ -287,7 +270,6 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
-        GstDisparity
         GstDtlsDec
         GstDtlsEnc
         GstDtlsSrtpDemux
@@ -308,8 +290,6 @@ GObject
           GstKateTag
         GstMXFDemux
         GstMidiParse
-        GstMimDec
-        GstMimEnc
         GstModPlug
         GstMpeg2enc
         GstMpegPSDemux
@@ -335,8 +315,6 @@ GObject
           GstId3Mux
         GstTeletextDec
         GstTimeCodeWait
-        GstTtmlParse
-        GstTtmlRender
         GstUvcH264MjpgDemux
         GstVideoDecoder
           GstLibde265Dec
@@ -382,6 +360,7 @@ GObject
       GstPlugin
       GstPluginFeature
         GstDeviceProviderFactory
+        GstDynamicTypeFactory
         GstElementFactory
         GstTracerFactory
         GstTypeFindFactory
@@ -392,45 +371,6 @@ GObject
   GstColorBalanceChannel
   GstEncodingProfile
   MXFMetadataBase
-    MXFDescriptiveMetadata
-      MXFDMS1
-        MXFDMS1Address
-        MXFDMS1Communications
-        MXFDMS1ContactsList
-        MXFDMS1Framework
-          MXFDMS1ProductionClipFramework
-            MXFDMS1ClipFramework
-            MXFDMS1ProductionFramework
-          MXFDMS1SceneFramework
-        MXFDMS1NameValue
-        MXFDMS1PictureFormat
-        MXFDMS1Processing
-        MXFDMS1Project
-        MXFDMS1Publication
-        MXFDMS1TextLanguage
-          MXFDMS1Branding
-          MXFDMS1CueWords
-          MXFDMS1Shot
-          MXFDMS1Thesaurus
-            MXFDMS1Annotation
-            MXFDMS1Award
-            MXFDMS1CaptionsDescription
-            MXFDMS1Classification
-            MXFDMS1Contact
-              MXFDMS1Location
-              MXFDMS1Organisation
-              MXFDMS1Person
-            MXFDMS1Contract
-            MXFDMS1DeviceParameters
-            MXFDMS1Event
-            MXFDMS1GroupRelationship
-            MXFDMS1Identification
-            MXFDMS1KeyPoint
-            MXFDMS1Participant
-            MXFDMS1Rights
-            MXFDMS1Scripting
-            MXFDMS1SettingPeriod
-          MXFDMS1Titles
     MXFMetadata
       MXFMetadataContentStorage
       MXFMetadataEssenceContainerData
@@ -464,10 +404,6 @@ GObject
         MXFMetadataEventTrack
         MXFMetadataStaticTrack
         MXFMetadataTimelineTrack
-  PangoContext
-  PangoFontMap
-    PangoFcFontMap
-      PangoCairoFcFontMap
 GInterface
   AtkImplementorIface
   GTypePlugin
@@ -481,5 +417,3 @@ GInterface
   GstVideoOverlay
   GstWaylandVideo
   GtkBuildable
-  MXFDescriptiveMetadataFrameworkInterface
-  PangoCairoFontMap

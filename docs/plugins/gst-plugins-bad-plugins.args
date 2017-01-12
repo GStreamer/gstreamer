@@ -67871,6 +67871,36 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstDecklinkVideoSrc::drop-no-signal-frames</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop No Signal Frames</NICK>
+<BLURB>Drop frames that are marked as having no input signal.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSrc::output-stream-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Stream Time</NICK>
+<BLURB>Output stream time directly instead of translating to pipeline clock.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSrc::skip-first-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip First Time</NICK>
+<BLURB>Skip that much time of initial frames after starting.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecklinkVideoSink::device-number</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -67958,6 +67988,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Discont Wait</NICK>
 <BLURB>Window of time in nanoseconds to wait before creating a discontinuity.</BLURB>
 <DEFAULT>1000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkAudioSrc::channels</NAME>
+<TYPE>GstDecklinkAudioChannels</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Channels</NICK>
+<BLURB>Audio channels.</BLURB>
+<DEFAULT>2 Channels</DEFAULT>
 </ARG>
 
 <ARG>
@@ -69256,7 +69296,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>QQuickItem</NICK>
-<BLURB>The QQuickItem to place in the object heirachy.</BLURB>
+<BLURB>The QQuickItem to place in the object hierarchy.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -69268,6 +69308,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Replay window size</NICK>
 <BLURB>Size of the replay protection window.</BLURB>
 <DEFAULT>128</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSrtpDec::stats</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Statistics</NICK>
+<BLURB>Various statistics.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -72131,6 +72181,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstKMSSink::force-modesetting</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Force modesetting</NICK>
+<BLURB>When enabled, the sink try to configure the display mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstBs2b::fcut</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[300,2000]</RANGE>
@@ -72351,6 +72411,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstTimeCodeStamper::post-messages</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Post element message</NICK>
+<BLURB>Post element message containing the current timecode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRawVideoParse::format</NAME>
 <TYPE>GstVideoFormat</TYPE>
 <RANGE></RANGE>
@@ -72416,7 +72486,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Plane offsets</NICK>
-<BLURB>Offsets of the planets in bytes.</BLURB>
+<BLURB>Offsets of the planes in bytes.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -72426,7 +72496,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Plane strides</NICK>
-<BLURB>Strides of the planets in bytes.</BLURB>
+<BLURB>Strides of the planes in bytes.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -72515,8 +72585,8 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>If use default fbo</NICK>
-<BLURB>When set TRUE, it will not create new fbo for qml render thread.</BLURB>
+<NICK>Whether to use default FBO</NICK>
+<BLURB>When set it will not create a new FBO for the QML render thread.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -72526,7 +72596,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>QQuickWindow</NICK>
-<BLURB>The QQuickWindow to place in the object heirachy.</BLURB>
+<BLURB>The QQuickWindow to place in the object hierarchy.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -72538,5 +72608,35 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Bitrate</NICK>
 <BLURB>Target Audio Bitrate (0 = fixed value based on  sample rate and channel count).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioBufferSplit::alignment-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= 18446744073709551614</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alignment Threshold</NICK>
+<BLURB>Timestamp alignment threshold in nanoseconds.</BLURB>
+<DEFAULT>40000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioBufferSplit::discont-wait</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= 18446744073709551614</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Discont Wait</NICK>
+<BLURB>Window of time in nanoseconds to wait before creating a discontinuity.</BLURB>
+<DEFAULT>1000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioBufferSplit::output-buffer-duration</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Buffer Duration</NICK>
+<BLURB>Output block size in seconds.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 

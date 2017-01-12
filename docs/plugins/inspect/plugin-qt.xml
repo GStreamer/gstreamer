@@ -3,7 +3,7 @@
   <description>Qt gl plugin</description>
   <filename>../../ext/qt/.libs/libgstqmlgl.so</filename>
   <basename>libgstqmlgl.so</basename>
-  <version>1.10.0</version>
+  <version>1.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -13,7 +13,7 @@
       <name>qmlglsink</name>
       <longname>Qt Video Sink</longname>
       <class>Sink/Video</class>
-      <description>A video sink the renders to a QQuickItem</description>
+      <description>A video sink that renders to a QQuickItem</description>
       <author>Matthew Waters &lt;matthew@centricular.com&gt;</author>
       <pads>
         <caps>
@@ -28,7 +28,7 @@
       <name>qmlglsrc</name>
       <longname>Qt Video Source</longname>
       <class>Source/Video</class>
-      <description>A video src the grab window from a qml view</description>
+      <description>A video src that captures a window from a QML view</description>
       <author>Multimedia Team &lt;shmmmw@freescale.com&gt;</author>
       <pads>
         <caps>

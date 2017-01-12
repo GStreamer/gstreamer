@@ -1,9 +1,9 @@
 <plugin>
   <name>wildmidi</name>
   <description>Wildmidi Plugin</description>
-  <filename>../../ext/timidity/.libs/libgstwildmidi.so</filename>
+  <filename>../../ext/wildmidi/.libs/libgstwildmidi.so</filename>
   <basename>libgstwildmidi.so</basename>
-  <version>1.10.0</version>
+  <version>1.11.1</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
