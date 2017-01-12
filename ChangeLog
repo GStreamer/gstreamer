@@ -1,9 +1,307 @@
-=== release 1.10.0 ===
+=== release 1.11.1 ===
 
-2016-11-01  Sebastian Dröge <slomo@coaxion.net>
+2017-01-12  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.0
+	  releasing 1.11.1
+
+2017-01-12 14:37:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/hr.po:
+	* po/id.po:
+	* po/sv.po:
+	  po: Update translations
+
+2016-12-16 16:52:00 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ext/amrnb/meson.build:
+	* ext/x264/meson.build:
+	* meson.build:
+	  meson: Install presets files
+
+2015-06-26 20:22:47 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* ext/x264/GstX264Enc.prs:
+	  x264enc: Add a youtube preset.
+	  Based on https://support.google.com/youtube/answer/1722171
+	  https://bugzilla.gnome.org/show_bug.cgi?id=751560
+
+2016-12-28 10:42:15 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* config.h.meson:
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* ext/Makefile.am:
+	* ext/mad/Makefile.am:
+	* ext/mad/gstmad.c:
+	* ext/mad/gstmad.h:
+	* ext/mad/meson.build:
+	* ext/meson.build:
+	  mad: remove plugin
+	  We have better replacements such as the mpg123 plugin.
+	  The main reason to keep around mad was for 'freeform'
+	  mp3 support, but mpg123 can handle those too nowadays.
+	  Also, mad is GPL and has been unmaintained for years.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776140
+
+2016-12-16 19:07:51 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* win32/MANIFEST:
+	* win32/common/.gitignore:
+	* win32/common/config.h:
+	  win32: remove platform-specific copies of generated headers
+	  Unused and no longer needed.
+
+2016-12-14 10:24:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* Makefile.am:
+	* configure.ac:
+	* gst-plugins-ugly.spec.in:
+	  Remove generated .spec file
+	  Likely extremely bitrotten, and we should not ship this anyway.
+
+2016-12-09 17:45:34 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* meson.build:
+	  meson: Support building without Gst debug
+
+2016-12-03 08:19:44 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From f980fd9 to 39ac2f5
+
+2016-12-02 14:06:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Fix memory leak of payload extensions for unusable/unsupported streams
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775515
+
+2016-11-30 18:11:30 +0200  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Add information for mixed mode
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775411
+
+2016-11-30 17:30:33 +0200  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Correctly pass interlacing/TFF information
+	  Give the interlacing information correctly to the encoder. Also parse
+	  TFF/BFF information from the caps and pass it too.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775411
+
+2016-11-28 15:14:18 +0200  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Auto-detect interlace mode from caps
+	  If the caps are interlaced, interlacing is always enabled on the
+	  encoder. If the interlace-mode field is missing or if it's progressive,
+	  the encoder uses the "interlaced" property.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775228
+
+2016-11-26 11:20:51 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitmodules:
+	  common: use https protocol for common submodule
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775110
+
+2016-11-25 23:51:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/realmedia/realhash.c:
+	  real: Fix compiler warnings with latest clang
+	  realhash.c:295:11: error: implicit conversion from 'int' to 'char' changes value from 128 to -128 [-Werror,-Wconstant-conversion]
+	  *buf1 = 128;
+	  ~ ^~~
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775112
+
+2016-11-25 12:41:03 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Allow 64bit sizes for DATA object
+	  we *can* have files greater than 4GB, any other object should be
+	  smaller than that
+
+2016-11-25 10:07:35 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Add sanity check for asf_stream_audio
+	  We should have enough bytes for the specified codec_data
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775070
+
+2016-11-25 09:45:04 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Add sanity checks when reading asf_stream_video_format
+	  It should report a size of at least 40 bytes
+	  Also check for the size of the remaining data (i.e. codec_data)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775070
+
+2016-11-25 09:44:05 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Add check for invalid/corrupt asf object
+	  An asf object can't realistically be bigger than 2**32 bytes.
+	  If it reports a size bigger than that, consider it corrupt and properly
+	  propagate the error back.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775070
+
+2016-11-22 17:14:44 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Handle EOS in push-mode on corrupted files
+	  It is possible no streams were activated when receiving EOS, if so
+	  handled it as if we hadn't seen the header
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774846
+
+2016-11-22 16:56:04 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: FILE headers are mandatory in the header
+	  As per the specification, also avoids ending up trying to play a
+	  file with plenty of un-initialized values.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774846
+
+2016-11-22 16:54:26 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Handle incomplete header in pull mode
+	  pulling headers is meant to complete as a whole. If we don't have
+	  enough data, it's an error.
+	  Avoids pipeline hangs on corrupted files
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774846
+
+2016-11-22 16:22:49 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Handle issues with "empty" files
+	  In some corrupted files, we could end up with no actual streams
+	  being exposed.
+	  In those cases, make sure we properly propagate the failure all
+	  the way to the loop function. This avoids ending up in cases where
+	  we are neither EOS'd nor ERROR'd out from a pipeline point of view.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774846
+
+2016-11-20 20:54:25 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: dvd-spu-clut-change is a sticky custom event
+
+2016-11-17 17:20:03 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* meson.build:
+	  meson: Add ignored warnings for MSVC
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774656
+
+2016-11-11 14:15:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* ext/x264/Makefile.am:
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	* ext/x264/meson.build:
+	* meson_options.txt:
+	  x264enc: Add configure parameter to specify additional x264 libraries with e.g. different depth configuration
+	  x264 has to be compiled specifically for a target bit depth.
+	  Distributions currently ship various libraries in their packages, with
+	  different bit depths.
+	  This change now allows to provide them all at configure time and have
+	  the x264enc element dynamically switch between them based on the bit
+	  depth of the input format.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=763297
+
+2016-11-01 18:09:25 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.11.0 ===
+
+2016-11-01 18:53:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.10.0 ===
+
+2016-11-01 18:05:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.10.0
+
+2016-11-01 17:54:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2016-11-01 17:43:01 +0200  Sebastian Dröge <sebastian@centricular.com>
 

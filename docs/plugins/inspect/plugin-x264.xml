@@ -3,7 +3,7 @@
   <description>libx264-based H264 plugins</description>
   <filename>../../ext/x264/.libs/libgstx264.so</filename>
   <basename>libgstx264.so</basename>
-  <version>1.10.0</version>
+  <version>1.11.1</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ I420, YV12, Y42B, Y444, NV12, I420_10LE, I422_10LE, Y444_10LE }, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 16, 2147483647 ], height=(int)[ 16, 2147483647 ]</details>
+          <details>video/x-raw, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 16, 2147483647 ], height=(int)[ 16, 2147483647 ], format=(string){ Y444, Y42B, I420, YV12, NV12 }</details>
         </caps>
         <caps>
           <name>src</name>
