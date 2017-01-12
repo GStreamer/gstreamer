@@ -1,9 +1,235 @@
-=== release 1.10.0 ===
+=== release 1.11.1 ===
 
-2016-11-01  Sebastian Dröge <slomo@coaxion.net>
+2017-01-12  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.0
+	  releasing 1.11.1
+
+2017-01-02 09:06:09 +0530  Garima Gaur <garima.g@samsung.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  Fix some caps leaks when creating pad templates
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776700
+
+2016-12-16 17:33:44 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* Makefile.am:
+	* configure.ac:
+	  Really remove generated .spec file
+
+2016-12-16 17:32:56 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libav.spec.in:
+	  Remove generated .spec file
+	  Likely extremely bitrotten, and we should not ship this anyway.
+
+2016-12-09 17:42:36 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* meson.build:
+	  meson: Support building without Gst debug
+
+2016-12-08 16:13:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n3.2.2
+
+2016-12-04 23:39:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add mapping for Flash Screen2 codec
+
+2016-12-03 08:20:40 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From f980fd9 to 39ac2f5
+
+2016-12-02 17:06:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Disable GIF "demuxer"
+	  It's actually a parser but it a) can only work with the ffmpeg GIF
+	  decoder that is deactivated anyway, and b) it currently causes infinite
+	  linking of avdemux_gif elements with a multiqueue in between in
+	  decodebin.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775516
+
+2016-12-02 14:19:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavprotocol.h:
+	  avprotocol: Don't use GST_LOG_OBJECT() and friends on an arbitrary struct that is not a GObject
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775516
+
+2016-11-26 14:00:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.2.1
+
+2016-11-26 13:59:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* .gitmodules:
+	  libav: Change ffmpeg submodule from GIT protocol to HTTPS
+
+2016-11-26 11:26:46 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitmodules:
+	  common: use https protocol for common submodule
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775110
+
+2016-11-23 15:38:49 +0100  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ext/libav/gstav.c:
+	  Define plugin license outside the call to PLUGIN_DEFINE
+	  Msvc fails at pre processing it and states that the
+	  the use of "#" is invalid inside a macro.
+
+2016-11-23 06:05:26 -0800  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: Ignore spurious issues when building with msvc
+
+2016-11-23 06:04:58 -0800  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* config.h.meson:
+	* ext/libav/gstavutils.c:
+	* meson.build:
+	  Properly check if unistd.h is avalaible
+	  And stop providing a meson.h.config as it is not needed (as meson dep
+	  has been bumped to 0.36)
+
+2016-11-24 17:15:14 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add support for packed 32bit RGBx variants
+	  We can support those, so just add the mapping
+
+2016-11-16 17:06:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavdemux.c:
+	  av: Enable IVF demuxer (and muxer)
+	  It works and is a quite unimportant format, we should get rid of our
+	  parser to reduce the amount of code to maintain.
+
+2016-11-14 11:49:52 +0100  Marinus Schraal <m.schraal@src.gnome.org>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Map artist to artist tag
+	  It was incorrectly mapped to album-artist before.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774398
+
+2016-11-12 15:21:59 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: blacklist fifo plugin
+	  Avoids criticals in gst-inspect-1.0 -a
+
+2016-11-11 16:03:00 +0000  leigh123linux@googlemail.com <leigh123linux@googlemail.com>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  avvidenc/dec: Disable more hardware encoder/decoders
+	  Important when using a system ffmpeg/libav.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774278
+
+2016-11-10 15:42:19 +0100  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* configure.ac:
+	  configure: fix target_os when cross-compiling for arm
+	  For arm 'host_os' is '*-gnueabi' or '*-gnueabihf' so sed needs to cut of
+	  more. Otherwise configuring ffmpeg will fail with "Unknown OS 'linuxeabi'."
+	  or something like that.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774215
+
+2016-11-04 16:27:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Fix comment to say interlace-mode instead of interlaced-mode
+
+2016-11-04 16:22:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: It's interlace-mode, not interlaced-mode
+
+2016-11-03 12:43:46 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* meson.build:
+	  meson: Include libav dependency in FFmpeg check
+	  The FFmpeg-origin check can't work if it isn't provided the
+	  dependency library.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773911
+
+2016-09-30 18:56:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add variant to the ProRes caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769048
+
+2016-09-29 15:35:01 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: Use interlaced-mode=interleaved and set field-order if possible
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771376
+
+2016-09-29 15:18:46 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Configure field order in the context if we can
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771376
+
+2016-09-29 13:26:34 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avvidenc: Set colorimetry information in the context if known
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750882
+
+2016-09-29 13:10:58 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Set colorimetry information from the context if known
+	  But only if upstream did not provide that information.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=750882
+
+2016-11-01 18:11:42 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+2016-10-29 15:38:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add mapping for Opus audio decoder
+	  Make avdec_opus work.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773672
+
+=== release 1.11.0 ===
+
+2016-11-01 18:53:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.10.0 ===
+
+2016-11-01 18:10:45 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-libav-plugins.args:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/gst-libav-plugins.interfaces:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.10.0
 
 2016-10-28 12:55:34 +0100  Tim-Philipp Müller <tim@centricular.com>
 

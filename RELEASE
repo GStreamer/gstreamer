@@ -1,15 +1,21 @@
 
-Release notes for GStreamer libav Plugins 1.10.0
+Release notes for GStreamer libav Plugins 1.11.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.10 release series. The 1.10 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the unstable
+1.11 release series. The 1.11 release series is adding new features on top of
+the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.11 release series
+will lead to the stable 1.12 release series in the next weeks. Any newly added
+API can still change until that point.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.10 release
-series.
+Full release notes will be provided at some point during the 1.11 release
+cycle, highlighting all the new features, bugfixes, performance optimizations
+and other important changes.
+
+
+Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
+
 
 
 This module contains plugins based on the ffmpeg project, including codecs.
@@ -34,6 +40,12 @@ contains a set of less supported plugins that haven't passed the
 
 
   
+
+Bugs fixed in this release
+     
+      * 750882 : ffmpeg: Add colorimetry support
+      * 773672 : Add mapping for Opus audio and make avdec_opus work
+      * 776700 : Fixed memory leak in usage of gst_pad_template_new() API
 
 ==== Download ====
 
@@ -70,8 +82,13 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Nirbheek Chauhan
+      * Edward Hervey
+      * Garima Gaur
+      * Marinus Schraal
+      * Michael Olbrich
+      * Scott D Phillips
       * Sebastian Dröge
       * Thibault Saunier
       * Tim-Philipp Müller
+      * leigh123linux@googlemail.com
  

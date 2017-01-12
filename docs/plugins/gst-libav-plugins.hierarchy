@@ -444,10 +444,10 @@ GObject
         avdemux_ea
         avdemux_ffm
         avdemux_film_cpk
-        avdemux_gif
         avdemux_gxf
         avdemux_idcin
         avdemux_ipmovie
+        avdemux_ivf
         avdemux_mm
         avdemux_mmf
         avdemux_mpc
@@ -489,7 +489,6 @@ GObject
         avmux_dvd
         avmux_f4v
         avmux_ffm
-        avmux_fifo
         avmux_filmstrip
         avmux_flv
         avmux_gxf
@@ -550,6 +549,7 @@ GObject
       GstPlugin
       GstPluginFeature
         GstDeviceProviderFactory
+        GstDynamicTypeFactory
         GstElementFactory
         GstTracerFactory
         GstTypeFindFactory
