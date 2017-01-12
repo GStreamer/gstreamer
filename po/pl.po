@@ -1,272 +1,186 @@
 # Polish translation for gst-plugins-bad.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2015.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.6.0\n"
+"Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2016-11-01 17:49+0200\n"
-"PO-Revision-Date: 2015-10-15 20:50+0200\n"
+"PO-Revision-Date: 2016-11-01 20:53+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 
+#: ext/gl/gstgltestsrc.c:521
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "nie udało się narysować wzoru"
 
+#: ext/gl/gstgltestsrc.c:522
 msgid "A GL error occured"
-msgstr ""
+msgstr "Wystąpił błąd GL"
 
+#: ext/gl/gstgltestsrc.c:528
 msgid "format wasn't negotiated before get function"
 msgstr "format nie został wynegocjowany przed funkcją pobrania"
 
+#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
 msgstr "Odczyt obrazu wzorca przez OpenCV nie powiódł się"
 
+#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Nie udało się odczytać informacji o tytułach dla DVD."
 
+#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nie udało się otworzyć urządzenia DVD '%s'."
 
+#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Nie udało się ustawić przewijania opartego na PGC."
 
-msgid ""
-"Could not read DVD. This may be because the DVD is encrypted and a DVD "
-"decryption library is not installed."
-msgstr ""
-"Nie udało się odczytać DVD. Powodem może być to, że płyta jest zaszyfrowana, "
-"a biblioteka odszyfrowująca nie została zainstalowana."
+#: ext/resindvd/resindvdsrc.c:1164
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "Nie udało się odczytać DVD. Powodem może być to, że płyta jest zaszyfrowana, a biblioteka odszyfrowująca nie została zainstalowana."
 
+#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "Nie udało się odczytać DVD."
 
+#: ext/smoothstreaming/gstmssdemux.c:405
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:695
 msgid "This file contains no playable streams."
 msgstr "Ten plik nie zawiera strumieni do odtworzenia."
 
+#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Nie udało się otworzyć strumienia sndfile do odczytu."
 
+#: ext/sndio/sndiosink.c:324 ext/sndio/sndiosrc.c:320
 msgid "Could not establish connection to sndio"
 msgstr "Nie udało się ustanowić połączenia z sndio"
 
+#: ext/sndio/sndiosink.c:331 ext/sndio/sndiosrc.c:327
 msgid "Failed to query sndio capabilities"
 msgstr "Nie udało się odpytać o możliwości sndio"
 
+#: ext/sndio/sndiosink.c:424 ext/sndio/sndiosrc.c:421
 msgid "Could not configure sndio"
 msgstr "Nie udało się skonfigurować sndio"
 
+#: ext/sndio/sndiosink.c:430 ext/sndio/sndiosrc.c:427
 msgid "Could not start sndio"
 msgstr "Nie udało się uruchomić sndio"
 
+#: gst/asfmux/gstasfmux.c:1831
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr ""
-"Wygenerowany plik ma dłuższy czas rozbiegówki niż czas trwania strumieni"
+msgstr "Wygenerowany plik ma dłuższy czas rozbiegówki niż czas trwania strumieni"
 
+#: gst/camerabin2/camerabingeneral.c:166 gst/camerabin2/gstcamerabin2.c:1875
+#: gst/camerabin2/gstdigitalzoom.c:282 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Brak elementu '%s' - proszę sprawdzić instalację GStreamera."
 
+#: gst/camerabin2/gstcamerabin2.c:363
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr ""
-"Położenie pliku ustawiono na NULL, proszę ustawić na poprawną nazwę pliku"
+msgstr "Położenie pliku ustawiono na NULL, proszę ustawić na poprawną nazwę pliku"
 
+#: gst/camerabin2/gstwrappercamerabinsrc.c:584
 msgid "Digitalzoom element couldn't be created"
 msgstr "Nie udało się utworzyć elementu Digitalzoom"
 
+#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "Format podobrazu nie został skonfigurowany przed przepływem danych"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3111
 msgid "Failed to get fragment URL."
 msgstr "Nie udało się uzyskać URL-a fragmentu."
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3462
 msgid "Couldn't download fragments"
 msgstr "Nie udało się pobrać fragmentów"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3551
+#: gst/mpegtsdemux/mpegtsbase.c:1608
 msgid "Internal data stream error."
 msgstr "Błąd wewnętrzny strumienia danych."
 
+#: gst/videomeasure/gstvideomeasure_collector.c:294
 msgid "No file name specified for writing."
 msgstr "Nie określono nazwy pliku do zapisu."
 
+#: gst/videomeasure/gstvideomeasure_collector.c:300
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-"Podanej nazwy pliku \"%s\" nie można przekształcić do lokalnego kodowania "
-"nazw plików."
+msgstr "Podanej nazwy pliku \"%s\" nie można przekształcić do lokalnego kodowania nazw plików."
 
+#: gst/videomeasure/gstvideomeasure_collector.c:307
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Nie udało się otworzyć pliku \"%s\" do zapisu."
 
+#: sys/dvb/gstdvbsrc.c:1571 sys/dvb/gstdvbsrc.c:1784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Urządzenie \"%s\" nie istnieje."
 
+#: sys/dvb/gstdvbsrc.c:1575
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nie udało się otworzyć urządzenia frontendu \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:1594
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nie udało się pobrać ustawień z urządzenia frontendu \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:1611
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr ""
-"Nie można wyliczyć systemów dostarczania z urządzenia frontendu \"%s\"."
+msgstr "Nie można wyliczyć systemów dostarczania z urządzenia frontendu \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:1788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
 
-#, fuzzy
+#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
-msgstr "Nie udało się odnaleźć pliku konfiguracyjnego kanałów DVB"
+msgstr "Nie udało się odnaleźć pliku konfiguracyjnego kanałów"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
+#, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "Nie udało się wczytać pliku konfiguracyjnego kanałów DVB: %s"
+msgstr "Nie udało się wczytać pliku konfiguracyjnego kanałów: '%s'"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
+#, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr "Nie udało się odnaleźć szczegółów dla kanału DVB %s"
+msgstr "Nie udało się odnaleźć szczegółów dla kanału '%s'"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:430
+#, c-format
 msgid "No properties for channel '%s'"
-msgstr "Nie udało się odnaleźć szczegółów dla kanału DVB %s"
+msgstr "Brak właściwości dla kanału '%s'"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:439
+#, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Nie udało się odnaleźć szczegółów dla kanału DVB %s"
+msgstr "Nie udało się ustawić właściwości dla kanału '%s'."
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:560
+#, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Nie udało się odnaleźć pliku konfiguracyjnego kanałów DVB"
+msgstr "Nie udało się odnaleźć pliku konfiguracyjnego kanałów: '%s'"
 
-#, fuzzy
+#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
-msgstr "Plik konfiguracyjny kanałów DVB nie zawiera żadnych kanałów"
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Błąd wewnętrzny przepływu danych."
-
-#~ msgid "default GStreamer sound events audiosink"
-#~ msgstr "domyślny element GStreamera pochłaniający zdarzenia dźwiękowe"
-
-#~ msgid ""
-#~ "GStreamer can play audio using any number of output elements. Some "
-#~ "possible choices are osssink, pulsesink and alsasink. The audiosink can "
-#~ "be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "GStreamer może odtwarzać dźwięk przy użyciu dowolnej liczby elementów "
-#~ "wyjściowych. Niektóre z możliwości to osssink, pulsesink oraz alsasink. "
-#~ "Wyjście dźwięku może być częściowym potokiem zamiast pojedynczego "
-#~ "elementu."
-
-#~ msgid "description for default GStreamer sound events audiosink"
-#~ msgstr ""
-#~ "opis domyślnego elementu GStreamera pochłaniającego zdarzenia dźwiękowe"
-
-#~ msgid "Describes the selected audiosink element."
-#~ msgstr "Opisuje wybrany element wyjściowy dźwięku."
-
-#~ msgid "default GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr ""
-#~ "domyślny element GStreamera pochłaniający dźwięk dla konferencji audio/"
-#~ "video"
-
-#~ msgid ""
-#~ "description for default GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr ""
-#~ "opis domyślnego elementu wyjściowego dźwięku GStreamera dla konferencji "
-#~ "audio/video"
-
-#~ msgid "default GStreamer audiosink for Music and Movies"
-#~ msgstr "domyślny element wyjściowy dźwięku GStreamera dla muzyki i filmów"
-
-#~ msgid "description for default GStreamer audiosink for Music and Movies"
-#~ msgstr ""
-#~ "opis domyślnego elementu wyjściowego dźwięku GStreamera dla muzyki i "
-#~ "filmów"
-
-#~ msgid "default GStreamer videosink"
-#~ msgstr "domyślny element GStreamera pochłaniający obraz"
-
-#~ msgid ""
-#~ "GStreamer can play video using any number of output elements. Some "
-#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
-#~ "The videosink can be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "GStreamer może odtwarzać obraz przy użyciu dowolnej liczby elementów "
-#~ "wyjściowych. Niektóre z możliwości to xvimagesink, ximagesink, "
-#~ "sdlvideosink oraz aasink. Wyjście obrazu może być częściowym potokiem "
-#~ "zamiast pojedynczego elementu."
-
-#~ msgid "description for default GStreamer videosink"
-#~ msgstr "opis domyślnego elementu GStreamera pochłaniającego obraz"
-
-#~ msgid "Describes the selected videosink element."
-#~ msgstr "Opisuje wybrany element wyjściowy obrazu."
-
-#~ msgid "default GStreamer audiosrc"
-#~ msgstr "domyślne źródło dźwięku GStreamera"
-
-#~ msgid ""
-#~ "GStreamer can record audio using any number of input elements. Some "
-#~ "possible choices are osssrc, pulsesrc and alsasrc. The audio source can "
-#~ "be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "GStreamer może nagrywać dźwięk z dowolnej liczby elementów wejściowych. "
-#~ "Niektóre możliwości to osssrc, pulsesrc oraz alsasrc. Źródło dźwięku może "
-#~ "być częściowym potokiem zamiast pojedynczego elementu."
-
-#~ msgid "description for default GStreamer audiosrc"
-#~ msgstr "opis domyślnego źródła dźwięku GStreamera"
-
-#~ msgid "Describes the selected audiosrc element."
-#~ msgstr "Opisuje wybrany element źródłowy dźwięku."
-
-#~ msgid "default GStreamer videosrc"
-#~ msgstr "domyślne źródło obrazu GStreamera"
-
-#~ msgid ""
-#~ "GStreamer can record video from any number of input elements. Some "
-#~ "possible choices are v4lsrc, v4l2src and videotestsrc. The video source "
-#~ "can be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "GStreamer może nagrywać obraz z dowolnej liczby elementów wejściowych. "
-#~ "Niektóre możliwości to v4lsrc, v4l2src oraz videotestsrc. Źródło obrazu "
-#~ "może być częściowym potokiem zamiast pojedynczego elementu."
-
-#~ msgid "description for default GStreamer videosrc"
-#~ msgstr "opis domyślnego źródła obrazu GStreamera"
-
-#~ msgid "Describes the selected videosrc element."
-#~ msgstr "Opisuje wybrany element źródłowy obrazu."
-
-#~ msgid "default GStreamer visualization"
-#~ msgstr "domyślna wizualizacja GStreamera"
-
-#~ msgid ""
-#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
-#~ "streams in video frames. Some possible choices are goom, goom2k1 and "
-#~ "synaesthesia. The visualization plugin can be a partial pipeline instead "
-#~ "of just one element."
-#~ msgstr ""
-#~ "GStreamer może umieszczać wtyczki wizualizujące w potoku w celu "
-#~ "przekształcania strumieni dźwiękowych na klatki obrazu. Niektóre "
-#~ "możliwości to goom, goom2k1 oraz synaesthesia. Wtyczka wizualizująca może "
-#~ "być częściowym potokiem zamiast pojedynczego elementu."
-
-#~ msgid "description for default GStreamer visualization"
-#~ msgstr "opis domyślego elementu wizualizującego GStreamera"
-
-#~ msgid "Describes the selected visualization element."
-#~ msgstr "Opisuje wybrany element wizualizujący."
+msgstr "Plik konfiguracyjny kanałów nie zawiera żadnych kanałów"
