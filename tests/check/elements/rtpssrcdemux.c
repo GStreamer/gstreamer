@@ -277,6 +277,45 @@ GST_START_TEST (test_rtpssrcdemux_max_streams)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtpssrcdemux_invalid_rtp)
+{
+  GstHarness *h = gst_harness_new_with_padnames ("rtpssrcdemux", "sink", NULL);
+  guint8 bad_pkt[] = {
+    0x01, 0x02, 0x03
+  };
+
+  gst_harness_set_src_caps_str (h, "application/x-rtp");
+  gst_harness_play (h);
+
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, gst_buffer_new_wrapped_full (0, bad_pkt,
+              sizeof bad_pkt, 0, sizeof bad_pkt, NULL, NULL)));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtpssrcdemux_invalid_rtcp)
+{
+  GstHarness *h =
+      gst_harness_new_with_padnames ("rtpssrcdemux", "rtcp_sink", NULL);
+  guint8 bad_pkt[] = {
+    0x01, 0x02, 0x03
+  };
+
+  gst_harness_set_src_caps_str (h, "application/x-rtcp");
+  gst_harness_play (h);
+
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, gst_buffer_new_wrapped_full (0, bad_pkt,
+              sizeof bad_pkt, 0, sizeof bad_pkt, NULL, NULL)));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpssrcdemux_suite (void)
 {
@@ -287,6 +326,8 @@ rtpssrcdemux_suite (void)
   tcase_add_test (tc_chain, test_event_forwarding);
   tcase_add_test (tc_chain, test_oob_event_locking);
   tcase_add_test (tc_chain, test_rtpssrcdemux_max_streams);
+  tcase_add_test (tc_chain, test_rtpssrcdemux_invalid_rtp);
+  tcase_add_test (tc_chain, test_rtpssrcdemux_invalid_rtcp);
 
   return s;
 }
