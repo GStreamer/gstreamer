@@ -672,7 +672,10 @@ gst_rtsp_session_next_timeout_usec (GstRTSPSession * session, gint64 now)
  * Deprecated: Use gst_rtsp_session_next_timeout_usec() instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
-#ifndef GST_DISABLE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gint gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now);
+#endif
+
 gint
 gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
 {
@@ -709,7 +712,6 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
   return res;
 }
 #endif
-#endif
 
 /**
  * gst_rtsp_session_is_expired_usec:
@@ -745,7 +747,9 @@ gst_rtsp_session_is_expired_usec (GstRTSPSession * session, gint64 now)
  * Deprecated: Use gst_rtsp_session_is_expired_usec() instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
-#ifndef GST_DISABLE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean gst_rtsp_session_is_expired (GstRTSPSession * session, GTimeVal * now);
+#endif
 gboolean
 gst_rtsp_session_is_expired (GstRTSPSession * session, GTimeVal * now)
 {
@@ -755,5 +759,4 @@ gst_rtsp_session_is_expired (GstRTSPSession * session, GTimeVal * now)
 
   return res;
 }
-#endif
 #endif
