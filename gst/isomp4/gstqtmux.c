@@ -543,8 +543,6 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   qtmux->moov_pos = 0;
   qtmux->mdat_pos = 0;
   qtmux->longest_chunk = GST_CLOCK_TIME_NONE;
-  qtmux->video_pads = 0;
-  qtmux->audio_pads = 0;
   qtmux->fragment_sequence = 0;
 
   if (qtmux->ftyp) {
@@ -4447,6 +4445,13 @@ gst_qt_mux_release_pad (GstElement * element, GstPad * pad)
   }
 
   gst_collect_pads_remove_pad (mux->collect, pad);
+
+  if (mux->sinkpads == NULL) {
+    /* No more outstanding request pads, reset our counters */
+    mux->video_pads = 0;
+    mux->audio_pads = 0;
+    mux->subtitle_pads = 0;
+  }
 }
 
 static GstPad *
