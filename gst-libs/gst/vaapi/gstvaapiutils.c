@@ -45,7 +45,7 @@
 #define STRCASEP(p, x)  STRCASE(CONCAT(p, x))
 #define STRCASE(x)      case x: return STRINGIFY(x)
 
-#if VA_CHECK_VERSION (0,39,4)
+#if VA_CHECK_VERSION (0,39,5)
 static void
 gst_vaapi_log (const char *message)
 {
@@ -66,7 +66,7 @@ vaapi_initialize (VADisplay dpy)
   gint major_version, minor_version;
   VAStatus status;
 
-#if VA_CHECK_VERSION (0,39,4)
+#if VA_CHECK_VERSION (0,39,5)
   vaSetInfoCallback (gst_vaapi_log);
 #endif
 
