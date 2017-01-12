@@ -1,9 +1,440 @@
-=== release 1.10.0 ===
+=== release 1.11.1 ===
 
-2016-11-01  Sebastian Dröge <slomo@coaxion.net>
+2017-01-12  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.0
+	  releasing 1.11.1
+
+2017-01-09 12:12:34 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-timeline-element.c:
+	* tests/check/ges/timelineedition.c:
+	  clip: Make sure that clip start change is notified before children changes
+	  Fixes https://phabricator.freedesktop.org/T7577
+	  Differential Revision: https://phabricator.freedesktop.org/D1600
+
+2016-10-19 15:36:49 +0000  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* tests/check/python/test_timeline.py:
+	  tests_: Check the order of signals when a transition is created
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1391
+
+2016-12-21 12:22:31 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-asset.c:
+	  asset: Fix set_proxy to abort when an error happens
+	  Differential Revision: https://phabricator.freedesktop.org/D1574
+
+2016-12-21 11:39:12 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-asset.c:
+	  asset: Reuse local variable
+	  Differential Revision: https://phabricator.freedesktop.org/D1573
+
+2017-01-04 15:55:36 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gst-editing-services-uninstalled.pc.in:
+	* pkgconfig/meson.build:
+	  meson: generate pkg-config -uninstalled pc files
+	  Generating those files is useful for users building the GStreamer stack
+	  using meson and having to link it to another project which is still
+	  using the autotools.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776810
+
+2016-12-23 15:08:06 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tools/utils.c:
+	  ges-launch: Use standard GstEncodingProfile deserialization function
+
+2016-12-22 10:00:06 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Remove space breaking muting ges-launch
+
+2016-12-22 09:48:58 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-video-transition.c:
+	  video-mixer: Fix the way we release mixer pads
+	  We were using the actual mixer pad to release the smart mixer
+	  pad, which seemed to be on purpose, but was not properly handle,
+	  moreover, it is now forbiden to pass a pad not inside a GstElement
+	  when releasing it.
+	  Also properly remove ghost pads from Smart mixer, we were planly
+	  failling at it.
+
+2016-12-22 08:44:07 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tools/meson.build:
+	  meson: Install ges-launch
+
+2016-12-16 17:29:59 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	* Makefile.am:
+	* configure.ac:
+	* gst-editing-services.spec.in:
+	  Remove generated .spec file
+	  Likely extremely bitrotten, and we should not ship this anyway.
+
+2016-12-16 14:04:06 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/text_properties.c:
+	* tests/check/meson.build:
+	  tests: Remove now meaningless empty testsuite
+
+2016-12-13 16:05:17 +0100  Antonio Ospite <ao2@ao2.it>
+
+	* tools/Makefile.am:
+	* tools/ges-launch-1.0.1:
+	* tools/meson.build:
+	  ges: add a basic unix man page for ges-launch-1.0
+	  Do not list all the possible options in the man page but only the help
+	  options.
+	  This is in order to avoid duplication and prevent the man page from
+	  becoming obsolete in case the options change in the code but do not get
+	  updated in the man page.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776063
+
+2016-12-13 15:10:26 +0100  Antonio Ospite <ao2@ao2.it>
+
+	* ges/ges.c:
+	  ges: fix the description of the --help-GES command line option
+	  Use "Show GES Options" which is more appropriate and avoids duplication
+	  with --help-gst which already says "Show GStreamer Options".
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776063
+
+2016-12-12 16:59:08 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* tests/check/ges/uriclip.c:
+	  tests: Make sure tests can be listed
+	  Initializing GstCheck before creating the testsuite
+
+2016-12-13 23:26:23 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tools/ges-launcher.c:
+	  ges-launch: Make sure GStreamer is always initialized
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776064
+
+2016-12-09 17:50:28 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* meson.build:
+	  meson: Support building without Gst debug
+
+2016-12-03 08:21:07 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1416c16 to 39ac2f5
+
+2016-12-01 17:08:43 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-timeline-element.c:
+	  element: Rework set_child_property_by_pspec
+	  It was making no sense to loose the information about the pspec itself
+	  to retrieve the child associated to it and was failling when we were
+	  forcing the AssociateType::prop synthax
+
+2016-12-01 15:46:51 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* tests/check/nle/nleoperation.c:
+	  test:nle: Soften check on refcount
+	  The composition might already have taken a new ref processing the
+	  source.
+
+2016-11-30 09:53:38 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Deactivate current stack in PAUSED_READY state
+	  To avoid a race when tearing down the composition (PAUSED_TO_READY),
+	  we should make sure to tear down the current stack and let the GstBin
+	  class handle the remaining thing to do during the change state.
+	  We should still ignore any error happening when tearing down the
+	  bin state just in case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775051
+
+2016-11-30 09:53:21 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* tools/ges-launch.c:
+	  tools: Deinit Gst before exiting
+
+2016-11-29 10:37:11 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* meson.build:
+	  meson: Do not print error logs when building the gir
+
+2016-11-28 17:07:39 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* examples/c/assets.c:
+	  examples: remove #include <ges-internal.h> from assets.c
+	  It is not needed and pulling it in is causing a link problem with msvc.
+	  Including ges-internal.h sets the default debug category in assets.c to
+	  _ges_debug. Because _ges_debug is marked as DATA in the libges.def, it
+	  will only be linked from libges.dll if it is marked in the source with
+	  dllimport. Instead of messing with that we can just remove this include.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775295
+
+2016-11-26 11:25:41 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitmodules:
+	  common: use https protocol for common submodule
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775110
+
+2016-11-23 18:42:27 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-timeline.c:
+	  ges-timeline: Properly calculate absolute diff of two unsigned integers
+	  CID 1394491.
+
+2016-11-23 18:28:35 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges.c:
+	  ges: Add NULL check before dereferencing
+	  CID 1394494.
+
+2016-11-20 15:34:46 +0100  Philippe Renon <philippe_renon@yahoo.fr>
+
+	* ges/ges-uri-asset.c:
+	  ges-uri-asset: fix compile error 'timeout' may be used uninitialized
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774751
+
+2016-11-18 10:21:45 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* Makefile.am:
+	* win32/MANIFEST:
+	* win32/common/libges.def:
+	  make: include common/win32.mak
+	  With the addition of the .def file for libges we need to make
+	  sure the check-export script from common gets executed so that the
+	  .def stays up to date.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774641
+
+2016-11-18 16:55:17 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* common:
+	  Update common submodule
+
+2016-11-17 10:31:50 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* ges/meson.build:
+	* meson.build:
+	* win32/common/libges.def:
+	  Enable building with MSVC
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774641
+
+2016-11-17 10:40:05 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* ges/gstframepositioner.c:
+	  Cast away const from GstMetaInfo in *_get_meta_info() functions
+	  MSVC warns about the const in the implicit argument conversion in the
+	  calls to g_once_init_{enter,leave}. It's OK so explicitly cast it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774641
+
+2016-11-17 10:39:01 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* ges/ges-formatter.c:
+	* ges/ges-validate.c:
+	  Pass gint/guint pointers instead of enum pointers
+	  The underlying integer type for enums are implementation defined and may
+	  not be the same size as gint/guint. So implicitly casting from pointers-
+	  to-enum-types to pointers-to-int-types is unsafe. MSVC warns on these.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774641
+
+2016-11-17 10:35:50 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/parse.l:
+	  parse: Don't #include <unistd.h>
+	  It isn't needed and isn't present in non-posix environments like windows
+	  with MSVC or mingw.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774641
+
+2016-11-17 09:40:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nlecomposition.c:
+	  Revert "nlecomposition: Start task and initialize the stack after chaining up to parent's change state function"
+	  This reverts commit 57d40bec1a3c5048baaad08403d7b7e641a9c55c.
+	  Apparently it causes timeouts in the unit tests on Jenkins and
+	  Thibault's machine, and in the gst-validate tests.
+	  Caused by elements staying in PAUSED and waiting to be set to PLAYING.
+	  Needs further investigation.
+
+2016-11-17 09:40:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nleobject.c:
+	  Revert "nleobject: Start up in NULL->READY->PAUSED after the parent class did"
+	  This reverts commit 5f7943c59d9def8c2dc9983936463462c1cdf63f.
+
+2016-11-16 18:11:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nleobject.c:
+	  nleobject: Start up in NULL->READY->PAUSED after the parent class did
+	  This keeps everything in a more consistent order and makes sure that the
+	  base class is already set up completely before we start doing anything.
+	  It also prevents from doing any setup if the base class fails, and
+	  possibly not shutting things down again then.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774480
+
+2016-11-15 17:56:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Start task and initialize the stack after chaining up to parent's change state function
+	  Otherwise we could set the state of the children to PAUSED already (i.e.
+	  start dataflow) from the composition's task, while the composition
+	  itself is currently chaining up to the parent class' change state
+	  function and did not activate the pads yet. This causes buffers and
+	  events to be discarded, and everything to stop with a not-negotiated
+	  error.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774480
+
+2016-11-15 18:34:44 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	* tests/check/nose2-junit-xml.cfg.in:
+	  tests: Fix running python unit tests
+	  Adding missing nose2-junit-xml.cfg.in file and minor fixes in
+	  the way we call nose2 also making sure the .xunit files end
+	  up in the right place.
+
+2016-11-15 15:09:10 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-uri-asset.c:
+	* ges/ges.c:
+	  ges: Check if GstDiscoverer could be created at init time
+	  And fail initialization if it is not the case, we make the assumption
+	  it worked all around the codebase so we should really concider it fatal.
+
+2016-11-10 15:17:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Fix small remaining race in previous commit
+	  The seek action might currently be handled (in which case it is not in
+	  the actions list and the action lock is not locked), but not actually
+	  handled completely yet (the seqnum is not stored yet).
+	  To prevent this, we remember what the current action is that is being
+	  handled, and also compare to that.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774149
+
+2016-10-19 16:34:56 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* configure.ac:
+	* tests/check/Makefile.am:
+	* tests/check/meson.build:
+	  tests_: Use nose2 instead of nosetests
+	  Differential Revision: https://phabricator.freedesktop.org/D1394
+
+2016-10-19 12:36:45 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	  ges: Fix documentation and debug comments
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1393
+
+2016-01-12 14:51:55 +0000  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/ges/timelineedition.c:
+	* tests/check/python/test_clip.py:
+	* tests/check/python/test_timeline.py:
+	  timeline: reimplement snap_to_position a bit more appropriately.
+	  It could yet be made be simpler, but it would require
+	  touching the rest of the timeline editing code.
+	  Fixes https://phabricator.freedesktop.org/T7587
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D657
+
+2016-11-09 17:14:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: De-duplicate seek events based on their sequence number
+	  If there are e.g. multiple video sinks, we would get the same seek event
+	  multiple times. But we only want to handle it once.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774149
+
+2016-11-07 18:01:51 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/validate/geslaunch.py:
+	  test:validate: Port to python3
+
+2016-11-09 11:48:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-timeline.c:
+	  ges-timeline: Fix typo in debug messages
+
+2016-10-08 10:43:07 +0200  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/python/test_timeline.py:
+	  timeline: Avoid creating extra transition when rippling clips
+	  In some cases when rippling clip we could get the algo lost because
+	  a transition existed between two clips (for example at the end of c1
+	  and at the begining of c2) but while rippling it would have required
+	  a transition at the end of c2 and beginning of c1, and we were properly
+	  not destroying the old one (as the two clips were in the moving context)
+	  but we were still creating the other transition in the end...
+	  Reviewed-by: Alex Băluț <alexandru.balut@gmail.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1362
+
+2016-10-07 15:31:40 +0200  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/python/test_timeline.py:
+	  timeline: Make sure transitions between rippled clips are never deleted
+	  Reviewed-by: Alex Băluț <alexandru.balut@gmail.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1361
+
+2016-10-06 19:14:57 +0200  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-layer.c:
+	* ges/ges-timeline.c:
+	* tests/check/python/test_timeline.py:
+	  timeline: Destroy transition if a neighbor is not being moved to a layer
+	  And make sure that we move the transition to the right layer, not trying
+	  to figure it out.
+	  Differential Revision: https://phabricator.freedesktop.org/D1360
+
+2016-10-06 14:00:23 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* tests/check/python/test_clip.py:
+	* tests/check/python/test_timeline.py:
+	  tests_: Check transition is gone when editing clip to another layer
+	  Differential Revision: https://phabricator.freedesktop.org/D1359
+
+2016-11-04 14:41:13 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: Unset the plugin paths to generate the .gir files
+	  Avoiding problems when using subproject:
+	  'Failed to load plugin something.so file too short'
+
+2016-11-01 18:10:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.11.0 ===
+
+2016-11-01 18:53:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.10.0 ===
+
+2016-11-01 18:12:35 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.10.0
 
 2016-10-25 08:54:11 -0700  Scott D Phillips <scott.d.phillips@intel.com>
 

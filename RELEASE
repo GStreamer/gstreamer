@@ -1,17 +1,32 @@
 
-Release notes for GStreamer Editing Services 1.10.0
+Release notes for GStreamer Editing Services 1.11.1
 
-The GStreamer team is pleased to announce the first release of the new stable
-1.10 release series. The 1.10 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6 and 1.8 series and is part of the API and ABI-stable 1.x
-release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release of the unstable
+1.11 release series. The 1.11 release series is adding new features on top of
+the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework. The unstable 1.11 release series
+will lead to the stable 1.12 release series in the next weeks. Any newly added
+API can still change until that point.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly after
-the source release by the GStreamer project during the stable 1.10 release
-series.
+Full release notes will be provided at some point during the 1.11 release
+cycle, highlighting all the new features, bugfixes, performance optimizations
+and other important changes.
+
+
+Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
 
   
+
+Bugs fixed in this release
+     
+      * 774480 : nlecomposition: Start task and initialize the stack after chaining up to parent's change state function
+      * 765967 : ges-launch wikipage in phabricator should become manpage
+      * 774641 : gst-editing-services: Enable building with MSVC
+      * 775051 : nlecomposition: validate: decodebin2 reaching code path that should not be reached when running scrub_forward_seeking on GES timelines
+      * 775295 : examples: remove #include < ges-internal.h > from assets.c
+      * 776063 : add a basic unix man page for ges-launch-1.0
+      * 776064 : ges-launch-1.0 segfaults when omitting options argument
 
 ==== Download ====
 
@@ -48,8 +63,14 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Nirbheek Chauhan
+      * Alexandru Băluț
+      * Antonio Ospite
+      * Edward Hervey
+      * Guillaume Desmottes
+      * Mathieu Duponchelle
+      * Philippe Renon
       * Scott D Phillips
+      * Sebastian Dröge
       * Thibault Saunier
       * Tim-Philipp Müller
  
