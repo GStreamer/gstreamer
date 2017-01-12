@@ -1,9 +1,945 @@
-=== release 1.10.0 ===
+=== release 1.11.1 ===
 
-2016-11-01  Sebastian Dröge <slomo@coaxion.net>
+2017-01-12  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.0
+	  releasing 1.11.1
+
+2017-01-12 12:49:55 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  vaapi: bump ifdef to API 0.40.0 for log redirect
+	  vaSetInfoCallback() is not released yet. It is going to appear in
+	  VA-API 0.40.0
+
+2017-01-12 13:45:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  vaapiutils: Fix compilation with latest and previous libva releases
+	  vaSetInfoCallback() was defined after 0.39.4 / 1.7.3, so check for
+	  0.39.5 instead.
+
+2017-01-11 16:04:24 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	* gst-libs/gst/vaapi/gstvaapiutils.h:
+	  libs: display: redirect logging at initialize
+	  Redirect libva's logs to GStreamer logging mechanism. This is
+	  particularly useful when VA is initialized, because it always logs
+	  out the drivers details.
+	  In order to achieve this a new helper function was added as a wrapper
+	  for the vaInitialize() function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777115
+
+2017-01-10 15:15:31 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: provide at least two buffers in sink pool
+	  Adds two buffers as the default value of minimum buffer.
+	  This would be used when creating and proposing vaapi bufferpool for
+	  sink pad, hence the upstream element will keep, at least, these two
+	  buffers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775203
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2017-01-10 13:49:27 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: don't update cloned attributes
+	  If the frame is a cloned picture, its PTS comes from its parent
+	  picture.  In addition, the base decoder doesn't set a valid PTS to
+	  the frame corresponding to the cloned picture.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774254
+
+2017-01-09 19:25:24 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: check for display
+	  This patch fixes the check of display, rather than check for the
+	  meta, which it is known it exists.
+
+2017-01-09 16:23:56 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: rename dmabuf allocator parameters
+	  Rename the parameters 'vip' and 'flags' to 'alloc_info' and
+	  'surface_alloc_flags' respectively. The purpose of this change is
+	  to auto-document those parameters.
+	  Also, aligned to this patch, the local 'alloc_info' variable was
+	  renamed as 'surface_info', because it stores the possible surface's
+	  video info, not the allocate one.
+
+2017-01-09 16:18:32 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: rename vip to alloc_info parameter
+	  In order to auto-document the code, this patch renames the 'vip'
+	  parameter in the functions related to gst_vaapi_video_allocator_new ()
+	  to 'alloc_info', since it declares the allocation video info from
+	  the vaapi buffer pool.
+
+2017-01-09 16:08:17 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: use GST_VIDEO_INFO_FORMAT_STRING()
+	  Use the existing local macro GST_VIDEO_INFO_FORMAT_STRING() to get
+	  the video format string.
+
+2017-01-09 12:51:11 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: unroll gst_vaapi_surface_new_with_format()
+	  gst_vaapi_surface_new_with_format() is a wrapper for
+	  gst_vaapi_surface_new_full (). In this case, the former is simpler
+	  than the first. This patch changes that.
+
+2017-01-04 19:23:06 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: notify if src pad caps changed
+	  If src pad caps have changed, it needs to notify it downstream. In
+	  addition, do not set passthrough if they have changed.
+	  Otherwise, transform sometimes starts processing before caps change.
+	  The passthrough value will be set in fixate later in this case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775204
+
+2016-12-14 15:51:01 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  vaapidecodebin: capsfilter to optimize negotiation
+	  Add a capsfilter forcing the caps
+	  "video/x-raw(memory:VASurface), format=(string)NV12" between the
+	  queue and the vaapipostproc so no renegotiation is required.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776175
+
+2016-12-21 17:38:07 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: fail surface/image configuration
+	  To detect and handle errors during allocator_configure_surface_info()
+	  and allocator_conigure_image_info().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776084
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2016-12-21 17:50:41 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: ensures raw caps at start()
+	  Calls gst_vaapi_plugin_base_get_allowed_raw_caps() at start() to avoid
+	  race conditions at get_caps(), especially with multiple src elements.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776303
+
+2016-12-09 14:51:52 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurface_drm.c:
+	  libs: surface: fix error handling code style
+
+2016-12-09 16:14:14 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: add gst_video_info_update_from_surface()
+	  With this function is possible to refactor and remove duplicated code
+	  between dmabuf configuration and direct rendering/uploading
+	  configuration.
+
+2016-12-09 15:51:32 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: no log object at initialization
+	  When an instance of GstVaapiVideoAllocator fails at initializing, the
+	  log message should not include the allocator's object, because it is
+	  going to be unrefed.
+
+2016-12-09 17:56:02 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: lock stream when setting caps
+
+2016-12-09 17:42:42 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  Revert "vaapidecode: implement negotiate() vmethod"
+	  This reverts commit 3285121181295c544480fc6ba756845b16285d30.
+	  videodecode's negotiate() vmethod is also called when events arrive,
+	  but this would mean that the proper configuration of sink pad might
+	  not be complete, thus we should not update the src pad.
+	  Let's keep the old non-vmethod negotitate().
+
+2016-12-07 16:52:35 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapi.c:
+	  Revert "encoders: demote to RANK_NONE since not fit for autoplugging yet"
+	  This reverts commit f182b8be2ba05965e6d31a4d380d6563b9b53a77.
+
+2016-12-01 18:57:10 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	* gst/vaapi/gstvaapiencode.h:
+	  vaapiencode: get surface formats in get_caps()
+	  Query for the supported surface formats in config at get_caps() vmethod.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769266
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2016-12-07 11:26:37 +0100  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder.h:
+	  libs: encoder: add gst_vaapi_encoder_get_surface_formats()
+	  This method will return the valid surface formats in the current
+	  config. If the are no VAConfig it is created with the information
+	  available.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769266
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2016-12-07 11:10:42 +0100  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: split set_context_info()
+	  Split set_context_info() adding init_context_info() which only
+	  initialises the GstVaapiContextInfo structure inside GstVaapiEncoder
+	  required for VAConfig.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769266
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2016-12-02 09:30:52 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	  libs: context: skip VAContext if no frame size
+	  If GstVaapiContextInfo has just initial information, without frame's
+	  width and height, skip the creation of the VAContext, just keep the
+	  VAConfig.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769266
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2016-12-02 09:28:07 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	  libs: context: split context_create()
+	  Split the funcion context_create() into context_create() and
+	  config_create().
+	  Decoupling VAConfig and VAContext during context creation, we could
+	  query the VAConfig for the supported surface's formats without creating
+	  a VAContext.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769266
+
+2016-12-06 17:33:42 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	  libs: drm: find render node in hybrid system
+	  Originally the drm backend only tried to open the first render node
+	  found. But in hybrid system this first render node might not support
+	  VA-API (propietary Nvidia driver, for example).
+	  This patch tries all the available nodes until a finding one with a
+	  VA-API supported driver.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774811
+	  Original-patch-by: Stirling Westrup <swestrup@gmail.com> and
+	  Reza Razavi <reza@userful.com>
+
+2016-11-14 17:45:55 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: refactor code for readability
+	  Added the inlined function allocator_configure_pools() moving out code
+	  from gst_vaapi_video_allocator_new() to make clear that it is a
+	  post-initalization of the object.
+
+2016-11-14 17:40:37 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: log error if not VA image
+	  Log an error message if the test image for surface downloading
+	  cannot be allocated or mapped.
+
+2016-11-14 17:33:41 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: remove unused macros
+	  These macros are not used. Let us remove them.
+
+2016-11-11 19:45:45 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: rename video for allocation_info
+	  Since video_info stores the GstVideoInfo of the allocation caps,
+	  it is clear if we rename it as allocation_info, to distinguish it
+	  later from negotiation_info.
+
+2016-10-19 15:27:03 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: add real GstVaapiDmaBufAllocator
+	  Instead of defining GstVaapiDmaBufAllocator as a hackish decorator of
+	  GstDmaBufAllocator, now, since the expose of the GstDmaBufAllocator's
+	  GType, GstVaapiDmaBufAllocator is a full feature GstAllocator inherited
+	  from GstDmaBufAllocator.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2016-10-19 15:30:09 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: errors in gst_vaapi_dmabuf_allocator_new()
+	  Add a helper function to initialize the gst_debug_vaapivideomemory,
+	  to use it either by the GstVaapiVideoAllocatorClass or
+	  GstVaapiDmabufAllocator (which is a decorator of GstDmaBufAllocator).
+	  Later, log possible errors when calling gst_vaapi_dmabuf_allocator_new ()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-11-29 15:14:32 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode: release internal encoder at stop()
+	  As the internal encoder is created at start(), let's release it at
+	  stop() vmethod, to be consistent.
+	  gst_vaapiencode_destroy() is called since it also resets the input and
+	  output states, which is something that the base class does internally
+	  after calling stop() vmethod.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769266
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2016-12-03 08:20:56 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From f49c55e to 39ac2f5
+
+2016-11-29 14:59:02 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode: call ensure_encoder() at start()
+	  Currently, specific encoder is created during set_format(). This might
+	  lead to race condition when creating profiles with multiple encoders.
+	  This patch moves ensure_encoder() call to start() vmethod to ensure
+	  avoiding the race condition.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773546
+
+2016-11-21 19:29:22 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  vaapidecodebin: bring back dynamic configuration
+	  In commit ca0c3fd6 we remove the dynamic configuration if the bin
+	  because we assumed that the bin will be always static as it is
+	  registered.
+	  Nonetheless we were wrong, because it is possible to request, with a
+	  property, to avoid the use of the post-processor.
+	  Since we want to add a way to disable the post-processor through
+	  environment variables, this remove feature is required again.
+	  If the environment variable GST_VAAPI_DISABLE_VPP is defined the
+	  postprocessor inside of the vaapidecodebin is disabled, then
+	  vaapidecodebin is an alias of the old vaapidecode.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775041
+
+2016-11-21 18:25:18 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: implement negotiate() vmethod
+	  Instead of decorating the negotiate() method, let us override it,
+	  so the stream is locked while called.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775040
+
+2016-11-26 11:27:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitmodules:
+	  common: use https protocol for common submodule
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775110
+
+2016-11-24 21:17:54 +0100  Dominique Leuenberger <dimstar@opensuse.org>
+
+	* gst-libs/gst/vaapi/Makefile.am:
+	  build: add LIBVA_WAYLAND_CFLAGS to libgstvaapiegl
+	  In case libva-wayland has its headers not installed in default
+	  locations (like /usr/include), the build fails to include "wayland-client.h":
+	  CC       libgstvaapi_egl_la-gstvaapiutils_egl.lo
+	  In file included from gstvaapidisplay_wayland.h:27:0,
+	  from gstvaapidisplay_egl.c:35:
+	  /usr/include/va/va_wayland.h:31:28: fatal error: wayland-client.h: No such file or directory
+	  #include <wayland-client.h>
+	  As we already passed VA_CLAGS, /usr/include/va/va_wayland.h could be found, but it is
+	  our fault not to instruct the system that we ALSO care for va_wayland. We correctly query
+	  for libva-wayland.pc in configure and use this in other places as well. It is thus only
+	  correct and consequent, to do it also at this spot.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773946
+
+2015-10-28 12:55:18 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideocontext.c:
+	  vaapivideocontext: log a message if no bus
+	  Raise a warning if there is no bus when the element tries to post a
+	  message.
+
+2015-10-28 12:57:14 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: create display at open()
+	  Instead of creating the VA display before setting the bus to the
+	  element, it is created when the element is opened.
+	  Basically, this commit is a revert of
+	  5e5d62cac79754ba60057fc2516135aad8d7de35
+	  That was done when the GStreamer's context sharing was not mature
+	  enough as now. There is no reason to keep this hack.
+
+2016-11-04 18:04:36 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: don't add video crop meta
+	  Since the differentiation of negotiation caps and allocation caps,
+	  there is no need to add a video crop meta with the negotiation caps.
+	  Hence, removing it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773948
+
+2015-03-19 21:20:26 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobuffer.c:
+	* gst/vaapi/gstvaapivideometa.c:
+	* gst/vaapi/gstvaapivideometa.h:
+	  remove the video converter from vaapi buffer meta
+	  Since all the video converter were deprecated in gstreamer-1.2, we don't need
+	  to handle them anymore in the vaapi's buffer meta.
+	  This patch removes its usage and the buffer meta's API for that.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=745728
+
+2016-11-21 18:28:18 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: destroy source pad allocator and pool
+	  First, deactivate source pad pool when the out caps change, and if so,
+	  destroy texture map, the source pad allocator and pool only if the
+	  new caps are different from the ones already set.
+
+2016-11-21 19:17:07 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: don't destroy sink pad allocator
+	  Don't destroy sink pad allocator at _set_caps() because it will be done at
+	  ensure_sinkpad_buffer_pool() if it is required.
+
+2016-11-21 18:27:00 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: first validate the out caps
+	  When calling _set_caps() first validate the out caps before doing
+	  anything else.
+
+2016-11-21 18:42:02 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: negotiate after destroying allocator
+	  This is related with bug 758907 when no vaapipostproc is used (no
+	  vaapidecodebin). In order to negotiate downstream we need to destroy
+	  the source pad allocator, otherwise the same allocated buffers are
+	  used, failing the mapping.
+
+2016-11-21 16:35:34 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: remove GST_VAAPI_TYPE_VIDEO_INFO
+	  Remove redundant GST_VAAPI_TYPE_VIDEO_INFO, since it is a duplicate of
+	  GST_TYPE_VIDEO_INFO created before gstreamer 1.6, where the boxed type
+	  was created.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774782
+
+2016-11-21 12:51:25 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: update the src pad allocator video info
+	  Update the size, stride and offset of the source pad allocator video
+	  info, so the pool could set the correct GstVideoMeta
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774782
+
+2016-11-21 12:36:27 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: add missing documentation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774782
+
+2016-11-21 12:29:26 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: use early return without goto
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774782
+
+2016-11-21 11:25:21 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  plugins: add allocator to allocation query
+	  This patch adds the created allocator to the allocation query either
+	  in decide_allocation() and propose_allocation() vmehtods.
+	  With it, there's no need to set the modified allocator's size in the
+	  pool configuration.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774782
+
+2016-10-19 15:15:01 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: set correct buffer size
+	  We should set the correct buffer size when we are configuring the pool,
+	  otherwise the buffer will be discarded when it returns to the pool.
+	  Indeed when the ref-count of a buffer reaches zero, its pool will queue
+	  it back (and ref it) if, and only if, the buffer size matches the
+	  configured buffer size on the pool.
+	  This issue can be debugged with GST_DEBUG=*PERF*:6, see gstbufferpool.c
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774782
+
+2016-11-10 13:26:31 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: check for memory allocator
+	  When calling gst_vaapi_video_memory_copy() the allocator of the memory
+	  to copy should be allocated by the vaapi allocator.
+	  This patch does this verification.
+
+2016-11-10 13:25:30 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: code style fixes
+	  A cosmetic commit for enhance readability of the casts and method
+	  preconditions.
+
+2016-11-09 19:49:22 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: unroll gst_vaapi_video_allocator_free()
+	  Instead of having a gst_vaapi_video_memory_free() that is only going to
+	  be called by gst_vaapi_video_allocator_free(), let's just remove the first
+	  and merged into the second.
+
+2016-11-09 19:29:12 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: avoid virtual methods casting
+	  Use the expected virtual method signatures for readability.
+
+2016-11-09 18:58:20 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: remove unimplemented methods
+	  Remove unimplemented method for allocator mem_share() and mem_is_span().
+
+2016-11-09 18:54:47 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: fail if frame map can't get plane
+	  If map() vmethod in GstVideMeta cannot get the plane data, return false,
+	  thus the caller will not try to read invalid memory.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774213
+
+2016-11-09 18:39:06 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: lock map and unmap operations
+	  In order to avoid race condition when two threads call map/unmap the same
+	  VA surface, this patch mutex these operations.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774213
+
+2016-11-09 17:37:06 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: refactor vaapi memory unmapping
+	  There were duplicated code in gst_video_meta_unmap_vaapi_memory() and
+	  gst_vaapi_video_memory_unmap() when unmapping.
+	  This patch refactors both methods adding the common function
+	  unmap_vaapi_memory(). This also ensures, if direct rendering is enabled, it
+	  is correctly reset.
+	  Additionally, only when mapping flag has the WRITE bit, it set the image as
+	  current, which was done in gst_video_meta_map_vaapi_memory() but no in
+	  gst_vaapi_video_memory_map().
+	  In order to make this, the mapping flags were required, so instead of
+	  overloading mem_unmap() virtual function, mem_unmap_full() is overloaded.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774213
+
+2016-11-09 13:54:23 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: refactor vaapi memory mapping
+	  There were duplicated code in gst_video_meta_map_vaapi_memory() and
+	  gst_vaapi_video_memory_map() when doing the READ and WRITE mapping.
+	  This patch refactors both methods adding the common function
+	  map_vaapi_memory().
+	  Additionally, only when flag has the READ bit it calls
+	  ensure_images_is_current(), which was done in
+	  gst_video_meta_map_vaapi_memory() but no in
+	  gst_vaapi_video_memory_map().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772151
+
+2016-10-27 18:22:18 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: unref allowed_sinkpad_caps at close()
+	  The variable member allowed_sinkpad_caps is constructed querying the
+	  current VA display. Bearing that in mind, the variable shall be freed
+	  when the VA display changes or is removed.
+	  This patch moves the freeing of allowed_sinkpad_caps to close(), when
+	  the VA display is freed.
+
+2016-11-11 11:40:09 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: finish event thread at stop()
+	  The thread that handles window's events should be finished during
+	  pipeline's shutdown, otherwise it will remain alive during pipeline
+	  re-activation, leading to unexpected problems.
+	  This patch fixes failures of intensive_state_change scenario of
+	  gst-validate
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774241
+
+2016-11-08 09:35:00 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: enhance debug message
+	  "gst_pad_push" is not a good description of the event.
+
+2016-11-08 10:05:32 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  postproc: honor gst_pad_push() return value
+	  Returning GST_FLOW_ERROR always when gst_pad_push fails might lead to
+	  deadlock during seek.
+	  This patch returns the same error of gst_pad_push() and log out the
+	  return value.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774030
+
+2016-11-04 16:26:18 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: guard GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS
+	  In commit 6d11a00 were introduced a regression when gstreamer-vaapi is
+	  compiled with out EGL/GLX support: it shall not support
+	  GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS.
+	  This patch guards the inclusion of GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS in the
+	  allowed src caps for vaapedecode if EGL/GLX.
+
+2016-11-04 12:55:23 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: increment map counter only if succeeded
+	  Previously the frame map counter increased independently if the map succeeded
+	  or not. This leaded to critical messages and crashes if the frame was unable
+	  to be mapped, but the counter increased.
+	  This patch increases the map counter only if the map operation occurred.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773939
+
+2016-11-03 17:30:46 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: set negotiation caps in src allocator
+	  When the allocator is created, it stores the allocation caps. But sometimes
+	  the "allocation caps" may be different from the "negotiation caps".
+	  In this case, the allocator should store the negotiation caps since they
+	  are the ones used for frame mapping with GstVideoMeta.
+	  When vaapispostproc is used, this is not a problem since the element is assume
+	  to resize. But when using a vaapi decoder only, with a software renderer, it
+	  fails in this case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773323
+
+2016-07-19 16:40:10 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecode.h:
+	  vaapidecode: generate source pad caps
+	  Just as vaapipostproc, VA decoder's context can be queried to get the possible
+	  raw formats, so, the src caps can negotiate the exact caps that the context
+	  supports.
+
+2016-02-25 18:57:30 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder.h:
+	  libs: decoder: add _get_surface_formats()
+	  This function exposes the available formats of the surfaces in the the current
+	  context to the plugins.
+
+2016-02-18 19:32:58 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	* gst-libs/gst/vaapi/gstvaapicontext.h:
+	  libs: context: ensure context formats
+	  This patch ensures to get the formats, as filter does, available in the
+	  decoder / encoder context.
+	  The context fills up the array as soon it is created, otherwise the pipeline
+	  could get stalled (perhaps this is a bug in my HSW backend).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752958
+
+2016-02-18 19:20:10 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_core.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_core.h:
+	  libs: move get_surface_formats to utils_core
+	  The query of all the supported formats for a VA config were only used by the
+	  postprocessor (vaapifilter). But, in order to enable the vaapidecoder to
+	  negotiate a suitable raw format with downstream, we need to query these
+	  formats against the decoder's config.
+	  This patch is the first step: moves the code in filter's ensure_image() to a
+	  generic gst_vaapi_get_surface_formats() in vaapiutils_core, so it can be
+	  shared later by the decoder.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=752958
+
+2016-07-19 18:56:15 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: remove set_sinkpad_dmabuf_allocator()
+	  Since when the sink pad allocator is created, it is decided if the required
+	  one is vaapi allocator or dmabuf allocator, there is no need to force its set
+	  again.
+
+2016-10-27 11:25:55 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: ensure display when getting raw caps
+	  When running gst-discoverer-1.0, in certain media, vaapipostroc is stopped
+	  meanwhile it is transforming caps. The problem is that stop() calls
+	  gst_vaapi_plugin_base_close(), which nullifies the element's va display, but
+	  the va display is used in tranform_caps() when it is extracting the possible
+	  format conversions. This display disappearing generates warning messages.
+	  This patch holds a local reference of va display at ensure_allowed_raw_caps()
+	  hence it doesn't go away meanwhile it is used, even if the
+	  gst_vaapi_plugin_base_close() is called in other thread.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773593
+
+2016-11-03 12:54:23 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  plugins: fix code style for errors
+
+2016-10-19 19:04:20 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapibufferproxy.c:
+	* gst-libs/gst/vaapi/gstvaapicodedbuffer.c:
+	* gst-libs/gst/vaapi/gstvaapicodedbufferproxy.c:
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	* gst-libs/gst/vaapi/gstvaapicontext_overlay.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_dpb.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_jpeg.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_vc1.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_vp8.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_vp9.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplaycache.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_jpeg.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	* gst-libs/gst/vaapi/gstvaapiimage.c:
+	* gst-libs/gst/vaapi/gstvaapiimagepool.c:
+	* gst-libs/gst/vaapi/gstvaapiparser_frame.c:
+	* gst-libs/gst/vaapi/gstvaapipixmap.c:
+	* gst-libs/gst/vaapi/gstvaapisubpicture.c:
+	* gst-libs/gst/vaapi/gstvaapisurface.c:
+	* gst-libs/gst/vaapi/gstvaapisurfacepool.c:
+	* gst-libs/gst/vaapi/gstvaapisurfaceproxy.c:
+	* gst-libs/gst/vaapi/gstvaapitexture.c:
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_glx.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_glx.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: fix code style for errors
+
+2016-11-03 09:31:17 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapivideocontext.c:
+	  plugins: update GstGL deprecated symbol
+	  GST_GL_TYPE_CONTEXT was deprecated. Now it is GST_TYPE_GL_CONTEXT.
+
+2016-10-21 11:48:54 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: direct render when raw video
+	  Enable the direct rendering with linear surfaces if the negotiated src caps
+	  are video/x-raw without features.
+	  Pass also the caps, since they are needed to know the requested caps features.
+
+2016-10-24 20:09:59 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: move src allocator error to instantiator
+	  Just as we did in ensure_sinkpad_allocator(), let's move the error message
+	  into the ensure_srcpad_allocator() from the caller,
+	  gst_vaapi_plugin_base_decide_allocation()
+
+2016-10-20 19:37:01 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: enable direct upload if raw video
+	  Enable the direct upload with linear surfaces if the negotiated sink caps are
+	  video/x-raw without features.
+
+2016-10-21 11:21:04 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapipluginutil.h:
+	  pluginutil: add gst_caps_is_video_raw()
+
+2016-10-24 19:25:27 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: receive caps in ensure_sinkpad_allocator()
+	  Instead of receiving the GstVideoInfo structure as parameter, get the original
+	  GstCaps from ensure_sinkpad_buffer_pool(), in this way we could decide better
+	  which allocator instantiate.
+
+2016-10-20 19:31:58 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: destroy derived image at unmap
+	  If the allocator was configured to use direct upload or rendering, the
+	  generated derived image created at mapping needs to be destroyed after
+	  unmapping, because, in order to process the surface, it should not be marked
+	  as "busy" by the driver.
+
+2016-10-21 11:57:55 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: enhance logs for direct modes
+	  Print, conditionally, only the enabled direct mode.
+
+2016-10-20 17:02:49 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: add direct upload flag
+	  Adds the direct-upload flag in the GstVaapiVideoAllocator and
+	  GstVaapiVideoMemory.
+	  It still doesn't apply any functional change.
+
+2016-10-20 16:49:22 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: set direct rendering at run-time
+	  The way to experiment with the direct rendering is through and internal
+	  compiler pre-processor flag.
+	  The current change set enables a way to specified at run-time, as a flag
+	  passed to the allocator at instanciation time.
+
+2016-10-20 18:09:59 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: log in perf category when copy
+	  Log in performance category when the derive image handling fails, falling back
+	  to memory copy.
+
+2016-10-20 16:31:21 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: error log is derive image fails
+	  Instead of a silently failure of the derive image, this patch log an error
+	  message according to the failure.
+
+2016-10-20 12:52:18 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: store surface alloc flags in qdata
+	  For sake of consistency, we should add the requested surface allocation flags
+	  to the object's qdata structure.
+
+2016-10-20 12:22:06 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: category init when object define
+	  Move the Gstreamer debug category initialize to the GObject definition.
+
+2016-11-03 08:31:16 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapitexturemap.c:
+	  libs: vaapitexturemap: trivial code-style fix
+
+2016-11-02 20:01:09 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	  libs: display: egl: avoid recreate native display
+	  Instead of passing the native descriptor of the display, just pass the received
+	  GstVaapiDisplay and reuse it.
+
+2016-11-02 15:38:52 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: log the GstVaapiDisplay name
+	  Now that GstVaapiDisplay is descendant of GstObject, it has a human-friendly
+	  name. Log it instead of the memory address.
+
+2016-11-02 18:37:00 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_egl.c:
+	  libs: window: egl: pass native va display
+	  When creating a GstVaapiWindowEGL, it also creates native window by its own
+	  native display. It should pass the native display, either X11 or Wayland.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768266
+
+2016-10-13 12:53:17 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidebug.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm_priv.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl_priv.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_glx.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_glx.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_glx_priv.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_priv.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland_priv.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_x11.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_x11.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_x11_priv.h:
+	* gst-libs/gst/vaapi/gstvaapitexture_egl.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.h:
+	* gst/vaapi/gstvaapivideocontext.c:
+	  libs: display: GstVaapiDisplay as GstObject descendant
+	  This patch is to change the inheritance of GstVaapiDisplay to GstObject,
+	  instead of GstVaapiMiniObject. In this way we can use all the available
+	  infrastructure for GObject/GstObject such as GstTracer, GIR, etc.
+	  In addition, a new debug category for GstVaapiDisplay is created to make it
+	  easier to trace debug messages. It is named "vaapidisplay" and it transverse
+	  all the VA display backends (DRM, GLX, EGL, Wayland, ...)
+	  This patch is a step forward to expose GstVaapiDisplay for users in a future
+	  library.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768266
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+=== release 1.11.0 ===
+
+2016-11-01 18:54:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.10.0 ===
+
+2016-11-01 18:19:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.10.0
 
 2016-10-27 17:13:48 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
 
