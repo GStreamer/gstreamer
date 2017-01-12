@@ -247,8 +247,8 @@ strip_mview_fields (GstCaps * incaps, GstVideoMultiviewFlags keep_flags)
     GstVideoMultiviewFlags flags, mask;
 
     gst_structure_remove_field (st, "multiview-mode");
-    if (gst_structure_get_flagset (st, "multiview-flags", (guint*) &flags,
-        (guint*) &mask)) {
+    if (gst_structure_get_flagset (st, "multiview-flags", (guint *) & flags,
+            (guint *) & mask)) {
       flags &= keep_flags;
       mask = keep_flags;
       gst_structure_set (st, "multiview-flags",
@@ -414,40 +414,12 @@ fail:
 static gboolean
 _find_local_gl_context (GstGLStereoSplit * split)
 {
-  GstQuery *query;
-  GstContext *context;
-  const GstStructure *s;
-
-  if (split->context)
+  if (gst_gl_query_local_gl_context (GST_ELEMENT (split), GST_PAD_SRC,
+          &split->context))
     return TRUE;
-
-  query = gst_query_new_context ("gst.gl.local_context");
-  if (!split->context
-      && gst_gl_run_query (GST_ELEMENT (split), query, GST_PAD_SRC)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &split->context,
-          NULL);
-    }
-  }
-  if (!split->context
-      && gst_gl_run_query (GST_ELEMENT (split), query, GST_PAD_SINK)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &split->context,
-          NULL);
-    }
-  }
-
-  GST_DEBUG_OBJECT (split, "found local context %p", split->context);
-
-  gst_query_unref (query);
-
-  if (split->context)
+  if (gst_gl_query_local_gl_context (GST_ELEMENT (split), GST_PAD_SINK,
+          &split->context))
     return TRUE;
-
   return FALSE;
 }
 
@@ -626,38 +598,9 @@ stereosplit_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
-      const gchar *context_type;
-      GstContext *context, *old_context;
-      gboolean ret;
-
-      ret = gst_gl_handle_context_query ((GstElement *) split, query,
-          &split->display, &split->other_context);
-      if (split->display)
-        gst_gl_display_filter_gl_api (split->display, SUPPORTED_GL_APIS);
-      gst_query_parse_context_type (query, &context_type);
-
-      if (g_strcmp0 (context_type, "gst.gl.local_context") == 0) {
-        GstStructure *s;
-
-        gst_query_parse_context (query, &old_context);
-
-        if (old_context)
-          context = gst_context_copy (old_context);
-        else
-          context = gst_context_new ("gst.gl.local_context", FALSE);
-
-        s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, split->context,
-            NULL);
-        gst_query_set_context (query, context);
-        gst_context_unref (context);
-
-        ret = split->context != NULL;
-      }
-      GST_LOG_OBJECT (split, "context query of type %s %i", context_type, ret);
-
-      if (ret)
-        return ret;
+      if (gst_gl_handle_context_query ((GstElement *) split, query,
+              split->display, split->context, split->other_context))
+        return TRUE;
 
       return gst_pad_query_default (pad, parent, query);
     }
@@ -684,38 +627,9 @@ stereosplit_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
-      const gchar *context_type;
-      GstContext *context, *old_context;
-      gboolean ret;
-
-      ret = gst_gl_handle_context_query ((GstElement *) split, query,
-          &split->display, &split->other_context);
-      if (split->display)
-        gst_gl_display_filter_gl_api (split->display, SUPPORTED_GL_APIS);
-      gst_query_parse_context_type (query, &context_type);
-
-      if (g_strcmp0 (context_type, "gst.gl.local_context") == 0) {
-        GstStructure *s;
-
-        gst_query_parse_context (query, &old_context);
-
-        if (old_context)
-          context = gst_context_copy (old_context);
-        else
-          context = gst_context_new ("gst.gl.local_context", FALSE);
-
-        s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, split->context,
-            NULL);
-        gst_query_set_context (query, context);
-        gst_context_unref (context);
-
-        ret = split->context != NULL;
-      }
-      GST_LOG_OBJECT (split, "context query of type %s %i", context_type, ret);
-
-      if (ret)
-        return ret;
+      if (gst_gl_handle_context_query ((GstElement *) split, query,
+              split->display, split->context, split->other_context))
+        return TRUE;
 
       return gst_pad_query_default (pad, parent, query);
     }

@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2016 Matthew Waters <matthew@centricular.com>
+ * Copyright (C) 2017 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,17 +18,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __EXT_GL_GST_GL_UTILS_H__
-#define __EXT_GL_GST_GL_UTILS_H__
+#ifndef __GST_GL_UTILS_PRIVATE_H__
+#define __GST_GL_UTILS_PRIVATE_H__
 
-#include <gst/gl/gl.h>
+#include <gst/gl/gstgl_fwd.h>
 
 G_BEGIN_DECLS
 
-gboolean gst_gl_context_gen_shader (GstGLContext * context,
-    const gchar * shader_vertex_source,
-    const gchar * shader_fragment_source, GstGLShader ** shader);
+gboolean gst_gl_run_query (GstElement * element, GstQuery * query, GstPadDirection direction);
 
 G_END_DECLS
 
-#endif /* __EXT_GL_GST_GL_UTILS_H__ */
+#endif /* __GST_GL_UTILS_H__ */

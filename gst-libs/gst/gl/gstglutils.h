@@ -36,11 +36,11 @@ gboolean gst_gl_handle_set_context (GstElement * element, GstContext * context,
     GstGLDisplay ** display, GstGLContext ** other_context);
 GST_EXPORT
 gboolean gst_gl_handle_context_query (GstElement * element, GstQuery * query, 
-    GstGLDisplay ** display, GstGLContext ** other_context);
-
+    GstGLDisplay * display, GstGLContext * context, GstGLContext * other_context);
 GST_EXPORT
-gboolean gst_gl_run_query (GstElement * element,
-    GstQuery * query, GstPadDirection direction);
+gboolean gst_gl_query_local_gl_context (GstElement * element, GstPadDirection direction,
+    GstGLContext ** context_ptr);
+
 GST_EXPORT
 gsize gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
     guint plane);

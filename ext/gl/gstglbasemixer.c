@@ -145,39 +145,12 @@ gst_gl_base_mixer_sink_event (GstAggregator * agg, GstAggregatorPad * bpad,
 static gboolean
 _find_local_gl_context (GstGLBaseMixer * mix)
 {
-  GstQuery *query;
-  GstContext *context;
-  const GstStructure *s;
-
-  if (mix->context)
+  if (gst_gl_query_local_gl_context (GST_ELEMENT (mix), GST_PAD_SRC,
+          &mix->context))
     return TRUE;
-
-  query = gst_query_new_context ("gst.gl.local_context");
-  if (!mix->context && gst_gl_run_query (GST_ELEMENT (mix), query, GST_PAD_SRC)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &mix->context,
-          NULL);
-    }
-  }
-  if (!mix->context
-      && gst_gl_run_query (GST_ELEMENT (mix), query, GST_PAD_SINK)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &mix->context,
-          NULL);
-    }
-  }
-
-  GST_DEBUG_OBJECT (mix, "found local context %p", mix->context);
-
-  gst_query_unref (query);
-
-  if (mix->context)
+  if (gst_gl_query_local_gl_context (GST_ELEMENT (mix), GST_PAD_SINK,
+          &mix->context))
     return TRUE;
-
   return FALSE;
 }
 
@@ -296,39 +269,9 @@ gst_gl_base_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
     }
     case GST_QUERY_CONTEXT:
     {
-      const gchar *context_type;
-      GstContext *context, *old_context;
-
-      ret = gst_gl_handle_context_query ((GstElement *) mix, query,
-          &mix->display, &mix->priv->other_context);
-      if (mix->display)
-        gst_gl_display_filter_gl_api (mix->display,
-            mix_class->supported_gl_api);
-      gst_query_parse_context_type (query, &context_type);
-
-      if (g_strcmp0 (context_type, "gst.gl.local_context") == 0) {
-        GstStructure *s;
-
-        gst_query_parse_context (query, &old_context);
-
-        if (old_context)
-          context = gst_context_copy (old_context);
-        else
-          context = gst_context_new ("gst.gl.local_context", FALSE);
-
-        s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, mix->context,
-            NULL);
-        gst_query_set_context (query, context);
-        gst_context_unref (context);
-
-        ret = mix->context != NULL;
-      }
-      GST_LOG_OBJECT (mix, "context query of type %s %i", context_type, ret);
-
-      if (ret)
-        return ret;
-
+      if (gst_gl_handle_context_query ((GstElement *) mix, query,
+              mix->display, mix->context, mix->priv->other_context))
+        return TRUE;
       break;
     }
     default:
@@ -508,46 +451,14 @@ gst_gl_base_mixer_src_activate_mode (GstAggregator * aggregator,
 static gboolean
 gst_gl_base_mixer_src_query (GstAggregator * agg, GstQuery * query)
 {
-  gboolean res = FALSE;
   GstGLBaseMixer *mix = GST_GL_BASE_MIXER (agg);
-  GstGLBaseMixerClass *mix_class = GST_GL_BASE_MIXER_GET_CLASS (mix);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
-      const gchar *context_type;
-      GstContext *context, *old_context;
-
-      res = gst_gl_handle_context_query ((GstElement *) mix, query,
-          &mix->display, &mix->priv->other_context);
-      if (mix->display)
-        gst_gl_display_filter_gl_api (mix->display,
-            mix_class->supported_gl_api);
-      gst_query_parse_context_type (query, &context_type);
-
-      if (g_strcmp0 (context_type, "gst.gl.local_context") == 0) {
-        GstStructure *s;
-
-        gst_query_parse_context (query, &old_context);
-
-        if (old_context)
-          context = gst_context_copy (old_context);
-        else
-          context = gst_context_new ("gst.gl.local_context", FALSE);
-
-        s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, mix->context,
-            NULL);
-        gst_query_set_context (query, context);
-        gst_context_unref (context);
-
-        res = mix->context != NULL;
-      }
-      GST_LOG_OBJECT (mix, "context query of type %s %i", context_type, res);
-
-      if (res)
-        return res;
-
+      if (gst_gl_handle_context_query ((GstElement *) mix, query,
+              mix->display, mix->context, mix->priv->other_context))
+        return TRUE;
       break;
     }
     default:
