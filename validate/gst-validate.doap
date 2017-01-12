@@ -52,6 +52,16 @@
    </GitRepository>
  </repository> 
 
+ <release>
+  <Version>
+   <revision>1.11.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2017-01-12</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.11.1.tar.xz" />
+  </Version>
+ </release>
+
   <Version>
    <revision>1.10.0</revision>
    <branch>master</branch>

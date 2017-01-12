@@ -1,9 +1,713 @@
-=== release 1.10.0 ===
+=== release 1.11.1 ===
 
-2016-11-01  Sebastian Dröge <slomo@coaxion.net>
+2017-01-12  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.0
+	  releasing 1.11.1
+
+2017-01-06 13:14:17 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  validate: Fix setting of the testsuite version
+	  If nano is set, it means we are running in git/unreleased version
+
+2017-01-06 12:09:13 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	  validate: Make sure to update children environment from current env
+	  And minor fix in function call
+
+2017-01-06 11:48:01 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate: check: Enhance test names
+
+2017-01-04 17:40:59 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/pkgconfig/Makefile.am:
+	* validate/pkgconfig/gst-validate-uninstalled.pc.in:
+	* validate/pkgconfig/meson.build:
+	  meson: generate pkg-config -uninstalled pc files
+	  Generating those files is useful for users building the GStreamer stack
+	  using meson and having to link it to another project which is still
+	  using the autotools.
+	  Fixed the -uninstalled pc file libdir path while I was on it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776810
+
+2017-01-03 16:25:47 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Make the IPC server socket blocking
+	  0.0 does not mean blocking in python3 and makes everything failling
+	  on windows.
+
+2017-01-03 15:58:35 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  validate: Properly kill subprocesses on windows
+
+2017-01-03 15:34:39 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/config.py.in:
+	* validate/tools/gst-validate-launcher.in:
+	  validate:launcher: Fix running on windows
+
+2017-01-03 14:52:38 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: Respect active testers when listing tests
+
+2017-01-03 14:38:24 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/__init__.py:
+	* validate/tools/gst-validate-launcher.in:
+	  validate: Make validate launcher apps work in a meson uninstalled env
+
+2017-01-03 13:11:42 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/Makefile.am:
+	* validate/launcher/apps/gstcheck.py:
+	  validate: Fix gstcheck when not running on a meson build dir
+
+2017-01-03 13:01:31 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/configure.ac:
+	* validate/launcher/Makefile.am:
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/config.py.in:
+	* validate/launcher/main.py:
+	* validate/launcher/meson.build:
+	* validate/launcher/testsuites/Makefile.am:
+	* validate/launcher/testsuites/check.py:
+	* validate/launcher/testsuites/meson.build:
+	  Revert "Revert "validate:launcher: Add an app handler for unit tests described in meson""
+	  This reverts commit 5656e2a1b208155be36cf16b08a9ffcc95694328.
+
+2017-01-03 07:05:12 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/main.py:
+	  validate: Ensure non-standard testsuite location is taken into account
+	  This is a regression that was introduced by 6504b9152cfd2d78ee3d773a0a32eec1900f955c
+	  If we have non-standard main_dir or qa_assets, make sure we prepend the
+	  checked-out testsuites directory to the list of expected ones
+
+2017-01-02 16:11:22 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/configure.ac:
+	* validate/launcher/Makefile.am:
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/config.py.in:
+	* validate/launcher/main.py:
+	* validate/launcher/meson.build:
+	* validate/launcher/testsuites/Makefile.am:
+	* validate/launcher/testsuites/check.py:
+	* validate/launcher/testsuites/meson.build:
+	  Revert "validate:launcher: Add an app handler for unit tests described in meson"
+	  This reverts commit a4aa5c60bb2015f006103317800fb1fddb5718e6.
+	  Does not work outside of gst-build (i.e. validate won't work when used either
+	  installed, in a prefix, or in gst-uninstalled).
+
+2016-12-30 11:53:13 +0100  christophecvr <stefansat@telenet.be>
+
+	* mediainfo/autogen.sh:
+	* mediainfo/configure.ac:
+	* mediainfo/src/Makefile.am:
+	  mediainfo: update build setup
+	  Fix intltool build setup to make it build on ubuntu 16.04 as well.
+	  Fixes: https://bugzilla.gnome.org/show_bug.cgi?id=776523
+
+2016-12-30 11:43:01 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* mediainfo/src/mi-info.vala:
+	  mediinfo: use less deprecated gtk api
+
+2016-12-30 11:41:10 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* mediainfo/configure.ac:
+	  mediainfo: use libgee-0.8
+	  We were using libgee-0.6 which was using gee-1.0 in pkgconfig.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776523
+
+2016-12-28 20:29:50 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* mediainfo/src/mi-app.vala:
+	* mediainfo/src/mi-info.vala:
+	  mediinfo: replace some deprecated UI by the new one
+
+2016-12-28 20:29:23 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* mediainfo/vapi/config.vapi:
+	  mediinfo: remove unused field
+
+2016-12-28 20:27:58 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* mediainfo/src/Makefile.am:
+	  mediainfo: remove 0.10 libs
+	  We check those in configure anyway.
+
+2016-12-25 11:34:33 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/tracer/analysis_runner.py:
+	* tracer/tracer/parser.py:
+	* tracer/tracer/parser_perf.py:
+	* tracer/tracer/parser_test.py:
+	  tracer: parser: small speedup
+	  Add a parser_perf test. Skip the extra filter stage and change the regex to
+	  match on category=TRACE lines only.
+	  Also flip the check in analysis_runner, since we only have a few tracer
+	  classes in the beginning, the rest are tracer entries.
+
+2016-12-22 16:23:02 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-stats.py:
+	  tracer: gsttr-stats: add a fast path for tracer-entry matching
+	  Extract the structure name from the string and only parse the full structure,
+	  if we are going to handle it.
+
+2016-12-23 15:00:53 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate-transcoding: Use standard GstEncodingProfile deserialization function
+
+2016-12-23 14:58:56 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Take into account test duration when filtering them
+	  Otherwise running -t 'some.*test' will run long tests (longer than hard
+	  timeout) which is not what the user expect.
+
+2016-12-22 19:24:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate-runner: Use correct enum in return value
+	  gst-validate-runner.c:856:7: error: implicit conversion from enumeration type 'GstValidateReportLevel' to different enumeration type 'GstValidateReportingDetails' [-Werror,-Wenum-conversion]
+	  GST_VALIDATE_REPORT_LEVEL_UNKNOWN);
+	  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+2016-12-22 10:08:32 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Add safe guards to runner API
+
+2016-12-22 10:08:31 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: Whitlist blacklisted test only when explicitely
+	  Otherwise running -t '.*reverse.*' will also run blacklisted
+	  tests which is probably not what use wants.
+
+2016-12-22 10:08:30 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  launcher: Make --update-media-info check if generating frames info or not
+
+2016-12-22 10:08:28 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/configure.ac:
+	* validate/launcher/Makefile.am:
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/config.py.in:
+	* validate/launcher/main.py:
+	* validate/launcher/meson.build:
+	* validate/launcher/testsuites/Makefile.am:
+	* validate/launcher/testsuites/check.py:
+	* validate/launcher/testsuites/meson.build:
+	  validate:launcher: Add an app handler for unit tests described in meson
+	  This way we can run all tests with the launcher which brings in many
+	  features.
+	  And add a testsuite for GStreamer unit tests.
+
+2016-12-22 10:08:27 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Allow specifying a timeout factor
+
+2016-12-22 10:08:26 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Print the iteration number when running forever
+
+2016-12-22 10:08:25 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/main.py:
+	  validate:launcher: Add a -v option to print subprocesses to stdout
+
+2016-12-22 10:08:24 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/main.py:
+	  validate:launcher: Run cpu_count test in parallel by default
+
+2016-12-22 10:08:23 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Do not list tests on unneeded testers
+
+2016-12-22 10:08:21 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Allow specifying several testsuite dirs
+
+2016-12-22 10:07:58 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Stop running test subprocesses in a shell
+	  And instead properly use a list of argument for the subprocesses.
+
+2016-12-20 21:00:58 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-stats.py:
+	  tracer: gsttr-stats: don't average aggregated values
+	  Only collect the first/last values for them.
+
+2016-12-20 12:10:43 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-stats.py:
+	  tracer/gsttr-stats: skip optional fields
+
+2016-12-20 12:09:21 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/tracer/structure.py:
+	* tracer/tracer/structure_test.py:
+	  tracer/structure: handle boolean fields
+
+2016-12-20 10:27:45 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-stats.py:
+	  tracer/gsttr-stats: improve formatting
+	  Add a headline and print the results as columns. Use ':' in ts format.
+
+2016-12-20 10:26:55 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/README:
+	  tracer/README: update docs
+	  Update status of what is done and what we want to figure still.
+
+2016-12-20 09:25:30 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/tracer/parser.py:
+	  tracer/parser: use local vars in the iterator function
+	  This saves variable lookups in this thight loop.
+
+2016-12-20 08:24:32 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/tracer/analysis_runner.py:
+	* tracer/tracer/analysis_runner_test.py:
+	* tracer/tracer/analyzer.py:
+	* tracer/tracer/parser.py:
+	* tracer/tracer/parser_test.py:
+	* tracer/tracer/structure.py:
+	* tracer/tracer/structure_perf.py:
+	* tracer/tracer/structure_test.py:
+	  tracer: pep8 cleanup
+
+2016-12-20 08:17:34 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/tracer/analysis_runner.py:
+	* tracer/tracer/analyzer.py:
+	* tracer/tracer/parser.py:
+	* tracer/tracer/structure.py:
+	  tracer: update docstrings
+
+2016-12-19 22:37:20 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/tracer/structure.py:
+	  tracer/structure: improve performance
+	  Use local vars in the parser. This way we can make them static methods.
+
+2016-12-16 15:00:04 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-stats.py:
+	* tracer/tracer/analysis_runner.py:
+	  tracer/gsttr-stats: adding some filtering options
+	  Also adding a way to show what is in the file.
+
+2016-12-16 14:08:46 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/Makefile:
+	* tracer/tracer/parser_test.py:
+	  tracer/Makefile: fix test invocation
+	  And fix a deprecation warning.
+
+2016-12-16 14:07:45 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/tracer/structure.py:
+	* tracer/tracer/structure_perf.py:
+	* tracer/tracer/structure_test.py:
+	  tracer/structure: add more tests and a benchmark
+
+2016-12-14 21:28:12 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-stats.py:
+	  tracer/gsttr-stats: move time unit hack into method
+
+2016-12-14 19:07:22 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-stats.py:
+	* tracer/tracer/analysis_runner.py:
+	* tracer/tracer/analysis_runner_test.py:
+	* tracer/tracer/analyzer.py:
+	  tracer/gsttr-stats: split Analyzer into Analyzer and AnalysisRunner
+	  This lets us run chain analyzers. Move the stats collection into the
+	  gsttr-stats tool.
+
+2016-12-12 22:41:23 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-stats.py:
+	  tracer: add a first tool to report aggregated findings
+	  A tool to report min/max/avg values per scope and traced value.
+
+2016-12-12 22:38:57 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/Makefile:
+	* tracer/README:
+	* tracer/tracer/analyzer.py:
+	* tracer/tracer/analyzer_test.py:
+	* tracer/tracer/parser.py:
+	* tracer/tracer/parser_test.py:
+	* tracer/tracer/structure.py:
+	* tracer/tracer/structure_test.py:
+	  tracer: add new python library to process tracer logs
+	  This is the beginning of a python library for wrting tools that process tracer
+	  logs. This library contains a structure parser written in python to avoid the
+	  dependency on gobject introspection (and the slowness and non pythoness that
+	  comes with it).
+
+2016-12-13 13:26:35 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* debug-viewer/GstDebugViewer/Data.py:
+	  debug-viewer: inline expression
+
+2016-12-19 16:17:56 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Properly get the rate for action validation
+	  This issue was most likely introduced by the refactoring of the
+	  position querying into a standalone function.
+	  In execute_next_action() the rate variable was never replaced by
+	  the current rate of the pipeline, this would result in all reverse
+	  playback actions to trigger immediately instead of waiting for
+	  the actual target time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776280
+
+2016-12-12 15:07:30 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: Fix usage of get_stack)trace after API change
+
+2016-12-12 12:27:42 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/tools/gst-validate-transcoding.c:
+	  validate: transcode: No buffering handling when the sink is not synced on the clock
+	  It makes no sense to pause the pipeline and wait for buffering to be
+	  done when the pipeline is just processing the data as it comes
+	  in without synchronizing on the clock.
+
+2016-12-09 17:43:53 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* meson.build:
+	  meson: Support building without Gst debug
+
+2016-12-07 15:11:33 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: fix small grammar nit
+
+2016-12-01 10:51:56 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/reporters.py:
+	  launcher: Handle stack trace information as jenkins expect it in the xunit file
+
+2016-11-30 14:07:04 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Handle missing media info file
+
+2016-11-30 13:32:09 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/tests/launcher_tests/test_validate.py:
+	  validate: Properly handle proxy pads generating detailed info about NNEs
+	  In cases where we had a two consecutive bins with proxy pads, we could
+	  segfault because we were dereferencing a NULL pointer to pad.
+
+2016-11-18 14:45:42 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tests/check/meson.build:
+	* validate/tests/getpluginsdir:
+	* validate/tests/launcher_tests/meson.build:
+	* validate/tests/meson.build:
+	* validate/tools/meson.build:
+	  meson: Modernize the way we set test env variables
+	  Removing the now useless getplugindirs script
+
+2016-11-30 07:40:05 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Make sure that the IPC server is shutdown before closing the socket
+
+2016-11-29 14:47:35 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Make sure to check string when verifying expected failures
+	  The value can potentially be None and we should handle that
+
+2016-11-26 10:25:43 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  validate:launcher: Allow specifying timeout as a known issue
+	  And minor cleanups
+
+2016-11-26 10:24:11 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/reporters.py:
+	  validate:launcher: Properly report stack trace as such in the xunit file
+
+2016-11-26 09:27:45 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Remove now useless validatelog
+	  We are now doing IPC to communicate with the launcher
+	  so let it simply go to stdout.
+
+2016-11-24 10:29:53 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  validate:launcher: Handle checking bug status for expected failures
+
+2016-11-26 11:26:05 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitmodules:
+	  common: use https protocol for common submodule
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775110
+
+2016-11-23 08:38:49 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-monitor-factory.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate: Fix GI warnings
+
+2016-11-19 12:36:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	* validate/meson.build:
+	  meson: Move vs_module_defs_dir to the validate subdirectory
+	  It's validate/win32/ and not just win32/
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774638
+
+2016-11-18 10:06:14 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* validate/Makefile.am:
+	* validate/win32/MANIFEST:
+	* validate/win32/common/libgstvalidate.def:
+	  validate: make: include common/win32.mak
+	  With the addition of the .def file for validate we need to make
+	  sure the check-export script from common gets executed so that the
+	  .def stays up to date.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774638
+
+2016-11-17 17:26:49 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* meson.build:
+	  meson: Add ignored warnings for MSVC
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774656
+
+2016-11-17 10:00:25 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* meson.build:
+	* validate/gst/validate/meson.build:
+	* win32/common/libgstvalidate.def:
+	  Enable building with MSVC
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774638
+
+2016-11-17 10:28:01 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: fix return type of get_range_func
+	  The return type of GstPadGetRangeFunction is GstFlowReturn
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774638
+
+2016-11-17 10:25:37 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* validate/gst/validate/validate.c:
+	  validate: Remove #include <unistd.h>
+	  It isn't needed and isn't present in non-posix environments like windows
+	  with MSVC or mingw.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774638
+
+2016-11-17 10:24:08 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/tools/gst-validate-transcoding.c:
+	  Fix MSVC const warnings
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774638
+
+2016-11-17 10:19:22 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  Pass gint/guint pointers instead of enum pointers
+	  The underlying integer type for enums are implementation defined and may
+	  not be the same size as gint/guint. So implicitly casting from pointers-
+	  to-enum-types to pointers-to-int-types is unsafe. MSVC warns on these.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774638
+
+2016-11-17 15:43:15 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/main.py:
+	  validate: Minor documentation fixes.
+
+2016-11-16 10:47:21 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	* validate/launcher/utils.py:
+	  validate: launcher: Allow checking if bugs linked to blacklist is fixed
+
+2016-11-16 10:48:26 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Consider wanted tests as whitelisted
+
+2016-11-15 18:55:09 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/meson.build:
+	  validate: meson: Do not mixup gstvalidate lib and tracer plugin
+	  Even though it is mostly the same thing in the end
+
+2016-11-14 18:41:34 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/utils.py:
+	  validate:launcher: Timeout if running gdb takes too much time
+
+2016-10-29 11:22:31 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Allow running the testsuite N number of times
+
+2016-11-14 13:05:04 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: Remove extra buffering status prints
+
+2016-11-09 17:37:24 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/utils.py:
+	  validate:launcher: Fix usage in an uninstalled environment
+
+2016-11-08 18:06:19 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/config.h.meson:
+	* validate/configure.ac:
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/meson.build:
+	* validate/meson.build:
+	  validate: Use gst_debug_get_stack_trace instead of our implementation
+	  And remove now useless config.h.meson file
+
+2016-11-07 17:20:09 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  validate:launcher: Try to generate a backtrace on segfaults
+
+2016-11-04 18:04:37 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* hooks/pre-commit-python.hook:
+	* validate/launcher/RangeHTTPServer.py:
+	* validate/launcher/__init__.py:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/config.py.in:
+	* validate/launcher/httpserver.py:
+	* validate/launcher/loggable.py:
+	* validate/launcher/main.py:
+	* validate/launcher/reporters.py:
+	* validate/launcher/utils.py:
+	* validate/launcher/vfb_server.py:
+	* validate/tools/gst-validate-analyze:
+	* validate/tools/gst-validate-launcher.in:
+	  validate:launcher: Port to Python3
+	  And sync logging.py with Pitivi version
+
+2016-11-04 14:45:19 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: Unset the plugin paths to generate the .gir files
+	  Avoiding problems when using subproject:
+	  'Failed to load plugin something.so file too short'
+
+2016-11-03 16:17:08 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: report: Do not unref an object where we do not own a ref
+	  g_io_stream_get_output_stream is transfer none
+
+2016-11-03 11:22:08 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/meson.build:
+	  validate: gir: We should not depend on GstVideo
+	  We do not depend on it at all in GstValidate itself
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773898
+
+2016-11-02 08:28:27 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	* validate/meson.build:
+	  validate: Allow using json-glib as a subproject
+
+2016-11-02 17:25:21 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tools/gst-validate-media-check.c:
+	  validate: media check: Always print runner infos when bailing out.
+
+2016-11-02 12:43:54 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/vfb_server.py:
+	  validate:launcher: Do not try to set DISPLAY envvar to None
+
+2016-11-01 18:11:13 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+=== release 1.11.0 ===
+
+2016-11-01 18:53:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/configure.ac:
+	  Back to development
+
+=== release 1.10.0 ===
+
+2016-11-01 18:16:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.10.0
 
 2016-10-26 17:58:58 +0200  Edward Hervey <edward@centricular.com>
 
