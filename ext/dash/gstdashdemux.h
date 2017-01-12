@@ -99,8 +99,15 @@ struct _GstDashDemuxStream
   guint64 keyframe_average_distance;
   gboolean first_sync_sample_after_moof, first_sync_sample_always_after_moof;
 
+  /* Internal position value, at the keyframe/entry level */
+  GstClockTime actual_position;
+  /* Timestamp of the beginning of the current fragment */
+  GstClockTime current_fragment_timestamp;
+
   /* Average keyframe download time (only in trickmode-key-units) */
   GstClockTime average_download_time;
+  /* Cached target time (only in trickmode-key-units) */
+  GstClockTime target_time;
 };
 
 /**
