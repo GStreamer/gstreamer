@@ -32,6 +32,9 @@ libopencv2_headers = [
   'opencv2/imgproc/imgproc_c.h',
   'opencv2/objdetect/objdetect.hpp',
   'opencv2/video/background_segm.hpp',
+]
+
+libopencv3_headers = [
   'opencv2/bgsegm.hpp',
 ]
 
@@ -39,13 +42,14 @@ gstopencv_cargs = ['-DGST_HAAR_CASCADES_DIR="@0@"']
 
 # First, check for the upper version limit and ensure it isn't found
 # FIXME: When 0.37.0 is released, change this to use many-version-conditions
-opencv3_dep = dependency('opencv', version : '>3.1.0', required : false)
+opencv3_1_dep = dependency('opencv', version : '>3.1.0', required : false)
 # Then, check if the lower version limit is found
 opencv2_dep = dependency('opencv', version : '>=2.3.0', required : false)
+opencv3_dep = dependency('opencv', version : '>= 3.0 ', required : false)
 
 opencv2_found = false
-if opencv3_dep.found()
-  message('OpenCV version is too new: \'' + opencv3_dep.version() + '\' (need <= 3.1.0)')
+if opencv3_1_dep.found()
+  message('OpenCV version is too new: \'' + opencv3_1_dep.version() + '\' (need <= 3.1.0)')
 elif opencv2_dep.found()
   message('OpenCV found, version is \'' + opencv2_dep.version() + '\'')
   opencv2_found = true
@@ -55,6 +59,15 @@ elif opencv2_dep.found()
       opencv2_found = false
     endif
   endforeach
+
+  if opencv3_dep.found()
+    foreach h : libopencv3_headers
+      if not cxx.has_header(h)
+        message('Needed header "' + h + '" not found')
+        opencv2_found = false
+      endif
+    endforeach
+  endif
 endif
 
 if opencv2_found
