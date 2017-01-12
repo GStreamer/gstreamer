@@ -660,6 +660,15 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstSplitMuxSink::format-location-full</NAME>
+<RETURNS>gchar*</RETURNS>
+<FLAGS>l</FLAGS>
+GstSplitMuxSink *gstsplitmuxsink
+guint  arg1
+GstSample *arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstSplitMuxSrc::format-location</NAME>
 <RETURNS>GStrv</RETURNS>
 <FLAGS>l</FLAGS>

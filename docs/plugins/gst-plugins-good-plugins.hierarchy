@@ -315,6 +315,7 @@ GObject
       GstPlugin
       GstPluginFeature
         GstDeviceProviderFactory
+        GstDynamicTypeFactory
         GstElementFactory
         GstTracerFactory
         GstTypeFindFactory
