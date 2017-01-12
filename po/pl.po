@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2016-11-01 20:53+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -16,171 +16,138 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 
-#: ext/gl/gstgltestsrc.c:521
 msgid "failed to draw pattern"
 msgstr "nie udało się narysować wzoru"
 
-#: ext/gl/gstgltestsrc.c:522
 msgid "A GL error occured"
 msgstr "Wystąpił błąd GL"
 
-#: ext/gl/gstgltestsrc.c:528
 msgid "format wasn't negotiated before get function"
 msgstr "format nie został wynegocjowany przed funkcją pobrania"
 
-#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
 msgstr "Odczyt obrazu wzorca przez OpenCV nie powiódł się"
 
-#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Nie udało się odczytać informacji o tytułach dla DVD."
 
-#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nie udało się otworzyć urządzenia DVD '%s'."
 
-#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Nie udało się ustawić przewijania opartego na PGC."
 
-#: ext/resindvd/resindvdsrc.c:1164
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Nie udało się odczytać DVD. Powodem może być to, że płyta jest zaszyfrowana, a biblioteka odszyfrowująca nie została zainstalowana."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Nie udało się odczytać DVD. Powodem może być to, że płyta jest zaszyfrowana, "
+"a biblioteka odszyfrowująca nie została zainstalowana."
 
-#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "Nie udało się odczytać DVD."
 
-#: ext/smoothstreaming/gstmssdemux.c:405
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:695
 msgid "This file contains no playable streams."
 msgstr "Ten plik nie zawiera strumieni do odtworzenia."
 
-#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Nie udało się otworzyć strumienia sndfile do odczytu."
 
-#: ext/sndio/sndiosink.c:324 ext/sndio/sndiosrc.c:320
-msgid "Could not establish connection to sndio"
-msgstr "Nie udało się ustanowić połączenia z sndio"
-
-#: ext/sndio/sndiosink.c:331 ext/sndio/sndiosrc.c:327
-msgid "Failed to query sndio capabilities"
-msgstr "Nie udało się odpytać o możliwości sndio"
-
-#: ext/sndio/sndiosink.c:424 ext/sndio/sndiosrc.c:421
-msgid "Could not configure sndio"
-msgstr "Nie udało się skonfigurować sndio"
-
-#: ext/sndio/sndiosink.c:430 ext/sndio/sndiosrc.c:427
-msgid "Could not start sndio"
-msgstr "Nie udało się uruchomić sndio"
-
-#: gst/asfmux/gstasfmux.c:1831
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr "Wygenerowany plik ma dłuższy czas rozbiegówki niż czas trwania strumieni"
+msgstr ""
+"Wygenerowany plik ma dłuższy czas rozbiegówki niż czas trwania strumieni"
 
-#: gst/camerabin2/camerabingeneral.c:166 gst/camerabin2/gstcamerabin2.c:1875
-#: gst/camerabin2/gstdigitalzoom.c:282 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Brak elementu '%s' - proszę sprawdzić instalację GStreamera."
 
-#: gst/camerabin2/gstcamerabin2.c:363
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr "Położenie pliku ustawiono na NULL, proszę ustawić na poprawną nazwę pliku"
+msgstr ""
+"Położenie pliku ustawiono na NULL, proszę ustawić na poprawną nazwę pliku"
 
-#: gst/camerabin2/gstwrappercamerabinsrc.c:584
 msgid "Digitalzoom element couldn't be created"
 msgstr "Nie udało się utworzyć elementu Digitalzoom"
 
-#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "Format podobrazu nie został skonfigurowany przed przepływem danych"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3111
 msgid "Failed to get fragment URL."
 msgstr "Nie udało się uzyskać URL-a fragmentu."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3462
 msgid "Couldn't download fragments"
 msgstr "Nie udało się pobrać fragmentów"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3551
-#: gst/mpegtsdemux/mpegtsbase.c:1608
 msgid "Internal data stream error."
 msgstr "Błąd wewnętrzny strumienia danych."
 
-#: gst/videomeasure/gstvideomeasure_collector.c:294
-msgid "No file name specified for writing."
-msgstr "Nie określono nazwy pliku do zapisu."
-
-#: gst/videomeasure/gstvideomeasure_collector.c:300
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr "Podanej nazwy pliku \"%s\" nie można przekształcić do lokalnego kodowania nazw plików."
-
-#: gst/videomeasure/gstvideomeasure_collector.c:307
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Nie udało się otworzyć pliku \"%s\" do zapisu."
-
-#: sys/dvb/gstdvbsrc.c:1571 sys/dvb/gstdvbsrc.c:1784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Urządzenie \"%s\" nie istnieje."
 
-#: sys/dvb/gstdvbsrc.c:1575
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nie udało się otworzyć urządzenia frontendu \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:1594
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nie udało się pobrać ustawień z urządzenia frontendu \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:1611
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Nie można wyliczyć systemów dostarczania z urządzenia frontendu \"%s\"."
+msgstr ""
+"Nie można wyliczyć systemów dostarczania z urządzenia frontendu \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:1788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
 
-#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
 msgstr "Nie udało się odnaleźć pliku konfiguracyjnego kanałów"
 
-#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Nie udało się wczytać pliku konfiguracyjnego kanałów: '%s'"
 
-#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
 #, c-format
 msgid "Couldn't find details for channel '%s'"
 msgstr "Nie udało się odnaleźć szczegółów dla kanału '%s'"
 
-#: sys/dvb/parsechannels.c:430
 #, c-format
 msgid "No properties for channel '%s'"
 msgstr "Brak właściwości dla kanału '%s'"
 
-#: sys/dvb/parsechannels.c:439
 #, c-format
 msgid "Failed to set properties for channel '%s'"
 msgstr "Nie udało się ustawić właściwości dla kanału '%s'."
 
-#: sys/dvb/parsechannels.c:560
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Nie udało się odnaleźć pliku konfiguracyjnego kanałów: '%s'"
 
-#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Plik konfiguracyjny kanałów nie zawiera żadnych kanałów"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "Nie udało się ustanowić połączenia z sndio"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Nie udało się odpytać o możliwości sndio"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "Nie udało się skonfigurować sndio"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "Nie udało się uruchomić sndio"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Nie określono nazwy pliku do zapisu."
+
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "Podanej nazwy pliku \"%s\" nie można przekształcić do lokalnego kodowania "
+#~ "nazw plików."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Nie udało się otworzyć pliku \"%s\" do zapisu."

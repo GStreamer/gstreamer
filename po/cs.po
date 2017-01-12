@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2015-10-15 20:54+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -60,18 +60,6 @@ msgstr "Tento soubor neobsahuje žádný proud, který by šel přehrát."
 msgid "Could not open sndfile stream for reading."
 msgstr "Nezdařilo se otevření proudu zvukového souboru ke čtení."
 
-msgid "Could not establish connection to sndio"
-msgstr "Nelze ustanovit spojení se sndio"
-
-msgid "Failed to query sndio capabilities"
-msgstr "Selhalo dotázání sndio na podporované funkce"
-
-msgid "Could not configure sndio"
-msgstr "Nelze nastavit sndio"
-
-msgid "Could not start sndio"
-msgstr "Nelze spustit sndio"
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Vygenerovaný soubor má delší čas videa vloženého před začátek (preroll) než "
@@ -100,18 +88,6 @@ msgstr "Nelze stáhnout fragmenty"
 
 msgid "Internal data stream error."
 msgstr "Chyba proudu vnitřních dat."
-
-msgid "No file name specified for writing."
-msgstr "K zápisu nebyl zadán žádný název souboru."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-"Zadaný název souboru „%s“ nelze převést do kódování místních názvů souborů."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Nezdařilo se otevření souboru „%s“ k zápisu."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -161,6 +137,30 @@ msgstr "Nelze najít soubor s nastavením kanálů DVB"
 #, fuzzy
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Soubor s nastavením kanálů DVB neobsahuje žádné kanály"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "Nelze ustanovit spojení se sndio"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Selhalo dotázání sndio na podporované funkce"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "Nelze nastavit sndio"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "Nelze spustit sndio"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "K zápisu nebyl zadán žádný název souboru."
+
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "Zadaný název souboru „%s“ nelze převést do kódování místních názvů "
+#~ "souborů."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Nezdařilo se otevření souboru „%s“ k zápisu."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Vnitřní chyba datového toku."

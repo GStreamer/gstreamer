@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2016-02-21 21:03+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -56,18 +56,6 @@ msgstr "Файлът не съдържа потоци за изпълнение.
 msgid "Could not open sndfile stream for reading."
 msgstr "Потокът sndfile не може да се отвори за четене."
 
-msgid "Could not establish connection to sndio"
-msgstr "Не може да се установи връзка към sndio"
-
-msgid "Failed to query sndio capabilities"
-msgstr "Неуспешно запитване за възможностите на sndio"
-
-msgid "Could not configure sndio"
-msgstr "Не може да се настрои sndio"
-
-msgid "Could not start sndio"
-msgstr "Не може да се стартира sndio"
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Генерираният файл е с по-дълго време за буфериране отколкото е самата му "
@@ -94,19 +82,6 @@ msgstr "Фрагментите не могат да бъдат свалени"
 
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка в потока на данни."
-
-msgid "No file name specified for writing."
-msgstr "Не е указано име на файл за запис."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-"Зададеното име на файл „%s“ не може да бъде прехвърлено в локалното кодиране "
-"на имена на файлове."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Файлът „%s“ не може да се отвори за запис."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -163,6 +138,30 @@ msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
 "Файлът с настройките на цифровото видеоръзпръскване (DVB) не съдържа никакви "
 "канали"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "Не може да се установи връзка към sndio"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Неуспешно запитване за възможностите на sndio"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "Не може да се настрои sndio"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "Не може да се стартира sndio"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Не е указано име на файл за запис."
+
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "Зададеното име на файл „%s“ не може да бъде прехвърлено в локалното "
+#~ "кодиране на имена на файлове."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Файлът „%s“ не може да се отвори за запис."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Вътрешна грешка в потока на данни."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2016-11-14 20:38+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -17,174 +17,141 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 
-#: ext/gl/gstgltestsrc.c:521
 msgid "failed to draw pattern"
 msgstr "gagal menggambar pola"
 
-#: ext/gl/gstgltestsrc.c:522
 msgid "A GL error occured"
 msgstr "Sebuah galat GL terjadi"
 
-#: ext/gl/gstgltestsrc.c:528
 msgid "format wasn't negotiated before get function"
 msgstr "format tidak dinegosiasikan sebelum mendapat fungsi"
 
-#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV gagal memuat templat gambar"
 
-#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Tak dapat membaca informasi judul untuk DVD."
 
-#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Gagal membuka divais DVD '%s'."
 
-#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Gagal mengatur pencarian berbasis PGC."
 
-#: ext/resindvd/resindvdsrc.c:1164
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Tak dapat membaca DVD. Hal ini kemungkinan karena DVD terenkripsi dan pustaka dekripsi tidak diinstal."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Tak dapat membaca DVD. Hal ini kemungkinan karena DVD terenkripsi dan "
+"pustaka dekripsi tidak diinstal."
 
-#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "Tak dapat membaca DVD."
 
-#: ext/smoothstreaming/gstmssdemux.c:405
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:695
 msgid "This file contains no playable streams."
 msgstr "Berkas ini tidak memuat stream yang dapat dimainkan."
 
-#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Tak dapat membuka stream sndfile untuk dibaca."
 
-#: ext/sndio/sndiosink.c:324 ext/sndio/sndiosrc.c:320
-msgid "Could not establish connection to sndio"
-msgstr "Tak bisa menjalin koneksi ke sndio"
-
-#: ext/sndio/sndiosink.c:331 ext/sndio/sndiosrc.c:327
-msgid "Failed to query sndio capabilities"
-msgstr "Gagal mengkuiri kapabilitas sndio"
-
-#: ext/sndio/sndiosink.c:424 ext/sndio/sndiosrc.c:421
-msgid "Could not configure sndio"
-msgstr "Tak dapat menata sndio"
-
-#: ext/sndio/sndiosink.c:430 ext/sndio/sndiosrc.c:427
-msgid "Could not start sndio"
-msgstr "Tak dapat memulai sndio"
-
-#: gst/asfmux/gstasfmux.c:1831
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr "Berkas yang dihasilkan memiliki waktu preroll lebih besar daripada durasi streamnya"
+msgstr ""
+"Berkas yang dihasilkan memiliki waktu preroll lebih besar daripada durasi "
+"streamnya"
 
-#: gst/camerabin2/camerabingeneral.c:166 gst/camerabin2/gstcamerabin2.c:1875
-#: gst/camerabin2/gstdigitalzoom.c:282 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Kurang elemen '%s' - periksa instalasi GStreamer Anda."
 
-#: gst/camerabin2/gstcamerabin2.c:363
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr "Lokasi berkas diisi NULL, harap isi dengan nama berkas yang valid"
 
-#: gst/camerabin2/gstwrappercamerabinsrc.c:584
 msgid "Digitalzoom element couldn't be created"
 msgstr "Elemen Digitalzoom tidak dapat dibuat"
 
-#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "Format subgambar tak ditata sebelum aliran data"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3111
 msgid "Failed to get fragment URL."
 msgstr "Gagal mendapat URL fragmen."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3462
 msgid "Couldn't download fragments"
 msgstr "Tak bisa mengunduh fragmen."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3551
-#: gst/mpegtsdemux/mpegtsbase.c:1608
 msgid "Internal data stream error."
 msgstr "Galat arus data internal."
 
-#: gst/videomeasure/gstvideomeasure_collector.c:294
-msgid "No file name specified for writing."
-msgstr "Tak ada nama berkas yang ditentukan untuk ditulis."
-
-#: gst/videomeasure/gstvideomeasure_collector.c:300
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr "Nama berkas \"%s\" yang diberikan tak bisa dikonversi ke enkoding nama berkas lokal."
-
-#: gst/videomeasure/gstvideomeasure_collector.c:307
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Tak dapat membuka berkas \"%s\" untuk ditulis."
-
-#: sys/dvb/gstdvbsrc.c:1571 sys/dvb/gstdvbsrc.c:1784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Divais \"%s\" tak ada."
 
-#: sys/dvb/gstdvbsrc.c:1575
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Tak dapat membuka divais ujung-depan \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:1594
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Tak dapat mendapatkan pengaturan dari divais ujung-depan \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:1611
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Tak dapat menghitung sistem pengantaran dari divais ujung-depan \"%s\"."
+msgstr ""
+"Tak dapat menghitung sistem pengantaran dari divais ujung-depan \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:1788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Tak dapat membuka berkas \"%s\" untuk dibaca."
 
-#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
 msgstr "Tak bisa temukan berkas konfigurasi kanal"
 
-#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Tak bisa memuat berkas konfigurasi kanal: ‘%s’"
 
-#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
 #, c-format
 msgid "Couldn't find details for channel '%s'"
 msgstr "Tak bisa temukan rincian untuk kanal ‘%s’"
 
-#: sys/dvb/parsechannels.c:430
 #, c-format
 msgid "No properties for channel '%s'"
 msgstr "Tak ada properti untuk kanal ‘%s’"
 
-#: sys/dvb/parsechannels.c:439
 #, c-format
 msgid "Failed to set properties for channel '%s'"
 msgstr "Gagal mengatur properti untuk kanal '%s'"
 
-#: sys/dvb/parsechannels.c:560
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Tak bisa temukan berkas konfigurasi kanal: ‘%s’"
 
-#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Berkas konfigurasi kanal tak memuat kanal apapun"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "Tak bisa menjalin koneksi ke sndio"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Gagal mengkuiri kapabilitas sndio"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "Tak dapat menata sndio"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "Tak dapat memulai sndio"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Tak ada nama berkas yang ditentukan untuk ditulis."
+
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "Nama berkas \"%s\" yang diberikan tak bisa dikonversi ke enkoding nama "
+#~ "berkas lokal."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Tak dapat membuka berkas \"%s\" untuk ditulis."
 
 #~ msgid "Couldn't get the Manifest's URI"
 #~ msgstr "Tak bisa memperoleh URI Manifes"

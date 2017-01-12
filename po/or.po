@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -56,20 +56,6 @@ msgstr ""
 msgid "Could not open sndfile stream for reading."
 msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-msgid "Could not establish connection to sndio"
-msgstr ""
-
-msgid "Failed to query sndio capabilities"
-msgstr ""
-
-#, fuzzy
-msgid "Could not configure sndio"
-msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବିନ୍ଯାସ କରିହେଲା ନାହିଁ."
-
-#, fuzzy
-msgid "Could not start sndio"
-msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -94,18 +80,6 @@ msgstr ""
 
 msgid "Internal data stream error."
 msgstr ""
-
-#, fuzzy
-msgid "No file name specified for writing."
-msgstr "କୌଣସି ଫାଇଲନାମ ଉଲ୍ଲେଖିତ ହୋଇ ନାହିଁ."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "\"%s\" ଫାଇଲ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -152,6 +126,21 @@ msgstr ""
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not configure sndio"
+#~ msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବିନ୍ଯାସ କରିହେଲା ନାହିଁ."
+
+#, fuzzy
+#~ msgid "Could not start sndio"
+#~ msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
+
+#, fuzzy
+#~ msgid "No file name specified for writing."
+#~ msgstr "କୌଣସି ଫାଇଲନାମ ଉଲ୍ଲେଖିତ ହୋଇ ନାହିଁ."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "\"%s\" ଫାଇଲ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."

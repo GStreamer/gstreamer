@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -58,20 +58,6 @@ msgstr ""
 msgid "Could not open sndfile stream for reading."
 msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
 
-msgid "Could not establish connection to sndio"
-msgstr ""
-
-msgid "Failed to query sndio capabilities"
-msgstr ""
-
-#, fuzzy
-msgid "Could not configure sndio"
-msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
-
-#, fuzzy
-msgid "Could not start sndio"
-msgstr "No s'ha pogut llegir el DVD."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -96,17 +82,6 @@ msgstr ""
 
 msgid "Internal data stream error."
 msgstr "S'ha produït un error intern de flux de dades."
-
-msgid "No file name specified for writing."
-msgstr "No s'ha especificat cap nom de fitxer per a l'escriptura."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "No s'ha pogut obrir el fitxer «%s» per a l'escriptura."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -153,6 +128,20 @@ msgstr ""
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not configure sndio"
+#~ msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
+
+#, fuzzy
+#~ msgid "Could not start sndio"
+#~ msgstr "No s'ha pogut llegir el DVD."
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "No s'ha especificat cap nom de fitxer per a l'escriptura."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "No s'ha pogut obrir el fitxer «%s» per a l'escriptura."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "S'ha produït un error intern de flux de dades."

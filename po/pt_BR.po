@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2016-05-06 16:02-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
@@ -57,18 +57,6 @@ msgstr "Este arquivo não contém fluxos reproduzíveis."
 msgid "Could not open sndfile stream for reading."
 msgstr "Não foi possível abrir o fluxo sndfile para leitura."
 
-msgid "Could not establish connection to sndio"
-msgstr "Não foi possível estabelecer a conexão para sndio"
-
-msgid "Failed to query sndio capabilities"
-msgstr "Falha ao consultar os recursos de sndio"
-
-msgid "Could not configure sndio"
-msgstr "Não foi possível configurar o sndio"
-
-msgid "Could not start sndio"
-msgstr "Não foi possível iniciar o sndio"
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "O arquivo gerado tem um tempo de preparação maior que a sua duração de fluxo"
@@ -96,19 +84,6 @@ msgstr "Não foi possível baixar os fragmentos"
 
 msgid "Internal data stream error."
 msgstr "Erro interno de fluxo de dados."
-
-msgid "No file name specified for writing."
-msgstr "Nenhum nome de arquivo especificado para gravação."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-"O nome de arquivo fornecido \"%s\" não pode ser convertido para a "
-"codificação de nome de arquivo local."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Não foi possível abrir o arquivo \"%s\" para gravação."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -160,6 +135,30 @@ msgstr "Não foi possível encontrar o arquivo de configuração de canal DVB"
 #, fuzzy
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "O arquivo de configuração de canal DVB não contém nenhum canal"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "Não foi possível estabelecer a conexão para sndio"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Falha ao consultar os recursos de sndio"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "Não foi possível configurar o sndio"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "Não foi possível iniciar o sndio"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Nenhum nome de arquivo especificado para gravação."
+
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "O nome de arquivo fornecido \"%s\" não pode ser convertido para a "
+#~ "codificação de nome de arquivo local."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Não foi possível abrir o arquivo \"%s\" para gravação."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Erro interno de fluxo de dados."

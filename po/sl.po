@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2011-04-26 15:21+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -61,20 +61,6 @@ msgstr ""
 msgid "Could not open sndfile stream for reading."
 msgstr "Datoteke \"%s\" ni mogoče odpreti za branje."
 
-msgid "Could not establish connection to sndio"
-msgstr ""
-
-msgid "Failed to query sndio capabilities"
-msgstr ""
-
-#, fuzzy
-msgid "Could not configure sndio"
-msgstr "Datoteke \"%s\" ni mogoče odpreti za branje."
-
-#, fuzzy
-msgid "Could not start sndio"
-msgstr "DVD-ja ni mogoče prebrati."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -99,17 +85,6 @@ msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Notranja napaka pretoka podatkov."
-
-msgid "No file name specified for writing."
-msgstr "Ni navedenega imena datoteke za pisanje."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Datoteke \"%s\" ni mogoče odpreti za pisanje."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -156,6 +131,20 @@ msgstr ""
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not configure sndio"
+#~ msgstr "Datoteke \"%s\" ni mogoče odpreti za branje."
+
+#, fuzzy
+#~ msgid "Could not start sndio"
+#~ msgstr "DVD-ja ni mogoče prebrati."
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Ni navedenega imena datoteke za pisanje."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Datoteke \"%s\" ni mogoče odpreti za pisanje."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Notranja napaka pretočnosti podatkov."

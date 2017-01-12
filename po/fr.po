@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2016-12-23 20:45+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -19,171 +19,139 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 
-#: ext/gl/gstgltestsrc.c:521
 msgid "failed to draw pattern"
 msgstr "échec du rendu de motif"
 
-#: ext/gl/gstgltestsrc.c:522
 msgid "A GL error occured"
 msgstr "Une erreur de rendu GL s’est produite"
 
-#: ext/gl/gstgltestsrc.c:528
 msgid "format wasn't negotiated before get function"
 msgstr "Format non négocié avant l'appel de la fonction get"
 
-#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV n’a pas pu charger l’image modèle"
 
-#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Impossible de lire les informations de titre du DVD."
 
-#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Impossible d’ouvrir le périphérique du DVD « %s »."
 
-#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Impossible de définir la recherche basée sur PGC."
 
-#: ext/resindvd/resindvdsrc.c:1164
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Impossible de lire le DVD. Il se peut qu’il soit chiffré et qu’aucune bibliothèque de déchiffrement DVD ne soit installée."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Impossible de lire le DVD. Il se peut qu’il soit chiffré et qu’aucune "
+"bibliothèque de déchiffrement DVD ne soit installée."
 
-#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "Impossible de lire le DVD."
 
-#: ext/smoothstreaming/gstmssdemux.c:405
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:695
 msgid "This file contains no playable streams."
 msgstr "Ce fichier ne contient aucun flux exploitable."
 
-#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Impossible d’ouvrir le fichier snd en lecture."
 
-#: ext/sndio/sndiosink.c:324 ext/sndio/sndiosrc.c:320
-msgid "Could not establish connection to sndio"
-msgstr "Impossible de se connecter à sndio"
-
-#: ext/sndio/sndiosink.c:331 ext/sndio/sndiosrc.c:327
-msgid "Failed to query sndio capabilities"
-msgstr "Impossible d’interroger les capacités de sndio"
-
-#: ext/sndio/sndiosink.c:424 ext/sndio/sndiosrc.c:421
-msgid "Could not configure sndio"
-msgstr "Impossible de configurer sndio"
-
-#: ext/sndio/sndiosink.c:430 ext/sndio/sndiosrc.c:427
-msgid "Could not start sndio"
-msgstr "Impossible de démarrer sndio"
-
-#: gst/asfmux/gstasfmux.c:1831
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr "Le fichier généré a un temps de lancement plus long que la durée du flux"
+msgstr ""
+"Le fichier généré a un temps de lancement plus long que la durée du flux"
 
-#: gst/camerabin2/camerabingeneral.c:166 gst/camerabin2/gstcamerabin2.c:1875
-#: gst/camerabin2/gstdigitalzoom.c:282 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Élément « %s » manquant — Vérifiez votre installation de GStreamer."
 
-#: gst/camerabin2/gstcamerabin2.c:363
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr "L’emplacement du fichier est inconnu (NULL), veuillez choisir un nom de fichier valide"
+msgstr ""
+"L’emplacement du fichier est inconnu (NULL), veuillez choisir un nom de "
+"fichier valide"
 
-#: gst/camerabin2/gstwrappercamerabinsrc.c:584
 msgid "Digitalzoom element couldn't be created"
 msgstr "L’élément Digitalzoom n’a pu être créé"
 
-#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "Le format de sous-image n’était pas configuré avant le flux de données"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3111
 msgid "Failed to get fragment URL."
 msgstr "Échec de la récupération de l’URL de fragment."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3462
 msgid "Couldn't download fragments"
 msgstr "Impossible de télécharger les fragments"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3551
-#: gst/mpegtsdemux/mpegtsbase.c:1608
 msgid "Internal data stream error."
 msgstr "Erreur interne de flux de données."
 
-#: gst/videomeasure/gstvideomeasure_collector.c:294
-msgid "No file name specified for writing."
-msgstr "Aucun nom de fichier indiqué en écriture."
-
-#: gst/videomeasure/gstvideomeasure_collector.c:300
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr "Le nom de fichier indiqué « %s » ne peut pas être converti dans l’encodage local au système de fichier."
-
-#: gst/videomeasure/gstvideomeasure_collector.c:307
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Impossible d’ouvrir le fichier « %s » en écriture."
-
-#: sys/dvb/gstdvbsrc.c:1571 sys/dvb/gstdvbsrc.c:1784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Le périphérique « %s » n’existe pas."
 
-#: sys/dvb/gstdvbsrc.c:1575
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Impossible d’ouvrir le périphérique frontal « %s »."
 
-#: sys/dvb/gstdvbsrc.c:1594
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Impossible d’obtenir les paramètres du périphérique frontal « %s »."
 
-#: sys/dvb/gstdvbsrc.c:1611
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Impossible d'énumérer les systèmes d’émission du périphérique frontal « %s »."
+msgstr ""
+"Impossible d'énumérer les systèmes d’émission du périphérique frontal « %s »."
 
-#: sys/dvb/gstdvbsrc.c:1788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossible d’ouvrir le fichier « %s » en lecture."
 
-#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
 msgstr "Impossible de trouver le fichier de configuration de canal"
 
-#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Impossible de charger le fichier de configuration du canal « %s »"
 
-#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
 #, c-format
 msgid "Couldn't find details for channel '%s'"
 msgstr "Impossible de trouver des informations sur le canal « %s »"
 
-#: sys/dvb/parsechannels.c:430
 #, c-format
 msgid "No properties for channel '%s'"
 msgstr "Aucun réglage pour le canal « %s »"
 
-#: sys/dvb/parsechannels.c:439
 #, c-format
 msgid "Failed to set properties for channel '%s'"
 msgstr "Impossible d’enregistrer le réglage du canal « %s »."
 
-#: sys/dvb/parsechannels.c:560
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Impossible de trouver le fichier de configuration du canal « %s »"
 
-#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Le fichier de configuration ne contient aucun canal"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "Impossible de se connecter à sndio"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Impossible d’interroger les capacités de sndio"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "Impossible de configurer sndio"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "Impossible de démarrer sndio"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Aucun nom de fichier indiqué en écriture."
+
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "Le nom de fichier indiqué « %s » ne peut pas être converti dans "
+#~ "l’encodage local au système de fichier."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Impossible d’ouvrir le fichier « %s » en écriture."

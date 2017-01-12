@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.6.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2015-11-20 23:46+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -57,18 +57,6 @@ msgstr "Ez a fájl nem tartalmaz lejátszható folyamokat."
 msgid "Could not open sndfile stream for reading."
 msgstr "A hangfájl folyam nem nyitható meg olvasásra."
 
-msgid "Could not establish connection to sndio"
-msgstr "Nem hozható létre kapcsolat az sndio programmal"
-
-msgid "Failed to query sndio capabilities"
-msgstr "Nem sikerült lekérdezni az sndio képességeit"
-
-msgid "Could not configure sndio"
-msgstr "Nem sikerült az sndio beállítása"
-
-msgid "Could not start sndio"
-msgstr "Nem sikerült az sndio indítása"
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Az előállított fájlnak nagyobb előtekerési ideje van, mint a folyamának "
@@ -97,18 +85,6 @@ msgstr "Nem sikerült letölteni a töredékeket"
 
 msgid "Internal data stream error."
 msgstr "Belső adatfolyamhiba."
-
-msgid "No file name specified for writing."
-msgstr "Nincs megadva fájlnév az íráshoz."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-"A kapott „%s” fájlnevet nem lehet átalakítani a helyi fájlnév kódolásra."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "A fájl („%s”) nem nyitható meg írásra."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -158,6 +134,29 @@ msgstr "Nem található DVB-csatorna beállítófájl"
 #, fuzzy
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "A DVB-csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "Nem hozható létre kapcsolat az sndio programmal"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Nem sikerült lekérdezni az sndio képességeit"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "Nem sikerült az sndio beállítása"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "Nem sikerült az sndio indítása"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Nincs megadva fájlnév az íráshoz."
+
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "A kapott „%s” fájlnevet nem lehet átalakítani a helyi fájlnév kódolásra."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "A fájl („%s”) nem nyitható meg írásra."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Belső adatfolyamhiba."

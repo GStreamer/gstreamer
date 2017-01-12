@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2016-11-02 21:21+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -18,182 +18,155 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Lokalize 1.5\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/gl/gstgltestsrc.c:521
 msgid "failed to draw pattern"
 msgstr "ошибка при рисовании шаблона"
 
-#: ext/gl/gstgltestsrc.c:522
 msgid "A GL error occured"
 msgstr "Произошла ошибка GL"
 
-#: ext/gl/gstgltestsrc.c:528
 msgid "format wasn't negotiated before get function"
 msgstr "перед функцией получения не был согласован формат"
 
-#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
 msgstr "Ошибка OpenCV при загрузке шаблона изображения"
 
-#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Не удалось прочитать информацию о структуре DVD."
 
-#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Не удалось открыть DVD-устройство «%s»."
 
-#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Не удалось включить PGC-позиционирование."
 
-#: ext/resindvd/resindvdsrc.c:1164
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Не удалось прочитать DVD. Это могло произойти из-за того, что DVD закодирован и не установлена библиотека декодирования DVD."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Не удалось прочитать DVD. Это могло произойти из-за того, что DVD "
+"закодирован и не установлена библиотека декодирования DVD."
 
-#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "Не удалось прочитать DVD."
 
-#: ext/smoothstreaming/gstmssdemux.c:405
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:695
 msgid "This file contains no playable streams."
 msgstr "Файл не содержит воспроизводимых потоков."
 
-#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Не удалось открыть поток sndfile для чтения."
 
-#: ext/sndio/sndiosink.c:324 ext/sndio/sndiosrc.c:320
-msgid "Could not establish connection to sndio"
-msgstr "Не удалось установить соединение с sndio"
-
-#: ext/sndio/sndiosink.c:331 ext/sndio/sndiosrc.c:327
-msgid "Failed to query sndio capabilities"
-msgstr "Ошибка при запросе возможностей sndio"
-
-#: ext/sndio/sndiosink.c:424 ext/sndio/sndiosrc.c:421
-msgid "Could not configure sndio"
-msgstr "Не удалось настроить sndio"
-
-#: ext/sndio/sndiosink.c:430 ext/sndio/sndiosrc.c:427
-msgid "Could not start sndio"
-msgstr "Не удалось запустить sndio"
-
-#: gst/asfmux/gstasfmux.c:1831
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr "В сгенерированном файле время предпуска (preroll) больше чем длительность его потоков"
+msgstr ""
+"В сгенерированном файле время предпуска (preroll) больше чем длительность "
+"его потоков"
 
-#: gst/camerabin2/camerabingeneral.c:166 gst/camerabin2/gstcamerabin2.c:1875
-#: gst/camerabin2/gstdigitalzoom.c:282 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Отсутствует элемент «%s» — проверьте правильность установки GStreamer."
 
-#: gst/camerabin2/gstcamerabin2.c:363
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr "Расположение файла равно NULL, укажите правильное имя файла"
 
-#: gst/camerabin2/gstwrappercamerabinsrc.c:584
 msgid "Digitalzoom element couldn't be created"
 msgstr "Невозможно создать элемент Digitalzoom"
 
-#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "Не настроен формат субграфики (subpicture) до потока данных"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3111
 msgid "Failed to get fragment URL."
 msgstr "Ошибка при получении URL фрагмента."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3462
 msgid "Couldn't download fragments"
 msgstr "Не удалось скачать фрагменты"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3551
-#: gst/mpegtsdemux/mpegtsbase.c:1608
 msgid "Internal data stream error."
 msgstr "Внутренняя ошибка потока данных."
 
-#: gst/videomeasure/gstvideomeasure_collector.c:294
-msgid "No file name specified for writing."
-msgstr "Не указано имя файла для записи."
-
-#: gst/videomeasure/gstvideomeasure_collector.c:300
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr "Указанное имя файла «%s» невозможно преобразовать в имя файла с локальной кодировкой."
-
-#: gst/videomeasure/gstvideomeasure_collector.c:307
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Не удалось открыть для записи файл «%s»."
-
-#: sys/dvb/gstdvbsrc.c:1571 sys/dvb/gstdvbsrc.c:1784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Устройство «%s» не существует."
 
-#: sys/dvb/gstdvbsrc.c:1575
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Не удалось открыть клиентское устройство «%s»."
 
-#: sys/dvb/gstdvbsrc.c:1594
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Не удалось получить параметры клиентского устройства «%s»."
 
-#: sys/dvb/gstdvbsrc.c:1611
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Не удалось пронумеровать системы доставки клиентского устройства «%s»."
 
-#: sys/dvb/gstdvbsrc.c:1788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не удалось открыть для чтения файл «%s»."
 
-#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
 msgstr "Не удалось найти файл настройки каналов"
 
-#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Не удалось загрузить файл настройки каналов: «%s»"
 
-#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
 #, c-format
 msgid "Couldn't find details for channel '%s'"
 msgstr "Не удалось найти информацию о канале «%s»"
 
-#: sys/dvb/parsechannels.c:430
 #, c-format
 msgid "No properties for channel '%s'"
 msgstr "Не удалось найти настройки канала «%s»"
 
-#: sys/dvb/parsechannels.c:439
 #, c-format
 msgid "Failed to set properties for channel '%s'"
 msgstr "Не удалось задать настройки канала «%s»"
 
-#: sys/dvb/parsechannels.c:560
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Не удалось найти файл настройки каналов: «%s»"
 
-#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Файл настройки каналов не содержит каналов"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "Не удалось установить соединение с sndio"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Ошибка при запросе возможностей sndio"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "Не удалось настроить sndio"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "Не удалось запустить sndio"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Не указано имя файла для записи."
+
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "Указанное имя файла «%s» невозможно преобразовать в имя файла с локальной "
+#~ "кодировкой."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Не удалось открыть для записи файл «%s»."
 
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "GStreamer audiosink по умолчанию для звуковых событий"
 
-#~ msgid "GStreamer can play audio using any number of output elements. Some possible choices are osssink, pulsesink and alsasink. The audiosink can be a partial pipeline instead of just one element."
-#~ msgstr "GStreamer может воспроизводить аудио через любое количество выходных элементов. Некоторые варианты: osssink, pulsesink и alsasink. Audiosink может быть конвейером, а не одиночным элементом."
+#~ msgid ""
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, pulsesink and alsasink. The audiosink can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer может воспроизводить аудио через любое количество выходных "
+#~ "элементов. Некоторые варианты: osssink, pulsesink и alsasink. Audiosink "
+#~ "может быть конвейером, а не одиночным элементом."
 
 #~ msgid "description for default GStreamer sound events audiosink"
 #~ msgstr "описание GStreamer audiosink по умолчанию для звуковых событий"
@@ -204,8 +177,10 @@ msgstr "Файл настройки каналов не содержит кан�
 #~ msgid "default GStreamer audiosink for Audio/Video Conferencing"
 #~ msgstr "GStreamer audiosink по умолчанию для аудио-видео конференций"
 
-#~ msgid "description for default GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr "описание GStreamer audiosink по умолчанию для аудио-видео конференций"
+#~ msgid ""
+#~ "description for default GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr ""
+#~ "описание GStreamer audiosink по умолчанию для аудио-видео конференций"
 
 #~ msgid "default GStreamer audiosink for Music and Movies"
 #~ msgstr "GStreamer audiosink по умолчанию для музыки и фильмов"
@@ -216,8 +191,14 @@ msgstr "Файл настройки каналов не содержит кан�
 #~ msgid "default GStreamer videosink"
 #~ msgstr "GStreamer videosink по умолчанию"
 
-#~ msgid "GStreamer can play video using any number of output elements. Some possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink can be a partial pipeline instead of just one element."
-#~ msgstr "GStreamer может воспроизводить видео через любой выходной элемент. Некоторые варианты: xvimagesink, ximagesink, sdlvideosink и aasink. Videosink может быть конвейером, а не одиночным элементом."
+#~ msgid ""
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer может воспроизводить видео через любой выходной элемент. "
+#~ "Некоторые варианты: xvimagesink, ximagesink, sdlvideosink и aasink. "
+#~ "Videosink может быть конвейером, а не одиночным элементом."
 
 #~ msgid "description for default GStreamer videosink"
 #~ msgstr "описание GStreamer videosink по умолчанию"
@@ -228,8 +209,14 @@ msgstr "Файл настройки каналов не содержит кан�
 #~ msgid "default GStreamer audiosrc"
 #~ msgstr "GStreamer audiosrc по умолчанию"
 
-#~ msgid "GStreamer can record audio using any number of input elements. Some possible choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial pipeline instead of just one element."
-#~ msgstr "GStreamer может записывать аудио с любого входного элемента. Некоторые варианты: osssrc, pulsesrc и alsasrc. Источником аудио может быть конвейер, а не одиночный элемент."
+#~ msgid ""
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, pulsesrc and alsasrc. The audio source can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer может записывать аудио с любого входного элемента. Некоторые "
+#~ "варианты: osssrc, pulsesrc и alsasrc. Источником аудио может быть "
+#~ "конвейер, а не одиночный элемент."
 
 #~ msgid "description for default GStreamer audiosrc"
 #~ msgstr "описание GStreamer audiosrc по умолчанию"
@@ -240,8 +227,14 @@ msgstr "Файл настройки каналов не содержит кан�
 #~ msgid "default GStreamer videosrc"
 #~ msgstr "GStreamer videosrc по умолчанию"
 
-#~ msgid "GStreamer can record video from any number of input elements. Some possible choices are v4lsrc, v4l2src and videotestsrc. The video source can be a partial pipeline instead of just one element."
-#~ msgstr "GStreamer может записывать видео с любого входного элемента. Некоторые варианты: v4lsrc, v4l2src и videotestsrc. Источником видео может быть конвейер, а не одиночный элемент."
+#~ msgid ""
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc, v4l2src and videotestsrc. The video source "
+#~ "can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer может записывать видео с любого входного элемента. Некоторые "
+#~ "варианты: v4lsrc, v4l2src и videotestsrc. Источником видео может быть "
+#~ "конвейер, а не одиночный элемент."
 
 #~ msgid "description for default GStreamer videosrc"
 #~ msgstr "описание GStreamer videosrc по умолчанию"
@@ -252,8 +245,16 @@ msgstr "Файл настройки каналов не содержит кан�
 #~ msgid "default GStreamer visualization"
 #~ msgstr "GStreamer visualization по умолчанию"
 
-#~ msgid "GStreamer can put visualization plugins in a pipeline to transform audio streams in video frames. Some possible choices are goom, goom2k1 and synaesthesia. The visualization plugin can be a partial pipeline instead of just one element."
-#~ msgstr "GStreamer может помещать модули визуализации для преобразования аудио потоков видео фрагментов. Некоторые варианты: goom, goom2k1 и synaesthesia. Модуль визуализации может быть конвейером, а не одиночным элементом."
+#~ msgid ""
+#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
+#~ "streams in video frames. Some possible choices are goom, goom2k1 and "
+#~ "synaesthesia. The visualization plugin can be a partial pipeline instead "
+#~ "of just one element."
+#~ msgstr ""
+#~ "GStreamer может помещать модули визуализации для преобразования аудио "
+#~ "потоков видео фрагментов. Некоторые варианты: goom, goom2k1 и "
+#~ "synaesthesia. Модуль визуализации может быть конвейером, а не одиночным "
+#~ "элементом."
 
 #~ msgid "description for default GStreamer visualization"
 #~ msgstr "описание GStreamer visualization по умолчанию"
@@ -274,16 +275,26 @@ msgstr "Файл настройки каналов не содержит кан�
 #~ msgstr "Внутренняя ошибка синхронизации."
 
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-#~ msgstr "Не удалось настроить кодировщик TwoLAME. Проверьте параметры сжатия."
+#~ msgstr ""
+#~ "Не удалось настроить кодировщик TwoLAME. Проверьте параметры сжатия."
 
-#~ msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-#~ msgstr "Запрашиваемый битрейт %d кбит/с недопустим для свойства «%s». Битрейт изменён на %d кбит/с."
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Запрашиваемый битрейт %d кбит/с недопустим для свойства «%s». Битрейт "
+#~ "изменён на %d кбит/с."
 
 #~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Не удалось открыть аудио-устройство для обработки параметров микшера."
+#~ msgstr ""
+#~ "Не удалось открыть аудио-устройство для обработки параметров микшера."
 
-#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Не удалось открыть аудио-устройство для обработки параметров микшера. Данная версия Open Sound System не поддерживается этим элементом."
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Не удалось открыть аудио-устройство для обработки параметров микшера. "
+#~ "Данная версия Open Sound System не поддерживается этим элементом."
 
 #~ msgid "Fast"
 #~ msgstr "Скорость"
@@ -480,17 +491,29 @@ msgstr "Файл настройки каналов не содержит кан�
 #~ msgid "Virtual mixer output"
 #~ msgstr "Виртуальный выход микшера"
 
-#~ msgid "Could not open audio device for playback. Device is being used by another application."
-#~ msgstr "Не удалось открыть аудио-устройство для воспроизведения. Устройство используется другим приложением."
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
+#~ msgstr ""
+#~ "Не удалось открыть аудио-устройство для воспроизведения. Устройство "
+#~ "используется другим приложением."
 
-#~ msgid "Could not open audio device for playback. You don't have permission to open the device."
-#~ msgstr "Не удалось открыть аудио-устройство для воспроизведения. Отсутствуют права доступа к устройству."
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
+#~ msgstr ""
+#~ "Не удалось открыть аудио-устройство для воспроизведения. Отсутствуют "
+#~ "права доступа к устройству."
 
 #~ msgid "Could not open audio device for playback."
 #~ msgstr "Не удалось открыть аудио-устройство для воспроизведения."
 
-#~ msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Не удалось открыть аудио-устройство для воспроизведения. Данная версия Open Sound System не поддерживается этим элементом."
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
+#~ msgstr ""
+#~ "Не удалось открыть аудио-устройство для воспроизведения. Данная версия "
+#~ "Open Sound System не поддерживается этим элементом."
 
 #~ msgid "Playback is not supported by this audio device."
 #~ msgstr "Воспроизведение не поддерживается данным аудио-устройством."

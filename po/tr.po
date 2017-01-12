@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2015-01-10 21:07+0100\n"
 "Last-Translator: Volkan Gezer <volkangezer@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -56,18 +56,6 @@ msgstr "Dosya çalınabilir akışlar içermiyor."
 msgid "Could not open sndfile stream for reading."
 msgstr "Sndfile akışı okumak için açamıyor."
 
-msgid "Could not establish connection to sndio"
-msgstr "Sndio ile bağlantı kurulamadı"
-
-msgid "Failed to query sndio capabilities"
-msgstr "Sndio yetenekleri sorgulanamadı"
-
-msgid "Could not configure sndio"
-msgstr "Sndio yapılandırılamadı"
-
-msgid "Could not start sndio"
-msgstr "Sndio başlatılamadı"
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Oluşturlmuş dosya, akışlarının süresinden daha büyük preroll zamanına sahip"
@@ -95,17 +83,6 @@ msgstr "Parçalar indirilemedi"
 
 msgid "Internal data stream error."
 msgstr "İç veri akım hatası."
-
-msgid "No file name specified for writing."
-msgstr "Yazmak için dosya adı belirtilmedi."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr "Verilen dosya adı \"%s\" yerel dosya adı kodlamasına dönüştürülemiyor."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Dosyayı \"%s\" yazmak için açamıyor."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -154,6 +131,29 @@ msgstr "DVB kanal yapılandırma dosyası bulunamadı"
 #, fuzzy
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "DVB kanal yapılandırma dosyası herhangi bir kanal içermiyor"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "Sndio ile bağlantı kurulamadı"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Sndio yetenekleri sorgulanamadı"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "Sndio yapılandırılamadı"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "Sndio başlatılamadı"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Yazmak için dosya adı belirtilmedi."
+
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "Verilen dosya adı \"%s\" yerel dosya adı kodlamasına dönüştürülemiyor."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Dosyayı \"%s\" yazmak için açamıyor."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "İç veri akış hatası."

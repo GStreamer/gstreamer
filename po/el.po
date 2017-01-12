@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2012-05-05 19:17+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -59,20 +59,6 @@ msgstr ""
 msgid "Could not open sndfile stream for reading."
 msgstr "Αδυναμία ανοίγματος αρχείου \"%s\" για ανάγνωση."
 
-msgid "Could not establish connection to sndio"
-msgstr ""
-
-msgid "Failed to query sndio capabilities"
-msgstr ""
-
-#, fuzzy
-msgid "Could not configure sndio"
-msgstr "Αδυναμία ανοίγματος αρχείου \"%s\" για ανάγνωση."
-
-#, fuzzy
-msgid "Could not start sndio"
-msgstr "Αδυναμία ανάγνωσης δίσκου DVD."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -97,17 +83,6 @@ msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
-
-msgid "No file name specified for writing."
-msgstr "Δεν έχει καθορισθεί όνομα αρχείου για εγγραφή."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Αδυναμία ανοίγματος αρχείου \"%s\" για εγγραφή."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -154,6 +129,20 @@ msgstr ""
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not configure sndio"
+#~ msgstr "Αδυναμία ανοίγματος αρχείου \"%s\" για ανάγνωση."
+
+#, fuzzy
+#~ msgid "Could not start sndio"
+#~ msgstr "Αδυναμία ανάγνωσης δίσκου DVD."
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Δεν έχει καθορισθεί όνομα αρχείου για εγγραφή."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Αδυναμία ανοίγματος αρχείου \"%s\" για εγγραφή."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Εσωτερικό σφάλμα ροής δεδομένων."

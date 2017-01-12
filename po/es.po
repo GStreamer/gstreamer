@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2011-10-02 15:47+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -56,20 +56,6 @@ msgstr ""
 msgid "Could not open sndfile stream for reading."
 msgstr "No se pudo abrir el archivo «%s» para leer."
 
-msgid "Could not establish connection to sndio"
-msgstr ""
-
-msgid "Failed to query sndio capabilities"
-msgstr ""
-
-#, fuzzy
-msgid "Could not configure sndio"
-msgstr "No se pudo abrir el archivo «%s» para leer."
-
-#, fuzzy
-msgid "Could not start sndio"
-msgstr "No se pudo leer el DVD."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -94,17 +80,6 @@ msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Error en el flujo de datos interno."
-
-msgid "No file name specified for writing."
-msgstr "No se especificó un nombre de archivo para su escritura."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "No se pudo abrir el archivo «%s» para escribir."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -152,6 +127,20 @@ msgstr "Configuración del canal del mezclador virtual"
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not configure sndio"
+#~ msgstr "No se pudo abrir el archivo «%s» para leer."
+
+#, fuzzy
+#~ msgid "Could not start sndio"
+#~ msgstr "No se pudo leer el DVD."
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "No se especificó un nombre de archivo para su escritura."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "No se pudo abrir el archivo «%s» para escribir."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Error en el flujo de datos interno."

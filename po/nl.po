@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2016-02-20 12:35+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -56,18 +56,6 @@ msgstr "Dit bestand bevat geen af te spelen streams."
 msgid "Could not open sndfile stream for reading."
 msgstr "Kan sndfile-stream niet openen om te lezen."
 
-msgid "Could not establish connection to sndio"
-msgstr "Kon geen verbinding opzetten naar sndio"
-
-msgid "Failed to query sndio capabilities"
-msgstr "Opvragen van de mogelijkheden van sndio is mislukt"
-
-msgid "Could not configure sndio"
-msgstr "Kon sndio niet instellen"
-
-msgid "Could not start sndio"
-msgstr "Kon sndio niet starten"
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Gegenereerd bestand heeft een grotere voorlooptijd dan de duur van zijn "
@@ -96,19 +84,6 @@ msgstr "Kan fragmenten niet downloaden"
 
 msgid "Internal data stream error."
 msgstr "Interne fout in gegevensstroom."
-
-msgid "No file name specified for writing."
-msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-"Ingegeven bestandsnaam \"%s\" kan niet geconverteerd worden naar de codering "
-"van een lokale bestandsnaam."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Kan bestand \"%s\" niet openen voor uitvoer."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -157,6 +132,30 @@ msgstr "Kon het instellingenbestand van het DVB-kanaal niet vinden"
 #, fuzzy
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Het instellingenbestand van het DVB-kanaal bevat geen kanalen"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "Kon geen verbinding opzetten naar sndio"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Opvragen van de mogelijkheden van sndio is mislukt"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "Kon sndio niet instellen"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "Kon sndio niet starten"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
+
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "Ingegeven bestandsnaam \"%s\" kan niet geconverteerd worden naar de "
+#~ "codering van een lokale bestandsnaam."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Kan bestand \"%s\" niet openen voor uitvoer."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Interne fout met gegevensdoorvoer."

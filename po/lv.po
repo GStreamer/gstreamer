@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2014-04-20 15:52+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -61,18 +61,6 @@ msgstr "Šī datne nesatur atskaņojamas straumes."
 msgid "Could not open sndfile stream for reading."
 msgstr "Nevarēja atvērt datni “%s” lasīšanai."
 
-msgid "Could not establish connection to sndio"
-msgstr "Nevarēja izveidot savienojumu ar sndio"
-
-msgid "Failed to query sndio capabilities"
-msgstr "Neizdevās apvaicāt sndio iespējas"
-
-msgid "Could not configure sndio"
-msgstr "Nevarēja konfigurēt sndio"
-
-msgid "Could not start sndio"
-msgstr "Nevarēja palaist sndio"
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 "Izveidotajai datnei ir lielāks pirms-atskaņojuma laiks, kā straumes garums"
@@ -99,19 +87,6 @@ msgstr "Nevarēja lejupielādēt fragmentus"
 
 msgid "Internal data stream error."
 msgstr "Iekšējās datu plūsmas kļūda."
-
-msgid "No file name specified for writing."
-msgstr "Ierakstīšanai nav norādīts neviens datnes nosaukums."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-"Doto datnes nosaukumu “%s” nevar pārveidot uz lokālo datnes nosaukuma "
-"kodējumu."
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Nav iespējams atvērt datni “%s” ierakstīšanai."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -160,6 +135,30 @@ msgstr "Nevarēja atrast DVB kanāla konfigurācijas datni"
 #, fuzzy
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "DVB kanāla konfigurācijas datne nesatur nevienu kanālu"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "Nevarēja izveidot savienojumu ar sndio"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Neizdevās apvaicāt sndio iespējas"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "Nevarēja konfigurēt sndio"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "Nevarēja palaist sndio"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Ierakstīšanai nav norādīts neviens datnes nosaukums."
+
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "Doto datnes nosaukumu “%s” nevar pārveidot uz lokālo datnes nosaukuma "
+#~ "kodējumu."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Nav iespējams atvērt datni “%s” ierakstīšanai."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Iekšēja datu plūsmas kļūda."

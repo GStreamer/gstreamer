@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2011-09-05 12:50+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -58,20 +58,6 @@ msgstr ""
 msgid "Could not open sndfile stream for reading."
 msgstr "Non foi posíbel abrir o ficheiro «%s» para ler."
 
-msgid "Could not establish connection to sndio"
-msgstr ""
-
-msgid "Failed to query sndio capabilities"
-msgstr ""
-
-#, fuzzy
-msgid "Could not configure sndio"
-msgstr "Non foi posíbel abrir o ficheiro «%s» para ler."
-
-#, fuzzy
-msgid "Could not start sndio"
-msgstr "Non foi posíbel ler o DVD."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -96,17 +82,6 @@ msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Produciuse un erro interno no fluxo de datos."
-
-msgid "No file name specified for writing."
-msgstr "Non se especificou ningún nome de ficheiro para a súa escritura."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Non foi posíbel abrir o ficheiro «%s» para escribir."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -153,6 +128,20 @@ msgstr ""
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not configure sndio"
+#~ msgstr "Non foi posíbel abrir o ficheiro «%s» para ler."
+
+#, fuzzy
+#~ msgid "Could not start sndio"
+#~ msgstr "Non foi posíbel ler o DVD."
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Non se especificou ningún nome de ficheiro para a súa escritura."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Non foi posíbel abrir o ficheiro «%s» para escribir."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Produciuse un erro interno no fluxo de datos."

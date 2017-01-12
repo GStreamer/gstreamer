@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"POT-Creation-Date: 2017-01-12 14:40+0200\n"
 "PO-Revision-Date: 2008-10-26 20:27+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -56,20 +56,6 @@ msgstr ""
 msgid "Could not open sndfile stream for reading."
 msgstr "Ma nistax naqra mill-fajl \"%s\"."
 
-msgid "Could not establish connection to sndio"
-msgstr ""
-
-msgid "Failed to query sndio capabilities"
-msgstr ""
-
-#, fuzzy
-msgid "Could not configure sndio"
-msgstr "Ma nistax naqra mill-fajl \"%s\"."
-
-#, fuzzy
-msgid "Could not start sndio"
-msgstr "Ma stajtx naqra informazzjoni fuq it-titlu tad-DVD."
-
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
 
@@ -94,17 +80,6 @@ msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Internal data stream error."
-
-msgid "No file name specified for writing."
-msgstr "L-ebda isem speċifikat biex nikteb."
-
-#, c-format
-msgid "Given file name \"%s\" can't be converted to local file name encoding."
-msgstr ""
-
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Ma nistax niftaħ fajl \"%s\" biex nikteb."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -152,6 +127,20 @@ msgstr "Virtual mixer channel configuration"
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not configure sndio"
+#~ msgstr "Ma nistax naqra mill-fajl \"%s\"."
+
+#, fuzzy
+#~ msgid "Could not start sndio"
+#~ msgstr "Ma stajtx naqra informazzjoni fuq it-titlu tad-DVD."
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "L-ebda isem speċifikat biex nikteb."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Ma nistax niftaħ fajl \"%s\" biex nikteb."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Internal data flow error."
