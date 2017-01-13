@@ -93,6 +93,7 @@
 
 #include "gstglimagesink.h"
 #include "gstglsinkbin.h"
+#include "gstglutils.h"
 
 #include <gst/gl/gstglviewconvert.h>
 
