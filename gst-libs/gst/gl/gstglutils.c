@@ -241,15 +241,40 @@ gst_gl_display_context_propagate (GstElement * element, GstGLDisplay * display)
   gst_element_post_message (GST_ELEMENT_CAST (element), msg);
 }
 
+/**
+ * gst_gl_ensure_element_data:
+ * @element: the #GstElement running the query
+ * @display_ptr: (inout): the resulting #GstGLDisplay
+ * @other_context_ptr: (inout): the resulting #GstGLContext
+ *
+ * Perform the steps necessary for retrieving a #GstGLDisplay and (optionally)
+ * an application provided #GstGLContext from the surrounding elements or from
+ * the application using the #GstContext mechanism.
+ *
+ * If the contents of @display_ptr or @other_context_ptr are not %NULL, then no
+ * #GstContext query is necessary for #GstGLDisplay or #GstGLContext retrieval
+ * or is performed.
+ *
+ * This performs #GstContext queries (if necessary) for a winsys display
+ * connection with %GST_GL_DISPLAY_CONTEXT_TYPE, "gst.x11.display.handle", and
+ * "GstWaylandDisplayHandleContextType" stopping after the first successful
+ * retrieval.
+ *
+ * This also performs a #GstContext query (if necessary) for an optional
+ * application provided #GstGLContext using the name "gst.gl.app_context".
+ * The returned #GstGLContext will be shared with a GStreamer created OpenGL context.
+ *
+ * Returns: whether a #GstGLDisplay exists in @display_ptr
+ */
 gboolean
 gst_gl_ensure_element_data (gpointer element, GstGLDisplay ** display_ptr,
-    GstGLContext ** context_ptr)
+    GstGLContext ** other_context_ptr)
 {
   GstGLDisplay *display;
 
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (display_ptr != NULL, FALSE);
-  g_return_val_if_fail (context_ptr != NULL, FALSE);
+  g_return_val_if_fail (other_context_ptr != NULL, FALSE);
 
   /*  1) Check if the element already has a context of the specific
    *     type.
@@ -272,7 +297,7 @@ gst_gl_ensure_element_data (gpointer element, GstGLDisplay ** display_ptr,
   gst_gl_display_context_propagate (element, display);
 
 get_gl_context:
-  if (*context_ptr)
+  if (*other_context_ptr)
     goto done;
 
   gst_gl_context_query (element);
@@ -281,6 +306,21 @@ done:
   return *display_ptr != NULL;
 }
 
+/**
+ * gst_gl_handle_set_context:
+ * @element: a #GstElement
+ * @context: a #GstContext
+ * @display: (inout) (transfer full): location of a #GstGLDisplay
+ * @other_context: (inout) (transfer full): location of a #GstGLContext
+ *
+ * Helper function for implementing GstElement::set_context() in OpenGL capable
+ * elements.
+ *
+ * Retrieve's the #GstGLDisplay or #GstGLContext in @context and places the
+ * result in @display or @other_context respectively.
+ *
+ * Returns: whether the @display or @other_context could be set successfully
+ */
 gboolean
 gst_gl_handle_set_context (GstElement * element, GstContext * context,
     GstGLDisplay ** display, GstGLContext ** other_context)
@@ -366,6 +406,17 @@ gst_gl_handle_set_context (GstElement * element, GstContext * context,
   return TRUE;
 }
 
+/**
+ * gst_gl_handle_context_query:
+ * @element: a #GstElement
+ * @query: a #GstQuery of type %GST_QUERY_CONTEXT
+ * @display: (transfer none) (nullable): a #GstGLDisplay
+ * @context: (transfer none) (nullable): a #GstGLContext
+ * @other_context: (transfer none) (nullable): application provided #GstGLContext
+ *
+ * Returns: Whether the @query was successfully responded to from the passed
+ *          @display, @context, and @other_context.
+ */
 gboolean
 gst_gl_handle_context_query (GstElement * element, GstQuery * query,
     GstGLDisplay * display, GstGLContext * gl_context,
@@ -507,6 +558,19 @@ gst_gl_handle_context_query (GstElement * element, GstQuery * query,
   return FALSE;
 }
 
+/**
+ * gst_gl_query_local_gl_context:
+ * @element: a #GstElement to query from
+ * @direction: the #GstPadDirection to query
+ * @context_ptr: (inout): location containing the current and/or resulting
+ *                      #GstGLContext
+ *
+ * Performs a GST_QUERY_CONTEXT query of type "gst.gl.local_context" on all
+ * #GstPads in @element of @direction for the local OpenGL context used by
+ * GStreamer elements.
+ *
+ * Returns: whether @context_ptr contains a #GstGLContext
+ */
 gboolean
 gst_gl_query_local_gl_context (GstElement * element, GstPadDirection direction,
     GstGLContext ** context_ptr)
@@ -535,6 +599,14 @@ gst_gl_query_local_gl_context (GstElement * element, GstPadDirection direction,
   return *context_ptr != NULL;
 }
 
+/**
+ * gst_gl_get_plane_data_size:
+ * @info: a #GstVideoInfo
+ * @align: a #GstVideoAlignment or %NULL
+ * @plane: plane number in @info to retrieve the data size of
+ *
+ * Retrieve the size in bytes of a video plane of data with a certain alignment
+ */
 gsize
 gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
     guint plane)
@@ -555,6 +627,15 @@ gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
   return plane_size;
 }
 
+/**
+ * gst_gl_get_plane_start:
+ * @info: a #GstVideoInfo
+ * @valign: a #GstVideoAlignment or %NULL
+ * @plane: plane number in @info to retrieve the data size of
+ *
+ * Returns: difference between the supposed start of the plane from the @info
+ *          and where the data from the previous plane ends.
+ */
 gsize
 gst_gl_get_plane_start (GstVideoInfo * info, GstVideoAlignment * valign,
     guint plane)
