@@ -293,6 +293,9 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
     }
 
     gst_caps_unref (peercaps);
+
+    aac_profile.nSampleRate = info->rate;
+    aac_profile.nChannels = info->channels;
   }
 
   aac_profile.nAACtools = self->aac_tools;
