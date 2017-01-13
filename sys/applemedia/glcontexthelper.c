@@ -22,32 +22,10 @@
 static GstGLContext *
 _find_local_gl_context (GstGLContextHelper * ctxh)
 {
-  GstQuery *query;
-  GstContext *context;
   GstGLContext *gl_context = NULL;
-  const GstStructure *s;
 
-  g_return_val_if_fail (ctxh != NULL, FALSE);
-
-  query = gst_query_new_context ("gst.gl.local_context");
-  if (gst_gl_run_query (ctxh->element, query, GST_PAD_SRC)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &gl_context, NULL);
-    }
-  }
-  if (!gl_context && gst_gl_run_query (ctxh->element, query, GST_PAD_SINK)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &gl_context, NULL);
-    }
-  }
-
-  GST_DEBUG_OBJECT (ctxh->element, "found local context %p", gl_context);
-
-  gst_query_unref (query);
+  gst_gl_query_local_gl_context (GST_ELEMENT (ctxh->element), GST_PAD_SRC,
+      &gl_context);
 
   return gl_context;
 }

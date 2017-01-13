@@ -1032,8 +1032,8 @@ _gl_sync_render_unlocked (struct gl_sync *sync)
   if (!af_meta) {
     GST_WARNING ("Failed to retreive the transformation meta from the "
         "gl_sync %p buffer %p", sync, sync->buffer);
-  } else if (gst_amc_surface_texture_get_transform_matrix (sync->
-          surface->texture, matrix, &error)) {
+  } else if (gst_amc_surface_texture_get_transform_matrix (sync->surface->
+          texture, matrix, &error)) {
 
     gst_video_affine_transformation_meta_apply_matrix (af_meta, matrix);
     gst_video_affine_transformation_meta_apply_matrix (af_meta, yflip_matrix);
@@ -2406,42 +2406,12 @@ gst_amc_video_dec_drain (GstAmcVideoDec * self)
 static gboolean
 gst_amc_video_dec_src_query (GstVideoDecoder * bdec, GstQuery * query)
 {
-  GstAmcVideoDec *self = GST_AMC_VIDEO_DEC (bdec);
-  gboolean ret;
-
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
-      const gchar *context_type;
-      GstContext *context, *old_context;
-
-      ret = gst_gl_handle_context_query ((GstElement *) self, query,
-          &self->gl_display, &self->other_gl_context);
-      gst_query_parse_context_type (query, &context_type);
-
-      if (g_strcmp0 (context_type, "gst.gl.local_context") == 0) {
-        GstStructure *s;
-
-        gst_query_parse_context (query, &old_context);
-
-        if (old_context)
-          context = gst_context_copy (old_context);
-        else
-          context = gst_context_new ("gst.gl.local_context", FALSE);
-
-        s = gst_context_writable_structure (context);
-        gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, self->gl_context,
-            NULL);
-        gst_query_set_context (query, context);
-        gst_context_unref (context);
-
-        ret = self->gl_context != NULL;
-      }
-      GST_LOG_OBJECT (self, "context query of type %s %i", context_type, ret);
-
-      if (ret)
-        return ret;
-
+      if (gst_gl_handle_context_query ((GstElement *) self, query,
+              self->gl_display, self->gl_context, self->other_gl_context))
+        return TRUE;
       break;
     }
     default:
@@ -2476,31 +2446,9 @@ _caps_are_rgba_with_gl_memory (GstCaps * caps)
 static gboolean
 _find_local_gl_context (GstAmcVideoDec * self)
 {
-  GstQuery *query;
-  GstContext *context;
-  const GstStructure *s;
-
-  if (self->gl_context)
+  if (gst_gl_query_local_gl_context (GST_ELEMENT (self), GST_PAD_SRC,
+          &self->gl_context))
     return TRUE;
-
-  query = gst_query_new_context ("gst.gl.local_context");
-  if (!self->gl_context
-      && gst_gl_run_query (GST_ELEMENT (self), query, GST_PAD_SRC)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &self->gl_context,
-          NULL);
-    }
-  }
-
-  GST_DEBUG_OBJECT (self, "found local context %p", self->gl_context);
-
-  gst_query_unref (query);
-
-  if (self->gl_context)
-    return TRUE;
-
   return FALSE;
 }
 
