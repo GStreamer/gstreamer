@@ -2781,6 +2781,9 @@ qtdemux_parse_uuid (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
     taglist = gst_tag_list_from_xmp_buffer (buf);
     gst_buffer_unref (buf);
 
+    /* make sure we have a usable taglist */
+    qtdemux->tag_list = gst_tag_list_make_writable (qtdemux->tag_list);
+
     qtdemux_handle_xmp_taglist (qtdemux, qtdemux->tag_list, taglist);
 
   } else if (memcmp (buffer + offset, playready_uuid, 16) == 0) {
@@ -11505,6 +11508,8 @@ gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
 
   if (!stream->stream_tags)
     stream->stream_tags = gst_tag_list_new_empty ();
+  else
+    stream->stream_tags = gst_tag_list_make_writable (stream->stream_tags);
 
   gst_tag_list_add (stream->stream_tags, GST_TAG_MERGE_REPLACE,
       GST_TAG_BITRATE, bitrate, NULL);
