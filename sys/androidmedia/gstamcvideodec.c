@@ -2406,7 +2406,7 @@ gst_amc_video_dec_drain (GstAmcVideoDec * self)
 static gboolean
 gst_amc_video_dec_src_query (GstVideoDecoder * bdec, GstQuery * query)
 {
-  GstAmcVideoDec *self = GST_AMC_VIDEO_DEC (decoder);
+  GstAmcVideoDec *self = GST_AMC_VIDEO_DEC (bdec);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
