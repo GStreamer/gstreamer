@@ -34,6 +34,7 @@
 
 #include "gstglviewconvert.h"
 #include "gstglsl_private.h"
+#include "gstglutils_private.h"
 #include <gst/video/gstvideoaffinetransformationmeta.h>
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))

@@ -722,7 +722,7 @@ static const gfloat to_ndc_matrix[] = {
   0.0f, 0.0f, 0.0, 1.0f,
 };
 
-void
+static void
 gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result)
 {
   int i, j, k;

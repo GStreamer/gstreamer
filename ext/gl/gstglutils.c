@@ -105,3 +105,63 @@ gst_gl_context_gen_shader (GstGLContext * context, const gchar * vert_src,
 
   return *shader != NULL;
 }
+
+static const gfloat identity_matrix[] = {
+  1.0f, 0.0f, 0.0, 0.0f,
+  0.0f, 1.0f, 0.0, 0.0f,
+  0.0f, 0.0f, 1.0, 0.0f,
+  0.0f, 0.0f, 0.0, 1.0f,
+};
+
+static const gfloat from_ndc_matrix[] = {
+  0.5f, 0.0f, 0.0, 0.5f,
+  0.0f, 0.5f, 0.0, 0.5f,
+  0.0f, 0.0f, 0.5, 0.5f,
+  0.0f, 0.0f, 0.0, 1.0f,
+};
+
+static const gfloat to_ndc_matrix[] = {
+  2.0f, 0.0f, 0.0, -1.0f,
+  0.0f, 2.0f, 0.0, -1.0f,
+  0.0f, 0.0f, 2.0, -1.0f,
+  0.0f, 0.0f, 0.0, 1.0f,
+};
+
+void
+gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result)
+{
+  int i, j, k;
+  gfloat tmp[16] = { 0.0f };
+
+  if (!a || !b || !result)
+    return;
+
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 4; j++) {
+      for (k = 0; k < 4; k++) {
+        tmp[i + (j * 4)] += a[i + (k * 4)] * b[k + (j * 4)];
+      }
+    }
+  }
+
+  for (i = 0; i < 16; i++)
+    result[i] = tmp[i];
+}
+
+void
+gst_gl_get_affine_transformation_meta_as_ndc (GstVideoAffineTransformationMeta *
+    meta, gfloat * matrix)
+{
+  if (!meta) {
+    int i;
+
+    for (i = 0; i < 16; i++) {
+      matrix[i] = identity_matrix[i];
+    }
+  } else {
+    gfloat tmp[16] = { 0.0f };
+
+    gst_gl_multiply_matrix4 (from_ndc_matrix, meta->matrix, tmp);
+    gst_gl_multiply_matrix4 (tmp, to_ndc_matrix, matrix);
+  }
+}
