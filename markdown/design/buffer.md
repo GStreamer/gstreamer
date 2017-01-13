@@ -68,13 +68,13 @@ Accessing the data of the buffer can happen by retrieving the individual
 `GstMemory` objects in the `GstBuffer` or by using the `gst_buffer_map()` and
 `gst_buffer_unmap()` functions.
 
-The `_map` and `_unmap` functions will always return the memory of all blocks as
-one large contiguous region of memory. Using the `_map` and `_unmap` functions
-might be more convenient than accessing the individual memory blocks at the
-expense of being more expensive because it might perform memcpy operations.
+The `_map()` and `_unmap()` functions will always return the memory of all
+blocks as one large contiguous region. Using these functions might be more
+convenient than accessing the individual memory blocks at the expense of
+being more expensive because it might perform memcpy operations.
 
-For buffers with only one `GstMemory` object (the most common case), `_map` and
-`_unmap` have no performance penalty at all.
+For buffers with only one `GstMemory` object (the most common case), `_map()`
+and `_unmap()` have no performance penalty at all.
 
 - **Read access with 1 memory block**: The memory block is accessed and mapped
 for read access. The memory block is unmapped after usage
