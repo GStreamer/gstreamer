@@ -2026,8 +2026,7 @@ gst_adaptive_demux_stream_update_current_bitrate (GstAdaptiveDemux * demux,
 
   stream->current_download_rate *= demux->bitrate_limit;
   GST_DEBUG_OBJECT (demux, "Bitrate after bitrate limit (%0.2f): %"
-      G_GUINT64_FORMAT, demux->bitrate_limit,
-      stream->current_download_rate * 8);
+      G_GUINT64_FORMAT, demux->bitrate_limit, stream->current_download_rate);
 
 #if 0
   /* Debugging code, modulate the bitrate every few fragments */
