@@ -1037,31 +1037,19 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
       src->proxy_id && src->proxy_pw)
     return;
 
-  if (src->automatic_redirect && SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
-    const gchar *location;
+  if (src->automatic_redirect &&
+      soup_session_would_redirect (src->session, msg) &&
+      soup_session_redirect_message (src->session, msg)) {
+    src->redirection_uri =
+        soup_uri_to_string (soup_message_get_uri (msg), FALSE);
+    src->redirection_permanent =
+        (msg->status_code == SOUP_STATUS_MOVED_PERMANENTLY);
+    GST_DEBUG_OBJECT (src, "%u redirect to \"%s\" (permanent %d)",
+        msg->status_code, src->redirection_uri, src->redirection_permanent);
 
-    location = soup_message_headers_get_one (msg->response_headers, "Location");
-
-    if (location) {
-      if (!g_utf8_validate (location, -1, NULL)) {
-        GST_ELEMENT_ERROR_WITH_DETAILS (src, RESOURCE, SEEK,
-            (_("Corrupted HTTP response.")),
-            ("Location header is not valid UTF-8"),
-            ("http-status-code", G_TYPE_UINT, msg->status_code,
-                "http-redirection-uri", G_TYPE_STRING,
-                GST_STR_NULL (src->redirection_uri), NULL));
-        src->ret = GST_FLOW_ERROR;
-        return;
-      }
-
-      src->redirection_uri = g_strdup (location);
-
-      src->redirection_permanent =
-          (msg->status_code == SOUP_STATUS_MOVED_PERMANENTLY);
-      GST_DEBUG_OBJECT (src, "%u redirect to \"%s\" (permanent %d)",
-          msg->status_code, src->redirection_uri, src->redirection_permanent);
-      return;
-    }
+    /* force a retry with the updated message */
+    src->ret = GST_FLOW_CUSTOM_ERROR;
+    return;
   }
 
   if (msg->status_code == SOUP_STATUS_UNAUTHORIZED) {
@@ -1434,7 +1422,7 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
   }
 
   soup_message_set_flags (src->msg, SOUP_MESSAGE_OVERWRITE_CHUNKS |
-      (src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
+      SOUP_MESSAGE_NO_REDIRECT);
   gst_soup_http_src_add_range_header (src, src->request_position,
       src->stop_position);
 
@@ -1454,6 +1442,8 @@ gst_soup_http_src_send_message (GstSoupHTTPSrc * src)
 
   if (g_cancellable_is_cancelled (src->cancellable))
     return GST_FLOW_FLUSHING;
+
+  src->ret = GST_FLOW_OK;
 
   gst_soup_http_src_got_headers (src, src->msg);
   if (src->ret != GST_FLOW_OK) {
@@ -1724,8 +1714,10 @@ done:
       src->input_stream = NULL;
     }
     g_mutex_unlock (&src->mutex);
-    if (ret == GST_FLOW_CUSTOM_ERROR)
+    if (ret == GST_FLOW_CUSTOM_ERROR) {
+      ret = GST_FLOW_OK;
       goto retry;
+    }
   }
   return ret;
 }
