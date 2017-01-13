@@ -418,6 +418,8 @@ set_caps (GstVaapiDecoder * decoder, const GstCaps * caps)
   if (!gst_video_info_from_caps (&codec_state->info, caps))
     return FALSE;
 
+  if (codec_state->caps)
+    gst_caps_unref (codec_state->caps);
   codec_state->caps = gst_caps_copy (caps);
 
   v_codec_data = gst_structure_get_value (structure, "codec_data");
@@ -1084,4 +1086,51 @@ gst_vaapi_decoder_get_surface_formats (GstVaapiDecoder * decoder)
   if (decoder && decoder->context)
     return gst_vaapi_context_get_surface_formats (decoder->context);
   return NULL;
+}
+
+/**
+ * gst_vaapi_decoder_update_caps:
+ * @decoder: a #GstVaapiDecoder
+ * @caps: a #GstCaps
+ *
+ * If @caps is compatible with the current caps, or they have the same
+ * codec, the caps are updated internally.
+ *
+ * This method will not call codec_state_changed() callback, since
+ * this function is intended to run sync and during the set_format()
+ * vmethod.
+ *
+ * Returns: %TRUE if the caps were updated internally.
+ **/
+gboolean
+gst_vaapi_decoder_update_caps (GstVaapiDecoder * decoder, GstCaps * caps)
+{
+  GstCaps *decoder_caps;
+  GstVaapiProfile profile;
+  GstVaapiCodec codec;
+
+  g_return_val_if_fail (decoder != NULL, FALSE);
+  g_return_val_if_fail (caps != NULL, FALSE);
+
+  decoder_caps = get_caps (decoder);
+  if (!decoder_caps)
+    return FALSE;
+
+  if (gst_caps_is_always_compatible (caps, decoder_caps)) {
+    set_caps (decoder, caps);
+    return TRUE;
+  }
+
+  profile = gst_vaapi_profile_from_caps (caps);
+  if (profile == GST_VAAPI_PROFILE_UNKNOWN)
+    return FALSE;
+  codec = gst_vaapi_profile_get_codec (profile);
+  if (codec == 0)
+    return FALSE;
+  if (codec == decoder->codec) {
+    set_caps (decoder, caps);
+    return TRUE;
+  }
+
+  return FALSE;
 }

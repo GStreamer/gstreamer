@@ -134,7 +134,8 @@ static gboolean gst_vaapidecode_update_sink_caps (GstVaapiDecode * decode,
 static gboolean gst_vaapi_decode_input_state_replace (GstVaapiDecode * decode,
     const GstVideoCodecState * new_state);
 
-/* get invoked only if actural VASurface size (not the cropped values) changed */
+/* invoked if actual VASurface size (not the cropped values)
+ * changed */
 static void
 gst_vaapi_decoder_state_changed (GstVaapiDecoder * decoder,
     const GstVideoCodecState * codec_state, gpointer user_data)
@@ -511,8 +512,9 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
     caps_renegotiate = is_display_resolution_changed (decode, crop_rect);
 
     if (gst_pad_needs_reconfigure (GST_VIDEO_DECODER_SRC_PAD (vdec))
-        || alloc_renegotiate || caps_renegotiate) {
+        || alloc_renegotiate || caps_renegotiate || decode->do_renego) {
 
+      g_atomic_int_set (&decode->do_renego, FALSE);
       if (!gst_vaapidecode_negotiate (decode))
         return GST_FLOW_ERROR;
     }
@@ -878,7 +880,6 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
   gst_vaapi_decoder_set_codec_state_changed_func (decode->decoder,
       gst_vaapi_decoder_state_changed, decode);
 
-  decode->decoder_caps = gst_caps_ref (caps);
   return TRUE;
 }
 
@@ -915,7 +916,6 @@ gst_vaapidecode_destroy (GstVaapiDecode * decode)
   gst_vaapidecode_purge (decode);
 
   gst_vaapi_decoder_replace (&decode->decoder, NULL);
-  gst_caps_replace (&decode->decoder_caps, NULL);
 
   gst_vaapidecode_release (gst_object_ref (decode));
 }
@@ -924,17 +924,14 @@ static gboolean
 gst_vaapidecode_reset_full (GstVaapiDecode * decode, GstCaps * caps,
     gboolean hard)
 {
-  GstVaapiCodec codec;
-
   /* Reset tracked frame size */
   decode->current_frame_size = 0;
 
-  if (!hard && decode->decoder && decode->decoder_caps) {
-    if (gst_caps_is_always_compatible (caps, decode->decoder_caps))
+  if (!hard && decode->decoder) {
+    if (gst_vaapi_decoder_update_caps (decode->decoder, caps)) {
+      g_atomic_int_set (&decode->do_renego, TRUE);
       return TRUE;
-    codec = gst_vaapi_codec_from_caps (caps);
-    if (codec == gst_vaapi_decoder_get_codec (decode->decoder))
-      return TRUE;
+    }
   }
 
   gst_vaapidecode_destroy (decode);
@@ -1009,7 +1006,6 @@ gst_vaapidecode_stop (GstVideoDecoder * vdec)
   gst_vaapidecode_purge (decode);
   gst_vaapi_decode_input_state_replace (decode, NULL);
   gst_vaapi_decoder_replace (&decode->decoder, NULL);
-  gst_caps_replace (&decode->decoder_caps, NULL);
   gst_caps_replace (&decode->sinkpad_caps, NULL);
   gst_caps_replace (&decode->srcpad_caps, NULL);
   return TRUE;
@@ -1049,7 +1045,7 @@ gst_vaapidecode_set_format (GstVideoDecoder * vdec, GstVideoCodecState * state)
     return FALSE;
   if (!gst_vaapi_plugin_base_set_caps (plugin, decode->sinkpad_caps, NULL))
     return FALSE;
-  if (!gst_vaapidecode_reset_full (decode, decode->sinkpad_caps, TRUE))
+  if (!gst_vaapidecode_reset_full (decode, decode->sinkpad_caps, FALSE))
     return FALSE;
 
   return TRUE;

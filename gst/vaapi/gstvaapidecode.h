@@ -45,7 +45,6 @@ struct _GstVaapiDecode {
     GstVaapiDecoder    *decoder;
     GMutex              surface_ready_mutex;
     GCond               surface_ready;
-    GstCaps            *decoder_caps;
     GstCaps            *allowed_sinkpad_caps;
     GstCaps            *allowed_srcpad_caps;
     guint               current_frame_size;
@@ -56,6 +55,8 @@ struct _GstVaapiDecode {
 
     GstVideoCodecState *input_state;
     GstSegment          in_segment;
+
+    gboolean            do_renego;
 };
 
 struct _GstVaapiDecodeClass {
