@@ -23,10 +23,10 @@ will return without doing anything. Otherwise it will call the
 activation function of the pad.
 
 Because the core does not know in which mode to activate a pad (PUSH or
-PULL), it delegates that choice to a method on the pad, activate(). The
-activate() function of a pad should choose whether to operate in PUSH or
+PULL), it delegates that choice to a method on the pad, `activate()`. The
+`activate()` function of a pad should choose whether to operate in PUSH or
 PULL mode. Once the choice is made, it should call `activate_mode()` with
-the selected activation mode. The default activate() function will call
+the selected activation mode. The default `activate()` function will call
 `activate_mode()` with `#GST_PAD_MODE_PUSH`, as it is the default
 mechanism for data flow. A sink pad that supports either mode of
 operation might call `activate_mode(PULL)` if the SCHEDULING query
@@ -37,7 +37,7 @@ Consider the case `fakesrc ! fakesink`, where fakesink is configured to
 operate in PULL mode. State changes in the pipeline will start with
 fakesink, which is the most downstream element. The core will call
 `activate()` on fakesink’s sink pad. For fakesink to go into PULL mode, it
-needs to implement a custom activate() function that will call
+needs to implement a custom `activate()` function that will call
 `activate_mode(PULL)` on its sink pad (because the default is to use PUSH
 mode). `activate_mode(PULL)` is then responsible for starting the task
 that pulls from fakesrc:src. Clearly, fakesrc needs to be notified that
@@ -55,7 +55,7 @@ on identity’s source pad would need to activate its sink pad in pull
 mode as well, which should propagate all the way to fakesrc.
 
 If, on the other hand, `fakesrc ! fakesink` is operating in PUSH mode,
-the activation sequence is different. First, activate() on fakesink:sink
+the activation sequence is different. First, `activate()` on fakesink:sink
 calls `activate_mode(PUSH)` on fakesink:sink. Then fakesrc’s pads are
 activated: sources first, then sinks (of which fakesrc has none).
 fakesrc:src’s activation function is then called.
