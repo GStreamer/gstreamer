@@ -683,6 +683,11 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, GstAudioInfo * info,
       GST_LOG_OBJECT (flacenc, "Setting picture type %d", image_type);
       flacenc->meta[entries]->data.picture.type = image_type;
 
+      if (width > 0 && height > 0) {
+        flacenc->meta[entries]->data.picture.width = width;
+        flacenc->meta[entries]->data.picture.height = height;
+      }
+
       FLAC__metadata_object_picture_set_mime_type (flacenc->meta[entries],
           (char *) gst_structure_get_name (structure), TRUE);
 
