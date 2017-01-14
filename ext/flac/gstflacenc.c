@@ -611,10 +611,12 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, GstAudioInfo * info,
     GstCaps *caps;
     const GstStructure *structure;
     GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
-    gint i;
+    gint i, width = 0, height = 0, png_icon_count = 0, other_icon_count = 0;
     GstMapInfo map;
 
     for (i = 0; i < n_images + n_preview_images; i++) {
+      gboolean is_preview_image = (i >= n_images);
+
       if (i < n_images) {
         if (!gst_tag_list_get_sample_index (copy, GST_TAG_IMAGE, i, &sample))
           continue;
@@ -635,17 +637,42 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, GstAudioInfo * info,
       flacenc->meta[entries] =
           FLAC__metadata_object_new (FLAC__METADATA_TYPE_PICTURE);
 
+      GST_LOG_OBJECT (flacenc, "image info: %" GST_PTR_FORMAT, structure);
+
       if (structure)
         gst_structure_get (structure, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
             &image_type, NULL);
       else
         image_type = GST_TAG_IMAGE_TYPE_NONE;
 
+      GST_LOG_OBJECT (flacenc, "image caps: %" GST_PTR_FORMAT, caps);
+
+      structure = gst_caps_get_structure (caps, 0);
+      gst_structure_get (structure, "width", G_TYPE_INT, &width,
+          "height", G_TYPE_INT, &height, NULL);
+
       /* Convert to ID3v2 APIC image type */
-      if (image_type == GST_TAG_IMAGE_TYPE_NONE)
-        image_type = (i < n_images) ? 0x00 : 0x01;
-      else
+      if (image_type == GST_TAG_IMAGE_TYPE_NONE) {
+        if (is_preview_image) {
+          /* 1 - 32x32 pixels 'file icon' (PNG only)
+           * 2 - Other file icon
+           * There may only be one each of picture type 1 and 2 in a file. */
+          if (width == 32 && height == 32
+              && gst_structure_has_name (structure, "image/png")
+              && png_icon_count++ == 0) {
+            image_type = 1;
+          } else if (width <= 32 && height <= 32 && ++other_icon_count == 0) {
+            image_type = 2;
+          } else {
+            image_type = 0;     /* Other */
+          }
+        } else {
+          image_type = 0;       /* Other */
+        }
+      } else {
+        /* GStreamer enum is the same but without the two icon types 1+2 */
         image_type = image_type + 2;
+      }
 
       buffer = gst_sample_get_buffer (sample);
       gst_buffer_map (buffer, &map, GST_MAP_READ);
@@ -653,10 +680,8 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, GstAudioInfo * info,
           map.data, map.size, TRUE);
       gst_buffer_unmap (buffer, &map);
 
-      /* FIXME: There's no way to set the picture type in libFLAC */
+      GST_LOG_OBJECT (flacenc, "Setting picture type %d", image_type);
       flacenc->meta[entries]->data.picture.type = image_type;
-
-      structure = gst_caps_get_structure (caps, 0);
 
       FLAC__metadata_object_picture_set_mime_type (flacenc->meta[entries],
           (char *) gst_structure_get_name (structure), TRUE);
