@@ -12429,7 +12429,7 @@ static const struct
   FOURCC__gen, GST_TAG_GENRE, NULL, qtdemux_tag_add_str}, {
   FOURCC_gnre, GST_TAG_GENRE, NULL, qtdemux_tag_add_gnre}, {
   FOURCC_tmpo, GST_TAG_BEATS_PER_MINUTE, NULL, qtdemux_tag_add_tmpo}, {
-  FOURCC_covr, GST_TAG_PREVIEW_IMAGE, NULL, qtdemux_tag_add_covr}, {
+  FOURCC_covr, GST_TAG_IMAGE, NULL, qtdemux_tag_add_covr}, {
   FOURCC_sonm, GST_TAG_TITLE_SORTNAME, NULL, qtdemux_tag_add_str}, {
   FOURCC_soal, GST_TAG_ALBUM_SORTNAME, NULL, qtdemux_tag_add_str}, {
   FOURCC_soar, GST_TAG_ARTIST_SORTNAME, NULL, qtdemux_tag_add_str}, {
