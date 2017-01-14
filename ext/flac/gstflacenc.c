@@ -661,7 +661,7 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, GstAudioInfo * info,
               && gst_structure_has_name (structure, "image/png")
               && png_icon_count++ == 0) {
             image_type = 1;
-          } else if (width <= 32 && height <= 32 && ++other_icon_count == 0) {
+          } else if (width <= 32 && height <= 32 && other_icon_count++ == 0) {
             image_type = 2;
           } else {
             image_type = 0;     /* Other */
