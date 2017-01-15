@@ -1709,7 +1709,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
           caps = gst_caps_new_empty_simple ("audio/x-ac3");
           if (codec_name)
             *codec_name = g_strdup ("wavext AC-3 SPDIF audio");
-        } else if (subformat_guid[0] == GST_RIFF_WAVE_FORMAT_EXTENSIBLE) {
+        } else if ((subformat_guid[0] & 0xffff) ==
+            GST_RIFF_WAVE_FORMAT_EXTENSIBLE) {
           GST_DEBUG ("WAVE_FORMAT_EXTENSIBLE nested");
         } else {
           /* recurse where no special consideration has yet to be identified 
