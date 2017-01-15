@@ -4347,7 +4347,17 @@ gst_bin_query (GstElement * element, GstQuery * query)
       }
       GST_OBJECT_UNLOCK (bin);
 #else
-      GST_FIXME ("implement duration caching in GstBin again");
+#ifndef GST_DISABLE_GST_DEBUG
+      G_STMT_START {
+        /* Quieten this particularly annoying FIXME a bit: */
+        static gboolean printed_fixme = FALSE;
+        if (!printed_fixme) {
+          GST_FIXME ("implement duration caching in GstBin again");
+          printed_fixme = TRUE;
+        }
+      }
+      G_STMT_END;
+#endif
 #endif
       /* no cached value found, iterate and collect durations */
       fold_func = (GstIteratorFoldFunction) bin_query_duration_fold;
