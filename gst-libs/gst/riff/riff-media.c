@@ -1615,7 +1615,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
           subformat_guid[2] == 0xaa000080 && subformat_guid[3] == 0x719b3800) {
         if (subformat_guid[0] == 0x00000001) {
           GST_DEBUG ("PCM");
-          if (strf != NULL) {
+          if (strf != NULL && strf->blockalign != 0 && strf->channels != 0
+              && strf->rate != 0) {
             gint ba = strf->blockalign;
             gint wd = ba * 8 / strf->channels;
             gint ws;
@@ -1648,7 +1649,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
           }
         } else if (subformat_guid[0] == 0x00000003) {
           GST_DEBUG ("FLOAT");
-          if (strf != NULL) {
+          if (strf != NULL && strf->blockalign != 0 && strf->channels != 0
+              && strf->rate != 0) {
             gint ba = strf->blockalign;
             gint wd = ba * 8 / strf->channels;
 
