@@ -701,6 +701,14 @@ GST_START_TEST (test_GstDateTime_iso8601)
   fail_unless (!gst_date_time_has_second (dt));
   gst_date_time_unref (dt);
 
+  /* some bogus ones, make copy to detect out of bound read in valgrind/asan */
+  {
+    gchar *s = g_strdup ("0002000000T00000:00+0");
+    dt = gst_date_time_new_from_iso8601_string (s);
+    gst_date_time_unref (dt);
+    g_free (s);
+  }
+
   g_date_time_unref (gdt2);
 }
 
