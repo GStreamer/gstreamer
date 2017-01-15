@@ -865,7 +865,7 @@ gst_date_time_new_from_iso8601_string (const gchar * string)
     else if (neg_pos)
       pos = neg_pos + 1;
 
-    if (pos) {
+    if (pos && strlen (pos) >= 3) {
       gint ret_tz;
       if (pos[2] == ':')
         ret_tz = sscanf (pos, "%d:%d", &gmt_offset_hour, &gmt_offset_min);
