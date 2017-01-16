@@ -4352,6 +4352,8 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     else if (!g_strcmp0 (variant, "4444xq"))
       entry.fourcc = FOURCC_ap4x;
 
+    sync = FALSE;
+
     if (!qtmux->interleave_time_set)
       qtmux->interleave_time = 500 * GST_MSECOND;
     if (!qtmux->interleave_bytes_set)
