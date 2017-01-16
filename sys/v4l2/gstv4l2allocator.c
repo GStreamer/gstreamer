@@ -489,7 +489,7 @@ gst_v4l2_allocator_probe (GstV4l2Allocator * allocator, guint32 memory,
 
     flags |= breq_flag;
 
-    bcreate.memory = allocator->type;
+    bcreate.memory = memory;
     bcreate.format = allocator->format;
 
     if ((v4l2_ioctl (allocator->video_fd, VIDIOC_CREATE_BUFS, &bcreate) == 0))
