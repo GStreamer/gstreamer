@@ -61,7 +61,6 @@ struct _GstSoupHTTPSrc {
   gchar **cookies;             /* HTTP request cookies. */
   SoupSession *session;        /* Async context. */
   SoupMessage *msg;            /* Request message. */
-  GstFlowReturn ret;           /* Return code from callback. */
   gint retry_count;            /* Number of retries since we received data */
   gint max_retries;            /* Maximum number of retries */
   gchar *method;               /* HTTP method */
