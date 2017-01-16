@@ -1868,7 +1868,6 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
 
           GST_LOG_OBJECT (pool, "processing buffer %i from our pool", index);
 
-          index = group->buffer.index;
           if (pool->buffers[index] != NULL) {
             GST_LOG_OBJECT (pool, "buffer %i already queued, copying", index);
             goto copying;
