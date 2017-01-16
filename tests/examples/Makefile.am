@@ -18,6 +18,8 @@ endif
 
 OPENCV_EXAMPLES=opencv
 
+MATRIXMIX_DIR=audiomixmatrix
+
 if USE_OPENGL
 GL_DIR=gl
 else
@@ -57,8 +59,8 @@ playout_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 playout_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(GST_LIBS)
 
 SUBDIRS= codecparsers mpegts $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES) \
-        $(GL_DIR) $(GTK3_DIR) $(AVSAMPLE_DIR) $(WAYLAND_DIR)
+        $(GL_DIR) $(GTK3_DIR) $(AVSAMPLE_DIR) $(WAYLAND_DIR) $(MATRIXMIX_DIR)
 DIST_SUBDIRS= codecparsers mpegts camerabin2 directfb mxf opencv uvch264 gl gtk \
-        avsamplesink waylandsink
+        avsamplesink waylandsink audiomixmatrix
 
 include $(top_srcdir)/common/parallel-subdirs.mak

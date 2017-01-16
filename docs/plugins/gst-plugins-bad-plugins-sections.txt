@@ -223,6 +223,22 @@ gst_audio_mixer_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-audiomixmatrix</FILE>
+<TITLE>audiomixmatrix</TITLE>
+GstAudioMixMatrix
+<SUBSECTION Standard>
+GstAudioMixMatrixClass
+GST_AUDIO_MIX_MATRIX
+GST_AUDIO_MIX_MATRIX_CAST
+GST_IS_AUDIO_MIX_MATRIX
+GST_AUDIO_MIX_MATRIX_CLASS
+GST_IS_AUDIO_MIX_MATRIX_CLASS
+GST_TYPE_AUDIO_MIX_MATRIX
+<SUBSECTION Private>
+gst_audio_mix_matrix_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-audioparse</FILE>
 <TITLE>audioparse</TITLE>
 GstAudioParse
