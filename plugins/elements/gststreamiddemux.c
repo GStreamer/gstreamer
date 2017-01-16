@@ -24,6 +24,7 @@
 
 /**
  * SECTION:element-streamiddemux
+ * @title: streamiddemux
  *
  * The basic concept was started from de-funneling element which restores one
  * serialized stream via #GstFunnel to its original state. #GstStreamidDemux

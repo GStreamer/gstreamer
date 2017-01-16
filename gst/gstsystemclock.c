@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstsystemclock
+ * @title: GstSystemClock
  * @short_description: Default clock that uses the current system time
  * @see_also: #GstClock
  *

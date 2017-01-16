@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstinterpolationcontrolsource
+ * @title: GstInterpolationControlSource
  * @short_description: interpolation control source
  *
  * #GstInterpolationControlSource is a #GstControlSource, that interpolates values between user-given

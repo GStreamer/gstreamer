@@ -93,7 +93,7 @@ struct _GstDataQueueSize
  * @bytes: The amount of bytes currently in the queue.
  * @time: The accumulated duration of the items currently in the queue.
  * @checkdata: The #gpointer registered when the #GstDataQueue was created.
- * 
+ *
  * The prototype of the function used to inform the queue that it should be
  * considered as full.
  *

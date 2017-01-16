@@ -25,6 +25,7 @@
 
 /**
  * SECTION:gstutils
+ * @title: GstUtils
  * @short_description: Various utility functions
  *
  */
@@ -4092,10 +4093,10 @@ gst_log2 (GstClockTime in)
  * %NULL, an allocation will take place. @temp should have at least the same
  * amount of memory allocated as @xy, i.e. 2*n*sizeof(GstClockTime).
  *
- * <note>This function assumes (x,y) values with reasonable large differences
- * between them. It will not calculate the exact results if the differences
- * between neighbouring values are too small due to not being able to
- * represent sub-integer values during the calculations.</note>
+ * > This function assumes (x,y) values with reasonable large differences
+ * > between them. It will not calculate the exact results if the differences
+ * > between neighbouring values are too small due to not being able to
+ * > represent sub-integer values during the calculations.
  *
  * Returns: %TRUE if the linear regression was successfully calculated
  *

@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstbufferlist
+ * @title: GstBufferList
  * @short_description: Lists of buffers for data-passing
  * @see_also: #GstPad, #GstMiniObject
  *

@@ -26,6 +26,7 @@
 
 /**
  * SECTION:gststreamcollection
+ * @title: GstStreamCollection
  * @short_description: Base class for collection of streams
  *
  * Since: 1.10

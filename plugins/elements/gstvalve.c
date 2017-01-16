@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-valve
+ * @title: valve
  *
  * The valve is a simple element that drops buffers when the #GstValve:drop
  * property is set to %TRUE and lets then through otherwise.

@@ -20,6 +20,7 @@
  */
 /**
  * SECTION:element-typefind
+ * @title: typefind
  *
  * Determines the media-type of a stream. It applies typefind functions in the
  * order of their rank. Once the type has been detected it sets its src pad caps

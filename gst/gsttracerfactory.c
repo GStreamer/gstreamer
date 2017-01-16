@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gsttracerfactory
+ * @title: GstTracerFactory
  * @short_description: Information about registered tracer functions
  *
  * Use gst_tracer_factory_get_list() to get a list of tracer factories known to

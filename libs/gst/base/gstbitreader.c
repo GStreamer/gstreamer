@@ -29,6 +29,7 @@
 
 /**
  * SECTION:gstbitreader
+ * @title: GstBitReader
  * @short_description: Reads any number of bits from a memory buffer
  *
  * #GstBitReader provides a bit reader that can read any number of bits

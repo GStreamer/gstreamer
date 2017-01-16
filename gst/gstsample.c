@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstsample
+ * @title: GstSample
  * @short_description: A media sample
  * @see_also: #GstBuffer, #GstCaps, #GstSegment
  *

@@ -24,6 +24,7 @@
 
  /**
  * SECTION:gsttriggercontrolsource
+ * @title: GstTriggerControlSource
  * @short_description: trigger control source
  *
  * #GstTriggerControlSource is a #GstControlSource, that returns values from user-given

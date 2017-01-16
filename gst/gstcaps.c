@@ -19,6 +19,7 @@
 
 /**
  * SECTION:gstcaps
+ * @title: GstCaps
  * @short_description: Structure describing sets of media formats
  * @see_also: #GstStructure, #GstMiniObject
  *
@@ -1768,8 +1769,8 @@ gst_caps_structure_subtract (GSList ** into, const GstStructure * minuend,
  * @subtrahend: #GstCaps to subtract
  *
  * Subtracts the @subtrahend from the @minuend.
- * <note>This function does not work reliably if optional properties for caps
- * are included on one caps and omitted on the other.</note>
+ * > This function does not work reliably if optional properties for caps
+ * > are included on one caps and omitted on the other.
  *
  * Returns: (transfer full): the resulting caps
  */

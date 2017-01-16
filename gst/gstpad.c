@@ -21,6 +21,7 @@
  */
 /**
  * SECTION:gstpad
+ * @title: GstPad
  * @short_description: Object contained by elements that allows links to
  *                     other elements
  * @see_also: #GstPadTemplate, #GstElement, #GstEvent, #GstQuery, #GstBuffer

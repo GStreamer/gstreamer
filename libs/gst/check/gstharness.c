@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstharness
+ * @title: GstHarness
  * @short_description: A test-harness for writing GStreamer unit tests
  * @see_also: #GstTestClock,\
  *
@@ -30,7 +31,7 @@
  * The basic structure of #GstHarness is two "floating" #GstPads that connect
  * to the harnessed #GstElement src and sink #GstPads like so:
  *
- * <programlisting>
+ * |[
  *           __________________________
  *  _____   |  _____            _____  |   _____
  * |     |  | |     |          |     | |  |     |
@@ -38,7 +39,7 @@
  * |_____|  | |_____|          |_____| |  |_____|
  *          |__________________________|
  *
- * </programlisting>
+ * ]|
  *
  * With this, you can now simulate any environment the #GstElement might find
  * itself in. By specifying the #GstCaps of the harness #GstPads, using
@@ -54,11 +55,11 @@
  * then pull them out to examine them with gst_harness_pull() and
  * gst_harness_pull_event().
  *
- * <example>
- * <title>A simple buffer-in buffer-out example</title>
- *   <programlisting language="c">
- *   #include &lt;gst/gst.h&gt;
- *   #include &lt;gst/check/gstharness.h&gt;
+ * ## A simple buffer-in buffer-out example
+ *
+ * |[<!-- language="C" -->
+ *   #include <gst/gst.h>
+ *   #include <gst/check/gstharness.h>
  *   GstHarness *h;
  *   GstBuffer *in_buf;
  *   GstBuffer *out_buf;
@@ -85,8 +86,7 @@
  *   gst_buffer_unref (out_buf);
  *   gst_harness_teardown (h);
  *
- *   </programlisting>
- * </example>
+ *   ]|
  *
  * Another main feature of the #GstHarness is its integration with the
  * #GstTestClock. Operating the #GstTestClock can be very challenging, but
@@ -104,20 +104,16 @@
  * src-element (videotestsrc) and an encoder (vp8enc) to feed the decoder data
  * with different configurations, by simply doing:
  *
- * <example>
- * <programlisting language="c">
+ * |[<!-- language="C" -->
  *   GstHarness * h = gst_harness_new (h, "vp8dec");
  *   gst_harness_add_src_parse (h, "videotestsrc is-live=1 ! vp8enc", TRUE);
- * </programlisting>
- * </example>
+ * ]|
  *
  * and then feeding it data with:
  *
- * <example>
- * <programlisting language="c">
+ * |[<!-- language="C" -->
  * gst_harness_push_from_src (h);
- * </programlisting>
- * </example>
+ * ]|
  *
  */
 #ifdef HAVE_CONFIG_H

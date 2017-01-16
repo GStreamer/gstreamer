@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstcontext
+ * @title: GstContext
  * @short_description: Lightweight objects to represent element contexts
  * @see_also: #GstMiniObject, #GstElement
  *

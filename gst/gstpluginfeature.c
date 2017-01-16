@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstpluginfeature
+ * @title: GstPluginfeature
  * @short_description: Base class for contents of a GstPlugin
  * @see_also: #GstPlugin
  *

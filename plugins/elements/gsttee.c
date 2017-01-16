@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-tee
+ * @title: tee
  * @see_also: #GstIdentity
  *
  * Split data to multiple pads. Branching the data flow is useful when e.g.
@@ -34,14 +35,14 @@
  * provide separate threads for each branch. Otherwise a blocked dataflow in one
  * branch would stall the other branches.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=song.ogg ! decodebin ! tee name=t ! queue ! audioconvert ! audioresample ! autoaudiosink t. ! queue ! audioconvert ! goom ! videoconvert ! autovideosink
- * ]| Play song.ogg audio file which must be in the current working directory
+ * ]|
+ *
+ * Play song.ogg audio file which must be in the current working directory
  * and render visualisations using the goom element (this can be easier done
  * using the playbin element, this is just an example pipeline).
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

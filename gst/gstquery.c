@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstquery
+ * @title: GstQuery
  * @short_description: Provide functions to create queries, and to set and parse
  *                     values in them.
  * @see_also: #GstPad, #GstElement
@@ -2252,15 +2253,11 @@ gst_query_parse_nth_scheduling_mode (GstQuery * query, guint index)
  *
  * Check if @query has scheduling mode set.
  *
- * <note>
- *   <para>
- *     When checking if upstream supports pull mode, it is usually not
- *     enough to just check for GST_PAD_MODE_PULL with this function, you
- *     also want to check whether the scheduling flags returned by
- *     gst_query_parse_scheduling() have the seeking flag set (meaning
- *     random access is supported, not only sequential pulls).
- *   </para>
- * </note>
+ * > When checking if upstream supports pull mode, it is usually not
+ * > enough to just check for GST_PAD_MODE_PULL with this function, you
+ * > also want to check whether the scheduling flags returned by
+ * > gst_query_parse_scheduling() have the seeking flag set (meaning
+ * > random access is supported, not only sequential pulls).
  *
  * Returns: %TRUE when @mode is in the list of scheduling modes.
  */

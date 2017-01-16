@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gsttracer
+ * @title: GstTracer
  * @short_description: Tracing base class
  *
  * Tracing modules will subclass #GstTracer and register through

@@ -81,7 +81,7 @@ typedef enum {
 
 /**
  * GstFakeSrcFillType:
- * @FAKE_SRC_FILLTYPE_NOTHING: do not fill buffers 
+ * @FAKE_SRC_FILLTYPE_NOTHING: do not fill buffers
  * @FAKE_SRC_FILLTYPE_ZERO: fill buffers with 0
  * @FAKE_SRC_FILLTYPE_RANDOM: fill buffers with random bytes
  * @FAKE_SRC_FILLTYPE_PATTERN: fill buffers with a pattern

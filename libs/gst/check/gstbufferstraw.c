@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstcheckbufferstraw
+ * @title: GstBufferStraw
  * @short_description: Buffer interception code for GStreamer unit tests
  *
  * These macros and functions are for internal use of the unit tests found

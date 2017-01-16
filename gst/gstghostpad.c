@@ -24,6 +24,7 @@
 
 /**
  * SECTION:gstghostpad
+ * @title: GstGhostPad
  * @short_description: Pseudo link pads
  * @see_also: #GstPad
  *

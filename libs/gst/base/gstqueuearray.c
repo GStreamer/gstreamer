@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstqueuearray
+ * @title: GstQueueArray
  * @short_description: Array based queue object
  *
  * #GstQueueArray is an object that provides standard queue functionality

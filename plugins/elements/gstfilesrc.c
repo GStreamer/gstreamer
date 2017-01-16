@@ -21,16 +21,16 @@
  */
 /**
  * SECTION:element-filesrc
+ * @title: filesrc
  * @see_also: #GstFileSrc
  *
  * Read data from a file in the local file system.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=song.ogg ! decodebin ! audioconvert ! audioresample ! autoaudiosink
  * ]| Play song.ogg audio file which must be in the current working directory.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -648,7 +648,7 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
 #ifdef G_OS_WIN32
   /* Unfortunately, g_filename_from_uri() doesn't handle some UNC paths
    * correctly on windows, it leaves them with an extra backslash
-   * at the start if they're of the mozilla-style file://///host/path/file 
+   * at the start if they're of the mozilla-style file://///host/path/file
    * form. Correct this.
    */
   if (location[0] == '\\' && location[1] == '\\' && location[2] == '\\')

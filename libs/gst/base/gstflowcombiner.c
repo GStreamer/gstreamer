@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstflowcombiner
+ * @title: GstFlowCombiner
  * @short_description: Utility to combine multiple flow returns into one
  *
  * Utility struct to help handling #GstFlowReturn combination. Useful for

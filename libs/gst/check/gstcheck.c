@@ -22,6 +22,7 @@
  */
 /**
  * SECTION:gstcheck
+ * @title: GstCheck
  * @short_description: Common code for GStreamer unit tests
  *
  * These macros and functions are for internal use of the unit tests found
@@ -64,7 +65,8 @@ gboolean _gst_check_list_tests = FALSE;
 static GQueue _gst_check_log_filters = G_QUEUE_INIT;
 static GMutex _gst_check_log_filters_mutex;
 
-struct _GstCheckLogFilter {
+struct _GstCheckLogFilter
+{
   gchar *log_domain;
   GLogLevelFlags log_level;
   GRegex *regex;
@@ -199,8 +201,8 @@ gst_check_clear_log_filter (void)
 
 typedef struct
 {
-  const gchar * domain;
-  const gchar * message;
+  const gchar *domain;
+  const gchar *message;
   GLogLevelFlags level;
   gboolean discard;
 } LogFilterApplyData;
@@ -243,7 +245,7 @@ gst_check_filter_log_filter (const gchar * log_domain,
 
 static gboolean
 gst_check_log_fatal_func (const gchar * log_domain, GLogLevelFlags log_level,
-    const gchar *message, gpointer user_data)
+    const gchar * message, gpointer user_data)
 {
   if (gst_check_filter_log_filter (log_domain, log_level, message))
     return FALSE;

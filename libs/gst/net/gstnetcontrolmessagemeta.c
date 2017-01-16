@@ -19,6 +19,7 @@
 
 /**
  * SECTION:gstnetcontrolmessagemeta
+ * @title: GstNetControlMessageMeta
  * @short_description: Network Control Message Meta
  *
  * #GstNetControlMessageMeta can be used to store control messages (ancillary

@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gsttoc
+ * @title: GstToc
  * @short_description: Generic table of contents support
  * @see_also: #GstStructure, #GstEvent, #GstMessage, #GstQuery
  *

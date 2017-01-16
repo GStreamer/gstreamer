@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstmeta
+ * @title: GstMeta
  * @short_description: Buffer metadata
  *
  * The #GstMeta structure should be included as the first member of a #GstBuffer

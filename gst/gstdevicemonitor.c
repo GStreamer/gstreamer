@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstdevicemonitor
+ * @title: GstDeviceMonitor
  * @short_description: A device monitor and prober
  * @see_also: #GstDevice, #GstDeviceProvider
  *
@@ -33,7 +34,6 @@
  *
  * The device monitor will monitor all devices matching the filters that
  * the application has set.
- *
  *
  * The basic use pattern of a device monitor is as follows:
  * |[

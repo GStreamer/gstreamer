@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstallocator
+ * @title: GstAllocator
  * @short_description: allocate memory blocks
  * @see_also: #GstMemory
  *

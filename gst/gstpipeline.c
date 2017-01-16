@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstpipeline
+ * @title: GstPipeline
  * @short_description: Top-level bin with clocking and bus management
                        functionality.
  * @see_also: #GstElement, #GstBin, #GstClock, #GstBus

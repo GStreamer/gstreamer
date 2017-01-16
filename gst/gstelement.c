@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstelement
+ * @title: GstElement
  * @short_description: Abstract base class for all pipeline elements
  * @see_also: #GstElementFactory, #GstPad
  *
@@ -362,8 +363,8 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
  * @element: a #GstElement to query
  *
  * Get the clock provided by the given element.
- * <note>An element is only required to provide a clock in the PAUSED
- * state. Some elements can provide a clock in other states.</note>
+ * > An element is only required to provide a clock in the PAUSED
+ * > state. Some elements can provide a clock in other states.
  *
  * Returns: (transfer full) (nullable): the GstClock provided by the
  * element or %NULL if no clock could be provided.  Unref after usage.
@@ -1365,7 +1366,7 @@ gst_element_class_add_static_metadata (GstElementClass * klass,
  * multiple author metadata. E.g: "Joe Bloggs &lt;joe.blogs at foo.com&gt;"
  *
  * Sets the detailed information for a #GstElementClass.
- * <note>This function is for use in _class_init functions only.</note>
+ * > This function is for use in _class_init functions only.
  */
 void
 gst_element_class_set_metadata (GstElementClass * klass,
@@ -1398,7 +1399,8 @@ gst_element_class_set_metadata (GstElementClass * klass,
  * multiple author metadata. E.g: "Joe Bloggs &lt;joe.blogs at foo.com&gt;"
  *
  * Sets the detailed information for a #GstElementClass.
- * <note>This function is for use in _class_init functions only.</note>
+ *
+ * > This function is for use in _class_init functions only.
  *
  * Same as gst_element_class_set_metadata(), but @longname, @classification,
  * @description, and @author must be static strings or inlined strings, as
@@ -1459,9 +1461,9 @@ gst_element_class_get_metadata (GstElementClass * klass, const gchar * key)
  *
  * Retrieves a list of the pad templates associated with @element_class. The
  * list must not be modified by the calling code.
- * <note>If you use this function in the #GInstanceInitFunc of an object class
- * that has subclasses, make sure to pass the g_class parameter of the
- * #GInstanceInitFunc here.</note>
+ * > If you use this function in the #GInstanceInitFunc of an object class
+ * > that has subclasses, make sure to pass the g_class parameter of the
+ * > #GInstanceInitFunc here.
  *
  * Returns: (transfer none) (element-type Gst.PadTemplate): the #GList of
  *     pad templates.
@@ -1480,9 +1482,9 @@ gst_element_class_get_pad_template_list (GstElementClass * element_class)
  * @name: the name of the #GstPadTemplate to get.
  *
  * Retrieves a padtemplate from @element_class with the given name.
- * <note>If you use this function in the #GInstanceInitFunc of an object class
- * that has subclasses, make sure to pass the g_class parameter of the
- * #GInstanceInitFunc here.</note>
+ * > If you use this function in the #GInstanceInitFunc of an object class
+ * > that has subclasses, make sure to pass the g_class parameter of the
+ * > #GInstanceInitFunc here.
  *
  * Returns: (transfer none) (nullable): the #GstPadTemplate with the
  *     given name, or %NULL if none was found. No unreferencing is

@@ -19,6 +19,7 @@
  */
 /**
  * SECTION:gstproxycontrolbinding
+ * @title: GstProxyControlBinding
  * @short_description: attachment for forwarding control sources
  * @see_also: #GstControlBinding
  *

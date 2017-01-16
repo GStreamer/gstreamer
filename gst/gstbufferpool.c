@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstbufferpool
+ * @title: GstBufferPool
  * @short_description: Pool for buffers
  * @see_also: #GstBuffer
  *
@@ -1030,7 +1031,7 @@ gst_buffer_pool_config_get_params (GstStructure * config, GstCaps ** caps,
  *
  * Get the @allocator and @params from @config.
  *
- * Returns: %TRUE, if the values are set. 
+ * Returns: %TRUE, if the values are set.
  */
 gboolean
 gst_buffer_pool_config_get_allocator (GstStructure * config,
@@ -1160,7 +1161,7 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
       }
     } else {
       /* We're the first thread waiting, we got the wait token and have to
-       * write it again later 
+       * write it again later
        * OR
        * We're a second thread and just consumed the flush token and block all
        * other threads, in which case we must not wait and give it back

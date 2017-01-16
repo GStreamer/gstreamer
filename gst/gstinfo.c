@@ -24,6 +24,7 @@
 
 /**
  * SECTION:gstinfo
+ * @title: GstInfo
  * @short_description: Debugging and logging facilities
  * @see_also: #gst-running for command line parameters
  * and environment variables that affect the debugging output.
@@ -1524,8 +1525,8 @@ gst_debug_get_color_mode (void)
  * If activated, debugging messages are sent to the debugging
  * handlers.
  * It makes sense to deactivate it for speed issues.
- * <note><para>This function is not threadsafe. It makes sense to only call it
- * during initialization.</para></note>
+ * > This function is not threadsafe. It makes sense to only call it
+ * during initialization.
  */
 void
 gst_debug_set_active (gboolean active)
@@ -1761,11 +1762,9 @@ gst_debug_category_free (GstDebugCategory * category)
  * Sets the threshold of the category to the given level. Debug information will
  * only be output if the threshold is lower or equal to the level of the
  * debugging message.
- * <note><para>
- * Do not use this function in production code, because other functions may
- * change the threshold of categories as side effect. It is however a nice
- * function to use when debugging (even from gdb).
- * </para></note>
+ * > Do not use this function in production code, because other functions may
+ * > change the threshold of categories as side effect. It is however a nice
+ * > function to use when debugging (even from gdb).
  */
 void
 gst_debug_category_set_threshold (GstDebugCategory * category,

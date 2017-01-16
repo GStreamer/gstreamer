@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:gstnettimeprovider
+ * @title: GstNetTimeProvider
  * @short_description: Special object that exposed the time of a clock
  *                     on the network.
  * @see_also: #GstClock, #GstNetClientClock, #GstPipeline

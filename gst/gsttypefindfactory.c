@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gsttypefindfactory
+ * @title: GstTypeFindFactory
  * @short_description: Information about registered typefind functions
  *
  * These functions allow querying informations about registered typefind

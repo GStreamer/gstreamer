@@ -22,6 +22,7 @@
  */
 /**
  * SECTION:gstargbcontrolbinding
+ * @title: GstARGBControlBinding
  * @short_description: attachment for control sources to argb properties
  *
  * A value mapping object that attaches multiple control sources to a guint

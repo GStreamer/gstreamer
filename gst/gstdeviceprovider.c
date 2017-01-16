@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstdeviceprovider
+ * @title: GstDeviceProvider
  * @short_description: A device provider
  * @see_also: #GstDevice, #GstDeviceMonitor
  *
@@ -252,7 +253,8 @@ gst_device_provider_class_add_static_metadata (GstDeviceProviderClass * klass,
  * multiple author metadata. E.g: "Joe Bloggs &lt;joe.blogs at foo.com&gt;"
  *
  * Sets the detailed information for a #GstDeviceProviderClass.
- * <note>This function is for use in _class_init functions only.</note>
+ *
+ * > This function is for use in _class_init functions only.
  *
  * Since: 1.4
  */
@@ -288,7 +290,8 @@ gst_device_provider_class_set_metadata (GstDeviceProviderClass * klass,
  * foo.com&gt;"
  *
  * Sets the detailed information for a #GstDeviceProviderClass.
- * <note>This function is for use in _class_init functions only.</note>
+ *
+ * > This function is for use in _class_init functions only.
  *
  * Same as gst_device_provider_class_set_metadata(), but @longname, @classification,
  * @description, and @author must be static strings or inlined strings, as

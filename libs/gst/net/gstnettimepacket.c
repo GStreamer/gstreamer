@@ -20,6 +20,7 @@
  */
 /**
  * SECTION:gstnettimepacket
+ * @title: GstNetTimePacket
  * @short_description: Helper structure to construct clock packets used
  *                     by network clocks.
  * @see_also: #GstClock, #GstNetClientClock, #GstNetTimeProvider

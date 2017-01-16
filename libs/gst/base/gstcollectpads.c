@@ -22,55 +22,47 @@
  */
 /**
  * SECTION:gstcollectpads
+ * @title: GstCollectPads
  * @short_description: manages a set of pads that operate in collect mode
  * @see_also:
  *
  * Manages a set of pads that operate in collect mode. This means that control
  * is given to the manager of this object when all pads have data.
- * <itemizedlist>
- *   <listitem><para>
- *     Collectpads are created with gst_collect_pads_new(). A callback should then
+ *
+ *   * Collectpads are created with gst_collect_pads_new(). A callback should then
  *     be installed with gst_collect_pads_set_function ().
- *   </para></listitem>
- *   <listitem><para>
- *     Pads are added to the collection with gst_collect_pads_add_pad()/
+ *
+ *   * Pads are added to the collection with gst_collect_pads_add_pad()/
  *     gst_collect_pads_remove_pad(). The pad
  *     has to be a sinkpad. The chain and event functions of the pad are
  *     overridden. The element_private of the pad is used to store
  *     private information for the collectpads.
- *   </para></listitem>
- *   <listitem><para>
- *     For each pad, data is queued in the _chain function or by
+ *
+ *   * For each pad, data is queued in the _chain function or by
  *     performing a pull_range.
- *   </para></listitem>
- *   <listitem><para>
- *     When data is queued on all pads in waiting mode, the callback function is called.
- *   </para></listitem>
- *   <listitem><para>
- *     Data can be dequeued from the pad with the gst_collect_pads_pop() method.
+ *
+ *   * When data is queued on all pads in waiting mode, the callback function is called.
+ *
+ *   * Data can be dequeued from the pad with the gst_collect_pads_pop() method.
  *     One can peek at the data with the gst_collect_pads_peek() function.
  *     These functions will return %NULL if the pad received an EOS event. When all
  *     pads return %NULL from a gst_collect_pads_peek(), the element can emit an EOS
  *     event itself.
- *   </para></listitem>
- *   <listitem><para>
- *     Data can also be dequeued in byte units using the gst_collect_pads_available(),
+ *
+ *   * Data can also be dequeued in byte units using the gst_collect_pads_available(),
  *     gst_collect_pads_read_buffer() and gst_collect_pads_flush() calls.
- *   </para></listitem>
- *   <listitem><para>
- *     Elements should call gst_collect_pads_start() and gst_collect_pads_stop() in
+ *
+ *   * Elements should call gst_collect_pads_start() and gst_collect_pads_stop() in
  *     their state change functions to start and stop the processing of the collectpads.
  *     The gst_collect_pads_stop() call should be called before calling the parent
  *     element state change function in the PAUSED_TO_READY state change to ensure
  *     no pad is blocked and the element can finish streaming.
- *   </para></listitem>
- *   <listitem><para>
- *     gst_collect_pads_set_waiting() sets a pad to waiting or non-waiting mode.
+ *
+ *   * gst_collect_pads_set_waiting() sets a pad to waiting or non-waiting mode.
  *     CollectPads element is not waiting for data to be collected on non-waiting pads.
  *     Thus these pads may but need not have data when the callback is called.
  *     All pads are in waiting mode by default.
- *   </para></listitem>
- * </itemizedlist>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -2137,7 +2129,7 @@ pad_removed:
  * and if so we call the collected function. When this is done we check if
  * data has been unqueued. If data is still queued we wait holding the stream
  * lock to make sure no EOS event can happen while we are ready to be
- * collected 
+ * collected
  */
 static GstFlowReturn
 gst_collect_pads_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)

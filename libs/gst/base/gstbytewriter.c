@@ -27,6 +27,7 @@
 
 /**
  * SECTION:gstbytewriter
+ * @title: GstByteWriter
  * @short_description: Writes different integer, string and floating point
  *     types to a memory buffer and allows reading
  *

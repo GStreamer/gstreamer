@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstlfocontrolsource
+ * @title: GstLFOControlSource
  * @short_description: LFO control source
  *
  * #GstLFOControlSource is a #GstControlSource, that provides several periodic

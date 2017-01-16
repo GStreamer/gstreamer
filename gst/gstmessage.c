@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstmessage
+ * @title: GstMessage
  * @short_description: Lightweight objects to signal the application of
  *                     pipeline events
  * @see_also: #GstBus, #GstMiniObject, #GstElement
@@ -1195,7 +1196,7 @@ gst_message_has_name (GstMessage * message, const gchar * name)
  *   switch (GST_MESSAGE_TYPE (msg)) {
  *     case GST_MESSAGE_TAG: {
  *       GstTagList *tags = NULL;
- *       
+ *
  *       gst_message_parse_tag (msg, &amp;tags);
  *       g_print ("Got tags from element %s\n", GST_OBJECT_NAME (msg->src));
  *       handle_tags (tags);
@@ -1245,7 +1246,7 @@ gst_message_parse_buffering (GstMessage * message, gint * percent)
 /**
  * gst_message_set_buffering_stats:
  * @message: A valid #GstMessage of type GST_MESSAGE_BUFFERING.
- * @mode: a buffering mode 
+ * @mode: a buffering mode
  * @avg_in: the average input rate
  * @avg_out: the average output rate
  * @buffering_left: amount of buffering time left in milliseconds
@@ -1318,7 +1319,7 @@ gst_message_parse_buffering_stats (GstMessage * message,
  *   switch (GST_MESSAGE_TYPE (msg)) {
  *     case GST_MESSAGE_STATE_CHANGED: {
  *       GstState old_state, new_state;
- *       
+ *
  *       gst_message_parse_state_changed (msg, &amp;old_state, &amp;new_state, NULL);
  *       g_print ("Element %s changed state from %s to %s.\n",
  *           GST_OBJECT_NAME (msg->src),
@@ -1506,7 +1507,7 @@ gst_message_parse_structure_change (GstMessage * message,
  *     case GST_MESSAGE_ERROR: {
  *       GError *err = NULL;
  *       gchar *dbg_info = NULL;
- *       
+ *
  *       gst_message_parse_error (msg, &amp;err, &amp;dbg_info);
  *       g_printerr ("ERROR from element %s: %s\n",
  *           GST_OBJECT_NAME (msg->src), err->message);
@@ -1696,7 +1697,7 @@ gst_message_parse_request_state (GstMessage * message, GstState * state)
  *
  * Create a new stream status message. This message is posted when a streaming
  * thread is created/destroyed or when the state changed.
- * 
+ *
  * Returns: (transfer full): the new stream status message.
  *
  * MT safe.
@@ -1886,7 +1887,7 @@ gst_message_parse_step_done (GstMessage * message, GstFormat * format,
  * @intermediate: is this an intermediate step
  *
  * This message is posted by elements when they accept or activate a new step
- * event for @amount in @format. 
+ * event for @amount in @format.
  *
  * @active is set to %FALSE when the element accepted the new step event and has
  * queued it for execution in the streaming threads.
@@ -1896,7 +1897,7 @@ gst_message_parse_step_done (GstMessage * message, GstFormat * format,
  * message is emitted, the application can queue a new step operation in the
  * element.
  *
- * Returns: (transfer full): The new step_start message. 
+ * Returns: (transfer full): The new step_start message.
  *
  * MT safe.
  */
@@ -2577,7 +2578,7 @@ gst_message_new_device_added (GstObject * src, GstDevice * device)
  * @message: a #GstMessage of type %GST_MESSAGE_DEVICE_ADDED
  * @device: (out) (allow-none) (transfer full): A location where to store a
  *  pointer to the new #GstDevice, or %NULL
- * 
+ *
  * Parses a device-added message. The device-added message is produced by
  * #GstDeviceProvider or a #GstDeviceMonitor. It announces the appearance
  * of monitored devices.
@@ -2755,7 +2756,7 @@ gst_message_new_stream_collection (GstObject * src,
  * @collection: (out) (allow-none) (transfer full): A location where to store a
  *  pointer to the #GstStreamCollection, or %NULL
  *
- * Parses a stream-collection message. 
+ * Parses a stream-collection message.
  *
  * Since: 1.10
  */
@@ -2903,7 +2904,7 @@ gst_message_streams_selected_get_stream (GstMessage * msg, guint idx)
  * @collection: (out) (allow-none) (transfer full): A location where to store a
  *  pointer to the #GstStreamCollection, or %NULL
  *
- * Parses a streams-selected message. 
+ * Parses a streams-selected message.
  *
  * Since: 1.10
  */

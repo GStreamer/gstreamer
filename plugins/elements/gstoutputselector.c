@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-output-selector
+ * @title: output-selector
  * @see_also: #GstOutputSelector, #GstInputSelector
  *
  * Direct input stream to one out of N output pads.

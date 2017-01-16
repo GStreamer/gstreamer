@@ -20,6 +20,7 @@
  */
 /**
  * SECTION:gstpreset
+ * @title: GstPreset
  * @short_description: helper interface for element presets
  *
  * This interface offers methods to query and manipulate parameter preset sets.

@@ -20,15 +20,17 @@
 
 /**
  * SECTION:element-dataurisrc
+ * @title: dataurisrc
  *
- * dataurisrc handles data: URIs, see <ulink url="http://tools.ietf.org/html/rfc2397">RFC 2397</ulink> for more information.
+ * dataurisrc handles data: URIs, see [RFC 2397](http://tools.ietf.org/html/rfc2397) for more information.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 -v dataurisrc uri="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfElEQVQ4je2MwQnAIAxFgziA4EnczIsO4MEROo/gzZWc4xdTbe1R6LGRR74heYS7iKElzfcMiRnt4hf8gk8EayB6luefue/HzlJfCA50XsNjYRxprZmenXNIKSGEsC+QUqK1hhgj521BzhnWWiilUGvdF5RS4L2HMQZCCJy8sHMm2TYdJAAAAABJRU5ErkJggg==" ! pngdec ! videoconvert ! imagefreeze ! videoconvert ! autovideosink
- * ]| This pipeline displays a small 16x16 PNG image from the data URI.
- * </refsect2>
+ * ]|
+ *
+ * This pipeline displays a small 16x16 PNG image from the data URI.
  */
 
 #ifdef HAVE_CONFIG_H

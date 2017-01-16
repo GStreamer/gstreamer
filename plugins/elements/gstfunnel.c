@@ -24,6 +24,7 @@
 
 /**
  * SECTION:element-funnel
+ * @title: funnel
  *
  * Takes packets from various input sinks into one output source.
  *

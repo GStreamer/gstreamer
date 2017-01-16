@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstevent
+ * @title: GstEvent
  * @short_description: Structure describing events that are passed up and down
  *                     a pipeline
  * @see_also: #GstPad, #GstElement
@@ -57,8 +58,8 @@
  *   ...
  *   // construct a seek event to play the media from second 2 to 5, flush
  *   // the pipeline to decrease latency.
- *   event = gst_event_new_seek (1.0, 
- *      GST_FORMAT_TIME, 
+ *   event = gst_event_new_seek (1.0,
+ *      GST_FORMAT_TIME,
  *      GST_SEEK_FLAG_FLUSH,
  *      GST_SEEK_TYPE_SET, 2 * GST_SECOND,
  *      GST_SEEK_TYPE_SET, 5 * GST_SECOND);
@@ -589,7 +590,7 @@ gst_event_parse_flush_stop (GstEvent * event, gboolean * reset_time)
  *
  * The list of @streams corresponds to the "Stream ID" of each stream to be
  * activated. Those ID can be obtained via the #GstStream objects present
- * in #GST_EVENT_STREAM_START, #GST_EVENT_STREAM_COLLECTION or 
+ * in #GST_EVENT_STREAM_START, #GST_EVENT_STREAM_COLLECTION or
  * #GST_MESSSAGE_STREAM_COLLECTION.
  *
  * Returns: (transfer full): a new select-streams event.
@@ -1089,7 +1090,7 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
  * @type indicates the reason for the QoS event. #GST_QOS_TYPE_OVERFLOW is
  * used when a buffer arrived in time or when the sink cannot keep up with
  * the upstream datarate. #GST_QOS_TYPE_UNDERFLOW is when the sink is not
- * receiving buffers fast enough and thus has to drop late buffers. 
+ * receiving buffers fast enough and thus has to drop late buffers.
  * #GST_QOS_TYPE_THROTTLE is used when the datarate is artificially limited
  * by the application, for example to reduce power consumption.
  *
@@ -1229,15 +1230,15 @@ gst_event_parse_qos (GstEvent * event, GstQOSType * type,
  *
  * A pipeline has a default playback segment configured with a start
  * position of 0, a stop position of -1 and a rate of 1.0. The currently
- * configured playback segment can be queried with #GST_QUERY_SEGMENT. 
+ * configured playback segment can be queried with #GST_QUERY_SEGMENT.
  *
- * @start_type and @stop_type specify how to adjust the currently configured 
+ * @start_type and @stop_type specify how to adjust the currently configured
  * start and stop fields in playback segment. Adjustments can be made relative
  * or absolute to the last configured values. A type of #GST_SEEK_TYPE_NONE
  * means that the position should not be updated.
  *
  * When the rate is positive and @start has been updated, playback will start
- * from the newly configured start position. 
+ * from the newly configured start position.
  *
  * For negative rates, playback will start from the newly configured stop
  * position (if any). If the stop position is updated, it must be different from
@@ -1641,7 +1642,7 @@ gst_event_parse_stream_start (GstEvent * event, const gchar ** stream_id)
  * @event: a stream-start event
  * @stream: (transfer none): the stream object to set
  *
- * Set the @stream on the stream-start @event 
+ * Set the @stream on the stream-start @event
  *
  * Since: 1.10
  */

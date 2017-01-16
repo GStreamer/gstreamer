@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gsttaglist
+ * @title: GstTagList
  * @short_description: List of tags and values used to describe media metadata
  *
  * List of tags and values used to describe media metadata.

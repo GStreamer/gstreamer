@@ -25,6 +25,7 @@
  */
 /**
  * SECTION:gstnetclientclock
+ * @title: GstNetClientClock
  * @short_description: Special clock that synchronizes to a remote time
  *                     provider.
  * @see_also: #GstClock, #GstNetTimeProvider, #GstPipeline
@@ -1378,7 +1379,7 @@ gst_net_client_clock_get_internal_time (GstClock * clock)
  * @base_time: initial time of the clock
  *
  * Create a new #GstNetClientInternalClock that will report the time
- * provided by the #GstNetTimeProvider on @remote_address and 
+ * provided by the #GstNetTimeProvider on @remote_address and
  * @remote_port.
  *
  * Returns: a new #GstClock that receives a time from the remote

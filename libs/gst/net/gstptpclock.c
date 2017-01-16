@@ -19,6 +19,7 @@
  */
 /**
  * SECTION:gstptpclock
+ * @title: GstPtpClock
  * @short_description: Special clock that synchronizes to a remote time
  *                     provider via PTP (IEEE1588:2008).
  * @see_also: #GstClock, #GstNetClientClock, #GstPipeline
@@ -39,7 +40,6 @@
  * return valid timestamps once the timestamps in the PTP domain are known. To
  * check this, you can use gst_clock_wait_for_sync(), the GstClock::synced
  * signal and gst_clock_is_synced().
- *
  *
  * To gather statistics about the PTP clock synchronization,
  * gst_ptp_statistics_callback_add() can be used. This gives the application
@@ -1991,7 +1991,6 @@ gst_ptp_is_initialized (void)
  * If @clock_id is %GST_PTP_CLOCK_ID_NONE, a clock id is automatically
  * generated from the MAC address of the first network interface.
  *
- *
  * This function is automatically called by gst_ptp_clock_new() with default
  * parameters if it wasn't called before.
  *
@@ -2504,7 +2503,6 @@ gst_ptp_clock_get_internal_time (GstClock * clock)
  *
  * If gst_ptp_init() was not called before, this will call gst_ptp_init() with
  * default parameters.
- *
  *
  * This clock only returns valid timestamps after it received the first
  * times from the PTP master clock on the network. Once this happens the

@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstbus
+ * @title: GstBus
  * @short_description: Asynchronous message bus subsystem
  * @see_also: #GstMessage, #GstElement
  *

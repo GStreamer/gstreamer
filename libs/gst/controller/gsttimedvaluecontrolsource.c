@@ -24,6 +24,7 @@
 
 /**
  * SECTION:gsttimedvaluecontrolsource
+ * @title: GstTimedValueControlSource
  * @short_description: timed value control source base class
  *
  * Base class for #GstControlSource that use time-stamped values.

@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstelementfactory
+ * @title: GstElementFactory
  * @short_description: Create GstElements from a factory
  * @see_also: #GstElement, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
  *
@@ -36,9 +37,8 @@
  *
  * The following code example shows you how to create a GstFileSrc element.
  *
- * <example>
- * <title>Using an element factory</title>
- * <programlisting language="c">
+ * ## Using an element factory
+ * |[<!-- language="C" -->
  *   #include &lt;gst/gst.h&gt;
  *
  *   GstElement *src;
@@ -51,8 +51,7 @@
  *   src = gst_element_factory_create (srcfactory, "src");
  *   g_return_if_fail (src != NULL);
  *   ...
- * </programlisting>
- * </example>
+ * ]|
  */
 
 #include "gst_private.h"

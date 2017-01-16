@@ -205,12 +205,10 @@ const gchar*          gst_pad_link_get_name (GstPadLinkReturn ret);
  * and @GST_PAD_LINK_CHECK_TEMPLATE_CAPS are mutually exclusive. If both are
  * specified, expensive but safe @GST_PAD_LINK_CHECK_CAPS are performed.
  *
- * <warning><para>
- * Only disable some of the checks if you are 100% certain you know the link
- * will not fail because of hierarchy/caps compatibility failures. If uncertain,
- * use the default checks (%GST_PAD_LINK_CHECK_DEFAULT) or the regular methods
- * for linking the pads.
- * </para></warning>
+ * > Only disable some of the checks if you are 100% certain you know the link
+ * > will not fail because of hierarchy/caps compatibility failures. If uncertain,
+ * > use the default checks (%GST_PAD_LINK_CHECK_DEFAULT) or the regular methods
+ * > for linking the pads.
  */
 
 typedef enum {

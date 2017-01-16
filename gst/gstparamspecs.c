@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:gstparamspec
+ * @title: GstParamSpec
  * @short_description: GParamSpec implementations specific
  * to GStreamer
  *

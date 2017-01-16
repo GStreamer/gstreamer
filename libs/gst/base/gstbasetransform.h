@@ -208,7 +208,7 @@ struct _GstBaseTransform {
  *                   do 1-to-1 transformations on input to output buffers can either
  *                   return GST_BASE_TRANSFORM_FLOW_DROPPED or simply not generate
  *                   an output buffer until they are ready to do so. (Since 1.6)
- *                   
+ *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum either @transform or @transform_ip need to be overridden.
  * If the element can overwrite the input data with the results (data is of the

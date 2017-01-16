@@ -21,19 +21,19 @@
  */
 /**
  * SECTION:element-capsfilter
+ * @title: capsfilter
  *
  * The element does not modify data as such, but can enforce limitations on the
  * data format.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc ! capsfilter caps=video/x-raw,format=GRAY8 ! videoconvert ! autovideosink
  * ]| Limits acceptable video from videotestsrc to be grayscale. Equivalent to
  * |[
  * gst-launch-1.0 videotestsrc ! video/x-raw,format=GRAY8 ! videoconvert ! autovideosink
  * ]| which is a short notation for the capsfilter element.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstdynamictypefactory
+ * @title: GstDynamicTypeFactory
  * @short_description: Represents a registered dynamically loadable GType
  * @see_also: #GstPlugin, #GstPluginFeature.
  *
@@ -33,17 +34,16 @@
  * done, the type is stored in the registry, and ready as soon as the
  * registry is loaded.
  *
- * <example>
- * <title>Registering a type for dynamic loading</title>
- * <programlisting language="c">
+ * ## Registering a type for dynamic loading
+ *
+ * |[<!-- language="C" -->
  *
  * static gboolean
  * plugin_init (GstPlugin * plugin)
  * {
  *   return gst_dynamic_type_register (plugin, GST_TYPE_CUSTOM_CAPS_FIELD);
  * }
- * </programlisting>
- * </example>
+ * ]|
  */
 
 #ifdef HAVE_CONFIG_H

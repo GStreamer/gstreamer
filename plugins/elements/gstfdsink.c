@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-fdsink
+ * @title: fdsink
  * @see_also: #GstFdSrc
  *
  * Write data to a unix file descriptor.

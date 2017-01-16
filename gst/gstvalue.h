@@ -36,11 +36,11 @@ G_BEGIN_DECLS
  *
  * Transform four characters into a #guint32 fourcc value with host
  * endianness.
- * <informalexample>
- * <programlisting>
+ *
+ * |[
  * guint32 fourcc = GST_MAKE_FOURCC ('M', 'J', 'P', 'G');
- * </programlisting>
- * </informalexample>
+ * ]|
+ *
  */
 #define GST_MAKE_FOURCC(a,b,c,d)        ((guint32)((a)|(b)<<8|(c)<<16|(d)<<24))
 
@@ -52,11 +52,11 @@ G_BEGIN_DECLS
  * endianness.
  * Caller is responsible for ensuring the input string consists of at least
  * four characters.
- * <informalexample>
- * <programlisting>
+ *
+ * |[
  * guint32 fourcc = GST_STR_FOURCC ("MJPG");
- * </programlisting>
- * </informalexample>
+ * ]|
+ *
  */
 #define GST_STR_FOURCC(f)               ((guint32)(((f)[0])|((f)[1]<<8)|((f)[2]<<16)|((f)[3]<<24)))
 
@@ -65,11 +65,11 @@ G_BEGIN_DECLS
  *
  * Can be used together with #GST_FOURCC_ARGS to properly output a
  * #guint32 fourcc value in a printf()-style text message.
- * <informalexample>
- * <programlisting>
+ *
+ * |[
  * printf ("fourcc: %" GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fcc));
- * </programlisting>
- * </informalexample>
+ * ]|
+ *
  */
 #define GST_FOURCC_FORMAT "c%c%c%c"
 

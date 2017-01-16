@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstbuffer
+ * @title: GstBuffer
  * @short_description: Data-passing buffer type
  * @see_also: #GstPad, #GstMiniObject, #GstMemory, #GstMeta, #GstBufferPool
  *

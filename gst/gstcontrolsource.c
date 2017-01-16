@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstcontrolsource
+ * @title: GstControlSource
  * @short_description: base class for control source sources
  *
  * The #GstControlSource is a base class for control value sources that could

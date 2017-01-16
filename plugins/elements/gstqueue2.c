@@ -25,6 +25,7 @@
 
 /**
  * SECTION:element-queue2
+ * @title: queue2
  *
  * Data is queued until one of the limits specified by the
  * #GstQueue2:max-size-buffers, #GstQueue2:max-size-bytes and/or

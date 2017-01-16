@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gststructure
+ * @title: GstStructure
  * @short_description: Generic structure containing fields of names and values
  * @see_also: #GstCaps, #GstMessage, #GstEvent, #GstQuery
  *

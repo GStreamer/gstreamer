@@ -20,6 +20,7 @@
  */
 /**
  * SECTION:gstminiobject
+ * @title: GstMiniObject
  * @short_description: Lightweight base class for the GStreamer object hierarchy
  *
  * #GstMiniObject is a simple structure that can be used to implement refcounted

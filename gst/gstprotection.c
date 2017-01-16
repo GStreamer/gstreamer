@@ -19,6 +19,7 @@
 
 /**
  * SECTION:gstprotection
+ * @title: GstProtection
  * @short_description: Functions and classes to support encrypted streams.
  *
  * The GstProtectionMeta class enables the information needed to decrypt a

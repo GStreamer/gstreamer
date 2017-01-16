@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstbasesink
+ * @title: GstBaseSink
  * @short_description: Base class for sink elements
  * @see_also: #GstBaseTransform, #GstBaseSrc
  *
@@ -51,7 +52,7 @@
  *       "Sink name",
  *       "Sink",
  *       "My Sink element",
- *       "The author &lt;my.sink@my.email&gt;");
+ *       "The author <my.sink@my.email>");
  * }
  * ]|
  *
@@ -98,7 +99,7 @@
  * should configure itself to process a specific media type.
  *
  * The #GstBaseSinkClass.start() and #GstBaseSinkClass.stop() virtual methods
- * will be called when resources should be allocated. Any 
+ * will be called when resources should be allocated. Any
  * #GstBaseSinkClass.preroll(), #GstBaseSinkClass.render() and
  * #GstBaseSinkClass.set_caps() function will be called between the
  * #GstBaseSinkClass.start() and #GstBaseSinkClass.stop() calls.
@@ -1330,7 +1331,7 @@ gst_base_sink_get_blocksize (GstBaseSink * sink)
  *
  * Set the time that will be inserted between rendered buffers. This
  * can be used to control the maximum buffers per second that the sink
- * will render. 
+ * will render.
  */
 void
 gst_base_sink_set_throttle_time (GstBaseSink * sink, guint64 throttle)
@@ -1347,7 +1348,7 @@ gst_base_sink_set_throttle_time (GstBaseSink * sink, guint64 throttle)
  * gst_base_sink_get_throttle_time:
  * @sink: a #GstBaseSink
  *
- * Get the time that will be inserted between frames to control the 
+ * Get the time that will be inserted between frames to control the
  * maximum buffers per second.
  *
  * Returns: the number of nanoseconds @sink will put between frames.
@@ -4104,7 +4105,7 @@ paused:
       }
     } else if (result == GST_FLOW_NOT_LINKED || result <= GST_FLOW_EOS) {
       /* for fatal errors we post an error message, post the error
-       * first so the app knows about the error first. 
+       * first so the app knows about the error first.
        * wrong-state is not a fatal error because it happens due to
        * flushing and posting an error message in that case is the
        * wrong thing to do, e.g. when basesrc is doing a flushing

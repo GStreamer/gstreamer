@@ -21,6 +21,7 @@
  */
 /**
  * SECTION:element-fakesrc
+ * @title: fakesrc
  * @see_also: #GstFakeSink
  *
  * The fakesrc element is a multipurpose element that can generate
@@ -29,13 +30,12 @@
  * It is mostly used as a testing element, one trivial example for testing
  * basic <application>GStreamer</application> core functionality is:
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v fakesrc num-buffers=5 ! fakesink
  * ]| This pipeline will push 5 empty buffers to the fakesink element and then
  * sends an EOS.
- * </refsect2>
+ *
  */
 
 /* FIXME: this ignores basesrc::blocksize property, which could be used as an

@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstadapter
+ * @title: GstAdapter
  * @short_description: adapts incoming data on a sink pad into chunks of N bytes
  *
  * This class is for elements that receive buffers in an undesired size.
@@ -1766,7 +1767,7 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
  * Returns: offset of the first match, or -1 if no match was found.
  *
  * Example:
- * <programlisting>
+ * |[
  * // Assume the adapter contains 0x00 0x01 0x02 ... 0xfe 0xff
  *
  * gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x00010203, 0, 256);
@@ -1783,7 +1784,7 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
  * // -> returns 2
  * gst_adapter_masked_scan_uint32 (adapter, 0xffff0000, 0x02030000, 0, 4);
  * // -> returns -1
- * </programlisting>
+ * ]|
  */
 gssize
 gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,

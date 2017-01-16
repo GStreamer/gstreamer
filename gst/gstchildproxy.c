@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstchildproxy
+ * @title: GstChildProxy
  * @short_description: Interface for multi child elements.
  * @see_also: #GstBin
  *

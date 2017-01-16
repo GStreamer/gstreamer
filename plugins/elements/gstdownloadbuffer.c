@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-downloadbuffer
+ * @title: downloadbuffer
  *
  * The downloadbuffer element provides on-disk buffering and caching of, typically,
  * a network file. temp-template should be set to a value such as
@@ -42,15 +43,12 @@
  * When the downloadbuffer has completely downloaded the media, it will
  * post an application message named  <classname>&quot;GstCacheDownloadComplete&quot;</classname>
  * with the following information:
- * <itemizedlist>
- * <listitem>
- *   <para>
+ *
+ * *
  *   G_TYPE_STRING
  *   <classname>&quot;location&quot;</classname>:
  *   the location of the completely downloaded file.
- *   </para>
- * </listitem>
- * </itemizedlist>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

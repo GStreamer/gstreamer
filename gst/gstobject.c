@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstobject
+ * @title: GstObject
  * @short_description: Base class for the GStreamer object hierarchy
  *
  * #GstObject provides a root for the object hierarchy tree filed in by the
@@ -42,9 +43,8 @@
  * gst_object_set_name() and gst_object_get_name() are used to set/get the name
  * of the object.
  *
- * <refsect2>
- * <title>controlled properties</title>
- * <para>
+ * ## controlled properties
+ *
  * Controlled properties offers a lightweight way to adjust gobject properties
  * over stream-time. It works by using time-stamped value pairs that are queued
  * for element-properties. At run-time the elements continuously pull value
@@ -52,42 +52,29 @@
  *
  * What needs to be changed in a #GstElement?
  * Very little - it is just two steps to make a plugin controllable!
- * <orderedlist>
- *   <listitem><para>
- *     mark gobject-properties paramspecs that make sense to be controlled,
+ *
+ *   * mark gobject-properties paramspecs that make sense to be controlled,
  *     by GST_PARAM_CONTROLLABLE.
- *   </para></listitem>
- *   <listitem><para>
- *     when processing data (get, chain, loop function) at the beginning call
+ *
+ *   * when processing data (get, chain, loop function) at the beginning call
  *     gst_object_sync_values(element,timestamp).
  *     This will make the controller update all GObject properties that are
  *     under its control with the current values based on the timestamp.
- *   </para></listitem>
- * </orderedlist>
  *
- * What needs to be done in applications?
- * Again it's not a lot to change.
- * <orderedlist>
- *   <listitem><para>
- *     create a #GstControlSource.
+ * What needs to be done in applications? Again it's not a lot to change.
+ *
+ *   * create a #GstControlSource.
  *     csource = gst_interpolation_control_source_new ();
  *     g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
- *   </para></listitem>
- *   <listitem><para>
- *     Attach the #GstControlSource on the controller to a property.
+ *
+ *   * Attach the #GstControlSource on the controller to a property.
  *     gst_object_add_control_binding (object, gst_direct_control_binding_new (object, "prop1", csource));
- *   </para></listitem>
- *   <listitem><para>
- *     Set the control values
+ *
+ *   * Set the control values
  *     gst_timed_value_control_source_set ((GstTimedValueControlSource *)csource,0 * GST_SECOND, value1);
  *     gst_timed_value_control_source_set ((GstTimedValueControlSource *)csource,1 * GST_SECOND, value2);
- *   </para></listitem>
- *   <listitem><para>
- *     start your pipeline
- *   </para></listitem>
- * </orderedlist>
- * </para>
- * </refsect2>
+ *
+ *   * start your pipeline
  */
 
 #include "gst_private.h"

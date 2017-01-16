@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstpadtemplate
+ * @title: GstPadTemplate
  * @short_description: Describe the media type of a pad.
  * @see_also: #GstPad, #GstElementFactory
  *

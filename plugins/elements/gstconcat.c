@@ -20,6 +20,7 @@
  */
 /**
  * SECTION:element-concat
+ * @title: concat
  * @see_also: #GstFunnel
  *
  * Concatenates streams together to one continous stream.
@@ -37,12 +38,11 @@
  * another downstream element like a streamsynchronizer adjusts the base
  * values on its own). The adjust-base property can be used for this purpose.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 concat name=c ! xvimagesink  videotestsrc num-buffers=100 ! c.   videotestsrc num-buffers=100 pattern=ball ! c.
  * ]| Plays two video streams one after another.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

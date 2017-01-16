@@ -28,6 +28,7 @@
 
 /**
  * SECTION:gstsegment
+ * @title: GstSegment
  * @short_description: Structure describing the configured region of interest
  *                     in a media file.
  * @see_also: #GstEvent
@@ -36,10 +37,9 @@
  * interest in a media file, called a segment.
  *
  * The structure can be used for two purposes:
- * <itemizedlist>
- *   <listitem><para>performing seeks (handling seek events)</para></listitem>
- *   <listitem><para>tracking playback regions (handling newsegment events)</para></listitem>
- * </itemizedlist>
+ *
+ *   * performing seeks (handling seek events)
+ *   * tracking playback regions (handling newsegment events)
  *
  * The segment is usually configured by the application with a seek event which
  * is propagated upstream and eventually handled by an element that performs the seek.

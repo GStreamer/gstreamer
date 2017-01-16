@@ -22,16 +22,16 @@
 
 /**
  * SECTION:gstbasesrc
+ * @title: GstBaseSrc
  * @short_description: Base class for getrange based source elements
  * @see_also: #GstPushSrc, #GstBaseTransform, #GstBaseSink
  *
  * This is a generic base class for source elements. The following
  * types of sources are supported:
- * <itemizedlist>
- *   <listitem><para>random access sources like files</para></listitem>
- *   <listitem><para>seekable sources</para></listitem>
- *   <listitem><para>live sources</para></listitem>
- * </itemizedlist>
+ *
+ *   * random access sources like files
+ *   * seekable sources
+ *   * live sources
  *
  * The source can be configured to operate in any #GstFormat with the
  * gst_base_src_set_format() method. The currently set format determines
@@ -40,30 +40,20 @@
  *
  * #GstBaseSrc always supports push mode scheduling. If the following
  * conditions are met, it also supports pull mode scheduling:
- * <itemizedlist>
- *   <listitem><para>The format is set to %GST_FORMAT_BYTES (default).</para>
- *   </listitem>
- *   <listitem><para>#GstBaseSrcClass.is_seekable() returns %TRUE.</para>
- *   </listitem>
- * </itemizedlist>
+ *
+ *   * The format is set to %GST_FORMAT_BYTES (default).
+ *   * #GstBaseSrcClass.is_seekable() returns %TRUE.
  *
  * If all the conditions are met for operating in pull mode, #GstBaseSrc is
  * automatically seekable in push mode as well. The following conditions must
  * be met to make the element seekable in push mode when the format is not
  * %GST_FORMAT_BYTES:
- * <itemizedlist>
- *   <listitem><para>
- *     #GstBaseSrcClass.is_seekable() returns %TRUE.
- *   </para></listitem>
- *   <listitem><para>
- *     #GstBaseSrcClass.query() can convert all supported seek formats to the
- *     internal format as set with gst_base_src_set_format().
- *   </para></listitem>
- *   <listitem><para>
- *     #GstBaseSrcClass.do_seek() is implemented, performs the seek and returns
- *      %TRUE.
- *   </para></listitem>
- * </itemizedlist>
+ *
+ * * #GstBaseSrcClass.is_seekable() returns %TRUE.
+ * * #GstBaseSrcClass.query() can convert all supported seek formats to the
+ *   internal format as set with gst_base_src_set_format().
+ * * #GstBaseSrcClass.do_seek() is implemented, performs the seek and returns
+ *    %TRUE.
  *
  * When the element does not meet the requirements to operate in pull mode, the
  * offset and length in the #GstBaseSrcClass.create() method should be ignored.
@@ -125,13 +115,12 @@
  *      "Source name",
  *      "Source",
  *      "My Source element",
- *      "The author &lt;my.sink@my.email&gt;");
+ *      "The author <my.sink@my.email>");
  * }
  * ]|
  *
- * <refsect2>
- * <title>Controlled shutdown of live sources in applications</title>
- * <para>
+ * ## Controlled shutdown of live sources in applications
+ *
  * Applications that record from a live source may want to stop recording
  * in a controlled way, so that the recording is stopped, but the data
  * already in the pipeline is processed to the end (remember that many live
@@ -149,8 +138,7 @@
  * After the EOS has been sent to the element, the application should wait for
  * an EOS message to be posted on the pipeline's bus. Once this EOS message is
  * received, it may safely shut down the entire pipeline.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

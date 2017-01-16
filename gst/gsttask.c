@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gsttask
+ * @title: GstTask
  * @short_description: Abstraction of GStreamer streaming threads.
  * @see_also: #GstElement, #GstPad
  *

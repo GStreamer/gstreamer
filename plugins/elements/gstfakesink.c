@@ -21,16 +21,16 @@
  */
 /**
  * SECTION:element-fakesink
+ * @title: fakesink
  * @see_also: #GstFakeSrc
  *
  * Dummy sink that swallows everything.
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc num-buffers=1000 ! fakesink sync=false
  * ]| Render 1000 audio buffers (of default size) as fast as possible.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

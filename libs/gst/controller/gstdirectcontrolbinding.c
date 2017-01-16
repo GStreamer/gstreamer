@@ -21,6 +21,7 @@
  */
 /**
  * SECTION:gstdirectcontrolbinding
+ * @title: GstDirectControlBinding
  * @short_description: direct attachment for control sources
  *
  * A value mapping object that attaches control sources to gobject properties. It

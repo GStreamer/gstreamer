@@ -25,6 +25,7 @@
 #define __GSTCOMPAT_H__
 /**
  * SECTION:gstcompat
+ * @title: GstCompat
  * @short_description: Deprecated API entries
  *
  * Please do not use these in new code.

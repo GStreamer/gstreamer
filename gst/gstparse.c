@@ -24,6 +24,7 @@
 
 /**
  * SECTION:gstparse
+ * @title: GstParse
  * @short_description: Get a pipeline from a text pipeline description
  *
  * These function allow to create a pipeline based on the syntax used in the

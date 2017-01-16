@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstdeviceproviderfactory
+ * @title: GstDeviceProviderFactory
  * @short_description: Create GstDeviceProviders from a factory
  * @see_also: #GstDeviceProvider, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
  *

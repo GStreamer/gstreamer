@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstdevice
+ * @title: GstDevice
  * @short_description: Object representing a device
  * @see_also: #GstDeviceProvider
  *

@@ -19,6 +19,7 @@
 
 /**
  * SECTION:gstnetaddressmeta
+ * @title: GstNetAddressMeta
  * @short_description: Network address metadata
  *
  * #GstNetAddressMeta can be used to store a network address (a #GSocketAddress)

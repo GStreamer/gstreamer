@@ -22,6 +22,7 @@
  */
 /**
  * SECTION:element-fdsrc
+ * @title: fdsrc
  * @see_also: #GstFdSink
  *
  * Read data from a unix file descriptor.
@@ -34,23 +35,16 @@
  * if no data was received in the given timeout.
  *
  * The message's structure contains one field:
- * <itemizedlist>
- * <listitem>
- *   <para>
- *   #guint64
- *   <classname>&quot;timeout&quot;</classname>: the timeout in microseconds that
- *   expired when waiting for data.
- *   </para>
- * </listitem>
- * </itemizedlist>
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * * #guint64 `timeout`: the timeout in microseconds that
+ *   expired when waiting for data.
+ *
+ * ## Example launch line
  * |[
  * echo "Hello GStreamer" | gst-launch-1.0 -v fdsrc ! fakesink dump=true
  * ]| A simple pipeline to read from the standard input and dump the data
  * with a fakesink as hex ascii block.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

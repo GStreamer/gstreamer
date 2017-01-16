@@ -20,7 +20,8 @@
 
 /**
  * SECTION:gstcapsfeatures
- * @short_description: A set of features in caps 
+ * @title: GstCapsFeatures
+ * @short_description: A set of features in caps
  * @see_also: #GstCaps
  *
  * #GstCapsFeatures can optionally be set on a #GstCaps to add requirements

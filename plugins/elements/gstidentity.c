@@ -22,6 +22,7 @@
  */
 /**
  * SECTION:element-identity
+ * @title: identity
  *
  * Dummy element that passes incoming data through unmodified. It has some
  * useful diagnostic functions, such as offset and timestamp checking.

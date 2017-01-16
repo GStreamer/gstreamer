@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gst
+ * @title: GStreamer
  * @short_description: Media library supporting arbitrary formats and filter
  *                     graphs.
  *
@@ -40,9 +41,9 @@
  * and argv variables so that GStreamer can process its own command line
  * options, as shown in the following example.
  *
- * <example>
- * <title>Initializing the gstreamer library</title>
- * <programlisting language="c">
+ * ## Initializing the gstreamer library
+ *
+ * |[ <!-- language="C" -->
  * int
  * main (int argc, char *argv[])
  * {
@@ -50,17 +51,16 @@
  *   gst_init (&amp;argc, &amp;argv);
  *   ...
  * }
- * </programlisting>
- * </example>
+ * ]|
  *
  * It's allowed to pass two %NULL pointers to gst_init() in case you don't want
  * to pass the command line args to GStreamer.
  *
  * You can also use GOption to initialize your own parameters as shown in
  * the next code fragment:
- * <example>
- * <title>Initializing own parameters when initializing gstreamer</title>
- * <programlisting>
+ *
+ * ## Initializing own parameters when initializing gstreamer
+ * |[ <!-- language="C" -->
  * static gboolean stats = FALSE;
  * ...
  * int
@@ -81,16 +81,14 @@
  *  g_option_context_free (ctx);
  * ...
  * }
- * </programlisting>
- * </example>
+ * ]|
  *
  * Use gst_version() to query the library version at runtime or use the
  * GST_VERSION_* macros to find the version at compile time. Optionally
  * gst_version_string() returns a printable string.
  *
  * The gst_deinit() call is used to clean up all internal resources used
- * by <application>GStreamer</application>. It is mostly used in unit tests 
- * to check for leaks.
+ * by GStreamer. It is mostly used in unit tests to check for leaks.
  */
 
 #include "gst_private.h"
@@ -381,11 +379,9 @@ gst_init_check (int *argc, char **argv[], GError ** err)
  * <link linkend="gst-running">Running GStreamer Applications</link>
  * for how to disable automatic registry updates.
  *
- * <note><para>
- * This function will terminate your program if it was unable to initialize
- * GStreamer for some reason.  If you want your program to fall back,
- * use gst_init_check() instead.
- * </para></note>
+ * > This function will terminate your program if it was unable to initialize
+ * > GStreamer for some reason.  If you want your program to fall back,
+ * > use gst_init_check() instead.
  *
  * WARNING: This function does not work in the same way as corresponding
  * functions in other glib-style libraries, such as gtk_init\(\). In
@@ -991,7 +987,7 @@ parse_goption_arg (const gchar * opt,
  * This function is therefore mostly used by testsuites and other memory
  * profiling tools.
  *
- * After this call GStreamer (including this method) should not be used anymore. 
+ * After this call GStreamer (including this method) should not be used anymore.
  */
 void
 gst_deinit (void)

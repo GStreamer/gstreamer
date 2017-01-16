@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstplugin
+ * @title: GstPlugin
  * @short_description: Container for features loaded from a shared object module
  * @see_also: #GstPluginFeature, #GstElementFactory
  *
@@ -671,7 +672,7 @@ static GMutex gst_plugin_loading_mutex;
  *
  * Loads the given plugin and refs it.  Caller needs to unref after use.
  *
- * Returns: (transfer full): a reference to the existing loaded GstPlugin, a 
+ * Returns: (transfer full): a reference to the existing loaded GstPlugin, a
  * reference to the newly-loaded GstPlugin, or %NULL if an error occurred.
  */
 GstPlugin *
@@ -1285,13 +1286,13 @@ gst_plugin_load_by_name (const gchar * name)
  * Loads @plugin. Note that the *return value* is the loaded plugin; @plugin is
  * untouched. The normal use pattern of this function goes like this:
  *
- * <programlisting>
+ * |[
  * GstPlugin *loaded_plugin;
  * loaded_plugin = gst_plugin_load (plugin);
  * // presumably, we're no longer interested in the potentially-unloaded plugin
  * gst_object_unref (plugin);
  * plugin = loaded_plugin;
- * </programlisting>
+ * ]|
  *
  * Returns: (transfer full): a reference to a loaded plugin, or %NULL on error.
  */

@@ -482,30 +482,24 @@ G_STMT_START{                                        \
  * Initializes a new #GstDebugCategory with the given properties and set to
  * the default threshold.
  *
- * <note>
- * <para>
- * This macro expands to nothing if debugging is disabled.
- * </para>
- * <para>
- * When naming your category, please follow the following conventions to ensure
- * that the pattern matching for categories works as expected. It is not
- * earth-shattering if you don't follow these conventions, but it would be nice
- * for everyone.
- * </para>
- * <para>
- * If you define a category for a plugin or a feature of it, name the category
- * like the feature. So if you wanted to write a "filesrc" element, you would
- * name the category "filesrc". Use lowercase letters only.
- * If you define more than one category for the same element, append an
- * underscore and an identifier to your categories, like this: "filesrc_cache"
- * </para>
- * <para>
- * If you create a library or an application using debugging categories, use a
- * common prefix followed by an underscore for all your categories. GStreamer
- * uses the GST prefix so GStreamer categories look like "GST_STATES". Be sure
- * to include uppercase letters.
- * </para>
- * </note>
+ * > This macro expands to nothing if debugging is disabled.
+ * >
+ * > When naming your category, please follow the following conventions to ensure
+ * > that the pattern matching for categories works as expected. It is not
+ * > earth-shattering if you don't follow these conventions, but it would be nice
+ * > for everyone.
+ * >
+ * > If you define a category for a plugin or a feature of it, name the category
+ * > like the feature. So if you wanted to write a "filesrc" element, you would
+ * > name the category "filesrc". Use lowercase letters only.
+ * > If you define more than one category for the same element, append an
+ * > underscore and an identifier to your categories, like this: "filesrc_cache"
+ * >
+ * > If you create a library or an application using debugging categories, use a
+ * > common prefix followed by an underscore for all your categories. GStreamer
+ * > uses the GST prefix so GStreamer categories look like "GST_STATES". Be sure
+ * > to include uppercase letters.
+ *
  */
 #define GST_DEBUG_CATEGORY_INIT(cat,name,color,description) G_STMT_START{\
   if (cat == NULL)							\

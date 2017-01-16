@@ -30,6 +30,7 @@
 
 /**
  * SECTION:gstbytereader
+ * @title: GstByteReader
  * @short_description: Reads different integer, string and floating point
  *     types from a memory buffer
  *
@@ -769,7 +770,6 @@ GST_BYTE_READER_PEEK_GET(64,gdouble,float64_be)
  * position if at least @size bytes are left and
  * updates the current position.
  *
- *
  * Returns: %TRUE if successful, %FALSE otherwise.
  */
 gboolean
@@ -789,7 +789,6 @@ gst_byte_reader_get_data (GstByteReader * reader, guint size,
  * Returns a constant pointer to the current data
  * position if at least @size bytes are left and
  * keeps the current position.
- *
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
  */
@@ -916,7 +915,7 @@ _masked_scan_uint32_peek (const GstByteReader * reader,
  * Returns: offset of the first match, or -1 if no match was found.
  *
  * Example:
- * <programlisting>
+ * |[
  * // Assume the reader contains 0x00 0x01 0x02 ... 0xfe 0xff
  *
  * gst_byte_reader_masked_scan_uint32 (reader, 0xffffffff, 0x00010203, 0, 256);
@@ -933,7 +932,7 @@ _masked_scan_uint32_peek (const GstByteReader * reader,
  * // -> returns 2
  * gst_byte_reader_masked_scan_uint32 (reader, 0xffff0000, 0x02030000, 0, 4);
  * // -> returns -1
- * </programlisting>
+ * ]|
  */
 guint
 gst_byte_reader_masked_scan_uint32 (const GstByteReader * reader, guint32 mask,
