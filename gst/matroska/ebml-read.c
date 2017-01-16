@@ -127,7 +127,7 @@ gst_ebml_peek_id_length (guint32 * _id, guint64 * _length, guint * _needed,
   /* ERRORS */
 peek_error:
   {
-    if (ret != GST_FLOW_FLUSHING)
+    if (ret != GST_FLOW_FLUSHING && ret != GST_FLOW_EOS)
       GST_WARNING_OBJECT (el, "peek failed, ret = %s", gst_flow_get_name (ret));
     else
       GST_DEBUG_OBJECT (el, "peek failed, ret = %s", gst_flow_get_name (ret));
