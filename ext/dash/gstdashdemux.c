@@ -2211,7 +2211,8 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
           /* FIXME, preserve seek flags */
           gst_dash_demux_stream_sidx_seek (dash_stream,
               demux->segment.rate >= 0, 0, dash_stream->pending_seek_ts, NULL);
-          dash_stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
+          /* push buffer up to sidx box, and do pending stream seek  */
+          break;
         } else {
           SIDX (dash_stream)->entry_index = dash_stream->sidx_index;
         }
@@ -2484,6 +2485,25 @@ gst_dash_demux_handle_isobmff_buffer (GstAdaptiveDemux * demux,
               gst_adaptive_demux_stream_push_buffer (stream,
                   buffer)) != GST_FLOW_OK)
         return ret;
+
+      /* Parser found sidx box now */
+      if (dash_stream->pending_seek_ts != GST_CLOCK_TIME_NONE &&
+          dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_SIDX &&
+          dash_stream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED &&
+          gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
+        GST_DEBUG_OBJECT (stream->pad,
+            "Found sidx box, return custom-success to do seeking now");
+        dash_stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
+
+        /* Clear isobmff parser */
+        gst_adapter_clear (dash_stream->isobmff_adapter);
+        dash_stream->isobmff_parser.current_fourcc = 0;
+        dash_stream->isobmff_parser.current_start_offset = 0;
+        dash_stream->isobmff_parser.current_offset = -1;
+        dash_stream->isobmff_parser.current_size = 0;
+        return GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT;
+      }
+
       if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT)
         return ret;
 
