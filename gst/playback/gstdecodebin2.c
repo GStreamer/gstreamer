@@ -241,7 +241,7 @@ enum
  * as low as possible (try to aim for 5 buffers) */
 #define AUTO_PLAY_SIZE_BYTES        2 * 1024 * 1024
 #define AUTO_PLAY_SIZE_BUFFERS      5
-#define AUTO_PLAY_SIZE_TIME         0
+#define AUTO_PLAY_SIZE_TIME         5 * GST_SECOND
 
 #define DEFAULT_SUBTITLE_ENCODING NULL
 #define DEFAULT_USE_BUFFERING     FALSE
@@ -3732,7 +3732,7 @@ decodebin_set_queue_size_full (GstDecodeBin * dbin, GstElement * multiqueue,
     if ((max_buffers = dbin->max_size_buffers) == 0)
       max_buffers = AUTO_PLAY_SIZE_BUFFERS;
     /* this is a multiqueue with disabled buffering, don't limit max_time */
-    if (dbin->use_buffering)
+    if (use_buffering)
       max_time = 0;
     else if ((max_time = dbin->max_size_time) == 0)
       max_time = AUTO_PLAY_SIZE_TIME;
