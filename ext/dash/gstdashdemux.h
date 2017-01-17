@@ -96,6 +96,7 @@ struct _GstDashDemuxStream
 
   guint64 moof_average_size, first_sync_sample_average_size;
   gboolean first_sync_sample_after_moof, first_sync_sample_always_after_moof;
+  gchar *last_representation_id;
 };
 
 /**
