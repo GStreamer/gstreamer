@@ -80,7 +80,8 @@
   COMMON_VIDEO_CAPS
 
 #define PRORES_CAPS \
-  "video/x-prores, variant = (string) {standard, lt, hq, proxy}, " \
+  "video/x-prores, " \
+  "variant = (string) {standard, lt, hq, proxy, 4444, 4444xq}, " \
   COMMON_VIDEO_CAPS
 
 #define SVQ_CAPS \
