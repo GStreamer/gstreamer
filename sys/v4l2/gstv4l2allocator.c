@@ -1240,9 +1240,18 @@ gst_v4l2_allocator_qbuf (GstV4l2Allocator * allocator,
     group->buffer.bytesused = gst_memory_get_sizes (group->mem[0], NULL, NULL);
   }
 
+  /* Ensure the memory will stay around and is RO */
+  for (i = 0; i < group->n_mem; i++)
+    gst_memory_ref (group->mem[i]);
+
   if (v4l2_ioctl (allocator->video_fd, VIDIOC_QBUF, &group->buffer) < 0) {
     GST_ERROR_OBJECT (allocator, "failed queueing buffer %i: %s",
         group->buffer.index, g_strerror (errno));
+
+    /* Release the memory, possibly making it RW again */
+    for (i = 0; i < group->n_mem; i++)
+      gst_memory_unref (group->mem[i]);
+
     ret = FALSE;
     if (IS_QUEUED (group->buffer)) {
       GST_DEBUG_OBJECT (allocator,
@@ -1260,10 +1269,6 @@ gst_v4l2_allocator_qbuf (GstV4l2Allocator * allocator,
         "driver pretends buffer is not queued even if queue succeeded");
     SET_QUEUED (group->buffer);
   }
-
-  /* Ensure the memory will stay around and is RO */
-  for (i = 0; i < group->n_mem; i++)
-    gst_memory_ref (group->mem[i]);
 
 done:
   return ret;
