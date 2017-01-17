@@ -862,18 +862,39 @@ GList *gst_player_get_audio_streams (const GstPlayerMediaInfo * info);
 GList *gst_player_get_subtitle_streams (const GstPlayerMediaInfo * info);
 #endif
 
+/**
+ * gst_player_get_video_streams:
+ * @info: a #GstPlayerMediaInfo
+ *
+ * Returns: (transfer none) (element-type GstPlayerVideoInfo): A #GList of
+ * matching #GstPlayerVideoInfo.
+ */
 GList *
 gst_player_get_video_streams (const GstPlayerMediaInfo * info)
 {
   return gst_player_media_info_get_video_streams (info);
 }
 
+/**
+ * gst_player_get_audio_streams:
+ * @info: a #GstPlayerMediaInfo
+ *
+ * Returns: (transfer none) (element-type GstPlayerAudioInfo): A #GList of
+ * matching #GstPlayerAudioInfo.
+ */
 GList *
 gst_player_get_audio_streams (const GstPlayerMediaInfo * info)
 {
   return gst_player_media_info_get_audio_streams (info);
 }
 
+/**
+ * gst_player_get_subtitle_streams:
+ * @info: a #GstPlayerMediaInfo
+ *
+ * Returns: (transfer none) (element-type GstPlayerSubtitleInfo): A #GList of
+ * matching #GstPlayerSubtitleInfo.
+ */
 GList *
 gst_player_get_subtitle_streams (const GstPlayerMediaInfo * info)
 {
