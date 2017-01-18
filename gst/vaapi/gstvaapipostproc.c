@@ -362,7 +362,8 @@ create_output_buffer (GstVaapiPostproc * postproc)
 
   g_return_val_if_fail (pool != NULL, NULL);
 
-  if (!gst_buffer_pool_set_active (pool, TRUE))
+  if (!gst_buffer_pool_is_active (pool) &&
+      !gst_buffer_pool_set_active (pool, TRUE))
     goto error_activate_pool;
 
   outbuf = NULL;

@@ -989,7 +989,8 @@ gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
   if (!plugin->sinkpad_buffer_pool)
     goto error_no_pool;
 
-  if (!gst_buffer_pool_set_active (plugin->sinkpad_buffer_pool, TRUE))
+  if (!gst_buffer_pool_is_active (plugin->sinkpad_buffer_pool) &&
+      !gst_buffer_pool_set_active (plugin->sinkpad_buffer_pool, TRUE))
     goto error_active_pool;
 
   outbuf = NULL;
