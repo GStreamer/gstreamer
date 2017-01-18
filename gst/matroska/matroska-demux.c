@@ -306,6 +306,8 @@ gst_matroska_demux_reset (GstElement * element)
   demux->to_time = GST_CLOCK_TIME_NONE;
   demux->cluster_time = GST_CLOCK_TIME_NONE;
   demux->cluster_offset = 0;
+  demux->cluster_prevsize = 0;
+  demux->seen_cluster_prevsize = FALSE;
   demux->next_cluster_offset = 0;
   demux->stream_last_time = GST_CLOCK_TIME_NONE;
   demux->last_cluster_offset = 0;
@@ -4659,6 +4661,7 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
       break;
     case GST_MATROSKA_READ_STATE_SCANNING:
       if (id != GST_MATROSKA_ID_CLUSTER &&
+          id != GST_MATROSKA_ID_PREVSIZE &&
           id != GST_MATROSKA_ID_CLUSTERTIMECODE) {
         if (demux->common.start_resync_offset != -1) {
           /* we need to skip byte per byte if we are scanning for a new cluster
@@ -4742,6 +4745,7 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
           }
           demux->cluster_time = GST_CLOCK_TIME_NONE;
           demux->cluster_offset = demux->common.offset;
+          demux->cluster_prevsize = 0;
           if (G_UNLIKELY (!demux->seek_first && demux->seek_block)) {
             GST_DEBUG_OBJECT (demux, "seek target block %" G_GUINT64_FORMAT
                 " not found in Cluster, trying next Cluster's first block instead",
@@ -4873,8 +4877,18 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
             GST_OBJECT_UNLOCK (demux);
           }
           break;
+        case GST_MATROSKA_ID_PREVSIZE:{
+          guint64 num;
+
+          GST_READ_CHECK (gst_matroska_demux_take (demux, read, &ebml));
+          if ((ret = gst_ebml_read_uint (&ebml, &id, &num)) != GST_FLOW_OK)
+            goto parse_failed;
+          GST_LOG_OBJECT (demux, "ClusterPrevSize: %" G_GUINT64_FORMAT, num);
+          demux->cluster_prevsize = num;
+          demux->seen_cluster_prevsize = TRUE;
+          break;
+        }
         case GST_MATROSKA_ID_POSITION:
-        case GST_MATROSKA_ID_PREVSIZE:
         case GST_MATROSKA_ID_ENCRYPTEDBLOCK:
         case GST_MATROSKA_ID_SILENTTRACKS:
           GST_DEBUG_OBJECT (demux,
@@ -5245,6 +5259,7 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       demux->common.segment.position = GST_CLOCK_TIME_NONE;
       demux->cluster_time = GST_CLOCK_TIME_NONE;
       demux->cluster_offset = 0;
+      demux->cluster_prevsize = 0;
       demux->need_segment = TRUE;
       demux->segment_seqnum = gst_event_get_seqnum (event);
       /* but keep some of the upstream segment */
@@ -5297,6 +5312,7 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       demux->common.segment.duration = dur;
       demux->cluster_time = GST_CLOCK_TIME_NONE;
       demux->cluster_offset = 0;
+      demux->cluster_prevsize = 0;
       GST_OBJECT_UNLOCK (demux);
       /* fall-through */
     }
