@@ -2,7 +2,7 @@
  * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) 2004 Wim Taymans <wim.taymans@gmail.com>
  * Copyright (C) 2007 Peter Kjellerstedt <pkj@axis.com>
- * Copyright (C) 2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+ * Copyright (C) 2008 Ole AndrÃ© Vadla RavnÃ¥s <ole.andre.ravnas@tandberg.com>
  *
  * gstpoll.c: File descriptor set
  *
