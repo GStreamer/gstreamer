@@ -31,6 +31,7 @@ if libtype != 'shared'
   gst_net = gst_net_static
 endif
 
+gst_net_gen_sources = []
 if libtype != 'static'
   gst_net_shared = shared_library('gstnet-@0@'.format(apiversion),
     gst_net_sources,
@@ -44,7 +45,7 @@ if libtype != 'static'
   )
   gst_net = gst_net_shared
   if build_gir
-    gnome.generate_gir(gst_net_shared,
+    gst_net_gir = gnome.generate_gir(gst_net_shared,
       sources : gst_net_sources + gst_net_headers,
       namespace : 'GstNet',
       nsversion : apiversion,
@@ -57,9 +58,11 @@ if libtype != 'static'
       install : true,
       extra_args : gir_init_section,
     )
+    gst_net_gen_sources += [gst_net_gir]
   endif
 endif
 
 gst_net_dep = declare_dependency(link_with : gst_net,
   include_directories : [libsinc],
+  sources: gst_net_gen_sources,
   dependencies : [gst_base_dep])

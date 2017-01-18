@@ -31,6 +31,8 @@ if libtype != 'shared'
   gst_controller = gst_controller_static
 endif
 
+
+gst_controller_gen_sources = []
 if libtype != 'static'
   gst_controller_shared = shared_library('gstcontroller-@0@'.format(apiversion),
     gst_controller_sources,
@@ -44,7 +46,7 @@ if libtype != 'static'
   )
   gst_controller = gst_controller_shared
   if build_gir
-    gnome.generate_gir(gst_controller_shared,
+    gst_controller_gir = gnome.generate_gir(gst_controller_shared,
       sources : gst_controller_sources + gst_controller_headers,
       namespace : 'GstController',
       nsversion : apiversion,
@@ -57,9 +59,11 @@ if libtype != 'static'
       install : true,
       extra_args : gir_init_section,
     )
+    gst_controller_gen_sources += [gst_controller_gir]
   endif
 endif
 
 gst_controller_dep = declare_dependency(link_with : gst_controller,
   include_directories : [libsinc],
+  sources: gst_controller_gen_sources,
   dependencies : [gst_dep])
