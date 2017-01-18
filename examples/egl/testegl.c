@@ -1059,8 +1059,8 @@ query_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     case GST_QUERY_CONTEXT:
     {
       if (gst_gl_handle_context_query (state->pipeline, query,
-              (GstGLDisplay **) & state->gst_display,
-              (GstGLContext **) & state->gl_context))
+              (GstGLDisplay *) state->gst_display, NULL,
+              (GstGLContext *) state->gl_context))
         return GST_PAD_PROBE_HANDLED;
       break;
     }
