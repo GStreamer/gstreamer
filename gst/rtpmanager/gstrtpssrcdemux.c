@@ -744,6 +744,8 @@ gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstObject * parent,
       ssrc = gst_rtcp_packet_rr_get_ssrc (&packet);
       break;
     case GST_RTCP_TYPE_APP:
+      ssrc = gst_rtcp_packet_app_get_ssrc (&packet);
+      break;
     case GST_RTCP_TYPE_RTPFB:
     case GST_RTCP_TYPE_PSFB:
       ssrc = gst_rtcp_packet_fb_get_sender_ssrc (&packet);

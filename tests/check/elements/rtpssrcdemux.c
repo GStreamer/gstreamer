@@ -277,6 +277,45 @@ GST_START_TEST (test_rtpssrcdemux_max_streams)
 
 GST_END_TEST;
 
+static void
+new_rtcp_ssrc_pad_found (GstElement * element, G_GNUC_UNUSED guint ssrc,
+    G_GNUC_UNUSED GstPad * rtp_pad, GSList ** src_h)
+{
+  GstHarness *h;
+  gchar *name;
+
+  name = g_strdup_printf ("rtcp_src_%u", ssrc);
+  h = gst_harness_new_with_element (element, NULL, name);
+  g_free (name);
+  *src_h = g_slist_prepend (*src_h, h);
+}
+
+GST_START_TEST (test_rtpssrcdemux_rtcp_app)
+{
+  GstHarness *h =
+      gst_harness_new_with_padnames ("rtpssrcdemux", "rtcp_sink", NULL);
+  GSList *src_h = NULL;
+  guint8 rtcp_app_pkt[] = { 0x81, 0xcc, 0x00, 0x05, 0x00, 0x00, 0x5d, 0xaf,
+    0x20, 0x20, 0x20, 0x20, 0x21, 0x02, 0x00, 0x0a,
+    0x00, 0x00, 0x5d, 0xaf, 0x00, 0x00, 0x16, 0x03
+  };
+
+  gst_harness_set_src_caps_str (h, "application/x-rtcp");
+  g_signal_connect (h->element,
+      "new-ssrc-pad", (GCallback) new_rtcp_ssrc_pad_found, &src_h);
+  gst_harness_play (h);
+
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, gst_buffer_new_wrapped_full (0, rtcp_app_pkt,
+              sizeof rtcp_app_pkt, 0, sizeof rtcp_app_pkt, NULL, NULL)));
+
+  fail_unless_equals_int (g_slist_length (src_h), 1);
+  g_slist_free_full (src_h, (GDestroyNotify) gst_harness_teardown);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_rtpssrcdemux_invalid_rtp)
 {
   GstHarness *h = gst_harness_new_with_padnames ("rtpssrcdemux", "sink", NULL);
@@ -316,6 +355,8 @@ GST_START_TEST (test_rtpssrcdemux_invalid_rtcp)
 
 GST_END_TEST;
 
+
+
 static Suite *
 rtpssrcdemux_suite (void)
 {
@@ -326,6 +367,7 @@ rtpssrcdemux_suite (void)
   tcase_add_test (tc_chain, test_event_forwarding);
   tcase_add_test (tc_chain, test_oob_event_locking);
   tcase_add_test (tc_chain, test_rtpssrcdemux_max_streams);
+  tcase_add_test (tc_chain, test_rtpssrcdemux_rtcp_app);
   tcase_add_test (tc_chain, test_rtpssrcdemux_invalid_rtp);
   tcase_add_test (tc_chain, test_rtpssrcdemux_invalid_rtcp);
 
