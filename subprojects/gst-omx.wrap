@@ -1,0 +1,4 @@
+[wrap-git]
+directory=gst-omx
+url=https://anongit.freedesktop.org/git/gstreamer/gst-omx.git
+revision=master

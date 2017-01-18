@@ -2,6 +2,7 @@
 gst-devtools
 gst-editing-services
 gst-libav
+gst-omx
 gst-plugins-bad
 gst-plugins-base
 gst-plugins-good
@@ -14,6 +15,7 @@ meson/
 subprojects/gst-devtools/
 subprojects/gst-editing-services/
 subprojects/gst-libav/
+subprojects/gst-omx/
 subprojects/gst-plugins-bad/
 subprojects/gst-plugins-base/
 subprojects/gst-plugins-good/

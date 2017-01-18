@@ -55,6 +55,10 @@ if not get_option('disable_gst_libav')
     subprojects += gst_libav
 endif
 
+if not get_option('disable_gst_omx')
+    subprojects += ['gst-omx']
+endif
+
 if not get_option('disable_gst_devtools')
   if dependency('json-glib-1.0', required : false).found()
     subprojects += ['gst-devtools']
