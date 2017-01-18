@@ -587,32 +587,44 @@ static gboolean
 gst_parse_element_can_do_caps (GstElement * e, GstPadDirection dir,
     GstCaps * link_caps)
 {
-  gboolean can_do = FALSE;
-  GList *pads;
+  gboolean can_do = FALSE, done = FALSE;
+  GstIterator *it;
 
-  GST_OBJECT_LOCK (e);
+  it = (dir == GST_PAD_SRC) ? gst_element_iterate_src_pads (e) : gst_element_iterate_sink_pads (e);
 
-  pads = (dir == GST_PAD_SRC) ? e->srcpads : e->sinkpads;
-
-  while (!can_do && pads != NULL) {
-    GstPad *pad = pads->data;
+  while (!done && !can_do) {
+    GValue v = G_VALUE_INIT;
+    GstPad *pad;
     GstCaps *caps;
 
-    caps = gst_pad_get_current_caps (pad);
-    if (caps == NULL)
-      caps = gst_pad_query_caps (pad, NULL);
+    switch (gst_iterator_next (it, &v)) {
+      case GST_ITERATOR_OK:
+        pad = g_value_get_object (&v);
 
-    can_do = gst_caps_can_intersect (caps, link_caps);
+        caps = gst_pad_get_current_caps (pad);
+        if (caps == NULL)
+          caps = gst_pad_query_caps (pad, NULL);
 
-    GST_TRACE ("can_do: %d for %" GST_PTR_FORMAT " and %" GST_PTR_FORMAT,
-        can_do, caps, link_caps);
+        can_do = gst_caps_can_intersect (caps, link_caps);
 
-    gst_caps_unref (caps);
+        GST_TRACE ("can_do: %d for %" GST_PTR_FORMAT " and %" GST_PTR_FORMAT,
+            can_do, caps, link_caps);
 
-    pads = pads->next;
+        gst_caps_unref (caps);
+
+        g_value_unset (&v);
+        break;
+      case GST_ITERATOR_DONE:
+      case GST_ITERATOR_ERROR:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        break;
+    }
   }
 
-  GST_OBJECT_UNLOCK (e);
+  gst_iterator_free (it);
 
   return can_do;
 }
