@@ -321,6 +321,7 @@ static gboolean gst_decode_bin_remove_element (GstBin * bin,
 static gboolean check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad);
 
 static GstCaps *get_pad_caps (GstPad * pad);
+static void unblock_pads (GstDecodeBin * dbin);
 
 #define EXPOSE_LOCK(dbin) G_STMT_START {				\
     GST_LOG_OBJECT (dbin,						\
@@ -1127,6 +1128,8 @@ gst_decode_bin_dispose (GObject * object)
 
   g_list_free (decode_bin->subtitles);
   decode_bin->subtitles = NULL;
+
+  unblock_pads (decode_bin);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -5188,19 +5191,20 @@ unblock_pads (GstDecodeBin * dbin)
     GstPad *opad;
 
     opad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (dpad));
-    if (!opad)
-      continue;
+    if (opad) {
 
-    GST_DEBUG_OBJECT (dpad, "unblocking");
-    if (dpad->block_id != 0) {
-      gst_pad_remove_probe (opad, dpad->block_id);
-      dpad->block_id = 0;
+      GST_DEBUG_OBJECT (dpad, "unblocking");
+      if (dpad->block_id != 0) {
+        gst_pad_remove_probe (opad, dpad->block_id);
+        dpad->block_id = 0;
+      }
+      gst_object_unref (opad);
     }
+
     dpad->blocked = FALSE;
     /* make flushing, prevent NOT_LINKED */
     gst_pad_set_active (GST_PAD_CAST (dpad), FALSE);
     gst_object_unref (dpad);
-    gst_object_unref (opad);
     GST_DEBUG_OBJECT (dpad, "unblocked");
   }
 
@@ -5319,6 +5323,7 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
           G_CALLBACK (type_found), dbin);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       if (dbin->have_type_id)
         g_signal_handler_disconnect (dbin->typefind, dbin->have_type_id);
       dbin->have_type_id = 0;
