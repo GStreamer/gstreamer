@@ -147,9 +147,12 @@
  *   </varlistentry>
  * </variablelist>
  *
- * A #GstBin will by default forward any event sent to it to all sink elements.
- * If all the sinks return %TRUE, the bin will also return %TRUE, else %FALSE is
- * returned. If no sinks are in the bin, the event handler will return %TRUE.
+ * A #GstBin will by default forward any event sent to it to all sink
+ * (#GST_EVENT_TYPE_DOWNSTREAM) or source (#GST_EVENT_TYPE_UPSTREAM) elements
+ * depending on the event type.
+ * If all the elements return %TRUE, the bin will also return %TRUE, else %FALSE
+ * is returned. If no elements of the required type are in the bin, the event
+ * handler will return %TRUE.
  *
  * </para>
  * </refsect2>
@@ -3129,13 +3132,11 @@ undo:
 }
 
 /*
- * This function is a utility event handler for seek events.
- * It will send the event to all sinks or sources and appropriate
- * ghost pads depending on the event-direction.
+ * This function is a utility event handler. It will send the event to all sinks
+ * or sources and appropriate ghost pads depending on the event-direction.
  *
- * Applications are free to override this behaviour and
- * implement their own seek handler, but this will work for
- * pretty much all cases in practice.
+ * Applications are free to override this behaviour and implement their own
+ * handler, but this will work for pretty much all cases in practice.
  */
 static gboolean
 gst_bin_send_event (GstElement * element, GstEvent * event)
