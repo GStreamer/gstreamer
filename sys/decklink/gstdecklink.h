@@ -111,6 +111,7 @@ typedef enum {
 GType gst_decklink_audio_connection_get_type (void);
 
 typedef enum {
+  GST_DECKLINK_AUDIO_CHANNELS_MAX = 0,
   GST_DECKLINK_AUDIO_CHANNELS_2 = 2,
   GST_DECKLINK_AUDIO_CHANNELS_8 = 8,
   GST_DECKLINK_AUDIO_CHANNELS_16 = 16

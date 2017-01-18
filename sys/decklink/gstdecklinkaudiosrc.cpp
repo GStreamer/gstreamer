@@ -427,10 +427,11 @@ gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 
   if (!caps) {
     GstCaps *channel_filter, *templ;
+
     templ = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
     channel_filter =
         gst_caps_new_simple ("audio/x-raw", "channels", G_TYPE_INT,
-        self->channels, NULL);
+        self->channels_found, NULL);
     caps = gst_caps_intersect (channel_filter, templ);
     gst_caps_unref (channel_filter);
     gst_caps_unref (templ);
@@ -736,6 +737,23 @@ gst_decklink_audio_src_open (GstDecklinkAudioSrc * self)
   }
 
   g_mutex_lock (&self->input->lock);
+  if (self->channels > 0) {
+    self->channels_found = self->channels;
+  } else {
+    if (self->input->attributes) {
+      HRESULT ret = self->input->attributes->GetInt
+          (BMDDeckLinkMaximumAudioChannels, &self->channels_found);
+      /* Sometimes the card may report an invalid number of channels. In
+       * that case, we should (empirically) use 8. */
+      if (ret != S_OK ||
+          self->channels_found == 0 || g_enum_get_value ((GEnumClass *)
+              g_type_class_peek (GST_TYPE_DECKLINK_AUDIO_CHANNELS),
+              self->channels_found)
+          == NULL) {
+        self->channels_found = GST_DECKLINK_AUDIO_CHANNELS_8;
+      }
+    }
+  }
   self->input->got_audio_packet = gst_decklink_audio_src_got_packet;
   g_mutex_unlock (&self->input->lock);
 

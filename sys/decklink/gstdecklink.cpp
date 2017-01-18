@@ -200,6 +200,7 @@ gst_decklink_audio_channels_get_type (void)
     {GST_DECKLINK_AUDIO_CHANNELS_2, "2 Channels", "2"},
     {GST_DECKLINK_AUDIO_CHANNELS_8, "8 Channels", "8"},
     {GST_DECKLINK_AUDIO_CHANNELS_16, "16 Channels", "16"},
+    {GST_DECKLINK_AUDIO_CHANNELS_MAX, "Maximum channels supported", "max"},
     {0, NULL, NULL}
   };
 
