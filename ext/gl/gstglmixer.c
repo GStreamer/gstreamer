@@ -224,6 +224,7 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps, GstCaps * filter)
 
   if (filter) {
     tmp = gst_caps_intersect (caps, filter);
+    tmp = gst_caps_make_writable (tmp);
   } else {
     tmp = gst_caps_copy (caps);
   }
