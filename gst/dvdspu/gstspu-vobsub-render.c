@@ -426,6 +426,7 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
   gint y, last_y;
   gint width, height;
   gint strides[3];
+  gint offset_index = 0;
 
   /* Set up our initial state */
   if (G_UNLIKELY (state->vobsub.pix_buf == NULL))
@@ -534,7 +535,7 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
     state->vobsub.clip_rect.top = state->vobsub.disp_rect.top;
     state->vobsub.clip_rect.bottom = state->vobsub.disp_rect.bottom;
 
-    /* clip right after the shift */
+    /* clip bottom after the shift */
     if (state->vobsub.clip_rect.bottom >= height)
       state->vobsub.clip_rect.bottom = height - 1;
 
@@ -545,18 +546,48 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
 
   /* We start rendering from the first line of the display rect */
   y = state->vobsub.disp_rect.top;
-  /* start_y is always an even number and we render lines in pairs from there,
+  /* We render most lines in pairs starting from an even y,
    * accumulating 2 lines of chroma then blending it. We might need to render a
-   * single line at the end if the display rect ends on an even line too. */
-  last_y = (state->vobsub.disp_rect.bottom - 1) & ~(0x01);
+   * single line at the start and end if the display rect starts on an odd line
+   * or ends on an even one */
+  if (y > state->vobsub.disp_rect.bottom)
+    return;                     /* Empty clip rect, nothing to do */
 
   /* Update our plane references to the first line of the disp_rect */
   planes[0] += strides[0] * y;
   planes[1] += strides[1] * (y / 2);
   planes[2] += strides[2] * (y / 2);
 
-  for (state->vobsub.cur_Y = y; state->vobsub.cur_Y <= last_y;
-      state->vobsub.cur_Y++) {
+  /* If the render rect starts on an odd line, render that only to start */
+  state->vobsub.cur_Y = y;
+  if (state->vobsub.cur_Y & 0x1) {
+    gboolean clip, visible = FALSE;
+
+    clip = (state->vobsub.cur_Y < state->vobsub.clip_rect.top
+        || state->vobsub.cur_Y > state->vobsub.clip_rect.bottom);
+
+    if (!clip) {
+      /* Render a first odd line. */
+      gstspu_vobsub_clear_comp_buffers (state);
+      state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x + 1;
+      visible |=
+          gstspu_vobsub_render_line (state, planes,
+          &state->vobsub.cur_offsets[offset_index]);
+      if (visible)
+        gstspu_vobsub_blend_comp_buffers (state, planes);
+    }
+
+    /* Update all the output pointers */
+    state->vobsub.cur_Y++;
+    planes[0] += strides[0];
+    planes[1] += strides[1];
+    planes[2] += strides[2];
+    /* Switch the offset index 0 <=> 1 */
+    offset_index ^= 0x1;
+  }
+
+  last_y = (state->vobsub.disp_rect.bottom - 1) & ~(0x01);
+  for (; state->vobsub.cur_Y <= last_y; state->vobsub.cur_Y++) {
     gboolean clip, visible = FALSE;
 
     clip = (state->vobsub.cur_Y < state->vobsub.clip_rect.top
@@ -566,10 +597,13 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
     gstspu_vobsub_clear_comp_buffers (state);
     /* Render even line */
     state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x;
-    gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[0]);
+    gstspu_vobsub_render_line (state, planes,
+        &state->vobsub.cur_offsets[offset_index]);
 
     /* Advance the luminance output pointer */
     planes[0] += strides[0];
+    /* Switch the offset index 0 <=> 1 */
+    offset_index ^= 0x1;
 
     state->vobsub.cur_Y++;
 
@@ -577,7 +611,7 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
     state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x + 1;
     visible |=
         gstspu_vobsub_render_line (state, planes,
-        &state->vobsub.cur_offsets[1]);
+        &state->vobsub.cur_offsets[offset_index]);
 
     if (visible && !clip) {
       /* Blend the accumulated UV compositing buffers onto the output */
@@ -588,6 +622,8 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
     planes[0] += strides[0];
     planes[1] += strides[1];
     planes[2] += strides[2];
+    /* Switch the offset index 0 <=> 1 */
+    offset_index ^= 0x1;
   }
 
   if (state->vobsub.cur_Y == state->vobsub.disp_rect.bottom) {
@@ -596,7 +632,7 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
     clip = (state->vobsub.cur_Y < state->vobsub.clip_rect.top
         || state->vobsub.cur_Y > state->vobsub.clip_rect.bottom);
 
-    g_assert ((state->vobsub.disp_rect.bottom & 0x01) == 0);
+    g_return_if_fail ((state->vobsub.disp_rect.bottom & 0x01) == 0);
 
     if (!clip) {
       /* Render a remaining lone last even line. y already has the correct value
@@ -605,7 +641,7 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
       state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x;
       visible |=
           gstspu_vobsub_render_line (state, planes,
-          &state->vobsub.cur_offsets[0]);
+          &state->vobsub.cur_offsets[offset_index]);
       if (visible)
         gstspu_vobsub_blend_comp_buffers (state, planes);
     }
