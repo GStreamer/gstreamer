@@ -1250,8 +1250,8 @@ handle_get_param_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (res != GST_RTSP_OK)
     goto bad_request;
 
-  if (size == 0) {
-    /* no body, keep-alive request */
+  if (size == 1) {
+    /* no body (only '\0'), keep-alive request */
     send_generic_response (client, GST_RTSP_STS_OK, ctx);
   } else {
     /* there is a body, handle the params */
@@ -1302,8 +1302,8 @@ handle_set_param_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (res != GST_RTSP_OK)
     goto bad_request;
 
-  if (size == 0) {
-    /* no body, keep-alive request */
+  if (size == 1) {
+    /* no body (only '\0'), keep-alive request */
     send_generic_response (client, GST_RTSP_STS_OK, ctx);
   } else {
     /* there is a body, handle the params */
