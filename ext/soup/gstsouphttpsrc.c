@@ -1413,34 +1413,40 @@ static GstFlowReturn
 gst_soup_http_src_send_message (GstSoupHTTPSrc * src)
 {
   GstFlowReturn ret;
+  GError *error = NULL;
 
   g_return_val_if_fail (src->msg != NULL, GST_FLOW_ERROR);
 
-  /* FIXME We are ignoring the GError here, might be useful to debug */
   src->input_stream =
-      soup_session_send (src->session, src->msg, src->cancellable, NULL);
+      soup_session_send (src->session, src->msg, src->cancellable, &error);
 
-  if (g_cancellable_is_cancelled (src->cancellable))
-    return GST_FLOW_FLUSHING;
+  if (g_cancellable_is_cancelled (src->cancellable)) {
+    ret = GST_FLOW_FLUSHING;
+    goto done;
+  }
 
   ret = gst_soup_http_src_got_headers (src, src->msg);
   if (ret != GST_FLOW_OK) {
-    return ret;
+    goto done;
   }
 
   if (!src->input_stream) {
-    GST_DEBUG_OBJECT (src, "Didn't get an input stream");
-    return GST_FLOW_ERROR;
+    GST_DEBUG_OBJECT (src, "Didn't get an input stream: %s", error->message);
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 
   if (SOUP_STATUS_IS_SUCCESSFUL (src->msg->status_code)) {
     GST_DEBUG_OBJECT (src, "Successfully got a reply");
   } else {
     /* FIXME - be more helpful to people debugging */
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
   }
 
-  return GST_FLOW_OK;
+done:
+  if (error)
+    g_error_free (error);
+  return ret;
 }
 
 static GstFlowReturn
