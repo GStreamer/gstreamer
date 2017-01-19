@@ -1649,7 +1649,7 @@ static GstFlowReturn
 gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstSoupHTTPSrc *src;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   GstEvent *http_headers_event = NULL;
 
   src = GST_SOUP_HTTP_SRC (psrc);
