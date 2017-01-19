@@ -1024,7 +1024,6 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
   const char *value;
   GstTagList *tag_list;
   GstBaseSrc *basesrc;
-  GstFlowReturn ret;
   guint64 newsize;
   GHashTable *params = NULL;
   GstEvent *http_headers_event;
@@ -1239,23 +1238,7 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
   }
 
   /* Handle HTTP errors. */
-  ret = gst_soup_http_src_parse_status (msg, src);
-
-  /* Check if Range header was respected. */
-  if (ret == GST_FLOW_CUSTOM_ERROR &&
-      src->read_position && msg->status_code != SOUP_STATUS_PARTIAL_CONTENT) {
-    src->seekable = FALSE;
-    GST_ELEMENT_ERROR_WITH_DETAILS (src, RESOURCE, SEEK,
-        (_("Server does not support seeking.")),
-        ("Server does not accept Range HTTP header, URL: %s, Redirect to: %s",
-            src->location, GST_STR_NULL (src->redirection_uri)),
-        ("http-status-code", G_TYPE_UINT, msg->status_code,
-            "http-redirection-uri", G_TYPE_STRING,
-            GST_STR_NULL (src->redirection_uri), NULL));
-    ret = GST_FLOW_ERROR;
-  }
-
-  return ret;
+  return gst_soup_http_src_parse_status (msg, src);
 }
 
 static GstBuffer *
@@ -1463,6 +1446,8 @@ gst_soup_http_src_send_message (GstSoupHTTPSrc * src)
 static GstFlowReturn
 gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method)
 {
+  GstFlowReturn ret;
+
   if (src->max_retries != -1 && src->retry_count > src->max_retries) {
     GST_DEBUG_OBJECT (src, "Max retries reached");
     return GST_FLOW_ERROR;
@@ -1492,7 +1477,23 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method)
     return GST_FLOW_FLUSHING;
   }
 
-  return gst_soup_http_src_send_message (src);
+  ret = gst_soup_http_src_send_message (src);
+
+  /* Check if Range header was respected. */
+  if (ret == GST_FLOW_OK && src->request_position > 0 &&
+      src->msg->status_code != SOUP_STATUS_PARTIAL_CONTENT) {
+    src->seekable = FALSE;
+    GST_ELEMENT_ERROR_WITH_DETAILS (src, RESOURCE, SEEK,
+        (_("Server does not support seeking.")),
+        ("Server does not accept Range HTTP header, URL: %s, Redirect to: %s",
+            src->location, GST_STR_NULL (src->redirection_uri)),
+        ("http-status-code", G_TYPE_UINT, src->msg->status_code,
+            "http-redirection-uri", G_TYPE_STRING,
+            GST_STR_NULL (src->redirection_uri), NULL));
+    ret = GST_FLOW_ERROR;
+  }
+
+  return ret;
 }
 
 /*
