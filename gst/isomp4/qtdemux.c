@@ -8545,6 +8545,8 @@ done2:
           /* save values */
           stream->stts_time = stts_time;
           stream->stts_sample_index = j + 1;
+          if (stream->stts_sample_index >= stream->stts_samples)
+            stream->stts_index++;
           goto done3;
         }
       }
