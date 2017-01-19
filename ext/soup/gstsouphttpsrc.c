@@ -1467,7 +1467,7 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method)
   GST_LOG_OBJECT (src, "Running request for method: %s", method);
 
   /* Update the position if we are retrying */
-  if (src->msg && (src->request_position != src->read_position)) {
+  if (src->msg && src->request_position > 0) {
     gst_soup_http_src_add_range_header (src, src->request_position,
         src->stop_position);
   }
@@ -1637,7 +1637,8 @@ gst_soup_http_src_read_buffer (GstSoupHTTPSrc * src, GstBuffer ** outbuf)
     }
   } else {
     gst_buffer_unref (*outbuf);
-    if (read_bytes < 0) {
+    if (read_bytes < 0 ||
+        (src->have_size && src->read_position < src->content_size)) {
       /* Maybe the server disconnected, retry */
       ret = GST_FLOW_CUSTOM_ERROR;
     } else {
