@@ -835,6 +835,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
         etrack->mapping_data = NULL;
         if (etrack->tags)
           gst_tag_list_unref (etrack->tags);
+        etrack->tags = NULL;
         goto next;
       } else if (!caps) {
         GST_WARNING_OBJECT (demux, "Couldn't create updated caps for stream");
