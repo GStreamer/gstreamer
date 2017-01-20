@@ -1366,9 +1366,6 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
 
               if (channels != -1) {
                 is_audio = TRUE;
-                template = gst_static_pad_template_get (&audio_template);
-                name = g_strdup_printf ("audio_%04x", bstream->pid);
-
                 caps =
                     gst_codec_utils_opus_create_caps (48000, channels,
                     mapping_family, stream_count, coupled_count,
