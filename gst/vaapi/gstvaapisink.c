@@ -1376,6 +1376,7 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
   GstVaapiRectangle tmp_rect;
   GstFlowReturn ret;
   gint32 view_id;
+  GstVideoCropMeta *crop_meta;
 
   if (!src_buffer) {
     if (sink->video_buffer)
@@ -1384,8 +1385,7 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
       return GST_FLOW_OK;
   }
 
-  GstVideoCropMeta *const crop_meta =
-      gst_buffer_get_video_crop_meta (src_buffer);
+  crop_meta = gst_buffer_get_video_crop_meta (src_buffer);
   if (crop_meta) {
     surface_rect = &tmp_rect;
     surface_rect->x = crop_meta->x;
