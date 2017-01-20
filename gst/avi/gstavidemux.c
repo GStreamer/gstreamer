@@ -3914,6 +3914,9 @@ gst_avi_demux_parse_ncdt (GstAviDemux * avi, GstBuffer * buf,
           ptr += 4;
           left -= 4;
 
+          if (sub_size > tsize)
+            break;
+
           GST_DEBUG_OBJECT (avi, "sub-tag %u, size %u", sub_tag, sub_size);
           /* http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/Nikon.html#NCTG
            * for some reason the sub_tag has a +2 offset
