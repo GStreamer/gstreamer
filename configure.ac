@@ -359,13 +359,13 @@ AG_GST_CHECK_FEATURE(IQA, [iqa], iqa , [
     HAVE_IQA="no"
   ])
 
-  AM_CONDITIONAL(HAVE_DSSIM, test "x$HAVE_DSSIM" = "xyes")
   if test "x$HAVE_DSSIM" = "xyes"; then
     AC_DEFINE(HAVE_DSSIM, 1, [Define if you have dssim library])
   fi
   AC_SUBST(DSSIM_LIBS)
   AC_SUBST(DSSIM_CFLAGS)
 ])
+AM_CONDITIONAL(HAVE_DSSIM, test "x$HAVE_DSSIM" = "xyes")
 
 dnl Orc
 ORC_CHECK([0.4.17])
