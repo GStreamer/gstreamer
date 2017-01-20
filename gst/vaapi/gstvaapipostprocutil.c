@@ -586,6 +586,28 @@ _set_colorimetry (GstVaapiPostproc * postproc, GstVideoFormat format,
 }
 
 static gboolean
+_set_interlace_mode (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
+    GstStructure * outs)
+{
+  const gchar *interlace_mode = NULL;
+
+  if (is_deinterlace_enabled (postproc, vinfo)) {
+    interlace_mode = "progressive";
+  } else {
+    interlace_mode =
+        gst_video_interlace_mode_to_string (GST_VIDEO_INFO_INTERLACE_MODE
+        (vinfo));
+  }
+
+  if (!interlace_mode)
+    return FALSE;
+
+  gst_structure_set (outs, "interlace-mode", G_TYPE_STRING, interlace_mode,
+      NULL);
+  return TRUE;
+}
+
+static gboolean
 _set_preferred_format (GstStructure * outs, GstVideoFormat format)
 {
   GValue value = G_VALUE_INIT;
@@ -649,6 +671,9 @@ _get_preferred_caps (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
   if (f == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)
     _set_colorimetry (postproc, format, structure);
 
+  if (!_set_interlace_mode (postproc, vinfo, structure))
+    goto interlace_mode_failed;
+
   outcaps = gst_caps_new_empty ();
   gst_caps_append_structure_full (outcaps, structure,
       gst_caps_features_copy (features));
@@ -671,6 +696,11 @@ fixate_failed:
 invalid_caps:
   {
     GST_WARNING_OBJECT (postproc, "No valid src caps found");
+    return NULL;
+  }
+interlace_mode_failed:
+  {
+    GST_WARNING_OBJECT (postproc, "Invalid sink caps interlace mode");
     return NULL;
   }
 }
