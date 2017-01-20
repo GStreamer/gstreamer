@@ -1299,22 +1299,28 @@ gst_riff_create_audio_caps (guint16 codec_id,
       if (strf != NULL) {
         gint ba = strf->blockalign;
         gint ch = strf->channels;
-        gint wd = ba * 8 / ch;
 
-        caps = gst_caps_new_simple ("audio/x-raw",
-            "format", G_TYPE_STRING, wd == 64 ? "F64LE" : "F32LE",
-            "layout", G_TYPE_STRING, "interleaved",
-            "channels", G_TYPE_INT, ch, NULL);
+        if (ba > 0 && ch > 0 && (ba == (64 / 8) * ch || ba == (32 / 8) * ch)) {
+          gint wd = ba * 8 / ch;
 
-        /* Add default channel layout. We know no default layout for more than
-         * 8 channels. */
-        if (ch > 8)
-          GST_WARNING ("don't know default layout for %d channels", ch);
-        else if (gst_riff_wave_add_default_channel_mask (caps, ch,
-                channel_reorder_map))
-          GST_DEBUG ("using default channel layout for %d channels", ch);
-        else
-          GST_WARNING ("failed to add channel layout");
+          caps = gst_caps_new_simple ("audio/x-raw",
+              "format", G_TYPE_STRING, wd == 64 ? "F64LE" : "F32LE",
+              "layout", G_TYPE_STRING, "interleaved",
+              "channels", G_TYPE_INT, ch, NULL);
+
+          /* Add default channel layout. We know no default layout for more than
+           * 8 channels. */
+          if (ch > 8)
+            GST_WARNING ("don't know default layout for %d channels", ch);
+          else if (gst_riff_wave_add_default_channel_mask (caps, ch,
+                  channel_reorder_map))
+            GST_DEBUG ("using default channel layout for %d channels", ch);
+          else
+            GST_WARNING ("failed to add channel layout");
+        } else {
+          GST_WARNING ("invalid block align %d or channel count %d", ba, ch);
+          return NULL;
+        }
       } else {
         /* FIXME: this is pretty useless - we need fixed caps */
         caps = gst_caps_from_string ("audio/x-raw, "
