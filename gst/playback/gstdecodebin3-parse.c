@@ -585,6 +585,9 @@ parsebin_pad_removed_cb (GstElement * demux, GstPad * pad, DecodebinInput * inp)
           free_output_stream (dbin, output);
         }
         GST_DEBUG_OBJECT (pad, "No pending pad, Remove multiqueue slot");
+        if (slot->probe_id)
+          gst_pad_remove_probe (slot->src_pad, slot->probe_id);
+        slot->probe_id = 0;
         dbin->slots = g_list_remove (dbin->slots, slot);
         free_multiqueue_slot_async (dbin, slot);
       }

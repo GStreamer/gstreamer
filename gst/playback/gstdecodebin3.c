@@ -1592,15 +1592,17 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
             dbin->output_streams = g_list_remove (dbin->output_streams, output);
             free_output_stream (dbin, output);
           }
+          slot->probe_id = 0;
           dbin->slots = g_list_remove (dbin->slots, slot);
           free_multiqueue_slot_async (dbin, slot);
           SELECTION_UNLOCK (dbin);
-          ret = GST_PAD_PROBE_HANDLED;
+          ret = GST_PAD_PROBE_REMOVE;
         }
         break;
       case GST_EVENT_CUSTOM_DOWNSTREAM:
         if (gst_event_has_name (ev, "decodebin3-custom-eos")) {
           slot->is_drained = TRUE;
+          ret = GST_PAD_PROBE_DROP;
           SELECTION_LOCK (dbin);
           if (slot->input == NULL) {
             GST_DEBUG_OBJECT (pad,
@@ -1612,11 +1614,12 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
                   g_list_remove (dbin->output_streams, output);
               free_output_stream (dbin, output);
             }
+            slot->probe_id = 0;
             dbin->slots = g_list_remove (dbin->slots, slot);
             free_multiqueue_slot_async (dbin, slot);
+            ret = GST_PAD_PROBE_REMOVE;
           }
           SELECTION_UNLOCK (dbin);
-          ret = GST_PAD_PROBE_DROP;
         }
         break;
       default:
