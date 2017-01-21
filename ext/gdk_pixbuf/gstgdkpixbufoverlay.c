@@ -610,12 +610,28 @@ gst_gdk_pixbuf_overlay_before_transform (GstBaseTransform * trans,
     GstBuffer * outbuf)
 {
   GstClockTime stream_time;
+  GstGdkPixbufOverlay *overlay = GST_GDK_PIXBUF_OVERLAY (trans);
+  gboolean set_passthrough = FALSE;
 
   stream_time = gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (outbuf));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (trans), stream_time);
+
+  /* now properties have been sync'ed; maybe need to update composition */
+  GST_OBJECT_LOCK (overlay);
+  if (G_UNLIKELY (overlay->update_composition)) {
+    gst_gdk_pixbuf_overlay_update_composition (overlay);
+    overlay->update_composition = FALSE;
+    set_passthrough = TRUE;
+  }
+  GST_OBJECT_UNLOCK (overlay);
+
+  /* determine passthrough mode so the buffer is writable if needed
+   * when passed into _transform_ip */
+  if (G_UNLIKELY (set_passthrough))
+    gst_base_transform_set_passthrough (trans, overlay->comp == NULL);
 }
 
 static GstFlowReturn
@@ -623,15 +639,6 @@ gst_gdk_pixbuf_overlay_transform_frame_ip (GstVideoFilter * filter,
     GstVideoFrame * frame)
 {
   GstGdkPixbufOverlay *overlay = GST_GDK_PIXBUF_OVERLAY (filter);
-
-  GST_OBJECT_LOCK (overlay);
-
-  if (G_UNLIKELY (overlay->update_composition)) {
-    gst_gdk_pixbuf_overlay_update_composition (overlay);
-    overlay->update_composition = FALSE;
-  }
-
-  GST_OBJECT_UNLOCK (overlay);
 
   if (overlay->comp != NULL)
     gst_video_overlay_composition_blend (overlay->comp, frame);
