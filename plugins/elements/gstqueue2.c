@@ -2580,7 +2580,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
         GST_QUEUE2_MUTEX_UNLOCK (queue);
         gst_queue2_post_buffering (queue);
       } else {
-        /* non-serialized events are passed upstream. */
+        /* non-serialized events are passed downstream. */
         ret = gst_pad_push_event (queue->srcpad, event);
       }
       break;
@@ -2592,10 +2592,12 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
   /* ERRORS */
 out_flushing:
   {
-    GST_DEBUG_OBJECT (queue, "refusing event, we are flushing");
+    GstFlowReturn ret = queue->sinkresult;
+    GST_DEBUG_OBJECT (queue, "refusing event, we are %s",
+        gst_flow_get_name (ret));
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     gst_event_unref (event);
-    return GST_FLOW_FLUSHING;
+    return ret;
   }
 out_eos:
   {
@@ -2671,7 +2673,8 @@ gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
   /* ERRORS */
 out_flushing:
   {
-    GST_DEBUG_OBJECT (queue, "refusing query, we are flushing");
+    GST_DEBUG_OBJECT (queue, "refusing query, we are %s",
+        gst_flow_get_name (queue->sinkresult));
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     return FALSE;
   }
@@ -2994,8 +2997,9 @@ no_item:
   }
 out_flushing:
   {
-    GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because we are flushing");
-    return GST_FLOW_FLUSHING;
+    GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because we are %s",
+        gst_flow_get_name (queue->srcresult));
+    return queue->srcresult;
   }
 }
 
@@ -3424,7 +3428,7 @@ out_flushing:
   {
     ret = queue->srcresult;
 
-    GST_DEBUG_OBJECT (queue, "we are flushing");
+    GST_DEBUG_OBJECT (queue, "we are %s", gst_flow_get_name (ret));
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     return ret;
   }
