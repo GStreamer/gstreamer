@@ -32,13 +32,13 @@ more buffers are to be processed after the EOS event.
 ```
 
 1) **`STREAM_START`**
-   - marks the start of a stream; unlike the SEGMENT event, there
-     will be no STREAM_START event after flushing seeks.
+   - marks the start of a stream; unlike the `SEGMENT` event, there
+     will be no `STREAM_START` event after flushing seeks.
 
 2) **`SEGMENT`**, rate, start/stop, time
    - marks valid buffer timestamp range (start, stop)
    - marks `stream_time` of buffers (time). This is the stream time of buffers
-     with a timestamp of S.start.
+     with a timestamp of `S.start`.
    - marks playback rate (rate). This is the required playback rate.
    - marks applied rate (`applied_rate`). This is the already applied playback
      rate. (See also [trickmodes](design/trickmodes.md))
