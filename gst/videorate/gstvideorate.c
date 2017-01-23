@@ -1018,8 +1018,21 @@ gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
     {
       GstFormat format;
       gint64 duration;
+      gdouble rate;
 
+      res =
+          GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+          query);
 
+      if (!res)
+        break;
+
+      GST_OBJECT_LOCK (videorate);
+      rate = videorate->rate;
+      GST_OBJECT_UNLOCK (videorate);
+
+      if (rate == 1.0)
+        break;
 
       gst_query_parse_duration (query, &format, &duration);
 
@@ -1029,28 +1042,34 @@ gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
       }
       GST_LOG_OBJECT (videorate, "upstream duration: %" G_GINT64_FORMAT,
           duration);
+      /* Shouldn't this be a multiplication if the direction is downstream? */
       if (GST_CLOCK_TIME_IS_VALID (duration)) {
-        duration = (gint64) (duration / videorate->rate);
+        duration = (gint64) (duration / rate);
       }
       GST_LOG_OBJECT (videorate, "our duration: %" G_GINT64_FORMAT, duration);
       gst_query_set_duration (query, format, duration);
-      res = TRUE;
       break;
     }
     case GST_QUERY_POSITION:
     {
       GstFormat dst_format;
       gint64 dst_value;
+      gdouble rate;
 
-      gst_query_parse_position (query, &dst_format, &dst_value);
+      GST_OBJECT_LOCK (videorate);
+      rate = videorate->rate;
+      GST_OBJECT_UNLOCK (videorate);
+
+      gst_query_parse_position (query, &dst_format, NULL);
 
       if (dst_format != GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (videorate, "not TIME format");
         break;
       }
+      /* Shouldn't this be a multiplication if the direction is downstream? */
       dst_value =
           (gint64) (gst_segment_to_stream_time (&videorate->segment,
-              GST_FORMAT_TIME, videorate->last_ts / videorate->rate));
+              GST_FORMAT_TIME, videorate->last_ts / rate));
       GST_LOG_OBJECT (videorate, "our position: %" GST_TIME_FORMAT,
           GST_TIME_ARGS (dst_value));
       gst_query_set_position (query, dst_format, dst_value);

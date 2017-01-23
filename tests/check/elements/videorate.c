@@ -1287,6 +1287,7 @@ listen_sink_query_duration (GstPad * pad, GstPadProbeInfo * info,
 
   if (GST_QUERY_TYPE (query) == GST_QUERY_DURATION) {
     gst_query_set_duration (query, GST_FORMAT_TIME, *duration);
+    return GST_PAD_PROBE_HANDLED;
   }
   return GST_PAD_PROBE_OK;
 }
@@ -1304,12 +1305,12 @@ GST_START_TEST (test_query_duration)
       "could not set to playing");
   probe_sink =
       gst_pad_add_probe (mysrcpad,
-      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM | GST_PAD_PROBE_TYPE_PUSH,
+      GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
       (GstPadProbeCallback) listen_sink_query_duration, &duration, NULL);
 
   query = gst_query_new_duration (GST_FORMAT_TIME);
   duration = GST_CLOCK_TIME_NONE;
-  gst_pad_peer_query (mysrcpad, query);
+  gst_pad_peer_query (mysinkpad, query);
   gst_query_parse_duration (query, NULL, &duration);
   fail_unless_equals_uint64 (duration, GST_CLOCK_TIME_NONE);
 
@@ -1319,7 +1320,7 @@ GST_START_TEST (test_query_duration)
   /* Setting rate to 2.0 */
   g_object_set (videorate, "rate", 2.0, NULL);
 
-  gst_pad_peer_query (mysrcpad, query);
+  gst_pad_peer_query (mysinkpad, query);
   gst_query_parse_duration (query, NULL, &duration);
   fail_unless_equals_uint64 (duration, 0.5 * GST_SECOND);
 
