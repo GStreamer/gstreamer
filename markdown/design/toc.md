@@ -14,12 +14,12 @@ level of the hierarchy, i.e. you shouldn’t have editions and chapters
 mixed together. Here is an example of right TOC:
 
 ```
-    -------  TOC  -------
-             /  \
-     edition1    edition2
-     |           |
-     -chapter1   -chapter3
-     -chapter2
+-------  TOC  -------
+         /  \
+ edition1    edition2
+ |           |
+ -chapter1   -chapter3
+ -chapter2
 ```
 
 Here are two editions (alternatives), the first contains two chapters
@@ -27,12 +27,12 @@ Here are two editions (alternatives), the first contains two chapters
 example of invalid TOC:
 
 ```
-    -------  TOC  -------
-             /  \
-     edition1    chapter1
-     |
-     -chapter1
-     -chapter2
+-------  TOC  -------
+         /  \
+ edition1    chapter1
+ |
+ -chapter1
+ -chapter2
 ```
 
 Here you have edition1 and chapter1 mixed on the same level of
