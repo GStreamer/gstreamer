@@ -33,9 +33,28 @@ gstplayer = library('gstplayer-' + api_version,
                   gsttag_dep, gstpbutils_dep],
   vs_module_defs: vs_module_defs_dir + 'libgstplayer.def',
 )
-# TODO: gir
+
+gen_sources = []
+if build_gir
+  player_gir = gnome.generate_gir(gstplayer,
+    sources : gstplayer_sources + gstplayer_headers,
+    namespace : 'GstPlayer',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-player-1.0',
+    includes : ['Gst-1.0', 'GstPbutils-1.0', 'GstBase-1.0', 'GstVideo-1.0',
+      'GstAudio-1.0', 'GstTag-1.0'],
+    install : true,
+    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep,
+                  gsttag_dep, gstpbutils_dep]
+  )
+  gen_sources += player_gir
+endif
 
 gstplayer_dep = declare_dependency(link_with : gstplayer,
   include_directories : [libsinc],
+  sources: gen_sources,
   dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep,
                   gsttag_dep, gstpbutils_dep])

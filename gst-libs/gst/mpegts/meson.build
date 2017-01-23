@@ -25,6 +25,7 @@ mpegts_h = custom_target('mpegtsenum_h',
   install : true,
   install_dir : 'include/gstreamer-1.0/gst/mpegts',
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+gen_sources = [mpegts_h]
 
 mpegts_c = custom_target('mpegtsenum_c',
   output : 'gstmpegts-enumtypes.c',
@@ -41,9 +42,24 @@ gstmpegts = library('gstmpegts-' + api_version,
   dependencies : [gst_dep],
   vs_module_defs: vs_module_defs_dir + 'libgstmpegts.def',
 )
-# TODO: generate gir
+if build_gir
+  mpegts_gir = gnome.generate_gir(gstmpegts,
+    sources : mpegts_sources + mpegts_headers,
+    namespace : 'GstMpegts',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-mpegts-1.0',
+    includes : ['Gst-1.0'],
+    install : true,
+    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    dependencies : [gst_dep]
+  )
+  gen_sources += mpegts_gir
+endif
+
 
 gstmpegts_dep = declare_dependency(link_with : gstmpegts,
   include_directories : [libsinc],
   dependencies : [gst_dep],
-  sources : [mpegts_h])
+  sources : gen_sources)
