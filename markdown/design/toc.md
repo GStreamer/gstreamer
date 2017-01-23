@@ -2,13 +2,13 @@
 
 ## General info about GstToc structure
 
-GstToc introduces a general way to handle chapters within multimedia
-formats. GstToc can be represented as tree structure with arbitrary
+`GstToc` introduces a general way to handle chapters within multimedia
+formats. `GstToc` can be represented as tree structure with arbitrary
 hierarchy. Tree item can be either of two types: sequence or
 alternative. Sequence types acts like a part of the media data, for
 example audio track in CUE sheet, or part of the movie. Alternative
 types acts like some kind of selection to process a different version of
-the media content, for example DVD angles. GstToc has one constraint on
+the media content, for example DVD angles. `GstToc` has one constraint on
 the tree structure: it does not allow different entry types on the same
 level of the hierarchy, i.e. you shouldn’t have editions and chapters
 mixed together. Here is an example of right TOC:
@@ -38,32 +38,32 @@ example of invalid TOC:
 Here you have edition1 and chapter1 mixed on the same level of
 hierarchy, and such TOC will be considered broken.
 
-GstToc has *entries* field of GList type which consists of children
-items. Each item is of type GstTocEntry. Also GstToc has list of tags
-and GstStructure called *info*. Please, use GstToc.info and
-GstTocEntry.info fields this way: create a GstStructure, put all info
+`GstToc` has *entries* field of GList type which consists of children
+items. Each item is of type `GstTocEntry`. Also `GstToc` has list of tags
+and `GstStructure` called *info*. Please, use `GstToc.info` and
+`GstTocEntry.info` fields this way: create a `GstStructure`, put all info
 related to your element there and put this structure into the *info*
 field under the name of your element. Some fields in the *info*
 structure can be used for internal purposes, so you should use it in the
 way described above to not to overwrite already existent fields.
 
-Let’s look at GstTocEntry a bit closer. One of the most important fields
+Let’s look at `GstTocEntry` a bit closer. One of the most important fields
 is *uid*, which must be unique for each item within the TOC. This is
 used to identify each item inside TOC, especially when element receives
 TOC select event with UID to seek on. Field *subentries* of type GList
-contains children items of type GstTocEntry. Thus you can achieve
+contains children items of type `GstTocEntry`. Thus you can achieve
 arbitrary hierarchy level. Field *type* can be either
-GST\_TOC\_ENTRY\_TYPE\_CHAPTER or GST\_TOC\_ENTRY\_TYPE\_EDITION which
+`GST_TOC_ENTRY_TYPE_CHAPTER` or `GST_TOC_ENTRY_TYPE_EDITION` which
 corresponds to chapter or edition type of item respectively. Field
 *tags* is a list of tags related to the item. And field *info* is
-similar to GstToc.info described above.
+similar to `GstToc.info` described above.
 
-So, a little more about managing GstToc. Use gst\_toc\_new() and
-gst\_toc\_unref() to create/free it. GstTocEntry can be created using
-gst\_toc\_entry\_new(). While building GstToc you can set start and stop
-timestamps for each item using gst\_toc\_entry\_set\_start\_stop() and
-loop\_type and repeat\_count using gst\_toc\_entry\_set\_loop(). The
-best way to process already created GstToc is to recursively go through
+So, a little more about managing `GstToc`. Use `gst_toc_new()` and
+`gst_toc_unref()` to create/free it. `GstTocEntry` can be created using
+`gst_toc_entry_new()`. While building `GstToc` you can set start and stop
+timestamps for each item using `gst_toc_entry_set_start_stop()` and
+`loop_type` and `repeat_count` using `gst_toc_entry_set_loop()`. The
+best way to process already created `GstToc` is to recursively go through
 the *entries* and *subentries* fields.
 
 Applications and plugins should not rely on TOCs having a certain kind
@@ -107,7 +107,7 @@ sink.
 ##  Working with GstMessage
 
 If a table of contents is available, applications will receive a TOC
-message on the pipeline’s GstBus.
+message on the pipeline’s `GstBus`.
 
 A TOC message will be posted on the bus by sinks when the receive a TOC
 event containing a TOC with global scope. Elements extracting TOCs
@@ -117,8 +117,8 @@ downstream.
 The reason for this is that there may be cascades of TOCs (e.g. a zip
 archive containing multiple matroska files, each with a TOC).
 
-GstMessage with GstToc can be created using gst\_message\_new\_toc() and
-parsed with gst\_message\_parse\_toc(). The *updated* parameter in these
+`GstMessage` with `GstToc` can be created using `gst_message_new_toc()` and
+parsed with `gst_message_parse_toc()`. The *updated* parameter in these
 methods indicates whether the TOC was just discovered (set to false) or
 TOC was already found and have been updated (set to true). This message
 will typically be posted by sinks to pipeline in case you have
@@ -134,12 +134,12 @@ There are two types of TOC-related events:
   - toc-select events that travel upstream and can be used to select a
     certain TOC entry for playback (similar to seek events)
 
-GstToc supports select event through GstEvent infrastructure. The idea
+`GstToc` supports select event through `GstEvent` infrastructure. The idea
 is the following: when you receive TOC select event, parse it with
-gst\_event\_parse\_toc\_select() and seek stream (if it is not
-streamable) for specified TOC UID (you can use gst\_toc\_find\_entry()
+`gst_event_parse_toc_select()` and seek stream (if it is not
+streamable) for specified TOC UID (you can use `gst_toc_find_entry()`
 to find entry in TOC by UID). To create TOC select event use
-gst\_event\_new\_toc\_select(). The common action on such event is to
+`gst_event_new_toc_select()`. The common action on such event is to
 seek to specified UID within your element.
 
 ## Implementation coverage, Specifications, …
@@ -154,7 +154,7 @@ feature is handled.
 <http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/AIFF/Docs/AIFF-1.3.pdf>
 o *MARK* o *INST*
 
-The *MARK* chunk defines a list of (cue-id, position\_in\_samples,
+The *MARK* chunk defines a list of (cue-id, `position_in_samples`,
 label).
 
 The *INST* chunk contains a sustainLoop and releaseLoop, each consisting
@@ -165,8 +165,8 @@ of (loop-type, cue-begin, cue-end)
 <http://xiph.org/flac/format.html#metadata_block_cuesheet> \*
 METADATA\_BLOCK\_CUESHEET \* CUESHEET\_TRACK o CUESHEET\_TRACK\_INDEX
 
-Both CUESHEET\_TRACK and CUESHEET\_TRACK\_INDEX have a (relative) offset
-in samples. CUESHEET\_TRACK has ISRC metadata.
+Both `CUESHEET_TRACK` and `CUESHEET_TRACK_INDEX` have a (relative) offset
+in samples. `CUESHEET_TRACK` has ISRC metadata.
 
 ### MKV: read/write
 
@@ -215,7 +215,7 @@ For mp4.edtl, wav.plst we could expose two editions. 1) the edit list is
 flattened: default, for playback 2) the stream has the raw data and the
 edit list is there as chapter markers: useful for editing software
 
-We might want to introduce a new GST\_TOC\_ENTRY\_TYPE\_MARKER or \_CUE.
+We might want to introduce a new `GST_TOC_ENTRY_TYPE_MARKER` or `_CUE`.
 This would be a sequence entry-type and it would not be used for
 navigational purposes, but to attach data to a point in time (envelopes,
 loops, …).
