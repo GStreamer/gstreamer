@@ -33,7 +33,7 @@ discarded or clipped.
 ### FLUSHING seek
 
 ```
-ex. `filesrc ! avidemux ! videodecoder ! videosink`
+filesrc ! avidemux ! videodecoder ! videosink
 ```
 
 When doing a seek in this pipeline for a segment 1 to 5 seconds, avidemux
