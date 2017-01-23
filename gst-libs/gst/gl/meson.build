@@ -595,9 +595,27 @@ if build_gstgl
     # Don't need vs_module_defs for gstgl because we do symbol exporting in the
     # function definitions via __declspec(dllexport/import)
   )
-  # TODO: generate gir
+  gen_sources = []
+  if build_gir
+    gl_gir = gnome.generate_gir(gstgl,
+      sources : gl_sources + gl_headers,
+      namespace : 'GstGL',
+      nsversion : api_version,
+      identifier_prefix : 'Gst',
+      symbol_prefix : 'gst',
+      export_packages : 'gstreamer-gl-1.0',
+      includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'],
+      install : true,
+      extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API',
+        '--c-include=gst/gl/gl.h'],
+      dependencies : [gst_dep, gstbase_dep, gstvideo_dep]
+    )
+    gen_sources += gl_gir
+  endif
+
 
   gstgl_dep = declare_dependency(link_with : gstgl,
     include_directories : [libsinc],
+    sources: gen_sources,
     dependencies : [gstbase_dep, gstvideo_dep] + gl_winsys_deps)
 endif
