@@ -1011,8 +1011,12 @@ gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
         gst_object_unref (peer);
         break;
       }
-      /* Simple fallthrough if we don't have a latency or not a peer that we
-       * can't ask about its latency yet.. */
+      /* Simple fall back if we don't have a latency or a peer that we
+       * can ask about its latency yet.. */
+      res =
+          GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+          query);
+      break;
     }
     case GST_QUERY_DURATION:
     {
