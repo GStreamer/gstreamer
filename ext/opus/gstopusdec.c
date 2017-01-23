@@ -26,16 +26,17 @@
 
 /**
  * SECTION:element-opusdec
+ * @title: opusdec
  * @see_also: opusenc, oggdemux
  *
  * This element decodes a OPUS stream to raw integer audio.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=opus.ogg ! oggdemux ! opusdec ! audioconvert ! audioresample ! alsasink
- * ]| Decode an Ogg/Opus file. To create an Ogg/Opus file refer to the documentation of opusenc.
- * </refsect2>
+ * ]|
+ * Decode an Ogg/Opus file. To create an Ogg/Opus file refer to the documentation of opusenc.
+ *
  */
 
 #ifdef HAVE_CONFIG_H

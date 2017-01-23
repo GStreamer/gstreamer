@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:gstaudiochannels
+ * @title: Audio-channels
  * @short_description: Support library for audio channel handling
  *
  * This library contains some helper functions for multichannel audio.

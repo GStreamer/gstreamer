@@ -19,6 +19,7 @@
 
 /**
  * SECTION:gsttaglicenses
+ * @title: Licenses
  * @short_description: utility functions for Creative Commons licenses
  * @see_also: #GstTagList
  *

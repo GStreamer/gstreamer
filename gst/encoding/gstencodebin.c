@@ -31,6 +31,7 @@
 
 /**
  * SECTION:element-encodebin
+ * @title: encodebin
  *
  * EncodeBin provides a bin for encoding/muxing various streams according to
  * a specified #GstEncodingProfile.
@@ -41,67 +42,54 @@
  * provide it raw or pre-encoded streams of data in input and have your
  * encoded/muxed/converted stream in output.
  *
- * <refsect2>
- * <title>Features</title>
- * <itemizedlist>
- * <listitem>
- * Automatic encoder and muxer selection based on elements available on the
+ * ## Features
+ *
+ * * Automatic encoder and muxer selection based on elements available on the
  * system.
- * </listitem>
- * <listitem>
- * Conversion of raw audio/video streams (scaling, framerate conversion,
+ *
+ * * Conversion of raw audio/video streams (scaling, framerate conversion,
  * colorspace conversion, samplerate conversion) to conform to the profile
  * output format.
- * </listitem>
- * <listitem>
- * Variable number of streams. If the presence property for a stream encoding
+ *
+ * * Variable number of streams. If the presence property for a stream encoding
  * profile is 0, you can request any number of sink pads for it via the
  * standard request pad gstreamer API or the #GstEncodeBin::request-pad action
  * signal.
- * </listitem>
- * <listitem>
- * Avoid reencoding (passthrough). If the input stream is already encoded and is
+ *
+ * * Avoid reencoding (passthrough). If the input stream is already encoded and is
  * compatible with what the #GstEncodingProfile expects, then the stream won't
  * be re-encoded but just passed through downstream to the muxer or the output.
- * </listitem>
- * <listitem>
- * Mix pre-encoded and raw streams as input. In addition to the passthrough
+ *
+ * * Mix pre-encoded and raw streams as input. In addition to the passthrough
  * feature above, you can feed both raw audio/video *AND* already-encoded data
  * to a pad. #GstEncodeBin will take care of passing through the compatible
  * segments and re-encoding the segments of media that need encoding.
- * </listitem>
- * <listitem>
- * Standard behaviour is to use a #GstEncodingContainerProfile to have both
+ *
+ * * Standard behaviour is to use a #GstEncodingContainerProfile to have both
  * encoding and muxing performed. But you can also provide a single stream
  * profile (like #GstEncodingAudioProfile) to only have the encoding done and
  * handle the encoded output yourself.
- * </listitem>
- * <listitem>
- * Audio imperfection corrections. Incoming audio streams can have non perfect
+ *
+ * * Audio imperfection corrections. Incoming audio streams can have non perfect
  * timestamps (jitter), like the streams coming from ASF files. #GstEncodeBin
  * will automatically fix those imperfections for you. See
  * #GstEncodeBin:audio-jitter-tolerance for more details.
- * </listitem>
- * <listitem>
- * Variable or Constant video framerate. If your #GstEncodingVideoProfile has
+ *
+ * * Variable or Constant video framerate. If your #GstEncodingVideoProfile has
  * the variableframerate property deactivated (default), then the incoming
  * raw video stream will be retimestampped in order to produce a constant
  * framerate.
- * </listitem>
- * <listitem>
- * Cross-boundary re-encoding. When feeding compatible pre-encoded streams that
+ *
+ * * Cross-boundary re-encoding. When feeding compatible pre-encoded streams that
  * fall on segment boundaries, and for supported formats (right now only H263),
  * the GOP will be decoded/reencoded when needed to produce an encoded output
  * that fits exactly within the request GstSegment.
- * </listitem>
- * <listitem>
- * Missing plugin support. If a #GstElement is missing to encode/mux to the
+ *
+ * * Missing plugin support. If a #GstElement is missing to encode/mux to the
  * request profile formats, a missing-plugin #GstMessage will be posted on the
  * #GstBus, allowing systems that support the missing-plugin system to offer the
  * user a way to install the missing element.
- * </listitem>
- * </itemizedlist>
- * </refsect2>
+ *
  */
 
 

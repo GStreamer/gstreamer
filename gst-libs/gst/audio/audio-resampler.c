@@ -42,6 +42,7 @@ GST_DEBUG_CATEGORY_STATIC (audio_resampler_debug);
 
 /**
  * SECTION:gstaudioresampler
+ * @title: GstAudioResampler
  * @short_description: Utility structure for resampler information
  *
  * #GstAudioResampler is a structure which holds the information

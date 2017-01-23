@@ -20,17 +20,18 @@
 
 /**
  * SECTION:element-videotestsrc
+ * @title: videotestsrc
  *
  * The videotestsrc element is used to produce test video data in a wide variety
  * of formats. The video test data produced can be controlled with the "pattern"
  * property.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc pattern=snow ! video/x-raw,width=1280,height=720 ! autovideosink
- * ]| Shows random noise in a video window.
- * </refsect2>
+ * ]|
+ *  Shows random noise in a video window.
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-giosrc
+ * @title: giosrc
  * @see_also: #GstFileSrc, #GstGnomeVFSSrc, #GstGioSink
  *
  * This plugin reads data from a local or remote location specified
@@ -40,22 +41,24 @@
  * message was received and gst_bus_set_flushing(bus, FALSE) after the
  * mounting was successful.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 -v giosrc location=file:///home/joe/foo.xyz ! fakesink
- * ]| The above pipeline will simply read a local file and do nothing with the
+ * ]|
+ *  The above pipeline will simply read a local file and do nothing with the
  * data read. Instead of giosrc, we could just as well have used the
  * filesrc element here.
  * |[
  * gst-launch-1.0 -v giosrc location=smb://othercomputer/foo.xyz ! filesink location=/home/joe/foo.xyz
- * ]| The above pipeline will copy a file from a remote host to the local file
+ * ]|
+ *  The above pipeline will copy a file from a remote host to the local file
  * system using the Samba protocol.
  * |[
  * gst-launch-1.0 -v giosrc location=smb://othercomputer/demo.mp3 ! decodebin ! audioconvert ! audioresample ! autoaudiosink
- * ]| The above pipeline will read and decode and play an mp3 file from a
+ * ]|
+ *  The above pipeline will read and decode and play an mp3 file from a
  * SAMBA server.
- * </refsect2>
+ *
  */
 
 /* FIXME: We would like to mount the enclosing volume of an URL
@@ -118,7 +121,7 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
 
   /**
    * GstGioSrc:file:
-   * 
+   *
    * %GFile to read from.
    */
   g_object_class_install_property (gobject_class, PROP_FILE,

@@ -24,6 +24,7 @@
 
 /**
  * SECTION:gstvideodecoder
+ * @title: GstVideoDecoder
  * @short_description: Base class for video decoders
  * @see_also:
  *
@@ -32,86 +33,61 @@
  *
  * The GstVideoDecoder base class and derived subclasses should cooperate as
  * follows:
- * <orderedlist>
- * <listitem>
- *   <itemizedlist><title>Configuration</title>
- *   <listitem><para>
- *     Initially, GstVideoDecoder calls @start when the decoder element
+ *
+ * ## Configuration
+ *
+ *   * Initially, GstVideoDecoder calls @start when the decoder element
  *     is activated, which allows the subclass to perform any global setup.
- *   </para></listitem>
- *   <listitem><para>
- *     GstVideoDecoder calls @set_format to inform the subclass of caps
+ *
+ *   * GstVideoDecoder calls @set_format to inform the subclass of caps
  *     describing input video data that it is about to receive, including
  *     possibly configuration data.
  *     While unlikely, it might be called more than once, if changing input
  *     parameters require reconfiguration.
- *   </para></listitem>
- *   <listitem><para>
- *     Incoming data buffers are processed as needed, described in Data
+ *
+ *   * Incoming data buffers are processed as needed, described in Data
  *     Processing below.
- *   </para></listitem>
- *   <listitem><para>
- *     GstVideoDecoder calls @stop at end of all processing.
- *   </para></listitem>
- *   </itemizedlist>
- * </listitem>
- * <listitem>
- *   <itemizedlist>
- *   <title>Data processing</title>
- *     <listitem><para>
- *       The base class gathers input data, and optionally allows subclass
+ *
+ *   * GstVideoDecoder calls @stop at end of all processing.
+ *
+ * ## Data processing
+ *
+ *     * The base class gathers input data, and optionally allows subclass
  *       to parse this into subsequently manageable chunks, typically
  *       corresponding to and referred to as 'frames'.
- *     </para></listitem>
- *     <listitem><para>
- *       Each input frame is provided in turn to the subclass' @handle_frame
+ *
+ *     * Each input frame is provided in turn to the subclass' @handle_frame
  *       callback.
  *       The ownership of the frame is given to the @handle_frame callback.
- *     </para></listitem>
- *     <listitem><para>
- *       If codec processing results in decoded data, the subclass should call
+ *
+ *     * If codec processing results in decoded data, the subclass should call
  *       @gst_video_decoder_finish_frame to have decoded data pushed.
  *       downstream. Otherwise, the subclass must call
  *       @gst_video_decoder_drop_frame, to allow the base class to do timestamp
  *       and offset tracking, and possibly to requeue the frame for a later
  *       attempt in the case of reverse playback.
- *     </para></listitem>
- *   </itemizedlist>
- * </listitem>
- * <listitem>
- *   <itemizedlist><title>Shutdown phase</title>
- *   <listitem><para>
- *     The GstVideoDecoder class calls @stop to inform the subclass that data
+ *
+ * ## Shutdown phase
+ *
+ *   * The GstVideoDecoder class calls @stop to inform the subclass that data
  *     parsing will be stopped.
- *   </para></listitem>
- *   </itemizedlist>
- * </listitem>
- * <listitem>
- *   <itemizedlist><title>Additional Notes</title>
- *   <listitem>
- *     <itemizedlist><title>Seeking/Flushing</title>
- *     <listitem><para>
- *   When the pipeline is seeked or otherwise flushed, the subclass is
- *   informed via a call to its @reset callback, with the hard parameter
- *   set to true. This indicates the subclass should drop any internal data
- *   queues and timestamps and prepare for a fresh set of buffers to arrive
- *   for parsing and decoding.
- *     </para></listitem>
- *     </itemizedlist>
- *   </listitem>
- *   <listitem>
- *     <itemizedlist><title>End Of Stream</title>
- *     <listitem><para>
- *   At end-of-stream, the subclass @parse function may be called some final
- *   times with the at_eos parameter set to true, indicating that the element
- *   should not expect any more data to be arriving, and it should parse and
- *   remaining frames and call gst_video_decoder_have_frame() if possible.
- *     </para></listitem>
- *     </itemizedlist>
- *   </listitem>
- *   </itemizedlist>
- * </listitem>
- * </orderedlist>
+ *
+ * ## Additional Notes
+ *
+ *   * Seeking/Flushing
+ *
+ *     * When the pipeline is seeked or otherwise flushed, the subclass is
+ *       informed via a call to its @reset callback, with the hard parameter
+ *       set to true. This indicates the subclass should drop any internal data
+ *       queues and timestamps and prepare for a fresh set of buffers to arrive
+ *       for parsing and decoding.
+ *
+ *   * End Of Stream
+ *
+ *     * At end-of-stream, the subclass @parse function may be called some final
+ *       times with the at_eos parameter set to true, indicating that the element
+ *       should not expect any more data to be arriving, and it should parse and
+ *       remaining frames and call gst_video_decoder_have_frame() if possible.
  *
  * The subclass is responsible for providing pad template caps for
  * source and sink pads. The pads need to be named "sink" and "src". It also
@@ -143,23 +119,18 @@
  * incoming data.
  *
  * The bare minimum that a functional subclass needs to implement is:
- * <itemizedlist>
- *   <listitem><para>Provide pad templates</para></listitem>
- *   <listitem><para>
- *      Inform the base class of output caps via
+ *
+ *   * Provide pad templates
+ *   * Inform the base class of output caps via
  *      @gst_video_decoder_set_output_state
- *   </para></listitem>
- *   <listitem><para>
- *      Parse input data, if it is not considered packetized from upstream
+ *
+ *   * Parse input data, if it is not considered packetized from upstream
  *      Data will be provided to @parse which should invoke
  *      @gst_video_decoder_add_to_frame and @gst_video_decoder_have_frame to
  *      separate the data belonging to each video frame.
- *   </para></listitem>
- *   <listitem><para>
- *      Accept data in @handle_frame and provide decoded results to
+ *
+ *   * Accept data in @handle_frame and provide decoded results to
  *      @gst_video_decoder_finish_frame, or call @gst_video_decoder_drop_frame.
- *   </para></listitem>
- * </itemizedlist>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -3358,7 +3329,7 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
 }
 
 /* Pass the frame in priv->current_frame through the
- * handle_frame() callback for decoding and passing to gvd_finish_frame(), 
+ * handle_frame() callback for decoding and passing to gvd_finish_frame(),
  * or dropping by passing to gvd_drop_frame() */
 static GstFlowReturn
 gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
@@ -3370,7 +3341,7 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
 
   decoder_class = GST_VIDEO_DECODER_GET_CLASS (decoder);
 
-  /* FIXME : This should only have to be checked once (either the subclass has an 
+  /* FIXME : This should only have to be checked once (either the subclass has an
    * implementation, or it doesn't) */
   g_return_val_if_fail (decoder_class->handle_frame != NULL, GST_FLOW_ERROR);
 
@@ -3538,7 +3509,7 @@ gst_video_decoder_get_oldest_frame (GstVideoDecoder * decoder)
  * @frame_number: system_frame_number of a frame
  *
  * Get a pending unfinished #GstVideoCodecFrame
- * 
+ *
  * Returns: (transfer full): pending unfinished #GstVideoCodecFrame identified by @frame_number.
  */
 GstVideoCodecFrame *
@@ -3568,7 +3539,7 @@ gst_video_decoder_get_frame (GstVideoDecoder * decoder, int frame_number)
  * @decoder: a #GstVideoDecoder
  *
  * Get all pending unfinished #GstVideoCodecFrame
- * 
+ *
  * Returns: (transfer full) (element-type GstVideoCodecFrame): pending unfinished #GstVideoCodecFrame.
  */
 GList *

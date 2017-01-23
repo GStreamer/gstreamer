@@ -20,17 +20,14 @@
 
  /**
  * SECTION:gstvideofilter
+ * @title: GstVideoFilter
  * @short_description: Base class for video filters
- * 
- * <refsect2>
- * <para>
+ *
  * Provides useful functions and a base class for video filters.
- * </para>
- * <para>
+ *
  * The videofilter will by default enable QoS on the parent GstBaseTransform
  * to implement frame dropping.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

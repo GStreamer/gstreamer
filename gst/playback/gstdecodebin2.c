@@ -24,6 +24,7 @@
 
 /**
  * SECTION:element-decodebin
+ * @title: decodebin
  *
  * #GstBin that auto-magically constructs a decoding pipeline using available
  * decoders and demuxers via auto-plugging.
@@ -717,11 +718,9 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * This signal is emitted whenever decodebin finds a new stream. It is
    * emitted before looking for any elements that can handle that stream.
    *
-   * <note>
-   *   Invocation of signal handlers stops after the first signal handler
-   *   returns #FALSE. Signal handlers are invoked in the order they were
-   *   connected in.
-   * </note>
+   * >   Invocation of signal handlers stops after the first signal handler
+   * >   returns #FALSE. Signal handlers are invoked in the order they were
+   * >   connected in.
    *
    * Returns: #TRUE if you wish decodebin to look for elements that can
    * handle the given @caps. If #FALSE, those caps will be considered as
@@ -749,11 +748,9 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * If this function returns an empty array, the pad will be considered as
    * having an unhandled type media type.
    *
-   * <note>
-   *   Only the signal handler that is connected first will ever by invoked.
-   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
-   *   signal, they will never be invoked!
-   * </note>
+   * >   Only the signal handler that is connected first will ever by invoked.
+   * >   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   * >   signal, they will never be invoked!
    *
    * Returns: a #GValueArray* with a list of factories to try. The factories are
    * by default tried in the returned order or based on the index returned by
@@ -781,13 +778,11 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * The callee should copy and modify @factories or return #NULL if the
    * order should not change.
    *
-   * <note>
-   *   Invocation of signal handlers stops after one signal handler has
-   *   returned something else than #NULL. Signal handlers are invoked in
-   *   the order they were connected in.
-   *   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
-   *   signal, they will never be invoked!
-   * </note>
+   * >   Invocation of signal handlers stops after one signal handler has
+   * >   returned something else than #NULL. Signal handlers are invoked in
+   * >   the order they were connected in.
+   * >   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
+   * >   signal, they will never be invoked!
    *
    * Returns: A new sorted array of #GstElementFactory objects.
    */
@@ -821,13 +816,11 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * A value of #GST_AUTOPLUG_SELECT_SKIP will skip @factory and move to the
    * next factory.
    *
-   * <note>
-   *   The signal handler will not be invoked if any of the previously
-   *   registered signal handlers (if any) return a value other than
-   *   GST_AUTOPLUG_SELECT_TRY. Which also means that if you return
-   *   GST_AUTOPLUG_SELECT_TRY from one signal handler, handlers that get
-   *   registered next (again, if any) can override that decision.
-   * </note>
+   * >   The signal handler will not be invoked if any of the previously
+   * >   registered signal handlers (if any) return a value other than
+   * >   GST_AUTOPLUG_SELECT_TRY. Which also means that if you return
+   * >   GST_AUTOPLUG_SELECT_TRY from one signal handler, handlers that get
+   * >   registered next (again, if any) can override that decision.
    *
    * Returns: a #GST_TYPE_AUTOPLUG_SELECT_RESULT that indicates the required
    * operation. the default handler will always return

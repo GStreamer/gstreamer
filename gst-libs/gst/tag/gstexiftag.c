@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gsttagexif
+ * @title: GstExiftag
  * @short_description: tag mappings and support functions for plugins
  *                     dealing with exif tags
  * @see_also: #GstTagList

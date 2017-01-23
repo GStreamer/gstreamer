@@ -19,21 +19,18 @@
 
 /**
  * SECTION:gstpbutilsdescriptions
+ * @title: Descriptions
  * @short_description: Provides human-readable descriptions for caps/codecs
  * and encoder, decoder, URI source and URI sink elements
  *
- * <refsect2>
- * <para>
  * The above functions provide human-readable strings for media formats
  * and decoder/demuxer/depayloader/encoder/muxer/payloader elements for use
  * in error dialogs or other messages shown to users.
- * </para>
- * <para>
+ *
  * gst_pb_utils_add_codec_description_to_tag_list() is a utility function
  * for demuxer and decoder elements to add audio/video codec tags from a
  * given (fixed) #GstCaps.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

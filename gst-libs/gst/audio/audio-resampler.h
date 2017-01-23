@@ -28,20 +28,20 @@ G_BEGIN_DECLS
 typedef struct _GstAudioResampler GstAudioResampler;
 
 /**
- * GST_AUDIO_RESAMPLER_OPT_CUTOFF
+ * GST_AUDIO_RESAMPLER_OPT_CUTOFF:
  *
  * G_TYPE_DOUBLE, Cutoff parameter for the filter. 0.940 is the default.
  */
 #define GST_AUDIO_RESAMPLER_OPT_CUTOFF      "GstAudioResampler.cutoff"
 /**
- * GST_AUDIO_RESAMPLER_OPT_STOP_ATTENUTATION
+ * GST_AUDIO_RESAMPLER_OPT_STOP_ATTENUTATION:
  *
  * G_TYPE_DOUBLE, stopband attenuation in debibels. The attenutation
  * after the stopband for the kaiser window. 85 dB is the default.
  */
 #define GST_AUDIO_RESAMPLER_OPT_STOP_ATTENUATION "GstAudioResampler.stop-attenutation"
 /**
- * GST_AUDIO_RESAMPLER_OPT_TRANSITION_BANDWIDTH
+ * GST_AUDIO_RESAMPLER_OPT_TRANSITION_BANDWIDTH:
  *
  * G_TYPE_DOUBLE, transition bandwidth. The width of the
  * transition band for the kaiser window. 0.087 is the default.
@@ -137,7 +137,7 @@ typedef enum {
  */
 #define GST_AUDIO_RESAMPLER_OPT_FILTER_INTERPOLATION "GstAudioResampler.filter-interpolation"
 /**
- * GST_AUDIO_RESAMPLER_OPT_FILTER_OVERSAMPLE
+ * GST_AUDIO_RESAMPLER_OPT_FILTER_OVERSAMPLE:
  *
  * G_TYPE_UINT, oversampling to use when interpolating filters
  * 8 is the default.

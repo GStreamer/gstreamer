@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-giosink
+ * @title: giosink
  * @see_also: #GstFileSink, #GstGnomeVFSSink, #GstGioSrc
  *
  * This plugin writes incoming data to a local or remote location specified
@@ -44,22 +45,24 @@
  * on the bus if the target location is not mounted yet and needs to be
  * mounted. This message can be used by application to mount the location
  * and retry after the location was mounted successfully.
- * 
- * <refsect2>
- * <title>Example pipelines</title>
+ *
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=input.xyz ! giosink location=file:///home/joe/out.xyz
- * ]| The above pipeline will simply copy a local file. Instead of giosink,
+ * ]|
+ *  The above pipeline will simply copy a local file. Instead of giosink,
  * we could just as well have used the filesink element here.
  * |[
  * gst-launch-1.0 -v uridecodebin uri=file:///path/to/audio.file ! audioconvert ! flacenc ! giosink location=smb://othercomputer/foo.flac
- * ]| The above pipeline will re-encode an audio file into FLAC format and store
+ * ]|
+ *  The above pipeline will re-encode an audio file into FLAC format and store
  * it on a remote host using the Samba protocol.
  * |[
  * gst-launch-1.0 -v audiotestsrc num-buffers=100 ! vorbisenc ! oggmux ! giosink location=file:///home/foo/bar.ogg
- * ]| The above pipeline will encode a 440Hz sine wave to Ogg Vorbis and stores
+ * ]|
+ *  The above pipeline will encode a 440Hz sine wave to Ogg Vorbis and stores
  * it in the home directory of user foo.
- * </refsect2>
+ *
  */
 
 /* FIXME: We would like to mount the enclosing volume of an URL

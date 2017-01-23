@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gsttagxmp
+ * @title: GstXmptag
  * @short_description: tag mappings and support functions for plugins
  *                     dealing with xmp packets
  * @see_also: #GstTagList

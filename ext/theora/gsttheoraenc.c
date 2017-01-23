@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-theoraenc
+ * @title: theoraenc
  * @see_also: theoradec, oggmux
  *
  * This element encodes raw video into a Theora stream.
@@ -45,14 +46,14 @@
  * A videorate element is often required in front of theoraenc, especially
  * when transcoding and when putting Theora into the Ogg container.
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 -v videotestsrc num-buffers=500 ! video/x-raw,width=1280,height=720 ! queue ! progressreport ! theoraenc ! oggmux ! filesink location=videotestsrc.ogg
- * ]| This example pipeline will encode a test video source to theora muxed in an
+ * ]|
+ *  This example pipeline will encode a test video source to theora muxed in an
  * ogg container. Refer to the theoradec documentation to decode the create
  * stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

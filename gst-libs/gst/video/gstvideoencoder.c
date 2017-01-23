@@ -24,6 +24,7 @@
 
 /**
  * SECTION:gstvideoencoder
+ * @title: GstVideoEncoder
  * @short_description: Base class for video encoders
  * @see_also:
  *
@@ -31,59 +32,40 @@
  * encoded video data.
  *
  * GstVideoEncoder and subclass should cooperate as follows.
- * <orderedlist>
- * <listitem>
- *   <itemizedlist><title>Configuration</title>
- *   <listitem><para>
- *     Initially, GstVideoEncoder calls @start when the encoder element
+ *
+ * ## Configuration
+ *
+ *   * Initially, GstVideoEncoder calls @start when the encoder element
  *     is activated, which allows subclass to perform any global setup.
- *   </para></listitem>
- *   <listitem><para>
- *     GstVideoEncoder calls @set_format to inform subclass of the format
+ *   * GstVideoEncoder calls @set_format to inform subclass of the format
  *     of input video data that it is about to receive.  Subclass should
  *     setup for encoding and configure base class as appropriate
  *     (e.g. latency). While unlikely, it might be called more than once,
  *     if changing input parameters require reconfiguration.  Baseclass
  *     will ensure that processing of current configuration is finished.
- *   </para></listitem>
- *   <listitem><para>
- *     GstVideoEncoder calls @stop at end of all processing.
- *   </para></listitem>
- *   </itemizedlist>
- * </listitem>
- * <listitem>
- *   <itemizedlist>
- *   <title>Data processing</title>
- *     <listitem><para>
- *       Base class collects input data and metadata into a frame and hands
+ *   * GstVideoEncoder calls @stop at end of all processing.
+ *
+ * ## Data processing
+ *
+ *     * Base class collects input data and metadata into a frame and hands
  *       this to subclass' @handle_frame.
- *     </para></listitem>
- *     <listitem><para>
- *       If codec processing results in encoded data, subclass should call
+ *
+ *     * If codec processing results in encoded data, subclass should call
  *       @gst_video_encoder_finish_frame to have encoded data pushed
  *       downstream.
- *     </para></listitem>
- *     <listitem><para>
- *       If implemented, baseclass calls subclass @pre_push just prior to
+ *
+ *     * If implemented, baseclass calls subclass @pre_push just prior to
  *       pushing to allow subclasses to modify some metadata on the buffer.
  *       If it returns GST_FLOW_OK, the buffer is pushed downstream.
- *     </para></listitem>
- *     <listitem><para>
- *       GstVideoEncoderClass will handle both srcpad and sinkpad events.
+ *
+ *     * GstVideoEncoderClass will handle both srcpad and sinkpad events.
  *       Sink events will be passed to subclass if @event callback has been
  *       provided.
- *     </para></listitem>
- *   </itemizedlist>
- * </listitem>
- * <listitem>
- *   <itemizedlist><title>Shutdown phase</title>
- *   <listitem><para>
- *     GstVideoEncoder class calls @stop to inform the subclass that data
+ *
+ * ## Shutdown phase
+ *
+ *   * GstVideoEncoder class calls @stop to inform the subclass that data
  *     parsing will be stopped.
- *   </para></listitem>
- *   </itemizedlist>
- * </listitem>
- * </orderedlist>
  *
  * Subclass is responsible for providing pad template caps for
  * source and sink pads. The pads need to be named "sink" and "src". It should
@@ -91,16 +73,11 @@
  * @gst_video_encoder_finish_frame.
  *
  * Things that subclass need to take care of:
- * <itemizedlist>
- *   <listitem><para>Provide pad templates</para></listitem>
- *   <listitem><para>
- *      Provide source pad caps before pushing the first buffer
- *   </para></listitem>
- *   <listitem><para>
- *      Accept data in @handle_frame and provide encoded results to
+ *
+ *   * Provide pad templates
+ *   * Provide source pad caps before pushing the first buffer
+ *   * Accept data in @handle_frame and provide encoded results to
  *      @gst_video_encoder_finish_frame.
- *   </para></listitem>
- * </itemizedlist>
  *
  */
 
@@ -1928,7 +1905,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
 /**
  * gst_video_encoder_finish_frame:
  * @encoder: a #GstVideoEncoder
- * @frame: (transfer full): an encoded #GstVideoCodecFrame 
+ * @frame: (transfer full): an encoded #GstVideoCodecFrame
  *
  * @frame must have a valid encoded data buffer, whose metadata fields
  * are then appropriately set according to frame data or no buffer at
@@ -2367,7 +2344,7 @@ gst_video_encoder_get_oldest_frame (GstVideoEncoder * encoder)
  * @frame_number: system_frame_number of a frame
  *
  * Get a pending unfinished #GstVideoCodecFrame
- * 
+ *
  * Returns: (transfer full): pending unfinished #GstVideoCodecFrame identified by @frame_number.
  */
 GstVideoCodecFrame *
@@ -2397,7 +2374,7 @@ gst_video_encoder_get_frame (GstVideoEncoder * encoder, int frame_number)
  * @encoder: a #GstVideoEncoder
  *
  * Get all pending unfinished #GstVideoCodecFrame
- * 
+ *
  * Returns: (transfer full) (element-type GstVideoCodecFrame): pending unfinished #GstVideoCodecFrame.
  */
 GList *

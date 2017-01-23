@@ -28,16 +28,15 @@
 
 /**
  * SECTION:gstcolorbalance
+ * @title: GstColorBalance
  * @short_description: Interface for adjusting color balance settings
  *
- * <refsect2><para>
  * This interface is implemented by elements which can perform some color
  * balance operation on video frames they process. For example, modifying
  * the brightness, contrast, hue or saturation.
- * </para><para>
+ *
  * Example elements are 'xvimagesink' and 'colorbalance'
- * </para>
- * </refsect2>
+ *
  */
 
 /* FIXME 0.11: check if we need to add API for sometimes-supportedness
@@ -146,7 +145,7 @@ gst_color_balance_list_channels (GstColorBalance * balance)
  *
  * Sets the current value of the channel to the passed value, which must
  * be between min_value and max_value.
- * 
+ *
  * See Also: The #GstColorBalanceChannel.min_value and
  *         #GstColorBalanceChannel.max_value members of the
  *         #GstColorBalanceChannel object.
@@ -169,11 +168,11 @@ gst_color_balance_set_value (GstColorBalance * balance,
  *
  * Retrieve the current value of the indicated channel, between min_value
  * and max_value.
- * 
+ *
  * See Also: The #GstColorBalanceChannel.min_value and
  *         #GstColorBalanceChannel.max_value members of the
  *         #GstColorBalanceChannel object.
- * 
+ *
  * Returns: The current value of the channel.
  */
 gint

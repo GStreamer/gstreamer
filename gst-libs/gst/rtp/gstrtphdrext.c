@@ -19,13 +19,10 @@
 
 /**
  * SECTION:gstrtphdrext
+ * @title: GstRtphdrext
  * @short_description: Helper methods for dealing with RTP header extensions
  * @see_also: #GstRTPBasePayload, #GstRTPBaseDepayload, gstrtpbuffer
  *
- * <refsect2>
- * <para>
- * </para>
- * </refsect2>
  */
 
 #include "gstrtphdrext.h"

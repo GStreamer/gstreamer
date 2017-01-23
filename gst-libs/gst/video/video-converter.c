@@ -39,27 +39,17 @@
 
 /**
  * SECTION:videoconverter
+ * @title: GstVideoConverter
  * @short_description: Generic video conversion
  *
- * <refsect2>
- * <para>
  * This object is used to convert video frames from one format to another.
  * The object can perform conversion of:
- * <itemizedlist>
- *  <listitem><para>
- *    video format
- *  </para></listitem>
- *  <listitem><para>
- *    video colorspace
- *  </para></listitem>
- *  <listitem><para>
- *    chroma-siting
- *  </para></listitem>
- *  <listitem><para>
- *    video size
- *  </para></listitem>
- * </para>
- * </refsect2>
+ *
+ *  * video format
+ *  * video colorspace
+ *  * chroma-siting
+ *  * video size
+ *
  */
 
 /*

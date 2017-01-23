@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-xvimagesink
+ * @title: xvimagesink
  *
  * XvImageSink renders video frames to a drawable (XWindow) on a local display
  * using the XVideo extension. Rendering to a remote display is theoretically
@@ -30,20 +31,17 @@
  * application, the element will create its own internal window and render
  * into it.
  *
- * <refsect2>
- * <title>Scaling</title>
- * <para>
+ * ## Scaling
+ *
  * The XVideo extension, when it's available, handles hardware accelerated
  * scaling of video frames. This means that the element will just accept
  * incoming video frames no matter their geometry and will then put them to the
  * drawable scaling them on the fly. Using the #GstXvImageSink:force-aspect-ratio
  * property it is possible to enforce scaling with a constant aspect ratio,
  * which means drawing black borders around the video frame.
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Events</title>
- * <para>
+ *
+ * ## Events
+ *
  * XvImageSink creates a thread to handle events coming from the drawable. There
  * are several kind of events that can be grouped in 2 big categories: input
  * events and window state related events. Input events will be translated to
@@ -53,11 +51,9 @@
  * is not flowing (GST_STATE_PAUSED). That means that even when the element is
  * paused, it will receive expose events from the drawable and draw the latest
  * frame with correct borders/aspect-ratio.
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Pixel aspect ratio</title>
- * <para>
+ *
+ * ## Pixel aspect ratio
+ *
  * When changing state to GST_STATE_READY, XvImageSink will open a connection to
  * the display specified in the #GstXvImageSink:display property or the
  * default display if nothing specified. Once this connection is open it will
@@ -68,26 +64,27 @@
  * Sometimes the calculated pixel aspect ratio can be wrong, it is
  * then possible to enforce a specific pixel aspect ratio using the
  * #GstXvImageSink:pixel-aspect-ratio property.
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Examples</title>
+ *
+ * ## Examples
  * |[
  * gst-launch-1.0 -v videotestsrc ! xvimagesink
- * ]| A pipeline to test hardware scaling.
+ * ]|
+ *  A pipeline to test hardware scaling.
  * When the test video signal appears you can resize the window and see that
  * video frames are scaled through hardware (no extra CPU cost). By default
  * the image will never be distorted when scaled, instead black borders will
  * be added if needed.
  * |[
  * gst-launch-1.0 -v videotestsrc ! xvimagesink force-aspect-ratio=false
- * ]| Same pipeline with #GstXvImageSink:force-aspect-ratio property set to
+ * ]|
+ *  Same pipeline with #GstXvImageSink:force-aspect-ratio property set to
  * false. You can observe that no borders are drawn around the scaled image
  * now and it will be distorted to fill the entire frame instead of respecting
  * the aspect ratio.
  * |[
  * gst-launch-1.0 -v videotestsrc ! navigationtest ! xvimagesink
- * ]| A pipeline to test navigation events.
+ * ]|
+ *  A pipeline to test navigation events.
  * While moving the mouse pointer over the test signal you will see a black box
  * following the mouse pointer. If you press the mouse button somewhere on the
  * video and release it somewhere else a green box will appear where you pressed
@@ -99,15 +96,17 @@
  * image area
  * |[
  * gst-launch-1.0 -v videotestsrc ! video/x-raw, pixel-aspect-ratio=4/3 ! xvimagesink
- * ]| This is faking a 4/3 pixel aspect ratio caps on video frames produced by
+ * ]|
+ *  This is faking a 4/3 pixel aspect ratio caps on video frames produced by
  * videotestsrc, in most cases the pixel aspect ratio of the display will be
  * 1/1. This means that XvImageSink will have to do the scaling to convert
  * incoming frames to a size that will match the display pixel aspect ratio
  * (from 320x240 to 320x180 in this case).
  * |[
  * gst-launch-1.0 -v videotestsrc ! xvimagesink hue=100 saturation=-100 brightness=100
- * ]| Demonstrates how to use the colorbalance interface.
- * </refsect2>
+ * ]|
+ *  Demonstrates how to use the colorbalance interface.
+ *
  */
 
 /* for developers: there are two useful tools : xvinfo and xvattr */

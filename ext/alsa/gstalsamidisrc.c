@@ -20,6 +20,7 @@
  */
 /**
  * SECTION:element-alsamidisrc
+ * @title: alsamidisrc
  * @see_also: #GstPushSrc
  *
  * The alsamidisrc element is an element that fetches ALSA MIDI sequencer
@@ -28,13 +29,13 @@
  *
  * It can be used to generate notes from a MIDI input device.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch -v alsamidisrc ports=129:0 ! fluiddec ! audioconvert ! autoaudiosink
- * ]| This pipeline will listen for events from the sequencer device at port 129:0,
+ * ]|
+ *  This pipeline will listen for events from the sequencer device at port 129:0,
  * and generate notes using the fluiddec element.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

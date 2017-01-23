@@ -22,16 +22,14 @@
 
 /**
  * SECTION:gstrtppayloads
+ * @title: GstRTPPayloadInfo
  * @short_description: Helper methods for dealing with RTP payloads
  * @see_also: gstrtpbuffer
  *
- * <refsect2>
- * <para>
  * The GstRTPPayloads helper functions makes it easy to deal with static and dynamic
- * payloads. Its main purpose is to retrieve properties such as the default clock-rate 
+ * payloads. Its main purpose is to retrieve properties such as the default clock-rate
  * and get session bandwidth information.
- * </para>
- * </refsect2>
+ *
  */
 
 #include <string.h>

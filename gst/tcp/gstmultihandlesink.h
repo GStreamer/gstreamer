@@ -78,7 +78,7 @@ typedef enum
  * @GST_SYNC_METHOD_NEXT_KEYFRAME       : client receives next keyframe
  * @GST_SYNC_METHOD_LATEST_KEYFRAME     : client receives latest keyframe (burst)
  * @GST_SYNC_METHOD_BURST               : client receives specific amount of data
- * @GST_SYNC_METHOD_BURST_KEYFRAME      : client receives specific amount of data 
+ * @GST_SYNC_METHOD_BURST_KEYFRAME      : client receives specific amount of data
  *                                        starting from latest keyframe
  * @GST_SYNC_METHOD_BURST_WITH_KEYFRAME : client receives specific amount of data from
  *                                        a keyframe, or if there is not enough data after

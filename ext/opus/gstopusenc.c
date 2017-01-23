@@ -25,16 +25,17 @@
 
 /**
  * SECTION:element-opusenc
+ * @title: opusenc
  * @see_also: opusdec, oggmux
  *
  * This element encodes raw audio to OPUS.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! opusenc ! oggmux ! filesink location=sine.ogg
- * ]| Encode a test sine signal to Ogg/OPUS.
- * </refsect2>
+ * ]|
+ * Encode a test sine signal to Ogg/OPUS.
+ *
  */
 
 #ifdef HAVE_CONFIG_H

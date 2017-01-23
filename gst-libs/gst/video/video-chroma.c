@@ -30,6 +30,7 @@
 
 /**
  * SECTION:gstvideochroma
+ * @title: GstVideoChromaResample
  * @short_description: Functions and utility object for operating on chroma video planes
  *
  * The functions gst_video_chroma_from_string() and gst_video_chroma_to_string() convert

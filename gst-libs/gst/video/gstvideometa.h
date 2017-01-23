@@ -170,7 +170,7 @@ typedef enum
  * @GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_FLIP: Bottom line first in memory, left row first
  * @GST_VIDEO_GL_TEXTURE_ORIENTATION_X_FLIP_Y_NORMAL: Top line first in memory, right row first
  * @GST_VIDEO_GL_TEXTURE_ORIENTATION_X_FLIP_Y_FLIP: Bottom line first in memory, right row first
- * 
+ *
  * The orientation of the GL texture.
  */
 typedef enum

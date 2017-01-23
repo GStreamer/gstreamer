@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-audiorate
+ * @title: audiorate
  * @see_also: #GstVideoRate
  *
  * This element takes an incoming stream of timestamped raw audio frames and
@@ -48,19 +49,20 @@
  * that the incoming data is then simply shifted (by less than the indicated
  * tolerance) to a perfect time.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v autoaudiosrc ! audiorate ! audioconvert ! wavenc ! filesink location=alsa.wav
- * ]| Capture audio from the sound card and turn it into a perfect stream
+ * ]|
+ *  Capture audio from the sound card and turn it into a perfect stream
  * for saving in a raw audio file.
  * |[
  * gst-launch-1.0 -v uridecodebin uri=file:///path/to/audio.file ! audiorate ! audioconvert ! wavenc ! filesink location=alsa.wav
- * ]| Decodes an audio file and transforms it into a perfect stream for saving
+ * ]|
+ *  Decodes an audio file and transforms it into a perfect stream for saving
  * in a raw audio WAV file. Without the audio rate, the timing might not be
  * preserved correctly in the WAV file in case the decoded stream is jittery
  * or there are samples missing.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

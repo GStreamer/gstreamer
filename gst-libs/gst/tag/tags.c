@@ -32,16 +32,14 @@
 
 /**
  * SECTION:gsttag
+ * @title: Tags
  * @short_description: additional tag definitions for plugins and applications
  * @see_also: #GstTagList
- * 
- * <refsect2>
- * <para>
+ *
  * Contains additional standardized GStreamer tag definitions for plugins
  * and applications, and functions to register them with the GStreamer
  * tag system.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifndef GST_DISABLE_GST_DEBUG

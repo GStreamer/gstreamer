@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstaudioclock
+ * @title: GstAudioClock
  * @short_description: Helper object for implementing audio clocks
  * @see_also: #GstAudioBaseSink, #GstSystemClock
  *

@@ -44,9 +44,10 @@
 
 /**
  * SECTION:gstrtspmessage
+ * @title: GstRTSPMessage
  * @short_description: RTSP messages
  * @see_also: gstrtspconnection
- *  
+ *
  * Provides methods for creating and parsing request, response and data messages.
  */
 
@@ -429,7 +430,7 @@ gst_rtsp_message_parse_data (GstRTSPMessage * msg, guint8 * channel)
  * @msg: a #GstRTSPMessage
  *
  * Unset the contents of @msg so that it becomes an uninitialized
- * #GstRTSPMessage again. This function is mostly used in combination with 
+ * #GstRTSPMessage again. This function is mostly used in combination with
  * gst_rtsp_message_init_request(), gst_rtsp_message_init_response() and
  * gst_rtsp_message_init_data() on stack allocated #GstRTSPMessage structures.
  *

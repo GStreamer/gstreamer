@@ -152,7 +152,7 @@ struct _GstXWindow
  * @pool_lock: used to protect the buffer pool
  * @buffer_pool: a list of #GstXImageBuffer that could be reused at next buffer
  * allocation call
- * @synchronous: used to store if XSynchronous should be used or not (for 
+ * @synchronous: used to store if XSynchronous should be used or not (for
  * debugging purpose only)
  * @keep_aspect: used to remember if reverse negotiation scaling should respect
  * aspect ratio

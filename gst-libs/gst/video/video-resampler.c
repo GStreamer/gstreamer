@@ -51,6 +51,7 @@ ensure_debug_category (void)
 
 /**
  * SECTION:gstvideoresampler
+ * @title: GstVideoResampler
  * @short_description: Utility structure for resampler information
  *
  * #GstVideoResampler is a structure which holds the information

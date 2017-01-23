@@ -20,17 +20,18 @@
 
 /**
  * SECTION:element-oggmux
+ * @title: oggmux
  * @see_also: <link linkend="gst-plugins-base-plugins-oggdemux">oggdemux</link>
  *
  * This element merges streams (audio and video) into ogg files.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 v4l2src num-buffers=500 ! video/x-raw,width=320,height=240 ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location=video.ogg
- * ]| Encodes a video stream captured from a v4l2-compatible camera to Ogg/Theora
+ * ]|
+ * Encodes a video stream captured from a v4l2-compatible camera to Ogg/Theora
  * (the encoding will stop automatically after 500 frames)
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -968,14 +969,14 @@ no_granule:
 
 
 /* make sure at least one buffer is queued on all pads, two if possible
- * 
+ *
  * if pad->buffer == NULL, pad->next_buffer !=  NULL, then
  *   we do not know if the buffer is the last or not
  * if pad->buffer != NULL, pad->next_buffer != NULL, then
  *   pad->buffer is not the last buffer for the pad
  * if pad->buffer != NULL, pad->next_buffer == NULL, then
  *   pad->buffer if the last buffer for the pad
- * 
+ *
  * returns a pointer to an oggpad that holds the best buffer, or
  * NULL when no pad was usable. "best" means the buffer marked
  * with the lowest timestamp. If best->buffer == NULL then either
@@ -1409,7 +1410,7 @@ gst_ogg_mux_make_fistail (GstOggMux * mux, ogg_stream_state * os)
  * page that allows decoders to identify the type of the stream.
  * After that we need to write out all extra info for the decoders.
  * In the case of a codec that also needs data as configuration, we can
- * find that info in the streamcaps. 
+ * find that info in the streamcaps.
  * After writing the headers we must start a new page for the data.
  */
 static GstFlowReturn
@@ -2034,11 +2035,11 @@ gst_ogg_mux_send_start_events (GstOggMux * ogg_mux, GstCollectPads * pads)
 }
 
 /* This function is called when there is data on all pads.
- * 
+ *
  * It finds a pad to pull on, this is done by looking at the buffers
  * to decide which one to use, and using the 'oldest' one first. It then calls
  * gst_ogg_mux_process_best_pad() to process as much data as possible.
- * 
+ *
  * If all the pads have received EOS, it flushes out all data by continually
  * getting the best pad and calling gst_ogg_mux_process_best_pad() until they
  * are all empty, and then sends EOS.

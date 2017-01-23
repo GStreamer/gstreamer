@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-timeoverlay
+ * @title: timeoverlay
  * @see_also: #GstBaseTextOverlay, #GstClockOverlay
  *
  * This element overlays the buffer time stamps of a video stream on
@@ -28,17 +29,18 @@
  * time stamp is displayed in the top left corner of the picture, with some
  * padding to the left and to the top.
  *
- * <refsect2>
  * |[
  * gst-launch-1.0 -v videotestsrc ! timeoverlay ! autovideosink
- * ]| Display the time stamps in the top left corner of the video picture.
+ * ]|
+ * Display the time stamps in the top left corner of the video picture.
  * |[
  * gst-launch-1.0 -v videotestsrc ! timeoverlay halignment=right valignment=bottom text="Stream time:" shaded-background=true font-desc="Sans, 24" ! autovideosink
- * ]| Another pipeline that displays the time stamps with some leading
+ * ]|
+ * Another pipeline that displays the time stamps with some leading
  * text in the bottom right corner of the video picture, with the background
  * of the text being shaded in order to make it more legible on top of a
  * bright video background.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

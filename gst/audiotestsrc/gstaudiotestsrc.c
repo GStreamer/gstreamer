@@ -18,22 +18,24 @@
  */
 /**
  * SECTION:element-audiotestsrc
+ * @title: audiotestsrc
  *
  * AudioTestSrc can be used to generate basic audio signals. It support several
  * different waveforms and allows to set the base frequency and volume.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc ! audioconvert ! autoaudiosink
- * ]| This pipeline produces a sine with default frequency, 440 Hz, and the
+ * ]|
+ *  This pipeline produces a sine with default frequency, 440 Hz, and the
  * default volume, 0.8 (relative to a maximum 1.0).
  * |[
  * gst-launch-1.0 audiotestsrc wave=2 freq=200 ! tee name=t ! queue ! audioconvert ! autoaudiosink t. ! queue ! audioconvert ! libvisual_lv_scope ! videoconvert ! autovideosink
- * ]| In this example a saw wave is generated. The wave is shown using a
+ * ]|
+ *  In this example a saw wave is generated. The wave is shown using a
  * scope visualizer from libvisual, allowing you to visually verify that
  * the saw wave is correct.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

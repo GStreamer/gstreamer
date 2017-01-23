@@ -22,17 +22,18 @@
 
 /**
  * SECTION:element-videoconvert
+ * @title: videoconvert
  *
  * Convert video frames between a great variety of video formats.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! video/x-raw,format=YUY2 ! videoconvert ! autovideosink
- * ]| This will output a test video (generated in YUY2 format) in a video
+ * ]|
+ *  This will output a test video (generated in YUY2 format) in a video
  * window. If the video sink selected does not support YUY2 videoconvert will
  * automatically convert the video to a format understood by the video sink.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -42,6 +42,7 @@
 
 /**
  * SECTION:gstrtspconnection
+ * @title: GstRTSPConnection
  * @short_description: manage RTSP connections
  * @see_also: gstrtspurl
  *

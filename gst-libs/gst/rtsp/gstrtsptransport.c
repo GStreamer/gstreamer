@@ -43,8 +43,9 @@
 
 /**
  * SECTION:gstrtsptransport
+ * @title: GstRTSPRange
  * @short_description: dealing with RTSP transports
- *  
+ *
  * Provides helper functions to deal with RTSP transport strings.
  */
 
@@ -146,7 +147,7 @@ G_STMT_START {                                    \
  * Allocate a new initialized #GstRTSPTransport. Use gst_rtsp_transport_free()
  * after usage.
  *
- * Returns: a #GstRTSPResult. 
+ * Returns: a #GstRTSPResult.
  */
 GstRTSPResult
 gst_rtsp_transport_new (GstRTSPTransport ** transport)
@@ -168,7 +169,7 @@ gst_rtsp_transport_new (GstRTSPTransport ** transport)
  *
  * Initialize @transport so that it can be used.
  *
- * Returns: #GST_RTSP_OK. 
+ * Returns: #GST_RTSP_OK.
  */
 GstRTSPResult
 gst_rtsp_transport_init (GstRTSPTransport * transport)
@@ -284,7 +285,7 @@ get_default_lower_trans (GstRTSPTransport * transport)
  * @manager will contain an element name or #NULL when no manager is
  * needed/available for @trans.
  *
- * Returns: #GST_RTSP_OK. 
+ * Returns: #GST_RTSP_OK.
  */
 GstRTSPResult
 gst_rtsp_transport_get_manager (GstRTSPTransMode trans, const gchar ** manager,

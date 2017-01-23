@@ -21,14 +21,11 @@
 
 /**
  * SECTION:gstmikey
+ * @title: GstMIKEYMessage
  * @short_description: Helper methods for dealing with MIKEY messages
  *
- * <refsect2>
- * <para>
  * The GstMIKEY helper functions makes it easy to parse and create MIKEY
  * messages.
- * </para>
- * </refsect2>
  *
  * Since: 1.4
  */

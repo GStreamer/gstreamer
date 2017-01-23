@@ -14,6 +14,7 @@
 
 /**
  * SECTION:gstrtpbasepayload
+ * @title: GstRTPBasePayload
  * @short_description: Base class for RTP payloader
  *
  * Provides a base class for RTP payloaders
@@ -275,48 +276,14 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    * application/x-rtp-payload-stats containing the following fields relating to
    * the last processed buffer and current state of the stream being payloaded:
    *
-   * <variablelist>
-   *   <varlistentry>
-   *     <term>clock-rate</term>
-   *     <listitem><para>#G_TYPE_UINT, clock-rate of the
-   *     stream</para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>running-time</term>
-   *     <listitem><para>#G_TYPE_UINT64, running time
-   *     </para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>seqnum</term>
-   *     <listitem><para>#G_TYPE_UINT, sequence number, same as
-   *     #GstRTPBasePayload:seqnum</para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>timestamp</term>
-   *     <listitem><para>#G_TYPE_UINT, RTP timestamp, same as
-   *     #GstRTPBasePayload:timestamp</para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>ssrc</term>
-   *     <listitem><para>#G_TYPE_UINT, The SSRC in use
-   *     </para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>pt</term>
-   *     <listitem><para>#G_TYPE_UINT, The Payload type in use, same as
-   *     #GstRTPBasePayload:pt</para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>seqnum-offset</term>
-   *     <listitem><para>#G_TYPE_UINT, The current offset added to the
-   *     seqnum</para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>timestamp-offset</term>
-   *     <listitem><para>#G_TYPE_UINT, The current offset added to the
-   *     timestamp</para></listitem>
-   *   </varlistentry>
-   * </variablelist>
+   *   * `clock-rate` :#G_TYPE_UINT, clock-rate of the stream
+   *   * `running-time` :#G_TYPE_UINT64, running time
+   *   * `seqnum` :#G_TYPE_UINT, sequence number, same as #GstRTPBasePayload:seqnum
+   *   * `timestamp` :#G_TYPE_UINT, RTP timestamp, same as #GstRTPBasePayload:timestamp
+   *   * `ssrc` :#G_TYPE_UINT, The SSRC in use
+   *   * `pt` :#G_TYPE_UINT, The Payload type in use, same as #GstRTPBasePayload:pt
+   *   * `seqnum-offset` :#G_TYPE_UINT, The current offset added to the seqnum
+   *   * `timestamp-offset` :#G_TYPE_UINT, The current offset added to the timestamp
    **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_STATS,
       g_param_spec_boxed ("stats", "Statistics", "Various statistics",

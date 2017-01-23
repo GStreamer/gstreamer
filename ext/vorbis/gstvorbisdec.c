@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-vorbisdec
+ * @title: vorbisdec
  * @see_also: vorbisenc, oggdemux
  *
  * This element decodes a Vorbis stream to raw float audio.
@@ -27,13 +28,12 @@
  * Foundation</ulink>. As it outputs raw float audio you will often need to
  * put an audioconvert element after it.
  *
- *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! autoaudiosink
- * ]| Decode an Ogg/Vorbis. To create an Ogg/Vorbis file refer to the documentation of vorbisenc.
- * </refsect2>
+ * ]|
+ *  Decode an Ogg/Vorbis. To create an Ogg/Vorbis file refer to the documentation of vorbisenc.
+ *
  */
 
 #ifdef HAVE_CONFIG_H

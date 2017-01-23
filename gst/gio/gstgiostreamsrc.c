@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-giostreamsrc
+ * @title: giostreamsrc
  *
  * This plugin reads data from a custom GIO #GInputStream.
  *
@@ -28,9 +29,8 @@
  * #GMemoryInputStream or to read from a file with a
  * #GFileInputStream.
  *
- * <refsect2>
- * <title>Example code</title>
- * <para>
+ * ## Example code
+ *
  * The following example reads data from a #GMemoryInputStream.
  * |[
 
@@ -58,8 +58,7 @@ g_object_set (G_OBJECT (src), "stream", stream, NULL);
 ...
 
  * ]|
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

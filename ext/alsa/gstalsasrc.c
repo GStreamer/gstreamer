@@ -21,16 +21,17 @@
 
 /**
  * SECTION:element-alsasrc
+ * @title: alsasrc
  * @see_also: alsasink
  *
  * This element reads data from an audio card using the ALSA API.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v alsasrc ! queue ! audioconvert ! vorbisenc ! oggmux ! filesink location=alsasrc.ogg
- * ]| Record from a sound card using ALSA and encode to Ogg/Vorbis.
- * </refsect2>
+ * ]|
+ *  Record from a sound card using ALSA and encode to Ogg/Vorbis.
+ *
  */
 
 #ifdef HAVE_CONFIG_H

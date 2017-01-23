@@ -19,6 +19,7 @@
  */
 /**
  * SECTION:gstappsrc
+ * @title: GstAppSrc
  * @short_description: Easy way for applications to inject buffers into a
  *     pipeline
  * @see_also: #GstBaseSrc, appsink

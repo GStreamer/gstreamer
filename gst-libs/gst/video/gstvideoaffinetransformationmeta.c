@@ -98,7 +98,7 @@ gst_video_affine_transformation_meta_get_info (void)
 }
 
 /**
- * gst_buffer_add_video_affine_transformation_meta
+ * gst_buffer_add_video_affine_transformation_meta:
  * @buffer: a #GstBuffer
  *
  * Attaches GstVideoAffineTransformationMeta metadata to @buffer with

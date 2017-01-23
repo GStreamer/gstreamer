@@ -32,24 +32,18 @@
 
 /**
  * SECTION:audioconverter
+ * @title: GstAudioConverter
  * @short_description: Generic audio conversion
  *
- * <refsect2>
- * <para>
  * This object is used to convert audio samples from one format to another.
  * The object can perform conversion of:
- * <itemizedlist>
- *  <listitem><para>
- *    audio format with optional dithering and noise shaping
- *  </para></listitem>
- *  <listitem><para>
- *    audio samplerate
- *  </para></listitem>
- *  <listitem><para>
- *    audio channels and channel layout
- *  </para></listitem>
- * </para>
- * </refsect2>
+ *
+ *  * audio format with optional dithering and noise shaping
+ *
+ *  * audio samplerate
+ *
+ *  * audio channels and channel layout
+ *
  */
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -1336,7 +1330,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
 }
 
 /**
- * gst_audio_converter_supports_inplace
+ * gst_audio_converter_supports_inplace:
  * @convert: a #GstAudioConverter
  *
  * Returns whether the audio converter can perform the conversion in-place.

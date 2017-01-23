@@ -56,7 +56,6 @@ G_BEGIN_DECLS
  * @GST_RTP_PAYLOAD_MP2T: MPEG-2 transport stream (RFC 2250)
  * @GST_RTP_PAYLOAD_H263: Video H263 (RFC 2190)
  *
- *
  * Standard predefined fixed payload types.
  *
  * The official list is at:

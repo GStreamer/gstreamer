@@ -22,24 +22,21 @@
 
 /**
  * SECTION:gstrtcpbuffer
+ * @title: GstRTCPBuffer
  * @short_description: Helper methods for dealing with RTCP buffers
  * @see_also: #GstRTPBasePayload, #GstRTPBaseDepayload, #gstrtpbuffer
  *
  * Note: The API in this module is not yet declared stable.
  *
- * <refsect2>
- * <para>
- * The GstRTPCBuffer helper functions makes it easy to parse and create regular 
+ * The GstRTPCBuffer helper functions makes it easy to parse and create regular
  * #GstBuffer objects that contain compound RTCP packets. These buffers are typically
  * of 'application/x-rtcp' #GstCaps.
- * </para>
- * <para>
+ *
  * An RTCP buffer consists of 1 or more #GstRTCPPacket structures that you can
  * retrieve with gst_rtcp_buffer_get_first_packet(). #GstRTCPPacket acts as a pointer
  * into the RTCP buffer; you can move to the next packet with
  * gst_rtcp_packet_move_to_next().
- * </para>
- * </refsect2>
+ *
  */
 
 #include <string.h>
@@ -497,7 +494,7 @@ end:
  * @type: the #GstRTCPType of the new packet
  * @packet: pointer to new packet
  *
- * Add a new packet of @type to @rtcp. @packet will point to the newly created 
+ * Add a new packet of @type to @rtcp. @packet will point to the newly created
  * packet.
  *
  * Returns: %TRUE if the packet could be created. This function returns %FALSE
@@ -677,7 +674,7 @@ gst_rtcp_packet_get_count (GstRTCPPacket * packet)
  * gst_rtcp_packet_get_length:
  * @packet: a valid #GstRTCPPacket
  *
- * Get the length field of @packet. This is the length of the packet in 
+ * Get the length field of @packet. This is the length of the packet in
  * 32-bit words minus one.
  *
  * Returns: The length field of @packet.
@@ -737,7 +734,7 @@ gst_rtcp_packet_sr_get_sender_info (GstRTCPPacket * packet, guint32 * ssrc,
 /**
  * gst_rtcp_packet_sr_set_sender_info:
  * @packet: a valid SR #GstRTCPPacket
- * @ssrc: the SSRC 
+ * @ssrc: the SSRC
  * @ntptime: the NTP time
  * @rtptime: the RTP time
  * @packet_count: the packet count

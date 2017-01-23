@@ -20,16 +20,14 @@
 
 /**
  * SECTION:gstrtpbuffer
+ * @title: GstRTPBuffer
  * @short_description: Helper methods for dealing with RTP buffers
  * @see_also: #GstRTPBasePayload, #GstRTPBaseDepayload, gstrtcpbuffer
  *
- * <refsect2>
- * <para>
- * The GstRTPBuffer helper functions makes it easy to parse and create regular 
+ * The GstRTPBuffer helper functions makes it easy to parse and create regular
  * #GstBuffer objects that contain RTP payloads. These buffers are typically of
  * 'application/x-rtp' #GstCaps.
- * </para>
- * </refsect2>
+ *
  */
 
 #include "gstrtpbuffer.h"
@@ -658,7 +656,7 @@ gst_rtp_buffer_pad_to (GstRTPBuffer * rtp, guint len)
  * @rtp: the RTP packet
  *
  * Check if the extension bit is set on the RTP packet in @buffer.
- * 
+ *
  * Returns: TRUE if @buffer has the extension bit set.
  */
 gboolean
@@ -693,7 +691,7 @@ gst_rtp_buffer_set_extension (GstRTPBuffer * rtp, gboolean extension)
  *
  * If @buffer did not contain an extension, this function will return %FALSE
  * with @bits, @data and @wordlen unchanged.
- * 
+ *
  * Returns: TRUE if @buffer had the extension bit set.
  */
 gboolean
@@ -891,7 +889,7 @@ gst_rtp_buffer_set_extension_data (GstRTPBuffer * rtp, guint16 bits,
  * @rtp: the RTP packet
  *
  * Get the SSRC of the RTP packet in @buffer.
- * 
+ *
  * Returns: the SSRC of @buffer in host order.
  */
 guint32
@@ -918,7 +916,7 @@ gst_rtp_buffer_set_ssrc (GstRTPBuffer * rtp, guint32 ssrc)
  * @rtp: the RTP packet
  *
  * Get the CSRC count of the RTP packet in @buffer.
- * 
+ *
  * Returns: the CSRC count of @buffer.
  */
 guint8
@@ -933,7 +931,7 @@ gst_rtp_buffer_get_csrc_count (GstRTPBuffer * rtp)
  * @idx: the index of the CSRC to get
  *
  * Get the CSRC at index @idx in @buffer.
- * 
+ *
  * Returns: the CSRC at index @idx in host order.
  */
 guint32

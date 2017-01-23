@@ -21,14 +21,12 @@
 
 /**
  * SECTION:gstrtspextension
+ * @title: GstRTSPExtension
  * @short_description: Interface for extending RTSP protocols
  *
- * <refsect2>
- * <para>
  *  This interface is implemented e.g. by the Windows Media Streaming RTSP
  *  exentension (rtspwms) and the RealMedia RTSP extension (rtspreal).
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

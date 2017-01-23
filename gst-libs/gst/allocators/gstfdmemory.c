@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstfdmemory
+ * @title: GstFdAllocator
  * @short_description: Memory wrapper for fd backed memory
  * @see_also: #GstMemory
  *

@@ -26,6 +26,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_video_pool_debug);
 
 /**
  * SECTION:gstvideopool
+ * @title: GstVideoBufferPool
  * @short_description: GstBufferPool for raw video buffers
  * @see_also: #GstBufferPool
  *

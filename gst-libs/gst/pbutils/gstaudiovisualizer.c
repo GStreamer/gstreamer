@@ -21,6 +21,7 @@
  */
 /**
  * SECTION:gstaudiovisualizer
+ * @title: GstAudioVisualizer
  *
  * A baseclass for scopes (visualizers). It takes care of re-fitting the
  * audio-rate to video-rate and handles renegotiation (downstream video size

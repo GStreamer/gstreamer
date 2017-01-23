@@ -22,16 +22,18 @@
 
 /**
  * SECTION:element-alsasink
+ * @title: alsasink
  * @see_also: alsasrc
  *
  * This element renders audio samples using the ALSA audio API.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v uridecodebin uri=file:///path/to/audio.ogg ! audioconvert ! audioresample ! autoaudiosink
- * ]| Play an Ogg/Vorbis file and output audio via ALSA.
- * </refsect2>
+ * ]|
+ *
+ * Play an Ogg/Vorbis file and output audio via ALSA.
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -42,14 +42,12 @@
 
 /**
  * SECTION:gstsdpmessage
+ * @title: GstSDPMessage
  * @short_description: Helper methods for dealing with SDP messages
  *
- * <refsect2>
- * <para>
  * The GstSDPMessage helper functions makes it easy to parse and create SDP
  * messages.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

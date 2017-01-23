@@ -22,43 +22,27 @@
 
 /**
  * SECTION:gstaudiosink
+ * @title: GstAudioSink
  * @short_description: Simple base class for audio sinks
  * @see_also: #GstAudioBaseSink, #GstAudioRingBuffer, #GstAudioSink.
  *
  * This is the most simple base class for audio sinks that only requires
  * subclasses to implement a set of simple functions:
  *
- * <variablelist>
- *   <varlistentry>
- *     <term>open()</term>
- *     <listitem><para>Open the device.</para></listitem>
- *   </varlistentry>
- *   <varlistentry>
- *     <term>prepare()</term>
- *     <listitem><para>Configure the device with the specified format.</para></listitem>
- *   </varlistentry>
- *   <varlistentry>
- *     <term>write()</term>
- *     <listitem><para>Write samples to the device.</para></listitem>
- *   </varlistentry>
- *   <varlistentry>
- *     <term>reset()</term>
- *     <listitem><para>Unblock writes and flush the device.</para></listitem>
- *   </varlistentry>
- *   <varlistentry>
- *     <term>delay()</term>
- *     <listitem><para>Get the number of samples written but not yet played
- *     by the device.</para></listitem>
- *   </varlistentry>
- *   <varlistentry>
- *     <term>unprepare()</term>
- *     <listitem><para>Undo operations done by prepare.</para></listitem>
- *   </varlistentry>
- *   <varlistentry>
- *     <term>close()</term>
- *     <listitem><para>Close the device.</para></listitem>
- *   </varlistentry>
- * </variablelist>
+ * * `open()` :Open the device.
+ *
+ * * `prepare()` :Configure the device with the specified format.
+ *
+ * * `write()` :Write samples to the device.
+ *
+ * * `reset()` :Unblock writes and flush the device.
+ *
+ * * `delay()` :Get the number of samples written but not yet played
+ * by the device.
+ *
+ * * `unprepare()` :Undo operations done by prepare.
+ *
+ * * `close()` :Close the device.
  *
  * All scheduling of samples and timestamps is done in this base class
  * together with #GstAudioBaseSink using a default implementation of a

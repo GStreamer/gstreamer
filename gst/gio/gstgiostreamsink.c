@@ -21,15 +21,15 @@
 
 /**
  * SECTION:element-giostreamsink
+ * @title: giostreamsink
  *
  * This plugin writes incoming data to a custom GIO #GOutputStream.
  *
  * It can, for example, be used to write a stream to memory with a
  * #GMemoryOuputStream or to write to a file with a #GFileOuputStream.
  *
- * <refsect2>
- * <title>Example code</title>
- * <para>
+ * ## Example code
+ *
  * The following example writes the received data to a #GMemoryOutputStream.
  * |[
 
@@ -58,8 +58,7 @@ out_data = g_memory_ouput_stream_get_data (G_MEMORY_OUTPUT_STREAM (stream));
 ...
 
  * ]|
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

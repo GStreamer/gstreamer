@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-videorate
+ * @title: videorate
  *
  * This element takes an incoming stream of timestamped video frames.
  * It will produce a perfect stream that matches the source pad's framerate.
@@ -56,20 +57,22 @@
  * certain factor. It must not be confused with framerate. Think of rate as
  * speed and framerate as flow.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v uridecodebin uri=file:///path/to/video.ogg ! videoconvert ! videoscale ! videorate ! video/x-raw,framerate=15/1 ! autovideosink
- * ]| Decode a video file and adjust the framerate to 15 fps before playing.
+ * ]|
+ *  Decode a video file and adjust the framerate to 15 fps before playing.
  * To create a test Ogg/Theora file refer to the documentation of theoraenc.
  * |[
  * gst-launch-1.0 -v v4l2src ! videorate ! video/x-raw,framerate=25/2 ! theoraenc ! oggmux ! filesink location=recording.ogg
- * ]| Capture video from a V4L device, and adjust the stream to 12.5 fps before
+ * ]|
+ *  Capture video from a V4L device, and adjust the stream to 12.5 fps before
  * encoding to Ogg/Theora.
  * |[
  * gst-launch-1.0 -v uridecodebin uri=file:///path/to/video.ogg ! videoconvert ! videoscale ! videorate ! video/x-raw,framerate=1/5 ! jpegenc ! multifilesink location=snapshot-%05d.jpg
- * ]| Decode a video file and save a snapshot every 5 seconds as consecutively numbered jpeg file.
- * </refsect2>
+ * ]|
+ *  Decode a video file and save a snapshot every 5 seconds as consecutively numbered jpeg file.
+ *
  */
 
 #ifdef HAVE_CONFIG_H

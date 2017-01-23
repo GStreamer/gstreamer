@@ -19,53 +19,37 @@
 
 /**
  * SECTION:gstpbutils
+ * @title: Pbutils
  * @short_description: General Application and Plugin Utility Library
  *
- * <refsect2>
- * <para>
  * libgstpbutils is a general utility library for plugins and applications.
  * It currently provides the
  * following:
- * </para>
- * <itemizedlist>
- * <listitem>
- * <para>
- * human-readable description strings of codecs, elements, sources, decoders,
+ *
+ * * human-readable description strings of codecs, elements, sources, decoders,
  * encoders, or sinks from decoder/encoder caps, element names, or protocol
  * names.
- * </para>
- * </listitem>
- * <listitem>
- * <para>
- * support for applications to initiate installation of missing plugins (if
+ *
+ * * support for applications to initiate installation of missing plugins (if
  * this is supported by the distribution or operating system used)
- * </para>
- * </listitem>
- * <listitem>
- * <para>
- * API for GStreamer elements to create missing-plugin messages in order to
+ *
+ * * API for GStreamer elements to create missing-plugin messages in order to
  * communicate to the application that a certain type of plugin is missing
  * (decoder, encoder, URI protocol source, URI protocol sink, named element)
- * </para>
- * </listitem>
- * <listitem>
- * <para>
- * API for applications to recognise and handle missing-plugin messages
- * </para>
- * </listitem>
- * </itemizedlist>
- * <title>Linking to this library</title>
- * <para>
+ *
+ * * API for applications to recognise and handle missing-plugin messages
+ *
+ * ## Linking to this library
+ *
  * You should obtain the required CFLAGS and LIBS using pkg-config on the
  * gstreamer-plugins-base-0.10 module. You will then also need to add
  * '-lgstpbutils-0.10' manually to your LIBS line.
- * </para>
- * <title>Library initialisation</title>
- * <para>
+ *
+ * ## Library initialisation
+ *
  * Before using any of its functions, applications and plugins must call
  * gst_pb_utils_init() to initialise the library.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

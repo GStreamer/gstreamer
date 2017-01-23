@@ -20,6 +20,7 @@
 
 /**
  * SECTION:encoding-profile
+ * @title: GstEncodingProfile
  * @short_description: Encoding profile library
  *
  * Functions to create and handle encoding profiles.
@@ -189,7 +190,6 @@
  *  return (GstEncodingProfile*) prof;
  *}
  *
- *
  * ]|
  *
  * # Example: Using an encoder preset with a profile
@@ -231,7 +231,6 @@
  *
  *  return (GstEncodingProfile*) prof;
  *}
- *
  *
  * ]|
  *

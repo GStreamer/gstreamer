@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstaudiobasesink
+ * @title: GstAudioBaseSink
  * @short_description: Base class for audio sinks
  * @see_also: #GstAudioSink, #GstAudioRingBuffer.
  *

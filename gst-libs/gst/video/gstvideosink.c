@@ -20,18 +20,15 @@
 
 /**
  * SECTION:gstvideosink
+ * @title: GstVideoSink
  * @short_description: Base class for video sinks
- * 
- * <refsect2>
- * <para>
- * Provides useful functions and a base class for video sinks. 
- * </para>
- * <para>
+ *
+ * Provides useful functions and a base class for video sinks.
+ *
  * GstVideoSink will configure the default base sink to drop frames that
  * arrive later than 20ms as this is considered the default threshold for
  * observing out-of-sync frames.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -92,7 +89,7 @@ static GstFlowReturn gst_video_sink_show_frame (GstBaseSink * bsink,
  * @dst: the #GstVideoRectangle describing the destination area
  * @result: a pointer to a #GstVideoRectangle which will receive the result area
  * @scaling: a #gboolean indicating if scaling should be applied or not
- * 
+ *
  * Takes @src rectangle and position it at the center of @dst rectangle with or
  * without @scaling. It handles clipping if the @src rectangle is bigger than
  * the @dst one and @scaling is set to FALSE.

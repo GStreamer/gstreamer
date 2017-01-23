@@ -22,6 +22,7 @@
  */
 /**
  * SECTION:element-adder
+ * @title: adder
  *
  * The adder allows to mix several streams into one by adding the data.
  * Mixed data is clamped to the min/max values of the data format.
@@ -33,12 +34,12 @@
  * audio mixing element: It will sync input streams correctly and also handle
  * live inputs properly.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc freq=100 ! adder name=mix ! audioconvert ! autoaudiosink audiotestsrc freq=500 ! mix.
- * ]| This pipeline produces two sine waves mixed together.
- * </refsect2>
+ * ]|
+ *  This pipeline produces two sine waves mixed together.
+ *
  */
 /* Element-Checklist-Version: 5 */
 

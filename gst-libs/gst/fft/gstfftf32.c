@@ -31,6 +31,7 @@
 
 /**
  * SECTION:gstfftf32
+ * @title: GstFFTF32
  * @short_description: FFT functions for 32 bit float samples
  *
  * #GstFFTF32 provides a FFT implementation and related functions for

@@ -19,22 +19,19 @@
 
 /**
  * SECTION:gstaudioringbuffer
+ * @title: GstAudioRingBuffer
  * @short_description: Base class for audio ringbuffer implementations
  * @see_also: #GstAudioBaseSink, #GstAudioSink
  *
- * <refsect2>
- * <para>
  * This object is the base class for audio ringbuffers used by the base
  * audio source and sink classes.
- * </para>
- * <para>
+ *
  * The ringbuffer abstracts a circular buffer of data. One reader and
  * one writer can operate on the data from different threads in a lockfree
  * manner. The base class is sufficiently flexible to be used as an
  * abstraction for DMA based ringbuffers as well as a pure software
  * implementations.
- * </para>
- * </refsect2>
+ *
  */
 
 #include <string.h>

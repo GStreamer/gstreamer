@@ -22,19 +22,20 @@
 
 /**
  * SECTION:element-tcpclientsrc
+ * @title: tcpclientsrc
  * @see_also: #tcpclientsink
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * # server:
  * nc -l -p 3000
  * # client:
  * gst-launch-1.0 tcpclientsrc port=3000 ! fdsink fd=2
- * ]| everything you type in the server is shown on the client.
+ * ]|
+ *  everything you type in the server is shown on the client.
  * If you want to detect network failures and/or limit the time your tcp client
  * keeps waiting for data from server setting a timeout value can be useful.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

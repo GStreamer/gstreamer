@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-subtitleoverlay
+ * @title: subtitleoverlay
  *
  * #GstBin that auto-magically overlays a video stream with subtitles by
  * autoplugging the required elements.
@@ -26,12 +27,12 @@
  * It supports raw, timestamped text, different textual subtitle formats and
  * DVD subpicture subtitles.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 -v filesrc location=test.mkv ! matroskademux name=demux ! video/x-h264 ! queue ! decodebin ! subtitleoverlay name=overlay ! videoconvert ! autovideosink  demux. ! subpicture/x-dvd ! queue ! overlay.
- * ]| This will play back the given Matroska file with h264 video and dvd subpicture style subtitles.
- * </refsect2>
+ * ]|
+ *  This will play back the given Matroska file with h264 video and dvd subpicture style subtitles.
+ *
  */
 
 #ifdef HAVE_CONFIG_H

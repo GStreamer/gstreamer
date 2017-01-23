@@ -22,17 +22,17 @@
 
 /**
  * SECTION:element-tcpserversrc
+ * @title: tcpserversrc
  * @see_also: #tcpserversink
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * # server:
  * gst-launch-1.0 tcpserversrc port=3000 ! fdsink fd=2
  * # client:
  * gst-launch-1.0 fdsrc fd=1 ! tcpclientsink port=3000
- * ]| 
- * </refsect2>
+ * ]|
+ *
  */
 
 #ifdef HAVE_CONFIG_H

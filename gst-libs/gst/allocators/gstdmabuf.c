@@ -27,6 +27,7 @@
 
 /**
  * SECTION:gstdmabuf
+ * @title: GstDmaBufAllocator
  * @short_description: Memory wrapper for Linux dmabuf memory
  * @see_also: #GstMemory
  *

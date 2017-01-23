@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-videoscale
+ * @title: videoscale
  * @see_also: videorate, videoconvert
  *
  * This element resizes video frames. By default the element will try to
@@ -31,18 +32,19 @@
  * RGB formats and is therefore generally able to operate anywhere in a
  * pipeline.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoconvert ! videoscale ! autovideosink
- * ]| Decode an Ogg/Theora and display the video. If the video sink chosen
+ * ]|
+ *  Decode an Ogg/Theora and display the video. If the video sink chosen
  * cannot perform scaling, the video scaling will be performed by videoscale
  * when you resize the video window.
  * To create the test Ogg/Theora file refer to the documentation of theoraenc.
  * |[
  * gst-launch-1.0 -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoconvert ! videoscale ! video/x-raw,width=100 ! autovideosink
- * ]| Decode an Ogg/Theora and display the video with a width of 100.
- * </refsect2>
+ * ]|
+ *  Decode an Ogg/Theora and display the video with a width of 100.
+ *
  */
 
 /* 

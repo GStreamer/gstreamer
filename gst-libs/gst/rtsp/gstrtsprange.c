@@ -42,8 +42,9 @@
 
 /**
  * SECTION:gstrtsprange
+ * @title: GstRTSPTimeRange
  * @short_description: dealing with time ranges
- *  
+ *
  * Provides helper functions to deal with time ranges.
  */
 

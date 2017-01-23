@@ -23,25 +23,27 @@
 
 /**
  * SECTION:element-audioconvert
+ * @title: audioconvert
  *
  * Audioconvert converts raw audio buffers between various possible formats.
  * It supports integer to float conversion, width/depth conversion,
  * signedness and endianness conversion and channel transformations
  * (ie. upmixing and downmixing), as well as dithering and noise-shaping.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v -m audiotestsrc ! audioconvert ! audio/x-raw,format=S8,channels=2 ! level ! fakesink silent=TRUE
- * ]| This pipeline converts audio to 8-bit.  The level element shows that
+ * ]|
+ *  This pipeline converts audio to 8-bit.  The level element shows that
  * the output levels still match the one for a sine wave.
  * |[
  * gst-launch-1.0 -v -m uridecodebin uri=file:///path/to/audio.flac ! audioconvert ! vorbisenc ! oggmux ! filesink location=audio.ogg
- * ]| The vorbis encoder takes float audio data instead of the integer data
+ * ]|
+ *  The vorbis encoder takes float audio data instead of the integer data
  * output by most other audio elements. This pipeline decodes a FLAC audio file
  * (or any other audio file for which decoders are installed) and re-encodes
  * it into an Ogg/Vorbis audio file.
- * </refsect2>
+ *
  */
 
 /*

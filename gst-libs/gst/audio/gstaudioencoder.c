@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstaudioencoder
+ * @title: GstAudioEncoder
  * @short_description: Base class for audio encoders
  * @see_also: #GstBaseTransform
  *
@@ -28,65 +29,46 @@
  * encoded audio data.
  *
  * GstAudioEncoder and subclass should cooperate as follows.
- * <orderedlist>
- * <listitem>
- *   <itemizedlist><title>Configuration</title>
- *   <listitem><para>
- *     Initially, GstAudioEncoder calls @start when the encoder element
+ *
+ * ## Configuration
+ *
+ *   * Initially, GstAudioEncoder calls @start when the encoder element
  *     is activated, which allows subclass to perform any global setup.
- *   </para></listitem>
- *   <listitem><para>
- *     GstAudioEncoder calls @set_format to inform subclass of the format
+ *
+ *   * GstAudioEncoder calls @set_format to inform subclass of the format
  *     of input audio data that it is about to receive.  Subclass should
  *     setup for encoding and configure various base class parameters
  *     appropriately, notably those directing desired input data handling.
  *     While unlikely, it might be called more than once, if changing input
  *     parameters require reconfiguration.
- *   </para></listitem>
- *   <listitem><para>
- *     GstAudioEncoder calls @stop at end of all processing.
- *   </para></listitem>
- *   </itemizedlist>
- * </listitem>
+ *
+ *   * GstAudioEncoder calls @stop at end of all processing.
+ *
  * As of configuration stage, and throughout processing, GstAudioEncoder
  * maintains various parameters that provide required context,
  * e.g. describing the format of input audio data.
  * Conversely, subclass can and should configure these context parameters
  * to inform base class of its expectation w.r.t. buffer handling.
- * <listitem>
- *   <itemizedlist>
- *   <title>Data processing</title>
- *     <listitem><para>
- *       Base class gathers input sample data (as directed by the context's
+ *
+ * ## Data processing
+ *
+ *     * Base class gathers input sample data (as directed by the context's
  *       frame_samples and frame_max) and provides this to subclass' @handle_frame.
- *     </para></listitem>
- *     <listitem><para>
- *       If codec processing results in encoded data, subclass should call
+ *     * If codec processing results in encoded data, subclass should call
  *       gst_audio_encoder_finish_frame() to have encoded data pushed
  *       downstream. Alternatively, it might also call
  *       gst_audio_encoder_finish_frame() (with a NULL buffer and some number of
  *       dropped samples) to indicate dropped (non-encoded) samples.
- *     </para></listitem>
- *     <listitem><para>
- *       Just prior to actually pushing a buffer downstream,
+ *     * Just prior to actually pushing a buffer downstream,
  *       it is passed to @pre_push.
- *     </para></listitem>
- *     <listitem><para>
- *       During the parsing process GstAudioEncoderClass will handle both
+ *     * During the parsing process GstAudioEncoderClass will handle both
  *       srcpad and sinkpad events. Sink events will be passed to subclass
  *       if @event callback has been provided.
- *     </para></listitem>
- *   </itemizedlist>
- * </listitem>
- * <listitem>
- *   <itemizedlist><title>Shutdown phase</title>
- *   <listitem><para>
- *     GstAudioEncoder class calls @stop to inform the subclass that data
+ *
+ * ## Shutdown phase
+ *
+ *   * GstAudioEncoder class calls @stop to inform the subclass that data
  *     parsing will be stopped.
- *   </para></listitem>
- *   </itemizedlist>
- * </listitem>
- * </orderedlist>
  *
  * Subclass is responsible for providing pad template caps for
  * source and sink pads. The pads need to be named "sink" and "src". It also
@@ -125,25 +107,16 @@
  * by same sample count and sample rate).
  *
  * Things that subclass need to take care of:
- * <itemizedlist>
- *   <listitem><para>Provide pad templates</para></listitem>
- *   <listitem><para>
- *      Set source pad caps when appropriate
- *   </para></listitem>
- *   <listitem><para>
- *      Inform base class of buffer processing needs using context's
+ *
+ *   * Provide pad templates
+ *   * Set source pad caps when appropriate
+ *   * Inform base class of buffer processing needs using context's
  *      frame_samples and frame_bytes.
- *   </para></listitem>
- *   <listitem><para>
- *      Set user-configurable properties to sane defaults for format and
+ *   * Set user-configurable properties to sane defaults for format and
  *      implementing codec at hand, e.g. those controlling timestamp behaviour
  *      and discontinuity processing.
- *   </para></listitem>
- *   <listitem><para>
- *      Accept data in @handle_frame and provide encoded results to
+ *   * Accept data in @handle_frame and provide encoded results to
  *      gst_audio_encoder_finish_frame().
- *   </para></listitem>
- * </itemizedlist>
  *
  */
 

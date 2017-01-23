@@ -31,6 +31,7 @@
 
 /**
  * SECTION:gstffts32
+ * @title: GstFFTS32
  * @short_description: FFT functions for signed 32 bit integer samples
  *
  * #GstFFTS32 provides a FFT implementation and related functions for

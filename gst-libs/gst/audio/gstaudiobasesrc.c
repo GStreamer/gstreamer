@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstaudiobasesrc
+ * @title: GstAudioBaseSrc
  * @short_description: Base class for audio sources
  * @see_also: #GstAudioSrc, #GstAudioRingBuffer.
  *

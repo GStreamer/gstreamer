@@ -42,8 +42,9 @@
 
 /**
  * SECTION:gstrtspurl
+ * @title: GstRTSPUrl
  * @short_description: handling RTSP urls
- *  
+ *
  * Provides helper functions to handle RTSP urls.
  */
 
@@ -308,7 +309,7 @@ gst_rtsp_url_get_port (const GstRTSPUrl * url, guint16 * port)
  * gst_rtsp_url_get_request_uri:
  * @url: a #GstRTSPUrl
  *
- * Get a newly allocated string describing the request URI for @url. 
+ * Get a newly allocated string describing the request URI for @url.
  *
  * Returns: a string with the request URI. g_free() after usage.
  */

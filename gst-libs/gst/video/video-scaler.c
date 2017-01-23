@@ -27,6 +27,7 @@
 
 /**
  * SECTION:gstvideoscaler
+ * @title: GstVideoScaler
  * @short_description: Utility object for rescaling video frames
  *
  * #GstVideoScaler is a utility object for rescaling and resampling

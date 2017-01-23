@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstaudioiec61937
+ * @title: GstAudio IEC61937
  * @short_description: Utility functions for IEC 61937 payloading
  *
  * This module contains some helper functions for encapsulating various

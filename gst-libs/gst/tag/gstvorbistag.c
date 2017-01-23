@@ -21,16 +21,14 @@
 
 /**
  * SECTION:gsttagvorbis
+ * @title: GstVorbisTag
  * @short_description: tag mappings and support functions for plugins
  *                     dealing with vorbiscomments
  * @see_also: #GstTagList
  *
- * <refsect2>
- * <para>
  * Contains various utility functions for plugins to parse or create
  * vorbiscomments and map them to and from #GstTagList<!-- -->s.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

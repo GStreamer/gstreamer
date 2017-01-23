@@ -22,33 +22,26 @@
 
 /**
  * SECTION:gsttagmux
+ * @title: GstTagMux
  * @see_also: GstApeMux, GstId3Mux
  * @short_description: Base class for adding tags that are in one single chunk
  *                     directly at the beginning or at the end of a file
  *
- * <refsect2>
- * <para>
  * Provides a base class for adding tags at the beginning or end of a
  * stream.
- * </para>
- * <title>Deriving from GstTagMux</title>
- * <para>
+ *
+ * ## Deriving from GstTagMux
+ *
  * Subclasses have to do the following things:
- * <itemizedlist>
- *  <listitem><para>
- *  In their base init function, they must add pad templates for the sink
- *  pad and the source pad to the element class, describing the media type
- *  they accept and output in the caps of the pad template.
- *  </para></listitem>
- *  <listitem><para>
- *  In their class init function, they must override the
- *  GST_TAG_MUX_CLASS(mux_klass)->render_start_tag and/or
- *  GST_TAG_MUX_CLASS(mux_klass)->render_end_tag vfuncs and set up a render
- *  function.
- *  </para></listitem>
- * </itemizedlist>
- * </para>
- * </refsect2>
+ *
+ *  * In their base init function, they must add pad templates for the sink
+ *    pad and the source pad to the element class, describing the media type
+ *    they accept and output in the caps of the pad template.
+ *  * In their class init function, they must override the
+ *    GST_TAG_MUX_CLASS(mux_klass)->render_start_tag and/or
+ *    GST_TAG_MUX_CLASS(mux_klass)->render_end_tag vfuncs and set up a render
+ *    function.
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include <config.h>

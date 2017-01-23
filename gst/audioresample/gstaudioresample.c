@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-audioresample
+ * @title: audioresample
  *
  * audioresample resamples raw audio buffers to different sample rates using
  * a configurable windowing function to enhance quality.
@@ -33,14 +34,14 @@
  * to initialize when the element is created. A third mode exists, which uses the full table
  * unless said table would become too large, in which case the interpolated one is used instead.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v uridecodebin uri=file:///path/to/audio.ogg ! audioconvert ! audioresample ! audio/x-raw, rate=8000 ! autoaudiosink
- * ]| Decode an audio file and downsample it to 8Khz and play sound.
+ * ]|
+ *  Decode an audio file and downsample it to 8Khz and play sound.
  * To create the Ogg/Vorbis file refer to the documentation of vorbisenc.
  * This assumes there is an audio sink that will accept/handle 8kHz audio.
- * </refsect2>
+ *
  */
 
 /* TODO:

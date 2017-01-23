@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstaudiodecoder
+ * @title: GstAudioDecoder
  * @short_description: Base class for audio decoders
  * @see_also: #GstBaseTransform
  *
@@ -30,72 +31,48 @@
  * raw audio samples.
  *
  * GstAudioDecoder and subclass should cooperate as follows.
- * <orderedlist>
- * <listitem>
- *   <itemizedlist><title>Configuration</title>
- *   <listitem><para>
- *     Initially, GstAudioDecoder calls @start when the decoder element
+ *
+ * ## Configuration
+ *
+ *   * Initially, GstAudioDecoder calls @start when the decoder element
  *     is activated, which allows subclass to perform any global setup.
  *     Base class (context) parameters can already be set according to subclass
  *     capabilities (or possibly upon receive more information in subsequent
  *     @set_format).
- *   </para></listitem>
- *   <listitem><para>
- *     GstAudioDecoder calls @set_format to inform subclass of the format
+ *   * GstAudioDecoder calls @set_format to inform subclass of the format
  *     of input audio data that it is about to receive.
  *     While unlikely, it might be called more than once, if changing input
  *     parameters require reconfiguration.
- *   </para></listitem>
- *   <listitem><para>
- *     GstAudioDecoder calls @stop at end of all processing.
- *   </para></listitem>
- *   </itemizedlist>
- * </listitem>
+ *   * GstAudioDecoder calls @stop at end of all processing.
+ *
  * As of configuration stage, and throughout processing, GstAudioDecoder
  * provides various (context) parameters, e.g. describing the format of
  * output audio data (valid when output caps have been set) or current parsing state.
  * Conversely, subclass can and should configure context to inform
  * base class of its expectation w.r.t. buffer handling.
- * <listitem>
- *   <itemizedlist>
- *   <title>Data processing</title>
- *     <listitem><para>
- *       Base class gathers input data, and optionally allows subclass
+ *
+ * ## Data processing
+ *     * Base class gathers input data, and optionally allows subclass
  *       to parse this into subsequently manageable (as defined by subclass)
  *       chunks.  Such chunks are subsequently referred to as 'frames',
  *       though they may or may not correspond to 1 (or more) audio format frame.
- *     </para></listitem>
- *     <listitem><para>
- *       Input frame is provided to subclass' @handle_frame.
- *     </para></listitem>
- *     <listitem><para>
- *       If codec processing results in decoded data, subclass should call
+ *     * Input frame is provided to subclass' @handle_frame.
+ *     * If codec processing results in decoded data, subclass should call
  *       @gst_audio_decoder_finish_frame to have decoded data pushed
  *       downstream.
- *     </para></listitem>
- *     <listitem><para>
- *       Just prior to actually pushing a buffer downstream,
+ *     * Just prior to actually pushing a buffer downstream,
  *       it is passed to @pre_push.  Subclass should either use this callback
  *       to arrange for additional downstream pushing or otherwise ensure such
  *       custom pushing occurs after at least a method call has finished since
  *       setting src pad caps.
- *     </para></listitem>
- *     <listitem><para>
- *       During the parsing process GstAudioDecoderClass will handle both
+ *     * During the parsing process GstAudioDecoderClass will handle both
  *       srcpad and sinkpad events. Sink events will be passed to subclass
  *       if @event callback has been provided.
- *     </para></listitem>
- *   </itemizedlist>
- * </listitem>
- * <listitem>
- *   <itemizedlist><title>Shutdown phase</title>
- *   <listitem><para>
- *     GstAudioDecoder class calls @stop to inform the subclass that data
+ *
+ * ## Shutdown phase
+ *
+ *   * GstAudioDecoder class calls @stop to inform the subclass that data
  *     parsing will be stopped.
- *   </para></listitem>
- *   </itemizedlist>
- * </listitem>
- * </orderedlist>
  *
  * Subclass is responsible for providing pad template caps for
  * source and sink pads. The pads need to be named "sink" and "src". It also
@@ -125,23 +102,18 @@
  * bitrates.
  *
  * Things that subclass need to take care of:
- * <itemizedlist>
- *   <listitem><para>Provide pad templates</para></listitem>
- *   <listitem><para>
- *      Set source pad caps when appropriate
- *   </para></listitem>
- *   <listitem><para>
- *      Set user-configurable properties to sane defaults for format and
+ *
+ *   * Provide pad templates
+ *   * Set source pad caps when appropriate
+ *   * Set user-configurable properties to sane defaults for format and
  *      implementing codec at hand, and convey some subclass capabilities and
  *      expectations in context.
- *   </para></listitem>
- *   <listitem><para>
- *      Accept data in @handle_frame and provide encoded results to
+ *
+ *   * Accept data in @handle_frame and provide encoded results to
  *      @gst_audio_decoder_finish_frame.  If it is prepared to perform
  *      PLC, it should also accept NULL data in @handle_frame and provide for
  *      data for indicated duration.
- *   </para></listitem>
- * </itemizedlist>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

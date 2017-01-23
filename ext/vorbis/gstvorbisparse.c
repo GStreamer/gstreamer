@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-vorbisparse
+ * @title: vorbisparse
  * @see_also: vorbisdec, oggdemux, theoraparse
  *
  * The vorbisparse element will parse the header packets of the Vorbis
@@ -33,18 +34,19 @@
  * vorbisparse outputs have all of the metadata that oggmux expects to receive,
  * which allows you to (for example) remux an ogg/vorbis file.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=sine.ogg ! oggdemux ! vorbisparse ! fakesink
- * ]| This pipeline shows that the streamheader is set in the caps, and that each
+ * ]|
+ *  This pipeline shows that the streamheader is set in the caps, and that each
  * buffer has the timestamp, duration, offset, and offset_end set.
  * |[
  * gst-launch-1.0 filesrc location=sine.ogg ! oggdemux ! vorbisparse \
  *            ! oggmux ! filesink location=sine-remuxed.ogg
- * ]| This pipeline shows remuxing. sine-remuxed.ogg might not be exactly the same
+ * ]|
+ *  This pipeline shows remuxing. sine-remuxed.ogg might not be exactly the same
  * as sine.ogg, but they should produce exactly the same decoded data.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

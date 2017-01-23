@@ -19,19 +19,16 @@
 
 /**
  * SECTION:gsttagxmpwriter
+ * @title: GstTagXmpWriter
  * @short_description: Interface for elements that provide XMP serialization
  *
- * <refsect2>
- * <para>
  * This interface is implemented by elements that are able to do XMP serialization. Examples for
  * such elements are #jifmux and #qtmux.
- * </para>
- * <para>
+ *
  * Applications can use this interface to configure which XMP schemas should be used when serializing
  * tags into XMP. Schemas are represented by their names, a full list of the supported schemas can be
  * obtained from gst_tag_xmp_list_schemas(). By default, all schemas are used.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

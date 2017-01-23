@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstrtpbasedepayload
+ * @title: GstRTPBaseDepayload
  * @short_description: Base class for RTP depayloader
  *
  * Provides a base class for RTP depayloaders
@@ -150,55 +151,17 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
    * application/x-rtp-depayload-stats containing the following fields relating to
    * the last processed buffer and current state of the stream being depayloaded:
    *
-   * <variablelist>
-   *   <varlistentry>
-   *     <term>clock-rate</term>
-   *     <listitem><para>#G_TYPE_UINT, clock-rate of the
-   *     stream</para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>npt-start</term>
-   *     <listitem><para>#G_TYPE_UINT64, time of playback start
-   *     </para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>npt-stop</term>
-   *     <listitem><para>#G_TYPE_UINT64, time of playback stop
-   *     </para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>play-speed</term>
-   *     <listitem><para>#G_TYPE_DOUBLE, the playback speed
-   *     </para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>play-scale</term>
-   *     <listitem><para>#G_TYPE_DOUBLE, the playback scale
-   *     </para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>running-time-dts</term>
-   *     <listitem><para>#G_TYPE_UINT64, the last running-time of the
+   *   * `clock-rate`: #G_TYPE_UINT, clock-rate of the stream
+   *   * `npt-start`: #G_TYPE_UINT64, time of playback start
+   *   * `npt-stop`: #G_TYPE_UINT64, time of playback stop
+   *   * `play-speed`: #G_TYPE_DOUBLE, the playback speed
+   *   * `play-scale`: #G_TYPE_DOUBLE, the playback scale
+   *   * `running-time-dts`: #G_TYPE_UINT64, the last running-time of the
    *      last DTS
-   *     </para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>running-time-pts</term>
-   *     <listitem><para>#G_TYPE_UINT64, the last running-time of the
+   *   * `running-time-pts`: #G_TYPE_UINT64, the last running-time of the
    *      last PTS
-   *     </para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>seqnum</term>
-   *     <listitem><para>#G_TYPE_UINT, the last seen seqnum
-   *     </para></listitem>
-   *   </varlistentry>
-   *   <varlistentry>
-   *     <term>timestamp</term>
-   *     <listitem><para>#G_TYPE_UINT, the last seen RTP timestamp
-   *     </para></listitem>
-   *   </varlistentry>
-   * </variablelist>
+   *   * `seqnum`: #G_TYPE_UINT, the last seen seqnum
+   *   * `timestamp`: #G_TYPE_UINT, the last seen RTP timestamp
    **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_STATS,
       g_param_spec_boxed ("stats", "Statistics", "Various statistics",

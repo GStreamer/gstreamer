@@ -25,6 +25,7 @@
 
 /**
  * SECTION:element-textoverlay
+ * @title: textoverlay
  * @see_also: #GstTextRender, #GstTextOverlay, #GstTimeOverlay, #GstSubParse
  *
  * This plugin renders text on top of a video stream. This can be either
@@ -37,18 +38,19 @@
  * The text can contain newline characters and text wrapping is enabled by
  * default.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 -v gst-launch-1.0 videotestsrc ! textoverlay text="Room A" valignment=top halignment=left font-desc="Sans, 72" ! autovideosink
- * ]| Here is a simple pipeline that displays a static text in the top left
+ * ]|
+ * Here is a simple pipeline that displays a static text in the top left
  * corner of the video picture
  * |[
  * gst-launch-1.0 -v filesrc location=subtitles.srt ! subparse ! txt.   videotestsrc ! timeoverlay ! textoverlay name=txt shaded-background=yes ! autovideosink
- * ]| Here is another pipeline that displays subtitles from an .srt subtitle
+ * ]|
+ * Here is another pipeline that displays subtitles from an .srt subtitle
  * file, centered at the bottom of the picture and with a rectangular shading
  * around the text in the background:
- * <para>
+ *
  * If you do not have such a subtitle file, create one looking like this
  * in a text editor:
  * |[
@@ -66,8 +68,7 @@
  * Uh? What are you talking about?
  * I don&apos;t understand  (18-62s)
  * ]|
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

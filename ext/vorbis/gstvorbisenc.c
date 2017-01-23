@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-vorbisenc
+ * @title: vorbisenc
  * @see_also: vorbisdec, oggmux
  *
  * This element encodes raw float audio into a Vorbis stream.
@@ -26,16 +27,17 @@
  * audio codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
  * Foundation</ulink>.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! vorbisenc ! oggmux ! filesink location=sine.ogg
- * ]| Encode a test sine signal to Ogg/Vorbis.  Note that the resulting file
+ * ]|
+ *  Encode a test sine signal to Ogg/Vorbis.  Note that the resulting file
  * will be really small because a sine signal compresses very well.
  * |[
  * gst-launch-1.0 -v autoaudiosrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=alsasrc.ogg
- * ]| Record from a sound card and encode to Ogg/Vorbis.
- * </refsect2>
+ * ]|
+ *  Record from a sound card and encode to Ogg/Vorbis.
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

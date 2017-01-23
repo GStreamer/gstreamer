@@ -24,14 +24,12 @@
 
 /**
  * SECTION:gstpbutilscodecutils
+ * @title: Codec utilities
  * @short_description: Miscellaneous codec-specific utility functions
  *
- * <refsect2>
- * <para>
  * Provides codec-specific ulility functions such as functions to provide the
  * codec profile and level in human-readable string form from header data.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -173,9 +171,7 @@ gst_codec_utils_aac_get_channels (const guint8 * audio_config, guint len)
  * determined using the AudioObjectType field which is in the first 5 bits of
  * @audio_config.
  *
- * <note>
- * HE-AAC support has not yet been implemented.
- * </note>
+ * > HE-AAC support has not yet been implemented.
  *
  * Returns: The profile as a const string and %NULL if the profile could not be
  * determined.
@@ -221,23 +217,13 @@ gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len)
  * The @audio_config parameter follows the following format, starting from the
  * most significant bit of the first byte:
  *
- * <itemizedlist>
- *   <listitem><para>
- *     Bit 0:4 contains the AudioObjectType
- *   </para></listitem>
- *   <listitem><para>
- *     Bit 5:8 contains the sample frequency index (if this is 0xf, then the
- *             next 24 bits define the actual sample frequency, and subsequent
- *             fields are appropriately shifted).
- *    </para></listitem>
- *   <listitem><para>
- *     Bit 9:12 contains the channel configuration
- *   </para></listitem>
- * </itemizedlist>
+ *   * Bit 0:4 contains the AudioObjectType
+ *   * Bit 5:8 contains the sample frequency index (if this is 0xf, then the
+ *     next 24 bits define the actual sample frequency, and subsequent
+ *     fields are appropriately shifted).
+ *   * Bit 9:12 contains the channel configuration
  *
- * <note>
- * HE-AAC support has not yet been implemented.
- * </note>
+ * > HE-AAC support has not yet been implemented.
  *
  * Returns: The level as a const string and %NULL if the level could not be
  * determined.
@@ -477,16 +463,14 @@ gst_codec_utils_aac_caps_set_level_and_profile (GstCaps * caps,
  * as a bitstream here, with bit 0 being the most significant bit of the first
  * byte.
  *
- * <itemizedlist>
- * <listitem><para>Bit 0:7   - Profile indication</para></listitem>
- * <listitem><para>Bit 8     - constraint_set0_flag</para></listitem>
- * <listitem><para>Bit 9     - constraint_set1_flag</para></listitem>
- * <listitem><para>Bit 10    - constraint_set2_flag</para></listitem>
- * <listitem><para>Bit 11    - constraint_set3_flag</para></listitem>
- * <listitem><para>Bit 12    - constraint_set3_flag</para></listitem>
- * <listitem><para>Bit 13:15 - Reserved</para></listitem>
- * <listitem><para>Bit 16:24 - Level indication</para></listitem>
- * </itemizedlist>
+ * * Bit 0:7   - Profile indication
+ * * Bit 8     - constraint_set0_flag
+ * * Bit 9     - constraint_set1_flag
+ * * Bit 10    - constraint_set2_flag
+ * * Bit 11    - constraint_set3_flag
+ * * Bit 12    - constraint_set3_flag
+ * * Bit 13:15 - Reserved
+ * * Bit 16:24 - Level indication
  *
  * Returns: The profile as a const string, or %NULL if there is an error.
  */
@@ -735,18 +719,16 @@ gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
  * specification. The profile_tier_level is viewed as a bitstream here,
  * with bit 0 being the most significant bit of the first byte.
  *
- * <itemizedlist>
- * <listitem><para>Bit 0:1   - general_profile_space</para></listitem>
- * <listitem><para>Bit 2     - general_tier_flag</para></listitem>
- * <listitem><para>Bit 3:7   - general_profile_idc</para></listitem>
- * <listitem><para>Bit 8:39  - gernal_profile_compatibility_flags</para></listitem>
- * <listitem><para>Bit 40    - general_progressive_source_flag</para></listitem>
- * <listitem><para>Bit 41    - general_interlaced_source_flag</para></listitem>
- * <listitem><para>Bit 42    - general_non_packed_constraint_flag</para></listitem>
- * <listitem><para>Bit 43    - general_frame_only_constraint_flag</para></listitem>
- * <listitem><para>Bit 44:87 - general_reserved_zero_44bits</para></listitem>
- * <listitem><para>Bit 88:95 - general_level_idc</para></listitem>
- * </itemizedlist>
+ * * Bit 0:1   - general_profile_space
+ * * Bit 2     - general_tier_flag
+ * * Bit 3:7   - general_profile_idc
+ * * Bit 8:39  - gernal_profile_compatibility_flags
+ * * Bit 40    - general_progressive_source_flag
+ * * Bit 41    - general_interlaced_source_flag
+ * * Bit 42    - general_non_packed_constraint_flag
+ * * Bit 43    - general_frame_only_constraint_flag
+ * * Bit 44:87 - general_reserved_zero_44bits
+ * * Bit 88:95 - general_level_idc
  *
  * Returns: The profile as a const string, or %NULL if there is an error.
  *

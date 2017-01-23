@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstaudiofilter
+ * @title: GstAudioFilter
  * @short_description: Base class for simple audio filters
  *
  * #GstAudioFilter is a #GstBaseTransform<!-- -->-derived base class for simple audio

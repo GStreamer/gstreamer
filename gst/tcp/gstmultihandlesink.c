@@ -23,14 +23,15 @@
 
 /**
  * SECTION:element-multihandlesink
+ * @title: multihandlesink
  * @see_also: tcpserversink
  *
  * This plugin writes incoming data to a set of file descriptors. The
- * file descriptors can be added to multihandlesink by emitting the #GstMultiHandleSink::add signal. 
+ * file descriptors can be added to multihandlesink by emitting the #GstMultiHandleSink::add signal.
  * For each descriptor added, the #GstMultiHandleSink::client-added signal will be called.
  *
  * A client can also be added with the #GstMultiHandleSink::add-full signal
- * that allows for more control over what and how much data a client 
+ * that allows for more control over what and how much data a client
  * initially receives.
  *
  * Clients can be removed from multihandlesink by emitting the #GstMultiHandleSink::remove signal. For
@@ -44,7 +45,7 @@
  * Note that multihandlesink still has a reference to the file descriptor when the
  * #GstMultiHandleSink::client-removed signal is emitted, so that "get-stats" can be performed on
  * the descriptor; it is therefore not safe to close the file descriptor in
- * the #GstMultiHandleSink::client-removed signal handler, and you should use the 
+ * the #GstMultiHandleSink::client-removed signal handler, and you should use the
  * #GstMultiHandleSink::client-fd-removed signal to safely close the fd.
  *
  * Multisocketsink internally keeps a queue of the incoming buffers and uses a
@@ -53,34 +54,34 @@
  * speeds.
  *
  * When adding a client to multihandlesink, the #GstMultiHandleSink:sync-method property will define
- * which buffer in the queued buffers will be sent first to the client. Clients 
- * can be sent the most recent buffer (which might not be decodable by the 
- * client if it is not a keyframe), the next keyframe received in 
+ * which buffer in the queued buffers will be sent first to the client. Clients
+ * can be sent the most recent buffer (which might not be decodable by the
+ * client if it is not a keyframe), the next keyframe received in
  * multihandlesink (which can take some time depending on the keyframe rate), or the
- * last received keyframe (which will cause a simple burst-on-connect). 
+ * last received keyframe (which will cause a simple burst-on-connect).
  * Multisocketsink will always keep at least one keyframe in its internal buffers
  * when the sync-mode is set to latest-keyframe.
  *
  * There are additional values for the #GstMultiHandleSink:sync-method
  * property to allow finer control over burst-on-connect behaviour. By selecting
  * the 'burst' method a minimum burst size can be chosen, 'burst-keyframe'
- * additionally requires that the burst begin with a keyframe, and 
+ * additionally requires that the burst begin with a keyframe, and
  * 'burst-with-keyframe' attempts to burst beginning with a keyframe, but will
  * prefer a minimum burst size even if it requires not starting with a keyframe.
  *
  * Multisocketsink can be instructed to keep at least a minimum amount of data
- * expressed in time or byte units in its internal queues with the 
+ * expressed in time or byte units in its internal queues with the
  * #GstMultiHandleSink:time-min and #GstMultiHandleSink:bytes-min properties respectively.
- * These properties are useful if the application adds clients with the 
+ * These properties are useful if the application adds clients with the
  * #GstMultiHandleSink::add-full signal to make sure that a burst connect can
- * actually be honored. 
+ * actually be honored.
  *
  * When streaming data, clients are allowed to read at a different rate than
  * the rate at which multihandlesink receives data. If the client is reading too
  * fast, no data will be send to the client until multihandlesink receives more
- * data. If the client, however, reads too slowly, data for that client will be 
- * queued up in multihandlesink. Two properties control the amount of data 
- * (buffers) that is queued in multihandlesink: #GstMultiHandleSink:buffers-max and 
+ * data. If the client, however, reads too slowly, data for that client will be
+ * queued up in multihandlesink. Two properties control the amount of data
+ * (buffers) that is queued in multihandlesink: #GstMultiHandleSink:buffers-max and
  * #GstMultiHandleSink:buffers-soft-max. A client that falls behind by
  * #GstMultiHandleSink:buffers-max is removed from multihandlesink forcibly.
  *
@@ -92,8 +93,8 @@
  * RESYNC_KEYFRAME positions the client at the most recent keyframe in the
  * buffer queue.
  *
- * multihandlesink will by default synchronize on the clock before serving the 
- * buffers to the clients. This behaviour can be disabled by setting the sync 
+ * multihandlesink will by default synchronize on the clock before serving the
+ * buffers to the clients. This behaviour can be disabled by setting the sync
  * property to FALSE. Multisocketsink will by default not do QoS and will never
  * drop late buffers.
  */

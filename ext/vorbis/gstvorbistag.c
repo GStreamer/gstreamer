@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-vorbistag
+ * @title: vorbistag
  * @see_also: #oggdemux, #oggmux, #vorbisparse, #GstTagSetter
  *
  * The vorbistags element can change the tag contained within a raw
@@ -34,14 +35,14 @@
  * automatically (and merged according to the merge mode set via the tag
  * setter interface).
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=foo.ogg ! oggdemux ! vorbistag ! oggmux ! filesink location=bar.ogg
- * ]| This element is not useful with gst-launch-1.0, because it does not support
+ * ]|
+ *  This element is not useful with gst-launch-1.0, because it does not support
  * setting the tags on a #GstTagSetter interface. Conceptually, the element
  * will usually be used in this order though.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

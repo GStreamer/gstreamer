@@ -19,40 +19,28 @@
  */
 /**
  * SECTION:gstvideooverlay
+ * @title: GstVideoOverlay
  * @short_description: Interface for setting/getting a window system resource
  *    on elements supporting it to configure a window into which to render a
  *    video.
  *
- * <refsect2>
- * <para>
  * The #GstVideoOverlay interface is used for 2 main purposes :
- * <itemizedlist>
- * <listitem>
- * <para>
- * To get a grab on the Window where the video sink element is going to render.
- * This is achieved by either being informed about the Window identifier that
- * the video sink element generated, or by forcing the video sink element to use
- * a specific Window identifier for rendering.
- * </para>
- * </listitem>
- * <listitem>
- * <para>
- * To force a redrawing of the latest video frame the video sink element
- * displayed on the Window. Indeed if the #GstPipeline is in #GST_STATE_PAUSED
- * state, moving the Window around will damage its content. Application
- * developers will want to handle the Expose events themselves and force the
- * video sink element to refresh the Window's content.
- * </para>
- * </listitem>
- * </itemizedlist>
- * </para>
- * <para>
+ *
+ * * To get a grab on the Window where the video sink element is going to render.
+ *   This is achieved by either being informed about the Window identifier that
+ *   the video sink element generated, or by forcing the video sink element to use
+ *   a specific Window identifier for rendering.
+ * * To force a redrawing of the latest video frame the video sink element
+ *   displayed on the Window. Indeed if the #GstPipeline is in #GST_STATE_PAUSED
+ *   state, moving the Window around will damage its content. Application
+ *   developers will want to handle the Expose events themselves and force the
+ *   video sink element to refresh the Window's content.
+ *
  * Using the Window created by the video sink is probably the simplest scenario,
  * in some cases, though, it might not be flexible enough for application
  * developers if they need to catch events such as mouse moves and button
  * clicks.
- * </para>
- * <para>
+ *
  * Setting a specific Window identifier on the video sink element is the most
  * flexible solution but it has some issues. Indeed the application needs to set
  * its Window identifier at the right time to avoid internal Window creation
@@ -93,11 +81,9 @@
  * ...
  * }
  * ]|
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Two basic usage scenarios</title>
- * <para>
+ *
+ * ## Two basic usage scenarios
+ *
  * There are two basic usage scenarios: in the simplest case, the application
  * uses #playbin or #plasink or knows exactly what particular element is used
  * for video output, which is usually the case when the application creates
@@ -109,8 +95,7 @@
  * As #playbin and #playsink implement the video overlay interface and proxy
  * it transparently to the actual video sink even if it is created later, this
  * case also applies when using these elements.
- * </para>
- * <para>
+ *
  * In the other and more common case, the application does not know in advance
  * what GStreamer video sink element will be used for video output. This is
  * usually the case when an element such as #autovideosink is used.
@@ -122,8 +107,7 @@
  * posts a prepare-window-handle message, and that is also why this message needs
  * to be handled in a sync bus handler which will be called from the streaming
  * thread directly (because the video sink will need an answer right then).
- * </para>
- * <para>
+ *
  * As response to the prepare-window-handle element message in the bus sync
  * handler, the application may use gst_video_overlay_set_window_handle() to tell
  * the video sink to render onto an existing window surface. At this point the
@@ -139,11 +123,9 @@
  * Gtk+ 2.18 and later, which is likely to cause problems when called from a
  * sync handler; see below for a better approach without GDK_WINDOW_XID()
  * used in the callback).
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>GstVideoOverlay and Gtk+</title>
- * <para>
+ *
+ * ## GstVideoOverlay and Gtk+
+ *
  * |[
  * #include &lt;gst/video/videooverlay.h&gt;
  * #include &lt;gtk/gtk.h&gt;
@@ -242,11 +224,9 @@
  *   ...
  * }
  * ]|
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>GstVideoOverlay and Qt</title>
- * <para>
+ *
+ * ## GstVideoOverlay and Qt
+ *
  * |[
  * #include &lt;glib.h&gt;
  * #include &lt;gst/gst.h&gt;
@@ -302,8 +282,7 @@
  *   return ret;
  * }
  * ]|
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

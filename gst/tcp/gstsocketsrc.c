@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-socketsrc
+ * @title: socketsrc
  *
  * Receive data from a socket.
  *

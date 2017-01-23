@@ -29,6 +29,7 @@
 
 /**
  * SECTION:gstvideodirection
+ * @title: GstVideoDirection
  * @short_description: Interface for elements providing video
  * rotation and flipping controls
  *

@@ -22,21 +22,21 @@
 
 /**
  * SECTION:element-textrender
+ * @title: textrender
  * @see_also: #GstTextOverlay
  *
  * This plugin renders text received on the text sink pad to a video
  * buffer (retaining the alpha channel), so it can later be overlayed
  * on top of video streams using other elements.
  *
- * The text can contain newline characters. (FIXME: What about text 
+ * The text can contain newline characters. (FIXME: What about text
  * wrapping? It does not make sense in this context)
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 -v filesrc location=subtitles.srt ! subparse ! textrender ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-clockoverlay
+ * @title: clockoverlay
  * @see_also: #GstBaseTextOverlay, #GstTimeOverlay
  *
  * This element overlays the current clock time on top of a video
@@ -28,18 +29,19 @@
  * time is displayed in the top left corner of the picture, with some
  * padding to the left and to the top.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 -v videotestsrc ! clockoverlay ! autovideosink
- * ]| Display the current wall clock time in the top left corner of the video picture
+ * ]|
+ * Display the current wall clock time in the top left corner of the video picture
  * |[
  * gst-launch-1.0 -v videotestsrc ! clockoverlay halignment=right valignment=bottom text="Edge City" shaded-background=true font-desc="Sans, 36" ! videoconvert ! autovideosink
- * ]| Another pipeline that displays the current time with some leading
+ * ]|
+ * Another pipeline that displays the current time with some leading
  * text in the bottom right corner of the video picture, with the background
  * of the text being shaded in order to make it more legible on top of a
  * bright video background.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

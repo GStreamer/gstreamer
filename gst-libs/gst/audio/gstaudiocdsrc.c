@@ -36,62 +36,53 @@
 
 /**
  * SECTION:gstaudiocdsrc
+ * @title: GstAudioCdSrc
  * @short_description: Base class for Audio CD sources
  *
- * <para>
  * Provides a base class for CD digital audio (CDDA) sources, which handles
  * things like seeking, querying, discid calculation, tags, and buffer
  * timestamping.
- * </para>
- * <refsect2>
- * <title>Using GstAudioCdSrc-based elements in applications</title>
- * <para>
+ *
+ * ## Using GstAudioCdSrc-based elements in applications
+ *
  * GstAudioCdSrc registers two #GstFormat<!-- -->s of its own, namely
  * the "track" format and the "sector" format. Applications will usually
  * only find the "track" format interesting. You can retrieve that #GstFormat
  * for use in seek events or queries with gst_format_get_by_nick("track").
- * </para>
- * <para>
+ *
  * In order to query the number of tracks, for example, an application would
  * set the CDDA source element to READY or PAUSED state and then query the
  * the number of tracks via gst_element_query_duration() using the track
  * format acquired above. Applications can query the currently playing track
  * in the same way.
- * </para>
- * <para>
+ *
  * Alternatively, applications may retrieve the currently playing track and
  * the total number of tracks from the taglist that will posted on the bus
  * whenever the CD is opened or the currently playing track changes. The
  * taglist will contain GST_TAG_TRACK_NUMBER and GST_TAG_TRACK_COUNT tags.
- * </para>
- * <para>
+ *
  * Applications playing back CD audio using playbin and cdda://n URIs should
  * issue a seek command in track format to change between tracks, rather than
  * setting a new cdda://n+1 URI on playbin (as setting a new URI on playbin
  * involves closing and re-opening the CD device, which is much much slower).
- * </para>
- * <refsect2>
- * </refsect2>
- * <title>Tags and meta-information</title>
- * <para>
+ *
+ * ## Tags and meta-information
+ *
  * CDDA sources will automatically emit a number of tags, details about which
  * can be found in the libgsttag documentation. Those tags are:
  * #GST_TAG_CDDA_CDDB_DISCID, #GST_TAG_CDDA_CDDB_DISCID_FULL,
  * #GST_TAG_CDDA_MUSICBRAINZ_DISCID, #GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL,
  * among others.
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Tracks and Table of Contents (TOC)</title>
- * <para>
+ *
+ * ## Tracks and Table of Contents (TOC)
+ *
  * Applications will be informed of the available tracks via a TOC message
  * on the pipeline's #GstBus. The #GstToc will contain a #GstTocEntry for
  * each track, with information about each track. The duration for each
  * track can be retrieved via the #GST_TAG_DURATION tag from each entry's
  * tag list, or calculated via gst_toc_entry_get_start_stop_times().
  * The track entries in the TOC will be sorted by track number.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

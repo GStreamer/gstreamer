@@ -29,6 +29,7 @@
 
 /**
  * SECTION:gstvideoorientation
+ * @title: GstVideoOrientation
  * @short_description: Interface for elements providing video orientation
  * controls
  *

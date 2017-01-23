@@ -31,6 +31,7 @@
 
 /**
  * SECTION:gstfftf64
+ * @title: GstFFTF64
  * @short_description: FFT functions for 64 bit float samples
  *
  * #GstFFTF64 provides a FFT implementation and related functions for

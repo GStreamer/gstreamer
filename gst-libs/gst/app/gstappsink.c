@@ -19,6 +19,7 @@
  */
 /**
  * SECTION:gstappsink
+ * @title: GstAppSink
  * @short_description: Easy way for applications to extract samples from a
  *     pipeline
  * @see_also: #GstSample, #GstBaseSink, appsrc

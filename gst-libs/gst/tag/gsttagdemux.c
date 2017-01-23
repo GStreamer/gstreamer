@@ -20,12 +20,11 @@
 
 /**
  * SECTION:gsttagdemux
+ * @title: GstTagDemux
  * @see_also: GstApeDemux, GstID3Demux
  * @short_description: Base class for demuxing tags that are in chunks
  *                     directly at the beginning or at the end of a file
- * 
- * <refsect2>
- * <para>
+ *
  * Provides a base class for demuxing tags at the beginning or end of a
  * stream and handles things like typefinding, querying, seeking, and
  * different modes of operation (chain-based, pull_range-based, and providing
@@ -35,37 +34,26 @@
  * there was no tag at all. Also, once the tag has been parsed, GstTagDemux
  * will try to determine the media type of the resulting stream and add a
  * source pad with the appropriate caps in order to facilitate auto-plugging.
- * </para>
- * <title>Deriving from GstTagDemux</title>
- * <para>
+ *
+ * ## Deriving from GstTagDemux
+ *
  * Subclasses have to do four things:
- * <itemizedlist>
- *  <listitem><para>
- *  In their base init function, they must add a pad template for the sink
- *  pad to the element class, describing the media type they can parse in
- *  the caps of the pad template.
- *  </para></listitem>
- *  <listitem><para>
- *  In their class init function, they must override
- *  GST_TAG_DEMUX_CLASS(demux_klass)->identify_tag with their own identify
- *  function.
- *  </para></listitem>
- *  <listitem><para>
- *  In their class init function, they must override
+ *
+ *  * In their base init function, they must add a pad template for the sink
+ *    pad to the element class, describing the media type they can parse in
+ *    the caps of the pad template.
+ *  * In their class init function, they must override
+ *    GST_TAG_DEMUX_CLASS(demux_klass)->identify_tag with their own identify
+ *    function.
+ *  * In their class init function, they must override
  *  GST_TAG_DEMUX_CLASS(demux_klass)->parse_tag with their own parse
  *  function.
- *  </para></listitem>
- *  <listitem><para>
- *  In their class init function, they must also set
- *  GST_TAG_DEMUX_CLASS(demux_klass)->min_start_size and/or 
+ *  * In their class init function, they must also set
+ *    GST_TAG_DEMUX_CLASS(demux_klass)->min_start_size and/or
  *  GST_TAG_DEMUX_CLASS(demux_klass)->min_end_size to the minimum size required
  *  for the identify function to decide whether the stream has a supported tag
  *  or not. A class parsing ID3v1 tags, for example, would set min_end_size to
  *  128 bytes.
- *  </para></listitem>
- * </itemizedlist>
- * </para>
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -120,9 +108,9 @@ struct _GstTagDemuxPrivate
   GList *pending_events;
 };
 
-/* Require at least 8kB of data before we attempt typefind. 
+/* Require at least 8kB of data before we attempt typefind.
  * Seems a decent value based on test files
- * 40kB is massive overkill for the maximum, I think, but it 
+ * 40kB is massive overkill for the maximum, I think, but it
  * doesn't do any harm (tpm: increased to 64kB after watching
  * typefinding fail on a wavpack file that needed 42kB to succeed) */
 #define TYPE_FIND_MIN_SIZE 8192
@@ -552,7 +540,7 @@ gst_tag_demux_chain_parse_tag (GstTagDemux * demux)
   g_assert (gst_buffer_is_writable (collect));
 
 
-  /* If we receive a buffer that's from the middle of the file, 
+  /* If we receive a buffer that's from the middle of the file,
    * we can't read tags so move to typefinding */
   if (GST_BUFFER_OFFSET_IS_VALID (collect) && GST_BUFFER_OFFSET (collect) != 0) {
     GST_DEBUG_OBJECT (demux, "Received buffer from non-zero offset %"
@@ -1571,7 +1559,7 @@ gst_tag_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 
   /* 1: */
   /* If we can activate pull_range upstream, then read any end and start
-   * tags, otherwise activate in push mode and the chain function will 
+   * tags, otherwise activate in push mode and the chain function will
    * collect buffers, read the start tag and output a buffer to end
    * preroll.
    */
@@ -1656,7 +1644,7 @@ gst_tag_demux_read_range (GstTagDemux * demux, GstObject * parent,
   if (ret != GST_FLOW_OK)
     return ret;
 
-  /* Adjust offset and length of the request to trim off tag information. 
+  /* Adjust offset and length of the request to trim off tag information.
    * For the returned buffer, adjust the output offset to match what downstream
    * should see */
   in_offset = offset + demux->priv->strip_start;

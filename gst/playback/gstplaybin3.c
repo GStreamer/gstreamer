@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-playbin3
+ * @title: playbin3
  *
  * playbin3 provides a stand-alone everything-in-one abstraction for an
  * audio and/or video player. It differs from the previous playbin (playbin2)
@@ -33,41 +34,22 @@
  * Its behaviour and exposed API is subject to change.</emphasis>
  *
  * playbin3 can handle both audio and video files and features
- * <itemizedlist>
- * <listitem>
- * automatic file type recognition and based on that automatic
- * selection and usage of the right audio/video/subtitle demuxers/decoders
- * </listitem>
- * <listitem>
- * auxilliary files - such as external subtitles and audio tracks
- * </listitem>
- * <listitem>
- * visualisations for audio files
- * </listitem>
- * <listitem>
- * subtitle support for video files. Subtitles can be store in external
- * files.
- * </listitem>
- * <listitem>
- * stream selection between different video/audio/subtitles streams
- * </listitem>
- * <listitem>
- * meta info (tag) extraction
- * </listitem>
- * <listitem>
- * easy access to the last video sample
- * </listitem>
- * <listitem>
- * buffering when playing streams over a network
- * </listitem>
- * <listitem>
- * volume control with mute option
- * </listitem>
- * </itemizedlist>
  *
- * <refsect2>
- * <title>Usage</title>
- * <para>
+ * * automatic file type recognition and based on that automatic
+ * selection and usage of the right audio/video/subtitle demuxers/decoders
+ *
+ * * auxilliary files - such as external subtitles and audio tracks
+ * * visualisations for audio files
+ * * subtitle support for video files. Subtitles can be store in external
+ *   files.
+ * * stream selection between different video/audio/subtitles streams
+ * * meta info (tag) extraction
+ * * easy access to the last video sample
+ * * buffering when playing streams over a network
+ * * volume control with mute option
+ *
+ * ## Usage
+ *
  * A playbin element can be created just like any other element using
  * gst_element_factory_make(). The file/URI to play should be set via the #GstPlayBin3:uri
  * property. This must be an absolute URI, relative file paths are not allowed.
@@ -103,11 +85,9 @@
  * via gst_element_query_position() and gst_element_query_duration() and
  * setting the format passed to GST_FORMAT_TIME. If the query was successful,
  * the duration or position will have been returned in units of nanoseconds.
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Advanced Usage: specifying the audio and video sink</title>
- * <para>
+ *
+ * ## Advanced Usage: specifying the audio and video sink
+ *
  * By default, if no audio sink or video sink has been specified via the
  * #GstPlayBin3:audio-sink or #GstPlayBin3:video-sink property, playbin3 will use the autoaudiosink
  * and autovideosink elements to find the first-best available output method.
@@ -137,21 +117,17 @@
  * It is also possible to 'suppress' audio and/or video output by using
  * 'fakesink' elements (or capture it from there using the fakesink element's
  * "handoff" signal, which, nota bene, is fired from the streaming thread!).
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Retrieving Tags and Other Meta Data</title>
- * <para>
+ *
+ * ## Retrieving Tags and Other Meta Data
+ *
  * Most of the common meta data (artist, title, etc.) can be retrieved by
  * watching for TAG messages on the pipeline's bus (see above).
  *
  * Other more specific meta information like width/height/framerate of video
  * streams or samplerate/number of channels of audio streams can be obtained
  * from the negotiated caps on the sink pads of the sinks.
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Buffering</title>
+ *
+ * ## Buffering
  * Playbin3 handles buffering automatically for the most part, but applications
  * need to handle parts of the buffering process as well. Whenever playbin3 is
  * buffering, it will post BUFFERING messages on the bus with a percentage
@@ -170,20 +146,19 @@
  *   ...
  * }
  * ]|
+ *
  * Note that applications should keep/set the pipeline in the PAUSED state when
  * a BUFFERING message is received with a buffer percent value < 100 and set
  * the pipeline back to PLAYING state when a BUFFERING message with a value
  * of 100 percent is received (if PLAYING is the desired state, that is).
- * </refsect2>
- * <refsect2>
- * <title>Embedding the video window in your application</title>
+ *
+ * ## Embedding the video window in your application
  * By default, playbin3 (or rather the video sinks used) will create their own
  * window. Applications will usually want to force output to a window of their
  * own, however. This can be done using the #GstVideoOverlay interface, which most
  * video sinks implement. See the documentation there for more details.
- * </refsect2>
- * <refsect2>
- * <title>Specifying which CD/DVD device to use</title>
+ *
+ * ## Specifying which CD/DVD device to use
  * The device to use for CDs/DVDs needs to be set on the source element
  * playbin3 creates before it is opened. The most generic way of doing this
  * is to connect to playbin3's "source-setup" (or "notify::source") signal,
@@ -194,35 +169,35 @@
  * elements involved if this will work or not. For example, for DVD menu
  * playback, the following syntax might work (if the resindvd plugin is used):
  * dvd://[/path/to/device]
- * </refsect2>
- * <refsect2>
- * <title>Handling redirects</title>
- * <para>
+ *
+ * ## Handling redirects
+ *
  * Some elements may post 'redirect' messages on the bus to tell the
  * application to open another location. These are element messages containing
  * a structure named 'redirect' along with a 'new-location' field of string
  * type. The new location may be a relative or an absolute URI. Examples
  * for such redirects can be found in many quicktime movie trailers.
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Examples</title>
+ *
+ * ## Examples
  * |[
  * gst-launch-1.0 -v playbin3 uri=file:///path/to/somefile.mp4
- * ]| This will play back the given AVI video file, given that the video and
+ * ]|
+ *  This will play back the given AVI video file, given that the video and
  * audio decoders required to decode the content are installed. Since no
  * special audio sink or video sink is supplied (via playbin3's audio-sink or
  * video-sink properties) playbin3 will try to find a suitable audio and
  * video sink automatically using the autoaudiosink and autovideosink elements.
  * |[
  * gst-launch-1.0 -v playbin3 uri=cdda://4
- * ]| This will play back track 4 on an audio CD in your disc drive (assuming
+ * ]|
+ *  This will play back track 4 on an audio CD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
  * |[
  * gst-launch-1.0 -v playbin3 uri=dvd://
- * ]| This will play back the DVD in your disc drive (assuming
+ * ]|
+ *  This will play back the DVD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
- * </refsect2>
+ *
  */
 
 /* FIXME 0.11: suppress warnings for deprecated API such as GValueArray

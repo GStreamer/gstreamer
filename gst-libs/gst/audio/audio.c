@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:gstaudio
+ * @title: GstAudio
  * @short_description: Support library for audio elements
  *
  * This library contains some helper functions for audio elements.
@@ -60,7 +61,7 @@ ensure_debug_category (void)
  * @segment: Segment in %GST_FORMAT_TIME or %GST_FORMAT_DEFAULT to which
  *           the buffer should be clipped.
  * @rate: sample rate.
- * @bpf: size of one audio frame in bytes. This is the size of one sample * 
+ * @bpf: size of one audio frame in bytes. This is the size of one sample *
  * number of channels.
  *
  * Clip the buffer to the given %GstSegment.

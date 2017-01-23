@@ -42,10 +42,11 @@
 
 /**
  * SECTION:gstrtspdefs
+ * @title: GstRtspdefs
  * @short_description: common RTSP defines
  * @see_also: gstrtspurl, gstrtspconnection
- *  
- * Provides common defines for the RTSP library. 
+ *
+ * Provides common defines for the RTSP library.
  */
 
 #ifdef HAVE_CONFIG_H

@@ -362,7 +362,7 @@ too_small:
  *        containing extradata for this particular stream (e.g.
  *        palette, codec initialization data).
  *
- * Parses a video stream´s strf structure plus optionally some
+ * Parses a video stream's strf structure plus optionally some
  * extradata from input data. This function takes ownership of @buf.
  *
  * Returns: TRUE if parsing succeeded, otherwise FALSE. The stream
@@ -460,7 +460,7 @@ too_small:
  *        containing extradata for this particular stream (e.g.
  *        codec initialization data).
  *
- * Parses an audio stream´s strf structure plus optionally some
+ * Parses an audio stream's strf structure plus optionally some
  * extradata from input data. This function takes ownership of @buf.
  * use.
  *

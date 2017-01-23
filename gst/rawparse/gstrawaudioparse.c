@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-rawaudioparse
+ * @title: rawaudioparse
  *
  * This element parses incoming data as raw audio samples and timestamps it.
  * It also handles seek queries in said raw audio data, and ensures that output
@@ -52,23 +53,24 @@
  * GStreamer positioning is used. This property is also useful for swapping left
  * and right in a stereo signal for example.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 souphttpsrc http://my-dlna-server/track.l16 \
  *     rawaudioparse ! audioconvert ! audioresample ! autoaudiosink
- * ]| Receive L16 data from a DLNA server, parse and timestamp it with
+ * ]|
+ *  Receive L16 data from a DLNA server, parse and timestamp it with
  * rawaudioparse, and play it. use-sink-caps is set to true since souphttpsrc
  * will set its source pad's caps to audio/x-unaligned-raw for the L16 stream.
  * |[
  * gst-launch-1.0 filesrc location=audio.raw ! rawaudioparse use-sink-caps=false \
  *         format=pcm pcm-format=s16le sample-rate=48000 num-channels=2 \
  *         audioconvert ! audioresample ! autoaudiosink
- * ]| Read raw data from a local file and parse it as PCM data with 48000 Hz sample
+ * ]|
+ *  Read raw data from a local file and parse it as PCM data with 48000 Hz sample
  * rate, signed 16 bit integer samples, and 2 channels. use-sink-caps is set to
  * false to ensure the property information is used and the parser does not expect
  * audio/x-raw or audio/x-unaligned-raw caps.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

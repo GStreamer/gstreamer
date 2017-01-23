@@ -31,6 +31,7 @@
 
 /**
  * SECTION:gstffts16
+ * @title: GstFFTS16
  * @short_description: FFT functions for signed 16 bit integer samples
  *
  * #GstFFTS16 provides a FFT implementation and related functions for

@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-rawvideoparse
+ * @title: rawvideoparse
  *
  * This element parses incoming data as raw video frames and timestamps these.
  * It also handles seek queries in said raw video data, and ensures that output
@@ -43,7 +44,7 @@
  * plane-array properties.
  *
  * The frame stride property is useful in cases where there is extra data between
- * the frames (for example, trailing metadata, or headers). The parser calculates 
+ * the frames (for example, trailing metadata, or headers). The parser calculates
  * the actual frame size out of the other properties and compares it with this
  * frame-stride value. If the frame stride is larger than the calculated size,
  * then the extra bytes after the end of the frame are skipped. For example, with
@@ -57,21 +58,22 @@
  * no duration set. The first output buffer will have a PTS 0, all subsequent ones
  * an unset PTS.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 filesrc location=video.raw ! rawvideoparse use-sink-caps=false \
  *         width=500 height=400 format=y444 ! autovideosink
- * ]| Read raw data from a local file and parse it as video data with 500x400 pixels
+ * ]|
+ *  Read raw data from a local file and parse it as video data with 500x400 pixels
  * and Y444 video format.
  * |[
  * gst-launch-1.0 filesrc location=video.raw ! queue ! "video/x-raw, width=320, \
  *         height=240, format=I420, framerate=1/1" ! rawvideoparse \
  *         use-sink-caps=true ! autovideosink
- * ]| Read raw data from a local file and parse it as video data with 320x240 pixels
+ * ]|
+ *  Read raw data from a local file and parse it as video data with 320x240 pixels
  * and I420 video format. The queue element here is to force push based scheduling.
  * See the documentation in #GstRawBaseParse for the reason why.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

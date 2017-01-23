@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstdiscoverer
+ * @title: GstDiscoverer
  * @short_description: Utility for discovering information on URIs.
  *
  * The #GstDiscoverer is a utility object which allows to get as much

@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-theoradec
+ * @title: theoradec
  * @see_also: theoraenc, oggdemux
  *
  * This element decodes theora streams into raw video
@@ -29,13 +30,13 @@
  * video codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
  * Foundation</ulink>, based on the VP3 codec.
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoconvert ! videoscale ! autovideosink
- * ]| This example pipeline will decode an ogg stream and decodes the theora video in it.
+ * ]|
+ *  This example pipeline will decode an ogg stream and decodes the theora video in it.
  * Refer to the theoraenc example to create the ogg file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

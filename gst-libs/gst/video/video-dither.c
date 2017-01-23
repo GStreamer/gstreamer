@@ -24,6 +24,7 @@
 
 /**
  * SECTION:gstvideodither
+ * @title: GstVideoDither
  * @short_description: Utility object for dithering and quantizing lines of video
  *
  * GstVideoDither provides implementations of several dithering algorithms

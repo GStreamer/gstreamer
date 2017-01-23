@@ -21,39 +21,32 @@
 
 /**
  * SECTION:gstvideooverlaycomposition
+ * @title: GstVideoOverlayRectangle
  * @short_description: Video Buffer Overlay Compositions (Subtitles, Logos)
  *
- * <refsect2>
- * <para>
  * Functions to create and handle overlay compositions on video buffers.
- * </para>
- * <para>
+ *
  * An overlay composition describes one or more overlay rectangles to be
  * blended on top of a video buffer.
- * </para>
- * <para>
+ *
  * This API serves two main purposes:
- * <itemizedlist>
- * <listitem>
- * it can be used to attach overlay information (subtitles or logos)
- * to non-raw video buffers such as GL/VAAPI/VDPAU surfaces. The actual
- * blending of the overlay can then be done by e.g. the video sink that
- * processes these non-raw buffers.
- * </listitem>
- * <listitem>
- * it can also be used to blend overlay rectangles on top of raw video
- * buffers, thus consolidating blending functionality for raw video in
- * one place.
- * </listitem>
+ *
+ * * it can be used to attach overlay information (subtitles or logos)
+ *   to non-raw video buffers such as GL/VAAPI/VDPAU surfaces. The actual
+ *   blending of the overlay can then be done by e.g. the video sink that
+ *   processes these non-raw buffers.
+ *
+ * * it can also be used to blend overlay rectangles on top of raw video
+ *   buffers, thus consolidating blending functionality for raw video in
+ *   one place.
+ *
  * Together, this allows existing overlay elements to easily handle raw
  * and non-raw video as input in without major changes (once the overlays
  * have been put into a #GstOverlayComposition object anyway) - for raw
  * video the overlay can just use the blending function to blend the data
  * on top of the video, and for surface buffers it can just attach them to
  * the buffer and let the sink render the overlays.
- * </itemizedlist>
- * </para>
- * </refsect2>
+ *
  */
 
 /* TODO:

@@ -19,6 +19,7 @@
 
 /**
  * SECTION:gstrtpbaseaudiopayload
+ * @title: GstRTPBaseAudioPayload
  * @short_description: Base class for audio RTP payloader
  *
  * Provides a base class for audio RTP payloaders for frame or sample based
@@ -36,9 +37,8 @@
  * sent in a last RTP packet. In the case of frame based codecs, the resulting
  * RTP packets always contain full frames.
  *
- * <refsect2>
- * <title>Usage</title>
- * <para>
+ * ## Usage
+ *
  * To use this base class, your child element needs to call either
  * gst_rtp_base_audio_payload_set_frame_based() or
  * gst_rtp_base_audio_payload_set_sample_based(). This is usually done in the
@@ -50,8 +50,7 @@
  * must set any variables or call/override any functions required by that base
  * class. The child element does not need to override any other functions
  * specific to GstRTPBaseAudioPayload.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
