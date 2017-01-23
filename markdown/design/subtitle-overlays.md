@@ -154,14 +154,14 @@ Multiple possible solutions come to mind:
     
     One would have to do implement a special kind of new query (e.g.
     FEATURE query) that is not passed on automatically by
-    gst\_pad\_query\_default() in order to make sure that all elements
+    `gst_pad_query_default()` in order to make sure that all elements
     downstream will handle the attached overlay data. (This is only a
     problem if we want to also attach overlay data to raw video pixel
     buffers; for new non-raw types we can just make it mandatory and
     assume support and be done with it; for existing non-raw types
     nothing changes anyway if subtitles don't work) (we need to maintain
     backwards compatibility for existing raw video pipelines like e.g.:
-    ..decoder \! suboverlay \! encoder..)
+    `..decoder ! suboverlay ! encoder..`)
     
     Even though slightly more work, attaching the overlay information to
     buffers seems more intuitive than sending it interleaved as events.
@@ -523,11 +523,11 @@ TEST: should these look (roughly) alike (note text distortion) - needs
 fixing in textoverlay
 
 ```
-    gst-launch-1.0 \
-       videotestsrc ! video/x-raw,width=640,height=480,pixel-aspect-ratio=1/1 \
-         ! textoverlay text=Hello font-desc=72 ! xvimagesink \
-       videotestsrc ! video/x-raw,width=320,height=480,pixel-aspect-ratio=2/1 \
-         ! textoverlay text=Hello font-desc=72 ! xvimagesink \
-       videotestsrc ! video/x-raw,width=640,height=240,pixel-aspect-ratio=1/2 \
-         ! textoverlay text=Hello font-desc=72 ! xvimagesink
+gst-launch-1.0 \
+   videotestsrc ! video/x-raw,width=640,height=480,pixel-aspect-ratio=1/1 \
+     ! textoverlay text=Hello font-desc=72 ! xvimagesink \
+   videotestsrc ! video/x-raw,width=320,height=480,pixel-aspect-ratio=2/1 \
+     ! textoverlay text=Hello font-desc=72 ! xvimagesink \
+   videotestsrc ! video/x-raw,width=640,height=240,pixel-aspect-ratio=1/2 \
+     ! textoverlay text=Hello font-desc=72 ! xvimagesink
 ```
