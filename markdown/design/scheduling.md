@@ -1,13 +1,13 @@
 # Scheduling
 
 The scheduling in GStreamer is based on pads actively pushing
-(producing) data or pad pulling in data (consuming) from other pads.
+(producing) data or pulling (consuming) data from other pads.
 
 ## Pushing
 
 A pad can produce data and push it to the next pad. A pad that behaves
-this way exposes a loop function that will be called repeatedly until it
-returns false. The loop function is allowed to block whenever it wants.
+this way exposes a loop function that will be repeatedly called until it
+returns false. This loop function is allowed to block whenever it wants.
 When the pad is deactivated the loop function should unblock though.
 
 A pad operating in the push mode can only produce data to a pad that
