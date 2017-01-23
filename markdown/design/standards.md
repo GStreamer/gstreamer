@@ -16,9 +16,9 @@ caller.
 ex:
 
 ``` c
-    name = gst_element_get_name (element);   /* copy of name is made */
-    .. use name ..
-    g_free (name);                           /* free after usage */
+name = gst_element_get_name (element);   /* copy of name is made */
+.. use name ..
+g_free (name);                           /* free after usage */
 ```
 
 ## Objects
@@ -33,11 +33,11 @@ that the caller should `_free()` or `_unref()` the objects after usage.
 ex:
 
 ``` c
-    peer = gst_pad_get_peer (pad);          /* peer with increased refcount */
-    if (peer) {
-      .. use peer ..
-      gst_object_unref (GST_OBJECT (peer)); /* unref peer after usage */
-    }
+peer = gst_pad_get_peer (pad);          /* peer with increased refcount */
+if (peer) {
+  .. use peer ..
+  gst_object_unref (GST_OBJECT (peer)); /* unref peer after usage */
+}
 ```
 
 ## Iterators
