@@ -12,5 +12,5 @@ Description: Bad video library for GStreamer elements
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@ gstreamer-bad-base-@GST_API_VERSION@
 
-Libs: -L${libdir} ${libdir}/libgstbadvideo-@GST_API_VERSION@.la
+Libs: -L${libdir} -lgstbadvideo-@GST_API_VERSION@
 Cflags: -I${includedir}

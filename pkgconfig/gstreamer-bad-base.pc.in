@@ -12,5 +12,5 @@ Description: Bad base classes for GStreamer elements
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@
 
-Libs: -L${libdir} ${libdir}/libgstbadbase-@GST_API_VERSION@.la
+Libs: -L${libdir} -lgstbadbase-@GST_API_VERSION@
 Cflags: -I${includedir}
