@@ -26,6 +26,10 @@
  * of formats. The video test data produced can be controlled with the "pattern"
  * property.
  *
+ * By default the videotestsrc will generate data indefinitely, but if the
+ * #GstBaseSrc:num-buffers property is non-zero it will instead generate a
+ * fixed number of video frames and then send EOS.
+ *
  * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc pattern=snow ! video/x-raw,width=1280,height=720 ! autovideosink
