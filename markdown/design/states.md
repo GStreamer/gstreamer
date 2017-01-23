@@ -11,12 +11,12 @@ element is initially instantiated, it is in the NULL state.
 
   - `NULL`: This is the initial state of an element.
 
-  - `READY`: The element should be prepared to go to PAUSED.
+  - `READY`: The element should be prepared to go to `PAUSED`.
 
   - `PAUSED`: The element should be ready to accept and process data. Sink
     elements, however, only accept one buffer and then block.
 
-  - `PLAYING`: The same as PAUSED except for live sources and sinks. Sinks
+  - `PLAYING`: The same as `PAUSED` except for live sources and sinks. Sinks
     accept and render data. Live sources produce data.
 
 We call the sequence `NULL→PLAYING` an upwards state change and
@@ -39,7 +39,7 @@ the following state changes are possible:
   - Some elements might need to return `ASYNC` and complete the state change
     when they have enough information. It is a requirement for sinks to
     return `ASYNC` and complete the state change when they receive the first
-    buffer or EOS event (preroll). Sinks also block the dataflow when in PAUSED.
+    buffer or EOS event (preroll). Sinks also block the dataflow when in `PAUSED`.
   - A pipeline resets the `running_time` to 0.
   - Live sources return `NO_PREROLL` and don't generate data.
 
@@ -69,7 +69,7 @@ the following state changes are possible:
     this state change and completes the state change when it receives a new
     buffer or an EOS event.
   - Any queued EOS messages are removed since they will be reposted when going
-    back to the PLAYING state. The EOS messages are queued in `GstBins`.
+    back to the `PLAYING` state. The EOS messages are queued in `GstBins`.
   - Live sources stop generating data and return `NO_PREROLL`.
 
 * `PAUSED -> READY`:
