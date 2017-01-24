@@ -103,7 +103,7 @@ downstream element can provide one.
 
 Size contains the size of the bufferpool's buffers and is never 0.
 
-min_buffers and max_buffers contain the suggested min and max amount of
+`min_buffers` and `max_buffers` contain the suggested min and max amount of
 buffers that should be managed by the pool.
 
 The upstream element can choose to use the provided pool or make its own
@@ -138,7 +138,7 @@ It is also possible to configure the allocator in a provided pool.
     }
 ```
 
-Use `gst_query_parse_nth_allocation_meta(`) to get the values.
+Use `gst_query_parse_nth_allocation_meta()` to get the values.
 
 These metadata items can be accepted by the downstream element when
 placed on buffers. There is also an arbitrary `GstStructure` associated
@@ -205,7 +205,7 @@ The element that wants to renegotiate a new bufferpool uses exactly the same
 algorithm as when it first started. It will negotiate caps first then use the
 ALLOCATION query to get and configure the new pool.
 
-### upstream
+### Upstream
 
 When a downstream element wants to negotiate a new format, it will send a
 RECONFIGURE event upstream. This instructs upstream to renegotiate both
@@ -234,20 +234,20 @@ automatically be freed by the pool and new allocations will fail.
 
 ## Use cases
 
-### - `videotestsrc ! xvimagesink`
+### `videotestsrc ! xvimagesink`
 
 * Before videotestsrc can output a buffer, it needs to negotiate caps and
 a bufferpool with the downstream peer pad.
 
 * First it will negotiate a suitable format with downstream according to the
-normal rules. It will send a CAPS event downstream with the negotiated
+normal rules. It will send a `CAPS` event downstream with the negotiated
 configuration.
 
-* Then it does an ALLOCATION query. It will use the returned bufferpool or
+* Then it does an `ALLOCATION` query. It will use the returned bufferpool or
 configures its own bufferpool with the returned parameters. The bufferpool is
 initially in the inactive state.
 
-* The ALLOCATION query lists the desired configuration of the downstream
+* The `ALLOCATION` query lists the desired configuration of the downstream
 xvimagesink, which can have specific alignment and/or min/max amount of
 buffers.
 
@@ -271,16 +271,16 @@ the pool member.
 this will cause further allocations to fail and currently allocated buffers to
 be freed. videotestsrc will then free the pool and stop streaming.
 
-### - ``videotestsrc ! queue ! myvideosink``
+### `videotestsrc ! queue ! myvideosink`
 
 * In this second use case we have a videosink that can at most allocate 3 video
 buffers.
 
 * Again videotestsrc will have to negotiate a bufferpool with the peer element.
-For this it will perform the ALLOCATION query which queue will proxy to its
+For this it will perform the `ALLOCATION` query which queue will proxy to its
 downstream peer element.
 
-* The bufferpool returned from myvideosink will have a max_buffers set to 3.
+* The bufferpool returned from myvideosink will have a `max_buffers` set to 3.
 queue and videotestsrc can operate with this upper limit because none of those
 elements require more than that amount of buffers for temporary storage.
 
@@ -307,7 +307,7 @@ bufferpool.
 to inactive. This causes any pending (blocked) acquire to return with
 a FLUSHING result and causes the streaming thread to pause.
 
-### - `.. ! myvideodecoder ! queue ! fakesink`
+### `.. ! myvideodecoder ! queue ! fakesink`
 
 * In this case, the myvideodecoder requires buffers to be aligned to 128 bytes
 and padded with 4096 bytes. The pipeline starts out with the decoder linked to
@@ -334,7 +334,7 @@ the old bufferpool.
 * The new bufferpool is set as the new bufferpool for the srcpad and sinkpad of
 the queue and set to the active state.
 
-### - `.. ! myvideodecoder ! queue ! myvideosink `
+### `.. ! myvideodecoder ! queue ! myvideosink`
 
 * myvideodecoder has negotiated a bufferpool with the downstream myvideosink to
 handle buffers of size 320x240. It has now detected a change in the video
@@ -354,12 +354,12 @@ dimension.
 can choose to use the current pool (which has buffers that are larger than the
 required size) or it can choose to renegotiate a new bufferpool.
 
-### - `.. ! myvideodecoder ! videoscale ! myvideosink`
+### `.. ! myvideodecoder ! videoscale ! myvideosink`
 
 * myvideosink is providing a bufferpool for upstream elements and wants to
 change the resolution.
 
-* myvideosink sends a RECONFIGURE event upstream to notify upstream that a new
+* myvideosink sends a `RECONFIGURE` event upstream to notify upstream that a new
 format is desirable. Upstream elements try to negotiate a new format and
 bufferpool before pushing out a new buffer. The old bufferpools are drained in
 the regular way.
