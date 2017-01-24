@@ -180,6 +180,8 @@ static void gst_openh264enc_set_rate_control (GstOpenh264Enc * openh264enc,
 #define DEFAULT_SLICE_MODE      GST_OPENH264_SLICE_MODE_N_SLICES
 #define DEFAULT_NUM_SLICES      1
 #define DEFAULT_COMPLEXITY      MEDIUM_COMPLEXITY
+#define DEFAULT_QP_MIN             0
+#define DEFAULT_QP_MAX             51
 
 enum
 {
@@ -200,6 +202,8 @@ enum
   PROP_SLICE_MODE,
   PROP_NUM_SLICES,
   PROP_COMPLEXITY,
+  PROP_QP_MIN,
+  PROP_QP_MAX,
   N_PROPERTIES
 };
 
@@ -299,6 +303,16 @@ gst_openh264enc_class_init (GstOpenh264EncClass * klass)
           0, G_MAXUINT, DEFAULT_MAX_BITRATE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_QP_MIN,
+      g_param_spec_uint ("qp-min", "Minimum Quantizer",
+          "Minimum quantizer", 0, 51, DEFAULT_QP_MIN,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_QP_MAX,
+      g_param_spec_uint ("qp-max", "Maximum Quantizer",
+          "Maximum quantizer", 0, 51, DEFAULT_QP_MAX,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   g_object_class_install_property (gobject_class, PROP_GOP_SIZE,
       g_param_spec_uint ("gop-size", "GOP size",
           "Number of frames between intra frames",
@@ -360,6 +374,8 @@ gst_openh264enc_init (GstOpenh264Enc * openh264enc)
   openh264enc->max_slice_size = DEFAULT_MAX_SLICE_SIZE;
   openh264enc->bitrate = DEFAULT_BITRATE;
   openh264enc->max_bitrate = DEFAULT_MAX_BITRATE;
+  openh264enc->qp_min = DEFAULT_QP_MIN;
+  openh264enc->qp_max = DEFAULT_QP_MAX;
   openh264enc->framerate = START_FRAMERATE;
   openh264enc->input_state = NULL;
   openh264enc->time_per_frame = GST_SECOND / openh264enc->framerate;
@@ -430,6 +446,14 @@ gst_openh264enc_set_property (GObject * object, guint property_id,
 
     case PROP_MAX_BITRATE:
       openh264enc->max_bitrate = g_value_get_uint (value);
+      break;
+
+    case PROP_QP_MIN:
+      openh264enc->qp_min = g_value_get_uint (value);
+      break;
+
+    case PROP_QP_MAX:
+      openh264enc->qp_max = g_value_get_uint (value);
       break;
 
     case PROP_MULTI_THREAD:
@@ -518,6 +542,14 @@ gst_openh264enc_get_property (GObject * object, guint property_id,
 
     case PROP_MAX_BITRATE:
       g_value_set_uint (value, openh264enc->max_bitrate);
+      break;
+
+    case PROP_QP_MIN:
+      g_value_set_uint (value, openh264enc->qp_min);
+      break;
+
+    case PROP_QP_MAX:
+      g_value_set_uint (value, openh264enc->qp_max);
       break;
 
     case PROP_ENABLE_DENOISE:
@@ -674,6 +706,8 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.iPicHeight = height;
   enc_params.iTargetBitrate = openh264enc->bitrate;
   enc_params.iMaxBitrate = openh264enc->max_bitrate;
+  enc_params.iMaxQp = openh264enc->qp_max;
+  enc_params.iMinQp = openh264enc->qp_min;
   enc_params.iRCMode = openh264enc->rate_control;
   enc_params.iTemporalLayerNum = 1;
   enc_params.iSpatialLayerNum = 1;

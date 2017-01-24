@@ -74,6 +74,8 @@ struct _GstOpenh264Enc
   guint max_slice_size;
   guint bitrate;
   guint max_bitrate;
+  guint qp_min;
+  guint qp_max;
   guint framerate;
   guint multi_thread;
   gboolean enable_denoise;
