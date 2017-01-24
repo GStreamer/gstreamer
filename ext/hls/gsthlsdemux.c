@@ -1454,7 +1454,7 @@ retry:
         "sequence:%" G_GINT64_FORMAT " , first_sequence:%" G_GINT64_FORMAT
         " , last_sequence:%" G_GINT64_FORMAT, m3u8->sequence,
         first_sequence, last_sequence);
-    if (m3u8->sequence >= last_sequence - 3) {
+    if (m3u8->sequence > last_sequence - 3) {
       //demux->need_segment = TRUE;
       /* Make sure we never go below the minimum sequence number */
       m3u8->sequence = MAX (first_sequence, last_sequence - 3);

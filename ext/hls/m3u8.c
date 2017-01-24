@@ -758,11 +758,8 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
       file = g_list_last (self->files);
 
       /* for live streams, start GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE from
-       * the end of the playlist. See section 6.3.3 of HLS draft. Note
-       * the -1, because GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE = 1 means
-       * start 1 target-duration from the end */
-      for (i = 0; i < GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE - 1 && file->prev;
-          ++i)
+       * the end of the playlist. See section 6.3.3 of HLS draft */
+      for (i = 0; i < GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE && file->prev; ++i)
         file = file->prev;
     } else {
       file = g_list_first (self->files);
@@ -1140,7 +1137,7 @@ gst_m3u8_get_seek_range (GstM3U8 * m3u8, gint64 * start, gint64 * stop)
   }
   count = g_list_length (m3u8->files);
 
-  for (walk = m3u8->files; walk && count >= min_distance; walk = walk->next) {
+  for (walk = m3u8->files; walk && count > min_distance; walk = walk->next) {
     file = walk->data;
     --count;
     duration += file->duration;
