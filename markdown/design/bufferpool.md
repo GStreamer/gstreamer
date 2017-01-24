@@ -1,6 +1,6 @@
 # Bufferpool
 
-This document details the design of how buffers are be allocated and
+This document details the design of how buffers are allocated and
 managed in pools.
 
 Bufferpools increase performance by reducing allocation overhead and
@@ -33,8 +33,7 @@ properties:
 
 - Notify upstream element of new bufferpool availability. This is
 important when a new element, that can provide a bufferpool, is
-dynamically linked
-downstream.
+dynamically linked downstream.
 
 ## GstBufferPool
 
@@ -63,8 +62,8 @@ The srcpad will always take the initiative to negotiate the allocation
 properties. It starts with creating a `GST_QUERY_ALLOCATION` with the negotiated
 caps.
 
-The srcpad can set the need-pool flag to TRUE in the query to optionally make the
-peer pad allocate a bufferpool. It should only do this if it is able to use
+The srcpad can set the need-pool flag to TRUE in the query to optionally make
+the peer pad allocate a bufferpool. It should only do this if it is able to use
 the peer provided bufferpool.
 
 It will then inspect the returned results and configure the returned pool or
@@ -73,8 +72,8 @@ create a new pool with the returned properties when needed.
 Buffers are then allocated by the srcpad from the negotiated pool and pushed to
 the peer pad as usual.
 
-The allocation query can also return an allocator object when the buffers are of
-different sizes and can't be allocated from a pool.
+The allocation query can also return an allocator object when the buffers are
+of different sizes and can't be allocated from a pool.
 
 ## Allocation query
 
@@ -86,14 +85,14 @@ The allocation query has the following fields:
 
 * (out) **`pool`**, `G_TYPE_ARRAY` of structure: an array of pool configurations:
 
-`` c
+``` c
     struct {
       GstBufferPool *pool;
       guint          size;
       guint          min_buffers;
       guint          max_buffers;
     }
-``
+```
 
 Use `gst_query_parse_nth_allocation_pool()` to get the values.
 
@@ -113,7 +112,8 @@ acceptable.
 The pool can then be configured with the suggested min and max amount of
 buffers or a downstream element might choose different values.
 
-* (out) **`allocator`**, `G_TYPE_ARRAY` of structure: an array of allocator parameters that can be used.
+* (out) **`allocator`**, `G_TYPE_ARRAY` of structure: an array of allocator
+parameters that can be used.
 
 ``` c
     struct {
@@ -129,7 +129,8 @@ parameters to allocate memory for the downstream element.
 
 It is also possible to configure the allocator in a provided pool.
 
-* (out) **`metadata`**, `G_TYPE_ARRAY` of structure: an array of metadata params that can be accepted.
+* (out) **`metadata`**, `G_TYPE_ARRAY` of structure: an array of metadata
+params that can be accepted.
 
 ``` c
     struct {
@@ -156,8 +157,8 @@ res = gst_buffer_pool_acquire_buffer (pool, &buffer, &params);
 ```
 
 A `GstBuffer` that is allocated from the pool will always be writable (have a
-refcount of 1) and it will also have its pool member point to the `GstBufferPool`
-that created the buffer.
+refcount of 1) and it will also have its pool member point to the
+`GstBufferPool` that created the buffer.
 
 Buffers are refcounted in the usual way. When the refcount of the buffer
 reaches 0, the buffer is automatically returned to the pool.
@@ -170,22 +171,21 @@ the inactive state we can drain all buffers from the pool.
 When the pool is in the inactive state, `gst_buffer_pool_acquire_buffer()` will
 return `GST_FLOW_FLUSHING` immediately.
 
-Extra parameters can be given to the `gst_buffer_pool_acquire_buffer()` method to
-influence the allocation decision. `GST_BUFFER_POOL_ACQUIRE_FLAG_KEY_UNIT` and
-`GST_BUFFER_POOL_ACQUIRE_FLAG_DISCONT` serve as hints.
+Extra parameters can be given to the `gst_buffer_pool_acquire_buffer()` method
+to influence the allocation decision. `GST_BUFFER_POOL_ACQUIRE_FLAG_KEY_UNIT`
+and `GST_BUFFER_POOL_ACQUIRE_FLAG_DISCONT` serve as hints.
 
 When the bufferpool is configured with a maximum number of buffers, allocation
 will block when all buffers are outstanding until a buffer is returned to the
 pool. This behaviour can be changed by specifying the
-`GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT` flag in the parameters. With this flag set,
-allocation will return `GST_FLOW_EOS` when the pool is empty.
+`GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT` flag in the parameters. With this flag
+set, allocation will return `GST_FLOW_EOS` when the pool is empty.
 
 ## Renegotiation
 
 Renegotiation of the bufferpool might need to be performed when the
 configuration of the pool changes. Changes can be in the buffer size
-(because of a caps change), alignment or number of
-        buffers.
+(because of a caps change), alignment or number of buffers.
 
 ### Downstream
 
