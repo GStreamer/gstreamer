@@ -1618,15 +1618,15 @@ done:
           GST_STREAM_FLAG_SPARSE);
     }
     stream->sparse = sparse;
-
-    gst_pad_push_event (pad, event);
-    gst_pad_set_caps (pad, caps);
     gst_stream_set_caps (bstream->stream_object, caps);
     if (!stream->taglist)
       stream->taglist = gst_tag_list_new_empty ();
     gst_pb_utils_add_codec_description_to_tag_list (stream->taglist, NULL,
         caps);
     gst_stream_set_tags (bstream->stream_object, stream->taglist);
+
+    gst_pad_push_event (pad, event);
+    gst_pad_set_caps (pad, caps);
     gst_pad_set_query_function (pad, gst_ts_demux_srcpad_query);
     gst_pad_set_event_function (pad, gst_ts_demux_srcpad_event);
   }
