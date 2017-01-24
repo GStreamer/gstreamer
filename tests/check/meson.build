@@ -133,7 +133,7 @@ foreach t : base_tests
     env.set('CK_DEFAULT_TIMEOUT', '20')
     env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', gst_tag_dir + '/license-translations.dict')
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
-        'gst-plugins-base@' + meson.build_root(), separator=':')
+        'gst-plugins-base@' + meson.build_root(), separator: ':')
     env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
 
     foreach plugindir: pluginsdirs
@@ -160,7 +160,7 @@ foreach group : [1, 2, 3, 4, 5, 6]
   env.set('CK_DEFAULT_TIMEOUT', '20')
   env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', gst_tag_dir + '/license-translations.dict')
   env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
-      'gst-plugins-base@' + meson.build_root(), separator=':')
+      'gst-plugins-base@' + meson.build_root(), separator: ':')
   env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
   foreach plugindir: pluginsdirs
     env.append('GST_PLUGIN_PATH_1_0', plugindir)
