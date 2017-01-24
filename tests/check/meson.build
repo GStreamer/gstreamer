@@ -59,7 +59,7 @@ foreach t : ugly_tests
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('CK_DEFAULT_TIMEOUT', '20')
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-plugins-base',
-      'gst-plugins-good', 'gst-plugins-ugly@' + meson.build_root(), separator=':')
+      'gst-plugins-good', 'gst-plugins-ugly@' + meson.build_root(), separator: ':')
     env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
 
     foreach plugindir: pluginsdirs
