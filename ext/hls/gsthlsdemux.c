@@ -356,7 +356,8 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     GstM3U8MediaFile *file = NULL;
 
     current_sequence = 0;
-    current_pos = 0;
+    current_pos = gst_m3u8_is_live (hls_stream->playlist) ?
+        hls_stream->playlist->first_file_start : 0;
     reverse = rate < 0;
     target_pos = reverse ? stop : start;
     target_type = reverse ? stop_type : start_type;
