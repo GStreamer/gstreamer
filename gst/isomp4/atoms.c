@@ -1544,6 +1544,17 @@ atom_write_size (guint8 ** buffer, guint64 * size, guint64 * offset,
   prop_copy_uint32 (*offset - atom_pos, buffer, size, &atom_pos);
 }
 
+static guint64
+atom_copy_empty (Atom * atom, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+
+  prop_copy_uint32 (0, buffer, size, offset);
+
+  return *offset - original_offset;
+}
+
 guint64
 atom_copy_data (Atom * atom, guint8 ** buffer, guint64 * size, guint64 * offset)
 {
@@ -1595,9 +1606,6 @@ atom_info_list_copy_data (GList * ai, guint8 ** buffer, guint64 * size,
     }
     ai = g_list_next (ai);
   }
-
-  /* append 0 as a terminator "length" to work around some broken software */
-  prop_copy_uint32 (0, buffer, size, offset);
 
   return *offset - original_offset;
 }
@@ -4135,6 +4143,15 @@ build_tapt_extension (gint clef_width, gint clef_height, gint prof_width,
       atom_data_free);
 }
 
+static AtomInfo *
+build_mov_video_sample_description_padding_extension (void)
+{
+  AtomData *atom_data = atom_data_new (FOURCC_clap);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_copy_empty,
+      atom_data_free);
+}
+
 SampleTableEntryMP4V *
 atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
     VisualSampleEntry * entry, guint32 scale, GList * ext_atoms_list)
@@ -4178,6 +4195,13 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
 
   ste->extension_atoms = g_list_append (ste->extension_atoms,
       build_pasp_extension (par_n, par_d));
+
+  if (context->flavor == ATOMS_TREE_FLAVOR_MOV) {
+    /* append 0 as a terminator "length" to work around some broken software */
+    ste->extension_atoms =
+        g_list_append (ste->extension_atoms,
+        build_mov_video_sample_description_padding_extension ());
+  }
 
   return ste;
 }
