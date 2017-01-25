@@ -1479,6 +1479,63 @@ is_selection_done (GstDecodebin3 * dbin)
   return msg;
 }
 
+/* Must be called with SELECTION_LOCK taken */
+static void
+check_all_slot_for_eos (GstDecodebin3 * dbin)
+{
+  gboolean all_drained = TRUE;
+  GList *iter;
+
+  GST_DEBUG_OBJECT (dbin, "check slot for eos");
+
+  for (iter = dbin->slots; iter; iter = iter->next) {
+    MultiQueueSlot *slot = iter->data;
+
+    if (!slot->output)
+      continue;
+
+    if (slot->is_drained) {
+      GST_DEBUG_OBJECT (slot->sink_pad, "slot %p is draned", slot);
+      continue;
+    }
+
+    all_drained = FALSE;
+    break;
+  }
+
+  if (all_drained) {
+    INPUT_LOCK (dbin);
+    if (!pending_pads_are_eos (dbin->main_input))
+      all_drained = FALSE;
+
+    if (all_drained) {
+      for (iter = dbin->other_inputs; iter; iter = iter->next) {
+        if (!pending_pads_are_eos ((DecodebinInput *) iter->data)) {
+          all_drained = FALSE;
+          break;
+        }
+      }
+    }
+    INPUT_UNLOCK (dbin);
+  }
+
+  if (all_drained) {
+    GST_DEBUG_OBJECT (dbin,
+        "All active slots are drained, and no pending input, push EOS");
+
+    for (iter = dbin->input_streams; iter; iter = iter->next) {
+      DecodebinInputStream *input = (DecodebinInputStream *) iter->data;
+      GstPad *peer = gst_pad_get_peer (input->srcpad);
+
+      /* Send EOS and then remove elements */
+      if (peer) {
+        gst_pad_send_event (peer, gst_event_new_eos ());
+        gst_object_unref (peer);
+      }
+    }
+  }
+}
+
 static GstPadProbeReturn
 multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
     MultiQueueSlot * slot)
@@ -1609,6 +1666,8 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
             dbin->slots = g_list_remove (dbin->slots, slot);
             free_multiqueue_slot_async (dbin, slot);
             ret = GST_PAD_PROBE_REMOVE;
+          } else {
+            check_all_slot_for_eos (dbin);
           }
           SELECTION_UNLOCK (dbin);
         }
