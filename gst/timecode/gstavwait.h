@@ -18,29 +18,39 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_TIMECODEWAIT_H__
-#define __GST_TIMECODEWAIT_H__
+#ifndef __GST_AVWAIT_H__
+#define __GST_AVWAIT_H__
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
 
 G_BEGIN_DECLS
-#define GST_TYPE_TIMECODEWAIT                    (gst_timecodewait_get_type())
-#define GST_TIMECODEWAIT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TIMECODEWAIT,GstTimeCodeWait))
-#define GST_IS_TIMECODEWAIT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TIMECODEWAIT))
-#define GST_TIMECODEWAIT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_TIMECODEWAIT,GstTimeCodeWaitClass))
-#define GST_IS_TIMECODEWAIT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_TIMECODEWAIT))
-#define GST_TIMECODEWAIT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_TIMECODEWAIT,GstTimeCodeWaitClass))
-typedef struct _GstTimeCodeWait GstTimeCodeWait;
-typedef struct _GstTimeCodeWaitClass GstTimeCodeWaitClass;
+#define GST_TYPE_AVWAIT                    (gst_avwait_get_type())
+#define GST_AVWAIT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AVWAIT,GstAvWait))
+#define GST_IS_AVWAIT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AVWAIT))
+#define GST_AVWAIT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_AVWAIT,GstAvWaitClass))
+#define GST_IS_AVWAIT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_AVWAIT))
+#define GST_AVWAIT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AVWAIT,GstAvWaitClass))
+#define GST_TYPE_AVWAIT_MODE (gst_avwait_mode_get_type ())
+typedef struct _GstAvWait GstAvWait;
+typedef struct _GstAvWaitClass GstAvWaitClass;
 
-struct _GstTimeCodeWait
+typedef enum
+{
+  MODE_TIMECODE,
+  MODE_RUNNING_TIME,
+  MODE_VIDEO_FIRST
+} GstAvWaitMode;
+
+struct _GstAvWait
 {
   GstElement parent;
 
   GstVideoTimeCode *tc;
   gboolean from_string;
+  GstClockTime target_running_time;
+  GstAvWaitMode mode;
 
   GstPad *asrcpad, *asinkpad, *vsrcpad, *vsinkpad;
 
@@ -49,7 +59,7 @@ struct _GstTimeCodeWait
 
   GstSegment asegment, vsegment;
 
-  GstClockTime running_time_of_timecode;
+  GstClockTime running_time_to_wait_for;
 
   gboolean video_eos_flag;
   gboolean audio_flush_flag;
@@ -59,12 +69,12 @@ struct _GstTimeCodeWait
   GMutex mutex;
 };
 
-struct _GstTimeCodeWaitClass
+struct _GstAvWaitClass
 {
   GstElementClass parent_class;
 };
 
-GType gst_timecodewait_get_type (void);
+GType gst_avwait_get_type (void);
 
 G_END_DECLS
-#endif /* __GST_TIMECODEWAIT_H__ */
+#endif /* __GST_AVWAIT_H__ */

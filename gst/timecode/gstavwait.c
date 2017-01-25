@@ -22,16 +22,19 @@
  */
 
 /**
- * SECTION:element-timecodewait
+ * SECTION:element-avwait
  *
- * This element acts like a synchronized audio/video "level". It gathers
- * all audio buffers sent between two video frames, and then sends a message
- * that contains the RMS value of all samples for these buffers.
+ * This element will drop all buffers until a specific timecode or running
+ * time has been reached. It will then pass-through both audio and video,
+ * starting from that specific timecode or running time, making sure that
+ * audio starts as early as possible after the video (or at the same time as
+ * the video). In the "audio-after-video" mode, it only drops audio buffers
+ * until video has started.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-1.0 filesrc location="my_file" ! decodebin name=d ! "audio/x-raw" ! timecodewait name=l target-timecode-str="00:00:04:00" ! autoaudiosink d. ! "video/x-raw" ! timecodestamper ! l. l. ! queue ! timeoverlay time-mode=time-code ! autovideosink
+ * gst-launch-1.0 filesrc location="my_file" ! decodebin name=d ! "audio/x-raw" ! avwait name=l target-timecode-str="00:00:04:00" ! autoaudiosink d. ! "video/x-raw" ! timecodestamper ! l. l. ! queue ! timeoverlay time-mode=time-code ! autovideosink
  * </refsect2>
  */
 
@@ -39,9 +42,9 @@
 #include "config.h"
 #endif
 
-#include "gsttimecodewait.h"
+#include "gstavwait.h"
 
-#define GST_CAT_DEFAULT gst_timecodewait_debug
+#define GST_CAT_DEFAULT gst_avwait_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static GstStaticPadTemplate audio_sink_template =
@@ -72,72 +75,106 @@ GST_STATIC_PAD_TEMPLATE ("vsrc",
     GST_STATIC_CAPS ("video/x-raw")
     );
 
-#define parent_class gst_timecodewait_parent_class
-G_DEFINE_TYPE (GstTimeCodeWait, gst_timecodewait, GST_TYPE_ELEMENT);
+#define parent_class gst_avwait_parent_class
+G_DEFINE_TYPE (GstAvWait, gst_avwait, GST_TYPE_ELEMENT);
 
 enum
 {
   PROP_0,
   PROP_TARGET_TIME_CODE,
-  PROP_TARGET_TIME_CODE_STRING
+  PROP_TARGET_TIME_CODE_STRING,
+  PROP_TARGET_RUNNING_TIME,
+  PROP_MODE
 };
 
 #define DEFAULT_TARGET_TIMECODE_STR "00:00:00:00"
+#define DEFAULT_TARGET_RUNNING_TIME GST_CLOCK_TIME_NONE
+#define DEFAULT_MODE MODE_TIMECODE
 
-static void gst_timecodewait_set_property (GObject * object,
+static void gst_avwait_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_timecodewait_get_property (GObject * object,
+static void gst_avwait_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_timecodewait_asink_chain (GstPad * pad,
+static GstFlowReturn gst_avwait_asink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * inbuf);
-static GstFlowReturn gst_timecodewait_vsink_chain (GstPad * pad,
+static GstFlowReturn gst_avwait_vsink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * inbuf);
-static gboolean gst_timecodewait_asink_event (GstPad * pad,
+static gboolean gst_avwait_asink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
-static gboolean gst_timecodewait_vsink_event (GstPad * pad,
+static gboolean gst_avwait_vsink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
-static GstIterator *gst_timecodewait_iterate_internal_links (GstPad *
+static GstIterator *gst_avwait_iterate_internal_links (GstPad *
     pad, GstObject * parent);
 
-static void gst_timecodewait_finalize (GObject * gobject);
+static void gst_avwait_finalize (GObject * gobject);
 
-static GstStateChangeReturn gst_timecodewait_change_state (GstElement *
+static GstStateChangeReturn gst_avwait_change_state (GstElement *
     element, GstStateChange transition);
 
+static GType
+gst_avwait_mode_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {MODE_TIMECODE, "time code (default)", "timecode"},
+      {MODE_RUNNING_TIME, "running time", "running-time"},
+      {MODE_VIDEO_FIRST, "video first", "video-first"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstAvWaitMode", values);
+  }
+  return gtype;
+}
+
 static void
-gst_timecodewait_class_init (GstTimeCodeWaitClass * klass)
+gst_avwait_class_init (GstAvWaitClass * klass)
 {
   GstElementClass *gstelement_class;
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  GST_DEBUG_CATEGORY_INIT (gst_timecodewait_debug,
-      "timecodewait", 0, "timecodewait");
+  GST_DEBUG_CATEGORY_INIT (gst_avwait_debug, "avwait", 0, "avwait");
 
   gstelement_class = (GstElementClass *) klass;
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Timecode Wait", "Filter/Audio/Video",
-      "Drops all audio/video until a specific timecode has been reached",
+      "Drops all audio/video until a specific timecode or running time has been reached",
       "Vivia Nikolaidou <vivia@toolsonair.com>");
 
-  gobject_class->set_property = gst_timecodewait_set_property;
-  gobject_class->get_property = gst_timecodewait_get_property;
+  gobject_class->set_property = gst_avwait_set_property;
+  gobject_class->get_property = gst_avwait_get_property;
 
   g_object_class_install_property (gobject_class, PROP_TARGET_TIME_CODE_STRING,
       g_param_spec_string ("target-timecode-string", "Target timecode (string)",
-          "Timecode to wait for (string). Must take the form 00:00:00:00",
+          "Timecode to wait for in timecode mode (string). Must take the form 00:00:00:00",
           DEFAULT_TARGET_TIMECODE_STR,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TARGET_TIME_CODE,
       g_param_spec_boxed ("target-timecode", "Target timecode (object)",
-          "Timecode to wait for (object)",
+          "Timecode to wait for in timecode mode (object)",
           GST_TYPE_VIDEO_TIME_CODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gobject_class->finalize = gst_timecodewait_finalize;
-  gstelement_class->change_state = gst_timecodewait_change_state;
+  g_object_class_install_property (gobject_class, PROP_TARGET_RUNNING_TIME,
+      g_param_spec_uint64 ("target-running-time", "Target running time",
+          "Running time to wait for in running-time mode",
+          0, G_MAXUINT64,
+          DEFAULT_TARGET_RUNNING_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode",
+          "Operation mode: What to wait for",
+          GST_TYPE_AVWAIT_MODE,
+          DEFAULT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gobject_class->finalize = gst_avwait_finalize;
+  gstelement_class->change_state = gst_avwait_change_state;
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &audio_src_template);
@@ -151,38 +188,38 @@ gst_timecodewait_class_init (GstTimeCodeWaitClass * klass)
 }
 
 static void
-gst_timecodewait_init (GstTimeCodeWait * self)
+gst_avwait_init (GstAvWait * self)
 {
   self->asinkpad =
       gst_pad_new_from_static_template (&audio_sink_template, "asink");
   gst_pad_set_chain_function (self->asinkpad,
-      GST_DEBUG_FUNCPTR (gst_timecodewait_asink_chain));
+      GST_DEBUG_FUNCPTR (gst_avwait_asink_chain));
   gst_pad_set_event_function (self->asinkpad,
-      GST_DEBUG_FUNCPTR (gst_timecodewait_asink_event));
+      GST_DEBUG_FUNCPTR (gst_avwait_asink_event));
   gst_pad_set_iterate_internal_links_function (self->asinkpad,
-      GST_DEBUG_FUNCPTR (gst_timecodewait_iterate_internal_links));
+      GST_DEBUG_FUNCPTR (gst_avwait_iterate_internal_links));
   gst_element_add_pad (GST_ELEMENT (self), self->asinkpad);
 
   self->vsinkpad =
       gst_pad_new_from_static_template (&video_sink_template, "vsink");
   gst_pad_set_chain_function (self->vsinkpad,
-      GST_DEBUG_FUNCPTR (gst_timecodewait_vsink_chain));
+      GST_DEBUG_FUNCPTR (gst_avwait_vsink_chain));
   gst_pad_set_event_function (self->vsinkpad,
-      GST_DEBUG_FUNCPTR (gst_timecodewait_vsink_event));
+      GST_DEBUG_FUNCPTR (gst_avwait_vsink_event));
   gst_pad_set_iterate_internal_links_function (self->vsinkpad,
-      GST_DEBUG_FUNCPTR (gst_timecodewait_iterate_internal_links));
+      GST_DEBUG_FUNCPTR (gst_avwait_iterate_internal_links));
   gst_element_add_pad (GST_ELEMENT (self), self->vsinkpad);
 
   self->asrcpad =
       gst_pad_new_from_static_template (&audio_src_template, "asrc");
   gst_pad_set_iterate_internal_links_function (self->asrcpad,
-      GST_DEBUG_FUNCPTR (gst_timecodewait_iterate_internal_links));
+      GST_DEBUG_FUNCPTR (gst_avwait_iterate_internal_links));
   gst_element_add_pad (GST_ELEMENT (self), self->asrcpad);
 
   self->vsrcpad =
       gst_pad_new_from_static_template (&video_src_template, "vsrc");
   gst_pad_set_iterate_internal_links_function (self->vsrcpad,
-      GST_DEBUG_FUNCPTR (gst_timecodewait_iterate_internal_links));
+      GST_DEBUG_FUNCPTR (gst_avwait_iterate_internal_links));
   gst_element_add_pad (GST_ELEMENT (self), self->vsrcpad);
 
   GST_PAD_SET_PROXY_CAPS (self->asinkpad);
@@ -197,7 +234,7 @@ gst_timecodewait_init (GstTimeCodeWait * self)
   GST_PAD_SET_PROXY_CAPS (self->vsrcpad);
   GST_PAD_SET_PROXY_SCHEDULING (self->vsrcpad);
 
-  self->running_time_of_timecode = GST_CLOCK_TIME_NONE;
+  self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
 
   self->video_eos_flag = FALSE;
   self->audio_flush_flag = FALSE;
@@ -205,15 +242,18 @@ gst_timecodewait_init (GstTimeCodeWait * self)
   self->from_string = FALSE;
   self->tc = gst_video_time_code_new_empty ();
 
+  self->target_running_time = DEFAULT_TARGET_RUNNING_TIME;
+  self->mode = DEFAULT_MODE;
+
   g_mutex_init (&self->mutex);
   g_cond_init (&self->cond);
 }
 
 static GstStateChangeReturn
-gst_timecodewait_change_state (GstElement * element, GstStateChange transition)
+gst_avwait_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstTimeCodeWait *self = GST_TIMECODEWAIT (element);
+  GstAvWait *self = GST_AVWAIT (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -237,7 +277,10 @@ gst_timecodewait_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       g_mutex_lock (&self->mutex);
-      self->running_time_of_timecode = GST_CLOCK_TIME_NONE;
+      if (self->mode != MODE_RUNNING_TIME) {
+        GST_DEBUG_OBJECT (self, "First time reset in paused to ready");
+        self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+      }
       gst_segment_init (&self->asegment, GST_FORMAT_UNDEFINED);
       self->asegment.position = GST_CLOCK_TIME_NONE;
       gst_segment_init (&self->vsegment, GST_FORMAT_UNDEFINED);
@@ -252,9 +295,9 @@ gst_timecodewait_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
-gst_timecodewait_finalize (GObject * object)
+gst_avwait_finalize (GObject * object)
 {
-  GstTimeCodeWait *self = GST_TIMECODEWAIT (object);
+  GstAvWait *self = GST_AVWAIT (object);
 
   if (self->tc) {
     gst_video_time_code_free (self->tc);
@@ -268,10 +311,10 @@ gst_timecodewait_finalize (GObject * object)
 }
 
 static void
-gst_timecodewait_get_property (GObject * object, guint prop_id,
+gst_avwait_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstTimeCodeWait *self = GST_TIMECODEWAIT (object);
+  GstAvWait *self = GST_AVWAIT (object);
 
   switch (prop_id) {
     case PROP_TARGET_TIME_CODE_STRING:{
@@ -285,6 +328,14 @@ gst_timecodewait_get_property (GObject * object, guint prop_id,
       g_value_set_boxed (value, self->tc);
       break;
     }
+    case PROP_TARGET_RUNNING_TIME:{
+      g_value_set_uint64 (value, self->target_running_time);
+      break;
+    }
+    case PROP_MODE:{
+      g_value_set_enum (value, self->mode);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -292,10 +343,10 @@ gst_timecodewait_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_timecodewait_set_property (GObject * object, guint prop_id,
+gst_avwait_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstTimeCodeWait *self = GST_TIMECODEWAIT (object);
+  GstAvWait *self = GST_AVWAIT (object);
 
   switch (prop_id) {
     case PROP_TARGET_TIME_CODE_STRING:{
@@ -333,6 +384,24 @@ gst_timecodewait_set_property (GObject * object, guint prop_id,
       self->from_string = FALSE;
       break;
     }
+    case PROP_TARGET_RUNNING_TIME:{
+      self->target_running_time = g_value_get_uint64 (value);
+      if (self->mode == MODE_RUNNING_TIME) {
+        self->running_time_to_wait_for = self->target_running_time;
+      }
+      break;
+    }
+    case PROP_MODE:{
+      GstAvWaitMode old_mode = self->mode;
+      self->mode = g_value_get_enum (value);
+      if (self->mode == MODE_RUNNING_TIME) {
+        self->running_time_to_wait_for = self->target_running_time;
+      } else if (self->mode != old_mode) {
+        GST_DEBUG_OBJECT (self, "First time reset in settings");
+        self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -340,10 +409,9 @@ gst_timecodewait_set_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_timecodewait_vsink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
+gst_avwait_vsink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstTimeCodeWait *self = GST_TIMECODEWAIT (parent);
+  GstAvWait *self = GST_AVWAIT (parent);
   GST_LOG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
@@ -355,6 +423,10 @@ gst_timecodewait_vsink_event (GstPad * pad, GstObject * parent,
         g_mutex_unlock (&self->mutex);
         gst_event_unref (event);
         return FALSE;
+      }
+      if (self->mode != MODE_RUNNING_TIME) {
+        GST_DEBUG_OBJECT (self, "First time reset in video segment");
+        self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
       }
       self->vsegment.position = GST_CLOCK_TIME_NONE;
       g_mutex_unlock (&self->mutex);
@@ -368,12 +440,15 @@ gst_timecodewait_vsink_event (GstPad * pad, GstObject * parent,
       g_cond_signal (&self->cond);
       g_mutex_unlock (&self->mutex);
       break;
-    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
       g_mutex_lock (&self->mutex);
+      if (self->mode != MODE_RUNNING_TIME) {
+        GST_DEBUG_OBJECT (self, "First time reset in video segment");
+        self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+      }
       gst_segment_init (&self->vsegment, GST_FORMAT_UNDEFINED);
-      g_cond_signal (&self->cond);
-      g_mutex_unlock (&self->mutex);
       self->vsegment.position = GST_CLOCK_TIME_NONE;
+      g_mutex_unlock (&self->mutex);
       break;
     case GST_EVENT_CAPS:{
       GstCaps *caps;
@@ -398,16 +473,14 @@ gst_timecodewait_vsink_event (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_timecodewait_asink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
+gst_avwait_asink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstTimeCodeWait *self = GST_TIMECODEWAIT (parent);
+  GstAvWait *self = GST_AVWAIT (parent);
   GST_LOG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
       g_mutex_lock (&self->mutex);
-      self->running_time_of_timecode = GST_CLOCK_TIME_NONE;
       gst_event_copy_segment (event, &self->asegment);
       if (self->asegment.format != GST_FORMAT_TIME) {
         GST_ERROR_OBJECT (self, "Invalid segment format");
@@ -426,7 +499,6 @@ gst_timecodewait_asink_event (GstPad * pad, GstObject * parent,
     case GST_EVENT_FLUSH_STOP:
       g_mutex_lock (&self->mutex);
       self->audio_flush_flag = FALSE;
-      self->running_time_of_timecode = GST_CLOCK_TIME_NONE;
       gst_segment_init (&self->asegment, GST_FORMAT_UNDEFINED);
       self->asegment.position = GST_CLOCK_TIME_NONE;
       g_mutex_unlock (&self->mutex);
@@ -440,7 +512,6 @@ gst_timecodewait_asink_event (GstPad * pad, GstObject * parent,
         g_mutex_unlock (&self->mutex);
         return FALSE;
       }
-      self->running_time_of_timecode = GST_CLOCK_TIME_NONE;
       g_mutex_unlock (&self->mutex);
       break;
     }
@@ -452,14 +523,10 @@ gst_timecodewait_asink_event (GstPad * pad, GstObject * parent,
 }
 
 static GstFlowReturn
-gst_timecodewait_vsink_chain (GstPad * pad, GstObject * parent,
-    GstBuffer * inbuf)
+gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 {
   GstClockTime timestamp;
-  GstTimeCodeWait *self = GST_TIMECODEWAIT (parent);
-  GstClockTime duration;
-  GstVideoTimeCode *tc = NULL;
-  GstVideoTimeCodeMeta *tc_meta;
+  GstAvWait *self = GST_AVWAIT (parent);
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   if (timestamp == GST_CLOCK_TIME_NONE) {
@@ -468,24 +535,58 @@ gst_timecodewait_vsink_chain (GstPad * pad, GstObject * parent,
   }
   g_mutex_lock (&self->mutex);
   self->vsegment.position = timestamp;
-  duration = GST_BUFFER_DURATION (inbuf);
-  if (duration != GST_CLOCK_TIME_NONE)
-    self->vsegment.position += duration;
-  tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
-  if (tc_meta)
-    tc = &tc_meta->tc;
-  if (self->tc != NULL && tc != NULL) {
-    if (gst_video_time_code_compare (tc, self->tc) < 0
-        && self->running_time_of_timecode == GST_CLOCK_TIME_NONE) {
-      GST_DEBUG_OBJECT (self, "Timecode not yet reached, ignoring frame");
-      gst_buffer_unref (inbuf);
-      inbuf = NULL;
-    } else if (self->running_time_of_timecode == GST_CLOCK_TIME_NONE) {
-      GST_INFO_OBJECT (self, "Target timecode reached at %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (self->vsegment.position));
-      self->running_time_of_timecode =
+  switch (self->mode) {
+    case MODE_TIMECODE:{
+      GstVideoTimeCode *tc = NULL;
+      GstVideoTimeCodeMeta *tc_meta;
+
+      tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
+      if (tc_meta)
+        tc = &tc_meta->tc;
+      if (self->tc != NULL && tc != NULL) {
+        if (gst_video_time_code_compare (tc, self->tc) < 0
+            && self->running_time_to_wait_for == GST_CLOCK_TIME_NONE) {
+          GST_DEBUG_OBJECT (self, "Timecode not yet reached, ignoring frame");
+          gst_buffer_unref (inbuf);
+          inbuf = NULL;
+        } else if (self->running_time_to_wait_for == GST_CLOCK_TIME_NONE) {
+          GST_INFO_OBJECT (self, "Target timecode reached at %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (self->vsegment.position));
+          self->running_time_to_wait_for =
+              gst_segment_to_running_time (&self->vsegment, GST_FORMAT_TIME,
+              self->vsegment.position);
+        }
+      }
+      break;
+    }
+    case MODE_RUNNING_TIME:{
+      GstClockTime running_time =
           gst_segment_to_running_time (&self->vsegment, GST_FORMAT_TIME,
           self->vsegment.position);
+      if (running_time < self->running_time_to_wait_for) {
+        GST_DEBUG_OBJECT (self,
+            "Have %" GST_TIME_FORMAT ", waiting for %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (running_time),
+            GST_TIME_ARGS (self->running_time_to_wait_for));
+        gst_buffer_unref (inbuf);
+        inbuf = NULL;
+      } else {
+        GST_INFO_OBJECT (self,
+            "Have %" GST_TIME_FORMAT ", waiting for %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (running_time),
+            GST_TIME_ARGS (self->running_time_to_wait_for));
+      }
+      break;
+    }
+    case MODE_VIDEO_FIRST:{
+      if (self->running_time_to_wait_for == GST_CLOCK_TIME_NONE) {
+        self->running_time_to_wait_for =
+            gst_segment_to_running_time (&self->vsegment, GST_FORMAT_TIME,
+            self->vsegment.position);
+        GST_DEBUG_OBJECT (self, "First video running time is %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (self->running_time_to_wait_for));
+      }
+      break;
     }
   }
   g_cond_signal (&self->cond);
@@ -503,7 +604,7 @@ gst_timecodewait_vsink_chain (GstPad * pad, GstObject * parent,
  *  1 if sign1*num1 > sign2*num2
  */
 static gint
-gst_timecodewait_compare_guint64_with_signs (gint sign1,
+gst_avwait_compare_guint64_with_signs (gint sign1,
     guint64 num1, gint sign2, guint64 num2)
 {
   if (sign1 != sign2)
@@ -515,11 +616,10 @@ gst_timecodewait_compare_guint64_with_signs (gint sign1,
 }
 
 static GstFlowReturn
-gst_timecodewait_asink_chain (GstPad * pad, GstObject * parent,
-    GstBuffer * inbuf)
+gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 {
   GstClockTime timestamp;
-  GstTimeCodeWait *self = GST_TIMECODEWAIT (parent);
+  GstAvWait *self = GST_AVWAIT (parent);
   GstClockTime current_running_time;
   GstClockTime video_running_time = GST_CLOCK_TIME_NONE;
   GstClockTime duration;
@@ -552,9 +652,9 @@ gst_timecodewait_asink_chain (GstPad * pad, GstObject * parent,
   }
   while (!(self->video_eos_flag || self->audio_flush_flag
           || self->shutdown_flag) && (video_running_time == GST_CLOCK_TIME_NONE
-          || gst_timecodewait_compare_guint64_with_signs (asign,
-              current_running_time, vsign, video_running_time) == 1)
-      && self->running_time_of_timecode == GST_CLOCK_TIME_NONE) {
+          || gst_avwait_compare_guint64_with_signs (asign,
+              current_running_time, vsign, video_running_time) == 1
+          || self->running_time_to_wait_for == GST_CLOCK_TIME_NONE)) {
     g_cond_wait (&self->cond, &self->mutex);
     vsign =
         gst_segment_to_running_time_full (&self->vsegment, GST_FORMAT_TIME,
@@ -568,7 +668,9 @@ gst_timecodewait_asink_chain (GstPad * pad, GstObject * parent,
     gst_buffer_unref (inbuf);
     return GST_FLOW_FLUSHING;
   }
-  duration = GST_BUFFER_DURATION (inbuf);
+  duration =
+      gst_util_uint64_scale (gst_buffer_get_size (inbuf) / self->ainfo.bpf,
+      GST_SECOND, self->ainfo.rate);
   if (duration != GST_CLOCK_TIME_NONE) {
     esign =
         gst_segment_to_running_time_full (&self->asegment, GST_FORMAT_TIME,
@@ -580,23 +682,24 @@ gst_timecodewait_asink_chain (GstPad * pad, GstObject * parent,
       return GST_FLOW_ERROR;
     }
   }
-  if (self->running_time_of_timecode == GST_CLOCK_TIME_NONE
-      || gst_timecodewait_compare_guint64_with_signs (esign,
-          running_time_at_end, 1, self->running_time_of_timecode) == -1) {
+  if (self->running_time_to_wait_for == GST_CLOCK_TIME_NONE
+      || gst_avwait_compare_guint64_with_signs (esign,
+          running_time_at_end, 1, self->running_time_to_wait_for) == -1) {
     GST_DEBUG_OBJECT (self,
-        "Dropped an audio buf at %" GST_TIME_FORMAT " with timecode %"
-        GST_TIME_FORMAT " video timecode %" GST_TIME_FORMAT,
+        "Dropped an audio buf at %" GST_TIME_FORMAT " waiting for %"
+        GST_TIME_FORMAT " video time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (current_running_time),
-        GST_TIME_ARGS (self->running_time_of_timecode),
+        GST_TIME_ARGS (self->running_time_to_wait_for),
         GST_TIME_ARGS (video_running_time));
+    GST_DEBUG_OBJECT (self, "Would have ended at %i %" GST_TIME_FORMAT,
+        esign, GST_TIME_ARGS (running_time_at_end));
     gst_buffer_unref (inbuf);
     inbuf = NULL;
-  } else if (current_running_time < self->running_time_of_timecode
-      && running_time_at_end > self->running_time_of_timecode) {
+  } else {
     GstSegment asegment2 = self->asegment;
 
     gst_segment_set_running_time (&asegment2, GST_FORMAT_TIME,
-        self->running_time_of_timecode);
+        self->running_time_to_wait_for);
     inbuf =
         gst_audio_buffer_clip (inbuf, &asegment2, self->ainfo.rate,
         self->ainfo.bpf);
@@ -609,12 +712,12 @@ gst_timecodewait_asink_chain (GstPad * pad, GstObject * parent,
 }
 
 static GstIterator *
-gst_timecodewait_iterate_internal_links (GstPad * pad, GstObject * parent)
+gst_avwait_iterate_internal_links (GstPad * pad, GstObject * parent)
 {
   GstIterator *it = NULL;
   GstPad *opad;
   GValue val = G_VALUE_INIT;
-  GstTimeCodeWait *self = GST_TIMECODEWAIT (parent);
+  GstAvWait *self = GST_AVWAIT (parent);
 
   if (self->asinkpad == pad)
     opad = gst_object_ref (self->asrcpad);
