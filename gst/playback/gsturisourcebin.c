@@ -1074,6 +1074,7 @@ link_pending_pad_to_output (GstURISourceBin * urisrc, OutputSlotInfo * slot)
       slot->is_eos = FALSE;
       BUFFERING_UNLOCK (urisrc);
       res = TRUE;
+      slot->is_eos = FALSE;
       urisrc->pending_pads =
           g_list_remove (urisrc->pending_pads, out_info->demux_src_pad);
     } else {
@@ -1186,6 +1187,7 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
         if (cur_caps == NULL || gst_caps_is_equal (caps, cur_caps)) {
           GST_LOG_OBJECT (urisrc, "Found existing slot %p to link to", slot);
           gst_caps_unref (cur_caps);
+          slot->is_eos = FALSE;
           return slot;
         }
         gst_caps_unref (cur_caps);
@@ -1313,8 +1315,17 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
       guint32 seqnum;
 
       if (slot->linked_info) {
-        /* Do not clear output slot yet. A new input was
-         * connected. We should just drop this EOS */
+        if (slot->is_eos) {
+          /* linked_info is old input which is stil linked without removal */
+          GST_DEBUG_OBJECT (pad, "push actual EOS");
+          seqnum = gst_event_get_seqnum (event);
+          eos = gst_event_new_eos ();
+          gst_event_set_seqnum (eos, seqnum);
+          gst_pad_push_event (slot->srcpad, eos);
+        } else {
+          /* Do not clear output slot yet. A new input was
+           * connected. We should just drop this EOS */
+        }
         GST_URI_SOURCE_BIN_UNLOCK (urisrc);
         return GST_PAD_PROBE_DROP;
       }
