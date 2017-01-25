@@ -807,7 +807,7 @@ public:
     if (got_video_frame && videosrc && video_frame) {
       BMDTimeValue stream_time = GST_CLOCK_TIME_NONE;
       BMDTimeValue stream_duration = GST_CLOCK_TIME_NONE;
-      IDeckLinkTimecode *dtc;
+      IDeckLinkTimecode *dtc = NULL;
 
       res =
           video_frame->GetStreamTime (&stream_time, &stream_duration,
