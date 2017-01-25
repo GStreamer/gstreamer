@@ -38,7 +38,7 @@ libgstqmlgl_la_CXXFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(QT_CFLAGS) \
-	$(GL_CFLAGS)
+	$(GL_CFLAGS) -std=c++11
 
 libgstqmlgl_la_LIBADD = \
 	$(GST_BASE_LIBS) \
