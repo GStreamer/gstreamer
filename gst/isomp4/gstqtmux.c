@@ -2024,7 +2024,7 @@ gst_qt_mux_prepare_moov_recovery (GstQTMux * qtmux)
   AtomFTYP *ftyp = NULL;
   GstBuffer *prefix = NULL;
 
-  GST_DEBUG_OBJECT (qtmux, "Openning moov recovery file: %s",
+  GST_DEBUG_OBJECT (qtmux, "Opening moov recovery file: %s",
       qtmux->moov_recov_file_path);
 
   qtmux->moov_recov_file = g_fopen (qtmux->moov_recov_file_path, "wb+");
@@ -2062,8 +2062,6 @@ fail:
   /* cleanup */
   fclose (qtmux->moov_recov_file);
   qtmux->moov_recov_file = NULL;
-  GST_WARNING_OBJECT (qtmux, "An error was detected while writing to "
-      "recover file, moov recovery won't work");
 }
 
 static GstFlowReturn
