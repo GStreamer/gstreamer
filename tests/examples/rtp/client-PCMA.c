@@ -81,7 +81,7 @@ static void
 on_ssrc_active_cb (GstElement * rtpbin, guint sessid, guint ssrc,
     GstElement * depay)
 {
-  GObject *session, *isrc, *osrc;
+  GObject *session, *osrc;
 
   g_print ("got RTCP from session %u, SSRC %u\n", sessid, ssrc);
 
