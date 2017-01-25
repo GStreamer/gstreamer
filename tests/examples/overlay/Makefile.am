@@ -16,7 +16,7 @@ if HAVE_QT
 EXAMPLES += qt-videooverlay
 
 qt_videooverlay_SOURCES = qt-videooverlay.cpp
-qt_videooverlay_CXXFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CXXFLAGS) $(X_CFLAGS) $(QT_CFLAGS) -fPIC
+qt_videooverlay_CXXFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CXXFLAGS) $(X_CFLAGS) $(QT_CFLAGS) -fPIC -std=c++11
 qt_videooverlay_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la \
 	$(GST_LIBS) $(X_LIBS) $(LIBM) $(QT_LIBS)
