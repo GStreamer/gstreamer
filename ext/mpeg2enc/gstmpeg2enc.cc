@@ -218,10 +218,9 @@ gst_mpeg2enc_add_fps (GstStructure * structure, gint fpss[])
 
   g_value_init (&list, GST_TYPE_LIST);
   g_value_init (&fps, GST_TYPE_FRACTION);
-  for (n = 0; fpss[n] != 0; n++) {
+  for (n = 0; fpss[n] != 0; n += 2) {
     gst_value_set_fraction (&fps, fpss[n], fpss[n + 1]);
     gst_value_list_append_value (&list, &fps);
-    n++;
   }
   gst_structure_set_value (structure, "framerate", &list);
   g_value_unset (&list);
