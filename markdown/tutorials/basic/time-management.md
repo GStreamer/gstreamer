@@ -100,13 +100,13 @@ int main(int argc, char *argv[]) {
         gint64 current = -1;
 
         /* Query the current position of the stream */
-        if (!gst_element_query_position (data.playbin, GST_TIME_FORMAT, &current)) {
+        if (!gst_element_query_position (data.playbin, GST_FORMAT_TIME, &current)) {
           g_printerr ("Could not query current position.\n");
         }
 
         /* If we didn't know it yet, query the stream duration */
         if (!GST_CLOCK_TIME_IS_VALID (data.duration)) {
-          if (!gst_element_query_duration (data.playbin, GST_TIME_FORMAT, &data.duration)) {
+          if (!gst_element_query_duration (data.playbin, GST_FORMAT_TIME, &data.duration)) {
             g_printerr ("Could not query current duration.\n");
           }
         }
@@ -285,7 +285,7 @@ and directly provides us with the result.
 ```
 /* If we didn't know it yet, query the stream duration */
 if (!GST_CLOCK_TIME_IS_VALID (data.duration)) {
-  if (!gst_element_query_duration (data.pipeline, GST_TIME_FORMAT, &data.duration)) {
+  if (!gst_element_query_duration (data.pipeline, GST_FORMAT_TIME, &data.duration)) {
      g_printerr ("Could not query current duration.\n");
   }
 }
