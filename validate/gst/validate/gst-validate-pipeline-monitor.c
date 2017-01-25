@@ -161,20 +161,13 @@ _check_pad_query_failures (GstPad * pad, GString * str,
     gst_object_unref (ghost_target);
 }
 
-static void
-_gather_pad_negotiation_details (GstPad * pad, GString * str,
-    GstValidatePadMonitor ** last_query_caps_fail_monitor,
-    GstValidatePadMonitor ** last_refused_caps_monitor)
+static GstPad *
+_get_peer_pad (GstPad * pad)
 {
-  GList *tmp;
-  GstElement *next;
   GstPad *peer = gst_pad_get_peer (pad);
 
-  _check_pad_query_failures (pad, str, last_query_caps_fail_monitor,
-      last_refused_caps_monitor);
-
   if (!peer)
-    return;
+    return NULL;
 
   while (GST_IS_PROXY_PAD (peer)) {
     GstPad *next_pad;
@@ -189,11 +182,29 @@ _gather_pad_negotiation_details (GstPad * pad, GString * str,
     }
 
     if (!next_pad)
-      return;
+      return NULL;
 
     gst_object_unref (peer);
     peer = next_pad;
   }
+
+  return peer;
+}
+
+static void
+_gather_pad_negotiation_details (GstPad * pad, GString * str,
+    GstValidatePadMonitor ** last_query_caps_fail_monitor,
+    GstValidatePadMonitor ** last_refused_caps_monitor)
+{
+  GList *tmp;
+  GstElement *next;
+  GstPad *peer = _get_peer_pad (pad);
+
+  _check_pad_query_failures (pad, str, last_query_caps_fail_monitor,
+      last_refused_caps_monitor);
+
+  if (!peer)
+    return;
 
   _check_pad_query_failures (peer, str, last_query_caps_fail_monitor,
       last_refused_caps_monitor);
@@ -270,7 +281,7 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
     GString * str)
 {
   gint i, j;
-  gboolean found = FALSE;
+  gboolean found = FALSE, empty_filter;
   GstCaps *filter = gst_caps_copy (monitor->last_query_filter);
   GstCaps *possible_caps = gst_pad_query_caps (monitor->pad, NULL);
   const gchar *filter_name, *possible_name;
@@ -280,6 +291,26 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
       "\n Caps negotiation failed starting from pad '%s'"
       " as the QUERY_CAPS returned EMPTY caps",
       gst_validate_reporter_get_name (GST_VALIDATE_REPORTER (monitor)));
+
+  empty_filter = gst_caps_is_empty (filter);
+  if (empty_filter) {
+    GstPad *peer = _get_peer_pad (monitor->pad);
+    gchar *prev_path = NULL;
+
+    if (peer) {
+      GstObject *prev = gst_pad_get_parent (peer);
+      if (prev) {
+        prev_path = gst_object_get_path_string (prev);
+        gst_object_unref (prev);
+      }
+    }
+
+    g_string_append_printf (str,
+        "\n - The QUERY filter caps is EMPTY, this is invalid and is a bug in "
+        " a previous element (probably in: '%s')\n",
+        prev_path ? prev_path : "no suspect");
+    g_free (prev_path);
+  }
 
   for (i = 0; i < gst_caps_get_size (possible_caps); i++) {
     possible_struct = gst_caps_get_structure (possible_caps, i);
@@ -314,7 +345,7 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
     }
   }
 
-  if (!found) {
+  if (!found && !empty_filter) {
     gchar *filter_caps_str = gst_caps_to_string (filter);
     gchar *possible_caps_str = gst_caps_to_string (possible_caps);
 
