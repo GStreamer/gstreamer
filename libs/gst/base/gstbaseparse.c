@@ -4644,10 +4644,6 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       gst_pad_push_event (parse->srcpad, gst_event_ref (fevent));
       gst_pad_push_event (parse->sinkpad, fevent);
       gst_base_parse_clear_queues (parse);
-    } else {
-      /* keep track of our position */
-      seeksegment.base = gst_segment_to_running_time (&seeksegment,
-          seeksegment.format, parse->segment.position);
     }
 
     memcpy (&parse->segment, &seeksegment, sizeof (GstSegment));
