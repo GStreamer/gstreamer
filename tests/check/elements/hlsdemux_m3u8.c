@@ -517,7 +517,7 @@ GST_START_TEST (test_live_playlist)
   pl = master->default_variant->m3u8;
   /* Check that we are live */
   assert_equals_int (gst_m3u8_is_live (pl), TRUE);
-  assert_equals_int (pl->sequence, 2681);
+  assert_equals_int (pl->sequence, 2680);
   /* Check number of entries */
   assert_equals_int (g_list_length (pl->files), 4);
   /* Check first media segments */
@@ -532,7 +532,7 @@ GST_START_TEST (test_live_playlist)
   assert_equals_int (file->sequence, 2683);
   fail_unless (gst_m3u8_get_seek_range (pl, &start, &stop));
   assert_equals_int64 (start, 0);
-  assert_equals_float (stop / (double) GST_SECOND, 16.0);
+  assert_equals_float (stop / (double) GST_SECOND, 8.0);
 
   gst_hls_master_playlist_unref (master);
 }
@@ -552,7 +552,7 @@ GST_START_TEST (test_live_playlist_rotated)
   master = load_playlist (LIVE_PLAYLIST);
   pl = master->default_variant->m3u8;
 
-  assert_equals_int (pl->sequence, 2681);
+  assert_equals_int (pl->sequence, 2680);
   /* Check first media segments */
   file = GST_M3U8_MEDIA_FILE (g_list_first (pl->files)->data);
   assert_equals_int (file->sequence, 2680);
