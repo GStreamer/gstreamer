@@ -2661,6 +2661,7 @@ append_debug_info (GString * trace, Dwfl * dwfl, const void *ip)
 static gchar *
 generate_unwind_trace (GstStackTraceFlags flags)
 {
+  gint unret;
   unw_context_t uc;
   unw_cursor_t cursor;
   gboolean use_libunwind = TRUE;
@@ -2677,15 +2678,31 @@ generate_unwind_trace (GstStackTraceFlags flags)
     dwfl = dwfl_begin (&callbacks);
 #endif /* HAVE_DW */
 
-  unw_getcontext (&uc);
-  unw_init_local (&cursor, &uc);
+  unret = unw_getcontext (&uc);
+  if (unret) {
+    GST_DEBUG ("Could not get libunwind context (%d)", unret);
+
+    goto done;
+  }
+  unret = unw_init_local (&cursor, &uc);
+  if (unret) {
+    GST_DEBUG ("Could not init libunwind context (%d)", unret);
+
+    goto done;
+  }
 
   while (unw_step (&cursor) > 0) {
 #ifdef HAVE_DW
     if (dwfl) {
       unw_word_t ip;
 
-      unw_get_reg (&cursor, UNW_REG_IP, &ip);
+      unret = unw_get_reg (&cursor, UNW_REG_IP, &ip);
+      if (unret) {
+        GST_DEBUG ("libunwind could read frame info (%d)", unret);
+
+        goto done;
+      }
+
       if (append_debug_info (trace, dwfl, (void *) (ip - 4))) {
         use_libunwind = FALSE;
         g_string_append (trace, ")\n");
@@ -2703,6 +2720,7 @@ generate_unwind_trace (GstStackTraceFlags flags)
     }
   }
 
+done:
 #ifdef HAVE_DW
   if (dwfl)
     dwfl_end (dwfl);
