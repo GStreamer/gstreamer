@@ -70,6 +70,9 @@ gst_gl_context_helper_ensure_context (GstGLContextHelper * ctxh)
     gst_gl_ensure_element_data (ctxh->element, &ctxh->display,
         &ctxh->other_context);
 
+  if (!ctxh->display)
+    goto display_error;
+
   context = _find_local_gl_context (ctxh);
   if (context) {
     GST_INFO_OBJECT (ctxh->element, "found local context %p, old context %p",
@@ -104,6 +107,14 @@ context_error:
     GST_ELEMENT_ERROR (ctxh->element, RESOURCE, NOT_FOUND, ("%s",
             error->message), (NULL));
     g_clear_error (&error);
+
+    return;
+  }
+
+display_error:
+  {
+    GST_ELEMENT_ERROR (ctxh->element, RESOURCE, NOT_FOUND,
+        ("Failed to obtain display"), (NULL));
 
     return;
   }
