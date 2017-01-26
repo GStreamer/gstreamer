@@ -103,6 +103,10 @@ GstStream *gst_stream_collection_get_stream (GstStreamCollection *collection, gu
 gboolean gst_stream_collection_add_stream (GstStreamCollection *collection,
                                            GstStream *stream);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstStreamCollection, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_STREAM_COLLECTION_H__ */
