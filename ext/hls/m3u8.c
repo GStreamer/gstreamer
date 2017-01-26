@@ -754,19 +754,30 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
 
     if (GST_M3U8_IS_LIVE (self)) {
       gint i;
+      GstClockTime sequence_pos = 0;
 
       file = g_list_last (self->files);
 
+      if (self->last_file_end >= GST_M3U8_MEDIA_FILE (file->data)->duration) {
+        sequence_pos =
+            self->last_file_end - GST_M3U8_MEDIA_FILE (file->data)->duration;
+      }
+
       /* for live streams, start GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE from
        * the end of the playlist. See section 6.3.3 of HLS draft */
-      for (i = 0; i < GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE && file->prev; ++i)
+      for (i = 0; i < GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE && file->prev &&
+          GST_M3U8_MEDIA_FILE (file->prev->data)->duration <= sequence_pos;
+          ++i) {
         file = file->prev;
+        sequence_pos -= GST_M3U8_MEDIA_FILE (file->data)->duration;
+      }
+      self->sequence_position = sequence_pos;
     } else {
       file = g_list_first (self->files);
+      self->sequence_position = 0;
     }
     self->current_file = file;
     self->sequence = GST_M3U8_MEDIA_FILE (file->data)->sequence;
-    self->sequence_position = 0;
     GST_DEBUG ("first sequence: %u", (guint) self->sequence);
   }
 
