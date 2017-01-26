@@ -61,7 +61,7 @@ gst_vulkan_format_from_video_format (GstVideoFormat v_format, guint plane)
       break;
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
-      return GST_VIDEO_GL_TEXTURE_TYPE_RGB16;
+      return VK_FORMAT_R5G6B5_UNORM_PACK16;
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_YUY2:
