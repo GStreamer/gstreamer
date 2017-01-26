@@ -140,6 +140,8 @@ struct _GstVaapiPluginBase
   gchar *display_name;
 
   GstObject *gl_context;
+  GstObject *gl_display;
+  GstObject *gl_other_context;
 
   GstCaps *allowed_raw_caps;
   GstAllocator *sinkpad_allocator;
@@ -235,6 +237,10 @@ G_GNUC_INTERNAL
 void
 gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
     GstObject * object);
+
+G_GNUC_INTERNAL
+GstObject *
+gst_vaapi_plugin_base_create_gl_context (GstVaapiPluginBase * plugin);
 
 G_GNUC_INTERNAL
 GstCaps *

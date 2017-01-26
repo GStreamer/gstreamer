@@ -241,6 +241,29 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
   return NULL;
 }
 
+static void
+gst_vaapi_find_gl_context (GstElement * element)
+{
+  GstObject *gl_context;
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element);
+
+  /* if the element is vaapisink or any vaapi encoder it doesn't need
+   * to know a GstGLContext in order to create an appropriate
+   * GstVaapiDisplay. Let's them to choose their own
+   * GstVaapiDisplay */
+  if (GST_IS_VIDEO_SINK (element) || GST_IS_VIDEO_ENCODER (element))
+    return;
+
+  gl_context = NULL;
+  if (!gst_vaapi_find_gl_local_context (element, &gl_context))
+    gl_context = gst_vaapi_plugin_base_create_gl_context (plugin);
+
+  if (gl_context) {
+    gst_vaapi_plugin_base_set_gl_context (plugin, gl_context);
+    gst_object_unref (gl_context);
+  }
+}
+
 gboolean
 gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type)
 {
@@ -254,6 +277,11 @@ gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type)
     if (gst_vaapi_plugin_base_has_display_type (plugin, type))
       return TRUE;
   }
+
+  /* Query for a local GstGL context. If it's found, it will be used
+   * to create the VA display */
+  if (!plugin->gl_context)
+    gst_vaapi_find_gl_context (element);
 
   /* If no neighboor, or application not interested, use system default */
   if (plugin->gl_context)

@@ -30,6 +30,9 @@
 #include "gstvaapivideocontext.h"
 #include "gstvaapivideometa.h"
 #include "gstvaapivideobufferpool.h"
+#if USE_GST_GL_HELPERS
+# include <gst/gl/gl.h>
+#endif
 
 /* Default debug category is from the subclass */
 #define GST_CAT_DEFAULT (plugin->debug_category)
@@ -75,6 +78,12 @@ gst_vaapi_plugin_base_set_context (GstVaapiPluginBase * plugin,
 
   if (gst_vaapi_video_context_get_display (context, &display))
     plugin_set_display (plugin, display);
+
+#if USE_GST_GL_HELPERS
+  gst_gl_handle_set_context (GST_ELEMENT_CAST (plugin), context,
+      (GstGLDisplay **) & plugin->gl_display,
+      (GstGLContext **) & plugin->gl_other_context);
+#endif
 }
 
 void
@@ -215,17 +224,6 @@ plugin_reset_texture_map (GstVaapiPluginBase * plugin)
     gst_vaapi_display_reset_texture_map (plugin->display);
 }
 
-static void
-gst_vaapi_plugin_base_find_gl_context (GstVaapiPluginBase * plugin)
-{
-  GstObject *gl_context;
-
-  if (!gst_vaapi_find_gl_local_context (GST_ELEMENT_CAST (plugin), &gl_context))
-    return;
-  gst_vaapi_plugin_base_set_gl_context (plugin, gl_context);
-  gst_object_unref (gl_context);
-}
-
 void
 gst_vaapi_plugin_base_class_init (GstVaapiPluginBaseClass * klass)
 {
@@ -292,6 +290,8 @@ gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
 
   gst_vaapi_display_replace (&plugin->display, NULL);
   gst_object_replace (&plugin->gl_context, NULL);
+  gst_object_replace (&plugin->gl_display, NULL);
+  gst_object_replace (&plugin->gl_other_context, NULL);
 
   gst_caps_replace (&plugin->sinkpad_caps, NULL);
   gst_video_info_init (&plugin->sinkpad_info);
@@ -385,10 +385,6 @@ gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin)
   if (gst_vaapi_plugin_base_has_display_type (plugin, plugin->display_type_req))
     return TRUE;
   gst_vaapi_display_replace (&plugin->display, NULL);
-
-  /* Query for a local GstGL context. If it's found, it will be used
-   * to create the VA display */
-  gst_vaapi_plugin_base_find_gl_context (plugin);
 
   if (!gst_vaapi_ensure_display (GST_ELEMENT (plugin),
           plugin->display_type_req))
@@ -1118,6 +1114,56 @@ gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
   }
   GST_INFO_OBJECT (plugin, "GL context: %" GST_PTR_FORMAT, plugin->gl_context);
   gst_vaapi_plugin_base_set_display_type (plugin, display_type);
+#endif
+}
+
+/**
+ * gst_vaapi_plugin_base_create_gl_context:
+ * @plugin: a #GstVaapiPluginBase
+ *
+ * It queries downstream and upstream for a #GstGLDisplay and a other
+ * #GstGLContext. If not found, a new #GstGLDisplay and #GstGLContext
+ * are created, if it is possible.
+ *
+ * Returns: (transfer full) a new created #GstGLContext or %NULL
+ **/
+GstObject *
+gst_vaapi_plugin_base_create_gl_context (GstVaapiPluginBase * plugin)
+{
+#if USE_GST_GL_HELPERS
+  GstGLContext *gl_other_context, *gl_context = NULL;
+  GstGLDisplay *gl_display;
+
+  gst_gl_ensure_element_data (plugin, (GstGLDisplay **) & plugin->gl_display,
+      (GstGLContext **) & plugin->gl_other_context);
+
+  gl_display = (GstGLDisplay *) plugin->gl_display;
+  if (!gl_display ||
+      gst_gl_display_get_handle_type (gl_display) == GST_GL_DISPLAY_TYPE_ANY) {
+    gst_object_replace (&plugin->gl_display, NULL);
+    gst_object_replace (&plugin->gl_other_context, NULL);
+    return NULL;
+  }
+  gl_other_context = (GstGLContext *) plugin->gl_other_context;
+
+  GST_INFO_OBJECT (plugin, "creating a new GstGL context");
+
+  GST_OBJECT_LOCK (gl_display);
+  do {
+    if (gl_context)
+      gst_object_unref (gl_context);
+    gl_context = gst_gl_display_get_gl_context_for_thread (gl_display, NULL);
+    if (!gl_context) {
+      if (!gst_gl_display_create_context (gl_display, gl_other_context,
+              &gl_context, NULL))
+        break;
+    }
+  } while (!gst_gl_display_add_context (gl_display, gl_context));
+  GST_OBJECT_UNLOCK (gl_display);
+
+  return GST_OBJECT_CAST (gl_context);
+#else
+  return NULL;
 #endif
 }
 
