@@ -451,7 +451,7 @@ gst_decklink_timecode_format_to_enum (BMDTimecodeFormat f)
 }
 
 static const BMDVideoConnection connections[] = {
-  0,                            /* auto */
+  (BMDVideoConnection)0,                            /* auto */
   bmdVideoConnectionSDI,
   bmdVideoConnectionHDMI,
   bmdVideoConnectionOpticalSDI,
@@ -808,7 +808,7 @@ public:
     if (got_video_frame && videosrc && video_frame) {
       BMDTimeValue stream_time = GST_CLOCK_TIME_NONE;
       BMDTimeValue stream_duration = GST_CLOCK_TIME_NONE;
-      IDeckLinkTimecode *dtc = NULL;
+      IDeckLinkTimecode *dtc = 0;
 
       res =
           video_frame->GetStreamTime (&stream_time, &stream_duration,
