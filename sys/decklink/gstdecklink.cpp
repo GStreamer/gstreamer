@@ -967,14 +967,16 @@ init_devices (gpointer data)
 
         GST_DEBUG ("Input %d supports:", i);
         while ((ret = mode_iter->Next (&mode)) == S_OK) {
-          const char *name;
+          const char* name;
 
-          mode->GetName (&name);
+          mode->GetName ((COMSTR_T *) &name);
+          CONVERT_COM_STRING (name);
           GST_DEBUG ("    %s mode: 0x%08x width: %ld height: %ld"
               " fields: 0x%08x flags: 0x%08x", name,
               (int) mode->GetDisplayMode (), mode->GetWidth (),
               mode->GetHeight (), (int) mode->GetFieldDominance (),
               (int) mode->GetFlags ());
+          FREE_COM_STRING (name);
           mode->Release ();
         }
         mode_iter->Release ();
@@ -1005,12 +1007,14 @@ init_devices (gpointer data)
         while ((ret = mode_iter->Next (&mode)) == S_OK) {
           const char *name;
 
-          mode->GetName (&name);
+          mode->GetName ((COMSTR_T *) &name);
+          CONVERT_COM_STRING (name);
           GST_DEBUG ("    %s mode: 0x%08x width: %ld height: %ld"
               " fields: 0x%08x flags: 0x%08x", name,
               (int) mode->GetDisplayMode (), mode->GetWidth (),
               mode->GetHeight (), (int) mode->GetFieldDominance (),
               (int) mode->GetFlags ());
+          FREE_COM_STRING (name);
           mode->Release ();
         }
         mode_iter->Release ();
