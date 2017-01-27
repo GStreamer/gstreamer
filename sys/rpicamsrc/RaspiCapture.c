@@ -1908,13 +1908,9 @@ raspi_capture_update_config (RASPIVID_STATE *state, RASPIVID_CONFIG *config, gbo
     MMAL_COMPONENT_T *encoder = state->encoder_component;
     MMAL_PORT_T *encoder_output = encoder->output[0];
 
-#if 0 /* not dynamically change-able */
-    encoder_output->format->bitrate = config->bitrate;
-    status = mmal_port_format_commit(encoder_output);
-    if (status != MMAL_SUCCESS) {
-      vcos_log_warn("Cannot change bitrate dynamically");
-    }
-#endif
+    status = mmal_port_parameter_set_uint32(encoder_output, MMAL_PARAMETER_VIDEO_BIT_RATE, config->bitrate);
+    if (status != MMAL_SUCCESS)
+      vcos_log_warn("Unable to change bitrate dynamically");
 
     {
       MMAL_PARAMETER_UINT32_T param = {{ MMAL_PARAMETER_INTRAPERIOD, sizeof(param)}, config->intraperiod};
