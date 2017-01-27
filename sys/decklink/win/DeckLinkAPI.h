@@ -15198,6 +15198,14 @@ EXTERN_C const IID IID_IDeckLinkInput_v7_1;
 
 /* end of Additional Prototypes */
 
+/* Functions */
+
+extern "C" {
+
+    IDeckLinkIterator* CreateDeckLinkIteratorInstance (void);
+
+}
+
 #ifdef __cplusplus
 }
 #endif
