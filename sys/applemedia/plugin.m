@@ -25,6 +25,7 @@
 #include "corevideomemory.h"
 #ifdef HAVE_IOS
 #include "iosassetsrc.h"
+#include "iosglmemory.h"
 #endif
 #ifdef HAVE_QTKIT
 #include "qtkitvideosrc.h"

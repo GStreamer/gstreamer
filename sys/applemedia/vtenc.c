@@ -790,10 +790,11 @@ gst_vtenc_create_session (GstVTEnc * self)
   VTCompressionSessionRef session = NULL;
   CFMutableDictionaryRef encoder_spec = NULL, pb_attrs;
   OSStatus status;
+
+#if !HAVE_IOS
   const GstVTEncoderDetails *codec_details =
       GST_VTENC_CLASS_GET_CODEC_DETAILS (G_OBJECT_GET_CLASS (self));
 
-#if !HAVE_IOS
   encoder_spec =
       CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
