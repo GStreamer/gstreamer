@@ -63,11 +63,11 @@ static gboolean
 gst_vaapiencode_sink_query (GstVideoEncoder * encoder, GstQuery * query)
 {
   gboolean ret = TRUE;
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (encoder);
+  GstElement *const element = GST_ELEMENT (encoder);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
-      ret = gst_vaapi_handle_context_query (query, plugin->display);
+      ret = gst_vaapi_handle_context_query (element, query);
       break;
     default:
       ret = GST_VIDEO_ENCODER_CLASS (gst_vaapiencode_parent_class)->sink_query
@@ -82,11 +82,11 @@ static gboolean
 gst_vaapiencode_src_query (GstVideoEncoder * encoder, GstQuery * query)
 {
   gboolean ret = TRUE;
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (encoder);
+  GstElement *const element = GST_ELEMENT (encoder);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
-      ret = gst_vaapi_handle_context_query (query, plugin->display);
+      ret = gst_vaapi_handle_context_query (element, query);
       break;
     default:
       ret = GST_VIDEO_ENCODER_CLASS (gst_vaapiencode_parent_class)->src_query

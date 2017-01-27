@@ -1197,12 +1197,11 @@ static gboolean
 gst_vaapidecode_sink_query (GstVideoDecoder * vdec, GstQuery * query)
 {
   gboolean ret = TRUE;
-  GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (decode);
+  GstElement *const element = GST_ELEMENT (vdec);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:{
-      ret = gst_vaapi_handle_context_query (query, plugin->display);
+      ret = gst_vaapi_handle_context_query (element, query);
       break;
     }
     default:{
@@ -1218,8 +1217,7 @@ static gboolean
 gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
 {
   gboolean ret = TRUE;
-  GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (decode);
+  GstElement *const element = GST_ELEMENT (vdec);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:{
@@ -1240,7 +1238,7 @@ gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
       break;
     }
     case GST_QUERY_CONTEXT:{
-      ret = gst_vaapi_handle_context_query (query, plugin->display);
+      ret = gst_vaapi_handle_context_query (element, query);
       break;
     }
     default:{

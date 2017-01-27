@@ -1334,11 +1334,11 @@ gst_vaapipostproc_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
+  GstElement *const element = GST_ELEMENT (trans);
 
   if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT) {
-    if (gst_vaapi_handle_context_query (query,
-            GST_VAAPI_PLUGIN_BASE_DISPLAY (postproc))) {
-      GST_DEBUG_OBJECT (postproc, "sharing display %p",
+    if (gst_vaapi_handle_context_query (element, query)) {
+      GST_DEBUG_OBJECT (postproc, "sharing display %" GST_PTR_FORMAT,
           GST_VAAPI_PLUGIN_BASE_DISPLAY (postproc));
       return TRUE;
     }

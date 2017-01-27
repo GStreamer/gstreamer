@@ -297,14 +297,25 @@ gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type)
 }
 
 gboolean
-gst_vaapi_handle_context_query (GstQuery * query, GstVaapiDisplay * display)
+gst_vaapi_handle_context_query (GstElement * element, GstQuery * query)
 {
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element);
   const gchar *type = NULL;
   GstContext *context, *old_context;
 
   g_return_val_if_fail (query != NULL, FALSE);
 
-  if (!display)
+#if USE_GST_GL_HELPERS
+  if (plugin->gl_display && plugin->gl_context && plugin->gl_other_context) {
+    if (gst_gl_handle_context_query (element, query,
+            (GstGLDisplay *) plugin->gl_display,
+            (GstGLContext *) plugin->gl_context,
+            (GstGLContext *) plugin->gl_other_context))
+      return TRUE;
+  }
+#endif
+
+  if (!plugin->display)
     return FALSE;
 
   if (!gst_query_parse_context_type (query, &type))
@@ -316,9 +327,9 @@ gst_vaapi_handle_context_query (GstQuery * query, GstVaapiDisplay * display)
   gst_query_parse_context (query, &old_context);
   if (old_context) {
     context = gst_context_copy (old_context);
-    gst_vaapi_video_context_set_display (context, display);
+    gst_vaapi_video_context_set_display (context, plugin->display);
   } else {
-    context = gst_vaapi_video_context_new_with_display (display, FALSE);
+    context = gst_vaapi_video_context_new_with_display (plugin->display, FALSE);
   }
 
   gst_query_set_context (query, context);

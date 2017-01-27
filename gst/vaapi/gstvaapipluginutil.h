@@ -35,7 +35,7 @@ gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_handle_context_query (GstQuery * query, GstVaapiDisplay * display);
+gst_vaapi_handle_context_query (GstElement * element, GstQuery * query);
 
 G_GNUC_INTERNAL
 gboolean

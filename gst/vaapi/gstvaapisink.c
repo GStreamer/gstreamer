@@ -1520,13 +1520,12 @@ gst_vaapisink_propose_allocation (GstBaseSink * base_sink, GstQuery * query)
 static gboolean
 gst_vaapisink_query (GstBaseSink * base_sink, GstQuery * query)
 {
-  GstVaapiSink *const sink = GST_VAAPISINK_CAST (base_sink);
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (sink);
+  GstElement *const element = GST_ELEMENT (base_sink);
   gboolean ret = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
-      ret = gst_vaapi_handle_context_query (query, plugin->display);
+      ret = gst_vaapi_handle_context_query (element, query);
       break;
     default:
       ret = GST_BASE_SINK_CLASS (gst_vaapisink_parent_class)->query (base_sink,
