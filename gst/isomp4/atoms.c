@@ -3132,23 +3132,24 @@ timecode_atom_trak_set_duration (AtomTRAK * trak, guint64 duration,
   g_assert (trak->mdia.minf.gmhd != NULL);
   g_assert (atom_array_get_len (&trak->mdia.minf.stbl.stts.entries) == 1);
 
-  trak->tkhd.duration = duration;
-  trak->mdia.mdhd.time_info.duration = duration;
-  trak->mdia.mdhd.time_info.timescale = timescale;
-
-  entry = &atom_array_index (&trak->mdia.minf.stbl.stts.entries, 0);
-  entry->sample_delta = duration;
-
   for (iter = trak->mdia.minf.stbl.stsd.entries; iter;
       iter = g_list_next (iter)) {
     SampleTableEntry *entry = iter->data;
     if (entry->kind == TIMECODE) {
       SampleTableEntryTMCD *tmcd = (SampleTableEntryTMCD *) entry;
 
-      tmcd->frame_duration = tmcd->frame_duration * timescale / tmcd->timescale;
-      tmcd->timescale = timescale;
+      duration = duration * tmcd->timescale / timescale;
+      timescale = tmcd->timescale;
+      break;
     }
   }
+
+  trak->tkhd.duration = duration;
+  trak->mdia.mdhd.time_info.duration = duration;
+  trak->mdia.mdhd.time_info.timescale = timescale;
+
+  entry = &atom_array_index (&trak->mdia.minf.stbl.stts.entries, 0);
+  entry->sample_delta = duration;
 }
 
 static guint32
@@ -3719,7 +3720,10 @@ atom_trak_add_timecode_entry (AtomTRAK * trak, AtomsContext * context,
   tmcd->name.name = g_strdup ("Tape");
   tmcd->timescale = tc->config.fps_n;
   tmcd->frame_duration = tc->config.fps_d;
-  tmcd->n_frames = tc->config.fps_n / tc->config.fps_d;
+  if (tc->config.fps_d == 1001)
+    tmcd->n_frames = tc->config.fps_n / 1000;
+  else
+    tmcd->n_frames = tc->config.fps_n / tc->config.fps_d;
 
   stsd->entries = g_list_prepend (stsd->entries, tmcd);
   stsd->n_entries++;
