@@ -24,6 +24,9 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+
+#include <stdint.h>
+
 #ifdef G_OS_UNIX
 #include "linux/DeckLinkAPI.h"
 #endif
