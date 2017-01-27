@@ -741,8 +741,12 @@ gst_decklink_audio_src_open (GstDecklinkAudioSrc * self)
     self->channels_found = self->channels;
   } else {
     if (self->input->attributes) {
+      int64_t channels_found;
+
       HRESULT ret = self->input->attributes->GetInt
-          (BMDDeckLinkMaximumAudioChannels, &self->channels_found);
+          (BMDDeckLinkMaximumAudioChannels, &channels_found);
+      self->channels_found = channels_found;
+
       /* Sometimes the card may report an invalid number of channels. In
        * that case, we should (empirically) use 8. */
       if (ret != S_OK ||
