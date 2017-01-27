@@ -108,6 +108,11 @@ def get_subprocess_env(options):
         for pkg_dir in pkg_dirs:
             prepend_env_var(env, "PKG_CONFIG_PATH", pkg_dir)
 
+    mesonpath = os.path.join(SCRIPTDIR, "meson")
+    if os.path.join(mesonpath):
+        # Add meson/ into PYTHONPATH if we are using a local meson
+        prepend_env_var(env, 'PYTHONPATH', mesonpath)
+
     return env
 
 
