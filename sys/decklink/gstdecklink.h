@@ -42,8 +42,8 @@
 #define FREE_COM_STRING(s) delete[] s;
 #define CONVERT_COM_STRING(s) BSTR _s = (BSTR)s; s = _com_util::ConvertBSTRToString(_s); ::SysFreeString(_s);
 #else
-#define COMSTR_T char*
-#define FREE_COM_STRING(s) free ((void *) s)
+#define COMSTR_T const char*
+#define FREE_COM_STRING(s)
 #define CONVERT_COM_STRING(s)
 #endif /* _MSC_VER */
 

@@ -601,8 +601,7 @@ static void
 gst_decklink_video_src_got_frame (GstElement * element,
     IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
     GstClockTime capture_time, GstClockTime stream_time,
-    GstClockTime stream_duration, IDeckLinkTimecode *dtc,
-    gboolean no_signal)
+    GstClockTime stream_duration, IDeckLinkTimecode * dtc, gboolean no_signal)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
   GstClockTime timestamp, duration;
@@ -680,7 +679,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
       } else {
         bflags = dtc->GetFlags ();
         GST_DEBUG_OBJECT (self, "Got timecode %02d:%02d:%02d:%02d",
-                hours, minutes, seconds, frames);
+            hours, minutes, seconds, frames);
         bmode = gst_decklink_get_mode (mode);
         if (bmode->interlaced) {
           flags =
@@ -696,8 +695,8 @@ gst_decklink_video_src_got_frame (GstElement * element,
               (GstVideoTimeCodeFlags) (flags |
               GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
         f->tc =
-            gst_video_time_code_new (bmode->fps_n, bmode->fps_d, NULL, flags, hours,
-            minutes, seconds, frames, field_count);
+            gst_video_time_code_new (bmode->fps_n, bmode->fps_d, NULL, flags,
+            hours, minutes, seconds, frames, field_count);
       }
       dtc->Release ();
     } else {

@@ -451,7 +451,7 @@ gst_decklink_timecode_format_to_enum (BMDTimecodeFormat f)
 }
 
 static const BMDVideoConnection connections[] = {
-  (BMDVideoConnection)0,                            /* auto */
+  (BMDVideoConnection) 0,       /* auto */
   bmdVideoConnectionSDI,
   bmdVideoConnectionHDMI,
   bmdVideoConnectionOpticalSDI,
@@ -757,7 +757,7 @@ public:
     void (*got_video_frame) (GstElement * videosrc,
         IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
         GstClockTime capture_time, GstClockTime stream_time,
-        GstClockTime stream_duration, IDeckLinkTimecode *dtc, gboolean
+        GstClockTime stream_duration, IDeckLinkTimecode * dtc, gboolean
         no_signal) = NULL;
     void (*got_audio_packet) (GstElement * videosrc,
         IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
@@ -967,9 +967,9 @@ init_devices (gpointer data)
 
         GST_DEBUG ("Input %d supports:", i);
         while ((ret = mode_iter->Next (&mode)) == S_OK) {
-          const char* name;
+          const char *name;
 
-          mode->GetName ((COMSTR_T *) &name);
+          mode->GetName ((COMSTR_T *) & name);
           CONVERT_COM_STRING (name);
           GST_DEBUG ("    %s mode: 0x%08x width: %ld height: %ld"
               " fields: 0x%08x flags: 0x%08x", name,
@@ -1007,7 +1007,7 @@ init_devices (gpointer data)
         while ((ret = mode_iter->Next (&mode)) == S_OK) {
           const char *name;
 
-          mode->GetName ((COMSTR_T *) &name);
+          mode->GetName ((COMSTR_T *) & name);
           CONVERT_COM_STRING (name);
           GST_DEBUG ("    %s mode: 0x%08x width: %ld height: %ld"
               " fields: 0x%08x flags: 0x%08x", name,
