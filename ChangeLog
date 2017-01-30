@@ -1,9 +1,30 @@
-=== release 1.10.2 ===
+=== release 1.10.3 ===
 
-2016-11-29  Sebastian Dröge <slomo@coaxion.net>
+2017-01-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.2
+	  releasing 1.10.3
+
+2016-12-22 08:44:07 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tools/meson.build:
+	  meson: Install ges-launch
+
+2016-12-22 10:00:06 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Remove space breaking muting ges-launch
+
+=== release 1.10.2 ===
+
+2016-11-29 16:22:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.10.2
 
 2016-11-20 15:34:46 +0100  Philippe Renon <philippe_renon@yahoo.fr>
 

@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Editing Services 1.10.2
+Release notes for GStreamer Editing Services 1.10.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -12,10 +12,6 @@ full list of bugfixes see Bugzilla.
 See /releases/1.10/ for the full release notes.
 
   
-
-Bugs fixed in this release
-     
-      * 774751 : ges-uri-asset: fix compile error 'timeout' may be used uninitialized
 
 ==== Download ====
 
@@ -52,6 +48,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Philippe Renon
-      * Tim-Philipp Müller
+      * Thibault Saunier
  
