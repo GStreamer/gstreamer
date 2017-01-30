@@ -8668,7 +8668,7 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     n_segments = QT_UINT32 (buffer + 12);
 
-    if (size < 16 + n_segments * entry_size) {
+    if (n_segments > 100000 || size < 16 + n_segments * entry_size) {
       GST_WARNING_OBJECT (qtdemux, "Invalid edit list");
       goto done;
     }
