@@ -3962,6 +3962,7 @@ not_enough_data:
     GST_WARNING_OBJECT (demux, "short read parsing language list object!");
     g_free (demux->languages);
     demux->languages = NULL;
+    demux->num_languages = 0;
     return GST_FLOW_OK;         /* not fatal */
   }
 }
