@@ -1,8 +1,9 @@
 shared_library('gstvalidategapplication',
                'gstvalidategapplication.c',
-                install: true,
-                install_dir: PLUGINDIR,
                 include_directories : inc_dirs,
-                dependencies : [gst_dep, glib_dep, gst_pbutils_dep],
+                c_args: ['-DHAVE_CONFIG_H'],
+                install: true,
+                install_dir: validate_plugins_install_dir,
+                dependencies : [gst_dep, glib_dep, gst_pbutils_dep, gio_dep],
                 link_with : [gstvalidate]
                )

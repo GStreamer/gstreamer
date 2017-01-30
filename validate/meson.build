@@ -16,11 +16,14 @@ configure_file(output : 'config.h', configuration : cdata)
 
 vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
 
+validate_plugins_install_dir = '@0@/gstreamer-1.0/validate'.format(get_option('libdir'))
 subdir('data')
 subdir('gst')
+subdir('gst-libs')
 subdir('launcher')
 subdir('tools')
 subdir('docs')
 subdir('pkgconfig')
 subdir('tests')
+subdir('plugins')
 #subdir('po')
