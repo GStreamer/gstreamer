@@ -71,10 +71,22 @@ You can easily run the test of all the components:
 mesontest -C build
 ```
 
+To list all available tests:
+
+```
+mesontest -C build --list
+```
+
+To run all the tests of a specific component:
+
+```
+mesontest -C build --suite gst-plugins-base
+```
+
 Or to run a specific test:
 
 ```
-mesontest -C build/ gst/gstbuffer
+mesontest -C build/ --suite gstreamer gst/gstbuffer
 ```
 
 ## Add information about GStreamer development environment in your prompt line
