@@ -947,6 +947,9 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
     }
   }
 
+  if (G_UNLIKELY (stream->downloading_header || stream->downloading_index))
+    return GST_FLOW_OK;
+
   gst_hls_demux_stream_clear_pending_data (hls_stream);
 
   if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED)
