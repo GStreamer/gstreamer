@@ -521,6 +521,15 @@ _find_frame (GstValidateSsim * self, GArray * frames, GstClockTime ts,
   guint i;
   Frame *lframe = &g_array_index (frames, Frame, 0);
 
+  if (frames->len == 1) {
+    Frame *iframe = &g_array_index (frames, Frame, 0);
+
+    if (iframe->ts == ts)
+      return iframe;
+
+    return NULL;
+  }
+
   for (i = 1; i < frames->len; i++) {
     Frame *iframe = &g_array_index (frames, Frame, i);
 
