@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Ugly Plugins 1.10.2
+Release notes for GStreamer Ugly Plugins 1.10.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -10,6 +10,7 @@ full list of bugfixes see Bugzilla.
 
 
 See /releases/1.10/ for the full release notes.
+
 
 
 "When you have to shoot, shoot.  Don't talk."
@@ -57,8 +58,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 774846 : asfdemux: Timeouts with corrupted files
-      * 775070 : asfdemux: ASF object size checks
+      * 775515 : asfdemux: memory leak in gst_asf_demux_process_ext_stream_props
+      * 777937 : asfdemux: invalid memory read in gst_asf_demux_process_ext_stream_props()
 
 ==== Download ====
 
@@ -95,7 +96,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
       * Sebastian Dröge
-      * Tim-Philipp Müller
  
