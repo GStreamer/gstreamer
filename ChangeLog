@@ -1,9 +1,47 @@
-=== release 1.10.2 ===
+=== release 1.10.3 ===
 
-2016-11-29  Sebastian Dröge <slomo@coaxion.net>
+2017-01-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.2
+	  releasing 1.10.3
+
+2016-12-08 16:13:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n3.2.2
+
+2016-12-02 14:19:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavprotocol.h:
+	  avprotocol: Don't use GST_LOG_OBJECT() and friends on an arbitrary struct that is not a GObject
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775516
+
+2016-12-02 17:06:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Disable GIF "demuxer"
+	  It's actually a parser but it a) can only work with the ffmpeg GIF
+	  decoder that is deactivated anyway, and b) it currently causes infinite
+	  linking of avdemux_gif elements with a multiqueue in between in
+	  decodebin.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775516
+
+2016-12-04 23:39:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add mapping for Flash Screen2 codec
+
+=== release 1.10.2 ===
+
+2016-11-29 16:22:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	  Release 1.10.2
 
 2016-11-26 14:00:39 +0200  Sebastian Dröge <sebastian@centricular.com>
 

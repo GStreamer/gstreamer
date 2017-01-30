@@ -1,7 +1,7 @@
 
-Release notes for GStreamer libav Plugins 1.10.2
+Release notes for GStreamer libav Plugins 1.10.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -34,6 +34,10 @@ contains a set of less supported plugins that haven't passed the
 
 
   
+
+Bugs fixed in this release
+     
+      * 775516 : gif hangs and causes memory leaks
 
 ==== Download ====
 
@@ -71,5 +75,4 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Sebastian Dröge
-      * Tim-Philipp Müller
  

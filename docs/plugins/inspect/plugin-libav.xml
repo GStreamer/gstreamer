@@ -3,7 +3,7 @@
   <description>All libav codecs and formats (local snapshot)</description>
   <filename>../../ext/libav/.libs/libgstlibav.so</filename>
   <basename>libgstlibav.so</basename>
-  <version>1.10.2</version>
+  <version>1.10.3</version>
   <license>LGPL</license>
   <source>gst-libav</source>
   <package>libav</package>
@@ -2708,7 +2708,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>unknown/unknown</details>
+          <details>video/x-flash-screen2</details>
         </caps>
         <caps>
           <name>src</name>
@@ -7135,33 +7135,6 @@
       </pads>
     </element>
     <element>
-      <name>avdemux_gif</name>
-      <longname>libav CompuServe Graphics Interchange Format (GIF) demuxer</longname>
-      <class>Codec/Demuxer</class>
-      <description>libav CompuServe Graphics Interchange Format (GIF) demuxer</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
-      <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>image/gif</details>
-        </caps>
-        <caps>
-          <name>audio_%u</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
-          <name>video_%u</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
       <name>avdemux_gxf</name>
       <longname>libav GXF (General eXchange Format) demuxer</longname>
       <class>Codec/Demuxer</class>
@@ -8423,7 +8396,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>unknown/unknown</details>
+          <details>video/x-flash-screen2</details>
         </caps>
       </pads>
     </element>
