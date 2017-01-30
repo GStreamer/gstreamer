@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Bad Plugins 1.10.2
+Release notes for GStreamer Bad Plugins 1.10.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -60,14 +60,23 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 774624 : GstGL build error due to not finding GstVideo-1.0.gir
-      * 774702 : dashdemux: Fix leak in gst_dash_demux_stream_free
-      * 774851 : glimagesink segfault when specifying GST_GL_WINDOW to something else than x11
-      * 774896 : h264 parser: Off by one read in gst_h264_parse_set_caps()
-      * 775048 : mpegts decoder: Out of bounds read in gst_mpegts_section_new
-      * 775120 : mpegts parser: null pointer deref in _parse_pat
-      * 775127 : hls_demux.testSeekUpdateStopPosition : The unit test that was always wrong
-      * 775130 : h264 parser: invalid input causes assert
+      * 740101 : amcaudiodec error: 'first buffer should have OMX_BUFFERFLAG_CODECCONFIG set'
+      * 775072 : memory leak in usage of gst_pad_get_current_caps() API
+      * 775292 : dtls: Set openssl's threadid the 1.0.x way
+      * 775970 : glimagesink: hang? on windows
+      * 776072 : gleffects: found performance downgrade in gstreamer 1.10.0 compared with 1.8.1
+      * 776244 : tsdemux: Taglist leak
+      * 776461 : dash: Include debug of gstisoff on dashdemux category
+      * 776591 : gst-plugins-bad-1.10.2 tarball missing some sys/androidmedia sources
+      * 776722 : gl/egl: don't pass a GError to gst_gl_context_egl_choose_config when trying gles2
+      * 776726 : autoconvert: reconfigure event leak
+      * 777143 : tests/examples/gtk/glliveshader.c fails to build on systems without GL_GEOMETRY_SHADER
+      * 777144 : gst-libs/gst/gl/gstglslstage.c: uses #ifdef GL_* constants instead of defining them
+      * 777400 : dvdspu: fix crash when display_rect.bottom isn't even
+      * 777503 : mxfdemux: use after free in gst_mini_object_unref / gst_tag_list_unref / gst_mxf_demux_update_essence_tracks
+      * 777533 : tsdemux: memory leak in create_pad_for_stream / gst_static_pad_template_get
+      * 777742 : avfvideosrc SEGFAULT when using GLMemory
+      * 777930 : motioncells: fix mingw build
 
 ==== Download ====
 
@@ -104,10 +113,21 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * David Evans
+      * Arun Raghavan
+      * Daniel Shahaf
       * Edward Hervey
+      * Fabrice Bellet
+      * Garima Gaur
+      * Graham Leggett
+      * Haihua Hu
+      * Jan Schmidt
+      * Juan Pablo Ugarte
       * Matthew Waters
+      * Nicola Murino
+      * Reynaldo H. Verdejo Pinochet
+      * Scott D Phillips
       * Sebastian Dröge
       * Seungha Yang
       * Tim-Philipp Müller
+      * Ursula Maplehurst
  

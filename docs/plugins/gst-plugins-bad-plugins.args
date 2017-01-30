@@ -72426,7 +72426,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Plane offsets</NICK>
-<BLURB>Offsets of the planets in bytes.</BLURB>
+<BLURB>Offsets of the planes in bytes.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -72436,7 +72436,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Plane strides</NICK>
-<BLURB>Strides of the planets in bytes.</BLURB>
+<BLURB>Strides of the planes in bytes.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -72548,5 +72548,25 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Bitrate</NICK>
 <BLURB>Target Audio Bitrate (0 = fixed value based on  sample rate and channel count).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVulkanSink::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force aspect ratio</NICK>
+<BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVulkanSink::pixel-aspect-ratio</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>The pixel aspect ratio of the device.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 

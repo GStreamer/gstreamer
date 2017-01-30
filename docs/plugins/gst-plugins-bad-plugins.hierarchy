@@ -99,6 +99,7 @@ GObject
               GstGtkSink
             GstInterVideoSink
             GstQtSink
+            GstVulkanSink
             GstWaylandSink
         GstBaseSrc
           GstAvdtpSrc
@@ -247,6 +248,7 @@ GObject
             GstVideoDiff
             GstZBar
             GstZebraStripe
+          GstVulkanUpload
           GstWatchdog
           GstYadif
         GstBin
