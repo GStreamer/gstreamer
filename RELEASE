@@ -1,7 +1,7 @@
 
-Release notes for GStreamer RTSP Server Library 1.10.2
+Release notes for GStreamer RTSP Server Library 1.10.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -15,8 +15,9 @@ See /releases/1.10/ for the full release notes.
 
 Bugs fixed in this release
      
-      * 765673 : udpsrc error: getsockname failed: could not get local address: Socket operation on non-socket
-      * 770239 : SAVP doesn't seem to work when restreaming an RTSP source
+      * 755329 : Race condition around finish_unprepare
+      * 776343 : gst-rtsp-server: TCP transport does not work
+      * 776345 : gst-rtsp-server: segmentation fault when trying to get server port in TCP transport case
 
 ==== Download ====
 
@@ -53,7 +54,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Göran Jönsson
-      * Matthew Waters
-      * Tim-Philipp Müller
+      * Edward Hervey
+      * Jan Schmidt
+      * Kseniia Vasilchuk
+      * Patricia Muscalu
+      * Sebastian Dröge
  
