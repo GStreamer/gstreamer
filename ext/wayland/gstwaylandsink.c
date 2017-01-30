@@ -639,6 +639,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   }
 
   /* update video info from video meta */
+  mem = gst_buffer_peek_memory (buffer, 0);
+
   vmeta = gst_buffer_get_video_meta (buffer);
   if (vmeta) {
     gint i;
@@ -647,12 +649,11 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       sink->video_info.offset[i] = vmeta->offset[i];
       sink->video_info.stride[i] = vmeta->stride[i];
     }
+    sink->video_info.size = mem->size;
   }
 
   GST_LOG_OBJECT (sink, "buffer %p does not have a wl_buffer from our "
       "display, creating it", buffer);
-
-  mem = gst_buffer_peek_memory (buffer, 0);
 
   format = GST_VIDEO_INFO_FORMAT (&sink->video_info);
   if (gst_wl_display_check_format_for_dmabuf (sink->display, format)) {
@@ -687,11 +688,11 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       if (!gst_buffer_pool_is_active (sink->pool)) {
         GstStructure *config;
         GstCaps *caps;
-        guint size = sink->video_info.size;
 
         config = gst_buffer_pool_get_config (sink->pool);
-        gst_buffer_pool_config_get_params (config, &caps, &size, NULL, NULL);
-        gst_buffer_pool_config_set_params (config, caps, size, 2, 0);
+        gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL);
+        gst_buffer_pool_config_set_params (config, caps, sink->video_info.size,
+            2, 0);
 
         /* This is a video pool, it should not fail with basic setings */
         if (!gst_buffer_pool_set_config (sink->pool, config) ||
