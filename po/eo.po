@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-29 15:32+0200\n"
+"POT-Creation-Date: 2017-01-30 15:32+0200\n"
 "PO-Revision-Date: 2011-06-04 21:48+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -32,9 +32,6 @@ msgid "Could not connect to server"
 msgstr "Ne eblis konekti al servilo"
 
 msgid "No URL set."
-msgstr ""
-
-msgid "Corrupted HTTP response."
 msgstr ""
 
 msgid "Server does not support seeking."

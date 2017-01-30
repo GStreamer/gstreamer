@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.4.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-29 15:32+0200\n"
+"POT-Creation-Date: 2017-01-30 15:32+0200\n"
 "PO-Revision-Date: 2015-01-10 21:07+0100\n"
 "Last-Translator: Volkan Gezer <volkangezer@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -35,9 +35,6 @@ msgstr "Sunucuya bağlanamıyor"
 
 msgid "No URL set."
 msgstr "Hiç bir URL ayarlanmamış."
-
-msgid "Corrupted HTTP response."
-msgstr ""
 
 msgid "Server does not support seeking."
 msgstr "Sunucu aramayı desteklemiyor."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-29 15:32+0200\n"
+"POT-Creation-Date: 2017-01-30 15:32+0200\n"
 "PO-Revision-Date: 2016-11-19 10:22-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -36,9 +36,6 @@ msgstr "Spajanje na poslužitelj nije moguće"
 
 msgid "No URL set."
 msgstr "URL adresa nije imenovana."
-
-msgid "Corrupted HTTP response."
-msgstr ""
 
 msgid "Server does not support seeking."
 msgstr "Poslužitelj ne podržava traženje."

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-29 15:32+0200\n"
+"POT-Creation-Date: 2017-01-30 15:32+0200\n"
 "PO-Revision-Date: 2016-02-20 16:13+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -35,9 +35,6 @@ msgstr "Kunde inte ansluta till servern"
 
 msgid "No URL set."
 msgstr "Ingen URL inställd."
-
-msgid "Corrupted HTTP response."
-msgstr ""
 
 msgid "Server does not support seeking."
 msgstr "Servern stöder inte sökning/spolning."
