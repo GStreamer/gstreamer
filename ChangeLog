@@ -1,9 +1,187 @@
-=== release 1.10.2 ===
+=== release 1.10.3 ===
 
-2016-11-29  Sebastian Dröge <slomo@coaxion.net>
+2017-01-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.2
+	  releasing 1.10.3
+
+2017-01-15 11:52:44 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/gstdatetime.c:
+	* tests/check/gst/gstdatetime.c:
+	  datetime: fix potential out-of-bound read on malformed datetime string
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777263
+
+2017-01-03 02:11:27 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstcaps.c:
+	  caps: Fix null pointer dereference on invalid static caps
+	  A typo in a static caps string may result in failure to
+	  deserialise it, so don't dereference the result without
+	  checking.
+
+2017-01-03 02:13:30 +1100  Jan Schmidt <jan@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Don't generate GST_FLOW_ERROR without logging
+	  At least log a message to the debug log when generating
+	  a GST_FLOW_ERROR, to make it possible to find where it came from.
+
+2017-01-03 02:12:27 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/gstpadtemplate.c:
+	  padtemplate: Fix null pointer dereference on invalid static caps
+	  A typo in a static caps string may result in failure to
+	  deserialise it, so don't dereference the result without
+	  checking.
+
+2016-12-22 18:45:10 +0100  Nicolas Dechesne <nicolas.dechesne@linaro.org>
+
+	* tools/gst-launch.c:
+	  tools: gst-launch: set GST_GL_XINITTHREADS
+	  This ensure that XInitThreads is called and so gl contexts are properly
+	  initialized.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776401
+
+2016-11-30 21:17:55 +0100  Fabrice Bellet <fabrice@bellet.info>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: fix a use after free case
+	  The event may be disposed while being pushed, so we make sure the
+	  debug infrastructure won't use it after the gst_pad_push().
+
+2016-12-13 20:00:55 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gstqueue2.c:
+	  queue/queue2: Ensure that the streaming thread is unlocked after deactivating the srcpad
+	  It might happen that the srcpad task function is never called at all, in
+	  which case unlocking everything from there will never happen.
+	  Make sure to unlock everything another time after the task function is
+	  definitely stopped.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776039
+
+2016-12-10 18:38:32 +0900  Seungha Yang <sh.yang@lge.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Fix overflow on get_buffering_level()
+	  guint64 denominator factor for gst_util_uint64_scale_int() can cause overflow
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775921
+
+2016-12-08 20:20:17 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstpad.c:
+	  tracer: move the PAD_LINK tracer hook to _pad_link_full()
+	  This is ultimately executing the pad_link. In the previous position we missed
+	  some links, notably ghostpads.
+
+2016-12-12 16:19:13 +0100  Edward Hervey <edward@centricular.com>
+
+	* plugins/elements/gstfilesrc.c:
+	  filesrc: Set GError in another error case
+	  When changing the location while open, properly set the GError regarding
+	  the failure.
+
+2016-12-06 22:32:31 +0100  Peter Seiderer <ps.report@gmx.net>
+
+	* gst/gstconfig.h.in:
+	  gstconfig: Fix unaligned access support for arc and nios2 architectures
+	  Fixes buildroot autobuild failures ([1], [2]).
+	  [1] http://autobuild.buildroot.net/results/fbd/fbdcd90635d5ec3a62ad98a7ff93b71b8e5ecde4
+	  [2] http://autobuild.buildroot.net/results/f3c/f3c9b0ed4ffb114221057237ce22c995b673a98b
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775728
+
+2016-12-06 16:27:23 +0100  Ricardo Ribalda Delgado <ricardo.ribalda@gmail.com>
+
+	* libs/gst/helpers/gst:
+	  helpers/gst: Get bash completion options from gst-launch
+	  It is more likely that gst-launch is installed than ges-launch
+	  Reported-by: Marianna Smidth Buschle <msb@qtec.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775714
+
+2016-12-02 22:47:32 +0100  Marcin Kolny <marcin.kolny@gmail.com>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  net: set clock name in the constructor
+	  gst_net_client_clock_new() and gst_ntp_clock_new() didn't set the
+	  "name" property.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775538
+
+2016-12-05 21:09:52 +0100  Peter Seiderer <ps.report@gmx.net>
+
+	* gst/gstconfig.h.in:
+	  gstconfig: Fix unaligned access support for microblaze and xtensa architectures
+	  Fixes buildroot autobuild failures, for details see:
+	  http://lists.busybox.net/pipermail/buildroot/2016-December/178895.html
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775661
+
+2016-12-05 11:01:45 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstconcat.c:
+	* plugins/elements/gsttee.c:
+	  elements: Handle GstIterator RESYNC return value correctly in gst_iterator_foreach()
+
+2016-12-01 18:20:11 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: Make sure to resync iterators and handle RESYNC at all in gst_iterator_foreach() calls
+
+=== release 1.10.2 ===
+
+2016-11-29 16:20:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.10.2
+
+2016-11-29 15:25:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2016-11-29 14:08:41 +0200  Sebastian Dröge <sebastian@centricular.com>
 
