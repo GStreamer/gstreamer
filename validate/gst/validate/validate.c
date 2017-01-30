@@ -29,6 +29,7 @@
 #  include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <string.h>
 /* For g_stat () */
 #include <glib/gstdio.h>
 #include <sys/types.h>
@@ -112,6 +113,33 @@ create_config (const gchar * path, const gchar * suffix)
   return result;
 }
 
+/* Copied from gststructure.c to avoid assertion */
+static gboolean
+gst_structure_validate_name (const gchar * name)
+{
+  const gchar *s;
+
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  if (G_UNLIKELY (!g_ascii_isalpha (*name))) {
+    GST_WARNING ("Invalid character '%c' at offset 0 in structure name: %s",
+        *name, name);
+    return FALSE;
+  }
+
+  /* FIXME: test name string more */
+  s = &name[1];
+  while (*s && (g_ascii_isalnum (*s) || strchr ("/-_.:+", *s) != NULL))
+    s++;
+  if (G_UNLIKELY (*s != '\0')) {
+    GST_WARNING ("Invalid character '%c' at offset %" G_GUINTPTR_FORMAT " in"
+        " structure name: %s", *s, ((guintptr) s - (guintptr) name), name);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 /**
  * gst_validate_plugin_get_config:
  * @plugin, a #GstPlugin, or #NULL
@@ -158,9 +186,10 @@ gst_validate_plugin_get_config (GstPlugin * plugin)
   g_strfreev (tmp);
 
   if (!plugin_conf) {
-    GstCaps *confs;
+    GstCaps *confs = NULL;
 
-    confs = gst_caps_from_string (config);
+    if (gst_structure_validate_name (config))
+      confs = gst_caps_from_string (config);
 
     if (confs) {
       gint i;
