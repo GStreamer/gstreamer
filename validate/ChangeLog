@@ -1,9 +1,55 @@
-=== release 1.10.2 ===
+=== release 1.10.3 ===
 
-2016-11-29  Sebastian Dröge <slomo@coaxion.net>
+2017-01-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.2
+	  releasing 1.10.3
+
+2016-12-19 16:17:56 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Properly get the rate for action validation
+	  This issue was most likely introduced by the refactoring of the
+	  position querying into a standalone function.
+	  In execute_next_action() the rate variable was never replaced by
+	  the current rate of the pipeline, this would result in all reverse
+	  playback actions to trigger immediately instead of waiting for
+	  the actual target time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776280
+
+2016-11-30 14:07:04 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Handle missing media info file
+
+2016-11-30 13:32:09 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/tests/launcher_tests/test_validate.py:
+	  validate: Properly handle proxy pads generating detailed info about NNEs
+	  In cases where we had a two consecutive bins with proxy pads, we could
+	  segfault because we were dereferencing a NULL pointer to pad.
+
+2016-11-30 07:40:05 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Make sure that the IPC server is shutdown before closing the socket
+
+2016-11-29 14:47:35 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Make sure to check string when verifying expected failures
+	  The value can potentially be None and we should handle that
+
+=== release 1.10.2 ===
+
+2016-11-29 16:23:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.10.2
 
 2016-11-02 12:43:54 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
 
