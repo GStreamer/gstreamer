@@ -1,9 +1,85 @@
-=== release 1.10.2 ===
+=== release 1.10.3 ===
 
-2016-11-29  Sebastian Dröge <slomo@coaxion.net>
+2017-01-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.2
+	  releasing 1.10.3
+
+2016-11-25 23:56:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomx.c:
+	  omx: Fix compiler warning with latest clang
+	  gstomx.c:1376:42: error: implicit conversion from enumeration type 'GstOMXAcquireBufferReturn' to different enumeration type 'OMX_ERRORTYPE'
+	  (aka 'enum OMX_ERRORTYPE') [-Werror,-Wenum-conversion]
+	  g_return_val_if_fail (!port->tunneled, GST_OMX_ACQUIRE_BUFFER_ERROR);
+	  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775112
+
+2017-01-10 15:29:08 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: set base class format instead of just source pad caps
+
+2017-01-13 16:23:12 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* omx/gstomxaacenc.c:
+	  omxaacenc: let encoder know about incoming rate/channels
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777223
+
+2016-12-14 13:29:08 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* omx/gstomx.c:
+	  Fix broken build due to syntax error
+	  Problem was introduced by 8716c23e2b0553db2982eb84c437f493c974385e
+
+2016-12-12 11:12:48 +0000  Graham Leggett <minfrin@sharp.fm>
+
+	* omx/gstomx.c:
+	  Prevent early EOS by resetting eos flag once GST_OMX_ACQUIRE_BUFFER_EOS is triggered
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774600
+
+2016-12-12 11:09:15 +0000  Graham Leggett <minfrin@sharp.fm>
+
+	* omx/gstomx.c:
+	  Add clear debug logging on all the paths out of gst_omx_port_acquire_buffer()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774600
+
+2016-12-01 18:23:50 +0100  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* config/rpi/gstomx.conf:
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  Add a signals-premature-eos hack for egl_render
+	  egl_render seems to have a bug and signals EOS before it has finished
+	  pushing out all data; this hack simply makes acquire_buffer() wait
+	  a bit more before signalling EOS, in case egl_render decides to spit
+	  out some more data.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741856
+
+2016-12-11 19:52:37 +0000  Graham Leggett <minfrin@sharp.fm>
+
+	* omx/gstomxvideo.c:
+	  Add support for OMX_COLOR_FormatYUV420PackedSemiPlanar and OMX_COLOR_Format24bitBGR888
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775959
+
+2016-12-18 19:46:55 +0000  Graham Leggett <minfrin@sharp.fm>
+
+	* omx/gstomxaudiodec.c:
+	* omx/gstomxvideodec.c:
+	  omx*dec: Flush before we stop the srcpad loop
+	  Flushing could otherwise hang if output port queue of pending buffers was empty
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774654
+
+=== release 1.10.2 ===
+
+2016-11-29 16:23:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	  Release 1.10.2
 
 === release 1.10.1 ===
 

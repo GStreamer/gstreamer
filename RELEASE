@@ -1,7 +1,7 @@
 
-Release notes for GStreamer OpenMAX IL wrapper plugin 1.10.2
+Release notes for GStreamer OpenMAX IL wrapper plugin 1.10.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -36,6 +36,14 @@ contains a set of less supported plugins that haven't passed the
 
 
   
+
+Bugs fixed in this release
+     
+      * 741856 : omxvideodec: add a hack to workaround egl_render signalling EOS prematurely
+      * 774600 : omx: Pipeline premature EOS after discontinuity on lossy transport stream
+      * 774654 : Flushing can hang if output port queue of pending buffers is empty
+      * 775959 : Support OMX_COLOR_FormatYUV420PackedSemiPlanar and OMX_COLOR_Format24bitBGR888
+      * 777223 : omxaacenc: let encoder know about incoming rate/channels
 
 ==== Download ====
 
@@ -72,5 +80,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * George Kiagiadakis
+      * Graham Leggett
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
+      * Vincent Penquerc'h
  
