@@ -70,7 +70,7 @@ inner_product_gint32_full_1_sse41 (gint32 * o, const gint32 * a,
   res = _mm_cvtsi128_si64 (sum);
 
   res = (res + (1 << (PRECISION_S32 - 1))) >> PRECISION_S32;
-  *o = CLAMP (res, -(1L << 31), (1L << 31) - 1);
+  *o = CLAMP (res, G_MININT32, G_MAXINT32);
 }
 
 static inline void
@@ -113,7 +113,7 @@ inner_product_gint32_linear_1_sse41 (gint32 * o, const gint32 * a,
   res = _mm_cvtsi128_si64 (sum[0]);
 
   res = (res + (1 << (PRECISION_S32 - 1))) >> PRECISION_S32;
-  *o = CLAMP (res, -(1L << 31), (1L << 31) - 1);
+  *o = CLAMP (res, G_MININT32, G_MAXINT32);
 }
 
 static inline void
@@ -178,7 +178,7 @@ inner_product_gint32_cubic_1_sse41 (gint32 * o, const gint32 * a,
   res = _mm_cvtsi128_si64 (sum[0]);
 
   res = (res + (1 << (PRECISION_S32 - 1))) >> PRECISION_S32;
-  *o = CLAMP (res, -(1L << 31), (1L << 31) - 1);
+  *o = CLAMP (res, G_MININT32, G_MAXINT32);
 }
 
 MAKE_RESAMPLE_FUNC (gint32, full, 1, sse41);
