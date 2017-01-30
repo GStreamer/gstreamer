@@ -1,9 +1,324 @@
-=== release 1.10.2 ===
+=== release 1.10.3 ===
 
-2016-11-29  Sebastian Dröge <slomo@coaxion.net>
+2017-01-30  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.2
+	  releasing 1.10.3
+
+2017-01-30 13:30:51 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/fr.po:
+	* po/nb.po:
+	* po/sr.po:
+	  po: Update translations
+
+2017-01-30 12:35:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/audio/audio-resampler-x86-sse41.c:
+	  audio-resampler: Fix integer overflow in clamping code
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777921
+
+2017-01-20 12:41:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff-media: Don't divide block align by zero channels
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777525
+
+2017-01-20 08:02:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/subparse/samiparse.c:
+	  samiparse: Check that the string has a non-zero length before overwriting the last byte with '\0'
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777502
+
+2017-01-15 18:42:34 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff-media: Don't recurse in for nested WAVEFORMATEX
+	  There was already a check for that, but it failed because
+	  subformat_guid[0] is a guint32 and that is then casted implicitely to a
+	  guint16 when recursing... just that we checked the uncasted value.
+	  This caused an infinite recursion and thus stack overflow.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777265
+
+2017-01-15 18:31:56 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff-media: Check for valid channels/rate before using the values
+	  Otherwise we might divide by zero or otherwise create invalid caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777262
+
+2017-01-11 18:24:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/video-converter.c:
+	  video-converter: Fix crashes in fast-paths when converting interlaced formats with different vertical subsampling
+	  E.g. the following pipelines fail because chroma values after the last
+	  line are read (note: 486 % 4 == 2):
+	  gst-launch-1.0 videotestsrc ! "video/x-raw,interlace-mode=interleaved,width=720,height=486,format=UYVY" ! videoconvert ! "video/x-raw,format=I420" ! fakesink
+	  gst-launch-1.0 videotestsrc ! "video/x-raw,interlace-mode=interleaved,width=720,height=486,format=I420" ! videoconvert ! "video/x-raw,format=UYVY" ! fakesink
+	  gst-launch-1.0 videotestsrc ! "video/x-raw,interlace-mode=interleaved,width=720,height=486,format=I420" ! videoconvert ! "video/x-raw,format=AYUV" ! fakesink
+
+2017-01-10 08:57:51 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst-libs/gst/pbutils/encoding-profile.c:
+	  pbutils: Fix annotation in gst_encoding_profile_set_preset
+
+2017-01-09 21:25:26 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/video/video.c:
+	  gst_video_guess_framerate: Don't throw away all precision
+	  When operating on framerates near 10000fps, at least keep 1
+	  digit of precision for calculations
+
+2017-01-04 11:21:51 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst/encoding/gstencodebin.c:
+	  encodebin: Fix stream_group_free when creating it went bad
+	  Avoiding trying to use NULL pointers
+
+2016-12-30 17:55:18 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: do not link to audio or video filter using padname
+	  ... as a sinkpad need not be called "sink", and it is not the case
+	  for e.g. timeoverlay (and friends).
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=776623
+
+2017-01-02 12:54:32 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/encoding/gstencodebin.c:
+	  encodebin: fix queue property types when setting
+
+2015-11-25 11:30:42 +0000  Stuart Weaver <stuart.weaver@datapath.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspurl.c:
+	  rtsp-url: unescape special chars in user/pass part of URL
+	  This way special characters such as '@' can be used in
+	  usernames or passwords, e.g.
+	  rtsp://view:%40dm%4An@<IP-ADDR>/media/camera1
+	  will now parse username and password into:
+	  User: view
+	  Pass: @dm:n
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758389
+
+2016-09-02 15:23:18 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	  audiotestsrc: Fix incorrect start of tick waveform
+	  Make sure ticks start with an accumulator value of 0 by incrementing it
+	  after filling in samples instead of before and by resetting the accumulator
+	  every time a tick begins. This prevents it from being discontinuous at the
+	  beginning of the tick.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774050
+
+2016-12-22 18:47:19 +0100  Nicolas Dechesne <nicolas.dechesne@linaro.org>
+
+	* tools/gst-play.c:
+	  tools: gst-play: set GST_GL_XINITHREADS
+	  This ensure that XInitThreads is called and so gl contexts are properly
+	  initialized.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776403
+
+2016-12-21 00:11:06 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gstparsebin.c:
+	  parsebin: Ignore failure to send sticky events
+	  When plugging and then exposing a parser, don't fail
+	  if it fails to send sticky events. The most likely
+	  reason is that things were flushed due to the app
+	  immediately doing a seek, but we can't detect flushing
+	  separately to other error conditions without a
+	  gst_pad_send_event_full() core function that returns
+	  a GstFlowReturn.
+
+2016-12-15 16:29:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: For adaptive streaming, ensure to put the buffering multiqueue after a parser or demuxer
+	  There are cases when there is no demuxer involved that could do the
+	  buffering, e.g. HLS with raw MP3 or AAC. In this case we want to place
+	  the buffering multiqueue after the parser.
+	  Before this change, we've considered the first element after the
+	  adaptive streaming demuxer as a parser. This is not always true, e.g.
+	  id3demux. Instead we now wait until we actually have a parser (or
+	  decoder).
+	  Fixes playback on such HLS streams.
+
+2016-12-09 17:36:47 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/tag/gstxmptag.c:
+	  xmptag: Don't leak the namespace string if there are multiple
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775887
+
+2016-12-09 17:57:52 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/tag/id3v2.c:
+	  id3v2: Add missing overrun check for frame sizes
+	  When frames claim to have a footer, ensure they
+	  are large enough to contain one to avoid an invalid
+	  read overrun.
+	  Spotted by Joshua Yabut
+
+2016-12-06 16:29:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/tag/gsttagdemux.c:
+	  tagdemux: Fix crash when shutting down element during getrange()
+	  Ensure that nothing is in any of the streaming thread functions
+	  anymore when going from PAUSED to READY. While the parent's state change
+	  function has deactivated all pads, there is nothing preventing
+	  downstream from activating our srcpad again and calling the getrange()
+	  function. Although we're in READY!
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775687
+
+2016-11-04 16:41:05 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/opus/gstopusdec.c:
+	  opusdec: fix 120 ms buffers being wrongly emitted
+	  Using the max 120 ms buffer size to ensure we have enough space
+	  for decoded data meant that Opus could actually return 120 ms'
+	  worth of data.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771723
+
+2016-09-26 10:50:52 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/opus/gstopusdec.c:
+	  opusdec: fix "buffer too small" error
+	  Always supply a buffer with max size to the decoder, as we
+	  can't really decide how many samples will be in the lost packet
+	  based on the timestamps we get.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771723
+
+2016-10-06 11:44:11 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/opus/gstopusdec.c:
+	  opusdec: interpret zero duration as unknown
+	  This fixes missing audio when we get buffers with zero
+	  duration, denoting unknown duration. When several such
+	  buffers are received in a row, they're all at the same
+	  timestamp, with zero duration.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771723
+
+2016-11-29 16:26:22 +0100  Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+
+	* tests/check/elements/multifdsink.c:
+	  multifdsink: Add a test involving a slow client
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774908
+
+2016-11-23 14:35:04 +0100  Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+
+	* gst/tcp/gstmultihandlesink.c:
+	  multihandlesink: Update bufpos in a separate pass
+	  If a client gets dropped and the iteration gets restarted, bufpos is
+	  incremented again for all clients that preceded the dropped one, causing
+	  havoc.
+	  Adjust the bufpos for all clients first before trying to drop any.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774908
+
+2016-11-29 15:30:43 +0100  Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+
+	* gst/tcp/gstmultihandlesink.c:
+	  multihandlesink: Fix buffers-queued being off by one
+	  max_buffer_usage is the index of the oldest buffer in the queue,
+	  starting at zero, not the number of buffers queued.
+	  find_limits returns the index of the oldest buffer that satisfies the
+	  limits in its min_idx parameter, not the number of buffers needed. Fix
+	  this use too in order to keep passing the tests that read
+	  buffers-queued.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775351
+
+2016-12-01 15:12:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Don't end up ignoring caps just because there are no headers for this stream
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775459
+
+2016-12-01 19:57:47 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/subparse/gstssaparse.c:
+	  ssaparse: Free initialization section before storing the next one
+	  If getting multiple caps events.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775480
+
+=== release 1.10.2 ===
+
+2016-11-29 16:20:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.10.2
+
+2016-11-29 15:28:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2016-11-29 14:09:18 +0200  Sebastian Dröge <sebastian@centricular.com>
 

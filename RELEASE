@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Base Plugins 1.10.2
+Release notes for GStreamer Base Plugins 1.10.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -58,10 +58,21 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 774911 : mikey:  gst_mikey_message_new_from_caps does not generate a correct message
-      * 774585 : videotimecode: Fix incorrect nsec_since_daily_jam calculation
-      * 774902 : typefind: out of bounds memory read in windows_icon_typefind
-      * 775224 : subtitleoverlay: Caps memory leak when failing to get sinkpad from subtitle renderer
+      * 758389 : rtsp-url: unescape special chars in user/pass part of URL
+      * 771723 : opusdec: too short buffers trigger error instead of PLC
+      * 774908 : multifdsink removing slow client corrupts matroska stream
+      * 775351 : multihandlesink: buffers-queued is off by one
+      * 775459 : oggdemux: Hangs on divx-bandits-sample file
+      * 775480 : ssaparse: memory leak in gst_ssa_parse_setcaps
+      * 775687 : tagdemux: Crash if getrange/shutdown happen at the same time
+      * 775887 : qtdemux/xmptag: memory leak in gst_tag_list_from_xmp_buffer
+      * 776403 : gst-play should set GST_GL_XINITHREADS so that XinitThread() is called appropriately
+      * 776623 : playbin/playsink fail to use timeoverlay as video-filter
+      * 777262 : riff-media: floating point exception in gst_riff_create_audio_caps
+      * 777265 : riff: stack overflow in gst_riff_create_audio_caps
+      * 777502 : samiparse: heap oob in html_context_handle_element
+      * 777525 : floating point exception in gst_riff_create_audio_caps (different than #777262)
+      * 777921 : audio-resampler: integer overflow in clamping code
 
 ==== Download ====
 
@@ -98,11 +109,14 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
-      * Garima Gaur
-      * Matthew Waters
+      * Carlos Rafael Giani
+      * Jan Alexander Steffens (heftig)
+      * Jan Schmidt
+      * Mark Nauwelaerts
+      * Nicolas Dechesne
       * Sebastian Dröge
+      * Stuart Weaver
+      * Thibault Saunier
       * Tim-Philipp Müller
-      * Ulf Olsson
-      * Vivia Nikolaidou
+      * Vincent Penquerc'h
  

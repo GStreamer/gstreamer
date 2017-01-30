@@ -3,7 +3,7 @@
   <description>Elements used to communicate with applications</description>
   <filename>../../gst/app/.libs/libgstapp.so</filename>
   <basename>libgstapp.so</basename>
-  <version>1.10.2</version>
+  <version>1.10.3</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
