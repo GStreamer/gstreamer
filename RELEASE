@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Good Plugins 1.10.2
+Release notes for GStreamer Good Plugins 1.10.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -55,12 +55,35 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 757292 : gdkpixbufoverlay: relative-x/y properties
-      * 774428 : qtdemux: Outputting unaligned raw audio/video buffers
-      * 774834 : flic decoder: Buffer overflow in flx_decode_delta_fli
-      * 774859 : flic decoder: Invalid memory read in flx_decode_chunks
-      * 774897 : flxdec: Unreferences itself one time too many on invalid files
-      * 775219 : avidemux: Ensure that tags are valid UTF-8 before adding them to the taglist
+      * 775898 : scaletempo: crash in Totem when doing Slow - > Fast - > Slow playback
+      * 754230 : qtdemux: support sparse time ranges in qtdemux without needing a seek for MSE
+      * 765498 : qtdemux: Fix key_time in gst_qtdemux_adjust_seek()
+      * 772646 : rtpjitterbuffer: fix lost-event using dts instead of pts
+      * 773218 : rtpbin: pipeline gets an EOS when any rtpsources byes
+      * 773891 : rtpjitterbuffer: fix timer-reuse bug
+      * 773905 : rtpjitterbuffer: fix bug in reschedule_timer
+      * 775071 : memory leak in usage of gst_pad_get_current_caps() API
+      * 775450 : aacparse: invalid memory read in gst_aac_parse_sink_setcaps
+      * 775451 : qtdemux: out of bounds read in qtdemux_tag_add_str_full
+      * 775455 : qtdemux: memory leaks in qtdemux_inflate
+      * 775472 : matroskademux: memory leak in matroska parser / gst_ebml_read_binary
+      * 775479 : avidemux: memory leak in gst_avi_demux_riff_parse_vprp
+      * 775543 : rtspsrc: redirect-on-play skips stream cleanup and TEARDOWN
+      * 775794 : qtdemux: can not play xvid/mp2 quicktime format
+      * 775888 : flxdec: memory leaks in gst_flxdec_chain
+      * 776107 : qtdemux: Crashes when parsing edit lists due to missing size checks
+      * 776720 : souphttpsrc: no request retry on early server termination
+      * 777101 : rtspsrc: tcp interleaved data dropped if first sub-streams are skipped during SETUP
+      * 777123 : wavparse: CRITICAL warning with injected flush stop event in pull mode
+      * 777157 : qtdemux: seqh buffer not freed after calling qtdemux_parse_svq3_stsd_data()
+      * 777174 : qtmux resets request pad counters on PAUSED- > READY
+      * 777222 : souphttpsrc: redirect uri is never set
+      * 777327 : v4l2allocator: memory type not correctly set in allocator probe
+      * 777362 : qtmux: Error always printed after writing moov recovery file, regardless of success/failure
+      * 777469 : qtdemux: out of bounds heap read in qtdemux_parse_samples
+      * 777500 : avidemux: gst_avi_demux_parse_ncdt heap out of bounds read
+      * 777532 : avidemux: invalid memory read in gst_avi_demux_parse_ncdt
+      * 777832 : qtmux: Timecode track fixes for STSD entry
 
 ==== Download ====
 
@@ -97,9 +120,21 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jagadish
+      * Alejandro G. Castro
+      * Andre McCurdy
+      * Arnaud Vrac
+      * Brendan Shanks
+      * Edward Hervey
+      * Enrique Ocaña González
+      * Garima Gaur
+      * Havard Graff
+      * Heekyoung Seo
+      * Jan Schmidt
+      * Jean-Christophe Trotin
+      * Matt Staples
       * Matthew Waters
-      * Philipp Zabel
+      * Rahul Bedarkar
       * Sebastian Dröge
-      * Tim-Philipp Müller
+      * Seungha Yang
+      * Vivia Nikolaidou
  
