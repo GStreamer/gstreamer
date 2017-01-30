@@ -848,7 +848,7 @@ gst_motion_cells_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     int thickness, success, motioncellsidxcnt, numberOfCells,
         motioncellsnumber, cellsOfInterestNumber;
     int mincellsOfInterestNumber, motiondetect;
-    uint minimum_motion_frames, postnomotion;
+    guint minimum_motion_frames, postnomotion;
     char *datafile;
     bool display, changed_datafile, useAlpha;
     gint64 starttime;
