@@ -230,13 +230,15 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                 fname = self.get_fname(scenario, protocol=mediainfo.get_protocol(), name=name)
 
                 expected_failures = extra_datas.get("expected-failures")
+                extra_env_vars = extra_datas.get("extra_env_vars")
                 self.add_test(GstValidateLaunchTest(fname,
                                                     self.test_manager.options,
                                                     self.test_manager.reporter,
                                                     pipeline_desc,
                                                     scenario=scenario,
                                                     media_descriptor=mediainfo,
-                                                    expected_failures=expected_failures)
+                                                    expected_failures=expected_failures,
+                                                    extra_env_variables=extra_env_vars)
                               )
 
 
