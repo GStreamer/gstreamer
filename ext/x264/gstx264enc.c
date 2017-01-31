@@ -137,16 +137,7 @@ struct _GstX264EncVTable
   int (*x264_param_parse) (x264_param_t *, const char *name, const char *value);
 };
 
-static GstX264EncVTable default_vtable = {
-  NULL,
-  &x264_bit_depth,
-  &x264_chroma_format, x264_encoder_close, x264_encoder_delayed_frames,
-  x264_encoder_encode, x264_encoder_headers, x264_encoder_intra_refresh,
-  x264_encoder_maximum_delayed_frames, x264_encoder_open,
-  x264_encoder_reconfig, &x264_levels, x264_param_apply_fastfirstpass,
-  x264_param_apply_profile, x264_param_default, x264_param_default_preset,
-  x264_param_parse
-};
+static GstX264EncVTable default_vtable;
 
 static GstX264EncVTable *vtable_8bit = NULL, *vtable_10bit = NULL;
 static GstCaps *supported_sinkcaps = NULL;
@@ -2899,6 +2890,27 @@ plugin_init (GstPlugin * plugin)
       "h264 encoding element");
 
   GST_INFO ("linked against x264 build: %u", X264_BUILD);
+
+  /* Initialize the static GstX264EncVTable which is overriden in load_x264()
+   * if needed. We can't initialize statically because these values are not
+   * constant on Windows. */
+  default_vtable.module = NULL;
+  default_vtable.x264_bit_depth = &x264_bit_depth;
+  default_vtable.x264_chroma_format = &x264_chroma_format;
+  default_vtable.x264_encoder_close = x264_encoder_close;
+  default_vtable.x264_encoder_delayed_frames = x264_encoder_delayed_frames;
+  default_vtable.x264_encoder_encode = x264_encoder_encode;
+  default_vtable.x264_encoder_headers = x264_encoder_headers;
+  default_vtable.x264_encoder_intra_refresh = x264_encoder_intra_refresh;
+  default_vtable.x264_encoder_maximum_delayed_frames = x264_encoder_maximum_delayed_frames;
+  default_vtable.x264_encoder_open = x264_encoder_open;
+  default_vtable.x264_encoder_reconfig = x264_encoder_reconfig;
+  default_vtable.x264_levels = &x264_levels;
+  default_vtable.x264_param_apply_fastfirstpass = x264_param_apply_fastfirstpass;
+  default_vtable.x264_param_apply_profile = x264_param_apply_profile;
+  default_vtable.x264_param_default = x264_param_default;
+  default_vtable.x264_param_default_preset = x264_param_default_preset;
+  default_vtable.x264_param_parse = x264_param_parse;
 
   if (!load_x264_libraries ())
     return FALSE;
