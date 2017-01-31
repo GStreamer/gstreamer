@@ -1037,6 +1037,10 @@ gst_validate_suite (void)
   TCase *tc_chain = tcase_create ("padmonitor");
   suite_add_tcase (s, tc_chain);
 
+  if (atexit (gst_validate_deinit) != 0) {
+    GST_ERROR ("failed to set gst_validate_deinit as exit function");
+  }
+
   fake_elements_register ();
 
   tcase_add_test (tc_chain, buffer_before_segment);

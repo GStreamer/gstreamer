@@ -99,6 +99,10 @@ gst_validate_suite (void)
   TCase *tc_chain = tcase_create ("monitoring");
   suite_add_tcase (s, tc_chain);
 
+  if (atexit (gst_validate_deinit) != 0) {
+    GST_ERROR ("failed to set gst_validate_deinit as exit function");
+  }
+
   tcase_add_test (tc_chain, monitors_added);
   tcase_add_test (tc_chain, monitors_cleanup);
 
