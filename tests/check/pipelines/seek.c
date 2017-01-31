@@ -1,6 +1,7 @@
 /* GStreamer simple seek unit test
  * Copyright (C) 2012 Collabora Ltd.
  *   Author: Tim-Philipp Müller <tim.muller@collabora.co.uk>
+ * Copyright (C) Julien Isorce <jisorce@oblong.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,6 +24,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/base/gstbaseparse.h>
 #include <gst/base/gstbasesrc.h>
 
 #include <gst/check/gstcheck.h>
@@ -129,6 +131,109 @@ timed_test_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
   return GST_FLOW_OK;
 }
 
+/* ========================================================================
+ *  Dummy parser
+ * ======================================================================== */
+
+typedef struct
+{
+  GstBaseParse parent;
+  gboolean caps_set;
+} DummyParser;
+
+typedef struct
+{
+  GstBaseParseClass parent_class;
+} DummyParserClass;
+
+static GType dummy_parser_get_type (void);
+
+G_DEFINE_TYPE (DummyParser, dummy_parser, GST_TYPE_BASE_PARSE);
+
+static gboolean
+dummy_parser_start (GstBaseParse * parse)
+{
+  return TRUE;
+}
+
+static gboolean
+dummy_parser_stop (GstBaseParse * parse)
+{
+  return TRUE;
+}
+
+static GstFlowReturn
+dummy_parser_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
+{
+  if (((DummyParser *) parse)->caps_set == FALSE) {
+    GstCaps *caps;
+    /* push caps */
+    caps = gst_caps_new_empty_simple ("ANY");
+    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
+    gst_caps_unref (caps);
+    ((DummyParser *) parse)->caps_set = TRUE;
+  }
+
+  GST_BUFFER_DURATION (frame->buffer) = GST_SECOND / 10;
+
+  return gst_base_parse_finish_frame (parse, frame,
+      gst_buffer_get_size (frame->buffer));
+}
+
+static gboolean
+dummy_parser_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
+{
+  gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
+  return TRUE;
+}
+
+static gboolean
+dummy_parser_src_event (GstBaseParse * parse, GstEvent * event)
+{
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      GST_INFO ("src event %s", GST_EVENT_TYPE_NAME (event));
+      break;
+  }
+  return GST_BASE_PARSE_CLASS (dummy_parser_parent_class)->src_event (parse,
+      event);
+}
+
+static void
+dummy_parser_class_init (DummyParserClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseParseClass *baseparse_class = GST_BASE_PARSE_CLASS (klass);
+
+  static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS_ANY);
+
+  static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS_ANY);
+
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
+
+  gst_element_class_set_metadata (element_class,
+      "DummyParser", "Parser/Video", "empty", "empty");
+
+  baseparse_class->start = GST_DEBUG_FUNCPTR (dummy_parser_start);
+  baseparse_class->stop = GST_DEBUG_FUNCPTR (dummy_parser_stop);
+  baseparse_class->handle_frame = GST_DEBUG_FUNCPTR (dummy_parser_handle_frame);
+  baseparse_class->set_sink_caps =
+      GST_DEBUG_FUNCPTR (dummy_parser_set_sink_caps);
+  baseparse_class->src_event = GST_DEBUG_FUNCPTR (dummy_parser_src_event);
+}
+
+static void
+dummy_parser_init (DummyParser * parser)
+{
+  parser->caps_set = FALSE;
+}
+
 /* ======================================================================== */
 
 GST_START_TEST (test_seek)
@@ -197,6 +302,256 @@ GST_START_TEST (test_seek)
 
 GST_END_TEST;
 
+
+/* This test checks that the pipeline does not wait for nothing after
+ * sending the non-flush seek event. */
+GST_START_TEST (test_loopback_1)
+{
+  GstMessage *msg;
+  GstElement *bin, *source, *parser, *sink;
+  gboolean res;
+  GstPad *sinkpad;
+  GstBus *bus;
+  guint seek_flags;
+
+  GST_INFO
+      ("construct the test pipeline fakesrc ! testparse ! fakesink sync=1");
+
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  source = gst_element_factory_make ("fakesrc", "source");
+  parser = g_object_new (dummy_parser_get_type (), "name", "testparse", NULL);
+  sink = gst_element_factory_make ("fakesink", "sink");
+
+  gst_bin_add_many (GST_BIN (bin), source, parser, sink, NULL);
+
+  res = gst_element_link (source, parser);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (parser, sink);
+  fail_unless (res == TRUE, NULL);
+
+  GST_INFO ("configure elements");
+
+  g_object_set (G_OBJECT (source),
+      "format", GST_FORMAT_BYTES,
+      "can-activate-pull", TRUE,
+      "can-activate-push", FALSE,
+      "is-live", FALSE,
+      "sizemax", 65536, "sizetype", 2 /* FAKE_SRC_SIZETYPE_FIXED */ ,
+      "num-buffers", 35, NULL);
+
+  /* Sync true is required for this test. */
+  g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
+
+  GST_INFO ("set paused state");
+
+  res = gst_element_set_state (bin, GST_STATE_PAUSED);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  GST_INFO ("wait for completion");
+
+  res =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  GST_INFO ("paused state reached");
+
+  fail_unless (GST_BASE_SRC (source)->random_access);
+
+  sinkpad = gst_element_get_static_pad (parser, "sink");
+  fail_unless (GST_PAD_MODE (sinkpad) == GST_PAD_MODE_PULL);
+  gst_object_unref (sinkpad);
+
+  GST_INFO ("flush seek");
+
+  seek_flags =
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_SEGMENT;
+
+  res = gst_element_seek (bin, 1.0, GST_FORMAT_TIME, seek_flags,
+      GST_SEEK_TYPE_SET, (GstClockTime) 0,
+      GST_SEEK_TYPE_SET, (GstClockTime) 2 * GST_SECOND);
+  fail_unless (res == TRUE, NULL);
+
+  GST_INFO ("set playing state");
+
+  res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_SEGMENT_DONE | GST_MESSAGE_ERROR);
+  fail_unless_equals_string (GST_MESSAGE_TYPE_NAME (msg), "segment-done");
+  gst_message_unref (msg);
+
+  GST_INFO ("warm-up sequence done");
+
+  seek_flags &= ~GST_SEEK_FLAG_FLUSH;
+  fail_if (seek_flags & GST_SEEK_FLAG_FLUSH, NULL);
+
+  GST_INFO ("non-flush seek");
+
+  res =
+      gst_element_seek (bin, 1.0, GST_FORMAT_TIME, seek_flags,
+      GST_SEEK_TYPE_SET, (GstClockTime) 0, GST_SEEK_TYPE_SET,
+      (GstClockTime) 3 * GST_SECOND);
+  fail_unless (res == TRUE, NULL);
+
+  GST_INFO ("wait for segment done message");
+
+  msg = gst_bus_timed_pop_filtered (bus, (GstClockTime) 2 * GST_SECOND,
+      GST_MESSAGE_SEGMENT_DONE | GST_MESSAGE_ERROR);
+  /* Make sure the pipeline is not waiting for nothing because the base time is
+   *  screwed up. */
+  fail_unless (msg, "no message within the timed window");
+  fail_unless_equals_string (GST_MESSAGE_TYPE_NAME (msg), "segment-done");
+
+  res = gst_element_set_state (bin, GST_STATE_NULL);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* cleanup */
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
+/* This test checks that the pipeline does not play the media instantly
+ * after sending the non-flush seek event. */
+GST_START_TEST (test_loopback_2)
+{
+  GstMessage *msg;
+  GstElement *bin, *source, *parser, *sink;
+  gboolean res;
+  GstPad *sinkpad;
+  GstBus *bus;
+  guint seek_flags;
+  gint64 position = GST_CLOCK_TIME_NONE;
+  gint64 playback_duration = GST_CLOCK_TIME_NONE;
+  gint64 start_absolute_time = GST_CLOCK_TIME_NONE;
+
+  GST_INFO
+      ("construct the test pipeline fakesrc ! testparse ! fakesink sync=1");
+
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  source = gst_element_factory_make ("fakesrc", "source");
+  parser = g_object_new (dummy_parser_get_type (), "name", "testparse", NULL);
+  sink = gst_element_factory_make ("fakesink", "sink");
+
+  gst_bin_add_many (GST_BIN (bin), source, parser, sink, NULL);
+
+  res = gst_element_link (source, parser);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (parser, sink);
+  fail_unless (res == TRUE, NULL);
+
+  GST_INFO ("configure elements");
+
+  g_object_set (G_OBJECT (source),
+      "format", GST_FORMAT_BYTES,
+      "can-activate-pull", TRUE,
+      "can-activate-push", FALSE,
+      "is-live", FALSE,
+      "sizemax", 65536, "sizetype", 2 /* FAKE_SRC_SIZETYPE_FIXED */ ,
+      NULL);
+
+  /* Sync true is required for this test. */
+  g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
+
+  GST_INFO ("set paused state");
+
+  res = gst_element_set_state (bin, GST_STATE_PAUSED);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  GST_INFO ("wait for completion");
+
+  res =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  GST_INFO ("paused state reached");
+
+  fail_unless (GST_BASE_SRC (source)->random_access);
+
+  sinkpad = gst_element_get_static_pad (parser, "sink");
+  fail_unless (GST_PAD_MODE (sinkpad) == GST_PAD_MODE_PULL);
+  gst_object_unref (sinkpad);
+
+  GST_INFO ("flush seek");
+
+  seek_flags =
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_SEGMENT;
+
+  res = gst_element_seek (bin, 1.0, GST_FORMAT_TIME, seek_flags,
+      GST_SEEK_TYPE_SET, (GstClockTime) 0,
+      GST_SEEK_TYPE_SET, (GstClockTime) 2 * GST_SECOND);
+  fail_unless (res == TRUE, NULL);
+
+  GST_INFO ("set playing state");
+
+  res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_SEGMENT_DONE | GST_MESSAGE_ERROR);
+  fail_unless_equals_string (GST_MESSAGE_TYPE_NAME (msg), "segment-done");
+  gst_message_unref (msg);
+
+  GST_INFO ("warm-up sequence done");
+
+  seek_flags &= ~GST_SEEK_FLAG_FLUSH;
+  fail_if (seek_flags & GST_SEEK_FLAG_FLUSH, NULL);
+
+  GST_INFO ("non-flush seek");
+
+  start_absolute_time = gst_clock_get_time (GST_ELEMENT_CLOCK (bin));
+
+  res =
+      gst_element_seek (bin, 1.0, GST_FORMAT_TIME, seek_flags,
+      GST_SEEK_TYPE_SET, (GstClockTime) 0, GST_SEEK_TYPE_SET,
+      (GstClockTime) 2 * GST_SECOND);
+  fail_unless (res == TRUE, NULL);
+
+  GST_INFO ("wait for segment done message");
+
+  msg = gst_bus_timed_pop_filtered (bus, (GstClockTime) 2 * GST_SECOND,
+      GST_MESSAGE_SEGMENT_DONE | GST_MESSAGE_ERROR);
+  fail_unless (msg, "no message within the timed window");
+  fail_unless_equals_string (GST_MESSAGE_TYPE_NAME (msg), "segment-done");
+
+  gst_message_parse_segment_done (msg, NULL, &position);
+  gst_message_unref (msg);
+
+  GST_INFO ("final position: %" G_GINT64_FORMAT, position);
+
+  fail_unless (position == 2 * GST_SECOND);
+
+  playback_duration =
+      GST_CLOCK_DIFF (start_absolute_time,
+      gst_clock_get_time (GST_ELEMENT_CLOCK (bin)));
+
+  GST_INFO ("test duration: %" G_GINT64_FORMAT, playback_duration);
+
+  fail_unless (playback_duration > GST_SECOND,
+      "playback duration should be near 2 seconds");
+
+  res = gst_element_set_state (bin, GST_STATE_NULL);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* cleanup */
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 static Suite *
 pipelines_seek_suite (void)
 {
@@ -205,6 +560,8 @@ pipelines_seek_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_seek);
+  tcase_add_test (tc_chain, test_loopback_1);
+  tcase_add_test (tc_chain, test_loopback_2);
 
   return s;
 }
