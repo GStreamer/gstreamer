@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=@webrtclibdir@
+includedir=@abs_top_srcdir@/gst-libs
+
+Name: GStreamer WebRTC, Uninstalled
+Description: GStreamer WebRTC support, uninstalled
+Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
+Version: @VERSION@
+Libs: -L${libdir} -lgstwebrtc-@GST_API_VERSION@
+Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
+

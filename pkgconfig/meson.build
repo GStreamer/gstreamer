@@ -18,6 +18,7 @@ pkgconf.set('mpegtslibdir', join_paths(meson.build_root(), gstmpegts.outdir()))
 pkgconf.set('playerlibdir', join_paths(meson.build_root(), gstplayer.outdir()))
 pkgconf.set('basecamerabinsrclibdir', join_paths(meson.build_root(), gstbasecamerabin.outdir()))
 pkgconf.set('photographylibdir', join_paths(meson.build_root(), gstphotography.outdir()))
+pkgconf.set('webrtclibdir', join_paths(meson.build_root(), gstwebrtc.outdir()))
 
 pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
 
@@ -29,6 +30,7 @@ pkg_libs = [
   'mpegts',
   'player',
   'plugins-bad',
+  'webrtc',
 ]
 
 #if use_wayland

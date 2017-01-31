@@ -65,5 +65,6 @@ videorecordingbin
 viewfinderbin
 voaacenc
 voamrwbenc
+webrtcbin
 x265enc
 zbar

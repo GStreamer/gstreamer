@@ -13,6 +13,7 @@ subdir('mpegts')
 #subdir('qt')
 #subdir('uvch264')
 #subdir('waylandsink')
+subdir('webrtc')
 
 executable('playout',
   'playout.c',

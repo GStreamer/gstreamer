@@ -52,6 +52,12 @@ else
 IPCPIPELINE_DIR=
 endif
 
+if USE_WEBRTC
+WEBRTC_DIR=webrtc
+else
+WEBRTC_DIR=
+endif
+
 noinst_PROGRAMS = playout
 
 playout_SOURCES = playout.c
@@ -60,8 +66,8 @@ playout_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(GST_LIB
 
 SUBDIRS= codecparsers mpegts $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES) \
         $(GTK3_DIR) $(AVSAMPLE_DIR) $(WAYLAND_DIR) $(MATRIXMIX_DIR) \
-        $(IPCPIPELINE_DIR)
+        $(IPCPIPELINE_DIR) $(WEBRTC_DIR)
 DIST_SUBDIRS= codecparsers mpegts camerabin2 directfb mxf opencv uvch264 gtk \
-        avsamplesink waylandsink audiomixmatrix ipcpipeline
+        avsamplesink waylandsink audiomixmatrix ipcpipeline webrtc
 
 include $(top_srcdir)/common/parallel-subdirs.mak

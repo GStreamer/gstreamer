@@ -55,6 +55,7 @@ base_tests = [
   [['elements/videoframe-audiolevel.c']],
   [['elements/viewfinderbin.c']],
   [['elements/voaacenc.c'], not voaac_dep.found(), [voaac_dep]],
+  [['elements/webrtcbin.c'], not libnice_dep.found(), [gstwebrtc_dep]],
   [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
   [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
   [['libs/h264parser.c'], false, [gstcodecparsers_dep]],

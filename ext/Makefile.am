@@ -406,6 +406,12 @@ else
 WEBRTCDSP_DIR=
 endif
 
+if USE_WEBRTC
+WEBRTC_DIR=webrtc
+else
+WEBRTC_DIR=
+endif
+
 if USE_TTML
 TTML_DIR=ttml
 else
@@ -482,7 +488,8 @@ SUBDIRS=\
 	$(DTLS_DIR) \
 	$(VULKAN_DIR) \
 	$(WEBRTCDSP_DIR) \
-	$(TTML_DIR)
+	$(TTML_DIR) \
+	$(WEBRTC_DIR)
 
 DIST_SUBDIRS = \
 	assrender \
@@ -551,6 +558,7 @@ DIST_SUBDIRS = \
 	dtls \
 	vulkan \
 	webrtcdsp \
-	ttml
+	ttml \
+	webrtc
 
 include $(top_srcdir)/common/parallel-subdirs.mak

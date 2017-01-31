@@ -7,6 +7,7 @@
 #include <gst/insertbin/gstinsertbin.h>
 #include <gst/mpegts/mpegts.h>
 #include <gst/player/player.h>
+#include <gst/webrtc/webrtc.h>
 
 gst_audio_aggregator_get_type
 gst_audio_aggregator_pad_get_type
@@ -48,4 +49,23 @@ gst_player_video_info_get_type
 gst_player_video_overlay_video_renderer_get_type
 gst_player_video_renderer_get_type
 gst_player_visualization_get_type
+
+
+gst_webrtc_dtls_setup_get_type
+gst_webrtc_dtls_transport_get_type
+gst_webrtc_dtls_transport_state_get_type
+gst_webrtc_ice_component_get_type
+gst_webrtc_ice_connection_state_get_type
+gst_webrtc_ice_gathering_state_get_type
+gst_webrtc_ice_role_get_type
+gst_webrtc_sdp_type_get_type
+gst_webrtc_ice_transport_get_type
+gst_webrtc_peer_connection_state_get_type
+gst_webrtc_rtp_receiver_get_type
+gst_webrtc_rtp_sender_get_type
+gst_webrtc_session_description_get_type
+gst_webrtc_signaling_state_get_type
+gst_webrtc_rtp_transceiver_direction_get_type
+gst_webrtc_rtp_transceiver_get_type
+gst_webrtc_stats_type_get_type
 

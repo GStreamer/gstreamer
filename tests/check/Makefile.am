@@ -204,6 +204,12 @@ else
 check_ipcpipeline=
 endif
 
+if USE_WEBRTC
+check_webrtc = elements/webrtcbin
+else
+check_webrtc=
+endif
+
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
 	elements/mplex    \
@@ -284,6 +290,7 @@ check_PROGRAMS = \
 	$(check_hlsdemux) \
 	$(check_srtp) \
 	$(check_player) \
+	$(check_webrtc) \
 	$(EXPERIMENTAL_CHECKS)
 
 noinst_HEADERS = elements/mxfdemux.h libs/isoff.h
@@ -561,6 +568,13 @@ orc_videobox_CFLAGS = $(ORC_CFLAGS)
 orc/compositor.c: $(top_srcdir)/gst/compositor/compositororc.orc
 	$(MKDIR_P) orc/
 	$(ORCC) --test -o $@ $<
+
+elements_webrtcbin_LDADD = \
+	$(top_builddir)/gst-libs/gst/webrtc/libgstwebrtc-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_SDP_LIBS) $(LDADD)
+elements_webrtcbin_CFLAGS = \
+	$(GST_PLUGINS_BASE_CLAGS) $(GST_PLUGINS_BAD_CFLAGS) $(GST_SDP_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 
 distclean-local-orc:
