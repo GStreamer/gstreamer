@@ -155,6 +155,7 @@ switch_streams (MyDataStruct * data)
 
   ev = gst_event_new_select_streams (streams);
   gst_element_send_event (data->pipeline, ev);
+  g_list_free (streams);
 
   return G_SOURCE_CONTINUE;
 }
