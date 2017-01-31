@@ -970,7 +970,7 @@ assignments:	/* NOP */		      { $$ = NULL; }
 	|	ASSIGNMENT assignments 	      { $$ = g_slist_prepend ($2, $1); }
 	;
 
-binopener:	'('			      { $$ = gst_parse_strdup(_("bin")); }
+binopener:	'('			      { $$ = gst_parse_strdup("bin"); }
 	|	BINREF			      { $$ = $1; }
 	;
 bin:	binopener assignments chainlist ')'   {
