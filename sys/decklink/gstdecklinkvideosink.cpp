@@ -661,6 +661,17 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
 
   convert_to_internal_clock (self, &running_time, &running_time_duration);
 
+  if (!self->output->started) {
+    GST_LOG_OBJECT (self, "Showing video frame synchronously because PAUSED");
+    ret = self->output->output->DisplayVideoFrameSync (frame);
+    if (ret != S_OK) {
+    GST_ELEMENT_ERROR (self, STREAM, FAILED,
+        (NULL), ("Failed to show video frame synchronously: 0x%08x", ret));
+    flow_ret = GST_FLOW_ERROR;
+    goto out;
+    }
+  }
+
   GST_LOG_OBJECT (self, "Scheduling video frame %p at %" GST_TIME_FORMAT
       " with duration %" GST_TIME_FORMAT, frame, GST_TIME_ARGS (running_time),
       GST_TIME_ARGS (running_time_duration));
