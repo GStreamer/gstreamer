@@ -81,8 +81,8 @@ enum _GstDewarpInterpolationMode {
 struct _GstDewarp
 {
   GstOpencvVideoFilter element;
-  cv::Mat map_x;
-  cv::Mat map_y;
+  cv::Mat *map_x;
+  cv::Mat *map_y;
   gdouble x_center;
   gdouble y_center;
   gdouble inner_radius;

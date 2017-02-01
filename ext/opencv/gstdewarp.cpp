@@ -161,8 +161,16 @@ static void
 gst_dewarp_finalize (GObject * obj)
 {
   GstDewarp *filter = GST_DEWARP (obj);
-  filter->map_x.release ();
-  filter->map_y.release ();
+
+  if (filter->map_x) {
+    filter->map_x->release ();
+    delete filter->map_x;
+  }
+
+  if (filter->map_y) {
+    filter->map_y->release ();
+    delete filter->map_y;
+  }
 
   G_OBJECT_CLASS (gst_dewarp_parent_class)->finalize (obj);
 }
@@ -276,6 +284,10 @@ gst_dewarp_init (GstDewarp * filter)
   filter->out_width = 0;
   filter->out_height = 0;
   filter->need_map_update = TRUE;
+
+  filter->map_x = new cv::Mat;
+  filter->map_y = new cv::Mat;
+
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
       FALSE);
 }
@@ -451,8 +463,8 @@ gst_dewarp_update_map (GstDewarp * filter)
   cx = filter->x_center * filter->in_width;
   cy = filter->y_center * filter->in_height;
   cv::Size destSize (out_width, out_height);
-  filter->map_x.create (destSize, CV_32FC1);
-  filter->map_y.create (destSize, CV_32FC1);
+  filter->map_x->create (destSize, CV_32FC1);
+  filter->map_y->create (destSize, CV_32FC1);
 
   for (y = 0; y < out_height; y++) {
     for (x = 0; x < out_width; x++) {
@@ -460,8 +472,8 @@ gst_dewarp_update_map (GstDewarp * filter)
       float theta = ((float) (x) / (float) (out_width)) * 2.0 * G_PI;
       float xs = cx + r * sin (theta) * filter->remap_correction_x;
       float ys = cy + r * cos (theta) * filter->remap_correction_y;
-      filter->map_x.at < float >(y, x) = xs;
-      filter->map_y.at < float >(y, x) = ys;
+      filter->map_x->at < float >(y, x) = xs;
+      filter->map_y->at < float >(y, x) = ys;
     }
   }
 
@@ -654,7 +666,7 @@ gst_dewarp_transform_frame (GstOpencvVideoFilter * btrans, GstBuffer * buffer,
     dewarped_image = cv::cvarrToMat (outimg, false);
 
     if (filter->display_mode == GST_DEWARP_DISPLAY_PANORAMA) {
-      cv::remap (fisheye_image, dewarped_image, filter->map_x, filter->map_y,
+      cv::remap (fisheye_image, dewarped_image, *filter->map_x, *filter->map_y,
           inter_mode);
     } else if (filter->display_mode == GST_DEWARP_DISPLAY_DOUBLE_PANORAMA) {
       cv::Mat view1, view2, panorama_image, concatenated;
@@ -663,7 +675,7 @@ gst_dewarp_transform_frame (GstOpencvVideoFilter * btrans, GstBuffer * buffer,
       panorama_height = filter->out_height / 2;
       cv::Size panoramaSize (panorama_width, panorama_height);
       panorama_image.create (panoramaSize, fisheye_image.type ());
-      cv::remap (fisheye_image, panorama_image, filter->map_x, filter->map_y,
+      cv::remap (fisheye_image, panorama_image, *filter->map_x, *filter->map_y,
           inter_mode);
       view1 =
           panorama_image (cv::Rect (0, 0, filter->out_width, panorama_height));
@@ -683,7 +695,7 @@ gst_dewarp_transform_frame (GstOpencvVideoFilter * btrans, GstBuffer * buffer,
       view_height = filter->out_height / 2;
       cv::Size panoramaSize (panorama_width, panorama_height);
       panorama_image.create (panoramaSize, fisheye_image.type ());
-      cv::remap (fisheye_image, panorama_image, filter->map_x, filter->map_y,
+      cv::remap (fisheye_image, panorama_image, *filter->map_x, *filter->map_y,
           inter_mode);
       view1 = panorama_image (cv::Rect (0, 0, view_width, view_height));
       view2 =
