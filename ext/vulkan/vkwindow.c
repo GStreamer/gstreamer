@@ -226,9 +226,9 @@ gst_vulkan_window_get_surface (GstVulkanWindow * window, GError ** error)
 {
   GstVulkanWindowClass *klass;
 
-  g_return_val_if_fail (GST_IS_VULKAN_WINDOW (window), NULL);
+  g_return_val_if_fail (GST_IS_VULKAN_WINDOW (window), (VkSurfaceKHR) 0);
   klass = GST_VULKAN_WINDOW_GET_CLASS (window);
-  g_return_val_if_fail (klass->get_surface != NULL, NULL);
+  g_return_val_if_fail (klass->get_surface != NULL, (VkSurfaceKHR) 0);
 
   return klass->get_surface (window, error);
 }
