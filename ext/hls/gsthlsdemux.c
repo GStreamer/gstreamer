@@ -298,6 +298,12 @@ gst_hls_demux_set_current (GstHLSDemux * self, GstM3U8 * m3u8)
   ((r >= 0 && start_type != GST_SEEK_TYPE_NONE) || \
    (r < 0 && stop_type != GST_SEEK_TYPE_NONE))
 
+#define IS_SNAP_SEEK(f) (f & (GST_SEEK_FLAG_SNAP_BEFORE |	  \
+                              GST_SEEK_FLAG_SNAP_AFTER |	  \
+                              GST_SEEK_FLAG_SNAP_NEAREST |	  \
+			      GST_SEEK_FLAG_TRICKMODE_KEY_UNITS | \
+			      GST_SEEK_FLAG_KEY_UNIT))
+
 static gboolean
 gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
 {
@@ -311,7 +317,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   GstClockTime current_pos, target_pos;
   gint64 current_sequence;
   guint64 bitrate;
-  gboolean snap_before, snap_after, snap_nearest, keyunit;
+  gboolean snap_after, snap_nearest;
   gboolean reverse;
 
   gst_event_parse_seek (seek, &rate, &format, &flags, &start_type, &start,
@@ -375,10 +381,8 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     target_pos = reverse ? stop : start;
 
     /* Snap to segment boundary. Improves seek performance on slow machines. */
-    keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
     snap_nearest =
         (flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST;
-    snap_before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
     snap_after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
 
     GST_M3U8_CLIENT_LOCK (hlsdemux->client);
@@ -422,11 +426,11 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
 
     /* Play from the end of the current selected segment */
     if (file) {
-      if (reverse && (snap_before || snap_after || snap_nearest))
+      if (reverse && IS_SNAP_SEEK (flags))
         current_pos += file->duration;
     }
 
-    if (keyunit || snap_before || snap_after || snap_nearest) {
+    if (IS_SNAP_SEEK (flags)) {
       if (!reverse)
         gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
             current_pos, stop_type, stop, NULL);
