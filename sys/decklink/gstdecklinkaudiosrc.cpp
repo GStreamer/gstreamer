@@ -429,9 +429,17 @@ gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
     GstCaps *channel_filter, *templ;
 
     templ = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
-    channel_filter =
-        gst_caps_new_simple ("audio/x-raw", "channels", G_TYPE_INT,
-        self->channels_found, NULL);
+    if (self->channels_found > 0) {
+      channel_filter =
+          gst_caps_new_simple ("audio/x-raw", "channels", G_TYPE_INT,
+          self->channels_found, NULL);
+    } else if (self->channels > 0) {
+      channel_filter =
+          gst_caps_new_simple ("audio/x-raw", "channels", G_TYPE_INT,
+          self->channels, NULL);
+    } else {
+      channel_filter = gst_caps_new_empty_simple ("audio/x-raw");
+    }
     caps = gst_caps_intersect (channel_filter, templ);
     gst_caps_unref (channel_filter);
     gst_caps_unref (templ);
