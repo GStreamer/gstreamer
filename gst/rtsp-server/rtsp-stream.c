@@ -191,6 +191,7 @@ enum
 {
   SIGNAL_NEW_RTP_ENCODER,
   SIGNAL_NEW_RTCP_ENCODER,
+  SIGNAL_NEW_RTP_RTCP_DECODER,
   SIGNAL_LAST
 };
 
@@ -243,6 +244,11 @@ gst_rtsp_stream_class_init (GstRTSPStreamClass * klass)
 
   gst_rtsp_stream_signals[SIGNAL_NEW_RTCP_ENCODER] =
       g_signal_new ("new-rtcp-encoder", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+
+  gst_rtsp_stream_signals[SIGNAL_NEW_RTP_RTCP_DECODER] =
+      g_signal_new ("new-rtp-rtcp-decoder", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
@@ -2279,6 +2285,10 @@ request_rtp_rtcp_decoder (GstElement * rtpbin, guint session,
 
     g_signal_connect (priv->srtpdec, "request-key",
         (GCallback) request_key, stream);
+
+    g_signal_emit (stream, gst_rtsp_stream_signals[SIGNAL_NEW_RTP_RTCP_DECODER],
+        0, priv->srtpdec);
+
   }
   return gst_object_ref (priv->srtpdec);
 }
