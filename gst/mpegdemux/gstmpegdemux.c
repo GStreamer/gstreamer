@@ -2409,6 +2409,8 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
   code = GST_READ_UINT32_BE (data);
   if (G_LIKELY (code != ID_PS_PACK_START_CODE))
     goto beach;
+  if (data + 12 > end)
+    goto beach;
   /* skip start code */
   data += 4;
   scr1 = GST_READ_UINT32_BE (data);
@@ -2437,12 +2439,17 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
     /* SCR has been converted into units of 90Khz ticks to make it comparable
        to DTS/PTS, that also implies 1 tick rounding error */
     data += 6;
+
+    if (data + 4 > end)
+      goto beach;
     /* PMR:22 ! :2==11 ! reserved:5 ! stuffing_len:3 */
     next32 = GST_READ_UINT32_BE (data);
     if ((next32 & 0x00000300) != 0x00000300)
       goto beach;
     stuffing_bytes = (next32 & 0x07);
     data += 4;
+    if (data + stuffing_bytes > end)
+      goto beach;
     while (stuffing_bytes--) {
       if (*data++ != 0xff)
         goto beach;
@@ -2469,6 +2476,9 @@ gst_ps_demux_scan_ts (GstPsDemux * demux, const guint8 * data,
   }
 
   /* Possible optional System header here */
+  if (data + 8 > end)
+    goto beach;
+
   code = GST_READ_UINT32_BE (data);
   len = GST_READ_UINT16_BE (data + 4);
   if (code == ID_PS_SYSTEM_HEADER_START_CODE) {
