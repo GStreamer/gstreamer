@@ -417,7 +417,8 @@ gst_ps_demux_create_stream (GstPsDemux * demux, gint id, gint stream_type)
     case ST_VIDEO_H264:
       template = klass->video_template;
       name = g_strdup_printf ("video_%02x", id);
-      caps = gst_caps_new_empty_simple ("video/x-h264");
+      caps = gst_caps_new_simple ("video/x-h264",
+          "stream-format", G_TYPE_STRING, "byte-stream", NULL);
       threshold = VIDEO_SEGMENT_THRESHOLD;
       break;
     case ST_PS_AUDIO_AC3:
