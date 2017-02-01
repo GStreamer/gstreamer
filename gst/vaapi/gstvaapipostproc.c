@@ -981,10 +981,12 @@ gst_vaapipostproc_update_src_caps (GstVaapiPostproc * postproc, GstCaps * caps,
       postproc->format != DEFAULT_FORMAT)
     postproc->flags |= GST_VAAPI_POSTPROC_FLAG_FORMAT;
 
-  if ((postproc->width || postproc->height) &&
-      postproc->width != GST_VIDEO_INFO_WIDTH (&postproc->sinkpad_info) &&
-      postproc->height != GST_VIDEO_INFO_HEIGHT (&postproc->sinkpad_info))
+  if (GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) !=
+      GST_VIDEO_INFO_WIDTH (&postproc->sinkpad_info)
+      && GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) !=
+      GST_VIDEO_INFO_HEIGHT (&postproc->sinkpad_info))
     postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SIZE;
+
   return TRUE;
 }
 
