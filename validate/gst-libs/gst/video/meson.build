@@ -4,7 +4,7 @@ if cairo_dep.found()
         'gstvalidatevideo',
         'gstvalidatessim.c', 'gssim.c',
         include_directories : inc_dirs,
-        dependencies : [gst_dep, gst_video_dep, glib_dep, cairo_dep, gio_dep,
+        dependencies : [gst_dep, gst_video_dep, gst_pbutils_dep, glib_dep, cairo_dep, gio_dep,
             mathlib],
     )
 endif
