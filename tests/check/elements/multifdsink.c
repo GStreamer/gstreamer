@@ -869,7 +869,7 @@ GST_START_TEST (test_client_kick)
   gint i, initial_buffers = 3, num_buffers = 0;
 
   sink = setup_multifdsink ();
-  g_object_set (sink, "units-max", initial_buffers, NULL);
+  g_object_set (sink, "units-max", (gint64) initial_buffers, NULL);
 
   fail_if (pipe (pfd1) == -1);
   fail_if (pipe (pfd2) == -1);
