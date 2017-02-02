@@ -666,6 +666,7 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   if (self->audio_flush_flag || self->shutdown_flag) {
     GST_DEBUG_OBJECT (self, "Shutting down, ignoring frame");
     gst_buffer_unref (inbuf);
+    g_mutex_unlock (&self->mutex);
     return GST_FLOW_FLUSHING;
   }
   duration =
