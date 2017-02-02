@@ -263,6 +263,28 @@ gst_wl_window_resize_video_surface (GstWlWindow * window, gboolean commit)
   window->video_rectangle = res;
 }
 
+static void
+gst_wl_window_set_opaque (GstWlWindow * window, const GstVideoInfo * info)
+{
+  struct wl_region *region;
+
+  /* Set area opaque */
+  region = wl_compositor_create_region (window->display->compositor);
+  wl_region_add (region, 0, 0, window->render_rectangle.w,
+      window->render_rectangle.h);
+  wl_surface_set_opaque_region (window->area_surface, region);
+  wl_region_destroy (region);
+
+  if (!GST_VIDEO_INFO_HAS_ALPHA (info)) {
+    /* Set video opaque */
+    region = wl_compositor_create_region (window->display->compositor);
+    wl_region_add (region, 0, 0, window->render_rectangle.w,
+        window->render_rectangle.h);
+    wl_surface_set_opaque_region (window->video_surface, region);
+    wl_region_destroy (region);
+  }
+}
+
 void
 gst_wl_window_render (GstWlWindow * window, GstWlBuffer * buffer,
     const GstVideoInfo * info)
@@ -274,6 +296,7 @@ gst_wl_window_render (GstWlWindow * window, GstWlBuffer * buffer,
 
     wl_subsurface_set_sync (window->video_subsurface);
     gst_wl_window_resize_video_surface (window, FALSE);
+    gst_wl_window_set_opaque (window, info);
   }
 
   if (G_LIKELY (buffer))
