@@ -559,7 +559,9 @@ GST_START_TEST (test_live_playlist_rotated)
 
   ret = gst_m3u8_update (pl, g_strdup (LIVE_ROTATED_PLAYLIST));
   assert_equals_int (ret, TRUE);
-  gst_m3u8_get_next_fragment (pl, TRUE, NULL, NULL);
+  file = gst_m3u8_get_next_fragment (pl, TRUE, NULL, NULL);
+  fail_unless (file != NULL);
+  gst_m3u8_media_file_unref (file);
 
   /* FIXME: Sequence should last - 3. Should it? */
   assert_equals_int (pl->sequence, 3001);
@@ -798,6 +800,7 @@ GST_START_TEST (test_get_next_fragment)
   assert_equals_uint64 (mf->duration, 10 * GST_SECOND);
   assert_equals_uint64 (mf->offset, 100);
   assert_equals_uint64 (mf->offset + mf->size, 1100);
+  gst_m3u8_media_file_unref (mf);
 
   gst_m3u8_advance_fragment (pl, TRUE);
 
@@ -810,6 +813,7 @@ GST_START_TEST (test_get_next_fragment)
   assert_equals_uint64 (mf->duration, 10 * GST_SECOND);
   assert_equals_uint64 (mf->offset, 1000);
   assert_equals_uint64 (mf->offset + mf->size, 2000);
+  gst_m3u8_media_file_unref (mf);
 
   gst_m3u8_advance_fragment (pl, TRUE);
 
@@ -821,6 +825,7 @@ GST_START_TEST (test_get_next_fragment)
   assert_equals_uint64 (mf->duration, 10 * GST_SECOND);
   assert_equals_uint64 (mf->offset, 2000);
   assert_equals_uint64 (mf->offset + mf->size, 3000);
+  gst_m3u8_media_file_unref (mf);
 
   gst_hls_master_playlist_unref (master);
 }
