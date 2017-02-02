@@ -299,7 +299,7 @@ static GstFlowReturn gst_rtp_session_sync_rtcp (RTPSession * sess,
 static gint gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
     gpointer user_data);
 static void gst_rtp_session_reconsider (RTPSession * sess, gpointer user_data);
-static void gst_rtp_session_request_key_unit (RTPSession * sess,
+static void gst_rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc,
     gboolean all_headers, gpointer user_data);
 static GstClockTime gst_rtp_session_request_time (RTPSession * session,
     gpointer user_data);
@@ -2647,7 +2647,7 @@ wrong_pad:
 
 static void
 gst_rtp_session_request_key_unit (RTPSession * sess,
-    gboolean all_headers, gpointer user_data)
+    guint32 ssrc, gboolean all_headers, gpointer user_data)
 {
   GstRtpSession *rtpsession = GST_RTP_SESSION (user_data);
   GstEvent *event;
@@ -2660,7 +2660,7 @@ gst_rtp_session_request_key_unit (RTPSession * sess,
 
   if (send_rtp_sink) {
     event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
-        gst_structure_new ("GstForceKeyUnit",
+        gst_structure_new ("GstForceKeyUnit", "ssrc", G_TYPE_UINT, ssrc,
             "all-headers", G_TYPE_BOOLEAN, all_headers, NULL));
     gst_pad_push_event (send_rtp_sink, event);
     gst_object_unref (send_rtp_sink);

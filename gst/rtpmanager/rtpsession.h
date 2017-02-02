@@ -120,6 +120,7 @@ typedef void (*RTPSessionReconsider) (RTPSession *sess, gpointer user_data);
 /**
  * RTPSessionRequestKeyUnit:
  * @sess: an #RTPSession
+ * @ssrc: SSRC of the source related to the key unit request
  * @all_headers: %TRUE if "all-headers" property should be set on the key unit
  *  request
  * @user_data: user data specified when registering
@@ -127,7 +128,7 @@ typedef void (*RTPSessionReconsider) (RTPSession *sess, gpointer user_data);
  * Asks the encoder to produce a key unit as soon as possibly within the
  * bandwidth constraints
  */
-typedef void (*RTPSessionRequestKeyUnit) (RTPSession *sess,
+typedef void (*RTPSessionRequestKeyUnit) (RTPSession *sess, guint32 ssrc,
     gboolean all_headers, gpointer user_data);
 
 /**
@@ -274,9 +275,6 @@ struct _RTPSession {
   gboolean      favor_new;
   GstClockTime  rtcp_feedback_retention_window;
   guint         rtcp_immediate_feedback_threshold;
-
-  GstClockTime last_keyframe_request;
-  gboolean     last_keyframe_all_headers;
 
   gboolean      is_doing_ptp;
 

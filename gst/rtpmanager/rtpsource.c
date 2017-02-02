@@ -301,6 +301,8 @@ rtp_source_init (RTPSource * src)
 
   src->reported_in_sr_of = g_hash_table_new (g_direct_hash, g_direct_equal);
 
+  src->last_keyframe_request = GST_CLOCK_TIME_NONE;
+
   rtp_source_reset (src);
 }
 
