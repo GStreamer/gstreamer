@@ -14,6 +14,6 @@ if launcher.found()
 
     test(test_name, launcher, args: ['-o', meson.build_root() + '/validate-launcher-output/',
       meson.current_source_dir() + '/test_validate.py', '--validate-tools-path',
-      meson.build_root() + '/validate/tools/'],
+      join_paths(meson.current_build_dir(), '..', '..', 'tools')],
       env: env)
 endif
