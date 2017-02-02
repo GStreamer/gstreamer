@@ -1114,6 +1114,8 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
   if (discont)
     stream->discont = TRUE;
 
+  gst_m3u8_media_file_unref (file);
+
   return GST_FLOW_OK;
 }
 

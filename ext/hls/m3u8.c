@@ -1182,9 +1182,12 @@ gst_hls_media_unref (GstHLSMedia * media)
 {
   g_assert (media != NULL && media->ref_count > 0);
   if (g_atomic_int_dec_and_test (&media->ref_count)) {
+    if (media->playlist)
+      gst_m3u8_unref (media->playlist);
     g_free (media->group_id);
     g_free (media->name);
     g_free (media->uri);
+    g_free (media->lang);
     g_free (media);
   }
 }
@@ -1402,6 +1405,8 @@ gst_hls_master_playlist_unref (GstHLSMasterPlaylist * playlist)
         (GDestroyNotify) gst_hls_variant_stream_unref);
     g_list_free_full (playlist->iframe_variants,
         (GDestroyNotify) gst_hls_variant_stream_unref);
+    if (playlist->default_variant)
+      gst_hls_variant_stream_unref (playlist->default_variant);
     g_free (playlist->last_data);
     g_free (playlist);
   }
