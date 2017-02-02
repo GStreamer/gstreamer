@@ -8,7 +8,7 @@ Caps are exposed on `GstPadTemplates` to describe all possible types a
 given pad can handle. They are also stored in the registry along with a
 description of the element.
 
-Caps are exposed on the element pads via CAPS and `ACCEPT_CAPS` queries.
+Caps are exposed on the element pads via `CAPS` and `ACCEPT_CAPS` queries.
 
 This function describes the possible types that the pad can handle or
 produce ([negotiation](design/negotiation.md)).
@@ -49,8 +49,8 @@ This is different to the intuitive mathematical definition as an empty field
 is defined to contain all possible values. This means that the empty field is
 always a superset of any other field.
 
-EMPTY caps are a subset of every other caps. Every caps are a subset of
-ANY caps.
+`EMPTY` caps are a subset of every other caps. Every caps are a subset of
+`ANY` caps.
 
 ### Equality
 
@@ -71,8 +71,8 @@ empty. If one structure contains a field that is not existing in the
 other structure it will be copied over to the intersection with the same
 value.
 
-The intersection with ANY caps is always the other caps and the
-intersection with EMPTY caps is always EMPTY.
+The intersection with `ANY` caps is always the other caps and the
+intersection with `EMPTY` caps is always `EMPTY`.
 
 ### Union
 
@@ -110,7 +110,7 @@ structure add additional constraints and/or information about the media
 type, like the width and height of a video frame, or the codec profile
 that is used. These fields can be non-fixed (e.g. ranges) for non-fixed
 caps but must be fixated to a fixed value during negotiation. If a field
-is included in the caps returned by a pad via the CAPS query, it imposes
+is included in the caps returned by a pad via the `CAPS` query, it imposes
 an additional constraint during negotiation. The caps in the end must
 have this field with a value that is a subset of the non-fixed value.
 Additional fields that are added in the negotiated caps give additional
@@ -124,10 +124,10 @@ specific structure, and only structures with the same name *and* equal
 caps features are considered compatible. Caps features can be used to
 require a specific memory representation or a specific meta to be set on
 buffers, for example a pad could require for a specific structure that
-it is passed EGLImage memory or buffers with the video meta. If no caps
+it is passed `EGLImage` memory or buffers with the video meta. If no caps
 features are provided for a structure, it is assumed that system memory
-is required unless later negotiation steps (e.g. the ALLOCATION query)
-detect that something else can be used. The special ANY caps features
+is required unless later negotiation steps (e.g. the `ALLOCATION` query)
+detect that something else can be used. The special `ANY` caps features
 can be used to specify that any caps feature would be accepted, for
 example if the buffer memory is not touched at all.
 
@@ -142,4 +142,4 @@ pad’s caps but pads can introduce additional constraints which would
 be checked in the `ACCEPT_CAPS` query handler.
 
 Data flow can only happen after pads have decided on common fixed caps.
-These caps are distributed to both pads with the CAPS event.
+These caps are distributed to both pads with the `CAPS` event.
