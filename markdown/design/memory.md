@@ -50,13 +50,16 @@ of `GstObject` and can be subclassed to make custom allocators.
 struct _GstAllocator {
   GstObject                 object;
 
-  const gchar              *mem_type;
+  const gchar               *mem_type;
 
-  GstMemoryMapFunction      mem_map;
-  GstMemoryUnmapFunction    mem_unmap;
-  GstMemoryCopyFunction     mem_copy;
-  GstMemoryShareFunction    mem_share;
-  GstMemoryIsSpanFunction   mem_is_span;
+  GstMemoryMapFunction       mem_map;
+  GstMemoryUnmapFunction     mem_unmap;
+  GstMemoryCopyFunction      mem_copy;
+  GstMemoryShareFunction     mem_share;
+  GstMemoryIsSpanFunction    mem_is_span;
+
+  GstMemoryMapFullFunction   mem_map_full;
+  GstMemoryUnmapFullFunction mem_unmap_full;
 };
 ```
 
