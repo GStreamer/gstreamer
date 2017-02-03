@@ -210,7 +210,7 @@ standard fields are initialized as usual. A memory area that is bigger
 than the structure size is allocated for the buffer metadata.
 
 ``` c
-    gst_buffer_new ();
+gst_buffer_new ();
 ```
 
 After creating a buffer, the application can set caps and add metadata
@@ -224,8 +224,8 @@ public `_get_info()` method from a shared library (for shared metadata).
 The following defines can usually be found in the shared .h file.
 
 ``` c
-    GstMetaInfo * gst_meta_timing_get_info();
-    #define GST_META_TIMING_INFO  (gst_meta_timing_get_info())
+GstMetaInfo * gst_meta_timing_get_info();
+#define GST_META_TIMING_INFO  (gst_meta_timing_get_info())
 ```
 
 Adding metadata to a buffer can be done with the
@@ -240,54 +240,54 @@ metadata conforming to the API specified in the given info. When no such
 metadata exists, the function will return NULL.
 
 ``` c
-    GstMetaTiming *timing;
+GstMetaTiming *timing;
 
-    timing = gst_buffer_get_meta (buffer, GST_META_TIMING_INFO);
+timing = gst_buffer_get_meta (buffer, GST_META_TIMING_INFO);
 ```
 
 Once a reference to the info has been obtained, the associated metadata
 can be added or modified on a buffer.
 
 ``` c
-    timing->timestamp = 0;
-    timing->duration = 20 * GST_MSECOND;
+timing->timestamp = 0;
+timing->duration = 20 * GST_MSECOND;
 ```
 
 Other convenience macros can be made to simplify the above code:
 
 ``` c
-    #define gst_buffer_get_meta_timing(b) \
-       ((GstMetaTiming *) gst_buffer_get_meta ((b), GST_META_TIMING_INFO)
+#define gst_buffer_get_meta_timing(b) \
+   ((GstMetaTiming *) gst_buffer_get_meta ((b), GST_META_TIMING_INFO)
 ```
 
 This makes the code look like this:
 
 ``` c
-    GstMetaTiming *timing;
+GstMetaTiming *timing;
 
-    timing = gst_buffer_get_meta_timing (buffer);
-    timing->timestamp = 0;
-    timing->duration = 20 * GST_MSECOND;
+timing = gst_buffer_get_meta_timing (buffer);
+timing->timestamp = 0;
+timing->duration = 20 * GST_MSECOND;
 ```
 
 To iterate the different metainfo structures, one can use the
 `gst_buffer_meta_get_next()` methods.
 
 ``` c
-    GstMeta *current = NULL;
+GstMeta *current = NULL;
 
-    /* passing NULL gives the first entry */
-    current = gst_buffer_meta_get_next (buffer, current);
+/* passing NULL gives the first entry */
+current = gst_buffer_meta_get_next (buffer, current);
 
-    /* passing a GstMeta returns the next */
-    current = gst_buffer_meta_get_next (buffer, current);
+/* passing a GstMeta returns the next */
+current = gst_buffer_meta_get_next (buffer, current);
 ```
 
 ## Memory management
 
 ### allocation
 
-We initially allocate a reasonable sized GstBuffer structure (say 512 bytes).
+We initially allocate a reasonable sized `GstBuffer` structure (say 512 bytes).
 
 Since the complete buffer structure, including a large area for metadata, is
 allocated in one go, we can reduce the number of memory allocations while still
@@ -304,8 +304,8 @@ NONE in the MetaTiming structures.
 The init/free functions can also be used to implement refcounting for a metadata
 structure. This can be useful when a structure is shared between buffers.
 
-When the `free_size` of the `GstBuffer` is exhausted, we will allocate new memory
-for each newly added Meta and use the next pointers to point to this. It
+When the `free_size` of the `GstBuffer` is exhausted, we will allocate new
+memory for each newly added Meta and use the next pointers to point to this. It
 is expected that this does not occur often and we might be able to optimize
 this transparently in the future.
 
