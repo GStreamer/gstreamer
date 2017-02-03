@@ -61,7 +61,7 @@ struct _GstCAOpenGLLayerSink
     GstBuffer *next_buffer;
     GstBuffer *next_sync;
 
-    GstGLCAOpenGLLayer *layer;
+    gpointer layer;
 
     gboolean keep_aspect_ratio;
 

@@ -121,8 +121,6 @@ static GstBusSyncReply create_window (GstBus* bus, GstMessage* message, MainWind
 
 static void end_stream_cb(GstBus* bus, GstMessage* message, MainWindow* window)
 {
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
   g_print ("end of stream\n");
 
   gst_element_set_state ([window pipeline], GST_STATE_NULL);
@@ -130,8 +128,6 @@ static void end_stream_cb(GstBus* bus, GstMessage* message, MainWindow* window)
   g_main_loop_quit ([window loop]);
 
   [window performSelectorOnMainThread:@selector(customClose) withObject:nil waitUntilDone:YES];
-
-  [pool release];
 }
 
 static gpointer thread_func (MainWindow* window)
@@ -162,11 +158,9 @@ int main(int argc, char **argv)
   gboolean ok=FALSE;
   GstBus *bus=NULL;
   GThread *loop_thread=NULL;
-  NSAutoreleasePool *pool=nil;
   NSRect rect;
   MainWindow *window=nil;
 
-  pool = [[NSAutoreleasePool alloc] init];
   [NSApplication sharedApplication];
 
   g_print("app created\n");
@@ -202,14 +196,15 @@ int main(int argc, char **argv)
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_add_signal_watch (bus);
-  g_signal_connect(bus, "message::error", G_CALLBACK(end_stream_cb), window);
-  g_signal_connect(bus, "message::warning", G_CALLBACK(end_stream_cb), window);
-  g_signal_connect(bus, "message::eos", G_CALLBACK(end_stream_cb), window);
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, window, NULL);
+  /* NOTE: window is not bridge_retained because its lifetime is just this function */
+  g_signal_connect(bus, "message::error", G_CALLBACK(end_stream_cb), (__bridge gpointer)window);
+  g_signal_connect(bus, "message::warning", G_CALLBACK(end_stream_cb), (__bridge gpointer)window);
+  g_signal_connect(bus, "message::eos", G_CALLBACK(end_stream_cb), (__bridge gpointer)window);
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, (__bridge gpointer)window, NULL);
   gst_object_unref (bus);
 
   loop_thread = g_thread_new (NULL,
-      (GThreadFunc) thread_func, window);
+      (GThreadFunc) thread_func, (__bridge gpointer)window);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
@@ -224,10 +219,6 @@ int main(int argc, char **argv)
   }
 
   g_thread_join (loop_thread);
-
-  [window release];
-
-  [pool release];
 
   return 0;
 }

@@ -46,10 +46,10 @@ static GstGLPlatform gst_gl_context_eagl_get_gl_platform (GstGLContext *
 
 struct _GstGLContextEaglPrivate
 {
-  EAGLContext *eagl_context;
+  gpointer eagl_context;
 
   /* Used if we render to a window */
-  CAEAGLLayer *eagl_layer;
+  gpointer eagl_layer;
   GLuint framebuffer;
   GLuint color_renderbuffer;
   GLuint depth_renderbuffer;
@@ -106,7 +106,7 @@ gst_gl_context_eagl_resize (GstGLContextEagl * eagl_context)
   int width, height;
 
   glBindRenderbuffer (GL_RENDERBUFFER, eagl_context->priv->color_renderbuffer);
-  [eagl_context->priv->eagl_context renderbufferStorage:GL_RENDERBUFFER fromDrawable:eagl_context->priv->eagl_layer];
+  [GS_GL_CONTEXT_EAGL_CONTEXT(eagl_context) renderbufferStorage:GL_RENDERBUFFER fromDrawable:GS_GL_CONTEXT_EAGL_LAYER(eagl_context)];
   glGetRenderbufferParameteriv (GL_RENDERBUFFER,
       GL_RENDERBUFFER_WIDTH, &width);
   glGetRenderbufferParameteriv (GL_RENDERBUFFER,
@@ -126,7 +126,7 @@ gst_gl_context_eagl_release_layer (GstGLContext * context)
   if (context_eagl->priv->eagl_layer) {
     gst_gl_context_eagl_activate (context, TRUE);
 
-    [context_eagl->priv->eagl_context renderbufferStorage: GL_RENDERBUFFER fromDrawable:nil];
+    [GS_GL_CONTEXT_EAGL_CONTEXT(context_eagl) renderbufferStorage: GL_RENDERBUFFER fromDrawable:nil];
 
     glDeleteFramebuffers (1, &context_eagl->priv->framebuffer);
     context_eagl->priv->framebuffer = 0;
@@ -156,7 +156,7 @@ gst_gl_context_eagl_update_layer (GstGLContext * context)
   UIView *window_handle = nil;
   GstGLWindow *window = gst_gl_context_get_window (context);
   if (window)
-    window_handle = (UIView *) gst_gl_window_get_window_handle (window);
+    window_handle = (__bridge UIView *)((void *)gst_gl_window_get_window_handle (window));
 
   if (!window_handle) {
     GST_INFO_OBJECT (context, "window handle not set yet, not updating layer");
@@ -170,7 +170,7 @@ gst_gl_context_eagl_update_layer (GstGLContext * context)
     gst_gl_context_eagl_release_layer (context);
 
   eagl_layer = (CAEAGLLayer *)[window_handle layer];
-  [EAGLContext setCurrentContext:priv->eagl_context];
+  [EAGLContext setCurrentContext:GS_GL_CONTEXT_EAGL_CONTEXT(context_eagl)];
 
   /* Allocate framebuffer */
   glGenFramebuffers (1, &framebuffer);
@@ -178,7 +178,7 @@ gst_gl_context_eagl_update_layer (GstGLContext * context)
   /* Allocate color render buffer */
   glGenRenderbuffers (1, &color_renderbuffer);
   glBindRenderbuffer (GL_RENDERBUFFER, color_renderbuffer);
-  [priv->eagl_context renderbufferStorage: GL_RENDERBUFFER fromDrawable:eagl_layer];
+  [GS_GL_CONTEXT_EAGL_CONTEXT(context_eagl) renderbufferStorage: GL_RENDERBUFFER fromDrawable:eagl_layer];
   glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       GL_RENDERBUFFER, color_renderbuffer);
   /* Get renderbuffer width/height */
@@ -203,7 +203,7 @@ gst_gl_context_eagl_update_layer (GstGLContext * context)
   glBindRenderbuffer (GL_RENDERBUFFER, 0);
   glBindFramebuffer (GL_FRAMEBUFFER, 0);
 
-  priv->eagl_layer = eagl_layer;
+  priv->eagl_layer = (__bridge_retained gpointer)eagl_layer;
   priv->framebuffer = framebuffer;
   priv->color_renderbuffer = color_renderbuffer;
   priv->depth_renderbuffer = depth_renderbuffer;
@@ -222,16 +222,16 @@ gst_gl_context_eagl_create_context (GstGLContext * context, GstGLAPI gl_api,
   EAGLSharegroup *share_group;
 
   if (other_context) {
-    EAGLContext *external_gl_context = (EAGLContext *)
+    EAGLContext *external_gl_context = (__bridge EAGLContext *)(void *)
         gst_gl_context_get_gl_context (other_context);
     share_group = [external_gl_context sharegroup];
   } else {
     share_group = nil;
   }
 
-  priv->eagl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3 sharegroup:share_group];
+  priv->eagl_context = (__bridge_retained gpointer)[[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3 sharegroup:share_group];
   if (!priv->eagl_context) {
-    priv->eagl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2 sharegroup:share_group];
+    priv->eagl_context = (__bridge_retained gpointer)[[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2 sharegroup:share_group];
   }
   if (!priv->eagl_context) {
     g_set_error_literal (error, GST_GL_CONTEXT_ERROR,
@@ -239,9 +239,6 @@ gst_gl_context_eagl_create_context (GstGLContext * context, GstGLAPI gl_api,
         "Failed to create OpenGL ES context");
     return FALSE;
   }
-
-  if (share_group)
-    [share_group release];
 
   priv->eagl_layer = NULL;
   priv->framebuffer = 0;
@@ -266,8 +263,8 @@ gst_gl_context_eagl_destroy_context (GstGLContext * context)
 
   gst_gl_context_eagl_release_layer (context);
 
-  [context_eagl->priv->eagl_context release];
-  context_eagl->priv->eagl_context = nil;
+  CFRelease(context_eagl->priv->eagl_context);
+  context_eagl->priv->eagl_context = NULL;
 }
 
 static gboolean
@@ -284,7 +281,7 @@ gst_gl_context_eagl_choose_format (GstGLContext * context, GError ** error)
     return TRUE;
 
   if (window)
-    window_handle = (UIView *) gst_gl_window_get_window_handle (window);
+    window_handle = (__bridge UIView *)(void *)gst_gl_window_get_window_handle (window);
 
   if (!window_handle) {
     gst_object_unref (window);
@@ -341,7 +338,7 @@ gst_gl_context_eagl_swap_buffers (GstGLContext * context)
   if (!context_eagl->priv->eagl_layer)
     return;
 
-  [context_eagl->priv->eagl_context presentRenderbuffer:GL_RENDERBUFFER];
+  [GS_GL_CONTEXT_EAGL_CONTEXT(context_eagl) presentRenderbuffer:GL_RENDERBUFFER];
 }
 
 static gboolean
@@ -360,7 +357,7 @@ gst_gl_context_eagl_activate (GstGLContext * context, gboolean activate)
     }
 
     GST_DEBUG ("Attaching context to thread %p", g_thread_self ());
-    if ([EAGLContext setCurrentContext:context_eagl->priv->eagl_context] == NO) {
+    if ([EAGLContext setCurrentContext:GS_GL_CONTEXT_EAGL_CONTEXT(context_eagl)] == NO) {
       GST_ERROR ("Couldn't make context current");
       return FALSE;
     }

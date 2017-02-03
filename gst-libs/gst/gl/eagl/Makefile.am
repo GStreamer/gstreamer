@@ -21,6 +21,7 @@ libgstgl_eagl_la_CFLAGS = \
 libgstgl_eagl_la_OBJCFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_builddir)/gst-libs \
+	-fobj-arc \
 	$(GL_CFLAGS) \
 	$(GL_OBJCFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
