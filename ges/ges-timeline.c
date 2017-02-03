@@ -1730,6 +1730,7 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
       g_list_free (moved_clips);
       _set_start0 (GES_TIMELINE_ELEMENT (obj), position);
 
+      moved_clips = NULL;
       if (timeline->priv->needs_rollback && !timeline->priv->rolling_back) {
         timeline->priv->rolling_back = TRUE;
         for (tmp = mv_ctx->moving_trackelements; tmp; tmp = tmp->next) {
@@ -1745,6 +1746,7 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
 
         }
         g_list_free (moved_clips);
+        moved_clips = NULL;
         _set_start0 (GES_TIMELINE_ELEMENT (obj), position - offset);
 
         ges_timeline_emit_snappig (timeline, obj, NULL);
