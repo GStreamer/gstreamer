@@ -569,7 +569,7 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
   /* enable direct rendering if downstream requests raw video */
   if (caps && gst_caps_is_video_raw (caps)) {
     if (plugin->srcpad_can_dmabuf) {
-      if (GST_IS_BASE_TRANSFORM (plugin)) {
+      if (GST_IS_VIDEO_DECODER (plugin) || GST_IS_BASE_TRANSFORM (plugin)) {
         plugin->srcpad_allocator =
             gst_vaapi_dmabuf_allocator_new (plugin->display, vinfo, 0,
             GST_PAD_SRC);
