@@ -12,13 +12,13 @@ multimedia data passed around in the pipeline.
 
 ## Memory layout
 
-`GstMemory` manages a memory region. The accessible part of the managed region is
-defined by an offset relative to the start of the region and a size. This
+`GstMemory` manages a memory region. The accessible part of the managed region
+is defined by an offset relative to the start of the region and a size. This
 means that the managed region can be larger than what is visible to the user of
 `GstMemory` API.
 
-Schematically, `GstMemory` has a pointer to a memory region of _maxsize_. The area
-starting from `offset` and `size` is accessible.
+Schematically, `GstMemory` has a pointer to a memory region of _maxsize_. The
+area starting from `offset` and `size` is accessible.
 
 ```
            memory
@@ -32,13 +32,13 @@ GstMemory  ->*----------------------------------------------------*
 The current properties of the accessible memory can be retrieved with:
 
 ``` c
-    gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *offset, gsize *maxsize);
+gsize gst_memory_get_sizes (GstMemory *mem, gsize *offset, gsize *maxsize);
 ```
 
 The offset and size can be changed with:
 
 ``` c
-    void        gst_memory_resize     (GstMemory *mem, gssize offset, gsize size);
+void  gst_memory_resize (GstMemory *mem, gssize offset, gsize size);
 ```
 
 ## Allocators
@@ -79,9 +79,8 @@ GStreamer system. This way, the allocator can be retrieved by name.
 After an allocator is created, new `GstMemory` can be created with
 
 ``` c
-    GstMemory * gst_allocator_alloc (const GstAllocator * allocator,
-                                     gsize size,
-                                     GstAllocationParams *params);
+GstMemory * gst_allocator_alloc (const GstAllocator * allocator,
+                                 gsize size, GstAllocationParams *params);
 ```
 
 `GstAllocationParams` contain extra info such as flags, alignment, prefix and
@@ -99,11 +98,11 @@ It is also possible to create a new `GstMemory` object that wraps existing
 memory with:
 
 ``` c
-    GstMemory * gst_memory_new_wrapped  (GstMemoryFlags flags,
-                                         gpointer data, gsize maxsize,
-                                         gsize offset, gsize size,
-                                         gpointer user_data,
-                                         GDestroyNotify notify);
+GstMemory * gst_memory_new_wrapped  (GstMemoryFlags flags,
+                                     gpointer data, gsize maxsize,
+                                     gsize offset, gsize size,
+                                     gpointer user_data,
+                                     GDestroyNotify notify);
 ```
 
 ## Lifecycle
@@ -131,16 +130,16 @@ After the data has been accessed in the object, the `unmap()` call must be
 performed, which will unlock the memory again.
 
 It is allowed to recursively map multiple times with the same or narrower
-access modes. For each of the map calls, a corresponding unmap call needs to
-be made. WRITE-only memory cannot be mapped in READ mode and READ-only memory
-cannot be mapped in WRITE mode.
+access modes. For each of the `map()` calls, a corresponding `unmap()` call
+needs to be made. WRITE-only memory cannot be mapped in READ mode and
+READ-only memory cannot be mapped in WRITE mode.
 
-The memory pointer returned from the map call is guaranteed to remain valid in
-the requested mapping mode until the corresponding unmap call is performed on
-the pointer.
+The memory pointer returned from the `map()` call is guaranteed to remain
+valid in the requested mapping mode until the corresponding `unmap()` call is
+performed on the pointer.
 
-When multiple map operations are nested and return the same pointer, the pointer
-is valid until the last unmap call is done.
+When multiple `map()` operations are nested and return the same pointer, the
+pointer is valid until the last `unmap()` call is done.
 
 When the final reference on a memory object is dropped, all outstanding
 mappings should have been unmapped.
