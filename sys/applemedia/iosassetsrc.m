@@ -52,12 +52,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_ios_asset_src_debug);
 
 
 #define DEFAULT_BLOCKSIZE       4*1024
-#define OBJC_CALLOUT_BEGIN() \
-   NSAutoreleasePool *pool; \
-   \
-   pool = [[NSAutoreleasePool alloc] init]
-#define OBJC_CALLOUT_END() \
-  [pool release]
 
 enum
 {
@@ -142,25 +136,22 @@ gst_ios_asset_src_class_init (GstIOSAssetSrcClass * klass)
 static void
 gst_ios_asset_src_init (GstIOSAssetSrc * src)
 {
-  OBJC_CALLOUT_BEGIN ();
   src->uri = NULL;
   src->asset = NULL;
-  src->library = [[[GstAssetsLibrary alloc] init] retain];
+  src->library = (__bridge_retained gpointer)[[GstAssetsLibrary alloc] init];
   gst_base_src_set_blocksize (GST_BASE_SRC (src), DEFAULT_BLOCKSIZE);
-  OBJC_CALLOUT_END ();
 }
 
 static void
 gst_ios_asset_src_free_resources (GstIOSAssetSrc *src)
 {
-  OBJC_CALLOUT_BEGIN ();
   if (src->asset != NULL) {
-    [src->asset release];
+    CFBridgingRelease(src->asset);
     src->asset = NULL;
   }
 
   if (src->url != NULL) {
-    [src->url release];
+    CFBridgingRelease(src->url);
     src->url = NULL;
   }
 
@@ -168,7 +159,6 @@ gst_ios_asset_src_free_resources (GstIOSAssetSrc *src)
     g_free (src->uri);
     src->uri = NULL;
   }
-  OBJC_CALLOUT_END ();
 }
 
 static void
@@ -176,12 +166,10 @@ gst_ios_asset_src_finalize (GObject * object)
 {
   GstIOSAssetSrc *src;
 
-  OBJC_CALLOUT_BEGIN ();
   src = GST_IOS_ASSET_SRC (object);
   gst_ios_asset_src_free_resources (src);
-  [src->library release];
+  CFBridgingRelease(src->library);
 
-  OBJC_CALLOUT_END ();
   G_OBJECT_CLASS (gst_ios_asset_src_parent_class)->finalize (object);
 }
 
@@ -192,7 +180,6 @@ gst_ios_asset_src_set_uri (GstIOSAssetSrc * src, const gchar * uri, GError **err
   NSString *nsuristr;
   NSURL *url;
 
-  OBJC_CALLOUT_BEGIN ();
   /* the element must be stopped in order to do this */
   GST_OBJECT_LOCK (src);
   state = GST_STATE (src);
@@ -213,11 +200,10 @@ gst_ios_asset_src_set_uri (GstIOSAssetSrc * src, const gchar * uri, GError **err
   }
 
   GST_INFO_OBJECT (src, "URI      : %s", src->uri);
-  src->url = url;
+  src->url = (__bridge_retained gpointer)url;
   src->uri = g_strdup (uri);
   g_object_notify (G_OBJECT (src), "uri");
 
-  OBJC_CALLOUT_END ();
   return TRUE;
 
   /* ERROR */
@@ -229,7 +215,6 @@ wrong_state:
         "Changing the 'uri' property on iosassetsrc when an asset is "
         "open is not supported.");
     GST_OBJECT_UNLOCK (src);
-    OBJC_CALLOUT_END ();
     return FALSE;
   }
 }
@@ -285,7 +270,6 @@ gst_ios_asset_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
   GstFlowReturn ret;
   GstIOSAssetSrc *src = GST_IOS_ASSET_SRC (basesrc);
 
-  OBJC_CALLOUT_BEGIN ();
   buf = gst_buffer_new_and_alloc (length);
   if (G_UNLIKELY (buf == NULL && length > 0)) {
     GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", length);
@@ -296,10 +280,10 @@ gst_ios_asset_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
   gst_buffer_map (buf, &info, GST_MAP_READWRITE);
 
   /* No need to read anything if length is 0 */
-  bytes_read = [src->asset getBytes: info.data
-                           fromOffset:offset
-                           length:length
-                           error:&err];
+  bytes_read = [GST_IOS_ASSET_SRC_ASSET(src) getBytes: info.data
+      fromOffset:offset
+          length:length
+           error:&err];
   if (G_UNLIKELY (err != NULL)) {
     goto could_not_read;
   }
@@ -333,7 +317,6 @@ could_not_read:
   }
 exit:
   {
-    OBJC_CALLOUT_END ();
     return ret;
   }
 
@@ -374,9 +357,7 @@ gst_ios_asset_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 
   src = GST_IOS_ASSET_SRC (basesrc);
 
-  OBJC_CALLOUT_BEGIN ();
-  *size = (guint64) [src->asset size];
-  OBJC_CALLOUT_END ();
+  *size = (guint64) [GST_IOS_ASSET_SRC_ASSET(src) size];
   return TRUE;
 }
 
@@ -386,8 +367,7 @@ gst_ios_asset_src_start (GstBaseSrc * basesrc)
   GstIOSAssetSrc *src = GST_IOS_ASSET_SRC (basesrc);
   gboolean ret = TRUE;
 
-  OBJC_CALLOUT_BEGIN ();
-  src->asset = [[src->library assetForURLSync: src->url] retain];
+  src->asset = (__bridge_retained gpointer)[GST_IOS_ASSET_SRC_LIBRARY(src) assetForURLSync: GST_IOS_ASSET_SRC_URL(src)];
 
   if (src->asset == NULL) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
@@ -396,7 +376,6 @@ gst_ios_asset_src_start (GstBaseSrc * basesrc)
     ret = FALSE;
   };
 
-  OBJC_CALLOUT_END ();
   return ret;
 }
 
@@ -406,9 +385,7 @@ gst_ios_asset_src_stop (GstBaseSrc * basesrc)
 {
   GstIOSAssetSrc *src = GST_IOS_ASSET_SRC (basesrc);
 
-  OBJC_CALLOUT_BEGIN ();
-  [src->asset release];
-  OBJC_CALLOUT_END ();
+  CFBridgingRelease(src->asset);
   return TRUE;
 }
 
@@ -480,24 +457,23 @@ gst_ios_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 
   dispatch_async(queue, ^{
     [self assetForURL:uri resultBlock:
-        ^(ALAsset *myasset)
-        {
-          self.asset = myasset;
-          self.result = [myasset defaultRepresentation];
+         ^(ALAsset *myasset)
+         {
+           self.asset = myasset;
+           self.result = [myasset defaultRepresentation];
 
-          dispatch_semaphore_signal(sema);
-        }
-      failureBlock:
-        ^(NSError *myerror)
-        {
-          self.result = nil;
-          dispatch_semaphore_signal(sema);
-        }
+           dispatch_semaphore_signal(sema);
+         }
+             failureBlock:
+         ^(NSError *myerror)
+         {
+           self.result = nil;
+           dispatch_semaphore_signal(sema);
+         }
     ];
   });
 
   dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-  dispatch_release(sema);
 
   return self.result;
 }

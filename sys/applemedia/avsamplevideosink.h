@@ -42,6 +42,8 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AV_SAMPLE_VIDEO_SINK))
 #define GST_IS_AV_SAMPLE_VIDEO_SINK_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AV_SAMPLE_VIDEO_SINK))
+#define GST_AV_SAMPLE_VIDEO_SINK_LAYER(obj) \
+    ((__bridge AVSampleBufferDisplayLayer *)(obj->layer))
 
 typedef struct _GstAVSampleVideoSink GstAVSampleVideoSink;
 typedef struct _GstAVSampleVideoSinkClass GstAVSampleVideoSinkClass;
@@ -50,7 +52,9 @@ struct _GstAVSampleVideoSink
 {
     GstVideoSink video_sink;
 
-    AVSampleBufferDisplayLayer *layer;
+    /* NOTE: ARC no longer allows Objective-C pointers in structs. */
+    /* Instead, use gpointer with explicit __bridge_* calls */
+    gpointer layer;
 
     GstVideoInfo info;
 

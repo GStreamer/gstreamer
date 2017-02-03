@@ -45,10 +45,10 @@ typedef struct _ContextThreadData
 typedef struct _TextureWrapper
 {
 #if HAVE_IOS
-    CVOpenGLESTextureCacheRef *cache;
+    CVOpenGLESTextureCacheRef cache;
     CVOpenGLESTextureRef texture;
 #else
-    CVOpenGLTextureCacheRef *cache;
+    CVOpenGLTextureCacheRef cache;
     CVOpenGLTextureRef texture;
 #endif
 
@@ -69,7 +69,7 @@ gst_video_texture_cache_new (GstGLContext * ctx)
       CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
   CVOpenGLESTextureCacheCreate (kCFAllocatorDefault, (CFDictionaryRef) cache_attrs,
-      (CVEAGLContext) gst_gl_context_get_gl_context (ctx), NULL, &cache->cache);
+      (__bridge CVEAGLContext) (gpointer)gst_gl_context_get_gl_context (ctx), NULL, &cache->cache);
 #else
   gst_ios_surface_memory_init ();
 #if 0
@@ -199,7 +199,8 @@ _do_create_memory (GstGLContext * context, ContextThreadData * data)
 
 success: {
   TextureWrapper *texture_data = g_new(TextureWrapper, 1);
-  texture_data->cache = CFRetain(cache->cache);
+  CFRetain(cache->cache);
+  texture_data->cache = cache->cache;
   texture_data->texture = texture;
   gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
   memory = gst_apple_core_video_memory_new_wrapped (gpixbuf, plane, size);

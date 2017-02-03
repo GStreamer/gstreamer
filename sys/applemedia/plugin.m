@@ -56,7 +56,6 @@ enable_mt_mode (void)
 {
   NSThread * th = [[NSThread alloc] init];
   [th start];
-  [th release];
   g_assert ([NSThread isMultiThreaded]);
 }
 #endif

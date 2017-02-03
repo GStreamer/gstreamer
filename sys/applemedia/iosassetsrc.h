@@ -44,6 +44,12 @@ G_BEGIN_DECLS
 #define GST_IS_IOS_ASSET_SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_IOS_ASSET_SRC))
 #define GST_IOS_ASSET_SRC_CAST(obj) ((GstIOSAssetSrc*) obj)
+#define GST_IOS_ASSET_SRC_ASSET(obj) \
+  (__bridge ALAssetRepresentation *)(obj->asset)
+#define GST_IOS_ASSET_SRC_LIBRARY(obj) \
+  (__bridge GstAssetsLibrary *)(obj->library)
+#define GST_IOS_ASSET_SRC_URL(obj) \
+  (__bridge NSURL *)(obj->url)
 
 typedef struct _GstIOSAssetSrc GstIOSAssetSrc;
 typedef struct _GstIOSAssetSrcClass GstIOSAssetSrcClass;
@@ -68,9 +74,12 @@ struct _GstIOSAssetSrc {
 
   /*< private >*/
   gchar * uri;                    /* asset uri */
-  NSURL * url;                    /* asset url */
-  ALAssetRepresentation * asset;  /* asset representation */
-  GstAssetsLibrary * library;     /* assets library */
+
+  /* NOTE: ARC no longer allows Objective-C pointers in structs. */
+  /* Instead, use gpointer with explicit __bridge_* calls */
+  gpointer url;                    /* asset url */
+  gpointer asset;  /* asset representation */
+  gpointer library;     /* assets library */
 };
 
 struct _GstIOSAssetSrcClass {

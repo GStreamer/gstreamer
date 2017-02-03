@@ -37,6 +37,8 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_AVF_ASSET_SRC \
   (gst_avf_asset_src_get_type())
+#define GST_AVF_ASSET_SRC_READER(obj) \
+  ((__bridge GstAVFAssetReader *)(obj->reader))
 #define GST_AVF_ASSET_SRC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AVF_ASSET_SRC,GstAVFAssetSrc))
 #define GST_AVF_ASSET_SRC_CLASS(klass) \
@@ -95,9 +97,9 @@ typedef enum
 - (void) start : (GError **) error;
 - (void) stop;
 - (void) seekTo: (guint64) start : (guint64) stop : (GError **) error;
-- (bool) hasMediaType: (GstAVFAssetReaderMediaType) type;
+- (BOOL) hasMediaType: (GstAVFAssetReaderMediaType) type;
 - (GstCaps *) getCaps: (GstAVFAssetReaderMediaType) type;
-- (bool) selectTrack: (GstAVFAssetReaderMediaType) type : (gint) index;
+- (BOOL) selectTrack: (GstAVFAssetReaderMediaType) type : (gint) index;
 - (GstBuffer *) nextBuffer:  (GstAVFAssetReaderMediaType) type : (GError **) error;
 @end
 
@@ -110,7 +112,10 @@ struct _GstAVFAssetSrc
   gint selected_video_track;
   gint selected_audio_track;
 
-  GstAVFAssetReader *reader;
+  /* NOTE: ARC no longer allows Objective-C pointers in structs. */
+  /* Instead, use gpointer with explicit __bridge_* calls */
+  gpointer reader;
+
   GstAVFAssetSrcState state;
   GMutex lock;
   GstEvent *seek_event;

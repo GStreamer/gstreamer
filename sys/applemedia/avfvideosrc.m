@@ -201,12 +201,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (void)finalize
 {
-  dispatch_release (mainQueue);
   mainQueue = NULL;
-  dispatch_release (workerQueue);
   workerQueue = NULL;
-
-  [super finalize];
 }
 
 - (BOOL)openDeviceInput
@@ -231,7 +227,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     device = [devices objectAtIndex:deviceIndex];
   }
   g_assert (device != nil);
-  [device retain];
 
   GST_INFO ("Opening '%s'", [[device localizedName] UTF8String]);
 
@@ -242,11 +237,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         ("Failed to open device: %s",
         [[err localizedDescription] UTF8String]),
         (NULL));
-    [device release];
     device = nil;
     return NO;
   }
-  [input retain];
   return YES;
 }
 
@@ -280,7 +273,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   }
   screenInput.capturesMouseClicks = captureScreenMouseClicks;
   input = screenInput;
-  [input retain];
   return YES;
 #endif
 }
@@ -337,17 +329,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     [session removeInput:input];
     [session removeOutput:output];
 
-    [session release];
     session = nil;
 
-    [input release];
     input = nil;
 
-    [output release];
     output = nil;
 
     if (!captureScreen) {
-      [device release];
       device = nil;
     }
 
@@ -457,7 +445,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     CMVideoDimensions dimensions;
 
     /* formatDescription can't be retrieved with valueForKey so use a selector here */
-    formatDescription = (CMFormatDescriptionRef) [f performSelector:@selector(formatDescription)];
+    formatDescription = (__bridge CMFormatDescriptionRef) [f performSelector:@selector(formatDescription)];
     dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
     for (NSObject *rate in [f valueForKey:@"videoSupportedFrameRateRanges"]) {
       int min_fps_n, min_fps_d, max_fps_n, max_fps_d;
@@ -529,7 +517,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       CMFormatDescriptionRef formatDescription;
       CMVideoDimensions dimensions;
 
-      formatDescription = (CMFormatDescriptionRef) [f performSelector:@selector(formatDescription)];
+      formatDescription = (__bridge CMFormatDescriptionRef) [f performSelector:@selector(formatDescription)];
       dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
       if (dimensions.width == info->width && dimensions.height == info->height) {
         found_format = TRUE;
@@ -805,9 +793,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   dispatch_sync (mainQueue, ^{ [session stopRunning]; });
   dispatch_sync (workerQueue, ^{});
 
-  [bufQueueLock release];
   bufQueueLock = nil;
-  [bufQueue release];
   bufQueue = nil;
 
   if (textureCache)
@@ -902,7 +888,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   if ([bufQueue count] == BUFFER_QUEUE_SIZE)
     [bufQueue removeLastObject];
 
-  [bufQueue insertObject:@{@"sbuf": (id)sampleBuffer,
+  [bufQueue insertObject:@{@"sbuf": (__bridge id)sampleBuffer,
                            @"timestamp": @(timestamp),
                            @"duration": @(duration)}
                  atIndex:0];
@@ -925,7 +911,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   }
 
   NSDictionary *dic = (NSDictionary *) [bufQueue lastObject];
-  sbuf = (CMSampleBufferRef) dic[@"sbuf"];
+  sbuf = (__bridge CMSampleBufferRef) dic[@"sbuf"];
   timestamp = (GstClockTime) [dic[@"timestamp"] longLongValue];
   duration = (GstClockTime) [dic[@"duration"] longLongValue];
   CFRetain (sbuf);
@@ -1224,28 +1210,16 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
       0, "iOS AVFoundation video source");
 }
 
-#define OBJC_CALLOUT_BEGIN() \
-  NSAutoreleasePool *pool; \
-  \
-  pool = [[NSAutoreleasePool alloc] init]
-#define OBJC_CALLOUT_END() \
-  [pool release]
-
-
 static void
 gst_avf_video_src_init (GstAVFVideoSrc * src)
 {
-  OBJC_CALLOUT_BEGIN ();
-  src->impl = [[GstAVFVideoSrcImpl alloc] initWithSrc:GST_PUSH_SRC (src)];
-  OBJC_CALLOUT_END ();
+  src->impl = (__bridge_retained gpointer)[[GstAVFVideoSrcImpl alloc] initWithSrc:GST_PUSH_SRC (src)];
 }
 
 static void
 gst_avf_video_src_finalize (GObject * obj)
 {
-  OBJC_CALLOUT_BEGIN ();
-  [GST_AVF_VIDEO_SRC_IMPL (obj) release];
-  OBJC_CALLOUT_END ();
+  CFBridgingRelease(GST_AVF_VIDEO_SRC_CAST(obj)->impl);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -1320,9 +1294,7 @@ gst_avf_video_src_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
 
-  OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (element) changeState: transition];
-  OBJC_CALLOUT_END ();
 
   return ret;
 }
@@ -1332,9 +1304,7 @@ gst_avf_video_src_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
 {
   GstCaps *ret;
 
-  OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) getCaps];
-  OBJC_CALLOUT_END ();
 
   return ret;
 }
@@ -1344,9 +1314,7 @@ gst_avf_video_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
 {
   gboolean ret;
 
-  OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) setCaps:caps];
-  OBJC_CALLOUT_END ();
 
   return ret;
 }
@@ -1356,9 +1324,7 @@ gst_avf_video_src_start (GstBaseSrc * basesrc)
 {
   gboolean ret;
 
-  OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) start];
-  OBJC_CALLOUT_END ();
 
   return ret;
 }
@@ -1368,9 +1334,7 @@ gst_avf_video_src_stop (GstBaseSrc * basesrc)
 {
   gboolean ret;
 
-  OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) stop];
-  OBJC_CALLOUT_END ();
 
   return ret;
 }
@@ -1380,9 +1344,7 @@ gst_avf_video_src_query (GstBaseSrc * basesrc, GstQuery * query)
 {
   gboolean ret;
 
-  OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) query:query];
-  OBJC_CALLOUT_END ();
 
   return ret;
 }
@@ -1392,9 +1354,7 @@ gst_avf_video_src_unlock (GstBaseSrc * basesrc)
 {
   gboolean ret;
 
-  OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) unlock];
-  OBJC_CALLOUT_END ();
 
   return ret;
 }
@@ -1404,9 +1364,7 @@ gst_avf_video_src_unlock_stop (GstBaseSrc * basesrc)
 {
   gboolean ret;
 
-  OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) unlockStop];
-  OBJC_CALLOUT_END ();
 
   return ret;
 }
@@ -1416,9 +1374,7 @@ gst_avf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
 {
   GstFlowReturn ret;
 
-  OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (pushsrc) create: buf];
-  OBJC_CALLOUT_END ();
 
   return ret;
 }
@@ -1429,9 +1385,7 @@ gst_avf_video_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstCaps *ret;
 
-  OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (bsrc) fixate:caps];
-  OBJC_CALLOUT_END ();
 
   return ret;
 }
@@ -1442,9 +1396,7 @@ gst_avf_video_src_decide_allocation (GstBaseSrc * bsrc,
 {
   gboolean ret;
 
-  OBJC_CALLOUT_BEGIN ();
   ret = [GST_AVF_VIDEO_SRC_IMPL (bsrc) decideAllocation:query];
-  OBJC_CALLOUT_END ();
 
   return ret;
 }
@@ -1452,7 +1404,5 @@ gst_avf_video_src_decide_allocation (GstBaseSrc * bsrc,
 static void
 gst_avf_video_src_set_context (GstElement * element, GstContext * context)
 {
-  OBJC_CALLOUT_BEGIN ();
   [GST_AVF_VIDEO_SRC_IMPL (element) setContext:context];
-  OBJC_CALLOUT_END ();
 }

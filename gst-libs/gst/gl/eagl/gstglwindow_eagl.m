@@ -54,10 +54,10 @@ static void gst_gl_window_eagl_send_message_async (GstGLWindow * window,
 
 struct _GstGLWindowEaglPrivate
 {
-  UIView *view;
+  gpointer view;
   gint window_width, window_height;
   gint preferred_width, preferred_height;
-  dispatch_queue_t gl_queue;
+  gpointer gl_queue;
 };
 
 static void
@@ -88,14 +88,14 @@ gst_gl_window_eagl_init (GstGLWindowEagl * window)
 {
   window->priv = GST_GL_WINDOW_EAGL_GET_PRIVATE (window);
   window->priv->gl_queue =
-      dispatch_queue_create ("org.freedesktop.gstreamer.glwindow", NULL);
+      (__bridge_retained gpointer)dispatch_queue_create ("org.freedesktop.gstreamer.glwindow", NULL);
 }
 
 static void
 gst_gl_window_eagl_finalize (GObject * object)
 {
   GstGLWindowEagl *window = GST_GL_WINDOW_EAGL (object);
-  dispatch_release (window->priv->gl_queue);
+  CFRelease(window->priv->gl_queue);
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -128,7 +128,7 @@ gst_gl_window_eagl_set_window_handle (GstGLWindow * window, guintptr handle)
   window_eagl = GST_GL_WINDOW_EAGL (window);
   context = gst_gl_window_get_context (window);
 
-  window_eagl->priv->view = (UIView *) handle;
+  window_eagl->priv->view = (gpointer)handle;
   GST_INFO_OBJECT (context, "handle set, updating layer");
   gst_gl_context_eagl_update_layer (context);
 
@@ -159,10 +159,10 @@ gst_gl_window_eagl_send_message_async (GstGLWindow * window,
       destroy (data);
     gst_object_unref (context);
   } else {
-    dispatch_async (window_eagl->priv->gl_queue, ^{
+    dispatch_async ((__bridge dispatch_queue_t)(window_eagl->priv->gl_queue), ^{
       gst_gl_context_activate (context, TRUE);
-      gst_object_unref (context);
       callback (data);
+      gst_object_unref (context);
       if (destroy)
         destroy (data);
     });
@@ -184,7 +184,7 @@ draw_cb (gpointer data)
     CGSize size;
     CAEAGLLayer *eagl_layer;
 
-    eagl_layer = (CAEAGLLayer *)[window_eagl->priv->view layer];
+    eagl_layer = (CAEAGLLayer *)[GS_GL_WINDOW_EAGL_VIEW(window_eagl) layer];
     size = eagl_layer.frame.size;
 
     if (window->queue_resize || window_eagl->priv->window_width != size.width ||

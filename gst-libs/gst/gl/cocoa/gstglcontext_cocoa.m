@@ -174,7 +174,6 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
   GstGLAPI context_api = GST_GL_API_NONE;
   const GLint swapInterval = 1;
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   CGLPixelFormatObj fmt = NULL;
   CGLContextObj glContext;
   CGLPixelFormatAttribute attribs[] = {
@@ -274,7 +273,6 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
 
   if (window)
     gst_object_unref (window);
-  [pool release];
 
   return TRUE;
 
@@ -282,7 +280,6 @@ error:
   {
     if (window)
       gst_object_unref (window);
-    [pool release];
     return FALSE;
   }
 }

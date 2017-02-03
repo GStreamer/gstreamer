@@ -52,20 +52,18 @@ _init_debug (void)
     gst_object_unref (self->draw_context);
 
   GST_TRACE ("dealloc GstGLCAOpenGLLayer %p context %p", self, self->gst_gl_context);
-
-  [super dealloc];
 }
 
 static void
 _context_ready (gpointer data)
 {
-  GstGLCAOpenGLLayer *ca_layer = data;
+  GstGLCAOpenGLLayer *ca_layer = (__bridge GstGLCAOpenGLLayer *) data;
 
   g_atomic_int_set (&ca_layer->can_draw, 1);
 }
 
 - (id)initWithGstGLContext:(GstGLContextCocoa *)parent_gl_context {
-  [super init];
+  self = [super init];
 
   _init_debug();
 
@@ -75,7 +73,7 @@ _context_ready (gpointer data)
   self.needsDisplayOnBoundsChange = YES;
 
   gst_gl_window_send_message_async (GST_GL_CONTEXT (parent_gl_context)->window,
-      (GstGLWindowCB) _context_ready, self, NULL);
+      (GstGLWindowCB) _context_ready, (__bridge_retained gpointer)self, (GDestroyNotify)CFRelease);
 
   return self;
 }
@@ -177,7 +175,7 @@ _context_ready (gpointer data)
 - (void)setResizeCallback:(GstGLWindowResizeCB)cb data:(gpointer)data
       notify:(GDestroyNotify)notify {
   if (self->resize_notify)
-    self->resize_notify (self->resize_notify);
+    self->resize_notify (self->resize_data);
 
   self->resize_cb = cb;
   self->resize_data = data;

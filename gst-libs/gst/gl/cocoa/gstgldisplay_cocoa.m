@@ -48,7 +48,6 @@ static GCond nsapp_cond;
 static gboolean
 gst_gl_display_cocoa_nsapp_iteration (gpointer data)
 {
-  NSAutoreleasePool *pool = nil;
   NSEvent *event = nil;
 
   if (![NSThread isMainThread]) {
@@ -56,7 +55,6 @@ gst_gl_display_cocoa_nsapp_iteration (gpointer data)
     return FALSE;
   }
 
-  pool = [[NSAutoreleasePool alloc] init];
 
   while ((event = ([NSApp nextEventMatchingMask:NSAnyEventMask
       untilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]
@@ -64,16 +62,12 @@ gst_gl_display_cocoa_nsapp_iteration (gpointer data)
     [NSApp sendEvent:event];
   }
 
-  [pool release];
-
   return TRUE;
 }
 
 static void
 gst_gl_display_cocoa_open_and_attach_source (gpointer data)
 {
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
   if ([NSThread isMainThread]) {
     /* The sharedApplication class method initializes
      * the display environment and connects your program
@@ -89,8 +83,6 @@ gst_gl_display_cocoa_open_and_attach_source (gpointer data)
 
     GST_DEBUG ("NSApp iteration loop attached, id %d", nsapp_source_id);
   }
-
-  [pool release];
 }
 
 static gboolean
