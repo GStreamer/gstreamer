@@ -343,6 +343,26 @@ ges_uri_clip_asset_set_info (GESUriClipAsset * self, GstDiscovererInfo * info)
 }
 
 static void
+_set_meta_file_size (const gchar * uri, GESUriClipAsset * asset)
+{
+  GError *error = NULL;
+  GFileInfo *file_info;
+  guint64 file_size;
+
+  GESMetaContainer *container = GES_META_CONTAINER (asset);
+
+  file_info = g_file_query_info (g_file_new_for_uri (uri), "standard::size",
+      G_FILE_QUERY_INFO_NONE, NULL, &error);
+  if (!error) {
+    file_size = g_file_info_get_attribute_uint64 (file_info, "standard::size");
+    ges_meta_container_register_meta_uint64 (container, GES_META_READ_WRITE,
+        "file-size", file_size);
+  } else {
+    g_error_free (error);
+  }
+}
+
+static void
 _set_meta_foreach (const GstTagList * tags, const gchar * tag,
     GESMetaContainer * container)
 {
@@ -370,6 +390,8 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
   tags = gst_discoverer_info_get_tags (info);
   if (tags)
     gst_tag_list_foreach (tags, (GstTagForeachFunc) _set_meta_foreach, mfs);
+
+  _set_meta_file_size (uri, mfs);
 
   if (gst_discoverer_info_get_result (info) == GST_DISCOVERER_OK) {
     ges_uri_clip_asset_set_info (mfs, info);
@@ -545,6 +567,8 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
         "Stream %s discovering failed (error code: %d)", uri,
         gst_discoverer_info_get_result (info));
   }
+
+  _set_meta_file_size (uri, asset);
 
   ges_asset_cache_put (gst_object_ref (asset), NULL);
   ges_uri_clip_asset_set_info (asset, info);
