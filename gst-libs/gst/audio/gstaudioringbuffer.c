@@ -129,7 +129,9 @@ static const gchar *format_type_names[] = {
   "eac3",
   "dts",
   "aac mpeg2",
-  "aac mpeg4"
+  "aac mpeg4",
+  "aac mpeg2 raw",
+  "aac mpeg4 raw"
 };
 #endif
 
