@@ -132,11 +132,10 @@ struct _GstMetaInfo {
 };
 ```
 
-api will contain a `GType` of the metadata API. A repository of registered
-MetaInfo will be maintained by the core. We will register some common
-metadata structures in core and some media specific info for
-audio/video/text in -base. Plugins can register additional custom
-metadata.
+The `api` member will contain a `GType` of the metadata API. A repository of
+registered `MetaInfo` will be maintained by the core. We will register some
+common metadata structures in core and some media specific info for
+audio/video/text in -base. Plugins can register additional custom metadata.
 
 For each implementation of api, there will thus be a unique `GstMetaInfo`.
 In the case of metadata with a well defined API, the implementation
@@ -323,9 +322,7 @@ the metadata in the buffer and call the associated free functions in the
 
 When a buffer should be sent over the wire or be serialized in GDP, we
 need a way to perform custom serialization and deserialization on the
-metadata.
-
-for this we can use the `GValue` transform functions.
+metadata. For this we can use the `GValue` transform functions.
 
 ## Transformations
 
