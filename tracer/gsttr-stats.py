@@ -10,23 +10,22 @@ python3 gsttr-stats.py trace.log
 3) print selected entries only
 python3 gsttr-stats.py -c latency trace.log
 '''
-
-import logging
-from fnmatch import fnmatch
-
 # TODO:
 # more options
 # - live-update interval (for file=='-')
 #
 # - for values like timestamps, we only want min/max but no average
 
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger('gsttr-stats')
-
+import logging
+from fnmatch import fnmatch
 from tracer.analysis_runner import AnalysisRunner
 from tracer.analyzer import Analyzer
 from tracer.parser import Parser
 from tracer.structure import Structure
+
+
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger('gsttr-stats')
 
 _SCOPE_RELATED_TO = {
     'GST_TRACER_VALUE_SCOPE_PAD': 'Pad',
@@ -36,6 +35,7 @@ _SCOPE_RELATED_TO = {
 }
 
 _NUMERIC_TYPES = ('int', 'uint', 'gint', 'guint', 'gint64', 'guint64')
+
 
 class Stats(Analyzer):
 
@@ -164,6 +164,7 @@ class Stats(Analyzer):
                         avg = format_ts(avg)
                 print("%-45s: %30s: %16s/%16s/%16s" % (sk, tk, mi, avg, ma))
 
+
 class ListClasses(Analyzer):
 
     def __init__(self):
@@ -182,12 +183,14 @@ def format_ts(ts):
     h = int(ts // (sec * 60 * 60))
     m = int((ts // (sec * 60)) % 60)
     s = (ts / sec)
-    return '{:02d}:{:02d}:{:010.7f}'.format(h,m,s)
+    return '{:02d}:{:02d}:{:010.7f}'.format(h, m, s)
+
 
 def is_time_field(f):
     # TODO: need proper units
     return (f.endswith('/time') or f.endswith('-dts') or f.endswith('-pts') or
         f.endswith('-duration'))
+
 
 if __name__ == '__main__':
     import argparse
