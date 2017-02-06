@@ -406,24 +406,48 @@ compare_frames_list (GstValidateMediaDescriptor * ref,
   return TRUE;
 }
 
+static GstCaps *
+_caps_cleanup_format_specific_fields (GstCaps * caps)
+{
+  gint i;
+  GstCaps *res = gst_caps_copy (caps);
+
+  for (i = 0; i < gst_caps_get_size (res); i++) {
+    GstStructure *s = gst_caps_get_structure (res, i);
+
+    if (gst_structure_has_name (s, "video/x-h264")) {
+      gst_structure_remove_fields (s, "stream-format", "codec_data", NULL);
+    }
+  }
+
+  return res;
+}
+
 /*  Return -1 if not found 1 if OK 0 if an error occured */
 static gint
 compare_streams (GstValidateMediaDescriptor * ref,
     GstValidateMediaStreamNode * rstream, GstValidateMediaStreamNode * cstream)
 {
   if (stream_id_is_equal (ref->filenode->uri, rstream->id, cstream->id)) {
-    if (!gst_caps_is_equal (rstream->caps, cstream->caps)) {
-      gchar *rcaps = gst_caps_to_string (rstream->caps),
-          *ccaps = gst_caps_to_string (cstream->caps);
+    GstCaps *rcaps = _caps_cleanup_format_specific_fields (rstream->caps),
+        *ccaps = _caps_cleanup_format_specific_fields (cstream->caps);
+    gchar *rcaps_str = gst_caps_to_string (rcaps),
+        *ccaps_str = gst_caps_to_string (ccaps);
+
+    if (!gst_caps_is_equal (rcaps, ccaps)) {
       GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
           "Reference descriptor for stream %s has caps: %s"
           " but compared stream %s has caps: %s",
-          rstream->id, rcaps, cstream->id, ccaps);
-      g_free (rcaps);
-      g_free (ccaps);
+          rstream->id, rcaps_str, cstream->id, ccaps_str);
+      gst_caps_unref (rcaps);
+      gst_caps_unref (ccaps);
+      g_free (rcaps_str);
+      g_free (ccaps_str);
       return 0;
     }
 
+    gst_caps_unref (rcaps);
+    gst_caps_unref (ccaps);
     /* We ignore the return value on purpose as this is not critical */
     compare_tags (ref, rstream, cstream);
 
