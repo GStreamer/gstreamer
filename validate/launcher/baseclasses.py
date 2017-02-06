@@ -70,11 +70,12 @@ class Test(Loggable):
         @hard_timeout: Max time the test can take in absolute
         """
         Loggable.__init__(self)
-        self.timeout = timeout * TIMEOUT_FACTOR
+        self.timeout = timeout * TIMEOUT_FACTOR * options.timeout_factor
         if hard_timeout:
             self.hard_timeout = hard_timeout * TIMEOUT_FACTOR
         else:
             self.hard_timeout = hard_timeout
+        self.hard_timeout *= options.timeout_factor
         self.classname = classname
         self.options = options
         self.application = application_name

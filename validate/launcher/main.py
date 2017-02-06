@@ -305,7 +305,7 @@ class LauncherConfig(Loggable):
         if (self.main_dir != DEFAULT_MAIN_DIR or
                 self.clone_dir != QA_ASSETS):
             local_clone_dir = os.path.join(self.main_dir, self.clone_dir, "testsuites")
-            if not local_clone_dir in self.testsuites_dirs:
+            if local_clone_dir not in self.testsuites_dirs:
                 self.testsuites_dirs.insert(0, local_clone_dir)
         if self.valgrind:
             try:
@@ -386,6 +386,9 @@ Note that all testsuite should be inside python modules, so the directory should
     parser.add_argument("-d", "--debug", dest="debug",
                         action="store_true",
                         help="Let user debug the process on timeout")
+    parser.add_argument("--timeout-factor", dest="timeout_factor",
+                        default=1.0, type=float,
+                        help="Factor to be applied on all timeout values.")
     parser.add_argument("-f", "--forever", dest="forever",
                         action="store_true",
                         help="Keep running tests until one fails")
