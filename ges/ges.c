@@ -134,6 +134,23 @@ ges_init (void)
   return ges_init_post (NULL, NULL, NULL, NULL);
 }
 
+/**
+ * ges_deinit:
+ *
+ * Clean up any resources created by GES in ges_init().
+ *
+ * It is normally not needed to call this function in a normal application as the
+ * resources will automatically be freed when the program terminates.
+ * This function is therefore mostly used by testsuites and other memory profiling tools.
+ *
+ * After this call GES (including this method) should not be used anymore.
+ */
+void
+ges_deinit (void)
+{
+  _ges_uri_asset_cleanup ();
+}
+
 #ifndef GST_DISABLE_OPTION_PARSING
 static gboolean
 parse_goption_arg (const gchar * s_opt,

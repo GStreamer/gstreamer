@@ -134,6 +134,10 @@ ges_suite (void)
   GstPluginFeature *pitch = gst_registry_find_feature (gst_registry_get (),
       "pitch", GST_TYPE_ELEMENT_FACTORY);
 
+  if (atexit (ges_deinit) != 0) {
+    GST_ERROR ("failed to set ges_deinit as exit function");
+  }
+
   if (pitch) {
     gst_object_unref (pitch);
 

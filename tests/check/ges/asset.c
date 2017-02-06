@@ -201,6 +201,10 @@ ges_suite (void)
   Suite *s = suite_create ("ges");
   TCase *tc_chain = tcase_create ("a");
 
+  if (atexit (ges_deinit) != 0) {
+    GST_ERROR ("failed to set ges_deinit as exit function");
+  }
+
   suite_add_tcase (s, tc_chain);
   ges_init ();
 

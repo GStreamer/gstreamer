@@ -437,6 +437,10 @@ gnonlin_suite (void)
   Suite *s = suite_create ("nlecomposition");
   TCase *tc_chain = tcase_create ("nlecomposition");
 
+  if (atexit (ges_deinit) != 0) {
+    GST_ERROR ("failed to set ges_deinit as exit function");
+  }
+
   ges_init ();
   suite_add_tcase (s, tc_chain);
 

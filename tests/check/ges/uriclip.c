@@ -290,6 +290,10 @@ main (int argc, char **argv)
 
   gst_check_init (&argc, &argv);
 
+  if (atexit (ges_deinit) != 0) {
+    GST_ERROR ("failed to set ges_deinit as exit function");
+  }
+
   s = ges_suite ();
 
   av_uri = ges_test_get_audio_video_uri ();

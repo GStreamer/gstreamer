@@ -5,6 +5,7 @@
 <TITLE>Initialization</TITLE>
 ges_init
 ges_init_check
+ges_deinit
 ges_version
 ges_init_get_option_group
 GES_VERSION_MAJOR

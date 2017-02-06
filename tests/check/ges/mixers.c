@@ -200,6 +200,10 @@ ges_suite (void)
   Suite *s = suite_create ("Smart mixers");
   TCase *tc_chain = tcase_create ("smart-mixers");
 
+  if (atexit (ges_deinit) != 0) {
+    GST_ERROR ("failed to set ges_deinit as exit function");
+  }
+
   ges_init ();
   suite_add_tcase (s, tc_chain);
 

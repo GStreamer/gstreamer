@@ -87,6 +87,7 @@ G_BEGIN_DECLS
 
 gboolean ges_init         (void);
 gboolean ges_init_check (int *argc, char **argv[], GError ** err);
+void     ges_deinit       (void);
 void     ges_version      (guint * major, guint * minor, guint * micro,
                            guint * nano);
 GOptionGroup *

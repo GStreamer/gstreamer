@@ -1759,6 +1759,10 @@ ges_suite (void)
   Suite *s = suite_create ("ges-layer");
   TCase *tc_chain = tcase_create ("timeline-layer");
 
+  if (atexit (ges_deinit) != 0) {
+    GST_ERROR ("failed to set ges_deinit as exit function");
+  }
+
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_layer_properties);

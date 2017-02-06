@@ -37,6 +37,9 @@
 
 static GHashTable *parent_newparent_table = NULL;
 
+static GstDiscoverer *discoverer = NULL;
+static GstDiscoverer *sync_discoverer = NULL;
+
 static void
 initable_iface_init (GInitableIface * initable_iface)
 {
@@ -220,18 +223,37 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
   if (errno)
     timeout = DEFAULT_DISCOVERY_TIMEOUT;
 
-  klass->discoverer = gst_discoverer_new (timeout, &err);
-  if (!klass->discoverer) {
-    GST_ERROR ("Could not create discoverer: %s", err->message);
-    g_error_free (err);
-    return;
+  if (!discoverer) {
+    discoverer = gst_discoverer_new (timeout, &err);
+    if (!discoverer) {
+      GST_ERROR ("Could not create discoverer: %s", err->message);
+      g_error_free (err);
+      return;
+    }
   }
 
-  klass->sync_discoverer = gst_discoverer_new (timeout, NULL);
+  /* The class structure keeps weak pointers on the discoverers so they
+   * can be properly cleaned up in _ges_uri_asset_cleanup(). */
+  if (!klass->discoverer) {
+    klass->discoverer = discoverer;
+    g_object_add_weak_pointer (G_OBJECT (discoverer),
+        (gpointer *) & klass->discoverer);
+  }
+
+  if (!sync_discoverer) {
+    sync_discoverer = gst_discoverer_new (timeout, &err);
+
+    if (!sync_discoverer) {
+      GST_ERROR ("Could not create discoverer: %s", err->message);
+      g_error_free (err);
+      return;
+    }
+  }
+
   if (!klass->sync_discoverer) {
-    GST_ERROR ("Could not create discoverer: %s", err->message);
-    g_error_free (err);
-    return;
+    klass->sync_discoverer = sync_discoverer;
+    g_object_add_weak_pointer (G_OBJECT (sync_discoverer),
+        (gpointer *) & klass->sync_discoverer);
   }
 
   g_signal_connect (klass->discoverer, "discovered",
@@ -734,4 +756,11 @@ ges_uri_source_asset_get_filesource_asset (GESUriSourceAsset * asset)
   g_return_val_if_fail (GES_IS_URI_SOURCE_ASSET (asset), NULL);
 
   return asset->priv->parent_asset;
+}
+
+void
+_ges_uri_asset_cleanup (void)
+{
+  g_clear_object (&discoverer);
+  g_clear_object (&sync_discoverer);
 }
