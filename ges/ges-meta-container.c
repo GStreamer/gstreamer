@@ -883,7 +883,7 @@ ges_meta_container_get_string (GESMetaContainer * container,
  * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  *
- * Returns: %TRUE if the vale could be optained %FALSE otherwize
+ * Returns: the #GValue corresponding to the meta with the given @key.
  */
 const GValue *
 ges_meta_container_get_meta (GESMetaContainer * container, const gchar * key)
