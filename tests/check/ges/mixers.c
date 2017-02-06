@@ -126,11 +126,14 @@ GST_START_TEST (simple_audio_mixed_with_pipeline)
   } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR)
     fail_error_message (message);
 
+  gst_message_unref (message);
   GST_INFO ("running main loop");
   g_main_loop_run (main_loop);
   g_main_loop_unref (main_loop);
 
 done:
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
 }
@@ -183,11 +186,14 @@ GST_START_TEST (audio_video_mixed_with_pipeline)
   } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR)
     fail_error_message (message);
 
+  gst_message_unref (message);
   GST_INFO ("running main loop");
   g_main_loop_run (main_loop);
   g_main_loop_unref (main_loop);
 
 done:
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
 }
