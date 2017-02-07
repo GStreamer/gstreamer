@@ -87,6 +87,7 @@ GST_START_TEST (check_text_overrides)
 
   g_remove (override_filename);
   g_free (override_filename);
+  gst_object_unref (runner);
 }
 
 GST_END_TEST;
