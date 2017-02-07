@@ -860,6 +860,8 @@ gst_validate_pad_monitor_dispose (GObject * object)
   g_list_free_full (monitor->expired_events, (GDestroyNotify) gst_event_unref);
   g_list_free_full (monitor->all_bufs, (GDestroyNotify) gst_buffer_unref);
   gst_caps_replace (&monitor->last_caps, NULL);
+  gst_caps_replace (&monitor->last_query_res, NULL);
+  gst_caps_replace (&monitor->last_query_filter, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
