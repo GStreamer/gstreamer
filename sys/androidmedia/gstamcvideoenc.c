@@ -349,8 +349,7 @@ caps_from_amc_format (GstAmcFormat * amc_format)
 
     caps =
         gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 4,
-        "systemstream", G_TYPE_BOOLEAN, FALSE,
-        "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+        "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
 
     if (gst_amc_format_get_int (amc_format, "profile", &amc_profile, NULL)) {
       profile_string = gst_amc_mpeg4_profile_to_string (amc_profile);
@@ -377,7 +376,7 @@ caps_from_amc_format (GstAmcFormat * amc_format)
     const gchar *profile_string, *level_string;
 
     caps =
-        gst_caps_new_simple ("video/x-h264", "parsed", G_TYPE_BOOLEAN, TRUE,
+        gst_caps_new_simple ("video/x-h264",
         "stream-format", G_TYPE_STRING, "byte-stream", NULL);
 
     if (gst_amc_format_get_int (amc_format, "profile", &amc_profile, NULL)) {
