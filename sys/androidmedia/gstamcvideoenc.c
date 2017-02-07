@@ -378,8 +378,7 @@ caps_from_amc_format (GstAmcFormat * amc_format)
 
     caps =
         gst_caps_new_simple ("video/x-h264", "parsed", G_TYPE_BOOLEAN, TRUE,
-        "stream-format", G_TYPE_STRING, "byte-stream",
-        "alignment", G_TYPE_STRING, "au", NULL);
+        "stream-format", G_TYPE_STRING, "byte-stream", NULL);
 
     if (gst_amc_format_get_int (amc_format, "profile", &amc_profile, NULL)) {
       profile_string = gst_amc_avc_profile_to_string (amc_profile, NULL);
