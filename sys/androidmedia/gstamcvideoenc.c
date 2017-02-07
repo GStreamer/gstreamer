@@ -858,6 +858,9 @@ gst_amc_video_enc_handle_output_frame (GstAmcVideoEnc * self,
         hdrs = gst_buffer_new_and_alloc (buffer_info->size);
         gst_buffer_fill (hdrs, 0, buf->data + buffer_info->offset,
             buffer_info->size);
+        GST_BUFFER_PTS (hdrs) =
+            gst_util_uint64_scale (buffer_info->presentation_time_us,
+            GST_USECOND, 1);
 
         l = g_list_append (l, hdrs);
         gst_video_encoder_set_headers (encoder, l);
