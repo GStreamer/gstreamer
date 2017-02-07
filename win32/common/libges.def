@@ -3,6 +3,7 @@ EXPORTS
 	_ges_container_set_height
 	_ges_container_set_priority_offset
 	_ges_debug DATA
+	_ges_uri_asset_cleanup
 	ges_add_missing_uri_relocation_uri
 	ges_asset_cache_lookup
 	ges_asset_extract
@@ -61,6 +62,7 @@ EXPORTS
 	ges_container_group
 	ges_container_remove
 	ges_container_ungroup
+	ges_deinit
 	ges_edge_get_type
 	ges_edit_mode_get_type
 	ges_effect_asset_get_type
