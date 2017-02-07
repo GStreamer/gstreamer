@@ -173,8 +173,7 @@ gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
 
   if (!display_x11->foreign_display) {
     window_x11->x11_source = x11_event_source_new (window_x11);
-    g_source_attach (window_x11->x11_source,
-        g_main_context_get_thread_default ());
+    g_source_attach (window_x11->x11_source, window->main_context);
   }
 
   window_x11->allow_extra_expose_events = TRUE;
