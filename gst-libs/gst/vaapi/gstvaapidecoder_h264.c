@@ -3116,6 +3116,7 @@ fill_picture_gaps (GstVaapiDecoderH264 * decoder, GstVaapiPictureH264 * picture,
   GstVaapiDecoderH264Private *const priv = &decoder->priv;
   GstH264SPS *const sps = get_sps (decoder);
   const gint32 MaxFrameNum = 1 << (sps->log2_max_frame_num_minus4 + 4);
+  gint32 prev_frame_num;
   GstVaapiFrameStore *prev_frame;
   GstVaapiPicture *base_picture;
   GstVaapiPictureH264 *lost_picture, *prev_picture;
@@ -3143,8 +3144,20 @@ fill_picture_gaps (GstVaapiDecoderH264 * decoder, GstVaapiPictureH264 * picture,
   lost_slice_hdr.dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag = 0;
 
   /* XXX: this process is incorrect for MVC */
-  /* XXX: optimize to reduce the number of dummy pictures created */
-  priv->frame_num = priv->prev_ref_frame_num;
+  /* Reduce frame num gaps so we don't have to create unnecessary
+   * dummy pictures */
+  prev_frame_num = priv->prev_ref_frame_num;
+  if (prev_frame_num > slice_hdr->frame_num)
+    prev_frame_num -= MaxFrameNum;
+
+  if ((slice_hdr->frame_num - prev_frame_num) - 1 > sps->num_ref_frames) {
+    prev_frame_num = (slice_hdr->frame_num - sps->num_ref_frames) - 1;
+
+    if (prev_frame_num < 0)
+      prev_frame_num += MaxFrameNum;
+  }
+  priv->frame_num = prev_frame_num;
+
   for (;;) {
     priv->prev_ref_frame_num = priv->frame_num;
     priv->frame_num = (priv->prev_ref_frame_num + 1) % MaxFrameNum;
