@@ -809,6 +809,12 @@ class GstValidateTest(Test):
         if self.result in [Result.FAILED, self.result is Result.PASSED]:
             return
 
+        for report in self.reports:
+            if report.get('issue-id') == 'runtime::missing-plugin':
+                self.set_result(Result.SKIPPED, "%s\n%s" % (report['summary'],
+                                                         report['details']))
+                return
+
         self.debug("%s returncode: %s", self, self.process.returncode)
 
         criticals, not_found_expected_failures, expected_returncode = self.check_reported_issues()

@@ -54,6 +54,7 @@ class Result(object):
     FAILED = "Failed"
     TIMEOUT = "Timeout"
     PASSED = "Passed"
+    SKIPPED = "Skipped"
     KNOWN_ERROR = "Known error"
 
 

@@ -69,7 +69,10 @@ class Reporter(Loggable):
         self._start_time = time.time()
 
     def set_failed(self, test):
-        self.stats["failures"] += 1
+        if test.result == Result.SKIPPED:
+            self.stats["skipped"] += 1
+        else:
+            self.stats["failures"] += 1
 
     def set_passed(self, test):
         self.stats["passed"] += 1
@@ -79,7 +82,8 @@ class Reporter(Loggable):
         if test.result == Result.PASSED:
             self.set_passed(test)
         elif test.result == Result.FAILED or \
-                test.result == Result.TIMEOUT:
+                test.result == Result.TIMEOUT or \
+                test.result == Result.SKIPPED:
             self.set_failed(test)
         else:
             raise UnknownResult("%s" % test.result)
@@ -200,7 +204,7 @@ class XunitReporter(Reporter):
     def set_failed(self, test):
         """Add failure output to Xunit report.
         """
-        self.stats['failures'] += 1
+        super().set_failed(test)
 
         stack_trace = ''
         if test.stack_trace:

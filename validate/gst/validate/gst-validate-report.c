@@ -58,6 +58,8 @@ gst_validate_report_serialize (GstValidateReport * report)
   JsonObject *jreport = json_object_new ();
 
   json_object_set_string_member (jreport, "type", "report");
+  json_object_set_string_member (jreport, "issue-id",
+      g_quark_to_string (report->issue->issue_id));
   json_object_set_string_member (jreport, "summary", report->issue->summary);
   json_object_set_string_member (jreport, "level",
       gst_validate_report_level_get_name (report->level));
