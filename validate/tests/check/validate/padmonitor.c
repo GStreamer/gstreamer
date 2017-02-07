@@ -156,6 +156,7 @@ GST_START_TEST (buffer_before_segment)
   gst_check_objects_destroyed_on_unref (src, srcpad, NULL);
   gst_check_object_destroyed_on_unref (sink);
   ASSERT_OBJECT_REFCOUNT (runner, "runner", 2);
+  gst_object_unref (monitor);
   gst_object_unref (runner);
 }
 
@@ -245,6 +246,7 @@ GST_START_TEST (buffer_outside_segment)
   fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
   gst_object_unref (sink);
+  gst_object_unref (monitor);
 }
 
 GST_END_TEST;
@@ -349,7 +351,7 @@ _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
   gst_object_unref (demuxer);
   ASSERT_OBJECT_REFCOUNT (pmonitor, "plop", 1);
   gst_object_unref (pmonitor);
-
+  gst_object_unref (srcpad);
 }
 
 #define FLOW_TEST(name, flow1, flow2, flow3, demux_flow, fails) \
@@ -561,7 +563,6 @@ _create_buffer (BufferDesc * bdesc)
 static void
 _check_media_info (GstSegment * segment, BufferDesc * bufs)
 {
-  GList *reports;
   GstEvent *segev;
   GstBuffer *buffer;
   GstElement *decoder;
@@ -570,6 +571,7 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
   GstValidateMonitor *monitor;
   GstValidateRunner *runner;
   GstValidateMediaDescriptor *mdesc;
+  GstCaps *caps;
 
   GError *err = NULL;
   gint i, num_issues = 0;
@@ -584,6 +586,7 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
   decoder = fake_decoder_new ();
   monitor = _start_monitoring_element (decoder, runner);
   gst_validate_monitor_set_media_descriptor (monitor, mdesc);
+  gst_object_unref (mdesc);
 
   srcpad = gst_pad_new ("src", GST_PAD_SRC);
   sinkpad = decoder->sinkpads->data;
@@ -595,11 +598,12 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
   assert_equals_string (gst_pad_link_get_name (gst_pad_link (srcpad, sinkpad)),
       gst_pad_link_get_name (GST_PAD_LINK_OK));
 
-  gst_check_setup_events_with_stream_id (srcpad, decoder,
+  caps =
       gst_caps_from_string
-      ("video/x-raw, width=360, height=42, framerate=24/1, pixel-aspect-ratio =1/1, format=AYUV"),
-      GST_FORMAT_TIME, "the-stream");
-
+      ("video/x-raw, width=360, height=42, framerate=24/1, pixel-aspect-ratio =1/1, format=AYUV");
+  gst_check_setup_events_with_stream_id (srcpad, decoder, caps, GST_FORMAT_TIME,
+      "the-stream");
+  gst_caps_unref (caps);
 
   if (segment) {
     segev = gst_event_new_segment (segment);
@@ -607,6 +611,7 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
   }
 
   for (i = 0; bufs[i].content != NULL; i++) {
+    GList *reports;
     BufferDesc *buf = &bufs[i];
     buffer = _create_buffer (buf);
 
@@ -629,6 +634,7 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
         tmp = tmp->next;
       }
     }
+    g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
   }
 
   /* clean up */
@@ -640,6 +646,7 @@ _check_media_info (GstSegment * segment, BufferDesc * bufs)
   gst_check_objects_destroyed_on_unref (decoder, sinkpad, NULL);
   ASSERT_OBJECT_REFCOUNT (runner, "runner", 2);
   gst_object_unref (runner);
+  gst_object_unref (monitor);
 }
 
 #define MEDIA_INFO_TEST(name,segment_start,bufs) \
@@ -757,6 +764,7 @@ GST_START_TEST (caps_events)
   GList *reports;
   GstValidateReport *report;
   GstValidateRunner *runner;
+  GstCaps *caps;
 
   fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = _start_monitoring_bin (pipeline);
@@ -775,9 +783,11 @@ GST_START_TEST (caps_events)
   assert_equals_int (g_list_length (reports), 0);
   g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
 
-  fail_unless (gst_pad_push_event (srcpad,
-          gst_event_new_caps (gst_caps_from_string
-              ("video/x-raw, format=AYUV, width=320, height=240, pixel-aspect-ratio=1/1"))));
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, format=AYUV, width=320, height=240, pixel-aspect-ratio=1/1");
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
   reports = gst_validate_runner_get_reports (runner);
 
   /* Our caps didn't have a framerate, the decoder sink should complain about
@@ -788,9 +798,11 @@ GST_START_TEST (caps_events)
   fail_unless_equals_int (report->issue->issue_id, CAPS_IS_MISSING_FIELD);
   g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
 
-  fail_unless (gst_pad_push_event (srcpad,
-          gst_event_new_caps (gst_caps_from_string
-              ("video/x-raw, format=AYUV, framerate=24/1, width=(fraction)320, height=240, pixel-aspect-ratio=1/1"))));
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, format=AYUV, framerate=24/1, width=(fraction)320, height=240, pixel-aspect-ratio=1/1");
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
 
   reports = gst_validate_runner_get_reports (runner);
   assert_equals_int (g_list_length (reports), 2);
@@ -798,13 +810,19 @@ GST_START_TEST (caps_events)
   /* A width isn't supposed to be a fraction */
   fail_unless_equals_int (report->level, GST_VALIDATE_REPORT_LEVEL_WARNING);
   fail_unless_equals_int (report->issue->issue_id, CAPS_FIELD_HAS_BAD_TYPE);
+  g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
 
-  fail_unless (gst_pad_push_event (srcpad,
-          gst_event_new_caps (gst_caps_from_string
-              ("video/x-raw, format=AYUV, framerate=24/1, width=320, height=240, pixel-aspect-ratio=1/1"))));
-  fail_unless (gst_pad_push_event (srcpad,
-          gst_event_new_caps (gst_caps_from_string
-              ("video/x-raw, format=AYUV, framerate=24/1, width=320, height=240, pixel-aspect-ratio=1/1"))));
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, format=AYUV, framerate=24/1, width=320, height=240, pixel-aspect-ratio=1/1");
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, format=AYUV, framerate=24/1, width=320, height=240, pixel-aspect-ratio=1/1");
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
 
   reports = gst_validate_runner_get_reports (runner);
   assert_equals_int (g_list_length (reports), 3);
@@ -821,6 +839,8 @@ GST_START_TEST (caps_events)
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   _stop_monitoring_bin (pipeline, runner);
+
+  gst_object_unref (srcpad);
 }
 
 GST_END_TEST;
@@ -866,6 +886,8 @@ GST_START_TEST (eos_without_segment)
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   _stop_monitoring_bin (pipeline, runner);
+
+  gst_object_unref (srcpad);
 }
 
 GST_END_TEST;
