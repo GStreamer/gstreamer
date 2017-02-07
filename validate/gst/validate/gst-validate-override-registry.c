@@ -314,6 +314,7 @@ _add_override_from_struct (GstStructure * soverride)
     } else {
       type = G_OBJECT_TYPE (element);
       gst_validate_override_register_by_type (type, override);
+      gst_object_unref (element);
     }
 
     registered = TRUE;
