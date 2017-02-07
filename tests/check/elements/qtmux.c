@@ -46,15 +46,17 @@ static GstPad *mysrcpad, *mysinkpad;
                         "channels = (int) 2, " \
                         "rate = (int) 48000"
 
-#define AUDIO_AAC_CAPS_STRING "audio/mpeg, " \
-                            "mpegversion=(int)4, " \
-                            "channels=(int)1, " \
-                            "rate=(int)44100, " \
-                            "stream-format=(string)raw, " \
-                            "level=(string)2, " \
-                            "base-profile=(string)lc, " \
-                            "profile=(string)lc, " \
-                            "codec_data=(buffer)1208"
+#define AUDIO_AAC_TMPL_CAPS_STRING "audio/mpeg, " \
+                                   "mpegversion=(int)4, " \
+                                   "channels=(int)1, " \
+                                   "rate=(int)44100, " \
+                                   "stream-format=(string)raw, " \
+                                   "level=(string)2, " \
+                                   "base-profile=(string)lc, " \
+                                   "profile=(string)lc"
+/* codec_data shouldn't be in the template caps, only in the actual caps */
+#define AUDIO_AAC_CAPS_STRING AUDIO_AAC_TMPL_CAPS_STRING \
+                              ", codec_data=(buffer)1208"
 
 #define VIDEO_CAPS_STRING "video/mpeg, " \
                            "mpegversion = (int) 4, " \
@@ -63,18 +65,20 @@ static GstPad *mysrcpad, *mysinkpad;
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"
 
-#define VIDEO_CAPS_H264_STRING "video/x-h264, " \
-                               "width=(int)320, " \
-                               "height=(int)240, " \
-                               "framerate=(fraction)30/1, " \
-                               "pixel-aspect-ratio=(fraction)1/1, " \
-                               "codec_data=(buffer)01640014ffe1001867640014a" \
+#define VIDEO_TMPL_CAPS_H264_STRING "video/x-h264, " \
+                                    "width=(int)320, " \
+                                    "height=(int)240, " \
+                                    "framerate=(fraction)30/1, " \
+                                    "pixel-aspect-ratio=(fraction)1/1, " \
+                                    "stream-format=(string)avc, " \
+                                    "alignment=(string)au, " \
+                                    "level=(string)2, " \
+                                    "profile=(string)high"
+/* codec_data shouldn't be in the template caps, only in the actual caps */
+#define VIDEO_CAPS_H264_STRING VIDEO_TMPL_CAPS_H264_STRING \
+                               ", codec_data=(buffer)01640014ffe1001867640014a" \
                                    "cd94141fb0110000003001773594000f14299600" \
-                                   "1000568ebecb22c, " \
-                               "stream-format=(string)avc, " \
-                               "alignment=(string)au, " \
-                               "level=(string)2, " \
-                               "profile=(string)high"
+                                   "1000568ebecb22c"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -90,7 +94,7 @@ static GstStaticPadTemplate srcvideoh264template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (VIDEO_CAPS_H264_STRING));
+    GST_STATIC_CAPS (VIDEO_TMPL_CAPS_H264_STRING));
 
 static GstStaticPadTemplate srcvideorawtemplate =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -107,7 +111,7 @@ static GstStaticPadTemplate srcaudioaactemplate =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (AUDIO_AAC_CAPS_STRING));
+    GST_STATIC_CAPS (AUDIO_AAC_TMPL_CAPS_STRING));
 
 /* setup and teardown needs some special handling for muxer */
 static GstPad *
@@ -819,7 +823,8 @@ extract_tags (const gchar * location, GstTagList ** taglist)
 
 static void
 test_average_bitrate_custom (const gchar * elementname,
-    GstStaticPadTemplate * tmpl, const gchar * sinkpadname)
+    GstStaticPadTemplate * tmpl, const gchar * caps_str,
+    const gchar * sinkpadname)
 {
   gchar *location;
   GstElement *qtmux;
@@ -854,7 +859,7 @@ test_average_bitrate_custom (const gchar * elementname,
 
   gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
 
-  caps = gst_pad_get_pad_template_caps (mysrcpad);
+  caps = gst_caps_from_string (caps_str);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
@@ -910,11 +915,15 @@ test_average_bitrate_custom (const gchar * elementname,
 
 GST_START_TEST (test_average_bitrate)
 {
-  test_average_bitrate_custom ("mp4mux", &srcaudioaactemplate, "audio_%u");
-  test_average_bitrate_custom ("mp4mux", &srcvideoh264template, "video_%u");
+  test_average_bitrate_custom ("mp4mux", &srcaudioaactemplate,
+      AUDIO_AAC_CAPS_STRING, "audio_%u");
+  test_average_bitrate_custom ("mp4mux", &srcvideoh264template,
+      VIDEO_CAPS_H264_STRING, "video_%u");
 
-  test_average_bitrate_custom ("qtmux", &srcaudioaactemplate, "audio_%u");
-  test_average_bitrate_custom ("qtmux", &srcvideoh264template, "video_%u");
+  test_average_bitrate_custom ("qtmux", &srcaudioaactemplate,
+      AUDIO_AAC_CAPS_STRING, "audio_%u");
+  test_average_bitrate_custom ("qtmux", &srcvideoh264template,
+      VIDEO_CAPS_H264_STRING, "video_%u");
 }
 
 GST_END_TEST;

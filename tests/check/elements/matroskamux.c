@@ -33,10 +33,12 @@ GstPad *mysrcpad, *mysinkpad;
 #define AC3_CAPS_STRING "audio/x-ac3, " \
                         "channels = (int) 1, " \
                         "rate = (int) 8000"
-#define VORBIS_CAPS_STRING "audio/x-vorbis, " \
-                           "channels = (int) 1, " \
-                           "rate = (int) 8000, " \
-                           "streamheader=(buffer)<10, 2020, 303030>"
+#define VORBIS_TMPL_CAPS_STRING "audio/x-vorbis, " \
+                                "channels = (int) 1, " \
+                                "rate = (int) 8000"
+/* streamheader shouldn't be in the template caps, only in the actual caps */
+#define VORBIS_CAPS_STRING VORBIS_TMPL_CAPS_STRING \
+                           ", streamheader=(buffer)<10, 2020, 303030>"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -45,7 +47,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate srcvorbistemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (VORBIS_CAPS_STRING));
+    GST_STATIC_CAPS (VORBIS_TMPL_CAPS_STRING));
 
 static GstStaticPadTemplate srcac3template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
