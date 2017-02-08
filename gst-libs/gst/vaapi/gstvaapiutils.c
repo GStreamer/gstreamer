@@ -182,6 +182,10 @@ string_of_VAProfile (VAProfile profile)
       MAP (H264MultiviewHigh);
       MAP (H264StereoHigh);
 #endif
+#if VA_CHECK_VERSION(0,37,1)
+      MAP (HEVCMain);
+      MAP (HEVCMain10);
+#endif
       MAP (VC1Simple);
       MAP (VC1Main);
       MAP (VC1Advanced);
