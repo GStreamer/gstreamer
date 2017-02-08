@@ -417,9 +417,10 @@ on_demuxPadRemoved (GstElement * demux, GstPad * pad, gpointer user_data)
     priv->callbacks->demux_pad_removed (&priv->engine, stream, priv->user_data);
   }
   fail_unless (stream->appsink != NULL);
-  fail_unless (stream->internal_pad != NULL);
-  gst_object_unref (stream->internal_pad);
-  stream->internal_pad = NULL;
+  if (stream->internal_pad) {
+    gst_object_unref (stream->internal_pad);
+    stream->internal_pad = NULL;
+  }
   appSink = GST_ELEMENT (stream->appsink);
   ret = gst_element_get_state (appSink, &currentState, &pending, 0);
   if ((ret == GST_STATE_CHANGE_SUCCESS && currentState == GST_STATE_PLAYING)
