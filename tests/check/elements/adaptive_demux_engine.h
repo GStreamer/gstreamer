@@ -30,6 +30,8 @@ G_BEGIN_DECLS
 typedef struct _GstAdaptiveDemuxTestEngine GstAdaptiveDemuxTestEngine;
 
 typedef struct _GstAdaptiveDemuxTestOutputStream {
+  gchar *name;
+
   /* the GstAppSink element getting the data for this stream */
   GstAppSink *appsink;
   GstPad *pad;
