@@ -827,7 +827,7 @@ gst_adaptive_demux_handle_message (GstBin * bin, GstMessage * msg)
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ERROR:{
       GList *iter;
-      GstAdaptiveDemuxStream *stream;
+      GstAdaptiveDemuxStream *stream = NULL;
       GError *err = NULL;
       gchar *debug = NULL;
       gchar *new_error = NULL;
@@ -836,37 +836,54 @@ gst_adaptive_demux_handle_message (GstBin * bin, GstMessage * msg)
       GST_MANIFEST_LOCK (demux);
 
       for (iter = demux->streams; iter; iter = g_list_next (iter)) {
-        stream = iter->data;
+        GstAdaptiveDemuxStream *cur = iter->data;
         if (gst_object_has_as_ancestor (GST_MESSAGE_SRC (msg),
-                GST_OBJECT_CAST (stream->src))) {
-          gst_message_parse_error (msg, &err, &debug);
-
-          GST_WARNING_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (stream),
-              "Source posted error: %d:%d %s (%s)", err->domain, err->code,
-              err->message, debug);
-
-          if (debug)
-            new_error = g_strdup_printf ("%s: %s\n", err->message, debug);
-          if (new_error) {
-            g_free (err->message);
-            err->message = new_error;
-          }
-
-          gst_message_parse_error_details (msg, &details);
-          if (details) {
-            gst_structure_get_uint (details, "http-status-code",
-                &stream->last_status_code);
-          }
-
-          /* error, but ask to retry */
-          gst_adaptive_demux_stream_fragment_download_finish (stream,
-              GST_FLOW_CUSTOM_ERROR, err);
-
-          g_error_free (err);
-          g_free (debug);
+                GST_OBJECT_CAST (cur->src))) {
+          stream = cur;
           break;
         }
       }
+      if (stream == NULL) {
+        for (iter = demux->prepared_streams; iter; iter = g_list_next (iter)) {
+          GstAdaptiveDemuxStream *cur = iter->data;
+          if (gst_object_has_as_ancestor (GST_MESSAGE_SRC (msg),
+                  GST_OBJECT_CAST (cur->src))) {
+            stream = cur;
+            break;
+          }
+        }
+        if (stream == NULL) {
+          GST_WARNING_OBJECT (demux,
+              "Failed to locate stream for errored element");
+          break;
+        }
+      }
+
+      gst_message_parse_error (msg, &err, &debug);
+
+      GST_WARNING_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (stream),
+          "Source posted error: %d:%d %s (%s)", err->domain, err->code,
+          err->message, debug);
+
+      if (debug)
+        new_error = g_strdup_printf ("%s: %s\n", err->message, debug);
+      if (new_error) {
+        g_free (err->message);
+        err->message = new_error;
+      }
+
+      gst_message_parse_error_details (msg, &details);
+      if (details) {
+        gst_structure_get_uint (details, "http-status-code",
+            &stream->last_status_code);
+      }
+
+      /* error, but ask to retry */
+      gst_adaptive_demux_stream_fragment_download_finish (stream,
+          GST_FLOW_CUSTOM_ERROR, err);
+
+      g_error_free (err);
+      g_free (debug);
 
       GST_MANIFEST_UNLOCK (demux);
 
