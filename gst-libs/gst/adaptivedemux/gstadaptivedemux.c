@@ -3627,7 +3627,13 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
 
 end_of_manifest:
   if (G_UNLIKELY (ret == GST_FLOW_EOS)) {
-    gst_adaptive_demux_stream_push_event (stream, gst_event_new_eos ());
+    if (GST_OBJECT_PARENT (stream->pad) != NULL) {
+      GST_DEBUG_OBJECT (stream->src, "Pushing EOS on pad");
+      gst_adaptive_demux_stream_push_event (stream, gst_event_new_eos ());
+    } else {
+      GST_ERROR_OBJECT (demux, "Can't push EOS on non-exposed pad");
+      goto download_error;
+    }
   }
 
 end:
