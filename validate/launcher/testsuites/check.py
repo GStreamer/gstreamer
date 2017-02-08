@@ -23,6 +23,10 @@ GStreamer unit tests
 
 TEST_MANAGER = "check"
 
+KNOWN_NOT_LEAKY = r'^check.gst-devtools.*|^check.gstreamer.*|^check-gst-plugins-base|^check.gst-plugins-ugly|^check.gst-plugins-good'
+
 
 def setup_tests(test_manager, options):
+    if options.gst_check_leak_trace_testnames == 'known-not-leaky':
+        options.gst_check_leak_trace_testnames = KNOWN_NOT_LEAKY
     return True

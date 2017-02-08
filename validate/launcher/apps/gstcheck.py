@@ -18,6 +18,7 @@
 # Boston, MA 02110-1301, USA.
 import argparse
 import os
+import re
 import pickle
 import platform
 import shutil
@@ -31,7 +32,7 @@ from launcher.utils import printc, Colors
 class MesonTest(Test):
 
     def __init__(self, name, options, reporter, test, child_env=None):
-        ref_env = os.environ
+        ref_env = os.environ.copy()
         if child_env is None:
             child_env = {}
         else:
@@ -80,14 +81,14 @@ class MesonTestsManager(TestsManager):
         if self.arggroup:
             return
 
-        MesonTestsManager.arggroup = parser.add_argument_group(
+        arggroup = MesonTestsManager.arggroup = parser.add_argument_group(
             "meson tests specific options and behaviours")
-        parser.add_argument("--meson-build-dir",
+        arggroup.add_argument("--meson-build-dir",
                             action="append",
                             dest='meson_build_dirs',
                             default=[config.BUILDDIR],
                             help="defines the paths to look for GstValidate tools.")
-        parser.add_argument("--meson-no-rebuild",
+        arggroup.add_argument("--meson-no-rebuild",
                             action="store_true",
                             default=False,
                             help="Whether to avoid to rebuild tests before running them.")
@@ -228,6 +229,28 @@ class GstCheckTestsManager(MesonTestsManager):
         with open(dumpfile, 'wb') as f:
             pickle.dump(self.tests_info, f)
 
+    def add_options(self, parser):
+        super().add_options(parser)
+        arggroup = parser.add_argument_group("gstcheck specific options")
+        arggroup.add_argument("--gst-check-leak-trace-testnames",
+                            default=None,
+                            help="A regex to specifying testsnames of the test"
+                              "to run with the leak tracer activated, if 'known-not-leaky'"
+                              " is specified, the testsuite will automatically activate"
+                              " leak tracers on tests known to be not leaky.")
+
+    def get_child_env(self, testname, check_name=None):
+        child_env = {}
+        if check_name:
+            child_env['GST_CHECKS'] = check_name
+
+        if self.options.gst_check_leak_trace_testnames:
+            if re.findall(self.options.gst_check_leak_trace_testnames, testname):
+                tracers = set(os.environ.get('GST_TRACERS', '').split(';')) | set(['leaks'])
+                child_env['GST_TRACERS'] = ';'.join(tracers)
+
+        return child_env
+
     def list_tests(self):
         if self.tests:
             return self.tests
@@ -266,12 +289,15 @@ class GstCheckTestsManager(MesonTestsManager):
         for test in mesontests:
             gst_tests = self.tests_info[test.fname[0]][1]
             if not gst_tests:
-                self.add_test(MesonTest(self.get_test_name(test),
-                                        self.options, self.reporter, test))
+                name = self.get_test_name(test)
+                child_env = self.get_child_env(name)
+                self.add_test(MesonTest(name, self.options, self.reporter, test,
+                                        child_env))
             else:
                 for ltest in gst_tests:
                     name = self.get_test_name(test) + '.' + ltest
+                    child_env = self.get_child_env(name, ltest)
                     self.add_test(MesonTest(name, self.options, self.reporter, test,
-                                            {'GST_CHECKS': ltest}))
+                                            child_env))
         self.save_tests_info()
         return self.tests
