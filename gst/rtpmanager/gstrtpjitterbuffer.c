@@ -2929,8 +2929,9 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     GST_DEBUG_OBJECT (jitterbuffer, "First buffer #%d", seqnum);
 
     /* calculate a pts based on rtptime and arrival time (dts) */
-    pts = rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, rtptime,
-        gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)));
+    pts =
+        rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, estimated_dts,
+        rtptime, gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)));
 
     /* we don't know what the next_in_seqnum should be, wait for the last
      * possible moment to push this buffer, maybe we get an earlier seqnum
@@ -2981,8 +2982,10 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     g_queue_clear (&priv->gap_packets);
 
     /* calculate a pts based on rtptime and arrival time (dts) */
-    pts = rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, rtptime,
-        gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)));
+    /* If we estimated the DTS, don't consider it in the clock skew calculations */
+    pts =
+        rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, estimated_dts,
+        rtptime, gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)));
 
     if (G_LIKELY (gap == 0)) {
       /* packet is expected */

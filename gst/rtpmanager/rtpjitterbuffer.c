@@ -690,7 +690,7 @@ queue_do_insert (RTPJitterBuffer * jbuf, GList * list, GList * item)
 
 GstClockTime
 rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
-      guint32 rtptime, GstClockTime base_time)
+    gboolean estimated_dts, guint32 rtptime, GstClockTime base_time)
 {
   guint64 ext_rtptime;
   GstClockTime gstrtptime, pts;
@@ -703,7 +703,7 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
    * Only reset if valid input time, which is likely for UDP input
    * where we expect this might happen due to async thread effects
    * (in seek and state change cycles), but not so much for TCP input */
-  if (GST_CLOCK_TIME_IS_VALID (dts) &&
+  if (GST_CLOCK_TIME_IS_VALID (dts) && !estimated_dts &&
       jbuf->mode != RTP_JITTER_BUFFER_MODE_SLAVE &&
       jbuf->base_time != -1 && jbuf->last_rtptime != -1) {
     GstClockTime ext_rtptime = jbuf->ext_rtptime;
