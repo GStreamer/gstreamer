@@ -1070,6 +1070,10 @@ child_is_same_stream (const GstCaps * _parent, const GstCaps * child)
   for (i = 0; i < size; i++) {
     gst_structure_remove_field (gst_caps_get_structure (parent, i), "parsed");
     gst_structure_remove_field (gst_caps_get_structure (parent, i), "framed");
+    gst_structure_remove_field (gst_caps_get_structure (parent, i),
+        "stream-format");
+    gst_structure_remove_field (gst_caps_get_structure (parent, i),
+        "alignment");
   }
   res = gst_caps_can_intersect (parent, child);
   gst_caps_unref (parent);
