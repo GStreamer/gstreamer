@@ -918,6 +918,7 @@ void       atom_trak_add_samples       (AtomTRAK * trak, guint32 nsamples, guint
                                         gint64 pts_offset);
 void       atom_trak_set_elst_entry    (AtomTRAK * trak, gint index, guint32 duration,
                                         guint32 media_time, guint32 rate);
+void       atom_trak_edts_clear        (AtomTRAK * trak);
 guint32    atom_trak_get_timescale     (AtomTRAK *trak);
 guint32    atom_trak_get_id            (AtomTRAK * trak);
 void       atom_stbl_add_samples       (AtomSTBL * stbl, guint32 nsamples,

@@ -3716,6 +3716,15 @@ atom_edts_add_entry (AtomEDTS * edts, gint index, EditListEntry * entry)
   *e = *entry;
 }
 
+void
+atom_trak_edts_clear (AtomTRAK * trak)
+{
+  if (trak->edts) {
+    atom_edts_clear (trak->edts);
+    trak->edts = NULL;
+  }
+}
+
 /*
  * Update an entry in this trak edits list, creating it if needed.
  * index is the index of the entry to update, or create if it's past the end.

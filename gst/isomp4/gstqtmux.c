@@ -2511,6 +2511,8 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
     GstCollectData *cdata = (GstCollectData *) walk->data;
     GstQTPad *qtpad = (GstQTPad *) cdata;
 
+    atom_trak_edts_clear (qtpad->trak);
+
     if (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts)) {
       guint32 lateness = 0;
       guint32 duration = qtpad->trak->tkhd.duration;
@@ -2556,7 +2558,6 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
 
       /* need to add the empty time to the trak duration */
       duration += lateness;
-
       qtpad->trak->tkhd.duration = duration;
       if (qtpad->tc_trak) {
         qtpad->tc_trak->tkhd.duration = duration;
