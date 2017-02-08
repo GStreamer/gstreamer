@@ -35,7 +35,6 @@
 #include "gstvaapitexturemap.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiworkarounds.h"
-#include "gstvaapiversion.h"
 
 /* Debug category for all vaapi libs */
 GST_DEBUG_CATEGORY (gst_debug_vaapi);
@@ -125,10 +124,6 @@ libgstvaapi_init_once (void)
     return;
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi, "vaapi", 0, "VA-API helper");
-
-  /* Dump gstreamer-vaapi version for debugging purposes */
-  GST_CAT_INFO (gst_debug_vaapi, "gstreamer-vaapi version %s",
-      GST_VAAPI_VERSION_ID);
 
   gst_vaapi_display_properties_init ();
 

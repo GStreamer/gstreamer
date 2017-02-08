@@ -143,7 +143,6 @@ libgstvaapi_source_priv_h =			\
 	gstvaapiutils_h264_priv.h		\
 	gstvaapiutils_h265_priv.h		\
 	gstvaapiutils_mpeg2_priv.h		\
-	gstvaapiversion.h			\
 	gstvaapivideopool_priv.h		\
 	gstvaapiwindow_priv.h			\
 	gstvaapiworkarounds.h			\
@@ -507,38 +506,7 @@ libgstvaapi_wayland_la_LDFLAGS = 		\
 	$(GST_ALL_LDFLAGS)			\
 	$(NULL)
 
-VERSION_FILE		= .VERSION
-OLD_VERSION_FILE	= $(VERSION_FILE).old
-NEW_VERSION_FILE	= $(VERSION_FILE).new
-PKG_VERSION_FILE	= $(VERSION_FILE).pkg
-
-gstvaapiversion.h: gen-version
-	$(AM_V_GEN)							    \
-	OV=`[ -f $(OLD_VERSION_FILE) ] && cat $(OLD_VERSION_FILE) || :`;    \
-	NV=`cat $(NEW_VERSION_FILE)`;					    \
-	if [ "$$OV" != "$$NV" -o ! -f gstvaapiversion.h ]; then		    \
-		cp -f $(NEW_VERSION_FILE) $(OLD_VERSION_FILE);		    \
-		$(SED) -e "s|\@GST_VAAPI_VERSION_ID\@|$${NV}|"		    \
-			$(srcdir)/gstvaapiversion.h.in > gstvaapiversion.h; \
-	fi
-
-gen-version:
-	@echo $(VERSION) > $(NEW_VERSION_FILE)
-if HAVE_GIT
-	@[ -d $(top_srcdir)/.git ] && \
-	(cd $(top_srcdir) && $(GIT) describe --tags) > $(NEW_VERSION_FILE) || :
-endif
-	@[ -f $(srcdir)/$(PKG_VERSION_FILE) ] && \
-	cp -f $(srcdir)/$(PKG_VERSION_FILE) $(NEW_VERSION_FILE) || :
-
-$(PKG_VERSION_FILE): $(NEW_VERSION_FILE)
-	@cp -f $< $@
-
-BUILT_SOURCES	= gstvaapiversion.h
-EXTRA_DIST	= gstvaapiversion.h.in $(PKG_VERSION_FILE)
-DISTCLEANFILES	= $(BUILT_SOURCES)
-
-EXTRA_DIST += \
+EXTRA_DIST = \
 	$(libgstvaapi_enc_source_c)		\
 	$(libgstvaapi_enc_source_h)		\
 	$(libgstvaapi_enc_source_priv_h)	\
@@ -562,12 +530,6 @@ EXTRA_DIST += \
 	$(libgstvaapi_egl_source_c)		\
 	$(libgstvaapi_egl_source_h)		\
 	$(libgstvaapi_egl_source_priv_h)	\
-	$(NULL)
-
-CLEANFILES = \
-	$(OLD_VERSION_FILE)	\
-	$(NEW_VERSION_FILE)	\
-	$(PKG_VERSION_FILE)	\
 	$(NULL)
 
 -include $(top_srcdir)/git.mk

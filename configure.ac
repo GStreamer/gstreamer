@@ -171,10 +171,6 @@ AC_PROG_CC_STDC
 dnl check if the compiler supports '-c' and '-o' options
 AM_PROG_CC_C_O
 
-dnl check for git command for version generation in libgstvaapi
-AC_PATH_PROG([GIT], [git])
-AM_CONDITIONAL([HAVE_GIT], [test -n "$GIT"])
-
 dnl check for documentation tools
 GTK_DOC_CHECK([$GTKDOC_REQ])
 AG_GST_PLUGIN_DOCS([$GTKDOC_REQ])
