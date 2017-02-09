@@ -780,6 +780,13 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   /* we need to collect the headers and construct a config string from them */
   if (VDT != 0) {
+    if (!rtpvorbispay->need_headers) {
+      GST_INFO_OBJECT (rtpvorbispay, "getting new headers, replace existing");
+      g_list_free_full (rtpvorbispay->headers,
+                        (GDestroyNotify) gst_buffer_unref);
+      rtpvorbispay->headers = NULL;
+      rtpvorbispay->need_headers = TRUE;
+    }
     GST_DEBUG_OBJECT (rtpvorbispay, "collecting header");
     /* append header to the list of headers */
     gst_buffer_unmap (buffer, &map);
