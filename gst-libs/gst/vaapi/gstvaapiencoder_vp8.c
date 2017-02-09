@@ -129,8 +129,9 @@ ensure_bitrate (GstVaapiEncoderVP8 * encoder)
             gst_util_uint64_scale (GST_VAAPI_ENCODER_WIDTH (encoder) *
             GST_VAAPI_ENCODER_HEIGHT (encoder),
             GST_VAAPI_ENCODER_FPS_N (encoder),
-            GST_VAAPI_ENCODER_FPS_D (encoder)) / 4 * 1000;
+            GST_VAAPI_ENCODER_FPS_D (encoder)) / (4 * 1000);
       }
+      break;
     default:
       base_encoder->bitrate = 0;
       break;
@@ -219,7 +220,7 @@ fill_sequence (GstVaapiEncoderVP8 * encoder, GstVaapiEncSequence * sequence)
   seq_param->frame_height = GST_VAAPI_ENCODER_HEIGHT (encoder);
 
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) & GST_VAAPI_RATECONTROL_CBR)
-    seq_param->bits_per_second = base_encoder->bitrate;
+    seq_param->bits_per_second = base_encoder->bitrate * 1000;
 
   seq_param->intra_period = base_encoder->keyframe_period;
 
