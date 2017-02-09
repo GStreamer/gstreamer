@@ -540,7 +540,7 @@ error_create_allocator:
 }
 
 static inline guint
-get_dmabuf_surface_allocation_flags ()
+get_dmabuf_surface_allocation_flags (void)
 {
   /* @FIXME: fetch the real devices ids */
   /* Pair vendor/device identifies an unique physical device. */
