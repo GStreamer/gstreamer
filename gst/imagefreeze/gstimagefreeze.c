@@ -288,7 +288,6 @@ gst_image_freeze_sink_getcaps (GstImageFreeze * self, GstCaps * filter)
   ret = gst_caps_make_writable (ret);
   gst_image_freeze_remove_fps (self, ret);
 
-done:
   GST_LOG_OBJECT (pad, "Returning caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
