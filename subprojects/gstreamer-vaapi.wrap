@@ -1,0 +1,4 @@
+[wrap-git]
+directory=gstreamer-vaapi
+url=https://anongit.freedesktop.org/git/gstreamer/gstreamer-vaapi.git
+revision=master

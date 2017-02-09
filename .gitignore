@@ -10,6 +10,7 @@ gst-plugins-ugly
 gst-python
 gst-rtsp-server
 gstreamer
+gstreamer-vaapi
 __pycache__
 meson/
 subprojects/gst-devtools/
@@ -23,4 +24,5 @@ subprojects/gst-plugins-ugly/
 subprojects/gst-python/
 subprojects/gst-rtsp-server/
 subprojects/gstreamer/
+subprojects/gstreamer-vaapi/
 subprojects/glib/
