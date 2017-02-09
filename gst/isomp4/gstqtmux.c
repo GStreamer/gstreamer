@@ -2552,6 +2552,10 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
         media_start = gst_util_uint64_scale_round (ctts,
             atom_trak_get_timescale (qtpad->trak), GST_SECOND);
 
+        /* atom_trak_set_elst_entry() has a quirk - if the edit list
+         * is empty because there's no gap added above, this call
+         * will not replace index 1, it will create the entry at index 0.
+         * Luckily, that's exactly what we want here */
         atom_trak_set_elst_entry (qtpad->trak, 1, duration, media_start,
             (guint32) (1 * 65536.0));
       }
