@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 '''
+Plot buffer pts and events in relation to the wall clock. The plots can be used
+to spot anomalies, such as processing gaps.
+
 How to run:
 1) generate a log
 GST_DEBUG="GST_TRACER:7" GST_TRACERS=stats GST_DEBUG_FILE=trace.log <application>

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 '''
+Aggregate values for each tracer event type and print them with some statistics.
+
 How to run:
 1) generate some log
 GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage;latency" GST_DEBUG_FILE=trace.log <application>
