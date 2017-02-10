@@ -42,6 +42,7 @@ _ios_gl_memory_destroy (GstGLBaseMemory * gl_mem)
 {
   GstIOSGLMemory *mem = (GstIOSGLMemory *) gl_mem;
 
+  CFRelease (mem->texture);
   gst_memory_unref (GST_MEMORY_CAST (mem->cv_mem));
   GST_GL_BASE_MEMORY_ALLOCATOR_CLASS
       (gst_ios_gl_memory_allocator_parent_class)->destroy (gl_mem);
@@ -134,8 +135,7 @@ _ios_gl_memory_new (GstGLContext * context,
     GstVideoGLTextureType tex_type,
     guint tex_id,
     GstVideoInfo * info,
-    guint plane,
-    GstVideoAlignment * valign, gpointer user_data, GDestroyNotify notify)
+    guint plane, GstVideoAlignment * valign, CVOpenGLESTextureRef texture)
 {
   GstIOSGLMemory *mem;
 
@@ -143,8 +143,9 @@ _ios_gl_memory_new (GstGLContext * context,
   mem->gl_mem.tex_id = tex_id;
   mem->gl_mem.texture_wrapped = TRUE;
   gst_gl_memory_init (&mem->gl_mem, _ios_gl_memory_allocator, NULL, context,
-      target, tex_type, NULL, info, plane, valign, user_data, notify);
+      target, tex_type, NULL, info, plane, valign, NULL, NULL);
   mem->cv_mem = cv_mem;
+  mem->texture = texture;
 
   GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
 
@@ -158,9 +159,8 @@ gst_ios_gl_memory_new_wrapped (GstGLContext * context,
     GstVideoGLTextureType tex_type,
     guint tex_id,
     GstVideoInfo * info,
-    guint plane,
-    GstVideoAlignment * valign, gpointer user_data, GDestroyNotify notify)
+    guint plane, GstVideoAlignment * valign, CVOpenGLESTextureRef texture)
 {
   return _ios_gl_memory_new (context, cv_mem, target, tex_type, tex_id, info,
-      plane, valign, user_data, notify);
+      plane, valign, texture);
 }
