@@ -101,7 +101,7 @@ object.
 All readers and writers acquire the lock before accessing the object. Only one
 thread is allowed access the protected structures at a time.
 
-Object locking is used for all objects extending from GstObject such as
+Object locking is used for all objects extending from `GstObject` such as
 `GstElement`, `GstPad`.
 
 Object locking can be done with recursive locks or regular mutexes. Object
@@ -153,7 +153,7 @@ not extend from the base `GstObject` class these macros can be different.
 
 ### refcounting
 
-All new objects created have the FLOATING flag set. This means that the object
+All new objects created have the `FLOATING` flag set. This means that the object
 is not owned or managed yet by anybody other than the one holding a reference
 to the object. The object in this state has a reference count of 1.
 
@@ -211,8 +211,8 @@ object. Two types of properties might exist: accessible with or without
 holding the object lock. All properties should only be accessed with their
 corresponding macros. The public object properties are marked in the .h files
 with /*< public >*/. The public properties that require a lock to be held are
-marked with `/*< public >*/` `/* with <lock_type> */`, where `<lock_type>` can be
-`LOCK` or `STATE_LOCK` or any other lock to mark the type(s) of lock to be
+marked with `/*< public >*/` `/* with <lock_type> */`, where `<lock_type>` can
+be `LOCK` or `STATE_LOCK` or any other lock to mark the type(s) of lock to be
 held.
 
 **Example**:
@@ -221,24 +221,24 @@ in `GstPad` there is a public property `direction`. It can be found in the
 section marked as public and requiring the LOCK to be held. There exists
 also a macro to access the property.
 
-```
-    struct _GstRealPad {
-    ...
-    /*< public >*/ /* with LOCK */
-    ...
-    GstPadDirection                direction;
-    ...
-    };
+``` c
+struct _GstRealPad {
+  ...
+  /*< public >*/ /* with LOCK */
+  ...
+  GstPadDirection                direction;
+  ...
+};
 
-    #define GST_RPAD_DIRECTION(pad)      (GST_REAL_PAD_CAST(pad)->direction)
+#define GST_RPAD_DIRECTION(pad)      (GST_REAL_PAD_CAST(pad)->direction)
 ```
 
 Accessing the property is therefore allowed with the following code example:
 
-```
-    GST_OBJECT_LOCK (pad);
-    direction = GST_RPAD_DIRECTION (pad);
-    GST_OBJECT_UNLOCK (pad);
+``` c
+GST_OBJECT_LOCK (pad);
+direction = GST_RPAD_DIRECTION (pad);
+GST_OBJECT_UNLOCK (pad);
 ```
 
 ### Property lifetime
@@ -264,16 +264,16 @@ required to increase the refcount of the peer pad because as soon as the
 lock is released, the peer could be unreffed and disposed, making the
 pointer obtained in the critical section point to invalid memory.
 
-```  c
-    GST_OBJECT_LOCK (pad);
-    peer = GST_RPAD_PEER (pad);
-    if (peer)
-    gst_object_ref (GST_OBJECT (peer));
-    GST_OBJECT_UNLOCK (pad);
-    ... use peer ...
+``` c
+GST_OBJECT_LOCK (pad);
+peer = GST_RPAD_PEER (pad);
+if (peer)
+gst_object_ref (GST_OBJECT (peer));
+GST_OBJECT_UNLOCK (pad);
+... use peer ...
 
-    if (peer)
-    gst_object_unref (GST_OBJECT (peer));
+if (peer)
+  gst_object_unref (GST_OBJECT (peer));
 ```
 
 Note that after releasing the lock the peer might not actually be the peer
@@ -283,13 +283,13 @@ critical section to include the operations on the peer.
 The following code is equivalent to the above but with using the functions
 to access object properties.
 
-```  c
-    peer = gst_pad_get_peer (pad);
-    if (peer) {
-    ... use peer ...
+``` c
+peer = gst_pad_get_peer (pad);
+if (peer) {
+  ... use peer ...
 
-    gst_object_unref (GST_OBJECT (peer));
-    }
+  gst_object_unref (GST_OBJECT (peer));
+}
 ```
 
 **Example**:
@@ -297,23 +297,23 @@ to access object properties.
 Accessing the name of an object makes a copy of the name. The caller of the
 function should `g_free()` the name after usage.
 
-```  c
-    GST_OBJECT_LOCK (object)
-    name = g_strdup (GST_OBJECT_NAME (object));
-    GST_OBJECT_UNLOCK (object)
-    ... use name ...
+``` c
+GST_OBJECT_LOCK (object)
+name = g_strdup (GST_OBJECT_NAME (object));
+GST_OBJECT_UNLOCK (object)
+... use name ...
 
-    g_free (name);
+g_free (name);
 ```
 
 or:
 
-```  c
-    name = gst_object_get_name (object);
+``` c
+name = gst_object_get_name (object);
 
-    ... use name ...
+... use name ...
 
-    g_free (name);
+g_free (name);
 ```
 
 ### Accessor methods
@@ -359,37 +359,37 @@ that whenever we reacquire the lock, we check for updates to the cookie to
 decide if we are still iterating the right list.
 
 ```  c
-    GST_OBJECT_LOCK (lock);
-    /* grab list and cookie */
-    cookie = object->list_cookie;
-    list = object-list;
-    while (list) {
-    GstObject *item = GST_OBJECT (list->data);
-    /* need to ref the item before releasing the lock */
-    gst_object_ref (item);
-    GST_OBJECT_UNLOCK (lock);
+GST_OBJECT_LOCK (lock);
+/* grab list and cookie */
+cookie = object->list_cookie;
+list = object-list;
+while (list) {
+  GstObject *item = GST_OBJECT (list->data);
+  /* need to ref the item before releasing the lock */
+  gst_object_ref (item);
+  GST_OBJECT_UNLOCK (lock);
 
-    ... use/change item here...
+  ... use/change item here...
 
-    /* release item here */
-    gst_object_unref (item);
+  /* release item here */
+  gst_object_unref (item);
 
-    GST_OBJECT_LOCK (lock);
-    if (cookie != object->list_cookie) {
-        /* handle rollback caused by concurrent modification
-    * of the list here */
+  GST_OBJECT_LOCK (lock);
+  if (cookie != object->list_cookie) {
+    /* handle rollback caused by concurrent modification
+     * of the list here */
 
     ...rollback changes to items...
 
     /* grab new cookie and list */
     cookie = object->list_cookie;
     list = object->list;
-    }
-    else {
-        list = g_list_next (list);
-    }
-    }
-    GST_OBJECT_UNLOCK (lock);
+  }
+  else {
+    list = g_list_next (list);
+  }
+}
+GST_OBJECT_UNLOCK (lock);
 ```
 
 ### GstIterator
@@ -399,7 +399,7 @@ list. The following code example is equivalent to the previous example.
 
 **Example**:
 
-```  c
+``` c
 it = _get_iterator(object);
 while (!done) {
     switch (gst_iterator_next (it, &item)) {
