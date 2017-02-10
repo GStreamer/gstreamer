@@ -1,8 +1,8 @@
 # GstMiniObject
 
-This document describes the design of the miniobject base class.
+This document describes the design of the `GstMiniObject` base class.
 
-The miniobject abstract base class is used to construct lightweight
+The `GstMiniObject` abstract base class is used to construct lightweight,
 refcounted and boxed types that are frequently created and destroyed.
 
 ## Requirements
@@ -70,7 +70,7 @@ _my_object_free (MyObject *obj)
 `GstMiniObject` is refcounted. When a `GstMiniObject` is first created, it
 has a refcount of 1.
 
-Each variable holding a reference to a GstMiniObject is responsible for
+Each variable holding a reference to a `GstMiniObject` is responsible for
 updating the refcount. This includes incrementing the refcount with
 `gst_mini_object_ref()` when a reference is kept to a miniobject or
 `gst_mini_object_unref()` when a reference is released.
@@ -81,7 +81,7 @@ miniobject anymore, we can free the miniobject.
 When freeing the miniobject, first the `GstMiniObjectDisposeFunction` is
 called. This function is allowed to revive the object again by
 incrementing the refcount, in which case it should return FALSE from the
-dispose function. The dispose function is used by GstBuffer to revive
+dispose function. The dispose function is used by `GstBuffer` to revive
 the buffer back into the `GstBufferPool` when needed.
 
 When the dispose function returns TRUE, the `GstMiniObjectFreeFunction`
@@ -109,11 +109,10 @@ miniobjects are managed in a Copy-On-Write way. A copy is only made when
 it is known that the object is shared between multiple objects or
 threads.
 
-There are 2 methods implemented for controlling access to the
-miniobject.
+There are 2 methods implemented for controlling access to the miniobject.
 
   - A first method relies on the refcount of the object to control
-    writability. Objects using this method have the LOCKABLE flag unset.
+    writability. Objects using this method have the `LOCKABLE` flag unset.
 
   - A second method relies on a separate counter for controlling the
     access to the object. Objects using this method have the LOCKABLE
@@ -124,8 +123,8 @@ miniobject.
 
 ### non-LOCKABLE GstMiniObjects
 
-These `GstMiniObjects` have the LOCKABLE flag unset. They use the refcount value
-to control writability of the object.
+These `GstMiniObjects` have the `LOCKABLE` flag unset. They use the refcount
+value to control writability of the object.
 
 When the refcount of the miniobject is > 1, the objects it referenced by at
 least 2 objects and is thus considered unwritable. A copy must be made before a
@@ -134,20 +133,21 @@ modification to the object can be done.
 Using the refcount to control writability is problematic for many language
 bindings that can keep additional references to the objects. This method is
 mainly for historical reasons until all users of the miniobjects are
-converted to use the LOCAKBLE flag.
+converted to use the `LOCKABLE` flag.
 
 ### LOCKABLE GstMiniObjects
 
-These `GstMiniObjects` have the LOCKABLE flag set. They use a separate counter
+These `GstMiniObjects` have the `LOCKABLE` flag set. They use a separate counter
 for controlling writability and access to the object.
 
 It consists of 2 components:
 
 #### exclusive counter
 
-Each object that wants to keep a reference to a `GstMiniObject` and doesn't want to
-see the changes from other owners of the same `GstMiniObject` needs to lock the
-`GstMiniObject` in EXCLUSIVE mode, which will increase the exclusive counter.
+Each object that wants to keep a reference to a `GstMiniObject` and doesn't
+want to see the changes from other owners of the same `GstMiniObject` needs to
+lock the `GstMiniObject` in `EXCLUSIVE` mode, which will increase the exclusive
+counter.
 
 The exclusive counter counts the amount of objects that share this
 `GstMiniObject`. The counter is initially 0, meaning that the object is not
@@ -164,29 +164,30 @@ and `gst_mini_object_unlock()` pair with the requested access method.
 
 A `gst_mini_object_lock()` can fail when a `WRITE` lock is requested and the
 exclusive counter is > 1. Indeed a `GstMiniObject` object with an exclusive
-counter > 1 is locked EXCLUSIVELY by at least 2 objects and is therefore not
+counter > 1 is locked `EXCLUSIVELY` by at least 2 objects and is therefore not
 writable.
 
 Once the `GstMiniObject` is locked with a certain access mode, it can be
 recursively locked with the same or narrower access mode. For example, first
-locking the `GstMiniObject` in READWRITE mode allows you to recusively lock the
-GstMiniObject in READWRITE, READ and WRITE mode. Memory locked in READ mode
-cannot be locked recursively in WRITE or READWRITE mode.
+locking the `GstMiniObject` in `READWRITE` mode allows you to recusively lock
+the `GstMiniObject` in `READWRITE`, `READ` and `WRITE` mode. Memory locked in
+`READ` mode cannot be locked recursively in `WRITE` or `READWRITE` mode.
 
-Note that multiple threads can READ lock the `GstMiniObject` concurrently but
-cannot lock the object in WRITE mode because the exclusive counter must be > 1.
+Note that multiple threads can `READ`-lock the `GstMiniObject` concurrently but
+cannot lock the object in `WRITE` mode because the exclusive counter must
+be > 1.
 
 All calls to `gst_mini_object_lock()` need to be paired with one
 `gst_mini_object_unlock()` call with the same access mode. When the last
 refcount of the object is removed, there should be no more outstanding locks.
 
 Note that a shared counter of both 0 and 1 leaves the `GstMiniObject` writable.
-The reason is to make it easy to create and pass ownership of the `GstMiniObject`
-to another object while keeping it writable. When the `GstMiniObject` is created
-with a shared count of 0, it is writable. When the `GstMiniObject` is then added
-to another object, the shared count is incremented to 1 and the GstMiniObject
-remains writable. The 0 share counter has a similar purpose as the floating
-reference in `GObject`.
+The reason is to make it easy to create and pass ownership of the
+`GstMiniObject` to another object while keeping it writable. When the
+`GstMiniObject` is created with a shared count of 0, it is writable. When the
+`GstMiniObject` is then added to another object, the shared count is incremented
+to 1 and the `GstMiniObject` remains writable. The 0 share counter has a similar
+purpose as the floating reference in `GObject`.
 
 ## Weak references
 
