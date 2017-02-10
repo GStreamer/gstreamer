@@ -187,17 +187,17 @@ push buffer  |---------------->| Process buffer of type B
     - before srcpad does a push, it figures out a type as stated in 1), then
     it pushes a caps event with the type. The sink checks the media type and
     configures itself for this type.
-    - the source then usually does an ALLOCATION query to negotiate a bufferpool
-    with the sink. It then allocates a buffer from the pool and pushes it to
-    the sink. since the sink accepted the caps, it can create a pool for the
-    format.
+    - the source then usually does an `ALLOCATION` query to negotiate a
+    bufferpool with the sink. It then allocates a buffer from the pool and
+    pushes it to the sink. Since the sink accepted the caps, it can create a
+    pool for the format.
     - since the sink stated in 1) it could accept the type, it will be able to
     handle it.
 
 * How can sink request another format?
     - sink asks if new format is possible for the source.
-    - sink pushes RECONFIGURE event upstream
-    - src receives the RECONFIGURE event and marks renegotiation
+    - sink pushes `RECONFIGURE` event upstream
+    - src receives the `RECONFIGURE` event and marks renegotiation
     - On the next buffer push, the source renegotiates the caps and the
     bufferpool. The sink will put the new new preferred format high in the list
     of caps it returns from its caps query.
@@ -206,8 +206,8 @@ push buffer  |---------------->| Process buffer of type B
 
 - queue proxies all accept and caps queries to the other peer pad.
 - queue proxies the bufferpool
-- queue proxies the RECONFIGURE event
-- queue stores CAPS event in the queue. This means that the queue can
+- queue proxies the `RECONFIGURE` event
+- queue stores `CAPS` event in the queue. This means that the queue can
 contain buffers with different types.
 
 ### Pull-mode negotiation
@@ -269,17 +269,17 @@ low latency offered by pull mode, we want to avoid capsnego from within
 the pulling thread, in case it causes us to miss our scheduling
 deadlines.
 
-The pull thread is usually started in the PAUSED→PLAYING state change.
+The pull thread is usually started in the `PAUSED→PLAYING` state change.
 We must be able to complete the negotiation before this state change
 happens.
 
-The time to do capsnego, then, is after the SCHEDULING query has
+The time to do capsnego, then, is after the `SCHEDULING` query has
 succeeded, but before the sink has spawned the pulling thread.
 
 #### Mechanism
 
 The sink determines that the upstream elements support pull based
-scheduling by doing a SCHEDULING query.
+scheduling by doing a `SCHEDULING` query.
 
 The sink initiates the negotiation process by intersecting the results
 of `gst_pad_query_caps()` on its sink pad and its peer src pad. This is
@@ -302,10 +302,10 @@ linked pads are activated in pull mode. Typically, this operation will
 trigger negotiation on the downstream elements, which will now be forced
 to negotiate to the final fixed desired caps of the sinkpad.
 
-After these steps, the sink element returns ASYNC from the state change
-function. The state will commit to PAUSED when the first buffer is
+After these steps, the sink element returns `ASYNC` from the state change
+function. The state will commit to `PAUSED` when the first buffer is
 received in the sink. This is needed to provide a consistent API to the
-applications that expect ASYNC return values from sinks but it also
+applications that expect `ASYNC` return values from sinks but it also
 allows us to perform the remainder of the negotiation outside of the
 context of the pulling thread.
 
