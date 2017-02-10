@@ -265,31 +265,38 @@ gst_gl_sink_bin_init (GstGLSinkBin * self)
 static gboolean
 _connect_sink_element (GstGLSinkBin * self)
 {
-  gboolean res = TRUE;
-
   gst_object_set_name (GST_OBJECT (self->sink), "sink");
-  res &= gst_bin_add (GST_BIN (self), self->sink);
 
-  res &= gst_element_link_pads (self->balance, "src", self->sink, "sink");
+  if (gst_bin_add (GST_BIN (self), self->sink) &&
+      gst_element_link_pads (self->balance, "src", self->sink, "sink"))
+    return TRUE;
 
-  if (!res)
-    GST_ERROR_OBJECT (self, "Failed to link sink element into the pipeline");
+  GST_ERROR_OBJECT (self, "Failed to link sink element into the pipeline");
+  return FALSE;
+}
 
-  return res;
+static void
+gst_gl_sink_bin_set_sink (GstGLSinkBin * self, GstElement * sink)
+{
+  g_return_if_fail (GST_IS_ELEMENT (sink));
+
+  if (self->sink) {
+    gst_bin_remove (GST_BIN (self), self->sink);
+    self->sink = NULL;
+  }
+
+  /* We keep an indirect reference when the element is added */
+  self->sink = sink;
+
+  if (sink && !_connect_sink_element (self))
+    self->sink = NULL;
 }
 
 void
 gst_gl_sink_bin_finish_init_with_element (GstGLSinkBin * self,
     GstElement * element)
 {
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  self->sink = element;
-
-  if (!_connect_sink_element (self)) {
-    gst_object_unref (self->sink);
-    self->sink = NULL;
-  }
+  gst_gl_sink_bin_set_sink (self, element);
 }
 
 void
@@ -302,7 +309,7 @@ gst_gl_sink_bin_finish_init (GstGLSinkBin * self)
     element = klass->create_element ();
 
   if (element)
-    gst_gl_sink_bin_finish_init_with_element (self, element);
+    gst_gl_sink_bin_set_sink (self, element);
 }
 
 static void
@@ -313,17 +320,8 @@ gst_gl_sink_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SINK:
-    {
-      GstElement *sink = g_value_get_object (value);
-      if (self->sink)
-        gst_bin_remove (GST_BIN (self), self->sink);
-      self->sink = sink;
-      if (sink) {
-        gst_object_ref_sink (sink);
-        _connect_sink_element (self);
-      }
+      gst_gl_sink_bin_set_sink (self, g_value_get_object (value));
       break;
-    }
     case PROP_CONTRAST:
     case PROP_BRIGHTNESS:
     case PROP_HUE:
