@@ -31,11 +31,22 @@
 #define ICY_METADATA \
     "StreamTitle='" TEST_METADATA "';\0\0\0\0"
 
+#define EMPTY_ICY_STREAM_TITLE_METADATA \
+    "StreamTitle='';\0"
+
 #define ICY_DATA \
     "aaaaaaaa" \
     "\x02" \
     ICY_METADATA \
     "bbbbbbbb"
+
+#define ICY_DATA_EMPTY_METADATA \
+    ICY_DATA \
+    "\x00" \
+    "dddddddd" \
+    "\x01" \
+    EMPTY_ICY_STREAM_TITLE_METADATA \
+    "cccccccc"
 
 #define ICYCAPS "application/x-icy, metadata-interval = (int)8"
 
@@ -220,6 +231,71 @@ GST_START_TEST (test_demux)
 
 GST_END_TEST;
 
+GST_START_TEST (test_demux_empty_data)
+{
+  GstMessage *message;
+  GstTagList *tags;
+  const GValue *tag_val;
+  const gchar *tag;
+  GstCaps *caps;
+
+  fail_unless (gst_type_find_register (NULL, "success", GST_RANK_PRIMARY,
+          typefind_succeed, NULL, gst_static_caps_get (&typefind_caps), NULL,
+          NULL));
+
+  fake_typefind_caps = TRUE;
+
+  caps = gst_caps_from_string (ICYCAPS);
+
+  create_icydemux ();
+  gst_check_setup_events (srcpad, icydemux, caps, GST_FORMAT_TIME);
+
+  push_data ((guint8 *) ICY_DATA_EMPTY_METADATA,
+      sizeof (ICY_DATA_EMPTY_METADATA), -1);
+
+  message = gst_bus_poll (bus, GST_MESSAGE_TAG, -1);
+  fail_unless (message != NULL);
+
+  gst_message_parse_tag (message, &tags);
+  fail_unless (tags != NULL);
+
+  tag_val = gst_tag_list_get_value_index (tags, GST_TAG_TITLE, 0);
+  fail_unless (tag_val != NULL);
+
+  tag = g_value_get_string (tag_val);
+  fail_unless (tag != NULL);
+
+  fail_unless_equals_string (TEST_METADATA, (char *) tag);
+
+  gst_tag_list_unref (tags);
+  gst_message_unref (message);
+
+  message = gst_bus_poll (bus, GST_MESSAGE_TAG, -1);
+  fail_unless (message != NULL);
+
+  gst_message_parse_tag (message, &tags);
+  fail_unless (tags != NULL);
+
+  tag_val = gst_tag_list_get_value_index (tags, GST_TAG_TITLE, 0);
+  fail_unless (tag_val == NULL);
+
+  gst_message_unref (message);
+
+  /* Ensure that no further tag messages are received, i.e. the empty ICY tag
+   * is skipped */
+  message = gst_bus_poll (bus, GST_MESSAGE_TAG, 100000000);
+  fail_unless (message == NULL);
+
+  gst_tag_list_unref (tags);
+  gst_caps_unref (caps);
+
+  cleanup_icydemux ();
+
+  fake_typefind_caps = FALSE;
+}
+
+GST_END_TEST;
+
 /* run this test first before the custom typefind function is set up */
 GST_START_TEST (test_first_buf_offset_when_merged_for_typefinding)
 {
@@ -292,6 +368,7 @@ icydemux_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_demux);
+  tcase_add_test (tc_chain, test_demux_empty_data);
   tcase_add_test (tc_chain, test_first_buf_offset_when_merged_for_typefinding);
   tcase_add_test (tc_chain, test_not_negotiated);
 
