@@ -39,7 +39,8 @@
 
 /* Supported set of VA rate controls, within this implementation */
 #define SUPPORTED_RATECONTROLS                  \
-  (GST_VAAPI_RATECONTROL_MASK (CQP))
+  (GST_VAAPI_RATECONTROL_MASK (CQP) |           \
+   GST_VAAPI_RATECONTROL_MASK (CBR))
 
 /* Supported set of tuning options, within this implementation */
 #define SUPPORTED_TUNE_OPTIONS \
@@ -257,6 +258,65 @@ error:
 }
 
 static gboolean
+ensure_misc_params (GstVaapiEncoderVP8 * encoder, GstVaapiEncPicture * picture)
+{
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
+  GstVaapiEncMiscParam *misc;
+
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) != GST_VAAPI_RATECONTROL_CBR)
+    return TRUE;
+
+  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (FrameRate, encoder);
+  if (!misc)
+    return FALSE;
+  {
+    VAEncMiscParameterFrameRate *param = misc->data;
+    param->framerate =
+        GST_VAAPI_ENCODER_FPS_N (encoder) / GST_VAAPI_ENCODER_FPS_D (encoder);
+  }
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+
+  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
+  if (!misc)
+    return FALSE;
+  {
+    VAEncMiscParameterHRD *hrd = misc->data;
+    if (base_encoder->bitrate > 0) {
+      hrd->buffer_size = base_encoder->bitrate * 1000 * 2;
+      hrd->initial_buffer_fullness = base_encoder->bitrate * 1000;
+    } else {
+      hrd->buffer_size = 0;
+      hrd->initial_buffer_fullness = 0;
+    }
+  }
+
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+
+  /* RateControl params */
+  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (RateControl, encoder);
+  if (!misc)
+    return FALSE;
+  {
+    VAEncMiscParameterRateControl *rate_control;
+    rate_control = misc->data;
+    rate_control->bits_per_second = base_encoder->bitrate * 1000;
+    rate_control->target_percentage = 70;
+    /* CPB (Coded picture buffer) length in milliseconds, which could
+     * be provided as a property */
+    rate_control->window_size = 500;
+    rate_control->initial_qp = encoder->yac_qi;
+    rate_control->min_qp = 1;
+  }
+
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+
+  return TRUE;
+}
+
+static gboolean
 fill_picture (GstVaapiEncoderVP8 * encoder,
     GstVaapiEncPicture * picture,
     GstVaapiCodedBuffer * codedbuf, GstVaapiSurfaceProxy * surface)
@@ -302,6 +362,10 @@ fill_picture (GstVaapiEncoderVP8 * encoder,
   }
 
   pic_param->sharpness_level = encoder->sharpness_level;
+
+  /* Used for CBR */
+  pic_param->clamp_qindex_low = 0;
+  pic_param->clamp_qindex_high = 127;
 
   return TRUE;
 }
@@ -374,6 +438,8 @@ gst_vaapi_encoder_vp8_encode (GstVaapiEncoder * base_encoder,
   g_assert (GST_VAAPI_SURFACE_PROXY_SURFACE (reconstruct));
 
   if (!ensure_sequence (encoder, picture))
+    goto error;
+  if (!ensure_misc_params (encoder, picture))
     goto error;
   if (!ensure_picture (encoder, picture, codedbuf, reconstruct))
     goto error;
