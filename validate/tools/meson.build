@@ -22,6 +22,17 @@ executable('gst-validate-media-check-' + apiversion,
             link_with : [gstvalidate]
         )
 
+if cairo_dep.found()
+    executable('gst-validate-image-check-' + apiversion,
+            'gst-validate-images-check.c',
+                install: true,
+                include_directories : inc_dirs,
+                dependencies : [gst_dep, glib_dep, gst_pbutils_dep, gio_dep],
+                c_args : [gst_c_args],
+                link_with : [gstvalidate, video]
+            )
+endif
+
 tmpconf = configuration_data()
 tmpconf.set('LIBDIR', get_option('prefix') + '/' + get_option('datadir') +
             '/' + get_option('libdir'))
