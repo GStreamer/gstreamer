@@ -170,36 +170,36 @@ implementations are possible and are invisible in the API or ABI.
 The complete buffer with metadata could, for example, look as follows:
 
 ```
-                         +-------------------------------------+
-GstMiniObject            |     GType (GstBuffer)               |
-                         |     refcount, flags, copy/disp/free |
-                         +-------------------------------------+
-GstBuffer                |     pool,pts,dts,duration,offsets   |
-                         |     <private data>                  |
-                         +.....................................+
-                         |     next                           ---+
-                      +- |     info                           ------> GstMetaInfo
-GstMetaTiming         |  |                                     | |
-                      |  |     dts                             | |
-                      |  |     pts                             | |
-                      |  |     duration                        | |
-                      +- |     clock_rate                      | |
-                         + . . . . . . . . . . . . . . . . . . + |
-                         |     next                           <--+
-GstMetaVideo       +- +- |     info                           ------> GstMetaInfo
-                   |  |  |                                     | |
-                   |  |  |     flags                           | |
-                   |  |  |     n_planes                        | |
-                   |  |  |     planes[]                        | |
-                   |  |  |     map                             | |
-                   |  |  |     unmap                           | |
-                   +- |  |                                     | |
-                      |  |     private fields                  | |
-GstMetaVideoImpl      |  |     ...                             | |
-                      |  |     ...                             | |
-                      +- |                                     | |
-                         + . . . . . . . . . . . . . . . . . . + .
-                         .                                       .
+                         +----------------------------------+
+GstMiniObject            |  GType (GstBuffer)               |
+                         |  refcount, flags, copy/disp/free |
+                         +----------------------------------+
+GstBuffer                |  pool,pts,dts,duration,offsets   |
+                         |  <private data>                  |
+                         +..................................+
+                         |  next                           ---+
+                      +- |  info                           ------> GstMetaInfo
+GstMetaTiming         |  |                                  | |
+                      |  |  dts                             | |
+                      |  |  pts                             | |
+                      |  |  duration                        | |
+                      +- |  clock_rate                      | |
+                         +  . . . . . . . . . . . . . . . . + |
+                         |  next                           <--+
+GstMetaVideo       +- +- |  info                           ------> GstMetaInfo
+                   |  |  |                                  | |
+                   |  |  |  flags                           | |
+                   |  |  |  n_planes                        | |
+                   |  |  |  planes[]                        | |
+                   |  |  |  map                             | |
+                   |  |  |  unmap                           | |
+                   +- |  |                                  | |
+                      |  |  private fields                  | |
+GstMetaVideoImpl      |  |  ...                             | |
+                      |  |  ...                             | |
+                      +- |                                  | |
+                         +  . . . . . . . . . . . . . . . . + .
+                         .                                    .
 ```
 
 ## API examples
