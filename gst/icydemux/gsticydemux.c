@@ -323,6 +323,7 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
   GstTagList *tags;
   const guint8 *data;
   int length, i;
+  gboolean tags_found = FALSE;
   gchar *buffer;
   gchar **strings;
 
@@ -340,6 +341,7 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
   for (i = 0; strings[i]; i++) {
     if (!g_ascii_strncasecmp (strings[i], "StreamTitle=", 12)) {
       char *title = gst_icydemux_unicodify (strings[i] + 13);
+      tags_found = TRUE;
 
       if (title && *title) {
         gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
@@ -348,6 +350,7 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
       }
     } else if (!g_ascii_strncasecmp (strings[i], "StreamUrl=", 10)) {
       char *url = gst_icydemux_unicodify (strings[i] + 11);
+      tags_found = TRUE;
 
       if (url && *url) {
         gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_HOMEPAGE,
@@ -362,7 +365,7 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
   gst_adapter_unmap (icydemux->meta_adapter);
   gst_adapter_flush (icydemux->meta_adapter, length);
 
-  if (!gst_tag_list_is_empty (tags))
+  if (tags_found)
     gst_icydemux_tag_found (icydemux, tags);
   else
     gst_tag_list_unref (tags);
