@@ -1038,20 +1038,6 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
     return GST_FLOW_OK;
   }
 
-  if (src->automatic_redirect &&
-      soup_session_would_redirect (src->session, msg) &&
-      soup_session_redirect_message (src->session, msg)) {
-    src->redirection_uri =
-        soup_uri_to_string (soup_message_get_uri (msg), FALSE);
-    src->redirection_permanent =
-        (msg->status_code == SOUP_STATUS_MOVED_PERMANENTLY);
-    GST_DEBUG_OBJECT (src, "%u redirect to \"%s\" (permanent %d)",
-        msg->status_code, src->redirection_uri, src->redirection_permanent);
-
-    /* force a retry with the updated message */
-    return GST_FLOW_CUSTOM_ERROR;
-  }
-
   if (msg->status_code == SOUP_STATUS_UNAUTHORIZED) {
     /* force an error */
     return gst_soup_http_src_parse_status (msg, src);
@@ -1371,6 +1357,19 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
   return GST_FLOW_OK;
 }
 
+static void
+gst_soup_http_src_restarted_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
+{
+  if (soup_session_would_redirect (src->session, msg)) {
+    src->redirection_uri =
+        soup_uri_to_string (soup_message_get_uri (msg), FALSE);
+    src->redirection_permanent =
+        (msg->status_code == SOUP_STATUS_MOVED_PERMANENTLY);
+    GST_DEBUG_OBJECT (src, "%u redirect to \"%s\" (permanent %d)",
+        msg->status_code, src->redirection_uri, src->redirection_permanent);
+  }
+}
+
 static gboolean
 gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
 {
@@ -1400,7 +1399,13 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
   }
 
   soup_message_set_flags (src->msg, SOUP_MESSAGE_OVERWRITE_CHUNKS |
-      SOUP_MESSAGE_NO_REDIRECT);
+      (src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
+
+  if (src->automatic_redirect) {
+    g_signal_connect (src->msg, "restarted",
+        G_CALLBACK (gst_soup_http_src_restarted_cb), src);
+  }
+
   gst_soup_http_src_add_range_header (src, src->request_position,
       src->stop_position);
 
