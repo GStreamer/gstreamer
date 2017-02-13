@@ -66,21 +66,21 @@ if (result) {
 the `_set_parent()` method performs the following actions:
 
 ```
-    lock (child);
-    if (child->parent != null) {
-      unlock (child);
-      return false;
-    }
-    if (is_floating (child)) {
-      unset (child, floating);
-    }
-    else {
-      _ref (child);
-    }
-    child->parent = parent;
-    unlock (child);
-    _signal (parent_set, child, parent);
-    return true;
+lock (child);
+if (child->parent != null) {
+  unlock (child);
+  return false;
+}
+if (is_floating (child)) {
+  unset (child, floating);
+}
+else {
+  _ref (child);
+}
+child->parent = parent;
+unlock (child);
+_signal (parent_set, child, parent);
+return true;
 ```
 
 The function atomically checks if the child has no parent yet
@@ -270,11 +270,11 @@ on the first object. The second object is reffed and a pointer
 is updated in the first object using the following algorithm:
 
 ``` c
-        LOCK (object1);
-        if (object1->pointer)
-          _unref (object1->pointer);
-        object1->pointer = _ref (object2);
-        UNLOCK (object1);
+LOCK (object1);
+if (object1->pointer)
+  _unref (object1->pointer);
+object1->pointer = _ref (object2);
+UNLOCK (object1);
 ```
 
 After releasing the lock on the first object is is not sure that
@@ -295,13 +295,13 @@ getting the reference from object1.
 Reading the object pointed to by object1 can be done like this:
 
 ``` c
-        LOCK (object1);
-        object2 = object1->pointer;
-        _ref (object2);
-        UNLOCK (object1);
+LOCK (object1);
+object2 = object1->pointer;
+_ref (object2);
+UNLOCK (object1);
 
-        … use object2 …
-        _unref (object2);
+… use object2 …
+_unref (object2);
 ```
 
 Depending on the type of the object, modifications can be done either with
@@ -310,35 +310,35 @@ copy-on-write or directly into the object.
 Copy on write can practically only be done like this:
 
 ``` c
-    LOCK (object1);
-    object2 = object1->pointer;
-    object2 = _copy_on_write (object2);
-    ... make modifications to object2 ...
-    UNLOCK (object1);
+LOCK (object1);
+object2 = object1->pointer;
+object2 = _copy_on_write (object2);
+... make modifications to object2 ...
+UNLOCK (object1);
 
-    Releasing the lock has only a very small window where the copy_on_write
-    actually does not perform a copy:
+Releasing the lock has only a very small window where the copy_on_write
+actually does not perform a copy:
 
-    LOCK (object1);
-    object2 = object1->pointer;
-    _ref (object2);
-    UNLOCK (object1);
+LOCK (object1);
+object2 = object1->pointer;
+_ref (object2);
+UNLOCK (object1);
 
-    /* object2 now has at least 2 refcounts making the next
-    copy-on-write make a real copy, unless some other thread writes
-    another object2 to object1 here … */
+/* object2 now has at least 2 refcounts making the next
+copy-on-write make a real copy, unless some other thread writes
+another object2 to object1 here … */
 
-    object2 = _copy_on_write (object2);
+object2 = _copy_on_write (object2);
 
-    /* make modifications to object2 … */
+/* make modifications to object2 … */
 
-    LOCK (object1);
-    if (object1->pointer != object2) {
-      if (object1->pointer)
-        _unref (object1->pointer);
-      object1->pointer = gst_object_ref (object2);
-    }
-    UNLOCK (object1);
+LOCK (object1);
+if (object1->pointer != object2) {
+  if (object1->pointer)
+    _unref (object1->pointer);
+  object1->pointer = gst_object_ref (object2);
+}
+UNLOCK (object1);
 ```
 
 #### destroying the single-reffed relationship
@@ -347,10 +347,10 @@ The folowing algorithm removes the single-reffed link between
 object1 and object2.
 
 ``` c
-            LOCK (object1);
-            _unref (object1->pointer);
-            object1->pointer = NULL;
-            UNLOCK (object1);
+LOCK (object1);
+_unref (object1->pointer);
+object1->pointer = NULL;
+UNLOCK (object1);
 ```
 
 Which yields the following initial state again:
@@ -412,12 +412,12 @@ must be defined for all unreffed relations. In these examples we always
 lock object1 first and then object2.
 
 ``` c
-    LOCK (object1);
-    LOCK (object2);
-    object2->refpointer = object1;
-    object1->refpointer = object2;
-    UNLOCK (object2);
-    UNLOCK (object1);
+LOCK (object1);
+LOCK (object2);
+object2->refpointer = object1;
+object1->refpointer = object2;
+UNLOCK (object2);
+UNLOCK (object1);
 ```
 
 #### using the unreffed relationship
@@ -426,12 +426,12 @@ Reading requires taking one of the locks and reading the corresponing
 object. Again we need to ref the object before releasing the lock.
 
 ``` c
-    LOCK (object1);
-    object2 = _ref (object1->refpointer);
-    UNLOCK (object1);
+LOCK (object1);
+object2 = _ref (object1->refpointer);
+UNLOCK (object1);
 
-    .. use object2 ..
-    _unref (object2);
+.. use object2 ..
+_unref (object2);
 ```
 
 #### destroying the unreffed relationship
@@ -442,12 +442,12 @@ relation.
 When only a reference to object1 is held:
 
 ``` c
-            LOCK (object1);
-            LOCK (object2);
-            object1->refpointer->refpointer = NULL;
-            object1->refpointer = NULL;
-            UNLOCK (object2);
-            UNLOCK (object1);
+LOCK (object1);
+LOCK (object2);
+object1->refpointer->refpointer = NULL;
+object1->refpointer = NULL;
+UNLOCK (object2);
+UNLOCK (object1);
 ```
 
 When only a reference to object2 is held, we need to get a handle to the
@@ -457,45 +457,45 @@ this we check the relation after grabbing both locks and retry if the
 relation changed.
 
 ``` c
-    retry:
-      LOCK (object2);
-      object1 = _ref (object2->refpointer);
-      UNLOCK (object2);
-      .. things can change here ..
-      LOCK (object1);
-      LOCK (object2);
-      if (object1 == object2->refpointer) {
-        /* relation unchanged */
-        object1->refpointer->refpointer = NULL;
-        object1->refpointer = NULL;
-      }
-      else {
-        /* relation changed.. retry */
-        UNLOCK (object2);
-        UNLOCK (object1);
-        _unref (object1);
-        goto retry;
-      }
-      UNLOCK (object2);
-      UNLOCK (object1);
-      _unref (object1);
-
-    /* When references are held to both objects. Note that it is not possible to
-    get references to both objects with the locks released since when the
-    references are taken and the locks are released, a concurrent update might
-    have changed the link, making the references not point to linked objects. */
-
-    LOCK (object1);
-    LOCK (object2);
-    if (object1->refpointer == object2) {
-      object2->refpointer = NULL;
-      object1->refpointer = NULL;
-    }
-    else {
-      .. objects are not linked ..
-    }
+retry:
+  LOCK (object2);
+  object1 = _ref (object2->refpointer);
+  UNLOCK (object2);
+  .. things can change here ..
+  LOCK (object1);
+  LOCK (object2);
+  if (object1 == object2->refpointer) {
+    /* relation unchanged */
+    object1->refpointer->refpointer = NULL;
+    object1->refpointer = NULL;
+  }
+  else {
+    /* relation changed.. retry */
     UNLOCK (object2);
     UNLOCK (object1);
+    _unref (object1);
+    goto retry;
+  }
+  UNLOCK (object2);
+  UNLOCK (object1);
+  _unref (object1);
+
+/* When references are held to both objects. Note that it is not possible to
+get references to both objects with the locks released since when the
+references are taken and the locks are released, a concurrent update might
+have changed the link, making the references not point to linked objects. */
+
+LOCK (object1);
+LOCK (object2);
+if (object1->refpointer == object2) {
+  object2->refpointer = NULL;
+  object1->refpointer = NULL;
+}
+else {
+  .. objects are not linked ..
+}
+UNLOCK (object2);
+UNLOCK (object1);
 ```
 
 ## double-reffed relation
