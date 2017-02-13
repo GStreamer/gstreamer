@@ -8,3 +8,6 @@ option('library_format', type : 'combo', choices : ['shared', 'static', 'both'],
 option('disable_introspection',
         type : 'boolean', value : false,
         description : 'Whether to disable the introspection generation')
+option('disable_libunwind',
+        type : 'boolean', value : false,
+        description : 'Whether to disable the usage of libunwind (to generate backtraces)')

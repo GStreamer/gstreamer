@@ -275,20 +275,24 @@ if host_machine.system() == 'windows'
   platform_deps = [cc.find_library('ws2_32')]
 endif
 
-unwind_dep = dependency('libunwind', required : false)
-dw_dep = dependency('libdw', required: false)
-if unwind_dep.found()
-  cdata.set('HAVE_UNWIND', 1)
-  if dw_dep.found()
-    cdata.set('HAVE_DW', 1)
+backtrace_deps = []
+if not get_option('disable_libunwind')
+  unwind_dep = dependency('libunwind', required : false)
+  dw_dep = dependency('libdw', required: false)
+  backtrace_deps = [unwind_dep, dw_dep]
+  if unwind_dep.found()
+    cdata.set('HAVE_UNWIND', 1)
+    if dw_dep.found()
+      cdata.set('HAVE_DW', 1)
+    else
+      message('Support for backtraces is partial only.')
+    endif
   else
-    message('Support for backtraces is partial only.')
-  endif
-else
-  if cc.has_function('backtrace')
-    cdata.set('HAVE_BACKTRACE', 1)
-  else
-      message('NO backtraces support.')
+    if cc.has_function('backtrace')
+      cdata.set('HAVE_BACKTRACE', 1)
+    else
+        message('NO backtraces support.')
+    endif
   endif
 endif
 
