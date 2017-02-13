@@ -2811,6 +2811,11 @@ request_rtp_decoder (GstElement * rtpbin, guint session, GstRTSPStream * stream)
     stream->srtpdec = gst_element_factory_make ("srtpdec", name);
     g_free (name);
 
+    if (stream->srtpdec == NULL) {
+      GST_ELEMENT_ERROR (stream->parent, CORE, MISSING_PLUGIN, (NULL),
+          ("no srtpdec element present!"));
+      return NULL;
+    }
     g_signal_connect (stream->srtpdec, "request-key",
         (GCallback) request_key, stream);
   }
@@ -2838,6 +2843,12 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
     name = g_strdup_printf ("srtpenc_%u", session);
     stream->srtpenc = gst_element_factory_make ("srtpenc", name);
     g_free (name);
+
+    if (stream->srtpenc == NULL) {
+      GST_ELEMENT_ERROR (stream->parent, CORE, MISSING_PLUGIN, (NULL),
+          ("no srtpenc element present!"));
+      return NULL;
+    }
 
     /* get RTCP crypto parameters from caps */
     s = gst_caps_get_structure (stream->srtcpparams, 0);
