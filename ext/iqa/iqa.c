@@ -157,7 +157,6 @@ do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
   out = (dssim_rgba *) out_info.data;
 
   ptrs = g_malloc (sizeof (char **) * ref->info.height);
-  ptrs2 = g_malloc (sizeof (char **) * cmp->info.height);
 
   for (y = 0; y < ref->info.height; y++) {
     ptrs[y] = ref_info.data + (ref->info.width * 4 * y);
