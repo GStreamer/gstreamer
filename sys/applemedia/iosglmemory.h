@@ -43,7 +43,8 @@ typedef struct _GstIOSGLMemory
 {
   GstGLMemory gl_mem;
   GstAppleCoreVideoMemory *cv_mem;
-  CVOpenGLESTextureRef texture;
+  gpointer gl_data;
+  GDestroyNotify gl_notify;
 } GstIOSGLMemory;
 
 #define GST_IOS_GL_MEMORY_ALLOCATOR_NAME   "IOSGLMemory"
@@ -59,7 +60,8 @@ gst_ios_gl_memory_new_wrapped (GstGLContext * context,
     GstVideoInfo * info,
     guint plane,
     GstVideoAlignment *valign,
-    CVOpenGLESTextureRef texture);
+    gpointer gl_data,
+    GDestroyNotify gl_notify);
 
 gboolean gst_is_ios_gl_memory (GstMemory * mem);
 
