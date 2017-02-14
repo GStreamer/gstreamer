@@ -24,7 +24,9 @@ EXTRA_DIST = \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
 	docs/design/gst-rtp-server-design \
 	gst-rtsp-server.doap \
-	$(win32)
+	$(win32) \
+	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
+	config.h.meson
 
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
