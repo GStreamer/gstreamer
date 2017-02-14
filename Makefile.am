@@ -17,8 +17,9 @@ EXTRA_DIST = \
 	ChangeLog gst-plugins-bad.doap autogen.sh $(win32) \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
 	meson_options.txt config.h.meson \
-	gst-libs/gst/*/*enum.py ext/srtp/srtp_mkenum.py \
-	win32/common/*.def \
+	gst-libs/gst/interfaces/build_mkenum.py \
+	gst-libs/gst/mpegts/mpegts_enum.py \
+	ext/srtp/srtp_mkenum.py \
 	ext/vulkan/vkconfig.h.meson gst-libs/gst/gl/gstglconfig.h.meson
 
 DISTCLEANFILES = _stdint.h

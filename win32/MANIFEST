@@ -1,1 +1,12 @@
 win32/MANIFEST
+win32/common/libgstadaptivedemux.def
+win32/common/libgstbadaudio.def
+win32/common/libgstbadbase.def
+win32/common/libgstbadvideo.def
+win32/common/libgstbasecamerabinsrc.def
+win32/common/libgstcodecparsers.def
+win32/common/libgstinsertbin.def
+win32/common/libgstmpegts.def
+win32/common/libgstphotography.def
+win32/common/libgstplayer.def
+win32/common/libgsturidownloader.def
