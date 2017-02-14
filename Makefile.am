@@ -6,7 +6,9 @@ SUBDIRS = \
 EXTRA_DIST = \
 	depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
-	ChangeLog gst-plugins-ugly.doap autogen.sh
+	ChangeLog gst-plugins-ugly.doap autogen.sh \
+	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
+	meson_options.txt config.h.meson
 
 DISTCLEANFILES = _stdint.h
 
