@@ -65,7 +65,7 @@ static const char gst_vaapidecode_sink_caps_str[] =
     GST_CAPS_CODEC("video/x-xvid")
     GST_CAPS_CODEC("video/x-h263")
     GST_CAPS_CODEC("video/x-h264")
-#if USE_HEVC_DECODER
+#if USE_H265_DECODER
     GST_CAPS_CODEC("video/x-h265")
 #endif
     GST_CAPS_CODEC("video/x-wmv")
@@ -119,7 +119,7 @@ static const GstVaapiDecoderMap vaapi_decode_map[] = {
 #if USE_VP9_DECODER
   {GST_VAAPI_CODEC_VP9, GST_RANK_PRIMARY, "vp9", "video/x-vp9"},
 #endif
-#if USE_HEVC_DECODER
+#if USE_H265_DECODER
   {GST_VAAPI_CODEC_H265, GST_RANK_PRIMARY, "h265", "video/x-h265"},
 #endif
   {0 /* the rest */ , GST_RANK_PRIMARY + 1, NULL,
@@ -855,7 +855,7 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
         }
       }
       break;
-#if USE_HEVC_DECODER
+#if USE_H265_DECODER
     case GST_VAAPI_CODEC_H265:
       decode->decoder = gst_vaapi_decoder_h265_new (dpy, caps);
 

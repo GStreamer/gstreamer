@@ -638,9 +638,9 @@ AC_CHECK_HEADERS([va/va_dec_hevc.h], [], [],
 CPPFLAGS="$saved_CPPFLAGS"
 
 dnl Check for HEVC decoding API (0.38+)
-USE_HEVC_DECODER=0
+USE_H265_DECODER=0
 AC_CACHE_CHECK([for HEVC decoding API],
-  [ac_cv_have_hevc_decoding_api],
+  [ac_cv_have_h265_decoding_api],
   [
     saved_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
@@ -663,12 +663,12 @@ slice_param.slice_data_offset = 0;
 slice_param.slice_data_flag = 0;
           ]])
       ],
-      [ac_cv_have_hevc_decoding_api="yes"],
-      [ac_cv_have_hevc_decoding_api="no"])
+      [ac_cv_have_h265_decoding_api="yes"],
+      [ac_cv_have_h265_decoding_api="no"])
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
   ])
-AS_IF([test "x$ac_cv_have_hevc_decoding_api" = "xyes"], [USE_HEVC_DECODER=1])
+AS_IF([test "x$ac_cv_have_h265_decoding_api" = "xyes"], [USE_H265_DECODER=1])
 
 dnl Check for vpp (video post-processing) support
 USE_VA_VPP=0
@@ -981,9 +981,9 @@ AC_DEFINE_UNQUOTED([USE_VP9_DECODER], [$USE_VP9_DECODER],
   [Defined to 1 if VP9 decoder is used])
 AM_CONDITIONAL([USE_VP9_DECODER], [test $USE_VP9_DECODER -eq 1])
 
-AC_DEFINE_UNQUOTED([USE_HEVC_DECODER], [$USE_HEVC_DECODER],
+AC_DEFINE_UNQUOTED([USE_H265_DECODER], [$USE_H265_DECODER],
   [Defined to 1 if HEVC decoder is used])
-AM_CONDITIONAL([USE_HEVC_DECODER], [test $USE_HEVC_DECODER -eq 1])
+AM_CONDITIONAL([USE_H265_DECODER], [test $USE_H265_DECODER -eq 1])
 
 AC_DEFINE_UNQUOTED([USE_DRM], [$USE_DRM],
   [Defined to 1 if DRM is enabled])

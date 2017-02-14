@@ -166,7 +166,7 @@ endif
 
 libgstvaapi_hevcdec_source_c = gstvaapidecoder_h265.c
 libgstvaapi_hevcdec_source_h = gstvaapidecoder_h265.h
-if USE_HEVC_DECODER
+if USE_H265_DECODER
 libgstvaapi_source_c += $(libgstvaapi_hevcdec_source_c)
 libgstvaapi_source_h += $(libgstvaapi_hevcdec_source_h)
 endif
