@@ -34,7 +34,10 @@ include $(top_srcdir)/common/win32.mak
 EXTRA_DIST = \
 	depcomp \
 	AUTHORS COPYING COPYING.LIB NEWS README RELEASE REQUIREMENTS \
-	ChangeLog gst-plugins-base.doap autogen.sh $(win32)
+	ChangeLog gst-plugins-base.doap autogen.sh $(win32) \
+	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
+	gst-libs/gst/*/*_mkenum.py \
+	meson_options.txt config.h.meson
 
 DISTCLEANFILES = _stdint.h
 
