@@ -855,10 +855,16 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   if (!gst_udpsrc_ensure_mem (udpsrc))
     goto memory_alloc_error;
 
-  /* optimization: use messages only in multicast mode */
+  /* optimization: use messages only in multicast mode and
+   * if we can't let the kernel do the filtering for us */
   p_msgs =
       (g_inet_address_get_is_multicast (g_inet_socket_address_get_address
           (udpsrc->addr))) ? &msgs : NULL;
+#ifdef IP_MULTICAST_ALL
+  if (g_inet_address_get_family (g_inet_socket_address_get_address
+          (udpsrc->addr)) == G_SOCKET_FAMILY_IPV4)
+    p_msgs = NULL;
+#endif
 
   /* Retrieve sender address unless we've been configured not to do so */
   p_saddr = (udpsrc->retrieve_sender_address) ? &saddr : NULL;
@@ -1445,7 +1451,14 @@ gst_udpsrc_open (GstUDPSrc * src)
 
     if (g_inet_address_get_family (g_inet_socket_address_get_address
             (src->addr)) == G_SOCKET_FAMILY_IPV4) {
-#if defined(IP_PKTINFO)
+#if defined(IP_MULTICAST_ALL)
+      if (!g_socket_set_option (src->used_socket, IPPROTO_IP, IP_MULTICAST_ALL,
+              0, &err)) {
+        GST_WARNING_OBJECT (src, "Failed to disable IP_MULTICAST_ALL: %s",
+            err->message);
+        g_clear_error (&err);
+      }
+#elif defined(IP_PKTINFO)
       if (!g_socket_set_option (src->used_socket, IPPROTO_IP, IP_PKTINFO, TRUE,
               &err)) {
         GST_WARNING_OBJECT (src, "Failed to enable IP_PKTINFO: %s",
