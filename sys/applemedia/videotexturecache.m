@@ -157,7 +157,7 @@ _do_create_memory (GstGLContext * context, ContextThreadData * data)
             gl_target, GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
             CVOpenGLESTextureGetName (texture),
             &cache->input_info,
-            0, NULL, texture);
+            0, NULL, texture, (GDestroyNotify) CFRelease);
         break;
       case GST_VIDEO_FORMAT_NV12: {
         GstVideoGLTextureType textype;
@@ -181,7 +181,7 @@ _do_create_memory (GstGLContext * context, ContextThreadData * data)
         memory = gst_apple_core_video_memory_new_wrapped (gpixbuf, plane, size);
         gl_memory = gst_ios_gl_memory_new_wrapped (context, memory,
                 gl_target, textype, CVOpenGLESTextureGetName (texture), &cache->input_info,
-                plane, NULL, texture);
+                plane, NULL, texture, (GDestroyNotify) CFRelease);
         break;
       }
     default:
