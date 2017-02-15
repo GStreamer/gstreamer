@@ -152,7 +152,6 @@ struct _GstSplitMuxSink
   GstClockTimeDiff max_out_running_time;
   GstClockTimeDiff next_max_out_running_time;
 
-  GstClockTimeDiff muxed_out_time;
   guint64 muxed_out_bytes;
 
   MqStreamCtx *reference_ctx;

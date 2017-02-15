@@ -932,10 +932,6 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
   complete_or_wait_on_out (splitmux, ctx);
 
-  if (splitmux->muxed_out_time == GST_CLOCK_STIME_NONE ||
-      splitmux->muxed_out_time < buf_info->run_ts)
-    splitmux->muxed_out_time = buf_info->run_ts;
-
   splitmux->muxed_out_bytes += buf_info->buf_size;
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -2128,8 +2124,8 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
       splitmux->input_state = SPLITMUX_INPUT_STATE_COLLECTING_GOP_START;
       splitmux->output_state = SPLITMUX_OUTPUT_STATE_START_NEXT_FILE;
       splitmux->max_in_running_time = GST_CLOCK_STIME_NONE;
-      splitmux->gop_start_time = splitmux->muxed_out_time =
-          splitmux->fragment_start_time = GST_CLOCK_STIME_NONE;
+      splitmux->gop_start_time = splitmux->fragment_start_time =
+          GST_CLOCK_STIME_NONE;
       splitmux->muxed_out_bytes = 0;
       GST_SPLITMUX_UNLOCK (splitmux);
       break;
