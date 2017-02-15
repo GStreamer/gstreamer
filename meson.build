@@ -88,7 +88,6 @@ configure_file(input : 'config.h.meson',
 
 gir = find_program('g-ir-scanner', required : false)
 gnome = import('gnome')
-gtkdoc = find_program('gtkdoc-scan', required : false)
 
 # Fixme, not very elegant.
 build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
@@ -139,14 +138,16 @@ subdir('pkgconfig')
 subdir('tests')
 subdir('examples')
 
-if build_machine.system() != 'windows'
-  if gtkdoc.found()
+if build_machine.system() == 'windows'
+  message('Disabling gtk-doc while building on Windows')
+elif get_option('disable_gtkdoc')
+  message('gtk-doc is disabled via options')
+else
+  if find_program('gtkdoc-scan', required : false).found()
     subdir('docs')
   else
     message('Not building documentation as gtk-doc was not found')
   endif
-else
-  message('Disabling gtk-doc while building on Windows')
 endif
 
 python3 = find_program('python3')
