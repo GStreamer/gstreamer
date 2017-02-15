@@ -1,4 +1,5 @@
 [wrap-git]
 directory=gst-plugins-base
 url=https://anongit.freedesktop.org/git/gstreamer/gst-plugins-base.git
+push-url=ssh://git.freedesktop.org/git/gstreamer/gst-plugins-base
 revision=master

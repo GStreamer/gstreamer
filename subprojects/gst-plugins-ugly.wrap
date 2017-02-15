@@ -1,4 +1,5 @@
 [wrap-git]
 directory=gst-plugins-ugly
 url=https://anongit.freedesktop.org/git/gstreamer/gst-plugins-ugly.git
+push-url=ssh://git.freedesktop.org/git/gstreamer/gst-plugins-ugly
 revision=master

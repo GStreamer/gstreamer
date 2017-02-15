@@ -1,4 +1,5 @@
 [wrap-git]
 directory=gst-rtsp-server
 url=https://anongit.freedesktop.org/git/gstreamer/gst-rtsp-server
+push-url=ssh://git.freedesktop.org/git/gstreamer/gst-rtsp-server
 revision=master

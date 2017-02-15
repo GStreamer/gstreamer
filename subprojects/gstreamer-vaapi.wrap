@@ -1,4 +1,5 @@
 [wrap-git]
 directory=gstreamer-vaapi
 url=https://anongit.freedesktop.org/git/gstreamer/gstreamer-vaapi.git
+push-url=ssh://git.freedesktop.org/git/gstreamer/gstreamer-vaapi
 revision=master
