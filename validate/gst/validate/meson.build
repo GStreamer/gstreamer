@@ -45,7 +45,7 @@ gstvalidate_headers = [
 install_headers(gstvalidate_headers, subdir : 'gstreamer-1.0/gst/validate')
 
 gstvalidate = shared_library('gstvalidate-1.0',
-    sources: gstvalidate_sources + gstvalidate_headers,
+    sources: gstvalidate_sources,
     version : libversion,
     soversion : soversion,
     include_directories : [inc_dirs],
@@ -56,7 +56,7 @@ gstvalidate = shared_library('gstvalidate-1.0',
                     gst_pbutils_dep, mathlib, json_dep])
 
 gstvalidateplugin = shared_library('gstvalidateplugin',
-    sources: gstvalidate_sources + gstvalidate_headers,
+    sources: gstvalidate_sources,
     include_directories : [inc_dirs],
     install: true,
     c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE'],
@@ -79,8 +79,8 @@ if build_gir
             sources : gstvalidate_sources + gstvalidate_headers,
             nsversion : '1.0',
             namespace : 'GstValidate',
-            symbol_prefix : 'gst_',
-            identifier_prefix : 'Gst',
+            symbol_prefix : 'gst_validate',
+            identifier_prefix : 'GstValidate',
             export_packages : 'gst-validate-' + apiversion,
             includes : ['GObject-2.0',
                         'GLib-2.0',
