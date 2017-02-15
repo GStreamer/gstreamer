@@ -24,10 +24,14 @@ python_dep = dependency('python3')
 python = find_program('python3')
 pythondetector = find_program('pythondetector')
 py_so_suffix = run_command(pythondetector, '--sosuffix').stdout().strip()
-pygi_override_dir = run_command(pythondetector, '--pygi-overridedir').stdout().strip()
 python_abi_flags = run_command(pythondetector, '--abiflags').stdout().strip()
 pylib_loc = run_command(pythondetector, '--libloc').stdout().strip()
 assert(pylib_loc != 'None', 'Python dynamic library path could not be determined')
+pygi_override_dir = get_option('pygi-overrides-dir')
+if pygi_override_dir == ''
+    pygi_override_dir = run_command(pythondetector, '--pygi-overridedir').stdout().strip()
+endif
+message('pygobject overrides directory ' + pygi_override_dir)
 
 pylib_suffix = 'so'
 if host_machine.system() == 'windows'

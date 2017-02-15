@@ -1,0 +1,2 @@
+option('pygi-overrides-dir', type : 'string', value : '',
+        description: 'Path to pygobject overrides directory')
