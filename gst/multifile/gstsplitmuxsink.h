@@ -82,6 +82,7 @@ typedef struct _MqStreamCtx
   gboolean in_eos;
   gboolean out_eos;
   gboolean need_unblock;
+  gboolean caps_change;
 
   GstSegment in_segment;
   GstSegment out_segment;

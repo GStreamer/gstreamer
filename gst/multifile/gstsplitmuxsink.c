@@ -612,6 +612,9 @@ send_eos (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
 static void
 complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
 {
+  if (ctx->caps_change)
+    return;
+
   do {
     /* When first starting up, the reference stream has to output
      * the first buffer to prepare the muxer and sink */
@@ -895,6 +898,43 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
         GST_SPLITMUX_UNLOCK (splitmux);
         return GST_PAD_PROBE_DROP;
       }
+      case GST_EVENT_CAPS:{
+        GstPad *peer;
+
+        if (!ctx->is_reference)
+          break;
+
+        peer = gst_pad_get_peer (pad);
+        if (peer) {
+          gboolean ok = gst_pad_send_event (peer, gst_event_ref (event));
+
+          gst_object_unref (peer);
+
+          if (ok)
+            break;
+        } else {
+          break;
+        }
+        /* This is in the case the muxer doesn't allow this change of caps */
+
+        GST_SPLITMUX_LOCK (splitmux);
+        locked = TRUE;
+        ctx->caps_change = TRUE;
+        splitmux->ready_for_output = FALSE;
+
+        if (splitmux->output_state != SPLITMUX_OUTPUT_STATE_START_NEXT_FILE) {
+
+          if (ctx->out_eos == FALSE) {
+            send_eos (splitmux, ctx);
+          }
+          splitmux->output_state = SPLITMUX_OUTPUT_STATE_START_NEXT_FILE;
+        }
+
+        /* Lets it fall through, if it fails again, then the muxer just can't
+         * support this format, but at least we have a closed file.
+         */
+        break;
+      }
       default:
         break;
     }
@@ -907,7 +947,14 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
       complete_or_wait_on_out (splitmux, ctx);
     GST_SPLITMUX_UNLOCK (splitmux);
 
-    return GST_PAD_PROBE_PASS;
+    /* Don't try to forward sticky events before the next buffer is there
+     * because it would cause a new file to be created without the first
+     * buffer being available.
+     */
+    if (ctx->caps_change && GST_EVENT_IS_STICKY (event))
+      return GST_PAD_PROBE_DROP;
+    else
+      return GST_PAD_PROBE_PASS;
   }
 
   /* Allow everything through until the configured next stopping point */
@@ -929,6 +976,8 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
       "Pad %" GST_PTR_FORMAT " buffer with run TS %" GST_STIME_FORMAT
       " size %" G_GUINT64_FORMAT,
       pad, GST_STIME_ARGS (ctx->out_running_time), buf_info->buf_size);
+
+  ctx->caps_change = FALSE;
 
   complete_or_wait_on_out (splitmux, ctx);
 
@@ -1015,7 +1064,9 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   gst_element_set_state (sink, GST_STATE_NULL);
 
   GST_SPLITMUX_LOCK (splitmux);
-  set_next_filename (splitmux, ctx);
+  if (splitmux->muxed_out_bytes > 0 || splitmux->fragment_id == 0)
+    set_next_filename (splitmux, ctx);
+  splitmux->muxed_out_bytes = 0;
   GST_SPLITMUX_UNLOCK (splitmux);
 
   gst_element_set_state (sink, GST_STATE_TARGET (splitmux));
