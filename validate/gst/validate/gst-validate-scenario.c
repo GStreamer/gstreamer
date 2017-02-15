@@ -1035,6 +1035,15 @@ execute_switch_track_pb (GstValidateScenario * scenario,
   }
 
   if (relative) {               /* We are changing track relatively to current track */
+    if (n == 0) {
+      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+          "Trying to execute a relative %s when there for %s track when there"
+          " is no track of this type available on current stream.",
+          action->type, type);
+
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    }
+
     index = (current + index) % n;
   }
 
