@@ -17,7 +17,9 @@ EXTRA_DIST = \
 	depcomp \
 	AUTHORS COPYING NEWS README RELEASE \
 	ChangeLog autogen.sh gst-editing-services.doap \
-	$(win32)
+	$(win32) \
+	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
+	meson_options.txt config.h.meson
 
 DISTCLEANFILES = _stdint.h
 
