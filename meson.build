@@ -33,7 +33,7 @@ gstallocators_dep = dependency('gstreamer-allocators-1.0', version : gst_req,
 gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
 gstcodecparsers_dep = dependency('gstreamer-codecparsers-1.0', version : gst_req,
-    fallback : ['gst-plugins-bad', 'gstcodecparsers_dep'], required: false)
+    fallback : ['gst-plugins-bad', 'gstcodecparsers_dep'])
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
     fallback : ['gst-plugins-bad', 'gstgl_dep'], required: false)
 gmodule_dep = dependency('gmodule-2.0', required: false)
