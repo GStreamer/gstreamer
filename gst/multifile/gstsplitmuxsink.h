@@ -150,7 +150,6 @@ struct _GstSplitMuxSink
 
   SplitMuxOutputState output_state;
   GstClockTimeDiff max_out_running_time;
-  GstClockTimeDiff next_max_out_running_time;
 
   guint64 muxed_out_bytes;
 
