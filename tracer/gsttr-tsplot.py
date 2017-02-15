@@ -19,6 +19,8 @@ eog <outdir>/*.png
 #   - this won't work well if the event is e.g. 'qos'
 #   - we could sort them by event type and separate them by double new-lines,
 #     we'd then use 'index <x>' to plot them in different colors with
+# - buffer-pts should be ahead of clock time of the pipeline
+#   - we don't have the clock ts in the log though
 
 import logging
 import os
@@ -42,7 +44,7 @@ _PLOT_SCRIPT_HEAD = Template(
     ''')
 _PLOT_SCRIPT_BODY = Template(
     '''set output '$png_file_name'
-       set multiplot layout 2,1 title '$pad_name'
+       set multiplot layout 3,1 title '$pad_name'
        set style line 100 lc rgb '#dddddd' lt 0 lw 1
        set grid back ls 100
 
@@ -51,6 +53,10 @@ _PLOT_SCRIPT_BODY = Template(
        set yrange [*:*]
        set ytics
        plot '$buf_file_name' using 1:2 with linespoints notitle
+
+        set ylabel "Duration (sec.msec)"
+       plot '$buf_file_name' using 1:3 with linespoints title "cycle", \
+            '' using 1:4 with linespoints title "duration"
 
        set ylabel "Events"
        set yrange [$ypos_max:10]
@@ -78,6 +84,7 @@ class TsPlot(Analyzer):
             'height': size[1],
         }
         self.buf_files = {}
+        self.buf_cts = {}
         self.ev_files = {}
         self.element_names = {}
         self.pad_names = {}
@@ -160,9 +167,15 @@ class TsPlot(Analyzer):
         if flags & _GST_BUFFER_FLAG_DISCONT:
             pad_file.write('\n')
         # convert timestamps to e.g. seconds
-        x = int(s.values['ts']) / 1e9
-        y = int(s.values['buffer-pts']) / 1e9
-        pad_file.write('%f %f\n' % (x, y))
+        cts = int(s.values['ts']) / 1e9
+        pts = int(s.values['buffer-pts']) / 1e9
+        dur = int(s.values['buffer-duration']) / 1e9
+        if not ix in self.buf_cts:
+            dcts = 0
+        else:
+            dcts = cts - self.buf_cts[ix]
+        self.buf_cts[ix] = cts
+        pad_file.write('%f %f %f %f\n' % (cts, pts, dcts, dur))
 
     def handle_tracer_entry(self, event):
         if event[Parser.F_FUNCTION]:
@@ -235,7 +248,7 @@ if __name__ == '__main__':
     parser.add_argument('outdir', nargs='?', default='tsplot')
     parser.add_argument('-g', '--ghost-pads', action='store_true',
                         help='also plot data for ghost-pads')
-    parser.add_argument('-s', '--size', action='store', default='1600x400',
+    parser.add_argument('-s', '--size', action='store', default='1600x600',
                         help='graph size as WxH')
     args = parser.parse_args()
 
