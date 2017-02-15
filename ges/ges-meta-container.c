@@ -878,9 +878,9 @@ ges_meta_container_get_string (GESMetaContainer * container,
 /**
  * ges_meta_container_get_meta:
  * @container: Target container
- * @key: Get the key name of the meta to retrieve
+ * @key: The key name of the meta to retrieve
  *
- * Gets the value of a given meta item, returns NULL if @meta_item
+ * Gets the value of a given meta item, returns NULL if @key
  * can not be found.
  *
  * Returns: the #GValue corresponding to the meta with the given @key.
