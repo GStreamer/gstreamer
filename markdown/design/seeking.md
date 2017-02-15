@@ -16,13 +16,10 @@ current playback position. To seek relative to the current playback
 position, one must query the position first and then perform an absolute
 seek to the desired position.
 
-Feedback of the seek operation can be immediately using the
-`GST_SEEK_FLAG_FLUSH` flag. With this flag, all pending data in the
-pipeline is discarded and playback starts from the new position
-immediately.
-
-When the `FLUSH` flag is not set, the seek will be queued and executed as
-soon as possible, which might be after all queues are emptied.
+If a seek operation is requested using the `GST_SEEK_FLAG_FLUSH` flag, all
+pending data in the pipeline is discarded and playback starts from the new
+position immediately.  If this flag is not set, the seek is queued to be
+executed as soon as possible, which might be after all queues are emptied.
 
 Seeking can be performed in different formats such as time, frames or
 samples.
