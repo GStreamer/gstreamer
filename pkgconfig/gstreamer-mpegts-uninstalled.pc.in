@@ -8,5 +8,5 @@ Description: GStreamer MPEG-TS support, uninstalled
 Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
 Version: @VERSION@
 Libs: -L${libdir} -lgstmpegts-@GST_API_VERSION@
-Cflags: -I${includedir}
+Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 
