@@ -20,6 +20,8 @@ MAINTAINERCLEANFILES = \
 
 EXTRA_DIST = \
 	configure.ac autogen.sh \
-	gstreamer-vaapi.doap
+	gstreamer-vaapi.doap \
+	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
+	meson_options.txt
 
 -include $(top_srcdir)/git.mk
