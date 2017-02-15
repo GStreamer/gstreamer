@@ -17,6 +17,9 @@ gstvalidate_sources = [
     'media-descriptor-parser.c',
     'gst-validate-media-info.c',
     'validate.c',
+]
+
+gstvalidate_headers = [
     'validate.h',
     'gst-validate-types.h',
     'gst-validate-bin-monitor.h',
@@ -36,10 +39,13 @@ gstvalidate_sources = [
     'gst-validate-runner.h',
     'gst-validate-scenario.h',
     'gst-validate-utils.h',
-    'gst-validate-media-info.h']
+    'gst-validate-media-info.h'
+]
+
+install_headers(gstvalidate_headers, subdir : 'gstreamer-1.0/gst/validate')
 
 gstvalidate = shared_library('gstvalidate-1.0',
-    sources: gstvalidate_sources,
+    sources: gstvalidate_sources + gstvalidate_headers,
     version : libversion,
     soversion : soversion,
     include_directories : [inc_dirs],
@@ -50,7 +56,7 @@ gstvalidate = shared_library('gstvalidate-1.0',
                     gst_pbutils_dep, mathlib, json_dep])
 
 gstvalidateplugin = shared_library('gstvalidateplugin',
-    sources: gstvalidate_sources,
+    sources: gstvalidate_sources + gstvalidate_headers,
     include_directories : [inc_dirs],
     install: true,
     c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE'],
@@ -70,7 +76,7 @@ if build_gir
       '--cflags-end']
     endif
     validate_gen_sources = [gnome.generate_gir(gstvalidate,
-            sources : gstvalidate_sources,
+            sources : gstvalidate_sources + gstvalidate_headers,
             nsversion : '1.0',
             namespace : 'GstValidate',
             symbol_prefix : 'gst_',
