@@ -2127,6 +2127,7 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
       splitmux->gop_start_time = splitmux->fragment_start_time =
           GST_CLOCK_STIME_NONE;
       splitmux->muxed_out_bytes = 0;
+      splitmux->ready_for_output = FALSE;
       GST_SPLITMUX_UNLOCK (splitmux);
       break;
     }
