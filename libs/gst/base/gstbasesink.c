@@ -799,7 +799,7 @@ gst_base_sink_set_max_lateness (GstBaseSink * sink, gint64 max_lateness)
  * gst_base_sink_get_max_lateness:
  * @sink: the sink
  *
- * Gets the max lateness value. See gst_base_sink_set_max_lateness for
+ * Gets the max lateness value. See gst_base_sink_set_max_lateness() for
  * more details.
  *
  * Returns: The maximum time in nanoseconds that a buffer can be late
