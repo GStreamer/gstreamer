@@ -2775,6 +2775,7 @@ gst_video_time_code_new_empty
 gst_video_time_code_free
 gst_video_time_code_copy
 gst_video_time_code_init
+gst_video_time_code_init_from_date_time
 gst_video_time_code_clear
 gst_video_time_code_is_valid
 gst_video_time_code_compare
@@ -2786,6 +2787,7 @@ gst_video_time_code_to_date_time
 gst_video_time_code_to_string
 gst_video_time_code_add_interval
 gst_video_time_code_new_from_string
+gst_video_time_code_new_from_date_time
 
 <SUBSECTION>
 GstVideoTimeCodeInterval

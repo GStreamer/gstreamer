@@ -191,6 +191,55 @@ gst_video_time_code_to_date_time (const GstVideoTimeCode * tc)
 }
 
 /**
+ * gst_video_time_code_init_from_date_time:
+ * @tc: a #GstVideoTimeCode
+ * @fps_n: Numerator of the frame rate
+ * @fps_d: Denominator of the frame rate
+ * @dt: #GDateTime to convert
+ * @flags: #GstVideoTimeCodeFlags
+ * @field_count: Interlaced video field count
+ *
+ * The resulting config->latest_daily_jam is set to
+ * midnight, and timecode is set to the given time.
+ *
+ * Since: 1.12
+ */
+
+void
+gst_video_time_code_init_from_date_time (GstVideoTimeCode * tc,
+    guint fps_n, guint fps_d,
+    GDateTime * dt, GstVideoTimeCodeFlags flags, guint field_count)
+{
+  GDateTime *jam;
+  guint64 frames;
+
+  jam = g_date_time_new_local (g_date_time_get_year (dt),
+      g_date_time_get_month (dt), g_date_time_get_day_of_month (dt), 0, 0, 0.0);
+
+  /* Note: This might be inaccurate for 1 frame
+   * in case we have a drop frame timecode */
+  frames =
+      gst_util_uint64_scale_round (g_date_time_get_microsecond (dt) *
+      G_GINT64_CONSTANT (1000), fps_n, fps_d * GST_SECOND);
+
+  gst_video_time_code_init (tc, fps_n, fps_d, jam, flags,
+      g_date_time_get_hour (dt), g_date_time_get_minute (dt),
+      g_date_time_get_second (dt), frames, field_count);
+
+  if (tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) {
+    guint df = (tc->config.fps_n + (tc->config.fps_d >> 1)) /
+        (15 * tc->config.fps_d);
+    if (tc->minutes % 10 && tc->seconds == 0 && tc->frames < df) {
+      tc->frames = df;
+    }
+  }
+
+  g_date_time_unref (jam);
+
+  g_return_if_fail (gst_video_time_code_is_valid (tc));
+}
+
+/**
  * gst_video_time_code_nsec_since_daily_jam:
  * @tc: a #GstVideoTimeCode
  *
@@ -618,6 +667,31 @@ gst_video_time_code_new_from_string (const gchar * tc_str)
   }
 }
 
+/**
+ * gst_video_time_code_new_from_date_time:
+ * @fps_n: Numerator of the frame rate
+ * @fps_d: Denominator of the frame rate
+ * @dt: #GDateTime to convert
+ * @flags: #GstVideoTimeCodeFlags
+ * @field_count: Interlaced video field count
+ *
+ * The resulting config->latest_daily_jam is set to
+ * midnight, and timecode is set to the given time.
+ *
+ * Returns: the #GVideoTimeCode representation of @dt.
+ *
+ * Since: 1.12
+ */
+GstVideoTimeCode *
+gst_video_time_code_new_from_date_time (guint fps_n, guint fps_d,
+    GDateTime * dt, GstVideoTimeCodeFlags flags, guint field_count)
+{
+  GstVideoTimeCode *tc;
+  tc = gst_video_time_code_new_empty ();
+  gst_video_time_code_init_from_date_time (tc, fps_n, fps_d, dt, flags,
+      field_count);
+  return tc;
+}
 
 /**
  * gst_video_time_code_init:

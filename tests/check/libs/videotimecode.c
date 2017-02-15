@@ -584,6 +584,68 @@ GST_START_TEST (videotimecode_interval)
 
 GST_END_TEST;
 
+GST_START_TEST (videotimecode_from_date_time_1s)
+{
+  GstVideoTimeCode *tc;
+  GDateTime *dt;
+
+  dt = g_date_time_new_local (2017, 2, 16, 0, 0, 1);
+  tc = gst_video_time_code_new_from_date_time (30000, 1001, dt,
+      GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, 0);
+
+  fail_unless_equals_int (tc->hours, 0);
+  fail_unless_equals_int (tc->minutes, 0);
+  fail_unless_equals_int (tc->seconds, 1);
+  fail_unless_equals_int (tc->frames, 0);
+
+  gst_video_time_code_free (tc);
+  g_date_time_unref (dt);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (videotimecode_from_date_time_halfsecond)
+{
+  GstVideoTimeCode *tc;
+  GDateTime *dt, *dt2;
+
+  dt = g_date_time_new_local (2017, 2, 17, 14, 13, 0);
+  dt2 = g_date_time_add (dt, 500000);
+  g_date_time_unref (dt);
+  tc = gst_video_time_code_new_from_date_time (30000, 1001, dt2,
+      GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, 0);
+
+  fail_unless_equals_int (tc->hours, 14);
+  fail_unless_equals_int (tc->minutes, 13);
+  fail_unless_equals_int (tc->seconds, 0);
+  fail_unless_equals_int (tc->frames, 15);
+
+  gst_video_time_code_free (tc);
+  g_date_time_unref (dt2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (videotimecode_from_date_time)
+{
+  GstVideoTimeCode *tc;
+  GDateTime *dt;
+
+  dt = g_date_time_new_local (2017, 2, 17, 14, 13, 30);
+  tc = gst_video_time_code_new_from_date_time (30000, 1001, dt,
+      GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, 0);
+
+  fail_unless_equals_int (tc->hours, 14);
+  fail_unless_equals_int (tc->minutes, 13);
+  fail_unless_equals_int (tc->seconds, 30);
+  fail_unless_equals_int (tc->frames, 0);
+
+  gst_video_time_code_free (tc);
+  g_date_time_unref (dt);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videotimecode_suite (void)
 {
@@ -617,6 +679,10 @@ gst_videotimecode_suite (void)
   tcase_add_test (tc, videotimecode_dailyjam_distance);
   tcase_add_test (tc, videotimecode_serialize_deserialize);
   tcase_add_test (tc, videotimecode_interval);
+
+  tcase_add_test (tc, videotimecode_from_date_time_1s);
+  tcase_add_test (tc, videotimecode_from_date_time_halfsecond);
+  tcase_add_test (tc, videotimecode_from_date_time);
   return s;
 }
 

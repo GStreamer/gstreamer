@@ -301,6 +301,7 @@ EXPORTS
 	gst_video_time_code_get_type
 	gst_video_time_code_increment_frame
 	gst_video_time_code_init
+	gst_video_time_code_init_from_date_time
 	gst_video_time_code_interval_clear
 	gst_video_time_code_interval_copy
 	gst_video_time_code_interval_free
@@ -313,6 +314,7 @@ EXPORTS
 	gst_video_time_code_meta_get_info
 	gst_video_time_code_new
 	gst_video_time_code_new_empty
+	gst_video_time_code_new_from_date_time
 	gst_video_time_code_new_from_string
 	gst_video_time_code_nsec_since_daily_jam
 	gst_video_time_code_to_date_time

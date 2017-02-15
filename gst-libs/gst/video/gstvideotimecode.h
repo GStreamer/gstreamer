@@ -135,6 +135,11 @@ GstVideoTimeCode * gst_video_time_code_new          (guint                    fp
                                                      guint                    field_count);
 GstVideoTimeCode * gst_video_time_code_new_empty    (void);
 GstVideoTimeCode * gst_video_time_code_new_from_string    (const gchar * tc_str);
+GstVideoTimeCode * gst_video_time_code_new_from_date_time (guint              fps_n,
+                                                     guint                    fps_d,
+                                                     GDateTime              * dt,
+                                                     GstVideoTimeCodeFlags    flags,
+                                                     guint                    field_count);
 void gst_video_time_code_free                       (GstVideoTimeCode       * tc);
 
 GstVideoTimeCode * gst_video_time_code_copy         (const GstVideoTimeCode * tc);
@@ -148,6 +153,12 @@ void gst_video_time_code_init                       (GstVideoTimeCode       * tc
                                                      guint                    minutes,
                                                      guint                    seconds,
                                                      guint                    frames,
+                                                     guint                    field_count);
+void gst_video_time_code_init_from_date_time        (GstVideoTimeCode       * tc,
+                                                     guint                    fps_n,
+                                                     guint                    fps_d,
+                                                     GDateTime              * dt,
+                                                     GstVideoTimeCodeFlags    flags,
                                                      guint                    field_count);
 void gst_video_time_code_clear                      (GstVideoTimeCode       * tc);
 
