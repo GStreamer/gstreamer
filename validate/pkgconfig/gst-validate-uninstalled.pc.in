@@ -8,5 +8,5 @@ Name: gst-validate
 Description: GStreamer Validate
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@
-Libs: @abs_top_builddir@/gst/validate/libgstvalidate-@GST_API_VERSION@.la
+Libs: -L${libdir} -lgstvalidate-@GST_API_VERSION@
 Cflags: -I@abs_top_srcdir@ -I@abs_top_builddir@
