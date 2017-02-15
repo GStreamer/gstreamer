@@ -1505,7 +1505,6 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
         vfunc (vscale, lines, LINE (dest, dest_stride, i), i, width, n_elems);
       }
     } else {
-      gint tmp_in = y;
       gint s1, s2;
 
       if (hscale->tmpwidth < width)
@@ -1515,6 +1514,8 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
       s2 = width * height;
 
       if (s1 <= s2) {
+        gint tmp_in = vscale->resampler.offset[y];
+
         for (i = y; i < height; i++) {
           guint in, j;
 
