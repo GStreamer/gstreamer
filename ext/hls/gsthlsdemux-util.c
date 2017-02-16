@@ -246,8 +246,8 @@ gst_hlsdemux_tsreader_find_pcrs_mpegts (GstHLSTSReader * r,
       GST_LOG ("Found packet for PID %04x (PMT)", r->pmt_pid);
       handle_pmt (r, p, size);
     }
-    /* sync byte (0x47), error indicator (TEI) not set, has_payload */
-    else if ((hdr & 0xFF800010) == 0x47000010
+    /* sync byte (0x47), error indicator (TEI) not set, has_adaptation_field */
+    else if ((hdr & 0xFF800020) == 0x47000020
         && ((hdr >> 8) & 0x1fff) == r->pcr_pid) {
       GST_LOG ("Found packet for PID %04x (PCR)", r->pcr_pid);
       handle_pcr (r, p, size);
