@@ -73,7 +73,7 @@ render_time = BUFFER_TIMESTAMP - segment_start + element->base_time
 
 It then syncs against the clock with this `render_time`. Note that
 `BUFFER_TIMESTAMP` is always >= `segment_start` or else it would fall outside
-of the configure segment.
+of the configured segment.
 
 Videosink reports its current position as (simplified):
 
