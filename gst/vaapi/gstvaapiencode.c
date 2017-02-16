@@ -537,6 +537,7 @@ static gboolean
 gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
+  gboolean ret;
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
@@ -552,8 +553,39 @@ gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
   encode->input_state = gst_video_codec_state_ref (state);
   encode->input_state_changed = TRUE;
 
-  return gst_pad_start_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode),
+  ret = gst_pad_start_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode),
       (GstTaskFunction) gst_vaapiencode_buffer_loop, encode, NULL);
+
+  if (!ret)
+    return FALSE;
+
+  /* Store some tags */
+  {
+    GstTagList *tags = gst_tag_list_new_empty ();
+    const gchar *encoder, *codec;
+    guint bitrate = 0;
+
+    g_object_get (encode, "bitrate", &bitrate, NULL);
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_NOMINAL_BITRATE,
+        bitrate, NULL);
+
+    if ((encoder =
+            gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (encode),
+                GST_ELEMENT_METADATA_LONGNAME)))
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, encoder,
+          NULL);
+
+    if ((codec =
+            gst_vaapi_codec_get_name (gst_vaapi_profile_get_codec
+                (gst_vaapi_profile_from_caps (state->caps)))))
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_CODEC, codec,
+          NULL);
+
+    gst_video_encoder_merge_tags (venc, tags, GST_TAG_MERGE_REPLACE);
+    gst_tag_list_unref (tags);
+  }
+
+  return TRUE;
 }
 
 static GstFlowReturn
