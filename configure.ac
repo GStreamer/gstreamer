@@ -713,33 +713,6 @@ case $host in
     old_LIBS=$LIBS
     old_CFLAGS=$CFLAGS
 
-    dnl FIXME: Mali EGL depends on GLESv1 or GLESv2
-    AC_CHECK_HEADER([EGL/fbdev_window.h],
-      [
-        LIBS="$LIBS -lUMP"
-        AC_CHECK_LIB([Mali], [mali_image_create],
-          [
-            LIBS="$LIBS -lMali"
-            AC_CHECK_LIB([GLESv2], [glEnable],
-              [
-                AC_CHECK_HEADER([GLES2/gl2.h],
-                  [
-                    AC_CHECK_LIB([EGL], [eglGetProcAddress],
-                      [
-                        AC_CHECK_HEADER([EGL/egl.h],
-                          [
-                            HAVE_EGL=yes
-                            HAVE_GLES2=yes
-                            EGL_LIBS="-lMali -lUMP"
-                            EGL_CFLAGS=""
-                            AC_DEFINE(USE_EGL_MALI_FB, [1], [Use Mali FB EGL platform])
-                          ])
-                      ])
-                  ])
-              ])
-          ])
-      ])
-
     dnl FIXME: EGL of RPi depends on GLESv1 or GLESv2
     dnl FIXME: GLESv2 of RPi depends on EGL... WTF!
     LIBS="$LIBS -lvcos -lvchiq_arm"

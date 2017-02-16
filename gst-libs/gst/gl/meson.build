@@ -524,7 +524,7 @@ if host_machine.system() == 'darwin'
 endif
 
 # TODO: Add rest of gl config here.
-# arm-mali, iOS, OS X, win32 specific support
+# iOS, OS X, win32 specific support
 
 build_gstgl = true
 if gl_lib_deps.length() == 0
