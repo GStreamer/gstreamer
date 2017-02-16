@@ -47,6 +47,8 @@ struct _GstAudioEcho
   guint64 max_delay;
   gfloat intensity;
   gfloat feedback;
+  gboolean surdelay;
+  guint64 surround_mask;
 
   /* < private > */
   GstAudioEchoProcessFunc process;
