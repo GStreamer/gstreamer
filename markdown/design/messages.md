@@ -105,3 +105,8 @@ processing strategy for Quality of Service reasons.
 
 **`GST_MESSAGE_PROGRESS`**: A progress message was posted. Progress messages
 inform the application about the state of asynchronous operations.
+
+**`GST_MESSAGE_TOC`**: A new table of contents (TOC) was found or a previously
+found one was updated.
+
+**`GST_MESSAGE_STREAM_START`**: Signals the start of a new stream.
