@@ -467,7 +467,7 @@ gst_validate_runner_new (void)
     runner = first_runner;
     first_runner = NULL;
   } else if (element_created) {
-    g_error ("Should never create a GstValidateRunner after a GstElement"
+    g_error ("Should never create a GstValidateRunner after a GstElement "
         "has been created in the same process.");
 
     return NULL;
@@ -665,11 +665,11 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
 
 /**
  * gst_validate_runner_get_reports_count:
- * @runner: The $GstValidateRunner to get the number of report from
+ * @runner: The $GstValidateRunner to get the number of reports from
  *
  * Get the number of reports present in the runner:
  *
- * Returns: The number of report present in the runner.
+ * Returns: The number of reports present in the runner.
  */
 guint
 gst_validate_runner_get_reports_count (GstValidateRunner * runner)
@@ -760,7 +760,7 @@ _do_report_synthesis (GstValidateRunner * runner)
  * gst_validate_runner_printf:
  * @runner: The #GstValidateRunner to print all the reports for
  *
- * Prints all the report on the terminal or on wherever set
+ * Prints all the reports on the terminal or on wherever is set
  * in the #GST_VALIDATE_FILE env variable.
  *
  * Returns: 0 if no critical error has been found and 18 if a critical
@@ -792,7 +792,7 @@ gst_validate_runner_printf (GstValidateRunner * runner)
   if (criticals) {
     GList *iter;
 
-    g_printerr ("\n\n==== Got criticals, Return value set to 18 ====\n");
+    g_printerr ("\n\n==== Got criticals. Return value set to 18 ====\n");
     ret = 18;
 
     for (iter = criticals; iter; iter = iter->next) {
