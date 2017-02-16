@@ -523,6 +523,8 @@ class GstValidateListener(socketserver.BaseRequestHandler):
                 test.set_position(obj['position'], 100)
             elif obj_type == 'action':
                 test.add_action_execution(obj)
+            elif obj_type == 'action-done':
+                self.actions_infos[-1]['execution-duration'] = obj['execution-duration']
             elif obj_type == 'report':
                 test.add_report(obj)
 

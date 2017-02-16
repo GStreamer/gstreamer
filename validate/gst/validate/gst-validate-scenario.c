@@ -1037,7 +1037,7 @@ execute_switch_track_pb (GstValidateScenario * scenario,
   if (relative) {               /* We are changing track relatively to current track */
     if (n == 0) {
       GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-          "Trying to execute a relative %s when there for %s track when there"
+          "Trying to execute a relative %s for %s track when there"
           " is no track of this type available on current stream.",
           action->type, type);
 
@@ -3365,9 +3365,30 @@ done:
 static gboolean
 _action_set_done (GstValidateAction * action)
 {
+  JsonBuilder *jbuild;
+  GstClockTime execution_duration;
+
   if (action->scenario == NULL)
     return G_SOURCE_REMOVE;
 
+  execution_duration = gst_util_get_timestamp () - action->priv->execution_time;
+
+  jbuild = json_builder_new ();
+  json_builder_begin_object (jbuild);
+  json_builder_set_member_name (jbuild, "type");
+  json_builder_add_string_value (jbuild, "action-done");
+  json_builder_set_member_name (jbuild, "action-type");
+  json_builder_add_string_value (jbuild, action->type);
+  json_builder_set_member_name (jbuild, "execution-duration");
+  json_builder_add_double_value (jbuild,
+      ((gdouble) execution_duration / GST_SECOND));
+  json_builder_end_object (jbuild);
+
+  gst_validate_send (json_builder_get_root (jbuild));
+  g_object_unref (jbuild);
+
+  gst_validate_printf (NULL, "  -> Action %s done (duration: %" GST_TIME_FORMAT
+      ")\n", action->type, GST_TIME_ARGS (execution_duration));
   action->priv->execution_time = GST_CLOCK_TIME_NONE;
   action->priv->state = _execute_sub_action_action (action);
   if (action->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
