@@ -523,8 +523,14 @@ class GstValidateListener(socketserver.BaseRequestHandler):
                 test.set_position(obj['position'], 100)
             elif obj_type == 'action':
                 test.add_action_execution(obj)
+                # Make sure that action is taken into account when checking if process
+                # is updating
+                test.position += 1
             elif obj_type == 'action-done':
-                self.actions_infos[-1]['execution-duration'] = obj['execution-duration']
+                # Make sure that action end is taken into account when checking if process
+                # is updating
+                test.position += 1
+                test.actions_infos[-1]['execution-duration'] = obj['execution-duration']
             elif obj_type == 'report':
                 test.add_report(obj)
 
