@@ -504,7 +504,7 @@ main (int argc, gchar ** argv)
   if (ret == 0) {
     ret = rep_err;
     if (rep_err != 0)
-      g_print ("Returning %d as error where found", rep_err);
+      g_print ("Returning %d as errors were found\n", rep_err);
   }
 
 exit:
