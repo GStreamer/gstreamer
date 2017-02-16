@@ -711,7 +711,7 @@ dpb_find_lowest_poc (GstVaapiDecoderH265 * decoder,
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiPictureH265 *found_picture = NULL;
-  guint i, found_index;
+  guint i, found_index = -1;
 
   for (i = 0; i < priv->dpb_count; i++) {
     GstVaapiPictureH265 *const picture = priv->dpb[i]->buffer;
@@ -723,7 +723,7 @@ dpb_find_lowest_poc (GstVaapiDecoderH265 * decoder,
 
   if (found_picture_ptr)
     *found_picture_ptr = found_picture;
-  return found_picture ? found_index : -1;
+  return found_index;
 }
 
 static gboolean

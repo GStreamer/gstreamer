@@ -769,7 +769,7 @@ dpb_find_nearest_prev_poc (GstVaapiDecoderH264 * decoder,
 {
   GstVaapiDecoderH264Private *const priv = &decoder->priv;
   GstVaapiPictureH264 *found_picture = NULL;
-  guint i, j, found_index;
+  guint i, j, found_index = -1;
 
   g_return_val_if_fail (picture != NULL, -1);
 
@@ -793,7 +793,7 @@ dpb_find_nearest_prev_poc (GstVaapiDecoderH264 * decoder,
 
   if (found_picture_ptr)
     *found_picture_ptr = found_picture;
-  return found_picture ? found_index : -1;
+  return found_index;
 }
 
 /* Finds the picture with the lowest POC that needs to be output */
@@ -803,7 +803,7 @@ dpb_find_lowest_poc (GstVaapiDecoderH264 * decoder,
 {
   GstVaapiDecoderH264Private *const priv = &decoder->priv;
   GstVaapiPictureH264 *found_picture = NULL;
-  guint i, j, found_index;
+  guint i, j, found_index = -1;
 
   for (i = 0; i < priv->dpb_count; i++) {
     GstVaapiFrameStore *const fs = priv->dpb[i];
@@ -824,7 +824,7 @@ dpb_find_lowest_poc (GstVaapiDecoderH264 * decoder,
 
   if (found_picture_ptr)
     *found_picture_ptr = found_picture;
-  return found_picture ? found_index : -1;
+  return found_index;
 }
 
 /* Finds the picture with the lowest VOC that needs to be output */
@@ -834,7 +834,7 @@ dpb_find_lowest_voc (GstVaapiDecoderH264 * decoder,
 {
   GstVaapiDecoderH264Private *const priv = &decoder->priv;
   GstVaapiPictureH264 *found_picture = NULL;
-  guint i, j, found_index;
+  guint i, j, found_index = -1;
 
   for (i = 0; i < priv->dpb_count; i++) {
     GstVaapiFrameStore *const fs = priv->dpb[i];
@@ -851,7 +851,7 @@ dpb_find_lowest_voc (GstVaapiDecoderH264 * decoder,
 
   if (found_picture_ptr)
     *found_picture_ptr = found_picture;
-  return found_picture ? found_index : -1;
+  return found_index;
 }
 
 static gboolean
