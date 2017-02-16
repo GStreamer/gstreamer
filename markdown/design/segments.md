@@ -22,8 +22,8 @@ rate.
 ```
 
 The playback of a segment starts with a source or demuxer element
-pushing a segment event containing the start time, stop time and rate of
-the segment. The purpose of this segment is to inform downstream
+pushing a `SEGMENT` event containing the start time, stop time and rate of
+the segment. The purpose of this event is to inform downstream
 elements of the requested segment positions. Some elements might produce
 buffers that fall outside of the segment and that might therefore be
 discarded or clipped.
@@ -65,15 +65,15 @@ keyframe. It then continues to decode and push frames with timestamps >= 1.
 When it reaches timestamp 5, it does not decode and push frames anymore.
 
 The video sink receives a frame of timestamp 1. It takes the start value of
-the previous segment and aplies the following (simplified) formula:
+the previous segment and applies the following (simplified) formula:
 
 ```
 render_time = BUFFER_TIMESTAMP - segment_start + element->base_time
 ```
 
 It then syncs against the clock with this `render_time`. Note that
-`BUFFER_TIMESTAMP` is always >= `segment_start` or else it would fall outside of
-the configure segment.
+`BUFFER_TIMESTAMP` is always >= `segment_start` or else it would fall outside
+of the configure segment.
 
 Videosink reports its current position as (simplified):
 
