@@ -3736,14 +3736,14 @@ invalid_dimensions:
 unsupported_field:
   {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Video devices uses an unsupported interlacing method.")),
+        (_("Video device uses an unsupported interlacing method.")),
         ("V4L2 field type %d not supported", fmt.fmt.pix.field));
     return FALSE;
   }
 unsupported_format:
   {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Video devices uses an unsupported pixel format.")),
+        (_("Video device uses an unsupported pixel format.")),
         ("V4L2 format %" GST_FOURCC_FORMAT " not supported",
             GST_FOURCC_ARGS (fmt.fmt.pix.pixelformat)));
     return FALSE;
