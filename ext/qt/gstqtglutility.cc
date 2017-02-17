@@ -37,7 +37,12 @@
 #endif
 
 #if GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
+#if GST_GL_HAVE_WINDOW_VIV_FB
+#include <qpa/qplatformnativeinterface.h>
+#include <gst/gl/viv-fb/gstgldisplay_viv_fb.h>
+#else
 #include <gst/gl/egl/gstgldisplay_egl.h>
+#endif
 #include <gst/gl/egl/gstglcontext_egl.h>
 #endif
 
@@ -85,8 +90,33 @@ gst_qt_get_gl_display ()
   if (QString::fromUtf8 ("android") == app->platformName())
     display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (eglGetDisplay(EGL_DEFAULT_DISPLAY));
 #elif GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
-  if (QString::fromUtf8("eglfs") == app->platformName())
+  if (QString::fromUtf8("eglfs") == app->platformName()) {
+#if GST_GL_HAVE_WINDOW_VIV_FB
+    /* FIXME: Could get the display directly from Qt like this
+      QPlatformNativeInterface *native =
+          QGuiApplication::platformNativeInterface();
+      EGLDisplay egl_display = (EGLDisplay)
+          native->nativeResourceForWindow("egldisplay", NULL);
+
+      However we seem to have no way for getting the EGLNativeDisplayType, aka
+      native_display, via public API. As such we have to assume that display 0
+      is always used. Only way around that is parsing the index the same way as
+      Qt does in QEGLDeviceIntegration::fbDeviceName(), so let's do that.
+    */
+    const gchar *fb_dev;
+    gint disp_idx = 0;
+
+    fb_dev = g_getenv ("QT_QPA_EGLFS_FB");
+    if (fb_dev) {
+      if (sscanf (fb_dev, "/dev/fb%d", &disp_idx) != 1)
+        disp_idx = 0;
+    }
+
+    display = (GstGLDisplay *) gst_gl_display_viv_fb_new (disp_idx);
+#else
     display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (eglGetDisplay(EGL_DEFAULT_DISPLAY));
+#endif
+  }
 #endif
 
 #if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
@@ -130,7 +160,11 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
   }
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
+#if GST_GL_HAVE_WINDOW_VIV_FB
+  if (GST_IS_GL_DISPLAY_VIV_FB (display)) {
+#else
   if (GST_IS_GL_DISPLAY_EGL (display)) {
+#endif
     platform = GST_GL_PLATFORM_EGL;
   }
 #endif
