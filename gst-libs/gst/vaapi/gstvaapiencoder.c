@@ -735,9 +735,6 @@ gst_vaapi_encoder_set_codec_state (GstVaapiEncoder * encoder,
   g_return_val_if_fail (state != NULL,
       GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER);
 
-  if (encoder->num_codedbuf_queued > 0)
-    goto error_operation_failed;
-
   if (!gst_video_info_is_equal (&state->info, &encoder->video_info)) {
     status = check_video_info (encoder, &state->info);
     if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
@@ -745,13 +742,6 @@ gst_vaapi_encoder_set_codec_state (GstVaapiEncoder * encoder,
     encoder->video_info = state->info;
   }
   return gst_vaapi_encoder_reconfigure_internal (encoder);
-
-  /* ERRORS */
-error_operation_failed:
-  {
-    GST_ERROR ("could not change codec state after encoding started");
-    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
-  }
 }
 
 /**
