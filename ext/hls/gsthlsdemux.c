@@ -123,6 +123,10 @@ gst_hls_demux_finalize (GObject * obj)
 
   gst_hls_demux_reset (GST_ADAPTIVE_DEMUX_CAST (demux));
   g_mutex_clear (&demux->keys_lock);
+  if (demux->keys) {
+    g_hash_table_unref (demux->keys);
+    demux->keys = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
