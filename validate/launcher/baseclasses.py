@@ -237,7 +237,7 @@ class Test(Loggable):
                     self.process.communicate()
                 else:
                     pname = subprocess.check_output(("readlink -e /proc/%s/exe"
-                                                    % self.process.pid).decode().split(' ')).replace('\n', '')
+                                                    % self.process.pid)).decode().split(' ').replace('\n', '')
                     input("%sTimeout happened you can attach gdb doing: $gdb %s %d%s\n"
                           "Press enter to continue" % (Colors.FAIL, pname, self.process.pid,
                                                        Colors.ENDC))
