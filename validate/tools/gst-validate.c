@@ -195,7 +195,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       if (GST_IS_VALIDATE_SCENARIO (GST_MESSAGE_SRC (message))
           && state == GST_STATE_NULL) {
         gst_validate_printf (GST_MESSAGE_SRC (message),
-            "State change request NULL, " "quiting mainloop\n");
+            "State change request NULL, quiting mainloop\n");
         g_main_loop_quit (mainloop);
       }
       break;
@@ -276,7 +276,7 @@ _register_playbin_actions (void)
       "The subtitles file that will be used should be specified\n"
       "relative to the playbin URI in use thanks to the subtitle-file\n"
       "action property. You can also specify a folder with subtitle-dir\n"
-      "For example if playbin.uri='file://some/uri.mov\n"
+      "For example if playbin.uri='file://some/uri.mov'\n"
       "and action looks like 'set-subtitle, subtitle-file=en.srt'\n"
       "the subtitle URI will be set to 'file:///some/uri.mov.en.srt'\n",
       FALSE);
