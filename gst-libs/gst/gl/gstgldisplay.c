@@ -70,6 +70,9 @@
 #include <gst/gl/egl/gsteglimage.h>
 #include <gst/gl/egl/gstglmemoryegl.h>
 #endif
+#if GST_GL_HAVE_WINDOW_VIV_FB
+#include <gst/gl/viv-fb/gstgldisplay_viv_fb.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_context);
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
@@ -295,6 +298,19 @@ gst_gl_display_new (void)
 #if GST_GL_HAVE_WINDOW_WAYLAND
   if (!display && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
     display = GST_GL_DISPLAY (gst_gl_display_wayland_new (NULL));
+#endif
+#if GST_GL_HAVE_WINDOW_VIV_FB
+  if (!display && (!user_choice || g_strstr_len (user_choice, 2, "viv-fb"))) {
+    const gchar *disp_idx_str = NULL;
+    gint disp_idx = 0;
+    disp_idx_str = g_getenv ("GST_GL_VIV_FB");
+    if (disp_idx_str) {
+      gint64 v = g_ascii_strtoll (disp_idx_str, NULL, 10);
+      if (v >= G_MININT && v <= G_MAXINT)
+        disp_idx = v;
+    }
+    display = GST_GL_DISPLAY (gst_gl_display_viv_fb_new (disp_idx));
+  }
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL
   if (!display && (!platform_choice
