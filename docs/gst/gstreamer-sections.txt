@@ -2058,6 +2058,7 @@ gst_pad_chain_list
 gst_pad_start_task
 gst_pad_pause_task
 gst_pad_stop_task
+gst_pad_task_get_state
 
 gst_pad_set_active
 

@@ -6070,6 +6070,40 @@ no_task:
 }
 
 /**
+ * gst_pad_get_task_state:
+ * @pad: the #GstPad to get task state from
+ *
+ * Get @pad task state. If no task is currently
+ * set, GST_TASK_STOPPED is returned.
+ *
+ * Returns: The current state of @pad's task.
+ */
+GstTaskState
+gst_pad_get_task_state (GstPad * pad)
+{
+  GstTask *task;
+  GstTaskState res;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_TASK_STOPPED);
+
+  GST_OBJECT_LOCK (pad);
+  task = GST_PAD_TASK (pad);
+  if (task == NULL)
+    goto no_task;
+  res = gst_task_get_state (task);
+  GST_OBJECT_UNLOCK (pad);
+
+  return res;
+
+no_task:
+  {
+    GST_DEBUG_OBJECT (pad, "pad has no task");
+    GST_OBJECT_UNLOCK (pad);
+    return GST_TASK_STOPPED;
+  }
+}
+
+/**
  * gst_pad_stop_task:
  * @pad: the #GstPad to stop the task of
  *

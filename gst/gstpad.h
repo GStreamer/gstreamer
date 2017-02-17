@@ -1417,6 +1417,7 @@ gboolean		gst_pad_start_task			(GstPad *pad, GstTaskFunction func,
 								 gpointer user_data, GDestroyNotify notify);
 gboolean		gst_pad_pause_task			(GstPad *pad);
 gboolean		gst_pad_stop_task			(GstPad *pad);
+GstTaskState	gst_pad_get_task_state		(GstPad *pad);
 
 /* internal links */
 void                    gst_pad_set_iterate_internal_links_function_full (GstPad * pad,
