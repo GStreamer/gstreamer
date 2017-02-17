@@ -3584,6 +3584,7 @@ gst-libs/gst/player/Makefile
 gst-libs/gst/video/Makefile
 gst-libs/gst/audio/Makefile
 gst-libs/gst/opencv/Makefile
+gst-libs/gst/allocators/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
@@ -3734,6 +3735,8 @@ pkgconfig/gstreamer-bad-video.pc
 pkgconfig/gstreamer-bad-video-uninstalled.pc
 pkgconfig/gstreamer-bad-audio.pc
 pkgconfig/gstreamer-bad-audio-uninstalled.pc
+pkgconfig/gstreamer-bad-allocators.pc
+pkgconfig/gstreamer-bad-allocators-uninstalled.pc
 tools/Makefile
 m4/Makefile
 )

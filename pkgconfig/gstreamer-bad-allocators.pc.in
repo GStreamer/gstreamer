@@ -1,0 +1,16 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/gstreamer-@GST_API_VERSION@
+datarootdir=${prefix}/share
+datadir=${datarootdir}
+girdir=${datadir}/gir-1.0
+typelibdir=${libdir}/girepository-1.0
+
+Name: GStreamer Bad Allocators Library
+Description: Bad Allocators implementation
+Requires: gstreamer-@GST_API_VERSION@
+Version: @VERSION@
+Libs: -L${libdir} -lgstbadallocators-@GST_API_VERSION@
+Cflags: -I${includedir}
+

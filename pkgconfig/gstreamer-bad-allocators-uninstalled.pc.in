@@ -1,0 +1,16 @@
+# the standard variables don't make sense for an uninstalled copy
+prefix=
+exec_prefix=
+libdir=@abs_top_builddir@/gst-libs/gst/allocators/.libs
+# includedir is builddir because it is used to find gstconfig.h in places
+includedir=@abs_top_builddir@/gst-libs
+girdir=@abs_top_builddir@/gst-libs/gst/allocators
+typelibdir=@abs_top_builddir@/gst-libs/gst/allocators
+
+Name: GStreamer Bad Allocators Library, Uninstalled
+Description: Bad Allocators implementation, uninstalled
+Version: @VERSION@
+Requires: gstreamer-@GST_API_VERSION@
+Libs: -L${libdir} -lgstbadallocators-@GST_API_VERSION@
+Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
+
