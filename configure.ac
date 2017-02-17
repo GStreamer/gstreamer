@@ -677,6 +677,7 @@ HAVE_GL=no
 HAVE_GLES2=no
 HAVE_GLES3_H=no
 HAVE_WAYLAND_EGL=no
+HAVE_VIV_FB_EGL=no
 
 HAVE_EGL_RPI=no
 
@@ -713,6 +714,37 @@ case $host in
 
     old_LIBS=$LIBS
     old_CFLAGS=$CFLAGS
+
+    if test "x$HAVE_EGL" = "xyes"; then
+        AC_CHECK_LIB([EGL], [fbGetDisplay], [HAVE_VIV_FB_EGL=yes])
+    fi
+
+    dnl FIXME: Mali EGL depends on GLESv1 or GLESv2
+    AC_CHECK_HEADER([EGL/fbdev_window.h],
+      [
+        LIBS="$LIBS -lUMP"
+        AC_CHECK_LIB([Mali], [mali_image_create],
+          [
+            LIBS="$LIBS -lMali"
+            AC_CHECK_LIB([GLESv2], [glEnable],
+              [
+                AC_CHECK_HEADER([GLES2/gl2.h],
+                  [
+                    AC_CHECK_LIB([EGL], [eglGetProcAddress],
+                      [
+                        AC_CHECK_HEADER([EGL/egl.h],
+                          [
+                            HAVE_EGL=yes
+                            HAVE_GLES2=yes
+                            EGL_LIBS="-lMali -lUMP"
+                            EGL_CFLAGS=""
+                            AC_DEFINE(USE_EGL_MALI_FB, [1], [Use Mali FB EGL platform])
+                          ])
+                      ])
+                  ])
+              ])
+          ])
+      ])
 
     dnl FIXME: EGL of RPi depends on GLESv1 or GLESv2
     dnl FIXME: GLESv2 of RPi depends on EGL... WTF!
@@ -993,6 +1025,16 @@ case $host in
       fi
     fi
 
+    if test "x$HAVE_VIV_FB_EGL" = "xyes"; then
+      if test "x$NEED_EGL" = "xno" -o "x$HAVE_EGL" = "xno"; then
+        AC_MSG_WARN([EGL is required by the Vivante EGL FB backend])
+      else
+        HAVE_WINDOW_VIV_FB=yes
+        GL_LIBS="$GL_LIBS"
+        GL_CFLAGS="$GL_CFLAGS"
+      fi
+    fi
+
     if test "x$HAVE_EGL_RPI" = "xyes"; then
       if test "x$NEED_DISPMANX" != "xno"; then
         HAVE_WINDOW_DISPMANX=yes
@@ -1007,7 +1049,7 @@ case $host in
       fi
     else
       if test "x$NEED_EGL" != "xno"; then
-        if test "x$HAVE_WINDOW_WAYLAND" = "xyes" -o "x$HAVE_WINDOW_X11" = "xyes" -o "x$HAVE_WINDOW_DISPMANX" = "xyes"; then
+        if test "x$HAVE_WINDOW_WAYLAND" = "xyes" -o "x$HAVE_WINDOW_X11" = "xyes" -o "x$HAVE_WINDOW_DISPMANX" = "xyes" -o "x$HAVE_WINDOW_VIV_FB" = "xyes"; then
           GL_LIBS="$GL_LIBS -lEGL $EGL_LIBS"
           GL_CFLAGS="$GL_CFLAGS $EGL_CFLAGS"
           USE_EGL=yes
@@ -1159,6 +1201,7 @@ GST_GL_HAVE_WINDOW_WAYLAND=0
 GST_GL_HAVE_WINDOW_ANDROID=0
 GST_GL_HAVE_WINDOW_DISPMANX=0
 GST_GL_HAVE_WINDOW_EAGL=0
+GST_GL_HAVE_WINDOW_VIV_FB=0
 
 if test "x$HAVE_WINDOW_X11" = "xyes"; then
   GL_WINDOWS="x11 $GL_WINDOWS"
@@ -1188,6 +1231,10 @@ if test "x$HAVE_WINDOW_EAGL" = "xyes"; then
   GL_WINDOWS="eagl $GL_WINDOWS"
   GST_GL_HAVE_WINDOW_EAGL=1
 fi
+if test "x$HAVE_WINDOW_VIV_FB" = "xyes"; then
+  GL_WINDOWS="viv-fb $GL_WINDOWS"
+  GST_GL_HAVE_WINDOW_VIV_FB=1
+fi
 
 GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_WINDOW_X11 $GST_GL_HAVE_WINDOW_X11
@@ -1197,6 +1244,7 @@ GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_WINDOW_ANDROID $GST_GL_HAVE_WINDOW_ANDROID
 #define GST_GL_HAVE_WINDOW_DISPMANX $GST_GL_HAVE_WINDOW_DISPMANX
 #define GST_GL_HAVE_WINDOW_EAGL $GST_GL_HAVE_WINDOW_EAGL
+#define GST_GL_HAVE_WINDOW_VIV_FB $GST_GL_HAVE_WINDOW_VIV_FB
 "
 
 dnl PLATFORM's
@@ -1272,6 +1320,7 @@ if test "x$GL_APIS" = "x" -o "x$GL_PLATFORMS" = "x" -o "x$GL_WINDOWS" = "x"; the
   HAVE_WINDOW_ANDROID=no
   HAVE_WINDOW_COCOA=no
   HAVE_WINDOW_EAGL=no
+  HAVE_WINDOW_VIV_FB=no
 fi
 
 AC_SUBST(GL_APIS)
@@ -1290,6 +1339,7 @@ AM_CONDITIONAL(HAVE_WINDOW_DISPMANX, test "x$HAVE_WINDOW_DISPMANX" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_WAYLAND, test "x$HAVE_WINDOW_WAYLAND" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_ANDROID, test "x$HAVE_WINDOW_ANDROID" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_EAGL, test "x$HAVE_WINDOW_EAGL" = "xyes")
+AM_CONDITIONAL(HAVE_WINDOW_VIV_FB, test "x$HAVE_WINDOW_VIV_FB" = "xyes")
 
 AM_CONDITIONAL(USE_OPENGL, test "x$USE_OPENGL" = "xyes")
 AM_CONDITIONAL(USE_GLES2, test "x$USE_GLES2" = "xyes")
@@ -3522,6 +3572,7 @@ gst-libs/gst/gl/egl/Makefile
 gst-libs/gst/gl/wayland/Makefile
 gst-libs/gst/gl/win32/Makefile
 gst-libs/gst/gl/x11/Makefile
+gst-libs/gst/gl/viv-fb/Makefile
 gst-libs/gst/insertbin/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/codecparsers/Makefile

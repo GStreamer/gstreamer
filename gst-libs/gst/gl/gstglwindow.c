@@ -58,6 +58,9 @@
 #if GST_GL_HAVE_WINDOW_EAGL
 #include "eagl/gstglwindow_eagl.h"
 #endif
+#if GST_GL_HAVE_WINDOW_VIV_FB
+#include "viv-fb/gstglwindow_viv_fb_egl.h"
+#endif
 #if GST_GL_HAVE_WINDOW_DISPMANX
 #include "dispmanx/gstglwindow_dispmanx_egl.h"
 #endif
@@ -271,6 +274,11 @@ gst_gl_window_new (GstGLDisplay * display)
   if (!window && (!user_choice || g_strstr_len (user_choice, 4, "eagl")))
     window = GST_GL_WINDOW (gst_gl_window_eagl_new (display));
 #endif
+#if GST_GL_HAVE_WINDOW_VIV_FB
+  if (!window && (!user_choice || g_strstr_len (user_choice, 2, "viv-fb")))
+    window = GST_GL_WINDOW (gst_gl_window_viv_fb_egl_new (display));
+#endif
+
   if (!window) {
     /* subclass returned a NULL window */
     GST_WARNING ("Could not create window. user specified %s, creating dummy"
