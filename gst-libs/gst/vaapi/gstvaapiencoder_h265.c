@@ -1625,7 +1625,8 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   pic_param->num_ref_idx_l1_default_active_minus1 =
       (ref_pool->max_reflist1_count ? (ref_pool->max_reflist1_count - 1) : 0);
 
-  get_nal_unit_type (picture, &nal_unit_type);
+  if (!get_nal_unit_type (picture, &nal_unit_type))
+    return FALSE;
   pic_param->nal_unit_type = nal_unit_type;
 
   /* set picture fields */
