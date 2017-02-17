@@ -1296,7 +1296,7 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
    * and move back to the previous keyframe. */
   for (n = 0; n < qtdemux->n_streams; n++) {
     QtDemuxStream *str;
-    guint32 index;
+    guint32 index, kindex;
     guint32 seg_idx;
     GstClockTime media_start;
     GstClockTime media_time;
@@ -1350,33 +1350,37 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
 
     if (!empty_segment) {
       /* find previous keyframe */
-      index = gst_qtdemux_find_keyframe (qtdemux, str, index, next);
+      kindex = gst_qtdemux_find_keyframe (qtdemux, str, index, next);
 
       /* we will settle for one before if none found after */
-      if (next && index == -1)
-        index = gst_qtdemux_find_keyframe (qtdemux, str, index, FALSE);
+      if (next && kindex == -1)
+        kindex = gst_qtdemux_find_keyframe (qtdemux, str, index, FALSE);
 
-      /* Snap to the start ts of the keyframe we found */
+      /* if the keyframe is at a different position, we need to update the
+       * requested seek time */
+      if (index != kindex) {
+        index = kindex;
 
-      /* get timestamp of keyframe */
-      media_time = QTSAMPLE_PTS_NO_CSLG (str, &str->samples[index]);
-      GST_DEBUG_OBJECT (qtdemux,
-          "keyframe at %u with time %" GST_TIME_FORMAT " at offset %"
-          G_GUINT64_FORMAT, index, GST_TIME_ARGS (media_time),
-          str->samples[index].offset);
+        /* get timestamp of keyframe */
+        media_time = QTSAMPLE_PTS_NO_CSLG (str, &str->samples[kindex]);
+        GST_DEBUG_OBJECT (qtdemux,
+            "keyframe at %u with time %" GST_TIME_FORMAT " at offset %"
+            G_GUINT64_FORMAT, kindex, GST_TIME_ARGS (media_time),
+            str->samples[kindex].offset);
 
-      /* keyframes in the segment get a chance to change the
-       * desired_offset. keyframes out of the segment are
-       * ignored. */
-      if (media_time >= seg->media_start) {
-        GstClockTime seg_time;
+        /* keyframes in the segment get a chance to change the
+         * desired_offset. keyframes out of the segment are
+         * ignored. */
+        if (media_time >= seg->media_start) {
+          GstClockTime seg_time;
 
-        /* this keyframe is inside the segment, convert back to
-         * segment time */
-        seg_time = (media_time - seg->media_start) + seg->time;
-        if ((!next && (seg_time < min_offset)) ||
-            (next && (seg_time > min_offset)))
-          min_offset = seg_time;
+          /* this keyframe is inside the segment, convert back to
+           * segment time */
+          seg_time = (media_time - seg->media_start) + seg->time;
+          if ((!next && (seg_time < min_offset)) ||
+              (next && (seg_time > min_offset)))
+            min_offset = seg_time;
+        }
       }
     }
 
