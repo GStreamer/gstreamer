@@ -807,7 +807,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "\n                          "
     " and then check them against pre generated, reference images."
     "\n                          "
-    " The following parametters can be passed in the configuration file:"
+    " The following parameters can be passed in the configuration file:"
     "\n                          "
     "   'element-classification': The target element classification as define in gst_element_class_set_metadata"
     "\n                          "

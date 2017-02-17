@@ -137,7 +137,7 @@ _create_keyboard_events (GstValidateAction * action,
   } else if (etype != GDK_KEY_PRESS && etype != GDK_KEY_RELEASE) {
     GST_VALIDATE_REPORT (action->scenario,
         g_quark_from_static_string ("scenario::execution-error"),
-        "GdkEvent type %s does not work with the 'keys' parametter",
+        "GdkEvent type %s does not work with the 'keys' parameter",
         gst_structure_get_string (action->structure, "type"));
 
     return NULL;
@@ -421,7 +421,7 @@ _execute_put_events (GstValidateScenario * scenario, GstValidateAction * action)
 
   GST_VALIDATE_REPORT (scenario,
       g_quark_from_static_string ("scenario::execution-error"),
-      "Action parametters not supported yet");
+      "Action parameters not supported yet");
 
   return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
 }

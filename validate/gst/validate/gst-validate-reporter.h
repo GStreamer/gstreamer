@@ -42,7 +42,7 @@ G_BEGIN_DECLS
  * @m: The #GstValidateReporter where the issue happened
  * @issue_id: The #GstValidateIssueId of the issue
  * @...: The format of the message describing the issue in a printf
- *       format, followed by the parametters.
+ *       format, followed by the parameters.
  *
  * Reports a new issue in the GstValidate reporting system with @m
  * as the source of that issue.

@@ -3866,7 +3866,7 @@ init_scenarios (void)
         {NULL}
       }),
       "Sets pipeline to PAUSED. You can add a 'duration'\n"
-      "parametter so the pipeline goes back to playing after that duration\n"
+      "parameter so the pipeline goes back to playing after that duration\n"
       "(in second)",
       GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK & GST_VALIDATE_ACTION_TYPE_ASYNC);
 
