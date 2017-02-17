@@ -68,8 +68,7 @@ static void gst_avdtp_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter);
-static gboolean gst_avdtp_src_query (GstPad * pad, GstObject * parent,
-    GstQuery * query);
+static gboolean gst_avdtp_src_query (GstBaseSrc * bsrc, GstQuery * query);
 static gboolean gst_avdtp_src_start (GstBaseSrc * bsrc);
 static gboolean gst_avdtp_src_stop (GstBaseSrc * bsrc);
 static GstFlowReturn gst_avdtp_src_create (GstBaseSrc * bsrc, guint64 offset,
@@ -96,6 +95,7 @@ gst_avdtp_src_class_init (GstAvdtpSrcClass * klass)
   basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_avdtp_src_unlock);
   basesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_avdtp_src_unlock_stop);
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_avdtp_src_getcaps);
+  basesrc_class->query = GST_DEBUG_FUNCPTR (gst_avdtp_src_query);
 
   g_object_class_install_property (gobject_class, PROP_TRANSPORT,
       g_param_spec_string ("transport",
@@ -124,9 +124,6 @@ gst_avdtp_src_init (GstAvdtpSrc * avdtpsrc)
   gst_base_src_set_format (GST_BASE_SRC (avdtpsrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (avdtpsrc), TRUE);
   gst_base_src_set_do_timestamp (GST_BASE_SRC (avdtpsrc), TRUE);
-
-  gst_pad_set_query_function (GST_BASE_SRC_PAD (avdtpsrc),
-      GST_DEBUG_FUNCPTR (gst_avdtp_src_query));
 }
 
 static void
@@ -177,9 +174,9 @@ gst_avdtp_src_set_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_avdtp_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+gst_avdtp_src_query (GstBaseSrc * bsrc, GstQuery * query)
 {
-  GstAvdtpSrc *avdtpsrc = GST_AVDTP_SRC (gst_pad_get_parent_element (pad));
+  GstAvdtpSrc *avdtpsrc = GST_AVDTP_SRC (bsrc);
   gboolean ret = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -199,7 +196,7 @@ gst_avdtp_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
 
     default:
-      ret = gst_pad_query_default (pad, parent, query);
+      ret = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
   }
 
   return ret;
