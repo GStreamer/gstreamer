@@ -528,6 +528,18 @@ gst_raw_base_parse_handle_frame (GstBaseParse * parse,
 
   in_size = gst_buffer_get_size (frame->buffer);
 
+  /* drop incomplete frame at the end of the stream
+   * https://bugzilla.gnome.org/show_bug.cgi?id=773666
+   */
+  if (GST_BASE_PARSE_DRAINING (parse) && in_size < frame_size) {
+    GST_DEBUG_OBJECT (raw_base_parse,
+        "Dropping %" G_GSIZE_FORMAT " bytes at EOS", in_size);
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
+    GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (raw_base_parse);
+
+    return gst_base_parse_finish_frame (parse, frame, in_size);
+  }
+
   /* gst_base_parse_set_min_frame_size() is called when the current
    * configuration changes and the change affects the frame size. This
    * means that a buffer must contain at least as many bytes as indicated
