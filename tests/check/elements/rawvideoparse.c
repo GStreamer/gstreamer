@@ -607,6 +607,37 @@ GST_START_TEST (test_change_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_incomplete_last_buffer)
+{
+  GstVideoInfo vinfo;
+  GstCaps *caps;
+
+  /* Start processing with the sink caps config active, using the
+   * default width/height/format and 25 Hz frame rate for the caps.
+   * Push some data, then change caps (25 Hz -> 50 Hz).
+   * Check that the changed caps are handled properly. */
+
+  gst_video_info_set_format (&vinfo, TEST_FRAME_FORMAT, TEST_WIDTH,
+      TEST_HEIGHT);
+  GST_VIDEO_INFO_FPS_N (&vinfo) = 25;
+  GST_VIDEO_INFO_FPS_D (&vinfo) = 1;
+  caps = gst_video_info_to_caps (&vinfo);
+
+  setup_rawvideoparse (TRUE, FALSE, caps, GST_FORMAT_BYTES);
+
+  push_data_and_check_output (&sinkcaps_ctx, 192, 192, GST_MSECOND * 0,
+      GST_MSECOND * 40, 1, 0, 0, 0);
+  push_data_and_check_output (&sinkcaps_ctx, 192, 192, GST_MSECOND * 40,
+      GST_MSECOND * 40, 2, 1, 1, 0);
+  push_data_and_check_output (&sinkcaps_ctx, 100, 192, GST_MSECOND * 40,
+      GST_MSECOND * 40, 2, 1, 1, 0);
+  gst_pad_push_event (mysrcpad, gst_event_new_eos ());
+  fail_unless_equals_int (g_list_length (buffers), 2);
+
+  cleanup_rawvideoparse ();
+}
+
+GST_END_TEST;
 
 static Suite *
 rawvideoparse_suite (void)
@@ -621,6 +652,7 @@ rawvideoparse_suite (void)
   tcase_add_test (tc_chain, test_push_with_no_framerate);
   tcase_add_test (tc_chain, test_computed_plane_strides);
   tcase_add_test (tc_chain, test_change_caps);
+  tcase_add_test (tc_chain, test_incomplete_last_buffer);
 
   return s;
 }
