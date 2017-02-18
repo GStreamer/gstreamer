@@ -234,7 +234,7 @@ if libtype != 'static'
 	  '--cflags-end']
     endif
 
-    gst_incdirs += [include_directories(meson.current_build_dir() + '/..')]
+    gst_incdirs += [configinc]
     gst_gen_sources += [gnome.generate_gir(libgst_shared,
       sources : gst_sources + gst_headers,
       namespace : 'Gst',
