@@ -67,6 +67,7 @@ G_DEFINE_TYPE (GstVideoConvert, gst_video_convert, GST_TYPE_VIDEO_FILTER);
 #define DEFAULT_PROP_MATRIX_MODE GST_VIDEO_MATRIX_MODE_FULL
 #define DEFAULT_PROP_GAMMA_MODE GST_VIDEO_GAMMA_MODE_NONE
 #define DEFAULT_PROP_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
+#define DEFAULT_PROP_N_THREADS 1
 
 enum
 {
@@ -79,7 +80,8 @@ enum
   PROP_CHROMA_MODE,
   PROP_MATRIX_MODE,
   PROP_GAMMA_MODE,
-  PROP_PRIMARIES_MODE
+  PROP_PRIMARIES_MODE,
+  PROP_N_THREADS
 };
 
 #define CSP_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ";" \
@@ -464,7 +466,9 @@ gst_video_convert_set_info (GstVideoFilter * filter,
           GST_VIDEO_CONVERTER_OPT_GAMMA_MODE,
           GST_TYPE_VIDEO_GAMMA_MODE, space->gamma_mode,
           GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE,
-          GST_TYPE_VIDEO_PRIMARIES_MODE, space->primaries_mode, NULL));
+          GST_TYPE_VIDEO_PRIMARIES_MODE, space->primaries_mode,
+          GST_VIDEO_CONVERTER_OPT_THREADS, G_TYPE_UINT,
+          space->n_threads, NULL));
   if (space->convert == NULL)
     goto no_convert;
 
@@ -576,6 +580,10 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
           "Primaries Conversion Mode", gst_video_primaries_mode_get_type (),
           DEFAULT_PROP_PRIMARIES_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_N_THREADS,
+      g_param_spec_uint ("n-threads", "Threads",
+          "Maximum number of threads to use", 0, G_MAXUINT,
+          DEFAULT_PROP_N_THREADS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -590,6 +598,7 @@ gst_video_convert_init (GstVideoConvert * space)
   space->matrix_mode = DEFAULT_PROP_MATRIX_MODE;
   space->gamma_mode = DEFAULT_PROP_GAMMA_MODE;
   space->primaries_mode = DEFAULT_PROP_PRIMARIES_MODE;
+  space->n_threads = DEFAULT_PROP_N_THREADS;
 }
 
 void
@@ -627,6 +636,9 @@ gst_video_convert_set_property (GObject * object, guint property_id,
       break;
     case PROP_DITHER_QUANTIZATION:
       csp->dither_quantization = g_value_get_uint (value);
+      break;
+    case PROP_N_THREADS:
+      csp->n_threads = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -669,6 +681,9 @@ gst_video_convert_get_property (GObject * object, guint property_id,
       break;
     case PROP_DITHER_QUANTIZATION:
       g_value_set_uint (value, csp->dither_quantization);
+      break;
+    case PROP_N_THREADS:
+      g_value_set_uint (value, csp->n_threads);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

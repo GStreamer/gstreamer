@@ -22,6 +22,13 @@
 #include "config.h"
 #endif
 
+#if 0
+#ifdef HAVE_PTHREAD
+#define _GNU_SOURCE
+#include <pthread.h>
+#endif
+#endif
+
 #include "video-converter.h"
 
 #include <glib.h>
@@ -118,6 +125,193 @@ ensure_debug_category (void)
 #define ensure_debug_category() /* NOOP */
 #endif /* GST_DISABLE_GST_DEBUG */
 
+typedef void (*GstParallelizedTaskFunc) (gpointer user_data);
+
+typedef struct _GstParallelizedTaskRunner GstParallelizedTaskRunner;
+typedef struct _GstParallelizedTaskThread GstParallelizedTaskThread;
+
+struct _GstParallelizedTaskThread
+{
+  GstParallelizedTaskRunner *runner;
+  guint idx;
+  GThread *thread;
+};
+
+struct _GstParallelizedTaskRunner
+{
+  guint n_threads;
+
+  GstParallelizedTaskThread *threads;
+
+  GstParallelizedTaskFunc func;
+  gpointer *task_data;
+
+  GMutex lock;
+  GCond cond_todo, cond_done;
+  gint n_todo, n_done;
+  gboolean quit;
+};
+
+static gpointer
+gst_parallelized_task_thread_func (gpointer data)
+{
+  GstParallelizedTaskThread *self = data;
+
+#if 0
+#ifdef HAVE_PTHREAD
+  {
+    pthread_t thread = pthread_self ();
+    cpu_set_t cpuset;
+    int r;
+
+    CPU_ZERO (&cpuset);
+    CPU_SET (self->idx, &cpuset);
+    if ((r = pthread_setaffinity_np (thread, sizeof (cpuset), &cpuset)) != 0)
+      GST_ERROR ("Failed to set thread affinity for thread %d: %s", self->idx,
+          g_strerror (r));
+  }
+#endif
+#endif
+
+  g_mutex_lock (&self->runner->lock);
+  self->runner->n_done++;
+  if (self->runner->n_done == self->runner->n_threads - 1)
+    g_cond_signal (&self->runner->cond_done);
+
+  do {
+    gint idx;
+
+    while (self->runner->n_todo == -1 && !self->runner->quit)
+      g_cond_wait (&self->runner->cond_todo, &self->runner->lock);
+
+    if (self->runner->quit)
+      break;
+
+    idx = self->runner->n_todo--;
+    g_assert (self->runner->n_todo >= -1);
+    g_mutex_unlock (&self->runner->lock);
+
+    g_assert (self->runner->func != NULL);
+
+    self->runner->func (self->runner->task_data[idx]);
+
+    g_mutex_lock (&self->runner->lock);
+    self->runner->n_done++;
+    if (self->runner->n_done == self->runner->n_threads - 1)
+      g_cond_signal (&self->runner->cond_done);
+  } while (TRUE);
+
+  g_mutex_unlock (&self->runner->lock);
+
+  return NULL;
+}
+
+static void
+gst_parallelized_task_runner_free (GstParallelizedTaskRunner * self)
+{
+  guint i;
+
+  g_mutex_lock (&self->lock);
+  self->quit = TRUE;
+  g_cond_broadcast (&self->cond_todo);
+  g_mutex_unlock (&self->lock);
+
+  for (i = 1; i < self->n_threads; i++) {
+    if (!self->threads[i].thread)
+      continue;
+
+    g_thread_join (self->threads[i].thread);
+  }
+
+  g_mutex_clear (&self->lock);
+  g_cond_clear (&self->cond_todo);
+  g_cond_clear (&self->cond_done);
+  g_free (self->threads);
+  g_free (self);
+}
+
+static GstParallelizedTaskRunner *
+gst_parallelized_task_runner_new (guint n_threads)
+{
+  GstParallelizedTaskRunner *self;
+  guint i;
+  GError *err = NULL;
+
+  if (n_threads == 0)
+    n_threads = g_get_num_processors ();
+
+  self = g_new0 (GstParallelizedTaskRunner, 1);
+  self->n_threads = n_threads;
+  self->threads = g_new0 (GstParallelizedTaskThread, n_threads);
+
+  self->quit = FALSE;
+  self->n_todo = -1;
+  self->n_done = 0;
+  g_mutex_init (&self->lock);
+  g_cond_init (&self->cond_todo);
+  g_cond_init (&self->cond_done);
+
+  /* Set when scheduling a job */
+  self->func = NULL;
+  self->task_data = NULL;
+
+  for (i = 0; i < n_threads; i++) {
+    self->threads[i].runner = self;
+    self->threads[i].idx = i;
+
+    /* First thread is the one calling run() */
+    if (i > 0) {
+      self->threads[i].thread =
+          g_thread_try_new (NULL, gst_parallelized_task_thread_func,
+          &self->threads[i], &err);
+      if (!self->threads[i].thread)
+        goto error;
+    }
+  }
+
+  g_mutex_lock (&self->lock);
+  while (self->n_done < self->n_threads - 1)
+    g_cond_wait (&self->cond_done, &self->lock);
+  self->n_done = 0;
+  g_mutex_unlock (&self->lock);
+
+  return self;
+
+error:
+  {
+    GST_ERROR ("Failed to start thread %u: %s", i, err->message);
+    g_clear_error (&err);
+
+    gst_parallelized_task_runner_free (self);
+    return NULL;
+  }
+}
+
+static void
+gst_parallelized_task_runner_run (GstParallelizedTaskRunner * self,
+    GstParallelizedTaskFunc func, gpointer * task_data)
+{
+  self->func = func;
+  self->task_data = task_data;
+
+  g_mutex_lock (&self->lock);
+  self->n_todo = self->n_threads - 2;
+  self->n_done = 0;
+  g_cond_broadcast (&self->cond_todo);
+  g_mutex_unlock (&self->lock);
+
+  self->func (self->task_data[self->n_threads - 1]);
+
+  g_mutex_lock (&self->lock);
+  while (self->n_done < self->n_threads - 1)
+    g_cond_wait (&self->cond_done, &self->lock);
+  self->n_done = 0;
+  g_mutex_unlock (&self->lock);
+
+  self->func = NULL;
+  self->task_data = NULL;
+}
+
 typedef struct _GstLineCache GstLineCache;
 
 #define SCALE    (8)
@@ -199,7 +393,9 @@ struct _GstVideoConverter
 
   GstStructure *config;
 
-  guint16 *tmpline;
+  GstParallelizedTaskRunner *conversion_runner;
+
+  guint16 **tmpline;
 
   gboolean fill_border;
   gpointer borderline;
@@ -212,7 +408,7 @@ struct _GstVideoConverter
       GstVideoFrame * dest);
 
   /* data for unpack */
-  GstLineCache *unpack_lines;
+  GstLineCache **unpack_lines;
   GstVideoFormat unpack_format;
   guint unpack_bits;
   gboolean unpack_rgb;
@@ -220,60 +416,60 @@ struct _GstVideoConverter
   gint unpack_pstride;
 
   /* chroma upsample */
-  GstLineCache *upsample_lines;
-  GstVideoChromaResample *upsample;
-  GstVideoChromaResample *upsample_p;
-  GstVideoChromaResample *upsample_i;
+  GstLineCache **upsample_lines;
+  GstVideoChromaResample **upsample;
+  GstVideoChromaResample **upsample_p;
+  GstVideoChromaResample **upsample_i;
   guint up_n_lines;
   gint up_offset;
 
   /* to R'G'B */
-  GstLineCache *to_RGB_lines;
+  GstLineCache **to_RGB_lines;
   MatrixData to_RGB_matrix;
   /* gamma decode */
   GammaData gamma_dec;
 
   /* scaling */
-  GstLineCache *hscale_lines;
-  GstVideoScaler *h_scaler;
+  GstLineCache **hscale_lines;
+  GstVideoScaler **h_scaler;
   gint h_scale_format;
-  GstLineCache *vscale_lines;
-  GstVideoScaler *v_scaler;
-  GstVideoScaler *v_scaler_p;
-  GstVideoScaler *v_scaler_i;
+  GstLineCache **vscale_lines;
+  GstVideoScaler **v_scaler;
+  GstVideoScaler **v_scaler_p;
+  GstVideoScaler **v_scaler_i;
   gint v_scale_width;
   gint v_scale_format;
 
   /* color space conversion */
-  GstLineCache *convert_lines;
+  GstLineCache **convert_lines;
   MatrixData convert_matrix;
   gint in_bits;
   gint out_bits;
 
   /* alpha correction */
-  GstLineCache *alpha_lines;
+  GstLineCache **alpha_lines;
   void (*alpha_func) (GstVideoConverter * convert, gpointer pixels, gint width);
 
   /* gamma encode */
   GammaData gamma_enc;
   /* to Y'CbCr */
-  GstLineCache *to_YUV_lines;
+  GstLineCache **to_YUV_lines;
   MatrixData to_YUV_matrix;
 
   /* chroma downsample */
-  GstLineCache *downsample_lines;
-  GstVideoChromaResample *downsample;
-  GstVideoChromaResample *downsample_p;
-  GstVideoChromaResample *downsample_i;
+  GstLineCache **downsample_lines;
+  GstVideoChromaResample **downsample;
+  GstVideoChromaResample **downsample_p;
+  GstVideoChromaResample **downsample_i;
   guint down_n_lines;
   gint down_offset;
 
   /* dither */
-  GstLineCache *dither_lines;
-  GstVideoDither *dither;
+  GstLineCache **dither_lines;
+  GstVideoDither **dither;
 
   /* pack */
-  GstLineCache *pack_lines;
+  GstLineCache **pack_lines;
   guint pack_nlines;
   GstVideoFormat pack_format;
   guint pack_bits;
@@ -296,14 +492,21 @@ struct _GstVideoConverter
   gint fout_height[4];
   gint fsplane[4];
   gint ffill[4];
-  GstVideoScaler *fh_scaler[4];
-  GstVideoScaler *fv_scaler[4];
+
+  struct
+  {
+    GstVideoScaler **scaler;
+  } fh_scaler[4];
+  struct
+  {
+    GstVideoScaler **scaler;
+  } fv_scaler[4];
   FastConvertFunc fconvert[4];
 };
 
 typedef gpointer (*GstLineCacheAllocLineFunc) (GstLineCache * cache, gint idx,
     gpointer user_data);
-typedef gboolean (*GstLineCacheNeedLineFunc) (GstLineCache * cache,
+typedef gboolean (*GstLineCacheNeedLineFunc) (GstLineCache * cache, gint idx,
     gint out_line, gint in_line, gpointer user_data);
 
 struct _GstLineCache
@@ -318,6 +521,7 @@ struct _GstLineCache
   gboolean alloc_writable;
 
   GstLineCacheNeedLineFunc need_line;
+  gint need_line_idx;
   gpointer need_line_data;
   GDestroyNotify need_line_notify;
 
@@ -363,10 +567,11 @@ gst_line_cache_free (GstLineCache * cache)
 
 static void
 gst_line_cache_set_need_line_func (GstLineCache * cache,
-    GstLineCacheNeedLineFunc need_line, gpointer user_data,
+    GstLineCacheNeedLineFunc need_line, gint idx, gpointer user_data,
     GDestroyNotify notify)
 {
   cache->need_line = need_line;
+  cache->need_line_idx = idx;
   cache->need_line_data = user_data;
   cache->need_line_notify = notify;
 }
@@ -385,8 +590,8 @@ gst_line_cache_set_alloc_line_func (GstLineCache * cache,
 #define BACKLOG 2
 
 static gpointer *
-gst_line_cache_get_lines (GstLineCache * cache, gint out_line, gint in_line,
-    gint n_lines)
+gst_line_cache_get_lines (GstLineCache * cache, gint idx, gint out_line,
+    gint in_line, gint n_lines)
 {
   if (cache->first + cache->backlog < in_line) {
     gint to_remove =
@@ -413,7 +618,7 @@ gst_line_cache_get_lines (GstLineCache * cache, gint out_line, gint in_line,
 
     oline = out_line + cache->first + cache->lines->len - in_line;
 
-    if (!cache->need_line (cache, oline, cache->first + cache->lines->len,
+    if (!cache->need_line (cache, idx, oline, cache->first + cache->lines->len,
             cache->need_line_data))
       break;
   }
@@ -448,30 +653,31 @@ static void video_converter_generic (GstVideoConverter * convert,
     const GstVideoFrame * src, GstVideoFrame * dest);
 static gboolean video_converter_lookup_fastpath (GstVideoConverter * convert);
 static void video_converter_compute_matrix (GstVideoConverter * convert);
-static void video_converter_compute_resample (GstVideoConverter * convert);
+static void video_converter_compute_resample (GstVideoConverter * convert,
+    gint idx);
 
 static gpointer get_dest_line (GstLineCache * cache, gint idx,
     gpointer user_data);
 
-static gboolean do_unpack_lines (GstLineCache * cache, gint out_line,
+static gboolean do_unpack_lines (GstLineCache * cache, gint idx, gint out_line,
     gint in_line, gpointer user_data);
-static gboolean do_downsample_lines (GstLineCache * cache, gint out_line,
+static gboolean do_downsample_lines (GstLineCache * cache, gint idx,
+    gint out_line, gint in_line, gpointer user_data);
+static gboolean do_convert_to_RGB_lines (GstLineCache * cache, gint idx,
+    gint out_line, gint in_line, gpointer user_data);
+static gboolean do_convert_lines (GstLineCache * cache, gint idx, gint out_line,
     gint in_line, gpointer user_data);
-static gboolean do_convert_to_RGB_lines (GstLineCache * cache, gint out_line,
+static gboolean do_alpha_lines (GstLineCache * cache, gint idx, gint out_line,
     gint in_line, gpointer user_data);
-static gboolean do_convert_lines (GstLineCache * cache, gint out_line,
+static gboolean do_convert_to_YUV_lines (GstLineCache * cache, gint idx,
+    gint out_line, gint in_line, gpointer user_data);
+static gboolean do_upsample_lines (GstLineCache * cache, gint idx,
+    gint out_line, gint in_line, gpointer user_data);
+static gboolean do_vscale_lines (GstLineCache * cache, gint idx, gint out_line,
     gint in_line, gpointer user_data);
-static gboolean do_alpha_lines (GstLineCache * cache, gint out_line,
+static gboolean do_hscale_lines (GstLineCache * cache, gint idx, gint out_line,
     gint in_line, gpointer user_data);
-static gboolean do_convert_to_YUV_lines (GstLineCache * cache, gint out_line,
-    gint in_line, gpointer user_data);
-static gboolean do_upsample_lines (GstLineCache * cache, gint out_line,
-    gint in_line, gpointer user_data);
-static gboolean do_vscale_lines (GstLineCache * cache, gint out_line,
-    gint in_line, gpointer user_data);
-static gboolean do_hscale_lines (GstLineCache * cache, gint out_line,
-    gint in_line, gpointer user_data);
-static gboolean do_dither_lines (GstLineCache * cache, gint out_line,
+static gboolean do_dither_lines (GstLineCache * cache, gint idx, gint out_line,
     gint in_line, gpointer user_data);
 
 static ConverterAlloc *
@@ -658,7 +864,7 @@ get_opt_enum (GstVideoConverter * convert, const gchar * opt, GType type,
 #define CHECK_CHROMA_NONE(c) (GET_OPT_CHROMA_MODE(c) == GST_VIDEO_CHROMA_MODE_NONE)
 
 static GstLineCache *
-chain_unpack_line (GstVideoConverter * convert)
+chain_unpack_line (GstVideoConverter * convert, gint idx)
 {
   GstLineCache *prev;
   GstVideoInfo *info;
@@ -676,31 +882,30 @@ chain_unpack_line (GstVideoConverter * convert)
       gst_video_format_to_string (convert->current_format),
       convert->current_pstride, convert->identity_unpack);
 
-  prev = convert->unpack_lines = gst_line_cache_new (NULL);
+  prev = convert->unpack_lines[idx] = gst_line_cache_new (NULL);
   prev->write_input = FALSE;
   prev->pass_alloc = FALSE;
   prev->n_lines = 1;
   prev->stride = convert->current_pstride * convert->current_width;
-  gst_line_cache_set_need_line_func (convert->unpack_lines,
-      do_unpack_lines, convert, NULL);
+  gst_line_cache_set_need_line_func (prev, do_unpack_lines, idx, convert, NULL);
 
-  return convert->unpack_lines;
+  return prev;
 }
 
 static GstLineCache *
-chain_upsample (GstVideoConverter * convert, GstLineCache * prev)
+chain_upsample (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 {
-  video_converter_compute_resample (convert);
+  video_converter_compute_resample (convert, idx);
 
-  if (convert->upsample_p || convert->upsample_i) {
+  if (convert->upsample_p[idx] || convert->upsample_i[idx]) {
     GST_DEBUG ("chain upsample");
-    prev = convert->upsample_lines = gst_line_cache_new (prev);
+    prev = convert->upsample_lines[idx] = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
     prev->n_lines = 4;
     prev->stride = convert->current_pstride * convert->current_width;
-    gst_line_cache_set_need_line_func (convert->upsample_lines,
-        do_upsample_lines, convert, NULL);
+    gst_line_cache_set_need_line_func (prev,
+        do_upsample_lines, idx, convert, NULL);
   }
   return prev;
 }
@@ -1366,7 +1571,8 @@ setup_gamma_encode (GstVideoConverter * convert, gint target_bits)
 }
 
 static GstLineCache *
-chain_convert_to_RGB (GstVideoConverter * convert, GstLineCache * prev)
+chain_convert_to_RGB (GstVideoConverter * convert, GstLineCache * prev,
+    gint idx)
 {
   gboolean do_gamma;
 
@@ -1393,13 +1599,13 @@ chain_convert_to_RGB (GstVideoConverter * convert, GstLineCache * prev)
         convert->current_format = GST_VIDEO_FORMAT_ARGB64;
     }
 
-    prev = convert->to_RGB_lines = gst_line_cache_new (prev);
+    prev = convert->to_RGB_lines[idx] = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = FALSE;
     prev->n_lines = 1;
     prev->stride = convert->current_pstride * convert->current_width;
-    gst_line_cache_set_need_line_func (convert->to_RGB_lines,
-        do_convert_to_RGB_lines, convert, NULL);
+    gst_line_cache_set_need_line_func (prev,
+        do_convert_to_RGB_lines, idx, convert, NULL);
 
     GST_DEBUG ("chain gamma decode");
     setup_gamma_decode (convert);
@@ -1408,7 +1614,7 @@ chain_convert_to_RGB (GstVideoConverter * convert, GstLineCache * prev)
 }
 
 static GstLineCache *
-chain_hscale (GstVideoConverter * convert, GstLineCache * prev)
+chain_hscale (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 {
   gint method;
   guint taps;
@@ -1416,11 +1622,11 @@ chain_hscale (GstVideoConverter * convert, GstLineCache * prev)
   method = GET_OPT_RESAMPLER_METHOD (convert);
   taps = GET_OPT_RESAMPLER_TAPS (convert);
 
-  convert->h_scaler =
+  convert->h_scaler[idx] =
       gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
       convert->in_width, convert->out_width, convert->config);
 
-  gst_video_scaler_get_coeff (convert->h_scaler, 0, NULL, &taps);
+  gst_video_scaler_get_coeff (convert->h_scaler[idx], 0, NULL, &taps);
 
   GST_DEBUG ("chain hscale %d->%d, taps %d, method %d",
       convert->in_width, convert->out_width, taps, method);
@@ -1428,19 +1634,18 @@ chain_hscale (GstVideoConverter * convert, GstLineCache * prev)
   convert->current_width = convert->out_width;
   convert->h_scale_format = convert->current_format;
 
-  prev = convert->hscale_lines = gst_line_cache_new (prev);
+  prev = convert->hscale_lines[idx] = gst_line_cache_new (prev);
   prev->write_input = FALSE;
   prev->pass_alloc = FALSE;
   prev->n_lines = 1;
   prev->stride = convert->current_pstride * convert->current_width;
-  gst_line_cache_set_need_line_func (convert->hscale_lines,
-      do_hscale_lines, convert, NULL);
+  gst_line_cache_set_need_line_func (prev, do_hscale_lines, idx, convert, NULL);
 
   return prev;
 }
 
 static GstLineCache *
-chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
+chain_vscale (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 {
   gint method;
   guint taps, taps_i = 0;
@@ -1450,39 +1655,39 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev)
   taps = GET_OPT_RESAMPLER_TAPS (convert);
 
   if (GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info)) {
-    convert->v_scaler_i =
+    convert->v_scaler_i[idx] =
         gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_INTERLACED,
         taps, convert->in_height, convert->out_height, convert->config);
 
-    gst_video_scaler_get_coeff (convert->v_scaler_i, 0, NULL, &taps_i);
+    gst_video_scaler_get_coeff (convert->v_scaler_i[idx], 0, NULL, &taps_i);
     backlog = taps_i;
   }
-  convert->v_scaler_p =
+  convert->v_scaler_p[idx] =
       gst_video_scaler_new (method, 0, taps, convert->in_height,
       convert->out_height, convert->config);
   convert->v_scale_width = convert->current_width;
   convert->v_scale_format = convert->current_format;
   convert->current_height = convert->out_height;
 
-  gst_video_scaler_get_coeff (convert->v_scaler_p, 0, NULL, &taps);
+  gst_video_scaler_get_coeff (convert->v_scaler_p[idx], 0, NULL, &taps);
 
   GST_DEBUG ("chain vscale %d->%d, taps %d, method %d, backlog %d",
       convert->in_height, convert->out_height, taps, method, backlog);
 
   prev->backlog = backlog;
-  prev = convert->vscale_lines = gst_line_cache_new (prev);
+  prev = convert->vscale_lines[idx] = gst_line_cache_new (prev);
   prev->pass_alloc = (taps == 1);
   prev->write_input = FALSE;
   prev->n_lines = MAX (taps_i, taps);
   prev->stride = convert->current_pstride * convert->current_width;
-  gst_line_cache_set_need_line_func (convert->vscale_lines,
-      do_vscale_lines, convert, NULL);
+  gst_line_cache_set_need_line_func (prev, do_vscale_lines, idx, convert, NULL);
 
   return prev;
 }
 
 static GstLineCache *
-chain_scale (GstVideoConverter * convert, GstLineCache * prev, gboolean force)
+chain_scale (GstVideoConverter * convert, GstLineCache * prev, gboolean force,
+    gint idx)
 {
   gint s0, s1, s2, s3;
 
@@ -1501,22 +1706,22 @@ chain_scale (GstVideoConverter * convert, GstLineCache * prev, gboolean force)
     if (s1 <= s2) {
       /* h scaling first produces less pixels */
       if (convert->current_width != convert->out_width)
-        prev = chain_hscale (convert, prev);
+        prev = chain_hscale (convert, prev, idx);
       if (convert->current_height != convert->out_height)
-        prev = chain_vscale (convert, prev);
+        prev = chain_vscale (convert, prev, idx);
     } else {
       /* v scaling first produces less pixels */
       if (convert->current_height != convert->out_height)
-        prev = chain_vscale (convert, prev);
+        prev = chain_vscale (convert, prev, idx);
       if (convert->current_width != convert->out_width)
-        prev = chain_hscale (convert, prev);
+        prev = chain_hscale (convert, prev, idx);
     }
   }
   return prev;
 }
 
 static GstLineCache *
-chain_convert (GstVideoConverter * convert, GstLineCache * prev)
+chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 {
   gboolean do_gamma, do_conversion, pass_alloc = FALSE;
   gboolean same_matrix, same_primaries, same_bits;
@@ -1629,13 +1834,13 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev)
 
   if (do_conversion) {
     GST_DEBUG ("chain conversion");
-    prev = convert->convert_lines = gst_line_cache_new (prev);
+    prev = convert->convert_lines[idx] = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = pass_alloc;
     prev->n_lines = 1;
     prev->stride = convert->current_pstride * convert->current_width;
-    gst_line_cache_set_need_line_func (convert->convert_lines,
-        do_convert_lines, convert, NULL);
+    gst_line_cache_set_need_line_func (prev,
+        do_convert_lines, idx, convert, NULL);
   }
   return prev;
 }
@@ -1693,7 +1898,7 @@ convert_mult_alpha_u16 (GstVideoConverter * convert, gpointer pixels,
 }
 
 static GstLineCache *
-chain_alpha (GstVideoConverter * convert, GstLineCache * prev)
+chain_alpha (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 {
   switch (convert->alpha_mode) {
     case ALPHA_MODE_NONE:
@@ -1715,19 +1920,19 @@ chain_alpha (GstVideoConverter * convert, GstLineCache * prev)
   }
 
   GST_DEBUG ("chain alpha mode %d", convert->alpha_mode);
-  prev = convert->alpha_lines = gst_line_cache_new (prev);
+  prev = convert->alpha_lines[idx] = gst_line_cache_new (prev);
   prev->write_input = TRUE;
   prev->pass_alloc = TRUE;
   prev->n_lines = 1;
   prev->stride = convert->current_pstride * convert->current_width;
-  gst_line_cache_set_need_line_func (convert->alpha_lines,
-      do_alpha_lines, convert, NULL);
+  gst_line_cache_set_need_line_func (prev, do_alpha_lines, idx, convert, NULL);
 
   return prev;
 }
 
 static GstLineCache *
-chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev)
+chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev,
+    gint idx)
 {
   gboolean do_gamma;
 
@@ -1755,36 +1960,36 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev)
     }
     convert->current_format = convert->pack_format;
 
-    prev = convert->to_YUV_lines = gst_line_cache_new (prev);
+    prev = convert->to_YUV_lines[idx] = gst_line_cache_new (prev);
     prev->write_input = FALSE;
     prev->pass_alloc = FALSE;
     prev->n_lines = 1;
     prev->stride = convert->current_pstride * convert->current_width;
-    gst_line_cache_set_need_line_func (convert->to_YUV_lines,
-        do_convert_to_YUV_lines, convert, NULL);
+    gst_line_cache_set_need_line_func (prev,
+        do_convert_to_YUV_lines, idx, convert, NULL);
   }
 
   return prev;
 }
 
 static GstLineCache *
-chain_downsample (GstVideoConverter * convert, GstLineCache * prev)
+chain_downsample (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 {
-  if (convert->downsample_p || convert->downsample_i) {
+  if (convert->downsample_p[idx] || convert->downsample_i[idx]) {
     GST_DEBUG ("chain downsample");
-    prev = convert->downsample_lines = gst_line_cache_new (prev);
+    prev = convert->downsample_lines[idx] = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
     prev->n_lines = 4;
     prev->stride = convert->current_pstride * convert->current_width;
-    gst_line_cache_set_need_line_func (convert->downsample_lines,
-        do_downsample_lines, convert, NULL);
+    gst_line_cache_set_need_line_func (prev,
+        do_downsample_lines, idx, convert, NULL);
   }
   return prev;
 }
 
 static GstLineCache *
-chain_dither (GstVideoConverter * convert, GstLineCache * prev)
+chain_dither (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 {
   gint i;
   gboolean do_dither = FALSE;
@@ -1833,21 +2038,22 @@ chain_dither (GstVideoConverter * convert, GstLineCache * prev)
   if (do_dither) {
     GST_DEBUG ("chain dither");
 
-    convert->dither = gst_video_dither_new (method,
+    convert->dither[idx] = gst_video_dither_new (method,
         flags, convert->pack_format, quant, convert->current_width);
 
-    prev = convert->dither_lines = gst_line_cache_new (prev);
+    prev = convert->dither_lines[idx] = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
     prev->n_lines = 1;
     prev->stride = convert->current_pstride * convert->current_width;
-    gst_line_cache_set_need_line_func (prev, do_dither_lines, convert, NULL);
+    gst_line_cache_set_need_line_func (prev, do_dither_lines, idx, convert,
+        NULL);
   }
   return prev;
 }
 
 static GstLineCache *
-chain_pack (GstVideoConverter * convert, GstLineCache * prev)
+chain_pack (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 {
   convert->pack_nlines = convert->out_info.finfo->pack_lines;
   convert->pack_pstride = convert->current_pstride;
@@ -1871,57 +2077,60 @@ setup_allocators (GstVideoConverter * convert)
   gpointer user_data;
   GDestroyNotify notify;
   gint width, n_lines;
+  gint i;
 
   width = MAX (convert->in_maxwidth, convert->out_maxwidth);
   width += convert->out_x;
 
-  n_lines = 1;
+  for (i = 0; i < convert->conversion_runner->n_threads; i++) {
+    n_lines = 1;
 
-  /* start with using dest lines if we can directly write into it */
-  if (convert->identity_pack) {
-    alloc_line = get_dest_line;
-    alloc_writable = TRUE;
-    user_data = convert;
-    notify = NULL;
-  } else {
-    user_data =
-        converter_alloc_new (sizeof (guint16) * width * 4, 4 + BACKLOG, convert,
-        NULL);
-    setup_border_alloc (convert, user_data);
-    notify = (GDestroyNotify) converter_alloc_free;
-    alloc_line = get_border_temp_line;
-    /* when we add a border, we need to write */
-    alloc_writable = convert->borderline != NULL;
-  }
-
-  /* now walk backwards, we try to write into the dest lines directly
-   * and keep track if the source needs to be writable */
-  for (cache = convert->pack_lines; cache; cache = cache->prev) {
-    gst_line_cache_set_alloc_line_func (cache, alloc_line, user_data, notify);
-    cache->alloc_writable = alloc_writable;
-    n_lines = MAX (n_lines, cache->n_lines);
-
-    /* make sure only one cache frees the allocator */
-    notify = NULL;
-
-    if (!cache->pass_alloc) {
-      /* can't pass allocator, make new temp line allocator */
-      user_data =
-          converter_alloc_new (sizeof (guint16) * width * 4,
-          n_lines + cache->backlog, convert, NULL);
-      notify = (GDestroyNotify) converter_alloc_free;
-      alloc_line = get_temp_line;
-      alloc_writable = FALSE;
-      n_lines = cache->n_lines;
-    }
-    /* if someone writes to the input, we need a writable line from the
-     * previous cache */
-    if (cache->write_input)
+    /* start with using dest lines if we can directly write into it */
+    if (convert->identity_pack) {
+      alloc_line = get_dest_line;
       alloc_writable = TRUE;
+      user_data = convert;
+      notify = NULL;
+    } else {
+      user_data =
+          converter_alloc_new (sizeof (guint16) * width * 4, 4 + BACKLOG,
+          convert, NULL);
+      setup_border_alloc (convert, user_data);
+      notify = (GDestroyNotify) converter_alloc_free;
+      alloc_line = get_border_temp_line;
+      /* when we add a border, we need to write */
+      alloc_writable = convert->borderline != NULL;
+    }
+
+    /* now walk backwards, we try to write into the dest lines directly
+     * and keep track if the source needs to be writable */
+    for (cache = convert->pack_lines[i]; cache; cache = cache->prev) {
+      gst_line_cache_set_alloc_line_func (cache, alloc_line, user_data, notify);
+      cache->alloc_writable = alloc_writable;
+      n_lines = MAX (n_lines, cache->n_lines);
+
+      /* make sure only one cache frees the allocator */
+      notify = NULL;
+
+      if (!cache->pass_alloc) {
+        /* can't pass allocator, make new temp line allocator */
+        user_data =
+            converter_alloc_new (sizeof (guint16) * width * 4,
+            n_lines + cache->backlog, convert, NULL);
+        notify = (GDestroyNotify) converter_alloc_free;
+        alloc_line = get_temp_line;
+        alloc_writable = FALSE;
+        n_lines = cache->n_lines;
+      }
+      /* if someone writes to the input, we need a writable line from the
+       * previous cache */
+      if (cache->write_input)
+        alloc_writable = TRUE;
+    }
+    /* free leftover allocator */
+    if (notify)
+      notify (user_data);
   }
-  /* free leftover allocator */
-  if (notify)
-    notify (user_data);
 }
 
 static void
@@ -2053,6 +2262,7 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
   GstLineCache *prev;
   const GstVideoFormatInfo *fin, *fout, *finfo;
   gdouble alpha_value;
+  gint n_threads, i;
 
   g_return_val_if_fail (in_info != NULL, NULL);
   g_return_val_if_fail (out_info != NULL, NULL);
@@ -2149,6 +2359,14 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
     convert->out_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
   }
 
+  n_threads = get_opt_uint (convert, GST_VIDEO_CONVERTER_OPT_THREADS, 1);
+  if (n_threads == 0 || n_threads > g_get_num_processors ())
+    n_threads = g_get_num_processors ();
+  /* Magic number of 200 lines */
+  if (MAX (convert->out_height, convert->in_height) / n_threads < 200)
+    n_threads = (MAX (convert->out_height, convert->in_height) + 199) / 200;
+  convert->conversion_runner = gst_parallelized_task_runner_new (n_threads);
+
   if (video_converter_lookup_fastpath (convert))
     goto done;
 
@@ -2160,32 +2378,54 @@ gst_video_converter_new (GstVideoInfo * in_info, GstVideoInfo * out_info,
 
   convert->convert = video_converter_generic;
 
-  convert->current_format = GST_VIDEO_INFO_FORMAT (in_info);
-  convert->current_width = convert->in_width;
-  convert->current_height = convert->in_height;
+  convert->upsample_p = g_new0 (GstVideoChromaResample *, n_threads);
+  convert->upsample_i = g_new0 (GstVideoChromaResample *, n_threads);
+  convert->downsample_p = g_new0 (GstVideoChromaResample *, n_threads);
+  convert->downsample_i = g_new0 (GstVideoChromaResample *, n_threads);
+  convert->v_scaler_p = g_new0 (GstVideoScaler *, n_threads);
+  convert->v_scaler_i = g_new0 (GstVideoScaler *, n_threads);
+  convert->h_scaler = g_new0 (GstVideoScaler *, n_threads);
+  convert->unpack_lines = g_new0 (GstLineCache *, n_threads);
+  convert->pack_lines = g_new0 (GstLineCache *, n_threads);
+  convert->upsample_lines = g_new0 (GstLineCache *, n_threads);
+  convert->to_RGB_lines = g_new0 (GstLineCache *, n_threads);
+  convert->hscale_lines = g_new0 (GstLineCache *, n_threads);
+  convert->vscale_lines = g_new0 (GstLineCache *, n_threads);
+  convert->convert_lines = g_new0 (GstLineCache *, n_threads);
+  convert->alpha_lines = g_new0 (GstLineCache *, n_threads);
+  convert->to_YUV_lines = g_new0 (GstLineCache *, n_threads);
+  convert->downsample_lines = g_new0 (GstLineCache *, n_threads);
+  convert->dither_lines = g_new0 (GstLineCache *, n_threads);
+  convert->dither = g_new0 (GstVideoDither *, n_threads);
 
-  /* unpack */
-  prev = chain_unpack_line (convert);
-  /* upsample chroma */
-  prev = chain_upsample (convert, prev);
-  /* convert to gamma decoded RGB */
-  prev = chain_convert_to_RGB (convert, prev);
-  /* do all downscaling */
-  prev = chain_scale (convert, prev, FALSE);
-  /* do conversion between color spaces */
-  prev = chain_convert (convert, prev);
-  /* do alpha channels */
-  prev = chain_alpha (convert, prev);
-  /* do all remaining (up)scaling */
-  prev = chain_scale (convert, prev, TRUE);
-  /* convert to gamma encoded Y'Cb'Cr' */
-  prev = chain_convert_to_YUV (convert, prev);
-  /* downsample chroma */
-  prev = chain_downsample (convert, prev);
-  /* dither */
-  prev = chain_dither (convert, prev);
-  /* pack into final format */
-  convert->pack_lines = chain_pack (convert, prev);
+  for (i = 0; i < n_threads; i++) {
+    convert->current_format = GST_VIDEO_INFO_FORMAT (in_info);
+    convert->current_width = convert->in_width;
+    convert->current_height = convert->in_height;
+
+    /* unpack */
+    prev = chain_unpack_line (convert, i);
+    /* upsample chroma */
+    prev = chain_upsample (convert, prev, i);
+    /* convert to gamma decoded RGB */
+    prev = chain_convert_to_RGB (convert, prev, i);
+    /* do all downscaling */
+    prev = chain_scale (convert, prev, FALSE, i);
+    /* do conversion between color spaces */
+    prev = chain_convert (convert, prev, i);
+    /* do alpha channels */
+    prev = chain_alpha (convert, prev, i);
+    /* do all remaining (up)scaling */
+    prev = chain_scale (convert, prev, TRUE, i);
+    /* convert to gamma encoded Y'Cb'Cr' */
+    prev = chain_convert_to_YUV (convert, prev, i);
+    /* downsample chroma */
+    prev = chain_downsample (convert, prev, i);
+    /* dither */
+    prev = chain_dither (convert, prev, i);
+    /* pack into final format */
+    convert->pack_lines[i] = chain_pack (convert, prev, i);
+  }
 
   setup_borderline (convert);
   /* now figure out allocators */
@@ -2230,64 +2470,96 @@ clear_matrix_data (MatrixData * data)
 void
 gst_video_converter_free (GstVideoConverter * convert)
 {
-  gint i;
+  guint i, j;
 
   g_return_if_fail (convert != NULL);
 
-  if (convert->upsample_p)
-    gst_video_chroma_resample_free (convert->upsample_p);
-  if (convert->upsample_i)
-    gst_video_chroma_resample_free (convert->upsample_i);
-  if (convert->downsample_p)
-    gst_video_chroma_resample_free (convert->downsample_p);
-  if (convert->downsample_i)
-    gst_video_chroma_resample_free (convert->downsample_i);
-  if (convert->v_scaler_p)
-    gst_video_scaler_free (convert->v_scaler_p);
-  if (convert->v_scaler_i)
-    gst_video_scaler_free (convert->v_scaler_i);
-  if (convert->h_scaler)
-    gst_video_scaler_free (convert->h_scaler);
-
-  if (convert->unpack_lines)
-    gst_line_cache_free (convert->unpack_lines);
-  if (convert->upsample_lines)
-    gst_line_cache_free (convert->upsample_lines);
-  if (convert->to_RGB_lines)
-    gst_line_cache_free (convert->to_RGB_lines);
-  if (convert->hscale_lines)
-    gst_line_cache_free (convert->hscale_lines);
-  if (convert->vscale_lines)
-    gst_line_cache_free (convert->vscale_lines);
-  if (convert->convert_lines)
-    gst_line_cache_free (convert->convert_lines);
-  if (convert->alpha_lines)
-    gst_line_cache_free (convert->alpha_lines);
-  if (convert->to_YUV_lines)
-    gst_line_cache_free (convert->to_YUV_lines);
-  if (convert->downsample_lines)
-    gst_line_cache_free (convert->downsample_lines);
-  if (convert->dither_lines)
-    gst_line_cache_free (convert->dither_lines);
-
-  if (convert->dither)
-    gst_video_dither_free (convert->dither);
+  for (i = 0; i < convert->conversion_runner->n_threads; i++) {
+    if (convert->upsample_p && convert->upsample_p[i])
+      gst_video_chroma_resample_free (convert->upsample_p[i]);
+    if (convert->upsample_i && convert->upsample_i[i])
+      gst_video_chroma_resample_free (convert->upsample_i[i]);
+    if (convert->downsample_p && convert->downsample_p[i])
+      gst_video_chroma_resample_free (convert->downsample_p[i]);
+    if (convert->downsample_i && convert->downsample_i[i])
+      gst_video_chroma_resample_free (convert->downsample_i[i]);
+    if (convert->v_scaler_p && convert->v_scaler_p[i])
+      gst_video_scaler_free (convert->v_scaler_p[i]);
+    if (convert->v_scaler_i && convert->v_scaler_i[i])
+      gst_video_scaler_free (convert->v_scaler_i[i]);
+    if (convert->h_scaler && convert->h_scaler[i])
+      gst_video_scaler_free (convert->h_scaler[i]);
+    if (convert->unpack_lines && convert->unpack_lines[i])
+      gst_line_cache_free (convert->unpack_lines[i]);
+    if (convert->upsample_lines && convert->upsample_lines[i])
+      gst_line_cache_free (convert->upsample_lines[i]);
+    if (convert->to_RGB_lines && convert->to_RGB_lines[i])
+      gst_line_cache_free (convert->to_RGB_lines[i]);
+    if (convert->hscale_lines && convert->hscale_lines[i])
+      gst_line_cache_free (convert->hscale_lines[i]);
+    if (convert->vscale_lines && convert->vscale_lines[i])
+      gst_line_cache_free (convert->vscale_lines[i]);
+    if (convert->convert_lines && convert->convert_lines[i])
+      gst_line_cache_free (convert->convert_lines[i]);
+    if (convert->alpha_lines && convert->alpha_lines[i])
+      gst_line_cache_free (convert->alpha_lines[i]);
+    if (convert->to_YUV_lines && convert->to_YUV_lines[i])
+      gst_line_cache_free (convert->to_YUV_lines[i]);
+    if (convert->downsample_lines && convert->downsample_lines[i])
+      gst_line_cache_free (convert->downsample_lines[i]);
+    if (convert->dither_lines && convert->dither_lines[i])
+      gst_line_cache_free (convert->dither_lines[i]);
+    if (convert->dither && convert->dither[i])
+      gst_video_dither_free (convert->dither[i]);
+  }
+  g_free (convert->upsample_p);
+  g_free (convert->upsample_i);
+  g_free (convert->downsample_p);
+  g_free (convert->downsample_i);
+  g_free (convert->v_scaler_p);
+  g_free (convert->v_scaler_i);
+  g_free (convert->h_scaler);
+  g_free (convert->unpack_lines);
+  g_free (convert->pack_lines);
+  g_free (convert->upsample_lines);
+  g_free (convert->to_RGB_lines);
+  g_free (convert->hscale_lines);
+  g_free (convert->vscale_lines);
+  g_free (convert->convert_lines);
+  g_free (convert->alpha_lines);
+  g_free (convert->to_YUV_lines);
+  g_free (convert->downsample_lines);
+  g_free (convert->dither_lines);
+  g_free (convert->dither);
 
   g_free (convert->gamma_dec.gamma_table);
   g_free (convert->gamma_enc.gamma_table);
 
-  g_free (convert->tmpline);
+  if (convert->tmpline) {
+    for (i = 0; i < convert->conversion_runner->n_threads; i++)
+      g_free (convert->tmpline[i]);
+    g_free (convert->tmpline);
+  }
+
   g_free (convert->borderline);
 
   if (convert->config)
     gst_structure_free (convert->config);
 
   for (i = 0; i < 4; i++) {
-    if (convert->fv_scaler[i])
-      gst_video_scaler_free (convert->fv_scaler[i]);
-    if (convert->fh_scaler[i])
-      gst_video_scaler_free (convert->fh_scaler[i]);
+    for (j = 0; j < convert->conversion_runner->n_threads; j++) {
+      if (convert->fv_scaler[i].scaler)
+        gst_video_scaler_free (convert->fv_scaler[i].scaler[j]);
+      if (convert->fh_scaler[i].scaler)
+        gst_video_scaler_free (convert->fh_scaler[i].scaler[j]);
+    }
+    g_free (convert->fv_scaler[i].scaler);
+    g_free (convert->fh_scaler[i].scaler);
   }
+
+  if (convert->conversion_runner)
+    gst_parallelized_task_runner_free (convert->conversion_runner);
+
   clear_matrix_data (&convert->to_RGB_matrix);
   clear_matrix_data (&convert->convert_matrix);
   clear_matrix_data (&convert->to_YUV_matrix);
@@ -2388,7 +2660,7 @@ video_converter_compute_matrix (GstVideoConverter * convert)
 }
 
 static void
-video_converter_compute_resample (GstVideoConverter * convert)
+video_converter_compute_resample (GstVideoConverter * convert, gint idx)
 {
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *sfinfo, *dfinfo;
@@ -2413,21 +2685,21 @@ video_converter_compute_resample (GstVideoConverter * convert)
       in_info->height != out_info->height) {
     if (GST_VIDEO_INFO_IS_INTERLACED (in_info)) {
       if (!CHECK_CHROMA_DOWNSAMPLE (convert))
-        convert->upsample_i = gst_video_chroma_resample_new (0,
+        convert->upsample_i[idx] = gst_video_chroma_resample_new (0,
             in_info->chroma_site, GST_VIDEO_CHROMA_FLAG_INTERLACED,
             sfinfo->unpack_format, sfinfo->w_sub[2], sfinfo->h_sub[2]);
       if (!CHECK_CHROMA_UPSAMPLE (convert))
-        convert->downsample_i =
+        convert->downsample_i[idx] =
             gst_video_chroma_resample_new (0, out_info->chroma_site,
             GST_VIDEO_CHROMA_FLAG_INTERLACED, dfinfo->unpack_format,
             -dfinfo->w_sub[2], -dfinfo->h_sub[2]);
     }
     if (!CHECK_CHROMA_DOWNSAMPLE (convert))
-      convert->upsample_p = gst_video_chroma_resample_new (0,
+      convert->upsample_p[idx] = gst_video_chroma_resample_new (0,
           in_info->chroma_site, 0, sfinfo->unpack_format, sfinfo->w_sub[2],
           sfinfo->h_sub[2]);
     if (!CHECK_CHROMA_UPSAMPLE (convert))
-      convert->downsample_p = gst_video_chroma_resample_new (0,
+      convert->downsample_p[idx] = gst_video_chroma_resample_new (0,
           out_info->chroma_site, 0, dfinfo->unpack_format, -dfinfo->w_sub[2],
           -dfinfo->h_sub[2]);
   }
@@ -2502,7 +2774,7 @@ get_dest_line (GstLineCache * cache, gint idx, gpointer user_data)
 }
 
 static gboolean
-do_unpack_lines (GstLineCache * cache, gint out_line, gint in_line,
+do_unpack_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
     gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
@@ -2527,7 +2799,7 @@ do_unpack_lines (GstLineCache * cache, gint out_line, gint in_line,
 }
 
 static gboolean
-do_upsample_lines (GstLineCache * cache, gint out_line, gint in_line,
+do_upsample_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
     gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
@@ -2542,12 +2814,15 @@ do_upsample_lines (GstLineCache * cache, gint out_line, gint in_line,
   }
 
   /* get the lines needed for chroma upsample */
-  lines = gst_line_cache_get_lines (cache->prev, out_line, start_line, n_lines);
+  lines =
+      gst_line_cache_get_lines (cache->prev, idx, out_line, start_line,
+      n_lines);
 
   if (convert->upsample) {
     GST_DEBUG ("doing upsample %d-%d %p", start_line, start_line + n_lines - 1,
         lines[0]);
-    gst_video_chroma_resample (convert->upsample, lines, convert->in_width);
+    gst_video_chroma_resample (convert->upsample[idx], lines,
+        convert->in_width);
   }
 
   for (i = 0; i < n_lines; i++)
@@ -2557,14 +2832,14 @@ do_upsample_lines (GstLineCache * cache, gint out_line, gint in_line,
 }
 
 static gboolean
-do_convert_to_RGB_lines (GstLineCache * cache, gint out_line, gint in_line,
-    gpointer user_data)
+do_convert_to_RGB_lines (GstLineCache * cache, gint idx, gint out_line,
+    gint in_line, gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
   MatrixData *data = &convert->to_RGB_matrix;
   gpointer *lines, destline;
 
-  lines = gst_line_cache_get_lines (cache->prev, out_line, in_line, 1);
+  lines = gst_line_cache_get_lines (cache->prev, idx, out_line, in_line, 1);
   destline = lines[0];
 
   if (data->matrix_func) {
@@ -2583,18 +2858,18 @@ do_convert_to_RGB_lines (GstLineCache * cache, gint out_line, gint in_line,
 }
 
 static gboolean
-do_hscale_lines (GstLineCache * cache, gint out_line, gint in_line,
+do_hscale_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
     gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
   gpointer *lines, destline;
 
-  lines = gst_line_cache_get_lines (cache->prev, out_line, in_line, 1);
+  lines = gst_line_cache_get_lines (cache->prev, idx, out_line, in_line, 1);
 
   destline = gst_line_cache_alloc_line (cache, out_line);
 
   GST_DEBUG ("hresample line %d %p->%p", in_line, lines[0], destline);
-  gst_video_scaler_horizontal (convert->h_scaler, convert->h_scale_format,
+  gst_video_scaler_horizontal (convert->h_scaler[idx], convert->h_scale_format,
       lines[0], destline, 0, convert->out_width);
 
   gst_line_cache_add_line (cache, in_line, destline);
@@ -2603,7 +2878,7 @@ do_hscale_lines (GstLineCache * cache, gint out_line, gint in_line,
 }
 
 static gboolean
-do_vscale_lines (GstLineCache * cache, gint out_line, gint in_line,
+do_vscale_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
     gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
@@ -2613,15 +2888,15 @@ do_vscale_lines (GstLineCache * cache, gint out_line, gint in_line,
 
   cline = CLAMP (in_line, 0, convert->out_height - 1);
 
-  gst_video_scaler_get_coeff (convert->v_scaler, cline, &sline, &n_lines);
-  lines = gst_line_cache_get_lines (cache->prev, out_line, sline, n_lines);
+  gst_video_scaler_get_coeff (convert->v_scaler[idx], cline, &sline, &n_lines);
+  lines = gst_line_cache_get_lines (cache->prev, idx, out_line, sline, n_lines);
 
   destline = gst_line_cache_alloc_line (cache, out_line);
 
   GST_DEBUG ("vresample line %d %d-%d %p->%p", in_line, sline,
       sline + n_lines - 1, lines[0], destline);
-  gst_video_scaler_vertical (convert->v_scaler, convert->v_scale_format, lines,
-      destline, cline, convert->v_scale_width);
+  gst_video_scaler_vertical (convert->v_scaler[idx], convert->v_scale_format,
+      lines, destline, cline, convert->v_scale_width);
 
   gst_line_cache_add_line (cache, in_line, destline);
 
@@ -2629,7 +2904,7 @@ do_vscale_lines (GstLineCache * cache, gint out_line, gint in_line,
 }
 
 static gboolean
-do_convert_lines (GstLineCache * cache, gint out_line, gint in_line,
+do_convert_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
     gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
@@ -2638,7 +2913,7 @@ do_convert_lines (GstLineCache * cache, gint out_line, gint in_line,
   guint in_bits, out_bits;
   gint width;
 
-  lines = gst_line_cache_get_lines (cache->prev, out_line, in_line, 1);
+  lines = gst_line_cache_get_lines (cache->prev, idx, out_line, in_line, 1);
 
   destline = lines[0];
 
@@ -2682,14 +2957,14 @@ do_convert_lines (GstLineCache * cache, gint out_line, gint in_line,
 }
 
 static gboolean
-do_alpha_lines (GstLineCache * cache, gint out_line, gint in_line,
+do_alpha_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
     gpointer user_data)
 {
   gpointer *lines, destline;
   GstVideoConverter *convert = user_data;
   gint width = MIN (convert->in_width, convert->out_width);
 
-  lines = gst_line_cache_get_lines (cache->prev, out_line, in_line, 1);
+  lines = gst_line_cache_get_lines (cache->prev, idx, out_line, in_line, 1);
   destline = lines[0];
 
   GST_DEBUG ("alpha line %d %p", in_line, destline);
@@ -2701,14 +2976,14 @@ do_alpha_lines (GstLineCache * cache, gint out_line, gint in_line,
 }
 
 static gboolean
-do_convert_to_YUV_lines (GstLineCache * cache, gint out_line, gint in_line,
-    gpointer user_data)
+do_convert_to_YUV_lines (GstLineCache * cache, gint idx, gint out_line,
+    gint in_line, gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
   MatrixData *data = &convert->to_YUV_matrix;
   gpointer *lines, destline;
 
-  lines = gst_line_cache_get_lines (cache->prev, out_line, in_line, 1);
+  lines = gst_line_cache_get_lines (cache->prev, idx, out_line, in_line, 1);
   destline = lines[0];
 
   if (convert->gamma_enc.gamma_func) {
@@ -2727,8 +3002,8 @@ do_convert_to_YUV_lines (GstLineCache * cache, gint out_line, gint in_line,
 }
 
 static gboolean
-do_downsample_lines (GstLineCache * cache, gint out_line, gint in_line,
-    gpointer user_data)
+do_downsample_lines (GstLineCache * cache, gint idx, gint out_line,
+    gint in_line, gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
   gpointer *lines;
@@ -2740,12 +3015,15 @@ do_downsample_lines (GstLineCache * cache, gint out_line, gint in_line,
     start_line += convert->down_offset;
 
   /* get the lines needed for chroma downsample */
-  lines = gst_line_cache_get_lines (cache->prev, out_line, start_line, n_lines);
+  lines =
+      gst_line_cache_get_lines (cache->prev, idx, out_line, start_line,
+      n_lines);
 
   if (convert->downsample) {
     GST_DEBUG ("downsample line %d %d-%d %p", in_line, start_line,
         start_line + n_lines - 1, lines[0]);
-    gst_video_chroma_resample (convert->downsample, lines, convert->out_width);
+    gst_video_chroma_resample (convert->downsample[idx], lines,
+        convert->out_width);
   }
 
   for (i = 0; i < n_lines; i++)
@@ -2755,23 +3033,58 @@ do_downsample_lines (GstLineCache * cache, gint out_line, gint in_line,
 }
 
 static gboolean
-do_dither_lines (GstLineCache * cache, gint out_line, gint in_line,
+do_dither_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
     gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
   gpointer *lines, destline;
 
-  lines = gst_line_cache_get_lines (cache->prev, out_line, in_line, 1);
+  lines = gst_line_cache_get_lines (cache->prev, idx, out_line, in_line, 1);
   destline = lines[0];
 
   if (convert->dither) {
     GST_DEBUG ("Dither line %d %p", in_line, destline);
-    gst_video_dither_line (convert->dither, destline, 0, out_line,
+    gst_video_dither_line (convert->dither[idx], destline, 0, out_line,
         convert->out_width);
   }
   gst_line_cache_add_line (cache, in_line, destline);
 
   return TRUE;
+}
+
+typedef struct
+{
+  GstLineCache *pack_lines;
+  gint idx;
+  gint h_0, h_1;
+  gint pack_lines_count;
+  gint out_y;
+  gboolean identity_pack;
+  gint lb_width, out_maxwidth;
+  GstVideoFrame *dest;
+} ConvertTask;
+
+static void
+convert_generic_task (ConvertTask * task)
+{
+  gint i;
+
+  for (i = task->h_0; i < task->h_1; i += task->pack_lines_count) {
+    gpointer *lines;
+
+    /* load the lines needed to pack */
+    lines =
+        gst_line_cache_get_lines (task->pack_lines, task->idx, i + task->out_y,
+        i, task->pack_lines_count);
+
+    if (!task->identity_pack) {
+      /* take away the border */
+      guint8 *l = ((guint8 *) lines[0]) - task->lb_width;
+      /* and pack into destination */
+      GST_DEBUG ("pack line %d %p (%p)", i + task->out_y, lines[0], l);
+      PACK_FRAME (task->dest, l, i + task->out_y, task->out_maxwidth);
+    }
+  }
 }
 
 static void
@@ -2783,6 +3096,10 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
   gint out_x, out_y, out_height;
   gint pack_lines, pstride;
   gint lb_width;
+  ConvertTask *tasks;
+  ConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
 
   out_height = convert->out_height;
   out_maxwidth = convert->out_maxwidth;
@@ -2805,15 +3122,15 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
     convert->downsample = convert->downsample_p;
     convert->v_scaler = convert->v_scaler_p;
   }
-  if (convert->upsample) {
-    gst_video_chroma_resample_get_info (convert->upsample,
+  if (convert->upsample[0]) {
+    gst_video_chroma_resample_get_info (convert->upsample[0],
         &convert->up_n_lines, &convert->up_offset);
   } else {
     convert->up_n_lines = 1;
     convert->up_offset = 0;
   }
-  if (convert->downsample) {
-    gst_video_chroma_resample_get_info (convert->downsample,
+  if (convert->downsample[0]) {
+    gst_video_chroma_resample_get_info (convert->downsample[0],
         &convert->down_n_lines, &convert->down_offset);
   } else {
     convert->down_n_lines = 1;
@@ -2831,21 +3148,31 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
       PACK_FRAME (dest, convert->borderline, i, out_maxwidth);
   }
 
-  for (i = 0; i < out_height; i += pack_lines) {
-    gpointer *lines;
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (ConvertTask, n_threads);
+  tasks_p = g_newa (ConvertTask *, n_threads);
 
-    /* load the lines needed to pack */
-    lines = gst_line_cache_get_lines (convert->pack_lines, i + out_y,
-        i, pack_lines);
+  lines_per_thread =
+      GST_ROUND_UP_N ((out_height + n_threads - 1) / n_threads, pack_lines);
 
-    if (!convert->identity_pack) {
-      /* take away the border */
-      guint8 *l = ((guint8 *) lines[0]) - lb_width;
-      /* and pack into destination */
-      GST_DEBUG ("pack line %d %p (%p)", i + out_y, lines[0], l);
-      PACK_FRAME (dest, l, i + out_y, out_maxwidth);
-    }
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dest = dest;
+    tasks[i].pack_lines = convert->pack_lines[i];
+    tasks[i].idx = i;
+    tasks[i].pack_lines_count = pack_lines;
+    tasks[i].out_y = out_y;
+    tasks[i].identity_pack = convert->identity_pack;
+    tasks[i].lb_width = lb_width;
+    tasks[i].out_maxwidth = out_maxwidth;
+
+    tasks[i].h_0 = i * lines_per_thread;
+    tasks[i].h_1 = MIN ((i + 1) * lines_per_thread, out_height);
+
+    tasks_p[i] = &tasks[i];
   }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_generic_task, (gpointer) tasks_p);
 
   if (convert->borderline) {
     for (i = out_y + out_height; i < out_maxheight; i++)
@@ -2871,6 +3198,40 @@ static void convert_fill_border (GstVideoConverter * convert,
       l2 = l1 + 1;                              \
     }
 
+typedef struct
+{
+  const GstVideoFrame *src;
+  GstVideoFrame *dest;
+  gint height_0, height_1;
+
+  /* parameters */
+  gboolean interlaced;
+  gint width;
+  gint alpha;
+  MatrixData *data;
+  gint in_x, in_y;
+  gint out_x, out_y;
+  gpointer tmpline;
+} FConvertTask;
+
+static void
+convert_I420_YUY2_task (FConvertTask * task)
+{
+  gint i;
+  gint l1, l2;
+
+  for (i = task->height_0; i < task->height_1; i += 2) {
+    GET_LINE_OFFSETS (task->interlaced, i, l1, l2);
+
+    video_orc_convert_I420_YUY2 (FRAME_GET_LINE (task->dest, l1),
+        FRAME_GET_LINE (task->dest, l2),
+        FRAME_GET_Y_LINE (task->src, l1),
+        FRAME_GET_Y_LINE (task->src, l2),
+        FRAME_GET_U_LINE (task->src, i >> 1),
+        FRAME_GET_V_LINE (task->src, i >> 1), (task->width + 1) / 2);
+  }
+}
+
 static void
 convert_I420_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
@@ -2879,8 +3240,11 @@ convert_I420_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
-  gint l1, l2;
   gint h2;
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
 
   /* I420 has half as many chroma lines, as such we have to
    * always merge two into one. For non-interlaced these are
@@ -2891,23 +3255,53 @@ convert_I420_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   else
     h2 = GST_ROUND_DOWN_2 (height);
 
-  for (i = 0; i < h2; i += 2) {
-    GET_LINE_OFFSETS (interlaced, i, l1, l2);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertTask, n_threads);
+  tasks_p = g_newa (FConvertTask *, n_threads);
 
-    video_orc_convert_I420_YUY2 (FRAME_GET_LINE (dest, l1),
-        FRAME_GET_LINE (dest, l2),
-        FRAME_GET_Y_LINE (src, l1),
-        FRAME_GET_Y_LINE (src, l2),
-        FRAME_GET_U_LINE (src, i >> 1),
-        FRAME_GET_V_LINE (src, i >> 1), (width + 1) / 2);
+  lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
+
+    tasks[i].interlaced = interlaced;
+    tasks[i].width = width;
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (h2, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
   }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_I420_YUY2_task, (gpointer) tasks_p);
 
   /* now handle last lines. For interlaced these are up to 3 */
   if (h2 != height) {
     for (i = h2; i < height; i++) {
-      UNPACK_FRAME (src, convert->tmpline, i, convert->in_x, width);
-      PACK_FRAME (dest, convert->tmpline, i, width);
+      UNPACK_FRAME (src, convert->tmpline[0], i, convert->in_x, width);
+      PACK_FRAME (dest, convert->tmpline[0], i, width);
     }
+  }
+}
+
+static void
+convert_I420_UYVY_task (FConvertTask * task)
+{
+  gint i;
+  gint l1, l2;
+
+  for (i = task->height_0; i < task->height_1; i += 2) {
+    GET_LINE_OFFSETS (task->interlaced, i, l1, l2);
+
+    video_orc_convert_I420_UYVY (FRAME_GET_LINE (task->dest, l1),
+        FRAME_GET_LINE (task->dest, l2),
+        FRAME_GET_Y_LINE (task->src, l1),
+        FRAME_GET_Y_LINE (task->src, l2),
+        FRAME_GET_U_LINE (task->src, i >> 1),
+        FRAME_GET_V_LINE (task->src, i >> 1), (task->width + 1) / 2);
   }
 }
 
@@ -2919,8 +3313,11 @@ convert_I420_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
-  gint l1, l2;
   gint h2;
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
 
   /* I420 has half as many chroma lines, as such we have to
    * always merge two into one. For non-interlaced these are
@@ -2931,23 +3328,53 @@ convert_I420_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   else
     h2 = GST_ROUND_DOWN_2 (height);
 
-  for (i = 0; i < h2; i += 2) {
-    GET_LINE_OFFSETS (interlaced, i, l1, l2);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertTask, n_threads);
+  tasks_p = g_newa (FConvertTask *, n_threads);
 
-    video_orc_convert_I420_UYVY (FRAME_GET_LINE (dest, l1),
-        FRAME_GET_LINE (dest, l2),
-        FRAME_GET_Y_LINE (src, l1),
-        FRAME_GET_Y_LINE (src, l2),
-        FRAME_GET_U_LINE (src, i >> 1),
-        FRAME_GET_V_LINE (src, i >> 1), (width + 1) / 2);
+  lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
+
+    tasks[i].interlaced = interlaced;
+    tasks[i].width = width;
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (h2, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
   }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_I420_UYVY_task, (gpointer) tasks_p);
 
   /* now handle last lines. For interlaced these are up to 3 */
   if (h2 != height) {
     for (i = h2; i < height; i++) {
-      UNPACK_FRAME (src, convert->tmpline, i, convert->in_x, width);
-      PACK_FRAME (dest, convert->tmpline, i, width);
+      UNPACK_FRAME (src, convert->tmpline[0], i, convert->in_x, width);
+      PACK_FRAME (dest, convert->tmpline[0], i, width);
     }
+  }
+}
+
+static void
+convert_I420_AYUV_task (FConvertTask * task)
+{
+  gint i;
+  gint l1, l2;
+
+  for (i = task->height_0; i < task->height_1; i += 2) {
+    GET_LINE_OFFSETS (task->interlaced, i, l1, l2);
+
+    video_orc_convert_I420_AYUV (FRAME_GET_LINE (task->dest, l1),
+        FRAME_GET_LINE (task->dest, l2),
+        FRAME_GET_Y_LINE (task->src, l1),
+        FRAME_GET_Y_LINE (task->src, l2),
+        FRAME_GET_U_LINE (task->src, i >> 1), FRAME_GET_V_LINE (task->src,
+            i >> 1), task->alpha, task->width);
   }
 }
 
@@ -2960,8 +3387,11 @@ convert_I420_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   guint8 alpha = MIN (convert->alpha_value, 255);
-  gint l1, l2;
   gint h2;
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
 
   /* I420 has half as many chroma lines, as such we have to
    * always merge two into one. For non-interlaced these are
@@ -2972,25 +3402,57 @@ convert_I420_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   else
     h2 = GST_ROUND_DOWN_2 (height);
 
-  for (i = 0; i < h2; i += 2) {
-    GET_LINE_OFFSETS (interlaced, i, l1, l2);
 
-    video_orc_convert_I420_AYUV (FRAME_GET_LINE (dest, l1),
-        FRAME_GET_LINE (dest, l2),
-        FRAME_GET_Y_LINE (src, l1),
-        FRAME_GET_Y_LINE (src, l2),
-        FRAME_GET_U_LINE (src, i >> 1), FRAME_GET_V_LINE (src, i >> 1),
-        alpha, width);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertTask, n_threads);
+  tasks_p = g_newa (FConvertTask *, n_threads);
+
+  lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
+
+    tasks[i].interlaced = interlaced;
+    tasks[i].width = width;
+    tasks[i].alpha = alpha;
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (h2, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
   }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_I420_AYUV_task, (gpointer) tasks_p);
 
   /* now handle last lines. For interlaced these are up to 3 */
   if (h2 != height) {
     for (i = h2; i < height; i++) {
-      UNPACK_FRAME (src, convert->tmpline, i, convert->in_x, width);
+      UNPACK_FRAME (src, convert->tmpline[0], i, convert->in_x, width);
       if (alpha != 0xff)
-        convert_set_alpha_u8 (convert, convert->tmpline, width);
-      PACK_FRAME (dest, convert->tmpline, i, width);
+        convert_set_alpha_u8 (convert, convert->tmpline[0], width);
+      PACK_FRAME (dest, convert->tmpline[0], i, width);
     }
+  }
+}
+
+static void
+convert_YUY2_I420_task (FConvertTask * task)
+{
+  gint i;
+  gint l1, l2;
+
+  for (i = task->height_0; i < task->height_1; i += 2) {
+    GET_LINE_OFFSETS (task->interlaced, i, l1, l2);
+
+    video_orc_convert_YUY2_I420 (FRAME_GET_Y_LINE (task->dest, l1),
+        FRAME_GET_Y_LINE (task->dest, l2),
+        FRAME_GET_U_LINE (task->dest, i >> 1),
+        FRAME_GET_V_LINE (task->dest, i >> 1),
+        FRAME_GET_LINE (task->src, l1), FRAME_GET_LINE (task->src, l2),
+        (task->width + 1) / 2);
   }
 }
 
@@ -3002,8 +3464,11 @@ convert_YUY2_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
-  gint l1, l2;
   gint h2;
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
 
   /* I420 has half as many chroma lines, as such we have to
    * always merge two into one. For non-interlaced these are
@@ -3014,23 +3479,54 @@ convert_YUY2_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   else
     h2 = GST_ROUND_DOWN_2 (height);
 
-  for (i = 0; i < h2; i += 2) {
-    GET_LINE_OFFSETS (interlaced, i, l1, l2);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertTask, n_threads);
+  tasks_p = g_newa (FConvertTask *, n_threads);
 
-    video_orc_convert_YUY2_I420 (FRAME_GET_Y_LINE (dest, l1),
-        FRAME_GET_Y_LINE (dest, l2),
-        FRAME_GET_U_LINE (dest, i >> 1),
-        FRAME_GET_V_LINE (dest, i >> 1),
-        FRAME_GET_LINE (src, l1), FRAME_GET_LINE (src, l2), (width + 1) / 2);
+  lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
+
+    tasks[i].interlaced = interlaced;
+    tasks[i].width = width;
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (h2, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
   }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_YUY2_I420_task, (gpointer) tasks_p);
 
   /* now handle last lines. For interlaced these are up to 3 */
   if (h2 != height) {
     for (i = h2; i < height; i++) {
-      UNPACK_FRAME (src, convert->tmpline, i, convert->in_x, width);
-      PACK_FRAME (dest, convert->tmpline, i, width);
+      UNPACK_FRAME (src, convert->tmpline[0], i, convert->in_x, width);
+      PACK_FRAME (dest, convert->tmpline[0], i, width);
     }
   }
+}
+
+typedef struct
+{
+  const guint8 *s, *s2, *su, *sv;
+  guint8 *d, *d2, *du, *dv;
+  gint sstride, sustride, svstride;
+  gint dstride, dustride, dvstride;
+  gint width, height;
+  gint alpha;
+  MatrixData *data;
+} FConvertPlaneTask;
+
+static void
+convert_YUY2_AYUV_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_YUY2_AYUV (task->d, task->dstride, task->s,
+      task->sstride, task->alpha, (task->width + 1) / 2, task->height);
 }
 
 static void
@@ -3041,16 +3537,50 @@ convert_YUY2_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   guint8 *s, *d;
   guint8 alpha = MIN (convert->alpha_value, 255);
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (GST_ROUND_UP_2 (convert->in_x) * 2);
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += (convert->out_x * 4);
 
-  video_orc_convert_YUY2_AYUV (d, FRAME_GET_STRIDE (dest), s,
-      FRAME_GET_STRIDE (src), alpha, (width + 1) / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+    tasks[i].alpha = alpha;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_YUY2_AYUV_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_YUY2_Y42B_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_YUY2_Y42B (task->d, task->dstride, task->du,
+      task->dustride, task->dv, task->dvstride,
+      task->s, task->sstride, (task->width + 1) / 2, task->height);
 }
 
 static void
@@ -3060,6 +3590,11 @@ convert_YUY2_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s, *dy, *du, *dv;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (GST_ROUND_UP_2 (convert->in_x) * 2);
@@ -3071,11 +3606,44 @@ convert_YUY2_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
   dv = FRAME_GET_V_LINE (dest, convert->out_y);
   dv += convert->out_x >> 1;
 
-  video_orc_convert_YUY2_Y42B (dy, FRAME_GET_Y_STRIDE (dest), du,
-      FRAME_GET_U_STRIDE (dest), dv, FRAME_GET_V_STRIDE (dest),
-      s, FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_Y_STRIDE (dest);
+    tasks[i].dustride = FRAME_GET_U_STRIDE (dest);
+    tasks[i].dvstride = FRAME_GET_V_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = dy + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].du = du + i * lines_per_thread * tasks[i].dustride;
+    tasks[i].dv = dv + i * lines_per_thread * tasks[i].dvstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_YUY2_Y42B_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_YUY2_Y444_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_YUY2_Y444 (task->d,
+      task->dstride, task->du,
+      task->dustride, task->dv,
+      task->dvstride, task->s,
+      task->sstride, (task->width + 1) / 2, task->height);
 }
 
 static void
@@ -3085,6 +3653,11 @@ convert_YUY2_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s, *dy, *du, *dv;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (GST_ROUND_UP_2 (convert->in_x) * 2);
@@ -3096,15 +3669,53 @@ convert_YUY2_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
   dv = FRAME_GET_V_LINE (dest, convert->out_y);
   dv += convert->out_x;
 
-  video_orc_convert_YUY2_Y444 (dy,
-      FRAME_GET_COMP_STRIDE (dest, 0), du,
-      FRAME_GET_COMP_STRIDE (dest, 1), dv,
-      FRAME_GET_COMP_STRIDE (dest, 2), s,
-      FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_Y_STRIDE (dest);
+    tasks[i].dustride = FRAME_GET_U_STRIDE (dest);
+    tasks[i].dvstride = FRAME_GET_V_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = dy + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].du = du + i * lines_per_thread * tasks[i].dustride;
+    tasks[i].dv = dv + i * lines_per_thread * tasks[i].dvstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_YUY2_Y444_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
 }
 
+static void
+convert_UYVY_I420_task (FConvertTask * task)
+{
+  gint i;
+  gint l1, l2;
+
+  for (i = task->height_0; i < task->height_1; i += 2) {
+    GET_LINE_OFFSETS (task->interlaced, i, l1, l2);
+
+    video_orc_convert_UYVY_I420 (FRAME_GET_COMP_LINE (task->dest, 0, l1),
+        FRAME_GET_COMP_LINE (task->dest, 0, l2),
+        FRAME_GET_COMP_LINE (task->dest, 1, i >> 1),
+        FRAME_GET_COMP_LINE (task->dest, 2, i >> 1),
+        FRAME_GET_LINE (task->src, l1), FRAME_GET_LINE (task->src, l2),
+        (task->width + 1) / 2);
+  }
+}
 
 static void
 convert_UYVY_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
@@ -3114,8 +3725,11 @@ convert_UYVY_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
-  gint l1, l2;
   gint h2;
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
 
   /* I420 has half as many chroma lines, as such we have to
    * always merge two into one. For non-interlaced these are
@@ -3126,23 +3740,43 @@ convert_UYVY_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   else
     h2 = GST_ROUND_DOWN_2 (height);
 
-  for (i = 0; i < h2; i += 2) {
-    GET_LINE_OFFSETS (interlaced, i, l1, l2);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertTask, n_threads);
+  tasks_p = g_newa (FConvertTask *, n_threads);
 
-    video_orc_convert_UYVY_I420 (FRAME_GET_COMP_LINE (dest, 0, l1),
-        FRAME_GET_COMP_LINE (dest, 0, l2),
-        FRAME_GET_COMP_LINE (dest, 1, i >> 1),
-        FRAME_GET_COMP_LINE (dest, 2, i >> 1),
-        FRAME_GET_LINE (src, l1), FRAME_GET_LINE (src, l2), (width + 1) / 2);
+  lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
+
+    tasks[i].interlaced = interlaced;
+    tasks[i].width = width;
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (h2, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
   }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_UYVY_I420_task, (gpointer) tasks_p);
 
   /* now handle last lines. For interlaced these are up to 3 */
   if (h2 != height) {
     for (i = h2; i < height; i++) {
-      UNPACK_FRAME (src, convert->tmpline, i, convert->in_x, width);
-      PACK_FRAME (dest, convert->tmpline, i, width);
+      UNPACK_FRAME (src, convert->tmpline[0], i, convert->in_x, width);
+      PACK_FRAME (dest, convert->tmpline[0], i, width);
     }
   }
+}
+
+static void
+convert_UYVY_AYUV_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_UYVY_AYUV (task->d, task->dstride, task->s,
+      task->sstride, task->alpha, (task->width + 1) / 2, task->height);
 }
 
 static void
@@ -3153,17 +3787,49 @@ convert_UYVY_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   guint8 *s, *d;
   guint8 alpha = MIN (convert->alpha_value, 255);
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (GST_ROUND_UP_2 (convert->in_x) * 2);
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += (convert->out_x * 4);
 
-  video_orc_convert_UYVY_AYUV (d,
-      FRAME_GET_STRIDE (dest), s,
-      FRAME_GET_STRIDE (src), alpha, (width + 1) / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+    tasks[i].alpha = alpha;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_UYVY_AYUV_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_UYVY_YUY2_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_UYVY_YUY2 (task->d, task->dstride, task->s,
+      task->sstride, (task->width + 1) / 2, task->height);
 }
 
 static void
@@ -3173,17 +3839,49 @@ convert_UYVY_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s, *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (GST_ROUND_UP_2 (convert->in_x) * 2);
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
-  video_orc_convert_UYVY_YUY2 (d,
-      FRAME_GET_STRIDE (dest), s,
-      FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_UYVY_YUY2_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_UYVY_Y42B_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_UYVY_Y42B (task->d, task->dstride, task->du,
+      task->dustride, task->dv, task->dvstride,
+      task->s, task->sstride, (task->width + 1) / 2, task->height);
 }
 
 static void
@@ -3193,6 +3891,11 @@ convert_UYVY_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s, *dy, *du, *dv;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (GST_ROUND_UP_2 (convert->in_x) * 2);
@@ -3204,13 +3907,44 @@ convert_UYVY_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
   dv = FRAME_GET_V_LINE (dest, convert->out_y);
   dv += convert->out_x >> 1;
 
-  video_orc_convert_UYVY_Y42B (dy,
-      FRAME_GET_Y_STRIDE (dest), du,
-      FRAME_GET_U_STRIDE (dest), dv,
-      FRAME_GET_V_STRIDE (dest), s,
-      FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_Y_STRIDE (dest);
+    tasks[i].dustride = FRAME_GET_U_STRIDE (dest);
+    tasks[i].dvstride = FRAME_GET_V_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = dy + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].du = du + i * lines_per_thread * tasks[i].dustride;
+    tasks[i].dv = dv + i * lines_per_thread * tasks[i].dvstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_UYVY_Y42B_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_UYVY_Y444_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_UYVY_Y444 (task->d,
+      task->dstride, task->du,
+      task->dustride, task->dv,
+      task->dvstride, task->s,
+      task->sstride, (task->width + 1) / 2, task->height);
 }
 
 static void
@@ -3220,6 +3954,11 @@ convert_UYVY_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s, *dy, *du, *dv;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (GST_ROUND_UP_2 (convert->in_x) * 2);
@@ -3231,13 +3970,41 @@ convert_UYVY_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
   dv = FRAME_GET_V_LINE (dest, convert->out_y);
   dv += convert->out_x;
 
-  video_orc_convert_UYVY_Y444 (dy,
-      FRAME_GET_Y_STRIDE (dest), du,
-      FRAME_GET_U_STRIDE (dest), dv,
-      FRAME_GET_V_STRIDE (dest), s,
-      FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_Y_STRIDE (dest);
+    tasks[i].dustride = FRAME_GET_U_STRIDE (dest);
+    tasks[i].dvstride = FRAME_GET_V_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = dy + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].du = du + i * lines_per_thread * tasks[i].dustride;
+    tasks[i].dv = dv + i * lines_per_thread * tasks[i].dvstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_UYVY_Y444_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_UYVY_GRAY8_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_UYVY_GRAY8 (task->d, task->dstride, (guint16 *) task->s,
+      task->sstride, task->width, task->height);
 }
 
 static void
@@ -3246,16 +4013,53 @@ convert_UYVY_GRAY8 (GstVideoConverter * convert, const GstVideoFrame * src,
 {
   gint width = convert->in_width;
   gint height = convert->in_height;
-  guint16 *s;
+  guint8 *s;
   guint8 *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = GST_VIDEO_FRAME_PLANE_DATA (src, 0);
   d = GST_VIDEO_FRAME_PLANE_DATA (dest, 0);
 
-  video_orc_convert_UYVY_GRAY8 (d,
-      FRAME_GET_STRIDE (dest), s, FRAME_GET_STRIDE (src), width, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_UYVY_GRAY8_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_AYUV_I420_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_AYUV_I420 (task->d,
+      2 * task->dstride, task->d2,
+      2 * task->dstride, task->du,
+      task->dustride, task->dv,
+      task->dvstride, task->s,
+      2 * task->sstride, task->s2,
+      2 * task->sstride, task->width / 2, task->height / 2);
 }
 
 static void
@@ -3265,6 +4069,11 @@ convert_AYUV_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s1, *s2, *dy1, *dy2, *du, *dv;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s1 = FRAME_GET_LINE (src, convert->in_y + 0);
   s1 += convert->in_x * 4;
@@ -3281,15 +4090,44 @@ convert_AYUV_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   dv += convert->out_x >> 1;
 
   /* only for even width/height */
-  video_orc_convert_AYUV_I420 (dy1,
-      2 * FRAME_GET_Y_STRIDE (dest), dy2,
-      2 * FRAME_GET_Y_STRIDE (dest), du,
-      FRAME_GET_U_STRIDE (dest), dv,
-      FRAME_GET_V_STRIDE (dest), s1,
-      2 * FRAME_GET_STRIDE (src), s2,
-      2 * FRAME_GET_STRIDE (src), width / 2, height / 2);
+
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = GST_ROUND_UP_2 ((height + n_threads - 1) / n_threads);
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_Y_STRIDE (dest);
+    tasks[i].dustride = FRAME_GET_U_STRIDE (dest);
+    tasks[i].dvstride = FRAME_GET_V_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = dy1 + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].d2 = dy2 + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].du = du + i * lines_per_thread * tasks[i].dustride / 2;
+    tasks[i].dv = dv + i * lines_per_thread * tasks[i].dvstride / 2;
+    tasks[i].s = s1 + i * lines_per_thread * tasks[i].sstride;
+    tasks[i].s2 = s2 + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_AYUV_I420_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_AYUV_YUY2_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_AYUV_YUY2 (task->d, task->dstride, task->s,
+      task->sstride, task->width / 2, task->height);
 }
 
 static void
@@ -3299,6 +4137,11 @@ convert_AYUV_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s, *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += convert->in_x * 4;
@@ -3306,10 +4149,37 @@ convert_AYUV_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
   /* only for even width */
-  video_orc_convert_AYUV_YUY2 (d,
-      FRAME_GET_STRIDE (dest), s, FRAME_GET_STRIDE (src), width / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_AYUV_YUY2_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_AYUV_UYVY_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_AYUV_UYVY (task->d, task->dstride, task->s,
+      task->sstride, task->width / 2, task->height);
 }
 
 static void
@@ -3319,6 +4189,11 @@ convert_AYUV_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s, *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += convert->in_x * 4;
@@ -3326,10 +4201,38 @@ convert_AYUV_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
   /* only for even width */
-  video_orc_convert_AYUV_UYVY (d,
-      FRAME_GET_STRIDE (dest), s, FRAME_GET_STRIDE (src), width / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_AYUV_UYVY_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_AYUV_Y42B_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_AYUV_Y42B (task->d, task->dstride, task->du,
+      task->dustride, task->dv, task->dvstride,
+      task->s, task->sstride, task->width / 2, task->height);
 }
 
 static void
@@ -3339,6 +4242,11 @@ convert_AYUV_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s, *dy, *du, *dv;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += convert->in_x * 4;
@@ -3351,12 +4259,42 @@ convert_AYUV_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
   dv += convert->out_x >> 1;
 
   /* only works for even width */
-  video_orc_convert_AYUV_Y42B (dy,
-      FRAME_GET_Y_STRIDE (dest), du,
-      FRAME_GET_U_STRIDE (dest), dv,
-      FRAME_GET_V_STRIDE (dest), s, FRAME_GET_STRIDE (src), width / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_Y_STRIDE (dest);
+    tasks[i].dustride = FRAME_GET_U_STRIDE (dest);
+    tasks[i].dvstride = FRAME_GET_V_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = dy + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].du = du + i * lines_per_thread * tasks[i].dustride;
+    tasks[i].dv = dv + i * lines_per_thread * tasks[i].dvstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_AYUV_Y42B_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_AYUV_Y444_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_AYUV_Y444 (task->d, task->dstride, task->du,
+      task->dustride, task->dv, task->dvstride,
+      task->s, task->sstride, task->width, task->height);
 }
 
 static void
@@ -3366,6 +4304,11 @@ convert_AYUV_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *s, *dy, *du, *dv;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += convert->in_x * 4;
@@ -3377,13 +4320,42 @@ convert_AYUV_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
   dv = FRAME_GET_V_LINE (dest, convert->out_y);
   dv += convert->out_x;
 
-  video_orc_convert_AYUV_Y444 (FRAME_GET_Y_LINE (dest, 0),
-      FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
-      FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
-      FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
-      FRAME_GET_STRIDE (src), width, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
 
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_Y_STRIDE (dest);
+    tasks[i].dustride = FRAME_GET_U_STRIDE (dest);
+    tasks[i].dvstride = FRAME_GET_V_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = dy + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].du = du + i * lines_per_thread * tasks[i].dustride;
+    tasks[i].dv = dv + i * lines_per_thread * tasks[i].dvstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_AYUV_Y444_task, (gpointer) tasks_p);
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_Y42B_YUY2_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_Y42B_YUY2 (task->d, task->dstride,
+      task->s, task->sstride,
+      task->su, task->sustride,
+      task->sv, task->svstride, (task->width + 1) / 2, task->height);
 }
 
 static void
@@ -3393,6 +4365,11 @@ convert_Y42B_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *sy, *su, *sv, *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   sy = FRAME_GET_Y_LINE (src, convert->in_y);
   sy += convert->in_x;
@@ -3404,13 +4381,43 @@ convert_Y42B_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
-  video_orc_convert_Y42B_YUY2 (d,
-      FRAME_GET_STRIDE (dest), sy,
-      FRAME_GET_Y_STRIDE (src), su,
-      FRAME_GET_U_STRIDE (src), sv,
-      FRAME_GET_V_STRIDE (src), (width + 1) / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_Y_STRIDE (src);
+    tasks[i].sustride = FRAME_GET_U_STRIDE (src);
+    tasks[i].svstride = FRAME_GET_V_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = sy + i * lines_per_thread * tasks[i].sstride;
+    tasks[i].su = su + i * lines_per_thread * tasks[i].sustride;
+    tasks[i].sv = sv + i * lines_per_thread * tasks[i].svstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_Y42B_YUY2_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_Y42B_UYVY_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_Y42B_UYVY (task->d, task->dstride,
+      task->s, task->sstride,
+      task->su, task->sustride,
+      task->sv, task->svstride, (task->width + 1) / 2, task->height);
 }
 
 static void
@@ -3420,6 +4427,11 @@ convert_Y42B_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *sy, *su, *sv, *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   sy = FRAME_GET_Y_LINE (src, convert->in_y);
   sy += convert->in_x;
@@ -3431,13 +4443,44 @@ convert_Y42B_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
-  video_orc_convert_Y42B_UYVY (d,
-      FRAME_GET_STRIDE (dest), sy,
-      FRAME_GET_Y_STRIDE (src), su,
-      FRAME_GET_U_STRIDE (src), sv,
-      FRAME_GET_V_STRIDE (src), (width + 1) / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_Y_STRIDE (src);
+    tasks[i].sustride = FRAME_GET_U_STRIDE (src);
+    tasks[i].svstride = FRAME_GET_V_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = sy + i * lines_per_thread * tasks[i].sstride;
+    tasks[i].su = su + i * lines_per_thread * tasks[i].sustride;
+    tasks[i].sv = sv + i * lines_per_thread * tasks[i].svstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_Y42B_UYVY_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_Y42B_AYUV_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_Y42B_AYUV (task->d, task->dstride, task->s,
+      task->sstride,
+      task->su,
+      task->sustride,
+      task->sv, task->svstride, task->alpha, task->width / 2, task->height);
 }
 
 static void
@@ -3448,6 +4491,11 @@ convert_Y42B_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   guint8 *sy, *su, *sv, *d;
   guint8 alpha = MIN (convert->alpha_value, 255);
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   sy = FRAME_GET_Y_LINE (src, convert->in_y);
   sy += convert->in_x;
@@ -3460,13 +4508,44 @@ convert_Y42B_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   d += convert->out_x * 4;
 
   /* only for even width */
-  video_orc_convert_Y42B_AYUV (d,
-      FRAME_GET_STRIDE (dest), sy,
-      FRAME_GET_Y_STRIDE (src), su,
-      FRAME_GET_U_STRIDE (src), sv,
-      FRAME_GET_V_STRIDE (src), alpha, width / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_Y_STRIDE (src);
+    tasks[i].sustride = FRAME_GET_U_STRIDE (src);
+    tasks[i].svstride = FRAME_GET_V_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = sy + i * lines_per_thread * tasks[i].sstride;
+    tasks[i].su = su + i * lines_per_thread * tasks[i].sustride;
+    tasks[i].sv = sv + i * lines_per_thread * tasks[i].svstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+    tasks[i].alpha = alpha;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_Y42B_AYUV_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_Y444_YUY2_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_Y444_YUY2 (task->d, task->dstride, task->s,
+      task->sstride,
+      task->su,
+      task->sustride, task->sv, task->svstride, task->width / 2, task->height);
 }
 
 static void
@@ -3476,6 +4555,11 @@ convert_Y444_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *sy, *su, *sv, *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   sy = FRAME_GET_Y_LINE (src, convert->in_y);
   sy += convert->in_x;
@@ -3487,13 +4571,43 @@ convert_Y444_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
-  video_orc_convert_Y444_YUY2 (d,
-      FRAME_GET_STRIDE (dest), sy,
-      FRAME_GET_Y_STRIDE (src), su,
-      FRAME_GET_U_STRIDE (src), sv,
-      FRAME_GET_V_STRIDE (src), width / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_Y_STRIDE (src);
+    tasks[i].sustride = FRAME_GET_U_STRIDE (src);
+    tasks[i].svstride = FRAME_GET_V_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = sy + i * lines_per_thread * tasks[i].sstride;
+    tasks[i].su = su + i * lines_per_thread * tasks[i].sustride;
+    tasks[i].sv = sv + i * lines_per_thread * tasks[i].svstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_Y444_YUY2_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_Y444_UYVY_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_Y444_UYVY (task->d, task->dstride, task->s,
+      task->sstride,
+      task->su,
+      task->sustride, task->sv, task->svstride, task->width / 2, task->height);
 }
 
 static void
@@ -3503,6 +4617,11 @@ convert_Y444_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   guint8 *sy, *su, *sv, *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   sy = FRAME_GET_Y_LINE (src, convert->in_y);
   sy += convert->in_x;
@@ -3514,13 +4633,44 @@ convert_Y444_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
-  video_orc_convert_Y444_UYVY (d,
-      FRAME_GET_STRIDE (dest), sy,
-      FRAME_GET_Y_STRIDE (src), su,
-      FRAME_GET_U_STRIDE (src), sv,
-      FRAME_GET_V_STRIDE (src), width / 2, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_Y_STRIDE (src);
+    tasks[i].sustride = FRAME_GET_U_STRIDE (src);
+    tasks[i].svstride = FRAME_GET_V_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = sy + i * lines_per_thread * tasks[i].sstride;
+    tasks[i].su = su + i * lines_per_thread * tasks[i].sustride;
+    tasks[i].sv = sv + i * lines_per_thread * tasks[i].svstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_Y444_UYVY_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_Y444_AYUV_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_Y444_AYUV (task->d, task->dstride, task->s,
+      task->sstride,
+      task->su,
+      task->sustride,
+      task->sv, task->svstride, task->alpha, task->width, task->height);
 }
 
 static void
@@ -3531,6 +4681,11 @@ convert_Y444_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   guint8 *sy, *su, *sv, *d;
   guint8 alpha = MIN (convert->alpha_value, 255);
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   sy = FRAME_GET_Y_LINE (src, convert->in_y);
   sy += convert->in_x;
@@ -3542,16 +4697,47 @@ convert_Y444_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += convert->out_x * 4;
 
-  video_orc_convert_Y444_AYUV (d,
-      FRAME_GET_STRIDE (dest), sy,
-      FRAME_GET_Y_STRIDE (src), su,
-      FRAME_GET_U_STRIDE (src), sv, FRAME_GET_V_STRIDE (src), alpha, width,
-      height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_Y_STRIDE (src);
+    tasks[i].sustride = FRAME_GET_U_STRIDE (src);
+    tasks[i].svstride = FRAME_GET_V_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = sy + i * lines_per_thread * tasks[i].sstride;
+    tasks[i].su = su + i * lines_per_thread * tasks[i].sustride;
+    tasks[i].sv = sv + i * lines_per_thread * tasks[i].svstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+    tasks[i].alpha = alpha;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_Y444_AYUV_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
 }
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
+static void
+convert_AYUV_ARGB_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_AYUV_ARGB (task->d, task->dstride, task->s,
+      task->sstride, task->data->im[0][0], task->data->im[0][2],
+      task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+      task->width, task->height);
+}
+
 static void
 convert_AYUV_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
     GstVideoFrame * dest)
@@ -3560,17 +4746,51 @@ convert_AYUV_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   MatrixData *data = &convert->convert_matrix;
   guint8 *s, *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (convert->in_x * 4);
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += (convert->out_x * 4);
 
-  video_orc_convert_AYUV_ARGB (d, FRAME_GET_STRIDE (dest), s,
-      FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
-      data->im[2][1], data->im[1][1], data->im[1][2], width, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+    tasks[i].data = data;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_AYUV_ARGB_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_AYUV_BGRA_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_AYUV_BGRA (task->d, task->dstride, task->s,
+      task->sstride, task->data->im[0][0], task->data->im[0][2],
+      task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+      task->width, task->height);
 }
 
 static void
@@ -3581,17 +4801,51 @@ convert_AYUV_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   MatrixData *data = &convert->convert_matrix;
   guint8 *s, *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (convert->in_x * 4);
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += (convert->out_x * 4);
 
-  video_orc_convert_AYUV_BGRA (d, FRAME_GET_STRIDE (dest), s,
-      FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
-      data->im[2][1], data->im[1][1], data->im[1][2], width, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+    tasks[i].data = data;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_AYUV_BGRA_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_AYUV_ABGR_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_AYUV_ABGR (task->d, task->dstride, task->s,
+      task->sstride, task->data->im[0][0], task->data->im[0][2],
+      task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+      task->width, task->height);
 }
 
 static void
@@ -3602,17 +4856,51 @@ convert_AYUV_ABGR (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   MatrixData *data = &convert->convert_matrix;
   guint8 *s, *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (convert->in_x * 4);
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += (convert->out_x * 4);
 
-  video_orc_convert_AYUV_ABGR (d, FRAME_GET_STRIDE (dest), s,
-      FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
-      data->im[2][1], data->im[1][1], data->im[1][2], width, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+    tasks[i].data = data;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_AYUV_ABGR_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
+}
+
+static void
+convert_AYUV_RGBA_task (FConvertPlaneTask * task)
+{
+  video_orc_convert_AYUV_RGBA (task->d, task->dstride, task->s,
+      task->sstride, task->data->im[0][0], task->data->im[0][2],
+      task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+      task->width, task->height);
 }
 
 static void
@@ -3623,19 +4911,75 @@ convert_AYUV_RGBA (GstVideoConverter * convert, const GstVideoFrame * src,
   gint height = convert->in_height;
   MatrixData *data = &convert->convert_matrix;
   guint8 *s, *d;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_LINE (src, convert->in_y);
   s += (convert->in_x * 4);
   d = FRAME_GET_LINE (dest, convert->out_y);
   d += (convert->out_x * 4);
 
-  video_orc_convert_AYUV_RGBA (d, FRAME_GET_STRIDE (dest), s,
-      FRAME_GET_STRIDE (src), data->im[0][0], data->im[0][2],
-      data->im[2][1], data->im[1][1], data->im[1][2], width, height);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertPlaneTask, n_threads);
+  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+    tasks[i].data = data;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_AYUV_RGBA_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
 }
 #endif
+
+static void
+convert_I420_BGRA_task (FConvertTask * task)
+{
+  gint i;
+
+  for (i = task->height_0; i < task->height_1; i++) {
+    guint8 *sy, *su, *sv, *d;
+
+    d = FRAME_GET_LINE (task->dest, i + task->out_y);
+    d += (task->out_x * 4);
+    sy = FRAME_GET_Y_LINE (task->src, i + task->in_y);
+    sy += task->in_x;
+    su = FRAME_GET_U_LINE (task->src, (i + task->in_y) >> 1);
+    su += (task->in_x >> 1);
+    sv = FRAME_GET_V_LINE (task->src, (i + task->in_y) >> 1);
+    sv += (task->in_x >> 1);
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    video_orc_convert_I420_BGRA (d, sy, su, sv,
+        task->data->im[0][0], task->data->im[0][2],
+        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+        task->width);
+#else
+    video_orc_convert_I420_ARGB (d, sy, su, sv,
+        task->data->im[0][0], task->data->im[0][2],
+        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+        task->width);
+#endif
+  }
+}
 
 static void
 convert_I420_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
@@ -3645,30 +4989,70 @@ convert_I420_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   MatrixData *data = &convert->convert_matrix;
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
 
-  for (i = 0; i < height; i++) {
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertTask, n_threads);
+  tasks_p = g_newa (FConvertTask *, n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
+
+    tasks[i].width = width;
+    tasks[i].data = data;
+    tasks[i].in_x = convert->in_x;
+    tasks[i].in_y = convert->in_y;
+    tasks[i].out_x = convert->out_x;
+    tasks[i].out_y = convert->out_y;
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (height, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_I420_BGRA_task, (gpointer) tasks_p);
+
+  convert_fill_border (convert, dest);
+}
+
+static void
+convert_I420_ARGB_task (FConvertTask * task)
+{
+  gint i;
+
+  for (i = task->height_0; i < task->height_1; i++) {
     guint8 *sy, *su, *sv, *d;
 
-    d = FRAME_GET_LINE (dest, i + convert->out_y);
-    d += (convert->out_x * 4);
-    sy = FRAME_GET_Y_LINE (src, i + convert->in_y);
-    sy += convert->in_x;
-    su = FRAME_GET_U_LINE (src, (i + convert->in_y) >> 1);
-    su += (convert->in_x >> 1);
-    sv = FRAME_GET_V_LINE (src, (i + convert->in_y) >> 1);
-    sv += (convert->in_x >> 1);
+    d = FRAME_GET_LINE (task->dest, i + task->out_y);
+    d += (task->out_x * 4);
+    sy = FRAME_GET_Y_LINE (task->src, i + task->in_y);
+    sy += task->in_x;
+    su = FRAME_GET_U_LINE (task->src, (i + task->in_y) >> 1);
+    su += (task->in_x >> 1);
+    sv = FRAME_GET_V_LINE (task->src, (i + task->in_y) >> 1);
+    sv += (task->in_x >> 1);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    video_orc_convert_I420_BGRA (d, sy, su, sv,
-        data->im[0][0], data->im[0][2],
-        data->im[2][1], data->im[1][1], data->im[1][2], width);
-#else
     video_orc_convert_I420_ARGB (d, sy, su, sv,
-        data->im[0][0], data->im[0][2],
-        data->im[2][1], data->im[1][1], data->im[1][2], width);
+        task->data->im[0][0], task->data->im[0][2],
+        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+        task->width);
+#else
+    video_orc_convert_I420_BGRA (d, sy, su, sv,
+        task->data->im[0][0], task->data->im[0][2],
+        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+        task->width);
 #endif
   }
-  convert_fill_border (convert, dest);
 }
 
 static void
@@ -3679,30 +5063,80 @@ convert_I420_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   MatrixData *data = &convert->convert_matrix;
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
 
-  for (i = 0; i < height; i++) {
-    guint8 *sy, *su, *sv, *d;
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertTask, n_threads);
+  tasks_p = g_newa (FConvertTask *, n_threads);
 
-    d = FRAME_GET_LINE (dest, i + convert->out_y);
-    d += (convert->out_x * 4);
-    sy = FRAME_GET_Y_LINE (src, i + convert->in_y);
-    sy += convert->in_x;
-    su = FRAME_GET_U_LINE (src, (i + convert->in_y) >> 1);
-    su += (convert->in_x >> 1);
-    sv = FRAME_GET_V_LINE (src, (i + convert->in_y) >> 1);
-    sv += (convert->in_x >> 1);
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
+
+    tasks[i].width = width;
+    tasks[i].data = data;
+    tasks[i].in_x = convert->in_x;
+    tasks[i].in_y = convert->in_y;
+    tasks[i].out_x = convert->out_x;
+    tasks[i].out_y = convert->out_y;
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (height, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_I420_ARGB_task, (gpointer) tasks_p);
+
+  convert_fill_border (convert, dest);
+}
+
+static void
+convert_I420_pack_ARGB_task (FConvertTask * task)
+{
+  gint i;
+  gpointer d[GST_VIDEO_MAX_PLANES];
+
+  d[0] = FRAME_GET_LINE (task->dest, 0);
+  d[0] =
+      (guint8 *) d[0] +
+      task->out_x * GST_VIDEO_FORMAT_INFO_PSTRIDE (task->dest->info.finfo, 0);
+
+  for (i = task->height_0; i < task->height_1; i++) {
+    guint8 *sy, *su, *sv;
+
+    sy = FRAME_GET_Y_LINE (task->src, i + task->in_y);
+    sy += task->in_x;
+    su = FRAME_GET_U_LINE (task->src, (i + task->in_y) >> 1);
+    su += (task->in_x >> 1);
+    sv = FRAME_GET_V_LINE (task->src, (i + task->in_y) >> 1);
+    sv += (task->in_x >> 1);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    video_orc_convert_I420_ARGB (d, sy, su, sv,
-        data->im[0][0], data->im[0][2],
-        data->im[2][1], data->im[1][1], data->im[1][2], width);
+    video_orc_convert_I420_ARGB (task->tmpline, sy, su, sv,
+        task->data->im[0][0], task->data->im[0][2],
+        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+        task->width);
 #else
-    video_orc_convert_I420_BGRA (d, sy, su, sv,
-        data->im[0][0], data->im[0][2],
-        data->im[2][1], data->im[1][1], data->im[1][2], width);
+    video_orc_convert_I420_BGRA (task->tmpline, sy, su, sv,
+        task->data->im[0][0], task->data->im[0][2],
+        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+        task->width);
 #endif
+    task->dest->info.finfo->pack_func (task->dest->info.finfo,
+        (GST_VIDEO_FRAME_IS_INTERLACED (task->dest) ?
+            GST_VIDEO_PACK_FLAG_INTERLACED :
+            GST_VIDEO_PACK_FLAG_NONE),
+        task->tmpline, 0, d, task->dest->info.stride,
+        task->dest->info.chroma_site, i + task->out_y, task->width);
   }
-  convert_fill_border (convert, dest);
 }
 
 static void
@@ -3713,39 +5147,40 @@ convert_I420_pack_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
   gint width = convert->in_width;
   gint height = convert->in_height;
   MatrixData *data = &convert->convert_matrix;
-  gpointer tmp = convert->tmpline;
-  gpointer d[GST_VIDEO_MAX_PLANES];
-  gint pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (dest->info.finfo, 0);
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
 
-  d[0] = FRAME_GET_LINE (dest, 0);
-  d[0] = (guint8 *) d[0] + convert->out_x * pstride;
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FConvertTask, n_threads);
+  tasks_p = g_newa (FConvertTask *, n_threads);
 
-  for (i = 0; i < height; i++) {
-    guint8 *sy, *su, *sv;
+  lines_per_thread = (height + n_threads - 1) / n_threads;
 
-    sy = FRAME_GET_Y_LINE (src, i + convert->in_y);
-    sy += convert->in_x;
-    su = FRAME_GET_U_LINE (src, (i + convert->in_y) >> 1);
-    su += (convert->in_x >> 1);
-    sv = FRAME_GET_V_LINE (src, (i + convert->in_y) >> 1);
-    sv += (convert->in_x >> 1);
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    video_orc_convert_I420_ARGB (tmp, sy, su, sv,
-        data->im[0][0], data->im[0][2],
-        data->im[2][1], data->im[1][1], data->im[1][2], width);
-#else
-    video_orc_convert_I420_BGRA (tmp, sy, su, sv,
-        data->im[0][0], data->im[0][2],
-        data->im[2][1], data->im[1][1], data->im[1][2], width);
-#endif
-    dest->info.finfo->pack_func (dest->info.finfo,
-        (GST_VIDEO_FRAME_IS_INTERLACED (dest) ?
-            GST_VIDEO_PACK_FLAG_INTERLACED :
-            GST_VIDEO_PACK_FLAG_NONE),
-        tmp, 0, d, dest->info.stride,
-        dest->info.chroma_site, i + convert->out_y, width);
+    tasks[i].width = width;
+    tasks[i].data = data;
+    tasks[i].in_x = convert->in_x;
+    tasks[i].in_y = convert->in_y;
+    tasks[i].out_x = convert->out_x;
+    tasks[i].out_y = convert->out_y;
+    tasks[i].tmpline = convert->tmpline[i];
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (height, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
   }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_I420_pack_ARGB_task,
+      (gpointer) tasks_p);
+
   convert_fill_border (convert, dest);
 }
 
@@ -3894,21 +5329,63 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
   }
 }
 
+typedef struct
+{
+  const guint8 *s, *s2;
+  guint8 *d, *d2;
+  gint sstride, dstride;
+  gint width, height;
+  gint fill;
+} FSimpleScaleTask;
+
+static void
+convert_plane_fill_task (FSimpleScaleTask * task)
+{
+  video_orc_memset_2d (task->d, task->dstride,
+      task->fill, task->width, task->height);
+}
+
 static void
 convert_plane_fill (GstVideoConverter * convert,
     const GstVideoFrame * src, GstVideoFrame * dest, gint plane)
 {
-  guint8 *s, *d;
-  gint splane = convert->fsplane[plane];
+  guint8 *d;
+  FSimpleScaleTask *tasks;
+  FSimpleScaleTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
-  s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
-  s += convert->fin_x[splane];
   d = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
   d += convert->fout_x[plane];
 
-  video_orc_memset_2d (d, FRAME_GET_PLANE_STRIDE (dest, plane),
-      convert->ffill[plane],
-      convert->fout_width[plane], convert->fout_height[plane]);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FSimpleScaleTask, n_threads);
+  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  lines_per_thread = (convert->fout_height[plane] + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].d = d + i * lines_per_thread * convert->fout_width[plane];
+
+    tasks[i].fill = convert->ffill[plane];
+    tasks[i].width = convert->fout_width[plane];
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, convert->fout_height[plane]);
+    tasks[i].height -= i * lines_per_thread;
+    tasks[i].dstride = FRAME_GET_PLANE_STRIDE (dest, plane);
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_plane_fill_task, (gpointer) tasks_p);
+}
+
+static void
+convert_plane_h_double_task (FSimpleScaleTask * task)
+{
+  video_orc_planar_chroma_422_444 (task->d,
+      task->dstride, task->s, task->sstride, task->width / 2, task->height);
 }
 
 static void
@@ -3917,16 +5394,47 @@ convert_plane_h_double (GstVideoConverter * convert,
 {
   guint8 *s, *d;
   gint splane = convert->fsplane[plane];
+  FSimpleScaleTask *tasks;
+  FSimpleScaleTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
   s += convert->fin_x[splane];
   d = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
   d += convert->fout_x[plane];
 
-  video_orc_planar_chroma_422_444 (d,
-      FRAME_GET_PLANE_STRIDE (dest, plane), s,
-      FRAME_GET_PLANE_STRIDE (src, splane), convert->fout_width[plane] / 2,
-      convert->fout_height[plane]);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FSimpleScaleTask, n_threads);
+  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  lines_per_thread = (convert->fout_height[plane] + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_PLANE_STRIDE (dest, plane);
+    tasks[i].sstride = FRAME_GET_PLANE_STRIDE (src, splane);
+
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = convert->fout_width[plane];
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, convert->fout_height[plane]);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_plane_h_double_task,
+      (gpointer) tasks_p);
+}
+
+static void
+convert_plane_h_halve_task (FSimpleScaleTask * task)
+{
+  video_orc_planar_chroma_444_422 (task->d,
+      task->dstride, task->s, task->sstride, task->width, task->height);
 }
 
 static void
@@ -3935,16 +5443,46 @@ convert_plane_h_halve (GstVideoConverter * convert,
 {
   guint8 *s, *d;
   gint splane = convert->fsplane[plane];
+  FSimpleScaleTask *tasks;
+  FSimpleScaleTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
   s += convert->fin_x[splane];
   d = FRAME_GET_PLANE_LINE (dest, plane, convert->fout_y[plane]);
   d += convert->fout_x[plane];
 
-  video_orc_planar_chroma_444_422 (d,
-      FRAME_GET_PLANE_STRIDE (dest, plane), s,
-      FRAME_GET_PLANE_STRIDE (src, splane), convert->fout_width[plane],
-      convert->fout_height[plane]);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FSimpleScaleTask, n_threads);
+  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  lines_per_thread = (convert->fout_height[plane] + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_PLANE_STRIDE (dest, plane);
+    tasks[i].sstride = FRAME_GET_PLANE_STRIDE (src, splane);
+
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = convert->fout_width[plane];
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, convert->fout_height[plane]);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_plane_h_halve_task, (gpointer) tasks_p);
+}
+
+static void
+convert_plane_v_double_task (FSimpleScaleTask * task)
+{
+  video_orc_planar_chroma_420_422 (task->d, 2 * task->dstride, task->d2,
+      2 * task->dstride, task->s, task->sstride, task->width, task->height / 2);
 }
 
 static void
@@ -3953,6 +5491,11 @@ convert_plane_v_double (GstVideoConverter * convert,
 {
   guint8 *s, *d1, *d2;
   gint ds, splane = convert->fsplane[plane];
+  FSimpleScaleTask *tasks;
+  FSimpleScaleTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
   s += convert->fin_x[splane];
@@ -3962,9 +5505,39 @@ convert_plane_v_double (GstVideoConverter * convert,
   d2 += convert->fout_x[plane];
   ds = FRAME_GET_PLANE_STRIDE (dest, plane);
 
-  video_orc_planar_chroma_420_422 (d1, 2 * ds, d2, 2 * ds,
-      s, FRAME_GET_PLANE_STRIDE (src, splane), convert->fout_width[plane],
-      convert->fout_height[plane] / 2);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FSimpleScaleTask, n_threads);
+  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  lines_per_thread =
+      GST_ROUND_UP_2 ((convert->fout_height[plane] + n_threads -
+          1) / n_threads);
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].d = d1 + i * lines_per_thread * ds;
+    tasks[i].d2 = d2 + i * lines_per_thread * ds;
+    tasks[i].dstride = ds;
+    tasks[i].sstride = FRAME_GET_PLANE_STRIDE (src, splane);
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride / 2;
+
+    tasks[i].width = convert->fout_width[plane];
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, convert->fout_height[plane]);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_plane_v_double_task,
+      (gpointer) tasks_p);
+}
+
+static void
+convert_plane_v_halve_task (FSimpleScaleTask * task)
+{
+  video_orc_planar_chroma_422_420 (task->d, task->dstride, task->s,
+      2 * task->sstride, task->s2, 2 * task->sstride, task->width,
+      task->height);
 }
 
 static void
@@ -3973,6 +5546,11 @@ convert_plane_v_halve (GstVideoConverter * convert,
 {
   guint8 *s1, *s2, *d;
   gint ss, ds, splane = convert->fsplane[plane];
+  FSimpleScaleTask *tasks;
+  FSimpleScaleTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s1 = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
   s1 += convert->fin_x[splane];
@@ -3984,8 +5562,36 @@ convert_plane_v_halve (GstVideoConverter * convert,
   ss = FRAME_GET_PLANE_STRIDE (src, splane);
   ds = FRAME_GET_PLANE_STRIDE (dest, plane);
 
-  video_orc_planar_chroma_422_420 (d, ds, s1, 2 * ss, s2, 2 * ss,
-      convert->fout_width[plane], convert->fout_height[plane]);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FSimpleScaleTask, n_threads);
+  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  lines_per_thread = (convert->fout_height[plane] + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].d = d + i * lines_per_thread * ds;
+    tasks[i].dstride = ds;
+    tasks[i].s = s1 + i * lines_per_thread * ss * 2;
+    tasks[i].s2 = s2 + i * lines_per_thread * ss * 2;
+    tasks[i].sstride = ss;
+
+    tasks[i].width = convert->fout_width[plane];
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, convert->fout_height[plane]);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_plane_v_halve_task, (gpointer) tasks_p);
+}
+
+static void
+convert_plane_hv_double_task (FSimpleScaleTask * task)
+{
+  video_orc_planar_chroma_420_444 (task->d, 2 * task->dstride, task->d2,
+      2 * task->dstride, task->s, task->sstride, (task->width + 1) / 2,
+      task->height / 2);
 }
 
 static void
@@ -3994,6 +5600,11 @@ convert_plane_hv_double (GstVideoConverter * convert,
 {
   guint8 *s, *d1, *d2;
   gint ss, ds, splane = convert->fsplane[plane];
+  FSimpleScaleTask *tasks;
+  FSimpleScaleTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
   s += convert->fin_x[splane];
@@ -4004,8 +5615,39 @@ convert_plane_hv_double (GstVideoConverter * convert,
   ss = FRAME_GET_PLANE_STRIDE (src, splane);
   ds = FRAME_GET_PLANE_STRIDE (dest, plane);
 
-  video_orc_planar_chroma_420_444 (d1, 2 * ds, d2, 2 * ds, s, ss,
-      (convert->fout_width[plane] + 1) / 2, convert->fout_height[plane] / 2);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FSimpleScaleTask, n_threads);
+  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  lines_per_thread =
+      GST_ROUND_UP_2 ((convert->fout_height[plane] + n_threads -
+          1) / n_threads);
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].d = d1 + i * lines_per_thread * ds;
+    tasks[i].d2 = d2 + i * lines_per_thread * ds;
+    tasks[i].dstride = ds;
+    tasks[i].sstride = ss;
+    tasks[i].s = s + i * lines_per_thread * ss / 2;
+
+    tasks[i].width = convert->fout_width[plane];
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, convert->fout_height[plane]);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_plane_hv_double_task,
+      (gpointer) tasks_p);
+}
+
+static void
+convert_plane_hv_halve_task (FSimpleScaleTask * task)
+{
+  video_orc_planar_chroma_444_420 (task->d, task->dstride, task->s,
+      2 * task->sstride, task->s2, 2 * task->sstride, task->width,
+      task->height);
 }
 
 static void
@@ -4014,6 +5656,11 @@ convert_plane_hv_halve (GstVideoConverter * convert,
 {
   guint8 *s1, *s2, *d;
   gint ss, ds, splane = convert->fsplane[plane];
+  FSimpleScaleTask *tasks;
+  FSimpleScaleTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
 
   s1 = FRAME_GET_PLANE_LINE (src, splane, convert->fin_y[splane]);
   s1 += convert->fin_x[splane];
@@ -4024,8 +5671,47 @@ convert_plane_hv_halve (GstVideoConverter * convert,
   ss = FRAME_GET_PLANE_STRIDE (src, splane);
   ds = FRAME_GET_PLANE_STRIDE (dest, plane);
 
-  video_orc_planar_chroma_444_420 (d, ds, s1, 2 * ss, s2, 2 * ss,
-      convert->fout_width[plane], convert->fout_height[plane]);
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FSimpleScaleTask, n_threads);
+  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  lines_per_thread = (convert->fout_height[plane] + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].d = d + i * lines_per_thread * ds;
+    tasks[i].dstride = ds;
+    tasks[i].s = s1 + i * lines_per_thread * ss * 2;
+    tasks[i].s2 = s2 + i * lines_per_thread * ss * 2;
+    tasks[i].sstride = ss;
+
+    tasks[i].width = convert->fout_width[plane];
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, convert->fout_height[plane]);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_plane_hv_halve_task,
+      (gpointer) tasks_p);
+}
+
+typedef struct
+{
+  GstVideoScaler *h_scaler, *v_scaler;
+  GstVideoFormat format;
+  const guint8 *s;
+  guint8 *d;
+  gint sstride, dstride;
+  guint x, y, w, h;
+} FScaleTask;
+
+static void
+convert_plane_hv_task (FScaleTask * task)
+{
+  gst_video_scaler_2d (task->h_scaler, task->v_scaler, task->format,
+      (guint8 *) task->s, task->sstride,
+      task->d, task->dstride, task->x, task->y, task->w, task->h);
 }
 
 static void
@@ -4034,9 +5720,12 @@ convert_plane_hv (GstVideoConverter * convert,
 {
   gint in_x, in_y, out_x, out_y, out_width, out_height;
   GstVideoFormat format;
-  GstVideoScaler *h_scaler, *v_scaler;
   gint splane = convert->fsplane[plane];
   guint8 *s, *d;
+  gint sstride, dstride;
+  FScaleTask *tasks;
+  FScaleTask **tasks_p;
+  gint i, n_threads, lines_per_thread;
 
   in_x = convert->fin_x[splane];
   in_y = convert->fin_y[splane];
@@ -4046,17 +5735,45 @@ convert_plane_hv (GstVideoConverter * convert,
   out_height = convert->fout_height[plane];
   format = convert->fformat[plane];
 
-  h_scaler = convert->fh_scaler[plane];
-  v_scaler = convert->fv_scaler[plane];
-
   s = FRAME_GET_PLANE_LINE (src, splane, in_y);
   s += in_x;
   d = FRAME_GET_PLANE_LINE (dest, plane, out_y);
   d += out_x;
 
-  gst_video_scaler_2d (h_scaler, v_scaler, format,
-      s, FRAME_GET_PLANE_STRIDE (src, splane),
-      d, FRAME_GET_PLANE_STRIDE (dest, plane), 0, 0, out_width, out_height);
+  sstride = FRAME_GET_PLANE_STRIDE (src, splane);
+  dstride = FRAME_GET_PLANE_STRIDE (dest, plane);
+
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = g_newa (FScaleTask, n_threads);
+  tasks_p = g_newa (FScaleTask *, n_threads);
+
+  lines_per_thread = (out_height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].h_scaler =
+        convert->fh_scaler[plane].scaler ? convert->
+        fh_scaler[plane].scaler[i] : NULL;
+    tasks[i].v_scaler =
+        convert->fv_scaler[plane].scaler ? convert->
+        fv_scaler[plane].scaler[i] : NULL;
+    tasks[i].format = format;
+    tasks[i].s = s;
+    tasks[i].d = d;
+    tasks[i].sstride = sstride;
+    tasks[i].dstride = dstride;
+
+    tasks[i].x = 0;
+    tasks[i].w = out_width;
+
+    tasks[i].y = i * lines_per_thread;
+    tasks[i].h = tasks[i].y + lines_per_thread;
+    tasks[i].h = MIN (out_height, tasks[i].h);
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_plane_hv_task, (gpointer) tasks_p);
 }
 
 static void
@@ -4184,6 +5901,7 @@ setup_scale (GstVideoConverter * convert)
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *in_finfo, *out_finfo;
   GstVideoFormat in_format, out_format;
+  guint n_threads = g_get_num_processors ();
 
   in_info = &convert->in_info;
   out_info = &convert->out_info;
@@ -4232,57 +5950,71 @@ setup_scale (GstVideoConverter * convert)
 
   if (n_planes == 1 && !GST_VIDEO_FORMAT_INFO_IS_GRAY (out_finfo)) {
     gint pstride;
+    guint j;
 
     if (is_merge_yuv (in_info)) {
       GstVideoScaler *y_scaler, *uv_scaler;
 
       if (in_width != out_width) {
-        y_scaler =
-            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_Y,
-                in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
-                GST_VIDEO_COMP_Y, out_width), convert->config);
-        uv_scaler =
-            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE,
-            gst_video_scaler_get_max_taps (y_scaler),
-            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_U,
-                in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
-                GST_VIDEO_COMP_U, out_width), convert->config);
+        convert->fh_scaler[0].scaler = g_new (GstVideoScaler *, n_threads);
+        for (j = 0; j < n_threads; j++) {
+          y_scaler =
+              gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_Y,
+                  in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
+                  GST_VIDEO_COMP_Y, out_width), convert->config);
+          uv_scaler =
+              gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE,
+              gst_video_scaler_get_max_taps (y_scaler),
+              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, GST_VIDEO_COMP_U,
+                  in_width), GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
+                  GST_VIDEO_COMP_U, out_width), convert->config);
 
-        convert->fh_scaler[0] =
-            gst_video_scaler_combine_packed_YUV (y_scaler, uv_scaler,
-            in_format, out_format);
+          convert->fh_scaler[0].scaler[j] =
+              gst_video_scaler_combine_packed_YUV (y_scaler, uv_scaler,
+              in_format, out_format);
 
-        gst_video_scaler_free (y_scaler);
-        gst_video_scaler_free (uv_scaler);
-      } else
-        convert->fh_scaler[0] = NULL;
+          gst_video_scaler_free (y_scaler);
+          gst_video_scaler_free (uv_scaler);
+        }
+      } else {
+        convert->fh_scaler[0].scaler = NULL;
+      }
 
       pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, GST_VIDEO_COMP_Y);
       convert->fin_x[0] = GST_ROUND_UP_2 (convert->in_x) * pstride;
       convert->fout_x[0] = GST_ROUND_UP_2 (convert->out_x) * pstride;
 
     } else {
-      if (in_width != out_width && in_width != 0 && out_width != 0)
-        convert->fh_scaler[0] =
-            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-            in_width, out_width, convert->config);
-      else
-        convert->fh_scaler[0] = NULL;
+      if (in_width != out_width && in_width != 0 && out_width != 0) {
+        convert->fh_scaler[0].scaler = g_new (GstVideoScaler *, n_threads);
+        for (j = 0; j < n_threads; j++) {
+          convert->fh_scaler[0].scaler[j] =
+              gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+              in_width, out_width, convert->config);
+        }
+      } else {
+        convert->fh_scaler[0].scaler = NULL;
+      }
 
       pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, GST_VIDEO_COMP_R);
       convert->fin_x[0] = convert->in_x * pstride;
       convert->fout_x[0] = convert->out_x * pstride;
     }
+
     stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (in_info, 0));
     stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (out_info, 0));
 
     if (in_height != out_height && in_height != 0 && out_height != 0) {
-      convert->fv_scaler[0] =
-          gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
-          in_height, out_height, convert->config);
+      convert->fv_scaler[0].scaler = g_new (GstVideoScaler *, n_threads);
+
+      for (j = 0; j < n_threads; j++) {
+        convert->fv_scaler[0].scaler[j] =
+            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+            in_height, out_height, convert->config);
+      }
     } else {
-      convert->fv_scaler[0] = NULL;
+      convert->fv_scaler[0].scaler = NULL;
     }
 
     convert->fin_y[0] = convert->in_y;
@@ -4419,16 +6151,28 @@ setup_scale (GstVideoConverter * convert)
       }
 
       if (need_h_scaler && iw != 0 && ow != 0) {
-        convert->fh_scaler[i] = gst_video_scaler_new (resample_method,
-            GST_VIDEO_SCALER_FLAG_NONE, taps, iw, ow, config);
-      } else
-        convert->fh_scaler[i] = NULL;
+        convert->fh_scaler[i].scaler = g_new (GstVideoScaler *, n_threads);
+
+        for (j = 0; j < n_threads; j++) {
+          convert->fh_scaler[i].scaler[j] =
+              gst_video_scaler_new (resample_method, GST_VIDEO_SCALER_FLAG_NONE,
+              taps, iw, ow, config);
+        }
+      } else {
+        convert->fh_scaler[i].scaler = NULL;
+      }
 
       if (need_v_scaler && ih != 0 && oh != 0) {
-        convert->fv_scaler[i] = gst_video_scaler_new (resample_method,
-            GST_VIDEO_SCALER_FLAG_NONE, taps, ih, oh, config);
-      } else
-        convert->fv_scaler[i] = NULL;
+        convert->fv_scaler[i].scaler = g_new (GstVideoScaler *, n_threads);
+
+        for (j = 0; j < n_threads; j++) {
+          convert->fv_scaler[i].scaler[j] =
+              gst_video_scaler_new (resample_method, GST_VIDEO_SCALER_FLAG_NONE,
+              taps, ih, oh, config);
+        }
+      } else {
+        convert->fv_scaler[i].scaler = NULL;
+      }
 
       gst_structure_free (config);
       convert->fformat[i] = get_scale_format (in_format, i);
@@ -4948,11 +6692,18 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
         && (transforms[i].alpha_copy || !need_copy)
         && (transforms[i].alpha_set || !need_set)
         && (transforms[i].alpha_mult || !need_mult)) {
+      guint j;
+
       GST_DEBUG ("using fastpath");
       if (transforms[i].needs_color_matrix)
         video_converter_compute_matrix (convert);
       convert->convert = transforms[i].convert;
-      convert->tmpline = g_malloc0 (sizeof (guint16) * (width + 8) * 4);
+
+      convert->tmpline =
+          g_new (guint16 *, convert->conversion_runner->n_threads);
+      for (j = 0; j < convert->conversion_runner->n_threads; j++)
+        convert->tmpline[j] = g_malloc0 (sizeof (guint16) * (width + 8) * 4);
+
       if (!transforms[i].keeps_size)
         if (!setup_scale (convert))
           return FALSE;

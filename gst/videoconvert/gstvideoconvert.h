@@ -56,6 +56,7 @@ struct _GstVideoConvert {
   GstVideoGammaMode gamma_mode;
   GstVideoPrimariesMode primaries_mode;
   gdouble alpha_value;
+  gint n_threads;
 };
 
 struct _GstVideoConvertClass

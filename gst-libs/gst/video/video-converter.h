@@ -265,6 +265,14 @@ typedef enum {
  */
 #define GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE   "GstVideoConverter.primaries-mode"
 
+/**
+ * GST_VIDEO_CONVERTER_OPT_THREADS:
+ *
+ * #G_TYPE_UINT, maximum number of threads to use. Default 1, 0 for the number
+ * of cores.
+ */
+#define GST_VIDEO_CONVERTER_OPT_THREADS   "GstVideoConverter.threads"
+
 typedef struct _GstVideoConverter GstVideoConverter;
 
 GstVideoConverter *  gst_video_converter_new            (GstVideoInfo *in_info,

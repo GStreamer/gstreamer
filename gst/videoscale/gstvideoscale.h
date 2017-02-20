@@ -88,6 +88,7 @@ struct _GstVideoScale {
   int submethod;
   double envelope;
   gboolean gamma_decode;
+  gint n_threads;
 
   GstVideoConverter *convert;
 
