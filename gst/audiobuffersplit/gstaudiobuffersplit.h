@@ -63,6 +63,8 @@ struct _GstAudioBufferSplit {
   guint samples_per_buffer;
   guint error_per_buffer;
   guint accumulated_error;
+
+  gboolean strict_buffer_size;
 };
 
 struct _GstAudioBufferSplitClass {

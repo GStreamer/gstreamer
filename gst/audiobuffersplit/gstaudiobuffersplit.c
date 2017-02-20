@@ -45,6 +45,7 @@ enum
   PROP_OUTPUT_BUFFER_DURATION,
   PROP_ALIGNMENT_THRESHOLD,
   PROP_DISCONT_WAIT,
+  PROP_STRICT_BUFFER_SIZE,
   LAST_PROP
 };
 
@@ -52,6 +53,7 @@ enum
 #define DEFAULT_OUTPUT_BUFFER_DURATION_D (50)
 #define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
 #define DEFAULT_DISCONT_WAIT (1 * GST_SECOND)
+#define DEFAULT_STRICT_BUFFER_SIZE (FALSE)
 
 #define parent_class gst_audio_buffer_split_parent_class
 G_DEFINE_TYPE (GstAudioBufferSplit, gst_audio_buffer_split, GST_TYPE_ELEMENT);
@@ -105,6 +107,13 @@ gst_audio_buffer_split_class_init (GstAudioBufferSplitClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  g_object_class_install_property (gobject_class, PROP_STRICT_BUFFER_SIZE,
+      g_param_spec_boolean ("strict-buffer-size", "Strict buffer size",
+          "Discard the last samples at EOS or discont if they are too "
+          "small to fill a buffer", DEFAULT_STRICT_BUFFER_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
   gst_element_class_set_static_metadata (gstelement_class,
       "Audio Buffer Split", "Audio/Filter",
       "Splits raw audio buffers into equal sized chunks",
@@ -140,6 +149,7 @@ gst_audio_buffer_split_init (GstAudioBufferSplit * self)
   self->output_buffer_duration_d = DEFAULT_OUTPUT_BUFFER_DURATION_D;
   self->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
   self->discont_wait = DEFAULT_DISCONT_WAIT;
+  self->strict_buffer_size = DEFAULT_STRICT_BUFFER_SIZE;
 
   self->adapter = gst_adapter_new ();
 }
@@ -175,6 +185,9 @@ gst_audio_buffer_split_set_property (GObject * object, guint property_id,
     case PROP_DISCONT_WAIT:
       self->discont_wait = g_value_get_uint64 (value);
       break;
+    case PROP_STRICT_BUFFER_SIZE:
+      self->strict_buffer_size = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -197,6 +210,9 @@ gst_audio_buffer_split_get_property (GObject * object, guint property_id,
       break;
     case PROP_DISCONT_WAIT:
       g_value_set_uint64 (value, self->discont_wait);
+      break;
+    case PROP_STRICT_BUFFER_SIZE:
+      g_value_set_boolean (value, self->strict_buffer_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -379,7 +395,12 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
       GST_INFO_OBJECT (self, "Have discont. Expected %"
           G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
           self->next_offset, start_offset);
-      ret = gst_audio_buffer_split_output (self, TRUE);
+      if (self->strict_buffer_size) {
+        gst_adapter_clear (self->adapter);
+        ret = GST_FLOW_OK;
+      } else {
+        ret = gst_audio_buffer_split_output (self, TRUE);
+      }
     }
     self->next_offset = end_offset;
     self->resync_time = timestamp;
@@ -499,7 +520,10 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
       }
       break;
     case GST_EVENT_EOS:
-      gst_audio_buffer_split_output (self, TRUE);
+      if (self->strict_buffer_size)
+        gst_adapter_clear (self->adapter);
+      else
+        gst_audio_buffer_split_output (self, TRUE);
       ret = gst_pad_event_default (pad, parent, event);
       break;
     default:
