@@ -499,7 +499,7 @@ gst_device_provider_factory_has_classesv (GstDeviceProviderFactory * factory,
     const gchar *found;
     guint len;
 
-    if (classes[0] == '\0')
+    if (classes[0] == NULL)
       continue;
 
     found = strstr (klass, classes[0]);
