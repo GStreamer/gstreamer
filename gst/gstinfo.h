@@ -419,16 +419,16 @@ gchar * gst_info_strdup_printf          (const gchar *format, ...) G_GNUC_PRINTF
  * see https://bugzilla.gnome.org/show_bug.cgi?id=764526 */
 #define gst_debug_add_log_function(func,data,notify) \
 G_STMT_START{                                        \
-  if (func == (void *) gst_debug_log_default) {               \
+  if ((func) == (void *) gst_debug_log_default) {    \
     gst_debug_add_log_function(NULL,data,notify);    \
   } else {                                           \
     gst_debug_add_log_function(func,data,notify);    \
   }                                                  \
 }G_STMT_END
 
-#define gst_debug_remove_log_function(func)   \
-    (func == (void *) gst_debug_log_default) ?         \
-        gst_debug_remove_log_function(NULL) : \
+#define gst_debug_remove_log_function(func)          \
+    ((func) == (void *) gst_debug_log_default) ?     \
+        gst_debug_remove_log_function(NULL) :        \
         gst_debug_remove_log_function(func)
 
 /**
@@ -554,7 +554,7 @@ GST_EXPORT GstDebugLevel            _gst_debug_min;
  */
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{		\
-  if (G_UNLIKELY (level <= GST_LEVEL_MAX && level <= _gst_debug_min)) {						\
+  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {						\
     gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
         (GObject *) (object), __VA_ARGS__);				\
   }									\
@@ -562,7 +562,7 @@ GST_EXPORT GstDebugLevel            _gst_debug_min;
 #else /* G_HAVE_GNUC_VARARGS */
 #ifdef G_HAVE_GNUC_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,args...) G_STMT_START{	\
-  if (G_UNLIKELY (level <= GST_LEVEL_MAX && level <= _gst_debug_min)) {						\
+  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {						\
     gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
         (GObject *) (object), ##args );					\
   }									\
@@ -572,7 +572,7 @@ static inline void
 GST_CAT_LEVEL_LOG_valist (GstDebugCategory * cat,
     GstDebugLevel level, gpointer object, const char *format, va_list varargs)
 {
-  if (G_UNLIKELY (level <= GST_LEVEL_MAX && level <= _gst_debug_min)) {
+  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {
     gst_debug_log_valist (cat, level, "", "", 0, (GObject *) object, format,
         varargs);
   }
