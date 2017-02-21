@@ -3601,6 +3601,8 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
   QtDemuxCencSampleSetInfo *ss_info = NULL;
   guint8 size;
   gint i;
+  GPtrArray *old_crypto_info = NULL;
+  guint old_entries = 0;
 
   g_return_val_if_fail (qtdemux != NULL, FALSE);
   g_return_val_if_fail (stream != NULL, FALSE);
@@ -3611,13 +3613,37 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
   ss_info = (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
 
   if (ss_info->crypto_info) {
-    GST_LOG_OBJECT (qtdemux, "unreffing existing crypto_info");
-    g_ptr_array_free (ss_info->crypto_info, TRUE);
+    old_crypto_info = ss_info->crypto_info;
+    /* Count number of non-null entries remaining at the tail end */
+    for (i = old_crypto_info->len - 1; i >= 0; i--) {
+      if (g_ptr_array_index (old_crypto_info, i) == NULL)
+        break;
+      old_entries++;
+    }
   }
 
   ss_info->crypto_info =
-      g_ptr_array_new_full (sample_count,
+      g_ptr_array_new_full (sample_count + old_entries,
       (GDestroyNotify) qtdemux_gst_structure_free);
+
+  /* We preserve old entries because we parse the next moof in advance
+   * of consuming all samples from the previous moof, and otherwise
+   * we'd discard the corresponding crypto info for the samples
+   * from the previous fragment. */
+  if (old_entries) {
+    GST_DEBUG_OBJECT (qtdemux, "Preserving %d old crypto info entries",
+        old_entries);
+    for (i = old_crypto_info->len - old_entries; i < old_crypto_info->len; i++) {
+      g_ptr_array_add (ss_info->crypto_info, g_ptr_array_index (old_crypto_info,
+              i));
+      g_ptr_array_index (old_crypto_info, i) = NULL;
+    }
+  }
+
+  if (old_crypto_info) {
+    /* Everything now belongs to the new array */
+    g_ptr_array_free (old_crypto_info, TRUE);
+  }
 
   for (i = 0; i < sample_count; ++i) {
     GstStructure *properties;
@@ -5444,14 +5470,20 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
       goto exit;
     }
 
-    index = stream->sample_index - (stream->n_samples - info->crypto_info->len);
+    /* The end of the crypto_info array matches our n_samples position,
+     * so count backward from there */
+    index = stream->sample_index - stream->n_samples + info->crypto_info->len;
     if (G_LIKELY (index >= 0 && index < info->crypto_info->len)) {
       /* steal structure from array */
       crypto_info = g_ptr_array_index (info->crypto_info, index);
       g_ptr_array_index (info->crypto_info, index) = NULL;
-      GST_LOG_OBJECT (qtdemux, "attaching cenc metadata [%u]", index);
+      GST_LOG_OBJECT (qtdemux, "attaching cenc metadata [%u/%u]", index,
+          info->crypto_info->len);
       if (!crypto_info || !gst_buffer_add_protection_meta (buf, crypto_info))
         GST_ERROR_OBJECT (qtdemux, "failed to attach cenc metadata to buffer");
+    } else {
+      GST_INFO_OBJECT (qtdemux, "No crypto info with index %d and sample %d",
+          index, stream->sample_index);
     }
   }
 
@@ -5516,6 +5548,18 @@ gst_qtdemux_do_fragmented_seek (GstQTDemux * qtdemux)
     stream->n_samples = 0;
     stream->stbl_index = -1;    /* no samples have yet been parsed */
     stream->sample_index = -1;
+
+    if (stream->protection_scheme_info) {
+      /* Clear out any old cenc crypto info entries as we'll move to a new moof */
+      if (stream->protection_scheme_type == FOURCC_cenc) {
+        QtDemuxCencSampleSetInfo *info =
+            (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
+        if (info->crypto_info) {
+          g_ptr_array_free (info->crypto_info, TRUE);
+          info->crypto_info = NULL;
+        }
+      }
+    }
 
     if (stream->ra_entries == NULL)
       continue;
