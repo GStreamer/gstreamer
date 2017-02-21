@@ -928,6 +928,13 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
     }
 
     if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED) {
+      if (G_UNLIKELY (hls_stream->pending_typefind_buffer)) {
+        GstBuffer *buf = hls_stream->pending_typefind_buffer;
+        hls_stream->pending_typefind_buffer = NULL;
+
+        gst_hls_demux_handle_buffer (demux, stream, buf, TRUE);
+      }
+
       if (hls_stream->pending_pcr_buffer) {
         GstBuffer *buf = hls_stream->pending_pcr_buffer;
         hls_stream->pending_pcr_buffer = NULL;
