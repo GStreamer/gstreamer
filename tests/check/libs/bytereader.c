@@ -563,6 +563,46 @@ GST_START_TEST (test_scan)
 
   /* not enough bytes */
   do_scan (&reader, 0xffffffff, 0xc4c5c6c7, 0x44, 99, -1);
+
+  /* check special code path that exists for 00 00 01 sync marker */
+  {
+    const guint8 sync_data[] = { 0xA0, 0x00, 0x00, 0x00, 0x01, 0xA5, 0xA6,
+      0xA7, 0xA8, 0xA9, 0xAA, 0x00, 0x00, 0x00, 0x01, 0xAF, 0xB0, 0xB1
+    };
+    guint32 val = 0;
+    guint8 *m;
+    gint found;
+
+    /* dup so valgrind can detect out of bounds access more easily */
+    m = g_memdup (sync_data, sizeof (sync_data));
+    gst_byte_reader_init (&reader, m, sizeof (sync_data));
+
+    found = gst_byte_reader_masked_scan_uint32_peek (&reader, 0xffffff00,
+        0x00000100, 0, sizeof (sync_data), &val);
+    fail_unless_equals_int (found, 2);
+    fail_unless_equals_int (val, 0x000001A5);
+
+    found = gst_byte_reader_masked_scan_uint32_peek (&reader, 0xffffff00,
+        0x00000100, 2, sizeof (sync_data) - 2, &val);
+    fail_unless_equals_int (found, 2);
+    fail_unless_equals_int (val, 0x000001A5);
+
+    found = gst_byte_reader_masked_scan_uint32_peek (&reader, 0xffffff00,
+        0x00000100, 3, sizeof (sync_data) - 3, &val);
+    fail_unless_equals_int (found, 12);
+    fail_unless_equals_int (val, 0x000001AF);
+
+    found = gst_byte_reader_masked_scan_uint32_peek (&reader, 0xffffff00,
+        0x00000100, 12, sizeof (sync_data) - 12, &val);
+    fail_unless_equals_int (found, 12);
+    fail_unless_equals_int (val, 0x000001AF);
+
+    found = gst_byte_reader_masked_scan_uint32_peek (&reader, 0xffffff00,
+        0x00000100, 13, sizeof (sync_data) - 13, &val);
+    fail_unless_equals_int (found, -1);
+
+    g_free (m);
+  }
 }
 
 GST_END_TEST;
