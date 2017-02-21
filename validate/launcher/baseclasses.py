@@ -73,9 +73,9 @@ class Test(Loggable):
         self.timeout = timeout * TIMEOUT_FACTOR * options.timeout_factor
         if hard_timeout:
             self.hard_timeout = hard_timeout * TIMEOUT_FACTOR
+            self.hard_timeout *= options.timeout_factor
         else:
             self.hard_timeout = hard_timeout
-        self.hard_timeout *= options.timeout_factor
         self.classname = classname
         self.options = options
         self.application = application_name
@@ -329,7 +329,7 @@ class Test(Loggable):
         return False
 
     def get_subproc_env(self):
-        return os.environ
+        return os.environ.copy()
 
     def kill_subprocess(self):
         if self.process is None:
@@ -1053,7 +1053,7 @@ class TestsManager(Loggable):
         return False
 
     def list_tests(self):
-        return sorted(list(self.tests))
+        return sorted(list(self.tests), key=lambda x: x.classname)
 
     def add_expected_issues(self, expected_failures):
         expected_failures_re = {}
