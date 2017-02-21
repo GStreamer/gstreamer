@@ -86,7 +86,7 @@ class MesonTestsManager(TestsManager):
         arggroup.add_argument("--meson-build-dir",
                             action="append",
                             dest='meson_build_dirs',
-                            default=[config.BUILDDIR],
+                            default=[],
                             help="defines the paths to look for GstValidate tools.")
         arggroup.add_argument("--meson-no-rebuild",
                             action="store_true",
@@ -94,6 +94,8 @@ class MesonTestsManager(TestsManager):
                             help="Whether to avoid to rebuild tests before running them.")
 
     def get_meson_tests(self):
+        if not self.options.meson_build_dirs:
+            self.options.meson_build_dirs = config.BUILDDIR
         mesontests = []
         for i, bdir in enumerate(self.options.meson_build_dirs):
             bdir = os.path.abspath(bdir)
