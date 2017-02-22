@@ -60,6 +60,7 @@ enum
   PROP_DAILY_JAM,
   PROP_POST_MESSAGES,
   PROP_FIRST_TIMECODE,
+  PROP_FIRST_NOW
 };
 
 #define DEFAULT_OVERRIDE_EXISTING FALSE
@@ -67,6 +68,7 @@ enum
 #define DEFAULT_SOURCE_CLOCK NULL
 #define DEFAULT_DAILY_JAM NULL
 #define DEFAULT_POST_MESSAGES FALSE
+#define DEFAULT_FIRST_NOW FALSE
 
 static GstStaticPadTemplate gst_timecodestamper_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -145,6 +147,12 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
           "If unset (and to-now is also not set), the timecode will start at 0",
           GST_TYPE_VIDEO_TIME_CODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FIRST_NOW,
+      g_param_spec_boolean ("first-timecode-to-now",
+          "Sets first timecode to system time",
+          "If true and first-timecode is unset, set it to system time "
+          "automatically when the first media segment is received.",
+          DEFAULT_FIRST_NOW, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_timecodestamper_sink_template));
@@ -168,6 +176,7 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
   timecodestamper->first_tc = NULL;
   timecodestamper->current_tc->config.latest_daily_jam = DEFAULT_DAILY_JAM;
   timecodestamper->post_messages = DEFAULT_POST_MESSAGES;
+  timecodestamper->first_tc_now = DEFAULT_FIRST_NOW;
 }
 
 static void
@@ -224,6 +233,9 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
         gst_video_time_code_free (timecodestamper->first_tc);
       timecodestamper->first_tc = g_value_dup_boxed (value);
       break;
+    case PROP_FIRST_NOW:
+      timecodestamper->first_tc_now = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -255,6 +267,9 @@ gst_timecodestamper_get_property (GObject * object, guint prop_id,
       break;
     case PROP_FIRST_TIMECODE:
       g_value_set_boxed (value, timecodestamper->first_tc);
+      break;
+    case PROP_FIRST_NOW:
+      g_value_set_boolean (value, timecodestamper->first_tc_now);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -330,6 +345,7 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
       GstSegment segment;
       guint64 frames;
       gchar *tc_str;
+      gboolean notify = FALSE;
 
       GST_OBJECT_LOCK (timecodestamper);
       if (timecodestamper->source_clock != NULL) {
@@ -350,6 +366,23 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
         GST_OBJECT_UNLOCK (timecodestamper);
         return FALSE;
       }
+
+      if (timecodestamper->first_tc_now && !timecodestamper->first_tc) {
+        GDateTime *dt = g_date_time_new_now_local ();
+        GstVideoTimeCode *tc;
+
+        gst_timecodestamper_set_drop_frame (timecodestamper);
+
+        tc = gst_video_time_code_new_from_date_time (timecodestamper->
+            vinfo.fps_n, timecodestamper->vinfo.fps_d, dt,
+            timecodestamper->current_tc->config.flags, 0);
+
+        g_date_time_unref (dt);
+
+        timecodestamper->first_tc = tc;
+        notify = TRUE;
+      }
+
       frames =
           gst_util_uint64_scale (segment.time, timecodestamper->vinfo.fps_n,
           timecodestamper->vinfo.fps_d * GST_SECOND);
@@ -362,6 +395,8 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
       GST_DEBUG_OBJECT (timecodestamper, "New timecode is %s", tc_str);
       g_free (tc_str);
       GST_OBJECT_UNLOCK (timecodestamper);
+      if (notify)
+        g_object_notify (G_OBJECT (timecodestamper), "first-timecode");
       break;
     }
     case GST_EVENT_CAPS:

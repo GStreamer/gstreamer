@@ -53,6 +53,7 @@ struct _GstTimeCodeStamper
   GstVideoInfo vinfo;
   GstClock *source_clock;
   gboolean post_messages;
+  gboolean first_tc_now;
 };
 
 struct _GstTimeCodeStamperClass
