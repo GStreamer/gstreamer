@@ -326,7 +326,10 @@ HAVE_XRENDER=0
 if test $USE_X11 -eq 1; then
   dnl Check for XKB library
   HAVE_XKBLIB=1
+  saved_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $X11_CFLAGS"
   AC_CHECK_HEADERS([X11/XKBlib.h], [], [HAVE_XKBLIB=0])
+  CPPFLAGS="$saved_CPPFLAGS"
 
   dnl Check for XRandR
   PKG_CHECK_MODULES([XRANDR], [xrandr],
@@ -454,6 +457,8 @@ if test "x$enable_egl" = "xyes" -a $GLES_VERSION_MASK -ne 0; then
 
       saved_CPPFLAGS="$CPPFLAGS"
       saved_LIBS="$LIBS"
+      CPPFLAGS="$CPPFLAGS $EGL_CFLAGS"
+      LIBS="$LIBS $EGL_LIBS"
       AC_CHECK_HEADERS([EGL/egl.h], [], [USE_EGL=0])
       AC_CHECK_LIB([EGL], [eglGetDisplay], [], [USE_EGL=0])
       CPPFLAGS="$saved_CPPFLAGS"
@@ -490,7 +495,7 @@ if test $USE_DRM -eq 1; then
   PKG_CHECK_MODULES([LIBVA_DRM], [libva-drm >= $VAAPI_DRM_REQ],
     [
       saved_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="$LIBVA_DRM_CFLAGS"
+      CPPFLAGS="$CPPFLAGS $LIBVA_DRM_CFLAGS"
       AC_CHECK_HEADERS([va/va_drm.h], [], [USE_DRM=0])
       CPPFLAGS="$saved_CPPFLAGS"
     ], [USE_DRM=0])
@@ -708,7 +713,7 @@ if test "x$enable_encoders" = "xyes"; then
     [
       USE_ENCODERS=1
       saved_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="$LIBVA_CFLAGS"
+      CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
       AC_CHECK_HEADERS([va/va_enc_mpeg2.h va/va_enc_h264.h], [],
         [USE_ENCODERS=0],
         [
@@ -724,6 +729,9 @@ USE_H265_ENCODER=0
 USE_VP9_ENCODER=0
 
 if test $USE_ENCODERS -eq 1; then
+  saved_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+
   dnl Check for JPEG Encoding API (0.37.0+)
   AC_CHECK_HEADERS([va/va_enc_jpeg.h], [], [],
     [
@@ -732,8 +740,6 @@ if test $USE_ENCODERS -eq 1; then
   AC_CACHE_CHECK([for JPEG encoding API],
     [ac_cv_have_jpeg_encoding_api],
     [
-      saved_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
       saved_LIBS="$LIBS"
       LIBS="$LIBS $LIBVA_LIBS"
       AC_COMPILE_IFELSE(
@@ -753,7 +759,6 @@ VAQMatrixBufferJPEG q_matrix;
         ],
         [ac_cv_have_jpeg_encoding_api="yes"],
         [ac_cv_have_jpeg_encoding_api="no"])
-      CPPFLAGS="$saved_CPPFLAGS"
       LIBS="$saved_LIBS"
     ])
   AS_IF([test "x$ac_cv_have_jpeg_encoding_api" = "xyes"], [USE_JPEG_ENCODER=1])
@@ -766,8 +771,6 @@ VAQMatrixBufferJPEG q_matrix;
   AC_CACHE_CHECK([for VP8 encoding API],
     [ac_cv_have_vp8_encoding_api],
     [
-      saved_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
       saved_LIBS="$LIBS"
       LIBS="$LIBS $LIBVA_LIBS"
       AC_COMPILE_IFELSE(
@@ -787,7 +790,6 @@ VAQMatrixBufferVP8 q_matrix;
         ],
         [ac_cv_have_vp8_encoding_api="yes"],
         [ac_cv_have_vp8_encoding_api="no"])
-      CPPFLAGS="$saved_CPPFLAGS"
       LIBS="$saved_LIBS"
     ])
   AS_IF([test "x$ac_cv_have_vp8_encoding_api" = "xyes"], [USE_VP8_ENCODER=1])
@@ -800,8 +802,6 @@ VAQMatrixBufferVP8 q_matrix;
   AC_CACHE_CHECK([for HEVC encoding API],
     [ac_cv_have_hevc_encoding_api],
     [
-      saved_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
       saved_LIBS="$LIBS"
       LIBS="$LIBS $LIBVA_LIBS"
       AC_COMPILE_IFELSE(
@@ -822,7 +822,6 @@ VAQMatrixBufferHEVC q_matrix;
         ],
         [ac_cv_have_hevc_encoding_api="yes"],
         [ac_cv_have_hevc_encoding_api="no"])
-      CPPFLAGS="$saved_CPPFLAGS"
       LIBS="$saved_LIBS"
     ])
   AS_IF([test "x$ac_cv_have_hevc_encoding_api" = "xyes"], [USE_H265_ENCODER=1])
@@ -835,8 +834,6 @@ VAQMatrixBufferHEVC q_matrix;
   AC_CACHE_CHECK([for VP9 encoding API],
     [ac_cv_have_vp9_encoding_api],
     [
-      saved_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
       saved_LIBS="$LIBS"
       LIBS="$LIBS $LIBVA_LIBS"
       AC_COMPILE_IFELSE(
@@ -857,10 +854,11 @@ VAEncMiscParameterTypeVP9PerSegmantParam misc_param;
         ],
         [ac_cv_have_vp9_encoding_api="yes"],
         [ac_cv_have_vp9_encoding_api="no"])
-      CPPFLAGS="$saved_CPPFLAGS"
       LIBS="$saved_LIBS"
     ])
   AS_IF([test "x$ac_cv_have_vp9_encoding_api" = "xyes"], [USE_VP9_ENCODER=1])
+
+  CPPFLAGS="$saved_CPPFLAGS"
 fi
 
 dnl VA/Wayland API
