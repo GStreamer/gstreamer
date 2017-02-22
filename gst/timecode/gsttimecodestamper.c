@@ -56,7 +56,6 @@ enum
   PROP_0,
   PROP_OVERRIDE_EXISTING,
   PROP_DROP_FRAME,
-  PROP_SOURCE_CLOCK,
   PROP_DAILY_JAM,
   PROP_POST_MESSAGES,
   PROP_FIRST_TIMECODE,
@@ -65,7 +64,6 @@ enum
 
 #define DEFAULT_OVERRIDE_EXISTING FALSE
 #define DEFAULT_DROP_FRAME FALSE
-#define DEFAULT_SOURCE_CLOCK NULL
 #define DEFAULT_DAILY_JAM NULL
 #define DEFAULT_POST_MESSAGES FALSE
 #define DEFAULT_FIRST_NOW FALSE
@@ -124,11 +122,6 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
       g_param_spec_boolean ("drop-frame", "Override existing timecode",
           "Use drop-frame timecodes for 29.97 and 59.94 FPS",
           DEFAULT_DROP_FRAME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_SOURCE_CLOCK,
-      g_param_spec_object ("source-clock",
-          "Source clock to use for first timecode",
-          "If unset, the timecode will refer to the stream time",
-          GST_TYPE_CLOCK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DAILY_JAM,
       g_param_spec_boxed ("daily-jam",
           "Daily jam",
@@ -171,7 +164,6 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
 {
   timecodestamper->override_existing = DEFAULT_OVERRIDE_EXISTING;
   timecodestamper->drop_frame = DEFAULT_DROP_FRAME;
-  timecodestamper->source_clock = DEFAULT_SOURCE_CLOCK;
   timecodestamper->current_tc = gst_video_time_code_new_empty ();
   timecodestamper->first_tc = NULL;
   timecodestamper->current_tc->config.latest_daily_jam = DEFAULT_DAILY_JAM;
@@ -189,9 +181,6 @@ gst_timecodestamper_dispose (GObject * object)
     timecodestamper->current_tc = NULL;
   }
 
-  if (timecodestamper->source_clock) {
-    gst_object_unref (timecodestamper->source_clock);
-    timecodestamper->source_clock = NULL;
   if (timecodestamper->first_tc != NULL) {
     gst_video_time_code_free (timecodestamper->first_tc);
     timecodestamper->first_tc = NULL;
@@ -212,11 +201,6 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DROP_FRAME:
       timecodestamper->drop_frame = g_value_get_boolean (value);
-      break;
-    case PROP_SOURCE_CLOCK:
-      if (timecodestamper->source_clock)
-        gst_object_unref (timecodestamper->source_clock);
-      timecodestamper->source_clock = g_value_dup_object (value);
       break;
     case PROP_DAILY_JAM:
       if (timecodestamper->current_tc->config.latest_daily_jam)
@@ -254,9 +238,6 @@ gst_timecodestamper_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DROP_FRAME:
       g_value_set_boolean (value, timecodestamper->drop_frame);
-      break;
-    case PROP_SOURCE_CLOCK:
-      g_value_set_object (value, timecodestamper->source_clock);
       break;
     case PROP_DAILY_JAM:
       g_value_set_boxed (value,
@@ -348,10 +329,6 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
       gboolean notify = FALSE;
 
       GST_OBJECT_LOCK (timecodestamper);
-      if (timecodestamper->source_clock != NULL) {
-        GST_OBJECT_UNLOCK (timecodestamper);
-        break;
-      }
 
       gst_event_copy_segment (event, &segment);
       if (segment.format != GST_FORMAT_TIME) {
@@ -437,7 +414,6 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     GstBuffer * buffer)
 {
   GstTimeCodeStamper *timecodestamper = GST_TIME_CODE_STAMPER (vfilter);
-  GstClockTime ref_time;
   GstVideoTimeCodeMeta *tc_meta;
   GstVideoTimeCode *tc;
 
@@ -451,64 +427,6 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     gst_buffer_foreach_meta (buffer, remove_timecode_meta, NULL);
   }
 
-  if (timecodestamper->source_clock != NULL) {
-    if (timecodestamper->current_tc->hours == 0
-        && timecodestamper->current_tc->minutes == 0
-        && timecodestamper->current_tc->seconds == 0
-        && timecodestamper->current_tc->frames == 0) {
-      guint64 hours, minutes, seconds, frames;
-      /* Daily jam time */
-
-      ref_time = gst_clock_get_time (timecodestamper->source_clock);
-      ref_time = ref_time % (24 * 60 * 60 * GST_SECOND);
-      hours = ref_time / (GST_SECOND * 60 * 60);
-      ref_time -= hours * GST_SECOND * 60 * 60;
-      minutes = ref_time / (GST_SECOND * 60);
-      ref_time -= minutes * GST_SECOND * 60;
-      seconds = ref_time / GST_SECOND;
-      ref_time -= seconds * GST_SECOND;
-      /* Converting to frames for the whole ref_time might be inaccurate in case
-       * we have a drop frame timecode */
-      frames = gst_util_uint64_scale (ref_time, timecodestamper->vinfo.fps_n,
-          timecodestamper->vinfo.fps_d * GST_SECOND);
-
-      GST_DEBUG_OBJECT (timecodestamper,
-          "Initializing with %" G_GUINT64_FORMAT ":%" G_GUINT64_FORMAT ":%"
-          G_GUINT64_FORMAT ":%" G_GUINT64_FORMAT "", hours, minutes, seconds,
-          frames);
-      gst_video_time_code_init (timecodestamper->current_tc,
-          timecodestamper->vinfo.fps_n,
-          timecodestamper->vinfo.fps_d,
-          NULL,
-          timecodestamper->vinfo.interlace_mode ==
-          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE ? 0 :
-          GST_VIDEO_TIME_CODE_FLAGS_INTERLACED, hours, minutes, seconds, 0, 0);
-      gst_timecodestamper_set_drop_frame (timecodestamper);
-      /* Do not use frames when initializing because maybe we have drop frame */
-      gst_video_time_code_add_frames (timecodestamper->current_tc, frames);
-    }
-  } else if (timecodestamper->source_clock == NULL) {
-    GstClockTime timecode_time;
-
-    timecode_time =
-        gst_video_time_code_nsec_since_daily_jam (timecodestamper->current_tc);
-    ref_time =
-        gst_segment_to_stream_time (&vfilter->segment, GST_FORMAT_TIME,
-        GST_BUFFER_PTS (buffer));
-    if (timecode_time != GST_CLOCK_TIME_NONE && ref_time != GST_CLOCK_TIME_NONE
-        && ((timecode_time > ref_time && timecode_time - ref_time > GST_SECOND)
-            || (ref_time > timecode_time
-                && ref_time - timecode_time > GST_SECOND))) {
-      gchar *tc_str =
-          gst_video_time_code_to_string (timecodestamper->current_tc);
-      GST_WARNING_OBJECT (timecodestamper,
-          "Time code %s (stream time %" GST_TIME_FORMAT
-          ") has drifted more than one second from stream time %"
-          GST_TIME_FORMAT, tc_str, GST_TIME_ARGS (timecode_time),
-          GST_TIME_ARGS (ref_time));
-      g_free (tc_str);
-    }
-  }
   gst_buffer_add_video_time_code_meta (buffer, timecodestamper->current_tc);
   tc = gst_video_time_code_copy (timecodestamper->current_tc);
   gst_video_time_code_increment_frame (timecodestamper->current_tc);
