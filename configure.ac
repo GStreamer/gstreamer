@@ -678,7 +678,6 @@ HAVE_GLES2=no
 HAVE_GLES3_H=no
 HAVE_WAYLAND_EGL=no
 HAVE_VIV_FB_EGL=no
-
 HAVE_EGL_RPI=no
 
 case $host in
@@ -715,6 +714,7 @@ case $host in
     old_LIBS=$LIBS
     old_CFLAGS=$CFLAGS
 
+    dnl imx6 / Vivante specifics
     if test "x$HAVE_EGL" = "xyes"; then
         AC_CHECK_LIB([EGL], [fbGetDisplay], [HAVE_VIV_FB_EGL=yes])
     fi
@@ -865,6 +865,14 @@ if test "x$HAVE_DRM_FOURCC_HEADER" = "xyes" -a \
         "x$HAVE_GST_ALLOCATORS" = "xyes" -a \
         "x$HAVE_EGL" = "xyes"; then
           GST_GL_HAVE_DMABUF=1
+fi
+
+dnl check for Vivante DirectVIV support
+AC_CHECK_LIB(GLESv2, glTexDirectVIV, [HAVE_VIV_DIRECTVIV=yes], [HAVE_VIV_DIRECTVIV=no])
+
+GST_GL_HAVE_VIV_DIRECTVIV=0
+if test "x$HAVE_VIV_DIRECTVIV" = "xyes"; then
+          GST_GL_HAVE_VIV_DIRECTVIV=1
 fi
 
 dnl check if we can include both GL and GLES2 at the same time
@@ -1286,6 +1294,7 @@ GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 
 GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_DMABUF $GST_GL_HAVE_DMABUF
+#define GST_GL_HAVE_VIV_DIRECTVIV $GST_GL_HAVE_VIV_DIRECTVIV
 "
 
 dnl Check for no platforms/window systems

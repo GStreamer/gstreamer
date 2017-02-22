@@ -82,7 +82,8 @@ libgstgl_@GST_API_VERSION@_la_LIBADD = \
 	-lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
-	$(GL_LIBS)
+	$(GL_LIBS) \
+	$(top_builddir)/gst-libs/gst/allocators/libgstbadallocators-@GST_API_VERSION@.la
 
 if HAVE_WINDOW_WIN32
 SUBDIRS += win32
