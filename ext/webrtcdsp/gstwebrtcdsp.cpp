@@ -78,6 +78,12 @@
 GST_DEBUG_CATEGORY (webrtc_dsp_debug);
 #define GST_CAT_DEFAULT (webrtc_dsp_debug)
 
+#define DEFAULT_TARGET_LEVEL_DBFS 3
+#define DEFAULT_COMPRESSION_GAIN_DB 9
+#define DEFAULT_STARTUP_MIN_VOLUME 12
+#define DEFAULT_LIMITER TRUE
+#define DEFAULT_GAIN_CONTROL_MODE webrtc::GainControl::kAdaptiveDigital
+
 static GstStaticPadTemplate gst_webrtc_dsp_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -145,6 +151,26 @@ gst_webrtc_noise_suppression_level_get_type (void)
   return suppression_level_type;
 }
 
+typedef webrtc::GainControl::Mode GstWebrtcGainControlMode;
+#define GST_TYPE_WEBRTC_GAIN_CONTROL_MODE \
+    (gst_webrtc_gain_control_mode_get_type ())
+static GType
+gst_webrtc_gain_control_mode_get_type (void)
+{
+  static GType gain_control_mode_type = 0;
+  static const GEnumValue mode_types[] = {
+    {webrtc::GainControl::kAdaptiveDigital, "Adaptive Digital", "adaptive-digital"},
+    {webrtc::GainControl::kFixedDigital, "Fixed Digital", "fixed-digital"},
+    {0, NULL, NULL}
+  };
+
+  if (!gain_control_mode_type) {
+    gain_control_mode_type =
+        g_enum_register_static ("GstWebrtcGainControlMode", mode_types);
+  }
+  return gain_control_mode_type;
+}
+
 enum
 {
   PROP_0,
@@ -157,7 +183,12 @@ enum
   PROP_GAIN_CONTROL,
   PROP_EXPERIMENTAL_AGC,
   PROP_EXTENDED_FILTER,
-  PROP_DELAY_AGNOSTIC
+  PROP_DELAY_AGNOSTIC,
+  PROP_TARGET_LEVEL_DBFS,
+  PROP_COMPRESSION_GAIN_DB,
+  PROP_STARTUP_MIN_VOLUME,
+  PROP_LIMITER,
+  PROP_GAIN_CONTROL_MODE
 };
 
 /**
@@ -191,6 +222,11 @@ struct _GstWebrtcDsp
   gboolean experimental_agc;
   gboolean extended_filter;
   gboolean delay_agnostic;
+  gint target_level_dbfs;
+  gint compression_gain_db;
+  gint startup_min_volume;
+  gboolean limiter;
+  webrtc::GainControl::Mode gain_control_mode;
 };
 
 G_DEFINE_TYPE (GstWebrtcDsp, gst_webrtc_dsp, GST_TYPE_AUDIO_FILTER);
@@ -408,7 +444,7 @@ gst_webrtc_dsp_start (GstBaseTransform * btrans)
   config.Set < webrtc::ExtendedFilter >
       (new webrtc::ExtendedFilter (self->extended_filter));
   config.Set < webrtc::ExperimentalAgc >
-      (new webrtc::ExperimentalAgc (self->experimental_agc));
+      (new webrtc::ExperimentalAgc (self->experimental_agc, self->startup_min_volume));
   config.Set < webrtc::DelayAgnostic >
       (new webrtc::DelayAgnostic (self->delay_agnostic));
 
@@ -505,8 +541,21 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
   }
 
   if (self->gain_control) {
-    GST_DEBUG_OBJECT (self, "Enabling Digital Gain Control");
-    apm->gain_control ()->set_mode (webrtc::GainControl::kAdaptiveDigital);
+    GEnumClass *mode_class = (GEnumClass *)
+        g_type_class_ref (GST_TYPE_WEBRTC_GAIN_CONTROL_MODE);
+
+    GST_DEBUG_OBJECT (self, "Enabling Digital Gain Control, target level "
+        "dBFS %d, compression gain dB %d, limiter %senabled, mode: %s",
+        self->target_level_dbfs, self->compression_gain_db,
+        self->limiter ? "" : "NOT ",
+        g_enum_get_value (mode_class, self->gain_control_mode)->value_name);
+
+    g_type_class_unref (mode_class);
+
+    apm->gain_control ()->set_mode (self->gain_control_mode);
+    apm->gain_control ()->set_target_level_dbfs (self->target_level_dbfs);
+    apm->gain_control ()->set_compression_gain_db (self->compression_gain_db);
+    apm->gain_control ()->enable_limiter (self->limiter);
     apm->gain_control ()->Enable (true);
   }
 
@@ -603,6 +652,22 @@ gst_webrtc_dsp_set_property (GObject * object,
     case PROP_DELAY_AGNOSTIC:
       self->delay_agnostic = g_value_get_boolean (value);
       break;
+    case PROP_TARGET_LEVEL_DBFS:
+      self->target_level_dbfs = g_value_get_int (value);
+      break;
+    case PROP_COMPRESSION_GAIN_DB:
+      self->compression_gain_db = g_value_get_int (value);
+      break;
+    case PROP_STARTUP_MIN_VOLUME:
+      self->startup_min_volume = g_value_get_int (value);
+      break;
+    case PROP_LIMITER:
+      self->limiter = g_value_get_boolean (value);
+      break;
+    case PROP_GAIN_CONTROL_MODE:
+      self->gain_control_mode =
+          (GstWebrtcGainControlMode) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -647,6 +712,21 @@ gst_webrtc_dsp_get_property (GObject * object,
       break;
     case PROP_DELAY_AGNOSTIC:
       g_value_set_boolean (value, self->delay_agnostic);
+      break;
+    case PROP_TARGET_LEVEL_DBFS:
+      g_value_set_int (value, self->target_level_dbfs);
+      break;
+    case PROP_COMPRESSION_GAIN_DB:
+      g_value_set_int (value, self->compression_gain_db);
+      break;
+    case PROP_STARTUP_MIN_VOLUME:
+      g_value_set_int (value, self->startup_min_volume);
+      break;
+    case PROP_LIMITER:
+      g_value_set_boolean (value, self->limiter);
+      break;
+    case PROP_GAIN_CONTROL_MODE:
+      g_value_set_enum (value, self->gain_control_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -783,6 +863,49 @@ gst_webrtc_dsp_class_init (GstWebrtcDspClass * klass)
       g_param_spec_boolean ("delay-agnostic", "Delay Agnostic",
           "Enable or disable the delay agnostic mode.",
           FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class,
+      PROP_TARGET_LEVEL_DBFS,
+      g_param_spec_int ("target-level-dbfs", "Target Level dBFS",
+          "Sets the target peak |level| (or envelope) of the gain control in "
+          "dBFS (decibels from digital full-scale).",
+          0, 31, DEFAULT_TARGET_LEVEL_DBFS, (GParamFlags) (G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class,
+      PROP_COMPRESSION_GAIN_DB,
+      g_param_spec_int ("compression-gain-db", "Compression Gain dB",
+          "Sets the maximum |gain| the digital compression stage may apply, "
+					"in dB.",
+          0, 90, DEFAULT_COMPRESSION_GAIN_DB, (GParamFlags) (G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class,
+      PROP_STARTUP_MIN_VOLUME,
+      g_param_spec_int ("startup-min-volume", "Startup Minimum Volume",
+          "At startup the experimental AGC moves the microphone volume up to "
+          "|startup_min_volume| if the current microphone volume is set too "
+          "low. No effect if experimental-agc isn't enabled.",
+          12, 255, DEFAULT_STARTUP_MIN_VOLUME, (GParamFlags) (G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class,
+      PROP_LIMITER,
+      g_param_spec_boolean ("limiter", "Limiter",
+          "When enabled, the compression stage will hard limit the signal to "
+          "the target level. Otherwise, the signal will be compressed but not "
+          "limited above the target level.",
+          DEFAULT_LIMITER, (GParamFlags) (G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class,
+      PROP_GAIN_CONTROL_MODE,
+      g_param_spec_enum ("gain-control-mode", "Gain Control Mode",
+          "Controls the mode of the compression stage",
+          GST_TYPE_WEBRTC_GAIN_CONTROL_MODE,
+          DEFAULT_GAIN_CONTROL_MODE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 }
 
