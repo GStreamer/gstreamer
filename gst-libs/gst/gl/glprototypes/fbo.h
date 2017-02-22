@@ -102,9 +102,10 @@ GST_GL_EXT_FUNCTION (GLboolean, IsFramebuffer,
 GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (offscreen_blit,
-                  GST_GL_API_NONE,
-                  255, 255,
-                  255, 255, /* not in either GLES */
+                  GST_GL_API_OPENGL | GST_GL_API_OPENGL3 |
+                  GST_GL_API_GLES2,
+                  3, 0,
+                  3, 0,
                   "EXT\0ANGLE\0",
                   "framebuffer_blit\0")
 GST_GL_EXT_FUNCTION (void, BlitFramebuffer,

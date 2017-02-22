@@ -70,6 +70,13 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 #define GL_TEXTURE_EXTERNAL_OES 0x8D65
 #endif
 
+#ifndef GL_READ_FRAMEBUFFER
+#define GL_READ_FRAMEBUFFER 0x8CA8
+#endif
+#ifndef GL_DRAW_FRAMEBUFFER
+#define GL_DRAW_FRAMEBUFFER 0x8CA9
+#endif
+
 G_DEFINE_TYPE (GstGLMemoryAllocator, gst_gl_memory_allocator,
     GST_TYPE_GL_BASE_MEMORY_ALLOCATOR);
 
@@ -627,7 +634,8 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
   guint out_gl_format, out_tex_target;
   GstMapInfo sinfo;
   guint src_tex_id;
-  guint fbo;
+  guint fbo[2];
+  guint n_fbos;
 
   gl = src->mem.context->gl_vtable;
   out_tex_target = gst_gl_texture_target_to_gl (out_target);
@@ -659,32 +667,83 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
       "texture %i", src, src_tex_id, tex_id);
 
   /* FIXME: try and avoid creating and destroying fbo's every copy... */
-  /* create a framebuffer object */
-  gl->GenFramebuffers (1, &fbo);
-  gl->BindFramebuffer (GL_FRAMEBUFFER, fbo);
+  if (!gl->BlitFramebuffer) {
+    /* create a framebuffer object */
+    n_fbos = 1;
+    gl->GenFramebuffers (n_fbos, &fbo[0]);
+    gl->BindFramebuffer (GL_FRAMEBUFFER, fbo[0]);
 
-  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      gst_gl_texture_target_to_gl (src->tex_target), src_tex_id, 0);
+    gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+        gst_gl_texture_target_to_gl (src->tex_target), src_tex_id, 0);
 
-//  if (!gst_gl_context_check_framebuffer_status (src->context))
-//    goto fbo_error;
+    if (!gst_gl_context_check_framebuffer_status (src->mem.context))
+      goto fbo_error;
 
-  gl->BindTexture (out_tex_target, tex_id);
-  gst_gl_query_start_log (GST_GL_BASE_MEMORY_CAST (src)->query,
-      GST_CAT_GL_MEMORY, GST_LEVEL_LOG, NULL, "%s", "CopyTexImage2D took");
-  gl->CopyTexImage2D (out_tex_target, 0, out_gl_format, 0, 0, out_width,
-      out_height, 0);
-  gst_gl_query_end (GST_GL_BASE_MEMORY_CAST (src)->query);
+    gl->BindTexture (out_tex_target, tex_id);
+    gst_gl_query_start_log (GST_GL_BASE_MEMORY_CAST (src)->query,
+        GST_CAT_GL_MEMORY, GST_LEVEL_LOG, NULL, "%s", "CopyTexImage2D took");
+    gl->CopyTexImage2D (out_tex_target, 0, out_gl_format, 0, 0, out_width,
+        out_height, 0);
+    gst_gl_query_end (GST_GL_BASE_MEMORY_CAST (src)->query);
 
-  gl->BindTexture (out_tex_target, 0);
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+    gl->BindTexture (out_tex_target, 0);
+    gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 
-  gl->DeleteFramebuffers (1, &fbo);
+    gl->DeleteFramebuffers (n_fbos, &fbo[0]);
+  } else {
+    /* create a framebuffer object */
+    n_fbos = 2;
+    gl->GenFramebuffers (n_fbos, &fbo[0]);
+
+    gl->BindFramebuffer (GL_READ_FRAMEBUFFER, fbo[0]);
+    gl->FramebufferTexture2D (GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+        gst_gl_texture_target_to_gl (src->tex_target), src_tex_id, 0);
+
+    if (!gst_gl_context_check_framebuffer_status (src->mem.context))
+      goto fbo_error;
+
+    gl->BindFramebuffer (GL_DRAW_FRAMEBUFFER, fbo[1]);
+
+    gl->FramebufferTexture2D (GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+        gst_gl_texture_target_to_gl (src->tex_target), tex_id, 0);
+
+    if (!gst_gl_context_check_framebuffer_status (src->mem.context))
+      goto fbo_error;
+
+    gl->BindTexture (out_tex_target, tex_id);
+    gst_gl_query_start_log (GST_GL_BASE_MEMORY_CAST (src)->query,
+        GST_CAT_GL_MEMORY, GST_LEVEL_LOG, NULL, "%s", "BlitFramebuffer took");
+    gl->ReadBuffer (GL_COLOR_ATTACHMENT0);
+    gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
+    gl->BlitFramebuffer (0, 0, out_width, out_height,
+        0, 0, out_width, out_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    gst_gl_query_end (GST_GL_BASE_MEMORY_CAST (src)->query);
+
+    gl->BindTexture (out_tex_target, 0);
+    gl->BindFramebuffer (GL_DRAW_FRAMEBUFFER, 0);
+    gl->BindFramebuffer (GL_READ_FRAMEBUFFER, 0);
+
+    gl->DeleteFramebuffers (n_fbos, &fbo[0]);
+  }
 
   gst_memory_unmap (GST_MEMORY_CAST (src), &sinfo);
 
   return TRUE;
 
+fbo_error:
+  {
+    gl->BindTexture (out_tex_target, 0);
+    if (!gl->BlitFramebuffer) {
+      gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+    } else {
+      gl->BindFramebuffer (GL_DRAW_FRAMEBUFFER, 0);
+      gl->BindFramebuffer (GL_READ_FRAMEBUFFER, 0);
+    }
+
+    gl->DeleteFramebuffers (n_fbos, &fbo[0]);
+
+    gst_memory_unmap (GST_MEMORY_CAST (src), &sinfo);
+  }
 error:
   return FALSE;
 }
