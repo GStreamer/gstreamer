@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2012-2014 Matthew Waters <ystree00@gmail.com>
+ * Copyright (C) 2017 Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -34,6 +35,10 @@
 
 #if GST_GL_HAVE_DMABUF
 #include <gst/allocators/gstdmabuf.h>
+#endif
+
+#if GST_GL_HAVE_VIV_DIRECTVIV
+#include <gst/allocators/gstphysmemory.h>
 #endif
 
 /**
@@ -1189,9 +1194,320 @@ static const UploadMethod _raw_data_upload = {
   &_raw_data_upload_free
 };
 
+#if GST_GL_HAVE_VIV_DIRECTVIV
+#ifndef GL_BGRA_EXT
+#define GL_BGRA_EXT                                             0x80E1
+#endif
+#ifndef GL_VIV_YV12
+#define GL_VIV_YV12                                             0x8FC0
+#endif
+#ifndef GL_VIV_NV12
+#define GL_VIV_NV12                                             0x8FC1
+#endif
+#ifndef GL_VIV_YUY2
+#define GL_VIV_YUY2                                             0x8FC2
+#endif
+#ifndef GL_VIV_UYVY
+#define GL_VIV_UYVY                                             0x8FC3
+#endif
+#ifndef GL_VIV_NV21
+#define GL_VIV_NV21                                             0x8FC4
+#endif
+#ifndef GL_VIV_I420
+#define GL_VIV_I420                                             0x8FC5
+#endif
+
+struct DirectVIVUpload
+{
+  GstGLUpload *upload;
+
+  GstGLVideoAllocationParams *params;
+  GstBuffer *inbuf, *outbuf;
+  void (*TexDirectVIVMap) (GLenum Target, GLsizei Width, GLsizei Height,
+      GLenum Format, GLvoid ** Logical, const GLuint * Physical);
+  void (*TexDirectInvalidateVIV) (GLenum Target);
+  gboolean loaded_functions;
+};
+
+#define GST_GL_DIRECTVIV_FORMAT "{RGBA, I420, YV12, NV12, NV21, YUY2, UYVY, BGRA, RGB16}"
+
+static GstStaticCaps _directviv_upload_caps =
+GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_GL_DIRECTVIV_FORMAT));
+
+static gpointer
+_directviv_upload_new (GstGLUpload * upload)
+{
+  struct DirectVIVUpload *directviv = g_new0 (struct DirectVIVUpload, 1);
+  directviv->upload = upload;
+  directviv->loaded_functions = FALSE;
+
+  return directviv;
+}
+
+static GstCaps *
+_directviv_upload_transform_caps (gpointer impl, GstGLContext * context,
+    GstPadDirection direction, GstCaps * caps)
+{
+  GstCapsFeatures *passthrough =
+      gst_caps_features_from_string
+      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+  GstCaps *ret;
+
+  if (direction == GST_PAD_SINK) {
+    GstCaps *tmp;
+
+    ret =
+        _set_caps_features_with_passthrough (caps,
+        GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
+
+    gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
+    tmp = _caps_intersect_texture_target (ret, 1 << GST_GL_TEXTURE_TARGET_2D);
+    gst_caps_unref (ret);
+    ret = tmp;
+  } else {
+    ret = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, GST_GL_DIRECTVIV_FORMAT));
+  }
+
+  gst_caps_features_free (passthrough);
+  return ret;
+}
+
+
+static void
+_directviv_upload_load_functions_gl_thread (GstGLContext * context,
+    struct DirectVIVUpload *directviv)
+{
+  directviv->TexDirectVIVMap =
+      gst_gl_context_get_proc_address (context, "glTexDirectVIVMap");
+  directviv->TexDirectInvalidateVIV =
+      gst_gl_context_get_proc_address (context, "glTexDirectInvalidateVIV");
+}
+
+static gboolean
+_directviv_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
+    GstCaps * out_caps)
+{
+  struct DirectVIVUpload *directviv = impl;
+  GstCapsFeatures *features;
+  guint n_mem;
+  GstMemory *mem;
+
+  if (!directviv->loaded_functions && (!directviv->TexDirectInvalidateVIV ||
+          !directviv->TexDirectVIVMap)) {
+    gst_gl_context_thread_add (directviv->upload->context,
+        (GstGLContextThreadFunc) _directviv_upload_load_functions_gl_thread,
+        directviv);
+    directviv->loaded_functions = TRUE;
+  }
+  if (!directviv->TexDirectInvalidateVIV || !directviv->TexDirectVIVMap)
+    return FALSE;
+
+  features = gst_caps_get_features (out_caps, 0);
+  if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY))
+    return FALSE;
+
+  if (directviv->params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) directviv->params);
+  if (!(directviv->params =
+          gst_gl_video_allocation_params_new (directviv->upload->context, NULL,
+              &directviv->upload->priv->out_info, -1, NULL,
+              GST_GL_TEXTURE_TARGET_2D, GST_VIDEO_GL_TEXTURE_TYPE_RGBA)))
+    return FALSE;
+
+  /* We only support a single memory per buffer at this point */
+  n_mem = gst_buffer_n_memory (buffer);
+  if (n_mem == 1) {
+    mem = gst_buffer_peek_memory (buffer, 0);
+  } else {
+    mem = NULL;
+  }
+
+  return n_mem == 1 && mem && gst_is_phys_memory (mem);
+}
+
+static void
+_directviv_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
+    GstQuery * query)
+{
+}
+
+static GLenum
+_directviv_upload_video_format_to_gl_format (GstVideoFormat format)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_I420:
+      return GL_VIV_I420;
+    case GST_VIDEO_FORMAT_YV12:
+      return GL_VIV_YV12;
+    case GST_VIDEO_FORMAT_NV12:
+      return GL_VIV_NV12;
+    case GST_VIDEO_FORMAT_NV21:
+      return GL_VIV_NV21;
+    case GST_VIDEO_FORMAT_YUY2:
+      return GL_VIV_YUY2;
+    case GST_VIDEO_FORMAT_UYVY:
+      return GL_VIV_UYVY;
+    case GST_VIDEO_FORMAT_RGB16:
+      return GL_RGB565;
+    case GST_VIDEO_FORMAT_RGBA:
+      return GL_RGBA;
+    case GST_VIDEO_FORMAT_BGRA:
+      return GL_BGRA_EXT;
+    case GST_VIDEO_FORMAT_RGBx:
+      return GL_RGBA;
+    case GST_VIDEO_FORMAT_BGRx:
+      return GL_BGRA_EXT;
+    default:
+      return 0;
+  }
+}
+
+typedef struct
+{
+  GstBuffer *buffer;
+  GstMemory *memory;
+  GstMapInfo map;
+  guintptr phys_addr;
+} DirectVIVUnmapData;
+
+static void
+_directviv_memory_unmap (DirectVIVUnmapData * data)
+{
+  gst_memory_unmap (data->memory, &data->map);
+  gst_memory_unref (data->memory);
+  gst_buffer_unref (data->buffer);
+  g_free (data);
+}
+
+static void
+_directviv_upload_perform_gl_thread (GstGLContext * context,
+    struct DirectVIVUpload *directviv)
+{
+  static GQuark directviv_unmap_quark = 0;
+  GstGLMemoryAllocator *allocator;
+  GstMemory *in_mem;
+  GstGLMemory *out_gl_mem;
+  GstVideoInfo *in_info;
+  DirectVIVUnmapData *unmap_data;
+  GstVideoMeta *vmeta;
+  gint width, height, gl_format;
+  const GstGLFuncs *gl;
+
+  if (!directviv_unmap_quark)
+    directviv_unmap_quark = g_quark_from_static_string ("GstGLDirectVIVUnmap");
+
+  gl = context->gl_vtable;
+
+  g_assert (gst_buffer_n_memory (directviv->inbuf) == 1);
+  in_info = &directviv->upload->priv->in_info;
+  in_mem = gst_buffer_peek_memory (directviv->inbuf, 0);
+  unmap_data = g_new0 (DirectVIVUnmapData, 1);
+  if (!gst_memory_map (in_mem, &unmap_data->map, GST_MAP_READ)) {
+    g_free (unmap_data);
+    return;
+  }
+  unmap_data->phys_addr = gst_phys_memory_get_phys_addr (in_mem);
+  if (!unmap_data->phys_addr) {
+    gst_memory_unmap (in_mem, &unmap_data->map);
+    g_free (unmap_data);
+    return;
+  }
+  unmap_data->memory = gst_memory_ref (in_mem);
+  unmap_data->buffer = gst_buffer_ref (directviv->inbuf);
+
+  allocator =
+      GST_GL_MEMORY_ALLOCATOR (gst_allocator_find
+      (GST_GL_MEMORY_PBO_ALLOCATOR_NAME));
+
+  /* FIXME: buffer pool */
+  directviv->outbuf = gst_buffer_new ();
+  gst_gl_memory_setup_buffer (allocator, directviv->outbuf, directviv->params,
+      NULL, NULL, 0);
+  gst_object_unref (allocator);
+
+  out_gl_mem = (GstGLMemory *) gst_buffer_peek_memory (directviv->outbuf, 0);
+
+  /* Need to keep the input memory and buffer mapped and valid until
+   * the GL memory is not used anymore */
+  gst_mini_object_set_qdata ((GstMiniObject *) out_gl_mem,
+      directviv_unmap_quark, unmap_data,
+      (GDestroyNotify) _directviv_memory_unmap);
+  gst_buffer_add_parent_buffer_meta (directviv->outbuf, directviv->inbuf);
+
+  /* width/height need to compensate for stride/padding */
+  vmeta = gst_buffer_get_video_meta (directviv->inbuf);
+  if (vmeta) {
+    width = vmeta->stride[0];
+    height = vmeta->offset[1] / width;
+  } else {
+    width = GST_VIDEO_INFO_PLANE_STRIDE (in_info, 0);
+    height = GST_VIDEO_INFO_PLANE_OFFSET (in_info, 1) / width;
+  }
+  width /= GST_VIDEO_INFO_COMP_PSTRIDE (in_info, 0);
+
+  gl_format =
+      _directviv_upload_video_format_to_gl_format (GST_VIDEO_INFO_FORMAT
+      (in_info));
+
+  gl->BindTexture (GL_TEXTURE_2D, out_gl_mem->tex_id);
+  directviv->TexDirectVIVMap (GL_TEXTURE_2D, width, height,
+      gl_format, (void **) &unmap_data->map.data, &unmap_data->phys_addr);
+  directviv->TexDirectInvalidateVIV (GL_TEXTURE_2D);
+}
+
+static GstGLUploadReturn
+_directviv_upload_perform (gpointer impl, GstBuffer * buffer,
+    GstBuffer ** outbuf)
+{
+  struct DirectVIVUpload *directviv = impl;
+
+  directviv->inbuf = buffer;
+  directviv->outbuf = NULL;
+  gst_gl_context_thread_add (directviv->upload->context,
+      (GstGLContextThreadFunc) _directviv_upload_perform_gl_thread, directviv);
+  directviv->inbuf = NULL;
+
+  if (!directviv->outbuf)
+    return GST_GL_UPLOAD_ERROR;
+
+  *outbuf = directviv->outbuf;
+  directviv->outbuf = NULL;
+
+  return GST_GL_UPLOAD_DONE;
+}
+
+static void
+_directviv_upload_free (gpointer impl)
+{
+  struct DirectVIVUpload *directviv = impl;
+
+  if (directviv->params)
+    gst_gl_allocation_params_free ((GstGLAllocationParams *) directviv->params);
+
+  g_free (impl);
+}
+
+static const UploadMethod _directviv_upload = {
+  "DirectVIV",
+  0,
+  &_directviv_upload_caps,
+  &_directviv_upload_new,
+  &_directviv_upload_transform_caps,
+  &_directviv_upload_accept,
+  &_directviv_upload_propose_allocation,
+  &_directviv_upload_perform,
+  &_directviv_upload_free
+};
+
+#endif /* GST_GL_HAVE_VIV_DIRECTVIV */
+
 static const UploadMethod *upload_methods[] = { &_gl_memory_upload,
 #if GST_GL_HAVE_DMABUF
   &_dma_buf_upload,
+#endif
+#if GST_GL_HAVE_VIV_DIRECTVIV
+  &_directviv_upload,
 #endif
   &_upload_meta_upload, &_raw_data_upload
 };
