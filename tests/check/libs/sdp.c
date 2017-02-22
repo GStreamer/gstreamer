@@ -1,6 +1,9 @@
 /* GStreamer unit tests for the SDP support library
  *
  * Copyright (C) 2013 Jose Antonio Santos Cadenas <santoscadenas@gmail.com>
+ * Copyright (C) 2013 Kurento
+ * Contact: Miguel París Díaz <mparisdiaz@gmail.com>
+ * Contact: José Antonio Santos Cadenas <santoscadenas@kurento.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,28 +24,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#include <gst/check/gstcheck.h>
-
-/*
- * test_sdp.c - gst-kurento-plugins
- *
- * Copyright (C) 2013 Kurento
- * Contact: Miguel París Díaz <mparisdiaz@gmail.com>
- * Contact: José Antonio Santos Cadenas <santoscadenas@kurento.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 
 #include <gst/check/gstcheck.h>
 #include <gst/sdp/gstsdpmessage.h>
