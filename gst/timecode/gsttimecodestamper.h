@@ -49,6 +49,7 @@ struct _GstTimeCodeStamper
   gboolean override_existing;
   gboolean drop_frame;
   GstVideoTimeCode *current_tc;
+  GstVideoTimeCode *first_tc;
   GstVideoInfo vinfo;
   GstClock *source_clock;
   gboolean post_messages;

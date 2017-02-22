@@ -58,7 +58,8 @@ enum
   PROP_DROP_FRAME,
   PROP_SOURCE_CLOCK,
   PROP_DAILY_JAM,
-  PROP_POST_MESSAGES
+  PROP_POST_MESSAGES,
+  PROP_FIRST_TIMECODE,
 };
 
 #define DEFAULT_OVERRIDE_EXISTING FALSE
@@ -135,6 +136,15 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
       g_param_spec_boolean ("post-messages", "Post element message",
           "Post element message containing the current timecode",
           DEFAULT_POST_MESSAGES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FIRST_TIMECODE,
+      g_param_spec_boxed ("first-timecode",
+          "Timecode at the first frame",
+          "If set, take this timecode for the first frame and increment from "
+          "it. Only the values itself are taken, flags and frame rate are "
+          "always determined by timecodestamper itself. "
+          "If unset (and to-now is also not set), the timecode will start at 0",
+          GST_TYPE_VIDEO_TIME_CODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_timecodestamper_sink_template));
@@ -155,6 +165,7 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
   timecodestamper->drop_frame = DEFAULT_DROP_FRAME;
   timecodestamper->source_clock = DEFAULT_SOURCE_CLOCK;
   timecodestamper->current_tc = gst_video_time_code_new_empty ();
+  timecodestamper->first_tc = NULL;
   timecodestamper->current_tc->config.latest_daily_jam = DEFAULT_DAILY_JAM;
   timecodestamper->post_messages = DEFAULT_POST_MESSAGES;
 }
@@ -172,6 +183,9 @@ gst_timecodestamper_dispose (GObject * object)
   if (timecodestamper->source_clock) {
     gst_object_unref (timecodestamper->source_clock);
     timecodestamper->source_clock = NULL;
+  if (timecodestamper->first_tc != NULL) {
+    gst_video_time_code_free (timecodestamper->first_tc);
+    timecodestamper->first_tc = NULL;
   }
 
   G_OBJECT_CLASS (gst_timecodestamper_parent_class)->dispose (object);
@@ -205,6 +219,11 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
     case PROP_POST_MESSAGES:
       timecodestamper->post_messages = g_value_get_boolean (value);
       break;
+    case PROP_FIRST_TIMECODE:
+      if (timecodestamper->first_tc)
+        gst_video_time_code_free (timecodestamper->first_tc);
+      timecodestamper->first_tc = g_value_dup_boxed (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -233,6 +252,9 @@ gst_timecodestamper_get_property (GObject * object, guint prop_id,
       break;
     case PROP_POST_MESSAGES:
       g_value_set_boolean (value, timecodestamper->post_messages);
+      break;
+    case PROP_FIRST_TIMECODE:
+      g_value_set_boxed (value, timecodestamper->first_tc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -269,7 +291,10 @@ gst_timecodestamper_reset_timecode (GstTimeCodeStamper * timecodestamper)
 {
   GDateTime *jam = NULL;
 
-  if (timecodestamper->current_tc->config.latest_daily_jam)
+  if (timecodestamper->first_tc &&
+      timecodestamper->first_tc->config.latest_daily_jam)
+    jam = g_date_time_ref (timecodestamper->first_tc->config.latest_daily_jam);
+  else if (timecodestamper->current_tc->config.latest_daily_jam)
     jam =
         g_date_time_ref (timecodestamper->current_tc->config.latest_daily_jam);
   gst_video_time_code_clear (timecodestamper->current_tc);
@@ -281,6 +306,14 @@ gst_timecodestamper_reset_timecode (GstTimeCodeStamper * timecodestamper)
       timecodestamper->vinfo.interlace_mode ==
       GST_VIDEO_INTERLACE_MODE_PROGRESSIVE ? 0 :
       GST_VIDEO_TIME_CODE_FLAGS_INTERLACED, 0, 0, 0, 0, 0);
+  if (timecodestamper->first_tc) {
+    timecodestamper->current_tc->hours = timecodestamper->first_tc->hours;
+    timecodestamper->current_tc->minutes = timecodestamper->first_tc->minutes;
+    timecodestamper->current_tc->seconds = timecodestamper->first_tc->seconds;
+    timecodestamper->current_tc->frames = timecodestamper->first_tc->frames;
+    timecodestamper->current_tc->field_count =
+        timecodestamper->first_tc->field_count;
+  }
   gst_timecodestamper_set_drop_frame (timecodestamper);
 }
 
