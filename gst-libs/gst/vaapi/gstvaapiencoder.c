@@ -596,7 +596,7 @@ init_context_info (GstVaapiEncoder * encoder)
       GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
 
   cip->usage = GST_VAAPI_CONTEXT_USAGE_ENCODE;
-  cip->profile = encoder->profile;
+  cip->profile = get_profile (encoder);
   if (cdata->codec == GST_VAAPI_CODEC_JPEG) {
     cip->entrypoint = GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE;
   } else {
