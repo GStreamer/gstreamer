@@ -96,6 +96,8 @@ static void gst_value_register_intersect_func (GType type1,
 static void gst_value_register_subtract_func (GType minuend_type,
     GType subtrahend_type, GstValueSubtractFunc func);
 
+static gboolean _priv_gst_value_parse_list (gchar * s, gchar ** after,
+    GValue * value, GType type);
 static gboolean _priv_gst_value_parse_array (gchar * s, gchar ** after,
     GValue * value, GType type);
 
@@ -1047,21 +1049,21 @@ gst_value_serialize_value_list (const GValue * value)
 static gboolean
 gst_value_deserialize_value_list (GValue * dest, const gchar * s)
 {
-  g_warning ("gst_value_deserialize_list: unimplemented");
-  return FALSE;
+  gchar *s2 = (gchar *) s;
+  return _priv_gst_value_parse_list (s2, &s2, dest, G_TYPE_INVALID);
 }
 
 static gchar *
 gst_value_serialize_value_array (const GValue * value)
 {
-  return _priv_gst_value_serialize_any_list (value, "{ ", " }", TRUE);
+  return _priv_gst_value_serialize_any_list (value, "< ", " >", TRUE);
 }
 
 static gboolean
 gst_value_deserialize_value_array (GValue * dest, const gchar * s)
 {
-  g_warning ("gst_value_deserialize_array: unimplemented");
-  return FALSE;
+  gchar *s2 = (gchar *) s;
+  return _priv_gst_value_parse_array (s2, &s2, dest, G_TYPE_INVALID);
 }
 
 static gchar *

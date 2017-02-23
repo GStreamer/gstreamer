@@ -2669,6 +2669,37 @@ GST_START_TEST (test_serialize_deserialize_format_enum)
 
 GST_END_TEST;
 
+GST_START_TEST (test_serialize_deserialize_value_array)
+{
+  GValue v = G_VALUE_INIT, v2 = G_VALUE_INIT, v3 = G_VALUE_INIT;
+  gchar *str = NULL;
+
+  g_value_init (&v, GST_TYPE_ARRAY);
+  g_value_init (&v2, GST_TYPE_ARRAY);
+  g_value_init (&v3, G_TYPE_DOUBLE);
+  g_value_set_double (&v3, 1);
+  gst_value_array_append_value (&v2, &v3);
+  g_value_unset (&v3);
+  g_value_init (&v3, G_TYPE_DOUBLE);
+  g_value_set_double (&v3, 0);
+  gst_value_array_append_value (&v2, &v3);
+  g_value_unset (&v3);
+  gst_value_array_append_value (&v, &v2);
+  g_value_unset (&v2);
+
+  str = gst_value_serialize (&v);
+
+  g_value_init (&v2, GST_TYPE_ARRAY);
+  fail_unless (gst_value_deserialize (&v2, str));
+  fail_unless (gst_value_compare (&v, &v2) == 0);
+
+  g_value_unset (&v2);
+  g_value_unset (&v);
+  g_free (str);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_serialize_deserialize_caps)
 {
   GValue value = { 0 }
@@ -3296,6 +3327,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_serialize_flags);
   tcase_add_test (tc_chain, test_deserialize_flags);
   tcase_add_test (tc_chain, test_serialize_deserialize_format_enum);
+  tcase_add_test (tc_chain, test_serialize_deserialize_value_array);
   tcase_add_test (tc_chain, test_string);
   tcase_add_test (tc_chain, test_deserialize_string);
   tcase_add_test (tc_chain, test_value_compare);
