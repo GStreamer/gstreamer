@@ -83,6 +83,9 @@ GST_DEBUG_CATEGORY (webrtc_dsp_debug);
 #define DEFAULT_STARTUP_MIN_VOLUME 12
 #define DEFAULT_LIMITER TRUE
 #define DEFAULT_GAIN_CONTROL_MODE webrtc::GainControl::kAdaptiveDigital
+#define DEFAULT_VOICE_DETECTION FALSE
+#define DEFAULT_VOICE_DETECTION_FRAME_SIZE_MS 10
+#define DEFAULT_VOICE_DETECTION_LIKELIHOOD webrtc::VoiceDetection::kLowLikelihood
 
 static GstStaticPadTemplate gst_webrtc_dsp_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -171,6 +174,28 @@ gst_webrtc_gain_control_mode_get_type (void)
   return gain_control_mode_type;
 }
 
+typedef webrtc::VoiceDetection::Likelihood GstWebrtcVoiceDetectionLikelihood;
+#define GST_TYPE_WEBRTC_VOICE_DETECTION_LIKELIHOOD \
+    (gst_webrtc_voice_detection_likelihood_get_type ())
+static GType
+gst_webrtc_voice_detection_likelihood_get_type (void)
+{
+  static GType likelihood_type = 0;
+  static const GEnumValue likelihood_types[] = {
+    {webrtc::VoiceDetection::kVeryLowLikelihood, "Very Low Likelihood", "very-low"},
+    {webrtc::VoiceDetection::kLowLikelihood, "Low Likelihood", "low"},
+    {webrtc::VoiceDetection::kModerateLikelihood, "Moderate Likelihood", "moderate"},
+    {webrtc::VoiceDetection::kHighLikelihood, "High Likelihood", "high"},
+    {0, NULL, NULL}
+  };
+
+  if (!likelihood_type) {
+    likelihood_type =
+        g_enum_register_static ("GstWebrtcVoiceDetectionLikelihood", likelihood_types);
+  }
+  return likelihood_type;
+}
+
 enum
 {
   PROP_0,
@@ -188,7 +213,10 @@ enum
   PROP_COMPRESSION_GAIN_DB,
   PROP_STARTUP_MIN_VOLUME,
   PROP_LIMITER,
-  PROP_GAIN_CONTROL_MODE
+  PROP_GAIN_CONTROL_MODE,
+  PROP_VOICE_DETECTION,
+  PROP_VOICE_DETECTION_FRAME_SIZE_MS,
+  PROP_VOICE_DETECTION_LIKELIHOOD,
 };
 
 /**
@@ -203,6 +231,7 @@ struct _GstWebrtcDsp
   /* Protected by the object lock */
   GstAudioInfo info;
   guint period_size;
+  gboolean stream_has_voice;
 
   /* Protected by the stream lock */
   GstAdapter *adapter;
@@ -227,6 +256,9 @@ struct _GstWebrtcDsp
   gint startup_min_volume;
   gboolean limiter;
   webrtc::GainControl::Mode gain_control_mode;
+  gboolean voice_detection;
+  gint voice_detection_frame_size_ms;
+  webrtc::VoiceDetection::Likelihood voice_detection_likelihood;
 };
 
 G_DEFINE_TYPE (GstWebrtcDsp, gst_webrtc_dsp, GST_TYPE_AUDIO_FILTER);
@@ -360,6 +392,28 @@ done:
   return ret;
 }
 
+static void
+gst_webrtc_vad_post_message (GstWebrtcDsp *self, GstClockTime timestamp,
+    gboolean stream_has_voice)
+{
+  GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (self);
+  GstStructure *s;
+  GstClockTime stream_time;
+
+  stream_time = gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
+      timestamp);
+
+  s = gst_structure_new ("voice-activity",
+      "stream-time", G_TYPE_UINT64, stream_time,
+      "stream-has-voice", G_TYPE_BOOLEAN, stream_has_voice, NULL);
+
+  GST_LOG_OBJECT (self, "Posting voice activity message, stream %s voice",
+      stream_has_voice ? "now has" : "no longer has");
+
+  gst_element_post_message (GST_ELEMENT (self),
+      gst_message_new_element (GST_OBJECT (self), s));
+}
+
 static GstFlowReturn
 gst_webrtc_dsp_process_stream (GstWebrtcDsp * self,
     GstBuffer * buffer)
@@ -384,6 +438,14 @@ gst_webrtc_dsp_process_stream (GstWebrtcDsp * self,
     GST_WARNING_OBJECT (self, "Failed to filter the audio: %s.",
         webrtc_error_to_string (err));
   } else {
+    if (self->voice_detection) {
+      gboolean stream_has_voice = apm->voice_detection ()->stream_has_voice ();
+
+      if (stream_has_voice != self->stream_has_voice)
+        gst_webrtc_vad_post_message (self, GST_BUFFER_PTS (buffer), stream_has_voice);
+
+      self->stream_has_voice = stream_has_voice;
+    }
     memcpy (info.data, frame.data_, self->period_size);
   }
 
@@ -559,6 +621,23 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
     apm->gain_control ()->Enable (true);
   }
 
+  if (self->voice_detection) {
+    GEnumClass *likelihood_class = (GEnumClass *)
+        g_type_class_ref (GST_TYPE_WEBRTC_VOICE_DETECTION_LIKELIHOOD);
+    GST_DEBUG_OBJECT (self, "Enabling Voice Activity Detection, frame size "
+      "%d milliseconds, likelihood: %s", self->voice_detection_frame_size_ms,
+      g_enum_get_value (likelihood_class,
+          self->voice_detection_likelihood)->value_name);
+    g_type_class_unref (likelihood_class);
+
+    self->stream_has_voice = FALSE;
+
+    apm->voice_detection ()->Enable (true);
+    apm->voice_detection ()->set_likelihood (self->voice_detection_likelihood);
+    apm->voice_detection ()->set_frame_size_ms (
+        self->voice_detection_frame_size_ms);
+  }
+
   GST_OBJECT_UNLOCK (self);
 
   return TRUE;
@@ -668,6 +747,16 @@ gst_webrtc_dsp_set_property (GObject * object,
       self->gain_control_mode =
           (GstWebrtcGainControlMode) g_value_get_enum (value);
       break;
+    case PROP_VOICE_DETECTION:
+      self->voice_detection = g_value_get_boolean (value);
+      break;
+    case PROP_VOICE_DETECTION_FRAME_SIZE_MS:
+      self->voice_detection_frame_size_ms = g_value_get_int (value);
+      break;
+    case PROP_VOICE_DETECTION_LIKELIHOOD:
+      self->voice_detection_likelihood =
+          (GstWebrtcVoiceDetectionLikelihood) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -727,6 +816,15 @@ gst_webrtc_dsp_get_property (GObject * object,
       break;
     case PROP_GAIN_CONTROL_MODE:
       g_value_set_enum (value, self->gain_control_mode);
+      break;
+    case PROP_VOICE_DETECTION:
+      g_value_set_boolean (value, self->voice_detection);
+      break;
+    case PROP_VOICE_DETECTION_FRAME_SIZE_MS:
+      g_value_set_int (value, self->voice_detection_frame_size_ms);
+      break;
+    case PROP_VOICE_DETECTION_LIKELIHOOD:
+      g_value_set_enum (value, self->voice_detection_likelihood);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -907,6 +1005,36 @@ gst_webrtc_dsp_class_init (GstWebrtcDspClass * klass)
           DEFAULT_GAIN_CONTROL_MODE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class,
+      PROP_VOICE_DETECTION,
+      g_param_spec_boolean ("voice-detection", "Voice Detection",
+          "Enable or disable the voice activity detector",
+          DEFAULT_VOICE_DETECTION, (GParamFlags) (G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class,
+      PROP_VOICE_DETECTION_FRAME_SIZE_MS,
+      g_param_spec_int ("voice-detection-frame-size-ms",
+          "Voice Detection Frame Size Milliseconds",
+          "Sets the |size| of the frames in ms on which the VAD will operate. "
+          "Larger frames will improve detection accuracy, but reduce the "
+          "frequency of updates",
+          10, 30, DEFAULT_VOICE_DETECTION_FRAME_SIZE_MS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class,
+      PROP_VOICE_DETECTION_LIKELIHOOD,
+      g_param_spec_enum ("voice-detection-likelihood",
+          "Voice Detection Likelihood",
+          "Specifies the likelihood that a frame will be declared to contain "
+          "voice.",
+          GST_TYPE_WEBRTC_VOICE_DETECTION_LIKELIHOOD,
+          DEFAULT_VOICE_DETECTION_LIKELIHOOD,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
 }
 
 static gboolean
