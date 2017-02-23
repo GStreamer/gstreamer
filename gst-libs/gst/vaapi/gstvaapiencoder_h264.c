@@ -2160,6 +2160,7 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   GstVaapiEncMiscParam *misc = NULL;
   VAEncMiscParameterRateControl *rate_control;
+  guint num_roi;
 
   /* HRD params */
   misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
@@ -2203,8 +2204,49 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
               GST_VAAPI_H264_SEI_PIC_TIMING))
         goto error_create_packed_sei_hdr;
     }
-
   }
+
+  /* region-of-interest params */
+  num_roi = base_encoder->roi_regions ?
+      g_list_length (base_encoder->roi_regions) : 0;
+#if VA_CHECK_VERSION(0,39,1)
+  if (num_roi > 0) {
+    /* ROI(Region of Interest) params */
+    VAEncMiscParameterBufferROI *roi_param;
+    VAEncROI *region_roi;
+    gpointer ptr;
+    GList *tmp;
+
+    misc =
+        gst_vaapi_enc_misc_param_new (base_encoder, VAEncMiscParameterTypeROI,
+        sizeof (VAEncMiscParameterBufferROI) + num_roi * sizeof (VAEncROI));
+
+    roi_param = misc->data;
+    roi_param->roi_flags.bits.roi_value_is_qp_delta = 1;
+    roi_param->max_delta_qp = 10;
+    roi_param->min_delta_qp = 10;
+
+    ptr = (guchar *) misc->param + sizeof (VAEncMiscParameterBuffer) +
+        sizeof (VAEncMiscParameterBufferROI);
+    region_roi = ptr;
+
+    for (tmp = base_encoder->roi_regions; tmp; tmp = tmp->next) {
+      GstVaapiROI *item = tmp->data;
+      region_roi->roi_value = item->roi_value;
+      region_roi->roi_rectangle.x = item->rect.x;
+      region_roi->roi_rectangle.y = item->rect.y;
+      region_roi->roi_rectangle.width = item->rect.width;
+      region_roi->roi_rectangle.height = item->rect.height;
+      region_roi++;
+    }
+
+    roi_param->roi = ptr;
+    roi_param->num_roi = num_roi;
+
+    gst_vaapi_enc_picture_add_misc_param (picture, misc);
+    gst_vaapi_codec_object_replace (&misc, NULL);
+  }
+#endif
 
   if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
     return FALSE;
