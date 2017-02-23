@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:32+0200\n"
+"POT-Creation-Date: 2017-02-23 15:16+0200\n"
 "PO-Revision-Date: 2014-04-20 16:38+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -258,11 +258,12 @@ msgid "Video device returned invalid dimensions."
 msgstr ""
 
 #, fuzzy
-msgid "Video devices uses an unsupported interlacing method."
+msgid "Video device uses an unsupported interlacing method."
 msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 
-msgid "Video devices uses an unsupported pixel format."
-msgstr ""
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
+msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 
 #, fuzzy
 msgid "Failed to configure internal buffer pool."

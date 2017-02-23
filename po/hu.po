@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:32+0200\n"
+"POT-Creation-Date: 2017-02-23 15:16+0200\n"
 "PO-Revision-Date: 2016-03-14 18:35+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -262,10 +262,12 @@ msgstr "A videoeszköz nem szolgáltatott kimeneti formátumot."
 msgid "Video device returned invalid dimensions."
 msgstr "A videoeszköz érvénytelen dimenziókkal tért vissza."
 
-msgid "Video devices uses an unsupported interlacing method."
+#, fuzzy
+msgid "Video device uses an unsupported interlacing method."
 msgstr "A videoeszközök nem támogatott váltottsoros módot használnak."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr "A videoeszközök nem támogatott képpontformátumot használnak."
 
 msgid "Failed to configure internal buffer pool."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:32+0200\n"
+"POT-Creation-Date: 2017-02-23 15:16+0200\n"
 "PO-Revision-Date: 2016-03-05 09:52+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -256,10 +256,12 @@ msgstr "Видео уређај не обезбеђује излазни зап�
 msgid "Video device returned invalid dimensions."
 msgstr "Видео уређај је вратио неисправне димензије."
 
-msgid "Video devices uses an unsupported interlacing method."
+#, fuzzy
+msgid "Video device uses an unsupported interlacing method."
 msgstr "Видео уређаји користе неподржани метод преплитања."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr "Видео уређаји користе неподржани запис сличице."
 
 msgid "Failed to configure internal buffer pool."

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:32+0200\n"
+"POT-Creation-Date: 2017-02-23 15:16+0200\n"
 "PO-Revision-Date: 2016-02-20 16:27+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -267,12 +267,14 @@ msgstr "Le périphérique vidéo n’a pas fourni de format de sortie."
 msgid "Video device returned invalid dimensions."
 msgstr "Le périphérique vidéo a retourné une dimensions incorrecte."
 
-msgid "Video devices uses an unsupported interlacing method."
+#, fuzzy
+msgid "Video device uses an unsupported interlacing method."
 msgstr ""
 "Le périphérique vidéo utilise une méthode d’entrelacement non prise en "
 "charge."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr "Le périphérique vidéo utilise un format de pixel non pris en charge."
 
 msgid "Failed to configure internal buffer pool."
