@@ -1,8 +1,8 @@
 # GStreamer 1.10 Release Notes
 
 GStreamer 1.10.0 was originally released on 1st November 2016.
-The latest bug-fix release in the 1.10 series is [1.10.3](#1.10.3) and was
-released on 30 January 2017.
+The latest bug-fix release in the 1.10 series is [1.10.4](#1.10.4) and was
+released on 23 February 2017.
 
 The GStreamer team is proud to announce a new major feature release in the
 stable 1.x API series of your favourite cross-platform multimedia framework!
@@ -13,7 +13,7 @@ improvements.
 See [https://gstreamer.freedesktop.org/releases/1.10/][latest] for the latest
 version of this document.
 
-*Last updated: Monday 30 Jan 2017, 12:00 UTC [(log)][gitlog]*
+*Last updated: Thursday 23 Feb 2017, 15:00 UTC [(log)][gitlog]*
 
 [latest]: https://gstreamer.freedesktop.org/releases/1.10/
 [gitlog]: https://cgit.freedesktop.org/gstreamer/www/log/src/htdocs/releases/1.10/release-notes-1.10.md
@@ -1136,10 +1136,13 @@ This release only contains bugfixes and it should be safe to update from 1.10.x.
 #### Major bugfixes in 1.10.3
 
  - Various fixes for crashes, assertions, deadlocks and memory leaks on fuzzed
-   input files and in other situations
+   input files and in other situations (CVE-2016-10198, CVE-2016-10199,
+   CVE-2017-5837, CVE-2017-5838, CVE-2017-5839, CVE-2017-5840, CVE-2017-5841,
+   CVE-2017-5842, CVE-2017-5843, CVE-2017-5844, CVE-2017-5845, CVE-2017-5846)
  - Regression fixes for souphttpsrc with redirection tracking and retrying
  - Regression fix for gst-rtsp-server not handling TCP-only medias anymore
  - Various other bugfixes the RTP/RTSP codebase
+ - Fix for gmodule on 64 bit Android, it was never working before there
  - vp8enc works again on 32 bit Windows
  - Fixes to Opus PLC handling in the decoder
  - Fix for stream corruption in multihandlesink when removing clients
@@ -1151,6 +1154,32 @@ not the full list of changes. For the full list of changes please refer to the
 GIT logs or ChangeLogs of the particular modules.
 
 [buglist-1.10.3]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=187054&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.10.3
+
+<a name="1.10.4"></a>
+
+### 1.10.4
+
+The third 1.10 bug-fix release (1.10.4) was released on 23 February 2017.
+This release only contains bugfixes and it should be safe to update from 1.10.x.
+
+#### Major bugfixes in 1.10.4
+
+ - Various fixes for crashes, assertions, deadlocks and memory leaks on fuzzed
+   input files and in other situations (CVE-2017-5847, CVE-2017-5848)
+ - More regression fixes for souphttpsrc redirection tracking
+ - Regression fix for gmodule on 32 bit Android, which was introduced as part
+   of the 64 bit Android fix in 1.10.3 and broke the androidmedia plugin
+ - Various bugfixes for regressions and other problems in the V4L2 plugin
+ - Fix for 5.1, 6.1 and 7.1 channel layouts for Vorbis
+ - Fixes for timestamp generation of Android video encoder element
+ - gst-libav was updated to ffmpeg 3.2.4, fixing a couple of CVEs
+ - ... and many, many more!
+
+For a full list of bugfixes see [Bugzilla][buglist-1.10.4]. Note that this is
+not the full list of changes. For the full list of changes please refer to the
+GIT logs or ChangeLogs of the particular modules.
+
+[buglist-1.10.4]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=187054&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.10.4
 
 ## Known Issues
 
@@ -1185,4 +1214,3 @@ Müller, Reynaldo H. Verdejo Pinochet, Arun Raghavan, Thibault Saunier,
 Jan Schmidt, Wim Taymans, Matthew Waters*
 
 *License: [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/)*
-
