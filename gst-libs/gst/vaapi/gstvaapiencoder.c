@@ -592,6 +592,32 @@ get_packed_headers (GstVaapiEncoder * encoder)
   return encoder->packed_headers;
 }
 
+static gboolean
+get_roi_capability (GstVaapiEncoder * encoder, guint * num_roi_supported)
+{
+#if VA_CHECK_VERSION(0,39,1)
+  VAConfigAttribValEncROI *roi_config;
+  guint value;
+
+  if (!get_config_attribute (encoder, VAConfigAttribEncROI, &value))
+    return FALSE;
+
+  roi_config = (VAConfigAttribValEncROI *) & value;
+
+  if (roi_config->bits.num_roi_regions == 0 ||
+      roi_config->bits.roi_rc_qp_delat_support == 0)
+    return FALSE;
+
+  GST_INFO ("Support for ROI - number of regions supported: %d",
+      roi_config->bits.num_roi_regions);
+
+  *num_roi_supported = roi_config->bits.num_roi_regions;
+  return TRUE;
+#else
+  return FALSE;
+#endif
+}
+
 static inline gboolean
 is_chroma_type_supported (GstVaapiEncoder * encoder)
 {
@@ -682,6 +708,9 @@ set_context_info (GstVaapiEncoder * encoder)
   memset (config, 0, sizeof (*config));
   config->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);
   config->packed_headers = get_packed_headers (encoder);
+  config->roi_capability =
+      get_roi_capability (encoder, &config->roi_num_supported);
+
   return TRUE;
 
   /* ERRORS */

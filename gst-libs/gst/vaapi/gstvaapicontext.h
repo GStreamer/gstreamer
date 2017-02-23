@@ -67,6 +67,8 @@ struct _GstVaapiConfigInfoEncoder
 {
   GstVaapiRateControl rc_mode;
   guint packed_headers;
+  gboolean roi_capability;
+  guint roi_num_supported;
 };
 
 /**

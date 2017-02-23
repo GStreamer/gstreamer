@@ -229,7 +229,7 @@ config_create (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
-  VAConfigAttrib attribs[3], *attrib = attribs;
+  VAConfigAttrib attribs[4], *attrib = attribs;
   VAStatus status;
   guint value, va_chroma_format;
 
@@ -300,6 +300,26 @@ config_create (GstVaapiContext * context)
         attrib++;
       }
 #endif
+#if VA_CHECK_VERSION(0,39,1)
+      if (config->roi_capability) {
+        VAConfigAttribValEncROI *roi_config;
+        attrib->type = VAConfigAttribEncROI;
+        if (!context_get_attribute (context, attrib->type, &value))
+          goto cleanup;
+
+        roi_config = (VAConfigAttribValEncROI *) & value;
+
+        if (roi_config->bits.num_roi_regions != config->roi_num_supported ||
+            roi_config->bits.roi_rc_qp_delat_support == 0) {
+          GST_ERROR ("ROI unsupported - number of regions supported: %d"
+              " ROI delta QP: %d", roi_config->bits.num_roi_regions,
+              roi_config->bits.roi_rc_qp_delat_support);
+          goto cleanup;
+        }
+        attrib->value = value;
+        attrib++;
+      }
+#endif
       break;
     }
 #endif
@@ -340,6 +360,14 @@ context_update_config_encoder (GstVaapiContext * context,
     config->packed_headers = new_config->packed_headers;
     config_changed = TRUE;
   }
+
+  if (config->roi_capability != new_config->roi_capability ||
+      config->roi_num_supported != new_config->roi_num_supported) {
+    config->roi_capability = new_config->roi_capability;
+    config->roi_num_supported = new_config->roi_num_supported;
+    config_changed = TRUE;
+  }
+
   return config_changed;
 }
 
