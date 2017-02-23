@@ -1,7 +1,7 @@
 
-Release notes for GStreamer RTSP Server Library 1.10.3
+Release notes for GStreamer RTSP Server Library 1.10.4
 
-The GStreamer team is proud to announce the third bugfix release in the stable
+The GStreamer team is proud to announce the fourth bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -12,12 +12,6 @@ full list of bugfixes see Bugzilla.
 See /releases/1.10/ for the full release notes.
 
   
-
-Bugs fixed in this release
-     
-      * 755329 : Race condition around finish_unprepare
-      * 776343 : gst-rtsp-server: TCP transport does not work
-      * 776345 : gst-rtsp-server: segmentation fault when trying to get server port in TCP transport case
 
 ==== Download ====
 
@@ -54,9 +48,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
-      * Jan Schmidt
-      * Kseniia Vasilchuk
-      * Patricia Muscalu
       * Sebastian Dröge
  
