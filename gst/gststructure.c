@@ -1799,7 +1799,14 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
 
     field = GST_STRUCTURE_FIELD (structure, i);
 
-    t = gst_value_serialize (&field->value);
+    if (G_VALUE_TYPE (&field->value) == GST_TYPE_ARRAY) {
+      t = _priv_gst_value_serialize_any_list (&field->value, "< ", " >", FALSE);
+    } else if (G_VALUE_TYPE (&field->value) == GST_TYPE_LIST) {
+      t = _priv_gst_value_serialize_any_list (&field->value, "{ ", " }", FALSE);
+    } else {
+      t = gst_value_serialize (&field->value);
+    }
+
     type = gst_structure_value_get_generic_type (&field->value);
 
     g_string_append_len (s, ", ", 2);

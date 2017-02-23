@@ -198,7 +198,7 @@ gst_value_hash_add_type (GType type, const GstValueTable * table)
  */
 gchar *
 _priv_gst_value_serialize_any_list (const GValue * value, const gchar * begin,
-    const gchar * end)
+    const gchar * end, gboolean print_type)
 {
   guint i;
   GArray *array = value->data[0].v_pointer;
@@ -214,6 +214,11 @@ _priv_gst_value_serialize_any_list (const GValue * value, const gchar * begin,
     v = &g_array_index (array, GValue, i);
     s_val = gst_value_serialize (v);
     if (s_val != NULL) {
+      if (print_type) {
+        g_string_append_c (s, '(');
+        g_string_append (s, _priv_gst_value_gtype_to_abbr (G_VALUE_TYPE (v)));
+        g_string_append_c (s, ')');
+      }
       g_string_append (s, s_val);
       g_free (s_val);
       if (i < alen - 1) {
@@ -1036,7 +1041,7 @@ gst_value_compare_g_value_array (const GValue * value1, const GValue * value2)
 static gchar *
 gst_value_serialize_value_list (const GValue * value)
 {
-  return _priv_gst_value_serialize_any_list (value, "{ ", " }");
+  return _priv_gst_value_serialize_any_list (value, "{ ", " }", TRUE);
 }
 
 static gboolean
@@ -1049,7 +1054,7 @@ gst_value_deserialize_value_list (GValue * dest, const gchar * s)
 static gchar *
 gst_value_serialize_value_array (const GValue * value)
 {
-  return _priv_gst_value_serialize_any_list (value, "< ", " >");
+  return _priv_gst_value_serialize_any_list (value, "{ ", " }", TRUE);
 }
 
 static gboolean
