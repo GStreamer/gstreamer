@@ -2133,6 +2133,8 @@ _priv_gst_value_get_abbrs (gint * n_abbrs)
       ,
       {"bitmask", GST_TYPE_BITMASK}
       ,
+      {"flagset", GST_TYPE_FLAG_SET}
+      ,
       {"sample", GST_TYPE_SAMPLE}
       ,
       {"taglist", GST_TYPE_TAG_LIST}
