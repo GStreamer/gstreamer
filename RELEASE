@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Good Plugins 1.10.3
+Release notes for GStreamer Good Plugins 1.10.4
 
-The GStreamer team is proud to announce the third bugfix release in the stable
+The GStreamer team is proud to announce the fourth bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -55,35 +55,16 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 775898 : scaletempo: crash in Totem when doing Slow - > Fast - > Slow playback
-      * 754230 : qtdemux: support sparse time ranges in qtdemux without needing a seek for MSE
-      * 765498 : qtdemux: Fix key_time in gst_qtdemux_adjust_seek()
-      * 772646 : rtpjitterbuffer: fix lost-event using dts instead of pts
-      * 773218 : rtpbin: pipeline gets an EOS when any rtpsources byes
-      * 773891 : rtpjitterbuffer: fix timer-reuse bug
-      * 773905 : rtpjitterbuffer: fix bug in reschedule_timer
-      * 775071 : memory leak in usage of gst_pad_get_current_caps() API
-      * 775450 : aacparse: invalid memory read in gst_aac_parse_sink_setcaps
-      * 775451 : qtdemux: out of bounds read in qtdemux_tag_add_str_full
-      * 775455 : qtdemux: memory leaks in qtdemux_inflate
-      * 775472 : matroskademux: memory leak in matroska parser / gst_ebml_read_binary
-      * 775479 : avidemux: memory leak in gst_avi_demux_riff_parse_vprp
-      * 775543 : rtspsrc: redirect-on-play skips stream cleanup and TEARDOWN
-      * 775794 : qtdemux: can not play xvid/mp2 quicktime format
-      * 775888 : flxdec: memory leaks in gst_flxdec_chain
-      * 776107 : qtdemux: Crashes when parsing edit lists due to missing size checks
-      * 776720 : souphttpsrc: no request retry on early server termination
-      * 777101 : rtspsrc: tcp interleaved data dropped if first sub-streams are skipped during SETUP
-      * 777123 : wavparse: CRITICAL warning with injected flush stop event in pull mode
-      * 777157 : qtdemux: seqh buffer not freed after calling qtdemux_parse_svq3_stsd_data()
-      * 777174 : qtmux resets request pad counters on PAUSED- > READY
-      * 777222 : souphttpsrc: redirect uri is never set
-      * 777327 : v4l2allocator: memory type not correctly set in allocator probe
-      * 777362 : qtmux: Error always printed after writing moov recovery file, regardless of success/failure
-      * 777469 : qtdemux: out of bounds heap read in qtdemux_parse_samples
-      * 777500 : avidemux: gst_avi_demux_parse_ncdt heap out of bounds read
-      * 777532 : avidemux: invalid memory read in gst_avi_demux_parse_ncdt
-      * 777832 : qtmux: Timecode track fixes for STSD entry
+      * 778341 : rtpjitterbuffer: resetting pts to 0 after gap
+      * 775702 : v4l2object: Don't set empty interlace-mode list
+      * 776106 : v4l2object: Don't check size in a non-list value
+      * 777399 : v4l2allocator: memory referenced too late
+      * 777940 : qtdemux: huge memory allocation
+      * 778428 : souphttpsrc: Original connection does not cleared if the uri is redirected
+      * 778437 : icydemux: reset tags on empty StreamTitle value
+      * 778453 : v4l2videodec: Makes singleton caps ref increase on every access
+      * 778815 : typo in gstv4l2object's  _acquire_format() set of error messages
+      * 775564 : v4l2 1.10 Regression: white pixels with camera on Raspberry Pi & gstgl
 
 ==== Download ====
 
@@ -120,21 +101,16 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alejandro G. Castro
-      * Andre McCurdy
-      * Arnaud Vrac
-      * Brendan Shanks
-      * Edward Hervey
-      * Enrique Ocaña González
-      * Garima Gaur
-      * Havard Graff
-      * Heekyoung Seo
+      * Arun Raghavan
       * Jan Schmidt
       * Jean-Christophe Trotin
-      * Matt Staples
-      * Matthew Waters
-      * Rahul Bedarkar
+      * Juan Pablo Ugarte
+      * Nicolas Dufresne
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
       * Seungha Yang
-      * Vivia Nikolaidou
+      * Søren Juul
+      * Thibault Saunier
+      * Tim-Philipp Müller
+      * Víctor Manuel Jáquez Leal
  

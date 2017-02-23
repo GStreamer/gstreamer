@@ -3,7 +3,7 @@
   <description>GStreamer audio equalizers</description>
   <filename>../../gst/equalizer/.libs/libgstequalizer.so</filename>
   <basename>libgstequalizer.so</basename>
-  <version>1.10.3</version>
+  <version>1.10.4</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>

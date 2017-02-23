@@ -3,7 +3,7 @@
   <description>PulseAudio plugin library</description>
   <filename>../../ext/pulse/.libs/libgstpulse.so</filename>
   <basename>libgstpulse.so</basename>
-  <version>1.10.3</version>
+  <version>1.10.4</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
