@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Editing Services 1.10.3
+Release notes for GStreamer Editing Services 1.10.4
 
-The GStreamer team is proud to announce the third bugfix release in the stable
+The GStreamer team is proud to announce the fourth bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -48,5 +48,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Sebastian Dröge
       * Thibault Saunier
  
