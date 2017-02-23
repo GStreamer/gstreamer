@@ -32,6 +32,7 @@ static guint g_bitrate = 0;
 static gchar *g_codec_str;
 static gchar *g_output_file_name;
 static char **g_input_files = NULL;
+static gboolean g_roi_enable = FALSE;
 
 #define SURFACE_NUM 16
 
@@ -42,6 +43,8 @@ static GOptionEntry g_options[] = {
       "desired bitrate expressed in kbps", NULL},
   {"output", 'o', 0, G_OPTION_ARG_FILENAME, &g_output_file_name,
       "output file name", NULL},
+  {"roi", 'r', 0, G_OPTION_ARG_NONE, &g_roi_enable,
+      "enable region of interest", NULL},
   {G_OPTION_REMAINING, ' ', 0, G_OPTION_ARG_FILENAME_ARRAY, &g_input_files,
       "input file name", NULL},
   {NULL}
@@ -58,6 +61,7 @@ typedef struct
   FILE *output_file;
   guint input_stopped:1;
   guint encode_failed:1;
+  GstVaapiROI roi_region[2];
 } App;
 
 static inline gchar *
@@ -180,6 +184,35 @@ set_format (GstVaapiEncoder * encoder, gint width, gint height, gint fps_n,
   return (status == GST_VAAPI_ENCODER_STATUS_SUCCESS);
 }
 
+static void
+add_roi (App * app)
+{
+  guint i;
+  gint width, height;
+
+  width = app->parser->width;
+  height = app->parser->height;
+
+  for (i = 0; i < 2; i++) {
+    app->roi_region[i].roi_value = 4;
+    app->roi_region[i].rect.x = i * width / 2;
+    app->roi_region[i].rect.y = i * height / 2;
+    app->roi_region[i].rect.width = width / 4;
+    app->roi_region[i].rect.height = height / 4;
+
+    gst_vaapi_encoder_add_roi (app->encoder, &app->roi_region[i]);
+  }
+}
+
+static void
+del_roi (App * app)
+{
+  guint i;
+
+  for (i = 0; i < 2; i++)
+    gst_vaapi_encoder_del_roi (app->encoder, &app->roi_region[i]);
+}
+
 static GstBuffer *
 allocate_buffer (GstVaapiCodedBuffer * vbuf)
 {
@@ -293,6 +326,9 @@ app_free (App * app)
 {
   g_return_if_fail (app);
 
+  if (g_roi_enable)
+    del_roi (app);
+
   if (app->parser)
     y4m_reader_close (app->parser);
 
@@ -347,6 +383,9 @@ app_new (const gchar * input_fn, const gchar * output_fn)
     g_warning ("Could not set format.");
     goto error;
   }
+
+  if (g_roi_enable)
+    add_roi (app);
 
   return app;
 
