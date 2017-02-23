@@ -1,9 +1,37 @@
-=== release 1.10.3 ===
+=== release 1.10.4 ===
 
-2017-01-30  Sebastian Dröge <slomo@coaxion.net>
+2017-02-23  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.3
+	  releasing 1.10.4
+
+2017-02-07 16:17:39 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: reduce frame number of gaps
+	  Reduce frame num gaps so that we don't have to create unnecessary
+	  dummy pictures, just throw them away.
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777506
+
+2017-02-01 14:32:45 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: set GST_VAAPI_POSTPROC_FLAG_SIZE according to src caps
+	  A value of width/height property should be set to out caps,
+	  if negotiation had been going properly.
+	  So we can use srcpad_info when making decision of scaling.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778010
+
+=== release 1.10.3 ===
+
+2017-01-30 16:29:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.10.3
 
 2017-01-20 19:57:52 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
 
