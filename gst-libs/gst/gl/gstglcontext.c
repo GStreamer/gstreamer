@@ -674,19 +674,37 @@ gst_gl_context_finalize (GObject * object)
         g_cond_wait (&context->priv->destroy_cond, &context->priv->render_lock);
       GST_INFO_OBJECT (context, "gl thread joined");
 
-      g_thread_unref (context->priv->gl_thread);
-      context->priv->gl_thread = NULL;
+      if (context->priv->gl_thread) {
+        g_thread_unref (context->priv->gl_thread);
+        context->priv->gl_thread = NULL;
+      }
     }
     g_mutex_unlock (&context->priv->render_lock);
 
     gst_gl_window_set_close_callback (context->window, NULL, NULL, NULL);
     gst_object_unref (context->window);
+    context->window = NULL;
   }
 
-  if (context->priv->sharegroup)
-    _context_share_group_unref (context->priv->sharegroup);
+  if (context->priv->active_thread) {
+    g_thread_unref (context->priv->active_thread);
+    context->priv->active_thread = NULL;
+  }
 
-  gst_object_unref (context->display);
+  if (context->priv->gl_thread) {
+    g_thread_unref (context->priv->gl_thread);
+    context->priv->gl_thread = NULL;
+  }
+
+  if (context->priv->sharegroup) {
+    _context_share_group_unref (context->priv->sharegroup);
+    context->priv->sharegroup = NULL;
+  }
+
+  if (context->display) {
+    gst_object_unref (context->display);
+    context->display = NULL;
+  }
 
   if (context->gl_vtable) {
     g_slice_free (GstGLFuncs, context->gl_vtable);
@@ -735,10 +753,18 @@ gst_gl_context_activate (GstGLContext * context, gboolean activate)
   result = context_class->activate (context, activate);
 
   if (result && activate) {
-    context->priv->active_thread = g_thread_self ();
+    GThread *old_thread = context->priv->active_thread;
+    context->priv->active_thread = g_thread_ref (g_thread_self ());
+    if (old_thread) {
+      g_thread_unref (old_thread);
+    }
+
     g_private_set (&current_context_key, context);
   } else {
-    context->priv->active_thread = NULL;
+    if (context->priv->active_thread) {
+      g_thread_unref (context->priv->active_thread);
+      context->priv->active_thread = NULL;
+    }
     g_private_set (&current_context_key, NULL);
   }
   GST_OBJECT_UNLOCK (context);
@@ -1768,10 +1794,18 @@ gst_gl_wrapped_context_get_gl_platform (GstGLContext * context)
 static gboolean
 gst_gl_wrapped_context_activate (GstGLContext * context, gboolean activate)
 {
-  if (activate)
-    context->priv->gl_thread = g_thread_self ();
-  else
-    context->priv->gl_thread = NULL;
+  if (activate) {
+    GThread *old_thread = context->priv->gl_thread;
+    context->priv->gl_thread = g_thread_ref (g_thread_self ());
+    if (old_thread) {
+      g_thread_unref (old_thread);
+    }
+  } else {
+    if (context->priv->gl_thread) {
+      g_thread_unref (context->priv->gl_thread);
+      context->priv->gl_thread = NULL;
+    }
+  }
 
   return TRUE;
 }
