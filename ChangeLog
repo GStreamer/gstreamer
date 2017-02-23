@@ -1,9 +1,99 @@
-=== release 1.10.3 ===
+=== release 1.10.4 ===
 
-2017-01-30  Sebastian Dröge <slomo@coaxion.net>
+2017-02-23  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.3
+	  releasing 1.10.4
+
+2017-02-21 20:23:51 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* libs/gst/base/gstbytereader.c:
+	* tests/check/libs/bytereader.c:
+	  bytereader: fix peek value when scanning for 00 00 01 with non-0 offset
+	  We would add the offset a second time in _scan_for_start_code()
+	  when we found a result, but it's already been added to the data
+	  pointer at the beginning of _masked_scan_uint32_peek(), so the
+	  peeked value would be wrong if the initial offset was >0, and
+	  we would potentially read memory out-of-bounds.
+	  Add unit test for all of this.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778365
+
+2017-02-20 12:16:32 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstinfo.h:
+	  info: put () around macro arguments
+	  Put braces around macro arguments or else we might run into problems
+	  with operater precedence.
+
+2017-02-20 10:49:46 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstdeviceproviderfactory.c:
+	  deviceproviderfactory: fix empty class check
+
+2017-01-31 21:19:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/parse/grammar.y:
+	  parse: Don't translate the "bin" element name
+	  Otherwise we won't be able to create bins, there is no element called
+	  "Behälter" if you're using a German locale.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777998
+
+=== release 1.10.3 ===
+
+2017-01-30 16:26:20 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.10.3
+
+2017-01-30 15:22:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2017-01-15 11:52:44 +0000  Tim-Philipp Müller <tim@centricular.com>
 

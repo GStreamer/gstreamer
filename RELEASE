@@ -1,7 +1,7 @@
 
-Release notes for GStreamer 1.10.3
+Release notes for GStreamer 1.10.4
 
-The GStreamer team is proud to announce the third bugfix release in the stable
+The GStreamer team is proud to announce the fourth bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
@@ -35,15 +35,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 776125 : fix an use after free in gst_base_sink_send_event()
-      * 775538 : Property " name " is not set for the net client clock
-      * 775661 : gstconfig: Compile failure for xtensa and microblaze architectures (unaligned access support)
-      * 775714 : bash autocomplete uses ges-launch for parameter autocompletion
-      * 775728 : gstconfig: Compile failure for arc and nios2 architectures (unaligned access support)
-      * 775921 : multiqueue: Fix overflow on get_buffering_level()
-      * 776039 : queue: deadlock between sink query and state change
-      * 776401 : gst-launch should set GST_GL_XINITHREADS so that XinitThread() is called appropriately
-      * 777263 : datetime: out of bounds read in gst_date_time_new_from_iso8601_string()
+      * 777998 : Bins can not be parsed when system language is German
+      * 778365 : bytereader: offset accounted twice in _masked_scan_uint32_peek for H264 special case
 
 ==== Download ====
 
@@ -80,15 +73,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
-      * Fabrice Bellet
-      * Jan Schmidt
-      * Marcin Kolny
-      * Nicolas Dechesne
-      * Peter Seiderer
-      * Ricardo Ribalda Delgado
       * Sebastian Dröge
-      * Seungha Yang
-      * Stefan Sauer
       * Tim-Philipp Müller
+      * Wim Taymans
  
