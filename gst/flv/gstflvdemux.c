@@ -3624,7 +3624,6 @@ gst_flv_demux_init (GstFlvDemux * demux)
 
   demux->adapter = gst_adapter_new ();
   demux->flowcombiner = gst_flow_combiner_new ();
-  gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 
   demux->own_index = FALSE;
 
