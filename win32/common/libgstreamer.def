@@ -966,6 +966,8 @@ EXPORTS
 	gst_pad_template_pad_created
 	gst_pad_unlink
 	gst_pad_use_fixed_caps
+	gst_param_spec_array
+	gst_param_spec_array_get_type
 	gst_param_spec_fraction
 	gst_param_spec_fraction_get_type
 	gst_parent_buffer_meta_api_get_type
