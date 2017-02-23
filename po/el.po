@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:21+0200\n"
+"POT-Creation-Date: 2017-02-23 15:12+0200\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -923,9 +923,6 @@ msgid "no source element for URI \"%s\""
 msgstr "δεν υπάρχει στοιχείο προέλευσης για το URI «%s»"
 
 msgid "syntax error"
-msgstr ""
-
-msgid "bin"
 msgstr ""
 
 #, c-format

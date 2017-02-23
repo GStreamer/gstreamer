@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:21+0200\n"
+"POT-Creation-Date: 2017-02-23 15:12+0200\n"
 "PO-Revision-Date: 2016-05-20 11:32+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -902,9 +902,6 @@ msgstr "neexistuje zdrojový prvok pre URI \"%s\""
 msgid "syntax error"
 msgstr "chyba syntaxe"
 
-msgid "bin"
-msgstr "zásobník"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "bol zadaný prázdny zásobník \"%s\", čo nie je dovolené"
@@ -1321,6 +1318,9 @@ msgstr "Nastavujem rúru na NULOVÚ ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Uvoľňujem rúru ...\n"
+
+#~ msgid "bin"
+#~ msgstr "zásobník"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Vnútorná chyba prúdu údajov."

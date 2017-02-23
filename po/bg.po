@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:21+0200\n"
+"POT-Creation-Date: 2017-02-23 15:12+0200\n"
 "PO-Revision-Date: 2016-02-21 21:02+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -902,9 +902,6 @@ msgstr "няма елемент-източник за адрес „%s“"
 msgid "syntax error"
 msgstr "синтактична грешка"
 
-msgid "bin"
-msgstr "резервоар"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "указан е празен резервоар „%s“, това е забранено"
@@ -1321,6 +1318,9 @@ msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Конвейерът се освобождава…\n"
+
+#~ msgid "bin"
+#~ msgstr "резервоар"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Вътрешна грешка на потока от данни."

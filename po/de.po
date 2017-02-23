@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:21+0200\n"
+"POT-Creation-Date: 2017-02-23 15:12+0200\n"
 "PO-Revision-Date: 2016-09-28 21:13+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -931,9 +931,6 @@ msgstr "Kein Quellelement für URI »%s«"
 msgid "syntax error"
 msgstr "Syntaxfehler"
 
-msgid "bin"
-msgstr "Behälter"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "Leeren Behälter »%s« angegeben -- nicht erlaubt"
@@ -1347,6 +1344,9 @@ msgstr "Leitung wird auf NULL gesetzt ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Leitung wird geleert ...\n"
+
+#~ msgid "bin"
+#~ msgstr "Behälter"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interner Fehler im Datenstrom."

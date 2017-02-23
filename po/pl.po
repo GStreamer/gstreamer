@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:21+0200\n"
+"POT-Creation-Date: 2017-02-23 15:12+0200\n"
 "PO-Revision-Date: 2016-11-01 20:41+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -906,9 +906,6 @@ msgstr "brak elementu źródłowego dla URI \"%s\""
 msgid "syntax error"
 msgstr "błąd składni"
 
-msgid "bin"
-msgstr "kontener"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "podano pusty kontener \"%s\", nie jest to dozwolone"
@@ -1322,3 +1319,6 @@ msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
+
+#~ msgid "bin"
+#~ msgstr "kontener"

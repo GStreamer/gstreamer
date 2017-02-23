@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:21+0200\n"
+"POT-Creation-Date: 2017-02-23 15:12+0200\n"
 "PO-Revision-Date: 2016-02-20 16:42+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -912,9 +912,6 @@ msgstr "geen bronelement voor URI \"%s\""
 msgid "syntax error"
 msgstr "syntaxisfout"
 
-msgid "bin"
-msgstr "bin"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "lege ton \"%s\" opgegeven, niet toegelaten"
@@ -1325,6 +1322,9 @@ msgstr "Pijplijn gezet op NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Pijplijn wordt vrijgemaakt ...\n"
+
+#~ msgid "bin"
+#~ msgstr "bin"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interne fout in gegevensstroom."

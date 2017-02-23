@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:21+0200\n"
+"POT-Creation-Date: 2017-02-23 15:12+0200\n"
 "PO-Revision-Date: 2016-06-25 13:26+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -907,9 +907,6 @@ msgstr "intet kildeelement for URI \"%s\""
 msgid "syntax error"
 msgstr "syntaksfejl"
 
-msgid "bin"
-msgstr "lager"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "specificeret tomt lager \"%s\", er ikke tilladt"
@@ -1328,6 +1325,9 @@ msgstr "Rørledning sættes til NUL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Rørledning frigøres ...\n"
+
+#~ msgid "bin"
+#~ msgstr "lager"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Intern datastrømsfejl."

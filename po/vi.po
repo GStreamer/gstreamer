@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-30 15:21+0200\n"
+"POT-Creation-Date: 2017-02-23 15:12+0200\n"
 "PO-Revision-Date: 2016-03-03 07:44+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -907,9 +907,6 @@ msgstr "không có phần tử nguồn cho URI “%s”"
 msgid "syntax error"
 msgstr "lỗi cú pháp"
 
-msgid "bin"
-msgstr "nhị phân"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "không cho phép nhị phân trống được ghi rõ “%s”"
@@ -1317,6 +1314,9 @@ msgstr "Đang đặt đường ống thành VÔ_GIÁ_TRỊ …\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Đang giải phóng đường ống …\n"
+
+#~ msgid "bin"
+#~ msgstr "nhị phân"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Lỗi luồng dữ liệu nội bộ."
