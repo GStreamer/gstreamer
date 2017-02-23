@@ -36,6 +36,16 @@ A wide range of video and audio decoders, encoders, and filters are included.
 
  <release>
   <Version>
+   <revision>1.10.4</revision>
+   <branch>1.10</branch>
+   <name></name>
+   <created>2017-02-23</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.10.4.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.10.3</revision>
    <branch>1.10</branch>
    <name></name>
