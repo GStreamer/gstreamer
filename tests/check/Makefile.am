@@ -523,6 +523,8 @@ elements_mulawenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 elements_multifile_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 elements_multifile_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(GST_LIBS) $(LDADD) $(LIBM)
 
+elements_splitmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstapp-$(GST_API_VERSION) $(GST_LIBS) $(LDADD) $(LIBM)
+
 elements_qtmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 elements_qtmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstpbutils-@GST_API_VERSION@ \
              $(GST_BASE_LIBS) $(GST_LIBS) $(GST_CHECK_LIBS)

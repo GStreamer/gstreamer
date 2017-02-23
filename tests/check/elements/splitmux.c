@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/app/app.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -270,6 +271,206 @@ GST_START_TEST (test_splitmuxsink)
 
 GST_END_TEST;
 
+static GstPadProbeReturn
+intercept_stream_start (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  GstEvent *event = gst_pad_probe_info_get_event (info);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START) {
+    GstStreamFlags flags;
+    event = gst_event_make_writable (event);
+    gst_event_parse_stream_flags (event, &flags);
+    gst_event_set_stream_flags (event, flags | GST_STREAM_FLAG_SPARSE);
+    GST_PAD_PROBE_INFO_DATA (info) = event;
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
+static GstFlowReturn
+new_sample_verify_continuous_timestamps (GstAppSink * appsink,
+    gpointer user_data)
+{
+  GstSample *sample;
+  GstBuffer *buffer;
+  GstClockTime *prev_ts = user_data;
+  GstClockTime new_ts;
+
+  sample = gst_app_sink_pull_sample (appsink);
+  buffer = gst_sample_get_buffer (sample);
+
+  new_ts = GST_BUFFER_PTS (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (*prev_ts)) {
+    fail_unless (*prev_ts < new_ts,
+        "%s: prev_ts (%" GST_TIME_FORMAT ") >= new_ts (%" GST_TIME_FORMAT ")",
+        GST_OBJECT_NAME (appsink), GST_TIME_ARGS (*prev_ts),
+        GST_TIME_ARGS (new_ts));
+  }
+
+  *prev_ts = new_ts;
+  gst_sample_unref (sample);
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+new_sample_verify_1sec_offset (GstAppSink * appsink, gpointer user_data)
+{
+  GstSample *sample;
+  GstBuffer *buffer;
+  GstClockTime *prev_ts = user_data;
+  GstClockTime new_ts;
+
+  sample = gst_app_sink_pull_sample (appsink);
+  buffer = gst_sample_get_buffer (sample);
+
+  new_ts = GST_BUFFER_PTS (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (*prev_ts)) {
+    fail_unless (new_ts > (*prev_ts + 900 * GST_MSECOND),
+        "%s: prev_ts (%" GST_TIME_FORMAT ") + 0.9s >= new_ts (%"
+        GST_TIME_FORMAT ")", GST_OBJECT_NAME (appsink),
+        GST_TIME_ARGS (*prev_ts), GST_TIME_ARGS (new_ts));
+  }
+
+  *prev_ts = new_ts;
+  gst_sample_unref (sample);
+  return GST_FLOW_OK;
+}
+
+/* https://bugzilla.gnome.org/show_bug.cgi?id=761086 */
+GST_START_TEST (test_splitmuxsrc_sparse_streams)
+{
+  GstElement *pipeline;
+  GstElement *element;
+  gchar *dest_pattern;
+  GstElement *appsrc;
+  GstPad *appsrc_src;
+  GstBus *bus;
+  GstMessage *msg;
+  gint i;
+
+  /* generate files */
+
+  /* in this test, we have 5sec of data with files split at 1sec intervals */
+  pipeline =
+      gst_parse_launch
+      ("videotestsrc num-buffers=75 !"
+      "  video/x-raw,width=80,height=64,framerate=15/1 !"
+      "  theoraenc keyframe-force=5 ! splitmuxsink name=splitsink"
+      "    max-size-time=1000000000 muxer=matroskamux"
+      " audiotestsrc num-buffers=100 samplesperbuffer=1024 !"
+      "  audio/x-raw,rate=20000 ! vorbisenc ! splitsink.audio_%u"
+      " appsrc name=appsrc format=time caps=text/x-raw,format=utf8 !"
+      "  splitsink.subtitle_%u", NULL);
+  fail_if (pipeline == NULL);
+
+  element = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (element == NULL);
+  dest_pattern = g_build_filename (tmpdir, "out%05d.ogg", NULL);
+  g_object_set (G_OBJECT (element), "location", dest_pattern, NULL);
+  g_clear_pointer (&dest_pattern, g_free);
+  g_clear_object (&element);
+
+  appsrc = gst_bin_get_by_name (GST_BIN (pipeline), "appsrc");
+  fail_if (appsrc == NULL);
+
+  /* add the SPARSE flag on the stream-start event of the subtitle stream */
+  appsrc_src = gst_element_get_static_pad (appsrc, "src");
+  fail_if (appsrc_src == NULL);
+  gst_pad_add_probe (appsrc_src, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      intercept_stream_start, NULL, NULL);
+  g_clear_object (&appsrc_src);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  /* push subtitles, one per second, starting from t=100ms */
+  for (i = 0; i < 5; i++) {
+    GstBuffer *buffer = gst_buffer_new_allocate (NULL, 5, NULL);
+    GstMapInfo info;
+
+    gst_buffer_map (buffer, &info, GST_MAP_WRITE);
+    strcpy ((char *) info.data, "test");
+    gst_buffer_unmap (buffer, &info);
+
+    GST_BUFFER_PTS (buffer) = i * GST_SECOND + 100 * GST_MSECOND;
+    GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer);
+
+    fail_if (gst_app_src_push_buffer (GST_APP_SRC (appsrc), buffer)
+        != GST_FLOW_OK);
+  }
+  fail_if (gst_app_src_end_of_stream (GST_APP_SRC (appsrc)) != GST_FLOW_OK);
+
+  msg = gst_bus_timed_pop_filtered (bus, 5 * GST_SECOND, GST_MESSAGE_EOS);
+  g_clear_pointer (&msg, gst_message_unref);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  g_clear_object (&bus);
+  g_clear_object (&pipeline);
+
+  /* read and verify */
+
+  pipeline =
+      gst_parse_launch
+      ("splitmuxsrc name=splitsrc"
+      " splitsrc. ! theoradec ! appsink name=vsink sync=false emit-signals=true"
+      " splitsrc. ! vorbisdec ! appsink name=asink sync=false emit-signals=true"
+      " splitsrc. ! text/x-raw ! appsink name=tsink sync=false emit-signals=true",
+      NULL);
+  fail_if (pipeline == NULL);
+
+  element = gst_bin_get_by_name (GST_BIN (pipeline), "splitsrc");
+  fail_if (element == NULL);
+  dest_pattern = g_build_filename (tmpdir, "out*.ogg", NULL);
+  g_object_set (G_OBJECT (element), "location", dest_pattern, NULL);
+  g_clear_pointer (&dest_pattern, g_free);
+  g_clear_object (&element);
+
+  {
+    GstClockTime vsink_prev_ts = GST_CLOCK_TIME_NONE;
+    GstClockTime asink_prev_ts = GST_CLOCK_TIME_NONE;
+    GstClockTime tsink_prev_ts = GST_CLOCK_TIME_NONE;
+
+    /* verify that timestamps are continuously increasing for audio + video.
+     * if we hit bug 761086, timestamps will jump about -900ms after switching
+     * to a new part, because this is the difference between the last subtitle
+     * pts and the last audio/video pts */
+    element = gst_bin_get_by_name (GST_BIN (pipeline), "vsink");
+    g_signal_connect (element, "new-sample",
+        (GCallback) new_sample_verify_continuous_timestamps, &vsink_prev_ts);
+    g_clear_object (&element);
+
+    element = gst_bin_get_by_name (GST_BIN (pipeline), "asink");
+    g_signal_connect (element, "new-sample",
+        (GCallback) new_sample_verify_continuous_timestamps, &asink_prev_ts);
+    g_clear_object (&element);
+
+    /* also verify that subtitle timestamps are increasing by about 1s.
+     * if we hit bug 761086, timestamps will increase by exactly 100ms instead,
+     * because this is the relative difference between a part's start time
+     * (remember a new part starts every 1sec) and the subtitle's pts in that
+     * part, which will be added to the max_ts of the previous part, which
+     * equals the last subtitle's pts (and should not!) */
+    element = gst_bin_get_by_name (GST_BIN (pipeline), "tsink");
+    g_signal_connect (element, "new-sample",
+        (GCallback) new_sample_verify_1sec_offset, &tsink_prev_ts);
+    g_clear_object (&element);
+
+    msg = run_pipeline (pipeline);
+  }
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+
+  g_clear_pointer (&msg, gst_message_unref);
+  g_clear_object (&pipeline);
+}
+
+GST_END_TEST;
+
 /* For verifying bug https://bugzilla.gnome.org/show_bug.cgi?id=762893 */
 GST_START_TEST (test_splitmuxsink_reuse_simple)
 {
@@ -303,16 +504,22 @@ splitmux_suite (void)
   Suite *s = suite_create ("splitmux");
   TCase *tc_chain = tcase_create ("general");
   TCase *tc_chain_basic = tcase_create ("basic");
-  gboolean have_theora, have_ogg;
+  TCase *tc_chain_complex = tcase_create ("complex");
+  gboolean have_theora, have_ogg, have_vorbis, have_matroska;
 
   /* we assume that if encoder/muxer are there, decoder/demuxer will be a well */
   have_theora = gst_registry_check_feature_version (gst_registry_get (),
       "theoraenc", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
   have_ogg = gst_registry_check_feature_version (gst_registry_get (),
       "oggmux", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+  have_vorbis = gst_registry_check_feature_version (gst_registry_get (),
+      "vorbisenc", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+  have_matroska = gst_registry_check_feature_version (gst_registry_get (),
+      "matroskamux", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
 
   suite_add_tcase (s, tc_chain);
   suite_add_tcase (s, tc_chain_basic);
+  suite_add_tcase (s, tc_chain_complex);
 
   tcase_add_test (tc_chain_basic, test_splitmuxsink_reuse_simple);
 
@@ -322,6 +529,15 @@ splitmux_suite (void)
     tcase_add_test (tc_chain, test_splitmuxsrc);
     tcase_add_test (tc_chain, test_splitmuxsrc_format_location);
     tcase_add_test (tc_chain, test_splitmuxsink);
+
+    if (have_matroska && have_vorbis) {
+      tcase_add_checked_fixture (tc_chain_complex, tempdir_setup,
+          tempdir_cleanup);
+
+      tcase_add_test (tc_chain_complex, test_splitmuxsrc_sparse_streams);
+    } else {
+      GST_INFO ("Skipping tests, missing plugins: matroska and/or vorbis");
+    }
   } else {
     GST_INFO ("Skipping tests, missing plugins: theora and/or ogg");
   }
