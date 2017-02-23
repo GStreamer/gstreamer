@@ -150,9 +150,22 @@ gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
   return window;
 }
 
+void
+gst_wl_window_ensure_fullscreen (GstWlWindow * window, gboolean fullscreen)
+{
+  if (!window)
+    return;
+
+  if (fullscreen)
+    wl_shell_surface_set_fullscreen (window->shell_surface,
+        WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, NULL);
+  else
+    wl_shell_surface_set_toplevel (window->shell_surface);
+}
+
 GstWlWindow *
 gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
-    GMutex * render_lock)
+    gboolean fullscreen, GMutex * render_lock)
 {
   GstWlWindow *window;
   gint width;
@@ -166,7 +179,7 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
   if (window->shell_surface) {
     wl_shell_surface_add_listener (window->shell_surface,
         &shell_surface_listener, window);
-    wl_shell_surface_set_toplevel (window->shell_surface);
+    gst_wl_window_ensure_fullscreen (window, fullscreen);
   } else {
     GST_ERROR ("Unable to get wl_shell_surface");
 

@@ -61,7 +61,8 @@ enum
 enum
 {
   PROP_0,
-  PROP_DISPLAY
+  PROP_DISPLAY,
+  PROP_FULLSCREEN
 };
 
 GST_DEBUG_CATEGORY (gstwayland_debug);
@@ -202,6 +203,11 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
       g_param_spec_string ("display", "Wayland Display name", "Wayland "
           "display name to connect to, if not supplied via the GstContext",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
+      g_param_spec_boolean ("fullscreen", "Fullscreen",
+          "Whether the surface should be made fullscreen ", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -209,6 +215,18 @@ gst_wayland_sink_init (GstWaylandSink * sink)
 {
   g_mutex_init (&sink->display_lock);
   g_mutex_init (&sink->render_lock);
+}
+
+static void
+gst_wayland_sink_set_fullscreen (GstWaylandSink * sink, gboolean fullscreen)
+{
+  if (fullscreen == sink->fullscreen)
+    return;
+
+  g_mutex_lock (&sink->render_lock);
+  sink->fullscreen = fullscreen;
+  gst_wl_window_ensure_fullscreen (sink->window, fullscreen);
+  g_mutex_unlock (&sink->render_lock);
 }
 
 static void
@@ -221,6 +239,11 @@ gst_wayland_sink_get_property (GObject * object,
     case PROP_DISPLAY:
       GST_OBJECT_LOCK (sink);
       g_value_set_string (value, sink->display_name);
+      GST_OBJECT_UNLOCK (sink);
+      break;
+    case PROP_FULLSCREEN:
+      GST_OBJECT_LOCK (sink);
+      g_value_set_boolean (value, sink->fullscreen);
       GST_OBJECT_UNLOCK (sink);
       break;
     default:
@@ -239,6 +262,11 @@ gst_wayland_sink_set_property (GObject * object,
     case PROP_DISPLAY:
       GST_OBJECT_LOCK (sink);
       sink->display_name = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (sink);
+      break;
+    case PROP_FULLSCREEN:
+      GST_OBJECT_LOCK (sink);
+      gst_wayland_sink_set_fullscreen (sink, g_value_get_boolean (value));
       GST_OBJECT_UNLOCK (sink);
       break;
     default:
@@ -659,7 +687,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
     if (!sink->window) {
       /* if we were not provided a window, create one ourselves */
       sink->window = gst_wl_window_new_toplevel (sink->display,
-          &sink->video_info, &sink->render_lock);
+          &sink->video_info, sink->fullscreen, &sink->render_lock);
     }
   }
 
