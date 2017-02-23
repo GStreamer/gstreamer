@@ -855,11 +855,12 @@ get_rate_control_mask (GstVaapiEncoder * encoder)
         continue;
       rate_control_mask |= 1 << to_GstVaapiRateControl (1 << i);
     }
-  }
-  GST_INFO ("supported rate controls: 0x%08x", rate_control_mask);
+    GST_INFO ("supported rate controls: 0x%08x", rate_control_mask);
 
-  encoder->got_rate_control_mask = TRUE;
-  encoder->rate_control_mask = cdata->rate_control_mask & rate_control_mask;
+    encoder->got_rate_control_mask = TRUE;
+    encoder->rate_control_mask = cdata->rate_control_mask & rate_control_mask;
+  }
+
   return encoder->rate_control_mask;
 }
 
