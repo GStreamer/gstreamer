@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:25+0200\n"
+"POT-Creation-Date: 2017-02-24 12:41+0200\n"
 "PO-Revision-Date: 2016-03-02 22:00+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -913,9 +913,6 @@ msgstr "відсутній елемент-джерело для URI «%s»"
 msgid "syntax error"
 msgstr "синтаксична помилка"
 
-msgid "bin"
-msgstr "фрагмент"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "вказано порожній контейнер «%s», не допускається"
@@ -1339,6 +1336,9 @@ msgstr "Канал переводиться у стан NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Спорожнення каналу...\n"
+
+#~ msgid "bin"
+#~ msgstr "фрагмент"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Помилка внутрішнього потоку даних."

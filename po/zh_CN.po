@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:25+0200\n"
+"POT-Creation-Date: 2017-02-24 12:41+0200\n"
 "PO-Revision-Date: 2016-11-02 13:43+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -883,9 +883,6 @@ msgstr "URI“%s”无源组件"
 msgid "syntax error"
 msgstr "语法错误"
 
-msgid "bin"
-msgstr "储仓"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "不允许指定空储仓“%s”"
@@ -1289,6 +1286,9 @@ msgstr "设置 NULL 管道 ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "释放管道资源 ...\n"
+
+#~ msgid "bin"
+#~ msgstr "储仓"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "内部数据流错误。"

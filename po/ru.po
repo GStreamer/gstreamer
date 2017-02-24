@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:25+0200\n"
+"POT-Creation-Date: 2017-02-24 12:41+0200\n"
 "PO-Revision-Date: 2016-03-05 08:41+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -916,9 +916,6 @@ msgstr "нет элемента-источника для URI «%s»"
 msgid "syntax error"
 msgstr "синтаксическая ошибка"
 
-msgid "bin"
-msgstr "контейнер"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "указанный пустой контейнер «%s» недопустим"
@@ -1336,6 +1333,9 @@ msgstr "Установка конвейера в состояние NULL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Освобождение конвейера…\n"
+
+#~ msgid "bin"
+#~ msgstr "контейнер"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Внутренняя ошибка потока данных."

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:25+0200\n"
+"POT-Creation-Date: 2017-02-24 12:41+0200\n"
 "PO-Revision-Date: 2016-03-02 22:19+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -915,9 +915,6 @@ msgstr "inget källelement för URI:n \"%s\""
 msgid "syntax error"
 msgstr "syntaxfel"
 
-msgid "bin"
-msgstr "korg"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "angav tom korg \"%s\", inte tillåtet"
@@ -1335,6 +1332,9 @@ msgstr "Ställer in rörledningen till NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Frigör rörledning ...\n"
+
+#~ msgid "bin"
+#~ msgstr "korg"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Internt fel i dataström."

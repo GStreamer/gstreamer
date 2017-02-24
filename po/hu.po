@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:25+0200\n"
+"POT-Creation-Date: 2017-02-24 12:41+0200\n"
 "PO-Revision-Date: 2016-03-14 16:10+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -912,9 +912,6 @@ msgstr "nincs forráselem a következő URI címhez: „%s”"
 msgid "syntax error"
 msgstr "szintaktikai hiba"
 
-msgid "bin"
-msgstr "tároló"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "a megadott üres „%s” tároló nem engedélyezett"
@@ -1327,6 +1324,9 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
+
+#~ msgid "bin"
+#~ msgstr "tároló"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Belső adatfolyam-hiba."

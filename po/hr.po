@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:25+0200\n"
+"POT-Creation-Date: 2017-02-24 12:41+0200\n"
 "PO-Revision-Date: 2016-11-19 09:55-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -926,9 +926,6 @@ msgstr "ne postoji source (izvor) element za adresu URI „%s“"
 msgid "syntax error"
 msgstr "greška u sintaksi"
 
-msgid "bin"
-msgstr "spremnik"
-
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "specificiran je prazni spremnik „%s“; to nije dopušteno"
@@ -1347,6 +1344,9 @@ msgstr "Cjevovod se postavlja u stanje NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Cjevovod se prazni...\n"
+
+#~ msgid "bin"
+#~ msgstr "spremnik"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interna greška protoka (stream) podataka."
