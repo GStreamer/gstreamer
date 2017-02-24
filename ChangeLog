@@ -1,9 +1,426 @@
-=== release 1.11.1 ===
+=== release 1.11.2 ===
 
-2017-01-12  Sebastian Dröge <slomo@coaxion.net>
+2017-02-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.1
+	  releasing 1.11.2
+
+2017-02-16 18:37:59 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode: merge tags for downstream's info
+	  Add encoder and codec name and the bitrate into the output for
+	  informational purposes. Some muxers or application use it as
+	  media metadata.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778781
+
+2017-02-17 01:27:52 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: caps can change at any time
+	  The encoder should be able to change its caps even it is already
+	  processing a stream.
+	  This is suppose to happen after a flush so the codedbuf_queue should
+	  be empty.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775490
+
+2017-02-17 01:19:00 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: bail if nal unit type fails
+	  Bail out if the NAL unit type is not recognized.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778782
+
+2017-02-16 18:11:50 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h264,h265 avoid uninitialized variable
+	  Configuring GCC to verify possible usage of uninitialized variables,
+	  shows that found_index might be used without previous assignation.
+	  This patch assigns a initial value to found_index, also avoid a
+	  branching when returning the result value.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778782
+
+2017-02-13 16:39:41 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* configure.ac:
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecodebin.c:
+	  build: rename USE_HEVC_DECODER to USE_H265_DECODER
+	  Rename to be consistent with H.264 and also H.265 encoder. The
+	  meson build assumed this was already consistently named, and so
+	  previously was not able to actually build the H.265 decoder.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778576
+
+2017-02-15 19:14:59 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: gstreamer-codecparsers is a required dep
+	  Just like in configure.ac.
+
+2017-02-15 00:26:21 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  meson: dist meson build files
+	  Ship meson build files in tarballs, so people who use tarballs
+	  in their builds can start playing with meson already.
+
+2017-02-10 09:51:38 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  libs: encoder: vp8: add CBR encoding mode
+	  This patch enables the Constant BitRate encoding mode in VP8 encoder.
+	  Basically it adds the configuration parameters required by libva to
+	  CBR enconding.
+	  Original-Patch-By: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749950
+
+2017-02-09 12:39:19 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  libs: encoder: vp8: fix bitrate calculation
+	  Base encoder's unit of bitrate is in Kbps. We should honor it so
+	  we use the value of bitrate in VA, in which is expressed in bps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=749950
+
+2017-02-09 12:49:44 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: fix build when gcc
+	  In commit a8e482f9 we added a function without parameters, but gcc
+	  doesn't like that.
+
+2017-02-06 15:46:20 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst-libs/gst/base/meson.build:
+	* gst-libs/gst/meson.build:
+	* gst-libs/gst/vaapi/meson.build:
+	* gst-libs/meson.build:
+	* gst/meson.build:
+	* gst/vaapi/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	  vaapi: add meson build
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778250
+
+2017-02-08 10:17:40 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* configure.ac:
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapiversion.h.in:
+	  make: remove gstvaapiversion.h generation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778250
+
+2016-10-19 15:47:41 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: use linear storage if not the same device
+	  When dmabuf is negotiated downstream and decoding and rendering are
+	  not done on the same device, the layout has to be linear in order for
+	  the memory to be shared accross devices, since each device has its
+	  own way to do tiling.
+	  Right now this code is rather just a to-do comment, since we are not
+	  fetching the device ids.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2017-02-08 14:17:05 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: utils: add HEVC profiles representation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778318
+
+2017-02-07 16:17:39 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: reduce frame number of gaps
+	  Reduce frame num gaps so that we don't have to create unnecessary
+	  dummy pictures, just throw them away.
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777506
+
+2016-10-16 01:04:09 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: don't GLTextureUpload if dmabuf
+	  Do not add the meta:GstVideoGLTextureUploadMeta feature if the render
+	  element can handle dmabuf-based buffers, avoiding its negotiation.
+
+2016-10-19 16:21:21 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: make pool to export decoder's surface
+	  Use new -base API gst_video_decoder_allocate_output_frame_full() to
+	  pass the current proxy/surface to the pool.
+	  The pool will will export thins given surface instead of exporting a
+	  brand new surface that will never be filled in with meaningfull data.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2017-02-03 17:06:29 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: decoder can negotiate dmabuf downstream
+
+2016-10-19 16:07:07 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: override acquire_buffer()
+	  Overriding the vmethod acquire_buffer() it is possible to attach the
+	  right GstMemory to the current acquired buffer.
+	  As a matter of fact, this acquired buffer may contain any instantiated
+	  GstFdmemory, since this buffer have been popped out from the buffer
+	  pool, which is a FIFO queue. So there is no garantee that this buffer
+	  matches with the current processed surface. Evenmore, the VA driver
+	  might not use a FIFO queue. Therefore, it is no way to guess on the
+	  ordering.
+	  In short, acquire_buffer on the VA driver and on the buffer pool return
+	  none matching data, we have to manually attach the right GstFdMemory to
+	  the acquired GstBuffer. The right GstMemory is the one associated with
+	  the current surface.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-10-19 16:05:04 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: export surface if it is provided
+	  gst_vaapi_dmabuf_memory_new() always exports a surface. Previously, it
+	  had to create that surface. Now it can also export an already provided
+	  surface. It is useful to export decoder's surfaces (from VA context).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-10-19 15:55:27 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.h:
+	  vaapivideobufferpool: add GstVaapiVideoBufferPoolAcquireParams
+	  Useful to let the pool know the current surface proxy when calling
+	  gst_buffer_pool_alloc_buffer() / gst_buffer_pool_acquire_buffer()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-10-19 15:09:34 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurface.c:
+	* gst-libs/gst/vaapi/gstvaapisurface.h:
+	  libs: surface: add gst_vaapi_surface_{set,peek}_buffer_proxy()
+	  These functions are useful when a dmabuf-based memory is instantiated in
+	  order to relate the generated buffer @proxy with the processed @surface.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-10-19 15:07:31 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst-libs/gst/vaapi/gstvaapibufferproxy.c:
+	* gst-libs/gst/vaapi/gstvaapibufferproxy.h:
+	* gst-libs/gst/vaapi/gstvaapibufferproxy_priv.h:
+	  libs: bufferproxy: gst_vaapi_buffer_proxy_{set,peek}_mem()
+	  This patch adds a GstMemory as a variable member of the buffer proxy,
+	  because we will need to associate the buffer proxy with the memory
+	  which exposes it. Later, we will know which memory, in the video buffer
+	  pool, is attached to the processed surface.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-10-19 15:33:41 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: don't GLTextureUpload if dmabuf
+	  Do not add the meta:GstVideoGLTextureUploadMeta feature if the render
+	  element can handle dmabuf-based buffers, avoiding its negotiation.
+	  Similar as "vaapidecode: do not add meta:GstVideoGLTextureUploadMeta
+	  feature if can dmabuf"
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-12-16 14:12:30 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: enable DMAbuf allocator to downstream
+	  If the negotiated caps are raw caps and downstream supports the
+	  EGL_EXT_image_dma_buf_import extension, then the created allocator
+	  is the DMAbuf, configured to downstream.
+	  At this moment, the only element which can push dmabuf-based buffers
+	  to downstream, is vaapipostproc.
+
+2016-06-02 22:13:51 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginbase.h:
+	  plugins: check if negotiate dmabuf with downstream
+	  In order to enable, in the future, dmabuf-based buffers, the vaapi base
+	  plugin needs to check if downstream can import dmabuf buffers.
+	  This patch checks if downstream can handle dmabuf, by introspecting the
+	  shared GL context. If the GL context is EGL/GLES2 and have the extension
+	  EGL_EXT_image_dma_buf_import, then dmabuf can be negotiated.
+	  Original-patch-by: Julien Isorce <j.isorce@samsung.com>
+
+2016-10-19 15:37:04 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: release proxy's data if downstream
+	  The surface created for downstream is going to be filled by VAAPI
+	  elements. So, the driver needs write access on that surface.
+	  This patch releases the derived image held by the proxy, thus the
+	  surface is unmarked as busy.
+	  This is how it has to be done as discussed on libva mailing list.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-10-19 15:01:04 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst-libs/gst/vaapi/gstvaapibufferproxy.c:
+	* gst-libs/gst/vaapi/gstvaapibufferproxy.h:
+	  libs: bufferproxy: add gst_vaapi_buffer_proxy_release_data()
+	  Adds an API to request the user's data release in the buffer proxy.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-10-19 15:27:03 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: add direction to dmabuf allocator
+	  Add GstPadDirection param to gst_vaapi_dmabuf_allocator_new(), thus
+	  we later could do different thing when the allocated memory is for
+	  upstream or dowstream, as required by VA-API.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-12-15 15:59:30 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_core.c:
+	  libs: utils: return NULL if failed to get surface formats
+	  Thus, when generating the allowed caps, the element will throw a
+	  warning and it will use its caps template.
+	  This behavior might be a bug in the VA driver.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775490
+
+2015-11-26 18:21:08 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  Revert "vaapidisplay: mark X11 display as compatible with EGL"
+	  This reverts commit 200b1baabc066f8a4102f82f539655d588200ec9.
+
+2017-02-01 14:32:45 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: set GST_VAAPI_POSTPROC_FLAG_SIZE according to src caps
+	  A value of width/height property should be set to out caps,
+	  if negotiation had been going properly.
+	  So we can use srcpad_info when making decision of scaling.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778010
+
+2017-01-27 12:10:54 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapiencode.c:
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapipluginutil.h:
+	* gst/vaapi/gstvaapipostproc.c:
+	* gst/vaapi/gstvaapisink.c:
+	  plugins: handle GL params through context query
+	  If the element instantiated the GL display and context, they should
+	  handle them too through the context query.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777409
+
+2017-01-26 12:02:56 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginbase.h:
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: create a GL context on certain conditions
+	  If a GstVaapiDisplay is not found in the GStreamer context sharing,
+	  then VAAPI elements look for a local GstGLContext in gst context
+	  sharing mechanism ('gst.gl.local.context').
+	  If this GstGLContext not found either then, only the VAAPI decoders
+	  and the VAAPI post-processor, will try to instantiate a new
+	  GstGLContext.
+	  If a valid GstGLContext is received, then a new GstVaapiDisplay will
+	  be instantiated with the platform, API and windowing specified by the
+	  instantiated GstGLContext.
+	  Original-Patch-By: Matt Fischer <matt.fischer@garmin.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777409
+
+2016-08-02 15:48:25 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideocontext.c:
+	  vaapivideocontext: context type can be rejected
+	  Instead of calling g_return_val_if_fail() to check the context type, we
+	  should use a normal conditional, since it is possible that other context types
+	  can arrive and try to be assigned. Otherwise a critical log message is
+	  printed.
+	  This happens when we use playbin3 with vaapipostproc as video-filter.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777409
+
+2017-01-20 19:57:52 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipostprocutil.c:
+	  vaapipostproc: use sink caps par if not requested
+	  Use the sink caps pixel-aspect-ratio to fixate the src caps, if it
+	  is not already set.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777395
+
+2017-01-20 19:00:24 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	* gst/vaapi/gstvaapipostprocutil.c:
+	  vaapipostproc: set interlace mode
+	  if the vaapipostproc is configured to not do deinterlacing, the
+	  interlace-mode in the src caps should be the same as the input caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777395
+
+2017-01-20 16:10:32 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: fix gcc compiler warning
+	  warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+
+2017-01-12 19:54:41 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: don't use member variable outside lock
+	  Thus a race condition segfault is avoided.
+	  Original-patch-by: Matt Staples <staples255@gmail.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777146
+
+2017-01-18 17:20:21 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipostproc.c:
+	  plugins: avoid log flood when activating pool
+	  Every time a new buffer is allocated, the pool is activated. This
+	  doesn't impact in performance since gst_buffer_pool_set_active()
+	  checks the current state of the pool. Nonetheless it logs out a
+	  message if the state is the same, and it floods the logging subsystem
+	  if it is enabled.
+	  To avoid this log flooding first the pool state is checked before
+	  changing it.
+
+2017-01-13 21:26:15 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder.h:
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecode.h:
+	  vaapidecode: update internal decoder sink caps
+	  When a new sink caps arrive the internal decoder state is updated
+	  and, if it is, request a downstream renegotiation.
+	  Previously, when new caps arrived the whole decoder where destroyed
+	  and recreated. Now, if the caps are compatible or has the same codec,
+	  the internal decoder is kept, but a downstream renegotiation is
+	  requested.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776979
+
+2017-01-12 16:33:13 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.11.1 ===
+
+2017-01-12 16:27:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.11.1
 
 2017-01-12 12:49:55 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
 
