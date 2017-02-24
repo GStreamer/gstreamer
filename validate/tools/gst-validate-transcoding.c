@@ -724,9 +724,9 @@ main (int argc, gchar ** argv)
           " or the name of the scenario (name of the file without the"
           " '.scenario' extension).", NULL},
     {"set-configs", '\0', 0, G_OPTION_ARG_STRING, &configs,
-          "Let you set a config scenario, the scenario needs to be set as 'config"
-          "' you can specify a list of scenario separated by ':'"
-          " it will override the GST_VALIDATE_SCENARIO environment variable,",
+          "Select a config scenario (one including 'is-config=true' in its"
+          " description). Specify multiple ones using ':' as separator."
+          " This option overrides the GST_VALIDATE_SCENARIO environment variable.",
         NULL},
     {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
         "If an EOS event should be sent to the pipeline if an interrupt is "

@@ -320,9 +320,9 @@ main (int argc, gchar ** argv)
           " media file that will be reproduced.",
         NULL},
     {"set-configs", '\0', 0, G_OPTION_ARG_STRING, &configs,
-          "Let you set a config scenario, the scenario needs to be set as 'config"
-          "' you can specify a list of scenario separated by ':'"
-          " it will override the GST_VALIDATE_SCENARIO environment variable.",
+          "Select a config scenario (one including 'is-config=true' in its"
+          " description). Specify multiple ones using ':' as separator."
+          " This option overrides the GST_VALIDATE_SCENARIO environment variable.",
         NULL},
     {NULL}
   };
