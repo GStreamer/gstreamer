@@ -890,6 +890,7 @@ EXPORTS
 	gst_pad_get_sticky_event
 	gst_pad_get_stream
 	gst_pad_get_stream_id
+	gst_pad_get_task_state
 	gst_pad_get_type
 	gst_pad_has_current_caps
 	gst_pad_is_active
