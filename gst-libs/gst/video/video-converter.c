@@ -291,22 +291,28 @@ static void
 gst_parallelized_task_runner_run (GstParallelizedTaskRunner * self,
     GstParallelizedTaskFunc func, gpointer * task_data)
 {
+  guint n_threads = self->n_threads;
+
   self->func = func;
   self->task_data = task_data;
 
-  g_mutex_lock (&self->lock);
-  self->n_todo = self->n_threads - 2;
-  self->n_done = 0;
-  g_cond_broadcast (&self->cond_todo);
-  g_mutex_unlock (&self->lock);
+  if (n_threads > 1) {
+    g_mutex_lock (&self->lock);
+    self->n_todo = self->n_threads - 2;
+    self->n_done = 0;
+    g_cond_broadcast (&self->cond_todo);
+    g_mutex_unlock (&self->lock);
+  }
 
   self->func (self->task_data[self->n_threads - 1]);
 
-  g_mutex_lock (&self->lock);
-  while (self->n_done < self->n_threads - 1)
-    g_cond_wait (&self->cond_done, &self->lock);
-  self->n_done = 0;
-  g_mutex_unlock (&self->lock);
+  if (n_threads > 1) {
+    g_mutex_lock (&self->lock);
+    while (self->n_done < self->n_threads - 1)
+      g_cond_wait (&self->cond_done, &self->lock);
+    self->n_done = 0;
+    g_mutex_unlock (&self->lock);
+  }
 
   self->func = NULL;
   self->task_data = NULL;
