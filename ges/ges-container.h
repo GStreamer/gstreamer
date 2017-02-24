@@ -144,20 +144,11 @@ gboolean ges_container_remove     (GESContainer *container, GESTimelineElement *
 GList * ges_container_ungroup     (GESContainer * container, gboolean recursive);
 GESContainer *ges_container_group (GList *containers);
 
-/* To be used by subclasses only */
-void _ges_container_set_height                (GESContainer * container,
-                                               guint32 height);
-gboolean ges_container_edit                   (GESContainer * container,
-                                               GList * layers, gint new_layer_priority,
-                                               GESEditMode mode,
-                                               GESEdge edge,
-                                               guint64 position);
-gint  _ges_container_get_priority_offset      (GESContainer * container,
-                                               GESTimelineElement *elem);
-void _ges_container_set_priority_offset       (GESContainer * container,
-                                               GESTimelineElement *elem,
-                                               gint32 priority_offset);
-
+gboolean ges_container_edit       (GESContainer * container,
+                                   GList * layers, gint new_layer_priority,
+                                   GESEditMode mode,
+                                   GESEdge edge,
+                                   guint64 position);
 
 G_END_DECLS
 #endif /* _GES_CONTAINER */

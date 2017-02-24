@@ -116,7 +116,5 @@ GstDiscovererStreamInfo * ges_uri_source_asset_get_stream_info     (GESUriSource
 const gchar * ges_uri_source_asset_get_stream_uri                  (GESUriSourceAsset *asset);
 const GESUriClipAsset *ges_uri_source_asset_get_filesource_asset   (GESUriSourceAsset *asset);
 
-void _ges_uri_asset_cleanup (void);
-
 G_END_DECLS
 #endif /* _GES_URI_CLIP_ASSET */

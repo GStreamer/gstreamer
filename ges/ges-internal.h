@@ -157,6 +157,8 @@ ges_effect_assect_id_get_type_and_bindesc (const char    *id,
                                            GESTrackType  *track_type,
                                            GError       **error);
 
+G_GNUC_INTERNAL void _ges_uri_asset_cleanup (void);
+
 /* GESExtractable internall methods
  *
  * FIXME Check if that should be public later
@@ -320,6 +322,14 @@ ges_base_xml_formatter_set_timeline_properties(GESBaseXmlFormatter * self,
  ****************************************************/
 G_GNUC_INTERNAL void _ges_container_sort_children         (GESContainer *container);
 G_GNUC_INTERNAL void _ges_container_sort_children_by_end  (GESContainer *container);
+G_GNUC_INTERNAL void _ges_container_set_height            (GESContainer * container,
+                                                           guint32 height);
+G_GNUC_INTERNAL gint  _ges_container_get_priority_offset  (GESContainer * container,
+                                                           GESTimelineElement *elem);
+G_GNUC_INTERNAL void _ges_container_set_priority_offset   (GESContainer * container,
+                                                           GESTimelineElement *elem,
+                                                           gint32 priority_offset);
+
 
 /****************************************************
  *                  GESClip                         *
