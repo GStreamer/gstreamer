@@ -1,9 +1,57 @@
-=== release 1.11.1 ===
+=== release 1.11.2 ===
 
-2017-01-12  Sebastian Dröge <slomo@coaxion.net>
+2017-02-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.1
+	  releasing 1.11.2
+
+2017-02-15 18:22:53 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  meson: dist meson build files
+	  Ship meson build files in tarballs, so people who use tarballs
+	  in their builds can start playing with meson already.
+
+2017-01-13 16:23:12 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* omx/gstomxaacenc.c:
+	  omxaacenc: let encoder know about incoming rate/channels
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777223
+
+2017-01-18 02:43:44 +1100  Matthew Waters <matthew@centricular.com>
+
+	* config/bellagio/meson.build:
+	* config/meson.build:
+	* config/rpi/meson.build:
+	* examples/egl/meson.build:
+	* examples/meson.build:
+	* hooks/pre-commit.hook:
+	* meson.build:
+	* meson_options.txt:
+	* omx/meson.build:
+	  build: add meson build definition
+	  Currently only been tested on the RPi within gst-build.
+
+2017-01-18 15:21:35 +1100  Matthew Waters <matthew@centricular.com>
+
+	* examples/egl/testegl.c:
+	  examples/testegl: update for libgstgl changes
+
+2017-01-12 16:33:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.11.1 ===
+
+2017-01-12 16:26:55 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	  Release 1.11.1
 
 2017-01-10 15:29:08 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
 

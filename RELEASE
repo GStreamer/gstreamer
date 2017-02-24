@@ -1,7 +1,7 @@
 
-Release notes for GStreamer OpenMAX IL wrapper plugin 1.11.1
+Release notes for GStreamer OpenMAX IL wrapper plugin 1.11.2
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.11 release series. The 1.11 release series is adding new features on top of
 the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.11 release series
@@ -42,11 +42,6 @@ contains a set of less supported plugins that haven't passed the
 
   
 
-Bugs fixed in this release
-     
-      * 740111 : omxvideodec: renders video flipped upside down when using egl_render
-      * 777102 : omxaudioenc: set base class format instead of just source pad caps
-
 ==== Download ====
 
 You can find source releases of gst-omx in the download
@@ -82,11 +77,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
-      * George Kiagiadakis
-      * Graham Leggett
       * Matthew Waters
-      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
       * Tim-Philipp Müller
       * Vincent Penquerc'h
