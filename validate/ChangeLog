@@ -1,9 +1,307 @@
-=== release 1.11.1 ===
+=== release 1.11.2 ===
 
-2017-01-12  Sebastian Dröge <slomo@coaxion.net>
+2017-02-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.1
+	  releasing 1.11.2
+
+2017-02-21 13:39:37 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/meson.build:
+	* validate/launcher/baseclasses.py:
+	* validate/tools/meson.build:
+	  validate:launcher: Various fixes to make the Test class directly usable
+	  And the launcher installed with meson usable
+
+2017-02-21 13:38:16 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate: launcher: Do not force using current module dir to run check tests
+
+2017-02-17 13:37:06 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/plugins/gtk/gstvalidategtk.c:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate: fix multiple occurrences of 'parametter'
+
+2017-02-17 13:23:34 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: fix unbalanced quotation mark in set-subtitle description
+	  + Remove pointless split in string literal
+
+2017-02-16 15:12:44 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Take ValidateAction execution as a marker of test update
+
+2017-02-16 14:52:15 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/launcher/baseclasses.py:
+	  validate:scenario: Report action done with the execution duration
+
+2017-02-16 13:46:06 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: runner: fix error msg for duplicated runner
+	  - Add trailing whitespace to avoid accidental concatenation
+	  - Fix bunch of typos and some grammar while at it
+
+2017-02-16 13:30:06 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: fix message on runner errors
+	  - Add newline char to avoid accidental concatenation with
+	  actual error message
+	  - Fix grammar while at it
+
+2017-02-15 18:31:38 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/meson.build:
+	  meson: Fix Gir *_prefix value to be the sames as with autotools
+	  We want to be able to do GstValidate.Monitor and not
+	  GstValidate.ValidateMonitor.
+	  And do not pass header to the list of sources to build libraries as
+	  it is not needed.
+
+2017-02-15 18:00:00 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/meson.build:
+	  meson: Do not forget to install headers
+
+2017-02-15 00:48:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/pkgconfig/gst-validate-uninstalled.pc.in:
+	  validate: pkgconfig: fix libtool-ism in uninstalled .pc file
+
+2017-02-15 13:46:03 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Do not switch relative track when no track of type avalaible
+	  This case was not handled and leaded to a division by zero.
+
+2017-02-15 12:39:18 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson_options.txt:
+	* validate/meson.build:
+	  validate: meson: Add a way to disable documentation generation
+
+2017-02-10 15:54:05 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tools/meson.build:
+	  validate:meson: Build gst-validate-image-check if possible
+
+2017-02-08 17:46:23 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/testsuites/check.py:
+	  validate:launcher: Add a way to specify a set of tests to run under the leak tracer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767856
+
+2017-02-10 18:15:15 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-tsplot.py:
+	  tracer: tsplot: separate the event section
+	  Place the events below the buffer-ts. This makes it more readable in many cases.
+
+2017-02-09 15:52:40 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-stats.py:
+	* tracer/gsttr-tsplot.py:
+	  tracer: tools: add a brief tool description
+
+2017-02-09 15:15:23 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-tsplot.py:
+	  tracer: tsplot: a new tool to draw buffer-ts vs. clock time graphs
+	  This tool helps to inspect data flow on each pad. It shows buffer timestamps
+	  and events in relation to wall clock.
+
+2017-02-05 19:37:51 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/README:
+	  tracer: REAME: planning update
+
+2017-02-05 19:37:07 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-stats.py:
+	  tracer: stats: python style cleanup
+
+2017-02-07 12:57:06 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-override-registry.c:
+	  valdate: fix element leak in overide-registry
+	  The elements were never released once created.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778279
+
+2017-02-07 12:50:33 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/tests/check/validate/overrides.c:
+	  validate: fix leak in overrides test
+	  The runner was never released.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778279
+
+2017-02-07 12:04:45 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/tests/check/validate/padmonitor.c:
+	  validate: fix leaks in pad monitor test
+	  - monitors were never released
+	  - reports were leaked
+	  - GstValidateMediaDescriptor was leaked
+	  - caps were leaked: gst_check_setup_events_with_stream_id() and
+	  gst_event_new_caps() don't consume the caps
+	  - srcpad were never released
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778279
+
+2017-02-07 12:28:02 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate: pad-monitor: fix caps leaks
+	  These caps were not released when disposing the pad monitor.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778279
+
+2017-02-07 13:12:09 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/reporters.py:
+	* validate/launcher/utils.py:
+	  validate: Mark tests as SKIPPED when installation is missing a GStreamer plugin
+
+2017-02-06 15:51:57 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  validate: Do not fail media check when fields are related to (decoding) elements
+	  In the case of h264 the stream might very well be in `nal` format but the decoder
+	  might not accept it thus the parser converts to `byte-stream`, leading
+	  to a correct stream detection but a failure in the validate-media-check
+	  tool.
+
+2017-02-06 12:16:41 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Add an option for user to modify timeout values
+	  Allowing to expand the test timeout when running on slow platforms
+
+2017-02-03 11:02:49 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Verify that Gst supression file could be found
+
+2017-02-02 15:47:30 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst-libs/gst/video/meson.build:
+	  validate:meson: Add pbutils as a dependency on the video library
+
+2017-02-02 14:29:30 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/tests/launcher_tests/meson.build:
+	  validate: meson: fix --validate-tools-path argument
+	  The path passed to --validate-tools-path was wrong when building using
+	  gst-build, preventing the launcher to find the validate tools.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777982
+	  Differential Revision: https://phabricator.freedesktop.org/D1634
+
+2017-02-02 08:19:01 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/plugins/ssim/meson.build:
+	  validate:meson: Add pbutils as a dependency
+	  Fixing build failure https://ci.appveyor.com/project/thiblahute/gst-build-ge9m5/build/1.0.1197
+	  FAILED: cl @subprojects/gst-devtools/validate/gst-libs/gst/video/gstvalidatevideo@sta/gstvalidatessim.c.obj.rsp
+	  c:\projects\gst-build-ge9m5\subprojects\gst-plugins-base\gst-libs\gst\pbutils\pbutils.h(30): fatal error C1083: Cannot open include file: 'gst/pbutils/pbutils-enumtypes.h': No such file or directory
+	  FAILED: cl @subprojects/gst-devtools/validate/plugins/ssim/gstvalidatessim@sha/gstvalidatessim.c.obj.rsp
+	  c:\projects\gst-build-ge9m5\subprojects\gst-plugins-base\gst-libs\gst\pbutils\pbutils.h(30): fatal error C1083: Cannot open include file: 'gst/pbutils/pbutils-enumtypes.h': No such file or directory
+
+2017-01-30 22:22:20 +0000  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/validate.c:
+	  validate: Avoid assertion when trying to pass the config as a caps
+
+2017-01-31 08:24:32 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst-libs/gst/video/meson.build:
+	  validate: Fix build if cairo is not avalaible
+
+2017-01-30 22:20:11 +0000  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	  validate:plugins: Handle the case where we have a pipelines with only 1 frame
+
+2017-01-31 11:35:30 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* validate/tests/check/validate/monitoring.c:
+	* validate/tests/check/validate/overrides.c:
+	* validate/tests/check/validate/padmonitor.c:
+	* validate/tests/check/validate/reporting.c:
+	  validate: tests: call gst_validate_deinit()
+	  gst_validate_deinit() needs to be called when the test is done to remove
+	  false positives when using the leaks tracer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777977
+	  Differential Revision: https://phabricator.freedesktop.org/D1630
+
+2017-01-30 19:19:04 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Allow passing extra env var to simple pipeline generator
+
+2017-01-30 21:19:00 +0000  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	* validate/gst-libs/gst/meson.build:
+	* validate/gst-libs/gst/video/meson.build:
+	* validate/gst-libs/meson.build:
+	* validate/meson.build:
+	* validate/plugins/fault_injection/meson.build:
+	* validate/plugins/gapplication/meson.build:
+	* validate/plugins/gtk/meson.build:
+	* validate/plugins/meson.build:
+	* validate/plugins/ssim/meson.build:
+	  meson:validate: Build validate plugins
+
+2017-01-24 12:28:15 +0900  Wonchul Lee <wonchul.lee@collabora.com>
+
+	* validate/gst/validate/Makefile.am:
+	  validate: fix linker flags for validate plugin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777938
+
+2017-01-25 21:41:31 +0000  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Handle the case where QUERY has an EMPTY caps filter
+	  In our algorithm describing caps negotiation issues.
+
+2017-01-10 12:32:31 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  validate: Stop comparing buffers offset values in media descriptor
+	  This value can vary for some external reasons and should not matter
+	  for now.
+
+2017-01-13 12:39:29 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: bump version
+
+2017-01-12 16:33:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/configure.ac:
+	  Back to development
+
+=== release 1.11.1 ===
+
+2017-01-12 16:28:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.11.1
 
 2017-01-06 13:14:17 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
 
