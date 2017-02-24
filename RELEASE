@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Editing Services 1.11.1
+Release notes for GStreamer Editing Services 1.11.2
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.11 release series. The 1.11 release series is adding new features on top of
 the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.11 release series
@@ -20,13 +20,8 @@ Binaries for Android, iOS, Mac OS X and Windows will be provided in the next day
 
 Bugs fixed in this release
      
-      * 774480 : nlecomposition: Start task and initialize the stack after chaining up to parent's change state function
-      * 765967 : ges-launch wikipage in phabricator should become manpage
-      * 774641 : gst-editing-services: Enable building with MSVC
-      * 775051 : nlecomposition: validate: decodebin2 reaching code path that should not be reached when running scrub_forward_seeking on GES timelines
-      * 775295 : examples: remove #include < ges-internal.h > from assets.c
-      * 776063 : add a basic unix man page for ges-launch-1.0
-      * 776064 : ges-launch-1.0 segfaults when omitting options argument
+      * 776805 : uri-asset: GstDiscoverer are never freeed
+      * 778248 : ges: fix leaks in test
 
 ==== Download ====
 
@@ -63,14 +58,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alexandru Băluț
-      * Antonio Ospite
       * Edward Hervey
       * Guillaume Desmottes
-      * Mathieu Duponchelle
-      * Philippe Renon
-      * Scott D Phillips
       * Sebastian Dröge
       * Thibault Saunier
       * Tim-Philipp Müller
+      * namanyadav12
  

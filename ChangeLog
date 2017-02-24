@@ -1,9 +1,133 @@
-=== release 1.11.1 ===
+=== release 1.11.2 ===
 
-2017-01-12  Sebastian Dröge <slomo@coaxion.net>
+2017-02-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.1
+	  releasing 1.11.2
+
+2017-02-15 12:52:24 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Add an option to disable doc generation
+
+2017-02-15 12:51:51 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-meta-container.c:
+	  Minor documentation fix
+
+2017-02-15 00:58:52 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  meson: dist meson build files
+	  Ship meson build files in tarballs, so people who use tarballs
+	  in their builds can start playing with meson already.
+
+2017-02-07 11:18:58 +0100  Edward Hervey <edward@centricular.com>
+
+	* win32/common/libges.def:
+	  win32: Update def file
+
+2017-02-06 13:18:32 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* tests/check/ges/mixers.c:
+	  mixers: fix leaks in tests
+	  - GstMessage and GstBus references were lost
+	  - Need to call gst_bus_remove_signal_watch() for each
+	  gst_bus_add_signal_watch_full() call
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778248
+
+2017-02-06 10:05:11 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-meta-container.c:
+	  ges-meta: Minor documenation fix
+
+2017-02-06 12:07:26 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-asset.h:
+	* ges/ges.c:
+	* ges/ges.h:
+	* tests/check/ges/asset.c:
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/effects.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/mixers.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/project.c:
+	* tests/check/ges/tempochange.c:
+	* tests/check/ges/timelineedition.c:
+	* tests/check/ges/titles.c:
+	* tests/check/ges/track.c:
+	* tests/check/ges/transition.c:
+	* tests/check/ges/uriclip.c:
+	* tests/check/nle/complex.c:
+	* tests/check/nle/nlecomposition.c:
+	* tests/check/nle/nleoperation.c:
+	* tests/check/nle/simple.c:
+	* tests/check/nle/tempochange.c:
+	  introduce ges_deinit()
+	  GstDiscoverer objects were leaked by tests making the leaks detector
+	  unusable.
+	  Introduce ges_deinit(), similiar to gst_deinit(), doing some cleanup
+	  before exiting the process.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776805
+
+2017-02-04 20:15:55 +0000  namanyadav12 <namanyadav128@gmail.com>
+
+	* ges/ges-uri-asset.c:
+	  uri-clip-asset: Add file-size metadata
+	  Add file-size metadata to GESUriClipAsset.
+	  Reviewed-by: Thibault Saunier <thibault.saunier@osg.samsung.com>
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1645
+
+2017-02-03 12:50:11 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Cleanup the moved_clip list before rolling back
+	  Otherwise we might end up using an already freed pointer
+	  Differential Revision: https://phabricator.freedesktop.org/D1640
+
+2017-01-13 12:41:51 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Revert "meson: don't use subproject fallback for gst-validate if it won't work"
+	  This reverts commit 6760e5e0b1b2f28fb04e9c430506af56c15432b9.
+	  This was not supposed to be pushed and should not be needed any more.
+
+2017-01-13 12:39:42 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: bump version
+
+2016-10-29 16:24:53 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: don't use subproject fallback for gst-validate if it won't work
+	  gst-validate has a hard-dep on json-glib-1.0 so maintain optionality of
+	  it all by only dragging it in as a fallback if we know we can satisfy
+	  the dependencies.
+
+2017-01-12 16:33:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.11.1 ===
+
+2017-01-12 16:20:08 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.11.1
 
 2017-01-09 12:12:34 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
 
