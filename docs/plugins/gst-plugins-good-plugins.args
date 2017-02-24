@@ -1015,7 +1015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.11.1"</DEFAULT>
+<DEFAULT>"GStreamer/1.11.2"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20109,6 +20109,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstAudioEcho::surround-delay</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Enable Surround Delay</NICK>
+<BLURB>Delay Surround Channels when TRUE instead of applying an echo effect.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioEcho::surround-mask</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Surround Mask</NICK>
+<BLURB>A bitmask of channels that are considered surround and delayed when surround-delay = TRUE.</BLURB>
+<DEFAULT>18446744073709551612</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAspectRatioCrop::aspect-ratio</NAME>
 <TYPE>GstFraction</TYPE>
 <RANGE></RANGE>
@@ -22571,20 +22591,20 @@
 <ARG>
 <NAME>GstGdkPixbufOverlay::relative-x</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,1]</RANGE>
+<RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Relative X Offset</NICK>
-<BLURB>Horizontal offset of overlay image in fractions of video image width, from top-left corner of video image.</BLURB>
+<BLURB>Horizontal offset of overlay image in fractions of video image width, from top-left corner of video image (in relative positioning).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstGdkPixbufOverlay::relative-y</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,1]</RANGE>
+<RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Relative Y Offset</NICK>
-<BLURB>Vertical offset of overlay image in fractions of video image height, from top-left corner of video image.</BLURB>
+<BLURB>Vertical offset of overlay image in fractions of video image height, from top-left corner of video image (in relative positioning).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -22616,6 +22636,26 @@
 <NICK>Positioning mode</NICK>
 <BLURB>Positioning mode of offset-x and offset-y properties.</BLURB>
 <DEFAULT>pixels-relative-to-edges</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::coef-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Relative X Offset</NICK>
+<BLURB>Horizontal offset of overlay image in fractions of video image width, from top-left corner of video image (absolute positioning).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::coef-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Relative Y Offset</NICK>
+<BLURB>Vertical offset of overlay image in fractions of video image height, from top-left corner of video image (absolute positioning).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23359,6 +23399,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTPRtxQueue::fulfilled-requests</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Fulfilled Requests</NICK>
+<BLURB>Number of fulfilled retransmission requests.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPRtxQueue::requests</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Requests</NICK>
+<BLURB>Total number of retransmission requests.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpGSTPay::config-interval</NAME>
 <TYPE>guint</TYPE>
 <RANGE><= 3600</RANGE>
@@ -24036,6 +24096,16 @@
 <NICK>Request keyframes at max-size-time</NICK>
 <BLURB>Request a keyframe every max-size-time ns to try splitting at that point. Needs max-size-bytes to be 0 in order to be effective.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::max-size-timecode</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum timecode difference</NICK>
+<BLURB>Maximum difference in timecode between first and last frame. Separator is assumed to be ":" everywhere (e.g. 01:00:00:00). Will only be effective if a timecode track is present.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>

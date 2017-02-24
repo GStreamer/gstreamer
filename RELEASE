@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Good Plugins 1.11.1
+Release notes for GStreamer Good Plugins 1.11.2
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.11 release series. The 1.11 release series is adding new features on top of
 the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.11 release series
@@ -60,43 +60,26 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 708221 : mp4dashmux: add the tfdt atom to the moof
-      * 746574 : matroskamux: add G722 audio support
-      * 748360 : rtspsrc: teardown usually never happens
-      * 749098 : matroskamux: drop streamheader buffers only if they really are headers
-      * 754696 : matroskamux: audio-only streams have all buffers flagged as delta units, causing problems with tcpserversink/multifdsink
-      * 757631 : progressreport format=bytes will not send msg
-      * 766991 : multifilesink: leaks memory when max-files property == 0
-      * 767771 : qtdemux/jpegdec: Interlaced content detected as progressive
-      * 768723 : rtprtx: test is sometimes failing
-      * 769041 : qtmux: Downscaling time value loses precision
-      * 769048 : qtmux: prores-related fixes
-      * 772181 : isomp4: Parse/store colorimetry, chroma-site and interlaced-mode/field-order
-      * 772740 : rtpbin: receiving RTP bundle support
-      * 773217 : qtmux: Allow configuring the maximum interleave size in bytes/time
-      * 773514 : rtph263pay: Use GST_TRACE for logging bitsream parsing
-      * 773712 : isomp4: Add support for FLAC
-      * 773785 : splitmuxsink: Use first buffer TS as mux start time
-      * 773828 : qtmux: Crash on EOS with GST_DEBUG enabled
-      * 774129 : 'gst_buffer_is_writable' assertion  in aacparse
-      * 774131 : flvmux: Add metadatacreator property
-      * 774403 : qtmux: Always write edit lists for the tracks to give a more accurate duration
-      * 774409 : tests/jitterbuffer: Major refactoring and cleanups
-      * 774566 : matroskaparse: error out on last buffer
-      * 774674 : qtdemux: Remove useless return variable
-      * 774747 : qtdemux: compiler warning with gcc 6.2
-      * 774789 : qtmux: Enable up to 16 unpositioned raw audio channels
-      * 774840 : qtmux: Fix various timestamp and duration related issues
-      * 774876 : meson: add libm to has_function checks
-      * 775287 : qtdemux: change off_t type to gint
-      * 775414 : qtdemux: Correctly read interlacing information
-      * 775702 : v4l2object: Don't set empty interlace-mode list
-      * 775752 : monoscope: Leaks allocation query
-      * 776030 : udpsrc: Add to join multiple multicast interfaces
-      * 776106 : v4l2object: Don't check size in a non-list value
-      * 776789 : avidemux: fix memory leak in usage of gst_pad_template_new() API
-      * 777095 : isomp4: Don't spam debug log with knonw/padding atoms
-      * 777157 : qtdemux: seqh buffer not freed after calling qtdemux_parse_svq3_stsd_data()
+      * 778690 : qtdemux: Possible bug on gst-1.11 gst_element_seek
+      * 736752 : mp4mux/qtmux: Add HEVC support
+      * 761761 : splitmuxsink: Caps changes not handled
+      * 766177 : qtdemux: Critical errors reported playing mp4 file with only xmp tags
+      * 768762 : tests: qtmux and matroskamux reported as leaking by the leaks tracer
+      * 774209 : splitmuxsink: Add option for timecode-based split
+      * 775440 : qtdemux: Use upstream's StreamFlags if there are
+      * 775817 : rtph265pay: fix config-interval handling
+      * 776714 : rtpmanager: enhance RTP statistics by recording nacks sent/received per source too
+      * 776715 : qtdemux: Skip seeking query if upstream format is time
+      * 776899 : v4l2: Remove usage and definition of LOG_CAPS macro
+      * 777100 : qtmux: Write tapt atom for MOV files if PAR not 1/1
+      * 777182 : rtxqueue: Expose basic statistics as properties.
+      * 777330 : v4l2bufferpool: remove duplicated line of code
+      * 777331 : qtmux: Don't write Sync Sample Atom for ProRes
+      * 777540 : isomp4: Unable to create streams playable with MSE
+      * 778013 : rtpsession: relate received FIRs and PLIs to source
+      * 778330 : qtmux: Creates two edit lists with reserved-* options enabled
+      * 778389 : imagefreeze can return erroneous results for an accept caps query
+      * 776962 : flacenc: Conversion from m4a encapsuled alac to flac fail with: Could not initialize supporting library.
 
 ==== Download ====
 
@@ -133,40 +116,34 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaque
-      * Alejandro G. Castro
-      * Andre McCurdy
-      * Arun Raghavan
-      * David Evans
+      * Arnaud Vrac
+      * Aurélien Zanelli
+      * Brendan Shanks
+      * David Warman
       * Edward Hervey
-      * Enrique Ocaña González
-      * Garima Gaur
-      * Havard Graff
-      * Heekyoung Seo
-      * Jagadish
+      * Enrico Jorns
+      * Georg Lippitsch
+      * Guillaume Desmottes
       * Jan Schmidt
+      * Jean-Christophe Trotin
+      * Jochen Henneberg
+      * Jonas Holmberg
+      * Juan Pablo Ugarte
       * Mark Nauwelaerts
+      * Mathieu Duponchelle
       * Matt Staples
-      * Matthew Waters
-      * Nicola Murino
-      * Nirbheek Chauhan
-      * Petr Kulhavy
-      * Philipp Zabel
-      * Philippe Normand
+      * Miguel París Díaz
+      * Nick Kallen
+      * Nicolas Dufresne
+      * Olivier Crête
+      * Rahul Bedarkar
       * Reynaldo H. Verdejo Pinochet
-      * Scott D Phillips
-      * Sean DuBois
+      * Santiago Carot-Nemesio
       * Sebastian Dröge
       * Seungha Yang
-      * Stian Selnes
+      * Søren Juul
+      * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
-      * Ursula Maplehurst
-      * Vincent Penquerc'h
-      * Vinod Kesti
       * Vivia Nikolaidou
-      * Víctor Manuel Jáquez Leal
-      * William Manley
-      * Wonchul Lee
-      * christophecvr
  
