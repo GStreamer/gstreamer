@@ -6074,9 +6074,11 @@ no_task:
  * @pad: the #GstPad to get task state from
  *
  * Get @pad task state. If no task is currently
- * set, GST_TASK_STOPPED is returned.
+ * set, #GST_TASK_STOPPED is returned.
  *
  * Returns: The current state of @pad's task.
+ *
+ * Since: 1.12
  */
 GstTaskState
 gst_pad_get_task_state (GstPad * pad)
