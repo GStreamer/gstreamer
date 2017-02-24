@@ -759,6 +759,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstIdentity::ts-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp offset for synchronisation</NICK>
+<BLURB>Timestamp offset in nanoseconds for synchronisation, negative for earlier sync.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstFileSrc::location</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>

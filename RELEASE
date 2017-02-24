@@ -1,7 +1,7 @@
 
-Release notes for GStreamer 1.11.1
+Release notes for GStreamer 1.11.2
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.11 release series. The 1.11 release series is adding new features on top of
 the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.11 release series
@@ -40,44 +40,13 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 772921 : debug log categories registered later can not be filtered for
-      * 599546 : Faster GST_WRITE_* macros
-      * 748626 : gst-uninstalled: export gio extra modules
-      * 750079 : registry: add factory for automatic dynamic caps enum/flags types loading
-      * 751450 : parse/grammar.y: Allow multiple links to happen.
-      * 760550 : parse-launch: improve possibly misleading error message when linking two elements with filter caps
-      * 761225 : pad: Allow multiple conversion specifiers for request pads and don't require it at the very end
-      * 761918 : gstvalue: Make GValueArray serializable
-      * 765734 : fakesink: Property to not drop out-of-segment buffers
-      * 766470 : Add gst_print(), gst_println(), gst_printerr(), gst_printerrln(), etc
-      * 768526 : funnel: Always push all sticky events whenever we forward a serialized event
-      * 769220 : info: add GstStream and GstStreamCollection support to gst_debug_print_object()
-      * 769775 : basesrc: Support PROTECTION event from application
-      * 770498 : multiqueue: decodebin, decodebin3 mpegts pipeline hangs
-      * 772468 : basesink: Don't nest prepare/render calls
-      * 772555 : debug: Implement gst_debug_print_stack_trace with libunwind/backtrace when avalaible
-      * 773089 : gstreamer: set env GST_REGISTRY_DISABLE=yes to disable registry
-      * 773092 : gstinfo: Replace %p and %r in GST_DEBUG_FILE
-      * 773568 : meson: don't add_global_arguments when being built as a subproject
-      * 773907 : gst-launch: fix minor memory leak when failing to parse options
-      * 773912 : fdsink: Returns flushing on PLAYING- > PAUSED if it can block in - > render
-      * 774332 : Latency tracer fails when asserting on GST_IS_EVENT (event)
-      * 774424 : meson: Fails to build on FreeBSD because -lexecinfo is not used
-      * 774623 : basetransform: Ensure to set the RECONFIGURE flag again if reconfiguration failed
-      * 774656 : meson: change add_global_arguments to add_project_arguments
-      * 774657 : add proxy control binding
-      * 774830 : uri: Add new uri API to get URI fragment as table
-      * 774916 : utils: Export linear regression calculation as public function
-      * 775110 : create-uninstalled-setup.sh script should use https: instead of git: and --depth=1
-      * 775365 : info: Properly start and end dwfl sessions when getting stack traces
-      * 775423 : info: Add a 'flags' parameter to gst_debug_get_stack_trace
-      * 775540 : check: Allow listing unit tests names
-      * 775541 : leaks: Implement ref/unref tracing in the leaks tracer
-      * 775727 : buffer: add gst_buffer_iterate_meta_filtered() convenience function
-      * 775796 : value: add intersection/union/is_subset/fixate implementations
-      * 775944 : Wrong introspection data for gst_event_new_select_streams and gst_event_parse_select_streams
-      * 776077 : gstpad: issue performance penalty warning only on actual cascading caps query cases
-      * 776392 : gst-inspect: Add a '--types' option to filter elements by types to print
+      * 764707 : segment: Modifiy inside segment condition
+      * 773091 : check: Add API to filter g_warning/g_critical etc
+      * 777375 : paramspec: Add gst_param_spec_array_list for GST_TYPE_ARRAY
+      * 777449 : parse: Deadlock when trying to link an element that takes its object lock while querying caps
+      * 777780 : GstBaseParse incorrectly handles non-flush seek
+      * 777810 : GstStream and GstStreamCollection missing g_autoptr() support
+      * 778866 : gstconfig.h.in: Fix unaligned access support for the openrisc architecture
 
 ==== Download ====
 
@@ -114,38 +83,17 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Antonio Ospite
-      * Edward Hervey
-      * Fabrice Bellet
-      * Guillaume Desmottes
-      * Hanno Boeck
-      * Iñaki García Etxebarria
+      * Brendan Shanks
       * Jan Schmidt
-      * Josep Torra
       * Julien Isorce
-      * Luis de Bethencourt
-      * Marcin Kolny
-      * Mark Nauwelaerts
-      * Matthew Waters
-      * Nicola Murino
-      * Nicolas Dechesne
-      * Nicolas Dufresne
-      * Nicolas Huet
       * Nirbheek Chauhan
-      * Olivier Crête
-      * Peter Seiderer
-      * Reynaldo H. Verdejo Pinochet
-      * Ricardo Ribalda Delgado
-      * Scott D Phillips
+      * Peter Korsgaard
       * Sebastian Dröge
       * Seungha Yang
       * Stefan Sauer
       * Stian Selnes
-      * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
-      * Ting-Wei Lan
-      * Victor Toso
-      * Vincent Penquerc'h
-      * Wonchul Lee
+      * Vivia Nikolaidou
+      * Wim Taymans
  
