@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2016-11-10 22:06+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -36,12 +36,6 @@ msgstr "Tak dapat menghubungi server"
 msgid "No URL set."
 msgstr "Tak ada URL yang ditentukan."
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr "Server tidak mendukung pencarian."
-
 msgid "Could not resolve server name."
 msgstr "Tak dapat menemukan nama server."
 
@@ -58,6 +52,9 @@ msgstr ""
 
 msgid "Server sent bad data."
 msgstr "Server mengirim data rusak."
+
+msgid "Server does not support seeking."
+msgstr "Server tidak mendukung pencarian."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Masukan audio tidak ada atau tidak sah, arus AVI akan rusak."
@@ -260,10 +257,12 @@ msgstr "Divais video tak menyediakan format keluaran."
 msgid "Video device returned invalid dimensions."
 msgstr "Divais video mengembalikan dimensi tidak sah."
 
-msgid "Video devices uses an unsupported interlacing method."
+#, fuzzy
+msgid "Video device uses an unsupported interlacing method."
 msgstr "Divais video menggunakan metode penyilangan yang tidak didukung."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr "Divais video menggunakan format pixel yang tidak didukung."
 
 msgid "Failed to configure internal buffer pool."

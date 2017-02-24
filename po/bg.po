@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2016-02-21 21:03+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -35,12 +35,6 @@ msgstr "Не може да се осъществи връзка към сърв�
 msgid "No URL set."
 msgstr "Не е зададен адрес."
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr "Сървърът не поддържа търсене."
-
 msgid "Could not resolve server name."
 msgstr "Сървърът не може да се открие по име."
 
@@ -56,6 +50,9 @@ msgstr "Възникна мрежова грешка или сървърът н�
 
 msgid "Server sent bad data."
 msgstr "Сървърът изпрати лоши данни."
+
+msgid "Server does not support seeking."
+msgstr "Сървърът не поддържа търсене."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Аудио входът липсва или е грешен. Потокът с AVI ще бъде повреден."
@@ -256,10 +253,12 @@ msgstr "Видео устройството не указва формат."
 msgid "Video device returned invalid dimensions."
 msgstr "Видео устройството върна неправилни размери"
 
-msgid "Video devices uses an unsupported interlacing method."
+#, fuzzy
+msgid "Video device uses an unsupported interlacing method."
 msgstr "Видео устройството използва неподдържана презредова развивка."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr "Видео устройството използва неподдържан формат на пикселите."
 
 msgid "Failed to configure internal buffer pool."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -34,12 +34,6 @@ msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
 msgid "No URL set."
 msgstr ""
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr ""
-
 #, fuzzy
 msgid "Could not resolve server name."
 msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
@@ -56,6 +50,9 @@ msgid ""
 msgstr ""
 
 msgid "Server sent bad data."
+msgstr ""
+
+msgid "Server does not support seeking."
 msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
@@ -249,10 +246,10 @@ msgstr ""
 msgid "Video device returned invalid dimensions."
 msgstr ""
 
-msgid "Video devices uses an unsupported interlacing method."
+msgid "Video device uses an unsupported interlacing method."
 msgstr ""
 
-msgid "Video devices uses an unsupported pixel format."
+msgid "Video device uses an unsupported pixel format."
 msgstr ""
 
 msgid "Failed to configure internal buffer pool."

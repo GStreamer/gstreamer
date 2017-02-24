@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -33,13 +33,6 @@ msgstr "Mhux possibli naqbad mas-server"
 msgid "No URL set."
 msgstr ""
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-#, fuzzy
-msgid "Server does not support seeking."
-msgstr "Appart '%s' ma jagħmilx video capture"
-
 #, fuzzy
 msgid "Could not resolve server name."
 msgstr "Mhux possibli naqbad mas-server"
@@ -57,6 +50,10 @@ msgstr ""
 
 msgid "Server sent bad data."
 msgstr ""
+
+#, fuzzy
+msgid "Server does not support seeking."
+msgstr "Appart '%s' ma jagħmilx video capture"
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Input audio ma nstabx jew mhux validu. AVI stream jista jkun korrott."
@@ -259,12 +256,14 @@ msgid "Video device returned invalid dimensions."
 msgstr ""
 
 #, fuzzy
-msgid "Video devices uses an unsupported interlacing method."
+msgid "Video device uses an unsupported interlacing method."
 msgstr ""
 "Id-driver tal-apparat '%s' ma jissapportja l-ebda capture method mifhum."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr ""
+"Id-driver tal-apparat '%s' ma jissapportja l-ebda capture method mifhum."
 
 msgid "Failed to configure internal buffer pool."
 msgstr ""

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2016-02-21 07:25+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -38,12 +38,6 @@ msgstr "Không thể kết nối tới máy phục vụ"
 msgid "No URL set."
 msgstr "Không có URL nào được đặt."
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr "Máy phục vụ không hỗ trợ di chuyển vị trí đọc."
-
 msgid "Could not resolve server name."
 msgstr "Không thể phân giải tên máy phục vụ."
 
@@ -59,6 +53,9 @@ msgstr "Có lỗi mạng đã xảy ra, hoặc máy chủ đóng kết nối b�
 
 msgid "Server sent bad data."
 msgstr "Máy chủ gửi dữ liệu sai."
+
+msgid "Server does not support seeking."
+msgstr "Máy phục vụ không hỗ trợ di chuyển vị trí đọc."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
@@ -262,10 +259,12 @@ msgstr "Thiết bị video không cung cấp định dạng xuất."
 msgid "Video device returned invalid dimensions."
 msgstr "Thiết bị video trả và kích thước không hợp lệ."
 
-msgid "Video devices uses an unsupported interlacing method."
+#, fuzzy
+msgid "Video device uses an unsupported interlacing method."
 msgstr "Thiết bị dùng phương pháp xen kẽ không được hỗ trợ."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr "Thiết bị video dùng định dạng điểm ảnh không được hỗ trợ."
 
 msgid "Failed to configure internal buffer pool."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2011-06-04 21:48+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -34,12 +34,6 @@ msgstr "Ne eblis konekti al servilo"
 msgid "No URL set."
 msgstr ""
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr ""
-
 msgid "Could not resolve server name."
 msgstr ""
 
@@ -54,6 +48,9 @@ msgid ""
 msgstr ""
 
 msgid "Server sent bad data."
+msgstr ""
+
+msgid "Server does not support seeking."
 msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
@@ -245,10 +242,10 @@ msgstr ""
 msgid "Video device returned invalid dimensions."
 msgstr ""
 
-msgid "Video devices uses an unsupported interlacing method."
+msgid "Video device uses an unsupported interlacing method."
 msgstr ""
 
-msgid "Video devices uses an unsupported pixel format."
+msgid "Video device uses an unsupported pixel format."
 msgstr ""
 
 msgid "Failed to configure internal buffer pool."

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -35,12 +35,6 @@ msgstr "Nu se poate stabili o conexiune la server"
 msgid "No URL set."
 msgstr ""
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr ""
-
 #, fuzzy
 msgid "Could not resolve server name."
 msgstr "Nu se poate stabili o conexiune la server"
@@ -57,6 +51,9 @@ msgid ""
 msgstr ""
 
 msgid "Server sent bad data."
+msgstr ""
+
+msgid "Server does not support seeking."
 msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
@@ -270,13 +267,16 @@ msgid "Video device returned invalid dimensions."
 msgstr ""
 
 #, fuzzy
-msgid "Video devices uses an unsupported interlacing method."
+msgid "Video device uses an unsupported interlacing method."
 msgstr ""
 "Driverul pentru dispozitivul „%s” nu suport nici o metodă de captură "
 "cunoscută."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr ""
+"Driverul pentru dispozitivul „%s” nu suport nici o metodă de captură "
+"cunoscută."
 
 msgid "Failed to configure internal buffer pool."
 msgstr ""

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2016-02-20 17:27+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -36,12 +36,6 @@ msgstr "Не вдалося з'єднатись з сервером"
 msgid "No URL set."
 msgstr "Не вказано адресу"
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr "Сервером не підтримується позиціювання."
-
 msgid "Could not resolve server name."
 msgstr "Не вдалося визначити адресу сервера за назвою."
 
@@ -59,6 +53,9 @@ msgstr ""
 
 msgid "Server sent bad data."
 msgstr "Сервером надіслано помилкові дані."
+
+msgid "Server does not support seeking."
+msgstr "Сервером не підтримується позиціювання."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
@@ -269,10 +266,12 @@ msgstr "Відеопристроєм не надано даних щодо фо�
 msgid "Video device returned invalid dimensions."
 msgstr "Відеопристроєм повернуто некоректні розмірності."
 
-msgid "Video devices uses an unsupported interlacing method."
+#, fuzzy
+msgid "Video device uses an unsupported interlacing method."
 msgstr "Драйвер пристрою «%s» не підтримує метод черезрядкового виведення."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr "Відеопристрій використовує непідтримуваний формат пікселів."
 
 msgid "Failed to configure internal buffer pool."

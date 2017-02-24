@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2016-03-14 18:35+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -39,12 +39,6 @@ msgstr "Nem sikerült csatlakozni a kiszolgálóhoz"
 msgid "No URL set."
 msgstr "Nincs beállítva URL."
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr "A kiszolgáló nem támogatja a tekerést."
-
 msgid "Could not resolve server name."
 msgstr "Nem sikerült feloldani a kiszolgáló nevét."
 
@@ -61,6 +55,9 @@ msgstr ""
 
 msgid "Server sent bad data."
 msgstr "A kiszolgáló hibás adatokat küldött."
+
+msgid "Server does not support seeking."
+msgstr "A kiszolgáló nem támogatja a tekerést."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nincs vagy érvénytelen bemeneti hang, az AVI-folyam sérült lesz."
@@ -265,10 +262,12 @@ msgstr "A videoeszköz nem szolgáltatott kimeneti formátumot."
 msgid "Video device returned invalid dimensions."
 msgstr "A videoeszköz érvénytelen dimenziókkal tért vissza."
 
-msgid "Video devices uses an unsupported interlacing method."
+#, fuzzy
+msgid "Video device uses an unsupported interlacing method."
 msgstr "A videoeszközök nem támogatott váltottsoros módot használnak."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr "A videoeszközök nem támogatott képpontformátumot használnak."
 
 msgid "Failed to configure internal buffer pool."

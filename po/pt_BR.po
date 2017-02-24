@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2016-05-06 17:49-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
@@ -41,12 +41,6 @@ msgstr "Não foi possível conectar ao servidor"
 msgid "No URL set."
 msgstr "Nenhum URL definido."
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr "Nâo há suporte a busca pelo servidor."
-
 msgid "Could not resolve server name."
 msgstr "Não foi possível resolver o nome do servidor."
 
@@ -63,6 +57,9 @@ msgstr ""
 
 msgid "Server sent bad data."
 msgstr "O servidor enviou dados ruins."
+
+msgid "Server does not support seeking."
+msgstr "Nâo há suporte a busca pelo servidor."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Entrada de áudio nula ou inválida, o fluxo AVI pode estar corrompido."
@@ -270,11 +267,13 @@ msgstr "O dispositivo de vídeo não forneceu um formato de saída."
 msgid "Video device returned invalid dimensions."
 msgstr "O dispositivo de vídeo retornou dimensões inválidas."
 
-msgid "Video devices uses an unsupported interlacing method."
+#, fuzzy
+msgid "Video device uses an unsupported interlacing method."
 msgstr ""
 "Os dispositivos de vídeo utilizam um método de entrelaçamento não suportado."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr "Os dispositivos de vídeo utilizam um formato para pixel não suportado."
 
 msgid "Failed to configure internal buffer pool."

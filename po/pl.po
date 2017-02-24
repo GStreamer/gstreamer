@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2016-02-20 21:43+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -32,12 +32,6 @@ msgstr "Nie udało się połączyć z serwerem"
 msgid "No URL set."
 msgstr "Nie ustawiono URL-a."
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr "Serwer nie obsługuje przewijania."
-
 msgid "Could not resolve server name."
 msgstr "Nie udało się rozwiązać nazwy serwera."
 
@@ -53,6 +47,9 @@ msgstr "Wystąpił błąd sieciowy lub serwer nieoczekiwanie zamknął połącze
 
 msgid "Server sent bad data."
 msgstr "Serwer przysłał błędne dane."
+
+msgid "Server does not support seeking."
+msgstr "Serwer nie obsługuje przewijania."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Brak lub niepoprawne wejście dźwięku, strumień AVI będzie uszkodzony."
@@ -257,10 +254,12 @@ msgstr "Urządzenie obrazu nie przekazało formatu wyjściowego."
 msgid "Video device returned invalid dimensions."
 msgstr "Urządzenie obrazu zwróciło błędne wymiary."
 
-msgid "Video devices uses an unsupported interlacing method."
+#, fuzzy
+msgid "Video device uses an unsupported interlacing method."
 msgstr "Urzędzenie obrazu wykorzystuje nie obsługiwany sposób przeplotu."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr "Urządzenie obrazu wykorzystuje nie obsługiwany format piksela."
 
 msgid "Failed to configure internal buffer pool."

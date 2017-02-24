@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2014-04-09 22:52+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -38,12 +38,6 @@ msgstr "Ni se mogoče povezati s strežnikom"
 msgid "No URL set."
 msgstr "Ni nastavljenega naslova URL."
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr "Strežnik ne podpira iskanja."
-
 msgid "Could not resolve server name."
 msgstr "Ni mogoče razrešiti imena strežnika."
 
@@ -61,6 +55,9 @@ msgstr ""
 
 msgid "Server sent bad data."
 msgstr "Strežnik je poslal slabe podatke."
+
+msgid "Server does not support seeking."
+msgstr "Strežnik ne podpira iskanja."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Napaka vhodnega zvoka, AVI pretok bo pokvarjen."
@@ -264,11 +261,12 @@ msgid "Video device returned invalid dimensions."
 msgstr ""
 
 #, fuzzy
-msgid "Video devices uses an unsupported interlacing method."
+msgid "Video device uses an unsupported interlacing method."
 msgstr "Gonilnik naprave \"%s\" ne podpira nobenega načina I/O %d."
 
-msgid "Video devices uses an unsupported pixel format."
-msgstr ""
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
+msgstr "Gonilnik naprave \"%s\" ne podpira nobenega načina I/O %d."
 
 #, fuzzy
 msgid "Failed to configure internal buffer pool."

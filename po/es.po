@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2011-02-12 18:30+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -35,12 +35,6 @@ msgstr "No se pudo conectar con el servidor"
 msgid "No URL set."
 msgstr "No existe un URL establecido."
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr "El servidor no soporta la búsqueda."
-
 msgid "Could not resolve server name."
 msgstr "No se pudo resolver el nombre del servidor."
 
@@ -58,6 +52,9 @@ msgstr ""
 
 msgid "Server sent bad data."
 msgstr "El servidor envió datos erróneos."
+
+msgid "Server does not support seeking."
+msgstr "El servidor no soporta la búsqueda."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "El audio no existe o no es válido, el flujo AVI estará corrupto."
@@ -276,13 +273,16 @@ msgid "Video device returned invalid dimensions."
 msgstr ""
 
 #, fuzzy
-msgid "Video devices uses an unsupported interlacing method."
+msgid "Video device uses an unsupported interlacing method."
 msgstr ""
 "El controlador del dispositivo «%s» no soporta ningún método de captura "
 "conocido."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr ""
+"El controlador del dispositivo «%s» no soporta ningún método de captura "
+"conocido."
 
 msgid "Failed to configure internal buffer pool."
 msgstr ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-01-12 14:38+0200\n"
+"POT-Creation-Date: 2017-02-24 12:48+0200\n"
 "PO-Revision-Date: 2016-03-05 09:52+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -35,12 +35,6 @@ msgstr "Не могу да се повежем са сервером"
 msgid "No URL set."
 msgstr "Није подешена адреса."
 
-msgid "Corrupted HTTP response."
-msgstr ""
-
-msgid "Server does not support seeking."
-msgstr "Сервер не подржава позиционирање."
-
 msgid "Could not resolve server name."
 msgstr "Не могу да решим назив сервера."
 
@@ -56,6 +50,9 @@ msgstr "Дошло је до грешке на мрежи, или је серв�
 
 msgid "Server sent bad data."
 msgstr "Сервер је послао лоше податке."
+
+msgid "Server does not support seeking."
+msgstr "Сервер не подржава позиционирање."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити оштећен."
@@ -259,10 +256,12 @@ msgstr "Видео уређај не обезбеђује излазни зап�
 msgid "Video device returned invalid dimensions."
 msgstr "Видео уређај је вратио неисправне димензије."
 
-msgid "Video devices uses an unsupported interlacing method."
+#, fuzzy
+msgid "Video device uses an unsupported interlacing method."
 msgstr "Видео уређаји користе неподржани метод преплитања."
 
-msgid "Video devices uses an unsupported pixel format."
+#, fuzzy
+msgid "Video device uses an unsupported pixel format."
 msgstr "Видео уређаји користе неподржани запис сличице."
 
 msgid "Failed to configure internal buffer pool."
