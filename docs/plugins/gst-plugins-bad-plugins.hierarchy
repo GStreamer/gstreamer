@@ -55,6 +55,7 @@ GObject
           GstSpectraScope
           GstSynaeScope
           GstWaveScope
+        GstAvWait
         GstBaseParse
           GstAsfParse
           GstDiracParse
@@ -101,6 +102,7 @@ GObject
             GstInterVideoSink
             GstKMSSink
             GstQtSink
+            GstVulkanSink
             GstWaylandSink
         GstBaseSrc
           GstAvdtpSrc
@@ -147,6 +149,7 @@ GObject
             GstStereo
             GstWebrtcDsp
             GstWebrtcEchoProbe
+          GstAudioMixMatrix
           GstBayer2RGB
           GstDebugSpy
           GstDtmfDetect
@@ -219,6 +222,26 @@ GObject
               GstPerspective
               GstRotate
               GstSquare
+            GstOpencvVideoFilter
+              GstCvDilateErode
+                GstCvDilate
+                GstCvErode
+              GstCvEqualizeHist
+              GstCvLaplace
+              GstCvSmooth
+              GstCvSobel
+              GstDewarp
+              GstEdgeDetect
+              GstFaceBlur
+              GstFaceDetect
+              GstGrabcut
+              GstHanddetect
+              GstMotioncells
+              GstOpencvTextOverlay
+              GstRetinex
+              GstSegmentation
+              GstSkinDetect
+              GstTemplateMatch
             GstRsvgOverlay
             GstSceneChange
             GstSimpleVideoMark
@@ -229,6 +252,7 @@ GObject
             GstVideoDiff
             GstZBar
             GstZebraStripe
+          GstVulkanUpload
           GstWatchdog
           GstYadif
         GstBin
@@ -270,6 +294,7 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
+        GstDisparity
         GstDtlsDec
         GstDtlsEnc
         GstDtlsSrtpDemux
@@ -314,7 +339,6 @@ GObject
         GstTagMux
           GstId3Mux
         GstTeletextDec
-        GstTimeCodeWait
         GstUvcH264MjpgDemux
         GstVideoDecoder
           GstLibde265Dec

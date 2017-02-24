@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Bad Plugins 1.11.1
+Release notes for GStreamer Bad Plugins 1.11.2
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.11 release series. The 1.11 release series is adding new features on top of
 the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.11 release series
@@ -15,7 +15,6 @@ and other important changes.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
-
 
 
 "That an accusation?"
@@ -66,77 +65,29 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 696852 : decklinkaudiosrc: does not allow the capture of more than 2 channels of embedded audio on SDI input
-      * 711155 : wayland: add DMABuf support to wayland sink
-      * 746018 : videoanalyse: doc not updated
-      * 751324 : Adds a new Image Quality Assessment plugin.
-      * 753003 : glimagesink: GstVideoOverlay crashes on widget resize (NSView / OS X)
-      * 755036 : mssdemux: improved live playback support
-      * 758232 : Add support for EBU-TT-D / TTML subtitles
-      * 760172 : dx9screencapsrc: add " cursor " option to draw the cursor
-      * 771992 : player: Cache duration and return cached duration
-      * 772357 : srtpdec: add stats readonly property
-      * 773473 : kmssink: support display mode setting
-      * 773521 : player: add set accurate seek config API
-      * 773570 : gstplayer: add media info get  track num API
-      * 773932 : vdpsink: Fix memory leak due to usage of Xlib API
-      * 773936 : mpdparser: MS PlayReady object parsing support
-      * 774035 : qmlglsrc: Support change render target on the fly and move fps calculate into qtglwindow
-      * 774112 : mpdparser: MS PlayReady ContentProtection event is truncated
-      * 774132 : mpegts: fix typo in GstMpegtsDescriptor docs
-      * 774177 : adaptivedemux: improvements for live seeking/duration
-      * 774178 : smoothstreaming: support live seeking and reporting the live duration
-      * 774196 : mpdparser: Fix timestamp setting on fragment
-      * 774223 : opencv: move base opencv filter class and utilities to gst-libs
-      * 774357 : mpdparser: Support multiple Period elements in external xml
-      * 774400 : gdiscreencapsrc: remove unused local variable
-      * 774463 : mpdparser: Allows invalid URI within xlink attributes
-      * 774485 : curl: Sometimes upload hangs in case the connection was cut between the client and the HTTP server
-      * 774493 : meson: Build waylandsink
-      * 774518 : gl/egl: gstglcontext_egl.h removal fallout
-      * 774530 : Remove non-ported plugins
-      * 774576 : opencv: caps to IplImage format conversion fails for sparse formats
-      * 774629 : decklinkvideosrc: Issue " no signal " warnings
-      * 774637 : meson: wayland: mark wl_scanner as required: false
-      * 774689 : audiobuffersplit: New element that splits raw audio buffers into equal-sized buffers
-      * 774850 : decklinksrc: Stop using the " hardware " timestamps and directly use the pipeline clock
-      * 774886 : Regression: fatal error: gst/gl/egl/gstglcontext_egl.h: No such file or directory
-      * 775171 : glcontext/glwindow: Race when creating/quitting
-      * 775248 : rpi,gl: EGLImage creation errors
-      * 775293 : schro: #include math.h before schroedinger  headers
-      * 775306 : codecparsers: h264parse: improve documentation
-      * 775377 : opencv: cvlaplace/cvsobel/edgedetect should use the already mapped outimage
-      * 775378 : opencv: facedetect/motioncells has spurious make_writable calls
-      * 775379 : aggregator: HTML Documentation does not display it as a class
-      * 775409 : interlace: Writing field-order into the src caps
-      * 775746 : Threads leaking after freeing up qmlglsink
-      * 775791 : waylandsink: lost display when playing a video playlist
-      * 775793 : Egl is being deinitialized on qmlglsink cleanup
-      * 775967 : ttmlparse: Transform caps event
-      * 776047 : opencv: add dewarp plugin
-      * 776076 : Fix caps memory leak from pad template creation
-      * 776141 : glimagesink: RGB png files don't work on raspberry pi (RGBA is fine)
-      * 776317 : gst-project-maker not included in distribution tarball
-      * 776352 : dashdemux: Drain remaining buffer in adapter
-      * 776399 : configure fails to detect QPA during cross compilation
-      * 776431 : dashdemux: Fix regression of On-Demand profile mpd playback
-      * 776722 : gl/egl: don't pass a GError to gst_gl_context_egl_choose_config when trying gles2
-      * 776727 : x265: fix two minor strings leaks
-      * 776787 : Fixed memory leak in usage of gst_pad_template_new() API
-      * 776790 : Fixed memory leak in gst module in usage of gst_pad_template_new() API
-      * 776900 : decklinkvideosrc: Do not append a zero timecode if none is found on the source
-      * 777048 : timecodestamper: Post element message with current timecode
-      * 777078 : qmlglsrc: use glBlitFramebuffer to copy texture for GLES3.0
-      * 777097 : jpegparse: Chain up to parent class' sink event handler
-      * 777121 : urisourcebin: Clear pad from pending list if it was linked
-      * 773927 : wayland plugin fails to build
-      * 770990 : New Plugin: Add GStreamer plugin for Intel's MediaSDK
-      * 774587 : msdk: add decoder
-      * 774793 : msdk: add mjpeg encoder/decoder
-      * 775726 : msdk: Add H.265 decoder
-      * 775288 : opencv: base opencv video filter class does not fully implement the video filter contract
-      * 772822 : opencv: reinstate check for opencv contrib, compilation fails without it
-      * 774527 : [PLUGIN-MOVE] Move dataurisrc to core
+      * 764947 : autodetect: bring element down to NULL on a successful choice
+      * 758257 : adaptivedemux: don't expose pads until caps are known
+      * 773709 : player: Add get video snapshot API
+      * 775665 : hlsdemux: problems with broken iHeartRadio streams
+      * 776360 : msdk: seeking doesn't work
+      * 776490 : player: Add support for selecting a specific video sink
+      * 777181 : qtmux: simplify video/x-h264 caps handling
+      * 777206 : dashdemux: mosaic issue for MPEG DASH live streaming due to not updating headers
+      * 777376 : matrixmix: New element that mixes audio channels
+      * 777377 : qtmux: add 4444 and 4444xq variants to video/x-prores pad template caps
+      * 777394 : dashdemux: Do pending seek when SIDX is found
+      * 777652 : iqa configure.ac: Fix AM_CONDITIONAL for HAVE_DSSIM
+      * 777682 : hls: m3u8: Set sequence position for live
+      * 777741 : avwait: Rename timecodewait to avwait, add modes
+      * 777760 : vulkan: Usage of wrong enum in gst_vulkan_format_from_video_format()
+      * 778028 : decklinkaudiosrc: Fix get_caps returning EMPTY
+      * 778076 : avwait: Fix potential deadlock when flushing / shutting down audio
+      * 778142 : opencv: allow compilation against 3.2.0
+      * 778703 : timecodestamper: Timecode from current system time
+      * 779064 : audiobuffersplit: Add drop-last property
+      * 779070 : glmemory: Use glBlitFramebuffer() instead of glCopyTexImage2D() if available
+      * 779103 : webrtcdsp: expose new properties.
+      * 779154 : meson: Added meson.build for audiomixmatrix and timecode
 
 ==== Download ====
 
@@ -173,52 +124,25 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Anton Eliasson
       * Arun Raghavan
-      * Chris Bass
-      * Daniel Garbanzo
-      * Daniel Shahaf
-      * David Evans
-      * Dongil Park
+      * Axel Menzel
       * Edward Hervey
       * Fabien Dessenne
-      * Fabrice Bellet
-      * Florent Thiéry
-      * Florian Zwoch
-      * Garima Gaur
-      * Gaurav Gupta
-      * Graham Leggett
-      * Guillaume Desmottes
-      * Haihua Hu
-      * Imre Eörs
+      * Georg Lippitsch
       * Jan Schmidt
-      * Josep Torra
-      * Julien Isorce
-      * Luis de Bethencourt
+      * Juan Pablo Ugarte
+      * Lars Wendler
       * Lyon Wang
-      * Mark Nauwelaerts
       * Mathieu Duponchelle
-      * Matt Staples
       * Matthew Waters
-      * Michael Tretter
+      * Nick Kallen
       * Nicola Murino
-      * Nicolas Dufresne
-      * Nirbheek Chauhan
-      * Olivier Crête
-      * Philipp Zabel
-      * Philippe Normand
-      * Philippe Renon
-      * Reynaldo H. Verdejo Pinochet
       * Scott D Phillips
       * Sebastian Dröge
-      * Sergey Borovkov
       * Seungha Yang
       * Stefan Sauer
-      * Stepan Salenikovich
       * Thibault Saunier
       * Tim-Philipp Müller
-      * Ursula Maplehurst
-      * Vincent Penquerc'h
       * Vivia Nikolaidou
-      * Víctor Manuel Jáquez Leal
+      * WeiChungChang
  

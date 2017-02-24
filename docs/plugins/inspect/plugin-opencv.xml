@@ -3,7 +3,7 @@
   <description>GStreamer OpenCV Plugins</description>
   <filename>../../ext/opencv/.libs/libgstopencv.so</filename>
   <basename>libgstopencv.so</basename>
-  <version>1.10.0</version>
+  <version>1.11.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -132,6 +132,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string)RGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>dewarp</name>
+      <longname>Dewarp fisheye images</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Dewarp fisheye images</description>
+      <author>Nicola Murino &lt;nicola.murino@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>
