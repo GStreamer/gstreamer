@@ -1,9 +1,66 @@
-=== release 1.11.1 ===
+=== release 1.11.2 ===
 
-2017-01-12  Sebastian Dröge <slomo@coaxion.net>
+2017-02-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.1
+	  releasing 1.11.2
+
+2017-02-14 20:40:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  meson: dist meson build files
+	  Ship meson build files in tarballs, so people who use tarballs
+	  in their builds can start playing with meson already.
+
+2017-02-07 23:39:37 +1100  Jan Schmidt <jan@centricular.com>
+
+	* examples/test-record.c:
+	  examples/test-record: Add extra line to initial printout
+	  Add an example line of how to deliver a stream to the
+	  RTSP RECORD example
+
+2017-01-19 14:57:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Also handle the (S|G)ET_PARAMETER case of size==0 || !data as keep-alive
+	  If there is no Content-Length header, no body would be allocated and the
+	  '\0' would also not be appended to the body.
+
+2017-01-19 14:24:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Fix handling of keep-alive GET_PARAMETER/SET_PARAMETER
+	  While they logically have 0 bytes length, GstRTSPConnection is appending
+	  a '\0' to everything making the size be 1 instead.
+
+2017-01-13 12:39:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: bump version
+
+2017-01-12 19:04:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-session.c:
+	  rtsp-session: Only remove deprecated API if requested to do so, not just when disabling
+	  gst_rtsp_session_is_expired() and gst_rtsp_session_next_timeout() were
+	  affected.
+
+2017-01-12 16:32:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.11.1 ===
+
+2017-01-12 16:14:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* win32/common/libgstrtspserver.def:
+	  Release 1.11.1
 
 2017-01-10 08:34:50 +0100  Patricia Muscalu <patricia@axis.com>
 

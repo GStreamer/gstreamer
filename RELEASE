@@ -1,7 +1,7 @@
 
-Release notes for GStreamer RTSP Server Library 1.11.1
+Release notes for GStreamer RTSP Server Library 1.11.2
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.11 release series. The 1.11 release series is adding new features on top of
 the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.11 release series
@@ -17,16 +17,6 @@ and other important changes.
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
 
   
-
-Bugs fixed in this release
-     
-      * 758062 : rtsp-client: emit new rtsp request signals in the beginning of each request
-      * 771830 : There is no time out in idle connection RTSP server
-      * 774173 : media: emit signal SIGNAL_NEW_STATE only when state change happens
-      * 774640 : gst-rtsp-server: Enable building with MSVC
-      * 776867 : pkgconfig: fix -uninstalled pc file
-      * 777037 : rtsp-factory: just fixing a little typo in comments
-      * 774416 : RTSP digest Authentification for gst-rtsp-server
 
 ==== Download ====
 
@@ -63,19 +53,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleksandr Slobodeniuk
-      * Branko Subasic
-      * Dag Gullberg
-      * Edward Hervey
-      * Guillaume Desmottes
-      * Göran Jönsson
       * Jan Schmidt
-      * Kseniia Vasilchuk
-      * Matthew Waters
-      * Neha Arora
-      * Patricia Muscalu
-      * Scott D Phillips
       * Sebastian Dröge
-      * Thibault Saunier
       * Tim-Philipp Müller
  
