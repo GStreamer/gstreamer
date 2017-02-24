@@ -95,7 +95,7 @@ class MesonTestsManager(TestsManager):
 
     def get_meson_tests(self):
         if not self.options.meson_build_dirs:
-            self.options.meson_build_dirs = config.BUILDDIR
+            self.options.meson_build_dirs = [config.BUILDDIR]
         mesontests = []
         for i, bdir in enumerate(self.options.meson_build_dirs):
             bdir = os.path.abspath(bdir)
