@@ -14,7 +14,6 @@ GObject
           GstAmrnbDec
           GstAmrwbDec
           GstDvdLpcmDec
-          GstMad
           GstMpg123AudioDec
         GstAudioEncoder
           GstAmrnbEnc
