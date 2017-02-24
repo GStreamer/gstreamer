@@ -1265,7 +1265,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
       g_free (filename);
       continue;
     }
-    if (!g_str_has_suffix (dirent, G_MODULE_SUFFIX)
+    if (!g_str_has_suffix (dirent, "." G_MODULE_SUFFIX)
 #ifdef GST_EXTRA_MODULE_SUFFIX
         && !g_str_has_suffix (dirent, GST_EXTRA_MODULE_SUFFIX)
 #endif
