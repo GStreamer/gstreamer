@@ -1,7 +1,7 @@
 
-Release notes for GStreamer libav Plugins 1.11.1
+Release notes for GStreamer libav Plugins 1.11.2
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.11 release series. The 1.11 release series is adding new features on top of
 the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.11 release series
@@ -15,7 +15,6 @@ and other important changes.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
-
 
 
 This module contains plugins based on the ffmpeg project, including codecs.
@@ -40,12 +39,6 @@ contains a set of less supported plugins that haven't passed the
 
 
   
-
-Bugs fixed in this release
-     
-      * 750882 : ffmpeg: Add colorimetry support
-      * 773672 : Add mapping for Opus audio and make avdec_opus work
-      * 776700 : Fixed memory leak in usage of gst_pad_template_new() API
 
 ==== Download ====
 
@@ -82,13 +75,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
-      * Garima Gaur
-      * Marinus Schraal
-      * Michael Olbrich
-      * Scott D Phillips
       * Sebastian Dröge
-      * Thibault Saunier
       * Tim-Philipp Müller
-      * leigh123linux@googlemail.com
  
