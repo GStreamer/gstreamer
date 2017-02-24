@@ -742,7 +742,7 @@ main (int argc, gchar ** argv)
         NULL},
     {"scenarios-defs-output-file", '\0', 0, G_OPTION_ARG_FILENAME,
           &output_file, "The output file to store scenarios details. "
-          "Implies --list-scenario",
+          "Implies --list-scenarios",
         NULL},
     {"force-reencoding", 'r', 0, G_OPTION_ARG_NONE, &force_reencoding,
         "Whether to try to force reencoding, meaning trying to only remux "

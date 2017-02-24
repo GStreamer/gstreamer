@@ -308,7 +308,7 @@ main (int argc, gchar ** argv)
         "List the available scenarios that can be run", NULL},
     {"scenarios-defs-output-file", '\0', 0, G_OPTION_ARG_FILENAME,
           &output_file, "The output file to store scenarios details. "
-          "Implies --list-scenario",
+          "Implies --list-scenarios",
         NULL},
     {"inspect-action-type", 't', 0, G_OPTION_ARG_NONE, &inspect_action_type,
           "Inspect the available action types with which to write scenarios."
