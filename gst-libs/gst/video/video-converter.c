@@ -262,7 +262,7 @@ gst_parallelized_task_runner_new (guint n_threads)
     /* First thread is the one calling run() */
     if (i > 0) {
       self->threads[i].thread =
-          g_thread_try_new (NULL, gst_parallelized_task_thread_func,
+          g_thread_try_new ("videoconvert", gst_parallelized_task_thread_func,
           &self->threads[i], &err);
       if (!self->threads[i].thread)
         goto error;
