@@ -79,6 +79,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstVideoScale::n-threads</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Threads</NICK>
+<BLURB>Maximum number of threads to use.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstURIDecodeBin::buffer-duration</NAME>
 <TYPE>gint64</TYPE>
 <RANGE>>= G_MAXULONG</RANGE>
@@ -989,6 +999,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstVideoConvert::n-threads</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threads</NICK>
+<BLURB>Maximum number of threads to use.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGioStreamSrc::stream</NAME>
 <TYPE>GInputStream*</TYPE>
 <RANGE></RANGE>
@@ -1596,6 +1616,36 @@
 <NICK>Zoneplate 2nd order products y offset</NICK>
 <BLURB>Zoneplate 2nd order products y offset.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoTestSrc::animation-mode</NAME>
+<TYPE>GstVideoTestSrcAnimationMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Animation mode</NICK>
+<BLURB>For pattern=ball, which counter defines the position of the ball.</BLURB>
+<DEFAULT>frame count</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoTestSrc::flip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flip</NICK>
+<BLURB>For pattern=ball, invert colors every second.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoTestSrc::motion</NAME>
+<TYPE>GstVideoTestSrcMotionType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion</NICK>
+<BLURB>For pattern=ball, what motion the ball does.</BLURB>
+<DEFAULT>Ball waves back and forth, up and down</DEFAULT>
 </ARG>
 
 <ARG>

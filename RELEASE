@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Base Plugins 1.11.1
+Release notes for GStreamer Base Plugins 1.11.2
 
-The GStreamer team is pleased to announce the first release of the unstable
+The GStreamer team is pleased to announce the second release of the unstable
 1.11 release series. The 1.11 release series is adding new features on top of
 the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
 series of the GStreamer multimedia framework. The unstable 1.11 release series
@@ -63,44 +63,16 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 678301 : audioringbuffer: introspection fixes and API clean up for bindings
-      * 699077 : videorate: add " rate " property to modify clip speed
-      * 744191 : encodebin: Need more buffers in output queue for better performance
-      * 749567 : tcpclientsrc: add timeout property
-      * 752052 : appsrc: Initialize min and max vars in get_property() for fix compiler warnings
-      * 756628 : audioclock: Add run time type check safety
-      * 758259 : discoverer: Add support to dump dot files
-      * 759358 : Add GST_CAPS_FEATURE_MEMORY_DMABUF " memory:DMABuf " 
-      * 765796 : rtp depayloaders output bad segment events when input stream is a non time segment
-      * 767450 : video-format: Add VYUY a packed 4:2:2 format
-      * 769698 : sdp: add support for rtcp-fb attributes
-      * 770355 : id3v2: Fix parsing extended header and string lists in UTF-16
-      * 771376 : video: Add top-field-first / bottom-field-first information to raw video caps if interlaced-mode=interleaved & proxy colorimetry in compressed caps too
-      * 772445 : urisourcebin: minor enhancements
-      * 772550 : urisourcebin: Fix minor typo and some FIXME list
-      * 772832 : parsebin: Rename variables include 'decode' to 'parse'
-      * 772864 : audioconvert: mask calculation optimization
-      * 773073 : audioconvert: endian conversion optimization
-      * 773102 : videotestsrc: Make snow deterministic
-      * 773165 : videodecoder: add _allocate_output_frame_with_params() to pass custom GstBufferPoolAcquireParams [API]
-      * 773341 : urisourcebin: Cleanup unused output slot
-      * 773944 : meson: Generate girs
-      * 774445 : meson: vorbis: Add -DTREMOR to flags for gstivorbisdec
-      * 774454 : playbin3: remove dead code
-      * 774484 : videodecoder, audiodecoder: parse format before checking in src_query_default
-      * 774588 : video-info: Catch overflows in the video frame size calculation
-      * 774728 : Subtitle showing as rectangular box in android platform
-      * 774878 : tag: fix some warnings in mklicensestables
-      * 774959 : rtpbuffer: fix ensure_buffers
-      * 775310 : playbin: Fix caps memory leak in usage of gst_static_caps_get() API
-      * 775369 : Audio distortion since commit 010b954 (regression)
-      * 775917 : tests: Do not use 'auto-select-streams' property in playbin3 test app
-      * 776038 : audioringbuffer: do not require 4 byte multiples for encoded audio
-      * 776188 : encodebin: Fallback to other profile if we fail with one
-      * 776447 : videotimecode: New GstVideoTimeCodeDiff type, ability to add to a GstVideoTimeCode
-      * 776458 : urisourcebin: Always configure typefind
-      * 777009 : urisourcebin: Never push actual EOS event to slot
-      * 772764 : GstVideoTimeCode lacks GstValue functions
+      * 740557 : videotestsrc: add ball motion based on system clock
+      * 775553 : playback: Fix leak on select_streams
+      * 775893 : decodbin: Leaking pads on errors
+      * 776797 : encodebin: fix caps leak in test
+      * 777458 : decklinkaudiosrc: Option to use max channels supported by device
+      * 777530 : decodebin3: Fix crash caused by slot double freeing
+      * 778298 : [REGRESSION]: discoverer: Misunderstands stream topology when a parser does stream formart conversion
+      * 778702 : videotimecode: Init from GDateTime
+      * 778974 : video-converter: Implement multi-threaded scaling/conversion
+      * 779010 : videotimecode: Validate for drop-frame correctness
 
 ==== Download ====
 
@@ -137,42 +109,19 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arun Raghavan
-      * Carlos Rafael Giani
-      * Changbok Chea
+      * Carl Karsten
       * Edward Hervey
-      * Evan Nemerson
-      * Garima Gaur
+      * Georg Lippitsch
       * Guillaume Desmottes
-      * Jan Alexander Steffens (heftig)
+      * Heekyoung Seo
       * Jan Schmidt
-      * Joris Valette
-      * Julien Isorce
-      * Marcin Kolny
-      * Mark Nauwelaerts
-      * Matthew Waters
-      * Miguel Paris
-      * Nicola Murino
-      * Nicolas Dechesne
-      * Nicolas Dufresne
-      * Patricia Muscalu
-      * Petr Kulhavy
-      * Reynaldo H. Verdejo Pinochet
-      * Scott D Phillips
+      * Jochen Henneberg
+      * Olivier Crete
       * Sebastian Dröge
       * Seungha Yang
-      * Song Bing
-      * Stian Selnes
-      * Stuart Weaver
+      * Stefan Sauer
       * Thibault Saunier
-      * Thomas Bluemel
       * Tim-Philipp Müller
-      * Tobias Mueller
-      * Tomasz Zajac
-      * Ulf Olsson
       * Vincent Penquerc'h
-      * Vineeth TM
-      * Vivia Nikolaidou
-      * Wonchul Lee
-      * hoonhee.lee
+      * Víctor Manuel Jáquez Leal
  

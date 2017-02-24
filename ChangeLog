@@ -1,9 +1,407 @@
-=== release 1.11.1 ===
+=== release 1.11.2 ===
 
-2017-01-12  Sebastian Dröge <slomo@coaxion.net>
+2017-02-24  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.1
+	  releasing 1.11.2
+
+2017-02-24 10:04:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/video-converter.c:
+	  video-converter: Give a name to the thread-pool threads
+	  This way they can be distinguished from any other threads in the same
+	  process.
+
+2017-02-24 10:02:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/video-converter.c:
+	  video-converter: Only lock the thread pool mutex when running with more than 1 thread
+	  There's no reason to lock anything if only the current thread is ever
+	  going to do any work.
+
+2017-02-20 21:38:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/video-converter.c:
+	* gst-libs/gst/video/video-converter.h:
+	* gst/videoconvert/gstvideoconvert.c:
+	* gst/videoconvert/gstvideoconvert.h:
+	* gst/videoscale/gstvideoscale.c:
+	* gst/videoscale/gstvideoscale.h:
+	  video-converter: Implement multi-threaded scaling/conversion
+	  This adds a property to select the maximum number of threads to use for
+	  conversion and scaling. During processing, each plane is split into
+	  an equal number of consecutive lines that are then processed by each
+	  thread.
+	  During tests, this gave up to 1.8x speedup with 2 threads and up to 3.2x
+	  speedup with 4 threads when converting e.g. 1080p to 4k in v210.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778974
+
+2017-02-21 11:59:12 +0100  Georg Lippitsch <glippitsch@toolsonair.com>
+
+	* gst-libs/gst/video/gstvideotimecode.c:
+	* tests/check/libs/videotimecode.c:
+	  videotimecode: Validate for drop-frame correctness
+	  In gst_video_time_code_is_valid, also check for invalid
+	  ranges when using drop-frame TC. Refactor some code which
+	  broke after the check was added.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779010
+
+2017-02-15 18:40:21 +0100  Georg Lippitsch <glippitsch@toolsonair.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/video/gstvideotimecode.c:
+	* gst-libs/gst/video/gstvideotimecode.h:
+	* tests/check/libs/videotimecode.c:
+	* win32/common/libgstvideo.def:
+	  videotimecode: Init from GDateTime
+	  Add a function to init the time code from a GDateTime
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778702
+
+2017-02-20 13:44:37 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* ext/vorbis/gstvorbiscommon.c:
+	  vorbis: Fix channel reorder map for 5.1, 6.1 and 7.1
+
+2017-02-15 21:41:47 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/video-scaler.c:
+	  video-scaler: Fix upscaling if width & height change and we're starting not at y=0
+	  It was taking the initial input y-offset from the output value, which
+	  only works for y=0 (in which case both are the same). If y > 0, we would
+	  always stay behind the requested input offset and never ever read
+	  anything from the input.
+
+2017-02-14 22:31:50 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  Fix distcheck
+	  Buildbot doesn't like wildcards here for some reason.
+
+2017-02-14 19:44:43 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  meson: dist meson build files
+	  Ship meson build files in tarballs, so people who use tarballs
+	  in their builds can start playing with meson already.
+
+2017-02-14 19:43:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* win32/MANIFEST:
+	  win32: dist all .def files
+
+2017-02-10 17:32:29 +0900  Heekyoung Seo <heekyoung.seo@lge.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefindfunctions: prevent unsigned int overflow
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778432
+
+2017-02-10 21:28:49 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/adder/gstadder.c:
+	  adder: ensure the discont flag is correct
+	  Previously it happened that reused buffer caused the discont to be on the wrong
+	  buffers.
+
+2017-02-08 11:42:45 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  discoverer: Ignore more parser related fields when comparing streams
+	  The parser might do some conversion on a stream but the stream keeps
+	  being the same, and we need to make sure GstDiscoverer detects it is the
+	  case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778298
+
+2017-02-04 14:46:00 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/audio/gstaudioringbuffer.c:
+	  audioringbuffer: Also add FLAC to debug strings.
+	  Oops, also add FLAC to the debug strings array.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777655
+
+2017-02-04 14:42:33 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/audio/gstaudioringbuffer.c:
+	  audioringbuffer: Prevent overflow of debug names array
+	  Add new audio types to the list of strings used for debug
+	  so we don't index past the end of that array.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777655
+
+2017-02-02 14:56:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/elements/multifdsink.c:
+	  multifdsink: Make sure to use a 64 bit integer for the units-max property
+
+2017-01-20 19:49:46 +0900  Seungha Yang <sh.yang@lge.com>
+
+	* gst/playback/gstdecodebin3-parse.c:
+	* gst/playback/gstdecodebin3.c:
+	  decodebin3: Fix crash caused by slot double freeing
+	  Probe for MultiQueue source pad might receive EOS twice,
+	  the first is fake-eos and the other is actual EOS.
+	  And the slot can be freed with fake-eos/EOS if the slot has no input.
+	  Since slot freeing is async, double free can be possible.
+	  So, decodebin3 needs to remove the probe also with slot freeing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777530
+
+2017-01-31 16:47:32 +0100  Edward Hervey <edward@centricular.com>
+
+	* tests/examples/decodebin_next/playbin-test.c:
+	  examples: Fix leak
+
+2016-12-03 13:38:28 +0900  Seungha Yang <sh.yang@lge.com>
+
+	* gst/playback/gstdecodebin3.c:
+	  decodebin3: Fix list leak on handle_stream_switch()
+	  Free no more used list variables
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775553
+
+2016-12-03 13:22:54 +0900  Seungha Yang <sh.yang@lge.com>
+
+	* gst/playback/gstdecodebin3.c:
+	  decodebin3: Change requested_selection to have its own memory for stream-id
+	  "requested_selection" list might be generated by select-streams event.
+	  And memory of stream-id(s) in select-streams is independent from that of stream-collection.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775553
+
+2016-12-03 12:47:41 +0900  Seungha Yang <sh.yang@lge.com>
+
+	* gst/playback/gstdecodebin3.c:
+	  decodebin3: Change return types of stream_in_{list,collection}
+	  Change return types of functions to get memory address of stream-id.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775553
+
+2016-12-03 12:43:22 +0900  Seungha Yang <sh.yang@lge.com>
+
+	* gst/playback/gstdecodebin3.c:
+	* gst/playback/gstplaybin3.c:
+	  playback: Fix leak on select_streams
+	  Since gst_event_parse_select_streams() returns newly allocated
+	  memory for stream-id(s), it should be freed explicitly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775553
+
+2017-01-02 15:12:47 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* tests/check/elements/encodebin.c:
+	  encodebin: fix caps leak in test
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776797
+
+2017-01-30 12:35:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/audio/audio-resampler-x86-sse41.c:
+	  audio-resampler: Fix integer overflow in clamping code
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777921
+
+2017-01-25 19:13:40 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/examples/overlay/Makefile.am:
+	  qt: The videooverlay example requires at least C++11
+	  ... and clang requires this to be specified on the commandline while gcc
+	  nowadays defaults to C++11 or even newer.
+
+2017-01-24 19:20:53 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson: Properly use ':' for defining keywords
+
+2017-01-23 19:45:05 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/videorate/gstvideorate.c:
+	  videorate: fix LATENCY query
+	  The latency query originally had a fallthrough to the default
+	  label at the end as fallback, but that got messed up when the
+	  DURATION and POSITION queries were added, so it then fell through
+	  to the duration query handler instead. Restore original behaviour.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699077
+
+2017-01-23 19:08:15 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/videorate/gstvideorate.c:
+	* tests/check/elements/videorate.c:
+	  videorate: fix duration and position query handling
+	  Duration query would return TRUE and duration=-1. This
+	  worked in the unit test because the unit test implementation
+	  was a bit broken.
+	  Both queries need to access rate with a lock.
+	  Fix broken duration query test as well. It relied on broken
+	  behaviour by the videorate query handler, and also it was
+	  implemented as a downstream query rather than an upstream
+	  query. And we must return HANDLED from the probe so that the
+	  query we intercept actually returns TRUE.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699077
+
+2017-01-23 19:50:09 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/audio/gstaudioringbuffer.h:
+	  audio: add since markers to docs for new enums
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777655
+
+2016-11-17 13:04:18 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudioringbuffer.c:
+	* gst-libs/gst/audio/gstaudioringbuffer.h:
+	  audio: add FLAC to GstAudioRingBufferFormatType
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777655
+
+2017-01-23 18:31:54 +0000  Olivier Crete <olivier.crete@collabora.com>
+
+	* gst-libs/gst/audio/gstaudioringbuffer.c:
+	* gst-libs/gst/audio/gstaudioringbuffer.h:
+	  audioringbuffer: Also support raw AAC
+	  Support raw AAC streams without the ADTS header
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777655
+
+2017-01-20 23:28:23 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	  docs: update libs section
+	  Include documented symbols that were not declared in section file.
+
+2017-01-20 12:41:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff-media: Don't divide block align by zero channels
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777525
+
+2017-01-20 08:02:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/subparse/samiparse.c:
+	  samiparse: Check that the string has a non-zero length before overwriting the last byte with '\0'
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777502
+
+2017-01-15 18:42:34 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff-media: Don't recurse in for nested WAVEFORMATEX
+	  There was already a check for that, but it failed because
+	  subformat_guid[0] is a guint32 and that is then casted implicitely to a
+	  guint16 when recursing... just that we checked the uncasted value.
+	  This caused an infinite recursion and thus stack overflow.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777265
+
+2017-01-18 14:59:18 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: Don't leak blocked pad references on errors
+	  When the decodebin state change fails because of an error
+	  message, we might not go through PAUSED->READY. Don't leak
+	  a ref to decodebin pads due to pad blocking in that case.
+	  This is because we return ASYNC going to PAUSED, and if
+	  we fail before reaching PAUSED the only transition we'll
+	  see is READY->NULL.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775893
+
+2014-11-27 18:02:49 -0600  Carl Karsten <carl@personnelware.com>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/videotestsrc/videotestsrc.c:
+	* gst/videotestsrc/videotestsrc.h:
+	  videotestsrc: Add options to make ball pattern based on system time, and invert each second.
+	  This adds some extra options that affect pattern=ball mode, allowing the
+	  animation to be synced to running time or wall-time clock for comparing
+	  sync across different instances / pipelines / machines.
+	  Also added is the ability to invert the rendering colours every second,
+	  and some different ball motion patterns.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=740557
+
+2017-01-15 18:31:56 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff-media: Check for valid channels/rate before using the values
+	  Otherwise we might divide by zero or otherwise create invalid caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=777262
+
+2017-01-13 12:38:52 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: bump version
+
+2017-01-12 16:32:42 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.11.1 ===
+
+2017-01-12 15:30:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	  Release 1.11.1
+
+2017-01-12 14:37:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2017-01-12 14:35:09 +0200  Sebastian Dröge <sebastian@centricular.com>
 
