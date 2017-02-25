@@ -116,6 +116,7 @@ EXPORTS
 	gst_buffer_add_meta
 	gst_buffer_add_parent_buffer_meta
 	gst_buffer_add_protection_meta
+	gst_buffer_add_reference_timestamp_meta
 	gst_buffer_append
 	gst_buffer_append_memory
 	gst_buffer_append_region
@@ -135,6 +136,7 @@ EXPORTS
 	gst_buffer_get_memory
 	gst_buffer_get_memory_range
 	gst_buffer_get_meta
+	gst_buffer_get_reference_timestamp_meta
 	gst_buffer_get_size
 	gst_buffer_get_sizes
 	gst_buffer_get_sizes_range
@@ -1173,6 +1175,8 @@ EXPORTS
 	gst_query_type_to_quark
 	gst_query_writable_structure
 	gst_rank_get_type
+	gst_reference_timestamp_meta_api_get_type
+	gst_reference_timestamp_meta_get_info
 	gst_registry_add_feature
 	gst_registry_add_plugin
 	gst_registry_check_feature_version

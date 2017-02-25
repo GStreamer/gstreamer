@@ -263,6 +263,10 @@ GstParentBufferMeta
 gst_buffer_add_parent_buffer_meta
 gst_buffer_get_parent_buffer_meta
 
+GstReferenceTimestampMeta
+gst_buffer_add_reference_timestamp_meta
+gst_buffer_get_reference_timestamp_meta
+
 gst_buffer_get_flags
 gst_buffer_set_flags
 gst_buffer_unset_flags

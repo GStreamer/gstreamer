@@ -2538,3 +2538,172 @@ gst_parent_buffer_meta_get_info (void)
 
   return meta_info;
 }
+
+GST_DEBUG_CATEGORY_STATIC (gst_reference_timestamp_meta_debug);
+
+/**
+ * gst_buffer_add_reference_timestamp_meta:
+ * @buffer: (transfer none): a #GstBuffer
+ * @reference: (transfer none): identifier for the timestamp reference.
+ * @timestamp: timestamp
+ * @duration: duration, or %GST_CLOCK_TIME_NONE
+ *
+ * Add a #GstReferenceTimestampMeta to @buffer that holds a @timestamp and
+ * optionally @duration based on a specific timestamp @reference. See the
+ * documentation of #GstReferenceTimestampMeta for details.
+ *
+ * Returns: (transfer none): The #GstReferenceTimestampMeta that was added to the buffer
+ *
+ * Since: 1.14
+ */
+GstReferenceTimestampMeta *
+gst_buffer_add_reference_timestamp_meta (GstBuffer * buffer,
+    GstCaps * reference, GstClockTime timestamp, GstClockTime duration)
+{
+  GstReferenceTimestampMeta *meta;
+
+  g_return_val_if_fail (GST_IS_CAPS (reference), NULL);
+  g_return_val_if_fail (timestamp != GST_CLOCK_TIME_NONE, NULL);
+
+  meta =
+      (GstReferenceTimestampMeta *) gst_buffer_add_meta (buffer,
+      GST_REFERENCE_TIMESTAMP_META_INFO, NULL);
+
+  if (!meta)
+    return NULL;
+
+  meta->reference = gst_caps_ref (reference);
+  meta->timestamp = timestamp;
+  meta->duration = duration;
+
+  return meta;
+}
+
+/**
+ * gst_buffer_get_reference_timestamp_meta:
+ * @buffer: a #GstBuffer
+ * @reference: (allow-none): a reference #GstCaps
+ *
+ * Find the first #GstReferenceTimestampMeta on @buffer that conforms to
+ * @reference. Conformance is tested by checking if the meta's reference is a
+ * subset of @reference.
+ *
+ * Buffers can contain multiple #GstReferenceTimestampMeta metadata items.
+ *
+ * Returns: (transfer none): the #GstReferenceTimestampMeta or %NULL when there
+ * is no such metadata on @buffer.
+ *
+ * Since: 1.14
+ */
+GstReferenceTimestampMeta *
+gst_buffer_get_reference_timestamp_meta (GstBuffer * buffer,
+    GstCaps * reference)
+{
+  gpointer state = NULL;
+  GstMeta *meta;
+  const GstMetaInfo *info = GST_REFERENCE_TIMESTAMP_META_INFO;
+
+  while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
+    if (meta->info->api == info->api) {
+      GstReferenceTimestampMeta *rmeta = (GstReferenceTimestampMeta *) meta;
+
+      if (!reference)
+        return rmeta;
+      if (gst_caps_is_subset (rmeta->reference, reference))
+        return rmeta;
+    }
+  }
+  return NULL;
+}
+
+static gboolean
+_gst_reference_timestamp_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstReferenceTimestampMeta *dmeta, *smeta;
+
+  /* we copy over the reference timestamp meta, independent of transformation
+   * that happens. If it applied to the original buffer, it still applies to
+   * the new buffer as it refers to the time when the media was captured */
+  smeta = (GstReferenceTimestampMeta *) meta;
+  dmeta =
+      gst_buffer_add_reference_timestamp_meta (dest, smeta->reference,
+      smeta->timestamp, smeta->duration);
+  if (!dmeta)
+    return FALSE;
+
+  GST_CAT_DEBUG (gst_reference_timestamp_meta_debug,
+      "copy reference timestamp metadata from buffer %p to %p", buffer, dest);
+
+  return TRUE;
+}
+
+static void
+_gst_reference_timestamp_meta_free (GstReferenceTimestampMeta * meta,
+    GstBuffer * buffer)
+{
+  if (meta->reference)
+    gst_caps_unref (meta->reference);
+}
+
+static gboolean
+_gst_reference_timestamp_meta_init (GstReferenceTimestampMeta * meta,
+    gpointer params, GstBuffer * buffer)
+{
+  static volatile gsize _init;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (gst_reference_timestamp_meta_debug,
+        "referencetimestampmeta", 0, "referencetimestampmeta");
+    g_once_init_leave (&_init, 1);
+  }
+
+  meta->reference = NULL;
+  meta->timestamp = GST_CLOCK_TIME_NONE;
+  meta->duration = GST_CLOCK_TIME_NONE;
+
+  return TRUE;
+}
+
+GType
+gst_reference_timestamp_meta_api_get_type (void)
+{
+  static volatile GType type = 0;
+  static const gchar *tags[] = { NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type =
+        gst_meta_api_type_register ("GstReferenceTimestampMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+
+  return type;
+}
+
+/**
+ * gst_reference_timestamp_meta_get_info:
+ *
+ * Get the global #GstMetaInfo describing  the #GstReferenceTimestampMeta meta.
+ *
+ * Returns: (transfer none): The #GstMetaInfo
+ *
+ * Since: 1.14
+ */
+const GstMetaInfo *
+gst_reference_timestamp_meta_get_info (void)
+{
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
+    const GstMetaInfo *meta =
+        gst_meta_register (gst_reference_timestamp_meta_api_get_type (),
+        "GstReferenceTimestampMeta",
+        sizeof (GstReferenceTimestampMeta),
+        (GstMetaInitFunction) _gst_reference_timestamp_meta_init,
+        (GstMetaFreeFunction) _gst_reference_timestamp_meta_free,
+        _gst_reference_timestamp_meta_transform);
+    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) meta);
+  }
+
+  return meta_info;
+}
