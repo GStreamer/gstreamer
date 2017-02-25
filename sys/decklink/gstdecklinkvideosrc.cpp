@@ -55,6 +55,8 @@ typedef struct
 {
   IDeckLinkVideoInputFrame *frame;
   GstClockTime timestamp, duration;
+  GstClockTime stream_timestamp;
+  GstClockTime stream_duration;
   GstDecklinkModeEnum mode;
   BMDPixelFormat format;
   GstVideoTimeCode *tc;
@@ -684,6 +686,8 @@ gst_decklink_video_src_got_frame (GstElement * element,
     f.frame = frame;
     f.timestamp = timestamp;
     f.duration = duration;
+    f.stream_timestamp = stream_time;
+    f.stream_duration = stream_duration;
     f.mode = mode;
     f.format = frame->GetPixelFormat ();
     f.no_signal = no_signal;
@@ -743,6 +747,8 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   GstCaps *caps;
   gboolean caps_changed = FALSE;
   const GstDecklinkMode *mode;
+  static GstStaticCaps stream_reference =
+      GST_STATIC_CAPS ("timestamp/x-stream");
 
   g_mutex_lock (&self->lock);
   while (gst_queue_array_is_empty (self->current_frames) && !self->flushing) {
@@ -840,6 +846,9 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   GST_BUFFER_DURATION (*buffer) = f.duration;
   if (f.tc != NULL)
     gst_buffer_add_video_time_code_meta (*buffer, f.tc);
+  gst_buffer_add_reference_timestamp_meta (*buffer,
+      gst_static_caps_get (&stream_reference), f.stream_timestamp,
+      f.stream_duration);
 
   mode = gst_decklink_get_mode (self->mode);
   if (mode->interlaced && mode->tff)

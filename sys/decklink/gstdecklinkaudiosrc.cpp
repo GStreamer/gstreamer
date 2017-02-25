@@ -61,6 +61,8 @@ typedef struct
 {
   IDeckLinkAudioInputPacket *packet;
   GstClockTime timestamp;
+  GstClockTime stream_timestamp;
+  GstClockTime stream_duration;
   gboolean no_signal;
 } CapturePacket;
 
@@ -531,6 +533,8 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     memset (&p, 0, sizeof (p));
     p.packet = packet;
     p.timestamp = timestamp;
+    p.stream_timestamp = stream_time;
+    p.stream_duration = stream_duration;
     p.no_signal = no_signal;
     packet->AddRef ();
     gst_queue_array_push_tail_struct (self->current_packets, &p);
@@ -553,6 +557,8 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   GstClockTime start_time, end_time;
   guint64 start_offset, end_offset;
   gboolean discont = FALSE;
+  static GstStaticCaps stream_reference =
+      GST_STATIC_CAPS ("timestamp/x-stream");
 
 retry:
   g_mutex_lock (&self->lock);
@@ -666,6 +672,10 @@ retry:
     GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_GAP);
   GST_BUFFER_TIMESTAMP (*buffer) = timestamp;
   GST_BUFFER_DURATION (*buffer) = duration;
+
+  gst_buffer_add_reference_timestamp_meta (*buffer,
+      gst_static_caps_get (&stream_reference), p.stream_timestamp,
+      p.stream_duration);
 
   GST_DEBUG_OBJECT (self,
       "Outputting buffer %p with timestamp %" GST_TIME_FORMAT " and duration %"
