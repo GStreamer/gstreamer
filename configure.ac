@@ -496,6 +496,7 @@ AG_GST_CHECK_PLUGIN(videoconvert)
 AG_GST_CHECK_PLUGIN(gio)
 AG_GST_CHECK_PLUGIN(playback)
 AG_GST_CHECK_PLUGIN(audioresample)
+AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(subparse)
 AG_GST_CHECK_PLUGIN(tcp)
 AG_GST_CHECK_PLUGIN(typefind)
@@ -881,6 +882,7 @@ gst/videoconvert/Makefile
 gst/gio/Makefile
 gst/pbtypes/Makefile
 gst/playback/Makefile
+gst/rawparse/Makefile
 gst/subparse/Makefile
 gst/tcp/Makefile
 gst/typefind/Makefile

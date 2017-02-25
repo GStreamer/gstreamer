@@ -24,6 +24,8 @@ GstSubtitleOverlay GstChildProxy
 GstTheoraEnc GstPreset
 GstURIDecodeBin GstChildProxy
 GstURISourceBin GstChildProxy
+GstUnalignedAudioParse GstChildProxy
+GstUnalignedVideoParse GstChildProxy
 GstVideoEncoder GstPreset
 GstVolume GstStreamVolume
 GstVorbisEnc GstPreset GstTagSetter

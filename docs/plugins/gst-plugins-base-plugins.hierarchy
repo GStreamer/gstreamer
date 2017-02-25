@@ -31,6 +31,10 @@ GObject
             GstVisuallv_analyzer
             GstVisuallv_scope
             GstVisualoinksie
+        GstBaseParse
+          GstRawBaseParse
+            GstRawAudioParse
+            GstRawVideoParse
         GstBaseSink
           GstAppSink
           GstAudioBaseSink
@@ -89,6 +93,8 @@ GObject
           GstSubtitleOverlay
           GstURIDecodeBin
           GstURISourceBin
+          GstUnalignedAudioParse
+          GstUnalignedVideoParse
         GstOggAviParse
         GstOggDemux
         GstOggMux

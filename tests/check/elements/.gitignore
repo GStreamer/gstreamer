@@ -29,3 +29,5 @@ playbin-complex
 playsink
 streamsynchronizer
 subparse
+rawaudioparse
+rawvideoparse

@@ -3378,3 +3378,163 @@
 <DEFAULT>0</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstRawVideoParse::format</NAME>
+<TYPE>GstVideoFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format</NICK>
+<BLURB>Format of frames in raw stream.</BLURB>
+<DEFAULT>GST_VIDEO_FORMAT_I420</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::frame-stride</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame stride</NICK>
+<BLURB>Stride between whole frames (0 = frames are tightly packed together).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::framerate</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame rate</NICK>
+<BLURB>Rate of frames in raw stream.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Height</NICK>
+<BLURB>Height of frames in raw stream.</BLURB>
+<DEFAULT>240</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced flag</NICK>
+<BLURB>True if frames in raw stream are interlaced.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::pixel-aspect-ratio</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel aspect ratio</NICK>
+<BLURB>Pixel aspect ratio of frames in raw stream.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::plane-offsets</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Plane offsets</NICK>
+<BLURB>Offsets of the planes in bytes.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::plane-strides</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Plane strides</NICK>
+<BLURB>Strides of the planes in bytes.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::top-field-first</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Top field first</NICK>
+<BLURB>True if top field in frames in raw stream come first (not used if frames aren't interlaced).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Width of frames in raw stream.</BLURB>
+<DEFAULT>320</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::channel-positions</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel positions</NICK>
+<BLURB>Channel positions used on the output.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::format</NAME>
+<TYPE>GstRawAudioParseFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format</NICK>
+<BLURB>Format of the raw audio stream.</BLURB>
+<DEFAULT>PCM</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::interleaved</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interleaved layout</NICK>
+<BLURB>True if audio has interleaved layout.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::num-channels</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of channels</NICK>
+<BLURB>Number of channels in raw stream.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::pcm-format</NAME>
+<TYPE>GstAudioFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>PCM format</NICK>
+<BLURB>Format of audio samples in PCM stream (ignored if format property is not set to pcm).</BLURB>
+<DEFAULT>GST_AUDIO_FORMAT_UNKNOWN</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawAudioParse::sample-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sample rate</NICK>
+<BLURB>Rate of audio samples in raw stream.</BLURB>
+<DEFAULT>44100</DEFAULT>
+</ARG>
+

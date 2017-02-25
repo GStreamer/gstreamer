@@ -103,6 +103,12 @@ else
 check_typefind =
 endif
 
+if USE_PLUGIN_RAWPARSE
+check_rawparse = elements/rawaudioparse elements/rawvideoparse
+else
+check_rawparse =
+endif
+
 if USE_PLUGIN_SUBPARSE
 check_subparse = elements/subparse
 else
@@ -237,6 +243,7 @@ check_PROGRAMS = \
 	$(check_opus) \
 	$(check_pango) \
 	$(check_playback) \
+	$(check_rawparse) \
 	$(check_subparse) \
 	$(check_tcp) \
 	$(check_theora) \
@@ -520,6 +527,12 @@ elements_decodebin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_encodebin_LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la $(GST_BASE_LIBS) $(LDADD)
 elements_encodebin_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+
+elements_rawaudioparse_LDADD = $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la $(GST_BASE_LIBS) -lgstbase-@GST_API_VERSION@ $(LDADD)
+elements_rawaudioparse_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+
+elements_rawvideoparse_LDADD = $(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la $(GST_BASE_LIBS) -lgstbase-@GST_API_VERSION@ $(LDADD)
+elements_rawvideoparse_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_subparse_LDADD =  $(LDADD)
 elements_subparse_CFLAGS = $(CFLAGS) $(AM_CFLAGS)

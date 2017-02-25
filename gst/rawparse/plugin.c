@@ -7,18 +7,12 @@
 #include "gstrawvideoparse.h"
 #include "gstunalignedaudioparse.h"
 #include "gstunalignedvideoparse.h"
-#include "gstaudioparse.h"
-#include "gstvideoparse.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret;
+  gboolean ret = TRUE;
 
-  ret = gst_element_register (plugin, "videoparse", GST_RANK_NONE,
-      gst_video_parse_get_type ());
-  ret &= gst_element_register (plugin, "audioparse", GST_RANK_NONE,
-      gst_audio_parse_get_type ());
   ret &= gst_element_register (plugin, "unalignedaudioparse", GST_RANK_MARGINAL,
       gst_unaligned_audio_parse_get_type ());
   ret &= gst_element_register (plugin, "unalignedvideoparse", GST_RANK_MARGINAL,
