@@ -1,15 +1,10 @@
 raw_sources = [
-  'gstunalignedaudioparse.c',
-  'gstunalignedvideoparse.c',
   'gstaudioparse.c',
   'gstvideoparse.c',
-  'gstrawbaseparse.c',
-  'gstrawaudioparse.c',
-  'gstrawvideoparse.c',
   'plugin.c',
 ]
 
-gstrawparse = library('gstrawparse',
+gstlegacyrawparse = library('gstlegacyrawparse',
   raw_sources,
   c_args : gst_plugins_bad_args,
   include_directories : [configinc],

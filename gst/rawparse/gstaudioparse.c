@@ -37,16 +37,29 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include "gstaudioparse.h"
-#include "gstrawaudioparse.h"
-#include "unalignedaudio.h"
 
 #include <string.h>
+
+typedef enum _GstRawAudioParseFormat GstRawAudioParseFormat;
+enum _GstRawAudioParseFormat
+{
+  GST_RAW_AUDIO_PARSE_FORMAT_PCM,
+  GST_RAW_AUDIO_PARSE_FORMAT_MULAW,
+  GST_RAW_AUDIO_PARSE_FORMAT_ALAW
+};
 
 static GstStaticPadTemplate static_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
+
+#define GST_UNALIGNED_RAW_AUDIO_CAPS \
+  "audio/x-unaligned-raw" \
+  ", format = (string) " GST_AUDIO_FORMATS_ALL \
+  ", rate = (int) [ 1, MAX ]" \
+  ", channels = (int) [ 1, MAX ]" \
+  ", layout = (string) { interleaved, non-interleaved }"
 
 static GstStaticPadTemplate static_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",

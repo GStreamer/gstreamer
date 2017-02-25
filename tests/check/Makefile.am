@@ -268,8 +268,6 @@ check_PROGRAMS = \
 	elements/netsim \
 	elements/pcapparse \
 	elements/pnm \
-	elements/rawaudioparse \
-	elements/rawvideoparse \
 	elements/rtponvifparse \
 	elements/rtponviftimestamp \
 	elements/id3mux \
@@ -335,12 +333,6 @@ elements_h263parse_LDADD = libparser.la $(LDADD)
 elements_h264parse_LDADD = libparser.la $(LDADD)
 
 elements_pcapparse_LDADD = libparser.la $(LDADD)
-
-elements_rawaudioparse_LDADD = $(GST_BASE_LIBS) -lgstbase-@GST_API_VERSION@ $(GST_AUDIO_LIBS) $(LDADD)
-elements_rawaudioparse_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-
-elements_rawvideoparse_LDADD = $(GST_BASE_LIBS) -lgstbase-@GST_API_VERSION@ $(GST_VIDEO_LIBS) $(LDADD)
-elements_rawvideoparse_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 libs_mpegvideoparser_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \

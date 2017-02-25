@@ -68,6 +68,7 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/imagefreeze/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/mpeg4videoparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/qtmux/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/rawparse/.libs/libgstrawparse* \
 	$(top_builddir)/gst/rtp/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/rtpmux/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/rtpvp8/.libs/*.{so,dll,DLL,dylib} \
@@ -84,6 +85,8 @@ CRUFT_FILES = \
 	$(top_builddir)/tests/check/elements/dataurisrc \
 	$(top_builddir)/tests/check/elements/imagefreeze \
 	$(top_builddir)/tests/check/elements/qtmux \
+	$(top_builddir)/tests/check/elements/rawaudioparse \
+	$(top_builddir)/tests/check/elements/rawvideoparse \
 	$(top_builddir)/tests/check/elements/rtpmux \
 	$(top_builddir)/tests/check/elements/selector \
 	$(top_builddir)/tests/check/elements/valve \

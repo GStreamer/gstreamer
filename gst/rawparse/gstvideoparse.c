@@ -36,9 +36,8 @@
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include <gst/gst.h>
-#include <gst/audio/audio.h>
+#include <gst/video/video.h>
 #include "gstvideoparse.h"
-#include "gstrawvideoparse.h"
 
 static GstStaticPadTemplate static_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
