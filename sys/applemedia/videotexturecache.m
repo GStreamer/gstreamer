@@ -42,6 +42,13 @@ typedef struct _ContextThreadData
   GstMemory *memory;
 } ContextThreadData;
 
+typedef struct _TextureWrapper
+{
+    CVOpenGLESTextureCacheRef *cache;
+    CVOpenGLESTextureRef texture;
+
+} TextureWrapper;
+
 GstVideoTextureCache *
 gst_video_texture_cache_new (GstGLContext * ctx)
 {
@@ -129,6 +136,12 @@ gst_video_texture_cache_set_format (GstVideoTextureCache * cache,
 }
 
 #if HAVE_IOS
+void gst_video_texture_cache_release_texture(TextureWrapper *data) {
+    CFRelease(data->texture);
+    CFRelease(data->cache);
+    g_free(data);
+}
+
 static void
 _do_create_memory (GstGLContext * context, ContextThreadData * data)
 {
@@ -141,6 +154,7 @@ _do_create_memory (GstGLContext * context, ContextThreadData * data)
   GstGLTextureTarget gl_target;
   GstAppleCoreVideoMemory *memory;
   GstIOSGLMemory *gl_memory;
+  GstVideoGLTextureType textype;
 
   switch (GST_VIDEO_INFO_FORMAT (&cache->input_info)) {
       case GST_VIDEO_FORMAT_BGRA:
@@ -151,16 +165,10 @@ _do_create_memory (GstGLContext * context, ContextThreadData * data)
               GL_RGBA, GL_UNSIGNED_BYTE, 0, &texture) != kCVReturnSuccess)
           goto error;
 
-        gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
-        memory = gst_apple_core_video_memory_new_wrapped (gpixbuf, plane, size);
-        gl_memory = gst_ios_gl_memory_new_wrapped (context, memory,
-            gl_target, GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
-            CVOpenGLESTextureGetName (texture),
-            &cache->input_info,
-            0, NULL, texture, (GDestroyNotify) CFRelease);
-        break;
+        textype = GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
+        plane = 0;
+        goto success;
       case GST_VIDEO_FORMAT_NV12: {
-        GstVideoGLTextureType textype;
         GLenum texifmt, texfmt;
 
         if (plane == 0)
@@ -177,21 +185,27 @@ _do_create_memory (GstGLContext * context, ContextThreadData * data)
               texfmt, GL_UNSIGNED_BYTE, plane, &texture) != kCVReturnSuccess)
           goto error;
 
-        gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
-        memory = gst_apple_core_video_memory_new_wrapped (gpixbuf, plane, size);
-        gl_memory = gst_ios_gl_memory_new_wrapped (context, memory,
-                gl_target, textype, CVOpenGLESTextureGetName (texture), &cache->input_info,
-                plane, NULL, texture, (GDestroyNotify) CFRelease);
-        break;
+        goto success;
       }
     default:
       g_warn_if_reached ();
       goto error;
   }
 
+success: {
+  TextureWrapper *texture_data = g_new(TextureWrapper, 1);
+  texture_data->cache = CFRetain(cache->cache);
+  texture_data->texture = texture;
+  gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
+  memory = gst_apple_core_video_memory_new_wrapped (gpixbuf, plane, size);
+  gl_memory = gst_ios_gl_memory_new_wrapped (context, memory,
+      gl_target, textype, CVOpenGLESTextureGetName (texture), &cache->input_info,
+     plane, NULL, texture_data, (GDestroyNotify) gst_video_texture_cache_release_texture);
+
   data->memory = GST_MEMORY_CAST (gl_memory);
 
   return;
+}
 
 error:
   data->memory = NULL;
