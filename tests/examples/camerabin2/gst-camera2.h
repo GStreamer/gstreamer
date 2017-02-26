@@ -19,7 +19,7 @@
  */
 /*
  * This is a demo application to test the camerabin element.
- * If you have question don't hesitate in contact me edgard.lima@indt.org.br
+ * If you have question don't hesitate in contact me edgard.lima@gmail.com
  */
 
 #ifndef __GST_CAMERA_BIN_H__

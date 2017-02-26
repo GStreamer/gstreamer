@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) <2005> Edgard Lima <edgard.lima@gmail.com>
  * Copyright (C) <2006> Rosfran Borges <rosfran.borges@indt.org.br>
  * Copyright (C) <2006> Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>
  *

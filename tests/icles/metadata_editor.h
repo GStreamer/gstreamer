@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright 2007 Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright 2007 Edgard Lima <edgard.lima@gmail.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),

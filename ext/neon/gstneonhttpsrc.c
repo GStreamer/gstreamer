@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) <2005> Edgard Lima <edgard.lima@gmail.com>
  * Copyright (C) <2006> Rosfran Borges <rosfran.borges@indt.org.br>
  * Copyright (C) <2006> Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>
  *
@@ -208,7 +208,7 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
   gst_element_class_set_static_metadata (element_class, "HTTP client source",
       "Source/Network",
       "Receive data as a client over the network via HTTP using NEON",
-      "Edgard Lima <edgard.lima@indt.org.br>, "
+      "Edgard Lima <edgard.lima@gmail.com>, "
       "Rosfran Borges <rosfran.borges@indt.org.br>, "
       "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>");
 }
