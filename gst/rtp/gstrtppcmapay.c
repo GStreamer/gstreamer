@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) <2005> Edgard Lima <edgard.lima@gmail.com>
  * Copyright (C) <2005> Nokia Corporation <kai.vehmanen@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -74,7 +74,7 @@ gst_rtp_pcma_pay_class_init (GstRtpPcmaPayClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "RTP PCMA payloader",
       "Codec/Payloader/Network/RTP",
       "Payload-encodes PCMA audio into a RTP packet",
-      "Edgard Lima <edgard.lima@indt.org.br>");
+      "Edgard Lima <edgard.lima@gmail.com>");
 
   gstrtpbasepayload_class->set_caps = gst_rtp_pcma_pay_setcaps;
 }

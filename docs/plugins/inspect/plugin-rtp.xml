@@ -1295,7 +1295,7 @@
       <longname>RTP PCMA depayloader</longname>
       <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts PCMA audio from RTP packets</description>
-      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
+      <author>Edgard Lima &lt;edgard.lima@gmail.com&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -1316,7 +1316,7 @@
       <longname>RTP PCMA payloader</longname>
       <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes PCMA audio into a RTP packet</description>
-      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
+      <author>Edgard Lima &lt;edgard.lima@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -1337,7 +1337,7 @@
       <longname>RTP PCMU depayloader</longname>
       <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts PCMU audio from RTP packets</description>
-      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
+      <author>Edgard Lima &lt;edgard.lima@gmail.com&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -1358,7 +1358,7 @@
       <longname>RTP PCMU payloader</longname>
       <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes PCMU audio into a RTP packet</description>
-      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
+      <author>Edgard Lima &lt;edgard.lima@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -1505,7 +1505,7 @@
       <longname>RTP Speex depayloader</longname>
       <class>Codec/Depayloader/Network/RTP</class>
       <description>Extracts Speex audio from RTP packets</description>
-      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
+      <author>Edgard Lima &lt;edgard.lima@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -1526,7 +1526,7 @@
       <longname>RTP Speex payloader</longname>
       <class>Codec/Payloader/Network/RTP</class>
       <description>Payload-encodes Speex audio into a RTP packet</description>
-      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
+      <author>Edgard Lima &lt;edgard.lima@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

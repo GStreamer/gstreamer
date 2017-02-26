@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
- *               2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@gmail.com>
  *
  * gstv4l2src.c: Video4Linux2 source element
  *
@@ -165,7 +165,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Video (video4linux2) Source", "Source/Video",
       "Reads frames from a Video4Linux2 device",
-      "Edgard Lima <edgard.lima@indt.org.br>, "
+      "Edgard Lima <edgard.lima@gmail.com>, "
       "Stefan Kost <ensonic@users.sf.net>");
 
   gst_element_class_add_pad_template

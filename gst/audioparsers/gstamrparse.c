@@ -1,5 +1,5 @@
 /* GStreamer Adaptive Multi-Rate parser plugin
- * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@gmail.com>
  * Copyright (C) 2008 Nokia Corporation. All rights reserved.
  *
  * Contact: Stefan Kost <stefan.kost@nokia.com>

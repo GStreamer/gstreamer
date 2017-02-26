@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
- *               2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@gmail.com>
  *               2009 Texas Instruments, Inc - http://www.ti.com/
  *
  * gstv4l2bufferpool.h V4L2 buffer pool class

@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
- *               2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@gmail.com>
  *
  * gstv4l2.c: plugin for v4l2 elements
  *

@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) <2005> Edgard Lima <edgard.lima@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -86,7 +86,7 @@ gst_rtp_speex_depay_class_init (GstRtpSPEEXDepayClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP Speex depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts Speex audio from RTP packets",
-      "Edgard Lima <edgard.lima@indt.org.br>");
+      "Edgard Lima <edgard.lima@gmail.com>");
 }
 
 static void

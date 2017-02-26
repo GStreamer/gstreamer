@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) <2005> Edgard Lima <edgard.lima@gmail.com>
  * Copyright (C) <2005> Zeeshan Ali <zeenix@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -87,7 +87,7 @@ gst_rtp_pcma_depay_class_init (GstRtpPcmaDepayClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP PCMA depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts PCMA audio from RTP packets",
-      "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>");
+      "Edgard Lima <edgard.lima@gmail.com>, Zeeshan Ali <zeenix@gmail.com>");
 
   gstrtpbasedepayload_class->process_rtp_packet = gst_rtp_pcma_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_pcma_depay_setcaps;

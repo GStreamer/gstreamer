@@ -38,7 +38,7 @@
       <longname>Video (video4linux2) Source</longname>
       <class>Source/Video</class>
       <description>Reads frames from a Video4Linux2 device</description>
-      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
+      <author>Edgard Lima &lt;edgard.lima@gmail.com&gt;, Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
       <pads>
         <caps>
           <name>src</name>

@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
- *               2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@gmail.com>
  *
  * gstv4l2tuner.c: tuner interface implementation for V4L2
  *

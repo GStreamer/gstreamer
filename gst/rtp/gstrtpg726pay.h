@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2005 Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) 2005 Edgard Lima <edgard.lima@gmail.com>
  * Copyright (C) 2007,2008 Axis Communications <dev-gstreamer@axis.com>
  *
  * This library is free software; you can redistribute it and/or

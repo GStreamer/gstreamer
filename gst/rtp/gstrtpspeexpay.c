@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) <2005> Edgard Lima <edgard.lima@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -87,7 +87,7 @@ gst_rtp_speex_pay_class_init (GstRtpSPEEXPayClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "RTP Speex payloader", "Codec/Payloader/Network/RTP",
       "Payload-encodes Speex audio into a RTP packet",
-      "Edgard Lima <edgard.lima@indt.org.br>");
+      "Edgard Lima <edgard.lima@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (rtpspeexpay_debug, "rtpspeexpay", 0,
       "Speex RTP Payloader");

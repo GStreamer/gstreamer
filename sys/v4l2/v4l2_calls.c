@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
- *               2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@gmail.com>
  *
  * v4l2_calls.c - generic V4L2 calls handling
  *

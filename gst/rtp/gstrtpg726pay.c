@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) 2005 Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) 2005 Edgard Lima <edgard.lima@gmail.com>
  * Copyright (C) 2005 Nokia Corporation <kai.vehmanen@nokia.com>
  * Copyright (C) 2007,2008 Axis Communications <dev-gstreamer@axis.com>
  *

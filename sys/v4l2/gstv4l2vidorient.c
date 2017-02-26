@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@gmail.com>
  *
  * gstv4l2vidorient.c: video orientation interface implementation for V4L2
  *
