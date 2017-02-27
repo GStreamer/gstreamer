@@ -205,8 +205,9 @@ gst_mpeg_audio_parse_reset (GstMpegAudioParse * mp3parse)
   mp3parse->xing_total_time = 0;
   mp3parse->xing_bytes = 0;
   mp3parse->xing_vbr_scale = 0;
-  memset (mp3parse->xing_seek_table, 0, 100);
-  memset (mp3parse->xing_seek_table_inverse, 0, 256);
+  memset (mp3parse->xing_seek_table, 0, sizeof (mp3parse->xing_seek_table));
+  memset (mp3parse->xing_seek_table_inverse, 0,
+      sizeof (mp3parse->xing_seek_table_inverse));
 
   mp3parse->vbri_bitrate = 0;
   mp3parse->vbri_frames = 0;
@@ -947,8 +948,9 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
     skip_toc:
       data += 100;
     } else {
-      memset (mp3parse->xing_seek_table, 0, 100);
-      memset (mp3parse->xing_seek_table_inverse, 0, 256);
+      memset (mp3parse->xing_seek_table, 0, sizeof (mp3parse->xing_seek_table));
+      memset (mp3parse->xing_seek_table_inverse, 0,
+          sizeof (mp3parse->xing_seek_table_inverse));
     }
 
     if (xing_flags & XING_VBR_SCALE_FLAG) {
