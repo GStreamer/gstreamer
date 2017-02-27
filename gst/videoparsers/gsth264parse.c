@@ -1791,6 +1791,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     }
 
     if (G_UNLIKELY (modified || h264parse->update_caps)) {
+      GstVideoInterlaceMode imode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
       gint width, height;
       GstClockTime latency;
 
@@ -1864,7 +1865,14 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
           gst_base_parse_set_latency (GST_BASE_PARSE (h264parse), latency,
               latency);
         }
+
       }
+      if (sps->frame_mbs_only_flag == 0)
+        imode = GST_VIDEO_INTERLACE_MODE_MIXED;
+
+      if (s && !gst_structure_has_field (s, "interlace-mode"))
+        gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
+            gst_video_interlace_mode_to_string (imode), NULL);
     }
   }
 
