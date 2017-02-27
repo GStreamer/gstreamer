@@ -1925,6 +1925,18 @@ gst_qt_mux_send_moov (GstQTMux * qtmux, guint64 * _offset,
   guint8 *data;
   GstBuffer *buf;
   GstFlowReturn ret = GST_FLOW_OK;
+  GSList *walk;
+  guint64 current_time = atoms_get_current_qt_time ();
+
+  /* update modification times */
+  qtmux->moov->mvhd.time_info.modification_time = current_time;
+  for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+    GstCollectData *cdata = (GstCollectData *) walk->data;
+    GstQTPad *qtpad = (GstQTPad *) cdata;
+
+    qtpad->trak->mdia.mdhd.time_info.modification_time = current_time;
+    qtpad->trak->tkhd.modification_time = current_time;
+  }
 
   /* serialize moov */
   offset = size = 0;

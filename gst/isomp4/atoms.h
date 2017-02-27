@@ -903,6 +903,8 @@ struct _AtomInfo
   AtomFreeFunc free_func;
 };
 
+guint64    atoms_get_current_qt_time   (void);
+
 guint64    atom_copy_data              (Atom *atom, guint8 **buffer,
                                         guint64 *size, guint64* offset);
 

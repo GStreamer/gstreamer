@@ -75,8 +75,8 @@ atoms_context_free (AtomsContext * context)
 #define SECS_PER_DAY (24 * 60 * 60)
 #define LEAP_YEARS_FROM_1904_TO_1970 17
 
-static guint64
-get_current_qt_time (void)
+guint64
+atoms_get_current_qt_time (void)
 {
   GTimeVal timeval;
 
@@ -89,7 +89,7 @@ get_current_qt_time (void)
 static void
 common_time_info_init (TimeInfo * ti)
 {
-  ti->creation_time = ti->modification_time = get_current_qt_time ();
+  ti->creation_time = ti->modification_time = atoms_get_current_qt_time ();
   ti->timescale = 0;
   ti->duration = 0;
 }
@@ -1143,7 +1143,7 @@ atom_tkhd_init (AtomTKHD * tkhd, AtomsContext * context)
 
   atom_full_init (&tkhd->header, FOURCC_tkhd, 0, 0, 0, flags);
 
-  tkhd->creation_time = tkhd->modification_time = get_current_qt_time ();
+  tkhd->creation_time = tkhd->modification_time = atoms_get_current_qt_time ();
   tkhd->duration = 0;
   tkhd->track_ID = 0;
   tkhd->reserved = 0;
