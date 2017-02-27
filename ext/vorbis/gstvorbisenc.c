@@ -306,6 +306,7 @@ gst_vorbis_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   vorbisenc->frequency = GST_AUDIO_INFO_RATE (info);
 
   /* if re-configured, we were drained and cleared already */
+  vorbisenc->header_sent = FALSE;
   if (!gst_vorbis_enc_setup (vorbisenc))
     return FALSE;
 
