@@ -2998,7 +2998,7 @@ gst_asf_demux_parse_stream_object (GstASFDemux * demux, guint8 * data,
 
   flags = gst_asf_demux_get_uint16 (&data, &size);
   stream_id = flags & 0x7f;
-  is_encrypted = ! !((flags & 0x8000) << 15);
+  is_encrypted = ! !(flags & 0x8000);
   unknown = gst_asf_demux_get_uint32 (&data, &size);
 
   GST_DEBUG_OBJECT (demux, "Found stream %u, time_offset=%" GST_TIME_FORMAT,
