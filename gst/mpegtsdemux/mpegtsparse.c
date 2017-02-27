@@ -706,7 +706,10 @@ mpegts_parse_inspect_packet (MpegTSBase * base, MpegTSPacketizerPacket * packet)
       parse->pcr_pid = packet->pid;
     /* Check the PCR-PID matches the program we want for multiple programs */
     if (parse->pcr_pid == packet->pid) {
-      parse->current_pcr = PCRTIME_TO_GSTTIME (packet->pcr);
+      parse->current_pcr = mpegts_packetizer_pts_to_ts (base->packetizer,
+          PCRTIME_TO_GSTTIME (packet->pcr), parse->pcr_pid);
+      GST_DEBUG ("Got new PCR %" GST_TIME_FORMAT " raw %" G_GUINT64_FORMAT,
+          GST_TIME_ARGS (parse->current_pcr), packet->pcr);
       if (parse->base_pcr == GST_CLOCK_TIME_NONE) {
         parse->base_pcr = parse->current_pcr;
       }
@@ -739,7 +742,6 @@ get_pending_timestamp_diff (MpegTSParse2 * parse)
 static GstFlowReturn
 drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all)
 {
-  MpegTSBase *base = (MpegTSBase *) (parse);
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime start_ts;
   GstClockTime pcr = GST_CLOCK_TIME_NONE;
@@ -775,8 +777,7 @@ drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all)
     return GST_FLOW_OK;
 
   if (GST_CLOCK_TIME_IS_VALID (parse->current_pcr)) {
-    pcr = mpegts_packetizer_pts_to_ts (base->packetizer,
-        parse->current_pcr, parse->pcr_pid);
+    pcr = parse->current_pcr;
     parse->current_pcr = GST_CLOCK_TIME_NONE;
   }
 
@@ -868,8 +869,7 @@ mpegts_parse_input_done (MpegTSBase * base, GstBuffer * buffer)
     GST_DEBUG_OBJECT (parse,
         "InputTS %" GST_TIME_FORMAT " PCR %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
-        GST_TIME_ARGS (mpegts_packetizer_pts_to_ts (base->packetizer,
-                parse->current_pcr, parse->pcr_pid)));
+        GST_TIME_ARGS (parse->current_pcr));
   }
 
   if (parse->set_timestamps || parse->first) {
