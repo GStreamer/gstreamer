@@ -19,6 +19,7 @@
  */
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
+#include <gst/audio/audio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -1329,6 +1330,95 @@ GST_START_TEST (rtp_gst_custom_event)
 
 GST_END_TEST;
 
+GST_START_TEST (rtp_vorbis_renegotiate)
+{
+  GstElement *pipeline;
+  GstElement *enc, *pay, *depay, *dec, *sink;
+  GstPad *sinkpad, *srcpad;
+  GstCaps *templcaps, *caps, *filter, *srccaps;
+  GstSegment segment;
+  GstBuffer *buffer;
+  GstMapInfo map;
+  GstAudioInfo info;
+
+  pipeline = gst_pipeline_new (NULL);
+  enc = gst_element_factory_make ("vorbisenc", NULL);
+  pay = gst_element_factory_make ("rtpvorbispay", NULL);
+  depay = gst_element_factory_make ("rtpvorbisdepay", NULL);
+  dec = gst_element_factory_make ("vorbisdec", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+  g_object_set (sink, "async", FALSE, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), enc, pay, depay, dec, sink, NULL);
+  fail_unless (gst_element_link_many (enc, pay, depay, dec, sink, NULL));
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  sinkpad = gst_element_get_static_pad (enc, "sink");
+  srcpad = gst_element_get_static_pad (dec, "src");
+
+  templcaps = gst_pad_get_pad_template_caps (sinkpad);
+  filter =
+      gst_caps_new_simple ("audio/x-raw", "channels", G_TYPE_INT, 2, "rate",
+      G_TYPE_INT, 44100, NULL);
+  caps = gst_caps_intersect (templcaps, filter);
+  caps = gst_caps_fixate (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_send_event (sinkpad,
+          gst_event_new_stream_start ("test")));
+  fail_unless (gst_pad_send_event (sinkpad, gst_event_new_caps (caps)));
+  fail_unless (gst_pad_send_event (sinkpad, gst_event_new_segment (&segment)));
+
+  gst_audio_info_from_caps (&info, caps);
+  buffer = gst_buffer_new_and_alloc (44100 * info.bpf);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  gst_audio_format_fill_silence (info.finfo, map.data, map.size);
+  gst_buffer_unmap (buffer, &map);
+  GST_BUFFER_PTS (buffer) = 0;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+
+  fail_unless_equals_int (gst_pad_chain (sinkpad, buffer), GST_FLOW_OK);
+
+  srccaps = gst_pad_get_current_caps (srcpad);
+  fail_unless (gst_caps_can_intersect (srccaps, caps));
+  gst_caps_unref (srccaps);
+
+  gst_caps_unref (caps);
+  gst_caps_unref (filter);
+  filter =
+      gst_caps_new_simple ("audio/x-raw", "channels", G_TYPE_INT, 2, "rate",
+      G_TYPE_INT, 48000, NULL);
+  caps = gst_caps_intersect (templcaps, filter);
+  caps = gst_caps_fixate (caps);
+
+  fail_unless (gst_pad_send_event (sinkpad, gst_event_new_caps (caps)));
+
+  gst_audio_info_from_caps (&info, caps);
+  buffer = gst_buffer_new_and_alloc (48000 * info.bpf);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  gst_audio_format_fill_silence (info.finfo, map.data, map.size);
+  gst_buffer_unmap (buffer, &map);
+  GST_BUFFER_PTS (buffer) = 0;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+
+  fail_unless_equals_int (gst_pad_chain (sinkpad, buffer), GST_FLOW_OK);
+
+  srccaps = gst_pad_get_current_caps (srcpad);
+  fail_unless (gst_caps_can_intersect (srccaps, caps));
+  gst_caps_unref (srccaps);
+
+  gst_caps_unref (caps);
+  gst_caps_unref (filter);
+  gst_caps_unref (templcaps);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 /*
  * Creates the test suite.
  *
@@ -1388,6 +1478,7 @@ rtp_payloading_suite (void)
     tcase_add_loop_test (tc_chain, rtp_jpeg_packet_loss, 0, 7);
   tcase_add_test (tc_chain, rtp_g729);
   tcase_add_test (tc_chain, rtp_gst_custom_event);
+  tcase_add_test (tc_chain, rtp_vorbis_renegotiate);
   return s;
 }
 
