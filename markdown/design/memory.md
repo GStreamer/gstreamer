@@ -5,6 +5,20 @@ This document describes the design of the memory objects.
 `GstMemory` objects are usually added to `GstBuffer` objects and contain the
 multimedia data passed around in the pipeline.
 
+``` c
+struct GstMemory {
+  GstMiniObject   mini_object;
+
+  GstAllocator   *allocator;
+
+  GstMemory      *parent;
+  gsize           maxsize;
+  gsize           align;
+  gsize           offset;
+  gsize           size;
+};
+```
+
 ## Requirements
 
 - It must be possible to have different memory allocators
