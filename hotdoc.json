@@ -1,4 +1,5 @@
 {
+    "project_version": "1.0",
     "add_anchors": true, 
     "extra_assets": [
         "images"
