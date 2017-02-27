@@ -2983,17 +2983,17 @@ gst_adaptive_demux_stream_download_uri (GstAdaptiveDemux * demux,
         *http_status = stream->last_status_code;
       }
     }
+
+    /* changing src element state might try to join the streaming thread, so
+     * we must not hold the manifest lock.
+     */
+    GST_MANIFEST_UNLOCK (demux);
   } else {
     GST_MANIFEST_UNLOCK (demux);
     if (stream->last_ret == GST_FLOW_OK)
       stream->last_ret = GST_FLOW_CUSTOM_ERROR;
     ret = GST_FLOW_CUSTOM_ERROR;
   }
-
-  /* changing src element state might try to join the streaming thread, so
-   * we must not hold the manifest lock.
-   */
-  GST_MANIFEST_UNLOCK (demux);
 
   stream->src_at_ready = FALSE;
 
