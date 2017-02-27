@@ -12,13 +12,10 @@ multimedia data passed around in the pipeline.
 
 ## Memory layout
 
-`GstMemory` manages a memory region. The accessible part of the managed region
-is defined by an offset relative to the start of the region and a size. This
-means that the managed region can be larger than what is visible to the user of
-`GstMemory` API.
-
-Schematically, `GstMemory` has a pointer to a memory region of _maxsize_. The
-area starting from `offset` and `size` is accessible.
+A `GstMemory` has a pointer to a memory region of `maxsize`. The accessible part
+of this managed region is defined by an `offset` relative to the start of the
+region and a `size`. This means that the managed region can be larger than what
+is visible to the user of the `GstMemory` API.
 
 ```
            memory
