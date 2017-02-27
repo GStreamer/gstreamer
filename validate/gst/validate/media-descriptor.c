@@ -407,7 +407,7 @@ compare_frames_list (GstValidateMediaDescriptor * ref,
 }
 
 static GstCaps *
-_caps_cleanup_format_specific_fields (GstCaps * caps)
+caps_cleanup_parsing_fields (GstCaps * caps)
 {
   gint i;
   GstCaps *res = gst_caps_copy (caps);
@@ -415,9 +415,8 @@ _caps_cleanup_format_specific_fields (GstCaps * caps)
   for (i = 0; i < gst_caps_get_size (res); i++) {
     GstStructure *s = gst_caps_get_structure (res, i);
 
-    if (gst_structure_has_name (s, "video/x-h264")) {
-      gst_structure_remove_fields (s, "stream-format", "codec_data", NULL);
-    }
+    gst_structure_remove_fields (s, "stream-format", "codec_data", "parsed",
+        "frames", "alignment", NULL);
   }
 
   return res;
@@ -429,8 +428,8 @@ compare_streams (GstValidateMediaDescriptor * ref,
     GstValidateMediaStreamNode * rstream, GstValidateMediaStreamNode * cstream)
 {
   if (stream_id_is_equal (ref->filenode->uri, rstream->id, cstream->id)) {
-    GstCaps *rcaps = _caps_cleanup_format_specific_fields (rstream->caps),
-        *ccaps = _caps_cleanup_format_specific_fields (cstream->caps);
+    GstCaps *rcaps = caps_cleanup_parsing_fields (rstream->caps),
+        *ccaps = caps_cleanup_parsing_fields (cstream->caps);
     gchar *rcaps_str = gst_caps_to_string (rcaps),
         *ccaps_str = gst_caps_to_string (ccaps);
 
