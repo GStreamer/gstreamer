@@ -33,8 +33,10 @@ import urllib.parse
 import subprocess
 import threading
 import queue
-from . import reporters
 import configparser
+import xml
+
+from . import reporters
 from . import loggable
 from .loggable import Loggable
 import xml.etree.cElementTree as ET
@@ -1923,7 +1925,12 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         super(GstValidateMediaDescriptor, self).__init__()
 
         self._xml_path = xml_path
-        self.media_xml = ET.parse(xml_path).getroot()
+        try:
+            self.media_xml = ET.parse(xml_path).getroot()
+        except xml.etree.ElementTree.ParseError:
+            printc("Could not parse %s" % xml_path,
+                   Colors.FAIL)
+            raise
 
         # Sanity checks
         self.media_xml.attrib["duration"]
