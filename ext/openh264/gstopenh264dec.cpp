@@ -37,6 +37,12 @@
 #include <gst/video/gstvideodecoder.h>
 #include <string.h>             /* for memcpy */
 
+#if OPENH264_VERSION_CHECK (1,9)
+#define HAVE_OPENH264_MAIN_PROFILE 1
+#else
+#define HAVE_OPENH264_MAIN_PROFILE 0
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_openh264dec_debug_category);
 #define GST_CAT_DEFAULT gst_openh264dec_debug_category
 
@@ -62,7 +68,12 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS
     ("video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, "
-        "profile=(string){ constrained-baseline, baseline}"));
+#if HAVE_OPENH264_MAIN_PROFILE
+        "profile=(string){ constrained-baseline, baseline, main, high }"
+#else
+        "profile=(string){ constrained-baseline, baseline }"
+#endif
+    ));
 
 static GstStaticPadTemplate gst_openh264dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
