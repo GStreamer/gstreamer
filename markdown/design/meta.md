@@ -386,8 +386,8 @@ We need to make sure that elements exchange metadata that they both
 understand, This is particularly important when the metadata describes
 the data layout in memory (such as strides).
 
-The ALLOCATION query is used to let upstream know what metadata we can
-suport.
+The `ALLOCATION` query is used to let upstream know what metadata we can
+support.
 
 It is also possible to have a bufferpool add certain metadata to the
 buffers from the pool. This feature is activated by enabling a buffer
