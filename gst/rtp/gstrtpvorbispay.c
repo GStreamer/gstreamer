@@ -780,17 +780,45 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   /* we need to collect the headers and construct a config string from them */
   if (VDT != 0) {
+    rtpvorbispay->need_headers = TRUE;
     if (!rtpvorbispay->need_headers && VDT == 1) {
       GST_INFO_OBJECT (rtpvorbispay, "getting new headers, replace existing");
       g_list_free_full (rtpvorbispay->headers,
           (GDestroyNotify) gst_buffer_unref);
       rtpvorbispay->headers = NULL;
-      rtpvorbispay->need_headers = TRUE;
     }
     GST_DEBUG_OBJECT (rtpvorbispay, "collecting header");
-    /* append header to the list of headers */
+    /* append header to the list of headers, or replace
+     * if the same type of header was already in there.
+     *
+     * This prevents storing an infinite amount of e.g. comment headers, there
+     * must only be one */
     gst_buffer_unmap (buffer, &map);
-    rtpvorbispay->headers = g_list_append (rtpvorbispay->headers, buffer);
+
+    if (rtpvorbispay->headers) {
+      gboolean found = FALSE;
+      GList *l;
+      guint8 new_header_type;
+
+      gst_buffer_extract (buffer, 0, &new_header_type, 1);
+
+      for (l = rtpvorbispay->headers; l; l = l->next) {
+        GstBuffer *header = l->data;
+        guint8 header_type;
+
+        if (gst_buffer_extract (header, 0, &header_type, 1)
+            && header_type == new_header_type) {
+          found = TRUE;
+          gst_buffer_unref (header);
+          l->data = buffer;
+        }
+      }
+      if (!found)
+        rtpvorbispay->headers = g_list_append (rtpvorbispay->headers, buffer);
+    } else {
+      rtpvorbispay->headers = g_list_append (rtpvorbispay->headers, buffer);
+    }
+
     ret = GST_FLOW_OK;
     goto done;
   } else if (rtpvorbispay->headers && rtpvorbispay->need_headers) {
