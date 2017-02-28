@@ -79,6 +79,7 @@ MotionCells::MotionCells ()
   m_cellwidth = 0;
   m_cellheight = 0;
   m_sensitivity = 0;
+  m_changed_datafile = false;
 
   memset (&m_header, 0, sizeof (MotionCellHeader));
   m_header.headersize = GINT32_TO_BE (MC_HEADER);
