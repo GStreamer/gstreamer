@@ -101,6 +101,7 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
 
   if (old_track_width && pos->width == old_track_width &&
       old_track_height && pos->height == old_track_height &&
+      pos->track_height && pos->track_width &&
       ((float) old_track_width / (float) old_track_height) ==
       ((float) pos->track_width / (float) pos->track_height)) {
 
