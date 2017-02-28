@@ -1236,6 +1236,7 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263Pay * rtph263pay,
   return mac;
 
 beach:
+  gst_rtp_h263_pay_mb_destroy (mac);
   return NULL;
 }
 
