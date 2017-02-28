@@ -675,9 +675,13 @@ unsupported_gl_api:
   }
 context_error:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("%s", error->message),
-        (NULL));
-    g_clear_error (&error);
+    if (error) {
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("%s", error->message),
+          (NULL));
+      g_clear_error (&error);
+    } else {
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), (NULL));
+    }
     if (src->context)
       gst_object_unref (src->context);
     src->context = NULL;
