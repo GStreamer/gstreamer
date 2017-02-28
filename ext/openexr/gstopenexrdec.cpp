@@ -342,7 +342,7 @@ gst_openexr_dec_handle_frame (GstVideoDecoder * decoder,
         MemIStream (gst_pad_get_stream_id (GST_VIDEO_DECODER_SINK_PAD
             (decoder)), map.data, map.size);
   }
-  catch (Iex::BaseExc e) {
+  catch (Iex::BaseExc& e) {
     gst_video_codec_frame_unref (frame);
 
     GST_ELEMENT_ERROR (self, CORE, FAILED,
