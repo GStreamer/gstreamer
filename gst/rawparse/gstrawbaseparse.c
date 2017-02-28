@@ -525,6 +525,7 @@ gst_raw_base_parse_handle_frame (GstBaseParse * parse,
   frame_size =
       klass->get_config_frame_size (raw_base_parse,
       GST_RAW_BASE_PARSE_CONFIG_CURRENT);
+  g_assert (frame_size > 0);
 
   in_size = gst_buffer_get_size (frame->buffer);
 
