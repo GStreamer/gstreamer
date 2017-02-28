@@ -7814,11 +7814,16 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 
     prev_caps = gst_pad_get_current_caps (stream->pad);
 
-    if (!prev_caps || !gst_caps_is_equal_fixed (prev_caps, stream->caps)) {
-      GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT, stream->caps);
-      gst_pad_set_caps (stream->pad, stream->caps);
+    if (stream->caps) {
+      if (!prev_caps || !gst_caps_is_equal_fixed (prev_caps, stream->caps)) {
+        GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT,
+            stream->caps);
+        gst_pad_set_caps (stream->pad, stream->caps);
+      } else {
+        GST_DEBUG_OBJECT (qtdemux, "ignore duplicated caps");
+      }
     } else {
-      GST_DEBUG_OBJECT (qtdemux, "ignore duplicated caps");
+      GST_WARNING_OBJECT (qtdemux, "stream without caps");
     }
 
     if (prev_caps)
