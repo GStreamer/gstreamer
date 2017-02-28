@@ -1259,9 +1259,6 @@ app_init (void)
 
   ret->selected_type = G_TYPE_NONE;
 
-  if (!ret)
-    return NULL;
-
   if (!(ret->timeline = ges_timeline_new ()))
     goto fail;
 
