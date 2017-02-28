@@ -206,7 +206,13 @@ parse_chain_output_probe (GstPad * pad, GstPadProbeInfo * info,
       {
         GstStream *stream = NULL;
         guint group_id = G_MAXUINT32;
-        gst_event_parse_group_id (ev, &group_id);
+
+        if (!gst_event_parse_group_id (ev, &group_id)) {
+          GST_FIXME_OBJECT (pad,
+              "Consider implementing group-id handling on stream-start event");
+          group_id = gst_util_group_id_next ();
+        }
+
         GST_DEBUG_OBJECT (pad, "Got stream-start, group_id:%d, input %p",
             group_id, input->input);
         if (set_input_group_id (input->input, &group_id)) {
