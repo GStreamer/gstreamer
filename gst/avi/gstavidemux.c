@@ -2646,7 +2646,7 @@ gst_avi_demux_index_for_time (GstAviDemux * avi,
       index = avi_stream_convert_time_to_frames_unchecked (stream, time);
       /* this entry typically undershoots the target time,
        * so check a bit more if next needed */
-      if (next) {
+      if (next && index != -1) {
         GstClockTime itime =
             avi_stream_convert_frames_to_time_unchecked (stream, index);
         if (itime < time && index + 1 < stream->idx_n)
