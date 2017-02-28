@@ -314,14 +314,23 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
   }
 
   if (flags & 0x10) {
-    /* P-STD */
+    /* P-STD
+     * '01'               :  2 bits
+     * P-STD_buffer_scale :  1 bit
+     * P-STD_buffer_size  : 13 bits
+     * */
     if (G_UNLIKELY (length < 2))
       goto need_more_data;
     val8 = *data;
     if (G_UNLIKELY ((val8 & 0xc0) != 0x40))
       goto bad_P_STD_marker;
+    /* If P-STD_buffer_scale is 0
+     *   multiply by 128 (i.e. << 7),
+     * else
+     *   multiply by 1024 (i.e. << 10)
+     */
     res->P_STD_buffer_size =
-        (GST_READ_UINT16_BE (data) & 0x1fff) << (val8 & 0x20) ? 10 : 7;
+        (GST_READ_UINT16_BE (data) & 0x1fff) << ((val8 & 0x20) ? 10 : 7);
     GST_LOG ("P_STD_buffer_size : %d", res->P_STD_buffer_size);
     data += 2;
     length -= 2;
