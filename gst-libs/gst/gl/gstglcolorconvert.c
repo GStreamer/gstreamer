@@ -2453,6 +2453,7 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
   struct ConvertInfo *c_info = &convert->priv->convert_info;
   guint out_width, out_height;
   gint i;
+  gboolean ret = TRUE;
 
   GLint viewport_dim[4] = { 0 };
 
@@ -2525,9 +2526,10 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
   gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
       viewport_dim[3]);
 
-  gst_gl_context_check_framebuffer_status (context);
+  if (!gst_gl_context_check_framebuffer_status (context))
+    ret = FALSE;
 
   gst_gl_context_clear_framebuffer (context);
 
-  return TRUE;
+  return ret;
 }
