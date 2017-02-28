@@ -523,7 +523,8 @@ str_to_time (const gchar * str)
 
   m = strtoull (buf, NULL, 10);
 
-  strncpy (buf, &str[6], sizeof (buf));
+  strncpy (buf, &str[6], sizeof (buf) - 1);
+  buf[sizeof (buf) - 1] = '\0';
   s = strtod (buf, NULL);
 
   ret = (h * 3600 * GST_SECOND) +
