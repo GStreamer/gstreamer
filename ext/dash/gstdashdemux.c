@@ -1176,8 +1176,13 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
         }
       }
       g_free (dashstream->last_representation_id);
-      dashstream->last_representation_id =
-          g_strdup (dashstream->active_stream->cur_representation->id);
+      if (dashstream->active_stream
+          && dashstream->active_stream->cur_representation) {
+        dashstream->last_representation_id =
+            g_strdup (dashstream->active_stream->cur_representation->id);
+      } else {
+        dashstream->last_representation_id = NULL;
+      }
     }
 
     if (GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER (stream)) {
