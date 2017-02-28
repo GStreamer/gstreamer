@@ -962,9 +962,13 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
       mix_pad->height <=
       0 ? GST_VIDEO_INFO_HEIGHT (&vagg_pad->info) : mix_pad->height;
 
-  gst_video_calculate_display_ratio (&dar_n, &dar_d, pad_width, pad_height,
-      GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
-      GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d);
+  if (!gst_video_calculate_display_ratio (&dar_n, &dar_d, pad_width, pad_height,
+          GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
+          GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d)) {
+    GST_WARNING_OBJECT (mix_pad, "Cannot calculate display aspect ratio");
+    *width = *height = 0;
+    return;
+  }
   GST_LOG_OBJECT (mix_pad, "scaling %ux%u by %u/%u (%u/%u / %u/%u)", pad_width,
       pad_height, dar_n, dar_d, GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
       GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d);
@@ -977,10 +981,8 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
     pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
   }
 
-  if (width)
-    *width = pad_width;
-  if (height)
-    *height = pad_height;
+  *width = pad_width;
+  *height = pad_height;
 }
 
 static GstCaps *
