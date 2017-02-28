@@ -1417,6 +1417,7 @@ ges_move_context_set_objects (GESTimeline * timeline, GESTrackElement * obj,
 
     case GES_EDGE_END:
       moving_point = _START (obj) + _DURATION (obj);
+      /* fall-through */
     case GES_EDGE_NONE:        /* In this case only works for ripple */
       mv_ctx->max_trim_pos = G_MAXUINT64;
 
