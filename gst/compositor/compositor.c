@@ -244,6 +244,7 @@ _mixer_pad_get_output_size (GstCompositor * comp,
           GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d)) {
     GST_WARNING_OBJECT (comp_pad, "Cannot calculate display aspect ratio");
     *width = *height = 0;
+    return;
   }
   GST_LOG_OBJECT (comp_pad, "scaling %ux%u by %u/%u (%u/%u / %u/%u)", pad_width,
       pad_height, dar_n, dar_d, GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
