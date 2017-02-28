@@ -148,9 +148,8 @@ gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result)
     result[i] = tmp[i];
 }
 
-void
-gst_gl_get_affine_transformation_meta_as_ndc (GstVideoAffineTransformationMeta *
-    meta, gfloat * matrix)
+void gst_gl_get_affine_transformation_meta_as_ndc_ext
+    (GstVideoAffineTransformationMeta * meta, gfloat * matrix)
 {
   if (!meta) {
     int i;
