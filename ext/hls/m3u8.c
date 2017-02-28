@@ -1235,13 +1235,13 @@ gst_m3u8_unquote (const gchar * str)
 static GstHLSMedia *
 gst_m3u8_parse_media (gchar * desc, const gchar * base_uri)
 {
-  GstHLSMediaType mtype = GST_HLS_MEDIA_TYPE_INVALID;
   GstHLSMedia *media;
   gchar *a, *v;
 
   media = g_new0 (GstHLSMedia, 1);
   media->ref_count = 1;
   media->playlist = gst_m3u8_new ();
+  media->mtype = GST_HLS_MEDIA_TYPE_INVALID;
 
   GST_LOG ("parsing %s", desc);
   while (desc != NULL && parse_attributes (&desc, &a, &v)) {
@@ -1284,7 +1284,7 @@ gst_m3u8_parse_media (gchar * desc, const gchar * base_uri)
   if (media->group_id == NULL || media->name == NULL)
     goto required_attributes_missing;
 
-  if (mtype == GST_HLS_MEDIA_TYPE_CLOSED_CAPTIONS)
+  if (media->mtype == GST_HLS_MEDIA_TYPE_CLOSED_CAPTIONS)
     goto uri_with_cc;
 
   GST_DEBUG ("media: %s, group '%s', name '%s', uri '%s', %s %s %s, lang=%s",
