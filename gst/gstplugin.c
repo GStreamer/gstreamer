@@ -344,7 +344,7 @@ _priv_gst_plugin_initialize (void)
  * name and the plugin's source package name, to keep the format simple.
  */
 static gboolean
-gst_plugin_desc_matches_whitelist_entry (GstPluginDesc * desc,
+gst_plugin_desc_matches_whitelist_entry (const GstPluginDesc * desc,
     const gchar * filename, const gchar * pattern)
 {
   const gchar *sep;
@@ -406,7 +406,7 @@ done:
 }
 
 gboolean
-priv_gst_plugin_desc_is_whitelisted (GstPluginDesc * desc,
+priv_gst_plugin_desc_is_whitelisted (const GstPluginDesc * desc,
     const gchar * filename)
 {
   gchar **entry;
@@ -681,12 +681,42 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   return _priv_gst_plugin_load_file_for_registry (filename, NULL, error);
 }
 
+static gchar *
+extract_symname (const char *filename)
+{
+  gchar *bname, *name, *symname;
+  const gchar *dot;
+  gsize prefix_len = 0, len;
+
+  bname = g_path_get_basename (filename);
+
+  if (g_str_has_prefix (bname, "libgst"))
+    prefix_len += 6;
+  else if (g_str_has_prefix (bname, "lib"))
+    prefix_len += 3;
+
+  dot = g_utf8_strrchr (bname, -1, '.');
+  if (dot)
+    len = dot - bname - prefix_len;
+  else
+    len = g_utf8_strlen (bname + prefix_len, -1);
+
+  name = g_strndup (bname + prefix_len, len);
+  g_free (bname);
+
+  symname = g_strconcat ("gst_plugin_", name, "_get_desc", NULL);
+  g_free (name);
+
+  return symname;
+}
+
 GstPlugin *
 _priv_gst_plugin_load_file_for_registry (const gchar * filename,
     GstRegistry * registry, GError ** error)
 {
-  GstPluginDesc *desc;
+  const GstPluginDesc *desc;
   GstPlugin *plugin;
+  gchar *symname;
   GModule *module;
   gboolean ret;
   gpointer ptr;
@@ -757,7 +787,20 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
     goto return_error;
   }
 
-  ret = g_module_symbol (module, "gst_plugin_desc", &ptr);
+  symname = extract_symname (filename);
+  ret = g_module_symbol (module, symname, &ptr);
+
+  if (ret) {
+    GstPluginDesc *(*get_desc) (void) = ptr;
+    ptr = get_desc ();
+  } else {
+    GST_DEBUG ("Could not find symbol '%s', falling back to gst_plugin_desc",
+        symname);
+    ret = g_module_symbol (module, "gst_plugin_desc", &ptr);
+  }
+
+  g_free (symname);
+
   if (!ret) {
     GST_DEBUG ("Could not find plugin entry point in \"%s\"", filename);
     g_set_error (error,
@@ -768,7 +811,7 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
     goto return_error;
   }
 
-  desc = (GstPluginDesc *) ptr;
+  desc = (const GstPluginDesc *) ptr;
 
   if (priv_gst_plugin_loading_have_whitelist () &&
       !priv_gst_plugin_desc_is_whitelisted (desc, filename)) {
@@ -789,28 +832,30 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
   }
 
   plugin->module = module;
-  plugin->orig_desc = desc;
 
   if (new_plugin) {
     /* check plugin description: complain about bad values and fail */
-    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, name, filename);
-    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, description, filename);
-    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, version, filename);
-    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, license, filename);
-    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, source, filename);
-    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, package, filename);
-    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, origin, filename);
+    CHECK_PLUGIN_DESC_FIELD (desc, name, filename);
+    CHECK_PLUGIN_DESC_FIELD (desc, description, filename);
+    CHECK_PLUGIN_DESC_FIELD (desc, version, filename);
+    CHECK_PLUGIN_DESC_FIELD (desc, license, filename);
+    CHECK_PLUGIN_DESC_FIELD (desc, source, filename);
+    CHECK_PLUGIN_DESC_FIELD (desc, package, filename);
+    CHECK_PLUGIN_DESC_FIELD (desc, origin, filename);
 
-    if (plugin->orig_desc->name != NULL && plugin->orig_desc->name[0] == '"') {
+    if (desc->name != NULL && desc->name[0] == '"') {
       g_warning ("Invalid plugin name '%s' - fix your GST_PLUGIN_DEFINE "
-          "(remove quotes around plugin name)", plugin->orig_desc->name);
+          "(remove quotes around plugin name)", desc->name);
     }
 
-    if (plugin->orig_desc->release_datetime != NULL &&
-        !check_release_datetime (plugin->orig_desc->release_datetime)) {
-      GST_ERROR ("GstPluginDesc for '%s' has invalid datetime '%s'",
-          filename, plugin->orig_desc->release_datetime);
-      plugin->orig_desc->release_datetime = NULL;
+    if (desc->release_datetime != NULL &&
+        !check_release_datetime (desc->release_datetime)) {
+      g_warning ("GstPluginDesc for '%s' has invalid datetime '%s'",
+          filename, desc->release_datetime);
+      g_set_error (error, GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE,
+          "Plugin %s has invalid plugin description field 'release_datetime'",
+          filename);
+      goto return_error;
     }
   }
 
@@ -824,7 +869,7 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
   GST_LOG ("Plugin %p for file \"%s\" prepared, registering...",
       plugin, filename);
 
-  if (!gst_plugin_register_func (plugin, plugin->orig_desc, NULL)) {
+  if (!gst_plugin_register_func (plugin, desc, NULL)) {
     /* remove signal handler */
     _gst_plugin_fault_handler_restore ();
     GST_DEBUG ("gst_plugin_register_func failed for plugin \"%s\"", filename);

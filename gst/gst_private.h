@@ -97,7 +97,7 @@ G_GNUC_INTERNAL  gboolean priv_gst_plugin_loading_have_whitelist (void);
 
 G_GNUC_INTERNAL  guint32  priv_gst_plugin_loading_get_whitelist_hash (void);
 
-G_GNUC_INTERNAL  gboolean priv_gst_plugin_desc_is_whitelisted (GstPluginDesc * desc,
+G_GNUC_INTERNAL  gboolean priv_gst_plugin_desc_is_whitelisted (const GstPluginDesc * desc,
                                                                const gchar   * filename);
 
 G_GNUC_INTERNAL  gboolean _priv_plugin_deps_env_vars_changed (GstPlugin * plugin);
@@ -352,8 +352,6 @@ struct _GstPlugin {
 
   /*< private >*/
   GstPluginDesc	desc;
-
-  GstPluginDesc *orig_desc;
 
   gchar *	filename;
   gchar *	basename;       /* base name (non-dir part) of plugin path */

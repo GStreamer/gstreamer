@@ -246,38 +246,40 @@ struct _GstPluginDesc {
  * If defined, the GST_PACKAGE_RELEASE_DATETIME will also be used for the
  * #GstPluginDesc,release_datetime field.
  */
-#ifdef GST_PLUGIN_BUILD_STATIC
-#define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)	\
-G_BEGIN_DECLS						\
-GST_PLUGIN_EXPORT void G_PASTE(gst_plugin_, G_PASTE(name, _register)) (void);			\
-							\
-void							\
-G_PASTE(gst_plugin_, G_PASTE(name, _register)) (void)	\
-{							\
-  gst_plugin_register_static (major, minor, G_STRINGIFY(name),	\
-      description, init, version, license,		\
-      PACKAGE, package, origin);			\
-}							\
-G_END_DECLS
-#else /* !GST_PLUGIN_BUILD_STATIC */
-#define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)	\
+#define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin) \
 G_BEGIN_DECLS \
-GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
-  major,						\
-  minor,						\
-  G_STRINGIFY(name),                                    \
-  (gchar *) description,				\
-  init,							\
-  version,						\
-  license,						\
-  PACKAGE,						\
-  package,						\
-  origin,						\
-  __GST_PACKAGE_RELEASE_DATETIME,                       \
-  GST_PADDING_INIT				        \
-}; \
+GST_PLUGIN_EXPORT const GstPluginDesc * G_PASTE(gst_plugin_, G_PASTE(name, _get_desc)) (void); \
+GST_PLUGIN_EXPORT void G_PASTE(gst_plugin_, G_PASTE(name, _register)) (void); \
+\
+static const GstPluginDesc gst_plugin_desc = { \
+  major, \
+  minor, \
+  G_STRINGIFY(name), \
+  (gchar *) description, \
+  init, \
+  version, \
+  license, \
+  PACKAGE, \
+  package, \
+  origin, \
+  __GST_PACKAGE_RELEASE_DATETIME, \
+  GST_PADDING_INIT \
+};                                       \
+\
+const GstPluginDesc * \
+G_PASTE(gst_plugin_, G_PASTE(name, _get_desc)) (void) \
+{ \
+    return &gst_plugin_desc; \
+} \
+\
+void \
+G_PASTE(gst_plugin_, G_PASTE(name, _register)) (void) \
+{ \
+  gst_plugin_register_static (major, minor, G_STRINGIFY(name), \
+      description, init, version, license, \
+      PACKAGE, package, origin); \
+} \
 G_END_DECLS
-#endif /* GST_PLUGIN_BUILD_STATIC */
 
 /**
  * GST_LICENSE_UNKNOWN:
