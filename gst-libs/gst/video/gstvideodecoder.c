@@ -2152,9 +2152,9 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
      * Also this function is only called for reverse playback to gather frames
      * GOP by GOP, and does not do any actual decoding. That would be done by
      * flush_decode() */
-    if (was_keyframe && decoder->input_segment.rate > 0.0
+    if (ret == GST_FLOW_OK && was_keyframe && decoder->input_segment.rate > 0.0
         && (decoder->input_segment.flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS))
-      gst_video_decoder_drain_out (decoder, FALSE);
+      ret = gst_video_decoder_drain_out (decoder, FALSE);
   } else {
     gst_adapter_push (priv->input_adapter, buf);
 
