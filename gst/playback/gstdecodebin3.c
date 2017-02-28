@@ -2267,7 +2267,9 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
       if (slot_to_deactivate) {
         GST_DEBUG_OBJECT (dbin,
             "Slot %p (%s) should be deactivated, no longer used", slot,
-            gst_stream_get_stream_id (slot->active_stream));
+            slot->
+            active_stream ? gst_stream_get_stream_id (slot->active_stream) :
+            "NULL");
         to_deactivate = g_list_append (to_deactivate, slot);
       }
     }
