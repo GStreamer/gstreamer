@@ -447,7 +447,7 @@ gst_raw_audio_parse_set_property (GObject * object, guint prop_id,
         gst_raw_audio_parse_set_config_channels (&
             (raw_audio_parse->properties_config), config->num_channels, 0,
             TRUE);
-      } else {
+      } else if (valarray != NULL) {
         /* Non-NULL value given. Make sure the channel_positions
          * array in the properties config has enough room, and that
          * the num_channels value equals the array length. Then copy
