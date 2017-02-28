@@ -964,9 +964,11 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
     if (splitmux->play_segment.start != -1) {
       GstClockTime part_start =
           gst_splitmux_part_reader_get_start_offset (splitmux->parts[cur_part]);
-      if (part_start >= splitmux->play_segment.start) {
+      if (part_start <= splitmux->play_segment.start) {
         GST_DEBUG_OBJECT (splitmux,
-            "Start position was within that part. Finishing");
+            "Start position %" GST_TIME_FORMAT
+            " was within that part. Finishing",
+            GST_TIME_ARGS (splitmux->play_segment.start));
         next_part = -1;
       }
     }
