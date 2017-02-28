@@ -811,6 +811,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
           found = TRUE;
           gst_buffer_unref (header);
           l->data = buffer;
+          break;
         }
       }
       if (!found)
