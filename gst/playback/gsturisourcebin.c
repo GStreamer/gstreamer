@@ -1725,7 +1725,7 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
           GST_URI_SOURCE_BIN_LOCK (urisrc);
           if (use_queue) {
             OutputSlotInfo *slot = get_output_slot (urisrc, FALSE, FALSE, NULL);
-            if (slot)
+            if (!slot)
               goto no_slot;
 
             gst_pad_link (pad, slot->sinkpad);
