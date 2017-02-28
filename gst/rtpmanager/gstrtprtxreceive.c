@@ -505,6 +505,23 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   rtx->last_time = GST_BUFFER_PTS (buffer);
 
+  if (g_hash_table_size (rtx->seqnum_ssrc1_map) > 0) {
+    GHashTableIter iter;
+    gpointer key, value;
+
+    g_hash_table_iter_init (&iter, rtx->seqnum_ssrc1_map);
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+      SsrcAssoc *assoc = value;
+
+      /* remove association request if it is too old */
+      if (GST_CLOCK_TIME_IS_VALID (rtx->last_time) &&
+          GST_CLOCK_TIME_IS_VALID (assoc->time) &&
+          assoc->time + ASSOC_TIMEOUT < rtx->last_time) {
+        g_hash_table_iter_remove (&iter);
+      }
+    }
+  }
+
   is_rtx =
       g_hash_table_lookup_extended (rtx->rtx_pt_map,
       GUINT_TO_POINTER (payload_type), NULL, NULL);
