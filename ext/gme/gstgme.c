@@ -217,9 +217,7 @@ gst_gme_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         guint64 dest = (guint64) start;
 
         if (gme->total_duration != GST_CLOCK_TIME_NONE)
-          dest = CLAMP (dest, 0, gme->total_duration);
-        else
-          dest = MAX (0, dest);
+          dest = MIN (dest, gme->total_duration);
 
         if (dest == cur)
           break;
