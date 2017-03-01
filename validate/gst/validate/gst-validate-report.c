@@ -886,9 +886,9 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       GstValidateActionType *type = GST_VALIDATE_ACTION_TYPE (source);
 
       g_string_assign (string, "\nAction type:");
-      g_string_append_printf (string, "\n  Name: %s", type->name);
-      g_string_append_printf (string, "\n  Implementer namespace: %s",
-          type->implementer_namespace);
+      g_string_append_printf (string,
+          "\n  Name: %s\n  Implementer namespace: %s",
+          type->name, type->implementer_namespace);
 
       if (IS_CONFIG_ACTION_TYPE (type->flags))
         g_string_append_printf (string,
@@ -918,13 +918,12 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
       if ((type->flags & GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL)) {
         has_parameters = TRUE;
-        g_string_append_printf (string, "\n     %-26s : %s", "optional",
-            "Don't raise an error if this action hasn't been executed or failed");
-        g_string_append_printf (string, "\n     %-28s %s", "",
-            "Possible types:");
-        g_string_append_printf (string, "\n     %-31s %s", "", "boolean");
-        g_string_append_printf (string, "\n     %-28s %s", "",
-            "Default: false");
+        g_string_append_printf (string,
+            "\n     optional                   : "
+            "Don't raise an error if this action hasn't been executed of failed"
+            "\n%-32s  Possible types:"
+            "\n%-32s    boolean"
+            "\n%-32s  Default: false","","","");
       }
 
       if (!has_parameters)
