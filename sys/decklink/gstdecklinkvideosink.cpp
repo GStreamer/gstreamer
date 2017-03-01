@@ -665,10 +665,9 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
     GST_LOG_OBJECT (self, "Showing video frame synchronously because PAUSED");
     ret = self->output->output->DisplayVideoFrameSync (frame);
     if (ret != S_OK) {
-    GST_ELEMENT_ERROR (self, STREAM, FAILED,
-        (NULL), ("Failed to show video frame synchronously: 0x%08x", ret));
-    flow_ret = GST_FLOW_ERROR;
-    goto out;
+      GST_ELEMENT_WARNING (self, STREAM, FAILED,
+          (NULL), ("Failed to show video frame synchronously: 0x%08x", ret));
+      ret = S_OK;
     }
   }
 
