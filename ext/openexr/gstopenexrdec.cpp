@@ -352,7 +352,7 @@ gst_openexr_dec_handle_frame (GstVideoDecoder * decoder,
   try {
     file = new RgbaInputFile (*istr);
   }
-  catch (Iex::BaseExc e) {
+  catch (Iex::BaseExc& e) {
     delete istr;
     gst_video_codec_frame_unref (frame);
 
@@ -406,7 +406,7 @@ gst_openexr_dec_handle_frame (GstVideoDecoder * decoder,
   try {
     file->setFrameBuffer (fb - dw.min.x - dw.min.y * width, 1, width);
     file->readPixels (dw.min.y, dw.max.y);
-  } catch (Iex::BaseExc e) {
+  } catch (Iex::BaseExc& e) {
     delete[](fb);
     delete file;
     delete istr;
