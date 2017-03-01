@@ -144,7 +144,7 @@ gst_validate_issue_get_id (GstValidateIssue * issue)
  * gst_validate_issue_new:
  * @issue_id: The ID of the issue, should be a GQuark
  * @summary: A summary of the issue
- * @description: A more complete of what the issue is about
+ * @description: A more complete description of the issue
  * @default_level: The level at which the issue will be reported by default
  *
  * Returns: (transfer full): The newly created #GstValidateIssue
