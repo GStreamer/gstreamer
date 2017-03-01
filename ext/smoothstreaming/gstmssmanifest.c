@@ -271,8 +271,7 @@ _gst_mss_stream_init (GstMssManifest * manifest, GstMssStream * stream,
 
   for (iter = node->children; iter; iter = iter->next) {
     if (node_has_type (iter, MSS_NODE_STREAM_FRAGMENT)) {
-      if (!stream->has_live_fragments || !builder.fragments)
-        gst_mss_fragment_list_builder_add (&builder, iter);
+      gst_mss_fragment_list_builder_add (&builder, iter);
     } else if (node_has_type (iter, MSS_NODE_STREAM_QUALITY)) {
       GstMssStreamQuality *quality = gst_mss_stream_quality_new (iter);
       stream->qualities = g_list_prepend (stream->qualities, quality);
@@ -934,7 +933,7 @@ guint64
 gst_mss_manifest_get_duration (GstMssManifest * manifest)
 {
   gchar *duration;
-  guint64 dur = -1;
+  guint64 dur = 0;
 
   /* try the property */
   duration =
@@ -1230,11 +1229,6 @@ gst_mss_stream_seek (GstMssStream * stream, gboolean forward,
   GST_DEBUG ("Stream %s seeking to %" G_GUINT64_FORMAT, stream->url, time);
   for (iter = stream->fragments; iter; iter = g_list_next (iter)) {
     fragment = iter->data;
-    if (stream->has_live_fragments) {
-      if (fragment->time + fragment->repetitions * fragment->duration > time)
-        stream->current_fragment = iter;
-      break;
-    }
     if (fragment->time + fragment->repetitions * fragment->duration > time) {
       stream->current_fragment = iter;
       stream->fragment_repetition_index =
@@ -1630,25 +1624,30 @@ gst_mss_stream_parse_fragment (GstMssStream * stream, GstBuffer * buffer)
     GList *l = g_list_last (stream->fragments);
     GstMssStreamFragment *last;
     GstMssStreamFragment *fragment;
+    guint64 parsed_time = stream->fragment_parser.tfrf.entries[index].time;
+    guint64 parsed_duration =
+        stream->fragment_parser.tfrf.entries[index].duration;
 
     if (l == NULL)
       break;
 
     last = (GstMssStreamFragment *) l->data;
 
-    if (last->time == stream->fragment_parser.tfrf.entries[index].time)
+    /* only add the fragment to the list if it's outside the time in the
+     * current list */
+    if (last->time >= stream->fragment_parser.tfrf.entries[index].time)
       continue;
 
     fragment = g_new (GstMssStreamFragment, 1);
     fragment->number = last->number + 1;
     fragment->repetitions = 1;
-    fragment->time = stream->fragment_parser.tfrf.entries[index].time;
-    fragment->duration = stream->fragment_parser.tfrf.entries[index].duration;
+    fragment->time = parsed_time;
+    fragment->duration = parsed_duration;
 
     stream->fragments = g_list_append (stream->fragments, fragment);
-    GST_LOG ("Adding fragment number: %u to %s stream, time: %" G_GUINT64_FORMAT
-        ", duration: %" G_GUINT64_FORMAT ", repetitions: %u",
-        fragment->number, stream_type_name,
-        fragment->time, fragment->duration, fragment->repetitions);
+    GST_LOG ("Adding fragment number: %u to %s stream, time: %"
+        G_GUINT64_FORMAT ", duration: %" G_GUINT64_FORMAT ", repetitions: %u",
+        fragment->number, stream_type_name, fragment->time,
+        fragment->duration, fragment->repetitions);
   }
 }
