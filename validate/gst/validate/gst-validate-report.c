@@ -374,7 +374,7 @@ gst_validate_report_load_issues (void)
       _("Query position reported a value outside of the current expected "
           "segment"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_NOT_ENDED,
-      _("All the actions were not executed before the program stopped"), NULL);
+      _("The program stopped before some actions were executed"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_TIMEOUT,
       _("The execution of an action timed out"), NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_FILE_MALFORMED,
@@ -919,7 +919,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       if ((type->flags & GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL)) {
         has_parameters = TRUE;
         g_string_append_printf (string, "\n     %-26s : %s", "optional",
-            "Don't raise an error if this action hasn't been executed of failed");
+            "Don't raise an error if this action hasn't been executed or failed");
         g_string_append_printf (string, "\n     %-28s %s", "",
             "Possible types:");
         g_string_append_printf (string, "\n     %-31s %s", "", "boolean");
@@ -1062,7 +1062,7 @@ gst_validate_report_print_dotfile (GstValidateReport * report)
         dotdir, G_DIR_SEPARATOR_S, report->dotfile_name);
   else
     gst_validate_printf (NULL,
-        "%*s dotfile : not dotfile produced as GST_DEBUG_DUMP_DOT_DIR is not set.\n",
+        "%*s dotfile : no dotfile produced as GST_DEBUG_DUMP_DOT_DIR is not set.\n",
         12, "");
 }
 
