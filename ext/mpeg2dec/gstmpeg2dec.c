@@ -807,7 +807,7 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 
   /* Mpeg2dec has 2 frame latency to produce a picture and 1 frame latency in
    * it's parser */
-  latency = gst_util_uint64_scale (3, vinfo->fps_d, vinfo->fps_n);
+  latency = gst_util_uint64_scale (3 * GST_SECOND, vinfo->fps_d, vinfo->fps_n);
   gst_video_decoder_set_latency (GST_VIDEO_DECODER (mpeg2dec), latency,
       latency);
 
