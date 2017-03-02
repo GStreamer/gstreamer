@@ -570,12 +570,7 @@ gst_player_set_uri_internal (gpointer user_data)
         (GDestroyNotify) uri_loaded_signal_data_free);
   }
 
-  /* if have suburi from previous playback then free it */
-  if (self->suburi) {
-    g_free (self->suburi);
-    self->suburi = NULL;
-    g_object_set (self->playbin, "suburi", NULL, NULL);
-  }
+  g_object_set (self->playbin, "suburi", NULL, NULL);
 
   g_mutex_unlock (&self->lock);
 
@@ -654,6 +649,9 @@ gst_player_set_property (GObject * object, guint prop_id,
       g_free (self->uri);
       g_free (self->redirect_uri);
       self->redirect_uri = NULL;
+
+      g_free (self->suburi);
+      self->suburi = NULL;
 
       self->uri = g_value_dup_string (value);
       GST_DEBUG_OBJECT (self, "Set uri=%s", self->uri);
