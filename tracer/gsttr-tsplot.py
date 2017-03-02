@@ -43,29 +43,33 @@ _PLOT_SCRIPT_HEAD = Template(
     '''set term png truecolor size $width,$height
     ''')
 _PLOT_SCRIPT_BODY = Template(
-    '''set output '$png_file_name'
-       set multiplot layout 3,1 title '$pad_name'
-       set style line 100 lc rgb '#dddddd' lt 0 lw 1
-       set grid back ls 100
+    '''
+    set output '$png_file_name'
+    set multiplot layout 3,1 title '$pad_name'
+    set style line 100 lc rgb '#dddddd' lt 0 lw 1
+    set grid back ls 100
 
-       set xlabel "Clock Time (sec.msec)"
-       set ylabel "Buffer Time (sec.msec)"
-       set yrange [*:*]
-       set ytics
-       plot '$buf_file_name' using 1:2 with linespoints notitle
+    set xlabel "Clock Time (sec.msec)"
+    set xrange [*:*] writeback
+    set ylabel "Buffer Time (sec.msec)"
+    set yrange [*:*]
+    set ytics
+    plot '$buf_file_name' using 1:2 with linespoints notitle
 
-        set ylabel "Duration (sec.msec)"
-       plot '$buf_file_name' using 1:3 with linespoints title "cycle", \
-            '' using 1:4 with linespoints title "duration"
+    set xrange restore
+    set ylabel "Duration (sec.msec)"
+    plot '$buf_file_name' using 1:3 with linespoints title "cycle", \
+         '' using 1:4 with linespoints title "duration"
 
-       set ylabel "Events"
-       set yrange [$ypos_max:10]
-       set ytics format ""
-       plot '$ev_file_name' using 1:4:3:(0) with vectors heads size screen 0.008,90 notitle, \
-            '' using 2:4 with points notitle, \
-            '' using 2:4:5 with labels font ',7' offset char 0,-0.5 notitle
-       unset multiplot
-       ''')
+    set xrange restore
+    set ylabel "Events"
+    set yrange [$ypos_max:10]
+    set ytics format ""
+    plot '$ev_file_name' using 1:4:3:(0) with vectors heads size screen 0.008,90 notitle, \
+         '' using 2:4 with points notitle, \
+         '' using 2:4:5 with labels font ',7' offset char 0,-0.5 notitle
+    unset multiplot
+    ''')
 
 class TsPlot(Analyzer):
     '''Generate a timestamp plots from a tracer log.
