@@ -35,6 +35,8 @@ __all__ = ["RangeHTTPRequestHandler"]
 import os
 import sys
 
+from socketserver import ThreadingMixIn
+
 import posixpath
 import http.server
 import urllib.parse
@@ -47,6 +49,8 @@ import time
 
 _bandwidth = 0
 
+class ThreadingSimpleServer(ThreadingMixIn, http.server.HTTPServer):
+    pass
 
 class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
@@ -280,5 +284,5 @@ def test(handler_class = RangeHTTPRequestHandler,server_class = http.server.HTTP
     http.server.test(handler_class, server_class)
 
 if __name__ == "__main__":
-    httpd = http.server.HTTPServer(("0.0.0.0", int(sys.argv[1])), RangeHTTPRequestHandler)
+    httpd = ThreadingSimpleServer(("0.0.0.0", int(sys.argv[1])), RangeHTTPRequestHandler)
     httpd.serve_forever()
