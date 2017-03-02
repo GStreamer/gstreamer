@@ -44,8 +44,8 @@ typedef enum {
 
 typedef enum {
   GST_SBC_ALLOCATION_METHOD_INVALID = -1,
-  GST_SBC_ALLOCATION_METHOD_SNR = 0,
-  GST_SBC_ALLOCATION_METHOD_LOUDNESS = 1
+  GST_SBC_ALLOCATION_METHOD_LOUDNESS = 0,
+  GST_SBC_ALLOCATION_METHOD_SNR = 1
 } GstSbcAllocationMethod;
 
 typedef struct _GstSbcParse GstSbcParse;
