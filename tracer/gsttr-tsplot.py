@@ -40,33 +40,44 @@ _HANDLED_CLASSES = ('buffer', 'event', 'new-pad', 'new-element')
 _GST_BUFFER_FLAG_DISCONT = (1<<6)
 
 _PLOT_SCRIPT_HEAD = Template(
-    '''set term png truecolor size $width,$height
+    '''
+    set term pngcairo truecolor size $width,$height font "Helvetica,14"
+    set style line 1 lc rgb '#8b1a0e' pt 1 ps 1 lt 1 lw 1 # --- red
+    set style line 2 lc rgb '#5e9c36' pt 6 ps 1 lt 1 lw 1 # --- green
+    set style line 100 lc rgb '#999999' lt 0 lw 1
+    set grid back ls 100
+    set key font ",10"
+    set label font ",10"
+    set tics font ",10"
+    set xlabel font ",10"
+    set ylabel font ",10"
     ''')
 _PLOT_SCRIPT_BODY = Template(
     '''
     set output '$png_file_name'
-    set multiplot layout 3,1 title '$pad_name'
-    set style line 100 lc rgb '#dddddd' lt 0 lw 1
-    set grid back ls 100
+    set multiplot layout 3,1 title "$title\\n$subtitle"
 
-    set xlabel "Clock Time (sec.msec)"
+    set xlabel ""
     set xrange [*:*] writeback
-    set ylabel "Buffer Time (sec.msec)"
+    set xtics format ""
+    set ylabel "Buffer Time (sec.msec)" offset 1,0
     set yrange [*:*]
     set ytics
-    plot '$buf_file_name' using 1:2 with linespoints notitle
+    plot '$buf_file_name' using 1:2 with linespoints ls 1 notitle
 
     set xrange restore
-    set ylabel "Duration (sec.msec)"
-    plot '$buf_file_name' using 1:3 with linespoints title "cycle", \
-         '' using 1:4 with linespoints title "duration"
+    set ylabel "Duration (sec.msec)" offset 1,0
+    plot '$buf_file_name' using 1:3 with linespoints ls 1title "cycle", \
+         '' using 1:4 with linespoints ls 2 title "duration"
 
     set xrange restore
-    set ylabel "Events"
+    set xtics format "%g" scale .5 offset 0,.5
+    set xlabel "Clock Time (sec.msec)" offset 0,1
+    set ylabel "Events" offset 1,0
     set yrange [$ypos_max:10]
     set ytics format ""
-    plot '$ev_file_name' using 1:4:3:(0) with vectors heads size screen 0.008,90 notitle, \
-         '' using 2:4 with points notitle, \
+    plot '$ev_file_name' using 1:4:3:(0) with vectors heads size screen 0.008,90 ls 1 notitle, \
+         '' using 2:4 with points ls 1 notitle, \
          '' using 2:4:5 with labels font ',7' offset char 0,-0.5 notitle
     unset multiplot
     ''')
@@ -91,7 +102,9 @@ class TsPlot(Analyzer):
         self.buf_cts = {}
         self.ev_files = {}
         self.element_names = {}
+        self.element_info = {}
         self.pad_names = {}
+        self.pad_info = {}
         self.ev_labels = {}
         self.ev_data = {}
         self.ev_ypos = {}
@@ -202,13 +215,16 @@ class TsPlot(Analyzer):
         if entry_name == 'new-element':
             ix = int(s.values['ix'])
             self.element_names[ix] = s.values['name']
+            self.element_info[ix] = 'Element Type: %s' % s.values['type']
         elif entry_name == 'new-pad':
             pad_type = s.values['type']
-            if pad_type not in ['GstGhostPad', 'GstProxyPad']:
+            if self.show_ghost_pads or pad_type not in ['GstGhostPad', 'GstProxyPad']:
                 parent_ix = int(s.values['parent-ix'])
                 parent_name = self.element_names.get(parent_ix, '')
                 ix = int(s.values['ix'])
-                self.pad_names[ix] = "%s.%s" % (parent_name, s.values['name'])
+                self.pad_names[ix] = '%s.%s' % (parent_name, s.values['name'])
+                self.pad_info[ix] = '(%s, Pad Type: %s)' % (
+                    self.element_info.get(parent_ix, ''), pad_type)
         elif entry_name == 'event':
             self._log_event(s)
         else:  # 'buffer'
@@ -226,10 +242,12 @@ class TsPlot(Analyzer):
             buf_file_name = '%s/buf_%d_%s.dat' % (self.outdir, ix, name)
             ev_file_name = '%s/ev_%d_%s.dat' % (self.outdir, ix, name)
             png_file_name = '%s/%d_%s.png' % (self.outdir, ix, name)
+            sub_title = self.pad_info[ix]
             ypos_max = (2 + len(self.ev_ypos[ix])) * -10
-            script += _PLOT_SCRIPT_BODY.substitute(self.params, pad_name=name,
-                buf_file_name=buf_file_name, ev_file_name=ev_file_name,
-                png_file_name=png_file_name, ypos_max=ypos_max)
+            script += _PLOT_SCRIPT_BODY.substitute(self.params, title=name,
+                subtitle=sub_title, buf_file_name=buf_file_name,
+                ev_file_name=ev_file_name, png_file_name=png_file_name,
+                ypos_max=ypos_max)
         # plot PNGs
         p = Popen(['gnuplot'], stdout=DEVNULL, stdin=PIPE)
         p.communicate(input=script.encode('utf-8'))
