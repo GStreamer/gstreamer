@@ -277,9 +277,11 @@ theora_dec_parse (GstVideoDecoder * decoder,
 
   if (av > 0) {
     data = gst_adapter_map (adapter, 1);
-    /* check for keyframe; must not be header packet */
-    if (!(data[0] & 0x80) && (data[0] & 0x40) == 0)
+    /* check for keyframe; must not be header packet (0x80 | 0x40) */
+    if (!(data[0] & 0xc0)) {
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+      GST_LOG_OBJECT (decoder, "Found keyframe");
+    }
     gst_adapter_unmap (adapter);
   }
 
