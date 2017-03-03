@@ -560,6 +560,9 @@ GST_EXPORT GstDebugLevel            _gst_debug_min;
  * Outputs a debugging message. This is the most general macro for outputting
  * debugging messages. You will probably want to use one of the ones described
  * below.
+ *
+ * There is no need to finish the end of the debug message with a newline
+ * character, a newline character will be added automatically.
  */
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{		\
@@ -627,6 +630,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an error message belonging to the given object in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_WARNING_OBJECT:
@@ -635,6 +641,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output a warning message belonging to the given object in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_INFO_OBJECT:
@@ -644,6 +653,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  *
  * Output an informational message belonging to the given object in the given
  * category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_DEBUG_OBJECT:
@@ -652,6 +664,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an debugging message belonging to the given object in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_LOG_OBJECT:
@@ -660,6 +675,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an logging message belonging to the given object in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_FIXME_OBJECT:
@@ -668,6 +686,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output a fixme message belonging to the given object in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_TRACE_OBJECT:
@@ -677,6 +698,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  *
  * Output a tracing message belonging to the given object in the given
  * category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_MEMDUMP_OBJECT:
@@ -688,6 +712,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  *
  * Output a hexdump of @data relating to the given object in the given
  * category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 
 
@@ -697,6 +724,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an error message in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_WARNING:
@@ -704,6 +734,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an warning message in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_INFO:
@@ -711,6 +744,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an informational message in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_DEBUG:
@@ -718,6 +754,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an debugging message in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_LOG:
@@ -725,6 +764,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an logging message in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_FIXME:
@@ -732,6 +774,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an fixme message in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_TRACE:
@@ -739,6 +784,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output a tracing message in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_CAT_MEMDUMP:
@@ -748,6 +796,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @length: length of the data to output
  *
  * Output a hexdump of @data in the given category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 
 
@@ -757,6 +808,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an error message belonging to the given object in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_WARNING_OBJECT:
@@ -764,6 +818,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output a warning message belonging to the given object in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_INFO_OBJECT:
@@ -772,6 +829,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  *
  * Output an informational message belonging to the given object in the default
  * category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_DEBUG_OBJECT:
@@ -780,6 +840,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  *
  * Output a debugging message belonging to the given object in the default
  * category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_LOG_OBJECT:
@@ -787,6 +850,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output a logging message belonging to the given object in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_FIXME_OBJECT:
@@ -794,6 +860,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output a fixme message belonging to the given object in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_TRACE_OBJECT:
@@ -801,6 +870,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output a tracing message belonging to the given object in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_MEMDUMP_OBJECT:
@@ -810,6 +882,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @length: length of the data to output
  *
  * Output a logging message belonging to the given object in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 
 
@@ -818,42 +893,63 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an error message in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_WARNING:
  * @...: printf-style message to output
  *
  * Output a warning message in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_INFO:
  * @...: printf-style message to output
  *
  * Output an informational message in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_DEBUG:
  * @...: printf-style message to output
  *
  * Output a debugging message in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_LOG:
  * @...: printf-style message to output
  *
  * Output a logging message in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_FIXME:
  * @...: printf-style message to output
  *
  * Output a fixme message in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_TRACE:
  * @...: printf-style message to output
  *
  * Output a tracing message in the default category.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 /**
  * GST_MEMDUMP:
@@ -862,6 +958,9 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @length: length of the data to output
  *
  * Output a hexdump of @data.
+ *
+ * There is no need to finish the end of the message string with a newline
+ * character, a newline character will be added automatically.
  */
 
 #ifdef G_HAVE_ISO_VARARGS
