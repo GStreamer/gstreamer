@@ -680,7 +680,7 @@ gst_audio_mix_matrix_fixate_caps (GstBaseTransform * trans,
 
     /* Try to keep channel configuration as much as possible */
     if (gst_structure_get_int (s2, "channels", &channels)) {
-      gint mindiff = channels;
+      gint mindiff = -1;
       othercaps = gst_caps_make_writable (othercaps);
       for (i = 0; i < capssize; i++) {
         s = gst_caps_get_structure (othercaps, i);
@@ -694,25 +694,30 @@ gst_audio_mix_matrix_fixate_caps (GstBaseTransform * trans,
           gst_structure_fixate_field_nearest_int (s, "channels", channels);
           if (gst_structure_get_int (s, "channels", &outchannels)) {
             diff = ABS (channels - outchannels);
-            if (diff < mindiff)
+            if (mindiff < 0 || diff < mindiff)
               mindiff = diff;
           }
         }
       }
 
-      for (i = 0; i < capssize; i++) {
-        gint outchannels, diff;
-        s = gst_caps_get_structure (othercaps, i);
-        if (gst_structure_get_int (s, "channels", &outchannels)) {
-          diff = ABS (channels - outchannels);
-          if (diff > mindiff) {
-            gst_caps_remove_structure (othercaps, i--);
-            capssize--;
+      if (mindiff >= 0) {
+        for (i = 0; i < capssize; i++) {
+          gint outchannels, diff;
+          s = gst_caps_get_structure (othercaps, i);
+          if (gst_structure_get_int (s, "channels", &outchannels)) {
+            diff = ABS (channels - outchannels);
+            if (diff > mindiff) {
+              gst_caps_remove_structure (othercaps, i--);
+              capssize--;
+            }
           }
         }
       }
     }
   }
+
+  if (gst_caps_is_empty (othercaps))
+    return othercaps;
 
   othercaps =
       GST_BASE_TRANSFORM_CLASS (gst_audio_mix_matrix_parent_class)->fixate_caps
