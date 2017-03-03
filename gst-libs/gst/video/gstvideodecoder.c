@@ -1915,12 +1915,22 @@ timestamp_free (Timestamp * ts)
 }
 
 static void
-gst_video_decoder_add_timestamp (GstVideoDecoder * decoder, GstBuffer * buffer)
+gst_video_decoder_add_buffer_info (GstVideoDecoder * decoder,
+    GstBuffer * buffer)
 {
   GstVideoDecoderPrivate *priv = decoder->priv;
   Timestamp *ts;
 
   ts = g_slice_new (Timestamp);
+
+  if (!GST_BUFFER_PTS_IS_VALID (buffer) &&
+      !GST_BUFFER_DTS_IS_VALID (buffer) &&
+      !GST_BUFFER_DURATION_IS_VALID (buffer) &&
+      GST_BUFFER_FLAGS (buffer) == 0) {
+    /* Save memory - don't bother storing info
+     * for buffers with no distinguishing info */
+    return;
+  }
 
   GST_LOG_OBJECT (decoder,
       "adding PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT
@@ -1938,7 +1948,7 @@ gst_video_decoder_add_timestamp (GstVideoDecoder * decoder, GstBuffer * buffer)
 }
 
 static void
-gst_video_decoder_get_timestamp_at_offset (GstVideoDecoder *
+gst_video_decoder_get_buffer_info_at_offset (GstVideoDecoder *
     decoder, guint64 offset, GstClockTime * pts, GstClockTime * dts,
     GstClockTime * duration, guint * flags)
 {
@@ -1973,9 +1983,9 @@ gst_video_decoder_get_timestamp_at_offset (GstVideoDecoder *
   }
 
   GST_LOG_OBJECT (decoder,
-      "got PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT " @ offs %"
+      "got PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT " flags %x @ offs %"
       G_GUINT64_FORMAT " (wanted offset:%" G_GUINT64_FORMAT ")",
-      GST_TIME_ARGS (*pts), GST_TIME_ARGS (*dts), got_offset, offset);
+      GST_TIME_ARGS (*pts), GST_TIME_ARGS (*dts), *flags, got_offset, offset);
 }
 
 static void
@@ -2124,15 +2134,16 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
   if (priv->current_frame == NULL)
     priv->current_frame = gst_video_decoder_new_frame (decoder);
 
-  if (GST_BUFFER_PTS_IS_VALID (buf) && !priv->packetized) {
-    gst_video_decoder_add_timestamp (decoder, buf);
-  }
+  if (!priv->packetized)
+    gst_video_decoder_add_buffer_info (decoder, buf);
+
   priv->input_offset += gst_buffer_get_size (buf);
 
   if (priv->packetized) {
     gboolean was_keyframe = FALSE;
     if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
       was_keyframe = TRUE;
+      GST_LOG_OBJECT (decoder, "Marking current_frame as sync point");
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (priv->current_frame);
     }
 
@@ -2235,8 +2246,9 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
     GList *next = walk->next;
 
     GST_DEBUG_OBJECT (dec, "parsing buffer %p, PTS %" GST_TIME_FORMAT
-        ", DTS %" GST_TIME_FORMAT, buf, GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DTS (buf)));
+        ", DTS %" GST_TIME_FORMAT " flags %x", buf,
+        GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DTS (buf)), GST_BUFFER_FLAGS (buf));
 
     /* parse buffer, resulting frames prepended to parse_gather queue */
     gst_buffer_ref (buf);
@@ -2424,10 +2436,11 @@ gst_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_LOG_OBJECT (decoder,
       "chain PTS %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT " duration %"
-      GST_TIME_FORMAT " size %" G_GSIZE_FORMAT,
+      GST_TIME_FORMAT " size %" G_GSIZE_FORMAT " flags %x",
       GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
       GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), gst_buffer_get_size (buf));
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
+      gst_buffer_get_size (buf), GST_BUFFER_FLAGS (buf));
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
@@ -3296,7 +3309,8 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
   guint flags;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  GST_LOG_OBJECT (decoder, "have_frame");
+  GST_LOG_OBJECT (decoder, "have_frame at offset %" G_GSIZE_FORMAT,
+      priv->frame_offset);
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
@@ -3309,7 +3323,7 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
 
   priv->current_frame->input_buffer = buffer;
 
-  gst_video_decoder_get_timestamp_at_offset (decoder,
+  gst_video_decoder_get_buffer_info_at_offset (decoder,
       priv->frame_offset, &pts, &dts, &duration, &flags);
 
   GST_BUFFER_PTS (buffer) = pts;
@@ -3317,14 +3331,15 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
   GST_BUFFER_DURATION (buffer) = duration;
   GST_BUFFER_FLAGS (buffer) = flags;
 
-  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
-    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (priv->current_frame);
-  }
-
   GST_LOG_OBJECT (decoder, "collected frame size %d, "
       "PTS %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT ", dur %"
       GST_TIME_FORMAT, n_available, GST_TIME_ARGS (pts), GST_TIME_ARGS (dts),
       GST_TIME_ARGS (duration));
+
+  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+    GST_LOG_OBJECT (decoder, "Marking as sync point");
+    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (priv->current_frame);
+  }
 
   /* In reverse playback, just capture and queue frames for later processing */
   if (decoder->input_segment.rate < 0.0) {
