@@ -1448,6 +1448,7 @@ gst_video_aggregator_check_reconfigure (GstVideoAggregator * vagg,
       || gst_pad_check_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg))) {
     gboolean ret;
 
+  restart:
     ret = gst_video_aggregator_update_src_caps (vagg);
     if (!ret) {
       gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg));
@@ -1486,6 +1487,13 @@ gst_video_aggregator_check_reconfigure (GstVideoAggregator * vagg,
         else
           return GST_FLOW_NOT_NEGOTIATED;
       }
+    } else {
+      /* It is possible that during gst_video_aggregator_update_src_caps()
+       * we got a caps change on one of the sink pads, in which case we need
+       * to redo the negotiation
+       * - https://bugzilla.gnome.org/show_bug.cgi?id=755782 */
+      if (gst_pad_check_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg)))
+        goto restart;
     }
   }
 
