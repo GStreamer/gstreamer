@@ -268,7 +268,7 @@ gboolean
 gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type)
 {
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element);
-  GstVaapiDisplay *display;
+  GstVaapiDisplay *display = NULL;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
@@ -284,9 +284,15 @@ gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type)
     gst_vaapi_find_gl_context (element);
 
   /* If no neighboor, or application not interested, use system default */
-  if (plugin->gl_context)
+  if (plugin->gl_context) {
     display = gst_vaapi_create_display_from_gl_context (plugin->gl_context);
-  else
+    /* Cannot instantiate VA display based on GL context. Reset the
+     *  requested display type to ANY to try again */
+    if (!display)
+      gst_vaapi_plugin_base_set_display_type (plugin,
+          GST_VAAPI_DISPLAY_TYPE_ANY);
+  }
+  if (!display)
     display = gst_vaapi_create_display (type, plugin->display_name);
   if (!display)
     return FALSE;
