@@ -676,7 +676,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
           packet->granulepos);
       GST_DEBUG_OBJECT (ogg, "new granule %" G_GUINT64_FORMAT,
           pad->current_granule);
-    } else if (ogg->segment.rate > 0.0 && pad->current_granule != -1) {
+    } else if (pad->current_granule != -1) {
       pad->current_granule += duration;
       if (!delta_unit) {
         pad->keyframe_granule = pad->current_granule;
@@ -684,19 +684,23 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       GST_DEBUG_OBJECT (ogg, "interpolating granule %" G_GUINT64_FORMAT,
           pad->current_granule);
     }
-    if (ogg->segment.rate < 0.0 && packet->granulepos == -1) {
-      /* negative rates, only set timestamp on the packets with a granulepos */
+
+    if (ogg->segment.rate < 0.0 && pad->current_granule == -1) {
+      /* negative rates, allow output of packets with no timestamp, let downstream reconstruct */
       out_timestamp = -1;
       out_duration = -1;
       out_offset = -1;
       out_offset_end = -1;
+      pad->prev_granule = -1;
     } else {
       /* we only push buffers after we have a valid granule. This is done so that
        * we nicely skip packets without a timestamp after a seek. This is ok
-       * because we base or seek on the packet after the page with the smaller
+       * because we base our seek on the packet after the page with the smaller
        * timestamp. */
-      if (pad->current_granule == -1)
+      if (pad->current_granule == -1) {
+        pad->prev_granule = -1;
         goto no_timestamp;
+      }
 
       if (pad->map.is_ogm) {
         out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
@@ -802,9 +806,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   /* Mark discont on the buffer */
   if (pad->discont) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-    if GST_BUFFER_TIMESTAMP_IS_VALID
-      (buf)
-          pad->discont = FALSE;
+    if (ogg->segment.rate < 0.0 || GST_BUFFER_TIMESTAMP_IS_VALID (buf))
+      pad->discont = FALSE;
   }
 
   /* don't push the header packets when we are asked to skip them */
@@ -2100,6 +2103,7 @@ gst_ogg_chain_free (GstOggChain * chain)
 static void
 gst_ogg_pad_mark_discont (GstOggPad * pad)
 {
+  GST_LOG_OBJECT (pad, "Marking discont on pad");
   pad->discont = TRUE;
   pad->map.last_size = 0;
 }
@@ -3341,8 +3345,12 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
       granule_time = gst_ogg_stream_get_end_time_for_granulepos (&pad->map,
           granulepos);
 
+      /* Convert to stream time */
+      granule_time -= pad->start_time;
+      granule_time += chain->begin_time;
+
       GST_LOG_OBJECT (ogg,
-          "looking at page with ts %" GST_TIME_FORMAT ", target %"
+          "looking at page with time %" GST_TIME_FORMAT ", target %"
           GST_TIME_FORMAT, GST_TIME_ARGS (granule_time),
           GST_TIME_ARGS (target));
       if (granule_time < target)
@@ -4435,7 +4443,7 @@ gst_ogg_demux_update_chunk_size (GstOggDemux * ogg, ogg_page * page)
 }
 
 static GstFlowReturn
-gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
+gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page, gboolean discont)
 {
   GstOggPad *pad;
   gint64 granule;
@@ -4517,6 +4525,10 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
     pad = gst_ogg_demux_find_pad (ogg, serialno);
   }
   if (pad) {
+    /* Reset granule interpolation if chaining in reverse (discont = TRUE) */
+    if (discont)
+      pad->current_granule = -1;
+
     result = gst_ogg_pad_submit_page (pad, page);
   } else {
     GST_PUSH_LOCK (ogg);
@@ -4595,7 +4607,7 @@ gst_ogg_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       /* discontinuity in the pages */
       GST_DEBUG_OBJECT (ogg, "discont in page found, continuing");
     } else {
-      result = gst_ogg_demux_handle_page (ogg, &page);
+      result = gst_ogg_demux_handle_page (ogg, &page, FALSE);
       if (result < 0) {
         GST_DEBUG_OBJECT (ogg, "gst_ogg_demux_handle_page returned %d", result);
       }
@@ -4718,7 +4730,9 @@ gst_ogg_demux_loop_reverse (GstOggDemux * ogg)
     ogg->newsegment = NULL;
   }
 
-  ret = gst_ogg_demux_handle_page (ogg, &page);
+  GST_LOG_OBJECT (ogg, "Handling page at offset %" G_GINT64_FORMAT,
+      ogg->offset);
+  ret = gst_ogg_demux_handle_page (ogg, &page, TRUE);
 
 done:
   return ret;
