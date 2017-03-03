@@ -582,7 +582,11 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 
   /* switch depending on packet type */
   if ((gst_ogg_packet_data (packet))[0] & 1) {
-    if (vd->initialized) {
+    /* If we get a new initialization packet, reset the decoder.
+     * The vorbis_info struct should have a rate of 0 if it hasn't been
+     * initialized yet. */
+    if ((vd->initialized || (vd->vi.rate != 0)) &&
+        (gst_ogg_packet_data (packet))[0] == 0x01) {
       GST_INFO_OBJECT (vd, "already initialized, re-init");
       vorbis_dec_reset (dec);
     }
