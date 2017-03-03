@@ -32,6 +32,9 @@
 #include <unistd.h>
 
 gchar *tmpdir = NULL;
+GstClockTime first_ts;
+GstClockTime last_ts;
+gdouble current_rate;
 
 static void
 tempdir_setup (void)
@@ -83,22 +86,6 @@ count_files (const gchar * target)
   return ret;
 }
 
-
-static GstMessage *
-run_pipeline (GstElement * pipeline)
-{
-  GstBus *bus = gst_element_get_bus (GST_ELEMENT (pipeline));
-  GstMessage *msg;
-
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-
-  gst_object_unref (bus);
-
-  return msg;
-}
-
 static void
 dump_error (GstMessage * msg)
 {
@@ -116,8 +103,94 @@ dump_error (GstMessage * msg)
   g_free (dbg_info);
 }
 
+static GstMessage *
+run_pipeline (GstElement * pipeline)
+{
+  GstBus *bus = gst_element_get_bus (GST_ELEMENT (pipeline));
+  GstMessage *msg;
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (bus);
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+
+  return msg;
+}
+
 static void
-test_playback (const gchar * in_pattern)
+seek_pipeline (GstElement * pipeline, gdouble rate, GstClockTime start,
+    GstClockTime end)
+{
+  /* Pause the pipeline, seek to the desired range / rate, wait for PAUSED again, then
+   * clear the tracking vars for start_ts / end_ts */
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+
+  /* specific end time not implemented: */
+  fail_unless (end == GST_CLOCK_TIME_NONE);
+
+  gst_element_seek (pipeline, rate, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, start,
+      GST_SEEK_TYPE_END, 0);
+
+  /* Wait for the pipeline to preroll again */
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+
+  GST_LOG ("Seeked pipeline. Rate %f time range %" GST_TIME_FORMAT " to %"
+      GST_TIME_FORMAT, rate, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
+
+  /* Clear tracking variables now that the seek is complete */
+  first_ts = last_ts = GST_CLOCK_TIME_NONE;
+  current_rate = rate;
+};
+
+static void
+receive_handoff (GstElement * object G_GNUC_UNUSED, GstBuffer * buf,
+    GstPad * arg1 G_GNUC_UNUSED, gpointer user_data G_GNUC_UNUSED)
+{
+  GstClockTime start = GST_BUFFER_TIMESTAMP (buf);
+  GstClockTime end = start;
+
+  if (GST_BUFFER_DURATION_IS_VALID (buf))
+    end += GST_BUFFER_DURATION (buf);
+
+  GST_LOG ("Got buffer %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (start), GST_TIME_ARGS (end));
+
+  /* Check time is moving in the right direction */
+  if (current_rate > 0) {
+    if (GST_CLOCK_TIME_IS_VALID (first_ts))
+      fail_unless (start >= first_ts,
+          "Timestamps went backward during forward play, %" GST_TIME_FORMAT
+          " < %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
+          GST_TIME_ARGS (first_ts));
+    if (GST_CLOCK_TIME_IS_VALID (last_ts))
+      fail_unless (end >= last_ts,
+          "Timestamps went backward during forward play, %" GST_TIME_FORMAT
+          " < %" GST_TIME_FORMAT, GST_TIME_ARGS (end), GST_TIME_ARGS (last_ts));
+  } else {
+    fail_unless (start <= first_ts,
+        "Timestamps went forward during reverse play, %" GST_TIME_FORMAT " > %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (first_ts));
+    fail_unless (end <= last_ts,
+        "Timestamps went forward during reverse play, %" GST_TIME_FORMAT " > %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (end), GST_TIME_ARGS (last_ts));
+  }
+
+  /* update the range of timestamps we've encountered */
+  if (!GST_CLOCK_TIME_IS_VALID (first_ts) || start < first_ts)
+    first_ts = start;
+  if (!GST_CLOCK_TIME_IS_VALID (last_ts) || end > last_ts)
+    last_ts = end;
+}
+
+static void
+test_playback (const gchar * in_pattern, GstClockTime first_time,
+    GstClockTime last_time)
 {
   GstMessage *msg;
   GstElement *pipeline;
@@ -136,12 +209,37 @@ test_playback (const gchar * in_pattern)
   g_object_set (G_OBJECT (pipeline), "uri", uri, NULL);
   g_free (uri);
 
-  msg = run_pipeline (pipeline);
+  g_signal_connect (fakesink, "handoff", (GCallback) receive_handoff, NULL);
+  g_object_set (G_OBJECT (fakesink), "signal-handoffs", TRUE, NULL);
 
-  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
-    dump_error (msg);
+  /* test forwards */
+  seek_pipeline (pipeline, 1.0, 0, -1);
+  fail_unless (first_ts == GST_CLOCK_TIME_NONE);
+  msg = run_pipeline (pipeline);
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
+
+  /* Check we saw the entire range of values */
+  fail_unless (first_ts == 0,
+      "Expected start of playback range 0, got %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (first_ts));
+  fail_unless (last_ts == (3 * GST_SECOND),
+      "Expected end of playback range 3s, got %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (last_ts));
+
+  /* Test backwards */
+  seek_pipeline (pipeline, -1.0, 0, -1);
+  msg = run_pipeline (pipeline);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+  /* Check we saw the entire range of values */
+  fail_unless (first_ts == 0,
+      "Expected start of playback range 0, got %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (first_ts));
+  fail_unless (last_ts == (3 * GST_SECOND),
+      "Expected end of playback range 3s, got %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (last_ts));
+
   gst_object_unref (pipeline);
 }
 
@@ -149,7 +247,7 @@ GST_START_TEST (test_splitmuxsrc)
 {
   gchar *in_pattern =
       g_build_filename (GST_TEST_FILES_PATH, "splitvideo*.ogg", NULL);
-  test_playback (in_pattern);
+  test_playback (in_pattern, 0, 3 * GST_SECOND);
   g_free (in_pattern);
 }
 
@@ -265,7 +363,7 @@ GST_START_TEST (test_splitmuxsink)
   fail_unless (count == 3, "Expected 3 output files, got %d", count);
 
   in_pattern = g_build_filename (tmpdir, "out*.ogg", NULL);
-  test_playback (in_pattern);
+  test_playback (in_pattern, 0, 3 * GST_SECOND);
   g_free (in_pattern);
 }
 
