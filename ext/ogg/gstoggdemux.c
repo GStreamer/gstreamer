@@ -723,7 +723,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
             out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
                 pad->prev_granule);
           else
-            out_timestamp = 0;
+            out_timestamp = GST_CLOCK_TIME_NONE;
 
           if (pad->map.audio_clipping
               && pad->current_granule < pad->prev_granule + duration) {
