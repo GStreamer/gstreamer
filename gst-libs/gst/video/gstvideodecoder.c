@@ -2773,7 +2773,7 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
     if (frame->duration != GST_CLOCK_TIME_NONE) {
       if (GST_CLOCK_TIME_IS_VALID (priv->last_timestamp_out))
         frame->pts = priv->last_timestamp_out + frame->duration;
-      else
+      else if (decoder->output_segment.rate > 0.0)
         frame->pts = decoder->output_segment.start;
       GST_LOG_OBJECT (decoder,
           "Guessing timestamp %" GST_TIME_FORMAT " for frame...",
