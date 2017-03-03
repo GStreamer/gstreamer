@@ -1588,7 +1588,7 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
 {
   xmlNode *cur_node;
   GstMultSegmentBaseType *mult_seg_base_type;
-  guint intval;
+  guint intval, do_sanity_check;
   gboolean has_timeline = FALSE, has_duration = FALSE;
 
   gst_mpdparser_free_mult_seg_base_type_ext (*pointer);
@@ -1641,7 +1641,40 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
 
   has_timeline = mult_seg_base_type->SegmentTimeline != NULL;
 
-  if (!has_duration && !has_timeline) {
+  /* check if timeline and duration are valid for this representation:
+   * do not check, if _all_ Representation-siblings have SegmentTemplate-childs
+   *   no sub-SegmentTemplates: we are the essential node and must have timeline
+   *     and duration: check it
+   *   all Representations have own SegmentTemplates: don't check here , the
+   *     check is done in the SegmentTemplate childs of the Representations
+   */
+#define SANITY_CHECK_REASON_NO_SUBTEMPLATES     0x02
+#define SANITY_CHECK_REASON_TOPLEVEL_TEMPLATE   0x01
+  /* loop through all Representation-siblings and look for SegmentTemplate
+   * childs. */
+  do_sanity_check = SANITY_CHECK_REASON_NO_SUBTEMPLATES; /* preset: no subseqs */
+  for (cur_node = a_node->parent->children; cur_node; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      if (xmlStrcmp (cur_node->name, (xmlChar *) "Representation") == 0) {
+        /* in Representation: look for SegmentTemplate child */
+        xmlNode *sub_node;
+        gboolean have_segmenttemplate = FALSE;
+        for (sub_node = cur_node->children; sub_node; sub_node = sub_node->next) {
+          if (sub_node->type == XML_ELEMENT_NODE) {
+            if (xmlStrcmp (sub_node->name, (xmlChar *) "SegmentTemplate") == 0) {
+              have_segmenttemplate = TRUE;
+            }
+          }
+        }
+        if (have_segmenttemplate)
+          do_sanity_check &= ~SANITY_CHECK_REASON_NO_SUBTEMPLATES;
+        else /* found Representation without SegmentTemplate: sanity necessary */
+          do_sanity_check |= SANITY_CHECK_REASON_TOPLEVEL_TEMPLATE;
+      }
+    }
+  }
+
+  if (do_sanity_check && !has_duration && !has_timeline) {
     GST_ERROR ("segment has neither duration nor timeline");
     goto error;
   }
