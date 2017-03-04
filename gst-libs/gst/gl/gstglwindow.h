@@ -36,7 +36,7 @@ GType gst_gl_window_get_type       (void);
 
 /* FIXME: remove this when moving to -base */
 #ifndef GST_DISABLE_DEPRECATED
-#define GST_TYPE_GL_WINDOW GST_TYPE_GL_WINDOW
+#define GST_GL_TYPE_WINDOW GST_TYPE_GL_WINDOW
 #endif
 #define GST_GL_WINDOW(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_WINDOW, GstGLWindow))
 #define GST_GL_WINDOW_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_TYPE_GL_WINDOW, GstGLWindowClass))

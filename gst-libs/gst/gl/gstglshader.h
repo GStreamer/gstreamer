@@ -32,7 +32,7 @@ GType gst_gl_shader_get_type (void);
 
 /* FIXME: remove this when moving to -base */
 #ifndef GST_DISABLE_DEPRECATED
-#define GST_TYPE_GL_SHADER GST_TYPE_GL_SHADER
+#define GST_GL_TYPE_SHADER GST_TYPE_GL_SHADER
 #endif
 #define GST_GL_SHADER(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_SHADER, GstGLShader))
 #define GST_GL_SHADER_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_SHADER, GstGLShaderClass))

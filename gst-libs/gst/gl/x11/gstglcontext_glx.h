@@ -32,7 +32,7 @@ GType gst_gl_context_glx_get_type     (void);
 
 /* FIXME: remove this when moving to -base */
 #ifndef GST_DISABLE_DEPRECATED
-#define GST_TYPE_GL_CONTEXT_GLX GST_TYPE_GL_CONTEXT_GLX
+#define GST_GL_TYPE_CONTEXT_GLX GST_TYPE_GL_CONTEXT_GLX
 #endif
 #define GST_GL_CONTEXT_GLX(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_CONTEXT_GLX, GstGLContextGLX))
 #define GST_GL_CONTEXT_GLX_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_CONTEXT_GLX, GstGLContextGLXClass))
