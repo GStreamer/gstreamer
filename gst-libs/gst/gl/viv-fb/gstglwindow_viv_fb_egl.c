@@ -30,7 +30,7 @@
 
 #define gst_gl_window_viv_fb_egl_parent_class parent_class
 G_DEFINE_TYPE (GstGLWindowVivFBEGL, gst_gl_window_viv_fb_egl,
-    GST_GL_TYPE_WINDOW);
+    GST_TYPE_GL_WINDOW);
 
 static guintptr gst_gl_window_viv_fb_egl_get_window_handle (GstGLWindow *
     window);
@@ -77,7 +77,7 @@ gst_gl_window_viv_fb_egl_new (GstGLDisplay * display)
     /* we require a Vivante FB display to create windows */
     return NULL;
 
-  return g_object_new (GST_GL_TYPE_WINDOW_VIV_FB_EGL, NULL);
+  return g_object_new (GST_TYPE_GL_WINDOW_VIV_FB_EGL, NULL);
 }
 
 static void
