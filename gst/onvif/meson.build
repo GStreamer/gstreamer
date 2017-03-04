@@ -4,7 +4,7 @@ onvif_sources = [
   'gstrtponviftimestamp.c',
 ]
 
-gstonvif = library('gstonvif',
+gstrtponvif = library('gstrtponvif',
   onvif_sources,
   c_args : gst_plugins_bad_args,
   include_directories : [configinc],

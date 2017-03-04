@@ -1,4 +1,4 @@
-camerabin2_sources = [
+camerabin_sources = [
   'gstdigitalzoom.c',
   'gstviewfinderbin.c',
   'camerabingeneral.c',
@@ -7,8 +7,8 @@ camerabin2_sources = [
   'gstplugin.c',
 ]
 
-gstcamerabin2 = library('gstcamerabin2',
-  camerabin2_sources,
+gstcamerabin = library('gstcamerabin',
+  camerabin_sources,
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
   include_directories : [configinc, libsinc],
   link_with : gstbasecamerabin,

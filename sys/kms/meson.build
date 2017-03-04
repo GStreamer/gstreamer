@@ -8,7 +8,7 @@ kmssink_sources = [
 libdrm_dep = dependency('libdrm', version : '>= 2.4.55', required : false)
 
 if libdrm_dep.found()
-  gstkmssink = library('gstkmssink',
+  gstkmssink = library('gstkms',
     kmssink_sources,
     c_args : gst_plugins_bad_args,
     include_directories : [configinc],
