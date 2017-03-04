@@ -31,8 +31,9 @@ G_BEGIN_DECLS
 GType gst_gl_context_cocoa_get_type       (void);
 
 /* FIXME: remove this when moving to -base */
-G_DEPRECATED_FOR(GST_TYPE_GL_CONTEXT_COCOA) \
-static inline GType GST_GL_TYPE_CONTEXT_COCOA (void) { return GST_TYPE_GL_CONTEXT_COCOA; }
+#ifndef GST_DISABLE_DEPRECATED
+#define GST_GL_TYPE_CONTEXT_COCOA GST_TYPE_GL_CONTEXT_COCOA
+#endif
 #define GST_GL_CONTEXT_COCOA(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_CONTEXT_COCOA, GstGLContextCocoa))
 #define GST_GL_CONTEXT_COCOA_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_CONTEXT_COCOA, GstGLContextCocoaClass))
 #define GST_IS_GL_CONTEXT_COCOA(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_CONTEXT_COCOA))

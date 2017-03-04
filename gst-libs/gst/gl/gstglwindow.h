@@ -35,8 +35,9 @@ GType gst_gl_window_get_type       (void);
 #define GST_TYPE_GL_WINDOW         (gst_gl_window_get_type())
 
 /* FIXME: remove this when moving to -base */
-G_DEPRECATED_FOR(GST_TYPE_GL_WINDOW) \
-static inline GType GST_GL_TYPE_WINDOW (void) { return GST_TYPE_GL_WINDOW; }
+#ifndef GST_DISABLE_DEPRECATED
+#define GST_TYPE_GL_WINDOW GST_TYPE_GL_WINDOW
+#endif
 #define GST_GL_WINDOW(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_WINDOW, GstGLWindow))
 #define GST_GL_WINDOW_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_TYPE_GL_WINDOW, GstGLWindowClass))
 #define GST_IS_GL_WINDOW(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_WINDOW))

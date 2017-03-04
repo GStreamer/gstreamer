@@ -31,8 +31,9 @@ GType gst_gl_shader_get_type (void);
 #define GST_TYPE_GL_SHADER         (gst_gl_shader_get_type())
 
 /* FIXME: remove this when moving to -base */
-G_DEPRECATED_FOR(GST_TYPE_GL_SHADER) \
-static inline GType GST_GL_TYPE_SHADER (void) { return GST_TYPE_GL_SHADER; }
+#ifndef GST_DISABLE_DEPRECATED
+#define GST_TYPE_GL_SHADER GST_TYPE_GL_SHADER
+#endif
 #define GST_GL_SHADER(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_SHADER, GstGLShader))
 #define GST_GL_SHADER_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_SHADER, GstGLShaderClass))
 #define GST_IS_GL_SHADER(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_SHADER))
