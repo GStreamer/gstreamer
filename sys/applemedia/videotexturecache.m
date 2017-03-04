@@ -44,8 +44,13 @@ typedef struct _ContextThreadData
 
 typedef struct _TextureWrapper
 {
+#if HAVE_IOS
     CVOpenGLESTextureCacheRef *cache;
     CVOpenGLESTextureRef texture;
+#else
+    CVOpenGLTextureCacheRef *cache;
+    CVOpenGLTextureRef texture;
+#endif
 
 } TextureWrapper;
 
