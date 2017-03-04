@@ -4,7 +4,7 @@ encoding_sources = ['gstencodebin.c',
   'gststreamsplitter.c',
   ]
 
-gstencoding = library('gstencodebin',
+gstencoding = library('gstencoding',
   encoding_sources,
   c_args : gst_plugins_base_args,
   include_directories: [configinc, libsinc],

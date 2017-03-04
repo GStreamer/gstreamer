@@ -10,7 +10,7 @@ xvideo_dep = dependency('xv', required : false)
 core_conf.set('HAVE_XVIDEO', x11_dep.found() and xvideo_dep.found())
 
 if xvideo_dep.found()
-  gstxvimage = library('gstxvimage',
+  gstxvimage = library('gstxvimagesink',
     xvimage_sources,
     c_args : gst_plugins_base_args,
     include_directories: [configinc, libsinc],

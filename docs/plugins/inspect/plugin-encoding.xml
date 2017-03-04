@@ -1,8 +1,8 @@
 <plugin>
   <name>encoding</name>
   <description>various encoding-related elements</description>
-  <filename>../../gst/encoding/.libs/libgstencodebin.so</filename>
-  <basename>libgstencodebin.so</basename>
+  <filename>../../gst/encoding/.libs/libgstencoding.so</filename>
+  <basename>libgstencoding.so</basename>
   <version>1.11.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
