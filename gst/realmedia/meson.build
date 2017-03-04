@@ -13,7 +13,7 @@ real_sources = [
   'realmedia.c'
 ]
 
-gstrmdemux = library('gstrmdemux',
+gstrmdemux = library('gstrealmedia',
   real_sources,
   c_args : ugly_args,
   include_directories : [configinc, libsinc],

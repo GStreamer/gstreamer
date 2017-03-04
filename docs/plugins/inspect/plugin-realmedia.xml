@@ -1,12 +1,12 @@
 <plugin>
   <name>realmedia</name>
   <description>RealMedia support plugins</description>
-  <filename>../../gst/realmedia/.libs/libgstrmdemux.so</filename>
-  <basename>libgstrmdemux.so</basename>
-  <version>1.11.2</version>
+  <filename>../../gst/realmedia/.libs/libgstrealmedia.so</filename>
+  <basename>libgstrealmedia.so</basename>
+  <version>1.11.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins source release</package>
+  <package>GStreamer Ugly Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
