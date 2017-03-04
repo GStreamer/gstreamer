@@ -531,7 +531,7 @@ gst_validate_gtk_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    gstvalidategtk,
+    validategtk,
     "GstValidate plugin to execute action specific to the Gtk toolkit",
     gst_validate_gtk_init, VERSION, "LGPL", GST_PACKAGE_NAME,
     GST_PACKAGE_ORIGIN)

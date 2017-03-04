@@ -74,7 +74,7 @@ gst_validate_gapplication_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    gstvalidategapplication,
+    validategapplication,
     "GstValidate plugin to run validate on gapplication",
     gst_validate_gapplication_init, VERSION, "LGPL", GST_PACKAGE_NAME,
     GST_PACKAGE_ORIGIN)

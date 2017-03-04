@@ -801,7 +801,7 @@ gst_validate_ssim_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    ssim,
+    validatessim,
     "GstValidate plugin to run the ssim algorithm on raw"
     " video buffers. It allows you to generate png files"
     "\n                          "
