@@ -32,8 +32,9 @@ GType gst_gl_context_get_type       (void);
 #define GST_TYPE_GL_CONTEXT         (gst_gl_context_get_type())
 
 /* FIXME: remove this when moving to -base */
-G_DEPRECATED_FOR(GST_TYPE_GL_CONTEXT) \
-static inline GType GST_GL_TYPE_CONTEXT (void) { return GST_TYPE_GL_CONTEXT; }
+#ifndef GST_DISABLE_DEPRECATED
+#define GST_TYPE_GL_CONTEXT GST_TYPE_GL_CONTEXT
+#endif
 #define GST_GL_CONTEXT(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_CONTEXT, GstGLContext))
 #define GST_GL_CONTEXT_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_TYPE_GL_CONTEXT, GstGLContextClass))
 #define GST_IS_GL_CONTEXT(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_CONTEXT))
