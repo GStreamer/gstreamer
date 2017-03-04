@@ -9,7 +9,7 @@ pulse_sources = [
 libpulse_dep = dependency('libpulse', version : '>=2.0', required : false)
 
 if libpulse_dep.found()
-  gstpulse = library('gstpulse',
+  gstpulse = library('gstpulseaudio',
     pulse_sources,
     c_args : gst_plugins_good_args,
     include_directories : [configinc, libsinc],

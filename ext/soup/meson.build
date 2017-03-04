@@ -13,7 +13,7 @@ soup_args = [
 libsoup_dep = dependency('libsoup-2.4', version : '>=2.48', required : false)
 
 if libsoup_dep.found()
-  gstsouphttpsrc = library('gstsouphttpsrc',
+  gstsouphttpsrc = library('gstsoup',
     soup_sources,
     c_args : gst_plugins_good_args + soup_args,
     link_args : noseh_link_args,
