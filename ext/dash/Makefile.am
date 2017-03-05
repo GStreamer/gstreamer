@@ -32,5 +32,5 @@ libgstdashdemux_la_LIBADD = \
 	$(GIO_LIBS) \
 	$(LIBXML2_LIBS)
 libgstdashdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdashdemux_la_LIBTOOLFLAGS = --tag=disable-static
+libgstdashdemux_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 

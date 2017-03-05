@@ -15,7 +15,7 @@ libgstsmoothstreaming_la_SOURCES = gstsmoothstreaming-plugin.c \
 	gstmssdemux.c \
 	gstmssfragmentparser.c \
 	gstmssmanifest.c
-libgstsmoothstreaming_la_LIBTOOLFLAGS = --tag=disable-static
+libgstsmoothstreaming_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstmssdemux.h \
 	gstmssfragmentparser.h \
