@@ -4765,62 +4765,61 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
   gint index = 0;
   gint repeat_index = 0;
   GstMediaSegment *selectedChunk = NULL;
-  gboolean in_segment;
 
   g_return_val_if_fail (stream != NULL, 0);
 
   if (stream->segments) {
     for (index = 0; index < stream->segments->len; index++) {
+      gboolean in_segment = FALSE;
       GstMediaSegment *segment = g_ptr_array_index (stream->segments, index);
+      GstClockTime end_time;
 
       GST_DEBUG ("Looking at fragment sequence chunk %d / %d", index,
           stream->segments->len);
-      in_segment = FALSE;
-      if (segment->start <= ts) {
-        GstClockTime end_time;
 
-        if (segment->repeat >= 0) {
-          end_time = segment->start + (segment->repeat + 1) * segment->duration;
-        } else {
-          end_time =
-              gst_mpdparser_get_segment_end_time (client, stream->segments,
-              segment, index);
-        }
+      if (segment->start > ts)
+        break;
 
-        /* avoid downloading another fragment just for 1ns in reverse mode */
-        if (forward)
-          in_segment = ts < end_time;
-        else
-          in_segment = ts <= end_time;
+      if (segment->repeat >= 0) {
+        end_time = segment->start + (segment->repeat + 1) * segment->duration;
+      } else {
+        end_time =
+            gst_mpdparser_get_segment_end_time (client, stream->segments,
+            segment, index);
+      }
 
-        if (in_segment) {
-          selectedChunk = segment;
-          repeat_index = (ts - segment->start) / segment->duration;
+      /* avoid downloading another fragment just for 1ns in reverse mode */
+      if (forward)
+        in_segment = ts < end_time;
+      else
+        in_segment = ts <= end_time;
 
-          /* At the end of a segment in reverse mode, start from the previous fragment */
-          if (!forward && repeat_index > 0
-              && ((ts - segment->start) % segment->duration == 0))
-            repeat_index--;
+      if (in_segment) {
+        selectedChunk = segment;
+        repeat_index = (ts - segment->start) / segment->duration;
 
-          if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) ==
-              GST_SEEK_FLAG_SNAP_NEAREST) {
-            /* FIXME implement this */
-          } else if ((forward && flags & GST_SEEK_FLAG_SNAP_AFTER) ||
-              (!forward && flags & GST_SEEK_FLAG_SNAP_BEFORE)) {
+        /* At the end of a segment in reverse mode, start from the previous fragment */
+        if (!forward && repeat_index > 0
+            && ((ts - segment->start) % segment->duration == 0))
+          repeat_index--;
 
-            if (repeat_index + 1 < segment->repeat) {
-              repeat_index++;
+        if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
+          /* FIXME implement this */
+        } else if ((forward && flags & GST_SEEK_FLAG_SNAP_AFTER) ||
+            (!forward && flags & GST_SEEK_FLAG_SNAP_BEFORE)) {
+
+          if (repeat_index + 1 < segment->repeat) {
+            repeat_index++;
+          } else {
+            repeat_index = 0;
+            if (index + 1 >= stream->segments->len) {
+              selectedChunk = NULL;
             } else {
-              repeat_index = 0;
-              if (index + 1 >= stream->segments->len) {
-                selectedChunk = NULL;
-              } else {
-                selectedChunk = g_ptr_array_index (stream->segments, ++index);
-              }
+              selectedChunk = g_ptr_array_index (stream->segments, ++index);
             }
           }
-          break;
         }
+        break;
       }
     }
 
