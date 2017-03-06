@@ -1792,7 +1792,10 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
         && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (dashdemux)) {
       GST_LOG_OBJECT (stream->pad, "current sync sample #%d",
           dashstream->current_sync_sample);
-      dur = dashstream->keyframe_average_distance;
+      if (dashstream->current_sync_sample == -1)
+        dur = 0;
+      else
+        dur = dashstream->keyframe_average_distance;
     } else if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
         dashstream->sidx_position != 0
         && dashstream->sidx_position != GST_CLOCK_TIME_NONE
