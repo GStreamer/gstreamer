@@ -159,8 +159,8 @@ gst_voaacenc_class_init (GstVoAacEncClass * klass)
   g_object_class_install_property (object_class, PROP_BITRATE,
       g_param_spec_int ("bitrate",
           "Bitrate",
-          "Target Audio Bitrate",
-          0, G_MAXINT, VOAAC_ENC_DEFAULT_BITRATE,
+          "Target Audio Bitrate (bits per second)",
+          0, 320000, VOAAC_ENC_DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
