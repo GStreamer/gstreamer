@@ -104,7 +104,7 @@ GST_START_TEST (test_test_source_properties)
 
   /* Test mute support */
   g_object_set (clip, "mute", TRUE, NULL);
-  fail_unless (ges_timeline_commit (timeline));
+  fail_if (ges_timeline_commit (timeline));
   nle_object_check (ges_track_element_get_nleobject (trackelement), 420, 510,
       120, 510, MIN_NLE_PRIO + TRANSITIONS_HEIGHT, FALSE);
   g_object_set (clip, "mute", FALSE, NULL);
