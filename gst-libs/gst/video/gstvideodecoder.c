@@ -1921,8 +1921,6 @@ gst_video_decoder_add_buffer_info (GstVideoDecoder * decoder,
   GstVideoDecoderPrivate *priv = decoder->priv;
   Timestamp *ts;
 
-  ts = g_slice_new (Timestamp);
-
   if (!GST_BUFFER_PTS_IS_VALID (buffer) &&
       !GST_BUFFER_DTS_IS_VALID (buffer) &&
       !GST_BUFFER_DURATION_IS_VALID (buffer) &&
@@ -1931,6 +1929,8 @@ gst_video_decoder_add_buffer_info (GstVideoDecoder * decoder,
      * for buffers with no distinguishing info */
     return;
   }
+
+  ts = g_slice_new (Timestamp);
 
   GST_LOG_OBJECT (decoder,
       "adding PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT
