@@ -164,6 +164,9 @@ gst_h264_parse_init (GstH264Parse * h264parse)
   gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (h264parse), FALSE);
   GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (h264parse));
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_BASE_PARSE_SINK_PAD (h264parse));
+
+  h264parse->aud_needed = TRUE;
+  h264parse->aud_insert = TRUE;
 }
 
 
@@ -192,6 +195,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->keyframe = FALSE;
   h264parse->header = FALSE;
   h264parse->frame_start = FALSE;
+  h264parse->aud_insert = TRUE;
   gst_adapter_clear (h264parse->frame_out);
 }
 
@@ -868,6 +872,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       pres = gst_h264_parser_parse_nal (nalparser, nalu);
       if (pres != GST_H264_PARSER_OK)
         return FALSE;
+      h264parse->aud_insert = FALSE;
       break;
     default:
       /* drop anything before the initial SPS */
@@ -943,6 +948,11 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
   return complete;
 }
 
+static guint8 au_delim[6] = {
+  0x00, 0x00, 0x00, 0x01,       /* nal prefix */
+  0x09,                         /* nal unit type = access unit delimiter */
+  0xf0                          /* allow any slice type */
+};
 
 static GstFlowReturn
 gst_h264_parse_handle_frame_packetized (GstBaseParse * parse,
@@ -1054,6 +1064,7 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
   GstH264ParserResult pres;
   gint framesize;
   GstFlowReturn ret;
+  gboolean au_complete;
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (frame->buffer,
               GST_BUFFER_FLAG_DISCONT))) {
@@ -1204,9 +1215,6 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
     GST_DEBUG_OBJECT (h264parse, "%p complete nal found. Off: %u, Size: %u",
         data, nalu.offset, nalu.size);
 
-    /* simulate no next nal if none needed */
-    nonext = nonext || (h264parse->align == GST_H264_PARSE_ALIGN_NAL);
-
     if (!nonext) {
       if (nalu.offset + nalu.size + 4 + 2 > size) {
         GST_DEBUG_OBJECT (h264parse, "not enough data for next NALU");
@@ -1231,7 +1239,18 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
       break;
 
     /* if no next nal, we know it's complete here */
-    if (gst_h264_parse_collect_nal (h264parse, data, size, &nalu))
+    au_complete = gst_h264_parse_collect_nal (h264parse, data, size, &nalu);
+
+    /* Judge whether or not to insert AU Delimiter in case of byte-stream */
+    if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
+      if (!h264parse->aud_needed)
+        h264parse->aud_insert = FALSE;
+
+      h264parse->aud_needed = au_complete;
+      break;
+    }
+
+    if (au_complete)
       break;
 
     GST_DEBUG_OBJECT (h264parse, "Looking for more");
@@ -2364,7 +2383,33 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     h264parse->sent_codec_tag = TRUE;
   }
 
-  buffer = frame->buffer;
+  /* In case of byte-stream, insert au delimeter by default
+   * if it doesn't exist */
+  if (frame->buffer != NULL && h264parse->aud_insert
+      && h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+    if (h264parse->align == GST_H264_PARSE_ALIGN_AU) {
+      GstMemory *mem =
+          gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, (guint8 *) au_delim,
+          sizeof (au_delim), 0, sizeof (au_delim), NULL, NULL);
+
+      frame->out_buffer = gst_buffer_copy (frame->buffer);
+      gst_buffer_prepend_memory (frame->out_buffer, mem);
+      if (h264parse->idr_pos >= 0)
+        h264parse->idr_pos += sizeof (au_delim);
+
+      buffer = frame->out_buffer;
+    } else {
+      GstBuffer *aud_buffer = gst_buffer_new_allocate (NULL, 2, NULL);
+      gst_buffer_fill (aud_buffer, 0, (guint8 *) (au_delim + 4), 2);
+
+      buffer = frame->buffer;
+      gst_h264_parse_push_codec_buffer (h264parse, aud_buffer,
+          GST_BUFFER_TIMESTAMP (buffer));
+      gst_buffer_unref (aud_buffer);
+    }
+  } else {
+    buffer = frame->buffer;
+  }
 
   if ((event = check_pending_key_unit_event (h264parse->force_key_unit_event,
               &parse->segment, GST_BUFFER_TIMESTAMP (buffer),

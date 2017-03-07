@@ -128,6 +128,10 @@ struct _GstH264Parse
   GstVideoMultiviewMode multiview_mode;
   GstVideoMultiviewFlags multiview_flags;
   gboolean first_in_bundle;
+
+  /* For insertion of AU Delimiter */
+  gboolean aud_needed;
+  gboolean aud_insert;
 };
 
 struct _GstH264ParseClass
