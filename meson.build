@@ -90,6 +90,14 @@ import os
 os.symlink(os.path.join('@1@', 'subprojects', '@0@'),
     os.path.join('@1@', '@0@'))
 '''
+
+foreach custom_subproj: get_option('custom_subprojects').split(',')
+    if custom_subproj != ''
+        message ('Adding custom subproject ' + custom_subproj)
+        subprojects += [custom_subproj]
+    endif
+endforeach
+
 foreach subproj: subprojects
     subproject(subproj, version: gst_version)
 

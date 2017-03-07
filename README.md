@@ -63,6 +63,23 @@ Update all GStreamer modules without rebuilding:
 ninja -C build/ git-update
 ```
 
+## Custom subprojects
+
+We also added a meson option, 'custom_subprojects', that allows the user
+to provide a comma-separated list of subprojects that should be built
+alongside the default ones.
+
+To use it:
+
+```
+cd subprojects
+git clone my_subproject
+cd ../build
+rm -rf * && meson .. -Dcustom_subprojects=my_subproject
+ninja
+```
+
+
 ## Run tests
 
 You can easily run the test of all the components:
