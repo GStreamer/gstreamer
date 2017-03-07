@@ -1965,9 +1965,9 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
       && gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)
       && dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
     /* fragment is advanced on data_received when byte limits are reached */
-    if (gst_dash_demux_stream_has_next_fragment (stream))
+    if (gst_dash_demux_stream_has_next_subfragment (stream)) {
       return GST_FLOW_OK;
-    return GST_FLOW_EOS;
+    }
   }
 
   if (G_UNLIKELY (stream->downloading_header || stream->downloading_index))
@@ -2749,14 +2749,19 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
                 && (GST_ADAPTIVE_DEMUX (stream->demux)->
                     segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS))
             && advance) {
-          GstFlowReturn new_ret;
-          new_ret =
-              gst_adaptive_demux_stream_advance_fragment (demux, stream,
-              SIDX_CURRENT_ENTRY (dash_stream)->duration);
 
-          /* only overwrite if it was OK before */
-          if (ret == GST_FLOW_OK)
-            ret = new_ret;
+          if (gst_dash_demux_stream_has_next_subfragment (stream)) {
+            GstFlowReturn new_ret;
+            new_ret =
+                gst_adaptive_demux_stream_advance_fragment (demux, stream,
+                SIDX_CURRENT_ENTRY (dash_stream)->duration);
+
+            /* only overwrite if it was OK before */
+            if (ret == GST_FLOW_OK)
+              ret = new_ret;
+          } else {
+            break;
+          }
         }
       }
     }
