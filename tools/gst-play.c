@@ -194,8 +194,8 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
   }
 
   if (verbose) {
-    play->deep_notify_id = g_signal_connect (play->playbin, "deep-notify",
-        G_CALLBACK (gst_object_default_deep_notify), NULL);
+    play->deep_notify_id =
+        gst_element_add_property_deep_notify_watch (play->playbin, NULL, TRUE);
   }
 
   play->loop = g_main_loop_new (NULL, FALSE);
@@ -468,6 +468,34 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
         if (ev)
           gst_event_unref (ev);
       }
+      break;
+    }
+    case GST_MESSAGE_PROPERTY_NOTIFY:{
+      const GValue *val;
+      const gchar *name;
+      GstObject *obj;
+      gchar *val_str = NULL;
+      gchar *obj_name;
+
+      gst_message_parse_property_notify (msg, &obj, &name, &val);
+
+      obj_name = gst_object_get_path_string (GST_OBJECT (obj));
+      if (val != NULL) {
+        if (G_VALUE_HOLDS_STRING (val))
+          val_str = g_value_dup_string (val);
+        else if (G_VALUE_TYPE (val) == GST_TYPE_CAPS)
+          val_str = gst_caps_to_string (g_value_get_boxed (val));
+        else if (G_VALUE_TYPE (val) == GST_TYPE_TAG_LIST)
+          val_str = gst_tag_list_to_string (g_value_get_boxed (val));
+        else
+          val_str = gst_value_serialize (val);
+      } else {
+        val_str = g_strdup ("(no value)");
+      }
+
+      gst_play_printf ("%s: %s = %s\n", obj_name, name, val_str);
+      g_free (obj_name);
+      g_free (val_str);
       break;
     }
     default:
