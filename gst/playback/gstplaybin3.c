@@ -534,7 +534,7 @@ struct _GstPlayBin3Class
 #define DEFAULT_SOURCE            NULL
 #define DEFAULT_FLAGS             GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_TEXT | \
                                   GST_PLAY_FLAG_SOFT_VOLUME | GST_PLAY_FLAG_DEINTERLACE | \
-                                  GST_PLAY_FLAG_SOFT_COLORBALANCE
+                                  GST_PLAY_FLAG_SOFT_COLORBALANCE | GST_PLAY_FLAG_BUFFERING
 #define DEFAULT_CURRENT_VIDEO     -1
 #define DEFAULT_CURRENT_AUDIO     -1
 #define DEFAULT_CURRENT_TEXT      -1

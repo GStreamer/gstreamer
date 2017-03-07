@@ -204,7 +204,7 @@ enum
 #define DEFAULT_BUFFER_DURATION     -1
 #define DEFAULT_BUFFER_SIZE         -1
 #define DEFAULT_DOWNLOAD            FALSE
-#define DEFAULT_USE_BUFFERING       FALSE
+#define DEFAULT_USE_BUFFERING       TRUE
 #define DEFAULT_RING_BUFFER_MAX_SIZE 0
 
 #define DEFAULT_CAPS (gst_static_caps_get (&default_raw_caps))
@@ -738,6 +738,7 @@ gst_uri_source_bin_init (GstURISourceBin * urisrc)
   urisrc->buffer_duration = DEFAULT_BUFFER_DURATION;
   urisrc->buffer_size = DEFAULT_BUFFER_SIZE;
   urisrc->download = DEFAULT_DOWNLOAD;
+  urisrc->use_buffering = DEFAULT_USE_BUFFERING;
   urisrc->ring_buffer_max_size = DEFAULT_RING_BUFFER_MAX_SIZE;
   urisrc->last_buffering_pct = -1;
 
