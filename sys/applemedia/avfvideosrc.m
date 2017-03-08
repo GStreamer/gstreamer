@@ -241,6 +241,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 @end
 
+#if HAVE_IOS
+
 static AVCaptureDeviceType GstAVFVideoSourceDeviceType2AVCaptureDeviceType(GstAVFVideoSourceDeviceType deviceType) {
   switch (deviceType) {
     case GST_AVF_VIDEO_SOURCE_DEVICE_TYPE_BUILT_IN_WIDE_ANGLE_CAMERA:
@@ -280,6 +282,8 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
       g_assert_not_reached();
   }
 }
+
+#endif
 
 @implementation GstAVFVideoSrcImpl
 
@@ -332,6 +336,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
   NSError *err;
 
   if (deviceIndex == DEFAULT_DEVICE_INDEX) {
+#ifdef HAVE_IOS
     if (deviceType != DEFAULT_DEVICE_TYPE && position != DEFAULT_POSITION) {
       device = [AVCaptureDevice
                 defaultDeviceWithDeviceType:GstAVFVideoSourceDeviceType2AVCaptureDeviceType(deviceType)
@@ -340,6 +345,9 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
     } else {
       device = [AVCaptureDevice defaultDeviceWithMediaType:mediaType];
     }
+#else
+      device = [AVCaptureDevice defaultDeviceWithMediaType:mediaType];
+#endif
     if (device == nil) {
       GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
                           ("No video capture devices found"), (NULL));
@@ -434,8 +442,10 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
 
     /* retained by session */
     connection = [[output connections] firstObject];
+#ifdef HAVE_IOS
     if (orientation != DEFAULT_ORIENTATION)
       connection.videoOrientation = GstAVFVideoSourceOrientation2AVCaptureVideoOrientation(orientation);
+#endif
     inputClock = ((AVCaptureInputPort *)connection.inputPorts[0]).clock;
 
     *successPtr = YES;
