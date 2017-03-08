@@ -1823,9 +1823,12 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
       g_string_append (s, t);
       g_free (t);
     } else {
-      GST_WARNING ("No value transform to serialize field '%s' of type '%s'",
-          g_quark_to_string (field->name),
-          _priv_gst_value_gtype_to_abbr (type));
+      if (!G_TYPE_CHECK_VALUE_TYPE (&field->value, G_TYPE_STRING) &&
+          !(G_TYPE_CHECK_VALUE_TYPE (&field->value, G_TYPE_POINTER) &&
+              g_value_get_pointer (&field->value) == NULL))
+        GST_WARNING ("No value transform to serialize field '%s' of type '%s'",
+            g_quark_to_string (field->name),
+            _priv_gst_value_gtype_to_abbr (type));
       g_string_append (s, "NULL");
     }
   }
