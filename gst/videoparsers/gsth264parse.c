@@ -2391,8 +2391,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   /* In case of byte-stream, insert au delimeter by default
    * if it doesn't exist */
-  if (frame->buffer != NULL && h264parse->aud_insert
-      && h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+  if (h264parse->aud_insert && h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
     if (h264parse->align == GST_H264_PARSE_ALIGN_AU) {
       GstMemory *mem =
           gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, (guint8 *) au_delim,
