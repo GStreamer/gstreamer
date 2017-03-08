@@ -302,6 +302,7 @@ gst_timecodestamper_reset_timecode (GstTimeCodeStamper * timecodestamper)
       timecodestamper->vinfo.interlace_mode ==
       GST_VIDEO_INTERLACE_MODE_PROGRESSIVE ? 0 :
       GST_VIDEO_TIME_CODE_FLAGS_INTERLACED, 0, 0, 0, 0, 0);
+  g_date_time_unref (jam);
   if (timecodestamper->first_tc) {
     timecodestamper->current_tc->hours = timecodestamper->first_tc->hours;
     timecodestamper->current_tc->minutes = timecodestamper->first_tc->minutes;
