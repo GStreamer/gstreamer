@@ -23,15 +23,15 @@
  */
 /**
  * SECTION:element-stereo
+ * @title: stereo
  *
  * Create a wide stereo effect.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! stereo ! audioconvert ! audioresample ! alsasink
  * ]| Play an Ogg/Vorbis file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
