@@ -456,7 +456,7 @@ gst_element_factory_make (const gchar * factoryname, const gchar * name)
   /* ERRORS */
 no_factory:
   {
-    GST_INFO ("no such element factory \"%s\"!", factoryname);
+    GST_WARNING ("no such element factory \"%s\"!", factoryname);
     return NULL;
   }
 create_failed:
