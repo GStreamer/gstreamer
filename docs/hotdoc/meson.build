@@ -1,13 +1,17 @@
 ges_excludes = []
-foreach f: ['gesmarshal.h', 'ges-internal.h', 'ges-auto-transition.[ch]',
-            'ges-structured-interface.[ch]', 'ges-structure-parser.[ch]',
-            'ges-smart-video-mixer.[ch]', 'gstframepositioner.[ch]',
-            'ges/lex.priv_ges_parse_yy.c']
+foreach f: ['gesmarshal.*',
+            'ges-internal.*',
+            'ges-auto-transition.*',
+            'ges-structured-interface.*',
+            'ges-structure-parser.*',
+            'ges-smart-*.',
+            'gstframepositioner.*',
+            'lex.priv_ges_parse_yy.c']
     ges_excludes += [join_paths(meson.current_source_dir(), '..', '..', 'ges', f)]
 endforeach
 
 hotdoc = import('hotdoc')
-gst_editin_services_doc = hotdoc.generate_doc('gst-editing-services',
+gst_editing_services_doc = hotdoc.generate_doc('gst-editing-services',
     project_version: apiversion,
     extra_assets: [join_paths(meson.current_source_dir(), 'images')],
     c_sources: ['../../ges/ges.h', '../../ges/*.[hc]'],
