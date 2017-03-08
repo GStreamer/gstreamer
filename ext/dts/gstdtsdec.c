@@ -20,18 +20,18 @@
 
 /**
  * SECTION:element-dtsdec
+ * @title: dtsdec
  *
  * Digital Theatre System (DTS) audio decoder
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 dvdreadsrc title=1 ! mpegpsdemux ! dtsdec ! audioresample ! audioconvert ! alsasink
  * ]| Play a DTS audio track from a dvd.
  * |[
  * gst-launch-1.0 filesrc location=abc.dts ! dtsdec ! audioresample ! audioconvert ! alsasink
  * ]| Decode a standalone file and play it.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-daalaenc
+ * @title: daalaenc
  * @see_also: daaladec, oggmux
  *
  * This element encodes raw video into a Daala stream.
@@ -30,14 +31,13 @@
  * video codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
  * Foundation</ulink>.
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! daalaenc ! oggmux ! filesink location=videotestsrc.ogg
  * ]| This example pipeline will encode a test video source to daala muxed in an
  * ogg container. Refer to the daaladec documentation to decode the create
  * stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

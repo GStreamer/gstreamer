@@ -23,21 +23,19 @@
 
 /**
  * SECTION:element-gltestsrc
+ * @title: gltestsrc
  *
- * <refsect2>
- * <para>
  * The gltestsrc element is used to produce test video texture.
  * The video test produced can be controlled with the "pattern"
  * property.
- * </para>
- * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ *
+ * ## Example launch line
+ *
+ * |[
  * gst-launch-1.0 -v gltestsrc pattern=smpte ! glimagesink
- * </programlisting>
+ * ]|
  * Shows original SMPTE color bars in a window.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

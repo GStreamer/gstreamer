@@ -20,17 +20,17 @@
  */
 /**
  * SECTION:element-synaescope
+ * @title: synaescope
  * @see_also: goom
  *
  * Synaescope is an audio visualisation element. It analyzes frequencies and
  * out-of phase properties of audio and draws this as clouds of stars.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc ! audioconvert ! synaescope ! ximagesink
  * ]|
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

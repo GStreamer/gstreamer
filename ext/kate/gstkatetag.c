@@ -21,46 +21,41 @@
 
 /**
  * SECTION:element-katetag
+ * @title: katetag
  * @see_also: #oggdemux, #oggmux, #kateparse, #GstTagSetter
  * @short_description: retags kate streams
  *
- * <refsect2>
- * <para>
  * The katetag element can change the tag contained within a raw
  * kate stream. Specifically, it modifies the comments header packet
  * of the kate stream, as well as the language and category of the
  * kate stream.
- * </para>
- * <para>
+ *
  * The element will also process the stream as the #kateparse element does
  * so it can be used when remuxing an Ogg Kate stream, without additional
  * elements.
- * </para>
- * <para>
+ *
  * Applications can set the tags to write using the #GstTagSetter interface.
  * Tags contained within the kate stream will be picked up
  * automatically (and merged according to the merge mode set via the tag
  * setter interface).
- * </para>
- * <title>Example pipelines</title>
- * <para>
+ *
+ * ## Example pipelines
+ *
  * This element is only useful with gst-launch-1.0 for modifying the language
  * and/or category (which are properties of the stream located in the kate
  * beginning of stream header), because it does not support setting the tags
  * on a #GstTagSetter interface. Conceptually, the element will usually be
  * used like:
- * <programlisting>
+ * |[
  * gst-launch-1.0 -v filesrc location=foo.ogg ! oggdemux ! katetag ! oggmux ! filesink location=bar.ogg
- * </programlisting>
- * </para>
- * <para>
+ * ]|
+ *
  * This pipeline will set the language and category of the stream to the
  * given values:
- * <programlisting>
+ * |[
  * gst-launch-1.0 -v filesrc location=foo.ogg ! oggdemux ! katetag language=pt_BR category=subtitles ! oggmux ! filesink location=bar.ogg
- * </programlisting>
- * </para>
- * </refsect2>
+ * ]|
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-compositor
+ * @title: compositor
  *
  * Compositor can accept AYUV, ARGB and BGRA video streams. For each of the requested
  * sink pads it will compare the incoming geometry and framerate to define the
@@ -29,40 +30,19 @@
  * biggest incoming video stream and the framerate of the fastest incoming one.
  *
  * Compositor will do colorspace conversion.
- * 
+ *
  * Individual parameters for each input stream can be configured on the
  * #GstCompositorPad:
  *
- * <itemizedlist>
- * <listitem>
- * "xpos": The x-coordinate position of the top-left corner of the picture
- * (#gint)
- * </listitem>
- * <listitem>
- * "ypos": The y-coordinate position of the top-left corner of the picture
- * (#gint)
- * </listitem>
- * <listitem>
- * "width": The width of the picture; the input will be scaled if necessary
- * (#gint)
- * </listitem>
- * <listitem>
- * "height": The height of the picture; the input will be scaled if necessary
- * (#gint)
- * </listitem>
- * <listitem>
- * "alpha": The transparency of the picture; between 0.0 and 1.0. The blending
- * is a simple copy when fully-transparent (0.0) and fully-opaque (1.0).
- * (#gdouble)
- * </listitem>
- * <listitem>
- * "zorder": The z-order position of the picture in the composition
- * (#guint)
- * </listitem>
- * </itemizedlist>
+ * * "xpos": The x-coordinate position of the top-left corner of the picture (#gint)
+ * * "ypos": The y-coordinate position of the top-left corner of the picture (#gint)
+ * * "width": The width of the picture; the input will be scaled if necessary (#gint)
+ * * "height": The height of the picture; the input will be scaled if necessary (#gint)
+ * * "alpha": The transparency of the picture; between 0.0 and 1.0. The blending
+ *   is a simple copy when fully-transparent (0.0) and fully-opaque (1.0). (#gdouble)
+ * * "zorder": The z-order position of the picture in the composition (#guint)
  *
- * <refsect2>
- * <title>Sample pipelines</title>
+ * ## Sample pipelines
  * |[
  * gst-launch-1.0 \
  *   videotestsrc pattern=1 ! \
@@ -85,7 +65,7 @@
  *   compositor name=comp ! videoconvert ! ximagesink \
  *   videotestsrc !  \
  *   video/x-raw, framerate=\(fraction\)5/1, width=320, height=240 ! comp.
- * ]| A pipeline to demostrate bgra comping. (This does not demonstrate alpha blending). 
+ * ]| A pipeline to demostrate bgra comping. (This does not demonstrate alpha blending).
  * |[
  * gst-launch-1.0 videotestsrc pattern=1 ! \
  *   video/x-raw,format =I420, framerate=\(fraction\)10/1, width=100, height=100 ! \
@@ -103,7 +83,7 @@
  *   "video/x-raw,format=AYUV,width=800,height=600,framerate=(fraction)10/1" ! \
  *   timeoverlay ! queue2 ! comp.
  * ]| A pipeline to demonstrate synchronized compositing (the second stream starts after 3 seconds)
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

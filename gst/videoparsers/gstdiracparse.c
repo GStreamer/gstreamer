@@ -18,16 +18,16 @@
  */
 /**
  * SECTION:element-gstdiracparse
+ * @title: gstdiracparse
  *
  * The gstdiracparse element does FIXME stuff.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v fakesrc ! gstdiracparse ! FIXME ! fakesink
  * ]|
  * FIXME Describe what the pipeline does.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

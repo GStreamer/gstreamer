@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-dx9screencapsrc
+ * @title: dx9screencapsrc
  *
  * This element uses DirectX to capture the desktop or a portion of it.
  * The default is capturing the whole desktop, but #GstDX9ScreenCapSrc:x,
@@ -27,8 +28,7 @@
  * Use #GstDX9ScreenCapSrc:monitor for changing which monitor to capture
  * from.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 dx9screencapsrc ! videoconvert ! dshowvideosink
  * ]| Capture the desktop and display it.
@@ -36,7 +36,7 @@
  * gst-launch-1.0 dx9screencapsrc x=100 y=100 width=320 height=240 !
  * videoconvert ! dshowvideosink
  * ]| Capture a portion of the desktop and display it.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -19,16 +19,15 @@
 
 /**
  * SECTION:element-openslessrc
+ * @title: openslessrc
  * @see_also: openslessink
  *
  * This element reads data from default audio input using the OpenSL ES API in Android OS.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v openslessrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=recorded.ogg
  * ]| Record from default audio input and encode to Ogg/Vorbis.
- * </refsect2>
  *
  */
 

@@ -25,14 +25,12 @@
 
 /**
  * SECTION:gstmpegvideoparser
+ * @title: GstMpegvideoParser
  * @short_description: Convenience library for mpeg1 and 2 video
  * bitstream parsing.
  *
- * <refsect2>
- * <para>
  * Provides useful functions for mpeg videos bitstream parsing.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstvp8parser
+ * @title: GstVp8Parser
  * @short_description: Convenience library for parsing vp8 video bitstream.
  *
  * For more details about the structures, you can refer to the

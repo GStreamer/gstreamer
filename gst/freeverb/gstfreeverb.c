@@ -30,16 +30,16 @@
 
 /**
  * SECTION:element-freeverb
+ * @title: freeverb
  *
  * Reverberation/room effect.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc wave=saw ! freeverb ! autoaudiosink
  * gst-launch-1.0 filesrc location="melo1.ogg" ! decodebin ! audioconvert ! freeverb ! autoaudiosink
  * ]|
- * </refsect2>
+ *
  */
 
 /* FIXME:

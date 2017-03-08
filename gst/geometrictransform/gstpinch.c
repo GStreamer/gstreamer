@@ -49,16 +49,16 @@
 
 /**
  * SECTION:element-pinch
+ * @title: pinch
  * @see_also: geometrictransform
  *
  * Pinch applies a 'pinch' geometric transform to the image.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! pinch ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

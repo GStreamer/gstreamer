@@ -26,17 +26,17 @@
 
 /**
  * SECTION:element-rtmpsrc
+ * @title: rtmpsrc
  *
  * This plugin reads data from a local or remote location specified
  * by an URI. This location can be specified using any protocol supported by
  * the RTMP library, i.e. rtmp, rtmpt, rtmps, rtmpe, rtmfp, rtmpte and rtmpts.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 -v rtmpsrc location=rtmp://somehost/someurl ! fakesink
  * ]| Open an RTMP location and pass its content to fakesink.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

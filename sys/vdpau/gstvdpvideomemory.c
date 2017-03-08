@@ -231,7 +231,7 @@ _vdp_video_mem_free (GstAllocator * allocator, GstMemory * mem)
  * gst_vdp_video_memory_alloc:
  * @device: a #GstVdpDevice
  * @info: the #GstVideoInfo describing the format to use
- * 
+ *
  * Returns: a GstMemory object with a VdpVideoSurface specified by @info
  * from @device
  */

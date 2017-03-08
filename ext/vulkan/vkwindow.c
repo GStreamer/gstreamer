@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:gstglwindow
+ * SECTION:vkwindow
  * @short_description: window/surface abstraction
  * @title: GstVulkanWindow
  * @see_also: #GstGLContext, #GstGLDisplay

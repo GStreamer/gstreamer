@@ -19,16 +19,16 @@
 
 /**
  * SECTION:element-coloreffects
+ * @title: coloreffects
  *
  * Map colors of the video input to a lookup table
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! coloreffects preset=heat ! videoconvert !
  *     autovideosink
  * ]| This pipeline shows the effect of coloreffects on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

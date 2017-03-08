@@ -31,11 +31,12 @@
 
 /**
  * SECTION:gstglrenderbuffer
+ * @title: GstGLRenderBuffer
  * @short_description: memory subclass for GL renderbuffer objects
  * @see_also: #GstMemory, #GstAllocator
  *
  * GstGLRenderbuffer is a #GstGLBaseMemory subclass providing support for
- * OpenGL renderbuffers.  
+ * OpenGL renderbuffers.
  *
  * #GstGLRenderbuffer is created or wrapped through gst_gl_base_memory_alloc()
  * with #GstGLRenderbufferAllocationParams.
@@ -329,7 +330,7 @@ gst_gl_renderbuffer_init_once (void)
 /**
  * gst_is_gl_renderbuffer:
  * @mem:a #GstMemory
- * 
+ *
  * Returns: whether the memory at @mem is a #GstGLRenderbuffer
  *
  * Since: 1.10

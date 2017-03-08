@@ -45,32 +45,29 @@
 
 /**
  * SECTION:element-tiger
+ * @title: tiger
  * @see_also: katedec
  *
- * <refsect2>
- * <para>
  * This element decodes and renders Kate streams
  * <ulink url="http://libkate.googlecode.com/">Kate</ulink> is a free codec
  * for text based data, such as subtitles. Any number of kate streams can be
  * embedded in an Ogg stream.
- * </para>
- * <para>
+ *
  * libkate (see above url) and <ulink url="http://libtiger.googlecode.com/">libtiger</ulink>
  * are needed to build this element.
- * </para>
- * <title>Example pipeline</title>
- * <para>
+ *
+ * ## Example pipeline
+ *
  * This pipeline renders a Kate stream on top of a Theora video multiplexed
  * in the same stream:
- * <programlisting>
+ * |[
  * gst-launch-1.0 \
  *   filesrc location=video.ogg ! oggdemux name=demux \
  *   demux. ! queue ! theoradec ! videoconvert ! tiger name=tiger \
  *   demux. ! queue ! kateparse ! tiger. \
  *   tiger. ! videoconvert ! autovideosink
- * </programlisting>
- * </para>
- * </refsect2>
+ * ]|
+ *
  */
 
 #ifdef HAVE_CONFIG_H

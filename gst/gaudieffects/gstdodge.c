@@ -46,15 +46,15 @@
 
 /**
  * SECTION:element-dodge
+ * @title: dodge
  *
  * Dodge saturates the colors of a video stream in realtime.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! dodge ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of dodge on a test stream
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

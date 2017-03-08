@@ -21,16 +21,16 @@
 
 /**
  * SECTION:element-glbumper
+ * @title: glbumper
  *
  * Bump mapping using the normal method.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 -v videotestsrc ! glupload ! glbumper location=normalmap.bmp ! glimagesink
  * ]| A pipeline to test normal mapping.
  * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

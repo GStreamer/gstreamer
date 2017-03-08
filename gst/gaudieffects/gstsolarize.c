@@ -46,15 +46,15 @@
 
 /**
  * SECTION:element-solarize
+ * @title: solarize
  *
  * Solarize does a smart inverse in a video stream in realtime.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! solarize ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of solarize on a test stream
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

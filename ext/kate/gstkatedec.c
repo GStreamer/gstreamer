@@ -45,33 +45,29 @@
 
 /**
  * SECTION:element-katedec
+ * @title: katedec
  * @see_also: oggdemux
  *
- * <refsect2>
- * <para>
  * This element decodes Kate streams
  * <ulink url="http://libkate.googlecode.com/">Kate</ulink> is a free codec
  * for text based data, such as subtitles. Any number of kate streams can be
  * embedded in an Ogg stream.
- * </para>
- * <para>
+ *
  * libkate (see above url) is needed to build this plugin.
- * </para>
- * <title>Example pipeline</title>
- * <para>
+ *
+ * ## Example pipeline
+ *
  * This explicitely decodes a Kate stream:
- * <programlisting>
+ * |[
  * gst-launch-1.0 filesrc location=test.ogg ! oggdemux ! katedec ! fakesink silent=TRUE
- * </programlisting>
- * </para>
- * <para>
+ * ]|
+ *
  * This will automatically detect and use any Kate streams multiplexed
  * in an Ogg stream:
- * <programlisting>
+ * |[
  * gst-launch-1.0 playbin uri=file:///tmp/test.ogg
- * </programlisting>
- * </para>
- * </refsect2>
+ * ]|
+ *
  */
 
 #ifdef HAVE_CONFIG_H

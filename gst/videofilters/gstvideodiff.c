@@ -18,16 +18,16 @@
  */
 /**
  * SECTION:element-gstvideodiff
+ * @title: gstvideodiff
  *
  * The videodiff element highlights the difference between a frame and its
  * previous on the luma plane.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc pattern=ball ! videodiff ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

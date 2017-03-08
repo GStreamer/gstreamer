@@ -86,7 +86,7 @@ struct _GstVdpWindow {
  * @flow_lock: used to protect data flow routines from external calls such as
  * events from @event_thread or methods from the #GstXOverlay interface
  * @par: used to override calculated pixel aspect ratio from @xcontext
- * @synchronous: used to store if XSynchronous should be used or not (for 
+ * @synchronous: used to store if XSynchronous should be used or not (for
  * debugging purpose only)
  * @handle_events: used to know if we should handle select XEvents or not
  *

@@ -49,17 +49,17 @@
 
 /**
  * SECTION:element-circle
+ * @title: circle
  * @see_also: geometrictransform
  *
  * Circle is a geometric image transform element. It warps the picture into an
  * arc shaped form.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! circle ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

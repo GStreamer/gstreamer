@@ -18,20 +18,20 @@
  */
 /**
  * SECTION:element-gstintervideosrc
+ * @title: gstintervideosrc
  *
  * The intervideosrc element is a video source element.  It is used
  * in connection with a intervideosink element in a different pipeline,
  * similar to interaudiosink and interaudiosrc.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v intervideosrc ! queue ! xvimagesink
  * ]|
- * 
+ *
  * The intersubsrc element cannot be used effectively with gst-launch-1.0,
  * as it requires a second pipeline in the application to send subtitles.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -45,7 +45,8 @@
  */
 
 /**
- * SECTION:gst-plugin-bad-plugins-srtpenc
+ * SECTION:element-srtpenc
+ * @title: srtpenc
  * @see_also: srtpdec
  *
  * gstrtpenc acts as an encoder that adds security to RTP and RTCP

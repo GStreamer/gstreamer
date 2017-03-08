@@ -376,7 +376,7 @@ gst_gl_context_new (GstGLDisplay * display)
  * @context_type: a #GstGLPlatform specifying the type of context in @handle
  * @available_apis: a #GstGLAPI containing the available OpenGL apis in @handle
  *
- * Wraps an existing OpenGL context into a #GstGLContext.  
+ * Wraps an existing OpenGL context into a #GstGLContext.
  *
  * Note: The caller is responsible for ensuring that the OpenGL context
  * represented by @handle stays alive while the returned #GstGLContext is

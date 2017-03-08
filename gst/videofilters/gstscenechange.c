@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:element-gstscenechange
+ * @title: gstscenechange
  *
  * The scenechange element detects scene changes (also known as shot
  * changes) in a video stream, and sends a signal when this occurs.
@@ -32,13 +33,12 @@
  *
  * The scenechange element does not work with compressed video.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=some_file.ogv ! decodebin !
  *   scenechange ! theoraenc ! fakesink
  * ]|
- * </refsect2>
+ *
  */
 /*
  * The algorithm used for scene change detection is a modification

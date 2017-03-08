@@ -22,16 +22,16 @@
 
 /**
  * SECTION:element-debugspy
+ * @title: debugspy
  *
  * A spy element that can provide information on buffers going through it, with
  * bus messages.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -m videotestsrc ! debugspy ! fakesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

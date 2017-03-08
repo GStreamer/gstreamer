@@ -23,7 +23,8 @@
 
 /**
  * SECTION:element-chromahold
- * 
+ * @title: chromahold
+ *
  * The chromahold element will remove all color information for
  * all colors except a single one and converts them to grayscale.
  *

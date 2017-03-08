@@ -20,17 +20,17 @@
  */
 /**
  * SECTION:element-wavescope
+ * @title: wavescope
  * @see_also: goom
  *
  * Wavescope is a simple audio visualisation element. It renders the waveforms
  * like on an oscilloscope.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc ! audioconvert ! wavescope ! ximagesink
  * ]|
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

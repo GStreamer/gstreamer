@@ -22,18 +22,18 @@
 
 /**
  * SECTION:element-timecodestamper
+ * @title: timecodestamper
  * @short_description: Attach a timecode into incoming video frames
  *
  * This element attaches a timecode into every incoming video frame. It starts
  * counting from the stream time of each segment start, which it converts into
  * a timecode.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc ! timecodestamper ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

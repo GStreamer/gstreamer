@@ -46,6 +46,7 @@
 
 /**
  * SECTION:element-srtpdec
+ * @title: srtpdec
  * @see_also: srtpenc
  *
  * gstrtpdec acts as a decoder that removes security from SRTP and SRTCP
@@ -95,8 +96,7 @@
  * other means. If no rollover counter is provided by the user, 0 is
  * used by default.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 udpsrc port=5004 caps='application/x-srtp, payload=(int)8, ssrc=(uint)1356955624, srtp-key=(buffer)012345678901234567890123456789012345678901234567890123456789, srtp-cipher=(string)aes-128-icm, srtp-auth=(string)hmac-sha1-80, srtcp-cipher=(string)aes-128-icm, srtcp-auth=(string)hmac-sha1-80' !  srtpdec ! rtppcmadepay ! alawdec ! pulsesink
  * ]| Receive PCMA SRTP packets through UDP using caps to specify
@@ -105,7 +105,7 @@
  * gst-launch-1.0 audiotestsrc ! alawenc ! rtppcmapay ! 'application/x-rtp, payload=(int)8, ssrc=(uint)1356955624' ! srtpenc key="012345678901234567890123456789012345678901234567890123456789" ! udpsink port=5004
  * ]| Send PCMA SRTP packets through UDP, nothing how the SSRC is forced so
  * that the receiver will recognize it.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

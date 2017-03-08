@@ -18,21 +18,21 @@
  */
 /**
  * SECTION:element-gstinteraudiosrc
+ * @title: gstinteraudiosrc
  *
  * The interaudiosrc element is an audio source element.  It is used
  * in connection with a interaudiosink element in a different pipeline.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v interaudiosrc ! queue ! autoaudiosink
  * ]|
- * 
+ *
  * The interaudiosrc element cannot be used effectively with gst-launch-1.0,
  * as it requires a second pipeline in the application to send audio.
  * See the gstintertest.c example in the gst-plugins-bad source code for
  * more details.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

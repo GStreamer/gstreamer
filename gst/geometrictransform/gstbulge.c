@@ -43,17 +43,17 @@
 
 /**
  * SECTION:element-bulge
+ * @title: bulge
  * @see_also: geometrictransform
  *
  * Bugle is a geometric image transform element. It adds a protuberance in the
  * center point.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! bulge ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

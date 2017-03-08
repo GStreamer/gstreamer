@@ -20,17 +20,17 @@
 
 /**
  * SECTION:element-bs2b
+ * @title: bs2b
  *
- * Improve headphone listening of stereo audio records using the bs2b library. 
+ * Improve headphone listening of stereo audio records using the bs2b library.
  * It does so by mixing the left and right channel in a way that simulates
  * a stereo speaker setup while using headphones.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 audiotestsrc ! "audio/x-raw,channel-mask=(bitmask)0x1" ! interleave name=i ! bs2b ! autoaudiosink audiotestsrc freq=330 ! "audio/x-raw,channel-mask=(bitmask)0x2" ! i.
  * ]| Play two independent sine test sources and crossfeed them.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

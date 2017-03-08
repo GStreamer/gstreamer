@@ -20,17 +20,17 @@
  */
 /**
  * SECTION:element-shmsink
+ * @title: shmsink
  *
  * Send data over shared memory to the matching source.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 -v videotestsrc ! "video/x-raw, format=YUY2, color-matrix=sdtv, \
  * chroma-site=mpeg2, width=(int)320, height=(int)240, framerate=(fraction)30/1" \
  * ! shmsink socket-path=/tmp/blah shm-size=2000000
  * ]| Send video to shm buffers.
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

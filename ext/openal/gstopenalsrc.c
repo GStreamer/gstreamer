@@ -49,20 +49,20 @@
 
  /**
  * SECTION:element-openalsrc
+ * @title: openalsrc
  * @see_also: openalsink
  * @short_description: capture raw audio samples through OpenAL
  *
  * This element captures raw audio samples through OpenAL.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v openalsrc ! audioconvert ! wavenc ! filesink location=stream.wav
  * ]| * will capture sound through OpenAL and encode it to a wav file.
  * |[
  * gst-launch-1.0 openalsrc ! "audio/x-raw,format=S16LE,rate=44100" ! audioconvert ! volume volume=0.25 ! openalsink
  * ]| will capture and play audio through OpenAL.
- * </refsect2>
+ *
  */
 
 /*

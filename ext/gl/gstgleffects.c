@@ -20,16 +20,16 @@
 
 /**
  * SECTION:element-gleffects.
+ * @title: gleffects.
  *
  * GL Shading Language effects.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 videotestsrc ! glupload ! gleffects effect=5 ! glimagesink
  * ]|
  * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

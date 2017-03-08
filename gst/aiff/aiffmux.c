@@ -42,6 +42,7 @@
 
 /**
  * SECTION:element-aiffmux
+ * @title: aiffmux
  *
  * Format an audio stream into the Audio Interchange File Format
  *

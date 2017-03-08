@@ -23,18 +23,18 @@
 
 /**
  * SECTION:element-waylandsink
+ * @title: waylandsink
  *
  *  The waylandsink is creating its own window and render the decoded video frames to that.
  *  Setup the Wayland environment as described in
  *  <ulink url="http://wayland.freedesktop.org/building.html">Wayland</ulink> home page.
  *  The current implementaion is based on weston compositor.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v videotestsrc ! waylandsink
  * ]| test the video rendering in wayland
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

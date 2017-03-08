@@ -20,10 +20,11 @@
  */
 /**
  * SECTION:element-audioparse
+ * @title: audioparse
  *
  * Converts a byte stream into audio frames.
  *
- * <note>This element is deprecated. Use #GstRawAudioParse instead.</note>
+ * This element is deprecated. Use #GstRawAudioParse instead.
  */
 
 #ifdef HAVE_CONFIG_H

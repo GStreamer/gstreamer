@@ -20,6 +20,7 @@
  */
 /**
  * SECTION:element-irtspparse
+ * @title: irtspparse
  * @short_description: Interleaved RTSP parser
  * @see_also: #GstPcapParse
  *
@@ -27,14 +28,13 @@
  * so-called "channels" from received interleaved (TCP) RTSP data
  * (typically extracted from some network capture).
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=h264crasher.pcap ! pcapparse ! irtspparse
  * ! rtph264depay ! ffdec_h264 ! fakesink
  * ]| Read from a pcap dump file using filesrc, extract the raw TCP packets,
  * depayload and decode them.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

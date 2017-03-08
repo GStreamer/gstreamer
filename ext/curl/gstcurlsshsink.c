@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-curlsshsink
+ * @title: curlsshsink
  * @short_description: sink that uploads data to a server using libcurl
  * @see_also:
  *

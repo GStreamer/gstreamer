@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-vulkansink
+ * @title: vulkansink
  *
  * vulkansink renders video frames to a drawable on a local or remote
  * display using Vulkan.

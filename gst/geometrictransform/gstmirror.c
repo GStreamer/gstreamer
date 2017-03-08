@@ -43,17 +43,17 @@
 
 /**
  * SECTION:element-mirror
+ * @title: mirror
  * @see_also: geometrictransform
  *
  * Mirror is a geometric transform element. It splits the image into two halves
  * and reflects one over each other.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! mirror ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

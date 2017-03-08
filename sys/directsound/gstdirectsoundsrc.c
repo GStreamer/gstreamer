@@ -50,15 +50,15 @@
 
 /**
  * SECTION:element-directsoundsrc
+ * @title: directsoundsrc
  *
  * Reads audio data using the DirectSound API.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v directsoundsrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=dsound.ogg
  * ]| Record from DirectSound and encode to Ogg/Vorbis.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

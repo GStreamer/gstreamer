@@ -22,43 +22,32 @@
 
 /**
  * SECTION:gsth265parser
+ * @title: GstH265Parser
  * @short_description: Convenience library for h265 video bitstream parsing.
  *
  * It offers you bitstream parsing in HEVC mode and non-HEVC mode. To identify
  * Nals in a bitstream and parse its headers, you should call:
- * <itemizedlist>
- *   <listitem>
- *      gst_h265_parser_identify_nalu() to identify the following nalu in
+ *
+ *   * gst_h265_parser_identify_nalu() to identify the following nalu in
  *        non-HEVC bitstreams
- *   </listitem>
- *   <listitem>
- *      gst_h265_parser_identify_nalu_hevc() to identify the nalu in
+ *
+ *   * gst_h265_parser_identify_nalu_hevc() to identify the nalu in
  *        HEVC bitstreams
- *   </listitem>
- * </itemizedlist>
  *
  * Then, depending on the #GstH265NalUnitType of the newly parsed #GstH265NalUnit,
  * you should call the differents functions to parse the structure:
- * <itemizedlist>
- *   <listitem>
- *      From #GST_H265_NAL_SLICE_TRAIL_N to #GST_H265_NAL_SLICE_CRA_NUT: gst_h265_parser_parse_slice_hdr()
- *   </listitem>
- *   <listitem>
- *      #GST_H265_NAL_SEI: gst_h265_parser_parse_sei()
- *   </listitem>
- *   <listitem>
- *      #GST_H265_NAL_VPS: gst_h265_parser_parse_vps()
- *   </listitem>
- *   <listitem>
- *      #GST_H265_NAL_SPS: gst_h265_parser_parse_sps()
- *   </listitem>
- *   <listitem>
- *      #GST_H265_NAL_PPS: #gst_h265_parser_parse_pps()
- *   </listitem>
- *   <listitem>
- *      Any other: gst_h265_parser_parse_nal()
- *   </listitem>
- * </itemizedlist>
+ *
+ *   * From #GST_H265_NAL_SLICE_TRAIL_N to #GST_H265_NAL_SLICE_CRA_NUT: gst_h265_parser_parse_slice_hdr()
+ *
+ *   * #GST_H265_NAL_SEI: gst_h265_parser_parse_sei()
+ *
+ *   * #GST_H265_NAL_VPS: gst_h265_parser_parse_vps()
+ *
+ *   * #GST_H265_NAL_SPS: gst_h265_parser_parse_sps()
+ *
+ *   * #GST_H265_NAL_PPS: #gst_h265_parser_parse_pps()
+ *
+ *   * Any other: gst_h265_parser_parse_nal()
  *
  * Note: You should always call gst_h265_parser_parse_nal() if you don't
  * actually need #GstH265NalUnitType to be parsed for your personal use, in
@@ -67,11 +56,8 @@
  * For more details about the structures, look at the ITU-T H.265
  * specifications, you can download them from:
  *
- * <itemizedlist>
- *   <listitem>
- *     ITU-T H.265: http://www.itu.int/rec/T-REC-H.265
- *   </listitem>
- * </itemizedlist>
+ *   * ITU-T H.265: http://www.itu.int/rec/T-REC-H.265
+ *
  */
 
 #ifdef HAVE_CONFIG_H

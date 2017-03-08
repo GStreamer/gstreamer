@@ -72,7 +72,7 @@ typedef enum {
  *   index
  *
  * Dequantization indices.
- */ 
+ */
 struct _GstVp8QuantIndices
 {
   guint8 y_ac_qi;

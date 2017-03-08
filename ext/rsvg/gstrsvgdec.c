@@ -19,15 +19,15 @@
  */
 /**
  * SECTION:element-rsvgdec
+ * @title: rsvgdec
  *
  * This elements renders SVG graphics.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 filesrc location=image.svg ! rsvgdec ! imagefreeze ! videoconvert ! autovideosink
  * ]| render and show a svg image.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

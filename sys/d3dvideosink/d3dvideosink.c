@@ -54,7 +54,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY (gst_d3dvideosink_debug);
 #define GST_CAT_DEFAULT gst_d3dvideosink_debug
 
-/** FWD DECLS **/
+/* FWD DECLS */
 /* GstXOverlay Interface */
 static void
 gst_d3dvideosink_video_overlay_interface_init (GstVideoOverlayInterface *
@@ -176,7 +176,7 @@ gst_d3dvideosink_init (GstD3DVideoSink * sink)
   g_rec_mutex_init (&sink->lock);
 }
 
-/** GObject Functions **/
+/* GObject Functions */
 
 static void
 gst_d3dvideosink_finalize (GObject * gobject)
@@ -245,7 +245,7 @@ gst_d3dvideosink_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-/** GstBaseSinkClass Functions **/
+/* GstBaseSinkClass Functions */
 
 static GstCaps *
 gst_d3dvideosink_get_caps (GstBaseSink * basesink, GstCaps * filter)
@@ -525,7 +525,7 @@ gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   return TRUE;
 }
 
-/** PUBLIC FUNCTIONS **/
+/* PUBLIC FUNCTIONS */
 
 /* Iterface Registrations */
 
@@ -602,7 +602,7 @@ gst_d3dvideosink_navigation_send_event (GstNavigation * navigation,
   }
 }
 
-/** PRIVATE FUNCTIONS **/
+/* PRIVATE FUNCTIONS */
 
 
 /* Plugin entry point */

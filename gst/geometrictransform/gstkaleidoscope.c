@@ -49,17 +49,17 @@
 
 /**
  * SECTION:element-kaleidoscope
+ * @title: kaleidoscope
  * @see_also: geometrictransform
  *
  * The kaleidscope element applies 'kaleidoscope' geometric transform to the
  * image.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! kaleidoscope ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

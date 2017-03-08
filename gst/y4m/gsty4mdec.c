@@ -18,15 +18,15 @@
  */
 /**
  * SECTION:element-gsty4mdec
+ * @title: gsty4mdec
  *
  * The gsty4mdec element decodes uncompressed video in YUV4MPEG format.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=file.y4m ! y4mdec ! xvimagesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -19,16 +19,15 @@
 
 /**
  * SECTION:element-openslessink
+ * @title: openslessink
  * @see_also: openslessrc
  *
  * This element renders raw audio samples using the OpenSL ES API in Android OS.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=music.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! opeslessink
  * ]| Play an Ogg/Vorbis file.
- * </refsect2>
  *
  */
 

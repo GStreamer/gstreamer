@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:element-gstzebrastripe
+ * @title: gstzebrastripe
  *
  * The zebrastripe element marks areas of images in a video stream
  * that are brighter than a threshold with a diagonal zebra stripe
@@ -27,8 +28,7 @@
  * threshold setting of 70 is often used to properly adjust skin
  * tones.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! zebrastripe ! xvimagesink
  * ]|
@@ -39,7 +39,7 @@
  * property setting can be calculated from IRE by using the formula
  * percent = (IRE * 1.075) - 7.5.  Note that 100 IRE corresponds to
  * 100 %, and 70 IRE corresponds to 68 %.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

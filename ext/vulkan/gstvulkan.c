@@ -20,6 +20,7 @@
 
 /**
  * SECTION:plugin-vulkan
+ * @title: vulkan
  *
  * Cross-platform Vulkan plugin.
  */

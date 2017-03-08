@@ -21,16 +21,16 @@
 
 /**
  * SECTION:element-wasapisink
+ * @title: wasapisink
  *
  * Provides audio playback using the Windows Audio Session API available with
  * Vista and newer.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v audiotestsrc samplesperbuffer=160 ! wasapisink
  * ]| Generate 20 ms buffers and render to the default audio device.
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #  include <config.h>

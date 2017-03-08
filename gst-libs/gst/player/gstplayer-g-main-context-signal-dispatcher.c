@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstplayer-gmaincontextsignaldispatcher
+ * @title: GstPlayerGMainContextSignalDispatcher
  * @short_description: Player GLib MainContext dispatcher
  *
  */

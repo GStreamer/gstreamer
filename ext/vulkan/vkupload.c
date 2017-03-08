@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-vulkanupload
+ * @title: vulkanupload
  *
  * vulkanupload uploads data into Vulkan memory objects.
  */

@@ -19,13 +19,13 @@
  */
 /**
  * SECTION:element-gstivtc
+ * @title: gstivtc
  *
  * The ivtc element is an inverse telecine filter.  It takes interlaced
  * video that was created from progressive content using a telecine
  * filter, and reconstructs the original progressive content.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc pattern=ball ! video/x-raw,framerate=24/1 !
  *     interlace !
@@ -36,7 +36,7 @@
  * converts it to a 60 fields per second interlaced stream.  Then the
  * stream is inversed telecine'd back to 24 fps, yielding approximately
  * the original videotestsrc content.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

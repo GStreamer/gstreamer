@@ -21,17 +21,17 @@
  */
 /**
  * SECTION:element-spectrascope
+ * @title: spectrascope
  * @see_also: goom
  *
  * Spectrascope is a simple spectrum visualisation element. It renders the
  * frequency spectrum as a series of bars.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc ! audioconvert ! spectrascope ! ximagesink
  * ]|
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

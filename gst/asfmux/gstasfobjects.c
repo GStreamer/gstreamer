@@ -58,7 +58,7 @@ const Guid guids[] = {
 
 /**
  * gst_asf_generate_file_id:
- * 
+ *
  * Generates a random GUID
  *
  * Returns: The generated GUID
@@ -146,7 +146,7 @@ gst_asf_read_var_size_field (guint8 * data, guint8 field_type)
 /**
  * gst_asf_get_var_size_field_len:
  * @field_type: the asf field type
- * 
+ *
  * Returns: the size in bytes of a variable of field_type type
  */
 guint
@@ -168,7 +168,7 @@ gst_asf_get_var_size_field_len (guint8 field_type)
  * gst_asf_file_info_new:
  *
  * Creates a new #GstAsfFileInfo
- * 
+ *
  * Returns: the created struct
  */
 GstAsfFileInfo *
@@ -180,7 +180,7 @@ gst_asf_file_info_new (void)
 /**
  * gst_asf_file_info_reset:
  * @info: the #GstAsfFileInfo to be reset
- * 
+ *
  * resets the data of a #GstFileInfo
  */
 void

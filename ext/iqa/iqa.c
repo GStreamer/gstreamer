@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-iqa
+ * @title: iqa
  * @short_description: Image Quality Assessment plugin.
  *
  * IQA will perform full reference image quality assessment, with the
@@ -48,13 +49,12 @@
  * sink_2\=\(double\)0.0082939683976297474\;",
  * time=(guint64)0;
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -m uridecodebin uri=file:///test/file/1 ! iqa name=iqa do-dssim=true \
  * ! videoconvert ! autovideosink uridecodebin uri=file:///test/file/2 ! iqa.
  * ]| This pipeline will output messages to the console for each set of compared frames.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

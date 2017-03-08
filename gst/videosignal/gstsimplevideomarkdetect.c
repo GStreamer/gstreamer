@@ -18,78 +18,46 @@
  */
 /**
  * SECTION:element-simplevideomarkdetect
+ * @title: simplevideomarkdetect
  * @see_also: #GstVideoMark
  *
  * This plugin detects #GstSimpleVideoMarkDetect:pattern-count squares in the bottom left
  * corner of the video frames. The squares have a width and height of
  * respectively #GstSimpleVideoMarkDetect:pattern-width and #GstSimpleVideoMarkDetect:pattern-height.
  * Even squares must be black and odd squares must be white.
- * 
+ *
  * When the pattern has been found, #GstSimpleVideoMarkDetect:pattern-data-count squares
  * after the pattern squares are read as a bitarray. White squares represent a 1
  * bit and black squares a 0 bit. The bitarray will will included in the element
  * message that is posted (see below).
- * 
+ *
  * After the pattern has been found and the data pattern has been read, an
- * element message called <classname>&quot;GstSimpleVideoMarkDetect&quot;</classname> will
+ * element message called `GstSimpleVideoMarkDetect` will
  * be posted on the bus. If the pattern is no longer found in the frame, the
  * same element message is posted with the have-pattern field set to #FALSE.
  * The message is only posted if the #GstSimpleVideoMarkDetect:message property is #TRUE.
- * 
+ *
  * The message's structure contains these fields:
- * <itemizedlist>
- * <listitem>
- *   <para>
- *   #gboolean
- *   <classname>&quot;have-pattern&quot;</classname>:
- *   if the pattern was found. This field will be set to #TRUE for as long as
+ *
+ * * #gboolean`have-pattern`: if the pattern was found. This field will be set to #TRUE for as long as
  *   the pattern was found in the frame and set to FALSE for the first frame
  *   that does not contain the pattern anymore.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;timestamp&quot;</classname>:
- *   the timestamp of the buffer that triggered the message.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;stream-time&quot;</classname>:
- *   the stream time of the buffer.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;running-time&quot;</classname>:
- *   the running_time of the buffer.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;duration&quot;</classname>:
- *   the duration of the buffer.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #guint64
- *   <classname>&quot;data&quot;</classname>:
- *   the data-pattern found after the pattern or 0 when have-signal is #FALSE.
- *   </para>
- * </listitem>
- * </itemizedlist>
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * * #GstClockTime `timestamp`: the timestamp of the buffer that triggered the message.
+ *
+ * * #GstClockTime `stream-time`: the stream time of the buffer.
+ *
+ * * #GstClockTime `running-time`: the running_time of the buffer.
+ *
+ * * #GstClockTime `duration`: the duration of the buffer.
+ *
+ * * #guint64 `data`: the data-pattern found after the pattern or 0 when have-signal is #FALSE.
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc ! simplevideomarkdetect ! videoconvert ! ximagesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

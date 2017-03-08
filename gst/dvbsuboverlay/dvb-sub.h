@@ -68,7 +68,7 @@ typedef struct DVBSubtitleRect {
 
 /**
  * DVBSubtitleWindow
- * @version: version 
+ * @version: version
  * @display_window_flag: window_* are valid
  * @display_width: assumed width of display
  * @display_height: assumed height of display

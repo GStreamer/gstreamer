@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstplayer-videooverlayvideorenderer
+ * @title: GstPlayerVideoOverlayVideoRenderer
  * @short_description: Player Video Overlay Video Renderer
  *
  */

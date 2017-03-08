@@ -20,17 +20,18 @@
 
 /**
  * SECTION:element-errorignore
+ * @title: errorignore
  *
  * Passes through all packets, until it encounters GST_FLOW_ERROR or
  * GST_FLOW_NOT_NEGOTIATED (configurable). At that point it will unref the
- * buffers and return GST_FLOW_OK (configurable) - until the next 
+ * buffers and return GST_FLOW_OK (configurable) - until the next
  * READY_TO_PAUSED, RECONFIGURE or FLUSH_STOP.
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc ! errorignore ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

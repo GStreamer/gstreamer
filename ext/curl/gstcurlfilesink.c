@@ -19,21 +19,20 @@
 
 /**
  * SECTION:element-curlfilesink
+ * @title: curlfilesink
  * @short_description: sink that uploads data to a server using libcurl
  * @see_also:
  *
  * This is a network sink that uses libcurl as a client to upload data to
  * a local or network drive.
  *
- * <refsect2>
- * <title>Example launch line (upload a JPEG file to /home/test/images
- * directory)</title>
+ * ## Example launch line (upload a JPEG file to /home/test/images directory)
  * |[
  * gst-launch-1.0 filesrc location=image.jpg ! jpegparse ! curlfilesink  \
  *     file-name=image.jpg  \
  *     location=file:///home/test/images/
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

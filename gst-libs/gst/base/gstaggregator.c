@@ -21,46 +21,40 @@
  */
 /**
  * SECTION: gstaggregator
+ * @title: GstAggregator
  * @short_description: manages a set of pads with the purpose of
  * aggregating their buffers.
  * @see_also: gstcollectpads for historical reasons.
  *
  * Manages a set of pads with the purpose of aggregating their buffers.
  * Control is given to the subclass when all pads have data.
- * <itemizedlist>
- *  <listitem><para>
- *    Base class for mixers and muxers. Subclasses should at least implement
+ *
+ *  * Base class for mixers and muxers. Subclasses should at least implement
  *    the #GstAggregatorClass.aggregate() virtual method.
- *  </para></listitem>
- *  <listitem><para>
- *    When data is queued on all pads, tha aggregate vmethod is called.
- *  </para></listitem>
- *  <listitem><para>
- *    One can peek at the data on any given GstAggregatorPad with the
+ *
+ *  * When data is queued on all pads, tha aggregate vmethod is called.
+ *
+ *  * One can peek at the data on any given GstAggregatorPad with the
  *    gst_aggregator_pad_get_buffer () method, and take ownership of it
  *    with the gst_aggregator_pad_steal_buffer () method. When a buffer
  *    has been taken with steal_buffer (), a new buffer can be queued
  *    on that pad.
- *  </para></listitem>
- *  <listitem><para>
- *    If the subclass wishes to push a buffer downstream in its aggregate
+ *
+ *  * If the subclass wishes to push a buffer downstream in its aggregate
  *    implementation, it should do so through the
  *    gst_aggregator_finish_buffer () method. This method will take care
  *    of sending and ordering mandatory events such as stream start, caps
  *    and segment.
- *  </para></listitem>
- *  <listitem><para>
- *    Same goes for EOS events, which should not be pushed directly by the
+ *
+ *  * Same goes for EOS events, which should not be pushed directly by the
  *    subclass, it should instead return GST_FLOW_EOS in its aggregate
  *    implementation.
- *  </para></listitem>
- *  <listitem><para>
- *    Note that the aggregator logic regarding gap event handling is to turn
+ *
+ *  * Note that the aggregator logic regarding gap event handling is to turn
  *    these into gap buffers with matching PTS and duration. It will also
  *    flag these buffers with GST_BUFFER_FLAG_GAP and GST_BUFFER_FLAG_DROPPABLE
  *    to ease their identification and subsequent processing.
- *  </para></listitem>
- * </itemizedlist>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

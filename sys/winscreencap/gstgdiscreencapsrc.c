@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-gdiscreencapsrc
+ * @title: gdiscreencapsrc
  *
  * This element uses GDI to capture the desktop or a portion of it.
  * The default is capturing the whole desktop, but #GstGDIScreenCapSrc:x,
@@ -29,8 +30,7 @@
  *
  * Set #GstGDIScreenCapSrc:cursor to TRUE to include the mouse cursor.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 gdiscreencapsrc ! videoconvert ! dshowvideosink
  * ]| Capture the desktop and display it.
@@ -39,7 +39,7 @@
  * ! videoconvert ! dshowvideosink
  * ]| Capture a portion of the desktop, including the mouse cursor, and
  * display it.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

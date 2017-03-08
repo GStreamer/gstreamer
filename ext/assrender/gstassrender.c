@@ -20,15 +20,15 @@
 
 /**
  * SECTION:element-assrender
+ * @title: assrender
  *
  * Renders timestamped SSA/ASS subtitles on top of a video stream.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=/path/to/mkv ! matroskademux name=d ! queue ! mpegaudioparse ! mpg123audiodec ! audioconvert ! autoaudiosink  d. ! queue ! h264parse ! avdec_h264 ! videoconvert ! r.   d. ! queue ! "application/x-ass" ! assrender name=r ! videoconvert ! autovideosink
  * ]| This pipeline demuxes a Matroska file with h.264 video, MP3 audio and embedded ASS subtitles and renders the subtitles on top of the video.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

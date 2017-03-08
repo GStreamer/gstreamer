@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-sbenc
+ * @title: sbenc
  *
  * This element encodes raw integer PCM audio into a Bluetooth SBC audio.
  *
@@ -27,12 +28,11 @@
  * allocation-mode can be set by adding a capsfilter element with appropriate
  * filtercaps after the sbcenc encoder element.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v audiotestsrc ! sbcenc ! rtpsbcpay ! udpsink
  * ]| Encode a sine wave into SBC, RTP payload it and send over the network using UDP
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

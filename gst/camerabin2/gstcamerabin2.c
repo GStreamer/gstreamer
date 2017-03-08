@@ -18,33 +18,22 @@
  */
 /**
  * SECTION:element-camerabin
+ * @title: camerabin
  *
  * CameraBin is a high-level camera object that encapsulates gstreamer
  * elements, providing an API for controlling a digital camera.
  *
- * <note>
- * Note that camerabin is still UNSTABLE and under development.
- * </note>
+ * > Note that camerabin is still UNSTABLE and under development.
  *
  * CameraBin has the following main features:
- * <itemizedlist>
- * <listitem>
- * Record videos
- * </listitem>
- * <listitem>
- * Capture pictures
- * </listitem>
- * <listitem>
- * Display a viewfinder
- * </listitem>
- * <listitem>
- * Post preview images for each capture (video and image)
- * </listitem>
- * </itemizedlist>
  *
- * <refsect2>
- * <title>Usage</title>
- * <para>
+ * * Record videos
+ * * Capture pictures
+ * * Display a viewfinder
+ * * Post preview images for each capture (video and image)
+ *
+ * ## Usage
+ *
  * Camerabin can be created using gst_element_factory_make() just like
  * any other element. Video or image capture mode can be selected using
  * the #GstCameraBin:mode property and the file to save the capture is
@@ -69,12 +58,11 @@
  * In both modes, if #GstCameraBin:post-previews is %TRUE, a #GstBuffer
  * will be post to the #GstBus in a field named 'buffer', in a
  * 'preview-image' message of type %GST_MESSAGE_ELEMENT.
- * </para>
- * </refsect2>
+ *
 
- * <refsect2>
- * <title>Customization</title>
- * <para>
+ *
+ * ## Customization
+ *
  * Camerabin provides various customization properties, allowing the user
  * to set custom filters, selecting the viewfinder sink and formats to
  * use to encode the captured images/videos.
@@ -114,20 +102,16 @@
  * of its branches: video capture, image capture, viewfinder and preview.
  * Check #GstCameraBin:video-filter, #GstCameraBin:image-filter,
  * #GstCameraBin:viewfinder-filter and #GstCameraBin:preview-filter.
- * </para>
- * </refsect2>
  *
- * <refsect2>
- * <title>Example launch line</title>
- * <para>
+ * ## Example launch line
+ *
  * Unfortunately, camerabin can't be really used from gst-launch-1.0, as you
  * need to send signals to control it. The following pipeline might be able
  * to show the viewfinder using all the default elements.
  * |[
  * gst-launch-1.0 -v -m camerabin
  * ]|
- * </para>
- * </refsect2>
+ *
 
  */
 

@@ -20,13 +20,11 @@
 
 /**
  * SECTION:gstjpegparser
+ * @title: GstJpegParser
  * @short_description: Convenience library for JPEG bitstream parsing.
  *
- * <refsect2>
- * <para>
  * Provides useful functions for parsing JPEG images
- * </para>
- * </refsect2>
+ *
  */
 
 #include <string.h>

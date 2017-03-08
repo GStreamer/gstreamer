@@ -21,6 +21,7 @@
  */
 /**
  * SECTION:element-autoconvert
+ * @title: autoconvert
  *
  * The #autoconvert element has one sink and one source pad. It will look for
  * other elements that also have one sink and one source pad.

@@ -21,15 +21,15 @@
 
 /**
  * SECTION:element-sbdec
+ * @title: sbdec
  *
  * This element decodes a Bluetooth SBC audio streams to raw integer PCM audio
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=audio.sbc ! sbcparse ! sbcdec ! audioconvert ! audioresample ! autoaudiosink
  * ]| Decode a raw SBC file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-audiomixmatrix
+ * @title: audiomixmatrix
  * @short_description: Transform input/output channels according to a matrix
  *
  * This element transforms a given number of input channels into a given
@@ -32,8 +33,7 @@
  * are automatically negotiated and the transformation matrix is a truncated
  * identity matrix.
  *
- * <refsect2>
- * <title>Example matrix generation code</title>
+ * ## Example matrix generation code
  * To generate the matrix using code:
  *
  * |[
@@ -54,14 +54,12 @@
  * g_object_set_property (G_OBJECT (audiomixmatrix), "matrix", &v);
  * g_value_unset (&v);
  * ]|
- * </refsect2>
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc ! audio/x-raw,channels=4 ! audiomixmatrix in-channels=4 out-channels=2 channel-mask=-1 matrix="<<(double)1, (double)0, (double)0, (double)0>, <0.0, 1.0, 0.0, 0.0>>" ! audio/x-raw,channels=2 ! autoaudiosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

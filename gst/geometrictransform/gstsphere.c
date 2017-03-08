@@ -49,16 +49,16 @@
 
 /**
  * SECTION:element-sphere
+ * @title: sphere
  * @see_also: geometrictransform
  *
  * The sphere element applies a 'sphere' geometric transform to the image.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! sphere ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

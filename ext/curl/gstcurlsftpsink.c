@@ -19,14 +19,17 @@
 
 /**
  * SECTION:element-curlsftpsink
+ * @title: curlsftpsink
  * @short_description: sink that uploads data to a server using libcurl
  * @see_also:
  *
  * This is a network sink that uses libcurl as a client to upload data to
  * a SFTP (SSH File Transfer Protocol) server.
  *
- * <refsect2>
- * <title>Example launch line (upload a file to /home/john/sftp_tests/)</title>
+ * ## Example launch line
+ *
+ * Upload a file to /home/john/sftp_tests/
+ *
  * |[
  * gst-launch-1.0 filesrc location=/home/jdoe/some.file ! curlsftpsink  \
  *     file-name=some.file.backup  \
@@ -36,8 +39,6 @@
  *     ssh-priv-keyfile=/home/jdoe/.ssh/id_rsa  \
  *     create-dirs=TRUE
  * ]|
- * </refsect2>
- *
  */
 
 #ifdef HAVE_CONFIG_H

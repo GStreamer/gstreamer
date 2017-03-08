@@ -24,36 +24,21 @@
 
 /**
  * SECTION:element-dtmfdetect
+ * @title: dtmfdetect
  * @short_description: Detects DTMF tones
  *
  * This element will detect DTMF tones and emit messages.
  *
- * The message is called <classname>&quot;dtmf-event&quot;</classname> and has
- * the following fields:
- * <itemizedlist>
- * <listitem>
- *   <para>
- *   gint <classname>type</classname> (0-1):
- *   The application uses this field to specify which of the two methods
+ * The message is called `dtmf-event` and has the following fields:
+ *
+ * * gint `type` (0-1): The application uses this field to specify which of the two methods
  *   specified in RFC 2833 to use. The value should be 0 for tones and 1 for
  *   named events. Tones are specified by their frequencies and events are
  *   specfied by their number. This element can only take events as input.
  *   Do not confuse with "method" which specified the output.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   gint <classname>number</classname> (0-16):
- *   The event number.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   gint <classname>method</classname> (2):
- *   This field will always been 2 (ie sound) from this element.
- *   </para>
- * </listitem>
- * </itemizedlist>
+ * * gint `number` (0-16): The event number.
+ * * gint `method` (2): This field will always been 2 (ie sound) from this element.
+ *
  */
 
 #ifdef HAVE_CONFIG_H

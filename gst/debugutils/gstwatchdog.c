@@ -19,6 +19,7 @@
  */
 /**
  * SECTION:element-gstwatchdog
+ * @title: watchdog
  *
  * The watchdog element watches buffers and events flowing through
  * a pipeline.  If no buffers are seen for a configurable amount of
@@ -32,12 +33,11 @@
  * This element is currently intended for transcoding pipelines,
  * although may be useful in other contexts.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v fakesrc ! watchdog ! fakesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

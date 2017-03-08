@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gstdataprotocol
+ * @title: GstDataProtocol
  * @short_description: Serialization of caps, buffers and events.
  * @see_also: #GstCaps, #GstEvent, #GstBuffer
  *

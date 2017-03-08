@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-wrappercamerabinsrc
+ * @title: wrappercamerabinsrc
  *
  * A camera bin src element that wraps a default video source with a single
  * pad into the 3pad model that camerabin2 expects.

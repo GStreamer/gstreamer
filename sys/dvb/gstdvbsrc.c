@@ -21,12 +21,12 @@
  */
 /**
  * SECTION:element-dvbsrc
+ * @title: dvbsrc
  *
  * dvbsrc can be used to capture media from DVB cards. Supported DTV
  * broadcasting standards include DVB-T/C/S, ATSC, ISDB-T and DTMB.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8 frequency=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpegvideoparse ! mpegvideoparse ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! pulsesink
  * ]| Captures a full transport stream from DVB card 0 that is a DVB-T card at tuned frequency 514000000 Hz with other parameters as seen in the pipeline and renders the first TV program on the transport stream.
@@ -42,7 +42,7 @@
  * |[
  *  gst-launch-1.0 dvbsrc frequency=503000000 delsys="atsc" modulation="8vsb" pids=48:49:52 ! decodebin name=dec dec. ! videoconvert ! autovideosink dec. ! audioconvert ! autoaudiosink
  * ]| Captures and renders KOFY-HD in San Jose, California. This is an ATSC broadcast, PMT ID 48, Audio/Video elementary stream PIDs 49 and 52 respectively.
- * </refsect2>
+ *
  */
 
 /*

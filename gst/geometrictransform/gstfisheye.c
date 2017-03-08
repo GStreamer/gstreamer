@@ -43,17 +43,17 @@
 
 /**
  * SECTION:element-fisheye
+ * @title: fisheye
  * @see_also: geometrictransform
  *
  * Fisheye is a geometric image transform element. It simulates a fisheye lens
  * by zooming on the center of the image and compressing the edges.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! fisheye ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

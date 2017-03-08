@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-lv2
+ * @title: lv2
  * @short_description: bridge for LV2.
  *
  * LV2 is a standard for plugins and matching host applications,

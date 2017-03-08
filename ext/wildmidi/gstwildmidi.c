@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-wildmidi
+ * @title: wildmidi
  * @see_also: timidity
  *
  * This element renders midi-files as audio streams using
@@ -29,13 +30,12 @@
  * uses the same sound-patches as timidity (it tries the path in $WILDMIDI_CFG,
  * $HOME/.wildmidirc and /etc/wildmidi.cfg)
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 filesrc location=song.mid ! wildmidi ! alsasink
  * ]| This example pipeline will parse the midi and render to raw audio which is
  * played via alsa.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

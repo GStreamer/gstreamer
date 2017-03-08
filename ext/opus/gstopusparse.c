@@ -22,16 +22,16 @@
 
 /**
  * SECTION:element-opusparse
+ * @title: opusparse
  * @see_also: opusenc, opusdec
  *
  * This element parses OPUS packets.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=opusdata ! opusparse ! opusdec ! audioconvert ! audioresample ! alsasink
  * ]| Decode and plays an unmuxed Opus file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

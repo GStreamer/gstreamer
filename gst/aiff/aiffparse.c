@@ -23,30 +23,26 @@
 
 /**
  * SECTION:element-aiffparse
+ * @title: aiffparse
  *
- * <refsect2>
- * <para>
  * Parse a .aiff file into raw or compressed audio.
- * </para>
- * <para>
+ *
  * The aiffparse element supports both push and pull mode operations, making it
  * possible to stream from a network source.
- * </para>
- * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ *
+ * ## Example launch line
+ *
+ * |[
  * gst-launch-1.0 filesrc location=sine.aiff ! aiffparse ! audioconvert ! alsasink
- * </programlisting>
+ * ]|
  * Read a aiff file and output to the soundcard using the ALSA element. The
  * aiff file is assumed to contain raw uncompressed samples.
- * </para>
- * <para>
- * <programlisting>
+ *
+ * |[
  * gst-launch-1.0 souphttpsrc location=http://www.example.org/sine.aiff ! queue ! aiffparse ! audioconvert ! alsasink
- * </programlisting>
+ * ]|
  * Stream data from a network url.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

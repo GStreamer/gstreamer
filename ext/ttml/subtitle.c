@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstsubtitle
+ * @title: GstSubtitle
  * @short_description: Library for describing sets of static subtitles.
  *
  * This library enables the description of static text scenes made up of a

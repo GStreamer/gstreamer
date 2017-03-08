@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstjpeg2000sampling
+ * @title: GstJpeg2000Sampling
  * @short_description: Manage JPEG 2000 sampling and colorspace fields
  *
  */

@@ -28,11 +28,12 @@
 
 /**
  * SECTION:vkmemory
+ * @title: GstVkMemory
  * @short_description: memory subclass for Vulkan device memory
  * @see_also: #GstMemory, #GstAllocator
  *
  * GstVulkanMemory is a #GstMemory subclass providing support for the mapping of
- * Vulkan device memory.  
+ * Vulkan device memory.
  */
 
 /* WARNING: while suballocation is allowed, nothing prevents aliasing which
@@ -347,7 +348,7 @@ gst_vulkan_memory_init_once (void)
 /**
  * gst_is_vulkan_memory:
  * @mem:a #GstMemory
- * 
+ *
  * Returns: whether the memory at @mem is a #GstVulkanMemory
  */
 gboolean

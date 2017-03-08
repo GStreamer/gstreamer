@@ -20,11 +20,11 @@
 
 /**
  * SECTION:element-ksvideosrc
+ * @title: ksvideosrc
  *
  * Provides low-latency video capture from WDM cameras on Windows.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v ksvideosrc do-stats=TRUE ! videoconvert ! dshowvideosink
  * ]| Capture from a camera and render using dshowvideosink.
@@ -32,7 +32,7 @@
  * gst-launch-1.0 -v ksvideosrc do-stats=TRUE ! image/jpeg, width=640, height=480
  * ! jpegdec ! videoconvert ! dshowvideosink
  * ]| Capture from an MJPEG camera and render using dshowvideosink.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

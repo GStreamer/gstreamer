@@ -22,6 +22,7 @@
  */
 /**
  * SECTION:gstvp9parser
+ * @title: GstVp9Parser
  * @short_description: Convenience library for parsing vp9 video bitstream.
  *
  * For more details about the structures, you can refer to the

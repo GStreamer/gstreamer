@@ -18,18 +18,18 @@
  */
 /**
  * SECTION:element-gstcombdetect
+ * @title: gstcombdetect
  *
  * The combdetect element detects if combing artifacts are present in
  * a raw video stream, and if so, marks them with a zebra stripe
  * pattern.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=file.mov ! decodebin ! combdetect !
  *     xvimagesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

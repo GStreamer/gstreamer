@@ -26,6 +26,7 @@
 
 /**
  * SECTION:vkbuffermemory
+ * @title: vkbuffermemory
  * @short_description: memory subclass for Vulkan buffer memory
  * @see_also: #GstMemory, #GstAllocator
  *
@@ -420,7 +421,7 @@ gst_vulkan_buffer_memory_init_once (void)
 /**
  * gst_is_vulkan_buffer_memory:
  * @mem:a #GstMemory
- * 
+ *
  * Returns: whether the memory at @mem is a #GstVulkanBufferMemory
  */
 gboolean

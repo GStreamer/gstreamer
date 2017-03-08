@@ -22,16 +22,16 @@
 
 /**
  * SECTION:element-glcolorbalance
+ * @title: glcolorbalance
  *
  * Adjusts brightness, contrast, hue, saturation on a video stream.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc ! glupload ! glcolorbalance saturation=0.0 ! glcolorconvert ! gldownload ! ximagesink
  * ]| This pipeline converts the image to black and white by setting the
  * saturation to 0.0.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

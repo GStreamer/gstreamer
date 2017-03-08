@@ -19,14 +19,17 @@
 
 /**
  * SECTION:element-curlsink
+ * @title: curlsink
  * @short_description: sink that uploads data to a server using libcurl
  * @see_also:
  *
  * This is a network sink that uses libcurl as a client to upload data to
  * an SMTP server.
  *
- * <refsect2>
- * <title>Example launch line (upload a JPEG file to an SMTP server)</title>
+ * ## Example launch line
+ *
+ * Upload a JPEG file to an SMTP server.
+ *
  * |[
  * gst-launch-1.0 filesrc location=image.jpg ! jpegparse ! curlsmtpsink  \
  *     file-name=image.jpg  \
@@ -38,7 +41,7 @@
  *     use-ssl=TRUE  \
  *     insecure=TRUE
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

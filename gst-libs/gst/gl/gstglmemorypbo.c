@@ -31,6 +31,7 @@
 
 /**
  * SECTION:gstglmemorypbo
+ * @title: GstGLMemoryPBO
  * @short_description: memory subclass for GL textures
  * @see_also: #GstMemory, #GstAllocator, #GstGLBufferPool
  *
@@ -846,7 +847,7 @@ gst_gl_memory_pbo_init_once (void)
 /**
  * gst_is_gl_memory_pbo:
  * @mem:a #GstMemory
- * 
+ *
  * Returns: whether the memory at @mem is a #GstGLMemoryPBO
  *
  * Since: 1.8

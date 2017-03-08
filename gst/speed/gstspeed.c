@@ -20,20 +20,20 @@
 
 /**
  * SECTION:element-speed
+ * @title: speed
  *
  * Plays an audio stream at a different speed (by resampling the audio).
- * 
+ *
  * Do not use this element. Either use the 'pitch' element, or do a seek with
  * a non-1.0 rate parameter, this will have the same effect as using the speed
  * element (but relies on the decoder/demuxer to handle this correctly, also
  * requires a fairly up-to-date gst-plugins-base, as of February 2007).
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=test.ogg ! decodebin ! audioconvert ! speed speed=1.5 ! audioconvert ! audioresample ! autoaudiosink
  * ]| Plays an .ogg file at 1.5x speed.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

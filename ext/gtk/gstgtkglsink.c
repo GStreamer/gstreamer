@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:gstgtkglsink
- *
+ * SECTION:element-gtkglsink
+ * @title: gtkglsink
  */
 
 #ifdef HAVE_CONFIG_H

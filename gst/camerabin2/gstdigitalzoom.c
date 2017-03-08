@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-digitalzoom
+ * @title: digitalzoom
  *
  * Does digital zooming by cropping and scaling an image.
  *

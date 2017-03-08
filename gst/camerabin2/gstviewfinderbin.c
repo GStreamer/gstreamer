@@ -18,16 +18,16 @@
  */
 /**
  * SECTION:element-gstviewfinderbin
+ * @title: gstviewfinderbin
  *
  * The gstviewfinderbin element is a displaying element for camerabin2.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! viewfinderbin
  * ]|
  * Feeds the viewfinderbin with video test data.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

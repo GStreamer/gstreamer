@@ -20,17 +20,17 @@
  */
 /**
  * SECTION:element-spacescope
+ * @title: spacescope
  * @see_also: goom
  *
  * Spacescope is a simple audio visualisation element. It maps the left and
  * right channel to x and y coordinates.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc ! audioconvert ! spacescope ! ximagesink
  * ]|
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

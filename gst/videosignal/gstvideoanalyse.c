@@ -18,63 +18,31 @@
  */
 /**
  * SECTION:element-videoanalyse
+ * @title: videoanalyse
  *
  * This plugin analyses every video frame and if the #GstVideoAnalyse:message
  * property is #TRUE, posts an element message with video statistics called
- * <classname>&quot;GstVideoAnalyse&quot;</classname>.
+ * `GstVideoAnalyse`.
  *
  * The message's structure contains these fields:
- * <itemizedlist>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;timestamp&quot;</classname>:
- *   the timestamp of the buffer that triggered the message.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;stream-time&quot;</classname>:
- *   the stream time of the buffer.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;running-time&quot;</classname>:
- *   the running_time of the buffer.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;duration&quot;</classname>:
- *   the duration of the buffer.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #gdouble
- *   <classname>&quot;luma-average&quot;</classname>:
- *   the average brightness of the frame. Range: 0.0-1.0
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #gdouble
- *   <classname>&quot;luma-variance&quot;</classname>:
- *   the brightness variance of the frame.
- *   </para>
- * </listitem>
- * </itemizedlist>
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * * #GstClockTime `timestamp`: the timestamp of the buffer that triggered the message.
+ *
+ * * #GstClockTime `stream-time`: the stream time of the buffer.
+ *
+ * * #GstClockTime `running-time`: the running_time of the buffer.
+ *
+ * * #GstClockTime`duration`:the duration of the buffer.
+ *
+ * * #gdouble`luma-average`: the average brightness of the frame. Range: 0.0-1.0
+ *
+ * * #gdouble`luma-variance`: the brightness variance of the frame.
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -m videotestsrc ! videoanalyse ! videoconvert ! ximagesink
- * ]| This pipeline emits messages to the console for each frame that has been analysed. 
- * </refsect2>
+ * ]| This pipeline emits messages to the console for each frame that has been analysed.
+ *
  */
 
 #ifdef HAVE_CONFIG_H

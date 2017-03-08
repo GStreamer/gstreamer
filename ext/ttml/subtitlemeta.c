@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstsubtitlemeta
+ * @title: GstSubtitleMeta
  * @short_description: Metadata class for timed-text subtitles.
  *
  * The GstSubtitleMeta class enables the layout and styling information needed

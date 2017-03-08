@@ -19,17 +19,17 @@
 
 /**
  * SECTION:element-pnmenc
+ * @title: pnmenc
  *
  * Encodes pnm images. This plugin supports both raw and ASCII encoding.
  * To enable ASCII encoding, set the parameter ascii to TRUE. If you omit
  * the parameter or set it to FALSE, the output will be raw encoded.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc num_buffers=1 ! videoconvert ! "video/x-raw,format=GRAY8" ! pnmenc ascii=true ! filesink location=test.pnm
  * ]| The above pipeline writes a test pnm file (ASCII encoding).
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

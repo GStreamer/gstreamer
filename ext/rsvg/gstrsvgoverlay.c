@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-rsvgoverlay
+ * @title: rsvgoverlay
  *
  * This elements overlays SVG graphics over the video. SVG data can
  * either be specified through properties, or fed through the
@@ -44,8 +45,7 @@
  * the values of the x/y/width/height attributes, by setting
  * height-/width-relative to 1.0. and all other attributes to 0.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 -v videotestsrc ! videoconvert ! rsvgoverlay location=foo.svg ! videoconvert ! autovideosink
  * ]| specifies the SVG location through the filename property.
@@ -55,7 +55,7 @@
  * |[
  * gst-launch-1.0 -v videotestsrc ! videoconvert ! rsvgoverlay data='&lt;svg viewBox="0 0 800 600"&gt;&lt;image x="80%" y="80%" width="10%" height="10%" xlink:href="foo.jpg" /&gt;&lt;/svg&gt;' ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

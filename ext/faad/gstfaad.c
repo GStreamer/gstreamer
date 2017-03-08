@@ -20,19 +20,19 @@
 
 /**
  * SECTION:element-faad
+ * @title: faad
  * @seealso: faac
  *
  * faad decodes AAC (MPEG-4 part 3) stream.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 filesrc location=example.mp4 ! qtdemux ! faad ! audioconvert ! audioresample ! autoaudiosink
  * ]| Play aac from mp4 file.
  * |[
  * gst-launch-1.0 filesrc location=example.adts ! faad ! audioconvert ! audioresample ! autoaudiosink
  * ]| Play standalone aac bitstream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

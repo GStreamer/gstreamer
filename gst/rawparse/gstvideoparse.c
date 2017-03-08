@@ -21,10 +21,11 @@
  */
 /**
  * SECTION:element-videoparse
+ * @title: videoparse
  *
  * Converts a byte stream into video frames.
  *
- * <note>This element is deprecated. Use #GstRawVideoParse instead.</note>
+ * > This element is deprecated. Use #GstRawVideoParse instead.
  */
 
 #ifdef HAVE_CONFIG_H

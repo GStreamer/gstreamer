@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstplayer-mediainfo
+ * @title: GstPlayerMediaInfo
  * @short_description: Player Media Information
  *
  */

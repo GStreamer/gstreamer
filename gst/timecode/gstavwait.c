@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-avwait
+ * @title: avwait
  *
  * This element will drop all buffers until a specific timecode or running
  * time has been reached. It will then pass-through both audio and video,
@@ -31,11 +32,10 @@
  * the video). In the "audio-after-video" mode, it only drops audio buffers
  * until video has started.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location="my_file" ! decodebin name=d ! "audio/x-raw" ! avwait name=l target-timecode-str="00:00:04:00" ! autoaudiosink d. ! "video/x-raw" ! timecodestamper ! l. l. ! queue ! timeoverlay time-mode=time-code ! autovideosink
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

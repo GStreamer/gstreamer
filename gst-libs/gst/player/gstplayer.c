@@ -21,6 +21,7 @@
 
 /**
  * SECTION:gstplayer
+ * @title: GstPlayer
  * @short_description: Player
  *
  */

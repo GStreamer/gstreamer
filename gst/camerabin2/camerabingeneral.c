@@ -20,6 +20,7 @@
 
 /**
  * SECTION:camerabingeneral
+ * @title: GstCameraBin2
  * @short_description: helper functions for #GstCameraBin2 and it's modules
  *
  * Common helper functions for #GstCameraBin2, #GstCameraBin2Image and

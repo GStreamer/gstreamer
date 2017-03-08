@@ -19,14 +19,17 @@
 
 /**
  * SECTION:element-curlhttpsink
+ * @title: curlhttpsink
  * @short_description: sink that uploads data to a server using libcurl
  * @see_also:
  *
  * This is a network sink that uses libcurl as a client to upload data to
  * an HTTP server.
  *
- * <refsect2>
- * <title>Example launch line (upload a JPEG file to an HTTP server)</title>
+ * ## Example launch line
+ *
+ * Upload a JPEG file to an HTTP server.
+ *
  * |[
  * gst-launch-1.0 filesrc location=image.jpg ! jpegparse ! curlhttpsink  \
  *     file-name=image.jpg  \
@@ -35,7 +38,6 @@
  *     content-type=image/jpeg  \
  *     use-content-length=false
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

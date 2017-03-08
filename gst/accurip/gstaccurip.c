@@ -33,6 +33,7 @@
 
 /**
  * SECTION:element-accurip
+ * @title: accurip
  * @short_desc: Computes an AccurateRip CRC
  *
  * The accurip element calculates a CRC for an audio stream which can be used
@@ -40,12 +41,11 @@
  * <ulink url="http://accuraterip.com/">AccurateRip</ulink>. This database
  * is used to check for a CD rip accuracy.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -m uridecodebin uri=file:///path/to/song.flac ! audioconvert ! accurip ! fakesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

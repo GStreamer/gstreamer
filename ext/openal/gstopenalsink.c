@@ -24,6 +24,7 @@
 
 /**
  * SECTION:element-openalsink
+ * @title: openalsink
  * @see_also: openalsrc
  * @short_description: capture raw audio samples through OpenAL
  *
@@ -31,8 +32,7 @@
  *
  * Unfortunately the capture API doesn't have a format enumeration/check. all you can do is try opening it and see if it works.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 audiotestsrc ! audioconvert ! volume volume=0.5 ! openalsink
  * ]| will play a sine wave (continuous beep sound) through OpenAL.
@@ -42,7 +42,7 @@
  * |[
  * gst-launch-1.0 openalsrc ! "audio/x-raw,format=S16LE,rate=44100" ! audioconvert ! volume volume=0.25 ! openalsink
  * ]| will capture and play audio through OpenAL.
- * </refsect2>
+ *
  */
 
 /*

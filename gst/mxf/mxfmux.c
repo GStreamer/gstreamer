@@ -19,15 +19,15 @@
 
 /**
  * SECTION:element-mxfmux
+ * @title: mxfmux
  *
  * mxfmux muxes different streams into an MXF file.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=/path/to/audio ! decodebin ! queue ! mxfmux name=m ! filesink location=file.mxf   filesrc location=/path/to/video ! decodebin ! queue ! m.
  * ]| This pipeline muxes an audio and video file into a single MXF file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

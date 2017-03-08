@@ -20,6 +20,7 @@
  */
 /**
  * SECTION:gstmpeg4parser
+ * @title: GstMpeg4Parser
  * @short_description: Convenience library for parsing mpeg4 part 2 video
  * bitstream.
  *

@@ -26,6 +26,7 @@
 
 /**
  * SECTION:vkbufferpool
+ * @title: GstVulkanBufferPool
  * @short_description: buffer pool for #GstVulkanBufferMemory objects
  * @see_also: #GstBufferPool, #GstVulkanBufferMemory
  *
@@ -33,7 +34,7 @@
  *
  * A #GstVulkanBufferPool is created with gst_vulkan_buffer_pool_new()
  *
- * #GstVulkanBufferPool implements the VideoMeta buffer pool option 
+ * #GstVulkanBufferPool implements the VideoMeta buffer pool option
  * #GST_BUFFER_POOL_OPTION_VIDEO_META
  */
 

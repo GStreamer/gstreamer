@@ -36,7 +36,7 @@ typedef enum
   WINDOW_VISIBILITY_ERROR = 4
 } WindowHandleVisibility;
 
-/** FWD DECLS **/
+/* FWD DECLS */
 
 static gboolean d3d_hidden_window_thread (GstD3DVideoSinkClass * klass);
 static gboolean d3d_window_wndproc_set (GstD3DVideoSink * sink);
@@ -68,7 +68,7 @@ static gint WM_D3DVIDEO_NOTIFY_DEVICE_LOST = 0;
 
 #define WM_QUIT_THREAD  WM_USER+0
 
-/** Helpers **/
+/* Helpers */
 
 #define ERROR_CHECK_HR(hr)                          \
   if(hr != S_OK) {                                  \
@@ -119,7 +119,7 @@ static gint WM_D3DVIDEO_NOTIFY_DEVICE_LOST = 0;
 #define D3DFMT_NV12 MAKEFOURCC ('N', 'V', '1', '2')
 #endif
 
-/** FORMATS **/
+/* FORMATS */
 
 #define CASE(x) case x: return #x;
 static const gchar *
@@ -978,7 +978,7 @@ end:
   return ret;
 }
 
-/** Windows for rendering (User Set or Internal) **/
+/* Windows for rendering (User Set or Internal) */
 
 static void
 d3d_window_wndproc_unset (GstD3DVideoSink * sink)
@@ -1208,7 +1208,7 @@ d3d_stop (GstD3DVideoSink * sink)
   return TRUE;
 }
 
-/** D3D Lost and Reset Device **/
+/* D3D Lost and Reset Device */
 
 static void
 d3d_notify_device_lost (GstD3DVideoSink * sink)
@@ -1256,7 +1256,7 @@ d3d_notify_device_reset (GstD3DVideoSink * sink)
   UNLOCK_SINK (sink);
 }
 
-/** Swap Chains **/
+/* Swap Chains */
 
 static gboolean
 d3d_init_swap_chain (GstD3DVideoSink * sink, HWND hWnd)
@@ -1988,7 +1988,7 @@ end:
 }
 
 
-/** D3D Window Proc Functions **/
+/* D3D Window Proc Functions */
 
 static LRESULT APIENTRY
 d3d_wnd_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -2110,7 +2110,7 @@ end:
   return ret;
 }
 
-/** Internal Window **/
+/* Internal Window */
 
 static LRESULT APIENTRY
 d3d_wnd_proc_internal (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -2269,7 +2269,7 @@ d3d_create_internal_window (GstD3DVideoSink * sink)
   return dat.hWnd;
 }
 
-/*** D3D Video Class Methdos ***/
+/* D3D Video Class Methdos */
 
 gboolean
 d3d_class_init (GstD3DVideoSink * sink)
@@ -2590,7 +2590,7 @@ end:;
   UNLOCK_CLASS (NULL, klass);
 }
 
-/** Hidden Window Loop Thread **/
+/* Hidden Window Loop Thread */
 
 static LRESULT APIENTRY
 D3DHiddenWndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

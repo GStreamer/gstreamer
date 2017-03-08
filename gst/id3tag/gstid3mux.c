@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-id3mux
+ * @title: id3mux
  * @see_also: #GstID3Demux, #GstTagSetter
  *
  * This element adds ID3v2 tags to the beginning of a stream, and ID3v1 tags
@@ -34,8 +35,7 @@
  * Tags sent by upstream elements will be picked up automatically (and merged
  * according to the merge mode set via the tag setter interface).
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=foo.ogg ! decodebin ! audioconvert ! id3mux ! filesink location=foo.mp3
  * ]| A pipeline that transcodes a file from Ogg/Vorbis to mp3 format with
@@ -44,7 +44,7 @@
  * |[
  * gst-launch-1.0 -m filesrc location=foo.mp3 ! id3demux ! fakesink silent=TRUE
  * ]| Verify that tags have been written.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

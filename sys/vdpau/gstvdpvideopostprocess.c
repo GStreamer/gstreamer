@@ -20,15 +20,15 @@
 
 /**
  * SECTION:element-vdpauvideopostprocess
+ * @title: vdpauvideopostprocess
  *
  * FIXME:Describe vdpaumpegdec here.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v -m fakesrc ! vdpauvideopostprocess ! fakesink silent=TRUE
  * ]|
- * </refsect2>
+ *
  */
 
 /*

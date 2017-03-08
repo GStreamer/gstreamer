@@ -19,16 +19,16 @@
 
 /**
  * SECTION:element-voaacenc
+ * @title: voaacenc
  *
- * AAC audio encoder based on vo-aacenc library 
+ * AAC audio encoder based on vo-aacenc library
  * <ulink url="http://sourceforge.net/projects/opencore-amr/files/vo-aacenc/">vo-aacenc library source file</ulink>.
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=abc.wav ! wavparse ! audioresample ! audioconvert ! voaacenc ! filesink location=abc.aac
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

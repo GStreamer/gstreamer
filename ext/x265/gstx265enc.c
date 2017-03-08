@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-x265enc
+ * @title: x265enc
  *
  * This element encodes raw video into H265 compressed data.
  *

@@ -43,17 +43,17 @@
 
 /**
  * SECTION:element-fieldanalysis
+ * @title: fieldanalysis
  *
  * Analyse fields from video buffers to identify whether the buffers are
  * progressive/telecined/interlaced and, if telecined, the telecine pattern
  * used.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v uridecodebin uri=/path/to/foo.bar ! fieldanalysis ! deinterlace ! videoconvert ! autovideosink
  * ]| This pipeline will analyse a video stream with default metrics and thresholds and output progressive frames.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

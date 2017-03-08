@@ -29,40 +29,30 @@
 
 /**
  * SECTION:gsth264parser
+ * @title: GstH264Parser
  * @short_description: Convenience library for h264 video
  * bitstream parsing.
  *
  * It offers bitstream parsing in both AVC (length-prefixed) and Annex B
  * (0x000001 start code prefix) format. To identify a NAL unit in a bitstream
  * and parse its headers, first call:
- * <itemizedlist>
- *   <listitem>
- *      #gst_h264_parser_identify_nalu to identify a NAL unit in an Annex B type bitstream
- *   </listitem>
- *   <listitem>
- *      #gst_h264_parser_identify_nalu_avc to identify a NAL unit in an AVC type bitstream
- *   </listitem>
- * </itemizedlist>
+ *
+ *   * #gst_h264_parser_identify_nalu to identify a NAL unit in an Annex B type bitstream
+ *
+ *   * #gst_h264_parser_identify_nalu_avc to identify a NAL unit in an AVC type bitstream
  *
  * The following functions are then available for parsing the structure of the
  * #GstH264NalUnit, depending on the #GstH264NalUnitType:
- * <itemizedlist>
- *   <listitem>
- *      From #GST_H264_NAL_SLICE to #GST_H264_NAL_SLICE_IDR: #gst_h264_parser_parse_slice_hdr
- *   </listitem>
- *   <listitem>
- *      #GST_H264_NAL_SEI: #gst_h264_parser_parse_sei
- *   </listitem>
- *   <listitem>
- *      #GST_H264_NAL_SPS: #gst_h264_parser_parse_sps
- *   </listitem>
- *   <listitem>
- *      #GST_H264_NAL_PPS: #gst_h264_parser_parse_pps
- *   </listitem>
- *   <listitem>
- *      Any other: #gst_h264_parser_parse_nal
- *   </listitem>
- * </itemizedlist>
+ *
+ *   * From #GST_H264_NAL_SLICE to #GST_H264_NAL_SLICE_IDR: #gst_h264_parser_parse_slice_hdr
+ *
+ *   * #GST_H264_NAL_SEI: #gst_h264_parser_parse_sei
+ *
+ *   * #GST_H264_NAL_SPS: #gst_h264_parser_parse_sps
+ *
+ *   * #GST_H264_NAL_PPS: #gst_h264_parser_parse_pps
+ *
+ *   * Any other: #gst_h264_parser_parse_nal
  *
  * One of these functions *must* be called on every NAL unit in the bitstream,
  * in order to keep the internal structures of the #GstH264NalParser up to
@@ -70,17 +60,13 @@
  * type, if no special parsing of the current NAL unit is required by the
  * application.
  *
- * For more details about the structures, look at the ITU-T H.264 and ISO/IEC 14496-10 – MPEG-4
+ * For more details about the structures, look at the ITU-T H.264 and ISO/IEC 14496-10 â€“ MPEG-4
  * Part 10 specifications, available at:
  *
- * <itemizedlist>
- *   <listitem>
- *     ITU-T H.264: http://www.itu.int/rec/T-REC-H.264
- *   </listitem>
- *   <listitem>
- *     ISO/IEC 14496-10: http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=56538
- *   </listitem>
- * </itemizedlist>
+ *   * ITU-T H.264: http://www.itu.int/rec/T-REC-H.264
+ *
+ *   * ISO/IEC 14496-10: http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=56538
+ *
  */
 
 #ifdef HAVE_CONFIG_H

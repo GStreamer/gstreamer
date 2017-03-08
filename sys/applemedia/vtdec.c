@@ -18,17 +18,17 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-gstvtdec
+ * SECTION:element-vtdec
+ * @title: gstvtdec
  *
  * Apple VideoToolbox based decoder.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=file.mov ! qtdemux ! queue ! h264parse ! vtdec ! videoconvert ! autovideosink
  * ]|
  * Decode h264 video from a mov file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

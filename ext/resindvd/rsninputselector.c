@@ -25,6 +25,7 @@
 
 /**
  * SECTION:element-input-selector
+ * @title: input-selector
  * @see_also: #GstOutputSelector
  *
  * Direct one out of N input streams to the output pad.
@@ -32,21 +33,11 @@
  * The input pads are from a GstPad subclass and have additional
  * properties, which users may find useful, namely:
  *
- * <itemizedlist>
- * <listitem>
- * "running-time": Running time of stream on pad (#gint64)
- * </listitem>
- * <listitem>
- * "tags": The currently active tags on the pad (#GstTagList, boxed type)
- * </listitem>
- * <listitem>
- * "active": If the pad is currently active (#gboolean)
- * </listitem>
- * <listitem>
- * "always-ok" : Make an inactive pads return #GST_FLOW_OK instead of
- * #GST_FLOW_NOT_LINKED
- * </listitem>
- * </itemizedlist>
+ * * "running-time": Running time of stream on pad (#gint64)
+ * * "tags": The currently active tags on the pad (#GstTagList, boxed type)
+ * * "active": If the pad is currently active (#gboolean)
+ * * "always-ok" : Make an inactive pads return #GST_FLOW_OK instead of #GST_FLOW_NOT_LINKED
+ *
  */
 
 #ifdef HAVE_CONFIG_H

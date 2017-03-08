@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstglformat
+ * @title: GstGlFormat
  * @short_description: utilities for dealing with OpenGL formats
  * @see_also: #GstGLBaseMemory, #GstGLMemory, #GstGLFramebuffer, #GstGLBuffer
  *

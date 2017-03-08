@@ -21,19 +21,19 @@
 
 /**
  * SECTION:element-fluiddec
+ * @title: fluiddec
  * @see_also: timidity, wildmidi
  *
  * This element renders midi-events as audio streams using
  * <ulink url="http://fluidsynth.sourceforge.net//">Fluidsynth</ulink>.
  * It offers better sound quality compared to the timidity or wildmidi element.
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 filesrc location=song.mid ! midiparse ! fluiddec ! pulsesink
  * ]| This example pipeline will parse the midi and render to raw audio which is
  * played via pulseaudio.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

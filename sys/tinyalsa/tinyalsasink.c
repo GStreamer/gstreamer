@@ -20,18 +20,18 @@
 
 /**
  * SECTION:element-tinyalsasink
+ * @title: tinyalsasink
  * @see_also: alsasink
  *
  * This element renders raw audio samples using the ALSA audio API via the
  * tinyalsa library.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v uridecodebin uri=file:///path/to/audio.ogg ! audioconvert ! audioresample ! tinyalsasink
  * ]| Play an Ogg/Vorbis file and output audio via ALSA using the tinyalsa
  * library.
- * </refsect2>
+ *
  */
 
 #include <gst/audio/gstaudiobasesink.h>

@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-rtmpsink
+ * @title: rtmpsink
  *
  * This element delivers data to a streaming server via RTMP. It uses
  * librtmp, and supports any protocols/urls that librtmp supports.
@@ -27,12 +28,11 @@
  * for librtmp, such as 'flashver=version'. See the librtmp documentation
  * for more detail
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! ffenc_flv ! flvmux ! rtmpsink location='rtmp://localhost/path/to/stream live=1'
  * ]| Encode a test video stream to FLV video format and stream it via RTMP.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

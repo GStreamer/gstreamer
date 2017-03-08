@@ -21,11 +21,11 @@
 
 /**
  * SECTION:element-glfilterglass
+ * @title: glfilterglass
  *
  * Map textures on moving glass.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 -v videotestsrc ! glfilterglass ! glimagesink
  * ]| A pipeline inspired from http://www.mdk.org.pl/2007/11/17/gl-colorspace-conversions
@@ -33,7 +33,7 @@
  * |[
  * gst-launch-1.0 -v videotestsrc ! glfilterglass ! video/x-raw, width=640, height=480 ! glimagesink
  * ]| The scene is greater than the input size.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -20,6 +20,7 @@
  */
 /**
  * SECTION:gstvc1parser
+ * @title: GstVc1Parser
  * @short_description: Convenience library for parsing vc1 video
  * bitstream.
  *

@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstglviewconvert
+ * @title: GstGLViewConvert
  * @short_description: convert between steroscopic/multiview video formats
  * @see_also: #GstGLColorConvert, #GstGLContext
  *
@@ -1432,7 +1433,7 @@ gst_gl_view_convert_get_property (GObject * object, guint prop_id,
  * @inbuf: (transfer none): the #GstGLMemory filled #GstBuffer to convert
  *
  * Converts the data contained by @inbuf using the formats specified by the
- * #GstCaps passed to gst_gl_view_convert_set_caps() 
+ * #GstCaps passed to gst_gl_view_convert_set_caps()
  *
  * Returns: (transfer full): a converted #GstBuffer or %NULL
  *

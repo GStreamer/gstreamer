@@ -22,20 +22,20 @@
 
 /**
  * SECTION:element-jifmux
+ * @title: jifmux
  * @short_description: JPEG interchange format writer
  *
  * Writes a JPEG image as JPEG/EXIF or JPEG/JFIF including various metadata. The
  * jpeg image received on the sink pad should be minimal (e.g. should not
  * contain metadata already).
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc num-buffers=1 ! jpegenc ! jifmux ! filesink location=...
  * ]|
  * The above pipeline renders a frame, encodes to jpeg, adds metadata and writes
  * it to disk.
- * </refsect2>
+ *
  */
 /*
 jpeg interchange format:

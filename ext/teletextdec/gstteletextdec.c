@@ -21,16 +21,16 @@
 
 /**
  * SECTION:element-teletextdec
+ * @title: teletextdec
  *
  * Decode a stream of raw VBI packets containing teletext information to a RGBA
  * stream.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v -m filesrc location=recording.mpeg ! tsdemux ! teletextdec ! videoconvert ! ximagesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

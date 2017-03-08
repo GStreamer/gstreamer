@@ -21,6 +21,7 @@
  */
 /**
  * SECTION:element-sirendec
+ * @title: sirendec
  *
  * This decodes audio buffers from the Siren 16 codec (a 16khz extension of
  * G.722.1) that is meant to be compatible with the Microsoft Windows Live

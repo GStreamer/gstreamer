@@ -21,15 +21,15 @@
 
 /**
  * SECTION:element-libde265dec
+ * @title: libde265dec
  *
  * Decodes HEVC/H.265 video.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=bitstream.hevc ! 'video/x-hevc,stream-format=byte-stream,framerate=25/1' ! libde265dec ! autovideosink
  * ]| The above pipeline decodes the HEVC/H.265 bitstream and renders it to the screen.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

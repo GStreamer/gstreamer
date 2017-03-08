@@ -18,18 +18,18 @@
  */
 /**
  * SECTION:element-gstaudiochannelmix
+ * @title: gstaudiochannelmix
  *
  * The audiochannelmix element mixes channels in stereo audio based on
  * properties set on the element.  The primary purpose is reconstruct
  * equal left/right channels on an input stream that has audio in only
  * one channel.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v audiotestsrc ! audiochannelmix ! autoaudiosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

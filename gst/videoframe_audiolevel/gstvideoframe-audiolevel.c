@@ -24,16 +24,16 @@
 
 /**
  * SECTION:element-videoframe-audiolevel
+ * @title: videoframe-audiolevel
  *
  * This element acts like a synchronized audio/video "level". It gathers
  * all audio buffers sent between two video frames, and then sends a message
  * that contains the RMS value of all samples for these buffers.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -m filesrc location="file.mkv" ! decodebin name=d ! "audio/x-raw" ! videoframe-audiolevel name=l ! autoaudiosink d. ! "video/x-raw" ! l. l. ! queue ! autovideosink ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -18,18 +18,18 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:element-gstahssrc
+ * SECTION:element-ahssrc
+ * @title: gstahssrc
  *
  * The ahssrc element reads data from Android device sensors
  * (android.hardware.Sensor).
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch -v ahssrc ! fakesink
  * ]|
  * Push Android sensor data into a fakesink.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

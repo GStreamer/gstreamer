@@ -19,15 +19,15 @@
 
 /**
  * SECTION:element-pnmdec
+ * @title: pnmdec
  *
  * Decodes pnm images.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=test.pnm ! pnmdec ! videoconvert ! autovideosink
  * ]| The above pipeline reads a pnm file and renders it to the screen.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

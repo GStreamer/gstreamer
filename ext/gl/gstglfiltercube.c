@@ -20,11 +20,11 @@
 
 /**
  * SECTION:element-glfiltercube
+ * @title: glfiltercube
  *
  * The resize and redraw callbacks can be set from a client code.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 -v videotestsrc ! glfiltercube ! glimagesink
  * ]| A pipeline to mpa textures on the 6 cube faces..
@@ -37,7 +37,7 @@
  * gst-launch-1.0 -v videotestsrc ! video/x-raw, width=640, height=480  ! glfiltercube ! glimagesink
  * ]| Resize scene before drawing the cube.
  * The scene size is greater than the input video size.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

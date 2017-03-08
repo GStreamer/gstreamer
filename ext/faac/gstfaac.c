@@ -20,16 +20,16 @@
 
 /**
  * SECTION:element-faac
+ * @title: faac
  * @see_also: faad
  *
  * faac encodes raw audio to AAC (MPEG-4 part 3) streams.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc wave=sine num-buffers=100 ! audioconvert ! faac ! matroskamux ! filesink location=sine.mkv
  * ]| Encode a sine beep as aac and write to matroska container.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

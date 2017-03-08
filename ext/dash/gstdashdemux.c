@@ -29,9 +29,10 @@
  */
 /**
  * SECTION:element-dashdemux
+ * @title: dashdemux
  *
  * DASH demuxer element.
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 playbin uri="http://www-itec.uni-klu.ac.at/ftp/datasets/mmsys12/RedBullPlayStreets/redbull_4s/RedBullPlayStreets_4s_isoffmain_DIS_23009_1_v_2_1c2_2011_08_30.mpd"
  * ]|

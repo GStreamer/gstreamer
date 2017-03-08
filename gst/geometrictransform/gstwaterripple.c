@@ -49,16 +49,16 @@
 
 /**
  * SECTION:element-waterripple
+ * @title: waterripple
  * @see_also: geometrictransform
  *
  * The waterripple element creates a water ripple effect on the image.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! waterripple ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-ladspa
+ * @title: ladspa
  * @short_description: bridge for LADSPA (Linux Audio Developer's Simple Plugin API)
  * @see_also: #GstAudioConvert #GstAudioResample, #GstAudioTestSrc, #GstAutoAudioSink
  *
@@ -32,8 +33,7 @@
  * element classification. The functionality you get depends on the LADSPA plugins
  * you have installed.
  *
- * <refsect2>
- * <title>Example LADSPA line without this plugins</title>
+ * ## Example LADSPA line without this plugins
  * |[
  * (padsp) listplugins
  * (padsp) analyseplugin cmt.so amp_mono
@@ -41,16 +41,13 @@
  * (padsp) applyplugin testin.wav testout.wav cmt.so amp_mono 2
  * gst-launch-1.0 playbin uri=file://"$PWD"/testout.wav
  * ]| Decode any audio file into wav with the format expected for the specific ladspa plugin to be applied, apply the ladspa filter and play it.
- * </refsect2>
  *
  * Now with this plugin:
  *
- * <refsect2>
- * <title>Example LADSPA line with this plugins</title>
+ * ## Example LADSPA line with this plugins
  * |[
  * gst-launch-1.0 autoaudiosrc ! ladspa-cmt-so-amp-mono gain=2 ! ladspa-caps-so-plate ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! tee name=myT myT. ! queue ! autoaudiosink myT. ! queue ! audioconvert ! goom ! videoconvert ! xvimagesink pixel-aspect-ratio=3/4
  * ]| Get audio input, filter it through CAPS Plate and TAP Stereo Echo, play it and show a visualization (recommended hearphones).
- * </refsect2>
  *
  * In case you wonder the plugin naming scheme, quoting ladspa.h:
  *   "Plugin types should be identified by file and label rather than by
@@ -61,60 +58,52 @@
  * on top of the audio in and out one, so some parameters are readable too.
  *
  * You can see the listing of plugins available with:
- * <refsect2>
- * <title>Inspecting the plugins list</title>
+ *
+ * ## Inspecting the plugins list
  * |[
  * gst-inspect ladspa
  * ]| List available LADSPA plugins on gstreamer.
- * </refsect2>
  *
  * You can see the parameters of any plugin with:
- * <refsect2>
- * <title>Inspecting the plugins</title>
+ *
+ * ## Inspecting the plugins
  * |[
  * gst-inspect ladspa-retro-flange-1208-so-retroflange
  * ]| List details of the plugin, parameters, range and defaults included.
- * </refsect2>
  *
  * The elements categorize in:
- * <itemizedlist>
- * <listitem><para>Filter/Effect/Audio/LADSPA:</para>
- * <refsect2>
- * <title>Example Filter/Effect/Audio/LADSPA line with this plugins</title>
+ *
+ * * Filter/Effect/Audio/LADSPA:
+ *
+ * ## Example Filter/Effect/Audio/LADSPA line with this plugins
  * |[
  * gst-launch-1.0 filesrc location="$myfile" ! decodebin ! audioconvert ! audioresample ! ladspa-calf-so-reverb decay-time=15 high-frq-damp=20000 room-size=5 diffusion=1 wet-amount=2 dry-amount=2 pre-delay=50 bass-cut=20000 treble-cut=20000 ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! autoaudiosink
  * ]| Decode any audio file, filter it through Calf Reverb LADSPA then TAP Stereo Echo, and play it.
- * </refsect2>
- * </listitem>
- * <listitem><para>Source/Audio/LADSPA:</para>
- * <refsect2>
- * <title>Example Source/Audio/LADSPA line with this plugins</title>
+ *
+ * * Source/Audio/LADSPA:
+ *
+ * ## Example Source/Audio/LADSPA line with this plugins
  * |[
  * gst-launch-1.0 ladspasrc-sine-so-sine-fcac frequency=220 amplitude=100 ! audioconvert ! autoaudiosink
  * ]| Generate a sine wave with Sine Oscillator (Freq:control, Amp:control) and play it.
- * </refsect2>
- * <refsect2>
- * <title>Example Source/Audio/LADSPA line with this plugins</title>
+ *
+ * ## Example Source/Audio/LADSPA line with this plugins
  * |[
  * gst-launch-1.0 ladspasrc-caps-so-click bpm=240 volume=1 ! autoaudiosink
  * ]| Generate clicks with CAPS Click - Metronome at 240 beats per minute and play it.
- * </refsect2>
- * <refsect2>
- * <title>Example Source/Audio/LADSPA line with this plugins</title>
+ *
+ * ## Example Source/Audio/LADSPA line with this plugins
  * |[
  * gst-launch-1.0 ladspasrc-random-1661-so-random-fcsc-oa ! ladspa-cmt-so-amp-mono gain=1.5 ! ladspa-caps-so-plate ! tee name=myT myT. ! queue ! autoaudiosink myT. ! queue ! audioconvert ! wavescope ! videoconvert ! autovideosink
  * ]| Generate random wave, filter it trhough Mono Amplifier and Versatile Plate Reverb, and play, while showing, it.
- * </refsect2>
- * </listitem>
- * <listitem><para>Sink/Audio/LADSPA:</para>
- * <refsect2>
- * <title>Example Sink/Audio/LADSPA line with this plugins</title>
+ *
+ * * Sink/Audio/LADSPA:
+ *
+ * ## Example Sink/Audio/LADSPA line with this plugins
  * |[
  * gst-launch-1.0 autoaudiosrc ! ladspa-cmt-so-amp-mono gain=2 ! ladspa-caps-so-plate ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! tee name=myT myT. ! audioconvert ! audioresample ! queue ! ladspasink-cmt-so-null-ai myT. ! audioconvert ! audioresample ! queue ! goom ! videoconvert ! xvimagesink pixel-aspect-ratio=3/4
  * ]| Get audio input, filter it trhough Mono Amplifier, CAPS Plate LADSPA and TAP Stereo Echo, explicitily anulate audio with Null (Audio Output), and play a visualization (recommended hearphones).
- * </refsect2>
- * </listitem>
- * </itemizedlist>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

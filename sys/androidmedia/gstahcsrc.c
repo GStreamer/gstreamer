@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-ahcsrc
+ * @title: ahcsrc
  *
  * ahcsrc can be used to capture video from android devices. It uses the
  * android.hardware.Camera Java API to capture from the system's cameras.
@@ -31,7 +32,7 @@
  * so it can be loaded into the virtual machine.
  * In order for it to work, an environment variable must be set to a writable
  * directory.
- * The source will look for the environment variable “TMP” which must contain
+ * The source will look for the environment variable â€œTMPâ€� which must contain
  * the absolute path to a writable directory.
  * It can be retreived using the following Java code :
  * |[
@@ -40,28 +41,24 @@
  * Where the @context variable is an object of type android.content.Context
  * (including its subclasses android.app.Activity or android.app.Application).
  * Another optional environment variable can be set for pointing to the
- * optimized dex classes directory. If the environment variable “DEX” is
- * available, it will be used, otherwise, the directory in the “TMP” environment
+ * optimized dex classes directory. If the environment variable â€œDEXâ€� is
+ * available, it will be used, otherwise, the directory in the â€œTMPâ€� environment
  * variable will be used for the optimized dex directory.
  * The system dex directory can be obtained using the following Java code :
  * |[
- *   context.getDir(“dex”, 0).getAbsolutePath();
+ *   context.getDir("dex", 0).getAbsolutePath();
  * ]|
  *
- * <note>
- * Those environment variable must be set before gst_init is called from
- * the native code.
- * </note>
+ * > Those environment variable must be set before gst_init is called from
+ * > the native code.
  *
- * <note>
- * If the “TMP” environment variable is not available or the directory is not
- * writable or any other issue happens while trying to load the embedded jar
- * file, then the source will fallback on trying to load the class directly
- * from the running application.
- * The file com/gstreamer/GstAhcCallback.java in the source's directory can be
- * copied into the Android application so it can be loaded at runtime
- * as a fallback mechanism.
- * </note>
+ * > If the "TMP" environment variable is not available or the directory is not
+ * > writable or any other issue happens while trying to load the embedded jar
+ * > file, then the source will fallback on trying to load the class directly
+ * > from the running application.
+ * > The file com/gstreamer/GstAhcCallback.java in the source's directory can be
+ * > copied into the Android application so it can be loaded at runtime
+ * > as a fallback mechanism.
  *
  */
 

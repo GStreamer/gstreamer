@@ -25,17 +25,17 @@
 
 /**
  * SECTION:element-kmssink
+ * @title: kmssink
  * @short_description: A KMS/DRM based video sink
  *
  * kmssink is a simple video sink that renders video frames directly
  * in a plane of a DRM device.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc ! kmssink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

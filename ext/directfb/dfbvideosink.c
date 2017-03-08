@@ -20,66 +20,52 @@
 
 /**
  * SECTION:element-dfbvideosink
+ * @title: dfbvideosink
  *
  * DfbVideoSink renders video frames using the
  * <ulink url="http://www.directfb.org/">DirectFB</ulink> library.
  * Rendering can happen in two different modes :
- * <itemizedlist>
- * <listitem>
- *   <para>
- *   Standalone: this mode will take complete control of the monitor forcing
+ *
+ * * Standalone: this mode will take complete control of the monitor forcing
  *   <ulink url="http://www.directfb.org/">DirectFB</ulink> to fullscreen layout.
  *   This is convenient to test using the  gst-launch-1.0 command line tool or
  *   other simple applications. It is possible to interrupt playback while
  *   being in this mode by pressing the Escape key.
- *   </para>
- *   <para>
  *   This mode handles navigation events for every input device supported by
  *   the <ulink url="http://www.directfb.org/">DirectFB</ulink> library, it will
  *   look for available video modes in the fb.modes file and try to switch
- *   the framebuffer video mode to the most suitable one. Depending on 
+ *   the framebuffer video mode to the most suitable one. Depending on
  *   hardware acceleration capabilities the element will handle scaling or not.
  *   If no acceleration is available it will do clipping or centering of the
  *   video frames respecting the original aspect ratio.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   Embedded: this mode will render video frames in a 
+ *
+ * * Embedded: this mode will render video frames in a
  *   #GstDfbVideoSink:surface provided by the
  *   application developer. This is a more advanced usage of the element and
- *   it is required to integrate video playback in existing 
+ *   it is required to integrate video playback in existing
  *   <ulink url="http://www.directfb.org/">DirectFB</ulink> applications.
- *   </para>
- *   <para>
  *   When using this mode the element just renders to the
- *   #GstDfbVideoSink:surface provided by the 
+ *   #GstDfbVideoSink:surface provided by the
  *   application, that means it won't handle navigation events and won't resize
  *   the #GstDfbVideoSink:surface to fit video
  *   frames geometry. Application has to implement the necessary code to grab
  *   informations about the negotiated geometry and resize there
  *   #GstDfbVideoSink:surface accordingly.
- *   </para>
- * </listitem>
- * </itemizedlist>
- * For both modes the element implements a buffer pool allocation system to 
- * optimize memory allocation time and handle reverse negotiation. Indeed if 
+ *
+ * For both modes the element implements a buffer pool allocation system to
+ * optimize memory allocation time and handle reverse negotiation. Indeed if
  * you insert an element like videoscale in the pipeline the video sink will
  * negotiate with it to try get a scaled video for either the fullscreen layout
  * or the application provided external #GstDfbVideoSink:surface.
  *
- * <refsect2>
- * <title>Example application</title>
- * <para>
+ * ## Example application
+ *
  * <include xmlns="http://www.w3.org/2003/XInclude" href="element-dfb-example.xml" />
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Example pipelines</title>
+ *
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v videotestsrc ! dfbvideosink hue=20000 saturation=40000 brightness=25000
  * ]| test the colorbalance interface implementation in dfbvideosink
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -810,7 +796,7 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
   dfbvideosink->backbuffer = FALSE;
   dfbvideosink->pixel_format = DSPF_UNKNOWN;
 
-  /* If we do it all by ourself we create the DirectFB context, get the 
+  /* If we do it all by ourself we create the DirectFB context, get the
      primary layer and use a fullscreen configuration */
   if (!dfbvideosink->ext_surface) {
     GST_DEBUG_OBJECT (dfbvideosink, "no external surface, taking over "

@@ -29,6 +29,7 @@
 
 /**
  * SECTION:gstglshader
+ * @title: GstGLShader
  * @short_description: object representing an OpenGL shader program
  * @see_also: #GstGLSLStage
  */

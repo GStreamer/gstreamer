@@ -18,15 +18,15 @@
  */
 /**
  * SECTION:element-dvdspu
+ * @title: dvdspu
  *
  * DVD sub picture overlay element.
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * FIXME: gst-launch-1.0 ...
  * ]| FIXME: description for the sample launch pipeline
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #  include <config.h>

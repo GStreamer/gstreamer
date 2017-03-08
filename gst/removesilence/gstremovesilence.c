@@ -20,15 +20,15 @@
 
 /**
  * SECTION:element-removesilence
+ * @title: removesilence
  *
  * Removes all silence periods from an audio stream, dropping silence buffers.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v -m filesrc location="audiofile" ! decodebin ! removesilence remove=true ! wavenc ! filesink location=without_audio.wav
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

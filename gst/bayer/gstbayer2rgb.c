@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-bayer2rgb
+ * @title: bayer2rgb
  *
  * Decodes raw camera bayer (fourcc BA81) to RGB.
  */

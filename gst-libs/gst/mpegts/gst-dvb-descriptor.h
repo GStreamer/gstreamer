@@ -290,10 +290,10 @@ gboolean gst_mpegts_descriptor_parse_dvb_bouquet_name (const GstMpegtsDescriptor
 /* GST_MTS_DESC_DVB_SERVICE (0x48) */
 /**
  * GstMpegtsDVBServiceType:
- * 
+ *
  * The type of service of a channel.
  *
- * As specified in Table 87 of ETSI EN 300 468 v1.13.1 
+ * As specified in Table 87 of ETSI EN 300 468 v1.13.1
  */
 typedef enum {
   GST_DVB_SERVICE_RESERVED_00               = 0x00,

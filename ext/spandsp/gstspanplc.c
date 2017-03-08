@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-spanplc
+ * @title: spanplc
  *
  * The spanplc (Packet Loss Concealment) element provides a synthetic
  * fill-in signal, to minimise the audible effect of lost packets in

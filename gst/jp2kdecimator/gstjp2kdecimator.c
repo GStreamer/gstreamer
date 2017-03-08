@@ -19,11 +19,11 @@
  */
 /**
  * SECTION:element-gstjp2kdecimator
+ * @title: gstjp2kdecimator
  *
  * The jp2kdecimator element removes information from JPEG2000 images without reencoding.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc num-buffers=1 ! jp2kenc ! \
  *   gstjp2kdecimator max-decomposition-levels=2 ! jp2kdec ! \
@@ -31,7 +31,7 @@
  * ]|
  * This pipelines encodes a test image to JPEG2000, only keeps 3 decomposition levels
  * decodes the decimated image again and shows it on the screen.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

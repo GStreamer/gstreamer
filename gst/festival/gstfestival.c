@@ -62,18 +62,18 @@
 
 /**
  * SECTION:element-festival
- * 
+ * @title: festival
+ *
  * This element connects to a
  * <ulink url="http://www.festvox.org/festival/index.html">festival</ulink>
  * server process and uses it to synthesize speech. Festival need to run already
  * in server mode, started as <screen>festival --server</screen>
- * 
- * <refsect2>
- * <title>Example pipeline</title>
+ *
+ * ## Example pipeline
  * |[
  * echo 'Hello G-Streamer!' | gst-launch-1.0 fdsrc fd=0 ! festival ! wavparse ! audioconvert ! alsasink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

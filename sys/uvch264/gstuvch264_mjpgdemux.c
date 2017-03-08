@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-uvch264mjpgdemux
+ * @title: uvch264mjpgdemux
  * @short_description: UVC H264 compliant MJPG demuxer
  *
  * Parses a MJPG stream from a UVC H264 compliant encoding camera and extracts

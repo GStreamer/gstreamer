@@ -43,16 +43,16 @@
 
 /**
  * SECTION:element-square
+ * @title: square
  * @see_also: geometrictransform
  *
  * The square element distorts the center part of the image into a square.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! square zoom=100 ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

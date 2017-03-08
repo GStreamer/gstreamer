@@ -22,9 +22,9 @@
 
 /**
  * SECTION:element-mssdemux
+ * @title: mssdemux
  *
  * Demuxes a Microsoft's Smooth Streaming manifest into its audio and/or video streams.
- *
  *
  */
 

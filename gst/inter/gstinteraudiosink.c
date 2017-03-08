@@ -18,13 +18,13 @@
  */
 /**
  * SECTION:element-gstinteraudiosink
+ * @title: gstinteraudiosink
  *
  * The interaudiosink element is an audio sink element.  It is used
  * in connection with a interaudiosrc element in a different pipeline,
  * similar to intervideosink and intervideosrc.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v audiotestsrc ! queue ! interaudiosink
  * ]|
@@ -34,7 +34,7 @@
  * audio.
  * See the gstintertest.c example in the gst-plugins-bad source code for
  * more details.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

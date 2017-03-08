@@ -20,18 +20,18 @@
  */
 /**
  * SECTION:element-shmsrc
+ * @title: shmsrc
  *
  * Receive data from the shared memory sink.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 shmsrc socket-path=/tmp/blah ! \
  * "video/x-raw, format=YUY2, color-matrix=sdtv, \
  * chroma-site=mpeg2, width=(int)320, height=(int)240, framerate=(fraction)30/1" \
  * ! queue ! videoconvert ! autovideosink
  * ]| Render video from shm buffers.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

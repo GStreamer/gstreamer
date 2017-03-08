@@ -23,18 +23,18 @@
 
 /**
  * SECTION:element-chromaprint
+ * @title: chromaprint
  *
  * The chromaprint element calculates an acoustic fingerprint for an
  * audio stream which can be used to identify a song and look up
  * further metadata from the <ulink url="http://acoustid.org/">Acoustid</ulink>
  * and Musicbrainz databases.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -m uridecodebin uri=file:///path/to/song.ogg ! audioconvert ! chromaprint ! fakesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

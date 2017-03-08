@@ -45,6 +45,7 @@ static void dvb_sub_init (void);
 
 /**
  * SECTION:dvb-sub
+ * @title: GstDvbSub
  * @short_description: a DVB subtitle parsing class
  * @stability: Unstable
  *

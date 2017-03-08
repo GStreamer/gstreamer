@@ -26,6 +26,7 @@
 
 /**
  * SECTION:vkimagememory
+ * @title: GstVkImageMemory
  * @short_description: memory subclass for Vulkan image memory
  * @see_also: #GstMemory, #GstAllocator
  *
@@ -559,7 +560,7 @@ gst_vulkan_image_memory_init_once (void)
 /**
  * gst_is_vulkan_image_memory:
  * @mem:a #GstMemory
- * 
+ *
  * Returns: whether the memory at @mem is a #GstVulkanImageMemory
  */
 gboolean

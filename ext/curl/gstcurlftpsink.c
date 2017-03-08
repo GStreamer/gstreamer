@@ -19,21 +19,23 @@
 
 /**
  * SECTION:element-curlftpsink
+ * @title: curlftpsink
  * @short_description: sink that uploads data to a server using libcurl
  * @see_also:
  *
  * This is a network sink that uses libcurl as a client to upload data to
  * an FTP server.
  *
- * <refsect2>
- * <title>Example launch line (upload a JPEG file to /home/test/images
- * directory)</title>
+ * ## Example launch line
+ *
+ * Upload a JPEG file to /home/test/images * directory)
+ *
  * |[
  * gst-launch-1.0 filesrc location=image.jpg ! jpegparse ! curlftpsink  \
  *     file-name=image.jpg  \
  *     location=ftp://192.168.0.1/images/
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

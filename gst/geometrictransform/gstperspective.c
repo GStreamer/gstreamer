@@ -49,16 +49,16 @@
 
 /**
  * SECTION:element-perspective
+ * @title: perspective
  * @see_also: geometrictransform
  *
  * The perspective element applies a 2D perspective transform.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! perspective ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 /* FIXME: suppress warnings for deprecated API such as GValueArray

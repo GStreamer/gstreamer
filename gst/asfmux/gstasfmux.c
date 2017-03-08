@@ -24,6 +24,7 @@
 
 /**
  * SECTION:element-asfmux
+ * @title: asfmux
  *
  * Muxes media into an ASF file/stream.
  *
@@ -31,9 +32,9 @@
  * stream number of the stream that goes through that pad. Stream numbers
  * are assigned sequentially, starting from 1.
  *
- * <refsect2>
- * <title>Example launch lines</title>
- * <para>(write everything in one line, without the backslash characters)</para>
+ * ## Example launch lines
+ *
+ * (write everything in one line, without the backslash characters)
  * |[
  * gst-launch-1.0 videotestsrc num-buffers=250 \
  * ! "video/x-raw,format=(string)I420,framerate=(fraction)25/1" ! avenc_wmv2 \
@@ -43,15 +44,15 @@
  * ]| This creates an ASF file containing an WMV video stream
  * with a test picture and WMA audio stream of a test sound.
  *
- * <title>Live streaming</title>
+ * ## Live streaming
  * asfmux and rtpasfpay are capable of generating a live asf stream.
- * asfmux has to set its 'streamable' property to true, because in this 
+ * asfmux has to set its 'streamable' property to true, because in this
  * mode it won't try to seek back to the start of the file to replace
  * some fields that couldn't be known at the file start. In this mode,
  * it won't also send indexes at the end of the data packets (the actual
  * media content)
  * the following pipelines are an example of this usage.
- * <para>(write everything in one line, without the backslash characters)</para>
+ * (write everything in one line, without the backslash characters)
  * Server (sender)
  * |[
  * gst-launch-1.0 -ve videotestsrc ! avenc_wmv2 ! asfmux name=mux streamable=true \
@@ -65,7 +66,7 @@
  * ! videoconvert ! autovideosink \
  * d. ! queue ! audioconvert ! autoaudiosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -421,7 +422,7 @@ content_description_calc_size_for_tag (const GstTagList * taglist,
 
       text = g_value_get_string (&value);
       /* +1 -> because of the \0 at the end
-       * 2* -> because we have uft8, and asf demands utf16 
+       * 2* -> because we have uft8, and asf demands utf16
        */
       content_size = 2 * (1 + g_utf8_strlen (text, -1));
 
@@ -442,7 +443,7 @@ content_description_calc_size_for_tag (const GstTagList * taglist,
     /* size of the tag content in utf16 +
      * size of the tag name +
      * 3 uint16 (size of the tag name string,
-     * size of the tag content string and 
+     * size of the tag content string and
      * type of content
      */
     asftags->ext_cont_desc_size += content_size +
@@ -465,7 +466,7 @@ content_description_calc_size_for_tag (const GstTagList * taglist,
  * size needed for the default and extended content description objects.
  * This results and a copy of the #GstTagList
  * are stored in the #GstAsfTags. We store a copy so that
- * the sizes estimated here mantain the same until they are 
+ * the sizes estimated here mantain the same until they are
  * written to the asf file.
  */
 static void
@@ -531,7 +532,7 @@ add_metadata_tag_size (const GstTagList * taglist, const gchar * tag,
 
       text = g_value_get_string (&value);
       /* +1 -> because of the \0 at the end
-       * 2* -> because we have uft8, and asf demands utf16 
+       * 2* -> because we have uft8, and asf demands utf16
        */
       content_size = 2 * (1 + g_utf8_strlen (text, -1));
     }
@@ -849,7 +850,7 @@ gst_asf_mux_write_extended_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
  * @size_buf: pointer to the memory position to write the size of the string
  * @str_buf: pointer to the memory position to write the string
  * @str: the string to be writen (in UTF-8)
- * @use32: if the string size should be writen with 32 bits (if true) 
+ * @use32: if the string size should be writen with 32 bits (if true)
  * or with 16 (if false)
  *
  * Writes a string with its size as it is needed in many asf objects.
@@ -870,7 +871,7 @@ gst_asf_mux_write_string_with_size (GstAsfMux * asfmux,
   GST_LOG_OBJECT (asfmux, "Writing extended content description string: "
       "%s", str);
 
-  /* 
+  /*
    * Covert the string to utf16
    * Also force the last bytes to null terminated,
    * tags were with extra weird characters without it.
@@ -909,7 +910,7 @@ gst_asf_mux_write_string_with_size (GstAsfMux * asfmux,
  *
  * Checks if a string tag with tagname exists in the taglist. If it
  * exists it is writen as an UTF-16LE to data_buf and its size in bytes
- * is writen to size_buf. It is used for writing content description 
+ * is writen to size_buf. It is used for writing content description
  * object fields.
  *
  * Returns: the size of the string
@@ -1191,7 +1192,7 @@ gst_asf_mux_write_data_object (GstAsfMux * asfmux, guint8 ** buf)
   /* Data object size. This is always >= ASF_DATA_OBJECT_SIZE. The standard
    * specifically accepts the value 0 in live streams, but WMP is not accepting
    * this while streaming using WMSP, so we default to minimum size also for
-   * live streams. Otherwise this field must be updated later on when we know 
+   * live streams. Otherwise this field must be updated later on when we know
    * the complete stream size.
    */
   GST_WRITE_UINT64_LE (*buf + 16, ASF_DATA_OBJECT_SIZE);
@@ -1338,7 +1339,7 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   gst_asf_mux_write_header_object (asfmux, &bufdata, map.size -
       ASF_DATA_OBJECT_SIZE, 2 + stream_num);
 
-  /* get the position of the file properties object for 
+  /* get the position of the file properties object for
    * updating it in gst_asf_mux_stop_file */
   asfmux->file_properties_object_position = bufdata - map.data;
   gst_asf_mux_write_file_properties (asfmux, &bufdata);
@@ -1765,7 +1766,7 @@ cleanup_and_return:
 /**
  * gst_asf_mux_stop_file:
  * @asfmux: #GstAsfMux
- * 
+ *
  * Finalizes the asf stream by pushing the indexes after
  * the data object. Also seeks back to the header positions
  * to rewrite some fields such as the total number of bytes
@@ -1802,7 +1803,7 @@ gst_asf_mux_stop_file (GstAsfMux * asfmux)
       play_duration = pad->play_duration;
   }
 
-  /* going back to file properties object to fill in 
+  /* going back to file properties object to fill in
    * values we didn't know back then */
   GST_DEBUG_OBJECT (asfmux,
       "Sending new segment to file properties object position");
@@ -2134,7 +2135,7 @@ gst_asf_mux_audio_set_caps (GstPad * pad, GstCaps * caps)
   audiopad->audioinfo.rate = (guint32) rate;
 
   /* taken from avimux
-   * codec initialization data, if any 
+   * codec initialization data, if any
    */
   codec_data = gst_structure_get_value (structure, "codec_data");
   if (codec_data) {
@@ -2227,7 +2228,7 @@ gst_asf_mux_video_set_caps (GstPad * pad, GstCaps * caps)
   videopad->vidinfo.height = (gint32) height;
 
   /* taken from avimux
-   * codec initialization data, if any 
+   * codec initialization data, if any
    */
   codec_data = gst_structure_get_value (structure, "codec_data");
   if (codec_data) {

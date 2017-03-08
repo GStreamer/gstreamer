@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-uvch264-src
+ * @title: uvch264-src
  *
  * A camera bin src element that wraps v4l2src and implements UVC H264
  * Extension Units (XU) to control the H264 encoder in the camera

@@ -18,27 +18,27 @@
  */
 /**
  * SECTION:element-simplevideomark
+ * @title: simplevideomark
  * @see_also: #GstVideoDetect
  *
  * This plugin produces #GstSimpleVideoMark::pattern-count squares in the bottom left
- * corner of the video frames. The squares have a width and height of 
+ * corner of the video frames. The squares have a width and height of
  * respectively #GstSimpleVideoMark:pattern-width and #GstSimpleVideoMark:pattern-height.
  * Even squares will be black and odd squares will be white.
- * 
+ *
  * After writing the pattern, #GstSimpleVideoMark:pattern-data-count squares after the
  * pattern squares are produced as the bitarray given in
  * #GstSimpleVideoMark:pattern-data. 1 bits will produce white squares and 0 bits will
  * produce black squares.
- * 
+ *
  * The element can be enabled with the #GstSimpleVideoMark:enabled property. It is
  * mostly used together with the #GstVideoDetect plugin.
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc ! simplevideomark ! videoconvert ! ximagesink
  * ]| Add the default black/white squares at the bottom left of the video frames.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

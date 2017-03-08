@@ -369,7 +369,7 @@ rsn_dec_get_type (void)
   return type;
 }
 
-/** Audio decoder subclass */
+/* Audio decoder subclass */
 static GstStaticPadTemplate audio_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -422,7 +422,7 @@ rsn_audiodec_init (RsnAudioDec * self)
 {
 }
 
-/** Video decoder subclass */
+/* Video decoder subclass */
 static GstStaticPadTemplate video_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

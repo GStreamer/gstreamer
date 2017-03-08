@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-dc1394src
+ * @title: dc1394src
  *
  * Source for IIDC (Instrumentation & Industrial Digital Camera) firewire
  * cameras. If several cameras are connected to the system, the desired one
@@ -31,8 +32,7 @@
  * corresponding video formats are exposed in the capabilities.
  * The Bayer pattern is left unspecified.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 -v dc1394src ! videoconvert ! autovideosink
  * ]| Capture and display frames from the first camera available in the system.
@@ -41,7 +41,7 @@
  *     ! "video/x-bayer,format=gbrg,width=1280,height=960,framerate=15/2" \
  *     ! bayer2rgb ! videoconvert ! autovideosink
  * ]| Capture and display frames from a specific camera in the desired format.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -43,17 +43,17 @@
 
 /**
  * SECTION:element-tunnel
+ * @title: tunnel
  * @see_also: geometrictransform
  *
  * Tunnel is a geometric image transform element. It applies a light tunnel
  * effect.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! tunnel ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

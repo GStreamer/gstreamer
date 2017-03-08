@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-jpegparse
+ * @title: jpegparse
  * @short_description: JPEG parser
  *
  * Parses a JPEG stream into JPEG images.  It looks for EOI boundaries to
@@ -30,14 +31,13 @@
  * image header searching for image properties such as width and height
  * among others. Jpegparse can also extract metadata (e.g. xmp).
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v souphttpsrc location=... ! jpegparse ! matroskamux ! filesink location=...
  * ]|
  * The above pipeline fetches a motion JPEG stream from an IP camera over
  * HTTP and stores it in a matroska file.
- * </refsect2>
+ *
  */
 /* FIXME: output plain JFIF APP marker only. This provides best code reuse.
  * JPEG decoders would not need to handle this part anymore. Also when remuxing

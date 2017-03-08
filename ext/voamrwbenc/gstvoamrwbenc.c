@@ -19,19 +19,19 @@
 
 /**
  * SECTION:element-voamrwbenc
+ * @title: voamrwbenc
  * @see_also: #GstAmrWbDec, #GstAmrWbParse
  *
- * AMR wideband encoder based on the 
+ * AMR wideband encoder based on the
  * <ulink url="http://www.penguin.cz/~utx/amr">reference codec implementation</ulink>.
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch filesrc location=abc.wav ! wavparse ! audioresample ! audioconvert ! voamrwbenc ! filesink location=abc.amr
  * ]|
  * Please note that the above stream misses the header, that is needed to play
  * the stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

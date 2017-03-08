@@ -46,15 +46,15 @@
 
 /**
  * SECTION:element-dilate
+ * @title: dilate
  *
  * Dilate adjusts the colors of a video stream in realtime.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! dilate ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of dilate on a test stream
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

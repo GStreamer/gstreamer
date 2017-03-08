@@ -19,15 +19,15 @@
 
 /**
  * SECTION:element-mxfdemux
+ * @title: mxfdemux
  *
  * mxfdemux demuxes an MXF file into the different contained streams.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=/path/to/mxf ! mxfdemux ! audioconvert ! autoaudiosink
  * ]| This pipeline demuxes an MXF file and outputs one of the contained raw audio streams.
- * </refsect2>
+ *
  */
 
 /* TODO:

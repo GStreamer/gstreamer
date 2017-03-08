@@ -46,26 +46,23 @@
 
 /**
  * SECTION:element-kateenc
+ * @title: kateenc
  * @see_also: oggmux
  *
- * <refsect2>
- * <para>
  * This element encodes Kate streams
  * <ulink url="http://libkate.googlecode.com/">Kate</ulink> is a free codec
  * for text based data, such as subtitles. Any number of kate streams can be
  * embedded in an Ogg stream.
- * </para>
- * <para>
+ *
  * libkate (see above url) is needed to build this plugin.
- * </para>
- * <title>Example pipeline</title>
- * <para>
+ *
+ * ## Example pipeline
+ *
  * This encodes a DVD SPU track to a Kate stream:
- * <programlisting>
+ * |[
  * gst-launch-1.0 dvdreadsrc ! dvddemux ! dvdsubparse ! kateenc category=spu-subtitles ! oggmux ! filesink location=test.ogg
- * </programlisting>
- * </para>
- * </refsect2>
+ * ]|
+ *
  */
 
 /* FIXME:

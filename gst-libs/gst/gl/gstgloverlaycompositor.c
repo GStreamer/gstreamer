@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstgloverlaycompositor
+ * @title: GstGLOverlayCompositor
  * @short_description: Composite multiple overlays using OpenGL
  * @see_also: #GstGLMemory, #GstGLContext
  */

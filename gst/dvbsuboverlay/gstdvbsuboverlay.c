@@ -20,17 +20,17 @@
 
 /**
  * SECTION:element-dvbsuboverlay
+ * @title: dvbsuboverlay
  *
  * Renders DVB subtitles on top of a video stream.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[ FIXME
  * gst-launch-1.0 -v filesrc location=/path/to/ts ! mpegtsdemux name=d ! queue ! mpegaudioparse ! mpg123audiodec ! audioconvert ! autoaudiosink \
  *     d. ! queue ! mpegvideoparse ! mpeg2dec ! videoconvert ! r. \
  *     d. ! queue ! "subpicture/x-dvb" ! dvbsuboverlay name=r ! videoconvert ! autovideosink
  * ]| This pipeline demuxes a MPEG-TS file with MPEG2 video, MP3 audio and embedded DVB subtitles and renders the subtitles on top of the video.
- * </refsect2>
+ *
  */
 
 
