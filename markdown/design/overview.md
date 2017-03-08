@@ -96,28 +96,28 @@ sink        src1
  +-----------+
 ```
 
-An element can be in four different states: NULL, READY, PAUSED,
-PLAYING. In the NULL and READY state, the element is not processing any
-data. In the PLAYING state it is processing data. The intermediate
+An element can be in four different states: `NULL`, `READY`, `PAUSED`,
+`PLAYING`. In the `NULL` and `READY` state, the element is not processing any
+data. In the `PLAYING` state it is processing data. The intermediate
 PAUSED state is used to preroll data in the pipeline. A state change can
 be performed with `gst_element_set_state()`.
 
 An element always goes through all the intermediate state changes. This
-means that when en element is in the READY state and is put to PLAYING,
-it will first go through the intermediate PAUSED state.
+means that when en element is in the `READY` state and is put to `PLAYING`,
+it will first go through the intermediate `PAUSED` state.
 
-An element state change to PAUSED will activate the pads of the element.
+An element state change to `PAUSED` will activate the pads of the element.
 First the source pads are activated, then the sinkpads. When the pads
 are activated, the pad activate function is called. Some pads will start
 a thread (`GstTask`) or some other mechanism to start producing or
 consuming data.
 
-The PAUSED state is special as it is used to preroll data in the
+The `PAUSED` state is special as it is used to preroll data in the
 pipeline. The purpose is to fill all connected elements in the pipeline
-with data so that the subsequent PLAYING state change happens very
+with data so that the subsequent `PLAYING` state change happens very
 quickly. Some elements will therefore not complete the state change to
-PAUSED before they have received enough data. Sink elements are required
-to only complete the state change to PAUSED after receiving the first
+`PAUSED` before they have received enough data. Sink elements are required
+to only complete the state change to `PAUSED` after receiving the first
 data.
 
 Normally the state changes of elements are coordinated by the pipeline
@@ -174,7 +174,7 @@ features to its children:
 
 - Select and manage a global clock for all its children.
 - Manage `running_time` based on the selected clock. Running\_time is
-the elapsed time the pipeline spent in the PLAYING state and is used
+the elapsed time the pipeline spent in the `PLAYING` state and is used
 for synchronisation.
 - Manage latency in the pipeline.
 - Provide means for elements to comunicate with the application by the
@@ -317,7 +317,7 @@ rate of one `GST_SECOND` per second. Clock values are expressed in
 nanoseconds. Elements use the clock time to synchronize the playback of
 data.
 
-Before the pipeline is set to PLAYING, the pipeline asks each element if
+Before the pipeline is set to `PLAYING`, the pipeline asks each element if
 they can provide a clock. The clock is selected in the following order:
 
 - If the application selected a clock, use that one.
@@ -340,7 +340,7 @@ produces data.
 ## Pipeline states
 
 When all the pads are linked and signals have been connected, the
-pipeline can be put in the PAUSED state to start dataflow.
+pipeline can be put in the `PAUSED` state to start dataflow.
 
 When a bin (and hence a pipeline) performs a state change, it will
 change the state of all its children. The pipeline will change the state
@@ -354,18 +354,20 @@ the order alsasink, mp3dec, filesrc.
 All intermediate states are traversed for each element resulting in the
 following chain of state changes:
 
-* alsasink to READY:  the audio device is probed
+* alsasink to `READY`:  the audio device is probed
 
-* mp3dec to READY:    nothing happens.
+* mp3dec to `READY`:    nothing happens
 
-* filesrc to READY:   the file is probed
+* filesrc to `READY`:   the file is probed
 
-* alsasink to PAUSED: the audio device is opened. alsasink is a sink and returns ASYNC because it did not receive data yet. mp3dec to PAUSED:   the decoding library is initialized
+* alsasink to `PAUSED`: the audio device is opened. alsasink is a sink and returns `ASYNC` because it did not receive data yet
 
-* filesrc to PAUSED:  the file is opened and a thread is started to push data to mp3dec
+* mp3dec to `PAUSED`:   the decoding library is initialized
+
+* filesrc to `PAUSED`:  the file is opened and a thread is started to push data to mp3dec
 
 At this point data flows from filesrc to mp3dec and alsasink. Since
-mp3dec is PAUSED, it accepts the data from filesrc on the sinkpad and
+mp3dec is `PAUSED`, it accepts the data from filesrc on the sinkpad and
 starts decoding the compressed data to raw audio samples.
 
 The mp3 decoder figures out the samplerate, the number of channels and
@@ -383,15 +385,15 @@ buffer of samples, it completes the state change to the PAUSED state. At
 this point the pipeline is prerolled and all elements have samples.
 Alsasink is now also capable of providing a clock to the pipeline.
 
-Since alsasink is now in the PAUSED state it blocks while receiving the
+Since alsasink is now in the `PAUSED` state it blocks while receiving the
 first buffer. This effectively blocks both mp3dec and filesrc in their
 `gst_pad_push()`.
 
-Since all elements now return SUCCESS from the
+Since all elements now return `SUCCESS` from the
 `gst_element_get_state()` function, the pipeline can be put in the
-PLAYING state.
+`PLAYING` state.
 
-Before going to PLAYING, the pipeline select a clock and samples the
+Before going to `PLAYING`, the pipeline select a clock and samples the
 current time of the clock. This is the `base_time`. It then distributes
 this time to all elements. Elements can then synchronize against the
 clock using the buffer `running_time`
@@ -399,11 +401,11 @@ clock using the buffer `running_time`
 
 The following chain of state changes then takes place:
 
-* alsasink to PLAYING:  the samples are played to the audio device
+* alsasink to `PLAYING`:  the samples are played to the audio device
 
-* mp3dec to PLAYING:    nothing happens
+* mp3dec to `PLAYING`:    nothing happens
 
-* filesrc to PLAYING:   nothing happens
+* filesrc to `PLAYING`:   nothing happens
 
 ## Pipeline status
 
@@ -415,11 +417,11 @@ The bus can be polled or added to the glib mainloop.
 
 The bus is distributed to all elements added to the pipeline. The
 elements use the bus to post messages on. Various message types exist
-such as ERRORS, WARNINGS, EOS, `STATE_CHANGED`, etc..
+such as `ERRORS`, `WARNINGS`, `EOS`, `STATE_CHANGED`, etc..
 
-The pipeline handles EOS messages received from elements in a special
+The pipeline handles `EOS` messages received from elements in a special
 way. It will only forward the message to the application when all sink
-elements have posted an EOS message.
+elements have posted an `EOS` message.
 
 Other methods for obtaining the pipeline status include the Query
 functionality that can be performed with `gst_element_query()` on the
@@ -436,50 +438,50 @@ supposed to accept any more data after receiving an EOS event on a
 sinkpad.
 
 The element providing the streaming thread stops sending data after
-sending the EOS event.
+sending the `EOS` event.
 
 The EOS event will eventually arrive in the sink element. The sink will
-then post an EOS message on the bus to inform the pipeline that a
-particular stream has finished. When all sinks have reported EOS, the
-pipeline forwards the EOS message to the application. The EOS message is
-only forwarded to the application in the PLAYING state.
+then post an `EOS` message on the bus to inform the pipeline that a
+particular stream has finished. When all sinks have reported `EOS`, the
+pipeline forwards the EOS message to the application. The `EOS` message is
+only forwarded to the application in the `PLAYING` state.
 
-When in EOS, the pipeline remains in the PLAYING state, it is the
-applications responsability to PAUSE or READY the pipeline. The
+When in `EOS`, the pipeline remains in the `PLAYING` state, it is the
+applications responsability to `PAUSE` or `READY` the pipeline. The
 application can also issue a seek, for example.
 
 ## Pipeline READY
 
-When a running pipeline is set from the PLAYING to READY state, the
+When a running pipeline is set from the `PLAYING` to `READY` state, the
 following actions occur in the pipeline:
 
-* alsasink to PAUSED:  alsasink blocks and completes the state change on the
-next sample. If the element was EOS, it does not wait for a sample to complete
+* alsasink to `PAUSED`:  alsasink blocks and completes the state change on the
+next sample. If the element was `EOS`, it does not wait for a sample to complete
 the state change.
-* mp3dec to PAUSED:    nothing
-* filesrc to PAUSED:   nothing
+* mp3dec to `PAUSED`:    nothing
+* filesrc to `PAUSED`:   nothing
 
-Going to the intermediate PAUSED state will block all elements in the
+Going to the intermediate `PAUSED` state will block all elements in the
 `_push()` functions. This happens because the sink element blocks on the
 first buffer it receives.
 
-Some elements might be performing blocking operations in the PLAYING
+Some elements might be performing blocking operations in the `PLAYING`
 state that must be unblocked when they go into the PAUSED state. This
 makes sure that the state change happens very fast.
 
-In the next PAUSED to READY state change the pipeline has to shut down
+In the next `PAUSED` to `READY` state change the pipeline has to shut down
 and all streaming threads must stop sending data. This happens in the
 following sequence:
 
-* alsasink to READY:   alsasink unblocks from the `_chain()` function and returns
-a FLUSHING return value to the peer element. The sinkpad is deactivated and
+* alsasink to `READY`:   alsasink unblocks from the `_chain()` function and returns
+a `FLUSHING` return value to the peer element. The sinkpad is deactivated and
 becomes unusable for sending more data.
-* mp3dec to READY:     the pads are deactivated and the state change completes
+* mp3dec to `READY`:     the pads are deactivated and the state change completes
 when mp3dec leaves its `_chain()` function.
-* filesrc to READY:    the pads are deactivated and the thread is paused.
+* filesrc to `READY`:    the pads are deactivated and the thread is paused.
 
 The upstream elements finish their `_chain()` function because the
-downstream element returned an error code (FLUSHING) from the `_push()`
+downstream element returned an error code (`FLUSHING`) from the `_push()`
 functions. These error codes are eventually returned to the element that
 started the streaming thread (filesrc), which pauses the thread and
 completes the state change.
@@ -513,13 +515,13 @@ operation, that element performs the following steps.
 2) make sure the streaming thread is not running. The streaming thread will
    always stop because of step 1).
 3) perform the seek operation
-4) send a FLUSH done event to all downstream and upstream peer elements.
-5) send SEGMENT event to inform all elements of the new position and to complete
+4) send a `FLUSH` done event to all downstream and upstream peer elements.
+5) send `SEGMENT` event to inform all elements of the new position and to complete
    the seek.
 
 In step 1) all downstream elements have to return from any blocking
 operations and have to refuse any further buffers or events different
-from a FLUSH done.
+from a `FLUSH` done.
 
 The first step ensures that the streaming thread eventually unblocks and
 that step 2) can be performed. At this point, dataflow is completely
@@ -536,13 +538,13 @@ Step 5) informs all elements of the new position in the stream. After
 that the event function returns back to the application. and the
 streaming threads start to produce new data.
 
-Since the pipeline is still PAUSED, this will preroll the next media
+Since the pipeline is still `PAUSED`, this will preroll the next media
 sample in the sinks. The application can wait for this preroll to
 complete by performing a `_get_state()` on the pipeline.
 
 The last step in the seek operation is then to adjust the stream
 `running_time` of the pipeline to 0 and to set the pipeline back to
-PLAYING.
+`PLAYING`.
 
 The sequence of events in our mp3 playback example.
 
