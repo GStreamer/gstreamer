@@ -1218,11 +1218,14 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
     g_object_set (queue, "max-size-bytes", urisrc->buffer_size, NULL);
   if (urisrc->buffer_duration != -1)
     g_object_set (queue, "max-size-time", urisrc->buffer_duration, NULL);
+#if 0
+  /* Disabled because this makes initial startup slower for radio streams */
   else {
     /* Buffer 4 seconds by default - some extra headroom over the
      * core default, because we trigger playback sooner */
-    g_object_set (queue, "max-size-time", 4 * GST_SECOND, NULL);
+    //g_object_set (queue, "max-size-time", 4 * GST_SECOND, NULL);
   }
+#endif
 
   /* Don't start buffering until the queue is empty (< 1%).
    * Start playback when the queue is 60% full, leaving a bit more room
