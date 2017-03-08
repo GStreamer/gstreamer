@@ -1199,6 +1199,7 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
         if (current_off == 0) {
           GST_DEBUG_OBJECT (h264parse, "skipping broken nal");
           *skipsize = nalu.offset;
+          h264parse->aud_needed = TRUE;
           goto skip;
         } else {
           GST_DEBUG_OBJECT (h264parse, "terminating au");
@@ -1232,8 +1233,17 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
           "broken/invalid nal Type: %d %s, Size: %u will be dropped",
           nalu.type, _nal_name (nalu.type), nalu.size);
       *skipsize = nalu.size;
+      h264parse->aud_needed = TRUE;
       goto skip;
     }
+
+    /* Judge whether or not to insert AU Delimiter in case of byte-stream
+     * If we're in the middle of au, we don't need to insert aud.
+     * Otherwise, we honor the result in gst_h264_parse_process_nal.
+     * Note that this should be done until draining if it's happening.
+     */
+    if (h264parse->align == GST_H264_PARSE_ALIGN_NAL && !h264parse->aud_needed)
+      h264parse->aud_insert = FALSE;
 
     if (nonext)
       break;
@@ -1241,11 +1251,7 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
     /* if no next nal, we know it's complete here */
     au_complete = gst_h264_parse_collect_nal (h264parse, data, size, &nalu);
 
-    /* Judge whether or not to insert AU Delimiter in case of byte-stream */
     if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
-      if (!h264parse->aud_needed)
-        h264parse->aud_insert = FALSE;
-
       h264parse->aud_needed = au_complete;
       break;
     }
