@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gestrackelement
+ * @title: GESTrackElement
  * @short_description: Base Class for objects contained in a GESTrack
  *
  * #GESTrackElement is the Base Class for any object that can be contained in a

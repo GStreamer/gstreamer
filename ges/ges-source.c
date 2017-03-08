@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gessource
+ * @title: GESSource
  * @short_description: Base Class for single-media sources
  */
 

@@ -19,6 +19,7 @@
 
 /**
  * SECTION:geseffect
+ * @title: GESEffect
  * @short_description: adds an effect build from a parse-launch style
  * bin description to a stream in a GESSourceClip or a GESLayer
  */

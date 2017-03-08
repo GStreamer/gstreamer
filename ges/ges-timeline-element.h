@@ -289,4 +289,3 @@ GESTrackType ges_timeline_element_get_track_types  (GESTimelineElement * self);
 G_END_DECLS
 
 #endif /* _GES_TIMELINE_ELEMENT_H_ */
-

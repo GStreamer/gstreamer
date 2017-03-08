@@ -19,6 +19,7 @@
 
 /**
  * SECTION:gesbaseeffect
+ * @title: GESBaseEffect
  * @short_description: adds an effect to a stream in a GESSourceClip or a
  * GESLayer
  */

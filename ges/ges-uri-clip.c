@@ -20,6 +20,7 @@
 
 /**
  * SECTION: gesuriclip
+ * @title: GESUriClip
  * @short_description: An object for manipulating media files in a GESTimeline
  *
  * Represents all the output streams from a particular uri. It is assumed that

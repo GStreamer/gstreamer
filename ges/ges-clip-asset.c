@@ -19,6 +19,7 @@
  */
 /**
  * SECTION: gesclipasset
+ * @title: GESClipAsset
  * @short_description: A GESAsset subclass specialized in GESClip extraction
  *
  * The #GESUriClipAsset is a special #GESAsset specilized in #GESClip.

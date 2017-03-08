@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gesformatter
+ * @title: GESFormatter
  * @short_description: Timeline saving and loading.
  *
  **/

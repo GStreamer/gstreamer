@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gesclip
+ * @title: GESClip
  * @short_description: Base Class for objects in a GESLayer
  *
  * A #GESClip is a 'natural' object which controls one or more
@@ -1018,7 +1019,6 @@ ges_clip_set_moving_from_layer (GESClip * clip, gboolean is_moving)
  * Tells you if the clip is currently moving from a layer to another.
  * You might rather use the ges_clip_move_to_layer function to
  * move #GESClip-s from a layer to another.
- *
  *
  * Returns: %TRUE if @clip is currently moving from its current layer
  * %FALSE otherwize

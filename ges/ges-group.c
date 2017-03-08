@@ -19,6 +19,7 @@
 
 /**
  * SECTION:gesgroup
+ * @title: GESGroup
  * @short_description: Class that permits to group GESClip-s in a timeline,
  * letting the user manage it a single GESTimelineElement
  *

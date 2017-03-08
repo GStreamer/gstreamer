@@ -19,6 +19,7 @@
 
 /**
  * SECTION: gesaudiotrack
+ * @title: GESAudioTrack
  * @short_description: A standard GESTrack for raw audio
  *
  * Sane default properties to specify and fixate the output stream are

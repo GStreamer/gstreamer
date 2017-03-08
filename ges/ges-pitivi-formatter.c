@@ -19,6 +19,7 @@
 
 /**
  * SECTION: gespitiviformatter
+ * @title: GESPitiviFormatter
  * @short_description: A formatter for the obsolete Pitivi xptv project file format
  *
  * This is a legacy format and you should avoid to use it. The formatter

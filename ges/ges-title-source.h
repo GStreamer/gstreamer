@@ -46,7 +46,7 @@ G_BEGIN_DECLS
 
 typedef struct _GESTitleSourcePrivate GESTitleSourcePrivate;
 
-/** 
+/**
  * GESTitleSource:
  *
  */
@@ -64,7 +64,6 @@ struct _GESTitleSource {
  * GESTitleSourceClass:
  * @parent_class: parent class
  */
-
 struct _GESTitleSourceClass {
   GESVideoSourceClass parent_class;
 

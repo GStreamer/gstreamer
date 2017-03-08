@@ -42,7 +42,6 @@ typedef struct _GESTextOverlayClipPrivate GESTextOverlayClipPrivate;
 
 /**
  * GESTextOverlayClip:
- * 
  */
 
 struct _GESTextOverlayClip

@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gesoverlayclip
+ * @title: GESOverlayClip
  * @short_description: Base Class for overlays in a GESLayer
  *
  * Overlays are objects which modify the underlying layer(s).
@@ -27,7 +28,7 @@
  * Examples of overlays include text, image watermarks, or audio dubbing.
  *
  * Transitions, which change from one source to another over time, are
- * not considered overlays. 
+ * not considered overlays.
  */
 
 #include "ges-internal.h"

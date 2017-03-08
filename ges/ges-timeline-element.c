@@ -18,6 +18,7 @@
 
 /**
  * SECTION:gestimelineelement
+ * @title: GESTimelineElement
  * @short_description: Base Class for all elements that will be in a way or
  * another inside a GESTimeline.
  *
@@ -1177,7 +1178,6 @@ ges_timeline_element_get_toplevel_parent (GESTimelineElement * self)
  * ges_timeline_element_get_name:
  * @self: a #GESTimelineElement
  *
- *
  * Returns a copy of the name of @self.
  * Caller should g_free() the return value after usage.
  *
@@ -1195,7 +1195,6 @@ ges_timeline_element_get_name (GESTimelineElement * self)
  * ges_timeline_element_set_name:
  * @self: a #GESTimelineElement
  * @name: (allow-none): The name @self should take (if avalaible<)
- *
  *
  * Sets the name of object, or gives @self a guaranteed unique name (if name is NULL).
  * This function makes a copy of the provided name, so the caller retains ownership

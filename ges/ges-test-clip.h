@@ -50,7 +50,6 @@ typedef struct _GESTestClipPrivate GESTestClipPrivate;
 
 /**
  * GESTestClip:
- * 
  */
 
 struct _GESTestClip {

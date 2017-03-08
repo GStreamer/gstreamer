@@ -129,4 +129,3 @@ GstClockTime ges_layer_get_duration (GESLayer *layer);
 G_END_DECLS
 
 #endif /* _GES_LAYER */
-

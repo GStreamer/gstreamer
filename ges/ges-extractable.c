@@ -20,6 +20,7 @@
  */
 /**
  * SECTION: gesextractable
+ * @title: GESExtractable Interface
  * @short_description: An interface for objects which can be extracted from a GESAsset
  *
  * FIXME: Long description needed

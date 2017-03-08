@@ -19,6 +19,7 @@
  */
 /**
  * SECTION: gesproject
+ * @title: GESProject
  * @short_description: A GESAsset that is used to manage projects
  *
  * The #GESProject is used to control a set of #GESAsset and is a

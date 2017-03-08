@@ -20,6 +20,7 @@
  */
 /**
  * SECTION: gesasset
+ * @title: GESAsset
  * @short_description: Represents usable resources inside the GStreamer Editing Services
  *
  * The Assets in the GStreamer Editing Services represent the resources

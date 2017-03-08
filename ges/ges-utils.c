@@ -19,6 +19,7 @@
 
 /**
  * SECTION:ges-utils
+ * @title: GES utilities
  * @short_description: Convenience methods
  *
  */

@@ -20,6 +20,7 @@
 
 /**
  * SECTION:ges-enums
+ * @title: GES Enumerations
  * @short_description: Various enums for the Gstreamer Editing Services
  */
 

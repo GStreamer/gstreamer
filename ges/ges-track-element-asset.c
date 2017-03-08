@@ -20,6 +20,7 @@
 
 /**
  * SECTION: gestrackelementasset
+ * @title: GESTrackElementAsset
  * @short_description: A GESAsset subclass specialized in GESTrackElement extraction
  */
 

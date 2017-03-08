@@ -20,6 +20,7 @@
  */
 /**
  * SECTION: gesuriclipasset
+ * @title: GESUriClipAsset
  * @short_description: A GESAsset subclass specialized in GESUriClip extraction
  *
  * The #GESUriClipAsset is a special #GESAsset that lets you handle
@@ -648,6 +649,7 @@ ges_uri_clip_asset_get_stream_assets (GESUriClipAsset * self)
  *****************************************************************/
 /**
  * SECTION: gesurisourceasset
+ * @title: GESUriClipAsset
  * @short_description: A GESAsset subclass specialized in GESUriSource extraction
  *
  * NOTE: You should never request such a #GESAsset as they will be created automatically

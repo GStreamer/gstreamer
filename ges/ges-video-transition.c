@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gesvideotransition
+ * @title: GESVideoTransition
  * @short_description: implements video crossfade transition
  */
 

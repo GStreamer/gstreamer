@@ -70,7 +70,6 @@ typedef enum
  * controlled by this Container. NOTE: Do not modify.
  * @height: The span of priorities this container occupies
  *
- *
  * The #GESContainer base class.
  */
 struct _GESContainer

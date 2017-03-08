@@ -22,6 +22,7 @@
 
 /**
  * SECTION: ges-gerror
+ * @title: GESErrors
  * @short_description: GError — Categorized error messages
  */
 
