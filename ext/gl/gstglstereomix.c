@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-glstereomix
+ * @title: glstereomix
  *
  * Combine 2 input streams to produce a stereoscopic output
  * stream. Input views are taken from the left pad and right pad
@@ -34,8 +35,7 @@
  * The multiview representation on the output is chosen according to
  * the downstream caps.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 -v videotestsrc pattern=ball name=left \
  *     videotestsrc name=right glstereomix name=mix \
@@ -52,10 +52,10 @@
  *     right. ! video/x-raw,width=640,height=480 ! glupload ! mix.  \
  *     mix. ! video/x-raw'(memory:GLMemory)',multiview-mode=top-bottom ! \
  *     glcolorconvert ! gldownload ! queue ! x264enc ! h264parse ! \
- *     mp4mux ! progressreport ! filesink location=output.mp4 
+ *     mp4mux ! progressreport ! filesink location=output.mp4
  * ]| Mix the input from a camera to the left view, and videotestsrc to the right view,
  *    and encode as a top-bottom frame packed H.264 video.
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

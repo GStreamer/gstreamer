@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstvideoaggregator
+ * @title: GstVideoAggregator
  * @short_description: Base class for video aggregators
  *
  * VideoAggregator can accept AYUV, ARGB and BGRA video streams. For each of the requested
