@@ -43,7 +43,6 @@ ApplicationWindow {
         id: player
         objectName: "player"
         volume: 0.5
-        positionUpdateInterval: 100
         autoPlay: false
 
         onStateChanged: {

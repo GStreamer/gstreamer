@@ -45,8 +45,6 @@ class Player : public QObject
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(qint64 duration READ duration NOTIFY durationChanged)
     Q_PROPERTY(qint64 position READ position NOTIFY positionUpdated)
-    Q_PROPERTY(quint32 positionUpdateInterval READ positionUpdateInterval
-               WRITE setPositionUpdateInterval)
     Q_PROPERTY(qreal volume READ volume WRITE setVolume NOTIFY volumeChanged)
     Q_PROPERTY(bool muted READ isMuted WRITE setMuted NOTIFY mutedChanged)
     Q_PROPERTY(int buffering READ buffering NOTIFY bufferingChanged)
@@ -92,7 +90,6 @@ public:
     QVariant currentAudio() const;
     QVariant currentSubtitle() const;
     bool isSubtitleEnabled() const;
-    quint32 positionUpdateInterval() const;
     bool autoPlay() const;
     QList<QUrl> playlist() const;
 
@@ -123,7 +120,6 @@ public slots:
     void setCurrentAudio(QVariant track);
     void setCurrentSubtitle(QVariant track);
     void setSubtitleEnabled(bool enabled);
-    void setPositionUpdateInterval(quint32 interval);
     void setPlaylist(const QList<QUrl> &playlist);
     void next();
     void previous();
