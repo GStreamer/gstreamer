@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gtkgstsink
+ * @title: GstGtkBaseSink
  *
  */
 

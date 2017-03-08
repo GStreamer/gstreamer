@@ -19,7 +19,8 @@
  */
 
 /**
- * SECTION:gtkgstsink
+ * SECTION:element-gtkgstsink
+ * @title: gtkgstsink
  *
  */
 

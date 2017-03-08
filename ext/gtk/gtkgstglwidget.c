@@ -41,6 +41,7 @@
 
 /**
  * SECTION:gtkgstglwidget
+ * @title: GtkGstGlWidget
  * @short_description: a #GtkGLArea that renders GStreamer video #GstBuffers
  * @see_also: #GtkGLArea, #GstBuffer
  *
