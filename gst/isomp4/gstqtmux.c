@@ -504,7 +504,6 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->total_duration = 0;
   qtpad->total_bytes = 0;
   qtpad->sparse = FALSE;
-  qtpad->tc_trak = NULL;
 
   qtpad->buf_head = 0;
   qtpad->buf_tail = 0;
@@ -518,6 +517,7 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
 
   /* reference owned elsewhere */
   qtpad->trak = NULL;
+  qtpad->tc_trak = NULL;
 
   if (qtpad->traf) {
     atom_traf_free (qtpad->traf);
@@ -605,6 +605,9 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   qtmux->reserved_duration_remaining = GST_CLOCK_TIME_NONE;
   qtmux->first_pts = GST_CLOCK_TIME_NONE;
   qtmux->tc_pos = -1;
+  if (qtmux->first_tc)
+    gst_video_time_code_free (qtmux->first_tc);
+  qtmux->first_tc = NULL;
 }
 
 static void

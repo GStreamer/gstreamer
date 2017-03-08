@@ -566,6 +566,14 @@ sample_entry_tmcd_new (void)
 }
 
 static void
+sample_entry_tmcd_free (SampleTableEntryTMCD * tmcd)
+{
+  atom_sample_entry_free (&tmcd->se);
+  g_free (tmcd->name.name);
+  g_free (tmcd);
+}
+
+static void
 sample_entry_mp4v_init (SampleTableEntryMP4V * mp4v, AtomsContext * context)
 {
   atom_sample_entry_init (&mp4v->se, FOURCC_mp4v);
@@ -673,6 +681,9 @@ atom_stsd_remove_entries (AtomSTSD * stsd)
         break;
       case SUBTITLE:
         sample_entry_tx3g_free ((SampleTableEntryTX3G *) se);
+        break;
+      case TIMECODE:
+        sample_entry_tmcd_free ((SampleTableEntryTMCD *) se);
         break;
       default:
         /* best possible cleanup */
@@ -3757,6 +3768,7 @@ atom_trak_add_timecode_entry (AtomTRAK * trak, AtomsContext * context,
 
   trak->mdia.hdlr.component_type = FOURCC_mhlr;
   trak->mdia.hdlr.handler_type = FOURCC_tmcd;
+  g_free (trak->mdia.hdlr.name);
   trak->mdia.hdlr.name = g_strdup ("Time Code Media Handler");
   trak->mdia.mdhd.time_info.timescale = tc->config.fps_n / tc->config.fps_d;
 
