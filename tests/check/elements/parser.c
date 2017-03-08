@@ -38,6 +38,7 @@ datablob ctx_headers[MAX_HEADERS] = { {NULL, 0}, };
 
 VerifyBuffer ctx_verify_buffer = NULL;
 ElementSetup ctx_setup = NULL;
+gboolean ctx_frame_generated = FALSE;
 
 gboolean ctx_no_metadata = FALSE;
 
@@ -235,6 +236,7 @@ gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
   GstCaps *src_caps;
   guint i, j, k;
   guint frames = 0, size = 0;
+  guint added_frame = 0;
 
   element = setup_element (test->factory, test->factory_setup,
       test->sink_template, NULL, test->src_template, test->src_caps);
@@ -244,6 +246,9 @@ gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
     buffer = buffer_new (test->headers[j].data, test->headers[j].size);
     fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
   }
+
+  if (ctx_frame_generated)
+    added_frame = test->series[0].fpb;
 
   for (j = 0; j < 3; j++) {
     for (i = 0; i < test->series[j].num; i++) {
@@ -262,7 +267,7 @@ gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
       else if (j == 1)
         vdata.offset_skip_amount += test->series[j].size * test->series[j].fpb;
       if (j != 1) {
-        frames += test->series[j].fpb;
+        frames += test->series[j].fpb + added_frame;
         size += test->series[j].size * test->series[j].fpb;
       }
     }

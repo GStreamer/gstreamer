@@ -64,6 +64,7 @@ extern gboolean ctx_no_metadata;
 
 extern VerifyBuffer ctx_verify_buffer;
 extern ElementSetup ctx_setup;
+extern gboolean ctx_frame_generated;
 
 /* no refs taken/kept, all up to caller */
 typedef struct
