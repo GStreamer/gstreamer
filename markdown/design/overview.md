@@ -41,7 +41,7 @@ pipeline. Below is an example of an ogg/vorbis playback pipeline.
 ```
 
 The filesrc element reads data from a file on disk. The oggdemux element
-parses the data and sends the compressed audio data to the vorbisdec
+demultiplexes the data and sends a compressed audio stream to the vorbisdec
 element. The vorbisdec element decodes the compressed data and sends it
 to the alsasink element. The alsasink element sends the samples to the
 audio card for playback.
