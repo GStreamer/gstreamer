@@ -162,6 +162,7 @@ gst_video_time_code_to_date_time (const GstVideoTimeCode * tc)
         ("Asked to convert time code %s to GDateTime, but its latest daily jam is NULL",
         tc_str);
     g_free (tc_str);
+    g_date_time_unref (ret);
     return NULL;
   }
 
@@ -171,6 +172,7 @@ gst_video_time_code_to_date_time (const GstVideoTimeCode * tc)
         ("Asked to convert time code %s to GDateTime, but its framerate is unknown",
         tc_str);
     g_free (tc_str);
+    g_date_time_unref (ret);
     return NULL;
   }
 
