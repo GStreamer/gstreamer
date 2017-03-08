@@ -3731,7 +3731,7 @@ void
 atom_trak_edts_clear (AtomTRAK * trak)
 {
   if (trak->edts) {
-    atom_edts_clear (trak->edts);
+    atom_edts_free (trak->edts);
     trak->edts = NULL;
   }
 }
