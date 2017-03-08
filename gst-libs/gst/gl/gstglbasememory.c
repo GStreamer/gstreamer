@@ -28,6 +28,7 @@
 
 /**
  * SECTION:gstglbasememory
+ * @title: GstGlBaseMemory
  * @short_description: memory subclass for GL buffers
  * @see_also: #GstMemory, #GstAllocator
  *
@@ -523,7 +524,7 @@ gst_gl_base_memory_allocator_init (GstGLBaseMemoryAllocator * allocator)
 /**
  * gst_is_gl_base_memory:
  * @mem:a #GstMemory
- * 
+ *
  * Returns: whether the memory at @mem is a #GstGLBaseMemory
  *
  * Since: 1.8

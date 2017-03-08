@@ -20,15 +20,15 @@
 
 /**
  * SECTION:element-glvideo_flip
+ * @title: glvideo_flip
  *
  * Transforms video on the GPU.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 videotestsrc ! glupload ! glvideoflip method=clockwise ! glimagesinkelement
  * ]| This pipeline flips the test image 90 degrees clockwise.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -20,13 +20,13 @@
 
 /**
  * SECTION:element-glvideomixer
+ * @title: glvideomixer
  *
  * Composites a number of streams into a single output scene using OpenGL in
  * a similar fashion to compositor and videomixer. See the compositor plugin
  * for documentation about the #GstGLVideoMixerPad properties.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0  glvideomixer name=m ! glimagesink \
  *     videotestsrc ! video/x-raw, format=YUY2 ! glupload ! glcolorconvert ! m. \
@@ -36,7 +36,7 @@
  *     videotestsrc ! glupload ! glfiltercube ! queue ! m. \
  *     videotestsrc ! glupload ! gleffects effect=6 ! queue ! m.gst-launch-1.0  glvideomixer name=m ! glimagesink \
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

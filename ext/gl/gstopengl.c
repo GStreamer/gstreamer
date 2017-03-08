@@ -23,20 +23,20 @@
 
 /**
  * SECTION:plugin-opengl
+ * @title: GstOpengl
  *
  * Cross-platform OpenGL plugin.
- * <refsect2>
- * <title>Debugging</title>
- * </refsect2>
- * <refsect2>
- * <title>Examples</title>
+ *
+ * ## Debugging
+ *
+ * ## Examples
  * |[
  * gst-launch-1.0 --gst-debug=gldisplay:3 videotestsrc ! glimagesink
  * ]| A debugging pipeline.
   |[
  * GST_DEBUG=gl*:6 gst-launch-1.0 videotestsrc ! glimagesink
  * ]| A debugging pipelines related to shaders.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstglsyncmeta
+ * @title: GstGLSyncMeta
  * @short_description: synchronization primitives
  * @see_also: #GstGLBaseMemory, #GstGLContext
  *

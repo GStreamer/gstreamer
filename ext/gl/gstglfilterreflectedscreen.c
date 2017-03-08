@@ -20,15 +20,15 @@
 
 /**
  * SECTION:element-glfilterreflectedscreen
+ * @title: glfilterreflectedscreen
  *
  * Map Video Texture upon a screen, on a reflecting surface
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 videotestsrc ! glupload ! glfilterreflectedscreen ! glimagesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

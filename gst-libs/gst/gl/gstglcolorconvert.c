@@ -31,6 +31,7 @@
 
 /**
  * SECTION:gstglcolorconvert
+ * @title: GstGlColorConvert
  * @short_description: convert between video color spaces and formats
  * @see_also: #GstGLUpload, #GstGLMemory, #GstGLBaseMemory
  *
@@ -1231,7 +1232,7 @@ gst_gl_color_convert_fixate_caps (GstGLContext * context,
  * @inbuf: (transfer none): the #GstGLMemory filled #GstBuffer to convert
  *
  * Converts the data contained by @inbuf using the formats specified by the
- * #GstCaps passed to gst_gl_color_convert_set_caps() 
+ * #GstCaps passed to gst_gl_color_convert_set_caps()
  *
  * Returns: (transfer full): a converted #GstBuffer or %NULL
  *

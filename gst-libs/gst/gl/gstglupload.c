@@ -43,6 +43,7 @@
 
 /**
  * SECTION:gstglupload
+ * @title: GstGLUpload
  * @short_description: an object that uploads to GL textures
  * @see_also: #GstGLDownload, #GstGLMemory
  *

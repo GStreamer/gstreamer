@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-glimagesink
+ * @title: glimagesink
  *
  * glimagesink renders video frames to a drawable on a local or remote
  * display using OpenGL. This element can receive a Window ID from the
@@ -34,28 +35,23 @@
  * See the #GstGLDisplay documentation for a list of environment variables that
  * can override window/platform detection.
  *
- * <refsect2>
- * <title>Scaling</title>
- * <para>
+ * ## Scaling
+ *
  * Depends on the driver, OpenGL handles hardware accelerated
  * scaling of video frames. This means that the element will just accept
  * incoming video frames no matter their geometry and will then put them to the
  * drawable scaling them on the fly. Using the #GstGLImageSink:force-aspect-ratio
  * property it is possible to enforce scaling with a constant aspect ratio,
  * which means drawing black borders around the video frame.
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Events</title>
- * <para>
+ *
+ * ## Events
+ *
  * Through the gl thread, glimagesink handle some events coming from the drawable
  * to manage its appearance even when the data is not flowing (GST_STATE_PAUSED).
  * That means that even when the element is paused, it will receive expose events
  * from the drawable and draw the latest frame with correct borders/aspect-ratio.
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Examples</title>
+ *
+ * ## Examples
  * |[
  * gst-launch-1.0 -v videotestsrc ! video/x-raw ! glimagesink
  * ]| A pipeline to test hardware scaling.
@@ -80,7 +76,7 @@
  * ]| The graphic FPS scene can be greater than the input video FPS.
  * The graphic scene can be written from a client code through the
  * two glfilterapp properties.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

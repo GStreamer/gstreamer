@@ -20,16 +20,16 @@
 
 /**
  * SECTION:element-gloverlay
+ * @title: gloverlay
  *
  * Overlay GL video texture with a PNG image
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 videotestsrc ! gloverlay location=image.jpg ! glimagesink
  * ]|
  * FBO (Frame Buffer Object) is required.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

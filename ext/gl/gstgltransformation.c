@@ -21,11 +21,11 @@
 
 /**
  * SECTION:element-gltransformation
+ * @title: gltransformation
  *
  * Transforms video on the GPU.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 gltestsrc ! gltransformation rotation-z=45 ! glimagesink
  * ]| A pipeline to rotate by 45 degrees
@@ -38,7 +38,7 @@
  * |[
  * gst-launch-1.0 gltestsrc ! gltransformation rotation-x=-45 ortho=True ! glimagesink
  * ]| Rotate the video around the X-Axis by -45° with an orthographic projection
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -22,14 +22,14 @@
 
 /**
  * SECTION:element-glviewconvert
+ * @title: glviewconvert
  *
  * Convert stereoscopic video between different representations using fragment shaders.
  *
  * The element can use either property settings or caps negotiation to choose the
  * input and output formats to process.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 videotestsrc ! glupload ! glviewconvert ! glimagesink
  * ]| Simple placebo example demonstrating identity passthrough of mono video
@@ -39,7 +39,7 @@
  * ]| Force re-interpretation of the input checkers pattern as a side-by-side stereoscopic
  *    image and display in glimagesink.
  * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

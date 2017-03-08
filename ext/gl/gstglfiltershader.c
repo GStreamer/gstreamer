@@ -21,11 +21,11 @@
 
 /**
  * SECTION:element-glshader
+ * @title: glshader
  *
  * OpenGL fragment shader filter
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 videotestsrc ! glupload ! glshader fragment="\"`cat myshader.frag`\"" ! glimagesink
  * ]|
@@ -45,13 +45,12 @@
  * uniform float time;
  * uniform float width;
  * uniform float height;
- * 
+ *
  * void main () {
  *   gl_FragColor = texture2D( tex, v_texcoord );
  * }
  * ]|
  *
- * </refsect2>
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

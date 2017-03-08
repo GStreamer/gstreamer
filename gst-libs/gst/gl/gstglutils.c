@@ -20,6 +20,7 @@
 
 /**
  * SECTION:gstglutils
+ * @title: GstGLUtils
  * @short_description: some miscellaneous utilities for OpenGL
  * @see_also: #GstGLContext
  */

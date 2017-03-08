@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstglfilter
+ * @title: GstGlFilter
  * @short_description: GstBaseTransform subclass for dealing with RGBA textures
  * @see_also: #GstBaseTransform, #GstGLContext, #GstGLFramebuffer
  *
@@ -1174,7 +1175,7 @@ _unbind_buffer (GstGLFilter * filter)
  * gst_gl_filter_draw_fullscreen_quad:
  * @filter: a #GstGLFilter
  *
- * Render a fullscreen quad using the current GL state.  The only GL state this 
+ * Render a fullscreen quad using the current GL state.  The only GL state this
  * modifies is the necessary vertex/index buffers and, if necessary, a
  * Vertex Array Object for drawing a fullscreen quad.  Framebuffer state,
  * any shaders, viewport state, etc must be setup by the caller.

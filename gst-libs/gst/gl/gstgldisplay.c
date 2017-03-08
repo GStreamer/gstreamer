@@ -27,7 +27,7 @@
  * @title: GstGLDisplay
  * @see_also: #GstContext, #GstGLContext, #GstGLWindow
  *
- * #GstGLDisplay represents a connection to the underlying windowing system. 
+ * #GstGLDisplay represents a connection to the underlying windowing system.
  * Elements are required to make use of #GstContext to share and propogate
  * a #GstGLDisplay.
  *
@@ -40,13 +40,13 @@
  * - GST_GL_API influences the OpenGL API requested by the OpenGL platform.
  *   Common values are 'opengl' and 'gles2'.
  *
- * <note>Certain window systems require a special function to be called to
- * initialize threading support.  As this GStreamer GL library does not preclude
- * concurrent access to the windowing system, it is strongly advised that
- * applications ensure that threading support has been initialized before any
- * other toolkit/library functionality is accessed.  Failure to do so could
- * result in sudden application abortion during execution.  The most notably
- * example of such a function is X11's XInitThreads().</note>
+ * > Certain window systems require a special function to be called to
+ * > initialize threading support.  As this GStreamer GL library does not preclude
+ * > concurrent access to the windowing system, it is strongly advised that
+ * > applications ensure that threading support has been initialized before any
+ * > other toolkit/library functionality is accessed.  Failure to do so could
+ * > result in sudden application abortion during execution.  The most notably
+ * > example of such a function is X11's XInitThreads\().
  */
 
 #ifdef HAVE_CONFIG_H

@@ -20,16 +20,16 @@
 
 /**
  * SECTION:element-glstereosplit
+ * @title: glstereosplit
  *
  * Receive a stereoscopic video stream and split into left/right
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 videotestsrc ! glstereosplit name=s ! queue ! glimagesink s. ! queue ! glimagesink
  * ]|
  * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

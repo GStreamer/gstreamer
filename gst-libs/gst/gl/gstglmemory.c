@@ -31,11 +31,12 @@
 
 /**
  * SECTION:gstglmemory
+ * @title: GstGlMemory
  * @short_description: memory subclass for GL textures
  * @see_also: #GstMemory, #GstAllocator, #GstGLBufferPool
  *
  * GstGLMemory is a #GstGLBaseMemory subclass providing support for the mapping of
- * OpenGL textures.  
+ * OpenGL textures.
  *
  * #GstGLMemory is created or wrapped through gst_gl_base_memory_alloc()
  * with #GstGLVideoAllocationParams.
@@ -1092,7 +1093,7 @@ gst_gl_memory_init_once (void)
 /**
  * gst_is_gl_memory:
  * @mem:a #GstMemory
- * 
+ *
  * Returns: whether the memory at @mem is a #GstGLMemory
  *
  * Since: 1.4

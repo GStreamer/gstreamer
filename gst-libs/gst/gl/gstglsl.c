@@ -29,6 +29,7 @@
 
 /**
  * SECTION:gstglsl
+ * @title: GstGLSL
  * @short_description: helpers for dealing with OpenGL shaders
  * @see_also: #GstGLSLStage, #GstGLShader
  */
