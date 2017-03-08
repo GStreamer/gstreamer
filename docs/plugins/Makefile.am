@@ -103,7 +103,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/rtmp/gstrtmpsink.h \
 	$(top_srcdir)/ext/spandsp/gstspanplc.h \
 	$(top_srcdir)/ext/spandsp/gstdtmfdetect.h \
-	$(top_srcdir)/ext/wildmidi/gstwildmidi.h \
+	$(top_srcdir)/ext/wildmidi/gstwildmididec.h \
 	$(top_srcdir)/ext/voaacenc/gstvoaacenc.h \
 	$(top_srcdir)/ext/voamrwbenc/gstvoamrwbenc.h \
 	$(top_srcdir)/ext/webrtcdsp/gstwebrtcdsp.h \
