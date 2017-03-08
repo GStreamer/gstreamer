@@ -23,6 +23,7 @@
  */
 /**
  * SECTION:element-audiomixer
+ * @title: audiomixer
  *
  * The audiomixer allows to mix several streams into one by adding the data.
  * Mixed data is clamped to the min/max values of the data format.
@@ -32,21 +33,13 @@
  * The input pads are from a GstPad subclass and have additional
  * properties to mute each pad individually and set the volume:
  *
- * <itemizedlist>
- * <listitem>
- * "mute": Whether to mute the pad or not (#gboolean)
- * </listitem>
- * <listitem>
- * "volume": The volume of the pad, between 0.0 and 10.0 (#gdouble)
- * </listitem>
- * </itemizedlist>
+ * * "mute": Whether to mute the pad or not (#gboolean)
+ * * "volume": The volume of the pad, between 0.0 and 10.0 (#gdouble)
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc freq=100 ! audiomixer name=mix ! audioconvert ! alsasink audiotestsrc freq=500 ! mix.
  * ]| This pipeline produces two sine waves mixed together.
- * </refsect2>
  *
  */
 

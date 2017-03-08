@@ -27,7 +27,7 @@
  */
 /**
  * SECTION:element-audiointerleave
- *
+ * @title: audiointerleave
  *
  */
 
@@ -593,7 +593,7 @@ gst_audio_interleave_class_init (GstAudioInterleaveClass * klass)
 
   /**
    * GstInterleave:channel-positions
-   * 
+   *
    * Channel positions: This property controls the channel positions
    * that are used on the src caps. The number of elements should be
    * the same as the number of sink pads and the array should contain
@@ -617,7 +617,7 @@ gst_audio_interleave_class_init (GstAudioInterleaveClass * klass)
 
   /**
    * GstInterleave:channel-positions-from-input
-   * 
+   *
    * Channel positions from input: If this property is set to %TRUE the channel
    * positions will be taken from the input caps if valid channel positions for
    * the output can be constructed from them. If this is set to %TRUE setting the
