@@ -159,6 +159,32 @@ GST_START_TEST (test_from_string)
   fail_unless_equals_int (g_value_get_boolean (val), TRUE);
   gst_structure_free (structure);
 
+  /* Tests for flagset deserialisation */
+  s = "foobar,value=0010:ffff";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  fail_unless ((val = gst_structure_get_value (structure, "value")) != NULL);
+  fail_unless (GST_VALUE_HOLDS_FLAG_SET (val));
+  gst_structure_free (structure);
+
+  /* In the presence of the hex values, the strings don't matter as long as they
+   * have the right form */
+  s = "foobar,value=0010:ffff:+random+other/not-the-other";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  fail_unless ((val = gst_structure_get_value (structure, "value")) != NULL);
+  fail_unless (GST_VALUE_HOLDS_FLAG_SET (val));
+  gst_structure_free (structure);
+
+  /* Test that a timecode string is deserialised as a string, not a flagset:
+   * https://bugzilla.gnome.org/show_bug.cgi?id=779755 */
+  s = "foobar,timecode=00:01:00:00";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  fail_unless ((val = gst_structure_get_value (structure, "timecode")) != NULL);
+  fail_unless (G_VALUE_HOLDS_STRING (val));
+  gst_structure_free (structure);
+
   s = "0.10:decoder-video/mpeg, abc=(boolean)false";
   ASSERT_CRITICAL (structure = gst_structure_from_string (s, NULL));
   fail_unless (structure == NULL, "Could not get structure from string %s", s);

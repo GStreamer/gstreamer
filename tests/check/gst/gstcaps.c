@@ -984,7 +984,8 @@ GST_START_TEST (test_intersect_flagset)
   c2 = gst_caps_from_string (test_string);
   g_free (test_string);
 
-  fail_unless (gst_caps_is_equal (c1, c2));
+  fail_unless (gst_caps_is_equal (c1, c2), "Caps %s != %s",
+      gst_caps_to_string (c1), gst_caps_to_string (c2));
 
   gst_caps_unref (c1);
   gst_caps_unref (c2);

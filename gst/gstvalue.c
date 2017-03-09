@@ -7055,6 +7055,14 @@ gst_value_serialize_flagset (const GValue * value)
 }
 
 static gboolean
+is_valid_flags_string (const gchar * s)
+{
+  /* We're looking to match +this/that+other-thing/not-this-thing type strings */
+  return g_regex_match_simple ("^([\\+\\/][\\w\\d-]+)+$", s, G_REGEX_CASELESS,
+      0);
+}
+
+static gboolean
 gst_value_deserialize_flagset (GValue * dest, const gchar * s)
 {
   gboolean res = FALSE;
@@ -7088,21 +7096,45 @@ gst_value_deserialize_flagset (GValue * dest, const gchar * s)
   if (G_UNLIKELY ((mask == 0 && errno == EINVAL) || cur == next))
     goto try_as_flags_string;
 
-  /* Next char should be NULL terminator, or a ':' */
-  if (G_UNLIKELY (next[0] != 0 && next[0] != ':'))
-    goto try_as_flags_string;
+  /* Next char should be NULL terminator, or a ':'. If ':', we need the flag string after */
+  if (G_UNLIKELY (next[0] == 0)) {
+    res = TRUE;
+    goto done;
+  }
 
+  if (next[0] != ':')
+    return FALSE;
+
+  s = next + 1;
+
+  if (g_str_equal (g_type_name (G_VALUE_TYPE (dest)), "GstFlagSet")) {
+    /* If we're parsing a generic flag set, that can mean we're guessing
+     * at the type in deserialising a GstStructure so at least check that
+     * we have a valid-looking string, so we don't cause deserialisation of
+     * other types of strings like 00:01:00:00 - https://bugzilla.gnome.org/show_bug.cgi?id=779755 */
+    if (is_valid_flags_string (s)) {
+      res = TRUE;
+      goto done;
+    }
+    return FALSE;
+  }
+
+  /* Otherwise, we already got a hex string for a valid non-generic flagset type */
   res = TRUE;
+  goto done;
 
 try_as_flags_string:
 
-  if (!res) {
+  {
     const gchar *set_class = g_type_name (G_VALUE_TYPE (dest));
     GFlagsClass *flags_klass = NULL;
     const gchar *end;
 
-    if (g_str_equal (set_class, "GstFlagSet"))
-      goto done;                /* There's no hope to parse a generic flag set */
+    if (g_str_equal (set_class, "GstFlagSet")) {
+      /* There's no hope to parse the fields of generic flag set if we didn't already
+       * catch a hex-string above */
+      return FALSE;
+    }
 
     /* Flags class is the FlagSet class with 'Set' removed from the end */
     end = g_strrstr (set_class, "Set");
@@ -7128,9 +7160,9 @@ try_as_flags_string:
     }
   }
 
+done:
   if (res)
     gst_value_set_flagset (dest, flags, mask);
-done:
   return res;
 
 }
