@@ -56,6 +56,7 @@ CRUFT_FILES = \
 	$(top_builddir)/win32/common/config.h-new \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
+	$(top_builddir)/docs/plugins/xml/plugin-shout2send.xml \
 	$(top_builddir)/gst/median/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/qtdemux/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/quicktime/.libs/*.{so,dll,DLL,dylib} \

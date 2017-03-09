@@ -343,7 +343,7 @@
     <xi:include href="xml/plugin-rtp.xml" />
     <xi:include href="xml/plugin-rtsp.xml" />
     <xi:include href="xml/plugin-shapewipe.xml" />
-    <xi:include href="xml/plugin-shout2send.xml" />
+    <xi:include href="xml/plugin-shout2.xml" />
     <xi:include href="xml/plugin-smpte.xml" />
     <xi:include href="xml/plugin-soup.xml" />
     <xi:include href="xml/plugin-spectrum.xml" />
