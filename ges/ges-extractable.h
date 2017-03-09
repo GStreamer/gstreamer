@@ -21,6 +21,8 @@
 #ifndef _GES_EXTRACTABLE_
 #define _GES_EXTRACTABLE_
 
+typedef struct _GESExtractable GESExtractable;
+
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <ges/ges-types.h>

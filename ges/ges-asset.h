@@ -23,6 +23,7 @@
 #define _GES_ASSET_
 
 #include <glib-object.h>
+#include <ges/ges-extractable.h>
 #include <ges/ges-types.h>
 #include <ges/ges-enums.h>
 #include <gio/gio.h>
