@@ -99,7 +99,7 @@ typedef struct _CustomData {
 
 /* This function is called when the GUI toolkit creates the physical window that will hold the video.
  * At this point we can retrieve its handler (which has a different meaning depending on the windowing system)
- * and pass it to GStreamer through the GstVideoOverlay interface. */
+ * and pass it to GStreamer through the VideoOverlay interface. */
 static void realize_cb (GtkWidget *widget, CustomData *data) {
   GdkWindow *window = gtk_widget_get_window (widget);
   guintptr window_handle;
@@ -115,7 +115,7 @@ static void realize_cb (GtkWidget *widget, CustomData *data) {
 #elif defined (GDK_WINDOWING_X11)
   window_handle = GDK_WINDOW_XID (window);
 #endif
-  /* Pass it to playbin, which implements GstVideoOverlay and will forward it to the video sink */
+  /* Pass it to playbin, which implements VideoOverlay and will forward it to the video sink */
   gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->playbin), window_handle);
 }
 
@@ -153,7 +153,6 @@ static gboolean draw_cb (GtkWidget *widget, cairo_t *cr, CustomData *data) {
     cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
     cairo_fill (cr);
-    cairo_destroy (cr);
   }
 
   return FALSE;
@@ -193,24 +192,24 @@ static void create_ui (CustomData *data) {
   stop_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_STOP);
   g_signal_connect (G_OBJECT (stop_button), "clicked", G_CALLBACK (stop_cb), data);
 
-  data->slider = gtk_hscale_new_with_range (0, 100, 1);
+  data->slider = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 100, 1);
   gtk_scale_set_draw_value (GTK_SCALE (data->slider), 0);
   data->slider_update_signal_id = g_signal_connect (G_OBJECT (data->slider), "value-changed", G_CALLBACK (slider_cb), data);
 
   data->streams_list = gtk_text_view_new ();
   gtk_text_view_set_editable (GTK_TEXT_VIEW (data->streams_list), FALSE);
 
-  controls = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,, 0);
+  controls = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start (GTK_BOX (controls), play_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), pause_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), stop_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), data->slider, TRUE, TRUE, 2);
 
-  main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,, 0);
+  main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start (GTK_BOX (main_hbox), video_window, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (main_hbox), data->streams_list, FALSE, FALSE, 2);
 
-  main_box = gtk_box_new (GTK_ORIENTATION_VERTICAL,, 0);
+  main_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start (GTK_BOX (main_box), main_hbox, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (main_box), controls, FALSE, FALSE, 0);
   gtk_container_add (GTK_CONTAINER (main_window), main_box);
@@ -255,7 +254,7 @@ static void tags_cb (GstElement *playbin, gint stream, CustomData *data) {
    * thread of this event through a message in the bus */
   gst_element_post_message (playbin,
     gst_message_new_application (GST_OBJECT (playbin),
-      gst_structure_new ("tags-changed", NULL)));
+      gst_structure_new_empty ("tags-changed")));
 }
 
 /* This function is called when an error message is posted on the bus */
@@ -382,7 +381,7 @@ static void analyze_streams (CustomData *data) {
 /* This function is called when an "application" message is posted on the bus.
  * Here we retrieve the message posted by the tags_cb callback */
 static void application_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
-  if (g_strcmp0 (gst_structure_get_name (gst_message_get_structure(msg)), "tags-changed") == 0) {
+  if (g_strcmp0 (gst_structure_get_name (gst_message_get_structure (msg)), "tags-changed") == 0) {
     /* If the message is the "tags-changed" (only one we are currently issuing), update
      * the stream info GUI */
     analyze_streams (data);
@@ -530,10 +529,10 @@ Standard GStreamer initialization and playbin pipeline creation, along
 with GTK+ initialization. Not much new.
 
 ``` c
-/* Connect to interesting signals in playbin */
-g_signal_connect (G_OBJECT (data.playbin), "video-tags-changed", (GCallback) tags_cb, &data);
-g_signal_connect (G_OBJECT (data.playbin), "audio-tags-changed", (GCallback) tags_cb, &data);
-g_signal_connect (G_OBJECT (data.playbin), "text-tags-changed", (GCallback) tags_cb, &data);
+  /* Connect to interesting signals in playbin */
+  g_signal_connect (G_OBJECT (data.playbin), "video-tags-changed", (GCallback) tags_cb, &data);
+  g_signal_connect (G_OBJECT (data.playbin), "audio-tags-changed", (GCallback) tags_cb, &data);
+  g_signal_connect (G_OBJECT (data.playbin), "text-tags-changed", (GCallback) tags_cb, &data);
 ```
 
 We are interested in being notified when new tags (metadata) appears on
@@ -552,14 +551,14 @@ commands, as shown below when reviewing the
 callbacks.
 
 ``` c
-/* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
-bus = gst_element_get_bus (data.playbin);
-gst_bus_add_signal_watch (bus);
-g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, &data);
-g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)eos_cb, &data);
-g_signal_connect (G_OBJECT (bus), "message::state-changed", (GCallback)state_changed_cb, &data);
-g_signal_connect (G_OBJECT (bus), "message::application", (GCallback)application_cb, &data);
-gst_object_unref (bus);
+  /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
+  bus = gst_element_get_bus (data.playbin);
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, &data);
+  g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)eos_cb, &data);
+  g_signal_connect (G_OBJECT (bus), "message::state-changed", (GCallback)state_changed_cb, &data);
+  g_signal_connect (G_OBJECT (bus), "message::application", (GCallback)application_cb, &data);
+  gst_object_unref (bus);
 ```
 
 In [](tutorials/playback/playbin-usage.md), `gst_bus_add_watch()` is
@@ -602,7 +601,7 @@ documentation of the signal.
 ``` c
 /* This function is called when the GUI toolkit creates the physical window that will hold the video.
  * At this point we can retrieve its handler (which has a different meaning depending on the windowing system)
- * and pass it to GStreamer through the GstVideoOverlay interface. */
+ * and pass it to GStreamer through the VideoOverlay interface. */
 static void realize_cb (GtkWidget *widget, CustomData *data) {
   GdkWindow *window = gtk_widget_get_window (widget);
   guintptr window_handle;
@@ -618,7 +617,7 @@ static void realize_cb (GtkWidget *widget, CustomData *data) {
 #elif defined (GDK_WINDOWING_X11)
   window_handle = GDK_WINDOW_XID (window);
 #endif
-  /* Pass it to playbin, which implements GstVideoOverlay and will forward it to the video sink */
+  /* Pass it to playbin, which implements VideoOverlay and will forward it to the video sink */
   gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->playbin), window_handle);
 }
 ```
@@ -690,7 +689,6 @@ static gboolean expose_cb (GtkWidget *widget, GdkEventExpose *event, CustomData 
     cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
     cairo_fill (cr);
-    cairo_destroy (cr);
   }
 
   return FALSE;
@@ -791,7 +789,7 @@ static void tags_cb (GstElement *playbin, gint stream, CustomData *data) {
    * thread of this event through a message in the bus */
   gst_element_post_message (playbin,
     gst_message_new_application (GST_OBJECT (playbin),
-      gst_structure_new ("tags-changed", NULL)));
+      gst_structure_new_empty ("tags-changed")));
 }
 ```
 
