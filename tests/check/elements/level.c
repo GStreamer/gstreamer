@@ -21,7 +21,6 @@
  */
 
 #include <unistd.h>
-#include <math.h>
 
 /* suppress warnings for deprecated API such as GValueArray
  * with newer GLib versions (>= 2.31.0) */
