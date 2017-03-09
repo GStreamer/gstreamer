@@ -250,7 +250,7 @@ static AVCaptureDeviceType GstAVFVideoSourceDeviceType2AVCaptureDeviceType(GstAV
     case GST_AVF_VIDEO_SOURCE_DEVICE_TYPE_BUILT_IN_TELEPHOTO_CAMERA:
       return AVCaptureDeviceTypeBuiltInTelephotoCamera;
     case GST_AVF_VIDEO_SOURCE_DEVICE_TYPE_BUILT_IN_DUAL_CAMERA:
-      return AVCaptureDeviceTypeBuiltInDualCamera;
+      return AVCaptureDeviceTypeBuiltInDuoCamera;
     case GST_AVF_VIDEO_SOURCE_DEVICE_TYPE_DEFAULT:
       g_assert_not_reached();
   }
