@@ -2923,7 +2923,7 @@ atom_wave_copy_data (AtomWAVE * wave, guint8 ** buffer,
 
 /* add samples to tables */
 
-static void
+void
 atom_stsc_add_new_entry (AtomSTSC * stsc, guint32 first_chunk, guint32 nsamples)
 {
   gint len;
@@ -3869,7 +3869,7 @@ atom_trak_add_subtitle_entry (AtomTRAK * trak, AtomsContext * context,
 }
 
 
-static void
+void
 atom_trak_set_constant_size_samples (AtomTRAK * trak, guint32 sample_size)
 {
   trak->mdia.minf.stbl.stsz.sample_size = sample_size;

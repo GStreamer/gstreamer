@@ -100,6 +100,9 @@ struct _GstQTPad
   gboolean sparse;
   /* bitrates */
   guint32 avg_bitrate, max_bitrate;
+  /* expected sample duration */
+  guint expected_sample_duration_n;
+  guint expected_sample_duration_d;
 
   /* for avg bitrate calculation */
   guint64 total_bytes;
@@ -147,6 +150,13 @@ struct _GstQTPad
   GstVideoTimeCode *first_tc;
   GstClockTime first_pts;
   guint64 tc_pos;
+
+  /* for keeping track in pre-fill mode */
+  GArray *samples;
+  /* current sample */
+  GstAdapter *raw_audio_adapter;
+  guint64 raw_audio_adapter_offset;
+  GstClockTime raw_audio_adapter_pts;
 };
 
 typedef enum _GstQTMuxState
@@ -162,7 +172,8 @@ typedef enum _GstQtMuxMode {
     GST_QT_MUX_MODE_FRAGMENTED,
     GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE,
     GST_QT_MUX_MODE_FAST_START,
-    GST_QT_MUX_MODE_ROBUST_RECORDING
+    GST_QT_MUX_MODE_ROBUST_RECORDING,
+    GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL,
 } GstQtMuxMode;
 
 struct _GstQTMux
@@ -273,6 +284,8 @@ struct _GstQTMux
   GstClockTime last_moov_update;
   GstClockTime reserved_moov_update_period;
   GstClockTime muxed_since_last_update;
+
+  gboolean reserved_prefill;
 
   /* for request pad naming */
   guint video_pads, audio_pads, subtitle_pads;

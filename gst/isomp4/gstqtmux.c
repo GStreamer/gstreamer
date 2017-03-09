@@ -268,6 +268,7 @@ enum
   PROP_RESERVED_DURATION_REMAINING,
   PROP_RESERVED_MOOV_UPDATE_PERIOD,
   PROP_RESERVED_BYTES_PER_SEC,
+  PROP_RESERVED_PREFILL,
 #ifndef GST_REMOVE_DEPRECATED
   PROP_DTS_METHOD,
 #endif
@@ -294,6 +295,7 @@ enum
 #define DEFAULT_RESERVED_MAX_DURATION   GST_CLOCK_TIME_NONE
 #define DEFAULT_RESERVED_MOOV_UPDATE_PERIOD   GST_CLOCK_TIME_NONE
 #define DEFAULT_RESERVED_BYTES_PER_SEC_PER_TRAK 550
+#define DEFAULT_RESERVED_PREFILL FALSE
 #define DEFAULT_INTERLEAVE_BYTES 0
 #define DEFAULT_INTERLEAVE_TIME 250*GST_MSECOND
 #define DEFAULT_MAX_RAW_AUDIO_DRIFT 40 * GST_MSECOND
@@ -325,6 +327,9 @@ static GstFlowReturn gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad,
 
 static GstFlowReturn
 gst_qt_mux_robust_recording_rewrite_moov (GstQTMux * qtmux);
+
+static void gst_qt_mux_update_global_statistics (GstQTMux * qtmux);
+static void gst_qt_mux_update_edit_lists (GstQTMux * qtmux);
 
 static GstElementClass *parent_class = NULL;
 
@@ -489,6 +494,12 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           "Multiplier for converting reserved-max-duration into bytes of header to reserve, per second, per track",
           0, 10000, DEFAULT_RESERVED_BYTES_PER_SEC_PER_TRAK,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_RESERVED_PREFILL,
+      g_param_spec_boolean ("reserved-prefill",
+          "Reserved Prefill Samples Table",
+          "Prefill samples table of reserved duration",
+          DEFAULT_RESERVED_PREFILL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INTERLEAVE_BYTES,
       g_param_spec_uint64 ("interleave-bytes", "Interleave (bytes)",
           "Interleave between streams in bytes",
@@ -547,6 +558,9 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
     qtpad->traf = NULL;
   }
   atom_array_clear (&qtpad->fragment_buffers);
+  if (qtpad->samples)
+    g_array_unref (qtpad->samples);
+  qtpad->samples = NULL;
 
   /* reference owned elsewhere */
   qtpad->tfra = NULL;
@@ -556,6 +570,10 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   if (qtpad->first_tc)
     gst_video_time_code_free (qtpad->first_tc);
   qtpad->first_tc = NULL;
+
+  if (qtpad->raw_audio_adapter)
+    gst_object_unref (qtpad->raw_audio_adapter);
+  qtpad->raw_audio_adapter = NULL;
 }
 
 /*
@@ -2113,6 +2131,447 @@ fail:
   qtmux->moov_recov_file = NULL;
 }
 
+static guint64
+prefill_get_block_index (GstQTMux * qtmux, GstQTPad * qpad)
+{
+  switch (qpad->fourcc) {
+    case FOURCC_apch:
+    case FOURCC_apcn:
+    case FOURCC_apcs:
+    case FOURCC_apco:
+    case FOURCC_ap4h:
+    case FOURCC_ap4x:
+      return qpad->sample_offset;
+    case FOURCC_sowt:
+    case FOURCC_twos:
+      return gst_util_uint64_scale_ceil (qpad->sample_offset,
+          qpad->expected_sample_duration_n,
+          qpad->expected_sample_duration_d *
+          atom_trak_get_timescale (qpad->trak));
+    default:
+      return -1;
+  }
+}
+
+static guint
+prefill_get_sample_size (GstQTMux * qtmux, GstQTPad * qpad)
+{
+  switch (qpad->fourcc) {
+    case FOURCC_apch:
+      if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 480) {
+        return 300000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 576) {
+        return 350000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 720) {
+        return 525000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 1080) {
+        return 1050000;
+      } else {
+        return 4150000;
+      }
+      break;
+    case FOURCC_apcn:
+      if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 480) {
+        return 200000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 576) {
+        return 250000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 720) {
+        return 350000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 1080) {
+        return 700000;
+      } else {
+        return 2800000;
+      }
+      break;
+    case FOURCC_apcs:
+      if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 480) {
+        return 150000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 576) {
+        return 200000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 720) {
+        return 250000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 1080) {
+        return 500000;
+      } else {
+        return 2800000;
+      }
+      break;
+    case FOURCC_apco:
+      if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 480) {
+        return 80000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 576) {
+        return 100000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 720) {
+        return 150000;
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 1080) {
+        return 250000;
+      } else {
+        return 900000;
+      }
+      break;
+    case FOURCC_sowt:
+    case FOURCC_twos:{
+      guint64 block_idx;
+      guint64 next_sample_offset;
+
+      block_idx = prefill_get_block_index (qtmux, qpad);
+      next_sample_offset =
+          gst_util_uint64_scale (block_idx + 1,
+          qpad->expected_sample_duration_d *
+          atom_trak_get_timescale (qpad->trak),
+          qpad->expected_sample_duration_n);
+
+      return (next_sample_offset - qpad->sample_offset) * qpad->sample_size;
+    }
+    case FOURCC_ap4h:
+    case FOURCC_ap4x:
+    default:
+      GST_ERROR_OBJECT (qtmux, "unsupported codec for pre-filling");
+      return -1;
+  }
+
+  return -1;
+}
+
+static GstClockTime
+prefill_get_next_timestamp (GstQTMux * qtmux, GstQTPad * qpad)
+{
+  switch (qpad->fourcc) {
+    case FOURCC_apch:
+    case FOURCC_apcn:
+    case FOURCC_apcs:
+    case FOURCC_apco:
+    case FOURCC_ap4h:
+    case FOURCC_ap4x:
+      return gst_util_uint64_scale (qpad->sample_offset + 1,
+          qpad->expected_sample_duration_d * GST_SECOND,
+          qpad->expected_sample_duration_n);
+    case FOURCC_sowt:
+    case FOURCC_twos:{
+      guint64 block_idx;
+      guint64 next_sample_offset;
+
+      block_idx = prefill_get_block_index (qtmux, qpad);
+      next_sample_offset =
+          gst_util_uint64_scale (block_idx + 1,
+          qpad->expected_sample_duration_d *
+          atom_trak_get_timescale (qpad->trak),
+          qpad->expected_sample_duration_n);
+
+      return gst_util_uint64_scale (next_sample_offset, GST_SECOND,
+          atom_trak_get_timescale (qpad->trak));
+    }
+    default:
+      GST_ERROR_OBJECT (qtmux, "unsupported codec for pre-filling");
+      return -1;
+  }
+
+  return -1;
+}
+
+static GstBuffer *
+prefill_raw_audio_prepare_buf_func (GstQTPad * qtpad, GstBuffer * buf,
+    GstQTMux * qtmux)
+{
+  guint64 block_idx;
+  guint64 nsamples;
+  GstClockTime input_timestamp;
+  guint64 input_timestamp_distance;
+
+  if (buf)
+    gst_adapter_push (qtpad->raw_audio_adapter, buf);
+
+  block_idx = gst_util_uint64_scale_ceil (qtpad->raw_audio_adapter_offset,
+      qtpad->expected_sample_duration_n,
+      qtpad->expected_sample_duration_d *
+      atom_trak_get_timescale (qtpad->trak));
+  nsamples =
+      gst_util_uint64_scale (block_idx + 1,
+      qtpad->expected_sample_duration_d * atom_trak_get_timescale (qtpad->trak),
+      qtpad->expected_sample_duration_n) - qtpad->raw_audio_adapter_offset;
+
+  if ((!GST_COLLECT_PADS_STATE_IS_SET (&qtpad->collect,
+              GST_COLLECT_PADS_STATE_EOS)
+          && gst_adapter_available (qtpad->raw_audio_adapter) <
+          nsamples * qtpad->sample_size)
+      || gst_adapter_available (qtpad->raw_audio_adapter) == 0) {
+    return NULL;
+  }
+
+  input_timestamp =
+      gst_adapter_prev_pts (qtpad->raw_audio_adapter,
+      &input_timestamp_distance);
+  if (input_timestamp != GST_CLOCK_TIME_NONE)
+    input_timestamp +=
+        gst_util_uint64_scale (input_timestamp_distance, GST_SECOND,
+        qtpad->sample_size * atom_trak_get_timescale (qtpad->trak));
+
+  buf =
+      gst_adapter_take_buffer (qtpad->raw_audio_adapter,
+      !GST_COLLECT_PADS_STATE_IS_SET (&qtpad->collect,
+          GST_COLLECT_PADS_STATE_EOS) ? nsamples *
+      qtpad->sample_size : gst_adapter_available (qtpad->raw_audio_adapter));
+  GST_BUFFER_PTS (buf) = input_timestamp;
+  GST_BUFFER_DTS (buf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
+
+  qtpad->raw_audio_adapter_offset += nsamples;
+
+  /* Check if we have yet another block of raw audio in the adapter */
+  nsamples =
+      gst_util_uint64_scale (block_idx + 2,
+      qtpad->expected_sample_duration_d * atom_trak_get_timescale (qtpad->trak),
+      qtpad->expected_sample_duration_n) - qtpad->raw_audio_adapter_offset;
+  if (gst_adapter_available (qtpad->raw_audio_adapter) >=
+      nsamples * qtpad->sample_size) {
+    input_timestamp =
+        gst_adapter_prev_pts (qtpad->raw_audio_adapter,
+        &input_timestamp_distance);
+    if (input_timestamp != GST_CLOCK_TIME_NONE)
+      input_timestamp +=
+          gst_util_uint64_scale (input_timestamp_distance, GST_SECOND,
+          qtpad->sample_size * atom_trak_get_timescale (qtpad->trak));
+    qtpad->raw_audio_adapter_pts = input_timestamp;
+  } else {
+    qtpad->raw_audio_adapter_pts = GST_CLOCK_TIME_NONE;
+  }
+
+  return buf;
+}
+
+static gboolean
+prefill_update_sample_size (GstQTMux * qtmux, GstQTPad * qpad)
+{
+  switch (qpad->fourcc) {
+    case FOURCC_apch:
+    case FOURCC_apcn:
+    case FOURCC_apcs:
+    case FOURCC_apco:
+    case FOURCC_ap4h:
+    case FOURCC_ap4x:{
+      guint sample_size = prefill_get_sample_size (qtmux, qpad);
+      atom_trak_set_constant_size_samples (qpad->trak, sample_size);
+      return TRUE;
+    }
+    case FOURCC_sowt:
+    case FOURCC_twos:{
+      GSList *walk;
+
+      /* Find the (first) video track and assume that we have to output
+       * in that size */
+      for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+        GstCollectData *cdata = (GstCollectData *) walk->data;
+        GstQTPad *tmp_qpad = (GstQTPad *) cdata;
+
+        if (tmp_qpad->trak->is_video) {
+          qpad->expected_sample_duration_n =
+              tmp_qpad->expected_sample_duration_n;
+          qpad->expected_sample_duration_d =
+              tmp_qpad->expected_sample_duration_d;
+          break;
+        }
+      }
+
+      if (walk == NULL) {
+        GST_INFO_OBJECT (qpad->collect.pad,
+            "Found no video framerate, using 40ms audio buffers");
+        qpad->expected_sample_duration_n = 25;
+        qpad->expected_sample_duration_d = 1;
+      }
+
+      /* Set a prepare_buf_func that ensures this */
+      qpad->prepare_buf_func = prefill_raw_audio_prepare_buf_func;
+      qpad->raw_audio_adapter = gst_adapter_new ();
+      qpad->raw_audio_adapter_offset = 0;
+      qpad->raw_audio_adapter_pts = GST_CLOCK_TIME_NONE;
+
+      return TRUE;
+    }
+    default:
+      return TRUE;
+  }
+}
+
+static GstQTPad *
+find_best_pad_prefill (GstQTMux * qtmux)
+{
+  GSList *walk;
+  GstQTPad *best_pad = NULL;
+
+  if (qtmux->current_pad &&
+      (qtmux->interleave_bytes != 0 || qtmux->interleave_time != 0) &&
+      (qtmux->interleave_bytes == 0
+          || qtmux->current_chunk_size <= qtmux->interleave_bytes)
+      && (qtmux->interleave_time == 0
+          || qtmux->current_chunk_duration <= qtmux->interleave_time)
+      && qtmux->mux_mode != GST_QT_MUX_MODE_FRAGMENTED
+      && qtmux->mux_mode != GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE) {
+
+    if (qtmux->current_pad->total_duration < qtmux->reserved_max_duration) {
+      best_pad = qtmux->current_pad;
+    }
+  } else if (qtmux->collect->data->next) {
+    best_pad = qtmux->current_pad = NULL;
+  }
+
+  if (!best_pad) {
+    GstClockTime best_time = GST_CLOCK_TIME_NONE;
+
+    for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+      GstCollectData *cdata = (GstCollectData *) walk->data;
+      GstQTPad *qtpad = (GstQTPad *) cdata;
+      GstClockTime timestamp;
+
+      if (qtpad->total_duration >= qtmux->reserved_max_duration)
+        continue;
+
+      timestamp = qtpad->total_duration;
+
+      if (best_pad == NULL ||
+          !GST_CLOCK_TIME_IS_VALID (best_time) || timestamp < best_time) {
+        best_pad = qtpad;
+        best_time = timestamp;
+      }
+    }
+  }
+
+  return best_pad;
+}
+
+static gboolean
+gst_qt_mux_prefill_samples (GstQTMux * qtmux)
+{
+  GstQTPad *qpad;
+  GSList *walk;
+
+  /* Update expected sample sizes/durations as needed, this is for raw
+   * audio where samples are actual audio samples. */
+  for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+    GstCollectData *cdata = (GstCollectData *) walk->data;
+    GstQTPad *qpad = (GstQTPad *) cdata;
+
+    if (!prefill_update_sample_size (qtmux, qpad))
+      return FALSE;
+  }
+
+  /* For the first sample check/update timecode as needed. We do that before
+   * all actual samples as the code in gst_qt_mux_add_buffer() does it with
+   * initial buffer directly, not with last_buf */
+  for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+    GstCollectData *cdata = (GstCollectData *) walk->data;
+    GstQTPad *qpad = (GstQTPad *) cdata;
+    GstBuffer *buffer =
+        gst_collect_pads_peek (qtmux->collect, (GstCollectData *) qpad);
+    GstVideoTimeCodeMeta *tc_meta;
+
+    if (buffer && (tc_meta = gst_buffer_get_video_time_code_meta (buffer))) {
+      GstVideoTimeCode *tc = &tc_meta->tc;
+
+      qpad->tc_trak = atom_trak_new (qtmux->context);
+      atom_moov_add_trak (qtmux->moov, qpad->tc_trak);
+
+      qpad->trak->tref = atom_tref_new (FOURCC_tmcd);
+      atom_tref_add_entry (qpad->trak->tref, qpad->tc_trak->tkhd.track_ID);
+
+      atom_trak_set_timecode_type (qpad->tc_trak, qtmux->context, tc);
+
+      atom_trak_add_samples (qpad->tc_trak, 1, 1, 4,
+          qtmux->mdat_size, FALSE, 0);
+
+      qpad->tc_pos = qtmux->mdat_size;
+      qpad->first_tc = gst_video_time_code_copy (tc);
+      qpad->first_pts = GST_BUFFER_PTS (buffer);
+
+      qtmux->current_chunk_offset = -1;
+      qtmux->current_chunk_size = 0;
+      qtmux->current_chunk_duration = 0;
+      qtmux->mdat_size += 4;
+    }
+    if (buffer)
+      gst_buffer_unref (buffer);
+  }
+
+  while ((qpad = find_best_pad_prefill (qtmux))) {
+    GstClockTime timestamp, next_timestamp, duration;
+    guint nsamples, sample_size;
+    guint64 chunk_offset;
+    gint64 scaled_duration;
+    gint64 pts_offset = 0;
+    gboolean sync = FALSE;
+    TrakBufferEntryInfo sample_entry;
+
+    sample_size = prefill_get_sample_size (qtmux, qpad);
+
+    if (sample_size == -1) {
+      return FALSE;
+    }
+
+    if (!qpad->samples)
+      qpad->samples = g_array_new (FALSE, FALSE, sizeof (TrakBufferEntryInfo));
+
+    timestamp = qpad->total_duration;
+    next_timestamp = prefill_get_next_timestamp (qtmux, qpad);
+    duration = next_timestamp - timestamp;
+
+    if (qpad->first_ts == GST_CLOCK_TIME_NONE)
+      qpad->first_ts = timestamp;
+    if (qpad->first_dts == GST_CLOCK_TIME_NONE)
+      qpad->first_dts = timestamp;
+
+    if (qtmux->current_pad != qpad || qtmux->current_chunk_offset == -1) {
+      qtmux->current_pad = qpad;
+      if (qtmux->current_chunk_offset == -1)
+        qtmux->current_chunk_offset = qtmux->mdat_size;
+      else
+        qtmux->current_chunk_offset += qtmux->current_chunk_size;
+      qtmux->current_chunk_size = 0;
+      qtmux->current_chunk_duration = 0;
+    }
+    if (qpad->sample_size)
+      nsamples = sample_size / qpad->sample_size;
+    else
+      nsamples = 1;
+    qpad->last_dts = timestamp;
+    scaled_duration = gst_util_uint64_scale_round (timestamp + duration,
+        atom_trak_get_timescale (qpad->trak),
+        GST_SECOND) - gst_util_uint64_scale_round (timestamp,
+        atom_trak_get_timescale (qpad->trak), GST_SECOND);
+
+    qtmux->current_chunk_size += sample_size;
+    qtmux->current_chunk_duration += duration;
+    qpad->total_bytes += sample_size;
+
+    chunk_offset = qtmux->current_chunk_offset;
+
+    /* I-frame only, no frame reordering */
+    sync = FALSE;
+    pts_offset = 0;
+
+    if (qtmux->current_chunk_duration > qtmux->longest_chunk
+        || !GST_CLOCK_TIME_IS_VALID (qtmux->longest_chunk)) {
+      qtmux->longest_chunk = qtmux->current_chunk_duration;
+    }
+
+    sample_entry.track_id = qpad->trak->tkhd.track_ID;
+    sample_entry.nsamples = nsamples;
+    sample_entry.delta = scaled_duration / nsamples;
+    sample_entry.size = sample_size / nsamples;
+    sample_entry.chunk_offset = chunk_offset;
+    sample_entry.pts_offset = pts_offset;
+    sample_entry.sync = sync;
+    sample_entry.do_pts = TRUE;
+    g_array_append_val (qpad->samples, sample_entry);
+    atom_trak_add_samples (qpad->trak, nsamples, scaled_duration / nsamples,
+        sample_size / nsamples, chunk_offset, sync, pts_offset);
+
+    qpad->total_duration = next_timestamp;
+    qtmux->mdat_size += sample_size;
+    qpad->sample_offset += nsamples;
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_qt_mux_start_file (GstQTMux * qtmux)
 {
@@ -2123,6 +2582,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   gchar s_id[32];
   GstClockTime reserved_max_duration;
   guint reserved_bytes_per_sec_per_trak;
+  GSList *walk;
 
   GST_DEBUG_OBJECT (qtmux, "starting file");
 
@@ -2159,7 +2619,10 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   } else if (qtmux->fast_start) {
     qtmux->mux_mode = GST_QT_MUX_MODE_FAST_START;
   } else if (reserved_max_duration != GST_CLOCK_TIME_NONE) {
-    qtmux->mux_mode = GST_QT_MUX_MODE_ROBUST_RECORDING;
+    if (qtmux->reserved_prefill)
+      qtmux->mux_mode = GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL;
+    else
+      qtmux->mux_mode = GST_QT_MUX_MODE_ROBUST_RECORDING;
   }
 
   switch (qtmux->mux_mode) {
@@ -2186,6 +2649,14 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
             "instead");
         qtmux->streamable = TRUE;
         g_object_notify (G_OBJECT (qtmux), "streamable");
+      }
+      break;
+    case GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL:
+      if (!gst_qt_mux_downstream_is_seekable (qtmux)) {
+        GST_WARNING_OBJECT (qtmux,
+            "downstream is not seekable, will not be able "
+            "to trim samples table at the end if less than reserved-duration is "
+            "recorded");
       }
       break;
   }
@@ -2261,7 +2732,6 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
           FALSE);
       break;
     case GST_QT_MUX_MODE_ROBUST_RECORDING:
-
       ret = gst_qt_mux_prepare_and_send_ftyp (qtmux);
       if (ret != GST_FLOW_OK)
         break;
@@ -2354,6 +2824,97 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       ret =
           gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE,
           FALSE);
+      break;
+    case GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL:
+      ret = gst_qt_mux_prepare_and_send_ftyp (qtmux);
+      if (ret != GST_FLOW_OK)
+        break;
+
+      /* Store this as the moov offset for later updating.
+       * We record mdat position below */
+      qtmux->moov_pos = qtmux->header_size;
+
+      if (!gst_qt_mux_prefill_samples (qtmux)) {
+        GST_ELEMENT_ERROR (qtmux, STREAM, MUX,
+            ("Unsupported codecs or configuration for prefill mode"), (NULL));
+
+        return GST_FLOW_ERROR;
+      }
+
+      gst_qt_mux_update_global_statistics (qtmux);
+      gst_qt_mux_configure_moov (qtmux);
+      gst_qt_mux_update_edit_lists (qtmux);
+      gst_qt_mux_setup_metadata (qtmux);
+
+      /* Moov header with pre-filled samples */
+      ret = gst_qt_mux_send_moov (qtmux, &qtmux->header_size, 0, FALSE, FALSE);
+      if (ret != GST_FLOW_OK)
+        return ret;
+
+      /* last_moov_size now contains the full size of the moov, moov_pos the
+       * position. This allows us to rewrite it in the very end as needed */
+      qtmux->reserved_moov_size =
+          qtmux->last_moov_size + 12 * g_slist_length (qtmux->sinkpads) + 8;
+
+      /* Send an additional free atom at the end so we definitely have space
+       * to rewrite the moov header at the end and remove the samples that
+       * were not actually written */
+      ret =
+          gst_qt_mux_send_free_atom (qtmux, &qtmux->header_size,
+          12 * g_slist_length (qtmux->sinkpads) + 8, FALSE);
+      if (ret != GST_FLOW_OK)
+        return ret;
+
+      /* extra atoms go after the free/moov(s), before the mdat */
+      ret =
+          gst_qt_mux_send_extra_atoms (qtmux, TRUE, &qtmux->header_size, FALSE);
+      if (ret != GST_FLOW_OK)
+        return ret;
+
+      qtmux->mdat_pos = qtmux->header_size;
+
+      /* And now send the mdat header */
+      ret =
+          gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size,
+          qtmux->mdat_size, TRUE, FALSE);
+
+      /* chunks position is set relative to the first byte of the
+       * MDAT atom payload. Set the overall offset into the file */
+      atom_moov_chunks_set_offset (qtmux->moov, qtmux->header_size);
+
+      {
+        GstSegment segment;
+
+        gst_segment_init (&segment, GST_FORMAT_BYTES);
+        segment.start = qtmux->moov_pos;
+        gst_pad_push_event (qtmux->srcpad, gst_event_new_segment (&segment));
+
+        ret = gst_qt_mux_send_moov (qtmux, NULL, 0, FALSE, FALSE);
+        if (ret != GST_FLOW_OK)
+          return ret;
+
+        segment.start = qtmux->header_size;
+        gst_pad_push_event (qtmux->srcpad, gst_event_new_segment (&segment));
+      }
+
+      qtmux->current_chunk_size = 0;
+      qtmux->current_chunk_duration = 0;
+      qtmux->current_chunk_offset = -1;
+      qtmux->mdat_size = 0;
+      qtmux->current_pad = NULL;
+      qtmux->longest_chunk = GST_CLOCK_TIME_NONE;
+
+      for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+        GstCollectData *cdata = (GstCollectData *) walk->data;
+        GstQTPad *qtpad = (GstQTPad *) cdata;
+
+        qtpad->total_bytes = 0;
+        qtpad->total_duration = 0;
+        qtpad->first_dts = qtpad->first_ts = GST_CLOCK_TIME_NONE;
+        qtpad->last_dts = GST_CLOCK_TIME_NONE;
+        qtpad->sample_offset = 0;
+      }
+
       break;
     case GST_QT_MUX_MODE_FAST_START:
       GST_OBJECT_LOCK (qtmux);
@@ -2703,6 +3264,161 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
        * No need to seek back after this, we won't write any more */
       return gst_qt_mux_update_mdat_size (qtmux, qtmux->mdat_pos,
           qtmux->mdat_size, NULL, TRUE);
+    }
+    case GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL:{
+      GSList *walk;
+      guint32 next_track_id = qtmux->moov->mvhd.next_track_id;
+
+      for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+        GstCollectData *cdata = (GstCollectData *) walk->data;
+        GstQTPad *qpad = (GstQTPad *) cdata;
+        const TrakBufferEntryInfo *sample_entry;
+        guint64 block_idx;
+        AtomSTBL *stbl = &qpad->trak->mdia.minf.stbl;
+
+        /* Get the block index of the last sample we wrote, not of the next
+         * sample we would write */
+        block_idx = prefill_get_block_index (qtmux, qpad);
+        g_assert (block_idx > 0);
+        block_idx--;
+
+        sample_entry =
+            &g_array_index (qpad->samples, TrakBufferEntryInfo, block_idx);
+
+        /* stts */
+        {
+          STTSEntry *entry;
+          guint64 nsamples = 0;
+          gint i, n;
+
+          n = atom_array_get_len (&stbl->stts.entries);
+          for (i = 0; i < n; i++) {
+            entry = &atom_array_index (&stbl->stts.entries, i);
+            if (nsamples + entry->sample_count >= qpad->sample_offset) {
+              entry->sample_count = qpad->sample_offset - nsamples;
+              stbl->stts.entries.len = i + 1;
+              break;
+            }
+            nsamples += entry->sample_count;
+          }
+          g_assert (i < n);
+        }
+
+        /* stsz */
+        {
+          g_assert (stbl->stsz.entries.len == 0);
+          stbl->stsz.table_size = qpad->sample_offset;
+        }
+
+        /* stco/stsc */
+        {
+          gint i, n;
+          guint64 nsamples = 0;
+          gint chunk_index = 0;
+
+          n = stbl->stco64.entries.len;
+          for (i = 0; i < n; i++) {
+            guint64 *entry = &atom_array_index (&stbl->stco64.entries, i);
+
+            if (*entry == sample_entry->chunk_offset) {
+              stbl->stco64.entries.len = i + 1;
+              chunk_index = i + 1;
+              break;
+            }
+          }
+          g_assert (i < n);
+          g_assert (chunk_index > 0);
+
+          n = stbl->stsc.entries.len;
+          for (i = 0; i < n; i++) {
+            STSCEntry *entry = &atom_array_index (&stbl->stsc.entries, i);
+
+            if (entry->first_chunk >= chunk_index)
+              break;
+
+            if (i > 0) {
+              nsamples +=
+                  (entry->first_chunk - atom_array_index (&stbl->stsc.entries,
+                      i -
+                      1).first_chunk) * atom_array_index (&stbl->stsc.entries,
+                  i - 1).samples_per_chunk;
+            }
+          }
+          g_assert (i > 0 && i <= n);
+
+          {
+            STSCEntry *prev_entry =
+                &atom_array_index (&stbl->stsc.entries, i - 1);
+            nsamples +=
+                (chunk_index -
+                prev_entry->first_chunk) * prev_entry->samples_per_chunk;
+            if (qpad->sample_offset - nsamples > 0) {
+              stbl->stsc.entries.len = i;
+              atom_stsc_add_new_entry (&stbl->stsc, chunk_index,
+                  qpad->sample_offset - nsamples);
+            } else {
+              stbl->stsc.entries.len = i;
+              stbl->stco64.entries.len--;
+            }
+          }
+        }
+
+        {
+          GList *walk2;
+
+          for (walk2 = qtmux->moov->mvex.trexs; walk2; walk2 = walk2->next) {
+            AtomTREX *trex = walk2->data;
+
+            if (trex->track_ID == qpad->trak->tkhd.track_ID) {
+              trex->track_ID = next_track_id;
+              break;
+            }
+          }
+
+          qpad->trak->tkhd.track_ID = next_track_id++;
+        }
+      }
+      qtmux->moov->mvhd.next_track_id = next_track_id;
+
+      gst_qt_mux_update_global_statistics (qtmux);
+      gst_qt_mux_configure_moov (qtmux);
+
+      gst_qt_mux_update_edit_lists (qtmux);
+
+      gst_qt_mux_setup_metadata (qtmux);
+      atom_moov_chunks_set_offset (qtmux->moov, qtmux->header_size);
+
+      {
+        GstSegment segment;
+        guint old_header_size = qtmux->last_moov_size;
+
+        gst_segment_init (&segment, GST_FORMAT_BYTES);
+        segment.start = qtmux->moov_pos;
+        gst_pad_push_event (qtmux->srcpad, gst_event_new_segment (&segment));
+
+        ret =
+            gst_qt_mux_send_moov (qtmux, NULL, qtmux->reserved_moov_size, FALSE,
+            FALSE);
+        if (ret != GST_FLOW_OK)
+          return ret;
+
+        if (old_header_size < qtmux->last_moov_size) {
+          GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+              ("Not enough free reserved space"));
+          ret = GST_FLOW_ERROR;
+        } else if (old_header_size > qtmux->last_moov_size) {
+          ret =
+              gst_qt_mux_send_free_atom (qtmux, NULL,
+              old_header_size - qtmux->last_moov_size, TRUE);
+        }
+
+        if (ret != GST_FLOW_OK)
+          return ret;
+      }
+
+      ret = gst_qt_mux_update_mdat_size (qtmux, qtmux->mdat_pos,
+          qtmux->mdat_size, NULL, FALSE);
+      return ret;
     }
     default:
       break;
@@ -3093,6 +3809,41 @@ gst_qt_mux_register_and_push_sample (GstQTMux * qtmux, GstQTPad * pad,
   }
 
   switch (qtmux->mux_mode) {
+    case GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL:{
+      const TrakBufferEntryInfo *sample_entry;
+      guint64 block_idx = prefill_get_block_index (qtmux, pad);
+
+      if (block_idx >= pad->samples->len) {
+        GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+            ("Unexpected sample %" G_GUINT64_FORMAT ", expected up to %u",
+                block_idx, pad->samples->len));
+        gst_buffer_unref (buffer);
+        return GST_FLOW_ERROR;
+      }
+
+      /* Check if all values are as expected */
+      sample_entry =
+          &g_array_index (pad->samples, TrakBufferEntryInfo, block_idx);
+
+      /* Allow +/- 1 difference for the scaled_duration to allow
+       * for some rounding errors
+       */
+      if (sample_entry->nsamples != nsamples
+          || ABSDIFF (sample_entry->delta, scaled_duration) > 1
+          || sample_entry->size != sample_size
+          || sample_entry->chunk_offset != chunk_offset
+          || sample_entry->pts_offset != pts_offset
+          || sample_entry->sync != sync) {
+        GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+            ("Unexpected values in sample %" G_GUINT64_FORMAT,
+                pad->sample_offset + 1));
+        gst_buffer_unref (buffer);
+        return GST_FLOW_ERROR;
+      }
+
+      ret = gst_qt_mux_send_buffer (qtmux, buffer, &qtmux->mdat_size, TRUE);
+      break;
+    }
     case GST_QT_MUX_MODE_MOOV_AT_END:
     case GST_QT_MUX_MODE_FAST_START:
     case GST_QT_MUX_MODE_ROBUST_RECORDING:
@@ -3143,7 +3894,6 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
     g_free (tc_str);
 #endif
     g_assert (pad->tc_trak == NULL);
-    tc_buf = gst_buffer_new_allocate (NULL, 4, NULL);
     pad->first_tc = gst_video_time_code_copy (tc);
     /* If frames are out of order, the frame we're currently getting might
      * not be the first one. Just write a 0 timecode for now and wait
@@ -3167,6 +3917,7 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
 
     atom_trak_set_timecode_type (pad->tc_trak, qtmux->context, pad->first_tc);
 
+    tc_buf = gst_buffer_new_allocate (NULL, 4, NULL);
     szret = gst_buffer_fill (tc_buf, 0, &frames_since_daily_jam, 4);
     g_assert (szret == 4);
 
@@ -3176,6 +3927,21 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
     /* Need to reset the current chunk (of the previous pad) here because
      * some other data was written now above, and the pad has to start a
      * new chunk now */
+    qtmux->current_chunk_offset = -1;
+    qtmux->current_chunk_size = 0;
+    qtmux->current_chunk_duration = 0;
+  } else if (qtmux->mux_mode == GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL) {
+    frames_since_daily_jam =
+        gst_video_time_code_frames_since_daily_jam (pad->first_tc);
+    frames_since_daily_jam = GUINT32_TO_BE (frames_since_daily_jam);
+
+    tc_buf = gst_buffer_new_allocate (NULL, 4, NULL);
+    szret = gst_buffer_fill (tc_buf, 0, &frames_since_daily_jam, 4);
+    g_assert (szret == 4);
+
+    ret = gst_qt_mux_send_buffer (qtmux, tc_buf, &qtmux->mdat_size, TRUE);
+    pad->tc_pos = -1;
+
     qtmux->current_chunk_offset = -1;
     qtmux->current_chunk_size = 0;
     qtmux->current_chunk_duration = 0;
@@ -3219,13 +3985,19 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   gint64 pts_offset = 0;
   gboolean sync = FALSE;
   GstFlowReturn ret = GST_FLOW_OK;
+  guint buffer_size;
 
   if (!pad->fourcc)
     goto not_negotiated;
 
   /* if this pad has a prepare function, call it */
   if (pad->prepare_buf_func != NULL) {
-    buf = pad->prepare_buf_func (pad, buf, qtmux);
+    GstBuffer *new_buf;
+
+    new_buf = pad->prepare_buf_func (pad, buf, qtmux);
+    if (buf && !new_buf)
+      return GST_FLOW_OK;
+    buf = new_buf;
   }
 
   ret = gst_qt_mux_check_and_update_timecode (qtmux, pad, buf, ret);
@@ -3250,7 +4022,6 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
           GST_PAD_NAME (pad->collect.pad));
     }
 #endif
-    qtmux->current_pad = pad;
     goto exit;
   }
 
@@ -3291,6 +4062,30 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
         GST_TIME_ARGS (GST_BUFFER_DTS (last_buf)));
     pad->last_buf = buf = gst_buffer_make_writable (buf);
     GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (last_buf);
+  }
+
+  buffer_size = gst_buffer_get_size (last_buf);
+
+  if (qtmux->mux_mode == GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL) {
+    guint required_buffer_size = prefill_get_sample_size (qtmux, pad);
+    guint fill_size = required_buffer_size - buffer_size;
+    GstMemory *mem;
+    GstMapInfo map;
+
+    if (required_buffer_size < buffer_size) {
+      GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+          ("Sample size %u bigger than expected maximum %u", buffer_size,
+              required_buffer_size));
+      goto bail;
+    }
+
+    mem = gst_allocator_alloc (NULL, fill_size, NULL);
+    gst_memory_map (mem, &map, GST_MAP_WRITE);
+    memset (map.data, 0, map.size);
+    gst_memory_unmap (mem, &map);
+    last_buf = gst_buffer_make_writable (last_buf);
+    gst_buffer_append_memory (last_buf, mem);
+    buffer_size = required_buffer_size;
   }
 
   /* duration actually means time delta between samples, so we calculate
@@ -3337,7 +4132,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
        buffer (= chunk)), but can also be fixed-packet-size codecs like ADPCM
      */
     sample_size = pad->sample_size;
-    if (gst_buffer_get_size (last_buf) % sample_size != 0)
+    if (buffer_size % sample_size != 0)
       goto fragmented_sample;
 
     /* note: qt raw audio storage warps it implicitly into a timewise
@@ -3357,7 +4152,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
           atom_trak_get_timescale (pad->trak), GST_SECOND);
       duration = GST_BUFFER_DURATION (last_buf);
     } else {
-      nsamples = gst_buffer_get_size (last_buf) / sample_size;
+      nsamples = buffer_size / sample_size;
       duration =
           gst_util_uint64_scale_round (nsamples, GST_SECOND,
           atom_trak_get_timescale (pad->trak));
@@ -3370,7 +4165,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
         nsamples, GST_SECOND, atom_trak_get_timescale (pad->trak));
   } else {
     nsamples = 1;
-    sample_size = gst_buffer_get_size (last_buf);
+    sample_size = buffer_size;
     if ((buf && GST_BUFFER_DTS_IS_VALID (buf))
         || GST_BUFFER_DTS_IS_VALID (last_buf)) {
       gint64 scaled_dts;
@@ -3399,12 +4194,10 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     }
   }
 
-  pad->sample_offset += nsamples;
-
   /* for computing the avg bitrate */
-  pad->total_bytes += gst_buffer_get_size (last_buf);
+  pad->total_bytes += buffer_size;
   pad->total_duration += duration;
-  qtmux->current_chunk_size += gst_buffer_get_size (last_buf);
+  qtmux->current_chunk_size += buffer_size;
   qtmux->current_chunk_duration += duration;
 
   chunk_offset = qtmux->current_chunk_offset;
@@ -3452,10 +4245,45 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     qtmux->longest_chunk = qtmux->current_chunk_duration;
   }
 
+  if (qtmux->mux_mode == GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL) {
+    const TrakBufferEntryInfo *sample_entry;
+    guint64 block_idx = prefill_get_block_index (qtmux, pad);
+
+    if (block_idx >= pad->samples->len) {
+      GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+          ("Unexpected sample %" G_GUINT64_FORMAT ", expected up to %u",
+              block_idx, pad->samples->len));
+      goto bail;
+    }
+
+    /* Check if all values are as expected */
+    sample_entry =
+        &g_array_index (pad->samples, TrakBufferEntryInfo, block_idx);
+
+    if (chunk_offset < sample_entry->chunk_offset) {
+      guint fill_size = sample_entry->chunk_offset - chunk_offset;
+      GstBuffer *fill_buf;
+
+      fill_buf = gst_buffer_new_allocate (NULL, fill_size, NULL);
+      gst_buffer_memset (fill_buf, 0, 0, fill_size);
+
+      ret = gst_qt_mux_send_buffer (qtmux, fill_buf, &qtmux->mdat_size, TRUE);
+      qtmux->current_chunk_offset = chunk_offset = sample_entry->chunk_offset;
+      qtmux->current_chunk_size = buffer_size;
+      qtmux->current_chunk_duration = duration;
+    } else if (chunk_offset != sample_entry->chunk_offset) {
+      GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+          ("Unexpected chunk offset %" G_GUINT64_FORMAT ", expected up to %"
+              G_GUINT64_FORMAT, chunk_offset, sample_entry->chunk_offset));
+      goto bail;
+    }
+  }
+
   /* now we go and register this buffer/sample all over */
   ret = gst_qt_mux_register_and_push_sample (qtmux, pad, last_buf,
       buf == NULL, nsamples, last_dts, scaled_duration, sample_size,
       chunk_offset, sync, TRUE, pts_offset);
+  pad->sample_offset += nsamples;
 
   /* if this is sparse and we have a next buffer, check if there is any gap
    * between them to insert an empty sample */
@@ -3588,9 +4416,64 @@ find_best_pad (GstQTMux * qtmux, GstCollectPads * pads)
   GSList *walk;
   GstQTPad *best_pad = NULL;
 
-  if (qtmux->current_pad &&
-      (qtmux->interleave_bytes != 0 || qtmux->interleave_time != 0) &&
-      (qtmux->interleave_bytes == 0
+  if (qtmux->mux_mode == GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL) {
+    guint64 smallest_offset = G_MAXUINT64;
+    guint64 chunk_offset = 0;
+
+    for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+      GstCollectData *cdata = (GstCollectData *) walk->data;
+      GstQTPad *qtpad = (GstQTPad *) cdata;
+      const TrakBufferEntryInfo *sample_entry;
+      guint64 block_idx, current_block_idx;
+      guint64 chunk_offset_offset = 0;
+      GstBuffer *tmp_buf =
+          gst_collect_pads_peek (pads, (GstCollectData *) qtpad);
+
+      /* Check for EOS pads and just skip them */
+      if (!tmp_buf && !qtpad->last_buf && (!qtpad->raw_audio_adapter
+              || gst_adapter_available (qtpad->raw_audio_adapter) == 0))
+        continue;
+      if (tmp_buf)
+        gst_buffer_unref (tmp_buf);
+
+      /* Find the exact offset where the next sample of this track is supposed
+       * to be written at */
+      block_idx = current_block_idx = prefill_get_block_index (qtmux, qtpad);
+      sample_entry =
+          &g_array_index (qtpad->samples, TrakBufferEntryInfo, block_idx);
+      while (block_idx > 0) {
+        const TrakBufferEntryInfo *tmp =
+            &g_array_index (qtpad->samples, TrakBufferEntryInfo, block_idx - 1);
+
+        if (tmp->chunk_offset != sample_entry->chunk_offset)
+          break;
+        chunk_offset_offset += tmp->size * tmp->nsamples;
+        block_idx--;
+      }
+
+      /* Except for the previously selected pad being EOS we always have
+       *  qtmux->current_chunk_offset + qtmux->current_chunk_size
+       *    ==
+       *  sample_entry->chunk_offset + chunk_offset_offset
+       * for the best pad. Instead of checking that, we just return the
+       * pad that has the smallest offset for the next to-be-written sample.
+       */
+      if (sample_entry->chunk_offset + chunk_offset_offset < smallest_offset) {
+        smallest_offset = sample_entry->chunk_offset + chunk_offset_offset;
+        best_pad = qtpad;
+        chunk_offset = sample_entry->chunk_offset;
+      }
+    }
+
+    if (chunk_offset != qtmux->current_chunk_offset) {
+      qtmux->current_pad = NULL;
+    }
+
+    return best_pad;
+  }
+
+  if (qtmux->current_pad && (qtmux->interleave_bytes != 0
+          || qtmux->interleave_time != 0) && (qtmux->interleave_bytes == 0
           || qtmux->current_chunk_size <= qtmux->interleave_bytes)
       && (qtmux->interleave_time == 0
           || qtmux->current_chunk_duration <= qtmux->interleave_time)
@@ -3683,9 +4566,16 @@ gst_qt_mux_collected (GstCollectPads * pads, gpointer user_data)
 
   /* clipping already converted to running time */
   if (best_pad != NULL) {
-    GstBuffer *buf = gst_collect_pads_pop (pads, (GstCollectData *) best_pad);
+    GstBuffer *buf = NULL;
 
-    g_assert (buf || best_pad->last_buf);
+    if (qtmux->mux_mode != GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL ||
+        best_pad->raw_audio_adapter == NULL ||
+        best_pad->raw_audio_adapter_pts == GST_CLOCK_TIME_NONE)
+      buf = gst_collect_pads_pop (pads, (GstCollectData *) best_pad);
+
+    g_assert (buf || best_pad->last_buf || (best_pad->raw_audio_adapter
+            && gst_adapter_available (best_pad->raw_audio_adapter) > 0));
+
     if (buf)
       gst_qt_pad_adjust_buffer_dts (qtmux, best_pad,
           (GstCollectData *) best_pad, &buf);
@@ -4165,6 +5055,8 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
 
   /* bring frame numerator into a range that ensures both reasonable resolution
    * as well as a fair duration */
+  qtpad->expected_sample_duration_n = framerate_num;
+  qtpad->expected_sample_duration_d = framerate_den;
   rate = qtmux->trak_timescale ?
       qtmux->trak_timescale : atom_framerate_to_timescale (framerate_num,
       framerate_den);
@@ -4959,6 +5851,9 @@ gst_qt_mux_get_property (GObject * object,
     case PROP_RESERVED_BYTES_PER_SEC:
       g_value_set_uint (value, qtmux->reserved_bytes_per_sec_per_trak);
       break;
+    case PROP_RESERVED_PREFILL:
+      g_value_set_boolean (value, qtmux->reserved_prefill);
+      break;
     case PROP_INTERLEAVE_BYTES:
       g_value_set_uint64 (value, qtmux->interleave_bytes);
       break;
@@ -5044,6 +5939,9 @@ gst_qt_mux_set_property (GObject * object,
       break;
     case PROP_RESERVED_BYTES_PER_SEC:
       qtmux->reserved_bytes_per_sec_per_trak = g_value_get_uint (value);
+      break;
+    case PROP_RESERVED_PREFILL:
+      qtmux->reserved_prefill = g_value_get_boolean (value);
       break;
     case PROP_INTERLEAVE_BYTES:
       qtmux->interleave_bytes = g_value_get_uint64 (value);

@@ -923,10 +923,13 @@ void       atom_trak_set_elst_entry    (AtomTRAK * trak, gint index, guint32 dur
 void       atom_trak_edts_clear        (AtomTRAK * trak);
 guint32    atom_trak_get_timescale     (AtomTRAK *trak);
 guint32    atom_trak_get_id            (AtomTRAK * trak);
+void       atom_trak_set_constant_size_samples (AtomTRAK * trak, guint32 sample_size);
 void       atom_stbl_add_samples       (AtomSTBL * stbl, guint32 nsamples,
                                         guint32 delta, guint32 size,
                                         guint64 chunk_offset, gboolean sync,
                                         gint64 pts_offset);
+void       atom_stsc_add_new_entry     (AtomSTSC * stsc,
+                                        guint32 first_chunk, guint32 nsamples);
 
 AtomMOOV*  atom_moov_new               (AtomsContext *context);
 void       atom_moov_free              (AtomMOOV *moov);
