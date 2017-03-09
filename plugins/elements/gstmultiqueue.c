@@ -203,6 +203,8 @@ static void recheck_buffering_status (GstMultiQueue * mq);
 
 static void gst_single_queue_flush_queue (GstSingleQueue * sq, gboolean full);
 
+static void calculate_interleave (GstMultiQueue * mq);
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
@@ -249,6 +251,8 @@ enum
 #define DEFAULT_USE_INTERLEAVE FALSE
 #define DEFAULT_UNLINKED_CACHE_TIME 250 * GST_MSECOND
 
+#define DEFAULT_MINIMUM_INTERLEAVE (250 * GST_MSECOND)
+
 enum
 {
   PROP_0,
@@ -266,6 +270,7 @@ enum
   PROP_SYNC_BY_RUNNING_TIME,
   PROP_USE_INTERLEAVE,
   PROP_UNLINKED_CACHE_TIME,
+  PROP_MINIMUM_INTERLEAVE,
   PROP_LAST
 };
 
@@ -611,6 +616,12 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MINIMUM_INTERLEAVE,
+      g_param_spec_uint64 ("min-interleave-time", "Minimum interleave time",
+          "Minimum extra buffering for deinterleaving (size of the queues) when use-interleave=true",
+          0, G_MAXUINT64, DEFAULT_MINIMUM_INTERLEAVE,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_multi_queue_finalize;
 
@@ -648,6 +659,7 @@ gst_multi_queue_init (GstMultiQueue * mqueue)
 
   mqueue->sync_by_running_time = DEFAULT_SYNC_BY_RUNNING_TIME;
   mqueue->use_interleave = DEFAULT_USE_INTERLEAVE;
+  mqueue->min_interleave_time = DEFAULT_MINIMUM_INTERLEAVE;
   mqueue->unlinked_cache_time = DEFAULT_UNLINKED_CACHE_TIME;
 
   mqueue->counter = 1;
@@ -790,6 +802,13 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       gst_multi_queue_post_buffering (mq);
       break;
+    case PROP_MINIMUM_INTERLEAVE:
+      GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+      mq->min_interleave_time = g_value_get_uint64 (value);
+      if (mq->use_interleave)
+        calculate_interleave (mq);
+      GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -848,6 +867,9 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
       break;
     case PROP_UNLINKED_CACHE_TIME:
       g_value_set_uint64 (value, mq->unlinked_cache_time);
+      break;
+    case PROP_MINIMUM_INTERLEAVE:
+      g_value_set_uint64 (value, mq->min_interleave_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1278,8 +1300,7 @@ calculate_interleave (GstMultiQueue * mq)
   if (GST_CLOCK_STIME_IS_VALID (low) && GST_CLOCK_STIME_IS_VALID (high)) {
     interleave = high - low;
     /* Padding of interleave and minimum value */
-    /* FIXME : Make the minimum time interleave a property */
-    interleave = (150 * interleave / 100) + 250 * GST_MSECOND;
+    interleave = (150 * interleave / 100) + mq->min_interleave_time;
 
     /* Update the stored interleave if:
      * * No data has arrived yet (high == low)

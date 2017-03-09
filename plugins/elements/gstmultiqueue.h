@@ -55,6 +55,7 @@ struct _GstMultiQueue {
 
   gboolean sync_by_running_time;
   gboolean use_interleave;
+  GstClockTime min_interleave_time;
 
   /* number of queues */
   guint	nbqueues;
