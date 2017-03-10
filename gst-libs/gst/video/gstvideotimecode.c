@@ -219,6 +219,7 @@ gst_video_time_code_init_from_date_time (GstVideoTimeCode * tc,
 {
   GDateTime *jam;
   guint64 frames;
+  gboolean add_a_frame = FALSE;
 
   jam = g_date_time_new_local (g_date_time_get_year (dt),
       g_date_time_get_month (dt), g_date_time_get_day_of_month (dt), 0, 0, 0.0);
@@ -228,6 +229,11 @@ gst_video_time_code_init_from_date_time (GstVideoTimeCode * tc,
   frames =
       gst_util_uint64_scale_round (g_date_time_get_microsecond (dt) *
       G_GINT64_CONSTANT (1000), fps_n, fps_d * GST_SECOND);
+  if (G_UNLIKELY (frames == fps_n)) {
+    /* Avoid invalid timecodes */
+    frames--;
+    add_a_frame = TRUE;
+  }
 
   gst_video_time_code_init (tc, fps_n, fps_d, jam, flags,
       g_date_time_get_hour (dt), g_date_time_get_minute (dt),
@@ -240,6 +246,8 @@ gst_video_time_code_init_from_date_time (GstVideoTimeCode * tc,
       tc->frames = df;
     }
   }
+  if (add_a_frame)
+    gst_video_time_code_increment_frame (tc);
 
   g_date_time_unref (jam);
 
