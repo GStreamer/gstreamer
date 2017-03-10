@@ -175,7 +175,7 @@ if build_gir
       '-I' + meson.current_build_dir() + '/..',
       '--cflags-end']
     endif
-    ges_gir = gnome.generate_gir(libges,
+    ges_gen_sources += [gnome.generate_gir(libges,
         sources : ges_sources + ges_headers,
         namespace : 'GES',
         nsversion : apiversion,
@@ -186,9 +186,7 @@ if build_gir
         install : true,
         dependencies : libges_deps,
         extra_args : ges_gir_extra_args
-    )
-
-    ges_gen_sources += [ges_gir]
+    )]
 endif
 
 ges_dep = declare_dependency(link_with : libges,

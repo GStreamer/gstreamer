@@ -36,7 +36,7 @@ editing-related applications.
 ### Timeline and TimelinePipeline
 
 The most top-level object encapsulating every other object is the
-[GESTimeline](GESTimeline). It is the central object for any editing project.
+#GESTimeline. It is the central object for any editing project.
 
 The `GESTimeline` is a `GstElement`. It can therefore be used in any
 GStreamer pipeline like any other object.
@@ -61,4 +61,4 @@ The GESTimeline can contain two types of objects (seen in
 
 In order to reduce even more the amount of GStreamer interaction the
 application developer has to deal with, a convenience GstPipeline has
-been made available specifically for Timelines : [GESPipeline](GESPipeline).
+been made available specifically for Timelines : #GESPipeline.
