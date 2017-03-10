@@ -1741,9 +1741,12 @@ gst_harness_dump_to_file (GstHarness * h, const gchar * filename)
 
   while ((buf = g_async_queue_try_pop (priv->buffer_queue))) {
     GstMapInfo info;
-    gst_buffer_map (buf, &info, GST_MAP_READ);
-    fwrite (info.data, 1, info.size, fd);
-    gst_buffer_unmap (buf, &info);
+    if (gst_buffer_map (buf, &info, GST_MAP_READ)) {
+      fwrite (info.data, 1, info.size, fd);
+      gst_buffer_unmap (buf, &info);
+    } else {
+      GST_ERROR ("failed to map buffer %p", buf);
+    }
     gst_buffer_unref (buf);
   }
 
