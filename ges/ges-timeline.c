@@ -3648,7 +3648,7 @@ ges_timeline_get_element (GESTimeline * timeline, const gchar * name)
  * ges_timeline_is_empty:
  * @timeline: a #GESTimeline
  *
- * Check whether a #GESTimelineElement is empty or not
+ * Check whether a #GESTimeline is empty or not
  *
  * Returns: %TRUE if the timeline is empty %FALSE otherwize
  */
