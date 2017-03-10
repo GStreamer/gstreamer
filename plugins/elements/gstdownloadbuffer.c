@@ -1250,6 +1250,7 @@ out_seeking:
   }
 write_error:
   {
+    GST_DOWNLOAD_BUFFER_MUTEX_UNLOCK (dlbuf);
     gst_buffer_unmap (buffer, &info);
     gst_buffer_unref (buffer);
     GST_ELEMENT_ERROR (dlbuf, RESOURCE, WRITE,
