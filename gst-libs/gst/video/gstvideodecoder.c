@@ -3309,7 +3309,7 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
   guint flags;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  GST_LOG_OBJECT (decoder, "have_frame at offset %" G_GSIZE_FORMAT,
+  GST_LOG_OBJECT (decoder, "have_frame at offset %" G_GUINT64_FORMAT,
       priv->frame_offset);
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
