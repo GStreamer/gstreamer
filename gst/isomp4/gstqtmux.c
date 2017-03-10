@@ -4344,12 +4344,12 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   } else if (strcmp (mimetype, "video/x-dirac") == 0) {
     entry.fourcc = FOURCC_drac;
   } else if (strcmp (mimetype, "video/x-qt-part") == 0) {
-    guint32 fourcc;
+    guint32 fourcc = 0;
 
     gst_structure_get_uint (structure, "format", &fourcc);
     entry.fourcc = fourcc;
   } else if (strcmp (mimetype, "video/x-mp4-part") == 0) {
-    guint32 fourcc;
+    guint32 fourcc = 0;
 
     gst_structure_get_uint (structure, "format", &fourcc);
     entry.fourcc = fourcc;
