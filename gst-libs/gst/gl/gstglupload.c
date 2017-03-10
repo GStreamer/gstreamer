@@ -178,6 +178,7 @@ _caps_intersect_texture_target (GstCaps * caps, GstGLTextureTarget target_mask)
 
   ret = gst_caps_intersect_full (caps, target, GST_CAPS_INTERSECT_FIRST);
 
+  g_value_unset (&targets);
   gst_caps_unref (target);
   return ret;
 }
