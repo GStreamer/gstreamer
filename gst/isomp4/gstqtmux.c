@@ -2094,6 +2094,8 @@ gst_qt_mux_prepare_moov_recovery (GstQTMux * qtmux)
     }
   }
 
+  return;
+
 fail:
   /* cleanup */
   fclose (qtmux->moov_recov_file);
