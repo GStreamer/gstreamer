@@ -39,7 +39,8 @@ include $(top_srcdir)/common/coverage/lcov.mak
 CRUFT_FILES = \
 	$(top_builddir)/gst-plugins-ugly.spec \
 	$(top_builddir)/common/shave \
-	$(top_builddir)/common/shave-libtool
+	$(top_builddir)/common/shave-libtool \
+	$(top_builddir)/gst/realmedia/.libs/libgstrmdemux.so
 
 CRUFT_DIRS = \
 	$(top_srcdir)/docs/plugins/tmpl \
