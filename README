@@ -135,7 +135,4 @@ Reporting Bugs
 --------------
 
   Bugs can be reported in the GNOME Bugzilla system at:
-  <https://bugzilla.gnome.org/enter_bug.cgi?product=gstreamer-vaapi>
-
-  From the main page, new bugs can be reported through New -> Other ->
-  gstreamer-vaapi product.
+  <https://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=gstreamer-vaapi>
