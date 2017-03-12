@@ -673,6 +673,11 @@ moov_recov_parse_trak (MoovRecovFile * moovrf, TrakRecovData * trakrd)
   if (!moov_recov_parse_mdia (moovrf, trakrd))
     return FALSE;
 
+  fseek (moovrf->file, (long int) trakrd->mdia_file_offset + trakrd->mdia_size,
+      SEEK_SET);
+  trakrd->extra_atoms_offset = ftell (moovrf->file);
+  trakrd->extra_atoms_size = size - (trakrd->extra_atoms_offset - offset);
+
   trakrd->file_offset = offset;
   /* position after the trak */
   return fseek (moovrf->file, (long int) offset + size, SEEK_SET) == 0;
@@ -921,6 +926,31 @@ fail:
   return NULL;
 }
 
+static gboolean
+copy_data_from_file_to_file (FILE * from, guint position, guint size, FILE * to,
+    GError ** err)
+{
+  guint8 *data = NULL;
+
+  if (fseek (from, position, SEEK_SET) != 0)
+    goto fail;
+  data = g_malloc (size);
+  if (fread (data, 1, size, from) != size) {
+    goto fail;
+  }
+  if (fwrite (data, 1, size, to) != size) {
+    ATOMS_RECOV_OUTPUT_WRITE_ERROR (err);
+    goto fail;
+  }
+
+  g_free (data);
+  return TRUE;
+
+fail:
+  g_free (data);
+  return FALSE;
+}
+
 gboolean
 moov_recov_write_file (MoovRecovFile * moovrf, MdatRecovFile * mdatrf,
     FILE * outf, GError ** err)
@@ -1088,10 +1118,16 @@ moov_recov_write_file (MoovRecovFile * moovrf, MdatRecovFile * mdatrf,
       ATOMS_RECOV_OUTPUT_WRITE_ERROR (err);
       goto fail;
     }
+
     g_free (trak_data);
     trak_data = NULL;
     g_free (stbl_children);
     stbl_children = NULL;
+
+    /* Copy the extra atoms after 'minf' */
+    if (!copy_data_from_file_to_file (moovrf->file, trak->extra_atoms_offset,
+            trak->extra_atoms_size, outf, err))
+      goto fail;
   }
 
   /* write the mdat */
