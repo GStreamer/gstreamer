@@ -103,6 +103,9 @@ typedef struct
   guint64 post_stsd_offset;
   guint32 stsd_size;
 
+  guint32 extra_atoms_size;
+  guint32 extra_atoms_offset;
+
   /* for storing the samples info */
   AtomSTBL stbl;
 } TrakRecovData;
