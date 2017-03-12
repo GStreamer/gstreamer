@@ -57,14 +57,17 @@ CRUFT_FILES = \
 	$(top_builddir)/common/shave-libtool \
 	$(top_builddir)/docs/plugins/xml/plugin-sdp.xml \
 	$(top_builddir)/ext/alsaspdif/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/ext/gtk/.libs/libgstgtksink.so \
 	$(top_builddir)/ext/hls/.libs/libgstfragmented* \
 	$(top_builddir)/ext/ivorbis/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/jack/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/ext/teletextdec/.libs/libgstteletextdec.so \
 	$(top_builddir)/gst/opus/.libs/libgstopus.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/mpg123/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/aacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/amrparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/audioparsers/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/camerabin2/.libs/libgstcamerabin2.so \
 	$(top_builddir)/gst/flacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/imagefreeze/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/mpeg4videoparse/.libs/*.{so,dll,DLL,dylib} \

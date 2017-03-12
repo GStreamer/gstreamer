@@ -1,8 +1,8 @@
 <plugin>
   <name>kms</name>
   <description>Video sink using the Linux kernel mode setting API</description>
-  <filename>../../sys/kms/.libs/libgstkmssink.so</filename>
-  <basename>libgstkmssink.so</basename>
+  <filename>../../sys/kms/.libs/libgstkms.so</filename>
+  <basename>libgstkms.so</basename>
   <version>1.11.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>

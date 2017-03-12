@@ -1,8 +1,8 @@
 <plugin>
   <name>teletext</name>
   <description>Teletext plugin</description>
-  <filename>../../ext/teletextdec/.libs/libgstteletextdec.so</filename>
-  <basename>libgstteletextdec.so</basename>
+  <filename>../../ext/teletextdec/.libs/libgstteletext.so</filename>
+  <basename>libgstteletext.so</basename>
   <version>1.11.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
