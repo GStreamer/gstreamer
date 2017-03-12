@@ -22,6 +22,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
+#define _GNU_SOURCE
 #include "gst/vaapi/sysdeps.h"
 #include <gst/video/video.h>
 #if USE_DRM

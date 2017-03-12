@@ -25,6 +25,7 @@
  * @short_description: VA/DRM display abstraction
  */
 
+#define _GNU_SOURCE
 #include "sysdeps.h"
 #include <string.h>
 #include <unistd.h>
