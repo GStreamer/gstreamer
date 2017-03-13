@@ -104,7 +104,7 @@ typedef struct
 {
   /* in */
   GstGLMemoryPBO *src;
-  GstVideoGLTextureType out_format;
+  GstGLFormat out_format;
   guint out_width, out_height;
   guint out_stride;
   gboolean respecify;
@@ -218,8 +218,8 @@ static gboolean
 _read_pixels_to_pbo (GstGLMemoryPBO * gl_mem)
 {
   if (!gl_mem->pbo || !CONTEXT_SUPPORTS_PBO_DOWNLOAD (gl_mem->mem.mem.context)
-      || gl_mem->mem.tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
-      || gl_mem->mem.tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA)
+      || gl_mem->mem.tex_format == GST_GL_LUMINANCE
+      || gl_mem->mem.tex_format == GST_GL_LUMINANCE_ALPHA)
     /* unsupported */
     return FALSE;
 
@@ -416,13 +416,13 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   out_stride = copy_params->out_stride;
 
   gl = context->gl_vtable;
-  out_gl_format = gst_gl_format_from_gl_texture_type (copy_params->out_format);
+  out_gl_format = copy_params->out_format;
   out_gl_type = GL_UNSIGNED_BYTE;
-  if (copy_params->out_format == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
+  if (copy_params->out_format == GST_GL_RGB565)
     out_gl_type = GL_UNSIGNED_SHORT_5_6_5;
-  in_gl_format = gst_gl_format_from_gl_texture_type (src->mem.tex_type);
+  in_gl_format = src->mem.tex_format;
   in_gl_type = GL_UNSIGNED_BYTE;
-  if (src->mem.tex_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
+  if (src->mem.tex_format == GST_GL_RGB565)
     in_gl_type = GL_UNSIGNED_SHORT_5_6_5;
 
   if (!gl->GenFramebuffers) {
@@ -448,7 +448,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
     guint out_gl_type;
 
     out_gl_type = GL_UNSIGNED_BYTE;
-    if (copy_params->out_format == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
+    if (copy_params->out_format == GST_GL_RGB565)
       out_gl_type = GL_UNSIGNED_SHORT_5_6_5;
 
     internal_format =
@@ -572,7 +572,7 @@ _gl_mem_copy (GstGLMemoryPBO * src, gssize offset, gssize size)
 
   dest = (GstMemory *) g_new0 (GstGLMemoryPBO, 1);
   gst_gl_memory_init (GST_GL_MEMORY_CAST (dest), allocator, NULL,
-      src->mem.mem.context, src->mem.tex_target, src->mem.tex_type, &params,
+      src->mem.mem.context, src->mem.tex_target, src->mem.tex_format, &params,
       &src->mem.info, src->mem.plane, &src->mem.valign, NULL, NULL);
 
   if (!GST_MEMORY_FLAG_IS_SET (src, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD)) {
@@ -588,7 +588,7 @@ _gl_mem_copy (GstGLMemoryPBO * src, gssize offset, gssize size)
 
     if (!gst_gl_memory_copy_into ((GstGLMemory *) src,
             ((GstGLMemory *) dest)->tex_id, src->mem.tex_target,
-            src->mem.tex_type, src->mem.tex_width, GL_MEM_HEIGHT (src))) {
+            src->mem.tex_format, src->mem.tex_width, GL_MEM_HEIGHT (src))) {
       GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
       gst_memory_unmap (GST_MEMORY_CAST (dest), &dinfo);
       goto memcpy;
@@ -649,7 +649,7 @@ _gl_mem_pbo_alloc (GstGLBaseMemoryAllocator * allocator,
   }
 
   gst_gl_memory_init (GST_GL_MEMORY_CAST (mem), GST_ALLOCATOR_CAST (allocator),
-      NULL, params->parent.context, params->target, params->tex_type,
+      NULL, params->parent.context, params->target, params->tex_format,
       params->parent.alloc_params, params->v_info, params->plane,
       params->valign, params->parent.user_data, params->parent.notify);
 
@@ -705,14 +705,14 @@ gst_gl_memory_pbo_allocator_init (GstGLMemoryPBOAllocator * allocator)
  * @gl_mem:a #GstGLMemoryPBO
  * @tex_id: the destination texture id
  * @target: the destination #GstGLTextureTarget
- * @tex_type: the destination #GstVideoGLTextureType
+ * @tex_format: the destination #GstGLFormat
  * @width: width of @tex_id
  * @height: height of @tex_id
  * @stride: stride of the backing texture data
  * @respecify: whether to copy the data or copy per texel
  *
  * Copies @gl_mem into the texture specfified by @tex_id.  The format of @tex_id
- * is specified by @tex_type, @width and @height.
+ * is specified by @tex_format, @width and @height.
  *
  * If @respecify is %TRUE, then the copy is performed in terms of the texture
  * data.  This is useful for splitting RGBA textures into RG or R textures or
@@ -731,7 +731,7 @@ gst_gl_memory_pbo_allocator_init (GstGLMemoryPBOAllocator * allocator)
  */
 gboolean
 gst_gl_memory_pbo_copy_into_texture (GstGLMemoryPBO * gl_mem, guint tex_id,
-    GstGLTextureTarget target, GstVideoGLTextureType tex_type, gint width,
+    GstGLTextureTarget target, GstGLFormat tex_format, gint width,
     gint height, gint stride, gboolean respecify)
 {
   GstGLMemoryPBOCopyParams copy_params;
@@ -739,7 +739,7 @@ gst_gl_memory_pbo_copy_into_texture (GstGLMemoryPBO * gl_mem, guint tex_id,
   copy_params.src = gl_mem;
   copy_params.tex_target = target;
   copy_params.tex_id = tex_id;
-  copy_params.out_format = tex_type;
+  copy_params.out_format = tex_format;
   copy_params.out_width = width;
   copy_params.out_height = height;
   copy_params.out_stride = stride;

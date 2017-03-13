@@ -93,8 +93,7 @@ gst_gl_differencematte_gl_start (GstGLBaseFilter * base_filter)
       gst_gl_memory_allocator_get_default (context);
   params =
       (GstGLAllocationParams *) gst_gl_video_allocation_params_new (context,
-      NULL, &filter->out_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D,
-      GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
+      NULL, &filter->out_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA);
 
   for (i = 0; i < 4; i++)
     differencematte->midtexture[i] =
@@ -306,8 +305,7 @@ init_pixbuf_texture (GstGLDifferenceMatte * differencematte)
       differencematte->pbuf_width, differencematte->pbuf_height);
   params =
       (GstGLAllocationParams *) gst_gl_video_allocation_params_new (context,
-      NULL, &v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D,
-      GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
+      NULL, &v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA);
 
   differencematte->newbgtexture =
       (GstGLMemory *) gst_gl_base_memory_alloc (tex_alloc, params);
@@ -317,7 +315,7 @@ init_pixbuf_texture (GstGLDifferenceMatte * differencematte)
     params =
         (GstGLAllocationParams *) gst_gl_video_allocation_params_new (context,
         NULL, &filter->out_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D,
-        GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
+        GST_GL_RGBA);
 
     differencematte->savedbgtexture =
         (GstGLMemory *) gst_gl_base_memory_alloc (tex_alloc, params);

@@ -78,7 +78,7 @@ GST_EXPORT
 gboolean      gst_gl_memory_pbo_copy_into_texture       (GstGLMemoryPBO *gl_mem,
                                                          guint tex_id,
                                                          GstGLTextureTarget target,
-                                                         GstVideoGLTextureType tex_type,
+                                                         GstGLFormat tex_format,
                                                          gint width,
                                                          gint height,
                                                          gint stride,

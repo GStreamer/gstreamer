@@ -83,9 +83,9 @@ _gl_rbo_create (GstGLRenderbuffer * gl_mem, GError ** error)
     GLenum tex_format;
     GLenum renderbuffer_type;
 
-    tex_format = gst_gl_format_from_gl_texture_type (gl_mem->renderbuffer_type);
+    tex_format = gl_mem->renderbuffer_format;
     renderbuffer_type = GL_UNSIGNED_BYTE;
-    if (gl_mem->renderbuffer_type == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
+    if (gl_mem->renderbuffer_format == GST_GL_RGB565)
       renderbuffer_type = GL_UNSIGNED_SHORT_5_6_5;
 
     internal_format =
@@ -109,12 +109,20 @@ _gl_rbo_create (GstGLRenderbuffer * gl_mem, GError ** error)
 static void
 gst_gl_renderbuffer_init (GstGLRenderbuffer * mem, GstAllocator * allocator,
     GstMemory * parent, GstGLContext * context,
-    GstVideoGLTextureType renderbuffer_type, GstAllocationParams * params,
+    GstGLFormat renderbuffer_format, GstAllocationParams * params,
     guint width, guint height, gpointer user_data, GDestroyNotify notify)
 {
-  gsize size = gst_gl_texture_type_n_bytes (renderbuffer_type) * width * height;
+  gsize size;
+  guint tex_type;
 
-  mem->renderbuffer_type = renderbuffer_type;
+  tex_type = GL_UNSIGNED_BYTE;
+  if (renderbuffer_format == GST_GL_RGB565)
+    tex_type = GL_UNSIGNED_SHORT_5_6_5;
+  size =
+      gst_gl_format_type_n_bytes (renderbuffer_format,
+      tex_type) * width * height;
+
+  mem->renderbuffer_format = renderbuffer_format;
   mem->width = width;
   mem->height = height;
 
@@ -123,7 +131,7 @@ gst_gl_renderbuffer_init (GstGLRenderbuffer * mem, GstAllocator * allocator,
 
   GST_CAT_DEBUG (GST_CAT_GL_RENDERBUFFER, "new GL renderbuffer context:%"
       GST_PTR_FORMAT " memory:%p format:%u dimensions:%ux%u ", context, mem,
-      mem->renderbuffer_type, gst_gl_renderbuffer_get_width (mem),
+      mem->renderbuffer_format, gst_gl_renderbuffer_get_width (mem),
       gst_gl_renderbuffer_get_height (mem));
 }
 
@@ -184,7 +192,7 @@ _default_gl_rbo_alloc (GstGLRenderbufferAllocator * allocator,
   }
 
   gst_gl_renderbuffer_init (mem, GST_ALLOCATOR_CAST (allocator), NULL,
-      params->parent.context, params->renderbuffer_type,
+      params->parent.context, params->renderbuffer_format,
       params->parent.alloc_params, params->width, params->height,
       params->parent.user_data, params->parent.notify);
 
@@ -256,19 +264,19 @@ gst_gl_renderbuffer_get_height (GstGLRenderbuffer * gl_mem)
 }
 
 /**
- * gst_gl_renderbuffer_get_type:
+ * gst_gl_renderbuffer_get_format:
  * @gl_mem: a #GstGLRenderbuffer
  *
- * Returns: the #GstVideoGLTextureType of @gl_mem
+ * Returns: the #GstGLFormat of @gl_mem
  *
- * Since: 1.10
+ * Since: 1.12
  */
-GstVideoGLTextureType
-gst_gl_renderbuffer_get_type (GstGLRenderbuffer * gl_mem)
+GstGLFormat
+gst_gl_renderbuffer_get_format (GstGLRenderbuffer * gl_mem)
 {
   g_return_val_if_fail (gst_is_gl_renderbuffer ((GstMemory *) gl_mem), 0);
 
-  return gl_mem->renderbuffer_type;
+  return gl_mem->renderbuffer_format;
 }
 
 /**
@@ -354,7 +362,7 @@ _gst_gl_rb_alloc_params_copy_data (GstGLRenderbufferAllocationParams * src_vid,
 
   gst_gl_allocation_params_copy_data (src, dest);
 
-  dest_vid->renderbuffer_type = src_vid->renderbuffer_type;
+  dest_vid->renderbuffer_format = src_vid->renderbuffer_format;
   dest_vid->width = src_vid->width;
   dest_vid->height = src_vid->height;
 }
@@ -365,7 +373,7 @@ static gboolean
     guint alloc_flags, GstGLAllocationParamsCopyFunc copy,
     GstGLAllocationParamsFreeFunc free, GstGLContext * context,
     GstAllocationParams * alloc_params, guint width, guint height,
-    GstVideoGLTextureType renderbuffer_type, gpointer wrapped_data,
+    GstGLFormat renderbuffer_format, gpointer wrapped_data,
     gpointer gl_handle, gpointer user_data, GDestroyNotify notify)
 {
   g_return_val_if_fail (params != NULL, FALSE);
@@ -380,7 +388,7 @@ static gboolean
           wrapped_data, gl_handle, user_data, notify))
     return FALSE;
 
-  params->renderbuffer_type = renderbuffer_type;
+  params->renderbuffer_format = renderbuffer_format;
   params->width = width;
   params->height = height;
 
@@ -393,7 +401,7 @@ static gboolean
  * @alloc_params: (allow-none): the #GstAllocationParams for sysmem mappings of the texture
  * @width: the width of the renderbuffer
  * @height: the height of the renderbuffer
- * @renderbuffer_type: the #GstVideoGLTextureType for the created textures
+ * @renderbuffer_format: the #GstGLFormat for the created textures
  *
  * Returns: a new #GstGLRenderbufferAllocationParams for allocating #GstGLRenderbuffer's
  *
@@ -401,7 +409,7 @@ static gboolean
  */
 GstGLRenderbufferAllocationParams *
 gst_gl_renderbuffer_allocation_params_new (GstGLContext * context,
-    GstAllocationParams * alloc_params, GstVideoGLTextureType renderbuffer_type,
+    GstAllocationParams * alloc_params, GstGLFormat renderbuffer_format,
     guint width, guint height)
 {
   GstGLRenderbufferAllocationParams *params =
@@ -413,7 +421,7 @@ gst_gl_renderbuffer_allocation_params_new (GstGLContext * context,
           GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO,
           (GstGLAllocationParamsCopyFunc) _gst_gl_rb_alloc_params_copy_data,
           (GstGLAllocationParamsFreeFunc) _gst_gl_rb_alloc_params_free_data,
-          context, alloc_params, width, height, renderbuffer_type, NULL, 0,
+          context, alloc_params, width, height, renderbuffer_format, NULL, 0,
           NULL, NULL)) {
     g_free (params);
     return NULL;
@@ -428,7 +436,7 @@ gst_gl_renderbuffer_allocation_params_new (GstGLContext * context,
  * @alloc_params: (allow-none): the #GstAllocationParams for @tex_id
  * @width: the width of the renderbuffer
  * @height: the height of the renderbuffer
- * @renderbuffer_type: the #GstVideoGLTextureType for @tex_id
+ * @renderbuffer_format: the #GstGLFormat for @tex_id
  * @gl_handle: the GL handle to wrap
  * @user_data: (allow-none): user data to call @notify with
  * @notify: (allow-none): a #GDestroyNotify
@@ -440,7 +448,7 @@ gst_gl_renderbuffer_allocation_params_new (GstGLContext * context,
  */
 GstGLRenderbufferAllocationParams *
 gst_gl_renderbuffer_allocation_params_new_wrapped (GstGLContext * context,
-    GstAllocationParams * alloc_params, GstVideoGLTextureType renderbuffer_type,
+    GstAllocationParams * alloc_params, GstGLFormat renderbuffer_format,
     guint width, guint height, gpointer gl_handle, gpointer user_data,
     GDestroyNotify notify)
 {
@@ -453,7 +461,7 @@ gst_gl_renderbuffer_allocation_params_new_wrapped (GstGLContext * context,
           GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO,
           (GstGLAllocationParamsCopyFunc) _gst_gl_rb_alloc_params_copy_data,
           (GstGLAllocationParamsFreeFunc) _gst_gl_rb_alloc_params_free_data,
-          context, alloc_params, width, height, renderbuffer_type, NULL,
+          context, alloc_params, width, height, renderbuffer_format, NULL,
           gl_handle, user_data, notify)) {
     g_free (params);
     return NULL;

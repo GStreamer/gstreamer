@@ -2094,8 +2094,8 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
     height = gst_gl_memory_get_texture_height (out_tex);
     gst_video_info_set_format (&temp_info, GST_VIDEO_FORMAT_RGBA, width,
         height);
-    if (out_tex->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE
-        || out_tex->tex_type == GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA
+    if (out_tex->tex_format == GST_GL_LUMINANCE
+        || out_tex->tex_format == GST_GL_LUMINANCE_ALPHA
         || out_width != width || out_height != height) {
       /* Luminance formats are not color renderable */
       /* renderering to a framebuffer only renders the intersection of all
@@ -2113,8 +2113,7 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
             GST_ALLOCATOR (gst_gl_memory_allocator_get_default (context));
         base_mem_allocator = GST_GL_BASE_MEMORY_ALLOCATOR (allocator);
         params = gst_gl_video_allocation_params_new (context, NULL, &temp_info,
-            0, NULL, viewconvert->to_texture_target,
-            GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
+            0, NULL, viewconvert->to_texture_target, GST_GL_RGBA);
 
         priv->out_tex[j] =
             (GstGLMemory *) gst_gl_base_memory_alloc (base_mem_allocator,
@@ -2172,7 +2171,7 @@ out:
         continue;
       }
       gst_gl_memory_copy_into (priv->out_tex[j], out_tex->tex_id,
-          viewconvert->to_texture_target, out_tex->tex_type, width, height);
+          viewconvert->to_texture_target, out_tex->tex_format, width, height);
       gst_memory_unmap ((GstMemory *) out_tex, &to_info);
     }
 

@@ -286,8 +286,7 @@ gst_gl_effects_gl_start (GstGLBaseFilter * base_filter)
       gst_allocator_find (GST_GL_MEMORY_ALLOCATOR_NAME);
   params =
       (GstGLAllocationParams *) gst_gl_video_allocation_params_new (context,
-      NULL, &filter->out_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D,
-      GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
+      NULL, &filter->out_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA);
 
   for (i = 0; i < NEEDED_TEXTURES; i++) {
     if (effects->midtexture[i])

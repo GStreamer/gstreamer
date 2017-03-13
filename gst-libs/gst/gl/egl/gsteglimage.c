@@ -144,7 +144,7 @@ _gst_egl_image_copy (GstMiniObject * obj)
  * gst_egl_image_new_wrapped:
  * @context: a #GstGLContext (must be an EGL context)
  * @image: the image to wrap
- * @type: the #GstVideoGLTextureType
+ * @format: the #GstGLFormat
  * @user_data: user data
  * @user_data_destroy: called when @user_data is no longer needed
  *
@@ -152,7 +152,7 @@ _gst_egl_image_copy (GstMiniObject * obj)
  */
 GstEGLImage *
 gst_egl_image_new_wrapped (GstGLContext * context, EGLImageKHR image,
-    GstVideoGLTextureType type, gpointer user_data,
+    GstGLFormat format, gpointer user_data,
     GstEGLImageDestroyNotify user_data_destroy)
 {
   GstEGLImage *img = NULL;
@@ -169,7 +169,7 @@ gst_egl_image_new_wrapped (GstGLContext * context, EGLImageKHR image,
 
   img->context = gst_object_ref (context);
   img->image = image;
-  img->type = type;
+  img->format = format;
 
   img->destroy_data = user_data;
   img->destroy_notify = user_data_destroy;
@@ -329,7 +329,7 @@ gst_egl_image_from_texture (GstGLContext * context, GstGLMemory * gl_mem,
   if (!img)
     return NULL;
 
-  return gst_egl_image_new_wrapped (context, img, gl_mem->tex_type, NULL,
+  return gst_egl_image_new_wrapped (context, img, gl_mem->tex_format, NULL,
       (GstEGLImageDestroyNotify) _destroy_egl_image);
 }
 
@@ -418,7 +418,7 @@ GstEGLImage *
 gst_egl_image_from_dmabuf (GstGLContext * context,
     gint dmabuf, GstVideoInfo * in_info, gint plane, gsize offset)
 {
-  GstVideoGLTextureType type;
+  GstGLFormat format;
   guintptr attribs[13];
   EGLImageKHR img;
   gint atti = 0;
@@ -426,9 +426,7 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
   gint i;
 
   fourcc = _drm_fourcc_from_info (in_info, plane);
-  type =
-      gst_gl_texture_type_from_format (context, GST_VIDEO_INFO_FORMAT (in_info),
-      plane);
+  format = gst_gl_format_from_video_info (context, in_info, plane);
 
   GST_DEBUG ("fourcc %.4s (%d) plane %d (%dx%d)",
       (char *) &fourcc, fourcc, plane,
@@ -461,7 +459,7 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
     return NULL;
   }
 
-  return gst_egl_image_new_wrapped (context, img, type, NULL,
+  return gst_egl_image_new_wrapped (context, img, format, NULL,
       (GstEGLImageDestroyNotify) _destroy_egl_image);
 }
 #endif /* GST_GL_HAVE_DMABUF */

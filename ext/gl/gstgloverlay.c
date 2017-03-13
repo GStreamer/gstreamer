@@ -688,8 +688,7 @@ gst_gl_overlay_load_jpeg (GstGLOverlay * overlay, FILE * fp)
       (GST_GL_BASE_FILTER (overlay)->context));
   params =
       gst_gl_video_allocation_params_new (GST_GL_BASE_FILTER (overlay)->context,
-      NULL, &v_info, 0, &v_align, GST_GL_TEXTURE_TARGET_2D,
-      GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
+      NULL, &v_info, 0, &v_align, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA);
   overlay->image_memory = (GstGLMemory *)
       gst_gl_base_memory_alloc (mem_allocator,
       (GstGLAllocationParams *) params);
@@ -804,8 +803,7 @@ gst_gl_overlay_load_png (GstGLOverlay * overlay, FILE * fp)
       (GST_GL_BASE_FILTER (overlay)->context));
   params =
       gst_gl_video_allocation_params_new (GST_GL_BASE_FILTER (overlay)->context,
-      NULL, &v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D,
-      GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
+      NULL, &v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA);
   overlay->image_memory = (GstGLMemory *)
       gst_gl_base_memory_alloc (mem_allocator,
       (GstGLAllocationParams *) params);

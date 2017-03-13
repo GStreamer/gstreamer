@@ -50,7 +50,7 @@ static const GLfloat vertices[] = {
 
 static GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-#define FORMAT GST_VIDEO_GL_TEXTURE_TYPE_RGBA
+#define FORMAT GST_GL_RGBA
 #define WIDTH 10
 #define HEIGHT 10
 #define RED 0xff, 0x00, 0x00, 0xff
@@ -334,7 +334,7 @@ GST_START_TEST (test_upload_gl_memory)
   buffer = gst_buffer_new ();
   params = gst_gl_video_allocation_params_new_wrapped_data (context, NULL,
       &in_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D,
-      GST_VIDEO_GL_TEXTURE_TYPE_RGBA, rgba_data, NULL, NULL);
+      GST_GL_RGBA, rgba_data, NULL, NULL);
   gl_mem = (GstGLMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
       (GstGLAllocationParams *) params);
   gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
