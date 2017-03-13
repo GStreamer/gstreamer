@@ -4150,9 +4150,8 @@ gst_value_union_int_int_range (GValue * dest, const GValue * src1,
   /* check if it extends the range */
   if (v == (INT_RANGE_MIN (src2) - 1) * INT_RANGE_STEP (src2)) {
     if (dest) {
-      guint64 new_min =
-          (guint) ((INT_RANGE_MIN (src2) - 1) * INT_RANGE_STEP (src2));
-      guint64 new_max = (guint) (INT_RANGE_MAX (src2) * INT_RANGE_STEP (src2));
+      guint64 new_min = INT_RANGE_MIN (src2) - 1;
+      guint64 new_max = INT_RANGE_MAX (src2);
 
       gst_value_init_and_copy (dest, src2);
       dest->data[0].v_uint64 = (new_min << 32) | (new_max);
@@ -4161,9 +4160,8 @@ gst_value_union_int_int_range (GValue * dest, const GValue * src1,
   }
   if (v == (INT_RANGE_MAX (src2) + 1) * INT_RANGE_STEP (src2)) {
     if (dest) {
-      guint64 new_min = (guint) (INT_RANGE_MIN (src2) * INT_RANGE_STEP (src2));
-      guint64 new_max =
-          (guint) ((INT_RANGE_MAX (src2) + 1) * INT_RANGE_STEP (src2));
+      guint64 new_min = INT_RANGE_MIN (src2);
+      guint64 new_max = INT_RANGE_MAX (src2) + 1;
 
       gst_value_init_and_copy (dest, src2);
       dest->data[0].v_uint64 = (new_min << 32) | (new_max);
