@@ -27,8 +27,8 @@ than simple playback.
 
 - Ability to play a certain amount of data at an arbitrary speed.
 
-We want a system where we can step frames in PAUSED as well as play
-short segments of data in PLAYING.
+We want a system where we can step frames in `PAUSED` as well as play
+short segments of data in `PLAYING`.
 
 ## Use Cases
 
@@ -41,14 +41,14 @@ short segments of data in PLAYING.
 '-----'    '-------'    '-----'   '------'    '-------'
 ```
 
-  - app sets the pipeline to PAUSED to block on the preroll picture
+  - app sets the pipeline to `PAUSED` to block on the preroll picture
 
   - app seeks to required position in the stream. This can be done
     with a positive or negative rate depending on the required frame
     stepping direction.
 
   - app steps frames (in `GST_FORMAT_DEFAULT` or `GST_FORMAT_BUFFER)`. The
-  pipeline loses its PAUSED state until the required number of frames have been
+  pipeline loses its `PAUSED` state until the required number of frames have been
   skipped, it then prerolls again. This skipping is purely done in the sink.
 
   - sink posts `STEP_DONE` with amount of frames stepped and
@@ -67,14 +67,14 @@ short segments of data in PLAYING.
            '-------'    '-----'   '------'    '-------'
 ```
 
-  - app sets the pipeline to PAUSED to block on the preroll picture
+  - app sets the pipeline to `PAUSED` to block on the preroll picture
 
   - app seeks to required position in the stream. This can be done
     with a positive or negative rate depending on the required frame
     stepping direction.
 
   - app steps frames (in `GST_FORMAT_DEFAULT` or `GST_FORMAT_BUFFER`) or an
-  amount of time on the video sink. The pipeline loses its PAUSED state until
+  amount of time on the video sink. The pipeline loses its `PAUSED` state until
   the required number of frames have been skipped, it then prerolls again. This
   skipping is purely done in the sink.
 
@@ -88,7 +88,7 @@ short segments of data in PLAYING.
 
 ### audio/video pipeline in PLAYING
 
-  - app sets the pipeline to PAUSED to block on the preroll picture
+  - app sets the pipeline to `PAUSED` to block on the preroll picture
 
   - app seeks to required position in the stream. This can be done
     with a positive or negative rate depending on the required frame
@@ -130,32 +130,32 @@ use a seek with a negative rate first to reverse the playback direction.
 * **`flush`** `G_TYPE_BOOLEAN`: when flushing is TRUE, the step is performed
 immediately:
 
-  - In the PAUSED state the pipeline loses the PAUSED state, the
+  - In the `PAUSED` state the pipeline loses the `PAUSED` state, the
     requested amount of data is skipped and the pipeline prerolls again
     when a non-intermediate step completes. When the pipeline was
     stepping while the event is sent, the current step operation is
     updated with the new amount and format. The sink will do a best
     effort to comply with the new amount.
 
-  - In the PLAYING state, the pipeline loses the PLAYING state, the
+  - In the PLAYING state, the pipeline loses the `PLAYING` state, the
     requested amount of data is skipped (not rendered) from the previous
-    STEP request or from the position of the last PAUSED if no previous
-    STEP operation was performed. The pipeline goes back to the PLAYING
+    STEP request or from the position of the last `PAUSED` if no previous
+    STEP operation was performed. The pipeline goes back to the `PLAYING`
     state when a non-intermediate step completes.
 
   - When flushing is FALSE, the step will be performed later.
 
-  - In the PAUSED state the step will be done when going to PLAYING. Any
-    previous step operation will be overridden with the new STEP event.
+  - In the `PAUSED` state the step will be done when going to `PLAYING`. Any
+    previous step operation will be overridden with the new `STEP` event.
 
-  - In the PLAYING state the step operation will be performed after the
+  - In the `PLAYING` state the step operation will be performed after the
     current step operation completes. If there was no previous step
     operation, the step operation will be performed from the position of
-    the last PAUSED state.
+    the last `PAUSED` state.
 
 * **`intermediate`** `G_TYPE_BOOLEAN`: Signal that this step operation is an
 intermediate step, part of a series of step operations. It is mostly
-interesting for stepping in the PAUSED state because the sink will only perform
+interesting for stepping in the `PAUSED` state because the sink will only perform
 a preroll after a non-intermediate step operation completes. Intermediate steps
 are useful to flush out data from other sinks in order to not cause excessive
 queueing. In the PLAYING state the intermediate flag has no visual effect. In
@@ -163,7 +163,7 @@ all states, the intermediate flag is passed to the corresponding
 `GST_MESSAGE_STEP_DONE`.
 
 The application will create a STEP event to start or stop the stepping
-operation. Both stepping in PAUSED and PLAYING can be performed by means
+operation. Both stepping in `PAUSED` and `PLAYING` can be performed by means
 of the flush flag.
 
 The event is usually sent to the pipeline, which will typically
