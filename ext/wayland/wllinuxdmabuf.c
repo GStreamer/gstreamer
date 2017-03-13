@@ -73,9 +73,9 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
     GstWlDisplay * display, const GstVideoInfo * info)
 {
   GstMemory *mem;
-  int fd, format;
-  guint i, width, height, offset, stride;
-  guint nmem, nplanes, mem_idx, flags = 0;
+  int format;
+  guint i, width, height;
+  guint nplanes, flags = 0;
   struct zwp_linux_buffer_params_v1 *params;
   gint64 timeout;
   ConstructBufferData data;
@@ -93,7 +93,6 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
   width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
   nplanes = GST_VIDEO_INFO_N_PLANES (info);
-  nmem = gst_buffer_n_memory (buf);
 
   GST_DEBUG_OBJECT (display, "Creating wl_buffer from DMABuf of size %"
       G_GSSIZE_FORMAT " (%d x %d), format %s", info->size, width, height,
@@ -103,11 +102,23 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
   params = zwp_linux_dmabuf_v1_create_params (display->dmabuf);
 
   for (i = 0; i < nplanes; i++) {
-    mem_idx = (nmem == nplanes) ? i : 0;
-    fd = gst_dmabuf_memory_get_fd (gst_buffer_peek_memory (buf, mem_idx));
+    guint offset, stride, mem_idx, length;
+    gsize skip;
+
     offset = GST_VIDEO_INFO_PLANE_OFFSET (info, i);
     stride = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
-    zwp_linux_buffer_params_v1_add (params, fd, i, offset, stride, 0, 0);
+    if (gst_buffer_find_memory (buf, offset, 1, &mem_idx, &length, &skip)) {
+      GstMemory *m = gst_buffer_peek_memory (buf, mem_idx);
+      gint fd = gst_dmabuf_memory_get_fd (m);
+      zwp_linux_buffer_params_v1_add (params, fd, i, m->offset + skip,
+          stride, 0, 0);
+    } else {
+      GST_ERROR_OBJECT (mem->allocator, "memory does not seem to contain "
+          "enough data for the specified format");
+      zwp_linux_buffer_params_v1_destroy (params);
+      data.wbuf = NULL;
+      goto out;
+    }
   }
 
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
@@ -136,6 +147,7 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
     }
   }
 
+out:
   if (!data.wbuf) {
     GST_ERROR_OBJECT (mem->allocator, "can't create linux-dmabuf buffer");
   } else {
