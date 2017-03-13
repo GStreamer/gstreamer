@@ -968,7 +968,7 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
         /* fallback: try to use EGLImage even if it is not in the caps feature */
         if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
           gst_video_codec_state_unref (state);
-          GST_ERROR_OBJECT (self, "Failed to negotiate RGBA for EGLImage");
+          GST_DEBUG_OBJECT (self, "Failed to negotiate RGBA for EGLImage");
           GST_VIDEO_DECODER_STREAM_UNLOCK (self);
           goto no_egl;
         }
