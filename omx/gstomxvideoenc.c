@@ -1757,12 +1757,40 @@ gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
       (gst_omx_video_enc_parent_class)->propose_allocation (encoder, query);
 }
 
+static GList *
+filter_supported_formats (GList * negotiation_map)
+{
+  GList *cur;
+
+  for (cur = negotiation_map; cur != NULL;) {
+    GstOMXVideoNegotiationMap *nmap = (GstOMXVideoNegotiationMap *) (cur->data);
+    GList *next;
+
+    switch (nmap->format) {
+      case GST_VIDEO_FORMAT_I420:
+      case GST_VIDEO_FORMAT_NV12:
+        //case GST_VIDEO_FORMAT_ABGR:
+        //case GST_VIDEO_FORMAT_ARGB:
+        cur = g_list_next (cur);
+        continue;
+      default:
+        gst_omx_video_negotiation_map_free (nmap);
+        next = g_list_next (cur);
+        negotiation_map = g_list_delete_link (negotiation_map, cur);
+        cur = next;
+    }
+  }
+
+  return negotiation_map;
+}
+
 static GstCaps *
 gst_omx_video_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 {
   GstOMXVideoEnc *self = GST_OMX_VIDEO_ENC (encoder);
   GList *negotiation_map = NULL;
   GstCaps *comp_supported_caps;
+  GstCaps *ret;
 
   if (!self->enc)
     return gst_video_encoder_proxy_getcaps (encoder, NULL, filter);
@@ -1770,18 +1798,22 @@ gst_omx_video_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
   negotiation_map =
       gst_omx_video_get_supported_colorformats (self->enc_in_port,
       self->input_state);
+  negotiation_map = filter_supported_formats (negotiation_map);
+
   comp_supported_caps = gst_omx_video_get_caps_for_map (negotiation_map);
   g_list_free_full (negotiation_map,
       (GDestroyNotify) gst_omx_video_negotiation_map_free);
 
   if (!gst_caps_is_empty (comp_supported_caps)) {
-    GstCaps *ret =
+    ret =
         gst_video_encoder_proxy_getcaps (encoder, comp_supported_caps, filter);
-
     gst_caps_unref (comp_supported_caps);
-    return ret;
   } else {
     gst_caps_unref (comp_supported_caps);
-    return gst_video_encoder_proxy_getcaps (encoder, NULL, filter);
+    ret = gst_video_encoder_proxy_getcaps (encoder, NULL, filter);
   }
+
+  GST_LOG_OBJECT (encoder, "Supported caps %" GST_PTR_FORMAT, ret);
+
+  return ret;
 }
