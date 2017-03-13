@@ -1090,6 +1090,10 @@ gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
 
     mems[i] = gst_buffer_peek_memory (inbuf, mems_idx[i]);
 
+    /* adjust for memory offset, in case data does not
+     * start from byte 0 in the dmabuf fd */
+    mems_skip[i] += mems[i]->offset;
+
     /* And all memory found must be dmabuf */
     if (!gst_is_dmabuf_memory (mems[i]))
       return FALSE;
