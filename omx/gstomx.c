@@ -2454,7 +2454,7 @@ gst_omx_command_to_string (OMX_COMMANDTYPE cmd)
 }
 
 #if defined(USE_OMX_TARGET_RPI)
-#define DEFAULT_HACKS (GST_OMX_HACK_NO_COMPONENT_ROLE)
+#define DEFAULT_HACKS (GST_OMX_HACK_NO_COMPONENT_ROLE | GST_OMX_HACK_HEIGHT_MULTIPLE_16)
 #else
 #define DEFAULT_HACKS (0)
 #endif
@@ -2490,6 +2490,8 @@ gst_omx_parse_hacks (gchar ** hacks)
       hacks_flags |= GST_OMX_HACK_NO_DISABLE_OUTPORT;
     else if (g_str_equal (*hacks, "signals-premature-eos"))
       hacks_flags |= GST_OMX_HACK_SIGNALS_PREMATURE_EOS;
+    else if (g_str_equal (*hacks, "height-multiple-16"))
+      hacks_flags |= GST_OMX_HACK_HEIGHT_MULTIPLE_16;
     else
       GST_WARNING ("Unknown hack: %s", *hacks);
     hacks++;

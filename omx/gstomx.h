@@ -134,6 +134,11 @@ G_BEGIN_DECLS
  */
 #define GST_OMX_HACK_NO_DISABLE_OUTPORT                               G_GUINT64_CONSTANT (0x0000000000000100)
 
+/* If the encoder requires input buffers that have a height
+ * which is a multiple of 16 pixels
+ */
+#define GST_OMX_HACK_HEIGHT_MULTIPLE_16             G_GUINT64_CONSTANT (0x0000000000000200)
+
 typedef struct _GstOMXCore GstOMXCore;
 typedef struct _GstOMXPort GstOMXPort;
 typedef enum _GstOMXPortDirection GstOMXPortDirection;
