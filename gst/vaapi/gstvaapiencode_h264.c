@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapih264enc ! mp4mux ! filesink location=test.mp4
+ *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapih264enc ! h264parse ! mp4mux ! filesink location=test.mp4
  * ]|
  * </refsect2>
  */
