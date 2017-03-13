@@ -1064,6 +1064,7 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
           ((port_def.format.video.nFrameHeight + 1) / 2));
       break;
 
+    case OMX_COLOR_FormatYUV420PackedSemiPlanar:
     case OMX_COLOR_FormatYUV420SemiPlanar:
       port_def.nBufferSize =
           (port_def.format.video.nStride * port_def.format.video.nFrameHeight) +
@@ -1072,6 +1073,8 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
       break;
 
     default:
+      GST_ERROR_OBJECT (self, "Unsupported port format %x",
+          port_def.format.video.eColorFormat);
       g_assert_not_reached ();
   }
 
