@@ -652,7 +652,8 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     /* otherwise create one and cache it */
     dmabuf->eglimage[i] =
         gst_egl_image_from_dmabuf (dmabuf->upload->context,
-        gst_dmabuf_memory_get_fd (mems[i]), in_info, i, mems_skip[i]);
+        gst_dmabuf_memory_get_fd (mems[i]), in_info, i,
+        mems[i]->offset + mems_skip[i]);
 
     if (!dmabuf->eglimage[i])
       return FALSE;
