@@ -53,7 +53,7 @@ GstIOSurfaceMemory *
 gst_io_surface_memory_wrapped (GstGLContext * context,
     IOSurfaceRef surface,
     GstGLTextureTarget target,
-    GstVideoGLTextureType tex_type,
+    GstGLFormat tex_format,
     GstVideoInfo * info,
     guint plane,
     GstVideoAlignment *valign,

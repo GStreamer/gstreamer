@@ -101,12 +101,8 @@ GST_EXPORT
 guint                   gst_gl_format_type_n_bytes                  (guint format,
                                                                      guint type);
 GST_EXPORT
-guint                   gst_gl_texture_type_n_bytes                 (GstVideoGLTextureType tex_format);
-GST_EXPORT
-guint                   gst_gl_format_from_gl_texture_type          (GstVideoGLTextureType tex_format);
-GST_EXPORT
-GstVideoGLTextureType   gst_gl_texture_type_from_format             (GstGLContext * context,
-                                                                     GstVideoFormat v_format,
+GstGLFormat             gst_gl_format_from_video_info               (GstGLContext * context,
+                                                                     GstVideoInfo * vinfo,
                                                                      guint plane);
 GST_EXPORT
 guint                   gst_gl_sized_gl_format_from_gl_format_type  (GstGLContext * context,

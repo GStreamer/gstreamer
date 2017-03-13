@@ -107,15 +107,14 @@ _create_glmem (GstAppleCoreVideoPixelBuffer * gpixbuf,
   return gst_video_texture_cache_create_memory (cache, gpixbuf, plane, size);
 #else
   GstIOSurfaceMemory *mem;
-  GstVideoGLTextureType tex_type =
-      gst_gl_texture_type_from_format (cache->ctx, GST_VIDEO_INFO_FORMAT (info),
-      plane);
+  GstGLFormat tex_format =
+      gst_gl_format_from_video_info (cache->ctx, info, plane);
   CVPixelBufferRef pixel_buf = gpixbuf->buf;
   IOSurfaceRef surface = CVPixelBufferGetIOSurface (pixel_buf);
 
   CFRetain (pixel_buf);
   mem = gst_io_surface_memory_wrapped (cache->ctx,
-      surface, GST_GL_TEXTURE_TARGET_RECTANGLE, tex_type,
+      surface, GST_GL_TEXTURE_TARGET_RECTANGLE, tex_format,
       info, plane, NULL, pixel_buf, (GDestroyNotify) CFRelease);
   return GST_MEMORY_CAST (mem);
 #endif

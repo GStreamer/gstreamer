@@ -151,7 +151,7 @@ _gl_mem_egl_alloc (GstGLBaseMemoryAllocator * allocator,
   }
 
   gst_gl_memory_init (GST_GL_MEMORY_CAST (mem), GST_ALLOCATOR_CAST (allocator),
-      NULL, params->parent.context, params->target, params->tex_type,
+      NULL, params->parent.context, params->target, params->tex_format,
       params->parent.alloc_params, params->v_info, params->plane,
       params->valign, params->parent.user_data, params->parent.notify);
 

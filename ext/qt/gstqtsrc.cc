@@ -393,7 +393,7 @@ gst_qt_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
   glparams =
       gst_gl_video_allocation_params_new (qt_src->context, &params, &vinfo, 0,
-      NULL, GST_GL_TEXTURE_TARGET_2D, GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
+      NULL, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA);
   gst_buffer_pool_config_set_gl_allocation_params (config,
       (GstGLAllocationParams *) glparams);
   gst_gl_allocation_params_free ((GstGLAllocationParams *) glparams);

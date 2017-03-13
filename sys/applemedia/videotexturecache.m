@@ -159,7 +159,7 @@ _do_create_memory (GstGLContext * context, ContextThreadData * data)
   GstGLTextureTarget gl_target;
   GstAppleCoreVideoMemory *memory;
   GstIOSGLMemory *gl_memory;
-  GstVideoGLTextureType textype;
+  GstGLFormat texformat;
 
   switch (GST_VIDEO_INFO_FORMAT (&cache->input_info)) {
       case GST_VIDEO_FORMAT_BGRA:
@@ -170,21 +170,20 @@ _do_create_memory (GstGLContext * context, ContextThreadData * data)
               GL_RGBA, GL_UNSIGNED_BYTE, 0, &texture) != kCVReturnSuccess)
           goto error;
 
-        textype = GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
+        texformat = GST_GL_RGBA;
         plane = 0;
         goto success;
       case GST_VIDEO_FORMAT_NV12: {
-        GLenum texifmt, texfmt;
+        GstGLFormat texifmt, texfmt;
 
         if (plane == 0)
-          textype = GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
+          texformat = GST_GL_LUMINANCE;
         else
-          textype = GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA;
-        texifmt = gst_gl_format_from_gl_texture_type (textype);
-        texfmt = gst_gl_sized_gl_format_from_gl_format_type (cache->ctx, texifmt, GL_UNSIGNED_BYTE);
+          texformat = GST_GL_LUMINANCE_ALPHA;
+        texfmt = gst_gl_sized_gl_format_from_gl_format_type (cache->ctx, texformat, GL_UNSIGNED_BYTE);
 
         if (CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault,
-              cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, texifmt,
+              cache->cache, pixel_buf, NULL, GL_TEXTURE_2D, texformat,
               GST_VIDEO_INFO_COMP_WIDTH (&cache->input_info, plane),
               GST_VIDEO_INFO_COMP_HEIGHT (&cache->input_info, plane),
               texfmt, GL_UNSIGNED_BYTE, plane, &texture) != kCVReturnSuccess)
@@ -205,7 +204,7 @@ success: {
   gl_target = gst_gl_texture_target_from_gl (CVOpenGLESTextureGetTarget (texture));
   memory = gst_apple_core_video_memory_new_wrapped (gpixbuf, plane, size);
   gl_memory = gst_ios_gl_memory_new_wrapped (context, memory,
-      gl_target, textype, CVOpenGLESTextureGetName (texture), &cache->input_info,
+      gl_target, texformat, CVOpenGLESTextureGetName (texture), &cache->input_info,
      plane, NULL, texture_data, (GDestroyNotify) gst_video_texture_cache_release_texture);
 
   data->memory = GST_MEMORY_CAST (gl_memory);

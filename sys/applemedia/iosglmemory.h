@@ -55,7 +55,7 @@ GstIOSGLMemory *
 gst_ios_gl_memory_new_wrapped (GstGLContext * context,
     GstAppleCoreVideoMemory *cv_mem,
     GstGLTextureTarget target,
-    GstVideoGLTextureType tex_type,
+    GstGLFormat tex_format,
     guint tex_id,
     GstVideoInfo * info,
     guint plane,

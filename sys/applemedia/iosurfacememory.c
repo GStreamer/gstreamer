@@ -166,7 +166,7 @@ static GstIOSurfaceMemory *
 _io_surface_memory_new (GstGLContext * context,
     IOSurfaceRef surface,
     GstGLTextureTarget target,
-    GstVideoGLTextureType tex_type,
+    GstGLFormat tex_format,
     GstVideoInfo * info,
     guint plane,
     GstVideoAlignment * valign, gpointer user_data, GDestroyNotify notify)
@@ -177,7 +177,7 @@ _io_surface_memory_new (GstGLContext * context,
 
   mem = g_new0 (GstIOSurfaceMemory, 1);
   gst_gl_memory_init (&mem->gl_mem, _io_surface_memory_allocator, NULL, context,
-      target, tex_type, NULL, info, plane, valign, user_data, notify);
+      target, tex_format, NULL, info, plane, valign, user_data, notify);
 
   GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
 
@@ -191,7 +191,7 @@ GstIOSurfaceMemory *
 gst_io_surface_memory_wrapped (GstGLContext * context,
     IOSurfaceRef surface,
     GstGLTextureTarget target,
-    GstVideoGLTextureType tex_type,
+    GstGLFormat tex_format,
     GstVideoInfo * info,
     guint plane,
     GstVideoAlignment * valign, gpointer user_data, GDestroyNotify notify)
@@ -214,15 +214,12 @@ _io_surface_memory_set_surface (GstIOSurfaceMemory * memory,
   if (surface) {
     GLuint tex_id, tex_target, texifmt, texfmt;
     guint plane;
-    GstVideoGLTextureType textype;
     CGLError cglError;
 
     plane = gl_mem->plane;
     tex_id = gl_mem->tex_id;
     tex_target = gst_gl_texture_target_to_gl (gl_mem->tex_target);
-    textype = gst_gl_texture_type_from_format (context,
-        GST_VIDEO_INFO_FORMAT (&gl_mem->info), plane);
-    texifmt = gst_gl_format_from_gl_texture_type (textype);
+    texifmt = gst_gl_format_from_video_info (context, &gl_mem->info, plane);
     texfmt =
         gst_gl_sized_gl_format_from_gl_format_type (context, texifmt,
         GL_UNSIGNED_BYTE);

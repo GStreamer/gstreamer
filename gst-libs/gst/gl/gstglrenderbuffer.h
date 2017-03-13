@@ -63,7 +63,7 @@ struct _GstGLRenderbuffer
   GstGLBaseMemory           mem;
 
   guint                     renderbuffer_id;
-  GstVideoGLTextureType     renderbuffer_type;
+  GstGLFormat               renderbuffer_format;
   guint                     width;
   guint                     height;
 
@@ -109,7 +109,7 @@ typedef struct
 {
   GstGLAllocationParams parent;
 
-  GstVideoGLTextureType renderbuffer_type;
+  GstGLFormat renderbuffer_format;
   guint width;
   guint height;
 
@@ -119,13 +119,13 @@ typedef struct
 
 GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_new           (GstGLContext * context,
                                                                                              GstAllocationParams * alloc_params,
-                                                                                             GstVideoGLTextureType renderbuffer_type,
+                                                                                             GstGLFormat renderbuffer_format,
                                                                                              guint width,
                                                                                              guint height);
 
 GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_new_wrapped   (GstGLContext * context,
                                                                                              GstAllocationParams * alloc_params,
-                                                                                             GstVideoGLTextureType renderbuffer_type,
+                                                                                             GstGLFormat renderbuffer_format,
                                                                                              guint width,
                                                                                              guint height,
                                                                                              gpointer gl_handle,
@@ -138,7 +138,7 @@ gboolean        gst_is_gl_renderbuffer          (GstMemory * mem);
 /* accessors */
 gint                    gst_gl_renderbuffer_get_width     (GstGLRenderbuffer * gl_mem);
 gint                    gst_gl_renderbuffer_get_height    (GstGLRenderbuffer * gl_mem);
-GstVideoGLTextureType   gst_gl_renderbuffer_get_type      (GstGLRenderbuffer * gl_mem);
+GstGLFormat             gst_gl_renderbuffer_get_format    (GstGLRenderbuffer * gl_mem);
 guint                   gst_gl_renderbuffer_get_id        (GstGLRenderbuffer * gl_mem);
 
 G_END_DECLS

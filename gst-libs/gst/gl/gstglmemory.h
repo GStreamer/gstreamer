@@ -68,7 +68,7 @@ struct _GstGLMemory
 
   guint                     tex_id;
   GstGLTextureTarget        tex_target;
-  GstVideoGLTextureType     tex_type;
+  GstGLFormat               tex_format;
   GstVideoInfo              info;
   GstVideoAlignment         valign;
   guint                     plane;
@@ -99,7 +99,7 @@ typedef struct _GstGLVideoAllocationParams GstGLVideoAllocationParams;
  * @plane: the video plane index to allocate
  * @valign: the #GstVideoAlignment to align the system representation to (may be %NULL for the default)
  * @target: the #GstGLTextureTarget to allocate
- * @tex_type: the #GstVideoGLTextureType to allocate
+ * @tex_fomrat: the #GstGLFormat to allocate
  */
 struct _GstGLVideoAllocationParams
 {
@@ -109,7 +109,7 @@ struct _GstGLVideoAllocationParams
   guint                  plane;
   GstVideoAlignment     *valign;
   GstGLTextureTarget     target;
-  GstVideoGLTextureType  tex_type;
+  GstGLFormat            tex_format;
 
   /* <private> */
   gpointer               _padding[GST_PADDING];
@@ -127,7 +127,7 @@ gboolean        gst_gl_video_allocation_params_init_full        (GstGLVideoAlloc
                                                                  guint plane,
                                                                  GstVideoAlignment * valign,
                                                                  GstGLTextureTarget target,
-                                                                 GstVideoGLTextureType tex_type,
+                                                                 GstGLFormat tex_format,
                                                                  gpointer wrapped_data,
                                                                  gpointer gl_handle,
                                                                  gpointer user_data,
@@ -139,7 +139,7 @@ GstGLVideoAllocationParams * gst_gl_video_allocation_params_new (GstGLContext * 
                                                                  guint plane,
                                                                  GstVideoAlignment * valign,
                                                                  GstGLTextureTarget target,
-                                                                 GstVideoGLTextureType tex_type);
+                                                                 GstGLFormat tex_format);
 GST_EXPORT
 GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_data    (GstGLContext * context,
                                                                                  GstAllocationParams * alloc_params,
@@ -147,7 +147,7 @@ GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_data    
                                                                                  guint plane,
                                                                                  GstVideoAlignment * valign,
                                                                                  GstGLTextureTarget target,
-                                                                                 GstVideoGLTextureType tex_type,
+                                                                                 GstGLFormat tex_format,
                                                                                  gpointer wrapped_data,
                                                                                  gpointer user_data,
                                                                                  GDestroyNotify notify);
@@ -159,7 +159,7 @@ GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_texture 
                                                                                  guint plane,
                                                                                  GstVideoAlignment * valign,
                                                                                  GstGLTextureTarget target,
-                                                                                 GstVideoGLTextureType tex_type,
+                                                                                 GstGLFormat tex_format,
                                                                                  guint tex_id,
                                                                                  gpointer user_data,
                                                                                  GDestroyNotify notify);
@@ -171,7 +171,7 @@ GstGLVideoAllocationParams * gst_gl_video_allocation_params_new_wrapped_gl_handl
                                                                                  guint plane,
                                                                                  GstVideoAlignment * valign,
                                                                                  GstGLTextureTarget target,
-                                                                                 GstVideoGLTextureType tex_type,
+                                                                                 GstGLFormat tex_format,
                                                                                  gpointer gl_handle,
                                                                                  gpointer user_data,
                                                                                  GDestroyNotify notify);
@@ -237,7 +237,7 @@ void            gst_gl_memory_init              (GstGLMemory * mem,
                                                  GstMemory * parent,
                                                  GstGLContext * context,
                                                  GstGLTextureTarget target,
-                                                 GstVideoGLTextureType tex_type,
+                                                 GstGLFormat tex_format,
                                                  GstAllocationParams *params,
                                                  GstVideoInfo * info,
                                                  guint plane,
@@ -249,14 +249,14 @@ GST_EXPORT
 gboolean        gst_gl_memory_copy_into         (GstGLMemory *gl_mem,
                                                  guint tex_id,
                                                  GstGLTextureTarget target,
-                                                 GstVideoGLTextureType tex_type,
+                                                 GstGLFormat tex_format,
                                                  gint width,
                                                  gint height);
 GST_EXPORT
 gboolean        gst_gl_memory_copy_teximage     (GstGLMemory * src,
                                                  guint tex_id,
                                                  GstGLTextureTarget out_target,
-                                                 GstVideoGLTextureType out_tex_type,
+                                                 GstGLFormat out_tex_format,
                                                  gint width,
                                                  gint height);
 
@@ -273,7 +273,7 @@ gint                    gst_gl_memory_get_texture_width     (GstGLMemory * gl_me
 GST_EXPORT
 gint                    gst_gl_memory_get_texture_height    (GstGLMemory * gl_mem);
 GST_EXPORT
-GstVideoGLTextureType   gst_gl_memory_get_texture_type      (GstGLMemory * gl_mem);
+GstGLFormat             gst_gl_memory_get_texture_format    (GstGLMemory * gl_mem);
 GST_EXPORT
 GstGLTextureTarget      gst_gl_memory_get_texture_target    (GstGLMemory * gl_mem);
 GST_EXPORT
@@ -283,7 +283,7 @@ GST_EXPORT
 gboolean                gst_gl_memory_setup_buffer          (GstGLMemoryAllocator * allocator,
                                                              GstBuffer * buffer,
                                                              GstGLVideoAllocationParams * params,
-                                                             GstVideoGLTextureType *tex_types,
+                                                             GstGLFormat *tex_formats,
                                                              gpointer *wrapped_data,
                                                              gsize n_wrapped_pointers);
 

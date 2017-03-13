@@ -117,70 +117,23 @@ gst_gl_format_type_n_bytes (guint format, guint type)
 }
 
 /**
- * gst_gl_texture_type_n_bytes:
- * @tex_format: a #GstVideoGLTextureType
- *
- * Returns: the number of bytes @tex_format used per pixel
- */
-guint
-gst_gl_texture_type_n_bytes (GstVideoGLTextureType tex_format)
-{
-  guint format, type;
-
-  format = gst_gl_format_from_gl_texture_type (tex_format);
-  type = GL_UNSIGNED_BYTE;
-  if (tex_format == GST_VIDEO_GL_TEXTURE_TYPE_RGB16)
-    type = GL_UNSIGNED_SHORT_5_6_5;
-
-  return gst_gl_format_type_n_bytes (format, type);
-}
-
-/**
- * gst_gl_format_from_gl_texture_type:
- * @tex_format: a #GstVideoGLTextureType
- *
- * Returns: the OpenGL format specified by @tex_format
- */
-guint
-gst_gl_format_from_gl_texture_type (GstVideoGLTextureType tex_format)
-{
-  switch (tex_format) {
-    case GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA:
-      return GST_GL_LUMINANCE_ALPHA;
-    case GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE:
-      return GST_GL_LUMINANCE;
-    case GST_VIDEO_GL_TEXTURE_TYPE_RGBA:
-      return GST_GL_RGBA;
-    case GST_VIDEO_GL_TEXTURE_TYPE_RGB:
-    case GST_VIDEO_GL_TEXTURE_TYPE_RGB16:
-      return GST_GL_RGB;
-    case GST_VIDEO_GL_TEXTURE_TYPE_RG:
-      return GST_GL_RG;
-    case GST_VIDEO_GL_TEXTURE_TYPE_R:
-      return GST_GL_RED;
-    default:
-      return tex_format;
-  }
-}
-
-/**
- * gst_gl_texture_type_from_format:
+ * gst_gl_format_from_video_info:
  * @context: a #GstGLContext
- * @v_format: a #GstVideoFormat
- * @plane: the plane number (starting from 0)
+ * @vinfo: a #GstVideoInfo
+ * @plane: the plane number in @vinfo
  *
- * Returns: the #GstVideoGLTextureType for the specified @format and @plane
- *          that can be allocated using @context
+ * Returns: the #GstGLFormat necessary for holding the data in @plane of @vinfo
  */
-GstVideoGLTextureType
-gst_gl_texture_type_from_format (GstGLContext * context,
-    GstVideoFormat v_format, guint plane)
+GstGLFormat
+gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
+    guint plane)
 {
   gboolean texture_rg =
       gst_gl_context_check_feature (context, "GL_EXT_texture_rg")
       || gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0)
       || gst_gl_context_check_feature (context, "GL_ARB_texture_rg")
       || gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 0);
+  GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (vinfo);
   guint n_plane_components;
 
   switch (v_format) {
@@ -228,18 +181,16 @@ gst_gl_texture_type_from_format (GstGLContext * context,
 
   switch (n_plane_components) {
     case 4:
-      return GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
+      return GST_GL_RGBA;
       break;
     case 3:
-      return GST_VIDEO_GL_TEXTURE_TYPE_RGB;
+      return GST_GL_RGB;
       break;
     case 2:
-      return texture_rg ? GST_VIDEO_GL_TEXTURE_TYPE_RG :
-          GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA;
+      return texture_rg ? GST_GL_RG : GST_GL_LUMINANCE_ALPHA;
       break;
     case 1:
-      return texture_rg ? GST_VIDEO_GL_TEXTURE_TYPE_R :
-          GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE;
+      return texture_rg ? GST_GL_RED : GST_GL_LUMINANCE;
       break;
     default:
       g_assert_not_reached ();

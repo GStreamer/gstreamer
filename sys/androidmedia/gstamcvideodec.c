@@ -1357,7 +1357,7 @@ retry:
 
       params = gst_gl_video_allocation_params_new (self->gl_context, NULL,
           &state->info, 0, NULL, GST_GL_TEXTURE_TARGET_EXTERNAL_OES,
-          GST_VIDEO_GL_TEXTURE_TYPE_RGBA);
+          GST_GL_RGBA);
 
       self->oes_mem = (GstGLMemory *) gst_gl_base_memory_alloc (base_mem_alloc,
           (GstGLAllocationParams *) params);

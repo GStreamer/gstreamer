@@ -53,7 +53,7 @@ struct _GstEGLImage
 
   GstGLContext *context;
   EGLImageKHR image;
-  GstVideoGLTextureType type;
+  GstGLFormat format;
 
   /* <private> */
   gpointer destroy_data;
@@ -64,7 +64,7 @@ struct _GstEGLImage
 
 GstEGLImage *             gst_egl_image_new_wrapped             (GstGLContext * context,
                                                                  EGLImageKHR image,
-                                                                 GstVideoGLTextureType type,
+                                                                 GstGLFormat format,
                                                                  gpointer user_data,
                                                                  GstEGLImageDestroyNotify user_data_destroy);
 EGLImageKHR             gst_egl_image_get_image                 (GstEGLImage * image);

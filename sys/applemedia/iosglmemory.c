@@ -132,7 +132,7 @@ static GstIOSGLMemory *
 _ios_gl_memory_new (GstGLContext * context,
     GstAppleCoreVideoMemory * cv_mem,
     GstGLTextureTarget target,
-    GstVideoGLTextureType tex_type,
+    GstGLFormat tex_format,
     guint tex_id,
     GstVideoInfo * info,
     guint plane,
@@ -144,7 +144,7 @@ _ios_gl_memory_new (GstGLContext * context,
   mem->gl_mem.tex_id = tex_id;
   mem->gl_mem.texture_wrapped = TRUE;
   gst_gl_memory_init (&mem->gl_mem, _ios_gl_memory_allocator, NULL, context,
-      target, tex_type, NULL, info, plane, valign, NULL, NULL);
+      target, tex_format, NULL, info, plane, valign, NULL, NULL);
   mem->cv_mem = cv_mem;
   mem->gl_data = gl_data;
   mem->gl_notify = gl_notify;
@@ -158,12 +158,12 @@ GstIOSGLMemory *
 gst_ios_gl_memory_new_wrapped (GstGLContext * context,
     GstAppleCoreVideoMemory * cv_mem,
     GstGLTextureTarget target,
-    GstVideoGLTextureType tex_type,
+    GstGLFormat tex_format,
     guint tex_id,
     GstVideoInfo * info,
     guint plane,
     GstVideoAlignment * valign, gpointer gl_data, GDestroyNotify gl_notify)
 {
-  return _ios_gl_memory_new (context, cv_mem, target, tex_type, tex_id, info,
+  return _ios_gl_memory_new (context, cv_mem, target, tex_format, tex_id, info,
       plane, valign, gl_data, gl_notify);
 }
