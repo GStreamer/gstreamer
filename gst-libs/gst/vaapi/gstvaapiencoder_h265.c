@@ -2171,9 +2171,9 @@ gst_vaapi_encoder_h265_get_codec_data (GstVaapiEncoder * base_encoder,
   WRITE_UINT32 (&bs, 0x00, 2);  /* parallelismType */
   WRITE_UINT32 (&bs, 0x3f, 6);  /* 111111 */
   WRITE_UINT32 (&bs, 0x01, 2);  /* chroma_format_idc */
-  WRITE_UINT32 (&bs, 0x3f, 6);  /* 111111 */
+  WRITE_UINT32 (&bs, 0x1f, 5);  /* 11111 */
   WRITE_UINT32 (&bs, 0x01, 3);  /* bit_depth_luma_minus8 */
-  WRITE_UINT32 (&bs, 0x3f, 6);  /* 111111 */
+  WRITE_UINT32 (&bs, 0x1f, 5);  /* 11111 */
   WRITE_UINT32 (&bs, 0x01, 3);  /* bit_depth_chroma_minus8 */
   WRITE_UINT32 (&bs, 0x00, 16); /* avgFramerate */
   WRITE_UINT32 (&bs, 0x00, 2);  /* constatnFramerate */
