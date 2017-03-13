@@ -23,10 +23,11 @@
  * @title: GESAudioSource
  * @short_description: Base Class for audio sources
  *
- * <refsect1 id="GESVideoSource.children_properties" role="properties">
- * <title role="children_properties.title">Children Properties
+ * ## Children Properties
+ *
  * You can use the following children properties through the
  * #ges_track_element_set_child_property and alike set of methods:
+ *
  * <informaltable frame="none">
  * <tgroup cols="3">
  * <colspec colname="properties_type" colwidth="150px"/>
@@ -46,7 +47,6 @@
  * </tbody>
  * </tgroup>
  * </informaltable>
- * </refsect1>
  */
 
 #include "ges-internal.h"

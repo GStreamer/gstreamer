@@ -23,10 +23,10 @@
  * @title: GESVideoSource
  * @short_description: Base Class for video sources
  *
- * <refsect1 id="GESVideoSource.children_properties" role="properties">
- * # Children Properties
+ * # Children Properties:
  * You can use the following children properties through the
  * #ges_track_element_set_child_property and alike set of methods:
+ *
  * <informaltable frame="none">
  * <tgroup cols="3">
  * <colspec colname="properties_type" colwidth="150px"/>
@@ -81,7 +81,6 @@
  * </tbody>
  * </tgroup>
  * </informaltable>
- * </refsect1>
  */
 
 #include <gst/pbutils/missing-plugins.h>
