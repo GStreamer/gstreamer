@@ -64,9 +64,9 @@ The application can influence this clock selection with two methods:
 `gst_pipeline_use_clock()` and `gst_pipeline_auto_clock()`.
 
 The `_use_clock()` method forces the use of a specific clock on the
-pipeline regardless of what clock providers are children of the
-pipeline. Setting NULL disables the clock completely and makes the
-pipeline run as fast as possible.
+pipeline regardless of what clock providers are available. Passing a
+NULL `GstClock *clock` parameter to this method disables all clocking
+and makes the pipeline run as fast as possible.
 
 The `_auto_clock()` method removes the fixed clock and reactivates the
 auto- matic clock selection algorithm described above.
