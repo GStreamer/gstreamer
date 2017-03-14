@@ -24,9 +24,6 @@ def prepend_env_var(env, var, value):
 def get_subprocess_env(options):
     env = os.environ.copy()
 
-    prepend_env_var(env, "GST_PLUGIN_PATH", options.builddir)
-    prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(SCRIPTDIR, 'subprojects',
-                                                         'gst-python', 'plugin'))
     env["CURRENT_GST"] = os.path.normpath(SCRIPTDIR)
     env["GST_VALIDATE_SCENARIOS_PATH"] = os.path.normpath(
         "%s/subprojects/gst-devtools/validate/data/scenarios" % SCRIPTDIR)
@@ -56,6 +53,9 @@ def get_subprocess_env(options):
     else:
         lib_path_envvar = 'LD_LIBRARY_PATH'
 
+    prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(SCRIPTDIR, 'subprojects',
+                                                        'gst-python', 'plugin'))
+
     meson, mesonconf, mesonintrospect = get_meson()
     targets_s = subprocess.check_output([sys.executable, mesonintrospect, options.builddir, '--targets'])
     targets = json.loads(targets_s.decode())
@@ -71,6 +71,7 @@ def get_subprocess_env(options):
                 continue
 
             if os.path.normpath("lib/gstreamer-1.0") in os.path.normpath(target.get('install_filename')):
+                prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(options.builddir, root))
                 continue
 
             prepend_env_var(env, lib_path_envvar,
