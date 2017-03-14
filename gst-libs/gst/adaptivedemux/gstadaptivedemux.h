@@ -293,18 +293,6 @@ struct _GstAdaptiveDemuxClass
   GstFlowReturn (*update_manifest_data) (GstAdaptiveDemux * demux, GstBuffer * buf);
 
   gboolean      (*is_live)          (GstAdaptiveDemux * demux);
-
-  /**
-   * get_duration:
-   * @demux: #GstAdaptiveDemux
-   *
-   * For non-live streams, this will be called to query the duration of the
-   * stream.
-   *
-   * Returns: The duration of the stream, or #GST_CLOCK_TIME_NONE if the
-   * duration is unknown
-   * Since: 1.6
-   */
   GstClockTime  (*get_duration)     (GstAdaptiveDemux * demux);
 
   /**

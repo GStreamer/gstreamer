@@ -934,7 +934,7 @@ guint64
 gst_mss_manifest_get_duration (GstMssManifest * manifest)
 {
   gchar *duration;
-  guint64 dur = GST_CLOCK_TIME_NONE;
+  guint64 dur = -1;
 
   /* try the property */
   duration =
