@@ -1070,7 +1070,6 @@ tests/examples/cairo/Makefile
 tests/examples/equalizer/Makefile
 tests/examples/jack/Makefile
 tests/examples/level/Makefile
-tests/examples/pulse/Makefile
 tests/examples/rtp/Makefile
 tests/examples/shapewipe/Makefile
 tests/examples/spectrum/Makefile

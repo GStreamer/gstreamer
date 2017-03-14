@@ -72,7 +72,8 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/median \
 	$(top_srcdir)/gst/qtdemux \
 	$(top_srcdir)/gst/quicktime \
-	$(top_srcdir)/ext/annodex
+	$(top_srcdir)/ext/annodex \
+	$(top_srcdir)/tests/examples/pulse
 
 include $(top_srcdir)/common/cruft.mak
 
