@@ -196,7 +196,7 @@ gst_io_surface_memory_wrapped (GstGLContext * context,
     guint plane,
     GstVideoAlignment * valign, gpointer user_data, GDestroyNotify notify)
 {
-  return _io_surface_memory_new (context, surface, target, tex_type, info,
+  return _io_surface_memory_new (context, surface, target, tex_format, info,
       plane, valign, user_data, notify);
 }
 
