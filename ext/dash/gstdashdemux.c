@@ -292,7 +292,14 @@ static GTimeSpan gst_dash_demux_get_clock_compensation (GstDashDemux * demux);
 static GDateTime *gst_dash_demux_get_server_now_utc (GstDashDemux * demux);
 
 #define SIDX(s) (&(s)->sidx_parser.sidx)
-#define SIDX_ENTRY(s,i) (&(SIDX(s)->entries[(i)]))
+
+static inline GstSidxBoxEntry *
+SIDX_ENTRY (GstDashDemuxStream * s, gint i)
+{
+  g_assert (i < SIDX (s)->entries_count);
+  return &(SIDX (s)->entries[(i)]);
+}
+
 #define SIDX_CURRENT_ENTRY(s) SIDX_ENTRY(s, SIDX(s)->entry_index)
 
 static void gst_dash_demux_send_content_protection_event (gpointer cp_data,
