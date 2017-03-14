@@ -4380,6 +4380,9 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       qtmux->interleave_time = 500 * GST_MSECOND;
     if (!qtmux->interleave_bytes_set)
       qtmux->interleave_bytes = width > 720 ? 4 * 1024 * 1024 : 2 * 1024 * 1024;
+  } else if (strcmp (mimetype, "video/x-cineform") == 0) {
+    entry.fourcc = FOURCC_cfhd;
+    sync = FALSE;
   }
 
   if (!entry.fourcc)

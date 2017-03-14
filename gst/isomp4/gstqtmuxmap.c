@@ -84,6 +84,10 @@
   "variant = (string) {standard, lt, hq, proxy, 4444, 4444xq}, " \
   COMMON_VIDEO_CAPS
 
+#define CINEFORM_CAPS \
+  "video/x-cineform, " \
+  COMMON_VIDEO_CAPS
+
 #define SVQ_CAPS \
   "video/x-svq, " \
   "svqversion = (int) 3, " \
@@ -178,6 +182,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             COMMON_VIDEO_CAPS "; "
             MPEG4V_CAPS "; "
             PRORES_CAPS "; "
+            CINEFORM_CAPS "; "
             H263_CAPS "; "
             H264_CAPS "; "
             H265_CAPS "; "

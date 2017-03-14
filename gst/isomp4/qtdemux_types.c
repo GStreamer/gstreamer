@@ -94,6 +94,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_dfLa, "dfLa", 0, qtdemux_dump_dfLa},
   {FOURCC_wave, "wave", QT_FLAG_CONTAINER},
   {FOURCC_appl, "appl", QT_FLAG_CONTAINER},
+  {FOURCC_cfhd, "cfhd", QT_FLAG_CONTAINER},
   {FOURCC_esds, "esds", 0},
   {FOURCC_hnti, "hnti", QT_FLAG_CONTAINER},
   {FOURCC_rtp_, "rtp ", 0, qtdemux_dump_unknown},
