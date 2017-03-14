@@ -1541,6 +1541,8 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
 
   gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
   gst_isoff_sidx_parser_init (&dashstream->sidx_parser);
+  dashstream->sidx_base_offset = 0;
+  dashstream->sidx_index = 0;
   if (dashstream->sidx_adapter)
     gst_adapter_clear (dashstream->sidx_adapter);
 
