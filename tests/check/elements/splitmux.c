@@ -189,8 +189,8 @@ receive_handoff (GstElement * object G_GNUC_UNUSED, GstBuffer * buf,
 }
 
 static void
-test_playback (const gchar * in_pattern, GstClockTime first_time,
-    GstClockTime last_time)
+test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
+    GstClockTime exp_last_time)
 {
   GstMessage *msg;
   GstElement *pipeline;
@@ -233,11 +233,13 @@ test_playback (const gchar * in_pattern, GstClockTime first_time,
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
   /* Check we saw the entire range of values */
-  fail_unless (first_ts == 0,
-      "Expected start of playback range 0, got %" GST_TIME_FORMAT,
+  fail_unless (first_ts == exp_first_time,
+      "Expected start of playback range %" GST_TIME_FORMAT
+      ", got %" GST_TIME_FORMAT, GST_TIME_ARGS (exp_first_time),
       GST_TIME_ARGS (first_ts));
-  fail_unless (last_ts == (3 * GST_SECOND),
-      "Expected end of playback range 3s, got %" GST_TIME_FORMAT,
+  fail_unless (last_ts == exp_last_time,
+      "Expected end of playback range %" GST_TIME_FORMAT
+      ", got %" GST_TIME_FORMAT, GST_TIME_ARGS (exp_last_time),
       GST_TIME_ARGS (last_ts));
 
   gst_object_unref (pipeline);
