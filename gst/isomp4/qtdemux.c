@@ -13866,6 +13866,13 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "layout", G_TYPE_STRING, "interleaved", NULL);
       stream->alignment = 4;
       break;
+    case GST_MAKE_FOURCC ('s', '1', '6', 'l'):
+      _codec ("Raw 16-bit PCM audio");
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S16LE",
+          "layout", G_TYPE_STRING, "interleaved", NULL);
+      stream->alignment = 2;
+      break;
     case FOURCC_ulaw:
       _codec ("Mu-law audio");
       caps = gst_caps_new_empty_simple ("audio/x-mulaw");
