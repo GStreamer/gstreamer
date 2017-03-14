@@ -1308,6 +1308,10 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
 {
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
+  gint last_index, last_repeat;
+
+  last_index = dashstream->active_stream->segment_index;
+  last_repeat = dashstream->active_stream->segment_repeat_index;
 
   if (dashstream->moof)
     gst_isoff_moof_box_free (dashstream->moof);
@@ -1317,7 +1321,21 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
   dashstream->moof_sync_samples = NULL;
   dashstream->current_sync_sample = -1;
 
+  gst_mpd_client_stream_seek (dashdemux->client, dashstream->active_stream,
+      forward, flags, ts, final_ts);
+
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
+    if (last_index != dashstream->active_stream->segment_index ||
+        last_repeat != dashstream->active_stream->segment_repeat_index) {
+      GST_LOG_OBJECT (stream->pad,
+          "Segment index was changed, reset sidx parser");
+      gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
+      gst_isoff_sidx_parser_init (&dashstream->sidx_parser);
+      dashstream->sidx_base_offset = 0;
+      if (dashstream->sidx_adapter)
+        gst_adapter_clear (dashstream->sidx_adapter);
+    }
+
     if (dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
       gst_dash_demux_stream_sidx_seek (dashstream, forward, flags, ts,
           final_ts);
@@ -1326,12 +1344,8 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
       /* FIXME - the final_ts won't be correct here */
       dashstream->pending_seek_ts = ts;
     }
-
-    return GST_FLOW_OK;
   }
 
-  gst_mpd_client_stream_seek (dashdemux->client, dashstream->active_stream,
-      forward, flags, ts, final_ts);
   return GST_FLOW_OK;
 }
 
