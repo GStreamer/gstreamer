@@ -230,19 +230,6 @@ gboolean     gst_v4l2_object_open_shared     (GstV4l2Object *v4l2object, GstV4l2
 gboolean     gst_v4l2_object_close           (GstV4l2Object *v4l2object);
 
 /* probing */
-#if 0
-const GList* gst_v4l2_probe_get_properties  (GstPropertyProbe * probe);
-
-void         gst_v4l2_probe_probe_property  (GstPropertyProbe * probe, guint prop_id,
-                                             const GParamSpec * pspec,
-                                             GList ** klass_devices);
-gboolean     gst_v4l2_probe_needs_probe     (GstPropertyProbe * probe, guint prop_id,
-                                             const GParamSpec * pspec,
-                                             GList ** klass_devices);
-GValueArray* gst_v4l2_probe_get_values      (GstPropertyProbe * probe, guint prop_id,
-                                             const GParamSpec * pspec,
-                                             GList ** klass_devices);
-#endif
 
 GstCaps*      gst_v4l2_object_get_all_caps (void);
 
