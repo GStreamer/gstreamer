@@ -154,7 +154,7 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
       break;
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
-      return GST_VIDEO_GL_TEXTURE_TYPE_RGB16;
+      return GST_GL_RGB565;
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_YUY2:
@@ -197,7 +197,7 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
       break;
   }
 
-  return GST_VIDEO_GL_TEXTURE_TYPE_RGBA;
+  return GST_GL_RGBA;
 }
 
 /**
