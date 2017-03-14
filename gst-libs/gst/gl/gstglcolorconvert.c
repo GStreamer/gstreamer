@@ -2476,8 +2476,7 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   if (gl->BindVertexArray)
     gl->BindVertexArray (convert->priv->vao);
-  else
-    _bind_buffer (convert);
+  _bind_buffer (convert);
 
   for (i = c_info->in_n_textures - 1; i >= 0; i--) {
     gchar *scale_name = g_strdup_printf ("tex_scale%u", i);
@@ -2501,8 +2500,7 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 
   if (gl->BindVertexArray)
     gl->BindVertexArray (0);
-  else
-    _unbind_buffer (convert);
+  _unbind_buffer (convert);
 
   if (gl->DrawBuffer)
     gl->DrawBuffer (GL_NONE);

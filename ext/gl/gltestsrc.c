@@ -213,16 +213,14 @@ _src_shader_fill_bound_fbo (gpointer impl)
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (src->vao);
-  else
-    _bind_buffer (src);
+  _bind_buffer (src);
 
   gl->DrawElements (GL_TRIANGLES, src->n_indices, GL_UNSIGNED_SHORT,
       (gpointer) (gintptr) src->index_offset);
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  else
-    _unbind_buffer (src);
+  _unbind_buffer (src);
 
   gst_gl_context_clear_shader (src->base.context);
 

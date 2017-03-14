@@ -1203,26 +1203,16 @@ gst_gl_filter_draw_fullscreen_quad (GstGLFilter * filter)
       gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, filter->vbo_indices);
       gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
           GL_STATIC_DRAW);
-
-      if (gl->GenVertexArrays) {
-        _bind_buffer (filter);
-        gl->BindVertexArray (0);
-      }
-
-      gl->BindBuffer (GL_ARRAY_BUFFER, 0);
-      gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     if (gl->GenVertexArrays)
       gl->BindVertexArray (filter->vao);
-    else
-      _bind_buffer (filter);
+    _bind_buffer (filter);
 
     gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
     if (gl->GenVertexArrays)
       gl->BindVertexArray (0);
-    else
-      _unbind_buffer (filter);
+    _unbind_buffer (filter);
   }
 }

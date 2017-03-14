@@ -191,8 +191,7 @@ _redraw_texture (GtkGstGLWidget * gst_widget, guint tex)
 
   if (gl->BindVertexArray)
     gl->BindVertexArray (priv->vao);
-  else
-    gtk_gst_gl_widget_bind_buffer (gst_widget);
+  gtk_gst_gl_widget_bind_buffer (gst_widget);
 
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (GL_TEXTURE_2D, tex);
@@ -202,8 +201,7 @@ _redraw_texture (GtkGstGLWidget * gst_widget, guint tex)
 
   if (gl->BindVertexArray)
     gl->BindVertexArray (0);
-  else
-    gtk_gst_gl_widget_unbind_buffer (gst_widget);
+  gtk_gst_gl_widget_unbind_buffer (gst_widget);
 
   gl->BindTexture (GL_TEXTURE_2D, 0);
 }

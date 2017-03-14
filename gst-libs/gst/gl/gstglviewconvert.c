@@ -1923,8 +1923,7 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
 
   if (gl->BindVertexArray)
     gl->BindVertexArray (priv->vao);
-  else
-    _bind_buffer (viewconvert);
+  _bind_buffer (viewconvert);
 
   if (in_mode == GST_VIDEO_MULTIVIEW_MODE_SEPARATED ||
       in_mode == GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME) {
@@ -1944,8 +1943,7 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
 
   if (gl->BindVertexArray)
     gl->BindVertexArray (0);
-  else
-    _unbind_buffer (viewconvert);
+  _unbind_buffer (viewconvert);
   if (gl->DrawBuffer)
     gl->DrawBuffer (GL_NONE);
   /* we are done with the shader */

@@ -2228,8 +2228,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
     if (gl->GenVertexArrays)
       gl->BindVertexArray (gl_sink->vao);
-    else
-      _bind_buffer (gl_sink);
+    _bind_buffer (gl_sink);
 
     gl->ActiveTexture (GL_TEXTURE0);
     gl->BindTexture (gl_target, gl_sink->redisplay_texture);
@@ -2258,8 +2257,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
     if (gl->GenVertexArrays)
       gl->BindVertexArray (0);
-    else
-      _unbind_buffer (gl_sink);
+    _unbind_buffer (gl_sink);
 
     if (gl_sink->ignore_alpha)
       gl->Disable (GL_BLEND);

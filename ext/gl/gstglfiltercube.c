@@ -476,15 +476,13 @@ _callback (gpointer stuff)
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (cube_filter->vao);
-  else
-    _bind_buffer (cube_filter);
+  _bind_buffer (cube_filter);
 
   gl->DrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  else
-    _unbind_buffer (cube_filter);
+  _unbind_buffer (cube_filter);
 
   gl->Disable (GL_DEPTH_TEST);
 
