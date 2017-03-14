@@ -960,19 +960,15 @@ gst_gl_transformation_callback (gpointer stuff)
   if (gl->GenVertexArrays)
     gl->BindVertexArray (transformation->vao);
 
-  if (transformation->caps_change) {
+  if (transformation->caps_change)
     _upload_vertices (transformation);
-    _bind_buffer (transformation);
-  } else if (!gl->GenVertexArrays) {
-    _bind_buffer (transformation);
-  }
+  _bind_buffer (transformation);
 
   gl->DrawElements (GL_TRIANGLE_STRIP, 5, GL_UNSIGNED_SHORT, 0);
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  else
-    _unbind_buffer (transformation);
+  _unbind_buffer (transformation);
 
   gst_gl_context_clear_shader (GST_GL_BASE_FILTER (filter)->context);
   transformation->caps_change = FALSE;

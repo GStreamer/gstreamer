@@ -239,15 +239,13 @@ blit_tex (gpointer data)
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (vao);
-  else
-    _bind_buffer (context);
+  _bind_buffer (context);
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  else
-    _unbind_buffer (context);
+  _unbind_buffer (context);
 
   return TRUE;
 }

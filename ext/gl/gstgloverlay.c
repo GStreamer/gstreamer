@@ -522,9 +522,7 @@ gst_gl_overlay_callback (GstGLFilter * filter, GstGLMemory * in_tex,
         GL_STATIC_DRAW);
   }
 
-  if (!gl->GenVertexArrays || overlay->geometry_change) {
-    _bind_buffer (overlay, overlay->overlay_vbo);
-  }
+  _bind_buffer (overlay, overlay->overlay_vbo);
 
   gl->BindTexture (GL_TEXTURE_2D, image_tex);
   gst_gl_shader_set_uniform_1f (overlay->shader, "alpha", overlay->alpha);
@@ -539,11 +537,9 @@ gst_gl_overlay_callback (GstGLFilter * filter, GstGLMemory * in_tex,
   ret = TRUE;
 
 out:
-  if (gl->GenVertexArrays) {
+  if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  } else {
-    _unbind_buffer (overlay);
-  }
+  _unbind_buffer (overlay);
 
   gst_gl_context_clear_shader (GST_GL_BASE_FILTER (filter)->context);
 
