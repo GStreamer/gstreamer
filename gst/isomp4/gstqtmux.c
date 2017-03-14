@@ -3553,7 +3553,11 @@ find_best_pad (GstQTMux * qtmux, GstCollectPads * pads)
       GST_DEBUG_OBJECT (qtmux, "Reusing pad %s:%s",
           GST_DEBUG_PAD_NAME (best_pad->collect.pad));
     }
-  } else {
+  } else if (qtmux->collect->data->next) {
+    /* Only switch pads if we have more than one, otherwise
+     * we can just put everything into a single chunk and save
+     * a few bytes of offsets
+     */
     if (qtmux->current_pad)
       GST_DEBUG_OBJECT (qtmux, "Switching from pad %s:%s",
           GST_DEBUG_PAD_NAME (qtmux->current_pad->collect.pad));
