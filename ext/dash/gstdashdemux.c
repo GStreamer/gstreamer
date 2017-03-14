@@ -1270,7 +1270,15 @@ gst_dash_demux_stream_sidx_seek (GstDashDemuxStream * dashstream,
         sizeof (GstSidxBoxEntry),
         (GCompareDataFunc) gst_dash_demux_index_entry_search, mode, &ts, NULL);
 
-    idx = entry - sidx->entries;
+    if (entry) {
+      idx = entry - sidx->entries;
+    } else if (mode == GST_SEARCH_MODE_BEFORE) {
+      /* target ts is smaller than pts of the first entry */
+      idx = 0;
+    } else {
+      /* target ts is larger than pts + duration of the last entry
+       * idx = sidx->entries_count */
+    }
 
     /* FIXME in reverse mode, if we are exactly at a fragment start it makes more
      * sense to start from the end of the previous fragment */
