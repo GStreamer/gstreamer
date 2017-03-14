@@ -268,48 +268,6 @@ gboolean      gst_v4l2_object_propose_allocation (GstV4l2Object * obj,
 
 GstStructure * gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
 
-
-#define GST_IMPLEMENT_V4L2_PROBE_METHODS(Type_Class, interface_as_function)                 \
-                                                                                            \
-static void                                                                                 \
-interface_as_function ## _probe_probe_property (GstPropertyProbe * probe,                   \
-                                                guint prop_id,                              \
-                                                const GParamSpec * pspec)                   \
-{                                                                                           \
-  Type_Class *this_class = (Type_Class*) G_OBJECT_GET_CLASS (probe);                        \
-  gst_v4l2_probe_probe_property (probe, prop_id, pspec,                                     \
-                                 &this_class->v4l2_class_devices);                          \
-}                                                                                           \
-                                                                                            \
-static gboolean                                                                             \
-interface_as_function ## _probe_needs_probe (GstPropertyProbe * probe,                      \
-                                             guint prop_id,                                 \
-                                             const GParamSpec * pspec)                      \
-{                                                                                           \
-  Type_Class *this_class = (Type_Class*) G_OBJECT_GET_CLASS (probe);                        \
-  return gst_v4l2_probe_needs_probe (probe, prop_id, pspec,                                 \
-                                     &this_class->v4l2_class_devices);                      \
-}                                                                                           \
-                                                                                            \
-static GValueArray *                                                                        \
-interface_as_function ## _probe_get_values (GstPropertyProbe * probe,                       \
-                                            guint prop_id,                                  \
-                                            const GParamSpec * pspec)                       \
-{                                                                                           \
-  Type_Class *this_class = (Type_Class*) G_OBJECT_GET_CLASS (probe);                        \
-  return gst_v4l2_probe_get_values (probe, prop_id, pspec,                                  \
-                                    &this_class->v4l2_class_devices);                       \
-}                                                                                           \
-                                                                                            \
-static void                                                                                 \
-interface_as_function ## _property_probe_interface_init (GstPropertyProbeInterface * iface) \
-{                                                                                           \
-  iface->get_properties = gst_v4l2_probe_get_properties;                                    \
-  iface->probe_property = interface_as_function ## _probe_probe_property;                   \
-  iface->needs_probe = interface_as_function ## _probe_needs_probe;                         \
-  iface->get_values = interface_as_function ## _probe_get_values;                           \
-}
-
 G_END_DECLS
 
 #endif /* __GST_V4L2_OBJECT_H__ */
