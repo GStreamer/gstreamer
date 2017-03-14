@@ -125,7 +125,7 @@ Sources
   framework are really easy to get.
 
   Stable source code releases can be found at:
-  <http://www.freedesktop.org/software/vaapi/releases/gstreamer-vaapi/>
+  <https://gstreamer.freedesktop.org/src/gstreamer-vaapi/>
 
   Git repository for work-in-progress changes is available at:
   <https://cgit.freedesktop.org/gstreamer/gstreamer-vaapi>
