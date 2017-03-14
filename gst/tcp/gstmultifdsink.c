@@ -290,16 +290,20 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * @gstmultifdsink: the multifdsink element to emit this signal on
    * @fd:             the file descriptor to get stats of from multifdsink
    *
-   * Get statistics about @fd. This function returns a GValueArray to ease
+   * Get statistics about @fd. This function returns a #GstStructure to ease
    * automatic wrapping for bindings.
    *
-   * Returns: a GValueArray with the statistics. The array contains guint64
-   *     values that represent respectively: total number of bytes sent, time
-   *     when the client was added, time when the client was
-   *     disconnected/removed, time the client is/was active, last activity
-   *     time (in epoch seconds), number of buffers dropped.
-   *     All times are expressed in nanoseconds (GstClockTime).
-   *     The array can be 0-length if the client was not found.
+   * Returns: a #GstStructure with the statistics. The structures
+   *     contains guint64 values that represent respectively: total
+   *     number of bytes sent (bytes-sent), time when the client was
+   *     added (connect-time), time when the client was
+   *     disconnected/removed (disconnect-time), time the client
+   *     is/was active (connect-duration), last activity time (in
+   *     epoch seconds) (last-activity-time), number of buffers
+   *     dropped (buffers-dropped), the timestamp of the first buffer
+   *     (first-buffer-ts) and of the last buffer (last-buffer-ts).
+   *     All times are expressed in nanoseconds (GstClockTime).  The
+   *     structure can be empty if the client was not found.
    */
   gst_multi_fd_sink_signals[SIGNAL_GET_STATS] =
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass),

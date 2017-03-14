@@ -897,7 +897,7 @@ gst_multi_handle_sink_get_stats (GstMultiHandleSink * sink,
         "connect-time", G_TYPE_UINT64, mhclient->connect_time,
         "disconnect-time", G_TYPE_UINT64, mhclient->disconnect_time,
         "connect-duration", G_TYPE_UINT64, interval,
-        "last-activitity-time", G_TYPE_UINT64, mhclient->last_activity_time,
+        "last-activity-time", G_TYPE_UINT64, mhclient->last_activity_time,
         "buffers-dropped", G_TYPE_UINT64, mhclient->dropped_buffers,
         "first-buffer-ts", G_TYPE_UINT64, mhclient->first_buffer_ts,
         "last-buffer-ts", G_TYPE_UINT64, mhclient->last_buffer_ts, NULL);
