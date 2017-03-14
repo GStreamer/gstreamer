@@ -1331,6 +1331,12 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           "video/x-theora", NULL);
       break;
 
+    case AV_CODEC_ID_CFHD:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode,
+          "video/x-cineform", NULL);
+      break;
+
     case AV_CODEC_ID_AAC:
     {
       caps =
@@ -3947,6 +3953,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-flash-screen2")) {
     id = AV_CODEC_ID_FLASHSV2;
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-cineform")) {
+    id = AV_CODEC_ID_CFHD;
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-indeo")) {
     gint indeoversion = 0;
