@@ -1577,8 +1577,7 @@ gst_dash_demux_stream_advance_sync_sample (GstAdaptiveDemuxStream * stream,
     idx =
         (target_time -
         dashstream->current_fragment_timestamp) /
-        MIN (dashstream->keyframe_average_distance,
-        stream->fragment.duration);
+        MIN (dashstream->keyframe_average_distance, stream->fragment.duration);
   }
 
   GST_DEBUG_OBJECT (stream->pad,
@@ -1811,7 +1810,7 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
     } else if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
         dashstream->sidx_position != 0
         && dashstream->sidx_position != GST_CLOCK_TIME_NONE
-        && dashstream->sidx_parser.sidx.entries) {
+        && SIDX (dashstream)->entries) {
       GstSidxBoxEntry *entry = SIDX_CURRENT_ENTRY (dashstream);
       dur = entry->duration;
     } else {
@@ -1876,16 +1875,16 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
     /* Key-unit trick mode, seek to fragment containing target time */
     if (stream->segment.rate > 0)
       ret = gst_dash_demux_stream_seek (stream, TRUE, 0,
-          target_time + dashstream->keyframe_average_distance, &actual_ts);
+          target_time, &actual_ts);
     else
       ret = gst_dash_demux_stream_seek (stream, FALSE, 0,
-          target_time - dashstream->keyframe_average_distance, &actual_ts);
+          target_time, &actual_ts);
     if (ret == GST_FLOW_OK)
       GST_DEBUG_OBJECT (stream->pad, "Emergency seek to %" GST_TIME_FORMAT,
           GST_TIME_ARGS (actual_ts));
     else
       GST_WARNING_OBJECT (stream->pad, "Failed to seek to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (target_time + dashstream->keyframe_average_distance));
+          GST_TIME_ARGS (target_time));
   } else {
     /* Normal mode, advance to the next fragment */
     ret = gst_mpd_client_advance_segment (dashdemux->client,
