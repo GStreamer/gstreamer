@@ -1292,6 +1292,8 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
     dashstream->actual_position =
         fragment.timestamp +
         dashstream->current_sync_sample * dashstream->keyframe_average_distance;
+    if (stream->segment.rate < 0.0)
+      dashstream->actual_position += dashstream->keyframe_average_distance;
     dashstream->actual_position =
         MIN (dashstream->actual_position,
         fragment.timestamp + stream->fragment.duration);
@@ -1332,6 +1334,7 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
       if (stream->demux->segment.rate < 0.0) {
         stream->fragment.range_end =
             stream->fragment.range_start + entry->size - 1;
+        dashstream->actual_position += entry->duration;
       } else {
         stream->fragment.range_end = fragment.range_end;
       }
