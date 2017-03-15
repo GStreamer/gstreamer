@@ -363,7 +363,9 @@ void
 gst_isoff_sidx_parser_clear (GstSidxParser * parser)
 {
   g_free (parser->sidx.entries);
-  parser->sidx.entries = NULL;
+  memset (parser, 0, sizeof (*parser));
+
+  gst_isoff_sidx_parser_init (parser);
 }
 
 static void
