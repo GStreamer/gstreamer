@@ -70,10 +70,10 @@ struct _GstRawVideoParseConfig
   /* Distance between the start of each frame, in bytes. If this value
    * is larger than the actual size of a frame, then the extra bytes
    * are skipped. For example, with frames that have 115200 bytes, a
-   * frame_stride value of 120000 means that 4800 trailing bytes are
+   * frame_size value of 120000 means that 4800 trailing bytes are
    * skipped after the 115200 frame bytes. This is useful to skip
    * metadata in between frames. */
-  guint frame_stride;
+  guint frame_size;
 
   GstVideoInfo info;
 

@@ -51,7 +51,7 @@
 #define NUM_TEST_PLANES 3
 
 #define PROP_CTX_PLANE_STRIDE 10
-#define PROP_CTX_FRAME_STRIDE 500
+#define PROP_CTX_FRAME_SIZE 500
 #define PROP_CTX_PLANE_PADDING 20
 #define PROP_CTX_PLANE_SIZE (PROP_CTX_PLANE_STRIDE * TEST_HEIGHT + PROP_CTX_PLANE_PADDING)
 
@@ -194,7 +194,7 @@ setup_rawvideoparse (gboolean use_sink_caps,
     g_value_unset (&val);
 
     g_object_set (G_OBJECT (rawvideoparse), "width", TEST_WIDTH, "height",
-        TEST_HEIGHT, "frame-stride", PROP_CTX_FRAME_STRIDE, "framerate",
+        TEST_HEIGHT, "frame-size", PROP_CTX_FRAME_SIZE, "framerate",
         TEST_FRAMERATE_N, TEST_FRAMERATE_D, "format", TEST_FRAME_FORMAT, NULL);
     g_object_set_property (G_OBJECT (rawvideoparse), "plane-offsets",
         &plane_offsets);
@@ -270,7 +270,7 @@ setup_rawvideoparse (gboolean use_sink_caps,
 
   for (i = 0; i < 10; ++i) {
     GstBuffer *buffer =
-        gst_buffer_new_allocate (NULL, PROP_CTX_FRAME_STRIDE, NULL);
+        gst_buffer_new_allocate (NULL, PROP_CTX_FRAME_SIZE, NULL);
     gst_buffer_memset (buffer, 0, 0xCC, gst_buffer_get_size (buffer));
     fill_test_pattern (&properties_ctx, buffer, i, 0);
     gst_adapter_push (properties_ctx.data, buffer);

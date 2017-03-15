@@ -33,7 +33,7 @@
  * The element implements the properties and sink caps configuration as specified
  * in the #GstRawBaseParse documentation. The properties configuration can be
  * modified by using the width, height, pixel-aspect-ratio, framerate, interlaced,
- * top-field-first, plane-strides, plane-offsets, and frame-stride properties.
+ * top-field-first, plane-strides, plane-offsets, and frame-size properties.
  *
  * If the properties configuration is used, plane strides and offsets will be
  * computed by using gst_video_info_set_format(). This can be overridden by passing
@@ -43,14 +43,14 @@
  * plane strides & offsets, pass NULL to one or both of the plane-offset and
  * plane-array properties.
  *
- * The frame stride property is useful in cases where there is extra data between
+ * The frame size property is useful in cases where there is extra data between
  * the frames (for example, trailing metadata, or headers). The parser calculates
  * the actual frame size out of the other properties and compares it with this
- * frame-stride value. If the frame stride is larger than the calculated size,
+ * frame-size value. If the frame size is larger than the calculated size,
  * then the extra bytes after the end of the frame are skipped. For example, with
- * 8-bit grayscale frames and a frame size of 100x10 pixels and a frame stride of
+ * 8-bit grayscale frames and a actual frame size of 100x10 pixels and a frame-size of
  * 1500 bytes, there are 500 excess bytes at the end of the actual frame which
- * are then skipped. It is safe to set the frame stride to a value that is smaller
+ * are then skipped. It is safe to set the frame size to a value that is smaller
  * than the actual frame size (in fact, its default value is 0); if it is smaller,
  * then no trailing data will be skipped.
  *
@@ -99,7 +99,7 @@ enum
   PROP_TOP_FIELD_FIRST,
   PROP_PLANE_STRIDES,
   PROP_PLANE_OFFSETS,
-  PROP_FRAME_STRIDE
+  PROP_FRAME_SIZE
 };
 
 #define DEFAULT_WIDTH                 320
@@ -313,10 +313,10 @@ gst_raw_video_parse_class_init (GstRawVideoParseClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
   g_object_class_install_property (object_class,
-      PROP_FRAME_STRIDE,
-      g_param_spec_uint ("frame-stride",
-          "Frame stride",
-          "Stride between whole frames (0 = frames are tightly packed together)",
+      PROP_FRAME_SIZE,
+      g_param_spec_uint ("frame-size",
+          "Frame size",
+          "Size of a frame (0 = frames are tightly packed together)",
           0, G_MAXUINT,
           DEFAULT_FRAME_STRIDE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
@@ -342,7 +342,7 @@ gst_raw_video_parse_init (GstRawVideoParse * raw_video_parse)
    * to TRUE, and make sure its bpf value is valid. */
   raw_video_parse->properties_config.ready = TRUE;
   raw_video_parse->properties_config.top_field_first = DEFAULT_TOP_FIELD_FIRST;
-  raw_video_parse->properties_config.frame_stride = DEFAULT_FRAME_STRIDE;
+  raw_video_parse->properties_config.frame_size = DEFAULT_FRAME_STRIDE;
 }
 
 static void
@@ -604,13 +604,14 @@ gst_raw_video_parse_set_property (GObject * object, guint prop_id,
       break;
     }
 
-    case PROP_FRAME_STRIDE:
+    case PROP_FRAME_SIZE:
     {
-      /* The frame stride does not affect the video frame size,
-       * so it is just set directly without any updates */
+      /* The frame size is used to accumulate extra padding that may exist at
+       * the end of a frame. It does not affect GstVideoInfo::size, hence
+       * it is just set directly without any updates */
 
       GST_RAW_BASE_PARSE_CONFIG_MUTEX_LOCK (object);
-      props_cfg->frame_stride = g_value_get_uint (value);
+      props_cfg->frame_size = g_value_get_uint (value);
       gst_raw_video_parse_update_info (props_cfg);
       if (!gst_raw_video_parse_is_using_sink_caps (raw_video_parse))
         gst_base_parse_set_min_frame_size (base_parse,
@@ -726,9 +727,9 @@ gst_raw_video_parse_get_property (GObject * object, guint prop_id,
       break;
     }
 
-    case PROP_FRAME_STRIDE:
+    case PROP_FRAME_SIZE:
       GST_RAW_BASE_PARSE_CONFIG_MUTEX_LOCK (object);
-      g_value_set_uint (value, raw_video_parse->properties_config.frame_stride);
+      g_value_set_uint (value, raw_video_parse->properties_config.frame_size);
       GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (object);
       break;
 
@@ -832,7 +833,7 @@ gst_raw_video_parse_set_config_from_caps (GstRawBaseParse * raw_base_parse,
     config_ptr->interlaced = GST_VIDEO_INFO_IS_INTERLACED (&(config_ptr->info));
     config_ptr->height = GST_VIDEO_INFO_HEIGHT (&(config_ptr->info));
     config_ptr->top_field_first = 0;
-    config_ptr->frame_stride = 0;
+    config_ptr->frame_size = 0;
 
     for (i = 0; i < GST_VIDEO_MAX_PLANES; ++i) {
       config_ptr->plane_offsets[i] =
@@ -870,7 +871,7 @@ gst_raw_video_parse_get_config_frame_size (GstRawBaseParse * raw_base_parse,
   GstRawVideoParseConfig *config_ptr =
       gst_raw_video_parse_get_config_ptr (raw_video_parse, config);
   return MAX (GST_VIDEO_INFO_SIZE (&(config_ptr->info)),
-      (gsize) (config_ptr->frame_stride));
+      (gsize) (config_ptr->frame_size));
 }
 
 static guint
@@ -912,7 +913,7 @@ gst_raw_video_parse_process (GstRawBaseParse * raw_base_parse,
 
   /* In case of extra padding bytes, get a subbuffer without the padding bytes.
    * Otherwise, just add the video meta. */
-  if (GST_VIDEO_INFO_SIZE (video_info) < config_ptr->frame_stride) {
+  if (GST_VIDEO_INFO_SIZE (video_info) < config_ptr->frame_size) {
     *processed_data = out_data =
         gst_buffer_copy_region (in_data,
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
@@ -1012,19 +1013,19 @@ gst_raw_video_parse_get_overhead_size (GstRawBaseParse * raw_base_parse,
   GstRawVideoParse *raw_video_parse = GST_RAW_VIDEO_PARSE (raw_base_parse);
   GstRawVideoParseConfig *config_ptr =
       gst_raw_video_parse_get_config_ptr (raw_video_parse, config);
-  gint64 frame_size = GST_VIDEO_INFO_SIZE (&(config_ptr->info));
-  gint64 frame_stride = config_ptr->frame_stride;
+  gint64 info_size = GST_VIDEO_INFO_SIZE (&(config_ptr->info));
+  gint64 frame_size = config_ptr->frame_size;
 
   /* In the video parser, the overhead is defined by the difference between
-   * the frame stride and the actual frame size. If the former is larger,
-   * then the additional bytes are considered padding bytes and get ignored
-   * by the base class. */
+   * the configured frame size and the GstVideoInfo size. If the former is
+   * larger, then the additional bytes are considered padding bytes and get
+   * ignored by the base class. */
 
   GST_LOG_OBJECT (raw_video_parse,
-      "frame size: %" G_GINT64_FORMAT "  frame stride: %" G_GINT64_FORMAT,
-      frame_size, frame_stride);
+      "info size: %" G_GINT64_FORMAT "  frame size: %" G_GINT64_FORMAT,
+      info_size, frame_size);
 
-  return (frame_size < frame_stride) ? (gint) (frame_stride - frame_size) : 0;
+  return (info_size < frame_size) ? (gint) (frame_size - info_size) : 0;
 }
 
 static gboolean
@@ -1069,7 +1070,7 @@ gst_raw_video_parse_init_config (GstRawVideoParseConfig * config)
   config->interlaced = DEFAULT_INTERLACED;
 
   config->top_field_first = DEFAULT_TOP_FIELD_FIRST;
-  config->frame_stride = DEFAULT_FRAME_STRIDE;
+  config->frame_size = DEFAULT_FRAME_STRIDE;
 
   gst_video_info_set_format (&(config->info), DEFAULT_FORMAT, DEFAULT_WIDTH,
       DEFAULT_HEIGHT);
