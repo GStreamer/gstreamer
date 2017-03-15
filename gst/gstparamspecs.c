@@ -233,6 +233,7 @@ static gboolean
 _gst_param_array_validate (GParamSpec * pspec, GValue * value)
 {
   GstParamSpecArray *aspec = GST_PARAM_SPEC_ARRAY_LIST (pspec);
+  gboolean ret = FALSE;
 
   /* ensure array values validity against a present element spec */
   if (aspec->element_spec) {
@@ -249,15 +250,16 @@ _gst_param_array_validate (GParamSpec * pspec, GValue * value)
           g_value_unset (element);
         g_value_init (element, G_PARAM_SPEC_VALUE_TYPE (element_spec));
         g_param_value_set_default (element_spec, element);
-        return FALSE;
+        ret = TRUE;
       }
+
       /* validate array value against element_spec */
-      if (!g_param_value_validate (element_spec, element))
-        return FALSE;
+      if (g_param_value_validate (element_spec, element))
+        ret = TRUE;
     }
   }
 
-  return TRUE;
+  return ret;
 }
 
 static gint
