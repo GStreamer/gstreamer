@@ -1996,7 +1996,10 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
       && gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)
       && dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
     /* fragment is advanced on data_received when byte limits are reached */
-    if (gst_dash_demux_stream_has_next_subfragment (stream)) {
+    if (dashstream->pending_seek_ts != GST_CLOCK_TIME_NONE) {
+      if (SIDX (dashstream)->entry_index < SIDX (dashstream)->entries_count)
+        return GST_FLOW_OK;
+    } else if (gst_dash_demux_stream_has_next_subfragment (stream)) {
       return GST_FLOW_OK;
     }
   }
@@ -2530,7 +2533,6 @@ gst_dash_demux_handle_isobmff_buffer (GstAdaptiveDemux * demux,
           gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
         GST_DEBUG_OBJECT (stream->pad,
             "Found sidx box, return custom-success to do seeking now");
-        dash_stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
 
         /* Clear isobmff parser */
         gst_adapter_clear (dash_stream->isobmff_adapter);
@@ -2730,6 +2732,9 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
     ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
   } else if (dash_stream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
     gsize available;
+
+    if (G_UNLIKELY (dash_stream->pending_seek_ts != GST_CLOCK_TIME_NONE))
+      dash_stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
 
     while (ret == GST_FLOW_OK
         && ((available =
