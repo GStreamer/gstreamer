@@ -69,7 +69,7 @@ struct _GstDashDemuxStream
   /* index parsing */
   GstAdapter *sidx_adapter;
   GstSidxParser sidx_parser;
-  gint sidx_index;
+  GstClockTime sidx_position;
   gint64 sidx_base_offset;
   GstClockTime pending_seek_ts;
   /* sidx offset tracking */
