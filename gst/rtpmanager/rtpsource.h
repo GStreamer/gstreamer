@@ -199,6 +199,8 @@ struct _RTPSource {
   gboolean     send_nack;
   GArray      *nacks;
 
+  gboolean      pt_set;
+  guint8        pt;
 };
 
 struct _RTPSourceClass {
