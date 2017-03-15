@@ -20,10 +20,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/* FIXME: GValueArray is deprecated, but there is currently no viabla alternative
- * See https://bugzilla.gnome.org/show_bug.cgi?id=667228 */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <gst/check/gstcheck.h>
 #include <gst/video/video.h>
 
@@ -177,41 +173,49 @@ setup_rawvideoparse (gboolean use_sink_caps,
 
   g_object_set (G_OBJECT (rawvideoparse), "use-sink-caps", use_sink_caps, NULL);
   if (set_properties) {
-    GValueArray *plane_offsets, *plane_strides;
+    GValue plane_offsets = G_VALUE_INIT;
+    GValue plane_strides = G_VALUE_INIT;
     GValue val = G_VALUE_INIT;
 
-    g_value_init (&val, G_TYPE_UINT);
+    g_value_init (&val, G_TYPE_INT);
+    g_value_init (&plane_offsets, GST_TYPE_ARRAY);
+    g_value_init (&plane_strides, GST_TYPE_ARRAY);
 
-    plane_offsets = g_value_array_new (NUM_TEST_PLANES);
     for (i = 0; i < NUM_TEST_PLANES; ++i) {
-      g_value_set_uint (&val, properties_ctx.plane_size * i);
-      g_value_array_insert (plane_offsets, i, &val);
+      g_value_set_int (&val, properties_ctx.plane_size * i);
+      gst_value_array_append_value (&plane_offsets, &val);
     }
 
-    plane_strides = g_value_array_new (NUM_TEST_PLANES);
     for (i = 0; i < NUM_TEST_PLANES; ++i) {
-      g_value_set_uint (&val, properties_ctx.plane_stride);
-      g_value_array_insert (plane_strides, i, &val);
+      g_value_set_int (&val, properties_ctx.plane_stride);
+      gst_value_array_append_value (&plane_strides, &val);
     }
 
     g_value_unset (&val);
 
     g_object_set (G_OBJECT (rawvideoparse), "width", TEST_WIDTH, "height",
         TEST_HEIGHT, "frame-stride", PROP_CTX_FRAME_STRIDE, "framerate",
-        TEST_FRAMERATE_N, TEST_FRAMERATE_D, "plane-offsets", plane_offsets,
-        "plane-strides", plane_strides, "format", TEST_FRAME_FORMAT, NULL);
+        TEST_FRAMERATE_N, TEST_FRAMERATE_D, "format", TEST_FRAME_FORMAT, NULL);
+    g_object_set_property (G_OBJECT (rawvideoparse), "plane-offsets",
+        &plane_offsets);
+    g_object_set_property (G_OBJECT (rawvideoparse), "plane-strides",
+        &plane_strides);
 
-    g_value_array_free (plane_offsets);
-    g_value_array_free (plane_strides);
+    g_value_unset (&plane_offsets);
+    g_value_unset (&plane_strides);
   }
 
   /* Check that the plane stride/offset values are correct */
   {
-    GValueArray *plane_offsets_array;
-    GValueArray *plane_strides_array;
+    GValue plane_offsets_array = G_VALUE_INIT;
+    GValue plane_strides_array = G_VALUE_INIT;
+
     /* By default, 320x240 i420 is used as format */
     guint plane_offsets[3] = { 0, 76800, 96000 };
     guint plane_strides[3] = { 320, 160, 160 };
+
+    g_value_init (&plane_offsets_array, GST_TYPE_ARRAY);
+    g_value_init (&plane_strides_array, GST_TYPE_ARRAY);
 
     if (set_properties) {
       /* When properties are explicitely set, we use Y444 as video format,
@@ -223,27 +227,28 @@ setup_rawvideoparse (gboolean use_sink_caps,
           properties_ctx.plane_stride;
     }
 
-    g_object_get (G_OBJECT (rawvideoparse), "plane-offsets",
-        &plane_offsets_array, "plane-strides", &plane_strides_array, NULL);
-    fail_unless (plane_offsets_array != NULL);
-    fail_unless (plane_strides_array != NULL);
-    fail_unless (plane_offsets_array->n_values ==
-        plane_strides_array->n_values);
+    g_object_get_property (G_OBJECT (rawvideoparse), "plane-offsets",
+        &plane_offsets_array);
+    g_object_get_property (G_OBJECT (rawvideoparse), "plane-strides",
+        &plane_strides_array);
 
-    for (i = 0; i < plane_offsets_array->n_values; ++i) {
-      GValue *gvalue;
+    fail_unless (gst_value_array_get_size (&plane_offsets_array) ==
+        gst_value_array_get_size (&plane_strides_array));
 
-      gvalue = g_value_array_get_nth (plane_offsets_array, i);
+    for (i = 0; i < gst_value_array_get_size (&plane_offsets_array); ++i) {
+      const GValue *gvalue;
+
+      gvalue = gst_value_array_get_value (&plane_offsets_array, i);
       fail_unless (gvalue != NULL);
-      fail_unless_equals_uint64 (plane_offsets[i], g_value_get_uint (gvalue));
+      fail_unless_equals_uint64 (plane_offsets[i], g_value_get_int (gvalue));
 
-      gvalue = g_value_array_get_nth (plane_strides_array, i);
+      gvalue = gst_value_array_get_value (&plane_strides_array, i);
       fail_unless (gvalue != NULL);
-      fail_unless_equals_uint64 (plane_strides[i], g_value_get_uint (gvalue));
+      fail_unless_equals_uint64 (plane_strides[i], g_value_get_int (gvalue));
     }
 
-    g_value_array_free (plane_offsets_array);
-    g_value_array_free (plane_strides_array);
+    g_value_unset (&plane_offsets_array);
+    g_value_unset (&plane_strides_array);
   }
 
   fail_unless (gst_element_set_state (rawvideoparse,
@@ -459,13 +464,15 @@ GST_START_TEST (test_computed_plane_strides)
   /* Test how plane strides & offsets are (re)computed if custom offsets/strides
    * are disabled, and how they are preserved if they are enabled. */
 
-  GValueArray *plane_offsets_array;
-  GValueArray *plane_strides_array;
+  GValue plane_offsets_array = G_VALUE_INIT;
+  GValue plane_strides_array = G_VALUE_INIT;
   guint i;
   guint const expected_comp_psize = TEST_WIDTH * TEST_HEIGHT;
 
-  setup_rawvideoparse (FALSE, TRUE, NULL, GST_FORMAT_BYTES);
+  g_value_init (&plane_offsets_array, GST_TYPE_ARRAY);
+  g_value_init (&plane_strides_array, GST_TYPE_ARRAY);
 
+  setup_rawvideoparse (FALSE, TRUE, NULL, GST_FORMAT_BYTES);
 
   /* The setup set a custom set of plane offsets and strides together with
    * width=TEST_WIDTH and height=TEST_HEIGHT. Check that the offsets & strides
@@ -474,34 +481,36 @@ GST_START_TEST (test_computed_plane_strides)
   g_object_set (G_OBJECT (rawvideoparse), "width", TEST_WIDTH * 2,
       "height", TEST_HEIGHT * 2, NULL);
 
-  g_object_get (G_OBJECT (rawvideoparse), "plane-offsets",
-      &plane_offsets_array, "plane-strides", &plane_strides_array, NULL);
+  g_object_get_property (G_OBJECT (rawvideoparse), "plane-offsets",
+      &plane_offsets_array);
+  g_object_get_property (G_OBJECT (rawvideoparse), "plane-strides",
+      &plane_strides_array);
 
-  for (i = 0; i < plane_offsets_array->n_values; ++i) {
-    GValue *gvalue;
+  for (i = 0; i < gst_value_array_get_size (&plane_offsets_array); ++i) {
+    const GValue *gvalue;
 
     /* See setup_rawvideoparse() for how the offsets & strides are defined
      * there. Offsets are set to plane_size*plane_index, and strides are
      * set to the properties_ctx.plane_stride value. */
 
-    gvalue = g_value_array_get_nth (plane_offsets_array, i);
+    gvalue = gst_value_array_get_value (&plane_offsets_array, i);
     fail_unless (gvalue != NULL);
     fail_unless_equals_uint64 (properties_ctx.plane_size * i,
-        g_value_get_uint (gvalue));
+        g_value_get_int (gvalue));
 
-    gvalue = g_value_array_get_nth (plane_strides_array, i);
+    gvalue = gst_value_array_get_value (&plane_strides_array, i);
     fail_unless (gvalue != NULL);
     fail_unless_equals_uint64 (properties_ctx.plane_stride,
-        g_value_get_uint (gvalue));
+        g_value_get_int (gvalue));
   }
 
-  g_value_array_free (plane_offsets_array);
-  g_value_array_free (plane_strides_array);
-
-
   /* Discard the custom planes&offsets, re-enabling computed values. */
-  g_object_set (G_OBJECT (rawvideoparse), "plane-offsets", (GValueArray *) NULL,
-      "plane-strides", (GValueArray *) NULL, NULL);
+  g_value_reset (&plane_offsets_array);
+  g_value_reset (&plane_strides_array);
+  g_object_set_property (G_OBJECT (rawvideoparse), "plane-offsets",
+      &plane_offsets_array);
+  g_object_set_property (G_OBJECT (rawvideoparse), "plane-strides",
+      &plane_strides_array);
 
 
   /* The strides & offsets should have been recomputed by now. Since the Y444
@@ -510,24 +519,26 @@ GST_START_TEST (test_computed_plane_strides)
    * plane_size*plane_index, with plane_size set to (TEST_WIDTH*2 * TEST_HEIGHT*2),
    * or TEST_WIDTH*TEST_HEIGHT*4 (-> expected_comp_psize*4). */
 
-  g_object_get (G_OBJECT (rawvideoparse), "plane-offsets",
-      &plane_offsets_array, "plane-strides", &plane_strides_array, NULL);
+  g_object_get_property (G_OBJECT (rawvideoparse), "plane-offsets",
+      &plane_offsets_array);
+  g_object_get_property (G_OBJECT (rawvideoparse), "plane-strides",
+      &plane_strides_array);
 
-  for (i = 0; i < plane_offsets_array->n_values; ++i) {
-    GValue *gvalue;
+  for (i = 0; i < gst_value_array_get_size (&plane_offsets_array); ++i) {
+    const GValue *gvalue;
 
-    gvalue = g_value_array_get_nth (plane_offsets_array, i);
+    gvalue = gst_value_array_get_value (&plane_offsets_array, i);
     fail_unless (gvalue != NULL);
     fail_unless_equals_uint64 (expected_comp_psize * 4 * i,
-        g_value_get_uint (gvalue));
+        g_value_get_int (gvalue));
 
-    gvalue = g_value_array_get_nth (plane_strides_array, i);
+    gvalue = gst_value_array_get_value (&plane_strides_array, i);
     fail_unless (gvalue != NULL);
-    fail_unless_equals_uint64 (TEST_WIDTH * 2, g_value_get_uint (gvalue));
+    fail_unless_equals_uint64 (TEST_WIDTH * 2, g_value_get_int (gvalue));
   }
 
-  g_value_array_free (plane_offsets_array);
-  g_value_array_free (plane_strides_array);
+  g_value_reset (&plane_offsets_array);
+  g_value_reset (&plane_strides_array);
 
 
   /* Again change the width & height values. width=TEST_WIDTH, height=TEST_HEIGHT.
@@ -540,25 +551,26 @@ GST_START_TEST (test_computed_plane_strides)
       "height", TEST_HEIGHT, NULL);
 
 
-  g_object_get (G_OBJECT (rawvideoparse), "plane-offsets",
-      &plane_offsets_array, "plane-strides", &plane_strides_array, NULL);
+  g_object_get_property (G_OBJECT (rawvideoparse), "plane-offsets",
+      &plane_offsets_array);
+  g_object_get_property (G_OBJECT (rawvideoparse), "plane-strides",
+      &plane_strides_array);
 
-  for (i = 0; i < plane_offsets_array->n_values; ++i) {
-    GValue *gvalue;
+  for (i = 0; i < gst_value_array_get_size (&plane_offsets_array); ++i) {
+    const GValue *gvalue;
 
-    gvalue = g_value_array_get_nth (plane_offsets_array, i);
+    gvalue = gst_value_array_get_value (&plane_offsets_array, i);
     fail_unless (gvalue != NULL);
     fail_unless_equals_uint64 (expected_comp_psize * i,
-        g_value_get_uint (gvalue));
+        g_value_get_int (gvalue));
 
-    gvalue = g_value_array_get_nth (plane_strides_array, i);
+    gvalue = gst_value_array_get_value (&plane_strides_array, i);
     fail_unless (gvalue != NULL);
-    fail_unless_equals_uint64 (TEST_WIDTH, g_value_get_uint (gvalue));
+    fail_unless_equals_uint64 (TEST_WIDTH, g_value_get_int (gvalue));
   }
 
-  g_value_array_free (plane_offsets_array);
-  g_value_array_free (plane_strides_array);
-
+  g_value_unset (&plane_offsets_array);
+  g_value_unset (&plane_strides_array);
 
   cleanup_rawvideoparse ();
 }

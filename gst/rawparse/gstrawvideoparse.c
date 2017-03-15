@@ -37,7 +37,7 @@
  *
  * If the properties configuration is used, plane strides and offsets will be
  * computed by using gst_video_info_set_format(). This can be overridden by passing
- * GValueArrays to the plane-offsets and plane-strides properties. When this is
+ * GstValueArrays to the plane-offsets and plane-strides properties. When this is
  * done, these custom offsets and strides are used later even if new width,
  * height, format etc. property values might be set. To switch back to computed
  * plane strides & offsets, pass NULL to one or both of the plane-offset and
@@ -79,10 +79,6 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
-
-/* FIXME: GValueArray is deprecated, but there is currently no viabla alternative
- * See https://bugzilla.gnome.org/show_bug.cgi?id=667228 */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include <string.h>
 #include "gstrawvideoparse.h"
@@ -292,26 +288,26 @@ gst_raw_video_parse_class_init (GstRawVideoParseClass * klass)
       );
   g_object_class_install_property (object_class,
       PROP_PLANE_STRIDES,
-      g_param_spec_value_array ("plane-strides",
+      gst_param_spec_array ("plane-strides",
           "Plane strides",
-          "Strides of the planes in bytes",
-          g_param_spec_uint ("plane-stride",
+          "Strides of the planes in bytes (e.g. plane-strides=\"<320,320>\")",
+          g_param_spec_int ("plane-stride",
               "Plane stride",
               "Stride of the n-th plane in bytes (0 = stride equals width*bytes-per-pixel)",
-              0, G_MAXUINT,
+              0, G_MAXINT,
               0,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
   g_object_class_install_property (object_class,
       PROP_PLANE_OFFSETS,
-      g_param_spec_value_array ("plane-offsets",
+      gst_param_spec_array ("plane-offsets",
           "Plane offsets",
-          "Offsets of the planes in bytes",
-          g_param_spec_uint ("plane-offset",
+          "Offsets of the planes in bytes (e.g. plane-offset=\"<0,76800>\")",
+          g_param_spec_int ("plane-offset",
               "Plane offset",
               "Offset of the n-th plane in bytes",
-              0, G_MAXUINT,
+              0, G_MAXINT,
               0,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
@@ -508,14 +504,13 @@ gst_raw_video_parse_set_property (GObject * object, guint prop_id,
 
     case PROP_PLANE_STRIDES:
     {
-      GValueArray *valarray = g_value_get_boxed (value);
       guint n_planes;
       guint i;
 
-      /* If no valarray is given, then disable custom
+      /* If no array is given, then disable custom
        * plane strides & offsets and stick to the
        * standard computed ones */
-      if (valarray == NULL) {
+      if (gst_value_array_get_size (value) == 0) {
         GST_DEBUG_OBJECT (raw_video_parse,
             "custom plane strides & offsets disabled");
         props_cfg->custom_plane_strides = FALSE;
@@ -523,30 +518,24 @@ gst_raw_video_parse_set_property (GObject * object, guint prop_id,
         break;
       }
 
-      /* Sanity check - reject empty arrays */
-      if ((valarray != NULL) && (valarray->n_values == 0)) {
-        GST_ELEMENT_ERROR (raw_video_parse, LIBRARY, SETTINGS,
-            ("plane strides property holds an empty array"), (NULL));
-        break;
-      }
-
       GST_RAW_BASE_PARSE_CONFIG_MUTEX_LOCK (object);
 
       n_planes = GST_VIDEO_INFO_N_PLANES (&(props_cfg->info));
 
-      /* Check that the valarray holds the right number of values */
-      if (valarray->n_values != n_planes) {
+      /* Check that the array holds the right number of values */
+      if (gst_value_array_get_size (value) < n_planes) {
         GST_ELEMENT_ERROR (raw_video_parse, LIBRARY, SETTINGS,
             ("incorrect number of elements in plane strides property"),
-            ("expected: %u, got: %u", n_planes, valarray->n_values));
+            ("expected: %u, got: %u", n_planes,
+                gst_value_array_get_size (value)));
         GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (object);
         break;
       }
 
       /* Copy the values to the stride array */
       for (i = 0; i < n_planes; ++i) {
-        GValue *val = g_value_array_get_nth (valarray, i);
-        props_cfg->plane_strides[i] = g_value_get_uint (val);
+        const GValue *val = gst_value_array_get_value (value, i);
+        props_cfg->plane_strides[i] = g_value_get_int (val);
         GST_DEBUG_OBJECT (raw_video_parse, "plane #%u stride: %d", i,
             props_cfg->plane_strides[i]);
       }
@@ -566,14 +555,13 @@ gst_raw_video_parse_set_property (GObject * object, guint prop_id,
 
     case PROP_PLANE_OFFSETS:
     {
-      GValueArray *valarray = g_value_get_boxed (value);
       guint n_planes;
       guint i;
 
-      /* If no valarray is given, then disable custom
+      /* If no array is given, then disable custom
        * plane strides & offsets and stick to the
        * standard computed ones */
-      if (valarray == NULL) {
+      if (gst_value_array_get_size (value) == 0) {
         GST_DEBUG_OBJECT (raw_video_parse,
             "custom plane strides & offsets disabled");
         props_cfg->custom_plane_strides = FALSE;
@@ -581,30 +569,24 @@ gst_raw_video_parse_set_property (GObject * object, guint prop_id,
         break;
       }
 
-      /* Sanity check - reject empty arrays */
-      if ((valarray != NULL) && (valarray->n_values == 0)) {
-        GST_ELEMENT_ERROR (raw_video_parse, LIBRARY, SETTINGS,
-            ("plane offsets property holds an empty array"), (NULL));
-        break;
-      }
-
       GST_RAW_BASE_PARSE_CONFIG_MUTEX_LOCK (object);
 
       n_planes = GST_VIDEO_INFO_N_PLANES (&(props_cfg->info));
 
-      /* Check that the valarray holds the right number of values */
-      if (valarray->n_values != n_planes) {
+      /* Check that the alarray holds the right number of values */
+      if (gst_value_array_get_size (value) < n_planes) {
         GST_ELEMENT_ERROR (raw_video_parse, LIBRARY, SETTINGS,
             ("incorrect number of elements in plane offsets property"),
-            ("expected: %u, got: %u", n_planes, valarray->n_values));
+            ("expected: %u, got: %u", n_planes,
+                gst_value_array_get_size (value)));
         GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (object);
         break;
       }
 
       /* Copy the values to the offset array */
       for (i = 0; i < n_planes; ++i) {
-        GValue *val = g_value_array_get_nth (valarray, i);
-        props_cfg->plane_offsets[i] = g_value_get_uint (val);
+        const GValue *val = gst_value_array_get_value (value, i);
+        props_cfg->plane_offsets[i] = g_value_get_int (val);
         GST_DEBUG_OBJECT (raw_video_parse, "plane #%u offset: %" G_GSIZE_FORMAT,
             i, props_cfg->plane_offsets[i]);
       }
@@ -702,26 +684,22 @@ gst_raw_video_parse_get_property (GObject * object, guint prop_id,
     {
       guint i, n_planes;
       GValue val = G_VALUE_INIT;
-      GValueArray *valarray;
+
+      g_value_reset (value);
 
       GST_RAW_BASE_PARSE_CONFIG_MUTEX_LOCK (object);
 
       n_planes = GST_VIDEO_INFO_N_PLANES (&(props_cfg->info));
-      valarray = g_value_array_new (n_planes);
-      g_value_init (&val, G_TYPE_UINT);
+      g_value_init (&val, G_TYPE_INT);
 
       for (i = 0; i < n_planes; ++i) {
-        g_value_set_uint (&val, props_cfg->plane_strides[i]);
-        g_value_array_insert (valarray, i, &val);
+        g_value_set_int (&val, props_cfg->plane_strides[i]);
+        gst_value_array_append_value (value, &val);
       }
 
       g_value_unset (&val);
 
       GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (object);
-
-      /* Pass on ownership to the value array,
-       * since we don't need it anymore */
-      g_value_take_boxed (value, valarray);
       break;
     }
 
@@ -729,26 +707,22 @@ gst_raw_video_parse_get_property (GObject * object, guint prop_id,
     {
       guint i, n_planes;
       GValue val = G_VALUE_INIT;
-      GValueArray *valarray;
+
+      g_value_reset (value);
 
       GST_RAW_BASE_PARSE_CONFIG_MUTEX_LOCK (object);
 
       n_planes = GST_VIDEO_INFO_N_PLANES (&(props_cfg->info));
-      valarray = g_value_array_new (n_planes);
-      g_value_init (&val, G_TYPE_UINT);
+      g_value_init (&val, G_TYPE_INT);
 
       for (i = 0; i < n_planes; ++i) {
-        g_value_set_uint (&val, props_cfg->plane_offsets[i]);
-        g_value_array_insert (valarray, i, &val);
+        g_value_set_int (&val, props_cfg->plane_offsets[i]);
+        gst_value_array_append_value (value, &val);
       }
 
       g_value_unset (&val);
 
       GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (object);
-
-      /* Pass on ownership to the value array,
-       * since we don't need it anymore */
-      g_value_take_boxed (value, valarray);
       break;
     }
 
