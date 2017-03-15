@@ -2744,6 +2744,7 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
           dash_stream->sidx_base_offset +
           SIDX_CURRENT_ENTRY (dash_stream)->offset +
           SIDX_CURRENT_ENTRY (dash_stream)->size;
+      gboolean has_next = gst_dash_demux_stream_has_next_subfragment (stream);
 
       if (dash_stream->sidx_current_offset + available < sidx_end_offset) {
         buffer = gst_adapter_take_buffer (dash_stream->sidx_adapter, available);
@@ -2762,6 +2763,11 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
                 gst_adapter_take_buffer (dash_stream->sidx_adapter,
                 sidx_end_offset - dash_stream->sidx_current_offset);
           }
+        } else if (!has_next
+            && sidx_end_offset <= dash_stream->sidx_current_offset) {
+          /* Drain all bytes, since there might be trailing bytes at the end of subfragment */
+          buffer =
+              gst_adapter_take_buffer (dash_stream->sidx_adapter, available);
         } else {
           buffer =
               gst_adapter_take_buffer (dash_stream->sidx_adapter,
@@ -2786,7 +2792,7 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
                     segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS))
             && advance) {
 
-          if (gst_dash_demux_stream_has_next_subfragment (stream)) {
+          if (has_next) {
             GstFlowReturn new_ret;
             new_ret =
                 gst_adaptive_demux_stream_advance_fragment (demux, stream,
