@@ -1810,15 +1810,24 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
     ret =
         gst_segment_position_from_running_time (&stream->segment,
         GST_FORMAT_TIME, earliest_time + MIN (deadline, GST_SECOND));
+    GST_DEBUG_OBJECT (stream->pad,
+        "MUST SKIP to at least %" GST_TIME_FORMAT " (was %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (ret), GST_TIME_ARGS (dashstream->actual_position));
   } else if (diff < 4 * dashstream->average_download_time) {
     /* Go forward a bit less aggresively (and at most 1s forward) */
     ret = gst_segment_position_from_running_time (&stream->segment,
         GST_FORMAT_TIME, cur_running + MIN (GST_SECOND,
             2 * dashstream->average_download_time));
+    GST_DEBUG_OBJECT (stream->pad,
+        "MUST SKIP to at least %" GST_TIME_FORMAT " (was %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (ret), GST_TIME_ARGS (dashstream->actual_position));
   } else {
     /* Get the next position satisfying the download time */
     ret = gst_segment_position_from_running_time (&stream->segment,
         GST_FORMAT_TIME, cur_running);
+    GST_DEBUG_OBJECT (stream->pad,
+        "Advance to %" GST_TIME_FORMAT " (was %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (ret), GST_TIME_ARGS (dashstream->actual_position));
   }
   return ret;
 }
@@ -2553,10 +2562,11 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
      * trickmodes while doing chunked downloading. In that case
      * just download from here to the end now */
     if (dashstream->moof
-        && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux))
+        && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux)) {
       stream->fragment.chunk_size = -1;
-    else
+    } else {
       stream->fragment.chunk_size = 0;
+    }
   }
 
   return stream->fragment.chunk_size != 0;
