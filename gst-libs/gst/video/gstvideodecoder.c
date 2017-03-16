@@ -401,6 +401,12 @@ struct _GstVideoDecoderPrivate
 
   /* flags */
   gboolean use_default_pad_acceptcaps;
+
+#ifndef GST_DISABLE_DEBUG
+  /* Diagnostic time for reporting the time
+   * from flush to first output */
+  GstClockTime last_reset_time;
+#endif
 };
 
 static GstElementClass *parent_class = NULL;
@@ -2080,6 +2086,10 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
   priv->time = 0;
   GST_OBJECT_UNLOCK (decoder);
 
+#ifndef GST_DISABLE_DEBUG
+  priv->last_reset_time = gst_util_get_timestamp ();
+#endif
+
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 }
 
@@ -3175,6 +3185,17 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
    * the error count, if there is one */
   if (G_UNLIKELY (priv->error_count))
     priv->error_count = 0;
+
+#ifndef GST_DISABLE_DEBUG
+  if (G_UNLIKELY (priv->last_reset_time != GST_CLOCK_TIME_NONE)) {
+    GstClockTime elapsed = gst_util_get_timestamp () - priv->last_reset_time;
+
+    /* First buffer since reset, report how long we took */
+    GST_INFO_OBJECT (decoder, "First buffer since flush took %" GST_TIME_FORMAT
+        " to produce", GST_TIME_ARGS (elapsed));
+    priv->last_reset_time = GST_CLOCK_TIME_NONE;
+  }
+#endif
 
   ret = gst_pad_push (decoder->srcpad, buf);
 
