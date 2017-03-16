@@ -4064,7 +4064,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
   GST_DEBUG ("Time since last RTCP: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT
       " = %" GST_TIME_FORMAT, GST_TIME_ARGS (data.current_time),
-      GST_TIME_ARGS (sess->last_rtcp_send_time),
+      GST_TIME_ARGS (sess->last_rtcp_check_time),
       GST_TIME_ARGS (data.current_time - sess->last_rtcp_check_time));
   sess->last_rtcp_check_time = data.current_time;
   sess->first_rtcp = FALSE;
