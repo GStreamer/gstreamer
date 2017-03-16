@@ -25,90 +25,113 @@
  * SECTION:element-rtprtxreceive
  * @see_also: rtprtxsend, rtpsession, rtpjitterbuffer
  *
- * The receiver will listen to the custom retransmission events from the
- * downstream jitterbuffer and will remember the SSRC1 of the stream and
- * seqnum that was requested. When it sees a packet with one of the stored
- * seqnum, it associates the SSRC2 of the stream with the SSRC1 of the
- * master stream. From then it knows that SSRC2 is the retransmission
- * stream of SSRC1. This algorithm is stated in RFC 4588. For this
- * algorithm to work, RFC4588 also states that no two pending retransmission
- * requests can exist for the same seqnum and different SSRCs or else it
- * would be impossible to associate the retransmission with the original
- * requester SSRC.
- * When the RTX receiver has associated the retransmission packets,
- * it can depayload and forward them to the source pad of the element.
- * RTX is SSRC-multiplexed. See #GstRtpRtxSend
+ * rtprtxreceive listens to the retransmission events from the
+ * downstream rtpjitterbuffer and remembers the SSRC (ssrc1) of the stream and
+ * the sequence number that was requested. When it receives a packet with
+ * a sequence number equal to one of the ones stored and with a different SSRC,
+ * it identifies the new SSRC (ssrc2) as the retransmission stream of ssrc1.
+ * From this point on, it replaces ssrc2 with ssrc1 in all packets of the
+ * ssrc2 stream and flags them as retransmissions, so that rtpjitterbuffer
+ * can reconstruct the original stream.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * This algorithm is implemented as specified in RFC 4588.
+ *
+ * This element is meant to be used with rtprtxsend on the sender side.
+ * See #GstRtpRtxSend
+ *
+ * Below you can see some examples that illustrate how rtprtxreceive and
+ * rtprtxsend fit among the other rtp elements and how they work internally.
+ * Normally, hoewever, you should avoid using such pipelines and use
+ * rtpbin instead, with its #GstRtpBin::request-aux-sender and
+ * #GstRtpBin::request-aux-receiver signals. See #GstRtpBin.
+ *
+ * # Example pipelines
  * |[
- * gst-launch-1.0 rtpsession name=rtpsession \
- *         audiotestsrc ! speexenc ! rtpspeexpay pt=97 ! rtprtxsend rtx-payload-type=99 ! \
- *             identity drop-probability=0.1 ! rtpsession.send_rtp_sink \
- *             rtpsession.send_rtp_src ! udpsink host="127.0.0.1" port=5000 \
- *         udpsrc port=5001 ! rtpsession.recv_rtcp_sink \
- *         rtpsession.send_rtcp_src ! udpsink host="127.0.0.1" port=5002 sync=false async=false
- * ]| Send audio stream through port 5000. (5001 and 5002 are just the rtcp link with the receiver)
+ * gst-launch-1.0 rtpsession name=rtpsession rtp-profile=avpf \
+ *     audiotestsrc is-live=true ! opusenc ! rtpopuspay pt=96 ! \
+ *         rtprtxsend payload-type-map="application/x-rtp-pt-map,96=(uint)97" ! \
+ *         rtpsession.send_rtp_sink \
+ *     rtpsession.send_rtp_src ! identity drop-probability=0.01 ! \
+ *         udpsink host="127.0.0.1" port=5000 \
+ *     udpsrc port=5001 ! rtpsession.recv_rtcp_sink \
+ *     rtpsession.send_rtcp_src ! udpsink host="127.0.0.1" port=5002 \
+ *         sync=false async=false
+ * ]| Send audio stream through port 5000 (5001 and 5002 are just the rtcp
+ * link with the receiver)
  * |[
- * gst-launch-1.0 rtpsession name=rtpsession \
- *         udpsrc port=5000 caps="application/x-rtp,media=(string)audio,clock-rate=(int)44100,encoding-name=(string)SPEEX,encoding-params=(string)1,octet-align=(string)1" ! \
- *             rtpsession.recv_rtp_sink \
- *             rtpsession.recv_rtp_src ! rtprtxreceive rtx-payload-types="99" ! rtpjitterbuffer do-retransmission=true ! rtpspeexdepay ! \
- *             speexdec ! audioconvert ! autoaudiosink \
- *         rtpsession.send_rtcp_src ! udpsink host="127.0.0.1" port=5001 \
- *         udpsrc port=5002 ! rtpsession.recv_rtcp_sink sync=fakse async=false
- * ]| Receive audio stream from port 5000. (5001 and 5002 are just the rtcp link with the sender)
- * On sender side make sure to use a different payload type for the stream and
- * its associated retransmission stream (see #GstRtpRtxSend). Note that several retransmission streams can
- * have the same payload type so this is not deterministic. Actually the
- * rtprtxreceiver element does the association using seqnum values.
- * On receiver side set all the retransmission payload types (Those informations are retrieve
- * through SDP).
- * You should still hear a clear sound when setting drop-probability to something greater than 0.
- * The rtpjitterbuffer will generate a custom upstream event GstRTPRetransmissionRequest when
- * it assumes that one packet is missing. Then this request is translated to a FB NACK in the rtcp link
- * Finally the rtpsession of the sender side re-convert it in a GstRTPRetransmissionRequest that will
- * be handle by rtprtxsend.
- * When increasing this value it may be possible that even the retransmission stream would be dropped
- * so the receiver will ask to resend the packets again and again until it actually receive them.
- * If the value is too high the rtprtxsend will not be able to retrieve the packet in its list of
- * stored packets. For learning purpose you could try to increase the max-size-packets or max-size-time
- * rtprtxsender's properties.
- * Also note that you should use rtprtxsend through rtpbin and its set-aux-send property. See #GstRtpBin.
+ * gst-launch-1.0 rtpsession name=rtpsession rtp-profile=avpf \
+ *     udpsrc port=5000 caps="application/x-rtp,media=(string)audio,clock-rate=(int)48000,encoding-name=(string)OPUS,payload=(int)96" ! \
+ *         rtpsession.recv_rtp_sink \
+ *     rtpsession.recv_rtp_src ! \
+ *         rtprtxreceive payload-type-map="application/x-rtp-pt-map,96=(uint)97" ! \
+ *         rtpssrcdemux ! rtpjitterbuffer do-retransmission=true ! \
+ *         rtpopusdepay ! opusdec ! audioconvert ! audioresample ! autoaudiosink \
+ *     rtpsession.send_rtcp_src ! \
+ *         udpsink host="127.0.0.1" port=5001 sync=false async=false \
+ *     udpsrc port=5002 ! rtpsession.recv_rtcp_sink
+ * ]| Receive audio stream from port 5000 (5001 and 5002 are just the rtcp
+ * link with the sender)
+ *
+ * In this example we can see a simple streaming of an OPUS stream with some
+ * of the packets being artificially dropped by the identity element.
+ * Thanks to retransmission, you should still hear a clear sound when setting
+ * drop-probability to something greater than 0.
+ *
+ * Internally, the rtpjitterbuffer will generate a custom upstream event,
+ * GstRTPRetransmissionRequest, when it detects that one packet is missing.
+ * Then this request is translated to a FB NACK in the rtcp link by rtpsession.
+ * Finally the rtpsession of the sender side will re-convert it in a
+ * GstRTPRetransmissionRequest that will be handled by rtprtxsend. rtprtxsend
+ * will then re-send the missing packet with a new srrc and a different payload
+ * type (here, 97), but with the same original sequence number. On the receiver
+ * side, rtprtxreceive will associate this new stream with the original and
+ * forward the retransmission packets to rtpjitterbuffer with the original
+ * ssrc and payload type.
+ *
  * |[
- * gst-launch-1.0 rtpsession name=rtpsession0 \
- *         audiotestsrc wave=0 ! speexenc ! rtpspeexpay pt=97 ! rtprtxsend rtx-payload-type=99 seqnum-offset=1 ! \
- *             identity drop-probability=0.1 ! rtpsession0.send_rtp_sink \
- *             rtpsession0.send_rtp_src ! udpsink host="127.0.0.1" port=5000 \
- *         udpsrc port=5001 ! rtpsession0.recv_rtcp_sink \
- *         rtpsession0.send_rtcp_src ! udpsink host="127.0.0.1" port=5002 sync=false async=false \
- *                rtpsession name=rtpsession1 \
- *         audiotestsrc wave=0 ! speexenc ! rtpspeexpay pt=97 ! rtprtxsend rtx-payload-type=99 seqnum-offset=10 ! \
- *             identity drop-probability=0.1 ! rtpsession1.send_rtp_sink \
- *             rtpsession1.send_rtp_src ! udpsink host="127.0.0.1" port=5000 \
- *         udpsrc port=5004 ! rtpsession1.recv_rtcp_sink \
- *         rtpsession1.send_rtcp_src ! udpsink host="127.0.0.1" port=5002 sync=false async=false
+ * gst-launch-1.0 rtpsession name=rtpsession rtp-profile=avpf \
+ *     audiotestsrc is-live=true ! opusenc ! rtpopuspay pt=97 seqnum-offset=1 ! \
+ *         rtprtxsend payload-type-map="application/x-rtp-pt-map,97=(uint)99" ! \
+ *         funnel name=f ! rtpsession.send_rtp_sink \
+ *     audiotestsrc freq=660.0 is-live=true ! opusenc ! \
+ *         rtpopuspay pt=97 seqnum-offset=100 ! \
+ *         rtprtxsend payload-type-map="application/x-rtp-pt-map,97=(uint)99" ! \
+ *         f. \
+ *     rtpsession.send_rtp_src ! identity drop-probability=0.01 ! \
+ *         udpsink host="127.0.0.1" port=5000 \
+ *     udpsrc port=5001 ! rtpsession.recv_rtcp_sink \
+ *     rtpsession.send_rtcp_src ! udpsink host="127.0.0.1" port=5002 \
+ *         sync=false async=false
  * ]| Send two audio streams to port 5000.
  * |[
- * gst-launch-1.0 rtpsession name=rtpsession
- *         udpsrc port=5000 caps="application/x-rtp,media=(string)audio,clock-rate=(int)44100,encoding-name=(string)SPEEX,encoding-params=(string)1,octet-align=(string)1" ! \
- *             rtpsession.recv_rtp_sink \
- *             rtpsession.recv_rtp_src ! rtprtxreceive rtx-payload-types="99" ! rtpssrcdemux name=demux \
- *             demux. ! queue ! rtpjitterbuffer do-retransmission=true ! rtpspeexdepay ! speexdec ! audioconvert ! autoaudiosink \
- *             demux. ! queue ! rtpjitterbuffer do-retransmission=true ! rtpspeexdepay ! speexdec ! audioconvert ! autoaudiosink \
- *         rtpsession.send_rtcp_src ! ! tee name=t ! queue ! udpsink host="127.0.0.1" port=5001 t. ! queue ! udpsink host="127.0.0.1" port=5004 \
- *         udpsrc port=5002 ! rtpsession.recv_rtcp_sink sync=fakse async=false
- * ]| Receive audio stream from port 5000.
- * On sender side the two streams have the same payload type for master streams, Same about retransmission streams.
- * The streams are sent to the network through two distincts sessions.
- * But we need to set a different seqnum-offset to make sure their seqnum navigate at a different rate like in concrete cases.
- * We could also choose the same seqnum offset but we would require to set a different initial seqnum value.
- * This is also why the rtprtxreceive can succeed to do the association between master and retransmission stream.
- * On receiver side the same session is used to receive the two streams. So the rtpssrcdemux is here to demultiplex
- * those two streams. The rtprtxreceive is responsible for reconstructing the original packets from the two retransmission streams.
- * You can play with the drop-probability value for one or both streams.
- * You should hear a clear sound. (after a few seconds the two streams wave feel synchronized)
- * </refsect2>
+ * gst-launch-1.0 rtpsession name=rtpsession rtp-profile=avpf \
+ *     udpsrc port=5000 caps="application/x-rtp,media=(string)audio,clock-rate=(int)48000,encoding-name=(string)OPUS,payload=(int)97" ! \
+ *         rtpsession.recv_rtp_sink \
+ *     rtpsession.recv_rtp_src ! \
+ *         rtprtxreceive payload-type-map="application/x-rtp-pt-map,97=(uint)99" ! \
+ *         rtpssrcdemux name=demux \
+ *     demux. ! queue ! rtpjitterbuffer do-retransmission=true ! rtpopusdepay ! \
+ *         opusdec ! audioconvert ! autoaudiosink \
+ *     demux. ! queue ! rtpjitterbuffer do-retransmission=true ! rtpopusdepay ! \
+ *         opusdec ! audioconvert ! autoaudiosink \
+ *     udpsrc port=5002 ! rtpsession.recv_rtcp_sink \
+ *     rtpsession.send_rtcp_src ! udpsink host="127.0.0.1" port=5001 \
+ *         sync=false async=false
+ * ]| Receive two audio streams from port 5000.
+ *
+ * In this example we are streaming two streams of the same type through the
+ * same port. They, however, are using a different SSRC (ssrc is randomly
+ * generated on each payloader - rtpopuspay in this example), so they can be
+ * identified and demultiplexed by rtpssrcdemux on the receiver side. This is
+ * an example of SSRC-multiplexing.
+ *
+ * It is important here to use a different starting sequence number
+ * (seqnum-offset), since this is the only means of identification that
+ * rtprtxreceive uses the very first time to identify retransmission streams.
+ * It is an error, according to RFC4588 to have two retransmission requests for
+ * packets belonging to two different streams but with the same sequence number.
+ * Note that the default seqnum-offset value (-1, which means random) would
+ * work just fine, but it is overriden here for illustration purposes.
  */
 
 #ifdef HAVE_CONFIG_H
