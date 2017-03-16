@@ -903,6 +903,8 @@ fill_planes (GstVideoInfo * info)
     case GST_VIDEO_FORMAT_Y444_10BE:
     case GST_VIDEO_FORMAT_GBR_10LE:
     case GST_VIDEO_FORMAT_GBR_10BE:
+    case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBR_12BE:
       info->stride[0] = GST_ROUND_UP_4 (width * 2);
       info->stride[1] = info->stride[0];
       info->stride[2] = info->stride[0];
@@ -910,6 +912,20 @@ fill_planes (GstVideoInfo * info)
       info->offset[1] = info->stride[0] * height;
       info->offset[2] = info->offset[1] * 2;
       info->size = info->stride[0] * height * 3;
+      break;
+    case GST_VIDEO_FORMAT_GBRA_10LE:
+    case GST_VIDEO_FORMAT_GBRA_10BE:
+    case GST_VIDEO_FORMAT_GBRA_12LE:
+    case GST_VIDEO_FORMAT_GBRA_12BE:
+      info->stride[0] = GST_ROUND_UP_4 (width * 2);
+      info->stride[1] = info->stride[0];
+      info->stride[2] = info->stride[0];
+      info->stride[3] = info->stride[0];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * height;
+      info->offset[2] = info->offset[1] * 2;
+      info->offset[3] = info->offset[1] * 3;
+      info->size = info->stride[0] * height * 4;
       break;
     case GST_VIDEO_FORMAT_NV12_64Z32:
       info->stride[0] =
