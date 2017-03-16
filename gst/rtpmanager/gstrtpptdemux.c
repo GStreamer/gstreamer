@@ -356,7 +356,7 @@ gst_rtp_pt_demux_get_caps (GstRtpPtDemux * rtpdemux, guint pt)
     gst_caps_unref (sink_caps);
   }
 
-  GST_DEBUG ("pt %d, got caps %" GST_PTR_FORMAT, pt, caps);
+  GST_DEBUG_OBJECT (rtpdemux, "pt %d, got caps %" GST_PTR_FORMAT, pt, caps);
 
   return caps;
 }
@@ -367,7 +367,7 @@ gst_rtp_pt_demux_clear_pt_map (GstRtpPtDemux * rtpdemux)
   GSList *walk;
 
   GST_OBJECT_LOCK (rtpdemux);
-  GST_DEBUG ("clearing pt map");
+  GST_DEBUG_OBJECT (rtpdemux, "clearing pt map");
   for (walk = rtpdemux->srcpads; walk; walk = g_slist_next (walk)) {
     GstRtpPtDemuxPad *pad = walk->data;
 
@@ -489,7 +489,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     g_free (padname);
     gst_pad_set_event_function (srcpad, gst_rtp_pt_demux_src_event);
 
-    GST_DEBUG ("Adding pt=%d to the list.", pt);
+    GST_DEBUG_OBJECT (rtpdemux, "Adding pt=%d to the list.", pt);
     rtpdemuxpad = g_slice_new0 (GstRtpPtDemuxPad);
     rtpdemuxpad->pt = pt;
     rtpdemuxpad->newcaps = FALSE;
@@ -518,7 +518,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     gst_element_add_pad (GST_ELEMENT_CAST (rtpdemux), srcpad);
 
-    GST_DEBUG ("emitting new-payload-type for pt %d", pt);
+    GST_DEBUG_OBJECT (rtpdemux, "emitting new-payload-type for pt %d", pt);
     g_signal_emit (G_OBJECT (rtpdemux),
         gst_rtp_pt_demux_signals[SIGNAL_NEW_PAYLOAD_TYPE], 0, pt, srcpad);
   }
@@ -528,13 +528,14 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     /* our own signal with an extra flag that this is the only pad */
     rtpdemux->last_pt = pt;
-    GST_DEBUG ("emitting payload-type-changed for pt %d", emit_pt);
+    GST_DEBUG_OBJECT (rtpdemux, "emitting payload-type-changed for pt %d",
+        emit_pt);
     g_signal_emit (G_OBJECT (rtpdemux),
         gst_rtp_pt_demux_signals[SIGNAL_PAYLOAD_TYPE_CHANGE], 0, emit_pt);
   }
 
   while (need_caps_for_pt (rtpdemux, pt)) {
-    GST_DEBUG ("need new caps for %d", pt);
+    GST_DEBUG_OBJECT (rtpdemux, "need new caps for %d", pt);
     caps = gst_rtp_pt_demux_get_caps (rtpdemux, pt);
     if (!caps)
       goto no_caps;
