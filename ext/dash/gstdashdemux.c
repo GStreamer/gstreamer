@@ -1347,8 +1347,8 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
           final_ts);
       if (SIDX (dashstream)->entry_index >= SIDX (dashstream)->entries_count) {
         GST_ERROR_OBJECT (stream->pad, "Couldn't find position in sidx");
-        dashstream->sidx_parser.status = GST_ISOFF_PARSER_UNEXPECTED;
         dashstream->sidx_position = GST_CLOCK_TIME_NONE;
+        gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
       }
     } else {
       /* no index yet, seek when we have it */
@@ -2287,8 +2287,8 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
           if (SIDX (dash_stream)->entry_index >=
               SIDX (dash_stream)->entries_count) {
             GST_ERROR_OBJECT (stream->pad, "Couldn't find position in sidx");
-            dash_stream->sidx_parser.status = GST_ISOFF_PARSER_UNEXPECTED;
             dash_stream->sidx_position = GST_CLOCK_TIME_NONE;
+            gst_isoff_sidx_parser_clear (&dash_stream->sidx_parser);
           }
           /* push buffer up to sidx box, and do pending stream seek  */
           break;
@@ -2771,8 +2771,8 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
             if (SIDX (dash_stream)->entry_index >=
                 SIDX (dash_stream)->entries_count) {
               GST_ERROR_OBJECT (stream->pad, "Couldn't find position in sidx");
-              dash_stream->sidx_parser.status = GST_ISOFF_PARSER_UNEXPECTED;
               dash_stream->sidx_position = GST_CLOCK_TIME_NONE;
+              gst_isoff_sidx_parser_clear (&dash_stream->sidx_parser);
             }
           } else {
             gint idx = 0;
