@@ -694,7 +694,7 @@ process_buffer (GstRtpRtxSend * rtx, GstBuffer * buffer)
   rtptime = gst_rtp_buffer_get_timestamp (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
-  GST_LOG_OBJECT (rtx,
+  GST_TRACE_OBJECT (rtx,
       "Processing buffer seqnum: %" G_GUINT16_FORMAT ", ssrc: %"
       G_GUINT32_FORMAT, seqnum, ssrc);
 
