@@ -2567,7 +2567,8 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAMS_SELECTED) {
     GstStreamCollection *collection = NULL;
     GstObject *src = GST_MESSAGE_SRC (msg);
-    gboolean pstate = playbin->do_stream_selections;
+    GstStreamType chosen_stream_types = 0;
+    gboolean reconfigure_playsink = FALSE;
 
     gst_message_parse_streams_selected (msg, &collection);
     if (collection) {
@@ -2584,16 +2585,24 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
 
         stream = gst_message_streams_selected_get_stream (msg, i);
         set_selected_stream (playbin, stream);
+        chosen_stream_types |= gst_stream_get_stream_type (stream);
         gst_object_unref (stream);
       }
-      if (pstate)
-        playbin->do_stream_selections = FALSE;
-      do_stream_selection (playbin);
-      if (pstate)
-        playbin->do_stream_selections = TRUE;
+
+      if (playbin->selected_stream_types != chosen_stream_types) {
+        GST_DEBUG_OBJECT (playbin, "Chosen stream types are changed");
+        reconfigure_playsink = TRUE;
+      }
+      playbin->selected_stream_types = chosen_stream_types;
       GST_PLAY_BIN3_UNLOCK (playbin);
 
       gst_object_unref (collection);
+
+      if (reconfigure_playsink &&
+          (playbin->selected_stream_types & ~playbin->active_stream_types &
+              (GST_STREAM_TYPE_VIDEO | GST_STREAM_TYPE_AUDIO)) == 0) {
+        no_more_pads_cb (playbin->decodebin, playbin);
+      }
     }
   }
 
