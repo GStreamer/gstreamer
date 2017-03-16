@@ -2442,6 +2442,14 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
     g_list_free (unknown);
   }
 
+  if (to_activate && !slots_to_reassign) {
+    for (tmp = to_activate; tmp; tmp = tmp->next) {
+      MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
+      gst_pad_add_probe (slot->src_pad, GST_PAD_PROBE_TYPE_IDLE,
+          (GstPadProbeCallback) idle_reconfigure, slot, NULL);
+    }
+  }
+
   /* For all streams to deactivate, add an idle probe where we will do
    * the unassignment and switch over */
   for (tmp = slots_to_reassign; tmp; tmp = tmp->next) {
