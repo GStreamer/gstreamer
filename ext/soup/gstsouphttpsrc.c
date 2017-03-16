@@ -86,6 +86,8 @@
 GST_DEBUG_CATEGORY_STATIC (souphttpsrc_debug);
 #define GST_CAT_DEFAULT souphttpsrc_debug
 
+#define GST_SOUP_SESSION_CONTEXT "gst.soup.session"
+
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -123,7 +125,7 @@ enum
 #define DEFAULT_IRADIO_MODE          TRUE
 #define DEFAULT_SOUP_LOG_LEVEL       SOUP_LOGGER_LOG_HEADERS
 #define DEFAULT_COMPRESS             FALSE
-#define DEFAULT_KEEP_ALIVE           FALSE
+#define DEFAULT_KEEP_ALIVE           TRUE
 #define DEFAULT_SSL_STRICT           TRUE
 #define DEFAULT_SSL_CA_FILE          NULL
 #define DEFAULT_SSL_USE_SYSTEM_CA_FILE TRUE
@@ -152,6 +154,8 @@ static void gst_soup_http_src_get_property (GObject * object, guint prop_id,
 
 static GstStateChangeReturn gst_soup_http_src_change_state (GstElement *
     element, GstStateChange transition);
+static void gst_soup_http_src_set_context (GstElement * element,
+    GstContext * context);
 static GstFlowReturn gst_soup_http_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 static gboolean gst_soup_http_src_start (GstBaseSrc * bsrc);
@@ -413,6 +417,8 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
       "Wouter Cloetens <wouter@mind.be>");
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_soup_http_src_change_state);
+  gstelement_class->set_context =
+      GST_DEBUG_FUNCPTR (gst_soup_http_src_set_context);
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_soup_http_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_soup_http_src_stop);
@@ -481,9 +487,13 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->cookies = NULL;
   src->iradio_mode = DEFAULT_IRADIO_MODE;
   src->session = NULL;
+  src->external_session = NULL;
+  src->forced_external_session = FALSE;
   src->msg = NULL;
   src->timeout = DEFAULT_TIMEOUT;
   src->log_level = DEFAULT_SOUP_LOG_LEVEL;
+  src->compress = DEFAULT_COMPRESS;
+  src->keep_alive = DEFAULT_KEEP_ALIVE;
   src->ssl_strict = DEFAULT_SSL_STRICT;
   src->ssl_use_system_ca_file = DEFAULT_SSL_USE_SYSTEM_CA_FILE;
   src->tls_database = DEFAULT_TLS_DATABASE;
@@ -511,6 +521,11 @@ gst_soup_http_src_dispose (GObject * gobject)
   GST_DEBUG_OBJECT (src, "dispose");
 
   gst_soup_http_src_session_close (src);
+
+  if (src->external_session) {
+    g_object_unref (src->external_session);
+    src->external_session = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (gobject);
 }
@@ -898,25 +913,84 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
   }
 
   if (!src->session) {
-    GST_DEBUG_OBJECT (src, "Creating session");
-    if (src->proxy == NULL) {
-      src->session =
-          soup_session_new_with_options (SOUP_SESSION_USER_AGENT,
-          src->user_agent, SOUP_SESSION_TIMEOUT, src->timeout,
-          SOUP_SESSION_SSL_STRICT, src->ssl_strict,
-          SOUP_SESSION_TLS_INTERACTION, src->tls_interaction, NULL);
+    GstQuery *query;
+    gboolean can_share = (src->timeout == DEFAULT_TIMEOUT)
+        && (src->ssl_strict == DEFAULT_SSL_STRICT)
+        && (src->tls_interaction == NULL) && (src->proxy == NULL)
+        && (src->tls_database == DEFAULT_TLS_DATABASE)
+        && (src->ssl_ca_file == DEFAULT_SSL_CA_FILE)
+        && (src->ssl_use_system_ca_file == DEFAULT_SSL_USE_SYSTEM_CA_FILE);
+
+    query = gst_query_new_context (GST_SOUP_SESSION_CONTEXT);
+    if (gst_pad_peer_query (GST_BASE_SRC_PAD (src), query)) {
+      GstContext *context;
+
+      gst_query_parse_context (query, &context);
+      gst_element_set_context (GST_ELEMENT_CAST (src), context);
     } else {
-      src->session =
-          soup_session_new_with_options (SOUP_SESSION_PROXY_URI, src->proxy,
-          SOUP_SESSION_TIMEOUT, src->timeout,
-          SOUP_SESSION_SSL_STRICT, src->ssl_strict,
-          SOUP_SESSION_USER_AGENT, src->user_agent,
-          SOUP_SESSION_TLS_INTERACTION, src->tls_interaction, NULL);
+      GstMessage *message;
+
+      message =
+          gst_message_new_need_context (GST_OBJECT_CAST (src),
+          GST_SOUP_SESSION_CONTEXT);
+      gst_element_post_message (GST_ELEMENT_CAST (src), message);
+    }
+    gst_query_unref (query);
+
+    if (src->external_session && (can_share || src->forced_external_session)) {
+      GST_DEBUG_OBJECT (src, "Using external session %p",
+          src->external_session);
+      src->session = g_object_ref (src->external_session);
+    } else {
+      GST_DEBUG_OBJECT (src, "Creating session (can share %d)", can_share);
+
+      /* We explicitly set User-Agent to NULL here and overwrite it per message
+       * to be able to have the same session with different User-Agents per
+       * source */
+      if (src->proxy == NULL) {
+        src->session =
+            soup_session_new_with_options (SOUP_SESSION_USER_AGENT,
+            NULL, SOUP_SESSION_TIMEOUT, src->timeout,
+            SOUP_SESSION_SSL_STRICT, src->ssl_strict,
+            SOUP_SESSION_TLS_INTERACTION, src->tls_interaction, NULL);
+      } else {
+        src->session =
+            soup_session_new_with_options (SOUP_SESSION_PROXY_URI, src->proxy,
+            SOUP_SESSION_TIMEOUT, src->timeout,
+            SOUP_SESSION_SSL_STRICT, src->ssl_strict,
+            SOUP_SESSION_USER_AGENT, NULL,
+            SOUP_SESSION_TLS_INTERACTION, src->tls_interaction, NULL);
+      }
+
+      if (src->session) {
+        gst_soup_util_log_setup (src->session, src->log_level,
+            GST_ELEMENT (src));
+        soup_session_add_feature_by_type (src->session,
+            SOUP_TYPE_CONTENT_DECODER);
+
+        if (can_share) {
+          GstContext *context;
+          GstMessage *message;
+          GstStructure *s;
+
+          GST_DEBUG_OBJECT (src, "Sharing session %p", src->session);
+
+          context = gst_context_new (GST_SOUP_SESSION_CONTEXT, TRUE);
+          s = gst_context_writable_structure (context);
+          gst_structure_set (s, "session", SOUP_TYPE_SESSION, src->session,
+              "force", G_TYPE_BOOLEAN, FALSE, NULL);
+
+          gst_element_set_context (GST_ELEMENT_CAST (src), context);
+          message =
+              gst_message_new_have_context (GST_OBJECT_CAST (src), context);
+          gst_element_post_message (GST_ELEMENT_CAST (src), message);
+        }
+      }
     }
 
     if (!src->session) {
       GST_ELEMENT_ERROR (src, LIBRARY, INIT,
-          (NULL), ("Failed to create async session"));
+          (NULL), ("Failed to create session"));
       return FALSE;
     }
 
@@ -924,23 +998,18 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
         G_CALLBACK (gst_soup_http_src_authenticate_cb), src);
 
     /* Set up logging */
-    gst_soup_util_log_setup (src->session, src->log_level, GST_ELEMENT (src));
-    if (src->tls_database)
-      g_object_set (src->session, "tls-database", src->tls_database, NULL);
-    else if (src->ssl_ca_file)
-      g_object_set (src->session, "ssl-ca-file", src->ssl_ca_file, NULL);
-    else
-      g_object_set (src->session, "ssl-use-system-ca-file",
-          src->ssl_use_system_ca_file, NULL);
+    if (src->session != src->external_session) {
+      if (src->tls_database)
+        g_object_set (src->session, "tls-database", src->tls_database, NULL);
+      else if (src->ssl_ca_file)
+        g_object_set (src->session, "ssl-ca-file", src->ssl_ca_file, NULL);
+      else
+        g_object_set (src->session, "ssl-use-system-ca-file",
+            src->ssl_use_system_ca_file, NULL);
+    }
   } else {
     GST_DEBUG_OBJECT (src, "Re-using session");
   }
-
-  if (src->compress)
-    soup_session_add_feature_by_type (src->session, SOUP_TYPE_CONTENT_DECODER);
-  else
-    soup_session_remove_feature_by_type (src->session,
-        SOUP_TYPE_CONTENT_DECODER);
 
   return TRUE;
 }
@@ -958,10 +1027,14 @@ gst_soup_http_src_session_close (GstSoupHTTPSrc * src)
   }
 
   if (src->session) {
-    soup_session_abort (src->session);
+    if (src->session != src->external_session)
+      soup_session_abort (src->session);
+    g_signal_handlers_disconnect_by_func (src->session,
+        G_CALLBACK (gst_soup_http_src_authenticate_cb), src);
     g_object_unref (src->session);
     src->session = NULL;
   }
+
   g_mutex_unlock (&src->mutex);
 }
 
@@ -969,6 +1042,10 @@ static void
 gst_soup_http_src_authenticate_cb (SoupSession * session, SoupMessage * msg,
     SoupAuth * auth, gboolean retrying, GstSoupHTTPSrc * src)
 {
+  /* Might be from another user of the shared session */
+  if (!GST_IS_SOUP_HTTP_SRC (src) || msg != src->msg)
+    return;
+
   if (!retrying) {
     /* First time authentication only, if we fail and are called again with retry true fall through */
     if (msg->status_code == SOUP_STATUS_UNAUTHORIZED) {
@@ -1362,6 +1439,29 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
         ("Error parsing URL."), ("URL: %s", src->location));
     return FALSE;
   }
+
+  /* Duplicating the defaults of libsoup here. We don't want to set a
+   * User-Agent in the session as each source might have its own User-Agent
+   * set */
+  if (!src->user_agent || !*src->user_agent) {
+    gchar *user_agent =
+        g_strdup_printf ("libsoup/%u.%u.%u", soup_get_major_version (),
+        soup_get_minor_version (), soup_get_micro_version ());
+    soup_message_headers_append (src->msg->request_headers, "User-Agent",
+        user_agent);
+    g_free (user_agent);
+  } else if (g_str_has_suffix (src->user_agent, " ")) {
+    gchar *user_agent = g_strdup_printf ("%slibsoup/%u.%u.%u", src->user_agent,
+        soup_get_major_version (),
+        soup_get_minor_version (), soup_get_micro_version ());
+    soup_message_headers_append (src->msg->request_headers, "User-Agent",
+        user_agent);
+    g_free (user_agent);
+  } else {
+    soup_message_headers_append (src->msg->request_headers, "User-Agent",
+        src->user_agent);
+  }
+
   if (!src->keep_alive) {
     soup_message_headers_append (src->msg->request_headers, "Connection",
         "close");
@@ -1378,6 +1478,9 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
           *cookie);
     }
   }
+
+  if (!src->compress)
+    soup_message_disable_feature (src->msg, SOUP_TYPE_CONTENT_DECODER);
 
   soup_message_set_flags (src->msg, SOUP_MESSAGE_OVERWRITE_CHUNKS |
       (src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
@@ -1724,7 +1827,7 @@ gst_soup_http_src_stop (GstBaseSrc * bsrc)
 
   src = GST_SOUP_HTTP_SRC (bsrc);
   GST_DEBUG_OBJECT (src, "stop()");
-  if (src->keep_alive && !src->msg)
+  if (src->keep_alive && !src->msg && src->session != src->external_session)
     gst_soup_http_src_cancel_message (src);
   else
     gst_soup_http_src_session_close (src);
@@ -1752,6 +1855,31 @@ gst_soup_http_src_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
+}
+
+static void
+gst_soup_http_src_set_context (GstElement * element, GstContext * context)
+{
+  GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (element);
+
+  if (g_strcmp0 (gst_context_get_context_type (context),
+          GST_SOUP_SESSION_CONTEXT) == 0) {
+    const GstStructure *s = gst_context_get_structure (context);
+
+    if (src->external_session)
+      g_object_unref (src->external_session);
+    src->external_session = NULL;
+    gst_structure_get (s, "session", SOUP_TYPE_SESSION, &src->external_session,
+        NULL);
+    src->forced_external_session = FALSE;
+    gst_structure_get (s, "force", G_TYPE_BOOLEAN,
+        &src->forced_external_session, NULL);
+
+    GST_DEBUG_OBJECT (src, "Setting external session %p (force: %d)",
+        src->external_session, src->forced_external_session);
+  }
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 /* Interrupt a blocking request. */
