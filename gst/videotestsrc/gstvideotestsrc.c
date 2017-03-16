@@ -86,11 +86,14 @@ enum
 };
 
 
-#define VTS_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ";" \
+#define VTS_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) "," \
+  "multiview-mode = { mono, left, right }"                              \
+  ";" \
   "video/x-bayer, format=(string) { bggr, rggb, grbg, gbrg }, "        \
   "width = " GST_VIDEO_SIZE_RANGE ", "                                 \
   "height = " GST_VIDEO_SIZE_RANGE ", "                                \
-  "framerate = " GST_VIDEO_FPS_RANGE
+  "framerate = " GST_VIDEO_FPS_RANGE ", "                              \
+  "multiview-mode = { mono, left, right }"
 
 
 static GstStaticPadTemplate gst_video_test_src_template =
@@ -490,6 +493,15 @@ gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   else
     gst_structure_set (structure, "interlace-mode", G_TYPE_STRING,
         "progressive", NULL);
+
+  if (gst_structure_has_field (structure, "multiview-mode"))
+    gst_structure_fixate_field_string (structure, "multiview-mode",
+        gst_video_multiview_mode_to_caps_string
+        (GST_VIDEO_MULTIVIEW_MODE_MONO));
+  else
+    gst_structure_set (structure, "multiview-mode", G_TYPE_STRING,
+        gst_video_multiview_mode_to_caps_string (GST_VIDEO_MULTIVIEW_MODE_MONO),
+        NULL);
 
   caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
 
