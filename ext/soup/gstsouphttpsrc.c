@@ -119,7 +119,7 @@ enum
   PROP_TLS_INTERACTION,
 };
 
-#define DEFAULT_USER_AGENT           "GStreamer souphttpsrc "
+#define DEFAULT_USER_AGENT           "GStreamer souphttpsrc " PACKAGE_VERSION " "
 #define DEFAULT_IRADIO_MODE          TRUE
 #define DEFAULT_SOUP_LOG_LEVEL       SOUP_LOGGER_LOG_HEADERS
 #define DEFAULT_COMPRESS             FALSE
