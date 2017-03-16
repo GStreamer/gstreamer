@@ -697,6 +697,10 @@ gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
       gint state = 0;
 
       nal_len = strlen (params[i]);
+      if (nal_len == 0) {
+        GST_WARNING_OBJECT (depayload, "empty param '%s' (#%d)", params[i], i);
+        continue;
+      }
       nal = gst_buffer_new_and_alloc (nal_len);
       gst_buffer_map (nal, &nalmap, GST_MAP_READWRITE);
 
