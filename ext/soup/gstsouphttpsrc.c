@@ -967,6 +967,7 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
             GST_ELEMENT (src));
         soup_session_add_feature_by_type (src->session,
             SOUP_TYPE_CONTENT_DECODER);
+        soup_session_add_feature_by_type (src->session, SOUP_TYPE_COOKIE_JAR);
 
         if (can_share) {
           GstContext *context;
