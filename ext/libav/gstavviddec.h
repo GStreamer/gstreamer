@@ -37,6 +37,8 @@ struct _GstFFMpegVidDec
   /* decoding */
   AVCodecContext *context;
   AVFrame *picture;
+  GstVideoMultiviewMode picture_multiview_mode;
+  GstVideoMultiviewFlags picture_multiview_flags;
   gint stride[AV_NUM_DATA_POINTERS];
   gboolean opened;
 
@@ -50,6 +52,8 @@ struct _GstFFMpegVidDec
   /* GST_VIDEO_BUFFER_FLAG_RFF | GST_VIDEO_BUFFER_FLAG_TFF */
   gint pic_field_order;
   gboolean pic_field_order_changed;
+  GstVideoMultiviewMode cur_multiview_mode;
+  GstVideoMultiviewFlags cur_multiview_flags;
   /* current context */
   gint ctx_ticks;
   gint ctx_time_d;

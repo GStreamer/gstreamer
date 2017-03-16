@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include <libavcodec/avcodec.h>
+#include <libavutil/stereo3d.h>
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -442,6 +443,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     ffmpegdec->ctx_ticks = 0;
     ffmpegdec->ctx_time_n = 0;
     ffmpegdec->ctx_time_d = 0;
+    ffmpegdec->cur_multiview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+    ffmpegdec->cur_multiview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
   }
 
   gst_caps_replace (&ffmpegdec->last_caps, state->caps);
@@ -902,7 +905,9 @@ picture_changed (GstFFMpegVidDec * ffmpegdec, AVFrame * picture)
       && ffmpegdec->pic_par_n == picture->sample_aspect_ratio.num
       && ffmpegdec->pic_par_d == picture->sample_aspect_ratio.den
       && ffmpegdec->pic_interlaced == picture->interlaced_frame
-      && ffmpegdec->pic_field_order == pic_field_order);
+      && ffmpegdec->pic_field_order == pic_field_order
+      && ffmpegdec->cur_multiview_mode == ffmpegdec->picture_multiview_mode
+      && ffmpegdec->cur_multiview_flags == ffmpegdec->picture_multiview_flags);
 }
 
 static gboolean
@@ -946,6 +951,8 @@ update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
   ffmpegdec->pic_height = picture->height;
   ffmpegdec->pic_par_n = picture->sample_aspect_ratio.num;
   ffmpegdec->pic_par_d = picture->sample_aspect_ratio.den;
+  ffmpegdec->cur_multiview_mode = ffmpegdec->picture_multiview_mode;
+  ffmpegdec->cur_multiview_flags = ffmpegdec->picture_multiview_flags;
 
   /* Remember if we have interlaced content and the field order changed
    * at least once. If that happens, we must be interlace-mode=mixed
@@ -1040,6 +1047,31 @@ no_par:
     out_info->par_d = 1;
     return;
   }
+}
+
+static GstVideoMultiviewMode
+stereo_av_to_gst (enum AVStereo3DType type)
+{
+  switch (type) {
+    case AV_STEREO3D_SIDEBYSIDE:
+      return GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE;
+    case AV_STEREO3D_TOPBOTTOM:
+      return GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM;
+    case AV_STEREO3D_FRAMESEQUENCE:
+      return GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME;
+    case AV_STEREO3D_CHECKERBOARD:
+      return GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD;
+    case AV_STEREO3D_SIDEBYSIDE_QUINCUNX:
+      return GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE_QUINCUNX;
+    case AV_STEREO3D_LINES:
+      return GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED;
+    case AV_STEREO3D_COLUMNS:
+      return GST_VIDEO_MULTIVIEW_MODE_COLUMN_INTERLEAVED;
+    default:
+      break;
+  }
+
+  return GST_VIDEO_MULTIVIEW_MODE_NONE;
 }
 
 static gboolean
@@ -1240,13 +1272,8 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   /* calculate and update par now */
   gst_ffmpegviddec_update_par (ffmpegdec, in_info, out_info);
 
-  /* Copy stereo/multiview info from upstream if set */
-  if (GST_VIDEO_INFO_MULTIVIEW_MODE (in_info) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
-    GST_VIDEO_INFO_MULTIVIEW_MODE (out_info) =
-        GST_VIDEO_INFO_MULTIVIEW_MODE (in_info);
-    GST_VIDEO_INFO_MULTIVIEW_FLAGS (out_info) =
-        GST_VIDEO_INFO_MULTIVIEW_FLAGS (in_info);
-  }
+  GST_VIDEO_INFO_MULTIVIEW_MODE (out_info) = ffmpegdec->cur_multiview_mode;
+  GST_VIDEO_INFO_MULTIVIEW_FLAGS (out_info) = ffmpegdec->cur_multiview_flags;
 
   if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (ffmpegdec)))
     goto negotiate_failed;
@@ -1521,6 +1548,31 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   /* also give back a buffer allocated by the frame, if any */
   gst_buffer_replace (&out_frame->output_buffer, out_dframe->buffer);
   gst_buffer_replace (&out_dframe->buffer, NULL);
+
+  /* Extract auxilliary info not stored in the main AVframe */
+  {
+    GstVideoInfo *in_info = &ffmpegdec->input_state->info;
+    /* Take multiview mode from upstream if present */
+    ffmpegdec->picture_multiview_mode = GST_VIDEO_INFO_MULTIVIEW_MODE (in_info);
+    ffmpegdec->picture_multiview_flags =
+        GST_VIDEO_INFO_MULTIVIEW_FLAGS (in_info);
+
+    /* Otherwise, see if there's info in the frame */
+    if (ffmpegdec->picture_multiview_mode == GST_VIDEO_MULTIVIEW_MODE_NONE) {
+      AVFrameSideData *side_data =
+          av_frame_get_side_data (ffmpegdec->picture, AV_FRAME_DATA_STEREO3D);
+      if (side_data) {
+        AVStereo3D *stereo = (AVStereo3D *) side_data->data;
+        ffmpegdec->picture_multiview_mode = stereo_av_to_gst (stereo->type);
+        if (stereo->flags & AV_STEREO3D_FLAG_INVERT) {
+          ffmpegdec->picture_multiview_flags =
+              GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+        } else {
+          ffmpegdec->picture_multiview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+        }
+      }
+    }
+  }
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "pts %" G_GUINT64_FORMAT " duration %" G_GUINT64_FORMAT,
