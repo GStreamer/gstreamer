@@ -29,6 +29,7 @@
 #include <errno.h>
 
 #include <libavcodec/avcodec.h>
+#include <libavutil/stereo3d.h>
 
 #include <gst/gst.h>
 #include <gst/video/gstvideometa.h>
@@ -603,6 +604,31 @@ buffer_info_free (void *opaque, guint8 * data)
   g_slice_free (BufferInfo, info);
 }
 
+static enum AVStereo3DType
+stereo_gst_to_av (GstVideoMultiviewMode mview_mode)
+{
+  switch (mview_mode) {
+    case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE:
+      return AV_STEREO3D_SIDEBYSIDE;
+    case GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM:
+      return AV_STEREO3D_TOPBOTTOM;
+    case GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME:
+      return AV_STEREO3D_FRAMESEQUENCE;
+    case GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD:
+      return AV_STEREO3D_CHECKERBOARD;
+    case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE_QUINCUNX:
+      return AV_STEREO3D_SIDEBYSIDE_QUINCUNX;
+    case GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED:
+      return AV_STEREO3D_LINES;
+    case GST_VIDEO_MULTIVIEW_MODE_COLUMN_INTERLEAVED:
+      return AV_STEREO3D_COLUMNS;
+    default:
+      break;
+  }
+  GST_WARNING ("Unsupported multiview mode - no mapping in libav");
+  return AV_STEREO3D_2D;
+}
+
 static GstFlowReturn
 gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
@@ -620,6 +646,16 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
     /* if this is not the case, a filter element should be used to swap fields */
     ffmpegenc->picture->top_field_first =
         GST_BUFFER_FLAG_IS_SET (frame->input_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+  }
+
+  if (GST_VIDEO_INFO_MULTIVIEW_MODE (info) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+    AVStereo3D *stereo = av_stereo3d_create_side_data (ffmpegenc->picture);
+    stereo->type = stereo_gst_to_av (GST_VIDEO_INFO_MULTIVIEW_MODE (info));
+
+    if (GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) &
+        GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST) {
+      stereo->flags = AV_STEREO3D_FLAG_INVERT;
+    }
   }
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame))
