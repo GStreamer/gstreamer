@@ -7,7 +7,7 @@ collates messages from them.
 
 ## Add/removing elements
 
-The basic functionality of a bin is to add and remove GstElements
+The basic functionality of a bin is to add and remove `GstElement`
 to/from it. `gst_bin_add()` and `gst_bin_remove()` perform these
 operations respectively.
 
@@ -58,16 +58,16 @@ When a bin goes to READY it will clear all cached messages.
 
 ## EOS
 
-The sink elements will post an EOS message on the bus when they reach
-EOS. The EOS message is only posted to the bus when the sink element is
-in PLAYING.
+The sink elements will post an `EOS` message on the bus when they reach
+`EOS`. This message is only posted to the bus when the sink element is
+in `PLAYING`.
 
-The bin collects all EOS messages and forwards it to the application as
-soon as all the sinks have posted an EOS.
+The bin collects all `EOS` messages and forwards it to the application as
+soon as all the sinks have posted an `EOS`.
 
-The list of queued EOS messages is cleared when the bin goes to PAUSED
-again. This means that all elements should repost the EOS message when
-going to PLAYING again.
+The list of queued `EOS` messages is cleared when the bin goes to `PAUSED`
+again. This means that all elements should repost the `EOS` message when
+going to `PLAYING` again.
 
 ## SEGMENT_START/DONE
 
@@ -76,7 +76,7 @@ application. It counts the number of `SEGMENT_START` messages and posts a
 `SEGMENT_STOP` message to the application when an equal number of
 `SEGMENT_STOP` messages were received.
 
-The cached `SEGMENT_START`/`STOP` messages are cleared when going to READY.
+The cached `SEGMENT_START`/`STOP` messages are cleared when going to `READY`.
 
 ## DURATION
 
@@ -92,7 +92,7 @@ cached duration value so that the bin will query the sinks again. This
 message is typically posted by elements that calculate the duration of
 the stream based on some average bitrate, which might change while
 playing the stream. The `DURATION_CHANGED` message is posted to the
-application, which can then fetch the updated DURATION.
+application, which can then fetch the updated `DURATION`.
 
 ## Subclassing
 
