@@ -699,8 +699,10 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
     previous_files = NULL;
 
     /* error was reported above already */
-    if (!consistent)
+    if (!consistent) {
+      GST_M3U8_UNLOCK (self);
       return FALSE;
+    }
   }
 
   if (self->files == NULL) {
