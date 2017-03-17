@@ -801,7 +801,7 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
     framesize = map.size;
     goto cleanup;
   } else if ((GST_READ_UINT16_BE (map.data) & 0xfffe) == 0xfff8) {
-    gboolean ret;
+    gboolean ret, is_first = !flacparse->strategy_checked;
     guint next;
 
     flacparse->offset = GST_BUFFER_OFFSET (buffer);
@@ -811,9 +811,15 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
     GST_DEBUG_OBJECT (flacparse, "Found sync code");
     ret = gst_flac_parse_frame_is_valid (flacparse, map.data, map.size, &next);
     if (ret) {
+      if (is_first) {
+        GST_INFO_OBJECT (flacparse, "First sample number is %" G_GUINT64_FORMAT,
+            flacparse->sample_number);
+        flacparse->first_sample_number = flacparse->sample_number;
+      }
       framesize = next;
       goto cleanup;
     }
+
     /* If we're at EOS and the frame was not valid, drop it! */
     if (G_UNLIKELY (GST_BASE_PARSE_DRAINING (flacparse))) {
       GST_WARNING_OBJECT (flacparse, "EOS");
@@ -1543,6 +1549,7 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   GstBuffer *buffer = frame->buffer, *sbuffer;
   GstMapInfo map;
   GstFlowReturn res = GST_FLOW_ERROR;
+  guint64 relative_sample_number;
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
@@ -1650,19 +1657,21 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     }
 
     /* also cater for oggmux metadata */
+    relative_sample_number =
+        flacparse->sample_number - flacparse->first_sample_number;
     if (flacparse->blocking_strategy == 0) {
       GST_BUFFER_PTS (buffer) =
-          gst_util_uint64_scale (flacparse->sample_number,
+          gst_util_uint64_scale (relative_sample_number,
           flacparse->block_size * GST_SECOND, flacparse->samplerate);
       GST_BUFFER_OFFSET_END (buffer) =
-          flacparse->sample_number * flacparse->block_size +
+          relative_sample_number * flacparse->block_size +
           flacparse->block_size;
     } else {
       GST_BUFFER_PTS (buffer) =
-          gst_util_uint64_scale (flacparse->sample_number, GST_SECOND,
+          gst_util_uint64_scale (relative_sample_number, GST_SECOND,
           flacparse->samplerate);
       GST_BUFFER_OFFSET_END (buffer) =
-          flacparse->sample_number + flacparse->block_size;
+          relative_sample_number + flacparse->block_size;
     }
 
     GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer);
