@@ -1169,6 +1169,9 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
   slot = g_new0 (OutputSlotInfo, 1);
   slot->queue = queue;
 
+  /* Set the slot onto the queue (needed in buffering msg handling) */
+  g_object_set_data (G_OBJECT (queue), "urisourcebin.slotinfo", slot);
+
   if (do_download) {
     gchar *temp_template, *filename;
     const gchar *tmp_dir, *prgname;
