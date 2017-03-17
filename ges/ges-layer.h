@@ -116,6 +116,8 @@ void     ges_layer_set_priority  (GESLayer * layer,
 
 gboolean ges_layer_is_empty      (GESLayer * layer);
 
+GList* ges_layer_get_clips_in_interval (GESLayer * layer, GstClockTime start, GstClockTime end);
+
 guint   ges_layer_get_priority  (GESLayer * layer);
 
 gboolean ges_layer_get_auto_transition (GESLayer * layer);

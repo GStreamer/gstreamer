@@ -734,3 +734,40 @@ ges_layer_set_timeline (GESLayer * layer, GESTimeline * timeline)
 
   layer->timeline = timeline;
 }
+
+/**
+ * ges_layer_get_clips_in_interval:
+ * @layer: a #GESLayer
+ * @start: start of the interval
+ * @end: end of the interval
+ *
+ * Gets the clips which appear between @start and @end on @layer.
+ *
+ * Returns: (transfer full) (element-type GESClip): a #GList of clips intersecting [@start, @end) interval on @layer.
+ */
+GList *
+ges_layer_get_clips_in_interval (GESLayer * layer, GstClockTime start,
+    GstClockTime end)
+{
+  GList *tmp;
+  GList *intersecting_clips = NULL;
+  GstClockTime clip_start, clip_end;
+  gboolean clip_intersects;
+  for (tmp = layer->priv->clips_start; tmp; tmp = tmp->next) {
+    clip_intersects = FALSE;
+    clip_start = ges_timeline_element_get_start (tmp->data);
+    clip_end = clip_start + ges_timeline_element_get_duration (tmp->data);
+    if (start <= clip_start && clip_start < end)
+      clip_intersects = TRUE;
+    else if (start < clip_end && clip_end <= end)
+      clip_intersects = TRUE;
+    else if (clip_start < start && clip_end > end)
+      clip_intersects = TRUE;
+
+    if (clip_intersects)
+      intersecting_clips =
+          g_list_insert_sorted (intersecting_clips, tmp->data,
+          (GCompareFunc) element_start_compare);
+  }
+  return intersecting_clips;
+}

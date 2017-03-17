@@ -1753,6 +1753,113 @@ GST_START_TEST (test_layer_meta_foreach)
 
 GST_END_TEST;
 
+GST_START_TEST (test_layer_get_clips_in_interval)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip, *clip2, *clip3;
+  GList *objects, *current;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  clip = (GESClip *) ges_test_clip_new ();
+  fail_unless (clip != NULL);
+  g_object_set (clip, "start", 10, "duration", 30, NULL);
+  assert_equals_uint64 (_START (clip), 10);
+  assert_equals_uint64 (_DURATION (clip), 30);
+
+  ges_layer_add_clip (layer, GES_CLIP (clip));
+
+  /* Clip's start lies between the interval */
+  current = objects = ges_layer_get_clips_in_interval (layer, 0, 30);
+  assert_equals_int (g_list_length (objects), 1);
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+
+  current = objects = ges_layer_get_clips_in_interval (layer, 0, 11);
+  assert_equals_int (g_list_length (objects), 1);
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+
+  /* Clip's end lies between the interval */
+  current = objects = ges_layer_get_clips_in_interval (layer, 30, 50);
+  assert_equals_int (g_list_length (objects), 1);
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+
+  current = objects = ges_layer_get_clips_in_interval (layer, 39, 50);
+  assert_equals_int (g_list_length (objects), 1);
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+
+  /* Clip exactly overlaps the interval */
+  current = objects = ges_layer_get_clips_in_interval (layer, 10, 40);
+  assert_equals_int (g_list_length (objects), 1);
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+
+  /* Clip completely inside the interval */
+  current = objects = ges_layer_get_clips_in_interval (layer, 0, 50);
+  assert_equals_int (g_list_length (objects), 1);
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+
+  /* Interval completely inside the clip duration */
+  current = objects = ges_layer_get_clips_in_interval (layer, 20, 30);
+  assert_equals_int (g_list_length (objects), 1);
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+
+  /* No intersecting clip */
+  objects = ges_layer_get_clips_in_interval (layer, 0, 10);
+  assert_equals_int (g_list_length (objects), 0);
+
+  objects = ges_layer_get_clips_in_interval (layer, 40, 50);
+  assert_equals_int (g_list_length (objects), 0);
+
+  /* Multiple intersecting clips */
+  clip2 = (GESClip *) ges_test_clip_new ();
+  fail_unless (clip2 != NULL);
+  g_object_set (clip2, "start", 50, "duration", 10, NULL);
+  assert_equals_uint64 (_START (clip2), 50);
+  assert_equals_uint64 (_DURATION (clip2), 10);
+
+  ges_layer_add_clip (layer, GES_CLIP (clip2));
+
+  clip3 = (GESClip *) ges_test_clip_new ();
+  fail_unless (clip3 != NULL);
+  g_object_set (clip3, "start", 0, "duration", 5, NULL);
+  assert_equals_uint64 (_START (clip3), 0);
+  assert_equals_uint64 (_DURATION (clip3), 5);
+
+  ges_layer_add_clip (layer, GES_CLIP (clip3));
+
+  /**
+  * Our timeline:
+  * -------------
+  *
+  *          |--------    0---------------     0---------       |
+  * layer:   |  clip3 |   |     clip     |     |  clip2  |      |
+  *          |-------05  10-------------40    50--------60      |
+  *          |--------------------------------------------------|
+  *
+  */
+
+  current = objects = ges_layer_get_clips_in_interval (layer, 4, 52);
+  assert_equals_int (g_list_length (objects), 3);
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip3));
+  current = current->next;
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+  current = current->next;
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip2));
+
+  current = objects = ges_layer_get_clips_in_interval (layer, 39, 65);
+  assert_equals_int (g_list_length (objects), 2);
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+  current = current->next;
+  fail_unless (current->data == GES_TIMELINE_ELEMENT (clip2));
+
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -1784,6 +1891,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_layer_meta_value);
   tcase_add_test (tc_chain, test_layer_meta_register);
   tcase_add_test (tc_chain, test_layer_meta_foreach);
+  tcase_add_test (tc_chain, test_layer_get_clips_in_interval);
 
   return s;
 }
