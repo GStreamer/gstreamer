@@ -44,17 +44,17 @@ application:
 
 The seek event contains:
 
-  - various flags describing:
+  - various `GstSeekFlags` flags describing:
 
-  - where to seek to (KEY\_UNIT)
+  - where to seek to (`KEY_UNIT`)
 
-  - how accurate the seek should be (ACCURATE)
+  - how accurate the seek should be (`ACCURATE`)
 
-  - how to perform the seek (FLUSH)
+  - how to perform the seek (`FLUSH`)
 
-  - what to do when the stop position is reached (SEGMENT).
+  - what to do when the stop position is reached (`SEGMENT`).
 
-  - extra playback options (SKIP)
+  - extra playback options (`SKIP`)
 
   - a format to seek in, this can be time, bytes, units (frames,
     samples), …
@@ -82,18 +82,18 @@ Send the new seek event to the pipeline with
 By default the pipeline will send the event to all sink elements. By
 default an element will forward the event upstream on all sinkpads.
 Elements can modify the format of the seek event. The most common format
-is GST\_FORMAT\_TIME.
+is `GST_FORMAT_TIME`.
 
 One element will actually perform the seek, this is usually the demuxer
 or source element. For more information on how to perform the different
 seek types see [seeking](design/seeking.md).
 
-For client side trickmode a SEGMENT event will be sent downstream with
+For client side trickmode a `SEGMENT` event will be sent downstream with
 the new rate and start/stop positions. All elements prepare themselves
 to handle the rate (see below). The applied rate of the SEGMENT event
 will be set to 1.0 to indicate that no rate adjustment has been done.
 
-for server side trick mode a SEGMENT event is sent downstream with a
+for server side trick mode a `SEGMENT` event is sent downstream with a
 rate of 1.0 and the start/stop positions. The elements will configure
 themselves for normal playback speed since the server will perform the
 rate conversions. The applied rate will be set to the rate that will be
@@ -109,12 +109,15 @@ connection requesting a new byte or time position and a new playback
 speed. The capabilities can be queried from the server when the
 connection is opened.
 
-We assume the source element is derived from the GstPushSrc base class.
-The base source should be configured with gst\_base\_src\_set\_format
-(src, GST\_FORMAT\_TIME).
+We assume the source element is derived from the `GstPushSrc` base class.
+The base source should be configured with:
 
-The do\_seek method will be called on the push src subclass with the
-seek information passed in the GstSegment argument.
+```c
+gst_base_src_set_format (src, GST_FORMAT_TIME);
+```
+
+The `do_seek()` method will be called on the `GstPushSrc` subclass with the
+seek information passed in the `GstSegment` argument.
 
 The rate value in the segment should be used to reopen the connection to
 the server requesting data at the new speed and possibly a new playback
@@ -155,12 +158,12 @@ the media contains data with non-standard playback speed or direction.
 ## client side forward trickmodes
 
 The seek happens as stated above. a SEGMENT event is sent downstream
-with a rate different from 1.0. Plugins receiving the SEGMENT can decide
+with a rate different from 1.0. Plugins receiving the `SEGMENT` can decide
 to perform the rate conversion of the media data (retimestamp video
 frames, resample audio, …).
 
 If a plugin decides to resample or retimestamp, it should modify the
-SEGMENT with a rate of 1.0 and update the applied rate so that
+`SEGMENT` with a rate of 1.0 and update the applied rate so that
 downstream elements don’t resample again but are aware that the media
 has been modified.
 
@@ -169,7 +172,7 @@ they receive a SEGMENT event with a rate different from 1.0. The
 position reporting in the base audio and video sinks will also depend on
 the applied rate of the segment information.
 
-When the SKIP flag is set, frames can be dropped in the elements. If S
+When the `SKIP` flag is set, frames can be dropped in the elements. If S
 is the speedup factor, a good algorithm for implementing frame skipping
 is to send audio in chunks of Nms (usually 300ms is good) and then skip
 ((S-1) \* Nns) of audio data. For the video we send only the keyframes
@@ -180,26 +183,26 @@ timestamps and would set an applied rate of S.
 
 For backwards playback the following rules apply:
 
-  - the rate in the SEGMENT is less than 0.0.
+  - the rate in the `SEGMENT` is less than 0.0.
 
-  - the SEGMENT start position is less than the stop position, playback
+  - the `SEGMENT` start position is less than the stop position, playback
     will however happen from stop to start in reverse.
 
-  - the time member in the SEGMENT is set to the stream time of the
+  - the time member in the `SEGMENT` is set to the stream time of the
     start position.
 
 For plugins the following rules apply:
 
   - A source plugin sends data in chunks starting from the last chunk of
     the file. The actual bytes are not reversed. Each chunk that is not
-    forward continuous with the previous chunk is marked with a DISCONT
+    forward continuous with the previous chunk is marked with a `DISCONT`
     flag.
 
   - A demuxer accumulates the chunks. As soon as a keyframe is found,
     everything starting from the keyframe up to the accumulated data is
     sent downstream. Timestamps on the buffers are set starting from the
     stop position to start, effectively going backwards. Chunks are
-    marked with DISCONT when they are not forward continuous with the
+    marked with `DISCONT` when they are not forward continuous with the
     previous buffer.
 
   - A video decoder decodes and accumulates all decoded frames. If a
@@ -221,15 +224,15 @@ For plugins the following rules apply:
 
   - for transcoding, audio and video resamplers can be used to reverse,
     resample and retimestamp the buffers. Any rate adjustments performed
-    on the media must be added to the applied\_rate and subtracted from
+    on the media must be added to the `applied_rate` and subtracted from
     the rate members in the SEGMENT
         event.
 
-In SKIP mode, the same algorithm as for forward SKIP mode can be used.
+In `SKIP` mode, the same algorithm as for forward `SKIP` mode can be used.
 
 ## Notes
 
-  - The clock/running\_time keeps running forward.
+  - The clock/`running_time` keeps running forward.
 
   - backwards playback potentially uses a lot of memory as frames and
     undecoded data gets buffered.
