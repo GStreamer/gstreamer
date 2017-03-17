@@ -5514,6 +5514,7 @@ gst_decode_bin_remove_element (GstBin * bin, GstElement * element)
   GList *iter;
 
   BUFFERING_LOCK (bin);
+  g_mutex_lock (&dbin->buffering_post_lock);
   for (iter = dbin->buffering_status; iter; iter = iter->next) {
     GstMessage *bufstats = iter->data;
 
@@ -5536,6 +5537,7 @@ gst_decode_bin_remove_element (GstBin * bin, GstElement * element)
     gst_element_post_message (GST_ELEMENT_CAST (bin),
         gst_message_new_buffering (GST_OBJECT_CAST (dbin), 100));
   }
+  g_mutex_unlock (&dbin->buffering_post_lock);
 
   return GST_BIN_CLASS (parent_class)->remove_element (bin, element);
 }
