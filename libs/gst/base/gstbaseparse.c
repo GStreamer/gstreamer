@@ -3237,7 +3237,8 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       ret = old_ret;
       goto done;
     }
-    old_ret = ret;
+    if (old_ret == GST_FLOW_OK)
+      old_ret = ret;
   }
 
 done:
