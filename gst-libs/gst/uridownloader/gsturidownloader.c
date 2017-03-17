@@ -42,7 +42,7 @@ struct _GstUriDownloaderPrivate
   gboolean got_buffer;
   GMutex download_lock;         /* used to restrict to one download only */
 
-  GstElement *parent;
+  GWeakRef parent;
 
   GError *err;
 
@@ -135,10 +135,7 @@ gst_uri_downloader_dispose (GObject * object)
     downloader->priv->download = NULL;
   }
 
-  if (downloader->priv->parent) {
-    gst_object_unref (downloader->priv->parent);
-    downloader->priv->parent = NULL;
-  }
+  g_weak_ref_clear (&downloader->priv->parent);
 
   G_OBJECT_CLASS (gst_uri_downloader_parent_class)->dispose (object);
 }
@@ -173,8 +170,7 @@ void
 gst_uri_downloader_set_parent (GstUriDownloader * downloader,
     GstElement * parent)
 {
-  gst_object_replace ((GstObject **) & downloader->priv->parent,
-      GST_OBJECT_CAST (parent));
+  g_weak_ref_set (&downloader->priv->parent, parent);
 }
 
 static gboolean
@@ -280,25 +276,25 @@ gst_uri_downloader_bus_handler (GstBus * bus,
     g_error_free (err);
     g_free (dbg_info);
   } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_NEED_CONTEXT) {
+    GstElement *parent = g_weak_ref_get (&downloader->priv->parent);
+
     /* post the same need-context as if it was from the parent and then
      * get it to our internal element that requested it */
-    if (downloader->priv->parent && GST_IS_ELEMENT (GST_MESSAGE_SRC (message))) {
+    if (parent && GST_IS_ELEMENT (GST_MESSAGE_SRC (message))) {
       const gchar *context_type;
       GstContext *context;
       GstElement *msg_src = GST_ELEMENT_CAST (GST_MESSAGE_SRC (message));
 
       gst_message_parse_context_type (message, &context_type);
-      context =
-          gst_element_get_context (downloader->priv->parent, context_type);
+      context = gst_element_get_context (parent, context_type);
 
       /* No context, request one */
       if (!context) {
         GstMessage *need_context_msg =
-            gst_message_new_need_context (GST_OBJECT_CAST (downloader->
-                priv->parent), context_type);
-        gst_element_post_message (downloader->priv->parent, need_context_msg);
-        context =
-            gst_element_get_context (downloader->priv->parent, context_type);
+            gst_message_new_need_context (GST_OBJECT_CAST (parent),
+            context_type);
+        gst_element_post_message (parent, need_context_msg);
+        context = gst_element_get_context (parent, context_type);
       }
 
       if (context) {
@@ -306,6 +302,8 @@ gst_uri_downloader_bus_handler (GstBus * bus,
         gst_context_unref (context);
       }
     }
+    if (parent)
+      gst_object_unref (parent);
   }
 
   gst_message_unref (message);
