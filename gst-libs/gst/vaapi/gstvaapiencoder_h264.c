@@ -36,6 +36,7 @@
 #include "gstvaapiencoder_h264.h"
 #include "gstvaapiutils_h264.h"
 #include "gstvaapiutils_h264_priv.h"
+#include "gstvaapiutils_h26x_priv.h"
 #include "gstvaapicodedbufferproxy_priv.h"
 #include "gstvaapisurface.h"
 
@@ -48,21 +49,6 @@
 
 /* Define the maximum value for view-id */
 #define MAX_VIEW_ID 1023
-
-/* Define the maximum IDR period */
-#define MAX_IDR_PERIOD 512
-
-/* Default CPB length (in milliseconds) */
-#define DEFAULT_CPB_LENGTH 1500
-
-/* Scale factor for CPB size (HRD cpb_size_scale: min = 4) */
-#define SX_CPB_SIZE 4
-
-/* Scale factor for bitrate (HRD bit_rate_scale: min = 6) */
-#define SX_BITRATE 6
-
-/* Define default rate control mode ("constant-qp") */
-#define DEFAULT_RATECONTROL GST_VAAPI_RATECONTROL_CQP
 
 /* Supported set of VA rate controls, within this implementation */
 #define SUPPORTED_RATECONTROLS                          \
@@ -198,66 +184,6 @@ h264_get_cpb_nal_factor (GstVaapiProfile profile)
       break;
   }
   return f;
-}
-
-/* ------------------------------------------------------------------------- */
-/* --- H.264 Bitstream Writer                                            --- */
-/* ------------------------------------------------------------------------- */
-
-#define WRITE_UINT32(bs, val, nbits) do {                       \
-    if (!gst_bit_writer_put_bits_uint32 (bs, val, nbits)) {     \
-      GST_WARNING ("failed to write uint32, nbits: %d", nbits); \
-      goto bs_error;                                            \
-    }                                                           \
-  } while (0)
-
-#define WRITE_UE(bs, val) do {                  \
-    if (!bs_write_ue (bs, val)) {               \
-      GST_WARNING ("failed to write ue(v)");    \
-      goto bs_error;                            \
-    }                                           \
-  } while (0)
-
-#define WRITE_SE(bs, val) do {                  \
-    if (!bs_write_se (bs, val)) {               \
-      GST_WARNING ("failed to write se(v)");    \
-      goto bs_error;                            \
-    }                                           \
-  } while (0)
-
-/* Write an unsigned integer Exp-Golomb-coded syntax element. i.e. ue(v) */
-static gboolean
-bs_write_ue (GstBitWriter * bs, guint32 value)
-{
-  guint32 size_in_bits = 0;
-  guint32 tmp_value = ++value;
-
-  while (tmp_value) {
-    ++size_in_bits;
-    tmp_value >>= 1;
-  }
-  if (size_in_bits > 1
-      && !gst_bit_writer_put_bits_uint32 (bs, 0, size_in_bits - 1))
-    return FALSE;
-  if (!gst_bit_writer_put_bits_uint32 (bs, value, size_in_bits))
-    return FALSE;
-  return TRUE;
-}
-
-/* Write a signed integer Exp-Golomb-coded syntax element. i.e. se(v) */
-static gboolean
-bs_write_se (GstBitWriter * bs, gint32 value)
-{
-  guint32 new_val;
-
-  if (value <= 0)
-    new_val = -(value << 1);
-  else
-    new_val = (value << 1) - 1;
-
-  if (!bs_write_ue (bs, new_val))
-    return FALSE;
-  return TRUE;
 }
 
 /* Write the NAL unit header */

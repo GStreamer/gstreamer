@@ -32,6 +32,7 @@ gstlibvaapi_sources = [
   'gstvaapiutils_core.c',
   'gstvaapiutils_h264.c',
   'gstvaapiutils_h265.c',
+  'gstvaapiutils_h26x.c',
   'gstvaapiutils_mpeg2.c',
   'gstvaapivalue.c',
   'gstvaapivideopool.c',

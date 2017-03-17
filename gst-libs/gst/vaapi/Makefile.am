@@ -78,6 +78,7 @@ libgstvaapi_source_c =				\
 	gstvaapiutils_core.c			\
 	gstvaapiutils_h264.c			\
 	gstvaapiutils_h265.c			\
+	gstvaapiutils_h26x.c			\
 	gstvaapiutils_mpeg2.c			\
 	gstvaapivalue.c				\
 	gstvaapivideopool.c			\
@@ -142,6 +143,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapiutils_core.h			\
 	gstvaapiutils_h264_priv.h		\
 	gstvaapiutils_h265_priv.h		\
+	gstvaapiutils_h26x_priv.h		\
 	gstvaapiutils_mpeg2_priv.h		\
 	gstvaapivideopool_priv.h		\
 	gstvaapiwindow_priv.h			\
