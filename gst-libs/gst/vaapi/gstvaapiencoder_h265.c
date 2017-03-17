@@ -2116,8 +2116,9 @@ gst_vaapi_encoder_h265_get_codec_data (GstVaapiEncoder * base_encoder,
   WRITE_UINT32 (&bs, GST_H265_NAL_VPS, 6);      /* Nal_unit_type */
   WRITE_UINT32 (&bs, 0x01, 16); /* numNalus, VPS count = 1 */
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
-  WRITE_UINT32 (&bs, vps_info.size, 16);        /* VPS nalUnitLength */
-  gst_bit_writer_put_bytes (&bs, vps_info.data, vps_info.size);
+  /* Write Nal unit length and data of VPS */
+  if (!gst_vaapi_utils_h26x_write_nal_unit (&bs, vps_info.data, vps_info.size))
+    goto nal_to_byte_stream_error;
 
   /* Write SPS */
   WRITE_UINT32 (&bs, 0x00, 1);  /* array_completeness */
@@ -2125,16 +2126,18 @@ gst_vaapi_encoder_h265_get_codec_data (GstVaapiEncoder * base_encoder,
   WRITE_UINT32 (&bs, GST_H265_NAL_SPS, 6);      /* Nal_unit_type */
   WRITE_UINT32 (&bs, 0x01, 16); /* numNalus, SPS count = 1 */
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
-  WRITE_UINT32 (&bs, sps_info.size, 16);        /* SPS nalUnitLength */
-  gst_bit_writer_put_bytes (&bs, sps_info.data, sps_info.size);
+  /* Write Nal unit length and data of SPS */
+  if (!gst_vaapi_utils_h26x_write_nal_unit (&bs, sps_info.data, sps_info.size))
+    goto nal_to_byte_stream_error;
 
   /* Write PPS */
   WRITE_UINT32 (&bs, 0x00, 1);  /* array_completeness */
   WRITE_UINT32 (&bs, 0x00, 1);  /* reserved zero */
   WRITE_UINT32 (&bs, GST_H265_NAL_PPS, 6);      /* Nal_unit_type */
   WRITE_UINT32 (&bs, 0x01, 16); /* numNalus, PPS count = 1 */
-  WRITE_UINT32 (&bs, pps_info.size, 16);        /* PPS nalUnitLength */
-  gst_bit_writer_put_bytes (&bs, pps_info.data, pps_info.size);
+  /* Write Nal unit length and data of PPS */
+  if (!gst_vaapi_utils_h26x_write_nal_unit (&bs, pps_info.data, pps_info.size))
+    goto nal_to_byte_stream_error;
 
   gst_buffer_unmap (encoder->pps_data, &pps_info);
   gst_buffer_unmap (encoder->sps_data, &sps_info);
@@ -2153,6 +2156,15 @@ gst_vaapi_encoder_h265_get_codec_data (GstVaapiEncoder * base_encoder,
 bs_error:
   {
     GST_ERROR ("failed to write codec-data");
+    gst_buffer_unmap (encoder->vps_data, &vps_info);
+    gst_buffer_unmap (encoder->sps_data, &sps_info);
+    gst_buffer_unmap (encoder->pps_data, &pps_info);
+    gst_bit_writer_clear (&bs, TRUE);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
+nal_to_byte_stream_error:
+  {
+    GST_ERROR ("failed to write nal unit");
     gst_buffer_unmap (encoder->vps_data, &vps_info);
     gst_buffer_unmap (encoder->sps_data, &sps_info);
     gst_buffer_unmap (encoder->pps_data, &pps_info);

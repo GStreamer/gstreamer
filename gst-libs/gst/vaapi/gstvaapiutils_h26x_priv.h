@@ -3,6 +3,8 @@
  *
  *  Copyright (C) 2011-2014 Intel Corporation
  *    Author: Gwenole Beauchesne
+ *  Copyright (C) 2017 Intel Corporation
+ *    Author: Hyunjun Ko <zzoon@igalia.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
@@ -76,6 +78,10 @@ bs_write_ue (GstBitWriter * bs, guint32 value);
 
 gboolean
 bs_write_se (GstBitWriter * bs, gint32 value);
+
+/* Write nal unit, applying emulation prevention bytes */
+gboolean
+gst_vaapi_utils_h26x_write_nal_unit (GstBitWriter * bs, guint8 * nal, guint nal_size);
 
 G_END_DECLS
 
