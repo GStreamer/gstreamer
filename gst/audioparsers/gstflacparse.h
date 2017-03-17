@@ -74,7 +74,6 @@ struct _GstFlacParse {
   guint8 blocking_strategy;
   guint16 block_size;
   guint64 sample_number;
-  guint64 first_sample_number;
   gboolean strategy_checked;
 
   gboolean sent_codec_tag;
