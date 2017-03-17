@@ -3501,7 +3501,7 @@ pack_I420_12BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     }
   } else {
     for (i = 0; i < width; i++) {
-      Y0 = s[i * 4 + 1] >> 6;
+      Y0 = s[i * 4 + 1] >> 4;
       GST_WRITE_UINT16_BE (dy + i, Y0);
     }
   }
