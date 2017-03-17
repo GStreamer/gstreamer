@@ -141,9 +141,10 @@ This provides a place to describe all provided views in a buffer / stream,
 and through Meta negotiation to inform decoders about which views to decode if
 not all are wanted.
 
-* Logical labels/names and mapping to GstVideoMeta numbers
+* Logical labels/names and mapping to `GstVideoMeta` numbers
 * Standard view labels LEFT/RIGHT, and non-standard ones (strings)
 
+```c
         GST_VIDEO_MULTIVIEW_VIEW_LEFT = 1
         GST_VIDEO_MULTIVIEW_VIEW_RIGHT = 2
 
@@ -158,6 +159,7 @@ not all are wanted.
             guint n_views;
             GstVideoMultiviewViewInfo *view_info;
         }
+```
 
 The meta is optional, and probably only useful later for MVC
 
@@ -239,15 +241,15 @@ Things to do to implement MVC handling
 When uploading raw video frames to GL textures, the goal is to implement:
 
 Split packed frames into separate GL textures when uploading, and
-attach multiple GstGLMemory's to the GstBuffer. The multiview-mode and
+attach multiple `GstGLMemory` to the `GstBuffer`. The multiview-mode and
 multiview-flags fields in the caps should change to reflect the conversion
-from one incoming GstMemory to multiple GstGLMemory, and change the
+from one incoming `GstMemory` to multiple `GstGLMemory`, and change the
 width/height in the output info as needed.
 
 This is (currently) targetted as 2 render passes - upload as normal
 to a single stereo-packed RGBA texture, and then unpack into 2
-smaller textures, output with GST_VIDEO_MULTIVIEW_MODE_SEPARATED, as
-2 GstGLMemory attached to one buffer. We can optimise the upload later
+smaller textures, output with `GST_VIDEO_MULTIVIEW_MODE_SEPARATED`, as
+2 `GstGLMemory` attached to one buffer. We can optimise the upload later
 to go directly to 2 textures for common input formats.
 
 Separat output textures have a few advantages:
@@ -264,15 +266,15 @@ Separat output textures have a few advantages:
    to any output packing.
 
  - In implementations that support quad buffers, having separate textures
-   makes it trivial to do GL_LEFT/GL_RIGHT output
+   makes it trivial to do `GL_LEFT`/`GL_RIGHT` output
 
 For either option, we'll need new glsink output API to pass more
 information to applications about multiple views for the draw signal/callback.
 
 I don't know if it's desirable to support *both* methods of representing
 views. If so, that should be signalled in the caps too. That could be a
-new multiview-mode for passing views in separate GstMemory objects
-attached to a GstBuffer, which would not be GL specific.
+new multiview-mode for passing views in separate `GstMemory` objects
+attached to a `GstBuffer`, which would not be GL specific.
 
 ### Overriding frame packing interpretation
 
@@ -285,9 +287,9 @@ to say so. How should we override that interpretation?
 
 ### Adding extra GstVideoMeta to buffers
 
-There should be one GstVideoMeta for the entire video frame in packed
-layouts, and one GstVideoMeta per GstGLMemory when views are attached
-to a GstBuffer separately. This should be done by the buffer pool,
+There should be one `GstVideoMeta` for the entire video frame in packed
+layouts, and one `GstVideoMeta` per `GstGLMemory` when views are attached
+to a `GstBuffer` separately. This should be done by the buffer pool,
 which knows from the caps.
 
 ### videooverlay interface extensions
