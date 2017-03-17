@@ -2633,7 +2633,7 @@ bs_error:
     gst_buffer_unmap (encoder->sps_data, &sps_info);
     gst_buffer_unmap (encoder->pps_data, &pps_info);
     gst_bit_writer_clear (&bs, TRUE);
-    return FALSE;
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
   }
 error_map_sps_buffer:
   {
