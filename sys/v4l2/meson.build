@@ -37,7 +37,7 @@ if cc.has_header('linux/videodev2.h') or cc.has_header('sys/videodev2.h') or cc.
     libv4l2_deps = []
   endif
 
-  gstv4l2 = library('gstv4l2',
+  gstv4l2 = library('gstvideo4linux2',
     v4l2_sources,
     c_args : gst_plugins_good_args,
     include_directories : [configinc, libsinc],
