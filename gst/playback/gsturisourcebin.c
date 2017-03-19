@@ -2162,7 +2162,7 @@ remove_source (GstURISourceBin * urisrc)
       gst_element_set_state (typefind, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (urisrc), typefind);
     }
-
+    g_list_free (urisrc->typefinds);
     urisrc->typefinds = NULL;
   }
 
