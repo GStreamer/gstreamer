@@ -28,13 +28,13 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-1.0 dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8 frequency=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mad ! alsasink
+ * gst-launch-1.0 dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8 frequency=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpegvideoparse ! mpegvideoparse ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! pulsesink
  * ]| Captures a full transport stream from DVB card 0 that is a DVB-T card at tuned frequency 514000000 Hz with other parameters as seen in the pipeline and renders the first TV program on the transport stream.
  * |[
- * gst-launch-1.0 dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8 frequency=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 pids=100:256:257 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mad ! alsasink
+ * gst-launch-1.0 dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8 frequency=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 pids=100:256:257 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpegvideoparse ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! pulsesink
  * ]| Captures and renders a transport stream from DVB card 0 that is a DVB-T card for a program at tuned frequency 514000000 Hz with PMT PID 100 and elementary stream PIDs of 256, 257 with other parameters as seen in the pipeline.
  * |[
- * gst-launch-1.0 dvbsrc polarity="h" frequency=11302000 symbol-rate=27500 diseqc-source=0 pids=50:102:103 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mad ! alsasink
+ * gst-launch-1.0 dvbsrc polarity="h" frequency=11302000 symbol-rate=27500 diseqc-source=0 pids=50:102:103 ! mpegtsdemux name=demux ! queue max-size-buffers=0 max-size-time=0 ! mpegvideoparse ! mpeg2dec ! xvimagesink demux. ! queue max-size-buffers=0 max-size-time=0 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! pulsesink
  * ]| Captures and renders a transport stream from DVB card 0 that is a DVB-S card for a program at tuned frequency 11302000 kHz, symbol rate of 27500 kBd (kilo bauds) with PMT PID of 50 and elementary stream PIDs of 102 and 103.
  * |[
  * gst-launch-1.0 dvbsrc frequency=515142857 guard=16 trans-mode="8k" isdbt-layer-enabled=7 isdbt-partial-reception=1 isdbt-layera-fec="2/3" isdbt-layera-modulation="QPSK" isdbt-layera-segment-count=1 isdbt-layera-time-interleaving=4 isdbt-layerb-fec="3/4" isdbt-layerb-modulation="qam-64" isdbt-layerb-segment-count=12 isdbt-layerb-time-interleaving=2 isdbt-layerc-fec="1/2" isdbt-layerc-modulation="qam-64" isdbt-layerc-segment-count=0 isdbt-layerc-time-interleaving=0 delsys="isdb-t" ! tsdemux ! "video/x-h264" ! h264parse ! queue ! avdec_h264 ! videoconvert ! queue ! autovideosink
