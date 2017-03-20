@@ -43,7 +43,9 @@ to assist or fine-tune the process.
 
  - **'autoplug-continue'**:
 
-        gboolean user_function (GstElement * decodebin, GstPad *pad, GstCaps * caps)
+```
+    gboolean user_function (GstElement * decodebin, GstPad *pad, GstCaps * caps)
+```
 
     This signal is fired at the very beginning with the source pad `GstCaps`. If
     the callback returns TRUE, the process continues normally. If the
@@ -52,7 +54,9 @@ to assist or fine-tune the process.
 
   - **'autoplug-factories'**:
 
-        GValueArray user_function (GstElement* decodebin, GstPad* pad, GstCaps* caps);
+```
+    GValueArray user_function (GstElement* decodebin, GstPad* pad, GstCaps* caps);
+```
 
     Get a list of elementfactories for @pad with @caps. This function is
     used to instruct decodebin2 of the elements it should try to
@@ -62,7 +66,9 @@ to assist or fine-tune the process.
 
   - **'autoplug-select'**:
 
-        gint user_function (GstElement* decodebin, GstPad* pad, GstCaps*caps, GValueArray* factories);
+```
+    gint user_function (GstElement* decodebin, GstPad* pad, GstCaps*caps, GValueArray* factories);
+```
 
     This signal is fired once autoplugging has got a list of compatible
     `GstElementFactory`. The signal is emitted with the `GstCaps` of the
@@ -92,13 +98,13 @@ By default the target caps are:
 ### Media chain/group handling
 
 When autoplugging, all streams coming out of a demuxer will be grouped
-in a DecodeGroup.
+in a `DecodeGroup`.
 
 All new source pads created on that demuxer after it has emitted the
 'no-more-pads' signal will be put in another DecodeGroup.
 
 Only one decodegroup can be active at any given time. If a new
-decodegroup is created while another one exists, that decodegroup will
+decodegroup is created while another one exists, that `DecodeGroup` will
 be set as blocking until the existing one has drained.
 
 ## DecodeGroup
@@ -118,12 +124,12 @@ The DecodeGroup contains:
 
 ### Proper group draining
 
-The DecodeGroup takes care that all the streams in the group are
+The `DecodeGroup` takes care that all the streams in the group are
 completely drained (EOS has come through all source ghost pads).
 
 ### Pre-roll and block
 
-The DecodeGroup has a global blocking feature. If enabled, all the
+The `DecodeGroup` has a global blocking feature. If enabled, all the
 ghosted source pads for that group will be blocked.
 
 A method is available to unblock all blocked pads for that group.
@@ -138,11 +144,11 @@ few differences:
   - Multiple streams handling.
 
     The element handles queueing data on more than one stream at once.
-    To achieve such a feature it has request sink pads (sink\_%u) and
-    'sometimes' src pads (src\_%u).
+    To achieve such a feature it has request sink pads (`sink_%u`) and
+    'sometimes' src pads (`src_%u`).
 
     When requesting a given sinkpad, the associated srcpad for that
-    stream will be created. Ex: requesting sink\_1 will generate src\_1.
+    stream will be created. Ex: requesting `sink_1` will generate `src_1`.
 
   - Non-starvation on multiple streams.
 
@@ -170,14 +176,12 @@ few differences:
       synchronously in relation to the order in which it arrived globally
       in the element (see 'Synchronous data pushing' below).
 
-    When woken up by the GCondition, the `GstTask` will try to push the
-    next `GstBuffer`/`GstEvent` on the queue. If pushing the
-    `GstBuffer`/`GstEvent` returns `GST_FLOW_NOT_LINKED`, then the
-    associated queue is marked as 'not-linked'. If pushing the
-    `GstBuffer`/`GstEvent` succeeded the queue will no longer be marked as
-    'not-linked'.
+    When woken up by the `GCondition`, the `GstTask` will try to push the
+    next `GstBuffer`/`GstEvent` on the queue. If pushing returns
+    `GST_FLOW_NOT_LINKED`, the associated queue is marked as `not-linked`.
+    If pushing succeeds, the queue will no longer be marked as `not-linked`.
 
-    If pushing on all srcpads returns `GstFlowReturn` different from
+    If pushing on all srcpads returns a `GstFlowReturn` different from
     `GST_FLOW_OK`, then all the srcpads' tasks are stopped and
     subsequent pushes on sinkpads will return `GST_FLOW_NOT_LINKED`.
 
@@ -216,7 +220,9 @@ Where there are multiple stream formats, parsers are usually expected to
 be able to convert between the different formats. This will, if
 implemented correctly, work as expected in a static pipeline such as
 
+```
     ... ! parser ! decoder ! sink
+```
 
 where the parser can query the decoder's capabilities even before
 processing the first piece of data, and configure itself to convert
