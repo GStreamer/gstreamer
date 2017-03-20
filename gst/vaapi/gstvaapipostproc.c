@@ -49,7 +49,11 @@
 #define GST_PLUGIN_DESC "A VA-API video postprocessing filter"
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapipostproc);
+#ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_debug_vaapipostproc
+#else
+#define GST_CAT_DEFAULT NULL
+#endif
 
 /* Default templates */
 /* *INDENT-OFF* */

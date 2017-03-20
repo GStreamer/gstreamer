@@ -49,7 +49,11 @@
 #define GST_VAAPI_DECODE_FLOW_PARSE_DATA        GST_FLOW_CUSTOM_SUCCESS_2
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapidecode);
+#ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_debug_vaapidecode
+#else
+#define GST_CAT_DEFAULT NULL
+#endif
 
 #define GST_VAAPI_DECODE_PARAMS_QDATA \
   g_quark_from_static_string("vaapidec-params")

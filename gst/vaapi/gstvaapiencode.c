@@ -38,7 +38,11 @@
 #define GST_VAAPI_ENCODE_FLOW_CONVERT_ERROR     GST_FLOW_CUSTOM_ERROR_1
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapiencode_debug);
+#ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_vaapiencode_debug
+#else
+#define GST_CAT_DEFAULT NULL
+#endif
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaapiEncode,
     gst_vaapiencode, GST_TYPE_VIDEO_ENCODER,

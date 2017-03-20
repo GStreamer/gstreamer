@@ -59,7 +59,11 @@
 #define GST_PLUGIN_DESC "A VA-API based videosink"
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapisink);
+#ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_debug_vaapisink
+#else
+#define GST_CAT_DEFAULT NULL
+#endif
 
 /* Default template */
 /* *INDENT-OFF* */
