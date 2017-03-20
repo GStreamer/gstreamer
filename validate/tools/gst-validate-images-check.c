@@ -43,12 +43,12 @@ main (int argc, char **argv)
     {"min-avg-similarity", 'a', 0, G_OPTION_ARG_DOUBLE,
           &min_avg_similarity,
           "The minimum average similarity under which we consider"
-          "the test as failing",
+          " the test as failing",
         NULL},
     {"min-lowest-similarity", 'l', 0, G_OPTION_ARG_DOUBLE,
           &min_lowest_similarity,
           "The minimum 'lowest' similarity under which we consider"
-          "the test as failing",
+          " the test as failing",
         NULL},
     {"result-output-folder", 'r', 0, G_OPTION_ARG_FILENAME,
           &outfolder,

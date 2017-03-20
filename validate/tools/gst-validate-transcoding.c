@@ -154,7 +154,7 @@ _check_is_key_unit_cb (GstPad * pad, GstPadProbeInfo * info,
         GST_VALIDATE_REPORT (kuinfo->scenario,
             SCENARIO_ACTION_EXECUTION_ERROR,
             "Did not receive a key frame after requested one, "
-            " at running_time %" GST_TIME_FORMAT " (with a %i "
+            "at running_time %" GST_TIME_FORMAT " (with a %i "
             "frame tolerance)", GST_TIME_ARGS (kuinfo->running_time),
             NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE);
 
@@ -362,7 +362,7 @@ _execute_set_restriction (GstValidateScenario * scenario,
       profile_type = GST_TYPE_ENCODING_VIDEO_PROFILE;
     else {
       g_error
-          ("No information on what profiles to apply action, you should set either"
+          ("No information on what profiles to apply action, you should set either "
           "profile_name or profile_type_name and the caps %s give us no hint",
           restriction_caps);
 
@@ -635,7 +635,7 @@ _register_actions (void)
       (GstValidateActionParameter []) {
         {
           .name = "restriction-caps",
-          .description = "The restriction caps to set on the encodebin"
+          .description = "The restriction caps to set on the encodebin "
                          "encoding profile.\nSee gst_encoding_profile_set_restriction()",
           .mandatory = TRUE,
           .types = "GstCaps serialized as a string"
@@ -659,7 +659,7 @@ _register_actions (void)
         {
           .name = "running-time",
           .description = "The running_time can be set to request a new key unit at a specific running_time.\n"
-                          "If not set, GST_CLOCK_TIME_NONE will be used so upstream elements will produce a new key unit"
+                          "If not set, GST_CLOCK_TIME_NONE will be used so upstream elements will produce a new key unit "
                           "as soon as possible.",
           .mandatory = FALSE,
           .types = "double or string",
@@ -766,7 +766,7 @@ main (int argc, gchar ** argv)
   g_option_context_set_summary (ctx, "Transcodes input-uri to output-uri, "
       "using the given encoding profile. The pipeline will be monitored for "
       "possible issues detection using the gst-validate lib."
-      "\nCan also perform file conformance"
+      "\nCan also perform file conformance "
       "tests after transcoding to make sure the result is correct");
   g_option_context_add_main_entries (ctx, options, NULL);
   if (want_help) {
@@ -813,7 +813,7 @@ main (int argc, gchar ** argv)
   }
 
   if (argc != 3) {
-    g_printerr ("%i arguments recived, 2 expected.\n"
+    g_printerr ("%i arguments received, 2 expected.\n"
         "You should run the test using:\n"
         "    ./gst-validate-transcoding-1.0 <input-uri> <output-uri> [options]\n",
         argc - 1);
