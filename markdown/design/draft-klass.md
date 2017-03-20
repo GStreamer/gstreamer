@@ -14,143 +14,150 @@ The topic of defining the klass of elements should be based on use
 cases.
 
 A list of classes that are used in a installation can be generated
-using: gst-inspect-1.0 -a | grep -ho Class:.\* | cut -c8- | sed
-"s/\\//\\\\n/g" | sort | uniq
+using:
+
+```
+gst-inspect-1.0 -a | grep -ho Klass.\* | cut -c8- | sort | uniq
+```
 
 ## Proposal
 
-The GstElementDetails contains a field named klass that is a pointer to
+The `GstElementDetails` contains a field named klass that is a pointer to
 a string describing the element type.
 
 In this document we describe the format and contents of the string.
 Elements should adhere to this specification although that is not
 enforced to allow for wild (application specific) customisation.
 
-###string format
+### String format
 
-    <keyword>['/'<keyword]*
+```
+<keyword>['/'<keyword]*
+```
 
-    The string consists of an _unordered_ list of keywords separated with a '/'
-    character. While the / suggests a hierarchy, this is _not_ the case.
+The string consists of an ***unordered*** list of keywords separated with a '/'
+character. While the / suggests a hierarchy, this is ***not*** the case.
 
-### keyword categories
+### Keyword categories
 
-- functional
+#### Functional
 
-    Categories are base on _intended usage_ of the element. Some elements
+    Categories are base on ***intended usage*** of the element. Some elements
     might have other side-effects (especially for filers/effects). The purpose
     is to list enough keywords so that applications can do meaningful filtering,
-    not to completely describe the functionality, that is expressed in caps etc..
+    not to completely describe the functionality that is expressed in caps.
 
-    - Source : produces data
+    - Source: produces data
 
-    - Sink : consumes data
+    - Sink: consumes data
 
-    - Filter : filters/transforms data, no modification on the data is
+    - Filter: filters/transforms data, no modification on the data is
     intended (although it might be unavoidable). The filter can
     decide on input and output caps independently of the stream
     contents (GstBaseTransform).
 
-    - Effect : applies an effect to some data, changes to data are
+    - Effect: applies an effect to some data, changes to data are
     intended. Examples are colorbalance, volume. These elements can
     also be implemented with GstBaseTransform.
 
-    - Demuxer : splits audio, video, … from a stream
+    - Demuxer: splits audio, video, … from a stream
 
-    - Muxer : interleave audio, video, … into one stream, this is like
+    - Muxer: interleave audio, video, … into one stream, this is like
     mixing but without losing or degrading each separate input
     stream. The reverse operation is possible with a Demuxer that
     reproduces the exact same input streams.
 
-    - Decoder : decodes encoded data into a raw format, there is
+    - Decoder: decodes encoded data into a raw format, there is
     typically no relation between input caps and output caps. The
     output caps are defined in the stream data. This separates the
     Decoder from the Filter and Effect.
 
-    - Encoder : encodes raw data into an encoded format.
+    - Encoder: encodes raw data into an encoded format.
 
-    - Mixer : combine audio, video, .. this is like muxing but with
+    - Mixer: combine audio, video, .. this is like muxing but with
     applying some algorithm so that the individual streams are not
     extractable anymore, there is therefore no reverse operation to
     mixing. (audio mixer, video mixer, …)
 
-    - Converter : convert audio into video, text to audio, … The
+    - Converter: convert audio into video, text to audio, … The
     converter typically works on raw types only. The source media
     type is listed first.
 
-    - Analyzer : reports about the stream contents.
+    - Analyzer: reports about the stream contents.
 
-    - Control : controls some aspect of a hardware device
+    - Control: controls some aspect of a hardware device
 
-    - Extracter : extracts tags/headers from a stream
+    - Extracter: extracts tags/headers from a stream
 
-    - Formatter : adds tags/headers to a stream
+    - Formatter: adds tags/headers to a stream
 
-    - Connector : allows for new connections in the pipeline. (tee, …)
+    - Connector: allows for new connections in the pipeline. (tee, …)
 
     - …
 
-- Based on media type
+#### Based on media type
 
     Purpose is to make a selection for elements operating on the different
     types of media. An audio application must be able to filter out the
     elements operating on audio, for example.
 
-    - Audio : operates on audio data
+    - Audio: operates on audio data
 
-    - Video : operates on video data
+    - Video: operates on video data
 
-    - Image : operates on image data. Usually this media type can also
+    - Image: operates on image data. Usually this media type can also
     be used to make a video stream in which case it is added
     together with the Video media type.
 
-    - Text : operates on text data
+    - Text: operates on text data
 
-    - Metadata : operates on metadata
+    - Metadata: operates on metadata
 
     - …
 
-- Extra features
+#### Extra features
 
     The purpose is to further specialize the element, mostly for
     application specific needs.
 
-    - Network : element is used in networked situations
+    - Network: element is used in networked situations
 
-    - Protocol : implements some protocol (RTSP, HTTP, …)
+    - Protocol: implements some protocol (RTSP, HTTP, …)
 
-    - Payloader : encapsulate as payload (RTP, RDT,.. )
+    - Payloader: encapsulate as payload (RTP, RDT,.. )
 
-    - Depayloader : strip a payload (RTP, RDT,.. )
+    - Depayloader: strip a payload (RTP, RDT,.. )
 
-    - RTP : intended to be used in RTP applications
+    - RTP: intended to be used in RTP applications
 
-    - Device : operates on some hardware device (disk, network, audio
+    - Device: operates on some hardware device (disk, network, audio
     card, video card, usb, …)
 
-    - Visualisation : intended to be used for audio visualisation
+    - Visualisation: intended to be used for audio visualisation
 
-    - Debug : intended usage is more for debugging purposes.
+    - Debug: intended usage is more for debugging purposes.
 
-- Categories found, but not yet in one of the above lists
+#### Categories found, but not yet in one of the above lists
 
-    - Bin : playbin, decodebin, bin, pipeline
+    - Bin: playbin, decodebin, bin, pipeline
 
-    - Codec : lots of decoders, encoder, demuxers should be removed?
+    - Codec: lots of decoders, encoder, demuxers should be removed?
 
-    - Generic : should be removed?
+    - Generic: should be removed?
 
-    - File : like network, should go to Extra?
+    - File: like network, should go to Extra?
 
-    - Editor : gnonlin, textoverlays
+    - Editor: gnonlin, textoverlays
 
     - DVD, GDP, LADSPA, Parser, Player, Subtitle, Testing, …
 
-3\) suggested order:
+### Suggested order:
 
+```
     <functional>[/<media type>]*[/<extra...>]*
+```
 
-4\) examples:
+### Examples:
 
     apedemux         : Extracter/Metadata
     audiotestsrc     : Source/Audio
