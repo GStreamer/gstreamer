@@ -786,7 +786,7 @@ make_mpeg_pipeline (const gchar * location)
   gst_element_link (src, demux);
 
   audio_bin = gst_bin_new ("a_decoder_bin");
-  a_decoder = gst_element_factory_make_or_warn ("mpg13audiodec", "a_dec");
+  a_decoder = gst_element_factory_make_or_warn ("mpg123audiodec", "a_dec");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
