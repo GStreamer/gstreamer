@@ -24,7 +24,7 @@ Usages of pull based scheduling:
 API for pull-based scheduling:
 
   - an element that wants to pull data from a peer element needs to call
-    the pull\_range() method. This methods requires an offset and a
+    the `pull_range()` method. This method requires an offset and a
     size. It is possible to leave the offset and size at -1, indicating
     that any offset or size is acceptable, this of course removes the
     advantages of getrange based scheduling.
@@ -47,7 +47,7 @@ Current scheduling decision:
 
   - core selects scheduling type starting on sinks by looking at
     existence of loop function on sinkpad and calling
-    \_check\_pull\_range() on the source pad to activate the pads in
+    `_check_pull_range()` on the source pad to activate the pads in
     push/pull mode.
 
   - element proxies pull mode pad activation to peer pad.
@@ -55,13 +55,13 @@ Current scheduling decision:
 Problems:
 
   - core makes a tough desicion without knowing anything about the
-    element. Some elements are able to deal with a pull\_range() without
+    element. Some elements are able to deal with a `pull_range()` without
     offset while others need full random access.
 
 Requirements:
 
   - element should be able to select scheduling method itself based on
-    how it can use the peer element pull\_range. This includes if the
+    how it can use the peer element `pull_range()`. This includes if the
     peer can operate with or without offset/size. This also means that
     the core does not need to select the scheduling method anymore and
     allows for more efficient scheduling methods adjusted for the
@@ -73,7 +73,7 @@ Proposition:
 
   - pads queries scheduling mode of peer pad. This query is rather
     finegrained and allows the element to know if the peer supports
-    offsets and sizes in the get\_range function. A proposition for the
+    offsets and sizes in the `get_range()` function. A proposition for the
     query is outlined in draft-query.txt.
 
   - pad selects scheduling mode and informs the peer pad of this
@@ -81,8 +81,7 @@ Proposition:
 
 Things to query:
 
-  - pad can do real random access (downstream peer can ask for offset
-    \!= -1)
+  - pad can do real random access (downstream peer can ask for offset `!= -1`)
 
   - min offset
 
@@ -92,8 +91,7 @@ Things to query:
 
   - align: all offsets should be aligned with this value.
 
-  - pad can give ranges from A to B length (peer can ask for A ⇐ length
-    ⇐ B)
+  - pad can give ranges from A to B length (peer can ask for `A ⇐ length ⇐ B`)
 
   - min length
 
