@@ -518,13 +518,13 @@ gboolean
               tmptag->data)->taglist != NULL) {
         GST_DEBUG ("Tag not found %s", tag);
       } else {
-        GST_DEBUG ("Tag not not properly deserialized");
+        GST_DEBUG ("Tag not properly deserialized");
       }
 
       ret = FALSE;
     }
 
-    GST_DEBUG ("Tag properly found found %s", tag);
+    GST_DEBUG ("Tag properly found %s", tag);
     g_free (tag);
   }
 

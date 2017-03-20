@@ -823,7 +823,7 @@ gst_validate_pad_monitor_check_late_serialized_events (GstValidatePadMonitor *
       gchar *event_str = _get_event_string (data->event);
 
       GST_VALIDATE_REPORT (monitor, SERIALIZED_EVENT_WASNT_PUSHED_IN_TIME,
-          "Serialized event %s wasn't pushed before expected " "timestamp %"
+          "Serialized event %s wasn't pushed before expected timestamp %"
           GST_TIME_FORMAT " on pad %s:%s", event_str,
           GST_TIME_ARGS (data->timestamp),
           GST_DEBUG_PAD_NAME (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor)));
@@ -1555,7 +1555,7 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
 
       if (pad_monitor->pending_flush_stop) {
         GST_VALIDATE_REPORT (pad_monitor, EVENT_FLUSH_START_UNEXPECTED,
-            "Received flush-start from " " when flush-stop was expected");
+            "Received flush-start from when flush-stop was expected");
       }
       pad_monitor->pending_flush_stop = TRUE;
     }
@@ -1648,7 +1648,7 @@ _should_check_buffers (GstValidatePadMonitor * pad_monitor,
         if (!gst_validate_media_descriptor_detects_frames
         (monitor->media_descriptor)) {
       GST_DEBUG_OBJECT (pad,
-          "No frame detection media descriptor " "=> not buffer checking");
+          "No frame detection media descriptor => not buffer checking");
       pad_monitor->check_buffers = FALSE;
     } else if (pad_monitor->all_bufs == NULL &&
         !gst_validate_media_descriptor_get_buffers (monitor->media_descriptor,
@@ -2359,7 +2359,7 @@ gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
       /* TODO is this a timestamp issue? */
       GST_VALIDATE_REPORT (monitor, BUFFER_IS_OUT_OF_SEGMENT,
           "buffer is out of segment and shouldn't be pushed. Timestamp: %"
-          GST_TIME_FORMAT " - duration: %" GST_TIME_FORMAT ". Range: %"
+          GST_TIME_FORMAT " - Duration: %" GST_TIME_FORMAT ". Range: %"
           GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),

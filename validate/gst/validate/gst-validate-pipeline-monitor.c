@@ -307,7 +307,7 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
 
     g_string_append_printf (str,
         "\n - The QUERY filter caps is EMPTY, this is invalid and is a bug in "
-        " a previous element (probably in: '%s')\n",
+        "a previous element (probably in: '%s')\n",
         prev_path ? prev_path : "no suspect");
     g_free (prev_path);
   }
@@ -437,8 +437,8 @@ _generate_not_negotiated_error_report (GstMessage * msg)
   else if (last_refused_caps_monitor)
     _append_accept_caps_failure_details (last_refused_caps_monitor, str);
   else {
-    GST_ERROR ("We should always be able to generate detailed report"
-        " about why negotiation failed, please report a bug against"
+    GST_ERROR ("We should always be able to generate a detailed report"
+        " about why negotiation failed. Please report a bug against"
         " gst-devtools:validate with this message and a way to reproduce.");
   }
 

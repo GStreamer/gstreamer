@@ -882,7 +882,7 @@ gst_validate_media_descriptor_writer_add_frame (GstValidateMediaDescriptorWriter
       g_markup_printf_escaped (" <frame duration=\"%" G_GUINT64_FORMAT
       "\" id=\"%i\" is-keyframe=\"%s\" offset=\"%" G_GUINT64_FORMAT
       "\" offset-end=\"%" G_GUINT64_FORMAT "\" pts=\"%" G_GUINT64_FORMAT
-      "\"  dts=\"%" G_GUINT64_FORMAT "\" running-time=\"%" G_GUINT64_FORMAT
+      "\" dts=\"%" G_GUINT64_FORMAT "\" running-time=\"%" G_GUINT64_FORMAT
       "\" checksum=\"%s\"/>",
       fnode->duration, id, fnode->is_keyframe ? "true" : "false",
       fnode->offset, fnode->offset_end, fnode->pts, fnode->dts,

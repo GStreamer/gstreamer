@@ -214,7 +214,7 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (ISSUE, BUFFER_IS_OUT_OF_SEGMENT,
       _("buffer is out of the segment range"),
       _("buffer being pushed is out of the current segment's start-stop "
-          " range. Meaning it is going to be discarded downstream without "
+          "range. Meaning it is going to be discarded downstream without "
           "any use"));
   REGISTER_VALIDATE_ISSUE (WARNING, BUFFER_TIMESTAMP_OUT_OF_RECEIVED_RANGE,
       _("buffer timestamp is out of the received buffer timestamps' range"),
@@ -874,7 +874,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       GstValidateActionParameter playback_time_param = {
         .name = "playback-time",
         .description =
-            "The playback time at which the action " "will be executed",
+            "The playback time at which the action will be executed",
         .mandatory = FALSE,
         .types = "double,string",
         .possible_variables =
@@ -920,7 +920,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
         has_parameters = TRUE;
         g_string_append_printf (string,
             "\n     optional                   : "
-            "Don't raise an error if this action hasn't been executed of failed"
+            "Don't raise an error if this action hasn't been executed or failed"
             "\n%-32s  Possible types:"
             "\n%-32s    boolean"
             "\n%-32s  Default: false","","","");

@@ -1448,7 +1448,7 @@ _should_execute_action (GstValidateScenario * scenario, GstValidateAction * act,
       GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
           "Trying to execute action %s with playback time %" GST_TIME_FORMAT
           " after the pipeline has been destroyed. It is impossible"
-          " to execute an action with a playback time specified "
+          " to execute an action with a playback time specified"
           " after the pipeline has been destroyed",
           act->type, GST_TIME_ARGS (act->playback_time));
 
@@ -1984,7 +1984,7 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
   if (scenario->pipeline == NULL) {
     GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
         "Can't execute a 'wait for signal' action after the pipeline "
-        " has been destroyed.");
+        "has been destroyed.");
 
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
@@ -2021,7 +2021,7 @@ _execute_wait_for_message (GstValidateScenario * scenario,
   if (scenario->pipeline == NULL) {
     GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
         "Can't execute a 'wait for message' action after the pipeline "
-        " has been destroyed.");
+        "has been destroyed.");
 
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
@@ -2746,8 +2746,8 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
     /* First check if the scenario name is not a full path to the
      * actual scenario */
     if (g_file_test (scenarios[i], G_FILE_TEST_IS_REGULAR)) {
-      GST_DEBUG_OBJECT (scenario, "Scenario: %s is a full path to a scenario "
-          "trying to load it", scenarios[i]);
+      GST_DEBUG_OBJECT (scenario, "Scenario: %s is a full path to a scenario. "
+          "Trying to load it", scenarios[i]);
       if ((ret = _load_scenario_file (scenario, scenarios[i], &is_config)))
         goto check_scenario;
     }
@@ -2905,8 +2905,8 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
 
   g_object_class_install_property (object_class, PROP_HANDLES_STATE,
       g_param_spec_boolean ("handles-states", "Handles state",
-          "True if the application should not set handle the first state change "
-          " False if it is application responsibility",
+          "True if the application should not handle the first state change. "
+          "False if it is application responsibility",
           FALSE, G_PARAM_READABLE));
 
   g_object_class_install_property (object_class,
@@ -3875,7 +3875,7 @@ init_scenarios (void)
 
   REGISTER_ACTION_TYPE ("stop", _execute_stop, NULL,
       "Stops the execution of the scenario. It will post a 'request-state'"
-      " message on the bus with NULL as a requested state "
+      " message on the bus with NULL as a requested state"
       " and the application is responsible for stopping itself."
       " if you override that action type, make sure to link up.",
       GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL);
