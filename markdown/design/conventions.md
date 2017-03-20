@@ -10,15 +10,15 @@ long as context is rigorously observed.
 ## Object classes
 
 Since everything starts with Gst, we will generally refer to objects by
-the shorter name, i.e. Element or Pad. These names will always have
+the shorter name, i.e. `Element` or `Pad`. These names will always have
 their first letter capitalized.
 
 ## Function names
 
 Within the context of a given object, functions defined in that object’s
 header and/or source file will have their object-specific prefix
-stripped. For instance, gst\_element\_add\_pad() would be referred to as
-simply *add\_pad(). Note that the trailing parentheses should always be
+stripped. For instance, `gst_element_add_pad()` would be referred to as
+simply `*add_pad()`. Note that the trailing parentheses should always be
 present, but sometimes may not be. A prefixing underscore (*) will
 always tell you it’s a function, however, regardless of the presence or
 absence of the trailing parentheses.
@@ -28,12 +28,12 @@ absence of the trailing parentheses.
 Values and macros defined as enums and preprocessor macros will be
 referred to in all capitals, as per their definition. This includes
 object flags and element states, as well as general enums. Examples are
-the states NULL, READY, PLAYING, and PAUSED; the element flags
-LOCKED\_STATE , and state return values SUCCESS, FAILURE, and ASYNC.
+the states `NULL`, `READY`, `PLAYING`, and `PAUSED`; the element flags
+`LOCKED_STATE`, and state return values `SUCCESS`, `FAILURE`, and `ASYNC`.
 Where there is a prefix, as in the element flags, it is usually dropped
 and implied. Note however that element flags should be cross-checked
 with the header, as there are currently two conventions in use: with and
-without *FLAGS* in the middle.
+without `*FLAGS*` in the middle.
 
 ## Drawing conventions
 
