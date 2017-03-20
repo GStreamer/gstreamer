@@ -422,7 +422,7 @@ typedef struct
   GMainContext *context;
   GstSample *sample;
   //GstBuffer *buffer;
-  gulong timeout_id;
+  GSource *timeout_source;
   gboolean finished;
 } GstVideoConvertSampleContext;
 
@@ -445,8 +445,8 @@ gst_video_convert_frame_context_free (GstVideoConvertSampleContext * ctx)
   g_mutex_lock (&ctx->mutex);
   g_mutex_unlock (&ctx->mutex);
   g_mutex_clear (&ctx->mutex);
-  if (ctx->timeout_id)
-    g_source_remove (ctx->timeout_id);
+  if (ctx->timeout_source)
+    g_source_destroy (ctx->timeout_source);
   //if (ctx->buffer)
   //  gst_buffer_unref (ctx->buffer);
   if (ctx->sample)
@@ -486,9 +486,9 @@ convert_frame_finish (GstVideoConvertSampleContext * context,
   GSource *source;
   GstVideoConvertSampleCallbackContext *ctx;
 
-  if (context->timeout_id)
-    g_source_remove (context->timeout_id);
-  context->timeout_id = 0;
+  if (context->timeout_source)
+    g_source_destroy (context->timeout_source);
+  context->timeout_source = NULL;
 
   ctx = g_slice_new (GstVideoConvertSampleCallbackContext);
   ctx->callback = context->callback;
@@ -712,11 +712,10 @@ gst_video_convert_sample_async (GstSample * sample,
   ctx->pipeline = pipeline;
 
   if (timeout != GST_CLOCK_TIME_NONE) {
-    source = g_timeout_source_new (timeout / GST_MSECOND);
-    g_source_set_callback (source,
+    ctx->timeout_source = g_timeout_source_new (timeout / GST_MSECOND);
+    g_source_set_callback (ctx->timeout_source,
         (GSourceFunc) convert_frame_timeout_callback, ctx, NULL);
-    ctx->timeout_id = g_source_attach (source, context);
-    g_source_unref (source);
+    g_source_attach (ctx->timeout_source, context);
   }
 
   g_signal_connect (src, "need-data",
