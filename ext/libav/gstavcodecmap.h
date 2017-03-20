@@ -68,6 +68,12 @@ gst_ffmpeg_compliance_get_type (void);
 #define FFMPEG_DEFAULT_COMPLIANCE GST_FFMPEG_NORMAL
 
 /*
+ * _codecid_is_image() returns TRUE for image formats
+ */
+gboolean
+gst_ffmpeg_codecid_is_image (enum AVCodecID codec_id);
+
+/*
  * _codecid_to_caps () gets the GstCaps that belongs to
  * a certain CodecID for a pad with compressed data.
  */

@@ -721,6 +721,30 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
   return caps;
 }
 
+/* Check if the given codec ID is an image format -- for now this is just
+ * anything whose caps is image/... */
+gboolean
+gst_ffmpeg_codecid_is_image (enum AVCodecID codec_id)
+{
+  switch (codec_id) {
+    case AV_CODEC_ID_MJPEG:
+    case AV_CODEC_ID_LJPEG:
+    case AV_CODEC_ID_GIF:
+    case AV_CODEC_ID_PPM:
+    case AV_CODEC_ID_PBM:
+    case AV_CODEC_ID_PCX:
+    case AV_CODEC_ID_SGI:
+    case AV_CODEC_ID_TARGA:
+    case AV_CODEC_ID_TIFF:
+    case AV_CODEC_ID_SUNRAST:
+    case AV_CODEC_ID_BMP:
+      return TRUE;
+
+    default:
+      return FALSE;
+  }
+}
+
 /* Convert a FFMPEG codec ID and optional AVCodecContext
  * to a GstCaps. If the context is ommitted, no fixed values
  * for video/audio size will be included in the GstCaps

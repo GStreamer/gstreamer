@@ -126,6 +126,7 @@ gst_ffmpegvidenc_base_init (GstFFMpegVidEncClass * klass)
   GstPadTemplate *srctempl = NULL, *sinktempl = NULL;
   GstCaps *srccaps = NULL, *sinkcaps = NULL;
   gchar *longname, *description;
+  const gchar *klass;
 
   in_plugin =
       (AVCodec *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
@@ -135,8 +136,11 @@ gst_ffmpegvidenc_base_init (GstFFMpegVidEncClass * klass)
   /* construct the element details struct */
   longname = g_strdup_printf ("libav %s encoder", in_plugin->long_name);
   description = g_strdup_printf ("libav %s encoder", in_plugin->name);
+  klass =
+      gst_ffmpeg_codecid_is_image (in_plugin->id) ? "Codec/Encoder/Image" :
+      "Codec/Encoder/Video";
   gst_element_class_set_metadata (element_class, longname,
-      "Codec/Encoder/Video", description,
+      klass, description,
       "Wim Taymans <wim.taymans@gmail.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
   g_free (longname);
