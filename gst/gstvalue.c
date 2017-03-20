@@ -938,6 +938,45 @@ gst_value_transform_g_value_array_string (const GValue * src_value,
   _gst_value_transform_g_value_array_string (src_value, dest_value, "< ", " >");
 }
 
+static void
+gst_value_transform_g_value_array_any_list (const GValue * src_value,
+    GValue * dest_value)
+{
+  const GValueArray *varray;
+  GArray *array;
+  gint i;
+
+  /* GLib will unset the value, memset to 0 the data instead of doing a proper
+   * reset. That's why we need to allocate the array here */
+  gst_value_init_list_or_array (dest_value);
+
+  varray = g_value_get_boxed (src_value);
+  array = dest_value->data[0].v_pointer;
+
+  for (i = 0; i < varray->n_values; i++) {
+    GValue val = G_VALUE_INIT;
+    gst_value_init_and_copy (&val, &varray->values[i]);
+    g_array_append_vals (array, &val, 1);
+  }
+}
+
+static void
+gst_value_transform_any_list_g_value_array (const GValue * src_value,
+    GValue * dest_value)
+{
+  GValueArray *varray;
+  const GArray *array;
+  gint i;
+
+  array = src_value->data[0].v_pointer;
+  varray = g_value_array_new (array->len);
+
+  for (i = 0; i < array->len; i++)
+    g_value_array_append (varray, &g_array_index (array, GValue, i));
+
+  g_value_take_boxed (dest_value, varray);
+}
+
 /* Do an unordered compare of the contents of a list */
 static gint
 gst_value_compare_value_list (const GValue * value1, const GValue * value2)
@@ -7525,10 +7564,18 @@ _priv_gst_value_initialize (void)
       gst_value_transform_fraction_range_string);
   g_value_register_transform_func (GST_TYPE_LIST, G_TYPE_STRING,
       gst_value_transform_list_string);
+  g_value_register_transform_func (GST_TYPE_LIST, G_TYPE_VALUE_ARRAY,
+      gst_value_transform_any_list_g_value_array);
   g_value_register_transform_func (GST_TYPE_ARRAY, G_TYPE_STRING,
       gst_value_transform_array_string);
+  g_value_register_transform_func (GST_TYPE_ARRAY, G_TYPE_VALUE_ARRAY,
+      gst_value_transform_any_list_g_value_array);
   g_value_register_transform_func (G_TYPE_VALUE_ARRAY, G_TYPE_STRING,
       gst_value_transform_g_value_array_string);
+  g_value_register_transform_func (G_TYPE_VALUE_ARRAY, GST_TYPE_ARRAY,
+      gst_value_transform_g_value_array_any_list);
+  g_value_register_transform_func (G_TYPE_VALUE_ARRAY, GST_TYPE_LIST,
+      gst_value_transform_g_value_array_any_list);
   g_value_register_transform_func (GST_TYPE_FRACTION, G_TYPE_STRING,
       gst_value_transform_fraction_string);
   g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_FRACTION,
