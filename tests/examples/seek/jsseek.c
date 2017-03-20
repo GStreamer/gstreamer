@@ -604,7 +604,7 @@ make_avi_msmpeg4v3_mp3_pipeline (const gchar * location)
 
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
-  a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
+  a_decoder = gst_element_factory_make_or_warn ("mpg123audiodec", "a_dec");
   a_convert = gst_element_factory_make_or_warn ("audioconvert", "a_convert");
   audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
 
@@ -668,8 +668,8 @@ make_mp3_pipeline (const gchar * location)
   pipeline = gst_pipeline_new ("app");
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
-  parser = gst_element_factory_make_or_warn ("mp3parse", "parse");
-  decoder = gst_element_factory_make_or_warn ("mad", "dec");
+  parser = gst_element_factory_make_or_warn ("mpegaudioparse", "parse");
+  decoder = gst_element_factory_make_or_warn ("mpg123audiodec", "dec");
   queue = gst_element_factory_make_or_warn ("queue", "queue");
   audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
 
@@ -719,7 +719,7 @@ make_avi_pipeline (const gchar * location)
   gst_element_link (src, demux);
 
   audio_bin = gst_bin_new ("a_decoder_bin");
-  a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
+  a_decoder = gst_element_factory_make_or_warn ("mpg123audiodec", "a_dec");
   audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   gst_element_link (a_decoder, a_queue);
@@ -779,15 +779,14 @@ make_mpeg_pipeline (const gchar * location)
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
-  //demux = gst_element_factory_make_or_warn ("mpegdemux", "demux");
-  demux = gst_element_factory_make_or_warn ("flupsdemux", "demux");
+  demux = gst_element_factory_make_or_warn ("mpegdemux", "demux");
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), demux);
   gst_element_link (src, demux);
 
   audio_bin = gst_bin_new ("a_decoder_bin");
-  a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
+  a_decoder = gst_element_factory_make_or_warn ("mpg13audiodec", "a_dec");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
@@ -864,7 +863,7 @@ make_mpegnt_pipeline (const gchar * location)
   gst_element_link (src, demux);
 
   audio_bin = gst_bin_new ("a_decoder_bin");
-  a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
+  a_decoder = gst_element_factory_make_or_warn ("mpg123audiodec", "a_dec");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
   //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
