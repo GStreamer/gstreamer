@@ -24,6 +24,7 @@ DIST_SUBDIRS = uridownloader adaptivedemux interfaces gl basecamerabinsrc \
 
 #dependencies
 video, audio: base
+gl: allocators
 
 adaptivedemux: uridownloader
 
