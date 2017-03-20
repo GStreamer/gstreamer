@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstdvb.la
 
 libgstdvb_la_SOURCES = \
