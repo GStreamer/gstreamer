@@ -2771,6 +2771,8 @@ gst_structure_get
 gst_structure_get_valist
 gst_structure_get_value
 gst_structure_set_value
+gst_structure_set_array
+gst_structure_set_list
 gst_structure_take_value
 gst_structure_set
 gst_structure_set_valist
@@ -2802,6 +2804,8 @@ gst_structure_get_date_time
 gst_structure_get_clock_time
 gst_structure_get_enum
 gst_structure_get_fraction
+gst_structure_get_array
+gst_structure_get_list
 gst_structure_foreach
 gst_structure_map_in_place
 gst_structure_filter_and_map_in_place

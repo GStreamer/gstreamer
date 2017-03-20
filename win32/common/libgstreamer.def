@@ -1277,6 +1277,7 @@ EXPORTS
 	gst_structure_free
 	gst_structure_from_string
 	gst_structure_get
+	gst_structure_get_array
 	gst_structure_get_boolean
 	gst_structure_get_clock_time
 	gst_structure_get_date
@@ -1288,6 +1289,7 @@ EXPORTS
 	gst_structure_get_fraction
 	gst_structure_get_int
 	gst_structure_get_int64
+	gst_structure_get_list
 	gst_structure_get_name
 	gst_structure_get_name_id
 	gst_structure_get_string
@@ -1325,6 +1327,8 @@ EXPORTS
 	gst_structure_remove_fields
 	gst_structure_remove_fields_valist
 	gst_structure_set
+	gst_structure_set_array
+	gst_structure_set_list
 	gst_structure_set_name
 	gst_structure_set_parent_refcount
 	gst_structure_set_valist

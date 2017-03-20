@@ -145,6 +145,14 @@ void                  gst_structure_set_value            (GstStructure        * 
                                                           const gchar         * fieldname,
                                                           const GValue        * value);
 
+void                  gst_structure_set_array            (GstStructure        * structure,
+                                                          const gchar         * fieldname,
+                                                          const GValueArray   * array);
+
+void                  gst_structure_set_list             (GstStructure        * structure,
+                                                          const gchar         * fieldname,
+                                                          const GValueArray   * array);
+
 void                  gst_structure_id_take_value        (GstStructure        * structure,
                                                           GQuark                field,
                                                           GValue              * value);
@@ -292,6 +300,14 @@ gboolean              gst_structure_get_flagset          (const GstStructure  * 
                                                           const gchar         * fieldname,
                                                           guint               * value_flags,
                                                           guint               * value_mask);
+
+gboolean              gst_structure_get_array            (GstStructure        * structure,
+                                                          const gchar         * fieldname,
+                                                          GValueArray        ** array);
+
+gboolean              gst_structure_get_list             (GstStructure        * structure,
+                                                          const gchar         * fieldname,
+                                                          GValueArray        ** array);
 
 gchar *               gst_structure_to_string    (const GstStructure * structure) G_GNUC_MALLOC;
 

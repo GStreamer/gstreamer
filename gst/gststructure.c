@@ -65,6 +65,10 @@
 #include "config.h"
 #endif
 
+/* FIXME 2.0: suppress warnings for deprecated API such as GValueArray
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <string.h>
 
 #include "gst_private.h"
@@ -2988,4 +2992,146 @@ gst_structure_fixate (GstStructure * structure)
   g_return_if_fail (GST_IS_STRUCTURE (structure));
 
   gst_structure_foreach (structure, default_fixate, structure);
+}
+
+static gboolean
+_gst_structure_get_any_list (GstStructure * structure, GType type,
+    const gchar * fieldname, GValueArray ** array)
+{
+  GstStructureField *field;
+  GValue val = G_VALUE_INIT;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+  g_return_val_if_fail (array != NULL, FALSE);
+
+  field = gst_structure_get_field (structure, fieldname);
+
+  if (field == NULL || G_VALUE_TYPE (&field->value) != type)
+    return FALSE;
+
+  g_value_init (&val, G_TYPE_VALUE_ARRAY);
+
+  if (g_value_transform (&field->value, &val)) {
+    *array = g_value_get_boxed (&val);
+    return TRUE;
+  }
+
+  g_value_unset (&val);
+  return FALSE;
+}
+
+/**
+ * gst_structure_get_array:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @array: (out): a pointer to a #GValueArray
+ *
+ * This is useful in language bindings where unknown #GValue types are not
+ * supported. This function will convert the %GST_TYPE_ARRAY and
+ * %GST_TYPE_LIST into a newly allocated #GValueArray and return it through
+ * @array. Be aware that this is slower then getting the #GValue directly.
+ *
+ * Returns: %TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain an int, this function
+ * returns %FALSE.
+ */
+gboolean
+gst_structure_get_array (GstStructure * structure, const gchar * fieldname,
+    GValueArray ** array)
+{
+  return _gst_structure_get_any_list (structure, GST_TYPE_ARRAY, fieldname,
+      array);
+}
+
+/**
+ * gst_structure_get_list:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @array: (out): a pointer to a #GValueArray
+ *
+ * This is useful in language bindings where unknown #GValue types are not
+ * supported. This function will convert the %GST_TYPE_ARRAY and
+ * %GST_TYPE_LIST into a newly allocated GValueArray and return it through
+ * @array. Be aware that this is slower then getting the #GValue directly.
+ *
+ * Returns: %TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain an int, this function
+ * returns %FALSE.
+ *
+ * Since 1.12
+ */
+gboolean
+gst_structure_get_list (GstStructure * structure, const gchar * fieldname,
+    GValueArray ** array)
+{
+  return _gst_structure_get_any_list (structure, GST_TYPE_LIST, fieldname,
+      array);
+}
+
+static void
+_gst_structure_set_any_list (GstStructure * structure, GType type,
+    const gchar * fieldname, const GValueArray * array)
+{
+  GValue arval = G_VALUE_INIT;
+  GValue value = G_VALUE_INIT;
+
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (fieldname != NULL);
+  g_return_if_fail (array != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
+
+  g_value_init (&value, type);
+  g_value_init (&arval, G_TYPE_VALUE_ARRAY);
+  g_value_set_static_boxed (&arval, array);
+
+  if (g_value_transform (&arval, &value)) {
+    gst_structure_id_set_value_internal (structure,
+        g_quark_from_string (fieldname), &value);
+  } else {
+    g_warning ("Failed to convert a GValueArray");
+  }
+
+  g_value_unset (&arval);
+  g_value_unset (&value);
+}
+
+/**
+ * gst_structure_set_array:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @array: a pointer to a #GValueArray
+ *
+ * This is useful in language bindings where unknown GValue types are not
+ * supported. This function will convert a @array to %GST_TYPE_ARRAY and set
+ * the field specified by @fieldname.  Be aware that this is slower then using
+ * %GST_TYPE_ARRAY in a #GValue directly.
+ *
+ * Since 1.12
+ */
+void
+gst_structure_set_array (GstStructure * structure, const gchar * fieldname,
+    const GValueArray * array)
+{
+  _gst_structure_set_any_list (structure, GST_TYPE_ARRAY, fieldname, array);
+}
+
+/**
+ * gst_structure_set_list:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @array: a pointer to a #GValueArray
+ *
+ * This is useful in language bindings where unknown GValue types are not
+ * supported. This function will convert a @array to %GST_TYPE_ARRAY and set
+ * the field specified by @fieldname. Be aware that this is slower then using
+ * %GST_TYPE_ARRAY in a #GValue directly.
+ *
+ * Since 1.12
+ */
+void
+gst_structure_set_list (GstStructure * structure, const gchar * fieldname,
+    const GValueArray * array)
+{
+  _gst_structure_set_any_list (structure, GST_TYPE_LIST, fieldname, array);
 }
