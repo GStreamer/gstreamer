@@ -3546,6 +3546,8 @@ gst_util_seqnum_compare
 gst_util_group_id_next
 gst_util_set_object_arg
 gst_util_set_value_from_string
+gst_util_set_object_array
+gst_util_get_object_array
 gst_util_get_timestamp
 GstSearchMode
 gst_util_array_binary_search

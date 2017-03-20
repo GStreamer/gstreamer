@@ -34,6 +34,10 @@ G_BEGIN_DECLS
 
 void            gst_util_set_value_from_string  (GValue *value, const gchar *value_str);
 void            gst_util_set_object_arg         (GObject *object, const gchar *name, const gchar *value);
+gboolean        gst_util_set_object_array       (GObject * object, const gchar * name,
+                                                 const GValueArray * array);
+gboolean        gst_util_get_object_array       (GObject * object, const gchar * name,
+                                                 GValueArray ** array);
 void            gst_util_dump_mem               (const guchar *mem, guint size);
 
 guint64         gst_util_gdouble_to_guint64     (gdouble value)  G_GNUC_CONST;

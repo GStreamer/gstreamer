@@ -30,6 +30,10 @@
  *
  */
 
+/* FIXME 2.0: suppress warnings for deprecated API such as GValueArray
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include "gst_private.h"
 #include <stdio.h>
 #include <string.h>
@@ -165,6 +169,75 @@ done:
 
   g_object_set_property (object, pspec->name, &v);
   g_value_unset (&v);
+}
+
+/**
+ * gst_util_set_object_array:
+ * @object: the object to set the array to
+ * @name: the name of the property to set
+ * @array: a #GValueArray containing the values
+ *
+ * Transfer a #GValueArray to %GST_TYPE_ARRAY and set this value on the
+ * specified property name. This allow language bindings to set GST_TYPE_ARRAY
+ * properties which are otherwise not an accessible type.
+ *
+ * Since: 1.12
+ */
+gboolean
+gst_util_set_object_array (GObject * object, const gchar * name,
+    const GValueArray * array)
+{
+  GValue v1 = G_VALUE_INIT, v2 = G_VALUE_INIT;
+  gboolean ret = FALSE;
+
+  g_value_init (&v1, G_TYPE_VALUE_ARRAY);
+  g_value_init (&v2, GST_TYPE_ARRAY);
+
+  g_value_set_static_boxed (&v1, array);
+
+  if (g_value_transform (&v1, &v2)) {
+    g_object_set_property (object, name, &v2);
+    ret = TRUE;
+  }
+
+  g_value_unset (&v1);
+  g_value_unset (&v2);
+
+  return ret;
+}
+
+/**
+ * gst_util_get_object_array:
+ * @object: the object to set the array to
+ * @name: the name of the property to set
+ * @array: (out): a return #GValueArray
+ *
+ * Get a property of type %GST_TYPE_ARRAY and transform it into a
+ * #GValueArray. This allow language bindings to get GST_TYPE_ARRAY
+ * properties which are otherwise not an accessible type.
+ *
+ * Since: 1.12
+ */
+gboolean
+gst_util_get_object_array (GObject * object, const gchar * name,
+    GValueArray ** array)
+{
+  GValue v1 = G_VALUE_INIT, v2 = G_VALUE_INIT;
+  gboolean ret = FALSE;
+
+  g_value_init (&v1, G_TYPE_VALUE_ARRAY);
+  g_value_init (&v2, GST_TYPE_ARRAY);
+
+  g_object_get_property (object, name, &v2);
+
+  if (g_value_transform (&v2, &v1)) {
+    *array = g_value_get_boxed (&v1);
+    ret = TRUE;
+  }
+
+  g_value_unset (&v2);
+
+  return ret;
 }
 
 /* work around error C2520: conversion from unsigned __int64 to double
