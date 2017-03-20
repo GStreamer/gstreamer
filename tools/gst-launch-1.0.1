@@ -238,11 +238,11 @@ in front of the sink to make things work.
 
 .B Audio playback
 
-Play the mp3 music file "music.mp3" using a libmad-based plug-in and
+Play the mp3 music file "music.mp3" using a libmpg123-based plug-in and
 output to an Pulseaudio device
 .br
 .B
-        gst\-launch\-1.0 filesrc location=music.mp3 ! mad ! audioconvert ! audioresample ! pulsesink
+        gst\-launch\-1.0 filesrc location=music.mp3 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! pulsesink
 
 Play an Ogg Vorbis format file
 .br
@@ -252,27 +252,27 @@ Play an Ogg Vorbis format file
 Play an mp3 file or an http stream using GIO
 .br
 .B
-        gst\-launch\-1.0 giosrc location=music.mp3 ! mpegaudioparse ! mad ! pulsesink
+        gst\-launch\-1.0 giosrc location=music.mp3 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! pulsesink
 .br
 .B
-        gst\-launch\-1.0 giosrc location=http://domain.com/music.mp3 ! mpegaudioparse ! mad ! audioconvert ! audioresample ! pulsesink
+        gst\-launch\-1.0 giosrc location=http://domain.com/music.mp3 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! pulsesink
 
 Use GIO to play an mp3 file located on an SMB server
 .br
 .B
-        gst\-launch\-1.0 giosrc location=smb://computer/music.mp3 ! mpegaudioparse ! mad ! audioconvert ! audioresample ! pulsesink
+        gst\-launch\-1.0 giosrc location=smb://computer/music.mp3 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! pulsesink
 
 .B Format conversion
 
 Convert an mp3 music file to an Ogg Vorbis file
 .br
 .B
-        gst\-launch\-1.0 filesrc location=music.mp3 ! mpegaudioparse ! mad ! audioconvert ! vorbisenc ! oggmux ! filesink location=music.ogg
+        gst\-launch\-1.0 filesrc location=music.mp3 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! vorbisenc ! oggmux ! filesink location=music.ogg
 
 Convert to the FLAC format
 .br
 .B
-        gst\-launch\-1.0 filesrc location=music.mp3 ! mpegaudioparse ! mad ! audioconvert ! flacenc ! filesink location=test.flac
+        gst\-launch\-1.0 filesrc location=music.mp3 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! flacenc ! filesink location=test.flac
 
 .B Other
 
@@ -287,24 +287,24 @@ Convert a .WAV file containing raw audio data into an Ogg Vorbis or mp3 file
         gst\-launch\-1.0 filesrc location=music.wav ! wavparse ! audioconvert ! vorbisenc ! oggmux ! filesink location=music.ogg
 .br
 .B
-        gst\-launch\-1.0 filesrc location=music.wav ! wavparse ! audioconvert ! lame ! filesink location=music.mp3
+        gst\-launch\-1.0 filesrc location=music.wav ! wavparse ! audioconvert ! lamemp3enc ! filesink location=music.mp3
 
 Rips all tracks from compact disc and convert them into a single mp3 file
 .br
 .B
-        gst\-launch\-1.0 cdparanoiasrc mode=continuous ! audioconvert ! lame ! mpegaudioparse ! id3v2mux ! filesink location=cd.mp3
+        gst\-launch\-1.0 cdparanoiasrc mode=continuous ! audioconvert ! lamemp3enc ! mpegaudioparse ! id3v2mux ! filesink location=cd.mp3
 
 Rips track 5 from the CD and converts it into a single mp3 file
 .br
 .B
-        gst\-launch\-1.0 cdparanoiasrc track=5 ! audioconvert ! lame ! mpegaudioparse ! id3v2mux ! filesink location=track5.mp3
+        gst\-launch\-1.0 cdparanoiasrc track=5 ! audioconvert ! lamemp3enc ! mpegaudioparse ! id3v2mux ! filesink location=track5.mp3
 
 Using \fBgst\-inspect\-1.0\fR(1), it is possible to discover settings like the above
 for cdparanoiasrc that will tell it to rip the entire cd or only tracks of it.
 Alternatively, you can use an URI and gst\-launch\-1.0 will find an element (such as
 cdparanoia) that supports that protocol for you, e.g.:
 .B
-       gst\-launch\-1.0 cdda://5 ! lame vbr=new vbr\-quality=6 ! filesink location=track5.mp3
+       gst\-launch\-1.0 cdda://5 ! lamemp3enc vbr=new vbr\-quality=6 ! filesink location=track5.mp3
 
 Records sound from your audio input and encodes it into an ogg file
 .br
@@ -328,12 +328,12 @@ an SDL window
 Play both video and audio portions of an MPEG movie
 .br
 .B
-        gst\-launch\-1.0 filesrc location=movie.mpg ! dvddemux name=demuxer  demuxer. ! queue ! mpegvideoparse ! mpeg2dec ! sdlvideosink  demuxer. ! queue ! mpegaudioparse ! mad ! audioconvert ! audioresample ! pulsesink
+        gst\-launch\-1.0 filesrc location=movie.mpg ! dvddemux name=demuxer  demuxer. ! queue ! mpegvideoparse ! mpeg2dec ! sdlvideosink  demuxer. ! queue ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! pulsesink
 
 Play an AVI movie with an external text subtitle stream
 .br
 .B
-        gst\-launch\-1.0 filesrc location=movie.mpg ! mpegdemux name=demuxer demuxer. ! queue ! mpegvideoparse ! mpeg2dec ! videoconvert ! sdlvideosink   demuxer. ! queue ! mpegaudioparse ! mad ! audioconvert ! audioresample ! pulsesink
+        gst\-launch\-1.0 filesrc location=movie.mpg ! mpegdemux name=demuxer demuxer. ! queue ! mpegvideoparse ! mpeg2dec ! videoconvert ! sdlvideosink   demuxer. ! queue ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! pulsesink
 
 This example also shows how to refer to specific pads by name if an element
 (here: textoverlay) has multiple sink or source pads.
