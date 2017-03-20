@@ -29,7 +29,8 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-1.0 filesrc location=test.mp3 ! mpegaudioparse ! mad ! autoaudiosink
+ * gst-launch-1.0 filesrc location=test.mp3 ! mpegaudioparse ! mpg123audiodec
+ *  ! audioconvert ! audioresample ! autoaudiosink
  * ]|
  * </refsect2>
  */
