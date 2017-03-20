@@ -25,13 +25,13 @@ pipeline.
 Consider a typical playback pipeline:
 
 ```
-                        .---------.  .------.
-            .-------.   | decoder |->| sink |
-.--------.  |       |-->'---------'  '------'
+                        +---------+  +------+
+            +-------+   | decoder |->| sink |
++--------+  |       |-->+---------+  +------+
 | source |->| demux |
-'--------'  |       |-->.---------.  .------.
-            '-------'   | decoder |->| sink |
-                        '---------'  '------'
++--------+  |       |-->+---------+  +------+
+            +-------+   | decoder |->| sink |
+                        +---------+  +------+
 ```
 
 The pipeline is initially configured to play back at speed 1.0 starting
@@ -157,7 +157,7 @@ the media contains data with non-standard playback speed or direction.
 
 ## client side forward trickmodes
 
-The seek happens as stated above. a SEGMENT event is sent downstream
+The seek happens as stated above. a `SEGMENT` event is sent downstream
 with a rate different from 1.0. Plugins receiving the `SEGMENT` can decide
 to perform the rate conversion of the media data (retimestamp video
 frames, resample audio, …).
@@ -206,11 +206,11 @@ For plugins the following rules apply:
     previous buffer.
 
   - A video decoder decodes and accumulates all decoded frames. If a
-    buffer with a DISCONT, SEGMENT or EOS is received, all accumulated
+    buffer with a `DISCONT`, `SEGMENT` or `EOS` is received, all accumulated
     frames are sent downsteam in reverse.
 
   - An audio decoder decodes and accumulates all decoded audio. If a
-    buffer with a DISCONT, SEGMENT or EOS is received, all accumulated
+    buffer with a `DISCONT`, `SEGMENT` or `EOS` is received, all accumulated
     audio is sent downstream in reverse order. Some audio codecs need
     the previous data buffer to decode the current one, in that case,
     the previous DISCONT buffer needs to be combined with the last
@@ -225,7 +225,7 @@ For plugins the following rules apply:
   - for transcoding, audio and video resamplers can be used to reverse,
     resample and retimestamp the buffers. Any rate adjustments performed
     on the media must be added to the `applied_rate` and subtracted from
-    the rate members in the SEGMENT
+    the rate members in the `SEGMENT`
         event.
 
 In `SKIP` mode, the same algorithm as for forward `SKIP` mode can be used.
