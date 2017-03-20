@@ -61,14 +61,14 @@ Whenever a request pad is created, encodebin will:
 This allows reducing the code to the minimum for applications wishing to
 encode a source for a given profile:
 
-```
-    encbin = gst_element_factory_make ("encodebin, NULL);
-    g_object_set (encbin, "profile", "N900/H264 HQ", NULL);
-    gst_element_link (encbin, filesink);
+```c
+encbin = gst_element_factory_make ("encodebin, NULL);
+g_object_set (encbin, "profile", "N900/H264 HQ", NULL);
+gst_element_link (encbin, filesink);
 
-    vsrcpad = gst_element_get_src_pad (source, "src1");
-    vsinkpad = gst_element_get_request\_pad (encbin, "video\_%u");
-    gst_pad_link (vsrcpad, vsinkpad);
+vsrcpad = gst_element_get_src_pad (source, "src1");
+vsinkpad = gst_element_get_request_pad (encbin, "video\_%u");
+gst_pad_link (vsrcpad, vsinkpad);
 ```
 
 ### Explanation of the Various stages in EncodeBin
