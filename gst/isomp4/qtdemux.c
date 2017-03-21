@@ -2005,6 +2005,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->mdatbuffer = NULL;
     qtdemux->restoredata_buffer = NULL;
     qtdemux->mdatleft = 0;
+    qtdemux->mdatsize = 0;
     if (qtdemux->comp_brands)
       gst_buffer_unref (qtdemux->comp_brands);
     qtdemux->comp_brands = NULL;
@@ -3272,6 +3273,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
    * size, else we will still be able to use this when dealing with gap'ed
    * input */
   qtdemux->mdatleft = *running_offset - initial_offset;
+  qtdemux->mdatsize = qtdemux->mdatleft;
 
   stream->n_samples += samples_count;
   stream->n_samples_moof += samples_count;
@@ -6264,8 +6266,9 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
             demux->streams[i]->sample_index = res;
             /* Finally update all push-based values to the expected values */
             demux->neededbytes = demux->streams[i]->samples[res].size;
-            demux->todrop = 0;
             demux->offset = GST_BUFFER_OFFSET (inbuf);
+            demux->mdatleft = demux->mdatsize - demux->offset;
+            demux->todrop = 0;
           }
         }
       }
@@ -6359,6 +6362,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             demux->state = QTDEMUX_STATE_MOVIE;
             demux->neededbytes = next_entry;
             demux->mdatleft = size;
+            demux->mdatsize = demux->mdatleft;
           } else {
             /* no headers yet, try to get them */
             guint bs;
@@ -6661,6 +6665,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
           demux->neededbytes = next_entry_size (demux);
           demux->state = QTDEMUX_STATE_MOVIE;
           demux->mdatleft = gst_adapter_available (demux->adapter);
+          demux->mdatsize = demux->mdatleft;
         } else {
           GST_DEBUG_OBJECT (demux, "Carrying on normally");
           gst_adapter_flush (demux->adapter, demux->neededbytes);

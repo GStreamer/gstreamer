@@ -165,7 +165,7 @@ struct _GstQTDemux {
   /* Used to store data if [mdat] is before the headers */
   GstBuffer *mdatbuffer;
   /* Amount of bytes left to read in the current [mdat] */
-  guint64 mdatleft;
+  guint64 mdatleft, mdatsize;
 
   /* When restoring the mdat to the adapter, this buffer stores any
    * trailing data that was after the last atom parsed as it has to be
