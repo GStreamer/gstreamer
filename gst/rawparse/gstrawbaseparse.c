@@ -525,7 +525,12 @@ gst_raw_base_parse_handle_frame (GstBaseParse * parse,
   frame_size =
       klass->get_config_frame_size (raw_base_parse,
       GST_RAW_BASE_PARSE_CONFIG_CURRENT);
-  g_assert (frame_size > 0);
+  if (frame_size <= 0) {
+    GST_ELEMENT_ERROR (parse, STREAM, FORMAT,
+        ("Non strictly positive frame size"), (NULL));
+    flow_ret = GST_FLOW_ERROR;
+    goto error_locked;
+  }
 
   in_size = gst_buffer_get_size (frame->buffer);
 
