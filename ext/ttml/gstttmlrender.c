@@ -1166,7 +1166,7 @@ typedef struct
 } TextRange;
 
 static void
-_text_range_free (TextRange * range)
+gst_ttml_render_text_range_free (TextRange * range)
 {
   g_slice_free (TextRange, range);
 }
@@ -1241,7 +1241,7 @@ typedef struct
 
 
 static void
-_unified_element_free (UnifiedElement * unified_element)
+gst_ttml_render_unified_element_free (UnifiedElement * unified_element)
 {
   g_free (unified_element->text);
   g_slice_free (UnifiedElement, unified_element);
@@ -1255,7 +1255,7 @@ typedef struct
 
 
 static void
-_unified_block_free (UnifiedBlock * unified_block)
+gst_ttml_render_unified_block_free (UnifiedBlock * unified_block)
 {
   g_ptr_array_unref (unified_block->unified_elements);
   g_slice_free (UnifiedBlock, unified_block);
@@ -1263,7 +1263,7 @@ _unified_block_free (UnifiedBlock * unified_block)
 
 
 static UnifiedElement *
-_unified_block_get_element (UnifiedBlock * block, guint index)
+gst_ttml_render_unified_block_get_element (UnifiedBlock * block, guint index)
 {
   if (index >= block->unified_elements->len)
     return NULL;
@@ -1276,8 +1276,8 @@ static void
 gst_ttml_render_handle_whitespace (UnifiedBlock * block)
 {
   UnifiedElement *last = NULL;
-  UnifiedElement *cur = _unified_block_get_element (block, 0);
-  UnifiedElement *next = _unified_block_get_element (block, 1);
+  UnifiedElement *cur = gst_ttml_render_unified_block_get_element (block, 0);
+  UnifiedElement *next = gst_ttml_render_unified_block_get_element (block, 1);
   guint i;
 
   for (i = 2; cur; ++i) {
@@ -1303,7 +1303,7 @@ gst_ttml_render_handle_whitespace (UnifiedBlock * block)
     }
     last = cur;
     cur = next;
-    next = _unified_block_get_element (block, i);
+    next = gst_ttml_render_unified_block_get_element (block, i);
   }
 }
 
@@ -1313,8 +1313,8 @@ gst_ttml_render_unify_block (const GstSubtitleBlock * block, GstBuffer * buf)
 {
   guint i;
   UnifiedBlock *ret = g_slice_new0 (UnifiedBlock);
-  ret->unified_elements =
-      g_ptr_array_new_with_free_func ((GDestroyNotify) _unified_element_free);
+  ret->unified_elements = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      gst_ttml_render_unified_element_free);
 
   for (i = 0; i < gst_subtitle_block_get_element_count (block); ++i) {
     UnifiedElement *ue = g_slice_new0 (UnifiedElement);
@@ -1350,7 +1350,7 @@ gst_ttml_render_generate_marked_up_string (GstTtmlRender * render,
   for (i = 0; i < element_count; ++i) {
     TextRange *range = g_slice_new0 (TextRange);
     UnifiedElement *unified_element =
-        _unified_block_get_element (unified_block, i);
+        gst_ttml_render_unified_block_get_element (unified_block, i);
 
     escaped_text = g_markup_escape_text (unified_element->text, -1);
     GST_CAT_DEBUG (ttmlrender_debug, "Escaped text is: \"%s\"", escaped_text);
@@ -1403,7 +1403,7 @@ gst_ttml_render_generate_marked_up_string (GstTtmlRender * render,
     g_free (font_size);
   }
 
-  _unified_block_free (unified_block);
+  gst_ttml_render_unified_block_free (unified_block);
   return joined_text;
 }
 
@@ -1955,8 +1955,8 @@ gst_ttml_render_render_text_block (GstTtmlRender * render,
     const GstSubtitleBlock * block, GstBuffer * text_buf, guint width,
     gboolean overflow)
 {
-  GPtrArray *char_ranges =
-      g_ptr_array_new_with_free_func ((GDestroyNotify) _text_range_free);
+  GPtrArray *char_ranges = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      gst_ttml_render_text_range_free);
   gchar *marked_up_string;
   PangoAlignment alignment;
   guint max_font_size;
