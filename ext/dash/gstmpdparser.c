@@ -4780,13 +4780,9 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
       if (segment->start > ts)
         break;
 
-      if (segment->repeat >= 0) {
-        end_time = segment->start + (segment->repeat + 1) * segment->duration;
-      } else {
-        end_time =
-            gst_mpdparser_get_segment_end_time (client, stream->segments,
-            segment, index);
-      }
+      end_time =
+          gst_mpdparser_get_segment_end_time (client, stream->segments,
+          segment, index);
 
       /* avoid downloading another fragment just for 1ns in reverse mode */
       if (forward)
