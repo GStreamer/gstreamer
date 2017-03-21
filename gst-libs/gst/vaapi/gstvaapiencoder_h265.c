@@ -20,11 +20,6 @@
  *  Boston, MA 02110-1301 USA
  */
 
-/* GValueArray has deprecated without providing an alternative in glib >= 2.32
- * See https://bugzilla.gnome.org/show_bug.cgi?id=667228
- */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include "sysdeps.h"
 #include <math.h>
 #include <va/va.h>
