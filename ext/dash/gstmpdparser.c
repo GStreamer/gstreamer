@@ -4791,8 +4791,12 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
         in_segment = ts <= end_time;
 
       if (in_segment) {
+        GstClockTime chunk_time;
+
         selectedChunk = segment;
         repeat_index = (ts - segment->start) / segment->duration;
+
+        chunk_time = segment->start + segment->duration * repeat_index;
 
         /* At the end of a segment in reverse mode, start from the previous fragment */
         if (!forward && repeat_index > 0
@@ -4801,8 +4805,9 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
 
         if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
           /* FIXME implement this */
-        } else if ((forward && flags & GST_SEEK_FLAG_SNAP_AFTER) ||
-            (!forward && flags & GST_SEEK_FLAG_SNAP_BEFORE)) {
+        } else if (((forward && flags & GST_SEEK_FLAG_SNAP_AFTER) ||
+                (!forward && flags & GST_SEEK_FLAG_SNAP_BEFORE)) &&
+            ts != chunk_time) {
 
           if (repeat_index + 1 < segment->repeat) {
             repeat_index++;
@@ -4833,6 +4838,7 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
         gst_mpd_client_get_segment_duration (client, stream, NULL);
     GstStreamPeriod *stream_period = gst_mpdparser_get_stream_period (client);
     guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
+    GstClockTime index_time;
 
     g_return_val_if_fail (stream->cur_seg_template->
         MultSegBaseType->SegmentTimeline == NULL, FALSE);
@@ -4846,11 +4852,13 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
       ts = 0;
 
     index = ts / duration;
+    index_time = index * duration;
 
     if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
       /* FIXME implement this */
-    } else if ((forward && flags & GST_SEEK_FLAG_SNAP_AFTER) ||
-        (!forward && flags & GST_SEEK_FLAG_SNAP_BEFORE)) {
+    } else if (((forward && flags & GST_SEEK_FLAG_SNAP_AFTER) ||
+            (!forward && flags & GST_SEEK_FLAG_SNAP_BEFORE))
+        && ts != index_time) {
       index++;
     }
 
