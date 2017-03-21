@@ -1168,14 +1168,14 @@ gst_ttml_render_draw_rectangle (guint width, guint height,
 
 typedef struct
 {
-  guint first_char;
-  guint last_char;
-} TextRange;
+  guint first_index;
+  guint last_index;
+} CharRange;
 
 static void
-gst_ttml_render_text_range_free (TextRange * range)
+gst_ttml_render_char_range_free (CharRange * range)
 {
-  g_slice_free (TextRange, range);
+  g_slice_free (CharRange, range);
 }
 
 
@@ -1336,11 +1336,11 @@ gst_ttml_render_unify_block (const GstSubtitleBlock * block, GstBuffer * buf)
 
 /* From the elements within @block, generate a string of the subtitle text
  * marked-up using pango-markup. Also, store the ranges of characters belonging
- * to the text of each element in @text_ranges. */
+ * to the text of each element in @char_ranges. */
 static gchar *
 gst_ttml_render_generate_marked_up_string (GstTtmlRender * render,
     const GstSubtitleBlock * block, GstBuffer * text_buf,
-    GPtrArray * text_ranges)
+    GPtrArray * char_ranges)
 {
   gchar *escaped_text, *joined_text, *old_text, *font_family, *font_size,
       *fgcolor;
@@ -1355,13 +1355,13 @@ gst_ttml_render_generate_marked_up_string (GstTtmlRender * render,
   gst_ttml_render_handle_whitespace (unified_block);
 
   for (i = 0; i < element_count; ++i) {
-    TextRange *range = g_slice_new0 (TextRange);
+    CharRange *range = g_slice_new0 (CharRange);
     UnifiedElement *unified_element =
         gst_ttml_render_unified_block_get_element (unified_block, i);
 
     escaped_text = g_markup_escape_text (unified_element->text, -1);
     GST_CAT_DEBUG (ttmlrender_debug, "Escaped text is: \"%s\"", escaped_text);
-    range->first_char = total_text_length;
+    range->first_index = total_text_length;
 
     fgcolor =
         gst_ttml_render_color_to_string (unified_element->element->
@@ -1397,11 +1397,11 @@ gst_ttml_render_generate_marked_up_string (GstTtmlRender * render,
     GST_CAT_DEBUG (ttmlrender_debug, "Joined text is now: %s", joined_text);
 
     total_text_length += strlen (unified_element->text);
-    range->last_char = total_text_length - 1;
+    range->last_index = total_text_length - 1;
     GST_CAT_DEBUG (ttmlrender_debug,
         "First character index: %u; last character  " "index: %u",
-        range->first_char, range->last_char);
-    g_ptr_array_insert (text_ranges, i, range);
+        range->first_index, range->last_index);
+    g_ptr_array_insert (char_ranges, i, range);
 
     g_free (old_text);
     g_free (escaped_text);
@@ -1768,7 +1768,7 @@ gst_ttml_render_render_element_backgrounds (const GstSubtitleBlock * block,
   guint padding;
   PangoLayoutLine *line;
   PangoRectangle first_char_pos, last_char_pos, line_extents;
-  TextRange *range;
+  CharRange *range;
   const GstSubtitleElement *element;
   guint rect_width;
   GstBuffer *rectangle;
@@ -1781,12 +1781,12 @@ gst_ttml_render_render_element_backgrounds (const GstSubtitleBlock * block,
     element = gst_subtitle_block_get_element (block, i);
 
     GST_CAT_LOG (ttmlrender_debug, "First char index: %u   Last char index: %u",
-        range->first_char, range->last_char);
-    pango_layout_index_to_pos (layout, range->first_char, &first_char_pos);
-    pango_layout_index_to_pos (layout, range->last_char, &last_char_pos);
-    pango_layout_index_to_line_x (layout, range->first_char, 1,
+        range->first_index, range->last_index);
+    pango_layout_index_to_pos (layout, range->first_index, &first_char_pos);
+    pango_layout_index_to_pos (layout, range->last_index, &last_char_pos);
+    pango_layout_index_to_line_x (layout, range->first_index, 1,
         &first_line, NULL);
-    pango_layout_index_to_line_x (layout, range->last_char, 0,
+    pango_layout_index_to_line_x (layout, range->last_index, 0,
         &last_line, NULL);
 
     first_char_start = PANGO_PIXELS (first_char_pos.x) - horiz_offset;
@@ -1957,7 +1957,7 @@ gst_ttml_render_render_text_block (GstTtmlRender * render,
     gboolean overflow)
 {
   GPtrArray *char_ranges = g_ptr_array_new_with_free_func ((GDestroyNotify)
-      gst_ttml_render_text_range_free);
+      gst_ttml_render_char_range_free);
   gchar *marked_up_string;
   PangoAlignment alignment;
   guint max_font_size;
