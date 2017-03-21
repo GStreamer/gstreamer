@@ -47,7 +47,8 @@ enum
   PROP_TIMECODE_FORMAT,
   PROP_OUTPUT_STREAM_TIME,
   PROP_SKIP_FIRST_TIME,
-  PROP_DROP_NO_SIGNAL_FRAMES
+  PROP_DROP_NO_SIGNAL_FRAMES,
+  PROP_SIGNAL
 };
 
 typedef struct
@@ -203,6 +204,11 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           DEFAULT_DROP_NO_SIGNAL_FRAMES,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_SIGNAL,
+      g_param_spec_boolean ("signal", "Input signal available",
+          "True if there is a valid input signal available",
+          FALSE, (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
   templ_caps = gst_decklink_mode_get_template_caps (TRUE);
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
@@ -345,6 +351,9 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_DROP_NO_SIGNAL_FRAMES:
       g_value_set_boolean (value, self->drop_no_signal_frames);
+      break;
+    case PROP_SIGNAL:
+      g_value_set_boolean (value, !self->no_signal);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -801,12 +810,14 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   if (f->no_signal) {
     if (!self->no_signal) {
       self->no_signal = TRUE;
+      g_object_notify (G_OBJECT (self), "signal");
       GST_ELEMENT_WARNING (GST_ELEMENT (self), RESOURCE, READ, ("No signal"),
           ("No input source was detected - video frames invalid"));
     }
   } else {
     if (self->no_signal) {
       self->no_signal = FALSE;
+      g_object_notify (G_OBJECT (self), "signal");
       GST_ELEMENT_INFO (GST_ELEMENT (self), RESOURCE, READ, ("Signal found"),
           ("Input source detected"));
     }
