@@ -94,6 +94,13 @@ GST_STATIC_PAD_TEMPLATE ("text_sink",
 #define GST_TTML_RENDER_BROADCAST(ov)(g_cond_broadcast (GST_TTML_RENDER_GET_COND (ov)))
 
 
+typedef enum
+{
+  GST_TTML_DIRECTION_INLINE,
+  GST_TTML_DIRECTION_BLOCK
+} GstTtmlDirection;
+
+
 typedef struct
 {
   guint height;
@@ -149,6 +156,8 @@ static GstTtmlRenderRenderedImage *gst_ttml_render_rendered_image_copy
     (GstTtmlRenderRenderedImage * image);
 static void gst_ttml_render_rendered_image_free
     (GstTtmlRenderRenderedImage * image);
+static GstTtmlRenderRenderedImage *gst_ttml_render_stitch_images (GPtrArray *
+    images, GstTtmlDirection direction);
 
 GType
 gst_ttml_render_get_type (void)
@@ -2044,30 +2053,61 @@ gst_ttml_render_get_alignment (GstSubtitleStyleSet * style_set)
 }
 
 
+/*
+ * Overlays a set of rendered images to return a single image. Order is
+ * significant: later entries in @images are rendered on top of earlier
+ * entries.
+ */
 static GstTtmlRenderRenderedImage *
-gst_ttml_render_stitch_blocks (GList * blocks)
+gst_ttml_render_overlay_images (GPtrArray * images)
 {
-  guint vert_offset = 0;
-  GList *block_entry;
   GstTtmlRenderRenderedImage *ret = NULL;
+  gint i;
 
-  for (block_entry = g_list_first (blocks); block_entry;
-      block_entry = block_entry->next) {
-    GstTtmlRenderRenderedImage *block, *tmp;
-    block = (GstTtmlRenderRenderedImage *) block_entry->data;
-    tmp = ret;
-
-    block->y += vert_offset;
-    GST_CAT_LOG (ttmlrender_debug, "Rendering block at vertical offset %u",
-        vert_offset);
-    vert_offset = block->y + block->height;
-    ret = gst_ttml_render_rendered_image_combine (ret, block);
-    if (tmp)
-      gst_ttml_render_rendered_image_free (tmp);
+  for (i = 0; i < images->len; ++i) {
+    GstTtmlRenderRenderedImage *tmp = ret;
+    ret = gst_ttml_render_rendered_image_combine (ret,
+        g_ptr_array_index (images, i));
+    gst_ttml_render_rendered_image_free (tmp);
   }
 
+  return ret;
+}
+
+
+/*
+ * Takes a set of images and renders them as a single image, where all the
+ * images are arranged contiguously in the direction given by @direction. Note
+ * that the positions of the images in @images will be altered.
+ */
+static GstTtmlRenderRenderedImage *
+gst_ttml_render_stitch_images (GPtrArray * images, GstTtmlDirection direction)
+{
+  guint cur_offset = 0;
+  GstTtmlRenderRenderedImage *ret = NULL;
+  gint i;
+
+  for (i = 0; i < images->len; ++i) {
+    GstTtmlRenderRenderedImage *block;
+    block = g_ptr_array_index (images, i);
+
+    if (direction == GST_TTML_DIRECTION_BLOCK) {
+      block->y += cur_offset;
+      cur_offset = block->y + block->height;
+    } else {
+      block->x += cur_offset;
+      cur_offset = block->x + block->width;
+    }
+  }
+
+  ret = gst_ttml_render_overlay_images (images);
+
   if (ret) {
-    GST_CAT_LOG (ttmlrender_debug, "Height of stitched image: %u", ret->height);
+    if (direction == GST_TTML_DIRECTION_BLOCK)
+      GST_CAT_LOG (ttmlrender_debug, "Height of stitched image: %u",
+          ret->height);
+    else
+      GST_CAT_LOG (ttmlrender_debug, "Width of stitched image: %u", ret->width);
     ret->image = gst_buffer_make_writable (ret->image);
   }
   return ret;
@@ -2194,10 +2234,12 @@ static GstVideoOverlayComposition *
 gst_ttml_render_render_text_region (GstTtmlRender * render,
     GstSubtitleRegion * region, GstBuffer * text_buf)
 {
-  GList *blocks = NULL;
   guint region_x, region_y, region_width, region_height;
   guint window_x, window_y, window_width, window_height;
   guint padding_start, padding_end, padding_before, padding_after;
+  GPtrArray *rendered_blocks =
+      g_ptr_array_new_with_free_func (
+      (GDestroyNotify) gst_ttml_render_rendered_image_free);
   GstTtmlRenderRenderedImage *region_image = NULL;
   GstTtmlRenderRenderedImage *blocks_image;
   GstVideoOverlayComposition *ret = NULL;
@@ -2249,15 +2291,14 @@ gst_ttml_render_render_text_region (GstTtmlRender * render,
     rendered_block = gst_ttml_render_render_text_block (render, block, text_buf,
         window_width, TRUE);
 
-    blocks = g_list_append (blocks, rendered_block);
+    g_ptr_array_add (rendered_blocks, rendered_block);
   }
 
-  if (blocks) {
+  if (rendered_blocks->len > 0) {
     GstTtmlRenderRenderedImage *tmp;
 
-    blocks_image = gst_ttml_render_stitch_blocks (blocks);
-    g_list_free_full (blocks,
-        (GDestroyNotify) gst_ttml_render_rendered_image_free);
+    blocks_image = gst_ttml_render_stitch_images (rendered_blocks,
+        GST_TTML_DIRECTION_BLOCK);
     blocks_image->x += window_x;
 
     switch (region->style_set->display_align) {
@@ -2303,6 +2344,8 @@ gst_ttml_render_render_text_region (GstTtmlRender * render,
     ret = gst_ttml_render_compose_overlay (region_image);
     gst_ttml_render_rendered_image_free (region_image);
   }
+
+  g_ptr_array_unref (rendered_blocks);
   return ret;
 }
 
