@@ -76,12 +76,8 @@ free_streamnode (GstValidateMediaStreamNode * streamnode)
   if (streamnode->tags)
     free_tagsnode (streamnode->tags);
 
-  if (streamnode->padname)
-    g_free (streamnode->padname);
-
-  if (streamnode->id)
-    g_free (streamnode->id);
-
+  g_free (streamnode->padname);
+  g_free (streamnode->id);
   g_free (streamnode->str_open);
   g_free (streamnode->str_close);
   g_slice_free (GstValidateMediaStreamNode, streamnode);
@@ -94,8 +90,7 @@ gst_validate_filenode_free (GstValidateMediaFileNode * filenode)
   if (filenode->tags)
     free_tagsnode (filenode->tags);
 
-  if (filenode->uri)
-    g_free (filenode->uri);
+  g_free (filenode->uri);
 
   if (filenode->caps)
     gst_caps_unref (filenode->caps);

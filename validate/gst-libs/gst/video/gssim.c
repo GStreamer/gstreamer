@@ -376,9 +376,8 @@ gssim_configure (Gssim * self, gint width, gint height)
 
   g_free (self->priv->windows);
   self->priv->windows = NULL;
-  if (self->priv->orgmu)
-    g_free (self->priv->orgmu);
 
+  g_free (self->priv->orgmu);
   self->priv->orgmu = g_new (gfloat, width * height);
 
   return TRUE;

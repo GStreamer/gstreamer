@@ -320,8 +320,7 @@ gst_validate_reporter_set_name (GstValidateReporter * reporter, gchar * name)
 {
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
 
-  if (priv->name)
-    g_free (priv->name);
+  g_free (priv->name);
 
   priv->name = name;
 }

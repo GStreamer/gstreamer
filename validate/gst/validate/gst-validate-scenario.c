@@ -2257,8 +2257,7 @@ _execute_set_debug_threshold (GstValidateScenario * scenario,
 
   gst_debug_set_threshold_from_string (threshold_str, reset);
 
-  if (str)
-    g_free (str);
+  g_free (str);
 
   return TRUE;
 }
@@ -2791,10 +2790,8 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
     }
     /* else check scenario */
   check_scenario:
-    if (tldir)
-      g_free (tldir);
-    if (lfilename)
-      g_free (lfilename);
+    g_free (tldir);
+    g_free (lfilename);
 
     if (!is_config) {
       if (found_actions == TRUE)
