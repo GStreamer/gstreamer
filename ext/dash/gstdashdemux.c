@@ -1295,8 +1295,7 @@ gst_dash_demux_stream_sidx_seek (GstDashDemuxStream * dashstream,
    * snapping */
   if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
     if (idx + 1 < sidx->entries_count
-        && ABS (sidx->entries[idx + 1].pts - ts) <
-        ABS (sidx->entries[idx].pts - ts))
+        && sidx->entries[idx + 1].pts - ts < ts - sidx->entries[idx].pts)
       idx += 1;
   } else if ((forward && (flags & GST_SEEK_FLAG_SNAP_AFTER)) || (!forward
           && (flags & GST_SEEK_FLAG_SNAP_BEFORE))) {
