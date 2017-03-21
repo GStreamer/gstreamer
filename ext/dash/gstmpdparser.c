@@ -4804,7 +4804,19 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
           repeat_index--;
 
         if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
-          /* FIXME implement this */
+          if (repeat_index + 1 < segment->repeat) {
+            if (ts - chunk_time > chunk_time + segment->duration - ts)
+              repeat_index++;
+          } else if (index + 1 < stream->segments->len) {
+            GstMediaSegment *next_segment =
+                g_ptr_array_index (stream->segments, index + 1);
+
+            if (ts - chunk_time > next_segment->start - ts) {
+              repeat_index = 0;
+              selectedChunk = next_segment;
+              index++;
+            }
+          }
         } else if (((forward && flags & GST_SEEK_FLAG_SNAP_AFTER) ||
                 (!forward && flags & GST_SEEK_FLAG_SNAP_BEFORE)) &&
             ts != chunk_time) {
@@ -4855,7 +4867,8 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
     index_time = index * duration;
 
     if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
-      /* FIXME implement this */
+      if (ts - index_time > index_time + duration - ts)
+        index++;
     } else if (((forward && flags & GST_SEEK_FLAG_SNAP_AFTER) ||
             (!forward && flags & GST_SEEK_FLAG_SNAP_BEFORE))
         && ts != index_time) {
