@@ -1258,19 +1258,27 @@ gst_ttml_render_unified_element_free (UnifiedElement * unified_element)
 typedef struct
 {
   GPtrArray *unified_elements;
+  GstSubtitleStyleSet *style_set;
+  gchar *joined_text;
 } UnifiedBlock;
 
 
 static void
 gst_ttml_render_unified_block_free (UnifiedBlock * unified_block)
 {
+  if (!unified_block)
+    return;
+
+  gst_subtitle_style_set_unref (unified_block->style_set);
   g_ptr_array_unref (unified_block->unified_elements);
+  g_free (unified_block->joined_text);
   g_slice_free (UnifiedBlock, unified_block);
 }
 
 
 static UnifiedElement *
-gst_ttml_render_unified_block_get_element (UnifiedBlock * block, guint index)
+gst_ttml_render_unified_block_get_element (const UnifiedBlock * block,
+    guint index)
 {
   if (index >= block->unified_elements->len)
     return NULL;
@@ -1318,18 +1326,27 @@ gst_ttml_render_handle_whitespace (UnifiedBlock * block)
 static UnifiedBlock *
 gst_ttml_render_unify_block (const GstSubtitleBlock * block, GstBuffer * buf)
 {
-  guint i;
   UnifiedBlock *ret = g_slice_new0 (UnifiedBlock);
+  guint i;
+
   ret->unified_elements = g_ptr_array_new_with_free_func ((GDestroyNotify)
       gst_ttml_render_unified_element_free);
+  ret->style_set = gst_subtitle_style_set_ref (block->style_set);
+  ret->joined_text = g_strdup ("");
 
   for (i = 0; i < gst_subtitle_block_get_element_count (block); ++i) {
+    gchar *text;
     UnifiedElement *ue = g_slice_new0 (UnifiedElement);
+
     ue->element = gst_subtitle_block_get_element (block, i);
     ue->text =
         gst_ttml_render_get_text_from_buffer (buf, ue->element->text_index);
     g_ptr_array_add (ret->unified_elements, ue);
+    text = g_strjoin (NULL, ret->joined_text, ue->text, NULL);
+    g_free (ret->joined_text);
+    ret->joined_text = text;
   }
+
   return ret;
 }
 
