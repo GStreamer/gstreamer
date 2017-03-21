@@ -234,6 +234,11 @@ gst_ttml_render_finalize (GObject * object)
     render->text_buffer = NULL;
   }
 
+  if (render->layout) {
+    g_object_unref (render->layout);
+    render->layout = NULL;
+  }
+
   g_mutex_clear (&render->lock);
   g_cond_clear (&render->cond);
 
@@ -294,6 +299,8 @@ gst_ttml_render_init (GstTtmlRender * render, GstTtmlRenderClass * klass)
   render->text_linked = FALSE;
 
   render->compositions = NULL;
+  render->layout =
+      pango_layout_new (GST_TTML_RENDER_GET_CLASS (render)->pango_context);
 
   g_mutex_init (&render->lock);
   g_cond_init (&render->cond);
@@ -1414,7 +1421,6 @@ gst_ttml_render_draw_text (GstTtmlRender * render, const gchar * text,
     guint max_width, PangoAlignment alignment, guint line_height,
     guint max_font_size, gboolean wrap)
 {
-  GstTtmlRenderClass *class;
   GstTtmlRenderRenderedText *ret;
   cairo_surface_t *surface, *cropped_surface;
   cairo_t *cairo_state, *cropped_state;
@@ -1430,30 +1436,27 @@ gst_ttml_render_draw_text (GstTtmlRender * render, const gchar * text,
   ret = g_slice_new0 (GstTtmlRenderRenderedText);
   ret->text_image = gst_ttml_render_rendered_image_new_empty ();
 
-  class = GST_TTML_RENDER_GET_CLASS (render);
-  ret->layout = pango_layout_new (class->pango_context);
-
-  pango_layout_set_markup (ret->layout, text, strlen (text));
+  pango_layout_set_markup (render->layout, text, strlen (text));
   GST_CAT_DEBUG (ttmlrender_debug, "Layout text: %s",
-      pango_layout_get_text (ret->layout));
+      pango_layout_get_text (render->layout));
   if (wrap) {
-    pango_layout_set_width (ret->layout, max_width * PANGO_SCALE);
-    pango_layout_set_wrap (ret->layout, PANGO_WRAP_WORD_CHAR);
+    pango_layout_set_width (render->layout, max_width * PANGO_SCALE);
+    pango_layout_set_wrap (render->layout, PANGO_WRAP_WORD_CHAR);
   } else {
-    pango_layout_set_width (ret->layout, -1);
+    pango_layout_set_width (render->layout, -1);
   }
 
-  pango_layout_set_alignment (ret->layout, alignment);
-  line = pango_layout_get_line_readonly (ret->layout, 0);
+  pango_layout_set_alignment (render->layout, alignment);
+  line = pango_layout_get_line_readonly (render->layout, 0);
   pango_layout_line_get_pixel_extents (line, NULL, &line_extents);
 
   GST_CAT_LOG (ttmlrender_debug, "Requested line_height: %u", line_height);
   spacing = line_height - line_extents.height;
-  pango_layout_set_spacing (ret->layout, PANGO_SCALE * spacing);
+  pango_layout_set_spacing (render->layout, PANGO_SCALE * spacing);
   GST_CAT_LOG (ttmlrender_debug, "Line spacing set to %d",
-      pango_layout_get_spacing (ret->layout) / PANGO_SCALE);
+      pango_layout_get_spacing (render->layout) / PANGO_SCALE);
 
-  pango_layout_get_pixel_extents (ret->layout, &ink_rect, &logical_rect);
+  pango_layout_get_pixel_extents (render->layout, &ink_rect, &logical_rect);
   GST_CAT_DEBUG (ttmlrender_debug, "logical_rect.x: %d   logical_rect.y: %d   "
       "logical_rect.width: %d   logical_rect.height: %d", logical_rect.x,
       logical_rect.y, logical_rect.width, logical_rect.height);
@@ -1474,7 +1477,7 @@ gst_ttml_render_draw_text (GstTtmlRender * render, const gchar * text,
 
   /* Render layout. */
   cairo_save (cairo_state);
-  pango_cairo_show_layout (cairo_state, ret->layout);
+  pango_cairo_show_layout (cairo_state, render->layout);
   cairo_restore (cairo_state);
 
   buf_width = bounding_box_x2 - bounding_box_x1;
@@ -1944,8 +1947,6 @@ gst_ttml_render_rendered_text_free (GstTtmlRenderRenderedText * text)
 {
   if (text->text_image)
     gst_ttml_render_rendered_image_free (text->text_image);
-  if (text->layout)
-    g_object_unref (text->layout);
   g_slice_free (GstTtmlRenderRenderedText, text);
 }
 
@@ -2004,7 +2005,7 @@ gst_ttml_render_render_text_block (GstTtmlRender * render,
 
   /* Render background rectangles, if any. */
   backgrounds = gst_ttml_render_render_element_backgrounds (block, char_ranges,
-      rendered_text->layout, text_offset - line_padding, 0,
+      render->layout, text_offset - line_padding, 0,
       (guint) round (block->style_set->line_height * max_font_size),
       line_padding, rendered_text->horiz_offset);
 

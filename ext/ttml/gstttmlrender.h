@@ -62,11 +62,6 @@ struct _GstTtmlRenderRenderedImage {
 struct _GstTtmlRenderRenderedText {
   GstTtmlRenderRenderedImage *text_image;
 
-  /* In order to get the positions of characters within a paragraph rendered by
-   * pango we need to retain a reference to the PangoLayout object that was
-   * used to render that paragraph. */
-  PangoLayout *layout;
-
   /* The coordinates in @layout will be offset horizontally with respect to the
    * position of those characters in @text_image. Store that offset here so
    * that the information in @layout can be used to locate the position and
@@ -107,6 +102,7 @@ struct _GstTtmlRender {
 
     gboolean                 need_render;
 
+    PangoLayout             *layout;
     GList * compositions;
 };
 
