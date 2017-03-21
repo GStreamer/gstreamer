@@ -1247,7 +1247,7 @@ gst_dash_demux_index_entry_search (GstSidxBoxEntry * entry, GstClockTime * ts,
     return 0;
 }
 
-static void
+static GstFlowReturn
 gst_dash_demux_stream_sidx_seek (GstDashDemuxStream * dashstream,
     gboolean forward, GstSeekFlags flags, GstClockTime ts,
     GstClockTime * final_ts)
@@ -1255,56 +1255,64 @@ gst_dash_demux_stream_sidx_seek (GstDashDemuxStream * dashstream,
   GstSidxBox *sidx = SIDX (dashstream);
   GstSidxBoxEntry *entry;
   gint idx = sidx->entries_count;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  /* check whether ts is already past the last element or not */
-  if (sidx->entries[idx - 1].pts + sidx->entries[idx - 1].duration >= ts) {
-    GstSearchMode mode = GST_SEARCH_MODE_BEFORE;
+  if (sidx->entries_count == 0)
+    return GST_FLOW_EOS;
 
-    if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
-      mode = GST_SEARCH_MODE_BEFORE;
-    } else if ((forward && (flags & GST_SEEK_FLAG_SNAP_AFTER)) ||
-        (!forward && (flags & GST_SEEK_FLAG_SNAP_BEFORE))) {
-      mode = GST_SEARCH_MODE_AFTER;
-    } else {
-      mode = GST_SEARCH_MODE_BEFORE;
-    }
+  entry =
+      gst_util_array_binary_search (sidx->entries, sidx->entries_count,
+      sizeof (GstSidxBoxEntry),
+      (GCompareDataFunc) gst_dash_demux_index_entry_search,
+      GST_SEARCH_MODE_EXACT, &ts, NULL);
 
-    entry =
-        gst_util_array_binary_search (sidx->entries, sidx->entries_count,
-        sizeof (GstSidxBoxEntry),
-        (GCompareDataFunc) gst_dash_demux_index_entry_search, mode, &ts, NULL);
+  /* No exact match found, nothing in our index
+   * This is usually a bug or broken stream, as the seeking code already
+   * makes sure that we're in the correct period and segment, and only need
+   * to find the correct place inside the segment. Allow for some rounding
+   * errors and inaccuracies here though */
+  if (!entry) {
+    GstSidxBoxEntry *last_entry = &sidx->entries[sidx->entries_count - 1];
 
-    if (entry) {
-      idx = entry - sidx->entries;
-    } else if (mode == GST_SEARCH_MODE_BEFORE) {
-      /* target ts is smaller than pts of the first entry */
-      idx = 0;
-    } else {
-      /* target ts is larger than pts + duration of the last entry
-       * idx = sidx->entries_count */
-    }
+    GST_WARNING_OBJECT (dashstream->parent.pad, "Couldn't find SIDX entry");
 
-    /* FIXME in reverse mode, if we are exactly at a fragment start it makes more
-     * sense to start from the end of the previous fragment */
-    /* FIXME we should have a GST_SEARCH_MODE_NEAREST */
-    if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST &&
-        idx + 1 < sidx->entries_count) {
-      if (ABS (sidx->entries[idx + 1].pts - ts) <
-          ABS (sidx->entries[idx].pts - ts))
-        idx += 1;
-    }
+    if (ts < sidx->entries[0].pts
+        && ts + 250 * GST_MSECOND >= sidx->entries[0].pts)
+      entry = &sidx->entries[0];
+    else if (ts >= last_entry->pts + last_entry->duration &&
+        ts < last_entry->pts + last_entry->duration + 250 * GST_MSECOND)
+      entry = last_entry;
   }
+  if (!entry)
+    return GST_FLOW_EOS;
+
+  idx = entry - sidx->entries;
+
+  /* FIXME in reverse mode, if we are exactly at a fragment start it makes more
+   * sense to start from the end of the previous fragment */
+
+  /* Now entry->pts <= ts < entry->pts + entry->duration, need to adjust for
+   * snapping */
+  if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
+    if (idx + 1 < sidx->entries_count
+        && ABS (sidx->entries[idx + 1].pts - ts) <
+        ABS (sidx->entries[idx].pts - ts))
+      idx += 1;
+  } else if ((forward && (flags & GST_SEEK_FLAG_SNAP_AFTER)) || (!forward
+          && (flags & GST_SEEK_FLAG_SNAP_BEFORE))) {
+    if (idx + 1 < sidx->entries_count && entry->pts < ts)
+      idx += 1;
+  }
+
+  g_assert (sidx->entry_index < sidx->entries_count);
 
   sidx->entry_index = idx;
-  if (idx == sidx->entries_count)
-    dashstream->sidx_position =
-        sidx->entries[idx - 1].pts + sidx->entries[idx - 1].duration;
-  else
-    dashstream->sidx_position = sidx->entries[idx].pts;
+  dashstream->sidx_position = sidx->entries[idx].pts;
 
-  if (final_ts) {
+  if (final_ts)
     *final_ts = dashstream->sidx_position;
-  }
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -1343,13 +1351,13 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
     }
 
     if (dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
-      gst_dash_demux_stream_sidx_seek (dashstream, forward, flags, ts,
-          final_ts);
-      if (SIDX (dashstream)->entry_index >= SIDX (dashstream)->entries_count) {
+      if (gst_dash_demux_stream_sidx_seek (dashstream, forward, flags, ts,
+              final_ts) != GST_FLOW_OK) {
         GST_ERROR_OBJECT (stream->pad, "Couldn't find position in sidx");
         dashstream->sidx_position = GST_CLOCK_TIME_NONE;
         gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
       }
+      dashstream->pending_seek_ts = GST_CLOCK_TIME_NONE;
     } else {
       /* no index yet, seek when we have it */
       /* FIXME - the final_ts won't be correct here */
@@ -2282,10 +2290,9 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
 
         if (GST_CLOCK_TIME_IS_VALID (dash_stream->pending_seek_ts)) {
           /* FIXME, preserve seek flags */
-          gst_dash_demux_stream_sidx_seek (dash_stream,
-              demux->segment.rate >= 0, 0, dash_stream->pending_seek_ts, NULL);
-          if (SIDX (dash_stream)->entry_index >=
-              SIDX (dash_stream)->entries_count) {
+          if (gst_dash_demux_stream_sidx_seek (dash_stream,
+                  demux->segment.rate >= 0, 0, dash_stream->pending_seek_ts,
+                  NULL) != GST_FLOW_OK) {
             GST_ERROR_OBJECT (stream->pad, "Couldn't find position in sidx");
             dash_stream->sidx_position = GST_CLOCK_TIME_NONE;
             gst_isoff_sidx_parser_clear (&dash_stream->sidx_parser);
@@ -2764,16 +2771,14 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
         if (dash_stream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
           if (GST_CLOCK_TIME_IS_VALID (dash_stream->pending_seek_ts)) {
             /* FIXME, preserve seek flags */
-            gst_dash_demux_stream_sidx_seek (dash_stream,
-                demux->segment.rate >= 0, 0, dash_stream->pending_seek_ts,
-                NULL);
-            dash_stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
-            if (SIDX (dash_stream)->entry_index >=
-                SIDX (dash_stream)->entries_count) {
+            if (gst_dash_demux_stream_sidx_seek (dash_stream,
+                    demux->segment.rate >= 0, 0, dash_stream->pending_seek_ts,
+                    NULL) != GST_FLOW_OK) {
               GST_ERROR_OBJECT (stream->pad, "Couldn't find position in sidx");
               dash_stream->sidx_position = GST_CLOCK_TIME_NONE;
               gst_isoff_sidx_parser_clear (&dash_stream->sidx_parser);
             }
+            dash_stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
           } else {
             gint idx = 0;
 
