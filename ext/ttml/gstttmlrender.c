@@ -93,6 +93,14 @@ GST_STATIC_PAD_TEMPLATE ("text_sink",
 #define GST_TTML_RENDER_SIGNAL(ov)   (g_cond_signal (GST_TTML_RENDER_GET_COND (ov)))
 #define GST_TTML_RENDER_BROADCAST(ov)(g_cond_broadcast (GST_TTML_RENDER_GET_COND (ov)))
 
+
+typedef struct
+{
+  guint height;
+  guint baseline;
+} FontMetrics;
+
+
 static GstElementClass *parent_class = NULL;
 static void gst_ttml_render_base_init (gpointer g_class);
 static void gst_ttml_render_class_init (GstTtmlRenderClass * klass);
@@ -1240,9 +1248,14 @@ map_fail:
 }
 
 
+/* @pango_font_size is the font size you would need to tell pango in order that
+ * the actual rendered height of @text matches the text height in @element's
+ * style set. */
 typedef struct
 {
   GstSubtitleElement *element;
+  guint pango_font_size;
+  FontMetrics pango_font_metrics;
   gchar *text;
 } UnifiedElement;
 
@@ -1323,8 +1336,104 @@ gst_ttml_render_handle_whitespace (UnifiedBlock * block)
 }
 
 
+/*
+ * Generates pango-markup'd version of @text that would make pango render it
+ * with the styling specified by @style_set.
+ */
+static gchar *
+gst_ttml_render_generate_pango_markup (GstSubtitleStyleSet * style_set,
+    guint font_height, const gchar * text)
+{
+  gchar *ret, *font_family, *font_size, *fgcolor;
+  const gchar *font_style, *font_weight, *underline;
+  gchar *escaped_text = g_markup_escape_text (text, -1);
+
+  fgcolor = gst_ttml_render_color_to_string (style_set->color);
+  font_size = g_strdup_printf ("%u", font_height);
+  font_family =
+      gst_ttml_render_resolve_generic_fontname (style_set->font_family);
+  if (!font_family)
+    font_family = g_strdup (style_set->font_family);
+  font_style = (style_set->font_style ==
+      GST_SUBTITLE_FONT_STYLE_NORMAL) ? "normal" : "italic";
+  font_weight = (style_set->font_weight ==
+      GST_SUBTITLE_FONT_WEIGHT_NORMAL) ? "normal" : "bold";
+  underline = (style_set->text_decoration ==
+      GST_SUBTITLE_TEXT_DECORATION_UNDERLINE) ? "single" : "none";
+
+  ret = g_strconcat ("<span "
+      "fgcolor=\"", fgcolor, "\" ",
+      "font=\"", font_size, "px\" ",
+      "font_family=\"", font_family, "\" ",
+      "font_style=\"", font_style, "\" ",
+      "font_weight=\"", font_weight, "\" ",
+      "underline=\"", underline, "\" ", ">", escaped_text, "</span>", NULL);
+
+  g_free (fgcolor);
+  g_free (font_family);
+  g_free (font_size);
+  g_free (escaped_text);
+  return ret;
+}
+
+
+/*
+ * Unfortunately, pango does not expose accurate metrics about fonts (their
+ * maximum height and baseline position), so we need to calculate this
+ * information ourselves by examining the ink rectangle of a string containing
+ * characters that extend to the maximum height/depth of the font.
+ */
+static FontMetrics
+gst_ttml_render_get_pango_font_metrics (GstTtmlRender * render,
+    GstSubtitleStyleSet * style_set, guint font_size)
+{
+  PangoRectangle ink_rect;
+  gchar *string;
+  FontMetrics ret;
+
+  string = gst_ttml_render_generate_pango_markup (style_set, font_size,
+      "Áĺľď¿gqy");
+  pango_layout_set_markup (render->layout, string, strlen (string));
+  pango_layout_get_pixel_extents (render->layout, &ink_rect, NULL);
+  g_free (string);
+
+  ret.height = ink_rect.height;
+  ret.baseline = PANGO_PIXELS (pango_layout_get_baseline (render->layout))
+      - ink_rect.y;
+  return ret;
+}
+
+
+/*
+ * Return the font size that you would need to pass to pango in order that the
+ * font applied to @element would be rendered at the text height applied to
+ * @element.
+ */
+static guint
+gst_ttml_render_get_pango_font_size (GstTtmlRender * render,
+    const GstSubtitleElement * element)
+{
+  guint desired_font_size =
+      (guint) ceil (element->style_set->font_size * render->height);
+  guint font_size = desired_font_size;
+  guint rendered_height = G_MAXUINT;
+  FontMetrics metrics;
+
+  while (rendered_height > desired_font_size) {
+    metrics =
+        gst_ttml_render_get_pango_font_metrics (render, element->style_set,
+        font_size);
+    rendered_height = metrics.height;
+    --font_size;
+  }
+
+  return font_size + 1;
+}
+
+
 static UnifiedBlock *
-gst_ttml_render_unify_block (const GstSubtitleBlock * block, GstBuffer * buf)
+gst_ttml_render_unify_block (GstTtmlRender * render,
+    const GstSubtitleBlock * block, GstBuffer * buf)
 {
   UnifiedBlock *ret = g_slice_new0 (UnifiedBlock);
   guint i;
@@ -1337,11 +1446,17 @@ gst_ttml_render_unify_block (const GstSubtitleBlock * block, GstBuffer * buf)
   for (i = 0; i < gst_subtitle_block_get_element_count (block); ++i) {
     gchar *text;
     UnifiedElement *ue = g_slice_new0 (UnifiedElement);
-
-    ue->element = gst_subtitle_block_get_element (block, i);
+    ue->element =
+        gst_subtitle_element_ref (gst_subtitle_block_get_element (block, i));
+    ue->pango_font_size =
+        gst_ttml_render_get_pango_font_size (render, ue->element);
+    ue->pango_font_metrics =
+        gst_ttml_render_get_pango_font_metrics (render, ue->element->style_set,
+        ue->pango_font_size);
     ue->text =
         gst_ttml_render_get_text_from_buffer (buf, ue->element->text_index);
     g_ptr_array_add (ret->unified_elements, ue);
+
     text = g_strjoin (NULL, ret->joined_text, ue->text, NULL);
     g_free (ret->joined_text);
     ret->joined_text = text;
@@ -1368,7 +1483,7 @@ gst_ttml_render_generate_marked_up_string (GstTtmlRender * render,
   guint i;
 
   joined_text = g_strdup ("");
-  unified_block = gst_ttml_render_unify_block (block, text_buf);
+  unified_block = gst_ttml_render_unify_block (render, block, text_buf);
   gst_ttml_render_handle_whitespace (unified_block);
 
   for (i = 0; i < element_count; ++i) {
