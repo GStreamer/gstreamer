@@ -377,10 +377,14 @@ process_buffer_locked (GstRTPMux * rtp_mux, GstRTPMuxPadPrivate * padpriv,
       gst_rtp_buffer_get_timestamp (rtpbuffer));
 
   if (padpriv) {
-    if (padpriv->segment.format == GST_FORMAT_TIME)
+    if (padpriv->segment.format == GST_FORMAT_TIME) {
       GST_BUFFER_PTS (rtpbuffer->buffer) =
           gst_segment_to_running_time (&padpriv->segment, GST_FORMAT_TIME,
           GST_BUFFER_PTS (rtpbuffer->buffer));
+      GST_BUFFER_DTS (rtpbuffer->buffer) =
+          gst_segment_to_running_time (&padpriv->segment, GST_FORMAT_TIME,
+          GST_BUFFER_DTS (rtpbuffer->buffer));
+    }
   }
 
   return TRUE;
@@ -500,6 +504,10 @@ resend_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 
     gst_event_parse_caps (*event, &caps);
     gst_rtp_mux_setcaps (pad, rtp_mux, caps);
+  } else if (GST_EVENT_TYPE (*event) == GST_EVENT_SEGMENT) {
+    GstSegment new_segment;
+    gst_segment_init (&new_segment, GST_FORMAT_TIME);
+    gst_pad_push_event (rtp_mux->srcpad, gst_event_new_segment (&new_segment));
   } else {
     gst_pad_push_event (rtp_mux->srcpad, gst_event_ref (*event));
   }
@@ -872,6 +880,10 @@ gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   gboolean is_pad;
   gboolean ret;
 
+  GST_OBJECT_LOCK (mux);
+  is_pad = (pad == mux->last_pad);
+  GST_OBJECT_UNLOCK (mux);
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
     {
@@ -902,15 +914,18 @@ gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_event_copy_segment (event, &padpriv->segment);
       }
       GST_OBJECT_UNLOCK (mux);
+
+      if (is_pad) {
+        GstSegment new_segment;
+        gst_segment_init (&new_segment, GST_FORMAT_TIME);
+        gst_event_unref (event);
+        event = gst_event_new_segment (&new_segment);
+      }
       break;
     }
     default:
       break;
   }
-
-  GST_OBJECT_LOCK (mux);
-  is_pad = (pad == mux->last_pad);
-  GST_OBJECT_UNLOCK (mux);
 
   if (is_pad) {
     return gst_pad_push_event (mux->srcpad, event);
