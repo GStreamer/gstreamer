@@ -1736,6 +1736,14 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
 #ifndef GST_DISABLE_GST_DEBUG
       GstClockTime ts = gst_util_get_timestamp ();
 #endif
+      guint32 seqnum = gst_event_get_seqnum (event);
+
+      if (seqnum == qtdemux->segment_seqnum) {
+        GST_LOG_OBJECT (pad,
+            "Drop duplicated SEEK event seqnum %" G_GUINT32_FORMAT, seqnum);
+        gst_event_unref (event);
+        return TRUE;
+      }
 
       if (qtdemux->upstream_format_is_time && qtdemux->fragmented) {
         /* seek should be handled by upstream, we might need to re-download fragments */

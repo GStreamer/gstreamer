@@ -2368,6 +2368,17 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstObject * parent,
         gst_event_unref (event);
         return FALSE;
       }
+
+      {
+        guint32 seqnum = gst_event_get_seqnum (event);
+        if (seqnum == demux->segment_seqnum) {
+          GST_LOG_OBJECT (pad,
+              "Drop duplicated SEEK event seqnum %" G_GUINT32_FORMAT, seqnum);
+          gst_event_unref (event);
+          return TRUE;
+        }
+      }
+
       if (!demux->streaming)
         res = gst_matroska_demux_handle_seek_event (demux, pad, event);
       else
