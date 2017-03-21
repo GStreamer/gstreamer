@@ -366,7 +366,10 @@ typedef enum {
  * all object types. The types to which each attribute applies is given in the
  * description of that attribute below.
  */
-struct _GstSubtitleStyleSet {
+struct _GstSubtitleStyleSet
+{
+  GstMiniObject mini_object;
+
   GstSubtitleTextDirection text_direction;
   gchar *font_family;
   gdouble font_size;
@@ -388,11 +391,42 @@ struct _GstSubtitleStyleSet {
   GstSubtitleWritingMode writing_mode;
   GstSubtitleBackgroundMode show_background;
   GstSubtitleOverflowMode overflow;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
+
+GType gst_subtitle_style_set_get_type (void);
 
 GstSubtitleStyleSet * gst_subtitle_style_set_new (void);
 
-void gst_subtitle_style_set_free (GstSubtitleStyleSet * style_set);
+/**
+ * gst_subtitle_style_set_ref:
+ * @style_set: A #GstSubtitleStyleSet.
+ *
+ * Increments the refcount of @style_set.
+ *
+ * Returns: (transfer full): @style_set.
+ */
+static inline GstSubtitleStyleSet *
+gst_subtitle_style_set_ref (GstSubtitleStyleSet * style_set)
+{
+  return (GstSubtitleStyleSet *)
+    gst_mini_object_ref (GST_MINI_OBJECT_CAST (style_set));
+}
+
+/**
+ * gst_subtitle_style_set_unref:
+ * @style_set: (transfer full): A #GstSubtitleStyleSet.
+ *
+ * Decrements the refcount of @style_set. If the refcount reaches 0, @style_set
+ * will be freed.
+ */
+static inline void
+gst_subtitle_style_set_unref (GstSubtitleStyleSet * style_set)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (style_set));
+}
 
 
 /**
@@ -489,7 +523,7 @@ void gst_subtitle_block_add_element (
 
 guint gst_subtitle_block_get_element_count (const GstSubtitleBlock * block);
 
-const GstSubtitleElement * gst_subtitle_block_get_element (
+GstSubtitleElement * gst_subtitle_block_get_element (
     const GstSubtitleBlock * block, guint index);
 
 /**

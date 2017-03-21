@@ -1242,7 +1242,7 @@ map_fail:
 
 typedef struct
 {
-  const GstSubtitleElement *element;
+  GstSubtitleElement *element;
   gchar *text;
 } UnifiedElement;
 

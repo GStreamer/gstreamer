@@ -33,6 +33,22 @@
 #include "subtitle.h"
 
 /**
+ * gst_subtitle_style_set_free:
+ * @style_set: A #GstSubtitleStyleSet.
+ *
+ * Free @style_set and its associated memory.
+ */
+static void
+_gst_subtitle_style_set_free (GstSubtitleStyleSet * style_set)
+{
+  g_return_if_fail (style_set != NULL);
+  g_free (style_set->font_family);
+  g_slice_free (GstSubtitleStyleSet, style_set);
+}
+
+GST_DEFINE_MINI_OBJECT_TYPE (GstSubtitleStyleSet, gst_subtitle_style_set);
+
+/**
  * gst_subtitle_style_set_new:
  *
  * Create a new #GstSubtitleStyleSet with default values for all properties.
@@ -45,6 +61,10 @@ gst_subtitle_style_set_new (void)
   GstSubtitleStyleSet *ret = g_slice_new0 (GstSubtitleStyleSet);
   GstSubtitleColor white = { 255, 255, 255, 255 };
   GstSubtitleColor transparent = { 0, 0, 0, 0 };
+
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (ret), 0,
+      gst_subtitle_style_set_get_type (), NULL, NULL,
+      (GstMiniObjectFreeFunction) _gst_subtitle_style_set_free);
 
   ret->font_family = g_strdup ("default");
   ret->font_size = 1.0;
@@ -60,26 +80,12 @@ gst_subtitle_style_set_new (void)
   return ret;
 }
 
-/**
- * gst_subtitle_style_set_free:
- * @style_set: A #GstSubtitleStyleSet.
- *
- * Free @style_set and its associated memory.
- */
-void
-gst_subtitle_style_set_free (GstSubtitleStyleSet * style_set)
-{
-  g_return_if_fail (style_set != NULL);
-  g_free (style_set->font_family);
-  g_slice_free (GstSubtitleStyleSet, style_set);
-}
-
 
 static void
 _gst_subtitle_element_free (GstSubtitleElement * element)
 {
   g_return_if_fail (element != NULL);
-  gst_subtitle_style_set_free (element->style_set);
+  gst_subtitle_style_set_unref (element->style_set);
   g_slice_free (GstSubtitleElement, element);
 }
 
@@ -121,7 +127,7 @@ static void
 _gst_subtitle_block_free (GstSubtitleBlock * block)
 {
   g_return_if_fail (block != NULL);
-  gst_subtitle_style_set_free (block->style_set);
+  gst_subtitle_style_set_unref (block->style_set);
   g_ptr_array_unref (block->elements);
   g_slice_free (GstSubtitleBlock, block);
 }
@@ -202,7 +208,7 @@ gst_subtitle_block_get_element_count (const GstSubtitleBlock * block)
  * function does not return a reference; the caller should obtain a reference
  * using gst_subtitle_element_ref(), if needed.
  */
-const GstSubtitleElement *
+GstSubtitleElement *
 gst_subtitle_block_get_element (const GstSubtitleBlock * block, guint index)
 {
   g_return_val_if_fail (block != NULL, NULL);
@@ -217,7 +223,7 @@ static void
 _gst_subtitle_region_free (GstSubtitleRegion * region)
 {
   g_return_if_fail (region != NULL);
-  gst_subtitle_style_set_free (region->style_set);
+  gst_subtitle_style_set_unref (region->style_set);
   g_ptr_array_unref (region->blocks);
   g_slice_free (GstSubtitleRegion, region);
 }
