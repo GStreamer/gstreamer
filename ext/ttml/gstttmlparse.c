@@ -463,6 +463,7 @@ handle_buffer (GstTtmlParse * self, GstBuffer * buf)
 
   if (!(caps = gst_ttml_parse_get_src_caps (self)))
     return GST_FLOW_EOS;
+  gst_caps_unref (caps);
 
   /* Push newsegment if needed */
   if (self->need_segment) {
