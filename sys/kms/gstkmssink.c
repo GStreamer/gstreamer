@@ -1067,6 +1067,7 @@ gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
   /* We cannot have multiple dmabuf per plane */
   if (n_mem > n_planes)
     return FALSE;
+  g_assert (n_planes != 0);
 
   /* Update video info based on video meta */
   if (meta) {
