@@ -103,6 +103,8 @@ struct _GstDashDemuxStream
   GstClockTime actual_position;
   /* Timestamp of the beginning of the current fragment */
   GstClockTime current_fragment_timestamp;
+  GstClockTime current_fragment_duration;
+  GstClockTime current_fragment_keyframe_distance;
 
   /* Average keyframe download time (only in trickmode-key-units) */
   GstClockTime average_download_time;

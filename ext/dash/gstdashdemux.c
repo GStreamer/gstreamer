@@ -1267,6 +1267,7 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
 
   /* Reset chunk size if any */
   stream->fragment.chunk_size = 0;
+  dashstream->current_fragment_keyframe_distance = GST_CLOCK_TIME_NONE;
 
   if (GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER (stream) && isombff) {
     gst_dash_demux_stream_update_headers_info (stream);
@@ -1289,14 +1290,19 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
         &fragment);
 
     dashstream->current_fragment_timestamp = fragment.timestamp;
+    dashstream->current_fragment_duration = fragment.duration;
+    dashstream->current_fragment_keyframe_distance =
+        fragment.duration / dashstream->moof_sync_samples->len;
     dashstream->actual_position =
         fragment.timestamp +
-        dashstream->current_sync_sample * dashstream->keyframe_average_distance;
+        dashstream->current_sync_sample *
+        dashstream->current_fragment_keyframe_distance;
     if (stream->segment.rate < 0.0)
-      dashstream->actual_position += dashstream->keyframe_average_distance;
+      dashstream->actual_position +=
+          dashstream->current_fragment_keyframe_distance;
     dashstream->actual_position =
         MIN (dashstream->actual_position,
-        fragment.timestamp + stream->fragment.duration);
+        fragment.timestamp + fragment.duration);
 
     stream->fragment.uri = fragment.uri;
     stream->fragment.timestamp = GST_CLOCK_TIME_NONE;
@@ -1321,6 +1327,7 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
         &fragment);
 
     dashstream->current_fragment_timestamp = fragment.timestamp;
+    dashstream->current_fragment_duration = fragment.duration;
     stream->fragment.uri = fragment.uri;
     /* If mpd does not specify indexRange (i.e., null index_uri),
      * sidx entries may not be available until download it */
@@ -1568,16 +1575,19 @@ gst_dash_demux_stream_advance_sync_sample (GstAdaptiveDemuxStream * stream,
   if (GST_CLOCK_TIME_IS_VALID (target_time)) {
     GST_LOG_OBJECT (stream->pad,
         "target_time:%" GST_TIME_FORMAT " fragment ts %" GST_TIME_FORMAT
-        " average:%" GST_TIME_FORMAT " fragment duration:%" GST_TIME_FORMAT,
+        " average keyframe dist: %" GST_TIME_FORMAT
+        " current keyframe dist: %" GST_TIME_FORMAT
+        " fragment duration:%" GST_TIME_FORMAT,
         GST_TIME_ARGS (target_time),
         GST_TIME_ARGS (dashstream->current_fragment_timestamp),
         GST_TIME_ARGS (dashstream->keyframe_average_distance),
+        GST_TIME_ARGS (dashstream->current_fragment_keyframe_distance),
         GST_TIME_ARGS (stream->fragment.duration));
 
     idx =
         (target_time -
         dashstream->current_fragment_timestamp) /
-        MIN (dashstream->keyframe_average_distance, stream->fragment.duration);
+        dashstream->current_fragment_keyframe_distance;
   }
 
   GST_DEBUG_OBJECT (stream->pad,
@@ -1708,8 +1718,16 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
       dashstream->actual_position);
 
   if (stream->qos_earliest_time == GST_CLOCK_TIME_NONE) {
-    GstClockTime run_key_dist = MIN (dashstream->keyframe_average_distance,
-        stream->fragment.duration) / ABS (stream->segment.rate);
+    GstClockTime run_key_dist;
+
+    if (dashstream->current_fragment_keyframe_distance != GST_CLOCK_TIME_NONE)
+      run_key_dist =
+          dashstream->current_fragment_keyframe_distance /
+          ABS (stream->segment.rate);
+    else
+      run_key_dist =
+          dashstream->keyframe_average_distance / ABS (stream->segment.rate);
+
     /* If we don't have downstream information (such as at startup or
      * without live sinks), just get the next time (already updated
      * in actual_position) */
@@ -1804,9 +1822,7 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
       if (dashstream->current_sync_sample == -1)
         dur = 0;
       else
-        dur =
-            MIN (dashstream->keyframe_average_distance,
-            stream->fragment.duration);
+        dur = dashstream->current_fragment_keyframe_distance;
     } else if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
         dashstream->sidx_position != 0
         && dashstream->sidx_position != GST_CLOCK_TIME_NONE
@@ -1874,10 +1890,10 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
       dashstream->active_stream->mimeType == GST_STREAM_VIDEO) {
     /* Key-unit trick mode, seek to fragment containing target time */
     if (stream->segment.rate > 0)
-      ret = gst_dash_demux_stream_seek (stream, TRUE, 0,
+      ret = gst_dash_demux_stream_seek (stream, TRUE, GST_SEEK_FLAG_SNAP_AFTER,
           target_time, &actual_ts);
     else
-      ret = gst_dash_demux_stream_seek (stream, FALSE, 0,
+      ret = gst_dash_demux_stream_seek (stream, FALSE, GST_SEEK_FLAG_SNAP_AFTER,
           target_time, &actual_ts);
     if (ret == GST_FLOW_OK)
       GST_DEBUG_OBJECT (stream->pad, "Emergency seek to %" GST_TIME_FORMAT,
@@ -2415,17 +2431,16 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
       if (dashstream->isobmff_parser.current_fourcc == 0) {
         stream->fragment.chunk_size += dashstream->moof_average_size;
         if (dashstream->first_sync_sample_always_after_moof) {
-          guint idx = -1;
+          gboolean first = FALSE;
           /* Check if we'll really need that first sample */
           if (GST_CLOCK_TIME_IS_VALID (dashstream->target_time))
-            idx =
+            first =
                 (dashstream->target_time -
                 dashstream->current_fragment_timestamp) /
-                MIN (dashstream->keyframe_average_distance,
-                stream->fragment.duration);
+                dashstream->keyframe_average_distance == 0 ? TRUE : FALSE;
           else if (stream->demux->segment.rate > 0.0)
-            idx = 0;
-          if (idx == 0)
+            first = TRUE;
+          if (first)
             stream->fragment.chunk_size += dashstream->keyframe_average_size;
         }
       }
@@ -2923,7 +2938,8 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
     g_assert (stream->fragment.duration != 0);
     g_assert (stream->fragment.duration != GST_CLOCK_TIME_NONE);
 
-    current_keyframe_distance =
+    dash_stream->current_fragment_keyframe_distance =
+        current_keyframe_distance =
         stream->fragment.duration / dash_stream->moof_sync_samples->len;
 
     if (dash_stream->keyframe_average_distance) {
@@ -2997,8 +3013,7 @@ gst_dash_demux_handle_isobmff (GstAdaptiveDemux * demux,
         idx =
             (dash_stream->target_time -
             dash_stream->current_fragment_timestamp) /
-            MIN (dash_stream->keyframe_average_distance,
-            stream->fragment.duration);
+            dash_stream->current_fragment_keyframe_distance;
 
       GST_DEBUG_OBJECT (stream->pad, "target %" GST_TIME_FORMAT " idx %d",
           GST_TIME_ARGS (dash_stream->target_time), idx);
