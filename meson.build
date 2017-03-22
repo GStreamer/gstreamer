@@ -302,8 +302,20 @@ glib_dep = dependency('glib-2.0', version : glib_req)
 gio_dep = dependency('gio-2.0', version : glib_req)
 gmodule_dep = dependency('gmodule-2.0', version : glib_req)
 x11_dep = dependency('x11', required : false)
+
 # Used by dtls and hls
 openssl_dep = dependency('openssl', version : '>= 1.0.1', required : false)
+
+# Used by mpeg2enc and mplex
+# mjpegtools upstream breaks API constantly and doesn't export the version in
+# a header anywhere. The configure file has a lot of logic to support old
+# versions, but it all seems untested and broken. Require 2.0.0. Can be changed
+# if someone complains.
+mjpegtools_dep = dependency('mjpegtools', version : '>=2.0.0', required : false)
+mjpegtools_api = '0'
+if mjpegtools_dep.found()
+  mjpegtools_api = '20000'
+endif
 
 if x11_dep.found()
   cdata.set('HAVE_X11', 1)
