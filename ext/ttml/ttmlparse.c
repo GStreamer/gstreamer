@@ -463,10 +463,8 @@ ttml_update_style_set (GstSubtitleStyleSet * style_set, TtmlStyleSet * tss,
   style_set->font_size *= (1.0 / cellres_y);
 
   if ((attr = ttml_style_set_get_attr (tss, "lineHeight"))) {
-    /* The TTML spec (section 8.2.12) recommends using a line height of 125%
-     * when "normal" is specified. */
     if (g_strcmp0 (attr, "normal") == 0)
-      style_set->line_height = 1.25;
+      style_set->line_height = -1;
     else
       style_set->line_height = g_ascii_strtod (attr, NULL) / 100.0;
   }

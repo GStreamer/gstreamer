@@ -68,7 +68,7 @@ gst_subtitle_style_set_new (void)
 
   ret->font_family = g_strdup ("default");
   ret->font_size = 1.0;
-  ret->line_height = 1.25;
+  ret->line_height = -1;
   ret->color = white;
   ret->background_color = transparent;
   ret->line_padding = 0.0;

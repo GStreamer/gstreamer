@@ -2194,14 +2194,47 @@ static BlockMetrics
 gst_ttml_render_get_block_metrics (GstTtmlRender * render, UnifiedBlock * block)
 {
   BlockMetrics ret;
-  guint descender = gst_ttml_render_get_most_frequent_descender (render, block);
-  guint font_size = (guint) ceil (block->style_set->font_size * render->height);
 
-  ret.line_height = (guint) ceil (font_size * block->style_set->line_height);
-  ret.baseline_offset = (guint) ((font_size + ret.line_height) / 2.0)
-      - descender;
-  GST_CAT_DEBUG (ttmlrender_debug,
-      "Got most frequent descender value of %u pixels.", descender);
+  /*
+   * The specified behaviour in TTML when lineHeight is "normal" is different
+   * from the behaviour when a percentage is given. In the former case, the
+   * line height is a percentage (the TTML spec recommends 125%) of the largest
+   * font size that is applied to the spans within the block; in the latter
+   * case, the line height is the given percentage of the font size that is
+   * applied to the block itself.
+   */
+  if (block->style_set->line_height < 0) {      /* lineHeight="normal" case */
+    guint max_text_height = 0;
+    guint descender = 0;
+    guint i;
+
+    for (i = 0; i < gst_ttml_render_unified_block_element_count (block); ++i) {
+      UnifiedElement *ue = gst_ttml_render_unified_block_get_element (block, i);
+
+      if (ue->pango_font_metrics.height > max_text_height) {
+        max_text_height = ue->pango_font_metrics.height;
+        descender =
+            ue->pango_font_metrics.height - ue->pango_font_metrics.baseline;
+      }
+    }
+
+    GST_CAT_LOG (ttmlrender_debug, "Max descender: %u   Max text height: %u",
+        descender, max_text_height);
+    ret.line_height = (guint) ceil (max_text_height * 1.25);
+    ret.baseline_offset = (guint) ((max_text_height + ret.line_height) / 2.0)
+        - descender;
+  } else {
+    guint descender;
+    guint font_size;
+
+    descender = gst_ttml_render_get_most_frequent_descender (render, block);
+    GST_CAT_LOG (ttmlrender_debug,
+        "Got most frequent descender value of %u pixels.", descender);
+    font_size = (guint) ceil (block->style_set->font_size * render->height);
+    ret.line_height = (guint) ceil (font_size * block->style_set->line_height);
+    ret.baseline_offset = (guint) ((font_size + ret.line_height) / 2.0)
+        - descender;
+  }
 
   return ret;
 }
