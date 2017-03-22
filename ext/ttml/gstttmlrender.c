@@ -1176,7 +1176,7 @@ beach:
 }
 
 
-/* Free returned string after use. */
+/* Caller needs to free returned string after use. */
 static gchar *
 gst_ttml_render_color_to_string (GstSubtitleColor color)
 {
@@ -1472,6 +1472,11 @@ gst_ttml_render_get_pango_font_size (GstTtmlRender * render,
 }
 
 
+/*
+ * Reunites each element in @block with its text, as extracted from @buf. Also
+ * stores the concatenated text from all contained elements to facilitate
+ * future processing.
+ */
 static UnifiedBlock *
 gst_ttml_render_unify_block (GstTtmlRender * render,
     const GstSubtitleBlock * block, GstBuffer * buf)
@@ -2118,7 +2123,7 @@ gst_ttml_render_layout_blocks (GstTtmlRender * render, GPtrArray * blocks,
 }
 
 
-/* If any of an array of elements has line wrapping enabled, return TRUE. */
+/* If any of an array of elements has line wrapping enabled, returns TRUE. */
 static gboolean
 gst_ttml_render_elements_are_wrapped (GPtrArray * elements)
 {
@@ -2291,8 +2296,10 @@ gst_ttml_render_rendered_image_free (GstTtmlRenderRenderedImage * image)
 }
 
 
-/* The order of arguments is significant: @image2 will be rendered on top of
- * @image1. */
+/*
+ * Combines two rendered image into a single image. The order of arguments is
+ * significant: @image2 will be rendered on top of @image1.
+ */
 static GstTtmlRenderRenderedImage *
 gst_ttml_render_rendered_image_combine (GstTtmlRenderRenderedImage * image1,
     GstTtmlRenderRenderedImage * image2)
