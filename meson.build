@@ -195,7 +195,7 @@ have_omx_theora = cc.has_header_symbol(
     prefix : extra_video_headers,
     args : gst_omx_args,
     required : false)
-if have_omx_vp8
+if have_omx_theora
   cdata.set('HAVE_THEORA', 1)
 endif
 
