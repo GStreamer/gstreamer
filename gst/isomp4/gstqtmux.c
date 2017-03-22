@@ -3157,6 +3157,13 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
         atom_trak_add_samples (pad->tc_trak, 1, 1, 4, qtmux->mdat_size, FALSE,
             0);
         ret = gst_qt_mux_send_buffer (qtmux, tc_buf, &qtmux->mdat_size, TRUE);
+
+        /* Need to reset the current chunk (of the previous pad) here because
+         * some other data was written now above, and the pad has to start a
+         * new chunk now */
+        qtmux->current_chunk_offset = -1;
+        qtmux->current_chunk_size = 0;
+        qtmux->current_chunk_duration = 0;
       } else if (pad->is_out_of_order) {
         /* Check for a lower timecode than the one stored */
         g_assert (pad->tc_trak != NULL);
