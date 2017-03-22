@@ -139,7 +139,7 @@ gst_audio_buffer_split_init (GstAudioBufferSplit * self)
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_set_query_function (self->sinkpad,
+  gst_pad_set_query_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_audio_buffer_split_src_query));
   GST_PAD_SET_PROXY_CAPS (self->srcpad);
   gst_pad_use_fixed_caps (self->srcpad);
