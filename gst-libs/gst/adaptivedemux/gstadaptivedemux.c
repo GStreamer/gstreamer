@@ -1196,14 +1196,19 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux)
      */
     for (iter = old_streams; iter; iter = g_list_next (iter)) {
       GstAdaptiveDemuxStream *stream = iter->data;
+      GstPad *pad = gst_object_ref (GST_PAD (stream->pad));
 
-      GST_LOG_OBJECT (stream->pad, "Removing stream");
       GST_MANIFEST_UNLOCK (demux);
 
-      gst_pad_push_event (stream->pad, gst_event_ref (eos));
-      gst_pad_set_active (stream->pad, FALSE);
-      gst_element_remove_pad (GST_ELEMENT (demux), stream->pad);
+      GST_DEBUG_OBJECT (pad, "Pushing EOS");
+      gst_pad_push_event (pad, gst_event_ref (eos));
+      gst_pad_set_active (pad, FALSE);
+
+      GST_LOG_OBJECT (pad, "Removing stream");
+      gst_element_remove_pad (GST_ELEMENT (demux), pad);
       GST_MANIFEST_LOCK (demux);
+
+      gst_object_unref (GST_OBJECT (pad));
 
       /* ask the download task to stop.
        * We will not join it now, because our thread can be one of these tasks.
@@ -2505,6 +2510,7 @@ _src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:{
+      GST_DEBUG_OBJECT (pad, "Saw EOS on src pad");
       GST_MANIFEST_LOCK (demux);
 
       gst_adaptive_demux_eos_handling (stream);
@@ -3531,6 +3537,8 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
         gst_task_stop (stream->download_task);
         if (gst_adaptive_demux_combine_flows (demux) == GST_FLOW_EOS) {
           if (gst_adaptive_demux_has_next_period (demux)) {
+            GST_DEBUG_OBJECT (stream->pad,
+                "Next period available, not sending EOS");
             gst_adaptive_demux_advance_period (demux);
             ret = GST_FLOW_OK;
           }
@@ -3628,8 +3636,13 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
 end_of_manifest:
   if (G_UNLIKELY (ret == GST_FLOW_EOS)) {
     if (GST_OBJECT_PARENT (stream->pad) != NULL) {
-      GST_DEBUG_OBJECT (stream->src, "Pushing EOS on pad");
-      gst_adaptive_demux_stream_push_event (stream, gst_event_new_eos ());
+      if (demux->next_streams == NULL && demux->prepared_streams == NULL) {
+        GST_DEBUG_OBJECT (stream->src, "Pushing EOS on pad");
+        gst_adaptive_demux_stream_push_event (stream, gst_event_new_eos ());
+      } else {
+        GST_DEBUG_OBJECT (stream->src,
+            "Stream is EOS, but we're switching fragments. Not sending.");
+      }
     } else {
       GST_ERROR_OBJECT (demux, "Can't push EOS on non-exposed pad");
       goto download_error;
