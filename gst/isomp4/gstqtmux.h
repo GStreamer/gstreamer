@@ -144,6 +144,11 @@ struct _GstQTPad
   GstQTPadPrepareBufferFunc prepare_buf_func;
   GstQTPadSetCapsFunc set_caps;
   GstQTPadCreateEmptyBufferFunc create_empty_buffer;
+
+  /* SMPTE timecode */
+  GstVideoTimeCode *first_tc;
+  GstClockTime first_pts;
+  guint64 tc_pos;
 };
 
 typedef enum _GstQTMuxState
@@ -211,11 +216,6 @@ struct _GstQTMux
 
   /* Set when tags are received, cleared when written to moov */
   gboolean tags_changed;
-
-  /* SMPTE timecode */
-  GstVideoTimeCode *first_tc;
-  GstClockTime first_pts;
-  guint64 tc_pos;
 
   /* fragmented file index */
   AtomMFRA *mfra;
