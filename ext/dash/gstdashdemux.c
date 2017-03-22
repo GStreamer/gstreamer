@@ -1290,6 +1290,10 @@ gst_dash_demux_stream_sidx_seek (GstDashDemuxStream * dashstream,
 
   /* FIXME in reverse mode, if we are exactly at a fragment start it makes more
    * sense to start from the end of the previous fragment */
+  if (!forward && idx > 0 && entry->pts == ts) {
+    idx--;
+    entry = &sidx->entries[idx];
+  }
 
   /* Now entry->pts <= ts < entry->pts + entry->duration, need to adjust for
    * snapping */

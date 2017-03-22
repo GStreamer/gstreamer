@@ -4864,6 +4864,11 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
       ts = 0;
 
     index = ts / duration;
+
+    /* At the end of a segment in reverse mode, start from the previous fragment */
+    if (!forward && index > 0 && ts % duration == 0)
+      index--;
+
     index_time = index * duration;
 
     if ((flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
