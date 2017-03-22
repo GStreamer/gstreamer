@@ -527,6 +527,12 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
 
   /* reference owned elsewhere */
   qtpad->tfra = NULL;
+
+  qtpad->first_pts = GST_CLOCK_TIME_NONE;
+  qtpad->tc_pos = -1;
+  if (qtpad->first_tc)
+    gst_video_time_code_free (qtpad->first_tc);
+  qtpad->first_tc = NULL;
 }
 
 /*
@@ -603,11 +609,6 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   qtmux->last_moov_update = GST_CLOCK_TIME_NONE;
   qtmux->muxed_since_last_update = 0;
   qtmux->reserved_duration_remaining = GST_CLOCK_TIME_NONE;
-  qtmux->first_pts = GST_CLOCK_TIME_NONE;
-  qtmux->tc_pos = -1;
-  if (qtmux->first_tc)
-    gst_video_time_code_free (qtmux->first_tc);
-  qtmux->first_tc = NULL;
 }
 
 static void
@@ -2517,18 +2518,18 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
 }
 
 static GstFlowReturn
-gst_qt_mux_update_timecode (GstQTMux * qtmux)
+gst_qt_mux_update_timecode (GstQTMux * qtmux, GstQTPad * qtpad)
 {
   GstSegment segment;
   GstBuffer *buf;
   GstMapInfo map;
-  guint64 offset = qtmux->tc_pos;
+  guint64 offset = qtpad->tc_pos;
   GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
 
   if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT)
     return GST_FLOW_OK;
 
-  g_assert (qtmux->tc_pos != -1);
+  g_assert (qtpad->tc_pos != -1);
 
   gst_segment_init (&segment, GST_FORMAT_BYTES);
   segment.start = offset;
@@ -2538,11 +2539,11 @@ gst_qt_mux_update_timecode (GstQTMux * qtmux)
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
 
   GST_WRITE_UINT32_BE (map.data,
-      gst_video_time_code_frames_since_daily_jam (qtmux->first_tc));
+      gst_video_time_code_frames_since_daily_jam (qtpad->first_tc));
   gst_buffer_unmap (buf, &map);
 
   /* Reset this value, so the timecode won't be re-rewritten */
-  qtmux->tc_pos = -1;
+  qtpad->tc_pos = -1;
 
   return gst_qt_mux_send_buffer (qtmux, buf, &offset, FALSE);
 }
@@ -2553,6 +2554,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   gboolean ret = GST_FLOW_OK;
   guint64 offset = 0, size = 0;
   gboolean large_file;
+  GSList *walk;
 
   GST_DEBUG_OBJECT (qtmux, "Updating remaining values and sending last data");
 
@@ -2567,12 +2569,16 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   }
 
   gst_qt_mux_update_global_statistics (qtmux);
-  if (qtmux->tc_pos != -1) {
-    /* File is being stopped and timecode hasn't been updated. Update it now
-     * with whatever we have */
-    ret = gst_qt_mux_update_timecode (qtmux);
-    if (ret != GST_FLOW_OK)
-      return ret;
+  for (walk = qtmux->collect->data; walk; walk = walk->next) {
+    GstQTPad *qtpad = (GstQTPad *) walk->data;
+
+    if (qtpad->tc_pos != -1) {
+      /* File is being stopped and timecode hasn't been updated. Update it now
+       * with whatever we have */
+      ret = gst_qt_mux_update_timecode (qtmux, qtpad);
+      if (ret != GST_FLOW_OK)
+        return ret;
+    }
   }
 
   switch (qtmux->mux_mode) {
@@ -3034,7 +3040,7 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
   if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT)
     return ret;
 
-  if (buf != NULL && (pad->tc_trak == NULL || qtmux->tc_pos != -1)) {
+  if (buf != NULL && (pad->tc_trak == NULL || pad->tc_pos != -1)) {
     GstVideoTimeCodeMeta *tc_meta = gst_buffer_get_video_time_code_meta (buf);
     if (tc_meta) {
       GstVideoTimeCode *tc = &tc_meta->tc;
@@ -3043,7 +3049,7 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
       guint32 frames_since_daily_jam;
 
       /* This means we never got a timecode before */
-      if (qtmux->first_tc == NULL) {
+      if (pad->first_tc == NULL) {
 #ifndef GST_DISABLE_GST_DEBUG
         gchar *tc_str = gst_video_time_code_to_string (tc);
         GST_DEBUG_OBJECT (qtmux, "Found first timecode %s", tc_str);
@@ -3051,18 +3057,18 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
 #endif
         g_assert (pad->tc_trak == NULL);
         tc_buf = gst_buffer_new_allocate (NULL, 4, NULL);
-        qtmux->first_tc = gst_video_time_code_copy (tc);
+        pad->first_tc = gst_video_time_code_copy (tc);
         /* If frames are out of order, the frame we're currently getting might
          * not be the first one. Just write a 0 timecode for now and wait
          * until we receive a timecode that's lower than the current one */
         if (pad->is_out_of_order) {
-          qtmux->first_pts = GST_BUFFER_PTS (buf);
+          pad->first_pts = GST_BUFFER_PTS (buf);
           frames_since_daily_jam = 0;
           /* Position to rewrite */
-          qtmux->tc_pos = qtmux->mdat_size;
+          pad->tc_pos = qtmux->mdat_size;
         } else {
           frames_since_daily_jam =
-              gst_video_time_code_frames_since_daily_jam (qtmux->first_tc);
+              gst_video_time_code_frames_since_daily_jam (pad->first_tc);
           frames_since_daily_jam = GUINT32_TO_BE (frames_since_daily_jam);
         }
         /* Write the timecode trak now */
@@ -3073,7 +3079,7 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
         atom_tref_add_entry (pad->trak->tref, pad->tc_trak->tkhd.track_ID);
 
         atom_trak_set_timecode_type (pad->tc_trak, qtmux->context,
-            qtmux->first_tc);
+            pad->first_tc);
 
         szret = gst_buffer_fill (tc_buf, 0, &frames_since_daily_jam, 4);
         g_assert (szret == 4);
@@ -3084,10 +3090,10 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
       } else if (pad->is_out_of_order) {
         /* Check for a lower timecode than the one stored */
         g_assert (pad->tc_trak != NULL);
-        if (GST_BUFFER_DTS (buf) <= qtmux->first_pts) {
-          if (gst_video_time_code_compare (tc, qtmux->first_tc) == -1) {
-            gst_video_time_code_free (qtmux->first_tc);
-            qtmux->first_tc = gst_video_time_code_copy (tc);
+        if (GST_BUFFER_DTS (buf) <= pad->first_pts) {
+          if (gst_video_time_code_compare (tc, pad->first_tc) == -1) {
+            gst_video_time_code_free (pad->first_tc);
+            pad->first_tc = gst_video_time_code_copy (tc);
           }
         } else {
           guint64 bk_size = qtmux->mdat_size;
@@ -3095,7 +3101,7 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
           /* If this frame's DTS is after the first PTS received, it means
            * we've already received the first frame to be presented. Otherwise
            * the decoder would need to go back in time */
-          gst_qt_mux_update_timecode (qtmux);
+          gst_qt_mux_update_timecode (qtmux, pad);
 
           /* Reset writing position */
           gst_segment_init (&segment, GST_FORMAT_BYTES);
@@ -4714,8 +4720,6 @@ gst_qt_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_collect_pads_start (qtmux->collect);
       qtmux->state = GST_QT_MUX_STATE_STARTED;
-      qtmux->first_tc = NULL;
-      qtmux->tc_pos = -1;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
