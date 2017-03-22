@@ -115,6 +115,33 @@ typedef struct
 } FontMetrics;
 
 
+typedef struct
+{
+  guint first_index;
+  guint last_index;
+} CharRange;
+
+
+/* @pango_font_size is the font size you would need to tell pango in order that
+ * the actual rendered height of @text matches the text height in @element's
+ * style set. */
+typedef struct
+{
+  GstSubtitleElement *element;
+  guint pango_font_size;
+  FontMetrics pango_font_metrics;
+  gchar *text;
+} UnifiedElement;
+
+
+typedef struct
+{
+  GPtrArray *unified_elements;
+  GstSubtitleStyleSet *style_set;
+  gchar *joined_text;
+} UnifiedBlock;
+
+
 static GstElementClass *parent_class = NULL;
 static void gst_ttml_render_base_init (gpointer g_class);
 static void gst_ttml_render_class_init (GstTtmlRenderClass * klass);
@@ -1194,12 +1221,6 @@ gst_ttml_render_draw_rectangle (guint width, guint height,
 }
 
 
-typedef struct
-{
-  guint first_index;
-  guint last_index;
-} CharRange;
-
 static void
 gst_ttml_render_char_range_free (CharRange * range)
 {
@@ -1268,18 +1289,6 @@ map_fail:
 }
 
 
-/* @pango_font_size is the font size you would need to tell pango in order that
- * the actual rendered height of @text matches the text height in @element's
- * style set. */
-typedef struct
-{
-  GstSubtitleElement *element;
-  guint pango_font_size;
-  FontMetrics pango_font_metrics;
-  gchar *text;
-} UnifiedElement;
-
-
 static void
 gst_ttml_render_unified_element_free (UnifiedElement * unified_element)
 {
@@ -1310,14 +1319,6 @@ gst_ttml_render_unified_element_copy (const UnifiedElement * unified_element)
 
   return ret;
 }
-
-
-typedef struct
-{
-  GPtrArray *unified_elements;
-  GstSubtitleStyleSet *style_set;
-  gchar *joined_text;
-} UnifiedBlock;
 
 
 static void
