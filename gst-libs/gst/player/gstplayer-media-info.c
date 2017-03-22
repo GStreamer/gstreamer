@@ -47,6 +47,7 @@ gst_player_stream_info_finalize (GObject * object)
   GstPlayerStreamInfo *sinfo = GST_PLAYER_STREAM_INFO (object);
 
   g_free (sinfo->codec);
+  g_free (sinfo->stream_id);
 
   if (sinfo->caps)
     gst_caps_unref (sinfo->caps);
@@ -543,6 +544,8 @@ gst_player_stream_info_copy (GstPlayerStreamInfo * ref)
     info->caps = gst_caps_copy (ref->caps);
   if (ref->codec)
     info->codec = g_strdup (ref->codec);
+  if (ref->stream_id)
+    info->stream_id = g_strdup (ref->stream_id);
 
   return info;
 }

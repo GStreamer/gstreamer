@@ -32,6 +32,7 @@ struct _GstPlayerStreamInfo
   GstCaps *caps;
   gint stream_index;
   GstTagList  *tags;
+  gchar *stream_id;
 };
 
 struct _GstPlayerStreamInfoClass
