@@ -138,7 +138,7 @@ gst_param_spec_fraction_get_type (void)
       _gst_param_fraction_validate,     /* value_validate    */
       _gst_param_fraction_values_cmp,   /* values_cmp        */
     };
-    pspec_info.value_type = GST_TYPE_FRACTION;
+    pspec_info.value_type = gst_fraction_get_type ();
     type = g_param_type_register_static ("GstParamFraction", &pspec_info);
     g_once_init_leave (&gst_faction_type, type);
   }
