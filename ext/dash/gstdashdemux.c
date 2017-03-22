@@ -1584,10 +1584,30 @@ gst_dash_demux_stream_advance_sync_sample (GstAdaptiveDemuxStream * stream,
         GST_TIME_ARGS (dashstream->current_fragment_keyframe_distance),
         GST_TIME_ARGS (stream->fragment.duration));
 
-    idx =
-        (target_time -
-        dashstream->current_fragment_timestamp) /
-        dashstream->current_fragment_keyframe_distance;
+    if (stream->demux->segment.rate > 0.0) {
+      idx =
+          (target_time -
+          dashstream->current_fragment_timestamp) /
+          dashstream->current_fragment_keyframe_distance;
+    } else {
+      GstClockTime end_time =
+          dashstream->current_fragment_timestamp +
+          dashstream->current_fragment_duration;
+
+      if (end_time < target_time) {
+        idx = dashstream->moof_sync_samples->len;
+      } else {
+        idx =
+            (end_time -
+            target_time) / dashstream->current_fragment_keyframe_distance;
+        if (idx == dashstream->moof_sync_samples->len) {
+          dashstream->current_sync_sample = -1;
+          fragment_finished = TRUE;
+          goto beach;
+        }
+        idx = dashstream->moof_sync_samples->len - 1 - idx;
+      }
+    }
   }
 
   GST_DEBUG_OBJECT (stream->pad,
