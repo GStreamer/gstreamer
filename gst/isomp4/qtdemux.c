@@ -86,7 +86,7 @@
 #define QTDEMUX_MAX_ATOM_SIZE (25*1024*1024)
 
 /* if the sample index is larger than this, something is likely wrong */
-#define QTDEMUX_MAX_SAMPLE_INDEX_SIZE (50*1024*1024)
+#define QTDEMUX_MAX_SAMPLE_INDEX_SIZE (200*1024*1024)
 
 /* For converting qt creation times to unix epoch times */
 #define QTDEMUX_SECONDS_PER_DAY (60 * 60 * 24)
