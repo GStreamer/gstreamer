@@ -2974,7 +2974,8 @@ static gboolean
 qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     QtDemuxStream * stream, guint32 d_sample_duration, guint32 d_sample_size,
     guint32 d_sample_flags, gint64 moof_offset, gint64 moof_length,
-    gint64 * base_offset, gint64 * running_offset, gint64 decode_ts)
+    gint64 * base_offset, gint64 * running_offset, gint64 decode_ts,
+    gboolean has_tfdt)
 {
   GstClockTime gst_ts = GST_CLOCK_TIME_NONE;
   guint64 timestamp;
@@ -3135,7 +3136,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
       /* If this is a GST_FORMAT_BYTES stream and there's a significant
        * difference (1 sec.) between decode_ts and timestamp, prefer the
        * former */
-      if (decode_ts != 0 && !qtdemux->upstream_format_is_time
+      if (has_tfdt && !qtdemux->upstream_format_is_time
           && ABSDIFF (decode_ts, timestamp) >
           MAX (stream->duration_last_moof / 2,
               GSTTIME_TO_QTSTREAMTIME (stream, GST_SECOND))) {
@@ -3827,7 +3828,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     while (trun_node) {
       qtdemux_parse_trun (qtdemux, &trun_data, stream,
           ds_duration, ds_size, ds_flags, moof_offset, length, &base_offset,
-          &running_offset, decode_time);
+          &running_offset, decode_time, (tfdt_node != NULL));
       /* iterate all siblings */
       trun_node = qtdemux_tree_get_sibling_by_type_full (trun_node, FOURCC_trun,
           &trun_data);
