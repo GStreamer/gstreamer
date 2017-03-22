@@ -975,8 +975,9 @@ pending_pad_blocked (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
   /* If already linked to a slot, nothing more to do */
   if (child_info->output_slot) {
-    GST_LOG_OBJECT (urisrc, "Pad %" GST_PTR_FORMAT " is linked to slot %p",
-        pad, child_info->output_slot);
+    GST_LOG_OBJECT (urisrc, "Pad %" GST_PTR_FORMAT " is linked to queue %"
+        GST_PTR_FORMAT " on slot %p", pad, child_info->output_slot->queue,
+        child_info->output_slot);
     GST_URI_SOURCE_BIN_UNLOCK (urisrc);
     goto done;
   }
