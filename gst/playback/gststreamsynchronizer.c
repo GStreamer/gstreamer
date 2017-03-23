@@ -69,6 +69,7 @@ typedef struct
   gboolean eos_sent;            /* when EOS was sent downstream */
   gboolean flushing;            /* set after flush-start and before flush-stop */
   gboolean seen_data;
+  gboolean send_gap_event;
   GstClockTime gap_duration;
 
   GstStreamFlags flags;
@@ -228,12 +229,12 @@ gst_stream_synchronizer_wait (GstStreamSynchronizer * self, GstPad * pad)
       break;
     }
 
-    if (self->send_gap_event) {
+    if (stream->send_gap_event) {
       GstEvent *event;
 
       if (!GST_CLOCK_TIME_IS_VALID (stream->segment.position)) {
         GST_WARNING_OBJECT (pad, "Have no position and can't send GAP event");
-        self->send_gap_event = FALSE;
+        stream->send_gap_event = FALSE;
         continue;
       }
 
@@ -251,7 +252,7 @@ gst_stream_synchronizer_wait (GstStreamSynchronizer * self, GstPad * pad)
       if (!ret) {
         return ret;
       }
-      self->send_gap_event = FALSE;
+      stream->send_gap_event = FALSE;
 
       /* force a check on the loop conditions as we unlocked a
        * few lines above and those variables could have changed */
@@ -620,7 +621,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         g_slist_free (pads);
       } else {
         if (seen_data) {
-          self->send_gap_event = TRUE;
+          stream->send_gap_event = TRUE;
           stream->gap_duration = GST_CLOCK_TIME_NONE;
           stream->wait = TRUE;
           ret = gst_stream_synchronizer_wait (self, srcpad);
@@ -767,7 +768,7 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
 
         ostream->segment.position = new_start;
 
-        self->send_gap_event = TRUE;
+        ostream->send_gap_event = TRUE;
         ostream->gap_duration = new_start - position;
         g_cond_broadcast (&ostream->stream_finish_cond);
       }
@@ -799,6 +800,7 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
   stream->segment_seqnum = G_MAXUINT32;
   stream->group_id = G_MAXUINT;
   stream->seen_data = FALSE;
+  stream->send_gap_event = FALSE;
 
   tmp = g_strdup_printf ("sink_%u", self->current_stream_number);
   stream->sinkpad = gst_pad_new_from_static_template (&sinktemplate, tmp);
@@ -921,7 +923,6 @@ gst_stream_synchronizer_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       GST_DEBUG_OBJECT (self, "State change NULL->READY");
       self->shutdown = FALSE;
-      self->send_gap_event = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG_OBJECT (self, "State change READY->PAUSED");
@@ -968,7 +969,7 @@ gst_stream_synchronizer_change_state (GstElement * element,
          * chain () will be blocked on pad_push (), so can't trigger the track
          * which reach EOS to send GAP event. */
         if (stream->is_eos && !stream->eos_sent) {
-          self->send_gap_event = TRUE;
+          stream->send_gap_event = TRUE;
           stream->gap_duration = GST_CLOCK_TIME_NONE;
           g_cond_broadcast (&stream->stream_finish_cond);
         }
@@ -983,7 +984,6 @@ gst_stream_synchronizer_change_state (GstElement * element,
       self->group_start_time = 0;
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
-      self->send_gap_event = FALSE;
       for (l = self->streams; l; l = l->next) {
         GstSyncStream *stream = l->data;
 
@@ -993,6 +993,7 @@ gst_stream_synchronizer_change_state (GstElement * element,
         stream->is_eos = FALSE;
         stream->eos_sent = FALSE;
         stream->flushing = FALSE;
+        stream->send_gap_event = FALSE;
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;

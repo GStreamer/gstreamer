@@ -47,7 +47,6 @@ struct _GstStreamSynchronizer
   /* < private > */
   GMutex lock;
   gboolean shutdown;
-  gboolean send_gap_event;
   gboolean eos;
   gboolean flushing;
 
