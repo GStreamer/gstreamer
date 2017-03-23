@@ -519,9 +519,6 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->total_bytes = 0;
   qtpad->sparse = FALSE;
 
-  qtpad->buf_head = 0;
-  qtpad->buf_tail = 0;
-
   gst_buffer_replace (&qtpad->last_buf, NULL);
 
   if (qtpad->tags) {

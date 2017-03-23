@@ -117,9 +117,6 @@ struct _GstQTPad
   GstClockTime first_ts;
   GstClockTime first_dts;
 
-  guint buf_head;
-  guint buf_tail;
-
   /* all the atom and chunk book-keeping is delegated here
    * unowned/uncounted reference, parent MOOV owns */
   AtomTRAK *trak;
