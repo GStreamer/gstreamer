@@ -3,7 +3,13 @@
 # Keep this list sorted!
 tests =	\
 	test_gst.py \
-	test_fraction.py
+	test_fraction.py \
+	test_intrange.py \
+	test_int64range.py \
+	test_doublerange.py \
+	test_fractionrange.py \
+	test_valuearray.py \
+	test_valuelist.py
 
 EXTRA_DIST = \
 	__init__.py \

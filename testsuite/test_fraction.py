@@ -98,9 +98,12 @@ class TestFraction(TestCase):
     def testPropertyMarshalling(self):
         Gst.init(None)
 
-        obj = Gst.ElementFactory.make("videoparse")
+        obj = Gst.ElementFactory.make("rawvideoparse")
         if not obj:
-            # no videoparse and I don't know of any elements in core or -base using
+            obj = Gst.ElementFactory.make("rawvideoparse")
+
+        if not obj:
+            # no (raw)videoparse and I don't know of any elements in core or -base using
             # fraction properties. Skip this test.
             return
 

@@ -269,7 +269,7 @@ class Fraction(Gst.Fraction):
         self.type = "fraction"
 
     def __repr__(self):
-        return '<Gst.Fraction %d/%d>' % (self.num, self.denom)
+        return '<Gst.Fraction %s>' % (str(self))
 
     def __value__(self):
         return self.num / self.denom
@@ -288,7 +288,8 @@ class Fraction(Gst.Fraction):
                             self.denom * other.denom)
         elif isinstance(other, int):
             return Fraction(self.num * other, self.denom)
-        raise TypeError
+        raise TypeError("%s is not supported, use Gst.Fraction or int." %
+                (type(other)))
 
     __rmul__ = __mul__
 
@@ -298,22 +299,180 @@ class Fraction(Gst.Fraction):
                             self.denom * other.num)
         elif isinstance(other, int):
             return Fraction(self.num, self.denom * other)
-        return TypeError
+        return TypeError("%s is not supported, use Gst.Fraction or int." %
+                (type(other)))
 
     __div__ = __truediv__
 
     def __rtruediv__(self, other):
         if isinstance(other, int):
             return Fraction(self.denom * other, self.num)
-        return TypeError
+        return TypeError("%s is not an int." % (type(other)))
 
     __rdiv__ = __rtruediv__
 
     def __float__(self):
         return float(self.num) / float(self.denom)
 
+    def __str__(self):
+        return '%d/%d' % (self.num, self.denom)
+
 Fraction = override(Fraction)
 __all__.append('Fraction')
+
+
+class IntRange(Gst.IntRange):
+    def __init__(self, r):
+        if not isinstance(r, range):
+            raise TypeError("%s is not a range." % (type(r)))
+
+        if (r.start >= r.stop):
+            raise TypeError("Range start must be smaller then stop")
+
+        if r.start % r.step != 0:
+            raise TypeError("Range start must be a multiple of the step")
+
+        if r.stop % r.step != 0:
+            raise TypeError("Range stop must be a multiple of the step")
+
+        self.range = r
+
+    def __repr__(self):
+        return '<Gst.IntRange [%d,%d,%d]>' % (self.range.start,
+                self.range.stop, self.range.step)
+
+    def __str__(self):
+        if self.range.step == 1:
+            return '[%d,%d]' % (self.range.start, self.range.stop)
+        else:
+            return '[%d,%d,%d]' % (self.range.start, self.range.stop,
+                    self.range.step)
+
+IntRange = override(IntRange)
+__all__.append('IntRange')
+
+
+class Int64Range(Gst.Int64Range):
+    def __init__(self, r):
+        if not isinstance(r, range):
+            raise TypeError("%s is not a range." % (type(r)))
+
+        if (r.start >= r.stop):
+            raise TypeError("Range start must be smaller then stop")
+
+        if r.start % r.step != 0:
+            raise TypeError("Range start must be a multiple of the step")
+
+        if r.stop % r.step != 0:
+            raise TypeError("Range stop must be a multiple of the step")
+
+        self.range = r
+
+    def __repr__(self):
+        return '<Gst.Int64Range [%d,%d,%d]>' % (self.range.start,
+                self.range.stop, self.range.step)
+
+    def __str__(self):
+        if self.range.step == 1:
+            return '(int64)[%d,%d]' % (self.range.start, self.range.stop)
+        else:
+            return '(int64)[%d,%d,%d]' % (self.range.start, self.range.stop,
+                    self.range.step)
+
+
+Int64Range = override(Int64Range)
+__all__.append('Int64Range')
+
+
+class DoubleRange(Gst.DoubleRange):
+    def __init__(self, start, stop):
+        self.start = float(start)
+        self.stop = float(stop)
+
+        if (start >= stop):
+            raise TypeError("Range start must be smaller then stop")
+
+    def __repr__(self):
+        return '<Gst.DoubleRange [%s,%s]>' % (str(self.start), str(self.stop))
+
+    def __str__(self):
+        return '(double)[%s,%s]' % (str(self.range.start), str(self.range.stop))
+
+
+DoubleRange = override(DoubleRange)
+__all__.append('DoubleRange')
+
+
+class FractionRange(Gst.FractionRange):
+    def __init__(self, start, stop):
+        if not isinstance(start, Gst.Fraction):
+            raise TypeError("%s is not a Gst.Fraction." % (type(start)))
+
+        if not isinstance(stop, Gst.Fraction):
+            raise TypeError("%s is not a Gst.Fraction." % (type(stop)))
+
+        if (float(start) >= float(stop)):
+            raise TypeError("Range start must be smaller then stop")
+
+        self.start = start
+        self.stop = stop
+
+    def __repr__(self):
+        return '<Gst.FractionRange [%s,%s]>' % (str(self.start),
+                str(self.stop))
+
+    def __str__(self):
+        return '(fraction)[%s,%s]' % (str(self.start), str(self.stop))
+
+FractionRange = override(FractionRange)
+__all__.append('FractionRange')
+
+
+class ValueArray(Gst.ValueArray):
+    def __init__(self, array):
+        self.array = list(array)
+
+    def __getitem__(self, index):
+        return self.array[index]
+
+    def __setitem__(self, index, value):
+        self.array[index] = value
+
+    def __len__(self):
+        return len(self.array)
+
+    def __str__(self):
+        return '<' + ','.join(map(str,self.array)) + '>'
+
+    def __repr__(self):
+        return '<Gst.ValueArray %s>' % (str(self))
+
+ValueArray = override(ValueArray)
+__all__.append('ValueArray')
+
+
+class ValueList(Gst.ValueList):
+    def __init__(self, array):
+        self.array = list(array)
+
+    def __getitem__(self, index):
+        return self.array[index]
+
+    def __setitem__(self, index, value):
+        self.array[index] = value
+
+    def __len__(self):
+        return len(self.array)
+
+    def __str__(self):
+        return '{' + ','.join(map(str,self.array)) + '}'
+
+    def __repr__(self):
+        return '<Gst.ValueList %s>' % (str(self))
+
+ValueList = override(ValueList)
+__all__.append('ValueList')
+
 
 def TIME_ARGS(time):
     if time == Gst.CLOCK_TIME_NONE:

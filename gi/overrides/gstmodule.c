@@ -127,11 +127,382 @@ fail:
   return -1;
 }
 
+static PyObject *
+gi_gst_int_range_from_value (const GValue * value)
+{
+  gint min, max, step;
+
+  min = gst_value_get_int_range_min (value);
+  max = gst_value_get_int_range_max (value);
+  step = gst_value_get_int_range_step (value);
+
+  return PyObject_CallFunction ((PyObject *) & PyRange_Type, "iii",
+      min, max, step);
+}
+
+static int
+gi_gst_int_range_to_value (GValue * value, PyObject * object)
+{
+  PyObject *range, *min, *max, *step;
+
+  range = PyObject_GetAttrString (object, "range");
+  if (range == NULL)
+    goto fail;
+
+  min = PyObject_GetAttrString (range, "start");
+  if (min == NULL)
+    goto fail;
+
+  max = PyObject_GetAttrString (range, "stop");
+  if (max == NULL)
+    goto fail;
+
+  step = PyObject_GetAttrString (range, "step");
+  if (step == NULL)
+    goto fail;
+
+  gst_value_set_int_range_step (value, PyLong_AsLong (min),
+      PyLong_AsLong (max), PyLong_AsLong (step));
+
+  return 0;
+
+fail:
+  PyErr_SetString (PyExc_KeyError,
+      "Object is not compatible with Gst.IntRange");
+  return -1;
+}
+
+static PyObject *
+gi_gst_int64_range_from_value (const GValue * value)
+{
+  gint64 min, max, step;
+
+  min = gst_value_get_int64_range_min (value);
+  max = gst_value_get_int64_range_max (value);
+  step = gst_value_get_int64_range_step (value);
+
+  return PyObject_CallFunction ((PyObject *) & PyRange_Type, "LLL",
+      min, max, step);
+}
+
+static int
+gi_gst_int64_range_to_value (GValue * value, PyObject * object)
+{
+  PyObject *range, *min, *max, *step;
+
+  range = PyObject_GetAttrString (object, "range");
+  if (range == NULL)
+    goto fail;
+
+  min = PyObject_GetAttrString (range, "start");
+  if (min == NULL)
+    goto fail;
+
+  max = PyObject_GetAttrString (range, "stop");
+  if (max == NULL)
+    goto fail;
+
+  step = PyObject_GetAttrString (range, "step");
+  if (step == NULL)
+    goto fail;
+
+  gst_value_set_int64_range_step (value, PyLong_AsLongLong (min),
+      PyLong_AsLongLong (max), PyLong_AsLongLong (step));
+
+  return 0;
+
+fail:
+  PyErr_SetString (PyExc_KeyError,
+      "Object is not compatible with Gst.Int64Range");
+  return -1;
+}
+
+static PyObject *
+gi_gst_double_range_from_value (const GValue * value)
+{
+  PyObject *module, *dict, *double_range_type, *double_range;
+  gdouble min, max;
+
+  min = gst_value_get_double_range_min (value);
+  max = gst_value_get_double_range_max (value);
+
+  module = PyImport_ImportModule ("gi.repository.Gst");
+
+  if (module == NULL) {
+    PyErr_SetString (PyExc_KeyError,
+        "Could not get module for gi.repository.Gst");
+    return NULL;
+  }
+
+  dict = PyModule_GetDict (module);
+  Py_DECREF (module);
+
+  /* For some reson we need this intermediary step */
+  module = PyMapping_GetItemString (dict, "_overrides_module");
+  if (module == NULL) {
+    PyErr_SetString (PyExc_KeyError,
+        "Could not get module for _overrides_module");
+    return NULL;
+  }
+
+  dict = PyModule_GetDict (module);
+  double_range_type = PyMapping_GetItemString (dict, "DoubleRange");
+
+  double_range = PyObject_CallFunction (double_range_type, "dd", min, max);
+
+  Py_DECREF (double_range_type);
+  Py_DECREF (module);
+
+  return double_range;
+}
+
+static int
+gi_gst_double_range_to_value (GValue * value, PyObject * object)
+{
+  PyObject *min, *max;
+
+  min = PyObject_GetAttrString (object, "start");
+  if (min == NULL)
+    goto fail;
+
+  max = PyObject_GetAttrString (object, "stop");
+  if (max == NULL)
+    goto fail;
+
+  gst_value_set_double_range (value, PyFloat_AsDouble (min),
+      PyFloat_AsDouble (max));
+
+  return 0;
+
+fail:
+  PyErr_SetString (PyExc_KeyError,
+      "Object is not compatible with Gst.DoubleRange");
+  return -1;
+}
+
+static PyObject *
+gi_gst_fraction_range_from_value (const GValue * value)
+{
+  PyObject *module, *min, *max, *dict, *fraction_range_type, *fraction_range;
+  const GValue *fraction;
+
+  fraction = gst_value_get_fraction_range_min (value);
+  min = gi_gst_fraction_from_value (fraction);
+
+  fraction = gst_value_get_fraction_range_max (value);
+  max = gi_gst_fraction_from_value (fraction);
+
+
+  module = PyImport_ImportModule ("gi.repository.Gst");
+
+  if (module == NULL) {
+    PyErr_SetString (PyExc_KeyError,
+        "Could not get module for gi.repository.Gst");
+    return NULL;
+  }
+
+  dict = PyModule_GetDict (module);
+  Py_DECREF (module);
+
+  /* For some reson we need this intermediary step */
+  module = PyMapping_GetItemString (dict, "_overrides_module");
+  if (module == NULL) {
+    PyErr_SetString (PyExc_KeyError,
+        "Could not get module for _overrides_module");
+    return NULL;
+  }
+
+  dict = PyModule_GetDict (module);
+  fraction_range_type = PyMapping_GetItemString (dict, "FractionRange");
+
+  fraction_range = PyObject_CallFunction (fraction_range_type, "OO", min, max);
+
+  Py_DECREF (fraction_range_type);
+  Py_DECREF (module);
+
+  return fraction_range;
+}
+
+static int
+gi_gst_fraction_range_to_value (GValue * value, PyObject * object)
+{
+  PyObject *min, *max;
+  GValue vmin = G_VALUE_INIT, vmax = G_VALUE_INIT;
+
+  min = PyObject_GetAttrString (object, "start");
+  if (min == NULL)
+    goto fail;
+
+  max = PyObject_GetAttrString (object, "stop");
+  if (max == NULL)
+    goto fail;
+
+  g_value_init (&vmin, GST_TYPE_FRACTION);
+  if (gi_gst_fraction_to_value (&vmin, min) < 0)
+    goto fail;
+
+  g_value_init (&vmax, GST_TYPE_FRACTION);
+  if (gi_gst_fraction_to_value (&vmax, max) < 0) {
+    g_value_unset (&vmin);
+    goto fail;
+  }
+
+  gst_value_set_fraction_range (value, &vmin, &vmax);
+  g_value_unset (&vmin);
+  g_value_unset (&vmax);
+
+  return 0;
+
+fail:
+  PyErr_SetString (PyExc_KeyError,
+      "Object is not compatible with Gst.FractionRange");
+  return -1;
+}
+
+static PyObject *
+gi_gst_array_from_value (const GValue * value)
+{
+  PyObject *list;
+  gint i;
+
+  list = PyList_New (gst_value_array_get_size (value));
+
+  for (i = 0; i < gst_value_array_get_size (value); i++) {
+    const GValue *v = gst_value_array_get_value (value, i);
+    PyList_SET_ITEM (list, i, pyg_value_as_pyobject (v, TRUE));
+  }
+
+  return list;
+}
+
+static int
+gi_gst_array_to_value (GValue * value, PyObject * object)
+{
+  gint len, i;
+
+  len = PySequence_Length (object);
+
+  for (i = 0; i < len; i++) {
+    GValue v = G_VALUE_INIT;
+    GType type;
+    PyObject *item;
+
+    item = PySequence_GetItem (object, i);
+
+    if (item == Py_None)
+      type = G_TYPE_POINTER;
+    else
+      type = pyg_type_from_object ((PyObject *) Py_TYPE (item));
+
+    if (type == G_TYPE_NONE) {
+      Py_DECREF (item);
+      goto fail;
+    }
+
+    g_value_init (&v, type);
+
+    if (pyg_value_from_pyobject (&v, item) < 0) {
+      Py_DECREF (item);
+      goto fail;
+    }
+
+    gst_value_array_append_and_take_value (value, &v);
+    Py_DECREF (item);
+  }
+
+  return 0;
+
+fail:
+  PyErr_SetString (PyExc_KeyError,
+      "Object is not compatible with Gst.ValueArray");
+  return -1;
+}
+
+static PyObject *
+gi_gst_list_from_value (const GValue * value)
+{
+  PyObject *list;
+  gint i;
+
+  list = PyList_New (gst_value_list_get_size (value));
+
+  for (i = 0; i < gst_value_list_get_size (value); i++) {
+    const GValue *v = gst_value_list_get_value (value, i);
+    PyList_SET_ITEM (list, i, pyg_value_as_pyobject (v, TRUE));
+  }
+
+  return list;
+}
+
+static int
+gi_gst_list_to_value (GValue * value, PyObject * object)
+{
+  gint len, i;
+
+  len = PySequence_Length (object);
+
+  for (i = 0; i < len; i++) {
+    GValue v = G_VALUE_INIT;
+    GType type;
+    PyObject *item;
+
+    item = PySequence_GetItem (object, i);
+
+    if (item == Py_None)
+      type = G_TYPE_POINTER;
+    else
+      type = pyg_type_from_object ((PyObject *) Py_TYPE (item));
+
+    if (type == G_TYPE_NONE) {
+      Py_DECREF (item);
+      goto fail;
+    }
+
+    g_value_init (&v, type);
+
+    if (pyg_value_from_pyobject (&v, item) < 0) {
+      Py_DECREF (item);
+      goto fail;
+    }
+
+    gst_value_list_append_and_take_value (value, &v);
+    Py_DECREF (item);
+  }
+
+  return 0;
+
+fail:
+  PyErr_SetString (PyExc_KeyError,
+      "Object is not compatible with Gst.ValueList");
+  return -1;
+}
+
 void
 gi_gst_register_types (PyObject * d)
 {
   pyg_register_gtype_custom (GST_TYPE_FRACTION,
       gi_gst_fraction_from_value, gi_gst_fraction_to_value);
+  pyg_register_gtype_custom (GST_TYPE_INT_RANGE,
+      gi_gst_int_range_from_value, gi_gst_int_range_to_value);
+  pyg_register_gtype_custom (GST_TYPE_INT64_RANGE,
+      gi_gst_int64_range_from_value, gi_gst_int64_range_to_value);
+  pyg_register_gtype_custom (GST_TYPE_DOUBLE_RANGE,
+      gi_gst_double_range_from_value, gi_gst_double_range_to_value);
+  pyg_register_gtype_custom (GST_TYPE_FRACTION_RANGE,
+      gi_gst_fraction_range_from_value, gi_gst_fraction_range_to_value);
+  pyg_register_gtype_custom (GST_TYPE_ARRAY,
+      gi_gst_array_from_value, gi_gst_array_to_value);
+  pyg_register_gtype_custom (GST_TYPE_LIST,
+      gi_gst_list_from_value, gi_gst_list_to_value);
+#if 0
+  /* TODO */
+  pyg_register_gtype_custom (GST_TYPE_DATE_TIME,
+      gi_gst_date_time_from_value, gi_gst_date_time_to_value);
+  pyg_register_gtype_custom (GST_TYPE_FLAG_SET,
+      gi_gst_flag_set_from_value, gi_gst_flag_set_to_value);
+  pyg_register_gtype_custom (GST_TYPE_BITMASK,
+      gi_gst_bitmask_from_value, gi_gst_bitmask_to_value);
+#endif
 }
 
 static int
