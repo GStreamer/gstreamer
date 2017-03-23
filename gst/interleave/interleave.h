@@ -61,6 +61,7 @@ struct _GstInterleave
   gboolean channel_positions_from_input;
 
   gint default_channels_ordering_map[64];
+  guint64 channel_mask;
 
   GstCaps *sinkcaps;
   gint configured_sinkpads_counter;
