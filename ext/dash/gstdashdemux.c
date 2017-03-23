@@ -1341,6 +1341,18 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
       forward, flags, ts, final_ts);
 
   if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
+    GstClockTime period_start, offset;
+
+    period_start = gst_mpd_parser_get_period_start_time (dashdemux->client);
+    offset =
+        gst_mpd_parser_get_stream_presentation_offset (dashdemux->client,
+        dashstream->index);
+
+    if (G_UNLIKELY (ts < period_start))
+      ts = offset;
+    else
+      ts += offset - period_start;
+
     if (last_index != dashstream->active_stream->segment_index ||
         last_repeat != dashstream->active_stream->segment_repeat_index) {
       GST_LOG_OBJECT (stream->pad,
