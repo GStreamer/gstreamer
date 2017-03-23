@@ -3074,9 +3074,10 @@ store_info:
   GST_DEBUG_OBJECT (v4l2object->element, "Got sizeimage %" G_GSIZE_FORMAT,
       info->size);
 
-  /* to avoid copies we need video meta if top or left padding */
+  /* to avoid copies we need video meta if there is padding */
   v4l2object->need_video_meta =
-      ((align->padding_top + align->padding_left) != 0);
+      ((align->padding_top + align->padding_left + align->padding_right +
+          align->padding_bottom) != 0);
 
   /* ... or if stride is non "standard" */
   if (!standard_stride)
