@@ -36,8 +36,8 @@ def get_python_libloc():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        print("Only 1 argument accepted")
+    if len(sys.argv) > 3:
+        print("At most 2 arguments accepted")
         exit(1)
 
     if sys.argv[1] == '--abiflags':
@@ -47,7 +47,25 @@ if __name__ == "__main__":
         suffix = get("EXT_SUFFIX") or get("SO") or ".so"
         print(suffix[1:])
     elif sys.argv[1] == '--pygi-overridedir':
+        prefix = sys.argv[2]
+        version = sys.version_info
+
+        # If we are installing in the same prefix as PyGobject
+        # make sure to install in the right place.
         import gi
-        print(gi._overridesdir)
+        if os.path.commonprefix([gi._overridesdir, prefix]) == prefix:
+            print(gi._overridesdir)
+            exit(0)
+
+        # Otherwise follow python's way of install site packages inside
+        # the provided prefix
+        if os.name == 'posix':
+            print(os.path.join(
+                prefix, 'lib', 'python%d.%d' % (version.major, version.minor),
+                'site-packages', 'gi', 'overrides'))
+        else:
+            print(os.path.join(
+                prefix, 'Lib', 'Python%d%d' % (version.major, version.minor),
+                'site-packages', 'gi', 'overrides'))
     elif sys.argv[1] == '--libloc':
         print(get_python_libloc())

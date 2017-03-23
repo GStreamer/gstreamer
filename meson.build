@@ -22,14 +22,38 @@ pygobject_dep = dependency('pygobject-3.0', version : '>= 3.0')
 python_dep = dependency('python3')
 
 python = find_program('python3')
-pythondetector = find_program('pythondetector')
-py_so_suffix = run_command(pythondetector, '--sosuffix').stdout().strip()
-python_abi_flags = run_command(pythondetector, '--abiflags').stdout().strip()
-pylib_loc = run_command(pythondetector, '--libloc').stdout().strip()
+pythondetector = find_program('scripts/pythondetector')
+
+cres = run_command(pythondetector, '--sosuffix')
+if cres.returncode() != 0
+    error('Could not detect python sosuffix' + cres.stdout() + cres.stderr())
+endif
+py_so_suffix = cres.stdout().strip()
+
+cres = run_command(pythondetector, '--abiflags')
+if cres.returncode() != 0
+    error('Could not detect python abiflags' + cres.stdout() + cres.stderr())
+endif
+python_abi_flags = cres.stdout().strip()
+
+cres = run_command(pythondetector, '--libloc')
+if cres.returncode() != 0
+    error('Could not detect python library location' + cres.stdout() + cres.stderr())
+endif
+pylib_loc = cres.stdout().strip()
+
 assert(pylib_loc != 'None', 'Python dynamic library path could not be determined')
 pygi_override_dir = get_option('pygi-overrides-dir')
 if pygi_override_dir == ''
-    pygi_override_dir = run_command(pythondetector, '--pygi-overridedir').stdout().strip()
+    cres = run_command(pythondetector, '--pygi-overridedir',
+            get_option('prefix'))
+    if cres.returncode() != 0
+        error('Could not detect PyGObject overrides location' + cres.stdout() + cres.stderr())
+    endif
+    pygi_override_dir = cres.stdout().strip()
+    if cres.stderr() != ''
+        message(cres.stderr())
+    endif
 endif
 message('pygobject overrides directory ' + pygi_override_dir)
 
@@ -39,7 +63,6 @@ if host_machine.system() == 'windows'
 elif host_machine.system() == 'darwin'
   pylib_suffix = 'dylib'
 endif
-
 cdata = configuration_data()
 cdata.set('PACKAGE', '"gst-python"')
 cdata.set('VERSION', '"@0@"'.format(gst_version))
