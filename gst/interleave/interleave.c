@@ -310,14 +310,15 @@ gst_interleave_set_channel_positions (GstInterleave * self, GstStructure * s)
 {
   guint64 channel_mask = 0;
 
-  if (self->channel_positions != NULL &&
+  if (self->channels <= 64 &&
+      self->channel_positions != NULL &&
       self->channels == self->channel_positions->n_values) {
     if (!gst_interleave_channel_positions_to_mask (self->channel_positions,
             self->default_channels_ordering_map, &channel_mask)) {
       GST_WARNING_OBJECT (self, "Invalid channel positions, using NONE");
       channel_mask = 0;
     }
-  } else {
+  } else if (self->channels <= 64) {
     GST_WARNING_OBJECT (self, "Using NONE channel positions");
   }
   gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
@@ -1228,8 +1229,10 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
 
     empty = FALSE;
     channel = GST_INTERLEAVE_PAD_CAST (cdata->pad)->channel;
-    outdata =
-        write_info.data + width * self->default_channels_ordering_map[channel];
+    if (self->channels <= 64) {
+      channel = self->default_channels_ordering_map[channel];
+    }
+    outdata = write_info.data + width * channel;
 
     self->func (outdata, input_info.data, self->channels, nsamples);
     gst_buffer_unmap (inbuf, &input_info);
