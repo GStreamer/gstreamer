@@ -127,18 +127,16 @@ foreach t : base_tests
     )
 
     env = environment()
-    env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
+    env.set('GST_PLUGIN_PATH_1_0',
+        meson.build_root(),
+        '@0@/@1@/gstreamer-1.0'.format(get_option('prefix'), get_option('libdir')),
+        seperator: ':')
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('GST_STATE_IGNORE_ELEMENTS', 'cdio cdparanoiasrc libvisual_ alsasrc alsasink')
     env.set('CK_DEFAULT_TIMEOUT', '20')
     env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', gst_tag_dir + '/license-translations.dict')
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
         'gst-plugins-base@' + meson.build_root(), separator: ':')
-    env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
-
-    foreach plugindir: pluginsdirs
-      env.append('GST_PLUGIN_PATH_1_0', plugindir)
-    endforeach
     env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
     test(test_name, exe, env: env, timeout: 3 * 60)
   endif
@@ -154,17 +152,16 @@ foreach group : [1, 2, 3, 4, 5, 6]
 
   # TODO Use env.copy when it is in meson
   env = environment()
-  env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
+  env.set('GST_PLUGIN_PATH_1_0',
+      meson.build_root(),
+      '@0@/@1@/gstreamer-1.0'.format(get_option('prefix'), get_option('libdir')),
+      seperator: ':')
   env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
   env.set('GST_STATE_IGNORE_ELEMENTS', 'cdio cdparanoiasrc libvisual_ alsasrc alsasink')
   env.set('CK_DEFAULT_TIMEOUT', '20')
   env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', gst_tag_dir + '/license-translations.dict')
   env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
       'gst-plugins-base@' + meson.build_root(), separator: ':')
-  env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
-  foreach plugindir: pluginsdirs
-    env.append('GST_PLUGIN_PATH_1_0', plugindir)
-  endforeach
   env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
 
   test(vscale_test_name, exe, env: env, timeout: 3 * 60)
