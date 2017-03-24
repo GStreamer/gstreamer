@@ -10,7 +10,7 @@ if mjpegtools_dep.found()
       'gstmpeg2encpicturereader.cc',
       cpp_args : gst_plugins_bad_args + ['-DGST_MJPEGTOOLS_API=' + mjpegtools_api],
       link_args : noseh_link_args,
-      include_directories : [configinc],
+      include_directories : [configinc, libsinc],
       dependencies : [gstvideo_dep, mjpegtools_dep, mpeg2enc_dep],
       install : true,
       install_dir : plugins_install_dir,
