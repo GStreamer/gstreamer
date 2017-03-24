@@ -65,12 +65,10 @@ typedef struct
 } CapturePacket;
 
 static void
-capture_packet_free (void *data)
+capture_packet_clear (CapturePacket * packet)
 {
-  CapturePacket *packet = (CapturePacket *) data;
-
   packet->packet->Release ();
-  g_free (packet);
+  memset (packet, 0, sizeof (*packet));
 }
 
 typedef struct
@@ -207,7 +205,9 @@ gst_decklink_audio_src_init (GstDecklinkAudioSrc * self)
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
 
-  g_queue_init (&self->current_packets);
+  self->current_packets =
+      gst_queue_array_new_for_struct (sizeof (CapturePacket),
+      DEFAULT_BUFFER_SIZE);
 }
 
 void
@@ -280,6 +280,15 @@ gst_decklink_audio_src_finalize (GObject * object)
 
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
+  if (self->current_packets) {
+    while (gst_queue_array_get_length (self->current_packets) > 0) {
+      CapturePacket *tmp = (CapturePacket *)
+          gst_queue_array_pop_head_struct (self->current_packets);
+      capture_packet_clear (tmp);
+    }
+    gst_queue_array_free (self->current_packets);
+    self->current_packets = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -508,21 +517,23 @@ gst_decklink_audio_src_got_packet (GstElement * element,
 
   g_mutex_lock (&self->lock);
   if (!self->flushing) {
-    CapturePacket *p;
+    CapturePacket p;
 
-    while (g_queue_get_length (&self->current_packets) >= self->buffer_size) {
-      p = (CapturePacket *) g_queue_pop_head (&self->current_packets);
+    while (gst_queue_array_get_length (self->current_packets) >=
+        self->buffer_size) {
+      CapturePacket *tmp = (CapturePacket *)
+          gst_queue_array_pop_head_struct (self->current_packets);
       GST_WARNING_OBJECT (self, "Dropping old packet at %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (p->timestamp));
-      capture_packet_free (p);
+          GST_TIME_ARGS (tmp->timestamp));
+      capture_packet_clear (tmp);
     }
 
-    p = (CapturePacket *) g_malloc0 (sizeof (CapturePacket));
-    p->packet = packet;
-    p->timestamp = timestamp;
-    p->no_signal = no_signal;
+    memset (&p, 0, sizeof (p));
+    p.packet = packet;
+    p.timestamp = timestamp;
+    p.no_signal = no_signal;
     packet->AddRef ();
-    g_queue_push_tail (&self->current_packets, p);
+    gst_queue_array_push_tail_struct (self->current_packets, &p);
     g_cond_signal (&self->cond);
   }
   g_mutex_unlock (&self->lock);
@@ -536,7 +547,7 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   const guint8 *data;
   glong sample_count;
   gsize data_size;
-  CapturePacket *p;
+  CapturePacket p;
   AudioPacket *ap;
   GstClockTime timestamp, duration;
   GstClockTime start_time, end_time;
@@ -545,29 +556,29 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
 retry:
   g_mutex_lock (&self->lock);
-  while (g_queue_is_empty (&self->current_packets) && !self->flushing) {
+  while (gst_queue_array_is_empty (self->current_packets) && !self->flushing) {
     g_cond_wait (&self->cond, &self->lock);
   }
 
-  p = (CapturePacket *) g_queue_pop_head (&self->current_packets);
-  g_mutex_unlock (&self->lock);
-
   if (self->flushing) {
-    if (p)
-      capture_packet_free (p);
     GST_DEBUG_OBJECT (self, "Flushing");
+    g_mutex_unlock (&self->lock);
     return GST_FLOW_FLUSHING;
   }
 
-  p->packet->GetBytes ((gpointer *) & data);
-  sample_count = p->packet->GetSampleFrameCount ();
+  p = *(CapturePacket *)
+      gst_queue_array_pop_head_struct (self->current_packets);
+  g_mutex_unlock (&self->lock);
+
+  p.packet->GetBytes ((gpointer *) & data);
+  sample_count = p.packet->GetSampleFrameCount ();
   data_size = self->info.bpf * sample_count;
 
-  if (p->timestamp == GST_CLOCK_TIME_NONE && self->next_offset == (guint64) - 1) {
+  if (p.timestamp == GST_CLOCK_TIME_NONE && self->next_offset == (guint64) - 1) {
     GST_DEBUG_OBJECT (self,
         "Got packet without timestamp before initial "
         "timestamp after discont - dropping");
-    capture_packet_free (p);
+    capture_packet_clear (&p);
     goto retry;
   }
 
@@ -578,12 +589,12 @@ retry:
       (gpointer) data, data_size, 0, data_size, ap,
       (GDestroyNotify) audio_packet_free);
 
-  ap->packet = p->packet;
-  p->packet->AddRef ();
+  ap->packet = p.packet;
+  p.packet->AddRef ();
   ap->input = self->input->input;
   ap->input->AddRef ();
 
-  timestamp = p->timestamp;
+  timestamp = p.timestamp;
 
   // Jitter and discontinuity handling, based on audiobasesrc
   start_time = timestamp;
@@ -651,7 +662,7 @@ retry:
         self->info.rate) - timestamp;
   }
 
-  if (p->no_signal)
+  if (p.no_signal)
     GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_GAP);
   GST_BUFFER_TIMESTAMP (*buffer) = timestamp;
   GST_BUFFER_DURATION (*buffer) = duration;
@@ -661,7 +672,7 @@ retry:
       GST_TIME_FORMAT, *buffer, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (*buffer)));
 
-  capture_packet_free (p);
+  capture_packet_clear (&p);
 
   return flow_ret;
 }
@@ -724,8 +735,11 @@ gst_decklink_audio_src_unlock_stop (GstBaseSrc * bsrc)
 
   g_mutex_lock (&self->lock);
   self->flushing = FALSE;
-  g_queue_foreach (&self->current_packets, (GFunc) capture_packet_free, NULL);
-  g_queue_clear (&self->current_packets);
+  while (gst_queue_array_get_length (self->current_packets) > 0) {
+    CapturePacket *tmp = (CapturePacket *)
+        gst_queue_array_pop_head_struct (self->current_packets);
+    capture_packet_clear (tmp);
+  }
   g_mutex_unlock (&self->lock);
 
   return TRUE;
@@ -795,8 +809,11 @@ gst_decklink_audio_src_stop (GstDecklinkAudioSrc * self)
 {
   GST_DEBUG_OBJECT (self, "Stopping");
 
-  g_queue_foreach (&self->current_packets, (GFunc) capture_packet_free, NULL);
-  g_queue_clear (&self->current_packets);
+  while (gst_queue_array_get_length (self->current_packets) > 0) {
+    CapturePacket *tmp = (CapturePacket *)
+        gst_queue_array_pop_head_struct (self->current_packets);
+    capture_packet_clear (tmp);
+  }
 
   if (self->input && self->input->audio_enabled) {
     g_mutex_lock (&self->input->lock);
