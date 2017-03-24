@@ -24,6 +24,8 @@
 #ifndef __GST_QUEUE_ARRAY_H__
 #define __GST_QUEUE_ARRAY_H__
 
+G_BEGIN_DECLS
+
 /**
  * GstQueueArray: (skip)
  */
@@ -65,5 +67,7 @@ gpointer        gst_queue_array_peek_head_struct (GstQueueArray * array);
 gboolean        gst_queue_array_drop_struct      (GstQueueArray * array,
                                                   guint           idx,
                                                   gpointer        p_struct);
+
+G_END_DECLS
 
 #endif
