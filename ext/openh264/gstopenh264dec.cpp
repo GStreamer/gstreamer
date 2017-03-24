@@ -202,6 +202,7 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
   guint i;
   guint8 *p;
   guint row_stride, component_width, component_height, src_width, row;
+  gboolean at_eos = (frame == NULL);
 
   if (frame) {
     if (!gst_buffer_map (frame->input_buffer, &map_info, GST_MAP_READ)) {
@@ -247,6 +248,15 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
     }
   }
 
+  /* No output available yet */
+  if (dst_buf_info.iBufferStatus != 1) {
+    if (at_eos)
+      return GST_FLOW_EOS;
+
+    gst_video_codec_frame_unref (frame);
+    return GST_FLOW_OK;
+  }
+
   /* FIXME: openh264 has no way for us to get a connection
    * between the input and output frames, we just have to
    * guess based on the input. Fortunately openh264 can
@@ -257,10 +267,13 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
     return GST_FLOW_EOS;
   }
 
-  /* No output available yet */
-  if (dst_buf_info.iBufferStatus != 1) {
-    gst_video_codec_frame_unref (frame);
-    return GST_FLOW_OK;
+  {
+    GstClockTime pts = dst_buf_info.uiOutYuvTimeStamp;
+    if (pts != frame->pts) {
+      GST_DEBUG_OBJECT (decoder, "Got output PTS %" GST_TIME_FORMAT
+          " but expected %" GST_TIME_FORMAT, GST_TIME_ARGS (pts),
+          GST_TIME_ARGS (frame->pts));
+    }
   }
 
   actual_width = dst_buf_info.UsrData.sSystemBuffer.iWidth;
