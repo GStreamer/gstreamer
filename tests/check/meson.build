@@ -128,8 +128,7 @@ foreach t : base_tests
 
     env = environment()
     env.set('GST_PLUGIN_PATH_1_0',
-        meson.build_root(),
-        '@0@/@1@/gstreamer-1.0'.format(get_option('prefix'), get_option('libdir')),
+        meson.build_root(), '@0@/@1@'.format(get_option('prefix'), plugins_install_dir),
         seperator: ':')
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('GST_STATE_IGNORE_ELEMENTS', 'cdio cdparanoiasrc libvisual_ alsasrc alsasink')
@@ -153,8 +152,7 @@ foreach group : [1, 2, 3, 4, 5, 6]
   # TODO Use env.copy when it is in meson
   env = environment()
   env.set('GST_PLUGIN_PATH_1_0',
-      meson.build_root(),
-      '@0@/@1@/gstreamer-1.0'.format(get_option('prefix'), get_option('libdir')),
+      meson.build_root(), '@0@/@1@'.format(get_option('prefix'), plugins_install_dir),
       seperator: ':')
   env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
   env.set('GST_STATE_IGNORE_ELEMENTS', 'cdio cdparanoiasrc libvisual_ alsasrc alsasink')
