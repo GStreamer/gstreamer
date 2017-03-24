@@ -313,7 +313,7 @@ gst_param_spec_array_get_type (void)
       _gst_param_array_validate,        /* value_validate    */
       _gst_param_array_values_cmp,      /* values_cmp        */
     };
-    pspec_info.value_type = GST_TYPE_ARRAY;
+    pspec_info.value_type = gst_value_array_get_type ();
     type = g_param_type_register_static ("GstParamArray", &pspec_info);
   }
   return type;
