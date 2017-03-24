@@ -2643,7 +2643,8 @@ gst_adaptive_demux_stream_wait_manifest_update (GstAdaptiveDemux * demux,
     g_mutex_unlock (&stream->fragment_download_lock);
 
     /* Got a new fragment or not live anymore? */
-    if (gst_adaptive_demux_stream_has_next_fragment (demux, stream)) {
+    if (gst_adaptive_demux_stream_update_fragment_info (demux, stream) ==
+        GST_FLOW_OK) {
       GST_DEBUG_OBJECT (demux, "new fragment available, "
           "not waiting for manifest update");
       ret = TRUE;
