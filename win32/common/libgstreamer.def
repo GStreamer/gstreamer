@@ -1555,6 +1555,7 @@ EXPORTS
 	gst_util_fraction_multiply
 	gst_util_fraction_to_double
 	gst_util_gdouble_to_guint64
+	gst_util_get_object_array
 	gst_util_get_timestamp
 	gst_util_greatest_common_divisor
 	gst_util_greatest_common_divisor_int64
@@ -1564,7 +1565,6 @@ EXPORTS
 	gst_util_seqnum_next
 	gst_util_set_object_arg
 	gst_util_set_object_array
-	gst_util_get_object_array
 	gst_util_set_value_from_string
 	gst_util_uint64_scale
 	gst_util_uint64_scale_ceil
