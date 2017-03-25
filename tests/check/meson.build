@@ -37,7 +37,8 @@ if not meson.is_subproject()
   pkgconfig = find_program('pkg-config')
   runcmd = run_command(pkgconfig, '--variable=pluginsdir',
       'gstreamer-' + apiversion, 'gstreamer-plugins-base-' + apiversion,
-      'gstreamer-plugins-bad-' + apiversion)
+      'gstreamer-plugins-bad-' + apiversion,
+      'gstreamer-plugins-good-' + apiversion)
 
   if runcmd.returncode() == 0
       pluginsdirs = runcmd.stdout().split()
@@ -56,14 +57,11 @@ foreach t : ges_tests
 
   if not skip_test
     env = environment()
-    env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('GST_STATE_IGNORE_ELEMENTS', '')
     env.set('CK_DEFAULT_TIMEOUT', '20')
     env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
-    foreach plugindir: pluginsdirs
-      env.append('GST_PLUGIN_PATH_1_0', plugindir)
-    endforeach
+    env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
 
     exe = executable(test_name, '@0@.c'.format(test_name),
         'ges/test-utils.c', 'nle/common.c',
