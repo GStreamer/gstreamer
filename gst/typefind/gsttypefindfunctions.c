@@ -503,7 +503,8 @@ hls_type_find (GstTypeFind * tf, gpointer unused)
 {
   DataScanCtx c = { 0, NULL, 0 };
 
-  if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 7)))
+  /* Minimum useful size is #EXTM3U\n + 1 tag + ':' = 30 bytes */
+  if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 30)))
     return;
 
   if (memcmp (c.data, "#EXTM3U", 7))
@@ -511,8 +512,8 @@ hls_type_find (GstTypeFind * tf, gpointer unused)
 
   data_scan_ctx_advance (tf, &c, 7);
 
-  /* Check only the first 256 bytes */
-  while (c.offset < 256) {
+  /* Check only the first 4KB */
+  while (c.offset < 4096) {
     if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 21)))
       return;
 
