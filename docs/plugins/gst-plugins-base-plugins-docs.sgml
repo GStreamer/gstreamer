@@ -11,7 +11,7 @@
     <releaseinfo>
       for GStreamer Base Plugins &GST_API_VERSION; (&GST_VERSION;)
       The latest version of this documentation can be found on-line at
-      <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base/html/</ulink>.
+      <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/</ulink>.
     </releaseinfo>
   </bookinfo>
 
