@@ -673,8 +673,11 @@ moov_recov_parse_trak (MoovRecovFile * moovrf, TrakRecovData * trakrd)
   if (!moov_recov_parse_mdia (moovrf, trakrd))
     return FALSE;
 
-  fseek (moovrf->file, (long int) trakrd->mdia_file_offset + trakrd->mdia_size,
-      SEEK_SET);
+  if (fseek (moovrf->file,
+          (long int) trakrd->mdia_file_offset + trakrd->mdia_size,
+          SEEK_SET) != 0)
+    return FALSE;
+
   trakrd->extra_atoms_offset = ftell (moovrf->file);
   trakrd->extra_atoms_size = size - (trakrd->extra_atoms_offset - offset);
 
