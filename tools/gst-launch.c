@@ -865,6 +865,8 @@ event_loop (GstElement * pipeline, gboolean blocking, gboolean do_progress,
             val_str = gst_caps_to_string (g_value_get_boxed (val));
           else if (G_VALUE_TYPE (val) == GST_TYPE_TAG_LIST)
             val_str = gst_tag_list_to_string (g_value_get_boxed (val));
+          else if (G_VALUE_TYPE (val) == GST_TYPE_STRUCTURE)
+            val_str = gst_structure_to_string (g_value_get_boxed (val));
           else
             val_str = gst_value_serialize (val);
         } else {
