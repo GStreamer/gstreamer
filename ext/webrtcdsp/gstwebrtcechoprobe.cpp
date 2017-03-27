@@ -277,7 +277,8 @@ gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
 
   GST_WEBRTC_ECHO_PROBE_LOCK (self);
 
-  if (!GST_CLOCK_TIME_IS_VALID (self->latency))
+  if (!GST_CLOCK_TIME_IS_VALID (self->latency) ||
+      !GST_AUDIO_INFO_IS_VALID (&self->info))
     goto done;
 
   /* In delay agnostic mode, just return 10ms of data */
