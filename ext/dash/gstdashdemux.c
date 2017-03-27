@@ -1787,7 +1787,7 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
   } else {
     /* Get the next position satisfying the download time */
     ret = gst_segment_position_from_running_time (&stream->segment,
-        GST_FORMAT_TIME, cur_running + dashstream->average_download_time);
+        GST_FORMAT_TIME, cur_running);
   }
   return ret;
 }
