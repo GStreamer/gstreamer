@@ -323,7 +323,7 @@ fail:
 static PyObject *
 gi_gst_array_from_value (const GValue * value)
 {
-  PyObject *list;
+  PyObject *list, *array_type, *array;
   gint i;
 
   list = PyList_New (gst_value_array_get_size (value));
@@ -333,7 +333,12 @@ gi_gst_array_from_value (const GValue * value)
     PyList_SET_ITEM (list, i, pyg_value_as_pyobject (v, TRUE));
   }
 
-  return list;
+  array_type = gi_gst_get_type ("ValueArray");
+  array = PyObject_CallFunction (array_type, "N", list);
+
+  Py_DECREF (array_type);
+
+  return array;
 }
 
 static int
@@ -382,7 +387,7 @@ fail:
 static PyObject *
 gi_gst_list_from_value (const GValue * value)
 {
-  PyObject *list;
+  PyObject *list, *value_list_type, *value_list;
   gint i;
 
   list = PyList_New (gst_value_list_get_size (value));
@@ -392,7 +397,12 @@ gi_gst_list_from_value (const GValue * value)
     PyList_SET_ITEM (list, i, pyg_value_as_pyobject (v, TRUE));
   }
 
-  return list;
+  value_list_type = gi_gst_get_type ("ValueList");
+  value_list = PyObject_CallFunction (value_list_type, "N", list);
+
+  Py_DECREF (value_list_type);
+
+  return value_list;
 }
 
 static int

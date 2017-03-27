@@ -54,3 +54,11 @@ class TestFraction(TestCase):
 
         self.failUnlessEqual(value[0], Gst.Fraction(1, 30))
         self.failUnlessEqual(value[1], Gst.Fraction(1, 2))
+
+        st["matrix"] = L([L([0, 1]), L([-1 ,0])])
+        value = st["matrix"]
+
+        self.failUnlessEqual(value[0][0], 0)
+        self.failUnlessEqual(value[0][1], 1)
+        self.failUnlessEqual(value[1][0], -1)
+        self.failUnlessEqual(value[1][1], 0)

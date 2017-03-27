@@ -82,6 +82,18 @@ class TestFraction(TestCase):
         st = Gst.Structure.new_empty("video/x-raw")
         st["array"] = A([Gst.Fraction(1, 30), Gst.Fraction(1, 2)])
         value = st["array"]
+        st["array"] = A(value)
 
         self.failUnlessEqual(value[0], Gst.Fraction(1, 30))
         self.failUnlessEqual(value[1], Gst.Fraction(1, 2))
+
+        st["matrix"] = A([A([0, 1]), A([-1, 0])])
+        value = st["matrix"]
+
+        self.failUnlessEqual(value[0][0], 0)
+        self.failUnlessEqual(value[0][1], 1)
+        self.failUnlessEqual(value[1][0], -1)
+        self.failUnlessEqual(value[1][1], 0)
+    
+
+        
