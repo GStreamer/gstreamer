@@ -2087,7 +2087,7 @@ GST_START_TEST
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <AdaptationSet>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
@@ -2125,7 +2125,7 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation_baseURL)
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <AdaptationSet>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <BaseURL serviceLocation=\"TestServiceLocation\""
       "                 byteRange=\"TestByteRange\">TestBaseURL</BaseURL>"
       "      </Representation></AdaptationSet></Period></MPD>";
@@ -2166,7 +2166,7 @@ GST_START_TEST
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <AdaptationSet>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SubRepresentation level=\"100\""
       "                           dependencyLevel=\"1 2 3\""
       "                           bandwidth=\"200\""
@@ -2219,7 +2219,7 @@ GST_START_TEST
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <AdaptationSet>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SubRepresentation>"
       "        </SubRepresentation>"
       "      </Representation></AdaptationSet></Period></MPD>";
@@ -2261,7 +2261,7 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation_segmentBase)
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <AdaptationSet>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SegmentBase>"
       "        </SegmentBase>"
       "      </Representation></AdaptationSet></Period></MPD>";
@@ -2300,7 +2300,7 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_representation_segmentList)
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <AdaptationSet>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SegmentList duration=\"1\">"
       "        </SegmentList>"
       "      </Representation></AdaptationSet></Period></MPD>";
@@ -2339,7 +2339,7 @@ GST_START_TEST
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period>"
       "    <AdaptationSet>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SegmentTemplate duration=\"1\">"
       "        </SegmentTemplate>"
       "      </Representation></AdaptationSet></Period></MPD>";
@@ -2677,13 +2677,13 @@ GST_START_TEST (dash_mpdparser_bitstreamSwitching_inheritance)
       "          bitstreamSwitching=\"true\">"
       "    <AdaptationSet id=\"1\""
       "                   mimeType=\"video/mp4\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation>"
       "    </AdaptationSet>"
       "    <AdaptationSet id=\"2\""
       "                   mimeType=\"audio\""
       "                   bitstreamSwitching=\"false\">"
-      "      <Representation>"
+      "      <Representation id=\"2\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
@@ -2888,7 +2888,7 @@ GST_START_TEST (dash_mpdparser_setup_streaming)
       "          duration=\"P0Y0M1DT1H1M1S\">"
       "    <AdaptationSet id=\"1\""
       "                   mimeType=\"video/mp4\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
@@ -3209,15 +3209,15 @@ GST_START_TEST (dash_mpdparser_activeStream_selection)
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
       "    <AdaptationSet id=\"1\" mimeType=\"video/mp4\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation>"
       "    </AdaptationSet>"
       "    <AdaptationSet id=\"2\" mimeType=\"audio\">"
-      "      <Representation>"
+      "      <Representation id=\"2\" bandwidth=\"250000\">"
       "      </Representation>"
       "    </AdaptationSet>"
       "    <AdaptationSet id=\"3\" mimeType=\"application\">"
-      "      <Representation>"
+      "      <Representation id=\"3\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
@@ -3320,7 +3320,7 @@ GST_START_TEST (dash_mpdparser_activeStream_parameters)
       "                   height=\"240\""
       "                   bitstreamSwitching=\"true\""
       "                   audioSamplingRate=\"48000\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
@@ -3401,15 +3401,15 @@ GST_START_TEST (dash_mpdparser_get_audio_languages)
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
       "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation>"
       "    </AdaptationSet>"
       "    <AdaptationSet id=\"2\" mimeType=\"video/mp4\">"
-      "      <Representation>"
+      "      <Representation id=\"2\" bandwidth=\"250000\">"
       "      </Representation>"
       "    </AdaptationSet>"
       "    <AdaptationSet id=\"3\" mimeType=\"audio\" lang=\"fr\">"
-      "      <Representation>"
+      "      <Representation id=\"3\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
@@ -3505,7 +3505,7 @@ GST_START_TEST (dash_mpdparser_get_baseURL1)
       "  <BaseURL>http://example.com/</BaseURL>"
       "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
       "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   GstMpdClient *mpdclient = setup_mpd_client (xml);
@@ -3532,7 +3532,7 @@ GST_START_TEST (dash_mpdparser_get_baseURL2)
       "    <BaseURL> /period_base_url/</BaseURL>"
       "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
       "      <BaseURL>adaptation_base_url</BaseURL>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <BaseURL>representation_base_url</BaseURL>"
       "      </Representation></AdaptationSet></Period></MPD>";
 
@@ -3574,7 +3574,7 @@ GST_START_TEST (dash_mpdparser_get_baseURL3)
       "    <BaseURL> /period_base_url/</BaseURL>"
       "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
       "      <BaseURL>adaptation_base_url</BaseURL>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <BaseURL>/representation_base_url</BaseURL>"
       "      </Representation></AdaptationSet></Period></MPD>";
 
@@ -3614,7 +3614,7 @@ GST_START_TEST (dash_mpdparser_get_baseURL4)
       "    <BaseURL> /period_base_url/</BaseURL>"
       "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
       "      <BaseURL>adaptation_base_url/</BaseURL>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <BaseURL>representation_base_url/</BaseURL>"
       "      </Representation></AdaptationSet></Period></MPD>";
 
@@ -3666,7 +3666,7 @@ GST_START_TEST (dash_mpdparser_get_baseURL5)
       "      <BaseURL>adaptation_base_url2/</BaseURL>"
       "      <BaseURL>adaptation_base_url3/</BaseURL>"
       "      <BaseURL>adaptation_base_url4/</BaseURL>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <BaseURL>representation_base_url1/</BaseURL>"
       "        <BaseURL>representation_base_url2/</BaseURL>"
       "        <BaseURL>representation_base_url3/</BaseURL>"
@@ -3748,7 +3748,7 @@ GST_START_TEST (dash_mpdparser_get_baseURL6)
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
       "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
       "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   GstMpdClient *mpdclient = setup_mpd_client (xml);
@@ -3773,7 +3773,7 @@ GST_START_TEST (dash_mpdparser_get_baseURL7)
       "  <BaseURL>x/example.com/</BaseURL>"
       "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
       "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   GstMpdClient *mpdclient;
@@ -3801,7 +3801,7 @@ GST_START_TEST (dash_mpdparser_get_baseURL8)
       "  <BaseURL>x:y/example.com/</BaseURL>"
       "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
       "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   GstMpdClient *mpdclient = setup_mpd_client (xml);
@@ -3862,7 +3862,7 @@ GST_START_TEST (dash_mpdparser_get_streamPresentationOffset)
       "    <AdaptationSet mimeType=\"video/mp4\">"
       "      <SegmentBase timescale=\"1000\" presentationTimeOffset=\"3000\">"
       "      </SegmentBase>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
@@ -3921,7 +3921,7 @@ GST_START_TEST (dash_mpdparser_segments)
       "     mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
       "  <Period id=\"Period0\" start=\"P0Y0M0DT0H0M10S\">"
       "    <AdaptationSet mimeType=\"video/mp4\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SegmentList duration=\"45\">"
       "          <SegmentURL media=\"TestMedia1\""
       "                      mediaRange=\"10-20\""
@@ -4061,7 +4061,7 @@ GST_START_TEST (dash_mpdparser_headers)
       "     mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
       "  <Period id=\"Period0\">"
       "    <AdaptationSet mimeType=\"video/mp4\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SegmentBase indexRange=\"10-20\">"
       "          <Initialization sourceURL=\"TestSourceUrl\""
       "                          range=\"100-200\">"
@@ -4144,7 +4144,7 @@ GST_START_TEST (dash_mpdparser_fragments)
       "     mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
       "  <Period id=\"Period0\" start=\"P0Y0M0DT0H0M10S\">"
       "    <AdaptationSet mimeType=\"video/mp4\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "      </Representation></AdaptationSet></Period></MPD>";
 
   gboolean ret;
@@ -4228,7 +4228,7 @@ GST_START_TEST (dash_mpdparser_inherited_segmentBase)
       "    <AdaptationSet>"
       "      <SegmentBase timescale=\"100\">"
       "      </SegmentBase>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SegmentBase timescale=\"200\">"
       "        </SegmentBase>"
       "      </Representation></AdaptationSet></Period></MPD>";
@@ -4286,7 +4286,7 @@ GST_START_TEST (dash_mpdparser_inherited_segmentURL)
       "                    indexRange=\"30-40\">"
       "        </SegmentURL>"
       "      </SegmentList>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SegmentList duration=\"110\">"
       "          <SegmentURL media=\"TestMediaRep\""
       "                      mediaRange=\"100-200\""
@@ -4372,7 +4372,7 @@ GST_START_TEST (dash_mpdparser_segment_list)
       "     mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
       "  <Period start=\"P0Y0M0DT0H0M10S\">"
       "    <AdaptationSet mimeType=\"video/mp4\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SegmentList duration=\"12000\">"
       "          <SegmentURL media=\"TestMedia\""
       "                      mediaRange=\"100-200\""
@@ -4566,7 +4566,7 @@ GST_START_TEST (dash_mpdparser_segment_timeline)
       "          <S t=\"10\"  d=\"20\" r=\"30\"></S>"
       "        </SegmentTimeline>"
       "      </SegmentList>"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SegmentList>"
       "          <SegmentTimeline>"
       "            <S t=\"3\"  d=\"2\" r=\"1\"></S>"
@@ -4753,7 +4753,7 @@ GST_START_TEST (dash_mpdparser_multiple_inherited_segmentURL)
       "         index=\"TestIndex1\" indexRange=\"200-300\""
       "      ></SegmentURL>"
       "    </SegmentList>"
-      "    <Representation>"
+      "    <Representation id=\"1\" bandwidth=\"250000\">"
       "      <SegmentList duration=\"8\">"
       "        <SegmentURL"
       "           media=\"TestMedia2\" mediaRange=\"30-40\""
@@ -4870,7 +4870,7 @@ GST_START_TEST (dash_mpdparser_multipleSegmentURL)
       " mediaPresentationDuration=\"P0Y0M0DT0H0M30S\">"
       "<Period start=\"P0Y0M0DT0H0M10S\">"
       "  <AdaptationSet mimeType=\"video/mp4\">"
-      "    <Representation>"
+      "    <Representation id=\"1\" bandwidth=\"250000\">"
       "      <SegmentList duration=\"25\">"
       "        <SegmentURL"
       "           media=\"TestMedia0\" mediaRange=\"10-20\""
@@ -5202,7 +5202,7 @@ GST_START_TEST (dash_mpdparser_read_unsigned_from_negative_values)
       "    <AdaptationSet par=\"-1:7\""
       "                   minFrameRate=\" -1\""
       "                   segmentAlignment=\"-4\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SubRepresentation dependencyLevel=\"1 -2 3\">"
       "        </SubRepresentation>"
       "      </Representation></AdaptationSet></Period></MPD>";
@@ -5321,7 +5321,7 @@ GST_START_TEST (dash_mpdparser_unmatched_segmentTimeline_segmentURL)
       "     mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
       "  <Period start=\"P0Y0M0DT0H0M10S\">"
       "    <AdaptationSet mimeType=\"video/mp4\">"
-      "      <Representation>"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
       "        <SegmentList>"
       "          <SegmentTimeline>"
       "            <S t=\"3\"  d=\"2\" r=\"1\"></S>"

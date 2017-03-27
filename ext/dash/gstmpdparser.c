@@ -1837,10 +1837,16 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node,
   new_representation = g_slice_new0 (GstRepresentationNode);
 
   GST_LOG ("attributes of Representation node:");
-  gst_mpdparser_get_xml_prop_string_no_whitespace (a_node, "id",
-      &new_representation->id);
-  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "bandwidth", 0,
-      &new_representation->bandwidth);
+  if (!gst_mpdparser_get_xml_prop_string_no_whitespace (a_node, "id",
+          &new_representation->id)) {
+    GST_ERROR ("Cannot parse Representation id, invalid manifest");
+    return FALSE;
+  }
+  if (!gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "bandwidth", 0,
+          &new_representation->bandwidth)) {
+    GST_ERROR ("Cannot parse Representation bandwidth, invalid manifest");
+    return FALSE;
+  }
   gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "qualityRanking", 0,
       &new_representation->qualityRanking);
   gst_mpdparser_get_xml_prop_string_vector_type (a_node, "dependencyId",
