@@ -2569,6 +2569,7 @@ remove_buffering_msgs (GstURISourceBin * urisrc, GstObject * src)
       gst_message_unref (bufstats);
       urisrc->buffering_status =
           g_list_delete_link (urisrc->buffering_status, iter);
+      removed = TRUE;
       break;
     }
     iter = g_list_next (iter);
