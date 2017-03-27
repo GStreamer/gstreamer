@@ -3282,6 +3282,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
    * size, else we will still be able to use this when dealing with gap'ed
    * input */
   qtdemux->mdatleft = *running_offset - initial_offset;
+  qtdemux->mdatoffset = initial_offset;
   qtdemux->mdatsize = qtdemux->mdatleft;
 
   stream->n_samples += samples_count;
@@ -6276,7 +6277,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
             /* Finally update all push-based values to the expected values */
             demux->neededbytes = demux->streams[i]->samples[res].size;
             demux->offset = GST_BUFFER_OFFSET (inbuf);
-            demux->mdatleft = demux->mdatsize - demux->offset;
+            demux->mdatleft =
+                demux->mdatsize - demux->offset + demux->mdatoffset;
             demux->todrop = 0;
           }
         }
