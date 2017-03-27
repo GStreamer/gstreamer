@@ -1896,11 +1896,13 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node,
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentBase") == 0) {
         gst_mpdparser_parse_seg_base_type_ext (&new_representation->SegmentBase,
-            cur_node, parent->SegmentBase);
+            cur_node, parent->SegmentBase ?
+            parent->SegmentBase : period_node->SegmentBase);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentTemplate") == 0) {
         if (!gst_mpdparser_parse_segment_template_node
             (&new_representation->SegmentTemplate, cur_node,
-                parent->SegmentTemplate))
+                parent->SegmentTemplate ?
+                parent->SegmentTemplate : period_node->SegmentTemplate))
           goto error;
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentList") == 0) {
         if (!gst_mpdparser_parse_segment_list_node
