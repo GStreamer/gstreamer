@@ -57,9 +57,9 @@ static void gst_video_parse_set_property (GObject * object, guint prop_id,
 static void gst_video_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GValueArray *gst_video_parse_int_valarray_from_string (const gchar *
-    str);
-static gchar *gst_video_parse_int_valarray_to_string (GValueArray * valarray);
+static gboolean gst_video_parse_int_valarray_from_string (const gchar *
+    str, GValue * valarray);
+static gchar *gst_video_parse_int_valarray_to_string (GValue * valarray);
 
 GST_DEBUG_CATEGORY_STATIC (gst_video_parse_debug);
 #define GST_CAT_DEFAULT gst_video_parse_debug
@@ -217,13 +217,13 @@ gst_video_parse_set_property (GObject * object, guint prop_id,
       break;
 
     case PROP_STRIDES:{
-      GValueArray *valarray =
-          gst_video_parse_int_valarray_from_string (g_value_get_string (value));
+      GValue valarray = G_VALUE_INIT;
 
-      if (valarray != NULL) {
+      if (gst_video_parse_int_valarray_from_string (g_value_get_string (value),
+              &valarray)) {
         g_object_set (G_OBJECT (vp->rawvideoparse), "plane-strides",
-            valarray, NULL);
-        g_value_array_free (valarray);
+            &valarray, NULL);
+        g_value_unset (&valarray);
       } else {
         GST_WARNING_OBJECT (vp, "failed to deserialize given strides");
       }
@@ -232,13 +232,13 @@ gst_video_parse_set_property (GObject * object, guint prop_id,
     }
 
     case PROP_OFFSETS:{
-      GValueArray *valarray =
-          gst_video_parse_int_valarray_from_string (g_value_get_string (value));
+      GValue valarray = G_VALUE_INIT;
 
-      if (valarray != NULL) {
+      if (gst_video_parse_int_valarray_from_string (g_value_get_string (value),
+              &valarray)) {
         g_object_set (G_OBJECT (vp->rawvideoparse), "plane-offsets",
             valarray, NULL);
-        g_value_array_free (valarray);
+        g_value_unset (&valarray);
       } else {
         GST_WARNING_OBJECT (vp, "failed to deserialize given offsets");
       }
@@ -318,20 +318,22 @@ gst_video_parse_get_property (GObject * object, guint prop_id, GValue * value,
     }
 
     case PROP_STRIDES:{
-      GValueArray *array;
+      GValue array;
+
       g_object_get (G_OBJECT (vp->rawvideoparse), "plane-strides", &array,
           NULL);
       g_value_take_string (value,
-          gst_video_parse_int_valarray_to_string (array));
+          gst_video_parse_int_valarray_to_string (&array));
       break;
     }
 
     case PROP_OFFSETS:{
-      GValueArray *array;
+      GValue array;
+
       g_object_get (G_OBJECT (vp->rawvideoparse), "plane-offsets", &array,
           NULL);
       g_value_take_string (value,
-          gst_video_parse_int_valarray_to_string (array));
+          gst_video_parse_int_valarray_to_string (&array));
       break;
     }
 
@@ -349,24 +351,23 @@ gst_video_parse_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GValueArray *
-gst_video_parse_int_valarray_from_string (const gchar * str)
+static gboolean
+gst_video_parse_int_valarray_from_string (const gchar * str, GValue * valarray)
 {
   gchar **strv;
   guint length;
   guint i;
-  GValueArray *valarray;
   GValue gvalue = G_VALUE_INIT;
 
   if (str == NULL)
-    return NULL;
+    return FALSE;
 
   strv = g_strsplit (str, ",", GST_VIDEO_MAX_PLANES);
   if (strv == NULL)
-    return NULL;
+    return FALSE;
 
   length = g_strv_length (strv);
-  valarray = g_value_array_new (length);
+  g_value_init (valarray, GST_TYPE_ARRAY);
   g_value_init (&gvalue, G_TYPE_UINT);
 
   for (i = 0; i < length; i++) {
@@ -378,21 +379,18 @@ gst_video_parse_int_valarray_from_string (const gchar * str)
     }
 
     g_value_set_uint (&gvalue, val);
-    g_value_array_insert (valarray, i, &gvalue);
+    gst_value_array_append_value (valarray, &gvalue);
   }
 
-finish:
   g_strfreev (strv);
-  return valarray;
+  return TRUE;
 
 error:
-  g_value_array_free (valarray);
-  valarray = NULL;
-  goto finish;
+  return FALSE;
 }
 
 static gchar *
-gst_video_parse_int_valarray_to_string (GValueArray * valarray)
+gst_video_parse_int_valarray_to_string (GValue * valarray)
 {
   /* holds a 64-bit number as string, which can have max. 20 digits
    * (with extra char for nullbyte) */
@@ -400,8 +398,8 @@ gst_video_parse_int_valarray_to_string (GValueArray * valarray)
   gchar *str = NULL;
   guint i;
 
-  for (i = 0; i < valarray->n_values; i++) {
-    GValue *gvalue = g_value_array_get_nth (valarray, i);
+  for (i = 0; i < gst_value_array_get_size (valarray); i++) {
+    const GValue *gvalue = gst_value_array_get_value (valarray, i);
     guint val = g_value_get_uint (gvalue);
     g_snprintf (stride_str, sizeof (stride_str), "%u", val);
 
