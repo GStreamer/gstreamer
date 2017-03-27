@@ -66,13 +66,9 @@ GST_DEBUG_CATEGORY_STATIC (pygst_debug);
 #define GST_CAT_DEFAULT pygst_debug
 
 static PyObject *
-gi_gst_fraction_from_value (const GValue * value)
+gi_gst_get_type (const gchar * type_name)
 {
-  PyObject *module, *dict, *fraction_type, *args, *fraction;
-  gint numerator, denominator;
-
-  numerator = gst_value_get_fraction_numerator (value);
-  denominator = gst_value_get_fraction_denominator (value);
+  PyObject *module, *dict;
 
   module = PyImport_ImportModule ("gi.repository.Gst");
 
@@ -94,13 +90,23 @@ gi_gst_fraction_from_value (const GValue * value)
   }
 
   dict = PyModule_GetDict (module);
-  fraction_type = PyMapping_GetItemString (dict, "Fraction");
+  return PyMapping_GetItemString (dict, type_name);
+}
+
+static PyObject *
+gi_gst_fraction_from_value (const GValue * value)
+{
+  PyObject *fraction_type, *args, *fraction;
+  gint numerator, denominator;
+
+  numerator = gst_value_get_fraction_numerator (value);
+  denominator = gst_value_get_fraction_denominator (value);
+
+  fraction_type = gi_gst_get_type ("Fraction");
 
   args = Py_BuildValue ("(ii)", numerator, denominator);
   fraction = PyObject_Call (fraction_type, args, NULL);
   Py_DECREF (args);
-  Py_DECREF (fraction_type);
-  Py_DECREF (module);
 
   return fraction;
 }
@@ -220,38 +226,16 @@ fail:
 static PyObject *
 gi_gst_double_range_from_value (const GValue * value)
 {
-  PyObject *module, *dict, *double_range_type, *double_range;
+  PyObject *double_range_type, *double_range;
   gdouble min, max;
 
   min = gst_value_get_double_range_min (value);
   max = gst_value_get_double_range_max (value);
 
-  module = PyImport_ImportModule ("gi.repository.Gst");
-
-  if (module == NULL) {
-    PyErr_SetString (PyExc_KeyError,
-        "Could not get module for gi.repository.Gst");
-    return NULL;
-  }
-
-  dict = PyModule_GetDict (module);
-  Py_DECREF (module);
-
-  /* For some reson we need this intermediary step */
-  module = PyMapping_GetItemString (dict, "_overrides_module");
-  if (module == NULL) {
-    PyErr_SetString (PyExc_KeyError,
-        "Could not get module for _overrides_module");
-    return NULL;
-  }
-
-  dict = PyModule_GetDict (module);
-  double_range_type = PyMapping_GetItemString (dict, "DoubleRange");
-
+  double_range_type = gi_gst_get_type ("DoubleRange");
   double_range = PyObject_CallFunction (double_range_type, "dd", min, max);
 
   Py_DECREF (double_range_type);
-  Py_DECREF (module);
 
   return double_range;
 }
@@ -283,7 +267,7 @@ fail:
 static PyObject *
 gi_gst_fraction_range_from_value (const GValue * value)
 {
-  PyObject *module, *min, *max, *dict, *fraction_range_type, *fraction_range;
+  PyObject *min, *max, *fraction_range_type, *fraction_range;
   const GValue *fraction;
 
   fraction = gst_value_get_fraction_range_min (value);
@@ -292,33 +276,10 @@ gi_gst_fraction_range_from_value (const GValue * value)
   fraction = gst_value_get_fraction_range_max (value);
   max = gi_gst_fraction_from_value (fraction);
 
-
-  module = PyImport_ImportModule ("gi.repository.Gst");
-
-  if (module == NULL) {
-    PyErr_SetString (PyExc_KeyError,
-        "Could not get module for gi.repository.Gst");
-    return NULL;
-  }
-
-  dict = PyModule_GetDict (module);
-  Py_DECREF (module);
-
-  /* For some reson we need this intermediary step */
-  module = PyMapping_GetItemString (dict, "_overrides_module");
-  if (module == NULL) {
-    PyErr_SetString (PyExc_KeyError,
-        "Could not get module for _overrides_module");
-    return NULL;
-  }
-
-  dict = PyModule_GetDict (module);
-  fraction_range_type = PyMapping_GetItemString (dict, "FractionRange");
-
-  fraction_range = PyObject_CallFunction (fraction_range_type, "OO", min, max);
+  fraction_range_type = gi_gst_get_type ("FractionRange");
+  fraction_range = PyObject_CallFunction (fraction_range_type, "NN", min, max);
 
   Py_DECREF (fraction_range_type);
-  Py_DECREF (module);
 
   return fraction_range;
 }
