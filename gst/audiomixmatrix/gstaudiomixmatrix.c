@@ -356,6 +356,9 @@ gst_audio_mix_matrix_get_property (GObject * object, guint prop_id,
     case PROP_MATRIX:{
       gint in, out;
 
+      if (self->matrix == NULL)
+        break;
+
       for (out = 0; out < self->out_channels; out++) {
         GValue row = G_VALUE_INIT;
         g_value_init (&row, GST_TYPE_ARRAY);
