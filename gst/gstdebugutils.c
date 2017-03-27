@@ -253,7 +253,7 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
   param_name =
       debug_dump_get_object_params (G_OBJECT (pad), details, ignore_propnames);
   if (details & GST_DEBUG_GRAPH_SHOW_STATES) {
-    gchar pad_flags[4];
+    gchar pad_flags[5];
     const gchar *activation_mode = "-><";
     const gchar *task_mode = "";
     GstTask *task;
@@ -282,7 +282,8 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
         GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_FLUSHING) ? 'F' : 'f';
     pad_flags[2] =
         GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_BLOCKING) ? 'B' : 'b';
-    pad_flags[3] = '\0';
+    pad_flags[3] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_EOS) ? 'E' : '\0';
+    pad_flags[4] = '\0';
 
     g_string_append_printf (str,
         "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s%s\\n[%c][%s]%s\", height=\"0.2\", style=\"%s\"];\n",
