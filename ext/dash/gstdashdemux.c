@@ -44,8 +44,8 @@
  * Introduction:
  *
  * dashdemux is a "fake" demux, as unlike traditional demux elements, it
- * doesn't split data streams contained in an enveloppe to expose them
- * to downstream decoding elements.
+ * doesn't split data streams contained in an envelope to expose them to
+ * downstream decoding elements.
  *
  * Instead, it parses an XML file called a manifest to identify a set of
  * individual stream fragments it needs to fetch and expose to the actual
