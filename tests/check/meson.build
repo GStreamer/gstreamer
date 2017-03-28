@@ -126,19 +126,11 @@ test_defines = [
   '-DGST_USE_UNSTABLE_API',
 ]
 
-pluginsdirs = [  ]
-# FIXME: Use if not gst_dep.is_internal() when avalaible as we only support the
-# case where GStreamer is another subproject here.
-if not meson.is_subproject()
-  pkgconfig = find_program('pkg-config')
-  runcmd = run_command(pkgconfig, '--variable=pluginsdir',
-      'gstreamer-' + api_version, 'gstreamer-plugins-base-' + api_version)
-
-  if runcmd.returncode() == 0
-      pluginsdirs = runcmd.stdout().split()
-  else
-    error('Could not determine GStreamer core plugins directory for unit tests.')
-  endif
+pluginsdirs = []
+if gst_dep.type_name() == 'pkgconfig'
+  pbase = dependency('gstreamer-plugins-base-' + api_version, required : false)
+  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir'),
+                 pbase.get_pkgconfig_variable('pluginsdir')]
 endif
 
 # fake device drivers: we could run hardware element tests against dummy drivers
