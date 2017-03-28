@@ -107,6 +107,10 @@ def get_subprocess_env(options):
 
         for pkg_dir in pkg_dirs:
             prepend_env_var(env, "PKG_CONFIG_PATH", pkg_dir)
+    prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(options.builddir,
+                                                         'subprojects',
+                                                         'gst-plugins-good',
+                                                         'pkgconfig'))
 
     mesonpath = os.path.join(SCRIPTDIR, "meson")
     if os.path.join(mesonpath):
