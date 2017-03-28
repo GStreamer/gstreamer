@@ -2910,11 +2910,11 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
       PROP_EXECUTE_ON_IDLE,
       g_param_spec_boolean ("execute-on-idle",
           "Force waiting between actions",
-          "Always execute actions on idle and do not chain them"
-          " to execute as fast as possible. That is usefull if action execution"
-          " can lead to the addition of source on the same main loop."
-          " It allows those other GSources to have a chance to be dispatch between"
-          " validate actions execution", FALSE, G_PARAM_READWRITE));
+          "Always execute actions on idle and do not chain them to execute as"
+          " fast as possible. Setting this property is useful if action "
+          " execution can lead to the addition of new sources on the same main"
+          " loop as it provides these new GSource a chance to be dispatched"
+          " between actions", FALSE, G_PARAM_READWRITE));
 
   /**
    * GstValidateScenario::done:
@@ -3457,7 +3457,7 @@ gst_validate_action_get_scenario (GstValidateAction * action)
  * @flags: The #GstValidateActionTypeFlags to set on the new action type
  *
  * Register a new action type to the action type system. If the action type already
- * exists, it will be overriden by that new definition
+ * exists, it will be overridden by the new definition
  *
  * Returns: (transfer none): The newly created action type or the already registered action type
  * if it had a higher rank
