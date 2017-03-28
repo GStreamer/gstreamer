@@ -90,18 +90,8 @@ test_deps = [gst_dep, gst_base_dep, gst_net_dep, gst_check_dep, audio_dep,
   fft_dep, riff_dep, sdp_dep, gio_dep] + glib_deps
 
 pluginsdirs = [  ]
-# FIXME: Use if not gst_dep.is_internal() when avalaible as we only support the
-# case where GStreamer is another subproject here.
-if not meson.is_subproject()
-  pkgconfig = find_program('pkg-config')
-  runcmd = run_command(pkgconfig, '--variable=pluginsdir',
-      'gstreamer-' + api_version)
-
-  if runcmd.returncode() == 0
-      pluginsdirs = runcmd.stdout().split()
-  else
-    error('Could not determine GStreamer core plugins directory for unit tests.')
-  endif
+if gst_dep.type_name() == 'pkgconfig'
+  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir')]
 endif
 
 foreach t : base_tests
