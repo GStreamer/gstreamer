@@ -33,18 +33,15 @@ test_defines = [
 ]
 
 pluginsdirs = []
-if not meson.is_subproject()
-  pkgconfig = find_program('pkg-config')
-  runcmd = run_command(pkgconfig, '--variable=pluginsdir',
-      'gstreamer-' + apiversion, 'gstreamer-plugins-base-' + apiversion,
-      'gstreamer-plugins-bad-' + apiversion,
-      'gstreamer-plugins-good-' + apiversion)
+if gst_dep.type_name() == 'pkgconfig'
+  pbase = dependency('gstreamer-plugins-base-' + apiversion, required : false)
+  pbad = dependency('gstreamer-plugins-bad-' + apiversion, required : false)
+  pgood = dependency('gstreamer-plugins-good-' + apiversion, required : false)
 
-  if runcmd.returncode() == 0
-      pluginsdirs = runcmd.stdout().split()
-  else
-    error('Could not determine GStreamer core plugins directory for unit tests.')
-  endif
+  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir'),
+                 pbase.get_pkgconfig_variable('pluginsdir'),
+                 pbad.get_pkgconfig_variable('pluginsdir'),
+                 pgood.get_pkgconfig_variable('pluginsdir')]
 endif
 
 foreach t : ges_tests
