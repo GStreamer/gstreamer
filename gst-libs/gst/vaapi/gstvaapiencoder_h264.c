@@ -1894,6 +1894,10 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
 
       pic_param->ReferenceFrames[i].picture_id =
           GST_VAAPI_SURFACE_PROXY_SURFACE_ID (ref_pic->pic);
+      pic_param->ReferenceFrames[i].TopFieldOrderCnt = ref_pic->poc;
+      pic_param->ReferenceFrames[i].flags |=
+          VA_PICTURE_H264_SHORT_TERM_REFERENCE;
+      pic_param->ReferenceFrames[i].frame_idx = ref_pic->frame_num;
       ++i;
     }
     g_assert (i <= 16 && i <= ref_pool->max_ref_frames);
@@ -2002,6 +2006,11 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
       for (; i_ref < reflist_0_count; ++i_ref) {
         slice_param->RefPicList0[i_ref].picture_id =
             GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_0[i_ref]->pic);
+        slice_param->RefPicList0[i_ref].TopFieldOrderCnt =
+            reflist_0[i_ref]->poc;
+        slice_param->RefPicList0[i_ref].flags |=
+            VA_PICTURE_H264_SHORT_TERM_REFERENCE;
+        slice_param->RefPicList0[i_ref].frame_idx = reflist_0[i_ref]->frame_num;
       }
       g_assert (i_ref == 1);
     }
@@ -2014,6 +2023,11 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
       for (; i_ref < reflist_1_count; ++i_ref) {
         slice_param->RefPicList1[i_ref].picture_id =
             GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_1[i_ref]->pic);
+        slice_param->RefPicList1[i_ref].TopFieldOrderCnt =
+            reflist_1[i_ref]->poc;
+        slice_param->RefPicList1[i_ref].flags |=
+            VA_PICTURE_H264_SHORT_TERM_REFERENCE;
+        slice_param->RefPicList1[i_ref].flags |= reflist_1[i_ref]->frame_num;
       }
       g_assert (i_ref == 1);
     }
