@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 
 #include "gstomxh264dec.h"
+#include "gstomxh264utils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_omx_h264_dec_debug_category);
 #define GST_CAT_DEFAULT gst_omx_h264_dec_debug_category
@@ -111,15 +112,81 @@ gst_omx_h264_dec_is_format_change (GstOMXVideoDec * dec,
 }
 
 static gboolean
+set_profile_and_level (GstOMXH264Dec * self, GstVideoCodecState * state)
+{
+  OMX_ERRORTYPE err;
+  OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
+  const gchar *profile_string, *level_string;
+  GstStructure *s;
+
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = GST_OMX_VIDEO_DEC (self)->dec_in_port->index;
+
+  /* Pass profile and level to the decoder if we have both info from the
+   * caps. */
+  s = gst_caps_get_structure (state->caps, 0);
+  profile_string = gst_structure_get_string (s, "profile");
+  if (!profile_string)
+    return TRUE;
+
+  param.eProfile = gst_omx_h264_utils_get_profile_from_str (profile_string);
+  if (param.eProfile == OMX_VIDEO_AVCProfileMax)
+    goto unsupported_profile;
+
+  level_string = gst_structure_get_string (s, "level");
+  if (!level_string)
+    return TRUE;
+
+  param.eLevel = gst_omx_h264_utils_get_level_from_str (level_string);
+  if (param.eLevel == OMX_VIDEO_AVCLevelMax)
+    goto unsupported_level;
+
+  GST_DEBUG_OBJECT (self, "Set profile (%s) and level (%s) on decoder",
+      profile_string, level_string);
+
+  err =
+      gst_omx_component_set_parameter (GST_OMX_VIDEO_DEC (self)->dec,
+      OMX_IndexParamVideoProfileLevelCurrent, &param);
+  if (err == OMX_ErrorUnsupportedIndex) {
+    GST_WARNING_OBJECT (self,
+        "Setting profile/level not supported by component");
+  } else if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "Error setting profile %u and level %u: %s (0x%08x)",
+        (guint) param.eProfile, (guint) param.eLevel,
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  return TRUE;
+
+unsupported_profile:
+  GST_ERROR_OBJECT (self, "Unsupported profile %s", profile_string);
+  return FALSE;
+
+unsupported_level:
+  GST_ERROR_OBJECT (self, "Unsupported level %s", level_string);
+  return FALSE;
+}
+
+static gboolean
 gst_omx_h264_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
     GstVideoCodecState * state)
 {
-  gboolean ret;
+  GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (dec);
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
+  OMX_ERRORTYPE err;
 
   gst_omx_port_get_port_definition (port, &port_def);
   port_def.format.video.eCompressionFormat = OMX_VIDEO_CodingAVC;
-  ret = gst_omx_port_update_port_definition (port, &port_def) == OMX_ErrorNone;
+  err = gst_omx_port_update_port_definition (port, &port_def);
+  if (err != OMX_ErrorNone)
+    return FALSE;
 
-  return ret;
+  if (klass->cdata.hacks & GST_OMX_HACK_PASS_PROFILE_TO_DECODER) {
+    if (!set_profile_and_level (GST_OMX_H264_DEC (dec), state))
+      return FALSE;
+  }
+
+  return TRUE;
 }

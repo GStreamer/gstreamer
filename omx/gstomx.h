@@ -150,6 +150,13 @@ G_BEGIN_DECLS
  */
 #define GST_OMX_HACK_HEIGHT_MULTIPLE_16             G_GUINT64_CONSTANT (0x0000000000000200)
 
+/* If we should pass the profile/level information from upstream to the
+ * OMX decoder. This is a violation of the OMX spec as
+ * OMX_IndexParamVideoProfileLevelCurrent is supposed to be r-o so
+ * do it as a platform specific hack.
+ */
+#define GST_OMX_HACK_PASS_PROFILE_TO_DECODER        G_GUINT64_CONSTANT (0x0000000000000800)
+
 typedef struct _GstOMXCore GstOMXCore;
 typedef struct _GstOMXPort GstOMXPort;
 typedef enum _GstOMXPortDirection GstOMXPortDirection;
