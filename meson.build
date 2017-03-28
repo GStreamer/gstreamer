@@ -269,6 +269,7 @@ subdir('sys')
 subdir('ext')
 subdir('tests')
 subdir('po')
+subdir('pkgconfig')
 
 configure_file(input : 'config.h.meson',
   output : 'config.h',
