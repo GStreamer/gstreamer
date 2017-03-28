@@ -3699,7 +3699,7 @@ init_scenarios (void)
         .name = "summary",
         .description = "Whether the scenario is a config only scenario (ie. explain what it does)",
         .mandatory = FALSE,
-        .types = "sting",
+        .types = "string",
         .possible_variables = NULL,
         .def = "'Nothing'"},
       {
@@ -3737,7 +3737,7 @@ init_scenarios (void)
       },
       {
         .name = "need-clock-sync",
-        .description = "Whether the scenario needs the execution to be syncronized with the pipeline\n"
+        .description = "Whether the scenario needs the execution to be synchronized with the pipeline's\n"
                        "clock. Letting the user know if it can be used with a 'fakesink sync=false' sink",
         .mandatory = FALSE,
         .types = "boolean",
