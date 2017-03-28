@@ -1235,6 +1235,9 @@ gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder)
 
   klass->finalize (encoder);
 
+  if (encoder->roi_regions)
+    g_list_free_full (encoder->roi_regions, g_free);
+
   gst_vaapi_object_replace (&encoder->context, NULL);
   gst_vaapi_display_replace (&encoder->display, NULL);
   encoder->va_display = NULL;
@@ -1381,6 +1384,111 @@ gst_vaapi_encoder_get_surface_formats (GstVaapiEncoder * encoder,
   g_array_unref (profiles);
 
   return formats;
+}
+
+/**
+ * gst_vaapi_encoder_add_roi:
+ * @encoder: a #GstVaapiEncoder
+ * @roi: (transfer none): a #GstVaapiROI
+ *
+ * Adds a roi region provided by user.
+ *
+ * This can be called on running a pipeline,
+ * Since vaapi encoder set roi regions at every frame encoding.
+ * Note that if it exceeds number of supported roi in driver,
+ * this will return FALSE.
+ *
+ * Return value: a #gboolean
+ */
+gboolean
+gst_vaapi_encoder_add_roi (GstVaapiEncoder * encoder, GstVaapiROI * roi)
+{
+  GstVaapiContextInfo *const cip = &encoder->context_info;
+  const GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;
+  GstVaapiROI *region = NULL;
+  GList *walk;
+
+  g_return_val_if_fail (roi != NULL, FALSE);
+
+  if (!config->roi_capability)
+    return FALSE;
+
+  if (encoder->roi_regions &&
+      g_list_length (encoder->roi_regions) > config->roi_num_supported)
+    return FALSE;
+
+  walk = encoder->roi_regions;
+  while (walk) {
+    GstVaapiROI *region_ptr = (GstVaapiROI *) walk->data;
+    if (region_ptr->rect.x == roi->rect.x &&
+        region_ptr->rect.y == roi->rect.y &&
+        region_ptr->rect.width == roi->rect.width &&
+        region_ptr->rect.height == roi->rect.height) {
+      /* Duplicated region */
+      goto end;
+    }
+    walk = walk->next;
+  }
+
+  region = g_malloc0 (sizeof (GstVaapiROI));
+  if (G_UNLIKELY (!region))
+    return FALSE;
+
+  region->rect.x = roi->rect.x;
+  region->rect.y = roi->rect.y;
+  region->rect.width = roi->rect.width;
+  region->rect.height = roi->rect.height;
+
+  encoder->roi_regions = g_list_append (encoder->roi_regions, region);
+
+end:
+  return TRUE;
+}
+
+/**
+ * gst_vaapi_encoder_del_roi:
+ * @encoder: a #GstVaapiEncoder
+ * @roi: (transfer none): a #GstVaapiROI
+ *
+ * Deletes a roi region provided by user.
+ *
+ * This can be called on running a pipeline,
+ * Since vaapi encoder set roi regions at every frame encoding.
+ *
+ * Return value: a #gboolean
+ */
+gboolean
+gst_vaapi_encoder_del_roi (GstVaapiEncoder * encoder, GstVaapiROI * roi)
+{
+  GstVaapiContextInfo *const cip = &encoder->context_info;
+  const GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;
+  GList *walk;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (roi != NULL, FALSE);
+
+  if (!config->roi_capability)
+    return FALSE;
+
+  if (encoder->roi_regions && g_list_length (encoder->roi_regions) == 0)
+    return FALSE;
+
+  walk = encoder->roi_regions;
+  while (walk) {
+    GstVaapiROI *region = (GstVaapiROI *) walk->data;
+    if (region->rect.x == roi->rect.x &&
+        region->rect.y == roi->rect.y &&
+        region->rect.width == roi->rect.width &&
+        region->rect.height == roi->rect.height) {
+      encoder->roi_regions = g_list_remove (encoder->roi_regions, region);
+      g_free (region);
+      ret = TRUE;
+      break;
+    }
+    walk = walk->next;
+  }
+
+  return ret;
 }
 
 /** Returns a GType for the #GstVaapiEncoderTune set */

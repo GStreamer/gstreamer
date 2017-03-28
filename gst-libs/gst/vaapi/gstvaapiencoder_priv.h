@@ -239,6 +239,9 @@ struct _GstVaapiEncoder
 
   guint got_packed_headers:1;
   guint got_rate_control_mask:1;
+
+  /* Region of Interest */
+  GList *roi_regions;
 };
 
 struct _GstVaapiEncoderClassData
