@@ -1280,7 +1280,7 @@ _set_rank (GstValidateScenario * scenario, GstValidateAction * action)
 
   feature = gst_registry_lookup_feature (gst_registry_get (), feature_name);
   if (!feature) {
-    GST_ERROR ("Could not find feaure %s", feature_name);
+    GST_ERROR ("Could not find feature %s", feature_name);
 
     return FALSE;
   }
