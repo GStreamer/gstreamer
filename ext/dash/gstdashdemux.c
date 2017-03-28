@@ -1731,13 +1731,47 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
   GstClockTimeDiff diff;
   GstClockTime ret = dashstream->actual_position;
   GstClockTime deadline;
+  GstClockTime earliest_time = GST_CLOCK_TIME_NONE;
+
+  /* Use current clock time or the QoS earliest time, whichever is further in
+   * the future. The QoS time is only updated on every QoS event and
+   * especially not if e.g. a videodecoder or converter drops a frame further
+   * downstream.
+   *
+   * We only use the times if we ever received a QoS event since the last
+   * flush, as otherwise base_time and clock might not be correct because of a
+   * still pre-rolling sink
+   */
+  if (stream->qos_earliest_time != GST_CLOCK_TIME_NONE) {
+    GstClock *clock;
+
+    clock = gst_element_get_clock (GST_ELEMENT_CAST (dashdemux));
+
+    if (clock) {
+      GstClockTime base_time;
+      GstClockTime now_time;
+
+      base_time = gst_element_get_base_time (GST_ELEMENT_CAST (dashdemux));
+      now_time = gst_clock_get_time (clock);
+      if (now_time > base_time)
+        now_time -= base_time;
+      else
+        now_time = 0;
+
+      gst_object_unref (clock);
+
+      earliest_time = MAX (now_time, stream->qos_earliest_time);
+    } else {
+      earliest_time = stream->qos_earliest_time;
+    }
+  }
 
   /* our current position in running time */
   cur_running =
       gst_segment_to_running_time (&stream->segment, GST_FORMAT_TIME,
       dashstream->actual_position);
 
-  if (stream->qos_earliest_time == GST_CLOCK_TIME_NONE) {
+  if (earliest_time == GST_CLOCK_TIME_NONE) {
     GstClockTime run_key_dist;
 
     if (dashstream->current_fragment_keyframe_distance != GST_CLOCK_TIME_NONE)
@@ -1761,7 +1795,7 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
 
   /* Figure out the difference, in running time, between where we are and
    * where downstream is */
-  diff = cur_running - stream->qos_earliest_time;
+  diff = cur_running - earliest_time;
   GST_LOG_OBJECT (stream->pad,
       "cur_running %" GST_TIME_FORMAT " diff %" GST_STIME_FORMAT
       " average_download %" GST_TIME_FORMAT, GST_TIME_ARGS (cur_running),
@@ -1775,10 +1809,7 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
     /* Force skipping (but not more than 1s ahead) */
     ret =
         gst_segment_position_from_running_time (&stream->segment,
-        GST_FORMAT_TIME, stream->qos_earliest_time + MIN (deadline,
-            GST_SECOND));
-    GST_DEBUG_OBJECT (stream->pad, "MUST SKIP to at least %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (ret));
+        GST_FORMAT_TIME, earliest_time + MIN (deadline, GST_SECOND));
   } else if (diff < 4 * dashstream->average_download_time) {
     /* Go forward a bit less aggresively (and at most 1s forward) */
     ret = gst_segment_position_from_running_time (&stream->segment,
