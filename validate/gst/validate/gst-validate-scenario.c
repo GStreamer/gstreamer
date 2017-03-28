@@ -763,7 +763,7 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
 static gboolean
 _execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  GST_DEBUG ("Sending eos to pipeline at %" GST_TIME_FORMAT,
+  GST_DEBUG ("Sending EOS to pipeline at %" GST_TIME_FORMAT,
       GST_TIME_ARGS (action->playback_time));
 
   return gst_element_send_event (scenario->pipeline, gst_event_new_eos ());

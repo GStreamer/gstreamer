@@ -68,11 +68,11 @@ typedef GstValidateExecuteActionReturn (*GstValidateExecuteAction) (GstValidateS
  * @action: The #GstValidateAction to prepare before execution
  *
  * A function that prepares @action so it can be executed right after.
- * Most of the time that function is used to parse and set field with
+ * Most of the time this function is used to parse and set fields with
  * equations in the action structure.
  *
- * Returns: a %TRUE if the action could be prepared and is ready to be run
- *          %FALSE otherwise
+ * Returns: %TRUE if the action could be prepared and is ready to be run
+ *          , %FALSE otherwise
  */
 typedef gboolean (*GstValidatePrepareAction) (GstValidateAction * action);
 
@@ -86,8 +86,8 @@ typedef struct _GstValidateActionPrivate          GstValidateActionPrivate;
  *        #gst_validate_register_action_type
  * @name: The name of the action, set from the user in the scenario
  * @structure: the #GstStructure defining the action
- * @scenario: The scenario for this action. This is not thread
- * safe and should be accessed exculsively from the main thread.
+ * @scenario: The scenario for this action. This is not thread-safe
+ * and should be accessed exclusively from the main thread.
  * If you need to access it from another thread use the
  * #gst_validate_action_get_scenario method
  *
