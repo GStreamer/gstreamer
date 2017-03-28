@@ -16,13 +16,6 @@ pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
 pkg_files = ['gstreamer-plugins-good']
 
 foreach p : pkg_files
-  infile = p + '.pc.in'
-  outfile = p + '-1.0.pc'
-  configure_file(input : infile,
-    output : outfile,
-    configuration : pkgconf,
-    install_dir : pkg_install_dir)
-
   infile = p + '-uninstalled.pc.in'
   outfile = p + '-1.0-uninstalled.pc'
   configure_file(input : infile,
