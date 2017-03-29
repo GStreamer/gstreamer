@@ -936,10 +936,15 @@ static gboolean
 ensure_profile (GstVaapiEncoderH265 * encoder)
 {
   GstVaapiProfile profile;
+  const GstVideoFormat format =
+      GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
 
   /* Always start from "Main" profile for maximum
      compatibility */
   profile = GST_VAAPI_PROFILE_H265_MAIN;
+
+  if (format == GST_VIDEO_FORMAT_P010_10LE)
+    profile = GST_VAAPI_PROFILE_H265_MAIN10;
 
   encoder->profile = profile;
   encoder->profile_idc = gst_vaapi_utils_h265_get_profile_idc (profile);
