@@ -924,7 +924,7 @@ ensure_profile_limits (GstVaapiEncoderH265 * encoder)
       ("Needs to lower coding tools to meet target decoder constraints");
   GST_WARNING ("Only supporting Main profile, reset profile to Main");
 
-  encoder->profile = GST_VAAPI_PROFILE_H265_MAIN;;
+  encoder->profile = GST_VAAPI_PROFILE_H265_MAIN;
   encoder->profile_idc =
       gst_vaapi_utils_h265_get_profile_idc (encoder->profile);
 
