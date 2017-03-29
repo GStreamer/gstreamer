@@ -1797,7 +1797,7 @@ gst_base_transform_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   res = bclass->get_unit_size (trans, caps, size);
   GST_DEBUG_OBJECT (trans,
-      "caps %" GST_PTR_FORMAT ") has unit size %" G_GSIZE_FORMAT ", res %s",
+      "caps %" GST_PTR_FORMAT " has unit size %" G_GSIZE_FORMAT ", res %s",
       caps, *size, res ? "TRUE" : "FALSE");
 
   if (res) {
