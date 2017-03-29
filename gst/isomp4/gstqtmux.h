@@ -108,6 +108,7 @@ struct _GstQTPad
   GstBuffer *last_buf;
   /* dts of last_buf */
   GstClockTime last_dts;
+  guint64 sample_offset;
 
   /* This is compensate for CTTS */
   GstClockTime dts_adjustment;
@@ -253,6 +254,8 @@ struct _GstQTMux
   guint64 interleave_bytes;
   GstClockTime interleave_time;
   gboolean interleave_bytes_set, interleave_time_set;
+
+  GstClockTime max_raw_audio_drift;
 
   /* Reserved minimum MOOV size in bytes
    * This is converted from reserved_max_duration

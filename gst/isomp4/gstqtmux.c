@@ -146,6 +146,10 @@
 GST_DEBUG_CATEGORY_STATIC (gst_qt_mux_debug);
 #define GST_CAT_DEFAULT gst_qt_mux_debug
 
+#ifndef ABSDIFF
+#define ABSDIFF(a, b) ((a) > (b) ? (a) - (b) : (b) - (a))
+#endif
+
 /* Hacker notes.
  *
  * The basic building blocks of MP4 files are:
@@ -270,6 +274,7 @@ enum
   PROP_DO_CTTS,
   PROP_INTERLEAVE_BYTES,
   PROP_INTERLEAVE_TIME,
+  PROP_MAX_RAW_AUDIO_DRIFT,
 };
 
 /* some spare for header size as well */
@@ -291,6 +296,7 @@ enum
 #define DEFAULT_RESERVED_BYTES_PER_SEC_PER_TRAK 550
 #define DEFAULT_INTERLEAVE_BYTES 0
 #define DEFAULT_INTERLEAVE_TIME 250*GST_MSECOND
+#define DEFAULT_MAX_RAW_AUDIO_DRIFT 40 * GST_MSECOND
 
 static void gst_qt_mux_finalize (GObject * object);
 
@@ -493,6 +499,11 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           "Interleave between streams in nanoseconds",
           0, G_MAXUINT64, DEFAULT_INTERLEAVE_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MAX_RAW_AUDIO_DRIFT,
+      g_param_spec_uint64 ("max-raw-audio-drift", "Max Raw Audio Drift",
+          "Maximum allowed drift of raw audio samples vs. timestamps in nanoseconds",
+          0, G_MAXUINT64, DEFAULT_MAX_RAW_AUDIO_DRIFT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_qt_mux_request_new_pad);
@@ -508,6 +519,7 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->sample_size = 0;
   qtpad->sync = FALSE;
   qtpad->last_dts = 0;
+  qtpad->sample_offset = 0;
   qtpad->dts_adjustment = GST_CLOCK_TIME_NONE;
   qtpad->first_ts = GST_CLOCK_TIME_NONE;
   qtpad->first_dts = GST_CLOCK_TIME_NONE;
@@ -655,6 +667,7 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
       DEFAULT_RESERVED_BYTES_PER_SEC_PER_TRAK;
   qtmux->interleave_bytes = DEFAULT_INTERLEAVE_BYTES;
   qtmux->interleave_time = DEFAULT_INTERLEAVE_TIME;
+  qtmux->max_raw_audio_drift = DEFAULT_MAX_RAW_AUDIO_DRIFT;
 
   /* always need this */
   qtmux->context =
@@ -3318,14 +3331,27 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   /* fragments only deal with 1 buffer == 1 chunk (== 1 sample) */
   if (pad->sample_size && !qtmux->fragment_sequence) {
+    GstClockTime expected_timestamp;
+
     /* Constant size packets: usually raw audio (with many samples per
        buffer (= chunk)), but can also be fixed-packet-size codecs like ADPCM
      */
     sample_size = pad->sample_size;
     if (gst_buffer_get_size (last_buf) % sample_size != 0)
       goto fragmented_sample;
+
     /* note: qt raw audio storage warps it implicitly into a timewise
-     * perfect stream, discarding buffer times */
+     * perfect stream, discarding buffer times.
+     * If the difference between the current PTS and the expected one
+     * becomes too big, we error out: there was a gap and we have no way to
+     * represent that, causing A/V sync to be off */
+    expected_timestamp =
+        gst_util_uint64_scale (pad->sample_offset, GST_SECOND,
+        atom_trak_get_timescale (pad->trak)) + pad->first_ts;
+    if (ABSDIFF (GST_BUFFER_DTS_OR_PTS (last_buf),
+            expected_timestamp) > qtmux->max_raw_audio_drift)
+      goto raw_audio_timestamp_drift;
+
     if (GST_BUFFER_DURATION (last_buf) != GST_CLOCK_TIME_NONE) {
       nsamples = gst_util_uint64_scale_round (GST_BUFFER_DURATION (last_buf),
           atom_trak_get_timescale (pad->trak), GST_SECOND);
@@ -3339,7 +3365,9 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
     /* timescale = samplerate */
     scaled_duration = 1;
-    pad->last_dts += duration;
+    pad->last_dts =
+        pad->first_dts + gst_util_uint64_scale_round (pad->sample_offset +
+        nsamples, GST_SECOND, atom_trak_get_timescale (pad->trak));
   } else {
     nsamples = 1;
     sample_size = gst_buffer_get_size (last_buf);
@@ -3370,6 +3398,8 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       pad->last_dts += duration;
     }
   }
+
+  pad->sample_offset += nsamples;
 
   /* for computing the avg bitrate */
   pad->total_bytes += gst_buffer_get_size (last_buf);
@@ -3471,6 +3501,18 @@ fragmented_sample:
   {
     GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
         ("Audio buffer contains fragmented sample."));
+    goto bail;
+  }
+raw_audio_timestamp_drift:
+  {
+    /* TODO: Could in theory be implemented with edit lists */
+    GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+        ("Audio stream timestamps are drifting (got %" GST_TIME_FORMAT
+            ", expected %" GST_TIME_FORMAT "). This is not supported yet!",
+            GST_TIME_ARGS (GST_BUFFER_DTS_OR_PTS (last_buf)),
+            GST_TIME_ARGS (gst_util_uint64_scale (pad->sample_offset,
+                    GST_SECOND,
+                    atom_trak_get_timescale (pad->trak)) + pad->first_ts)));
     goto bail;
   }
 no_pts:
@@ -4923,6 +4965,9 @@ gst_qt_mux_get_property (GObject * object,
     case PROP_INTERLEAVE_TIME:
       g_value_set_uint64 (value, qtmux->interleave_time);
       break;
+    case PROP_MAX_RAW_AUDIO_DRIFT:
+      g_value_set_uint64 (value, qtmux->max_raw_audio_drift);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -5007,6 +5052,9 @@ gst_qt_mux_set_property (GObject * object,
     case PROP_INTERLEAVE_TIME:
       qtmux->interleave_time = g_value_get_uint64 (value);
       qtmux->interleave_time_set = TRUE;
+      break;
+    case PROP_MAX_RAW_AUDIO_DRIFT:
+      qtmux->max_raw_audio_drift = g_value_get_uint64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
