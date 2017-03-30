@@ -739,6 +739,45 @@ gst_vaapiencode_sink_event (GstVideoEncoder * venc, GstEvent * event)
   GstPad *const srcpad = GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode);
   gboolean ret;
 
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:{
+      const GstStructure *s = gst_event_get_structure (event);
+      if (gst_structure_has_name (s, "GstVaapiEncoderRegionOfInterest")) {
+        GstVaapiROI roi;
+
+        if (!encode->encoder)
+          return TRUE;
+
+        if (!gst_structure_get_uint (s, "roi-x", &roi.rect.x) ||
+            !gst_structure_get_uint (s, "roi-y", &roi.rect.y) ||
+            !gst_structure_get_uint (s, "roi-width", &roi.rect.width) ||
+            !gst_structure_get_uint (s, "roi-height", &roi.rect.height) ||
+            !gst_structure_get_int (s, "roi-value", &roi.roi_value)) {
+          return TRUE;
+        }
+
+        if (roi.roi_value == 0) {
+          ret = gst_vaapi_encoder_del_roi (encode->encoder, &roi);
+          if (ret) {
+            GST_INFO_OBJECT (venc, "ROI: region with %d/%d/%d/%d is removed",
+                roi.rect.x, roi.rect.y, roi.rect.width, roi.rect.height);
+          }
+        } else {
+          ret = gst_vaapi_encoder_add_roi (encode->encoder, &roi);
+          if (ret) {
+            GST_INFO_OBJECT (venc, "ROI: region with %d/%d/%d/%d is added",
+                roi.rect.x, roi.rect.y, roi.rect.width, roi.rect.height);
+          }
+        }
+        gst_event_unref (event);
+        return ret;
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
   ret = GST_VIDEO_ENCODER_CLASS (gst_vaapiencode_parent_class)->sink_event
       (venc, event);
   if (!ret)

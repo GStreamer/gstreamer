@@ -33,6 +33,80 @@
  *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapih264enc ! h264parse ! mp4mux ! filesink location=test.mp4
  * ]|
  * </refsect2>
+ *
+ * <refsect2>
+ * <title>Region of Interest</title>
+ * Since libva supports Region Of Interest for avc encoding depending on H/W,
+ * GStreamer VA-API supports it by #GstEvent.
+ * To enable ROI, an application must send an event of type GST_EVENT_CUSTOM_DOWNSTREAM,
+ * having a structure of name "GstVaapiEncoderRegionOfInterest" with fields set
+ * according to the following table:
+ *
+ * <informaltable>
+ * <tgroup cols='3'>
+ * <colspec colname='Name' />
+ * <colspec colname='Type' />
+ * <colspec colname='Purpose' />
+ * <thead>
+ * <row>
+ * <entry>Name</entry>
+ * <entry>GType</entry>
+ * <entry>Description</entry>
+ * </row>
+ * </thead>
+ * <tbody>
+ * <row>
+ * <entry>roi-value</entry>
+ * <entry>G_TYPE_INT</entry>
+ * <entry>specifies ROI delta QP or ROI priority.
+ * ROI delta QP is the value that will be added on top of the frame level QP.
+ * ROI priority specifies the priority of a region, it can be positive (more important)
+ * or negative (less important) values and is compared with non-ROI region (taken as value 0),
+ *
+ * </entry>
+ * </row>
+ * <row>
+ * <entry>roi-x</entry>
+ * <entry>G_TYPE_UINT</entry>
+ * <entry>X</entry>
+ * </row>
+ * <row>
+ * <entry>roi-y</entry>
+ * <entry>G_TYPE_UINT</entry>
+ * <entry>Y</entry>
+ * </row>
+ * <row>
+ * <entry>roi-width</entry>
+ * <entry>G_TYPE_UINT</entry>
+ * <entry>width</entry>
+ * </row>
+ * <row>
+ * <entry>roi-height</entry>
+ * <entry>G_TYPE_UINT</entry>
+ * <entry>height</entry>
+ * </row>
+ * </tbody>
+ * </tgroup>
+ * </informaltable>
+ *
+ * For example, the following code informs the encoder to enable ROI
+ * with a region for ROI.
+ * Note that if an application wants to disable the region,
+ * just send an event with roi-value=0 and same coordination.
+ *
+ * <programlisting>
+ *   GstEvent *event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+ *       gst_structure_new ("GstVaapiEncoderRegionOfInterest",
+ *       "roi-x", G_TYPE_UINT, 1820,
+ *       "roi-y", G_TYPE_UINT, 980,
+ *       "roi-width", G_TYPE_UINT, 100,
+ *       "roi-height", G_TYPE_UINT, 100,
+ *       "roi-value", G_TYPE_INT, 4, NULL));
+ *
+ * gst_element_send_event (pipeline, event);
+ * </programlisting>
+ * </refsect2>
+ *
  */
 
 #include "gstcompat.h"
