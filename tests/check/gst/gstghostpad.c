@@ -1321,6 +1321,51 @@ GST_START_TEST (test_activate_sink_switch_mode)
 
 GST_END_TEST;
 
+static gboolean thread_running;
+static gpointer
+send_query_to_pad_func (GstPad * pad)
+{
+  GstQuery *query = gst_query_new_latency ();
+
+  while (thread_running) {
+    gst_pad_peer_query (pad, query);
+    g_thread_yield ();
+  }
+
+  gst_query_unref (query);
+  return NULL;
+}
+
+GST_START_TEST (test_stress_upstream_queries_while_tearing_down)
+{
+  GThread *query_thread;
+  gint i;
+  GstPad *pad = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_pad_set_active (pad, TRUE);
+
+  thread_running = TRUE;
+  query_thread = g_thread_new ("queries",
+      (GThreadFunc) send_query_to_pad_func, pad);
+
+  for (i = 0; i < 1000; i++) {
+    GstPad *ghostpad = gst_ghost_pad_new ("ghost-sink", pad);
+    gst_pad_set_active (ghostpad, TRUE);
+
+    g_thread_yield ();
+
+    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (ghostpad), NULL);
+    gst_pad_set_active (pad, FALSE);
+    gst_object_unref (ghostpad);
+  }
+
+  thread_running = FALSE;
+  g_thread_join (query_thread);
+
+  gst_object_unref (pad);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_ghost_pad_suite (void)
 {
@@ -1351,6 +1396,7 @@ gst_ghost_pad_suite (void)
   tcase_add_test (tc_chain, test_activate_sink_and_src);
   tcase_add_test (tc_chain, test_activate_src_pull_mode);
   tcase_add_test (tc_chain, test_activate_sink_switch_mode);
+  tcase_add_test (tc_chain, test_stress_upstream_queries_while_tearing_down);
 
   return s;
 }
