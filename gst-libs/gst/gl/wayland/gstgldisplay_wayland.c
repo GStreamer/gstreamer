@@ -39,6 +39,8 @@ registry_handle_global (void *data, struct wl_registry *registry,
 {
   GstGLDisplayWayland *display = data;
 
+  GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
+
   GST_TRACE_OBJECT (display, "registry_handle_global with registry %p, "
       "interface %s, version %u", registry, interface, version);
 
