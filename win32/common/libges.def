@@ -88,6 +88,7 @@ EXPORTS
 	ges_layer_add_clip
 	ges_layer_get_auto_transition
 	ges_layer_get_clips
+	ges_layer_get_clips_in_interval
 	ges_layer_get_duration
 	ges_layer_get_priority
 	ges_layer_get_timeline
