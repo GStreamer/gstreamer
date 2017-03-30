@@ -2,7 +2,7 @@ if mjpegtools_dep.found()
   mplex2_dep = cxx.find_library('mplex2', required : false)
 
   if mplex2_dep.found()
-    gstmplex2 = library('gstmplex2',
+    gstmplex2 = library('gstmplex',
       'gstmplex.cc',
       'gstmplexibitstream.cc',
       'gstmplexjob.cc',
