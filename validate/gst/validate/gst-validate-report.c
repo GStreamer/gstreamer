@@ -221,7 +221,7 @@ gst_validate_report_load_issues (void)
       _("a buffer leaving an element should have its timestamps in the range "
           "of the received buffers timestamps. i.e. If an element received "
           "buffers with timestamps from 0s to 10s, it can't push a buffer with "
-          "with a 11s timestamp, because it doesn't have data for that"));
+          "a 11s timestamp, because it doesn't have data for that"));
   REGISTER_VALIDATE_ISSUE (WARNING, WRONG_BUFFER,
       _("Received buffer does not correspond to wanted one."),
       _("When checking playback of a file against a MediaInfo file"
@@ -382,7 +382,7 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_EXECUTION_ERROR,
       _("The execution of an action did not properly happen"), NULL);
   REGISTER_VALIDATE_ISSUE (ISSUE, SCENARIO_ACTION_EXECUTION_ISSUE,
-      _("An issue happend during the execution of a scenario"), NULL);
+      _("An issue happened during the execution of a scenario"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_WARNING, _("We got a g_log warning"),
       NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, G_LOG_CRITICAL,
@@ -893,7 +893,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       if (IS_CONFIG_ACTION_TYPE (type->flags))
         g_string_append_printf (string,
             "\n    Is config action (meaning it will be executing right "
-            "at the begining of the execution of the pipeline)");
+            "at the beginning of the execution of the pipeline)");
 
 
       tmp = g_strdup_printf ("\n    ");
