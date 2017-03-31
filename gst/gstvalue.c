@@ -4351,7 +4351,7 @@ structure_field_union_into (GQuark field_id, GValue * val, gpointer user_data)
     return FALSE;
 
   g_value_unset (val);
-  gst_value_init_and_copy (val, &res_value);
+  gst_value_move (val, &res_value);
   return TRUE;
 }
 
