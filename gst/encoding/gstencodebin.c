@@ -755,6 +755,7 @@ request_pad_for_stream (GstEncodeBin * encodebin, GType ptype,
   if (!sgroup)
     goto no_stream_group;
 
+  g_list_free (not_found_encoder_profs);
   return sgroup->ghostpad;
 
 no_stream_profile:
