@@ -68,6 +68,7 @@ enum
 static guint gst_stream_collection_signals[LAST_SIGNAL] = { 0 };
 
 static void gst_stream_collection_dispose (GObject * object);
+static void gst_stream_collection_finalize (GObject * object);
 
 static void gst_stream_collection_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -129,6 +130,7 @@ gst_stream_collection_class_init (GstStreamCollectionClass * klass)
       2, GST_TYPE_STREAM, G_TYPE_PARAM);
 
   gobject_class->dispose = gst_stream_collection_dispose;
+  gobject_class->finalize = gst_stream_collection_finalize;
 }
 
 static void
@@ -159,11 +161,21 @@ gst_stream_collection_dispose (GObject * object)
   if (collection->priv->streams) {
     g_queue_foreach (collection->priv->streams,
         (GFunc) release_gst_stream, collection);
-    g_queue_free (collection->priv->streams);
-    collection->priv->streams = NULL;
+    g_queue_clear (collection->priv->streams);
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_stream_collection_finalize (GObject * object)
+{
+  GstStreamCollection *collection = GST_STREAM_COLLECTION_CAST (object);
+
+  if (collection->priv->streams)
+    g_queue_free (collection->priv->streams);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /**
