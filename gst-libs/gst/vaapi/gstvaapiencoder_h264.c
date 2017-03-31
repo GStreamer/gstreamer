@@ -2027,7 +2027,8 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
             reflist_1[i_ref]->poc;
         slice_param->RefPicList1[i_ref].flags |=
             VA_PICTURE_H264_SHORT_TERM_REFERENCE;
-        slice_param->RefPicList1[i_ref].flags |= reflist_1[i_ref]->frame_num;
+        slice_param->RefPicList1[i_ref].frame_idx |=
+            reflist_1[i_ref]->frame_num;
       }
       g_assert (i_ref == 1);
     }
