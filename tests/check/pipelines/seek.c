@@ -406,6 +406,7 @@ GST_START_TEST (test_loopback_1)
    *  screwed up. */
   fail_unless (msg, "no message within the timed window");
   fail_unless_equals_string (GST_MESSAGE_TYPE_NAME (msg), "segment-done");
+  gst_message_unref (msg);
 
   res = gst_element_set_state (bin, GST_STATE_NULL);
   fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
