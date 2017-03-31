@@ -373,6 +373,9 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   out_caps = gst_caps_make_writable (out_caps);
   gst_caps_append (out_caps, gst_caps_copy (raw_caps));
   gst_caps_replace (&encode->allowed_sinkpad_caps, out_caps);
+  GST_INFO_OBJECT (encode, "Allowed sink caps %" GST_PTR_FORMAT,
+      encode->allowed_sinkpad_caps);
+
   ret = TRUE;
 
 bail:
@@ -411,7 +414,7 @@ gst_vaapiencode_get_caps (GstVideoEncoder * venc, GstCaps * filter)
   result = gst_video_encoder_proxy_getcaps (venc, encode->allowed_sinkpad_caps,
       filter);
 
-  GST_DEBUG_OBJECT (venc, "Returning sink caps %" GST_PTR_FORMAT, result);
+  GST_DEBUG_OBJECT (venc, "Negotiated sink caps %" GST_PTR_FORMAT, result);
   return result;
 }
 
