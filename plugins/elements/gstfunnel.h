@@ -40,6 +40,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FUNNEL))
 #define GST_IS_FUNNEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FUNNEL))
+#define GST_FUNNEL_CAST(obj) ((GstFunnel *)(obj))
 
 typedef struct _GstFunnel          GstFunnel;
 typedef struct _GstFunnelClass     GstFunnelClass;

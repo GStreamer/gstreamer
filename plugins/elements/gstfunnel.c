@@ -128,7 +128,7 @@ static void
 gst_funnel_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstFunnel *funnel = GST_FUNNEL (object);
+  GstFunnel *funnel = GST_FUNNEL_CAST (object);
 
   switch (prop_id) {
     case PROP_FORWARD_STICKY_EVENTS:
@@ -144,7 +144,7 @@ static void
 gst_funnel_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstFunnel *funnel = GST_FUNNEL (object);
+  GstFunnel *funnel = GST_FUNNEL_CAST (object);
 
   switch (prop_id) {
     case PROP_FORWARD_STICKY_EVENTS:
@@ -159,7 +159,7 @@ gst_funnel_get_property (GObject * object, guint prop_id, GValue * value,
 static void
 gst_funnel_dispose (GObject * object)
 {
-  GstFunnel *funnel = GST_FUNNEL (object);
+  GstFunnel *funnel = GST_FUNNEL_CAST (object);
   GList *item;
 
   gst_object_replace ((GstObject **) & funnel->last_sinkpad, NULL);
@@ -278,7 +278,7 @@ done:
 static void
 gst_funnel_release_pad (GstElement * element, GstPad * pad)
 {
-  GstFunnel *funnel = GST_FUNNEL (element);
+  GstFunnel *funnel = GST_FUNNEL_CAST (element);
   GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
   gboolean got_eos;
   gboolean send_eos = FALSE;
@@ -350,7 +350,7 @@ static GstFlowReturn
 gst_funnel_sink_chain_list (GstPad * pad, GstObject * parent,
     GstBufferList * list)
 {
-  GstFunnel *funnel = GST_FUNNEL (parent);
+  GstFunnel *funnel = GST_FUNNEL_CAST (parent);
 
   return gst_funnel_sink_chain_object (pad, funnel, TRUE,
       GST_MINI_OBJECT_CAST (list));
@@ -359,7 +359,7 @@ gst_funnel_sink_chain_list (GstPad * pad, GstObject * parent,
 static GstFlowReturn
 gst_funnel_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstFunnel *funnel = GST_FUNNEL (parent);
+  GstFunnel *funnel = GST_FUNNEL_CAST (parent);
 
   return gst_funnel_sink_chain_object (pad, funnel, FALSE,
       GST_MINI_OBJECT_CAST (buffer));
@@ -368,7 +368,7 @@ gst_funnel_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 static gboolean
 gst_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstFunnel *funnel = GST_FUNNEL (parent);
+  GstFunnel *funnel = GST_FUNNEL_CAST (parent);
   GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
   gboolean forward = TRUE;
   gboolean res = TRUE;

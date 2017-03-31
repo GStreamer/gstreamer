@@ -1551,7 +1551,7 @@ gst_base_transform_query (GstPad * pad, GstObject * parent, GstQuery * query)
   GstBaseTransformClass *bclass;
   gboolean ret = FALSE;
 
-  trans = GST_BASE_TRANSFORM (parent);
+  trans = GST_BASE_TRANSFORM_CAST (parent);
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->query)
@@ -1832,7 +1832,7 @@ gst_base_transform_sink_event (GstPad * pad, GstObject * parent,
   GstBaseTransformClass *bclass;
   gboolean ret = TRUE;
 
-  trans = GST_BASE_TRANSFORM (parent);
+  trans = GST_BASE_TRANSFORM_CAST (parent);
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->sink_event)
@@ -1913,7 +1913,7 @@ gst_base_transform_src_event (GstPad * pad, GstObject * parent,
   GstBaseTransformClass *bclass;
   gboolean ret = TRUE;
 
-  trans = GST_BASE_TRANSFORM (parent);
+  trans = GST_BASE_TRANSFORM_CAST (parent);
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->src_event)
@@ -2160,7 +2160,7 @@ gst_base_transform_getrange (GstPad * pad, GstObject * parent, guint64 offset,
     guint length, GstBuffer ** buffer)
 {
   GstBaseTransformClass *klass = GST_BASE_TRANSFORM_GET_CLASS (parent);
-  GstBaseTransform *trans = GST_BASE_TRANSFORM (parent);
+  GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (parent);
   GstBaseTransformPrivate *priv = trans->priv;
   GstFlowReturn ret;
   GstBuffer *inbuf = NULL;
@@ -2237,7 +2237,7 @@ pull_error:
 static GstFlowReturn
 gst_base_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstBaseTransform *trans = GST_BASE_TRANSFORM (parent);
+  GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (parent);
   GstBaseTransformClass *klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   GstBaseTransformPrivate *priv = trans->priv;
   GstFlowReturn ret;
@@ -2334,7 +2334,7 @@ gst_base_transform_set_property (GObject * object, guint prop_id,
 {
   GstBaseTransform *trans;
 
-  trans = GST_BASE_TRANSFORM (object);
+  trans = GST_BASE_TRANSFORM_CAST (object);
 
   switch (prop_id) {
     case PROP_QOS:
@@ -2352,7 +2352,7 @@ gst_base_transform_get_property (GObject * object, guint prop_id,
 {
   GstBaseTransform *trans;
 
-  trans = GST_BASE_TRANSFORM (object);
+  trans = GST_BASE_TRANSFORM_CAST (object);
 
   switch (prop_id) {
     case PROP_QOS:
@@ -2439,7 +2439,7 @@ gst_base_transform_sink_activate_mode (GstPad * pad, GstObject * parent,
   gboolean result = FALSE;
   GstBaseTransform *trans;
 
-  trans = GST_BASE_TRANSFORM (parent);
+  trans = GST_BASE_TRANSFORM_CAST (parent);
 
   switch (mode) {
     case GST_PAD_MODE_PUSH:
@@ -2465,7 +2465,7 @@ gst_base_transform_src_activate_mode (GstPad * pad, GstObject * parent,
   gboolean result = FALSE;
   GstBaseTransform *trans;
 
-  trans = GST_BASE_TRANSFORM (parent);
+  trans = GST_BASE_TRANSFORM_CAST (parent);
 
   switch (mode) {
     case GST_PAD_MODE_PULL:
