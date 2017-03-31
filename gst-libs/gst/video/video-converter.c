@@ -5910,7 +5910,7 @@ setup_scale (GstVideoConverter * convert)
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *in_finfo, *out_finfo;
   GstVideoFormat in_format, out_format;
-  guint n_threads = g_get_num_processors ();
+  guint n_threads = convert->conversion_runner->n_threads;
 
   in_info = &convert->in_info;
   out_info = &convert->out_info;
