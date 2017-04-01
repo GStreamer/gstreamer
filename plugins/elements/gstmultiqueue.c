@@ -150,6 +150,7 @@ struct _GstSingleQueue
   GstDataQueueSize max_size, extra_size;
   GstClockTime cur_time;
   gboolean is_eos;
+  gboolean is_segment_done;
   gboolean is_sparse;
   gboolean flushing;
   gboolean active;
@@ -1085,6 +1086,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush,
     sq->cur_time = 0;
     sq->max_size.visible = mq->max_size.visible;
     sq->is_eos = FALSE;
+    sq->is_segment_done = FALSE;
     sq->nextid = 0;
     sq->oldid = 0;
     sq->last_oldid = G_MAXUINT32;
@@ -1126,7 +1128,8 @@ get_buffering_level (GstSingleQueue * sq)
       size.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
 
   /* get bytes and time buffer levels and take the max */
-  if (sq->is_eos || sq->srcresult == GST_FLOW_NOT_LINKED || sq->is_sparse) {
+  if (sq->is_eos || sq->is_segment_done || sq->srcresult == GST_FLOW_NOT_LINKED
+      || sq->is_sparse) {
     buffering_level = MAX_BUFFERING_LEVEL;
   } else {
     buffering_level = 0;
@@ -1626,6 +1629,9 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
     event = GST_EVENT_CAST (object);
 
     switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_SEGMENT_DONE:
+        *allow_drop = FALSE;
+        break;
       case GST_EVENT_EOS:
         result = GST_FLOW_EOS;
         if (G_UNLIKELY (*allow_drop))
@@ -2039,7 +2045,7 @@ out_flushing:
      * has returned an error flow return. After EOS there
      * will be no further buffer which could propagate the
      * error upstream */
-    if (sq->is_eos && sq->srcresult < GST_FLOW_EOS) {
+    if ((sq->is_eos || sq->is_segment_done) && sq->srcresult < GST_FLOW_EOS) {
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       GST_ELEMENT_FLOW_ERROR (mq, sq->srcresult);
     } else {
@@ -2261,6 +2267,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       goto done;
 
     case GST_EVENT_SEGMENT:
+      sq->is_segment_done = FALSE;
       sref = gst_event_ref (event);
       break;
     case GST_EVENT_GAP:
@@ -2312,6 +2319,14 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   /* mark EOS when we received one, we must do that after putting the
    * buffer in the queue because EOS marks the buffer as filled. */
   switch (type) {
+    case GST_EVENT_SEGMENT_DONE:
+      sq->is_segment_done = TRUE;
+      GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+      update_buffering (mq, sq);
+      GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+      single_queue_overrun_cb (sq->queue, sq);
+      gst_multi_queue_post_buffering (mq);
+      break;
     case GST_EVENT_EOS:
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       sq->is_eos = TRUE;
@@ -2832,7 +2847,7 @@ single_queue_check_full (GstDataQueue * dataq, guint visible, guint bytes,
       sq->max_size.bytes, sq->cur_time, sq->max_size.time);
 
   /* we are always filled on EOS */
-  if (sq->is_eos)
+  if (sq->is_eos || sq->is_segment_done)
     return TRUE;
 
   /* we never go past the max visible items unless we are in buffering mode */
