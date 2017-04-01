@@ -53,6 +53,7 @@ gst*orc.h
 /tests/check/elements/videoframe-audiolevel
 /tests/check/elements/pnm
 /tests/check/pipelines/simple-launch-lines
+/tests/examples/audiomixmatrix/test-audiomixmatrix
 /tests/examples/codecparsers/parse-jpeg
 /tests/examples/codecparsers/parse-vp8
 /tests/examples/gtk/gtkglsink
