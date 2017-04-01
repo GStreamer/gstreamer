@@ -342,7 +342,6 @@ static void
 gst_gl_cocoa_draw_cb (GstGLWindowCocoa *window_cocoa)
 {
   GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
-  GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
   GstGLNSWindow *internal_win_id = (__bridge GstGLNSWindow *)priv->internal_win_id;
 
   if (internal_win_id && ![internal_win_id isClosed]) {
@@ -442,7 +441,6 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
   window_cocoa = cocoa;
   GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
   GstGLNSWindow *internal_win_id = (__bridge GstGLNSWindow *)priv->internal_win_id;
-  NSView *external_view = (__bridge NSView *)priv->external_view;
 
   self = [super initWithContentRect: contentRect
         styleMask: styleMask backing: bufferingType
