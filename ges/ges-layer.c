@@ -356,7 +356,7 @@ ges_layer_get_duration (GESLayer * layer)
  * removed. If you wish to use the @clip after this function, make sure you
  * call gst_object_ref() before removing it from the @layer.
  *
- * Returns: TRUE if the clip could be removed, FALSE if the layer does
+ * Returns: %TRUE if the clip could be removed, %FALSE if the layer does
  * not want to remove the clip.
  */
 gboolean

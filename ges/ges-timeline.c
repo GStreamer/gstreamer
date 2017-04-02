@@ -2819,8 +2819,8 @@ ges_timeline_new (void)
  *
  * Creates a timeline from the given URI.
  *
- * Returns (transfer floating) (nullable): A new timeline if the uri was loaded
- * successfully, or NULL if the uri could not be loaded.
+ * Returns: (transfer floating) (nullable): A new timeline if the uri was loaded
+ * successfully, or %NULL if the uri could not be loaded.
  */
 GESTimeline *
 ges_timeline_new_from_uri (const gchar * uri, GError ** error)
@@ -3413,7 +3413,7 @@ ges_timeline_commit_unlocked (GESTimeline * timeline)
  * directly executed in the non-linear engine. Call this method once you are
  * done with a set of changes and want it to be executed.
  *
- * The GESTimeline::commited signal will be emitted when the (possibly updated)
+ * The #GESTimeline::commited signal will be emitted when the (possibly updated)
  * #GstPipeline is ready to output data again, except if the state of the
  * timeline was #GST_STATE_READY or #GST_STATE_NULL.
  *
@@ -3423,7 +3423,7 @@ ges_timeline_commit_unlocked (GESTimeline * timeline)
  *
  * You should not try to change the state of the timeline, seek it or add
  * tracks to it during a commit operation, that is between a call to this
- * function and after receiving the GESTimeline::commited signal.
+ * function and after receiving the #GESTimeline::commited signal.
  *
  * See #ges_timeline_commit_sync if you don't want to bother with waiting
  * for the signal.
