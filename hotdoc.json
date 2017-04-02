@@ -9,6 +9,7 @@
         "gstreamer-1.0"
     ], 
     "project_name": "GStreamer Documentation",
+    "project_version": "1.0",
     "sitemap": "sitemap.txt", 
     "syntax_highlighting_activate": true,
     "devhelp_activate": true,
