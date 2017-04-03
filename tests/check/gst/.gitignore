@@ -35,6 +35,7 @@ gstplugin
 gstpoll
 gstpreset
 gstprintf
+gstpromise
 gstprotection
 gstregistry
 gstsegment

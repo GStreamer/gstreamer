@@ -133,6 +133,7 @@ check_PROGRAMS =				\
 	gst/gstpoll     			\
 	gst/gstprotection     			\
 	$(PRINTF_CHECKS)			\
+	gst/gstpromise				\
 	gst/gstsegment				\
 	gst/gstsystemclock			\
 	gst/gstclock				\

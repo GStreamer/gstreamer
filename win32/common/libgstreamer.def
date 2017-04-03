@@ -1091,6 +1091,14 @@ EXPORTS
 	gst_printerrln
 	gst_println
 	gst_progress_type_get_type
+	gst_promise_expire
+	gst_promise_get_type
+	gst_promise_interrupt
+	gst_promise_new
+	gst_promise_reply
+	gst_promise_result_get_type
+	gst_promise_set_change_callback
+	gst_promise_wait
 	gst_protection_filter_systems_by_available_decryptors
 	gst_protection_meta_api_get_type
 	gst_protection_meta_get_info

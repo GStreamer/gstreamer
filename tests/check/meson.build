@@ -38,6 +38,7 @@ core_tests = [
   [ 'gst/gstprotection.c' ],
   [ 'gst/gstquery.c', not have_registry ],
   [ 'gst/gstregistry.c', not have_registry ],
+  [ 'gst/gstpromise.c'],
   [ 'gst/gstsegment.c' ],
   [ 'gst/gststream.c' ],
   [ 'gst/gststructure.c' ],

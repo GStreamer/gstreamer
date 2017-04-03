@@ -2678,6 +2678,29 @@ GstRegistryPrivate
 
 
 <SECTION>
+<FILE>gstpromise</FILE>
+<TITLE>GstPromise</TITLE>
+GstPromiseResult
+GstPromiseChangeFunc
+GstPromise
+gst_promise_new
+gst_promise_new_with_change_func
+gst_promise_ref
+gst_promise_unref
+gst_promise_wait
+gst_promise_reply
+gst_promise_interrupt
+gst_promise_expire
+<SUBSECTION Standard>
+GST_PROMISE
+GST_TYPE_PROMISE
+gst_promise_get_type
+GST_TYPE_PROMISE_RESULT
+gst_promise_result_get_type
+</SECTION>
+
+
+<SECTION>
 <FILE>gstsegment</FILE>
 <TITLE>GstSegment</TITLE>
 GstSegment

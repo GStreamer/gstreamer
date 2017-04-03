@@ -26,6 +26,7 @@ gst_pad_template_get_type
 gst_pipeline_get_type
 gst_plugin_feature_get_type
 gst_preset_get_type
+gst_promise_get_type
 gst_registry_get_type
 gst_system_clock_get_type
 gst_tag_setter_get_type
@@ -48,4 +49,3 @@ gst_sample_get_type
 gst_tag_list_get_type
 gst_toc_get_type
 gst_toc_entry_get_type
-

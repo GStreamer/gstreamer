@@ -96,6 +96,7 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gstpluginfeature.xml" />
     <xi:include href="xml/gstpoll.xml" />
     <xi:include href="xml/gstpreset.xml" />
+    <xi:include href="xml/gstpromise.xml" />
     <xi:include href="xml/gstprotection.xml" />
     <xi:include href="xml/gstquery.xml" />
     <xi:include href="xml/gstregistry.xml" />
