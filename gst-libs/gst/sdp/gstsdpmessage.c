@@ -93,31 +93,37 @@ G_STMT_START {                    \
 
 #define DEFINE_STRING_SETTER(field)                                     \
 GstSDPResult gst_sdp_message_set_##field (GstSDPMessage *msg, const gchar *val) { \
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);                   \
   g_free (msg->field);                                                  \
   msg->field = g_strdup (val);                                          \
   return GST_SDP_OK;                                                    \
 }
 #define DEFINE_STRING_GETTER(field)                                     \
 const gchar* gst_sdp_message_get_##field (const GstSDPMessage *msg) {   \
+  g_return_val_if_fail (msg != NULL, NULL);                             \
   return msg->field;                                                    \
 }
 
 #define DEFINE_ARRAY_LEN(field)                                         \
 guint gst_sdp_message_##field##_len (const GstSDPMessage *msg) {        \
+  g_return_val_if_fail (msg != NULL, 0);                                \
   return msg->field->len;                                               \
 }
 #define DEFINE_ARRAY_GETTER(method, field, type)                        \
 const type * gst_sdp_message_get_##method (const GstSDPMessage *msg, guint idx) {  \
+  g_return_val_if_fail (msg != NULL, NULL);                             \
   return &g_array_index (msg->field, type, idx);                        \
 }
 #define DEFINE_PTR_ARRAY_GETTER(method, field, type)                    \
 const type gst_sdp_message_get_##method (const GstSDPMessage *msg, guint idx) {    \
+  g_return_val_if_fail (msg != NULL, (type) 0);                         \
   return g_array_index (msg->field, type, idx);                         \
 }
 #define DEFINE_ARRAY_INSERT(method, field, intype, dup_method, type)         \
 GstSDPResult gst_sdp_message_insert_##method (GstSDPMessage *msg, gint idx, intype val) {   \
   type vt;                                                              \
   type* v = &vt;                                                         \
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);                   \
   dup_method (v, val);                                                  \
   if (idx == -1)                                                        \
     g_array_append_val (msg->field, vt);                                \
@@ -128,20 +134,25 @@ GstSDPResult gst_sdp_message_insert_##method (GstSDPMessage *msg, gint idx, inty
 
 #define DEFINE_ARRAY_REPLACE(method, field, intype, free_method, dup_method, type)         \
 GstSDPResult gst_sdp_message_replace_##method (GstSDPMessage *msg, guint idx, intype val) {   \
-  type *v = &g_array_index (msg->field, type, idx);                   \
-  free_method (v);                                                    \
+  type *v;                                                              \
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);                   \
+  v = &g_array_index (msg->field, type, idx);                           \
+  free_method (v);                                                      \
   dup_method (v, val);                                                  \
   return GST_SDP_OK;                                                    \
 }
 #define DEFINE_ARRAY_REMOVE(method, field, type, free_method)                        \
 GstSDPResult gst_sdp_message_remove_##method (GstSDPMessage *msg, guint idx) {  \
-  type *v = &g_array_index (msg->field, type, idx);                     \
+  type *v;                                                              \
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);                   \
+  v = &g_array_index (msg->field, type, idx);                           \
   free_method (v);                                                      \
   g_array_remove_index (msg->field, idx);                               \
   return GST_SDP_OK;                                                    \
 }
 #define DEFINE_ARRAY_ADDER(method, type)                                \
 GstSDPResult gst_sdp_message_add_##method (GstSDPMessage *msg, const type val) {   \
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);                   \
   return gst_sdp_message_insert_##method (msg, -1, val);                \
 }
 
@@ -789,6 +800,8 @@ gst_sdp_message_set_origin (GstSDPMessage * msg, const gchar * username,
     const gchar * sess_id, const gchar * sess_version, const gchar * nettype,
     const gchar * addrtype, const gchar * addr)
 {
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+
   REPLACE_STRING (msg->origin.username, username);
   REPLACE_STRING (msg->origin.sess_id, sess_id);
   REPLACE_STRING (msg->origin.sess_version, sess_version);
@@ -810,6 +823,8 @@ gst_sdp_message_set_origin (GstSDPMessage * msg, const gchar * username,
 const GstSDPOrigin *
 gst_sdp_message_get_origin (const GstSDPMessage * msg)
 {
+  g_return_val_if_fail (msg != NULL, NULL);
+
   return &msg->origin;
 }
 
@@ -1036,6 +1051,8 @@ GstSDPResult
 gst_sdp_message_set_connection (GstSDPMessage * msg, const gchar * nettype,
     const gchar * addrtype, const gchar * address, guint ttl, guint addr_number)
 {
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+
   REPLACE_STRING (msg->connection.nettype, nettype);
   REPLACE_STRING (msg->connection.addrtype, addrtype);
   REPLACE_STRING (msg->connection.address, address);
@@ -1056,6 +1073,8 @@ gst_sdp_message_set_connection (GstSDPMessage * msg, const gchar * nettype,
 const GstSDPConnection *
 gst_sdp_message_get_connection (const GstSDPMessage * msg)
 {
+  g_return_val_if_fail (msg != NULL, NULL);
+
   return &msg->connection;
 }
 
@@ -1075,6 +1094,8 @@ GstSDPResult
 gst_sdp_bandwidth_set (GstSDPBandwidth * bw, const gchar * bwtype,
     guint bandwidth)
 {
+  g_return_val_if_fail (bw != NULL, GST_SDP_EINVAL);
+
   bw->bwtype = g_strdup (bwtype);
   bw->bandwidth = bandwidth;
   return GST_SDP_OK;
@@ -1093,6 +1114,8 @@ gst_sdp_bandwidth_set (GstSDPBandwidth * bw, const gchar * bwtype,
 GstSDPResult
 gst_sdp_bandwidth_clear (GstSDPBandwidth * bw)
 {
+  g_return_val_if_fail (bw != NULL, GST_SDP_EINVAL);
+
   FREE_STRING (bw->bwtype);
   bw->bandwidth = 0;
   return GST_SDP_OK;
@@ -1182,6 +1205,8 @@ gst_sdp_message_add_bandwidth (GstSDPMessage * msg, const gchar * bwtype,
 {
   GstSDPBandwidth bw;
 
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+
   gst_sdp_bandwidth_set (&bw, bwtype, bandwidth);
   return gst_sdp_message_insert_bandwidth (msg, -1, &bw);
 }
@@ -1203,6 +1228,8 @@ GstSDPResult
 gst_sdp_time_set (GstSDPTime * t, const gchar * start,
     const gchar * stop, const gchar ** repeat)
 {
+  g_return_val_if_fail (t != NULL, GST_SDP_EINVAL);
+
   t->start = g_strdup (start);
   t->stop = g_strdup (stop);
   if (repeat) {
@@ -1231,6 +1258,8 @@ gst_sdp_time_set (GstSDPTime * t, const gchar * start,
 GstSDPResult
 gst_sdp_time_clear (GstSDPTime * t)
 {
+  g_return_val_if_fail (t != NULL, GST_SDP_EINVAL);
+
   FREE_STRING (t->start);
   FREE_STRING (t->stop);
   INIT_STR_ARRAY (t->repeat);
@@ -1324,6 +1353,8 @@ gst_sdp_message_add_time (GstSDPMessage * msg, const gchar * start,
 {
   GstSDPTime times;
 
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+
   gst_sdp_time_set (&times, start, stop, repeat);
   g_array_append_val (msg->times, times);
 
@@ -1346,6 +1377,8 @@ GstSDPResult
 gst_sdp_zone_set (GstSDPZone * zone, const gchar * adj_time,
     const gchar * typed_time)
 {
+  g_return_val_if_fail (zone != NULL, GST_SDP_EINVAL);
+
   zone->time = g_strdup (adj_time);
   zone->typed_time = g_strdup (typed_time);
   return GST_SDP_OK;
@@ -1364,6 +1397,8 @@ gst_sdp_zone_set (GstSDPZone * zone, const gchar * adj_time,
 GstSDPResult
 gst_sdp_zone_clear (GstSDPZone * zone)
 {
+  g_return_val_if_fail (zone != NULL, GST_SDP_EINVAL);
+
   FREE_STRING (zone->time);
   FREE_STRING (zone->typed_time);
   return GST_SDP_OK;
@@ -1452,6 +1487,8 @@ gst_sdp_message_add_zone (GstSDPMessage * msg, const gchar * adj_time,
 {
   GstSDPZone zone;
 
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+
   gst_sdp_zone_set (&zone, adj_time, typed_time);
   g_array_append_val (msg->zones, zone);
 
@@ -1472,6 +1509,8 @@ GstSDPResult
 gst_sdp_message_set_key (GstSDPMessage * msg, const gchar * type,
     const gchar * data)
 {
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+
   REPLACE_STRING (msg->key.type, type);
   REPLACE_STRING (msg->key.data, data);
 
@@ -1489,6 +1528,8 @@ gst_sdp_message_set_key (GstSDPMessage * msg, const gchar * type,
 const GstSDPKey *
 gst_sdp_message_get_key (const GstSDPMessage * msg)
 {
+  g_return_val_if_fail (msg != NULL, NULL);
+
   return &msg->key;
 }
 
@@ -1508,6 +1549,9 @@ GstSDPResult
 gst_sdp_attribute_set (GstSDPAttribute * attr, const gchar * key,
     const gchar * value)
 {
+  g_return_val_if_fail (attr != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (key != NULL, GST_SDP_EINVAL);
+
   attr->key = g_strdup (key);
   attr->value = g_strdup (value);
   return GST_SDP_OK;
@@ -1526,6 +1570,8 @@ gst_sdp_attribute_set (GstSDPAttribute * attr, const gchar * key,
 GstSDPResult
 gst_sdp_attribute_clear (GstSDPAttribute * attr)
 {
+  g_return_val_if_fail (attr != NULL, GST_SDP_EINVAL);
+
   FREE_STRING (attr->key);
   FREE_STRING (attr->value);
   return GST_SDP_OK;
@@ -1567,6 +1613,9 @@ gst_sdp_message_get_attribute_val_n (const GstSDPMessage * msg,
     const gchar * key, guint nth)
 {
   guint i;
+
+  g_return_val_if_fail (msg != NULL, NULL);
+  g_return_val_if_fail (key != NULL, NULL);
 
   for (i = 0; i < msg->attributes->len; i++) {
     GstSDPAttribute *attr;
@@ -1661,6 +1710,10 @@ gst_sdp_message_add_attribute (GstSDPMessage * msg, const gchar * key,
 {
   GstSDPAttribute attr;
 
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (key != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (value != NULL, GST_SDP_EINVAL);
+
   gst_sdp_attribute_set (&attr, key, value);
   g_array_append_val (msg->attributes, attr);
 
@@ -1703,6 +1756,9 @@ gst_sdp_message_add_media (GstSDPMessage * msg, GstSDPMedia * media)
 {
   guint len;
   GstSDPMedia *nmedia;
+
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
 
   len = msg->medias->len;
   g_array_set_size (msg->medias, len + 1);
@@ -1972,6 +2028,8 @@ gst_sdp_media_as_text (const GstSDPMedia * media)
 const gchar *
 gst_sdp_media_get_media (const GstSDPMedia * media)
 {
+  g_return_val_if_fail (media != NULL, NULL);
+
   return media->media;
 }
 
@@ -1987,6 +2045,9 @@ gst_sdp_media_get_media (const GstSDPMedia * media)
 GstSDPResult
 gst_sdp_media_set_media (GstSDPMedia * media, const gchar * med)
 {
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (med != NULL, GST_SDP_EINVAL);
+
   g_free (media->media);
   media->media = g_strdup (med);
 
@@ -2004,6 +2065,8 @@ gst_sdp_media_set_media (GstSDPMedia * media, const gchar * med)
 guint
 gst_sdp_media_get_port (const GstSDPMedia * media)
 {
+  g_return_val_if_fail (media != NULL, 0);
+
   return media->port;
 }
 
@@ -2018,6 +2081,8 @@ gst_sdp_media_get_port (const GstSDPMedia * media)
 guint
 gst_sdp_media_get_num_ports (const GstSDPMedia * media)
 {
+  g_return_val_if_fail (media != NULL, 0);
+
   return media->num_ports;
 }
 
@@ -2034,6 +2099,8 @@ gst_sdp_media_get_num_ports (const GstSDPMedia * media)
 GstSDPResult
 gst_sdp_media_set_port_info (GstSDPMedia * media, guint port, guint num_ports)
 {
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+
   media->port = port;
   media->num_ports = num_ports;
 
@@ -2051,6 +2118,8 @@ gst_sdp_media_set_port_info (GstSDPMedia * media, guint port, guint num_ports)
 const gchar *
 gst_sdp_media_get_proto (const GstSDPMedia * media)
 {
+  g_return_val_if_fail (media != NULL, NULL);
+
   return media->proto;
 }
 
@@ -2066,6 +2135,8 @@ gst_sdp_media_get_proto (const GstSDPMedia * media)
 GstSDPResult
 gst_sdp_media_set_proto (GstSDPMedia * media, const gchar * proto)
 {
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+
   g_free (media->proto);
   media->proto = g_strdup (proto);
 
@@ -2083,6 +2154,8 @@ gst_sdp_media_set_proto (GstSDPMedia * media, const gchar * proto)
 guint
 gst_sdp_media_formats_len (const GstSDPMedia * media)
 {
+  g_return_val_if_fail (media != NULL, 0);
+
   return media->fmts->len;
 }
 
@@ -2098,6 +2171,8 @@ gst_sdp_media_formats_len (const GstSDPMedia * media)
 const gchar *
 gst_sdp_media_get_format (const GstSDPMedia * media, guint idx)
 {
+  g_return_val_if_fail (media != NULL, NULL);
+
   if (idx >= media->fmts->len)
     return NULL;
   return g_array_index (media->fmts, gchar *, idx);
@@ -2121,6 +2196,9 @@ gst_sdp_media_insert_format (GstSDPMedia * media, gint idx,
     const gchar * format)
 {
   gchar *fmt;
+
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (format != NULL, GST_SDP_EINVAL);
 
   fmt = g_strdup (format);
 
@@ -2150,6 +2228,9 @@ gst_sdp_media_replace_format (GstSDPMedia * media, guint idx,
 {
   gchar **old;
 
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (format != NULL, GST_SDP_EINVAL);
+
   old = &g_array_index (media->fmts, gchar *, idx);
   g_free (*old);
   *old = g_strdup (format);
@@ -2173,6 +2254,8 @@ gst_sdp_media_remove_format (GstSDPMedia * media, guint idx)
 {
   gchar **old;
 
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+
   old = &g_array_index (media->fmts, gchar *, idx);
   g_free (*old);
   g_array_remove_index (media->fmts, idx);
@@ -2194,6 +2277,9 @@ gst_sdp_media_add_format (GstSDPMedia * media, const gchar * format)
 {
   gchar *fmt;
 
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (format != NULL, GST_SDP_EINVAL);
+
   fmt = g_strdup (format);
 
   g_array_append_val (media->fmts, fmt);
@@ -2212,6 +2298,8 @@ gst_sdp_media_add_format (GstSDPMedia * media, const gchar * format)
 const gchar *
 gst_sdp_media_get_information (const GstSDPMedia * media)
 {
+  g_return_val_if_fail (media != NULL, NULL);
+
   return media->information;
 }
 
@@ -2227,6 +2315,8 @@ gst_sdp_media_get_information (const GstSDPMedia * media)
 GstSDPResult
 gst_sdp_media_set_information (GstSDPMedia * media, const gchar * information)
 {
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+
   g_free (media->information);
   media->information = g_strdup (information);
 
@@ -2253,6 +2343,11 @@ GstSDPResult
 gst_sdp_connection_set (GstSDPConnection * conn, const gchar * nettype,
     const gchar * addrtype, const gchar * address, guint ttl, guint addr_number)
 {
+  g_return_val_if_fail (conn != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (nettype != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (addrtype != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (address != NULL, GST_SDP_EINVAL);
+
   conn->nettype = g_strdup (nettype);
   conn->addrtype = g_strdup (addrtype);
   conn->address = g_strdup (address);
@@ -2274,6 +2369,8 @@ gst_sdp_connection_set (GstSDPConnection * conn, const gchar * nettype,
 GstSDPResult
 gst_sdp_connection_clear (GstSDPConnection * conn)
 {
+  g_return_val_if_fail (conn != NULL, GST_SDP_EINVAL);
+
   FREE_STRING (conn->nettype);
   FREE_STRING (conn->addrtype);
   FREE_STRING (conn->address);
@@ -2294,6 +2391,8 @@ gst_sdp_connection_clear (GstSDPConnection * conn)
 guint
 gst_sdp_media_connections_len (const GstSDPMedia * media)
 {
+  g_return_val_if_fail (media != NULL, 0);
+
   return media->connections->len;
 }
 
@@ -2309,6 +2408,9 @@ gst_sdp_media_connections_len (const GstSDPMedia * media)
 const GstSDPConnection *
 gst_sdp_media_get_connection (const GstSDPMedia * media, guint idx)
 {
+  g_return_val_if_fail (media != NULL, NULL);
+  g_return_val_if_fail (idx < media->connections->len, NULL);
+
   return &g_array_index (media->connections, GstSDPConnection, idx);
 }
 
@@ -2329,6 +2431,11 @@ GstSDPResult
 gst_sdp_media_insert_connection (GstSDPMedia * media, gint idx,
     GstSDPConnection * conn)
 {
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (conn != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (idx == -1
+      || idx < media->connections->len, GST_SDP_EINVAL);
+
   if (idx == -1)
     g_array_append_val (media->connections, *conn);
   else
@@ -2355,6 +2462,10 @@ gst_sdp_media_replace_connection (GstSDPMedia * media, guint idx,
 {
   GstSDPConnection *old;
 
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (conn != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (idx < media->connections->len, GST_SDP_EINVAL);
+
   old = &g_array_index (media->connections, GstSDPConnection, idx);
   gst_sdp_connection_clear (old);
   *old = *conn;
@@ -2377,6 +2488,9 @@ GstSDPResult
 gst_sdp_media_remove_connection (GstSDPMedia * media, guint idx)
 {
   GstSDPConnection *old;
+
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (idx < media->connections->len, GST_SDP_EINVAL);
 
   old = &g_array_index (media->connections, GstSDPConnection, idx);
   gst_sdp_connection_clear (old);
@@ -2405,6 +2519,11 @@ gst_sdp_media_add_connection (GstSDPMedia * media, const gchar * nettype,
 {
   GstSDPConnection conn;
 
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (nettype != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (addrtype != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (address != NULL, GST_SDP_EINVAL);
+
   gst_sdp_connection_set (&conn, nettype, addrtype, address, ttl, addr_number);
   g_array_append_val (media->connections, conn);
 
@@ -2422,6 +2541,8 @@ gst_sdp_media_add_connection (GstSDPMedia * media, const gchar * nettype,
 guint
 gst_sdp_media_bandwidths_len (const GstSDPMedia * media)
 {
+  g_return_val_if_fail (media != NULL, 0);
+
   return media->bandwidths->len;
 }
 
@@ -2437,6 +2558,8 @@ gst_sdp_media_bandwidths_len (const GstSDPMedia * media)
 const GstSDPBandwidth *
 gst_sdp_media_get_bandwidth (const GstSDPMedia * media, guint idx)
 {
+  g_return_val_if_fail (media != NULL, NULL);
+
   return &g_array_index (media->bandwidths, GstSDPBandwidth, idx);
 }
 
@@ -2457,6 +2580,11 @@ GstSDPResult
 gst_sdp_media_insert_bandwidth (GstSDPMedia * media, gint idx,
     GstSDPBandwidth * bw)
 {
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (bw != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (idx == -1
+      || idx < media->bandwidths->len, GST_SDP_EINVAL);
+
   if (idx == -1)
     g_array_append_val (media->bandwidths, *bw);
   else
@@ -2482,6 +2610,9 @@ gst_sdp_media_replace_bandwidth (GstSDPMedia * media, guint idx,
     GstSDPBandwidth * bw)
 {
   GstSDPBandwidth *old;
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (bw != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (idx < media->bandwidths->len, GST_SDP_EINVAL);
 
   old = &g_array_index (media->bandwidths, GstSDPBandwidth, idx);
   gst_sdp_bandwidth_clear (old);
@@ -2506,6 +2637,9 @@ gst_sdp_media_remove_bandwidth (GstSDPMedia * media, guint idx)
 {
   GstSDPBandwidth *old;
 
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (idx < media->bandwidths->len, GST_SDP_EINVAL);
+
   old = &g_array_index (media->bandwidths, GstSDPBandwidth, idx);
   gst_sdp_bandwidth_clear (old);
   g_array_remove_index (media->bandwidths, idx);
@@ -2529,6 +2663,9 @@ gst_sdp_media_add_bandwidth (GstSDPMedia * media, const gchar * bwtype,
 {
   GstSDPBandwidth bw;
 
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (bwtype != NULL, GST_SDP_EINVAL);
+
   gst_sdp_bandwidth_set (&bw, bwtype, bandwidth);
   g_array_append_val (media->bandwidths, bw);
 
@@ -2549,6 +2686,8 @@ GstSDPResult
 gst_sdp_media_set_key (GstSDPMedia * media, const gchar * type,
     const gchar * data)
 {
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+
   g_free (media->key.type);
   media->key.type = g_strdup (type);
   g_free (media->key.data);
@@ -2568,6 +2707,8 @@ gst_sdp_media_set_key (GstSDPMedia * media, const gchar * type,
 const GstSDPKey *
 gst_sdp_media_get_key (const GstSDPMedia * media)
 {
+  g_return_val_if_fail (media != NULL, NULL);
+
   return &media->key;
 }
 
@@ -2582,6 +2723,8 @@ gst_sdp_media_get_key (const GstSDPMedia * media)
 guint
 gst_sdp_media_attributes_len (const GstSDPMedia * media)
 {
+  g_return_val_if_fail (media != NULL, 0);
+
   return media->attributes->len;
 }
 
@@ -2601,6 +2744,10 @@ gst_sdp_media_add_attribute (GstSDPMedia * media, const gchar * key,
 {
   GstSDPAttribute attr;
 
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (key != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (value != NULL, GST_SDP_EINVAL);
+
   gst_sdp_attribute_set (&attr, key, value);
   g_array_append_val (media->attributes, attr);
 
@@ -2619,6 +2766,9 @@ gst_sdp_media_add_attribute (GstSDPMedia * media, const gchar * key,
 const GstSDPAttribute *
 gst_sdp_media_get_attribute (const GstSDPMedia * media, guint idx)
 {
+  g_return_val_if_fail (media != NULL, NULL);
+  g_return_val_if_fail (idx < media->attributes->len, NULL);
+
   return &g_array_index (media->attributes, GstSDPAttribute, idx);
 }
 
@@ -2637,6 +2787,9 @@ gst_sdp_media_get_attribute_val_n (const GstSDPMedia * media, const gchar * key,
     guint nth)
 {
   guint i;
+
+  g_return_val_if_fail (media != NULL, NULL);
+  g_return_val_if_fail (key != NULL, NULL);
 
   for (i = 0; i < media->attributes->len; i++) {
     GstSDPAttribute *attr;
@@ -2664,6 +2817,9 @@ gst_sdp_media_get_attribute_val_n (const GstSDPMedia * media, const gchar * key,
 const gchar *
 gst_sdp_media_get_attribute_val (const GstSDPMedia * media, const gchar * key)
 {
+  g_return_val_if_fail (media != NULL, NULL);
+  g_return_val_if_fail (key != NULL, NULL);
+
   return gst_sdp_media_get_attribute_val_n (media, key, 0);
 }
 
@@ -2684,6 +2840,11 @@ GstSDPResult
 gst_sdp_media_insert_attribute (GstSDPMedia * media, gint idx,
     GstSDPAttribute * attr)
 {
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (attr != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (idx == -1
+      || idx < media->attributes->len, GST_SDP_EINVAL);
+
   if (idx == -1)
     g_array_append_val (media->attributes, *attr);
   else
@@ -2710,6 +2871,10 @@ gst_sdp_media_replace_attribute (GstSDPMedia * media, guint idx,
 {
   GstSDPAttribute *old;
 
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (attr != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (idx < media->attributes->len, GST_SDP_EINVAL);
+
   old = &g_array_index (media->attributes, GstSDPAttribute, idx);
   gst_sdp_attribute_clear (old);
   *old = *attr;
@@ -2732,6 +2897,8 @@ GstSDPResult
 gst_sdp_media_remove_attribute (GstSDPMedia * media, guint idx)
 {
   GstSDPAttribute *old;
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (idx < media->attributes->len, GST_SDP_EINVAL);
 
   old = &g_array_index (media->attributes, GstSDPAttribute, idx);
   gst_sdp_attribute_clear (old);
@@ -3369,6 +3536,8 @@ gst_sdp_media_get_caps_from_media (const GstSDPMedia * media, gint pt)
   GstStructure *s;
   gint payload = 0;
   gboolean ret;
+
+  g_return_val_if_fail (media != NULL, NULL);
 
   /* get and parse rtpmap */
   rtpmap = gst_sdp_get_attribute_for_pt (media, "rtpmap", pt);
