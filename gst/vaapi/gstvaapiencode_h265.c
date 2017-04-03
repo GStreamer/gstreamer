@@ -64,7 +64,7 @@ static const char gst_vaapiencode_h265_sink_caps_str[] =
 /* *INDENT-OFF* */
 static const char gst_vaapiencode_h265_src_caps_str[] =
   GST_CODEC_CAPS ", "
-  "profile = (string) { main }";
+  "profile = (string) { main, main-10 }";
 /* *INDENT-ON* */
 
 /* *INDENT-OFF* */
