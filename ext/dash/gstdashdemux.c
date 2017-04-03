@@ -1886,7 +1886,7 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
         "Advancing to %" GST_TIME_FORMAT " (was %" GST_TIME_FORMAT ")",
         GST_TIME_ARGS (ret), GST_TIME_ARGS (min_position));
 
-    return ret;
+    goto out;
   }
 
   /* Figure out the difference, in running time, between where we are and
@@ -1924,6 +1924,31 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
     GST_DEBUG_OBJECT (stream->pad,
         "Advance to %" GST_TIME_FORMAT " (was %" GST_TIME_FORMAT ")",
         GST_TIME_ARGS (ret), GST_TIME_ARGS (min_position));
+  }
+
+out:
+
+  {
+    GstClockTime cur_skip =
+        (cur_position < ret) ? ret - cur_position : cur_position - ret;
+
+    if (dashstream->average_skip_size == 0) {
+      dashstream->average_skip_size = cur_skip;
+    } else {
+      dashstream->average_skip_size =
+          (cur_skip + 3 * dashstream->average_skip_size) / 4;
+    }
+
+    if (dashstream->average_skip_size >
+        cur_skip + dashstream->keyframe_average_distance
+        && dashstream->average_skip_size > min_skip) {
+      if (stream->segment.rate > 0)
+        ret = cur_position + dashstream->average_skip_size;
+      else if (cur_position > dashstream->average_skip_size)
+        ret = cur_position - dashstream->average_skip_size;
+      else
+        ret = 0;
+    }
   }
 
   return ret;
@@ -2320,7 +2345,9 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   /* Update the current sequence on all streams */
   for (iter = streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemuxStream *stream = iter->data;
+    GstDashDemuxStream *dashstream = iter->data;
 
+    dashstream->average_skip_size = 0;
     if (gst_dash_demux_stream_seek (stream, rate >= 0, 0, target_pos,
             NULL) != GST_FLOW_OK)
       return FALSE;

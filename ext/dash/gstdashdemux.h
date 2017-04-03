@@ -110,6 +110,8 @@ struct _GstDashDemuxStream
   GstClockTime average_download_time;
   /* Cached target time (only in trickmode-key-units) */
   GstClockTime target_time;
+  /* Average skip-ahead time (only in trickmode-key-units) */
+  GstClockTime average_skip_size;
 };
 
 /**
