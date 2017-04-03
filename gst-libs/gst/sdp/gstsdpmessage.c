@@ -170,6 +170,9 @@ gst_sdp_message_boxed_copy (GstSDPMessage * orig)
 {
   GstSDPMessage *copy;
 
+  if (!orig)
+    return NULL;
+
   if (gst_sdp_message_copy (orig, &copy) == GST_SDP_OK)
     return copy;
 
