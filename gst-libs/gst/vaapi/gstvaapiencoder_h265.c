@@ -1436,6 +1436,13 @@ static gboolean
 fill_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncSequence * sequence)
 {
   VAEncSequenceParameterBufferHEVC *const seq_param = sequence->param;
+  const GstVideoFormat format =
+      GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
+  guint bits_depth_luma_minus8 =
+      GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info (format), 0);
+  if (bits_depth_luma_minus8 < 8)
+    return FALSE;
+  bits_depth_luma_minus8 -= 8;
 
   memset (seq_param, 0, sizeof (VAEncSequenceParameterBufferHEVC));
 
@@ -1457,8 +1464,8 @@ fill_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncSequence * sequence)
   seq_param->seq_fields.value = 0;
   seq_param->seq_fields.bits.chroma_format_idc = 1;
   seq_param->seq_fields.bits.separate_colour_plane_flag = 0;
-  seq_param->seq_fields.bits.bit_depth_luma_minus8 = 0;
-  seq_param->seq_fields.bits.bit_depth_chroma_minus8 = 0;
+  seq_param->seq_fields.bits.bit_depth_luma_minus8 = bits_depth_luma_minus8;
+  seq_param->seq_fields.bits.bit_depth_chroma_minus8 = bits_depth_luma_minus8;
   seq_param->seq_fields.bits.scaling_list_enabled_flag = FALSE;
   seq_param->seq_fields.bits.strong_intra_smoothing_enabled_flag = TRUE;
   seq_param->seq_fields.bits.amp_enabled_flag = TRUE;
