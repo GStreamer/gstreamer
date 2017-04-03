@@ -1589,6 +1589,10 @@ gst_dash_demux_stream_advance_sync_sample (GstAdaptiveDemuxStream * stream,
           (target_time -
           dashstream->current_fragment_timestamp) /
           dashstream->current_fragment_keyframe_distance;
+
+      /* Prevent getting stuck in a loop due to rounding errors */
+      if (idx == dashstream->current_sync_sample)
+        idx++;
     } else {
       GstClockTime end_time =
           dashstream->current_fragment_timestamp +
@@ -1606,6 +1610,17 @@ gst_dash_demux_stream_advance_sync_sample (GstAdaptiveDemuxStream * stream,
           goto beach;
         }
         idx = dashstream->moof_sync_samples->len - 1 - idx;
+      }
+
+      /* Prevent getting stuck in a loop due to rounding errors */
+      if (idx == dashstream->current_sync_sample) {
+        if (idx == 0) {
+          dashstream->current_sync_sample = -1;
+          fragment_finished = TRUE;
+          goto beach;
+        }
+
+        idx--;
       }
     }
   }
@@ -1839,6 +1854,7 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
   GstClockTime target_time = GST_CLOCK_TIME_NONE;
   GstClockTime actual_ts;
+  GstClockTime previous_position;
   GstFlowReturn ret;
 
   GST_DEBUG_OBJECT (stream->pad, "Advance fragment");
@@ -1871,6 +1887,8 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
         GST_TIME_ARGS (stream->last_download_time),
         GST_TIME_ARGS (dashstream->average_download_time));
   }
+
+  previous_position = dashstream->actual_position;
 
   /* Update internal position */
   if (GST_CLOCK_TIME_IS_VALID (dashstream->actual_position)) {
@@ -1948,19 +1966,56 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
   if (GST_CLOCK_TIME_IS_VALID (target_time)
       && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux) &&
       dashstream->active_stream->mimeType == GST_STREAM_VIDEO) {
-    /* Key-unit trick mode, seek to fragment containing target time */
-    if (stream->segment.rate > 0)
-      ret = gst_dash_demux_stream_seek (stream, TRUE, GST_SEEK_FLAG_SNAP_AFTER,
+    GstClockTime actual_ts;
+    GstSeekFlags flags = 0;
+
+    /* Key-unit trick mode, seek to fragment containing target time
+     *
+     * We first try seeking without snapping. As above code to skip keyframes
+     * in the current fragment was not successful, we should go at least one
+     * fragment ahead. Due to rounding errors we could end up at the same
+     * fragment again here, in which case we retry seeking with the SNAP_AFTER
+     * flag.
+     *
+     * We don't always set that flag as we would then end up one further
+     * fragment in the future in all good cases.
+     */
+    while (TRUE) {
+      ret =
+          gst_dash_demux_stream_seek (stream, (stream->segment.rate > 0), flags,
           target_time, &actual_ts);
-    else
-      ret = gst_dash_demux_stream_seek (stream, FALSE, GST_SEEK_FLAG_SNAP_AFTER,
-          target_time, &actual_ts);
-    if (ret == GST_FLOW_OK)
-      GST_DEBUG_OBJECT (stream->pad, "Emergency seek to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (actual_ts));
-    else
-      GST_WARNING_OBJECT (stream->pad, "Failed to seek to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (target_time));
+
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (stream->pad, "Failed to seek to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (target_time));
+        /* Give up */
+        if (flags != 0)
+          break;
+
+        /* Retry with skipping ahead */
+        flags |= GST_SEEK_FLAG_SNAP_AFTER;
+        continue;
+      }
+
+      GST_DEBUG_OBJECT (stream->pad,
+          "Skipped to %" GST_TIME_FORMAT " (wanted %" GST_TIME_FORMAT ")",
+          GST_TIME_ARGS (actual_ts), GST_TIME_ARGS (target_time));
+
+      if ((stream->segment.rate > 0 && actual_ts < previous_position) ||
+          (stream->segment.rate < 0 && actual_ts > previous_position)) {
+        /* Give up */
+        if (flags != 0)
+          break;
+
+        /* Retry with forcing skipping ahead */
+        flags |= GST_SEEK_FLAG_SNAP_AFTER;
+
+        continue;
+      }
+
+      /* All good */
+      break;
+    }
   } else {
     /* Normal mode, advance to the next fragment */
     ret = gst_mpd_client_advance_segment (dashdemux->client,
