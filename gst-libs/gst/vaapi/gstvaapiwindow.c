@@ -74,6 +74,23 @@ gst_vaapi_window_create (GstVaapiWindow * window, guint width, guint height)
   return TRUE;
 }
 
+static void
+gst_vaapi_window_finalize (GstVaapiWindow * window)
+{
+}
+
+void
+gst_vaapi_window_class_init (GstVaapiWindowClass * klass)
+{
+  GstVaapiObjectClass *const object_class = GST_VAAPI_OBJECT_CLASS (klass);
+
+  object_class->finalize = (GstVaapiObjectFinalizeFunc)
+      gst_vaapi_window_finalize;
+}
+
+GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiWindow,
+    gst_vaapi_window, gst_vaapi_window_class_init (&g_class));
+
 GstVaapiWindow *
 gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
     GstVaapiDisplay * display, GstVaapiID id, guint width, guint height)

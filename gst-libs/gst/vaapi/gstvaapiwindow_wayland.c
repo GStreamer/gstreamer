@@ -46,6 +46,12 @@
 #define GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE(obj) \
     (&GST_VAAPI_WINDOW_WAYLAND_CAST(obj)->priv)
 
+#define GST_VAAPI_WINDOW_WAYLAND_CLASS(klass) \
+  ((GstVaapiWindowWaylandClass *)(klass))
+
+#define GST_VAAPI_WINDOW_WAYLAND_GET_CLASS(obj) \
+  GST_VAAPI_WINDOW_WAYLAND_CLASS (GST_VAAPI_WINDOW_GET_CLASS (obj))
+
 typedef struct _GstVaapiWindowWaylandPrivate GstVaapiWindowWaylandPrivate;
 typedef struct _GstVaapiWindowWaylandClass GstVaapiWindowWaylandClass;
 typedef struct _FrameState FrameState;
@@ -135,6 +141,7 @@ struct _GstVaapiWindowWaylandClass
 {
   /*< private > */
   GstVaapiWindowClass parent_class;
+  GstVaapiObjectFinalizeFunc parent_finalize;
 };
 
 static gboolean
@@ -339,6 +346,9 @@ gst_vaapi_window_wayland_destroy (GstVaapiWindow * window)
   gst_vaapi_video_pool_replace (&priv->surface_pool, NULL);
 
   gst_poll_free (priv->poll);
+
+  GST_VAAPI_WINDOW_WAYLAND_GET_CLASS (window)->parent_finalize (GST_VAAPI_OBJECT
+      (window));
 }
 
 static gboolean
@@ -593,6 +603,9 @@ gst_vaapi_window_wayland_class_init (GstVaapiWindowWaylandClass * klass)
   GstVaapiObjectClass *const object_class = GST_VAAPI_OBJECT_CLASS (klass);
   GstVaapiWindowClass *const window_class = GST_VAAPI_WINDOW_CLASS (klass);
 
+  gst_vaapi_window_class_init (&klass->parent_class);
+
+  klass->parent_finalize = object_class->finalize;
   object_class->finalize = (GstVaapiObjectFinalizeFunc)
       gst_vaapi_window_wayland_destroy;
 

@@ -120,6 +120,9 @@ GstVaapiWindow *
 gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
     GstVaapiDisplay * display, GstVaapiID handle, guint width, guint height);
 
+void
+gst_vaapi_window_class_init (GstVaapiWindowClass * klass);
+
 /* Inline reference counting for core libgstvaapi library */
 #ifdef IN_LIBGSTVAAPI_CORE
 #define gst_vaapi_window_ref_internal(window) \

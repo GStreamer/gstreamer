@@ -297,6 +297,9 @@ gst_vaapi_window_x11_destroy (GstVaapiWindow * window)
     }
     GST_VAAPI_OBJECT_ID (window) = None;
   }
+
+  GST_VAAPI_WINDOW_X11_GET_CLASS (window)->parent_finalize (GST_VAAPI_OBJECT
+      (window));
 }
 
 static gboolean
@@ -536,6 +539,9 @@ gst_vaapi_window_x11_class_init (GstVaapiWindowX11Class * klass)
   GstVaapiObjectClass *const object_class = GST_VAAPI_OBJECT_CLASS (klass);
   GstVaapiWindowClass *const window_class = GST_VAAPI_WINDOW_CLASS (klass);
 
+  gst_vaapi_window_class_init (&klass->parent_class);
+
+  klass->parent_finalize = object_class->finalize;
   object_class->finalize = (GstVaapiObjectFinalizeFunc)
       gst_vaapi_window_x11_destroy;
 

@@ -79,6 +79,7 @@ struct _GstVaapiWindowX11Class
 {
   /*< private >*/
   GstVaapiWindowClass parent_class;
+  GstVaapiObjectFinalizeFunc parent_finalize;
 };
 
 void
