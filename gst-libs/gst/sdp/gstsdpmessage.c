@@ -3358,6 +3358,7 @@ gst_sdp_get_attribute_for_pt (const GstSDPMedia * media, const gchar * name,
   return NULL;
 }
 
+/* this may modify the input string (and resets) */
 #define PARSE_INT(p, del, res)          \
 G_STMT_START {                          \
   gchar *t = p;                         \
@@ -3365,12 +3366,15 @@ G_STMT_START {                          \
   if (p == NULL)                        \
     res = -1;                           \
   else {                                \
+    char prev = *p;                     \
     *p = '\0';                          \
-    p++;                                \
     res = atoi (t);                     \
+    *p = prev;                          \
+    p++;                                \
   }                                     \
 } G_STMT_END
 
+/* this may modify the string without reset */
 #define PARSE_STRING(p, del, res)       \
 G_STMT_START {                          \
   gchar *t = p;                         \
@@ -3398,44 +3402,53 @@ static gboolean
 gst_sdp_parse_rtpmap (const gchar * rtpmap, gint * payload, gchar ** name,
     gint * rate, gchar ** params)
 {
-  gchar *p, *t;
+  gchar *p, *t, *orig_value;
 
-  p = (gchar *) rtpmap;
+  p = orig_value = g_strdup (rtpmap);
 
   PARSE_INT (p, " ", *payload);
   if (*payload == -1)
-    return FALSE;
+    goto fail;
 
   SKIP_SPACES (p);
   if (*p == '\0')
-    return FALSE;
+    goto fail;
 
   PARSE_STRING (p, "/", *name);
   if (*name == NULL) {
     GST_DEBUG ("no rate, name %s", p);
     /* no rate, assume -1 then, this is not supposed to happen but RealMedia
      * streams seem to omit the rate. */
-    *name = p;
+    *name = g_strdup (p);
     *rate = -1;
-    return TRUE;
+    *params = NULL;
+    goto out;
+  } else {
+    *name = strdup (*name);
   }
 
   t = p;
   p = strstr (p, "/");
   if (p == NULL) {
     *rate = atoi (t);
-    return TRUE;
+    *params = NULL;
+    goto out;
   }
-  *p = '\0';
   p++;
   *rate = atoi (t);
 
-  t = p;
   if (*p == '\0')
-    return TRUE;
-  *params = t;
+    *params = NULL;
+  else
+    *params = g_strdup (p);
 
+out:
+  g_free (orig_value);
   return TRUE;
+
+fail:
+  g_free (orig_value);
+  return FALSE;
 }
 
 /**
@@ -3527,8 +3540,8 @@ gst_sdp_media_get_caps_from_media (const GstSDPMedia * media, gint pt)
 {
   GstCaps *caps;
   const gchar *rtpmap;
-  const gchar *fmtp;
-  const gchar *framesize;
+  gchar *fmtp = NULL;
+  gchar *framesize = NULL;
   gchar *name = NULL;
   gint rate = -1;
   gchar *params = NULL;
@@ -3600,11 +3613,11 @@ gst_sdp_media_get_caps_from_media (const GstSDPMedia * media, gint pt)
   }
 
   /* parse optional fmtp: field */
-  if ((fmtp = gst_sdp_get_attribute_for_pt (media, "fmtp", pt))) {
+  if ((fmtp = g_strdup (gst_sdp_get_attribute_for_pt (media, "fmtp", pt)))) {
     gchar *p;
     gint payload = 0;
 
-    p = (gchar *) fmtp;
+    p = fmtp;
 
     /* p is now of the format <payload> <param>[=<value>];... */
     PARSE_INT (p, " ", payload);
@@ -3664,11 +3677,12 @@ gst_sdp_media_get_caps_from_media (const GstSDPMedia * media, gint pt)
   }
 
   /* parse framesize: field */
-  if ((framesize = gst_sdp_media_get_attribute_val (media, "framesize"))) {
+  if ((framesize =
+          g_strdup (gst_sdp_media_get_attribute_val (media, "framesize")))) {
     gchar *p;
 
     /* p is now of the format <payload> <width>-<height> */
-    p = (gchar *) framesize;
+    p = framesize;
 
     PARSE_INT (p, " ", payload);
     if (payload != -1 && payload == pt) {
@@ -3679,18 +3693,25 @@ gst_sdp_media_get_caps_from_media (const GstSDPMedia * media, gint pt)
   /* parse rtcp-fb: field */
   gst_sdp_media_add_rtcp_fb_attributes_from_media (media, pt, caps);
 
+out:
+  g_free (framesize);
+  g_free (fmtp);
+  g_free (name);
+  g_free (params);
   return caps;
 
   /* ERRORS */
 no_rtpmap:
   {
     GST_ERROR ("rtpmap type not given for dynamic payload %d", pt);
-    return NULL;
+    caps = NULL;
+    goto out;
   }
 no_rate:
   {
     GST_ERROR ("rate unknown for payload type %d", pt);
-    return NULL;
+    caps = NULL;
+    goto out;
   }
 }
 

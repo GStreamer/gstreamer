@@ -526,6 +526,39 @@ GST_START_TEST (media_from_caps_rtcp_fb_pt_101)
 }
 
 GST_END_TEST
+GST_START_TEST (caps_from_media_really_const)
+{
+  GstSDPMessage *message;
+  glong length = -1;
+  const GstSDPMedia *media1;
+  gchar *serialized;
+  GstCaps *caps;
+
+  /* BUG: gst_sdp_media_get_caps_from_media() used to modify the media passed
+   * thus violating the const tag */
+
+  gst_sdp_message_new (&message);
+  gst_sdp_message_parse_buffer ((guint8 *) sdp, length, message);
+
+  serialized = gst_sdp_message_as_text (message);
+  fail_unless (g_strcmp0 (serialized, sdp) == 0);
+  g_free (serialized);
+
+  media1 = gst_sdp_message_get_media (message, 0);
+  fail_unless (media1 != NULL);
+
+  caps = gst_sdp_media_get_caps_from_media (media1, 96);
+
+  serialized = gst_sdp_message_as_text (message);
+  fail_unless (g_strcmp0 (serialized, sdp) == 0);
+  g_free (serialized);
+
+  gst_caps_unref (caps);
+
+  gst_sdp_message_free (message);
+}
+
+GST_END_TEST
 /*
  * End of test cases
  */
@@ -540,6 +573,7 @@ sdp_suite (void)
   tcase_add_test (tc_chain, boxed);
   tcase_add_test (tc_chain, modify);
   tcase_add_test (tc_chain, caps_from_media);
+  tcase_add_test (tc_chain, caps_from_media_really_const);
   tcase_add_test (tc_chain, media_from_caps);
   tcase_add_test (tc_chain, caps_from_media_rtcp_fb);
   tcase_add_test (tc_chain, caps_from_media_rtcp_fb_all);
