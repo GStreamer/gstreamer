@@ -623,24 +623,13 @@ gst_video_rate_init (GstVideoRate * videorate)
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (videorate), TRUE);
 }
 
-/* flush the oldest buffer */
+/* @outbuf: (transfer full) needs to be writable */
 static GstFlowReturn
-gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate,
-    GstClockTime next_intime)
+gst_video_rate_push_buffer (GstVideoRate * videorate, GstBuffer * outbuf,
+    gboolean duplicate, GstClockTime next_intime)
 {
   GstFlowReturn res;
-  GstBuffer *outbuf;
   GstClockTime push_ts;
-
-  if (!videorate->prevbuf)
-    goto eos_before_buffers;
-
-  outbuf = gst_buffer_ref (videorate->prevbuf);
-  if (videorate->drop_only)
-    gst_buffer_replace (&videorate->prevbuf, NULL);
-
-  /* make sure we can write to the metadata */
-  outbuf = gst_buffer_make_writable (outbuf);
 
   GST_BUFFER_OFFSET (outbuf) = videorate->out;
   GST_BUFFER_OFFSET_END (outbuf) = videorate->out + 1;
@@ -710,6 +699,26 @@ gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate,
   res = gst_pad_push (GST_BASE_TRANSFORM_SRC_PAD (videorate), outbuf);
 
   return res;
+}
+
+/* flush the oldest buffer */
+static GstFlowReturn
+gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate,
+    GstClockTime next_intime)
+{
+  GstBuffer *outbuf;
+
+  if (!videorate->prevbuf)
+    goto eos_before_buffers;
+
+  outbuf = gst_buffer_ref (videorate->prevbuf);
+  if (videorate->drop_only)
+    gst_buffer_replace (&videorate->prevbuf, NULL);
+
+  /* make sure we can write to the metadata */
+  outbuf = gst_buffer_make_writable (outbuf);
+
+  return gst_video_rate_push_buffer (videorate, outbuf, duplicate, next_intime);
 
   /* WARNINGS */
 eos_before_buffers:
