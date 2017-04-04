@@ -604,14 +604,14 @@ get_default_chroma_type (GstVaapiEncoder * encoder,
 }
 
 static void
-init_context_info (GstVaapiEncoder * encoder)
+init_context_info (GstVaapiEncoder * encoder, GstVaapiContextInfo * cip,
+    GstVaapiProfile profile)
 {
-  GstVaapiContextInfo *const cip = &encoder->context_info;
   const GstVaapiEncoderClassData *const cdata =
       GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
 
   cip->usage = GST_VAAPI_CONTEXT_USAGE_ENCODE;
-  cip->profile = get_profile (encoder);
+  cip->profile = profile;
   if (cdata->codec == GST_VAAPI_CODEC_JPEG) {
     cip->entrypoint = GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE;
   } else {
@@ -633,7 +633,7 @@ set_context_info (GstVaapiEncoder * encoder)
   const GstVideoFormat format =
       GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
 
-  init_context_info (encoder);
+  init_context_info (encoder, cip, get_profile (encoder));
 
   cip->chroma_type = gst_vaapi_video_format_get_chroma_type (format);
   cip->width = GST_VAAPI_ENCODER_WIDTH (encoder);
@@ -1168,7 +1168,7 @@ gst_vaapi_encoder_ensure_context_config (GstVaapiEncoder * encoder)
   if (encoder->context)
     return TRUE;
 
-  init_context_info (encoder);
+  init_context_info (encoder, cip, get_profile (encoder));
   encoder->context = gst_vaapi_context_new (encoder->display, cip);
   return (encoder->context != NULL);
 }
