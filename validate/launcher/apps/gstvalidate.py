@@ -215,11 +215,10 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
                 if self.test_manager.options.mute:
                     if scenario and scenario.needs_clock_sync():
-                        fakesink = "fakesink sync=true"
+                        audiosink = "fakesink sync=true"
+                        videosink = "fakesink sync=true qos=true max-lateness=20000000"
                     else:
-                        fakesink = "fakesink"
-
-                    audiosink = videosink = fakesink
+                        audiosink = videosink = "fakesink"
                 else:
                     audiosink = 'autoaudiosink'
                     videosink = 'autovideosink'
@@ -267,12 +266,13 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                 if self.test_manager.options.mute:
                     if scenario.needs_clock_sync() or \
                             minfo.media_descriptor.need_clock_sync():
-                        fakesink = "'fakesink sync=true'"
+                        afakesink = "'fakesink sync=true'"
+                        vfakesink = "'fakesink sync=true qos=true max-lateness=20000000'"
                     else:
-                        fakesink = "'fakesink'"
+                        vfakesink = afakesink = "'fakesink'"
 
                     cpipe += " audio-sink=%s video-sink=%s" % (
-                        fakesink, fakesink)
+                        afakesink, vfakesink)
 
                 fname = "%s.%s" % (self.get_fname(scenario,
                                    protocol),
