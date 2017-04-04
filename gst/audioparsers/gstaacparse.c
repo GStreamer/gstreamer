@@ -564,8 +564,13 @@ gst_aac_parse_read_loas_audio_specific_config (GstAacParse * aacparse,
   if (audio_object_type == 5 || audio_object_type == 29) {
     extension_audio_object_type = 5;
     sbr = TRUE;
-    if (audio_object_type == 29)
+    if (audio_object_type == 29) {
       ps = TRUE;
+      /* Parametric stereo. If we have a one-channel configuration, we can
+       * override it to stereo */
+      if (*channels == 1)
+        *channels = 2;
+    }
 
     GST_LOG_OBJECT (aacparse,
         "Audio object type 5 or 29, so rereading sampling rate...");
