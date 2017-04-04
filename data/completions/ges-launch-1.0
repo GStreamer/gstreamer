@@ -30,7 +30,11 @@ fi
 . "$HELPERDIR"/gst
 
 HELPER="$_GST_HELPER"
-GES_COMMAND_LIST="ges-launch-1.0 help | grep '^  +' | cut -d' ' -f3"
+
+_list_commands ()
+{
+  ges-launch-1.0 help | grep '^  +' | cut -d' ' -f3
+}
 
 _ges___inspect_action_type ()
 {
@@ -67,7 +71,7 @@ _ges_clip () {
 	then
 		_gst_mandatory_argument
 	else
-		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $($GES_COMMAND_LIST)" -- $cur) )
+		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $(_list_commands)" -- $cur) )
 	fi
 }
 
@@ -76,7 +80,7 @@ _ges_test_clip () {
 	then
 		_gst_mandatory_argument
 	else
-		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $($GES_COMMAND_LIST)" -- $cur) )
+		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $(_list_commands)" -- $cur) )
 	fi
 }
 
@@ -85,7 +89,7 @@ _ges_effect () {
 	then
 		_gst_mandatory_argument
 	else
-		COMPREPLY=( $(compgen -W "duration= start= layer= $($GES_COMMAND_LIST)" -- $cur) )
+		COMPREPLY=( $(compgen -W "duration= start= layer= $(_list_commands)" -- $cur) )
 	fi
 }
 
@@ -94,7 +98,7 @@ _ges_list_options () {
 }
 
 _ges_list_commands () {
-	COMPREPLY=( $(compgen -W "$($GES_COMMAND_LIST)" -- $cur) )
+	COMPREPLY=( $(compgen -W "$(_list_commands)" -- $cur) )
 }
 
 _ges_list_properties () {
@@ -147,7 +151,7 @@ __ges_main ()
 {
 	local i=1 c=1 command function_exists completion_func commands real_command effect_bin_description
 
-	commands=($(ges-launch-1.0 help all | egrep '^  +'))
+	commands=($(_ges_list_command))
 	real_command=""
 	effect_bin_description=""
 
