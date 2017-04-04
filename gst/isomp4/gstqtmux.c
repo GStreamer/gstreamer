@@ -3155,6 +3155,8 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   }
 
   ret = gst_qt_mux_check_and_update_timecode (qtmux, pad, buf, ret);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   if (last_buf && !buf && !GST_BUFFER_DURATION_IS_VALID (last_buf)) {
     /* this is last buffer; there is no next buffer so we need valid number as duration */
