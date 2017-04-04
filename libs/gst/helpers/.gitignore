@@ -1,4 +1,4 @@
 gst-plugin-scanner
-gst-completion-helper-?.?*
+gst-completion-helper
 gst-ptp-helper
 *.o

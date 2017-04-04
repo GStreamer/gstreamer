@@ -7,8 +7,6 @@ pluginsdir=@libdir@/gstreamer-@GST_API_VERSION@
 datarootdir=${prefix}/share
 datadir=${datarootdir}
 girdir=${datadir}/gir-1.0
-completionsdir=@BASH_COMPLETION_DIR@
-helpersdir=@BASH_HELPERS_DIR@
 typelibdir=${libdir}/girepository-1.0
 
 Name: GStreamer

@@ -21,7 +21,7 @@
 _GST_HELPERDIR="${BASH_SOURCE[0]%/*}/../helpers"
 
 if [[ ! -d "$_GST_HELPERDIR" ]]; then
-	_GST_HELPERDIR="$(pkg-config --variable=helpersdir gstreamer-1.0)"
+	_GST_HELPERDIR="$(pkg-config --variable=bashhelpersdir gstreamer-1.0)"
 else
 	_GST_HELPERDIR=`cd "$_GST_HELPERDIR"; pwd`
 fi
@@ -29,11 +29,9 @@ fi
 # Common definitions
 . "$_GST_HELPERDIR"/gst
 
-_GST_HELPER="$_GST_HELPERDIR/gst-completion-helper-1.0"
-
 _gst_launch_all_arguments ()
 {
-	COMPREPLY=( $(compgen -W "$(gst-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
+	_gst_all_arguments gst-launch-1.0
 }
 
 _gst_complete_compatible_elements ()
@@ -51,7 +49,7 @@ _gst_complete_element_properties ()
 	COMPREPLY=( $(compgen -W "$($_GST_HELPER --element-properties $previous_element)" -- $cur) )
 }
 
-_gstlaunch___exclude_ () { _gst_mandatory_argument; }
+_gstlaunch___exclude_ () { _gst_mandatory_argument gst-launch-1.0; }
 
 _gst_launch_main ()
 {
@@ -61,7 +59,7 @@ _gst_launch_main ()
 		do
 			local var
 			var="${COMP_WORDS[i]}"
-			if [[ "$var" == "--"* ]]
+			if [[ "$var" == "-"* ]]
 			then
 				command="$var"
 			fi
@@ -74,7 +72,7 @@ _gst_launch_main ()
 			local var
 			var="${COMP_WORDS[i]}"
 
-			if [[ "$var" == "--"* ]]
+			if [[ "$var" == "-"* ]]
 			then
 				i=$(($i+1))
 				continue
@@ -105,7 +103,7 @@ _gst_launch_main ()
 
 	function_exists=$?
 
-	if [[ "$cur" == "--"* ]]; then
+	if [[ "$cur" == "-"* ]]; then
 		_gst_launch_all_arguments
 	elif [ $function_exists -eq 0 ]
 	then

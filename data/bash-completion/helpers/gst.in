@@ -18,17 +18,39 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
+_GST_HELPER="@GST_COMPLETION_HELPER_INSTALLED@"
+if [[ ! -x "$_GST_HELPER" ]]
+then
+        helper="$(pkg-config --variable=helpersdir gstreamer-@GST_API_VERSION@)/gst-completion-helper"
+
+        if [ -x "$helper" ]
+        then
+          _GST_HELPER=$helper
+        fi
+fi
+
 ___gst_debug_level () { _gst_mandatory_argument; }
 ___gst_debug () { _gst_mandatory_argument; }
 ___gst_debug_color_mode () { _gst_mandatory_argument; }
 ___gst_plugin_path () { _gst_mandatory_argument; }
 ___gst_plugin_load () { _gst_mandatory_argument; }
 
+_gst_all_arguments ()
+{
+	COMPREPLY=( $(compgen -W "$($1 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*\|-[[:alpha:]],' | cut -d'=' -f1 | cut -d',' -f1)" -- $cur) )
+}
+
 _gst_mandatory_argument ()
 {
+	__app=$1
+	if [[ -z $__app ]]
+	then
+		__app=gst-launch-1.0
+	fi
+
 	if [[ "$prev" != "$command" ]]
 	then
-		COMPREPLY=( $(compgen -W "$(gst-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
+		_gst_all_arguments $__app
 	else
 		COMPREPLY=("$cur")
 	fi

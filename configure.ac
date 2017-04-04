@@ -153,11 +153,14 @@ then
     fi
 
     PKG_CHECK_MODULES([BASH_COMPLETION], [bash-completion >= 2.0],
-        [BASH_COMPLETION_DIR="`eval pkg-config $extra_args --variable=completionsdir bash-completion`"],
-        [BASH_COMPLETION_DIR="$datadir/bash-completion/completions"])
-    PKG_CHECK_MODULES([BASH_COMPLETION], [bash-completion >= 2.0],
-        [BASH_HELPERS_DIR="`eval pkg-config $extra_args --variable=helpersdir bash-completion`"],
-        [BASH_HELPERS_DIR="$datadir/bash-completion/helpers"])
+        [
+          BASH_COMPLETION_DIR="`eval pkg-config $extra_args --variable=completionsdir bash-completion`"
+          BASH_HELPERS_DIR="`eval pkg-config $extra_args --variable=helpersdir bash-completion`"
+        ],
+        [
+          BASH_COMPLETION_DIR="$datadir/bash-completion/completions"
+          BASH_HELPERS_DIR="$datadir/bash-completion/helpers"
+        ])
 else
     BASH_COMPLETION_DIR="$with_bash_completion_dir/completions"
     BASH_HELPERS_DIR="$with_bash_completion_dir/helpers"
@@ -1013,6 +1016,12 @@ AC_DEFINE_UNQUOTED(GST_PLUGIN_SCANNER_INSTALLED,
     "$GST_PLUGIN_SCANNER_INSTALLED", [location of the installed gst-plugin-scanner])
 AC_SUBST(GST_PLUGIN_SCANNER_INSTALLED)
 
+dnl completion helper locations
+AS_AC_EXPAND(GST_COMPLETION_HELPER_INSTALLED,${libexecdir}/gstreamer-$GST_API_VERSION/gst-completion-helper)
+AC_DEFINE_UNQUOTED(GST_COMPLETION_HELPER_INSTALLED,
+    "$GST_COMPLETION_HELPER_INSTALLED", [location of the installed gst-completion-helper])
+AC_SUBST(GST_COMPLETION_HELPER_INSTALLED)
+
 dnl ptp helper locations
 AS_AC_EXPAND(GST_PTP_HELPER_INSTALLED,${libexecdir}/gstreamer-$GST_API_VERSION/gst-ptp-helper)
 AC_DEFINE_UNQUOTED(GST_PTP_HELPER_INSTALLED,
@@ -1026,6 +1035,7 @@ AG_GST_CHECK_CHECKS
 AC_CONFIG_FILES(
 Makefile
 data/Makefile
+data/bash-completion/helpers/gst
 gst/Makefile
 gst/gstconfig.h
 gst/gstversion.h
