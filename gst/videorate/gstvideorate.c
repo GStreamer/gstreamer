@@ -712,9 +712,6 @@ gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate,
     goto eos_before_buffers;
 
   outbuf = gst_buffer_ref (videorate->prevbuf);
-  if (videorate->drop_only)
-    gst_buffer_replace (&videorate->prevbuf, NULL);
-
   /* make sure we can write to the metadata */
   outbuf = gst_buffer_make_writable (outbuf);
 
@@ -1387,8 +1384,11 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
           (videorate->segment.rate < 0.0 && intime <= videorate->next_ts)) {
         GstFlowReturn r;
 
-        /* on error the _flush function posted a warning already */
-        if ((r = gst_video_rate_flush_prev (videorate, FALSE,
+        /* The buffer received from basetransform is garanteed to be writable.
+         * It just needs to be reffed so the buffer won't be consumed once pushed and
+         * GstBaseTransform can get its reference back. */
+        if ((r = gst_video_rate_push_buffer (videorate,
+                    gst_buffer_ref (buffer), FALSE,
                     GST_CLOCK_TIME_NONE)) != GST_FLOW_OK) {
           res = r;
           goto done;
