@@ -37,7 +37,7 @@ ___gst_plugin_load () { _gst_mandatory_argument; }
 
 _gst_all_arguments ()
 {
-	COMPREPLY=( $(compgen -W "$($1 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*\|-[[:alpha:]],' | cut -d'=' -f1 | cut -d',' -f1)" -- $cur) )
+	COMPREPLY=( $(compgen -W "$($1 --help-all | grep "^  -" | grep -oh '[[:graph:]]*--[[:graph:]]*\|-[[:alpha:]],' | cut -d'=' -f1 | cut -d',' -f1)" -- $cur) )
 }
 
 _gst_mandatory_argument ()
