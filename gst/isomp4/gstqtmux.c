@@ -3234,6 +3234,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     }
 #endif
     pad->last_buf = buf;
+    qtmux->current_pad = pad;
     goto exit;
   } else {
     gst_buffer_ref (last_buf);
@@ -3600,7 +3601,10 @@ find_best_pad (GstQTMux * qtmux, GstCollectPads * pads)
           continue;
         }
       } else {
-        timestamp = GST_BUFFER_DTS_OR_PTS (tmp_buf);
+        if (qtpad->last_buf)
+          timestamp = GST_BUFFER_DTS_OR_PTS (qtpad->last_buf);
+        else
+          timestamp = GST_BUFFER_DTS_OR_PTS (tmp_buf);
       }
 
       if (best_pad == NULL ||
