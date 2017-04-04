@@ -524,6 +524,7 @@ gst_ttml_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
        * seek request and instead send us a newsegment from the seek request
        * it received via its video pads instead, so all is fine then too) */
       ret = TRUE;
+      self->need_segment = TRUE;
       gst_event_unref (event);
       break;
     }
