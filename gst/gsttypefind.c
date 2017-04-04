@@ -71,7 +71,7 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
 
   GST_INFO ("registering typefind function for %s", name);
 
-  factory = g_object_newv (GST_TYPE_TYPE_FIND_FACTORY, 0, NULL);
+  factory = g_object_new (GST_TYPE_TYPE_FIND_FACTORY, NULL);
   GST_DEBUG_OBJECT (factory, "using new typefind factory for %s", name);
 
   gst_plugin_feature_set_name (GST_PLUGIN_FEATURE_CAST (factory), name);

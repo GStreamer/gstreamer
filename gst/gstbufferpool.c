@@ -219,7 +219,7 @@ gst_buffer_pool_new (void)
 {
   GstBufferPool *result;
 
-  result = g_object_newv (GST_TYPE_BUFFER_POOL, 0, NULL);
+  result = g_object_new (GST_TYPE_BUFFER_POOL, NULL);
   GST_DEBUG_OBJECT (result, "created new buffer pool");
 
   return result;

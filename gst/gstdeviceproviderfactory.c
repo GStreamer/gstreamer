@@ -197,9 +197,7 @@ gst_device_provider_register (GstPlugin * plugin, const gchar * name,
     return TRUE;
   }
 
-  factory =
-      GST_DEVICE_PROVIDER_FACTORY_CAST (g_object_newv
-      (GST_TYPE_DEVICE_PROVIDER_FACTORY, 0, NULL));
+  factory = g_object_new (GST_TYPE_DEVICE_PROVIDER_FACTORY, NULL);
   gst_plugin_feature_set_name (GST_PLUGIN_FEATURE_CAST (factory), name);
   GST_LOG_OBJECT (factory, "Created new device providerfactory for type %s",
       g_type_name (type));
@@ -284,8 +282,7 @@ gst_device_provider_factory_get (GstDeviceProviderFactory * factory)
   /* create an instance of the device provider, cast so we don't assert on NULL
    * also set name as early as we can
    */
-  device_provider = GST_DEVICE_PROVIDER_CAST (g_object_newv (factory->type, 0,
-          NULL));
+  device_provider = g_object_new (factory->type, NULL);
   if (G_UNLIKELY (device_provider == NULL))
     goto no_device_provider;
 

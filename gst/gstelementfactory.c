@@ -230,9 +230,7 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
     return TRUE;
   }
 
-  factory =
-      GST_ELEMENT_FACTORY_CAST (g_object_newv (GST_TYPE_ELEMENT_FACTORY, 0,
-          NULL));
+  factory = g_object_new (GST_TYPE_ELEMENT_FACTORY, NULL);
   gst_plugin_feature_set_name (GST_PLUGIN_FEATURE_CAST (factory), name);
   GST_LOG_OBJECT (factory, "Created new elementfactory for type %s",
       g_type_name (type));
@@ -369,10 +367,9 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
    * also set name as early as we can
    */
   if (name)
-    element =
-        GST_ELEMENT_CAST (g_object_new (factory->type, "name", name, NULL));
+    element = g_object_new (factory->type, "name", name, NULL);
   else
-    element = GST_ELEMENT_CAST (g_object_newv (factory->type, 0, NULL));
+    element = g_object_new (factory->type, NULL);
   if (G_UNLIKELY (element == NULL))
     goto no_element;
 

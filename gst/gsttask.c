@@ -423,7 +423,7 @@ gst_task_new (GstTaskFunction func, gpointer user_data, GDestroyNotify notify)
 
   g_return_val_if_fail (func != NULL, NULL);
 
-  task = g_object_newv (GST_TYPE_TASK, 0, NULL);
+  task = g_object_new (GST_TYPE_TASK, NULL);
   task->func = func;
   task->user_data = user_data;
   task->notify = notify;

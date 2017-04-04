@@ -236,7 +236,7 @@ gst_data_queue_new (GstDataQueueCheckFullFunction checkfull,
 
   g_return_val_if_fail (checkfull != NULL, NULL);
 
-  ret = g_object_newv (GST_TYPE_DATA_QUEUE, 0, NULL);
+  ret = g_object_new (GST_TYPE_DATA_QUEUE, NULL);
   ret->priv->checkfull = checkfull;
   ret->priv->checkdata = checkdata;
   ret->priv->fullcallback = fullcallback;

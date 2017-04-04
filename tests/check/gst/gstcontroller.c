@@ -231,7 +231,7 @@ static GType gst_test_control_source_get_type (void);
 static GstTestControlSource *
 gst_test_control_source_new (void)
 {
-  return g_object_newv (GST_TYPE_TEST_CONTROL_SOURCE, 0, NULL);
+  return g_object_new (GST_TYPE_TEST_CONTROL_SOURCE, NULL);
 }
 
 static gboolean

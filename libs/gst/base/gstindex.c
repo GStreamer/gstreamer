@@ -305,7 +305,7 @@ gst_index_new (void)
 {
   GstIndex *index;
 
-  index = g_object_newv (gst_index_get_type (), 0, NULL);
+  index = g_object_new (gst_index_get_type (), NULL);
 
   return index;
 }

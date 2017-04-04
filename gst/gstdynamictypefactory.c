@@ -123,9 +123,7 @@ gst_dynamic_type_factory_create (GstRegistry * registry,
 {
   GstDynamicTypeFactory *factory;
 
-  factory =
-      GST_DYNAMIC_TYPE_FACTORY_CAST (g_object_newv
-      (GST_TYPE_DYNAMIC_TYPE_FACTORY, 0, NULL));
+  factory = g_object_new (GST_TYPE_DYNAMIC_TYPE_FACTORY, NULL);
   gst_plugin_feature_set_name (GST_PLUGIN_FEATURE_CAST (factory), name);
   GST_LOG_OBJECT (factory, "Created new dynamictypefactory for type %s", name);
 

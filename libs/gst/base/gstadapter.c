@@ -240,7 +240,7 @@ gst_adapter_finalize (GObject * object)
 GstAdapter *
 gst_adapter_new (void)
 {
-  return g_object_newv (GST_TYPE_ADAPTER, 0, NULL);
+  return g_object_new (GST_TYPE_ADAPTER, NULL);
 }
 
 /**

@@ -169,7 +169,7 @@ gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
     return TRUE;
   }
 
-  factory = g_object_newv (GST_TYPE_TRACER_FACTORY, 0, NULL);
+  factory = g_object_new (GST_TYPE_TRACER_FACTORY, NULL);
   GST_DEBUG_OBJECT (factory, "new tracer factory for %s", name);
 
   gst_plugin_feature_set_name (GST_PLUGIN_FEATURE_CAST (factory), name);

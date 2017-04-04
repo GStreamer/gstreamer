@@ -218,7 +218,7 @@ gst_tracer_record_new (const gchar * name, const gchar * firstfield, ...)
   }
   va_end (varargs);
 
-  self = g_object_newv (GST_TYPE_TRACER_RECORD, 0, NULL);
+  self = g_object_new (GST_TYPE_TRACER_RECORD, NULL);
   self->spec = structure;
   gst_tracer_record_build_format (self);
 
