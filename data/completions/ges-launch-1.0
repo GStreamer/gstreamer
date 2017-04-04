@@ -151,7 +151,7 @@ __ges_main ()
 {
 	local i=1 c=1 command function_exists completion_func commands real_command effect_bin_description
 
-	commands=($(_ges_list_command))
+	commands=($(_list_commands))
 	real_command=""
 	effect_bin_description=""
 
