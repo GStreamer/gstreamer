@@ -3215,9 +3215,11 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     buf = pad->prepare_buf_func (pad, buf, qtmux);
   }
 
-  last_buf = pad->last_buf;
-
   ret = gst_qt_mux_check_and_update_timecode (qtmux, pad, buf, ret);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  last_buf = pad->last_buf;
 
   if (last_buf == NULL) {
 #ifndef GST_DISABLE_GST_DEBUG
