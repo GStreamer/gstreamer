@@ -87,6 +87,10 @@ string_of_VARateControl (guint rate_control);
 
 G_GNUC_INTERNAL
 guint
+to_GstVaapiChromaType (guint va_rt_format);
+
+G_GNUC_INTERNAL
+guint
 from_GstVaapiChromaType (guint chroma_type);
 
 G_GNUC_INTERNAL

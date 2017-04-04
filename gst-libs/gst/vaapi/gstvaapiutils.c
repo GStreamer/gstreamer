@@ -316,6 +316,56 @@ string_of_VARateControl (guint rate_control)
 }
 
 /**
+ * to_GstVaapiChromaType:
+ * @va_rt_format: the value of VAConfigAttribRTFormat
+ *
+ * Converts the VA_RT_FORMAT_* to #GstVaapiChromaType
+ *
+ * Returns: the #GstVaapiChromaType associated to @va_rt_format or
+ * zero.
+ **/
+guint
+to_GstVaapiChromaType (guint va_rt_format)
+{
+  guint chroma_type;
+
+  switch (va_rt_format) {
+    case VA_RT_FORMAT_YUV420:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+      break;
+    case VA_RT_FORMAT_YUV422:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422;
+      break;
+    case VA_RT_FORMAT_YUV444:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444;
+      break;
+#if VA_CHECK_VERSION(0,34,0)
+    case VA_RT_FORMAT_YUV411:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV411;
+      break;
+    case VA_RT_FORMAT_YUV400:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV400;
+      break;
+    case VA_RT_FORMAT_RGB32:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_RGB32;
+      break;
+    case VA_RT_FORMAT_RGB16:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_RGB16;
+      break;
+#endif
+#if VA_CHECK_VERSION(0,38,1)
+    case VA_RT_FORMAT_YUV420_10BPP:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
+      break;
+#endif
+    default:
+      chroma_type = 0;
+      break;
+  }
+  return chroma_type;
+}
+
+/**
  * from_GstVaapiChromaType:
  * @chroma_type: the #GstVaapiChromaType
  *

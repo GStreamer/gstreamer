@@ -588,6 +588,21 @@ unsupported:
   }
 }
 
+static guint
+get_default_chroma_type (GstVaapiEncoder * encoder,
+    const GstVaapiContextInfo * cip)
+{
+  guint value;
+
+  if (!gst_vaapi_get_config_attribute (encoder->display,
+          gst_vaapi_profile_get_va_profile (cip->profile),
+          gst_vaapi_entrypoint_get_va_entrypoint (cip->entrypoint),
+          VAConfigAttribRTFormat, &value))
+    return 0;
+
+  return to_GstVaapiChromaType (value);
+}
+
 static void
 init_context_info (GstVaapiEncoder * encoder)
 {
@@ -603,6 +618,7 @@ init_context_info (GstVaapiEncoder * encoder)
     if (cip->entrypoint != GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP)
       cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
   }
+  cip->chroma_type = get_default_chroma_type (encoder, cip);
   cip->width = 0;
   cip->height = 0;
   cip->ref_frames = encoder->num_ref_frames;
