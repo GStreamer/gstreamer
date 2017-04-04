@@ -3216,10 +3216,14 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   }
 
   ret = gst_qt_mux_check_and_update_timecode (qtmux, pad, buf, ret);
-  if (ret != GST_FLOW_OK)
+  if (ret != GST_FLOW_OK) {
+    if (buf)
+      gst_buffer_unref (buf);
     return ret;
+  }
 
   last_buf = pad->last_buf;
+  pad->last_buf = buf;
 
   if (last_buf == NULL) {
 #ifndef GST_DISABLE_GST_DEBUG
@@ -3233,18 +3237,15 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
           GST_PAD_NAME (pad->collect.pad));
     }
 #endif
-    pad->last_buf = buf;
     qtmux->current_pad = pad;
     goto exit;
-  } else {
-    gst_buffer_ref (last_buf);
   }
 
   if (!GST_BUFFER_PTS_IS_VALID (last_buf))
     goto no_pts;
 
   /* if this is the first buffer, store the timestamp */
-  if (G_UNLIKELY (pad->first_ts == GST_CLOCK_TIME_NONE) && last_buf) {
+  if (G_UNLIKELY (pad->first_ts == GST_CLOCK_TIME_NONE)) {
     if (GST_BUFFER_PTS_IS_VALID (last_buf)) {
       pad->first_ts = GST_BUFFER_PTS (last_buf);
     } else if (GST_BUFFER_DTS_IS_VALID (last_buf)) {
@@ -3269,7 +3270,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
         GST_TIME_ARGS (pad->first_ts));
   }
 
-  if (last_buf && buf && GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buf)) &&
+  if (buf && GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buf)) &&
       GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (last_buf)) &&
       GST_BUFFER_DTS (buf) < GST_BUFFER_DTS (last_buf)) {
     GST_ERROR ("decreasing DTS value %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
@@ -3288,15 +3289,13 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   else
     duration = 0;
   if (!pad->sparse) {
-    if (last_buf && buf && GST_BUFFER_DTS_IS_VALID (buf)
+    if (buf && GST_BUFFER_DTS_IS_VALID (buf)
         && GST_BUFFER_DTS_IS_VALID (last_buf))
       duration = GST_BUFFER_DTS (buf) - GST_BUFFER_DTS (last_buf);
-    else if (last_buf && buf && GST_BUFFER_PTS_IS_VALID (buf)
+    else if (buf && GST_BUFFER_PTS_IS_VALID (buf)
         && GST_BUFFER_PTS_IS_VALID (last_buf))
       duration = GST_BUFFER_PTS (buf) - GST_BUFFER_PTS (last_buf);
   }
-
-  gst_buffer_replace (&pad->last_buf, buf);
 
   if (qtmux->current_pad != pad || qtmux->current_chunk_offset == -1) {
     GST_DEBUG_OBJECT (qtmux,
@@ -3373,10 +3372,8 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   }
 
   /* for computing the avg bitrate */
-  if (G_LIKELY (last_buf)) {
-    pad->total_bytes += gst_buffer_get_size (last_buf);
-    pad->total_duration += duration;
-  }
+  pad->total_bytes += gst_buffer_get_size (last_buf);
+  pad->total_duration += duration;
   qtmux->current_chunk_size += gst_buffer_get_size (last_buf);
   qtmux->current_chunk_duration += duration;
 
@@ -3460,9 +3457,6 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     }
   }
 
-  if (buf)
-    gst_buffer_unref (buf);
-
 exit:
 
   return ret;
@@ -3470,8 +3464,6 @@ exit:
   /* ERRORS */
 bail:
   {
-    if (buf)
-      gst_buffer_unref (buf);
     gst_buffer_unref (last_buf);
     return GST_FLOW_ERROR;
   }
