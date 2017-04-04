@@ -34,7 +34,6 @@ GES_COMMAND_LIST="ges-launch-1.0 help | grep '^  +' | cut -d' ' -f3"
 
 _ges___inspect_action_type ()
 {
-        # FIXME --inspect-action-type does not exist anymore
 	COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --inspect-action-type | grep '^[^ ]' | cut -d':' -f2)" -- $cur) )
 }
 
@@ -44,7 +43,6 @@ _ges___track_types ()
 }
 
 _ges___set_scenario () {
-	# FIXME Check if gst-validate-1.0 is present
 	COMPREPLY=( $(compgen -W "*.scenario $(gst-validate-1.0 -l | awk '$0=$2' FS=[ RS=])" -- $cur) )
 }
 
