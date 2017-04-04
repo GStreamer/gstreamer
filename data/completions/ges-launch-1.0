@@ -21,7 +21,7 @@
 HELPERDIR="${BASH_SOURCE[0]%/*}/../helpers"
 
 if [[ ! -d "$HELPERDIR" ]]; then
-	HELPERDIR="$(pkg-config --variable=helpersdir gstreamer-1.0)"
+	HELPERDIR="$(pkg-config --variable=bashhelpersdir gstreamer-1.0)"
 else
 	HELPERDIR=`cd "$HELPERDIR"; pwd`
 fi
@@ -29,10 +29,12 @@ fi
 # Common definitions
 . "$HELPERDIR"/gst
 
-HELPER="$HELPERDIR/gst-completion-helper-1.0"
+HELPER="$_GST_HELPER"
+GES_COMMAND_LIST="ges-launch-1.0 help | grep '^  +' | cut -d' ' -f3"
 
 _ges___inspect_action_type ()
 {
+        # FIXME --inspect-action-type does not exist anymore
 	COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --inspect-action-type | grep '^[^ ]' | cut -d':' -f2)" -- $cur) )
 }
 
@@ -42,6 +44,7 @@ _ges___track_types ()
 }
 
 _ges___set_scenario () {
+	# FIXME Check if gst-validate-1.0 is present
 	COMPREPLY=( $(compgen -W "*.scenario $(gst-validate-1.0 -l | awk '$0=$2' FS=[ RS=])" -- $cur) )
 }
 
@@ -66,7 +69,7 @@ _ges_clip () {
 	then
 		_gst_mandatory_argument
 	else
-		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $(ges-launch-1.0 help all | egrep '^  +')" -- $cur) )
+		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $($GES_COMMAND_LIST)" -- $cur) )
 	fi
 }
 
@@ -75,7 +78,7 @@ _ges_test_clip () {
 	then
 		_gst_mandatory_argument
 	else
-		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $(ges-launch-1.0 help all | egrep '^  +')" -- $cur) )
+		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $($GES_COMMAND_LIST)" -- $cur) )
 	fi
 }
 
@@ -84,16 +87,16 @@ _ges_effect () {
 	then
 		_gst_mandatory_argument
 	else
-		COMPREPLY=( $(compgen -W "duration= start= layer= $(ges-launch-1.0 help all | egrep '^  +')" -- $cur) )
+		COMPREPLY=( $(compgen -W "duration= start= layer= $($GES_COMMAND_LIST)" -- $cur) )
 	fi
 }
 
 _ges_list_options () {
-	COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --help-all | grep -oh '[[:graph:]]*--[[:graph:]]*' | cut -d'=' -f1)" -- $cur) )
+	_gst_all_arguments ges-launch-1.0
 }
 
 _ges_list_commands () {
-	COMPREPLY=( $(compgen -W "$(ges-launch-1.0 help all | egrep '^  +')" -- $cur) )
+	COMPREPLY=( $(compgen -W "$($GES_COMMAND_LIST)" -- $cur) )
 }
 
 _ges_list_properties () {
