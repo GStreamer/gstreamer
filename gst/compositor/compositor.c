@@ -381,7 +381,7 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
 
   /* There's three types of width/height here:
    * 1. GST_VIDEO_FRAME_WIDTH/HEIGHT:
-   *     The frame width/height (same as pad->buffer_vinfo.height/width;
+   *     The frame width/height (same as pad->info.height/width;
    *     see gst_video_frame_map())
    * 2. cpad->width/height:
    *     The optional pad property for scaling the frame (if zero, the video is
@@ -409,21 +409,20 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
       gst_video_converter_free (cpad->convert);
     cpad->convert = NULL;
 
-    colorimetry =
-        gst_video_colorimetry_to_string (&pad->buffer_vinfo.colorimetry);
-    chroma = gst_video_chroma_to_string (pad->buffer_vinfo.chroma_site);
+    colorimetry = gst_video_colorimetry_to_string (&pad->info.colorimetry);
+    chroma = gst_video_chroma_to_string (pad->info.chroma_site);
 
     wanted_colorimetry =
         gst_video_colorimetry_to_string (&cpad->conversion_info.colorimetry);
     wanted_chroma =
         gst_video_chroma_to_string (cpad->conversion_info.chroma_site);
 
-    if (GST_VIDEO_INFO_FORMAT (&pad->buffer_vinfo) !=
+    if (GST_VIDEO_INFO_FORMAT (&pad->info) !=
         GST_VIDEO_INFO_FORMAT (&cpad->conversion_info)
         || g_strcmp0 (colorimetry, wanted_colorimetry)
         || g_strcmp0 (chroma, wanted_chroma)
-        || width != GST_VIDEO_INFO_WIDTH (&pad->buffer_vinfo)
-        || height != GST_VIDEO_INFO_HEIGHT (&pad->buffer_vinfo)) {
+        || width != GST_VIDEO_INFO_WIDTH (&pad->info)
+        || height != GST_VIDEO_INFO_HEIGHT (&pad->info)) {
       GstVideoInfo tmp_info;
 
       gst_video_info_set_format (&tmp_info, cpad->conversion_info.finfo->format,
@@ -438,11 +437,10 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
       tmp_info.interlace_mode = cpad->conversion_info.interlace_mode;
 
       GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
-          GST_VIDEO_INFO_FORMAT (&pad->buffer_vinfo),
+          GST_VIDEO_INFO_FORMAT (&pad->info),
           GST_VIDEO_INFO_FORMAT (&tmp_info));
 
-      cpad->convert =
-          gst_video_converter_new (&pad->buffer_vinfo, &tmp_info, NULL);
+      cpad->convert = gst_video_converter_new (&pad->info, &tmp_info, NULL);
       cpad->conversion_info = tmp_info;
 
       if (!cpad->convert) {
@@ -522,8 +520,7 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
 
   frame = g_slice_new0 (GstVideoFrame);
 
-  if (!gst_video_frame_map (frame, &pad->buffer_vinfo, pad->buffer,
-          GST_MAP_READ)) {
+  if (!gst_video_frame_map (frame, &pad->info, pad->buffer, GST_MAP_READ)) {
     GST_WARNING_OBJECT (vagg, "Could not map input buffer");
     return FALSE;
   }

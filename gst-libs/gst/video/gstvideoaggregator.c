@@ -75,6 +75,8 @@ struct _GstVideoAggregatorPadPrivate
 
   GstClockTime start_time;
   GstClockTime end_time;
+
+  GstVideoInfo pending_vinfo;
 };
 
 
@@ -244,8 +246,7 @@ gst_video_aggregator_pad_prepare_frame (GstVideoAggregatorPad * pad,
 
   frame = g_slice_new0 (GstVideoFrame);
 
-  if (!gst_video_frame_map (frame, &pad->buffer_vinfo, pad->buffer,
-          GST_MAP_READ)) {
+  if (!gst_video_frame_map (frame, &pad->info, pad->buffer, GST_MAP_READ)) {
     GST_WARNING_OBJECT (vagg, "Could not map input buffer");
     return FALSE;
   }
@@ -886,8 +887,20 @@ gst_video_aggregator_pad_sink_setcaps (GstPad * pad, GstObject * parent,
     }
   }
 
-  vaggpad->info = info;
-  gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg));
+  if (!vaggpad->info.finfo ||
+      GST_VIDEO_INFO_FORMAT (&vaggpad->info) == GST_VIDEO_FORMAT_UNKNOWN) {
+    /* no video info was already set, so this is the first time
+     * that this pad is getting configured; configure immediately to avoid
+     * problems with the initial negotiation */
+    vaggpad->info = info;
+    gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg));
+  } else {
+    /* this pad already had caps but received new ones; keep the new caps
+     * pending until we pick the next buffer from the queue, otherwise we
+     * might use an old buffer with the new caps and crash */
+    vaggpad->priv->pending_vinfo = info;
+    GST_DEBUG_OBJECT (pad, "delaying caps change");
+  }
   ret = TRUE;
 
   GST_VIDEO_AGGREGATOR_UNLOCK (vagg);
@@ -1098,6 +1111,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
   GList *l;
   gboolean eos = TRUE;
   gboolean need_more_data = FALSE;
+  gboolean need_reconfigure = FALSE;
 
   /* get a set of buffers into pad->buffer that are within output_start_running_time
    * and output_end_running_time taking into account finished and unresponsive pads */
@@ -1108,7 +1122,6 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
     GstSegment segment;
     GstAggregatorPad *bpad;
     GstBuffer *buf;
-    GstVideoInfo *vinfo;
     gboolean is_eos;
 
     bpad = GST_AGGREGATOR_PAD (pad);
@@ -1130,8 +1143,6 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         GST_OBJECT_UNLOCK (vagg);
         return GST_FLOW_ERROR;
       }
-
-      vinfo = &pad->info;
 
       /* FIXME: Make all this work with negative rates */
       end_time = GST_BUFFER_DURATION (buf);
@@ -1155,7 +1166,11 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
           GST_DEBUG_OBJECT (pad, "buffer duration is -1, start_time < "
               "output_start_running_time.  Discarding old buffer");
           gst_buffer_replace (&pad->buffer, buf);
-          pad->buffer_vinfo = *vinfo;
+          if (pad->priv->pending_vinfo.finfo) {
+            pad->info = pad->priv->pending_vinfo;
+            need_reconfigure = TRUE;
+            pad->priv->pending_vinfo.finfo = NULL;
+          }
           gst_buffer_unref (buf);
           gst_aggregator_pad_drop_buffer (bpad);
           need_more_data = TRUE;
@@ -1164,7 +1179,11 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         gst_buffer_unref (buf);
         buf = gst_aggregator_pad_steal_buffer (bpad);
         gst_buffer_replace (&pad->buffer, buf);
-        pad->buffer_vinfo = *vinfo;
+        if (pad->priv->pending_vinfo.finfo) {
+          pad->info = pad->priv->pending_vinfo;
+          need_reconfigure = TRUE;
+          pad->priv->pending_vinfo.finfo = NULL;
+        }
         /* FIXME: Set start_time and end_time to something here? */
         gst_buffer_unref (buf);
         GST_DEBUG_OBJECT (pad, "buffer duration is -1");
@@ -1225,7 +1244,11 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
             "Taking new buffer with start time %" GST_TIME_FORMAT,
             GST_TIME_ARGS (start_time));
         gst_buffer_replace (&pad->buffer, buf);
-        pad->buffer_vinfo = *vinfo;
+        if (pad->priv->pending_vinfo.finfo) {
+          pad->info = pad->priv->pending_vinfo;
+          need_reconfigure = TRUE;
+          pad->priv->pending_vinfo.finfo = NULL;
+        }
         pad->priv->start_time = start_time;
         pad->priv->end_time = end_time;
 
@@ -1239,7 +1262,11 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         eos = FALSE;
       } else {
         gst_buffer_replace (&pad->buffer, buf);
-        pad->buffer_vinfo = *vinfo;
+        if (pad->priv->pending_vinfo.finfo) {
+          pad->info = pad->priv->pending_vinfo;
+          need_reconfigure = TRUE;
+          pad->priv->pending_vinfo.finfo = NULL;
+        }
         pad->priv->start_time = start_time;
         pad->priv->end_time = end_time;
         GST_DEBUG_OBJECT (pad,
@@ -1277,6 +1304,9 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
     }
   }
   GST_OBJECT_UNLOCK (vagg);
+
+  if (need_reconfigure)
+    gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg));
 
   if (need_more_data)
     return GST_FLOW_NEEDS_DATA;
@@ -1515,6 +1545,7 @@ gst_video_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
   GST_VIDEO_AGGREGATOR_LOCK (vagg);
 
+restart:
   flow_ret = gst_video_aggregator_check_reconfigure (vagg, timeout);
   if (flow_ret != GST_FLOW_OK) {
     if (flow_ret == GST_FLOW_NEEDS_DATA)
@@ -1570,6 +1601,17 @@ gst_video_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   } else if (flow_ret == GST_FLOW_ERROR) {
     GST_WARNING_OBJECT (vagg, "Error collecting buffers");
     goto unlock_and_return;
+  }
+
+  /* It is possible that gst_video_aggregator_fill_queues() marked the pad
+   * for reconfiguration. In this case we have to reconfigure before continuing
+   * because we have picked a new buffer with different caps than before from
+   * one one of the sink pads and continuing here may lead to a crash.
+   * https://bugzilla.gnome.org/show_bug.cgi?id=780682
+   */
+  if (gst_pad_needs_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg))) {
+    GST_DEBUG_OBJECT (vagg, "Need reconfigure");
+    goto restart;
   }
 
   GST_DEBUG_OBJECT (vagg,
