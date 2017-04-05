@@ -815,7 +815,7 @@ print_action_parameter (GString * string, GstValidateActionType * type,
         g_regex_replace (newline_regex, param->description,
         -1, 0, tmp, 0, NULL);
   } else {
-    desc = g_strdup_printf ("No description");
+    desc = g_strdup ("No description");
   }
 
   g_string_append_printf (string, "\n %-30s : %s", param_head, desc);
