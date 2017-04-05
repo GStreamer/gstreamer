@@ -440,7 +440,8 @@ gst_vaapi_encoder_vp9_init (GstVaapiEncoder * base_encoder)
   encoder->sharpness_level = DEFAULT_SHARPNESS_LEVEL;
   encoder->yac_qi = DEFAULT_YAC_QINDEX;
 
-  memset (encoder->ref_list, 0, G_N_ELEMENTS (encoder->ref_list));
+  memset (encoder->ref_list, 0,
+      G_N_ELEMENTS (encoder->ref_list) * sizeof (encoder->ref_list[0]));
   encoder->ref_list_idx = 0;
 
   return TRUE;
