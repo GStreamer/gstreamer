@@ -868,7 +868,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
       gint i;
-      gchar *desc, *tmp;
+      gchar *desc;
       gboolean has_parameters = FALSE;
 
       GstValidateActionParameter playback_time_param = {
@@ -896,13 +896,10 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
             "at the beginning of the execution of the pipeline)");
 
 
-      tmp = g_strdup_printf ("\n    ");
-      desc =
-          g_regex_replace (newline_regex, type->description, -1, 0, tmp, 0,
-          NULL);
+      desc = g_regex_replace (newline_regex, type->description, -1, 0, "\n    ",
+          0, NULL);
       g_string_append_printf (string, "\n\n  Description: \n    %s", desc);
       g_free (desc);
-      g_free (tmp);
 
       if (!IS_CONFIG_ACTION_TYPE (type->flags))
         print_action_parameter (string, type, &playback_time_param);
