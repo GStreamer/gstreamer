@@ -41,6 +41,26 @@
 static void drop_frame (GstVaapiDecoder * decoder, GstVideoCodecFrame * frame);
 
 static void
+parser_state_reset (GstVaapiParserState * ps)
+{
+
+  if (ps->input_adapter)
+    gst_adapter_clear (ps->input_adapter);
+  if (ps->output_adapter)
+    gst_adapter_clear (ps->output_adapter);
+  ps->current_adapter = NULL;
+
+  if (ps->next_unit_pending) {
+    gst_vaapi_decoder_unit_clear (&ps->next_unit);
+    ps->next_unit_pending = FALSE;
+  }
+
+  ps->current_frame_number = 0;
+  ps->input_offset1 = ps->input_offset2 = 0;
+  ps->at_eos = FALSE;
+}
+
+static void
 parser_state_finalize (GstVaapiParserState * ps)
 {
   if (ps->input_adapter) {
@@ -264,16 +284,6 @@ do_decode (GstVaapiDecoder * decoder, GstVideoCodecFrame * base_frame)
       break;
   }
   return status;
-}
-
-static inline GstVaapiDecoderStatus
-do_flush (GstVaapiDecoder * decoder)
-{
-  GstVaapiDecoderClass *const klass = GST_VAAPI_DECODER_GET_CLASS (decoder);
-
-  if (klass->flush)
-    return klass->flush (decoder);
-  return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static GstVaapiDecoderStatus
@@ -1029,13 +1039,69 @@ gst_vaapi_decoder_decode (GstVaapiDecoder * decoder, GstVideoCodecFrame * frame)
   return do_decode (decoder, frame);
 }
 
+/* This function really marks the end of input,
+ * so that the decoder will drain out any pending
+ * frames on calls to gst_vaapi_decoder_get_frame_with_timeout() */
 GstVaapiDecoderStatus
 gst_vaapi_decoder_flush (GstVaapiDecoder * decoder)
 {
+  GstVaapiDecoderClass *klass;
+
   g_return_val_if_fail (decoder != NULL,
       GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
-  return do_flush (decoder);
+  klass = GST_VAAPI_DECODER_GET_CLASS (decoder);
+
+  if (klass->flush)
+    return klass->flush (decoder);
+
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+/* Reset the decoder instance to a clean state,
+ * clearing any pending decode state, without
+ * reallocating the entire decoder */
+GstVaapiDecoderStatus
+gst_vaapi_decoder_reset (GstVaapiDecoder * decoder)
+{
+  GstVaapiDecoderClass *klass;
+  GstVaapiDecoderStatus ret = GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+  g_return_val_if_fail (decoder != NULL,
+      GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+
+  klass = GST_VAAPI_DECODER_GET_CLASS (decoder);
+
+  GST_DEBUG ("Resetting decoder");
+
+  if (klass->reset) {
+    ret = klass->reset (decoder);
+  } else {
+    if (klass->destroy)
+      klass->destroy (decoder);
+    if (klass->create)
+      if (!klass->create (decoder))
+        ret = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  }
+
+  if (ret != GST_VAAPI_DECODER_STATUS_SUCCESS)
+    return ret;
+
+  /* Clear any buffers and frame in the queues */
+  {
+    GstVideoCodecFrame *frame;
+    GstBuffer *buffer;
+
+    while ((frame = g_async_queue_try_pop (decoder->frames)) != NULL)
+      gst_video_codec_frame_unref (frame);
+
+    while ((buffer = g_async_queue_try_pop (decoder->buffers)) != NULL)
+      gst_buffer_unref (buffer);
+  }
+
+  parser_state_reset (&decoder->parser_state);
+
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 GstVaapiDecoderStatus

@@ -317,6 +317,8 @@ gst_vaapi_decoder_mpeg2_close (GstVaapiDecoderMpeg2 * decoder)
   priv->state = 0;
 
   gst_vaapi_dpb_replace (&priv->dpb, NULL);
+
+  priv->is_opened = FALSE;
 }
 
 static gboolean

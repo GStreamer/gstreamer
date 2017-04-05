@@ -67,7 +67,6 @@ struct _GstVaapiDecoderVC1Private
   guint8 rndctrl;
   guint rbdu_buffer_size;
   guint is_opened:1;
-  guint is_first_field:1;
   guint has_codec_data:1;
   guint has_entrypoint:1;
   guint size_changed:1;
@@ -134,6 +133,7 @@ gst_vaapi_decoder_vc1_close (GstVaapiDecoderVC1 * decoder)
     gst_vc1_bitplanes_free (priv->bitplanes);
     priv->bitplanes = NULL;
   }
+  priv->is_opened = FALSE;
 }
 
 static gboolean
@@ -150,6 +150,11 @@ gst_vaapi_decoder_vc1_open (GstVaapiDecoderVC1 * decoder)
   priv->bitplanes = gst_vc1_bitplanes_new ();
   if (!priv->bitplanes)
     return FALSE;
+
+  memset (&priv->seq_hdr, 0, sizeof (GstVC1SeqHdr));
+  memset (&priv->entrypoint_hdr, 0, sizeof (GstVC1EntryPointHdr));
+  memset (&priv->frame_hdr, 0, sizeof (GstVC1FrameHdr));
+
   return TRUE;
 }
 
@@ -174,8 +179,13 @@ gst_vaapi_decoder_vc1_create (GstVaapiDecoder * base_decoder)
   GstVaapiDecoderVC1 *const decoder = GST_VAAPI_DECODER_VC1_CAST (base_decoder);
   GstVaapiDecoderVC1Private *const priv = &decoder->priv;
 
+  priv->has_codec_data = priv->has_entrypoint =
+      priv->size_changed = priv->profile_changed =
+      priv->closed_entry = priv->broken_link = FALSE;
+
   priv->profile = (GstVaapiProfile) 0;
   priv->rndctrl = 0;
+  priv->width = priv->height = 0;
   return TRUE;
 }
 
@@ -1357,6 +1367,9 @@ gst_vaapi_decoder_vc1_start_frame (GstVaapiDecoder * base_decoder,
     GST_ERROR ("failed to reset context");
     return status;
   }
+  status = ensure_decoder (decoder);
+  if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+    return status;
 
   picture = GST_VAAPI_PICTURE_NEW (VC1, decoder);
   if (!picture) {

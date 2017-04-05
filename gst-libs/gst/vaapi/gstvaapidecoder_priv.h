@@ -225,6 +225,7 @@ struct _GstVaapiDecoderClass
       struct _GstVaapiDecoderUnit * unit);
   GstVaapiDecoderStatus (*end_frame) (GstVaapiDecoder * decoder);
   GstVaapiDecoderStatus (*flush) (GstVaapiDecoder * decoder);
+  GstVaapiDecoderStatus (*reset) (GstVaapiDecoder * decoder);
   GstVaapiDecoderStatus (*decode_codec_data) (GstVaapiDecoder * decoder,
       const guchar * buf, guint buf_size);
 };

@@ -133,6 +133,9 @@ GstVaapiDecoderStatus
 gst_vaapi_decoder_flush (GstVaapiDecoder * decoder);
 
 GstVaapiDecoderStatus
+gst_vaapi_decoder_reset (GstVaapiDecoder * decoder);
+
+GstVaapiDecoderStatus
 gst_vaapi_decoder_check_status (GstVaapiDecoder * decoder);
 
 gboolean

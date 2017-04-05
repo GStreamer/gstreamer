@@ -1221,10 +1221,11 @@ gst_vaapi_decoder_h264_destroy (GstVaapiDecoder * base_decoder)
   guint i;
 
   gst_vaapi_decoder_h264_close (decoder);
+  priv->is_opened = FALSE;
 
   g_free (priv->dpb);
   priv->dpb = NULL;
-  priv->dpb_size = 0;
+  priv->dpb_size_max = priv->dpb_size = 0;
 
   g_free (priv->prev_ref_frames);
   priv->prev_ref_frames = NULL;

@@ -957,6 +957,8 @@ gst_vaapi_decoder_h265_close (GstVaapiDecoderH265 * decoder)
     gst_h265_parser_free (priv->parser);
     priv->parser = NULL;
   }
+
+  priv->is_opened = FALSE;
 }
 
 static gboolean
@@ -982,7 +984,8 @@ gst_vaapi_decoder_h265_destroy (GstVaapiDecoder * base_decoder)
   gst_vaapi_decoder_h265_close (decoder);
   g_free (priv->dpb);
   priv->dpb = NULL;
-  priv->dpb_size = 0;
+  priv->dpb_count = priv->dpb_size_max = priv->dpb_size = 0;
+
   for (i = 0; i < G_N_ELEMENTS (priv->pps); i++)
     gst_vaapi_parser_info_h265_replace (&priv->pps[i], NULL);
   gst_vaapi_parser_info_h265_replace (&priv->active_pps, NULL);

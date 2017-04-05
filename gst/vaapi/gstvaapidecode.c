@@ -953,20 +953,21 @@ gst_vaapidecode_destroy (GstVaapiDecode * decode)
 }
 
 static gboolean
-gst_vaapidecode_reset_full (GstVaapiDecode * decode, GstCaps * caps,
-    gboolean hard)
+gst_vaapidecode_reset (GstVaapiDecode * decode, GstCaps * caps,
+    gboolean force_reset)
 {
   /* Reset tracked frame size */
   decode->current_frame_size = 0;
 
-  if (!hard && decode->decoder) {
+  if (decode->decoder) {
     if (gst_vaapi_decoder_update_caps (decode->decoder, caps)) {
       g_atomic_int_set (&decode->do_renego, TRUE);
-      return TRUE;
+      if (!force_reset)
+        return TRUE;
     }
+    return gst_vaapi_decoder_reset (decode->decoder);
   }
 
-  gst_vaapidecode_destroy (decode);
   return gst_vaapidecode_create (decode, caps);
 }
 
@@ -1047,8 +1048,6 @@ static gboolean
 gst_vaapidecode_flush (GstVideoDecoder * vdec)
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
-  gboolean reverse;
-
   if (!decode->decoder)
     return FALSE;
 
@@ -1056,13 +1055,9 @@ gst_vaapidecode_flush (GstVideoDecoder * vdec)
 
   gst_vaapidecode_purge (decode);
 
-  /* in reverse playback we cannot destroy the decoder at flush, since
-   * it will lost the parsing state */
-  reverse = decode->in_segment.rate < 0;
-
-  /* There could be issues if we avoid the reset_full() while doing
+  /* There could be issues if we avoid the reset() while doing
    * seeking: we have to reset the internal state */
-  return gst_vaapidecode_reset_full (decode, decode->sinkpad_caps, !reverse);
+  return gst_vaapidecode_reset (decode, decode->sinkpad_caps, TRUE);
 }
 
 static gboolean
@@ -1077,7 +1072,7 @@ gst_vaapidecode_set_format (GstVideoDecoder * vdec, GstVideoCodecState * state)
     return FALSE;
   if (!gst_vaapi_plugin_base_set_caps (plugin, decode->sinkpad_caps, NULL))
     return FALSE;
-  if (!gst_vaapidecode_reset_full (decode, decode->sinkpad_caps, FALSE))
+  if (!gst_vaapidecode_reset (decode, decode->sinkpad_caps, FALSE))
     return FALSE;
 
   return TRUE;
