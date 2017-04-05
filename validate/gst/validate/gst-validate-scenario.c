@@ -3297,7 +3297,7 @@ gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
     for (i = 0; i < num_scenarios; i++) {
       file = g_file_new_for_path (scenarios[i]);
       if (!_parse_scenario (file, kf)) {
-        GST_ERROR ("Could not parser scenario: %s", scenarios[i]);
+        GST_ERROR ("Could not parse scenario: %s", scenarios[i]);
 
         gst_object_unref (file);
         res = 1;
