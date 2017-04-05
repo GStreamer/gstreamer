@@ -177,12 +177,12 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
           display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
 #endif
       } else {
-#if USE_X11
-        if (!display_type && GST_GL_HAVE_WINDOW_X11)
+#if USE_X11 && GST_GL_HAVE_WINDOW_X11
+        if (!display_type)
           display_type = GST_VAAPI_DISPLAY_TYPE_X11;
 #endif
-#if USE_WAYLAND
-        if (!display_type && GST_GL_HAVE_WINDOW_WAYLAND)
+#if USE_WAYLAND && GST_GL_HAVE_WINDOW_WAYLAND
+        if (!display_type)
           display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
 #endif
       }
