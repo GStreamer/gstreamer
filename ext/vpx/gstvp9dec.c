@@ -148,6 +148,37 @@ gst_vp9_dec_get_valid_format (GstVPXDec * dec, vpx_image_t * img,
       *fmt = GST_VIDEO_FORMAT_Y444;
       return TRUE;
 
+    case VPX_IMG_FMT_I440:
+      /* Planar, half height, full width U/V */
+      GST_FIXME_OBJECT (dec, "Please add a 4:4:0 planar frame format");
+      GST_ELEMENT_WARNING (dec, STREAM, NOT_IMPLEMENTED,
+          (NULL), ("Unsupported frame format - 4:4:0 planar"));
+      return FALSE;
+    case VPX_IMG_FMT_I42016:
+      /* VPX_IMG_FMT_I420 | VPX_IMG_FMT_HIGHBITDEPTH */
+      GST_FIXME_OBJECT (dec, "Please add 16-bit I420 format");
+      GST_ELEMENT_WARNING (dec, STREAM, NOT_IMPLEMENTED,
+          (NULL), ("Unsupported frame format - 16-bit 4:2:0 planar"));
+      return FALSE;
+    case VPX_IMG_FMT_I42216:
+      /* VPX_IMG_FMT_I422 | VPX_IMG_FMT_HIGHBITDEPTH */
+      GST_FIXME_OBJECT (dec, "Please add 16-bit Y42B format");
+      GST_ELEMENT_WARNING (dec, STREAM, NOT_IMPLEMENTED,
+          (NULL), ("Unsupported frame format - 16-bit 4:2:2 planar"));
+      return FALSE;
+    case VPX_IMG_FMT_I44416:
+      /* VPX_IMG_FMT_I444 | VPX_IMG_FMT_HIGHBITDEPTH */
+      GST_FIXME_OBJECT (dec, "Please add 16-bit Y444 format");
+      GST_ELEMENT_WARNING (dec, STREAM, NOT_IMPLEMENTED,
+          (NULL), ("Unsupported frame format - 16-bit 4:4:4 planar"));
+      return FALSE;
+    case VPX_IMG_FMT_I44016:
+      /* VPX_IMG_FMT_I440 | VPX_IMG_FMT_HIGHBITDEPTH */
+      GST_FIXME_OBJECT (dec, "Please add 16-bit 4:4:0 planar frame format");
+      GST_ELEMENT_WARNING (dec, STREAM, NOT_IMPLEMENTED,
+          (NULL), ("Unsupported frame format - 16-bit 4:4:0 planar"));
+      return FALSE;
+
     default:
       return FALSE;
   }
