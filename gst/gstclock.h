@@ -84,7 +84,7 @@ typedef gpointer GstClockID;
  *
  * Constant to define an undefined clock time.
  */
-#define GST_CLOCK_STIME_NONE             G_MININT64
+#define GST_CLOCK_STIME_NONE             ((GstClockTimeDiff)G_MININT64)
 /**
  * GST_CLOCK_STIME_IS_VALID:
  * @time: signed clock time to validate
@@ -101,25 +101,25 @@ typedef gpointer GstClockID;
  *
  * Constant that defines one GStreamer second.
  */
-#define GST_SECOND  (G_USEC_PER_SEC * G_GINT64_CONSTANT (1000))
+#define GST_SECOND  ((GstClockTime)(G_USEC_PER_SEC * G_GINT64_CONSTANT (1000)))
 /**
  * GST_MSECOND: (value 1000000) (type GstClockTime)
  *
  * Constant that defines one GStreamer millisecond.
  */
-#define GST_MSECOND (GST_SECOND / G_GINT64_CONSTANT (1000))
+#define GST_MSECOND ((GstClockTime)(GST_SECOND / G_GINT64_CONSTANT (1000)))
 /**
  * GST_USECOND: (value 1000) (type GstClockTime)
  *
  * Constant that defines one GStreamer microsecond.
  */
-#define GST_USECOND (GST_SECOND / G_GINT64_CONSTANT (1000000))
+#define GST_USECOND ((GstClockTime)(GST_SECOND / G_GINT64_CONSTANT (1000000)))
 /**
  * GST_NSECOND: (value 1) (type GstClockTime)
  *
  * Constant that defines one GStreamer nanosecond
  */
-#define GST_NSECOND (GST_SECOND / G_GINT64_CONSTANT (1000000000))
+#define GST_NSECOND ((GstClockTime)(GST_SECOND / G_GINT64_CONSTANT (1000000000)))
 
 
 /**

@@ -54,12 +54,12 @@ typedef enum {
 } GstQueryTypeFlags;
 
 /**
- * GST_QUERY_TYPE_BOTH:
+ * GST_QUERY_TYPE_BOTH: (value 3) (type GstQueryTypeFlags)
  *
  * The same thing as #GST_QUERY_TYPE_UPSTREAM | #GST_QUERY_TYPE_DOWNSTREAM.
  */
 #define GST_QUERY_TYPE_BOTH \
-    (GST_QUERY_TYPE_UPSTREAM | GST_QUERY_TYPE_DOWNSTREAM)
+    ((GstQueryTypeFlags)(GST_QUERY_TYPE_UPSTREAM | GST_QUERY_TYPE_DOWNSTREAM))
 
 #define GST_QUERY_NUM_SHIFT     (8)
 

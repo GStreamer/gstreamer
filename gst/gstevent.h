@@ -50,12 +50,12 @@ typedef enum {
 } GstEventTypeFlags;
 
 /**
- * GST_EVENT_TYPE_BOTH:
+ * GST_EVENT_TYPE_BOTH: (value 3) (type GstEventTypeFlags)
  *
  * The same thing as #GST_EVENT_TYPE_UPSTREAM | #GST_EVENT_TYPE_DOWNSTREAM.
  */
 #define GST_EVENT_TYPE_BOTH \
-    (GST_EVENT_TYPE_UPSTREAM | GST_EVENT_TYPE_DOWNSTREAM)
+    ((GstEventTypeFlags)(GST_EVENT_TYPE_UPSTREAM | GST_EVENT_TYPE_DOWNSTREAM))
 
 #define GST_EVENT_NUM_SHIFT     (8)
 
