@@ -110,7 +110,8 @@ foreach subproj: subprojects
 endforeach
 
 setenv = find_program('gst-uninstalled.py')
-run_target('uninstalled', command : [setenv, '--builddir=@0@'.format(meson.current_build_dir()),
+run_target('uninstalled', command : [setenv, '--builddir=@0@'.format(meson.build_root()),
+	   '--srcdir=@0@'.format(meson.source_root()),
            '--gst-version=@0@'.format(gst_branch)])
 
 update = find_program('git-update')

@@ -173,6 +173,9 @@ if __name__ == "__main__":
     parser.add_argument("--builddir",
                         default=os.path.join(SCRIPTDIR, "build"),
                         help="The meson build directory")
+    parser.add_argument("--srcdir",
+                        default=SCRIPTDIR,
+                        help="The top level source directory")
     parser.add_argument("--gst-version", default="master",
                         help="The GStreamer major version")
     options, args = parser.parse_known_args()
@@ -180,6 +183,11 @@ if __name__ == "__main__":
     if not os.path.exists(options.builddir):
         print("GStreamer not built in %s\n\nBuild it and try again" %
               options.builddir)
+        exit(1)
+
+    if not os.path.exists(options.srcdir):
+        print("The specified source dir does not exist" %
+              options.srcdir)
         exit(1)
 
     if not args:
@@ -200,7 +208,8 @@ if __name__ == "__main__":
                 args.append(tmprc.name)
     python_set = python_env(options)
     try:
-        exit(subprocess.call(args, env=get_subprocess_env(options)))
+        exit(subprocess.call(args, cwd=options.srcdir,
+                             env=get_subprocess_env(options)))
     except subprocess.CalledProcessError as e:
         exit(e.returncode)
     finally:
