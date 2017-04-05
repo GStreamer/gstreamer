@@ -427,7 +427,7 @@ typedef enum {
 } GstBufferCopyFlags;
 
 /**
- * GST_BUFFER_COPY_METADATA:
+ * GST_BUFFER_COPY_METADATA: (value 7) (type GstBufferCopyFlags)
  *
  * Combination of all possible metadata fields that can be copied with
  * gst_buffer_copy_into().
@@ -436,7 +436,7 @@ typedef enum {
                                         GST_BUFFER_COPY_META)
 
 /**
- * GST_BUFFER_COPY_ALL:
+ * GST_BUFFER_COPY_ALL: (value 15) (type GstBufferCopyFlags)
  *
  * Combination of all possible fields that can be copied with
  * gst_buffer_copy_into().

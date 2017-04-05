@@ -179,7 +179,7 @@ typedef enum {
 } GstMapFlags;
 
 /**
- * GST_MAP_READWRITE:
+ * GST_MAP_READWRITE: (value 3) (type GstMapFlags)
  *
  * GstMapFlags value alias for GST_MAP_READ | GST_MAP_WRITE
  */
