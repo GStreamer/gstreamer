@@ -210,8 +210,9 @@ G_BEGIN_DECLS
  */
 #define GST_VALUE_HOLDS_FLAG_SET(x)     (G_TYPE_CHECK_VALUE_TYPE ((x), GST_TYPE_FLAG_SET))
 
-/*
- * GST_FLAG_SET_MASK_EXACT:
+/**
+ * GST_FLAG_SET_MASK_EXACT: (value 4294967295) (type guint)
+ *
  * A mask value with all bits set, for use as a
  * #GstFlagSet mask where all flag bits must match
  * exactly
