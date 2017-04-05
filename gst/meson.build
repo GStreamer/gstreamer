@@ -16,6 +16,8 @@ subdir('compositor')
 subdir('debugutils')
 subdir('dvbsuboverlay')
 subdir('dvdspu')
+# did not work
+#subdir('faceoverlay')
 subdir('festival')
 subdir('fieldanalysis')
 subdir('freeverb')

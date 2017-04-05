@@ -459,6 +459,11 @@ dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
 
 dnl *** plug-ins to include ***
+dnl Non ported plugins (non-dependant, then dependant)
+dnl Make sure you have a space before and after all plugins
+GST_PLUGINS_NONPORTED="faceoverlay"
+
+AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(accurip)
@@ -480,6 +485,7 @@ AG_GST_CHECK_PLUGIN(coloreffects)
 AG_GST_CHECK_PLUGIN(debugutils)
 AG_GST_CHECK_PLUGIN(dvbsuboverlay)
 AG_GST_CHECK_PLUGIN(dvdspu)
+AG_GST_CHECK_PLUGIN(faceoverlay)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(fieldanalysis)
 AG_GST_CHECK_PLUGIN(freeverb)
@@ -3524,6 +3530,7 @@ gst/coloreffects/Makefile
 gst/debugutils/Makefile
 gst/dvbsuboverlay/Makefile
 gst/dvdspu/Makefile
+gst/faceoverlay/Makefile
 gst/festival/Makefile
 gst/fieldanalysis/Makefile
 gst/freeverb/Makefile
