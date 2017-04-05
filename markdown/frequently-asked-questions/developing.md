@@ -1,6 +1,6 @@
 # Developing applications with GStreamer
 
-## How do I compile programs that use GStreamer ?
+> How do I compile programs that use GStreamer ?
 
 <!-- FIXME: update for windows, macOS, and meson build, get rid of libtool things -->
 
@@ -31,7 +31,7 @@ For bigger projects, you should integrate pkg-config use in your
 Makefile, or integrate with autoconf using the pkg.m4 macro (providing
 `PKG_CONFIG_CHECK`).
 
-## How do I develop against an uninstalled GStreamer copy ?
+> How do I develop against an uninstalled GStreamer copy ?
 
 It is possible to develop and compile against an uninstalled copy
 of gstreamer and gst-plugins-\* (for example, against git checkouts).
@@ -69,7 +69,7 @@ environment is used.
 [gst-uninstalled]: http://cgit.freedesktop.org/gstreamer/gstreamer/tree/scripts/gst-uninstalled
 [create-uninstalled]: http://cgit.freedesktop.org/gstreamer/gstreamer/tree/scripts/create-uninstalled-setup.sh
 
-## How can I use GConf to get the system-wide defaults ?
+> How can I use GConf to get the system-wide defaults ?
 
 For GNOME applications it's a good idea to use GConf to find the
 default ways of outputting audio and video. You can do this by using the
@@ -78,7 +78,7 @@ output. They will take care of everything GConf-related for you and
 automatically use the outputs that the user configured. If you are using
 gconfaudiosink, your application should set the 'profile' property.
 
-## How do I debug these funny shell scripts that libtool makes ?
+> How do I debug these funny shell scripts that libtool makes ?
 
 When you link a program against uninstalled GStreamer using
 libtool, funny shell scripts are made to modify your shared object
@@ -87,7 +87,7 @@ gst-launch, try
 
     libtool --mode=execute gdb /path/to/gst-launch
 
-. If this does not work, you're probably using a broken version of
+If this does not work, you're probably using a broken version of
 libtool.
 
 If you build GStreamer using the Meson build system, libtool will not
@@ -95,7 +95,7 @@ be used and this is not a problem. You can run `gdb`, `valgrind` or any
 debugging tools directly on the binaries Meson creates in the build
 directory.
 
-## Why is mail traffic so low on gstreamer-devel ?
+> Why is mail traffic so low on gstreamer-devel ?
 
 Our main arena for coordination and discussion are IRC and bugzilla, not
 mailing lists. Join us in [`#gstreamer`][irc-gstreamer] on irc.freenode.net.
@@ -106,7 +106,7 @@ mailing list is never a bad idea, however.
 [irc-gstreamer]: irc://irc.freenode.net/#gstreamer
 [webchat-gstreamer]: https://webchat.freenode.net
 
-## What kind of versioning scheme does GStreamer use ?
+> What kind of versioning scheme does GStreamer use ?
 
 For public releases, GStreamer uses a standard MAJOR.MINOR.MICRO
 version scheme. If the release consists of mostly bug fixes or
@@ -129,7 +129,7 @@ not supported. Additionally, if you didn't get this package or tarball
 from the GStreamer team, don't have high hopes on it doing whatever you
 want it to do.
 
-## What is the coding style for GStreamer code?
+> What is the coding style for GStreamer code?
 
 The core and almost all plugin modules are basically coded in
 K\&R with 2-space indenting. Just follow what's already there and you'll
@@ -179,7 +179,7 @@ See [How to submit patches][submit-patches] for more details.
 
 [submit-patches]: contribute/index.md#how-to-submit-patches
 
-## I have translated one of the module .po files into a new language. How do I get it included?
+> I have translated one of the module .po files into a new language. How do I get it included?
 
 GStreamer translations are uniformly managed through the
 [Translation Project](http://translationproject.org). There are some

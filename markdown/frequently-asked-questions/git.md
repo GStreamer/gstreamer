@@ -1,13 +1,13 @@
 # Building GStreamer from git
 
-## Is there a way to test or develop against GStreamer from git without interfering with my system GStreamer installed from packages?
+> Is there a way to test or develop against GStreamer from git without interfering with my system GStreamer installed from packages?
 
 Yes! You have two options: you can either run GStreamer in an
 uninstalled setup (see [How do I develop against an uninstalled
 GStreamer copy ?](#developing-uninstalled-gstreamer)), or you can use
 GNOME's jhbuild.
 
-## How do I check out GStreamer from git ?
+> How do I check out GStreamer from git ?
 
 GStreamer is hosted on Freedesktop.org. GStreamer consists of
 various parts. In the beginning, you will be interested in the
@@ -28,15 +28,15 @@ use
 This will create three directories in your current directory:
 "gstreamer", "gst-plugins-base", and "gst-plugins-good". If you want to
 get another module, use the above git clone command line and replace
-$module with the name of the module. Once you have checked out these
+`$module` with the name of the module. Once you have checked out these
 modules, you will need to change into each directory and run
-./autogen.sh, which will among other things checkout the common module
+`./autogen.sh`, which will among other things checkout the common module
 underneath each module checkout.
 
 The [modules page](http://gstreamer.freedesktop.org/modules/) has a list
 of active ones together with a short description.
 
-## How do I get developer access to GStreamer git ?
+> How do I get developer access to GStreamer git ?
 
 If you want to gain developer access to GStreamer git, you should
 ask for it on the development lists, or ask one of the maintainers
@@ -62,7 +62,7 @@ Freedesktop.org, you will then have to provide them with:
 Once you have all these items, see
 <http://freedesktop.org/wiki/AccountRequests> for what to do with them.
 
-## I ran autogen.sh, but it fails with aclocal errors. What's wrong ?
+> I ran autogen.sh, but it fails with aclocal errors. What's wrong ?
 
     + running aclocal -I m4 -I common/m4 ...
     aclocal: configure.ac: 8: macro `AM_DISABLE_STATIC' not found in library

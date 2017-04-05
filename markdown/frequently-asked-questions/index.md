@@ -1,3 +1,7 @@
+---
+render-subpages: false
+...
+
 # Frequently Asked Questions
 
 ## Getting Started

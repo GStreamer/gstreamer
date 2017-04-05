@@ -1,6 +1,6 @@
 # General
 
-## Is GStreamer a media player ?
+> Is GStreamer a media player ?
 
 No, GStreamer is a development framework for creating applications like
 media players, video editors, streaming media broadcasters and so on.
@@ -8,7 +8,7 @@ That said, very good media players can easily be built on top of GStreamer
 especially when using the high-level APIs we provide such as `GstPlayer` or
 the `playbin` and `playbin3` elements.
 
-## Why is GStreamer written in C ? Why not C++/Objective-C/... ?
+> Why is GStreamer written in C ? Why not C++/Objective-C/... ?
 
 We like C. Aside from "personal preference", there are a number
 of technical reasons why C is nice in this project:
@@ -37,7 +37,7 @@ So, in closing, we like C. If you don't, that's fine; if you still want
 to help out on GStreamer, we always need more language binding people.
 And if not, don't bother us; we're working :-)
 
-## What kind of applications have been written in GStreamer?
+> What kind of applications have been written in GStreamer?
 
 GStreamer has been designed from the start to be a general-purpose multimedia
 framework that can be used to write all kinds of multimedia applications.
@@ -53,7 +53,7 @@ For a list of projects, look at the [application
 list](http://gstreamer.freedesktop.org/apps/) on the GStreamer project
 website.
 
-## Does GStreamer support the format of my media files?
+> Does GStreamer support the format of my media files?
 
 GStreamer is plugin based and was designed to be extensible from the start,
 so it can pretty much support any media format provided suitable plugins
@@ -76,7 +76,7 @@ provide:
 
   - ways to obtain mediafiles in that format to test.
 
-## What are the exact licensing terms for GStreamer and its plugins?
+> What are the exact licensing terms for GStreamer and its plugins?
 
 All of GStreamer, including our own plugin code, is licensed
 under the [GNU LGPL 2.1](http://www.gnu.org/licenses/lgpl-2.1.html)
@@ -96,13 +96,13 @@ You can see the effective license of a plugin as license field in
 `gst-inspect-1.0`. In the future we might have the application enforce a
 stricter policy (much like tainting in the kernel).
 
-## Is GStreamer a sound server ?
+> Is GStreamer a sound server ?
 
 No, GStreamer is not a soundserver. GStreamer does however have
 plugins supporting most of the major soundservers available today,
 including pulseaudio, Jack and others.
 
-## Is GStreamer available for platforms other than Linux?
+> Is GStreamer available for platforms other than Linux?
 
 Yes, GStreamer is a cross-platform multimedia framework that
 works on all major operating systems, including but not limited to
@@ -110,7 +110,7 @@ Linux, Android, iOS, macOS, Windows, and *BSD, and there are official
 SDK binary packages for Android, iOS, macOS and Windows made available
 with every GStreamer release.
 
-## What is GStreamer's relationship with the GNOME community ?
+> What is GStreamer's relationship with the GNOME community ?
 
 GStreamer is an independent project, but we do traditionally have
 a close relationship with the GNOME community. Many of our hackers
@@ -119,7 +119,7 @@ is officially bundled with the GNOME desktop, as lots of GNOME applications
 are using it. This does not exclude use of GStreamer by other communities
 at all, of course.
 
-## What is GStreamer's relationship with the KDE community ?
+> What is GStreamer's relationship with the KDE community ?
 
 The GStreamer community wants to have as good a relationship as
 possible with KDE, and we hope that someday KDE decides to adopt
@@ -129,7 +129,7 @@ GStreamer is used by various KDE and Qt multimedia APIs. Also,
 some of the KDE hackers have created Qt bindings of GStreamer, made a
 simple video player and using it in some audio players (JuK and AmaroK).
 
-## I'm considering adding GStreamer output to my application...
+> I'm considering adding GStreamer output to my application...
 
 That doesn't really make sense. GStreamer is not a sound server,
 so you don't output directly to GStreamer, and it's not an intermediate
