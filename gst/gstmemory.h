@@ -183,7 +183,7 @@ typedef enum {
  *
  * GstMapFlags value alias for GST_MAP_READ | GST_MAP_WRITE
  */
-#define GST_MAP_READWRITE      (GST_MAP_READ | GST_MAP_WRITE)
+#define GST_MAP_READWRITE      ((GstMapFlags) (GST_MAP_READ | GST_MAP_WRITE))
 
 
 /**
