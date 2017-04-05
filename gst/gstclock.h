@@ -95,31 +95,30 @@ typedef gpointer GstClockID;
  */
 #define GST_CLOCK_STIME_IS_VALID(time)   (((GstClockTimeDiff)(time)) != GST_CLOCK_STIME_NONE)
 
-/* FIXME: still need to explicitly force types on the defines below */
 /**
- * GST_SECOND: (value 1000000000) (type GstClockTime)
+ * GST_SECOND: (value 1000000000) (type GstClockTimeDiff)
  *
  * Constant that defines one GStreamer second.
  */
-#define GST_SECOND  ((GstClockTime)(G_USEC_PER_SEC * G_GINT64_CONSTANT (1000)))
+#define GST_SECOND  ((GstClockTimeDiff)(G_USEC_PER_SEC * G_GINT64_CONSTANT (1000)))
 /**
- * GST_MSECOND: (value 1000000) (type GstClockTime)
+ * GST_MSECOND: (value 1000000) (type GstClockTimeDiff)
  *
  * Constant that defines one GStreamer millisecond.
  */
-#define GST_MSECOND ((GstClockTime)(GST_SECOND / G_GINT64_CONSTANT (1000)))
+#define GST_MSECOND ((GstClockTimeDiff)(GST_SECOND / G_GINT64_CONSTANT (1000)))
 /**
- * GST_USECOND: (value 1000) (type GstClockTime)
+ * GST_USECOND: (value 1000) (type GstClockTimeDiff)
  *
  * Constant that defines one GStreamer microsecond.
  */
-#define GST_USECOND ((GstClockTime)(GST_SECOND / G_GINT64_CONSTANT (1000000)))
+#define GST_USECOND ((GstClockTimeDiff)(GST_SECOND / G_GINT64_CONSTANT (1000000)))
 /**
- * GST_NSECOND: (value 1) (type GstClockTime)
+ * GST_NSECOND: (value 1) (type GstClockTimeDiff)
  *
  * Constant that defines one GStreamer nanosecond
  */
-#define GST_NSECOND ((GstClockTime)(GST_SECOND / G_GINT64_CONSTANT (1000000000)))
+#define GST_NSECOND ((GstClockTimeDiff)(GST_SECOND / G_GINT64_CONSTANT (1000000000)))
 
 
 /**
