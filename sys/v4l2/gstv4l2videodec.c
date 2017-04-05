@@ -753,9 +753,10 @@ gst_v4l2_video_dec_decide_allocation (GstVideoDecoder * decoder,
         query);
 
   if (GST_CLOCK_TIME_IS_VALID (self->v4l2capture->duration)) {
-    GST_DEBUG_OBJECT (self, "Setting latency: %u * %llu",
-        self->v4l2capture->min_buffers, self->v4l2capture->duration);
     latency = self->v4l2capture->min_buffers * self->v4l2capture->duration;
+    GST_DEBUG_OBJECT (self, "Setting latency: %" GST_TIME_FORMAT " (%"
+        G_GUINT32_FORMAT " * %" G_GUINT64_FORMAT, GST_TIME_ARGS (latency),
+        self->v4l2capture->min_buffers, self->v4l2capture->duration);
     gst_video_decoder_set_latency (decoder, latency, latency);
   } else {
     GST_WARNING_OBJECT (self, "Duration invalid, not setting latency");
