@@ -715,6 +715,8 @@ struct _GstVaapiEncoderH264
   guint16 view_ids[MAX_NUM_VIEWS];
   GstVaapiH264ViewRefPool ref_pools[MAX_NUM_VIEWS];
   GstVaapiH264ViewReorderPool reorder_pools[MAX_NUM_VIEWS];
+
+  gboolean use_aud;
 };
 
 /* Write a SEI buffering period payload */
@@ -1290,6 +1292,52 @@ fill_hrd_params (GstVaapiEncoderH264 * encoder, VAEncMiscParameterHRD * hrd)
   } else {
     hrd->buffer_size = 0;
     hrd->initial_buffer_fullness = 0;
+  }
+}
+
+static gboolean
+add_packed_au_delimiter (GstVaapiEncoderH264 * encoder,
+    GstVaapiEncPicture * picture)
+{
+  GstVaapiEncPackedHeader *packed_aud;
+  GstBitWriter bs;
+  VAEncPackedHeaderParameterBuffer packed_header_param_buffer = { 0 };
+  guint32 data_bit_size;
+  guint8 *data;
+
+  gst_bit_writer_init (&bs, 128 * 8);
+  WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
+  bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_NONE,
+      GST_H264_NAL_AU_DELIMITER);
+  WRITE_UINT32 (&bs, picture->type - 1, 3);
+  if (!bs_write_trailing_bits (&bs))
+    goto bs_error;
+
+  g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
+  data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
+  data = GST_BIT_WRITER_DATA (&bs);
+
+  packed_header_param_buffer.type = VAEncPackedHeaderRawData;
+  packed_header_param_buffer.bit_length = data_bit_size;
+  packed_header_param_buffer.has_emulation_bytes = 0;
+
+  packed_aud = gst_vaapi_enc_packed_header_new (GST_VAAPI_ENCODER (encoder),
+      &packed_header_param_buffer, sizeof (packed_header_param_buffer),
+      data, (data_bit_size + 7) / 8);
+  g_assert (packed_aud);
+
+  gst_vaapi_enc_picture_add_packed_header (picture, packed_aud);
+  gst_vaapi_codec_object_replace (&packed_aud, NULL);
+
+  gst_bit_writer_clear (&bs, TRUE);
+  return TRUE;
+
+  /* ERRORS */
+bs_error:
+  {
+    GST_WARNING ("failed to write AU Delimiter  NAL unit");
+    gst_bit_writer_clear (&bs, TRUE);
+    return FALSE;
   }
 }
 
@@ -2120,6 +2168,13 @@ ensure_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 {
   GstVaapiEncSequence *sequence = NULL;
 
+  /* Insert an AU delimiter */
+  if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+          VA_ENC_PACKED_HEADER_RAW_DATA) && encoder->use_aud) {
+    if (!add_packed_au_delimiter (encoder, picture))
+      goto error_create_packed_au_delimiter;
+  }
+
   /* submit an SPS header before every new I-frame, if codec config changed */
   if (!encoder->config_changed || picture->type != GST_VAAPI_PICTURE_TYPE_I)
     return TRUE;
@@ -2156,6 +2211,11 @@ error_create_seq_param:
     GST_ERROR ("failed to create sequence parameter buffer (SPS)");
     gst_vaapi_codec_object_replace (&sequence, NULL);
     return FALSE;
+  }
+error_create_packed_au_delimiter:
+  {
+    GST_ERROR ("failed to create AU delimiter");
+    gst_vaapi_codec_object_replace (&sequence, NULL);
   }
 error_create_packed_seq_hdr:
   {
@@ -2983,6 +3043,9 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
       }
       break;
     }
+    case GST_VAAPI_ENCODER_H264_PROP_AUD:
+      encoder->use_aud = g_value_get_boolean (value);
+      break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -3134,6 +3197,7 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           "Number of Views",
           "Number of Views for MVC encoding",
           1, MAX_NUM_VIEWS, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstVaapiEncoderH264:view-ids:
    *
@@ -3146,6 +3210,17 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           g_param_spec_uint ("view-id-value", "View id value",
               "view id values used for mvc encoding", 0, MAX_VIEW_ID, 0,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:aud:
+   *
+   * Use AU (Access Unit) delimeter.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_AUD,
+      g_param_spec_boolean ("aud", "AU delimiter",
+          "Use AU (Access Unit) delimeter", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
