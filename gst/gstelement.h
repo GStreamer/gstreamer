@@ -176,14 +176,14 @@ typedef enum {
 
 /**
  * GstStateChange:
- * #GST_STATE_CHANGE_NULL_TO_READY    : state change from NULL to READY.
+ * @GST_STATE_CHANGE_NULL_TO_READY    : state change from NULL to READY.
  *
  *   * The element must check if the resources it needs are available. Device
  *     sinks and -sources typically try to probe the device to constrain their
  *     caps.
  *   * The element opens the device (in case feature need to be probed).
  *
- * #GST_STATE_CHANGE_READY_TO_PAUSED  : state change from READY to PAUSED.
+ * @GST_STATE_CHANGE_READY_TO_PAUSED  : state change from READY to PAUSED.
  *
  *   * The element pads are activated in order to receive data in PAUSED.
  *     Streaming threads are started.
@@ -196,7 +196,7 @@ typedef enum {
  *
  *   * Live sources return %GST_STATE_CHANGE_NO_PREROLL and don't generate data.
  *
- * #GST_STATE_CHANGE_PAUSED_TO_PLAYING: state change from PAUSED to PLAYING.
+ * @GST_STATE_CHANGE_PAUSED_TO_PLAYING: state change from PAUSED to PLAYING.
  *
  *   * Most elements ignore this state change.
  *   * The pipeline selects a #GstClock and distributes this to all the children
@@ -213,7 +213,7 @@ typedef enum {
  *     sometimes pads.
  *   * Live sources start generating data and return %GST_STATE_CHANGE_SUCCESS.
  *
- * #GST_STATE_CHANGE_PLAYING_TO_PAUSED: state change from PLAYING to PAUSED.
+ * @GST_STATE_CHANGE_PLAYING_TO_PAUSED: state change from PLAYING to PAUSED.
  *
  *   * Most elements ignore this state change.
  *   * The pipeline calculates the running_time based on the last selected
@@ -230,7 +230,7 @@ typedef enum {
  *
  *   * Live sources stop generating data and return %GST_STATE_CHANGE_NO_PREROLL.
  *
- * #GST_STATE_CHANGE_PAUSED_TO_READY  : state change from PAUSED to READY.
+ * @GST_STATE_CHANGE_PAUSED_TO_READY  : state change from PAUSED to READY.
  *
  *   * Sinks unblock any waits in the preroll.
  *   * Elements unblock any waits on devices
@@ -240,7 +240,7 @@ typedef enum {
  *   * The sink forgets all negotiated formats
  *   * Elements remove all sometimes pads
  *
- * #GST_STATE_CHANGE_READY_TO_NULL    : state change from READY to NULL.
+ * @GST_STATE_CHANGE_READY_TO_NULL    : state change from READY to NULL.
  *
  *   * Elements close devices
  *   * Elements reset any internal state.
