@@ -1161,7 +1161,7 @@ error:
 }
 
 static GstVaapiContext *
-create_test_context_config (GstVaapiEncoder * encoder)
+create_test_context_config (GstVaapiEncoder * encoder, GstVaapiProfile profile)
 {
   GstVaapiContextInfo cip = { 0, };
   GstVaapiContext *ctxt;
@@ -1169,7 +1169,11 @@ create_test_context_config (GstVaapiEncoder * encoder)
   if (encoder->context)
     return gst_vaapi_object_ref (encoder->context);
 
-  init_context_info (encoder, &cip, get_profile (encoder));
+  /* if there is no profile, let's figure out one */
+  if (profile == GST_VAAPI_PROFILE_UNKNOWN)
+    profile = get_profile (encoder);
+
+  init_context_info (encoder, &cip, profile);
   ctxt = gst_vaapi_context_new (encoder->display, &cip);
   return ctxt;
 }
@@ -1183,12 +1187,13 @@ create_test_context_config (GstVaapiEncoder * encoder)
  * Returns: a #GArray of valid formats for the current VAConfig
  **/
 GArray *
-gst_vaapi_encoder_get_surface_formats (GstVaapiEncoder * encoder)
+gst_vaapi_encoder_get_surface_formats (GstVaapiEncoder * encoder,
+    GstVaapiProfile profile)
 {
   GstVaapiContext *ctxt;
   GArray *formats;
 
-  ctxt = create_test_context_config (encoder);
+  ctxt = create_test_context_config (encoder, profile);
   if (!ctxt)
     return NULL;
   formats = gst_vaapi_context_get_surface_formats (ctxt);

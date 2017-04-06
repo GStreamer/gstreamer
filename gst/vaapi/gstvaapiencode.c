@@ -362,7 +362,8 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   if (!out_caps)
     goto failed_create_va_caps;
 
-  formats = gst_vaapi_encoder_get_surface_formats (encode->encoder);
+  formats = gst_vaapi_encoder_get_surface_formats (encode->encoder,
+      GST_VAAPI_PROFILE_UNKNOWN);
   if (!formats)
     goto failed_get_formats;
 

@@ -174,7 +174,8 @@ GstVaapiEncoderStatus
 gst_vaapi_encoder_flush (GstVaapiEncoder * encoder);
 
 GArray *
-gst_vaapi_encoder_get_surface_formats (GstVaapiEncoder * encoder);
+gst_vaapi_encoder_get_surface_formats (GstVaapiEncoder * encoder,
+    GstVaapiProfile profile);
 G_END_DECLS
 
 #endif /* GST_VAAPI_ENCODER_H */
