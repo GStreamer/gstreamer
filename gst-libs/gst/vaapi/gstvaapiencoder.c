@@ -1178,6 +1178,50 @@ create_test_context_config (GstVaapiEncoder * encoder, GstVaapiProfile profile)
   return ctxt;
 }
 
+static GArray *
+get_profile_surface_formats (GstVaapiEncoder * encoder, GstVaapiProfile profile)
+{
+  GstVaapiContext *ctxt;
+  GArray *formats;
+
+  ctxt = create_test_context_config (encoder, profile);
+  if (!ctxt)
+    return NULL;
+  formats = gst_vaapi_context_get_surface_formats (ctxt);
+  gst_vaapi_object_unref (ctxt);
+  return formats;
+}
+
+static gboolean
+merge_profile_surface_formats (GstVaapiEncoder * encoder,
+    GstVaapiProfile profile, GArray * formats)
+{
+  GArray *surface_fmts;
+  guint i, j;
+  GstVideoFormat fmt, sfmt;
+
+  if (profile == GST_VAAPI_PROFILE_UNKNOWN)
+    return FALSE;
+
+  surface_fmts = get_profile_surface_formats (encoder, profile);
+  if (!surface_fmts)
+    return FALSE;
+
+  for (i = 0; i < surface_fmts->len; i++) {
+    sfmt = g_array_index (surface_fmts, GstVideoFormat, i);
+    for (j = 0; j < formats->len; j++) {
+      fmt = g_array_index (formats, GstVideoFormat, j);
+      if (fmt == sfmt)
+        break;
+    }
+    if (j >= formats->len)
+      g_array_append_val (formats, sfmt);
+  }
+
+  g_array_unref (surface_fmts);
+  return TRUE;
+}
+
 /**
  * gst_vaapi_encoder_get_surface_formats:
  * @encoder: a #GstVaapiEncoder instances
@@ -1190,14 +1234,34 @@ GArray *
 gst_vaapi_encoder_get_surface_formats (GstVaapiEncoder * encoder,
     GstVaapiProfile profile)
 {
-  GstVaapiContext *ctxt;
-  GArray *formats;
+  const GstVaapiEncoderClassData *const cdata =
+      GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
+  GArray *profiles, *formats;
+  guint i;
 
-  ctxt = create_test_context_config (encoder, profile);
-  if (!ctxt)
+  if (profile || encoder->context)
+    return get_profile_surface_formats (encoder, profile);
+
+  /* no specific context neither specific profile, let's iterate among
+   * the codec's profiles */
+  profiles = gst_vaapi_display_get_encode_profiles (encoder->display);
+  if (!profiles)
     return NULL;
-  formats = gst_vaapi_context_get_surface_formats (ctxt);
-  gst_vaapi_object_unref (ctxt);
+
+  formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
+  for (i = 0; i < profiles->len; i++) {
+    profile = g_array_index (profiles, GstVaapiProfile, i);
+    if (gst_vaapi_profile_get_codec (profile) == cdata->codec) {
+      if (!merge_profile_surface_formats (encoder, profile, formats)) {
+        g_array_unref (formats);
+        formats = NULL;
+        break;
+      }
+    }
+  }
+
+  g_array_unref (profiles);
+
   return formats;
 }
 
