@@ -1160,17 +1160,18 @@ error:
   }
 }
 
-static gboolean
-gst_vaapi_encoder_ensure_context_config (GstVaapiEncoder * encoder)
+static GstVaapiContext *
+create_test_context_config (GstVaapiEncoder * encoder)
 {
-  GstVaapiContextInfo *const cip = &encoder->context_info;
+  GstVaapiContextInfo cip = { 0, };
+  GstVaapiContext *ctxt;
 
   if (encoder->context)
-    return TRUE;
+    return gst_vaapi_object_ref (encoder->context);
 
-  init_context_info (encoder, cip, get_profile (encoder));
-  encoder->context = gst_vaapi_context_new (encoder->display, cip);
-  return (encoder->context != NULL);
+  init_context_info (encoder, &cip, get_profile (encoder));
+  ctxt = gst_vaapi_context_new (encoder->display, &cip);
+  return ctxt;
 }
 
 /**
@@ -1184,9 +1185,15 @@ gst_vaapi_encoder_ensure_context_config (GstVaapiEncoder * encoder)
 GArray *
 gst_vaapi_encoder_get_surface_formats (GstVaapiEncoder * encoder)
 {
-  if (!gst_vaapi_encoder_ensure_context_config (encoder))
+  GstVaapiContext *ctxt;
+  GArray *formats;
+
+  ctxt = create_test_context_config (encoder);
+  if (!ctxt)
     return NULL;
-  return gst_vaapi_context_get_surface_formats (encoder->context);
+  formats = gst_vaapi_context_get_surface_formats (ctxt);
+  gst_vaapi_object_unref (ctxt);
+  return formats;
 }
 
 /** Returns a GType for the #GstVaapiEncoderTune set */
