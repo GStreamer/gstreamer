@@ -86,10 +86,8 @@ struct _GstDirectSoundSrc
   DWORD notifysize;
 
   guint buffer_size;
-  guint latency_size;
   guint bytes_per_sample;
 
-  guint buffer_time;
   guint latency_time;
 
   HMIXER mixer;
