@@ -229,7 +229,8 @@ gst_video_time_code_init_from_date_time (GstVideoTimeCode * tc,
   frames =
       gst_util_uint64_scale_round (g_date_time_get_microsecond (dt) *
       G_GINT64_CONSTANT (1000), fps_n, fps_d * GST_SECOND);
-  if (G_UNLIKELY (frames == fps_n)) {
+  if (G_UNLIKELY (((frames == fps_n) && (fps_d == 1)) ||
+          ((frames == fps_n / 1000) && (fps_d == 1001)))) {
     /* Avoid invalid timecodes */
     frames--;
     add_a_frame = TRUE;
