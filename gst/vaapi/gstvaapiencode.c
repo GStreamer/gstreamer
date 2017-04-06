@@ -349,9 +349,11 @@ gst_vaapiencode_buffer_loop (GstVaapiEncode * encode)
 static gboolean
 ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
 {
+  GstVaapiEncodeClass *klass = GST_VAAPIENCODE_GET_CLASS (encode);
   GstCaps *out_caps, *raw_caps = NULL;
   GArray *formats = NULL;
   gboolean ret = FALSE;
+  GstVaapiProfile profile = GST_VAAPI_PROFILE_UNKNOWN;
 
   if (encode->allowed_sinkpad_caps)
     return TRUE;
@@ -362,8 +364,17 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   if (!out_caps)
     goto failed_create_va_caps;
 
-  formats = gst_vaapi_encoder_get_surface_formats (encode->encoder,
-      GST_VAAPI_PROFILE_UNKNOWN);
+  if (klass->get_profile) {
+    GstCaps *allowed =
+        gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
+    if (allowed) {
+      if (!gst_caps_is_empty (allowed) && !gst_caps_is_any (allowed))
+        profile = klass->get_profile (allowed);
+      gst_caps_unref (allowed);
+    }
+  }
+
+  formats = gst_vaapi_encoder_get_surface_formats (encode->encoder, profile);
   if (!formats)
     goto failed_get_formats;
 

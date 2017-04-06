@@ -129,6 +129,25 @@ gst_vaapiencode_h264_get_property (GObject * object,
   }
 }
 
+static GstVaapiProfile
+gst_vaapiencode_h264_get_profile (GstCaps * caps)
+{
+  guint i;
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *const structure = gst_caps_get_structure (caps, i);
+    const GValue *const value = gst_structure_get_value (structure, "profile");
+
+    if (value && G_VALUE_HOLDS_STRING (value)) {
+      const gchar *str = g_value_get_string (value);
+      if (str)
+        return gst_vaapi_utils_h264_get_profile_from_string (str);
+    }
+  }
+
+  return GST_VAAPI_PROFILE_UNKNOWN;
+}
+
 typedef struct
 {
   GstVaapiProfile best_profile;
@@ -397,6 +416,7 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
   object_class->get_property = gst_vaapiencode_h264_get_property;
 
   encode_class->get_properties = gst_vaapi_encoder_h264_get_default_properties;
+  encode_class->get_profile = gst_vaapiencode_h264_get_profile;
   encode_class->set_config = gst_vaapiencode_h264_set_config;
   encode_class->get_caps = gst_vaapiencode_h264_get_caps;
   encode_class->alloc_encoder = gst_vaapiencode_h264_alloc_encoder;

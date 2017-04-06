@@ -80,6 +80,7 @@ struct _GstVaapiEncodeClass
   GstFlowReturn       (*alloc_buffer)   (GstVaapiEncode * encode,
                                          GstVaapiCodedBuffer * coded_buf,
                                          GstBuffer ** outbuf_ptr);
+  GstVaapiProfile     (*get_profile)    (GstCaps * caps);
 };
 
 GType
