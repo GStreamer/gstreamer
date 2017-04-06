@@ -187,7 +187,8 @@ ensure_hw_profile (GstVaapiEncoderVP9 * encoder)
   /* ERRORS */
 error_unsupported_profile:
   {
-    GST_ERROR ("unsupported HW profile (0x%08x)", encoder->profile);
+    GST_ERROR ("unsupported HW profile %s",
+        gst_vaapi_profile_get_name (encoder->profile));
     return FALSE;
   }
 }
