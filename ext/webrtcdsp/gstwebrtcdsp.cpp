@@ -903,8 +903,7 @@ gst_webrtc_dsp_class_init (GstWebrtcDspClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_ECHO_CANCEL,
       g_param_spec_boolean ("echo-cancel", "Echo Cancel",
-          "Enable or disable echo canceller, note that it will be disabled if "
-          "no webrtcechoprobe has been found", TRUE,
+          "Enable or disable echo canceller", TRUE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
