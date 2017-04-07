@@ -1,9 +1,363 @@
-=== release 1.11.2 ===
+=== release 1.11.90 ===
 
-2017-02-24  Sebastian Dröge <slomo@coaxion.net>
+2017-04-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.2
+	  releasing 1.11.90
+
+2017-04-03 14:52:41 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  vaapiencode: h265: add main-10 in caps template
+	  This patch adds h265's main-10 profile in encoder src caps template.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771291
+
+2017-04-03 15:34:51 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: chroma and luma with format
+	  If the profile is main-10 the bit_depth_luma_minus8, in the sequence
+	  parameter buffer, shall be the color format bit depth minus 8, 10-8
+	  which is 2. Also for bit_depth_chroma_minus8.
+	  This patch gets the negotiated sink caps format and queries its
+	  luma's depth and uses that value to fill the mentioned parameters.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771291
+
+2017-03-29 19:20:26 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: admit YUV420_10BPP as valid chroma
+	  Accepts as supported the GST_VAAPI_CHROMA_TYPE_YUV420_10BPP chroma
+	  type.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771291
+
+2017-03-29 19:16:50 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: ensures profile given format
+	  Set the VA profile as GST_VAAPI_PROFILE_H265_MAIN10 if the
+	  configured color format is P010_10LE.
+	  Otherwise, keep GST_VAAPI_PROFILE_H265_MAIN
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771291
+
+2017-04-06 17:21:21 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encode: merge all possible surface formats
+	  When the function gst_vaapi_encoder_get_surface_formats() was added
+	  it was under the assumption that any VA profile of the specific codec
+	  supported the same format colors. But it is not, for example the
+	  profiles that support 10bit formats.
+	  In other words, different VA profiles of a same codec may support
+	  different color formats in their upload surfaces.
+	  In order to expose all the possible color formats, if no profile is
+	  specified via source caps, or if the encoder doesn't have yet a
+	  context, all the possible VA profiles for the specific codec are
+	  iterated and their color formats are merged.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771291
+
+2017-04-06 16:28:12 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	* gst/vaapi/gstvaapiencode.h:
+	* gst/vaapi/gstvaapiencode_h264.c:
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  vaapiencode: add get_profile() vmethod
+	  This new virtual method, get_profile(), if implemented by specific
+	  encoders, will return the VA profile potentially determined by the
+	  source caps.
+	  Also it is implemented by h264 and h265 encoders, which are the main
+	  users of this vmethod.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771291
+
+2017-04-06 12:49:24 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder.h:
+	* gst/vaapi/gstvaapiencode.c:
+	  libs: encoder: pass profile to get_surface_formats()
+	  In order to get the supported surface formats within a specific
+	  profile this patch adds the GstVaapiProfile as property to
+	  gst_vaapi_encoder_get_surface_formats().
+	  Currently the extracted formats are only those related with the
+	  default profile of the element's codec.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771291
+
+2017-04-06 12:28:51 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: dummy context for get_surface_formats()
+	  Instead of creating (if it doesn't exist, yet) the encoder's context
+	  the method gst_vaapi_encoder_get_surface_formats() now it creates
+	  dummy contexts, unless the encoder has it already created.
+	  The purpose of this is to avoid setting a encoder's context with a
+	  wrong profile.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771291
+
+2017-04-04 14:39:59 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: refactor init_context_info()
+	  In order to generate vaapi contexts iterative, the function
+	  init_context_info() is refactored to pass, as parameters the
+	  GstVaapiContextInfo and the GstVaapiProfile.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771291
+
+2017-04-04 14:21:43 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	* gst-libs/gst/vaapi/gstvaapiutils.h:
+	  libs: encoder: initialize chroma_type
+	  Instead of initialize the chroma_type with a undefined value, which
+	  will be converted to GST_VAAPI_CHROMA_TYPE_YUV420 by GstVaapiContext,
+	  this patch queries the VA config, given the received
+	  GstVaapiContextInfo's parameters, and gets the first response.
+	  In order to get the GstVaapiChromaType value, also it was needed to
+	  add a new utility function: to_GstVaapiChromaType(), which, given a
+	  VA_RT_FORMAT_* will return the associated GstVaapiChromaType.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771291
+
+2017-03-31 11:21:21 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode: enhance logs of negotiated caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771291
+
+2017-04-05 11:15:41 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: vp9: Fix initialization of ref_list
+	  gcc 7.0.1 gives a memset-elt-size warning in gst_vaapi_encoder_vp9_init:
+	  'memset' used with length equal to number of elements without
+	  multiplication by element size [-Werror=memset-elt-size]
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780947
+
+2017-03-31 14:12:43 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  encoder: h264: Fix Backward ReferencePicture flag setting
+	  This is a regression introduced by e829b62 which
+	  override the reference flags and caused issues with
+	  latest intel-vaapi-driver.
+
+2017-03-29 13:22:47 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: fix code style
+	  Trivial patch to remove a double ';' as end of instruction.
+
+2017-03-28 10:53:20 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  encoder: h264: Fix B frame encoding artifacts
+	  The current implementation is updating the POC values only
+	  in Slice parameter Buffer.But we are not filling the
+	  picture order count and reference flags in VAPictureH264
+	  while populating VA Picture/Slice structures.The latest
+	  intel-vaapi-driver is directly accessing the above fields
+	  from VAPicutreH264 provided as RefPicLists, which resulted
+	  some wrong maths and prediction errors in driver.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780620
+
+2017-03-21 16:13:56 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: remove unused macro definition
+	  Since the h265 encoder doesn't use GValueArray, there is no need to
+	  disable the Glib deprecation warnings, thus removing the macro
+	  definition.
+
+2017-03-20 16:45:01 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapiencode.c:
+	* gst/vaapi/gstvaapipostproc.c:
+	* gst/vaapi/gstvaapisink.c:
+	  plugins: when debug disabled, default category is NULL
+	  As in gstreamer-vaapi a common base class is used, the specific
+	  default category is passed to the base-plugin initializator, thus
+	  the log messages are categorized with the used plugin.
+	  Nonetheless, when the gst-debug is disabled in compilation time,
+	  it is needed to pass NULL to the base-plugin initializator. This
+	  patch does that.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780302
+
+2017-03-17 17:14:01 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h26x.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h26x_priv.h:
+	  libs: h26x: adds gst_vaapi_utils_h26x_write_nal_unit()
+	  Implements gst_vaapi_utils_h26x_write_nal_unit(), which writes NAL
+	  unit length and data to a bitwriter.
+	  Note that this helper function applies EPB (Emulation Prevention
+	  Bytes), since otherwise produced codec_data might be broken when
+	  decoder/parser considering EPB, starts parsing.
+	  See sections 7.3 and 7.4 of the H264 and H264 specifications, which
+	  describes the emulation_prevention_three_byte.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778750
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2017-03-17 16:49:41 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h26x.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h26x_priv.h:
+	* gst-libs/gst/vaapi/meson.build:
+	  libs: utils: h26x: create vaapiutils_h26x
+	  Since there is duplicated code in h264/265 encoder, we could
+	  refactor it to avoid duplicated code.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778750
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2017-03-17 16:32:36 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h264/5: fix wrong return value
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778750
+
+2017-03-13 17:29:59 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  docs: h264/h265: put parser to the example pipeline
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778749
+
+2017-03-13 16:20:59 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: fix reserved length of bits
+	  Fix reserved length of bits for bit_depth_luma_minus8 and bit_depth_chroma_minus8
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778749
+
+2017-03-12 18:59:42 +0100  Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	* tests/test-display.c:
+	  O_CLOEXEC needs _GNU_SOURCE defined
+	  From man open(2):
+	  The O_CLOEXEC, O_DIRECTORY, and O_NOFOLLOW flags are not specified
+	  in POSIX.1-2001, but are specified in POSIX.1-2008.  Since glibc
+	  2.12, one can obtain their definitions by defining either
+	  _POSIX_C_SOURCE with a value greater than or equal to 200809L or
+	  _XOPEN_SOURCE with a value greater than or equal to 700.  In glibc
+	  2.11 and earlier, one obtains the definitions by defining
+	  _GNU_SOURCE.
+	  And indeed, with the uClibc C library, O_CLOEXEC is not exposed if
+	  _GNU_SOURCE is not defined. Therefore, this commit fixes the build of
+	  gstreamer-vaapi with the uClibc C library.
+	  Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779953
+
+2017-03-14 16:07:08 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* README:
+	  README: fix "Sources" section
+	  Update the URL where the release source tarballs can be downloaded.
+
+2017-03-12 21:39:53 +0100  Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+
+	* README:
+	  README: fix "Reporting bugs" section
+	  The "Reporting bugs" section gives
+	  https://bugzilla.gnome.org/enter_bug.cgi?product=gstreamer-vaapi as the
+	  link to report a bug, but this link says "Sorry, entering a bug into the
+	  product gstreamer-vaapi has been disabled.".
+	  This commit fixes the URL to point to the proper location, and also
+	  removes the following paragraph that is no longer correct.
+	  Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779954
+
+2017-03-03 19:55:00 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: retry to create the VA display
+	  Particularly in GNOME Wayland, the negotiated or created GL context
+	  defines a GLX environment, but VAAPI fails to create a GLX VA
+	  display because there is no a DRI2 connection.
+	  This patch retries to create the VA display if VA cannot create one
+	  with the GL context parameters. Now using the old list of display
+	  types.
+	  This should also work in the case of systems with two GPU, when the
+	  non-VAAPI has the graphics environment, and the VAAPI-enabled one
+	  shall work headless.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772838
+
+2016-10-19 15:33:41 +0100  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: texture upload if driver supports GL
+	  Removes GstVideoGLTextureUploadMeta caps feature if the driver
+	  doesn't support opengl.
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772838
+
+2016-10-25 17:48:47 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: texture upload if driver supports GL
+	  When the allowed source pad caps are generated, the GLTextureUpload caps are
+	  only inserted if the driver support OpenGL.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=772838
+
+2017-02-22 15:02:01 -0800  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* configure.ac:
+	  configure: Add missing compiler flags
+	  The AC_CHECK_HEADERS macro was failing to locate some headers, in
+	  particular the va_enc_* headers due to missing compiler flags.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779101
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+2017-03-01 14:48:46 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: window: wayland: handle more VAStatus to use vpp
+	  Since the commit landed https://github.com/01org/intel-vaapi-driver/pull/55,
+	  we should consider more returned VAStatus to use vpp.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779400
+
+2017-02-23 15:16:06 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: ensure profile when context initialization
+	  We can't be sure that encoder's profile is assgined already or not
+	  at context initialization.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779120
+
+2017-02-23 15:13:59 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: set rate control info only when query succeed
+	  Currently, it set rate control information even when query fails.
+	  In addition, it doesn't update any more since the flag
+	  got_rate_control_mask is set to TRUE.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779120
+
+2017-02-24 16:00:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  meson: Update version
+
+2017-02-24 15:38:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.11.2 ===
+
+2017-02-24 15:10:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.11.2
 
 2017-02-16 18:37:59 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
 
