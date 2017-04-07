@@ -827,11 +827,13 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
 
       break;
     }
+    case GST_EVENT_SEGMENT_DONE:
     case GST_EVENT_EOS:{
       gint count = 0;
       GstFlowReturn res = GST_FLOW_OK;
 
-      GST_DEBUG_OBJECT (videorate, "Got EOS");
+      GST_DEBUG_OBJECT (videorate, "Got %s",
+          gst_event_type_get_name (GST_EVENT_TYPE (event)));
 
       /* If the segment has a stop position, fill the segment */
       if (GST_CLOCK_TIME_IS_VALID (videorate->segment.stop)) {
