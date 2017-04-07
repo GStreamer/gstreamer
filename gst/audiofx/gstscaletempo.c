@@ -651,6 +651,22 @@ gst_scaletempo_sink_event (GstBaseTransform * trans, GstEvent * event)
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
     gst_segment_init (&scaletempo->in_segment, GST_FORMAT_UNDEFINED);
     gst_segment_init (&scaletempo->out_segment, GST_FORMAT_UNDEFINED);
+  } else if (GST_EVENT_TYPE (event) == GST_EVENT_GAP) {
+    if (scaletempo->scale != 1.0) {
+      GstClockTime gap_ts, gap_duration;
+      gst_event_parse_gap (event, &gap_ts, &gap_duration);
+      if (scaletempo->reverse) {
+        gap_ts = scaletempo->in_segment.stop - gap_ts;
+      } else {
+        gap_ts = gap_ts - scaletempo->in_segment.start;
+      }
+      gap_ts = gap_ts / scaletempo->scale + scaletempo->in_segment.start;
+      if (GST_CLOCK_TIME_IS_VALID (gap_duration)) {
+        gap_duration = gap_duration / ABS (scaletempo->scale);
+      }
+      gst_event_unref (event);
+      event = gst_event_new_gap (gap_ts, gap_duration);
+    }
   }
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
