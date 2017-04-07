@@ -11,3 +11,4 @@ EXPORTS
 	gst_uri_downloader_get_type
 	gst_uri_downloader_new
 	gst_uri_downloader_reset
+	gst_uri_downloader_set_parent
