@@ -1,9 +1,85 @@
-=== release 1.11.2 ===
+=== release 1.11.90 ===
 
-2017-02-24  Sebastian Dröge <slomo@coaxion.net>
+2017-04-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.2
+	  releasing 1.11.90
+
+2017-04-07 14:27:23 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Fix compiler warning
+	  gstomxvideoenc.c: In function ‘gst_omx_video_enc_fill_buffer’:
+	  CC       libgstomx_la-gstomxaacdec.lo
+	  gstomxvideoenc.c:1316:27: warning: format ‘%u’ expects argument of type ‘unsigned int’, but argument 8 has type ‘OMX_U32 {aka long unsigned int}’ [-Wformat=]
+	  GST_LOG_OBJECT (self, "Matched strides - direct copy %u bytes",
+	  ^
+	  outbuf->omx_buf->nFilledLen);
+	  ~~~~~~~~~~~~~~~~~~
+
+2017-03-22 17:18:09 +0530  Gurkirpal Singh <gurkirpal204@gmail.com>
+
+	* meson.build:
+	  meson: fix logic to set HAVE_THEORA
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780392
+
+2017-03-14 03:02:06 +1100  Jan Schmidt <thaytan@noraisin.net>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Add an unimplemented mapping for RGBA formats
+	  Add some pixel formats mappings for 2 RGBA formats. Not yet
+	  implemented in the buffer input code though, so no effect for now.
+
+2017-03-14 03:00:49 +1100  Jan Schmidt <thaytan@noraisin.net>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Add GST_OMX_HACK_HEIGHT_MULTIPLE_16 for Rpi
+	  The Raspberry Pi encoder produces corrupt output unless
+	  the input height is a multiple of 16. Add a hack that adds
+	  zero padding when needed.
+
+2017-03-14 02:42:15 +1100  Jan Schmidt <thaytan@noraisin.net>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Add a mapping for OMX_COLOR_FormatYUV420PackedSemiPlanar
+	  The RaspberryPi
+
+2017-03-14 02:40:24 +1100  Jan Schmidt <thaytan@noraisin.net>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Filter out unimplemented formats
+	  Don't announce pixel formats in the caps if they've not been
+	  implemented.
+
+2017-03-14 02:34:36 +1100  Jan Schmidt <thaytan@noraisin.net>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: demote ERROR message
+	  There's no need to warn about failing to negotiate EGL output
+	  - that can be perfectly normal.
+
+2017-02-24 16:00:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  meson: Update version
+
+2017-02-24 15:38:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.11.2 ===
+
+2017-02-24 15:10:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	  Release 1.11.2
 
 2017-02-15 18:22:53 +0000  Tim-Philipp Müller <tim@centricular.com>
 
