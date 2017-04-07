@@ -299,17 +299,20 @@ on_message (GstBus * bus, GstMessage * message, gpointer user_data)
   gdouble rms;
   gint channels2;
   guint i;
-  GstClockTime *rtime = g_new (GstClockTime, 1);
+  GstClockTime *rtime;
 
   if (message->type != GST_MESSAGE_ELEMENT
       || strcmp (name, "videoframe-audiolevel") != 0)
     goto done;
 
   num_msgs++;
-  if (!gst_structure_get_clock_time (s, "running-time", rtime))
+  rtime = g_new (GstClockTime, 1);
+  if (!gst_structure_get_clock_time (s, "running-time", rtime)) {
     g_warning ("Could not parse running time");
-  else
+    g_free (rtime);
+  } else {
     g_queue_push_tail (&msg_timestamp_q, rtime);
+  }
 
   /* the values are packed into GValueArrays with the value per channel */
   array_val = gst_structure_get_value (s, "rms");
