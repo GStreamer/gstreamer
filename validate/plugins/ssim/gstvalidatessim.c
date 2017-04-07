@@ -212,7 +212,7 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
   }
 
   gst_validate_printf (self,
-      "Running frame comparison between images from %s and %s" "%s%s.\n",
+      "Running frame comparison between images from '%s' and '%s' %s%s.\n",
       compared_files_dir, self->priv->outdir,
       self->priv->result_outdir ? ". Issues can be visialized in " :
       " (set 'result-output-dir' in the config file to visualize the result)",
@@ -607,7 +607,7 @@ _save_frame (ValidateSsimOverride * self, GstVideoFrame * frame,
     if ((status = cairo_surface_write_to_png (surface, outname)) !=
         CAIRO_STATUS_SUCCESS) {
       GST_VALIDATE_REPORT (self, SSIM_SAVING_ERROR,
-          "Could not save %s" " cairo status is %s", outname,
+          "Could not save '%s', cairo status is '%s'", outname,
           cairo_status_to_string (status));
 
       res = FALSE;

@@ -177,7 +177,7 @@ gst_validate_ssim_save_out (GstValidateSsim * self, GstBuffer * buffer,
     if ((status = cairo_surface_write_to_png (surface, outfile)) !=
         CAIRO_STATUS_SUCCESS) {
       GST_VALIDATE_REPORT (self, GENERAL_INPUT_ERROR,
-          "Could not save %s" " cairo status is %s", outfile,
+          "Could not save '%s', cairo status is '%s'", outfile,
           cairo_status_to_string (status));
     }
 
@@ -947,7 +947,7 @@ gst_validate_ssim_class_init (GstValidateSsimClass * klass)
 
   g_object_class_install_property (oclass, PROP_RUNNER,
       g_param_spec_object ("validate-runner", "VALIDATE Runner",
-          "The Validate runner to " "report errors to",
+          "The Validate runner to report errors to",
           GST_TYPE_VALIDATE_RUNNER,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 }

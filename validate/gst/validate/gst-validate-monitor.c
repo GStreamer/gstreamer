@@ -175,7 +175,7 @@ gst_validate_monitor_class_init (GstValidateMonitorClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_VALIDATE_PARENT,
       g_param_spec_object ("validate-parent", "VALIDATE parent monitor",
-          "The Validate monitor " "that is the parent of this one",
+          "The Validate monitor that is the parent of this one",
           GST_TYPE_VALIDATE_MONITOR,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 }

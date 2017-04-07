@@ -2904,7 +2904,7 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
 
   g_object_class_install_property (object_class, PROP_RUNNER,
       g_param_spec_object ("validate-runner", "VALIDATE Runner",
-          "The Validate runner to " "report errors to",
+          "The Validate runner to report errors to",
           GST_TYPE_VALIDATE_RUNNER,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
@@ -2919,7 +2919,7 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
       g_param_spec_boolean ("execute-on-idle",
           "Force waiting between actions",
           "Always execute actions on idle and do not chain them to execute as"
-          " fast as possible. Setting this property is useful if action "
+          " fast as possible. Setting this property is useful if action"
           " execution can lead to the addition of new sources on the same main"
           " loop as it provides these new GSource a chance to be dispatched"
           " between actions", FALSE, G_PARAM_READWRITE));
@@ -3172,7 +3172,7 @@ gst_validate_scenario_factory_create (GstValidateRunner *
   }
 
   if (scenario->priv->handles_state) {
-    GST_INFO_OBJECT (scenario, "Scenario handles state,"
+    GST_INFO_OBJECT (scenario, "Scenario handles state."
         " Starting the get position source");
     _add_execute_actions_gsource (scenario);
   }

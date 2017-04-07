@@ -115,7 +115,7 @@ gst_validate_override_class_init (GstValidateOverrideClass * klass)
 
   g_object_class_install_property (oclass, PROP_RUNNER,
       g_param_spec_object ("validate-runner", "VALIDATE Runner",
-          "The Validate runner to " "report errors to",
+          "The Validate runner to report errors to",
           GST_TYPE_VALIDATE_RUNNER,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 }
