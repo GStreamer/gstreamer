@@ -251,6 +251,7 @@ gst_gl_display_finalize (GObject * object)
     g_free (l->data);
   }
 
+  g_list_free (display->windows);
   g_list_free (display->priv->contexts);
 
   g_cond_clear (&display->priv->thread_cond);
