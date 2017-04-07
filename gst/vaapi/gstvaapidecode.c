@@ -960,10 +960,12 @@ gst_vaapidecode_reset (GstVaapiDecode * decode, GstCaps * caps,
   decode->current_frame_size = 0;
 
   if (decode->decoder) {
-    if (gst_vaapi_decoder_update_caps (decode->decoder, caps)) {
-      g_atomic_int_set (&decode->do_renego, TRUE);
-      if (!force_reset)
-        return TRUE;
+    if (!gst_caps_is_equal (caps, gst_vaapi_decoder_get_caps (decode->decoder))) {
+      if (gst_vaapi_decoder_update_caps (decode->decoder, caps)) {
+        g_atomic_int_set (&decode->do_renego, TRUE);
+        if (!force_reset)
+          return TRUE;
+      }
     }
     return gst_vaapi_decoder_reset (decode->decoder);
   }
