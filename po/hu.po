@@ -1,632 +1,190 @@
-# Hungarian translation of gst-plugins-bad
+# Hungarian translation for gst-plugins-bad.
+# Copyright (C) 2007, 2008, 2009, 2012, 2014, 2015, 2017 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
 #
 # Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2012.
-# Balázs Úr <urbalazs@gmail.com>, 2014, 2015.
+# Balázs Úr <urbalazs@gmail.com>, 2014, 2015, 2017.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.6.0\n"
+"Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-02-24 12:51+0200\n"
-"PO-Revision-Date: 2015-11-20 23:46+0100\n"
+"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"PO-Revision-Date: 2017-03-19 00:53+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Lokalize 1.2\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
+#: ext/gl/gstgltestsrc.c:521
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "a minta rajzolása meghiúsult"
 
+#: ext/gl/gstgltestsrc.c:522
 msgid "A GL error occured"
-msgstr ""
+msgstr "GL hiba történt"
 
+#: ext/gl/gstgltestsrc.c:528
 msgid "format wasn't negotiated before get function"
 msgstr "a formátum nem lett egyeztetve a függvény lekérése előtt"
 
+#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
 msgstr "Az OpenCV-nek nem sikerült betöltenie a sablonképet"
 
+#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Nem lehet címinformációkat olvasni a DVD-ről."
 
+#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nem nyitható meg a DVD eszköz („%s”)."
 
+#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "A PGC-alapú keresés beállítása meghiúsult."
 
-msgid ""
-"Could not read DVD. This may be because the DVD is encrypted and a DVD "
-"decryption library is not installed."
-msgstr ""
-"Nem olvasható a DVD. Ezt az okozhatja, hogy a DVD titkosított, és a DVD-"
-"visszafejtő programkönyvtár nincs telepítve."
+#: ext/resindvd/resindvdsrc.c:1164
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "Nem olvasható a DVD. Ezt az okozhatja, hogy a DVD titkosított, és a DVD-visszafejtő programkönyvtár nincs telepítve."
 
+#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "Nem olvasható a DVD."
 
+#: ext/smoothstreaming/gstmssdemux.c:405
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:695
 msgid "This file contains no playable streams."
 msgstr "Ez a fájl nem tartalmaz lejátszható folyamokat."
 
+#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "A hangfájl folyam nem nyitható meg olvasásra."
 
-msgid "Generated file has a larger preroll time than its streams duration"
-msgstr ""
-"Az előállított fájlnak nagyobb előtekerési ideje van, mint a folyamának "
-"időtartama"
+#: ext/sndio/sndiosink.c:324 ext/sndio/sndiosrc.c:320
+msgid "Could not establish connection to sndio"
+msgstr "Nem hozható létre kapcsolat az sndio programmal"
 
+#: ext/sndio/sndiosink.c:331 ext/sndio/sndiosrc.c:327
+msgid "Failed to query sndio capabilities"
+msgstr "Nem sikerült lekérdezni az sndio képességeit"
+
+#: ext/sndio/sndiosink.c:424 ext/sndio/sndiosrc.c:421
+msgid "Could not configure sndio"
+msgstr "Nem sikerült az sndio beállítása"
+
+#: ext/sndio/sndiosink.c:430 ext/sndio/sndiosrc.c:427
+msgid "Could not start sndio"
+msgstr "Nem sikerült az sndio indítása"
+
+#: gst/asfmux/gstasfmux.c:1831
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr "Az előállított fájlnak nagyobb előtekerési ideje van, mint a folyamának időtartama"
+
+#: gst/camerabin2/camerabingeneral.c:166 gst/camerabin2/gstcamerabin2.c:1875
+#: gst/camerabin2/gstdigitalzoom.c:282 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Hiányzó „%s” elem - ellenőrizze a GStreamer telepítését."
 
+#: gst/camerabin2/gstcamerabin2.c:363
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr ""
-"A fájl helye NULL értékre lett állítva, kérjük állítsa be egy érvényes "
-"fájlnévre"
+msgstr "A fájl helye NULL értékre lett állítva, kérjük állítsa be egy érvényes fájlnévre"
 
+#: gst/camerabin2/gstwrappercamerabinsrc.c:584
 msgid "Digitalzoom element couldn't be created"
 msgstr "A digitális nagyítás elemet nem sikerült létrehozni"
 
+#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "A részkép formátuma nem lett beállítva az adatfolyam előtt"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3111
 msgid "Failed to get fragment URL."
 msgstr "Nem sikerült lekérni a töredék URL-t."
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3462
 msgid "Couldn't download fragments"
 msgstr "Nem sikerült letölteni a töredékeket"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3551
+#: gst/mpegtsdemux/mpegtsbase.c:1608
 msgid "Internal data stream error."
 msgstr "Belső adatfolyamhiba."
 
+#: gst/videomeasure/gstvideomeasure_collector.c:294
+msgid "No file name specified for writing."
+msgstr "Nincs megadva fájlnév az íráshoz."
+
+#: gst/videomeasure/gstvideomeasure_collector.c:300
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
+msgstr "A kapott „%s” fájlnevet nem lehet átalakítani a helyi fájlnév kódolásra."
+
+#: gst/videomeasure/gstvideomeasure_collector.c:307
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "A fájl („%s”) nem nyitható meg írásra."
+
+#: sys/dvb/gstdvbsrc.c:1571 sys/dvb/gstdvbsrc.c:1784
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Az eszköz („%s”) nem létezik."
 
+#: sys/dvb/gstdvbsrc.c:1575
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nem nyitható meg az előtéteszköz („%s”)."
 
+#: sys/dvb/gstdvbsrc.c:1594
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nem kérhetők le a beállítások az előtéteszköztől („%s”)."
 
+#: sys/dvb/gstdvbsrc.c:1611
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr ""
-"Nem lehet felsorolni a szállító rendszereket a(z) „%s” előtéteszköztől."
+msgstr "Nem lehet felsorolni a szállító rendszereket a(z) „%s” előtéteszköztől."
 
+#: sys/dvb/gstdvbsrc.c:1788
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "A fájl („%s”) nem nyitható meg olvasásra."
 
-#, fuzzy
+#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
-msgstr "Nem található DVB-csatorna beállítófájl"
+msgstr "Nem található csatorna beállítófájl"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
+#, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "Nem sikerült betölteni a DVB-csatorna beállítófájlt: %s"
+msgstr "Nem sikerült betölteni a csatorna beállítófájlt: „%s”"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
+#, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr "Nem találhatók a(z) %s DVB-csatorna részletei"
+msgstr "Nem találhatók a(z) „%s” csatorna részletei"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:430
+#, c-format
 msgid "No properties for channel '%s'"
-msgstr "Nem találhatók a(z) %s DVB-csatorna részletei"
+msgstr "Nincsenek tulajdonságok a(z) „%s” csatornához"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:439
+#, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Nem találhatók a(z) %s DVB-csatorna részletei"
+msgstr "Nem sikerült beállítani a(z) „%s” csatorna tulajdonságait"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:560
+#, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Nem található DVB-csatorna beállítófájl"
+msgstr "Nem található csatorna beállítófájl: „%s”"
 
-#, fuzzy
+#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
-msgstr "A DVB-csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
-
-#~ msgid "Could not establish connection to sndio"
-#~ msgstr "Nem hozható létre kapcsolat az sndio programmal"
-
-#~ msgid "Failed to query sndio capabilities"
-#~ msgstr "Nem sikerült lekérdezni az sndio képességeit"
-
-#~ msgid "Could not configure sndio"
-#~ msgstr "Nem sikerült az sndio beállítása"
-
-#~ msgid "Could not start sndio"
-#~ msgstr "Nem sikerült az sndio indítása"
-
-#~ msgid "No file name specified for writing."
-#~ msgstr "Nincs megadva fájlnév az íráshoz."
-
-#~ msgid ""
-#~ "Given file name \"%s\" can't be converted to local file name encoding."
-#~ msgstr ""
-#~ "A kapott „%s” fájlnevet nem lehet átalakítani a helyi fájlnév kódolásra."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "A fájl („%s”) nem nyitható meg írásra."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Belső adatfolyamhiba."
-
-#~ msgid "default GStreamer sound events audiosink"
-#~ msgstr "alapértelmezett GStreamer hangesemények audiosink"
-
-#~ msgid ""
-#~ "GStreamer can play audio using any number of output elements. Some "
-#~ "possible choices are osssink, pulsesink and alsasink. The audiosink can "
-#~ "be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "A GStreamer képes hangot lejátszani bármilyen számú kimeneti elem "
-#~ "használatával. Néhány lehetséges választás a következő lehet: osssink, "
-#~ "pulsesink és alsasink. Az audiosink lehet egy részleges adatcsatorna is "
-#~ "egyetlen elem helyett."
-
-#~ msgid "description for default GStreamer sound events audiosink"
-#~ msgstr "az alapértelmezett GStreamer hangesemények audiosink leírása"
-
-#~ msgid "Describes the selected audiosink element."
-#~ msgstr "Leírja a kiválasztott audiosink elemet."
-
-#~ msgid "default GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr "alapértelmezett GStreamer audiosink a hang/videó konferenciához"
-
-#~ msgid ""
-#~ "description for default GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr ""
-#~ "az alapértelmezett GStreamer audiosink leírása a hang/videó konferenciához"
-
-#~ msgid "default GStreamer audiosink for Music and Movies"
-#~ msgstr "alapértelmezett GStreamer audiosink zenékhez és filmekhez"
-
-#~ msgid "description for default GStreamer audiosink for Music and Movies"
-#~ msgstr ""
-#~ "az alapértelmezett GStreamer audiosink leírása zenékhez és filmekhez"
-
-#~ msgid "default GStreamer videosink"
-#~ msgstr "alapértelmezett GStreamer videosink"
-
-#~ msgid ""
-#~ "GStreamer can play video using any number of output elements. Some "
-#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
-#~ "The videosink can be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "A GStreamer képes videót lejátszani bármilyen számú kimeneti elem "
-#~ "használatával. Néhány lehetséges választás a következő lehet: "
-#~ "xvimagesink, ximagesink, sdlvideosink és aasink. Az videosink lehet egy "
-#~ "részleges adatcsatorna is egyetlen elem helyett."
-
-#~ msgid "description for default GStreamer videosink"
-#~ msgstr "az alapértelmezett GStreamer videosink leírása"
-
-#~ msgid "Describes the selected videosink element."
-#~ msgstr "Leírja a kiválasztott videosink elemet."
-
-#~ msgid "default GStreamer audiosrc"
-#~ msgstr "alapértelmezett GStreamer audiosrc"
-
-#~ msgid ""
-#~ "GStreamer can record audio using any number of input elements. Some "
-#~ "possible choices are osssrc, pulsesrc and alsasrc. The audio source can "
-#~ "be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "A GStreamer képes hangot felvenni bármilyen számú bemeneti elem "
-#~ "használatával. Néhány lehetséges választás a következő lehet: osssrc, "
-#~ "pulsesrc és alsasrc. A hangforrás lehet egy részleges adatcsatorna is "
-#~ "egyetlen elem helyett."
-
-#~ msgid "description for default GStreamer audiosrc"
-#~ msgstr "az alapértelmezett GStreamer audiosrc leírása"
-
-#~ msgid "Describes the selected audiosrc element."
-#~ msgstr "Leírja a kiválasztott audiosrc elemet."
-
-#~ msgid "default GStreamer videosrc"
-#~ msgstr "alapértelmezett GStreamer videosrc"
-
-#~ msgid ""
-#~ "GStreamer can record video from any number of input elements. Some "
-#~ "possible choices are v4lsrc, v4l2src and videotestsrc. The video source "
-#~ "can be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "A GStreamer képes videót felvenni bármilyen számú bemeneti elem "
-#~ "használatával. Néhány lehetséges választás a következő lehet: v4lsrc, "
-#~ "v4l2src és videotestsrc. A videoforrás lehet egy részleges adatcsatorna "
-#~ "is egyetlen elem helyett."
-
-#~ msgid "description for default GStreamer videosrc"
-#~ msgstr "az alapértelmezett GStreamer videosrc leírása"
-
-#~ msgid "Describes the selected videosrc element."
-#~ msgstr "Leírja a kiválasztott videosrc elemet."
-
-#~ msgid "default GStreamer visualization"
-#~ msgstr "alapértelmezett GStreamer képi megjelenítés"
-
-#~ msgid ""
-#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
-#~ "streams in video frames. Some possible choices are goom, goom2k1 and "
-#~ "synaesthesia. The visualization plugin can be a partial pipeline instead "
-#~ "of just one element."
-#~ msgstr ""
-#~ "A GStreamer képes képi megjelenítő bővítményeket elhelyezni egy "
-#~ "adatcsatornába a videoképkockákban lévő hangfolyamok átalakításához. "
-#~ "Néhány lehetséges választás a következő lehet: goom, goom2k1 és "
-#~ "synaesthesia. A képi megjelenítő bővítmény lehet egy részleges "
-#~ "adatcsatorna is egyetlen elem helyett."
-
-#~ msgid "description for default GStreamer visualization"
-#~ msgstr "az alapértelmezett GStreamer képi megjelenítés leírása"
-
-#~ msgid "Describes the selected visualization element."
-#~ msgstr "Leírja a kiválasztott képi megjelenítés elemet."
-
-#~ msgid "Couldn't get the Manifest's URI"
-#~ msgstr "Nem kérhető le a Manifest URL-e"
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Nem lehet írni a fájlba („%s”)."
-
-#~ msgid "Internal clock error."
-#~ msgstr "Belső órahiba."
-
-#~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "A hangeszköz nem nyitható meg a keverő vezérlőinek kezeléséhez."
-
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "A hangeszköz nem nyitható meg a keverő vezérlőinek kezeléséhez. A Nyílt "
-#~ "hangrendszer ezen verzióját nem támogatja az elem."
-
-#~ msgid "Volume"
-#~ msgstr "Hangerő"
-
-#~ msgid "Master"
-#~ msgstr "Master"
-
-#~ msgid "Front"
-#~ msgstr "Elöl"
-
-#~ msgid "Rear"
-#~ msgstr "Hátul"
-
-#~ msgid "Headphones"
-#~ msgstr "Fülhallgatók"
-
-#~ msgid "Center"
-#~ msgstr "Közép"
-
-#~ msgid "LFE"
-#~ msgstr "LFE"
-
-#~ msgid "Surround"
-#~ msgstr "Térhatású"
-
-#~ msgid "Side"
-#~ msgstr "Oldalt"
-
-#~ msgid "Built-in Speaker"
-#~ msgstr "Beépített hangszóró"
-
-#~ msgid "AUX 1 Out"
-#~ msgstr "1. AUX ki"
-
-#~ msgid "AUX 2 Out"
-#~ msgstr "2. AUX ki"
-
-#~ msgid "AUX Out"
-#~ msgstr "AUX ki"
-
-#~ msgid "Bass"
-#~ msgstr "Mély"
-
-#~ msgid "Treble"
-#~ msgstr "Magas"
-
-#~ msgid "3D Depth"
-#~ msgstr "3D mélység"
-
-#~ msgid "3D Center"
-#~ msgstr "3D közép"
-
-#~ msgid "3D Enhance"
-#~ msgstr "3D bővítés"
-
-#~ msgid "Telephone"
-#~ msgstr "Telefon"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofon"
-
-#~ msgid "Line Out"
-#~ msgstr "Vonalkimenet"
-
-#~ msgid "Line In"
-#~ msgstr "Vonalbemenet"
-
-#~ msgid "Internal CD"
-#~ msgstr "Belső CD"
-
-#~ msgid "Video In"
-#~ msgstr "Videó be"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "1. AUX be"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "2. AUX be"
-
-#~ msgid "AUX In"
-#~ msgstr "AUX be"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Record Gain"
-#~ msgstr "Felvétel-erősítés"
-
-#~ msgid "Output Gain"
-#~ msgstr "Kimenet-erősítés"
-
-#~ msgid "Microphone Boost"
-#~ msgstr "Mikrofon-erősítés"
-
-#~ msgid "Loopback"
-#~ msgstr "Visszacsatolás"
-
-#~ msgid "Diagnostic"
-#~ msgstr "Diagnosztika"
-
-#~ msgid "Bass Boost"
-#~ msgstr "Mély erősítése"
-
-#~ msgid "Playback Ports"
-#~ msgstr "Lejátszási portok"
-
-#~ msgid "Input"
-#~ msgstr "Bemenet"
-
-#~ msgid "Record Source"
-#~ msgstr "Forrás felvétele"
-
-#~ msgid "Monitor Source"
-#~ msgstr "Forrás figyelése"
-
-#~ msgid "Keyboard Beep"
-#~ msgstr "Billentyűzethang"
-
-#~ msgid "Monitor"
-#~ msgstr "Figyelés"
-
-#~ msgid "Simulate Stereo"
-#~ msgstr "Sztereó szimulálása"
-
-#~ msgid "Stereo"
-#~ msgstr "Sztereó"
-
-#~ msgid "Surround Sound"
-#~ msgstr "Térhatású hang"
-
-#~ msgid "Microphone Gain"
-#~ msgstr "Mikrofon erősítése"
-
-#~ msgid "Speaker Source"
-#~ msgstr "Hangszóróforrás"
-
-#~ msgid "Microphone Source"
-#~ msgstr "Mikrofonforrás"
-
-#~ msgid "Jack"
-#~ msgstr "Jack"
-
-#~ msgid "Center / LFE"
-#~ msgstr "Közép/LFE"
-
-#~ msgid "Stereo Mix"
-#~ msgstr "Sztereó keverő"
-
-#~ msgid "Mono Mix"
-#~ msgstr "Mono keverő"
-
-#~ msgid "Input Mix"
-#~ msgstr "Bemeneti keverő"
-
-#~ msgid "SPDIF In"
-#~ msgstr "SPDIF be"
-
-#~ msgid "SPDIF Out"
-#~ msgstr "SPDIF ki"
-
-#~ msgid "Microphone 1"
-#~ msgstr "1. mikrofon"
-
-#~ msgid "Microphone 2"
-#~ msgstr "2. mikrofon"
-
-#~ msgid "Digital Out"
-#~ msgstr "Digitális ki"
-
-#~ msgid "Digital In"
-#~ msgstr "Digitális be"
-
-#~ msgid "HDMI"
-#~ msgstr "HDMI"
-
-#~ msgid "Modem"
-#~ msgstr "Modem"
-
-#~ msgid "Handset"
-#~ msgstr "Kagyló"
-
-#~ msgid "Other"
-#~ msgstr "Egyéb"
-
-#~ msgid "None"
-#~ msgstr "Nincs"
-
-#~ msgid "On"
-#~ msgstr "Be"
-
-#~ msgid "Off"
-#~ msgstr "Ki"
-
-#~ msgid "Mute"
-#~ msgstr "Némítás"
-
-#~ msgid "Fast"
-#~ msgstr "Gyors"
-
-#~ msgid "Very Low"
-#~ msgstr "Nagyon alacsony"
-
-#~ msgid "Low"
-#~ msgstr "Alacsony"
-
-#~ msgid "Medium"
-#~ msgstr "Közepes"
-
-#~ msgid "High"
-#~ msgstr "Magas"
-
-#~ msgid "Very High"
-#~ msgstr "Nagyon magas"
-
-#~ msgid "Production"
-#~ msgstr "Előállítás"
-
-#~ msgid "Front Panel Microphone"
-#~ msgstr "Előlapi mikrofon"
-
-#~ msgid "Front Panel Line In"
-#~ msgstr "Előlapi vonalbemenet"
-
-#~ msgid "Front Panel Headphones"
-#~ msgstr "Előlapi fülhallgató"
-
-#~ msgid "Front Panel Line Out"
-#~ msgstr "Előlapi vonalkimenet"
-
-#~ msgid "Green Connector"
-#~ msgstr "Zöld csatlakozó"
-
-#~ msgid "Pink Connector"
-#~ msgstr "Rózsaszín csatlakozó"
-
-#~ msgid "Blue Connector"
-#~ msgstr "Kék csatlakozó"
-
-#~ msgid "White Connector"
-#~ msgstr "Fehér csatlakozó"
-
-#~ msgid "Black Connector"
-#~ msgstr "Fekete csatlakozó"
-
-#~ msgid "Gray Connector"
-#~ msgstr "Szürke csatlakozó"
-
-#~ msgid "Orange Connector"
-#~ msgstr "Narancs csatlakozó"
-
-#~ msgid "Red Connector"
-#~ msgstr "Vörös csatlakozó"
-
-#~ msgid "Yellow Connector"
-#~ msgstr "Sárga csatlakozó"
-
-#~ msgid "Green Front Panel Connector"
-#~ msgstr "Zöld előlapi csatlakozó"
-
-#~ msgid "Pink Front Panel Connector"
-#~ msgstr "Rózsaszín előlapi csatlakozó"
-
-#~ msgid "Blue Front Panel Connector"
-#~ msgstr "Kék előlapi csatlakozó"
-
-#~ msgid "White Front Panel Connector"
-#~ msgstr "Fehér előlapi csatlakozó"
-
-#~ msgid "Black Front Panel Connector"
-#~ msgstr "Fekete előlapi csatlakozó"
-
-#~ msgid "Gray Front Panel Connector"
-#~ msgstr "Szürke előlapi csatlakozó"
-
-#~ msgid "Orange Front Panel Connector"
-#~ msgstr "Narancs előlapi csatlakozó"
-
-#~ msgid "Red Front Panel Connector"
-#~ msgstr "Vörös előlapi csatlakozó"
-
-#~ msgid "Yellow Front Panel Connector"
-#~ msgstr "Sárga előlapi csatlakozó"
-
-#~ msgid "Spread Output"
-#~ msgstr "Kimenet szórása"
-
-#~ msgid "Downmix"
-#~ msgstr "Lekeverés"
-
-#~ msgid "Virtual Mixer Input"
-#~ msgstr "Virtuális keverőbemenet"
-
-#~ msgid "Virtual Mixer Output"
-#~ msgstr "Virtuális keverőkimenet"
-
-#~ msgid "Virtual Mixer Channels"
-#~ msgstr "Virtuális keverőcsatornák"
-
-#~ msgid "%s Function"
-#~ msgstr "%s funkció"
-
-#~ msgid "%s %d"
-#~ msgstr "%s %d"
-
-#~ msgid ""
-#~ "Could not open audio device for playback. Device is being used by another "
-#~ "application."
-#~ msgstr ""
-#~ "Nem nyitható meg hangeszköz a lejátszáshoz. Az eszközt másik alkalmazás "
-#~ "használja."
-
-#~ msgid ""
-#~ "Could not open audio device for playback. You don't have permission to "
-#~ "open the device."
-#~ msgstr ""
-#~ "Nem nyitható meg hangeszköz a lejátszáshoz. Nincs jogosultsága az eszköz "
-#~ "megnyitására."
-
-#~ msgid "Could not open audio device for playback."
-#~ msgstr "Nem nyitható meg hangeszköz a lejátszáshoz."
-
-#~ msgid ""
-#~ "Could not open audio device for playback. This version of the Open Sound "
-#~ "System is not supported by this element."
-#~ msgstr ""
-#~ "Nem nyitható meg hangeszköz a lejátszáshoz. A Nyílt hangrendszer ezen "
-#~ "verzióját nem támogatja az elem."
-
-#~ msgid "Playback is not supported by this audio device."
-#~ msgstr "A hangeszköz nem támogatja a lejátszást."
-
-#~ msgid "Audio playback error."
-#~ msgstr "Hanglejátszási hiba."
-
-#~ msgid "Recording is not supported by this audio device."
-#~ msgstr "A hangeszköz nem támogatja a felvételt."
-
-#~ msgid "Error recording from audio device."
-#~ msgstr "Hiba a hangeszközről való felvételkor."
+msgstr "A csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
