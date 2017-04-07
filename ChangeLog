@@ -1,9 +1,108 @@
-=== release 1.11.2 ===
+=== release 1.11.90 ===
 
-2017-02-24  Sebastian Dröge <slomo@coaxion.net>
+2017-04-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.2
+	  releasing 1.11.90
+
+2017-03-27 14:59:24 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gi/overrides/gstmodule.c:
+	* testsuite/test_valuearray.py:
+	* testsuite/test_valuelist.py:
+	  array/list: Make gvalue conversion symmetric
+	  This is needed to support matrix. Otherwise, getting
+	  a matrix would remove the rows envelopess, which would
+	  make the "cast" fails, since it would not know if the
+	  internal rows are ValueArray or ValueList. I think reading,
+	  modifying and setting back the matrix is an important use
+	  case.
+
+2017-03-27 14:52:24 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gi/overrides/gstmodule.c:
+	  gstmodule: Factor out gst type creation
+	  This reduces a lot the boiler plate all over. At the same
+	  time, use N instead of O when passing PyObject to fix
+	  the objects leaks.
+
+2017-03-24 13:28:35 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* .gitignore:
+	  Add /build and install to the gitignore
+
+2017-03-23 12:21:32 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/gstmodule.c:
+	* testsuite/Makefile.am:
+	* testsuite/common.py:
+	* testsuite/meson.build:
+	* testsuite/test_doublerange.py:
+	* testsuite/test_fraction.py:
+	* testsuite/test_fractionrange.py:
+	* testsuite/test_int64range.py:
+	* testsuite/test_intrange.py:
+	* testsuite/test_valuearray.py:
+	* testsuite/test_valuelist.py:
+	  overrides: Add more GstValue overrides
+	  This patch adds overrides to support IntRange, Int64Range, DoubleRange,
+	  FractionRange, Array and List. For integer ranges, it maps this
+	  to python 'range'. Gst.IntRange() and Gst.Int64Range() are simple cast
+	  to let the underlying code know which GType to use. To set such range in
+	  python you will do:
+	  structure["range"] = Gst.IntRange(range(0,10,2)))
+	  Same for the 64 bit variant. And when you do:
+	  r = structure.get_value("range")
+	  A range will be returned directly, without the wrapper. For DoubleRange
+	  and FractionRange, there is no native support in python. So the usage
+	  will be:
+	  structure["range"] = Gst.DoubleRange(0,10.0)
+	  structure["range"] =
+	  Gst.FractionRange(Gst.Fraction(1/30), Gst.Fraction(1/5)
+	  When getting this value, Gst.DoubleRange and Gst.FractionRange class are
+	  returned. They both have start/stop members. The naming was taken from
+	  range type.
+	  For Array and List, both uses the native list type, though they can be
+	  constructed from any python sequence. So again, the class is just like
+	  a cast, to let it pick the right GType and python list are being
+	  returned.
+	  structure["list"] = Gst.ValueList([1,2,3,4])
+	  structure["array"] = Gst.ValueArray([1,2,3,4)
+	  Using string and tuple could also work. Since Gst.ValueList/Array are
+	  sequence, you can convert one to the other with:
+	  list = Gst.ValueList([1,2,3,4])
+	  array = Gst.ValueArray (list)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753754
+
+2017-03-23 12:09:05 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	* scripts/pythondetector:
+	  meson: Install in gi._overidesdir only if we are installing in right prefix
+	  And make sure python detector did not fail
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780369
+
+2017-02-24 16:01:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  meson: Update version
+
+2017-02-24 15:38:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.11.2 ===
+
+2017-02-24 15:09:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.11.2
 
 2017-02-24 12:08:48 +0200  Sebastian Dröge <sebastian@centricular.com>
 
