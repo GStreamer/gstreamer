@@ -572,6 +572,86 @@ GST_START_TEST (test_rtxsender_max_size_time)
 
 GST_END_TEST;
 
+static void
+test_rtxqueue_packet_retention (gboolean test_with_time)
+{
+  guint ssrc = 1234567;
+  guint pt = 96;
+  gint num_buffers = test_with_time ? 30 : 10;
+  gint half_buffers = num_buffers / 2;
+  GstClockTime timestamp_delta = GST_SECOND / 30;
+  GstClockTime timestamp = 0;
+  GstBuffer *buf;
+  GstHarness *h;
+  gint i, j;
+
+  h = gst_harness_new ("rtprtxqueue");
+
+  /* In both cases we want the rtxqueue to store 'half_buffers'
+     amount of buffers at most. In max-size-packets mode, it's trivial.
+     In max-size-time mode, we specify almost half a second, which is
+     the equivalent of 15 frames in a 30fps video stream.
+   */
+  g_object_set (h->element,
+      "max-size-packets", test_with_time ? 0 : half_buffers,
+      "max-size-time", test_with_time ? 498 : 0, NULL);
+
+  gst_harness_set_src_caps_str (h, "application/x-rtp, "
+      "media = (string)video, payload = (int)96, "
+      "ssrc = (uint)1234567, clock-rate = (int)90000, "
+      "encoding-name = (string)RAW");
+
+  /* Now push all buffers and request retransmission every time for all of them.
+   * Note that rtprtxqueue sends retransmissions in chain(), just before
+   * pushing out the chained buffer, a differentiation from rtprtxsend above
+   */
+  for (i = 0; i < num_buffers; ++i, timestamp += timestamp_delta) {
+    /* Request to retransmit all the previous ones */
+    for (j = 0; j < i; ++j) {
+      guint rtx_seqnum = 0x100 + j;
+      gst_harness_push_upstream_event (h,
+          create_rtx_event (ssrc, pt, rtx_seqnum));
+    }
+
+    /* push one packet */
+    buf = create_rtp_buffer (ssrc, pt, 0x100 + i);
+    GST_BUFFER_TIMESTAMP (buf) = timestamp;
+    gst_harness_push (h, buf);
+
+    /* Pull the ones supposed to be retransmitted */
+    for (j = 0; j < i; ++j) {
+      guint rtx_seqnum = 0x100 + j;
+      if (j >= i - half_buffers)
+        pull_and_verify (h, FALSE, ssrc, pt, rtx_seqnum);
+    }
+
+    /* There should be only one packet remaining in the queue now */
+    fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+    /* pull the one that we just pushed (comes after the retransmitted ones) */
+    pull_and_verify (h, FALSE, ssrc, pt, 0x100 + i);
+
+    /* Check there no extra buffers in the harness queue */
+    fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+  }
+
+  gst_harness_teardown (h);
+}
+
+GST_START_TEST (test_rtxqueue_max_size_packets)
+{
+  test_rtxqueue_packet_retention (FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtxqueue_max_size_time)
+{
+  test_rtxqueue_packet_retention (TRUE);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtprtx_suite (void)
 {
@@ -587,6 +667,8 @@ rtprtx_suite (void)
   tcase_add_test (tc_chain, test_multi_rtxsend_rtxreceive_with_packet_loss);
   tcase_add_test (tc_chain, test_rtxsender_max_size_packets);
   tcase_add_test (tc_chain, test_rtxsender_max_size_time);
+  tcase_add_test (tc_chain, test_rtxqueue_max_size_packets);
+  tcase_add_test (tc_chain, test_rtxqueue_max_size_time);
 
   return s;
 }
