@@ -507,6 +507,7 @@ GST_START_TEST (test_splitmuxsrc_sparse_streams)
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
+  g_clear_object (&appsrc);
   g_clear_object (&bus);
   g_clear_object (&pipeline);
 
