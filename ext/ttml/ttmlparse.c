@@ -42,6 +42,7 @@
 #define DEFAULT_CELLRES_X 32
 #define DEFAULT_CELLRES_Y 15
 #define MAX_FONT_FAMILY_NAME_LENGTH 128
+#define NSECONDS_IN_DAY 24 * 3600 * GST_SECOND
 
 GST_DEBUG_CATEGORY_EXTERN (ttmlparse_debug);
 #define GST_CAT_DEFAULT ttmlparse_debug
@@ -424,7 +425,7 @@ ttml_parse_body (const xmlNode * node)
 
   for (node = node->children; node != NULL; node = node->next) {
     GNode *descendants = NULL;
-    if (!xmlIsBlankNode (node) && (descendants = ttml_parse_body (node)))
+    if ((descendants = ttml_parse_body (node)))
       g_node_append (ret, descendants);
   }
 
@@ -1018,8 +1019,9 @@ ttml_resolve_element_timings (GNode * node, gpointer data)
 
   if (!GST_CLOCK_TIME_IS_VALID (element->begin)) {
     GST_CAT_WARNING (ttmlparse_debug,
-        "No timing found for element. Removing from tree...");
-    g_node_unlink (node);
+        "No timing found for element; setting to Root Temporal Extent.");
+    leaf->begin = 0;
+    leaf->end = NSECONDS_IN_DAY;
   } else {
     leaf->begin = element->begin;
     leaf->end = element->end;
@@ -1276,6 +1278,34 @@ ttml_handle_whitespace (GNode * tree)
 }
 
 
+static GNode *
+ttml_filter_content_nodes (GNode * node)
+{
+  GNode *child, *next_child;
+  TtmlElement *element = node->data;
+  TtmlElement *parent = node->parent ? node->parent->data : NULL;
+
+  child = node->children;
+  next_child = child ? child->next : NULL;
+  while (child) {
+    ttml_filter_content_nodes (child);
+    child = next_child;
+    next_child = child ? child->next : NULL;
+  }
+
+  /* Only text content in <p>s and <span>s is significant. */
+  if (element->type == TTML_ELEMENT_TYPE_ANON_SPAN
+      && parent->type != TTML_ELEMENT_TYPE_P
+      && parent->type != TTML_ELEMENT_TYPE_SPAN) {
+    ttml_delete_element (element);
+    g_node_destroy (node);
+    node = NULL;
+  }
+
+  return node;
+}
+
+
 /* Store child elements of @node with name @element_name in @table, as long as
  * @table doesn't already contain an element with the same ID. */
 static void
@@ -1357,6 +1387,7 @@ ttml_copy_element (const TtmlElement * element)
   ret->type = element->type;
   if (element->id)
     ret->id = g_strdup (element->id);
+  ret->whitespace_mode = element->whitespace_mode;
   if (element->styles)
     ret->styles = g_strdupv (element->styles);
   if (element->region)
@@ -1697,7 +1728,7 @@ ttml_assign_region_times (GList * region_trees, GstClockTime doc_begin,
        * any real-world stream. */
       region->begin = (doc_begin != GST_CLOCK_TIME_NONE) ? doc_begin : 0;
       region->end = (doc_duration != GST_CLOCK_TIME_NONE) ?
-          region->begin + doc_duration : 24 * 3600 * GST_SECOND;
+          region->begin + doc_duration : NSECONDS_IN_DAY;
     }
   }
 }
@@ -1737,8 +1768,7 @@ ttml_parse (const gchar * input, GstClockTime begin, GstClockTime duration)
       (GDestroyNotify) ttml_delete_element);
 
   /* Parse input. */
-  doc = xmlReadMemory (input, strlen (input), "any_doc_name", NULL,
-      XML_PARSE_NOBLANKS);
+  doc = xmlReadMemory (input, strlen (input), "any_doc_name", NULL, 0);
   if (!doc) {
     GST_CAT_ERROR (ttmlparse_debug, "Failed to parse document.");
     return NULL;
@@ -1792,6 +1822,7 @@ ttml_parse (const gchar * input, GstClockTime begin, GstClockTime duration)
 
     ttml_inherit_whitespace_mode (body_tree, doc_whitespace_mode);
     ttml_handle_whitespace (body_tree);
+    ttml_filter_content_nodes (body_tree);
     if (GST_CLOCK_TIME_IS_VALID (begin) && GST_CLOCK_TIME_IS_VALID (duration))
       ttml_apply_time_window (body_tree, begin, begin + duration);
     ttml_resolve_timings (body_tree);
