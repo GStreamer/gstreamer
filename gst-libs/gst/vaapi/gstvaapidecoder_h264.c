@@ -1258,6 +1258,37 @@ gst_vaapi_decoder_h264_create (GstVaapiDecoder * base_decoder)
   return TRUE;
 }
 
+/* Limited reset can just needs to get the decoder
+ * ready to process fresh data after a flush.
+ * Preserves the existing DPB allocation and any SPS/PPS */
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_h264_reset (GstVaapiDecoder * base_decoder)
+{
+  GstVaapiDecoderH264 *const decoder =
+      GST_VAAPI_DECODER_H264_CAST (base_decoder);
+  GstVaapiDecoderH264Private *const priv = &decoder->priv;
+
+  gst_vaapi_decoder_h264_close (decoder);
+  priv->is_opened = FALSE;
+
+  priv->dpb_size = 0;
+
+  g_free (priv->prev_ref_frames);
+  priv->prev_ref_frames = NULL;
+  g_free (priv->prev_frames);
+  priv->prev_frames = NULL;
+  priv->prev_frames_alloc = 0;
+
+  priv->profile = GST_VAAPI_PROFILE_UNKNOWN;
+  priv->entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
+  priv->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+  priv->prev_pic_structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+  priv->progressive_sequence = TRUE;
+  priv->top_field_first = FALSE;
+
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
 /* Activates the supplied PPS */
 static GstH264PPS *
 ensure_pps (GstVaapiDecoderH264 * decoder, GstH264PPS * pps)
@@ -4658,6 +4689,7 @@ gst_vaapi_decoder_h264_class_init (GstVaapiDecoderH264Class * klass)
 
   decoder_class->create = gst_vaapi_decoder_h264_create;
   decoder_class->destroy = gst_vaapi_decoder_h264_destroy;
+  decoder_class->reset = gst_vaapi_decoder_h264_reset;
   decoder_class->parse = gst_vaapi_decoder_h264_parse;
   decoder_class->decode = gst_vaapi_decoder_h264_decode;
   decoder_class->start_frame = gst_vaapi_decoder_h264_start_frame;
