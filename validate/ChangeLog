@@ -1,9 +1,220 @@
-=== release 1.11.2 ===
+=== release 1.11.90 ===
 
-2017-02-24  Sebastian Dröge <slomo@coaxion.net>
+2017-04-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.2
+	  releasing 1.11.90
+
+2017-04-05 15:26:31 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: scenario: fix error message on scenario parsing failure
+
+2017-04-05 14:40:12 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: report: avoid pointless var & associated dup/free
+	  Just pass the replacement string literal to _regex_replace().
+
+2017-04-05 14:09:53 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: report: avoid _strdup_printf() if not needed
+	  g_strdup() is enough for this string literal.
+
+2017-03-31 15:18:09 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: report: fix description for timestamp out of range
+	  Additionally: Fix nits in the descriptions for
+	  SCENARIO_ACTION_EXECUTION_ISSUE and CONFIG_ACTION_TYPE
+
+2017-04-04 14:52:17 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Improve video fakesink properties
+	  Try to emulate a bit better a real video sink by making the video
+	  fakesink handle/calculate/report QoS.
+	  Also use the same lateness value as default videosink
+
+2017-03-28 14:35:38 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: scenario: improve description blurb for execute-on-idle
+	  Additionally: Fix issues in _register_action_type() documentation.
+
+2017-03-28 14:01:16 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: scenario: fix msg on _lookup_feature() failure
+
+2017-03-28 13:30:04 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate: scenario: fix documentation for GstValidateAction
+	  Additionally:
+	  Improve GstValidatePrepareAction documentation
+	  Correct one-off use of 'eos' instead of EOS.
+
+2017-03-28 12:51:12 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: scenario: fix type field in description parameter
+	  Nothing wrong with Sting though :)
+	  Additionally: Fix typo in need-clock-sync's description
+
+2017-03-21 16:22:50 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst-libs/gst/video/gssim.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/media-descriptor.c:
+	  validate: do not check for NULL before g_free()
+	  g_free() is NULL-safe.
+
+2017-03-20 15:39:24 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor.c:
+	  validate: fix issues with a couple of string constants
+	  Fix missing and/or dupplicated separators, bogus breaks, typos, etc.
+
+2017-03-20 14:36:36 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/tools/gst-validate-images-check.c:
+	* validate/tools/gst-validate-transcoding.c:
+	  validate: fix whitespace separators in multi-line string constants
+	  Drop dupplicated & add missing ones
+	  Additionally: typo fixes
+
+2017-03-04 11:13:33 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/meson.build:
+	* validate/plugins/fault_injection/socket_interposer.c:
+	* validate/plugins/gapplication/gstvalidategapplication.c:
+	* validate/plugins/gtk/gstvalidategtk.c:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  Rename plugin filenames to match plugin names
+	  - libgstvalidateplugin.so -> libgstvalidatetracer.so
+	  - faultinjection -> validatefaultinjection
+	  - gstvalidategtk -> validategtk
+	  - ssim -> validatessim
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779344
+
+2017-03-03 21:31:02 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-tsplot.py:
+	  tracer: tsplot: tune the plot style a bit
+	  Tweak the styles and spacing. Make the title multi-line and add more info.
+
+2017-03-01 15:06:59 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: report: avoid unnecessary calls to _append_printf
+	  Additionally: simplify %format magic used for padding
+
+2017-03-01 14:04:24 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: report: clarify misleading message on skipped actions
+	  Intention is to notify that not all actions were
+	  executed but previous message suggested none were.
+	  Additionally: fix problems in two others
+
+2017-03-01 13:49:01 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: report: fix _issue_new()'s parameter description
+
+2017-03-02 21:27:05 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-tsplot.py:
+	  tracer: tsplot: ensure multiplots use same xrange
+	  Only this way one can visually align events with buffer graphs.
+
+2017-02-15 17:53:05 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tracer/gsttr-tsplot.py:
+	  tracer: tsplot: add a 3rd plot showing cycle vs. durations
+	  This is helpful to spot time-segments where we processes slower than required
+	  for real-time playback.
+
+2017-03-02 17:35:22 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/RangeHTTPServer.py:
+	  validate: Make the HTTP server multi-threaded
+	  Avoids having one test blocking all other tests
+
+2017-02-27 12:10:49 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Add information on media info files parsing failures
+
+2017-02-27 12:10:16 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  validate: Ignore more parser related fields when comparing media caps
+
+2017-02-20 12:52:06 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: launcher: Fix the way we retrieve command name
+	  We are now using a list of args for subprocess so just using it is simple now
+
+2017-02-20 12:51:26 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	* validate/launcher/meson.build:
+	  validate:launcher: Fix typo in meson build definitions
+
+2017-02-17 16:29:15 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: Fix call to decode() on a string
+
+2017-02-24 14:40:25 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: fix mention to nonexistent option
+
+2017-02-24 11:29:31 -0800  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: improve set-config option description
+
+2017-02-24 17:32:16 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate:launcher: Fix setting meson build dir
+
+2017-02-24 16:00:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  meson: Update version
+
+2017-02-24 15:37:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/configure.ac:
+	  Back to development
+
+=== release 1.11.2 ===
+
+2017-02-24 15:10:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.11.2
 
 2017-02-21 13:39:37 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
 
