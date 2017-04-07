@@ -507,3 +507,55 @@
    fun:gst_element_set_state_func
    fun:test_alsa_mixer_track
 }
+{
+   <a one time alloc>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:g_type_create_instance
+   ...
+   fun:g_object_newv
+   fun:g_object_new
+   fun:gst_gl_memory_egl_init_once
+   fun:g_type_create_instance
+}
+{
+   <a one time alloc>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:g_type_create_instance
+   ...
+   fun:g_object_newv
+   fun:g_object_new
+   fun:gst_gl_memory_pbo_init_once
+   fun:gst_gl_display_init
+   fun:g_type_create_instance
+}
+{
+   <a one time alloc>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:g_type_create_instance
+   ...
+   fun:g_object_newv
+   fun:g_object_new
+   fun:gst_gl_buffer_init_once
+   fun:gst_gl_display_init
+}
+{
+   <dodgy one, seems like a xcb bug>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   fun:xcb_wait_for_reply
+}
+{
+   <one off init alloc in ld-2.22.so>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:g_malloc0
+   ...
+   fun:call_init.part.0
+   fun:_dl_init
+}
