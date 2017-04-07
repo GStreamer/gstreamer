@@ -162,6 +162,7 @@ gst_gl_display_finalize (GObject * object)
     g_free (l->data);
   }
 
+  g_list_free (display->windows);
   g_list_free (display->priv->contexts);
 
   G_OBJECT_CLASS (gst_gl_display_parent_class)->finalize (object);
