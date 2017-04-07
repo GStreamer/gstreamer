@@ -70,9 +70,6 @@ GObject
           GstMpegvParse
           GstOpusParse
           GstPngParse
-          GstRawBaseParse
-            GstRawAudioParse
-            GstRawVideoParse
           GstVC1Parse
         GstBaseSink
           GstAudioBaseSink
@@ -283,8 +280,6 @@ GObject
             GstCameraBin
           GstSDPDemux
           GstSdpSrc
-          GstUnalignedAudioParse
-          GstUnalignedVideoParse
           GstVideoParse
           GstViewfinderBin
           RsnDvdBin

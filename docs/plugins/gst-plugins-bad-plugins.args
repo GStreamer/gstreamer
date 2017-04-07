@@ -58211,10 +58211,10 @@
 <ARG>
 <NAME>GstVoAacEnc::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>[0,320000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bitrate</NICK>
-<BLURB>Target Audio Bitrate.</BLURB>
+<BLURB>Target Audio Bitrate (bits per second).</BLURB>
 <DEFAULT>128000</DEFAULT>
 </ARG>
 
@@ -67901,6 +67901,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstDecklinkVideoSrc::signal</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Input signal available</NICK>
+<BLURB>True if there is a valid input signal available.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecklinkVideoSink::device-number</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -72378,6 +72388,36 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Target Level dBFS</NICK>
 <BLURB>Sets the target peak |level| (or envelope) of the gain control in dBFS (decibels from digital full-scale).</BLURB>
 <DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::voice-detection</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Voice Detection</NICK>
+<BLURB>Enable or disable the voice activity detector.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::voice-detection-frame-size-ms</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[10,30]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Voice Detection Frame Size Milliseconds</NICK>
+<BLURB>Sets the |size| of the frames in ms on which the VAD will operate. Larger frames will improve detection accuracy, but reduce the frequency of updates.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebrtcDsp::voice-detection-likelihood</NAME>
+<TYPE>GstWebrtcVoiceDetectionLikelihood</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Voice Detection Likelihood</NICK>
+<BLURB>Specifies the likelihood that a frame will be declared to contain voice.</BLURB>
+<DEFAULT>Low Likelihood</DEFAULT>
 </ARG>
 
 <ARG>

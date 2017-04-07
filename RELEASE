@@ -1,17 +1,15 @@
 
-Release notes for GStreamer Bad Plugins 1.11.2
+Release notes for GStreamer Bad Plugins 1.11.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.11 release series. The 1.11 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.11 release series
-will lead to the stable 1.12 release series in the next weeks. Any newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the first release candidate of the
+stable 1.12 release series. The 1.12 release series is adding new features on
+top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
+ABI-stable 1.x release series of the GStreamer multimedia framework.
 
 
-Full release notes will be provided at some point during the 1.11 release
-cycle, highlighting all the new features, bugfixes, performance optimizations
-and other important changes.
+Full release notes will be provided with the 1.12.0 release, highlighting all
+the new features, bugfixes, performance optimizations and other important
+changes.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -65,29 +63,36 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 764947 : autodetect: bring element down to NULL on a successful choice
-      * 758257 : adaptivedemux: don't expose pads until caps are known
-      * 773709 : player: Add get video snapshot API
-      * 775665 : hlsdemux: problems with broken iHeartRadio streams
-      * 776360 : msdk: seeking doesn't work
-      * 776490 : player: Add support for selecting a specific video sink
-      * 777181 : qtmux: simplify video/x-h264 caps handling
-      * 777206 : dashdemux: mosaic issue for MPEG DASH live streaming due to not updating headers
-      * 777376 : matrixmix: New element that mixes audio channels
-      * 777377 : qtmux: add 4444 and 4444xq variants to video/x-prores pad template caps
-      * 777394 : dashdemux: Do pending seek when SIDX is found
-      * 777652 : iqa configure.ac: Fix AM_CONDITIONAL for HAVE_DSSIM
-      * 777682 : hls: m3u8: Set sequence position for live
-      * 777741 : avwait: Rename timecodewait to avwait, add modes
-      * 777760 : vulkan: Usage of wrong enum in gst_vulkan_format_from_video_format()
-      * 778028 : decklinkaudiosrc: Fix get_caps returning EMPTY
-      * 778076 : avwait: Fix potential deadlock when flushing / shutting down audio
-      * 778142 : opencv: allow compilation against 3.2.0
-      * 778703 : timecodestamper: Timecode from current system time
-      * 779064 : audiobuffersplit: Add drop-last property
-      * 779070 : glmemory: Use glBlitFramebuffer() instead of glCopyTexImage2D() if available
-      * 779103 : webrtcdsp: expose new properties.
-      * 779154 : meson: Added meson.build for audiomixmatrix and timecode
+      * 736213 : h264parse: process NAL AU DELIMITER
+      * 755782 : compositor: Segmentation fault
+      * 764726 : dashdemux: fix default suggestedPresentationDelay
+      * 772811 : hlsdemux: Add support for EXT-X-DISCONTINUITY-SEQUENCE
+      * 774544 : [PLUGIN-MOVE] Move rawparse to gst-plugins-base
+      * 775487 : player: Move to playbin3 and GstStreams API
+      * 776436 : ttml: Failed assertions with non-conformant input
+      * 776997 : hlsdemux: Implement adaptivedemux's _stream_seek()
+      * 776999 : queue2: Avoid return flushing for a not-linked state
+      * 777847 : ios/osx: Don't use manual reference counting in ObjC code
+      * 778073 : hls: m3u8: Fix leak on _master_playlist_unref()
+      * 778333 : Applemedia/AVFVideoSource: Add support for position, device type, and device orientation
+      * 778731 : hlsdemux: Fix checking bit for adaptation_field_control field to parse pcr
+      * 778825 : gl: Add support for Vivante EGL FB windowing system
+      * 779011 : hlsdemux: Try to find type at the end of a fragment
+      * 779067 : glupload: Add support for Vivante DirectTexture uploads
+      * 779309 : h264parse: Include `interlace-mode` in caps
+      * 779333 : tsdemux: Probably broken code, compiler warning with gcc 7
+      * 779447 : Regression: smoothstreaming live seeking and duration
+      * 779453 : gst-player: fix gst-player failed to load external subtitle uri
+      * 779790 : waylandsink: add offset setting for multiplane dmabuf
+      * 779831 : h264parse (baseparse?) fail to pass not-linked upstream sometimes
+      * 779856 : shmsrc: do not exit prematurely when polling
+      * 779869 : glupload: fix GValue leak
+      * 780064 : gstglformat.c fails to compile with a warning.
+      * 780108 : dashdemux: invalid enum conversion in SIDX seek error handling
+      * 780179 : m3u8: Fix parsing EXT-X-DISCONTINUITY
+      * 780180 : m3u8: Release m3u8 lock if consistent checking failed
+      * 780330 : Intermittent compile failure libgstgl
+      * 780367 : decklinkvideosrc: Add no-signal property
 
 ==== Download ====
 
@@ -124,25 +129,35 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Alex Ashley
       * Arun Raghavan
-      * Axel Menzel
+      * Chris Bass
+      * Dongil Park
+      * Douglas Bagnall
+      * Edgard Lima
       * Edward Hervey
-      * Fabien Dessenne
       * Georg Lippitsch
+      * George Kiagiadakis
+      * Haihua Hu
+      * Hyunjun Ko
       * Jan Schmidt
-      * Juan Pablo Ugarte
-      * Lars Wendler
-      * Lyon Wang
+      * Josep Torra
+      * Luis de Bethencourt
       * Mathieu Duponchelle
       * Matthew Waters
       * Nick Kallen
-      * Nicola Murino
+      * Nicolas Dufresne
+      * Nirbheek Chauhan
+      * Olivier Crête
+      * Reynaldo H. Verdejo Pinochet
+      * Samuel Maroy
       * Scott D Phillips
       * Sebastian Dröge
       * Seungha Yang
-      * Stefan Sauer
+      * Thiago Santos
       * Thibault Saunier
+      * Thomas Bluemel
       * Tim-Philipp Müller
-      * Vivia Nikolaidou
-      * WeiChungChang
+      * Vincent Penquerc'h
+      * Wojciech Przybyl
  
