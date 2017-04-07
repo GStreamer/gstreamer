@@ -276,6 +276,11 @@ static GstFlowReturn
 gst_adaptive_demux_stream_push_event (GstAdaptiveDemuxStream * stream,
     GstEvent * event);
 
+static void gst_adaptive_demux_stop_manifest_update_task (GstAdaptiveDemux *
+    demux);
+static void gst_adaptive_demux_start_manifest_update_task (GstAdaptiveDemux *
+    demux);
+
 static void gst_adaptive_demux_start_tasks (GstAdaptiveDemux * demux,
     gboolean start_preroll_streams);
 static void gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux);
@@ -556,11 +561,19 @@ gst_adaptive_demux_change_state (GstElement * element,
       GST_MANIFEST_LOCK (demux);
       demux->running = FALSE;
       gst_adaptive_demux_reset (demux);
+      gst_adaptive_demux_stop_manifest_update_task (demux);
       GST_MANIFEST_UNLOCK (demux);
+
+      /* demux->priv->updates_task value never changes, so it is safe to read it
+       * outside critical section
+       */
+      gst_task_join (demux->priv->updates_task);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_MANIFEST_LOCK (demux);
       gst_adaptive_demux_reset (demux);
+      if (demux->priv->have_manifest)
+        gst_adaptive_demux_start_manifest_update_task (demux);
       demux->running = TRUE;
       GST_MANIFEST_UNLOCK (demux);
       break;
@@ -701,15 +714,7 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
           gst_adaptive_demux_prepare_streams (demux,
               gst_adaptive_demux_is_live (demux));
           gst_adaptive_demux_start_tasks (demux, TRUE);
-          if (gst_adaptive_demux_is_live (demux)) {
-            g_mutex_lock (&demux->priv->updates_timed_lock);
-            demux->priv->stop_updates_task = FALSE;
-            g_mutex_unlock (&demux->priv->updates_timed_lock);
-            /* Task to periodically update the manifest */
-            if (demux_class->requires_periodical_playlist_update (demux)) {
-              gst_task_start (demux->priv->updates_task);
-            }
-          }
+          gst_adaptive_demux_start_manifest_update_task (demux);
         } else {
           /* no streams */
           GST_WARNING_OBJECT (demux, "No streams created from manifest");
@@ -770,7 +775,6 @@ gst_adaptive_demux_reset (GstAdaptiveDemux * demux)
   demux->priv->old_streams = NULL;
 
   gst_adaptive_demux_stop_tasks (demux);
-  gst_uri_downloader_reset (demux->downloader);
 
   if (klass->reset)
     klass->reset (demux);
@@ -1686,13 +1690,6 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
     gst_adaptive_demux_start_tasks (demux, FALSE);
   }
 
-  if (gst_adaptive_demux_is_live (demux)) {
-    g_mutex_lock (&demux->priv->updates_timed_lock);
-    demux->priv->stop_updates_task = FALSE;
-    g_mutex_unlock (&demux->priv->updates_timed_lock);
-    /* Task to periodically update the manifest */
-    gst_task_start (demux->priv->updates_task);
-  }
   GST_MANIFEST_UNLOCK (demux);
   GST_API_UNLOCK (demux);
   gst_event_unref (event);
@@ -1900,6 +1897,38 @@ gst_adaptive_demux_start_tasks (GstAdaptiveDemux * demux,
   }
 }
 
+/* must be called with manifest_lock taken */
+static void
+gst_adaptive_demux_stop_manifest_update_task (GstAdaptiveDemux * demux)
+{
+  gst_uri_downloader_cancel (demux->downloader);
+
+  gst_task_stop (demux->priv->updates_task);
+
+  g_mutex_lock (&demux->priv->updates_timed_lock);
+  demux->priv->stop_updates_task = TRUE;
+  g_cond_signal (&demux->priv->updates_timed_cond);
+  g_mutex_unlock (&demux->priv->updates_timed_lock);
+}
+
+/* must be called with manifest_lock taken */
+static void
+gst_adaptive_demux_start_manifest_update_task (GstAdaptiveDemux * demux)
+{
+  GstAdaptiveDemuxClass *demux_class = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
+
+  if (gst_adaptive_demux_is_live (demux)) {
+    gst_uri_downloader_reset (demux->downloader);
+    g_mutex_lock (&demux->priv->updates_timed_lock);
+    demux->priv->stop_updates_task = FALSE;
+    g_mutex_unlock (&demux->priv->updates_timed_lock);
+    /* Task to periodically update the manifest */
+    if (demux_class->requires_periodical_playlist_update (demux)) {
+      gst_task_start (demux->priv->updates_task);
+    }
+  }
+}
+
 /* must be called with manifest_lock taken
  * This function will temporarily release manifest_lock in order to join the
  * download threads.
@@ -1910,13 +1939,6 @@ static void
 gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
 {
   GList *iter;
-
-  gst_task_stop (demux->priv->updates_task);
-
-  g_mutex_lock (&demux->priv->updates_timed_lock);
-  demux->priv->stop_updates_task = TRUE;
-  g_cond_signal (&demux->priv->updates_timed_cond);
-  g_mutex_unlock (&demux->priv->updates_timed_lock);
 
   GST_LOG_OBJECT (demux, "Stopping tasks");
 
@@ -1933,8 +1955,6 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
   g_mutex_lock (&demux->priv->preroll_lock);
   g_cond_broadcast (&demux->priv->preroll_cond);
   g_mutex_unlock (&demux->priv->preroll_lock);
-
-  gst_uri_downloader_cancel (demux->downloader);
 
   g_mutex_lock (&demux->priv->manifest_update_lock);
   g_cond_broadcast (&demux->priv->manifest_cond);
@@ -1965,11 +1985,6 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
   }
 
   GST_MANIFEST_UNLOCK (demux);
-
-  /* demux->priv->updates_task value never changes, so it is safe to read it
-   * outside critical section
-   */
-  gst_task_join (demux->priv->updates_task);
 
   GST_MANIFEST_LOCK (demux);
 
@@ -3771,15 +3786,14 @@ gst_adaptive_demux_updates_loop (GstAdaptiveDemux * demux)
         &demux->priv->updates_timed_lock, next_update);
     g_mutex_unlock (&demux->priv->updates_timed_lock);
 
-    GST_MANIFEST_LOCK (demux);
-
     g_mutex_lock (&demux->priv->updates_timed_lock);
     if (demux->priv->stop_updates_task) {
       g_mutex_unlock (&demux->priv->updates_timed_lock);
-      GST_MANIFEST_UNLOCK (demux);
       goto quit;
     }
     g_mutex_unlock (&demux->priv->updates_timed_lock);
+
+    GST_MANIFEST_LOCK (demux);
 
     GST_DEBUG_OBJECT (demux, "Updating playlist");
 
