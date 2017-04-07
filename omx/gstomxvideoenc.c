@@ -1314,7 +1314,7 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
     outbuf->omx_buf->nFilledLen = gst_buffer_get_size (inbuf);
 
     GST_LOG_OBJECT (self, "Matched strides - direct copy %u bytes",
-        outbuf->omx_buf->nFilledLen);
+        (guint) outbuf->omx_buf->nFilledLen);
 
     gst_buffer_extract (inbuf, 0,
         outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset,
