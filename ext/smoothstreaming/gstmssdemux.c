@@ -728,5 +728,5 @@ gst_mss_demux_requires_periodical_playlist_update (GstAdaptiveDemux * demux)
 {
   GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (demux);
 
-  return (!gst_mss_manifest_is_live (mssdemux->manifest));
+  return TRUE;
 }
