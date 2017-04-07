@@ -1,9 +1,288 @@
-=== release 1.11.2 ===
+=== release 1.11.90 ===
 
-2017-02-24  Sebastian Dröge <slomo@coaxion.net>
+2017-04-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.2
+	  releasing 1.11.90
+
+2017-04-04 16:27:33 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* data/completions/ges-launch-1.0:
+	  completion: Fix previous commit
+
+2017-04-04 16:20:17 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* data/completions/ges-launch-1.0:
+	  completion: Fix listing commands
+	  Executing a single string does not work in this context. Fixed using
+	  a bash function instead.
+
+2017-04-04 15:48:05 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* data/completions/ges-launch-1.0:
+	  completion: Remove incorrect fixmes
+	  In fact the fixmes are incorrect since these are options that are
+	  available when built against gst-validate, which I didn't. There is
+	  reference to these options in the HELP_SUMMARY that refers to these
+	  options stating "if ges-launch is built with gst-validate ..." and these
+	  get picked by the regex that list the options.
+
+2017-04-04 14:55:18 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* data/completions/ges-launch-1.0:
+	  completion: Update to new gstreamer core helpers
+	  Also fix regressions, and mark lost features and problems with fixmes.
+
+2017-04-02 23:03:18 +0200  Corentin Noël <corentin@elementary.io>
+
+	* ges/ges-layer.c:
+	* ges/ges-pipeline.c:
+	* ges/ges-timeline.c:
+	  Tiny fixes in the documentation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780854
+
+2017-03-30 19:57:06 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* win32/common/libges.def:
+	  Add missing win32 definition
+	  This should fix dist check. ges_layer_get_clips_in_interval() was
+	  added recently but missing from the list.
+
+2017-03-28 14:25:06 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson: Use get_pkgconfig_variable instead of calling pkg-config ourself
+	  It is avalaible in meson 0.36 which is now are requirement
+	  Nothing happens on not found dependencies.
+
+2017-03-25 10:47:16 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson: test: Fix environment object usage
+	  And make sure to bring -good plugins in.
+
+2017-03-17 19:02:56 +0000  suhas2go <suhas2go@gmail.com>
+
+	* ges/ges-layer.c:
+	* ges/ges-layer.h:
+	* tests/check/ges/layer.c:
+	  layer: Add ability to get clips in a given interval
+	  Reviewed-by: Alex Băluț <<alexandru.balut@gmail.com>>
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1689
+
+2017-03-13 09:30:39 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-audio-source.c:
+	* ges/ges-title-source.c:
+	* ges/ges-transition.c:
+	* ges/ges-video-source.c:
+	  docs: Fix generation using markdown for titles around tables
+
+2017-03-10 19:46:33 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* docs/hotdoc/images/layer_track_overview.png:
+	* docs/hotdoc/index.md:
+	* docs/hotdoc/meson.build:
+	* docs/hotdoc/sitemap.txt:
+	* docs/meson.build:
+	  Revert "doc: Build documentation with hotdoc"
+	  This reverts commit 8857e004f78ea009e1c87a93da5cf3e25dbde07f.
+	  This was not meant to be pushed yet.
+
+2017-03-10 19:46:24 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* docs/hotdoc/index.md:
+	* docs/hotdoc/meson.build:
+	* ges/meson.build:
+	* meson.build:
+	  Revert "Fhotdoc"
+	  This reverts commit 220618ecc7c061a2146e00e0063123b8dbaeb734.
+	  This was not meant to be pushed.
+
+2017-03-10 19:46:09 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* docs/hotdoc/base-classes.md:
+	* docs/hotdoc/low_level.md:
+	* docs/hotdoc/meson.build:
+	* docs/hotdoc/sitemap.txt:
+	  Revert "HOTDOC"
+	  This reverts commit 5e251483ee6777b6a74a7988b5969bf95f6ecab6.
+	  This was not meant to be pushed.
+
+2017-03-10 19:34:21 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	  ges: Minor GESTimeline documentation fix
+
+2017-03-09 17:49:44 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* docs/hotdoc/base-classes.md:
+	* docs/hotdoc/low_level.md:
+	* docs/hotdoc/meson.build:
+	* docs/hotdoc/sitemap.txt:
+	  HOTDOC gi
+
+2017-03-09 13:11:37 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-asset.h:
+	* ges/ges-extractable.h:
+	  extractable: Typedef only in its own .h
+
+2017-03-08 18:26:42 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* docs/hotdoc/index.md:
+	* docs/hotdoc/meson.build:
+	* ges/meson.build:
+	* meson.build:
+	  Fhotdoc
+
+2017-03-08 18:13:48 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-audio-source.c:
+	* ges/ges-audio-test-source.c:
+	* ges/ges-audio-track.c:
+	* ges/ges-audio-transition.c:
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-base-effect-clip.c:
+	* ges/ges-base-effect.c:
+	* ges/ges-base-transition-clip.c:
+	* ges/ges-clip-asset.c:
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-container.h:
+	* ges/ges-effect-clip.c:
+	* ges/ges-effect.c:
+	* ges/ges-enums.c:
+	* ges/ges-extractable.c:
+	* ges/ges-formatter.c:
+	* ges/ges-gerror.h:
+	* ges/ges-group.c:
+	* ges/ges-image-source.c:
+	* ges/ges-layer.c:
+	* ges/ges-layer.h:
+	* ges/ges-multi-file-source.c:
+	* ges/ges-operation-clip.c:
+	* ges/ges-operation.c:
+	* ges/ges-overlay-clip.c:
+	* ges/ges-pipeline.c:
+	* ges/ges-pitivi-formatter.c:
+	* ges/ges-project.c:
+	* ges/ges-source-clip.c:
+	* ges/ges-source.c:
+	* ges/ges-test-clip.c:
+	* ges/ges-test-clip.h:
+	* ges/ges-text-overlay-clip.c:
+	* ges/ges-text-overlay-clip.h:
+	* ges/ges-text-overlay.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-timeline.c:
+	* ges/ges-title-clip.c:
+	* ges/ges-title-source.c:
+	* ges/ges-title-source.h:
+	* ges/ges-track-element-asset.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track.c:
+	* ges/ges-transition-clip.c:
+	* ges/ges-transition.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-clip.c:
+	* ges/ges-utils.c:
+	* ges/ges-video-source.c:
+	* ges/ges-video-test-source.c:
+	* ges/ges-video-track.c:
+	* ges/ges-video-transition.c:
+	* ges/ges-video-uri-source.c:
+	  docs: Port all docstring to gtk-doc markdown
+
+2017-03-08 18:02:47 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* docs/hotdoc/images/layer_track_overview.png:
+	* docs/hotdoc/index.md:
+	* docs/hotdoc/meson.build:
+	* docs/hotdoc/sitemap.txt:
+	* docs/meson.build:
+	  doc: Build documentation with hotdoc
+
+2017-03-06 08:53:00 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/ges/backgroundsource.c:
+	  timeline: Return FALSE when commiting an empty timeline
+	  Meaning that ASYNC_DONE/COMMITED is always emited when TRUE is returned
+
+2017-02-28 15:39:27 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/gstframepositioner.c:
+	  framepositioner: Prevent division by zero
+	  CID 1369046
+	  CID 1369047
+
+2017-02-28 15:36:46 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-timeline.c:
+	  ges-timeline: Document intentional case-fall-through
+	  CID 1364754
+
+2017-02-28 13:02:44 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/c/ges-ui.c:
+	  ges-ui: Ensure that string is \0-terminated
+	  CID 1320699
+
+2017-02-28 12:59:35 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-project.c:
+	  ges-project: Check for set/unset error correctly by dereferencing
+	  ... or simply calling g_clear_error() on it which does that for us.
+	  CID 1257630
+
+2017-02-28 12:50:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/c/ges-ui.c:
+	  examples/ges-ui: Remove useless NULL check
+	  g_new0() will abort if allocation fails.
+	  CID 1139842
+
+2017-02-24 15:44:36 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-container.h:
+	* ges/ges-internal.h:
+	* ges/ges-uri-asset.h:
+	* win32/common/libges.def:
+	  ges: Keep internal symbols internal
+	  The following implementation details where exposed as public symbols:
+	  - _ges_container_get_priority_offset
+	  - _ges_container_set_height
+	  - _ges_container_set_priority_offset
+	  - _ges_uri_asset_cleanup
+	  but it was not correct and that should never have been used outside
+	  GES.
+	  Moving those declarations to the internal header and marking as
+	  internal.
+
+2017-02-24 16:00:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  meson: Update version
+
+2017-02-24 15:37:55 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.11.2 ===
+
+2017-02-24 15:10:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	  Release 1.11.2
 
 2017-02-15 12:52:24 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
 
