@@ -88,6 +88,42 @@ gl_cocoa_headers = []
 gl_egl_headers = []
 
 glconf = configuration_data()
+glconf_options = [
+    'GST_GL_HAVE_OPENGL',
+    'GST_GL_HAVE_GLES2',
+    'GST_GL_HAVE_GLES3',
+
+    'GST_GL_HAVE_WINDOW_X11',
+    'GST_GL_HAVE_WINDOW_COCOA',
+    'GST_GL_HAVE_WINDOW_WIN32',
+    'GST_GL_HAVE_WINDOW_WAYLAND',
+    'GST_GL_HAVE_WINDOW_ANDROID',
+    'GST_GL_HAVE_WINDOW_DISPMANX',
+    'GST_GL_HAVE_WINDOW_EAGL',
+    'GST_GL_HAVE_WINDOW_VIV_FB',
+
+    'GST_GL_HAVE_PLATFORM_EGL',
+    'GST_GL_HAVE_PLATFORM_GLX',
+    'GST_GL_HAVE_PLATFORM_WGL',
+    'GST_GL_HAVE_PLATFORM_CGL',
+    'GST_GL_HAVE_PLATFORM_EAGL',
+
+    'GST_GL_HAVE_DMABUF',
+    'GST_GL_HAVE_VIV_DIRECTVIV',
+
+    'GST_GL_HAVE_GLEGLIMAGEOES',
+    'GST_GL_HAVE_GLCHAR',
+    'GST_GL_HAVE_GLSIZEIPTR',
+    'GST_GL_HAVE_GLINTPTR',
+    'GST_GL_HAVE_GLSYNC',
+    'GST_GL_HAVE_GLUINT64',
+    'GST_GL_HAVE_GLINT64',
+    'GST_GL_HAVE_EGLATTRIB',
+]
+
+foreach option : glconf_options
+  glconf.set10(option, false)
+endforeach
 
 gmodule_dep = dependency('gmodule-no-export-2.0')
 unneeded_dep = dependency('', required : false)
