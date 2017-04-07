@@ -1,17 +1,15 @@
 
-Release notes for GStreamer Ugly Plugins 1.11.2
+Release notes for GStreamer Ugly Plugins 1.11.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.11 release series. The 1.11 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.11 release series
-will lead to the stable 1.12 release series in the next weeks. Any newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the first release candidate of the
+stable 1.12 release series. The 1.12 release series is adding new features on
+top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
+ABI-stable 1.x release series of the GStreamer multimedia framework.
 
 
-Full release notes will be provided at some point during the 1.11 release
-cycle, highlighting all the new features, bugfixes, performance optimizations
-and other important changes.
+Full release notes will be provided with the 1.12.0 release, highlighting all
+the new features, bugfixes, performance optimizations and other important
+changes.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -62,7 +60,7 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 777903 : x264 fails to build on Windows
+      * 779329 : gst-plugins-ugly fails to build with GCC 7.0.1
 
 ==== Download ====
 
@@ -99,7 +97,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Nirbheek Chauhan
+      * Edgard Lima
+      * Jan Schmidt
+      * Nicolas Dufresne
       * Sebastian Dröge
       * Thibault Saunier
       * Tim-Philipp Müller
