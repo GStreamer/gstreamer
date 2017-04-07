@@ -312,6 +312,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
       g_set_error (error, GST_GL_CONTEXT_ERROR,
           GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE,
           "Failed to create EGLDisplay from native display");
+      gst_object_unref (display);
       goto failure;
     }
 
