@@ -171,6 +171,7 @@ main (int   argc,
   }
 
   gst_object_unref (GST_OBJECT (element));
+  gst_object_unref (GST_OBJECT (factory));
 
   return 0;
 }
@@ -293,6 +294,8 @@ main (int   argc,
            gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)),
            gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS),
            gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_DESCRIPTION));
+
+  gst_object_unref (GST_OBJECT (factory));
 
   return 0;
 }
