@@ -2935,7 +2935,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Use Buffering</NICK>
 <BLURB>Perform buffering on demuxed/parsed media.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3075,7 +3075,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Flags</NICK>
 <BLURB>Flags to control behaviour.</BLURB>
-<DEFAULT>Render the video stream|Render the audio stream|Render subtitles|Use software volume|Deinterlace video if necessary|Use software color balance</DEFAULT>
+<DEFAULT>Render the video stream|Render the audio stream|Render subtitles|Use software volume|Buffer demuxed/parsed data|Deinterlace video if necessary|Use software color balance</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3440,21 +3440,21 @@
 
 <ARG>
 <NAME>GstRawVideoParse::plane-offsets</NAME>
-<TYPE>GValueArray*</TYPE>
+<TYPE>GstValueArray</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Plane offsets</NICK>
-<BLURB>Offsets of the planes in bytes.</BLURB>
+<BLURB>Offsets of the planes in bytes (e.g. plane-offset="<0,76800>").</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstRawVideoParse::plane-strides</NAME>
-<TYPE>GValueArray*</TYPE>
+<TYPE>GstValueArray</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Plane strides</NICK>
-<BLURB>Strides of the planes in bytes.</BLURB>
+<BLURB>Strides of the planes in bytes (e.g. plane-strides="<320,320>").</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -3476,6 +3476,16 @@
 <NICK>Width</NICK>
 <BLURB>Width of frames in raw stream.</BLURB>
 <DEFAULT>320</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRawVideoParse::frame-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame size</NICK>
+<BLURB>Size of a frame (0 = frames are tightly packed together).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>

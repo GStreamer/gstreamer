@@ -1,9 +1,792 @@
-=== release 1.11.2 ===
+=== release 1.11.90 ===
 
-2017-02-24  Sebastian Dröge <slomo@coaxion.net>
+2017-04-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.2
+	  releasing 1.11.90
+
+2017-04-07 15:06:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/hu.po:
+	  po: Update translations
+
+2017-04-03 16:41:49 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	* tests/check/libs/sdp.c:
+	  sdp/media: caps_from_media() don't modify the input media
+	  Performing a gst_sdp_media_get_caps_from_media() would result in
+	  changing fields in the GstSDPMedia violating the const tag in the
+	  function declaration.
+	  Before there would be a line with a=rtpmap:96 VP8/90000
+	  after, that attribute would only contain a=rtpmap:96
+	  Fix by performing modifications on duplicated strings instead of on
+	  the internal values.
+	  Also add a simple test for checking that the representation doesn't
+	  change by a gst_sdp_media_get_caps_from_media()
+
+2017-04-03 15:08:06 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	  sdp: add g_return*_if_fail assertions on invalid inputs
+	  Prevents some programming errors and invalid modifications.
+
+2017-04-03 15:05:47 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	  sdp/message: fix segfault copying NULL in the boxed copy impl
+	  Allows passing NULL as a value to g_object_set and as signal
+	  parameters without crashing.
+
+2017-03-31 13:43:52 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst-libs/gst/video/video-converter.c:
+	  video-converter: fix scaler leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780764
+
+2017-03-31 15:59:19 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/encoding/gstencodebin.c:
+	  encodebin: fix list leak when requesting a new pad
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780769
+
+2017-03-28 14:31:34 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson: Use get_pkgconfig_variable instead of calling pkg-config ourself
+	  It is avalaible in meson 0.36 which is now are requirement
+
+2017-03-27 22:59:17 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gsturisourcebin.c:
+	  urisourcebin: Set removed flag when removing buffering msg
+	  Forgot to set the flag, resulting in a missed check for
+	  sending 100% in some cases. Spotted by Coverity.
+	  CID: 1403263
+
+2017-03-26 23:33:24 +0200  Francisco Velazquez <francisv@ifi.uio.no>
+
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	  docs: Fix broken URL in reference manual
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780566
+
+2017-03-21 13:12:47 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/rawparse/gstrawbaseparse.c:
+	  rawvideoparse: fix assert on large width/height in caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776446
+
+2017-03-27 00:26:53 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Expand the search range for HLS detection
+	  HLS files can have arbitrary extra tags in them, and
+	  those can be quite long lines. We need to search
+	  further than 256 bytes sometimes just to get past the
+	  first few lines of the file. Make the limit 4KB,
+	  which matches a typical input block size and should
+	  hopefully cover every crazy input.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780559
+
+2017-03-24 18:51:12 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson: Fix build failure from previous commit
+	  Mistake while rebasing
+
+2017-03-24 18:46:34 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson: Specify pluginsdir setting the environment
+	  And do not specify the separator as this is OS
+	  dependent and will be handled properly by default
+
+2017-03-24 17:00:23 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* tests/check/meson.build:
+	  meson: Reuse plugins_install_dir for building env
+
+2017-03-24 16:16:26 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* tests/check/meson.build:
+	  meson: Fix plugin path when running test
+	  The path was only adding the build root. We need to also add the
+	  prefix for the case we work with installed setup. As the search is
+	  recursive, I had to remove any subdirectory to the already present build
+	  root.
+
+2017-03-15 17:28:48 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/rawparse/gstrawvideoparse.c:
+	* gst/rawparse/gstrawvideoparse.h:
+	* tests/check/elements/rawvideoparse.c:
+	  rawvideoparse: Rename frame-stride in to frame-size
+	  The term stride is confusing here, since the stride is always use
+	  to signal the pixel row size of an image (including padding). Also
+	  a frame may have a single stride, which adds to the confusion. This
+	  patch uses frame-size, which simply indicate the frame size in the
+	  case the images have some padding in between.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780053
+
+2017-03-15 15:28:49 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/rawparse/gstrawvideoparse.c:
+	* tests/check/elements/rawvideoparse.c:
+	  rawvideoparse: Use GstValueArray for strides and offsets
+	  This allow using those property through gst-launch-1.0. This type
+	  gained a deserilizer recently. The syntax is: <val1, val2, ...>.
+	  Note that we also use the type int instead of uint to avoid having
+	  to cast when specifying the values. The deserilizers assume
+	  int by default.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780053
+
+2017-03-23 13:56:19 +0800  Haihua Hu <jared.hu@nxp.com>
+
+	* gst/playback/gststreamsynchronizer.c:
+	* gst/playback/gststreamsynchronizer.h:
+	  streamsynchronizer: every stream need keep their own send_gap_event flag
+	  When a clip has video audio and subtitle, if need send gap event
+	  to audio and subtitle, we should make sure all has been sent, so
+	  need every stream keep one send_gap_event.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780429
+
+2017-03-23 00:21:44 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gsturisourcebin.c:
+	  urisourcebin: Mention which queue is being linked in debug output
+
+2017-03-20 17:45:35 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/examples/seek/jsseek.c:
+	  examples: jsseek: fix typo
+	  Spotted by Yaakov Selkowitz
+
+2017-03-20 16:57:58 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/examples/seek/jsseek.c:
+	  examples: jsseek: update for removal of mad plugin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776140
+
+2017-03-20 17:20:36 +0530  Arun Raghavan <arun@arunraghavan.net>
+
+	* gst-libs/gst/video/convertframe.c:
+	  convertframe: Fix async video sample conversion with non-default context
+	  The GSource for dealing with timeouts in
+	  gst_video_convert_sample_async() might be attached to a non-default
+	  context, so we should not be using g_source_remove() on the returned ID.
+	  The correct thing to do is to keep a reference to the actual GSource and
+	  then call g_source_destroy() on it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780297
+
+2017-03-19 13:51:24 +0900  Seungha Yang <sh.yang@lge.com>
+
+	* gst/playback/gsturisourcebin.c:
+	  urisourcebin: Fix typefind list leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780257
+
+2017-03-17 21:39:58 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tests/check/elements/adder.c:
+	  adder: cleanup the tests
+	  Take a first stab at cleaning up the tests. Extract common code. Make sure
+	  we actually verify things.
+
+2017-03-18 01:10:54 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: Close a small race posting 100% buffering
+	  When posting 100% buffering due to removing the last
+	  buffering element, we still need to hold the posting
+	  lock as well, to avoid any race with other elements
+	  that might post a buffering message at that exact
+	  moment
+
+2017-03-18 00:54:55 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gsturisourcebin.c:
+	  urisourcebin: Fix buffering message aggregation.
+	  Add locking, and handle EOS properly now that urisourcebin
+	  uses custom events in place of real EOS events, so we
+	  need to manually remove buffering messages and potentially
+	  post 100% in that situation
+
+2017-03-18 00:06:02 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gsturisourcebin.c:
+	  urisourcebin: Store slot info on the queue object too
+	  The buffering message handling tries to look up the
+	  slot info on the queue itself.
+
+2017-03-16 13:56:10 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Add debug output tracking decode-after-flush
+	  Track how long it takes to generate the first buffer after a flush
+	  as a simple measure of how efficient the decoder is at skipping /
+	  rushing to get to the first decode.
+
+2017-03-16 11:27:47 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	  videotestsrc: Publish multiview-mode info in the caps
+	  Don't allow downstream to accidentally pretend that
+	  the output is anything than a mono or single-eye
+	  left/right view.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776172
+
+2017-03-17 13:43:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/video-format.c:
+	  video-format: Shift correctly when packing I420_12BE
+
+2017-03-17 13:14:58 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/video-format.h:
+	  video-format: Order all formats in GST_VIDEO_FORMATS_ALL like in the enum
+	  And remove duplicated entries.
+
+2017-03-17 15:59:14 +0530  Arun Raghavan <arun@arunraghavan.net>
+
+	* gst-libs/gst/pbutils/encoding-profile.c:
+	  encoding-profile: Mark format caps as transfer-none in profile creation
+
+2017-03-16 17:37:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/video-format.h:
+	  video-format: Add Since markers to all new formats from 1.2
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780100
+
+2017-03-16 17:12:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/video-converter.c:
+	* gst-libs/gst/video/video-format.c:
+	* gst-libs/gst/video/video-format.h:
+	* gst-libs/gst/video/video-info.c:
+	  video: Add I420/I422/Y444_12LE/BE and GBRA video formats
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780100
+
+2017-03-16 11:45:42 +0100  Emeric Grange <egrange@gopro.com>
+
+	* gst-libs/gst/video/video-converter.c:
+	* gst-libs/gst/video/video-format.c:
+	* gst-libs/gst/video/video-format.h:
+	* gst-libs/gst/video/video-info.c:
+	  video: Add GBRA_10LE/BE, GBR_12LE/BE, GBRA_12LE/BE pixel formats
+	  With additional bugfixes from Sebastian Dröge <sebastian@centricular.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780100
+
+2017-03-14 16:30:18 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/tcp/gstmultifdsink.c:
+	* gst/tcp/gstmultihandlesink.c:
+	  multifdsink: Remove GValueArray from the doc
+	  It's been a GstStructure for a long time. Also fix
+	  a typo in the name of one of the fields.
+
+2017-03-12 11:35:25 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* Makefile.am:
+	  Add old libgstencodebin.so to cruft list
+	  This will help fixing clash in gst-uninstalled setup.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779344
+
+2017-01-23 16:36:11 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ext/alsa/gstalsamidisrc.c:
+	* ext/alsa/gstalsasink.c:
+	* ext/alsa/gstalsasrc.c:
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggmux.c:
+	* ext/opus/gstopusdec.c:
+	* ext/opus/gstopusenc.c:
+	* ext/pango/gstclockoverlay.c:
+	* ext/pango/gsttextoverlay.c:
+	* ext/pango/gsttextrender.c:
+	* ext/pango/gsttimeoverlay.c:
+	* ext/theora/gsttheoradec.c:
+	* ext/theora/gsttheoraenc.c:
+	* ext/theora/gsttheoraparse.c:
+	* ext/vorbis/gstvorbisdec.c:
+	* ext/vorbis/gstvorbisenc.c:
+	* ext/vorbis/gstvorbisparse.c:
+	* ext/vorbis/gstvorbistag.c:
+	* gst-libs/gst/allocators/gstdmabuf.c:
+	* gst-libs/gst/allocators/gstfdmemory.c:
+	* gst-libs/gst/app/gstappsink.c:
+	* gst-libs/gst/app/gstappsrc.c:
+	* gst-libs/gst/audio/audio-channels.c:
+	* gst-libs/gst/audio/audio-converter.c:
+	* gst-libs/gst/audio/audio-resampler.c:
+	* gst-libs/gst/audio/audio-resampler.h:
+	* gst-libs/gst/audio/audio.c:
+	* gst-libs/gst/audio/gstaudiobasesink.c:
+	* gst-libs/gst/audio/gstaudiobasesrc.c:
+	* gst-libs/gst/audio/gstaudiocdsrc.c:
+	* gst-libs/gst/audio/gstaudioclock.c:
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	* gst-libs/gst/audio/gstaudiofilter.c:
+	* gst-libs/gst/audio/gstaudioiec61937.c:
+	* gst-libs/gst/audio/gstaudiometa.c:
+	* gst-libs/gst/audio/gstaudioringbuffer.c:
+	* gst-libs/gst/audio/gstaudiosink.c:
+	* gst-libs/gst/audio/gstaudiosrc.c:
+	* gst-libs/gst/audio/streamvolume.c:
+	* gst-libs/gst/fft/gstfft.c:
+	* gst-libs/gst/fft/gstfftf32.c:
+	* gst-libs/gst/fft/gstfftf64.c:
+	* gst-libs/gst/fft/gstffts16.c:
+	* gst-libs/gst/fft/gstffts32.c:
+	* gst-libs/gst/pbutils/codec-utils.c:
+	* gst-libs/gst/pbutils/descriptions.c:
+	* gst-libs/gst/pbutils/encoding-profile.c:
+	* gst-libs/gst/pbutils/gstaudiovisualizer.c:
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	* gst-libs/gst/pbutils/gstpluginsbaseversion.c:
+	* gst-libs/gst/pbutils/install-plugins.c:
+	* gst-libs/gst/pbutils/missing-plugins.c:
+	* gst-libs/gst/pbutils/pbutils.c:
+	* gst-libs/gst/riff/riff-read.c:
+	* gst-libs/gst/riff/riff.c:
+	* gst-libs/gst/rtp/gstrtcpbuffer.c:
+	* gst-libs/gst/rtp/gstrtpbaseaudiopayload.c:
+	* gst-libs/gst/rtp/gstrtpbasedepayload.c:
+	* gst-libs/gst/rtp/gstrtpbasepayload.c:
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	* gst-libs/gst/rtp/gstrtphdrext.c:
+	* gst-libs/gst/rtp/gstrtppayloads.c:
+	* gst-libs/gst/rtp/gstrtppayloads.h:
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	* gst-libs/gst/rtsp/gstrtspdefs.c:
+	* gst-libs/gst/rtsp/gstrtspextension.c:
+	* gst-libs/gst/rtsp/gstrtspmessage.c:
+	* gst-libs/gst/rtsp/gstrtsprange.c:
+	* gst-libs/gst/rtsp/gstrtsptransport.c:
+	* gst-libs/gst/rtsp/gstrtspurl.c:
+	* gst-libs/gst/sdp/gstmikey.c:
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	* gst-libs/gst/tag/gstexiftag.c:
+	* gst-libs/gst/tag/gstid3tag.c:
+	* gst-libs/gst/tag/gsttagdemux.c:
+	* gst-libs/gst/tag/gsttagmux.c:
+	* gst-libs/gst/tag/gstvorbistag.c:
+	* gst-libs/gst/tag/gstxmptag.c:
+	* gst-libs/gst/tag/lang.c:
+	* gst-libs/gst/tag/licenses.c:
+	* gst-libs/gst/tag/tags.c:
+	* gst-libs/gst/tag/xmpwriter.c:
+	* gst-libs/gst/video/colorbalance.c:
+	* gst-libs/gst/video/colorbalancechannel.c:
+	* gst-libs/gst/video/gstvideoaffinetransformationmeta.c:
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* gst-libs/gst/video/gstvideoencoder.c:
+	* gst-libs/gst/video/gstvideofilter.c:
+	* gst-libs/gst/video/gstvideometa.h:
+	* gst-libs/gst/video/gstvideopool.c:
+	* gst-libs/gst/video/gstvideosink.c:
+	* gst-libs/gst/video/gstvideosink.h:
+	* gst-libs/gst/video/navigation.c:
+	* gst-libs/gst/video/video-chroma.c:
+	* gst-libs/gst/video/video-converter.c:
+	* gst-libs/gst/video/video-dither.c:
+	* gst-libs/gst/video/video-event.c:
+	* gst-libs/gst/video/video-overlay-composition.c:
+	* gst-libs/gst/video/video-resampler.c:
+	* gst-libs/gst/video/video-scaler.c:
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/videodirection.c:
+	* gst-libs/gst/video/videoorientation.c:
+	* gst-libs/gst/video/videooverlay.c:
+	* gst/adder/gstadder.c:
+	* gst/app/gstapp.c:
+	* gst/audioconvert/gstaudioconvert.c:
+	* gst/audiorate/gstaudiorate.c:
+	* gst/audioresample/gstaudioresample.c:
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	* gst/encoding/gstencodebin.c:
+	* gst/gio/gstgiosink.c:
+	* gst/gio/gstgiosrc.c:
+	* gst/gio/gstgiostreamsink.c:
+	* gst/gio/gstgiostreamsrc.c:
+	* gst/playback/gstdecodebin2.c:
+	* gst/playback/gstdecodebin3.c:
+	* gst/playback/gstparsebin.c:
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstplaybin3.c:
+	* gst/playback/gstsubtitleoverlay.c:
+	* gst/playback/gsturidecodebin.c:
+	* gst/playback/gsturisourcebin.c:
+	* gst/rawparse/gstrawaudioparse.c:
+	* gst/rawparse/gstrawvideoparse.c:
+	* gst/tcp/gstmultifdsink.c:
+	* gst/tcp/gstmultihandlesink.c:
+	* gst/tcp/gstmultihandlesink.h:
+	* gst/tcp/gstmultisocketsink.c:
+	* gst/tcp/gstsocketsrc.c:
+	* gst/tcp/gsttcpclientsink.c:
+	* gst/tcp/gsttcpclientsrc.c:
+	* gst/tcp/gsttcpserversink.c:
+	* gst/tcp/gsttcpserversrc.c:
+	* gst/videoconvert/gstvideoconvert.c:
+	* gst/videorate/gstvideorate.c:
+	* gst/videoscale/gstvideoscale.c:
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/volume/gstvolume.c:
+	* sys/ximage/ximagesink.c:
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.c:
+	  docs: Convert gtkdoc comments to markdown
+	  Modernizing the documentation, making it simpler to read an
+	  modify and allowing us to possibly switch to hotdoc in the
+	  future.
+
+2017-03-10 17:40:13 +0200  Vivia Nikolaidou <vivia@toolsonair.com>
+
+	* gst-libs/gst/video/gstvideotimecode.c:
+	  videotimecode: Fix invalid timecode right before a new second
+	  When initializing a timecode from a GDateTime, and the remaining time
+	  until the new second is less than half a frame (according to the given
+	  frame rate), it would lead to the creation of an invalid timecode, e.g.
+	  00:00:00:25 (at 25 fps) instead of 00:00:01:00. Fixed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779866
+
+2017-03-10 18:22:27 +1100  Matthew Waters <matthew@centricular.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: fix build error on i386
+	  Use G_GUINT64_FORMAT for guint64 values.
+	  Introduced by fcb63e77a9de42cfb50da03a4925b06704006be3
+	  Found by Alexander Larsson
+	  gstvideodecoder.c: In function 'gst_video_decoder_have_frame':
+	  gstvideodecoder.c:3312:51: error: format '%u' expects argument of type 'unsigned int', but argument 8 has type 'guint64 {aka long long unsigned int}' [-Werror=format=]
+
+2017-03-04 10:08:04 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-pbtypes.xml:
+	* gst/encoding/Makefile.am:
+	* gst/encoding/meson.build:
+	* sys/xvimage/meson.build:
+	  Fix plugin filenames to match pugin names
+	  - libgstencodebin.so is now libgstencoding.so
+	  - libgstximage.so is now libgstximagesink.so (meson only)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779344
+
+2017-03-09 01:40:06 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/playback/gsturisourcebin.c:
+	  urisourcebin: Shrink queue2 max-size-time buffering
+	  The expanded 4 second buffering was making radio streams that are
+	  being delivered at real-time speeds too slow. We might need
+	  a better plan for matching the queue2 size to incoming bitrate
+	  in the absence of tag information or timestamping.
+	  In uridecodebin, it used tags on the output of decodebin to
+	  adjust the queue2 buffering, but urisourcebin doesn't have that
+	  view - decodebin is downstream from us.
+
+2017-03-08 15:47:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/gstvideotimecode.c:
+	  videotimecode: Unref GDateTime in error cases
+
+2017-03-07 14:59:36 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaybin3.c:
+	* gst/playback/gsturisourcebin.c:
+	  playbin3/urisourcebin: Enable buffering by default
+	  This only has effect on network streams in these elements, and by
+	  enabling it by default we get the same behaviour as in playbin2.
+
+2017-03-07 00:25:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/gst-play.c:
+	  tools: gst-play: improve verbose output of property notifications
+	  Use new message notify API and print caps and taglists in a nicer
+	  to read way, just like gst-launch-1.0 does nowadays, without
+	  escaping everything three times.
+
+2017-03-06 19:14:48 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Fix a leak introduced in fcb63e
+	  CID: 1402055
+
+2017-03-04 00:27:30 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Fix reverse playback
+	  Fix various issues with reverse playback by clearing tracking
+	  vars when working in reverse, and where possible using the
+	  timestamp interpolation code to generate timestamps for
+	  outgoing buffers. Make sure to mark things as discontinuous
+	  only when looping backward to a new position and fix seeking
+	  to the next page when starting.
+
+2017-03-04 00:22:17 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Timestamp tracking fixes
+	  In gst_ogg_demux_do_seek() when calculating the
+	  keyframe time, account for a non-zero start-time
+	  Handle a discontinuous first packet in
+	  gst_ogg_demux_setup_first_granule() because that's pretty
+	  normal after a seek. Also differentiate between a genuinely
+	  truncated first packet and just bailing out early, by not using
+	  granule = -1 as an error code.
+	  Make the debug output logs clearer about which timestamps
+	  are stream times (PTS) and which are ogg timestamps.
+
+2017-03-04 00:15:50 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Don't arbitrarily guess a timestamp of 0
+	  When we haven't managed to manufacture a timestamp for
+	  a packet, don't just guess '0', leave it at none and
+	  let downstream decide
+
+2017-03-04 00:12:26 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ext/theora/gsttheoradec.c:
+	  theoradec: Make the keyframe condition check clearer
+	  Make the keyframe checking if statement easier to
+	  read, and add some debug when detecting a keyframe
+
+2017-03-04 00:18:07 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Restrict frame timestamp guessing in reverse mode
+	  Don't guess a timestamp of the start of the segment when running
+	  in reverse mode, as more likely it means we're discontinuous somewhere
+	  in the middle of the segment, and we'll fix up timestamps once
+	  the frames are decoded and reversed.
+
+2017-03-04 00:10:27 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Store buffer information even without PTS
+	  When a PTS is not set, we still want to store the rest of the
+	  buffer information, or else we lose important things like the
+	  duration or buffer flags when parsing.
+
+2017-03-03 10:52:15 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/vorbis/gstvorbisdec.c:
+	  vorbisdec: Reset decoder in more situations
+	  This is a followup commit to b95725c37e70ad3c1ec8dadb401388db375df482
+	  * Resetting the decoder should only happen when we get a new initialization
+	  header (0x01) and not on the other headers
+	  * The initialized variable only gets set to TRUE once all headers have
+	  been parsed. Also check if the vorbis_info struct has been properly resetted
+	  also. Failure to do that would cause vorbisdec to error if it got
+	  two initialization header in a row (the first would configure the underlying
+	  library and the second one would error out because it's already initialized)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779515
+
+2017-02-28 15:51:00 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rawparse/gstrawbaseparse.c:
+	  rawbaseparse: Assert that frame size is > 0
+	  We would later divide by zero otherwise, and generally won't do the
+	  right thing.
+	  CID 1401383
+
+2017-02-28 15:26:36 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rawparse/gstrawaudioparse.c:
+	  rawaudioparse: Fix potential NULL pointer dereference
+	  CID 1364606
+
+2017-02-28 15:17:24 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstdecodebin3.c:
+	  decodebin3: Fix potential NULL pointer dereference on slot deactivation
+	  CID 1363331
+
+2017-02-28 15:15:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gsturisourcebin.c:
+	  urisourcebin: Fix inverted check for an existing slot
+	  CID 1363330
+
+2017-02-28 15:13:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstdecodebin3-parse.c:
+	  decodebin3: Handle stream-start events without group id correctly
+	  CID 1363327
+
+2017-02-28 15:11:42 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Handle return value of gst_video_decoder_drain()
+	  CID 1362896
+
+2017-02-09 12:44:51 +0000  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* ext/vorbis/gstvorbisdec.c:
+	  vorbisdec: reset decoder on vorbis headers update
+	  if the vorbis encoder receives new headers it must be
+	  reset and re-initialized to continue decoding, e. g.
+	  for live streams
+
+2017-02-27 19:04:30 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/vorbis/gstvorbisenc.c:
+	  vorbisenc: Resend (new, updated) headers when the caps are changing
+	  The headers are usually changing together with the caps, and they are
+	  nedeed for correct decoding.
+
+2017-02-25 19:19:32 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rawparse/Makefile.am:
+	  rawparse: fix linking for audio/video libs
+	  Broke build in gnome continuous
+
+2017-02-25 15:14:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rawparse/meson.build:
+	  rawparse: Fix meson build
+
+2017-02-25 14:48:40 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/gst-plugins-base-plugins.interfaces:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst/meson.build:
+	* gst/rawparse/Makefile.am:
+	* gst/rawparse/meson.build:
+	* gst/rawparse/plugin.c:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	  rawparse: Move to gst-plugins-base
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774544
+
+2017-02-25 14:32:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	  Merge branch 'rawparse-moved-plugin'
+
+2017-02-24 15:59:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  meson: Update version
+
+2017-02-24 15:37:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.11.2 ===
+
+2017-02-24 15:07:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	  Release 1.11.2
+
+2017-02-24 12:46:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2017-02-24 10:04:21 +0200  Sebastian Dröge <sebastian@centricular.com>
 
@@ -61,6 +844,16 @@
 
 	* ext/vorbis/gstvorbiscommon.c:
 	  vorbis: Fix channel reorder map for 5.1, 6.1 and 7.1
+
+2017-02-18 20:18:50 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rawparse/gstrawbaseparse.c:
+	* tests/check/elements/rawvideoparse.c:
+	  rawbaseparse: Drop incomplete frames at EOS
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=773666
+	  This would ideally be solved in baseparse but that requires further
+	  thought at this point, and in the meantime it would be good to have
+	  rawbaseparse not assert on this but handle it gracefully instead.
 
 2017-02-15 21:41:47 +0200  Sebastian Dröge <sebastian@centricular.com>
 
@@ -1236,6 +2029,11 @@
 	  function. Although we're in READY!
 	  https://bugzilla.gnome.org/show_bug.cgi?id=775687
 
+2016-12-05 18:17:30 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rawparse/gstrawvideoparse.c:
+	  rawvideoparse: fix typos in property description
+
 2016-12-03 08:19:15 +0100  Edward Hervey <bilboed@bilboed.com>
 
 	* README:
@@ -1396,6 +2194,18 @@
 	  Rename GstAudioConverter->chain_pack to chain_end.
 	  https://bugzilla.gnome.org/show_bug.cgi?id=773073
 
+2016-11-28 14:25:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rawparse/gstrawaudioparse.c:
+	* gst/rawparse/gstrawaudioparse.h:
+	* gst/rawparse/gstrawbaseparse.c:
+	* gst/rawparse/gstrawbaseparse.h:
+	* gst/rawparse/gstrawvideoparse.c:
+	* gst/rawparse/gstrawvideoparse.h:
+	* gst/rawparse/gstunalignedaudioparse.c:
+	* gst/rawparse/gstunalignedvideoparse.c:
+	  rawparse: Whitespace cleanup
+
 2016-11-28 17:12:26 +0530  Garima Gaur <garima.g@samsung.com>
 
 	* gst/playback/gstsubtitleoverlay.c:
@@ -1416,6 +2226,25 @@
 	  discoverer: Also stop waiting for subtitles if we get EOS
 	  We're not going to get a buffer or GAP event anymore after EOS and would
 	  wait forever otherwise.
+
+2016-11-27 12:40:53 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rawparse/gstrawbaseparse.c:
+	  rawbaseparse: Fix output buffer size trimming
+	  For frame->buffer, baseparse is doing that automatically for us. For
+	  frame->output_buffer it doesn't and assumes that the subclass is already
+	  doing that. Consistency!
+
+2016-11-27 11:44:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rawparse/gstrawaudioparse.c:
+	* gst/rawparse/gstrawbaseparse.c:
+	* gst/rawparse/gstrawbaseparse.h:
+	* gst/rawparse/gstrawvideoparse.c:
+	  rawparse: Properly align raw audio/video output buffers
+	  That is, aligned to the basic type for audio and to 32 bytes for video.
+	  Fixes crashes if the raw buffers are passed to SIMD processing functions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774428
 
 2016-11-26 13:53:49 +0200  Sebastian Dröge <sebastian@centricular.com>
 
@@ -1892,6 +2721,13 @@
 	* gst/pbtypes/meson.build:
 	  meson: Add pbtypes plugin
 
+2016-11-02 09:36:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/elements/rawvideoparse.c:
+	  Revert "tests: rawvideoparse: add test for flow error handling"
+	  This reverts commit 280b4ac2ffc63908a74944f50589b2630be16232.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773666
+
 2015-05-28 22:50:05 +1000  Jan Schmidt <jan@centricular.com>
 
 	* configure.ac:
@@ -1972,6 +2808,13 @@
 	  Having it inside the caps for these cases simplifies code and makes it
 	  possible to express these requirements more explicitly with the caps.
 	  https://bugzilla.gnome.org/show_bug.cgi?id=771376
+
+2016-10-29 11:33:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/rawvideoparse.c:
+	  tests: rawvideoparse: add test for flow error handling
+	  Also needs fixes in baseparse:
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773666
 
 2016-11-01 18:08:45 +0000  Tim-Philipp Müller <tim@centricular.com>
 
@@ -2185,6 +3028,15 @@
 	* po/vi.po:
 	* po/zh_CN.po:
 	  Update .po files
+
+2016-10-29 11:31:28 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rawparse/gstrawbaseparse.c:
+	  rawparse: pass flow returns upstream
+	  rawvideoparse wouldn't error out on not-negotiated,
+	  but would just keep on going, because it didn't pass
+	  the flow return value back to the parent class and
+	  thus upstream, so the source wouldnt' stop streaming.
 
 2016-10-25 08:52:52 -0700  Scott D Phillips <scott.d.phillips@intel.com>
 
@@ -3100,6 +3952,19 @@
 	  there before in any case, which was to just drop all buffers if rate < 0.0.
 	  https://bugzilla.gnome.org/show_bug.cgi?id=769624
 
+2016-08-19 12:24:58 +0100  Luis de Bethencourt <luisbg@osg.samsung.com>
+
+	* gst/rawparse/gstrawvideoparse.c:
+	  rawvideoparse: fix typo in comment
+	  Small typo in the comment explaining the code fixed by the previous commit.
+	  Fixing it.
+
+2016-08-19 14:19:38 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rawparse/gstrawvideoparse.c:
+	  rawvideoparse: Revert last commit and actually remember the physically last plane
+	  Instead of just always taking the last one as before.
+
 2016-08-12 21:04:03 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
 
 	* gst-libs/gst/fft/kiss_fft_s16.h:
@@ -3110,6 +3975,15 @@
 	  This really only makes a difference for MSVC, which has it starting from
 	  Visual Studio 2015.
 
+2016-08-19 11:57:33 +0100  Luis de Bethencourt <luisbg@osg.samsung.com>
+
+	* gst/rawparse/gstrawvideoparse.c:
+	  rawvideoparse: remove unused assignment
+	  Value in last_plane will be overwritten before used, remove unused
+	  asignment.
+	  Fixes commit 91cf5ac69f9c99fe41d60f42b4174915dd135e7b
+	  CID 1371462
+
 2016-08-19 09:27:01 +0200  Wim Taymans <wtaymans@redhat.com>
 
 	* gst-libs/gst/allocators/gstfdmemory.c:
@@ -3118,6 +3992,26 @@
 	  Add GST_FD_MEMORY_FLAG_DONT_CLOSE to avoid closing the fd when the
 	  memory is freed. When you can guarantee the lifetime of the fd is
 	  longer than the memory, this can save a dup() call.
+
+2016-08-08 17:54:46 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* tests/check/elements/rawaudioparse.c:
+	* tests/check/elements/rawvideoparse.c:
+	  rawparse: Fix and extend unit tests
+	  * Add caps change test to unit tests
+	  * Cleanup leftover buffers after each unit test
+	  * Add missing rawvideoparse entry in .gitignore
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769637
+
+2016-08-16 09:31:40 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* gst/rawparse/gstrawvideoparse.c:
+	* gst/rawparse/gstrawvideoparse.h:
+	* tests/check/elements/rawvideoparse.c:
+	  rawvideoparse: Compute plane offsets & strides if no custom ones are set
+	  This is useful to ensure that the offsets and strides are computed if
+	  only width, height, format etc. in the property config are set.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769797
 
 2016-08-17 13:03:43 +0300  Vivia Nikolaidou <vivia@toolsonair.com>
 
@@ -3274,6 +4168,17 @@
 	  Scalable High Intra(G.10.1.3) profiles to the profile list
 	  https://bugzilla.gnome.org/show_bug.cgi?id=769303
 
+2016-07-29 10:49:26 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rawparse/gstrawaudioparse.c:
+	  rawaudioparse: Use G_GINT64_MODIFIER for portability
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769295
+
+2016-07-29 10:07:23 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rawparse/gstunalignedaudioparse.c:
+	  unalignedaudioparse: Fix element factory name of inner parser
+
 2016-07-26 17:46:02 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst-libs/gst/rtp/gstrtpbuffer.c:
@@ -3287,6 +4192,33 @@
 
 	* gst/playback/gstparsebin.c:
 	  parsebin: maintain original order when creating fallback stream collection
+
+2016-07-25 17:54:09 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* gst/rawparse/Makefile.am:
+	  rawparse: Remove old parser code and wrap new parsers in old elements
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767011
+
+2016-07-25 13:45:40 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* gst/rawparse/Makefile.am:
+	* gst/rawparse/gstrawaudioparse.c:
+	* gst/rawparse/gstrawaudioparse.h:
+	* gst/rawparse/gstrawbaseparse.c:
+	* gst/rawparse/gstrawbaseparse.h:
+	* gst/rawparse/gstrawvideoparse.c:
+	* gst/rawparse/gstrawvideoparse.h:
+	* gst/rawparse/gstunalignedaudioparse.c:
+	* gst/rawparse/gstunalignedvideoparse.c:
+	* gst/rawparse/gstunalignedvideoparse.h:
+	* gst/rawparse/plugin.c:
+	* gst/rawparse/unalignedvideo.h:
+	* tests/check/elements/rawaudioparse.c:
+	* tests/check/elements/rawvideoparse.c:
+	  rawparse: Add new raw audio and video parser elements
+	  The new rawaudioparse and rawvideoparse elements are based on GstBaseParse
+	  and completely replace audioparse and videoparse
+	  https://bugzilla.gnome.org/show_bug.cgi?id=767011
 
 2016-03-20 14:37:03 +1100  Jan Schmidt <jan@centricular.com>
 
@@ -4423,6 +5355,23 @@
 	* docs/plugins/inspect/plugin-ximagesink.xml:
 	* docs/plugins/inspect/plugin-xvimagesink.xml:
 	  docs: Update for git master
+
+2016-03-04 22:10:47 +0100  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* gst/rawparse/Makefile.am:
+	* gst/rawparse/gstunalignedaudioparse.c:
+	* gst/rawparse/gstunalignedaudioparse.h:
+	* gst/rawparse/plugin.c:
+	* gst/rawparse/unalignedaudio.h:
+	  rawparse: Add unaligned raw audio parsing to audioparse and add new element
+	  This helps in cases where raw audio data is being delivered, but the
+	  buffers do not come in sample aligned sizes. The new unalignedaudioparse
+	  bin can be autoplugged and configures an internal audioparse element to
+	  align the data. audioparse itself gets support for audio/x-unaligned-raw
+	  input caps; the output caps then contain the same information, except that
+	  the name is changed to audio/x-raw (since audioparse aligns the data).
+	  This ensures that souphttpsrc ! audioparse still works.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=689460
 
 2016-05-14 15:43:24 +0300  Matthew Waters <matthew@centricular.com>
 
@@ -12549,6 +13498,12 @@
 	* gst-libs/gst/audio/gstaudiosrc.h:
 	  audio: The delay vfunc returns the number of frames, not samples
 	  https://bugzilla.gnome.org/show_bug.cgi?id=748289
+
+2015-04-26 18:04:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rawparse/Makefile.am:
+	  Remove obsolete Android build cruft
+	  This is not needed any longer.
 
 2015-04-26 17:49:33 +0100  Tim-Philipp Müller <tim@centricular.com>
 
@@ -27403,6 +28358,11 @@
 
 2012-10-24 12:16:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
+	* gst/rawparse/Makefile.am:
+	  gst: Add better support for static plugins
+
+2012-10-24 12:16:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
 	* ext/opus/Makefile.am:
 	  gst: Add better support for static plugins
 
@@ -27955,6 +28915,11 @@
 	* gst/playback/gsturidecodebin.c:
 	  uridecodebin: remove commented code
 	  This is dead since ~6 years.
+
+2013-03-27 22:24:03 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	  Merge SBC decoder and encoder from bluez
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690582
 
 2013-03-27 22:24:03 +0000  Tim-Philipp Müller <tim@centricular.net>
 
@@ -37610,10 +38575,21 @@
 	  gst/h264parse/gsth264parse.c
 	  gst/videoparsers/gsth264parse.c
 
+2012-04-06 14:52:12 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
+	  Conflicts:
+	  gst/h264parse/gsth264parse.c
+	  gst/videoparsers/gsth264parse.c
+
 2012-04-06 10:54:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* gst/playback/gstdecodebin.c:
 	  playback: Remove gstdecodebin.c, which is nowaday unused anyway
+
+2012-04-05 17:15:11 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	  Merge remote-tracking branch 'origin/0.10'
 
 2012-04-05 17:15:11 -0400  Thibault Saunier <thibault.saunier@collabora.com>
 
@@ -37624,6 +38600,11 @@
 	* common:
 	  Automatic update of common submodule
 	  From 7fda524 to 464fe15
+
+2012-04-05 18:02:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rawparse/plugin.c:
+	  gst: Update for GST_PLUGIN_DEFINE() API changes
 
 2012-04-05 18:02:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
@@ -37835,8 +38816,17 @@
 
 2012-04-04 14:41:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
+	* gst/rawparse/Makefile.am:
+	  gst: Update versioning
+
+2012-04-04 14:41:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
 	* ext/opus/Makefile.am:
 	  gst: Update versioning
+
+2012-04-04 12:06:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
 
 2012-04-04 12:06:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
@@ -37883,6 +38873,12 @@
 
 	* gst/videoconvert/gstvideoconvert.c:
 	  videoconvert: plug caps leak
+
+2012-04-02 15:31:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
+	  Conflicts:
+	  gst/mpegtsdemux/tsdemux.c
 
 2012-04-02 15:31:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
@@ -38136,6 +39132,10 @@
 
 	  Merge branch 'master' of ssh://git.freedesktop.org/git/gstreamer/gst-plugins-bad
 
+2012-03-29 18:04:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge branch 'master' of ssh://git.freedesktop.org/git/gstreamer/gst-plugins-bad
+
 2012-03-29 17:41:55 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
 
 	* tests/check/libs/libsabi.c:
@@ -38151,6 +39151,89 @@
 
 	* docs/design/draft-hw-acceleration.txt:
 	  design: First go at hardware-acceleration design doc
+
+2012-03-29 17:41:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
+	  Conflicts:
+	  NEWS
+	  RELEASE
+	  common
+	  configure.ac
+	  docs/libs/gst-plugins-bad-libs-sections.txt
+	  docs/plugins/gst-plugins-bad-plugins.args
+	  docs/plugins/gst-plugins-bad-plugins.hierarchy
+	  docs/plugins/gst-plugins-bad-plugins.interfaces
+	  docs/plugins/inspect/plugin-adpcmdec.xml
+	  docs/plugins/inspect/plugin-adpcmenc.xml
+	  docs/plugins/inspect/plugin-assrender.xml
+	  docs/plugins/inspect/plugin-audiovisualizers.xml
+	  docs/plugins/inspect/plugin-autoconvert.xml
+	  docs/plugins/inspect/plugin-bayer.xml
+	  docs/plugins/inspect/plugin-bz2.xml
+	  docs/plugins/inspect/plugin-camerabin2.xml
+	  docs/plugins/inspect/plugin-celt.xml
+	  docs/plugins/inspect/plugin-dataurisrc.xml
+	  docs/plugins/inspect/plugin-debugutilsbad.xml
+	  docs/plugins/inspect/plugin-dtmf.xml
+	  docs/plugins/inspect/plugin-dtsdec.xml
+	  docs/plugins/inspect/plugin-dvbsuboverlay.xml
+	  docs/plugins/inspect/plugin-dvdspu.xml
+	  docs/plugins/inspect/plugin-faac.xml
+	  docs/plugins/inspect/plugin-faad.xml
+	  docs/plugins/inspect/plugin-gsm.xml
+	  docs/plugins/inspect/plugin-h264parse.xml
+	  docs/plugins/inspect/plugin-mms.xml
+	  docs/plugins/inspect/plugin-modplug.xml
+	  docs/plugins/inspect/plugin-mpeg2enc.xml
+	  docs/plugins/inspect/plugin-mpegdemux2.xml
+	  docs/plugins/inspect/plugin-mpegtsdemux.xml
+	  docs/plugins/inspect/plugin-mpegvideoparse.xml
+	  docs/plugins/inspect/plugin-mplex.xml
+	  docs/plugins/inspect/plugin-pcapparse.xml
+	  docs/plugins/inspect/plugin-rawparse.xml
+	  docs/plugins/inspect/plugin-rtpmux.xml
+	  docs/plugins/inspect/plugin-rtpvp8.xml
+	  docs/plugins/inspect/plugin-scaletempo.xml
+	  docs/plugins/inspect/plugin-schro.xml
+	  docs/plugins/inspect/plugin-sdp.xml
+	  docs/plugins/inspect/plugin-segmentclip.xml
+	  docs/plugins/inspect/plugin-shm.xml
+	  docs/plugins/inspect/plugin-videomaxrate.xml
+	  docs/plugins/inspect/plugin-videoparsersbad.xml
+	  docs/plugins/inspect/plugin-vp8.xml
+	  docs/plugins/inspect/plugin-y4mdec.xml
+	  ext/celt/gstceltdec.c
+	  ext/dts/gstdtsdec.c
+	  ext/modplug/gstmodplug.cc
+	  ext/opus/gstopusenc.c
+	  gst-libs/gst/video/gstbasevideocodec.c
+	  gst-libs/gst/video/gstbasevideocodec.h
+	  gst-libs/gst/video/gstbasevideodecoder.c
+	  gst-libs/gst/video/gstbasevideodecoder.h
+	  gst-libs/gst/video/gstbasevideoencoder.c
+	  gst-libs/gst/video/gstbasevideoencoder.h
+	  gst/adpcmdec/Makefile.am
+	  gst/audiovisualizers/gstbaseaudiovisualizer.c
+	  gst/h264parse/gsth264parse.c
+	  gst/mpegdemux/mpegtsparse.c
+	  gst/mpegtsdemux/mpegtsbase.c
+	  gst/mpegtsdemux/mpegtspacketizer.c
+	  gst/mpegtsdemux/mpegtsparse.c
+	  gst/mpegtsdemux/tsdemux.c
+	  gst/mpegtsdemux/tsdemux.h
+	  gst/mxf/mxfdemux.c
+	  gst/rawparse/gstaudioparse.c
+	  gst/videoparsers/gsth263parse.c
+	  gst/videoparsers/gsth264parse.c
+	  sys/d3dvideosink/d3dvideosink.c
+	  sys/decklink/gstdecklinksink.cpp
+	  sys/dvb/gstdvbsrc.c
+	  sys/shm/gstshmsrc.c
+	  sys/vdpau/h264/gstvdph264dec.c
+	  sys/vdpau/mpeg/gstvdpmpegdec.c
+	  tests/examples/opencv/gst_element_print_properties.c
+	  win32/common/config.h
 
 2012-03-29 17:41:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
@@ -39930,6 +41013,12 @@
 	  Conflicts:
 	  gst/colorspace/colorspace.c
 
+2012-02-21 10:06:16 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  gst/colorspace/colorspace.c
+
 2012-02-21 10:05:20 +0100  David Schleef <ds@schleef.org>
 
 	* gst/videoconvert/videoconvert.c:
@@ -39962,6 +41051,13 @@
 	* gst/videoconvert/videoconvert.c:
 	  videoconvert: clamp intermediates when dithering
 	  Port from the colorspace plugin in -bad.
+
+2012-02-20 16:07:50 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  ext/opus/gstopusparse.c
+	  gst/colorspace/colorspace.c
 
 2012-02-20 16:07:50 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -40167,6 +41263,19 @@
 
 	  Merge branch 'master' into 0.11
 
+2012-02-17 09:01:56 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2012-02-16 14:33:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  gst/mpegtsdemux/mpegtsbase.c
+	  gst/mpegtsdemux/mpegtspacketizer.c
+	  gst/mpegtsdemux/tsdemux.c
+	  gst/mve/gstmvedemux.c
+
 2012-02-16 14:33:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	  Merge branch 'master' into 0.11
@@ -40204,6 +41313,10 @@
 
 	* gst-libs/gst/audio/gstaudiodecoder.c:
 	  audiodecoder: assert some more that subclass parsed frame has proper len
+
+2012-02-15 17:14:34 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2012-02-15 17:14:34 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
 
@@ -40265,6 +41378,10 @@
 	* gst-libs/gst/tag/gsttagdemux.c:
 	  tagdemux: fix src query handler
 	  We don't want to blindly forward all queries.
+
+2012-02-14 11:19:04 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2012-02-14 11:19:04 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -40486,6 +41603,24 @@
 	  We can't use G_DEFINE_*TYPE here because we need the klass in the _init
 	  method to get to the padtemplates. Fixes 'GstTagDemux subclass GstTagDemux
 	  did not set up a {sink,src} pad template' warnings.
+
+2012-02-10 16:46:50 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  ext/chromaprint/gstchromaprint.c
+	  ext/mpeg2enc/Makefile.am
+	  ext/voaacenc/gstvoaacenc.c
+	  gst/dvbsuboverlay/gstdvbsuboverlay.c
+	  gst/mpegtsdemux/mpegtsbase.c
+	  gst/sdp/gstsdpdemux.c
+	  gst/videoparsers/gsth264parse.c
+	  sys/d3dvideosink/d3dvideosink.c
+	  tests/examples/camerabin/gst-camera-perf.c
+	  tests/examples/camerabin/gst-camerabin-test.c
+	  tests/examples/camerabin2/gst-camerabin2-test.c
+	  tests/examples/mxf/mxfdemux-structure.c
+	  tests/examples/scaletempo/demo-main.c
 
 2012-02-10 16:46:50 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -41149,6 +42284,15 @@
 	  gst/colorspace/colorspace.c
 	  gst/mpegvideoparse/mpegvideoparse.c
 
+2012-01-25 13:22:43 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  configure.ac
+	  ext/kate/gstkateenc.c
+	  gst/colorspace/colorspace.c
+	  gst/mpegvideoparse/mpegvideoparse.c
+
 2012-01-25 12:50:44 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
 
 	* gst/adder/gstadder.c:
@@ -41769,6 +42913,10 @@
 
 	  Merge remote-tracking branch 'origin/master' into 0.11
 
+2012-01-13 00:11:54 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+
 2012-01-12 23:35:44 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* gst-libs/gst/tag/gstvorbistag.c:
@@ -41933,6 +43081,14 @@
 
 	* gst/playback/gststreamsynchronizer.c:
 	  streamsynchronizer: Don't unref the parent in the event function
+
+2012-01-10 15:50:37 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  gst/mpegtsdemux/tsdemux.c
+	  gst/videoparsers/gsth264parse.c
+	  tests/check/elements/camerabin2.c
 
 2012-01-10 15:50:37 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
@@ -42579,6 +43735,39 @@
 	  Merge remote-tracking branch 'origin/master' into 0.11
 	  Conflicts:
 	  tests/examples/camerabin2/Makefile.am
+
+2011-12-30 11:49:27 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+	  Conflicts:
+	  tests/examples/camerabin2/Makefile.am
+
+2011-12-30 11:41:17 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11-premerge
+	  Conflicts:
+	  docs/libs/Makefile.am
+	  ext/kate/gstkatetiger.c
+	  ext/opus/gstopusdec.c
+	  ext/xvid/gstxvidenc.c
+	  gst-libs/gst/basecamerabinsrc/Makefile.am
+	  gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c
+	  gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h
+	  gst-libs/gst/video/gstbasevideocodec.c
+	  gst-libs/gst/video/gstbasevideocodec.h
+	  gst-libs/gst/video/gstbasevideodecoder.c
+	  gst-libs/gst/video/gstbasevideoencoder.c
+	  gst/asfmux/gstasfmux.c
+	  gst/audiovisualizers/gstwavescope.c
+	  gst/camerabin2/gstcamerabin2.c
+	  gst/debugutils/gstcompare.c
+	  gst/frei0r/gstfrei0rmixer.c
+	  gst/mpegpsmux/mpegpsmux.c
+	  gst/mpegtsmux/mpegtsmux.c
+	  gst/mxf/mxfmux.c
+	  gst/videomeasure/gstvideomeasure_ssim.c
+	  gst/videoparsers/gsth264parse.c
+	  gst/videoparsers/gstmpeg4videoparse.c
 
 2011-12-30 11:41:17 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
 
@@ -44789,9 +45978,23 @@
 
 	  Merge remote-tracking branch 'origin/master' into 0.11
 
+2011-11-28 23:20:58 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+
 2011-11-28 23:20:32 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	  Merge commit '7521b597f4dc49d8d168f368f0e7ebaf98a72156' into 0.11
+
+2011-11-28 23:20:32 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge commit '7521b597f4dc49d8d168f368f0e7ebaf98a72156' into 0.11
+
+2011-11-28 23:20:02 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge commit '26d6add9457f00ce8ec13844368466f0e3816e5d' into 0.11
+	  Conflicts:
+	  ext/rtmp/gstrtmpsink.c
 
 2011-11-28 23:20:02 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
@@ -45043,11 +46246,24 @@
 
 	  Merge remote-tracking branch 'origin/master' into 0.11
 
+2011-11-27 23:33:45 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+
 2011-11-27 20:14:08 +0100  Matej Knopp <matej.knopp@gmail.com>
 
 	* gst/playback/gsturidecodebin.c:
 	  uridecodebin: fix debug message printf format compiler warning
 	  https://bugzilla.gnome.org/show_bug.cgi?id=662607
+
+2011-11-26 15:37:25 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+	  Conflicts:
+	  ext/opus/gstopusdec.c
+	  ext/opus/gstopusparse.c
+	  gst-libs/gst/video/gstbasevideodecoder.c
+	  gst-libs/gst/video/gstbasevideodecoder.h
 
 2011-11-26 15:37:25 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
@@ -45127,6 +46343,16 @@
 
 	* gst/playback/gstplaybin2.c:
 	  docs: mention explicitly that playbin2 signals are emitted from a streaming thread
+
+2011-11-25 12:48:58 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+	  Conflicts:
+	  ext/faac/gstfaac.c
+	  ext/opus/gstopusdec.c
+	  ext/opus/gstopusenc.c
+	  gst/audiovisualizers/gstspacescope.c
+	  gst/colorspace/colorspace.c
 
 2011-11-25 12:48:58 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
 
@@ -45376,6 +46602,19 @@
 	  gst/filter/gstiir.c
 	  gst/playondemand/gstplayondemand.c
 
+2011-11-23 11:08:39 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  ext/opus/gstopusdec.c
+	  ext/opus/gstopusenc.c
+	  ext/opus/gstopusparse.c
+	  gst/audiovisualizers/gstwavescope.c
+	  gst/filter/Makefile.am
+	  gst/filter/gstfilter.c
+	  gst/filter/gstiir.c
+	  gst/playondemand/gstplayondemand.c
+
 2011-11-23 10:50:53 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	  Merge branch 'master' into 0.11
@@ -45589,6 +46828,17 @@
 
 	* gst-libs/gst/audio/gstaudiobasesink.c:
 	  fix for scheduling mode rename
+
+2011-11-17 17:32:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  ext/celt/gstceltdec.c
+	  ext/opus/gstopusdec.c
+	  ext/opus/gstopusdec.h
+	  ext/opus/gstopusenc.c
+	  ext/opus/gstopusenc.h
+	  ext/opus/gstopusparse.c
 
 2011-11-17 17:32:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -46410,11 +47660,19 @@
 
 	  Merge branch 'master' into 0.11
 
+2011-11-11 10:39:17 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
 2011-11-10 23:02:35 +0200  Stefan Sauer <ensonic@users.sf.net>
 
 	* gst/volume/gstvolume.c:
 	* tests/icles/audio-trickplay.c:
 	  controller: port controller api changes
+
+2011-11-10 18:34:48 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2011-11-10 18:34:48 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -46544,6 +47802,10 @@
 
 	  Merge branch 'master' into 0.11
 
+2011-11-10 12:14:19 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
 2011-11-10 11:42:10 +0100  Edward Hervey <edward@collabora.com>
 
 	* tests/check/libs/struct_arm.h:
@@ -46564,6 +47826,16 @@
 2011-11-09 12:24:37 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	  Merge branch 'master' into 0.11
+
+2011-11-09 12:24:37 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2011-11-09 12:19:04 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  gst/colorspace/colorspace.c
 
 2011-11-09 12:19:04 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -46871,6 +48143,10 @@
 
 	  Merge branch 'master' into 0.11
 
+2011-11-07 10:02:00 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
 2011-11-04 22:00:43 +0100  Stefan Sauer <ensonic@users.sf.net>
 
 	* gst/adder/gstadder.c:
@@ -46926,6 +48202,10 @@
 
 	* ext/ogg/gstoggdemux.c:
 	  oggdemux: fix somtimes pad
+
+2011-11-04 11:01:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2011-11-04 11:01:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -47229,6 +48509,10 @@
 
 	  Merge branch 'master' into 0.11
 
+2011-11-02 10:31:24 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
 2011-10-31 02:39:48 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/netbuffer/gstnetbuffer.c:
@@ -47300,6 +48584,10 @@
 	* tests/icles/audio-trickplay.c:
 	  Update for pad API changes
 	  GstProbeType, GstProbeReturn and GstActivateMode -> GstPad*
+
+2011-10-31 14:51:32 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
 
 2011-10-31 14:51:32 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
@@ -47458,6 +48746,10 @@
 	* gst/subparse/gstsubparse.c:
 	* gst/typefind/gsttypefindfunctions.c:
 	  fix compilation
+
+2011-10-27 16:13:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2011-10-27 16:13:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -47636,6 +48928,10 @@
 
 	  Merge branch 'master' into 0.11
 
+2011-10-18 14:32:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
 2011-10-18 13:00:29 +0200  René Stadler <rene.stadler@collabora.co.uk>
 
 	* gst/playback/gstsubtitleoverlay.c:
@@ -47681,6 +48977,10 @@
 
 	* gst-libs/gst/audio/audio.c:
 	  audio: Indent and doc fixes
+
+2011-10-16 15:28:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2011-10-16 15:28:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -47809,6 +49109,10 @@
 
 	  Merge branch 'master' into 0.11
 
+2011-10-08 11:17:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
 2011-10-08 11:05:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* ext/vorbis/gstvorbisdec.c:
@@ -47892,6 +49196,10 @@
 
 	  Merge branch 'master' into 0.11
 
+2011-10-06 14:05:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
 2011-10-04 21:17:37 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
 
 	* gst/encoding/gstencodebin.c:
@@ -47950,6 +49258,10 @@
 
 	  Merge branch 'master' into 0.11
 
+2011-10-04 13:29:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
 2011-10-03 15:20:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* gst/playback/gstplaybin2.c:
@@ -47981,6 +49293,10 @@
 	  Only A/V streams are added at the moment, there does not seem to be
 	  a similar way to add other streams (eg, subtitles).
 	  https://bugzilla.gnome.org/show_bug.cgi?id=642878
+
+2011-10-03 11:24:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2011-10-03 11:24:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -48291,6 +49607,10 @@
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	  docs: minor docs fix
+
+2011-09-26 22:31:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2011-09-26 22:31:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -48925,6 +50245,10 @@
 	* gst-libs/gst/audio/audio.h:
 	  audio: update audio format enums to match changes in 0.11
 	  And add new audio format info stuff to docs.
+
+2011-09-06 16:13:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2011-09-06 16:13:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -49781,6 +51105,12 @@
 	  Conflicts:
 	  ext/resindvd/rsnwrappedbuffer.c
 
+2011-08-25 12:49:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  ext/resindvd/rsnwrappedbuffer.c
+
 2011-08-24 17:39:11 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
 
 	* ext/ogg/gstoggmux.c:
@@ -50410,6 +51740,10 @@
 	* gst/audioresample/resample.c:
 	  audioresample: fix build without orc
 	  https://bugzilla.gnome.org/show_bug.cgi?id=656781
+
+2011-08-17 19:01:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2011-08-17 19:01:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -51534,6 +52868,20 @@
 2011-08-04 09:40:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	  Merge branch 'master' into 0.11
+
+2011-08-04 09:40:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2011-08-04 09:36:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  common
+	  configure.ac
+	  gst/colorspace/colorspace.c
+	  gst/colorspace/colorspace.h
+	  gst/colorspace/gstcolorspace.c
 
 2011-08-04 09:36:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -54132,6 +55480,20 @@
 
 	* gst-plugins-base.spec.in:
 	  Add gobject introspection files to spec
+
+2011-06-15 16:06:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  android/aacparse.mk
+	  android/amrparse.mk
+	  android/h264parse.mk
+	  android/metadata.mk
+	  android/qtmux.mk
+	  android/sdpelem.mk
+	  configure.ac
+	  gst/qtmux/gstqtmux.c
+	  win32/common/config.h
 
 2011-06-15 14:53:56 +0100  Christian Fredrik Kalager Schaller <christian.schaller@collabora.co.uk>
 
@@ -57457,6 +58819,15 @@
 	  tag: fix typo in ID3 genres
 	  psychadelic -> psychedelic. Spotted by Sébastien Wilmet.
 	  https://bugzilla.gnome.org/show_bug.cgi?id=647399
+
+2011-04-11 00:36:35 -0400  Thibault Saunier <thibault.saunier@collabora.co.uk>
+
+	* gst/rawparse/Makefile.am:
+	  android: make it ready for androgenizer
+	  Remove the android/ top dir
+	  Fixe the Makefile.am to be androgenized
+	  To build gstreamer for android we are now using androgenizer which generates the needed Android.mk files.
+	  Androgenizer can be found here: http://git.collabora.co.uk/?p=user/derek/androgenizer.git
 
 2011-01-27 17:28:51 +0100  Alessandro Decina <alessandro.d@gmail.com>
 
@@ -62305,6 +63676,11 @@
 	  The stop time has to be advanced too so that running time keep in sync
 	  for gapless mode.
 	  https://bugzilla.gnome.org/show_bug.cgi?id=631312
+
+2010-10-07 10:34:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rawparse/Makefile.am:
+	  audioparse: Add support for setting the channel-positions
 
 2010-10-06 16:19:49 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
 
@@ -73148,6 +74524,12 @@
 	  audioresample: Fix timestamp drift
 	  Fixes bug #591934.
 
+2009-08-25 23:44:50 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* gst/rawparse/Makefile.am:
+	  resindvd, rawparse: fix LDFLAGS for gst-plugins-base libs
+	  Fixes #593063.
+
 2009-08-24 11:34:35 -0700  David Schleef <ds@schleef.org>
 
 	* ext/gnomevfs/gstgnomevfssrc.c:
@@ -73586,6 +74968,13 @@
 	* gst/videoscale/vs_image.c:
 	* gst/videotestsrc/gstvideotestsrc.c:
 	  gst: Remove dead assignments and resulting unused variables
+
+2009-08-08 07:59:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rawparse/Makefile.am:
+	  videoparse: Use libgstvideo for everything instead of our own calculations
+	  Also make RGB usage easier by providing xRGB, RGBx, etc. formats
+	  instead of requiring to set red_mask and friends.
 
 2009-08-07 13:05:42 +0200  Josep Torra <n770galaxy@gmail.com>
 
@@ -80788,6 +82177,130 @@
 	  * ext/ogg/gstoggdemux.h:
 	  Copy seqnums around to track playback segments and messages.
 
+2008-11-04 12:42:30 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  Don't install static libs for plugins. Fixes #550851 for -bad.
+	  Original commit message from CVS:
+	  * ext/alsaspdif/Makefile.am:
+	  * ext/amrwb/Makefile.am:
+	  * ext/apexsink/Makefile.am:
+	  * ext/arts/Makefile.am:
+	  * ext/artsd/Makefile.am:
+	  * ext/audiofile/Makefile.am:
+	  * ext/audioresample/Makefile.am:
+	  * ext/bz2/Makefile.am:
+	  * ext/cdaudio/Makefile.am:
+	  * ext/celt/Makefile.am:
+	  * ext/dc1394/Makefile.am:
+	  * ext/dirac/Makefile.am:
+	  * ext/directfb/Makefile.am:
+	  * ext/divx/Makefile.am:
+	  * ext/dts/Makefile.am:
+	  * ext/faac/Makefile.am:
+	  * ext/faad/Makefile.am:
+	  * ext/gsm/Makefile.am:
+	  * ext/hermes/Makefile.am:
+	  * ext/ivorbis/Makefile.am:
+	  * ext/jack/Makefile.am:
+	  * ext/jp2k/Makefile.am:
+	  * ext/ladspa/Makefile.am:
+	  * ext/lcs/Makefile.am:
+	  * ext/libfame/Makefile.am:
+	  * ext/libmms/Makefile.am:
+	  * ext/metadata/Makefile.am:
+	  * ext/mpeg2enc/Makefile.am:
+	  * ext/mplex/Makefile.am:
+	  * ext/musepack/Makefile.am:
+	  * ext/musicbrainz/Makefile.am:
+	  * ext/mythtv/Makefile.am:
+	  * ext/nas/Makefile.am:
+	  * ext/neon/Makefile.am:
+	  * ext/ofa/Makefile.am:
+	  * ext/polyp/Makefile.am:
+	  * ext/resindvd/Makefile.am:
+	  * ext/sdl/Makefile.am:
+	  * ext/shout/Makefile.am:
+	  * ext/snapshot/Makefile.am:
+	  * ext/sndfile/Makefile.am:
+	  * ext/soundtouch/Makefile.am:
+	  * ext/spc/Makefile.am:
+	  * ext/swfdec/Makefile.am:
+	  * ext/tarkin/Makefile.am:
+	  * ext/theora/Makefile.am:
+	  * ext/timidity/Makefile.am:
+	  * ext/twolame/Makefile.am:
+	  * ext/x264/Makefile.am:
+	  * ext/xine/Makefile.am:
+	  * ext/xvid/Makefile.am:
+	  * gst-libs/gst/app/Makefile.am:
+	  * gst-libs/gst/dshow/Makefile.am:
+	  * gst/aiffparse/Makefile.am:
+	  * gst/app/Makefile.am:
+	  * gst/audiobuffer/Makefile.am:
+	  * gst/bayer/Makefile.am:
+	  * gst/cdxaparse/Makefile.am:
+	  * gst/chart/Makefile.am:
+	  * gst/colorspace/Makefile.am:
+	  * gst/dccp/Makefile.am:
+	  * gst/deinterlace/Makefile.am:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/dvdspu/Makefile.am:
+	  * gst/festival/Makefile.am:
+	  * gst/filter/Makefile.am:
+	  * gst/flacparse/Makefile.am:
+	  * gst/flv/Makefile.am:
+	  * gst/games/Makefile.am:
+	  * gst/h264parse/Makefile.am:
+	  * gst/librfb/Makefile.am:
+	  * gst/mixmatrix/Makefile.am:
+	  * gst/modplug/Makefile.am:
+	  * gst/mpeg1sys/Makefile.am:
+	  * gst/mpeg4videoparse/Makefile.am:
+	  * gst/mpegdemux/Makefile.am:
+	  * gst/mpegtsmux/Makefile.am:
+	  * gst/mpegvideoparse/Makefile.am:
+	  * gst/mve/Makefile.am:
+	  * gst/nsf/Makefile.am:
+	  * gst/nuvdemux/Makefile.am:
+	  * gst/overlay/Makefile.am:
+	  * gst/passthrough/Makefile.am:
+	  * gst/pcapparse/Makefile.am:
+	  * gst/playondemand/Makefile.am:
+	  * gst/rawparse/Makefile.am:
+	  * gst/real/Makefile.am:
+	  * gst/rtjpeg/Makefile.am:
+	  * gst/rtpmanager/Makefile.am:
+	  * gst/scaletempo/Makefile.am:
+	  * gst/sdp/Makefile.am:
+	  * gst/selector/Makefile.am:
+	  * gst/smooth/Makefile.am:
+	  * gst/smoothwave/Makefile.am:
+	  * gst/speed/Makefile.am:
+	  * gst/speexresample/Makefile.am:
+	  * gst/stereo/Makefile.am:
+	  * gst/subenc/Makefile.am:
+	  * gst/tta/Makefile.am:
+	  * gst/vbidec/Makefile.am:
+	  * gst/videodrop/Makefile.am:
+	  * gst/videosignal/Makefile.am:
+	  * gst/virtualdub/Makefile.am:
+	  * gst/vmnc/Makefile.am:
+	  * gst/y4m/Makefile.am:
+	  * sys/acmenc/Makefile.am:
+	  * sys/cdrom/Makefile.am:
+	  * sys/dshowdecwrapper/Makefile.am:
+	  * sys/dshowsrcwrapper/Makefile.am:
+	  * sys/dvb/Makefile.am:
+	  * sys/dxr3/Makefile.am:
+	  * sys/fbdev/Makefile.am:
+	  * sys/oss4/Makefile.am:
+	  * sys/qcam/Makefile.am:
+	  * sys/qtwrapper/Makefile.am:
+	  * sys/vcd/Makefile.am:
+	  * sys/wininet/Makefile.am:
+	  * win32/common/config.h:
+	  Don't install static libs for plugins. Fixes #550851 for -bad.
+
 2008-11-04 12:42:18 +0000  Stefan Kost <ensonic@users.sourceforge.net>
 
 	  Don't install static libs for plugins. Fixes #550851 for -bad.
@@ -87290,6 +88803,14 @@
 	  Original commit message from CVS:
 	  Update .po files
 
+2008-01-23 13:18:24 +0000  Christian Schaller <uraeus@gnome.org>
+
+	* gst/rawparse/Makefile.am:
+	  Add missing no_inst header files to Makefile.am so disting still works
+	  Original commit message from CVS:
+	  Add missing no_inst header files to Makefile.am so disting still works
+	  Update spec file with latest changes
+
 2008-01-22 15:37:49 +0000  Thijs Vermeir <thijsvermeir@gmail.com>
 
 	  gst-libs/gst/rtp/gstrtpbuffer.c: Fix typos and wrong extension check. Fixes #511274.
@@ -87811,6 +89332,44 @@
 	  Add some locking to make things threadsafe.
 	  * gst/playback/test7.c: (about_to_finish_cb):
 	  Fix test.
+
+2007-12-23 06:22:32 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  Add new plugin rawparse that contains a base class for raw data parsers and the two elements audioparse and videopars...
+	  Original commit message from CVS:
+	  * configure.ac:
+	  * gst/rawparse/Makefile.am:
+	  * gst/rawparse/README:
+	  * gst/rawparse/gstaudioparse.c: (gst_audio_parse_format_get_type),
+	  (gst_audio_parse_endianness_get_type), (gst_audio_parse_base_init),
+	  (gst_audio_parse_class_init), (gst_audio_parse_init),
+	  (gst_audio_parse_set_property), (gst_audio_parse_get_property),
+	  (gst_audio_parse_update_frame_size), (gst_audio_parse_get_caps):
+	  * gst/rawparse/gstaudioparse.h:
+	  * gst/rawparse/gstrawparse.c: (gst_raw_parse_base_init),
+	  (gst_raw_parse_class_init), (gst_raw_parse_init),
+	  (gst_raw_parse_dispose),
+	  (gst_raw_parse_class_set_src_pad_template),
+	  (gst_raw_parse_class_set_multiple_frames_per_buffer),
+	  (gst_raw_parse_reset), (gst_raw_parse_chain),
+	  (gst_raw_parse_convert), (gst_raw_parse_sink_event),
+	  (gst_raw_parse_src_event), (gst_raw_parse_src_query_type),
+	  (gst_raw_parse_src_query), (gst_raw_parse_set_framesize),
+	  (gst_raw_parse_set_fps), (gst_raw_parse_get_fps),
+	  (gst_raw_parse_is_negotiated):
+	  * gst/rawparse/gstrawparse.h:
+	  * gst/rawparse/gstvideoparse.c: (gst_video_parse_format_get_type),
+	  (gst_video_parse_endianness_get_type), (gst_video_parse_base_init),
+	  (gst_video_parse_class_init), (gst_video_parse_init),
+	  (gst_video_parse_set_property), (gst_video_parse_get_property),
+	  (gst_video_parse_format_to_fourcc),
+	  (gst_video_parse_update_frame_size), (gst_video_parse_get_caps):
+	  * gst/rawparse/gstvideoparse.h:
+	  * gst/rawparse/plugin.c: (plugin_init):
+	  Add new plugin rawparse that contains a base class for raw data
+	  parsers and the two elements audioparse and videoparse that can
+	  be used to parse raw audio and video. These are inspired by the
+	  old videoparse element which the new rawparse plugin deprecates.
 
 2007-12-22 12:06:47 +0000  Tim-Philipp Müller <tim@centricular.net>
 

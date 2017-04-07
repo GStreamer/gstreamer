@@ -1,17 +1,15 @@
 
-Release notes for GStreamer Base Plugins 1.11.2
+Release notes for GStreamer Base Plugins 1.11.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.11 release series. The 1.11 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.11 release series
-will lead to the stable 1.12 release series in the next weeks. Any newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the first release candidate of the
+stable 1.12 release series. The 1.12 release series is adding new features on
+top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
+ABI-stable 1.x release series of the GStreamer multimedia framework.
 
 
-Full release notes will be provided at some point during the 1.11 release
-cycle, highlighting all the new features, bugfixes, performance optimizations
-and other important changes.
+Full release notes will be provided with the 1.12.0 release, highlighting all
+the new features, bugfixes, performance optimizations and other important
+changes.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -63,16 +61,15 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 740557 : videotestsrc: add ball motion based on system clock
-      * 775553 : playback: Fix leak on select_streams
-      * 775893 : decodbin: Leaking pads on errors
-      * 776797 : encodebin: fix caps leak in test
-      * 777458 : decklinkaudiosrc: Option to use max channels supported by device
-      * 777530 : decodebin3: Fix crash caused by slot double freeing
-      * 778298 : [REGRESSION]: discoverer: Misunderstands stream topology when a parser does stream formart conversion
-      * 778702 : videotimecode: Init from GDateTime
-      * 778974 : video-converter: Implement multi-threaded scaling/conversion
-      * 779010 : videotimecode: Validate for drop-frame correctness
+      * 779866 : videotimecode: Fix invalid timecode right before a new second
+      * 779515 : vorbisdec: Reset decoder in more situations
+      * 780053 : rawvideoparse: Stride/Offset no longer usable from gst-launch
+      * 780257 : urisourcebin: Fix typefind list leak
+      * 780429 : streamsynchronizer: every stream need keep their own send_gap_event flag
+      * 780566 : Broken URL link for latest on-line version in reference manual
+      * 780657 : meson: Use dep.get_pkgconfig_variable()
+      * 780764 : video-converter: fix scaler leak
+      * 780769 : encodebin: fix list leak when requesting a new pad
 
 ==== Download ====
 
@@ -109,19 +106,21 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Carl Karsten
+      * Arun Raghavan
       * Edward Hervey
-      * Georg Lippitsch
-      * Guillaume Desmottes
-      * Heekyoung Seo
+      * Emeric Grange
+      * Francisco Velazquez
+      * Haihua Hu
       * Jan Schmidt
       * Jochen Henneberg
-      * Olivier Crete
+      * Matthew Waters
+      * Nicolas Dufresne
+      * Olivier Crête
       * Sebastian Dröge
       * Seungha Yang
       * Stefan Sauer
       * Thibault Saunier
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Víctor Manuel Jáquez Leal
+      * Vivia Nikolaidou
  
