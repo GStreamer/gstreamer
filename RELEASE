@@ -1,17 +1,15 @@
 
-Release notes for GStreamer Good Plugins 1.11.2
+Release notes for GStreamer Good Plugins 1.11.90
 
-The GStreamer team is pleased to announce the second release of the unstable
-1.11 release series. The 1.11 release series is adding new features on top of
-the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable 1.x release
-series of the GStreamer multimedia framework. The unstable 1.11 release series
-will lead to the stable 1.12 release series in the next weeks. Any newly added
-API can still change until that point.
+The GStreamer team is pleased to announce the first release candidate of the
+stable 1.12 release series. The 1.12 release series is adding new features on
+top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
+ABI-stable 1.x release series of the GStreamer multimedia framework.
 
 
-Full release notes will be provided at some point during the 1.11 release
-cycle, highlighting all the new features, bugfixes, performance optimizations
-and other important changes.
+Full release notes will be provided with the 1.12.0 release, highlighting all
+the new features, bugfixes, performance optimizations and other important
+changes.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -60,26 +58,20 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 778690 : qtdemux: Possible bug on gst-1.11 gst_element_seek
-      * 736752 : mp4mux/qtmux: Add HEVC support
-      * 761761 : splitmuxsink: Caps changes not handled
-      * 766177 : qtdemux: Critical errors reported playing mp4 file with only xmp tags
-      * 768762 : tests: qtmux and matroskamux reported as leaking by the leaks tracer
-      * 774209 : splitmuxsink: Add option for timecode-based split
-      * 775440 : qtdemux: Use upstream's StreamFlags if there are
-      * 775817 : rtph265pay: fix config-interval handling
-      * 776714 : rtpmanager: enhance RTP statistics by recording nacks sent/received per source too
-      * 776715 : qtdemux: Skip seeking query if upstream format is time
-      * 776899 : v4l2: Remove usage and definition of LOG_CAPS macro
-      * 777100 : qtmux: Write tapt atom for MOV files if PAR not 1/1
-      * 777182 : rtxqueue: Expose basic statistics as properties.
-      * 777330 : v4l2bufferpool: remove duplicated line of code
-      * 777331 : qtmux: Don't write Sync Sample Atom for ProRes
-      * 777540 : isomp4: Unable to create streams playable with MSE
-      * 778013 : rtpsession: relate received FIRs and PLIs to source
-      * 778330 : qtmux: Creates two edit lists with reserved-* options enabled
-      * 778389 : imagefreeze can return erroneous results for an accept caps query
-      * 776962 : flacenc: Conversion from m4a encapsuled alac to flac fail with: Could not initialize supporting library.
+      * 773218 : rtpbin: pipeline gets an EOS when any rtpsources byes
+      * 722560 : rtprtxreceive: cleanup orphan retransmission requests
+      * 761086 : splitmuxsrc: use the max ts of all streams as the offset to align the next stream with
+      * 771478 : qtmux moov-recovery-file option fails by gst-launch-1.0
+      * 777738 : flacparse: fix FLAC streaming for non-0 start sample
+      * 779230 : Update plugins description
+      * 779389 : sbcparse parses allocation mode incorrectly
+      * 779422 : qtmux: Update modification times when sending the moov
+      * 780022 : qtdemux: add support for S16L PCM audio
+      * 780024 : qtmux: add support for CineForm
+      * 780105 : rtpsource: " no clock-rate, cannot interpolate rtp " forever
+      * 780331 : interleave segfaults with more than 64 channels
+      * 780347 : rtpmux output PTS are not in line with the DTS and the segment
+      * 780966 : aacparse: streamline and improve AudioSpecificConfig parsing
 
 ==== Download ====
 
@@ -116,34 +108,25 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arnaud Vrac
-      * Aurélien Zanelli
-      * Brendan Shanks
-      * David Warman
+      * Andrew
+      * Carlos Rafael Giani
+      * Douglas Bagnall
+      * Edgard Lima
       * Edward Hervey
-      * Enrico Jorns
-      * Georg Lippitsch
-      * Guillaume Desmottes
+      * Emeric Grange
+      * Enrique Ocaña González
+      * George Kiagiadakis
       * Jan Schmidt
-      * Jean-Christophe Trotin
-      * Jochen Henneberg
-      * Jonas Holmberg
-      * Juan Pablo Ugarte
-      * Mark Nauwelaerts
-      * Mathieu Duponchelle
-      * Matt Staples
+      * Michael Dutka
+      * Michael Smith
       * Miguel París Díaz
-      * Nick Kallen
       * Nicolas Dufresne
       * Olivier Crête
-      * Rahul Bedarkar
-      * Reynaldo H. Verdejo Pinochet
-      * Santiago Carot-Nemesio
+      * Philipp Zabel
       * Sebastian Dröge
-      * Seungha Yang
-      * Søren Juul
       * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
-      * Vivia Nikolaidou
+      * Vincent Penquerc'h
+      * Wim Taymans
  
