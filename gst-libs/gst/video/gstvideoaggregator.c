@@ -1268,7 +1268,9 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         } else if (is_eos) {
           eos = FALSE;
         }
-      } else if (is_eos) {
+      }
+
+      if (is_eos) {
         gst_buffer_replace (&pad->buffer, NULL);
       }
     }
