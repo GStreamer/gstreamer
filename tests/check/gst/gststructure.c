@@ -254,6 +254,24 @@ GST_START_TEST (test_to_from_string)
 
   gst_structure_free (st1);
   gst_structure_free (st2);
+
+  /* Test NULL strings */
+  st1 = gst_structure_new ("test", "mynullstr", G_TYPE_STRING, NULL, NULL);
+  fail_unless (st1 != NULL);
+  str = gst_structure_to_string (st1);
+  fail_unless (strcmp (str, "test, mynullstr=(string)NULL;") == 0,
+      "Failed to serialize to right string: %s", str);
+
+  st2 = gst_structure_from_string (str, NULL);
+  fail_unless (st2 != NULL);
+  g_free (str);
+
+  fail_unless (gst_structure_is_equal (st1, st2),
+      "Structures did not match:\n\tStructure 1: %" GST_PTR_FORMAT
+      "\n\tStructure 2: %" GST_PTR_FORMAT "\n", st1, st2);
+
+  gst_structure_free (st1);
+  gst_structure_free (st2);
 }
 
 GST_END_TEST;
