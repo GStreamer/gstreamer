@@ -2408,7 +2408,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   stream->download_total_bytes += gst_buffer_get_size (buffer);
 
-  GST_DEBUG_OBJECT (stream->pad, "Received buffer of size %" G_GSIZE_FORMAT,
+  GST_TRACE_OBJECT (stream->pad, "Received buffer of size %" G_GSIZE_FORMAT,
       gst_buffer_get_size (buffer));
 
   ret = klass->data_received (demux, stream, buffer);
@@ -3760,7 +3760,8 @@ gst_adaptive_demux_updates_loop (GstAdaptiveDemux * demux)
       /* update_failed_count is used only here, no need to protect it */
       demux->priv->update_failed_count++;
       if (demux->priv->update_failed_count <= DEFAULT_FAILED_COUNT) {
-        GST_WARNING_OBJECT (demux, "Could not update the playlist");
+        GST_WARNING_OBJECT (demux, "Could not update the playlist, flow: %s",
+            gst_flow_get_name (ret));
         next_update = gst_adaptive_demux_get_monotonic_time (demux)
             + klass->get_manifest_update_interval (demux) * GST_USECOND;
       } else {
@@ -4029,9 +4030,10 @@ gst_adaptive_demux_update_manifest_default (GstAdaptiveDemux * demux)
   GstFragment *download;
   GstBuffer *buffer;
   GstFlowReturn ret;
+  GError *error = NULL;
 
   download = gst_uri_downloader_fetch_uri (demux->downloader,
-      demux->manifest_uri, NULL, TRUE, TRUE, TRUE, NULL);
+      demux->manifest_uri, NULL, TRUE, TRUE, TRUE, &error);
   if (download) {
     g_free (demux->manifest_uri);
     g_free (demux->manifest_base_uri);
@@ -4050,8 +4052,11 @@ gst_adaptive_demux_update_manifest_default (GstAdaptiveDemux * demux)
     /* FIXME: Should the manifest uri vars be reverted to original
      * values if updating fails? */
   } else {
+    GST_WARNING_OBJECT (demux, "Failed to download manifest: %s",
+        error->message);
     ret = GST_FLOW_NOT_LINKED;
   }
+  g_clear_error (&error);
 
   return ret;
 }
