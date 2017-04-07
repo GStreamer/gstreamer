@@ -1,9 +1,41 @@
-=== release 1.11.2 ===
+=== release 1.11.90 ===
 
-2017-02-24  Sebastian Dröge <slomo@coaxion.net>
+2017-04-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.2
+	  releasing 1.11.90
+
+2017-03-27 18:19:33 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/test-launch.c:
+	  examples: make test-launch pipeline shared by default as well
+
+2017-02-27 19:10:44 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* pkgconfig/gstreamer-rtsp-server-uninstalled.pc.in:
+	  gstreamer-rtsp-server: Add both srcdir and builddir to the include path
+	  Just the build dir is not going to work for srcdir!=builddir.
+
+2017-02-24 15:59:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  meson: Update version
+
+2017-02-24 15:37:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.11.2 ===
+
+2017-02-24 15:10:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	  Release 1.11.2
 
 2017-02-14 20:40:26 +0000  Tim-Philipp Müller <tim@centricular.com>
 

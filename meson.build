@@ -1,5 +1,5 @@
 project('gst-rtsp-server', 'c',
-  version : '1.11.2.1',
+  version : '1.11.90',
   meson_version : '>= 0.33.0',
   default_options : ['warning_level=1', 'buildtype=debugoptimized'])
 
