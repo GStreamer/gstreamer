@@ -855,6 +855,7 @@ gst_mpegts_descriptor_from_registration (const gchar * format_identifier,
   GstMpegtsDescriptor *descriptor;
 
   g_return_val_if_fail (format_identifier != NULL, NULL);
+  g_return_val_if_fail (additional_info_length > 0 || !additional_info, NULL);
 
   descriptor = _new_descriptor (GST_MTS_DESC_REGISTRATION,
       4 + additional_info_length);
@@ -1055,7 +1056,7 @@ gst_mpegts_descriptor_from_iso_639_language (const gchar * language)
 
   g_return_val_if_fail (language != NULL, NULL);
 
-  descriptor = _new_descriptor (GST_MTS_DESC_ISO_639_LANGUAGE, 4 + 4);  /* a language takes 4 bytes */
+  descriptor = _new_descriptor (GST_MTS_DESC_ISO_639_LANGUAGE, 4);      /* a language takes 4 bytes */
 
   memcpy (descriptor->data + 2, language, 3);
   descriptor->data[2 + 3] = 0;  /* set audio type to undefined */
@@ -1115,6 +1116,8 @@ gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 * data,
     gsize length)
 {
   GstMpegtsDescriptor *descriptor;
+
+  g_return_val_if_fail (length > 0 || !data, NULL);
 
   descriptor = _new_descriptor (tag, length);
 
