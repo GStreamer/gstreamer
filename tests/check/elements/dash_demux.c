@@ -75,7 +75,7 @@ gst_dash_demux_test_case_new (void)
 
      static GstDashDemuxTestCase *gst_dash_demux_test_case_new (void)
 {
-  return g_object_newv (GST_TYPE_DASH_DEMUX_TEST_CASE, 0, NULL);
+  return g_object_new (GST_TYPE_DASH_DEMUX_TEST_CASE, NULL);
 }
 
 typedef struct _GstDashDemuxTestCaseClass

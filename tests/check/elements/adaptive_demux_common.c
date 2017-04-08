@@ -119,7 +119,7 @@ gst_adaptive_demux_test_case_finalize (GObject * object)
 GstAdaptiveDemuxTestCase *
 gst_adaptive_demux_test_case_new (void)
 {
-  return g_object_newv (GST_TYPE_ADAPTIVE_DEMUX_TEST_CASE, 0, NULL);
+  return g_object_new (GST_TYPE_ADAPTIVE_DEMUX_TEST_CASE, NULL);
 }
 
 
