@@ -35,7 +35,6 @@ GType gst_gl_framebuffer_get_type (void);
 #define GST_IS_GL_FRAMEBUFFER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_GL_FRAMEBUFFER))
 #define GST_GL_FRAMEBUFFER_CAST(obj)        ((GstGLFramebuffer*)(obj))
 
-typedef struct _GstGLFramebufferClass GstGLFramebufferClass;
 typedef struct _GstGLFramebufferPrivate GstGLFramebufferPrivate;
 
 /**
