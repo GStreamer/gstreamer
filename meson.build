@@ -363,6 +363,9 @@ gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' +
     'gst_init(NULL,NULL);' ]
 vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
 
+# Used by the *_mkenum.py helper scripts
+glib_mkenums = find_program('glib-mkenums')
+
 gst_c_args = ['-DHAVE_CONFIG_H']
 if libtype == 'static'
   gst_c_args += ['-DGST_STATIC_COMPILATION']
