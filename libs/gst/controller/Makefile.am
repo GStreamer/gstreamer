@@ -1,5 +1,17 @@
 lib_LTLIBRARIES = libgstcontroller-@GST_API_VERSION@.la
 
+glib_enum_headers= \
+	gstinterpolationcontrolsource.h \
+	gstlfocontrolsource.h
+
+glib_enum_define = GST_CONTROLLER
+glib_gen_prefix = gst
+glib_gen_basename = controller
+
+built_sources = controller-enumtypes.c
+built_headers = controller-enumtypes.h
+BUILT_SOURCES = $(built_sources) $(built_headers)
+
 libgstcontroller_@GST_API_VERSION@_includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/controller
 libgstcontroller_@GST_API_VERSION@_include_HEADERS = \
 	controller.h \
@@ -11,6 +23,9 @@ libgstcontroller_@GST_API_VERSION@_include_HEADERS = \
 	gsttriggercontrolsource.h \
 	gstlfocontrolsource.h
 
+nodist_libgstcontroller_@GST_API_VERSION@_include_HEADERS = \
+	controller-enumtypes.h
+
 libgstcontroller_@GST_API_VERSION@_la_SOURCES = \
 	gstargbcontrolbinding.c \
 	gstdirectcontrolbinding.c \
@@ -20,16 +35,20 @@ libgstcontroller_@GST_API_VERSION@_la_SOURCES = \
 	gsttriggercontrolsource.c \
 	gstlfocontrolsource.c
 
+nodist_libgstcontroller_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
+
 libgstcontroller_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstcontroller_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS) $(LIBM)
 libgstcontroller_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
-CLEANFILES = *.gcno *.gcda *.gcov
+CLEANFILES = *.gcno *.gcda *.gcov $(BUILT_SOURCES)
 
 %.c.gcov: .libs/libgstcontroller_@GST_API_VERSION@_la-%.gcda %.c
 	$(GCOV) -b -f -o $^ > $@.out
 
 gcov: $(libgstcontroller_@GST_API_VERSION@_la_SOURCES:=.gcov)
+
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstController-@GST_API_VERSION@.gir

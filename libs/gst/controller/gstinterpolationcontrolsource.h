@@ -28,6 +28,7 @@
 #include <gst/gst.h>
 
 #include <gst/controller/gsttimedvaluecontrolsource.h>
+#include <gst/controller/controller-enumtypes.h>
 
 G_BEGIN_DECLS
 
@@ -43,8 +44,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((vtable), GST_TYPE_INTERPOLATION_CONTROL_SOURCE))
 #define GST_INTERPOLATION_CONTROL_SOURCE_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_CLASS ((inst), GST_TYPE_INTERPOLATION_CONTROL_SOURCE, GstInterpolationControlSourceClass))
-
-#define GST_TYPE_INTERPOLATION_MODE (gst_interpolation_mode_get_type ())
 
 typedef struct _GstInterpolationControlSource GstInterpolationControlSource;
 typedef struct _GstInterpolationControlSourceClass GstInterpolationControlSourceClass;
@@ -91,7 +90,6 @@ struct _GstInterpolationControlSourceClass {
 };
 
 GType gst_interpolation_control_source_get_type (void);
-GType gst_interpolation_mode_get_type (void);
 
 /* Functions */
 

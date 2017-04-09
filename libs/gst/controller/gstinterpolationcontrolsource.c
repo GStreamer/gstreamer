@@ -621,28 +621,6 @@ enum
   PROP_MODE = 1
 };
 
-GType
-gst_interpolation_mode_get_type (void)
-{
-  static gsize gtype = 0;
-  static const GEnumValue values[] = {
-    {GST_INTERPOLATION_MODE_NONE, "GST_INTERPOLATION_MODE_NONE", "none"},
-    {GST_INTERPOLATION_MODE_LINEAR, "GST_INTERPOLATION_MODE_LINEAR", "linear"},
-    {GST_INTERPOLATION_MODE_CUBIC, "GST_INTERPOLATION_MODE_CUBIC", "cubic"},
-    {GST_INTERPOLATION_MODE_CUBIC_MONOTONIC,
-        "GST_INTERPOLATION_MODE_CUBIC_MONOTONIC", "cubic-monotonic"},
-    {0, NULL, NULL}
-  };
-
-  if (g_once_init_enter (&gtype)) {
-    GType tmp = g_enum_register_static ("GstInterpolationMode", values);
-    g_once_init_leave (&gtype, tmp);
-  }
-
-  return (GType) gtype;
-}
-
-
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "interpolation control source", 0, \
     "timeline value interpolating control source")

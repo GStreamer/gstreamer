@@ -8,7 +8,12 @@ gst_controller_sources = [
   'gstlfocontrolsource.c',
 ]
 
-gst_controller_headers = [
+controller_mkenum_headers = [
+  'gstinterpolationcontrolsource.h',
+  'gstlfocontrolsource.h',
+]
+
+gst_controller_headers = controller_mkenum_headers + [
   'gstargbcontrolbinding.h',
   'gstdirectcontrolbinding.h',
   'gsttimedvaluecontrolsource.h',
@@ -19,6 +24,21 @@ gst_controller_headers = [
   'controller.h',
 ]
 install_headers(gst_controller_headers, subdir : 'gstreamer-1.0/gst/controller/')
+
+mkenums = find_program('controller_mkenum.py')
+gstcontroller_h = custom_target('gstcontrollerenum_h',
+  output : 'controller-enumtypes.h',
+  input : controller_mkenum_headers,
+  install : true,
+  install_dir : 'include/gstreamer-1.0/gst/controller/',
+  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+
+gstcontroller_c = custom_target('gstcontrollerenum_c',
+  output : 'controller-enumtypes.c',
+  input : controller_mkenum_headers,
+  depends : [gstcontroller_h],
+  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+controller_gen_sources = [gstcontroller_h]
 
 if libtype != 'shared'
   gst_controller_static = static_library('gstcontroller-@0@'.format(apiversion),
