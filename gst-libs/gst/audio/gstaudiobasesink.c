@@ -121,30 +121,6 @@ enum
   PROP_LAST
 };
 
-GType
-gst_audio_base_sink_slave_method_get_type (void)
-{
-  static volatile gsize slave_method_type = 0;
-  static const GEnumValue slave_method[] = {
-    {GST_AUDIO_BASE_SINK_SLAVE_RESAMPLE, "GST_AUDIO_BASE_SINK_SLAVE_RESAMPLE",
-        "resample"},
-    {GST_AUDIO_BASE_SINK_SLAVE_SKEW, "GST_AUDIO_BASE_SINK_SLAVE_SKEW", "skew"},
-    {GST_AUDIO_BASE_SINK_SLAVE_NONE, "GST_AUDIO_BASE_SINK_SLAVE_NONE", "none"},
-    {GST_AUDIO_BASE_SINK_SLAVE_CUSTOM, "GST_AUDIO_BASE_SINK_SLAVE_CUSTOM",
-        "custom"},
-    {0, NULL, NULL},
-  };
-
-  if (g_once_init_enter (&slave_method_type)) {
-    GType tmp =
-        g_enum_register_static ("GstAudioBaseSinkSlaveMethod", slave_method);
-    g_once_init_leave (&slave_method_type, tmp);
-  }
-
-  return (GType) slave_method_type;
-}
-
-
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_audio_base_sink_debug, "audiobasesink", 0, "audiobasesink element");
 #define gst_audio_base_sink_parent_class parent_class

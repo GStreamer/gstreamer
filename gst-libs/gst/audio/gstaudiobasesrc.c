@@ -45,29 +45,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_audio_base_src_debug);
 #define GST_CAT_DEFAULT gst_audio_base_src_debug
 
-GType
-gst_audio_base_src_slave_method_get_type (void)
-{
-  static volatile gsize slave_method_type = 0;
-  /* FIXME 2.0: nick should be "retimestamp" not "re-timestamp" */
-  static const GEnumValue slave_method[] = {
-    {GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE,
-        "GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE", "resample"},
-    {GST_AUDIO_BASE_SRC_SLAVE_RETIMESTAMP,
-        "GST_AUDIO_BASE_SRC_SLAVE_RETIMESTAMP", "re-timestamp"},
-    {GST_AUDIO_BASE_SRC_SLAVE_SKEW, "GST_AUDIO_BASE_SRC_SLAVE_SKEW", "skew"},
-    {GST_AUDIO_BASE_SRC_SLAVE_NONE, "GST_AUDIO_BASE_SRC_SLAVE_NONE", "none"},
-    {0, NULL, NULL},
-  };
-
-  if (g_once_init_enter (&slave_method_type)) {
-    GType tmp =
-        g_enum_register_static ("GstAudioBaseSrcSlaveMethod", slave_method);
-    g_once_init_leave (&slave_method_type, tmp);
-  }
-  return (GType) slave_method_type;
-}
-
 #define GST_AUDIO_BASE_SRC_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_AUDIO_BASE_SRC, GstAudioBaseSrcPrivate))
 
@@ -993,7 +970,7 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
         }
         break;
       }
-      case GST_AUDIO_BASE_SRC_SLAVE_RETIMESTAMP:
+      case GST_AUDIO_BASE_SRC_SLAVE_RE_TIMESTAMP:
       {
         GstClockTime base_time, latency;
 

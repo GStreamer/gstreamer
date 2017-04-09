@@ -200,24 +200,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
 static GstFormat track_format;
 static GstFormat sector_format;
 
-GType
-gst_audio_cd_src_mode_get_type (void)
-{
-  static GType mode_type;       /* 0 */
-  static const GEnumValue modes[] = {
-    {GST_AUDIO_CD_SRC_MODE_NORMAL, "Stream consists of a single track",
-        "normal"},
-    {GST_AUDIO_CD_SRC_MODE_CONTINUOUS, "Stream consists of the whole disc",
-        "continuous"},
-    {0, NULL, NULL}
-  };
-
-  if (mode_type == 0)
-    mode_type = g_enum_register_static ("GstAudioCdSrcMode", modes);
-
-  return mode_type;
-}
-
 static void
 gst_audio_cd_src_class_init (GstAudioCdSrcClass * klass)
 {

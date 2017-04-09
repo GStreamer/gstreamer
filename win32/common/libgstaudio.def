@@ -1,6 +1,7 @@
 EXPORTS
 	_gst_audio_decoder_error
 	gst_audio_base_sink_create_ringbuffer
+	gst_audio_base_sink_discont_reason_get_type
 	gst_audio_base_sink_get_alignment_threshold
 	gst_audio_base_sink_get_discont_wait
 	gst_audio_base_sink_get_drift_tolerance

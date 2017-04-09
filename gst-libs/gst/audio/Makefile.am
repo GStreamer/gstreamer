@@ -11,7 +11,10 @@ glib_enum_headers= 		\
 	audio-info.h			\
 	audio-quantize.h			\
 	audio-resampler.h			\
-	gstaudioringbuffer.h
+	gstaudioringbuffer.h			\
+	gstaudiobasesrc.h			\
+	gstaudiocdsrc.h				\
+	gstaudiobasesink.h
 
 glib_enum_define = GST_AUDIO
 glib_gen_prefix = gst_audio

@@ -33,6 +33,9 @@ audio_mkenum_headers = [
   'audio-quantize.h',
   'audio-resampler.h',
   'gstaudioringbuffer.h',
+  'gstaudiobasesrc.h',
+  'gstaudiocdsrc.h',
+  'gstaudiobasesink.h',
 ]
 
 # FIXME: check headers

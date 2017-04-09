@@ -99,8 +99,6 @@ typedef enum
   GST_AUDIO_BASE_SINK_SLAVE_CUSTOM
 } GstAudioBaseSinkSlaveMethod;
 
-#define GST_TYPE_AUDIO_BASE_SINK_SLAVE_METHOD (gst_audio_base_sink_slave_method_get_type ())
-
 typedef struct _GstAudioBaseSink GstAudioBaseSink;
 typedef struct _GstAudioBaseSinkClass GstAudioBaseSinkClass;
 typedef struct _GstAudioBaseSinkPrivate GstAudioBaseSinkPrivate;
@@ -223,7 +221,6 @@ struct _GstAudioBaseSinkClass {
 };
 
 GType gst_audio_base_sink_get_type(void);
-GType gst_audio_base_sink_slave_method_get_type (void);
 
 GstAudioRingBuffer *
            gst_audio_base_sink_create_ringbuffer       (GstAudioBaseSink *sink);

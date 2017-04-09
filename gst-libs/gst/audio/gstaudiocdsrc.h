@@ -54,8 +54,6 @@ typedef enum {
   GST_AUDIO_CD_SRC_MODE_CONTINUOUS       /* stream = whole disc */
 } GstAudioCdSrcMode;
 
-#define GST_TYPE_AUDIO_CD_SRC_MODE          (gst_audio_cd_src_mode_get_type ())
-
 /**
  * GstAudioCdSrcTrack:
  * @is_audio: Whether this is an audio track
@@ -134,7 +132,6 @@ struct _GstAudioCdSrcClass {
 };
 
 GType    gst_audio_cd_src_get_type (void);
-GType    gst_audio_cd_src_mode_get_type (void);
 
 gboolean gst_audio_cd_src_add_track (GstAudioCdSrc      * src,
                                      GstAudioCdSrcTrack * track);
