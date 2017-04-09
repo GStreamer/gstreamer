@@ -22,9 +22,24 @@ tag_headers = [
 ]
 install_headers(tag_headers, subdir : 'gstreamer-1.0/gst/tag/')
 
+mkenums = find_program('tag_mkenum.py')
+gsttag_h = custom_target('gsttagenum_h',
+  output : 'tag-enumtypes.h',
+  input : tag_mkenum_headers,
+  install : true,
+  install_dir : 'include/gstreamer-1.0/gst/tag/',
+  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+
+gsttag_c = custom_target('gsttagenum_c',
+  output : 'tag-enumtypes.c',
+  input : tag_mkenum_headers,
+  depends : [gsttag_h],
+  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+tag_gen_sources = [gsttag_h]
+
 tag_deps = [gst_base_dep, libm]
 gsttag = library('gsttag-@0@'.format(api_version),
-  tag_sources,
+  tag_sources, gsttag_h, gsttag_c,
   c_args : gst_plugins_base_args,
   include_directories: [configinc, libsinc],
   version : libversion,
@@ -34,10 +49,9 @@ gsttag = library('gsttag-@0@'.format(api_version),
   vs_module_defs: vs_module_defs_dir + 'libgsttag.def',
 )
 
-tag_gen_sources  = []
 if build_gir
   tag_gen_sources += [gnome.generate_gir(gsttag,
-    sources : tag_sources + tag_headers,
+    sources : tag_sources + tag_headers + [gsttag_h] + [gsttag_c],
     namespace : 'GstTag',
     nsversion : api_version,
     identifier_prefix : 'Gst',

@@ -1,8 +1,23 @@
 libgsttagincludedir = \
 	$(includedir)/gstreamer-@GST_API_VERSION@/gst/tag
 
+glib_enum_define = GST_TAG
+glib_gen_prefix = gst_tag
+glib_gen_basename = tag
+
+glib_enum_headers = tag.h gsttagdemux.h
+
+built_sources = tag-enumtypes.c
+built_headers = tag-enumtypes.h
+BUILT_SOURCES = $(built_sources) $(built_headers)
+
+include $(top_srcdir)/common/gst-glib-gen.mak
+
 libgsttaginclude_HEADERS = \
 	tag.h gsttagdemux.h gsttagmux.h xmpwriter.h
+nodist_libgsttaginclude_HEADERS = tag-enumtypes.h
+
+CLEANFILES = $(BUILT_SOURCES)
 
 lib_LTLIBRARIES = libgsttag-@GST_API_VERSION@.la
 
@@ -10,6 +25,7 @@ libgsttag_@GST_API_VERSION@_la_SOURCES = \
 	gstvorbistag.c gstid3tag.c gstxmptag.c gstexiftag.c \
 	lang.c licenses.c tags.c gsttagdemux.c gsttagmux.c \
 	gsttageditingprivate.c id3v2.c id3v2frames.c xmpwriter.c
+nodist_libgsttag_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
 libgsttag_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ZLIB_CFLAGS) \
@@ -73,7 +89,7 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
-CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)
+CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
 
 # little program that reads iso_639.xml and outputs tables for us as fallback

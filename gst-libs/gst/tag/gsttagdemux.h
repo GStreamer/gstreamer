@@ -22,6 +22,7 @@
 #define __GST_TAG_DEMUX_H__
 
 #include <gst/gst.h>
+#include <gst/tag/tag-enumtypes.h>
 
 G_BEGIN_DECLS
 
@@ -48,9 +49,6 @@ typedef enum {
   GST_TAG_DEMUX_RESULT_AGAIN,
   GST_TAG_DEMUX_RESULT_OK
 } GstTagDemuxResult;
-
-GType gst_tag_demux_result_get_type (void);
-#define GST_TYPE_TAG_DEMUX_RESULT (gst_tag_demux_result_get_type())
 
 /**
  * GstTagDemux:

@@ -168,23 +168,6 @@ static void gst_tag_demux_init (GstTagDemux * obj, GstTagDemuxClass * klass);
 
 static gpointer parent_class;   /* NULL */
 
-GType
-gst_tag_demux_result_get_type (void)
-{
-  static GType etype = 0;
-  if (etype == 0) {
-    static const GEnumValue values[] = {
-      {GST_TAG_DEMUX_RESULT_BROKEN_TAG, "GST_TAG_DEMUX_RESULT_BROKEN_TAG",
-          "broken-tag"},
-      {GST_TAG_DEMUX_RESULT_AGAIN, "GST_TAG_DEMUX_RESULT_AGAIN", "again"},
-      {GST_TAG_DEMUX_RESULT_OK, "GST_TAG_DEMUX_RESULT_OK", "ok"},
-      {0, NULL, NULL}
-    };
-    etype = g_enum_register_static ("GstTagDemuxResult", values);
-  }
-  return etype;
-}
-
 /* Cannot use boilerplate macros here because we want the abstract flag */
 GType
 gst_tag_demux_get_type (void)

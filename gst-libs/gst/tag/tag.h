@@ -26,6 +26,7 @@
 #include <gst/tag/gsttagdemux.h>
 #include <gst/tag/gsttagmux.h>
 #include <gst/tag/xmpwriter.h>
+#include <gst/tag/tag-enumtypes.h>
 
 G_BEGIN_DECLS
 
@@ -412,9 +413,6 @@ typedef enum {
   GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO
 } GstTagImageType;
 
-#define GST_TYPE_TAG_IMAGE_TYPE  (gst_tag_image_type_get_type ())
-GType   gst_tag_image_type_get_type (void);
-
 /**
  * GST_TAG_ID3V2_HEADER_SIZE:
  *
@@ -610,8 +608,6 @@ const gchar *       gst_tag_get_license_version (const gchar * license_ref);
 const gchar *       gst_tag_get_license_description  (const gchar * license_ref);
 
 const gchar *       gst_tag_get_license_jurisdiction (const gchar * license_ref);
-
-GType               gst_tag_license_flags_get_type (void);
 
 G_END_DECLS
 
