@@ -60,5 +60,18 @@ def get_meson():
         mesonintrospect = os.path.join(ROOTDIR, 'meson', 'mesonintrospect.py')
         return meson, mesonconf, mesonintrospect
 
-    return accept_command(["meson.py", "meson"]), accept_command(["mesonconf.py", "mesonconf"]), \
-        accept_command(["mesonintrospect.py", "mesonintrospect"])
+    mesonintrospect = os.environ.get('MESONINTROSPECT', None)
+    if mesonintrospect and os.path.exists(mesonintrospect):
+      mesondir = os.path.dirname(mesonintrospect)
+      if mesonintrospect.endswith('.py'):
+        meson = os.path.join(mesondir, 'meson.py')
+        mesonconf = os.path.join(mesondir, 'mesonconf.py')
+      else:
+        meson = os.path.join(mesondir, 'meson')
+        mesonconf = os.path.join(mesondir, 'mesonconf')
+    else:
+      meson = accept_command(["meson.py", "meson"])
+      mesonconf = accept_command(["mesonconf.py", "mesonconf"])
+      mesonintrospect = accept_command(["mesonintrospect.py", "mesonintrospect"])
+
+    return meson, mesonconf, mesonintrospect
