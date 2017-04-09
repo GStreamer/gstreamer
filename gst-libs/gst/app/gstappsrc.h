@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
+#include <gst/app/app-enumtypes.h>
 
 G_BEGIN_DECLS
 
@@ -116,10 +117,6 @@ struct _GstAppSrcClass
 };
 
 GType gst_app_src_get_type(void);
-
-/* GType getter for GstAppStreamType */
-#define GST_TYPE_APP_STREAM_TYPE (gst_app_stream_type_get_type ())
-GType gst_app_stream_type_get_type (void);
 
 void             gst_app_src_set_caps                (GstAppSrc *appsrc, const GstCaps *caps);
 GstCaps*         gst_app_src_get_caps                (GstAppSrc *appsrc);

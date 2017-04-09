@@ -2,11 +2,18 @@ lib_LTLIBRARIES = libgstapp-@GST_API_VERSION@.la
 
 glib_enum_define = GST_APP
 glib_gen_prefix = __gst_app
-glib_gen_basename = gstapp
+glib_gen_basename = app
+
+glib_enum_headers = gstappsrc.h
+
+built_sources = app-enumtypes.c
+built_headers = app-enumtypes.h
+BUILT_SOURCES = $(built_sources) $(built_headers)
 
 include $(top_srcdir)/common/gst-glib-gen.mak
 
-libgstapp_@GST_API_VERSION@_la_SOURCES = gstappsrc.c gstappsink.c 
+libgstapp_@GST_API_VERSION@_la_SOURCES = gstappsrc.c gstappsink.c
+nodist_libgstapp_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 libgstapp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstapp_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS)
@@ -17,6 +24,9 @@ libgstapp_@GST_API_VERSION@include_HEADERS = \
 	app.h \
 	gstappsrc.h \
 	gstappsink.h
+nodist_libgstapp_@GST_API_VERSION@include_HEADERS = app-enumtypes.h
+
+CLEANFILES = $(BUILT_SOURCES)
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstApp-@GST_API_VERSION@.gir
@@ -69,5 +79,5 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
-CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)
+CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif

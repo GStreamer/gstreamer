@@ -191,26 +191,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GType
-gst_app_stream_type_get_type (void)
-{
-  static volatile gsize stream_type_type = 0;
-  static const GEnumValue stream_type[] = {
-    {GST_APP_STREAM_TYPE_STREAM, "GST_APP_STREAM_TYPE_STREAM", "stream"},
-    {GST_APP_STREAM_TYPE_SEEKABLE, "GST_APP_STREAM_TYPE_SEEKABLE", "seekable"},
-    {GST_APP_STREAM_TYPE_RANDOM_ACCESS, "GST_APP_STREAM_TYPE_RANDOM_ACCESS",
-        "random-access"},
-    {0, NULL, NULL}
-  };
-
-  if (g_once_init_enter (&stream_type_type)) {
-    GType tmp = g_enum_register_static ("GstAppStreamType", stream_type);
-    g_once_init_leave (&stream_type_type, tmp);
-  }
-
-  return (GType) stream_type_type;
-}
-
 static void gst_app_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
