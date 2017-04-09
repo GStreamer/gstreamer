@@ -14,10 +14,13 @@ tag_sources = [
   'xmpwriter.c',
 ]
 
-tag_headers = [
+tag_mkenum_headers = [
   'gsttagdemux.h',
-  'gsttagmux.h',
   'tag.h',
+]
+
+tag_headers = tag_mkenum_headers + [
+  'gsttagmux.h',
   'xmpwriter.h',
 ]
 install_headers(tag_headers, subdir : 'gstreamer-1.0/gst/tag/')
