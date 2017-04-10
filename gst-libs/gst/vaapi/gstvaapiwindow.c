@@ -58,6 +58,60 @@ gst_vaapi_window_ensure_size (GstVaapiWindow * window)
 }
 
 static gboolean
+ensure_filter (GstVaapiWindow * window)
+{
+  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (window);
+
+  /* Ensure VPP pipeline is built */
+  if (window->filter)
+    return TRUE;
+
+  window->filter = gst_vaapi_filter_new (display);
+  if (!window->filter)
+    goto error_create_filter;
+  if (!gst_vaapi_filter_set_format (window->filter, window->surface_format))
+    goto error_unsupported_format;
+
+  return TRUE;
+
+error_create_filter:
+  {
+    GST_WARNING ("failed to create VPP filter. Disabling");
+    window->has_vpp = FALSE;
+    return FALSE;
+  }
+error_unsupported_format:
+  {
+    GST_ERROR ("unsupported render target format %s",
+        gst_vaapi_video_format_to_string (window->surface_format));
+    window->has_vpp = FALSE;
+    return FALSE;
+  }
+}
+
+static gboolean
+ensure_filter_surface_pool (GstVaapiWindow * window)
+{
+  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (window);
+
+  if (window->surface_pool)
+    goto ensure_filter;
+
+  /* Ensure VA surface pool is created */
+  /* XXX: optimize the surface format to use. e.g. YUY2 */
+  window->surface_pool = gst_vaapi_surface_pool_new (display,
+      window->surface_format, window->width, window->height);
+  if (!window->surface_pool) {
+    GST_WARNING ("failed to create surface pool for conversion");
+    return FALSE;
+  }
+  gst_vaapi_filter_replace (&window->filter, NULL);
+
+ensure_filter:
+  return ensure_filter (window);
+}
+
+static gboolean
 gst_vaapi_window_create (GstVaapiWindow * window, guint width, guint height)
 {
   gst_vaapi_display_get_size (GST_VAAPI_OBJECT_DISPLAY (window),
@@ -77,6 +131,8 @@ gst_vaapi_window_create (GstVaapiWindow * window, guint width, guint height)
 static void
 gst_vaapi_window_finalize (GstVaapiWindow * window)
 {
+  gst_vaapi_video_pool_replace (&window->surface_pool, NULL);
+  gst_vaapi_filter_replace (&window->filter, NULL);
 }
 
 void
@@ -112,6 +168,10 @@ gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
 
   window->use_foreign_window = id != GST_VAAPI_ID_INVALID;
   GST_VAAPI_OBJECT_ID (window) = window->use_foreign_window ? id : 0;
+  window->surface_format = GST_VIDEO_FORMAT_ENCODED;
+  window->has_vpp =
+      GST_VAAPI_DISPLAY_HAS_VPP (GST_VAAPI_OBJECT_DISPLAY (window));
+
   if (!gst_vaapi_window_create (window, width, height))
     goto error;
   return window;
@@ -120,6 +180,48 @@ gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
 error:
   {
     gst_vaapi_window_unref_internal (window);
+    return NULL;
+  }
+}
+
+GstVaapiSurface *
+gst_vaapi_window_vpp_convert_internal (GstVaapiWindow * window,
+    GstVaapiSurface * surface, const GstVaapiRectangle * src_rect,
+    const GstVaapiRectangle * dst_rect, guint flags)
+{
+  GstVaapiSurface *vpp_surface = NULL;
+  GstVaapiFilterStatus status;
+
+  if (!window->has_vpp)
+    return NULL;
+
+  if (!ensure_filter_surface_pool (window))
+    return NULL;
+
+  if (src_rect)
+    if (!gst_vaapi_filter_set_cropping_rectangle (window->filter, src_rect))
+      return NULL;
+  if (dst_rect)
+    if (!gst_vaapi_filter_set_target_rectangle (window->filter, dst_rect))
+      return NULL;
+
+  /* Post-process the decoded source surface */
+  vpp_surface = gst_vaapi_video_pool_get_object (window->surface_pool);
+  if (!vpp_surface)
+    return NULL;
+
+  status =
+      gst_vaapi_filter_process (window->filter, surface, vpp_surface, flags);
+  if (status != GST_VAAPI_FILTER_STATUS_SUCCESS)
+    goto error_process_filter;
+  return vpp_surface;
+
+  /* ERRORS */
+error_process_filter:
+  {
+    GST_ERROR ("failed to process surface %" GST_VAAPI_ID_FORMAT " (error %d)",
+        GST_VAAPI_ID_ARGS (GST_VAAPI_OBJECT_ID (surface)), status);
+    gst_vaapi_video_pool_put_object (window->surface_pool, vpp_surface);
     return NULL;
   }
 }
@@ -388,6 +490,8 @@ gst_vaapi_window_set_size (GstVaapiWindow * window, guint width, guint height)
 
   if (!GST_VAAPI_WINDOW_GET_CLASS (window)->resize (window, width, height))
     return;
+
+  gst_vaapi_video_pool_replace (&window->surface_pool, NULL);
 
   window->width = width;
   window->height = height;

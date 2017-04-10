@@ -26,6 +26,8 @@
 #define GST_VAAPI_WINDOW_PRIV_H
 
 #include "gstvaapiobject_priv.h"
+#include "gstvaapifilter.h"
+#include "gstvaapisurfacepool.h"
 
 G_BEGIN_DECLS
 
@@ -75,6 +77,12 @@ struct _GstVaapiWindow
   guint use_foreign_window:1;
   guint is_fullscreen:1;
   guint check_geometry:1;
+
+ /* for conversion */
+  GstVideoFormat surface_format;
+  GstVaapiVideoPool *surface_pool;
+  GstVaapiFilter *filter;
+  gboolean has_vpp;
 };
 
 /**
@@ -119,6 +127,11 @@ struct _GstVaapiWindowClass
 GstVaapiWindow *
 gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
     GstVaapiDisplay * display, GstVaapiID handle, guint width, guint height);
+
+GstVaapiSurface *
+gst_vaapi_window_vpp_convert_internal (GstVaapiWindow * window,
+    GstVaapiSurface * surface, const GstVaapiRectangle * src_rect,
+    const GstVaapiRectangle * dst_rect, guint flags);
 
 void
 gst_vaapi_window_class_init (GstVaapiWindowClass * klass);
