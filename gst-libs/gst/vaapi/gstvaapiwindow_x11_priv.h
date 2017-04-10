@@ -55,6 +55,7 @@ struct _GstVaapiWindowX11Private
   guint is_mapped:1;
   guint fullscreen_on_map:1;
   guint has_xrender:1;
+  gboolean need_vpp;
 };
 
 /**

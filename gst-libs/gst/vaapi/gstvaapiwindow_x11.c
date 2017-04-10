@@ -399,18 +399,13 @@ gst_vaapi_window_x11_resize (GstVaapiWindow * window, guint width, guint height)
   return !has_errors;
 }
 
-static gboolean
-gst_vaapi_window_x11_render (GstVaapiWindow * window,
-    GstVaapiSurface * surface,
+static VAStatus
+gst_vaapi_window_x11_put_surface (GstVaapiWindow * window,
+    VASurfaceID surface_id,
     const GstVaapiRectangle * src_rect,
     const GstVaapiRectangle * dst_rect, guint flags)
 {
-  VASurfaceID surface_id;
   VAStatus status;
-
-  surface_id = GST_VAAPI_OBJECT_ID (surface);
-  if (surface_id == VA_INVALID_ID)
-    return FALSE;
 
   GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
   status = vaPutSurface (GST_VAAPI_OBJECT_VADISPLAY (window),
@@ -425,11 +420,68 @@ gst_vaapi_window_x11_render (GstVaapiWindow * window,
       dst_rect->width,
       dst_rect->height, NULL, 0, from_GstVaapiSurfaceRenderFlags (flags)
       );
+
   GST_VAAPI_OBJECT_UNLOCK_DISPLAY (window);
-  if (!vaapi_check_status (status, "vaPutSurface()"))
+
+  return status;
+}
+
+static gboolean
+gst_vaapi_window_x11_render (GstVaapiWindow * window,
+    GstVaapiSurface * surface,
+    const GstVaapiRectangle * src_rect,
+    const GstVaapiRectangle * dst_rect, guint flags)
+{
+  VASurfaceID surface_id;
+  VAStatus status;
+  GstVaapiWindowX11Private *const priv =
+      GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
+  gboolean ret = FALSE;
+
+  surface_id = GST_VAAPI_OBJECT_ID (surface);
+  if (surface_id == VA_INVALID_ID)
     return FALSE;
 
-  return TRUE;
+  if (window->has_vpp && priv->need_vpp)
+    goto conversion;
+
+  status =
+      gst_vaapi_window_x11_put_surface (window, surface_id, src_rect, dst_rect,
+      flags);
+
+  if (status == VA_STATUS_ERROR_FLAG_NOT_SUPPORTED ||
+      status == VA_STATUS_ERROR_UNIMPLEMENTED ||
+      status == VA_STATUS_ERROR_INVALID_IMAGE_FORMAT) {
+    priv->need_vpp = TRUE;
+  } else {
+    ret = vaapi_check_status (status, "vaPutSurface()");
+  }
+
+conversion:
+  if (priv->need_vpp && window->has_vpp) {
+    GstVaapiSurface *const vpp_surface =
+        gst_vaapi_window_vpp_convert_internal (window, surface, NULL, NULL,
+        flags);
+    if (G_LIKELY (vpp_surface)) {
+      surface_id = GST_VAAPI_OBJECT_ID (vpp_surface);
+      status =
+          gst_vaapi_window_x11_put_surface (window, surface_id, src_rect,
+          dst_rect, flags);
+
+      ret = vaapi_check_status (status, "vaPutSurface()");
+
+      if (!gst_vaapi_surface_sync (vpp_surface)) {
+        GST_WARNING ("failed to render surface");
+        ret = FALSE;
+      }
+
+      gst_vaapi_video_pool_put_object (window->surface_pool, vpp_surface);
+    } else {
+      priv->need_vpp = FALSE;
+    }
+  }
+
+  return ret;
 }
 
 static gboolean
