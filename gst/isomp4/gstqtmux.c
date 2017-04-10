@@ -3339,7 +3339,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
     /* timescale = samplerate */
     scaled_duration = 1;
-    pad->last_dts += duration * nsamples;
+    pad->last_dts += duration;
   } else {
     nsamples = 1;
     sample_size = gst_buffer_get_size (last_buf);
