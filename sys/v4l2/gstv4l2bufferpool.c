@@ -292,6 +292,9 @@ gst_v4l2_buffer_pool_import_userptr (GstV4l2BufferPool * pool,
   gst_mini_object_set_qdata (GST_MINI_OBJECT (dest), GST_V4L2_IMPORT_QUARK,
       data, (GDestroyNotify) _unmap_userptr_frame);
 
+  gst_buffer_copy_into (dest, src,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+
   return ret;
 
 not_our_buffer:
@@ -345,6 +348,9 @@ gst_v4l2_buffer_pool_import_dmabuf (GstV4l2BufferPool * pool,
 
   gst_mini_object_set_qdata (GST_MINI_OBJECT (dest), GST_V4L2_IMPORT_QUARK,
       gst_buffer_ref (src), (GDestroyNotify) gst_buffer_unref);
+
+  gst_buffer_copy_into (dest, src,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
   return GST_FLOW_OK;
 
