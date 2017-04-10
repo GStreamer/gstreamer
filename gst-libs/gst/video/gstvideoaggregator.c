@@ -1219,16 +1219,16 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
       if (pad->priv->end_time != -1) {
         if (pad->priv->end_time <= output_start_running_time) {
           pad->priv->start_time = pad->priv->end_time = -1;
-          if (is_eos) {
+          if (!is_eos) {
             GST_DEBUG ("I just need more data");
             need_more_data = TRUE;
+          } else {
+            gst_buffer_replace (&pad->buffer, NULL);
           }
         } else if (is_eos) {
           eos = FALSE;
         }
-      }
-
-      if (is_eos) {
+      } else if (is_eos) {
         gst_buffer_replace (&pad->buffer, NULL);
       }
     }
