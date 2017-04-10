@@ -2754,6 +2754,12 @@ gst_value_compare_structure (const GValue * value1, const GValue * value2)
   GstStructure *structure1 = GST_STRUCTURE (g_value_get_boxed (value1));
   GstStructure *structure2 = GST_STRUCTURE (g_value_get_boxed (value2));
 
+  if (structure1 == structure2)
+    return GST_VALUE_EQUAL;
+
+  if (!structure1 || !structure2)
+    return GST_VALUE_UNORDERED;
+
   if (gst_structure_is_equal (structure1, structure2))
     return GST_VALUE_EQUAL;
 

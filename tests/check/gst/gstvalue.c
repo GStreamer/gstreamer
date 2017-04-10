@@ -1048,6 +1048,23 @@ GST_START_TEST (test_value_compare)
   fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
   g_value_unset (&value1);
   g_value_unset (&value2);
+
+  /* Check that we can compare structure */
+  {
+    GstStructure *s = gst_structure_new_empty ("test");
+
+    g_value_init (&value1, GST_TYPE_STRUCTURE);
+    g_value_init (&value2, GST_TYPE_STRUCTURE);
+    fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL);
+
+    gst_value_set_structure (&value1, s);
+    fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_UNORDERED);
+    gst_value_set_structure (&value2, s);
+    fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL);
+    g_value_unset (&value1);
+    g_value_unset (&value2);
+    gst_structure_free (s);
+  }
 }
 
 GST_END_TEST;
