@@ -2614,10 +2614,15 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
                 sidx_end_offset - dash_stream->sidx_current_offset);
           }
         } else {
-          buffer =
-              gst_adapter_take_buffer (dash_stream->sidx_adapter,
-              sidx_end_offset - dash_stream->sidx_current_offset);
-          advance = TRUE;
+          if (sidx_end_offset <= dash_stream->sidx_current_offset) {
+            buffer = NULL;
+            gst_adapter_clear (dash_stream->sidx_adapter);
+          } else {
+            buffer =
+                gst_adapter_take_buffer (dash_stream->sidx_adapter,
+                sidx_end_offset - dash_stream->sidx_current_offset);
+            advance = TRUE;
+          }
         }
       }
 
