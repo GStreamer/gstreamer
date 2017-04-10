@@ -383,7 +383,7 @@ G_BEGIN_DECLS
  * @GST_TAG_IMAGE_TYPE_VIDEO_CAPTURE         : Movie/video screen capture
  * @GST_TAG_IMAGE_TYPE_FISH                  : A fish as funny as the ID3v2 spec
  * @GST_TAG_IMAGE_TYPE_ILLUSTRATION          : Illustration
- * @GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO      : Band/artist logotype
+ * @GST_TAG_IMAGE_TYPE_ARTIST_LOGO           : Band/artist logotype
  * @GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO : Publisher/studio logotype
  *
  * Type of image contained in an image tag (specified as "image-type" field in
@@ -409,9 +409,12 @@ typedef enum {
   GST_TAG_IMAGE_TYPE_VIDEO_CAPTURE,
   GST_TAG_IMAGE_TYPE_FISH,
   GST_TAG_IMAGE_TYPE_ILLUSTRATION,
-  GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO,
+  GST_TAG_IMAGE_TYPE_ARTIST_LOGO,
   GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO
 } GstTagImageType;
+
+/* FIXME 2.0: Fix the enum value name */
+#define GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO GST_TAG_IMAGE_TYPE_ARTIST_LOGO
 
 /**
  * GST_TAG_ID3V2_HEADER_SIZE:
@@ -550,7 +553,7 @@ gboolean       gst_tag_check_language_code          (const gchar * lang_code);
  *     but only non-commercial distribution is allowed
  * @GST_TAG_LICENSE_REQUIRES_NOTICE: copyright and license notices
  *     must be kept intact
- * @GST_TAG_LICENSE_REQUIRES_ATTRIBUTION: credit must be given to
+ * @GST_TAG_LICENSE_REQUIRES_ATTRIBUTIONS: credit must be given to
  *     copyright holder and/or author
  * @GST_TAG_LICENSE_REQUIRES_SHARE_ALIKE: derivative works must be
  *     licensed under the same terms or compatible terms as the original work
@@ -582,7 +585,7 @@ typedef enum {
   GST_TAG_LICENSE_PERMITS_SHARING                  = (1 << 3),
 
   GST_TAG_LICENSE_REQUIRES_NOTICE                  = (1 << 8),
-  GST_TAG_LICENSE_REQUIRES_ATTRIBUTION             = (1 << 9),
+  GST_TAG_LICENSE_REQUIRES_ATTRIBUTIONS            = (1 << 9),
   GST_TAG_LICENSE_REQUIRES_SHARE_ALIKE             = (1 << 10),
   GST_TAG_LICENSE_REQUIRES_SOURCE_CODE             = (1 << 11),
   GST_TAG_LICENSE_REQUIRES_COPYLEFT                = (1 << 12),
@@ -594,6 +597,9 @@ typedef enum {
   GST_TAG_LICENSE_CREATIVE_COMMONS_LICENSE         = (1 << 24),
   GST_TAG_LICENSE_FREE_SOFTWARE_FOUNDATION_LICENSE = (1 << 25)
 } GstTagLicenseFlags;
+
+/* FIXME 2.0: Fix the enum value name */
+#define GST_TAG_LICENSE_REQUIRES_ATTRIBUTION GST_TAG_LICENSE_REQUIRES_ATTRIBUTIONS
 
 gchar **            gst_tag_get_licenses (void);
 
