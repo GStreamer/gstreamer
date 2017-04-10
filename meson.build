@@ -99,7 +99,11 @@ foreach custom_subproj: get_option('custom_subprojects').split(',')
 endforeach
 
 foreach subproj: subprojects
-    subproject(subproj, version: gst_version)
+    default_options = []
+    if get_option('disable_introspection')
+        default_options += ['disable_introspection=true']
+    endif
+    subproject(subproj, version: gst_version, default_options: default_options)
 
     cmdres = run_command(python3, '-c', symlink.format(subproj, meson.current_source_dir()))
     if cmdres.returncode() == 0
