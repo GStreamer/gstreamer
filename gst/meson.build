@@ -158,7 +158,7 @@ configure_file(input : 'gstconfig.h.in',
   output : 'gstconfig.h',
   install_dir : 'include/gstreamer-1.0/gst',
   configuration : cdata)
-configure_file(input : 'gstversion.h.in',
+gst_version_h = configure_file(input : 'gstversion.h.in',
   output : 'gstversion.h',
   install_dir : 'include/gstreamer-1.0/gst',
   configuration : cdata)
@@ -233,7 +233,7 @@ if libtype != 'static'
 
     gst_incdirs += [configinc]
     gst_gen_sources += [gnome.generate_gir(libgst_shared,
-      sources : gst_sources + gst_headers,
+      sources : gst_sources + gst_headers + gst_enums + [gst_version_h],
       namespace : 'Gst',
       nsversion : apiversion,
       identifier_prefix : 'Gst',

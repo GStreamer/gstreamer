@@ -59,6 +59,7 @@ if libtype != 'static'
   )
   gst_base = gst_base_shared
   if build_gir
+    gst_gir_extra_args = gir_init_section + [ '--c-include=gst/base/base.h' ]
     gst_base_gen_sources += [gnome.generate_gir(gst_base_shared,
       sources : gst_base_sources + gst_base_headers,
       namespace : 'GstBase',
@@ -70,7 +71,7 @@ if libtype != 'static'
       include_directories : [configinc, libsinc, privinc],
       includes : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0', 'Gst-1.0'],
       install : true,
-      extra_args : gir_init_section,
+      extra_args : gst_gir_extra_args,
     )]
   endif
 endif

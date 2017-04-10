@@ -66,6 +66,7 @@ if libtype != 'static'
   )
   gst_controller = gst_controller_shared
   if build_gir
+    gst_gir_extra_args = gir_init_section + [ '--c-include=gst/controller/controller.h' ]
     gst_controller_gir = gnome.generate_gir(gst_controller_shared,
       sources : gst_controller_sources + gst_controller_headers + [gstcontroller_h] + [gstcontroller_c],
       namespace : 'GstController',
@@ -77,7 +78,7 @@ if libtype != 'static'
       include_directories : [configinc, libsinc, privinc],
       includes : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0', 'Gst-1.0'],
       install : true,
-      extra_args : gir_init_section,
+      extra_args : gst_gir_extra_args,
     )
     gst_controller_gen_sources += [gst_controller_gir]
   endif
