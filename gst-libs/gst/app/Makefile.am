@@ -32,6 +32,7 @@ if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstApp-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstapp_@GST_API_VERSION@include_HEADERS))
+gir_headers+=$(patsubst %,$(srcdir)/%, $(nodist_libgstapp_@GST_API_VERSION@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstapp_@GST_API_VERSION@_la_SOURCES))
 gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstapp_@GST_API_VERSION@_la_SOURCES))
 
