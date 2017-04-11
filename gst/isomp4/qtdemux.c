@@ -3426,9 +3426,12 @@ qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
       default_sample_duration, default_sample_size, default_sample_flags);
 
   /* FIXME: Handle TF_SAMPLE_DESCRIPTION_INDEX properly */
-  if (flags & TF_SAMPLE_DESCRIPTION_INDEX)
-    if (!gst_byte_reader_skip (tfhd, 4))
+  if (flags & TF_SAMPLE_DESCRIPTION_INDEX) {
+    guint32 sample_description_index;
+    if (!gst_byte_reader_get_uint32_be (tfhd, &sample_description_index))
       goto invalid_track;
+    (*stream)->stsd_sample_description_id = sample_description_index - 1;
+  }
 
   if (flags & TF_DEFAULT_SAMPLE_DURATION)
     if (!gst_byte_reader_get_uint32_be (tfhd, default_sample_duration))
