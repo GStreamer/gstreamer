@@ -144,9 +144,6 @@ gst_vaapi_window_class_init (GstVaapiWindowClass * klass)
       gst_vaapi_window_finalize;
 }
 
-GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiWindow,
-    gst_vaapi_window, gst_vaapi_window_class_init (&g_class));
-
 GstVaapiWindow *
 gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
     GstVaapiDisplay * display, GstVaapiID id, guint width, guint height)
