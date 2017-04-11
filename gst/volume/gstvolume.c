@@ -230,7 +230,7 @@ volume_choose_func (GstVolume * self, const GstAudioInfo * info)
 
 static gboolean
 volume_update_volume (GstVolume * self, const GstAudioInfo * info,
-    gfloat volume, gboolean mute)
+    gdouble volume, gboolean mute)
 {
   gboolean passthrough;
   gboolean res;
@@ -647,7 +647,7 @@ volume_setup (GstAudioFilter * filter, const GstAudioInfo * info)
 {
   gboolean res;
   GstVolume *self = GST_VOLUME (filter);
-  gfloat volume;
+  gdouble volume;
   gboolean mute;
 
   GST_OBJECT_LOCK (self);
@@ -687,7 +687,7 @@ volume_before_transform (GstBaseTransform * base, GstBuffer * buffer)
 {
   GstClockTime timestamp;
   GstVolume *self = GST_VOLUME (base);
-  gfloat volume;
+  gdouble volume;
   gboolean mute;
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
