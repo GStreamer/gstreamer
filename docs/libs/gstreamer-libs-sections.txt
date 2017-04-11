@@ -18,7 +18,7 @@
 <SECTION>
 <FILE>gstargbcontrolbinding</FILE>
 <TITLE>GstARGBControlBinding</TITLE>
-<INCLUDE>libs/controller/gstargbcontrolbinding.h</INCLUDE>
+<INCLUDE>libs/controller/controller.h</INCLUDE>
 gst_argb_control_binding_new
 <SUBSECTION Standard>
 GstARGBControlBinding
@@ -35,7 +35,7 @@ gst_argb_control_binding_get_type
 <SECTION>
 <FILE>gstdirectcontrolbinding</FILE>
 <TITLE>GstDirectControlBinding</TITLE>
-<INCLUDE>libs/controller/gstdirectcontrolbinding.h</INCLUDE>
+<INCLUDE>libs/controller/controller.h</INCLUDE>
 gst_direct_control_binding_new
 gst_direct_control_binding_new_absolute
 <SUBSECTION Standard>
@@ -55,7 +55,7 @@ gst_direct_control_binding_get_type
 <SECTION>
 <FILE>gstproxycontrolbinding</FILE>
 <TITLE>GstProxyControlBinding</TITLE>
-<INCLUDE>libs/controller/gstdirectcontrolbinding.h</INCLUDE>
+<INCLUDE>libs/controller/controller.h</INCLUDE>
 gst_proxy_control_binding_new
 <SUBSECTION Standard>
 GstProxyControlBinding
@@ -74,7 +74,7 @@ gst_proxy_control_binding_get_type
 <SECTION>
 <FILE>gsttimedvaluecontrolsource</FILE>
 <TITLE>GstTimedValueControlSource</TITLE>
-<INCLUDE>libs/controller/gsttimedvaluecontrolsource.h</INCLUDE>
+<INCLUDE>libs/controller/controller.h</INCLUDE>
 GstTimedValueControlSource
 GstControlPoint
 gst_timed_value_control_source_find_control_point_iter
@@ -104,7 +104,7 @@ gst_control_point_get_type
 <SECTION>
 <FILE>gstinterpolationcontrolsource</FILE>
 <TITLE>GstInterpolationControlSource</TITLE>
-<INCLUDE>libs/controller/gstinterpolationcontrolsource.h</INCLUDE>
+<INCLUDE>libs/controller/controller.h</INCLUDE>
 GstInterpolationControlSource
 GstInterpolationMode
 gst_interpolation_control_source_new
@@ -148,7 +148,7 @@ gst_lfo_waveform_get_type
 <SECTION>
 <FILE>gsttriggercontrolsource</FILE>
 <TITLE>GstTriggerControlSource</TITLE>
-<INCLUDE>libs/controller/gsttriggercontrolsource.h</INCLUDE>
+<INCLUDE>libs/controller/controller.h</INCLUDE>
 GstTriggerControlSource
 gst_trigger_control_source_new
 GST_TYPE_TRIGGER_WAVEFORM
