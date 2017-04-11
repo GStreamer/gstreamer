@@ -49,6 +49,7 @@ gl_headers = [
   'gstglmemorypbo.h',
   'gstgloverlaycompositor.h',
   'gstglquery.h',
+  'gstglrenderbuffer.h',
   'gstglshader.h',
   'gstglshaderstrings.h',
   'gstglsl.h',
