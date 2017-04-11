@@ -1819,6 +1819,13 @@ class GstValidateBaseTestManager(TestsManager):
 
         self._scenarios = list(set(self._scenarios))
 
+    def set_scenarios(self, scenarios):
+        """
+        Override the scenarios
+        """
+        self._scenarios = []
+        self.add_scenarios(scenarios)
+        
     def get_scenarios(self):
         return self._scenarios
 
