@@ -1396,6 +1396,10 @@ unprotect:
       GST_INFO_OBJECT (filter,
           "Dropping replayed packet, probably retransmission");
       goto err;
+    case srtp_err_status_replay_old:
+      GST_INFO_OBJECT (filter,
+          "Dropping replayed old packet, probably retransmission");
+      goto err;
     case srtp_err_status_key_expired:{
       GstSrtpDecSsrcStream *stream;
 

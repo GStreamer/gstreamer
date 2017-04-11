@@ -78,6 +78,7 @@
 #  define srtp_err_status_ok err_status_ok
 #  define srtp_err_status_bad_param err_status_bad_param
 #  define srtp_err_status_replay_fail err_status_replay_fail
+#  define srtp_err_status_replay_old err_status_replay_old
 #  define srtp_err_status_key_expired err_status_key_expired
 #  define srtp_err_status_auth_fail err_status_auth_fail
 #  define srtp_err_status_cipher_fail err_status_cipher_fail
