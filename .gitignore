@@ -56,5 +56,8 @@ Build
 *.gc??
 *.swp
 
+/libs/gst/*/*-enumtypes.[ch]
+/libs/gst/helpers/gst-completion-helper-1.0
+
 /tests/misc/netclock-replay
 /build
