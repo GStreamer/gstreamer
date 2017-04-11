@@ -37,9 +37,11 @@ EXTRA_DIST = \
 	ChangeLog gst-plugins-base.doap autogen.sh $(win32) \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
 	gst-libs/gst/audio/audio_mkenum.py \
+	gst-libs/gst/app/app_mkenum.py \
 	gst-libs/gst/pbutils/pbutils_mkenum.py \
 	gst-libs/gst/rtp/rtp_mkenum.py \
 	gst-libs/gst/rtsp/rtsp_mkenum.py \
+	gst-libs/gst/tag/tag_mkenum.py \
 	gst-libs/gst/video/video_mkenum.py \
 	meson_options.txt config.h.meson
 
