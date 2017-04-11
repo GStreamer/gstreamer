@@ -18,11 +18,10 @@ if libdl.found() and have_pthread_h
     build_decklink = true
   elif host_machine.system() == 'darwin'
     decklink_sources += ['osx/DeckLinkAPIDispatch.cpp']
-    decklink_ldflags = '-Wl,-framework,CoreFoundation'
+    decklink_ldflags = ['-Wl,-framework,CoreFoundation']
     build_decklink = true
   elif host_machine.system() == 'windows'
     decklink_sources += ['win/DeckLinkAPIDispatch.cpp', 'win/DeckLinkAPI_i.c']
-    decklink_ldflags = '-Wl,-framework,CoreFoundation'
     build_decklink = true
   else
     message('Not building decklink plugin for system ' + host_machine.system())
