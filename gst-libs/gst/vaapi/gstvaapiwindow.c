@@ -69,7 +69,7 @@ ensure_filter (GstVaapiWindow * window)
   window->filter = gst_vaapi_filter_new (display);
   if (!window->filter)
     goto error_create_filter;
-  if (!gst_vaapi_filter_set_format (window->filter, window->surface_format))
+  if (!gst_vaapi_filter_set_format (window->filter, GST_VIDEO_FORMAT_NV12))
     goto error_unsupported_format;
 
   return TRUE;
@@ -83,7 +83,7 @@ error_create_filter:
 error_unsupported_format:
   {
     GST_ERROR ("unsupported render target format %s",
-        gst_vaapi_video_format_to_string (window->surface_format));
+        gst_vaapi_video_format_to_string (GST_VIDEO_FORMAT_NV12));
     window->has_vpp = FALSE;
     return FALSE;
   }
@@ -100,7 +100,7 @@ ensure_filter_surface_pool (GstVaapiWindow * window)
   /* Ensure VA surface pool is created */
   /* XXX: optimize the surface format to use. e.g. YUY2 */
   window->surface_pool = gst_vaapi_surface_pool_new (display,
-      window->surface_format, window->width, window->height);
+      GST_VIDEO_FORMAT_NV12, window->width, window->height);
   if (!window->surface_pool) {
     GST_WARNING ("failed to create surface pool for conversion");
     return FALSE;
@@ -168,7 +168,6 @@ gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
 
   window->use_foreign_window = id != GST_VAAPI_ID_INVALID;
   GST_VAAPI_OBJECT_ID (window) = window->use_foreign_window ? id : 0;
-  window->surface_format = GST_VIDEO_FORMAT_ENCODED;
   window->has_vpp =
       GST_VAAPI_DISPLAY_HAS_VPP (GST_VAAPI_OBJECT_DISPLAY (window));
 

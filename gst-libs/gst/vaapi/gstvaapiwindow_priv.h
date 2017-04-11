@@ -78,8 +78,7 @@ struct _GstVaapiWindow
   guint is_fullscreen:1;
   guint check_geometry:1;
 
- /* for conversion */
-  GstVideoFormat surface_format;
+  /* for conversion */
   GstVaapiVideoPool *surface_pool;
   GstVaapiFilter *filter;
   gboolean has_vpp;
