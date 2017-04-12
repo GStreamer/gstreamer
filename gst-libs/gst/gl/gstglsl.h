@@ -48,22 +48,22 @@ typedef enum {
 /**
  * GstGLSLVersion:
  * @GST_GLSL_VERSION_NONE: no version
- * @GST_GLSL_VERSION_100: #version 100 (only valid for ES)
- * @GST_GLSL_VERSION_110: #version 110 (only valid for compatibility desktop GL)
- * @GST_GLSL_VERSION_120: #version 120 (only valid for compatibility desktop GL)
- * @GST_GLSL_VERSION_130: #version 130 (only valid for compatibility desktop GL)
- * @GST_GLSL_VERSION_140: #version 140 (only valid for compatibility desktop GL)
- * @GST_GLSL_VERSION_150: #version 150 (valid for compatibility/core desktop GL)
- * @GST_GLSL_VERSION_300: #version 300 (only valid for ES)
- * @GST_GLSL_VERSION_310: #version 310 (only valid for ES)
- * @GST_GLSL_VERSION_320: #version 320 (only valid for ES)
- * @GST_GLSL_VERSION_330: #version 330 (valid for compatibility/core desktop GL)
- * @GST_GLSL_VERSION_400: #version 400 (valid for compatibility/core desktop GL)
- * @GST_GLSL_VERSION_410: #version 410 (valid for compatibility/core desktop GL)
- * @GST_GLSL_VERSION_420: #version 420 (valid for compatibility/core desktop GL)
- * @GST_GLSL_VERSION_430: #version 430 (valid for compatibility/core desktop GL)
- * @GST_GLSL_VERSION_440: #version 440 (valid for compatibility/core desktop GL)
- * @GST_GLSL_VERSION_450: #version 450 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_100: version 100 (only valid for ES)
+ * @GST_GLSL_VERSION_110: version 110 (only valid for compatibility desktop GL)
+ * @GST_GLSL_VERSION_120: version 120 (only valid for compatibility desktop GL)
+ * @GST_GLSL_VERSION_130: version 130 (only valid for compatibility desktop GL)
+ * @GST_GLSL_VERSION_140: version 140 (only valid for compatibility desktop GL)
+ * @GST_GLSL_VERSION_150: version 150 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_300: version 300 (only valid for ES)
+ * @GST_GLSL_VERSION_310: version 310 (only valid for ES)
+ * @GST_GLSL_VERSION_320: version 320 (only valid for ES)
+ * @GST_GLSL_VERSION_330: version 330 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_400: version 400 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_410: version 410 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_420: version 420 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_430: version 430 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_440: version 440 (valid for compatibility/core desktop GL)
+ * @GST_GLSL_VERSION_450: version 450 (valid for compatibility/core desktop GL)
  *
  * GLSL version list
  *
