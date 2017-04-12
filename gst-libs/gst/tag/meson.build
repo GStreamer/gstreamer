@@ -53,6 +53,7 @@ gsttag = library('gsttag-@0@'.format(api_version),
 )
 
 if build_gir
+  gst_gir_extra_args = gir_init_section + [ '--c-include=gst/tag/tag.h' ]
   tag_gen_sources += [gnome.generate_gir(gsttag,
     sources : tag_sources + tag_headers + [gsttag_h] + [gsttag_c],
     namespace : 'GstTag',
@@ -62,7 +63,7 @@ if build_gir
     export_packages : 'gstreamer-tag-1.0',
     includes : ['Gst-1.0'],
     install : true,
-    extra_args : gir_init_section,
+    extra_args : gst_gir_extra_args,
     dependencies : tag_deps
   )]
 endif

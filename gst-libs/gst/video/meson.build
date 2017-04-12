@@ -131,6 +131,7 @@ gstvideo = library('gstvideo-@0@'.format(api_version),
 )
 
 if build_gir
+  gst_gir_extra_args = gir_init_section + [ '--c-include=gst/video/video.h' ]
   video_gen_sources += [gnome.generate_gir(gstvideo,
     sources : video_sources + video_headers + [gstvideo_c] + [gstvideo_h],
     namespace : 'GstVideo',
@@ -140,7 +141,7 @@ if build_gir
     export_packages : 'gstreamer-video-1.0',
     includes : ['Gst-1.0', 'GLib-2.0', 'GObject-2.0', 'GModule-2.0' ],
     install : true,
-    extra_args : gir_init_section,
+    extra_args : gst_gir_extra_args,
     dependencies : gstvideo_deps
   )]
 endif

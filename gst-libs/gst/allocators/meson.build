@@ -19,6 +19,7 @@ gstallocators = library('gstallocators-@0@'.format(api_version),
 
 allocators_gen_sources  = []
 if build_gir
+  gst_gir_extra_args = gir_init_section + [ '--c-include=gst/allocators/allocators.h' ]
   allocators_gen_sources += [gnome.generate_gir(gstallocators,
     sources : gst_allocators_sources + gst_allocators_headers,
     namespace : 'GstAllocators',
@@ -28,7 +29,7 @@ if build_gir
     export_packages : 'gstreamer-allocators-1.0',
     includes : ['Gst-1.0'],
     install : true,
-    extra_args : gir_init_section,
+    extra_args : gst_gir_extra_args,
     dependencies : [gst_dep]
   )]
 endif

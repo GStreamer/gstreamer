@@ -21,6 +21,7 @@ gstsdp = library('gstsdp-@0@'.format(api_version),
 
 sdp_gen_sources  = []
 if build_gir
+  gst_gir_extra_args = gir_init_section + [ '--c-include=gst/sdp/sdp.h' ]
   sdp_gen_sources += [gnome.generate_gir(gstsdp,
     sources : gst_sdp_sources + gst_sdp_headers,
     namespace : 'GstSdp',
@@ -30,7 +31,7 @@ if build_gir
     export_packages : 'gstreamer-sdp-1.0',
     includes : ['Gst-1.0'],
     install : true,
-    extra_args : gir_init_section,
+    extra_args : gst_gir_extra_args,
     dependencies : rtsp_deps
   )]
 endif

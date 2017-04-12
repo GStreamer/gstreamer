@@ -50,6 +50,7 @@ gst_rtp = library('gstrtp-@0@'.format(api_version),
 
 rtp_gen_sources = [gstrtp_enum_h]
 if build_gir
+  gst_gir_extra_args = gir_init_section + [ '--c-include=gst/rtp/rtp.h' ]
   rtp_gen_sources += [gnome.generate_gir(gst_rtp,
     sources : rtp_sources + rtp_headers + [gstrtp_enum_c] + [gstrtp_enum_h],
     namespace : 'GstRtp',
@@ -59,7 +60,7 @@ if build_gir
     export_packages : 'gstreamer-rtp-1.0',
     includes : ['Gst-1.0', 'GstBase-1.0'],
     install : true,
-    extra_args : gir_init_section,
+    extra_args : gst_gir_extra_args,
     dependencies : gstrtp_deps
   )]
 endif

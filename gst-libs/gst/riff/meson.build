@@ -30,6 +30,7 @@ riff_gen_sources  = []
 # This library does not respect the type naming conventions required to be
 # usable in binded languages.
 # if build_gir
+#   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/riff/riff.h' ]
 #   riff_gen_sources += [gnome.generate_gir(gstriff,
 #     sources : riff_sources + riff_headers,
 #     namespace : 'GstRiff',
@@ -39,7 +40,7 @@ riff_gen_sources  = []
 #     export_packages : 'gstreamer-riff-1.0',
 #     includes : ['Gst-1.0'],
 #     install : true,
-#     extra_args : gir_init_section,
+#     extra_args : gst_gir_extra_args,
 #     dependencies : riff_deps,
 #   )]
 # endif

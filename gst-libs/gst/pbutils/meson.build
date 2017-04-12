@@ -65,6 +65,7 @@ pbutils = library('gstpbutils-@0@'.format(api_version),
 
 pbutils_gen_sources = [gstpbutils_h]
 if build_gir
+  gst_gir_extra_args = gir_init_section + [ '--c-include=gst/pbutils/pbutils.h' ]
   pbutils_gen_sources += [gnome.generate_gir(pbutils,
     sources : pbutils_sources + pbutils_headers + [gstpbutils_h],
     namespace : 'GstPbutils',
@@ -74,7 +75,7 @@ if build_gir
     export_packages : 'gstreamer-pbutils-1.0',
     includes : ['Gst-1.0', 'GstBase-1.0'],
     install : true,
-    extra_args : gir_init_section,
+    extra_args : gst_gir_extra_args,
     dependencies : gstpbutils_deps
   )]
 endif

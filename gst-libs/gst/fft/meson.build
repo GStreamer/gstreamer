@@ -37,6 +37,7 @@ gstfft = library('gstfft-@0@'.format(api_version),
 
 fft_gen_sources  = []
 if build_gir
+  gst_gir_extra_args = gir_init_section + [ '--c-include=gst/fft/fft.h' ]
   fft_gen_sources += [gnome.generate_gir(gstfft,
     sources : fft_sources + fft_headers,
     namespace : 'GstFft',
@@ -46,7 +47,7 @@ if build_gir
     export_packages : 'gstreamer-fft-1.0',
     includes : ['Gst-1.0'],
     install : true,
-    extra_args : gir_init_section,
+    extra_args : gst_gir_extra_args,
     dependencies : [gst_dep, libm]
   )]
 endif
