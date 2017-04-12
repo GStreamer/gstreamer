@@ -52,7 +52,7 @@ if libtype != 'shared'
 endif
 
 
-gst_controller_gen_sources = []
+gst_controller_gen_sources = [gstcontroller_h]
 if libtype != 'static'
   gst_controller_shared = shared_library('gstcontroller-@0@'.format(apiversion),
     gst_controller_sources, gstcontroller_h, gstcontroller_c,
