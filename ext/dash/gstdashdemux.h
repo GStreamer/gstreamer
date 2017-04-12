@@ -67,25 +67,25 @@ struct _GstDashDemuxStream
   GstMediaFragmentInfo current_fragment;
 
   /* index parsing */
-  GstAdapter *sidx_adapter;
   GstSidxParser sidx_parser;
   GstClockTime sidx_position;
   gint64 sidx_base_offset;
+  gboolean allow_sidx;
   GstClockTime pending_seek_ts;
-  /* sidx offset tracking */
-  guint64 sidx_current_offset;
+
+  GstAdapter *adapter;
+  /* current offset of the first byte in the adapter / last byte we pushed or
+   * dropped*/
+  guint64 current_offset;
   /* index = 1, header = 2, data = 3 */
-  guint sidx_index_header_or_data;
+  guint current_index_header_or_data;
 
   /* ISOBMFF box parsing */
   gboolean is_isobmff;
-  GstAdapter *isobmff_adapter;
   struct {
     /* index = 1, header = 2, data = 3 */
-    guint index_header_or_data;
     guint32 current_fourcc;
     guint64 current_start_offset;
-    guint64 current_offset;
     guint64 current_size;
   } isobmff_parser;
 

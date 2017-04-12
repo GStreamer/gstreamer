@@ -708,12 +708,14 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
         gst_adaptive_demux_stream_new (GST_ADAPTIVE_DEMUX_CAST (demux), srcpad);
     stream->active_stream = active_stream;
     s = gst_caps_get_structure (caps, 0);
-    stream->is_isobmff =
-        gst_structure_has_name (s, "video/quicktime") ||
-        gst_structure_has_name (s, "audio/x-m4a");
+    stream->allow_sidx =
+        gst_mpd_client_has_isoff_ondemand_profile (demux->client);
+    stream->is_isobmff = gst_structure_has_name (s, "video/quicktime")
+        || gst_structure_has_name (s, "audio/x-m4a");
     stream->first_sync_sample_always_after_moof = TRUE;
-    if (stream->is_isobmff)
-      stream->isobmff_adapter = gst_adapter_new ();
+    if (stream->is_isobmff
+        || gst_mpd_client_has_isoff_ondemand_profile (demux->client))
+      stream->adapter = gst_adapter_new ();
     gst_adaptive_demux_stream_set_caps (GST_ADAPTIVE_DEMUX_STREAM_CAST (stream),
         caps);
     if (tags)
@@ -731,8 +733,6 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     }
 
     gst_isoff_sidx_parser_init (&stream->sidx_parser);
-    if (gst_mpd_client_has_isoff_ondemand_profile (demux->client))
-      stream->sidx_adapter = gst_adapter_new ();
   }
 
   return TRUE;
@@ -1132,11 +1132,9 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
 
   if (GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER (stream) && isombff) {
     gst_dash_demux_stream_update_headers_info (stream);
-    dashstream->sidx_base_offset = stream->fragment.index_range_end + 1;
     /* sidx entries may not be available in here */
-    if (dashstream->sidx_position != 0
-        && dashstream->sidx_position != GST_CLOCK_TIME_NONE
-        && SIDX (dashstream)->entries) {
+    if (stream->fragment.index_uri
+        && dashstream->sidx_position != GST_CLOCK_TIME_NONE) {
       /* request only the index to be downloaded as we need to reposition the
        * stream to a subsegment */
       return GST_FLOW_OK;
@@ -1152,6 +1150,7 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
 
     gst_mpd_client_get_next_fragment (dashdemux->client, dashstream->index,
         &fragment);
+
     stream->fragment.uri = fragment.uri;
     stream->fragment.timestamp = GST_CLOCK_TIME_NONE;
     stream->fragment.duration = GST_CLOCK_TIME_NONE;
@@ -1174,8 +1173,7 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
     stream->fragment.uri = fragment.uri;
     /* If mpd does not specify indexRange (i.e., null index_uri),
      * sidx entries may not be available until download it */
-    if (isombff && dashstream->sidx_position != 0
-        && dashstream->sidx_position != GST_CLOCK_TIME_NONE
+    if (isombff && dashstream->sidx_position != GST_CLOCK_TIME_NONE
         && SIDX (dashstream)->entries) {
       GstSidxBoxEntry *entry = SIDX_CURRENT_ENTRY (dashstream);
       stream->fragment.range_start =
@@ -1207,7 +1205,7 @@ gst_dash_demux_index_entry_search (GstSidxBoxEntry * entry, GstClockTime * ts,
     gpointer user_data)
 {
   GstClockTime entry_ts = entry->pts + entry->duration;
-  if (entry_ts < *ts)
+  if (entry_ts <= *ts)
     return -1;
   else if (entry->pts > *ts)
     return 1;
@@ -1293,9 +1291,19 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
   gint last_index, last_repeat;
+  gboolean is_isobmff;
 
   last_index = dashstream->active_stream->segment_index;
   last_repeat = dashstream->active_stream->segment_repeat_index;
+
+  if (dashstream->adapter)
+    gst_adapter_clear (dashstream->adapter);
+  dashstream->current_offset = -1;
+  dashstream->current_index_header_or_data = 0;
+
+  dashstream->isobmff_parser.current_fourcc = 0;
+  dashstream->isobmff_parser.current_start_offset = 0;
+  dashstream->isobmff_parser.current_size = 0;
 
   if (dashstream->moof)
     gst_isoff_moof_box_free (dashstream->moof);
@@ -1305,10 +1313,16 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
   dashstream->moof_sync_samples = NULL;
   dashstream->current_sync_sample = -1;
 
-  gst_mpd_client_stream_seek (dashdemux->client, dashstream->active_stream,
-      forward, flags, ts, final_ts);
+  is_isobmff = gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client);
 
-  if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
+  if (!gst_mpd_client_stream_seek (dashdemux->client, dashstream->active_stream,
+          forward,
+          is_isobmff ? (flags & (~(GST_SEEK_FLAG_SNAP_BEFORE |
+                      GST_SEEK_FLAG_SNAP_AFTER))) : flags, ts, final_ts)) {
+    return GST_FLOW_EOS;
+  }
+
+  if (is_isobmff) {
     GstClockTime period_start, offset;
 
     period_start = gst_mpd_parser_get_period_start_time (dashdemux->client);
@@ -1326,11 +1340,8 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
       GST_LOG_OBJECT (stream->pad,
           "Segment index was changed, reset sidx parser");
       gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
-      gst_isoff_sidx_parser_init (&dashstream->sidx_parser);
       dashstream->sidx_base_offset = 0;
-      dashstream->sidx_position = GST_CLOCK_TIME_NONE;
-      if (dashstream->sidx_adapter)
-        gst_adapter_clear (dashstream->sidx_adapter);
+      dashstream->allow_sidx = TRUE;
     }
 
     if (dashstream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
@@ -1487,34 +1498,6 @@ gst_dash_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream)
       dashstream->active_stream, stream->demux->segment.rate > 0.0);
 }
 
-static void
-gst_dash_demux_clear_pending_stream_data (GstDashDemux * dashdemux,
-    GstDashDemuxStream * dashstream)
-{
-  gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
-  gst_isoff_sidx_parser_init (&dashstream->sidx_parser);
-  if (dashstream->sidx_adapter)
-    gst_adapter_clear (dashstream->sidx_adapter);
-  dashstream->sidx_base_offset = 0;
-  dashstream->sidx_position = GST_CLOCK_TIME_NONE;
-
-  /* Reset ISOBMFF box parsing state */
-  if (dashstream->isobmff_adapter)
-    gst_adapter_clear (dashstream->isobmff_adapter);
-  dashstream->isobmff_parser.current_fourcc = 0;
-  dashstream->isobmff_parser.current_start_offset = 0;
-  dashstream->isobmff_parser.current_offset = 0;
-  dashstream->isobmff_parser.current_size = 0;
-
-  if (dashstream->moof)
-    gst_isoff_moof_box_free (dashstream->moof);
-  dashstream->moof = NULL;
-  if (dashstream->moof_sync_samples)
-    g_array_free (dashstream->moof_sync_samples, TRUE);
-  dashstream->moof_sync_samples = NULL;
-  dashstream->current_sync_sample = -1;
-}
-
 static GstFlowReturn
 gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
 {
@@ -1531,11 +1514,8 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
       return GST_FLOW_OK;
   }
 
-  if (dashstream->isobmff_adapter)
-    gst_adapter_clear (dashstream->isobmff_adapter);
   dashstream->isobmff_parser.current_fourcc = 0;
   dashstream->isobmff_parser.current_start_offset = 0;
-  dashstream->isobmff_parser.current_offset = 0;
   dashstream->isobmff_parser.current_size = 0;
 
   if (dashstream->moof)
@@ -1555,8 +1535,9 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
   gst_isoff_sidx_parser_init (&dashstream->sidx_parser);
   dashstream->sidx_base_offset = 0;
   dashstream->sidx_position = GST_CLOCK_TIME_NONE;
-  if (dashstream->sidx_adapter)
-    gst_adapter_clear (dashstream->sidx_adapter);
+  dashstream->allow_sidx = TRUE;
+  if (dashstream->adapter)
+    gst_adapter_clear (dashstream->adapter);
 
   return gst_mpd_client_advance_segment (dashdemux->client,
       dashstream->active_stream, stream->demux->segment.rate > 0.0);
@@ -1649,7 +1630,28 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
       dashstream->sidx_position = GST_CLOCK_TIME_NONE;
     }
 
-    gst_dash_demux_clear_pending_stream_data (demux, dashstream);
+    gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
+    dashstream->sidx_base_offset = 0;
+    dashstream->allow_sidx = TRUE;
+
+    /* Reset ISOBMFF box parsing state */
+    dashstream->isobmff_parser.current_fourcc = 0;
+    dashstream->isobmff_parser.current_start_offset = 0;
+    dashstream->isobmff_parser.current_size = 0;
+
+    dashstream->current_offset = -1;
+    dashstream->current_index_header_or_data = 0;
+
+    if (dashstream->adapter)
+      gst_adapter_clear (dashstream->adapter);
+
+    if (dashstream->moof)
+      gst_isoff_moof_box_free (dashstream->moof);
+    dashstream->moof = NULL;
+    if (dashstream->moof_sync_samples)
+      g_array_free (dashstream->moof_sync_samples, TRUE);
+    dashstream->moof_sync_samples = NULL;
+    dashstream->current_sync_sample = -1;
   }
 
 end:
@@ -1744,13 +1746,13 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
 
   /* Update the current sequence on all streams */
   for (iter = streams; iter; iter = g_list_next (iter)) {
-    GstDashDemuxStream *dashstream = iter->data;
+    GstAdaptiveDemuxStream *stream = iter->data;
 
-    if (flags & GST_SEEK_FLAG_FLUSH) {
-      gst_dash_demux_clear_pending_stream_data (dashdemux, dashstream);
-    }
-    gst_dash_demux_stream_seek (iter->data, rate >= 0, 0, target_pos, NULL);
+    if (gst_dash_demux_stream_seek (stream, rate >= 0, 0, target_pos,
+            NULL) != GST_FLOW_OK)
+      return FALSE;
   }
+
   return TRUE;
 }
 
@@ -1974,11 +1976,8 @@ gst_dash_demux_stream_fragment_start (GstAdaptiveDemux * demux,
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
 
-  dashstream->sidx_index_header_or_data = 0;
-  dashstream->sidx_current_offset = -1;
-
-  dashstream->isobmff_parser.index_header_or_data = 0;
-  dashstream->isobmff_parser.current_offset = -1;
+  dashstream->current_index_header_or_data = 0;
+  dashstream->current_offset = -1;
 
   /* We need to mark every first buffer of a key unit as discont,
    * and also every first buffer of a moov and moof. This ensures
@@ -2069,11 +2068,13 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
             dashstream->sidx_base_offset +
             SIDX_CURRENT_ENTRY (dashstream)->offset +
             SIDX_CURRENT_ENTRY (dashstream)->size;
+        guint64 downloaded_end_offset =
+            dashstream->current_offset +
+            gst_adapter_available (dashstream->adapter);
 
         if (stream->fragment.chunk_size +
-            dashstream->isobmff_parser.current_offset > sidx_end_offset) {
-          stream->fragment.chunk_size =
-              sidx_end_offset - dashstream->isobmff_parser.current_offset;
+            downloaded_end_offset > sidx_end_offset) {
+          stream->fragment.chunk_size = sidx_end_offset - downloaded_end_offset;
         }
       }
     } else if (dashstream->moof && dashstream->moof_sync_samples) {
@@ -2085,6 +2086,9 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
             &g_array_index (dashstream->moof_sync_samples,
             GstDashStreamSyncSample, 0);
         guint64 end_offset = sync_sample->end_offset + 1;
+        guint64 downloaded_end_offset =
+            dashstream->current_offset +
+            gst_adapter_available (dashstream->adapter);
 
         if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
             dashstream->sidx_parser.sidx.entries) {
@@ -2098,9 +2102,8 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
           }
         }
 
-        if (dashstream->isobmff_parser.current_offset < end_offset) {
-          stream->fragment.chunk_size =
-              end_offset - dashstream->isobmff_parser.current_offset;
+        if (downloaded_end_offset < end_offset) {
+          stream->fragment.chunk_size = end_offset - downloaded_end_offset;
         } else {
           stream->fragment.chunk_size = 0;
         }
@@ -2126,19 +2129,21 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
   return stream->fragment.chunk_size != 0;
 }
 
-static GstBuffer *
+static GstFlowReturn
 gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
-    GstDashDemuxStream * dash_stream, GstBuffer * buffer)
+    GstDashDemuxStream * dash_stream, gboolean * sidx_seek_needed)
 {
   GstAdaptiveDemuxStream *stream = (GstAdaptiveDemuxStream *) dash_stream;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   gsize available;
-  guint index_header_or_data;
+  GstBuffer *buffer;
   GstMapInfo map;
   GstByteReader reader;
   guint32 fourcc;
   guint header_size;
   guint64 size, buffer_offset;
+
+  *sidx_seek_needed = FALSE;
 
   /* This must not be called when we're in the mdat. We only look at the mdat
    * header and then stop parsing the boxes as we're only interested in the
@@ -2148,36 +2153,9 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
   g_assert (dash_stream->isobmff_parser.current_fourcc !=
       GST_ISOFF_FOURCC_MDAT);
 
-  if (stream->downloading_index)
-    index_header_or_data = 1;
-  else if (stream->downloading_header)
-    index_header_or_data = 2;
-  else
-    index_header_or_data = 3;
-
-  if (dash_stream->isobmff_parser.index_header_or_data != index_header_or_data) {
-    /* Clear pending data */
-    if (gst_adapter_available (dash_stream->isobmff_adapter) != 0)
-      GST_ERROR_OBJECT (stream->pad,
-          "Had pending ISOBMFF data after switch between index/header/data");
-    gst_adapter_clear (dash_stream->isobmff_adapter);
-    dash_stream->isobmff_parser.current_fourcc = 0;
-    dash_stream->isobmff_parser.current_start_offset = 0;
-    dash_stream->isobmff_parser.current_offset = -1;
-    dash_stream->isobmff_parser.current_size = 0;
-    dash_stream->isobmff_parser.index_header_or_data = index_header_or_data;
-  }
-
-  if (dash_stream->isobmff_parser.current_offset == -1) {
-    dash_stream->isobmff_parser.current_offset =
-        GST_BUFFER_OFFSET_IS_VALID (buffer) ? GST_BUFFER_OFFSET (buffer) : 0;
-  }
-
-  gst_adapter_push (dash_stream->isobmff_adapter, buffer);
-
-  available = gst_adapter_available (dash_stream->isobmff_adapter);
-  buffer = gst_adapter_take_buffer (dash_stream->isobmff_adapter, available);
-  buffer_offset = dash_stream->isobmff_parser.current_offset;
+  available = gst_adapter_available (dash_stream->adapter);
+  buffer = gst_adapter_take_buffer (dash_stream->adapter, available);
+  buffer_offset = dash_stream->current_offset;
 
   /* Always at the start of a box here */
   g_assert (dash_stream->isobmff_parser.current_size == 0);
@@ -2187,8 +2165,7 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
   gst_byte_reader_init (&reader, map.data, map.size);
 
   /* While there are more boxes left to parse ... */
-  dash_stream->isobmff_parser.current_start_offset =
-      dash_stream->isobmff_parser.current_offset;
+  dash_stream->isobmff_parser.current_start_offset = buffer_offset;
   do {
     dash_stream->isobmff_parser.current_fourcc = 0;
     dash_stream->isobmff_parser.current_size = 0;
@@ -2222,11 +2199,13 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
     GST_LOG_OBJECT (stream->pad,
         "box %" GST_FOURCC_FORMAT " at offset %" G_GUINT64_FORMAT " size %"
         G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc),
-        dash_stream->isobmff_parser.current_offset +
-        gst_byte_reader_get_pos (&reader) - header_size, size);
+        dash_stream->isobmff_parser.current_start_offset, size);
 
     if (dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_MOOF) {
       GstByteReader sub_reader;
+
+      /* Only allow SIDX before the very first moof */
+      dash_stream->allow_sidx = FALSE;
 
       g_assert (dash_stream->moof == NULL);
       g_assert (dash_stream->moof_sync_samples == NULL);
@@ -2249,13 +2228,15 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
       }
     } else if (dash_stream->isobmff_parser.current_fourcc ==
         GST_ISOFF_FOURCC_SIDX &&
-        gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
+        gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
+        dash_stream->allow_sidx) {
       GstByteReader sub_reader;
       GstIsoffParserResult res;
       guint dummy;
 
-      dash_stream->sidx_base_offset = buffer_offset +
-          gst_byte_reader_get_pos (&reader) - header_size + size;
+      dash_stream->sidx_base_offset =
+          dash_stream->isobmff_parser.current_start_offset + size;
+      dash_stream->allow_sidx = FALSE;
 
       gst_byte_reader_get_sub_reader (&reader, &sub_reader, size - header_size);
 
@@ -2265,41 +2246,64 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
 
       if (res == GST_ISOFF_PARSER_DONE) {
         guint64 first_offset = dash_stream->sidx_parser.sidx.first_offset;
+        GstSidxBox *sidx = SIDX (dash_stream);
+        guint i;
+
         if (first_offset) {
           GST_LOG_OBJECT (stream->pad,
               "non-zero sidx first offset %" G_GUINT64_FORMAT, first_offset);
           dash_stream->sidx_base_offset += first_offset;
         }
 
-        if (GST_CLOCK_TIME_IS_VALID (dash_stream->pending_seek_ts)) {
-          /* FIXME, preserve seek flags */
-          if (gst_dash_demux_stream_sidx_seek (dash_stream,
-                  demux->segment.rate >= 0, 0, dash_stream->pending_seek_ts,
-                  NULL) != GST_FLOW_OK) {
-            GST_ERROR_OBJECT (stream->pad, "Couldn't find position in sidx");
+        for (i = 0; i < sidx->entries_count; i++) {
+          GstSidxBoxEntry *entry = &sidx->entries[i];
+
+          if (entry->ref_type != 0) {
+            GST_FIXME_OBJECT (stream->pad, "SIDX ref_type 1 not supported yet");
             dash_stream->sidx_position = GST_CLOCK_TIME_NONE;
             gst_isoff_sidx_parser_clear (&dash_stream->sidx_parser);
+            break;
           }
-          /* push buffer up to sidx box, and do pending stream seek  */
-          break;
-        } else {
-          gint idx = 0;
+        }
 
-          if (dash_stream->sidx_position == GST_CLOCK_TIME_NONE) {
-            idx = 0;
-          } else {
-            gint i;
-
-            /* Set sidx index to the highest entry that is smaller than our
-             * remembered position */
-            for (i = 0; i < SIDX (dash_stream)->entries_count; i++) {
-              idx = i;
-              if (SIDX_ENTRY (dash_stream, i)->pts + SIDX_ENTRY (dash_stream,
-                      i)->duration > dash_stream->sidx_position)
-                break;
+        /* We might've cleared the index above */
+        if (sidx->entries_count > 0) {
+          if (GST_CLOCK_TIME_IS_VALID (dash_stream->pending_seek_ts)) {
+            /* FIXME, preserve seek flags */
+            if (gst_dash_demux_stream_sidx_seek (dash_stream,
+                    demux->segment.rate >= 0, 0, dash_stream->pending_seek_ts,
+                    NULL) != GST_FLOW_OK) {
+              GST_ERROR_OBJECT (stream->pad, "Couldn't find position in sidx");
+              dash_stream->sidx_position = GST_CLOCK_TIME_NONE;
+              gst_isoff_sidx_parser_clear (&dash_stream->sidx_parser);
             }
+            dash_stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
+          } else {
+
+            if (dash_stream->sidx_position == GST_CLOCK_TIME_NONE) {
+              SIDX (dash_stream)->entry_index = 0;
+            } else {
+              if (gst_dash_demux_stream_sidx_seek (dash_stream,
+                      demux->segment.rate >= 0, GST_SEEK_FLAG_SNAP_BEFORE,
+                      dash_stream->sidx_position, NULL) != GST_FLOW_OK) {
+                GST_ERROR_OBJECT (stream->pad,
+                    "Couldn't find position in sidx");
+                dash_stream->sidx_position = GST_CLOCK_TIME_NONE;
+                gst_isoff_sidx_parser_clear (&dash_stream->sidx_parser);
+              }
+            }
+            dash_stream->sidx_position =
+                SIDX (dash_stream)->entries[SIDX (dash_stream)->
+                entry_index].pts;
           }
-          SIDX (dash_stream)->entry_index = idx;
+        }
+
+        if (dash_stream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED &&
+            SIDX (dash_stream)->entry_index != 0) {
+          /* Need to jump to the requested SIDX entry. Push everything up to
+           * the SIDX box below and let the caller handle everything else */
+          *sidx_seek_needed = TRUE;
+          break;
         }
       }
     } else {
@@ -2320,23 +2324,21 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
     GST_LOG_OBJECT (stream->pad,
         "box %" GST_FOURCC_FORMAT " at offset %" G_GUINT64_FORMAT " size %"
         G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc),
-        dash_stream->isobmff_parser.current_offset +
-        gst_byte_reader_get_pos (&reader) - header_size,
+        dash_stream->isobmff_parser.current_start_offset,
         dash_stream->isobmff_parser.current_size);
 
     /* At mdat. Move the start of the mdat to the adapter and have everything
      * else be pushed. We parsed all header boxes at this point and are not
      * supposed to be called again until the next moof */
     pending = _gst_buffer_split (buffer, gst_byte_reader_get_pos (&reader), -1);
-    gst_adapter_push (dash_stream->isobmff_adapter, pending);
-    dash_stream->isobmff_parser.current_offset +=
-        gst_byte_reader_get_pos (&reader);
+    gst_adapter_push (dash_stream->adapter, pending);
+    dash_stream->current_offset += gst_byte_reader_get_pos (&reader);
     dash_stream->isobmff_parser.current_size = 0;
 
     GST_BUFFER_OFFSET (buffer) = buffer_offset;
     GST_BUFFER_OFFSET_END (buffer) =
         buffer_offset + gst_buffer_get_size (buffer);
-    return buffer;
+    return gst_adaptive_demux_stream_push_buffer (stream, buffer);
   } else if (gst_byte_reader_get_pos (&reader) != 0) {
     GstBuffer *pending;
 
@@ -2344,22 +2346,21 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
      * which is the start of the next box if any remainder */
 
     pending = _gst_buffer_split (buffer, gst_byte_reader_get_pos (&reader), -1);
-    gst_adapter_push (dash_stream->isobmff_adapter, pending);
-    dash_stream->isobmff_parser.current_offset +=
-        gst_byte_reader_get_pos (&reader);
+    gst_adapter_push (dash_stream->adapter, pending);
+    dash_stream->current_offset += gst_byte_reader_get_pos (&reader);
     dash_stream->isobmff_parser.current_size = 0;
 
     GST_BUFFER_OFFSET (buffer) = buffer_offset;
     GST_BUFFER_OFFSET_END (buffer) =
         buffer_offset + gst_buffer_get_size (buffer);
-    return buffer;
+    return gst_adaptive_demux_stream_push_buffer (stream, buffer);
   }
 
   /* Not even a single complete, non-mdat box, wait */
   dash_stream->isobmff_parser.current_size = 0;
-  gst_adapter_push (dash_stream->isobmff_adapter, buffer);
+  gst_adapter_push (dash_stream->adapter, buffer);
 
-  return NULL;
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -2548,149 +2549,161 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
 
 
 static GstFlowReturn
-gst_dash_demux_handle_isobmff_buffer (GstAdaptiveDemux * demux,
-    GstAdaptiveDemuxStream * stream, GstBuffer * buffer)
+gst_dash_demux_handle_isobmff (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream)
 {
   GstDashDemuxStream *dash_stream = (GstDashDemuxStream *) stream;
-  GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *buffer;
+  gboolean sidx_advance = FALSE;
 
-  /* Parsing isobmff
-   * - TRICKMODE_KEY_UNITS can be supported and it's video stream
-   * - Or, it's On-Demand profile but index_uri for this stream (whatever video/audio)
-   *   is not available, and sidx box was not parsed yet */
-  if ((dashdemux->allow_trickmode_key_units &&
-          dash_stream->active_stream->mimeType == GST_STREAM_VIDEO) ||
-      (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
-          dash_stream->sidx_parser.status != GST_ISOFF_SIDX_PARSER_FINISHED)) {
-    if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
-      buffer = gst_dash_demux_parse_isobmff (demux, dash_stream, buffer);
-      if (buffer
-          && (ret =
-              gst_adaptive_demux_stream_push_buffer (stream,
-                  buffer)) != GST_FLOW_OK)
-        return ret;
+  /* We parse all ISOBMFF boxes of a (sub)fragment until the mdat. This covers
+   * at least moov, moof and sidx boxes. Once mdat is received we just output
+   * everything until the next (sub)fragment */
+  if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT) {
+    gboolean sidx_seek_needed = FALSE;
 
-      /* Parser found sidx box now */
-      if (dash_stream->pending_seek_ts != GST_CLOCK_TIME_NONE &&
-          dash_stream->isobmff_parser.current_fourcc == GST_ISOFF_FOURCC_SIDX &&
-          dash_stream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED &&
-          gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
-        GST_DEBUG_OBJECT (stream->pad,
-            "Found sidx box, return custom-success to do seeking now");
+    ret = gst_dash_demux_parse_isobmff (demux, dash_stream, &sidx_seek_needed);
+    if (ret != GST_FLOW_OK)
+      return ret;
 
-        /* Clear isobmff parser */
-        gst_adapter_clear (dash_stream->isobmff_adapter);
-        dash_stream->isobmff_parser.current_fourcc = 0;
-        dash_stream->isobmff_parser.current_start_offset = 0;
-        dash_stream->isobmff_parser.current_offset = -1;
-        dash_stream->isobmff_parser.current_size = 0;
-        return GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT;
-      }
+    /* Go to selected segment if needed here */
+    if (sidx_seek_needed && !stream->downloading_index)
+      return GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT;
 
-      if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT)
-        return ret;
+    /* No mdat yet, let's get called again with the next boxes */
+    if (dash_stream->isobmff_parser.current_fourcc != GST_ISOFF_FOURCC_MDAT)
+      return ret;
 
-      /* Jump to the next sync sample. As we're doing chunked downloading
-       * here, just drop data until our chunk is over so we can reuse the
-       * HTTP connection instead of having to create a new one or
-       * reuse the data if the sync sample follows the moof */
-      if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
-          && gst_dash_demux_find_sync_samples (demux, stream) &&
-          GST_ADAPTIVE_DEMUX (stream->demux)->
-          segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+    /* Here we end up only if we're right at the mdat start */
 
-        if (dash_stream->first_sync_sample_after_moof) {
-          /* If we're here, don't throw away data but collect sync
-           * sample while we're at it below. We're doing chunked
-           * downloading so might need to adjust the next chunk size for
-           * the remainder */
-          dash_stream->current_sync_sample = 0;
-        } else {
-          gst_adapter_clear (dash_stream->isobmff_adapter);
-        }
-      }
-
-      if (gst_adapter_available (dash_stream->isobmff_adapter) == 0)
-        return ret;
-
-      /* We have some data from the mdat available in the adapter, handle it
-       * below in the push code */
-      buffer =
-          gst_adapter_take_buffer (dash_stream->isobmff_adapter,
-          gst_adapter_available (dash_stream->isobmff_adapter));
-    } else {
-      if (dash_stream->isobmff_parser.current_offset == -1) {
-        dash_stream->isobmff_parser.current_offset =
-            GST_BUFFER_OFFSET_IS_VALID (buffer) ? GST_BUFFER_OFFSET (buffer) :
-            0;
-      }
-    }
-
-    /* At mdat and isobmff and trick modes are allowed */
-
-    /* We're actually running in key-units trick mode */
+    /* Jump to the next sync sample. As we're doing chunked downloading
+     * here, just drop data until our chunk is over so we can reuse the
+     * HTTP connection instead of having to create a new one or
+     * reuse the data if the sync sample follows the moof */
     if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
-        && dash_stream->moof_sync_samples
-        && GST_ADAPTIVE_DEMUX (stream->demux)->
+        && gst_dash_demux_find_sync_samples (demux, stream) &&
+        GST_ADAPTIVE_DEMUX (stream->demux)->
         segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
 
-      if (dash_stream->current_sync_sample == -1) {
-        /* We're doing chunked downloading and wait for finishing the current
-         * chunk so we can jump to the first keyframe */
-        gst_buffer_unref (buffer);
-        return GST_FLOW_OK;
-      } else if (dash_stream->first_sync_sample_after_moof
-          && dash_stream->current_sync_sample == 0) {
-        GstDashStreamSyncSample *sync_sample =
-            &g_array_index (dash_stream->moof_sync_samples,
-            GstDashStreamSyncSample, 0);
-        guint64 end_offset =
-            dash_stream->isobmff_parser.current_offset +
-            gst_buffer_get_size (buffer);
-
-        /* If the first keyframe follows directly the moof and we're
-         * downloading it here, make sure to not download too much */
-
-        if (end_offset > sync_sample->end_offset + 1) {
-          guint64 remaining =
-              sync_sample->end_offset + 1 -
-              dash_stream->isobmff_parser.current_offset;
-
-          if (remaining) {
-            GstBuffer *sub =
-                gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0,
-                remaining);
-            gst_buffer_unref (buffer);
-            buffer = sub;
-          } else {
-            gst_buffer_unref (buffer);
-            return GST_FLOW_OK;
-          }
-        }
+      if (dash_stream->first_sync_sample_after_moof) {
+        /* If we're here, don't throw away data but collect sync
+         * sample while we're at it below. We're doing chunked
+         * downloading so might need to adjust the next chunk size for
+         * the remainder */
+        dash_stream->current_sync_sample = 0;
       }
     }
 
-    GST_BUFFER_OFFSET (buffer) = dash_stream->isobmff_parser.current_offset;
-    dash_stream->isobmff_parser.current_offset += gst_buffer_get_size (buffer);
-    GST_BUFFER_OFFSET_END (buffer) = dash_stream->isobmff_parser.current_offset;
-  } else if (gst_adapter_available (dash_stream->isobmff_adapter) > 0) {
-    guint64 offset;
+    if (gst_adapter_available (dash_stream->adapter) == 0)
+      return ret;
 
-    /* Drain adapter */
-    gst_adapter_push (dash_stream->isobmff_adapter, buffer);
-
-    buffer =
-        gst_adapter_take_buffer (dash_stream->isobmff_adapter,
-        gst_adapter_available (dash_stream->isobmff_adapter));
-
-    /* Set buffer offset based on the last parser's offset */
-    offset = dash_stream->isobmff_parser.current_offset;
-    GST_BUFFER_OFFSET (buffer) = offset;
-    GST_BUFFER_OFFSET_END (buffer) = offset + gst_buffer_get_size (buffer);
+    /* We have some data from the mdat available in the adapter, handle it
+     * below in the push code */
+  } else {
+    /* Somewhere in the middle of the mdat */
   }
 
-  return gst_adaptive_demux_stream_push_buffer (stream, buffer);
+  /* At mdat */
+  if (dash_stream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
+    guint64 sidx_end_offset =
+        dash_stream->sidx_base_offset +
+        SIDX_CURRENT_ENTRY (dash_stream)->offset +
+        SIDX_CURRENT_ENTRY (dash_stream)->size;
+    gboolean has_next = gst_dash_demux_stream_has_next_subfragment (stream);
+    gsize available;
+
+    /* Need to handle everything in the adapter according to the parsed SIDX
+     * and advance subsegments accordingly */
+
+    available = gst_adapter_available (dash_stream->adapter);
+    if (dash_stream->current_offset + available < sidx_end_offset) {
+      buffer = gst_adapter_take_buffer (dash_stream->adapter, available);
+    } else {
+      if (!has_next && sidx_end_offset <= dash_stream->current_offset) {
+        /* Drain all bytes, since there might be trailing bytes at the end of subfragment */
+        buffer = gst_adapter_take_buffer (dash_stream->adapter, available);
+      } else {
+        if (sidx_end_offset <= dash_stream->current_offset) {
+          /* This means a corrupted stream or a bug: ignoring bugs, it
+           * should only happen if the SIDX index is corrupt */
+          GST_ERROR_OBJECT (stream->pad, "Invalid SIDX state");
+          gst_adapter_clear (dash_stream->adapter);
+          return GST_FLOW_ERROR;
+        } else {
+          buffer =
+              gst_adapter_take_buffer (dash_stream->adapter,
+              sidx_end_offset - dash_stream->current_offset);
+          sidx_advance = TRUE;
+        }
+      }
+    }
+  } else {
+    /* Take it all and handle it further below */
+    buffer =
+        gst_adapter_take_buffer (dash_stream->adapter,
+        gst_adapter_available (dash_stream->adapter));
+
+    /* Attention: All code paths below need to update dash_stream->current_offset */
+  }
+
+  /* We're actually running in key-units trick mode */
+  if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
+      && dash_stream->moof_sync_samples
+      && GST_ADAPTIVE_DEMUX (stream->demux)->
+      segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) {
+
+    if (dash_stream->current_sync_sample == -1) {
+      /* We're doing chunked downloading and wait for finishing the current
+       * chunk so we can jump to the first keyframe */
+      dash_stream->current_offset += gst_buffer_get_size (buffer);
+      gst_buffer_unref (buffer);
+      return GST_FLOW_OK;
+    } else {
+      GstDashStreamSyncSample *sync_sample =
+          &g_array_index (dash_stream->moof_sync_samples,
+          GstDashStreamSyncSample, dash_stream->current_sync_sample);
+      guint64 end_offset =
+          dash_stream->current_offset + gst_buffer_get_size (buffer);
+
+      /* Make sure to not download too much, this should only happen for
+       * the very first keyframe if it follows the moof */
+      if (dash_stream->current_offset >= sync_sample->end_offset + 1) {
+        dash_stream->current_offset += gst_buffer_get_size (buffer);
+        gst_buffer_unref (buffer);
+        return GST_FLOW_OK;
+      } else if (end_offset > sync_sample->end_offset + 1) {
+        guint64 remaining =
+            sync_sample->end_offset + 1 - dash_stream->current_offset;
+        GstBuffer *sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0,
+            remaining);
+        gst_buffer_unref (buffer);
+        buffer = sub;
+      }
+    }
+  }
+
+  GST_BUFFER_OFFSET (buffer) = dash_stream->current_offset;
+  dash_stream->current_offset += gst_buffer_get_size (buffer);
+  GST_BUFFER_OFFSET_END (buffer) = dash_stream->current_offset;
+
+  ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  if (sidx_advance) {
+    ret =
+        gst_adaptive_demux_stream_advance_fragment (demux, stream,
+        SIDX_CURRENT_ENTRY (dash_stream)->duration);
+    if (ret != GST_FLOW_OK)
+      return ret;
+
+    /* If we still have data available, recurse and use it up if possible */
+    if (gst_adapter_available (dash_stream->adapter) > 0)
+      return gst_dash_demux_handle_isobmff (demux, stream);
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -2698,16 +2711,8 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstBuffer * buffer)
 {
   GstDashDemuxStream *dash_stream = (GstDashDemuxStream *) stream;
-  GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstFlowReturn ret = GST_FLOW_OK;
   guint index_header_or_data;
-
-  if (!gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
-    if (dash_stream->is_isobmff)
-      return gst_dash_demux_handle_isobmff_buffer (demux, stream, buffer);
-    else
-      return gst_adaptive_demux_stream_push_buffer (stream, buffer);
-  }
 
   if (stream->downloading_index)
     index_header_or_data = 1;
@@ -2716,94 +2721,32 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
   else
     index_header_or_data = 3;
 
-  if (dash_stream->sidx_index_header_or_data != index_header_or_data) {
+  if (dash_stream->current_index_header_or_data != index_header_or_data) {
     /* Clear pending data */
-    if (gst_adapter_available (dash_stream->sidx_adapter) != 0)
+    if (gst_adapter_available (dash_stream->adapter) != 0)
       GST_ERROR_OBJECT (stream->pad,
           "Had pending SIDX data after switch between index/header/data");
-    gst_adapter_clear (dash_stream->sidx_adapter);
-    dash_stream->sidx_index_header_or_data = index_header_or_data;
-    dash_stream->sidx_current_offset = -1;
+    gst_adapter_clear (dash_stream->adapter);
+    dash_stream->current_index_header_or_data = index_header_or_data;
+    dash_stream->current_offset = -1;
   }
 
-  if (dash_stream->sidx_current_offset == -1)
-    dash_stream->sidx_current_offset =
+  if (dash_stream->current_offset == -1)
+    dash_stream->current_offset =
         GST_BUFFER_OFFSET_IS_VALID (buffer) ? GST_BUFFER_OFFSET (buffer) : 0;
 
-  gst_adapter_push (dash_stream->sidx_adapter, buffer);
+  gst_adapter_push (dash_stream->adapter, buffer);
   buffer = NULL;
 
-  if (stream->downloading_index) {
-    GstIsoffParserResult res;
-    guint consumed;
-    gsize available;
-
-    available = gst_adapter_available (dash_stream->sidx_adapter);
-    buffer = gst_adapter_take_buffer (dash_stream->sidx_adapter, available);
-
-    if (dash_stream->sidx_parser.status != GST_ISOFF_SIDX_PARSER_FINISHED) {
-      res =
-          gst_isoff_sidx_parser_add_buffer (&dash_stream->sidx_parser, buffer,
-          &consumed);
-
-      if (res == GST_ISOFF_PARSER_ERROR) {
-      } else if (res == GST_ISOFF_PARSER_UNEXPECTED) {
-        /* this is not a 'sidx' index, just skip it and continue playback */
-      } else {
-        /* when finished, prepare for real data streaming */
-        if (dash_stream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
-          if (GST_CLOCK_TIME_IS_VALID (dash_stream->pending_seek_ts)) {
-            /* FIXME, preserve seek flags */
-            if (gst_dash_demux_stream_sidx_seek (dash_stream,
-                    demux->segment.rate >= 0, 0, dash_stream->pending_seek_ts,
-                    NULL) != GST_FLOW_OK) {
-              GST_ERROR_OBJECT (stream->pad, "Couldn't find position in sidx");
-              dash_stream->sidx_position = GST_CLOCK_TIME_NONE;
-              gst_isoff_sidx_parser_clear (&dash_stream->sidx_parser);
-            }
-            dash_stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
-          } else {
-            gint idx = 0;
-
-            if (dash_stream->sidx_position == GST_CLOCK_TIME_NONE) {
-              idx = 0;
-            } else {
-              gint i;
-
-              /* Set sidx index to the highest entry that is smaller than our
-               * remembered position */
-              for (i = 0; i < SIDX (dash_stream)->entries_count; i++) {
-                idx = i;
-                if (SIDX_ENTRY (dash_stream, i)->pts + SIDX_ENTRY (dash_stream,
-                        i)->duration > dash_stream->sidx_position)
-                  break;
-              }
-            }
-            SIDX (dash_stream)->entry_index = idx;
-          }
-        } else if (consumed < available) {
-          GstBuffer *pending;
-          /* we still need to keep some data around for the next parsing round
-           * so just push what was already processed by the parser */
-          pending = _gst_buffer_split (buffer, consumed, -1);
-          gst_adapter_push (dash_stream->sidx_adapter, pending);
-        }
-      }
-    }
-    GST_BUFFER_OFFSET (buffer) = dash_stream->sidx_current_offset;
-    GST_BUFFER_OFFSET_END (buffer) =
-        GST_BUFFER_OFFSET (buffer) + gst_buffer_get_size (buffer);
-    dash_stream->sidx_current_offset = GST_BUFFER_OFFSET_END (buffer);
-    ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
+  if (dash_stream->is_isobmff || stream->downloading_index) {
+    /* SIDX index is also ISOBMMF */
+    ret = gst_dash_demux_handle_isobmff (demux, stream);
   } else if (dash_stream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
     gsize available;
 
-    if (G_UNLIKELY (dash_stream->pending_seek_ts != GST_CLOCK_TIME_NONE))
-      dash_stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
-
+    /* Not ISOBMFF but had a SIDX index. Does this even exist or work? */
     while (ret == GST_FLOW_OK
-        && ((available =
-                gst_adapter_available (dash_stream->sidx_adapter)) > 0)) {
+        && ((available = gst_adapter_available (dash_stream->adapter)) > 0)) {
       gboolean advance = FALSE;
       guint64 sidx_end_offset =
           dash_stream->sidx_base_offset +
@@ -2811,86 +2754,62 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
           SIDX_CURRENT_ENTRY (dash_stream)->size;
       gboolean has_next = gst_dash_demux_stream_has_next_subfragment (stream);
 
-      if (dash_stream->sidx_current_offset + available < sidx_end_offset) {
-        buffer = gst_adapter_take_buffer (dash_stream->sidx_adapter, available);
+      if (dash_stream->current_offset + available < sidx_end_offset) {
+        buffer = gst_adapter_take_buffer (dash_stream->adapter, available);
       } else {
-        /* In key-units mode, we advance the fragments manually once the
-         * current key-unit is over but throw away all data that is after
-         * the current sidx entry end */
-        if (dash_stream->moof_sync_samples
-            && (GST_ADAPTIVE_DEMUX (stream->demux)->
-                segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)) {
-          if (sidx_end_offset <= dash_stream->sidx_current_offset) {
-            buffer = NULL;
-            gst_adapter_clear (dash_stream->sidx_adapter);
-          } else {
-            buffer =
-                gst_adapter_take_buffer (dash_stream->sidx_adapter,
-                sidx_end_offset - dash_stream->sidx_current_offset);
-          }
-        } else if (!has_next
-            && sidx_end_offset <= dash_stream->sidx_current_offset) {
+        if (!has_next && sidx_end_offset <= dash_stream->current_offset) {
           /* Drain all bytes, since there might be trailing bytes at the end of subfragment */
-          buffer =
-              gst_adapter_take_buffer (dash_stream->sidx_adapter, available);
+          buffer = gst_adapter_take_buffer (dash_stream->adapter, available);
         } else {
-          if (sidx_end_offset <= dash_stream->sidx_current_offset) {
-            buffer = NULL;
-            gst_adapter_clear (dash_stream->sidx_adapter);
+          if (sidx_end_offset <= dash_stream->current_offset) {
+            /* This means a corrupted stream or a bug: ignoring bugs, it
+             * should only happen if the SIDX index is corrupt */
+            GST_ERROR_OBJECT (stream->pad, "Invalid SIDX state");
+            gst_adapter_clear (dash_stream->adapter);
+            ret = GST_FLOW_ERROR;
+            break;
           } else {
             buffer =
-                gst_adapter_take_buffer (dash_stream->sidx_adapter,
-                sidx_end_offset - dash_stream->sidx_current_offset);
+                gst_adapter_take_buffer (dash_stream->adapter,
+                sidx_end_offset - dash_stream->current_offset);
             advance = TRUE;
           }
         }
       }
 
-      if (buffer != NULL) {
-        GST_BUFFER_OFFSET (buffer) = dash_stream->sidx_current_offset;
-        GST_BUFFER_OFFSET_END (buffer) =
-            GST_BUFFER_OFFSET (buffer) + gst_buffer_get_size (buffer);
-        dash_stream->sidx_current_offset = GST_BUFFER_OFFSET_END (buffer);
+      GST_BUFFER_OFFSET (buffer) = dash_stream->current_offset;
+      GST_BUFFER_OFFSET_END (buffer) =
+          GST_BUFFER_OFFSET (buffer) + gst_buffer_get_size (buffer);
+      dash_stream->current_offset = GST_BUFFER_OFFSET_END (buffer);
 
-        if (dash_stream->is_isobmff)
-          ret = gst_dash_demux_handle_isobmff_buffer (demux, stream, buffer);
-        else
-          ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
+      ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
 
-        if (!(dash_stream->moof_sync_samples
-                && (GST_ADAPTIVE_DEMUX (stream->demux)->
-                    segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS))
-            && advance) {
+      if (advance) {
+        if (has_next) {
+          GstFlowReturn new_ret;
+          new_ret =
+              gst_adaptive_demux_stream_advance_fragment (demux, stream,
+              SIDX_CURRENT_ENTRY (dash_stream)->duration);
 
-          if (has_next) {
-            GstFlowReturn new_ret;
-            new_ret =
-                gst_adaptive_demux_stream_advance_fragment (demux, stream,
-                SIDX_CURRENT_ENTRY (dash_stream)->duration);
-
-            /* only overwrite if it was OK before */
-            if (ret == GST_FLOW_OK)
-              ret = new_ret;
-          } else {
-            break;
-          }
+          /* only overwrite if it was OK before */
+          if (ret == GST_FLOW_OK)
+            ret = new_ret;
+        } else {
+          break;
         }
       }
     }
   } else {
     /* this should be the main header, just push it all */
-    buffer = gst_adapter_take_buffer (dash_stream->sidx_adapter,
-        gst_adapter_available (dash_stream->sidx_adapter));
+    buffer = gst_adapter_take_buffer (dash_stream->adapter,
+        gst_adapter_available (dash_stream->adapter));
 
-    GST_BUFFER_OFFSET (buffer) = dash_stream->sidx_current_offset;
+    GST_BUFFER_OFFSET (buffer) = dash_stream->current_offset;
     GST_BUFFER_OFFSET_END (buffer) =
         GST_BUFFER_OFFSET (buffer) + gst_buffer_get_size (buffer);
-    dash_stream->sidx_current_offset = GST_BUFFER_OFFSET_END (buffer);
+    dash_stream->current_offset = GST_BUFFER_OFFSET_END (buffer);
 
-    if (dash_stream->is_isobmff)
-      return gst_dash_demux_handle_isobmff_buffer (demux, stream, buffer);
-    else
-      return gst_adaptive_demux_stream_push_buffer (stream, buffer);
+    ret = gst_adaptive_demux_stream_push_buffer (stream, buffer);
   }
 
   return ret;
@@ -2902,10 +2821,8 @@ gst_dash_demux_stream_free (GstAdaptiveDemuxStream * stream)
   GstDashDemuxStream *dash_stream = (GstDashDemuxStream *) stream;
 
   gst_isoff_sidx_parser_clear (&dash_stream->sidx_parser);
-  if (dash_stream->sidx_adapter)
-    g_object_unref (dash_stream->sidx_adapter);
-  if (dash_stream->isobmff_adapter)
-    g_object_unref (dash_stream->isobmff_adapter);
+  if (dash_stream->adapter)
+    g_object_unref (dash_stream->adapter);
   if (dash_stream->moof)
     gst_isoff_moof_box_free (dash_stream->moof);
   if (dash_stream->moof_sync_samples)

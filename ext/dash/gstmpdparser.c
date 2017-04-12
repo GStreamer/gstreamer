@@ -4790,9 +4790,6 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
       GST_DEBUG ("Looking at fragment sequence chunk %d / %d", index,
           stream->segments->len);
 
-      if (segment->start > ts)
-        break;
-
       end_time =
           gst_mpdparser_get_segment_end_time (client, stream->segments,
           segment, index);
