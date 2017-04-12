@@ -7964,8 +7964,16 @@ gst_qtdemux_stream_check_and_change_stsd_index (GstQTDemux * demux,
 
   GST_DEBUG_OBJECT (stream->pad, "Changing stsd index from '%u' to '%u'",
       stream->cur_stsd_entry_index, stream->stsd_sample_description_id);
-  stream->cur_stsd_entry_index = stream->stsd_sample_description_id;
-  stream->new_caps = TRUE;
+  if (G_UNLIKELY (stream->stsd_sample_description_id >=
+          stream->stsd_entries_length)) {
+    GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
+        (_("This file is invalid and cannot be played.")),
+        ("New sample description id is out of bounds (%d >= %d)",
+            stream->stsd_sample_description_id, stream->stsd_entries_length));
+  } else {
+    stream->cur_stsd_entry_index = stream->stsd_sample_description_id;
+    stream->new_caps = TRUE;
+  }
 }
 
 static gboolean
