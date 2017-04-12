@@ -1184,6 +1184,7 @@ static gboolean
 execute_switch_track_pb3 (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
   GstValidateScenarioPrivate *priv = scenario->priv;
   gint index;
   GstStreamType stype;
@@ -1195,12 +1196,12 @@ execute_switch_track_pb3 (GstValidateScenario * scenario,
 
   if (!monitor->stream_collection) {
     GST_ERROR ("No stream collection message received on the bus");
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    return res;
   }
 
   if (!monitor->streams_selected) {
     GST_ERROR ("No streams selected message received on the bus");
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    return res;
   }
 
   type = gst_structure_get_string (action->structure, "type");
@@ -1230,15 +1231,22 @@ execute_switch_track_pb3 (GstValidateScenario * scenario,
       ACTION_EXPECTED_STREAM_QUARK, g_list_copy (new_streams),
       (GDestroyNotify) g_list_free);
 
-  priv->pending_switch_track = action;
-
   if (!gst_element_send_event (scenario->pipeline,
           gst_event_new_select_streams (new_streams))) {
     GST_ERROR ("select-streams event not handled");
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    return res;
   }
 
-  return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+  priv->pending_switch_track = action;
+  if (scenario->priv->target_state > GST_STATE_PAUSED) {
+    res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+  } else {
+    gst_mini_object_ref ((GstMiniObject *) action);
+    res = GST_VALIDATE_EXECUTE_ACTION_INTERLACED;
+  }
+
+
+  return res;
 }
 
 static gboolean
