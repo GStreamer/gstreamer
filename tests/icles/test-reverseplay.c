@@ -210,7 +210,7 @@ handle_output (GstPad * pad, GstPadProbeInfo * info, StreamInfo * si)
   GstClockTime start, end;
   GstBuffer *buf;
 
-  GST_LOG_OBJECT (pad, "Fired probe type 0x%x\n", info->type);
+  GST_LOG_OBJECT (pad, "Fired probe type 0x%x", info->type);
 
   if (info->type & GST_PAD_PROBE_TYPE_BUFFER_LIST) {
     g_warning ("Buffer list handling not implemented");

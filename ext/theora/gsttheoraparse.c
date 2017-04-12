@@ -324,7 +324,7 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
     ret = th_decode_headerin (&parse->info, &parse->comment, &setup, &packet);
     gst_buffer_unmap (buf, &map);
     if (ret < 0) {
-      GST_WARNING_OBJECT (parse, "Failed to decode Theora header %d: %d\n",
+      GST_WARNING_OBJECT (parse, "Failed to decode Theora header %d: %d",
           i + 1, ret);
     }
   }

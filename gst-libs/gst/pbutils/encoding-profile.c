@@ -1633,7 +1633,7 @@ create_encoding_stream_profile (gchar * serialized_profile)
 
     presence = g_ascii_strtoll (strpresence_v[1], &endptr, 10);
     if (endptr == strpresence_v[1]) {
-      GST_ERROR ("Wrong presence %s\n", strpresence_v[1]);
+      GST_ERROR ("Wrong presence %s", strpresence_v[1]);
 
       return NULL;
     }
@@ -1836,7 +1836,7 @@ add_stream_to_profile (GstEncodingContainerProfile * profile,
     gst_structure_remove_field (s, "alignment");
   }
 
-  GST_LOG ("Stream: %" GST_PTR_FORMAT "\n", caps);
+  GST_LOG ("Stream: %" GST_PTR_FORMAT, caps);
   if (GST_IS_DISCOVERER_AUDIO_INFO (sinfo)) {
     sprofile =
         (GstEncodingProfile *) gst_encoding_audio_profile_new (caps, NULL,
@@ -1903,7 +1903,7 @@ gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)
     return NULL;
 
   caps = gst_discoverer_stream_info_get_caps (sinfo);
-  GST_LOG ("Container: %" GST_PTR_FORMAT "\n", caps);
+  GST_LOG ("Container: %" GST_PTR_FORMAT, caps);
   profile =
       gst_encoding_container_profile_new ("auto-generated",
       "Automatically generated from GstDiscovererInfo", caps, NULL);

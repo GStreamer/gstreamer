@@ -2385,7 +2385,7 @@ suggest:
     if (data0 != first_sync && prob >= 10)
       prob -= 10;
 
-    GST_LOG ("Suggesting MPEG %d system stream, %d packs, %d pes, prob %u%%\n",
+    GST_LOG ("Suggesting MPEG %d system stream, %d packs, %d pes, prob %u%%",
         mpegversion, pack_headers, pes_headers, prob);
 
     gst_type_find_suggest_simple (tf, prob, "video/mpeg",

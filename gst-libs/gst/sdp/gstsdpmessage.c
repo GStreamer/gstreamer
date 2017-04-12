@@ -3785,7 +3785,7 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
       tmp = g_strdup_printf ("%d nack", caps_pt);
       gst_sdp_media_add_attribute (media, "rtcp-fb", tmp);
       g_free (tmp);
-      GST_DEBUG ("adding rtcp-fb-nack to pt=%d\n", caps_pt);
+      GST_DEBUG ("adding rtcp-fb-nack to pt=%d", caps_pt);
     }
   }
 
@@ -3794,7 +3794,7 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
       tmp = g_strdup_printf ("%d nack pli", caps_pt);
       gst_sdp_media_add_attribute (media, "rtcp-fb", tmp);
       g_free (tmp);
-      GST_DEBUG ("adding rtcp-fb-nack-pli to pt=%d\n", caps_pt);
+      GST_DEBUG ("adding rtcp-fb-nack-pli to pt=%d", caps_pt);
     }
   }
 
@@ -3803,7 +3803,7 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
       tmp = g_strdup_printf ("%d ccm fir", caps_pt);
       gst_sdp_media_add_attribute (media, "rtcp-fb", tmp);
       g_free (tmp);
-      GST_DEBUG ("adding rtcp-fb-ccm-fir to pt=%d\n", caps_pt);
+      GST_DEBUG ("adding rtcp-fb-ccm-fir to pt=%d", caps_pt);
     }
   }
 

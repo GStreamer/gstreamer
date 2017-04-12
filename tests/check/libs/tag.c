@@ -856,7 +856,7 @@ GST_START_TEST (test_language_utils)
     ASSERT_STRINGS_EQUAL (gst_tag_get_language_code_iso_639_1 (c2t), *c);
     ASSERT_STRINGS_EQUAL (gst_tag_get_language_code_iso_639_1 (c2b), *c);
 
-    GST_DEBUG ("[%s] %s %s %s : %s\n", *c, c1, c2t, c2b, lang_name);
+    GST_DEBUG ("[%s] %s %s %s : %s", *c, c1, c2t, c2b, lang_name);
 
   }
   g_strfreev (lang_codes);
