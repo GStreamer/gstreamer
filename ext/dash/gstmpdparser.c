@@ -1873,12 +1873,12 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node,
   if (!gst_mpdparser_get_xml_prop_string_no_whitespace (a_node, "id",
           &new_representation->id)) {
     GST_ERROR ("Cannot parse Representation id, invalid manifest");
-    return FALSE;
+    goto error;
   }
   if (!gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "bandwidth", 0,
           &new_representation->bandwidth)) {
     GST_ERROR ("Cannot parse Representation bandwidth, invalid manifest");
-    return FALSE;
+    goto error;
   }
   gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "qualityRanking", 0,
       &new_representation->qualityRanking);
