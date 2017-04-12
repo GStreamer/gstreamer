@@ -272,9 +272,9 @@ struct _GstAggregatorClass {
  * GstAggregator methods *
  ************************/
 
-GstFlowReturn  gst_aggregator_finish_buffer         (GstAggregator                *  agg,
+GstFlowReturn  gst_aggregator_finish_buffer         (GstAggregator                *  self,
                                                      GstBuffer                    *  buffer);
-void           gst_aggregator_set_src_caps          (GstAggregator                *  agg,
+void           gst_aggregator_set_src_caps          (GstAggregator                *  self,
                                                      GstCaps                      *  caps);
 
 void           gst_aggregator_set_latency           (GstAggregator                *  self,
