@@ -564,20 +564,22 @@ gst_directsound_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
     GST_WARNING ("buffer-time was less than latency");
   }
 
-  spec->segsize =
-      gst_util_uint64_scale (spec->latency_time, wfx.nAvgBytesPerSec, 1000000);
-  if (spec->segsize < GST_AUDIO_INFO_BPF (&spec->info))
-    spec->segsize = GST_AUDIO_INFO_BPF (&spec->info);
-  else if (spec->segsize % GST_AUDIO_INFO_BPF (&spec->info) != 0)
-    spec->segsize =
-        ((spec->segsize + GST_AUDIO_INFO_BPF (&spec->info) -
-            1) / GST_AUDIO_INFO_BPF (&spec->info)) *
-        GST_AUDIO_INFO_BPF (&spec->info);
+  /* Save the times */
+  dsoundsrc->buffer_time = spec->buffer_time;
+  dsoundsrc->latency_time = spec->latency_time;
 
-  dsoundsrc->latency_time =
-      gst_util_uint64_scale (spec->segsize, 1000000,
-      GST_AUDIO_INFO_BPF (&spec->info) * GST_AUDIO_INFO_RATE (&spec->info));
-  spec->segtotal = spec->buffer_time / dsoundsrc->latency_time;
+  dsoundsrc->latency_size = (gint) wfx.nAvgBytesPerSec *
+      dsoundsrc->latency_time / 1000000.0;
+
+  spec->segsize = (guint) (((double) spec->buffer_time / 1000000.0) *
+      wfx.nAvgBytesPerSec);
+
+  /* just in case */
+  if (spec->segsize < 1)
+    spec->segsize = 1;
+
+  spec->segtotal = GST_AUDIO_INFO_BPF (&spec->info) * 8 *
+      (wfx.nAvgBytesPerSec / spec->segsize);
 
   GST_DEBUG_OBJECT (asrc,
       "bytes/sec: %lu, buffer size: %d, segsize: %d, segtotal: %d",
@@ -816,7 +818,7 @@ gst_directsound_src_mixer_find (GstDirectSoundSrc * dsoundsrc,
     if (mmres != MMSYSERR_NOERROR)
       continue;
 
-    mmres = mixerGetDevCaps ((UINT_PTR) dsoundsrc->mixer,
+    mmres = mixerGetDevCaps ((UINT_PTR)dsoundsrc->mixer,
         mixer_caps, sizeof (MIXERCAPS));
 
     if (mmres != MMSYSERR_NOERROR) {
