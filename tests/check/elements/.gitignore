@@ -76,6 +76,7 @@ videofilter
 videomixer
 vp8dec
 vp8enc
+vp9enc
 wavpackdec
 wavparse
 wavpackenc
