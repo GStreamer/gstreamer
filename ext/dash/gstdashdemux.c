@@ -721,7 +721,6 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
           (stream), tags);
     stream->index = i;
     stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
-    stream->last_representation_id = NULL;
     if (active_stream->cur_adapt_set &&
         active_stream->cur_adapt_set->RepresentationBase &&
         active_stream->cur_adapt_set->RepresentationBase->ContentProtection) {
@@ -1164,38 +1163,6 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
 
   if (gst_mpd_client_get_next_fragment_timestamp (dashdemux->client,
           dashstream->index, &ts)) {
-    if (gst_mpd_client_is_live (dashdemux->client)) {
-      if (!GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER (stream)) {
-        if (dashstream->active_stream
-            && dashstream->active_stream->cur_representation) {
-          /* id specifies an identifier for this Representation. The
-           * identifier shall be unique within a Period unless the
-           * Representation is functionally identically to another
-           * Representation in the same Period. */
-          if (!g_strcmp0 (dashstream->active_stream->cur_representation->id,
-                  dashstream->last_representation_id)) {
-            GstCaps *caps;
-            stream->need_header = TRUE;
-
-            GST_INFO_OBJECT (dashdemux, "Switching bitrate to %d",
-                dashstream->active_stream->cur_representation->bandwidth);
-            caps =
-                gst_dash_demux_get_input_caps (dashdemux,
-                dashstream->active_stream);
-            gst_adaptive_demux_stream_set_caps (stream, caps);
-          }
-        }
-      }
-      g_free (dashstream->last_representation_id);
-      if (dashstream->active_stream
-          && dashstream->active_stream->cur_representation) {
-        dashstream->last_representation_id =
-            g_strdup (dashstream->active_stream->cur_representation->id);
-      } else {
-        dashstream->last_representation_id = NULL;
-      }
-    }
-
     if (GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER (stream)) {
       gst_adaptive_demux_stream_fragment_clear (&stream->fragment);
       gst_dash_demux_stream_update_headers_info (stream);
@@ -2943,7 +2910,6 @@ gst_dash_demux_stream_free (GstAdaptiveDemuxStream * stream)
     gst_isoff_moof_box_free (dash_stream->moof);
   if (dash_stream->moof_sync_samples)
     g_array_free (dash_stream->moof_sync_samples, TRUE);
-  g_free (dash_stream->last_representation_id);
 }
 
 static GstDashDemuxClockDrift *
