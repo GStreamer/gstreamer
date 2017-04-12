@@ -16,7 +16,9 @@ subdir('shout2')
 subdir('soup')
 subdir('speex')
 # FIXME: taglib fails to compile and link with msvc
-if cc.get_id() != 'msvc'
+if cc.get_id() == 'msvc'
+  message('Building with MSVC, disabling taglib support. Patches welcome!')
+else
   subdir('taglib')
 endif
 subdir('vpx')
