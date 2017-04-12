@@ -1652,7 +1652,7 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
 #define SANITY_CHECK_REASON_TOPLEVEL_TEMPLATE   0x01
   /* loop through all Representation-siblings and look for SegmentTemplate
    * childs. */
-  do_sanity_check = SANITY_CHECK_REASON_NO_SUBTEMPLATES; /* preset: no subseqs */
+  do_sanity_check = SANITY_CHECK_REASON_NO_SUBTEMPLATES;        /* preset: no subseqs */
   for (cur_node = a_node->parent->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "Representation") == 0) {
@@ -1668,7 +1668,7 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
         }
         if (have_segmenttemplate)
           do_sanity_check &= ~SANITY_CHECK_REASON_NO_SUBTEMPLATES;
-        else /* found Representation without SegmentTemplate: sanity necessary */
+        else                    /* found Representation without SegmentTemplate: sanity necessary */
           do_sanity_check |= SANITY_CHECK_REASON_TOPLEVEL_TEMPLATE;
       }
     }
