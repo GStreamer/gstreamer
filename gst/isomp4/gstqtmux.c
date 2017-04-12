@@ -3276,7 +3276,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     GST_ERROR ("decreasing DTS value %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
         GST_TIME_ARGS (GST_BUFFER_DTS (last_buf)));
-    buf = gst_buffer_make_writable (buf);
+    pad->last_buf = buf = gst_buffer_make_writable (buf);
     GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (last_buf);
   }
 
