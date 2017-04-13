@@ -1477,6 +1477,7 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
     g_array_free (dashstream->moof_sync_samples, TRUE);
   dashstream->moof_sync_samples = NULL;
   dashstream->current_sync_sample = -1;
+  dashstream->target_time = GST_CLOCK_TIME_NONE;
 
   is_isobmff = gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client);
 
@@ -2109,8 +2110,9 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
       }
 
       GST_DEBUG_OBJECT (stream->pad,
-          "Skipped to %" GST_TIME_FORMAT " (wanted %" GST_TIME_FORMAT ")",
-          GST_TIME_ARGS (actual_ts), GST_TIME_ARGS (target_time));
+          "Skipped to %" GST_TIME_FORMAT " (wanted %" GST_TIME_FORMAT ", was %"
+          GST_TIME_FORMAT ")", GST_TIME_ARGS (actual_ts),
+          GST_TIME_ARGS (target_time), GST_TIME_ARGS (previous_position));
 
       if ((stream->segment.rate > 0 && actual_ts < previous_position) ||
           (stream->segment.rate < 0 && actual_ts > previous_position)) {
