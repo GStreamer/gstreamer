@@ -2496,13 +2496,11 @@ AG_GST_CHECK_FEATURE(DTLS, [DTLS plugin], dtls, [
 dnl *** ttml ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TTML, true)
 AG_GST_CHECK_FEATURE(TTML, [TTML plugin], ttml, [
-  if test "x$BUILD_EXPERIMENTAL" = "xyes"; then
-    PKG_CHECK_MODULES(TTML, [ libxml-2.0 >= 2.9.2 pango cairo pangocairo ], [
-      HAVE_TTML="yes"
-    ], [
-      HAVE_TTML="no"
-    ])
-  fi
+  PKG_CHECK_MODULES(TTML, [ libxml-2.0 >= 2.9.2 pango cairo pangocairo ], [
+    HAVE_TTML="yes"
+  ], [
+    HAVE_TTML="no"
+  ])
 ])
 
 dnl *** modplug ***

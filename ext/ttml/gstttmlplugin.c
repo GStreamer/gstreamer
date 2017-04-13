@@ -33,11 +33,20 @@ GST_DEBUG_CATEGORY (ttmlrender_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "ttmlparse", GST_RANK_PRIMARY,
-          GST_TYPE_TTML_PARSE))
+  guint rank = GST_RANK_NONE;
+
+  /* We don't want this autoplugged by default yet for now */
+  if (g_getenv ("GST_TTML_AUTOPLUG")) {
+    GST_INFO_OBJECT (plugin, "Registering ttml elements with primary rank.");
+    rank = GST_RANK_PRIMARY;
+  }
+
+  gst_plugin_add_dependency_simple (plugin, "GST_TTML_AUTOPLUG", NULL, NULL,
+      GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+
+  if (!gst_element_register (plugin, "ttmlparse", rank, GST_TYPE_TTML_PARSE))
     return FALSE;
-  if (!gst_element_register (plugin, "ttmlrender", GST_RANK_PRIMARY,
-          GST_TYPE_TTML_RENDER))
+  if (!gst_element_register (plugin, "ttmlrender", rank, GST_TYPE_TTML_RENDER))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (ttmlparse_debug, "ttmlparse", 0, "TTML parser");
