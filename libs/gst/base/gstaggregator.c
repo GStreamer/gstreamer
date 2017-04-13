@@ -1430,6 +1430,10 @@ gst_aggregator_default_sink_event (GstAggregator * self,
       PAD_LOCK (aggpad);
       GST_OBJECT_LOCK (aggpad);
       gst_event_copy_segment (event, &aggpad->segment);
+      /* We've got a new segment, tail_position is now meaningless
+       * and may interfere with the time_level calculation
+       */
+      aggpad->priv->tail_position = GST_CLOCK_TIME_NONE;
       update_time_level (aggpad, FALSE);
       GST_OBJECT_UNLOCK (aggpad);
       PAD_UNLOCK (aggpad);
