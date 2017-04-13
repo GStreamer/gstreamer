@@ -61,8 +61,8 @@ Internet, along with audio. Congratulations!
 Let's review these lines of code and see what they do:
 
 ``` c
-    /* Initialize GStreamer */
-    gst_init (&argc, &argv);
+/* Initialize GStreamer */
+gst_init (&argc, &argv);
 ```
 
 This must always be your first GStreamer command. Among other things,
@@ -80,8 +80,8 @@ benefit from the GStreamer standard command-line options (more on this
 in [Basic tutorial 10: GStreamer tools])
 
 ``` c
-    /* Build the pipeline */
-    pipeline = gst_parse_launch ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
+/* Build the pipeline */
+pipeline = gst_parse_launch ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
 ```
 
 This line is the heart of this tutorial, and exemplifies **two** key
@@ -133,8 +133,8 @@ only thing we are doing in this example is exiting on error, so do not
 expect much feedback.
 
 ``` c
-    /* Start playing */
-    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+/* Start playing */
+gst_element_set_state (pipeline, GST_STATE_PLAYING);
 ```
 
 This line highlights another interesting concept: the state. Every
@@ -147,9 +147,9 @@ In this line, `gst_element_set_state()` is setting `pipeline` (our only
 element, remember) to the PLAYING state, thus initiating playback.
 
 ``` c
-    /* Wait until error or EOS */
-    bus = gst_element_get_bus (pipeline);
-    gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+/* Wait until error or EOS */
+bus = gst_element_get_bus (pipeline);
+gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
 ```
 
 These lines will wait until an error occurs or the end of the stream is
@@ -171,12 +171,13 @@ Before terminating the application, though, there is a couple of things
 we need to do to tidy up correctly after ourselves.
 
 ``` c
-    /* Free resources */
-    if (msg != NULL)
-      gst_message_unref (msg);
-    gst_object_unref (bus);
-    gst_element_set_state (pipeline, GST_STATE_NULL);
-    gst_object_unref (pipeline);
+/* Free resources */
+if (msg != NULL)
+  gst_message_unref (msg);
+
+gst_object_unref (bus);
+gst_element_set_state (pipeline, GST_STATE_NULL);
+gst_object_unref (pipeline);
 ```
 
 Always read the documentation of the functions you use, to know if you
