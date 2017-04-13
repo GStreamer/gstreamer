@@ -65,7 +65,7 @@ Let's write a very simple media player based on playbin, this time,
 with a GUI!
 
 Copy this code into a text file named `basic-tutorial-5.c` (or find it
-in the SDK installation).
+in your GStreamer installation).
 
 **basic-tutorial-5.c**
 

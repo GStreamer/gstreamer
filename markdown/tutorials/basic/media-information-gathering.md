@@ -73,7 +73,7 @@ playback.
 ## The GStreamer Discoverer
 
 Copy this code into a text file named `basic-tutorial-9.c` (or find it
-in the SDK installation).
+in your GStreamer installation).
 
 **basic-tutorial-9.c**
 

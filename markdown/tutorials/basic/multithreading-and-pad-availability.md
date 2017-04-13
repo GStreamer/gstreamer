@@ -80,7 +80,7 @@ Without further delay, let's see the code.
 ## Simple multithreaded example
 
 Copy this code into a text file named `basic-tutorial-7.c` (or find it
-in the SDK installation).
+in your GStreamer installation).
 
 **basic-tutorial-7.c**
 

@@ -18,7 +18,7 @@ and linking them all together. In the process, we will learn:
 ## Manual Hello World
 
 Copy this code into a text file named `basic-tutorial-2.c` (or find it
-in the SDK installation).
+in your GStreamer installation).
 
 **basic-tutorial-2.c**
 

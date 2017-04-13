@@ -31,7 +31,7 @@ Finally, the stream duration is queried and updated whenever it changes.
 ## Seeking example
 
 Copy this code into a text file named `basic-tutorial-4.c` (or find it
-in the SDK installation).
+in your GStreamer installation).
 
 **basic-tutorial-4.c**
 

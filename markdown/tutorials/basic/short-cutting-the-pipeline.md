@@ -89,7 +89,7 @@ been received, but it could obviously perform more complex tasks.
 ## A crude waveform generator
 
 Copy this code into a text file named `basic-tutorial-8.c` (or find it
-in the SDK installation).
+in your GStreamer installation).
 
 ``` c
 #include <gst/gst.h>

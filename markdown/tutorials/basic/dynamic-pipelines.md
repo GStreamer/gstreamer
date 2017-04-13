@@ -81,7 +81,7 @@ ignore the video.
 ## Dynamic Hello World
 
 Copy this code into a text file named `basic-tutorial-3.c` (or find it
-in the SDK installation).
+in your GStreamer installation).
 
 **basic-tutorial-3.c**
 

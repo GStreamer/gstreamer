@@ -118,7 +118,7 @@ Pad Caps are fixed.
 ## A trivial Pad Capabilities Example
 
 Copy this code into a text file named `basic-tutorial-6.c` (or find it
-in the SDK installation).
+in your GStreamer installation).
 
 **basic-tutorial-6.c**
 

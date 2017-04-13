@@ -21,7 +21,7 @@ Without further ado, get ready for your first GStreamer application...
 ## Hello world
 
 Copy this code into a text file named `basic-tutorial-1.c` (or find it
-in the SDK installation).
+in your GStreamer installation).
 
 **basic-tutorial-1.c**
 
