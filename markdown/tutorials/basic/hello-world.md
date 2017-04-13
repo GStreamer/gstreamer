@@ -145,7 +145,6 @@ to the PLAYING state.
 
 In this line, `gst_element_set_state()` is setting `pipeline` (our only
 element, remember) to the PLAYING state, thus initiating playback.
-```
 
 ``` c
     /* Wait until error or EOS */
