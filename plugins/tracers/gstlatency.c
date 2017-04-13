@@ -106,7 +106,7 @@ log_latency (const GstStructure * data, GstPad * sink_pad, guint64 sink_ts)
   sink = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (sink_pad));
 
   gst_tracer_record_log (tr_latency, src, sink,
-      GST_CLOCK_DIFF (src_ts, sink_ts));
+      GST_CLOCK_DIFF (src_ts, sink_ts), sink_ts);
   g_free (src);
   g_free (sink);
 }
@@ -213,6 +213,12 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING,
               "time it took for the buffer to go from src to sink ns",
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING, "ts when the latency has been logged",
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
