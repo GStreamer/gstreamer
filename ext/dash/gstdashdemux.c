@@ -1289,8 +1289,17 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
     gst_mpd_client_get_next_fragment (dashdemux->client, dashstream->index,
         &fragment);
 
-    dashstream->current_fragment_timestamp = fragment.timestamp;
-    dashstream->current_fragment_duration = fragment.duration;
+    if (isombff && dashstream->sidx_position != GST_CLOCK_TIME_NONE
+        && SIDX (dashstream)->entries) {
+      GstSidxBoxEntry *entry = SIDX_CURRENT_ENTRY (dashstream);
+      dashstream->current_fragment_timestamp = fragment.timestamp = entry->pts;
+      dashstream->current_fragment_duration = fragment.duration =
+          entry->duration;
+    } else {
+      dashstream->current_fragment_timestamp = fragment.timestamp;
+      dashstream->current_fragment_duration = fragment.duration;
+    }
+
     dashstream->current_fragment_keyframe_distance =
         fragment.duration / dashstream->moof_sync_samples->len;
     dashstream->actual_position =
@@ -1326,8 +1335,6 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
     gst_mpd_client_get_next_fragment (dashdemux->client, dashstream->index,
         &fragment);
 
-    dashstream->current_fragment_timestamp = fragment.timestamp;
-    dashstream->current_fragment_duration = fragment.duration;
     stream->fragment.uri = fragment.uri;
     /* If mpd does not specify indexRange (i.e., null index_uri),
      * sidx entries may not be available until download it */
@@ -1337,7 +1344,10 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
       stream->fragment.range_start =
           dashstream->sidx_base_offset + entry->offset;
       dashstream->actual_position = stream->fragment.timestamp = entry->pts;
-      stream->fragment.duration = entry->duration;
+      dashstream->current_fragment_timestamp = stream->fragment.timestamp =
+          entry->pts;
+      dashstream->current_fragment_duration = stream->fragment.duration =
+          entry->duration;
       if (stream->demux->segment.rate < 0.0) {
         stream->fragment.range_end =
             stream->fragment.range_start + entry->size - 1;
@@ -1348,7 +1358,9 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
     } else {
       dashstream->actual_position = stream->fragment.timestamp =
           fragment.timestamp;
-      stream->fragment.duration = fragment.duration;
+      dashstream->current_fragment_timestamp = fragment.timestamp;
+      dashstream->current_fragment_duration = stream->fragment.duration =
+          fragment.duration;
       if (stream->demux->segment.rate < 0.0)
         dashstream->actual_position += fragment.duration;
       stream->fragment.range_start =
@@ -1993,18 +2005,26 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
         && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (dashdemux)) {
       GST_LOG_OBJECT (stream->pad, "current sync sample #%d",
           dashstream->current_sync_sample);
-      if (dashstream->current_sync_sample == -1)
+      if (dashstream->current_sync_sample == -1) {
         dur = 0;
-      else if (dashstream->current_sync_sample <
-          dashstream->moof_sync_samples->len)
+      } else if (dashstream->current_sync_sample <
+          dashstream->moof_sync_samples->len) {
         dur = dashstream->current_fragment_keyframe_distance;
-      else
-        dur =
-            dashstream->current_fragment_timestamp +
-            dashstream->current_fragment_duration - dashstream->actual_position;
+      } else {
+        if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
+            dashstream->sidx_position != GST_CLOCK_TIME_NONE
+            && SIDX (dashstream)->entries) {
+          GstSidxBoxEntry *entry = SIDX_CURRENT_ENTRY (dashstream);
+          dur = entry->duration;
+        } else {
+          dur =
+              dashstream->current_fragment_timestamp +
+              dashstream->current_fragment_duration -
+              dashstream->actual_position;
+        }
+      }
     } else if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
-        dashstream->sidx_position != 0
-        && dashstream->sidx_position != GST_CLOCK_TIME_NONE
+        dashstream->sidx_position != GST_CLOCK_TIME_NONE
         && SIDX (dashstream)->entries) {
       GstSidxBoxEntry *entry = SIDX_CURRENT_ENTRY (dashstream);
       dur = entry->duration;
@@ -2101,8 +2121,8 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
           GST_TIME_FORMAT ")", GST_TIME_ARGS (actual_ts),
           GST_TIME_ARGS (target_time), GST_TIME_ARGS (previous_position));
 
-      if ((stream->segment.rate > 0 && actual_ts < previous_position) ||
-          (stream->segment.rate < 0 && actual_ts > previous_position)) {
+      if ((stream->segment.rate > 0 && actual_ts <= previous_position) ||
+          (stream->segment.rate < 0 && actual_ts >= previous_position)) {
         /* Give up */
         if (flags != 0)
           break;
@@ -3172,9 +3192,17 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
     g_assert (stream->fragment.duration != 0);
     g_assert (stream->fragment.duration != GST_CLOCK_TIME_NONE);
 
-    dash_stream->current_fragment_keyframe_distance =
-        current_keyframe_distance =
-        stream->fragment.duration / dash_stream->moof_sync_samples->len;
+    if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)
+        && dash_stream->sidx_position != GST_CLOCK_TIME_NONE
+        && SIDX (dash_stream)->entries) {
+      GstSidxBoxEntry *entry = SIDX_CURRENT_ENTRY (dash_stream);
+      current_keyframe_distance =
+          entry->duration / dash_stream->moof_sync_samples->len;
+    } else {
+      current_keyframe_distance =
+          stream->fragment.duration / dash_stream->moof_sync_samples->len;
+    }
+    dash_stream->current_fragment_keyframe_distance = current_keyframe_distance;
 
     if (dash_stream->keyframe_average_distance) {
       /* Under-estimate the keyframe distance */
