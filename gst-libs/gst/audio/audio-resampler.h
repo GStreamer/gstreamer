@@ -34,9 +34,9 @@ typedef struct _GstAudioResampler GstAudioResampler;
  */
 #define GST_AUDIO_RESAMPLER_OPT_CUTOFF      "GstAudioResampler.cutoff"
 /**
- * GST_AUDIO_RESAMPLER_OPT_STOP_ATTENUTATION:
+ * GST_AUDIO_RESAMPLER_OPT_STOP_ATTENUATION:
  *
- * G_TYPE_DOUBLE, stopband attenuation in debibels. The attenutation
+ * G_TYPE_DOUBLE, stopband attenuation in decibels. The attenuation
  * after the stopband for the kaiser window. 85 dB is the default.
  */
 #define GST_AUDIO_RESAMPLER_OPT_STOP_ATTENUATION "GstAudioResampler.stop-attenutation"
