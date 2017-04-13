@@ -59,6 +59,15 @@ gstnet_dep = dependency('gstreamer-net-1.0', version : gst_req,
 
 vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
 
+gir = find_program('g-ir-scanner', required : false)
+gnome = import('gnome')
+build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
+gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' + \
+    'g_setenv("GST_REGISTRY_1.0", "@0@", TRUE);'.format(meson.current_build_dir() + '/gir_empty_registry.reg') + \
+    'g_setenv("GST_PLUGIN_PATH_1_0", "", TRUE);' + \
+    'g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", "", TRUE);' + \
+    'gst_init(NULL,NULL);' ]
+
 subdir('gst')
 subdir('tests')
 subdir('examples')

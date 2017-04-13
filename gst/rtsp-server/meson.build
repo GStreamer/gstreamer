@@ -43,6 +43,7 @@ rtsp_server_headers = [
 ]
 install_headers(rtsp_server_headers, subdir : 'gstreamer-1.0/gst/rtsp-server')
 
+gst_rtsp_server_deps = [gstrtsp_dep, gstrtp_dep, gstsdp_dep, gstnet_dep, gstapp_dep]
 gst_rtsp_server = library('gstrtspserver-@0@'.format(api_version),
   rtsp_server_sources,
   include_directories : rtspserver_incs,
@@ -50,10 +51,29 @@ gst_rtsp_server = library('gstrtspserver-@0@'.format(api_version),
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gstrtsp_dep, gstrtp_dep, gstsdp_dep, gstnet_dep, gstapp_dep],
+  dependencies : gst_rtsp_server_deps,
   vs_module_defs: vs_module_defs_dir + 'libgstrtspserver.def'
 )
 
+rtsp_server_gen_sources = []
+if build_gir
+  gst_gir_extra_args = gir_init_section + ['--c-include=gst/rtsp-server/rtsp-server.h']
+  rtsp_server_gir = gnome.generate_gir(gst_rtsp_server,
+    sources : rtsp_server_headers + rtsp_server_sources,
+    namespace : 'GstRtspServer',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-rtsp-server-' + api_version,
+    install : true,
+    extra_args : gst_gir_extra_args,
+    includes : ['Gst-1.0', 'GstRtsp-1.0', 'GstNet-1.0'],
+    dependencies : gst_rtsp_server_deps,
+  )
+  rtsp_server_gen_sources += [rtsp_server_gir]
+endif
+
 gst_rtsp_server_dep = declare_dependency(link_with : gst_rtsp_server,
   include_directories : rtspserver_incs,
+  sources : rtsp_server_gen_sources,
   dependencies : [gstrtsp_dep, gstrtp_dep, gstsdp_dep, gstnet_dep, gstapp_dep])
