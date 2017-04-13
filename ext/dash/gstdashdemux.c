@@ -2060,19 +2060,6 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
   dashstream->moof_sync_samples = NULL;
   dashstream->current_sync_sample = -1;
 
-  if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
-    if (gst_dash_demux_stream_advance_subfragment (stream))
-      return GST_FLOW_OK;
-  }
-
-  gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
-  gst_isoff_sidx_parser_init (&dashstream->sidx_parser);
-  dashstream->sidx_base_offset = 0;
-  dashstream->sidx_position = GST_CLOCK_TIME_NONE;
-  dashstream->allow_sidx = TRUE;
-  if (dashstream->adapter)
-    gst_adapter_clear (dashstream->adapter);
-
   /* Check if we just need to 'advance' to the next fragment, or if we
    * need to skip by more. */
   if (GST_CLOCK_TIME_IS_VALID (target_time)
@@ -2131,6 +2118,19 @@ gst_dash_demux_stream_advance_fragment (GstAdaptiveDemuxStream * stream)
     }
   } else {
     /* Normal mode, advance to the next fragment */
+    if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client)) {
+      if (gst_dash_demux_stream_advance_subfragment (stream))
+        return GST_FLOW_OK;
+    }
+
+    if (dashstream->adapter)
+      gst_adapter_clear (dashstream->adapter);
+
+    gst_isoff_sidx_parser_clear (&dashstream->sidx_parser);
+    dashstream->sidx_base_offset = 0;
+    dashstream->sidx_position = GST_CLOCK_TIME_NONE;
+    dashstream->allow_sidx = TRUE;
+
     ret = gst_mpd_client_advance_segment (dashdemux->client,
         dashstream->active_stream, stream->demux->segment.rate > 0.0);
   }
@@ -2252,6 +2252,7 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
       g_array_free (dashstream->moof_sync_samples, TRUE);
     dashstream->moof_sync_samples = NULL;
     dashstream->current_sync_sample = -1;
+    dashstream->target_time = GST_CLOCK_TIME_NONE;
   }
 
 end:
@@ -2663,13 +2664,15 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
         if (dashstream->first_sync_sample_always_after_moof) {
           gboolean first = FALSE;
           /* Check if we'll really need that first sample */
-          if (GST_CLOCK_TIME_IS_VALID (dashstream->target_time))
+          if (GST_CLOCK_TIME_IS_VALID (dashstream->target_time)) {
             first =
                 ((dashstream->target_time -
                     dashstream->current_fragment_timestamp) /
                 dashstream->keyframe_average_distance) == 0 ? TRUE : FALSE;
-          else if (stream->segment.rate > 0)
+          } else if (stream->segment.rate > 0) {
             first = TRUE;
+          }
+
           if (first)
             stream->fragment.chunk_size += dashstream->keyframe_average_size;
         }
@@ -3238,13 +3241,16 @@ gst_dash_demux_handle_isobmff (GstAdaptiveDemux * demux,
     if (dash_stream->active_stream->mimeType == GST_STREAM_VIDEO
         && gst_dash_demux_find_sync_samples (demux, stream) &&
         GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux)) {
-      guint idx = 0;
+      guint idx = -1;
 
-      if (GST_CLOCK_TIME_IS_VALID (dash_stream->target_time))
+      if (GST_CLOCK_TIME_IS_VALID (dash_stream->target_time)) {
         idx =
             (dash_stream->target_time -
             dash_stream->current_fragment_timestamp) /
             dash_stream->current_fragment_keyframe_distance;
+      } else if (stream->segment.rate > 0) {
+        idx = 0;
+      }
 
       GST_DEBUG_OBJECT (stream->pad, "target %" GST_TIME_FORMAT " idx %d",
           GST_TIME_ARGS (dash_stream->target_time), idx);
