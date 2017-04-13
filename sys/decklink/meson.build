@@ -25,12 +25,12 @@ if libdl.found() and have_pthread_h
   endif
 endif
 
-cxx = meson.get_compiler('cpp')
-if cxx.has_argument('-Wno-non-virtual-dtor')
-  decklink_cppargs += ['-Wno-non-virtual-dtor']
-endif
-
 if build_decklink
+  cxx = meson.get_compiler('cpp')
+  if cxx.has_argument('-Wno-non-virtual-dtor')
+    decklink_cppargs += ['-Wno-non-virtual-dtor']
+  endif
+
   decklink = library('gstdecklink',
     decklink_sources,
     cpp_args : gst_plugins_bad_args + decklink_cppargs,
