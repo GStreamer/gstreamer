@@ -1108,9 +1108,13 @@ gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
      * presentation time offset, we will also have to move the segment start
      * by that offset.
      *
-     * Now the running time and stream time at the stream's segment start has to
-     * be the one that is stored inside the demuxer's segment, which means
-     * that segment.base and segment.time have to be copied over.
+     * Likewise, the demuxer segment stop value is adjusted in the same
+     * fashion.
+     *
+     * Now the running time and stream time at the stream's segment start has
+     * to be the one that is stored inside the demuxer's segment, which means
+     * that segment.base and segment.time have to be copied over (done just
+     * above)
      *
      *
      * If the demuxer segment start is smaller than the period start time,
@@ -1124,26 +1128,46 @@ gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
      * segment's base, which is supposed to be the running time of the period
      * start according to the demuxer's segment.
      *
+     * The same logic applies for negative rates with the segment stop and
+     * the period stop time (which gets clamped).
+     *
      *
      * For the first case where not the complete period is inside the segment,
      * the segment time and base as calculated by the second case would be
      * equivalent.
      */
-
-    /* If first and live, demuxer did seek to the current position already */
+    GST_DEBUG_OBJECT (demux, "Using demux segment %" GST_SEGMENT_FORMAT,
+        &demux->segment);
+    GST_DEBUG_OBJECT (demux,
+        "period_start: %" GST_TIME_FORMAT " offset: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (period_start), GST_TIME_ARGS (offset));
+    /* note for readers:
+     * Since stream->segment is initially a copy of demux->segment,
+     * only the values that need updating are modified below. */
     if (first_and_live) {
+      /* If first and live, demuxer did seek to the current position already */
       stream->segment.start = demux->segment.start - period_start + offset;
+      if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop))
+        stream->segment.stop = demux->segment.stop - period_start + offset;
+      /* FIXME : Do we need to handle negative rates for this ? */
       stream->segment.position = stream->segment.start;
-      stream->segment.time = demux->segment.time;
-      stream->segment.base = demux->segment.base;
     } else if (demux->segment.start > period_start) {
+      /* seek within a period */
       stream->segment.start = demux->segment.start - period_start + offset;
-      stream->segment.position = offset;
-      stream->segment.time = demux->segment.time;
-      stream->segment.base = demux->segment.base;
+      if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop))
+        stream->segment.stop = demux->segment.stop - period_start + offset;
+      if (stream->segment.rate >= 0)
+        stream->segment.position = offset;
+      else
+        stream->segment.position = stream->segment.stop;
     } else {
       stream->segment.start = offset;
-      stream->segment.position = offset;
+      if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop))
+        stream->segment.stop = demux->segment.stop - period_start + offset;
+      if (stream->segment.rate >= 0)
+        stream->segment.position = offset;
+      else
+        stream->segment.position = stream->segment.stop;
       stream->segment.time =
           gst_segment_to_stream_time (&demux->segment, GST_FORMAT_TIME,
           period_start);
@@ -1155,7 +1179,8 @@ gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
     stream->pending_segment = gst_event_new_segment (&stream->segment);
     gst_event_set_seqnum (stream->pending_segment, demux->priv->segment_seqnum);
 
-    GST_DEBUG ("Prepared segment %" GST_SEGMENT_FORMAT " for stream %p",
+    GST_DEBUG_OBJECT (demux,
+        "Prepared segment %" GST_SEGMENT_FORMAT " for stream %p",
         &stream->segment, stream);
   }
 
@@ -1639,6 +1664,8 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
       offset =
           gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
       stream->segment.start += offset - period_start;
+      if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop))
+        stream->segment.stop += offset - period_start;
       if (demux->segment.rate > 0 && start_type != GST_SEEK_TYPE_NONE)
         stream->segment.position = stream->segment.start;
       else if (demux->segment.rate < 0 && stop_type != GST_SEEK_TYPE_NONE)
