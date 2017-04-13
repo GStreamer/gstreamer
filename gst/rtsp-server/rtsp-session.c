@@ -617,7 +617,7 @@ gst_rtsp_session_allow_expire (GstRTSPSession * session)
 /**
  * gst_rtsp_session_next_timeout_usec:
  * @session: a #GstRTSPSession
- * @now: (transfer none): the current monotonic time
+ * @now: the current monotonic time
  *
  * Get the amount of milliseconds till the session will expire.
  *
@@ -716,7 +716,7 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
 /**
  * gst_rtsp_session_is_expired_usec:
  * @session: a #GstRTSPSession
- * @now: (transfer none): the current monotonic time
+ * @now: the current monotonic time
  *
  * Check if @session timeout out.
  *

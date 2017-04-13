@@ -803,10 +803,10 @@ gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFactory * factory)
 
 /**
  * gst_rtsp_media_factory_set_multicast_iface:
- * @media_factory: a #GstRTSPMediaFactory
+ * @factory: a #GstRTSPMediaFactory
  * @multicast_iface: (transfer none): a multicast interface name
  *
- * configure @multicast_iface to be used for @media_factory.
+ * configure @multicast_iface to be used for @factory.
  */
 void
 gst_rtsp_media_factory_set_multicast_iface (GstRTSPMediaFactory * media_factory,
@@ -834,11 +834,11 @@ gst_rtsp_media_factory_set_multicast_iface (GstRTSPMediaFactory * media_factory,
 
 /**
  * gst_rtsp_media_factory_get_multicast_iface:
- * @media_factory: a #GstRTSPMediaFactory
+ * @factory: a #GstRTSPMediaFactory
  *
- * Get the multicast interface used for @media_factory.
+ * Get the multicast interface used for @factory.
  *
- * Returns: (transfer full): the multicast interface for @media_factory. g_free() after
+ * Returns: (transfer full): the multicast interface for @factory. g_free() after
  * usage.
  */
 gchar *
@@ -1292,7 +1292,7 @@ gst_rtsp_media_factory_get_media_gtype (GstRTSPMediaFactory * factory)
 /**
  * gst_rtsp_media_factory_set_clock:
  * @factory: a #GstRTSPMediaFactory
- * @clockd: the clock to be used by the media factory
+ * @clock: the clock to be used by the media factory
  *
  * Configures a specific clock to be used by the pipelines
  * of all medias created from this factory.

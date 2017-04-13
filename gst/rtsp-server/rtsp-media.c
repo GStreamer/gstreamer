@@ -1494,7 +1494,7 @@ gst_rtsp_media_set_publish_clock_mode (GstRTSPMedia * media,
 
 /**
  * gst_rtsp_media_get_publish_clock_mode:
- * @factory: a #GstRTSPMedia
+ * @media: a #GstRTSPMedia
  *
  * Gets if and how the media clock should be published according to RFC7273.
  *

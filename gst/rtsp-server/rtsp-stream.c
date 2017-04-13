@@ -1416,7 +1416,8 @@ cleanup:
  * gst_rtsp_stream_allocate_udp_sockets:
  * @stream: a #GstRTSPStream
  * @family: protocol family
- * @transport_method: transport method
+ * @transport: transport method
+ * @use_client_setttings: Whether to use client settings or not
  *
  * Allocates RTP and RTCP ports.
  *
@@ -1574,7 +1575,7 @@ gst_rtsp_stream_get_rtpsession (GstRTSPStream * stream)
 }
 
 /**
- * gst_rtsp_stream_get_encoder:
+ * gst_rtsp_stream_get_srtp_encoder:
  * @stream: a #GstRTSPStream
  *
  * Get the SRTP encoder for this stream.
@@ -2262,7 +2263,7 @@ gst_rtsp_stream_set_publish_clock_mode (GstRTSPStream * stream,
 
 /**
  * gst_rtsp_stream_get_publish_clock_mode:
- * @factory: a #GstRTSPStream
+ * @stream: a #GstRTSPStream
  *
  * Gets if and how the stream clock should be published according to RFC7273.
  *
@@ -2977,7 +2978,7 @@ gst_rtsp_stream_get_joined_bin (GstRTSPStream * stream)
  * @rtptime: (allow-none): result RTP timestamp
  * @seq: (allow-none): result RTP seqnum
  * @clock_rate: (allow-none): the clock rate
- * @running_time: (allow-none): result running-time
+ * @running_time: result running-time
  *
  * Retrieve the current rtptime, seq and running-time. This is used to
  * construct a RTPInfo reply header.
