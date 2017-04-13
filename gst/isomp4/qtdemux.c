@@ -6885,6 +6885,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
 
             /* skip this data, stream is EOS */
             gst_adapter_flush (demux->adapter, demux->neededbytes);
+            demux->offset += demux->neededbytes;
 
             /* check if all streams are eos */
             ret = GST_FLOW_EOS;
@@ -6893,11 +6894,6 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
                 ret = GST_FLOW_OK;
                 break;
               }
-            }
-
-            if (ret == GST_FLOW_EOS) {
-              GST_DEBUG_OBJECT (demux, "All streams are EOS, signal upstream");
-              goto eos;
             }
           } else {
             GstBuffer *outbuf;
@@ -6928,6 +6924,13 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         demux->offset += demux->neededbytes;
         GST_LOG_OBJECT (demux, "offset is now %" G_GUINT64_FORMAT,
             demux->offset);
+
+
+        if (ret == GST_FLOW_EOS) {
+          GST_DEBUG_OBJECT (demux, "All streams are EOS, signal upstream");
+          demux->neededbytes = -1;
+          goto eos;
+        }
 
         if ((demux->neededbytes = next_entry_size (demux)) == -1) {
           if (demux->fragmented) {
