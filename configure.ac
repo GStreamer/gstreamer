@@ -1939,10 +1939,11 @@ AG_GST_CHECK_FEATURE(NVENC, [NVIDIA Encode API], nvenc, [
       CUDA_LIBS="-L$CUDA_PREFIX/lib -L$CUDA_PREFIX/lib64 -L$CUDA_PREFIX/lib/stubs -L$CUDA_PREFIX/lib64/stubs -lcuda -lcudart"
     fi
   else
-    PKG_CHECK_MODULES([CUDA], [cuda-7.5 cudart-7.5],, [
-      PKG_CHECK_MODULES([CUDA], [cuda-7.0 cudart-7.0],, [
-        PKG_CHECK_MODULES([CUDA], [cuda-6.5 cudart-6.5],, [
-          AC_MSG_WARN([Could not find cuda headers/libraries])])])])
+    PKG_CHECK_MODULES([CUDA], [cuda-8.0 cudart-8.0],, [
+      PKG_CHECK_MODULES([CUDA], [cuda-7.5 cudart-7.5],, [
+        PKG_CHECK_MODULES([CUDA], [cuda-7.0 cudart-7.0],, [
+          PKG_CHECK_MODULES([CUDA], [cuda-6.5 cudart-6.5],, [
+            AC_MSG_WARN([Could not find cuda headers/libraries])])])])])
   fi
 
   HAVE_CUDA_H=no
