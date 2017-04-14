@@ -288,6 +288,14 @@ gst_rtsp_nat_method_get_type (void)
   return rtsp_nat_method_type;
 }
 
+#define RTSP_SRC_RESPONSE_ERROR(src, response_msg, err_cat, err_code, error_message) \
+  do { \
+    GST_ELEMENT_ERROR_WITH_DETAILS((src), err_cat, err_code, ("%s", error_message), \
+        ("%s (%d)", (response_msg)->type_data.response.reason, (response_msg)->type_data.response.code), \
+        ("rtsp-status-code", G_TYPE_UINT, (response_msg)->type_data.response.code, \
+         "rtsp-status-reason", G_TYPE_STRING, GST_STR_NULL((response_msg)->type_data.response.reason), NULL)); \
+  } while (0)
+
 static void gst_rtspsrc_finalize (GObject * object);
 
 static void gst_rtspsrc_set_property (GObject * object, guint prop_id,
@@ -1585,7 +1593,7 @@ no_proto:
   }
 unknown_proto:
   {
-    GST_ERROR_OBJECT (src, "unknown proto in media %s", proto);
+    GST_ERROR_OBJECT (src, "unknown proto in media: '%s'", proto);
     return;
   }
 }
@@ -5548,12 +5556,12 @@ error_response:
 
     switch (response->type_data.response.code) {
       case GST_RTSP_STS_NOT_FOUND:
-        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), ("%s",
-                response->type_data.response.reason));
+        RTSP_SRC_RESPONSE_ERROR (src, response, RESOURCE, NOT_FOUND,
+            "Not found");
         break;
       case GST_RTSP_STS_UNAUTHORIZED:
-        GST_ELEMENT_ERROR (src, RESOURCE, NOT_AUTHORIZED, (NULL), ("%s",
-                response->type_data.response.reason));
+        RTSP_SRC_RESPONSE_ERROR (src, response, RESOURCE, NOT_AUTHORIZED,
+            "Unauthorized");
         break;
       case GST_RTSP_STS_MOVED_PERMANENTLY:
       case GST_RTSP_STS_MOVE_TEMPORARILY:
@@ -5597,9 +5605,8 @@ error_response:
         res = GST_RTSP_OK;
         break;
       default:
-        GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-            ("Got error response: %d (%s).", response->type_data.response.code,
-                response->type_data.response.reason));
+        RTSP_SRC_RESPONSE_ERROR (src, response, RESOURCE, READ,
+            "Unhandled error");
         break;
     }
     /* if we return ERROR we should unset the response ourselves */
