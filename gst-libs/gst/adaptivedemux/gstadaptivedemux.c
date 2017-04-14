@@ -1544,7 +1544,9 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
     GST_DEBUG_OBJECT (demux, "sending flush start");
     fevent = gst_event_new_flush_start ();
     gst_event_set_seqnum (fevent, seqnum);
+    GST_MANIFEST_UNLOCK (demux);
     gst_adaptive_demux_push_src_event (demux, fevent);
+    GST_MANIFEST_LOCK (demux);
 
     gst_adaptive_demux_stop_tasks (demux);
   } else if ((rate > 0 && start_type != GST_SEEK_TYPE_NONE) ||
