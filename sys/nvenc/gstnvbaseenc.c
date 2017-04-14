@@ -458,8 +458,7 @@ gst_nv_base_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
       gboolean ret;
 
       ret = gst_gl_handle_context_query ((GstElement *) nvenc, query,
-          (GstGLDisplay **) & nvenc->display,
-          (GstGLContext **) & nvenc->other_context);
+          nvenc->display, NULL, nvenc->other_context);
       if (nvenc->display)
         gst_gl_display_filter_gl_api (GST_GL_DISPLAY (nvenc->display),
             SUPPORTED_GL_APIS);
