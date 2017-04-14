@@ -395,7 +395,6 @@ else
 
   case $host_os in
     mingw32*)
-      emblibav_configure_args="$emblibav_configure_args --enable-memalign-hack"
       WIN32_LIBS="-lws2_32"
       ;;
     *)
