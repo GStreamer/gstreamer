@@ -3779,6 +3779,23 @@ atom_trak_add_audio_entry (AtomTRAK * trak, AtomsContext * context,
   return mp4a;
 }
 
+/* return number of centiframes per second */
+guint
+atom_framerate_to_timescale (gint n, gint d)
+{
+  if (n == 0)
+    return 10000;
+
+  if (d != 1 && d != 1001) {
+    /* otherwise there are probably rounding errors and we should rather guess
+     * if it's close enough to a well known framerate */
+    gst_video_guess_framerate (gst_util_uint64_scale (d, GST_SECOND, n), &n,
+        &d);
+  }
+
+  return gst_util_uint64_scale (n, 100, d);
+}
+
 static SampleTableEntryTMCD *
 atom_trak_add_timecode_entry (AtomTRAK * trak, AtomsContext * context,
     GstVideoTimeCode * tc)
@@ -3790,7 +3807,8 @@ atom_trak_add_timecode_entry (AtomTRAK * trak, AtomsContext * context,
   trak->mdia.hdlr.handler_type = FOURCC_tmcd;
   g_free (trak->mdia.hdlr.name);
   trak->mdia.hdlr.name = g_strdup ("Time Code Media Handler");
-  trak->mdia.mdhd.time_info.timescale = tc->config.fps_n / tc->config.fps_d;
+  trak->mdia.mdhd.time_info.timescale =
+      atom_framerate_to_timescale (tc->config.fps_n, tc->config.fps_d);
 
   tmcd->se.kind = TIMECODE;
   tmcd->se.data_reference_index = 1;
@@ -3799,8 +3817,9 @@ atom_trak_add_timecode_entry (AtomTRAK * trak, AtomsContext * context,
     tmcd->tc_flags |= TC_DROP_FRAME;
   tmcd->name.language_code = 0;
   tmcd->name.name = g_strdup ("Tape");
-  tmcd->timescale = tc->config.fps_n;
-  tmcd->frame_duration = tc->config.fps_d;
+  tmcd->timescale =
+      atom_framerate_to_timescale (tc->config.fps_n, tc->config.fps_d);
+  tmcd->frame_duration = 100;
   if (tc->config.fps_d == 1001)
     tmcd->n_frames = tc->config.fps_n / 1000;
   else

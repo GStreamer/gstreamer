@@ -938,6 +938,8 @@ void       atom_moov_chunks_set_offset (AtomMOOV *moov, guint32 offset);
 void       atom_moov_add_trak          (AtomMOOV *moov, AtomTRAK *trak);
 guint      atom_moov_get_trak_count    (AtomMOOV *moov);
 
+guint      atom_framerate_to_timescale (gint fps_n, gint fps_d);
+
 guint64    atom_mvhd_copy_data         (AtomMVHD * atom, guint8 ** buffer,
                                         guint64 * size, guint64 * offset);
 void       atom_stco64_chunks_set_offset (AtomSTCO64 * stco64, guint32 offset);
