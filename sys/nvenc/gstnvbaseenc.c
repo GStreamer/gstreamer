@@ -142,7 +142,7 @@ _rc_mode_to_nv (GstNvRCMode mode)
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, " "format = (string) NV12, " // TODO: I420, YV12, Y444 support
+    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { NV12, I420 }, "       // TODO: YV12, Y444 support
         "width = (int) [ 16, 4096 ], height = (int) [ 16, 2160 ], "
         "framerate = (fraction) [0, MAX],"
         "interlace-mode = { progressive, mixed, interleaved } "
@@ -1738,9 +1738,6 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
     width = GST_VIDEO_FRAME_WIDTH (&vframe);
     height = GST_VIDEO_FRAME_HEIGHT (&vframe);
 
-    // FIXME: this only works for NV12
-    g_assert (GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_NV12);
-
     /* copy Y plane */
     src = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
     src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
@@ -1752,18 +1749,50 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
       src += src_stride;
     }
 
-    /* copy UV plane */
-    src = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
-    src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
-    dest =
-        (guint8 *) in_buf_lock.bufferDataPtr +
-        GST_ROUND_UP_32 (GST_VIDEO_INFO_HEIGHT (&nvenc->input_info)) *
-        in_buf_lock.pitch;
-    dest_stride = in_buf_lock.pitch;
-    for (y = 0; y < GST_ROUND_UP_2 (height) / 2; ++y) {
-      memcpy (dest, src, width);
-      dest += dest_stride;
-      src += src_stride;
+    if (GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_NV12) {
+      /* copy UV plane */
+      src = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
+      src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
+      dest =
+          (guint8 *) in_buf_lock.bufferDataPtr +
+          GST_ROUND_UP_32 (height) * in_buf_lock.pitch;
+      dest_stride = in_buf_lock.pitch;
+      for (y = 0; y < GST_ROUND_UP_2 (height) / 2; ++y) {
+        memcpy (dest, src, width);
+        dest += dest_stride;
+        src += src_stride;
+      }
+    } else if (GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_I420) {
+      guint8 *dest_u, *dest_v;
+
+      dest_u = (guint8 *) in_buf_lock.bufferDataPtr +
+          GST_ROUND_UP_32 (height) * in_buf_lock.pitch;
+      dest_v = dest_u + ((GST_ROUND_UP_32 (height) / 2) *
+          (in_buf_lock.pitch / 2));
+      dest_stride = in_buf_lock.pitch / 2;
+
+      /* copy U plane */
+      src = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
+      src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
+      dest = dest_u;
+      for (y = 0; y < GST_ROUND_UP_2 (height) / 2; ++y) {
+        memcpy (dest, src, width / 2);
+        dest += dest_stride;
+        src += src_stride;
+      }
+
+      /* copy V plane */
+      src = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 2);
+      src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 2);
+      dest = dest_v;
+      for (y = 0; y < GST_ROUND_UP_2 (height) / 2; ++y) {
+        memcpy (dest, src, width / 2);
+        dest += dest_stride;
+        src += src_stride;
+      }
+    } else {
+      // FIXME: this only works for NV12 and I420
+      g_assert_not_reached ();
     }
 
     nv_ret = NvEncUnlockInputBuffer (nvenc->encoder, in_buf);
