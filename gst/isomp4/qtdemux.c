@@ -6326,10 +6326,12 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         }
       }
       if (!is_gap_input) {
+        GST_DEBUG_OBJECT (demux, "Resetting, actual DISCONT");
         /* Reset state if it's a real discont */
         demux->neededbytes = 16;
         demux->state = QTDEMUX_STATE_INITIAL;
         demux->offset = GST_BUFFER_OFFSET (inbuf);
+        gst_adapter_clear (demux->adapter);
       }
     }
     /* Reverse fragmented playback, need to flush all we have before
