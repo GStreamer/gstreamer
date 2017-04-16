@@ -166,6 +166,7 @@ enum
   PROP_QP_MIN,
   PROP_QP_MAX,
   PROP_QP_CONST,
+  PROP_GOP_SIZE,
 };
 
 #define DEFAULT_PRESET GST_NV_PRESET_DEFAULT
@@ -174,6 +175,7 @@ enum
 #define DEFAULT_QP_MIN -1
 #define DEFAULT_QP_MAX -1
 #define DEFAULT_QP_CONST -1
+#define DEFAULT_GOP_SIZE 75
 
 /* This lock is needed to prevent the situation where multiple encoders are
  * initialised at the same time which appears to cause excessive CPU usage over
@@ -284,6 +286,12 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
           DEFAULT_QP_CONST,
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_GOP_SIZE,
+      g_param_spec_int ("gop-size", "GOP size",
+          "Number of frames between intra frames (-1 = infinite)",
+          -1, G_MAXINT, DEFAULT_GOP_SIZE,
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
           "Bitrate in kbit/sec (0 = from NVENC preset)", 0, 2000 * 1024,
@@ -661,6 +669,7 @@ gst_nv_base_enc_init (GstNvBaseEnc * nvenc)
   nvenc->qp_max = DEFAULT_QP_MAX;
   nvenc->qp_const = DEFAULT_QP_CONST;
   nvenc->bitrate = DEFAULT_BITRATE;
+  nvenc->gop_size = DEFAULT_GOP_SIZE;
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
@@ -1191,6 +1200,13 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
       params->encodeConfig->rcParams.maxQP.qpInterP = nvenc->qp_max;
       params->encodeConfig->rcParams.maxQP.qpIntra = nvenc->qp_max;
     }
+  }
+
+  if (nvenc->gop_size < 0) {
+    params->encodeConfig->gopLength = NVENC_INFINITE_GOPLENGTH;
+    params->encodeConfig->frameIntervalP = 1;
+  } else if (nvenc->gop_size > 0) {
+    params->encodeConfig->gopLength = nvenc->gop_size;
   }
 
   g_assert (nvenc_class->set_encoder_config);
@@ -1945,6 +1961,10 @@ gst_nv_base_enc_set_property (GObject * object, guint prop_id,
       nvenc->bitrate = g_value_get_uint (value);
       gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
+    case PROP_GOP_SIZE:
+      nvenc->gop_size = g_value_get_int (value);
+      gst_nv_base_enc_schedule_reconfig (nvenc);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1978,6 +1998,9 @@ gst_nv_base_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_BITRATE:
       g_value_set_uint (value, nvenc->bitrate);
+      break;
+    case PROP_GOP_SIZE:
+      g_value_set_int (value, nvenc->gop_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

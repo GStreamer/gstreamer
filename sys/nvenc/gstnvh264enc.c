@@ -479,6 +479,8 @@ gst_nv_h264_enc_set_encoder_config (GstNvBaseEnc * nvenc,
     config->encodeCodecConfig.h264Config.chromaFormatIDC = 3;
   }
 
+  config->encodeCodecConfig.h264Config.idrPeriod = config->gopLength;
+
   /* FIXME: make property */
   config->encodeCodecConfig.h264Config.outputAUD = 1;
 

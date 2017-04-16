@@ -69,6 +69,7 @@ typedef struct {
   gint            qp_max;
   gint            qp_const;
   guint           bitrate;
+  gint            gop_size;
 
   CUcontext       cuda_ctx;
   void          * encoder;
