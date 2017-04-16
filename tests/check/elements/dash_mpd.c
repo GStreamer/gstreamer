@@ -1980,6 +1980,141 @@ GST_START_TEST (dash_mpdparser_period_adaptationSet_segmentTemplate)
 GST_END_TEST;
 
 
+GST_START_TEST
+    (dash_mpdparser_period_adaptationSet_representation_segmentTemplate_inherit)
+{
+  GstPeriodNode *periodNode;
+  GstAdaptationSetNode *adaptationSet;
+  GstRepresentationNode *representation;
+  GstSegmentTemplateNode *segmentTemplate;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentTemplate media=\"ParentMedia\" duration=\"1\" "
+      "                     initialization=\"ParentInitialization\">"
+      "    </SegmentTemplate>"
+      "    <AdaptationSet>"
+      "      <Representation id=\"1\" bandwidth=\"5000\">"
+      "      <SegmentTemplate media=\"TestMedia\""
+      "                       index=\"TestIndex\""
+      "                       bitstreamSwitching=\"TestBitstreamSwitching\">"
+      "      </SegmentTemplate></Representation></AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
+  adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
+  representation =
+      (GstRepresentationNode *) adaptationSet->Representations->data;
+  segmentTemplate = representation->SegmentTemplate;
+  assert_equals_string (segmentTemplate->media, "TestMedia");
+  assert_equals_string (segmentTemplate->index, "TestIndex");
+  assert_equals_string (segmentTemplate->initialization,
+      "ParentInitialization");
+  assert_equals_string (segmentTemplate->bitstreamSwitching,
+      "TestBitstreamSwitching");
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+GST_START_TEST
+    (dash_mpdparser_period_adaptationSet_representation_segmentBase_inherit) {
+  GstPeriodNode *periodNode;
+  GstAdaptationSetNode *adaptationSet;
+  GstRepresentationNode *representation;
+  GstSegmentBaseType *segmentBase;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentBase timescale=\"123456\""
+      "                 presentationTimeOffset=\"123456789\""
+      "                 indexRange=\"100-200\""
+      "                 indexRangeExact=\"true\">"
+      "      <Initialisation sourceURL=\"TestSourceURL\""
+      "                      range=\"100-200\" />"
+      "    </SegmentBase>"
+      "    <AdaptationSet>"
+      "      <Representation id=\"1\" bandwidth=\"5000\">"
+      "      <SegmentBase>"
+      "      </SegmentBase></Representation></AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
+  adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
+  representation =
+      (GstRepresentationNode *) adaptationSet->Representations->data;
+  segmentBase = representation->SegmentBase;
+  assert_equals_int (segmentBase->timescale, 123456);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
+ * Test parsing Period AdaptationSet SegmentTemplate attributes with
+ * inheritance
+ */
+GST_START_TEST (dash_mpdparser_adapt_repr_segmentTemplate_inherit)
+{
+  GstPeriodNode *periodNode;
+  GstAdaptationSetNode *adaptationSet;
+  GstSegmentTemplateNode *segmentTemplate;
+  GstRepresentationNode *representation;
+  GstMultSegmentBaseType *multSegBaseType;
+  GstSegmentBaseType *segBaseType;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period duration=\"PT0H5M0.000S\">"
+      "    <AdaptationSet maxWidth=\"1280\" maxHeight=\"720\" maxFrameRate=\"50\">"
+      "      <SegmentTemplate initialization=\"set1_init.mp4\"/>"
+      "      <Representation id=\"1\" mimeType=\"video/mp4\" codecs=\"avc1.640020\" "
+      "          width=\"1280\" height=\"720\" frameRate=\"50\" bandwidth=\"30000\">"
+      "        <SegmentTemplate timescale=\"12800\" media=\"track1_$Number$.m4s\" startNumber=\"1\" duration=\"25600\"/>"
+      "  </Representation></AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  periodNode = (GstPeriodNode *) mpdclient->mpd_node->Periods->data;
+  adaptationSet = (GstAdaptationSetNode *) periodNode->AdaptationSets->data;
+  representation = (GstRepresentationNode *)
+      adaptationSet->Representations->data;
+  segmentTemplate = representation->SegmentTemplate;
+  fail_if (segmentTemplate == NULL);
+  multSegBaseType = segmentTemplate->MultSegBaseType;
+  segBaseType = multSegBaseType->SegBaseType;
+
+  assert_equals_uint64 (segBaseType->timescale, 12800);
+  assert_equals_uint64 (multSegBaseType->duration, 25600);
+  assert_equals_uint64 (multSegBaseType->startNumber, 1);
+  assert_equals_string (segmentTemplate->media, "track1_$Number$.m4s");
+  assert_equals_string (segmentTemplate->initialization, "set1_init.mp4");
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
 /*
  * Test parsing Period AdaptationSet SegmentTemplate attributes with
  * inheritance
@@ -5698,6 +5833,8 @@ dash_suite (void)
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_representationBase_framePacking);
   tcase_add_test (tc_simpleMPD,
+      dash_mpdparser_adapt_repr_segmentTemplate_inherit);
+  tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_representationBase_audioChannelConfiguration);
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_representationBase_contentProtection);
@@ -5748,6 +5885,10 @@ dash_suite (void)
       dash_mpdparser_period_adaptationSet_representation_segmentList);
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_representation_segmentTemplate);
+  tcase_add_test (tc_simpleMPD,
+      dash_mpdparser_period_adaptationSet_representation_segmentTemplate_inherit);
+  tcase_add_test (tc_simpleMPD,
+      dash_mpdparser_period_adaptationSet_representation_segmentBase_inherit);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_period_subset);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_utctiming);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_utctiming_invalid_value);
