@@ -1537,6 +1537,8 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
     }
   }
 
+  stream->discont = TRUE;
+
   return GST_FLOW_OK;
 }
 
