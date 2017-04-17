@@ -2702,19 +2702,22 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
 
       if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
           dashstream->sidx_parser.sidx.entries) {
-        guint64 sidx_end_offset =
+        guint64 sidx_start_offset =
             dashstream->sidx_base_offset +
-            SIDX_CURRENT_ENTRY (dashstream)->offset +
-            SIDX_CURRENT_ENTRY (dashstream)->size;
+            SIDX_CURRENT_ENTRY (dashstream)->offset;
+        guint64 sidx_end_offset =
+            sidx_start_offset + SIDX_CURRENT_ENTRY (dashstream)->size;
         guint64 downloaded_end_offset;
 
         if (dashstream->current_offset == GST_CLOCK_TIME_NONE) {
-          downloaded_end_offset = stream->fragment.range_start;
+          downloaded_end_offset = sidx_start_offset;
         } else {
           downloaded_end_offset =
               dashstream->current_offset +
               gst_adapter_available (dashstream->adapter);
         }
+
+        downloaded_end_offset = MAX (downloaded_end_offset, sidx_start_offset);
 
         if (stream->fragment.chunk_size +
             downloaded_end_offset > sidx_end_offset) {
@@ -2732,13 +2735,9 @@ gst_dash_demux_need_another_chunk (GstAdaptiveDemuxStream * stream)
         guint64 end_offset = sync_sample->end_offset + 1;
         guint64 downloaded_end_offset;
 
-        if (dashstream->current_offset == GST_CLOCK_TIME_NONE) {
-          downloaded_end_offset = stream->fragment.range_start;
-        } else {
-          downloaded_end_offset =
-              dashstream->current_offset +
-              gst_adapter_available (dashstream->adapter);
-        }
+        downloaded_end_offset =
+            dashstream->current_offset +
+            gst_adapter_available (dashstream->adapter);
 
         if (gst_mpd_client_has_isoff_ondemand_profile (dashdemux->client) &&
             dashstream->sidx_parser.sidx.entries) {
