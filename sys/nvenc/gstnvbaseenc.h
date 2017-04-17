@@ -77,6 +77,7 @@ typedef struct {
   GValue        * input_formats;                  /* OBJECT LOCK */
 
   GstVideoCodecState *input_state;
+  volatile gint       reconfig;                   /* ATOMIC */
   gboolean            gl_input;
 
   /* allocated buffers */

@@ -1054,6 +1054,8 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   NV_ENC_PRESET_CONFIG preset_config = { 0, };
   NVENCSTATUS nv_ret;
 
+  g_atomic_int_set (&nvenc->reconfig, FALSE);
+
   if (old_state) {
     reconfigure_params.version = NV_ENC_RECONFIGURE_PARAMS_VER;
     params = &reconfigure_params.reInitEncodeParams;
@@ -1633,6 +1635,10 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
 
   g_assert (nvenc->encoder != NULL);
 
+  if (g_atomic_int_compare_and_exchange (&nvenc->reconfig, TRUE, FALSE)) {
+    if (!gst_nv_base_enc_set_format (enc, nvenc->input_state))
+      return GST_FLOW_ERROR;
+  }
 #if HAVE_NVENC_GST_GL
   if (nvenc->gl_input)
     in_map_flags |= GST_MAP_GL;
@@ -1893,6 +1899,12 @@ gst_nv_base_enc_flush (GstVideoEncoder * enc)
 #endif
 
 static void
+gst_nv_base_enc_schedule_reconfig (GstNvBaseEnc * nvenc)
+{
+  g_atomic_int_set (&nvenc->reconfig, TRUE);
+}
+
+static void
 gst_nv_base_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -1905,21 +1917,27 @@ gst_nv_base_enc_set_property (GObject * object, guint prop_id,
     case PROP_PRESET:
       nvenc->preset_enum = g_value_get_enum (value);
       nvenc->selected_preset = _nv_preset_to_guid (nvenc->preset_enum);
+      gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
     case PROP_RC_MODE:
       nvenc->rate_control_mode = g_value_get_enum (value);
+      gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
     case PROP_QP_MIN:
       nvenc->qp_min = g_value_get_int (value);
+      gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
     case PROP_QP_MAX:
       nvenc->qp_max = g_value_get_int (value);
+      gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
     case PROP_QP_CONST:
       nvenc->qp_const = g_value_get_int (value);
+      gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
     case PROP_BITRATE:
       nvenc->bitrate = g_value_get_uint (value);
+      gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
