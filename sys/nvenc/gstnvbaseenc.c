@@ -222,6 +222,7 @@ static void gst_nv_base_enc_get_property (GObject * object, guint prop_id,
 static void gst_nv_base_enc_finalize (GObject * obj);
 static GstCaps *gst_nv_base_enc_getcaps (GstVideoEncoder * enc,
     GstCaps * filter);
+static gboolean gst_nv_base_enc_stop_bitstream_thread (GstNvBaseEnc * nvenc);
 
 static void
 gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
@@ -504,6 +505,8 @@ static gboolean
 gst_nv_base_enc_stop (GstVideoEncoder * enc)
 {
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
+
+  gst_nv_base_enc_stop_bitstream_thread (nvenc);
 
   gst_nv_base_enc_free_buffers (nvenc);
 
