@@ -1053,8 +1053,7 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   port_def.format.video.nFrameWidth = info->width;
   if (port_def.nBufferAlignment)
     port_def.format.video.nStride =
-        (info->width + port_def.nBufferAlignment - 1) &
-        (~(port_def.nBufferAlignment - 1));
+        GST_ROUND_UP_N (info->width, port_def.nBufferAlignment);
   else
     port_def.format.video.nStride = GST_ROUND_UP_4 (info->width);       /* safe (?) default */
 
