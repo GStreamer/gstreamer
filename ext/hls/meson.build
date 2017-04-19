@@ -3,6 +3,7 @@ hls_sources = [
   'gsthlsdemux-util.c',
   'gsthlsplugin.c',
   'gsthlssink.c',
+  'gsthlssink2.c',
   'gstm3u8playlist.c',
   'm3u8.c',
 ]

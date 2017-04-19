@@ -7,6 +7,7 @@
 #include "gsthls.h"
 #include "gsthlsdemux.h"
 #include "gsthlssink.h"
+#include "gsthlssink2.h"
 
 GST_DEBUG_CATEGORY (hls_debug);
 
@@ -20,6 +21,9 @@ hls_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_hls_sink_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_hls_sink2_plugin_init (plugin))
     return FALSE;
 
   return TRUE;

@@ -7,6 +7,7 @@ libgsthls_la_SOURCES =			\
 	gsthlsdemux-util.c  \
 	gsthlsplugin.c 			\
 	gsthlssink.c 				\
+	gsthlssink2.c 				\
 	gstm3u8playlist.c
 
 libgsthls_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(LIBGCRYPT_CFLAGS) $(NETTLE_CFLAGS) $(OPENSSL_CFLAGS)
@@ -23,5 +24,6 @@ noinst_HEADERS = 			\
 	gsthls.h			\
 	gsthlsdemux.h			\
 	gsthlssink.h			\
+	gsthlssink2.h			\
 	gstm3u8playlist.h		\
 	m3u8.h
