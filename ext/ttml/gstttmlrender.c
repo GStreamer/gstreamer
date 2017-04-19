@@ -1841,7 +1841,9 @@ gst_ttml_render_split_block (UnifiedBlock * block, GPtrArray * char_ranges)
   gint i;
 
   for (i = 0; i < char_ranges->len; ++i) {
-    gint index, first_offset, last_offset;
+    gint index;
+    gint first_offset = 0;
+    gint last_offset = 0;
     CharRange *range = g_ptr_array_index (char_ranges, i);
     UnifiedBlock *clone = gst_ttml_render_unified_block_copy (block);
     UnifiedElement *ue;
@@ -1854,6 +1856,12 @@ gst_ttml_render_split_block (UnifiedBlock * block, GPtrArray * char_ranges)
         &last_offset);
     GST_CAT_LOG (ttmlrender_debug, "Last char in range is in element %d",
         index);
+
+    if (index < 0) {
+      GST_CAT_WARNING (ttmlrender_debug, "Range end not found in block text.");
+      gst_ttml_render_unified_block_free (clone);
+      continue;
+    }
 
     /* Remove elements that are after the one that contains the range end. */
     GST_CAT_LOG (ttmlrender_debug, "There are %d elements in cloned block.",
@@ -1868,6 +1876,13 @@ gst_ttml_render_split_block (UnifiedBlock * block, GPtrArray * char_ranges)
         &first_offset);
     GST_CAT_LOG (ttmlrender_debug, "First char in range is in element %d",
         index);
+
+    if (index < 0) {
+      GST_CAT_WARNING (ttmlrender_debug,
+          "Range start not found in block text.");
+      gst_ttml_render_unified_block_free (clone);
+      continue;
+    }
 
     /* Remove elements that are before the one that contains the range start. */
     while (index > 0) {
