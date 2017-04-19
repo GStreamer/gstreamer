@@ -1985,7 +1985,7 @@ gst_ttml_render_draw_text (GstTtmlRender * render, const gchar * text,
   ret->width = buf_width;
   ret->height = buf_height;
   ret->x = 0;
-  ret->y = MAX (0, baseline_offset - (baseline - ink_rect.y));
+  ret->y = MAX (0, (gint) baseline_offset - (baseline - ink_rect.y));
   return ret;
 }
 
