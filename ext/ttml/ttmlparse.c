@@ -734,9 +734,9 @@ ttml_style_set_inherit (TtmlStyleSet * parent, TtmlStyleSet * child)
      * fontSize based on the parent's fontSize; otherwise, we simply keep
      * the value defined in the child's style set. */
     if (g_strcmp0 ((const gchar *) attr_name, "fontSize") == 0
-        && ttml_style_set_contains_attr (ret, (const gchar *) attr_name)) {
+        && ttml_style_set_contains_attr (ret, "fontSize")) {
       const gchar *original_child_font_size =
-          ttml_style_set_get_attr (child, "fontSize");
+          ttml_style_set_get_attr (ret, "fontSize");
       gchar *scaled_child_font_size =
           ttml_get_relative_font_size ((const gchar *) attr_value,
           original_child_font_size);
