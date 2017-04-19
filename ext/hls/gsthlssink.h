@@ -51,8 +51,6 @@ struct _GstHlsSink
   guint index;
   gint max_files;
   gint target_duration;
-  gint count;
-  guint timeout_id;
   GstSegment segment;
   gboolean waiting_fku;
   GstClockTime last_running_time;
