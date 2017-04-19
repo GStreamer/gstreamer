@@ -108,6 +108,7 @@ typedef enum {
   GST_VAAPI_ENCODER_PROP_BITRATE,
   GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD,
   GST_VAAPI_ENCODER_PROP_TUNE,
+  GST_VAAPI_ENCODER_PROP_QUALITY_LEVEL
 } GstVaapiEncoderProp;
 
 /**
@@ -165,6 +166,10 @@ gst_vaapi_encoder_set_keyframe_period (GstVaapiEncoder * encoder,
 GstVaapiEncoderStatus
 gst_vaapi_encoder_set_tuning (GstVaapiEncoder * encoder,
     GstVaapiEncoderTune tuning);
+
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_quality_level (GstVaapiEncoder * encoder,
+    guint quality_level);
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_get_buffer_with_timeout (GstVaapiEncoder * encoder,

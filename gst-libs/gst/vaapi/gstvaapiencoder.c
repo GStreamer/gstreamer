@@ -169,7 +169,42 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
           cdata->encoder_tune_get_type (), cdata->default_encoder_tune,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVaapiEncoder:quality-level:
+   *
+   * The Encoding quality level.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_PROP_QUALITY_LEVEL,
+      g_param_spec_uint ("quality-level",
+          "Quality Level",
+          "Encoding Quality Level ", 1, 8,
+          4, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   return props;
+}
+
+gboolean
+gst_vaapi_encoder_ensure_param_quality_level (GstVaapiEncoder * encoder,
+    GstVaapiEncPicture * picture)
+{
+  GstVaapiEncMiscParam *misc;
+  VAEncMiscParameterBufferQualityLevel *quality_level;
+
+  /* quality level param is not supported */
+  if (GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder) == 0)
+    return TRUE;
+
+  misc = GST_VAAPI_ENC_QUALITY_LEVEL_MISC_PARAM_NEW (encoder);
+  if (!misc)
+    return FALSE;
+  quality_level = misc->data;
+  memset (quality_level, 0, sizeof (VAEncMiscParameterBufferQualityLevel));
+  quality_level->quality_level = encoder->quality_level;
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+
+  return TRUE;
 }
 
 /**
@@ -686,7 +721,7 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   GstVaapiEncoderStatus status;
   GstVaapiVideoPool *pool;
-  guint codedbuf_size;
+  guint codedbuf_size, quality_level_max = 0;
 
   /* Generate a keyframe every second */
   if (!encoder->keyframe_period)
@@ -698,6 +733,16 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
 
   if (!gst_vaapi_encoder_ensure_context (encoder))
     goto error_reset_context;
+
+  if (get_config_attribute (encoder, VAConfigAttribEncQualityRange,
+          &quality_level_max) && quality_level_max > 0) {
+    encoder->quality_level =
+        gst_util_uint64_scale_int_ceil (encoder->quality_level,
+        quality_level_max, 8);
+  } else {
+    encoder->quality_level = 0;
+  }
+  GST_INFO ("Quality level is fixed to %d", encoder->quality_level);
 
   codedbuf_size = encoder->codedbuf_pool ?
       gst_vaapi_coded_buffer_pool_get_buffer_size (GST_VAAPI_CODED_BUFFER_POOL
@@ -809,6 +854,10 @@ set_property (GstVaapiEncoder * encoder, gint prop_id, const GValue * value)
       break;
     case GST_VAAPI_ENCODER_PROP_TUNE:
       status = gst_vaapi_encoder_set_tuning (encoder, g_value_get_enum (value));
+      break;
+    case GST_VAAPI_ENCODER_PROP_QUALITY_LEVEL:
+      status = gst_vaapi_encoder_set_quality_level (encoder,
+          g_value_get_uint (value));
       break;
   }
   return status;
@@ -1031,6 +1080,42 @@ gst_vaapi_encoder_set_tuning (GstVaapiEncoder * encoder,
 error_operation_failed:
   {
     GST_ERROR ("could not change tuning options after encoding started");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
+}
+
+/**
+ * gst_vaapi_encoder_set_quality_level:
+ * @encoder: a #GstVaapiEncoder
+ * @quality_level: the encoder quality level
+ *
+ * Notifies the @encoder to use the supplied @quality_level value.
+ *
+ * Note: currently, the quality_level can only be specified before
+ * the last call to gst_vaapi_encoder_set_codec_state(), which shall
+ * occur before the first frame is encoded. Afterwards, any change to
+ * this parameter causes gst_vaapi_encoder_set_quality_level() to
+ * return @GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED.
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_quality_level (GstVaapiEncoder * encoder,
+    guint quality_level)
+{
+  g_return_val_if_fail (encoder != NULL, 0);
+
+  if (encoder->quality_level != quality_level
+      && encoder->num_codedbuf_queued > 0)
+    goto error_operation_failed;
+
+  encoder->quality_level = quality_level;
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
+error_operation_failed:
+  {
+    GST_ERROR ("could not change quality level after encoding started");
     return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
   }
 }

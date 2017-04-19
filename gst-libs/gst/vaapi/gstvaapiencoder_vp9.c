@@ -215,6 +215,16 @@ error:
   }
 }
 
+static gboolean
+ensure_misc_params (GstVaapiEncoderVP9 * encoder, GstVaapiEncPicture * picture)
+{
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
+
+  if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
+    return FALSE;
+  return TRUE;
+}
+
 static void
 get_ref_indices (guint ref_pic_mode, guint ref_list_idx, guint * last_idx,
     guint * gf_idx, guint * arf_idx, guint8 * refresh_frame_flags)
@@ -358,6 +368,8 @@ gst_vaapi_encoder_vp9_encode (GstVaapiEncoder * base_encoder,
   g_assert (GST_VAAPI_SURFACE_PROXY_SURFACE (reconstruct));
 
   if (!ensure_sequence (encoder, picture))
+    goto error;
+  if (!ensure_misc_params (encoder, picture))
     goto error;
   if (!ensure_picture (encoder, picture, codedbuf, reconstruct))
     goto error;

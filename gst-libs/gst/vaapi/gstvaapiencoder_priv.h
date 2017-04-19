@@ -164,6 +164,17 @@ G_BEGIN_DECLS
 #define GST_VAAPI_ENCODER_TUNE(encoder) \
   (GST_VAAPI_ENCODER_CAST (encoder)->tune)
 
+/**
+ * GST_VAAPI_ENCODER_QUALITY_LEVEL:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the quality level
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_QUALITY_LEVEL
+#define GST_VAAPI_ENCODER_QUALITY_LEVEL(encoder) \
+  (GST_VAAPI_ENCODER_CAST (encoder)->quality_level)
+
 /* Generate a mask for the supplied tuning option (internal) */
 #define GST_VAAPI_ENCODER_TUNE_MASK(TUNE) \
   (1U << G_PASTE (GST_VAAPI_ENCODER_TUNE_, TUNE))
@@ -216,6 +227,7 @@ struct _GstVaapiEncoder
   guint32 rate_control_mask;
   guint bitrate; /* kbps */
   guint keyframe_period;
+  guint quality_level;
 
   GMutex mutex;
   GCond surface_free;
@@ -339,6 +351,11 @@ gst_vaapi_encoder_release_surface (GstVaapiEncoder * encoder,
 {
   gst_vaapi_surface_proxy_unref (proxy);
 }
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_encoder_ensure_param_quality_level (GstVaapiEncoder * encoder,
+    GstVaapiEncPicture * picture);
 
 G_END_DECLS
 

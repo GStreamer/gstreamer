@@ -2157,6 +2157,7 @@ error_create_packed_seq_hdr:
 static gboolean
 ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 {
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   GstVaapiEncMiscParam *misc = NULL;
   VAEncMiscParameterRateControl *rate_control;
 
@@ -2204,6 +2205,10 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
     }
 
   }
+
+  if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
+    return FALSE;
+
   return TRUE;
 
 error_create_packed_sei_hdr:

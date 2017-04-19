@@ -496,6 +496,9 @@ set_misc_parameters (GstVaapiEncoderMpeg2 * encoder,
     rate_control->basic_unit_size = 0;
     gst_vaapi_codec_object_replace (&misc, NULL);
   }
+
+  if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
+    return FALSE;
   return TRUE;
 }
 
