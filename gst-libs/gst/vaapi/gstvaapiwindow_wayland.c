@@ -319,6 +319,15 @@ gst_vaapi_window_wayland_destroy (GstVaapiWindow * window)
   /* Wait for the last frame to complete redraw */
   gst_vaapi_window_wayland_sync (window);
 
+  /* Make sure that the last wl buffer's callback could be called */
+  GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
+  if (priv->surface) {
+    wl_surface_attach (priv->surface, NULL, 0, 0);
+    wl_surface_commit (priv->surface);
+    wl_display_flush (wl_display);
+  }
+  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (window);
+
   if (priv->event_queue)
     wl_display_roundtrip_queue (wl_display, priv->event_queue);
 
