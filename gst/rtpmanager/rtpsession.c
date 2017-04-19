@@ -3266,6 +3266,7 @@ early_exit:
 typedef struct
 {
   RTPSource *source;
+  gboolean is_bye;
   GstBuffer *buffer;
 } ReportOutput;
 
@@ -3877,6 +3878,7 @@ static void
 generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
 {
   RTPSession *sess = data->sess;
+  gboolean is_bye = FALSE;
   ReportOutput *output;
 
   /* only generate RTCP for active internal sources */
@@ -3895,6 +3897,7 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
   if (source->marked_bye) {
     /* send BYE */
     make_source_bye (sess, source, data);
+    is_bye = TRUE;
   } else if (!data->is_early) {
     /* loop over all known sources and add report blocks. If we are early, we
      * just make a minimal RTCP packet and skip this step */
@@ -3919,6 +3922,7 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
 
   output = g_slice_new (ReportOutput);
   output->source = g_object_ref (source);
+  output->is_bye = is_bye;
   output->buffer = data->rtcp;
   /* queue the RTCP packet to push later */
   g_queue_push_tail (&data->output, output);
@@ -4102,7 +4106,7 @@ done:
       GST_DEBUG ("%p, sending RTCP packet, avg size %u, %u", &sess->stats,
           sess->stats.avg_rtcp_packet_size, packet_size);
       result =
-          sess->callbacks.send_rtcp (sess, source, buffer,
+          sess->callbacks.send_rtcp (sess, source, buffer, output->is_bye,
           sess->send_rtcp_user_data);
 
       RTP_SESSION_LOCK (sess);
