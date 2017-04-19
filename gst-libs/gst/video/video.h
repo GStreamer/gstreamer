@@ -44,7 +44,7 @@ G_BEGIN_DECLS
  * @padding_bottom: extra pixels on the bottom
  * @stride_align: array with extra alignment requirements for the strides
  *
- * Extra alignment paramters for the memory of video buffers. This
+ * Extra alignment parameters for the memory of video buffers. This
  * structure is usually used to configure the bufferpool if it supports the
  * #GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT.
  */
