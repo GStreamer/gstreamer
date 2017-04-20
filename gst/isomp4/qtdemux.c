@@ -414,6 +414,7 @@ struct _QtDemuxStream
 
   /* fragmented */
   gboolean parsed_trex;
+  guint32 def_sample_description_index; /* index is 1-based */
   guint32 def_sample_duration;
   guint32 def_sample_size;
   guint32 def_sample_flags;
@@ -2950,7 +2951,7 @@ qtdemux_parse_trex (GstQTDemux * qtdemux, QtDemuxStream * stream,
       trex = qtdemux_tree_get_child_by_type_full (mvex, FOURCC_trex,
           &trex_data);
       while (trex) {
-        guint32 id = 0, dur = 0, size = 0, flags = 0, dummy = 0;
+        guint32 id = 0, sdi = 0, dur = 0, size = 0, flags = 0;
 
         /* skip version/flags */
         if (!gst_byte_reader_skip (&trex_data, 4))
@@ -2959,8 +2960,7 @@ qtdemux_parse_trex (GstQTDemux * qtdemux, QtDemuxStream * stream,
           goto next;
         if (id != stream->track_id)
           goto next;
-        /* sample description index; ignore */
-        if (!gst_byte_reader_get_uint32_be (&trex_data, &dummy))
+        if (!gst_byte_reader_get_uint32_be (&trex_data, &sdi))
           goto next;
         if (!gst_byte_reader_get_uint32_be (&trex_data, &dur))
           goto next;
@@ -2974,6 +2974,7 @@ qtdemux_parse_trex (GstQTDemux * qtdemux, QtDemuxStream * stream,
             dur, size, flags);
 
         stream->parsed_trex = TRUE;
+        stream->def_sample_description_index = sdi;
         stream->def_sample_duration = dur;
         stream->def_sample_size = size;
         stream->def_sample_flags = flags;
@@ -3426,7 +3427,9 @@ qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
   qtdemux_parse_trex (qtdemux, *stream,
       default_sample_duration, default_sample_size, default_sample_flags);
 
-  /* FIXME: Handle TF_SAMPLE_DESCRIPTION_INDEX properly */
+  (*stream)->stsd_sample_description_id =
+      (*stream)->def_sample_description_index - 1;
+
   if (flags & TF_SAMPLE_DESCRIPTION_INDEX) {
     guint32 sample_description_index;
     if (!gst_byte_reader_get_uint32_be (tfhd, &sample_description_index))
