@@ -48,6 +48,7 @@ _transform_format (GstVaapiPostproc * postproc, GstCapsFeatures * features,
     return;
 
   gst_structure_set_value (structure, "format", &value);
+  g_value_unset (&value);
 }
 
 static void
@@ -615,11 +616,11 @@ _set_preferred_format (GstStructure * outs, GstVideoFormat format)
   if (format == GST_VIDEO_FORMAT_UNKNOWN || format == GST_VIDEO_FORMAT_ENCODED)
     return FALSE;
 
-  if (gst_vaapi_value_set_format (&value, format)) {
-    gst_structure_set_value (outs, "format", &value);
-    return TRUE;
-  }
-  return FALSE;
+  if (!gst_vaapi_value_set_format (&value, format))
+    return FALSE;
+  gst_structure_set_value (outs, "format", &value);
+  g_value_unset (&value);
+  return TRUE;
 }
 
 static GstCaps *
