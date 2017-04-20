@@ -1306,8 +1306,9 @@ ttml_filter_content_nodes (GNode * node)
 }
 
 
-/* Store child elements of @node with name @element_name in @table, as long as
- * @table doesn't already contain an element with the same ID. */
+/* Store in @table child elements of @node with name @element_name. A child
+ * element with the same ID as an existing entry in @table will overwrite the
+ * existing entry. */
 static void
 ttml_store_unique_children (xmlNodePtr node, const gchar * element_name,
     GHashTable * table)
@@ -1317,11 +1318,15 @@ ttml_store_unique_children (xmlNodePtr node, const gchar * element_name,
   for (ptr = node->children; ptr; ptr = ptr->next) {
     if (xmlStrcmp (ptr->name, (const xmlChar *) element_name) == 0) {
       TtmlElement *element = ttml_parse_element (ptr);
+      gboolean new_key;
 
-      if (element)
-        if (!g_hash_table_contains (table, element->id))
-          g_hash_table_insert (table, (gpointer) (element->id),
-              (gpointer) element);
+      if (element) {
+        new_key = g_hash_table_insert (table, g_strdup (element->id), element);
+        if (!new_key)
+          GST_CAT_WARNING (ttmlparse_debug,
+              "Document contains two %s elements with the same ID (\"%s\").",
+              element_name, element->id);
+      }
     }
   }
 }
@@ -1762,9 +1767,9 @@ ttml_parse (const gchar * input, GstClockTime begin, GstClockTime duration)
   }
   GST_CAT_LOG (ttmlparse_debug, "Input:\n%s", input);
 
-  styles_table = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
+  styles_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
       (GDestroyNotify) ttml_delete_element);
-  regions_table = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
+  regions_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
       (GDestroyNotify) ttml_delete_element);
 
   /* Parse input. */
