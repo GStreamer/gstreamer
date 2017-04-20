@@ -114,6 +114,8 @@ class MesonTestsManager(TestsManager):
         return mesontests
 
     def rebuild(self, all=False):
+        if not self.options.meson_build_dirs:
+            self.options.meson_build_dirs = [config.BUILDDIR]
         if self.options.meson_no_rebuild:
             return True
 
