@@ -44,6 +44,12 @@
 #define MAX_FONT_FAMILY_NAME_LENGTH 128
 #define NSECONDS_IN_DAY 24 * 3600 * GST_SECOND
 
+#define TTML_CHAR_NULL 0x00
+#define TTML_CHAR_SPACE 0x20
+#define TTML_CHAR_TAB 0x09
+#define TTML_CHAR_LF 0x0A
+#define TTML_CHAR_CR 0x0D
+
 GST_DEBUG_CATEGORY_EXTERN (ttmlparse_debug);
 #define GST_CAT_DEFAULT ttmlparse_debug
 
@@ -1247,12 +1253,14 @@ ttml_handle_element_whitespace (GNode * node, gpointer data)
     gunichar u = g_utf8_get_char (c);
     gint nbytes = g_unichar_to_utf8 (u, buf);
 
-    if (nbytes == 1 && buf[0] == 0xA) {
+    /* Repace each newline or tab with a space. */
+    if (nbytes == 1 && (buf[0] == TTML_CHAR_LF || buf[0] == TTML_CHAR_TAB)) {
       *c = ' ';
-      buf[0] = 0x20;
+      buf[0] = TTML_CHAR_SPACE;
     }
 
-    if (nbytes == 1 && (buf[0] == 0x20 || buf[0] == 0x9 || buf[0] == 0xD)) {
+    /* Collapse runs of whitespace. */
+    if (nbytes == 1 && (buf[0] == TTML_CHAR_SPACE || buf[0] == TTML_CHAR_CR)) {
       ++space_count;
     } else {
       if (space_count > 1) {
@@ -1261,7 +1269,7 @@ ttml_handle_element_whitespace (GNode * node, gpointer data)
         c = new_head;
       }
       space_count = 0;
-      if (nbytes == 1 && buf[0] == 0x0) /* Reached end of string. */
+      if (nbytes == 1 && buf[0] == TTML_CHAR_NULL)
         break;
     }
   }
