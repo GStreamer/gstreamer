@@ -109,6 +109,7 @@ struct _GstRTSPConnection
   /*< private > */
   /* URL for the remote connection */
   GstRTSPUrl *url;
+  GstRTSPVersion version;
 
   gboolean server;
   GSocketClient *client;
@@ -314,6 +315,7 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
   newconn->username = NULL;
   newconn->passwd = NULL;
   newconn->auth_params = NULL;
+  newconn->version = 0;
 
   *conn = newconn;
 
@@ -1454,10 +1456,12 @@ message_to_string (GstRTSPConnection * conn, GstRTSPMessage * message)
   switch (message->type) {
     case GST_RTSP_MESSAGE_REQUEST:
       /* create request string, add CSeq */
-      g_string_append_printf (str, "%s %s RTSP/1.0\r\n"
+      g_string_append_printf (str, "%s %s RTSP/%s\r\n"
           "CSeq: %d\r\n",
           gst_rtsp_method_as_text (message->type_data.request.method),
-          message->type_data.request.uri, conn->cseq++);
+          message->type_data.request.uri,
+          gst_rtsp_version_as_text (message->type_data.request.version),
+          conn->cseq++);
       /* add session id if we have one */
       if (conn->session_id[0] != '\0') {
         gst_rtsp_message_remove_header (message, GST_RTSP_HDR_SESSION, -1);
@@ -1469,7 +1473,8 @@ message_to_string (GstRTSPConnection * conn, GstRTSPMessage * message)
       break;
     case GST_RTSP_MESSAGE_RESPONSE:
       /* create response string */
-      g_string_append_printf (str, "RTSP/1.0 %d %s\r\n",
+      g_string_append_printf (str, "RTSP/%s %d %s\r\n",
+          gst_rtsp_version_as_text (message->type_data.response.version),
           message->type_data.response.code, message->type_data.response.reason);
       break;
     case GST_RTSP_MESSAGE_HTTP_REQUEST:
@@ -1626,6 +1631,7 @@ static GstRTSPResult
 parse_protocol_version (gchar * protocol, GstRTSPMsgType * type,
     GstRTSPVersion * version)
 {
+  GstRTSPVersion rversion;
   GstRTSPResult res = GST_RTSP_OK;
   gchar *ver;
 
@@ -1640,8 +1646,10 @@ parse_protocol_version (gchar * protocol, GstRTSPMsgType * type,
     if (sscanf (ver, "%u.%u%c", &major, &minor, &dummychar) != 2)
       res = GST_RTSP_EPARSE;
 
+    rversion = major * 0x10 + minor;
     if (g_ascii_strcasecmp (protocol, "RTSP") == 0) {
-      if (major != 1 || minor != 0) {
+
+      if (rversion != GST_RTSP_VERSION_1_0 && rversion != GST_RTSP_VERSION_2_0) {
         *version = GST_RTSP_VERSION_INVALID;
         res = GST_RTSP_ERROR;
       }
@@ -1651,16 +1659,16 @@ parse_protocol_version (gchar * protocol, GstRTSPMsgType * type,
       else if (*type == GST_RTSP_MESSAGE_RESPONSE)
         *type = GST_RTSP_MESSAGE_HTTP_RESPONSE;
 
-      if (major == 1 && minor == 1) {
-        *version = GST_RTSP_VERSION_1_1;
-      } else if (major != 1 || minor != 0) {
-        *version = GST_RTSP_VERSION_INVALID;
+      if (rversion != GST_RTSP_VERSION_1_0 &&
+          rversion != GST_RTSP_VERSION_1_1 && rversion != GST_RTSP_VERSION_2_0)
         res = GST_RTSP_ERROR;
-      }
     } else
       res = GST_RTSP_EPARSE;
   } else
     res = GST_RTSP_EPARSE;
+
+  if (res == GST_RTSP_OK)
+    *version = rversion;
 
   return res;
 }

@@ -40,6 +40,11 @@ G_BEGIN_DECLS
 #define GST_RTSP_EXTENSION_GET_INTERFACE(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_RTSP_EXTENSION, GstRTSPExtensionInterface))
 
+/**
+ * GstRTSPExtension:
+ *
+ * An interface representing RTSP extensions.
+ */
 typedef struct _GstRTSPExtension GstRTSPExtension;
 typedef struct _GstRTSPExtensionInterface GstRTSPExtensionInterface;
 

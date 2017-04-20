@@ -71,7 +71,7 @@ G_STMT_START { \
  * @GST_RTSP_ERESOLV: a host resolve error occured
  * @GST_RTSP_ENOTIMPL: function not implemented
  * @GST_RTSP_ESYS: a system error occured, errno contains more details
- * @GST_RTSP_EPARSE: a persing error occured
+ * @GST_RTSP_EPARSE: a parsing error occured
  * @GST_RTSP_EWSASTART: windows networking could not start
  * @GST_RTSP_EWSAVERSION: windows networking stack has wrong version
  * @GST_RTSP_EEOF: end-of-file was reached
@@ -158,13 +158,15 @@ typedef enum {
  * @GST_RTSP_VERSION_INVALID: unknown/invalid version
  * @GST_RTSP_VERSION_1_0: version 1.0
  * @GST_RTSP_VERSION_1_1: version 1.1.
+ * @GST_RTSP_VERSION_2_0: version 2.0.
  *
  * The supported RTSP versions.
  */
 typedef enum {
   GST_RTSP_VERSION_INVALID = 0x00,
   GST_RTSP_VERSION_1_0     = 0x10,
-  GST_RTSP_VERSION_1_1     = 0x11
+  GST_RTSP_VERSION_1_1     = 0x11,
+  GST_RTSP_VERSION_2_0     = 0x20
 } GstRTSPVersion;
 
 /**
@@ -331,6 +333,12 @@ typedef enum {
 
   /* Since 1.4 */
   GST_RTSP_HDR_KEYMGMT,             /* KeyMgmt */
+
+  /* Since 1.X */
+  GST_RTSP_HDR_PIPELINED_REQUESTS,  /* Pipelined-Requests Rr     opt.      SETUP */
+  GST_RTSP_HDR_MEDIA_PROPERTIES,    /* Media-Properties   Rr     opt.      SETUP */
+  GST_RTSP_HDR_SEEK_STYLE,          /* Seek-Type          Rr     opt.      PLAY */
+  GST_RTSP_HDR_ACCEPT_RANGES,       /* Accept-Ranges      Rr     opt.      SETUP, GET_PARAMETER */
 
   GST_RTSP_HDR_LAST
 } GstRTSPHeaderField;

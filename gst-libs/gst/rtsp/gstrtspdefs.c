@@ -57,6 +57,7 @@
 #include <string.h>
 
 #include "gstrtspdefs.h"
+#include <gst/gst.h>
 
 struct rtsp_header
 {
@@ -175,6 +176,12 @@ static struct rtsp_header rtsp_headers[] = {
 
   /* Since 1.4 */
   {"KeyMgmt", FALSE},
+
+  /* Since 1.XX */
+  {"Pipelined-Requests", FALSE},
+  {"Media-Properties", FALSE},
+  {"Seek-Style", FALSE},
+  {"Accept-Ranges", FALSE},
 
   {NULL, FALSE}
 };
@@ -337,6 +344,10 @@ gst_rtsp_version_as_text (GstRTSPVersion version)
 
     case GST_RTSP_VERSION_1_1:
       return "1.1";
+
+    case GST_RTSP_VERSION_2_0:
+      return "2.0";
+
 
     default:
       return "0.0";
