@@ -107,6 +107,7 @@ struct _GstRTSPStream {
   gboolean      eos;
   gboolean      discont;
   gboolean      need_caps;
+  gboolean      waiting_setup_response;
 
   /* for interleaved mode */
   guint8        channel[2];
@@ -269,7 +270,8 @@ struct _GstRTSPSrc {
   /* supported methods */
   gint               methods;
 
-  gboolean           seekable;
+  /* Same semantic as described in gst_rtsp_media_seekable */
+  gfloat             seekable;
   GstClockTime       last_pos;
 
   /* session management */
@@ -282,6 +284,9 @@ struct _GstRTSPSrc {
 
   /* a list of RTSP extensions as GstElement */
   GstRTSPExtensionList  *extensions;
+
+  GstRTSPVersion default_version;
+  GstRTSPVersion version;
 };
 
 struct _GstRTSPSrcClass {
