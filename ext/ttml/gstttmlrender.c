@@ -1917,6 +1917,8 @@ gst_ttml_render_split_block (UnifiedBlock * block, GPtrArray * char_ranges)
 
     if (gst_ttml_render_unified_block_element_count (clone) > 0)
       g_ptr_array_add (ret, clone);
+    else
+      gst_ttml_render_unified_block_free (clone);
   }
 
   if (ret->len == 0) {
