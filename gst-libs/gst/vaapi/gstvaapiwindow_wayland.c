@@ -188,11 +188,11 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
       int saved_errno = errno;
       if (saved_errno == EAGAIN || saved_errno == EINTR)
         goto again;
-      if (saved_errno == EBUSY) {       /* closing */
-        wl_display_cancel_read (wl_display);
+      wl_display_cancel_read (wl_display);
+      if (saved_errno == EBUSY) /* flushing */
         return FALSE;
-      }
-      goto error;
+      else
+        goto error;
     }
 
     if (wl_display_read_events (wl_display) < 0)
