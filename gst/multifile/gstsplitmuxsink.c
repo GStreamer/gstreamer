@@ -1751,6 +1751,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
         mux_template =
             gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
             (splitmux->muxer), "audio");
+        name = NULL;
       }
     }
     if (mux_template == NULL) {
@@ -1758,6 +1759,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
       mux_template =
           gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
           (splitmux->muxer), "sink_%d");
+      name = NULL;
     }
   }
 
