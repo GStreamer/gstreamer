@@ -85,7 +85,7 @@ patents.
 
 ## Software is as-is
 
-All software and the entire GStreamer binaries areprovided as-is, without any
+All software and the entire GStreamer binaries are provided as-is, without any
 warranty whatsoever. The individual licenses have particular language
 disclaiming liability: we invite you to read all of them. Should you
 need a warranty on the fact that software works as intended or have any
@@ -203,7 +203,7 @@ distributing software that violates patents in a given country could be
 entirely safe if done in another country. Fair use exceptions also
 exist. So we cannot advise you whether the software we provide would be
 considered violating patents in your country or in any other country,
-but that can be said for virtually all kinds of sofware. Only, since we
+but that can be said for virtually all kinds of software. Only, since we
 deal with audio-video standards, and these standards are by and large
 designed to use certain patented technologies, it is common wisdom that
 the pieces of software that implement these standards are sensitive in
