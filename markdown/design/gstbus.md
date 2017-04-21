@@ -33,7 +33,7 @@ to deal with messages from different threads.
 If no messages are popped from the bus with either a `GSource` or
 `gst_bus_pop()`, they remain on the bus.
 
-When a pipeline or bin goes from READY into NULL state, it will set its
+When a pipeline or bin goes from `READY` into `NULL` state, it will set its
 bus to flushing, ie. the bus will drop all existing and new messages on
 the bus. This is necessary because bus messages hold references to the
 bin/pipeline or its elements, so there are circular references that need
