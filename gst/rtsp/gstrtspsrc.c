@@ -956,9 +956,9 @@ gst_rtspsrc_provide_clock (GstElement * element)
   GstClock *clock;
 
   if ((clock = src->provided_clock) != NULL)
-    gst_object_ref (clock);
+    return gst_object_ref (clock);
 
-  return clock;
+  return GST_ELEMENT_CLASS (parent_class)->provide_clock (element);
 }
 
 /* a proxy string of the format [user:passwd@]host[:port] */
