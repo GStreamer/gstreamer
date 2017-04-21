@@ -1,4 +1,4 @@
-tools = [ 'gst-inspect', 'gst-launch','gst-typefind' ]
+tools = [ 'gst-inspect', 'gst-launch', 'gst-stats', 'gst-typefind' ]
 
 foreach tool : tools
   exe_name = '@0@-@1@'.format(tool, apiversion)
