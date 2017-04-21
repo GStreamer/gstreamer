@@ -1,15 +1,15 @@
 # GstElement
 
-The Element is the most important object in the entire GStreamer system,
-as it defines the structure of the pipeline. Elements include sources,
+The `GstElement` is the most important object in the entire GStreamer system,
+as it defines the structure of the pipeline. Elements include: sources,
 filters, sinks, and containers (Bins). They may be an intrinsic part of
 the core GStreamer library, or may be loaded from a plugin. In some
 cases they’re even fabricated from completely different systems (see the
-LADSPA plugin). They are generally created from a `GstElementFactory`,
+LADSPA plugin). Elements are generally created from a `GstElementFactory`,
 which will be covered in another chapter, but for the intrinsic types
 they can be created with specific functions.
 
-Elements contains `GstPads` (also covered in another chapter), which are
+Elements contain `GstPads` (also covered in another chapter), which are
 subsequently used to connect the Elements together to form a pipeline
 capable of passing and processing data. They have a parent, which must
 be another Element. This allows deeply nested pipelines, and the
@@ -17,21 +17,19 @@ possibility of "black-box" meta-elements.
 
 ## Name
 
-All elements are named, and while they should ideally be unique in any
+All elements are named, and while their names should ideally be unique in any
 given pipeline, they do not have to be. The only guaranteed unique name
 for an element is its complete path in the object hierarchy. In other
-words, an element’s name is unique inside its parent. (This follows from
-GstObject’s name explanation)
-
-This uniqueness is guaranteed through all functions where either
-parentage or name of an element is changed.
+words, an element’s name is unique inside its parent (This follows from
+`GstObject`’s name explanation). This uniqueness is guaranteed through
+all functions where either the parentage or name of an element is changed.
 
 ## Pads
 
 `GstPads` are the property of a given `GstElement`. They provide the
-connection capability, with allowing arbitrary structure in the graph.
-For any Element but a source or sink, there will be at least 2 Pads
-owned by the Element. These pads are stored in a single `GList` within the
+connection capability allowing arbitrary structure in the graph.
+Every `GstElement` (with the exception of sources and sinks) have at
+least 2 `GstPad`s. These pads are stored in a single `GList` within the
 Element. Several counters are kept in order to allow quicker
 determination of the type and properties of a given Element.
 
