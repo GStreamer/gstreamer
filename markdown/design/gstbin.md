@@ -1,11 +1,11 @@
 # GstBin
 
-`GstBin` is a container element for other `GstElements`. This makes it
+`GstBin` is a container element for other `GstElements`. It makes
 possible to group elements together so that they can be treated as one
 single `GstElement`. A `GstBin` provides a `GstBus` for the children and
 collates messages from them.
 
-## Add/removing elements
+## Adding/removing elements
 
 The basic functionality of a bin is to add and remove `GstElement`
 to/from it. `gst_bin_add()` and `gst_bin_remove()` perform these
@@ -22,10 +22,11 @@ from itself. A few examples of the provided functions:
 * `gst_bin_get_by_name()` retrieves an element by name.
 * `gst_bin_iterate_elements()` returns an iterator to all the children.
 
-## element management
+## Element management
 
 The most important function of the `GstBin` is to distribute all
-`GstElement` operations on itself to all of its children. This includes:
+`GstElement` operations on itself to all of its children. These
+operations include:
 
   - state changes
 
@@ -54,7 +55,7 @@ trigger a recalculation of the current state of the bin, as described in
 The application can retrieve the external `GstBus` and integrate it in the
 mainloop or it can just `pop()` messages off in its own thread.
 
-When a bin goes to READY it will clear all cached messages.
+When a bin goes to `READY` it will clear all cached messages.
 
 ## EOS
 
@@ -80,7 +81,7 @@ The cached `SEGMENT_START`/`STOP` messages are cleared when going to `READY`.
 
 ## DURATION
 
-When a DURATION query is performed on a bin, it will forward the query
+When a `DURATION` query is performed on a bin, it will forward the query
 to all its sink elements. The bin will calculate the total duration as
 the MAX of all returned durations and will then cache the result so that
 any further queries can use the cached version. The reason for caching the
