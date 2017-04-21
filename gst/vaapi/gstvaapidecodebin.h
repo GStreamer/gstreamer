@@ -54,6 +54,7 @@ typedef struct _GstVaapiDecodeBin {
   GstVaapiDeinterlaceMethod deinterlace_method;
   gboolean disable_vpp;
 
+  gboolean configured;
 } GstVaapiDecodeBin;
 
 typedef struct _GstVaapiDecodeBinClass {

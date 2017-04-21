@@ -302,7 +302,7 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
       "max-size-buffers", vaapidecbin->max_size_buffers,
       "max-size-time", vaapidecbin->max_size_time, NULL);
 
-  if (vaapidecbin->disable_vpp)
+  if (vaapidecbin->disable_vpp || vaapidecbin->configured)
     return TRUE;
 
   GST_INFO_OBJECT (vaapidecbin, "enabling VPP");
@@ -357,6 +357,7 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
     goto error_link_pad;
 
   gst_object_unref (bin_srcpad);
+  vaapidecbin->configured = TRUE;
 
   return TRUE;
 
