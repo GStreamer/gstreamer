@@ -316,9 +316,6 @@ gst_vaapi_window_wayland_destroy (GstVaapiWindow * window)
   struct wl_display *const wl_display =
       GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
 
-  /* Wait for the last frame to complete redraw */
-  gst_vaapi_window_wayland_sync (window);
-
   /* Make sure that the last wl buffer's callback could be called */
   GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
   if (priv->surface) {
@@ -328,13 +325,10 @@ gst_vaapi_window_wayland_destroy (GstVaapiWindow * window)
   }
   GST_VAAPI_OBJECT_UNLOCK_DISPLAY (window);
 
+  gst_poll_set_flushing (priv->poll, TRUE);
+
   if (priv->event_queue)
     wl_display_roundtrip_queue (wl_display, priv->event_queue);
-
-  if (priv->last_frame) {
-    frame_state_free (priv->last_frame);
-    priv->last_frame = NULL;
-  }
 
   if (priv->shell_surface) {
     wl_shell_surface_destroy (priv->shell_surface);
