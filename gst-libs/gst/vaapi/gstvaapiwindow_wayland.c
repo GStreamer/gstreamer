@@ -62,6 +62,7 @@ struct _FrameState
   GstVaapiSurface *surface;
   GstVaapiVideoPool *surface_pool;
   struct wl_callback *callback;
+  gboolean done;
 };
 
 static FrameState *
@@ -77,6 +78,7 @@ frame_state_new (GstVaapiWindow * window)
   frame->surface = NULL;
   frame->surface_pool = NULL;
   frame->callback = NULL;
+  frame->done = FALSE;
   return frame;
 }
 
@@ -372,15 +374,21 @@ gst_vaapi_window_wayland_resize (GstVaapiWindow * window,
   return TRUE;
 }
 
-static void
-frame_done_callback (void *data, struct wl_callback *callback, uint32_t time)
+static inline gboolean
+frame_done (FrameState * frame)
 {
-  FrameState *const frame = data;
   GstVaapiWindowWaylandPrivate *const priv =
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (frame->window);
 
+  g_atomic_int_set (&frame->done, TRUE);
   g_atomic_pointer_compare_and_exchange (&priv->last_frame, frame, NULL);
-  g_atomic_int_dec_and_test (&priv->num_frames_pending);
+  return g_atomic_int_dec_and_test (&priv->num_frames_pending);
+}
+
+static void
+frame_done_callback (void *data, struct wl_callback *callback, uint32_t time)
+{
+  frame_done (data);
 }
 
 static const struct wl_callback_listener frame_callback_listener = {
@@ -390,8 +398,12 @@ static const struct wl_callback_listener frame_callback_listener = {
 static void
 frame_release_callback (void *data, struct wl_buffer *wl_buffer)
 {
+  FrameState *const frame = data;
+
+  if (!frame->done)
+    frame_done (frame);
   wl_buffer_destroy (wl_buffer);
-  frame_state_free (data);
+  frame_state_free (frame);
 }
 
 static const struct wl_buffer_listener frame_buffer_listener = {
