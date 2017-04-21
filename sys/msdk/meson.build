@@ -11,6 +11,10 @@ msdk_sources = [
   'gstmsdkmpeg2enc.c',
   'gstmsdkvp8enc.c',
   'msdk.c',
+  'dummy.cpp', # This forces C++ linking of gstmsdk, which is
+               # required by libmfx.a. This can be removed when we
+               # depend on a version of meson that has a fix for
+               # https://github.com/mesonbuild/meson/issues/1653
 ]
 
 if host_machine.system() == 'windows'
@@ -25,7 +29,7 @@ msdk_root = run_command(python3, '-c', 'import os; print(os.environ.get("INTELME
 if msdk_root != ''
   msdk_libdir = [msdk_root + '/lib/lin_x64', msdk_root + '/lib/x64']
   msdk_incdir = include_directories(msdk_root + '/include')
-  msdk_lib = cc.find_library('mfx', dirs: msdk_libdir, required: false)
+  msdk_lib = cxx.find_library('mfx', dirs: msdk_libdir, required: false)
   if host_machine.system() == 'windows'
     legacy_stdio_dep = cc.find_library('legacy_stdio_definitions', required: false)
     d3d11_dep = cc.find_library('d3d11', required: false)
