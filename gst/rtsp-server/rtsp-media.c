@@ -125,7 +125,7 @@ struct _GstRTSPMediaPrivate
   GstNetTimeProvider *nettime;
 
   gboolean is_live;
-  gboolean seekable;
+  GstClockTimeDiff seekable;
   gboolean buffering;
   GstState target_state;
 
@@ -663,6 +663,45 @@ default_create_rtpbin (GstRTSPMedia * media)
 
 /* must be called with state lock */
 static void
+check_seekable (GstRTSPMedia * media)
+{
+  GstQuery *query;
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  /* Update the seekable state of the pipeline in case it changed */
+  if ((priv->transport_mode & GST_RTSP_TRANSPORT_MODE_RECORD)) {
+    /* TODO: Seeking for RECORD? */
+    priv->seekable = -1;
+  } else {
+    guint i, n = priv->streams->len;
+
+    for (i = 0; i < n; i++) {
+      GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+
+      if (gst_rtsp_stream_get_publish_clock_mode (stream) ==
+          GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET) {
+        priv->seekable = -1;
+        return;
+      }
+    }
+  }
+
+  query = gst_query_new_seeking (GST_FORMAT_TIME);
+  if (gst_element_query (priv->pipeline, query)) {
+    GstFormat format;
+    gboolean seekable;
+    gint64 start, end;
+
+    gst_query_parse_seeking (query, &format, &seekable, &start, &end);
+    priv->seekable = seekable ? G_MAXINT64 : 0.0;
+  }
+
+  gst_query_unref (query);
+}
+
+
+/* must be called with state lock */
+static void
 collect_media_stats (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
@@ -730,6 +769,8 @@ collect_media_stats (GstRTSPMedia * media)
       priv->range.max.seconds = ((gdouble) stop) / GST_SECOND;
       priv->range_stop = stop;
     }
+
+    check_seekable (media);
   }
 }
 
@@ -2114,9 +2155,10 @@ gst_rtsp_media_get_status (GstRTSPMedia * media)
 }
 
 /**
- * gst_rtsp_media_seek:
+ * gst_rtsp_media_seek_full:
  * @media: a #GstRTSPMedia
  * @range: (transfer none): a #GstRTSPTimeRange
+ * @flags: The minimal set of #GstSeekFlags to use
  *
  * Seek the pipeline of @media to @range. @media must be prepared with
  * gst_rtsp_media_prepare().
@@ -2124,14 +2166,14 @@ gst_rtsp_media_get_status (GstRTSPMedia * media)
  * Returns: %TRUE on success.
  */
 gboolean
-gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
+gst_rtsp_media_seek_full (GstRTSPMedia * media, GstRTSPTimeRange * range,
+    GstSeekFlags flags)
 {
   GstRTSPMediaClass *klass;
   GstRTSPMediaPrivate *priv;
   gboolean res;
   GstClockTime start, stop;
   GstSeekType start_type, stop_type;
-  GstQuery *query;
   gint64 current_position;
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
@@ -2147,37 +2189,16 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     goto not_prepared;
 
   /* Update the seekable state of the pipeline in case it changed */
-  if ((priv->transport_mode & GST_RTSP_TRANSPORT_MODE_RECORD)) {
-    /* TODO: Seeking for RECORD? */
-    priv->seekable = FALSE;
-  } else {
-    guint i, n = priv->streams->len;
+  check_seekable (media);
 
-    for (i = 0; i < n; i++) {
-      GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+  if (priv->seekable == 0) {
+    GST_FIXME_OBJECT (media, "Handle going back to 0 for none live"
+        " not seekable streams.");
 
-      if (gst_rtsp_stream_get_publish_clock_mode (stream) ==
-          GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET) {
-        priv->seekable = FALSE;
-        goto not_seekable;
-      }
-    }
-
-    query = gst_query_new_seeking (GST_FORMAT_TIME);
-    if (gst_element_query (priv->pipeline, query)) {
-      GstFormat format;
-      gboolean seekable;
-      gint64 start, end;
-
-      gst_query_parse_seeking (query, &format, &seekable, &start, &end);
-      priv->seekable = seekable;
-    }
-
-    gst_query_unref (query);
-  }
-
-  if (!priv->seekable)
     goto not_seekable;
+  } else if (priv->seekable < 0) {
+    goto not_seekable;
+  }
 
   start_type = stop_type = GST_SEEK_TYPE_NONE;
 
@@ -2205,14 +2226,18 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     stop_type = GST_SEEK_TYPE_SET;
 
   if (start != GST_CLOCK_TIME_NONE || stop != GST_CLOCK_TIME_NONE) {
-    GstSeekFlags flags;
+    gboolean had_flags = flags != 0;
 
     GST_INFO ("seeking to %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
     /* depends on the current playing state of the pipeline. We might need to
      * queue this until we get EOS. */
-    flags = GST_SEEK_FLAG_FLUSH;
+    if (had_flags)
+      flags |= GST_SEEK_FLAG_FLUSH;
+    else
+      flags = GST_SEEK_FLAG_FLUSH;
+
 
     /* if range start was not supplied we must continue from current position.
      * but since we're doing a flushing seek, let us query the current position
@@ -2225,12 +2250,14 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
             GST_TIME_ARGS (current_position));
         start = current_position;
         start_type = GST_SEEK_TYPE_SET;
-        flags |= GST_SEEK_FLAG_ACCURATE;
+        if (!had_flags)
+          flags |= GST_SEEK_FLAG_ACCURATE;
       }
     } else {
       /* only set keyframe flag when modifying start */
       if (start_type != GST_SEEK_TYPE_NONE)
-        flags |= GST_SEEK_FLAG_KEY_UNIT;
+        if (!had_flags)
+          flags |= GST_SEEK_FLAG_KEY_UNIT;
     }
 
     if (start == current_position && stop_type == GST_SEEK_TYPE_NONE) {
@@ -2299,6 +2326,24 @@ preroll_failed:
     return FALSE;
   }
 }
+
+
+/**
+ * gst_rtsp_media_seek:
+ * @media: a #GstRTSPMedia
+ * @range: (transfer none): a #GstRTSPTimeRange
+ *
+ * Seek the pipeline of @media to @range. @media must be prepared with
+ * gst_rtsp_media_prepare().
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
+{
+  return gst_rtsp_media_seek_full (media, range, 0);
+}
+
 
 static void
 stream_collect_blocking (GstRTSPStream * stream, gboolean * blocked)
@@ -2675,18 +2720,16 @@ start_preroll (GstRTSPMedia * media)
   switch (ret) {
     case GST_STATE_CHANGE_SUCCESS:
       GST_INFO ("SUCCESS state change for media %p", media);
-      priv->seekable = TRUE;
       break;
     case GST_STATE_CHANGE_ASYNC:
       GST_INFO ("ASYNC state change for media %p", media);
-      priv->seekable = TRUE;
       break;
     case GST_STATE_CHANGE_NO_PREROLL:
       /* we need to go to PLAYING */
       GST_INFO ("NO_PREROLL state change: live media %p", media);
       /* FIXME we disable seeking for live streams for now. We should perform a
        * seeking query in preroll instead */
-      priv->seekable = FALSE;
+      priv->seekable = -1;
       priv->is_live = TRUE;
       if (!(priv->transport_mode & GST_RTSP_TRANSPORT_MODE_RECORD)) {
         /* start blocked  to make sure nothing goes to the sink */
@@ -2953,7 +2996,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
 
   /* reset some variables */
   priv->is_live = FALSE;
-  priv->seekable = FALSE;
+  priv->seekable = -1;
   priv->buffering = FALSE;
 
   /* we're preparing now */
@@ -3936,4 +3979,25 @@ gst_rtsp_media_get_transport_mode (GstRTSPMedia * media)
   g_mutex_unlock (&priv->lock);
 
   return res;
+}
+
+/**
+ * gst_rtsp_media_get_seekbale:
+ * @media: a #GstRTSPMedia
+ *
+ * Check if the pipeline for @media seek and up to what point in time,
+ * it can seek.
+ *
+ * Returns: -1 if the stream is not seekable, 0 if seekable only to the beginning
+ * and > 0 to indicate the longest duration between any two random access points.
+ * G_MAXINT64 means any value is possible.
+ */
+GstClockTimeDiff
+gst_rtsp_media_seekable (GstRTSPMedia * media)
+{
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  /* Currently we are not able to seek on live streams,
+   * and no stream is seekable only to the beginning */
+  return media->priv->seekable;
 }

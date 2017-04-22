@@ -93,6 +93,11 @@ struct _GstRTSPClientPrivate
 
   guint rtsp_ctrl_timeout_id;
   guint rtsp_ctrl_timeout_cnt;
+
+  /* The version currently being used */
+  GstRTSPVersion version;
+
+  GHashTable *pipelined_requests;       /* pipelined_request_id -> session_id */
 };
 
 static GMutex tunnels_lock;
@@ -528,6 +533,8 @@ gst_rtsp_client_init (GstRTSPClient * client)
   priv->transports =
       g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
       g_object_unref);
+  priv->pipelined_requests = g_hash_table_new_full (g_str_hash,
+      g_str_equal, g_free, g_free);
 }
 
 static GstRTSPFilterResult
@@ -799,6 +806,10 @@ send_message (GstRTSPClient * client, GstRTSPContext * ctx,
 
   if (close)
     gst_rtsp_message_add_header (message, GST_RTSP_HDR_CONNECTION, "close");
+
+  if (ctx->request)
+    message->type_data.response.version =
+        ctx->request->type_data.request.version;
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_SEND_MESSAGE],
       0, ctx, message);
@@ -1251,6 +1262,12 @@ handle_get_param_request (GstRTSPClient * client, GstRTSPContext * ctx)
     goto bad_request;
 
   if (size == 0 || !data || strlen ((char *) data) == 0) {
+    if (ctx->request->type_data.request.version >= GST_RTSP_VERSION_2_0) {
+      GST_ERROR_OBJECT (client, "Using PLAY request for keep-alive is forbidden"
+          " in RTSP 2.0");
+      goto bad_request;
+    }
+
     /* no body (or only '\0'), keep-alive request */
     send_generic_response (client, GST_RTSP_STS_OK, ctx);
   } else {
@@ -1498,6 +1515,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPRangeUnit unit = GST_RTSP_RANGE_NPT;
   gchar *path, *rtpinfo;
   gint matched;
+  gchar *seek_style = NULL;
   GstRTSPStatusCode sig_result;
 
   if (!(session = ctx->session))
@@ -1546,10 +1564,26 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (res == GST_RTSP_OK) {
     if (gst_rtsp_range_parse (str, &range) == GST_RTSP_OK) {
       GstRTSPMediaStatus media_status;
+      GstSeekFlags flags = 0;
+
+      if (gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_SEEK_STYLE,
+              &seek_style, 0)) {
+        if (g_strcmp0 (seek_style, "RAP") == 0)
+          flags = GST_SEEK_FLAG_ACCURATE;
+        else if (g_strcmp0 (seek_style, "CoRAP") == 0)
+          flags = GST_SEEK_FLAG_KEY_UNIT;
+        else if (g_strcmp0 (seek_style, "First-Prior") == 0)
+          flags = GST_SEEK_FLAG_KEY_UNIT & GST_SEEK_FLAG_SNAP_BEFORE;
+        else if (g_strcmp0 (seek_style, "Next") == 0)
+          flags = GST_SEEK_FLAG_KEY_UNIT & GST_SEEK_FLAG_SNAP_AFTER;
+        else
+          GST_FIXME_OBJECT (client, "Add support for seek style %s",
+              seek_style);
+      }
 
       /* we have a range, seek to the position */
       unit = range->unit;
-      gst_rtsp_media_seek (media, range);
+      gst_rtsp_media_seek_full (media, range, flags);
       gst_rtsp_range_free (range);
 
       media_status = gst_rtsp_media_get_status (media);
@@ -1570,6 +1604,9 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (rtpinfo)
     gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RTP_INFO,
         rtpinfo);
+  if (seek_style)
+    gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_SEEK_STYLE,
+        seek_style);
 
   /* add the range */
   str = gst_rtsp_media_get_range_string (media, TRUE, unit);
@@ -2208,6 +2245,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gint matched;
   gboolean new_session = FALSE;
   GstRTSPStatusCode sig_result;
+  gchar *pipelined_request_id = NULL, *accept_range = NULL;
 
   if (!ctx->uri)
     goto no_uri;
@@ -2222,6 +2260,11 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
       &transport, 0);
   if (res != GST_RTSP_OK)
     goto no_transport;
+
+  /* Handle Pipelined-requests if using >= 2.0 */
+  if (ctx->request->type_data.request.version >= GST_RTSP_VERSION_2_0)
+    gst_rtsp_message_get_header (ctx->request,
+        GST_RTSP_HDR_PIPELINED_REQUESTS, &pipelined_request_id, 0);
 
   /* we create the session after parsing stuff so that we don't make
    * a session for malformed requests */
@@ -2292,6 +2335,9 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     if (!(session = gst_rtsp_session_pool_create (priv->session_pool)))
       goto service_unavailable;
 
+    /* Pipelined requests should be cleared between sessions */
+    g_hash_table_remove_all (priv->pipelined_requests);
+
     /* make sure this client is closed when the session is closed */
     client_watch_session (client, session);
 
@@ -2303,6 +2349,11 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     ctx->session = session;
   }
 
+  if (pipelined_request_id) {
+    g_hash_table_insert (client->priv->pipelined_requests,
+        g_strdup (pipelined_request_id),
+        g_strdup (gst_rtsp_session_get_sessionid (session)));
+  }
   rtsp_ctrl_timeout_remove (priv);
 
   if (!klass->configure_client_media (client, media, stream, ctx))
@@ -2326,6 +2377,33 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
           &keymgmt, 0) == GST_RTSP_OK) {
     if (!handle_keymgmt (client, ctx, keymgmt))
       goto keymgmt_error;
+  }
+
+  if (gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_ACCEPT_RANGES,
+          &accept_range, 0) == GST_RTSP_OK) {
+    GEnumValue *runit = NULL;
+    gint i;
+    gchar **valid_ranges;
+    GEnumClass *runit_class = g_type_class_ref (GST_TYPE_RTSP_RANGE_UNIT);
+
+    gst_rtsp_message_dump (ctx->request);
+    valid_ranges = g_strsplit (accept_range, ",", -1);
+
+    for (i = 0; valid_ranges[i]; i++) {
+      gchar *range = valid_ranges[i];
+
+      while (*range == ' ')
+        range++;
+
+      runit = g_enum_get_value_by_nick (runit_class, range);
+      if (runit)
+        break;
+    }
+    g_strfreev (valid_ranges);
+    g_type_class_unref (runit_class);
+
+    if (!runit)
+      goto unsupported_range_unit;
   }
 
   if (sessmedia == NULL) {
@@ -2385,6 +2463,33 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_TRANSPORT,
       trans_str);
   g_free (trans_str);
+
+  if (pipelined_request_id)
+    gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_PIPELINED_REQUESTS,
+        pipelined_request_id);
+
+  if (ctx->request->type_data.request.version >= GST_RTSP_VERSION_2_0) {
+    GstClockTimeDiff seekable = gst_rtsp_media_seekable (media);
+    GString *media_properties = g_string_new (NULL);
+
+    if (seekable == -1)
+      g_string_append (media_properties,
+          "No-Seeking,Time-Progressing,Time-Duration=0.0");
+    else if (seekable == 0)
+      g_string_append (media_properties, "Beginning-Only");
+    else if (seekable == G_MAXINT64)
+      g_string_append (media_properties, "Random-Access");
+    else
+      g_string_append_printf (media_properties,
+          "Random-Access=%f, Unlimited, Immutable",
+          (gdouble) seekable / GST_SECOND);
+
+    gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_MEDIA_PROPERTIES,
+        g_string_free (media_properties, FALSE));
+    /* TODO Check how Accept-Ranges should be filled */
+    gst_rtsp_message_add_header (ctx->request, GST_RTSP_HDR_ACCEPT_RANGES,
+        "npt, clock, smpte, clock");
+  }
 
   send_message (client, ctx, ctx->response, FALSE);
 
@@ -2503,6 +2608,13 @@ unsupported_mode:
         ! !(gst_rtsp_media_get_transport_mode (media) &
             GST_RTSP_TRANSPORT_MODE_RECORD), ct->mode_play, ct->mode_record);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
+    goto cleanup_transport;
+  }
+unsupported_range_unit:
+  {
+    GST_ERROR ("Client %p: does not support any range format we support",
+        client);
+    send_generic_response (client, GST_RTSP_STS_NOT_IMPLEMENTED, ctx);
     goto cleanup_transport;
   }
 keymgmt_error:
@@ -3036,7 +3148,8 @@ unsuspend_failed:
 }
 
 static gboolean
-handle_options_request (GstRTSPClient * client, GstRTSPContext * ctx)
+handle_options_request (GstRTSPClient * client, GstRTSPContext * ctx,
+    GstRTSPVersion version)
 {
   GstRTSPMethod options;
   gchar *str;
@@ -3046,9 +3159,13 @@ handle_options_request (GstRTSPClient * client, GstRTSPContext * ctx)
       GST_RTSP_OPTIONS |
       GST_RTSP_PAUSE |
       GST_RTSP_PLAY |
-      GST_RTSP_RECORD | GST_RTSP_ANNOUNCE |
       GST_RTSP_SETUP |
       GST_RTSP_GET_PARAMETER | GST_RTSP_SET_PARAMETER | GST_RTSP_TEARDOWN;
+
+  if (version < GST_RTSP_VERSION_2_0) {
+    options |= GST_RTSP_RECORD;
+    options |= GST_RTSP_ANNOUNCE;
+  }
 
   str = gst_rtsp_options_as_text (options);
 
@@ -3209,7 +3326,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   GstRTSPContext sctx = { NULL }, *ctx;
   GstRTSPMessage response = { 0 };
   gchar *unsupported_reqs = NULL;
-  gchar *sessid;
+  gchar *sessid = NULL, *pipelined_request_id = NULL;
 
   if (!(ctx = gst_rtsp_context_get_current ())) {
     ctx = &sctx;
@@ -3233,7 +3350,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
       gst_rtsp_version_as_text (version));
 
   /* we can only handle 1.0 requests */
-  if (version != GST_RTSP_VERSION_1_0)
+  if (version != GST_RTSP_VERSION_1_0 && version != GST_RTSP_VERSION_2_0)
     goto not_supported;
 
   ctx->method = method;
@@ -3272,7 +3389,20 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   }
 
   /* get the session if there is any */
-  res = gst_rtsp_message_get_header (request, GST_RTSP_HDR_SESSION, &sessid, 0);
+  res = gst_rtsp_message_get_header (request, GST_RTSP_HDR_PIPELINED_REQUESTS,
+      &pipelined_request_id, 0);
+  if (res == GST_RTSP_OK) {
+    sessid = g_hash_table_lookup (client->priv->pipelined_requests,
+        pipelined_request_id);
+
+    if (!sessid)
+      res = GST_RTSP_ERROR;
+  }
+
+  if (res != GST_RTSP_OK)
+    res =
+        gst_rtsp_message_get_header (request, GST_RTSP_HDR_SESSION, &sessid, 0);
+
   if (res == GST_RTSP_OK) {
     if (priv->session_pool == NULL)
       goto no_pool;
@@ -3334,7 +3464,8 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   /* now see what is asked and dispatch to a dedicated handler */
   switch (method) {
     case GST_RTSP_OPTIONS:
-      handle_options_request (client, ctx);
+      priv->version = version;
+      handle_options_request (client, ctx, version);
       break;
     case GST_RTSP_DESCRIBE:
       handle_describe_request (client, ctx);
@@ -3358,9 +3489,13 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
       handle_get_param_request (client, ctx);
       break;
     case GST_RTSP_ANNOUNCE:
+      if (version >= GST_RTSP_VERSION_2_0)
+        goto invalid_command_for_version;
       handle_announce_request (client, ctx);
       break;
     case GST_RTSP_RECORD:
+      if (version >= GST_RTSP_VERSION_2_0)
+        goto invalid_command_for_version;
       handle_record_request (client, ctx);
       break;
     case GST_RTSP_REDIRECT:
@@ -3392,6 +3527,15 @@ not_supported:
     GST_ERROR ("client %p: version %d not supported", client, version);
     send_generic_response (client, GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED,
         ctx);
+    goto done;
+  }
+invalid_command_for_version:
+  {
+    if (priv->watch != NULL)
+      gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);
+
+    GST_ERROR ("client %p: invalid command for version", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     goto done;
   }
 bad_request:

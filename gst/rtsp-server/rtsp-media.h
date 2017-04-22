@@ -362,6 +362,12 @@ GstRTSPStream *       gst_rtsp_media_find_stream      (GstRTSPMedia *media, cons
 
 GST_EXPORT
 gboolean              gst_rtsp_media_seek             (GstRTSPMedia *media, GstRTSPTimeRange *range);
+gboolean              gst_rtsp_media_seek_full        (GstRTSPMedia *media,
+                                                       GstRTSPTimeRange *range,
+                                                       GstSeekFlags flags);
+
+GST_EXPORT
+GstClockTimeDiff      gst_rtsp_media_seekable         (GstRTSPMedia *media);
 
 GST_EXPORT
 gchar *               gst_rtsp_media_get_range_string (GstRTSPMedia *media,
