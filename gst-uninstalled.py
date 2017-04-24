@@ -45,7 +45,7 @@ def get_subprocess_env(options):
 
     sharedlib_reg = re.compile(r'\.so|\.dylib|\.dll')
     typelib_reg = re.compile(r'.*\.typelib$')
-    pluginpath_reg = re.compile(r'lib\w*' + os.path.normpath('/gstreamer-1.0/'))
+    pluginpath_reg = re.compile(r'lib.*' + os.path.normpath('/gstreamer-1.0/'))
 
     if os.name is 'nt':
         lib_path_envvar = 'PATH'
