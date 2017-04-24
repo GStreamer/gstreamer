@@ -89,7 +89,6 @@ struct _TtmlElement
   GstClockTime end;
   TtmlStyleSet *style_set;
   gchar *text;
-  guint text_index;
 };
 
 /* Represents a static scene consisting of one or more trees of elements that
@@ -1411,7 +1410,6 @@ ttml_copy_element (const TtmlElement * element)
     ret->style_set = ttml_style_set_copy (element->style_set);
   if (element->text)
     ret->text = g_strdup (element->text);
-  ret->text_index = element->text_index;
 
   return ret;
 }
@@ -1498,8 +1496,6 @@ ttml_add_element (GstSubtitleBlock * block, TtmlElement * element,
   element_style = gst_subtitle_style_set_new ();
   ttml_update_style_set (element_style, element->style_set,
       cellres_x, cellres_y);
-  GST_CAT_DEBUG (ttmlparse_debug, "Creating element with text index %u",
-      element->text_index);
 
   if (element->type != TTML_ELEMENT_TYPE_BR)
     buffer_index = ttml_add_text_to_buffer (buf, element->text);
