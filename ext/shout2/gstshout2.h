@@ -46,6 +46,12 @@ struct _GstShout2send {
 
   shout_t *conn;
 
+  guint64 prev_queuelen;
+  guint64 data_sent;
+  GstClockTime datasent_reset_ts;
+  gboolean stalled;
+  GstClockTime stalled_ts;
+
   gchar *ip;
   guint port;
   gchar *password;
@@ -61,6 +67,7 @@ struct _GstShout2send {
   gchar *songartist;
   gchar *songtitle;
   int    format;
+  uint   timeout;
 
   GstTagList* tags;
 };
