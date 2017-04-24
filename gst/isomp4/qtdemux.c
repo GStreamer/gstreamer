@@ -5600,26 +5600,25 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
       gst_pad_push_event (stream->pad, event);
     }
 
-    if (info->crypto_info == NULL) {
-      GST_DEBUG_OBJECT (qtdemux, "cenc metadata hasn't been parsed yet");
-      gst_buffer_unref (buf);
-      goto exit;
-    }
 
-    /* The end of the crypto_info array matches our n_samples position,
-     * so count backward from there */
-    index = stream->sample_index - stream->n_samples + info->crypto_info->len;
-    if (G_LIKELY (index >= 0 && index < info->crypto_info->len)) {
-      /* steal structure from array */
-      crypto_info = g_ptr_array_index (info->crypto_info, index);
-      g_ptr_array_index (info->crypto_info, index) = NULL;
-      GST_LOG_OBJECT (qtdemux, "attaching cenc metadata [%u/%u]", index,
-          info->crypto_info->len);
-      if (!crypto_info || !gst_buffer_add_protection_meta (buf, crypto_info))
-        GST_ERROR_OBJECT (qtdemux, "failed to attach cenc metadata to buffer");
-    } else {
-      GST_INFO_OBJECT (qtdemux, "No crypto info with index %d and sample %d",
-          index, stream->sample_index);
+    if (info->crypto_info == NULL)
+      GST_DEBUG_OBJECT (qtdemux, "cenc metadata hasn't been parsed yet, pushing buffer as if it wasn't encrypted");
+    else {
+      /* The end of the crypto_info array matches our n_samples position,
+       * so count backward from there */
+      index = stream->sample_index - stream->n_samples + info->crypto_info->len;
+      if (G_LIKELY (index >= 0 && index < info->crypto_info->len)) {
+        /* steal structure from array */
+        crypto_info = g_ptr_array_index (info->crypto_info, index);
+        g_ptr_array_index (info->crypto_info, index) = NULL;
+        GST_LOG_OBJECT (qtdemux, "attaching cenc metadata [%u/%u]", index,
+            info->crypto_info->len);
+        if (!crypto_info || !gst_buffer_add_protection_meta (buf, crypto_info))
+          GST_ERROR_OBJECT (qtdemux, "failed to attach cenc metadata to buffer");
+      } else {
+        GST_INFO_OBJECT (qtdemux, "No crypto info with index %d and sample %d",
+            index, stream->sample_index);
+      }
     }
   }
 
