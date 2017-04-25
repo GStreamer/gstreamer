@@ -1628,6 +1628,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   GstSegment seeksegment;
   guint32 seqnum = 0;
   GstEvent *flush_event;
+  gboolean ret;
 
   if (event) {
     GST_DEBUG_OBJECT (qtdemux, "doing seek with event");
@@ -1674,12 +1675,18 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   if (event) {
     /* configure the segment with the seek variables */
     GST_DEBUG_OBJECT (qtdemux, "configuring seek");
-    gst_segment_do_seek (&seeksegment, rate, format, flags,
-        cur_type, cur, stop_type, stop, &update);
+    if (!gst_segment_do_seek (&seeksegment, rate, format, flags,
+            cur_type, cur, stop_type, stop, &update)) {
+      ret = FALSE;
+      GST_ERROR_OBJECT (qtdemux, "inconsistent seek values, doing nothing");
+    } else {
+      /* now do the seek */
+      ret = gst_qtdemux_perform_seek (qtdemux, &seeksegment, seqnum, flags);
+    }
+  } else {
+    /* now do the seek */
+    ret = gst_qtdemux_perform_seek (qtdemux, &seeksegment, seqnum, flags);
   }
-
-  /* now do the seek, this actually never returns FALSE */
-  gst_qtdemux_perform_seek (qtdemux, &seeksegment, seqnum, flags);
 
   /* prepare for streaming again */
   if (flush) {
@@ -1708,7 +1715,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
 
   GST_PAD_STREAM_UNLOCK (qtdemux->sinkpad);
 
-  return TRUE;
+  return ret;
 
   /* ERRORS */
 no_format:
