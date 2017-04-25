@@ -10,7 +10,7 @@ TEST_CFLAGS = \
 
 TEST_LIBS = \
 	$(GST_LIBS) 			\
-	$(GST_VIDEO_CFLAGS)		\
+	$(GST_VIDEO_LIBS)		\
 	$(NULL)
 
 test_vaapisink_SOURCES	= test-vaapisink.c
