@@ -480,6 +480,9 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
 
   /* Wait for the previous frame to complete redraw */
   if (!gst_vaapi_window_wayland_sync (window)) {
+    /* Release vpp surface if exists */
+    if (priv->need_vpp && window->has_vpp)
+      gst_vaapi_video_pool_put_object (window->surface_pool, surface);
     wl_buffer_destroy (buffer);
     return !priv->sync_failed;
   }
