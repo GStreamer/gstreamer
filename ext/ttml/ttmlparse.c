@@ -1152,7 +1152,7 @@ ttml_remove_nodes_by_time (GNode * node, GstClockTime time)
   }
 
   if (!node->children && ((element->begin > time) || (element->end <= time))) {
-    g_node_destroy (node);
+    ttml_delete_tree (node);
     node = NULL;
   }
 
@@ -1704,7 +1704,7 @@ static void
 ttml_delete_scene (TtmlScene * scene)
 {
   if (scene->trees)
-    g_list_free_full (scene->trees, (GDestroyNotify) g_node_destroy);
+    g_list_free_full (scene->trees, (GDestroyNotify) ttml_delete_tree);
   if (scene->buf)
     gst_buffer_unref (scene->buf);
   g_slice_free (TtmlScene, scene);
