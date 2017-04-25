@@ -1538,6 +1538,16 @@ ttml_blend_colors (GstSubtitleColor color1, GstSubtitleColor color2)
 }
 
 
+static void
+ttml_warn_of_mispositioned_element (TtmlElement * element)
+{
+  gchar *type = ttml_get_element_type_string (element);
+  GST_CAT_WARNING (ttmlparse_debug, "Ignoring illegally positioned %s element.",
+      type);
+  g_free (type);
+}
+
+
 /* Create the subtitle region and its child blocks and elements for @tree,
  * inserting element text in @buf. Ownership of created region is transferred
  * to caller. */
@@ -1572,9 +1582,7 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
 
     element = node->data;
     if (element->type != TTML_ELEMENT_TYPE_DIV) {
-      GST_CAT_WARNING (ttmlparse_debug,
-          "Ignoring %s child of body element: only a div is allowed here.",
-          ttml_get_element_type_string (element));
+      ttml_warn_of_mispositioned_element (element);
       continue;
     }
     div_color =
@@ -1590,9 +1598,7 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
 
       element = p_node->data;
       if (element->type != TTML_ELEMENT_TYPE_P) {
-        GST_CAT_WARNING (ttmlparse_debug,
-            "Ignoring %s child of div element: only a p is allowed here.",
-            ttml_get_element_type_string (element));
+        ttml_warn_of_mispositioned_element (element);
         continue;
       }
       p_color =
@@ -1624,15 +1630,11 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
                 || element->type == TTML_ELEMENT_TYPE_ANON_SPAN) {
               ttml_add_element (block, element, buf, cellres_x, cellres_y);
             } else {
-              GST_CAT_WARNING (ttmlparse_debug,
-                  "Ignoring illegally positioned %s element.",
-                  ttml_get_element_type_string (element));
+              ttml_warn_of_mispositioned_element (element);
             }
           }
         } else {
-          GST_CAT_WARNING (ttmlparse_debug,
-              "Ignoring illegally positioned %s element.",
-              ttml_get_element_type_string (element));
+          ttml_warn_of_mispositioned_element (element);
         }
       }
 
