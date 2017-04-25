@@ -1466,12 +1466,15 @@ ttml_split_body_by_region (GNode * body, GHashTable * regions)
 }
 
 
-static guint
+static gint
 ttml_add_text_to_buffer (GstBuffer * buf, const gchar * text)
 {
   GstMemory *mem;
   GstMapInfo map;
   guint ret;
+
+  if (gst_buffer_n_memory (buf) == gst_buffer_get_max_memory ())
+    return -1;
 
   mem = gst_allocator_alloc (NULL, strlen (text) + 1, NULL);
   if (!gst_memory_map (mem, &map, GST_MAP_WRITE))
@@ -1490,7 +1493,7 @@ ttml_add_text_to_buffer (GstBuffer * buf, const gchar * text)
 
 /* Create a GstSubtitleElement from @element, add it to @block, and insert its
  * associated text in @buf. */
-static void
+static gboolean
 ttml_add_element (GstSubtitleBlock * block, TtmlElement * element,
     GstBuffer * buf, guint cellres_x, guint cellres_y)
 {
@@ -1498,20 +1501,27 @@ ttml_add_element (GstSubtitleBlock * block, TtmlElement * element,
   guint buffer_index;
   GstSubtitleElement *sub_element = NULL;
 
-  element_style = gst_subtitle_style_set_new ();
-  ttml_update_style_set (element_style, element->style_set,
-      cellres_x, cellres_y);
-
   buffer_index = ttml_add_text_to_buffer (buf, element->text);
+  if (buffer_index == -1) {
+    GST_CAT_WARNING (ttmlparse_debug,
+        "Reached maximum element count for buffer - discarding element.");
+    return FALSE;
+  }
 
   GST_CAT_DEBUG (ttmlparse_debug, "Inserted text at index %u in GstBuffer.",
       buffer_index);
+
+  element_style = gst_subtitle_style_set_new ();
+  ttml_update_style_set (element_style, element->style_set,
+      cellres_x, cellres_y);
   sub_element = gst_subtitle_element_new (element_style, buffer_index,
       (element->whitespace_mode != TTML_WHITESPACE_MODE_PRESERVE));
 
   gst_subtitle_block_add_element (block, sub_element);
-  GST_CAT_DEBUG (ttmlparse_debug, "Added element to block; there are now %u"
-      " elements in the block.", gst_subtitle_block_get_element_count (block));
+  GST_CAT_DEBUG (ttmlparse_debug,
+      "Added element to block; there are now %u elements in the block.",
+      gst_subtitle_block_get_element_count (block));
+  return TRUE;
 }
 
 
@@ -1621,7 +1631,9 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
 
         if (element->type == TTML_ELEMENT_TYPE_BR
             || element->type == TTML_ELEMENT_TYPE_ANON_SPAN) {
-          ttml_add_element (block, element, buf, cellres_x, cellres_y);
+          if (!ttml_add_element (block, element, buf, cellres_x, cellres_y))
+            GST_CAT_WARNING (ttmlparse_debug,
+                "Failed to add element to buffer.");
         } else if (element->type == TTML_ELEMENT_TYPE_SPAN) {
           /* Loop through anon-span children of this span. */
           for (anon_node = content_node->children; anon_node;
@@ -1630,7 +1642,9 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
 
             if (element->type == TTML_ELEMENT_TYPE_BR
                 || element->type == TTML_ELEMENT_TYPE_ANON_SPAN) {
-              ttml_add_element (block, element, buf, cellres_x, cellres_y);
+              if (!ttml_add_element (block, element, buf, cellres_x, cellres_y))
+                GST_CAT_WARNING (ttmlparse_debug,
+                    "Failed to add element to buffer.");
             } else {
               ttml_warn_of_mispositioned_element (element);
             }
@@ -1640,10 +1654,14 @@ ttml_create_subtitle_region (GNode * tree, GstBuffer * buf, guint cellres_x,
         }
       }
 
-      gst_subtitle_region_add_block (region, block);
-      GST_CAT_DEBUG (ttmlparse_debug,
-          "Added block to region; there are now %u blocks in the region.",
-          gst_subtitle_region_get_block_count (region));
+      if (gst_subtitle_block_get_element_count (block) > 0) {
+        gst_subtitle_region_add_block (region, block);
+        GST_CAT_DEBUG (ttmlparse_debug,
+            "Added block to region; there are now %u blocks in the region.",
+            gst_subtitle_region_get_block_count (region));
+      } else {
+        gst_subtitle_block_unref (block);
+      }
     }
   }
 
