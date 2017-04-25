@@ -726,7 +726,5 @@ gst_mss_demux_data_received (GstAdaptiveDemux * demux,
 static gboolean
 gst_mss_demux_requires_periodical_playlist_update (GstAdaptiveDemux * demux)
 {
-  GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (demux);
-
   return TRUE;
 }
