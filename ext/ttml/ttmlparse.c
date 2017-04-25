@@ -403,6 +403,9 @@ ttml_parse_element (const xmlNode * node)
     element->text = g_strdup ((const gchar *) node->content);
   }
 
+  if (element->type == TTML_ELEMENT_TYPE_BR)
+    element->text = g_strdup ("\n");
+
   if ((value = ttml_get_xml_property (node, "space"))) {
     if (g_strcmp0 (value, "preserve") == 0)
       element->whitespace_mode = TTML_WHITESPACE_MODE_PRESERVE;
@@ -880,10 +883,11 @@ ttml_inherit_styles (GNode * node, gpointer data)
     parent = node->parent->data;
     if (parent->style_set) {
       tmp = element->style_set;
-      if (element->type == TTML_ELEMENT_TYPE_ANON_SPAN) {
-        /* Anon spans should merge all style attributes from their parent. */
+      if (element->type == TTML_ELEMENT_TYPE_ANON_SPAN ||
+          element->type == TTML_ELEMENT_TYPE_BR) {
         element->style_set = ttml_style_set_merge (parent->style_set,
             element->style_set);
+        element->styles = g_strdupv (parent->styles);
       } else {
         element->style_set = ttml_style_set_inherit (parent->style_set,
             element->style_set);
@@ -1241,13 +1245,14 @@ ttml_handle_element_whitespace (GNode * node, gpointer data)
   guint textlen;
   gchar *c;
 
-  if (!element->text
-      || (element->whitespace_mode == TTML_WHITESPACE_MODE_PRESERVE)) {
+  if (!element->text || (element->type == TTML_ELEMENT_TYPE_BR) ||
+      (element->whitespace_mode == TTML_WHITESPACE_MODE_PRESERVE)) {
     return FALSE;
   }
 
   textlen = strlen (element->text);
   for (c = element->text; TRUE; c = g_utf8_next_char (c)) {
+
     gchar buf[6] = { 0 };
     gunichar u = g_utf8_get_char (c);
     gint nbytes = g_unichar_to_utf8 (u, buf);
@@ -1497,10 +1502,7 @@ ttml_add_element (GstSubtitleBlock * block, TtmlElement * element,
   ttml_update_style_set (element_style, element->style_set,
       cellres_x, cellres_y);
 
-  if (element->type != TTML_ELEMENT_TYPE_BR)
-    buffer_index = ttml_add_text_to_buffer (buf, element->text);
-  else
-    buffer_index = ttml_add_text_to_buffer (buf, "\n");
+  buffer_index = ttml_add_text_to_buffer (buf, element->text);
 
   GST_CAT_DEBUG (ttmlparse_debug, "Inserted text at index %u in GstBuffer.",
       buffer_index);
