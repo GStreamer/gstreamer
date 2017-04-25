@@ -54,6 +54,7 @@ GST_DEBUG_CATEGORY_EXTERN (ttmlparse_debug);
 #define GST_CAT_DEFAULT ttmlparse_debug
 
 static gchar *ttml_get_xml_property (const xmlNode * node, const char *name);
+static gpointer ttml_copy_tree_element (gconstpointer src, gpointer data);
 
 typedef struct _TtmlStyleSet TtmlStyleSet;
 typedef struct _TtmlElement TtmlElement;
@@ -776,6 +777,38 @@ ttml_style_set_inherit (TtmlStyleSet * parent, TtmlStyleSet * child)
 }
 
 
+/*
+ * Returns TRUE iff @element1 and @element2 reference the same set of styles.
+ * If neither @element1 nor @element2 reference any styles, they are considered
+ * to have matching styling and, hence, TRUE is returned.
+ */
+static gboolean
+ttml_element_styles_match (TtmlElement * element1, TtmlElement * element2)
+{
+  const gchar *const *strv;
+  gint i;
+
+  if (!element1 || !element2 || (!element1->styles && element2->styles) ||
+      (element1->styles && !element2->styles))
+    return FALSE;
+
+  if (!element1->styles && !element2->styles)
+    return TRUE;
+
+  strv = (const gchar * const *) element2->styles;
+
+  if (g_strv_length (element1->styles) != g_strv_length (element2->styles))
+    return FALSE;
+
+  for (i = 0; i < g_strv_length (element1->styles); ++i) {
+    if (!g_strv_contains (strv, element1->styles[i]))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+
 static gchar *
 ttml_get_element_type_string (TtmlElement * element)
 {
@@ -1172,7 +1205,8 @@ ttml_get_active_trees (GList * element_trees, GstClockTime time)
   GList *ret = NULL;
 
   for (tree = g_list_first (element_trees); tree; tree = tree->next) {
-    GNode *root = g_node_copy ((GNode *) tree->data);
+    GNode *root = g_node_copy_deep ((GNode *) tree->data,
+        ttml_copy_tree_element, NULL);
     GST_CAT_LOG (ttmlparse_debug, "There are %u nodes in tree.",
         g_node_n_nodes (root, G_TRAVERSE_ALL));
     root = ttml_remove_nodes_by_time (root, time);
@@ -1481,7 +1515,7 @@ ttml_add_text_to_buffer (GstBuffer * buf, const gchar * text)
     GST_CAT_ERROR (ttmlparse_debug, "Failed to map memory.");
 
   g_strlcpy ((gchar *) map.data, text, map.size);
-  GST_CAT_DEBUG (ttmlparse_debug, "Inserted following text into buffer: %s",
+  GST_CAT_DEBUG (ttmlparse_debug, "Inserted following text into buffer: \"%s\"",
       (gchar *) map.data);
   gst_memory_unmap (mem, &map);
 
@@ -1765,6 +1799,118 @@ ttml_assign_region_times (GList * region_trees, GstClockTime doc_begin,
 }
 
 
+/*
+ * Promotes @node to the position of its parent, setting the prev, next and
+ * parent pointers of @node to that of its original parent. The replaced parent
+ * is freed. Should be called only on nodes that are the sole child of their
+ * parent, otherwise sibling nodes may be leaked.
+ */
+static void
+ttml_promote_node (GNode * node)
+{
+  GNode *parent_node = node->parent;
+  TtmlElement *parent_element;
+
+  if (!parent_node)
+    return;
+  parent_element = (TtmlElement *) parent_node->data;
+
+  node->prev = parent_node->prev;
+  if (!node->prev)
+    parent_node->parent->children = node;
+  else
+    node->prev->next = node;
+  node->next = parent_node->next;
+  if (node->next)
+    node->next->prev = node;
+  node->parent = parent_node->parent;
+
+  parent_node->prev = parent_node->next = NULL;
+  parent_node->parent = parent_node->children = NULL;
+  g_node_destroy (parent_node);
+  ttml_delete_element (parent_element);
+}
+
+
+/*
+ * Returns TRUE if @element is of a type that can be joined with another
+ * joinable element.
+ */
+static gboolean
+ttml_element_is_joinable (TtmlElement * element)
+{
+  return element->type == TTML_ELEMENT_TYPE_ANON_SPAN ||
+      element->type == TTML_ELEMENT_TYPE_BR;
+}
+
+
+/* Joins adjacent inline element in @tree that have the same styling. */
+static void
+ttml_join_region_tree_inline_elements (GNode * tree)
+{
+  GNode *n1, *n2;
+
+  for (n1 = tree; n1; n1 = n1->next) {
+    if (n1->children) {
+      TtmlElement *element = (TtmlElement *) n1->data;
+      ttml_join_region_tree_inline_elements (n1->children);
+      if (element->type == TTML_ELEMENT_TYPE_SPAN &&
+          g_node_n_children (n1) == 1) {
+        GNode *child = n1->children;
+        if (n1 == tree)
+          tree = child;
+        ttml_promote_node (child);
+        n1 = child;
+      }
+    }
+  }
+
+  n1 = tree;
+  n2 = tree->next;
+
+  while (n1 && n2) {
+    TtmlElement *e1 = (TtmlElement *) n1->data;
+    TtmlElement *e2 = (TtmlElement *) n2->data;
+
+    if (ttml_element_is_joinable (e1) &&
+        ttml_element_is_joinable (e2) && ttml_element_styles_match (e1, e2)) {
+      gchar *tmp = e1->text;
+      GST_CAT_LOG (ttmlparse_debug,
+          "Joining adjacent element text \"%s\" & \"%s\"", e1->text, e2->text);
+      e1->text = g_strconcat (e1->text, e2->text, NULL);
+      e1->type = TTML_ELEMENT_TYPE_ANON_SPAN;
+      g_free (tmp);
+
+      ttml_delete_element (e2);
+      g_node_destroy (n2);
+      n2 = n1->next;
+    } else {
+      n1 = n2;
+      n2 = n2 ? n2->next : NULL;
+    }
+  }
+}
+
+
+static void
+ttml_join_inline_elements (GList * scenes)
+{
+  GList *scene_entry;
+
+  for (scene_entry = g_list_first (scenes); scene_entry;
+      scene_entry = scene_entry->next) {
+    TtmlScene *scene = scene_entry->data;
+    GList *region_tree;
+
+    for (region_tree = g_list_first (scene->trees); region_tree;
+        region_tree = region_tree->next) {
+      GNode *tree = (GNode *) region_tree->data;
+      ttml_join_region_tree_inline_elements (tree);
+    }
+  }
+}
+
+
 static xmlNodePtr
 ttml_find_child (xmlNodePtr parent, const gchar * name)
 {
@@ -1865,6 +2011,7 @@ ttml_parse (const gchar * input, GstClockTime begin, GstClockTime duration)
     scenes = ttml_create_scenes (region_trees);
     GST_CAT_LOG (ttmlparse_debug, "There are %u scenes in all.",
         g_list_length (scenes));
+    ttml_join_inline_elements (scenes);
     ttml_attach_scene_metadata (scenes, cellres_x, cellres_y);
     output_buffers = create_buffer_list (scenes);
 
