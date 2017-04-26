@@ -176,6 +176,8 @@ _fixate_frame_size (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
     gint num, den;
 
     from_par_n = GST_VIDEO_INFO_PAR_N (vinfo);
+    if (from_par_n == 0)
+      from_par_n = 1;
     from_par_d = GST_VIDEO_INFO_PAR_D (vinfo);
     from_w = GST_VIDEO_INFO_WIDTH (vinfo);
     from_h = GST_VIDEO_INFO_HEIGHT (vinfo);

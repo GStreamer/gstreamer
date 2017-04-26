@@ -1334,6 +1334,8 @@ gst_vaapisink_set_caps (GstBaseSink * base_sink, GstCaps * caps)
   sink->video_height = GST_VIDEO_INFO_HEIGHT (vip);
   sink->video_par_n = GST_VIDEO_INFO_PAR_N (vip);
   sink->video_par_d = GST_VIDEO_INFO_PAR_D (vip);
+  if (sink->video_par_n == 0)
+    sink->video_par_n = 1;
   GST_DEBUG ("video pixel-aspect-ratio %d/%d",
       sink->video_par_n, sink->video_par_d);
 
