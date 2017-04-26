@@ -36,6 +36,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_src_debug);
 #define DEFAULT_SKIP_FIRST_TIME (0)
 #define DEFAULT_DROP_NO_SIGNAL_FRAMES (FALSE)
 
+#ifndef ABSDIFF
+#define ABSDIFF(x, y) ( (x) > (y) ? ((x) - (y)) : ((y) - (x)) )
+#endif
+
 enum
 {
   PROP_0,
@@ -832,6 +836,26 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
     }
   }
 
+  if (self->expected_stream_time != GST_CLOCK_TIME_NONE &&
+      ABSDIFF (self->expected_stream_time, f.stream_timestamp) > 1) {
+    GstMessage *msg;
+    GstClockTime running_time;
+
+    self->dropped += f.stream_timestamp - self->expected_stream_time;
+    running_time = gst_segment_to_running_time (&GST_BASE_SRC (self)->segment,
+        GST_FORMAT_TIME, f.timestamp);
+
+    msg = gst_message_new_qos (GST_OBJECT (self), TRUE, running_time, f.stream_timestamp,
+        f.timestamp, f.duration);
+    gst_message_set_qos_stats (msg, GST_FORMAT_TIME, self->processed,
+        self->dropped);
+    gst_element_post_message (GST_ELEMENT (self), msg);
+  }
+  if (self->first_stream_time == GST_CLOCK_TIME_NONE)
+    self->first_stream_time = f.stream_timestamp;
+  self->processed = f.stream_timestamp - self->dropped - self->first_stream_time;
+  self->expected_stream_time = f.stream_timestamp + f.stream_duration;
+
   g_mutex_unlock (&self->lock);
   if (caps_changed) {
     caps = gst_decklink_mode_get_caps (f.mode, f.format, TRUE);
@@ -1087,6 +1111,10 @@ gst_decklink_video_src_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      self->processed = 0;
+      self->dropped = 0;
+      self->expected_stream_time = GST_CLOCK_TIME_NONE;
+      self->first_stream_time = GST_CLOCK_TIME_NONE;
       if (!gst_decklink_video_src_open (self)) {
         ret = GST_STATE_CHANGE_FAILURE;
         goto out;
