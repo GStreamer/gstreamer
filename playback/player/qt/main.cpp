@@ -29,7 +29,9 @@
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
+    /* Use QApplication instead of QGuiApplication since the latter is needed
+     * for widgets like the QFileDialog to work */
+    QApplication app(argc, argv);
     int result;
 
     QCommandLineParser parser;
