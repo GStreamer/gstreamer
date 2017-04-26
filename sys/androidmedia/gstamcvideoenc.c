@@ -730,7 +730,8 @@ _find_nearest_frame (GstAmcVideoEnc * self, GstClockTime reference_timestamp)
       best_id = id;
 
       /* For frames without timestamp we simply take the first frame */
-      if ((reference_timestamp == 0 && timestamp == 0) || diff == 0)
+      if ((reference_timestamp == 0 && !GST_CLOCK_TIME_IS_VALID (timestamp))
+          || diff == 0)
         break;
     }
   }
