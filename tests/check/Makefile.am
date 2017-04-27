@@ -455,6 +455,7 @@ elements_dash_isoff_SOURCES = elements/dash_isoff.c
 
 elements_dash_demux_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(AM_CFLAGS) $(LIBXML2_CFLAGS)
 elements_dash_demux_LDADD = \
+	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-$(GST_API_VERSION).la \
 	$(top_builddir)/gst-libs/gst/adaptivedemux/libgstadaptivedemux-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) -lgstapp-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(LIBXML2_LIBS) $(LDADD)
@@ -465,6 +466,7 @@ elements_neonhttpsrc_CFLAGS = $(AM_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 
 elements_mssdemux_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(AM_CFLAGS) $(LIBXML2_CFLAGS)
 elements_mssdemux_LDADD = \
+	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-$(GST_API_VERSION).la \
 	$(top_builddir)/gst-libs/gst/adaptivedemux/libgstadaptivedemux-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) -lgstapp-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(LIBXML2_LIBS) $(LDADD)
