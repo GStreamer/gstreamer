@@ -1,0 +1,1367 @@
+# translation of gstreamer-0.10.22.2.po to Asturian
+# asturian translation for gstreamer
+# This file is put in the public domain.
+#
+# Astur <malditoastur@gmail.com>, 2009.
+msgid ""
+msgstr ""
+"Project-Id-Version: gstreamer 0.10.28.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2010-04-14 23:57+0100\n"
+"PO-Revision-Date: 2010-06-07 22:01+0100\n"
+"Last-Translator: astur <maacub@gmail.com>\n"
+"Language-Team: Asturian <ubuntu-l10n-ast@lists.ubuntu.com>\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Launchpad-Export-Date: 2010-06-06 21:16+0000\n"
+"X-Generator: Launchpad (build Unknown)\n"
+"X-Poedit-Language: asturian\n"
+
+#: gst/gst.c:310
+msgid "Print the GStreamer version"
+msgstr "Amosar la versión de GStreamer"
+
+#: gst/gst.c:312
+msgid "Make all warnings fatal"
+msgstr "Facer que toles alvertencies seyan fatales"
+
+#: gst/gst.c:316
+msgid "Print available debug categories and exit"
+msgstr "Amosar les categoríes de depuración disponibles y colar"
+
+#: gst/gst.c:320
+msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr "Nivel de depuración por defeutu dende 1 (solo n'error) a 5 (cualesquiera) o 0 pa ensin-salida"
+
+#: gst/gst.c:322
+msgid "LEVEL"
+msgstr "NIVEL"
+
+#: gst/gst.c:324
+msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr "Llista de pares nome_de_categoría:nivel separtada por comes p'afitar los niveles específicos de les categoríes de mmou individual. Por exemplu: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+
+#: gst/gst.c:327
+msgid "LIST"
+msgstr "LISTA"
+
+#: gst/gst.c:329
+msgid "Disable colored debugging output"
+msgstr "Desactivar la coloración de la salida depurada"
+
+#: gst/gst.c:332
+msgid "Disable debugging"
+msgstr "Desactivar depuración"
+
+#: gst/gst.c:336
+msgid "Enable verbose plugin loading diagnostics"
+msgstr "Activar el diagnósticu detalláu de la carga de los complementos"
+
+#: gst/gst.c:340
+msgid "Colon-separated paths containing plugins"
+msgstr "Rutas separtaes por dos puntos «:», que contengan complementos"
+
+#: gst/gst.c:340
+msgid "PATHS"
+msgstr "RUTES"
+
+#: gst/gst.c:343
+msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
+msgstr "Llista de complementos (plugins) separtaos por comes a precargar n'adición a la llista atroxada na variable d'entornu GST_PLUGIN_PATH"
+
+#: gst/gst.c:345
+msgid "PLUGINS"
+msgstr "COMPLEMENTOS"
+
+#: gst/gst.c:348
+msgid "Disable trapping of segmentation faults during plugin loading"
+msgstr "Desactivar atrapáu de fallos de segmentación durante la carga del complementu"
+
+#: gst/gst.c:353
+msgid "Disable updating the registry"
+msgstr "Desactivar l'anovamientu del rexistru"
+
+#: gst/gst.c:358
+msgid "Disable spawning a helper process while scanning the registry"
+msgstr "Desactivar el llanzamientu d'un procesu d'aida al escanear el rexistru"
+
+#: gst/gst.c:389
+msgid "GStreamer Options"
+msgstr "Opciones de GStreamer"
+
+#: gst/gst.c:390
+msgid "Show GStreamer Options"
+msgstr "Amosar opciones de GStreamer"
+
+#: gst/gst.c:948
+msgid "Unknown option"
+msgstr "Opción desconocía"
+
+#: gst/gsterror.c:139
+msgid "GStreamer encountered a general core library error."
+msgstr "GStreamer alcontró un error nuna biblioteca principal."
+
+#: gst/gsterror.c:141 gst/gsterror.c:182 gst/gsterror.c:202 gst/gsterror.c:233
+msgid "GStreamer developers were too lazy to assign an error code to this error."
+msgstr "Los desendolcadores de GStreamer fueron enforma vagos p'asignar un códigu pa esti error."
+
+#: gst/gsterror.c:144
+msgid "Internal GStreamer error: code not implemented."
+msgstr "Fallu internu de GStreamer: códigu non implementáu."
+
+#: gst/gsterror.c:146
+msgid "GStreamer error: state change failed and some element failed to post a proper error message with the reason for the failure."
+msgstr "Fallu de GStreamer: falló'l cambéu d'estáu y dalgún elementu nun pudo unviar un mensaxe de fallu apropiáu col motivu del fallu."
+
+#: gst/gsterror.c:148
+msgid "Internal GStreamer error: pad problem."
+msgstr "Fallu internu de GStreamer: problema col pad."
+
+#: gst/gsterror.c:150
+msgid "Internal GStreamer error: thread problem."
+msgstr "Fallu internu de GStreamer: problema de filu."
+
+#: gst/gsterror.c:152
+msgid "Internal GStreamer error: negotiation problem."
+msgstr "Fallu internu de GStreamer: problema de negociación."
+
+#: gst/gsterror.c:154
+msgid "Internal GStreamer error: event problem."
+msgstr "Fallu internu de GStreamer: problema con un eventu."
+
+#: gst/gsterror.c:156
+msgid "Internal GStreamer error: seek problem."
+msgstr "Fallu internu de GStreamer: problema de gueta."
+
+#: gst/gsterror.c:158
+msgid "Internal GStreamer error: caps problem."
+msgstr "Fallu internu de GStreamer: problema de mayúscules."
+
+#: gst/gsterror.c:159
+msgid "Internal GStreamer error: tag problem."
+msgstr "Fallu internu de GStreamer: problema con una etiqueta."
+
+#: gst/gsterror.c:161
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr "A la so instalación de GStreamer fálta-y un complementu."
+
+#: gst/gsterror.c:163
+msgid "Internal GStreamer error: clock problem."
+msgstr "Fallu internu de GStreamer: problema col reló."
+
+#: gst/gsterror.c:165
+msgid "This application is trying to use GStreamer functionality that has been disabled."
+msgstr "Esta aplicación ta intentando usar funcionalidaes de GStreamer que foron desactivaes."
+
+#: gst/gsterror.c:180
+msgid "GStreamer encountered a general supporting library error."
+msgstr "GStreamer alcontró un fallu nuna llibrería de sofitu xeneral."
+
+#: gst/gsterror.c:184
+msgid "Could not initialize supporting library."
+msgstr "Nun pudo anicializase la biblioteca de sofitu."
+
+#: gst/gsterror.c:185
+msgid "Could not close supporting library."
+msgstr "Nun pudo zarrase la llibrería de sofitu."
+
+#: gst/gsterror.c:186
+msgid "Could not configure supporting library."
+msgstr "Nun pudo configurase la biblioteca de sofitu"
+
+#: gst/gsterror.c:200
+msgid "GStreamer encountered a general resource error."
+msgstr "GStreamer alcontró un fallu xeneral de recursu."
+
+#: gst/gsterror.c:204
+msgid "Resource not found."
+msgstr "Recursu non alcontráu."
+
+#: gst/gsterror.c:205
+msgid "Resource busy or not available."
+msgstr "Recursu ocupáu o non disponible"
+
+#: gst/gsterror.c:206
+msgid "Could not open resource for reading."
+msgstr "Nun pudo abrise'l recursu pa llectura."
+
+#: gst/gsterror.c:207
+msgid "Could not open resource for writing."
+msgstr "Nun pudo abrise'l recursu pa escritura."
+
+#: gst/gsterror.c:209
+msgid "Could not open resource for reading and writing."
+msgstr "Nun pudo abrise'l recursu pa llectura y escritura."
+
+#: gst/gsterror.c:210
+msgid "Could not close resource."
+msgstr "Nun pudo zarrase'l recursu."
+
+#: gst/gsterror.c:211
+msgid "Could not read from resource."
+msgstr "Nun pudo lleese del recursu."
+
+#: gst/gsterror.c:212
+msgid "Could not write to resource."
+msgstr "Nun pudo escribise nel recursu."
+
+#: gst/gsterror.c:213
+msgid "Could not perform seek on resource."
+msgstr "Nun pudo facese una busca nel recursu."
+
+#: gst/gsterror.c:214
+msgid "Could not synchronize on resource."
+msgstr "Nun pudo sincronizase col recursu."
+
+#: gst/gsterror.c:216
+msgid "Could not get/set settings from/on resource."
+msgstr "Nun se pudieron obtenese/afitase les opciones de/nel preséu."
+
+#: gst/gsterror.c:217
+msgid "No space left on the resource."
+msgstr "Nun queda espaciu llibre nel recursu."
+
+#: gst/gsterror.c:231
+msgid "GStreamer encountered a general stream error."
+msgstr "GStreamer alcontró un fallu xeneral de fluxu."
+
+#: gst/gsterror.c:236
+msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgstr "L'elementu nun implementa el remanamientu d'esti stream. Por favor, notifique'l fallu."
+
+#: gst/gsterror.c:238
+msgid "Could not determine type of stream."
+msgstr "Nun pudo determinase la triba de fluxu."
+
+#: gst/gsterror.c:240
+msgid "The stream is of a different type than handled by this element."
+msgstr "El fluxu ye d'una triba distinta a la que puede remanar esti elementu."
+
+#: gst/gsterror.c:242
+msgid "There is no codec present that can handle the stream's type."
+msgstr "Nun hai presente dengún codec que pueda remanar esta triba de streams."
+
+#: gst/gsterror.c:243
+msgid "Could not decode stream."
+msgstr "Nun pudo decodificase'l fluxu."
+
+#: gst/gsterror.c:244
+msgid "Could not encode stream."
+msgstr "Nun pudo codificase'l fluxu."
+
+#: gst/gsterror.c:245
+msgid "Could not demultiplex stream."
+msgstr "Nun pudo demultiplexase'l fluxu."
+
+#: gst/gsterror.c:246
+msgid "Could not multiplex stream."
+msgstr "Nun pudo multiplexase'l fluxu."
+
+#: gst/gsterror.c:247
+msgid "The stream is in the wrong format."
+msgstr "El fluxu ta nún formatu fallíu"
+
+#: gst/gsterror.c:249
+msgid "The stream is encrypted and decryption is not supported."
+msgstr "Esti fluxu ta cifráu, y el descifráu nun ta sofitáu."
+
+#: gst/gsterror.c:251
+msgid "The stream is encrypted and can't be decrypted because no suitable key has been supplied."
+msgstr "El fluxu ta cifráu y nun puede descifrase porque nun se suministró una contraseña afayaíza."
+
+#: gst/gsterror.c:303
+#, c-format
+msgid "No error message for domain %s."
+msgstr "Nun hai mensaxe de fallu pal dominiu %s."
+
+#: gst/gsterror.c:311
+#, c-format
+msgid "No standard error message for domain %s and code %d."
+msgstr "Nun hai mensaxe de fallu standard pal dominiu %s y códigu %d."
+
+#: gst/gstpipeline.c:528
+msgid "Selected clock cannot be used in pipeline."
+msgstr "El reló esbilláu nun puede usase nuna tubería."
+
+#: gst/gsttaglist.c:98
+msgid "title"
+msgstr "títulu"
+
+#: gst/gsttaglist.c:98
+msgid "commonly used title"
+msgstr "títulu usáu por vezu"
+
+#: gst/gsttaglist.c:101
+msgid "title sortname"
+msgstr "nome curtiu de títulu"
+
+#: gst/gsttaglist.c:101
+msgid "commonly used title for sorting purposes"
+msgstr "títulu usáu por vezu pa ordenación"
+
+#: gst/gsttaglist.c:104
+msgid "artist"
+msgstr "artista"
+
+#: gst/gsttaglist.c:105
+msgid "person(s) responsible for the recording"
+msgstr "persona(es) responsable(s) de la grabación"
+
+#: gst/gsttaglist.c:109
+msgid "artist sortname"
+msgstr "nome curtiu del artista"
+
+#: gst/gsttaglist.c:110
+msgid "person(s) responsible for the recording for sorting purposes"
+msgstr "persona(es) responsable(s) de la grabación pa ordenación"
+
+#: gst/gsttaglist.c:113
+msgid "album"
+msgstr "álbum"
+
+#: gst/gsttaglist.c:114
+msgid "album containing this data"
+msgstr "álbum que contién estos datos"
+
+#: gst/gsttaglist.c:117
+msgid "album sortname"
+msgstr "nome curtiu d'álbum"
+
+#: gst/gsttaglist.c:118
+msgid "album containing this data for sorting purposes"
+msgstr "l'álbum contién estos datos pa cuestiones de sofitu"
+
+#: gst/gsttaglist.c:121
+msgid "album artist"
+msgstr "album artist"
+
+#: gst/gsttaglist.c:122
+msgid "The artist of the entire album, as it should be displayed"
+msgstr "L'artista del álbum completu, talo y como tien d'amosase"
+
+#: gst/gsttaglist.c:126
+msgid "album artist sortname"
+msgstr "nome curtiu de album artist"
+
+#: gst/gsttaglist.c:127
+msgid "The artist of the entire album, as it should be sorted"
+msgstr "L'artista del álbum completu, talo y como tien d'axeitase"
+
+#: gst/gsttaglist.c:129
+msgid "date"
+msgstr "data"
+
+#: gst/gsttaglist.c:129
+msgid "date the data was created (as a GDate structure)"
+msgstr "data na que se crearon estos datos (como cadarma GDate)"
+
+#: gst/gsttaglist.c:132
+msgid "genre"
+msgstr "xéneru"
+
+#: gst/gsttaglist.c:133
+msgid "genre this data belongs to"
+msgstr "xéneru al que pertenecen estos datos"
+
+#: gst/gsttaglist.c:136
+msgid "comment"
+msgstr "comentariu"
+
+#: gst/gsttaglist.c:137
+msgid "free text commenting the data"
+msgstr "testu llibre que comenta los datos"
+
+#: gst/gsttaglist.c:140
+msgid "extended comment"
+msgstr "comentariu estendíu"
+
+#: gst/gsttaglist.c:141
+msgid "free text commenting the data in key=value or key[en]=comment form"
+msgstr "testu llibre comentando los datos de forma: llave=valor ó llave[en]=comentariu"
+
+#: gst/gsttaglist.c:145
+msgid "track number"
+msgstr "númberu de pista"
+
+#: gst/gsttaglist.c:146
+msgid "track number inside a collection"
+msgstr "númberu de pista dientro d'una colección"
+
+#: gst/gsttaglist.c:149
+msgid "track count"
+msgstr "contador de pistes"
+
+#: gst/gsttaglist.c:150
+msgid "count of tracks inside collection this track belongs to"
+msgstr "númberu de pistes dientro de la colección a la que pertenez ésta"
+
+#: gst/gsttaglist.c:154
+msgid "disc number"
+msgstr "númberu de discu"
+
+#: gst/gsttaglist.c:155
+msgid "disc number inside a collection"
+msgstr "númberu de discu dientro d'una colección"
+
+#: gst/gsttaglist.c:158
+msgid "disc count"
+msgstr "candidá de discos"
+
+#: gst/gsttaglist.c:159
+msgid "count of discs inside collection this disc belongs to"
+msgstr "númberu de discos de la colección a la que pertenez esti discu"
+
+#: gst/gsttaglist.c:163
+msgid "location"
+msgstr "allugamientu"
+
+#: gst/gsttaglist.c:163
+msgid "Origin of media as a URI (location, where the original of the file or stream is hosted)"
+msgstr "Orixe del mediu como un URI (ubicación, au ta allugáu'l ficheru o fluxu orixinal)"
+
+#: gst/gsttaglist.c:168
+msgid "homepage"
+msgstr "páxina principal"
+
+#: gst/gsttaglist.c:169
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr "Páxina principal pa esti sofitu (ex. páxina principal del artista o película)"
+
+#: gst/gsttaglist.c:172
+msgid "description"
+msgstr "descrición"
+
+#: gst/gsttaglist.c:172
+msgid "short text describing the content of the data"
+msgstr "testu curtiu que describi'l conteníu de los datos"
+
+#: gst/gsttaglist.c:175
+msgid "version"
+msgstr "versión"
+
+#: gst/gsttaglist.c:175
+msgid "version of this data"
+msgstr "versión de los datos"
+
+#: gst/gsttaglist.c:176
+msgid "ISRC"
+msgstr "ISRC"
+
+#: gst/gsttaglist.c:178
+msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
+msgstr "International Standard Recording Code - vea http://www.ifpi.org/isrc/"
+
+#: gst/gsttaglist.c:182
+msgid "organization"
+msgstr "organización"
+
+#: gst/gsttaglist.c:184
+msgid "copyright"
+msgstr "copyright"
+
+#: gst/gsttaglist.c:184
+msgid "copyright notice of the data"
+msgstr "avisu de copyright de los datos"
+
+#: gst/gsttaglist.c:186
+msgid "copyright uri"
+msgstr "uri del copyright"
+
+#: gst/gsttaglist.c:187
+msgid "URI to the copyright notice of the data"
+msgstr "URI de los datos del copyright"
+
+#: gst/gsttaglist.c:190
+msgid "contact"
+msgstr "contautu"
+
+#: gst/gsttaglist.c:190
+msgid "contact information"
+msgstr "información de contautu"
+
+#: gst/gsttaglist.c:192
+msgid "license"
+msgstr "llicencia"
+
+#: gst/gsttaglist.c:192
+msgid "license of data"
+msgstr "llicencia de los datos"
+
+#: gst/gsttaglist.c:194
+msgid "license uri"
+msgstr "uri de la llicencia"
+
+#: gst/gsttaglist.c:195
+msgid "URI to the license of the data"
+msgstr "URI de los datos de la llicencia"
+
+#: gst/gsttaglist.c:198
+msgid "performer"
+msgstr "intérprete"
+
+#: gst/gsttaglist.c:199
+msgid "person(s) performing"
+msgstr "persona(es) executora(es)"
+
+#: gst/gsttaglist.c:202
+msgid "composer"
+msgstr "compositor"
+
+#: gst/gsttaglist.c:203
+msgid "person(s) who composed the recording"
+msgstr "persona(es) que compuso la grabación"
+
+#: gst/gsttaglist.c:207
+msgid "duration"
+msgstr "duración"
+
+#: gst/gsttaglist.c:207
+msgid "length in GStreamer time units (nanoseconds)"
+msgstr "llonxitú n'unidaes de tiempu de GStreamer (nanosegundos)"
+
+#: gst/gsttaglist.c:210
+msgid "codec"
+msgstr "codec"
+
+#: gst/gsttaglist.c:211
+msgid "codec the data is stored in"
+msgstr "codec col que s'atroxen los datos"
+
+#: gst/gsttaglist.c:214
+msgid "video codec"
+msgstr "codec de vídeu"
+
+#: gst/gsttaglist.c:214
+msgid "codec the video data is stored in"
+msgstr "codec nel que s'atroxen los datos del vídeo"
+
+#: gst/gsttaglist.c:217
+msgid "audio codec"
+msgstr "codec del audio"
+
+#: gst/gsttaglist.c:217
+msgid "codec the audio data is stored in"
+msgstr "codec nel que s'atroxen los datos del audio"
+
+#: gst/gsttaglist.c:220
+msgid "subtitle codec"
+msgstr "códec del subtítulu"
+
+#: gst/gsttaglist.c:220
+msgid "codec the subtitle data is stored in"
+msgstr "códec nel que tán atroxaos los datos del subtítulu"
+
+#: gst/gsttaglist.c:222
+msgid "container format"
+msgstr "formatu del contenedor"
+
+#: gst/gsttaglist.c:223
+msgid "container format the data is stored in"
+msgstr "formatu del contenedor nel que tán atroxaos los datos"
+
+#: gst/gsttaglist.c:225
+msgid "bitrate"
+msgstr "tasa de bits"
+
+#: gst/gsttaglist.c:225
+msgid "exact or average bitrate in bits/s"
+msgstr "tasa de bits media o exauta en bits/s"
+
+#: gst/gsttaglist.c:227
+msgid "nominal bitrate"
+msgstr "tasa de bits nominal"
+
+#: gst/gsttaglist.c:227
+msgid "nominal bitrate in bits/s"
+msgstr "tasa de bits nominal en bits/s"
+
+#: gst/gsttaglist.c:229
+msgid "minimum bitrate"
+msgstr "tasa mínima de bits"
+
+#: gst/gsttaglist.c:229
+msgid "minimum bitrate in bits/s"
+msgstr "tasa de bits mínima en bits/s"
+
+#: gst/gsttaglist.c:231
+msgid "maximum bitrate"
+msgstr "tasa de bits máxima"
+
+#: gst/gsttaglist.c:231
+msgid "maximum bitrate in bits/s"
+msgstr "tasa de bits máxima en bits/s"
+
+#: gst/gsttaglist.c:234
+msgid "encoder"
+msgstr "codificador"
+
+#: gst/gsttaglist.c:234
+msgid "encoder used to encode this stream"
+msgstr "codificador usáu pa codificar esti fluxu"
+
+#: gst/gsttaglist.c:237
+msgid "encoder version"
+msgstr "versión del codificador"
+
+#: gst/gsttaglist.c:238
+msgid "version of the encoder used to encode this stream"
+msgstr "versión del codificador usáu pa codificar esti fluxu"
+
+#: gst/gsttaglist.c:240
+msgid "serial"
+msgstr "serie"
+
+#: gst/gsttaglist.c:240
+msgid "serial number of track"
+msgstr "númberu de serie de la pista"
+
+#: gst/gsttaglist.c:242
+msgid "replaygain track gain"
+msgstr "ganancia na reproducción de la pista"
+
+#: gst/gsttaglist.c:242
+msgid "track gain in db"
+msgstr "ganancia de la pista en db"
+
+#: gst/gsttaglist.c:244
+msgid "replaygain track peak"
+msgstr "picu de ganancia na reproducción de la pista"
+
+#: gst/gsttaglist.c:244
+msgid "peak of the track"
+msgstr "peak de la pista"
+
+#: gst/gsttaglist.c:246
+msgid "replaygain album gain"
+msgstr "ganancia na reproducción del álbum"
+
+#: gst/gsttaglist.c:246
+msgid "album gain in db"
+msgstr "ganancia del álbum en db"
+
+#: gst/gsttaglist.c:248
+msgid "replaygain album peak"
+msgstr "picu de ganancia na reproducción del álbum"
+
+#: gst/gsttaglist.c:248
+msgid "peak of the album"
+msgstr "estremu del album"
+
+#: gst/gsttaglist.c:250
+msgid "replaygain reference level"
+msgstr "nivel de referencia de replaygain"
+
+#: gst/gsttaglist.c:251
+msgid "reference level of track and album gain values"
+msgstr "nivel de referencia de los valores de ganancia de la pista y del álbum"
+
+#: gst/gsttaglist.c:253
+msgid "language code"
+msgstr "códigu del llinguax"
+
+#: gst/gsttaglist.c:254
+msgid "language code for this stream, conforming to ISO-639-1"
+msgstr "códigu del llinguax pa esti fluxu, según la norma ISO-639-1"
+
+#: gst/gsttaglist.c:256
+msgid "image"
+msgstr "imaxe"
+
+#: gst/gsttaglist.c:256
+msgid "image related to this stream"
+msgstr "imaxe rellacionada con esti fluxu"
+
+#. TRANSLATORS: 'preview image' = image that shows a preview of the full image
+#: gst/gsttaglist.c:259
+msgid "preview image"
+msgstr "previsualizar imaxe"
+
+#: gst/gsttaglist.c:259
+msgid "preview image related to this stream"
+msgstr "previsualizar la imaxe rellacionada con esti fluxu"
+
+#: gst/gsttaglist.c:261
+msgid "attachment"
+msgstr "axuntu"
+
+#: gst/gsttaglist.c:261
+msgid "file attached to this stream"
+msgstr "ficheru axuntu a esti fluxu"
+
+#: gst/gsttaglist.c:264
+msgid "beats per minute"
+msgstr "pulsos per minutu"
+
+#: gst/gsttaglist.c:264
+msgid "number of beats per minute in audio"
+msgstr "númberu de pulsos per minutu n'audio"
+
+#: gst/gsttaglist.c:266
+msgid "keywords"
+msgstr "pallabres contraseña"
+
+#: gst/gsttaglist.c:266
+msgid "comma separated keywords describing the content"
+msgstr "pallabres contraseña separtaes por comes describiendo'l conteníu"
+
+#: gst/gsttaglist.c:269
+msgid "geo location name"
+msgstr "nome de la xeollocalización"
+
+#: gst/gsttaglist.c:269
+msgid "human readable descriptive location of where the media has been recorded or produced"
+msgstr "llocalización descriptiva y lleíble d'aú se grabó o se fizo'l conteníu"
+
+#: gst/gsttaglist.c:272
+msgid "geo location latitude"
+msgstr "llatitú de la xeollocalización"
+
+#: gst/gsttaglist.c:273
+msgid "geo latitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the equator, negative values for southern latitudes)"
+msgstr "llatitú xeográfica au se grabó o fizo'l mediu, en graos d'acordies con WGS84 (cero ye l'ecuador, valores negativos pa llatitúes meridionales)"
+
+#: gst/gsttaglist.c:277
+msgid "geo location longitude"
+msgstr "llonxitú de la xeollocalización"
+
+#: gst/gsttaglist.c:278
+msgid "geo longitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  negative values for western longitudes)"
+msgstr "llonxitú xeográfica au se grabó o fizo'l mediu, en graos d'acordies con WGS84 (cero ye'l primer meridianu en Greenwich/GB, valores negativos pa llonxitúes occidentales)"
+
+#: gst/gsttaglist.c:282
+msgid "geo location elevation"
+msgstr "elevación de la xeollocalización"
+
+#: gst/gsttaglist.c:283
+msgid "geo elevation of where the media has been recorded or produced in meters according to WGS84 (zero is average sea level)"
+msgstr "elevación xeográfica au se grabó o fexo'l mediu, en metros d'acordies con WGS84 (cero ye'l nivel mediu del mar)"
+
+#: gst/gsttaglist.c:286
+msgid "geo location country"
+msgstr "nome de la xeollocalización"
+
+#: gst/gsttaglist.c:287
+msgid "country (english name) where the media has been recorded or produced"
+msgstr "país (nome n'inglés) au se fizo o grabó'l mediu"
+
+#: gst/gsttaglist.c:290
+msgid "geo location city"
+msgstr "ciudá de la xeollocalización"
+
+#: gst/gsttaglist.c:291
+msgid "city (english name) where the media has been recorded or produced"
+msgstr "ciudá (nome n'inglés) au se fizo o grabó'l mediu"
+
+#: gst/gsttaglist.c:294
+msgid "geo location sublocation"
+msgstr "sub-allugamientu de la xeollocalización"
+
+#: gst/gsttaglist.c:295
+msgid "a location whithin a city where the media has been produced or created (e.g. the neighborhood)"
+msgstr "un allugamientu nuna ciudá au se fizo o creó'l mediu (ex. n'agüeria)"
+
+#. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
+#: gst/gsttaglist.c:299
+msgid "show name"
+msgstr "amosar nome"
+
+#: gst/gsttaglist.c:300
+msgid "Name of the tv/podcast/series show the media is from"
+msgstr "Nome del programa/podcast/serie"
+
+#. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
+#: gst/gsttaglist.c:304
+msgid "show sortname"
+msgstr "amosar nome d'ordenación"
+
+#: gst/gsttaglist.c:305
+msgid "Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr "Nome del programa/podcast/serie, col envís d'ordenación"
+
+#: gst/gsttaglist.c:308
+msgid "episode number"
+msgstr "númberu d'episodiu"
+
+#: gst/gsttaglist.c:309
+msgid "The episode number in the season the media is part of"
+msgstr "El númberu d'episodiu na temporada"
+
+#: gst/gsttaglist.c:312
+msgid "season number"
+msgstr "númberu de temporada"
+
+#: gst/gsttaglist.c:313
+msgid "The season number of the show the media is part of"
+msgstr "El númberu de temporada del programa"
+
+#: gst/gsttaglist.c:316
+msgid "lyrics"
+msgstr "lletres"
+
+#: gst/gsttaglist.c:316
+msgid "The lyrics of the media, commonly used for songs"
+msgstr "Les lletres del ficheru multimedia, davezu usáu pa canciones"
+
+#: gst/gsttaglist.c:319
+msgid "composer sortname"
+msgstr "nome ordenáu del compositor"
+
+#: gst/gsttaglist.c:320
+msgid "person(s) who composed the recording, for sorting purposes"
+msgstr "persona(es) que compuso la grabación, col envís d'ordenación"
+
+#: gst/gsttaglist.c:322
+msgid "grouping"
+msgstr "agrupación"
+
+#: gst/gsttaglist.c:323
+msgid "Groups related media that spans multiple tracks, like the different pieces of a concerto. It is a higher level than a track, but lower than an album"
+msgstr "Agrupa temes rellacionaos que s'esparden varies pistes, como les diferentes partes d'un conciertu. Ye un nivel más altu que'l d'una pista, pero más baxu que'l d'un Álbum"
+
+#: gst/gsttaglist.c:327
+msgid "user rating"
+msgstr "puntuación d'usuariu"
+
+#: gst/gsttaglist.c:328
+msgid "Rating attributed by a user. The higher the rank, the more the user likes this media"
+msgstr "Puntuación atribuyía por un usuariu. Cuanto mayor seya la puntuación más-y va prestar al usuariu"
+
+#: gst/gsttaglist.c:368
+msgid ", "
+msgstr ", "
+
+#: gst/gstutils.c:2367
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "FALLU: dende l'elementu %s: %s\n"
+
+#: gst/gstutils.c:2369 tools/gst-launch.c:525
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Información adicional de depuráu:\n"
+"%s\n"
+
+#: gst/parse/grammar.y:229
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "binariu baleru especificáu \"%s\", non permitíu"
+
+#: gst/parse/grammar.y:238
+#, c-format
+msgid "no bin \"%s\", skipping"
+msgstr "nun esiste'l binariu «%s», saltando"
+
+#: gst/parse/grammar.y:447
+#, c-format
+msgid "no property \"%s\" in element \"%s\""
+msgstr "nun esiste la propiedá «%s» nel elementu «%s»"
+
+#: gst/parse/grammar.y:462
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "nun pudo afitase la propiedá \"%s\" nel elementu \"%s\" a \"%s\""
+
+#: gst/parse/grammar.y:613
+#, c-format
+msgid "could not link %s to %s"
+msgstr "nun pudo enllazase %s a %s"
+
+#: gst/parse/grammar.y:661
+#, c-format
+msgid "no element \"%s\""
+msgstr "nun esiste l'elementu «%s»"
+
+#: gst/parse/grammar.y:713
+#, c-format
+msgid "could not parse caps \"%s\""
+msgstr "nun pudieron analizase les capacidaes «%s»"
+
+#: gst/parse/grammar.y:735 gst/parse/grammar.y:783 gst/parse/grammar.y:799
+#: gst/parse/grammar.y:862
+msgid "link without source element"
+msgstr "enllaz ensin elementos de fonte"
+
+#: gst/parse/grammar.y:741 gst/parse/grammar.y:780 gst/parse/grammar.y:871
+msgid "link without sink element"
+msgstr "enllaz ensin elementu sink"
+
+#: gst/parse/grammar.y:817
+#, c-format
+msgid "no source element for URI \"%s\""
+msgstr "nun hai dengún elementu fonte pal URI \"%s\""
+
+#: gst/parse/grammar.y:827
+#, c-format
+msgid "no element to link URI \"%s\" to"
+msgstr "nun hai dengún elementu au apunta'l URI \"%s\""
+
+#: gst/parse/grammar.y:835
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr "nun hai dengún elementu sink pal URI «%s»"
+
+#: gst/parse/grammar.y:842
+#, c-format
+msgid "could not link sink element for URI \"%s\""
+msgstr "nun se puede enllazar con dengún elementu sink pal URI «%s»"
+
+#: gst/parse/grammar.y:856
+msgid "empty pipeline not allowed"
+msgstr "nun se permiten tuberíes baleres"
+
+#: libs/gst/base/gstbasesrc.c:2180
+msgid "Internal clock error."
+msgstr "Fallu del reló internu."
+
+#: libs/gst/base/gstbasesrc.c:2542 libs/gst/base/gstbasesrc.c:2553
+#: libs/gst/base/gstbasesink.c:3869 plugins/elements/gstqueue.c:1210
+#: plugins/elements/gstqueue2.c:1866
+msgid "Internal data flow error."
+msgstr "Fallu del fluxu internu de datos."
+
+#: libs/gst/base/gstbasesink.c:2596
+msgid "A lot of buffers are being dropped."
+msgstr "Perdiéronse abondos búferes."
+
+#: libs/gst/base/gstbasesink.c:3342
+msgid "Internal data flow problem."
+msgstr "Problema del fluxu internu de datos."
+
+#: libs/gst/base/gstbasesink.c:3858
+msgid "Internal data stream error."
+msgstr "Fallu del stream internu de datos."
+
+#: plugins/elements/gstcapsfilter.c:109
+msgid "Filter caps"
+msgstr "Filtrar capacidaes"
+
+#: plugins/elements/gstcapsfilter.c:110
+msgid "Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object."
+msgstr "Restrinxir la posibilidá de capacidaes permitíes (NULL significa ANY). Definir esta propiedá toma una referencia del oxetu provistu GstCaps."
+
+#: plugins/elements/gstfilesink.c:424
+msgid "No file name specified for writing."
+msgstr "Nun s'especificó un nome de ficheru pa escritura."
+
+#: plugins/elements/gstfilesink.c:430
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Nun pudo abrise'l ficheru \"%s\" pa escritura."
+
+#: plugins/elements/gstfilesink.c:455
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Fallu al zarrar el ficheru \"%s\"."
+
+#: plugins/elements/gstfilesink.c:595
+#, c-format
+msgid "Error while seeking in file \"%s\"."
+msgstr "Fallu durante'l posicionamientu nel ficheru «%s»."
+
+#: plugins/elements/gstfilesink.c:602 plugins/elements/gstfilesink.c:664
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Fallu al escribir al ficheru \"%s\"."
+
+#: plugins/elements/gstfilesrc.c:1047
+msgid "No file name specified for reading."
+msgstr "Nun s'especificó un nome de ficheru pa llectura."
+
+#: plugins/elements/gstfilesrc.c:1059 plugins/elements/gstqueue2.c:1252
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Nun pudo abrise'l ficheru «%s» pa la so llectura."
+
+#: plugins/elements/gstfilesrc.c:1068
+#, c-format
+msgid "Could not get info on \"%s\"."
+msgstr "Nun pudo obtenese información de «%s»."
+
+#: plugins/elements/gstfilesrc.c:1075
+#, c-format
+msgid "\"%s\" is a directory."
+msgstr "\"%s\" ye un direutoriu."
+
+#: plugins/elements/gstfilesrc.c:1082
+#, c-format
+msgid "File \"%s\" is a socket."
+msgstr "El ficheru \"%s\" ye un socket."
+
+#: plugins/elements/gstidentity.c:560
+msgid "Failed after iterations as requested."
+msgstr "Fallu dempués de les iteraciones requeríes."
+
+#: plugins/elements/gstqueue2.c:973
+msgid "Error while writing to download file."
+msgstr "Fallu al escribir pa descargar el ficheru."
+
+#: plugins/elements/gstqueue2.c:1238
+msgid "No Temp directory specified."
+msgstr "Nun s'especificó un direutoriu Temporal"
+
+#: plugins/elements/gstqueue2.c:1244
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Nun pudo crease'l ficheru temporal \"%s\"."
+
+#: plugins/elements/gsttypefindelement.c:209
+msgid "caps"
+msgstr "mayúscules"
+
+#: plugins/elements/gsttypefindelement.c:210
+msgid "detected capabilities in stream"
+msgstr "capacidaes deteutaes nel ficheru stream"
+
+#: plugins/elements/gsttypefindelement.c:213
+msgid "minimum"
+msgstr "mínimu"
+
+#: plugins/elements/gsttypefindelement.c:218
+msgid "maximum"
+msgstr "máximu"
+
+#: plugins/elements/gsttypefindelement.c:223
+msgid "force caps"
+msgstr "forciar mayúscules"
+
+#: plugins/elements/gsttypefindelement.c:224
+msgid "force caps without doing a typefind"
+msgstr "forciar mayúscules ensin facer «typefind»"
+
+#: plugins/elements/gsttypefindelement.c:559
+#: plugins/elements/gsttypefindelement.c:940
+msgid "Stream contains no data."
+msgstr "El fluxu nun caltién datos"
+
+#: tools/gst-inspect.c:243
+msgid "Implemented Interfaces:\n"
+msgstr "Interfaces implementaes:\n"
+
+#: tools/gst-inspect.c:326
+msgid "readable"
+msgstr "llexible"
+
+#: tools/gst-inspect.c:333
+msgid "writable"
+msgstr "escribible"
+
+#: tools/gst-inspect.c:338
+msgid "controllable"
+msgstr "controlable"
+
+#: tools/gst-inspect.c:950
+msgid "Blacklisted files:"
+msgstr "Ficheros na llista prieta:"
+
+#: tools/gst-inspect.c:962 tools/gst-inspect.c:1055
+msgid "Total count: "
+msgstr "Cuenta total: "
+
+#: tools/gst-inspect.c:963
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] "%d ficheru na llista prieta"
+msgstr[1] "%d ficheros na llista prieta"
+
+#: tools/gst-inspect.c:1056
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] "%d complementu"
+msgstr[1] "%d complementos"
+
+#: tools/gst-inspect.c:1059
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] "%d entrada na llista prieta"
+msgstr[1] "%d entraes na llista prieta"
+
+#: tools/gst-inspect.c:1064
+#, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "%d característica"
+msgstr[1] "%d carauterístiques"
+
+#: tools/gst-inspect.c:1465
+msgid "Print all elements"
+msgstr "Imprentar tolos elementos"
+
+#: tools/gst-inspect.c:1467
+msgid "Print list of blacklisted files"
+msgstr "Imprentar llista de los ficheros na llista prieta"
+
+#: tools/gst-inspect.c:1469
+msgid ""
+"Print a machine-parsable list of features the specified plugin or all plugins provide.\n"
+"                                       Useful in connection with external automatic plugin installation mechanisms"
+msgstr ""
+"Imprentar una llista de carauterístiques analizables por una máquina que proporciona'l complementu especificáu.\n"
+"                                       Útil xunto con mecanismos con complementos automáticos esternos d'instalación"
+
+#: tools/gst-inspect.c:1474
+msgid "List the plugin contents"
+msgstr "Llistar el conteníu del complementu"
+
+#: tools/gst-inspect.c:1477
+msgid "Print supported URI schemes, with the elements that implement them"
+msgstr "Imprentar los esquemes URI sofitaos, colos elementos que los implementen"
+
+#: tools/gst-inspect.c:1580
+#, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "Nun pudo cargase'l ficheru del complementu: %s\n"
+
+#: tools/gst-inspect.c:1585
+#, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "Nun esiste l'elementu o complementu «%s»\n"
+
+#: tools/gst-launch.c:93
+msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+msgstr "Usu: gst-xmllaunch <ficheru.xml> [ elementu.propiedá=valor ... ]\n"
+
+#: tools/gst-launch.c:102
+#, c-format
+msgid "ERROR: parse of xml file '%s' failed.\n"
+msgstr "ERROR: falló l'analís del ficheru xml «%s».\n"
+
+#: tools/gst-launch.c:108
+#, c-format
+msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+msgstr "FALLU: nun hai elementos de fluxu de primer nivel nel ficheru «%s».\n"
+
+#: tools/gst-launch.c:114
+msgid "WARNING: only one toplevel element is supported at this time.\n"
+msgstr "ALVERTENCIA: nesti intre namái se sofita un elementu de nivel superior.\n"
+
+#: tools/gst-launch.c:125
+#, c-format
+msgid "ERROR: could not parse command line argument %d: %s.\n"
+msgstr "FALLU: nun pudo analizase l'argumentu %d de la llinia d'órdenes: %s.\n"
+
+#: tools/gst-launch.c:136
+#, c-format
+msgid "WARNING: element named '%s' not found.\n"
+msgstr "AVISU: elementu '%s' non alcontráu.\n"
+
+#: tools/gst-launch.c:424
+#, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Obtúvose'l mensaxe #%u del elementu «%s» (%s): "
+
+#: tools/gst-launch.c:428
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Obtúvose'l mensax #%u dende tabla \"%s:%s\" (%s): "
+
+#: tools/gst-launch.c:432
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Obtúvose'l mensax #%u del oxetu «%s» (%s): "
+
+#: tools/gst-launch.c:436
+#, c-format
+msgid "Got message #%u (%s): "
+msgstr "Obtúvose'l mensax #%u (%s): "
+
+#: tools/gst-launch.c:473
+#, c-format
+msgid "Got EOS from element \"%s\".\n"
+msgstr "¿Obtuvo EOS dende l'elementu \"%s\".?\n"
+
+#: tools/gst-launch.c:482
+#, c-format
+msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr "ETIQUETA ALCONTRADA: alcontrada pol elementu \"%s\"\n"
+
+#: tools/gst-launch.c:485
+#, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "ALCONTRADA ETIQUETA      : alcontrada por tabla \"%s:%s\".\n"
+
+#: tools/gst-launch.c:488
+#, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "ALCONTRADA ETIQUETA      : alcontrada por oxetu \"%s\".\n"
+
+#: tools/gst-launch.c:491
+msgid "FOUND TAG\n"
+msgstr "ALCONTRADA ETIQUETA\n"
+
+#: tools/gst-launch.c:506
+#, c-format
+msgid ""
+"INFO:\n"
+"%s\n"
+msgstr ""
+"INFO:\n"
+"%s\n"
+
+#: tools/gst-launch.c:523
+#, c-format
+msgid "WARNING: from element %s: %s\n"
+msgstr "ATENCIÓN: dende l'elementu %s: %s\n"
+
+#: tools/gst-launch.c:570
+msgid "Prerolled, waiting for buffering to finish...\n"
+msgstr "Pre-endolcáu, esperando al buffer a que fine...\n"
+
+#: tools/gst-launch.c:585
+msgid "buffering..."
+msgstr "atroxando nel búfer…"
+
+#: tools/gst-launch.c:596
+msgid "Done buffering, setting pipeline to PLAYING ...\n"
+msgstr "Atroxáu, afite la tubería a REPRODUCIENDO...\n"
+
+#: tools/gst-launch.c:604
+msgid "Buffering, setting pipeline to PAUSED ...\n"
+msgstr "Atroxando, afite la tubería a PAUSA...\n"
+
+#: tools/gst-launch.c:613
+msgid "Redistribute latency...\n"
+msgstr "Redistribuyir llatencia…\n"
+
+#: tools/gst-launch.c:624
+#, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr "Afitando l'estáu a %s según lo solicitó %s…\n"
+
+#: tools/gst-launch.c:640
+msgid "Interrupt: Stopping pipeline ...\n"
+msgstr "Interrumpir: parando'l conductu …\n"
+
+#: tools/gst-launch.c:679
+msgid "Output tags (also known as metadata)"
+msgstr "Etiquetes de salides (tamién conocíes como metadatos)"
+
+#: tools/gst-launch.c:681
+msgid "Output status information and property notifications"
+msgstr "Estáu de salida y notificaciones de propiedá"
+
+#: tools/gst-launch.c:683
+msgid "Do not print any progress information"
+msgstr "Nun amosar denguna información de progresu"
+
+#: tools/gst-launch.c:685
+msgid "Output messages"
+msgstr "Mensaxes de salida"
+
+#: tools/gst-launch.c:687
+msgid "Do not output status information of TYPE"
+msgstr "Nun amosar la información del estáu de TRIBA"
+
+#: tools/gst-launch.c:687
+msgid "TYPE1,TYPE2,..."
+msgstr "TRIBA1,TRIBA2,…"
+
+#: tools/gst-launch.c:690
+msgid "Save xml representation of pipeline to FILE and exit"
+msgstr "Guardar una representación xml de la conexón al FICHERU y colar"
+
+#: tools/gst-launch.c:690
+msgid "FILE"
+msgstr "FICHERU"
+
+#: tools/gst-launch.c:693
+msgid "Do not install a fault handler"
+msgstr "Nun instalar un remanador de fallos"
+
+#: tools/gst-launch.c:695
+msgid "Print alloc trace (if enabled at compile time)"
+msgstr "Imprentar la traza d'asignaciones (si s'activó al compilar)"
+
+#: tools/gst-launch.c:697
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr "Forciar EOS nes fontes enantes de zarrar la tubería"
+
+#: tools/gst-launch.c:771
+#, c-format
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr "FALLU: nun pudo criase la conexón: %s.\n"
+
+#: tools/gst-launch.c:775
+msgid "ERROR: pipeline could not be constructed.\n"
+msgstr "FALLU: nun pudo criase la conexón.\n"
+
+#: tools/gst-launch.c:779
+#, c-format
+msgid "WARNING: erroneous pipeline: %s\n"
+msgstr "ALVERTENCIA: Conexón errónea: %s\n"
+
+#: tools/gst-launch.c:806
+msgid "ERROR: the 'pipeline' element wasn't found.\n"
+msgstr "FALLU: Nun s'atopó l'elementu de «conexón».\n"
+
+#: tools/gst-launch.c:812 tools/gst-launch.c:894
+msgid "Setting pipeline to PAUSED ...\n"
+msgstr "Afitando'l fluxu a POSÁU ...\n"
+
+#: tools/gst-launch.c:817
+msgid "ERROR: Pipeline doesn't want to pause.\n"
+msgstr "FALLU: El fluxu nun quier ponese en posa.\n"
+
+#: tools/gst-launch.c:822
+msgid "Pipeline is live and does not need PREROLL ...\n"
+msgstr "El fluxu ye en vivo y nun necesita PRECACHEÁU ...\n"
+
+#: tools/gst-launch.c:826
+msgid "Pipeline is PREROLLING ...\n"
+msgstr "El fluxu ta PRECACHEÁNDOSE ...\n"
+
+#: tools/gst-launch.c:829 tools/gst-launch.c:842
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "FALLU: El fluxu nun quier precachease.\n"
+
+#: tools/gst-launch.c:835
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "El fluxu ta precacheáu ...\n"
+
+#: tools/gst-launch.c:847
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Afitando'l fluxu pa REPRODUCCIÓN ...\n"
+
+#: tools/gst-launch.c:854
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "FALLU: el fluxu nun quier reproducise.\n"
+
+#: tools/gst-launch.c:874
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS al apagar activáu; Forciando EOS na tubería\n"
+
+#: tools/gst-launch.c:877
+msgid "Waiting for EOS...\n"
+msgstr "Esperando a EOS…\n"
+
+#: tools/gst-launch.c:882
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS recibíu: parando'l conductu …\n"
+
+#: tools/gst-launch.c:884
+msgid "An error happened while waiting for EOS\n"
+msgstr "Asocedió un fallu al esperar a EOS\n"
+
+#: tools/gst-launch.c:891
+msgid "Execution ended after %"
+msgstr "La execución finó tres de %"
+
+#: tools/gst-launch.c:902
+msgid "Setting pipeline to READY ...\n"
+msgstr "Afitando pipeline a READY...\n"
+
+#: tools/gst-launch.c:907
+msgid "Setting pipeline to NULL ...\n"
+msgstr "Afitando pipeline a NULL...\n"
+
+#: tools/gst-launch.c:912
+msgid "Freeing pipeline ...\n"
+msgstr "Lliberando la tubería…\n"
