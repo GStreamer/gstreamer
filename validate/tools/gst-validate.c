@@ -112,7 +112,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
         state_transition_name = g_strdup_printf ("%s_%s",
             gst_element_state_get_name (oldstate),
             gst_element_state_get_name (newstate));
-        dump_name = g_strconcat ("ges-launch.", state_transition_name, NULL);
+        dump_name = g_strconcat ("gst-validate.", state_transition_name, NULL);
 
 
         GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
