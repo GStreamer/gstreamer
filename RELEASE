@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Bad Plugins 1.11.90
+Release notes for GStreamer Bad Plugins 1.11.91
 
-The GStreamer team is pleased to announce the first release candidate of the
+The GStreamer team is pleased to announce the second release candidate of the
 stable 1.12 release series. The 1.12 release series is adding new features on
 top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
 ABI-stable 1.x release series of the GStreamer multimedia framework.
@@ -63,36 +63,34 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 736213 : h264parse: process NAL AU DELIMITER
-      * 755782 : compositor: Segmentation fault
-      * 764726 : dashdemux: fix default suggestedPresentationDelay
-      * 772811 : hlsdemux: Add support for EXT-X-DISCONTINUITY-SEQUENCE
-      * 774544 : [PLUGIN-MOVE] Move rawparse to gst-plugins-base
-      * 775487 : player: Move to playbin3 and GstStreams API
-      * 776436 : ttml: Failed assertions with non-conformant input
-      * 776997 : hlsdemux: Implement adaptivedemux's _stream_seek()
-      * 776999 : queue2: Avoid return flushing for a not-linked state
-      * 777847 : ios/osx: Don't use manual reference counting in ObjC code
-      * 778073 : hls: m3u8: Fix leak on _master_playlist_unref()
-      * 778333 : Applemedia/AVFVideoSource: Add support for position, device type, and device orientation
-      * 778731 : hlsdemux: Fix checking bit for adaptation_field_control field to parse pcr
-      * 778825 : gl: Add support for Vivante EGL FB windowing system
-      * 779011 : hlsdemux: Try to find type at the end of a fragment
-      * 779067 : glupload: Add support for Vivante DirectTexture uploads
-      * 779309 : h264parse: Include `interlace-mode` in caps
-      * 779333 : tsdemux: Probably broken code, compiler warning with gcc 7
-      * 779447 : Regression: smoothstreaming live seeking and duration
-      * 779453 : gst-player: fix gst-player failed to load external subtitle uri
-      * 779790 : waylandsink: add offset setting for multiplane dmabuf
-      * 779831 : h264parse (baseparse?) fail to pass not-linked upstream sometimes
-      * 779856 : shmsrc: do not exit prematurely when polling
-      * 779869 : glupload: fix GValue leak
-      * 780064 : gstglformat.c fails to compile with a warning.
-      * 780108 : dashdemux: invalid enum conversion in SIDX seek error handling
-      * 780179 : m3u8: Fix parsing EXT-X-DISCONTINUITY
-      * 780180 : m3u8: Release m3u8 lock if consistent checking failed
-      * 780330 : Intermittent compile failure libgstgl
-      * 780367 : decklinkvideosrc: Add no-signal property
+      * 729371 : dash/qtdemux: Reported video size does not correspond to what avdec_h264 states
+      * 764011 : faceoverlay: port to Gstreamer 1.x
+      * 778237 : dash, mpdparser: problem with German DVB-T2 DASH  preview streams
+      * 780190 : amcvideodec: Does not handle input without PTS correctly
+      * 780397 : dashdemux: Fix SEEK of multi-period On-Demand profile
+      * 780402 : ttml: Correctly render blocks containing text of multiple sizes
+      * 780494 : adaptivedemux: Retry downloading a fragment immediately if any in live streaming
+      * 780569 : mpdparser: Report error if Representation is invalid
+      * 780570 : mpdparser: Allow inherit Segment{Base,Template} from Period
+      * 780897 : ttml: Subtitle presentation stops after seek
+      * 781017 : gstaggregator: fix event use after free
+      * 781018 : gldisplay: fix list leak
+      * 781019 : glcontext: fix display leak
+      * 781022 : tests: fix leak in videoframe-audiolevel test
+      * 781023 : mxfmux: fix index entry leak
+      * 781024 : mpegts: fix invalid memory access in language descriptor
+      * 781027 : ttmlparse: Incorrectly filters untimed whitespace from content nodes
+      * 781037 : videoaggregator: Do not mix the same buffer twice when EOS.
+      * 781043 : gl: gstglconfig.h differs in meson and autotools builds
+      * 781156 : meson: error in file sys/decklink/meson.build on macOS
+      * 781170 : glimagesink: displays no window on macOS
+      * 781179 : meson: missing gstglrenderbuffer.h installation
+      * 781188 : kmssink expects planes to support scaling
+      * 781233 : dashdemux: Rewrite ISOBMFF & SIDX handling
+      * 781267 : adaptivedemux: Fix segment creation/adaptation some more
+      * 781320 : adaptivedemux: Don't hold locks when pushing FLUSH_START
+      * 781539 : ttmlparse: Update tab handling to match clarified intention of TTML spec
+      * 781725 : ttml: Max number of GstMemorys in GstBuffer can be exceeded in live subtitling scenario
 
 ==== Download ====
 
@@ -129,35 +127,23 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alex Ashley
-      * Arun Raghavan
       * Chris Bass
-      * Dongil Park
-      * Douglas Bagnall
-      * Edgard Lima
+      * Claudio Saavedra
       * Edward Hervey
-      * Georg Lippitsch
-      * George Kiagiadakis
-      * Haihua Hu
-      * Hyunjun Ko
+      * Fabian Orccon
       * Jan Schmidt
-      * Josep Torra
-      * Luis de Bethencourt
+      * Jürgen Sachs
       * Mathieu Duponchelle
       * Matthew Waters
-      * Nick Kallen
       * Nicolas Dufresne
-      * Nirbheek Chauhan
-      * Olivier Crête
-      * Reynaldo H. Verdejo Pinochet
-      * Samuel Maroy
+      * Ole André Vadla Ravnås
+      * Philipp Zabel
       * Scott D Phillips
       * Sebastian Dröge
       * Seungha Yang
       * Thiago Santos
       * Thibault Saunier
-      * Thomas Bluemel
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Wojciech Przybyl
+      * shakin chou
  

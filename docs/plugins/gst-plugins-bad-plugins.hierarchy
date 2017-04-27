@@ -269,6 +269,7 @@ GObject
             GstDtlsSrtpDec
             GstDtlsSrtpEnc
           GstFPSDisplaySink
+          GstFaceOverlay
           GstGLFilterBin
           GstGLMixerBin
             GstGLVideoMixerBin
@@ -334,6 +335,8 @@ GObject
         GstTagMux
           GstId3Mux
         GstTeletextDec
+        GstTtmlParse
+        GstTtmlRender
         GstUvcH264MjpgDemux
         GstVideoDecoder
           GstLibde265Dec
@@ -423,6 +426,10 @@ GObject
         MXFMetadataEventTrack
         MXFMetadataStaticTrack
         MXFMetadataTimelineTrack
+  PangoContext
+  PangoFontMap
+    PangoFcFontMap
+      PangoCairoFcFontMap
 GInterface
   AtkImplementorIface
   GTypePlugin
@@ -436,3 +443,4 @@ GInterface
   GstVideoOverlay
   GstWaylandVideo
   GtkBuildable
+  PangoCairoFontMap
