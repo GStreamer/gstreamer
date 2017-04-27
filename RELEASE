@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Base Plugins 1.11.90
+Release notes for GStreamer Base Plugins 1.11.91
 
-The GStreamer team is pleased to announce the first release candidate of the
+The GStreamer team is pleased to announce the second release candidate of the
 stable 1.12 release series. The 1.12 release series is adding new features on
 top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
 ABI-stable 1.x release series of the GStreamer multimedia framework.
@@ -61,15 +61,11 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 779866 : videotimecode: Fix invalid timecode right before a new second
-      * 779515 : vorbisdec: Reset decoder in more situations
-      * 780053 : rawvideoparse: Stride/Offset no longer usable from gst-launch
-      * 780257 : urisourcebin: Fix typefind list leak
-      * 780429 : streamsynchronizer: every stream need keep their own send_gap_event flag
-      * 780566 : Broken URL link for latest on-line version in reference manual
-      * 780657 : meson: Use dep.get_pkgconfig_variable()
-      * 780764 : video-converter: fix scaler leak
-      * 780769 : encodebin: fix list leak when requesting a new pad
+      * 781147 : ogv: Seeking OGV over HTTP often hangs
+      * 781149 : volume: GDouble " volume " property stored secretly as a gfloat
+      * 781152 : gst-device-monitor: print the gst-launch line for a device
+      * 781168 : meson: Not installing gstappsink.h
+      * 781490 : GstVideoAlignment: fix typo in doc
 
 ==== Download ====
 
@@ -106,21 +102,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arun Raghavan
-      * Edward Hervey
-      * Emeric Grange
-      * Francisco Velazquez
-      * Haihua Hu
-      * Jan Schmidt
-      * Jochen Henneberg
-      * Matthew Waters
-      * Nicolas Dufresne
+      * Claudio Saavedra
+      * Guillaume Desmottes
       * Olivier Crête
+      * Rico Tzschichholz
       * Sebastian Dröge
-      * Seungha Yang
-      * Stefan Sauer
-      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Vivia Nikolaidou
  
