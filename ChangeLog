@@ -1,9 +1,293 @@
-=== release 1.11.90 ===
+=== release 1.11.91 ===
 
-2017-04-07  Sebastian Dröge <slomo@coaxion.net>
+2017-04-27  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.90
+	  releasing 1.11.91
+
+2017-04-27 13:08:56 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  Revert "plugins: reject pixel-aspect-ratio with value 0/1"
+	  This reverts commit c0be7b1890ea8da915a81ae82bc9f504aee7cc26.
+
+2017-04-27 12:43:54 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: reject pixel-aspect-ratio with value 0/1
+	  Do not negotiate a pixel-aspect-ratio of 0/1.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781759
+
+2017-04-26 15:48:01 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostprocutil.c:
+	* gst/vaapi/gstvaapisink.c:
+	  plugins: handle pixel-aspect-ratio with value 0/1
+	  When downstream negotiates a pixel-aspect-ratio of 0/1, the
+	  calculations for resizing and formatting in vaapipostproc and
+	  vaapisink, respectively, failed, and thus the pipeline.
+	  This patch handles this situation by converting p-a-r of 0/1 to
+	  1/1. This is how other sinks, such as glimagesink, work.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781759
+
+2017-04-27 14:42:55 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: fix leak of created allocator
+	  Since it's created by itself, it should be unref-counted
+	  after gst_buffer_pool_config_set_allocator call. Afterwards,
+	  this allocator will be ref-counted again when assigning to priv->allocator.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781577
+
+2017-04-21 19:07:18 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: create or reconfig allocator
+	  Sometimes a video decoder could set different buffer pool
+	  configurations, because their frame size changes. In this case we
+	  did not reconfigure the allocator.
+	  This patch enables this use case, creating a new allocator inside
+	  the VAAPI buffer pool if the caps changed, if it is not dmabuf-based.
+	  If so, it is just reconfigured, since it doesn't have a surface pool.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781577
+
+2017-04-25 12:58:44 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/elements/Makefile.am:
+	  test: elements: fix compilation flags
+	  This issue was spotten on bug #766704
+	  Original-patch-by: Hyunjun Ko <zzoon@igalia.com>
+
+2017-04-25 16:23:08 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: windows: wayland: fix leak if failure of sync
+	  Sometimes gst_vaapi_window_wayland_sync returns FALSE when poll returns EBUSY
+	  during destruction.
+	  In this case, if GstVaapiWindow is using vpp, leak of vpp surface happens.
+	  This surface is not attached to anything at this moment, so we should release
+	  it manually.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781695
+
+2017-04-24 20:30:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 60aeef6 to 48a5d85
+
+2017-04-21 15:30:09 +0200  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: window: wayland: mark frames as done
+	  When the frame listener callbacks 'done', the number of pending
+	  frames are decreased. Nonetheless, there might be occasions where
+	  the buffer listener callbacks 'release', without calling previously
+	  frame's 'done'. This leads to problem with
+	  gst_vaapi_window_wayland_sync() operation.
+	  This patch marks as done those frames which were callbacked, but if
+	  the buffer callbacks 'release' and associated frame is not marked
+	  as 'done' it is so, thus the number of pending frames keeps correct.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780442
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2017-04-21 14:07:44 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: window: wayland: don't sync at destroy()
+	  Don't call gst_vaapi_window_wayland_sync() when destroying the
+	  wayland window instance, since it might lead to a lock at
+	  gst_poll_wait() when more than one instances of vaapisink are
+	  rendering in the same pipeline, this is because they share the
+	  same window.
+	  Since now all the frames are freed we don't need to freed the
+	  private last_frame, since its address is invalid now.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780442
+	  Signed-off-by: Hyunjun Ko <zzoon@igalia.com>
+
+2017-04-19 10:37:19 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: window: wayland: null buffer at destroy()
+	  Fix leakage of the last wl buffer.
+	  VAAPI wayland sink needs to send a null buffer while destruction,
+	  it assures that all the wl buffers are released. Otherwise, the last
+	  buffer's callback might be not called, which leads to leak of
+	  GstVaapiDisplay.
+	  This was inspired by gstwaylandsink.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774029
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2016-10-30 10:43:49 +0900  Jagyum Koo <koojagyum@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: window: wayland: rt event queue at destroy()
+	  The proxy object of wl_buffer for the last frame remains in the
+	  wl_map. Even though we call wl_buffer_destroy() in
+	  frame_release_callback(), the proxy object remains without being
+	  removed, since proxy object is deleted when wayland server sees the
+	  delete request and sends 'delete_id' event.
+	  We need to call roundtrip before destroying event_queue so that the
+	  proxy object is removed. Otherwise, it would be mess up as receiving
+	  'delete_id' event from previous play, when playing in the next
+	  va/wayland window with the same wl_display connection.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773689
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2017-04-20 20:30:52 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: window: wayland: cancel read at poll message
+	  Always call wl_display_cancel_read() when an errno is set, but
+	  different to EAGAIN or EINTR.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780442
+
+2017-04-21 18:05:48 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	* gst/vaapi/gstvaapidecodebin.h:
+	  vaapidecodebin: skips configuration once it's done
+	  Skips configuration of creation of vpp/capsfilter and link them once it's done.
+	  Otherwise, it always fails when it's trying to re-start playback.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781573
+
+2017-04-20 18:44:41 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostprocutil.c:
+	  vaapipostproc: fixes for memory leaks
+	  The use of gst_vaapi_value_set_format() and gst_structure_*_value()
+	  requires to clear the used GValue to avoid a memory leak.
+
+2016-12-08 18:51:54 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginbase.h:
+	  plugins: enable direct rendering with envvar
+	  Direct rendering (use vaDeriveImage rather than vaPutImage) has better
+	  performance in some Intel platforms (Haswell, for example) but in others
+	  (Skylake) is the opposite.
+	  In order to have some control, the patch enables the direct rendering
+	  through the environment variable GST_VAAPI_ENABLE_DIRECT_RENDERING.
+	  Also it seems to generating some problems with gallium/radeon backend.
+	  See bug #779642.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775848
+
+2017-04-08 02:05:21 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: Don't renegotiate on every flush
+	  If caps don't actually change, don't update the
+	  decoder and don't set the do_renego flag forcing
+	  downstream renegotiation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781142
+
+2017-04-08 01:21:23 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  h264 decoder: Implement reset() for faster flush
+	  Implement a custom reset() function for faster flushes
+	  that just clear the reference pictures but don't reallocate
+	  the DPB or clear out SPS/PPS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781142
+
+2017-04-05 17:24:20 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder.h:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_priv.h:
+	* gst-libs/gst/vaapi/gstvaapidecoder_vc1.c:
+	* gst/vaapi/gstvaapidecode.c:
+	  Implement decoder reset on flush, rather than recreating
+	  Clear decoders out on a flush but keep the same instance,
+	  rather than completely recreating them. That avoids
+	  unecessarily freeing and recreating surface pools
+	  and contexts, which can be quite expensive
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781142
+
+2017-04-11 18:50:35 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow.c:
+	  libs: window: don't add an unused function
+	  The macro GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE only defines
+	  a function that is never used, thus when compiling we might see
+	  this warning (clang):
+	  gstvaapiwindow.c:147:1: warning: unused function 'gst_vaapi_window_class' [-Wunused-function]
+	  GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiWindow,
+	  ^
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759533
+
+2017-04-11 18:22:00 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_priv.h:
+	  libs: window: remove surface_format member
+	  Since we always convert to NV12, there is no need to keep a
+	  variable for that. Let us hard code it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759533
+
+2017-04-10 17:23:26 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_x11.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_x11_priv.h:
+	  libs: window: x11/wayland: use new api for conversion
+	  Since gst_vaapi_window_vpp_convert_internal is created,
+	  GstVaapiWindowX11/Wayland can use it for conversion.
+	  Note that once it chooses to use vpp, it's going to use vpp
+	  until the session is finished.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759533
+
+2017-04-10 11:41:29 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_priv.h:
+	  libs: window: add gst_vaapi_window_vpp_convert_internal()
+	  If a backend doesn't support specific format, we can use vpp for conversion
+	  and make it playing.
+	  This api is originated from GstVaapiWindowWayland and moved to GstVaapiWindow,
+	  so that GstVaapiWindowX11 could use it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759533
+
+2017-04-03 16:45:36 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_x11.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_x11_priv.h:
+	  libs: window: x11/wayland: chaining up to GstVaapiWindow
+	  Currently, GstVaapiWindowX11/Wayland are not descendants of GstVaapiWindow.
+	  This patch chains them up to GstVaapiWindow to handle common members in GstVaapiWindow.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=759533
+
+2017-04-05 11:19:15 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: Fix usage of GST_GL_HAVE_WINDOW_* defines
+	  When these definitions are false, they are undef in the
+	  preprocessor, not a defined value of 0. When they are unset the
+	  compile fails with:
+	  'GST_GL_HAVE_WINDOW_WAYLAND' undeclared (first use in this function)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780948
+
+2017-04-10 23:51:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 39ac2f5 to 60aeef6
+
+=== release 1.11.90 ===
+
+2017-04-07 16:36:21 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.11.90
 
 2017-04-03 14:52:41 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
 
