@@ -1,9 +1,78 @@
-=== release 1.11.90 ===
+=== release 1.11.91 ===
 
-2017-04-07  Sebastian Dröge <slomo@coaxion.net>
+2017-04-27  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.90
+	  releasing 1.11.91
+
+2015-08-16 13:32:04 +0200  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/scenarios/update_stop.scenario:
+	  validate: Fix update_stop.scenario seek property naming
+
+2017-04-20 10:02:58 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  launcher:check: Ensure to set build dir before rebuilding
+
+2017-04-11 07:48:21 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/baseclasses.py:
+	  baseclasses: Add method to set a specific list of scenarios
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781314
+
+2017-04-07 13:49:32 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate: drop unneeded break+concat in some string literals
+	  Perform other related improvements while at it.
+
+2017-04-12 11:07:44 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Do not expect track switch to be synchronous for playbin3
+	  And let following actions to be executed (setting the action as
+	  INTERLACED) which will make sure the track switch happened at some
+	  point. It means the user has to set the pipeline to PLAYING so we can
+	  make it works but we do not have choice here I think
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781213
+
+2017-04-10 17:06:25 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  Update meson.build version to 1.11.90 too
+
+2017-04-10 11:43:28 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate-pad-monitor: Fix previous commit
+	  Post-send handling was only meant for seek events
+
+2017-04-10 07:58:01 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Safely store expected seek values
+	  Protect the expected seek values with the same lock as the one
+	  that will be used to read/validate the resulting segments and flush
+	  values.
+	  Avoids races with duplicated seeks (i.e. a seek that was already
+	  sent and handled via another pad, such as in demuxers).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781112
+
+=== release 1.11.90 ===
+
+2017-04-07 16:36:04 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.11.90
 
 2017-04-05 15:26:31 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
 
