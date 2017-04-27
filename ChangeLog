@@ -1,9 +1,41 @@
-=== release 1.11.90 ===
+=== release 1.11.91 ===
 
-2017-04-07  Sebastian Dröge <slomo@coaxion.net>
+2017-04-27  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.90
+	  releasing 1.11.91
+
+2017-04-17 17:02:48 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  videoenc: use GST_ROUND_UP_N() macro
+	  Makes the code much easier to read and understand.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781409
+
+2017-04-24 20:30:21 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 60aeef6 to 48a5d85
+
+2017-04-10 23:51:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From 39ac2f5 to 60aeef6
+
+=== release 1.11.90 ===
+
+2017-04-07 16:36:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.11.90
 
 2017-04-07 14:27:23 +0300  Sebastian Dröge <sebastian@centricular.com>
 
