@@ -1,9 +1,61 @@
-=== release 1.11.90 ===
+=== release 1.11.91 ===
 
-2017-04-07  Sebastian Dröge <slomo@coaxion.net>
+2017-04-27  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.90
+	  releasing 1.11.91
+
+2017-04-24 20:30:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 60aeef6 to 48a5d85
+
+2017-04-21 11:50:17 +1000  Jan Schmidt <jan@centricular.com>
+
+	* configure.ac:
+	  Revert "configure: Set the assembler used for libav to $CC"
+	  This reverts commit 1a265f029aa9be1bf3f72d1dcd9feafbf23a6298.
+	  It also makes it impossible to pass something other than $CC
+	  as the assembler. People should adjust the passed AS variable
+	  if they need something different.
+
+2017-04-14 14:55:52 +0200  Edward Hervey <edward@centricular.com>
+
+	* configure.ac:
+	  configure: Remove usage of memalign_hack in ffmpeg
+	  It was removed in the last release
+
+2017-04-13 15:23:45 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	  avaudenc/dec: Blacklist more PCM decoders/encoders
+
+2017-04-13 15:15:55 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.3
+
+2017-04-10 23:50:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From 39ac2f5 to 60aeef6
+
+=== release 1.11.90 ===
+
+2017-04-07 16:34:46 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.11.90
 
 2017-03-22 12:55:40 +0530  Arun Raghavan <arun@arunraghavan.net>
 

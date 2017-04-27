@@ -57,6 +57,7 @@ avenc_msmpeg4 GstPreset
 avenc_msmpeg4v2 GstPreset
 avenc_msvideo1 GstPreset
 avenc_nellymoser GstPreset
+avenc_opus GstPreset
 avenc_pam GstPreset
 avenc_pbm GstPreset
 avenc_pcm_s16be_planar GstPreset
@@ -166,6 +167,7 @@ avmux_psp GstTagSetter
 avmux_rcv GstTagSetter
 avmux_rm GstTagSetter
 avmux_rso GstTagSetter
+avmux_scc GstTagSetter
 avmux_singlejpeg GstTagSetter
 avmux_smjpeg GstTagSetter
 avmux_smoothstreaming GstTagSetter

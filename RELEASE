@@ -1,7 +1,7 @@
 
-Release notes for GStreamer libav Plugins 1.11.90
+Release notes for GStreamer libav Plugins 1.11.91
 
-The GStreamer team is pleased to announce the first release candidate of the
+The GStreamer team is pleased to announce the second release candidate of the
 stable 1.12 release series. The 1.12 release series is adding new features on
 top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
 ABI-stable 1.x release series of the GStreamer multimedia framework.
@@ -13,11 +13,6 @@ changes.
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
-
-
-
-This module contains plugins based on the ffmpeg project, including codecs.
-
 
 
 Other modules containing plugins are:
@@ -38,11 +33,6 @@ contains a set of less supported plugins that haven't passed the
 
 
   
-
-Bugs fixed in this release
-     
-      * 767938 : Add support for AVStereo3D API for stereoscopic video
-      * 780317 : avvidenc: Classify image encoders with " Image " instead of " Video " 
 
 ==== Download ====
 
@@ -79,8 +69,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arun Raghavan
-      * Emeric Grange
+      * Edward Hervey
       * Jan Schmidt
       * Sebastian Dröge
+      * Tim-Philipp Müller
  
