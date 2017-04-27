@@ -1,0 +1,188 @@
+# Friulian translation for gst-plugins-bad package of GStreamer project
+# This file is put in the public domain.
+# Fabio Tomat <f.t.public@gmail.com>, 2016.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-bad 1.10.0\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2016-11-01 17:49+0200\n"
+"PO-Revision-Date: 2016-12-30 13:28+0100\n"
+"Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
+"Language-Team: Friulian <f.t.public@gmail.com>\n"
+"Language: fur\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.11\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ext/gl/gstgltestsrc.c:521
+msgid "failed to draw pattern"
+msgstr "no si è rivâts a disegnâ il motîf"
+
+#: ext/gl/gstgltestsrc.c:522
+msgid "A GL error occured"
+msgstr "Al è capitât un erôr GL"
+
+#: ext/gl/gstgltestsrc.c:528
+msgid "format wasn't negotiated before get function"
+msgstr "il formât nol jere concuardât prime de funzion get"
+
+#: ext/opencv/gsttemplatematch.cpp:186
+msgid "OpenCV failed to load template image"
+msgstr "OpenCV nol è rivât a cjariâ la imagjin model"
+
+#: ext/resindvd/resindvdsrc.c:361
+msgid "Could not read title information for DVD."
+msgstr "Impussibil lei lis informazions dal titul pal DVD."
+
+#: ext/resindvd/resindvdsrc.c:367
+#, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "No si è rivâts a vierzi il dispositîf DVD '%s'."
+
+#: ext/resindvd/resindvdsrc.c:373
+msgid "Failed to set PGC based seeking."
+msgstr "No si è rivâts a stabilî la ricercje basade su PGC."
+
+#: ext/resindvd/resindvdsrc.c:1164
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "Impussibil lei il DVD. Al podarès jessi parcè che il DVD al è cifrât e no je instalade une librarie par decifrâ."
+
+#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
+msgid "Could not read DVD."
+msgstr "Impussibil lei il DVD."
+
+#: ext/smoothstreaming/gstmssdemux.c:405
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:695
+msgid "This file contains no playable streams."
+msgstr "Chest file nol à flus riprodusibil."
+
+#: ext/sndfile/gstsfdec.c:769
+msgid "Could not open sndfile stream for reading."
+msgstr "Impussibil vierzi il flus sndfile pe leture."
+
+#: ext/sndio/sndiosink.c:324 ext/sndio/sndiosrc.c:320
+msgid "Could not establish connection to sndio"
+msgstr "Impussibil stabilî la conession a sndio"
+
+#: ext/sndio/sndiosink.c:331 ext/sndio/sndiosrc.c:327
+msgid "Failed to query sndio capabilities"
+msgstr "No si è rivâts a interogâ lis funzionalitâts di sndio"
+
+#: ext/sndio/sndiosink.c:424 ext/sndio/sndiosrc.c:421
+msgid "Could not configure sndio"
+msgstr "Impussibil configurâ sndio"
+
+#: ext/sndio/sndiosink.c:430 ext/sndio/sndiosrc.c:427
+msgid "Could not start sndio"
+msgstr "Impussibil fâ partî sndio"
+
+#: gst/asfmux/gstasfmux.c:1831
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr "Il file gjenerât al à un timp par tornâ a fâ sù preventîf plui grant de durade dai siei flus"
+
+#: gst/camerabin2/camerabingeneral.c:166 gst/camerabin2/gstcamerabin2.c:1875
+#: gst/camerabin2/gstdigitalzoom.c:282 gst/camerabin2/gstviewfinderbin.c:270
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Al mancje l'element '%s' - controle la instalazion di GStreamer."
+
+#: gst/camerabin2/gstcamerabin2.c:363
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr "La posizion dal file e je metude a NULL, stabilissile a un non di file valit"
+
+#: gst/camerabin2/gstwrappercamerabinsrc.c:584
+msgid "Digitalzoom element couldn't be created"
+msgstr "L'element digitalzoom nol pues jessi creât"
+
+#: gst/dvdspu/gstdvdspu.c:1041
+msgid "Subpicture format was not configured before data flow"
+msgstr "Il formât subpicture nol jere configurât prime dal fluî dai dâts"
+
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3111
+msgid "Failed to get fragment URL."
+msgstr "No si è rivâts a otignî il URL dal frament"
+
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3462
+msgid "Couldn't download fragments"
+msgstr "Impussibil discjariâ i framents"
+
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3551
+#: gst/mpegtsdemux/mpegtsbase.c:1608
+msgid "Internal data stream error."
+msgstr "Erôr interni dal flus dai dâts."
+
+#: gst/videomeasure/gstvideomeasure_collector.c:294
+msgid "No file name specified for writing."
+msgstr "Nissun non di file specificât pe scriture."
+
+#: gst/videomeasure/gstvideomeasure_collector.c:300
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
+msgstr "Il non di file furnît \"%s\" nol pues jessi convertît te codifiche non file locâl."
+
+#: gst/videomeasure/gstvideomeasure_collector.c:307
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Impussibil vierzi il file \"%s\" pe scriture."
+
+#: sys/dvb/gstdvbsrc.c:1571 sys/dvb/gstdvbsrc.c:1784
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Il dispositîf \"%s\" nol esist."
+
+#: sys/dvb/gstdvbsrc.c:1575
+#, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "Impussibil vierzi il dispositîf di frontend \"%s\"."
+
+#: sys/dvb/gstdvbsrc.c:1594
+#, c-format
+msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Impussibil otignî impostazions dal dispositîf di frontend \"%s\"."
+
+#: sys/dvb/gstdvbsrc.c:1611
+#, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
+msgstr "Impussibil listâ i sistemis di consegne dal dispositîf di frontend \"%s\"."
+
+#: sys/dvb/gstdvbsrc.c:1788
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Impussibil vierzi il file \"%s\" pe leture."
+
+#: sys/dvb/parsechannels.c:410
+msgid "Couldn't find channel configuration file"
+msgstr "Impussibil cjatâ il file di configurazion canâl"
+
+#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
+#, c-format
+msgid "Couldn't load channel configuration file: '%s'"
+msgstr "Impussibil cjariâ il file di configurazion canâl: '%s'"
+
+#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
+#, c-format
+msgid "Couldn't find details for channel '%s'"
+msgstr "Impussibil cjatâ i detais pal canâl '%s'"
+
+#: sys/dvb/parsechannels.c:430
+#, c-format
+msgid "No properties for channel '%s'"
+msgstr "Nissune proprietât pal canâl '%s'"
+
+#: sys/dvb/parsechannels.c:439
+#, c-format
+msgid "Failed to set properties for channel '%s'"
+msgstr "No si è rivâts a stabilî lis proprietâts pal canâl '%s'"
+
+#: sys/dvb/parsechannels.c:560
+#, c-format
+msgid "Couldn't find channel configuration file: '%s'"
+msgstr "Impussibil cjatâ il file di configurazion canâl: '%s'"
+
+#: sys/dvb/parsechannels.c:570
+msgid "Channel configuration file doesn't contain any channels"
+msgstr "Il file di configurazion canâl nol à nissun canâl"
