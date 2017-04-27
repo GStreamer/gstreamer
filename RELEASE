@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Good Plugins 1.11.90
+Release notes for GStreamer Good Plugins 1.11.91
 
-The GStreamer team is pleased to announce the first release candidate of the
+The GStreamer team is pleased to announce the second release candidate of the
 stable 1.12 release series. The 1.12 release series is adding new features on
 top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
 ABI-stable 1.x release series of the GStreamer multimedia framework.
@@ -58,20 +58,19 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 773218 : rtpbin: pipeline gets an EOS when any rtpsources byes
-      * 722560 : rtprtxreceive: cleanup orphan retransmission requests
-      * 761086 : splitmuxsrc: use the max ts of all streams as the offset to align the next stream with
-      * 771478 : qtmux moov-recovery-file option fails by gst-launch-1.0
-      * 777738 : flacparse: fix FLAC streaming for non-0 start sample
-      * 779230 : Update plugins description
-      * 779389 : sbcparse parses allocation mode incorrectly
-      * 779422 : qtmux: Update modification times when sending the moov
-      * 780022 : qtdemux: add support for S16L PCM audio
-      * 780024 : qtmux: add support for CineForm
-      * 780105 : rtpsource: " no clock-rate, cannot interpolate rtp " forever
-      * 780331 : interleave segfaults with more than 64 channels
-      * 780347 : rtpmux output PTS are not in line with the DTS and the segment
-      * 780966 : aacparse: streamline and improve AudioSpecificConfig parsing
+      * 767498 : splitmuxsink: Not handling FLUSH events correctly
+      * 778337 : qtdemux: sample_description_index not evaluated when parsing the stsd-box
+      * 778830 : v4l2dec: Fix race when going from PAUSED to READY
+      * 779106 : flvdemux: remove duplicated segment initialization
+      * 780904 : rtprtxqueue: implement handling of the max-size-time property
+      * 781008 : scaletempo: Fix GAP events handle issue when set rate
+      * 781025 : tests: fix leak in splitmux test
+      * 781119 : v4l2: No timestamp set when importing dma buffer on V4L2_OUTPUT interface
+      * 781266 : qtdemux: Properly reset demuxer when all streams are EOS
+      * 781270 : qtdemux, dash: segmentation fault on representation change
+      * 781304 : rtspsrc: Use GST_ELEMENT_ERROR_WITH_DETAILS
+      * 781319 : qtdemux: Reset adapter in more discontinuity cases
+      * 781362 : qtdemux: Fix leak on QtDemuxStreamStsdEntry
 
 ==== Download ====
 
@@ -108,25 +107,18 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andrew
-      * Carlos Rafael Giani
-      * Douglas Bagnall
-      * Edgard Lima
+      * ChangBok Chae
       * Edward Hervey
-      * Emeric Grange
-      * Enrique Ocaña González
       * George Kiagiadakis
-      * Jan Schmidt
-      * Michael Dutka
-      * Michael Smith
-      * Miguel París Díaz
-      * Nicolas Dufresne
-      * Olivier Crête
-      * Philipp Zabel
+      * Jürgen Sachs
+      * Lyon Wang
+      * Nirbheek Chauhan
       * Sebastian Dröge
+      * Seungha Yang
       * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
+      * Todor Tomov
       * Vincent Penquerc'h
-      * Wim Taymans
+      * Xavier Claessens
  
