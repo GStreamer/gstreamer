@@ -426,7 +426,7 @@ set_video_template_caps (GstCaps * caps)
       "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+      "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 1, 1, G_MAXINT, 1, NULL);
 }
 
 GstCaps *
