@@ -179,6 +179,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
       allocator = gst_vaapi_video_allocator_new (priv->display, &new_vip,
           surface_alloc_flags, 0);
       gst_buffer_pool_config_set_allocator (config, allocator, NULL);
+      gst_object_unref (allocator);
     }
   }
 
