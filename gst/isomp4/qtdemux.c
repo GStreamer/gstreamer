@@ -3933,7 +3933,8 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
 
       GST_DEBUG_OBJECT (qtdemux, "decode time %" G_GINT64_FORMAT
           " (%" GST_TIME_FORMAT ")", decode_time,
-          GST_TIME_ARGS (QTSTREAMTIME_TO_GSTTIME (stream, decode_time)));
+          GST_TIME_ARGS (stream ? QTSTREAMTIME_TO_GSTTIME (stream,
+                  decode_time) : GST_CLOCK_TIME_NONE));
 
       /* Discard the fragment buffer timestamp info to avoid using it.
        * Rely on tfdt instead as it is more accurate than the timestamp
