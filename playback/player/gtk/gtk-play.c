@@ -1263,9 +1263,13 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
   gtk_menu_shell_append (GTK_MENU_SHELL (menu), quit);
 
   gtk_widget_show_all (menu);
+#if GTK_CHECK_VERSION(3,22,00)
+  gtk_menu_popup_at_pointer (GTK_MENU (menu), (GdkEvent *) event);
+#else
   gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL, NULL,
       (event != NULL) ? event->button : 0,
       gdk_event_get_time ((GdkEvent *) event));
+#endif
 
   if (media_info)
     g_object_unref (media_info);
