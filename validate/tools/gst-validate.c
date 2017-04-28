@@ -228,12 +228,26 @@ _execute_set_subtitles (GstValidateScenario * scenario,
   gchar *uri, *fname;
   GFile *tmpfile, *folder;
   const gchar *subtitle_file, *subtitle_dir;
+  GstElement *pipeline = gst_validate_scenario_get_pipeline (scenario);
+
+  if (pipeline == NULL) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Can't execute a '%s' action after the pipeline "
+        "has been destroyed.", action->type);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
 
   subtitle_file = gst_structure_get_string (action->structure, "subtitle-file");
-  g_return_val_if_fail (subtitle_file != NULL, FALSE);
-  subtitle_dir = gst_structure_get_string (action->structure, "subtitle-dir");
+  if (subtitle_file == NULL) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "No 'subtitle-file' specified in 'set-subtile'");
+    gst_object_unref (pipeline);
 
-  g_object_get (scenario->pipeline, "current-uri", &uri, NULL);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  }
+
+  subtitle_dir = gst_structure_get_string (action->structure, "subtitle-dir");
+  g_object_get (pipeline, "current-uri", &uri, NULL);
   tmpfile = g_file_new_for_uri (uri);
   g_free (uri);
 
@@ -251,8 +265,9 @@ _execute_set_subtitles (GstValidateScenario * scenario,
 
   uri = g_file_get_uri (tmpfile);
   gst_validate_printf (action, "Setting subtitle file to: %s", uri);
-  g_object_set (scenario->pipeline, "suburi", uri, NULL);
+  g_object_set (pipeline, "suburi", uri, NULL);
   g_free (uri);
+  gst_object_unref (pipeline);
 
   return TRUE;
 }

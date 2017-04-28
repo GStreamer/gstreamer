@@ -46,7 +46,6 @@ _stop_monitoring_bin (GstBin * bin, GstValidateRunner * runner)
   monitor =
       (GstValidateMonitor *) g_object_get_data (G_OBJECT (bin),
       "validate-monitor");
-  ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
   gst_object_unref (bin);
   ASSERT_OBJECT_REFCOUNT (monitor, "monitor", 1);
   gst_object_unref (monitor);

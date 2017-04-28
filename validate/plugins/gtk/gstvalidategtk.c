@@ -131,25 +131,26 @@ _create_keyboard_events (GstValidateAction * action,
 #endif
   GList *events = NULL;
   GdkDevice *device = NULL;
+  GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
   if (etype == GDK_NOTHING) {
     etype = GDK_KEY_PRESS;
   } else if (etype != GDK_KEY_PRESS && etype != GDK_KEY_RELEASE) {
-    GST_VALIDATE_REPORT (action->scenario,
+    GST_VALIDATE_REPORT (scenario,
         g_quark_from_static_string ("scenario::execution-error"),
         "GdkEvent type %s does not work with the 'keys' parameter",
         gst_structure_get_string (action->structure, "type"));
 
-    return NULL;
+    goto fail;
   }
 #if GTK_CHECK_VERSION(3,20,0)
   display = gdk_display_get_default ();
   if (display == NULL) {
-    GST_VALIDATE_REPORT (action->scenario,
+    GST_VALIDATE_REPORT (scenario,
         g_quark_from_static_string ("scenario::execution-error"),
         "Could not find a display");
 
-    return NULL;
+    goto fail;
   }
 
   seat = gdk_display_get_default_seat (display);
@@ -158,11 +159,11 @@ _create_keyboard_events (GstValidateAction * action,
   device = get_device (action, GDK_SOURCE_KEYBOARD);
 #endif
   if (device == NULL) {
-    GST_VALIDATE_REPORT (action->scenario,
+    GST_VALIDATE_REPORT (scenario,
         g_quark_from_static_string ("scenario::execution-error"),
         "Could not find a keyboard device");
 
-    return NULL;
+    goto fail;
   }
 
   if (keyname) {
@@ -189,7 +190,13 @@ _create_keyboard_events (GstValidateAction * action,
     }
   }
 
+  gst_object_unref (scenario);
   return events;
+
+fail:
+  gst_object_unref (scenario);
+
+  return NULL;
 }
 
 typedef struct

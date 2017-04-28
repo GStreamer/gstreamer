@@ -103,7 +103,6 @@ struct _GstValidateAction
   const gchar *type;
   const gchar *name;
   GstStructure *structure;
-  GstValidateScenario *scenario;
 
   /* < private > */
   guint action_number;
@@ -112,7 +111,7 @@ struct _GstValidateAction
 
   GstValidateActionPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING_LARGE - 2]; /* ->scenario + ->priv */
+  gpointer _gst_reserved[GST_PADDING_LARGE - 1]; /* ->priv */
 };
 
 void                  gst_validate_action_set_done     (GstValidateAction *action);
@@ -243,12 +242,11 @@ struct _GstValidateScenario
   GstObject parent;
 
   /*< public >*/
-  GstElement *pipeline;
 
   /*< private >*/
   GstValidateScenarioPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING + 1];
 };
 
 GType gst_validate_scenario_get_type (void);
@@ -287,7 +285,8 @@ gboolean gst_validate_action_get_clocktime (GstValidateScenario * scenario,
                                             const gchar * name,
                                             GstClockTime * retval);
 
-gboolean gst_validate_scenario_execute_seek (GstValidateScenario *scenario,
+GstValidateExecuteActionReturn
+gst_validate_scenario_execute_seek         (GstValidateScenario *scenario,
                                              GstValidateAction *action,
                                              gdouble rate,
                                              GstFormat format,
@@ -305,6 +304,9 @@ gst_validate_execute_action                 (GstValidateActionType * action_type
 
 GstState
 gst_validate_scenario_get_target_state     (GstValidateScenario *scenario);
+
+GstElement *
+gst_validate_scenario_get_pipeline         (GstValidateScenario * scenario);
 
 void gst_validate_scenario_deinit          (void);
 

@@ -66,15 +66,14 @@ GST_END_TEST;
 GST_START_TEST (monitors_cleanup)
 {
   GstElement *src, *sink;
-  GstValidateRunner *runner;
   GstValidateMonitor *monitor, *pmonitor1, *pmonitor2;
 
+  GstValidateRunner *runner = gst_validate_runner_new ();
   GstElement *pipeline = gst_pipeline_new ("validate-pipeline");
 
   src = gst_element_factory_make ("fakesrc", "source");
   sink = gst_element_factory_make ("fakesink", "sink");
 
-  runner = gst_validate_runner_new ();
   monitor = gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline),
       runner, NULL);
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
