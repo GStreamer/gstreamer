@@ -1425,6 +1425,7 @@ create_ui (GtkPlay * play)
     play->video_area =
         gst_player_gtk_video_renderer_get_widget (GST_PLAYER_GTK_VIDEO_RENDERER
         (play->renderer));
+    g_object_unref (play->video_area);
   } else {
     play->renderer = gst_player_video_overlay_video_renderer_new (NULL);
 
@@ -1778,7 +1779,6 @@ gtk_play_dispose (GObject * object)
     g_object_unref (self->player);
   }
   self->player = NULL;
-  g_clear_object (&self->video_area);
 
   G_OBJECT_CLASS (gtk_play_parent_class)->dispose (object);
 }
