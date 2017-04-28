@@ -198,12 +198,16 @@ case "${ac_cv_omx_target}" in
   zynqultrascaleplus)
     AC_DEFINE(USE_OMX_TARGET_ZYNQ_USCALE_PLUS, 1, [Use Zynq UltraScale+ OpenMAX IL target])
     ;;
+  tizonia)
+    AC_DEFINE(USE_OMX_TARGET_TIZONIA, 1, [Use Tizonia OpenMAX IL target])
+    ;;
   none|*)
-    AC_ERROR([invalid OpenMAX IL target, you must specify one of --with-omx-target={generic,rpi,bellagio,zynqultrascaleplus}])
+    AC_ERROR([invalid OpenMAX IL target, you must specify one of --with-omx-target={generic,rpi,bellagio,tizonia,zynqultrascaleplus}])
     ;;
 esac
 AM_CONDITIONAL(USE_OMX_TARGET_GENERIC, test "x$ac_cv_omx_target" = "xgeneric")
 AM_CONDITIONAL(USE_OMX_TARGET_BELLAGIO, test "x$ac_cv_omx_target" = "xbellagio")
+AM_CONDITIONAL(USE_OMX_TARGET_TIZONIA, test "x$ac_cv_omx_target" = "xtizonia")
 AM_CONDITIONAL(USE_OMX_TARGET_RPI, test "x$ac_cv_omx_target" = "xrpi")
 AM_CONDITIONAL(USE_OMX_TARGET_ZYNQ_USCALE_PLUS, test "x$ac_cv_omx_target" = "xzynqultrascaleplus")
 
@@ -217,6 +221,12 @@ if test x"$ac_cv_omx_struct_packing" != x"none"; then
 elif test x"$ac_cv_omx_target_struct_packing" != x"none"; then
   AC_MSG_NOTICE([Using $ac_cv_omx_target_struct_packing as OpenMAX struct packing])
   AC_DEFINE_UNQUOTED(GST_OMX_STRUCT_PACKING, $ac_cv_omx_target_struct_packing, [The struct packing used for OpenMAX structures])
+fi
+
+dnl settings for tizonia target
+if test "x$ac_cv_omx_target" = "xtizonia"; then
+    PKG_CHECK_MODULES([TIZONIA], [tizilheaders])
+    CPPFLAGS="$CPPFLAGS $TIZONIA_CFLAGS"
 fi
 
 AC_ARG_WITH([omx-header-path],
