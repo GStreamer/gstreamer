@@ -15,21 +15,21 @@ state since such a buffer might never arrive.
 
 Live sources return `NO_PREROLL` when going to the `PAUSED` state to inform
 the bin/pipeline that this element will not be able to produce data in
-the `PAUSED` state. `NO_PREROLL` should be returned for both READY→PAUSED
-and PLAYING→PAUSED.
+the `PAUSED` state. `NO_PREROLL` should be returned for both `READY→PAUSED`
+and `PLAYING→PAUSED`.
 
 When performing a `get_state()` on a bin with a non-zero timeout value,
 the bin must be sure that there are no live sources in the pipeline
-because otherwise, the `get_state()` function would block on the sinks.
+because otherwise, `get_state()` would block on the sinks.
 
-A gstbin therefore always performs a zero timeout `get_state()` on its
-elements to discover the `NO_PREROLL` (and ERROR) elements before
+A `GstBin` therefore always performs a zero-timeout `get_state()` on its
+elements to discover the `NO_PREROLL` (and `ERROR`) elements before
 performing a blocking wait.
 
 ## Scheduling
 
 Live sources will not produce data in the `PAUSED` state. They block in
-the `get_range()` function or in the loop function until they go to PLAYING.
+`get_range()` or in the loop function until they go to `PLAYING`.
 
 ## Latency
 
