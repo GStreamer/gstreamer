@@ -12,6 +12,9 @@ cdata.set('VALIDATEPLUGINDIR', '"@0@/@1@/gstreamer-1.0/validate"'.format(get_opt
 cdata.set('GST_DATADIR', '"@0@/@1@"'.format(prefix, get_option('datadir')))
 cdata.set('PACKAGE_NAME', '"GStreamer Validate"')
 cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
+if cc.has_header('unistd.h')
+  cdata.set('HAVE_UNISTD_H', 1)
+endif
 configure_file(output : 'config.h', configuration : cdata)
 
 vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'

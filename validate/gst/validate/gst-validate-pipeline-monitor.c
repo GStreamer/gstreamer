@@ -31,6 +31,12 @@
 
 #define PRINT_POSITION_TIMEOUT 250
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+static gboolean output_is_tty = TRUE;
+
 /**
  * SECTION:gst-validate-pipeline-monitor
  * @short_description: Class that wraps a #GstPipeline for Validate checks
@@ -77,6 +83,11 @@ gst_validate_pipeline_monitor_class_init (GstValidatePipelineMonitorClass *
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->dispose = gst_validate_pipeline_monitor_dispose;
+
+#ifdef HAVE_UNISTD_H
+  output_is_tty = isatty (1);
+#endif
+
 }
 
 static void
@@ -132,8 +143,9 @@ print_position (GstValidateMonitor * monitor)
 
   gst_validate_printf (NULL,
       "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
-      " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
-      rate);
+      " speed: %f />%c", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
+      rate, output_is_tty ? '\r' : '\n');
+
 done:
   gst_object_unref (pipeline);
 
