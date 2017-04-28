@@ -227,6 +227,8 @@ dnl settings for tizonia target
 if test "x$ac_cv_omx_target" = "xtizonia"; then
     PKG_CHECK_MODULES([TIZONIA], [tizilheaders])
     CPPFLAGS="$CPPFLAGS $TIZONIA_CFLAGS"
+    TIZONIA_LIBDIR="`$PKG_CONFIG --variable=libdir tizilheaders`"
+    AC_SUBST(TIZONIA_LIBDIR)
 fi
 
 AC_ARG_WITH([omx-header-path],
@@ -377,6 +379,8 @@ tools/Makefile
 config/Makefile
 config/bellagio/Makefile
 config/rpi/Makefile
+config/tizonia/gstomx.conf
+config/tizonia/Makefile
 config/zynqultrascaleplus/Makefile
 examples/Makefile
 examples/egl/Makefile
