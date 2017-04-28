@@ -1003,7 +1003,7 @@ gst_deinit (void)
   }
   g_thread_pool_set_max_unused_threads (0);
   bin_class = GST_BIN_CLASS (g_type_class_peek (gst_bin_get_type ()));
-  if (bin_class->pool != NULL) {
+  if (bin_class && bin_class->pool != NULL) {
     g_thread_pool_free (bin_class->pool, FALSE, TRUE);
     bin_class->pool = NULL;
   }
