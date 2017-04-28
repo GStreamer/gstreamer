@@ -1233,7 +1233,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * Action signal to retrieve the currently playing video frame in the format
    * specified by @caps.
    * If @caps is %NULL, no conversion will be performed and this function is
-   * equivalent to the #GstPlayBin::frame property.
+   * equivalent to the #GstPlayBin::sample property.
    *
    * Returns: a #GstSample of the current video frame converted to #caps.
    * The caps on the sample will describe the final layout of the buffer data.
