@@ -60,7 +60,7 @@ if not get_option('disable_gst_omx')
 endif
 
 if not get_option('disable_gstreamer_vaapi')
-  if dependency('libva', version: '>= 0.30.4', required : false).found()
+  if dependency('libva', version: ['>= 0.30.4', '< 0.99.0'], required : false).found()
     subprojects += ['gstreamer-vaapi']
   else
     message('WARNING: not building gstreamer-vaapi module, missing libva')
