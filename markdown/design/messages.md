@@ -110,3 +110,7 @@ inform the application about the state of asynchronous operations.
 found one was updated.
 
 **`GST_MESSAGE_STREAM_START`**: Signals the start of a new stream.
+
+**`GST_MESSAGE_NEED_CONTEXT`**: Signals that an element wants a specific context (Since 1.2)
+
+**`GST_MESSAGE_HAVE_CONTEXT`**: Signals that an element created a context (Since 1.2)
