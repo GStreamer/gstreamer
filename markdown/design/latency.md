@@ -11,7 +11,7 @@ of the way a live source works. Consider an audio source, it will start
 capturing the first sample at time 0. If the source pushes buffers with
 44100 samples at a time at 44100Hz, it will have collected the buffer at
 second 1. Since the timestamp of the buffer is 0 and the time of the
-clock is now \>= 1 second, the sink will drop this buffer because it is
+clock is now `>= 1` second, the sink will drop this buffer because it is
 too late. Without any latency compensation in the sink, all buffers will
 be dropped.
 
@@ -51,13 +51,13 @@ An audio capture/playback pipeline.
 * asink audio sink, provides a clock
 
 ```
-.--------------------------.
++--------------------------+
 | pipeline                 |
-| .------.      .-------.  |
+| +------+      +-------+  |
 | | asrc |      | asink |  |
 | |     src -> sink     |  |
-| '------'      '-------'  |
-'--------------------------'
+| +------+      +-------+  |
++--------------------------+
 ```
 
 * *NULL→READY*:
@@ -216,9 +216,9 @@ These elements posted an `ASYNC_START` message without a matching
 `ASYNC_DONE` one.
 
 The pipeline will not change the state of the elements that are still
-doing an ASYNC state change.
+doing an `ASYNC` state change.
 
-When an ASYNC element prerolls, it commits its state to PAUSED and posts
+When an ASYNC element prerolls, it commits its state to `PAUSED` and posts
 an `ASYNC_DONE` message. The pipeline notices this `ASYNC_DONE` message
 and matches it with the `ASYNC_START` message it cached for the
 corresponding element.
@@ -228,13 +228,13 @@ the pipeline proceeds with setting the elements to the final state
 again.
 
 The base time of the element was already set by the pipeline when it
-changed the NO\_PREROLL element to PLAYING. This operation has to be
+changed the `NO_PREROLL` element to `PLAYING`. This operation has to be
 performed in the separate async state change thread (like the one
 currently used for going from `PAUSED→PLAYING` in a non-live pipeline).
 
 ## Query
 
-The pipeline latency is queried with the LATENCY query.
+The pipeline latency is queried with the `LATENCY` query.
 
 * **`live`** `G_TYPE_BOOLEAN` (default FALSE): - if a live element is found upstream
 
@@ -253,7 +253,9 @@ element's own value is added to upstream's value, as this will give
 the overall minimum latency of all elements from the source to the
 current element:
 
-    min_latency = upstream_min_latency + own_min_latency
+```c
+min_latency = upstream_min_latency + own_min_latency
+```
 
 * **`max-latency`** `G_TYPE_UINT64` (default 0, NONE meaning infinity): - the
 maximum latency in the pipeline, meaning the maximum time an element
@@ -278,12 +280,12 @@ latency (i.e. the size of its internal buffer) to upstream's value. If
 upstream's maximum latency, or the elements internal maximum latency was NONE
 (i.e. infinity), it will be set to infinity.
 
-
-    if (upstream_max_latency == NONE || own_max_latency == NONE)
-      max_latency = NONE;
-    else
-      max_latency = upstream_max_latency + own_max_latency
-
+```c
+if (upstream_max_latency == NONE || own_max_latency == NONE)
+  max_latency = NONE;
+else
+  max_latency = upstream_max_latency + own_max_latency;
+```
 
 If the element has multiple sinkpads, the minimum upstream latency is
 the maximum of all live upstream minimum latencies.
@@ -294,7 +296,9 @@ maximum latency and upstream’s. Examples for such elements are audio sinks
 and sources with an internal ringbuffer, leaky queues and in general live
 sources with a limited amount of internal buffers that can be used.
 
-        max_latency = MIN (upstream_max_latency, own_max_latency)
+```c
+max_latency = MIN (upstream_max_latency, own_max_latency)
+```
 
 > Note: many GStreamer base classes allow subclasses to set a
 > minimum and maximum latency and handle the query themselves. These
@@ -335,12 +339,12 @@ Intermediate elements pass the query upstream and add the amount of
 latency they add to the result.
 
 ```
-ex1: sink1: \[20 - 20\] sink2: \[33 - 40\]
+ex1: sink1: [20 - 20] sink2: [33 - 40]
 
     MAX (20, 33) = 33
     MIN (20, 40) = 20 < 33 -> impossible
 
-ex2: sink1: \[20 - 50\] sink2: \[33 - 40\]
+ex2: sink1: [20 - 50] sink2: [33 - 40]
 
     MAX (20, 33) = 33
     MIN (50, 40) = 40 >= 33 -> latency = 33
@@ -388,7 +392,7 @@ The `ASYNC_START` message is kept by the parent bin. When the element
 prerolls, it posts an `ASYNC_DONE` message.
 
 When all `ASYNC_START` messages are matched with an `ASYNC_DONE` message,
-the bin will capture a new base\_time from the clock and will bring all
+the bin will capture a new `base_time` from the clock and will bring all
 the sinks back to `PLAYING` after setting the new base time on them. It’s
 also possible to perform additional latency calculations and adjustments
 before doing this.
@@ -396,20 +400,20 @@ before doing this.
 ## Dynamically adjusting latency
 
 An element that wants to change the latency in the pipeline can do this
-by posting a LATENCY message on the bus. This message instructs the
+by posting a `LATENCY` message on the bus. This message instructs the
 pipeline to:
 
   - query the latency in the pipeline (which might now have changed)
-    with a LATENCY query.
+    with a `LATENCY` query.
 
-  - redistribute a new global latency to all elements with a LATENCY
+  - redistribute a new global latency to all elements with a `LATENCY`
     event.
 
 A use case where the latency in a pipeline can change could be a network
 element that observes an increased inter-packet arrival jitter or
 excessive packet loss and decides to increase its internal buffering
-(and thus the latency). The element must post a LATENCY message and
-perform the additional latency adjustments when it receives the LATENCY
+(and thus the latency). The element must post a `LATENCY` message and
+perform the additional latency adjustments when it receives the `LATENCY`
 event from the downstream peer element.
 
 In a similar way, the latency can be decreased when network conditions
