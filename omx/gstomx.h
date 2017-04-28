@@ -89,6 +89,17 @@ G_BEGIN_DECLS
 } G_STMT_END
 #endif
 
+/* OMX_StateInvalid does not exist in 1.2.0 spec. The initial state is now
+ * StateLoaded. Problem is that gst-omx still needs an initial state different
+ * than StateLoaded. Otherwise gst_omx_component_set_state(StateLoaded) will
+ * early return because it will think it is already in StateLoaded. Also note
+ * that there is no call to gst_omx_component_set_state(StateInvalid) so this
+ * also shows that StateInvalid is used as a helper in gst-omx.
+ */
+#if OMX_VERSION_MINOR == 2
+#define OMX_StateInvalid OMX_StateReserved_0x00000000
+#endif
+
 /* Different hacks that are required to work around
  * bugs in different OpenMAX implementations
  */

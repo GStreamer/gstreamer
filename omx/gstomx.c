@@ -1872,7 +1872,11 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
   if (port->enabled_pending || port->disabled_pending) {
     GST_ERROR_OBJECT (comp->parent, "%s port %d enabled/disabled pending "
         "already", comp->name, port->index);
+#if OMX_VERSION_MINOR == 2
+    err = OMX_ErrorBadParameter;
+#else
     err = OMX_ErrorInvalidState;
+#endif
     goto done;
   }
 
@@ -2322,8 +2326,6 @@ gst_omx_error_to_string (OMX_ERRORTYPE err)
       return "Invalid component name";
     case OMX_ErrorComponentNotFound:
       return "Component not found";
-    case OMX_ErrorInvalidComponent:
-      return "Invalid component";
     case OMX_ErrorBadParameter:
       return "Bad parameter";
     case OMX_ErrorNotImplemented:
@@ -2334,8 +2336,6 @@ gst_omx_error_to_string (OMX_ERRORTYPE err)
       return "Overflow";
     case OMX_ErrorHardware:
       return "Hardware";
-    case OMX_ErrorInvalidState:
-      return "Invalid state";
     case OMX_ErrorStreamCorrupt:
       return "Stream corrupt";
     case OMX_ErrorPortsNotCompatible:
@@ -2354,12 +2354,6 @@ gst_omx_error_to_string (OMX_ERRORTYPE err)
       return "Same state";
     case OMX_ErrorResourcesPreempted:
       return "Resources preempted";
-    case OMX_ErrorPortUnresponsiveDuringAllocation:
-      return "Port unresponsive during allocation";
-    case OMX_ErrorPortUnresponsiveDuringDeallocation:
-      return "Port unresponsive during deallocation";
-    case OMX_ErrorPortUnresponsiveDuringStop:
-      return "Port unresponsive during stop";
     case OMX_ErrorIncorrectStateTransition:
       return "Incorrect state transition";
     case OMX_ErrorIncorrectStateOperation:
@@ -2380,14 +2374,26 @@ gst_omx_error_to_string (OMX_ERRORTYPE err)
       return "Macroblock errors in frame";
     case OMX_ErrorFormatNotDetected:
       return "Format not detected";
-    case OMX_ErrorContentPipeOpenFailed:
-      return "Content pipe open failed";
-    case OMX_ErrorContentPipeCreationFailed:
-      return "Content pipe creation failed";
     case OMX_ErrorSeperateTablesUsed:
       return "Separate tables used";
     case OMX_ErrorTunnelingUnsupported:
       return "Tunneling unsupported";
+#if OMX_VERSION_MINOR == 1
+    case OMX_ErrorInvalidComponent:
+      return "Invalid component";
+    case OMX_ErrorInvalidState:
+      return "Invalid state";
+    case OMX_ErrorPortUnresponsiveDuringAllocation:
+      return "Port unresponsive during allocation";
+    case OMX_ErrorPortUnresponsiveDuringDeallocation:
+      return "Port unresponsive during deallocation";
+    case OMX_ErrorPortUnresponsiveDuringStop:
+      return "Port unresponsive during stop";
+    case OMX_ErrorContentPipeOpenFailed:
+      return "Content pipe open failed";
+    case OMX_ErrorContentPipeCreationFailed:
+      return "Content pipe creation failed";
+#endif
     default:
       if (err_u >= (guint) OMX_ErrorKhronosExtensions
           && err_u < (guint) OMX_ErrorVendorStartUnused) {
