@@ -34,8 +34,8 @@ message carries a `GstTagList` with the tag information.
 **`GST_MESSAGE_BUFFERING`**: An element is buffering data and that could
 potentially take some time. This message is typically emitted by elements that
 perform some sort of network buffering. While the pipeline is buffering it
-should remain in the PAUSED state. When the buffering is finished, it can
-resume PLAYING.
+should remain in the `PAUSED` state. When the buffering is finished, it can
+resume `PLAYING`.
 
 **`GST_MESSAGE_STATE_CHANGED`**: An element changed state in the pipeline.
 The message carries the old, new and pending state of the element.
@@ -77,7 +77,7 @@ segment. This message is not forwarded to applications but is used internally
 to schedule `SEGMENT_DONE` messages.
 
 **`GST_MESSAGE_SEGMENT_DONE`**: An element or bin completed playback of
-a segment. This message is only posted on the bus if a SEGMENT seek is
+a segment. This message is only posted on the bus if a `SEGMENT` seek is
 performed on a pipeline.
 
 **`GST_MESSAGE_DURATION_CHANGED`**: An element posts this message when it has
