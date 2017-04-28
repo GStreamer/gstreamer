@@ -187,16 +187,16 @@ between 000 and 999.
 ### WAV: read/write <http://www.sonicspot.com/guide/wavefiles.html> \* *cue
 ' o 'plst* \* *adtl* \* *labl* \* *note* o *ltxt* o *smpl*
 
-The *cue ' chunk defines a list of markers in the stream with 'cue-id’s.
-The 'smpl* chunk defines a list of regions in the stream with 'cue-id’s
+The `*cue` chunk defines a list of markers in the stream with `cue-id`s.
+The `smpl*` chunk defines a list of regions in the stream with `cue-id`s
 in the same namespace (?).
 
 The various *adtl* chunks: *labl*, *note* and *ltxt* refer to the
 'cue-id’s.
 
-A *plst* chunk defines a sequence of segments (cue-id, length\_samples,
-repeats). The *smpl* chunk defines a list of loops (cue-id, beg, end,
-loop-type, repeats).
+A *plst* chunk defines a sequence of segments (`cue-id`, `length_samples`,
+repeats). The *smpl* chunk defines a list of loops (`cue-id`, `beg`, `end`,
+`loop-type`, `repeats`).
 
 ## Conclusion/Ideas/Future work
 
@@ -204,9 +204,9 @@ Based on the data of chapter 5, a few thoughts and observations that can
 be used to extend and refine our API. These things below are not
 reflecting the current implementation.
 
-All formats have table of \[cue-id, cue-start, (cue-end), (extra tags)\]
-- cue-id is commonly represented as and unsigned int 32bit - cue-end is
-optional - extra tags could be represented as a structure/taglist
+All formats have table of `[cue-id, cue-start, (cue-end), (extra tags)]`
+- `cue-id` is commonly represented as and unsigned int 32bit - `cue-end` is
+optional. Extra tags could be represented as a structure/taglist
 
 Many formats have metadata that references the cue-table. - loops in
 instruments in wav, aifc - edit lists in wav, mp4
