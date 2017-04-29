@@ -45,7 +45,7 @@
     "audio/x-dts, framed = (boolean) true, " \
       "block-size = (int) { 512, 1024, 2048 }; " \
     "audio/mpeg, mpegversion = (int) 1, " \
-      "mpegaudioversion = (int) [ 1, 2 ], parsed = (boolean) true;"
+      "mpegaudioversion = (int) [ 1, 3 ], parsed = (boolean) true;"
 
 
 GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
