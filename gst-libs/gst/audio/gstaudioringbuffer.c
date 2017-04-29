@@ -272,8 +272,8 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
     info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/mpeg") &&
       gst_structure_get_int (structure, "mpegaudioversion", &i) &&
-      (i == 1 || i == 2)) {
-    /* Now we know this is MPEG-1 or MPEG-2 (non AAC) */
+      (i == 1 || i == 2 || i == 3)) {
+    /* Now we know this is MPEG-1, MPEG-2 or MPEG-2.5 (non AAC) */
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
