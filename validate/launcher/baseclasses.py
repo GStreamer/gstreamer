@@ -1027,7 +1027,7 @@ class TestsManager(Loggable):
 
     """ A class responsible for managing tests. """
 
-    name = ""
+    name = "base"
 
     def __init__(self):
 
@@ -1051,7 +1051,7 @@ class TestsManager(Loggable):
         self.blacklisted_tests = []
 
     def init(self):
-        return False
+        return True
 
     def list_tests(self):
         return sorted(list(self.tests), key=lambda x: x.classname)
