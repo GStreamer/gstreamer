@@ -40,7 +40,7 @@
  *
  * ## Example launch lines
  * |[
- * gst-launch-1.0 -v gst-launch-1.0 videotestsrc ! textoverlay text="Room A" valignment=top halignment=left font-desc="Sans, 72" ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! textoverlay text="Room A" valignment=top halignment=left font-desc="Sans, 72" ! autovideosink
  * ]|
  * Here is a simple pipeline that displays a static text in the top left
  * corner of the video picture
