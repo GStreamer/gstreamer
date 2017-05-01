@@ -45,7 +45,7 @@ def get_subprocess_env(options):
 
     sharedlib_reg = re.compile(r'\.so|\.dylib|\.dll')
     typelib_reg = re.compile(r'.*\.typelib$')
-    pluginpath_reg = re.compile(r'lib.*' + os.path.normpath('/gstreamer-1.0/'))
+    pluginpath_reg = re.compile(r'lib.*' + re.escape(os.path.normpath('/gstreamer-1.0/')))
 
     if os.name is 'nt':
         lib_path_envvar = 'PATH'
@@ -85,7 +85,7 @@ def get_subprocess_env(options):
     presets = set()
     encoding_targets = set()
     pkg_dirs = set()
-    if '--installed' in subprocess.check_output([mesonintrospect, '-h']).decode():
+    if '--installed' in subprocess.check_output([sys.executable, mesonintrospect, '-h']).decode():
         installed_s = subprocess.check_output([sys.executable, mesonintrospect,
                                                options.builddir, '--installed'])
         for path, installpath in json.loads(installed_s.decode()).items():
