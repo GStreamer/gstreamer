@@ -35,7 +35,7 @@ main (int argc, char **argv)
   GError *err = NULL;
   GstValidateRunner *runner = NULL;
   GOptionContext *ctx;
-  const gchar *outfolder = NULL;
+  gchar *outfolder = NULL;
   gfloat mssim = 0, lowest = 1, highest = -1;
   gdouble min_avg_similarity = 0.95, min_lowest_similarity = -1.0;
 
