@@ -929,7 +929,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
     GST_DEBUG ("copying metadata %s", g_type_name (info->api));
   }
 
-  if (do_copy) {
+  if (do_copy && info->transform_func) {
     GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
     GST_DEBUG ("copy metadata %s", g_type_name (info->api));
     /* simply copy then */
