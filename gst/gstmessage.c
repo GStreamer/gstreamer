@@ -415,7 +415,7 @@ gst_message_new_error_with_details (GstObject * src, GError * error,
   GstMessage *message;
   GstStructure *structure;
 
-  if (!g_utf8_validate (debug, -1, NULL)) {
+  if (debug && !g_utf8_validate (debug, -1, NULL)) {
     debug = NULL;
     g_warning ("Trying to set debug field of error message, but "
         "string is not valid UTF-8. Please file a bug.");
@@ -507,7 +507,7 @@ gst_message_new_warning_with_details (GstObject * src, GError * error,
   GstMessage *message;
   GstStructure *structure;
 
-  if (!g_utf8_validate (debug, -1, NULL)) {
+  if (debug && !g_utf8_validate (debug, -1, NULL)) {
     debug = NULL;
     g_warning ("Trying to set debug field of warning message, but "
         "string is not valid UTF-8. Please file a bug.");
@@ -597,7 +597,7 @@ gst_message_new_info_with_details (GstObject * src, GError * error,
   GstMessage *message;
   GstStructure *structure;
 
-  if (!g_utf8_validate (debug, -1, NULL)) {
+  if (debug && !g_utf8_validate (debug, -1, NULL)) {
     debug = NULL;
     g_warning ("Trying to set debug field of info message, but "
         "string is not valid UTF-8. Please file a bug.");
