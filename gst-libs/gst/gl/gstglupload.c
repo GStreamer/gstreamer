@@ -1267,8 +1267,13 @@ _directviv_upload_transform_caps (gpointer impl, GstGLContext * context,
     gst_caps_unref (ret);
     ret = tmp;
   } else {
-    ret = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+    GstCaps *tmp;
+    tmp = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, GST_GL_DIRECTVIV_FORMAT));
+    ret =
+        _set_caps_features_with_passthrough (tmp,
+        GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, passthrough);
+    gst_caps_unref (tmp);
   }
 
   gst_caps_features_free (passthrough);
