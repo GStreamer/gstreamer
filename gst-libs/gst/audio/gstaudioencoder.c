@@ -696,7 +696,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
 
   /* we only copy metadata when the subclass implemented a transform_meta
    * function and when it returns %TRUE */
-  if (do_copy) {
+  if (do_copy && info->transform_func) {
     GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
     GST_DEBUG_OBJECT (encoder, "copy metadata %s", g_type_name (info->api));
     /* simply copy then */

@@ -492,9 +492,9 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
   const GstMetaInfo *info = (*meta)->info;
   const gchar *const *tags = gst_meta_api_type_get_tags (info->api);
 
-  if (!tags || (g_strv_length ((gchar **) tags) == 1
-          && gst_meta_api_type_has_tag (info->api,
-              g_quark_from_string (GST_META_TAG_AUDIO_STR)))) {
+  if (info->transform_func && (!tags || (g_strv_length ((gchar **) tags) == 1
+              && gst_meta_api_type_has_tag (info->api,
+                  g_quark_from_string (GST_META_TAG_AUDIO_STR))))) {
     GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
     GST_DEBUG_OBJECT (pay, "copy metadata %s", g_type_name (info->api));
     /* simply copy then */
