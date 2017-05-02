@@ -1971,6 +1971,10 @@ gst_qtdemux_setcaps (GstQTDemux * demux, GstCaps * caps)
         stream = _create_stream ();
         demux->streams[demux->n_streams] = stream;
         demux->n_streams = 1;
+        /* mss has no stsd/stsd entry, use id 0 as default */
+        stream->stsd_entries_length = 1;
+        stream->stsd_sample_description_id = stream->cur_stsd_entry_index = 0;
+        stream->stsd_entries = g_new0 (QtDemuxStreamStsdEntry, 1);
       } else {
         stream = demux->streams[0];
       }
@@ -3442,6 +3446,11 @@ qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
     if (!gst_byte_reader_get_uint32_be (tfhd, &sample_description_index))
       goto invalid_track;
     (*stream)->stsd_sample_description_id = sample_description_index - 1;
+  }
+
+  if (qtdemux->mss_mode) {
+    /* mss has no stsd entry */
+    (*stream)->stsd_sample_description_id = 0;
   }
 
   if (flags & TF_DEFAULT_SAMPLE_DURATION)
