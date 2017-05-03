@@ -1596,10 +1596,10 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
         "No timeout time for action %" GST_PTR_FORMAT, structure);
   }
 
-  if (!(action->name = gst_structure_get_string (structure, "name")))
-    action->name = "";
-
   action->structure = gst_structure_copy (structure);
+
+  if (!(action->name = gst_structure_get_string (action->structure, "name")))
+    action->name = "";
 
   if (!action->priv->main_structure)
     action->priv->main_structure = gst_structure_copy (structure);
