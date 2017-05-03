@@ -445,6 +445,7 @@ struct _GstDecodeChain
   GMutex lock;                  /* Protects this chain and its groups */
 
   GstPad *pad;                  /* srcpad that caused creation of this chain */
+  gulong pad_probe_id;          /* id for the demuxer_source_pad_probe probe */
 
   gboolean drained;             /* TRUE if the all children are drained */
   gboolean demuxer;             /* TRUE if elements->data is a demuxer */
@@ -2086,7 +2087,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         GST_OBJECT_NAME (chain->parent->multiqueue));
 
     /* Set a flush-start/-stop probe on the downstream events */
-    gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_FLUSH,
+    chain->pad_probe_id =
+        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_FLUSH,
         demuxer_source_pad_probe, chain->parent, NULL);
 
     decode_pad_set_target (dpad, NULL);
@@ -4068,6 +4070,11 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
       chain, GST_DEBUG_PAD_NAME (chain->pad), GST_DEBUG_PAD_NAME (drainpad));
 
   CHAIN_MUTEX_LOCK (chain);
+
+  if (chain->pad_probe_id) {
+    gst_pad_remove_probe (chain->pad, chain->pad_probe_id);
+    chain->pad_probe_id = 0;
+  }
 
   /* Definitely can't be in drained chains */
   if (G_UNLIKELY (chain->drained)) {
