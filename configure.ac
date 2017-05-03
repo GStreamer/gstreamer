@@ -1912,9 +1912,9 @@ AC_SUBST(LIBUDEV_LIBS)
 AC_SUBST(LIBUSB_CFLAGS)
 AC_SUBST(LIBUSB_LIBS)
 
-dnl *** NVENC ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_NVENC, true)
-AG_GST_CHECK_FEATURE(NVENC, [NVIDIA Encode API], nvenc, [
+dnl *** CUDA ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CUDA, true)
+AG_GST_CHECK_FEATURE(CUDA, [NVIDIA CUDA API],, [
   AC_ARG_WITH([cuda-prefix],
           AS_HELP_STRING([--with-cuda-prefix],
           [Use the provided prefix for detecting the cuda installation]),
@@ -1958,7 +1958,35 @@ AG_GST_CHECK_FEATURE(NVENC, [NVIDIA Encode API], nvenc, [
   AC_CHECK_LIB(cuda,cuInit,[HAVE_CUDA_LIB="yes"], [
       AC_MSG_WARN([Could not find cuda library])])
   LIBS="$save_LIBS"
+])
 
+dnl *** NVDEC ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_NVDEC, true)
+AG_GST_CHECK_FEATURE(NVDEC, [nvdec], nvdec, [
+  HAVE_NVCUVID_H=no
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CUDA_CFLAGS $save_CPPFLAGS"
+  AC_CHECK_HEADER([nvcuvid.h], [HAVE_NVCUVID_H=yes],
+      AC_MSG_WARN([Could not find nvcuvid.h]))
+  CPPFLAGS=$save_CPPFLAGS
+
+  HAVE_NVCUVID=no
+  save_LIBS="$LIBS"
+  LIBS="$CUDA_LIBS $save_LIBS"
+  AC_CHECK_LIB(nvcuvid, cuvidCtxLock, [HAVE_NVCUVID=yes],
+      AC_MSG_WARN([Could not find library nvcuvid]))
+  LIBS="$save_LIBS"
+
+  if test "x$HAVE_NVCUVID_H" = "xyes" -a "x$HAVE_NVCUVID" = "xyes"; then
+    HAVE_NVDEC=yes
+  else
+    HAVE_NVDEC=no
+  fi
+])
+
+dnl *** NVENC ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_NVENC, true)
+AG_GST_CHECK_FEATURE(NVENC, [NVIDIA Encode API], nvenc, [
   dnl nvEncodeAPI.h header
   HAVE_NVENCODEAPI_H=no
   AC_ARG_VAR(NVENCODE_CFLAGS, [C compiler flags for NvEncodeAPI.h])
@@ -3628,6 +3656,7 @@ sys/dvb/Makefile
 sys/fbdev/Makefile
 sys/kms/Makefile
 sys/msdk/Makefile
+sys/nvdec/Makefile
 sys/nvenc/Makefile
 sys/opensles/Makefile
 sys/shm/Makefile
