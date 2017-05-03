@@ -621,10 +621,10 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
 
   if (SUCCEEDED (hRes) && SUCCEEDED (hRes2) && (dwStatus & DSBSTATUS_PLAYING)) {
     DWORD dwFreeBufferSize = 0;
-    DWORD sleepTime = 0;
+    guint64 sleep_time_ms = 0;
 
   calculate_freesize:
-    /* calculate the free size of the circular buffer */
+    /* Calculate the free space in the circular buffer */
     if (dwCurrentPlayCursor < dsoundsink->current_circular_offset)
       dwFreeBufferSize =
           dsoundsink->buffer_size - (dsoundsink->current_circular_offset -
@@ -633,21 +633,28 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
       dwFreeBufferSize =
           dwCurrentPlayCursor - dsoundsink->current_circular_offset;
 
-    if (length >= dwFreeBufferSize) {
-      sleepTime =
-          ((length -
-              dwFreeBufferSize) * 1000) / (dsoundsink->bytes_per_sample *
-          GST_AUDIO_BASE_SINK (asink)->ringbuffer->spec.info.rate);
-      if (sleepTime > 0) {
-        GST_DEBUG_OBJECT (dsoundsink,
-            "gst_directsound_sink_write: length:%i, FreeBufSiz: %ld, sleepTime: %ld, bps: %i, rate: %i",
-            length, dwFreeBufferSize, sleepTime, dsoundsink->bytes_per_sample,
-            GST_AUDIO_BASE_SINK (asink)->ringbuffer->spec.info.rate);
-        Sleep (sleepTime);
-      }
+    /* Not enough free space, wait for some samples to be played out. We could
+     * write out partial data, but that will result in a tight loop in the
+     * audioringbuffer write thread, and lead to high CPU usage. */
+    if (length > dwFreeBufferSize) {
+      gint rate = GST_AUDIO_BASE_SINK (asink)->ringbuffer->spec.info.rate;
+      /* Wait for a time proportional to the space needed. In reality, the
+       * directsound sink's position does not update frequently enough, so we
+       * will end up waiting for much longer. Note that Sleep() has millisecond
+       * resolution at best. */
+      sleep_time_ms = gst_util_uint64_scale_int ((length - dwFreeBufferSize),
+          1000, dsoundsink->bytes_per_sample * rate);
+      /* Make sure we don't run in a tight loop unnecessarily */
+      sleep_time_ms = MAX (sleep_time_ms, 10);
+      GST_DEBUG_OBJECT (dsoundsink,
+          "length: %u, FreeBufSiz: %ld, sleep_time_ms: %" G_GUINT64_FORMAT
+          ", bps: %i, rate: %i", length, dwFreeBufferSize, sleep_time_ms,
+          dsoundsink->bytes_per_sample, rate);
+      Sleep (sleep_time_ms);
+
+      /* May we send out? */
       hRes = IDirectSoundBuffer_GetCurrentPosition (dsoundsink->pDSBSecondary,
           &dwCurrentPlayCursor, NULL);
-
       hRes2 =
           IDirectSoundBuffer_GetStatus (dsoundsink->pDSBSecondary, &dwStatus);
       if (SUCCEEDED (hRes) && SUCCEEDED (hRes2)
@@ -674,10 +681,10 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
 
   if (dwStatus & DSBSTATUS_BUFFERLOST) {
     hRes = IDirectSoundBuffer_Restore (dsoundsink->pDSBSecondary);      /*need a loop waiting the buffer is restored?? */
-
     dsoundsink->current_circular_offset = 0;
   }
 
+  /* Lock a buffer of length @length for writing */
   hRes = IDirectSoundBuffer_Lock (dsoundsink->pDSBSecondary,
       dsoundsink->current_circular_offset, length, &pLockedBuffer1,
       &dwSizeBuffer1, &pLockedBuffer2, &dwSizeBuffer2, 0L);
