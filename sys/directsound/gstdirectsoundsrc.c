@@ -74,6 +74,7 @@
 #include <windows.h>
 #include <dsound.h>
 #include <mmsystem.h>
+#include <stdio.h>
 
 GST_DEBUG_CATEGORY_STATIC (directsoundsrc_debug);
 #define GST_CAT_DEFAULT directsoundsrc_debug
@@ -530,12 +531,45 @@ gst_directsound_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   if (wfx.wBitsPerSample != 16 && wfx.wBitsPerSample != 8)
     goto dodgy_width;
 
-  /* Set the buffer size to two seconds. 
-     This should never reached. 
-   */
-  dsoundsrc->buffer_size = wfx.nAvgBytesPerSec * 2;
+  GST_INFO_OBJECT (asrc, "latency time: %" G_GUINT64_FORMAT " - buffer time: %"
+      G_GUINT64_FORMAT, spec->latency_time, spec->buffer_time);
 
-  GST_DEBUG_OBJECT (asrc, "Buffer size: %d", dsoundsrc->buffer_size);
+  /* Buffer-time should always be >= 2*latency */
+  if (spec->buffer_time < spec->latency_time * 2) {
+    spec->buffer_time = spec->latency_time * 2;
+    GST_WARNING ("buffer-time was less than 2*latency-time, clamping");
+  }
+
+  /* Set the buffer size from our configured buffer time (in microsecs) */
+  dsoundsrc->buffer_size =
+      gst_util_uint64_scale_int (spec->buffer_time, wfx.nAvgBytesPerSec,
+      GST_SECOND / GST_USECOND);
+
+  GST_INFO_OBJECT (asrc, "Buffer size: %d", dsoundsrc->buffer_size);
+
+  spec->segsize =
+      gst_util_uint64_scale (spec->latency_time, wfx.nAvgBytesPerSec,
+      GST_SECOND / GST_USECOND);
+
+  /* Sanitized segsize */
+  if (spec->segsize < GST_AUDIO_INFO_BPF (&spec->info))
+    spec->segsize = GST_AUDIO_INFO_BPF (&spec->info);
+  else if (spec->segsize % GST_AUDIO_INFO_BPF (&spec->info) != 0)
+    spec->segsize =
+        ((spec->segsize + GST_AUDIO_INFO_BPF (&spec->info) -
+            1) / GST_AUDIO_INFO_BPF (&spec->info)) *
+        GST_AUDIO_INFO_BPF (&spec->info);
+  spec->segtotal = dsoundsrc->buffer_size / spec->segsize;
+  /* The device usually takes time = 1-2 segments to start producing buffers */
+  spec->seglatency = spec->segtotal + 2;
+
+  /* Fetch and set the actual latency time that will be used */
+  dsoundsrc->latency_time =
+      gst_util_uint64_scale (spec->segsize, GST_SECOND / GST_USECOND,
+      GST_AUDIO_INFO_BPF (&spec->info) * GST_AUDIO_INFO_RATE (&spec->info));
+
+  GST_INFO_OBJECT (asrc, "actual latency time: %" G_GUINT64_FORMAT,
+      spec->latency_time);
 
   /* Init secondary buffer desciption */
   memset (&descSecondary, 0, sizeof (DSCBUFFERDESC));
@@ -555,33 +589,7 @@ gst_directsound_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 
   dsoundsrc->bytes_per_sample = GST_AUDIO_INFO_BPF (&spec->info);
 
-  GST_DEBUG ("latency time: %" G_GUINT64_FORMAT " - buffer time: %"
-      G_GUINT64_FORMAT, spec->latency_time, spec->buffer_time);
-
-  /* Buffer-time should be always more than 2*latency */
-  if (spec->buffer_time < spec->latency_time * 2) {
-    spec->buffer_time = spec->latency_time * 2;
-    GST_WARNING ("buffer-time was less than latency");
-  }
-
-  /* Save the times */
-  dsoundsrc->buffer_time = spec->buffer_time;
-  dsoundsrc->latency_time = spec->latency_time;
-
-  dsoundsrc->latency_size = (gint) wfx.nAvgBytesPerSec *
-      dsoundsrc->latency_time / 1000000.0;
-
-  spec->segsize = (guint) (((double) spec->buffer_time / 1000000.0) *
-      wfx.nAvgBytesPerSec);
-
-  /* just in case */
-  if (spec->segsize < 1)
-    spec->segsize = 1;
-
-  spec->segtotal = GST_AUDIO_INFO_BPF (&spec->info) * 8 *
-      (wfx.nAvgBytesPerSec / spec->segsize);
-
-  GST_DEBUG_OBJECT (asrc,
+  GST_INFO_OBJECT (asrc,
       "bytes/sec: %lu, buffer size: %d, segsize: %d, segtotal: %d",
       wfx.nAvgBytesPerSec, dsoundsrc->buffer_size, spec->segsize,
       spec->segtotal);
@@ -589,7 +597,7 @@ gst_directsound_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   /* Not read anything yet */
   dsoundsrc->current_circular_offset = 0;
 
-  GST_DEBUG_OBJECT (asrc, "channels: %d, rate: %d, bytes_per_sample: %d"
+  GST_INFO_OBJECT (asrc, "channels: %d, rate: %d, bytes_per_sample: %d"
       " WAVEFORMATEX.nSamplesPerSec: %ld, WAVEFORMATEX.wBitsPerSample: %d,"
       " WAVEFORMATEX.nBlockAlign: %d, WAVEFORMATEX.nAvgBytesPerSec: %ld",
       GST_AUDIO_INFO_CHANNELS (&spec->info), GST_AUDIO_INFO_RATE (&spec->info),
@@ -639,6 +647,8 @@ gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length,
     GstClockTime * timestamp)
 {
   GstDirectSoundSrc *dsoundsrc;
+  guint64 sleep_time_ms;
+  guint64 slept_time_ms = 0;
 
   HRESULT hRes;                 /* Result for windows functions */
   DWORD dwCurrentCaptureCursor = 0;
@@ -670,13 +680,26 @@ gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length,
   if (!(dwStatus & DSCBSTATUS_CAPTURING)) {
     hRes = IDirectSoundCaptureBuffer_Start (dsoundsrc->pDSBSecondary,
         DSCBSTART_LOOPING);
-    //    Sleep (dsoundsrc->latency_time/1000);
-    GST_DEBUG_OBJECT (asrc, "capture started");
+    GST_INFO_OBJECT (asrc, "capture started");
   }
-  //  calculate_buffersize:
-  while (length > dwBufferSize) {
-    Sleep (dsoundsrc->latency_time / 1000);
 
+  /* Loop till the source has produced bytes equal to or greater than @length.
+  *
+   * DirectSound has a notification-based API that uses Windows CreateEvent()
+   * + WaitForSingleObject(), but it is completely useless for live streams.
+   *
+   *  1. You must schedule all events before starting capture
+   *  2. The events are all fired exactly once
+   *  3. You cannot schedule new events while a capture is running
+   *  4. You cannot stop/schedule/start either
+   *
+   * This means you cannot use the API while doing live looped capture and we
+   * must resort to this.
+   *
+   * However, this is almost as efficient as event-based capture since it's ok
+   * to consistently overwait by a fixed amount; the extra bytes will just end
+   * up being used in the next call, and the extra latency will be constant. */
+  while (TRUE) {
     hRes =
         IDirectSoundCaptureBuffer_GetCurrentPosition (dsoundsrc->pDSBSecondary,
         &dwCurrentCaptureCursor, NULL);
@@ -686,7 +709,8 @@ gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length,
       return -1;
     }
 
-    /* calculate the buffer */
+    /* calculate the size of the buffer that's been captured while accounting
+     * for wrap-arounds */
     if (dwCurrentCaptureCursor < dsoundsrc->current_circular_offset) {
       dwBufferSize = dsoundsrc->buffer_size -
           (dsoundsrc->current_circular_offset - dwCurrentCaptureCursor);
@@ -694,13 +718,37 @@ gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length,
       dwBufferSize =
           dwCurrentCaptureCursor - dsoundsrc->current_circular_offset;
     }
-  }                             // while (...
 
-  /* Lock the buffer */
+    if (dwBufferSize >= length) {
+      /* Yay, we got all the data we need */
+      break;
+    } else {
+      GST_DEBUG_OBJECT (asrc, "not enough data, got %lu (want at least %u)",
+          dwBufferSize, length);
+      /* If we didn't get enough data, sleep for a proportionate time */
+      sleep_time_ms = gst_util_uint64_scale (dsoundsrc->latency_time,
+          length - dwBufferSize, length * 1000);
+      /* Make sure we don't run in a tight loop unnecessarily */
+      sleep_time_ms = MAX (sleep_time_ms, 10);
+      GST_DEBUG_OBJECT (asrc, "sleeping for %" G_GUINT64_FORMAT "ms",
+          sleep_time_ms);
+      Sleep (sleep_time_ms);
+      slept_time_ms += sleep_time_ms;
+    }
+  }
+
+  GST_DEBUG_OBJECT (asrc, "Got enough data: %lu bytes (wanted at least %u), "
+      "slept for %" G_GUINT64_FORMAT "ms", dwBufferSize, length, slept_time_ms);
+
+  /* Lock the buffer and read only the first @length bytes. Keep the rest in
+   * the capture buffer for the next read. */
   hRes = IDirectSoundCaptureBuffer_Lock (dsoundsrc->pDSBSecondary,
       dsoundsrc->current_circular_offset,
       length,
       &pLockedBuffer1, &dwSizeBuffer1, &pLockedBuffer2, &dwSizeBuffer2, 0L);
+
+  /* NOTE: We now assume that dwSizeBuffer1 + dwSizeBuffer2 == length since the
+   * API is supposed to guarantee that */
 
   /* Copy buffer data to another buffer */
   if (hRes == DS_OK) {
@@ -720,7 +768,7 @@ gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length,
 
   GST_DSOUND_UNLOCK (dsoundsrc);
 
-  /* return length (readed data size in bytes) */
+  /* We always read exactly @length data */
   return length;
 }
 
@@ -733,7 +781,7 @@ gst_directsound_src_delay (GstAudioSrc * asrc)
   DWORD dwBytesInQueue = 0;
   gint nNbSamplesInQueue = 0;
 
-  GST_DEBUG_OBJECT (asrc, "Delay");
+  GST_INFO_OBJECT (asrc, "Delay");
 
   dsoundsrc = GST_DIRECTSOUND_SRC (asrc);
 
@@ -754,6 +802,8 @@ gst_directsound_src_delay (GstAudioSrc * asrc)
 
     nNbSamplesInQueue = dwBytesInQueue / dsoundsrc->bytes_per_sample;
   }
+
+  GST_INFO_OBJECT (asrc, "Delay is %d samples", nNbSamplesInQueue);
 
   return nNbSamplesInQueue;
 }
@@ -818,7 +868,7 @@ gst_directsound_src_mixer_find (GstDirectSoundSrc * dsoundsrc,
     if (mmres != MMSYSERR_NOERROR)
       continue;
 
-    mmres = mixerGetDevCaps ((UINT_PTR)dsoundsrc->mixer,
+    mmres = mixerGetDevCaps ((UINT_PTR) dsoundsrc->mixer,
         mixer_caps, sizeof (MIXERCAPS));
 
     if (mmres != MMSYSERR_NOERROR) {
