@@ -172,6 +172,9 @@ enum _GstRtspSrcNtpTimeSource
   NTP_TIME_SOURCE_CLOCK_TIME
 };
 
+#define DEBUG_RTSP(__self,msg) if (__self->debug) gst_rtsp_message_dump (msg)
+#define DEBUG_SDP(__self,msg) if (__self->debug) gst_sdp_message_dump (msg)
+
 #define GST_TYPE_RTSP_SRC_NTP_TIME_SOURCE (gst_rtsp_src_ntp_time_source_get_type())
 static GType
 gst_rtsp_src_ntp_time_source_get_type (void)
@@ -4429,8 +4432,7 @@ gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
 
   GST_DEBUG_OBJECT (src, "got server request message");
 
-  if (src->debug)
-    gst_rtsp_message_dump (request);
+  DEBUG_RTSP (src, request);
 
   res = gst_rtsp_ext_list_receive_request (src->extensions, request);
 
@@ -4447,8 +4449,7 @@ gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
     g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_HANDLE_REQUEST],
         0, request, &response);
 
-    if (src->debug)
-      gst_rtsp_message_dump (&response);
+    DEBUG_RTSP (src, &response);
 
     res = gst_rtspsrc_connection_send (src, conninfo, &response, NULL);
     if (res < 0)
@@ -4818,8 +4819,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
       case GST_RTSP_MESSAGE_RESPONSE:
         /* we ignore response messages */
         GST_DEBUG_OBJECT (src, "ignoring response message");
-        if (src->debug)
-          gst_rtsp_message_dump (&message);
+        DEBUG_RTSP (src, &message);
         break;
       case GST_RTSP_MESSAGE_DATA:
         GST_DEBUG_OBJECT (src, "got data message");
@@ -4949,8 +4949,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
       case GST_RTSP_MESSAGE_RESPONSE:
         /* we ignore response and data messages */
         GST_DEBUG_OBJECT (src, "ignoring response message");
-        if (src->debug)
-          gst_rtsp_message_dump (&message);
+        DEBUG_RTSP (src, &message);
         if (message.type_data.response.code == GST_RTSP_STS_UNAUTHORIZED) {
           GST_DEBUG_OBJECT (src, "but is Unauthorized response ...");
           if (gst_rtspsrc_setup_auth (src, &message) && !(retry++)) {
@@ -5497,8 +5496,7 @@ again:
 
   GST_DEBUG_OBJECT (src, "sending message");
 
-  if (src->debug)
-    gst_rtsp_message_dump (request);
+  DEBUG_RTSP (src, request);
 
   res = gst_rtspsrc_connection_send (src, conninfo, request, src->ptcp_timeout);
   if (res < 0)
@@ -5513,8 +5511,7 @@ next:
   if (res < 0)
     goto receive_error;
 
-  if (src->debug)
-    gst_rtsp_message_dump (response);
+  DEBUG_RTSP (src, response);
 
   switch (response->type) {
     case GST_RTSP_MESSAGE_REQUEST:
@@ -6667,8 +6664,7 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
   else
     src->props = gst_structure_new_empty ("RTSPProperties");
 
-  if (src->debug)
-    gst_sdp_message_dump (sdp);
+  DEBUG_SDP (src, sdp);
 
   gst_rtsp_ext_list_parse_sdp (src->extensions, sdp, src->props);
 
