@@ -502,7 +502,7 @@ gst_shout2send_start (GstBaseSink * basesink)
     goto set_failed;
 
   cur_prop = "username";
-  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, "source");
+  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, sink->username);
   if (shout_set_user (sink->conn, sink->username) != SHOUTERR_SUCCESS)
     goto set_failed;
 
