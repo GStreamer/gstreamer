@@ -33,7 +33,7 @@ if hls_crypto_dep.found()
     include_directories : [configinc],
     dependencies : [gstpbutils_dep, gsttag_dep, gstvideo_dep,
 		    gstadaptivedemux_dep, gsturidownloader_dep,
-		    hls_crypto_dep],
+		    hls_crypto_dep, libm],
     install : true,
     install_dir : plugins_install_dir,
   )
