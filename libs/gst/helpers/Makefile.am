@@ -30,10 +30,3 @@ if HAVE_PTP_HELPER_CAPABILITIES
 endif
 endif
 
-# clean out the old one to make sure everything is udpated correctly
-# remove again after release
-CLEANFILES = plugin-scanner
-
-if ENABLE_BASH_COMPLETION
-CLEANFILES += gst-completion-helper-@GST_API_VERSION@
-endif
