@@ -1,20 +1,16 @@
 
-Release notes for GStreamer 1.11.91
+Release notes for GStreamer 1.12.0
+
+The GStreamer team is pleased to announce the first release in the stable 1.12
+release series. The 1.12 release series is adding new features on top of the
+1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable
+1.x release series of the GStreamer multimedia framework.
 
 
-The GStreamer team is pleased to announce the second release candidate of the
-stable 1.12 release series. The 1.12 release series is adding new features on
-top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
-
-
-Full release notes will be provided with the 1.12.0 release, highlighting all
-the new features, bugfixes, performance optimizations and other important
-changes.
+Full release notes can be found here
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
-
 
 
 This module, gstreamer, only contains core functionality.
@@ -40,12 +36,7 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 780757 : tests: fix message leak in seek test
-      * 781145 : friulian translation
-      * 781438 : value: NULL string serialization/deserialization
-      * 781484 : basetransform: typo fix: remove unbalanced closing parenthesis in debug log
-      * 781585 : meson: gst-stats isn't installed
-      * 780903 : Fails to build with -Werror against glib master, use of deprecated g_object_newv()
+      * 782050 : basetransform/adapter: Check if meta transform_func is NULL before using it
 
 ==== Download ====
 
@@ -82,12 +73,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Koop Mast
-      * Olivier Crête
-      * Rico Tzschichholz
+      * Frédéric Dalleau
+      * Nicola Murino
       * Sebastian Dröge
-      * Thibault Saunier
-      * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Yasushi SHOJI
+      * Víctor Manuel Jáquez Leal
  
