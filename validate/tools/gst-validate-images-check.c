@@ -66,7 +66,7 @@ main (int argc, char **argv)
   ctx = g_option_context_new ("/reference/file/path /compared/file/path");
 
   g_option_context_set_summary (ctx,
-      "The gst-validate-images-check calculates SSIM (Structural SIMilarity) "
+      "The gst-validate-images-check calculates SSIM (Structural SIMilarity)"
       " index for the images. And according to min-lowest-similarity and"
       " min-avg-similarity, it will consider the images similar enough"
       " or report critical issues in the GstValidate reporting system");
