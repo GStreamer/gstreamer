@@ -1,15 +1,13 @@
 
-Release notes for GStreamer Base Plugins 1.11.91
+Release notes for GStreamer Base Plugins 1.12.0
 
-The GStreamer team is pleased to announce the second release candidate of the
-stable 1.12 release series. The 1.12 release series is adding new features on
-top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release in the stable 1.12
+release series. The 1.12 release series is adding new features on top of the
+1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable
+1.x release series of the GStreamer multimedia framework.
 
 
-Full release notes will be provided with the 1.12.0 release, highlighting all
-the new features, bugfixes, performance optimizations and other important
-changes.
+Full release notes can be found here
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -59,14 +57,6 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Bugs fixed in this release
-     
-      * 781147 : ogv: Seeking OGV over HTTP often hangs
-      * 781149 : volume: GDouble " volume " property stored secretly as a gfloat
-      * 781152 : gst-device-monitor: print the gst-launch line for a device
-      * 781168 : meson: Not installing gstappsink.h
-      * 781490 : GstVideoAlignment: fix typo in doc
-
 ==== Download ====
 
 You can find source releases of gst-plugins-base in the download
@@ -102,11 +92,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Claudio Saavedra
-      * Guillaume Desmottes
-      * Olivier Crête
-      * Rico Tzschichholz
       * Sebastian Dröge
       * Tim-Philipp Müller
-      * Vivia Nikolaidou
+      * Vincent Penquerc'h
+      * Vitor Massaru Iha
  

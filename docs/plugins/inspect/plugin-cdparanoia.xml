@@ -3,7 +3,7 @@
   <description>Read audio from CD in paranoid mode</description>
   <filename>../../ext/cdparanoia/.libs/libgstcdparanoia.so</filename>
   <basename>libgstcdparanoia.so</basename>
-  <version>1.11.91</version>
+  <version>1.12.0</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
