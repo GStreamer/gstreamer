@@ -8,34 +8,44 @@ decklink_sources = [
 
 build_decklink = false
 decklink_ldflags = []
+decklink_libs = []
 
-libdl = cc.find_library('dl', required: false)
-have_pthread_h = cdata.has('HAVE_PTHREAD_H')
-
-if libdl.found() and have_pthread_h
-  if host_machine.system() == 'linux'
-    decklink_sources += ['linux/DeckLinkAPIDispatch.cpp']
+if host_machine.system() == 'windows'
+  decklink_sources += ['win/DeckLinkAPIDispatch.cpp', 'win/DeckLinkAPI_i.c']
+  # Only used by MSVC. On MinGW, this is all inlined.
+  # FIXME: Use commsuppwd.lib for debug builds?
+  comutil_dep = cxx.find_library('comsuppw', required : false)
+  if comutil_dep.found()
     build_decklink = true
-  elif host_machine.system() == 'darwin'
-    decklink_sources += ['osx/DeckLinkAPIDispatch.cpp']
-    decklink_ldflags = ['-Wl,-framework,CoreFoundation']
-    build_decklink = true
-  elif host_machine.system() == 'windows'
-    decklink_sources += ['win/DeckLinkAPIDispatch.cpp', 'win/DeckLinkAPI_i.c']
-    build_decklink = true
-  else
-    message('Not building decklink plugin for system ' + host_machine.system())
+    decklink_libs = [comutil_dep]
+  endif
+else
+  libdl = cc.find_library('dl', required: false)
+  have_pthread_h = cdata.has('HAVE_PTHREAD_H')
+  if libdl.found() and have_pthread_h
+    decklink_libs = [libm, libdl, dependency('threads')]
+    if host_machine.system() == 'linux'
+      decklink_sources += ['linux/DeckLinkAPIDispatch.cpp']
+      build_decklink = true
+    elif host_machine.system() == 'darwin'
+      decklink_sources += ['osx/DeckLinkAPIDispatch.cpp']
+      decklink_ldflags = ['-Wl,-framework,CoreFoundation']
+      build_decklink = true
+    endif
   endif
 endif
 
 if build_decklink
+  message('Building decklink plugin')
   decklink = library('gstdecklink',
     decklink_sources,
     cpp_args : gst_plugins_bad_args + [ '-DGST_USE_UNSTABLE_API' ],
     link_args : decklink_ldflags + noseh_link_args,
     include_directories : [configinc],
-    dependencies : [gstvideo_dep, gstaudio_dep, gstbase_dep, gst_dep, libm, libdl, dependency('threads')],
+    dependencies : [gstvideo_dep, gstaudio_dep, gstbase_dep, gst_dep] + decklink_libs,
     install : true,
     install_dir : plugins_install_dir,
   )
+else
+  message('Not building decklink plugin for "@0@'.format(host_machine.system()))
 endif
