@@ -1,9 +1,21 @@
-=== release 1.11.91 ===
+=== release 1.12.0 ===
 
-2017-04-27  Sebastian Dröge <slomo@coaxion.net>
+2017-05-04  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.91
+	  releasing 1.12.0
+
+=== release 1.11.91 ===
+
+2017-04-27 17:37:36 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.11.91
 
 === release 1.11.90 ===
 
