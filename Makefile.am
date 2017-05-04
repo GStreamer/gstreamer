@@ -4,7 +4,7 @@ DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
 aclocaldir = $(datadir)/aclocal
-aclocal_DATA = gst-element-check-@GST_API_VERSION@.m4
+aclocal_DATA = gst-element-check-1.0.m4
 
 SUBDIRS = pkgconfig \
 	gst libs plugins tests \
@@ -31,7 +31,7 @@ DIST_SUBDIRS = pkgconfig \
 include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
-	gst-element-check.m4 \
+	gst-element-check-1.0.m4 \
 	configure.ac autogen.sh depcomp \
 	MAINTAINERS ABOUT-NLS RELEASE gstreamer.doap \
 	scripts/gst-uninstalled \
@@ -41,8 +41,6 @@ EXTRA_DIST = \
 	meson_options.txt config.h.meson  \
 	gst/parse/gen_lex.py.in gst/parse/gen_grammar.py.in \
 	$(win32)
-
-CLEANFILES = gst-element-check-@GST_API_VERSION@.m4
 
 DISTCLEANFILES = _stdint.h
 
@@ -152,9 +150,6 @@ endif
 
 check: $(CHECK_EXPORTS) check-enum-gettypes
 
-gst-element-check-@GST_API_VERSION@.m4: gst-element-check.m4
-	$(AM_V_GEN)cp $(srcdir)/gst-element-check.m4 gst-element-check-@GST_API_VERSION@.m4
-
 # cruft: plugins that have been merged or moved or renamed
 
 CRUFT_FILES = \
@@ -208,4 +203,4 @@ CRUFT_DIRS = \
 
 include $(top_srcdir)/common/cruft.mak
 
-all-local: gst-element-check-@GST_API_VERSION@.m4 check-cruft
+all-local: check-cruft
