@@ -1,9 +1,50 @@
-=== release 1.11.91 ===
+=== release 1.12.0 ===
 
-2017-04-27  Sebastian Dröge <slomo@coaxion.net>
+2017-05-04  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.91
+	  releasing 1.12.0
+
+2017-05-04 11:49:33 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  Revert "vaapidecodebin: fix element's classification"
+	  This reverts commit 8cbe03599a4f27c2001380e2ec150c4f4267a9cf.
+
+2017-04-27 22:55:27 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* configure.ac:
+	* meson.build:
+	  build: Require libva < 0.99.0
+	  libva >= 0.99.0 is not currently supported by gstreamer-vaapi, so
+	  fail to configure instead of failing late in the build.
+	  This libva is bundled in msdk[1] and it is ahead in time with
+	  respect the official and open source libva[2]. GStreamer-VAAPI
+	  only supports the latter for now.
+	  1. https://software.intel.com/en-us/media-sdk/download
+	  2. https://github.com/01org/libva/
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781866
+
+2017-05-02 14:08:54 +0200  Victor Toso <me@victortoso.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  vaapidecodebin: fix element's classification
+	  This bin should have similar classification as decodebin which is
+	  "Generic/Bin/Decoder" otherwise it will appear wrongly as video
+	  decoder.
+	  Signed-off-by: Victor Toso <victortoso@redhat.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782063
+
+=== release 1.11.91 ===
+
+2017-04-27 17:49:52 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.11.91
 
 2017-04-27 13:08:56 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
