@@ -38,7 +38,7 @@
 
 #define bool BOOL
 
-#define COMSTR_T BSTR*
+#define COMSTR_T BSTR
 #define FREE_COM_STRING(s) delete[] s;
 #define CONVERT_COM_STRING(s) BSTR _s = (BSTR)s; s = _com_util::ConvertBSTRToString(_s); ::SysFreeString(_s);
 #else
