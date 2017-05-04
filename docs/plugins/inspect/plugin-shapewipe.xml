@@ -3,7 +3,7 @@
   <description>Shape Wipe transition filter</description>
   <filename>../../gst/shapewipe/.libs/libgstshapewipe.so</filename>
   <basename>libgstshapewipe.so</basename>
-  <version>1.11.91</version>
+  <version>1.12.0</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>

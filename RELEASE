@@ -1,15 +1,13 @@
 
-Release notes for GStreamer Good Plugins 1.11.91
+Release notes for GStreamer Good Plugins 1.12.0
 
-The GStreamer team is pleased to announce the second release candidate of the
-stable 1.12 release series. The 1.12 release series is adding new features on
-top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release in the stable 1.12
+release series. The 1.12 release series is adding new features on top of the
+1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable
+1.x release series of the GStreamer multimedia framework.
 
 
-Full release notes will be provided with the 1.12.0 release, highlighting all
-the new features, bugfixes, performance optimizations and other important
-changes.
+Full release notes can be found here
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -58,19 +56,7 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 767498 : splitmuxsink: Not handling FLUSH events correctly
-      * 778337 : qtdemux: sample_description_index not evaluated when parsing the stsd-box
-      * 778830 : v4l2dec: Fix race when going from PAUSED to READY
-      * 779106 : flvdemux: remove duplicated segment initialization
-      * 780904 : rtprtxqueue: implement handling of the max-size-time property
-      * 781008 : scaletempo: Fix GAP events handle issue when set rate
-      * 781025 : tests: fix leak in splitmux test
-      * 781119 : v4l2: No timestamp set when importing dma buffer on V4L2_OUTPUT interface
-      * 781266 : qtdemux: Properly reset demuxer when all streams are EOS
-      * 781270 : qtdemux, dash: segmentation fault on representation change
-      * 781304 : rtspsrc: Use GST_ELEMENT_ERROR_WITH_DETAILS
-      * 781319 : qtdemux: Reset adapter in more discontinuity cases
-      * 781362 : qtdemux: Fix leak on QtDemuxStreamStsdEntry
+      * 782042 : qtdemux: Fix crash on mss stream caused by invalid stsd entry access
 
 ==== Download ====
 
@@ -107,18 +93,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * ChangBok Chae
-      * Edward Hervey
-      * George Kiagiadakis
-      * Jürgen Sachs
-      * Lyon Wang
-      * Nirbheek Chauhan
       * Sebastian Dröge
       * Seungha Yang
-      * Thiago Santos
-      * Thibault Saunier
-      * Tim-Philipp Müller
-      * Todor Tomov
-      * Vincent Penquerc'h
-      * Xavier Claessens
  

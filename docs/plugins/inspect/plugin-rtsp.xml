@@ -3,7 +3,7 @@
   <description>transfer data via RTSP</description>
   <filename>../../gst/rtsp/.libs/libgstrtsp.so</filename>
   <basename>libgstrtsp.so</basename>
-  <version>1.11.91</version>
+  <version>1.12.0</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
