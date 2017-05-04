@@ -3,7 +3,7 @@
   <description>Decodes ATSC A/52 encoded audio streams</description>
   <filename>../../ext/a52dec/.libs/libgsta52dec.so</filename>
   <basename>libgsta52dec.so</basename>
-  <version>1.11.91</version>
+  <version>1.12.0</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
