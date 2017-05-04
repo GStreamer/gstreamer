@@ -1,7 +1,7 @@
-project('All GStreamer modules', 'c', version : '1.11.1.1', meson_version : '>= 0.36')
+project('All GStreamer modules', 'c', version : '1.12.0', meson_version : '>= 0.36')
 
 gst_version = '>= @0@'.format(meson.project_version())
-gst_branch = 'master'
+gst_branch = '1.12.0'
 
 glib_req = '>= 2.40.0'
 
