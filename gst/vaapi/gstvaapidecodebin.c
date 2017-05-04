@@ -251,7 +251,7 @@ gst_vaapi_decode_bin_class_init (GstVaapiDecodeBinClass * klass)
   element_class->change_state = gst_vaapi_decode_bin_change_state;
   gst_element_class_set_static_metadata (element_class,
       "VA-API Decode Bin",
-      "Generic/Bin/Decoder",
+      "Codec/Decoder/Video",
       GST_PLUGIN_DESC,
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, "
       "Victor Jaquez <victorx.jaquez@intel.com>");
