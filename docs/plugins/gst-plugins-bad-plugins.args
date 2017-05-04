@@ -72246,7 +72246,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Echo Cancel</NICK>
-<BLURB>Enable or disable echo canceller, note that it will be disabled if no webrtcechoprobe has been found.</BLURB>
+<BLURB>Enable or disable echo canceller.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 

@@ -1,15 +1,13 @@
 
-Release notes for GStreamer Bad Plugins 1.11.91
+Release notes for GStreamer Bad Plugins 1.12.0
 
-The GStreamer team is pleased to announce the second release candidate of the
-stable 1.12 release series. The 1.12 release series is adding new features on
-top of the 1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and
-ABI-stable 1.x release series of the GStreamer multimedia framework.
+The GStreamer team is pleased to announce the first release in the stable 1.12
+release series. The 1.12 release series is adding new features on top of the
+1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable
+1.x release series of the GStreamer multimedia framework.
 
 
-Full release notes will be provided with the 1.12.0 release, highlighting all
-the new features, bugfixes, performance optimizations and other important
-changes.
+Full release notes can be found here
 
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
@@ -63,34 +61,12 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 729371 : dash/qtdemux: Reported video size does not correspond to what avdec_h264 states
-      * 764011 : faceoverlay: port to Gstreamer 1.x
-      * 778237 : dash, mpdparser: problem with German DVB-T2 DASH  preview streams
-      * 780190 : amcvideodec: Does not handle input without PTS correctly
-      * 780397 : dashdemux: Fix SEEK of multi-period On-Demand profile
-      * 780402 : ttml: Correctly render blocks containing text of multiple sizes
-      * 780494 : adaptivedemux: Retry downloading a fragment immediately if any in live streaming
-      * 780569 : mpdparser: Report error if Representation is invalid
-      * 780570 : mpdparser: Allow inherit Segment{Base,Template} from Period
-      * 780897 : ttml: Subtitle presentation stops after seek
-      * 781017 : gstaggregator: fix event use after free
-      * 781018 : gldisplay: fix list leak
-      * 781019 : glcontext: fix display leak
-      * 781022 : tests: fix leak in videoframe-audiolevel test
-      * 781023 : mxfmux: fix index entry leak
-      * 781024 : mpegts: fix invalid memory access in language descriptor
-      * 781027 : ttmlparse: Incorrectly filters untimed whitespace from content nodes
-      * 781037 : videoaggregator: Do not mix the same buffer twice when EOS.
-      * 781043 : gl: gstglconfig.h differs in meson and autotools builds
-      * 781156 : meson: error in file sys/decklink/meson.build on macOS
-      * 781170 : glimagesink: displays no window on macOS
-      * 781179 : meson: missing gstglrenderbuffer.h installation
-      * 781188 : kmssink expects planes to support scaling
-      * 781233 : dashdemux: Rewrite ISOBMFF & SIDX handling
-      * 781267 : adaptivedemux: Fix segment creation/adaptation some more
-      * 781320 : adaptivedemux: Don't hold locks when pushing FLUSH_START
-      * 781539 : ttmlparse: Update tab handling to match clarified intention of TTML spec
-      * 781725 : ttml: Max number of GstMemorys in GstBuffer can be exceeded in live subtitling scenario
+      * 773681 : directsoundsink: High cpu usage on windows x86
+      * 764947 : autodetect: bring element down to NULL on a successful choice
+      * 780976 : webrtcdsp: do not fail to start if webrtcechoprobe is not found
+      * 782046 : glupload: passthrough composition caps features in directviv upload
+      * 782119 : meson: ext/hls/libgsthls.so needs -lm
+      * 782078 : qtkitvideosrc: Removed in order to avoid obsolete APIs
 
 ==== Download ====
 
@@ -127,23 +103,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Chris Bass
-      * Claudio Saavedra
-      * Edward Hervey
-      * Fabian Orccon
-      * Jan Schmidt
-      * Jürgen Sachs
-      * Mathieu Duponchelle
-      * Matthew Waters
-      * Nicolas Dufresne
-      * Ole André Vadla Ravnås
-      * Philipp Zabel
-      * Scott D Phillips
+      * George Kiagiadakis
+      * Haihua Hu
+      * Josep Torra
       * Sebastian Dröge
-      * Seungha Yang
-      * Thiago Santos
-      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * shakin chou
+      * Ting-Wei Lan
  

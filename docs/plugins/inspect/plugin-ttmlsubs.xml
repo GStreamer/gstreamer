@@ -3,7 +3,7 @@
   <description>TTML subtitle handling</description>
   <filename>../../ext/ttml/.libs/libgstttmlsubs.so</filename>
   <basename>libgstttmlsubs.so</basename>
-  <version>1.11.91</version>
+  <version>1.12.0</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>gst-ttml</package>
