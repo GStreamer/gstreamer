@@ -39,13 +39,19 @@
 #define bool BOOL
 
 #define COMSTR_T BSTR
-#define FREE_COM_STRING(s) delete[] s;
-#define CONVERT_COM_STRING(s) BSTR _s = (BSTR)s; s = _com_util::ConvertBSTRToString(_s); ::SysFreeString(_s);
+/* MinGW does not have comsuppw.lib, so no _com_util::ConvertBSTRToString */
+# ifdef __MINGW32__
+#  define CONVERT_COM_STRING(s) BSTR _s = (BSTR)s; s = (char*) malloc(100); wcstombs(s, _s, 100); ::SysFreeString(_s);
+#  define FREE_COM_STRING(s) free(s);
+# else
+#  define CONVERT_COM_STRING(s) BSTR _s = (BSTR)s; s = _com_util::ConvertBSTRToString(_s); ::SysFreeString(_s);
+#  define FREE_COM_STRING(s) delete[] s;
+# endif
 #else
 #define COMSTR_T const char*
-#define FREE_COM_STRING(s)
 #define CONVERT_COM_STRING(s)
-#endif /* _MSC_VER */
+#define FREE_COM_STRING(s)
+#endif /* G_OS_WIN32 */
 
 typedef enum {
   GST_DECKLINK_MODE_AUTO,

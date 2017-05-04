@@ -12,12 +12,15 @@ decklink_libs = []
 
 if host_machine.system() == 'windows'
   decklink_sources += ['win/DeckLinkAPIDispatch.cpp', 'win/DeckLinkAPI_i.c']
-  # Only used by MSVC. On MinGW, this is all inlined.
-  # FIXME: Use commsuppwd.lib for debug builds?
-  comutil_dep = cxx.find_library('comsuppw', required : false)
-  if comutil_dep.found()
+  if cxx.get_id() == 'msvc'
+    # FIXME: Use commsuppwd.lib for debug builds?
+    comutil_dep = cxx.find_library('comsuppw')
+    if comutil_dep.found()
+      build_decklink = true
+      decklink_libs = [comutil_dep]
+    endif
+  else
     build_decklink = true
-    decklink_libs = [comutil_dep]
   endif
 else
   libdl = cc.find_library('dl', required: false)

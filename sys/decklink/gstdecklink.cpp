@@ -967,7 +967,7 @@ init_devices (gpointer data)
 
         GST_DEBUG ("Input %d supports:", i);
         while ((ret = mode_iter->Next (&mode)) == S_OK) {
-          const char *name;
+          char *name;
 
           mode->GetName ((COMSTR_T *) & name);
           CONVERT_COM_STRING (name);
@@ -1005,7 +1005,7 @@ init_devices (gpointer data)
 
         GST_DEBUG ("Output %d supports:", i);
         while ((ret = mode_iter->Next (&mode)) == S_OK) {
-          const char *name;
+          char *name;
 
           mode->GetName ((COMSTR_T *) & name);
           CONVERT_COM_STRING (name);
