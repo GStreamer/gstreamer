@@ -1,9 +1,31 @@
-=== release 1.11.91 ===
+=== release 1.12.0 ===
 
-2017-04-27  Sebastian Dröge <slomo@coaxion.net>
+2017-05-04  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.11.91
+	  releasing 1.12.0
+
+2017-04-30 14:35:29 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  launcher: Allow using the base launcher as a test manager
+	  No reason to force people to subclass it in simple cases.
+
+2017-04-27 16:45:00 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tools/gst-validate.c:
+	  tools: Fix dotfile name
+
+=== release 1.11.91 ===
+
+2017-04-27 17:54:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.11.91
 
 2015-08-16 13:32:04 +0200  Thibault Saunier <tsaunier@gnome.org>
 
