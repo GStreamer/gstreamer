@@ -1524,6 +1524,9 @@ gst_validate_execute_action (GstValidateActionType * action_type,
     action->priv->printed = FALSE;
     action->structure = gst_structure_copy (action->priv->main_structure);
 
+    if (!(action->name = gst_structure_get_string (action->structure, "name")))
+      action->name = "";
+
     if (res == GST_VALIDATE_EXECUTE_ACTION_ASYNC)
       action->priv->executing_last_subaction = TRUE;
   }
