@@ -420,6 +420,8 @@ gst_validate_send (JsonNode * root)
 
       g_free (message);
       g_object_unref (jgen);
+      if (error)
+        g_error_free (error);
       g_idle_add ((GSourceFunc) gst_validate_send, root);
       return G_SOURCE_REMOVE;
     }
@@ -431,6 +433,8 @@ gst_validate_send (JsonNode * root)
 
   g_free (message);
   g_object_unref (jgen);
+  if (error)
+    g_error_free (error);
 
 done:
   json_node_free (root);
