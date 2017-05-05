@@ -1502,12 +1502,25 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
 
   if (gst_adaptive_demux_is_live (demux)) {
     gint64 range_start, range_stop;
+    gboolean changed = FALSE;
     if (!gst_adaptive_demux_get_live_seek_range (demux, &range_start,
             &range_stop)) {
       GST_MANIFEST_UNLOCK (demux);
       GST_API_UNLOCK (demux);
       gst_event_unref (event);
       return FALSE;
+    }
+
+    /* Handle relative positioning for live streams (relative to the range_stop) */
+    if (start_type == GST_SEEK_TYPE_END) {
+      start = range_stop + start;
+      start_type = GST_SEEK_TYPE_SET;
+      changed = TRUE;
+    }
+    if (stop_type == GST_SEEK_TYPE_END) {
+      stop = range_stop + stop;
+      stop_type = GST_SEEK_TYPE_SET;
+      changed = TRUE;
     }
 
     if (!(flags & GST_SEEK_FLAG_ACCURATE)) {
@@ -1523,6 +1536,7 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
         start = range_start;
         if (stop != GST_CLOCK_TIME_NONE)
           stop += dt;
+        changed = TRUE;
       }
     }
 
@@ -1532,6 +1546,14 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
       GST_WARNING_OBJECT (demux, "Seek to invalid position");
       gst_event_unref (event);
       return FALSE;
+    }
+
+    if (changed) {
+      gst_event_unref (event);
+      event =
+          gst_event_new_seek (rate, format, flags,
+          start_type, start, stop_type, stop);
+
     }
   }
 
