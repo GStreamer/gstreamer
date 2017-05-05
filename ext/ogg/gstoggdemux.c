@@ -736,9 +736,15 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
           }
           if (pad->map.audio_clipping
               && pad->current_granule - duration < -pad->map.granule_offset) {
-            if (pad->current_granule >= -pad->map.granule_offset)
-              clip_start = -pad->map.granule_offset;
-            else
+            if (pad->current_granule >= -pad->map.granule_offset) {
+              guint64 already_removed =
+                  pad->current_granule >
+                  duration ? pad->current_granule - duration : 0;
+              clip_start =
+                  already_removed >
+                  -pad->map.granule_offset ? 0 : -pad->map.granule_offset -
+                  already_removed;
+            } else
               clip_start = pad->current_granule;
           }
         } else {
@@ -747,9 +753,15 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
 
           if (pad->map.audio_clipping
               && pad->current_granule - duration < -pad->map.granule_offset) {
-            if (pad->current_granule >= -pad->map.granule_offset)
-              clip_start = -pad->map.granule_offset;
-            else
+            if (pad->current_granule >= -pad->map.granule_offset) {
+              guint64 already_removed =
+                  pad->current_granule >
+                  duration ? pad->current_granule - duration : 0;
+              clip_start =
+                  already_removed >
+                  -pad->map.granule_offset ? 0 : -pad->map.granule_offset -
+                  already_removed;
+            } else
               clip_start = pad->current_granule;
           }
         }

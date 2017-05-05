@@ -2030,21 +2030,13 @@ granulepos_to_granule_opus (GstOggStream * pad, gint64 granulepos)
   if (granulepos == -1)
     return -1;
 
-  /* We must reject some particular cases for the first granpos */
-
   if (pad->first_granpos < 0 || granulepos < pad->first_granpos)
     pad->first_granpos = granulepos;
 
-  if (pad->first_granpos == granulepos) {
-    if (granulepos < -pad->granule_offset) {
-      GST_ERROR ("Invalid Opus stream: first granulepos (%" G_GINT64_FORMAT
-          ") less than preskip (%" G_GINT64_FORMAT ")", granulepos,
-          -pad->granule_offset);
-      return -1;
-    }
-  }
+  if (granulepos < -pad->granule_offset)
+    return 0;
 
-  return granulepos;
+  return granulepos + pad->granule_offset;
 }
 
 static gint64
