@@ -74,7 +74,7 @@ if have_ptp
   gst_ptp_have_cap = false
   cap_dep = []
   if cc.has_header('sys/capability.h')
-    cap_dep = find_library('cap', required : false)
+    cap_dep = cc.find_library('cap', required : false)
     if cap_dep.found() and cc.has_function('cap_init', dependencies : cap_dep)
       gst_ptp_have_cap = true
     endif
