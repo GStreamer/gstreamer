@@ -178,10 +178,10 @@ if cc.has_function('localtime_r', prefix : '#include<time.h>')
 endif
 
 if cc.links('''#include <pthread.h>
-							 int main() {
-								 pthread_setname_np("example");
-							 }''', name : 'pthread_setname_np(const char*)')
-	cdata.set('HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID', 1)
+               int main() {
+                 pthread_setname_np("example"); return 0;
+               }''', name : 'pthread_setname_np(const char*)')
+  cdata.set('HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID', 1)
 endif
 
 # Check for posix timers and the monotonic clock
