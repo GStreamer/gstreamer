@@ -438,3 +438,9 @@
 #mesondefine STRUCT_ITIMERSPEC_DEFINITION_MISSING
 #mesondefine clockid_t
 #mesondefine timer_t
+
+#mesondefine HAVE_SIOCGIFCONF_SIOCGIFFLAGS_SIOCGIFHWADDR
+#mesondefine HAVE_GETIFADDRS_AF_LINK
+#mesondefine HAVE_PTP
+#mesondefine HAVE_PTP_HELPER_SETUID_USER
+#mesondefine HAVE_PTP_HELPER_SETUID_GROUP

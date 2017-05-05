@@ -326,10 +326,6 @@ test_deps = [gmp_dep, gsl_dep, gslcblas_dep]
 dl_dep = cc.find_library('dl', required : false)
 cdata.set('HAVE_DLADDR', cc.has_function('dladdr', dependencies : dl_dep))
 
-configure_file(input : 'config.h.meson',
-  output : 'config.h',
-  configuration : cdata)
-
 
 configinc = include_directories('.')
 libsinc = include_directories('libs')
@@ -422,6 +418,10 @@ subdir('pkgconfig')
 subdir('tests')
 subdir('po')
 subdir('data')
+
+configure_file(input : 'config.h.meson',
+  output : 'config.h',
+  configuration : cdata)
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')

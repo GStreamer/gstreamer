@@ -11,3 +11,9 @@ option('disable_introspection',
 option('disable_libunwind',
         type : 'boolean', value : false,
         description : 'Whether to disable the usage of libunwind (to generate backtraces)')
+option('with-ptp-helper-setuid-user', type : 'string',
+        description : 'User to switch to when installing gst-ptp-helper setuid root')
+option('with-ptp-helper-setuid-group', type : 'string',
+        description : 'Group to switch to when installing gst-ptp-helper setuid root')
+option('with-ptp-helper-permissions', type : 'combo',
+       choices : ['none', 'setuid-root', 'capabilities', 'auto'], value : 'auto')

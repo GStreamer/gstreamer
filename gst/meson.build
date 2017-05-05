@@ -154,14 +154,18 @@ else
   gst_registry = []
 endif
 
+# Make copy so configure_file consumes the copy and we can
+# still add to the original cdata later.
+gst_cdata = cdata
+
 configure_file(input : 'gstconfig.h.in',
   output : 'gstconfig.h',
   install_dir : 'include/gstreamer-1.0/gst',
-  configuration : cdata)
+  configuration : gst_cdata)
 gst_version_h = configure_file(input : 'gstversion.h.in',
   output : 'gstversion.h',
   install_dir : 'include/gstreamer-1.0/gst',
-  configuration : cdata)
+  configuration : gst_cdata)
 
 gst_enums = gnome.mkenums('gstenumtypes',
   sources : gst_headers,
