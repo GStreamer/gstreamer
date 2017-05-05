@@ -1526,7 +1526,7 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
       }
     }
 
-    if (start < range_start || start >= range_stop) {
+    if (start < range_start || start > range_stop) {
       GST_MANIFEST_UNLOCK (demux);
       GST_API_UNLOCK (demux);
       GST_WARNING_OBJECT (demux, "Seek to invalid position");
