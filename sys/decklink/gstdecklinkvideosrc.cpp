@@ -421,7 +421,7 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
         gst_decklink_get_connection (self->connection));
     if (ret != S_OK) {
       GST_ERROR_OBJECT (self,
-          "Failed to set configuration (input source): 0x%08lx", ret);
+          "Failed to set configuration (input source): 0x%08x", ret);
       return FALSE;
     }
 
@@ -430,7 +430,7 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
           bmdAnalogVideoFlagCompositeSetup75);
       if (ret != S_OK) {
         GST_ERROR_OBJECT (self,
-            "Failed to set configuration (composite setup): 0x%08lx", ret);
+            "Failed to set configuration (composite setup): 0x%08x", ret);
         return FALSE;
       }
     }
@@ -447,7 +447,7 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
           &autoDetection);
       if (ret != S_OK) {
         GST_ERROR_OBJECT (self,
-            "Failed to get attribute (autodetection): 0x%08lx", ret);
+            "Failed to get attribute (autodetection): 0x%08x", ret);
         return FALSE;
       }
       if (autoDetection)
@@ -465,7 +465,7 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   format = self->caps_format;
   ret = self->input->input->EnableVideoInput (mode->mode, format, flags);
   if (ret != S_OK) {
-    GST_WARNING_OBJECT (self, "Failed to enable video input: 0x%08lx", ret);
+    GST_WARNING_OBJECT (self, "Failed to enable video input: 0x%08x", ret);
     return FALSE;
   }
 
@@ -694,7 +694,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
 
       res = dtc->GetComponents (&hours, &minutes, &seconds, &frames);
       if (res != S_OK) {
-        GST_ERROR ("Could not get components for timecode %p: 0x%08lx", dtc,
+        GST_ERROR ("Could not get components for timecode %p: 0x%08x", dtc,
             res);
         f.tc = NULL;
       } else {
@@ -1022,7 +1022,7 @@ gst_decklink_video_src_start_streams (GstElement * element)
     res = self->input->input->StartStreams ();
     if (res != S_OK) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED,
-          (NULL), ("Failed to start streams: 0x%08lx", res));
+          (NULL), ("Failed to start streams: 0x%08x", res));
       return;
     }
   } else {
@@ -1076,7 +1076,7 @@ gst_decklink_video_src_change_state (GstElement * element,
       res = self->input->input->StopStreams ();
       if (res != S_OK) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED,
-            (NULL), ("Failed to stop streams: 0x%08lx", res));
+            (NULL), ("Failed to stop streams: 0x%08x", res));
         ret = GST_STATE_CHANGE_FAILURE;
       }
       break;

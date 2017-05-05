@@ -814,7 +814,7 @@ public:
           video_frame->GetStreamTime (&stream_time, &stream_duration,
           GST_SECOND);
       if (res != S_OK) {
-        GST_ERROR ("Failed to get stream time: 0x%08lx", res);
+        GST_ERROR ("Failed to get stream time: 0x%08x", res);
         stream_time = GST_CLOCK_TIME_NONE;
         stream_duration = GST_CLOCK_TIME_NONE;
       }
@@ -828,7 +828,7 @@ public:
             &dtc);
 
         if (res != S_OK) {
-          GST_DEBUG_OBJECT (videosrc, "Failed to get timecode: 0x%08lx", res);
+          GST_DEBUG_OBJECT (videosrc, "Failed to get timecode: 0x%08x", res);
           dtc = NULL;
         }
       }
@@ -843,7 +843,7 @@ public:
 
       res = audio_packet->GetPacketTime (&packet_time, GST_SECOND);
       if (res != S_OK) {
-        GST_ERROR ("Failed to get stream time: 0x%08lx", res);
+        GST_ERROR ("Failed to get stream time: 0x%08x", res);
         packet_time = GST_CLOCK_TIME_NONE;
       }
       m_input->got_audio_packet (audiosrc, audio_packet, capture_time,
@@ -950,7 +950,7 @@ init_devices (gpointer data)
     ret = decklink->QueryInterface (IID_IDeckLinkInput,
         (void **) &devices[i].input.input);
     if (ret != S_OK) {
-      GST_WARNING ("selected device does not have input interface: 0x%08lx",
+      GST_WARNING ("selected device does not have input interface: 0x%08x",
           ret);
     } else {
       IDeckLinkDisplayModeIterator *mode_iter;
@@ -987,7 +987,7 @@ init_devices (gpointer data)
     ret = decklink->QueryInterface (IID_IDeckLinkOutput,
         (void **) &devices[i].output.output);
     if (ret != S_OK) {
-      GST_WARNING ("selected device does not have output interface: 0x%08lx",
+      GST_WARNING ("selected device does not have output interface: 0x%08x",
           ret);
     } else {
       IDeckLinkDisplayModeIterator *mode_iter;
@@ -1025,7 +1025,7 @@ init_devices (gpointer data)
     ret = decklink->QueryInterface (IID_IDeckLinkConfiguration,
         (void **) &devices[i].input.config);
     if (ret != S_OK) {
-      GST_WARNING ("selected device does not have config interface: 0x%08lx",
+      GST_WARNING ("selected device does not have config interface: 0x%08x",
           ret);
     }
 
@@ -1033,8 +1033,8 @@ init_devices (gpointer data)
         (void **) &devices[i].input.attributes);
     devices[i].output.attributes = devices[i].input.attributes;
     if (ret != S_OK) {
-      GST_WARNING ("selected device does not have attributes interface:"
-          " 0x%08lx", ret);
+      GST_WARNING ("selected device does not have attributes interface: 0x%08x",
+          ret);
     }
 
     ret = iterator->Next (&decklink);
@@ -1272,7 +1272,7 @@ gst_decklink_clock_get_internal_time (GstClock * clock)
   GST_LOG_OBJECT (clock,
       "result %" GST_TIME_FORMAT " time %" GST_TIME_FORMAT " last time %"
       GST_TIME_FORMAT " offset %" GST_TIME_FORMAT " start time %"
-      GST_TIME_FORMAT " (ret: 0x%08lx)", GST_TIME_ARGS (result),
+      GST_TIME_FORMAT " (ret: 0x%08x)", GST_TIME_ARGS (result),
       GST_TIME_ARGS (time), GST_TIME_ARGS (last_time), GST_TIME_ARGS (offset),
       GST_TIME_ARGS (start_time), ret);
 

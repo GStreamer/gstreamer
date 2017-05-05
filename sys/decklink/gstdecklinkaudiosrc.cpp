@@ -404,7 +404,7 @@ gst_decklink_audio_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
         self->input->config->SetInt (bmdDeckLinkConfigAudioInputConnection,
         conn);
     if (ret != S_OK) {
-      GST_ERROR ("set configuration (audio input connection): 0x%08lx", ret);
+      GST_ERROR ("set configuration (audio input connection): 0x%08x", ret);
       return FALSE;
     }
   }
@@ -412,7 +412,7 @@ gst_decklink_audio_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   ret = self->input->input->EnableAudioInput (bmdAudioSampleRate48kHz,
       sample_depth, self->info.channels);
   if (ret != S_OK) {
-    GST_WARNING_OBJECT (self, "Failed to enable audio input: 0x%08lx", ret);
+    GST_WARNING_OBJECT (self, "Failed to enable audio input: 0x%08x", ret);
     return FALSE;
   }
 

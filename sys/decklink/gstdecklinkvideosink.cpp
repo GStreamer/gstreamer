@@ -403,7 +403,7 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   ret = self->output->output->EnableVideoOutput (mode->mode, flags);
   if (ret != S_OK) {
-    GST_WARNING_OBJECT (self, "Failed to enable video output: 0x%08lx", ret);
+    GST_WARNING_OBJECT (self, "Failed to enable video output: 0x%08x", ret);
     return FALSE;
   }
 
@@ -611,7 +611,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
       &frame);
   if (ret != S_OK) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED,
-        (NULL), ("Failed to create video frame: 0x%08lx", ret));
+        (NULL), ("Failed to create video frame: 0x%08x", ret));
     return GST_FLOW_ERROR;
   }
 
@@ -650,7 +650,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
         (uint8_t) tc_meta->tc.seconds, (uint8_t) tc_meta->tc.frames, bflags);
     if (ret != S_OK) {
       GST_ERROR_OBJECT (self,
-          "Failed to set timecode %s to video frame: 0x%08lx", tc_str, ret);
+          "Failed to set timecode %s to video frame: 0x%08x", tc_str, ret);
       flow_ret = GST_FLOW_ERROR;
       g_free (tc_str);
       goto out;
@@ -666,7 +666,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
     ret = self->output->output->DisplayVideoFrameSync (frame);
     if (ret != S_OK) {
       GST_ELEMENT_WARNING (self, STREAM, FAILED,
-          (NULL), ("Failed to show video frame synchronously: 0x%08lx", ret));
+          (NULL), ("Failed to show video frame synchronously: 0x%08x", ret));
       ret = S_OK;
     }
   }
@@ -679,7 +679,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
       running_time, running_time_duration, GST_SECOND);
   if (ret != S_OK) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED,
-        (NULL), ("Failed to schedule frame: 0x%08lx", ret));
+        (NULL), ("Failed to schedule frame: 0x%08x", ret));
     flow_ret = GST_FLOW_ERROR;
     goto out;
   }
@@ -828,7 +828,7 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
       res = self->output->output->StopScheduledPlayback (0, 0, 0);
       if (res != S_OK) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED,
-            (NULL), ("Failed to stop scheduled playback: 0x%08lx", res));
+            (NULL), ("Failed to stop scheduled playback: 0x%08x", res));
         gst_object_unref (clock);
         return;
       }
@@ -843,7 +843,7 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
         GST_SECOND, 1.0);
     if (res != S_OK) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED,
-          (NULL), ("Failed to start scheduled playback: 0x%08lx", res));
+          (NULL), ("Failed to start scheduled playback: 0x%08x", res));
       gst_object_unref (clock);
       return;
     }
@@ -911,7 +911,7 @@ gst_decklink_video_sink_stop_scheduled_playback (GstDecklinkVideoSink * self)
   res = self->output->output->StopScheduledPlayback (start_time, 0, GST_SECOND);
   if (res != S_OK) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED,
-        (NULL), ("Failed to stop scheduled playback: 0x%08lx", res));
+        (NULL), ("Failed to stop scheduled playback: 0x%08x", res));
     ret = GST_STATE_CHANGE_FAILURE;
   }
   self->internal_base_time = GST_CLOCK_TIME_NONE;
