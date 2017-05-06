@@ -616,9 +616,9 @@ typedef struct _GstMatroskaTrackSubtitleContext {
 
 typedef struct _GstMatroskaIndex {
   guint64        pos;      /* of the corresponding *cluster*! */
-  guint16        track;    /* reference to 'num' */
   GstClockTime   time;     /* in nanoseconds */
   guint32        block;    /* number of the block in the cluster */
+  guint16        track;    /* reference to 'num' */
 } GstMatroskaIndex;
 
 typedef struct _Wavpack4Header {
