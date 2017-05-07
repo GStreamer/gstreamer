@@ -513,15 +513,25 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
     case OMX_EventError:
     {
       GstOMXMessage *msg;
+      OMX_ERRORTYPE error_type = nData1;
 
       /* Yes, this really happens... */
-      if (nData1 == OMX_ErrorNone)
+      if (error_type == OMX_ErrorNone)
         break;
+
+      /* Always ignore PortUnpopulated error. This error is informational
+       * at best but it is useful for debugging some strange scenarios.
+       */
+      if (error_type == OMX_ErrorPortUnpopulated) {
+        GST_DEBUG_OBJECT (comp->parent, "%s got error: %s (0x%08x)",
+            comp->name, gst_omx_error_to_string (error_type), error_type);
+        break;
+      }
 
       msg = g_slice_new (GstOMXMessage);
 
       msg->type = GST_OMX_MESSAGE_ERROR;
-      msg->content.error.error = nData1;
+      msg->content.error.error = error_type;
       GST_ERROR_OBJECT (comp->parent, "%s got error: %s (0x%08x)", comp->name,
           gst_omx_error_to_string (msg->content.error.error),
           msg->content.error.error);
