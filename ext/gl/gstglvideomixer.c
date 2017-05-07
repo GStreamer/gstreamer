@@ -34,7 +34,7 @@
  *     glupload ! glcolorconvert ! m. \
  *     videotestsrc ! glupload ! gleffects effect=2 ! queue ! m.  \
  *     videotestsrc ! glupload ! glfiltercube ! queue ! m. \
- *     videotestsrc ! glupload ! gleffects effect=6 ! queue ! m.gst-launch-1.0  glvideomixer name=m ! glimagesink
+ *     videotestsrc ! glupload ! gleffects effect=6 ! queue ! m.
  * ]|
  *
  */
