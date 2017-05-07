@@ -90,6 +90,9 @@ struct _GstMotioncells
   //time stuff
   GTimeVal tv;
   double framerate;
+  //Video width and height are known in "gst_motion_cells_handle_sink_event",
+  // but not when setting the "motionmaskcoords".
+  gchar has_delayed_mask;
 };
 
 struct _GstMotioncellsClass

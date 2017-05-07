@@ -337,6 +337,7 @@ gst_motion_cells_init (GstMotioncells * filter)
   filter->prev_datafile = NULL;
   filter->cur_datafile = NULL;
   filter->basename_datafile = NULL;
+  filter->has_delayed_mask = 0;
   filter->datafile_extension = g_strdup (DEF_DATAFILEEXT);
   filter->sensitivity = SENSITIVITY_DEFAULT;
   filter->threshold = THRESHOLD_DEFAULT;
@@ -381,6 +382,22 @@ gst_motion_cells_init (GstMotioncells * filter)
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
       TRUE);
+}
+
+static void fix_coords(motionmaskcoordrect& coords, int width, int height)
+{
+  --width;
+  --height;
+
+  if (width < coords.upper_left_x)
+    coords.upper_left_x = width;
+  if (width < coords.lower_right_x)
+    coords.lower_right_x = width;
+
+  if (height < coords.upper_left_y)
+    coords.upper_left_y = height;
+  if (height < coords.lower_right_y)
+    coords.lower_right_y = height;
 }
 
 static void
@@ -478,6 +495,8 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
       filter->datafile_extension = g_value_dup_string (value);
       break;
     case PROP_MOTIONMASKCOORD:
+      filter->has_delayed_mask = (0 < filter->width && 0 < filter->height);
+
       strs = g_strsplit (g_value_get_string (value), ",", 255);
       GFREE (filter->motionmaskcoords);
       //setting number of regions
@@ -492,14 +511,15 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
 
           for (i = 0; i < filter->motionmaskcoord_count; ++i) {
             sscanf (strs[i], "%d:%d:%d:%d", &ux, &uy, &lx, &ly);
-            ux = CLAMP (ux, 0, filter->width - 1);
-            uy = CLAMP (uy, 0, filter->height - 1);
-            lx = CLAMP (lx, 0, filter->width - 1);
-            ly = CLAMP (ly, 0, filter->height - 1);
-            filter->motionmaskcoords[i].upper_left_x = ux;
-            filter->motionmaskcoords[i].upper_left_y = uy;
-            filter->motionmaskcoords[i].lower_right_x = lx;
-            filter->motionmaskcoords[i].lower_right_y = ly;
+
+            filter->motionmaskcoords[i].upper_left_x = ux < 0 ? 0 : ux;
+            filter->motionmaskcoords[i].upper_left_y = uy < 0 ? 0 : uy;
+            filter->motionmaskcoords[i].lower_right_x = lx < 0 ? 0 : lx;
+            filter->motionmaskcoords[i].lower_right_y = ly < 0 ? 0 : ly;
+
+            if (0 < filter->width && 0 < filter->height) {
+              fix_coords(filter->motionmaskcoords[i], filter->width, filter->height);
+            }
           }
         } else {
           filter->motionmaskcoord_count = 0;
@@ -761,7 +781,6 @@ gst_motioncells_update_motion_cells (GstMotioncells * filter)
 static void
 gst_motioncells_update_motion_masks (GstMotioncells * filter)
 {
-
   int i = 0;
   int maskcnt = 0;
   int j = 0;
@@ -806,6 +825,7 @@ gst_motion_cells_handle_sink_event (GstPad * pad, GstObject * parent,
   GstMotioncells *filter;
   GstVideoInfo info;
   gboolean res = TRUE;
+  int i;
 
   filter = gst_motion_cells (parent);
 
@@ -818,6 +838,16 @@ gst_motion_cells_handle_sink_event (GstPad * pad, GstObject * parent,
 
       filter->width = info.width;
       filter->height = info.height;
+
+      if (0 != filter->has_delayed_mask
+        && 0 < filter->motionmaskcoord_count && NULL != filter->motionmaskcoords
+        && 0 < filter->width && 0 < filter->height)
+      {
+        filter->has_delayed_mask = 0;
+        for (i = 0; i < filter->motionmaskcoord_count; ++i) {
+          fix_coords(filter->motionmaskcoords[i], filter->width, filter->height);
+        }
+      }
 
       filter->framerate = (double) info.fps_n / (double) info.fps_d;
       break;
