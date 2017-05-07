@@ -58,7 +58,7 @@ extern const gchar *priv_gst_dump_dot_dir;      /* NULL *//* set from gst.c */
 
 #define PARAM_MAX_LENGTH 80
 
-const gchar spaces[] = {
+static const gchar spaces[] = {
   "                                "    /* 32 */
       "                                "        /* 64 */
       "                                "        /* 96 */
