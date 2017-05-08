@@ -148,6 +148,10 @@ gst_directsound_sink_finalize (GObject * object)
   dsoundsink->device_id = NULL;
 
   g_mutex_clear (&dsoundsink->dsound_lock);
+  gst_object_unref (dsoundsink->system_clock);
+  if (dsoundsink->write_wait_clock_id != NULL) {
+    gst_clock_id_unref (dsoundsink->write_wait_clock_id);
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -227,6 +231,8 @@ gst_directsound_sink_init (GstDirectSoundSink * dsoundsink)
   dsoundsink->buffer_size = DSBSIZE_MIN;
   dsoundsink->volume = 100;
   g_mutex_init (&dsoundsink->dsound_lock);
+  dsoundsink->system_clock = gst_system_clock_obtain ();
+  dsoundsink->write_wait_clock_id = NULL;
   dsoundsink->first_buffer_after_reset = FALSE;
 }
 
@@ -624,7 +630,8 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
 
   if (SUCCEEDED (hRes) && SUCCEEDED (hRes2) && (dwStatus & DSBSTATUS_PLAYING)) {
     DWORD dwFreeBufferSize = 0;
-    guint64 sleep_time_ms = 0;
+    GstClockTime sleep_time_ms = 0, sleep_until;
+    GstClockID clock_id;
 
   calculate_freesize:
     /* Calculate the free space in the circular buffer */
@@ -649,11 +656,44 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
           1000, dsoundsink->bytes_per_sample * rate);
       /* Make sure we don't run in a tight loop unnecessarily */
       sleep_time_ms = MAX (sleep_time_ms, 10);
+      sleep_until = gst_clock_get_time (dsoundsink->system_clock) +
+          sleep_time_ms * GST_MSECOND;
+
       GST_DEBUG_OBJECT (dsoundsink,
           "length: %u, FreeBufSiz: %ld, sleep_time_ms: %" G_GUINT64_FORMAT
           ", bps: %i, rate: %i", length, dwFreeBufferSize, sleep_time_ms,
           dsoundsink->bytes_per_sample, rate);
-      Sleep (sleep_time_ms);
+
+      if (G_UNLIKELY (dsoundsink->write_wait_clock_id == NULL ||
+              gst_clock_single_shot_id_reinit (dsoundsink->system_clock,
+                  dsoundsink->write_wait_clock_id, sleep_until) == FALSE)) {
+
+        if (dsoundsink->write_wait_clock_id != NULL) {
+          gst_clock_id_unref (dsoundsink->write_wait_clock_id);
+        }
+
+        dsoundsink->write_wait_clock_id =
+            gst_clock_new_single_shot_id (dsoundsink->system_clock,
+            sleep_until);
+      }
+
+      clock_id = dsoundsink->write_wait_clock_id;
+      dsoundsink->reset_while_sleeping = FALSE;
+
+      GST_DSOUND_UNLOCK (dsoundsink);
+
+      /* don't bother with the return value as we'll detect reset separately,
+         as reset could happen between when this returns and we obtain the lock
+         again -- so we can't use UNSCHEDULED here */
+      gst_clock_id_wait (clock_id, NULL);
+
+      GST_DSOUND_LOCK (dsoundsink);
+
+      /* if a reset occurs, exit now */
+      if (dsoundsink->reset_while_sleeping == TRUE) {
+        GST_DSOUND_UNLOCK (dsoundsink);
+        return -1;
+      }
 
       /* May we send out? */
       hRes = IDirectSoundBuffer_GetCurrentPosition (dsoundsink->pDSBSecondary,
@@ -698,12 +738,12 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
     if (pLockedBuffer2 != NULL)
       memcpy (pLockedBuffer2, (LPBYTE) data + dwSizeBuffer1, dwSizeBuffer2);
 
+    hRes = IDirectSoundBuffer_Unlock (dsoundsink->pDSBSecondary, pLockedBuffer1,
+        dwSizeBuffer1, pLockedBuffer2, dwSizeBuffer2);
+
     // Update where the buffer will lock (for next time)
     dsoundsink->current_circular_offset += dwSizeBuffer1 + dwSizeBuffer2;
     dsoundsink->current_circular_offset %= dsoundsink->buffer_size;     /* Circular buffer */
-
-    hRes = IDirectSoundBuffer_Unlock (dsoundsink->pDSBSecondary, pLockedBuffer1,
-        dwSizeBuffer1, pLockedBuffer2, dwSizeBuffer2);
   }
 
   /* if the buffer was not in playing state yet, call play on the buffer 
@@ -790,7 +830,11 @@ gst_directsound_sink_reset (GstAudioSink * asink)
     }
   }
 
+  dsoundsink->reset_while_sleeping = TRUE;
   dsoundsink->first_buffer_after_reset = TRUE;
+  if (dsoundsink->write_wait_clock_id != NULL) {
+    gst_clock_id_unschedule (dsoundsink->write_wait_clock_id);
+  }
 
   GST_DSOUND_UNLOCK (dsoundsink);
 }
