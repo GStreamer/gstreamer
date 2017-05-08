@@ -3031,6 +3031,43 @@ qtdemux_update_default_piff_encryption_settings (GstQTDemux * qtdemux,
   return TRUE;
 }
 
+static gboolean
+qtdemux_parse_cenc_subsample (GstQTDemux * qtdemux, GstByteReader * br,
+    GstStructure * properties, guint sample_index)
+{
+  guint8 *data;
+  GstBuffer *buf;
+  guint16 n_subsamples;
+
+  g_return_val_if_fail (br != NULL, FALSE);
+  g_return_val_if_fail (properties != NULL, FALSE);
+
+  if (!gst_byte_reader_get_uint16_be (br, &n_subsamples)
+      || n_subsamples == 0) {
+    GST_ERROR_OBJECT (qtdemux,
+        "failed to get subsample count for sample %u", sample_index);
+    return FALSE;
+  }
+
+  GST_LOG_OBJECT (qtdemux, "subsample count: %u", n_subsamples);
+  if (!gst_byte_reader_dup_data (br, n_subsamples * 6, &data)) {
+    GST_ERROR_OBJECT (qtdemux, "failed to get subsample data for sample %u",
+        sample_index);
+    return FALSE;
+  }
+
+  buf = gst_buffer_new_wrapped (data, n_subsamples * 6);
+
+  if (!buf)
+    return FALSE;
+
+  gst_structure_set (properties,
+      "subsample_count", G_TYPE_UINT, n_subsamples,
+      "subsamples", GST_TYPE_BUFFER, buf, NULL);
+  gst_buffer_unref (buf);
+
+  return TRUE;
+}
 
 static void
 qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
@@ -3164,35 +3201,17 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
     gst_buffer_unref (buf);
 
     if (uses_sub_sample_encryption) {
-      guint16 n_subsamples;
       const GValue *kid_buf_value;
 
-      if (!gst_byte_reader_get_uint16_be (&br, &n_subsamples)
-          || n_subsamples == 0) {
-        GST_ERROR_OBJECT (qtdemux,
-            "failed to get subsample count for sample %u", i);
+      if (!qtdemux_parse_cenc_subsample (qtdemux, &br, properties, i)) {
         gst_structure_free (properties);
         qtdemux->cenc_aux_sample_count = i;
         return;
       }
-      GST_LOG_OBJECT (qtdemux, "subsample count: %u", n_subsamples);
-      if (!gst_byte_reader_dup_data (&br, n_subsamples * 6, &data)) {
-        GST_ERROR_OBJECT (qtdemux, "failed to get subsample data for sample %u",
-            i);
-        gst_structure_free (properties);
-        qtdemux->cenc_aux_sample_count = i;
-        return;
-      }
-      buf = gst_buffer_new_wrapped (data, n_subsamples * 6);
 
       kid_buf_value =
           gst_structure_get_value (ss_info->default_properties, "kid");
-
-      gst_structure_set (properties,
-          "subsample_count", G_TYPE_UINT, n_subsamples,
-          "subsamples", GST_TYPE_BUFFER, buf, NULL);
       gst_structure_set_value (properties, "kid", kid_buf_value);
-      gst_buffer_unref (buf);
     } else {
       gst_structure_set (properties, "subsample_count", G_TYPE_UINT, 0, NULL);
     }
@@ -4471,7 +4490,6 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   for (i = 0; i < sample_count; ++i) {
     GstStructure *properties;
-    guint16 n_subsamples = 0;
     guint8 *data;
     guint iv_size;
     GstBuffer *buf;
@@ -4512,29 +4530,10 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
     size = info_sizes[i];
     if (size > iv_size) {
-      if (!gst_byte_reader_get_uint16_be (br, &n_subsamples)
-          || !(n_subsamples > 0)) {
-        gst_structure_free (properties);
-        GST_ERROR_OBJECT (qtdemux,
-            "failed to get subsample count for sample %u", i);
-        return FALSE;
-      }
-      GST_LOG_OBJECT (qtdemux, "subsample count: %u", n_subsamples);
-      if (!gst_byte_reader_dup_data (br, n_subsamples * 6, &data)) {
-        GST_ERROR_OBJECT (qtdemux, "failed to get subsample data for sample %u",
-            i);
+      if (!qtdemux_parse_cenc_subsample (qtdemux, br, properties, i)) {
         gst_structure_free (properties);
         return FALSE;
       }
-      buf = gst_buffer_new_wrapped (data, n_subsamples * 6);
-      if (!buf) {
-        gst_structure_free (properties);
-        return FALSE;
-      }
-      gst_structure_set (properties,
-          "subsample_count", G_TYPE_UINT, n_subsamples,
-          "subsamples", GST_TYPE_BUFFER, buf, NULL);
-      gst_buffer_unref (buf);
     } else {
       gst_structure_set (properties, "subsample_count", G_TYPE_UINT, 0, NULL);
     }
