@@ -81,6 +81,10 @@ struct _GstDirectSoundSink
   /* lock used to protect writes and resets */
   GMutex dsound_lock;
 
+  GstClock *system_clock;
+  GstClockID write_wait_clock_id;
+  gboolean reset_while_sleeping;
+
   gboolean first_buffer_after_reset;
 
   GstAudioRingBufferFormatType type;
