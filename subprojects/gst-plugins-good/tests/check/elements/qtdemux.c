@@ -1955,6 +1955,123 @@ GST_START_TEST (test_qtdemux_seek_push_mode)
 
 GST_END_TEST;
 
+/* Sample taken from
+ * https://storage.googleapis.com/wvmedia/cenc/h264/tears/tears_audio_eng.mp4
+ * - deleted 'sidx' for size
+ * - deleted all but the second 'moof' + 'mdat' pair
+ * - renamed 'saiz' and 'saio' to 'skip', effectively disabling them
+ */
+#define SENC_FILE TEST_FILE_PREFIX "qtdemux-test-audio-senc.mp4"
+static guint8 *senc_mp4;
+static const guint senc_mp4_len = 167507;
+
+GST_START_TEST (test_qtdemux_parse_senc)
+{
+  GstHarness *h;
+  GstPluginFeature *feature;
+  GstElement *bin;
+  GstElement *element;
+  GstPad *pad;
+  GstBuffer *buf;
+  guint64 iv;
+
+  /* The goal of this test is to check that qtdemux can properly create
+   * GstProtectionMeta from information contained in 'senc' box. */
+
+  feature = gst_registry_find_feature (gst_registry_get (), "mockdecryptor",
+      GST_TYPE_ELEMENT_FACTORY);
+  gst_plugin_feature_set_rank (feature, GST_RANK_PRIMARY + 100);
+
+  bin =
+      gst_parse_bin_from_description
+      ("qtdemux name=demux ! mockdecryptor name=decrypt", FALSE, NULL);
+
+  /* Automatic ghost pads can expose wrong sink and src; create them manually. */
+  element = gst_bin_get_by_name (GST_BIN (bin), "demux");
+  pad = gst_element_get_static_pad (element, "sink");
+  gst_element_add_pad (bin, gst_ghost_pad_new ("sink", pad));
+  gst_clear_object (&pad);
+  gst_clear_object (&element);
+
+  element = gst_bin_get_by_name (GST_BIN (bin), "decrypt");
+  pad = gst_element_get_static_pad (element, "src");
+  gst_element_add_pad (bin, gst_ghost_pad_new ("src", pad));
+  gst_clear_object (&pad);
+  gst_clear_object (&element);
+
+  h = gst_harness_new_with_element (bin, "sink", "src");
+  gst_harness_set_src_caps_str (h, "video/quicktime");
+  gst_clear_object (&bin);
+
+  g_assert_true (load_file (SENC_FILE, &senc_mp4, senc_mp4_len));
+
+  buf = gst_buffer_new_and_alloc (senc_mp4_len);
+  gst_buffer_fill (buf, 0, senc_mp4, senc_mp4_len);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  fail_unless (gst_harness_buffers_in_queue (h) == 431);
+
+  static const guint8 KID[16] = "0000000000000000";
+
+  iv = 0x0568209f828d85f4;
+
+  while ((buf = gst_harness_try_pull (h))) {
+    const GstStructure *s;
+    const GValue *val;
+    GstBuffer *b;
+    guint iv_size, subsample_count;
+    gboolean encrypted;
+    const gchar *cipher_mode;
+    guint8 expected[sizeof (iv)];
+
+    fail_unless_equals_int (gst_buffer_get_n_meta (buf,
+            GST_PROTECTION_META_API_TYPE), 1);
+
+    s = ((GstProtectionMeta *) gst_buffer_get_meta (buf,
+            GST_PROTECTION_META_API_TYPE))->info;
+
+    fail_unless_equals_string (gst_structure_get_name (s),
+        "application/x-cenc");
+
+    fail_unless (gst_structure_get_uint (s, "iv_size", &iv_size));
+    fail_unless_equals_uint64 (iv_size, 8);
+
+    fail_unless (gst_structure_get_boolean (s, "encrypted", &encrypted));
+    fail_unless (encrypted);
+
+    val = gst_structure_get_value (s, "kid");
+    fail_unless (val && GST_VALUE_HOLDS_BUFFER (val));
+    fail_unless_equals_int (gst_buffer_memcmp (gst_value_get_buffer (val), 0,
+            KID, sizeof (KID)), 0);
+
+    cipher_mode = gst_structure_get_string (s, "cipher-mode");
+    fail_unless_equals_string (cipher_mode, "cenc");
+
+    val = gst_structure_get_value (s, "iv");
+    fail_unless (val && GST_VALUE_HOLDS_BUFFER (val));
+    b = gst_value_get_buffer (val);
+    fail_unless_equals_int (gst_buffer_get_size (b), iv_size);
+    GST_WRITE_UINT64_BE (expected, iv);
+    fail_unless_equals_int (gst_buffer_memcmp (b, 0, &expected, iv_size), 0);
+
+    fail_unless (gst_structure_get_uint (s, "subsample_count",
+            &subsample_count));
+    fail_unless_equals_uint64 (subsample_count, 0);
+
+    ++iv;
+
+    gst_clear_buffer (&buf);
+  }
+
+  gst_plugin_feature_set_rank (feature, GST_RANK_NONE);
+
+  g_clear_pointer (&senc_mp4, g_free);
+  gst_harness_teardown (h);
+  gst_clear_object (&feature);
+}
+
+GST_END_TEST;
+
 static Suite *
 qtdemux_suite (void)
 {
@@ -1976,6 +2093,7 @@ qtdemux_suite (void)
   tcase_add_test (tc_chain, test_qtdemux_editlist);
   tcase_add_test (tc_chain, test_qtdemux_sample_interleaving);
   tcase_add_test (tc_chain, test_qtdemux_seek_push_mode);
+  tcase_add_test (tc_chain, test_qtdemux_parse_senc);
 
   return s;
 }

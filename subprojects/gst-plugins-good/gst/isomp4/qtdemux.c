@@ -4443,6 +4443,129 @@ qtdemux_parse_saio (GstQTDemux * qtdemux, QtDemuxStream * stream,
   return TRUE;
 }
 
+/* Parse Sample Encryption (senc) which contains sample auxiliary information
+ * like combination of saio and saiz (but much simpler than them) */
+static gboolean
+qtdemux_parse_senc (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstByteReader * br, guint64 max_samples)
+{
+  QtDemuxCencSampleSetInfo *ss_info = NULL;
+  guint i;
+  guint orig_crypto_info_len = 0;
+  guint8 version;
+  guint32 flags, sample_count;
+  gboolean uses_sub_sample_encryption = FALSE;
+
+  g_return_val_if_fail (qtdemux != NULL, FALSE);
+  g_return_val_if_fail (stream != NULL, FALSE);
+  g_return_val_if_fail (br != NULL, FALSE);
+  g_return_val_if_fail (stream->protected, FALSE);
+  g_return_val_if_fail (stream->protection_scheme_info != NULL, FALSE);
+
+  ss_info = (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
+
+  if (!gst_byte_reader_get_uint8 (br, &version)) {
+    GST_ERROR_OBJECT (qtdemux, "failed to get version");
+    return FALSE;
+  }
+
+  if (version != 0) {
+    GST_ERROR_OBJECT (qtdemux, "unsupported senc version %u", version);
+    return FALSE;
+  }
+
+  if (!gst_byte_reader_get_uint24_be (br, &flags)) {
+    GST_ERROR_OBJECT (qtdemux, "failed to get flags");
+    return FALSE;
+  }
+
+  uses_sub_sample_encryption = flags & 0x000002;
+
+  if (!gst_byte_reader_get_uint32_be (br, &sample_count)) {
+    GST_ERROR_OBJECT (qtdemux, "failed to get sample_count for sample");
+    return FALSE;
+  }
+
+  /* There can't be senc entries for more samples than the track runs of this
+   * fragment contain. */
+  if (sample_count > max_samples) {
+    GST_ERROR_OBJECT (qtdemux, "senc sample_count %u exceeds the %"
+        G_GUINT64_FORMAT " samples of the fragment", sample_count, max_samples);
+    return FALSE;
+  }
+
+  if (sample_count > 0) {
+    GstStructure *properties;
+    guint iv_size;
+    guint min_entry_size;
+    gboolean res;
+
+    properties = qtdemux_get_cenc_sample_properties (qtdemux, stream, 0);
+    res = properties
+        && gst_structure_get_uint (properties, "iv_size", &iv_size);
+    gst_clear_structure (&properties);
+
+    if (!res) {
+      GST_ERROR_OBJECT (qtdemux, "failed to get IV size");
+      return FALSE;
+    }
+
+    if (!gst_qtdemux_stream_shrink_crypto_info (qtdemux, stream)) {
+      return FALSE;
+    }
+
+    /* Rough check that the data for the declared sample_count may reasonably
+     * fit into the 'senc' box. */
+    min_entry_size = iv_size + (uses_sub_sample_encryption ? 2 : 0);
+    if (min_entry_size == 0) {
+      min_entry_size = 1;
+    }
+    if (sample_count > (gst_byte_reader_get_remaining (br) / min_entry_size)) {
+      GST_ERROR_OBJECT (qtdemux,
+          "senc sample_count %u exceeds remaining box size", sample_count);
+      return FALSE;
+    }
+    orig_crypto_info_len = ss_info->crypto_info->len;
+  }
+
+  for (i = 0; i < sample_count; ++i) {
+    GstStructure *properties;
+    guint iv_size;
+
+    properties = qtdemux_get_cenc_sample_properties (qtdemux, stream, i);
+    if (properties == NULL) {
+      GST_ERROR_OBJECT (qtdemux, "failed to get properties for sample %u", i);
+      goto parse_error;
+    }
+
+    g_ptr_array_add (ss_info->crypto_info, properties);
+
+    if (!gst_structure_get_uint (properties, "iv_size", &iv_size)) {
+      GST_ERROR_OBJECT (qtdemux, "failed to get IV size for sample %u", i);
+      goto parse_error;
+    }
+    if (!qtdemux_parse_iv (qtdemux, stream, br, iv_size, properties)) {
+      GST_ERROR_OBJECT (qtdemux, "failed to get IV for sample %u", i);
+      goto parse_error;
+    }
+    if (uses_sub_sample_encryption) {
+      if (!qtdemux_parse_cenc_subsample (qtdemux, br, properties, i)) {
+        goto parse_error;
+      }
+    } else {
+      gst_structure_set (properties, "subsample_count", G_TYPE_UINT, 0, NULL);
+    }
+  }
+
+  return TRUE;
+
+parse_error:
+  /* Remove infos added by parse_senc. We will later try to add them using saiz
+   * and saio if they are present. */
+  g_ptr_array_set_size (ss_info->crypto_info, orig_crypto_info_len);
+  return FALSE;
+}
+
 static void
 qtdemux_gst_structure_free (GstStructure * gststructure)
 {
@@ -4668,14 +4791,19 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
             &ds_size, &ds_flags, &base_offset))
       goto missing_tfhd;
 
-    /* Sample grouping support */
+    saiz_node =
+        qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_saiz,
+        &saiz_data);
+
+    /* CENC or CBCS encrypted stream */
     if (stream != NULL && stream->protected
         && (stream->protection_scheme_type == FOURCC_cenc
             || stream->protection_scheme_type == FOURCC_cbcs)) {
       QtDemuxCencSampleSetInfo *info = stream->protection_scheme_info;
-      GNode *sgpd_node;
-      GstByteReader sgpd_data;
+      GNode *sgpd_node, *senc_node;
+      GstByteReader sgpd_data, senc_data;
 
+      /* Sample grouping support */
       if (!info) {
         GST_ERROR_OBJECT (qtdemux, "Have no valid protection scheme info");
         goto fail;
@@ -4720,15 +4848,35 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
               FOURCC_sbgp, &sbgp_data);
         }
       }
+
+      /* Sample Encryption node */
+      senc_node =
+          qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_senc,
+          &senc_data);
+      if (senc_node) {
+        guint64 trun_samples;
+
+        if (!qtdemux_count_trun_samples (qtdemux, traf_node, &trun_samples)) {
+          goto fail;
+        }
+
+        if (qtdemux_parse_senc (qtdemux, stream, &senc_data, trun_samples)) {
+          /* Use senc instead of saiz/saio */
+          saiz_node = NULL;
+        } else if (!saiz_node) {
+          GST_ERROR_OBJECT (qtdemux, "failed to parse senc and saiz not found");
+          goto fail;
+        } else {
+          GST_WARNING_OBJECT (qtdemux,
+              "failed to parse senc; will try saiz instead");
+        }
+      }
     }
 
     /* The following code assumes at most a single set of sample auxiliary
      * data in the fragment (consisting of a saiz box and a corresponding saio
      * box); in theory, however, there could be multiple sets of sample
      * auxiliary data in a fragment. */
-    saiz_node =
-        qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_saiz,
-        &saiz_data);
     if (saiz_node) {
       guint32 info_type = 0;
       guint64 offset = 0;
