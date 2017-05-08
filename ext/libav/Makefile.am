@@ -30,15 +30,41 @@ libgstlibav_la_SOURCES = gstav.c	\
 # 			  gstavscale.c
 
 libgstlibav_la_CFLAGS = $(LIBAV_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libgstlibav_la_LIBADD = $(LIBAV_LIBS) $(GST_PLUGINS_BASE_LIBS) \
+
+if HAVE_LIBAV_UNINSTALLED
+  libgstlibav_la_LIBTOOLFLAGS = --tag=disable-static
+  libgstlibav_la_LIBADD =
+if !GST_PLUGIN_BUILD_STATIC
+    libgstlibav_la_LIBADD += $(LIBAV_LIBS)
+endif
+else
+  libgstlibav_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+  libgstlibav_la_LIBADD = $(LIBAV_LIBS)
+endif
+
+libgstlibav_la_LIBADD += $(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-$(GST_API_VERSION) -lgstvideo-$(GST_API_VERSION) \
 	-lgstpbutils-$(GST_API_VERSION) $(GST_BASE_LIBS) \
 	$(LIBM) $(WIN32_LIBS) -lz $(BZ2_LIBS) $(LZMA_LIBS)
 libgstlibav_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DARWIN_LDFLAGS)
-libgstlibav_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 if HAVE_LIBAV_UNINSTALLED
 libgstlibav_la_DEPENDENCIES = $(LIBAV_DEPS)
+
+if GST_PLUGIN_BUILD_STATIC
+libgstlibav_la_LINK_static = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	--tag=disable-shared $(LIBTOOLFLAGS) --mode=link \
+	$(CCLD) $(libgstlibav_la_CFLAGS) $(CFLAGS) \
+	$(libgstlibav_la_LDFLAGS) $(LDFLAGS) -o $@
+
+libgstlibav.la: $(libgstlibav_la_OBJECTS) $(libgstlibav_la_DEPENDENCIES) $(EXTRA_libgstlibav_la_DEPENDENCIES)
+	$(AM_V_CCLD)$(libgstlibav_la_LINK) -rpath $(plugindir) $(libgstlibav_la_OBJECTS) $(LIBAV_DEPS) $(libgstlibav_la_LIBADD) $(LIBS)
+	$(AM_V_at)rm $@
+	$(AM_V_CCLD)$(libgstlibav_la_LINK_static) -rpath $(plugindir) $(libgstlibav_la_OBJECTS) $(libgstlibav_la_LIBADD) $(LIBS)
+	$(AM_V_at)mv $@ $@.tmp
+	$(AM_V_GEN) sed -e "s|^\(dependency_libs='\)|\1 $(LIBAV_LIBS)|" $@.tmp > $@ && rm $@.tmp
+endif
+
 endif
 
 
