@@ -1496,20 +1496,30 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
   if (format != GST_FORMAT_TIME) {
     GST_MANIFEST_UNLOCK (demux);
     GST_API_UNLOCK (demux);
+    GST_WARNING_OBJECT (demux,
+        "Adaptive demuxers only support TIME-based seeking");
     gst_event_unref (event);
     return FALSE;
   }
 
+  seqnum = gst_event_get_seqnum (event);
+
   if (gst_adaptive_demux_is_live (demux)) {
     gint64 range_start, range_stop;
     gboolean changed = FALSE;
+
     if (!gst_adaptive_demux_get_live_seek_range (demux, &range_start,
             &range_stop)) {
       GST_MANIFEST_UNLOCK (demux);
       GST_API_UNLOCK (demux);
       gst_event_unref (event);
+      GST_WARNING_OBJECT (demux, "Failure getting the live seek ranges");
       return FALSE;
     }
+
+    GST_DEBUG_OBJECT (demux,
+        "Live range is %" GST_STIME_FORMAT " %" GST_STIME_FORMAT,
+        GST_STIME_ARGS (range_start), GST_STIME_ARGS (range_stop));
 
     /* Handle relative positioning for live streams (relative to the range_stop) */
     if (start_type == GST_SEEK_TYPE_END) {
@@ -1528,19 +1538,27 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
        * to map to the start for live cases, since those can return a "moving
        * target" based on wall time.
        */
-      if (start < range_start) {
-        guint64 dt = range_start - start;
+      if (start_type == GST_SEEK_TYPE_SET && start < range_start) {
         GST_DEBUG_OBJECT (demux,
-            "Non accurate seek before live stream start, offsetting by %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (dt));
+            "Non accurate seek before live stream start, setting to range start: %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (range_start));
         start = range_start;
-        if (stop != GST_CLOCK_TIME_NONE)
-          stop += dt;
+        changed = TRUE;
+      }
+      /* truncate stop position also if set */
+      if (stop_type == GST_SEEK_TYPE_SET && stop > range_stop) {
+        GST_DEBUG_OBJECT (demux,
+            "Non accurate seek beyong now, setting to: %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (range_stop));
+        stop = range_stop;
         changed = TRUE;
       }
     }
 
-    if (start < range_start || start > range_stop) {
+    /* If the seek position is still outside of the seekable range, refuse the seek */
+    if (((start_type == GST_SEEK_TYPE_SET) && (start < range_start
+                || start > range_stop)) || ((stop_type == GST_SEEK_TYPE_SET)
+            && (stop < range_start || stop > range_stop))) {
       GST_MANIFEST_UNLOCK (demux);
       GST_API_UNLOCK (demux);
       GST_WARNING_OBJECT (demux, "Seek to invalid position");
@@ -1548,16 +1566,15 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
       return FALSE;
     }
 
+    /* Re-create seek event with changed/updated values */
     if (changed) {
       gst_event_unref (event);
       event =
           gst_event_new_seek (rate, format, flags,
           start_type, start, stop_type, stop);
-
+      gst_event_set_seqnum (event, seqnum);
     }
   }
-
-  seqnum = gst_event_get_seqnum (event);
 
   GST_DEBUG_OBJECT (demux, "seek event, %" GST_PTR_FORMAT, event);
 
