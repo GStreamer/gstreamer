@@ -2450,7 +2450,6 @@ gst_qtdemux_stream_free (GstQTDemux * qtdemux, QtDemuxStream * stream)
     gst_element_remove_pad (GST_ELEMENT_CAST (qtdemux), stream->pad);
     gst_flow_combiner_remove_pad (qtdemux->flowcombiner, stream->pad);
   }
-  g_free (stream->stsd_entries);
   g_free (stream);
 }
 
