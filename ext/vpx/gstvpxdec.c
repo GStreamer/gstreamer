@@ -491,6 +491,7 @@ gst_vpx_dec_release_buffer_cb (gpointer priv, vpx_codec_frame_buffer_t * fb)
   gst_buffer_unmap (frame->buffer, &frame->info);
   gst_buffer_unref (frame->buffer);
   g_free (frame);
+  fb->priv = NULL;
 
   return 0;
 }
