@@ -41,9 +41,9 @@ libopencv3_headers = [
 gstopencv_cargs = ['-DGST_HAAR_CASCADES_DIR="@0@"']
 
 opencv_dep = dependency('opencv', version : ['>=2.3.0', '<=3.1.0'], required : false)
+opencv_found = opencv_dep.found()
 
-if opencv_dep.found()
-  opencv_found = true
+if opencv_found
   foreach h : libopencv2_headers
     if not cxx.has_header(h)
       message('Needed header "' + h + '" not found')
