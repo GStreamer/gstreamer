@@ -104,6 +104,9 @@ struct _GstDirectSoundSrc
 
   GMutex dsound_lock;
 
+  GstClock *system_clock;
+  GstClockID *read_wait_clock_id;
+  gboolean reset_while_sleeping;
 };
 
 struct _GstDirectSoundSrcClass 
