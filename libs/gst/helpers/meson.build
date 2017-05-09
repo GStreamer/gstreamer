@@ -80,7 +80,7 @@ if have_ptp
     endif
   endif
 
-  setcap = find_program('setcap', '/usr/bin/setcap', '/sbin/setcap', required : false)
+  setcap = find_program('setcap', '/usr/sbin/setcap', '/sbin/setcap', required : false)
 
   # user/group to change to in gst-ptp-helper
   ptp_helper_setuid_user = get_option('with-ptp-helper-setuid-user')
