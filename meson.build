@@ -245,9 +245,7 @@ endif
 omx_conf_dir = join_paths (get_option ('prefix'), get_option ('sysconfdir'), 'xdg')
 cdata.set_quoted('GST_OMX_CONFIG_DIR', omx_conf_dir)
 
-configure_file(input : 'config.h.meson',
-  output : 'config.h',
-  configuration : cdata)
+configure_file(output : 'config.h', configuration : cdata)
 
 subdir('config')
 subdir('examples')
