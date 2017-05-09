@@ -275,7 +275,7 @@ gst_gl_window_new (GstGLDisplay * display)
     window = GST_GL_WINDOW (gst_gl_window_eagl_new (display));
 #endif
 #if GST_GL_HAVE_WINDOW_VIV_FB
-  if (!window && (!user_choice || g_strstr_len (user_choice, 2, "viv-fb")))
+  if (!window && (!user_choice || g_strstr_len (user_choice, 6, "viv-fb")))
     window = GST_GL_WINDOW (gst_gl_window_viv_fb_egl_new (display));
 #endif
 

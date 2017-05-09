@@ -301,7 +301,7 @@ gst_gl_display_new (void)
     display = GST_GL_DISPLAY (gst_gl_display_wayland_new (NULL));
 #endif
 #if GST_GL_HAVE_WINDOW_VIV_FB
-  if (!display && (!user_choice || g_strstr_len (user_choice, 2, "viv-fb"))) {
+  if (!display && (!user_choice || g_strstr_len (user_choice, 6, "viv-fb"))) {
     const gchar *disp_idx_str = NULL;
     gint disp_idx = 0;
     disp_idx_str = g_getenv ("GST_GL_VIV_FB");
