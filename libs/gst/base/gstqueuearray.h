@@ -31,39 +31,49 @@ G_BEGIN_DECLS
  */
 typedef struct _GstQueueArray GstQueueArray;
 
+GST_EXPORT
 GstQueueArray * gst_queue_array_new       (guint initial_size);
 
+GST_EXPORT
 void            gst_queue_array_free      (GstQueueArray * array);
 
+GST_EXPORT
 gpointer        gst_queue_array_pop_head  (GstQueueArray * array);
+
+GST_EXPORT
 gpointer        gst_queue_array_peek_head (GstQueueArray * array);
 
+GST_EXPORT
 void            gst_queue_array_push_tail (GstQueueArray * array,
                                            gpointer        data);
-
+GST_EXPORT
 gboolean        gst_queue_array_is_empty  (GstQueueArray * array);
 
+GST_EXPORT
 gpointer        gst_queue_array_drop_element (GstQueueArray * array,
                                               guint           idx);
-
+GST_EXPORT
 guint           gst_queue_array_find (GstQueueArray * array,
                                       GCompareFunc    func,
                                       gpointer        data);
-
+GST_EXPORT
 guint           gst_queue_array_get_length (GstQueueArray * array);
 
 /* Functions for use with structures */
 
+GST_EXPORT
 GstQueueArray * gst_queue_array_new_for_struct (gsize struct_size,
                                                 guint initial_size);
-
+GST_EXPORT
 void            gst_queue_array_push_tail_struct (GstQueueArray * array,
                                                   gpointer        p_struct);
-
+GST_EXPORT
 gpointer        gst_queue_array_pop_head_struct  (GstQueueArray * array);
 
+GST_EXPORT
 gpointer        gst_queue_array_peek_head_struct (GstQueueArray * array);
 
+GST_EXPORT
 gboolean        gst_queue_array_drop_struct      (GstQueueArray * array,
                                                   guint           idx,
                                                   gpointer        p_struct);

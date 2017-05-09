@@ -46,46 +46,97 @@ G_BEGIN_DECLS
 typedef struct _GstAdapter GstAdapter;
 typedef struct _GstAdapterClass GstAdapterClass;
 
+GST_EXPORT
 GType                   gst_adapter_get_type            (void);
 
+GST_EXPORT
 GstAdapter *            gst_adapter_new                 (void) G_GNUC_MALLOC;
 
+GST_EXPORT
 void                    gst_adapter_clear               (GstAdapter *adapter);
+
+GST_EXPORT
 void                    gst_adapter_push                (GstAdapter *adapter, GstBuffer* buf);
+
+GST_EXPORT
 gconstpointer           gst_adapter_map                 (GstAdapter *adapter, gsize size);
+
+GST_EXPORT
 void                    gst_adapter_unmap               (GstAdapter *adapter);
+
+GST_EXPORT
 void                    gst_adapter_copy                (GstAdapter *adapter, gpointer dest,
                                                          gsize offset, gsize size);
+GST_EXPORT
 GBytes *                gst_adapter_copy_bytes          (GstAdapter *adapter,
                                                          gsize offset, gsize size);
+GST_EXPORT
 void                    gst_adapter_flush               (GstAdapter *adapter, gsize flush);
+
+GST_EXPORT
 gpointer                gst_adapter_take                (GstAdapter *adapter, gsize nbytes);
+
+GST_EXPORT
 GstBuffer*              gst_adapter_take_buffer         (GstAdapter *adapter, gsize nbytes);
+
+GST_EXPORT
 GList*                  gst_adapter_take_list           (GstAdapter *adapter, gsize nbytes);
+
+GST_EXPORT
 GstBuffer *             gst_adapter_take_buffer_fast    (GstAdapter *adapter, gsize nbytes);
+
+GST_EXPORT
 GstBufferList *         gst_adapter_take_buffer_list    (GstAdapter *adapter, gsize nbytes);
+
+GST_EXPORT
 GstBuffer*              gst_adapter_get_buffer          (GstAdapter *adapter, gsize nbytes);
+
+GST_EXPORT
 GList*                  gst_adapter_get_list            (GstAdapter *adapter, gsize nbytes);
+
+GST_EXPORT
 GstBuffer *             gst_adapter_get_buffer_fast     (GstAdapter *adapter, gsize nbytes);
+
+GST_EXPORT
 GstBufferList *         gst_adapter_get_buffer_list     (GstAdapter *adapter, gsize nbytes);
+
+GST_EXPORT
 gsize                   gst_adapter_available           (GstAdapter *adapter);
+
+GST_EXPORT
 gsize                   gst_adapter_available_fast      (GstAdapter *adapter);
 
+GST_EXPORT
 GstClockTime            gst_adapter_prev_pts            (GstAdapter *adapter, guint64 *distance);
+
+GST_EXPORT
 GstClockTime            gst_adapter_prev_dts            (GstAdapter *adapter, guint64 *distance);
+
+GST_EXPORT
 GstClockTime            gst_adapter_prev_pts_at_offset  (GstAdapter * adapter, gsize offset, guint64 * distance);
+
+GST_EXPORT
 GstClockTime            gst_adapter_prev_dts_at_offset  (GstAdapter * adapter, gsize offset, guint64 * distance);
+
+GST_EXPORT
 guint64                 gst_adapter_prev_offset         (GstAdapter *adapter, guint64 *distance);
 
+GST_EXPORT
 GstClockTime            gst_adapter_pts_at_discont      (GstAdapter *adapter);
+
+GST_EXPORT
 GstClockTime            gst_adapter_dts_at_discont      (GstAdapter *adapter);
+
+GST_EXPORT
 guint64                 gst_adapter_offset_at_discont   (GstAdapter *adapter);
 
+GST_EXPORT
 guint64                 gst_adapter_distance_from_discont (GstAdapter *adapter);
 
+GST_EXPORT
 gssize                  gst_adapter_masked_scan_uint32  (GstAdapter * adapter, guint32 mask,
                                                          guint32 pattern, gsize offset, gsize size);
-
+GST_EXPORT
 gssize                  gst_adapter_masked_scan_uint32_peek  (GstAdapter * adapter, guint32 mask,
                                                          guint32 pattern, gsize offset, gsize size, guint32 * value);
 

@@ -41,23 +41,31 @@ G_BEGIN_DECLS
  */
 typedef struct _GstFlowCombiner GstFlowCombiner;
 
+GST_EXPORT
 GstFlowCombiner * gst_flow_combiner_new (void);
 
+GST_EXPORT
 void              gst_flow_combiner_free (GstFlowCombiner * combiner);
 
+GST_EXPORT
 GstFlowReturn     gst_flow_combiner_update_flow (GstFlowCombiner * combiner, GstFlowReturn fret);
 
+GST_EXPORT
 GstFlowReturn     gst_flow_combiner_update_pad_flow (GstFlowCombiner * combiner, GstPad * pad,
                                                      GstFlowReturn fret);
-
+GST_EXPORT
 void              gst_flow_combiner_add_pad    (GstFlowCombiner * combiner, GstPad * pad);
 
+GST_EXPORT
 void              gst_flow_combiner_remove_pad (GstFlowCombiner * combiner, GstPad * pad);
 
+GST_EXPORT
 void              gst_flow_combiner_clear (GstFlowCombiner * combiner);
 
+GST_EXPORT
 void              gst_flow_combiner_reset (GstFlowCombiner * combiner);
 
+GST_EXPORT
 GType             gst_flow_combiner_get_type (void);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

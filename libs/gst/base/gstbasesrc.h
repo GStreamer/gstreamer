@@ -233,40 +233,65 @@ struct _GstBaseSrcClass {
   gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
-GType gst_base_src_get_type (void);
+GST_EXPORT
+GType           gst_base_src_get_type (void);
 
+GST_EXPORT
 GstFlowReturn   gst_base_src_wait_playing     (GstBaseSrc *src);
 
+GST_EXPORT
 void            gst_base_src_set_live         (GstBaseSrc *src, gboolean live);
+
+GST_EXPORT
 gboolean        gst_base_src_is_live          (GstBaseSrc *src);
 
+GST_EXPORT
 void            gst_base_src_set_format       (GstBaseSrc *src, GstFormat format);
 
+GST_EXPORT
 void            gst_base_src_set_dynamic_size (GstBaseSrc * src, gboolean dynamic);
 
+GST_EXPORT
 void            gst_base_src_set_automatic_eos (GstBaseSrc * src, gboolean automatic_eos);
 
+GST_EXPORT
 void            gst_base_src_set_async        (GstBaseSrc *src, gboolean async);
+
+GST_EXPORT
 gboolean        gst_base_src_is_async         (GstBaseSrc *src);
 
+GST_EXPORT
 void            gst_base_src_start_complete   (GstBaseSrc * basesrc, GstFlowReturn ret);
+
+GST_EXPORT
 GstFlowReturn   gst_base_src_start_wait       (GstBaseSrc * basesrc);
 
+GST_EXPORT
 gboolean        gst_base_src_query_latency    (GstBaseSrc *src, gboolean * live,
                                                GstClockTime * min_latency,
                                                GstClockTime * max_latency);
-
+GST_EXPORT
 void            gst_base_src_set_blocksize    (GstBaseSrc *src, guint blocksize);
+
+GST_EXPORT
 guint           gst_base_src_get_blocksize    (GstBaseSrc *src);
 
+GST_EXPORT
 void            gst_base_src_set_do_timestamp (GstBaseSrc *src, gboolean timestamp);
+
+GST_EXPORT
 gboolean        gst_base_src_get_do_timestamp (GstBaseSrc *src);
 
+GST_EXPORT
 gboolean        gst_base_src_new_seamless_segment (GstBaseSrc *src, gint64 start, gint64 stop, gint64 time);
 
+GST_EXPORT
 gboolean        gst_base_src_set_caps         (GstBaseSrc *src, GstCaps *caps);
 
+GST_EXPORT
 GstBufferPool * gst_base_src_get_buffer_pool  (GstBaseSrc *src);
+
+GST_EXPORT
 void            gst_base_src_get_allocator    (GstBaseSrc *src,
                                                GstAllocator **allocator,
                                                GstAllocationParams *params);

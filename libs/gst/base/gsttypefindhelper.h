@@ -28,16 +28,19 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GstCaps * gst_type_find_helper (GstPad *src, guint64 size);
 
+GST_EXPORT
 GstCaps * gst_type_find_helper_for_data   (GstObject              *obj,
                                            const guint8           *data,
                                            gsize                   size,
                                            GstTypeFindProbability *prob);
+GST_EXPORT
 GstCaps * gst_type_find_helper_for_buffer (GstObject              *obj,
                                            GstBuffer              *buf,
                                            GstTypeFindProbability *prob);
-
+GST_EXPORT
 GstCaps * gst_type_find_helper_for_extension (GstObject * obj,
                                               const gchar * extension);
 
@@ -64,7 +67,7 @@ typedef GstFlowReturn (*GstTypeFindHelperGetRangeFunction) (GstObject  *obj,
                                                             guint64     offset,
                                                             guint       length,
                                                             GstBuffer **buffer);
-
+GST_EXPORT
 GstCaps * gst_type_find_helper_get_range (GstObject                         *obj,
                                           GstObject                         *parent,
                                           GstTypeFindHelperGetRangeFunction  func,

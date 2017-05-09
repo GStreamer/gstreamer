@@ -339,73 +339,111 @@ struct _GstCollectPadsClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_collect_pads_get_type(void);
+GST_EXPORT
+GType           gst_collect_pads_get_type (void);
 
 /* creating the object */
-GstCollectPads*        gst_collect_pads_new           (void);
+
+GST_EXPORT
+GstCollectPads* gst_collect_pads_new      (void);
 
 /* set the callbacks */
+
+GST_EXPORT
 void            gst_collect_pads_set_function         (GstCollectPads *pads,
                                                        GstCollectPadsFunction func,
                                                        gpointer user_data);
+GST_EXPORT
 void            gst_collect_pads_set_buffer_function  (GstCollectPads *pads,
                                                        GstCollectPadsBufferFunction func,
                                                        gpointer user_data);
+GST_EXPORT
 void            gst_collect_pads_set_event_function   (GstCollectPads *pads,
                                                        GstCollectPadsEventFunction func,
                                                        gpointer user_data);
+GST_EXPORT
 void            gst_collect_pads_set_query_function   (GstCollectPads *pads,
                                                        GstCollectPadsQueryFunction func,
                                                        gpointer user_data);
+GST_EXPORT
 void            gst_collect_pads_set_compare_function (GstCollectPads *pads,
                                                        GstCollectPadsCompareFunction func,
                                                        gpointer user_data);
+GST_EXPORT
 void            gst_collect_pads_set_clip_function    (GstCollectPads *pads,
                                                        GstCollectPadsClipFunction clipfunc,
                                                        gpointer user_data);
+GST_EXPORT
 void            gst_collect_pads_set_flush_function    (GstCollectPads *pads,
                                                        GstCollectPadsFlushFunction func,
                                                        gpointer user_data);
 
 /* pad management */
+
+GST_EXPORT
 GstCollectData* gst_collect_pads_add_pad       (GstCollectPads *pads, GstPad *pad, guint size,
                                                 GstCollectDataDestroyNotify destroy_notify,
                                                 gboolean lock);
+GST_EXPORT
 gboolean        gst_collect_pads_remove_pad    (GstCollectPads *pads, GstPad *pad);
 
 /* start/stop collection */
+
+GST_EXPORT
 void            gst_collect_pads_start         (GstCollectPads *pads);
+
+GST_EXPORT
 void            gst_collect_pads_stop          (GstCollectPads *pads);
+
+GST_EXPORT
 void            gst_collect_pads_set_flushing  (GstCollectPads *pads, gboolean flushing);
 
 /* get collected buffers */
+
+GST_EXPORT
 GstBuffer*      gst_collect_pads_peek          (GstCollectPads *pads, GstCollectData *data);
+
+GST_EXPORT
 GstBuffer*      gst_collect_pads_pop           (GstCollectPads *pads, GstCollectData *data);
 
 /* get collected bytes */
+
+GST_EXPORT
 guint           gst_collect_pads_available     (GstCollectPads *pads);
+
+GST_EXPORT
 guint           gst_collect_pads_flush         (GstCollectPads *pads, GstCollectData *data,
                                                 guint size);
+GST_EXPORT
 GstBuffer*      gst_collect_pads_read_buffer   (GstCollectPads * pads, GstCollectData * data,
                                                 guint size);
+GST_EXPORT
 GstBuffer*      gst_collect_pads_take_buffer   (GstCollectPads * pads, GstCollectData * data,
                                                 guint size);
 
 /* setting and unsetting waiting mode */
+
+GST_EXPORT
 void            gst_collect_pads_set_waiting   (GstCollectPads *pads, GstCollectData *data,
                                                 gboolean waiting);
 
 /* convenience helper */
+
+GST_EXPORT
 GstFlowReturn	gst_collect_pads_clip_running_time (GstCollectPads * pads,
                                                     GstCollectData * cdata,
                                                     GstBuffer * buf, GstBuffer ** outbuf,
                                                     gpointer user_data);
 
 /* default handlers */
+
+GST_EXPORT
 gboolean        gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
                                                 GstEvent * event, gboolean discard);
+GST_EXPORT
 gboolean        gst_collect_pads_src_event_default (GstCollectPads * pads, GstPad * pad,
                                                     GstEvent * event);
+GST_EXPORT
 gboolean        gst_collect_pads_query_default (GstCollectPads * pads, GstCollectData * data,
                                                 GstQuery * query, gboolean discard);
 

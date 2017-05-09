@@ -36,6 +36,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DATA_QUEUE))
 #define GST_IS_DATA_QUEUE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DATA_QUEUE))
+
 typedef struct _GstDataQueue GstDataQueue;
 typedef struct _GstDataQueueClass GstDataQueueClass;
 typedef struct _GstDataQueueSize GstDataQueueSize;
@@ -134,31 +135,45 @@ struct _GstDataQueueClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_data_queue_get_type (void);
+GST_EXPORT
+GType          gst_data_queue_get_type (void);
 
+GST_EXPORT
 GstDataQueue * gst_data_queue_new            (GstDataQueueCheckFullFunction checkfull,
 					      GstDataQueueFullCallback fullcallback,
 					      GstDataQueueEmptyCallback emptycallback,
 					      gpointer checkdata) G_GNUC_MALLOC;
-
+GST_EXPORT
 gboolean       gst_data_queue_push           (GstDataQueue * queue, GstDataQueueItem * item);
+
+GST_EXPORT
 gboolean       gst_data_queue_push_force     (GstDataQueue * queue, GstDataQueueItem * item);
 
+GST_EXPORT
 gboolean       gst_data_queue_pop            (GstDataQueue * queue, GstDataQueueItem ** item);
+
+GST_EXPORT
 gboolean       gst_data_queue_peek           (GstDataQueue * queue, GstDataQueueItem ** item);
 
+GST_EXPORT
 void           gst_data_queue_flush          (GstDataQueue * queue);
 
+GST_EXPORT
 void           gst_data_queue_set_flushing   (GstDataQueue * queue, gboolean flushing);
 
+GST_EXPORT
 gboolean       gst_data_queue_drop_head      (GstDataQueue * queue, GType type);
 
+GST_EXPORT
 gboolean       gst_data_queue_is_full        (GstDataQueue * queue);
 
+GST_EXPORT
 gboolean       gst_data_queue_is_empty       (GstDataQueue * queue);
 
+GST_EXPORT
 void           gst_data_queue_get_level      (GstDataQueue * queue, GstDataQueueSize *level);
 
+GST_EXPORT
 void           gst_data_queue_limits_changed (GstDataQueue * queue);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

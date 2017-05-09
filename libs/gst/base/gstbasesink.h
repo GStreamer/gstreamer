@@ -201,63 +201,118 @@ struct _GstBaseSinkClass {
   gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
-GType gst_base_sink_get_type(void);
+GST_EXPORT
+GType           gst_base_sink_get_type (void);
 
+GST_EXPORT
 GstFlowReturn   gst_base_sink_do_preroll        (GstBaseSink *sink, GstMiniObject *obj);
+
+GST_EXPORT
 GstFlowReturn   gst_base_sink_wait_preroll      (GstBaseSink *sink);
 
 /* synchronizing against the clock */
+
+GST_EXPORT
 void            gst_base_sink_set_sync          (GstBaseSink *sink, gboolean sync);
+
+GST_EXPORT
 gboolean        gst_base_sink_get_sync          (GstBaseSink *sink);
 
 /* Drop buffers which are out of segment */
+
+GST_EXPORT
 void            gst_base_sink_set_drop_out_of_segment (GstBaseSink *sink, gboolean drop_out_of_segment);
+
+GST_EXPORT
 gboolean        gst_base_sink_get_drop_out_of_segment (GstBaseSink *sink);
 
 /* dropping late buffers */
+
+GST_EXPORT
 void            gst_base_sink_set_max_lateness  (GstBaseSink *sink, gint64 max_lateness);
+
+GST_EXPORT
 gint64          gst_base_sink_get_max_lateness  (GstBaseSink *sink);
 
 /* performing QoS */
+
+GST_EXPORT
 void            gst_base_sink_set_qos_enabled   (GstBaseSink *sink, gboolean enabled);
+
+GST_EXPORT
 gboolean        gst_base_sink_is_qos_enabled    (GstBaseSink *sink);
 
 /* doing async state changes */
+
+GST_EXPORT
 void            gst_base_sink_set_async_enabled (GstBaseSink *sink, gboolean enabled);
+
+GST_EXPORT
 gboolean        gst_base_sink_is_async_enabled  (GstBaseSink *sink);
 
 /* tuning synchronisation */
+
+GST_EXPORT
 void            gst_base_sink_set_ts_offset     (GstBaseSink *sink, GstClockTimeDiff offset);
+
+GST_EXPORT
 GstClockTimeDiff gst_base_sink_get_ts_offset    (GstBaseSink *sink);
 
 /* last sample */
+
+GST_EXPORT
 GstSample *     gst_base_sink_get_last_sample   (GstBaseSink *sink);
+
+GST_EXPORT
 void            gst_base_sink_set_last_sample_enabled (GstBaseSink *sink, gboolean enabled);
+
+GST_EXPORT
 gboolean        gst_base_sink_is_last_sample_enabled (GstBaseSink *sink);
 
 /* latency */
+
+GST_EXPORT
 gboolean        gst_base_sink_query_latency     (GstBaseSink *sink, gboolean *live, gboolean *upstream_live,
                                                  GstClockTime *min_latency, GstClockTime *max_latency);
+GST_EXPORT
 GstClockTime    gst_base_sink_get_latency       (GstBaseSink *sink);
 
 /* render delay */
+
+GST_EXPORT
 void            gst_base_sink_set_render_delay  (GstBaseSink *sink, GstClockTime delay);
+
+GST_EXPORT
 GstClockTime    gst_base_sink_get_render_delay  (GstBaseSink *sink);
 
 /* blocksize */
+
+GST_EXPORT
 void            gst_base_sink_set_blocksize     (GstBaseSink *sink, guint blocksize);
+
+GST_EXPORT
 guint           gst_base_sink_get_blocksize     (GstBaseSink *sink);
 
 /* throttle-time */
+
+GST_EXPORT
 void            gst_base_sink_set_throttle_time (GstBaseSink *sink, guint64 throttle);
+
+GST_EXPORT
 guint64         gst_base_sink_get_throttle_time (GstBaseSink *sink);
 
 /* max-bitrate */
+
+GST_EXPORT
 void            gst_base_sink_set_max_bitrate   (GstBaseSink *sink, guint64 max_bitrate);
+
+GST_EXPORT
 guint64         gst_base_sink_get_max_bitrate   (GstBaseSink *sink);
 
+GST_EXPORT
 GstClockReturn  gst_base_sink_wait_clock        (GstBaseSink *sink, GstClockTime time,
                                                  GstClockTimeDiff * jitter);
+GST_EXPORT
 GstFlowReturn   gst_base_sink_wait              (GstBaseSink *sink, GstClockTime time,
                                                  GstClockTimeDiff *jitter);
 

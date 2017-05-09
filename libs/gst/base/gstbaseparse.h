@@ -275,78 +275,84 @@ struct _GstBaseParseClass {
   gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
 };
 
+GST_EXPORT
 GType           gst_base_parse_get_type (void);
 
+GST_EXPORT
 GType           gst_base_parse_frame_get_type (void);
 
+GST_EXPORT
 GstBaseParseFrame * gst_base_parse_frame_new  (GstBuffer              * buffer,
                                                GstBaseParseFrameFlags   flags,
                                                gint                     overhead);
-
+GST_EXPORT
 void            gst_base_parse_frame_init      (GstBaseParseFrame * frame);
 
+GST_EXPORT
 void            gst_base_parse_frame_free      (GstBaseParseFrame * frame);
 
+GST_EXPORT
 GstFlowReturn   gst_base_parse_push_frame      (GstBaseParse      * parse,
                                                 GstBaseParseFrame * frame);
-
+GST_EXPORT
 GstFlowReturn   gst_base_parse_finish_frame    (GstBaseParse * parse,
                                                 GstBaseParseFrame * frame,
                                                 gint size);
-
+GST_EXPORT
 void            gst_base_parse_set_duration    (GstBaseParse      * parse,
                                                 GstFormat           fmt,
                                                 gint64              duration,
                                                 gint                interval);
-
+GST_EXPORT
 void            gst_base_parse_set_average_bitrate (GstBaseParse   * parse,
                                                     guint            bitrate);
-
+GST_EXPORT
 void            gst_base_parse_set_min_frame_size (GstBaseParse    * parse,
                                                    guint             min_size);
-
+GST_EXPORT
 void            gst_base_parse_set_has_timing_info (GstBaseParse   * parse,
                                                     gboolean         has_timing);
-
+GST_EXPORT
 void            gst_base_parse_drain           (GstBaseParse * parse);
 
+GST_EXPORT
 void            gst_base_parse_set_syncable    (GstBaseParse * parse,
                                                 gboolean       syncable);
-
+GST_EXPORT
 void            gst_base_parse_set_passthrough (GstBaseParse * parse,
                                                 gboolean       passthrough);
-
+GST_EXPORT
 void            gst_base_parse_set_pts_interpolation (GstBaseParse * parse,
                                                       gboolean pts_interpolate);
-
+GST_EXPORT
 void            gst_base_parse_set_infer_ts (GstBaseParse * parse,
                                              gboolean infer_ts);
-
+GST_EXPORT
 void            gst_base_parse_set_frame_rate  (GstBaseParse * parse,
                                                 guint          fps_num,
                                                 guint          fps_den,
                                                 guint          lead_in,
                                                 guint          lead_out);
-
+GST_EXPORT
 void            gst_base_parse_set_latency     (GstBaseParse * parse,
                                                 GstClockTime min_latency,
                                                 GstClockTime max_latency);
-
+GST_EXPORT
 gboolean        gst_base_parse_convert_default (GstBaseParse * parse,
                                                 GstFormat      src_format,
                                                 gint64         src_value,
                                                 GstFormat      dest_format,
                                                 gint64       * dest_value);
-
+GST_EXPORT
 gboolean        gst_base_parse_add_index_entry (GstBaseParse * parse,
                                                 guint64        offset,
                                                 GstClockTime   ts,
                                                 gboolean       key,
                                                 gboolean       force);
-
+GST_EXPORT
 void            gst_base_parse_set_ts_at_offset (GstBaseParse *parse,
                                                  gsize offset);
-
+GST_EXPORT
 void            gst_base_parse_merge_tags       (GstBaseParse  * parse,
                                                  GstTagList    * tags,
                                                  GstTagMergeMode mode);
