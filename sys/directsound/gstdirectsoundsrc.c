@@ -163,6 +163,9 @@ gst_directsound_src_finalize (GObject * object)
   GstDirectSoundSrc *dsoundsrc = GST_DIRECTSOUND_SRC (object);
 
   g_mutex_clear (&dsoundsrc->dsound_lock);
+  gst_object_unref (dsoundsrc->system_clock);
+  if (dsoundsrc->read_wait_clock_id != NULL)
+    gst_clock_id_unref (dsoundsrc->read_wait_clock_id);
 
   g_free (dsoundsrc->device_name);
 
@@ -321,6 +324,9 @@ gst_directsound_src_init (GstDirectSoundSrc * src)
 {
   GST_DEBUG_OBJECT (src, "initializing directsoundsrc");
   g_mutex_init (&src->dsound_lock);
+  src->system_clock = gst_system_clock_obtain ();
+  src->read_wait_clock_id = NULL;
+  src->reset_while_sleeping = FALSE;
   src->device_guid = NULL;
   src->device_id = NULL;
   src->device_name = NULL;
@@ -647,8 +653,8 @@ gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length,
     GstClockTime * timestamp)
 {
   GstDirectSoundSrc *dsoundsrc;
-  guint64 sleep_time_ms;
-  guint64 slept_time_ms = 0;
+  guint64 sleep_time_ms, sleep_until;
+  GstClockID clock_id;
 
   HRESULT hRes;                 /* Result for windows functions */
   DWORD dwCurrentCaptureCursor = 0;
@@ -684,7 +690,7 @@ gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length,
   }
 
   /* Loop till the source has produced bytes equal to or greater than @length.
-  *
+   *
    * DirectSound has a notification-based API that uses Windows CreateEvent()
    * + WaitForSingleObject(), but it is completely useless for live streams.
    *
@@ -730,15 +736,40 @@ gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length,
           length - dwBufferSize, length * 1000);
       /* Make sure we don't run in a tight loop unnecessarily */
       sleep_time_ms = MAX (sleep_time_ms, 10);
-      GST_DEBUG_OBJECT (asrc, "sleeping for %" G_GUINT64_FORMAT "ms",
+      /* Sleep using gst_clock_id_wait() so that we can be interrupted */
+      sleep_until = gst_clock_get_time (dsoundsrc->system_clock) +
+          sleep_time_ms * GST_MSECOND;
+      /* Setup the clock id wait */
+      if (G_UNLIKELY (dsoundsrc->read_wait_clock_id == NULL ||
+              gst_clock_single_shot_id_reinit (dsoundsrc->system_clock,
+                  dsoundsrc->read_wait_clock_id, sleep_until) == FALSE)) {
+        if (dsoundsrc->read_wait_clock_id != NULL)
+          gst_clock_id_unref (dsoundsrc->read_wait_clock_id);
+        dsoundsrc->read_wait_clock_id =
+            gst_clock_new_single_shot_id (dsoundsrc->system_clock, sleep_until);
+      }
+
+      clock_id = dsoundsrc->read_wait_clock_id;
+      dsoundsrc->reset_while_sleeping = FALSE;
+
+      GST_DEBUG_OBJECT (asrc, "waiting %" G_GUINT64_FORMAT "ms for more data",
           sleep_time_ms);
-      Sleep (sleep_time_ms);
-      slept_time_ms += sleep_time_ms;
+      GST_DSOUND_UNLOCK (dsoundsrc);
+
+      gst_clock_id_wait (clock_id, NULL);
+
+      GST_DSOUND_LOCK (dsoundsrc);
+
+      if (dsoundsrc->reset_while_sleeping == TRUE) {
+        GST_DEBUG_OBJECT (asrc, "reset while sleeping, cancelled read");
+        GST_DSOUND_UNLOCK (dsoundsrc);
+        return -1;
+      }
     }
   }
 
-  GST_DEBUG_OBJECT (asrc, "Got enough data: %lu bytes (wanted at least %u), "
-      "slept for %" G_GUINT64_FORMAT "ms", dwBufferSize, length, slept_time_ms);
+  GST_DEBUG_OBJECT (asrc, "Got enough data: %lu bytes (wanted at least %u)",
+      dwBufferSize, length);
 
   /* Lock the buffer and read only the first @length bytes. Keep the rest in
    * the capture buffer for the next read. */
@@ -819,11 +850,12 @@ gst_directsound_src_reset (GstAudioSrc * asrc)
 
   dsoundsrc = GST_DIRECTSOUND_SRC (asrc);
 
-#if 0
-  IDirectSoundCaptureBuffer_Stop (dsoundsrc->pDSBSecondary);
-#endif
-
   GST_DSOUND_LOCK (dsoundsrc);
+
+  dsoundsrc->reset_while_sleeping = TRUE;
+  /* Interrupt read sleep if required */
+  if (dsoundsrc->read_wait_clock_id != NULL)
+    gst_clock_id_unschedule (dsoundsrc->read_wait_clock_id);
 
   if (dsoundsrc->pDSBSecondary) {
     /*stop capturing */
