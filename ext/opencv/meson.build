@@ -40,47 +40,38 @@ libopencv3_headers = [
 
 gstopencv_cargs = ['-DGST_HAAR_CASCADES_DIR="@0@"']
 
-# First, check for the upper version limit and ensure it isn't found
-# FIXME: When 0.37.0 is released, change this to use many-version-conditions
-opencv3_1_dep = dependency('opencv', version : '>3.1.0', required : false)
-# Then, check if the lower version limit is found
-opencv2_dep = dependency('opencv', version : '>=2.3.0', required : false)
-opencv3_dep = dependency('opencv', version : '>= 3.0 ', required : false)
+opencv_dep = dependency('opencv', version : ['>=2.3.0', '<=3.1.0'], required : false)
 
-opencv2_found = false
-if opencv3_1_dep.found()
-  message('OpenCV version is too new: \'' + opencv3_1_dep.version() + '\' (need <= 3.1.0)')
-elif opencv2_dep.found()
-  message('OpenCV found, version is \'' + opencv2_dep.version() + '\'')
-  opencv2_found = true
+if opencv_dep.found()
+  opencv_found = true
   foreach h : libopencv2_headers
     if not cxx.has_header(h)
       message('Needed header "' + h + '" not found')
-      opencv2_found = false
+      opencv_found = false
     endif
   endforeach
 
-  if opencv3_dep.found()
+  if opencv_dep.version() >= '3.0.0'
     foreach h : libopencv3_headers
       if not cxx.has_header(h)
         message('Needed header "' + h + '" not found')
-        opencv2_found = false
+        opencv_found = false
       endif
     endforeach
   endif
 endif
 
-if opencv2_found
-  opencv2_prefix = opencv2_dep.get_pkgconfig_variable('prefix')
-  gstopencv_cargs += ['-DOPENCV_PREFIX="' + opencv2_prefix + '"']
+if opencv_found
+  opencv_prefix = opencv_dep.get_pkgconfig_variable('prefix')
+  gstopencv_cargs += ['-DOPENCV_PREFIX="' + opencv_prefix + '"']
 
   # Check the data dir used by opencv for its xml data files
   # Use prefix from pkg-config to be compatible with cross-compilation
-  r = run_command('test', '-d', opencv2_prefix + '/share/opencv')
+  r = run_command('test', '-d', opencv_prefix + '/share/opencv')
   if r.returncode() == 0
     gstopencv_cargs += '-DOPENCV_PATH_NAME="opencv"'
   else
-    r = run_command('test', '-d', opencv2_prefix + '/share/OpenCV')
+    r = run_command('test', '-d', opencv_prefix + '/share/OpenCV')
     if r.returncode() == 0
       gstopencv_cargs += '-DOPENCV_PATH_NAME="OpenCv"'
     else
@@ -92,7 +83,7 @@ if opencv2_found
     cpp_args : gst_plugins_bad_args + gstopencv_cargs + [ '-DGST_USE_UNSTABLE_API' ],
     link_args : noseh_link_args,
     include_directories : [configinc],
-    dependencies : [gstbase_dep, gstvideo_dep, opencv2_dep, gstopencv_dep],
+    dependencies : [gstbase_dep, gstvideo_dep, opencv_dep, gstopencv_dep],
     install : true,
     install_dir : plugins_install_dir,
   )
