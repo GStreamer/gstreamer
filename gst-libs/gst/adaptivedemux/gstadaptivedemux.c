@@ -1766,6 +1766,35 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
       seg_evt = gst_event_new_segment (&stream->segment);
       gst_event_set_seqnum (seg_evt, demux->priv->segment_seqnum);
       gst_event_replace (&stream->pending_segment, seg_evt);
+      GST_DEBUG_OBJECT (stream->pad, "Pending segment now %" GST_SEGMENT_FORMAT,
+          &stream->pending_segment);
+      gst_event_unref (seg_evt);
+      /* Make sure the first buffer after a seek has the discont flag */
+      stream->discont = TRUE;
+    }
+    /* Same thing but for prepared streams that haven't been exposed yet */
+    for (iter = demux->prepared_streams; iter; iter = g_list_next (iter)) {
+      GstAdaptiveDemuxStream *stream = iter->data;
+      GstEvent *seg_evt;
+      GstClockTime offset;
+
+      /* See comments in gst_adaptive_demux_get_period_start_time() for
+       * an explanation of the segment modifications */
+      stream->segment = demux->segment;
+      offset =
+          gst_adaptive_demux_stream_get_presentation_offset (demux, stream);
+      stream->segment.start += offset - period_start;
+      if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop))
+        stream->segment.stop += offset - period_start;
+      if (demux->segment.rate > 0 && start_type != GST_SEEK_TYPE_NONE)
+        stream->segment.position = stream->segment.start;
+      else if (demux->segment.rate < 0 && stop_type != GST_SEEK_TYPE_NONE)
+        stream->segment.position = stream->segment.stop;
+      seg_evt = gst_event_new_segment (&stream->segment);
+      gst_event_set_seqnum (seg_evt, demux->priv->segment_seqnum);
+      gst_event_replace (&stream->pending_segment, seg_evt);
+      GST_DEBUG_OBJECT (stream->pad, "Pending segment now %" GST_SEGMENT_FORMAT,
+          &stream->pending_segment);
       gst_event_unref (seg_evt);
       /* Make sure the first buffer after a seek has the discont flag */
       stream->discont = TRUE;
