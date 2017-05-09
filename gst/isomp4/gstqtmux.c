@@ -3344,9 +3344,9 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
                   i - 1).samples_per_chunk;
             }
           }
-          g_assert (i > 0 && i <= n);
+          g_assert (i <= n);
 
-          {
+          if (i > 0) {
             STSCEntry *prev_entry =
                 &atom_array_index (&stbl->stsc.entries, i - 1);
             nsamples +=
@@ -3360,6 +3360,11 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
               stbl->stsc.entries.len = i;
               stbl->stco64.entries.len--;
             }
+          } else {
+            /* Everything in a single chunk */
+            stbl->stsc.entries.len = 0;
+            atom_stsc_add_new_entry (&stbl->stsc, chunk_index,
+                qpad->sample_offset);
           }
         }
 
