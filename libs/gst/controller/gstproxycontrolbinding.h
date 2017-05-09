@@ -25,7 +25,6 @@
 
 G_BEGIN_DECLS
 
-GType gst_proxy_control_binding_get_type (void);
 #define GST_TYPE_PROXY_CONTROL_BINDING  (gst_proxy_control_binding_get_type())
 #define GST_PROXY_CONTROL_BINDING(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PROXY_CONTROL_BINDING,GstProxyControlBinding))
@@ -70,10 +69,14 @@ struct _GstProxyControlBindingClass
   gpointer _padding[GST_PADDING];
 };
 
-GstControlBinding *     gst_proxy_control_binding_new               (GstObject * object,
-                                                                     const gchar * property_name,
-                                                                     GstObject * ref_object,
-                                                                     const gchar * ref_property_name);
+GST_EXPORT
+GType                   gst_proxy_control_binding_get_type (void);
+
+GST_EXPORT
+GstControlBinding *     gst_proxy_control_binding_new (GstObject * object,
+                                                       const gchar * property_name,
+                                                       GstObject * ref_object,
+                                                       const gchar * ref_property_name);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstProxyControlBinding, gst_object_unref)

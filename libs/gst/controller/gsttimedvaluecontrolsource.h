@@ -81,6 +81,7 @@ struct _GstControlPoint
   } cache;
 };
 
+GST_EXPORT
 GType gst_control_point_get_type (void);
 
 /**
@@ -115,24 +116,36 @@ struct _GstTimedValueControlSourceClass {
 #define GST_TIMED_VALUE_CONTROL_SOURCE_UNLOCK(o) \
   g_mutex_unlock(&((GstTimedValueControlSource *)o)->lock)
 
-GType gst_timed_value_control_source_get_type (void);
+GST_EXPORT
+GType           gst_timed_value_control_source_get_type (void);
 
 /* Functions */
 
+GST_EXPORT
 GSequenceIter * gst_timed_value_control_source_find_control_point_iter (
                                                                GstTimedValueControlSource * self,
                                                                GstClockTime timestamp);
-
+GST_EXPORT
 gboolean        gst_timed_value_control_source_set            (GstTimedValueControlSource * self,
                                                                GstClockTime timestamp,
                                                                const gdouble value);
+GST_EXPORT
 gboolean        gst_timed_value_control_source_set_from_list  (GstTimedValueControlSource * self,
                                                                const GSList * timedvalues);
+GST_EXPORT
 gboolean        gst_timed_value_control_source_unset          (GstTimedValueControlSource * self,
                                                                GstClockTime timestamp);
+
+GST_EXPORT
 void            gst_timed_value_control_source_unset_all      (GstTimedValueControlSource *self);
+
+GST_EXPORT
 GList *         gst_timed_value_control_source_get_all        (GstTimedValueControlSource * self);
+
+GST_EXPORT
 gint            gst_timed_value_control_source_get_count      (GstTimedValueControlSource * self);
+
+GST_EXPORT
 void            gst_timed_value_control_invalidate_cache      (GstTimedValueControlSource * self);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

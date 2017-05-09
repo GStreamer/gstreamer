@@ -72,10 +72,12 @@ struct _GstTriggerControlSourceClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType gst_trigger_control_source_get_type (void);
 
 /* Functions */
 
+GST_EXPORT
 GstControlSource *gst_trigger_control_source_new (void);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

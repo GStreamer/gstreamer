@@ -7,6 +7,7 @@ glib_enum_headers= \
 glib_enum_define = GST_CONTROLLER
 glib_gen_prefix = gst
 glib_gen_basename = controller
+glib_gen_decl_banner=GST_EXPORT
 
 built_sources = controller-enumtypes.c
 built_headers = controller-enumtypes.h
