@@ -41,7 +41,9 @@ struct _GstNetControlMessageMeta {
   GSocketControlMessage *message;
 };
 
+GST_EXPORT
 GType gst_net_control_message_meta_api_get_type (void);
+
 #define GST_NET_CONTROL_MESSAGE_META_API_TYPE \
   (gst_net_control_message_meta_api_get_type())
 
@@ -49,10 +51,14 @@ GType gst_net_control_message_meta_api_get_type (void);
   gst_buffer_get_meta((b),GST_NET_CONTROL_MESSAGE_META_API_TYPE))
 
 /* implementation */
+
+GST_EXPORT
 const GstMetaInfo *gst_net_control_message_meta_get_info (void);
+
 #define GST_NET_CONTROL_MESSAGE_META_INFO \
   (gst_net_control_message_meta_get_info())
 
+GST_EXPORT
 GstNetControlMessageMeta * gst_buffer_add_net_control_message_meta (GstBuffer             * buffer,
                                                                     GSocketControlMessage * message);
 

@@ -62,8 +62,10 @@ struct _GstNetTimeProviderClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType                   gst_net_time_provider_get_type  (void);
 
+GST_EXPORT
 GstNetTimeProvider*     gst_net_time_provider_new       (GstClock *clock,
                                                          const gchar *address,
                                                          gint port);

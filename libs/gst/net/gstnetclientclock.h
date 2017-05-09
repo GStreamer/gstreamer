@@ -68,8 +68,10 @@ struct _GstNetClientClockClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType           gst_net_client_clock_get_type	(void);
 
+GST_EXPORT
 GstClock*	gst_net_client_clock_new	(const gchar *name, const gchar *remote_address,
                                                  gint remote_port, GstClockTime base_time);
 
@@ -87,7 +89,10 @@ GstClock*	gst_net_client_clock_new	(const gchar *name, const gchar *remote_addre
 typedef struct _GstNetClientClock GstNtpClock;
 typedef struct _GstNetClientClockClass GstNtpClockClass;
 
+GST_EXPORT
 GType           gst_ntp_clock_get_type	        (void);
+
+GST_EXPORT
 GstClock*	gst_ntp_clock_new	        (const gchar *name, const gchar *remote_address,
                                                  gint remote_port, GstClockTime base_time);
 

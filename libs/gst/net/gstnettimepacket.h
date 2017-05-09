@@ -47,18 +47,26 @@ struct _GstNetTimePacket {
   GstClockTime remote_time;
 };
 
-GType gst_net_time_packet_get_type(void);
+GST_EXPORT
+GType                   gst_net_time_packet_get_type    (void);
 
+GST_EXPORT
 GstNetTimePacket*       gst_net_time_packet_new         (const guint8 *buffer);
+
+GST_EXPORT
 GstNetTimePacket*       gst_net_time_packet_copy        (const GstNetTimePacket *packet);
+
+GST_EXPORT
 void                    gst_net_time_packet_free        (GstNetTimePacket *packet);
 
+GST_EXPORT
 guint8*                 gst_net_time_packet_serialize   (const GstNetTimePacket *packet);
 
+GST_EXPORT
 GstNetTimePacket*	gst_net_time_packet_receive     (GSocket         * socket,
                                                          GSocketAddress ** src_address,
                                                          GError         ** error);
-
+GST_EXPORT
 gboolean                gst_net_time_packet_send        (const GstNetTimePacket * packet,
                                                          GSocket                * socket,
                                                          GSocketAddress         * dest_address,
