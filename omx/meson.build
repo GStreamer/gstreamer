@@ -51,7 +51,7 @@ gstomx = library('gstomx',
 #  link_args : noseh_link_args,
   include_directories : [configinc] + extra_inc,
   dependencies : [gstvideo_dep, gstaudio_dep, gstbase_dep, gstcontroller_dep,
-                  libm] + optional_deps,
+                  libm, gmodule_dep] + optional_deps,
   install : true,
   install_dir : plugins_install_dir,
 )
