@@ -177,6 +177,83 @@ gst_jpeg2000_parse_event (GstBaseParse * parse, GstEvent * event)
   return res;
 }
 
+static GstJPEG2000ParseFormats
+format_from_media_type (const GstStructure * structure)
+{
+  const char *media_type = gst_structure_get_name (structure);
+  if (!strcmp (media_type, "image/x-j2c"))
+    return GST_JPEG2000_PARSE_J2C;
+  if (!strcmp (media_type, "image/x-jpc"))
+    return GST_JPEG2000_PARSE_JPC;
+  if (!strcmp (media_type, "image/x-jp2"))
+    return GST_JPEG2000_PARSE_JP2;
+  return GST_JPEG2000_PARSE_NO_CODEC;
+}
+
+/* check downstream caps to configure media type */
+static void
+gst_jpeg2000_parse_negotiate (GstJPEG2000Parse * parse, GstCaps * in_caps)
+{
+  GstCaps *caps;
+  guint codec_format = GST_JPEG2000_PARSE_NO_CODEC;
+
+  g_return_if_fail ((in_caps == NULL) || gst_caps_is_fixed (in_caps));
+
+  caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  GST_DEBUG_OBJECT (parse, "allowed caps: %" GST_PTR_FORMAT, caps);
+
+  /* concentrate on leading structure, since decodebin parser
+   * capsfilter always includes parser template caps */
+  if (caps) {
+    caps = gst_caps_truncate (caps);
+    GST_DEBUG_OBJECT (parse, "negotiating with caps: %" GST_PTR_FORMAT, caps);
+  }
+
+  if (in_caps && caps) {
+    if (gst_caps_can_intersect (in_caps, caps)) {
+      GST_DEBUG_OBJECT (parse, "downstream accepts upstream caps");
+      codec_format =
+          format_from_media_type (gst_caps_get_structure (in_caps, 0));
+      gst_caps_unref (caps);
+      caps = NULL;
+    }
+  }
+
+  /* FIXME We could fail the negotiation immediatly if caps are empty */
+  if (caps && !gst_caps_is_empty (caps)) {
+    /* fixate to avoid ambiguity with lists when parsing */
+    caps = gst_caps_fixate (caps);
+    codec_format = format_from_media_type (gst_caps_get_structure (caps, 0));
+  }
+
+  /* default */
+  if (codec_format == GST_JPEG2000_PARSE_NO_CODEC)
+    codec_format = GST_JPEG2000_PARSE_J2C;
+
+  GST_DEBUG_OBJECT (parse, "selected codec format %d", codec_format);
+
+  parse->codec_format = codec_format;
+
+  if (caps)
+    gst_caps_unref (caps);
+}
+
+static const char *
+media_type_from_codec_format (GstJPEG2000ParseFormats f)
+{
+  switch (f) {
+    case GST_JPEG2000_PARSE_J2C:
+      return "image/x-j2c";
+    case GST_JPEG2000_PARSE_JP2:
+      return "image/x-jp2";
+    case GST_JPEG2000_PARSE_JPC:
+      return "image/x-jpc";
+    default:
+      g_assert_not_reached ();
+      return "invalid/x-invalid";
+  }
+}
+
 static GstFlowReturn
 gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize)
@@ -205,12 +282,17 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   guint num_prefix_bytes = 0;   /* number of bytes to skip before actual code stream */
   GstCaps *src_caps = NULL;
   guint frame_size = 0;
-  gboolean is_j2c = jpeg2000parse->codec_format == GST_JPEG2000_PARSE_J2C;
+  gboolean is_j2c;
 
   if (!gst_buffer_map (frame->buffer, &map, GST_MAP_READ)) {
     GST_ERROR_OBJECT (jpeg2000parse, "Unable to map buffer");
     return GST_FLOW_ERROR;
   }
+
+  if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_NO_CODEC)
+    gst_jpeg2000_parse_negotiate (jpeg2000parse, NULL);
+
+  is_j2c = jpeg2000parse->codec_format == GST_JPEG2000_PARSE_J2C;
 
   gst_byte_reader_init (&reader, map.data, map.size);
   num_prefix_bytes = GST_JPEG2000_MARKER_SIZE;
@@ -460,6 +542,8 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     }
   }
 
+  gst_jpeg2000_parse_negotiate (jpeg2000parse, current_caps);
+
   /* now we can set the source caps, if something has changed */
   source_sampling =
       sink_sampling !=
@@ -475,9 +559,9 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     jpeg2000parse->colorspace = colorspace;
 
     src_caps =
-        gst_caps_new_simple (gst_structure_get_name (current_caps_struct),
-        "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
-        "colorspace", G_TYPE_STRING,
+        gst_caps_new_simple (media_type_from_codec_format
+        (jpeg2000parse->codec_format), "width", G_TYPE_INT, width, "height",
+        G_TYPE_INT, height, "colorspace", G_TYPE_STRING,
         gst_jpeg2000_colorspace_to_string (colorspace), "sampling",
         G_TYPE_STRING, gst_jpeg2000_sampling_to_string (source_sampling), NULL);
 
