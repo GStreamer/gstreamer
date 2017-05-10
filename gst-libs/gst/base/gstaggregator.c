@@ -229,12 +229,10 @@ struct _GstAggregatorPadPrivate
   GMutex flush_lock;
 };
 
-static gboolean
-gst_aggregator_pad_flush (GstAggregatorPad * aggpad, GstAggregator * agg)
+/* Must be called with PAD_LOCK held */
+static void
+gst_aggregator_pad_reset_unlocked (GstAggregatorPad * aggpad)
 {
-  GstAggregatorPadClass *klass = GST_AGGREGATOR_PAD_GET_CLASS (aggpad);
-
-  PAD_LOCK (aggpad);
   aggpad->priv->pending_eos = FALSE;
   aggpad->priv->eos = FALSE;
   aggpad->priv->flow_return = GST_FLOW_OK;
@@ -247,6 +245,15 @@ gst_aggregator_pad_flush (GstAggregatorPad * aggpad, GstAggregator * agg)
   aggpad->priv->head_time = GST_CLOCK_TIME_NONE;
   aggpad->priv->tail_time = GST_CLOCK_TIME_NONE;
   aggpad->priv->time_level = 0;
+}
+
+static gboolean
+gst_aggregator_pad_flush (GstAggregatorPad * aggpad, GstAggregator * agg)
+{
+  GstAggregatorPadClass *klass = GST_AGGREGATOR_PAD_GET_CLASS (aggpad);
+
+  PAD_LOCK (aggpad);
+  gst_aggregator_pad_reset_unlocked (aggpad);
   PAD_UNLOCK (aggpad);
 
   if (klass->flush)
@@ -2458,6 +2465,7 @@ gst_aggregator_pad_init (GstAggregatorPad * pad)
   g_mutex_init (&pad->priv->lock);
 
   pad->priv->first_buffer = TRUE;
+  gst_aggregator_pad_reset_unlocked (pad);
 }
 
 /**
