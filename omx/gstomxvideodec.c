@@ -1885,6 +1885,9 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
       if (!gst_omx_video_dec_open (GST_VIDEO_DECODER (self)))
         return FALSE;
       needs_disable = FALSE;
+
+      /* The local port_def is now obsolete so get it again. */
+      gst_omx_port_get_port_definition (self->dec_in_port, &port_def);
     } else {
 #if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
       if (self->eglimage) {
