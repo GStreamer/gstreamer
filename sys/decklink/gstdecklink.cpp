@@ -768,6 +768,7 @@ public:
     gboolean no_signal = FALSE;
     GstClock *clock = NULL;
     HRESULT res;
+    BMDTimeValue stream_time = GST_CLOCK_TIME_NONE;
 
     g_mutex_lock (&m_input->lock);
     if (m_input->videosrc) {
@@ -806,7 +807,6 @@ public:
     }
 
     if (got_video_frame && videosrc && video_frame) {
-      BMDTimeValue stream_time = GST_CLOCK_TIME_NONE;
       BMDTimeValue stream_duration = GST_CLOCK_TIME_NONE;
       IDeckLinkTimecode *dtc = 0;
 
@@ -839,15 +839,8 @@ public:
     }
 
     if (got_audio_packet && audiosrc && audio_packet) {
-      BMDTimeValue packet_time = GST_CLOCK_TIME_NONE;
-
-      res = audio_packet->GetPacketTime (&packet_time, GST_SECOND);
-      if (res != S_OK) {
-        GST_ERROR ("Failed to get stream time: 0x%08x", res);
-        packet_time = GST_CLOCK_TIME_NONE;
-      }
       m_input->got_audio_packet (audiosrc, audio_packet, capture_time,
-          packet_time, no_signal);
+          stream_time, no_signal);
     } else {
       if (!audio_packet)
         GST_DEBUG ("Received no audio packet at %" GST_TIME_FORMAT,
