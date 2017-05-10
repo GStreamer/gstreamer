@@ -382,9 +382,6 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
   ret =
       GST_ELEMENT_CLASS (gst_omx_video_dec_parent_class)->change_state
       (element, transition);
