@@ -245,6 +245,7 @@ gst_aggregator_pad_reset_unlocked (GstAggregatorPad * aggpad)
   aggpad->priv->head_time = GST_CLOCK_TIME_NONE;
   aggpad->priv->tail_time = GST_CLOCK_TIME_NONE;
   aggpad->priv->time_level = 0;
+  aggpad->priv->first_buffer = TRUE;
 }
 
 static gboolean
@@ -1095,8 +1096,6 @@ gst_aggregator_default_sink_event (GstAggregator * self,
       } else {
         GST_OBJECT_UNLOCK (self);
       }
-
-      aggpad->priv->first_buffer = TRUE;
 
       /* We never forward the event */
       goto eat;
@@ -2464,7 +2463,6 @@ gst_aggregator_pad_init (GstAggregatorPad * pad)
   g_mutex_init (&pad->priv->flush_lock);
   g_mutex_init (&pad->priv->lock);
 
-  pad->priv->first_buffer = TRUE;
   gst_aggregator_pad_reset_unlocked (pad);
 }
 
