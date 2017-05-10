@@ -3395,7 +3395,6 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
 
       {
         GstSegment segment;
-        guint old_header_size = qtmux->last_moov_size;
 
         gst_segment_init (&segment, GST_FORMAT_BYTES);
         segment.start = qtmux->moov_pos;
@@ -3407,14 +3406,10 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
         if (ret != GST_FLOW_OK)
           return ret;
 
-        if (old_header_size < qtmux->last_moov_size) {
-          GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
-              ("Not enough free reserved space"));
-          ret = GST_FLOW_ERROR;
-        } else if (old_header_size > qtmux->last_moov_size) {
+        if (qtmux->reserved_moov_size > qtmux->last_moov_size) {
           ret =
               gst_qt_mux_send_free_atom (qtmux, NULL,
-              old_header_size - qtmux->last_moov_size, TRUE);
+              qtmux->reserved_moov_size - qtmux->last_moov_size, TRUE);
         }
 
         if (ret != GST_FLOW_OK)
