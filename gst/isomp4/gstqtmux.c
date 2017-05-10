@@ -2545,7 +2545,7 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
         if (lateness > 0) {
           GST_DEBUG_OBJECT (qtmux,
               "Pad %s is a late stream by %" GST_TIME_FORMAT,
-              GST_PAD_NAME (qtpad->collect.pad), GST_TIME_ARGS (lateness));
+              GST_PAD_NAME (qtpad->collect.pad), GST_TIME_ARGS (diff));
 
           atom_trak_set_elst_entry (qtpad->trak, 0, lateness, (guint32) - 1,
               (guint32) (1 * 65536.0));
