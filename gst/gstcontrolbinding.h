@@ -110,21 +110,29 @@ struct _GstControlBindingClass
 
 #define GST_CONTROL_BINDING_PSPEC(cb) (((GstControlBinding *) cb)->pspec)
 
-GType gst_control_binding_get_type (void);
+GST_EXPORT
+GType               gst_control_binding_get_type (void);
 
 /* Functions */
 
+GST_EXPORT
 gboolean            gst_control_binding_sync_values        (GstControlBinding * binding, GstObject *object,
                                                             GstClockTime timestamp, GstClockTime last_sync);
+GST_EXPORT
 GValue *            gst_control_binding_get_value          (GstControlBinding *binding,
                                                             GstClockTime timestamp);
+GST_EXPORT
 gboolean            gst_control_binding_get_value_array    (GstControlBinding *binding, GstClockTime timestamp,
                                                             GstClockTime interval, guint n_values, gpointer values);
+GST_EXPORT
 gboolean            gst_control_binding_get_g_value_array  (GstControlBinding *binding, GstClockTime timestamp,
                                                             GstClockTime interval, guint n_values, GValue *values);
-
+GST_EXPORT
 void                gst_control_binding_set_disabled       (GstControlBinding * binding, gboolean disabled);
+
+GST_EXPORT
 gboolean            gst_control_binding_is_disabled        (GstControlBinding * binding);
+
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstControlBinding, gst_object_unref)
 #endif

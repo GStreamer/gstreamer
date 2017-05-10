@@ -48,7 +48,10 @@ typedef struct _GstTracerFactoryClass GstTracerFactoryClass;
 
 /* tracering interface */
 
+GST_EXPORT
 GType           gst_tracer_factory_get_type          (void);
+
+GST_EXPORT
 GList *         gst_tracer_factory_get_list          (void);
 
 

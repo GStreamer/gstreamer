@@ -60,28 +60,38 @@ G_BEGIN_DECLS
 #define GST_IS_DEVICE_PROVIDER_FACTORY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DEVICE_PROVIDER_FACTORY))
 #define GST_DEVICE_PROVIDER_FACTORY_CAST(obj)       ((GstDeviceProviderFactory *)(obj))
 
+GST_EXPORT
 GType                   gst_device_provider_factory_get_type          (void);
 
+GST_EXPORT
 GstDeviceProviderFactory * gst_device_provider_factory_find            (const gchar *name);
 
+GST_EXPORT
 GType                   gst_device_provider_factory_get_device_provider_type (GstDeviceProviderFactory *factory);
 
+GST_EXPORT
 const gchar *           gst_device_provider_factory_get_metadata       (GstDeviceProviderFactory *factory, const gchar *key);
+
+GST_EXPORT
 gchar **                gst_device_provider_factory_get_metadata_keys  (GstDeviceProviderFactory *factory);
 
+GST_EXPORT
 GstDeviceProvider*       gst_device_provider_factory_get                (GstDeviceProviderFactory *factory) G_GNUC_MALLOC;
+
+GST_EXPORT
 GstDeviceProvider*       gst_device_provider_factory_get_by_name        (const gchar *factoryname) G_GNUC_MALLOC;
 
+GST_EXPORT
 gboolean                gst_device_provider_register                   (GstPlugin *plugin, const gchar *name,
                                                                        guint rank,
                                                                        GType type);
-
+GST_EXPORT
 gboolean      gst_device_provider_factory_has_classesv (GstDeviceProviderFactory * factory,
                                                        gchar ** classes);
-
+GST_EXPORT
 gboolean      gst_device_provider_factory_has_classes (GstDeviceProviderFactory *factory,
                                                        const gchar * classes);
-
+GST_EXPORT
 GList *       gst_device_provider_factory_list_get_device_providers (
                                                        GstRank minrank) G_GNUC_MALLOC;
 

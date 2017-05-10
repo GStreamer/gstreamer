@@ -82,8 +82,10 @@ G_BEGIN_DECLS
 
 /* --- get_type functions --- */
 
+GST_EXPORT
 GType  gst_param_spec_fraction_get_type (void);
 
+GST_EXPORT
 GType  gst_param_spec_array_get_type (void);
 
 
@@ -130,6 +132,7 @@ struct _GstParamSpecArray {
 
 /* --- GParamSpec prototypes --- */
 
+GST_EXPORT
 GParamSpec  * gst_param_spec_fraction (const gchar * name,
                                        const gchar * nick,
                                        const gchar * blurb,
@@ -137,7 +140,7 @@ GParamSpec  * gst_param_spec_fraction (const gchar * name,
                                        gint max_num, gint max_denom,
                                        gint default_num, gint default_denom,
                                        GParamFlags flags) G_GNUC_MALLOC;
-
+GST_EXPORT
 GParamSpec  * gst_param_spec_array    (const gchar * name,
                                        const gchar * nick,
                                        const gchar * blurb,

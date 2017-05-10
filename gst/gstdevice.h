@@ -84,20 +84,31 @@ struct _GstDeviceClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType          gst_device_get_type (void);
 
+GST_EXPORT
 GstElement *   gst_device_create_element      (GstDevice * device, const gchar * name);
 
+GST_EXPORT
 GstCaps *      gst_device_get_caps            (GstDevice * device);
+
+GST_EXPORT
 gchar *        gst_device_get_display_name    (GstDevice * device);
+
+GST_EXPORT
 gchar *        gst_device_get_device_class    (GstDevice * device);
+
+GST_EXPORT
 GstStructure * gst_device_get_properties      (GstDevice * device);
+
+GST_EXPORT
 gboolean       gst_device_reconfigure_element (GstDevice * device,
                                                GstElement * element);
-
+GST_EXPORT
 gboolean        gst_device_has_classesv       (GstDevice * device,
                                                gchar ** classes);
-
+GST_EXPORT
 gboolean        gst_device_has_classes        (GstDevice * device,
                                                const gchar * classes);
 

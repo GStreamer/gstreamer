@@ -410,8 +410,13 @@ struct _GstEvent {
   guint32       seqnum;
 };
 
+GST_EXPORT
 const gchar*    gst_event_type_get_name         (GstEventType type);
+
+GST_EXPORT
 GQuark          gst_event_type_to_quark         (GstEventType type);
+
+GST_EXPORT
 GstEventTypeFlags
                 gst_event_type_get_flags        (GstEventType type);
 
@@ -458,136 +463,239 @@ gst_event_copy (const GstEvent * event)
   return GST_EVENT_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (event)));
 }
 
+GST_EXPORT
 GType           gst_event_get_type              (void);
 
 /* custom event */
+
+GST_EXPORT
 GstEvent*       gst_event_new_custom            (GstEventType type, GstStructure *structure) G_GNUC_MALLOC;
 
+GST_EXPORT
 const GstStructure *
                 gst_event_get_structure         (GstEvent *event);
+
+GST_EXPORT
 GstStructure *  gst_event_writable_structure    (GstEvent *event);
 
+GST_EXPORT
 gboolean        gst_event_has_name              (GstEvent *event, const gchar *name);
 
 /* identifiers for events and messages */
+
+GST_EXPORT
 guint32         gst_event_get_seqnum            (GstEvent *event);
+
+GST_EXPORT
 void            gst_event_set_seqnum            (GstEvent *event, guint32 seqnum);
 
 /* accumulated pad offsets for the event */
+
+GST_EXPORT
 gint64          gst_event_get_running_time_offset (GstEvent *event);
+
+GST_EXPORT
 void            gst_event_set_running_time_offset (GstEvent *event, gint64 offset);
 
 /* Stream start event */
+
+GST_EXPORT
 GstEvent *      gst_event_new_stream_start      (const gchar *stream_id) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_event_parse_stream_start    (GstEvent *event, const gchar **stream_id);
+
+GST_EXPORT
 void            gst_event_set_stream		(GstEvent *event, GstStream *stream);
+
+GST_EXPORT
 void            gst_event_parse_stream		(GstEvent *event, GstStream **stream);
 
+GST_EXPORT
 void            gst_event_set_stream_flags      (GstEvent *event, GstStreamFlags flags);
+
+GST_EXPORT
 void            gst_event_parse_stream_flags    (GstEvent *event, GstStreamFlags *flags);
 
+GST_EXPORT
 void            gst_event_set_group_id          (GstEvent *event, guint group_id);
+
+GST_EXPORT
 gboolean        gst_event_parse_group_id        (GstEvent *event, guint *group_id);
 
 /* flush events */
+
+GST_EXPORT
 GstEvent *      gst_event_new_flush_start       (void) G_GNUC_MALLOC;
 
+GST_EXPORT
 GstEvent *      gst_event_new_flush_stop        (gboolean reset_time) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_event_parse_flush_stop      (GstEvent *event, gboolean *reset_time);
 
 /* Stream collection event */
+
+GST_EXPORT
 GstEvent *      gst_event_new_stream_collection   (GstStreamCollection *collection) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_event_parse_stream_collection (GstEvent *event, GstStreamCollection **collection);
 
 /* select streams event */
+
+GST_EXPORT
 GstEvent *      gst_event_new_select_streams    (GList *streams);
+
+GST_EXPORT
 void            gst_event_parse_select_streams  (GstEvent *event, GList **streams);
 
 /* stream-group-done event */
+
+GST_EXPORT
 GstEvent *      gst_event_new_stream_group_done (guint group_id) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_event_parse_stream_group_done (GstEvent *event, guint *group_id);
 
 /* EOS event */
+
+GST_EXPORT
 GstEvent *      gst_event_new_eos               (void) G_GNUC_MALLOC;
 
 /* GAP event */
+
+GST_EXPORT
 GstEvent *      gst_event_new_gap               (GstClockTime   timestamp,
                                                  GstClockTime   duration) G_GNUC_MALLOC;
-
+GST_EXPORT
 void            gst_event_parse_gap             (GstEvent     * event,
                                                  GstClockTime * timestamp,
                                                  GstClockTime * duration);
 
 /* Caps events */
+
+GST_EXPORT
 GstEvent *      gst_event_new_caps              (GstCaps *caps) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_event_parse_caps            (GstEvent *event, GstCaps **caps);
 
 /* segment event */
+
+GST_EXPORT
 GstEvent*       gst_event_new_segment           (const GstSegment *segment) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_event_parse_segment         (GstEvent *event, const GstSegment **segment);
+
+GST_EXPORT
 void            gst_event_copy_segment          (GstEvent *event, GstSegment *segment);
 
 /* tag event */
+
+GST_EXPORT
 GstEvent*       gst_event_new_tag               (GstTagList *taglist) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_event_parse_tag             (GstEvent *event, GstTagList **taglist);
 
 /* TOC event */
+
+GST_EXPORT
 GstEvent*      gst_event_new_toc                (GstToc *toc, gboolean updated);
+
+GST_EXPORT
 void           gst_event_parse_toc              (GstEvent *event, GstToc **toc, gboolean *updated);
 
 /* Protection event */
+
+GST_EXPORT
 GstEvent *     gst_event_new_protection         (const gchar * system_id, GstBuffer * data, const gchar * origin);
 
+GST_EXPORT
 void           gst_event_parse_protection       (GstEvent * event, const gchar ** system_id,
                                                  GstBuffer ** data, const gchar ** origin);
 
 /* buffer */
+
+GST_EXPORT
 GstEvent *      gst_event_new_buffer_size       (GstFormat format, gint64 minsize, gint64 maxsize,
                                                  gboolean async) G_GNUC_MALLOC;
+GST_EXPORT
 void            gst_event_parse_buffer_size     (GstEvent *event, GstFormat *format, gint64 *minsize,
                                                  gint64 *maxsize, gboolean *async);
 
 /* sink message */
+
+GST_EXPORT
 GstEvent*       gst_event_new_sink_message      (const gchar *name, GstMessage *msg) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_event_parse_sink_message    (GstEvent *event, GstMessage **msg);
 
 /* QOS events */
+
+GST_EXPORT
 GstEvent*       gst_event_new_qos               (GstQOSType type, gdouble proportion,
                                                  GstClockTimeDiff diff, GstClockTime timestamp) G_GNUC_MALLOC;
+GST_EXPORT
 void            gst_event_parse_qos             (GstEvent *event, GstQOSType *type,
                                                  gdouble *proportion, GstClockTimeDiff *diff,
                                                  GstClockTime *timestamp);
 /* seek event */
+
+GST_EXPORT
 GstEvent*       gst_event_new_seek              (gdouble rate, GstFormat format, GstSeekFlags flags,
                                                  GstSeekType start_type, gint64 start,
                                                  GstSeekType stop_type, gint64 stop) G_GNUC_MALLOC;
+GST_EXPORT
 void            gst_event_parse_seek            (GstEvent *event, gdouble *rate, GstFormat *format,
                                                  GstSeekFlags *flags,
                                                  GstSeekType *start_type, gint64 *start,
                                                  GstSeekType *stop_type, gint64 *stop);
 
 /* navigation event */
+
+GST_EXPORT
 GstEvent*       gst_event_new_navigation        (GstStructure *structure) G_GNUC_MALLOC;
 
 /* latency event */
+
+GST_EXPORT
 GstEvent*       gst_event_new_latency           (GstClockTime latency) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_event_parse_latency         (GstEvent *event, GstClockTime *latency);
 
 /* step event */
+
+GST_EXPORT
 GstEvent*       gst_event_new_step              (GstFormat format, guint64 amount, gdouble rate,
                                                  gboolean flush, gboolean intermediate) G_GNUC_MALLOC;
+GST_EXPORT
 void            gst_event_parse_step            (GstEvent *event, GstFormat *format, guint64 *amount,
                                                  gdouble *rate, gboolean *flush, gboolean *intermediate);
 
 /* renegotiate event */
+
+GST_EXPORT
 GstEvent*       gst_event_new_reconfigure       (void) G_GNUC_MALLOC;
 
 /* TOC select event */
+
+GST_EXPORT
 GstEvent*       gst_event_new_toc_select        (const gchar *uid) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_event_parse_toc_select      (GstEvent *event, gchar **uid);
 
 /* segment-done event */
+
+GST_EXPORT
 GstEvent*       gst_event_new_segment_done      (GstFormat format, gint64 position) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_event_parse_segment_done    (GstEvent *event, GstFormat *format, gint64 *position);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

@@ -218,6 +218,7 @@ struct _GstMiniObject {
   gpointer qdata;
 };
 
+GST_EXPORT
 void            gst_mini_object_init (GstMiniObject *mini_object,
                                       guint flags, GType type,
                                       GstMiniObjectCopyFunction copy_func,
@@ -226,35 +227,58 @@ void            gst_mini_object_init (GstMiniObject *mini_object,
 
 
 /* refcounting */
+
+GST_EXPORT
 GstMiniObject * gst_mini_object_ref		(GstMiniObject *mini_object);
+
+GST_EXPORT
 void            gst_mini_object_unref		(GstMiniObject *mini_object);
 
+GST_EXPORT
 void            gst_mini_object_weak_ref        (GstMiniObject *object,
 					         GstMiniObjectNotify notify,
 					         gpointer data);
+GST_EXPORT
 void            gst_mini_object_weak_unref	(GstMiniObject *object,
 					         GstMiniObjectNotify notify,
 					         gpointer data);
 
 /* locking */
+
+GST_EXPORT
 gboolean        gst_mini_object_lock            (GstMiniObject *object, GstLockFlags flags);
+
+GST_EXPORT
 void            gst_mini_object_unlock          (GstMiniObject *object, GstLockFlags flags);
 
+GST_EXPORT
 gboolean        gst_mini_object_is_writable     (const GstMiniObject *mini_object);
+
+GST_EXPORT
 GstMiniObject * gst_mini_object_make_writable	(GstMiniObject *mini_object) G_GNUC_WARN_UNUSED_RESULT;
 
 /* copy */
+
+GST_EXPORT
 GstMiniObject * gst_mini_object_copy		(const GstMiniObject *mini_object) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
 
 
+GST_EXPORT
 void            gst_mini_object_set_qdata       (GstMiniObject *object, GQuark quark,
                                                  gpointer data, GDestroyNotify destroy);
+GST_EXPORT
 gpointer        gst_mini_object_get_qdata       (GstMiniObject *object, GQuark quark);
+
+GST_EXPORT
 gpointer        gst_mini_object_steal_qdata     (GstMiniObject *object, GQuark quark);
 
-
+GST_EXPORT
 gboolean        gst_mini_object_replace         (GstMiniObject **olddata, GstMiniObject *newdata);
+
+GST_EXPORT
 gboolean        gst_mini_object_take            (GstMiniObject **olddata, GstMiniObject *newdata);
+
+GST_EXPORT
 GstMiniObject * gst_mini_object_steal           (GstMiniObject **olddata) G_GNUC_WARN_UNUSED_RESULT;
 
 /**

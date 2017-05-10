@@ -192,32 +192,62 @@ struct _GstBinClass {
   gpointer _gst_reserved[GST_PADDING-2];
 };
 
+GST_EXPORT
 GType		gst_bin_get_type		(void);
+
+GST_EXPORT
 GstElement*	gst_bin_new			(const gchar *name);
 
 /* add and remove elements from the bin */
+
+GST_EXPORT
 gboolean	gst_bin_add			(GstBin *bin, GstElement *element);
+
+GST_EXPORT
 gboolean	gst_bin_remove			(GstBin *bin, GstElement *element);
 
 /* retrieve a single child */
+
+GST_EXPORT
 GstElement*	gst_bin_get_by_name		 (GstBin *bin, const gchar *name);
+
+GST_EXPORT
 GstElement*	gst_bin_get_by_name_recurse_up	 (GstBin *bin, const gchar *name);
+
+GST_EXPORT
 GstElement*	gst_bin_get_by_interface	 (GstBin *bin, GType iface);
 
 /* retrieve multiple children */
+
+GST_EXPORT
 GstIterator*    gst_bin_iterate_elements	 (GstBin *bin);
+
+GST_EXPORT
 GstIterator*    gst_bin_iterate_sorted		 (GstBin *bin);
+
+GST_EXPORT
 GstIterator*    gst_bin_iterate_recurse		 (GstBin *bin);
 
+GST_EXPORT
 GstIterator*	gst_bin_iterate_sinks		 (GstBin *bin);
+
+GST_EXPORT
 GstIterator*	gst_bin_iterate_sources		 (GstBin *bin);
+
+GST_EXPORT
 GstIterator*	gst_bin_iterate_all_by_interface (GstBin *bin, GType iface);
 
 /* latency */
+
+GST_EXPORT
 gboolean        gst_bin_recalculate_latency      (GstBin * bin);
 
 /* set and get suppressed flags */
+
+GST_EXPORT
 void            gst_bin_set_suppressed_flags (GstBin * bin, GstElementFlags flags);
+
+GST_EXPORT
 GstElementFlags gst_bin_get_suppressed_flags (GstBin * bin);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

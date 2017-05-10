@@ -131,21 +131,34 @@ gst_buffer_list_copy (const GstBufferList * list)
  */
 #define gst_buffer_list_make_writable(list) GST_BUFFER_LIST_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (list)))
 
+GST_EXPORT
 GType                    gst_buffer_list_get_type              (void);
 
 /* allocation */
+
+GST_EXPORT
 GstBufferList *          gst_buffer_list_new                   (void) G_GNUC_MALLOC;
+
+GST_EXPORT
 GstBufferList *          gst_buffer_list_new_sized             (guint size) G_GNUC_MALLOC;
 
+GST_EXPORT
 guint                    gst_buffer_list_length                (GstBufferList *list);
 
+GST_EXPORT
 GstBuffer *              gst_buffer_list_get                   (GstBufferList *list, guint idx);
+
+GST_EXPORT
 void                     gst_buffer_list_insert                (GstBufferList *list, gint idx, GstBuffer *buffer);
+
+GST_EXPORT
 void                     gst_buffer_list_remove                (GstBufferList *list, guint idx, guint length);
 
+GST_EXPORT
 gboolean                 gst_buffer_list_foreach               (GstBufferList *list,
                                                                 GstBufferListFunc func,
 								gpointer user_data);
+GST_EXPORT
 GstBufferList *          gst_buffer_list_copy_deep             (const GstBufferList * list);
 
 #define gst_buffer_list_add(l,b) gst_buffer_list_insert((l),-1,(b));

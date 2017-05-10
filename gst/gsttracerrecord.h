@@ -37,6 +37,7 @@ typedef struct _GstTracerRecordClass GstTracerRecordClass;
 #define GST_TRACER_RECORD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_TRACER_RECORD,GstTracerRecordClass))
 #define GST_TRACER_RECORD_CAST(obj)       ((GstTracerRecord *)(obj))
 
+GST_EXPORT
 GType gst_tracer_record_get_type          (void);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
@@ -87,9 +88,11 @@ typedef enum
 
 #ifdef GST_USE_UNSTABLE_API
 
+GST_EXPORT
 GstTracerRecord * gst_tracer_record_new (const gchar * name, const gchar * firstfield, ...);
 
 #ifndef GST_DISABLE_GST_DEBUG
+GST_EXPORT
 void              gst_tracer_record_log (GstTracerRecord *self, ...);
 #else
 #define gst_tracer_record_log(...) G_STMT_START {} G_STMT_END

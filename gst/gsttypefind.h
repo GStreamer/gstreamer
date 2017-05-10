@@ -91,25 +91,30 @@ struct _GstTypeFind {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType     gst_type_find_get_type   (void);
 
 /* typefind function interface */
+
+GST_EXPORT
 const guint8 *  gst_type_find_peek       (GstTypeFind   * find,
                                           gint64          offset,
                                           guint           size);
-
+GST_EXPORT
 void            gst_type_find_suggest    (GstTypeFind   * find,
                                           guint           probability,
                                           GstCaps       * caps);
-
+GST_EXPORT
 void            gst_type_find_suggest_simple (GstTypeFind * find,
                                               guint         probability,
                                               const char  * media_type,
                                               const char  * fieldname, ...);
-
+GST_EXPORT
 guint64   gst_type_find_get_length (GstTypeFind   * find);
 
 /* registration interface */
+
+GST_EXPORT
 gboolean  gst_type_find_register   (GstPlugin            * plugin,
                                     const gchar          * name,
                                     guint                  rank,

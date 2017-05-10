@@ -57,16 +57,23 @@ struct _GstProxyPadClass
   gpointer _gst_reserved[1];
 };
 
-GType gst_proxy_pad_get_type (void);
+GST_EXPORT
+GType               gst_proxy_pad_get_type (void);
 
-GstProxyPad*     gst_proxy_pad_get_internal     (GstProxyPad *pad);
+GST_EXPORT
+GstProxyPad *       gst_proxy_pad_get_internal (GstProxyPad *pad);
 
 
+GST_EXPORT
 GstIterator*        gst_proxy_pad_iterate_internal_links_default (GstPad *pad, GstObject *parent) G_GNUC_MALLOC;
+
+GST_EXPORT
 GstFlowReturn       gst_proxy_pad_chain_default                  (GstPad *pad, GstObject *parent,
                                                                   GstBuffer *buffer);
+GST_EXPORT
 GstFlowReturn       gst_proxy_pad_chain_list_default             (GstPad *pad, GstObject *parent,
                                                                   GstBufferList *list);
+GST_EXPORT
 GstFlowReturn       gst_proxy_pad_getrange_default               (GstPad *pad, GstObject *parent,
                                                                   guint64 offset, guint size,
                                                                   GstBuffer **buffer);
@@ -104,22 +111,34 @@ struct _GstGhostPadClass
 };
 
 
+GST_EXPORT
 GType            gst_ghost_pad_get_type          (void);
 
+GST_EXPORT
 GstPad*          gst_ghost_pad_new               (const gchar *name, GstPad *target) G_GNUC_MALLOC;
+
+GST_EXPORT
 GstPad*          gst_ghost_pad_new_no_target     (const gchar *name, GstPadDirection dir) G_GNUC_MALLOC;
 
+GST_EXPORT
 GstPad*          gst_ghost_pad_new_from_template (const gchar *name, GstPad * target, GstPadTemplate * templ) G_GNUC_MALLOC;
+
+GST_EXPORT
 GstPad*          gst_ghost_pad_new_no_target_from_template (const gchar *name, GstPadTemplate * templ) G_GNUC_MALLOC;
 
+GST_EXPORT
 GstPad*          gst_ghost_pad_get_target        (GstGhostPad *gpad);
+
+GST_EXPORT
 gboolean         gst_ghost_pad_set_target        (GstGhostPad *gpad, GstPad *newtarget);
 
+GST_EXPORT
 gboolean         gst_ghost_pad_construct         (GstGhostPad *gpad);
 
+GST_EXPORT
 gboolean         gst_ghost_pad_activate_mode_default  (GstPad * pad, GstObject * parent,
                                                        GstPadMode mode, gboolean active);
-
+GST_EXPORT
 gboolean         gst_ghost_pad_internal_activate_mode_default   (GstPad * pad, GstObject * parent,
                                                                  GstPadMode mode, gboolean active);
 

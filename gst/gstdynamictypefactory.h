@@ -45,10 +45,13 @@ G_BEGIN_DECLS
 #define GST_IS_DYNAMIC_TYPE_FACTORY_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DYNAMIC_TYPE_FACTORY))
 #define GST_DYNAMIC_TYPE_FACTORY_CAST(obj)      ((GstDynamicTypeFactory *)(obj))
 
+GST_EXPORT
 GType  gst_dynamic_type_factory_get_type        (void);
 
+GST_EXPORT
 GType  gst_dynamic_type_factory_load            (const gchar *factoryname);
 
+GST_EXPORT
 gboolean gst_dynamic_type_register              (GstPlugin *plugin, GType type);
 
 G_END_DECLS

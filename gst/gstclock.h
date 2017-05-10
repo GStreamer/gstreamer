@@ -491,33 +491,47 @@ struct _GstClockClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType                   gst_clock_get_type              (void);
 
+GST_EXPORT
 GstClockTime            gst_clock_set_resolution        (GstClock *clock,
                                                          GstClockTime resolution);
+GST_EXPORT
 GstClockTime            gst_clock_get_resolution        (GstClock *clock);
 
+GST_EXPORT
 GstClockTime            gst_clock_get_time              (GstClock *clock);
+
+GST_EXPORT
 void                    gst_clock_set_calibration       (GstClock *clock, GstClockTime internal,
                                                          GstClockTime external,
                                                          GstClockTime rate_num,
                                                          GstClockTime rate_denom);
+GST_EXPORT
 void                    gst_clock_get_calibration       (GstClock *clock, GstClockTime *internal,
                                                          GstClockTime *external,
                                                          GstClockTime *rate_num,
                                                          GstClockTime *rate_denom);
 
 /* master/slave clocks */
+
+GST_EXPORT
 gboolean                gst_clock_set_master            (GstClock *clock, GstClock *master);
+
+GST_EXPORT
 GstClock*               gst_clock_get_master            (GstClock *clock);
 
+GST_EXPORT
 void                    gst_clock_set_timeout           (GstClock *clock,
                                                          GstClockTime timeout);
+GST_EXPORT
 GstClockTime            gst_clock_get_timeout           (GstClock *clock);
 
+GST_EXPORT
 gboolean                gst_clock_add_observation       (GstClock *clock, GstClockTime slave,
                                                          GstClockTime master, gdouble *r_squared);
-
+GST_EXPORT
 gboolean                gst_clock_add_observation_unapplied (GstClock *clock, GstClockTime slave,
                                                          GstClockTime master, gdouble *r_squared,
                                                          GstClockTime *internal,
@@ -526,55 +540,85 @@ gboolean                gst_clock_add_observation_unapplied (GstClock *clock, Gs
                                                          GstClockTime *rate_denom);
 
 /* getting and adjusting internal/external time */
+
+GST_EXPORT
 GstClockTime            gst_clock_get_internal_time     (GstClock *clock);
+
+GST_EXPORT
 GstClockTime            gst_clock_adjust_unlocked       (GstClock *clock, GstClockTime internal);
+
+GST_EXPORT
 GstClockTime            gst_clock_adjust_with_calibration (GstClock *clock,
                                                          GstClockTime internal_target,
                                                          GstClockTime cinternal,
                                                          GstClockTime cexternal,
                                                          GstClockTime cnum,
                                                          GstClockTime cdenom);
+GST_EXPORT
 GstClockTime            gst_clock_unadjust_with_calibration (GstClock *clock,
                                                          GstClockTime external_target,
                                                          GstClockTime cinternal,
                                                          GstClockTime cexternal,
                                                          GstClockTime cnum,
                                                          GstClockTime cdenom);
+GST_EXPORT
 GstClockTime            gst_clock_unadjust_unlocked     (GstClock * clock, GstClockTime external);
 
 /* waiting for, signalling and checking for synchronization */
+
+GST_EXPORT
 gboolean                gst_clock_wait_for_sync         (GstClock * clock, GstClockTime timeout);
+
+GST_EXPORT
 gboolean                gst_clock_is_synced             (GstClock * clock);
 
 /* to be used by subclasses only */
+
+GST_EXPORT
 void                    gst_clock_set_synced            (GstClock * clock, gboolean synced);
 
 /* creating IDs that can be used to get notifications */
+
+GST_EXPORT
 GstClockID              gst_clock_new_single_shot_id    (GstClock *clock,
                                                          GstClockTime time);
+GST_EXPORT
 GstClockID              gst_clock_new_periodic_id       (GstClock *clock,
                                                          GstClockTime start_time,
                                                          GstClockTime interval);
 
 /* reference counting */
+
+GST_EXPORT
 GstClockID              gst_clock_id_ref                (GstClockID id);
+
+GST_EXPORT
 void                    gst_clock_id_unref              (GstClockID id);
 
 /* operations on IDs */
+
+GST_EXPORT
 gint                    gst_clock_id_compare_func       (gconstpointer id1, gconstpointer id2);
 
+GST_EXPORT
 GstClockTime            gst_clock_id_get_time           (GstClockID id);
+
+GST_EXPORT
 GstClockReturn          gst_clock_id_wait               (GstClockID id,
                                                          GstClockTimeDiff *jitter);
+GST_EXPORT
 GstClockReturn          gst_clock_id_wait_async         (GstClockID id,
                                                          GstClockCallback func,
                                                          gpointer user_data,
                                                          GDestroyNotify destroy_data);
+GST_EXPORT
 void                    gst_clock_id_unschedule         (GstClockID id);
 
+GST_EXPORT
 gboolean                gst_clock_single_shot_id_reinit (GstClock * clock,
                                                          GstClockID id,
                                                          GstClockTime time);
+GST_EXPORT
 gboolean                gst_clock_periodic_id_reinit    (GstClock * clock,
                                                          GstClockID id,
                                                          GstClockTime start_time,

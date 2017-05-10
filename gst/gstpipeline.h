@@ -88,24 +88,46 @@ struct _GstPipelineClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType           gst_pipeline_get_type           (void);
+
+GST_EXPORT
 GstElement*     gst_pipeline_new                (const gchar *name) G_GNUC_MALLOC;
 
+GST_EXPORT
 GstBus*         gst_pipeline_get_bus            (GstPipeline *pipeline);
 
+GST_EXPORT
 void            gst_pipeline_use_clock          (GstPipeline *pipeline, GstClock *clock);
+
+GST_EXPORT
 gboolean        gst_pipeline_set_clock          (GstPipeline *pipeline, GstClock *clock);
+
+GST_EXPORT
 GstClock*       gst_pipeline_get_clock          (GstPipeline *pipeline);
+
+GST_EXPORT
 GstClock*       gst_pipeline_get_pipeline_clock (GstPipeline *pipeline);
+
+GST_EXPORT
 void            gst_pipeline_auto_clock         (GstPipeline *pipeline);
 
+GST_EXPORT
 void            gst_pipeline_set_delay          (GstPipeline *pipeline, GstClockTime delay);
+
+GST_EXPORT
 GstClockTime    gst_pipeline_get_delay          (GstPipeline *pipeline);
 
+GST_EXPORT
 void            gst_pipeline_set_latency        (GstPipeline *pipeline, GstClockTime latency);
+
+GST_EXPORT
 GstClockTime    gst_pipeline_get_latency        (GstPipeline *pipeline);
 
+GST_EXPORT
 void            gst_pipeline_set_auto_flush_bus (GstPipeline *pipeline, gboolean auto_flush);
+
+GST_EXPORT
 gboolean        gst_pipeline_get_auto_flush_bus (GstPipeline *pipeline);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

@@ -48,6 +48,8 @@ typedef struct _GstPluginDesc GstPluginDesc;
  *
  * Returns: The error quark used in GError messages
  */
+
+GST_EXPORT
 GQuark gst_plugin_error_quark (void);
 /**
  * GST_PLUGIN_ERROR:
@@ -303,8 +305,10 @@ G_END_DECLS
 typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
                                                          gpointer user_data);
 
+GST_EXPORT
 GType                   gst_plugin_get_type             (void);
 
+GST_EXPORT
 gboolean		gst_plugin_register_static	(gint major_version,
                                                          gint minor_version,
                                                          const gchar *name,
@@ -315,7 +319,7 @@ gboolean		gst_plugin_register_static	(gint major_version,
                                                          const gchar *source,
                                                          const gchar *package,
                                                          const gchar *origin);
-
+GST_EXPORT
 gboolean		gst_plugin_register_static_full	(gint major_version,
                                                          gint minor_version,
                                                          const gchar *name,
@@ -327,38 +331,65 @@ gboolean		gst_plugin_register_static_full	(gint major_version,
                                                          const gchar *package,
                                                          const gchar *origin,
                                                          gpointer user_data);
-
+GST_EXPORT
 const gchar*		gst_plugin_get_name		(GstPlugin *plugin);
+
+GST_EXPORT
 const gchar*		gst_plugin_get_description	(GstPlugin *plugin);
+
+GST_EXPORT
 const gchar*		gst_plugin_get_filename		(GstPlugin *plugin);
+
+GST_EXPORT
 const gchar*		gst_plugin_get_version		(GstPlugin *plugin);
+
+GST_EXPORT
 const gchar*		gst_plugin_get_license		(GstPlugin *plugin);
+
+GST_EXPORT
 const gchar*		gst_plugin_get_source		(GstPlugin *plugin);
+
+GST_EXPORT
 const gchar*		gst_plugin_get_package		(GstPlugin *plugin);
+
+GST_EXPORT
 const gchar*		gst_plugin_get_origin		(GstPlugin *plugin);
+
+GST_EXPORT
 const gchar*		gst_plugin_get_release_date_string (GstPlugin *plugin);
+
+GST_EXPORT
 const GstStructure*	gst_plugin_get_cache_data	(GstPlugin * plugin);
+
+GST_EXPORT
 void			gst_plugin_set_cache_data	(GstPlugin * plugin, GstStructure *cache_data);
 
+GST_EXPORT
 gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 
+GST_EXPORT
 GstPlugin *		gst_plugin_load_file		(const gchar *filename, GError** error);
 
+GST_EXPORT
 GstPlugin *             gst_plugin_load                 (GstPlugin *plugin);
+
+GST_EXPORT
 GstPlugin *             gst_plugin_load_by_name         (const gchar *name);
 
+GST_EXPORT
 void                    gst_plugin_add_dependency        (GstPlugin    * plugin,
                                                           const gchar ** env_vars,
                                                           const gchar ** paths,
                                                           const gchar ** names,
                                                           GstPluginDependencyFlags flags);
+GST_EXPORT
 void                    gst_plugin_add_dependency_simple (GstPlugin   * plugin,
                                                           const gchar * env_vars,
                                                           const gchar * paths,
                                                           const gchar * names,
                                                           GstPluginDependencyFlags flags);
-
-void gst_plugin_list_free (GList *list);
+GST_EXPORT
+void                    gst_plugin_list_free (GList *list);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstPlugin, gst_object_unref)

@@ -55,14 +55,18 @@ struct _GstTracerClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType gst_tracer_get_type          (void);
 
 #ifdef GST_USE_UNSTABLE_API
 
+GST_EXPORT
 void gst_tracing_register_hook (GstTracer *tracer, const gchar *detail,
   GCallback func);
 
 /* tracing modules */
+
+GST_EXPORT
 gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type);
 
 #endif

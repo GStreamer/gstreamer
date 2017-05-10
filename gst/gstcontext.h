@@ -42,6 +42,7 @@ GST_EXPORT GType _gst_context_type;
 
 
 
+GST_EXPORT
 GType           gst_context_get_type            (void);
 
 
@@ -132,14 +133,22 @@ gst_context_replace (GstContext **old_context, GstContext *new_context)
   return gst_mini_object_replace ((GstMiniObject **) old_context, (GstMiniObject *) new_context);
 }
 
+GST_EXPORT
 GstContext *          gst_context_new                      (const gchar * context_type,
                                                             gboolean persistent) G_GNUC_MALLOC;
-
+GST_EXPORT
 const gchar *         gst_context_get_context_type         (const GstContext * context);
+
+GST_EXPORT
 gboolean              gst_context_has_context_type         (const GstContext * context, const gchar * context_type);
+
+GST_EXPORT
 const GstStructure *  gst_context_get_structure            (const GstContext * context);
+
+GST_EXPORT
 GstStructure *        gst_context_writable_structure       (GstContext * context);
 
+GST_EXPORT
 gboolean              gst_context_is_persistent            (const GstContext * context);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

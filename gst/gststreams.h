@@ -107,30 +107,45 @@ struct _GstStreamClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType     gst_stream_get_type (void);
 
 #include <gst/gstevent.h>
 
+GST_EXPORT
 GstStream *gst_stream_new            (const gchar *stream_id,
 				      GstCaps *caps,
 				      GstStreamType type,
 				      GstStreamFlags flags);
+GST_EXPORT
+const gchar *  gst_stream_get_stream_id (GstStream *stream);
 
-const gchar *gst_stream_get_stream_id (GstStream *stream);
-
+GST_EXPORT
 void           gst_stream_set_stream_flags (GstStream *stream, GstStreamFlags flags);
+
+GST_EXPORT
 GstStreamFlags gst_stream_get_stream_flags (GstStream *stream);
 
-void          gst_stream_set_stream_type (GstStream *stream, GstStreamType stream_type);
-GstStreamType gst_stream_get_stream_type (GstStream *stream);
+GST_EXPORT
+void           gst_stream_set_stream_type (GstStream *stream, GstStreamType stream_type);
 
-void        gst_stream_set_tags (GstStream *stream, GstTagList *tags);
-GstTagList *gst_stream_get_tags (GstStream *stream);
+GST_EXPORT
+GstStreamType  gst_stream_get_stream_type (GstStream *stream);
 
-void     gst_stream_set_caps (GstStream *stream, GstCaps *caps);
-GstCaps *gst_stream_get_caps (GstStream *stream);
+GST_EXPORT
+void           gst_stream_set_tags (GstStream *stream, GstTagList *tags);
 
-const gchar *gst_stream_type_get_name (GstStreamType stype);
+GST_EXPORT
+GstTagList *   gst_stream_get_tags (GstStream *stream);
+
+GST_EXPORT
+void           gst_stream_set_caps (GstStream *stream, GstCaps *caps);
+
+GST_EXPORT
+GstCaps *      gst_stream_get_caps (GstStream *stream);
+
+GST_EXPORT
+const gchar *  gst_stream_type_get_name (GstStreamType stype);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstStream, gst_object_unref)

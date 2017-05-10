@@ -52,7 +52,9 @@ struct _GstProtectionMeta
   GstStructure *info;
 };
 
+GST_EXPORT
 GType gst_protection_meta_api_get_type (void);
+
 #define GST_PROTECTION_META_API_TYPE (gst_protection_meta_api_get_type())
 
 #define gst_buffer_get_protection_meta(b) \
@@ -60,12 +62,14 @@ GType gst_protection_meta_api_get_type (void);
 
 #define GST_PROTECTION_META_INFO (gst_protection_meta_get_info())
 
-const GstMetaInfo *gst_protection_meta_get_info (void);
+GST_EXPORT
+const GstMetaInfo * gst_protection_meta_get_info (void);
 
-GstProtectionMeta *gst_buffer_add_protection_meta (GstBuffer * buffer,
-    GstStructure * info);
-
-const gchar *gst_protection_select_system (const gchar ** system_identifiers);
+GST_EXPORT
+GstProtectionMeta * gst_buffer_add_protection_meta (GstBuffer * buffer,
+                                                    GstStructure * info);
+GST_EXPORT
+const gchar * gst_protection_select_system (const gchar ** system_identifiers);
 
 G_END_DECLS
 #endif /* __GST_PROTECTION_META_H__ */

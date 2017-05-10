@@ -144,6 +144,7 @@ gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);
 
 G_GNUC_INTERNAL  void _priv_gst_registry_cleanup (void);
 
+GST_EXPORT
 gboolean _gst_plugin_loader_client_run (void);
 
 G_GNUC_INTERNAL  GstPlugin * _priv_gst_plugin_load_file_for_registry (const gchar *filename,
@@ -224,6 +225,7 @@ GstCapsFeatures * __gst_caps_get_features_unchecked (const GstCaps * caps, guint
 
 #ifndef GST_DISABLE_REGISTRY
 /* Secret variable to initialise gst without registry cache */
+
 GST_EXPORT gboolean _gst_disable_registry_cache;
 #endif
 

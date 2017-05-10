@@ -99,49 +99,69 @@ struct _GstDeviceProviderClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType       gst_device_provider_get_type (void);
 
 
+GST_EXPORT
 GList *     gst_device_provider_get_devices    (GstDeviceProvider * provider);
 
+GST_EXPORT
 gboolean    gst_device_provider_start          (GstDeviceProvider * provider);
+
+GST_EXPORT
 void        gst_device_provider_stop           (GstDeviceProvider * provider);
 
+GST_EXPORT
 gboolean    gst_device_provider_can_monitor    (GstDeviceProvider * provider);
 
+GST_EXPORT
 GstBus *    gst_device_provider_get_bus        (GstDeviceProvider * provider);
 
+GST_EXPORT
 void        gst_device_provider_device_add     (GstDeviceProvider * provider,
                                                 GstDevice * device);
+GST_EXPORT
 void        gst_device_provider_device_remove  (GstDeviceProvider * provider,
                                                 GstDevice * device);
-
+GST_EXPORT
 gchar **    gst_device_provider_get_hidden_providers (GstDeviceProvider * provider);
+
+GST_EXPORT
 void        gst_device_provider_hide_provider        (GstDeviceProvider * provider,
                                                       const gchar       * name);
+GST_EXPORT
 void        gst_device_provider_unhide_provider      (GstDeviceProvider * provider,
                                                       const gchar       * name);
 
 
 /* device provider class meta data */
+
+GST_EXPORT
 void        gst_device_provider_class_set_metadata         (GstDeviceProviderClass *klass,
                                                             const gchar     *longname,
                                                             const gchar     *classification,
                                                             const gchar     *description,
                                                             const gchar     *author);
+GST_EXPORT
 void        gst_device_provider_class_set_static_metadata  (GstDeviceProviderClass *klass,
                                                             const gchar     *longname,
                                                             const gchar     *classification,
                                                             const gchar     *description,
                                                             const gchar     *author);
+GST_EXPORT
 void        gst_device_provider_class_add_metadata         (GstDeviceProviderClass * klass,
                                                             const gchar * key, const gchar * value);
+GST_EXPORT
 void        gst_device_provider_class_add_static_metadata  (GstDeviceProviderClass * klass,
                                                             const gchar * key, const gchar * value);
+GST_EXPORT
 const gchar * gst_device_provider_class_get_metadata       (GstDeviceProviderClass * klass,
                                                             const gchar * key);
 
 /* factory management */
+
+GST_EXPORT
 GstDeviceProviderFactory * gst_device_provider_get_factory (GstDeviceProvider * provider);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

@@ -209,41 +209,67 @@ struct _GstSegment {
   gpointer        _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType        gst_segment_get_type            (void);
 
+GST_EXPORT
 GstSegment * gst_segment_new                 (void) G_GNUC_MALLOC;
+
+GST_EXPORT
 GstSegment * gst_segment_copy                (const GstSegment *segment) G_GNUC_MALLOC;
+
+GST_EXPORT
 void         gst_segment_copy_into           (const GstSegment *src, GstSegment *dest);
+
+GST_EXPORT
 void         gst_segment_free                (GstSegment *segment);
 
+GST_EXPORT
 void         gst_segment_init                (GstSegment *segment, GstFormat format);
 
+GST_EXPORT
 gint         gst_segment_to_stream_time_full (const GstSegment *segment, GstFormat format, guint64 position, guint64 * stream_time);
+
+GST_EXPORT
 guint64      gst_segment_to_stream_time      (const GstSegment *segment, GstFormat format, guint64 position);
+
+GST_EXPORT
 gint         gst_segment_position_from_stream_time_full (const GstSegment * segment, GstFormat format, guint64 stream_time, guint64 * position);
+
+GST_EXPORT
 guint64      gst_segment_position_from_stream_time (const GstSegment * segment, GstFormat format, guint64 stream_time);
+
+GST_EXPORT
 guint64      gst_segment_to_running_time     (const GstSegment *segment, GstFormat format, guint64 position);
 
+GST_EXPORT
 gint         gst_segment_to_running_time_full (const GstSegment *segment, GstFormat format, guint64 position,
                                                guint64 * running_time);
 #ifndef GST_DISABLE_DEPRECATED
+GST_EXPORT
 guint64      gst_segment_to_position         (const GstSegment *segment, GstFormat format, guint64 running_time);
 #endif
+GST_EXPORT
 gint         gst_segment_position_from_running_time_full (const GstSegment *segment, GstFormat format, guint64 running_time, guint64 * position);
+
+GST_EXPORT
 guint64      gst_segment_position_from_running_time (const GstSegment *segment, GstFormat format, guint64 running_time);
 
+GST_EXPORT
 gboolean     gst_segment_set_running_time    (GstSegment *segment, GstFormat format, guint64 running_time);
 
+GST_EXPORT
 gboolean     gst_segment_offset_running_time (GstSegment *segment, GstFormat format, gint64 offset);
 
+GST_EXPORT
 gboolean     gst_segment_clip                (const GstSegment *segment, GstFormat format, guint64 start,
                                               guint64 stop, guint64 *clip_start, guint64 *clip_stop);
-
-
+GST_EXPORT
 gboolean     gst_segment_do_seek             (GstSegment * segment, gdouble rate,
                                               GstFormat format, GstSeekFlags flags,
                                               GstSeekType start_type, guint64 start,
                                               GstSeekType stop_type, guint64 stop, gboolean * update);
+GST_EXPORT
 gboolean     gst_segment_is_equal            (const GstSegment * s0, const GstSegment * s1);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

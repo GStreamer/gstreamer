@@ -47,19 +47,32 @@ GST_EXPORT GType _gst_sample_type;
  */
 typedef struct _GstSample GstSample;
 
-GType gst_sample_get_type            (void);
+GST_EXPORT
+GType                gst_sample_get_type      (void);
 
 /* allocation */
+
+GST_EXPORT
 GstSample *          gst_sample_new           (GstBuffer          *buffer,
                                                GstCaps            *caps,
                                                const GstSegment   *segment,
                                                GstStructure       *info);
-
+GST_EXPORT
 GstBuffer *          gst_sample_get_buffer    (GstSample *sample);
+
+GST_EXPORT
 GstCaps *            gst_sample_get_caps      (GstSample *sample);
+
+GST_EXPORT
 GstSegment *         gst_sample_get_segment   (GstSample *sample);
+
+GST_EXPORT
 const GstStructure * gst_sample_get_info      (GstSample *sample);
+
+GST_EXPORT
 GstBufferList *      gst_sample_get_buffer_list (GstSample *sample);
+
+GST_EXPORT
 void                 gst_sample_set_buffer_list (GstSample *sample, GstBufferList *buffer_list);
 
 /* refcounting */

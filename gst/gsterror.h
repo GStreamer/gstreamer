@@ -242,10 +242,19 @@ typedef enum
  */
 #define GST_ERROR_SYSTEM    ("system error: %s", g_strerror (errno))
 
+GST_EXPORT
 gchar *gst_error_get_message (GQuark domain, gint code);
+
+GST_EXPORT
 GQuark gst_stream_error_quark (void);
+
+GST_EXPORT
 GQuark gst_core_error_quark (void);
+
+GST_EXPORT
 GQuark gst_resource_error_quark (void);
+
+GST_EXPORT
 GQuark gst_library_error_quark (void);
 
 G_END_DECLS

@@ -175,17 +175,27 @@ struct _GstStaticPadTemplate {
 }
 
 /* templates and factories */
+
+GST_EXPORT
 GType			gst_pad_template_get_type		(void);
+
+GST_EXPORT
 GType			gst_static_pad_template_get_type	(void);
 
+GST_EXPORT
 GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 								 GstPadDirection direction, GstPadPresence presence,
 								 GstCaps *caps) G_GNUC_MALLOC;
-
+GST_EXPORT
 GstPadTemplate *	gst_static_pad_template_get             (GstStaticPadTemplate *pad_template);
+
+GST_EXPORT
 GstCaps*		gst_static_pad_template_get_caps	(GstStaticPadTemplate *templ);
+
+GST_EXPORT
 GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
 
+GST_EXPORT
 void                    gst_pad_template_pad_created            (GstPadTemplate * templ, GstPad * pad);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

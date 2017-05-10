@@ -342,9 +342,13 @@ struct _GstMessage
 
 #include <gst/gstquery.h>
 
+GST_EXPORT
 GType           gst_message_get_type            (void);
 
+GST_EXPORT
 const gchar*    gst_message_type_get_name       (GstMessageType type);
+
+GST_EXPORT
 GQuark          gst_message_type_to_quark       (GstMessageType type);
 
 /* refcounting */
@@ -436,206 +440,373 @@ gst_message_replace (GstMessage **old_message, GstMessage *new_message)
 
 
 /* custom messages */
+
+GST_EXPORT
 GstMessage *    gst_message_new_custom          (GstMessageType type,
                                                  GstObject    * src,
                                                  GstStructure * structure) G_GNUC_MALLOC;
+GST_EXPORT
 const GstStructure *
                 gst_message_get_structure       (GstMessage *message);
 
+GST_EXPORT
 gboolean        gst_message_has_name            (GstMessage *message, const gchar *name);
 
 /* identifiers for events and messages */
+
+GST_EXPORT
 guint32         gst_message_get_seqnum          (GstMessage *message);
+
+GST_EXPORT
 void            gst_message_set_seqnum          (GstMessage *message, guint32 seqnum);
 
 /* EOS */
+
+GST_EXPORT
 GstMessage *    gst_message_new_eos             (GstObject * src) G_GNUC_MALLOC;
 
 /* ERROR */
 
+GST_EXPORT
 GstMessage *    gst_message_new_error           (GstObject * src, GError * error, const gchar * debug) G_GNUC_MALLOC;
+
+GST_EXPORT
 GstMessage *    gst_message_new_error_with_details (GstObject * src, GError * error, const gchar * debug, GstStructure * details) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_error         (GstMessage *message, GError **gerror, gchar **debug);
+
+GST_EXPORT
 void            gst_message_parse_error_details (GstMessage *message, const GstStructure **structure);
 
 /* WARNING */
+
+GST_EXPORT
 GstMessage *    gst_message_new_warning         (GstObject * src, GError * error, const gchar * debug) G_GNUC_MALLOC;
+
+GST_EXPORT
 GstMessage *    gst_message_new_warning_with_details (GstObject * src, GError * error, const gchar * debug, GstStructure * details) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_warning       (GstMessage *message, GError **gerror, gchar **debug);
+
+GST_EXPORT
 void            gst_message_parse_warning_details (GstMessage *message, const GstStructure **structure);
 
 /* INFO */
+
+GST_EXPORT
 GstMessage *    gst_message_new_info            (GstObject * src, GError * error, const gchar * debug) G_GNUC_MALLOC;
+
+GST_EXPORT
 GstMessage *    gst_message_new_info_with_details (GstObject * src, GError * error, const gchar * debug, GstStructure * details) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_info          (GstMessage *message, GError **gerror, gchar **debug);
+
+GST_EXPORT
 void            gst_message_parse_info_details  (GstMessage *message, const GstStructure **structure);
 
 /* TAG */
+
+GST_EXPORT
 GstMessage *    gst_message_new_tag             (GstObject * src, GstTagList * tag_list) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_tag           (GstMessage *message, GstTagList **tag_list);
 
 /* BUFFERING */
+
+GST_EXPORT
 GstMessage *    gst_message_new_buffering         (GstObject * src, gint percent) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_buffering       (GstMessage *message, gint *percent);
+
+GST_EXPORT
 void            gst_message_set_buffering_stats   (GstMessage *message, GstBufferingMode mode,
                                                    gint avg_in, gint avg_out,
                                                    gint64 buffering_left);
+GST_EXPORT
 void            gst_message_parse_buffering_stats (GstMessage *message, GstBufferingMode *mode,
                                                    gint *avg_in, gint *avg_out,
                                                    gint64 *buffering_left);
 
 /* STATE_CHANGED */
+
+GST_EXPORT
 GstMessage *    gst_message_new_state_changed   (GstObject * src, GstState oldstate,
                                                  GstState newstate, GstState pending) G_GNUC_MALLOC;
+GST_EXPORT
 void            gst_message_parse_state_changed (GstMessage *message, GstState *oldstate,
                                                  GstState *newstate, GstState *pending);
 
 /* STATE_DIRTY */
+
+GST_EXPORT
 GstMessage *    gst_message_new_state_dirty     (GstObject * src) G_GNUC_MALLOC;
 
 /* STEP_DONE */
+
+GST_EXPORT
 GstMessage *    gst_message_new_step_done       (GstObject * src, GstFormat format, guint64 amount,
                                                  gdouble rate, gboolean flush, gboolean intermediate,
                                                  guint64 duration, gboolean eos) G_GNUC_MALLOC;
+GST_EXPORT
 void            gst_message_parse_step_done     (GstMessage * message, GstFormat *format, guint64 *amount,
                                                  gdouble *rate, gboolean *flush, gboolean *intermediate,
                                                  guint64 *duration, gboolean *eos);
 /* CLOCK_PROVIDE */
+
+GST_EXPORT
 GstMessage *    gst_message_new_clock_provide   (GstObject * src, GstClock *clock, gboolean ready) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_clock_provide (GstMessage *message, GstClock **clock,
                                                  gboolean *ready);
 
 /* CLOCK_LOST */
+
+GST_EXPORT
 GstMessage *    gst_message_new_clock_lost      (GstObject * src, GstClock *clock) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_clock_lost    (GstMessage *message, GstClock **clock);
 
 /* NEW_CLOCK */
+
+GST_EXPORT
 GstMessage *    gst_message_new_new_clock       (GstObject * src, GstClock *clock) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_new_clock     (GstMessage *message, GstClock **clock);
 
 /* APPLICATION */
+
+GST_EXPORT
 GstMessage *    gst_message_new_application     (GstObject * src, GstStructure * structure) G_GNUC_MALLOC;
 
 /* ELEMENT */
+
+GST_EXPORT
 GstMessage *    gst_message_new_element         (GstObject * src, GstStructure * structure) G_GNUC_MALLOC;
 
 /* SEGMENT_START */
+
+GST_EXPORT
 GstMessage *    gst_message_new_segment_start   (GstObject * src, GstFormat format, gint64 position) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_segment_start (GstMessage *message, GstFormat *format,
                                                  gint64 *position);
 
 /* SEGMENT_DONE */
+
+GST_EXPORT
 GstMessage *    gst_message_new_segment_done    (GstObject * src, GstFormat format, gint64 position) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_segment_done  (GstMessage *message, GstFormat *format,
                                                  gint64 *position);
 
 /* DURATION_CHANGED */
+
+GST_EXPORT
 GstMessage *    gst_message_new_duration_changed (GstObject * src) G_GNUC_MALLOC;
 
 /* LATENCY */
+
+GST_EXPORT
 GstMessage *    gst_message_new_latency         (GstObject * src) G_GNUC_MALLOC;
 
 /* ASYNC_START */
+
+GST_EXPORT
 GstMessage *    gst_message_new_async_start     (GstObject * src) G_GNUC_MALLOC;
 
 /* ASYNC_DONE */
+
+GST_EXPORT
 GstMessage *    gst_message_new_async_done      (GstObject * src, GstClockTime running_time) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_async_done    (GstMessage *message, GstClockTime *running_time);
 
 /* STRUCTURE CHANGE */
+
+GST_EXPORT
 GstMessage *    gst_message_new_structure_change   (GstObject * src, GstStructureChangeType type,
                                                     GstElement *owner, gboolean busy) G_GNUC_MALLOC;
+GST_EXPORT
 void            gst_message_parse_structure_change (GstMessage *message, GstStructureChangeType *type,
                                                     GstElement **owner, gboolean *busy);
 
 /* STREAM STATUS */
+
+GST_EXPORT
 GstMessage *    gst_message_new_stream_status        (GstObject * src, GstStreamStatusType type,
                                                       GstElement *owner) G_GNUC_MALLOC;
+GST_EXPORT
 void            gst_message_parse_stream_status      (GstMessage *message, GstStreamStatusType *type,
                                                       GstElement **owner);
+GST_EXPORT
 void            gst_message_set_stream_status_object (GstMessage *message, const GValue *object);
+
+GST_EXPORT
 const GValue *  gst_message_get_stream_status_object (GstMessage *message);
 
 /* REQUEST_STATE */
+
+GST_EXPORT
 GstMessage *    gst_message_new_request_state   (GstObject * src, GstState state) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_request_state (GstMessage * message, GstState *state);
 
 /* STEP_START */
+
+GST_EXPORT
 GstMessage *    gst_message_new_step_start      (GstObject * src, gboolean active, GstFormat format,
                                                  guint64 amount, gdouble rate, gboolean flush,
                                                  gboolean intermediate) G_GNUC_MALLOC;
+GST_EXPORT
 void            gst_message_parse_step_start    (GstMessage * message, gboolean *active, GstFormat *format,
                                                  guint64 *amount, gdouble *rate, gboolean *flush,
                                                  gboolean *intermediate);
 
 /* QOS */
+
+GST_EXPORT
 GstMessage *    gst_message_new_qos             (GstObject * src, gboolean live, guint64 running_time,
                                                  guint64 stream_time, guint64 timestamp, guint64 duration) G_GNUC_MALLOC;
+GST_EXPORT
 void            gst_message_set_qos_values      (GstMessage * message, gint64 jitter, gdouble proportion,
                                                  gint quality);
+GST_EXPORT
 void            gst_message_set_qos_stats       (GstMessage * message, GstFormat format, guint64 processed,
                                                  guint64 dropped);
+GST_EXPORT
 void            gst_message_parse_qos           (GstMessage * message, gboolean * live, guint64 * running_time,
                                                  guint64 * stream_time, guint64 * timestamp, guint64 * duration);
+GST_EXPORT
 void            gst_message_parse_qos_values    (GstMessage * message, gint64 * jitter, gdouble * proportion,
                                                  gint * quality);
+GST_EXPORT
 void            gst_message_parse_qos_stats     (GstMessage * message, GstFormat * format, guint64 * processed,
                                                  guint64 * dropped);
 /* PROGRESS */
+
+GST_EXPORT
 GstMessage *    gst_message_new_progress           (GstObject * src, GstProgressType type, const gchar *code,
                                                     const gchar *text) G_GNUC_MALLOC;
+GST_EXPORT
 void            gst_message_parse_progress         (GstMessage * message, GstProgressType * type, gchar ** code,
                                                     gchar ** text);
 
 /* TOC */
+
+GST_EXPORT
 GstMessage *    gst_message_new_toc             (GstObject *src, GstToc *toc, gboolean updated);
+
+GST_EXPORT
 void            gst_message_parse_toc           (GstMessage *message, GstToc **toc, gboolean *updated);
 
 /* RESET_TIME */
+
+GST_EXPORT
 GstMessage *    gst_message_new_reset_time      (GstObject * src, GstClockTime running_time) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_reset_time    (GstMessage *message, GstClockTime *running_time);
 
 /* STREAM_START */
+
+GST_EXPORT
 GstMessage *    gst_message_new_stream_start    (GstObject * src) G_GNUC_MALLOC;
 
+GST_EXPORT
 void            gst_message_set_group_id        (GstMessage *message, guint group_id);
+
+GST_EXPORT
 gboolean        gst_message_parse_group_id      (GstMessage *message, guint *group_id);
 
 /* NEED_CONTEXT */
+
+GST_EXPORT
 GstMessage *    gst_message_new_need_context    (GstObject * src, const gchar * context_type) G_GNUC_MALLOC;
+
+GST_EXPORT
 gboolean        gst_message_parse_context_type  (GstMessage * message, const gchar ** context_type);
 
 /* HAVE_CONTEXT */
+
+GST_EXPORT
 GstMessage *    gst_message_new_have_context    (GstObject * src, GstContext *context) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_have_context  (GstMessage *message, GstContext **context);
 
 /* DEVICE_ADDED */
+
+GST_EXPORT
 GstMessage *    gst_message_new_device_added    (GstObject * src, GstDevice * device) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_device_added  (GstMessage * message, GstDevice ** device);
 
 /* DEVICE_REMOVED */
+
+GST_EXPORT
 GstMessage *    gst_message_new_device_removed    (GstObject * src, GstDevice * device) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_device_removed  (GstMessage * message, GstDevice ** device);
 
 /* PROPERTY_NOTIFY */
+
+GST_EXPORT
 GstMessage *    gst_message_new_property_notify   (GstObject * src, const gchar * property_name, GValue * val) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_property_notify (GstMessage * message, GstObject ** object, const gchar ** property_name, const GValue ** property_value);
 
 /* STREAM_COLLECTION */
+
+GST_EXPORT
 GstMessage *    gst_message_new_stream_collection   (GstObject * src, GstStreamCollection * collection) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_parse_stream_collection (GstMessage *message, GstStreamCollection **collection);
 
 /* STREAMS_SELECTED */
+
+GST_EXPORT
 GstMessage *    gst_message_new_streams_selected (GstObject *src, GstStreamCollection *collection);
+
+GST_EXPORT
 void            gst_message_streams_selected_add (GstMessage *message, GstStream *stream);
+
+GST_EXPORT
 void            gst_message_parse_streams_selected (GstMessage * message, GstStreamCollection **collection);
+
+GST_EXPORT
 guint           gst_message_streams_selected_get_size (GstMessage * message);
+
+GST_EXPORT
 GstStream      *gst_message_streams_selected_get_stream (GstMessage *message, guint idx);
 
 /* REDIRECT */
+
+GST_EXPORT
 GstMessage *    gst_message_new_redirect             (GstObject * src, const gchar * location, GstTagList * tag_list, const GstStructure * entry_struct) G_GNUC_MALLOC;
+
+GST_EXPORT
 void            gst_message_add_redirect_entry       (GstMessage * message, const gchar * location, GstTagList * tag_list, const GstStructure * entry_struct);
+
+GST_EXPORT
 void            gst_message_parse_redirect_entry     (GstMessage * message, gsize entry_index, const gchar ** location, GstTagList ** tag_list, const GstStructure ** entry_struct);
+
+GST_EXPORT
 gsize           gst_message_get_num_redirect_entries (GstMessage * message);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

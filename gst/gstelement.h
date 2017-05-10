@@ -335,7 +335,9 @@ typedef enum
  */
 #define GST_ELEMENT_START_TIME(elem)            (GST_ELEMENT_CAST(elem)->start_time)
 
+GST_EXPORT
 GstStructure *gst_make_element_message_details (const char *name, ...);
+
 #define GST_ELEMENT_MESSAGE_MAKE_DETAILS(args) gst_make_element_message_details args
 
 /**
@@ -730,33 +732,47 @@ struct _GstElementClass
 };
 
 /* element class pad templates */
+
+GST_EXPORT
 void                    gst_element_class_add_pad_template      (GstElementClass *klass, GstPadTemplate *templ);
 
+GST_EXPORT
 void                    gst_element_class_add_static_pad_template (GstElementClass *klass, GstStaticPadTemplate *static_templ);
 
+GST_EXPORT
 GstPadTemplate*         gst_element_class_get_pad_template      (GstElementClass *element_class, const gchar *name);
+
+GST_EXPORT
 GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
 
 /* element class meta data */
+
+GST_EXPORT
 void                    gst_element_class_set_metadata          (GstElementClass *klass,
                                                                  const gchar     *longname,
                                                                  const gchar     *classification,
                                                                  const gchar     *description,
                                                                  const gchar     *author);
+GST_EXPORT
 void                    gst_element_class_set_static_metadata   (GstElementClass *klass,
                                                                  const gchar     *longname,
                                                                  const gchar     *classification,
                                                                  const gchar     *description,
                                                                  const gchar     *author);
+GST_EXPORT
 void                    gst_element_class_add_metadata          (GstElementClass * klass,
                                                                  const gchar * key, const gchar * value);
+GST_EXPORT
 void                    gst_element_class_add_static_metadata   (GstElementClass * klass,
                                                                  const gchar * key, const gchar * value);
+GST_EXPORT
 const gchar *           gst_element_class_get_metadata          (GstElementClass * klass,
                                                                  const gchar * key);
 
 
 /* element instance */
+
+GST_EXPORT
 GType                   gst_element_get_type            (void);
 
 /* basic name and parentage stuff from GstObject */
@@ -805,62 +821,116 @@ GType                   gst_element_get_type            (void);
 #define                 gst_element_set_parent(elem,parent)     gst_object_set_parent(GST_OBJECT_CAST(elem),parent)
 
 /* clocking */
+
+GST_EXPORT
 GstClock*               gst_element_provide_clock       (GstElement *element);
+
+GST_EXPORT
 GstClock*               gst_element_get_clock           (GstElement *element);
+
+GST_EXPORT
 gboolean                gst_element_set_clock           (GstElement *element, GstClock *clock);
+
+GST_EXPORT
 void                    gst_element_set_base_time       (GstElement *element, GstClockTime time);
+
+GST_EXPORT
 GstClockTime            gst_element_get_base_time       (GstElement *element);
+
+GST_EXPORT
 void                    gst_element_set_start_time      (GstElement *element, GstClockTime time);
+
+GST_EXPORT
 GstClockTime            gst_element_get_start_time      (GstElement *element);
 
 /* bus */
+
+GST_EXPORT
 void                    gst_element_set_bus             (GstElement * element, GstBus * bus);
+
+GST_EXPORT
 GstBus *                gst_element_get_bus             (GstElement * element);
 
 /* context */
+
+GST_EXPORT
 void                    gst_element_set_context         (GstElement * element, GstContext * context);
+
+GST_EXPORT
 GList *                 gst_element_get_contexts        (GstElement * element);
+
+GST_EXPORT
 GstContext *            gst_element_get_context         (GstElement * element, const gchar * context_type);
+
+GST_EXPORT
 GstContext *            gst_element_get_context_unlocked (GstElement * element, const gchar * context_type);
 
 /* pad management */
+
+GST_EXPORT
 gboolean                gst_element_add_pad             (GstElement *element, GstPad *pad);
+
+GST_EXPORT
 gboolean                gst_element_remove_pad          (GstElement *element, GstPad *pad);
+
+GST_EXPORT
 void                    gst_element_no_more_pads        (GstElement *element);
 
+GST_EXPORT
 GstPad*                 gst_element_get_static_pad      (GstElement *element, const gchar *name);
+
+GST_EXPORT
 GstPad*                 gst_element_get_request_pad     (GstElement *element, const gchar *name);
+
+GST_EXPORT
 GstPad*                 gst_element_request_pad         (GstElement *element, GstPadTemplate *templ,
 							 const gchar * name, const GstCaps *caps);
+GST_EXPORT
 void                    gst_element_release_request_pad (GstElement *element, GstPad *pad);
 
+GST_EXPORT
 GstIterator *           gst_element_iterate_pads        (GstElement * element);
+
+GST_EXPORT
 GstIterator *           gst_element_iterate_src_pads    (GstElement * element);
+
+GST_EXPORT
 GstIterator *           gst_element_iterate_sink_pads   (GstElement * element);
 
 /* event/query/format stuff */
+
+GST_EXPORT
 gboolean                gst_element_send_event          (GstElement *element, GstEvent *event);
+
+GST_EXPORT
 gboolean                gst_element_seek                (GstElement *element, gdouble rate,
                                                          GstFormat format, GstSeekFlags flags,
                                                          GstSeekType start_type, gint64 start,
                                                          GstSeekType stop_type, gint64 stop);
+GST_EXPORT
 gboolean                gst_element_query               (GstElement *element, GstQuery *query);
 
 /* messages */
+
+GST_EXPORT
 gboolean                gst_element_post_message        (GstElement * element, GstMessage * message);
 
 /* error handling */
 /* gcc versions < 3.3 warn about NULL being passed as format to printf */
 #if (!defined(__GNUC__) || (__GNUC__ < 3) || (__GNUC__ == 3 && __GNUC_MINOR__ < 3))
+GST_EXPORT
 gchar *                 _gst_element_error_printf       (const gchar *format, ...);
 #else
+GST_EXPORT
 gchar *                 _gst_element_error_printf       (const gchar *format, ...) G_GNUC_PRINTF (1, 2);
 #endif
+
+GST_EXPORT
 void                    gst_element_message_full        (GstElement * element, GstMessageType type,
                                                          GQuark domain, gint code, gchar * text,
                                                          gchar * debug, const gchar * file,
                                                          const gchar * function, gint line);
-
+GST_EXPORT
 void                    gst_element_message_full_with_details (GstElement * element, GstMessageType type,
                                                          GQuark domain, gint code, gchar * text,
                                                          gchar * debug, const gchar * file,
@@ -868,42 +938,61 @@ void                    gst_element_message_full_with_details (GstElement * elem
                                                          GstStructure * structure);
 
 /* state management */
+
+GST_EXPORT
 gboolean                gst_element_is_locked_state     (GstElement *element);
+
+GST_EXPORT
 gboolean                gst_element_set_locked_state    (GstElement *element, gboolean locked_state);
+
+GST_EXPORT
 gboolean                gst_element_sync_state_with_parent (GstElement *element);
 
+GST_EXPORT
 GstStateChangeReturn    gst_element_get_state           (GstElement * element,
                                                          GstState * state,
                                                          GstState * pending,
                                                          GstClockTime timeout);
+GST_EXPORT
 GstStateChangeReturn    gst_element_set_state           (GstElement *element, GstState state);
 
+GST_EXPORT
 void                    gst_element_abort_state         (GstElement * element);
+
+GST_EXPORT
 GstStateChangeReturn    gst_element_change_state        (GstElement * element,
                                                          GstStateChange transition);
+
+GST_EXPORT
 GstStateChangeReturn    gst_element_continue_state      (GstElement * element,
                                                          GstStateChangeReturn ret);
+GST_EXPORT
 void                    gst_element_lost_state          (GstElement * element);
+
 
 typedef void          (*GstElementCallAsyncFunc)        (GstElement * element,
                                                          gpointer     user_data);
-
+GST_EXPORT
 void                    gst_element_call_async          (GstElement * element,
                                                          GstElementCallAsyncFunc func, gpointer user_data,
                                                          GDestroyNotify destroy_notify);
 
 /* factory management */
+
+GST_EXPORT
 GstElementFactory*      gst_element_get_factory         (GstElement *element);
 
 /* utility functions */
+
+GST_EXPORT
 gulong                  gst_element_add_property_notify_watch (GstElement  * element,
                                                                const gchar * property_name,
                                                                gboolean      include_value);
-
+GST_EXPORT
 gulong                  gst_element_add_property_deep_notify_watch (GstElement  * element,
                                                                     const gchar * property_name,
                                                                     gboolean      include_value);
-
+GST_EXPORT
 void                    gst_element_remove_property_notify_watch (GstElement * element,
                                                                   gulong       watch_id);
 

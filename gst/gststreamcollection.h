@@ -93,15 +93,22 @@ struct _GstStreamCollectionClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType gst_stream_collection_get_type (void);
 
+GST_EXPORT
 GstStreamCollection *gst_stream_collection_new (const gchar *upstream_id);
 
+GST_EXPORT
 const gchar *gst_stream_collection_get_upstream_id (GstStreamCollection *collection);
 
+GST_EXPORT
 guint gst_stream_collection_get_size (GstStreamCollection *collection);
+
+GST_EXPORT
 GstStream *gst_stream_collection_get_stream (GstStreamCollection *collection, guint index);
 
+GST_EXPORT
 gboolean gst_stream_collection_add_stream (GstStreamCollection *collection,
                                            GstStream *stream);
 

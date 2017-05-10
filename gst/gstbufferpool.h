@@ -175,44 +175,80 @@ struct _GstBufferPoolClass {
   gpointer _gst_reserved[GST_PADDING - 2];
 };
 
+GST_EXPORT
 GType       gst_buffer_pool_get_type (void);
 
 /* allocation */
+
+GST_EXPORT
 GstBufferPool *  gst_buffer_pool_new  (void);
 
 /* state management */
+
+GST_EXPORT
 gboolean         gst_buffer_pool_set_active      (GstBufferPool *pool, gboolean active);
+
+GST_EXPORT
 gboolean         gst_buffer_pool_is_active       (GstBufferPool *pool);
 
+GST_EXPORT
 gboolean         gst_buffer_pool_set_config      (GstBufferPool *pool, GstStructure *config);
+
+GST_EXPORT
 GstStructure *   gst_buffer_pool_get_config      (GstBufferPool *pool);
 
+GST_EXPORT
 const gchar **   gst_buffer_pool_get_options     (GstBufferPool *pool);
+
+GST_EXPORT
 gboolean         gst_buffer_pool_has_option      (GstBufferPool *pool, const gchar *option);
 
+GST_EXPORT
 void             gst_buffer_pool_set_flushing    (GstBufferPool *pool, gboolean flushing);
 
 /* helpers for configuring the config structure */
+
+GST_EXPORT
 void             gst_buffer_pool_config_set_params    (GstStructure *config, GstCaps *caps,
                                                        guint size, guint min_buffers, guint max_buffers);
+
+GST_EXPORT
 gboolean         gst_buffer_pool_config_get_params    (GstStructure *config, GstCaps **caps,
                                                        guint *size, guint *min_buffers, guint *max_buffers);
+
+GST_EXPORT
 void             gst_buffer_pool_config_set_allocator (GstStructure *config, GstAllocator *allocator,
                                                        const GstAllocationParams *params);
+
+GST_EXPORT
 gboolean         gst_buffer_pool_config_get_allocator (GstStructure *config, GstAllocator **allocator,
                                                        GstAllocationParams *params);
 
 /* options */
+
+GST_EXPORT
 guint            gst_buffer_pool_config_n_options   (GstStructure *config);
+
+GST_EXPORT
 void             gst_buffer_pool_config_add_option  (GstStructure *config, const gchar *option);
+
+GST_EXPORT
 const gchar *    gst_buffer_pool_config_get_option  (GstStructure *config, guint index);
+
+GST_EXPORT
 gboolean         gst_buffer_pool_config_has_option  (GstStructure *config, const gchar *option);
+
+GST_EXPORT
 gboolean         gst_buffer_pool_config_validate_params (GstStructure *config, GstCaps *caps,
                                                          guint size, guint min_buffers, guint max_buffers);
 
 /* buffer management */
+
+GST_EXPORT
 GstFlowReturn    gst_buffer_pool_acquire_buffer  (GstBufferPool *pool, GstBuffer **buffer,
                                                   GstBufferPoolAcquireParams *params);
+
+GST_EXPORT
 void             gst_buffer_pool_release_buffer  (GstBufferPool *pool, GstBuffer *buffer);
 
 G_END_DECLS

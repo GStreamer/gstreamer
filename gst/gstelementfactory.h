@@ -50,28 +50,43 @@ G_BEGIN_DECLS
 #define GST_IS_ELEMENT_FACTORY_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT_FACTORY))
 #define GST_ELEMENT_FACTORY_CAST(obj)           ((GstElementFactory *)(obj))
 
+GST_EXPORT
 GType                   gst_element_factory_get_type            (void);
 
+GST_EXPORT
 GstElementFactory *     gst_element_factory_find                (const gchar *name);
 
+GST_EXPORT
 GType                   gst_element_factory_get_element_type    (GstElementFactory *factory);
 
+GST_EXPORT
 const gchar *           gst_element_factory_get_metadata        (GstElementFactory *factory, const gchar *key);
+
+GST_EXPORT
 gchar **                gst_element_factory_get_metadata_keys   (GstElementFactory *factory);
 
+GST_EXPORT
 guint                   gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
+
+GST_EXPORT
 const GList *           gst_element_factory_get_static_pad_templates (GstElementFactory *factory);
 
+GST_EXPORT
 GstURIType              gst_element_factory_get_uri_type        (GstElementFactory *factory);
+
+GST_EXPORT
 const gchar * const *   gst_element_factory_get_uri_protocols   (GstElementFactory *factory);
 
+GST_EXPORT
 gboolean                gst_element_factory_has_interface       (GstElementFactory *factory,
                                                                  const gchar *interfacename);
-
+GST_EXPORT
 GstElement*             gst_element_factory_create              (GstElementFactory *factory,
                                                                  const gchar *name) G_GNUC_MALLOC;
+GST_EXPORT
 GstElement*             gst_element_factory_make                (const gchar *factoryname, const gchar *name) G_GNUC_MALLOC;
 
+GST_EXPORT
 gboolean                gst_element_register                    (GstPlugin *plugin, const gchar *name,
                                                                  guint rank, GType type);
 
@@ -195,13 +210,16 @@ typedef guint64 GstElementFactoryListType;
 #define GST_ELEMENT_FACTORY_KLASS_MEDIA_SUBTITLE        "Subtitle"
 #define GST_ELEMENT_FACTORY_KLASS_MEDIA_METADATA        "Metadata"
 
+GST_EXPORT
 gboolean      gst_element_factory_list_is_type      (GstElementFactory *factory,
                                                      GstElementFactoryListType type);
 
+GST_EXPORT
 GList *       gst_element_factory_list_get_elements (GstElementFactoryListType type,
                                                      GstRank minrank) G_GNUC_MALLOC;
 
 
+GST_EXPORT
 GList *       gst_element_factory_list_filter       (GList *list, const GstCaps *caps,
                                                      GstPadDirection direction,
                                                      gboolean subsetonly) G_GNUC_MALLOC;

@@ -85,15 +85,22 @@ struct _GstTaskPoolClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType           gst_task_pool_get_type    (void);
 
+GST_EXPORT
 GstTaskPool *   gst_task_pool_new         (void);
+
+GST_EXPORT
 void            gst_task_pool_prepare     (GstTaskPool *pool, GError **error);
 
+GST_EXPORT
 gpointer        gst_task_pool_push        (GstTaskPool *pool, GstTaskPoolFunction func,
                                            gpointer user_data, GError **error);
+GST_EXPORT
 void            gst_task_pool_join        (GstTaskPool *pool, gpointer id);
 
+GST_EXPORT
 void		gst_task_pool_cleanup     (GstTaskPool *pool);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

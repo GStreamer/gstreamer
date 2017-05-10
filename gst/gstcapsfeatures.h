@@ -45,38 +45,76 @@ GST_EXPORT GstCapsFeatures *_gst_caps_features_any;
 GST_EXPORT GstCapsFeatures *_gst_caps_features_memory_system_memory;
 #define GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY (_gst_caps_features_memory_system_memory)
 
+GST_EXPORT
 GType             gst_caps_features_get_type (void);
+
+GST_EXPORT
 gboolean          gst_is_caps_features (gconstpointer obj);
 
+GST_EXPORT
 GstCapsFeatures * gst_caps_features_new_empty (void);
+
+GST_EXPORT
 GstCapsFeatures * gst_caps_features_new_any (void);
+
+GST_EXPORT
 GstCapsFeatures * gst_caps_features_new (const gchar *feature1, ...);
+
+GST_EXPORT
 GstCapsFeatures * gst_caps_features_new_valist (const gchar *feature1, va_list varargs);
+
+GST_EXPORT
 GstCapsFeatures * gst_caps_features_new_id (GQuark feature1, ...);
+
+GST_EXPORT
 GstCapsFeatures * gst_caps_features_new_id_valist (GQuark feature1, va_list varargs);
 
+GST_EXPORT
 gboolean          gst_caps_features_set_parent_refcount  (GstCapsFeatures *features, gint * refcount);
 
+GST_EXPORT
 GstCapsFeatures * gst_caps_features_copy (const GstCapsFeatures * features);
+
+GST_EXPORT
 void              gst_caps_features_free (GstCapsFeatures * features);
 
+GST_EXPORT
 gchar *           gst_caps_features_to_string (const GstCapsFeatures * features);
+
+GST_EXPORT
 GstCapsFeatures * gst_caps_features_from_string (const gchar * features);
 
+GST_EXPORT
 guint             gst_caps_features_get_size (const GstCapsFeatures * features);
+
+GST_EXPORT
 const gchar *     gst_caps_features_get_nth (const GstCapsFeatures * features, guint i);
+
+GST_EXPORT
 GQuark            gst_caps_features_get_nth_id (const GstCapsFeatures * features, guint i);
 
+GST_EXPORT
 gboolean          gst_caps_features_contains (const GstCapsFeatures * features, const gchar * feature);
+
+GST_EXPORT
 gboolean          gst_caps_features_contains_id (const GstCapsFeatures * features, GQuark feature);
+
+GST_EXPORT
 gboolean          gst_caps_features_is_equal (const GstCapsFeatures * features1, const GstCapsFeatures * features2);
 
+GST_EXPORT
 gboolean          gst_caps_features_is_any (const GstCapsFeatures * features);
 
+GST_EXPORT
 void              gst_caps_features_add (GstCapsFeatures * features, const gchar * feature);
+
+GST_EXPORT
 void              gst_caps_features_add_id ( GstCapsFeatures * features, GQuark feature);
 
+GST_EXPORT
 void              gst_caps_features_remove (GstCapsFeatures * features, const gchar * feature);
+
+GST_EXPORT
 void              gst_caps_features_remove_id (GstCapsFeatures * features, GQuark feature);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
