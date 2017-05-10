@@ -1081,10 +1081,6 @@ gst_segment_position_from_running_time_full (const GstSegment * segment,
  * Deprecated. Use gst_segment_position_from_running_time() instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-guint64 gst_segment_to_position (const GstSegment * segment, GstFormat format,
-    guint64 running_time);
-#endif
 guint64
 gst_segment_to_position (const GstSegment * segment, GstFormat format,
     guint64 running_time)

@@ -239,10 +239,8 @@ gboolean	gst_object_has_as_parent		(GstObject *object, GstObject *parent);
 GST_EXPORT
 gboolean	gst_object_has_as_ancestor	(GstObject *object, GstObject *ancestor);
 
-#ifndef GST_DISABLE_DEPRECATED
-GST_EXPORT
+GST_DEPRECATED_FOR(gst_object_has_as_ancestor)
 gboolean	gst_object_has_ancestor		(GstObject *object, GstObject *ancestor);
-#endif
 
 GST_EXPORT
 void            gst_object_default_deep_notify  (GObject *object, GstObject *orig,

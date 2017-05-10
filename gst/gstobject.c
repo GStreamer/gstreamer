@@ -835,11 +835,7 @@ gst_object_has_as_ancestor (GstObject * object, GstObject * ancestor)
  *
  * MT safe. Grabs and releases @object's locks.
  */
-/* FIXME 2.0: remove */
 #ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-gboolean gst_object_has_ancestor (GstObject * object, GstObject * ancestor);
-#endif
 gboolean
 gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
 {

@@ -245,10 +245,10 @@ guint64      gst_segment_to_running_time     (const GstSegment *segment, GstForm
 GST_EXPORT
 gint         gst_segment_to_running_time_full (const GstSegment *segment, GstFormat format, guint64 position,
                                                guint64 * running_time);
-#ifndef GST_DISABLE_DEPRECATED
-GST_EXPORT
+
+GST_DEPRECATED_FOR(gst_segment_position_from_running_time)
 guint64      gst_segment_to_position         (const GstSegment *segment, GstFormat format, guint64 running_time);
-#endif
+
 GST_EXPORT
 gint         gst_segment_position_from_running_time_full (const GstSegment *segment, GstFormat format, guint64 running_time, guint64 * position);
 
