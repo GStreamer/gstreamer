@@ -4273,6 +4273,8 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       gst_buffer_memset (fill_buf, 0, 0, fill_size);
 
       ret = gst_qt_mux_send_buffer (qtmux, fill_buf, &qtmux->mdat_size, TRUE);
+      if (ret != GST_FLOW_OK)
+        goto bail;
       qtmux->current_chunk_offset = chunk_offset = sample_entry->chunk_offset;
       qtmux->current_chunk_size = buffer_size;
       qtmux->current_chunk_duration = duration;
