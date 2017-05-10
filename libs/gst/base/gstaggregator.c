@@ -1026,6 +1026,9 @@ update_time_level (GstAggregatorPad * aggpad, gboolean head)
           GST_FORMAT_TIME, aggpad->priv->head_position);
     else
       aggpad->priv->head_time = GST_CLOCK_TIME_NONE;
+
+    if (!GST_CLOCK_TIME_IS_VALID (aggpad->priv->tail_time))
+      aggpad->priv->tail_time = aggpad->priv->head_time;
   } else {
     if (GST_CLOCK_TIME_IS_VALID (aggpad->priv->tail_position) &&
         aggpad->segment.format == GST_FORMAT_TIME)
