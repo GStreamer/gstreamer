@@ -3390,6 +3390,23 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
 
       gst_qt_mux_update_edit_lists (qtmux);
 
+      /* Check if any gap edit lists were added. We don't have any space
+       * reserved for this in the moov and the pre-finalized moov would have
+       * broken A/V synchronization. Error out here now
+       */
+      for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+        GstCollectData *cdata = (GstCollectData *) walk->data;
+        GstQTPad *qpad = (GstQTPad *) cdata;
+
+        if (qpad->trak->edts
+            && g_slist_length (qpad->trak->edts->elst.entries) > 1) {
+          GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+              ("Can't support gaps in prefill mode"));
+
+          return GST_FLOW_ERROR;
+        }
+      }
+
       gst_qt_mux_setup_metadata (qtmux);
       atom_moov_chunks_set_offset (qtmux->moov, qtmux->header_size);
 
