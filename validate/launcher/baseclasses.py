@@ -1695,7 +1695,7 @@ class Scenario(object):
 
     def does_reverse_playback(self):
         if hasattr(self, "reverse_playback"):
-            return bool(self.seek)
+            return bool(self.reverse_playback)
 
         return False
 
@@ -1901,6 +1901,9 @@ class MediaDescriptor(Loggable):
     def can_play_reverse(self):
         raise NotImplemented
 
+    def prerrols(self):
+        return True
+
     def is_compatible(self, scenario):
         if scenario is None:
             return True
@@ -1925,6 +1928,9 @@ class MediaDescriptor(Loggable):
 
         if self.is_live() and not scenario.compatible_with_live_content():
             self.debug("Do not run %s as %s is a live content", scenario, self.get_uri())
+            return False
+
+        if not self.prerrols() and getattr(scenario, 'needs_preroll', False):
             return False
 
         if self.get_duration() and self.get_duration() / GST_SECOND < scenario.get_min_media_duration():

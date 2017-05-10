@@ -698,6 +698,9 @@ class GstValidateRTSPMediaDesciptor(GstValidateMediaDescriptor):
     def get_protocol(self):
         return Protocols.RTSP
 
+    def prerrols(self):
+        return False
+
 
 class GstValidateTestManager(GstValidateBaseTestManager):
 
