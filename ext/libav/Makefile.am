@@ -51,10 +51,12 @@ if GST_PLUGIN_BUILD_STATIC
 libgstlibav.la: $(libgstlibav_la_OBJECTS) $(libgstlibav_la_DEPENDENCIES) $(EXTRA_libgstlibav_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(libgstlibav_la_LINK) -rpath $(plugindir) $(libgstlibav_la_OBJECTS) $(libgstlibav_la_LIBADD) $(LIBS)
 	$(AM_V_at)cp $@ $@.tmp
-	$(AM_V_at)rm $@
+	$(AM_V_at)cp .libs/$@i .libs/$@i.tmp
+	$(AM_V_at)rm $@ .libs/$@i
 	$(AM_V_at)$(AR) -d .libs/libgstlibav.a $(foreach dep,$(LIBAV_DEPS), $(notdir $(dep)))
 	$(AM_V_at)$(RANLIB) .libs/libgstlibav.a
 	$(AM_V_GEN)sed -e "s|^\(dependency_libs='\)|\1 $(LIBAV_LIBS)|" $@.tmp > $@ && rm $@.tmp
+	$(AM_V_GEN)sed -e "s|^\(dependency_libs='\)|\1 $(LIBAV_LIBS)|" .libs/$@i.tmp > .libs/$@i && rm .libs/$@i.tmp
 endif
 endif
 
