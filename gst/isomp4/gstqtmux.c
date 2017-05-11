@@ -4658,8 +4658,6 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   gint constant_size = 0;
   const gchar *stream_format;
 
-  qtpad->prepare_buf_func = NULL;
-
   /* does not go well to renegotiate stream mid-way, unless
    * the old caps are a subset of the new one (this means upstream
    * added more info to the caps, as both should be 'fixed' caps) */
@@ -4677,10 +4675,14 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
         "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
         GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
     gst_caps_unref (current_caps);
+
+    return TRUE;
   }
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
+
+  qtpad->prepare_buf_func = NULL;
 
   format = qtmux_klass->format;
   structure = gst_caps_get_structure (caps, 0);
@@ -5025,8 +5027,6 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   gboolean sync = FALSE;
   int par_num, par_den;
 
-  qtpad->prepare_buf_func = NULL;
-
   /* does not go well to renegotiate stream mid-way, unless
    * the old caps are a subset of the new one (this means upstream
    * added more info to the caps, as both should be 'fixed' caps) */
@@ -5044,10 +5044,14 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
         "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
         GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
     gst_caps_unref (current_caps);
+
+    return TRUE;
   }
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
+
+  qtpad->prepare_buf_func = NULL;
 
   format = qtmux_klass->format;
   structure = gst_caps_get_structure (caps, 0);
@@ -5543,6 +5547,8 @@ gst_qt_mux_subtitle_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
         "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
         GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
     gst_caps_unref (current_caps);
+
+    return TRUE;
   }
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
