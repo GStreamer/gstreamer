@@ -93,6 +93,7 @@ glconf_options = [
     'GST_GL_HAVE_OPENGL',
     'GST_GL_HAVE_GLES2',
     'GST_GL_HAVE_GLES3',
+    'GST_GL_HAVE_GLES3EXT3_H',
 
     'GST_GL_HAVE_WINDOW_X11',
     'GST_GL_HAVE_WINDOW_COCOA',
@@ -305,6 +306,8 @@ endif
 
 # GLES2 checks
 gles2_dep = unneeded_dep
+gles3_h = false
+gles3ext3_h = false
 if need_api_gles2 != 'no'
   gles2_dep = dependency('glesv2', required : false)
   if not gles2_dep.found()
@@ -328,9 +331,14 @@ if need_api_gles2 != 'no'
 # include <OpenGLES/ES2/glext.h>
 #else'''
   if gles3_h
+    gles3ext3_h = gles3_h and cc.has_header('GLES3/gl3ext.h', required : false, dependencies : gles2_dep)
     gles_includes += '''
 # include <GLES3/gl3.h>
+# include <GLES2/gl2ext.h>'''
+    if gles3ext3_h
+      gles_includes += '''
 # include <GLES3/gl3ext.h>'''
+    endif
   else
     gles_includes += '''
 # include <GLES2/gl2.h>
@@ -368,6 +376,9 @@ if gles2_dep.found()
   glconf.set10('GST_GL_HAVE_GLES2', 1)
   if gles3_h
     glconf.set10('GST_GL_HAVE_GLES3', 1)
+    if gles3ext3_h
+      glconf.set10('GST_GL_HAVE_GLES3EXT3_H', 1)
+    endif
   endif
   enabled_gl_apis += 'gles2'
 endif
