@@ -41,13 +41,15 @@ if HAVE_LIBAV_UNINSTALLED
 libgstlibav_la_DEPENDENCIES = $(LIBAV_DEPS)
 
 if GST_PLUGIN_BUILD_STATIC
+depsdir = $(libdir)
+deps_DATA = $(LIBAV_DEPS)
+
 libgstlibav_la = $(DESTDIR)$(plugindir)/libgstlibav.la
 
 install-data-hook: 
 	$(AM_V_at)cp $(libgstlibav_la) $(libgstlibav_la).tmp
 	$(AM_V_GEN)sed -e "s|-L$(top_builddir)/gst-libs/ext/libav/lib[a-z]* ||g" \
 				   $(libgstlibav_la).tmp > $(libgstlibav_la) && rm $(libgstlibav_la).tmp
-	$(AM_V_at)$(INSTALL) -t$(DESTDIR)$(libdir) $(LIBAV_DEPS)
 endif
 endif
 
