@@ -25,7 +25,7 @@ msdk_root = run_command(python3, '-c', 'import os; print(os.environ.get("INTELME
 if msdk_root != ''
   msdk_libdir = [msdk_root + '/lib/lin_x64', msdk_root + '/lib/x64']
   msdk_incdir = include_directories(msdk_root + '/include')
-  msdk_lib = cc.find_library('mfx', dirs: msdk_libdir, required: false)
+  msdk_lib = cxx.find_library('mfx', dirs: msdk_libdir, required: false)
   if host_machine.system() == 'windows'
     legacy_stdio_dep = cc.find_library('legacy_stdio_definitions', required: false)
     d3d11_dep = cc.find_library('d3d11', required: false)
