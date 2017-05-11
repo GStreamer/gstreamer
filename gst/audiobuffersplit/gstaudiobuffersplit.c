@@ -167,6 +167,44 @@ gst_audio_buffer_split_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gboolean
+gst_audio_buffer_split_update_samples_per_buffer (GstAudioBufferSplit * self)
+{
+  gboolean ret = TRUE;
+
+  GST_OBJECT_LOCK (self);
+
+  /* For a later time */
+  if (!self->info.finfo
+      || GST_AUDIO_INFO_FORMAT (&self->info) == GST_AUDIO_FORMAT_UNKNOWN) {
+    self->samples_per_buffer = 0;
+    goto out;
+  }
+
+  self->samples_per_buffer =
+      (((guint64) GST_AUDIO_INFO_RATE (&self->info)) *
+      self->output_buffer_duration_n) / self->output_buffer_duration_d;
+  if (self->samples_per_buffer == 0) {
+    ret = FALSE;
+    goto out;
+  }
+
+  self->error_per_buffer =
+      (((guint64) GST_AUDIO_INFO_RATE (&self->info)) *
+      self->output_buffer_duration_n) % self->output_buffer_duration_d;
+  self->accumulated_error = 0;
+
+  GST_DEBUG_OBJECT (self, "Buffer duration: %u/%u",
+      self->output_buffer_duration_n, self->output_buffer_duration_d);
+  GST_DEBUG_OBJECT (self, "Samples per buffer: %u (error: %u/%u)",
+      self->samples_per_buffer, self->error_per_buffer,
+      self->output_buffer_duration_d);
+out:
+  GST_OBJECT_UNLOCK (self);
+
+  return ret;
+}
+
 static void
 gst_audio_buffer_split_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
@@ -178,6 +216,7 @@ gst_audio_buffer_split_set_property (GObject * object, guint property_id,
       self->output_buffer_duration_n = gst_value_get_fraction_numerator (value);
       self->output_buffer_duration_d =
           gst_value_get_fraction_denominator (value);
+      gst_audio_buffer_split_update_samples_per_buffer (self);
       break;
     case PROP_ALIGNMENT_THRESHOLD:
       self->alignment_threshold = g_value_get_uint64 (value);
@@ -260,19 +299,13 @@ gst_audio_buffer_split_change_state (GstElement * element,
 }
 
 static GstFlowReturn
-gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force)
+gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force,
+    gint rate, gint bpf, guint samples_per_buffer)
 {
-  gint rate, bpf;
   gint size, avail;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  rate = GST_AUDIO_INFO_RATE (&self->info);
-  bpf = GST_AUDIO_INFO_BPF (&self->info);
-
-  if (self->samples_per_buffer == 0)
-    return GST_FLOW_NOT_NEGOTIATED;
-
-  size = self->samples_per_buffer * bpf;
+  size = samples_per_buffer * bpf;
 
   /* If we accumulated enough error for one sample, include one
    * more sample in this buffer. Accumulated error is updated below */
@@ -332,19 +365,16 @@ gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force)
 
 static GstFlowReturn
 gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
-    GstBuffer * buffer)
+    GstBuffer * buffer, gint rate, gint bpf, guint samples_per_buffer)
 {
   GstClockTime timestamp;
   gsize size;
   guint64 start_offset, end_offset;
-  gint rate, bpf;
   gboolean discont = FALSE;
   GstFlowReturn ret = GST_FLOW_OK;
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  rate = GST_AUDIO_INFO_RATE (&self->info);
-  bpf = GST_AUDIO_INFO_BPF (&self->info);
   start_offset = gst_util_uint64_scale (timestamp, rate, GST_SECOND);
   size = gst_buffer_get_size (buffer);
   end_offset = start_offset + size / bpf;
@@ -399,7 +429,9 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
         gst_adapter_clear (self->adapter);
         ret = GST_FLOW_OK;
       } else {
-        ret = gst_audio_buffer_split_output (self, TRUE);
+        ret =
+            gst_audio_buffer_split_output (self, TRUE, rate, bpf,
+            samples_per_buffer);
       }
     }
     self->next_offset = end_offset;
@@ -423,10 +455,9 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
 
 static GstBuffer *
 gst_audio_buffer_split_clip_buffer (GstAudioBufferSplit * self,
-    GstBuffer * buffer)
+    GstBuffer * buffer, const GstSegment * segment, gint rate, gint bpf)
 {
-  return gst_audio_buffer_clip (buffer, &self->segment,
-      GST_AUDIO_INFO_RATE (&self->info), GST_AUDIO_INFO_BPF (&self->info));
+  return gst_audio_buffer_clip (buffer, segment, rate, bpf);
 }
 
 static GstFlowReturn
@@ -435,17 +466,32 @@ gst_audio_buffer_split_sink_chain (GstPad * pad, GstObject * parent,
 {
   GstAudioBufferSplit *self = GST_AUDIO_BUFFER_SPLIT (parent);
   GstFlowReturn ret;
+  GstAudioFormat format;
+  gint rate, bpf, samples_per_buffer;
 
-  if (GST_AUDIO_INFO_FORMAT (&self->info) == GST_AUDIO_FORMAT_UNKNOWN) {
+  GST_OBJECT_LOCK (self);
+  format =
+      self->info.
+      finfo ? GST_AUDIO_INFO_FORMAT (&self->info) : GST_AUDIO_FORMAT_UNKNOWN;
+  rate = GST_AUDIO_INFO_RATE (&self->info);
+  bpf = GST_AUDIO_INFO_BPF (&self->info);
+  samples_per_buffer = self->samples_per_buffer;
+  GST_OBJECT_UNLOCK (self);
+
+  if (format == GST_AUDIO_FORMAT_UNKNOWN || samples_per_buffer == 0) {
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  buffer = gst_audio_buffer_split_clip_buffer (self, buffer);
+  buffer =
+      gst_audio_buffer_split_clip_buffer (self, buffer, &self->segment, rate,
+      bpf);
   if (!buffer)
     return GST_FLOW_OK;
 
-  ret = gst_audio_buffer_split_handle_discont (self, buffer);
+  ret =
+      gst_audio_buffer_split_handle_discont (self, buffer, rate, bpf,
+      samples_per_buffer);
   if (ret != GST_FLOW_OK) {
     gst_buffer_unref (buffer);
     return ret;
@@ -453,7 +499,8 @@ gst_audio_buffer_split_sink_chain (GstPad * pad, GstObject * parent,
 
   gst_adapter_push (self->adapter, buffer);
 
-  return gst_audio_buffer_split_output (self, FALSE);
+  return gst_audio_buffer_split_output (self, FALSE, rate, bpf,
+      samples_per_buffer);
 }
 
 static gboolean
@@ -472,23 +519,8 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
       ret = gst_audio_info_from_caps (&self->info, caps);
 
       if (ret) {
-        self->samples_per_buffer =
-            (((guint64) GST_AUDIO_INFO_RATE (&self->info)) *
-            self->output_buffer_duration_n) / self->output_buffer_duration_d;
-        if (self->samples_per_buffer == 0)
-          ret = FALSE;
-
-        self->error_per_buffer =
-            (((guint64) GST_AUDIO_INFO_RATE (&self->info)) *
-            self->output_buffer_duration_n) % self->output_buffer_duration_d;
-        self->accumulated_error = 0;
-
         GST_DEBUG_OBJECT (self, "Got caps %" GST_PTR_FORMAT, caps);
-        GST_DEBUG_OBJECT (self, "Buffer duration: %u/%u",
-            self->output_buffer_duration_n, self->output_buffer_duration_d);
-        GST_DEBUG_OBJECT (self, "Samples per buffer: %u (error: %u/%u)",
-            self->samples_per_buffer, self->error_per_buffer,
-            self->output_buffer_duration_d);
+        ret = gst_audio_buffer_split_update_samples_per_buffer (self);
       } else {
         ret = FALSE;
       }
@@ -520,10 +552,25 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
       }
       break;
     case GST_EVENT_EOS:
-      if (self->strict_buffer_size)
+      if (self->strict_buffer_size) {
         gst_adapter_clear (self->adapter);
-      else
-        gst_audio_buffer_split_output (self, TRUE);
+      } else {
+        GstAudioFormat format;
+        gint rate, bpf, samples_per_buffer;
+
+        GST_OBJECT_LOCK (self);
+        format =
+            self->info.finfo ? GST_AUDIO_INFO_FORMAT (&self->info) :
+            GST_AUDIO_FORMAT_UNKNOWN;
+        rate = GST_AUDIO_INFO_RATE (&self->info);
+        bpf = GST_AUDIO_INFO_BPF (&self->info);
+        samples_per_buffer = self->samples_per_buffer;
+        GST_OBJECT_UNLOCK (self);
+
+        if (format != GST_AUDIO_FORMAT_UNKNOWN && samples_per_buffer != 0)
+          gst_audio_buffer_split_output (self, TRUE, rate, bpf,
+              samples_per_buffer);
+      }
       ret = gst_pad_event_default (pad, parent, event);
       break;
     default:
