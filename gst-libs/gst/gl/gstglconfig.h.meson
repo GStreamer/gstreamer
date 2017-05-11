@@ -14,6 +14,7 @@ G_BEGIN_DECLS
 #mesondefine GST_GL_HAVE_OPENGL
 #mesondefine GST_GL_HAVE_GLES2
 #mesondefine GST_GL_HAVE_GLES3
+#mesondefine GST_GL_HAVE_GLES3EXT3_H
 
 #mesondefine GST_GL_HAVE_WINDOW_X11
 #mesondefine GST_GL_HAVE_WINDOW_COCOA
