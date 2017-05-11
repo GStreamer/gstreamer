@@ -186,6 +186,7 @@ main (int argc, char *argv[])
   g_timeout_add (100, progress_update, pipeline);
   gtk_main ();
   gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (volume);
   gst_object_unref (pipeline);
   gst_object_unref (bus);
 
