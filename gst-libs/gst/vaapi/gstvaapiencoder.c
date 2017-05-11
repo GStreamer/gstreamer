@@ -188,6 +188,7 @@ gboolean
 gst_vaapi_encoder_ensure_param_quality_level (GstVaapiEncoder * encoder,
     GstVaapiEncPicture * picture)
 {
+#if VA_CHECK_VERSION(0,36,0)
   GstVaapiEncMiscParam *misc;
   VAEncMiscParameterBufferQualityLevel *quality_level;
 
@@ -203,7 +204,7 @@ gst_vaapi_encoder_ensure_param_quality_level (GstVaapiEncoder * encoder,
   quality_level->quality_level = encoder->quality_level;
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
   gst_vaapi_codec_object_replace (&misc, NULL);
-
+#endif
   return TRUE;
 }
 
@@ -734,6 +735,7 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   if (!gst_vaapi_encoder_ensure_context (encoder))
     goto error_reset_context;
 
+#if VA_CHECK_VERSION(0,36,0)
   if (get_config_attribute (encoder, VAConfigAttribEncQualityRange,
           &quality_level_max) && quality_level_max > 0) {
     encoder->quality_level =
@@ -743,6 +745,7 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
     encoder->quality_level = 0;
   }
   GST_INFO ("Quality level is fixed to %d", encoder->quality_level);
+#endif
 
   codedbuf_size = encoder->codedbuf_pool ?
       gst_vaapi_coded_buffer_pool_get_buffer_size (GST_VAAPI_CODED_BUFFER_POOL
