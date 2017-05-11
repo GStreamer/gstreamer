@@ -38,7 +38,10 @@
 # else
 #  if GST_GL_HAVE_GLES3
 #   include <GLES3/gl3.h>
-#   include <GLES3/gl3ext.h>
+#   if GST_GL_HAVE_GLES3EXT3_H
+#    include <GLES3/gl3ext.h>
+#   endif
+#   include <GLES2/gl2ext.h>
 #  else
 #   include <GLES2/gl2.h>
 #   include <GLES2/gl2ext.h>
