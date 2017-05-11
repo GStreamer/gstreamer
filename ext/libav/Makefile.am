@@ -31,32 +31,23 @@ libgstlibav_la_SOURCES = gstav.c	\
 
 libgstlibav_la_CFLAGS = $(LIBAV_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstlibav_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
-libgstlibav_la_LIBADD =
-
-if HAVE_LIBAV_UNINSTALLED
-libgstlibav_la_LIBADD += $(LIBAV_DEPS)
-libgstlibav_la_DEPENDENCIES = $(LIBAV_DEPS)
-else
-libgstlibav_la_LIBADD += $(LIBAV_LIBS)
-endif
-
-libgstlibav_la_LIBADD += $(GST_PLUGINS_BASE_LIBS) \
+libgstlibav_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-$(GST_API_VERSION) -lgstvideo-$(GST_API_VERSION) \
 	-lgstpbutils-$(GST_API_VERSION) $(GST_BASE_LIBS) \
-	$(LIBM) $(WIN32_LIBS) -lz $(BZ2_LIBS) $(LZMA_LIBS)
+	 $(LIBAV_LIBS) $(LIBM) $(WIN32_LIBS) -lz $(BZ2_LIBS) $(LZMA_LIBS)
 libgstlibav_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DARWIN_LDFLAGS)
 
 if HAVE_LIBAV_UNINSTALLED
+libgstlibav_la_DEPENDENCIES = $(LIBAV_DEPS)
+
 if GST_PLUGIN_BUILD_STATIC
-libgstlibav.la: $(libgstlibav_la_OBJECTS) $(libgstlibav_la_DEPENDENCIES) $(EXTRA_libgstlibav_la_DEPENDENCIES)
-	$(AM_V_CCLD)$(libgstlibav_la_LINK) -rpath $(plugindir) $(libgstlibav_la_OBJECTS) $(libgstlibav_la_LIBADD) $(LIBS)
-	$(AM_V_at)cp $@ $@.tmp
-	$(AM_V_at)cp .libs/$@i .libs/$@i.tmp
-	$(AM_V_at)rm $@ .libs/$@i
-	$(AM_V_at)$(AR) -d .libs/libgstlibav.a $(foreach dep,$(LIBAV_DEPS), $(notdir $(dep)))
-	$(AM_V_at)$(RANLIB) .libs/libgstlibav.a
-	$(AM_V_GEN)sed -e "s|^\(dependency_libs='\)|\1 $(LIBAV_LIBS)|" $@.tmp > $@ && rm $@.tmp
-	$(AM_V_GEN)sed -e "s|^\(dependency_libs='\)|\1 $(LIBAV_LIBS)|" .libs/$@i.tmp > .libs/$@i && rm .libs/$@i.tmp
+libgstlibav_la = $(DESTDIR)$(plugindir)/libgstlibav.la
+
+install-data-hook: 
+	$(AM_V_at)cp $(libgstlibav_la) $(libgstlibav_la).tmp
+	$(AM_V_GEN)sed -e "s|-L$(top_builddir)/gst-libs/ext/libav/lib[a-z]* ||g" \
+				   $(libgstlibav_la).tmp > $(libgstlibav_la) && rm $(libgstlibav_la).tmp
+	$(AM_V_at)$(INSTALL) -t$(DESTDIR)$(libdir) $(LIBAV_DEPS)
 endif
 endif
 

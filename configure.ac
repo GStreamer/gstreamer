@@ -319,15 +319,12 @@ else
               \$(top_builddir)/gst-libs/ext/libav/libavfilter/libavfilter.a \
               \$(top_builddir)/gst-libs/ext/libav/libswresample/libswresample.a \
               \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
-  if test "x$enable_static_plugins" = xyes; then
-      dnl with static linking we can't use the .a archive directly as they would
-      dnl be included in the final libgstlibav.a as a file and won't be usable.
-      dnl libav*.a must be copied to the final destination too
-      LIBAV_LIBS="-lavformat -lavcodec -lswresample -lavutil -lavfilter"
-  else
-      dnl libgstlibav.la: libs to statically link to
-      LIBAV_LIBS="$LIBAV_DEPS"
-  fi
+
+  LIBAV_LIBS="-L\$(top_builddir)/gst-libs/ext/libav/libavformat -lavformat \
+              -L\$(top_builddir)/gst-libs/ext/libav/libavcodec -lavcodec \
+              -L\$(top_builddir)/gst-libs/ext/libav/libswresample -lswresample \
+              -L\$(top_builddir)/gst-libs/ext/libav/libavutil -lavutil \
+              -L\$(top_builddir)/gst-libs/ext/libav/libavfilter -lavfilter"
 
   dnl
   SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
