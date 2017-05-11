@@ -699,6 +699,10 @@ case $host in
         AG_GST_CHECK_LIBHEADER(GLES2, GLESv2, glTexImage2D,, GLES2/gl2.h)
       fi
       AC_CHECK_HEADER([GLES3/gl3.h], [HAVE_GLES3_H=yes])
+      AS_IF([test "x$HAVE_GLES3_H" == "xyes"],
+            [
+             AC_CHECK_HEADER([GLES3/gl3ext.h], [HAVE_GLES3EXT3_H=yes], [HAVE_GLES3EXT3_H=no], [#include <GLES3/gl3.h>])
+            ])
     fi
     if test "x$NEED_EGL" != "xno"; then
       AG_GST_PKG_CHECK_MODULES(EGL, egl)
@@ -874,8 +878,12 @@ fi
 dnl check if we can include both GL and GLES2 at the same time
 if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
   GLES3_H_DEFINE=0
+  GLES3EXT3_H_DEFINE=0
   if test "x$HAVE_GLES3_H" == "xyes"; then
     GLES3_H_DEFINE=1
+  fi
+  if test "x$HAVE_GLES3EXT3_H" == "xyes"; then
+    GLES3EXT3_H_DEFINE=1
   fi
   GL_INCLUDES="
 #ifdef __GNUC__
@@ -891,7 +899,10 @@ if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
 # else
 #  if $GLES3_H_DEFINE
 #   include <GLES3/gl3.h>
-#   include <GLES3/gl3ext.h>
+#   if $GLES3EXT3_H_DEFINE
+#     include <GLES3/gl3ext.h>
+#   endif
+#   include <GLES2/gl2ext.h>
 #  else
 #   include <GLES2/gl2.h>
 #   include <GLES2/gl2ext.h>
@@ -1177,6 +1188,7 @@ dnl APIs
 GST_GL_HAVE_OPENGL=0
 GST_GL_HAVE_GLES2=0
 GST_GL_HAVE_GLES3=0
+GST_GL_HAVE_GLES3EXT3_H=0
 
 if test "x$USE_OPENGL" = "xyes"; then
   GL_APIS="gl $GL_APIS"
@@ -1187,6 +1199,9 @@ if test "x$USE_GLES2" = "xyes"; then
   GST_GL_HAVE_GLES2=1
   if test "x$HAVE_GLES3_H" = "xyes"; then
     GST_GL_HAVE_GLES3=1
+    if test "x$HAVE_GLES3EXT3_H" = "xyes"; then
+      GST_GL_HAVE_GLES3EXT3_H=1
+    fi
   fi
 fi
 
@@ -1194,6 +1209,7 @@ GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_OPENGL $GST_GL_HAVE_OPENGL
 #define GST_GL_HAVE_GLES2 $GST_GL_HAVE_GLES2
 #define GST_GL_HAVE_GLES3 $GST_GL_HAVE_GLES3
+#define GST_GL_HAVE_GLES3EXT3_H $GST_GL_HAVE_GLES3EXT3_H
 "
 
 dnl WINDOW's
@@ -1371,7 +1387,10 @@ if test "x$USE_GLES2" = "xyes"; then
 # else
 #  if $GST_GL_HAVE_GLES3
 #   include <GLES3/gl3.h>
-#   include <GLES3/gl3ext.h>
+#   if $GST_GL_HAVE_GLES3EXT3_H
+#    include <GLES3/gl3ext.h>
+#   endif
+#   include <GLES2/gl2ext.h>
 #  else
 #   include <GLES2/gl2.h>
 #   include <GLES2/gl2ext.h>
