@@ -3478,7 +3478,10 @@ main (int argc, char **argv)
   }
 
   pipelines[app.pipeline_type].func (&app, app.current_path->data);
-  g_assert (app.pipeline);
+  if (!app.pipeline || !GST_IS_PIPELINE (app.pipeline)) {
+    g_print ("Pipeline failed on %s\n", argv[3]);
+    exit (-1);
+  }
 
   create_ui (&app);
 
