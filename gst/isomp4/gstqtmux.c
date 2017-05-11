@@ -4096,13 +4096,18 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       goto bail;
     }
 
-    mem = gst_allocator_alloc (NULL, fill_size, NULL);
-    gst_memory_map (mem, &map, GST_MAP_WRITE);
-    memset (map.data, 0, map.size);
-    gst_memory_unmap (mem, &map);
-    last_buf = gst_buffer_make_writable (last_buf);
-    gst_buffer_append_memory (last_buf, mem);
-    buffer_size = required_buffer_size;
+    if (fill_size > 0) {
+      GST_DEBUG_OBJECT (qtmux,
+          "Padding buffer by %u bytes to reach required %u bytes", fill_size,
+          required_buffer_size);
+      mem = gst_allocator_alloc (NULL, fill_size, NULL);
+      gst_memory_map (mem, &map, GST_MAP_WRITE);
+      memset (map.data, 0, map.size);
+      gst_memory_unmap (mem, &map);
+      last_buf = gst_buffer_make_writable (last_buf);
+      gst_buffer_append_memory (last_buf, mem);
+      buffer_size = required_buffer_size;
+    }
   }
 
   /* duration actually means time delta between samples, so we calculate
