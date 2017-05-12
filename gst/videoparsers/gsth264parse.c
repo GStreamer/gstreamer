@@ -395,7 +395,6 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
     /* fixate to avoid ambiguity with lists when parsing */
     caps = gst_caps_fixate (caps);
     gst_h264_parse_format_from_caps (caps, &format, &align);
-    gst_caps_unref (caps);
   }
 
   /* default */
@@ -413,6 +412,9 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
 
   h264parse->transform = in_format != h264parse->format ||
       align == GST_H264_PARSE_ALIGN_AU;
+
+  if (caps)
+    gst_caps_unref (caps);
 }
 
 static GstBuffer *
