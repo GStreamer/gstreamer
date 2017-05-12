@@ -1,17 +1,5 @@
 plugin_LTLIBRARIES = libgstlibav.la
 
-if HAVE_BZ2
-    BZ2_LIBS = -lbz2
-else
-    BZ2_LIBS =
-endif
-
-if HAVE_LZMA
-    LZMA_LIBS = -llzma
-else
-    LZMA_LIBS =
-endif
-
 libgstlibav_la_SOURCES = gstav.c	\
 			  gstavprotocol.c	\
 			  gstavcodecmap.c	\
@@ -34,23 +22,17 @@ libgstlibav_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 libgstlibav_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-$(GST_API_VERSION) -lgstvideo-$(GST_API_VERSION) \
 	-lgstpbutils-$(GST_API_VERSION) $(GST_BASE_LIBS) \
-	 $(LIBAV_LIBS) $(LIBM) $(WIN32_LIBS) -lz $(BZ2_LIBS) $(LZMA_LIBS)
+	 $(LIBAV_LIBS) $(WIN32_LIBS)
 libgstlibav_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DARWIN_LDFLAGS)
 
 if HAVE_LIBAV_UNINSTALLED
 libgstlibav_la_DEPENDENCIES = $(LIBAV_DEPS)
 
-if GST_PLUGIN_BUILD_STATIC
-depsdir = $(libdir)
-deps_DATA = $(LIBAV_DEPS)
-
-libgstlibav_la = $(DESTDIR)$(plugindir)/libgstlibav.la
-
-install-data-hook: 
-	$(AM_V_at)cp $(libgstlibav_la) $(libgstlibav_la).tmp
-	$(AM_V_GEN)sed -e "s|-L$(top_builddir)/gst-libs/ext/libav/lib[a-z]* ||g" \
-				   $(libgstlibav_la).tmp > $(libgstlibav_la) && rm $(libgstlibav_la).tmp
-endif
+# FIXME: For some reason libtool ignores libavfilter.la, add it
+install-data-hook:
+	$(AM_V_at)cd $(DESTDIR)$(plugindir) \
+		&& sed -e "s|\($(libdir)/libavformat.la\)|$(libdir)/libavfilter.la \1|" \
+		libgstlibav.la > libgstlibav.la.tmp && cp libgstlibav.la.tmp libgstlibav.la && rm libgstlibav.la.tmp
 endif
 
 

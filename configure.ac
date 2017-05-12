@@ -314,17 +314,17 @@ else
                 -I \$(top_builddir)/gst-libs/ext/libav \
                  -Wno-deprecated-declarations"
 
-  LIBAV_DEPS="\$(top_builddir)/gst-libs/ext/libav/libavformat/libavformat.a \
+  LIBAV_DEPS="\$(top_builddir)/gst-libs/ext/libav/libavfilter/libavfilter.a \
+              \$(top_builddir)/gst-libs/ext/libav/libavformat/libavformat.a \
               \$(top_builddir)/gst-libs/ext/libav/libavcodec/libavcodec.a \
-              \$(top_builddir)/gst-libs/ext/libav/libavfilter/libavfilter.a \
               \$(top_builddir)/gst-libs/ext/libav/libswresample/libswresample.a \
               \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
 
-  LIBAV_LIBS="-L\$(top_builddir)/gst-libs/ext/libav/libavformat -lavformat \
-              -L\$(top_builddir)/gst-libs/ext/libav/libavcodec -lavcodec \
-              -L\$(top_builddir)/gst-libs/ext/libav/libswresample -lswresample \
-              -L\$(top_builddir)/gst-libs/ext/libav/libavutil -lavutil \
-              -L\$(top_builddir)/gst-libs/ext/libav/libavfilter -lavfilter"
+  LIBAV_LIBS="$ac_pwd/gst-libs/ext/libavfilter.la \
+              $ac_pwd/gst-libs/ext/libavformat.la \
+              $ac_pwd/gst-libs/ext/libavcodec.la \
+              $ac_pwd/gst-libs/ext/libswresample.la \
+              $ac_pwd/gst-libs/ext/libavutil.la"
 
   dnl
   SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
