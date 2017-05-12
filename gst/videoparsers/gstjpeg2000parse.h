@@ -42,7 +42,64 @@ G_BEGIN_DECLS
 typedef struct _GstJPEG2000Parse GstJPEG2000Parse;
 typedef struct _GstJPEG2000ParseClass GstJPEG2000ParseClass;
 
-#define GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS 4
+
+/**
+ * JPEG 2000 Profiles (stored in rsiz/capabilities field in code stream header)
+ * See Table A.10 from 15444-1 (updated in various AMDs)
+ *
+ * For broadcast profiles, the GST_JPEG2000_PARSE_PROFILE_BC_XXXX profile value must be combined with the target
+ * main level (3-0 LSBs, with value between 0 and 11).
+ * Example:
+ * capabilities  GST_JPEG2000_PARSE_PROFILE_BC_MULTI | 0x0005 (in this case, main level equals 5)
+ *
+ * For IMF profiles, the GST_JPEG2000_PARSE_PROFILE_IMF_XXXX profile value must be combined with the target main level
+ * (3-0 LSBs, with value between 0 and 11), and target sub level (7-4 LSBs, with value between 0 and 9).
+ * Example:
+ * capabilities  GST_JPEG2000_PARSE_PROFILE_IMF_2K | 0x0040 | 0x0005 (in this case, main level equals 5 and sub level equals 4)
+ *
+ *
+ * Broadcast main level (15444-1 AMD4,AMD8)
+ *
+ * Note: Mbit/s == 10^6 bits/s;  Msamples/s == 10^6 samples/s
+ *
+ * Level 0: no max rate
+ * Level 1:	200 Mbits/s, 65  Msamples/s
+ * Level 2:	200 Mbits/s, 130 Msamples/s
+ * Level 3:	200 Mbits/s, 195 Msamples/s
+ * Level 4:	400 Mbits/s, 260 Msamples/s
+ * Level 5:	800Mbits/s,  520 Msamples/s
+ * Level >= 6: 2^(Level-6) * 1600 Mbits/s, 2^(Level-6) * 1200 Msamples/s
+ *
+ * Broadcast tiling
+ *
+ * Either single-tile or multi-tile. Multi-tile only permits
+ * 1 or 4 tiles per frame, where multiple tiles have identical
+ * sizes, and are configured in either 2x2 or 1x4 layout.
+ *
+ * */
+
+#define GST_JPEG2000_PARSE_PROFILE_NONE        0x0000 /** no profile -  defined in 15444-1 */
+#define GST_JPEG2000_PARSE_PROFILE_0           0x0001 /** Profile 0 - defined in  15444-1,Table A.45 */
+#define GST_JPEG2000_PARSE_PROFILE_1           0x0002 /** Profile 1 - defined in 15444-1,Table A.45 */
+#define GST_JPEG2000_PARSE_PROFILE_CINEMA_2K   0x0003 /** 2K Cinema profile - defined in 15444-1 AMD1 */
+#define GST_JPEG2000_PARSE_PROFILE_CINEMA_4K   0x0004 /** 4K Cinema profile - defined in 15444-1 AMD1 */
+#define GST_JPEG2000_PARSE_PROFILE_CINEMA_S2K  0x0005 /** Scalable 2K Cinema profile - defined in 15444-1 AMD2 */
+#define GST_JPEG2000_PARSE_PROFILE_CINEMA_S4K  0x0006 /** Scalable 4K Cinema profile - defined in 15444-1 AMD2 */
+#define GST_JPEG2000_PARSE_PROFILE_CINEMA_LTS  0x0007/** Long Term Storage Cinema profile - defined in 15444-1 AMD2 */
+#define GST_JPEG2000_PARSE_PROFILE_BC_SINGLE   0x0100 /** Single Tile Broadcast profile - defined in 15444-1 AMD3 */
+#define GST_JPEG2000_PARSE_PROFILE_BC_MULTI    0x0200 /** Multi Tile Broadcast profile - defined in 15444-1 AMD3 */
+#define GST_JPEG2000_PARSE_PROFILE_BC_MULTI_R  0x0300 /** Multi Tile Reversible Broadcast profile - defined in 15444-1 AMD3 */
+#define GST_JPEG2000_PARSE_PROFILE_BC_MASK	 	0x0F0F /** Mask for broadcast profile, including main level */
+#define GST_JPEG2000_PARSE_PROFILE_IMF_2K      0x0400 /** 2K Single Tile Lossy IMF profile - defined in 15444-1 AMD 8 */
+#define GST_JPEG2000_PARSE_PROFILE_IMF_4K      0x0401 /** 4K Single Tile Lossy IMF profile - defined in 15444-1 AMD 8 */
+#define GST_JPEG2000_PARSE_PROFILE_IMF_8K      0x0402 /** 8K Single Tile Lossy IMF profile - defined in 15444-1 AMD 8 */
+#define GST_JPEG2000_PARSE_PROFILE_IMF_2K_R    0x0403 /** 2K Single/Multi Tile Reversible IMF profile - defined in 15444-1 AMD 8 */
+#define GST_JPEG2000_PARSE_PROFILE_IMF_4K_R    0x0800 /** 4K Single/Multi Tile Reversible IMF profile - defined in 15444-1 AMD 8 */
+#define GST_JPEG2000_PARSE_PROFILE_IMF_8K_R    0x0801 /** 8K Single/Multi Tile Reversible IMF profile - defined in 15444-1 AMD 8 */
+#define GST_JPEG2000_PARSE_PROFILE_MASK 	   0xBFFF  /** Mask for profile bits */
+#define GST_JPEG2000_PARSE_PROFILE_PART2 	 	0x8000 /** At least 1 extension defined in 15444-2 (Part-2) */
+
+#define GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS  4
 
 typedef enum
 {

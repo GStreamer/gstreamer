@@ -25,6 +25,35 @@
 #include "gstjpeg2000parse.h"
 #include <gst/base/base.h>
 
+/* Not used at the moment
+static gboolean gst_jpeg2000_parse_is_cinema(guint16 rsiz)   {
+	return ((rsiz >= GST_JPEG2000_PARSE_PROFILE_CINEMA_2K) && (rsiz <= GST_JPEG2000_PARSE_PROFILE_CINEMA_S4K));
+}
+static gboolean gst_jpeg2000_parse_is_storage(guint16 rsiz)   {
+	return (rsiz == GST_JPEG2000_PARSE_PROFILE_CINEMA_LTS);
+}
+*/
+static gboolean
+gst_jpeg2000_parse_is_broadcast (guint16 rsiz)
+{
+  return ((rsiz >= GST_JPEG2000_PARSE_PROFILE_BC_SINGLE) &&
+      (rsiz <= ((GST_JPEG2000_PARSE_PROFILE_BC_MULTI_R) | (0x000b)))
+      && ((rsiz & (~GST_JPEG2000_PARSE_PROFILE_BC_MASK)) == 0));
+}
+
+static gboolean
+gst_jpeg2000_parse_is_imf (guint16 rsiz)
+{
+  return ((rsiz >= GST_JPEG2000_PARSE_PROFILE_IMF_2K)
+      && (rsiz <= ((GST_JPEG2000_PARSE_PROFILE_IMF_8K_R) | (0x009b))));
+}
+
+static gboolean
+gst_jpeg2000_parse_is_part_2 (guint16 rsiz)
+{
+  return (rsiz & GST_JPEG2000_PARSE_PROFILE_PART2);
+}
+
 
 
 static void
@@ -67,11 +96,13 @@ static GstStaticPadTemplate srctemplate =
         " width = (int)[1, MAX], height = (int)[1, MAX],"
         GST_JPEG2000_SAMPLING_LIST ","
         GST_JPEG2000_COLORSPACE_LIST ","
+        " profile = (int)[0, 49151],"
         " parsed = (boolean) true;"
         "image/x-j2c,"
         " width = (int)[1, MAX], height = (int)[1, MAX],"
         GST_JPEG2000_SAMPLING_LIST ","
-        GST_JPEG2000_COLORSPACE_LIST "," " parsed = (boolean) true")
+        GST_JPEG2000_COLORSPACE_LIST ","
+        " profile = (int)[0, 49151]," " parsed = (boolean) true")
     );
 
 static GstStaticPadTemplate sinktemplate =
@@ -272,6 +303,11 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   guint8 dx[GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS];
   guint8 dy[GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS];
   guint16 numcomps;
+  guint16 capabilities = 0;
+  guint16 profile = 0;
+  gboolean validate_main_level = FALSE;
+  guint8 main_level = 0;
+  guint8 sub_level = 0;
   guint16 compno;
   GstJPEG2000Sampling parsed_sampling = GST_JPEG2000_SAMPLING_NONE;
   const gchar *sink_sampling_string = NULL;
@@ -361,9 +397,46 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
       goto beach;
   }
 
-  /* 2 to skip marker size, and another 2 to skip rsiz field */
-  if (!gst_byte_reader_skip (&reader, num_prefix_bytes + 2 + 2))
+  /* 2 to skip marker size */
+  if (!gst_byte_reader_skip (&reader, num_prefix_bytes + 2))
     goto beach;
+
+  if (!gst_byte_reader_get_uint16_be (&reader, &capabilities))
+    goto beach;
+
+  profile = capabilities & GST_JPEG2000_PARSE_PROFILE_MASK;
+  if (!gst_jpeg2000_parse_is_part_2 (capabilities)) {
+    if ((profile > GST_JPEG2000_PARSE_PROFILE_CINEMA_LTS)
+        && !gst_jpeg2000_parse_is_broadcast (profile)
+        && !gst_jpeg2000_parse_is_imf (profile)) {
+      GST_ELEMENT_ERROR (jpeg2000parse, STREAM, DECODE, NULL,
+          ("Unrecognized JPEG 2000 profile %d", profile));
+      ret = GST_FLOW_ERROR;
+      goto beach;
+    }
+    if (gst_jpeg2000_parse_is_broadcast (profile)) {
+      main_level = capabilities & 0xF;
+      validate_main_level = TRUE;
+    } else if (gst_jpeg2000_parse_is_imf (profile)) {
+      main_level = capabilities & 0xF;
+      validate_main_level = TRUE;
+      sub_level = (capabilities >> 4) & 0xF;
+      if (sub_level > 9) {
+        GST_ELEMENT_ERROR (jpeg2000parse, STREAM, DECODE, NULL,
+            ("Sub level %d is invalid", sub_level));
+        ret = GST_FLOW_ERROR;
+        goto beach;
+      }
+    }
+    if (validate_main_level && main_level > 11) {
+      GST_ELEMENT_ERROR (jpeg2000parse, STREAM, DECODE, NULL,
+          ("Main level %d is invalid", main_level));
+      ret = GST_FLOW_ERROR;
+      goto beach;
+
+    }
+  }
+
 
   if (!gst_byte_reader_get_uint32_be (&reader, &x1))
     goto beach;
@@ -560,10 +633,23 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
 
     src_caps =
         gst_caps_new_simple (media_type_from_codec_format
-        (jpeg2000parse->codec_format), "width", G_TYPE_INT, width, "height",
-        G_TYPE_INT, height, "colorspace", G_TYPE_STRING,
+        (jpeg2000parse->codec_format),
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "colorspace", G_TYPE_STRING,
         gst_jpeg2000_colorspace_to_string (colorspace), "sampling",
-        G_TYPE_STRING, gst_jpeg2000_sampling_to_string (source_sampling), NULL);
+        G_TYPE_STRING, gst_jpeg2000_sampling_to_string (source_sampling),
+        "profile", G_TYPE_UINT, profile, NULL);
+
+    if (gst_jpeg2000_parse_is_broadcast (capabilities)
+        || gst_jpeg2000_parse_is_imf (capabilities)) {
+      gst_caps_set_simple (src_caps, "main-level", G_TYPE_UINT, main_level,
+          NULL);
+      if (gst_jpeg2000_parse_is_imf (capabilities)) {
+        gst_caps_set_simple (src_caps, "sub-level", G_TYPE_UINT, sub_level,
+            NULL);
+      }
+    }
 
     if (gst_structure_get_fraction (current_caps_struct, "framerate", &fr_num,
             &fr_denom)) {
