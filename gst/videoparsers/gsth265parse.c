@@ -341,7 +341,6 @@ gst_h265_parse_negotiate (GstH265Parse * h265parse, gint in_format,
     /* fixate to avoid ambiguity with lists when parsing */
     caps = gst_caps_fixate (caps);
     gst_h265_parse_format_from_caps (caps, &format, &align);
-    gst_caps_unref (caps);
   }
 
   /* default */
@@ -358,6 +357,9 @@ gst_h265_parse_negotiate (GstH265Parse * h265parse, gint in_format,
   h265parse->align = align;
 
   h265parse->transform = (in_format != h265parse->format);
+
+  if (caps)
+    gst_caps_unref (caps);
 }
 
 static GstBuffer *
