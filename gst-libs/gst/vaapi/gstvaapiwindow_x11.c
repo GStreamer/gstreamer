@@ -37,6 +37,7 @@
 #include "gstvaapipixmap_priv.h"
 #include "gstvaapidisplay_x11.h"
 #include "gstvaapidisplay_x11_priv.h"
+#include "gstvaapisurface_priv.h"
 #include "gstvaapiutils.h"
 #include "gstvaapiutils_x11.h"
 
@@ -463,9 +464,15 @@ conversion:
         gst_vaapi_window_vpp_convert_internal (window, surface, NULL, NULL,
         flags);
     if (G_LIKELY (vpp_surface)) {
+      GstVaapiRectangle vpp_src_rect;
+
       surface_id = GST_VAAPI_OBJECT_ID (vpp_surface);
+      vpp_src_rect.x = vpp_src_rect.y = 0;
+      vpp_src_rect.width = GST_VAAPI_SURFACE_WIDTH (vpp_surface);
+      vpp_src_rect.height = GST_VAAPI_SURFACE_HEIGHT (vpp_surface);
+
       status =
-          gst_vaapi_window_x11_put_surface (window, surface_id, src_rect,
+          gst_vaapi_window_x11_put_surface (window, surface_id, &vpp_src_rect,
           dst_rect, flags);
 
       ret = vaapi_check_status (status, "vaPutSurface()");
