@@ -22,7 +22,7 @@
  * SECTION:gstharness
  * @title: GstHarness
  * @short_description: A test-harness for writing GStreamer unit tests
- * @see_also: #GstTestClock,\
+ * @see_also: #GstTestClock
  *
  * #GstHarness is meant to make writing unit test for GStreamer much easier.
  * It can be thought of as a way of treating a #GstElement as a black box,
