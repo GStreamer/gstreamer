@@ -79,6 +79,7 @@ enum
   PROP_SEND_KEYFRAME_REQUESTS,
   PROP_MAX_FILES,
   PROP_MUXER_OVERHEAD,
+  PROP_ALIGNMENT_THRESHOLD,
   PROP_MUXER,
   PROP_SINK
 };
@@ -88,6 +89,7 @@ enum
 #define DEFAULT_MAX_FILES           0
 #define DEFAULT_MUXER_OVERHEAD      0.02
 #define DEFAULT_SEND_KEYFRAME_REQUESTS FALSE
+#define DEFAULT_ALIGNMENT_THRESHOLD 0
 #define DEFAULT_MUXER "mp4mux"
 #define DEFAULT_SINK "filesink"
 
@@ -250,7 +252,12 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
           "old files start to be deleted to make room for new ones.", 0,
           G_MAXUINT, DEFAULT_MAX_FILES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+  g_object_class_install_property (gobject_class, PROP_ALIGNMENT_THRESHOLD,
+      g_param_spec_uint64 ("alignment-threshold", "Alignment threshold (ns)",
+          "Allow non-reference streams to be that many ns before the reference"
+          " stream",
+          0, G_MAXUINT64, DEFAULT_ALIGNMENT_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MUXER,
       g_param_spec_object ("muxer", "Muxer",
@@ -301,6 +308,7 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   splitmux->max_files = DEFAULT_MAX_FILES;
   splitmux->send_keyframe_requests = DEFAULT_SEND_KEYFRAME_REQUESTS;
   splitmux->next_max_tc_time = GST_CLOCK_TIME_NONE;
+  splitmux->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
 
   splitmux->threshold_timecode_str = NULL;
 
@@ -406,6 +414,11 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
       splitmux->mux_overhead = g_value_get_double (value);
       GST_OBJECT_UNLOCK (splitmux);
       break;
+    case PROP_ALIGNMENT_THRESHOLD:
+      GST_OBJECT_LOCK (splitmux);
+      splitmux->alignment_threshold = g_value_get_uint64 (value);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
     case PROP_SINK:
       GST_OBJECT_LOCK (splitmux);
       if (splitmux->provided_sink)
@@ -468,6 +481,11 @@ gst_splitmux_sink_get_property (GObject * object, guint prop_id,
     case PROP_MUXER_OVERHEAD:
       GST_OBJECT_LOCK (splitmux);
       g_value_set_double (value, splitmux->mux_overhead);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
+    case PROP_ALIGNMENT_THRESHOLD:
+      GST_OBJECT_LOCK (splitmux);
+      g_value_set_uint64 (value, splitmux->alignment_threshold);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_SINK:
@@ -619,6 +637,19 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
     /* When first starting up, the reference stream has to output
      * the first buffer to prepare the muxer and sink */
     gboolean can_output = (ctx->is_reference || splitmux->ready_for_output);
+    GstClockTimeDiff my_max_out_running_time = splitmux->max_out_running_time;
+
+    if (!(splitmux->max_out_running_time == 0 ||
+            splitmux->max_out_running_time == GST_CLOCK_STIME_NONE ||
+            splitmux->alignment_threshold == 0 ||
+            splitmux->max_out_running_time < splitmux->alignment_threshold)) {
+      my_max_out_running_time -= splitmux->alignment_threshold;
+      GST_LOG_OBJECT (ctx->srcpad,
+          "Max out running time currently %" GST_STIME_FORMAT
+          ", with threshold applied it is %" GST_STIME_FORMAT,
+          GST_STIME_ARGS (splitmux->max_out_running_time),
+          GST_STIME_ARGS (my_max_out_running_time));
+    }
 
     if (ctx->flushing
         || splitmux->output_state == SPLITMUX_OUTPUT_STATE_STOPPED)
@@ -627,11 +658,11 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
     GST_LOG_OBJECT (ctx->srcpad,
         "Checking running time %" GST_STIME_FORMAT " against max %"
         GST_STIME_FORMAT, GST_STIME_ARGS (ctx->out_running_time),
-        GST_STIME_ARGS (splitmux->max_out_running_time));
+        GST_STIME_ARGS (my_max_out_running_time));
 
     if (can_output) {
       if (splitmux->max_out_running_time == GST_CLOCK_STIME_NONE ||
-          ctx->out_running_time < splitmux->max_out_running_time) {
+          ctx->out_running_time < my_max_out_running_time) {
         return;
       }
 
