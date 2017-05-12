@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/video/navigation.h>
 
 typedef struct _CustomData
 {
@@ -28,18 +29,10 @@ send_rotate_event (AppData * data)
   g_print ("Sending event %p done: %d\n", event, res);
 }
 
-/* Process keyboard input */
-static gboolean
-handle_keyboard (GIOChannel * source, GIOCondition cond, AppData * data)
+static void
+keyboard_cb (const gchar * key, AppData * data)
 {
-  gchar *str = NULL;
-
-  if (g_io_channel_read_line (source, &str, NULL, NULL,
-          NULL) != G_IO_STATUS_NORMAL) {
-    return TRUE;
-  }
-
-  switch (g_ascii_tolower (str[0])) {
+  switch (g_ascii_tolower (key[0])) {
     case 'r':
       send_rotate_event (data);
       break;
@@ -53,7 +46,53 @@ handle_keyboard (GIOChannel * source, GIOCondition cond, AppData * data)
     default:
       break;
   }
+}
 
+static gboolean
+bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
+{
+  AppData *data = user_data;
+
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_ELEMENT:
+    {
+      GstNavigationMessageType mtype = gst_navigation_message_get_type (msg);
+      if (mtype == GST_NAVIGATION_MESSAGE_EVENT) {
+        GstEvent *ev = NULL;
+
+        if (gst_navigation_message_parse_event (msg, &ev)) {
+          GstNavigationEventType type = gst_navigation_event_get_type (ev);
+          if (type == GST_NAVIGATION_EVENT_KEY_PRESS) {
+            const gchar *key;
+
+            if (gst_navigation_event_parse_key_event (ev, &key))
+              keyboard_cb (key, data);
+          }
+        }
+        if (ev)
+          gst_event_unref (ev);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  return TRUE;
+}
+
+/* Process keyboard input */
+static gboolean
+handle_keyboard (GIOChannel * source, GIOCondition cond, AppData * data)
+{
+  gchar *str = NULL;
+
+  if (g_io_channel_read_line (source, &str, NULL, NULL,
+          NULL) != G_IO_STATUS_NORMAL) {
+    return TRUE;
+  }
+
+  keyboard_cb (str, data);
   g_free (str);
 
   return TRUE;
@@ -66,6 +105,7 @@ main (int argc, char *argv[])
   GstStateChangeReturn ret;
   GIOChannel *io_stdin;
   GError *err = NULL;
+  guint srcid;
 
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
@@ -83,6 +123,7 @@ main (int argc, char *argv[])
   }
 
   data.video_sink = gst_bin_get_by_name (GST_BIN (data.pipeline), "sink");
+  srcid = gst_bus_add_watch (GST_ELEMENT_BUS (data.pipeline), bus_msg, &data);
 
   /* Add a keyboard watch so we get notified of keystrokes */
   io_stdin = g_io_channel_unix_new (fileno (stdin));
@@ -103,6 +144,7 @@ main (int argc, char *argv[])
 
 bail:
   /* Free resources */
+  g_source_remove (srcid);
   g_main_loop_unref (data.loop);
   g_io_channel_unref (io_stdin);
 
