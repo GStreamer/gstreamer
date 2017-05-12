@@ -319,7 +319,7 @@ gst_vaapi_enc_picture_encode (GstVaapiEncPicture * picture);
       G_PASTE (VAEncMiscParameterType, type),                           \
       sizeof (G_PASTE (VAEncMiscParameter, type)))
 
-/* GstVaapiEncFeiMiscParam */
+/* GstVaapiEncQualityLevelMiscParam */
 #define GST_VAAPI_ENC_QUALITY_LEVEL_MISC_PARAM_NEW(encoder)             \
   gst_vaapi_enc_misc_param_new (GST_VAAPI_ENCODER_CAST (encoder),       \
       VAEncMiscParameterTypeQualityLevel,                               \
