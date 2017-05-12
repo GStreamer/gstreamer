@@ -584,6 +584,7 @@ gst_vaapisink_video_overlay_set_event_handling (GstVideoOverlay * overlay,
 {
   GstVaapiSink *const sink = GST_VAAPISINK (overlay);
 
+  sink->handle_events = handle_events;
   gst_vaapisink_set_event_handling (sink, handle_events);
 }
 
@@ -930,7 +931,6 @@ gst_vaapisink_set_event_handling (GstVaapiSink * sink, gboolean handle_events)
     return;
 
   GST_OBJECT_LOCK (sink);
-  sink->handle_events = handle_events;
   if (handle_events && !sink->event_thread) {
     /* Setup our event listening thread */
     GST_DEBUG ("starting xevent thread");
