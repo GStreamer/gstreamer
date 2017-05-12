@@ -467,7 +467,7 @@ gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 static void
 gst_decklink_audio_src_got_packet (GstElement * element,
     IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
-    GstClockTime packet_time, gboolean no_signal)
+    GstClockTime stream_time, GstClockTime stream_duration, gboolean no_signal)
 {
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (element);
   GstClockTime timestamp;
@@ -475,7 +475,7 @@ gst_decklink_audio_src_got_packet (GstElement * element,
   GST_LOG_OBJECT (self,
       "Got audio packet at %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT
       ", no signal %d", GST_TIME_ARGS (capture_time),
-      GST_TIME_ARGS (packet_time), no_signal);
+      GST_TIME_ARGS (stream_time), no_signal);
 
   g_mutex_lock (&self->input->lock);
   if (self->input->videosrc) {
@@ -488,22 +488,22 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     }
 
     if (videosrc->first_time == GST_CLOCK_TIME_NONE)
-      videosrc->first_time = packet_time;
+      videosrc->first_time = stream_time;
 
     if (videosrc->skip_first_time > 0
-        && packet_time - videosrc->first_time < videosrc->skip_first_time) {
+        && stream_time - videosrc->first_time < videosrc->skip_first_time) {
       GST_DEBUG_OBJECT (self,
           "Skipping frame as requested: %" GST_TIME_FORMAT " < %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (packet_time),
+          GST_TIME_FORMAT, GST_TIME_ARGS (stream_time),
           GST_TIME_ARGS (videosrc->skip_first_time + videosrc->first_time));
       g_mutex_unlock (&self->input->lock);
       return;
     }
 
     if (videosrc->output_stream_time)
-      timestamp = packet_time;
+      timestamp = stream_time;
     else
-      timestamp = gst_clock_adjust_with_calibration (NULL, packet_time,
+      timestamp = gst_clock_adjust_with_calibration (NULL, stream_time,
           videosrc->current_time_mapping.xbase,
           videosrc->current_time_mapping.b, videosrc->current_time_mapping.num,
           videosrc->current_time_mapping.den);

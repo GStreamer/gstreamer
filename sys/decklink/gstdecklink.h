@@ -225,7 +225,7 @@ struct _GstDecklinkInput {
   BMDPixelFormat format;
 
   /* Set by the audio source */
-  void (*got_audio_packet) (GstElement *videosrc, IDeckLinkAudioInputPacket * packet, GstClockTime capture_time, GstClockTime packet_time, gboolean no_signal);
+  void (*got_audio_packet) (GstElement *videosrc, IDeckLinkAudioInputPacket * packet, GstClockTime capture_time, GstClockTime stream_time, GstClockTime stream_duration, gboolean no_signal);
 
   GstElement *audiosrc;
   gboolean audio_enabled;

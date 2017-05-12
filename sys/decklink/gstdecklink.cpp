@@ -761,7 +761,8 @@ public:
         no_signal) = NULL;
     void (*got_audio_packet) (GstElement * videosrc,
         IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
-        GstClockTime packet_time, gboolean no_signal) = NULL;
+        GstClockTime stream_time, GstClockTime stream_duration,
+        gboolean no_signal) = NULL;
     GstDecklinkModeEnum mode;
     GstClockTime capture_time = GST_CLOCK_TIME_NONE;
     GstClockTime base_time = 0;
@@ -769,6 +770,7 @@ public:
     GstClock *clock = NULL;
     HRESULT res;
     BMDTimeValue stream_time = GST_CLOCK_TIME_NONE;
+    BMDTimeValue stream_duration = GST_CLOCK_TIME_NONE;
 
     g_mutex_lock (&m_input->lock);
     if (m_input->videosrc) {
@@ -807,7 +809,6 @@ public:
     }
 
     if (got_video_frame && videosrc && video_frame) {
-      BMDTimeValue stream_duration = GST_CLOCK_TIME_NONE;
       IDeckLinkTimecode *dtc = 0;
 
       res =
@@ -840,7 +841,7 @@ public:
 
     if (got_audio_packet && audiosrc && audio_packet) {
       m_input->got_audio_packet (audiosrc, audio_packet, capture_time,
-          stream_time, no_signal);
+          stream_time, stream_duration, no_signal);
     } else {
       if (!audio_packet)
         GST_DEBUG ("Received no audio packet at %" GST_TIME_FORMAT,
