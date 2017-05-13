@@ -11,3 +11,7 @@ option('disable_introspection',
 option('disable_libunwind',
         type : 'boolean', value : false,
         description : 'Whether to disable the usage of libunwind (to generate backtraces)')
+option('with-package-name', type : 'string',
+       description : 'package name to use in plugins')
+option('with-package-origin', type : 'string', value : 'Unknown package origin',
+       description : 'package origin URL to use in plugins')
