@@ -146,6 +146,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_____, "----", QT_FLAG_CONTAINER,},
   {FOURCC_data, "data", 0, qtdemux_dump_unknown},
   {FOURCC_free, "free", 0,},
+  {FOURCC_skip, "skip", 0,},
   {FOURCC_SVQ3, "SVQ3", 0,},
   {FOURCC_rmra, "rmra", QT_FLAG_CONTAINER,},
   {FOURCC_rmda, "rmda", QT_FLAG_CONTAINER,},

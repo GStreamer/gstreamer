@@ -4301,6 +4301,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       break;
     case FOURCC_mdat:
     case FOURCC_free:
+    case FOURCC_skip:
     case FOURCC_wide:
     case FOURCC_PICT:
     case FOURCC_pnot:
@@ -6693,8 +6694,9 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             case FOURCC_styp:
               /* [styp] is like a [ftyp], but in fragment header. We ignore it for now
                * FALLTHROUGH */
+            case FOURCC_skip:
             case FOURCC_free:
-              /* [free] is a padding atom */
+              /* [free] and [skip] are padding atoms */
               GST_DEBUG_OBJECT (demux,
                   "Skipping fourcc while parsing header : %" GST_FOURCC_FORMAT,
                   GST_FOURCC_ARGS (fourcc));
