@@ -11,6 +11,10 @@ option('disable_introspection',
 option('disable_libunwind',
         type : 'boolean', value : false,
         description : 'Whether to disable the usage of libunwind (to generate backtraces)')
+option('with-package-name', type : 'string',
+       description : 'package name to use in plugins')
+option('with-package-origin', type : 'string', value : 'Unknown package origin',
+       description : 'package origin URL to use in plugins')
 option('with-ptp-helper-setuid-user', type : 'string',
         description : 'User to switch to when installing gst-ptp-helper setuid root')
 option('with-ptp-helper-setuid-group', type : 'string',
