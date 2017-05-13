@@ -41,7 +41,7 @@ SCANOBJ_OPTIONS=--type-init-func="gst_init(&argc,&argv)"
 
 # Header files to ignore when scanning.
 IGNORE_HFILES = \
-	libcheck internal-check.h \
+	check/libcheck internal-check.h \
 	gstinterpolationcontrolsourceprivate.h \
 	gstlfocontrolsourceprivate.h \
 	gstgetbits_inl.h \
