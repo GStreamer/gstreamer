@@ -556,7 +556,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   gint i;
   GstDecklinkVideoFormat caps_format;
   BMDPixelFormat format;
-  gint bpp;
+  gint stride;
   GstVideoTimeCodeMeta *tc_meta;
 
   GST_DEBUG_OBJECT (self, "Preparing buffer %p", buffer);
@@ -568,7 +568,6 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
 
   caps_format = gst_decklink_type_from_video_format (self->info.finfo->format);
   format = gst_decklink_pixel_format_from_type (caps_format);
-  bpp = gst_decklink_bpp_from_type (caps_format);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
@@ -623,8 +622,9 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
 
   frame->GetBytes ((void **) &outdata);
   indata = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
+  stride = MIN (GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0), frame->GetRowBytes());
   for (i = 0; i < self->info.height; i++) {
-    memcpy (outdata, indata, GST_VIDEO_FRAME_WIDTH (&vframe) * bpp);
+    memcpy (outdata, indata, stride);
     indata += GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
     outdata += frame->GetRowBytes ();
   }
