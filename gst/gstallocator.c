@@ -594,6 +594,9 @@ _priv_gst_allocator_initialize (void)
 
   _sysmem_allocator = g_object_new (gst_allocator_sysmem_get_type (), NULL);
 
+  /* Clear floating flag */
+  gst_object_ref_sink (_sysmem_allocator);
+
   gst_allocator_register (GST_ALLOCATOR_SYSMEM,
       gst_object_ref (_sysmem_allocator));
 
