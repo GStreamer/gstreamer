@@ -207,6 +207,7 @@ gst_vulkan_buffer_pool_new (GstVulkanDevice * device)
   GstVulkanBufferPool *pool;
 
   pool = g_object_new (GST_TYPE_VULKAN_BUFFER_POOL, NULL);
+  g_object_ref_sink (pool);
   pool->device = gst_object_ref (device);
 
   GST_LOG_OBJECT (pool, "new Vulkan buffer pool for device %" GST_PTR_FORMAT,

@@ -113,6 +113,7 @@ gst_ios_gl_memory_init (void)
 
     _ios_gl_memory_allocator =
         g_object_new (GST_TYPE_IOS_GL_MEMORY_ALLOCATOR, NULL);
+    gst_object_ref_sink (_ios_gl_memory_allocator);
 
     gst_allocator_register (GST_IOS_GL_MEMORY_ALLOCATOR_NAME,
         gst_object_ref (_ios_gl_memory_allocator));

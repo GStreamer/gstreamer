@@ -154,7 +154,12 @@ gst_uri_downloader_finalize (GObject * object)
 GstUriDownloader *
 gst_uri_downloader_new (void)
 {
-  return g_object_new (GST_TYPE_URI_DOWNLOADER, NULL);
+  GstUriDownloader *downloader;
+
+  downloader = g_object_new (GST_TYPE_URI_DOWNLOADER, NULL);
+  gst_object_ref_sink (downloader);
+
+  return downloader;
 }
 
 /**

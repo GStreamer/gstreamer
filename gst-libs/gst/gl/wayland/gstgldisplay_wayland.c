@@ -116,6 +116,7 @@ gst_gl_display_wayland_new (const gchar * name)
   GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
 
   ret = g_object_new (GST_TYPE_GL_DISPLAY_WAYLAND, NULL);
+  gst_object_ref_sink (ret);
   ret->display = wl_display_connect (name);
 
   if (!ret->display) {
@@ -151,6 +152,7 @@ gst_gl_display_wayland_new_with_display (struct wl_display * display)
   GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
 
   ret = g_object_new (GST_TYPE_GL_DISPLAY_WAYLAND, NULL);
+  gst_object_ref_sink (ret);
 
   ret->display = display;
   ret->foreign_display = TRUE;

@@ -109,6 +109,8 @@ gst_vulkan_window_xcb_init (GstVulkanWindowXCB * window)
 GstVulkanWindowXCB *
 gst_vulkan_window_xcb_new (GstVulkanDisplay * display)
 {
+  GstVulkanWindowXCB *window;
+
   _init_debug ();
 
   if ((gst_vulkan_display_get_handle_type (display) &
@@ -119,7 +121,10 @@ gst_vulkan_window_xcb_new (GstVulkanDisplay * display)
     return NULL;
   }
 
-  return g_object_new (GST_TYPE_VULKAN_WINDOW_XCB, NULL);
+  window = g_object_new (GST_TYPE_VULKAN_WINDOW_XCB, NULL);
+  gst_object_ref_sink (window);
+
+  return window;
 }
 
 static void

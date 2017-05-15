@@ -235,6 +235,7 @@ _new_with_stages_va_list (GstGLContext * context, GError ** error,
   g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
 
   shader = g_object_new (GST_TYPE_GL_SHADER, NULL);
+  gst_object_ref_sink (shader);
   shader->context = gst_object_ref (context);
 
   while ((stage = va_arg (varargs, GstGLSLStage *))) {

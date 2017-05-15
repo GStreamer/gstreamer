@@ -209,5 +209,10 @@ gst_kms_buffer_pool_class_init (GstKMSBufferPoolClass * klass)
 GstBufferPool *
 gst_kms_buffer_pool_new (void)
 {
-  return g_object_new (GST_TYPE_KMS_BUFFER_POOL, NULL);
+  GstBufferPool *pool;
+
+  pool = g_object_new (GST_TYPE_KMS_BUFFER_POOL, NULL);
+  gst_object_ref_sink (pool);
+
+  return pool;
 }

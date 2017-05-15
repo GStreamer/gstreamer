@@ -550,6 +550,7 @@ gst_vulkan_image_memory_init_once (void)
 
     _vulkan_image_memory_allocator =
         g_object_new (gst_vulkan_image_memory_allocator_get_type (), NULL);
+    gst_object_ref_sink (_vulkan_image_memory_allocator);
 
     gst_allocator_register (GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_NAME,
         gst_object_ref (_vulkan_image_memory_allocator));

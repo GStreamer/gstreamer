@@ -382,7 +382,7 @@ gst_gl_context_new (GstGLDisplay * display)
  * represented by @handle stays alive while the returned #GstGLContext is
  * active.
  *
- * Returns: a #GstGLContext wrapping @handle
+ * Returns: (transfer full): a #GstGLContext wrapping @handle
  *
  * Since: 1.4
  */
@@ -402,6 +402,7 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
       NULL);
 
   context_wrap = g_object_new (GST_TYPE_GL_WRAPPED_CONTEXT, NULL);
+  gst_object_ref_sink (context_wrap);
 
   if (!context_wrap) {
     /* subclass returned a NULL context */

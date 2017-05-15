@@ -334,6 +334,8 @@ gst_shm_sink_allocator_new (GstShmSink * sink)
 {
   GstShmSinkAllocator *self = g_object_new (GST_TYPE_SHM_SINK_ALLOCATOR, NULL);
 
+  gst_object_ref_sink (self);
+
   self->sink = gst_object_ref (sink);
 
   return self;

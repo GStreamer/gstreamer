@@ -252,6 +252,7 @@ gst_gl_memory_egl_init_once (void)
 
     _gl_memory_egl_allocator =
         g_object_new (GST_TYPE_GL_MEMORY_EGL_ALLOCATOR, NULL);
+    gst_object_ref_sink (_gl_memory_egl_allocator);
 
     /* The allocator is never unreffed */
     GST_OBJECT_FLAG_SET (_gl_memory_egl_allocator,

@@ -72,12 +72,17 @@ gst_gl_window_viv_fb_egl_init (GstGLWindowVivFBEGL * window)
 GstGLWindowVivFBEGL *
 gst_gl_window_viv_fb_egl_new (GstGLDisplay * display)
 {
+  GstGLWindowVivFBEGL *window;
+
   if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_VIV_FB) ==
       0)
     /* we require a Vivante FB display to create windows */
     return NULL;
 
-  return g_object_new (GST_TYPE_GL_WINDOW_VIV_FB_EGL, NULL);
+  window = g_object_new (GST_TYPE_GL_WINDOW_VIV_FB_EGL, NULL);
+  gst_object_ref_sink (window);
+
+  return window;
 }
 
 static void

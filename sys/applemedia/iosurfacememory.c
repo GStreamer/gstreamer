@@ -147,6 +147,7 @@ gst_ios_surface_memory_init (void)
 
     _io_surface_memory_allocator =
         g_object_new (GST_TYPE_IO_SURFACE_MEMORY_ALLOCATOR, NULL);
+    gst_object_ref_sink (_io_surface_memory_allocator);
 
     gst_allocator_register (GST_IO_SURFACE_MEMORY_ALLOCATOR_NAME,
         gst_object_ref (_io_surface_memory_allocator));

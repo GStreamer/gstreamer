@@ -108,13 +108,18 @@ gst_gl_window_dispmanx_egl_init (GstGLWindowDispmanxEGL * window_egl)
 GstGLWindowDispmanxEGL *
 gst_gl_window_dispmanx_egl_new (GstGLDisplay * display)
 {
+  GstGLWindowDispmanxEGL *window;
+
   if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_EGL) == 0)
     /* we require an egl display to create dispmanx windows */
     return NULL;
 
   GST_DEBUG ("creating Dispmanx EGL window");
 
-  return g_object_new (GST_TYPE_GL_WINDOW_DISPMANX_EGL, NULL);
+  window = g_object_new (GST_TYPE_GL_WINDOW_DISPMANX_EGL, NULL);
+  gst_object_ref_sink (window);
+
+  return window;
 }
 
 static void

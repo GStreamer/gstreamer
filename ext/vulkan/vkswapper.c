@@ -410,6 +410,7 @@ gst_vulkan_swapper_new (GstVulkanDevice * device, GstVulkanWindow * window)
   GstVulkanSwapper *swapper;
 
   swapper = g_object_new (GST_TYPE_VULKAN_SWAPPER, NULL);
+  gst_object_ref_sink (swapper);
   swapper->device = gst_object_ref (device);
   swapper->window = gst_object_ref (window);
 

@@ -3020,7 +3020,7 @@ gst_player_init_once (G_GNUC_UNUSED gpointer user_data)
  * no special video set up will be done and some default handling will be
  * performed.
  *
- * Returns: a new #GstPlayer instance
+ * Returns: (transfer full): a new #GstPlayer instance
  */
 GstPlayer *
 gst_player_new (GstPlayerVideoRenderer * video_renderer,
@@ -3034,6 +3034,7 @@ gst_player_new (GstPlayerVideoRenderer * video_renderer,
   self =
       g_object_new (GST_TYPE_PLAYER, "video-renderer", video_renderer,
       "signal-dispatcher", signal_dispatcher, NULL);
+  gst_object_ref_sink (self);
 
   if (video_renderer)
     g_object_unref (video_renderer);

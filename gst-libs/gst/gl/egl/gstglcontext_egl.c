@@ -108,9 +108,14 @@ gst_gl_context_egl_init (GstGLContextEGL * context)
 GstGLContextEGL *
 gst_gl_context_egl_new (GstGLDisplay * display)
 {
+  GstGLContextEGL *context;
+
   /* XXX: display type could theoretically be anything, as long as
    * eglGetDisplay supports it. */
-  return g_object_new (GST_TYPE_GL_CONTEXT_EGL, NULL);
+  context = g_object_new (GST_TYPE_GL_CONTEXT_EGL, NULL);
+  gst_object_ref_sink (context);
+
+  return context;
 }
 
 static gboolean

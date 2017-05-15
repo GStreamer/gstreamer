@@ -171,6 +171,7 @@ gst_vdp_video_buffer_pool_new (GstVdpDevice * device)
   GstVdpVideoBufferPool *pool;
 
   pool = g_object_new (GST_TYPE_VDP_VIDEO_BUFFER_POOL, NULL);
+  g_object_ref_sink (pool);
   pool->device = gst_object_ref (device);
 
   GST_LOG_OBJECT (pool, "new VdpVideo buffer pool %p", pool);

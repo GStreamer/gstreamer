@@ -346,8 +346,13 @@ gst_kms_allocator_init (GstKMSAllocator * allocator)
 GstAllocator *
 gst_kms_allocator_new (int fd)
 {
-  return g_object_new (GST_TYPE_KMS_ALLOCATOR, "name",
+  GstAllocator *alloc;
+
+  alloc = g_object_new (GST_TYPE_KMS_ALLOCATOR, "name",
       "KMSMemory::allocator", "drm-fd", fd, NULL);
+  gst_object_ref_sink (alloc);
+
+  return alloc;
 }
 
 /* The mem_offsets are relative to the GstMemory start, unlike the vinfo->offset

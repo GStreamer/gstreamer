@@ -130,6 +130,7 @@ gst_vulkan_display_xcb_new_with_connection (xcb_connection_t * connection,
   GST_DEBUG_CATEGORY_GET (gst_vulkan_display_debug, "gldisplay");
 
   ret = g_object_new (GST_TYPE_VULKAN_DISPLAY_XCB, NULL);
+  gst_object_ref_sink (ret);
 
   ret->connection = connection;
   ret->screen = _get_screen_from_connection (connection, screen_no);

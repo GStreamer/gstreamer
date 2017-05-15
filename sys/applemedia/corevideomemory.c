@@ -269,6 +269,7 @@ gst_apple_core_video_memory_init (void)
 
     _apple_core_video_allocator =
         g_object_new (GST_TYPE_APPLE_CORE_VIDEO_ALLOCATOR, NULL);
+    gst_object_ref_sink (_apple_core_video_allocator);
 
     gst_allocator_register (GST_APPLE_CORE_VIDEO_ALLOCATOR_NAME,
         gst_object_ref (_apple_core_video_allocator));

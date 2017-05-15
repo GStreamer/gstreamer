@@ -489,6 +489,7 @@ gst_d3dsurface_buffer_pool_new (GstD3DVideoSink * sink)
   GstD3DSurfaceBufferPool *pool;
 
   pool = g_object_new (GST_TYPE_D3DSURFACE_BUFFER_POOL, NULL);
+  gst_object_ref_sink (pool);
   pool->sink = gst_object_ref (sink);
 
   GST_LOG_OBJECT (pool, "new buffer pool %p", pool);
@@ -559,9 +560,11 @@ gst_d3dsurface_buffer_pool_set_config (GstBufferPool * bpool,
       gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-  if (pool->add_metavideo)
+  if (pool->add_metavideo) {
     pool->allocator =
         g_object_new (GST_TYPE_D3D_SURFACE_MEMORY_ALLOCATOR, NULL);
+    gst_object_ref_sink (pool->allocator);
+  }
 
   return TRUE;
 }

@@ -98,12 +98,17 @@ gst_gl_context_wgl_init (GstGLContextWGL * context_wgl)
 GstGLContextWGL *
 gst_gl_context_wgl_new (GstGLDisplay * display)
 {
+  GstGLContextWGL *context;
+
   if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_WIN32) ==
       0)
     /* we require an win32 display handle to create WGL contexts */
     return NULL;
 
-  return g_object_new (GST_TYPE_GL_CONTEXT_WGL, NULL);
+  context = g_object_new (GST_TYPE_GL_CONTEXT_WGL, NULL);
+  gst_object_ref_sink (context);
+
+  return context;
 }
 
 static HGLRC

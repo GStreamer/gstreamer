@@ -164,6 +164,8 @@ gst_vulkan_window_wayland_init (GstVulkanWindowWayland * window)
 GstVulkanWindowWayland *
 gst_vulkan_window_wayland_new (GstVulkanDisplay * display)
 {
+  GstVulkanWindowWayland *window;
+
   if ((gst_vulkan_display_get_handle_type (display) &
           GST_VULKAN_DISPLAY_TYPE_WAYLAND)
       == 0)
@@ -172,7 +174,10 @@ gst_vulkan_window_wayland_new (GstVulkanDisplay * display)
 
   GST_DEBUG ("creating Wayland window");
 
-  return g_object_new (GST_TYPE_VULKAN_WINDOW_WAYLAND, NULL);
+  window = g_object_new (GST_TYPE_VULKAN_WINDOW_WAYLAND, NULL);
+  gst_object_ref_sink (window);
+
+  return window;
 }
 
 static void

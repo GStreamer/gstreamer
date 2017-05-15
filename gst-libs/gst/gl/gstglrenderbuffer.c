@@ -317,6 +317,7 @@ gst_gl_renderbuffer_init_once (void)
 
     _gl_renderbuffer_allocator =
         g_object_new (GST_TYPE_GL_RENDERBUFFER_ALLOCATOR, NULL);
+    gst_object_ref_sink (_gl_renderbuffer_allocator);
     GST_OBJECT_FLAG_SET (_gl_renderbuffer_allocator,
         GST_OBJECT_FLAG_MAY_BE_LEAKED);
 

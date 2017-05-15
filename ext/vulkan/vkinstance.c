@@ -72,7 +72,12 @@ struct _GstVulkanInstancePrivate
 GstVulkanInstance *
 gst_vulkan_instance_new (void)
 {
-  return g_object_new (GST_TYPE_VULKAN_INSTANCE, NULL);
+  GstVulkanInstance *instance;
+
+  instance = g_object_new (GST_TYPE_VULKAN_INSTANCE, NULL);
+  gst_object_ref_sink (instance);
+
+  return instance;
 }
 
 static void

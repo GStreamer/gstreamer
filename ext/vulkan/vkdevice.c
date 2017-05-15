@@ -60,6 +60,8 @@ gst_vulkan_device_new (GstVulkanInstance * instance)
 {
   GstVulkanDevice *device = g_object_new (GST_TYPE_VULKAN_DEVICE, NULL);
 
+  gst_object_ref_sink (device);
+
   device->instance = gst_object_ref (instance);
   /* FIXME: select this externally */
   device->device_index = 0;
@@ -350,6 +352,7 @@ gst_vulkan_device_get_queue (GstVulkanDevice * device, guint32 queue_family,
       device->queue_family_props[queue_family].queueCount, NULL);
 
   ret = g_object_new (GST_TYPE_VULKAN_QUEUE, NULL);
+  gst_object_ref_sink (ret);
   ret->device = gst_object_ref (device);
   ret->family = queue_family;
   ret->index = queue_i;

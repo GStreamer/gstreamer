@@ -216,6 +216,7 @@ gst_vulkan_display_new (GstVulkanInstance * instance)
     GST_FIXME ("creating dummy display");
 
     display = g_object_new (GST_TYPE_VULKAN_DISPLAY, NULL);
+    gst_object_ref_sink (display);
     display->instance = gst_object_ref (instance);
   }
 

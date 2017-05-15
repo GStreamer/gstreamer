@@ -469,7 +469,7 @@ gst_gl_color_convert_init (GstGLColorConvert * convert)
  * gst_gl_color_convert_new:
  * @context: a #GstGLContext
  *
- * Returns: a new #GstGLColorConvert object
+ * Returns: (transfer full): a new #GstGLColorConvert object
  *
  * Since: 1.4
  */
@@ -479,6 +479,7 @@ gst_gl_color_convert_new (GstGLContext * context)
   GstGLColorConvert *convert;
 
   convert = g_object_new (GST_TYPE_GL_COLOR_CONVERT, NULL);
+  gst_object_ref_sink (convert);
 
   convert->context = gst_object_ref (context);
 

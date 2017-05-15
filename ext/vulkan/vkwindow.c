@@ -311,5 +311,10 @@ gst_vulkan_dummy_window_init (GstVulkanDummyWindow * dummy)
 GstVulkanDummyWindow *
 gst_vulkan_dummy_window_new (void)
 {
-  return g_object_new (gst_vulkan_dummy_window_get_type (), NULL);
+  GstVulkanDummyWindow *window;
+
+  window = g_object_new (gst_vulkan_dummy_window_get_type (), NULL);
+  gst_object_ref_sink (window);
+
+  return window;
 }

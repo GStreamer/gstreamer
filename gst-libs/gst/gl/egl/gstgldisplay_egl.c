@@ -176,6 +176,7 @@ gst_gl_display_egl_new (void)
   GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
 
   ret = g_object_new (GST_TYPE_GL_DISPLAY_EGL, NULL);
+  gst_object_ref_sink (ret);
   ret->display =
       gst_gl_display_egl_get_from_native (GST_GL_DISPLAY_TYPE_ANY, 0);
 
@@ -206,6 +207,7 @@ gst_gl_display_egl_new_with_egl_display (EGLDisplay display)
   GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
 
   ret = g_object_new (GST_TYPE_GL_DISPLAY_EGL, NULL);
+  gst_object_ref_sink (ret);
 
   ret->display = display;
   ret->foreign_display = TRUE;
@@ -270,6 +272,7 @@ gst_gl_display_egl_from_gl_display (GstGLDisplay * display)
   g_return_val_if_fail (display_type != GST_GL_DISPLAY_TYPE_NONE, NULL);
 
   ret = g_object_new (GST_TYPE_GL_DISPLAY_EGL, NULL);
+  gst_object_ref_sink (ret);
 
   ret->display =
       gst_gl_display_egl_get_from_native (display_type, native_display);

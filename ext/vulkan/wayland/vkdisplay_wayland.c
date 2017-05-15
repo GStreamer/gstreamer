@@ -117,6 +117,7 @@ gst_vulkan_display_wayland_new (const gchar * name)
   GstVulkanDisplayWayland *ret;
 
   ret = g_object_new (GST_TYPE_VULKAN_DISPLAY_WAYLAND, NULL);
+  gst_object_ref_sink (ret);
   ret->display = wl_display_connect (name);
 
   if (!ret->display) {
@@ -154,6 +155,7 @@ gst_vulkan_display_wayland_new_with_display (struct wl_display * display)
   g_return_val_if_fail (display != NULL, NULL);
 
   ret = g_object_new (GST_TYPE_VULKAN_DISPLAY_WAYLAND, NULL);
+  gst_object_ref_sink (ret);
 
   ret->display = display;
   ret->foreign_display = TRUE;

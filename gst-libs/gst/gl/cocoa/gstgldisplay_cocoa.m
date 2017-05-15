@@ -115,6 +115,7 @@ gst_gl_display_cocoa_setup_nsapp (gpointer data)
 
   if (NSApp != nil && !singleton) {
     GstGLDisplayCocoa *ret = g_object_new (GST_TYPE_GL_DISPLAY_COCOA, NULL);
+    gst_object_ref_sink (ret);
     g_mutex_unlock (&nsapp_lock);
     return ret;
   }
@@ -167,6 +168,7 @@ gst_gl_display_cocoa_setup_nsapp (gpointer data)
   } else {
     GST_DEBUG ("Create display");
     singleton = g_object_new (GST_TYPE_GL_DISPLAY_COCOA, NULL);
+    gst_object_ref_sink (singletone);
   }
 
   g_mutex_unlock (&nsapp_lock);
@@ -223,13 +225,18 @@ gst_gl_display_cocoa_finalize (GObject * object)
 GstGLDisplayCocoa *
 gst_gl_display_cocoa_new (void)
 {
+  GstGLDisplayCocoa *display;
+
   GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
 
 #ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
-  return gst_gl_display_cocoa_setup_nsapp (NULL);
+  display = gst_gl_display_cocoa_setup_nsapp (NULL);
 #else
-  return g_object_new (GST_TYPE_GL_DISPLAY_COCOA, NULL);
+  display = g_object_new (GST_TYPE_GL_DISPLAY_COCOA, NULL);
+  gst_object_ref_sink (display);
 #endif
+
+  return display;
 }
 
 static guintptr

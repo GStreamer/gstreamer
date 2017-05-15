@@ -336,14 +336,19 @@ gst_gl_view_convert_finalize (GObject * object)
 /**
  * gst_gl_view_convert_new:
  *
- * Returns: a new #GstGLViewConvert
+ * Returns: (transfer full): a new #GstGLViewConvert
  *
  * Since: 1.6
  */
 GstGLViewConvert *
 gst_gl_view_convert_new (void)
 {
-  return g_object_new (GST_TYPE_GL_VIEW_CONVERT, NULL);
+  GstGLViewConvert *convert;
+
+  convert = g_object_new (GST_TYPE_GL_VIEW_CONVERT, NULL);
+  gst_object_ref_sink (convert);
+
+  return convert;
 }
 
 /**

@@ -466,6 +466,7 @@ gst_dfb_buffer_pool_new (GstDfbVideoSink * dfbvideosink)
   g_return_val_if_fail (GST_IS_DFBVIDEOSINK (dfbvideosink), NULL);
 
   pool = g_object_new (GST_TYPE_DFB_BUFFER_POOL, NULL);
+  g_object_ref_sink (pool);
   pool->dfbvideosink = gst_object_ref (dfbvideosink);
 
   GST_LOG_OBJECT (pool, "new dfb buffer pool %p", pool);

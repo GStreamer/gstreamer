@@ -110,8 +110,11 @@ gst_wl_shm_allocator_init (GstWlShmAllocator * self)
 void
 gst_wl_shm_allocator_register (void)
 {
-  gst_allocator_register (GST_ALLOCATOR_WL_SHM,
-      g_object_new (GST_TYPE_WL_SHM_ALLOCATOR, NULL));
+  GstAllocator *alloc;
+
+  alloc = g_object_new (GST_TYPE_WL_SHM_ALLOCATOR, NULL);
+  gst_object_ref_sink (alloc);
+  gst_allocator_register (GST_ALLOCATOR_WL_SHM, alloc);
 }
 
 GstAllocator *
