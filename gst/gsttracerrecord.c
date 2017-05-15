@@ -178,7 +178,7 @@ gst_tracer_record_init (GstTracerRecord * self)
  *
  * > Please note that this is still under discussion and subject to change.
  *
- * Returns: (transfer floating): a new #GstTracerRecord
+ * Returns: (transfer full): a new #GstTracerRecord
  */
 GstTracerRecord *
 gst_tracer_record_new (const gchar * name, const gchar * firstfield, ...)
@@ -219,6 +219,10 @@ gst_tracer_record_new (const gchar * name, const gchar * firstfield, ...)
   va_end (varargs);
 
   self = g_object_new (GST_TYPE_TRACER_RECORD, NULL);
+
+  /* Clear floating flag */
+  gst_object_ref_sink (self);
+
   self->spec = structure;
   gst_tracer_record_build_format (self);
 

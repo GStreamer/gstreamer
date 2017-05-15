@@ -212,7 +212,7 @@ gst_buffer_pool_finalize (GObject * object)
  *
  * Creates a new #GstBufferPool instance.
  *
- * Returns: (transfer floating): a new #GstBufferPool instance
+ * Returns: (transfer full): a new #GstBufferPool instance
  */
 GstBufferPool *
 gst_buffer_pool_new (void)
@@ -221,6 +221,9 @@ gst_buffer_pool_new (void)
 
   result = g_object_new (GST_TYPE_BUFFER_POOL, NULL);
   GST_DEBUG_OBJECT (result, "created new buffer pool");
+
+  /* Clear floating flag */
+  gst_object_ref_sink (result);
 
   return result;
 }

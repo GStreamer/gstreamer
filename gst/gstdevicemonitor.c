@@ -785,14 +785,21 @@ gst_device_monitor_remove_filter (GstDeviceMonitor * monitor, guint filter_id)
  *
  * Create a new #GstDeviceMonitor
  *
- * Returns: (transfer floating): a new device monitor.
+ * Returns: (transfer full): a new device monitor.
  *
  * Since: 1.4
  */
 GstDeviceMonitor *
 gst_device_monitor_new (void)
 {
-  return g_object_new (GST_TYPE_DEVICE_MONITOR, NULL);
+  GstDeviceMonitor *monitor;
+
+  monitor = g_object_new (GST_TYPE_DEVICE_MONITOR, NULL);
+
+  /* Clear floating flag */
+  gst_object_ref_sink (monitor);
+
+  return monitor;
 }
 
 /**

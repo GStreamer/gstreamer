@@ -114,12 +114,18 @@ _priv_gst_tracing_init (void)
       if ((feature = gst_registry_lookup_feature (registry, t[i]))) {
         factory = GST_TRACER_FACTORY (gst_plugin_feature_load (feature));
         if (factory) {
+          GstTracer *tracer;
+
           GST_INFO_OBJECT (factory, "creating tracer: type-id=%u",
               (guint) factory->type);
 
+          tracer = g_object_new (factory->type, "params", params, NULL);
+
+          /* Clear floating flag */
+          gst_object_ref_sink (tracer);
+
           /* tracers register them self to the hooks */
-          gst_object_unref (g_object_new (factory->type, "params", params,
-                  NULL));
+          gst_object_unref (tracer);
         } else {
           GST_WARNING_OBJECT (feature,
               "loading plugin containing feature %s failed!", t[i]);
