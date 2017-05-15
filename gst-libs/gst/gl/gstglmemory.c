@@ -1096,6 +1096,7 @@ gst_gl_memory_init_once (void)
         "OpenGL Base Texture Memory");
 
     _gl_memory_allocator = g_object_new (GST_TYPE_GL_MEMORY_ALLOCATOR, NULL);
+    gst_object_ref_sink (_gl_memory_allocator);
 
     gst_allocator_register (GST_GL_MEMORY_ALLOCATOR_NAME, _gl_memory_allocator);
 

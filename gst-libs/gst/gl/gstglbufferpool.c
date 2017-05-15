@@ -310,6 +310,7 @@ gst_gl_buffer_pool_new (GstGLContext * context)
   GstGLBufferPool *pool;
 
   pool = g_object_new (GST_TYPE_GL_BUFFER_POOL, NULL);
+  gst_object_ref_sink (pool);
   pool->context = gst_object_ref (context);
 
   GST_LOG_OBJECT (pool, "new GL buffer pool for context %" GST_PTR_FORMAT,

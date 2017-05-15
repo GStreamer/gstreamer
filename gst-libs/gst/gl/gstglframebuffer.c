@@ -166,7 +166,7 @@ gst_gl_framebuffer_finalize (GObject * object)
  *
  * Returns: a new #GstGLFramebuffer
  *
- * Since: 1.10
+ * Since: (transfer full): 1.10
  */
 GstGLFramebuffer *
 gst_gl_framebuffer_new (GstGLContext * context)
@@ -187,6 +187,7 @@ gst_gl_framebuffer_new (GstGLContext * context)
   fb = g_object_new (GST_TYPE_GL_FRAMEBUFFER, NULL);
   fb->context = gst_object_ref (context);
   gl->GenFramebuffers (1, &fb->fbo_id);
+  gst_object_ref_sink (fb);
 
   return fb;
 }

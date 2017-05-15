@@ -103,8 +103,13 @@ gst_gl_window_eagl_finalize (GObject * object)
 GstGLWindowEagl *
 gst_gl_window_eagl_new (GstGLDisplay * display)
 {
+  GstGLWindowEagl *window;
+
   /* there isn't an eagl display type */
-  return g_object_new (GST_TYPE_GL_WINDOW_EAGL, NULL);
+  window = g_object_new (GST_TYPE_GL_WINDOW_EAGL, NULL);
+  gst_object_ref_sink (window);
+
+  return window;
 }
 
 static guintptr

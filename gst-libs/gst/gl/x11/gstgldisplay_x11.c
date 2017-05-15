@@ -88,6 +88,7 @@ gst_gl_display_x11_new (const gchar * name)
   GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
 
   ret = g_object_new (GST_TYPE_GL_DISPLAY_X11, NULL);
+  gst_object_ref_sink (ret);
   ret->name = g_strdup (name);
   ret->display = XOpenDisplay (ret->name);
 
@@ -131,6 +132,7 @@ gst_gl_display_x11_new_with_display (Display * display)
   GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
 
   ret = g_object_new (GST_TYPE_GL_DISPLAY_X11, NULL);
+  gst_object_ref_sink (ret);
 
   ret->name = g_strdup (DisplayString (display));
   ret->display = display;

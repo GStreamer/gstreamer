@@ -112,11 +112,16 @@ gst_gl_context_glx_init (GstGLContextGLX * context)
 GstGLContextGLX *
 gst_gl_context_glx_new (GstGLDisplay * display)
 {
+  GstGLContextGLX *context;
+
   if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_X11) == 0)
     /* we require an x11 display handle to create GLX contexts */
     return NULL;
 
-  return g_object_new (GST_TYPE_GL_CONTEXT_GLX, NULL);
+  context = g_object_new (GST_TYPE_GL_CONTEXT_GLX, NULL);
+  gst_object_ref_sink (context);
+
+  return context;
 }
 
 static inline void

@@ -1014,5 +1014,10 @@ gst_gl_dummy_window_init (GstGLDummyWindow * dummy)
 GstGLDummyWindow *
 gst_gl_dummy_window_new (void)
 {
-  return g_object_new (gst_gl_dummy_window_get_type (), NULL);
+  GstGLDummyWindow *window;
+
+  window = g_object_new (gst_gl_dummy_window_get_type (), NULL);
+  gst_object_ref_sink (window);
+
+  return window;
 }

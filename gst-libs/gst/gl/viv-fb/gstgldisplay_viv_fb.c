@@ -83,6 +83,7 @@ gst_gl_display_viv_fb_new (gint disp_idx)
   GST_DEBUG ("creating Vivante FB EGL display %d", disp_idx);
 
   display = g_object_new (GST_TYPE_GL_DISPLAY_VIV_FB, NULL);
+  gst_object_ref_sink (display);
   display->disp_idx = disp_idx;
   display->display = fbGetDisplayByIndex (display->disp_idx);
   if (!display->display) {

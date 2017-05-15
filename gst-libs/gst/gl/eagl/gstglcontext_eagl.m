@@ -96,8 +96,13 @@ gst_gl_context_eagl_init (GstGLContextEagl * context)
 GstGLContextEagl *
 gst_gl_context_eagl_new (GstGLDisplay * display)
 {
+  GstGLContextEagl *context;
+
   /* there isn't actually a display type for eagl yet? */
-  return g_object_new (GST_TYPE_GL_CONTEXT_EAGL, NULL);
+  context = g_object_new (GST_TYPE_GL_CONTEXT_EAGL, NULL);
+  gst_object_ref_sink (context);
+
+  return context;
 }
 
 void

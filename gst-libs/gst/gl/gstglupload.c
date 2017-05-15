@@ -1561,13 +1561,15 @@ gst_gl_upload_init (GstGLUpload * upload)
  * gst_gl_upload_new:
  * @context: a #GstGLContext
  *
- * Returns: a new #GstGLUpload object
+ * Returns: (transfer full): a new #GstGLUpload object
  */
 GstGLUpload *
 gst_gl_upload_new (GstGLContext * context)
 {
   GstGLUpload *upload = g_object_new (GST_TYPE_GL_UPLOAD, NULL);
   gint i, n;
+
+  gst_object_ref_sink (upload);
 
   if (context)
     gst_gl_upload_set_context (upload, context);

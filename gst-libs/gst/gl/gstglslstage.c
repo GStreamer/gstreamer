@@ -196,7 +196,7 @@ _ensure_shader (GstGLSLStage * stage)
  * @n_strings: the number of strings in @str
  * @str: an array of strings concatted together to produce a shader
  *
- * Returns: (transfer full): a new #GstGLSLStage of the specified @type
+ * Returns: (transfer floating): a new #GstGLSLStage of the specified @type
  *
  * Since: 1.8
  */
@@ -235,7 +235,7 @@ gst_glsl_stage_new_with_strings (GstGLContext * context, guint type,
  * @profile: the #GstGLSLProfile
  * @str: a shader string
  *
- * Returns: (transfer full): a new #GstGLSLStage of the specified @type
+ * Returns: (transfer floating): a new #GstGLSLStage of the specified @type
  *
  * Since: 1.8
  */
@@ -252,7 +252,7 @@ gst_glsl_stage_new_with_string (GstGLContext * context, guint type,
  * @context: a #GstGLContext
  * @type: the GL enum shader stage type
  *
- * Returns: (transfer full): a new #GstGLSLStage of the specified @type
+ * Returns: (transfer floating): a new #GstGLSLStage of the specified @type
  *
  * Since: 1.8
  */
@@ -267,7 +267,7 @@ gst_glsl_stage_new (GstGLContext * context, guint type)
  * gst_glsl_stage_new_with_default_vertex:
  * @context: a #GstGLContext
  *
- * Returns: (transfer full): a new #GstGLSLStage with the default vertex shader
+ * Returns: (transfer floating): a new #GstGLSLStage with the default vertex shader
  *
  * Since: 1.8
  */
@@ -284,7 +284,7 @@ gst_glsl_stage_new_default_vertex (GstGLContext * context)
  * gst_glsl_stage_new_with_default_fragment:
  * @context: a #GstGLContext
  *
- * Returns: (transfer full): a new #GstGLSLStage with the default fragment shader
+ * Returns: (transfer floating): a new #GstGLSLStage with the default fragment shader
  *
  * Since: 1.8
  */

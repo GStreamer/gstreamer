@@ -143,11 +143,16 @@ gst_gl_window_cocoa_finalize (GObject * object)
 GstGLWindowCocoa *
 gst_gl_window_cocoa_new (GstGLDisplay * display)
 {
+  GstGLWindowCocoa *window;
+
   if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_COCOA) == 0)
     /* we require an cocoa display to create CGL windows */
     return NULL;
 
-  return g_object_new (GST_TYPE_GL_WINDOW_COCOA, NULL);
+  window = g_object_new (GST_TYPE_GL_WINDOW_COCOA, NULL);
+  gst_object_ref_sink (window);
+
+  return window;
 }
 
 /* Must be called from the main thread */

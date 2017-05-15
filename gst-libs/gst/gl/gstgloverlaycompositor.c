@@ -474,6 +474,8 @@ gst_gl_overlay_compositor_new (GstGLContext * context)
   GstGLOverlayCompositor *compositor =
       g_object_new (GST_TYPE_GL_OVERLAY_COMPOSITOR, NULL);
 
+  gst_object_ref_sink (compositor);
+
   compositor->context = gst_object_ref (context);
 
   gst_gl_context_thread_add (compositor->context,
@@ -575,6 +577,7 @@ gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
         GstGLCompositionOverlay *overlay =
             gst_gl_composition_overlay_new (compositor->context, rectangle,
             compositor->position_attrib, compositor->texcoord_attrib);
+        gst_object_ref_sink (overlay);
 
         gst_gl_composition_overlay_upload (overlay, buf);
 

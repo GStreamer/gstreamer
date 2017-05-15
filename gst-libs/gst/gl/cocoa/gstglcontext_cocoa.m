@@ -77,11 +77,16 @@ gst_gl_context_cocoa_init (GstGLContextCocoa * context)
 GstGLContextCocoa *
 gst_gl_context_cocoa_new (GstGLDisplay * display)
 {
+  GstGLContextCocoa *context;
+
   if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_COCOA) == 0)
     /* we require an cocoa display to create CGL contexts */
     return NULL;
 
-  return g_object_new (GST_TYPE_GL_CONTEXT_COCOA, NULL);
+  context = g_object_new (GST_TYPE_GL_CONTEXT_COCOA, NULL);
+  gst_object_ref_sink (context);
+
+  return context;
 }
 
 struct pixel_attr

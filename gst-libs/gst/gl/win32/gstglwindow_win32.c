@@ -93,12 +93,17 @@ gst_gl_window_win32_init (GstGLWindowWin32 * window)
 GstGLWindowWin32 *
 gst_gl_window_win32_new (GstGLDisplay * display)
 {
+  GstGLWindowWin32 *window;
+
   if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_WIN32) ==
       0)
     /* we require an win32 display to create win32 windows */
     return NULL;
 
-  return g_object_new (GST_TYPE_GL_WINDOW_WIN32, NULL);
+  window = g_object_new (GST_TYPE_GL_WINDOW_WIN32, NULL);
+  gst_object_ref_sink (window);
+
+  return window;
 }
 
 static void

@@ -323,7 +323,8 @@ gst_gl_display_new (void)
         "(platform: %s), creating dummy",
         GST_STR_NULL (user_choice), GST_STR_NULL (platform_choice));
 
-    return g_object_new (GST_TYPE_GL_DISPLAY, NULL);
+    display = g_object_new (GST_TYPE_GL_DISPLAY, NULL);
+    gst_object_ref_sink (display);
   }
 
   return display;
