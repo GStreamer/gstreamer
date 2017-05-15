@@ -72,14 +72,16 @@ G_BEGIN_DECLS
     }                                           \
   } G_STMT_END
 
-
+G_GNUC_INTERNAL
 gboolean
 bs_write_ue (GstBitWriter * bs, guint32 value);
 
+G_GNUC_INTERNAL
 gboolean
 bs_write_se (GstBitWriter * bs, gint32 value);
 
 /* Write nal unit, applying emulation prevention bytes */
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_utils_h26x_write_nal_unit (GstBitWriter * bs, guint8 * nal, guint nal_size);
 
