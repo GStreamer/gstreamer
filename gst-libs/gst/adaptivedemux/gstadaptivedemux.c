@@ -1507,6 +1507,7 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
   if (gst_adaptive_demux_is_live (demux)) {
     gint64 range_start, range_stop;
     gboolean changed = FALSE;
+    gboolean start_valid = TRUE, stop_valid = TRUE;
 
     if (!gst_adaptive_demux_get_live_seek_range (demux, &range_start,
             &range_stop)) {
@@ -1555,13 +1556,29 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
       }
     }
 
+    if (start_type == GST_SEEK_TYPE_SET && GST_CLOCK_TIME_IS_VALID (start) &&
+        (start < range_start || start > range_stop)) {
+      GST_WARNING_OBJECT (demux,
+          "Seek to invalid position start:%" GST_STIME_FORMAT
+          " out of seekable range (%" GST_STIME_FORMAT " - %" GST_STIME_FORMAT
+          ")", GST_STIME_ARGS (start), GST_STIME_ARGS (range_start),
+          GST_STIME_ARGS (range_stop));
+      start_valid = FALSE;
+    }
+    if (stop_type == GST_SEEK_TYPE_SET && GST_CLOCK_TIME_IS_VALID (stop) &&
+        (stop < range_start || stop > range_stop)) {
+      GST_WARNING_OBJECT (demux,
+          "Seek to invalid position stop:%" GST_STIME_FORMAT
+          " out of seekable range (%" GST_STIME_FORMAT " - %" GST_STIME_FORMAT
+          ")", GST_STIME_ARGS (stop), GST_STIME_ARGS (range_start),
+          GST_STIME_ARGS (range_stop));
+      stop_valid = FALSE;
+    }
+
     /* If the seek position is still outside of the seekable range, refuse the seek */
-    if (((start_type == GST_SEEK_TYPE_SET) && (start < range_start
-                || start > range_stop)) || ((stop_type == GST_SEEK_TYPE_SET)
-            && (stop < range_start || stop > range_stop))) {
+    if (!start_valid || !stop_valid) {
       GST_MANIFEST_UNLOCK (demux);
       GST_API_UNLOCK (demux);
-      GST_WARNING_OBJECT (demux, "Seek to invalid position");
       gst_event_unref (event);
       return FALSE;
     }
