@@ -60,6 +60,8 @@ typedef enum {
  * GstVaapiConfigInfoEncoder:
  * @rc_mode: rate-control mode (#GstVaapiRateControl).
  * @packed_headers: notify encoder that packed headers are submitted (mask).
+ * @roi_capability: if encoder supports regions-of-interest.
+ * @roi_num_supported: The number of regions-of-interest supported.
  *
  * Extra configuration for encoding.
  */
