@@ -3,6 +3,7 @@ lib_LTLIBRARIES = libgstapp-@GST_API_VERSION@.la
 glib_enum_define = GST_APP
 glib_gen_prefix = __gst_app
 glib_gen_basename = app
+glib_gen_decl_banner=GST_EXPORT
 
 glib_enum_headers = gstappsrc.h
 

@@ -116,35 +116,64 @@ struct _GstAppSrcClass
   gpointer     _gst_reserved[GST_PADDING-1];
 };
 
-GType gst_app_src_get_type(void);
+GST_EXPORT
+GType            gst_app_src_get_type                (void);
 
+GST_EXPORT
 void             gst_app_src_set_caps                (GstAppSrc *appsrc, const GstCaps *caps);
+
+GST_EXPORT
 GstCaps*         gst_app_src_get_caps                (GstAppSrc *appsrc);
 
+GST_EXPORT
 void             gst_app_src_set_size                (GstAppSrc *appsrc, gint64 size);
+
+GST_EXPORT
 gint64           gst_app_src_get_size                (GstAppSrc *appsrc);
 
+GST_EXPORT
 void             gst_app_src_set_duration            (GstAppSrc *appsrc, GstClockTime duration);
+
+GST_EXPORT
 GstClockTime     gst_app_src_get_duration            (GstAppSrc *appsrc);
 
+GST_EXPORT
 void             gst_app_src_set_stream_type         (GstAppSrc *appsrc, GstAppStreamType type);
+
+GST_EXPORT
 GstAppStreamType gst_app_src_get_stream_type         (GstAppSrc *appsrc);
 
+GST_EXPORT
 void             gst_app_src_set_max_bytes           (GstAppSrc *appsrc, guint64 max);
+
+GST_EXPORT
 guint64          gst_app_src_get_max_bytes           (GstAppSrc *appsrc);
 
+GST_EXPORT
 guint64          gst_app_src_get_current_level_bytes (GstAppSrc *appsrc);
 
+GST_EXPORT
 void             gst_app_src_set_latency             (GstAppSrc *appsrc, guint64 min, guint64 max);
+
+GST_EXPORT
 void             gst_app_src_get_latency             (GstAppSrc *appsrc, guint64 *min, guint64 *max);
 
+GST_EXPORT
 void             gst_app_src_set_emit_signals        (GstAppSrc *appsrc, gboolean emit);
+
+GST_EXPORT
 gboolean         gst_app_src_get_emit_signals        (GstAppSrc *appsrc);
 
+GST_EXPORT
 GstFlowReturn    gst_app_src_push_buffer             (GstAppSrc *appsrc, GstBuffer *buffer);
+
+GST_EXPORT
 GstFlowReturn    gst_app_src_end_of_stream           (GstAppSrc *appsrc);
+
+GST_EXPORT
 GstFlowReturn    gst_app_src_push_sample             (GstAppSrc *appsrc, GstSample *sample);
 
+GST_EXPORT
 void             gst_app_src_set_callbacks           (GstAppSrc * appsrc,
                                                       GstAppSrcCallbacks *callbacks,
                                                       gpointer user_data,
