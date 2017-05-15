@@ -100,6 +100,7 @@ struct _GstAudioVisualizerClass
   gboolean (*decide_allocation)   (GstAudioVisualizer * scope, GstQuery *query);
 };
 
+GST_EXPORT
 GType gst_audio_visualizer_get_type (void);
 
 G_END_DECLS

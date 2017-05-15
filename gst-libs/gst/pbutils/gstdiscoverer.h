@@ -33,6 +33,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISCOVERER_STREAM_INFO))
 typedef struct _GstDiscovererStreamInfo GstDiscovererStreamInfo;
 typedef GObjectClass GstDiscovererStreamInfoClass;
+
+GST_EXPORT
 GType gst_discoverer_stream_info_get_type (void);
 
 /**
@@ -57,13 +59,28 @@ GType gst_discoverer_stream_info_get_type (void);
 #define gst_discoverer_stream_info_ref(info) ((GstDiscovererStreamInfo*) g_object_ref((GObject*) info))
 #define gst_discoverer_stream_info_unref(info) (g_object_unref((GObject*) info))
 
+GST_EXPORT
 GstDiscovererStreamInfo* gst_discoverer_stream_info_get_previous(GstDiscovererStreamInfo* info);
+
+GST_EXPORT
 GstDiscovererStreamInfo* gst_discoverer_stream_info_get_next(GstDiscovererStreamInfo* info);
+
+GST_EXPORT
 GstCaps*                 gst_discoverer_stream_info_get_caps(GstDiscovererStreamInfo* info);
+
+GST_EXPORT
 const GstTagList*        gst_discoverer_stream_info_get_tags(GstDiscovererStreamInfo* info);
+
+GST_EXPORT
 const GstToc*            gst_discoverer_stream_info_get_toc(GstDiscovererStreamInfo* info);
+
+GST_EXPORT
 const gchar*             gst_discoverer_stream_info_get_stream_id(GstDiscovererStreamInfo* info);
+
+GST_EXPORT
 const GstStructure*      gst_discoverer_stream_info_get_misc(GstDiscovererStreamInfo* info);
+
+GST_EXPORT
 const gchar *            gst_discoverer_stream_info_get_stream_type_nick(GstDiscovererStreamInfo* info);
 
 /**
@@ -80,8 +97,10 @@ const gchar *            gst_discoverer_stream_info_get_stream_type_nick(GstDisc
 typedef struct _GstDiscovererContainerInfo GstDiscovererContainerInfo;
 typedef GObjectClass GstDiscovererContainerInfoClass;
 
+GST_EXPORT
 GType gst_discoverer_container_info_get_type (void);
 
+GST_EXPORT
 GList *gst_discoverer_container_info_get_streams(GstDiscovererContainerInfo *info);
 
 
@@ -99,13 +118,25 @@ GList *gst_discoverer_container_info_get_streams(GstDiscovererContainerInfo *inf
 typedef struct _GstDiscovererAudioInfo GstDiscovererAudioInfo;
 typedef GObjectClass GstDiscovererAudioInfoClass;
 
+GST_EXPORT
 GType gst_discoverer_audio_info_get_type (void);
 
+GST_EXPORT
 guint gst_discoverer_audio_info_get_channels(const GstDiscovererAudioInfo* info);
+
+GST_EXPORT
 guint gst_discoverer_audio_info_get_sample_rate(const GstDiscovererAudioInfo* info);
+
+GST_EXPORT
 guint gst_discoverer_audio_info_get_depth(const GstDiscovererAudioInfo* info);
+
+GST_EXPORT
 guint gst_discoverer_audio_info_get_bitrate(const GstDiscovererAudioInfo* info);
+
+GST_EXPORT
 guint gst_discoverer_audio_info_get_max_bitrate(const GstDiscovererAudioInfo* info);
+
+GST_EXPORT
 const gchar * gst_discoverer_audio_info_get_language(const GstDiscovererAudioInfo* info);
 
 /**
@@ -121,18 +152,41 @@ const gchar * gst_discoverer_audio_info_get_language(const GstDiscovererAudioInf
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISCOVERER_VIDEO_INFO))
 typedef struct _GstDiscovererVideoInfo GstDiscovererVideoInfo;
 typedef GObjectClass GstDiscovererVideoInfoClass;
+
+GST_EXPORT
 GType gst_discoverer_video_info_get_type (void);
 
+GST_EXPORT
 guint           gst_discoverer_video_info_get_width(const GstDiscovererVideoInfo* info);
+
+GST_EXPORT
 guint           gst_discoverer_video_info_get_height(const GstDiscovererVideoInfo* info);
+
+GST_EXPORT
 guint           gst_discoverer_video_info_get_depth(const GstDiscovererVideoInfo* info);
+
+GST_EXPORT
 guint           gst_discoverer_video_info_get_framerate_num(const GstDiscovererVideoInfo* info);
+
+GST_EXPORT
 guint           gst_discoverer_video_info_get_framerate_denom(const GstDiscovererVideoInfo* info);
+
+GST_EXPORT
 guint           gst_discoverer_video_info_get_par_num(const GstDiscovererVideoInfo* info);
+
+GST_EXPORT
 guint           gst_discoverer_video_info_get_par_denom(const GstDiscovererVideoInfo* info);
+
+GST_EXPORT
 gboolean        gst_discoverer_video_info_is_interlaced(const GstDiscovererVideoInfo* info);
+
+GST_EXPORT
 guint           gst_discoverer_video_info_get_bitrate(const GstDiscovererVideoInfo* info);
+
+GST_EXPORT
 guint           gst_discoverer_video_info_get_max_bitrate(const GstDiscovererVideoInfo* info);
+
+GST_EXPORT
 gboolean        gst_discoverer_video_info_is_image(const GstDiscovererVideoInfo* info);
 
 /**
@@ -149,8 +203,11 @@ gboolean        gst_discoverer_video_info_is_image(const GstDiscovererVideoInfo*
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISCOVERER_SUBTITLE_INFO))
 typedef struct _GstDiscovererSubtitleInfo GstDiscovererSubtitleInfo;
 typedef GObjectClass GstDiscovererSubtitleInfoClass;
+
+GST_EXPORT
 GType gst_discoverer_subtitle_info_get_type (void);
 
+GST_EXPORT
 const gchar *   gst_discoverer_subtitle_info_get_language(const GstDiscovererSubtitleInfo* info);
 
 /**
@@ -211,35 +268,69 @@ typedef struct _GstDiscovererInfo GstDiscovererInfo;
 #define GST_IS_DISCOVERER_INFO(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISCOVERER_INFO))
 typedef GObjectClass GstDiscovererInfoClass;
+
+GST_EXPORT
 GType gst_discoverer_info_get_type (void);
 
 #define gst_discoverer_info_unref(info) (g_object_unref((GObject*)info))
 #define gst_discoverer_info_ref(info) (g_object_ref((GObject*)info))
 
+GST_EXPORT
 GstDiscovererInfo*        gst_discoverer_info_copy (GstDiscovererInfo * ptr);
 
+GST_EXPORT
 const gchar*              gst_discoverer_info_get_uri(const GstDiscovererInfo* info);
+
+GST_EXPORT
 GstDiscovererResult       gst_discoverer_info_get_result(const GstDiscovererInfo* info);
+
+GST_EXPORT
 GstDiscovererStreamInfo*  gst_discoverer_info_get_stream_info(GstDiscovererInfo* info);
+
+GST_EXPORT
 GList*                    gst_discoverer_info_get_stream_list(GstDiscovererInfo* info);
+
+GST_EXPORT
 GstClockTime              gst_discoverer_info_get_duration(const GstDiscovererInfo* info);
+
+GST_EXPORT
 gboolean                  gst_discoverer_info_get_seekable(const GstDiscovererInfo* info);
+
+GST_EXPORT
 const GstStructure*       gst_discoverer_info_get_misc(const GstDiscovererInfo* info);
+
+GST_EXPORT
 const GstTagList*         gst_discoverer_info_get_tags(const GstDiscovererInfo* info); 
+GST_EXPORT
 const GstToc*             gst_discoverer_info_get_toc(const GstDiscovererInfo* info);
+
+GST_EXPORT
 const gchar**             gst_discoverer_info_get_missing_elements_installer_details(const GstDiscovererInfo* info);
 
+GST_EXPORT
 GList *                   gst_discoverer_info_get_streams (GstDiscovererInfo *info,
 							   GType streamtype);
+
+GST_EXPORT
 GList *                   gst_discoverer_info_get_audio_streams (GstDiscovererInfo *info);
+
+GST_EXPORT
 GList *                   gst_discoverer_info_get_video_streams (GstDiscovererInfo *info);
+
+GST_EXPORT
 GList *                   gst_discoverer_info_get_subtitle_streams (GstDiscovererInfo *info);
+
+GST_EXPORT
 GList *                   gst_discoverer_info_get_container_streams (GstDiscovererInfo *info);
 
+GST_EXPORT
 GVariant *                gst_discoverer_info_to_variant (GstDiscovererInfo *info,
                                                           GstDiscovererSerializeFlags flags);
+
+GST_EXPORT
 GstDiscovererInfo *       gst_discoverer_info_from_variant (GVariant *variant);
 
+GST_EXPORT
 void                      gst_discoverer_stream_info_list_free (GList *infos);
 
 #define GST_TYPE_DISCOVERER \
@@ -286,16 +377,27 @@ struct _GstDiscovererClass {
   gpointer _reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType          gst_discoverer_get_type (void);
+
+GST_EXPORT
 GstDiscoverer *gst_discoverer_new (GstClockTime timeout, GError **err);
 
 /* Asynchronous API */
+
+GST_EXPORT
 void           gst_discoverer_start (GstDiscoverer *discoverer);
+
+GST_EXPORT
 void           gst_discoverer_stop (GstDiscoverer *discoverer);
+
+GST_EXPORT
 gboolean       gst_discoverer_discover_uri_async (GstDiscoverer *discoverer,
 						  const gchar *uri);
 
 /* Synchronous API */
+
+GST_EXPORT
 GstDiscovererInfo *
 gst_discoverer_discover_uri (GstDiscoverer * discoverer,
 			     const gchar * uri,

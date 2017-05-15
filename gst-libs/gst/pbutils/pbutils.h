@@ -34,6 +34,7 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 void    gst_pb_utils_init (void);
 
 G_END_DECLS

@@ -16,6 +16,7 @@ glib_enum_headers = $(headers_pbutils)
 glib_enum_define = PB_UTILS
 glib_gen_prefix = pbutils
 glib_gen_basename = pbutils
+glib_gen_decl_banner=GST_EXPORT
 
 built_headers_configure = \
 	gstpluginsbaseversion.h
