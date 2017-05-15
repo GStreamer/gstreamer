@@ -398,7 +398,12 @@ gst_lfo_control_source_reset (GstLFOControlSource * self)
 GstControlSource *
 gst_lfo_control_source_new (void)
 {
-  return g_object_new (GST_TYPE_LFO_CONTROL_SOURCE, NULL);
+  GstControlSource *csource = g_object_new (GST_TYPE_LFO_CONTROL_SOURCE, NULL);
+
+  /* Clear floating flag */
+  gst_object_ref_sink (csource);
+
+  return csource;
 }
 
 static gboolean

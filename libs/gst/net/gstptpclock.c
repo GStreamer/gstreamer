@@ -855,6 +855,7 @@ handle_announce_message (PtpMessage * msg, GstClockTime receive_time)
     clock_name = g_strdup_printf ("ptp-clock-%u", domain->domain);
     domain->domain_clock =
         g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", clock_name, NULL);
+    gst_object_ref_sink (domain->domain_clock);
     g_free (clock_name);
     g_queue_init (&domain->pending_syncs);
     domain->last_path_delays_missing = 9;
@@ -1445,6 +1446,7 @@ handle_sync_message (PtpMessage * msg, GstClockTime receive_time)
     clock_name = g_strdup_printf ("ptp-clock-%u", domain->domain);
     domain->domain_clock =
         g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", clock_name, NULL);
+    gst_object_ref_sink (domain->domain_clock);
     g_free (clock_name);
     g_queue_init (&domain->pending_syncs);
     domain->last_path_delays_missing = 9;
@@ -2111,6 +2113,7 @@ gst_ptp_init (guint64 clock_id, gchar ** interfaces)
   observation_system_clock =
       g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "ptp-observation-clock",
       NULL);
+  gst_object_ref_sink (observation_system_clock);
 
   initted = TRUE;
 
@@ -2510,11 +2513,15 @@ gst_ptp_clock_get_internal_time (GstClock * clock)
  * check this with gst_clock_wait_for_sync(), the GstClock::synced signal and
  * gst_clock_is_synced().
  *
+ * Returns: (transfer full): A new #GstClock
+ *
  * Since: 1.6
  */
 GstClock *
 gst_ptp_clock_new (const gchar * name, guint domain)
 {
+  GstClock *clock;
+
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (domain <= G_MAXUINT8, NULL);
 
@@ -2523,8 +2530,13 @@ gst_ptp_clock_new (const gchar * name, guint domain)
     return NULL;
   }
 
-  return g_object_new (GST_TYPE_PTP_CLOCK, "name", name, "domain", domain,
+  clock = g_object_new (GST_TYPE_PTP_CLOCK, "name", name, "domain", domain,
       NULL);
+
+  /* Clear floating flag */
+  gst_object_ref_sink (clock);
+
+  return clock;
 }
 
 typedef struct

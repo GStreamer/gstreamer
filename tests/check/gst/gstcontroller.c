@@ -231,7 +231,13 @@ static GType gst_test_control_source_get_type (void);
 static GstTestControlSource *
 gst_test_control_source_new (void)
 {
-  return g_object_new (GST_TYPE_TEST_CONTROL_SOURCE, NULL);
+  GstTestControlSource *csource =
+      g_object_new (GST_TYPE_TEST_CONTROL_SOURCE, NULL);
+
+  /* Clear floating flag */
+  gst_object_ref_sink (csource);
+
+  return csource;
 }
 
 static gboolean

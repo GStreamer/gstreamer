@@ -691,8 +691,15 @@ gst_test_clock_new (void)
 GstClock *
 gst_test_clock_new_with_start_time (GstClockTime start_time)
 {
+  GstClock *clock;
+
   g_assert_cmpuint (start_time, !=, GST_CLOCK_TIME_NONE);
-  return g_object_new (GST_TYPE_TEST_CLOCK, "start-time", start_time, NULL);
+  clock = g_object_new (GST_TYPE_TEST_CLOCK, "start-time", start_time, NULL);
+
+  /* Clear floating flag */
+  gst_object_ref_sink (clock);
+
+  return clock;
 }
 
 /**

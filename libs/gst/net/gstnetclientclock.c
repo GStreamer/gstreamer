@@ -1332,6 +1332,7 @@ gst_net_client_clock_constructed (GObject * object)
         g_object_new (GST_TYPE_NET_CLIENT_INTERNAL_CLOCK, "address",
         self->priv->address, "port", self->priv->port, "is-ntp",
         self->priv->is_ntp, NULL);
+    gst_object_ref_sink (cache->clock);
     clocks = g_list_prepend (clocks, cache);
 
     /* Not actually leaked but is cached for a while before being disposed,
@@ -1382,7 +1383,7 @@ gst_net_client_clock_get_internal_time (GstClock * clock)
  * provided by the #GstNetTimeProvider on @remote_address and
  * @remote_port.
  *
- * Returns: a new #GstClock that receives a time from the remote
+ * Returns: (transfer full): a new #GstClock that receives a time from the remote
  * clock.
  */
 GstClock *
@@ -1399,6 +1400,9 @@ gst_net_client_clock_new (const gchar * name, const gchar * remote_address,
   ret =
       g_object_new (GST_TYPE_NET_CLIENT_CLOCK, "name", name, "address",
       remote_address, "port", remote_port, "base-time", base_time, NULL);
+
+  /* Clear floating flag */
+  gst_object_ref_sink (ret);
 
   return ret;
 }
@@ -1426,7 +1430,7 @@ gst_ntp_clock_init (GstNtpClock * self)
  * Create a new #GstNtpClock that will report the time provided by
  * the NTPv4 server on @remote_address and @remote_port.
  *
- * Returns: a new #GstClock that receives a time from the remote
+ * Returns: (transfer full): a new #GstClock that receives a time from the remote
  * clock.
  *
  * Since: 1.6
@@ -1445,6 +1449,8 @@ gst_ntp_clock_new (const gchar * name, const gchar * remote_address,
   ret =
       g_object_new (GST_TYPE_NTP_CLOCK, "name", name, "address", remote_address,
       "port", remote_port, "base-time", base_time, NULL);
+
+  gst_object_ref_sink (ret);
 
   return ret;
 }

@@ -229,9 +229,6 @@ gst_bus_init (GstBus * bus)
   g_mutex_init (&bus->priv->queue_lock);
   bus->priv->queue = gst_atomic_queue_new (32);
 
-  /* clear floating flag */
-  gst_object_ref_sink (bus);
-
   GST_DEBUG_OBJECT (bus, "created");
 }
 
@@ -287,6 +284,9 @@ gst_bus_new (void)
 
   result = g_object_new (gst_bus_get_type (), NULL);
   GST_DEBUG_OBJECT (result, "created new bus");
+
+  /* clear floating flag */
+  gst_object_ref_sink (result);
 
   return result;
 }

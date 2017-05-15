@@ -203,9 +203,6 @@ gst_task_init (GstTask * task)
   g_mutex_lock (&pool_lock);
   task->priv->pool = gst_object_ref (klass->pool);
   g_mutex_unlock (&pool_lock);
-
-  /* clear floating flag */
-  gst_object_ref_sink (task);
 }
 
 static void
@@ -429,6 +426,9 @@ gst_task_new (GstTaskFunction func, gpointer user_data, GDestroyNotify notify)
   task->notify = notify;
 
   GST_DEBUG ("Created task %p", task);
+
+  /* clear floating flag */
+  gst_object_ref_sink (task);
 
   return task;
 }

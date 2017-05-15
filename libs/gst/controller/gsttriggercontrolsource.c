@@ -188,7 +188,13 @@ G_DEFINE_TYPE_WITH_CODE (GstTriggerControlSource, gst_trigger_control_source,
 GstControlSource *
 gst_trigger_control_source_new (void)
 {
-  return g_object_new (GST_TYPE_TRIGGER_CONTROL_SOURCE, NULL);
+  GstControlSource *csource =
+      g_object_new (GST_TYPE_TRIGGER_CONTROL_SOURCE, NULL);
+
+  /* Clear floating flag */
+  gst_object_ref_sink (csource);
+
+  return csource;
 }
 
 static void
