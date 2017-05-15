@@ -100,6 +100,9 @@ gst_1394_clock_new (const gchar * name)
       GST_1394_CLOCK (g_object_new (GST_TYPE_1394_CLOCK, "name", name,
           "clock-type", GST_CLOCK_TYPE_OTHER, NULL));
 
+  /* Clear floating flag */
+  gst_object_ref_sink (_1394clock);
+
   return _1394clock;
 }
 
