@@ -48,14 +48,22 @@ struct _GstFFTS32Complex
 };
 
 /* Functions */
+
+GST_EXPORT
 GstFFTS32 *     gst_fft_s32_new         (gint len, gboolean inverse);
+
+GST_EXPORT
 void            gst_fft_s32_free        (GstFFTS32 *self);
 
+GST_EXPORT
 void            gst_fft_s32_fft         (GstFFTS32 *self, const gint32 *timedata,
                                          GstFFTS32Complex *freqdata);
+
+GST_EXPORT
 void            gst_fft_s32_inverse_fft (GstFFTS32 *self, const GstFFTS32Complex *freqdata,
                                          gint32 *timedata);
 
+GST_EXPORT
 void            gst_fft_s32_window      (GstFFTS32 *self, gint32 *timedata, GstFFTWindow window);
 
 G_END_DECLS

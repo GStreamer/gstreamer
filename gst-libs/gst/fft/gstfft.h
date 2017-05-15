@@ -19,6 +19,7 @@
 
 #include <glib.h>
 #include <math.h>
+#include <gst/gst.h>
 
 #ifndef __GST_FFT_H__
 #define __GST_FFT_H__
@@ -46,6 +47,7 @@ typedef enum
 
 /* Functions */
 
+GST_EXPORT
 gint gst_fft_next_fast_length (gint n) G_GNUC_CONST;
 
 G_END_DECLS

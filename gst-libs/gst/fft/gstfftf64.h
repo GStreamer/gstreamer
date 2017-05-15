@@ -48,14 +48,22 @@ struct _GstFFTF64Complex
 };
 
 /* Functions */
+
+GST_EXPORT
 GstFFTF64 *     gst_fft_f64_new         (gint len, gboolean inverse);
+
+GST_EXPORT
 void            gst_fft_f64_free        (GstFFTF64 *self);
 
+GST_EXPORT
 void            gst_fft_f64_fft         (GstFFTF64 *self, const gdouble *timedata,
                                          GstFFTF64Complex *freqdata);
+
+GST_EXPORT
 void            gst_fft_f64_inverse_fft (GstFFTF64 *self, const GstFFTF64Complex *freqdata,
                                          gdouble *timedata);
 
+GST_EXPORT
 void            gst_fft_f64_window      (GstFFTF64 *self, gdouble *timedata, GstFFTWindow window);
 
 G_END_DECLS
