@@ -220,39 +220,54 @@ struct _GstAudioBaseSinkClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType gst_audio_base_sink_get_type(void);
 
+GST_EXPORT
 GstAudioRingBuffer *
            gst_audio_base_sink_create_ringbuffer       (GstAudioBaseSink *sink);
 
+GST_EXPORT
 void       gst_audio_base_sink_set_provide_clock       (GstAudioBaseSink *sink, gboolean provide);
+
+GST_EXPORT
 gboolean   gst_audio_base_sink_get_provide_clock       (GstAudioBaseSink *sink);
 
+GST_EXPORT
 void       gst_audio_base_sink_set_slave_method        (GstAudioBaseSink *sink,
                                                         GstAudioBaseSinkSlaveMethod method);
+GST_EXPORT
 GstAudioBaseSinkSlaveMethod
            gst_audio_base_sink_get_slave_method        (GstAudioBaseSink *sink);
 
+GST_EXPORT
 void       gst_audio_base_sink_set_drift_tolerance     (GstAudioBaseSink *sink,
                                                         gint64 drift_tolerance);
+GST_EXPORT
 gint64     gst_audio_base_sink_get_drift_tolerance     (GstAudioBaseSink *sink);
 
+GST_EXPORT
 void       gst_audio_base_sink_set_alignment_threshold (GstAudioBaseSink * sink,
                                                         GstClockTime alignment_threshold);
+GST_EXPORT
 GstClockTime
            gst_audio_base_sink_get_alignment_threshold (GstAudioBaseSink * sink);
 
+GST_EXPORT
 void       gst_audio_base_sink_set_discont_wait        (GstAudioBaseSink * sink,
                                                         GstClockTime discont_wait);
+GST_EXPORT
 GstClockTime
            gst_audio_base_sink_get_discont_wait        (GstAudioBaseSink * sink);
 
+GST_EXPORT
 void
 gst_audio_base_sink_set_custom_slaving_callback        (GstAudioBaseSink * sink,
                                                         GstAudioBaseSinkCustomSlavingCallback callback,
                                                         gpointer user_data,
                                                         GDestroyNotify notify);
 
+GST_EXPORT
 void gst_audio_base_sink_report_device_failure         (GstAudioBaseSink * sink);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

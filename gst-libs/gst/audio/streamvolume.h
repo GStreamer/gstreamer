@@ -58,17 +58,26 @@ typedef enum {
   GST_STREAM_VOLUME_FORMAT_DB
 } GstStreamVolumeFormat;
 
+GST_EXPORT
 GType           gst_stream_volume_get_type        (void);
+
+GST_EXPORT
 void            gst_stream_volume_set_volume      (GstStreamVolume *volume,
                                                    GstStreamVolumeFormat format,
                                                    gdouble val);
+
+GST_EXPORT
 gdouble         gst_stream_volume_get_volume      (GstStreamVolume *volume,
                                                    GstStreamVolumeFormat format);
 
+GST_EXPORT
 void            gst_stream_volume_set_mute        (GstStreamVolume *volume,
                                                    gboolean mute);
+
+GST_EXPORT
 gboolean        gst_stream_volume_get_mute        (GstStreamVolume *volume);
 
+GST_EXPORT
 gdouble         gst_stream_volume_convert_volume  (GstStreamVolumeFormat from,
                                                    GstStreamVolumeFormat to,
                                                    gdouble val) G_GNUC_CONST;

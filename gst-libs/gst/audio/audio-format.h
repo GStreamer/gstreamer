@@ -250,6 +250,7 @@ struct _GstAudioFormatInfo {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType gst_audio_format_info_get_type (void);
 
 #define GST_AUDIO_FORMAT_INFO_FORMAT(info)           ((info)->format)
@@ -267,15 +268,20 @@ GType gst_audio_format_info_get_type (void);
 #define GST_AUDIO_FORMAT_INFO_DEPTH(info)            ((info)->depth)
 
 
+GST_EXPORT
 GstAudioFormat gst_audio_format_build_integer    (gboolean sign, gint endianness,
                                                   gint width, gint depth) G_GNUC_CONST;
 
+GST_EXPORT
 GstAudioFormat gst_audio_format_from_string      (const gchar *format) G_GNUC_CONST;
+
+GST_EXPORT
 const gchar *  gst_audio_format_to_string        (GstAudioFormat format) G_GNUC_CONST;
 
 const GstAudioFormatInfo *
                gst_audio_format_get_info         (GstAudioFormat format) G_GNUC_CONST;
 
+GST_EXPORT
 void           gst_audio_format_fill_silence     (const GstAudioFormatInfo *info,
                                                   gpointer dest, gsize length);
 

@@ -97,6 +97,7 @@ struct _GstAudioSinkClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType gst_audio_sink_get_type(void);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

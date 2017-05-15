@@ -56,14 +56,19 @@ struct _GstAudioDownmixMeta {
   gfloat       **matrix;
 };
 
+GST_EXPORT
 GType gst_audio_downmix_meta_api_get_type (void);
+
+GST_EXPORT
 const GstMetaInfo * gst_audio_downmix_meta_get_info (void);
 
 #define gst_buffer_get_audio_downmix_meta(b) ((GstAudioDownmixMeta*)gst_buffer_get_meta((b), GST_AUDIO_DOWNMIX_META_API_TYPE))
+GST_EXPORT
 GstAudioDownmixMeta * gst_buffer_get_audio_downmix_meta_for_channels    (GstBuffer *buffer,
                                                                          const GstAudioChannelPosition *to_position,
                                                                          gint                           to_channels);
 
+GST_EXPORT
 GstAudioDownmixMeta * gst_buffer_add_audio_downmix_meta (GstBuffer    *buffer,
                                                          const GstAudioChannelPosition *from_position,
                                                          gint                           from_channels,
@@ -106,11 +111,15 @@ struct _GstAudioClippingMeta {
   guint64   end;
 };
 
+GST_EXPORT
 GType gst_audio_clipping_meta_api_get_type (void);
+
+GST_EXPORT
 const GstMetaInfo * gst_audio_clipping_meta_get_info (void);
 
 #define gst_buffer_get_audio_clipping_meta(b) ((GstAudioClippingMeta*)gst_buffer_get_meta((b), GST_AUDIO_CLIPPING_META_API_TYPE))
 
+GST_EXPORT
 GstAudioClippingMeta * gst_buffer_add_audio_clipping_meta (GstBuffer *buffer,
                                                            GstFormat  format,
                                                            guint64    start,

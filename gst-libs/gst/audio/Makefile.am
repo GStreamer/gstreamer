@@ -19,6 +19,7 @@ glib_enum_headers= 		\
 glib_enum_define = GST_AUDIO
 glib_gen_prefix = gst_audio
 glib_gen_basename = audio
+glib_gen_decl_banner=GST_EXPORT
 
 built_sources = audio-enumtypes.c
 built_headers = audio-enumtypes.h

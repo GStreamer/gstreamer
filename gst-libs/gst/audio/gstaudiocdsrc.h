@@ -131,8 +131,10 @@ struct _GstAudioCdSrcClass {
   gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
+GST_EXPORT
 GType    gst_audio_cd_src_get_type (void);
 
+GST_EXPORT
 gboolean gst_audio_cd_src_add_track (GstAudioCdSrc      * src,
                                      GstAudioCdSrcTrack * track);
 

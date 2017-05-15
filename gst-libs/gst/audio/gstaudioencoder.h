@@ -247,93 +247,127 @@ struct _GstAudioEncoderClass {
   gpointer       _gst_reserved[GST_PADDING_LARGE-3];
 };
 
+GST_EXPORT
 GType           gst_audio_encoder_get_type         (void);
 
+GST_EXPORT
 GstFlowReturn   gst_audio_encoder_finish_frame (GstAudioEncoder * enc,
                                                 GstBuffer       * buffer,
                                                 gint              samples);
 
+GST_EXPORT
 GstCaps *       gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc,
                                                  GstCaps         * caps,
                                                  GstCaps         * filter);
 
+GST_EXPORT
 gboolean        gst_audio_encoder_set_output_format  (GstAudioEncoder    * enc,
                                                       GstCaps            * caps);
 
+GST_EXPORT
 gboolean        gst_audio_encoder_negotiate          (GstAudioEncoder * enc);
 
+GST_EXPORT
 GstBuffer *     gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * enc,
                                                           gsize             size);
 
 /* context parameters */
+
+GST_EXPORT
 GstAudioInfo  * gst_audio_encoder_get_audio_info (GstAudioEncoder * enc);
 
+GST_EXPORT
 gint            gst_audio_encoder_get_frame_samples_min (GstAudioEncoder * enc);
 
+GST_EXPORT
 void            gst_audio_encoder_set_frame_samples_min (GstAudioEncoder * enc, gint num);
 
+GST_EXPORT
 gint            gst_audio_encoder_get_frame_samples_max (GstAudioEncoder * enc);
 
+GST_EXPORT
 void            gst_audio_encoder_set_frame_samples_max (GstAudioEncoder * enc, gint num);
 
+GST_EXPORT
 gint            gst_audio_encoder_get_frame_max (GstAudioEncoder * enc);
 
+GST_EXPORT
 void            gst_audio_encoder_set_frame_max (GstAudioEncoder * enc, gint num);
 
+GST_EXPORT
 gint            gst_audio_encoder_get_lookahead (GstAudioEncoder * enc);
 
+GST_EXPORT
 void            gst_audio_encoder_set_lookahead (GstAudioEncoder * enc, gint num);
 
+GST_EXPORT
 void            gst_audio_encoder_get_latency (GstAudioEncoder * enc,
                                                GstClockTime    * min,
                                                GstClockTime    * max);
 
+GST_EXPORT
 void            gst_audio_encoder_set_latency (GstAudioEncoder * enc,
                                                GstClockTime      min,
                                                GstClockTime      max);
 
+GST_EXPORT
 void            gst_audio_encoder_set_headers (GstAudioEncoder * enc,
                                                GList           * headers);
 
+GST_EXPORT
 void            gst_audio_encoder_set_allocation_caps (GstAudioEncoder * enc,
                                                        GstCaps         * allocation_caps);
 
 /* object properties */
 
+GST_EXPORT
 void            gst_audio_encoder_set_mark_granule (GstAudioEncoder * enc,
                                                     gboolean enabled);
 
+GST_EXPORT
 gboolean        gst_audio_encoder_get_mark_granule (GstAudioEncoder * enc);
 
+GST_EXPORT
 void            gst_audio_encoder_set_perfect_timestamp (GstAudioEncoder * enc,
                                                          gboolean          enabled);
 
+GST_EXPORT
 gboolean        gst_audio_encoder_get_perfect_timestamp (GstAudioEncoder * enc);
 
+GST_EXPORT
 void            gst_audio_encoder_set_hard_resync (GstAudioEncoder * enc,
                                                    gboolean          enabled);
 
+GST_EXPORT
 gboolean        gst_audio_encoder_get_hard_resync (GstAudioEncoder * enc);
 
+GST_EXPORT
 void            gst_audio_encoder_set_tolerance (GstAudioEncoder * enc,
                                                  GstClockTime      tolerance);
 
+GST_EXPORT
 GstClockTime    gst_audio_encoder_get_tolerance (GstAudioEncoder * enc);
 
+GST_EXPORT
 void            gst_audio_encoder_set_hard_min (GstAudioEncoder * enc,
                                                 gboolean enabled);
 
+GST_EXPORT
 gboolean        gst_audio_encoder_get_hard_min (GstAudioEncoder * enc);
 
+GST_EXPORT
 void            gst_audio_encoder_set_drainable (GstAudioEncoder * enc,
                                                  gboolean enabled);
 
+GST_EXPORT
 gboolean        gst_audio_encoder_get_drainable (GstAudioEncoder * enc);
 
+GST_EXPORT
 void            gst_audio_encoder_get_allocator (GstAudioEncoder * enc,
                                                  GstAllocator ** allocator,
                                                  GstAllocationParams * params);
 
+GST_EXPORT
 void            gst_audio_encoder_merge_tags (GstAudioEncoder * enc,
                                               const GstTagList * tags, GstTagMergeMode mode);
 
