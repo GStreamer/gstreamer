@@ -1211,6 +1211,8 @@ gst_decklink_clock_new (const gchar * name)
       GST_DECKLINK_CLOCK (g_object_new (GST_TYPE_DECKLINK_CLOCK, "name", name,
           "clock-type", GST_CLOCK_TYPE_OTHER, NULL));
 
+  gst_object_ref_sink (self);
+
   return GST_CLOCK_CAST (self);
 }
 
