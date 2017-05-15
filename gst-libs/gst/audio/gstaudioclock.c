@@ -97,7 +97,7 @@ gst_audio_clock_dispose (GObject * object)
  * calculated it will call @func with @user_data. When @func returns
  * #GST_CLOCK_TIME_NONE, the clock will return the last reported time.
  *
- * Returns: a new #GstAudioClock casted to a #GstClock.
+ * Returns: (transfer full): a new #GstAudioClock casted to a #GstClock.
  */
 GstClock *
 gst_audio_clock_new (const gchar * name, GstAudioClockGetTimeFunc func,
@@ -110,6 +110,8 @@ gst_audio_clock_new (const gchar * name, GstAudioClockGetTimeFunc func,
   aclock->func = func;
   aclock->user_data = user_data;
   aclock->destroy_notify = destroy_notify;
+
+  gst_object_ref_sink (aclock);
 
   return (GstClock *) aclock;
 }
