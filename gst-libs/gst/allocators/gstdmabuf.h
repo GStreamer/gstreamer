@@ -95,14 +95,19 @@ struct _GstDmaBufAllocatorClass
 };
 
 
-GType gst_dmabuf_allocator_get_type (void);
+GST_EXPORT
+GType          gst_dmabuf_allocator_get_type (void);
 
+GST_EXPORT
 GstAllocator * gst_dmabuf_allocator_new (void);
 
+GST_EXPORT
 GstMemory    * gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size);
 
+GST_EXPORT
 gint           gst_dmabuf_memory_get_fd (GstMemory * mem);
 
+GST_EXPORT
 gboolean       gst_is_dmabuf_memory (GstMemory * mem);
 
 
