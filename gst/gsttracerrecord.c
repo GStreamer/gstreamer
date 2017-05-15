@@ -178,7 +178,7 @@ gst_tracer_record_init (GstTracerRecord * self)
  *
  * > Please note that this is still under discussion and subject to change.
  *
- * Returns: a new #GstTracerRecord
+ * Returns: (transfer floating): a new #GstTracerRecord
  */
 GstTracerRecord *
 gst_tracer_record_new (const gchar * name, const gchar * firstfield, ...)

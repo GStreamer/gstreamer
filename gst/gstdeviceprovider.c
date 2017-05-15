@@ -543,12 +543,15 @@ gst_device_provider_get_bus (GstDeviceProvider * provider)
 /**
  * gst_device_provider_device_add:
  * @provider: a #GstDeviceProvider
- * @device: (transfer full): a #GstDevice that has been added
+ * @device: (transfer floating): a #GstDevice that has been added
  *
  * Posts a message on the provider's #GstBus to inform applications that
  * a new device has been added.
  *
  * This is for use by subclasses.
+ *
+ * @device's reference count will be incremented, and any floating reference
+ * will be removed (see gst_object_ref_sink()).
  *
  * Since: 1.4
  */
@@ -568,8 +571,10 @@ gst_device_provider_device_add (GstDeviceProvider * provider,
   }
 
   GST_OBJECT_LOCK (provider);
-  provider->devices = g_list_prepend (provider->devices,
-      gst_object_ref (device));
+  /* Take an additional reference so we can be sure nobody removed it from the
+   * provider in the meantime and we can safely emit the message */
+  gst_object_ref (device);
+  provider->devices = g_list_prepend (provider->devices, device);
   GST_OBJECT_UNLOCK (provider);
 
   message = gst_message_new_device_added (GST_OBJECT (provider), device);

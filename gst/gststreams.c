@@ -210,7 +210,7 @@ gst_stream_finalize (GObject * object)
  * Create a new #GstStream for the given @stream_id, @caps, @type
  * and @flags
  *
- * Returns: The new #GstStream
+ * Returns: (transfer floating): The new #GstStream
  *
  * Since: 1.10
  */

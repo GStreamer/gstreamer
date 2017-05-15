@@ -2567,8 +2567,8 @@ gst_object_default_error (GstObject * source, const GError * error,
 /**
  * gst_bin_add_many:
  * @bin: a #GstBin
- * @element_1: (transfer full): the #GstElement element to add to the bin
- * @...: (transfer full): additional elements to add to the bin
+ * @element_1: (transfer floating): the #GstElement element to add to the bin
+ * @...: (transfer floating): additional elements to add to the bin
  *
  * Adds a %NULL-terminated list of elements to a bin.  This function is
  * equivalent to calling gst_bin_add() for each member of the list. The return

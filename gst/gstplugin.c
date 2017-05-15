@@ -710,6 +710,10 @@ extract_symname (const char *filename)
   return symname;
 }
 
+/* Note: The return value is (transfer full) although we work with floating
+ * references here. If a new plugin instance is created, it is always sinked
+ * in the registry first and a new reference is returned
+ */
 GstPlugin *
 _priv_gst_plugin_load_file_for_registry (const gchar * filename,
     GstRegistry * registry, GError ** error)

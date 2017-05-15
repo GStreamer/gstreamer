@@ -650,7 +650,7 @@ gst_object_get_name (GstObject * object)
 
 /**
  * gst_object_set_parent:
- * @object: a #GstObject
+ * @object: (transfer floating): a #GstObject
  * @parent: new parent of object
  *
  * Sets the parent of @object to @parent. The object's reference count will
@@ -1202,12 +1202,13 @@ gst_object_set_control_binding_disabled (GstObject * object,
 /**
  * gst_object_add_control_binding:
  * @object: the controller object
- * @binding: (transfer full): the #GstControlBinding that should be used
+ * @binding: (transfer floating): the #GstControlBinding that should be used
  *
  * Attach the #GstControlBinding to the object. If there already was a
  * #GstControlBinding for this property it will be replaced.
  *
- * The @object will take ownership of the @binding.
+ * The object's reference count will be incremented, and any floating
+ * reference will be removed (see gst_object_ref_sink())
  *
  * Returns: %FALSE if the given @binding has not been setup for this object or
  * has been setup for a non suitable property, %TRUE otherwise.

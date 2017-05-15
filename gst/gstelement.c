@@ -635,7 +635,7 @@ gst_element_get_index (GstElement * element)
 /**
  * gst_element_add_pad:
  * @element: a #GstElement to add the pad to.
- * @pad: (transfer full): the #GstPad to add to the element.
+ * @pad: (transfer floating): the #GstPad to add to the element.
  *
  * Adds a pad (link point) to @element. @pad's parent will be set to @element;
  * see gst_object_set_parent() for refcounting information.
@@ -1250,11 +1250,14 @@ gst_element_iterate_sink_pads (GstElement * element)
 /**
  * gst_element_class_add_pad_template:
  * @klass: the #GstElementClass to add the pad template to.
- * @templ: (transfer full): a #GstPadTemplate to add to the element class.
+ * @templ: (transfer floating): a #GstPadTemplate to add to the element class.
  *
  * Adds a padtemplate to an element class. This is mainly used in the _class_init
  * functions of classes. If a pad template with the same name as an already
  * existing one is added the old one is replaced by the new one.
+ *
+ * @templ's reference count will be incremented, and any floating
+ * reference will be removed (see gst_object_ref_sink())
  *
  */
 void

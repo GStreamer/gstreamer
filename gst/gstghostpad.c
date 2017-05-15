@@ -658,7 +658,7 @@ construct_failed:
  *
  * The created ghostpad will not have a padtemplate.
  *
- * Returns: (transfer full) (nullable): a new #GstPad, or %NULL in
+ * Returns: (transfer floating) (nullable): a new #GstPad, or %NULL in
  * case of an error.
  */
 GstPad *
@@ -726,7 +726,7 @@ set_target_failed:
  *
  * Will ref the target.
  *
- * Returns: (transfer full) (nullable): a new #GstPad, or %NULL in
+ * Returns: (transfer floating) (nullable): a new #GstPad, or %NULL in
  * case of an error.
  */
 
@@ -769,7 +769,7 @@ set_target_failed:
  * Create a new ghostpad based on @templ, without setting a target. The
  * direction will be taken from the @templ.
  *
- * Returns: (transfer full) (nullable): a new #GstPad, or %NULL in
+ * Returns: (transfer floating) (nullable): a new #GstPad, or %NULL in
  * case of an error.
  */
 GstPad *

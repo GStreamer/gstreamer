@@ -284,7 +284,7 @@ G_DEFINE_POINTER_TYPE (GstStaticPadTemplate, gst_static_pad_template);
  *
  * Converts a #GstStaticPadTemplate into a #GstPadTemplate.
  *
- * Returns: (transfer full): a new #GstPadTemplate.
+ * Returns: (transfer floating): a new #GstPadTemplate.
  */
 /* FIXME0.11: rename to gst_pad_template_new_from_static_pad_template() */
 GstPadTemplate *

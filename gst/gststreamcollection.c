@@ -184,7 +184,7 @@ gst_stream_collection_finalize (GObject * object)
  *
  * Create a new #GstStreamCollection.
  *
- * Returns: The new #GstStreamCollection.
+ * Returns: (transfer floating): The new #GstStreamCollection.
  *
  * Since: 1.10
  */

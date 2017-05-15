@@ -174,7 +174,7 @@ gst_proxy_control_binding_class_init (GstProxyControlBindingClass * klass)
  * requests from @property_name on @object to the control binding at
  * @ref_property_name on @ref_object.
  *
- * Returns: a new #GstControlBinding that proxies the control interface between
+ * Returns: (transfer floating): a new #GstControlBinding that proxies the control interface between
  * properties on different #GstObject's
  *
  * Since: 1.12

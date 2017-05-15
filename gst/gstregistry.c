@@ -410,10 +410,12 @@ gst_registry_get_path_list (GstRegistry * registry)
 /**
  * gst_registry_add_plugin:
  * @registry: the registry to add the plugin to
- * @plugin: (transfer full): the plugin to add
+ * @plugin: (transfer floating): the plugin to add
  *
  * Add the plugin to the registry. The plugin-added signal will be emitted.
- * This function will sink @plugin.
+ *
+ * @plugin's reference count will be incremented, and any floating
+ * reference will be removed (see gst_object_ref_sink())
  *
  * Returns: %TRUE on success.
  *
@@ -542,10 +544,12 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
 /**
  * gst_registry_add_feature:
  * @registry: the registry to add the plugin to
- * @feature: (transfer full): the feature to add
+ * @feature: (transfer floating): the feature to add
  *
  * Add the feature to the registry. The feature-added signal will be emitted.
- * This function sinks @feature.
+ *
+ * @feature's reference count will be incremented, and any floating
+ * reference will be removed (see gst_object_ref_sink())
  *
  * Returns: %TRUE on success.
  *

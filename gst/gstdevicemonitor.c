@@ -785,7 +785,7 @@ gst_device_monitor_remove_filter (GstDeviceMonitor * monitor, guint filter_id)
  *
  * Create a new #GstDeviceMonitor
  *
- * Returns: (transfer full): a new device monitor.
+ * Returns: (transfer floating): a new device monitor.
  *
  * Since: 1.4
  */
