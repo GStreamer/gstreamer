@@ -97,11 +97,14 @@ typedef struct {
   guint  addr_number;
 } GstSDPConnection;
 
+GST_EXPORT
 GstSDPResult    gst_sdp_connection_set   (GstSDPConnection *conn,
                                           const gchar *nettype,
                                           const gchar *addrtype,
                                           const gchar *address,
                                           guint ttl, guint addr_number);
+
+GST_EXPORT
 GstSDPResult    gst_sdp_connection_clear (GstSDPConnection *conn);
 
 
@@ -157,8 +160,11 @@ typedef struct {
   guint  bandwidth;
 } GstSDPBandwidth;
 
+GST_EXPORT
 GstSDPResult    gst_sdp_bandwidth_set    (GstSDPBandwidth *bw, const gchar *bwtype,
                                           guint bandwidth);
+
+GST_EXPORT
 GstSDPResult    gst_sdp_bandwidth_clear  (GstSDPBandwidth *bw);
 
 /**
@@ -178,8 +184,11 @@ typedef struct {
   GArray *repeat;
 } GstSDPTime;
 
+GST_EXPORT
 GstSDPResult    gst_sdp_time_set    (GstSDPTime *t, const gchar *start,
                                      const gchar *stop, const gchar **repeat);
+
+GST_EXPORT
 GstSDPResult    gst_sdp_time_clear  (GstSDPTime *t);
 
 /**
@@ -196,8 +205,11 @@ typedef struct {
   gchar *typed_time;
 } GstSDPZone;
 
+GST_EXPORT
 GstSDPResult    gst_sdp_zone_set    (GstSDPZone *zone, const gchar *adj_time,
                                      const gchar *typed_time);
+
+GST_EXPORT
 GstSDPResult    gst_sdp_zone_clear  (GstSDPZone *zone);
 
 
@@ -226,8 +238,11 @@ typedef struct {
   gchar *value;
 } GstSDPAttribute;
 
+GST_EXPORT
 GstSDPResult    gst_sdp_attribute_set    (GstSDPAttribute *attr, const gchar *key,
                                           const gchar *value);
+
+GST_EXPORT
 GstSDPResult    gst_sdp_attribute_clear  (GstSDPAttribute *attr);
 
 /**
@@ -295,6 +310,7 @@ typedef struct {
 } GstSDPMessage;
 
 
+GST_EXPORT
 GType                   gst_sdp_message_get_type            (void);
 
 #define GST_TYPE_SDP_MESSAGE           (gst_sdp_message_get_type())
@@ -302,173 +318,352 @@ GType                   gst_sdp_message_get_type            (void);
 #define GST_SDP_MESSAGE(object)        (GST_SDP_MESSAGE_CAST(object))
 
 /* Session descriptions */
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_new                 (GstSDPMessage **msg);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_init                (GstSDPMessage *msg);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_uninit              (GstSDPMessage *msg);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_free                (GstSDPMessage *msg);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_copy                (const GstSDPMessage *msg, GstSDPMessage **copy);
 
+GST_EXPORT
 GstSDPResult            gst_sdp_message_parse_buffer        (const guint8 *data, guint size, GstSDPMessage *msg);
+
+GST_EXPORT
 gchar*                  gst_sdp_message_as_text             (const GstSDPMessage *msg);
 
 /* convert from/to uri */
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_parse_uri           (const gchar *uri, GstSDPMessage *msg);
+
+GST_EXPORT
 gchar*                  gst_sdp_message_as_uri              (const gchar *scheme, const GstSDPMessage *msg);
 
 /* utils */
+
+GST_EXPORT
 gboolean                gst_sdp_address_is_multicast        (const gchar *nettype, const gchar *addrtype,
                                                              const gchar *addr);
 /* v=.. */
+
+GST_EXPORT
 const gchar*            gst_sdp_message_get_version         (const GstSDPMessage *msg);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_set_version         (GstSDPMessage *msg, const gchar *version);
 
 /* o=<username> <sess-id> <sess-version> <nettype> <addrtype> <unicast-address> */
+
+GST_EXPORT
 const GstSDPOrigin*     gst_sdp_message_get_origin          (const GstSDPMessage *msg);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_set_origin          (GstSDPMessage *msg, const gchar *username,
                                                              const gchar *sess_id, const gchar *sess_version,
                                                              const gchar *nettype, const gchar *addrtype,
                                                              const gchar *addr);
 
 /* s=<session name> */
+
+GST_EXPORT
 const gchar*            gst_sdp_message_get_session_name    (const GstSDPMessage *msg);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_set_session_name    (GstSDPMessage *msg, const gchar *session_name);
 
 /* i=<session description> */
+
+GST_EXPORT
 const gchar*            gst_sdp_message_get_information     (const GstSDPMessage *msg);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_set_information     (GstSDPMessage *msg, const gchar *information);
 
 /* u=<uri> */
+
+GST_EXPORT
 const gchar*            gst_sdp_message_get_uri             (const GstSDPMessage *msg);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_set_uri             (GstSDPMessage *msg, const gchar *uri);
 
 /* e=<email-address> */
+
+GST_EXPORT
 guint                   gst_sdp_message_emails_len          (const GstSDPMessage *msg);
+
+GST_EXPORT
 const gchar*            gst_sdp_message_get_email           (const GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_insert_email        (GstSDPMessage *msg, gint idx,
                                                              const gchar *email);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_replace_email       (GstSDPMessage *msg, guint idx,
                                                              const gchar *email);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_remove_email        (GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_add_email           (GstSDPMessage *msg, const gchar *email);
 
 /* p=<phone-number> */
+
+GST_EXPORT
 guint                   gst_sdp_message_phones_len          (const GstSDPMessage *msg);
+
+GST_EXPORT
 const gchar*            gst_sdp_message_get_phone           (const GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_insert_phone        (GstSDPMessage *msg, gint idx,
                                                              const gchar *phone);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_replace_phone       (GstSDPMessage *msg, guint idx,
                                                              const gchar *phone);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_remove_phone        (GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_add_phone           (GstSDPMessage *msg, const gchar *phone);
 
 /* c=<nettype> <addrtype> <connection-address>[/<ttl>][/<number of addresses>] */
 
+GST_EXPORT
 const GstSDPConnection* gst_sdp_message_get_connection      (const GstSDPMessage *msg);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_set_connection      (GstSDPMessage *msg, const gchar *nettype,
                                                              const gchar *addrtype, const gchar *address,
                                                              guint ttl, guint addr_number);
 /* b=<bwtype>:<bandwidth> */
+
+GST_EXPORT
 guint                   gst_sdp_message_bandwidths_len      (const GstSDPMessage *msg);
+
+GST_EXPORT
 const GstSDPBandwidth*  gst_sdp_message_get_bandwidth       (const GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_insert_bandwidth    (GstSDPMessage * msg, gint idx,
                                                              GstSDPBandwidth * bw);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_replace_bandwidth   (GstSDPMessage * msg, guint idx,
                                                              GstSDPBandwidth * bw);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_remove_bandwidth    (GstSDPMessage * msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_add_bandwidth       (GstSDPMessage *msg, const gchar *bwtype,
                                                              guint bandwidth);
 
 /* t=<start-time> <stop-time> and
  * r=<repeat interval> <active duration> <offsets from start-time> */
+
+GST_EXPORT
 guint                   gst_sdp_message_times_len           (const GstSDPMessage *msg);
+
+GST_EXPORT
 const GstSDPTime*       gst_sdp_message_get_time            (const GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_insert_time         (GstSDPMessage *msg, gint idx,
                                                              GstSDPTime *t);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_replace_time        (GstSDPMessage *msg, guint idx,
                                                              GstSDPTime *t);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_remove_time         (GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_add_time            (GstSDPMessage *msg, const gchar *start,
                                                              const gchar *stop, const gchar **repeat);
 
 /* z=<adjustment time> <offset> <adjustment time> <offset> .... */
+
+GST_EXPORT
 guint                   gst_sdp_message_zones_len           (const GstSDPMessage *msg);
+
+GST_EXPORT
 const GstSDPZone*       gst_sdp_message_get_zone            (const GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_insert_zone         (GstSDPMessage *msg, gint idx,
                                                              GstSDPZone *zone);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_replace_zone        (GstSDPMessage *msg, guint idx,
                                                              GstSDPZone *zone);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_remove_zone         (GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_add_zone            (GstSDPMessage *msg, const gchar *adj_time,
                                                              const gchar *typed_time);
 
 /* k=<method>[:<encryption key>] */
+
+GST_EXPORT
 const GstSDPKey*        gst_sdp_message_get_key             (const GstSDPMessage *msg);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_set_key             (GstSDPMessage *msg, const gchar *type,
                                                              const gchar *data);
 /* a=... */
+
+GST_EXPORT
 guint                   gst_sdp_message_attributes_len      (const GstSDPMessage *msg);
+
+GST_EXPORT
 const GstSDPAttribute*  gst_sdp_message_get_attribute       (const GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 const gchar*            gst_sdp_message_get_attribute_val   (const GstSDPMessage *msg,
                                                              const gchar *key);
+
+GST_EXPORT
 const gchar*            gst_sdp_message_get_attribute_val_n (const GstSDPMessage *msg,
                                                              const gchar *key, guint nth);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_insert_attribute    (GstSDPMessage *msg, gint idx,
                                                              GstSDPAttribute *attr);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_replace_attribute   (GstSDPMessage *msg, guint idx,
                                                              GstSDPAttribute *attr);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_remove_attribute    (GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_add_attribute       (GstSDPMessage *msg, const gchar *key,
                                                              const gchar *value);
 
 /* m=.. sections */
+
+GST_EXPORT
 guint                   gst_sdp_message_medias_len          (const GstSDPMessage *msg);
+
+GST_EXPORT
 const GstSDPMedia*      gst_sdp_message_get_media           (const GstSDPMessage *msg, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_add_media           (GstSDPMessage *msg, GstSDPMedia *media);
 
+GST_EXPORT
 GstSDPResult            gst_sdp_message_dump                (const GstSDPMessage *msg);
 
 /* Media descriptions */
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_new                   (GstSDPMedia **media);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_init                  (GstSDPMedia *media);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_uninit                (GstSDPMedia *media);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_free                  (GstSDPMedia *media);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_copy                  (const GstSDPMedia *media, GstSDPMedia **copy);
 
+GST_EXPORT
 gchar*                  gst_sdp_media_as_text               (const GstSDPMedia *media);
 
 /* m=<media> <port>/<number of ports> <proto> <fmt> ... */
+
+GST_EXPORT
 const gchar*            gst_sdp_media_get_media             (const GstSDPMedia *media);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_set_media             (GstSDPMedia *media, const gchar *med);
 
+GST_EXPORT
 guint                   gst_sdp_media_get_port              (const GstSDPMedia *media);
+
+GST_EXPORT
 guint                   gst_sdp_media_get_num_ports         (const GstSDPMedia *media);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_set_port_info         (GstSDPMedia *media, guint port,
                                                              guint num_ports);
 
+GST_EXPORT
 const gchar*            gst_sdp_media_get_proto             (const GstSDPMedia *media);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_set_proto             (GstSDPMedia *media, const gchar *proto);
 
+GST_EXPORT
 guint                   gst_sdp_media_formats_len           (const GstSDPMedia *media);
+
+GST_EXPORT
 const gchar*            gst_sdp_media_get_format            (const GstSDPMedia *media, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_insert_format         (GstSDPMedia *media, gint idx,
                                                              const gchar *format);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_replace_format        (GstSDPMedia *media, guint idx,
                                                              const gchar *format);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_remove_format         (GstSDPMedia *media, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_add_format            (GstSDPMedia *media, const gchar *format);
 
 /* i=<session description> */
+
+GST_EXPORT
 const gchar*            gst_sdp_media_get_information       (const GstSDPMedia *media);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_set_information       (GstSDPMedia *media, const gchar *information);
 
 /* c=<nettype> <addrtype> <connection-address>[/<ttl>][/<number of addresses>] */
+
+GST_EXPORT
 guint                   gst_sdp_media_connections_len       (const GstSDPMedia *media);
+
+GST_EXPORT
 const GstSDPConnection* gst_sdp_media_get_connection        (const GstSDPMedia *media, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_insert_connection     (GstSDPMedia *media, gint idx,
                                                              GstSDPConnection *conn);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_replace_connection    (GstSDPMedia *media, guint idx,
                                                              GstSDPConnection *conn);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_remove_connection     (GstSDPMedia *media, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_add_connection        (GstSDPMedia *media,
                                                              const gchar *nettype,
                                                              const gchar *addrtype,
@@ -476,39 +671,85 @@ GstSDPResult            gst_sdp_media_add_connection        (GstSDPMedia *media,
                                                              guint ttl, guint addr_number);
 
 /* b=<bwtype>:<bandwidth> */
+
+GST_EXPORT
 guint                   gst_sdp_media_bandwidths_len        (const GstSDPMedia *media);
+
+GST_EXPORT
 const GstSDPBandwidth*  gst_sdp_media_get_bandwidth         (const GstSDPMedia *media, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_insert_bandwidth      (GstSDPMedia *media, gint idx,
                                                              GstSDPBandwidth *bw);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_replace_bandwidth     (GstSDPMedia *media, guint idx,
                                                              GstSDPBandwidth *bw);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_remove_bandwidth      (GstSDPMedia *media, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_add_bandwidth         (GstSDPMedia *media, const gchar *bwtype,
                                                              guint bandwidth);
 
 /* k=<method>:<encryption key> */
+
+GST_EXPORT
 const GstSDPKey*        gst_sdp_media_get_key               (const GstSDPMedia *media);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_set_key               (GstSDPMedia *media, const gchar *type,
                                                              const gchar *data);
 /* a=... */
+
+GST_EXPORT
 guint                   gst_sdp_media_attributes_len        (const GstSDPMedia *media);
+
+GST_EXPORT
 const GstSDPAttribute * gst_sdp_media_get_attribute         (const GstSDPMedia *media, guint idx);
+
+GST_EXPORT
 const gchar*            gst_sdp_media_get_attribute_val     (const GstSDPMedia *media, const gchar *key);
+
+GST_EXPORT
 const gchar*            gst_sdp_media_get_attribute_val_n   (const GstSDPMedia *media, const gchar *key,
                                                              guint nth);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_insert_attribute      (GstSDPMedia *media, gint idx,
                                                              GstSDPAttribute *attr);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_replace_attribute     (GstSDPMedia *media, guint idx,
                                                              GstSDPAttribute *attr);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_remove_attribute      (GstSDPMedia *media, guint idx);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_add_attribute         (GstSDPMedia *media, const gchar *key,
                                                              const gchar *value);
+
+GST_EXPORT
 GstCaps*                gst_sdp_media_get_caps_from_media   (const GstSDPMedia *media, gint pt);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_set_media_from_caps   (const GstCaps* caps, GstSDPMedia *media);
+
+GST_EXPORT
 gchar *                 gst_sdp_make_keymgmt                (const gchar *uri, const gchar *base64);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_parse_keymgmt       (const GstSDPMessage *msg, GstMIKEYMessage **mikey);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_parse_keymgmt         (const GstSDPMedia *media, GstMIKEYMessage **mikey);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_message_attributes_to_caps  (const GstSDPMessage *msg, GstCaps *caps);
+
+GST_EXPORT
 GstSDPResult            gst_sdp_media_attributes_to_caps    (const GstSDPMedia *media, GstCaps *caps);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
