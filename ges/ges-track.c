@@ -912,7 +912,7 @@ ges_track_set_mixing (GESTrack * track, gboolean mixing)
 /**
  * ges_track_add_element:
  * @track: a #GESTrack
- * @object: (transfer full): the #GESTrackElement to add
+ * @object: (transfer floating): the #GESTrackElement to add
  *
  * Adds the given object to the track. Sets the object's controlling track,
  * and thus takes ownership of the @object.
@@ -932,11 +932,15 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
 
   if (G_UNLIKELY (ges_track_element_get_track (object) != NULL)) {
     GST_WARNING ("Object already belongs to another track");
+    gst_object_ref_sink (object);
+    gst_object_unref (object);
     return FALSE;
   }
 
   if (G_UNLIKELY (!ges_track_element_set_track (object, track))) {
     GST_ERROR ("Couldn't properly add the object to the Track");
+    gst_object_ref_sink (object);
+    gst_object_unref (object);
     return FALSE;
   }
 
@@ -947,6 +951,8 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
   if (G_UNLIKELY (!ges_nle_composition_add_object (track->priv->composition,
               ges_track_element_get_nleobject (object)))) {
     GST_WARNING ("Couldn't add object to the NleComposition");
+    gst_object_ref_sink (object);
+    gst_object_unref (object);
     return FALSE;
   }
 

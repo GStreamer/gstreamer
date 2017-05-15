@@ -508,8 +508,8 @@ _set_name (GESTimelineElement * self, const gchar * wanted_name)
  * @self: a #GESTimelineElement
  * @parent: new parent of self
  *
- * Sets the parent of @self to @parent. The object's reference count will
- * be incremented, and any floating reference will be removed (see gst_object_ref_sink()).
+ * Sets the parent of @self to @parent. The parents needs to already
+ * own a hard reference on @self.
  *
  * Returns: %TRUE if @parent could be set or %FALSE when @self
  * already had a parent or @self and @parent are the same.
@@ -525,7 +525,8 @@ ges_timeline_element_set_parent (GESTimelineElement * self,
   if (self == parent) {
     GST_INFO_OBJECT (self, "Trying to add %p in itself, not a good idea!",
         self);
-
+    gst_object_ref_sink (self);
+    gst_object_unref (self);
     return FALSE;
   }
 
@@ -548,6 +549,8 @@ ges_timeline_element_set_parent (GESTimelineElement * self,
 had_parent:
   {
     GST_WARNING_OBJECT (self, "set parent failed, object already had a parent");
+    gst_object_ref_sink (self);
+    gst_object_unref (self);
     return FALSE;
   }
 }

@@ -308,7 +308,6 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
 
     GST_ERROR ("Asset could not be created for uri %s, error: %s",
         ges_asset_get_id (asset), error->message);
-
   } else {
     GESProject *project = udata->layer->timeline ?
         GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE
@@ -316,10 +315,15 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
     ges_extractable_set_asset (GES_EXTRACTABLE (udata->clip), asset);
 
     ges_project_add_asset (project, asset);
+
+    /* clip was already ref-sinked when creating udata,
+     * gst_layer_add_clip() creates a new ref as such and
+     * below we unref the ref from udata */
     ges_layer_add_clip (udata->layer, udata->clip);
   }
 
   gst_object_unref (asset);
+  gst_object_unref (udata->clip);
   g_slice_free (NewAssetUData, udata);
 }
 
@@ -525,7 +529,7 @@ ges_layer_is_empty (GESLayer * layer)
 /**
  * ges_layer_add_clip:
  * @layer: a #GESLayer
- * @clip: (transfer full): the #GESClip to add.
+ * @clip: (transfer floating): the #GESClip to add.
  *
  * Adds the given clip to the layer. Sets the clip's parent, and thus
  * takes ownership of the clip.
@@ -556,6 +560,7 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
   current_layer = ges_clip_get_layer (clip);
   if (G_UNLIKELY (current_layer)) {
     GST_WARNING ("Clip %p already belongs to another layer", clip);
+    gst_object_ref_sink (clip);
     gst_object_unref (current_layer);
 
     return FALSE;
@@ -566,7 +571,7 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
     gchar *id;
     NewAssetUData *mudata = g_slice_new (NewAssetUData);
 
-    mudata->clip = clip;
+    mudata->clip = gst_object_ref_sink (clip);
     mudata->layer = layer;
 
     GST_DEBUG_OBJECT (layer, "%" GST_PTR_FORMAT " as no reference to any "
@@ -594,10 +599,9 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
     ges_extractable_set_asset (GES_EXTRACTABLE (clip), asset);
 
     g_slice_free (NewAssetUData, mudata);
+  } else {
+    gst_object_ref_sink (clip);
   }
-
-
-  gst_object_ref_sink (clip);
 
   /* Take a reference to the clip and store it stored by start/priority */
   priv->clips_start = g_list_insert_sorted (priv->clips_start, clip,
@@ -683,8 +687,6 @@ ges_layer_add_asset (GESLayer * layer,
   }
 
   if (!ges_layer_add_clip (layer, clip)) {
-    gst_object_unref (clip);
-
     return NULL;
   }
 

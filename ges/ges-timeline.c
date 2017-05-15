@@ -2948,7 +2948,7 @@ ges_timeline_append_layer (GESTimeline * timeline)
 /**
  * ges_timeline_add_layer:
  * @timeline: a #GESTimeline
- * @layer: (transfer full): the #GESLayer to add
+ * @layer: (transfer floating): the #GESLayer to add
  *
  * Add the layer to the timeline. The reference to the @layer will be stolen
  * by the @timeline.
@@ -2966,12 +2966,16 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
   /* We can only add a layer that doesn't already belong to another timeline */
   if (G_UNLIKELY (layer->timeline)) {
     GST_WARNING ("Layer belongs to another timeline, can't add it");
+    gst_object_ref_sink (layer);
+    gst_object_unref (layer);
     return FALSE;
   }
 
   /* Add to the list of layers, make sure we don't already control it */
   if (G_UNLIKELY (g_list_find (timeline->layers, (gconstpointer) layer))) {
     GST_WARNING ("Layer is already controlled by this timeline");
+    gst_object_ref_sink (layer);
+    gst_object_unref (layer);
     return FALSE;
   }
 
