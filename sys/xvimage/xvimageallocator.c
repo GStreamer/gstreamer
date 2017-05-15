@@ -328,6 +328,7 @@ gst_xvimage_allocator_new (GstXvContext * context)
 
   alloc = g_object_new (GST_TYPE_XVIMAGE_ALLOCATOR, NULL);
   alloc->context = gst_xvcontext_ref (context);
+  gst_object_ref_sink (alloc);
 
   return alloc;
 }

@@ -675,8 +675,10 @@ gst_ximage_buffer_pool_new (GstXImageSink * ximagesink)
   g_return_val_if_fail (GST_IS_X_IMAGE_SINK (ximagesink), NULL);
 
   pool = g_object_new (GST_TYPE_XIMAGE_BUFFER_POOL, NULL);
+  gst_object_ref_sink (pool);
   pool->sink = gst_object_ref (ximagesink);
   pool->allocator = g_object_new (GST_TYPE_XIMAGE_MEMORY_ALLOCATOR, NULL);
+  gst_object_ref_sink (pool->allocator);
 
   GST_LOG_OBJECT (pool, "new XImage buffer pool %p", pool);
 

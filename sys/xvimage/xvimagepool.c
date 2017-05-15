@@ -209,6 +209,7 @@ gst_xvimage_buffer_pool_new (GstXvImageAllocator * allocator)
   GstXvImageBufferPool *pool;
 
   pool = g_object_new (GST_TYPE_XVIMAGE_BUFFER_POOL, NULL);
+  gst_object_ref_sink (pool);
   pool->allocator = gst_object_ref (allocator);
 
   GST_LOG_OBJECT (pool, "new XvImage buffer pool %p", pool);
