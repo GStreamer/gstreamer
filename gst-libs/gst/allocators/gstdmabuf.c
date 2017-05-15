@@ -62,7 +62,7 @@ gst_dmabuf_allocator_init (GstDmaBufAllocator * allocator)
  *
  * Return a new dmabuf allocator.
  *
- * Returns: (transfer full): a new dmabuf allocator, or NULL if the allocator
+ * Returns: (transfer floating): a new dmabuf allocator, or NULL if the allocator
  *    isn't available. Use gst_object_unref() to release the allocator after
  *    usage
  *

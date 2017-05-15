@@ -236,7 +236,7 @@ gst_fd_allocator_init (GstFdAllocator * allocator)
  *
  * Return a new fd allocator.
  *
- * Returns: (transfer full): a new fd allocator, or NULL if the allocator
+ * Returns: (transfer floating): a new fd allocator, or NULL if the allocator
  *    isn't available. Use gst_object_unref() to release the allocator after
  *    usage
  *
