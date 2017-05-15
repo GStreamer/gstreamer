@@ -1589,6 +1589,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
 
   pool = (GstV4l2BufferPool *) g_object_new (GST_TYPE_V4L2_BUFFER_POOL,
       "name", name, NULL);
+  g_object_ref_sink (pool);
   g_free (name);
 
   gst_poll_fd_init (&pool->pollfd);

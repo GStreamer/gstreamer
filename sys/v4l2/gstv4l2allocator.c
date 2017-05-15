@@ -639,6 +639,7 @@ gst_v4l2_allocator_new (GstObject * parent, gint video_fd,
   g_free (parent_name);
 
   allocator = g_object_new (GST_TYPE_V4L2_ALLOCATOR, "name", name, NULL);
+  gst_object_ref_sink (allocator);
   g_free (name);
 
   /* Save everything */
