@@ -360,6 +360,12 @@ gboolean
 gst_vaapi_encoder_ensure_param_quality_level (GstVaapiEncoder * encoder,
     GstVaapiEncPicture * picture);
 
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_encoder_ensure_num_slices (GstVaapiEncoder * encoder,
+    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint,
+    guint media_max_slices, guint * num_slices);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_ENCODER_PRIV_H */

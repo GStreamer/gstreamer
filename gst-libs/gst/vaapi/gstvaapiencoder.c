@@ -1387,6 +1387,55 @@ gst_vaapi_encoder_get_surface_formats (GstVaapiEncoder * encoder,
 }
 
 /**
+ * gst_vaapi_encoder_ensure_num_slices:
+ * @encoder: a #GstVaapiEncoder
+ * @profile: a #GstVaapiProfile
+ * @entrypoint: a #GstVaapiEntrypoint
+ * @media_max_slices: the number of the slices permitted by the stream
+ * @num_slices: (out): the possible number of slices to process
+ *
+ * This function will clamp the @num_slices provided by the user,
+ * according the limit of the number of slices permitted by the stream
+ * and by the hardware.
+ *
+ * We need to pass the @profile and the @entrypoint, because at the
+ * moment the encoder base class, still doesn't have them assigned,
+ * and this function is meant to be called by the derived classes
+ * while they are configured.
+ *
+ * Returns: %TRUE if the number of slices is different than zero.
+ **/
+gboolean
+gst_vaapi_encoder_ensure_num_slices (GstVaapiEncoder * encoder,
+    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint,
+    guint media_max_slices, guint * num_slices)
+{
+  VAProfile va_profile;
+  VAEntrypoint va_entrypoint;
+  guint max_slices, num;
+
+  va_profile = gst_vaapi_profile_get_va_profile (profile);
+  va_entrypoint = gst_vaapi_entrypoint_get_va_entrypoint (entrypoint);
+
+  if (!gst_vaapi_get_config_attribute (encoder->display, va_profile,
+          va_entrypoint, VAConfigAttribEncMaxSlices, &max_slices)) {
+    *num_slices = 1;
+    return TRUE;
+  }
+
+  num = *num_slices;
+  if (num > max_slices)
+    num = max_slices;
+  if (num > media_max_slices)
+    num = media_max_slices;
+
+  if (num == 0)
+    return FALSE;
+  *num_slices = num;
+  return TRUE;
+}
+
+/**
  * gst_vaapi_encoder_add_roi:
  * @encoder: a #GstVaapiEncoder
  * @roi: (transfer none): a #GstVaapiROI

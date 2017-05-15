@@ -1960,9 +1960,9 @@ reset_properties (GstVaapiEncoderH265 * encoder)
     encoder->min_qp = encoder->init_qp;
 
   ctu_size = encoder->ctu_width * encoder->ctu_height;
-  if (encoder->num_slices > (ctu_size + 1) / 2)
-    encoder->num_slices = (ctu_size + 1) / 2;
-  g_assert (encoder->num_slices);
+  g_assert (gst_vaapi_encoder_ensure_num_slices (base_encoder, encoder->profile,
+          GST_VAAPI_ENTRYPOINT_SLICE_ENCODE, (ctu_size + 1) / 2,
+          &encoder->num_slices));
 
   if (encoder->num_bframes > (base_encoder->keyframe_period + 1) / 2)
     encoder->num_bframes = (base_encoder->keyframe_period + 1) / 2;

@@ -2436,9 +2436,8 @@ reset_properties (GstVaapiEncoderH264 * encoder)
     encoder->min_qp = encoder->init_qp;
 
   mb_size = encoder->mb_width * encoder->mb_height;
-  if (encoder->num_slices > (mb_size + 1) / 2)
-    encoder->num_slices = (mb_size + 1) / 2;
-  g_assert (encoder->num_slices);
+  g_assert (gst_vaapi_encoder_ensure_num_slices (base_encoder, encoder->profile,
+          encoder->entrypoint, (mb_size + 1) / 2, &encoder->num_slices));
 
   if (encoder->num_bframes > (base_encoder->keyframe_period + 1) / 2)
     encoder->num_bframes = (base_encoder->keyframe_period + 1) / 2;
