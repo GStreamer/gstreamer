@@ -495,7 +495,7 @@ void Player::onEndOfStreamReached(Player *player)
 void Player::setUri(QUrl url)
 {
     Q_ASSERT(player_ != 0);
-    QByteArray uri = url.toString().toLocal8Bit();
+    QByteArray uri = url.toEncoded();
 
     gst_player_set_uri(player_, uri.data());
 
