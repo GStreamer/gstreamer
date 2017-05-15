@@ -30,7 +30,7 @@ core_tests = [
   [ 'gst/gstobject.c' ],
   [ 'gst/gstpad.c', not have_registry ],
   [ 'gst/gstparamspecs.c' ],
-  [ 'gst/gstprintf.c', disable_gst_debug],
+  [ 'gst/gstprintf.c', disable_gst_debug, printf_lib],
   [ 'gst/gstpipeline.c', not have_registry ],
   [ 'gst/gstpoll.c' ],
   [ 'gst/gstplugin.c', not have_registry ],
@@ -123,16 +123,15 @@ gst_deps = [gst_dep, gst_base_dep, gst_check_dep, gst_net_dep, gst_controller_de
 foreach t : core_tests
   fname = t.get(0)
   test_name = fname.split('.').get(0)
-  if t.length() == 2
-    skip_test = t.get(1)
-  else
-    skip_test = false
-  endif
+  skip_test = t.get(1, false)
+  link_with_libs = t.get(2, [])
+
   if not skip_test
     exe = executable(test_name, fname,
         c_args : gst_c_args + test_defines,
         cpp_args : gst_c_args + test_defines,
         include_directories : [configinc],
+        link_with : link_with_libs,
         dependencies : test_deps + glib_deps + gst_deps,
     )
 
