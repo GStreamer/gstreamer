@@ -500,7 +500,7 @@ gst_gl_shader_detach (GstGLShader * shader, GstGLSLStage * stage)
 /**
  * gst_gl_shader_attach_unlocked:
  * @shader: a #GstGLShader
- * @stage: a #GstGLSLStage to attach
+ * @stage: (transfer floating): a #GstGLSLStage to attach
  *
  * Attaches @stage to @shader.  @stage must have been successfully compiled
  * with gst_glsl_stage_compile().
@@ -521,18 +521,28 @@ gst_gl_shader_attach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
 
   if (!_gst_glsl_funcs_fill (&shader->priv->vtable, shader->context)) {
     GST_WARNING_OBJECT (shader, "Failed to retreive required GLSL functions");
+    gst_object_ref_sink (stage);
+    gst_object_unref (stage);
     return FALSE;
   }
 
-  if (!_ensure_program (shader))
+  if (!_ensure_program (shader)) {
+    gst_object_ref_sink (stage);
+    gst_object_unref (stage);
     return FALSE;
+  }
 
   /* already attached? */
-  if (g_list_find (shader->priv->stages, stage))
+  if (g_list_find (shader->priv->stages, stage)) {
+    gst_object_ref_sink (stage);
+    gst_object_unref (stage);
     return TRUE;
+  }
 
   stage_handle = gst_glsl_stage_get_handle (stage);
   if (!stage_handle) {
+    gst_object_ref_sink (stage);
+    gst_object_unref (stage);
     return FALSE;
   }
 
@@ -555,7 +565,7 @@ gst_gl_shader_attach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
 /**
  * gst_gl_shader_attach:
  * @shader: a #GstGLShader
- * @stage: a #GstGLSLStage to attach
+ * @stage: (transfer floating): a #GstGLSLStage to attach
  *
  * Attaches @stage to @shader.  @stage must have been successfully compiled
  * with gst_glsl_stage_compile().
