@@ -71,7 +71,7 @@ struct _GstRTPBaseDepayload
  * @packet_lost: signal the depayloader about packet loss
  * @handle_event: custom event handling
  *
- * Base class for audio RTP payloader.
+ * Base class for RTP depayloaders.
  */
 struct _GstRTPBaseDepayloadClass
 {
