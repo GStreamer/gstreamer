@@ -734,8 +734,6 @@ had_parent:
         pad_name, GST_ELEMENT_NAME (element));
     GST_OBJECT_UNLOCK (element);
     g_free (pad_name);
-    gst_object_ref_sink (pad);
-    gst_object_unref (pad);
     return FALSE;
   }
 no_direction:
@@ -1275,6 +1273,7 @@ gst_element_class_add_pad_template (GstElementClass * klass,
 
     /* Found pad with the same name, replace and return */
     if (strcmp (templ->name_template, padtempl->name_template) == 0) {
+      gst_object_ref_sink (padtempl);
       gst_object_unref (padtempl);
       template_list->data = templ;
       return;

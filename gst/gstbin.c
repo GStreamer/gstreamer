@@ -1367,6 +1367,8 @@ adding_itself:
     GST_OBJECT_LOCK (bin);
     g_warning ("Cannot add bin '%s' to itself", GST_ELEMENT_NAME (bin));
     GST_OBJECT_UNLOCK (bin);
+    gst_object_ref_sink (element);
+    gst_object_unref (element);
     return FALSE;
   }
 duplicate_name:
@@ -1384,8 +1386,6 @@ had_parent:
     g_warning ("Element '%s' already has parent", elem_name);
     GST_OBJECT_UNLOCK (bin);
     g_free (elem_name);
-    gst_object_ref_sink (element);
-    gst_object_unref (element);
     return FALSE;
   }
 }

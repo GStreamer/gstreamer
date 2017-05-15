@@ -444,6 +444,8 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
         GST_WARNING_OBJECT (registry,
             "Not replacing plugin because new one (%s) is blacklisted but for a different location than existing one (%s)",
             plugin->filename, existing_plugin->filename);
+        /* Keep reference counting consistent */
+        gst_object_ref_sink (plugin);
         gst_object_unref (plugin);
         GST_OBJECT_UNLOCK (registry);
         return FALSE;

@@ -615,7 +615,6 @@ parent_failed:
     g_critical ("Could not set internal pad %s:%s",
         GST_DEBUG_PAD_NAME (internal));
     GST_OBJECT_UNLOCK (pad);
-    gst_object_unref (internal);
     return FALSE;
   }
 }

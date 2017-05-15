@@ -1475,7 +1475,6 @@ ghost_up (GstElement * e, GstPad * pad)
   if (!gst_element_add_pad ((GstElement *) parent, gpad)) {
     g_warning ("Pad named %s already exists in element %s\n",
         GST_OBJECT_NAME (gpad), GST_OBJECT_NAME (parent));
-    gst_object_unref ((GstObject *) gpad);
     GST_STATE_UNLOCK (parent);
     return NULL;
   }
@@ -2059,7 +2058,6 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
 
     if (!gst_bin_add (GST_BIN (parent), capsfilter)) {
       GST_ERROR ("Could not add capsfilter");
-      gst_object_unref (capsfilter);
       gst_object_unref (parent);
       return FALSE;
     }
