@@ -145,23 +145,29 @@ struct _GstRTPBasePayloadClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType           gst_rtp_base_payload_get_type           (void);
 
+GST_EXPORT
 void            gst_rtp_base_payload_set_options        (GstRTPBasePayload *payload,
                                                          const gchar *media,
                                                          gboolean dynamic,
                                                          const gchar *encoding_name,
                                                          guint32 clock_rate);
 
+GST_EXPORT
 gboolean        gst_rtp_base_payload_set_outcaps        (GstRTPBasePayload *payload,
                                                          const gchar *fieldname, ...);
 
+GST_EXPORT
 gboolean        gst_rtp_base_payload_is_filled          (GstRTPBasePayload *payload,
                                                          guint size, GstClockTime duration);
 
+GST_EXPORT
 GstFlowReturn   gst_rtp_base_payload_push               (GstRTPBasePayload *payload,
                                                          GstBuffer *buffer);
 
+GST_EXPORT
 GstFlowReturn   gst_rtp_base_payload_push_list          (GstRTPBasePayload *payload,
                                                          GstBufferList *list);
 

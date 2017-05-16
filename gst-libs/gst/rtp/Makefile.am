@@ -38,6 +38,7 @@ glib_gen_prefix = __gst_rtp
 glib_enum_define = gst_rtp
 glib_enum_headers = $(libgstrtpinclude_HEADERS)
 glib_gen_basename = gstrtp
+glib_gen_decl_banner=GST_EXPORT
 
 include $(top_srcdir)/common/gst-glib-gen.mak
 
