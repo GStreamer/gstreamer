@@ -152,27 +152,9 @@ dnl *** set variables based on configure arguments ***
 dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
-dnl build static plugins or not
-AC_MSG_CHECKING([whether to build static plugins or not])
-AC_ARG_ENABLE(
-  static-plugins,
-  AC_HELP_STRING(
-    [--enable-static-plugins],
-    [build static plugins @<:@default=no@:>@]),
-  [AS_CASE(
-    [$enableval], [no], [], [yes], [],
-    [AC_MSG_ERROR([bad value "$enableval" for --enable-static-plugins])])],
-  [enable_static_plugins=no])
-AC_MSG_RESULT([$enable_static_plugins])
-if test "x$enable_static_plugins" = xyes; then
-  AC_DEFINE(GST_PLUGIN_BUILD_STATIC, 1,
-    [Define if static plugins should be built])
-  GST_PLUGIN_LIBTOOLFLAGS=""
-else
-  GST_PLUGIN_LIBTOOLFLAGS="--tag=disable-static"
-fi
-AC_SUBST(GST_PLUGIN_LIBTOOLFLAGS)
-AM_CONDITIONAL(GST_PLUGIN_BUILD_STATIC, test "x$enable_static_plugins" = "xyes")
+dnl Detect if we are building static plugins, in which case we need to
+dnl generates libav .la files and install the static libraries.
+AM_CONDITIONAL(GST_PLUGIN_BUILD_STATIC, test "x$enable_static" = "xyes")
 
 dnl define an ERROR_CFLAGS Makefile variable
 AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
