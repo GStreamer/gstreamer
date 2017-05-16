@@ -12,6 +12,5 @@ libgstvolume_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(ORC_LIBS)
-libgstvolume_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstvolume.h

@@ -11,6 +11,5 @@ libgstvideoconvert_la_LIBADD = \
 	$(GST_LIBS) \
 	$(LIBM)
 libgstvideoconvert_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstvideoconvert_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstvideoconvert.h

@@ -11,7 +11,6 @@ libgstencoding_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstencoding_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
 	$(GST_LIBS)
-libgstencoding_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = 		\
 	gstencodebin.h		\
