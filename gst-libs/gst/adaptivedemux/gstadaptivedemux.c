@@ -1560,26 +1560,27 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
       changed = TRUE;
     }
 
-    if (!(flags & GST_SEEK_FLAG_ACCURATE)) {
-      /* If the accurate flag is not set, we allow seeking before the start
-       * to map to the start for live cases, since those can return a "moving
-       * target" based on wall time.
-       */
-      if (start_type == GST_SEEK_TYPE_SET && start < range_start) {
-        GST_DEBUG_OBJECT (demux,
-            "Non accurate seek before live stream start, setting to range start: %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (range_start));
-        start = range_start;
-        changed = TRUE;
-      }
-      /* truncate stop position also if set */
-      if (stop_type == GST_SEEK_TYPE_SET && stop > range_stop) {
-        GST_DEBUG_OBJECT (demux,
-            "Non accurate seek beyong now, setting to: %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (range_stop));
-        stop = range_stop;
-        changed = TRUE;
-      }
+    /* Adjust the requested start/stop position if it falls beyond the live
+     * seek range.
+     * The only case where we don't adjust is for the starting point of
+     * an accurate seek (start if forward and stop if backwards)
+     */
+    if (start_type == GST_SEEK_TYPE_SET && start < range_start &&
+        (rate < 0 || !(flags & GST_SEEK_FLAG_ACCURATE))) {
+      GST_DEBUG_OBJECT (demux,
+          "seek before live stream start, setting to range start: %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (range_start));
+      start = range_start;
+      changed = TRUE;
+    }
+    /* truncate stop position also if set */
+    if (stop_type == GST_SEEK_TYPE_SET && stop > range_stop &&
+        (rate > 0 || !(flags & GST_SEEK_FLAG_ACCURATE))) {
+      GST_DEBUG_OBJECT (demux,
+          "seek ending after live start, adjusting to: %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (range_stop));
+      stop = range_stop;
+      changed = TRUE;
     }
 
     if (start_type == GST_SEEK_TYPE_SET && GST_CLOCK_TIME_IS_VALID (start) &&
