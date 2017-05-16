@@ -13,6 +13,5 @@ libgstrtspclientsink_la_LIBADD = $(top_builddir)/gst/rtsp-server/libgstrtspserve
 		       -lgstsdp-@GST_API_VERSION@ $(GST_NET_LIBS) $(GST_LIBS) \
 			$(GIO_LIBS)
 libgstrtspclientsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstrtspclientsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstrtspclientsink.h
