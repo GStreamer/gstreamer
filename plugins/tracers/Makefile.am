@@ -30,7 +30,6 @@ libgstcoretracers_la_LIBADD = \
 	$(GST_PRINTF_LA) \
 	$(GST_OBJ_LIBS)
 libgstcoretracers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstcoretracers_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
   gstlatency.h \

@@ -28,7 +28,7 @@ gst_elements_sources = [
 if libtype != 'shared'
   gst_elements_static = static_library('gstcoreelements',
     gst_elements_sources,
-    c_args : gst_c_args + ['-DGST_PLUGIN_BUILD_STATIC'],
+    c_args : gst_c_args,
     include_directories : [configinc],
     dependencies : [gobject_dep, glib_dep, gst_dep, gst_base_dep],
     install : true,

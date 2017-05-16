@@ -33,7 +33,6 @@ libgstcoreelements_la_LIBADD = \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_API_VERSION@.la \
 	$(GST_OBJ_LIBS)
 libgstcoreelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstcoreelements_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS =		\
 	gstcapsfilter.h		\
