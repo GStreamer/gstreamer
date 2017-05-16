@@ -171,18 +171,29 @@ struct _GstRTSPTransport {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GstRTSPResult      gst_rtsp_transport_new          (GstRTSPTransport **transport);
+
+GST_EXPORT
 GstRTSPResult      gst_rtsp_transport_init         (GstRTSPTransport *transport);
 
+GST_EXPORT
 GstRTSPResult      gst_rtsp_transport_parse        (const gchar *str, GstRTSPTransport *transport);
+
+GST_EXPORT
 gchar*             gst_rtsp_transport_as_text      (GstRTSPTransport *transport);
 
+GST_EXPORT
 GstRTSPResult      gst_rtsp_transport_get_mime     (GstRTSPTransMode trans, const gchar **mime);
+
+GST_EXPORT
 GstRTSPResult      gst_rtsp_transport_get_manager  (GstRTSPTransMode trans, const gchar **manager, guint option);
 
+GST_EXPORT
 GstRTSPResult      gst_rtsp_transport_get_media_type (GstRTSPTransport *transport,
                                                       const gchar **media_type);
 
+GST_EXPORT
 GstRTSPResult      gst_rtsp_transport_free         (GstRTSPTransport *transport);
 
 G_END_DECLS

@@ -43,8 +43,7 @@
 #ifndef __GST_RTSP_DEFS_H__
 #define __GST_RTSP_DEFS_H__
 
-#include <glib.h>
-#include <glib-object.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
@@ -390,21 +389,37 @@ typedef enum {
   GST_RTSP_STS_OPTION_NOT_SUPPORTED                 = 551
 } GstRTSPStatusCode;
 
+GST_EXPORT
 gchar*             gst_rtsp_strresult          (GstRTSPResult result);
 
+GST_EXPORT
 const gchar*       gst_rtsp_method_as_text     (GstRTSPMethod method);
+
+GST_EXPORT
 const gchar*       gst_rtsp_version_as_text    (GstRTSPVersion version);
+
+GST_EXPORT
 const gchar*       gst_rtsp_header_as_text     (GstRTSPHeaderField field);
+
+GST_EXPORT
 const gchar*       gst_rtsp_status_as_text     (GstRTSPStatusCode code);
 
+GST_EXPORT
 gchar*             gst_rtsp_options_as_text    (GstRTSPMethod options);
+
+GST_EXPORT
 GstRTSPMethod      gst_rtsp_options_from_text  (const gchar *options);
 
+GST_EXPORT
 GstRTSPHeaderField gst_rtsp_find_header_field  (const gchar *header);
+
+GST_EXPORT
 GstRTSPMethod      gst_rtsp_find_method        (const gchar *method);
 
+GST_EXPORT
 gboolean           gst_rtsp_header_allow_multiple (GstRTSPHeaderField field);
 
+GST_EXPORT
 gchar *            gst_rtsp_generate_digest_auth_response (const gchar *algorithm,
                                                            const gchar *method,
                                                            const gchar *realm,
