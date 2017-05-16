@@ -16,7 +16,6 @@ libgstnle_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 
 libgstnle_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstnle_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	nle.h			\
