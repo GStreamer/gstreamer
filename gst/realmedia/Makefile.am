@@ -14,7 +14,6 @@ libgstrealmedia_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 				-lgstpbutils-@GST_API_VERSION@ \
 				$(GST_BASE_LIBS) $(GST_LIBS)
 libgstrealmedia_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstrealmedia_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = rademux.h rmdemux.h rmutils.h rdtdepay.h rdtmanager.h \
 		 rdtjitterbuffer.h rtspreal.h realhash.h asmrules.h gstrdtbuffer.h \

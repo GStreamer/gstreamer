@@ -6,6 +6,5 @@ libgstsid_la_CXXFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
 libgstsid_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(SIDPLAY_LIBS) \
 		      -lgstaudio-$(GST_API_VERSION)
 libgstsid_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstsid_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstsiddec.h
