@@ -47,7 +47,6 @@ libgstopencv_la_LIBADD = \
 	$(GSTPB_BASE_LIBS) -lgstvideo-$(GST_API_VERSION)
 
 libgstopencv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstopencv_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 # headers we need but don't want installed
 noinst_HEADERS = \

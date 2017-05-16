@@ -10,4 +10,3 @@ libgstadpcmdec_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstadpcmdec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstadpcmdec_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)

@@ -14,5 +14,3 @@ libgstwebp_la_LIBADD = \
 	$(GST_LIBS) \
 	$(WEBP_LIBS)
 libgstwebp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstwebp_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
-

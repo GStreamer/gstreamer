@@ -8,6 +8,5 @@ libgstivfparse_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstivfparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstivfparse_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstivfparse.h

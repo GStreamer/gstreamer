@@ -9,7 +9,6 @@ libgstvoamrwbenc_la_CFLAGS = -DGST_USE_UNSTABLE_API \
 libgstvoamrwbenc_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-$(GST_API_VERSION) $(GST_BASE_LIBS) $(VOAMRWBENC_LIBS)
 libgstvoamrwbenc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstvoamrwbenc_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS =	\
 	gstvoamrwbenc.h

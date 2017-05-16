@@ -8,7 +8,6 @@ libgstdfbvideosink_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 			       -lgstvideo-$(GST_API_VERSION) \
 			       $(DIRECTFB_LIBS)
 libgstdfbvideosink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdfbvideosink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = dfbvideosink.h
 

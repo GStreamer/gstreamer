@@ -50,7 +50,6 @@ libgstandroidmedia_la_LIBADD = \
 	$(GST_LIBS) \
 	$(ORC_LIBS)
 libgstandroidmedia_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstandroidmedia_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 androidmedia_java_classesdir = $(datadir)/gst-android/ndk-build/androidmedia/
 androidmedia_java_classes_DATA = \

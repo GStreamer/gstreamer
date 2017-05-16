@@ -15,7 +15,6 @@ libgstlegacyrawparse_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstlegacyrawparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstlegacyrawparse_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstaudioparse.h \

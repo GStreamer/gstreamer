@@ -32,7 +32,6 @@ libgstmxf_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstmxf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstmxf_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	mxful.h \

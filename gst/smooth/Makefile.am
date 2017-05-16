@@ -11,6 +11,5 @@ libgstsmooth_la_LIBADD =  \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstsmooth_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstsmooth_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstsmooth.h

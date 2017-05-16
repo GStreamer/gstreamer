@@ -52,4 +52,3 @@ libgstmsdk_la_LIBADD += \
 endif
 
 libgstmsdk_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstmsdk_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)

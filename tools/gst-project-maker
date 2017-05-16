@@ -230,7 +230,6 @@ lib${gstreplace}_la_SOURCES = ${gstreplace}plugin.c ${gstreplace}.c ${gstreplace
 lib${gstreplace}_la_CFLAGS = \$(GST_CFLAGS)
 lib${gstreplace}_la_LIBADD = \$(GST_LIBS)
 lib${gstreplace}_la_LDFLAGS = \$(GST_PLUGIN_LDFLAGS)
-lib${gstreplace}_la_LIBTOOLFLAGS = \$(GST_PLUGIN_LIBTOOLFLAGS)
 
 EOF
 

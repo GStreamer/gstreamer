@@ -13,4 +13,3 @@ libgstinterlace_la_LIBADD = \
 	$(LIBM)
 
 libgstinterlace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstinterlace_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)

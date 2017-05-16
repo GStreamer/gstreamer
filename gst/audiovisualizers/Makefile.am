@@ -14,7 +14,6 @@ libgstaudiovisualizers_la_LIBADD = \
 	-lgstvideo-$(GST_API_VERSION) -lgstfft-$(GST_API_VERSION) \
 	-lgstpbutils-$(GST_API_VERSION) $(GST_BASE_LIBS)  $(GST_LIBS) $(LIBM)
 libgstaudiovisualizers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstaudiovisualizers_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstdrawhelpers.h \
 	gstspacescope.h \

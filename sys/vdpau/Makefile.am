@@ -23,7 +23,6 @@ libgstvdpau_la_LIBADD = \
 	$(VDPAU_LIBS) $(LIBM)
 
 libgstvdpau_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstvdpau_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstvdputils.h \

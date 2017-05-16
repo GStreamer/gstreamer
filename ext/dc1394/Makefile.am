@@ -15,8 +15,6 @@ libgstdc1394_la_LIBADD = \
     $(GST_LIBS)
 libgstdc1394_la_LDFLAGS = \
     $(GST_PLUGIN_LDFLAGS)
-libgstdc1394_la_LIBTOOLFLAGS = \
-    $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
     gstdc1394src.h

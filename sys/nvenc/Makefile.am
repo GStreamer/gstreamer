@@ -30,4 +30,3 @@ libgstnvenc_la_LIBADD += \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_API_VERSION).la
 endif
 libgstnvenc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstnvenc_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)

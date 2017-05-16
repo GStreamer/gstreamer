@@ -20,7 +20,6 @@ libgstiqa_la_LIBADD =  \
 libgstiqa_la_LIBADD += $(DSSIM_LIBS)
 
 libgstiqa_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstiqa_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	iqa.h

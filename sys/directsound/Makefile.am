@@ -7,6 +7,5 @@ libgstdirectsoundsrc_la_LIBADD = \
 	$(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
 	$(DIRECTX_LDFLAGS) $(DIRECTSOUND_LIBS) -lole32
 libgstdirectsoundsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdirectsoundsrc_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS= gstdirectsoundsrc.h

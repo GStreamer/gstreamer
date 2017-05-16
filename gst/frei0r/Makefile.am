@@ -10,6 +10,5 @@ libgstfrei0r_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFL
 libgstfrei0r_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(GMODULE_NO_EXPORT_LIBS)
 libgstfrei0r_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstfrei0r_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstfrei0r.h gstfrei0rfilter.h gstfrei0rsrc.h gstfrei0rmixer.h frei0r.h

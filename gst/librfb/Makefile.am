@@ -17,7 +17,6 @@ libgstrfbsrc_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
                          $(X11_LIBS) \
                          $(GIO_LIBS)
 libgstrfbsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GIO_LDFLAGS)
-libgstrfbsrc_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	rfbdecoder.h \

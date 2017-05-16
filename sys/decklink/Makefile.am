@@ -21,8 +21,6 @@ libgstdecklink_la_LDFLAGS += \
 	-Wl,-framework,CoreFoundation
 endif
 
-libgstdecklink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
-
 libgstdecklink_la_SOURCES = \
 	gstdecklink.cpp \
 	gstdecklinkaudiosink.cpp \

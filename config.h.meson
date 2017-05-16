@@ -85,9 +85,6 @@
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
 #mesondefine GST_PACKAGE_RELEASE_DATETIME
 
-/* Define if static plugins should be built */
-#mesondefine GST_PLUGIN_BUILD_STATIC
-
 /* Define to enable Windows ACM library (used by acm). */
 #mesondefine HAVE_ACM
 

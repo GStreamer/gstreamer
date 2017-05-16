@@ -13,6 +13,5 @@ libgstcoloreffects_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstcoloreffects_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstcoloreffects_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstcoloreffects.h gstchromahold.h

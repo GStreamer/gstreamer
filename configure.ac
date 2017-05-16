@@ -387,28 +387,6 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
   ["${srcdir}/gst-plugins-bad.doap"],
   [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
 
-dnl build static plugins or not
-AC_MSG_CHECKING([whether to build static plugins or not])
-AC_ARG_ENABLE(
-  static-plugins,
-  AC_HELP_STRING(
-    [--enable-static-plugins],
-    [build static plugins @<:@default=no@:>@]),
-  [AS_CASE(
-    [$enableval], [no], [], [yes], [],
-    [AC_MSG_ERROR([bad value "$enableval" for --enable-static-plugins])])],
-  [enable_static_plugins=no])
-AC_MSG_RESULT([$enable_static_plugins])
-if test "x$enable_static_plugins" = xyes; then
-  AC_DEFINE(GST_PLUGIN_BUILD_STATIC, 1,
-    [Define if static plugins should be built])
-  GST_PLUGIN_LIBTOOLFLAGS=""
-else
-  GST_PLUGIN_LIBTOOLFLAGS="--tag=disable-static"
-fi
-AC_SUBST(GST_PLUGIN_LIBTOOLFLAGS)
-AM_CONDITIONAL(GST_PLUGIN_BUILD_STATIC, test "x$enable_static_plugins" = "xyes")
-
 dnl If only building static libraries, define GST_STATIC_COMPILATION. This is
 dnl needed only on Windows, but it doesn't hurt to have it everywhere.
 if test x$enable_static = xyes -a x$enable_shared = xno; then

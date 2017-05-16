@@ -13,7 +13,6 @@ libgstfluidsynthmidi_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 			     $(GST_BASE_CFLAGS) $(FLUIDSYNTH_CFLAGS)
 libgstfluidsynthmidi_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(FLUIDSYNTH_LIBS)
 libgstfluidsynthmidi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstfluidsynthmidi_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 endif
 
 noinst_HEADERS = gstfluiddec.h

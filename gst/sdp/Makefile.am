@@ -8,6 +8,5 @@ libgstsdpelem_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GIO_LIBS) 
 		       -lgstapp-@GST_API_VERSION@ \
 		       $(GST_LIBS) $(WINSOCK2_LIBS)
 libgstsdpelem_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstsdpelem_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstsdpdemux.h gstsdpsrc.h

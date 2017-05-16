@@ -20,7 +20,6 @@ libgstcamerabin_la_LIBADD = \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 
 libgstcamerabin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstcamerabin_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstviewfinderbin.h \
 		camerabingeneral.h \

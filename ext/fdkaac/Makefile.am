@@ -8,6 +8,5 @@ libgstfdkaac_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-@GST_API_VERSION@ -lgstpbutils-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(FDK_AAC_LIBS)
 libgstfdkaac_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstfdkaac_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstfdkaacenc.h gstfdkaacdec.h

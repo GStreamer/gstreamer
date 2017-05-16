@@ -11,6 +11,5 @@ libgstrsvg_la_LIBADD = \
 	$(GST_LIBS) \
 	$(RSVG_LIBS)
 libgstrsvg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
-libgstrsvg_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstrsvgdec.h gstrsvgoverlay.h

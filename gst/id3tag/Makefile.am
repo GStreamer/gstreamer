@@ -13,6 +13,5 @@ libgstid3tag_la_LIBADD = \
 	$(GST_LIBS)
 
 libgstid3tag_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstid3tag_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstid3mux.h id3tag.h

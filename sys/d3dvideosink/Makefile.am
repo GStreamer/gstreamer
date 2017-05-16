@@ -7,6 +7,5 @@ libgstd3dvideosink_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-$(GST_API_VERSION) \
 	$(DIRECT3D_LIBS) $(DIRECTX_LDFAGS)
 libgstd3dvideosink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstd3dvideosink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = d3dvideosink.h d3dhelpers.h

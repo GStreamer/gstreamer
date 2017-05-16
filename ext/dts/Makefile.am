@@ -7,6 +7,5 @@ libgstdtsdec_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) \
 	-lgstaudio-@GST_API_VERSION@ \
 	$(DTS_LIBS) $(ORC_LIBS)
 libgstdtsdec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdtsdec_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstdtsdec.h

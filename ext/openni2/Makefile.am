@@ -16,7 +16,6 @@ libgstopenni2_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(OPENNI2_LIBS) \
                        $(GSTPB_BASE_LIBS) -lgstvideo-$(GST_API_VERSION)
 
 libgstopenni2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstopenni2_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 # headers we need but don't want installed
 noinst_HEADERS = gstopenni2src.h

@@ -17,7 +17,6 @@ libgstaudiomixer_la_LIBADD =  \
 		$(top_builddir)/gst-libs/gst/audio/libgstbadaudio-$(GST_API_VERSION).la \
 		$(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_API_VERSION@ \
 		$(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS)
-libgstaudiomixer_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstaudiomixer.h gstaudiointerleave.h
 

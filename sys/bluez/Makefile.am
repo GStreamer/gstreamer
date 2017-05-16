@@ -26,7 +26,6 @@ libgstbluez_la_LIBADD = \
 	$(GIO_LIBS) \
 	$(GIO_UNIX_LIBS)
 libgstbluez_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstbluez_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	a2dp-codecs.h \

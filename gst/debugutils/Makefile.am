@@ -15,7 +15,6 @@ libgstdebugutilsbad_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-$(GST_API_VERSION) \
 	$(GST_LIBS)
 libgstdebugutilsbad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdebugutilsbad_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = fpsdisplaysink.h \
 	gstchecksumsink.h \

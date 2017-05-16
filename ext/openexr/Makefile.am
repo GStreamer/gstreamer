@@ -11,7 +11,6 @@ libgstopenexr_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(OPENEXR_LIBS)
 libgstopenexr_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstopenexr_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstopenexrdec.h \

@@ -13,7 +13,6 @@ libgstmpeg2enc_la_LIBADD = \
         $(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ \
         $(GST_LIBS) $(MPEG2ENC_LIBS)
 libgstmpeg2enc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstmpeg2enc_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstmpeg2enc.hh \

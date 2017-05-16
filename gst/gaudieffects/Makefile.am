@@ -26,7 +26,6 @@ libgstgaudieffects_la_LIBADD = \
     $(LIBM) \
     $(ORC_LIBS)
 libgstgaudieffects_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstgaudieffects_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 # headers we need but don't want installed
 noinst_HEADERS = \

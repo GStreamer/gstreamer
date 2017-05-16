@@ -12,5 +12,4 @@ libgstacmenc_la_LIBADD =     \
     -lmsacm32
 
 libgstacmenc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstacmenc_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 

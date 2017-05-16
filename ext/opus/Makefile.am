@@ -15,6 +15,5 @@ libgstopusparse_la_LIBADD = \
 	$(GST_LIBS) \
 	$(OPUS_LIBS)
 libgstopusparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
-libgstopusparse_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstopusparse.h gstopusheader.h

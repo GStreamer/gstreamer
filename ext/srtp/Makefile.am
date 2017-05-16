@@ -14,7 +14,6 @@ libgstsrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	$(GST_LIBS)				\
 	$(SRTP_LIBS) 
 libgstsrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstsrtp_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 glib_enum_headers=gstsrtp.h
 glib_enum_define=GST_SRTP

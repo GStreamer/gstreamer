@@ -14,7 +14,6 @@ libgstfreeverb_la_LIBADD = $(GST_LIBS) \
 	-lgstaudio-$(GST_API_VERSION) \
 	$(LIBM)
 libgstfreeverb_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstfreeverb_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 # headers we need but don't want installed
 noinst_HEADERS = gstfreeverb.h

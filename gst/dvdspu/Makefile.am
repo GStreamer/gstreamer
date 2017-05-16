@@ -7,7 +7,6 @@ libgstdvdspu_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(
 libgstdvdspu_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
      $(GST_LIBS)
 libgstdvdspu_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdvdspu_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstdvdspu.h gstspu-pgs.h gstspu-vobsub.h gstspu-common.h
 

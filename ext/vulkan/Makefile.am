@@ -73,6 +73,5 @@ libgstvulkan_la_LIBADD += wayland/libgstvulkan-wayland.la
 endif
 
 libgstvulkan_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstvulkan_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 

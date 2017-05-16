@@ -13,6 +13,5 @@ libgstlv2_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
 	$(LIBM) $(LILV_LIBS)
 libgstlv2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstlv2_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstlv2.h gstlv2utils.h

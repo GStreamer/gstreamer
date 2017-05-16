@@ -23,7 +23,6 @@ libgstladspa_la_LIBADD = \
 	$(GST_LIBS) \
 	$(GMODULE_NO_EXPORT_LIBS)
 libgstladspa_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstladspa_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstladspautils.h \

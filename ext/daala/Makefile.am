@@ -16,5 +16,4 @@ libgstdaala_la_LIBADD = \
 	$(GST_LIBS) \
 	$(DAALA_LIBS)
 libgstdaala_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdaala_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 

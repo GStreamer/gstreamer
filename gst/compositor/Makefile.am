@@ -22,7 +22,6 @@ libgstcompositor_la_LIBADD =  \
 	-lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS) $(LIBM)
 libgstcompositor_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstcompositor_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 # headers we need but don't want installed
 noinst_HEADERS = \

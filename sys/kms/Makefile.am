@@ -29,10 +29,6 @@ libgstkms_la_LDFLAGS = 			\
 	$(GST_PLUGIN_LDFLAGS)			\
 	$(NULL)
 
-libgstkms_la_LIBTOOLFLAGS = 		\
-	$(GST_PLUGIN_LIBTOOLFLAGS) 		\
-	$(NULL)
-
 noinst_HEADERS = 				\
 	gstkmssink.h 				\
 	gstkmsutils.h				\

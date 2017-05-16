@@ -11,4 +11,3 @@ libgstacmmp3dec_la_LIBADD =      \
     -lgsttag-$(GST_API_VERSION)   \
     -lmsacm32
 libgstacmmp3dec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DIRECTSOUND_LDFLAGS)
-libgstacmmp3dec_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)

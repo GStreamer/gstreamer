@@ -19,6 +19,5 @@ libgstfieldanalysis_la_LIBADD = \
 	$(ORC_LIBS)
 
 libgstfieldanalysis_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstfieldanalysis_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstfieldanalysis.h

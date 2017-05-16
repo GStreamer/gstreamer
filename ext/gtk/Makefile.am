@@ -36,7 +36,6 @@ libgstgtk_la_LIBADD = \
 
 libgstgtk_la_SOURCES = $(sources)
 libgstgtk_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstgtk_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 if USE_GTK3_GL
 if USE_GL

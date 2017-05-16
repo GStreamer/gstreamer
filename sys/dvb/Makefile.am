@@ -21,7 +21,6 @@ libgstdvb_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/mpegts/libgstmpegts-$(GST_API_VERSION).la \
 	$(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS)
 libgstdvb_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdvb_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstdvbsrc.h  \

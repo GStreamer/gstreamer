@@ -13,7 +13,6 @@ libgstmpegpsdemux_la_LIBADD = \
 	-lgstpbutils-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) -lgstbase-$(GST_API_VERSION) $(GST_LIBS)
 libgstmpegpsdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstmpegpsdemux_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstmpegdefs.h   \

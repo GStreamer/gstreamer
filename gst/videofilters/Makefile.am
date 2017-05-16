@@ -22,7 +22,6 @@ libgstvideofiltersbad_la_LIBADD = \
 	$(ORC_LIBS) \
 	$(LIBM)
 libgstvideofiltersbad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstvideofiltersbad_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstzebrastripe.h \

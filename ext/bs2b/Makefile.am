@@ -10,6 +10,5 @@ libgstbs2b_la_LIBADD = \
 	$(GST_BASE_LIBS) $(GST_LIBS) \
 	$(BS2B_LIBS)
 libgstbs2b_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstbs2b_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstbs2b.h

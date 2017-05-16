@@ -10,6 +10,5 @@ libgstaccurip_la_LIBADD = \
 	$(GST_BASE_LIBS) $(GST_LIBS) \
 	$(ACCURIP_LIBS)
 libgstaccurip_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstaccurip_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstaccurip.h

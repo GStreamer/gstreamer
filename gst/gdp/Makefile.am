@@ -9,7 +9,6 @@ libgstgdp_la_SOURCES = \
 libgstgdp_la_CFLAGS = $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstgdp_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
 libgstgdp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstgdp_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	dataprotocol.h \

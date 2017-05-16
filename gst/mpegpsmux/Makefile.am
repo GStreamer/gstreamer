@@ -10,7 +10,6 @@ libgstmpegpsmux_la_SOURCES = \
 libgstmpegpsmux_la_CFLAGS = $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstmpegpsmux_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
 libgstmpegpsmux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstmpegpsmux_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	mpegpsmux.h \

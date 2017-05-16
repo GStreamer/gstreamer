@@ -8,6 +8,5 @@ libgstfaac_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-@GST_API_VERSION@ -lgstpbutils-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(FAAC_LIBS)
 libgstfaac_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstfaac_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstfaac.h

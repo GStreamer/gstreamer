@@ -26,7 +26,6 @@ libgstttmlsubs_la_LIBADD = \
 	$(LIBM)
 
 libgstttmlsubs_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstttmlsubs_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 # headers we need but don't want installed
 noinst_HEADERS = \

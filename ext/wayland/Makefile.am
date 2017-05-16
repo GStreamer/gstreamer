@@ -31,7 +31,6 @@ libgstwaylandsink_la_LIBADD = \
 	-lgstallocators-$(GST_API_VERSION) \
 	$(WAYLAND_LIBS)
 libgstwaylandsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstwaylandsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstwaylandsink.h \

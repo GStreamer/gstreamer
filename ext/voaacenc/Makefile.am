@@ -17,7 +17,6 @@ libgstvoaacenc_la_LIBADD = \
 	$(GST_LIBS) \
 	$(VOAACENC_LIBS)
 libgstvoaacenc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstvoaacenc_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstvoaacenc.h

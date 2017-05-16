@@ -13,7 +13,6 @@ libgsttinyalsa_la_LIBADD =            \
     $(GST_BASE_LIBS)                  \
     $(GST_LIBS)
 libgsttinyalsa_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgsttinyalsa_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = tinyalsasink.h
 

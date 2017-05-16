@@ -28,7 +28,6 @@ libgstgeometrictransform_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
                             $(GST_BASE_LIBS) \
                             $(GST_LIBS) $(LIBM)
 libgstgeometrictransform_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstgeometrictransform_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstgeometrictransform.h \
                  gstcirclegeometrictransform.h \

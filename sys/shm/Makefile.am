@@ -5,6 +5,4 @@ libgstshm_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_CFLAGS) -DSHM_PIPE_USE_GLI
 libgstshm_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstshm_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(SHM_LIBS)
 
-libgstshm_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
-
 noinst_HEADERS = gstshmsrc.h gstshmsink.h shmpipe.h  shmalloc.h

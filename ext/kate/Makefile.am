@@ -12,7 +12,6 @@ libgstkate_la_SOURCES = gstkate.c gstkatedec.c gstkateenc.c gstkateparse.c gstka
 libgstkate_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(TIGER_CFLAGS) $(KATE_CFLAGS)
 libgstkate_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) -lgsttag-$(GST_API_VERSION) $(GST_LIBS) $(TIGER_LIBS) $(KATE_LIBS)
 libgstkate_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstkate_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 # headers we need but don't want installed
 noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h gstkateutil.h gstkatespu.h gstkatetiger.h
