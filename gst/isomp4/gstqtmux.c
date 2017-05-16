@@ -2523,6 +2523,10 @@ gst_qt_mux_update_timecode (GstQTMux * qtmux)
   GstBuffer *buf;
   GstMapInfo map;
   guint64 offset = qtmux->tc_pos;
+  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
+
+  if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT)
+    return GST_FLOW_OK;
 
   g_assert (qtmux->tc_pos != -1);
 
@@ -3025,6 +3029,11 @@ static GstFlowReturn
 gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
     GstBuffer * buf, GstFlowReturn ret)
 {
+  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
+
+  if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT)
+    return ret;
+
   if (buf != NULL && (pad->tc_trak == NULL || qtmux->tc_pos != -1)) {
     GstVideoTimeCodeMeta *tc_meta = gst_buffer_get_video_time_code_meta (buf);
     if (tc_meta) {
