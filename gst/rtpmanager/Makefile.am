@@ -37,4 +37,3 @@ libgstrtpmanager_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	$(GST_NET_LIBS) -lgstrtp-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstrtpmanager_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstrtpmanager_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)

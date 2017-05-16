@@ -21,7 +21,6 @@ libgstvpx_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-@GST_API_VERSION@ -lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(VPX_LIBS)
 libgstvpx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstvpx_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
     gstvpxdec.h \

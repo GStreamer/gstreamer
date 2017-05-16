@@ -17,7 +17,6 @@ libgstosxaudio_la_LIBADD = 			  \
     $(GST_LIBS)
 
 libgstosxaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework,CoreAudio  -Wl,-framework,AudioToolbox
-libgstosxaudio_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
 
 noinst_HEADERS = gstosxaudiosink.h	  \
                  gstosxaudiodeviceprovider.h \

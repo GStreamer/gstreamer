@@ -22,7 +22,6 @@ libgst1394_la_LIBADD = \
 	$(GST_LIBS) \
 	$(DV1394_LIBS)
 libgst1394_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgst1394_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstdv1394src.h gst1394probe.h $(hdvheaders) \
 	gst1394clock.h

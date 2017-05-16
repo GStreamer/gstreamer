@@ -14,6 +14,5 @@ libgsttaglib_la_LIBADD = \
 	$(GST_LIBS) \
 	$(TAGLIB_LIBS)
 libgsttaglib_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgsttaglib_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstid3v2mux.h gstapev2mux.h

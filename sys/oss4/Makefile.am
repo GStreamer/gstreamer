@@ -12,7 +12,6 @@ libgstoss4_la_LIBADD = \
 	-lgstaudio-$(GST_API_VERSION) \
 	$(GST_LIBS)
 libgstoss4_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
-libgstoss4_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	oss4-audio.h          \

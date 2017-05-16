@@ -12,7 +12,6 @@ libgstossaudio_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstossaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
-libgstossaudio_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = common.h            \
 		gstosssink.h	     \

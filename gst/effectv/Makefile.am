@@ -15,7 +15,6 @@ libgsteffectv_la_LIBADD = \
 	$(GST_LIBS) \
 	$(LIBM)
 libgsteffectv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgsteffectv_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gsteffectv.h gstaging.h gstdice.h gstedge.h \
         gstquark.h gstrev.h gstshagadelic.h gstvertigo.h gstwarp.h gstop.h \

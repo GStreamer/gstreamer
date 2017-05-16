@@ -12,7 +12,6 @@ libgstequalizer_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-$(GST_API_VERSION) $(GST_BASE_LIBS) \
 	$(GST_LIBS) $(LIBM)
 libgstequalizer_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstequalizer_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstiirequalizer.h
 

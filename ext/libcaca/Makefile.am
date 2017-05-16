@@ -13,6 +13,5 @@ libgstcacasink_la_LIBADD = \
 	$(GST_LIBS) \
 	$(LIBCACA_LIBS)
 libgstcacasink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstcacasink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstcacasink.h

@@ -8,7 +8,6 @@ libgstrtsp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_LIBS) $(GST_BASE_LIBS) $(G
 		       -lgstrtp-@GST_API_VERSION@ -lgstrtsp-@GST_API_VERSION@ \
 		       -lgstsdp-@GST_API_VERSION@ $(GST_NET_LIBS) $(GST_LIBS)
 libgstrtsp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstrtsp_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstrtspsrc.h     \
 		 gstrtsp.h        \

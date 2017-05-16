@@ -15,7 +15,6 @@ libgstsunaudio_la_LIBADD = \
         $(GST_PLUGINS_BASE_LIBS) \
         $(GST_LIBS)
 libgstsunaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstsunaudio_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstsunaudiosink.h \
                  gstsunaudiomixer.h \

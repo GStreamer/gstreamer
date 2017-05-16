@@ -11,6 +11,5 @@ libgstapetag_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstapetag_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstapetag_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstapedemux.h

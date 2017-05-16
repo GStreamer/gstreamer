@@ -29,7 +29,6 @@ libgstvideo4linux2_la_CFLAGS =   $(GST_PLUGINS_BASE_CFLAGS) \
 				 $(GUDEV_CFLAGS)
 
 libgstvideo4linux2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstvideo4linux2_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 libgstvideo4linux2_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 				 -lgstallocators-$(GST_API_VERSION) \
 				 -lgstvideo-$(GST_API_VERSION) \

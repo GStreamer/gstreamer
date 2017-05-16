@@ -23,6 +23,5 @@ libgstavi_la_LIBADD = \
 	-lgstvideo-@GST_API_VERSION@
 
 libgstavi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstavi_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 EXTRA_DIST = README

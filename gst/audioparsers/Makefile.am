@@ -13,7 +13,6 @@ libgstaudioparsers_la_LIBADD = \
 	-lgstaudio-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstaudioparsers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstaudioparsers_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstaacparse.h gstamrparse.h gstac3parse.h \
 	gstdcaparse.h gstflacparse.h gstmpegaudioparse.h gstsbcparse.h \

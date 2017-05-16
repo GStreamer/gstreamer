@@ -15,7 +15,6 @@ libgstvideobox_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 			   $(ORC_LIBS) \
 			   -lgstvideo-@GST_API_VERSION@
 libgstvideobox_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstvideobox_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstvideobox.h
 EXTRA_DIST += README

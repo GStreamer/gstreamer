@@ -17,7 +17,6 @@ libgstvideofilter_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 			-lgstvideo-@GST_API_VERSION@ \
 			$(GST_BASE_LIBS) $(GST_LIBS)
 libgstvideofilter_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
-libgstvideofilter_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 gstvideoexample.c: $(srcdir)/make_filter $(srcdir)/gstvideotemplate.c
 	$(srcdir)/make_filter Videoexample $(srcdir)/gstvideotemplate.c

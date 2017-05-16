@@ -13,6 +13,5 @@ libgstosxvideosink_la_LIBADD =  \
 	-lgstvideo-$(GST_API_VERSION)
 
 libgstosxvideosink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework -Wl,Cocoa -Wl,-framework -Wl,OpenGL
-libgstosxvideosink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
 
 noinst_HEADERS = osxvideosink.h cocoawindow.h
