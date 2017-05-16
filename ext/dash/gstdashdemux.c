@@ -723,6 +723,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
           (stream), tags);
     stream->index = i;
     stream->pending_seek_ts = GST_CLOCK_TIME_NONE;
+    stream->sidx_position = GST_CLOCK_TIME_NONE;
     if (active_stream->cur_adapt_set &&
         active_stream->cur_adapt_set->RepresentationBase &&
         active_stream->cur_adapt_set->RepresentationBase->ContentProtection) {
