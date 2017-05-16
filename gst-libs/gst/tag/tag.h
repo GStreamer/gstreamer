@@ -423,25 +423,37 @@ typedef enum {
 
 /* functions for vorbis comment manipulation */
 
+GST_EXPORT
 const gchar *           gst_tag_from_vorbis_tag                 (const gchar *          vorbis_tag);
+
+GST_EXPORT
 const gchar *           gst_tag_to_vorbis_tag                   (const gchar *          gst_tag);
+
+GST_EXPORT
 void                    gst_vorbis_tag_add                      (GstTagList *           list, 
                                                                  const gchar *          tag, 
                                                                  const gchar *          value);
 
+GST_EXPORT
 GList *                 gst_tag_to_vorbis_comments              (const GstTagList *     list, 
                                                                  const gchar *          tag);
 
 /* functions to convert GstBuffers with vorbiscomment contents to GstTagLists and back */
+
+GST_EXPORT
 GstTagList *            gst_tag_list_from_vorbiscomment         (const guint8 *         data,
                                                                  gsize                  size,
                                                                  const guint8 *         id_data,
                                                                  const guint            id_data_length,
                                                                  gchar **               vendor_string);
+
+GST_EXPORT
 GstTagList *            gst_tag_list_from_vorbiscomment_buffer  (GstBuffer *            buffer,
                                                                  const guint8 *         id_data,
                                                                  const guint            id_data_length,
                                                                  gchar **               vendor_string);
+
+GST_EXPORT
 GstBuffer *             gst_tag_list_to_vorbiscomment_buffer    (const GstTagList *     list,
                                                                  const guint8 *         id_data,
                                                                  const guint            id_data_length,
@@ -453,77 +465,112 @@ GstBuffer *             gst_tag_list_to_vorbiscomment_buffer    (const GstTagLis
  * gst_tag_list_from_id3v2_tag(). Also, note gst.tag.list_xyz() namespace vs. gst.tag_list_xyz(),
  * which is a bit confusing and possibly doesn't map too well */
 
+GST_EXPORT
 guint                   gst_tag_id3_genre_count                 (void);
+
+GST_EXPORT
 const gchar *           gst_tag_id3_genre_get                   (const guint            id);
+
+GST_EXPORT
 GstTagList *            gst_tag_list_new_from_id3v1             (const guint8 *         data);
 
+GST_EXPORT
 const gchar *           gst_tag_from_id3_tag                    (const gchar *          id3_tag);
+
+GST_EXPORT
 const gchar *           gst_tag_from_id3_user_tag               (const gchar *          type,
                                                                  const gchar *          id3_user_tag);
+
+GST_EXPORT
 const gchar *           gst_tag_to_id3_tag                      (const gchar *          gst_tag);
 
+GST_EXPORT
 gboolean                gst_tag_list_add_id3_image (GstTagList   * tag_list,
                                                     const guint8 * image_data,
                                                     guint          image_data_len,
                                                     guint          id3_picture_type);
 
+GST_EXPORT
 GstTagList *            gst_tag_list_from_id3v2_tag (GstBuffer * buffer);
 
+GST_EXPORT
 guint                   gst_tag_get_id3v2_tag_size  (GstBuffer * buffer);
 
 /* functions to  convert GstBuffers with xmp packets contents to GstTagLists and back */
+
+GST_EXPORT
 GstTagList *            gst_tag_list_from_xmp_buffer (GstBuffer *  buffer);
+
+GST_EXPORT
 GstBuffer *		          gst_tag_list_to_xmp_buffer   (const GstTagList * list,
 							                                        gboolean read_only,
 							                                        const gchar ** schemas);
+
+GST_EXPORT
 const gchar**		        gst_tag_xmp_list_schemas     (void);
 
 /* functions related to exif */
+
+GST_EXPORT
 GstBuffer *             gst_tag_list_to_exif_buffer (const GstTagList * taglist,
                                                      gint byte_order,
                                                      guint32 base_offset);
 
+GST_EXPORT
 GstBuffer *             gst_tag_list_to_exif_buffer_with_tiff_header (const GstTagList * taglist);
 
+GST_EXPORT
 GstTagList *            gst_tag_list_from_exif_buffer (GstBuffer * buffer,
                                                        gint byte_order,
                                                        guint32 base_offset);
 
+GST_EXPORT
 GstTagList *            gst_tag_list_from_exif_buffer_with_tiff_header (
                                                       GstBuffer * buffer);
 
 /* other tag-related functions */
 
+GST_EXPORT
 gboolean                gst_tag_parse_extended_comment (const gchar  * ext_comment,
                                                         gchar       ** key,
                                                         gchar       ** lang,
                                                         gchar       ** value,
                                                         gboolean       fail_if_no_key);
 
+GST_EXPORT
 gchar                 * gst_tag_freeform_string_to_utf8 (const gchar  * data,
                                                          gint           size,
                                                          const gchar ** env_vars);
 
+GST_EXPORT
 GstSample             * gst_tag_image_data_to_image_sample (const guint8   * image_data,
                                                             guint            image_data_len,
                                                             GstTagImageType  image_type);
 
 /* FIXME 0.11: get rid of this awkward register/init function, see tags.c */
+
+GST_EXPORT
 void                    gst_tag_register_musicbrainz_tags (void);
 
 
 /* language tag related functions */
 
+GST_EXPORT
 gchar **       gst_tag_get_language_codes (void);
 
+GST_EXPORT
 const gchar *  gst_tag_get_language_name (const gchar * language_code);
 
+GST_EXPORT
 const gchar *  gst_tag_get_language_code_iso_639_1 (const gchar * lang_code);
 
+GST_EXPORT
 const gchar *  gst_tag_get_language_code_iso_639_2B (const gchar * lang_code);
 
+GST_EXPORT
 const gchar *  gst_tag_get_language_code_iso_639_2T (const gchar * lang_code);
 
+GST_EXPORT
 gboolean       gst_tag_check_language_code          (const gchar * lang_code);
 
 /**
@@ -595,18 +642,25 @@ typedef enum {
   GST_TAG_LICENSE_FREE_SOFTWARE_FOUNDATION_LICENSE = (1 << 25)
 } GstTagLicenseFlags;
 
+GST_EXPORT
 gchar **            gst_tag_get_licenses (void);
 
+GST_EXPORT
 GstTagLicenseFlags  gst_tag_get_license_flags (const gchar * license_ref);
 
+GST_EXPORT
 const gchar *       gst_tag_get_license_nick  (const gchar * license_ref);
 
+GST_EXPORT
 const gchar *       gst_tag_get_license_title (const gchar * license_ref);
 
+GST_EXPORT
 const gchar *       gst_tag_get_license_version (const gchar * license_ref);
 
+GST_EXPORT
 const gchar *       gst_tag_get_license_description  (const gchar * license_ref);
 
+GST_EXPORT
 const gchar *       gst_tag_get_license_jurisdiction (const gchar * license_ref);
 
 G_END_DECLS

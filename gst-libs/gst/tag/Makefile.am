@@ -4,6 +4,7 @@ libgsttagincludedir = \
 glib_enum_define = GST_TAG
 glib_gen_prefix = gst_tag
 glib_gen_basename = tag
+glib_gen_decl_banner=GST_EXPORT
 
 glib_enum_headers = tag.h gsttagdemux.h
 
