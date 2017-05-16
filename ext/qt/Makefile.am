@@ -48,7 +48,6 @@ libgstqmlgl_la_LIBADD = \
 	-lgstvideo-$(GST_API_VERSION)
 
 libgstqmlgl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstqmlgl_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 
 $(moc_generated): moc_%.cc: %.h
