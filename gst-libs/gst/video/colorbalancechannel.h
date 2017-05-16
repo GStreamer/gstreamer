@@ -78,6 +78,7 @@ struct _GstColorBalanceChannelClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType   gst_color_balance_channel_get_type (void);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

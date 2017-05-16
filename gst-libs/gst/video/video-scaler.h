@@ -50,33 +50,44 @@ typedef enum {
 
 typedef struct _GstVideoScaler GstVideoScaler;
 
+GST_EXPORT
 GstVideoScaler *      gst_video_scaler_new            (GstVideoResamplerMethod method,
                                                        GstVideoScalerFlags flags,
                                                        guint n_taps,
                                                        guint in_size, guint out_size,
                                                        GstStructure * options);
+
+GST_EXPORT
 void                  gst_video_scaler_free           (GstVideoScaler *scale);
 
+GST_EXPORT
 guint                 gst_video_scaler_get_max_taps   (GstVideoScaler *scale);
+
+GST_EXPORT
 const gdouble *       gst_video_scaler_get_coeff      (GstVideoScaler *scale,
                                                        guint out_offset,
                                                        guint *in_offset,
                                                        guint *n_taps);
 
+GST_EXPORT
 void                  gst_video_scaler_horizontal     (GstVideoScaler *scale,
                                                        GstVideoFormat format,
                                                        gpointer src, gpointer dest,
                                                        guint dest_offset, guint width);
+
+GST_EXPORT
 void                  gst_video_scaler_vertical       (GstVideoScaler *scale,
                                                        GstVideoFormat format,
                                                        gpointer src_lines[], gpointer dest,
                                                        guint dest_offset, guint width);
 
+GST_EXPORT
 GstVideoScaler *      gst_video_scaler_combine_packed_YUV (GstVideoScaler * y_scale,
                                                            GstVideoScaler *uv_scale,
                                                            GstVideoFormat in_format,
                                                            GstVideoFormat out_format);
 
+GST_EXPORT
 void                  gst_video_scaler_2d             (GstVideoScaler *hscale,
                                                        GstVideoScaler *vscale,
                                                        GstVideoFormat format,

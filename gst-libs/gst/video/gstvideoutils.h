@@ -264,21 +264,34 @@ struct _GstVideoCodecFrame
 };
 
 /* GstVideoCodecState */
+
+GST_EXPORT
 GType           gst_video_codec_state_get_type (void);
 
+GST_EXPORT
 GstVideoCodecState *gst_video_codec_state_ref (GstVideoCodecState * state);
 
+GST_EXPORT
 void                gst_video_codec_state_unref (GstVideoCodecState * state);
 
 
 /* GstVideoCodecFrame */
+
+GST_EXPORT
 GType                gst_video_codec_frame_get_type (void);
 
+GST_EXPORT
 GstVideoCodecFrame  *gst_video_codec_frame_ref (GstVideoCodecFrame * frame);
+
+GST_EXPORT
 void                 gst_video_codec_frame_unref (GstVideoCodecFrame * frame);
+
+GST_EXPORT
 void                 gst_video_codec_frame_set_user_data (GstVideoCodecFrame *frame,
 						          gpointer user_data,
 				                          GDestroyNotify notify);
+
+GST_EXPORT
 gpointer             gst_video_codec_frame_get_user_data (GstVideoCodecFrame *frame);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

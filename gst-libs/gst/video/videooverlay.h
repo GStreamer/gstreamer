@@ -68,30 +68,39 @@ struct _GstVideoOverlayInterface {
   void (*set_window_handle)    (GstVideoOverlay *overlay, guintptr handle);
 };
 
+GST_EXPORT
 GType   gst_video_overlay_get_type (void);
 
 /* virtual function wrappers */
 
+GST_EXPORT
 gboolean        gst_video_overlay_set_render_rectangle  (GstVideoOverlay * overlay,
                                                          gint              x,
                                                          gint              y,
                                                          gint              width,
                                                          gint              height);
 
+GST_EXPORT
 void            gst_video_overlay_expose                (GstVideoOverlay * overlay);
 
+GST_EXPORT
 void            gst_video_overlay_handle_events         (GstVideoOverlay * overlay,
                                                          gboolean          handle_events);
 
+GST_EXPORT
 void            gst_video_overlay_set_window_handle     (GstVideoOverlay * overlay,
                                                          guintptr handle);
 
 /* public methods to dispatch bus messages */
+
+GST_EXPORT
 void            gst_video_overlay_got_window_handle     (GstVideoOverlay * overlay,
                                                          guintptr          handle);
 
+GST_EXPORT
 void            gst_video_overlay_prepare_window_handle (GstVideoOverlay * overlay);
 
+GST_EXPORT
 gboolean        gst_is_video_overlay_prepare_window_handle_message (GstMessage * msg);
 
 G_END_DECLS

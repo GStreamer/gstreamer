@@ -120,8 +120,10 @@ struct _GstVideoSinkClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType gst_video_sink_get_type (void);
 
+GST_EXPORT
 void gst_video_sink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
                                  GstVideoRectangle *result, gboolean scaling);
 

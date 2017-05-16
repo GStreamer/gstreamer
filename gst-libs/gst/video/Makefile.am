@@ -8,6 +8,7 @@ glib_enum_headers = video.h video-format.h video-color.h video-info.h video-dith
 glib_enum_define = GST_VIDEO
 glib_gen_prefix = gst_video
 glib_gen_basename = video
+glib_gen_decl_banner=GST_EXPORT
 
 built_sources = video-enumtypes.c
 built_headers = video-enumtypes.h

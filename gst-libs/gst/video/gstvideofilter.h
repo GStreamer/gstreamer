@@ -79,6 +79,7 @@ struct _GstVideoFilterClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType gst_video_filter_get_type (void);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

@@ -117,6 +117,8 @@ typedef struct _GstVideoDecoderPrivate GstVideoDecoderPrivate;
 
 
 /* do not use this one, use macro below */
+
+GST_EXPORT
 GstFlowReturn _gst_video_decoder_error (GstVideoDecoder *dec, gint weight,
                                              GQuark domain, gint code,
                                              gchar *txt, gchar *debug,
@@ -339,94 +341,134 @@ struct _GstVideoDecoderClass
   void         *padding[GST_PADDING_LARGE-6];
 };
 
+GST_EXPORT
 GType    gst_video_decoder_get_type (void);
 
 /* Context parameters */
+
+GST_EXPORT
 void     gst_video_decoder_set_packetized (GstVideoDecoder * decoder,
 					   gboolean packetized);
 
+GST_EXPORT
 gboolean gst_video_decoder_get_packetized (GstVideoDecoder * decoder);
 
+GST_EXPORT
 void     gst_video_decoder_set_estimate_rate (GstVideoDecoder * dec,
 					      gboolean          enabled);
 
+GST_EXPORT
 gint     gst_video_decoder_get_estimate_rate (GstVideoDecoder * dec);
 
+GST_EXPORT
 void     gst_video_decoder_set_max_errors (GstVideoDecoder * dec,
 					   gint              num);
 
+GST_EXPORT
 gint     gst_video_decoder_get_max_errors (GstVideoDecoder * dec);
 
+GST_EXPORT
 void     gst_video_decoder_set_needs_format (GstVideoDecoder * dec,
                                              gboolean enabled);
 
+GST_EXPORT
 gboolean gst_video_decoder_get_needs_format (GstVideoDecoder * dec);
 
+GST_EXPORT
 void     gst_video_decoder_set_latency (GstVideoDecoder *decoder,
 					GstClockTime min_latency,
 					GstClockTime max_latency);
+
+GST_EXPORT
 void     gst_video_decoder_get_latency (GstVideoDecoder *decoder,
 					GstClockTime *min_latency,
 					GstClockTime *max_latency);
 
+GST_EXPORT
 void     gst_video_decoder_get_allocator (GstVideoDecoder *decoder,
                                           GstAllocator **allocator,
                                           GstAllocationParams *params);
+
+GST_EXPORT
 GstBufferPool *gst_video_decoder_get_buffer_pool (GstVideoDecoder *decoder);
 
 /* Object methods */
 
+GST_EXPORT
 GstVideoCodecFrame *gst_video_decoder_get_frame        (GstVideoDecoder *decoder,
 						        int frame_number);
 
+GST_EXPORT
 GstVideoCodecFrame *gst_video_decoder_get_oldest_frame (GstVideoDecoder *decoder);
 
+GST_EXPORT
 GList *             gst_video_decoder_get_frames       (GstVideoDecoder *decoder);
 
 /* Parsing related methods */
+
+GST_EXPORT
 void           gst_video_decoder_add_to_frame     (GstVideoDecoder *decoder,
 						   int n_bytes);
+
+GST_EXPORT
 GstFlowReturn  gst_video_decoder_have_frame       (GstVideoDecoder *decoder);
+
+GST_EXPORT
 gsize          gst_video_decoder_get_pending_frame_size (GstVideoDecoder *decoder);
 
+GST_EXPORT
 GstBuffer     *gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder);
 
+GST_EXPORT
 GstFlowReturn  gst_video_decoder_allocate_output_frame_with_params (GstVideoDecoder *decoder,
                                                                     GstVideoCodecFrame * frame,
                                                                     GstBufferPoolAcquireParams *params);
+
+GST_EXPORT
 GstFlowReturn  gst_video_decoder_allocate_output_frame  (GstVideoDecoder *decoder,
 						         GstVideoCodecFrame *frame);
 
+GST_EXPORT
 GstVideoCodecState *gst_video_decoder_set_output_state (GstVideoDecoder *decoder,
 							GstVideoFormat fmt, guint width, guint height,
 							GstVideoCodecState *reference);
 
+GST_EXPORT
 GstVideoCodecState *gst_video_decoder_get_output_state (GstVideoDecoder *decoder);
 
+GST_EXPORT
 gboolean         gst_video_decoder_negotiate           (GstVideoDecoder * decoder);
 
+GST_EXPORT
 GstClockTimeDiff gst_video_decoder_get_max_decode_time (GstVideoDecoder *decoder,
 							GstVideoCodecFrame *frame);
 
+GST_EXPORT
 gdouble          gst_video_decoder_get_qos_proportion (GstVideoDecoder * decoder);
 
+GST_EXPORT
 GstFlowReturn    gst_video_decoder_finish_frame (GstVideoDecoder *decoder,
 						 GstVideoCodecFrame *frame);
 
+GST_EXPORT
 GstFlowReturn    gst_video_decoder_drop_frame (GstVideoDecoder *dec,
 					       GstVideoCodecFrame *frame);
 
+GST_EXPORT
 void             gst_video_decoder_release_frame (GstVideoDecoder * dec,
 						  GstVideoCodecFrame * frame);
 
+GST_EXPORT
 void             gst_video_decoder_merge_tags (GstVideoDecoder *decoder,
                                                const GstTagList *tags,
                                                GstTagMergeMode mode);
 
+GST_EXPORT
 GstCaps *        gst_video_decoder_proxy_getcaps (GstVideoDecoder * decoder,
 						  GstCaps         * caps,
                                                   GstCaps         * filter);
 
+GST_EXPORT
 void             gst_video_decoder_set_use_default_pad_acceptcaps (GstVideoDecoder * decoder,
                                                                    gboolean use);
 

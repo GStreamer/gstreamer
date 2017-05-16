@@ -498,19 +498,29 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_TILE_HS(info) ((info)->tile_hs)
 
 /* format properties */
+
+GST_EXPORT
 GstVideoFormat gst_video_format_from_masks           (gint depth, gint bpp, gint endianness,
                                                       guint red_mask, guint green_mask,
                                                       guint blue_mask, guint alpha_mask) G_GNUC_CONST;
 
+GST_EXPORT
 GstVideoFormat gst_video_format_from_fourcc          (guint32 fourcc) G_GNUC_CONST;
+
+GST_EXPORT
 GstVideoFormat gst_video_format_from_string          (const gchar *format) G_GNUC_CONST;
 
+GST_EXPORT
 guint32        gst_video_format_to_fourcc            (GstVideoFormat format) G_GNUC_CONST;
+
+GST_EXPORT
 const gchar *  gst_video_format_to_string            (GstVideoFormat format) G_GNUC_CONST;
 
+GST_EXPORT
 const GstVideoFormatInfo *
                gst_video_format_get_info             (GstVideoFormat format) G_GNUC_CONST;
 
+GST_EXPORT
 gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsize *size);
 
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
