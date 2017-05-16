@@ -160,6 +160,6 @@ libgstopengl_la_LIBADD = \
 	$(GRAPHENE_LIBS)
 
 libgstopengl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstopengl_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
+libgstopengl_la_LIBTOOLFLAGS = --tag=CC
 
 
