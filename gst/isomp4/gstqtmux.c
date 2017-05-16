@@ -2443,6 +2443,7 @@ gst_qt_mux_prefill_samples (GstQTMux * qtmux)
 {
   GstQTPad *qpad;
   GSList *walk;
+  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
 
   /* Update expected sample sizes/durations as needed, this is for raw
    * audio where samples are actual audio samples. */
@@ -2454,41 +2455,43 @@ gst_qt_mux_prefill_samples (GstQTMux * qtmux)
       return FALSE;
   }
 
-  /* For the first sample check/update timecode as needed. We do that before
-   * all actual samples as the code in gst_qt_mux_add_buffer() does it with
-   * initial buffer directly, not with last_buf */
-  for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
-    GstCollectData *cdata = (GstCollectData *) walk->data;
-    GstQTPad *qpad = (GstQTPad *) cdata;
-    GstBuffer *buffer =
-        gst_collect_pads_peek (qtmux->collect, (GstCollectData *) qpad);
-    GstVideoTimeCodeMeta *tc_meta;
+  if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT) {
+    /* For the first sample check/update timecode as needed. We do that before
+     * all actual samples as the code in gst_qt_mux_add_buffer() does it with
+     * initial buffer directly, not with last_buf */
+    for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+      GstCollectData *cdata = (GstCollectData *) walk->data;
+      GstQTPad *qpad = (GstQTPad *) cdata;
+      GstBuffer *buffer =
+          gst_collect_pads_peek (qtmux->collect, (GstCollectData *) qpad);
+      GstVideoTimeCodeMeta *tc_meta;
 
-    if (buffer && (tc_meta = gst_buffer_get_video_time_code_meta (buffer))) {
-      GstVideoTimeCode *tc = &tc_meta->tc;
+      if (buffer && (tc_meta = gst_buffer_get_video_time_code_meta (buffer))) {
+        GstVideoTimeCode *tc = &tc_meta->tc;
 
-      qpad->tc_trak = atom_trak_new (qtmux->context);
-      atom_moov_add_trak (qtmux->moov, qpad->tc_trak);
+        qpad->tc_trak = atom_trak_new (qtmux->context);
+        atom_moov_add_trak (qtmux->moov, qpad->tc_trak);
 
-      qpad->trak->tref = atom_tref_new (FOURCC_tmcd);
-      atom_tref_add_entry (qpad->trak->tref, qpad->tc_trak->tkhd.track_ID);
+        qpad->trak->tref = atom_tref_new (FOURCC_tmcd);
+        atom_tref_add_entry (qpad->trak->tref, qpad->tc_trak->tkhd.track_ID);
 
-      atom_trak_set_timecode_type (qpad->tc_trak, qtmux->context, tc);
+        atom_trak_set_timecode_type (qpad->tc_trak, qtmux->context, tc);
 
-      atom_trak_add_samples (qpad->tc_trak, 1, 1, 4,
-          qtmux->mdat_size, FALSE, 0);
+        atom_trak_add_samples (qpad->tc_trak, 1, 1, 4,
+            qtmux->mdat_size, FALSE, 0);
 
-      qpad->tc_pos = qtmux->mdat_size;
-      qpad->first_tc = gst_video_time_code_copy (tc);
-      qpad->first_pts = GST_BUFFER_PTS (buffer);
+        qpad->tc_pos = qtmux->mdat_size;
+        qpad->first_tc = gst_video_time_code_copy (tc);
+        qpad->first_pts = GST_BUFFER_PTS (buffer);
 
-      qtmux->current_chunk_offset = -1;
-      qtmux->current_chunk_size = 0;
-      qtmux->current_chunk_duration = 0;
-      qtmux->mdat_size += 4;
+        qtmux->current_chunk_offset = -1;
+        qtmux->current_chunk_size = 0;
+        qtmux->current_chunk_duration = 0;
+        qtmux->mdat_size += 4;
+      }
+      if (buffer)
+        gst_buffer_unref (buffer);
     }
-    if (buffer)
-      gst_buffer_unref (buffer);
   }
 
   while ((qpad = find_best_pad_prefill (qtmux))) {
@@ -3173,6 +3176,10 @@ gst_qt_mux_update_timecode (GstQTMux * qtmux, GstQTPad * qtpad)
   GstBuffer *buf;
   GstMapInfo map;
   guint64 offset = qtpad->tc_pos;
+  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
+
+  if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT)
+    return GST_FLOW_OK;
 
   g_assert (qtpad->tc_pos != -1);
 
@@ -3893,6 +3900,10 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
   GstBuffer *tc_buf;
   gsize szret;
   guint32 frames_since_daily_jam;
+  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
+
+  if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT)
+    return ret;
 
   if (buf == NULL || (pad->tc_trak != NULL && pad->tc_pos == -1))
     return ret;
