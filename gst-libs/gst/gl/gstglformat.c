@@ -58,6 +58,7 @@ _gl_format_n_components (guint format)
     case GST_VIDEO_GL_TEXTURE_TYPE_RGB:
     case GST_VIDEO_GL_TEXTURE_TYPE_RGB16:
     case GST_GL_RGB:
+    case GST_GL_RGB565:
       return 3;
     case GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA:
     case GST_VIDEO_GL_TEXTURE_TYPE_RG:
@@ -257,6 +258,7 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
       break;
     case GST_GL_RGBA8:
     case GST_GL_RGB8:
+    case GST_GL_RGB565:
     case GST_GL_RG8:
     case GST_GL_R8:
     case GST_GL_LUMINANCE:
