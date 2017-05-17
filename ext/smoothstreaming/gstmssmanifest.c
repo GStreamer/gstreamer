@@ -1600,9 +1600,10 @@ gst_mss_stream_fragment_parsing_needed (GstMssStream * stream)
 void
 gst_mss_stream_parse_fragment (GstMssStream * stream, GstBuffer * buffer)
 {
-  GstMssStreamFragment *current_fragment = NULL;
   const gchar *stream_type_name;
   guint8 index;
+  GstMoofBox *moof;
+  GstTrafBox *traf;
 
   if (!stream->has_live_fragments)
     return;
@@ -1610,20 +1611,20 @@ gst_mss_stream_parse_fragment (GstMssStream * stream, GstBuffer * buffer)
   if (!gst_mss_fragment_parser_add_buffer (&stream->fragment_parser, buffer))
     return;
 
-  current_fragment = stream->current_fragment->data;
-  current_fragment->time = stream->fragment_parser.tfxd.time;
-  current_fragment->duration = stream->fragment_parser.tfxd.duration;
+  moof = stream->fragment_parser.moof;
+  traf = &g_array_index (moof->traf, GstTrafBox, 0);
 
   stream_type_name =
       gst_mss_stream_type_name (gst_mss_stream_get_type (stream));
 
-  for (index = 0; index < stream->fragment_parser.tfrf.entries_count; index++) {
+  for (index = 0; index < traf->tfrf->entries_count; index++) {
+    GstTfrfBoxEntry *entry =
+        &g_array_index (traf->tfrf->entries, GstTfrfBoxEntry, index);
     GList *l = g_list_last (stream->fragments);
     GstMssStreamFragment *last;
     GstMssStreamFragment *fragment;
-    guint64 parsed_time = stream->fragment_parser.tfrf.entries[index].time;
-    guint64 parsed_duration =
-        stream->fragment_parser.tfrf.entries[index].duration;
+    guint64 parsed_time = entry->time;
+    guint64 parsed_duration = entry->duration;
 
     if (l == NULL)
       break;
@@ -1632,7 +1633,7 @@ gst_mss_stream_parse_fragment (GstMssStream * stream, GstBuffer * buffer)
 
     /* only add the fragment to the list if it's outside the time in the
      * current list */
-    if (last->time >= stream->fragment_parser.tfrf.entries[index].time)
+    if (last->time >= entry->time)
       continue;
 
     fragment = g_new (GstMssStreamFragment, 1);

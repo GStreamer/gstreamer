@@ -34,101 +34,15 @@ void
 gst_mss_fragment_parser_init (GstMssFragmentParser * parser)
 {
   parser->status = GST_MSS_FRAGMENT_HEADER_PARSER_INIT;
-  parser->tfrf.entries_count = 0;
 }
 
 void
 gst_mss_fragment_parser_clear (GstMssFragmentParser * parser)
 {
-  parser->tfrf.entries_count = 0;
-  if (parser->tfrf.entries) {
-    g_free (parser->tfrf.entries);
-    parser->tfrf.entries = 0;
-  }
-}
-
-static gboolean
-_parse_tfrf_box (GstMssFragmentParser * parser, GstByteReader * reader)
-{
-  guint8 version;
-  guint32 flags = 0;
-  guint8 fragment_count = 0;
-  guint8 index = 0;
-
-  if (!gst_byte_reader_get_uint8 (reader, &version)) {
-    GST_ERROR ("Error getting box's version field");
-    return FALSE;
-  }
-
-  if (!gst_byte_reader_get_uint24_be (reader, &flags)) {
-    GST_ERROR ("Error getting box's flags field");
-    return FALSE;
-  }
-
-  gst_byte_reader_get_uint8 (reader, &fragment_count);
-  parser->tfrf.entries_count = fragment_count;
-  parser->tfrf.entries =
-      g_malloc (sizeof (GstTfrfBoxEntry) * parser->tfrf.entries_count);
-  for (index = 0; index < fragment_count; index++) {
-    guint64 absolute_time = 0;
-    guint64 absolute_duration = 0;
-    if (version & 0x01) {
-      gst_byte_reader_get_uint64_be (reader, &absolute_time);
-      gst_byte_reader_get_uint64_be (reader, &absolute_duration);
-    } else {
-      guint32 time = 0;
-      guint32 duration = 0;
-      gst_byte_reader_get_uint32_be (reader, &time);
-      gst_byte_reader_get_uint32_be (reader, &duration);
-      time = ~time;
-      duration = ~duration;
-      absolute_time = ~time;
-      absolute_duration = ~duration;
-    }
-    parser->tfrf.entries[index].time = absolute_time;
-    parser->tfrf.entries[index].duration = absolute_duration;
-  }
-
-  GST_LOG ("tfrf box parsed");
-  return TRUE;
-}
-
-static gboolean
-_parse_tfxd_box (GstMssFragmentParser * parser, GstByteReader * reader)
-{
-  guint8 version;
-  guint32 flags = 0;
-  guint64 absolute_time = 0;
-  guint64 absolute_duration = 0;
-
-  if (!gst_byte_reader_get_uint8 (reader, &version)) {
-    GST_ERROR ("Error getting box's version field");
-    return FALSE;
-  }
-
-  if (!gst_byte_reader_get_uint24_be (reader, &flags)) {
-    GST_ERROR ("Error getting box's flags field");
-    return FALSE;
-  }
-
-  if (version & 0x01) {
-    gst_byte_reader_get_uint64_be (reader, &absolute_time);
-    gst_byte_reader_get_uint64_be (reader, &absolute_duration);
-  } else {
-    guint32 time = 0;
-    guint32 duration = 0;
-    gst_byte_reader_get_uint32_be (reader, &time);
-    gst_byte_reader_get_uint32_be (reader, &duration);
-    time = ~time;
-    duration = ~duration;
-    absolute_time = ~time;
-    absolute_duration = ~duration;
-  }
-
-  parser->tfxd.time = absolute_time;
-  parser->tfxd.duration = absolute_duration;
-  GST_LOG ("tfxd box parsed");
-  return TRUE;
+  if (parser->moof)
+    gst_isoff_moof_box_free (parser->moof);
+  parser->moof = NULL;
+  parser->current_fourcc = 0;
 }
 
 gboolean
@@ -137,26 +51,10 @@ gst_mss_fragment_parser_add_buffer (GstMssFragmentParser * parser,
 {
   GstByteReader reader;
   GstMapInfo info;
-  guint32 size;
+  guint64 size;
   guint32 fourcc;
-  const guint8 *uuid;
+  guint header_size;
   gboolean error = FALSE;
-  gboolean mdat_box_found = FALSE;
-
-  static const guint8 tfrf_uuid[] = {
-    0xd4, 0x80, 0x7e, 0xf2, 0xca, 0x39, 0x46, 0x95,
-    0x8e, 0x54, 0x26, 0xcb, 0x9e, 0x46, 0xa7, 0x9f
-  };
-
-  static const guint8 tfxd_uuid[] = {
-    0x6d, 0x1d, 0x9b, 0x05, 0x42, 0xd5, 0x44, 0xe6,
-    0x80, 0xe2, 0x14, 0x1d, 0xaf, 0xf7, 0x57, 0xb2
-  };
-
-  static const guint8 piff_uuid[] = {
-    0xa2, 0x39, 0x4f, 0x52, 0x5a, 0x9b, 0x4f, 0x14,
-    0xa2, 0x44, 0x6c, 0x42, 0x7c, 0x64, 0x8d, 0xf4
-  };
 
   if (!gst_buffer_map (buffer, &info, GST_MAP_READ)) {
     return FALSE;
@@ -165,97 +63,55 @@ gst_mss_fragment_parser_add_buffer (GstMssFragmentParser * parser,
   gst_byte_reader_init (&reader, info.data, info.size);
   GST_TRACE ("Total buffer size: %u", gst_byte_reader_get_size (&reader));
 
-  size = gst_byte_reader_get_uint32_be_unchecked (&reader);
-  fourcc = gst_byte_reader_get_uint32_le_unchecked (&reader);
-  if (fourcc == GST_MSS_FRAGMENT_FOURCC_MOOF) {
-    GST_TRACE ("moof box found");
-    size = gst_byte_reader_get_uint32_be_unchecked (&reader);
-    fourcc = gst_byte_reader_get_uint32_le_unchecked (&reader);
-    if (fourcc == GST_MSS_FRAGMENT_FOURCC_MFHD) {
-      gst_byte_reader_skip_unchecked (&reader, size - 8);
+  do {
+    parser->current_fourcc = 0;
 
-      size = gst_byte_reader_get_uint32_be_unchecked (&reader);
-      fourcc = gst_byte_reader_get_uint32_le_unchecked (&reader);
-      if (fourcc == GST_MSS_FRAGMENT_FOURCC_TRAF) {
-        size = gst_byte_reader_get_uint32_be_unchecked (&reader);
-        fourcc = gst_byte_reader_get_uint32_le_unchecked (&reader);
-        if (fourcc == GST_MSS_FRAGMENT_FOURCC_TFHD) {
-          gst_byte_reader_skip_unchecked (&reader, size - 8);
-
-          size = gst_byte_reader_get_uint32_be_unchecked (&reader);
-          fourcc = gst_byte_reader_get_uint32_le_unchecked (&reader);
-          if (fourcc == GST_MSS_FRAGMENT_FOURCC_TRUN) {
-            GST_TRACE ("trun box found, size: %" G_GUINT32_FORMAT, size);
-            if (!gst_byte_reader_skip (&reader, size - 8)) {
-              GST_WARNING ("Failed to skip trun box, enough data?");
-              error = TRUE;
-              goto beach;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  while (!mdat_box_found) {
-    GST_TRACE ("remaining data: %u", gst_byte_reader_get_remaining (&reader));
-    if (!gst_byte_reader_get_uint32_be (&reader, &size)) {
-      GST_WARNING ("Failed to get box size, enough data?");
-      error = TRUE;
+    if (!gst_isoff_parse_box_header (&reader, &fourcc, NULL, &header_size,
+            &size)) {
       break;
     }
 
-    GST_TRACE ("box size: %" G_GUINT32_FORMAT, size);
-    if (!gst_byte_reader_get_uint32_le (&reader, &fourcc)) {
-      GST_WARNING ("Failed to get fourcc, enough data?");
-      error = TRUE;
-      break;
-    }
+    parser->current_fourcc = fourcc;
 
-    if (fourcc == GST_MSS_FRAGMENT_FOURCC_MDAT) {
-      GST_LOG ("mdat box found");
-      mdat_box_found = TRUE;
-      break;
-    }
+    GST_LOG ("box %" GST_FOURCC_FORMAT " size %" G_GUINT64_FORMAT,
+        GST_FOURCC_ARGS (fourcc), size);
 
-    if (fourcc != GST_MSS_FRAGMENT_FOURCC_UUID) {
-      GST_ERROR ("invalid UUID fourcc: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (fourcc));
-      error = TRUE;
-      break;
-    }
+    parser->current_fourcc = fourcc;
 
-    if (!gst_byte_reader_peek_data (&reader, 16, &uuid)) {
-      GST_ERROR ("not enough data in UUID box");
-      error = TRUE;
-      break;
-    }
+    if (parser->current_fourcc == GST_ISOFF_FOURCC_MOOF) {
+      GstByteReader sub_reader;
 
-    if (memcmp (uuid, piff_uuid, 16) == 0) {
-      gst_byte_reader_skip_unchecked (&reader, size - 8);
-      GST_LOG ("piff box detected");
-    }
-
-    if (memcmp (uuid, tfrf_uuid, 16) == 0) {
-      gst_byte_reader_get_data (&reader, 16, &uuid);
-      if (!_parse_tfrf_box (parser, &reader)) {
-        GST_ERROR ("txrf box parsing error");
+      g_assert (parser->moof == NULL);
+      gst_byte_reader_get_sub_reader (&reader, &sub_reader, size - header_size);
+      parser->moof = gst_isoff_moof_box_parse (&sub_reader);
+      if (parser->moof == NULL) {
+        GST_ERROR ("Failed to parse moof");
         error = TRUE;
-        break;
       }
+    } else if (parser->current_fourcc == GST_ISOFF_FOURCC_MDAT) {
+      goto beach;
+    } else {
+      gst_byte_reader_skip (&reader, size - header_size);
     }
-
-    if (memcmp (uuid, tfxd_uuid, 16) == 0) {
-      gst_byte_reader_get_data (&reader, 16, &uuid);
-      if (!_parse_tfxd_box (parser, &reader)) {
-        GST_ERROR ("tfrf box parsing error");
-        error = TRUE;
-        break;
-      }
-    }
-  }
+  } while (gst_byte_reader_get_remaining (&reader) > 0);
 
 beach:
+
+  /* Do sanity check */
+  if (parser->current_fourcc != GST_ISOFF_FOURCC_MDAT || !parser->moof ||
+      parser->moof->traf->len == 0)
+    error = TRUE;
+
+  if (!error) {
+    GstTrafBox *traf = &g_array_index (parser->moof->traf, GstTrafBox, 0);
+    if (!traf->tfxd) {
+      GST_ERROR ("no tfxd box");
+      error = TRUE;
+    } else if (!traf->tfrf) {
+      GST_ERROR ("no tfrf box");
+      error = TRUE;
+    }
+  }
 
   if (!error)
     parser->status = GST_MSS_FRAGMENT_HEADER_PARSER_FINISHED;
