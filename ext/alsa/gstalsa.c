@@ -126,6 +126,14 @@ gst_alsa_get_pcm_format (GstAudioFormat fmt)
       return SND_PCM_FORMAT_U32_LE;
     case GST_AUDIO_FORMAT_U32BE:
       return SND_PCM_FORMAT_U32_BE;
+    case GST_AUDIO_FORMAT_F32LE:
+      return SND_PCM_FORMAT_FLOAT_LE;
+    case GST_AUDIO_FORMAT_F32BE:
+      return SND_PCM_FORMAT_FLOAT_BE;
+    case GST_AUDIO_FORMAT_F64LE:
+      return SND_PCM_FORMAT_FLOAT64_LE;
+    case GST_AUDIO_FORMAT_F64BE:
+      return SND_PCM_FORMAT_FLOAT64_BE;
     default:
       break;
   }
