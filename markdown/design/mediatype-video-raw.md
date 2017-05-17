@@ -37,15 +37,17 @@
      must be prepared for this. This mode requires multiple
      GstVideoMeta metadata to describe the fields.
 
- - **chroma-site**, `G_TYPE_STRING`: Default UNKNOWN. The chroma siting of the
-   video frames.
+ - **chroma-site**, `G_TYPE_STRING`: Default `GST_VIDEO_CHROMA_SITE_UNKNOWN`.
+   The chroma siting of the video frames.
 
    - *"jpeg"*: `GST_VIDEO_CHROMA_SITE_JPEG`
    - *"mpeg2"*: `GST_VIDEO_CHROMA_SITE_MPEG2`
    - *"dv"*: `GST_VIDEO_CHROMA_SITE_DV`
+   - ...
+   - *"none"*: `GST_VIDEO_CHROMA_SITE_NONE`
 
- - **colorimetry**, `G_TYPE_STRING`: Default UNKNOWN. The colorimetry of the
-   video frames. Predefined colorimetry is given with the following values:
+ - **colorimetry**, `G_TYPE_STRING`: Default `GST_VIDEO_COLORIMETRY_UNKNOWN`.
+   The colorimetry of the video frames. Predefined colorimetry is given with the following values:
 
    - *"bt601"*
    - *"bt709"*
