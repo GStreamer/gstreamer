@@ -25,10 +25,14 @@
 #include "gstqtglutility.h"
 #include <QtGui/QGuiApplication>
 
-#if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (HAVE_QT_X11)
+#if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
 #include <QX11Info>
 #include <gst/gl/x11/gstgldisplay_x11.h>
+#if GST_GL_HAVE_PLATFORM_GLX
 #include <gst/gl/x11/gstglcontext_glx.h>
+#elif GST_GL_HAVE_PLATFORM_EGL
+#include <gst/gl/egl/gstglcontext_egl.h>
+#endif
 #endif
 
 #if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_WAYLAND)
@@ -151,7 +155,11 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
 
 #if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
   if (GST_IS_GL_DISPLAY_X11 (display)) {
+#if GST_GL_HAVE_PLATFORM_GLX
     platform = GST_GL_PLATFORM_GLX;
+#elif GST_GL_HAVE_PLATFORM_EGL
+    platform = GST_GL_PLATFORM_EGL;
+#endif
   }
 #endif
 #if GST_GL_HAVE_WINDOW_WAYLAND && defined (HAVE_QT_WAYLAND)

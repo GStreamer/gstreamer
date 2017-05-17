@@ -2922,7 +2922,7 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
           QT_CFLAGS="$QT_CFLAGS -I$PKG_CONFIG_SYSROOT_DIR/$QPA_INCLUDE_PATH"
           HAVE_QT_QPA_HEADER="yes"
         ], [AC_MSG_NOTICE([Cannot find QPA])])
-        if test "x$GST_GL_HAVE_WINDOW_X11" = "x1" -a "x$GST_GL_HAVE_PLATFORM_GLX" = "x1"; then
+        if test "x$GST_GL_HAVE_WINDOW_X11" = "x1" -a "x$GST_GL_HAVE_PLATFORM_GLX" = "x1" || test "x$GST_GL_HAVE_WINDOW_X11" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EGL" = "x1"; then
           PKG_CHECK_MODULES(QT_X11, Qt5X11Extras, [
             AC_DEFINE([HAVE_QT_X11], [], [Define if Qt X11 integration is installed])
             QT_CFLAGS="$QT_CFLAGS $QT_X11_CFLAGS"
