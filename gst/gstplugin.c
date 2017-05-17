@@ -687,8 +687,13 @@ extract_symname (const char *filename)
   gchar *bname, *name, *symname;
   const gchar *dot;
   gsize prefix_len = 0, len;
+  int i;
 
   bname = g_path_get_basename (filename);
+  for (i = 0; bname[i]; ++i) {
+    if (bname[i] == '-')
+      bname[i] = '_';
+  }
 
   if (g_str_has_prefix (bname, "libgst"))
     prefix_len += 6;
