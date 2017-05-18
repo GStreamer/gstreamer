@@ -1090,8 +1090,7 @@ gst_h265_parse_make_codec_data (GstH265Parse * h265parse)
 
   buf =
       gst_buffer_new_allocate (NULL,
-      23 + num_arrays + (3 * num_arrays) + vps_size + sps_size + pps_size,
-      NULL);
+      23 + (3 * num_arrays) + vps_size + sps_size + pps_size, NULL);
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   data = map.data;
   memset (data, 0, map.size);
