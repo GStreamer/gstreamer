@@ -1058,4 +1058,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     webrtcdsp,
     "Voice pre-processing using WebRTC Audio Processing Library",
-    plugin_init, VERSION, "LGPL", "WebRTCDsp", "http://git.collabora.com")
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

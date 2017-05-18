@@ -50,5 +50,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     openh264,
     "OpenH264 encoder/decoder plugin",
-    plugin_init,
-    VERSION, "BSD", "OpenWebRTC GStreamer plugins", "http://www.ericsson.com")
+    plugin_init, VERSION, "BSD", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

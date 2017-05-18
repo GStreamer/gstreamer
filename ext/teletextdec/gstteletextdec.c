@@ -1143,4 +1143,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     teletext,
     "Teletext plugin",
-    teletext_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
+    teletext_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

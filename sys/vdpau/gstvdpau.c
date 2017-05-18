@@ -46,4 +46,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     vdpau,
     "Various elements utilizing VDPAU",
-    vdpau_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
+    vdpau_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
