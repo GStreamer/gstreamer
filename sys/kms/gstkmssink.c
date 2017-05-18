@@ -70,6 +70,8 @@ G_DEFINE_TYPE_WITH_CODE (GstKMSSink, gst_kms_sink, GST_TYPE_VIDEO_SINK,
         GST_PLUGIN_DESC);
     GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE"));
 
+static void gst_kms_sink_drain (GstKMSSink * self);
+
 enum
 {
   PROP_DRIVER_NAME = 1,
@@ -825,6 +827,11 @@ gst_kms_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   self = GST_KMS_SINK (bsink);
 
+  /* We are going to change the internal buffer pool, which means it will no
+   * longer be compatbile with the last_buffer size. Drain now, as we won't be
+   * able to do that later on. */
+  gst_kms_sink_drain (self);
+
   if (!gst_video_info_from_caps (&vinfo, caps))
     goto invalid_format;
 
@@ -1337,6 +1344,45 @@ no_disp_ratio:
 }
 
 static void
+gst_kms_sink_drain (GstKMSSink * self)
+{
+  GstParentBufferMeta *parent_meta;
+
+  GST_DEBUG_OBJECT (self, "draining");
+
+  if (!self->last_buffer)
+    return;
+
+  /* We only need to return the last_buffer if it depends on upstream buffer.
+   * In this case, the last_buffer will have a GstParentBufferMeta set. */
+  parent_meta = gst_buffer_get_parent_buffer_meta (self->last_buffer);
+  if (parent_meta) {
+    GstBuffer *dumb_buf;
+    dumb_buf = gst_kms_sink_copy_to_dumb_buffer (self, parent_meta->buffer);
+    gst_kms_sink_show_frame (GST_VIDEO_SINK (self), dumb_buf);
+  }
+}
+
+static gboolean
+gst_kms_sink_query (GstBaseSink * bsink, GstQuery * query)
+{
+  GstKMSSink *self = GST_KMS_SINK (bsink);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:
+    case GST_QUERY_DRAIN:
+    {
+      gst_kms_sink_drain (self);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
+}
+
+static void
 gst_kms_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -1440,6 +1486,7 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_kms_sink_set_caps);
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_kms_sink_get_caps);
   basesink_class->propose_allocation = gst_kms_sink_propose_allocation;
+  basesink_class->query = gst_kms_sink_query;
 
   videosink_class->show_frame = gst_kms_sink_show_frame;
 
