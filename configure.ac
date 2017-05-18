@@ -162,49 +162,6 @@ GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
 AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
 
-AC_ARG_WITH([omx-header-path],
-            AS_HELP_STRING([--with-omx-header-path],[path of external OpenMAX IL header files]),
-        [omx_header_path="$withval"], [omx_header_path="none"])
-
-if test x"$omx_header_path" != x"none"; then
-    CPPFLAGS="$CPPFLAGS -I$omx_header_path"
-fi
-dnl Check for external OpenMAX IL headers
-AC_CHECK_HEADER([OMX_Core.h], [HAVE_EXTERNAL_OMX=yes], [HAVE_EXTERNAL_OMX=no], [AC_INCLUDES_DEFAULT])
-AM_CONDITIONAL(HAVE_EXTERNAL_OMX, test "x$HAVE_EXTERNAL_OMX" = "xyes")
-
-dnl Our internal OpenMAX IL headers have OMX_VideoExt.h
-HAVE_VIDEO_EXT=yes
-if test "x$HAVE_EXTERNAL_OMX" = "xyes"; then
-    AC_CHECK_HEADER([OMX_VideoExt.h], [HAVE_VIDEO_EXT=yes], [HAVE_VIDEO_EXT=no], [AC_INCLUDES_DEFAULT])
-fi
-
-VIDEO_HEADERS="#include <OMX_Video.h>"
-if test "x$HAVE_VIDEO_EXT" = "xyes"; then
-    AC_DEFINE(HAVE_VIDEO_EXT, 1, [OpenMAX IL has OMX_VideoExt.h header])
-    VIDEO_HEADERS="$VIDEO_HEADERS
-#include <OMX_VideoExt.h>
-"
-fi
-
-AC_CHECK_DECLS([OMX_VIDEO_CodingVP8],
-  [
-    AC_DEFINE(HAVE_VP8, 1, [OpenMAX IL has VP8 support])
-    HAVE_VP8=yes
-  ], [
-    HAVE_VP8=no
-  ], [[$VIDEO_HEADERS]])
-AM_CONDITIONAL(HAVE_VP8, test "x$HAVE_VP8" = "xyes")
-
-AC_CHECK_DECLS([OMX_VIDEO_CodingTheora],
-  [
-    AC_DEFINE(HAVE_THEORA, 1, [OpenMAX IL has Theora support])
-    HAVE_THEORA=yes
-  ], [
-    HAVE_THEORA=no
-  ], [[$VIDEO_HEADERS]])
-AM_CONDITIONAL(HAVE_THEORA, test "x$HAVE_THEORA" = "xyes")
-
 dnl Check for -Bsymbolic-functions linker flag used to avoid
 dnl intra-library PLT jumps, if available.
 AC_ARG_ENABLE(Bsymbolic,
@@ -257,6 +214,49 @@ elif test x"$ac_cv_omx_target_struct_packing" != x"none"; then
   AC_MSG_NOTICE([Using $ac_cv_omx_target_struct_packing as OpenMAX struct packing])
   AC_DEFINE_UNQUOTED(GST_OMX_STRUCT_PACKING, $ac_cv_omx_target_struct_packing, [The struct packing used for OpenMAX structures])
 fi
+
+AC_ARG_WITH([omx-header-path],
+            AS_HELP_STRING([--with-omx-header-path],[path of external OpenMAX IL header files]),
+        [omx_header_path="$withval"], [omx_header_path="none"])
+
+if test x"$omx_header_path" != x"none"; then
+    CPPFLAGS="$CPPFLAGS -I$omx_header_path"
+fi
+dnl Check for external OpenMAX IL headers
+AC_CHECK_HEADER([OMX_Core.h], [HAVE_EXTERNAL_OMX=yes], [HAVE_EXTERNAL_OMX=no], [AC_INCLUDES_DEFAULT])
+AM_CONDITIONAL(HAVE_EXTERNAL_OMX, test "x$HAVE_EXTERNAL_OMX" = "xyes")
+
+dnl Our internal OpenMAX IL headers have OMX_VideoExt.h
+HAVE_VIDEO_EXT=yes
+if test "x$HAVE_EXTERNAL_OMX" = "xyes"; then
+    AC_CHECK_HEADER([OMX_VideoExt.h], [HAVE_VIDEO_EXT=yes], [HAVE_VIDEO_EXT=no], [AC_INCLUDES_DEFAULT])
+fi
+
+VIDEO_HEADERS="#include <OMX_Video.h>"
+if test "x$HAVE_VIDEO_EXT" = "xyes"; then
+    AC_DEFINE(HAVE_VIDEO_EXT, 1, [OpenMAX IL has OMX_VideoExt.h header])
+    VIDEO_HEADERS="$VIDEO_HEADERS
+#include <OMX_VideoExt.h>
+"
+fi
+
+AC_CHECK_DECLS([OMX_VIDEO_CodingVP8],
+  [
+    AC_DEFINE(HAVE_VP8, 1, [OpenMAX IL has VP8 support])
+    HAVE_VP8=yes
+  ], [
+    HAVE_VP8=no
+  ], [[$VIDEO_HEADERS]])
+AM_CONDITIONAL(HAVE_VP8, test "x$HAVE_VP8" = "xyes")
+
+AC_CHECK_DECLS([OMX_VIDEO_CodingTheora],
+  [
+    AC_DEFINE(HAVE_THEORA, 1, [OpenMAX IL has Theora support])
+    HAVE_THEORA=yes
+  ], [
+    HAVE_THEORA=no
+  ], [[$VIDEO_HEADERS]])
+AM_CONDITIONAL(HAVE_THEORA, test "x$HAVE_THEORA" = "xyes")
 
 dnl *** set variables based on configure arguments ***
 
