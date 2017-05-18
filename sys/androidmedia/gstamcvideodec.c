@@ -1969,6 +1969,8 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
           gst_video_codec_state_unref (prev_output_state);
         }
       }
+
+      gst_caps_unref (downstream_caps);
     }
   }
 
