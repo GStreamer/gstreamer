@@ -466,8 +466,15 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
     out_buf = gst_buffer_new_allocate (NULL, size, NULL);
     gst_buffer_fill (out_buf, 0, data, size);
     frame->output_buffer = out_buf;
-    if ((task->output_bitstream.FrameType & MFX_FRAMETYPE_IDR) == 0 &&
-        (task->output_bitstream.FrameType & MFX_FRAMETYPE_xIDR) == 0) {
+    frame->pts =
+        gst_util_uint64_scale (task->output_bitstream.TimeStamp, GST_SECOND,
+        90000);
+    frame->dts =
+        gst_util_uint64_scale (task->output_bitstream.DecodeTimeStamp,
+        GST_SECOND, 90000);
+
+    if ((task->output_bitstream.FrameType & MFX_FRAMETYPE_IDR) != 0 ||
+        (task->output_bitstream.FrameType & MFX_FRAMETYPE_xIDR) != 0) {
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
     }
 
@@ -686,6 +693,11 @@ invalid_frame:
 static gboolean
 gst_msdkenc_start (GstVideoEncoder * encoder)
 {
+  /* Set the minimum pts to some huge value (1000 hours). This keeps
+     the dts at the start of the stream from needing to be
+     negative. */
+  gst_video_encoder_set_min_pts (encoder, GST_SECOND * 60 * 60 * 1000);
+
   return TRUE;
 }
 
