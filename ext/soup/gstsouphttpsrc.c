@@ -937,10 +937,12 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
     }
     gst_query_unref (query);
 
+    GST_OBJECT_LOCK (src);
     if (src->external_session && (can_share || src->forced_external_session)) {
       GST_DEBUG_OBJECT (src, "Using external session %p",
           src->external_session);
       src->session = g_object_ref (src->external_session);
+      src->session_is_shared = TRUE;
     } else {
       GST_DEBUG_OBJECT (src, "Creating session (can share %d)", can_share);
 
@@ -975,16 +977,23 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
           GstStructure *s;
 
           GST_DEBUG_OBJECT (src, "Sharing session %p", src->session);
+          src->session_is_shared = TRUE;
 
           context = gst_context_new (GST_SOUP_SESSION_CONTEXT, TRUE);
           s = gst_context_writable_structure (context);
           gst_structure_set (s, "session", SOUP_TYPE_SESSION, src->session,
               "force", G_TYPE_BOOLEAN, FALSE, NULL);
 
+          gst_object_ref (src->session);
+          GST_OBJECT_UNLOCK (src);
           gst_element_set_context (GST_ELEMENT_CAST (src), context);
           message =
               gst_message_new_have_context (GST_OBJECT_CAST (src), context);
           gst_element_post_message (GST_ELEMENT_CAST (src), message);
+          GST_OBJECT_LOCK (src);
+          gst_object_unref (src->session);
+        } else {
+          src->session_is_shared = FALSE;
         }
       }
     }
@@ -992,14 +1001,14 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
     if (!src->session) {
       GST_ELEMENT_ERROR (src, LIBRARY, INIT,
           (NULL), ("Failed to create session"));
+      GST_OBJECT_UNLOCK (src);
       return FALSE;
     }
 
     g_signal_connect (src->session, "authenticate",
         G_CALLBACK (gst_soup_http_src_authenticate_cb), src);
 
-    /* Set up logging */
-    if (src->session != src->external_session) {
+    if (!src->session_is_shared) {
       if (src->tls_database)
         g_object_set (src->session, "tls-database", src->tls_database, NULL);
       else if (src->ssl_ca_file)
@@ -1008,6 +1017,7 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
         g_object_set (src->session, "ssl-use-system-ca-file",
             src->ssl_use_system_ca_file, NULL);
     }
+    GST_OBJECT_UNLOCK (src);
   } else {
     GST_DEBUG_OBJECT (src, "Re-using session");
   }
@@ -1028,7 +1038,7 @@ gst_soup_http_src_session_close (GstSoupHTTPSrc * src)
   }
 
   if (src->session) {
-    if (src->session != src->external_session)
+    if (!src->session_is_shared)
       soup_session_abort (src->session);
     g_signal_handlers_disconnect_by_func (src->session,
         G_CALLBACK (gst_soup_http_src_authenticate_cb), src);
@@ -1828,7 +1838,7 @@ gst_soup_http_src_stop (GstBaseSrc * bsrc)
 
   src = GST_SOUP_HTTP_SRC (bsrc);
   GST_DEBUG_OBJECT (src, "stop()");
-  if (src->keep_alive && !src->msg && src->session != src->external_session)
+  if (src->keep_alive && !src->msg && !src->session_is_shared)
     gst_soup_http_src_cancel_message (src);
   else
     gst_soup_http_src_session_close (src);
@@ -1867,6 +1877,7 @@ gst_soup_http_src_set_context (GstElement * element, GstContext * context)
           GST_SOUP_SESSION_CONTEXT) == 0) {
     const GstStructure *s = gst_context_get_structure (context);
 
+    GST_OBJECT_LOCK (src);
     if (src->external_session)
       g_object_unref (src->external_session);
     src->external_session = NULL;
@@ -1878,6 +1889,7 @@ gst_soup_http_src_set_context (GstElement * element, GstContext * context)
 
     GST_DEBUG_OBJECT (src, "Setting external session %p (force: %d)",
         src->external_session, src->forced_external_session);
+    GST_OBJECT_UNLOCK (src);
   }
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
