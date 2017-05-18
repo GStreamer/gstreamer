@@ -30,7 +30,10 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GstRTSPResult    gst_rtsp_params_set      (GstRTSPClient * client, GstRTSPContext * ctx);
+
+GST_EXPORT
 GstRTSPResult    gst_rtsp_params_get      (GstRTSPClient * client, GstRTSPContext * ctx);
 
 G_END_DECLS

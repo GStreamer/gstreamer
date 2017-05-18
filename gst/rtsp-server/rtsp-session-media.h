@@ -61,35 +61,52 @@ struct _GstRTSPSessionMediaClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType                    gst_rtsp_session_media_get_type       (void);
 
+GST_EXPORT
 GstRTSPSessionMedia *    gst_rtsp_session_media_new            (const gchar *path,
                                                                 GstRTSPMedia *media);
 
+GST_EXPORT
 gboolean                 gst_rtsp_session_media_matches        (GstRTSPSessionMedia *media,
                                                                 const gchar *path,
                                                                 gint * matched);
+
+GST_EXPORT
 GstRTSPMedia *           gst_rtsp_session_media_get_media      (GstRTSPSessionMedia *media);
 
+GST_EXPORT
 GstClockTime             gst_rtsp_session_media_get_base_time  (GstRTSPSessionMedia *media);
 /* control media */
+
+GST_EXPORT
 gboolean                 gst_rtsp_session_media_set_state      (GstRTSPSessionMedia *media,
                                                                 GstState state);
 
+GST_EXPORT
 void                     gst_rtsp_session_media_set_rtsp_state (GstRTSPSessionMedia *media,
                                                                 GstRTSPState state);
+
+GST_EXPORT
 GstRTSPState             gst_rtsp_session_media_get_rtsp_state (GstRTSPSessionMedia *media);
 
 /* get stream transport config */
+
+GST_EXPORT
 GstRTSPStreamTransport * gst_rtsp_session_media_set_transport  (GstRTSPSessionMedia *media,
                                                                 GstRTSPStream *stream,
                                                                 GstRTSPTransport *tr);
+
+GST_EXPORT
 GstRTSPStreamTransport * gst_rtsp_session_media_get_transport  (GstRTSPSessionMedia *media,
                                                                 guint idx);
 
+GST_EXPORT
 gboolean                 gst_rtsp_session_media_alloc_channels (GstRTSPSessionMedia *media,
                                                                 GstRTSPRange *range);
 
+GST_EXPORT
 gchar *                  gst_rtsp_session_media_get_rtpinfo    (GstRTSPSessionMedia * media);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

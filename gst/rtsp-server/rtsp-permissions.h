@@ -26,6 +26,7 @@ typedef struct _GstRTSPPermissions GstRTSPPermissions;
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GType gst_rtsp_permissions_get_type (void);
 
 #define GST_TYPE_RTSP_PERMISSIONS        (gst_rtsp_permissions_get_type ())
@@ -71,20 +72,29 @@ gst_rtsp_permissions_unref (GstRTSPPermissions * permissions)
 }
 
 
+GST_EXPORT
 GstRTSPPermissions *  gst_rtsp_permissions_new             (void);
 
+GST_EXPORT
 void                  gst_rtsp_permissions_add_role        (GstRTSPPermissions *permissions,
                                                             const gchar *role,
                                                             const gchar *fieldname, ...);
+
+GST_EXPORT
 void                  gst_rtsp_permissions_add_role_valist (GstRTSPPermissions *permissions,
                                                             const gchar *role,
                                                             const gchar *fieldname,
                                                             va_list var_args);
+
+GST_EXPORT
 void                  gst_rtsp_permissions_remove_role     (GstRTSPPermissions *permissions,
                                                             const gchar *role);
+
+GST_EXPORT
 const GstStructure *  gst_rtsp_permissions_get_role        (GstRTSPPermissions *permissions,
                                                             const gchar *role);
 
+GST_EXPORT
 gboolean              gst_rtsp_permissions_is_allowed      (GstRTSPPermissions *permissions,
                                                             const gchar *role, const gchar *permission);
 

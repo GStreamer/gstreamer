@@ -79,36 +79,63 @@ struct _GstRTSPSessionClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType                  gst_rtsp_session_get_type             (void);
 
 /* create a new session */
+
+GST_EXPORT
 GstRTSPSession *       gst_rtsp_session_new                  (const gchar *sessionid);
 
+GST_EXPORT
 const gchar *          gst_rtsp_session_get_sessionid        (GstRTSPSession *session);
 
+GST_EXPORT
 gchar *                gst_rtsp_session_get_header           (GstRTSPSession *session);
 
+GST_EXPORT
 void                   gst_rtsp_session_set_timeout          (GstRTSPSession *session, guint timeout);
+
+GST_EXPORT
 guint                  gst_rtsp_session_get_timeout          (GstRTSPSession *session);
 
 /* session timeout stuff */
+
+GST_EXPORT
 void                   gst_rtsp_session_touch                (GstRTSPSession *session);
+
+GST_EXPORT
 void                   gst_rtsp_session_prevent_expire       (GstRTSPSession *session);
+
+GST_EXPORT
 void                   gst_rtsp_session_allow_expire         (GstRTSPSession *session);
+
+GST_EXPORT
 gint                   gst_rtsp_session_next_timeout_usec    (GstRTSPSession *session, gint64 now);
+
+GST_EXPORT
 gboolean               gst_rtsp_session_is_expired_usec      (GstRTSPSession *session, gint64 now);
 #ifndef GST_DISABLE_DEPRECATED
+GST_EXPORT
 gint                   gst_rtsp_session_next_timeout         (GstRTSPSession *session, GTimeVal *now);
+
+GST_EXPORT
 gboolean               gst_rtsp_session_is_expired           (GstRTSPSession *session, GTimeVal *now);
 #endif
 
 /* handle media in a session */
+
+GST_EXPORT
 GstRTSPSessionMedia *  gst_rtsp_session_manage_media         (GstRTSPSession *sess,
                                                               const gchar *path,
                                                               GstRTSPMedia *media);
+
+GST_EXPORT
 gboolean               gst_rtsp_session_release_media        (GstRTSPSession *sess,
                                                               GstRTSPSessionMedia *media);
 /* get media in a session */
+
+GST_EXPORT
 GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess,
                                                               const gchar *path,
                                                               gint * matched);
@@ -137,6 +164,7 @@ typedef GstRTSPFilterResult (*GstRTSPSessionFilterFunc)  (GstRTSPSession *sess,
                                                           GstRTSPSessionMedia *media,
                                                           gpointer user_data);
 
+GST_EXPORT
 GList *                gst_rtsp_session_filter           (GstRTSPSession *sess,
                                                           GstRTSPSessionFilterFunc func,
                                                           gpointer user_data);

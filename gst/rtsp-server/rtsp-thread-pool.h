@@ -40,6 +40,7 @@ G_BEGIN_DECLS
 #define GST_RTSP_THREAD_POOL_CAST(obj)         ((GstRTSPThreadPool*)(obj))
 #define GST_RTSP_THREAD_POOL_CLASS_CAST(klass) ((GstRTSPThreadPoolClass*)(klass))
 
+GST_EXPORT
 GType gst_rtsp_thread_get_type (void);
 
 #define GST_TYPE_RTSP_THREAD        (gst_rtsp_thread_get_type ())
@@ -77,9 +78,13 @@ struct _GstRTSPThread {
   GMainLoop *loop;
 };
 
+GST_EXPORT
 GstRTSPThread *   gst_rtsp_thread_new      (GstRTSPThreadType type);
 
+GST_EXPORT
 gboolean          gst_rtsp_thread_reuse    (GstRTSPThread * thread);
+
+GST_EXPORT
 void              gst_rtsp_thread_stop     (GstRTSPThread * thread);
 
 /**
@@ -154,16 +159,24 @@ struct _GstRTSPThreadPoolClass {
   gpointer         _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType               gst_rtsp_thread_pool_get_type        (void);
 
+GST_EXPORT
 GstRTSPThreadPool * gst_rtsp_thread_pool_new             (void);
 
+GST_EXPORT
 void                gst_rtsp_thread_pool_set_max_threads (GstRTSPThreadPool * pool, gint max_threads);
+
+GST_EXPORT
 gint                gst_rtsp_thread_pool_get_max_threads (GstRTSPThreadPool * pool);
 
+GST_EXPORT
 GstRTSPThread *     gst_rtsp_thread_pool_get_thread      (GstRTSPThreadPool *pool,
                                                           GstRTSPThreadType type,
                                                           GstRTSPContext *ctx);
+
+GST_EXPORT
 void                gst_rtsp_thread_pool_cleanup         (void);
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPThread, gst_rtsp_thread_unref)

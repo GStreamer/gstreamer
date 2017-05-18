@@ -65,121 +65,211 @@ struct _GstRTSPStreamClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType             gst_rtsp_stream_get_type         (void);
 
+GST_EXPORT
 GstRTSPStream *   gst_rtsp_stream_new              (guint idx, GstElement *payloader,
                                                     GstPad *pad);
+
+GST_EXPORT
 guint             gst_rtsp_stream_get_index        (GstRTSPStream *stream);
+
+GST_EXPORT
 guint             gst_rtsp_stream_get_pt           (GstRTSPStream *stream);
+
+GST_EXPORT
 GstPad *          gst_rtsp_stream_get_srcpad       (GstRTSPStream *stream);
+
+GST_EXPORT
 GstPad *          gst_rtsp_stream_get_sinkpad      (GstRTSPStream *stream);
 
+GST_EXPORT
 void              gst_rtsp_stream_set_control      (GstRTSPStream *stream, const gchar *control);
+
+GST_EXPORT
 gchar *           gst_rtsp_stream_get_control      (GstRTSPStream *stream);
+
+GST_EXPORT
 gboolean          gst_rtsp_stream_has_control      (GstRTSPStream *stream, const gchar *control);
 
+GST_EXPORT
 void              gst_rtsp_stream_set_mtu          (GstRTSPStream *stream, guint mtu);
+
+GST_EXPORT
 guint             gst_rtsp_stream_get_mtu          (GstRTSPStream *stream);
 
+GST_EXPORT
 void              gst_rtsp_stream_set_dscp_qos     (GstRTSPStream *stream, gint dscp_qos);
+
+GST_EXPORT
 gint              gst_rtsp_stream_get_dscp_qos     (GstRTSPStream *stream);
 
+GST_EXPORT
 gboolean          gst_rtsp_stream_is_transport_supported  (GstRTSPStream *stream,
                                                            GstRTSPTransport *transport);
 
+GST_EXPORT
 void              gst_rtsp_stream_set_profiles     (GstRTSPStream *stream, GstRTSPProfile profiles);
+
+GST_EXPORT
 GstRTSPProfile    gst_rtsp_stream_get_profiles     (GstRTSPStream *stream);
 
+GST_EXPORT
 void              gst_rtsp_stream_set_protocols    (GstRTSPStream *stream, GstRTSPLowerTrans protocols);
+
+GST_EXPORT
 GstRTSPLowerTrans gst_rtsp_stream_get_protocols    (GstRTSPStream *stream);
 
+GST_EXPORT
 void              gst_rtsp_stream_set_address_pool (GstRTSPStream *stream, GstRTSPAddressPool *pool);
+
+GST_EXPORT
 GstRTSPAddressPool *
                   gst_rtsp_stream_get_address_pool (GstRTSPStream *stream);
 
+GST_EXPORT
 void              gst_rtsp_stream_set_multicast_iface (GstRTSPStream *stream, const gchar * multicast_iface);
+
+GST_EXPORT
 gchar *           gst_rtsp_stream_get_multicast_iface (GstRTSPStream *stream);
 
+GST_EXPORT
 GstRTSPAddress *  gst_rtsp_stream_reserve_address  (GstRTSPStream *stream,
                                                     const gchar * address,
                                                     guint port,
                                                     guint n_ports,
                                                     guint ttl);
 
+GST_EXPORT
 gboolean          gst_rtsp_stream_join_bin         (GstRTSPStream *stream,
                                                     GstBin *bin, GstElement *rtpbin,
                                                     GstState state);
+
+GST_EXPORT
 gboolean          gst_rtsp_stream_leave_bin        (GstRTSPStream *stream,
                                                     GstBin *bin, GstElement *rtpbin);
+
+GST_EXPORT
 GstBin *          gst_rtsp_stream_get_joined_bin   (GstRTSPStream *stream);
 
+GST_EXPORT
 gboolean          gst_rtsp_stream_set_blocked      (GstRTSPStream * stream,
                                                     gboolean blocked);
+
+GST_EXPORT
 gboolean          gst_rtsp_stream_is_blocking      (GstRTSPStream * stream);
 
+GST_EXPORT
 void              gst_rtsp_stream_set_client_side (GstRTSPStream *stream, gboolean client_side);
+
+GST_EXPORT
 gboolean          gst_rtsp_stream_is_client_side (GstRTSPStream *stream);
 
+GST_EXPORT
 void              gst_rtsp_stream_get_server_port  (GstRTSPStream *stream,
                                                     GstRTSPRange *server_port,
                                                     GSocketFamily family);
+
+GST_EXPORT
 GstRTSPAddress *  gst_rtsp_stream_get_multicast_address (GstRTSPStream *stream,
                                                          GSocketFamily family);
 
 
+GST_EXPORT
 GObject *         gst_rtsp_stream_get_rtpsession   (GstRTSPStream *stream);
 
+GST_EXPORT
 GstElement *      gst_rtsp_stream_get_srtp_encoder (GstRTSPStream *stream);
 
+GST_EXPORT
 void              gst_rtsp_stream_get_ssrc         (GstRTSPStream *stream,
                                                     guint *ssrc);
 
+GST_EXPORT
 gboolean          gst_rtsp_stream_get_rtpinfo      (GstRTSPStream *stream,
                                                     guint *rtptime, guint *seq,
                                                     guint *clock_rate,
                                                     GstClockTime *running_time);
+
+GST_EXPORT
 GstCaps *         gst_rtsp_stream_get_caps         (GstRTSPStream *stream);
 
+GST_EXPORT
 GstFlowReturn     gst_rtsp_stream_recv_rtp         (GstRTSPStream *stream,
                                                     GstBuffer *buffer);
+
+GST_EXPORT
 GstFlowReturn     gst_rtsp_stream_recv_rtcp        (GstRTSPStream *stream,
                                                     GstBuffer *buffer);
 
+GST_EXPORT
 gboolean          gst_rtsp_stream_add_transport    (GstRTSPStream *stream,
                                                     GstRTSPStreamTransport *trans);
+
+GST_EXPORT
 gboolean          gst_rtsp_stream_remove_transport (GstRTSPStream *stream,
                                                     GstRTSPStreamTransport *trans);
 
+GST_EXPORT
 GSocket *         gst_rtsp_stream_get_rtp_socket   (GstRTSPStream *stream,
                                                     GSocketFamily family);
+
+GST_EXPORT
 GSocket *         gst_rtsp_stream_get_rtcp_socket  (GstRTSPStream *stream,
                                                     GSocketFamily family);
 
+GST_EXPORT
 gboolean          gst_rtsp_stream_update_crypto    (GstRTSPStream * stream,
                                                     guint ssrc, GstCaps * crypto);
 
+GST_EXPORT
 gboolean          gst_rtsp_stream_query_position   (GstRTSPStream * stream,
                                                     gint64 * position);
+
+GST_EXPORT
 gboolean          gst_rtsp_stream_query_stop       (GstRTSPStream * stream,
                                                     gint64 * stop);
 
+GST_EXPORT
 void              gst_rtsp_stream_set_seqnum_offset          (GstRTSPStream *stream, guint16 seqnum);
+
+GST_EXPORT
 guint16           gst_rtsp_stream_get_current_seqnum          (GstRTSPStream *stream);
+
+GST_EXPORT
 void              gst_rtsp_stream_set_retransmission_time     (GstRTSPStream *stream, GstClockTime time);
+
+GST_EXPORT
 GstClockTime      gst_rtsp_stream_get_retransmission_time     (GstRTSPStream *stream);
+
+GST_EXPORT
 guint             gst_rtsp_stream_get_retransmission_pt       (GstRTSPStream * stream);
+
+GST_EXPORT
 void              gst_rtsp_stream_set_retransmission_pt       (GstRTSPStream * stream,
                                                                guint rtx_pt);
+
+GST_EXPORT
 void              gst_rtsp_stream_set_buffer_size  (GstRTSPStream *stream, guint size);
+
+GST_EXPORT
 guint             gst_rtsp_stream_get_buffer_size  (GstRTSPStream *stream);
 
+GST_EXPORT
 void              gst_rtsp_stream_set_pt_map                 (GstRTSPStream * stream, guint pt, GstCaps * caps);
+
+GST_EXPORT
 GstElement *      gst_rtsp_stream_request_aux_sender         (GstRTSPStream * stream, guint sessid);
 
+GST_EXPORT
 gboolean          gst_rtsp_stream_allocate_udp_sockets       (GstRTSPStream * stream, GSocketFamily family,
                                                               GstRTSPTransport *transport, gboolean use_client_setttings);
 
+GST_EXPORT
 void                    gst_rtsp_stream_set_publish_clock_mode (GstRTSPStream * stream, GstRTSPPublishClockMode mode);
+
+GST_EXPORT
 GstRTSPPublishClockMode gst_rtsp_stream_get_publish_clock_mode (GstRTSPStream * stream);
 
 /**
@@ -206,6 +296,7 @@ typedef GstRTSPFilterResult (*GstRTSPStreamTransportFilterFunc) (GstRTSPStream *
                                                                  GstRTSPStreamTransport *trans,
                                                                  gpointer user_data);
 
+GST_EXPORT
 GList *                gst_rtsp_stream_transport_filter  (GstRTSPStream *stream,
                                                           GstRTSPStreamTransportFilterFunc func,
                                                           gpointer user_data);

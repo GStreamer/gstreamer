@@ -28,6 +28,7 @@ typedef struct _GstRTSPToken GstRTSPToken;
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GType gst_rtsp_token_get_type(void);
 
 #define GST_TYPE_RTSP_TOKEN        (gst_rtsp_token_get_type())
@@ -73,15 +74,26 @@ gst_rtsp_token_unref (GstRTSPToken * token)
 }
 
 
+GST_EXPORT
 GstRTSPToken *       gst_rtsp_token_new_empty          (void);
+
+GST_EXPORT
 GstRTSPToken *       gst_rtsp_token_new                (const gchar * firstfield, ...);
+
+GST_EXPORT
 GstRTSPToken *       gst_rtsp_token_new_valist         (const gchar * firstfield, va_list var_args);
 
+GST_EXPORT
 const GstStructure * gst_rtsp_token_get_structure      (GstRTSPToken *token);
+
+GST_EXPORT
 GstStructure *       gst_rtsp_token_writable_structure (GstRTSPToken *token);
 
+GST_EXPORT
 const gchar *        gst_rtsp_token_get_string         (GstRTSPToken *token,
                                                         const gchar *field);
+
+GST_EXPORT
 gboolean             gst_rtsp_token_is_allowed         (GstRTSPToken *token,
                                                         const gchar *field);
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

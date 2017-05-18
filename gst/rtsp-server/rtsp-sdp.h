@@ -33,7 +33,11 @@ typedef struct {
 } GstSDPInfo;
 
 /* creating SDP */
+
+GST_EXPORT
 gboolean            gst_rtsp_sdp_from_media  (GstSDPMessage *sdp, GstSDPInfo *info, GstRTSPMedia * media);
+
+GST_EXPORT
 gboolean            gst_rtsp_sdp_from_stream (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPStream *stream);
 
 G_END_DECLS

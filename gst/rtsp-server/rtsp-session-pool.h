@@ -113,29 +113,49 @@ typedef GstRTSPFilterResult (*GstRTSPSessionPoolFilterFunc)  (GstRTSPSessionPool
                                                               gpointer user_data);
 
 
+GST_EXPORT
 GType                 gst_rtsp_session_pool_get_type          (void);
 
 /* creating a session pool */
+
+GST_EXPORT
 GstRTSPSessionPool *  gst_rtsp_session_pool_new               (void);
 
 /* counting sessions */
+
+GST_EXPORT
 void                  gst_rtsp_session_pool_set_max_sessions  (GstRTSPSessionPool *pool, guint max);
+
+GST_EXPORT
 guint                 gst_rtsp_session_pool_get_max_sessions  (GstRTSPSessionPool *pool);
 
+GST_EXPORT
 guint                 gst_rtsp_session_pool_get_n_sessions    (GstRTSPSessionPool *pool);
 
 /* managing sessions */
+
+GST_EXPORT
 GstRTSPSession *      gst_rtsp_session_pool_create            (GstRTSPSessionPool *pool);
+
+GST_EXPORT
 GstRTSPSession *      gst_rtsp_session_pool_find              (GstRTSPSessionPool *pool,
                                                                const gchar *sessionid);
+
+GST_EXPORT
 gboolean              gst_rtsp_session_pool_remove            (GstRTSPSessionPool *pool,
                                                                GstRTSPSession *sess);
 
 /* perform session maintenance */
+
+GST_EXPORT
 GList *               gst_rtsp_session_pool_filter            (GstRTSPSessionPool *pool,
                                                                GstRTSPSessionPoolFilterFunc func,
                                                                gpointer user_data);
+
+GST_EXPORT
 guint                 gst_rtsp_session_pool_cleanup           (GstRTSPSessionPool *pool);
+
+GST_EXPORT
 GSource *             gst_rtsp_session_pool_create_watch      (GstRTSPSessionPool *pool);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

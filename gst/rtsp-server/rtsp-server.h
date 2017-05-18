@@ -93,46 +93,77 @@ struct _GstRTSPServerClass {
   gpointer         _gst_reserved[GST_PADDING_LARGE];
 };
 
+GST_EXPORT
 GType                 gst_rtsp_server_get_type             (void);
 
+GST_EXPORT
 GstRTSPServer *       gst_rtsp_server_new                  (void);
 
+GST_EXPORT
 void                  gst_rtsp_server_set_address          (GstRTSPServer *server, const gchar *address);
+
+GST_EXPORT
 gchar *               gst_rtsp_server_get_address          (GstRTSPServer *server);
 
+GST_EXPORT
 void                  gst_rtsp_server_set_service          (GstRTSPServer *server, const gchar *service);
+
+GST_EXPORT
 gchar *               gst_rtsp_server_get_service          (GstRTSPServer *server);
 
+GST_EXPORT
 void                  gst_rtsp_server_set_backlog          (GstRTSPServer *server, gint backlog);
+
+GST_EXPORT
 gint                  gst_rtsp_server_get_backlog          (GstRTSPServer *server);
 
+GST_EXPORT
 int                   gst_rtsp_server_get_bound_port       (GstRTSPServer *server);
 
+GST_EXPORT
 void                  gst_rtsp_server_set_session_pool     (GstRTSPServer *server, GstRTSPSessionPool *pool);
+
+GST_EXPORT
 GstRTSPSessionPool *  gst_rtsp_server_get_session_pool     (GstRTSPServer *server);
 
+GST_EXPORT
 void                  gst_rtsp_server_set_mount_points     (GstRTSPServer *server, GstRTSPMountPoints *mounts);
+
+GST_EXPORT
 GstRTSPMountPoints *  gst_rtsp_server_get_mount_points     (GstRTSPServer *server);
 
+GST_EXPORT
 void                  gst_rtsp_server_set_auth             (GstRTSPServer *server, GstRTSPAuth *auth);
+
+GST_EXPORT
 GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *server);
 
+GST_EXPORT
 void                  gst_rtsp_server_set_thread_pool      (GstRTSPServer *server, GstRTSPThreadPool *pool);
+
+GST_EXPORT
 GstRTSPThreadPool *   gst_rtsp_server_get_thread_pool      (GstRTSPServer *server);
 
+GST_EXPORT
 gboolean              gst_rtsp_server_transfer_connection  (GstRTSPServer * server, GSocket *socket,
                                                             const gchar * ip, gint port,
                                                             const gchar *initial_buffer);
 
+GST_EXPORT
 gboolean              gst_rtsp_server_io_func              (GSocket *socket, GIOCondition condition,
                                                             GstRTSPServer *server);
 
+GST_EXPORT
 GSocket *             gst_rtsp_server_create_socket        (GstRTSPServer *server,
                                                             GCancellable  *cancellable,
                                                             GError **error);
+
+GST_EXPORT
 GSource *             gst_rtsp_server_create_source        (GstRTSPServer *server,
                                                             GCancellable * cancellable,
                                                             GError **error);
+
+GST_EXPORT
 guint                 gst_rtsp_server_attach               (GstRTSPServer *server,
                                                             GMainContext *context);
 
@@ -160,6 +191,7 @@ typedef GstRTSPFilterResult (*GstRTSPServerClientFilterFunc)  (GstRTSPServer *se
                                                                GstRTSPClient *client,
                                                                gpointer user_data);
 
+GST_EXPORT
 GList *                gst_rtsp_server_client_filter    (GstRTSPServer *server,
                                                          GstRTSPServerClientFilterFunc func,
                                                          gpointer user_data);

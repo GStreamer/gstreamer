@@ -78,10 +78,16 @@ struct _GstRTSPContext {
   gpointer            _gst_reserved[GST_PADDING - 1];
 };
 
+GST_EXPORT
 GType gst_rtsp_context_get_type (void);
 
+GST_EXPORT
 GstRTSPContext *     gst_rtsp_context_get_current   (void);
+
+GST_EXPORT
 void                 gst_rtsp_context_push_current  (GstRTSPContext * ctx);
+
+GST_EXPORT
 void                 gst_rtsp_context_pop_current   (GstRTSPContext * ctx);
 
 
