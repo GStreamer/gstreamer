@@ -825,5 +825,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     shout2,
     "Sends data to an icecast server using libshout2",
-    plugin_init,
-    VERSION, "LGPL", "libshout2", "http://www.icecast.org/download/")
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
