@@ -1055,7 +1055,6 @@ static gboolean
 child_is_same_stream (const GstCaps * _parent, const GstCaps * child)
 {
   GstCaps *parent;
-  guint i, size;
   gboolean res;
 
   if (_parent == child)
@@ -1065,17 +1064,7 @@ child_is_same_stream (const GstCaps * _parent, const GstCaps * child)
   if (!child)
     return FALSE;
 
-  parent = gst_caps_copy (_parent);
-  size = gst_caps_get_size (parent);
-
-  for (i = 0; i < size; i++) {
-    gst_structure_remove_field (gst_caps_get_structure (parent, i), "parsed");
-    gst_structure_remove_field (gst_caps_get_structure (parent, i), "framed");
-    gst_structure_remove_field (gst_caps_get_structure (parent, i),
-        "stream-format");
-    gst_structure_remove_field (gst_caps_get_structure (parent, i),
-        "alignment");
-  }
+  parent = copy_and_clean_caps (_parent);
   res = gst_caps_can_intersect (parent, child);
   gst_caps_unref (parent);
   return res;
