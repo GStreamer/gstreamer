@@ -308,6 +308,10 @@ gsttag_dep = dependency('gstreamer-tag-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'tag_dep'])
 gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
+if host_machine.system() != 'windows'
+  gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+    fallback : ['gstreamer', 'gst_check_dep'])
+endif
 
 libm = cc.find_library('m', required : false)
 glib_dep = dependency('glib-2.0', version : glib_req)
@@ -407,6 +411,7 @@ subdir('gst-libs')
 subdir('gst')
 subdir('sys')
 subdir('ext')
+subdir('tests')
 subdir('pkgconfig')
 
 python3 = find_program('python3')
