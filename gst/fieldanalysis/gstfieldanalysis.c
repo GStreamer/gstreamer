@@ -1850,4 +1850,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     fieldanalysis,
     "Video field analysis",
-    fieldanalysis_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
+    fieldanalysis_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
