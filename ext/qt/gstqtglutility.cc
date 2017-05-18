@@ -41,8 +41,8 @@
 #include <gst/gl/egl/gstglcontext_egl.h>
 #endif
 
-#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
-#include <gst/gl/coaoa/gstgldisplay_cocoa.h>
+#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_CGL && defined (HAVE_QT_MAC)
+#include <gst/gl/cocoa/gstgldisplay_cocoa.h>
 #endif
 
 #define GST_CAT_DEFAULT qt_gl_utils_debug
@@ -89,7 +89,7 @@ gst_qt_get_gl_display ()
     display = (GstGLDisplay *) gst_gl_display_egl_new ();
 #endif
 
-#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
+#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_CGL && defined (HAVE_QT_MAC)
   if (QString::fromUtf8 ("cocoa") == app->platformName())
     display = (GstGLDisplay *) gst_gl_display_cocoa_new ();
 #endif
@@ -135,7 +135,7 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
   }
 #endif
   if (platform == 0) {
-#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_COCOA && defined (HAVE_QT_MAC)
+#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_CGL && defined (HAVE_QT_MAC)
     platform = GST_GL_PLATFORM_CGL;
 #elif GST_GL_HAVE_WINDOW_EAGL && GST_GL_HAVE_PLATFORM_EAGL && defined (HAVE_QT_IOS)
     platform = GST_GL_PLATFORM_EAGL;
