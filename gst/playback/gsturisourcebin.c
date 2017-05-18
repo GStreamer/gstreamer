@@ -1980,7 +1980,7 @@ handle_new_pad (GstURISourceBin * urisrc, GstPad * srcpad, GstCaps * caps)
         gst_query_parse_duration (query, NULL, &dur);
         do_download = (dur != -1);
       }
-      gst_object_unref (query);
+      gst_query_unref (query);
     }
 
     GST_DEBUG_OBJECT (urisrc, "check media-type %s, %d", media_type,
