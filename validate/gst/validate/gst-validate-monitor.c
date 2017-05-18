@@ -129,6 +129,10 @@ gst_validate_monitor_dispose (GObject * object)
     g_object_weak_unref (G_OBJECT (monitor->target),
         (GWeakNotify) _target_freed_cb, monitor);
 
+  if (monitor->pipeline)
+    g_object_weak_unref (G_OBJECT (monitor->pipeline),
+        (GWeakNotify) _pipeline_freed_cb, monitor);
+
   if (monitor->media_descriptor)
     gst_object_unref (monitor->media_descriptor);
 
