@@ -774,7 +774,7 @@ debug_dump_header (GstBin * bin, GstDebugGraphDetails details, GString * str)
       "    pos=\"0,0!\",\n"
       "    margin=\"0.05,0.05\",\n"
       "    style=\"filled\",\n"
-      "    label=\"Legend\\lElement-States: [~] void-pending, [0] null, [-] ready, [=] paused, [>] playing\\lPad-Activation: [-] none, [>] push, [<] pull\\lPad-Flags: [b]locked, [f]lushing, [b]locking; upper-case is set\\lPad-Task: [T] has started task, [t] has paused task\\l\",\n"
+      "    label=\"Legend\\lElement-States: [~] void-pending, [0] null, [-] ready, [=] paused, [>] playing\\lPad-Activation: [-] none, [>] push, [<] pull\\lPad-Flags: [b]locked, [f]lushing, [b]locking, [E]OS; upper-case is set\\lPad-Task: [T] has started task, [t] has paused task\\l\",\n"
       "  ];"
       "\n", G_OBJECT_TYPE_NAME (bin), GST_OBJECT_NAME (bin),
       (state_name ? state_name : ""), (param_name ? param_name : "")
