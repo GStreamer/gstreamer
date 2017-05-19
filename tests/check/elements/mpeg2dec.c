@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/video/video-info.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
@@ -1749,6 +1750,7 @@ GST_START_TEST (test_decode_stream1)
   int i, num_buffers;
   GstCaps *out_caps, *caps;
   guint offset = 0;
+  GstVideoInfo info;
 
   mpeg2dec = setup_mpeg2dec ();
 
@@ -1779,13 +1781,18 @@ GST_START_TEST (test_decode_stream1)
   fail_unless_equals_int (num_buffers, 30);
 
   /* each buffer should have these caps */
-  out_caps =
-      gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
-      "I420", "width", G_TYPE_INT, 176, "height", G_TYPE_INT, 144,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, "framerate",
-      GST_TYPE_FRACTION, 25, 1, "interlace-mode", G_TYPE_STRING, "progressive",
-      "chroma-site", G_TYPE_STRING, "mpeg2",
-      "colorimetry", G_TYPE_STRING, "bt601", NULL);
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_I420, 176, 144);
+  GST_VIDEO_INFO_PAR_N (&info) = GST_VIDEO_INFO_PAR_D (&info) = 1;
+  GST_VIDEO_INFO_FPS_N (&info) = 25;
+  GST_VIDEO_INFO_FPS_D (&info) = 1;
+  GST_VIDEO_INFO_FPS_D (&info) = 1;
+  GST_VIDEO_INFO_CHROMA_SITE (&info) = GST_VIDEO_CHROMA_SITE_MPEG2;
+  gst_video_colorimetry_from_string (&GST_VIDEO_INFO_COLORIMETRY (&info),
+      GST_VIDEO_COLORIMETRY_BT601);
+  GST_VIDEO_INFO_MULTIVIEW_MODE (&info) = GST_VIDEO_MULTIVIEW_MODE_MONO;
+
+  out_caps = gst_video_info_to_caps (&info);
 
   caps = gst_pad_get_current_caps (mysinkpad);
   GST_LOG ("output caps %" GST_PTR_FORMAT, caps);
@@ -1825,6 +1832,7 @@ GST_START_TEST (test_decode_stream2)
   GstCaps *out_caps;
   GstCaps *caps;
   guint offset = 0;
+  GstVideoInfo info;
 
   mpeg2dec = setup_mpeg2dec ();
 
@@ -1856,13 +1864,18 @@ GST_START_TEST (test_decode_stream2)
   fail_unless_equals_int (num_buffers, 30);
 
   /* each buffer should have these caps */
-  out_caps =
-      gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "I420",
-      "width", G_TYPE_INT, 183, "height", G_TYPE_INT, 217,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, "framerate",
-      GST_TYPE_FRACTION, 25, 1, "interlace-mode", G_TYPE_STRING, "progressive",
-      "chroma-site", G_TYPE_STRING, "mpeg2", "colorimetry", G_TYPE_STRING,
-      "bt601", NULL);
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_I420, 183, 217);
+  GST_VIDEO_INFO_PAR_N (&info) = GST_VIDEO_INFO_PAR_D (&info) = 1;
+  GST_VIDEO_INFO_FPS_N (&info) = 25;
+  GST_VIDEO_INFO_FPS_D (&info) = 1;
+  GST_VIDEO_INFO_FPS_D (&info) = 1;
+  GST_VIDEO_INFO_CHROMA_SITE (&info) = GST_VIDEO_CHROMA_SITE_MPEG2;
+  gst_video_colorimetry_from_string (&GST_VIDEO_INFO_COLORIMETRY (&info),
+      GST_VIDEO_COLORIMETRY_BT601);
+  GST_VIDEO_INFO_MULTIVIEW_MODE (&info) = GST_VIDEO_MULTIVIEW_MODE_MONO;
+
+  out_caps = gst_video_info_to_caps (&info);
 
   caps = gst_pad_get_current_caps (mysinkpad);
   GST_LOG ("output caps %" GST_PTR_FORMAT, caps);
