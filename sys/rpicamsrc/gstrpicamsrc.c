@@ -478,11 +478,11 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ANNOTATION_TEXT_COLOUR,
       g_param_spec_int ("annotation-text-colour", "Annotation text colour (VUY)",
-          "Set the annotation text colour, as a VUY hex value eg #8080FF, -1 for default", -1,
+          "Set the annotation text colour, as the integer corresponding to a VUY value eg 0x8080FF = 8421631, -1 for default", -1,
           G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ANNOTATION_TEXT_BG_COLOUR,
       g_param_spec_int ("annotation-text-bg-colour", "Annotation text background colour (VUY)",
-          "Set the annotation text background colour, as a VUY hex value eg #8080FF, -1 for default", -1,
+          "Set the annotation text background colour, as the integer corresponding to a VUY value eg 0x8080FF = 8421631, -1 for default", -1,
           G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
   g_object_class_override_property (gobject_class, PROP_VIDEO_DIRECTION,
