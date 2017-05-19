@@ -116,10 +116,9 @@ int main(int argc, char *argv[]) {
 
 ## Walkthrough
 
-The basic construction block of GStreamer are the elements, which
-process the data as it flows *downstream* from the source elements (the
-producers of data) to the sink elements (the consumers of data), passing
-through filter elements.
+The *elements* are GStreamer's basic construction blocks. They process
+the data as it flows *downstream* from the source elements (data producers)
+to the sink elements (data consumers), passing through filter elements.
 
 ![](images/figure-1.png)
 
@@ -187,7 +186,7 @@ A pipeline is a particular type of `bin`, which is the element used to
 contain other elements. Therefore all methods which apply to bins also
 apply to pipelines. In our case, we call `gst_bin_add_many()` to add the
 elements to the pipeline (mind the cast). This function accepts a list
-of elements to be added, ending with NULL. Individual elements can be
+of elements to be added, ending with `NULL`. Individual elements can be
 added with `gst_bin_add()`.
 
 These elements, however, are not linked with each other yet. For this,
@@ -213,11 +212,12 @@ properties) or inquired to find out about the element's internal state
 Properties are read from with `g_object_get()` and written to
 with `g_object_set()`.
 
-`g_object_set()` accepts a NULL-terminated list of property-name,
-property-value pairs, so multiple properties can be changed in one go
-(GStreamer elements are all a particular kind of `GObject`, which is the
-entity offering property facilities: This is why the property handling
-methods have the `g_` prefix).
+`g_object_set()` accepts a `NULL`-terminated list of property-name,
+property-value pairs, so multiple properties can be changed in one go.
+
+GStreamer elements are all a particular kind of `GObject`, which is the
+entity offering property facilities. This is why the property handling
+methods have the `g_` prefix.
 
 The line of code above changes the “pattern” property of `videotestsrc`,
 which controls the type of test video the element outputs. Try different
@@ -281,7 +281,7 @@ if (msg != NULL) {
 `gst_bus_timed_pop_filtered()` waits for execution to end and returns
 with a `GstMessage` which we previously ignored. We
 asked `gst_bus_timed_pop_filtered()` to return when GStreamer
-encountered either an error condition or an EOS, so we need to check
+encountered either an error condition or an `EOS`, so we need to check
 which one happened, and print a message on screen (Your application will
 probably want to undertake more complex actions).
 
