@@ -1,7 +1,7 @@
 # name, condition when to skip the test and extra dependencies
 ugly_tests = [
   [ 'elements/amrnbenc', not amrnb_dep.found() ],
-  [ 'elements/mpeg2dec', not mpeg2_dep.found() ],
+  [ 'elements/mpeg2dec', not mpeg2_dep.found(), [ gstvideo_dep ] ],
   [ 'elements/mpg123audiodec', not mpg123_dep.found() ],
   [ 'elements/x264enc', not x264_dep.found() ],
   [ 'elements/xingmux' ],
