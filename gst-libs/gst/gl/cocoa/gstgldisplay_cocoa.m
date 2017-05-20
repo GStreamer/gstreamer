@@ -34,6 +34,10 @@ G_DEFINE_TYPE (GstGLDisplayCocoa, gst_gl_display_cocoa, GST_TYPE_GL_DISPLAY);
 static void gst_gl_display_cocoa_finalize (GObject * object);
 static guintptr gst_gl_display_cocoa_get_handle (GstGLDisplay * display);
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#define NSEventMaskAny                       NSAnyEventMask
+#endif
+
 /* Define this if the GLib patch from
  * https://bugzilla.gnome.org/show_bug.cgi?id=741450
  * is used
@@ -56,7 +60,7 @@ gst_gl_display_cocoa_nsapp_iteration (gpointer data)
   }
 
 
-  while ((event = ([NSApp nextEventMatchingMask:NSAnyEventMask
+  while ((event = ([NSApp nextEventMatchingMask:NSEventMaskAny
       untilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]
       inMode:NSDefaultRunLoopMode dequeue:YES])) != nil) {
     [NSApp sendEvent:event];
