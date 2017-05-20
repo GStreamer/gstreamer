@@ -47,6 +47,26 @@ gst_check = shared_library('gstcheck-@0@'.format(apiversion),
   dependencies : [gobject_dep, glib_dep, gst_dep],
 )
 
+gst_check_gen_sources = []
+
+if build_gir
+  gst_gir_extra_args = gir_init_section + [ '--c-include=gst/check/check.h' ]
+  gst_check_gen_sources += [gnome.generate_gir(gst_check,
+    sources : gst_check_sources + gst_check_headers,
+    namespace : 'GstCheck',
+    nsversion : apiversion,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-check-1.0',
+    dependencies : [gst_dep],
+    include_directories : [configinc, libsinc, privinc],
+    includes : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0', 'Gst-1.0'],
+    install : true,
+    extra_args : gst_gir_extra_args,
+  )]
+endif
+
 gst_check_dep = declare_dependency(link_with : gst_check,
   include_directories : [libsinc],
-  dependencies : [gst_dep])
+  dependencies : [gst_dep],
+  sources : gst_check_gen_sources)
