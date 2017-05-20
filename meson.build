@@ -101,9 +101,20 @@ cdata.set('SIZEOF_VOIDP', cc.sizeof('void*'))
 cdata.set('VERSION', '"@0@"'.format(gst_version))
 cdata.set('PACKAGE', '"gst-plugins-ugly"')
 cdata.set('GETTEXT_PACKAGE', '"gst-plugins-ugly-1.0"')
-cdata.set('GST_PACKAGE_NAME', '"GStreamer Ugly Plug-ins"')
-cdata.set('GST_PACKAGE_ORIGIN', '"Unknown package origin"')
 cdata.set('GST_LICENSE', '"LGPL"')
+
+# GStreamer package name and origin url
+gst_package_name = get_option('with-package-name')
+if gst_package_name == ''
+  if gst_version_nano == 0
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Ugly Plug-ins source release')
+  elif gst_version_nano == 1
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Ugly Plug-ins git')
+  else
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Ugly Plug-ins prerelease')
+  endif
+endif
+cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
 
 # Mandatory GST deps
 gst_dep = dependency('gstreamer-1.0', version : gst_req,

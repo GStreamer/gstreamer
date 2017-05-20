@@ -1,2 +1,6 @@
-option('x264_libraries', type : 'string', value : '', description : 'Colon separated list of additional x264 library paths, e.g. for 10-bit version')
-
+option('x264_libraries', type : 'string', value : '',
+       description : 'Colon separated list of additional x264 library paths, e.g. for 10-bit version')
+option('with-package-name', type : 'string',
+       description : 'package name to use in plugins')
+option('with-package-origin', type : 'string', value : 'Unknown package origin',
+       description : 'package origin URL to use in plugins')
