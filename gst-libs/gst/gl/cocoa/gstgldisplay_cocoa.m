@@ -172,7 +172,7 @@ gst_gl_display_cocoa_setup_nsapp (gpointer data)
   } else {
     GST_DEBUG ("Create display");
     singleton = g_object_new (GST_TYPE_GL_DISPLAY_COCOA, NULL);
-    gst_object_ref_sink (singletone);
+    gst_object_ref_sink (singleton);
   }
 
   g_mutex_unlock (&nsapp_lock);
