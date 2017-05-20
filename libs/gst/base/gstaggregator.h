@@ -120,6 +120,7 @@ gboolean    gst_aggregator_pad_is_eos       (GstAggregatorPad *  pad);
 #define GST_IS_AGGREGATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AGGREGATOR))
 
 #define GST_FLOW_NOT_HANDLED           GST_FLOW_CUSTOM_SUCCESS
+#define GST_AGGREGATOR_FLOW_NEED_DATA             GST_FLOW_CUSTOM_ERROR
 
 /**
  * GstAggregator:
@@ -195,6 +196,18 @@ struct _GstAggregator
  *                  based aggregation to occur. Defaults to returning
  *                  GST_CLOCK_TIME_NONE causing the element to wait for buffers
  *                  on all sink pads before aggregating.
+ * @update_src_caps: Lets subclasses update the #GstCaps representing
+ *                   the src pad caps before usage.  The result should end up
+ *                   in @ret. Return %GST_AGGREGATOR_FLOW_NEED_DATA to indicate that the
+ *                   element needs more information (caps, a buffer, etc) to
+ *                   choose the correct caps. Should return ANY caps if the
+ *                   stream has not caps at all.
+ * @fixate_src_caps: Optional.
+ *                   Fixate and return the src pad caps provided.  The function takes
+ *                   ownership of @caps and returns a fixated version of
+ *                   @caps. @caps is not guaranteed to be writable.
+ * @negotiated_src_caps: Optional.
+ *                       Notifies subclasses what caps format has been negotiated
  *
  * The aggregator base class will handle in a thread-safe way all manners of
  * concurrent flushes, seeks, pad additions and removals, leaving to the
@@ -250,6 +263,13 @@ struct _GstAggregatorClass {
                                         GstPadTemplate * templ,
                                         const gchar    * req_name,
                                         const GstCaps  * caps);
+  GstFlowReturn     (*update_src_caps) (GstAggregator *  self,
+                                        GstCaps       *  caps,
+                                        GstCaps       ** ret);
+  GstCaps *         (*fixate_src_caps) (GstAggregator *  self,
+                                        GstCaps       *  caps);
+  gboolean          (*negotiated_src_caps) (GstAggregator *  self,
+                                            GstCaps      *  caps);
 
   /*< private >*/
   gpointer          _gst_reserved[GST_PADDING_LARGE];

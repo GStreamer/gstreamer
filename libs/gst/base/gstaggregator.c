@@ -809,6 +809,116 @@ gst_aggregator_pad_set_flushing (GstAggregatorPad * aggpad,
   PAD_UNLOCK (aggpad);
 }
 
+static GstFlowReturn
+gst_aggregator_default_update_src_caps (GstAggregator * agg, GstCaps * caps,
+    GstCaps ** ret)
+{
+  *ret = gst_caps_ref (caps);
+
+  return GST_FLOW_OK;
+}
+
+static GstCaps *
+gst_aggregator_default_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
+{
+  caps = gst_caps_fixate (caps);
+
+  return caps;
+}
+
+static gboolean
+gst_aggregator_default_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
+{
+  return TRUE;
+}
+
+/* WITH SRC_LOCK held */
+static GstFlowReturn
+gst_aggregator_update_src_caps (GstAggregator * self)
+{
+  GstAggregatorClass *agg_klass = GST_AGGREGATOR_GET_CLASS (self);
+  GstCaps *downstream_caps, *template_caps, *caps = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  template_caps = gst_pad_get_pad_template_caps (self->srcpad);
+  downstream_caps = gst_pad_peer_query_caps (self->srcpad, template_caps);
+
+  if (gst_caps_is_empty (downstream_caps)) {
+    GST_INFO_OBJECT (self, "Downstream caps (%"
+        GST_PTR_FORMAT ") not compatible with pad template caps (%"
+        GST_PTR_FORMAT ")", downstream_caps, template_caps);
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
+
+  g_assert (agg_klass->update_src_caps);
+  GST_DEBUG_OBJECT (self, "updating caps from %" GST_PTR_FORMAT,
+      downstream_caps);
+  ret = agg_klass->update_src_caps (self, downstream_caps, &caps);
+  if (ret < GST_FLOW_OK) {
+    GST_WARNING_OBJECT (self, "Subclass failed to update provided caps");
+    goto done;
+  }
+  if ((caps == NULL || gst_caps_is_empty (caps)) && ret >= GST_FLOW_OK) {
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
+  GST_DEBUG_OBJECT (self, "               to %" GST_PTR_FORMAT, caps);
+
+#ifdef GST_ENABLE_EXTRA_CHECKS
+  if (!gst_caps_is_subset (caps, template_caps)) {
+    GstCaps *intersection;
+
+    GST_ERROR_OBJECT (self,
+        "update_src_caps returned caps %" GST_PTR_FORMAT
+        " which are not a real subset of the template caps %"
+        GST_PTR_FORMAT, caps, template_caps);
+    g_warning ("%s: update_src_caps returned caps which are not a real "
+        "subset of the filter caps", GST_ELEMENT_NAME (self));
+
+    intersection =
+        gst_caps_intersect_full (template_caps, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = intersection;
+  }
+#endif
+
+  if (gst_caps_is_any (caps)) {
+    goto done;
+  }
+
+  if (!gst_caps_is_fixed (caps)) {
+    g_assert (agg_klass->fixate_src_caps);
+
+    GST_DEBUG_OBJECT (self, "fixate caps from %" GST_PTR_FORMAT, caps);
+    if (!(caps = agg_klass->fixate_src_caps (self, caps))) {
+      GST_WARNING_OBJECT (self, "Subclass failed to fixate provided caps");
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto done;
+    }
+    GST_DEBUG_OBJECT (self, "             to %" GST_PTR_FORMAT, caps);
+  }
+
+  if (agg_klass->negotiated_src_caps) {
+    if (!agg_klass->negotiated_src_caps (self, caps)) {
+      GST_WARNING_OBJECT (self, "Subclass failed to accept negotiated caps");
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto done;
+    }
+  }
+
+  gst_aggregator_set_src_caps (self, caps);
+
+done:
+  gst_caps_unref (downstream_caps);
+  gst_caps_unref (template_caps);
+
+  if (caps)
+    gst_caps_unref (caps);
+
+  return ret;
+}
+
 static void
 gst_aggregator_aggregate_func (GstAggregator * self)
 {
@@ -823,7 +933,7 @@ gst_aggregator_aggregate_func (GstAggregator * self)
 
   GST_LOG_OBJECT (self, "Checking aggregate");
   while (priv->send_eos && priv->running) {
-    GstFlowReturn flow_return;
+    GstFlowReturn flow_return = GST_FLOW_OK;
     gboolean processed_event = FALSE;
 
     gst_aggregator_iterate_sinkpads (self, check_events, NULL);
@@ -835,8 +945,19 @@ gst_aggregator_aggregate_func (GstAggregator * self)
     if (processed_event)
       continue;
 
-    GST_TRACE_OBJECT (self, "Actually aggregating!");
-    flow_return = klass->aggregate (self, timeout);
+    if (gst_pad_check_reconfigure (GST_AGGREGATOR_SRC_PAD (self))) {
+      flow_return = gst_aggregator_update_src_caps (self);
+      if (flow_return != GST_FLOW_OK)
+        gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (self));
+    }
+
+    if (timeout || flow_return >= GST_FLOW_OK) {
+      GST_TRACE_OBJECT (self, "Actually aggregating!");
+      flow_return = klass->aggregate (self, timeout);
+    }
+
+    if (flow_return == GST_AGGREGATOR_FLOW_NEED_DATA)
+      continue;
 
     GST_OBJECT_LOCK (self);
     if (flow_return == GST_FLOW_FLUSHING && priv->flush_seeking) {
@@ -1979,6 +2100,9 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
   klass->src_query = gst_aggregator_default_src_query;
 
   klass->create_new_pad = gst_aggregator_default_create_new_pad;
+  klass->update_src_caps = gst_aggregator_default_update_src_caps;
+  klass->fixate_src_caps = gst_aggregator_default_fixate_src_caps;
+  klass->negotiated_src_caps = gst_aggregator_default_negotiated_src_caps;
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_aggregator_request_new_pad);
