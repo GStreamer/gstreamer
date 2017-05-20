@@ -4,3 +4,7 @@ option('v4l2-probe', type : 'boolean', value : true)
 option('with-libv4l2', type : 'boolean', value : true)
 # Whether to use orc or not (auto will autodetect, yes will error out if not found)
 option('use_orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
+option('with-package-name', type : 'string',
+       description : 'package name to use in plugins')
+option('with-package-origin', type : 'string', value : 'Unknown package origin',
+       description : 'package origin URL to use in plugins')

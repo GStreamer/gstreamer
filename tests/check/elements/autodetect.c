@@ -212,8 +212,7 @@ autodetect_suite (void)
       "autodetect-test",
       "autodetect test elements",
       plugin_init,
-      VERSION, "LGPL", PACKAGE, PACKAGE_NAME,
-      "http://gstreamer.freedesktop.org");
+      VERSION, "LGPL", PACKAGE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_autovideosink_plugs_best);

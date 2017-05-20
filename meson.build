@@ -136,9 +136,19 @@ cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
 cdata.set('GST_LICENSE', '"LGPL"')
 cdata.set('PACKAGE', '"gst-plugins-good"')
 cdata.set('GETTEXT_PACKAGE', '"gst-plugins-good-1.0"')
-cdata.set('PACKAGE_NAME', '"GStreamer Good Plug-ins"')
-cdata.set('GST_PACKAGE_NAME', '"GStreamer Good Plug-ins"')
-cdata.set('GST_PACKAGE_ORIGIN', '"Unknown package origin"') # FIXME: make configurable
+
+# GStreamer package name and origin url
+gst_package_name = get_option('with-package-name')
+if gst_package_name == ''
+  if gst_version_nano == 0
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Good Plug-ins source release')
+  elif gst_version_nano == 1
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Good Plug-ins git')
+  else
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Good Plug-ins prerelease')
+  endif
+endif
+cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
 
 # Mandatory GST deps
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
