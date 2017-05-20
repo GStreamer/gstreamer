@@ -308,6 +308,12 @@ struct _GstAggregatorPrivate
   GstAggregatorStartTimeSelection start_time_selection;
   GstClockTime start_time;
 
+  /* protected by the object lock */
+  GstQuery *allocation_query;
+  GstAllocator *allocator;
+  GstBufferPool *pool;
+  GstAllocationParams allocation_params;
+
   /* properties */
   gint64 latency;               /* protected by both src_lock and all pad locks */
 };
@@ -832,6 +838,117 @@ gst_aggregator_default_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
   return TRUE;
 }
 
+
+/* takes ownership of the pool, allocator and query */
+static gboolean
+gst_aggregator_set_allocation (GstAggregator * self,
+    GstBufferPool * pool, GstAllocator * allocator,
+    GstAllocationParams * params, GstQuery * query)
+{
+  GstAllocator *oldalloc;
+  GstBufferPool *oldpool;
+  GstQuery *oldquery;
+
+  GST_DEBUG ("storing allocation query");
+
+  GST_OBJECT_LOCK (self);
+  oldpool = self->priv->pool;
+  self->priv->pool = pool;
+
+  oldalloc = self->priv->allocator;
+  self->priv->allocator = allocator;
+
+  oldquery = self->priv->allocation_query;
+  self->priv->allocation_query = query;
+
+  if (params)
+    self->priv->allocation_params = *params;
+  else
+    gst_allocation_params_init (&self->priv->allocation_params);
+  GST_OBJECT_UNLOCK (self);
+
+  if (oldpool) {
+    GST_DEBUG_OBJECT (self, "deactivating old pool %p", oldpool);
+    gst_buffer_pool_set_active (oldpool, FALSE);
+    gst_object_unref (oldpool);
+  }
+  if (oldalloc) {
+    gst_object_unref (oldalloc);
+  }
+  if (oldquery) {
+    gst_query_unref (oldquery);
+  }
+  return TRUE;
+}
+
+
+static gboolean
+gst_aggregator_decide_allocation (GstAggregator * self, GstQuery * query)
+{
+  GstAggregatorClass *aggclass = GST_AGGREGATOR_GET_CLASS (self);
+
+  if (aggclass->decide_allocation)
+    if (!aggclass->decide_allocation (self, query))
+      return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_aggregator_do_allocation (GstAggregator * self, GstCaps * caps)
+{
+  GstQuery *query;
+  gboolean result = TRUE;
+  GstBufferPool *pool = NULL;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+
+  /* find a pool for the negotiated caps now */
+  GST_DEBUG_OBJECT (self, "doing allocation query");
+  query = gst_query_new_allocation (caps, TRUE);
+  if (!gst_pad_peer_query (self->srcpad, query)) {
+    /* not a problem, just debug a little */
+    GST_DEBUG_OBJECT (self, "peer ALLOCATION query failed");
+  }
+
+  GST_DEBUG_OBJECT (self, "calling decide_allocation");
+  result = gst_aggregator_decide_allocation (self, query);
+
+  GST_DEBUG_OBJECT (self, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, result,
+      query);
+
+  if (!result)
+    goto no_decide_allocation;
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0)
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+
+  /* now store */
+  result =
+      gst_aggregator_set_allocation (self, pool, allocator, &params, query);
+
+  return result;
+
+  /* Errors */
+no_decide_allocation:
+  {
+    GST_WARNING_OBJECT (self, "Failed to decide allocation");
+    gst_query_unref (query);
+
+    return result;
+  }
+
+}
+
 /* WITH SRC_LOCK held */
 static GstFlowReturn
 gst_aggregator_update_src_caps (GstAggregator * self)
@@ -908,6 +1025,11 @@ gst_aggregator_update_src_caps (GstAggregator * self)
   }
 
   gst_aggregator_set_src_caps (self, caps);
+
+  if (!gst_aggregator_do_allocation (self, caps)) {
+    GST_WARNING_OBJECT (self, "Allocation negotiation failed");
+    ret = GST_FLOW_NOT_NEGOTIATED;
+  }
 
 done:
   gst_caps_unref (downstream_caps);
@@ -1008,6 +1130,8 @@ gst_aggregator_start (GstAggregator * self)
   self->priv->send_segment = TRUE;
   self->priv->send_eos = TRUE;
   self->priv->srccaps = NULL;
+
+  gst_aggregator_set_allocation (self, NULL, NULL, NULL, NULL);
 
   klass = GST_AGGREGATOR_GET_CLASS (self);
 
@@ -1382,6 +1506,8 @@ gst_aggregator_stop (GstAggregator * agg)
   if (agg->priv->tags)
     gst_tag_list_unref (agg->priv->tags);
   agg->priv->tags = NULL;
+
+  gst_aggregator_set_allocation (agg, NULL, NULL, NULL, NULL);
 
   return result;
 }
@@ -2818,4 +2944,54 @@ gst_aggregator_set_latency (GstAggregator * self,
     gst_element_post_message (GST_ELEMENT_CAST (self),
         gst_message_new_latency (GST_OBJECT_CAST (self)));
   }
+}
+
+/**
+ * gst_aggregator_get_buffer_pool:
+ * @self: a #GstAggregator
+ *
+ * Returns: (transfer full): the instance of the #GstBufferPool used
+ * by @trans; free it after use it
+ */
+GstBufferPool *
+gst_aggregator_get_buffer_pool (GstAggregator * self)
+{
+  GstBufferPool *pool;
+
+  g_return_val_if_fail (GST_IS_AGGREGATOR (self), NULL);
+
+  GST_OBJECT_LOCK (self);
+  pool = self->priv->pool;
+  if (pool)
+    gst_object_ref (pool);
+  GST_OBJECT_UNLOCK (self);
+
+  return pool;
+}
+
+/**
+ * gst_aggregator_get_allocator:
+ * @self: a #GstAggregator
+ * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
+ * used
+ * @params: (out) (allow-none) (transfer full): the
+ * #GstAllocationParams of @allocator
+ *
+ * Lets #GstAggregator sub-classes get the memory @allocator
+ * acquired by the base class and its @params.
+ *
+ * Unref the @allocator after use it.
+ */
+void
+gst_aggregator_get_allocator (GstAggregator * self,
+    GstAllocator ** allocator, GstAllocationParams * params)
+{
+  g_return_if_fail (GST_IS_AGGREGATOR (self));
+
+  if (allocator)
+    *allocator = self->priv->allocator ?
+        gst_object_ref (self->priv->allocator) : NULL;
+
+  if (params)
+    *params = self->priv->allocation_params;
 }

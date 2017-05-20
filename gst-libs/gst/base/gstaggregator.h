@@ -207,6 +207,11 @@ struct _GstAggregator
  *                   @caps. @caps is not guaranteed to be writable.
  * @negotiated_src_caps: Optional.
  *                       Notifies subclasses what caps format has been negotiated
+ * @decide_allocation: Optional.
+ *                     Allows the subclass to influence the allocation choices.
+ *                     Setup the allocation parameters for allocating output
+ *                     buffers. The passed in query contains the result of the
+ *                     downstream allocation query.
  *
  * The aggregator base class will handle in a thread-safe way all manners of
  * concurrent flushes, seeks, pad additions and removals, leaving to the
@@ -269,6 +274,8 @@ struct _GstAggregatorClass {
                                         GstCaps       *  caps);
   gboolean          (*negotiated_src_caps) (GstAggregator *  self,
                                             GstCaps      *  caps);
+  gboolean          (*decide_allocation) (GstAggregator * self,
+                                          GstQuery * query);
 
   /*< private >*/
   gpointer          _gst_reserved[GST_PADDING_LARGE];
@@ -313,6 +320,14 @@ gboolean gst_aggregator_iterate_sinkpads           (GstAggregator               
                                                     gpointer                         user_data);
 
 GstClockTime  gst_aggregator_get_latency           (GstAggregator                 *  self);
+
+GstBufferPool * gst_aggregator_get_buffer_pool     (GstAggregator                 * self);
+void          gst_aggregator_get_allocator         (GstAggregator                 * self,
+                                                    GstAllocator
+ ** allocator,
+                                                    GstAllocationParams
+  * params);
+
 
 G_END_DECLS
 
