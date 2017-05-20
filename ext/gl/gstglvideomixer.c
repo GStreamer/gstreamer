@@ -453,9 +453,8 @@ static void gst_gl_video_mixer_set_property (GObject * object, guint prop_id,
 static void gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps,
-    GstCaps * filter);
-static GstCaps *_fixate_caps (GstVideoAggregator * vagg, GstCaps * caps);
+static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps);
+static GstCaps *_fixate_caps (GstAggregator * agg, GstCaps * caps);
 static gboolean gst_gl_video_mixer_propose_allocation (GstGLBaseMixer *
     base_mix, GstGLBaseMixerPad * base_pad, GstQuery * decide_query,
     GstQuery * query);
@@ -874,9 +873,9 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
       gst_gl_video_mixer_process_textures;
 
   vagg_class->update_caps = _update_caps;
-  vagg_class->fixate_caps = _fixate_caps;
 
   agg_class->sinkpads_type = GST_TYPE_GL_VIDEO_MIXER_PAD;
+  agg_class->fixate_src_caps = _fixate_caps;
 
   mix_class->propose_allocation = gst_gl_video_mixer_propose_allocation;
 
@@ -986,7 +985,7 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
 }
 
 static GstCaps *
-_update_caps (GstVideoAggregator * vagg, GstCaps * caps, GstCaps * filter)
+_update_caps (GstVideoAggregator * vagg, GstCaps * caps)
 {
   GstCaps *ret;
   GList *l;
@@ -1014,18 +1013,15 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps, GstCaps * filter)
 
   GST_OBJECT_UNLOCK (vagg);
 
-  if (filter) {
-    ret = gst_caps_intersect (caps, filter);
-  } else {
-    ret = gst_caps_ref (caps);
-  }
+  ret = gst_caps_ref (caps);
 
   return ret;
 }
 
 static GstCaps *
-_fixate_caps (GstVideoAggregator * vagg, GstCaps * caps)
+_fixate_caps (GstAggregator * agg, GstCaps * caps)
 {
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
   GstGLVideoMixer *mix = GST_GL_VIDEO_MIXER (vagg);
   gint best_width = 0, best_height = 0;
   gint best_fps_n = 0, best_fps_d = 0;
