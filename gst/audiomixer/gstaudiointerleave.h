@@ -56,7 +56,7 @@ struct _GstAudioInterleave {
   GstAudioAggregator parent;
 
   gint padcounter;
-  guint channels;
+  guint channels; /* object lock */
 
   GstCaps *sinkcaps;
 

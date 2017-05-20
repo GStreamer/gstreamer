@@ -513,8 +513,11 @@ gst_audio_interleave_update_src_caps (GstAggregator * agg, GstCaps * caps,
   /* This means that either no caps have been set on the sink pad (if
    * sinkcaps is NULL) or that there is no sink pad (if channels == 0).
    */
-  if (self->sinkcaps == NULL || self->channels == 0)
+  GST_OBJECT_LOCK (self);
+  if (self->sinkcaps == NULL || self->channels == 0) {
+    GST_OBJECT_UNLOCK (self);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
 
   *ret = gst_caps_copy (self->sinkcaps);
   s = gst_caps_get_structure (*ret, 0);
@@ -522,6 +525,8 @@ gst_audio_interleave_update_src_caps (GstAggregator * agg, GstCaps * caps,
   gst_structure_set (s, "channels", G_TYPE_INT, self->channels, "layout",
       G_TYPE_STRING, "interleaved", "channel-mask", GST_TYPE_BITMASK,
       gst_audio_interleave_get_channel_mask (self), NULL);
+
+  GST_OBJECT_UNLOCK (self);
 
   return GST_FLOW_OK;
 }
@@ -726,10 +731,12 @@ gst_audio_interleave_request_new_pad (GstElement * element,
 
   /* FIXME: We ignore req_name, this is evil! */
 
+  GST_OBJECT_LOCK (self);
   padnumber = g_atomic_int_add (&self->padcounter, 1);
-  channel = g_atomic_int_add (&self->channels, 1);
+  channel = self->channels++;
   if (!self->channel_positions_from_input)
     channel = padnumber;
+  GST_OBJECT_UNLOCK (self);
 
   pad_name = g_strdup_printf ("sink_%u", padnumber);
   newpad = (GstAudioInterleavePad *)
@@ -776,7 +783,7 @@ gst_audio_interleave_release_pad (GstElement * element, GstPad * pad)
   /* Take lock to make sure we're not changing this when processing buffers */
   GST_OBJECT_LOCK (self);
 
-  g_atomic_int_add (&self->channels, -1);
+  self->channels--;
 
   position = GST_AUDIO_INTERLEAVE_PAD (pad)->channel;
   g_value_array_remove (self->input_channel_positions, position);
