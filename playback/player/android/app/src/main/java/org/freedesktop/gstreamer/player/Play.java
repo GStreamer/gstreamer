@@ -133,15 +133,17 @@ public class Play extends Activity implements SurfaceHolder.Callback, OnSeekBarC
         Intent intent = getIntent();
         android.net.Uri uri = intent.getData();
         Log.i ("GStreamer", "Received URI: " + uri);
-        if (uri.getScheme().equals("content")) {
-            android.database.Cursor cursor = getContentResolver().query(uri, null, null, null, null);
-            cursor.moveToFirst();
-            mediaUri = "file://" + cursor.getString(cursor.getColumnIndex(android.provider.MediaStore.Video.Media.DATA));
-            cursor.close();
-        } else {
-            mediaUri = uri.toString();
+        if (uri != null) {
+            if (uri.getScheme().equals("content")) {
+                android.database.Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+                cursor.moveToFirst();
+                mediaUri = "file://" + cursor.getString(cursor.getColumnIndex(android.provider.MediaStore.Video.Media.DATA));
+                cursor.close();
+            } else {
+                mediaUri = uri.toString();
+            }
+            player.setUri(mediaUri);
         }
-        player.setUri(mediaUri);
 
         updateTimeWidget();
     }
