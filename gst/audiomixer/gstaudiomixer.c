@@ -624,7 +624,6 @@ gst_audiomixer_release_pad (GstElement * element, GstPad * pad)
 }
 
 
-/* Called with object lock and pad object lock held */
 static gboolean
 gst_audiomixer_aggregate_one_buffer (GstAudioAggregator * aagg,
     GstAudioAggregatorPad * aaggpad, GstBuffer * inbuf, guint in_offset,
@@ -635,8 +634,13 @@ gst_audiomixer_aggregate_one_buffer (GstAudioAggregator * aagg,
   GstMapInfo outmap;
   gint bpf;
 
+  GST_OBJECT_LOCK (aagg);
+  GST_OBJECT_LOCK (aaggpad);
+
   if (pad->mute || pad->volume < G_MINDOUBLE) {
     GST_DEBUG_OBJECT (pad, "Skipping muted pad");
+    GST_OBJECT_UNLOCK (aaggpad);
+    GST_OBJECT_UNLOCK (aagg);
     return FALSE;
   }
 
@@ -743,6 +747,9 @@ gst_audiomixer_aggregate_one_buffer (GstAudioAggregator * aagg,
   }
   gst_buffer_unmap (inbuf, &inmap);
   gst_buffer_unmap (outbuf, &outmap);
+
+  GST_OBJECT_UNLOCK (aaggpad);
+  GST_OBJECT_UNLOCK (aagg);
 
   return TRUE;
 }
