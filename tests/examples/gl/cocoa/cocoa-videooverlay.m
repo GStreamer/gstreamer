@@ -22,6 +22,14 @@
 #include <gst/gst.h>
 #include <gst/video/videooverlay.h>
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#define NSEventMaskAny                       NSAnyEventMask
+#define NSWindowStyleMaskTitled              NSTitledWindowMask
+#define NSWindowStyleMaskClosable            NSClosableWindowMask
+#define NSWindowStyleMaskResizable           NSResizableWindowMask
+#define NSWindowStyleMaskMiniaturizable      NSMiniaturizableWindowMask
+#endif
+
 /* ============================================================= */
 /*                                                               */
 /*                          MainWindow                           */
@@ -48,7 +56,8 @@
   m_isClosed = FALSE;
 
   self = [super initWithContentRect: contentRect
-		styleMask: (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
+    styleMask: (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
+                NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable)
     backing: NSBackingStoreBuffered defer: NO screen: nil];
 
   [self setReleasedWhenClosed:NO];
@@ -211,7 +220,7 @@ int main(int argc, char **argv)
   [window orderFront:window];
 
   while (![window isClosed]) {
-    NSEvent *event = [NSApp nextEventMatchingMask:NSAnyEventMask
+    NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny
       untilDate:[NSDate dateWithTimeIntervalSinceNow:1]
       inMode:NSDefaultRunLoopMode dequeue:YES];
     if (event)
