@@ -322,8 +322,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     );
 
 static gboolean gst_gl_mixer_src_query (GstAggregator * agg, GstQuery * query);
-static GstFlowReturn gst_gl_mixer_get_output_buffer (GstVideoAggregator *
-    videoaggregator, GstBuffer ** outbuf);
 static gboolean gst_gl_mixer_stop (GstAggregator * agg);
 static gboolean gst_gl_mixer_start (GstAggregator * agg);
 
@@ -371,7 +369,6 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   agg_class->negotiated_src_caps = _negotiated_caps;
 
   videoaggregator_class->aggregate_frames = gst_gl_mixer_aggregate_frames;
-  videoaggregator_class->get_output_buffer = gst_gl_mixer_get_output_buffer;
   videoaggregator_class->find_best_format = _find_best_format;
 
   mix_class->propose_allocation = gst_gl_mixer_propose_allocation;
@@ -463,34 +460,6 @@ gst_gl_mixer_src_query (GstAggregator * agg, GstQuery * query)
   }
 
   return res;
-}
-
-static GstFlowReturn
-gst_gl_mixer_get_output_buffer (GstVideoAggregator * videoaggregator,
-    GstBuffer ** outbuf)
-{
-  GstGLMixer *mix = GST_GL_MIXER (videoaggregator);
-  GstBufferPool *pool;
-  GstFlowReturn ret;
-
-  pool =
-      gst_gl_base_mixer_get_buffer_pool (GST_GL_BASE_MIXER (videoaggregator));
-
-  if (!pool)
-    return GST_FLOW_NOT_NEGOTIATED;
-
-  if (!gst_buffer_pool_is_active (pool)) {
-    if (!gst_buffer_pool_set_active (pool, TRUE)) {
-      GST_ELEMENT_ERROR (mix, RESOURCE, SETTINGS,
-          ("failed to activate bufferpool"), ("failed to activate bufferpool"));
-      return GST_FLOW_ERROR;
-    }
-  }
-
-  ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL);
-  gst_object_unref (pool);
-
-  return ret;
 }
 
 static void

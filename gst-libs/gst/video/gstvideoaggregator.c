@@ -1897,22 +1897,68 @@ gst_video_aggregator_release_pad (GstElement * element, GstPad * pad)
   return;
 }
 
+static gboolean
+gst_video_aggregator_decide_allocation (GstAggregator * self, GstQuery * query)
+{
+  GstAllocationParams params = { 0, 15, 0, 0 };
+  guint i;
+
+  if (gst_query_get_n_allocation_params (query) == 0)
+    gst_query_add_allocation_param (query, NULL, &params);
+  else
+    for (i = 0; i < gst_query_get_n_allocation_params (query); i++) {
+      GstAllocator *allocator;
+
+      gst_query_parse_nth_allocation_param (query, i, &allocator, &params);
+      params.align = MAX (params.align, 15);
+      gst_query_set_nth_allocation_param (query, i, allocator, &params);
+    }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_video_aggregator_get_output_buffer (GstVideoAggregator * videoaggregator,
     GstBuffer ** outbuf)
 {
-  guint outsize;
-  static GstAllocationParams params = { 0, 15, 0, 0, };
+  GstAggregator *aggregator = GST_AGGREGATOR (videoaggregator);
+  GstBufferPool *pool;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  outsize = GST_VIDEO_INFO_SIZE (&videoaggregator->info);
-  *outbuf = gst_buffer_new_allocate (NULL, outsize, &params);
+  pool = gst_aggregator_get_buffer_pool (aggregator);
 
-  if (*outbuf == NULL) {
-    GST_ERROR_OBJECT (videoaggregator,
-        "Could not instantiate buffer of size: %d", outsize);
+  if (pool) {
+    if (!gst_buffer_pool_is_active (pool)) {
+      if (!gst_buffer_pool_set_active (pool, TRUE)) {
+        GST_ELEMENT_ERROR (videoaggregator, RESOURCE, SETTINGS,
+            ("failed to activate bufferpool"),
+            ("failed to activate bufferpool"));
+        return GST_FLOW_ERROR;
+      }
+    }
+
+    ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL);
+    gst_object_unref (pool);
+  } else {
+    guint outsize;
+    GstAllocator *allocator;
+    GstAllocationParams params;
+
+    gst_aggregator_get_allocator (aggregator, &allocator, &params);
+
+    outsize = GST_VIDEO_INFO_SIZE (&videoaggregator->info);
+    *outbuf = gst_buffer_new_allocate (allocator, outsize, &params);
+
+    if (allocator)
+      gst_object_unref (allocator);
+
+    if (*outbuf == NULL) {
+      GST_ELEMENT_ERROR (videoaggregator, RESOURCE, NO_SPACE_LEFT,
+          (NULL), ("Could not acquire buffer of size: %d", outsize));
+      ret = GST_FLOW_ERROR;
+    }
   }
-
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static gboolean
@@ -2090,6 +2136,7 @@ gst_video_aggregator_class_init (GstVideoAggregatorClass * klass)
   agg_class->fixate_src_caps = gst_video_aggregator_default_fixate_src_caps;
   agg_class->negotiated_src_caps =
       gst_video_aggregator_default_negotiated_src_caps;
+  agg_class->decide_allocation = gst_video_aggregator_decide_allocation;
 
   klass->find_best_format = gst_video_aggregator_find_best_format;
   klass->get_output_buffer = gst_video_aggregator_get_output_buffer;
