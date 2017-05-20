@@ -28,6 +28,13 @@
 
 #include "gstgl_cocoa_private.h"
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#define NSWindowStyleMaskTitled              NSTitledWindowMask
+#define NSWindowStyleMaskClosable            NSClosableWindowMask
+#define NSWindowStyleMaskResizable           NSResizableWindowMask
+#define NSWindowStyleMaskMiniaturizable      NSMiniaturizableWindowMask
+#endif
+
 /* =============================================================*/
 /*                                                              */
 /*               GstGLNSWindow declaration                      */
@@ -175,8 +182,8 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
   gst_object_unref (context);
 
   internal_win_id = [[GstGLNSWindow alloc] initWithContentRect:rect styleMask: 
-      (NSTitledWindowMask | NSClosableWindowMask |
-      NSResizableWindowMask | NSMiniaturizableWindowMask)
+      (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
+      NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable)
       backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window_cocoa];
 
   priv->internal_win_id = (__bridge_retained gpointer)internal_win_id;
