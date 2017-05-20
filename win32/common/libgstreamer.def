@@ -975,6 +975,7 @@ EXPORTS
 	gst_parent_buffer_meta_get_info
 	gst_parse_bin_from_description
 	gst_parse_bin_from_description_full
+	gst_parse_context_copy
 	gst_parse_context_free
 	gst_parse_context_get_missing_elements
 	gst_parse_context_get_type
