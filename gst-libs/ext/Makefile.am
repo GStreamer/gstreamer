@@ -113,7 +113,7 @@ endif
 clean-local:
 	cd libav && $(MAKE) clean
 	rm -rf .libs
-	rm -r *.la
+	rm -f *.la
 
 dist-clean:
 	cd libav && $(MAKE) distclean
