@@ -2659,7 +2659,6 @@ _class_init (gpointer g_class, gpointer data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
   GError *err = NULL;
   gchar **config_dirs;
   gchar **elements;
@@ -2807,7 +2806,7 @@ plugin_init (GstPlugin * plugin)
     }
     subtype = g_type_register_static (type, type_name, &type_info, 0);
     g_free (type_name);
-    ret |= gst_element_register (plugin, elements[i], rank, subtype);
+    gst_element_register (plugin, elements[i], rank, subtype);
   }
   g_strfreev (elements);
 
@@ -2815,7 +2814,7 @@ done:
   g_free (env_config_dir);
   g_free (config_dirs);
 
-  return ret;
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
