@@ -73,7 +73,7 @@ gst_validate_registry_get (void)
 
   g_mutex_lock (&_gst_validate_registry_mutex);
   if (G_UNLIKELY (!_gst_validate_registry_default)) {
-    _gst_validate_registry_default = g_object_newv (GST_TYPE_REGISTRY, 0, NULL);
+    _gst_validate_registry_default = g_object_new (GST_TYPE_REGISTRY, NULL);
     gst_object_ref_sink (GST_OBJECT_CAST (_gst_validate_registry_default));
   }
   registry = _gst_validate_registry_default;
