@@ -1024,9 +1024,18 @@ static GstBuffer *
 gst_audio_aggregator_create_output_buffer (GstAudioAggregator * aagg,
     guint num_frames)
 {
-  GstBuffer *outbuf = gst_buffer_new_allocate (NULL, num_frames *
-      GST_AUDIO_INFO_BPF (&aagg->info), NULL);
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  GstBuffer *outbuf;
   GstMapInfo outmap;
+
+  gst_aggregator_get_allocator (GST_AGGREGATOR (aagg), &allocator, &params);
+
+  outbuf = gst_buffer_new_allocate (allocator, num_frames *
+      GST_AUDIO_INFO_BPF (&aagg->info), &params);
+
+  if (allocator)
+    gst_object_unref (allocator);
 
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
   gst_audio_format_fill_silence (aagg->info.finfo, outmap.data, outmap.size);
