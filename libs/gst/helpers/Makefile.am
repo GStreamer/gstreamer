@@ -30,3 +30,4 @@ if HAVE_PTP_HELPER_CAPABILITIES
 endif
 endif
 
+EXTRA_DIST = ptp_helper_post_install.sh
