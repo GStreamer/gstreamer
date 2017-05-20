@@ -39,6 +39,8 @@ dnl we override it here if we need to for the release candidate of new series
 GST_API_VERSION=1.0
 AC_SUBST(GST_API_VERSION)
 
+dnl *** Check for external $AS vs detected by AS_LIBTOOL
+user_AS="$AS"
 AG_GST_LIBTOOL_PREPARE
 AS_LIBTOOL(GST, 1200, 0, 1200)
 
@@ -406,8 +408,11 @@ else
     emblibav_configure_args="$emblibav_configure_args --ar=\\\"\\\$AR\\\""
   fi
 
-  if test x"$AS" != x; then
-    emblibav_configure_args="$emblibav_configure_args --as=\\\"\\\$AS\\\""
+  if test x"$orig_AS" != x; then
+    emblibav_configure_args="$emblibav_configure_args --as=\\\"\\\$orig_AS\\\""
+  elif test x"$CC" != x; then
+    dnl No external $AS - try $CC for the libav assembler
+    emblibav_configure_args="$emblibav_configure_args --as=\\\"\\\$CC\\\""
   fi
 
   if test x"$CC" != x; then
@@ -451,14 +456,19 @@ else
      dnl to detect out-of-tree builds
      if test -z "$srcdir" -o "$srcdir" = .; then
        confcmd=./configure
+       gasppdir=../gas-preprocessor
      else
        confcmd="$ac_abs_top_srcdir"/gst-libs/ext/libav/configure
+       gasppdir="$ac_abs_top_srcdir"/gst-libs/ext/gas-preprocessor
      fi
 
      AS_MKDIR_P(["$ac_top_build_prefix"gst-libs/ext/libav])
+     oldPATH="$PATH"
+     PATH="$gasppdir:$PATH"
      cd "$ac_top_build_prefix"gst-libs/ext/libav &&
          eval "$confcmd $emblibav_configure_args" ||
          AC_MSG_ERROR([Failed to configure embedded Libav tree])
+     PATH="$oldPATH"
      cd "$origdir"
     ],
     [emblibav_configure_args="$emblibav_configure_args"])

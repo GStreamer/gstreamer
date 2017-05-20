@@ -4,3 +4,6 @@
 [submodule "gst-libs/ext/libav"]
         path = gst-libs/ext/libav
         url = https://git.ffmpeg.org/ffmpeg.git
+[submodule "gst-libs/ext/gas-preprocessor"]
+	path = gst-libs/ext/gas-preprocessor
+	url = git://git.libav.org/gas-preprocessor.git
