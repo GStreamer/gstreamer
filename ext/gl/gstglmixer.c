@@ -96,16 +96,16 @@ gst_gl_mixer_pad_set_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-_negotiated_caps (GstVideoAggregator * vagg, GstCaps * caps)
+_negotiated_caps (GstAggregator * agg, GstCaps * caps)
 {
-  GstGLMixer *mix = GST_GL_MIXER (vagg);
+  GstGLMixer *mix = GST_GL_MIXER (agg);
   gboolean ret;
 
   mix->priv->negotiated = TRUE;
 
   gst_caps_replace (&mix->out_caps, caps);
 
-  ret = GST_VIDEO_AGGREGATOR_CLASS (parent_class)->negotiated_caps (vagg, caps);
+  ret = GST_AGGREGATOR_CLASS (parent_class)->negotiated_src_caps (agg, caps);
 
   return ret;
 }
@@ -213,29 +213,6 @@ gst_gl_mixer_pad_sink_acceptcaps (GstPad * pad, GstGLMixer * mix,
   gst_caps_unref (template_caps);
 
   return ret;
-}
-
-/* copies the given caps */
-static GstCaps *
-_update_caps (GstVideoAggregator * vagg, GstCaps * caps, GstCaps * filter)
-{
-  GstCaps *tmp;
-  guint i, n;
-
-  if (filter) {
-    tmp = gst_caps_intersect (caps, filter);
-    tmp = gst_caps_make_writable (tmp);
-  } else {
-    tmp = gst_caps_copy (caps);
-  }
-
-  n = gst_caps_get_size (tmp);
-  for (i = 0; i < n; i++) {
-    gst_caps_set_features (tmp, i,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
-  }
-
-  return tmp;
 }
 
 static GstCaps *
@@ -391,11 +368,10 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   agg_class->src_query = gst_gl_mixer_src_query;
   agg_class->stop = gst_gl_mixer_stop;
   agg_class->start = gst_gl_mixer_start;
+  agg_class->negotiated_src_caps = _negotiated_caps;
 
   videoaggregator_class->aggregate_frames = gst_gl_mixer_aggregate_frames;
   videoaggregator_class->get_output_buffer = gst_gl_mixer_get_output_buffer;
-  videoaggregator_class->negotiated_caps = _negotiated_caps;
-  videoaggregator_class->update_caps = _update_caps;
   videoaggregator_class->find_best_format = _find_best_format;
 
   mix_class->propose_allocation = gst_gl_mixer_propose_allocation;

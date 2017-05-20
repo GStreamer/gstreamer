@@ -108,11 +108,14 @@ gst_gl_base_mixer_pad_set_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-_negotiated_caps (GstVideoAggregator * vagg, GstCaps * caps)
+_negotiated_caps (GstAggregator * agg, GstCaps * caps)
 {
-  GstGLBaseMixer *mix = GST_GL_BASE_MIXER (vagg);
+  GstGLBaseMixer *mix = GST_GL_BASE_MIXER (agg);
 
-  return gst_gl_base_mixer_do_bufferpool (mix, caps);
+  if (!gst_gl_base_mixer_do_bufferpool (mix, caps))
+    return FALSE;
+
+  return GST_AGGREGATOR_CLASS (parent_class)->negotiated_src_caps (agg, caps);
 }
 
 static gboolean
@@ -324,9 +327,6 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
-
-  GstVideoAggregatorClass *videoaggregator_class =
-      (GstVideoAggregatorClass *) klass;
   GstAggregatorClass *agg_class = (GstAggregatorClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "glmixer", 0, "opengl mixer");
@@ -350,8 +350,7 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
   agg_class->src_activate = gst_gl_base_mixer_src_activate_mode;
   agg_class->stop = gst_gl_base_mixer_stop;
   agg_class->start = gst_gl_base_mixer_start;
-
-  videoaggregator_class->negotiated_caps = _negotiated_caps;
+  agg_class->negotiated_src_caps = _negotiated_caps;
 
   klass->propose_allocation = _default_propose_allocation;
 
