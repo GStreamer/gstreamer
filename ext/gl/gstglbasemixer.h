@@ -99,7 +99,5 @@ struct _GstGLBaseMixerClass
 
 GType gst_gl_base_mixer_get_type(void);
 
-GstBufferPool *gst_gl_base_mixer_get_buffer_pool (GstGLBaseMixer * mix);
-
 G_END_DECLS
 #endif /* __GST_GL_BASE_MIXER_H__ */
