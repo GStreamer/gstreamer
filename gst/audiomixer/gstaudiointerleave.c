@@ -823,6 +823,9 @@ gst_audio_interleave_aggregate_one_buffer (GstAudioAggregator * aagg,
   gint out_width, in_bpf, out_bpf, out_channels, channel;
   guint8 *outdata;
 
+  GST_OBJECT_LOCK (aagg);
+  GST_OBJECT_LOCK (aaggpad);
+
   out_width = GST_AUDIO_INFO_WIDTH (&aagg->info) / 8;
   in_bpf = GST_AUDIO_INFO_BPF (&aaggpad->info);
   out_bpf = GST_AUDIO_INFO_BPF (&aagg->info);
@@ -849,6 +852,9 @@ gst_audio_interleave_aggregate_one_buffer (GstAudioAggregator * aagg,
 
   gst_buffer_unmap (inbuf, &inmap);
   gst_buffer_unmap (outbuf, &outmap);
+
+  GST_OBJECT_UNLOCK (aaggpad);
+  GST_OBJECT_UNLOCK (aagg);
 
   return TRUE;
 }

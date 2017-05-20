@@ -976,6 +976,8 @@ gst_audio_aggregator_mix_buffer (GstAudioAggregator * aagg,
   guint out_start;
   gboolean filled;
   guint blocksize;
+  guint in_offset;
+  gboolean pad_changed = FALSE;
 
   blocksize = gst_util_uint64_scale (aagg->priv->output_buffer_duration,
       GST_AUDIO_INFO_RATE (&aagg->info), GST_SECOND);
@@ -1001,11 +1003,25 @@ gst_audio_aggregator_mix_buffer (GstAudioAggregator * aagg,
     return FALSE;
   }
 
+  gst_buffer_ref (inbuf);
+  in_offset = pad->priv->position;
+  GST_OBJECT_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (aagg);
+
   filled = GST_AUDIO_AGGREGATOR_GET_CLASS (aagg)->aggregate_one_buffer (aagg,
-      pad, inbuf, pad->priv->position, outbuf, out_start, overlap);
+      pad, inbuf, in_offset, outbuf, out_start, overlap);
+
+  GST_OBJECT_LOCK (aagg);
+  GST_OBJECT_LOCK (pad);
+
+  pad_changed = (inbuf != pad->priv->buffer);
+  gst_buffer_unref (inbuf);
 
   if (filled)
     GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_GAP);
+
+  if (pad_changed)
+    return FALSE;
 
   pad->priv->position += overlap;
   pad->priv->output_offset += overlap;
