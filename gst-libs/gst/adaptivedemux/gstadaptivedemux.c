@@ -2400,7 +2400,7 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
 
   /* Wait for preroll if blocking */
   GST_DEBUG_OBJECT (stream->pad,
-      "About to push buffer of size %" G_GUINT64_FORMAT,
+      "About to push buffer of size %" G_GSIZE_FORMAT,
       gst_buffer_get_size (buffer));
 
   ret = gst_pad_push (stream->pad, buffer);
