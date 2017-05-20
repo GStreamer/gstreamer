@@ -30,10 +30,21 @@ cdata.set('GETTEXT_PACKAGE', '"gst-rtsp-server-1.0"')
 cdata.set('PACKAGE', '"gst-rtsp-server"')
 cdata.set('VERSION', '"@0@"'.format(gst_version))
 cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
-cdata.set('GST_PACKAGE_NAME', '"GStreamer RTSP Server Library"')
-cdata.set('GST_PACKAGE_ORIGIN', '"Unknown package origin"')
 #cdata.set('GST_API_VERSION', '"@0@"'.format(api_version))
 cdata.set('GST_LICENSE', '"LGPL"')
+
+# GStreamer package name and origin url
+gst_package_name = get_option('with-package-name')
+if gst_package_name == ''
+  if gst_version_nano == 0
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer RTSP Server Library source release')
+  elif gst_version_nano == 1
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer RTSP Server Library git')
+  else
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer RTSP Server Library prerelease')
+  endif
+endif
+cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
 
 configure_file(input : 'config.h.meson',
   output : 'config.h',
