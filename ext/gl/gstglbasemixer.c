@@ -580,20 +580,6 @@ no_decide_allocation:
   }
 }
 
-GstBufferPool *
-gst_gl_base_mixer_get_buffer_pool (GstGLBaseMixer * mix)
-{
-  GstBufferPool *pool;
-
-  GST_OBJECT_LOCK (mix);
-  pool = mix->priv->pool;
-  if (pool)
-    gst_object_ref (pool);
-  GST_OBJECT_UNLOCK (mix);
-
-  return pool;
-}
-
 static void
 gst_gl_base_mixer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
