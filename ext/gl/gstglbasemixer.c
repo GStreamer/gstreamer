@@ -31,8 +31,6 @@
 #define gst_gl_base_mixer_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstGLBaseMixer, gst_gl_base_mixer,
     GST_TYPE_VIDEO_AGGREGATOR);
-static gboolean gst_gl_base_mixer_do_bufferpool (GstGLBaseMixer * mix,
-    GstCaps * outcaps);
 
 #define GST_CAT_DEFAULT gst_gl_base_mixer_debug
 GST_DEBUG_CATEGORY (gst_gl_base_mixer_debug);
@@ -105,17 +103,6 @@ gst_gl_base_mixer_pad_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static gboolean
-_negotiated_caps (GstAggregator * agg, GstCaps * caps)
-{
-  GstGLBaseMixer *mix = GST_GL_BASE_MIXER (agg);
-
-  if (!gst_gl_base_mixer_do_bufferpool (mix, caps))
-    return FALSE;
-
-  return GST_AGGREGATOR_CLASS (parent_class)->negotiated_src_caps (agg, caps);
 }
 
 static gboolean
@@ -316,11 +303,8 @@ static void gst_gl_base_mixer_set_property (GObject * object, guint prop_id,
 static void gst_gl_base_mixer_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gl_base_mixer_decide_allocation (GstGLBaseMixer * mix,
+static gboolean gst_gl_base_mixer_decide_allocation (GstAggregator * agg,
     GstQuery * query);
-static gboolean gst_gl_base_mixer_set_allocation (GstGLBaseMixer * mix,
-    GstBufferPool * pool, GstAllocator * allocator,
-    GstAllocationParams * params, GstQuery * query);
 
 static void
 gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
@@ -350,7 +334,7 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
   agg_class->src_activate = gst_gl_base_mixer_src_activate_mode;
   agg_class->stop = gst_gl_base_mixer_stop;
   agg_class->start = gst_gl_base_mixer_start;
-  agg_class->negotiated_src_caps = _negotiated_caps;
+  agg_class->decide_allocation = gst_gl_base_mixer_decide_allocation;
 
   klass->propose_allocation = _default_propose_allocation;
 
@@ -468,8 +452,9 @@ gst_gl_base_mixer_src_query (GstAggregator * agg, GstQuery * query)
 }
 
 static gboolean
-gst_gl_base_mixer_decide_allocation (GstGLBaseMixer * mix, GstQuery * query)
+gst_gl_base_mixer_decide_allocation (GstAggregator * agg, GstQuery * query)
 {
+  GstGLBaseMixer *mix = GST_GL_BASE_MIXER (agg);
   GstGLBaseMixerClass *mix_class = GST_GL_BASE_MIXER_GET_CLASS (mix);
 
   if (!_get_gl_context (mix))
@@ -480,104 +465,6 @@ gst_gl_base_mixer_decide_allocation (GstGLBaseMixer * mix, GstQuery * query)
       return FALSE;
 
   return TRUE;
-}
-
-/* takes ownership of the pool, allocator and query */
-static gboolean
-gst_gl_base_mixer_set_allocation (GstGLBaseMixer * mix,
-    GstBufferPool * pool, GstAllocator * allocator,
-    GstAllocationParams * params, GstQuery * query)
-{
-  GstAllocator *oldalloc;
-  GstBufferPool *oldpool;
-  GstQuery *oldquery;
-  GstGLBaseMixerPrivate *priv = mix->priv;
-
-  GST_DEBUG ("storing allocation query");
-
-  GST_OBJECT_LOCK (mix);
-  oldpool = priv->pool;
-  priv->pool = pool;
-
-  oldalloc = priv->allocator;
-  priv->allocator = allocator;
-
-  oldquery = priv->query;
-  priv->query = query;
-
-  if (params)
-    priv->params = *params;
-  else
-    gst_allocation_params_init (&priv->params);
-  GST_OBJECT_UNLOCK (mix);
-
-  if (oldpool) {
-    GST_DEBUG_OBJECT (mix, "deactivating old pool %p", oldpool);
-    gst_buffer_pool_set_active (oldpool, FALSE);
-    gst_object_unref (oldpool);
-  }
-  if (oldalloc) {
-    gst_object_unref (oldalloc);
-  }
-  if (oldquery) {
-    gst_query_unref (oldquery);
-  }
-  return TRUE;
-}
-
-static gboolean
-gst_gl_base_mixer_do_bufferpool (GstGLBaseMixer * mix, GstCaps * outcaps)
-{
-  GstQuery *query;
-  gboolean result = TRUE;
-  GstBufferPool *pool = NULL;
-  GstAllocator *allocator;
-  GstAllocationParams params;
-  GstAggregator *agg = GST_AGGREGATOR (mix);
-
-  /* find a pool for the negotiated caps now */
-  GST_DEBUG_OBJECT (mix, "doing allocation query");
-  query = gst_query_new_allocation (outcaps, TRUE);
-  if (!gst_pad_peer_query (agg->srcpad, query)) {
-    /* not a problem, just debug a little */
-    GST_DEBUG_OBJECT (mix, "peer ALLOCATION query failed");
-  }
-
-  GST_DEBUG_OBJECT (mix, "calling decide_allocation");
-  result = gst_gl_base_mixer_decide_allocation (mix, query);
-
-  GST_DEBUG_OBJECT (mix, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, result,
-      query);
-
-  if (!result)
-    goto no_decide_allocation;
-
-  /* we got configuration from our peer or the decide_allocation method,
-   * parse them */
-  if (gst_query_get_n_allocation_params (query) > 0) {
-    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
-  } else {
-    allocator = NULL;
-    gst_allocation_params_init (&params);
-  }
-
-  if (gst_query_get_n_allocation_pools (query) > 0)
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
-
-  /* now store */
-  result =
-      gst_gl_base_mixer_set_allocation (mix, pool, allocator, &params, query);
-
-  return result;
-
-  /* Errors */
-no_decide_allocation:
-  {
-    GST_WARNING_OBJECT (mix, "Failed to decide allocation");
-    gst_query_unref (query);
-
-    return result;
-  }
 }
 
 static void
