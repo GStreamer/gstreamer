@@ -99,12 +99,24 @@ core_conf.set('GETTEXT_PACKAGE', '"gst-plugins-base-1.0"')
 core_conf.set('PACKAGE', '"gst-plugins-base"')
 core_conf.set('VERSION', '"@0@"'.format(gst_version))
 core_conf.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
-core_conf.set('GST_PACKAGE_NAME', '"GStreamer Base Plug-ins"')
-core_conf.set('GST_PACKAGE_ORIGIN', '"Unknown package origin"')
 core_conf.set('GST_API_VERSION', '"@0@"'.format(api_version))
 core_conf.set('GST_INSTALL_PLUGINS_HELPER', '"/FIXME"')
 core_conf.set('GST_DATADIR', '"/FIXME"')
 core_conf.set('GST_LICENSE', '"LGPL"')
+
+# GStreamer package name and origin url
+gst_package_name = get_option('with-package-name')
+if gst_package_name == ''
+  if gst_version_nano == 0
+    core_conf.set_quoted('GST_PACKAGE_NAME', 'GStreamer Base Plug-ins source release')
+  elif gst_version_nano == 1
+    core_conf.set_quoted('GST_PACKAGE_NAME', 'GStreamer Base Plug-ins git')
+  else
+    core_conf.set_quoted('GST_PACKAGE_NAME', 'GStreamer Base Plug-ins prerelease')
+  endif
+endif
+core_conf.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
+
 # FIXME: These should be configure options
 core_conf.set('DEFAULT_VIDEOSINK', '"autovideosink"')
 core_conf.set('DEFAULT_AUDIOSINK', '"autoaudiosink"')

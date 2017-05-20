@@ -5,3 +5,7 @@ option('disable_introspection',
         type : 'boolean', value : false,
         description : 'Whether to disable the introspection generation')
 option('disable_gtkdoc', type : 'boolean', value : false)
+option('with-package-name', type : 'string',
+       description : 'package name to use in plugins')
+option('with-package-origin', type : 'string', value : 'Unknown package origin',
+       description : 'package origin URL to use in plugins')
