@@ -644,24 +644,33 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
        * e.g. if you push 5.1-surround audio to a stereo configuration,
        * the left and right channels will be played accordingly,
        * and the rest will be dropped. */
-
-      if (channels == 1 || (channels == 2 &&
-              (channel_mask == 0 || channel_mask == STEREO_CHANNEL_MASK))) {
-
+      if (channels == 1) {
+        /* If have mono, then also offer stereo since CoreAudio downmixes to it */
+        GstStructure *stereo = gst_structure_copy (out_s);
+        gst_structure_remove_field (out_s, "channel-mask");
+        gst_structure_set (stereo, "channels", G_TYPE_INT, 2,
+            "channel-mask", GST_TYPE_BITMASK, STEREO_CHANNEL_MASK, NULL);
+        gst_caps_append_structure (caps, stereo);
+        gst_caps_append_structure (caps, out_s);
+      } else if (channels == 2 && (channel_mask == 0
+              || channel_mask == STEREO_CHANNEL_MASK)) {
         /* If have stereo channels, then also offer mono since CoreAudio
-         * upmixes it. If mono, then also offer stereo since CoreAudio
-         * downmixes to it */
+         * upmixes it. */
+        GstStructure *mono = gst_structure_copy (out_s);
+        gst_structure_set (mono, "channels", G_TYPE_INT, 1, NULL);
+        gst_structure_remove_field (mono, "channel-mask");
+        gst_structure_set (out_s, "channel-mask", GST_TYPE_BITMASK,
+            STEREO_CHANNEL_MASK, NULL);
 
-        gst_structure_set (out_s, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
-
-        if (channels == 1)
-          gst_structure_set (out_s, "channel-mask", GST_TYPE_BITMASK,
-              STEREO_CHANNEL_MASK, NULL);
+        gst_caps_append_structure (caps, out_s);
+        gst_caps_append_structure (caps, mono);
+      } else {
+        /* Otherwhise just add the caps */
+        gst_caps_append_structure (caps, out_s);
       }
-
-      gst_caps_append_structure (caps, out_s);
     }
   }
 
+  GST_DEBUG_OBJECT (core_audio, "Probed caps:%" GST_PTR_FORMAT, caps);
   return caps;
 }
