@@ -348,7 +348,6 @@ gst_audiomixer_setcaps (GstAudioMixer * audiomixer, GstPad * pad,
   GstAudioInfo info;
   GstStructure *s;
   gint channels = 0;
-  gboolean ret;
 
   caps = gst_caps_copy (orig_caps);
 
@@ -405,20 +404,21 @@ gst_audiomixer_setcaps (GstAudioMixer * audiomixer, GstPad * pad,
       gst_caps_unref (caps);
       return FALSE;
     }
+  } else {
+    gst_caps_replace (&aagg->current_caps, caps);
+    aagg->info = info;
+    gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (agg));
   }
   GST_OBJECT_UNLOCK (audiomixer);
 
-  ret = gst_audio_aggregator_set_src_caps (aagg, caps);
-
-  if (ret)
-    gst_audio_aggregator_set_sink_caps (aagg, GST_AUDIO_AGGREGATOR_PAD (pad),
-        orig_caps);
+  gst_audio_aggregator_set_sink_caps (aagg, GST_AUDIO_AGGREGATOR_PAD (pad),
+      orig_caps);
 
   GST_INFO_OBJECT (pad, "handle caps change to %" GST_PTR_FORMAT, caps);
 
   gst_caps_unref (caps);
 
-  return ret;
+  return TRUE;
 
   /* ERRORS */
 invalid_format:
@@ -427,6 +427,20 @@ invalid_format:
     GST_WARNING_OBJECT (audiomixer, "invalid format set as caps");
     return FALSE;
   }
+}
+
+static GstFlowReturn
+gst_audiomixer_update_src_caps (GstAggregator * agg, GstCaps * caps,
+    GstCaps ** ret)
+{
+  GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (agg);
+
+  if (aagg->current_caps == NULL)
+    return GST_AGGREGATOR_FLOW_NEED_DATA;
+
+  *ret = gst_caps_ref (aagg->current_caps);
+
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -495,6 +509,8 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
 
   agg_class->sink_query = GST_DEBUG_FUNCPTR (gst_audiomixer_sink_query);
   agg_class->sink_event = GST_DEBUG_FUNCPTR (gst_audiomixer_sink_event);
+  agg_class->update_src_caps =
+      GST_DEBUG_FUNCPTR (gst_audiomixer_update_src_caps);
 
   aagg_class->aggregate_one_buffer = gst_audiomixer_aggregate_one_buffer;
 }

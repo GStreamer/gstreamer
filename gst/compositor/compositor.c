@@ -870,8 +870,9 @@ set_functions (GstCompositor * self, GstVideoInfo * info)
 }
 
 static GstCaps *
-_fixate_caps (GstVideoAggregator * vagg, GstCaps * caps)
+_fixate_caps (GstAggregator * agg, GstCaps * caps)
 {
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
   GList *l;
   gint best_width = -1, best_height = -1;
   gint best_fps_n = -1, best_fps_d = -1;
@@ -945,21 +946,21 @@ _fixate_caps (GstVideoAggregator * vagg, GstCaps * caps)
 }
 
 static gboolean
-_negotiated_caps (GstVideoAggregator * vagg, GstCaps * caps)
+_negotiated_caps (GstAggregator * agg, GstCaps * caps)
 {
   GstVideoInfo v_info;
 
-  GST_DEBUG_OBJECT (vagg, "Negotiated caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (agg, "Negotiated caps %" GST_PTR_FORMAT, caps);
 
   if (!gst_video_info_from_caps (&v_info, caps))
     return FALSE;
 
-  if (!set_functions (GST_COMPOSITOR (vagg), &v_info)) {
-    GST_ERROR_OBJECT (vagg, "Failed to setup vfuncs");
+  if (!set_functions (GST_COMPOSITOR (agg), &v_info)) {
+    GST_ERROR_OBJECT (agg, "Failed to setup vfuncs");
     return FALSE;
   }
 
-  return TRUE;
+  return GST_AGGREGATOR_CLASS (parent_class)->negotiated_src_caps (agg, caps);
 }
 
 static GstFlowReturn
@@ -1090,8 +1091,8 @@ gst_compositor_class_init (GstCompositorClass * klass)
 
   agg_class->sinkpads_type = GST_TYPE_COMPOSITOR_PAD;
   agg_class->sink_query = _sink_query;
-  videoaggregator_class->fixate_caps = _fixate_caps;
-  videoaggregator_class->negotiated_caps = _negotiated_caps;
+  agg_class->fixate_src_caps = _fixate_caps;
+  agg_class->negotiated_src_caps = _negotiated_caps;
   videoaggregator_class->aggregate_frames = gst_compositor_aggregate_frames;
 
   g_object_class_install_property (gobject_class, PROP_BACKGROUND,

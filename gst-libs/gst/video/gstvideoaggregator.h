@@ -73,9 +73,6 @@ struct _GstVideoAggregator
  * @update_caps:              Optional.
  *                            Lets subclasses update the #GstCaps representing
  *                            the src pad caps before usage.  Return %NULL to indicate failure.
- * @fixate_caps:              Fixate and return the src pad caps provided.  The function takes
- *                            ownership of @caps and returns a fixated version of
- *                            @caps. @caps is not guaranteed to be writable.
  * @aggregate_frames:         Lets subclasses aggregate frames that are ready. Subclasses
  *                            should iterate the GstElement.sinkpads and use the already
  *                            mapped #GstVideoFrame from GstVideoAggregatorPad.aggregated_frame
@@ -97,16 +94,11 @@ struct _GstVideoAggregatorClass
 
   /*< public >*/
   GstCaps *          (*update_caps)               (GstVideoAggregator *  videoaggregator,
-                                                   GstCaps            *  caps,
-                                                   GstCaps            *  filter_caps);
-  GstCaps *          (*fixate_caps)               (GstVideoAggregator *  videoaggregator,
                                                    GstCaps            *  caps);
   GstFlowReturn      (*aggregate_frames)          (GstVideoAggregator *  videoaggregator,
                                                    GstBuffer          *  outbuffer);
   GstFlowReturn      (*get_output_buffer)         (GstVideoAggregator *  videoaggregator,
                                                    GstBuffer          ** outbuffer);
-  gboolean           (*negotiated_caps)           (GstVideoAggregator *  videoaggregator,
-                                                   GstCaps            *  caps);
   void               (*find_best_format)          (GstVideoAggregator *  vagg,
                                                    GstCaps            *  downstream_caps,
                                                    GstVideoInfo       *  best_info,

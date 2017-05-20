@@ -144,8 +144,6 @@ struct _GstAudioAggregatorPrivate
 {
   GMutex mutex;
 
-  gboolean send_caps;           /* aagg lock */
-
   /* All three properties are unprotected, can't be modified while streaming */
   /* Size in frames that is output per buffer */
   GstClockTime output_buffer_duration;
@@ -189,6 +187,8 @@ static GstFlowReturn gst_audio_aggregator_aggregate (GstAggregator * agg,
     gboolean timeout);
 static gboolean sync_pad_values (GstAudioAggregator * aagg,
     GstAudioAggregatorPad * pad);
+static gboolean gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg,
+    GstCaps * caps);
 
 #define DEFAULT_OUTPUT_BUFFER_DURATION (10 * GST_MSECOND)
 #define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
@@ -251,6 +251,8 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_aggregator_aggregate);
   gstaggregator_class->clip = GST_DEBUG_FUNCPTR (gst_audio_aggregator_do_clip);
   gstaggregator_class->get_next_time = gst_audio_aggregator_get_next_time;
+  gstaggregator_class->negotiated_src_caps =
+      gst_audio_aggregator_negotiated_src_caps;
 
   klass->create_output_buffer = gst_audio_aggregator_create_output_buffer;
 
@@ -656,9 +658,10 @@ gst_audio_aggregator_set_sink_caps (GstAudioAggregator * aagg,
 }
 
 
-gboolean
-gst_audio_aggregator_set_src_caps (GstAudioAggregator * aagg, GstCaps * caps)
+static gboolean
+gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
 {
+  GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (agg);
   GstAudioInfo info;
 
   if (!gst_audio_info_from_caps (&info, caps)) {
@@ -674,8 +677,6 @@ gst_audio_aggregator_set_src_caps (GstAudioAggregator * aagg, GstCaps * caps)
     gst_caps_replace (&aagg->current_caps, caps);
 
     memcpy (&aagg->info, &info, sizeof (info));
-    aagg->priv->send_caps = TRUE;
-
   }
 
   GST_OBJECT_UNLOCK (aagg);
@@ -683,7 +684,9 @@ gst_audio_aggregator_set_src_caps (GstAudioAggregator * aagg, GstCaps * caps)
 
   /* send caps event later, after stream-start event */
 
-  return TRUE;
+  return
+      GST_AGGREGATOR_CLASS
+      (gst_audio_aggregator_parent_class)->negotiated_src_caps (agg, caps);
 }
 
 
@@ -1132,19 +1135,11 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
       GST_OBJECT_UNLOCK (agg);
       GST_AUDIO_AGGREGATOR_UNLOCK (aagg);
-      return GST_FLOW_OK;
+      return GST_AGGREGATOR_FLOW_NEED_DATA;
     } else {
       GST_OBJECT_UNLOCK (agg);
       goto not_negotiated;
     }
-  }
-
-  if (aagg->priv->send_caps) {
-    GST_OBJECT_UNLOCK (agg);
-    gst_aggregator_set_src_caps (agg, aagg->current_caps);
-    GST_OBJECT_LOCK (agg);
-
-    aagg->priv->send_caps = FALSE;
   }
 
   rate = GST_AUDIO_INFO_RATE (&aagg->info);
@@ -1296,7 +1291,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     /* We dropped a buffer, retry */
     GST_LOG_OBJECT (aagg, "A pad dropped a buffer, wait for the next one");
     GST_AUDIO_AGGREGATOR_UNLOCK (aagg);
-    return GST_FLOW_OK;
+    return GST_AGGREGATOR_FLOW_NEED_DATA;
   }
 
   if (!is_done && !is_eos) {
@@ -1304,7 +1299,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     GST_LOG_OBJECT (aagg,
         "We're not done yet for the current offset, waiting for more data");
     GST_AUDIO_AGGREGATOR_UNLOCK (aagg);
-    return GST_FLOW_OK;
+    return GST_AGGREGATOR_FLOW_NEED_DATA;
   }
 
   if (is_eos) {
