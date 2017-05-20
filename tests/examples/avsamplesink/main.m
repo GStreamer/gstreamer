@@ -25,6 +25,10 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreMedia/CoreMedia.h>
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#define NSWindowStyleMaskBorderless          NSBorderlessWindowMask
+#endif
+
 static NSRunLoop *loop;
 static int quit = 0;
 
@@ -97,7 +101,7 @@ gint main (gint argc, gchar *argv[])
   g_object_get (videosink, "layer", &layer, NULL);
 
   NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect (0, 0, 320, 240)
-      styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO];
+      styleMask:NSWindowStyleMaskBorderless backing:NSBackingStoreBuffered defer:NO];
   [window setOpaque:NO];
   [window.contentView setWantsLayer:YES];
 
