@@ -1898,10 +1898,16 @@ gst_video_aggregator_release_pad (GstElement * element, GstPad * pad)
 }
 
 static gboolean
-gst_video_aggregator_decide_allocation (GstAggregator * self, GstQuery * query)
+gst_video_aggregator_decide_allocation (GstAggregator * agg, GstQuery * query)
 {
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
   GstAllocationParams params = { 0, 15, 0, 0 };
   guint i;
+  GstBufferPool *pool;
+  guint size, min, max;
+  gboolean update = FALSE;
+  GstStructure *config = NULL;
+  GstCaps *caps = NULL;
 
   if (gst_query_get_n_allocation_params (query) == 0)
     gst_query_add_allocation_param (query, NULL, &params);
@@ -1913,6 +1919,43 @@ gst_video_aggregator_decide_allocation (GstAggregator * self, GstQuery * query)
       params.align = MAX (params.align, 15);
       gst_query_set_nth_allocation_param (query, i, allocator, &params);
     }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    /* adjust size */
+    size = MAX (size, vagg->info.size);
+    update = TRUE;
+  } else {
+    pool = NULL;
+    size = vagg->info.size;
+    min = max = 0;
+    update = FALSE;
+  }
+
+  /* no downstream pool, make our own */
+  if (pool == NULL)
+    pool = gst_video_buffer_pool_new ();
+
+  config = gst_buffer_pool_get_config (pool);
+
+  gst_query_parse_allocation (query, &caps, NULL);
+  if (caps)
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
+  gst_buffer_pool_set_config (pool, config);
+
+  if (update)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  if (pool)
+    gst_object_unref (pool);
 
   return TRUE;
 }
