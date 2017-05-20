@@ -126,8 +126,7 @@ public class Play extends Activity implements SurfaceHolder.Callback, OnSeekBarC
             }
         });
 
-        SurfaceView sv = (SurfaceView) this.findViewById(R.id.surface_video);
-        SurfaceHolder sh = sv.getHolder();
+        SurfaceHolder sh = gsv.getHolder();
         sh.addCallback(this);
 
         String mediaUri = null;
