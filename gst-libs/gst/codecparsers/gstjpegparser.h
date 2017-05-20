@@ -374,28 +374,36 @@ struct _GstJpegSegment
   gssize size;
 };
 
+GST_EXPORT
 gboolean  gst_jpeg_parse (GstJpegSegment * seg,
                           const guint8   * data,
                           gsize            size,
                           guint            offset);
 
+GST_EXPORT
 gboolean  gst_jpeg_segment_parse_frame_header  (const GstJpegSegment  * segment,
                                                 GstJpegFrameHdr       * frame_hdr);
 
+GST_EXPORT
 gboolean  gst_jpeg_segment_parse_scan_header   (const GstJpegSegment * segment,
                                                 GstJpegScanHdr       * scan_hdr);
 
+GST_EXPORT
 gboolean  gst_jpeg_segment_parse_huffman_table (const GstJpegSegment * segment,
                                                 GstJpegHuffmanTables * huff_tables);
 
+GST_EXPORT
 gboolean  gst_jpeg_segment_parse_restart_interval (const GstJpegSegment * segment,
                                                    guint                * interval);
 
+GST_EXPORT
 gboolean  gst_jpeg_segment_parse_quantization_table (const GstJpegSegment * segment,
                                                      GstJpegQuantTables   * quant_tables);
 
+GST_EXPORT
 void      gst_jpeg_get_default_quantization_tables (GstJpegQuantTables * quant_tables);
 
+GST_EXPORT
 void      gst_jpeg_get_default_huffman_tables (GstJpegHuffmanTables * huff_tables);
 
 G_END_DECLS

@@ -58,11 +58,20 @@ typedef enum
 /* GST_JPEG2000_SAMPLING_LIST: sampling strings in list form, for use in caps */
 #define GST_JPEG2000_SAMPLING_LIST "sampling = (string) {\"RGB\", \"BGR\", \"RGBA\", \"BGRA\", \"YCbCr-4:4:4\", \"YCbCr-4:2:2\", \"YCbCr-4:2:0\", \"YCbCr-4:1:1\", \"GRAYSCALE\" , \"YCbCrA-4:4:4:4\"}"
 
+GST_EXPORT
 const gchar *gst_jpeg2000_sampling_to_string (GstJPEG2000Sampling sampling);
+
+GST_EXPORT
 GstJPEG2000Sampling gst_jpeg2000_sampling_from_string (const gchar *
     sampling_string);
+
+GST_EXPORT
 gboolean gst_jpeg2000_sampling_is_rgb (GstJPEG2000Sampling sampling);
+
+GST_EXPORT
 gboolean gst_jpeg2000_sampling_is_yuv (GstJPEG2000Sampling sampling);
+
+GST_EXPORT
 gboolean gst_jpeg2000_sampling_is_mono (GstJPEG2000Sampling sampling);
 
 
@@ -81,8 +90,11 @@ typedef enum
   GST_JPEG2000_COLORSPACE_GRAY
 } GstJPEG2000Colorspace;
 
+GST_EXPORT
 const gchar *gst_jpeg2000_colorspace_to_string (GstJPEG2000Colorspace
     colorspace);
+
+GST_EXPORT
 GstJPEG2000Colorspace gst_jpeg2000_colorspace_from_string (const gchar *
     colorspace_string);
 

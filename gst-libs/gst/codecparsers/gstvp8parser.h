@@ -326,12 +326,14 @@ struct _GstVp8Parser
   GstVp8ModeProbs mode_probs;
 };
 
-void
-gst_vp8_parser_init (GstVp8Parser * parser);
+GST_EXPORT
+void                gst_vp8_parser_init (GstVp8Parser * parser);
 
-GstVp8ParserResult
-gst_vp8_parser_parse_frame_header (GstVp8Parser * parser,
-    GstVp8FrameHdr * frame_hdr, const guint8 * data, gsize size);
+GST_EXPORT
+GstVp8ParserResult  gst_vp8_parser_parse_frame_header (GstVp8Parser   * parser,
+                                                       GstVp8FrameHdr * frame_hdr,
+                                                       const guint8   * data,
+                                                       gsize            size);
 
 G_END_DECLS
 

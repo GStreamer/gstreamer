@@ -576,65 +576,78 @@ struct _GstVC1BDU
   guint8 * data;
 };
 
+GST_EXPORT
 GstVC1ParserResult gst_vc1_identify_next_bdu           (const guint8 *data,
                                                         gsize size,
                                                         GstVC1BDU *bdu);
 
 
+GST_EXPORT
 GstVC1ParserResult gst_vc1_parse_sequence_header       (const guint8 *data,
                                                         gsize size,
                                                         GstVC1SeqHdr * seqhdr);
 
+GST_EXPORT
 GstVC1ParserResult gst_vc1_parse_entry_point_header    (const  guint8 *data,
                                                         gsize size,
                                                         GstVC1EntryPointHdr * entrypoint,
                                                         GstVC1SeqHdr *seqhdr);
 
+GST_EXPORT
 GstVC1ParserResult gst_vc1_parse_sequence_layer        (const guint8 *data,
                                                         gsize size,
                                                         GstVC1SeqLayer * seqlayer);
-
+GST_EXPORT
 GstVC1ParserResult
 gst_vc1_parse_sequence_header_struct_a                 (const guint8 *data,
                                                         gsize size,
                                                         GstVC1SeqStructA *structa);
+GST_EXPORT
 GstVC1ParserResult
 gst_vc1_parse_sequence_header_struct_b                 (const guint8 *data,
                                                         gsize size,
                                                         GstVC1SeqStructB *structb);
-
+GST_EXPORT
 GstVC1ParserResult
 gst_vc1_parse_sequence_header_struct_c                 (const guint8 *data,
                                                         gsize size,
                                                         GstVC1SeqStructC *structc);
 
+GST_EXPORT
 GstVC1ParserResult gst_vc1_parse_frame_layer           (const guint8 *data,
                                                         gsize size,
                                                         GstVC1FrameLayer * framelayer);
 
+GST_EXPORT
 GstVC1ParserResult gst_vc1_parse_frame_header          (const guint8 *data,
                                                         gsize size,
                                                         GstVC1FrameHdr * framehdr,
                                                         GstVC1SeqHdr *seqhdr,
                                                         GstVC1BitPlanes *bitplanes);
 
+GST_EXPORT
 GstVC1ParserResult gst_vc1_parse_field_header          (const guint8 *data,
                                                         gsize size,
                                                         GstVC1FrameHdr * fieldhdr,
                                                         GstVC1SeqHdr *seqhdr,
                                                         GstVC1BitPlanes *bitplanes);
 
+GST_EXPORT
 GstVC1ParserResult gst_vc1_parse_slice_header           (const guint8 *data,
                                                          gsize size,
                                                          GstVC1SliceHdr *slicehdr, 
                                                          GstVC1SeqHdr *seqhdr);
 
+GST_EXPORT
 GstVC1BitPlanes *  gst_vc1_bitplanes_new               (void);
 
+GST_EXPORT
 void               gst_vc1_bitplanes_free              (GstVC1BitPlanes *bitplanes);
 
+GST_EXPORT
 void               gst_vc1_bitplanes_free_1            (GstVC1BitPlanes *bitplanes);
 
+GST_EXPORT
 gboolean           gst_vc1_bitplanes_ensure_size       (GstVC1BitPlanes *bitplanes,
                                                         GstVC1SeqHdr *seqhdr);
 

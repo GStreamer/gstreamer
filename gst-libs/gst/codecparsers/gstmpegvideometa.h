@@ -32,9 +32,11 @@ G_BEGIN_DECLS
 
 typedef struct _GstMpegVideoMeta GstMpegVideoMeta;
 
+GST_EXPORT
 GType gst_mpeg_video_meta_api_get_type (void);
 #define GST_MPEG_VIDEO_META_API_TYPE  (gst_mpeg_video_meta_api_get_type())
 #define GST_MPEG_VIDEO_META_INFO  (gst_mpeg_video_meta_get_info())
+GST_EXPORT
 const GstMetaInfo * gst_mpeg_video_meta_get_info (void);
 
 /**
@@ -75,6 +77,7 @@ struct _GstMpegVideoMeta {
 
 #define gst_buffer_get_mpeg_video_meta(b) ((GstMpegVideoMeta*)gst_buffer_get_meta((b),GST_MPEG_VIDEO_META_API_TYPE))
 
+GST_EXPORT
 GstMpegVideoMeta *
 gst_buffer_add_mpeg_video_meta (GstBuffer * buffer, 
                                 const GstMpegVideoSequenceHdr *seq_hdr,
