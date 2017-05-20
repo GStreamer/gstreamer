@@ -139,10 +139,10 @@ set_filters (GstLeaksTracer * self, const gchar * filters)
        * should_handle_object_type() when/if the object type is actually
        * used. */
       if (!self->unhandled_filter)
-        self->unhandled_filter = g_hash_table_new (NULL, NULL);
+        self->unhandled_filter = g_hash_table_new_full (g_str_hash, g_str_equal,
+            g_free, NULL);
 
-      g_hash_table_add (self->unhandled_filter,
-          GUINT_TO_POINTER (g_quark_from_string (tmp[i])));
+      g_hash_table_add (self->unhandled_filter, g_strdup (tmp[i]));
       g_atomic_int_inc (&self->unhandled_filter_count);
       continue;
     }
@@ -194,6 +194,23 @@ set_stacktrace:
 }
 
 static gboolean
+_expand_unhandled_filters (gchar * typename, gpointer unused_value,
+    GstLeaksTracer * self)
+{
+  GType type;
+
+  type = g_type_from_name (typename);
+
+  if (type == 0)
+    return FALSE;
+
+  g_atomic_int_dec_and_test (&self->unhandled_filter_count);
+  g_array_append_val (self->filter, type);
+
+  return TRUE;
+}
+
+static gboolean
 should_handle_object_type (GstLeaksTracer * self, GType object_type)
 {
   guint i, len;
@@ -202,23 +219,14 @@ should_handle_object_type (GstLeaksTracer * self, GType object_type)
     /* No filtering, handle all types */
     return TRUE;
 
+  if (object_type == 0)
+    return FALSE;
+
+
   if (g_atomic_int_get (&self->unhandled_filter_count)) {
     GST_OBJECT_LOCK (self);
-    if (self->unhandled_filter) {
-      GQuark q;
-
-      q = g_type_qname (object_type);
-      if (g_hash_table_contains (self->unhandled_filter, GUINT_TO_POINTER (q))) {
-        g_array_append_val (self->filter, object_type);
-        g_hash_table_remove (self->unhandled_filter, GUINT_TO_POINTER (q));
-
-        if (g_atomic_int_dec_and_test (&self->unhandled_filter_count))
-          g_clear_pointer (&self->unhandled_filter, g_hash_table_unref);
-
-        GST_OBJECT_UNLOCK (self);
-        return TRUE;
-      }
-    }
+    g_hash_table_foreach_remove (self->unhandled_filter,
+        (GHRFunc) _expand_unhandled_filters, self);
     GST_OBJECT_UNLOCK (self);
   }
 
