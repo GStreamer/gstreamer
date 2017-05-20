@@ -26,6 +26,7 @@ endif
 
 manpages = \
 	gst-inspect-@GST_API_VERSION@.1 \
+	gst-stats-@GST_API_VERSION@.1 \
 	gst-typefind-@GST_API_VERSION@.1
 
 if !GST_DISABLE_PARSE
@@ -43,4 +44,5 @@ EXTRA_DIST = \
 	gst-inspect-@GST_API_VERSION@.1 \
 	gst-typefind-@GST_API_VERSION@.1 \
 	gst-launch-@GST_API_VERSION@.1 \
+	gst-stats-@GST_API_VERSION@.1 \
 	$(noinst_SCRIPTS)
