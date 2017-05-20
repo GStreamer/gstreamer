@@ -162,9 +162,6 @@ void
 gst_audio_aggregator_set_sink_caps (GstAudioAggregator * aagg,
     GstAudioAggregatorPad * pad, GstCaps * caps);
 
-gboolean
-gst_audio_aggregator_set_src_caps (GstAudioAggregator * aagg, GstCaps * caps);
-
 
 G_END_DECLS
 

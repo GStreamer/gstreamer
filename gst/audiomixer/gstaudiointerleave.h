@@ -58,7 +58,6 @@ struct _GstAudioInterleave {
   gint padcounter;
   guint channels;
 
-  gboolean new_caps;
   GstCaps *sinkcaps;
 
   GValueArray *channel_positions;

@@ -1043,7 +1043,9 @@ GST_START_TEST (test_audiointerleave_2ch_smallbuf)
   gst_caps_unref (caps);
   gst_event_unref (ev);
 
-  for (i = 0; i < 24; i++)
+  /* eat the caps processing */
+  gst_harness_crank_single_clock_wait (h);
+  for (i = 0; i < 23; i++)
     gst_harness_crank_single_clock_wait (h);
   fail_unless_equals_uint64 (gst_clock_get_time (GST_ELEMENT_CLOCK
           (h->element)), 750 * GST_MSECOND);
