@@ -455,14 +455,9 @@ static gboolean
 gst_gl_base_mixer_decide_allocation (GstAggregator * agg, GstQuery * query)
 {
   GstGLBaseMixer *mix = GST_GL_BASE_MIXER (agg);
-  GstGLBaseMixerClass *mix_class = GST_GL_BASE_MIXER_GET_CLASS (mix);
 
   if (!_get_gl_context (mix))
     return FALSE;
-
-  if (mix_class->decide_allocation)
-    if (!mix_class->decide_allocation (mix, query))
-      return FALSE;
 
   return TRUE;
 }

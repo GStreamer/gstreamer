@@ -334,7 +334,7 @@ static void gst_gl_mixer_set_property (GObject * object, guint prop_id,
 static void gst_gl_mixer_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gl_mixer_decide_allocation (GstGLBaseMixer * mix,
+static gboolean gst_gl_mixer_decide_allocation (GstAggregator * agg,
     GstQuery * query);
 
 static void gst_gl_mixer_finalize (GObject * object);
@@ -367,12 +367,12 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   agg_class->stop = gst_gl_mixer_stop;
   agg_class->start = gst_gl_mixer_start;
   agg_class->negotiated_src_caps = _negotiated_caps;
+  agg_class->decide_allocation = gst_gl_mixer_decide_allocation;
 
   videoaggregator_class->aggregate_frames = gst_gl_mixer_aggregate_frames;
   videoaggregator_class->find_best_format = _find_best_format;
 
   mix_class->propose_allocation = gst_gl_mixer_propose_allocation;
-  mix_class->decide_allocation = gst_gl_mixer_decide_allocation;
 
   /* Register the pad class */
   g_type_class_ref (GST_TYPE_GL_MIXER_PAD);
@@ -475,16 +475,23 @@ _mixer_create_fbo (GstGLContext * context, GstGLMixer * mix)
 }
 
 static gboolean
-gst_gl_mixer_decide_allocation (GstGLBaseMixer * base_mix, GstQuery * query)
+gst_gl_mixer_decide_allocation (GstAggregator * agg, GstQuery * query)
 {
+  GstGLBaseMixer *base_mix = GST_GL_BASE_MIXER (agg);
   GstGLMixer *mix = GST_GL_MIXER (base_mix);
   GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
-  GstGLContext *context = base_mix->context;
+  GstGLContext *context;
   GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
   guint min, max, size;
   gboolean update_pool;
+
+  if (!GST_AGGREGATOR_CLASS (gst_gl_mixer_parent_class)->decide_allocation (agg,
+          query))
+    return FALSE;
+
+  context = base_mix->context;
 
   g_mutex_lock (&mix->priv->gl_resource_lock);
   mix->priv->gl_resource_ready = FALSE;
