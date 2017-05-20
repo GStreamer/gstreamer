@@ -45,26 +45,6 @@
 #include "parse/types.h"
 #endif
 
-static GstParseContext *
-gst_parse_context_copy (const GstParseContext * context)
-{
-  GstParseContext *ret = NULL;
-#ifndef GST_DISABLE_PARSE
-
-  ret = gst_parse_context_new ();
-  if (context) {
-    GQueue missing_copy = G_QUEUE_INIT;
-    GList *l;
-
-    for (l = context->missing_elements; l != NULL; l = l->next)
-      g_queue_push_tail (&missing_copy, g_strdup ((const gchar *) l->data));
-
-    ret->missing_elements = missing_copy.head;
-  }
-#endif
-  return ret;
-}
-
 G_DEFINE_BOXED_TYPE (GstParseContext, gst_parse_context,
     (GBoxedCopyFunc) gst_parse_context_copy,
     (GBoxedFreeFunc) gst_parse_context_free);
@@ -111,6 +91,34 @@ gst_parse_context_new (void)
 #else
   return NULL;
 #endif
+}
+
+/**
+ * gst_parse_context_copy:
+ * @context: a #GstParseContext
+ *
+ * Copies the @context.
+ *
+ * Returns: (transfer full): A copied #GstParseContext
+ */
+GstParseContext *
+gst_parse_context_copy (const GstParseContext * context)
+{
+  GstParseContext *ret = NULL;
+#ifndef GST_DISABLE_PARSE
+
+  ret = gst_parse_context_new ();
+  if (context) {
+    GQueue missing_copy = G_QUEUE_INIT;
+    GList *l;
+
+    for (l = context->missing_elements; l != NULL; l = l->next)
+      g_queue_push_tail (&missing_copy, g_strdup ((const gchar *) l->data));
+
+    ret->missing_elements = missing_copy.head;
+  }
+#endif
+  return ret;
 }
 
 /**

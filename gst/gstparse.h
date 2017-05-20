@@ -108,6 +108,9 @@ gchar          ** gst_parse_context_get_missing_elements (GstParseContext * cont
 GST_EXPORT
 void              gst_parse_context_free (GstParseContext * context);
 
+GST_EXPORT
+GstParseContext * gst_parse_context_copy (const GstParseContext * context);
+
 
 /* parse functions */
 
