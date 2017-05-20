@@ -106,8 +106,6 @@ GType gst_audio_aggregator_pad_get_type           (void);
 #define GST_IS_AUDIO_AGGREGATOR(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_AGGREGATOR))
 #define GST_IS_AUDIO_AGGREGATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_AGGREGATOR))
 
-#define GST_FLOW_CUSTOM_SUCCESS        GST_FLOW_NOT_HANDLED
-
 /**
  * GstAudioAggregator:
  * @parent: The parent #GstAggregator
