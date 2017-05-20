@@ -8,6 +8,8 @@ gst_version = meson.project_version()
 version_arr = gst_version.split('.')
 gst_version_major = version_arr[0]
 gst_version_minor = version_arr[1]
+gst_version_micro = version_arr[2]
+gst_version_nano = version_arr.get(3, 0)
 
 libavfilter_dep = dependency('libavfilter', version: '>= 6.47.100')
 libavformat_dep = dependency('libavformat', version: '>= 57.41.100')
@@ -33,6 +35,21 @@ cdata = configuration_data()
 cdata.set('LIBAV_SOURCE', '"system install"')
 cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
 cdata.set('PACKAGE', '"gst-libav"')
+
+# GStreamer package name and origin url
+gst_package_name = get_option('with-package-name')
+if gst_package_name == ''
+  if gst_version_nano == 0
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer FFMPEG Plug-ins source release')
+  elif gst_version_nano == 1
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer FFMPEG Plug-ins git')
+  else
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer FFMPEG Plug-ins prerelease')
+  endif
+endif
+cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
+
+
 check_headers = [['unistd.h', 'HAVE_UNISTD_H']]
 
 foreach h : check_headers

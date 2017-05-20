@@ -182,5 +182,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     libav,
     "All libav codecs and formats (" LIBAV_SOURCE ")",
-    plugin_init, PACKAGE_VERSION, LICENSE,
-    "libav", "http://www.libav.org")
+    plugin_init, PACKAGE_VERSION, LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
