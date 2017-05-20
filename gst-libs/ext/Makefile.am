@@ -16,19 +16,6 @@ EXTRA_DIST=Makefile.am
 MAINTAINERCLEANDIRS = $(DIST_SUBDIRS)
 LIB_LIST=libavutil libswresample libavcodec libavformat libavfilter
 
-if HAVE_BZ2
-    BZ2_LIBS = -lbz2
-else
-    BZ2_LIBS =
-endif
-
-if HAVE_LZMA
-    LZMA_LIBS = -llzma
-else
-    LZMA_LIBS =
-endif
-
-
 define create_la
 echo "  GEN      $1.la" && \
 (echo "# $1.la - a libtool library file" && \

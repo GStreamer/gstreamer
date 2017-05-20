@@ -280,6 +280,9 @@ else
   LIBS=$save_LIBS
   if test "x$HAVE_BZ2" = "xno"; then
     AC_WARN([libbz2 not found, matroska demuxer will not be able to read bz2 tracks])
+    BZ2_LIBS=
+  else
+    BZ2_LIBS="-lbz2"
   fi
 
   dnl *** Check for lzma
@@ -291,6 +294,9 @@ else
   LIBS=$save_LIBS
   if test "x$HAVE_LZMA" = "xno"; then
     AC_WARN([lzma not found, tiff reader will not be able to read lzma files])
+    LZMA_LIBS=
+  else
+    LZMA_LIBS="-llzma"
   fi
 
   dnl libgstlibav.la: include dirs
@@ -465,6 +471,8 @@ AC_SUBST(SWSCALE_CFLAGS)
 AC_SUBST(SWSCALE_DEPS)
 AC_SUBST(SWSCALE_LIBS)
 AC_SUBST(WIN32_LIBS)
+AC_SUBST(BZ2_LIBS)
+AC_SUBST(LZMA_LIBS)
 
 if test x$HAVE_LIBAV_UNINSTALLED = x1; then
   AC_DEFINE(HAVE_LIBAV_UNINSTALLED, [], [Defined if building against uninstalled Libav source])
