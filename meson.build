@@ -251,10 +251,21 @@ cdata.set('PACKAGE_BUGREPORT', '"http://bugzilla.gnome.org/enter_bug.cgi?product
 cdata.set('PACKAGE_NAME', '"GStreamer Bad Plug-ins"')
 cdata.set('GETTEXT_PACKAGE', '"gst-plugins-bad-1.0"')
 cdata.set('GST_API_VERSION', '"@0@"'.format(api_version))
-cdata.set('GST_PACKAGE_NAME', '"GStreamer Bad Plug-ins"')
-cdata.set('GST_PACKAGE_ORIGIN', '"Unknown package origin"')
 cdata.set('GST_LICENSE', '"LGPL"')
 cdata.set('LIBDIR', '"@0@"'.format(get_option('libdir')))
+
+# GStreamer package name and origin url
+gst_package_name = get_option('with-package-name')
+if gst_package_name == ''
+  if gst_version_nano == 0
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Bad Plug-ins source release')
+  elif gst_version_nano == 1
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Bad Plug-ins git')
+  else
+    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Bad Plug-ins prerelease')
+  endif
+endif
+cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
 
 # FIXME: This should be exposed as a configuration option
 host_system = host_machine.system()
