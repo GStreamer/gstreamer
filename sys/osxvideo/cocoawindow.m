@@ -41,6 +41,14 @@
 /* Debugging category */
 #include <gst/gstinfo.h>
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#define NSEventTypeMouseMoved                NSMouseMoved
+#define NSEventTypeLeftMouseDown             NSLeftMouseDown
+#define NSEventTypeLeftMouseUp               NSLeftMouseUp
+#define NSEventTypeRightMouseDown            NSRightMouseDown
+#define NSEventTypeRightMouseUp              NSRightMouseUp
+#endif
+
 static
 const gchar* gst_keycode_to_keyname(gint16 keycode)
 {
@@ -736,15 +744,15 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
     return;
 
   switch ([event type]) {
-    case NSMouseMoved:
+    case NSEventTypeMouseMoved:
       button = 0;
       break;
-    case NSLeftMouseDown:
-    case NSLeftMouseUp:
+    case NSEventTypeLeftMouseDown:
+    case NSEventTypeLeftMouseUp:
       button = 1;
       break;
-    case NSRightMouseDown:
-    case NSRightMouseUp:
+    case NSEventTypeRightMouseDown:
+    case NSEventTypeRightMouseUp:
       button = 2;
       break;
     default:

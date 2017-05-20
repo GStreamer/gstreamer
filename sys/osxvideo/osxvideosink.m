@@ -82,6 +82,15 @@ static GCond _run_loop_cond;
 static GstOSXVideoSinkClass *sink_class = NULL;
 static GstVideoSinkClass *parent_class = NULL;
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#define NSEventMaskAny                       NSAnyEventMask
+#define NSWindowStyleMaskTitled              NSTitledWindowMask
+#define NSWindowStyleMaskClosable            NSClosableWindowMask
+#define NSWindowStyleMaskResizable           NSResizableWindowMask
+#define NSWindowStyleMaskTexturedBackground  NSTexturedBackgroundWindowMask
+#define NSWindowStyleMaskMiniaturizable      NSMiniaturizableWindowMask
+#endif
+
 /* Helper to trigger calls from the main thread */
 static void
 gst_osx_video_sink_call_from_main_thread(GstOSXVideoSink *osxvideosink,
@@ -114,7 +123,7 @@ run_ns_app_loop (void) {
   pollTime = [NSDate distantFuture];
 
   do {
-      event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:pollTime
+      event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:pollTime
           inMode:NSDefaultRunLoopMode dequeue:YES];
       [NSApp sendEvent:event];
     }
@@ -776,11 +785,11 @@ gst_osx_video_sink_get_type (void)
 
   osxwindow->internal = TRUE;
 
-  mask =  NSTitledWindowMask             |
-          NSClosableWindowMask           |
-          NSResizableWindowMask          |
-          NSTexturedBackgroundWindowMask |
-          NSMiniaturizableWindowMask;
+  mask =  NSWindowStyleMaskTitled             |
+          NSWindowStyleMaskClosable           |
+          NSWindowStyleMaskResizable          |
+          NSWindowStyleMaskTexturedBackground |
+          NSWindowStyleMaskMiniaturizable;
 
   rect.origin.x = 100.0;
   rect.origin.y = 100.0;
