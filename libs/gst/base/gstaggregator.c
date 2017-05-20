@@ -1390,7 +1390,6 @@ gst_aggregator_request_new_pad (GstElement * element,
   }
 
   GST_DEBUG_OBJECT (element, "Adding pad %s", GST_PAD_NAME (agg_pad));
-  self->priv->has_peer_latency = FALSE;
 
   if (priv->running)
     gst_pad_set_active (GST_PAD (agg_pad), TRUE);
@@ -2165,12 +2164,16 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
 
   buf_pts = GST_BUFFER_PTS (buffer);
 
-  aggpad->priv->first_buffer = FALSE;
-
   for (;;) {
     SRC_LOCK (self);
     GST_OBJECT_LOCK (self);
     PAD_LOCK (aggpad);
+
+    if (aggpad->priv->first_buffer) {
+      self->priv->has_peer_latency = FALSE;
+      aggpad->priv->first_buffer = FALSE;
+    }
+
     if (gst_aggregator_pad_has_space (self, aggpad)
         && aggpad->priv->flow_return == GST_FLOW_OK) {
       if (head)
