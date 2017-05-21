@@ -276,7 +276,10 @@ struct _GstAggregatorClass {
                                             GstCaps      *  caps);
   gboolean          (*decide_allocation) (GstAggregator * self,
                                           GstQuery * query);
-
+  gboolean          (*propose_allocation) (GstAggregator * self,
+                                           GstAggregatorPad * pad,
+                                           GstQuery * decide_query,
+                                           GstQuery * query);
   /*< private >*/
   gpointer          _gst_reserved[GST_PADDING_LARGE];
 };

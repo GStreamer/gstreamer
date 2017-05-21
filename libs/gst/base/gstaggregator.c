@@ -2088,6 +2088,45 @@ gst_aggregator_default_sink_query (GstAggregator * self,
 {
   GstPad *pad = GST_PAD (aggpad);
 
+  if (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION) {
+    GstQuery *decide_query = NULL;
+    GstAggregatorClass *agg_class;
+    gboolean ret;
+
+    GST_OBJECT_LOCK (self);
+    PAD_LOCK (aggpad);
+    if (G_UNLIKELY (!aggpad->priv->negotiated)) {
+      GST_DEBUG_OBJECT (self,
+          "not negotiated yet, can't answer ALLOCATION query");
+      PAD_UNLOCK (aggpad);
+      GST_OBJECT_UNLOCK (self);
+
+      return FALSE;
+    }
+
+    if ((decide_query = self->priv->allocation_query))
+      gst_query_ref (decide_query);
+    PAD_UNLOCK (aggpad);
+    GST_OBJECT_UNLOCK (self);
+
+    GST_DEBUG_OBJECT (self,
+        "calling propose allocation with query %" GST_PTR_FORMAT, decide_query);
+
+    agg_class = GST_AGGREGATOR_GET_CLASS (self);
+
+    /* pass the query to the propose_allocation vmethod if any */
+    if (agg_class->propose_allocation)
+      ret = agg_class->propose_allocation (self, aggpad, decide_query, query);
+    else
+      ret = FALSE;
+
+    if (decide_query)
+      gst_query_unref (decide_query);
+
+    GST_DEBUG_OBJECT (self, "ALLOCATION ret %d, %" GST_PTR_FORMAT, ret, query);
+    return ret;
+  }
+
   return gst_pad_query_default (pad, GST_OBJECT (self), query);
 }
 
