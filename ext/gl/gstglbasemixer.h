@@ -47,8 +47,6 @@ typedef struct _GstGLBaseMixerPadClass GstGLBaseMixerPadClass;
 struct _GstGLBaseMixerPad
 {
   GstVideoAggregatorPad parent;                /* subclass the pad */
-
-  gboolean negotiated;
 };
 
 struct _GstGLBaseMixerPadClass
