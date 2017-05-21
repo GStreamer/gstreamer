@@ -6,7 +6,7 @@ taglib_sources = [
 
 taglib_dep = dependency('taglib', version : '>= 1.5', required : false)
 
-if taglib_dep.found() and add_languages('cpp')
+if taglib_dep.found() and add_languages('cpp', required : false)
   gsttaglib = library('gsttaglib',
     taglib_sources,
     c_args : gst_plugins_good_args + ['-DGST_USE_UNSTABLE_API'],

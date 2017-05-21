@@ -1,4 +1,4 @@
-project('gst-plugins-good', 'c', 'cpp',
+project('gst-plugins-good', 'c',
   version : '1.13.0.1',
   meson_version : '>= 0.36.0',
   default_options : [ 'warning_level=1',
