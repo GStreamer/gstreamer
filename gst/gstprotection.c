@@ -158,7 +158,7 @@ gst_buffer_add_protection_meta (GstBuffer * buffer, GstStructure * info)
 
 /**
  * gst_protection_select_system:
- * @system_identifiers: (transfer none): A null terminated array of strings
+ * @system_identifiers: (transfer none) (array zero-terminated=1): A null terminated array of strings
  * that contains the UUID values of each protection system that is to be
  * checked.
  *
