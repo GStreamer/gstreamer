@@ -157,9 +157,7 @@ else
   cdata.set('DISABLE_ORC', 1)
 endif
 
-configure_file(input : 'config.h.meson',
-  output : 'config.h',
-  configuration : cdata)
+configure_file(output : 'config.h', configuration : cdata)
 
 ugly_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
