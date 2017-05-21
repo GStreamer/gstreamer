@@ -221,6 +221,8 @@ struct _GstAggregatorPadPrivate
   GstClockTime time_level;
   GstSegment head_segment;      /* segment before the queue */
 
+  gboolean negotiated;
+
   gboolean eos;
 
   GMutex lock;
@@ -762,18 +764,29 @@ check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
     }
     if (pad->priv->clipped_buffer == NULL &&
         GST_IS_EVENT (g_queue_peek_tail (&pad->priv->buffers))) {
-      event = g_queue_pop_tail (&pad->priv->buffers);
-      PAD_BROADCAST_EVENT (pad);
+      event = gst_event_ref (g_queue_peek_tail (&pad->priv->buffers));
     }
     PAD_UNLOCK (pad);
     if (event) {
+      gboolean ret;
+
       if (processed_event)
         *processed_event = TRUE;
       if (klass == NULL)
         klass = GST_AGGREGATOR_GET_CLASS (self);
 
       GST_LOG_OBJECT (pad, "Processing %" GST_PTR_FORMAT, event);
-      klass->sink_event (self, pad, event);
+      gst_event_ref (event);
+      ret = klass->sink_event (self, pad, event);
+
+      PAD_LOCK (pad);
+      if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS)
+        pad->priv->negotiated = ret;
+      if (g_queue_peek_tail (&pad->priv->buffers) == event)
+        gst_event_unref (g_queue_pop_tail (&pad->priv->buffers));
+      gst_event_unref (event);
+      PAD_BROADCAST_EVENT (pad);
+      PAD_UNLOCK (pad);
     }
   } while (event != NULL);
 
@@ -1478,6 +1491,10 @@ gst_aggregator_stop_pad (GstAggregator * self, GstAggregatorPad * pad,
     gpointer unused_udata)
 {
   gst_aggregator_pad_flush (pad, self);
+
+  PAD_LOCK (pad);
+  pad->priv->negotiated = FALSE;
+  PAD_UNLOCK (pad);
 
   return TRUE;
 }
@@ -2717,6 +2734,7 @@ gst_aggregator_pad_init (GstAggregatorPad * pad)
   g_mutex_init (&pad->priv->lock);
 
   gst_aggregator_pad_reset_unlocked (pad);
+  pad->priv->negotiated = FALSE;
 }
 
 /* Must be called with the PAD_LOCK held */
