@@ -270,9 +270,7 @@ else
 endif
 
 # Use core_conf after all subdirs have set values
-configure_file(input : 'config.h.meson',
-  output : 'config.h',
-  configuration : core_conf)
+configure_file(output : 'config.h', configuration : core_conf)
 
 python3 = find_program('python3')
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')

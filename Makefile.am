@@ -43,7 +43,7 @@ EXTRA_DIST = \
 	gst-libs/gst/rtsp/rtsp_mkenum.py \
 	gst-libs/gst/tag/tag_mkenum.py \
 	gst-libs/gst/video/video_mkenum.py \
-	meson_options.txt config.h.meson
+	meson_options.txt
 
 DISTCLEANFILES = _stdint.h
 
