@@ -100,25 +100,6 @@ gst_gl_base_mixer_pad_set_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
-gst_gl_base_mixer_sink_event (GstAggregator * agg, GstAggregatorPad * bpad,
-    GstEvent * event)
-{
-  GstGLBaseMixerPad *pad = GST_GL_BASE_MIXER_PAD (bpad);
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-      if (!GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, bpad, event))
-        return FALSE;
-
-      pad->negotiated = TRUE;
-      return TRUE;
-    default:
-      break;
-  }
-
-  return GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, bpad, event);
-}
 
 static gboolean
 _find_local_gl_context (GstGLBaseMixer * mix)
@@ -291,7 +272,6 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
 
   agg_class->sinkpads_type = GST_TYPE_GL_BASE_MIXER_PAD;
   agg_class->sink_query = gst_gl_base_mixer_sink_query;
-  agg_class->sink_event = gst_gl_base_mixer_sink_event;
   agg_class->src_query = gst_gl_base_mixer_src_query;
   agg_class->src_activate = gst_gl_base_mixer_src_activate_mode;
   agg_class->stop = gst_gl_base_mixer_stop;
@@ -311,32 +291,10 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
   klass->supported_gl_api = GST_GL_API_ANY;
 }
 
-static gboolean
-_reset_pad (GstAggregator * self, GstAggregatorPad * base_pad,
-    gpointer user_data)
-{
-  GstGLBaseMixerPad *mix_pad = GST_GL_BASE_MIXER_PAD (base_pad);
-
-  mix_pad->negotiated = FALSE;
-
-  return TRUE;
-}
-
-static void
-gst_gl_base_mixer_reset (GstGLBaseMixer * mix)
-{
-  /* clean up collect data */
-
-  gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (mix),
-      (GstAggregatorPadForeachFunc) _reset_pad, NULL);
-}
-
 static void
 gst_gl_base_mixer_init (GstGLBaseMixer * mix)
 {
   mix->priv = GST_GL_BASE_MIXER_GET_PRIVATE (mix);
-
-  gst_gl_base_mixer_reset (mix);
 }
 
 static void
@@ -465,8 +423,6 @@ gst_gl_base_mixer_stop (GstAggregator * agg)
     gst_object_unref (mix->context);
     mix->context = NULL;
   }
-
-  gst_gl_base_mixer_reset (mix);
 
   return TRUE;
 }
