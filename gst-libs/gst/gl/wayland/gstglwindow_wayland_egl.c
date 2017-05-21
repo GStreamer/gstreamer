@@ -486,7 +486,6 @@ draw_cb (gpointer data)
   GstGLWindowWaylandEGL *window_egl = data;
   GstGLWindow *window = GST_GL_WINDOW (window_egl);
   GstGLContext *context = gst_gl_window_get_context (window);
-  GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
   create_surfaces (window_egl);
 
@@ -503,7 +502,7 @@ draw_cb (gpointer data)
   if (window->draw)
     window->draw (window->draw_data);
 
-  context_class->swap_buffers (context);
+  gst_gl_context_swap_buffers (context);
 
   if (window_egl->window.subsurface)
     wl_subsurface_set_desync (window_egl->window.subsurface);

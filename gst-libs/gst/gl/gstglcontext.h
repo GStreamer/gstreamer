@@ -164,6 +164,8 @@ GST_EXPORT
 guintptr      gst_gl_context_get_gl_context   (GstGLContext *context);
 GST_EXPORT
 gboolean      gst_gl_context_can_share        (GstGLContext * context, GstGLContext *other_context);
+GST_EXPORT
+void          gst_gl_context_swap_buffers     (GstGLContext * context);
 
 GST_EXPORT
 gboolean      gst_gl_context_create           (GstGLContext *context, GstGLContext *other_context, GError ** error);

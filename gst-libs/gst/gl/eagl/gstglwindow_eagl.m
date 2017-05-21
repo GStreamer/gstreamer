@@ -183,7 +183,6 @@ draw_cb (gpointer data)
   GstGLWindow *window = GST_GL_WINDOW (window_eagl);
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextEagl *eagl_context = GST_GL_CONTEXT_EAGL (context);
-  GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
   if (window_eagl->priv->view) {
     CGSize size;
@@ -210,7 +209,7 @@ draw_cb (gpointer data)
   if (window->draw)
     window->draw (window->draw_data);
 
-  context_class->swap_buffers (context);
+  gst_gl_context_swap_buffers (context);
 
   gst_gl_context_eagl_finish_draw (eagl_context);
 
