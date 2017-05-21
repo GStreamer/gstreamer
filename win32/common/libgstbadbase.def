@@ -1,5 +1,7 @@
 EXPORTS
 	gst_aggregator_finish_buffer
+	gst_aggregator_get_allocator
+	gst_aggregator_get_buffer_pool
 	gst_aggregator_get_latency
 	gst_aggregator_get_type
 	gst_aggregator_iterate_sinkpads
