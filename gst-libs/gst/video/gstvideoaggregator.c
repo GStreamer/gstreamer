@@ -1898,6 +1898,15 @@ gst_video_aggregator_release_pad (GstElement * element, GstPad * pad)
 }
 
 static gboolean
+gst_video_aggregator_propose_allocation (GstAggregator * agg,
+    GstAggregatorPad * pad, GstQuery * decide_query, GstQuery * query)
+{
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  return TRUE;
+}
+
+static gboolean
 gst_video_aggregator_decide_allocation (GstAggregator * agg, GstQuery * query)
 {
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
@@ -2180,6 +2189,7 @@ gst_video_aggregator_class_init (GstVideoAggregatorClass * klass)
   agg_class->negotiated_src_caps =
       gst_video_aggregator_default_negotiated_src_caps;
   agg_class->decide_allocation = gst_video_aggregator_decide_allocation;
+  agg_class->propose_allocation = gst_video_aggregator_propose_allocation;
 
   klass->find_best_format = gst_video_aggregator_find_best_format;
   klass->get_output_buffer = gst_video_aggregator_get_output_buffer;
