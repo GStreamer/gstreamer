@@ -455,9 +455,8 @@ static void gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
 
 static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps);
 static GstCaps *_fixate_caps (GstAggregator * agg, GstCaps * caps);
-static gboolean gst_gl_video_mixer_propose_allocation (GstGLBaseMixer *
-    base_mix, GstGLBaseMixerPad * base_pad, GstQuery * decide_query,
-    GstQuery * query);
+static gboolean gst_gl_video_mixer_propose_allocation (GstAggregator *
+    agg, GstAggregatorPad * agg_pad, GstQuery * decide_query, GstQuery * query);
 static void gst_gl_video_mixer_reset (GstGLMixer * mixer);
 static gboolean gst_gl_video_mixer_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
@@ -849,7 +848,6 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   GstElementClass *element_class;
   GstAggregatorClass *agg_class = (GstAggregatorClass *) klass;
   GstVideoAggregatorClass *vagg_class = (GstVideoAggregatorClass *) klass;
-  GstGLBaseMixerClass *mix_class = GST_GL_BASE_MIXER_CLASS (klass);
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
@@ -872,12 +870,12 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   GST_GL_MIXER_CLASS (klass)->process_textures =
       gst_gl_video_mixer_process_textures;
 
+
   vagg_class->update_caps = _update_caps;
 
   agg_class->sinkpads_type = GST_TYPE_GL_VIDEO_MIXER_PAD;
   agg_class->fixate_src_caps = _fixate_caps;
-
-  mix_class->propose_allocation = gst_gl_video_mixer_propose_allocation;
+  agg_class->propose_allocation = gst_gl_video_mixer_propose_allocation;
 
   GST_GL_BASE_MIXER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
@@ -923,11 +921,11 @@ gst_gl_video_mixer_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_gl_video_mixer_propose_allocation (GstGLBaseMixer * base_mix,
-    GstGLBaseMixerPad * base_pad, GstQuery * decide_query, GstQuery * query)
+gst_gl_video_mixer_propose_allocation (GstAggregator * agg,
+    GstAggregatorPad * agg_pad, GstQuery * decide_query, GstQuery * query)
 {
-  if (!GST_GL_BASE_MIXER_CLASS (parent_class)->propose_allocation (base_mix,
-          base_pad, decide_query, query))
+  if (!GST_AGGREGATOR_CLASS (parent_class)->propose_allocation (agg,
+          agg_pad, decide_query, query))
     return FALSE;
 
   gst_query_add_allocation_meta (query,

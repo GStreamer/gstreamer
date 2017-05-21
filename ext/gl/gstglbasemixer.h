@@ -91,8 +91,6 @@ struct _GstGLBaseMixerClass
   GstVideoAggregatorClass parent_class;
   GstGLAPI supported_gl_api;
 
-  gboolean (*propose_allocation) (GstGLBaseMixer * mix, GstGLBaseMixerPad * pad, GstQuery * decide_query, GstQuery *query);
-
   gpointer _padding[GST_PADDING];
 };
 

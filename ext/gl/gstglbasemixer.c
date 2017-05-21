@@ -58,11 +58,6 @@ struct _GstGLBaseMixerPrivate
   gboolean negotiated;
 
   GstGLContext *other_context;
-
-  GstBufferPool *pool;
-  GstAllocator *allocator;
-  GstAllocationParams params;
-  GstQuery *query;
 };
 
 G_DEFINE_TYPE (GstGLBaseMixerPad, gst_gl_base_mixer_pad,
@@ -103,13 +98,6 @@ gst_gl_base_mixer_pad_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static gboolean
-_default_propose_allocation (GstGLBaseMixer * mix, GstGLBaseMixerPad * pad,
-    GstQuery * decide_query, GstQuery * query)
-{
-  return TRUE;
 }
 
 static gboolean
@@ -211,52 +199,26 @@ context_error:
 }
 
 static gboolean
+gst_gl_base_mixer_propose_allocation (GstAggregator * agg,
+    GstAggregatorPad * aggpad, GstQuery * decide_query, GstQuery * query)
+{
+  GstGLBaseMixer *mix = GST_GL_BASE_MIXER (agg);
+
+  if (!_get_gl_context (mix))
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_gl_base_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
     GstQuery * query)
 {
-  gboolean ret = FALSE;
   GstGLBaseMixer *mix = GST_GL_BASE_MIXER (agg);
-  GstGLBaseMixerClass *mix_class = GST_GL_BASE_MIXER_GET_CLASS (mix);
-  GstGLBaseMixerPad *pad = GST_GL_BASE_MIXER_PAD (bpad);
 
   GST_TRACE ("QUERY %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ALLOCATION:
-    {
-      GstQuery *decide_query = NULL;
-
-      GST_OBJECT_LOCK (mix);
-      if (G_UNLIKELY (!pad->negotiated)) {
-        GST_DEBUG_OBJECT (mix,
-            "not negotiated yet, can't answer ALLOCATION query");
-        GST_OBJECT_UNLOCK (mix);
-        return FALSE;
-      }
-
-      if ((decide_query = mix->priv->query))
-        gst_query_ref (decide_query);
-      GST_OBJECT_UNLOCK (mix);
-
-      if (!_get_gl_context (mix))
-        return FALSE;
-
-      GST_DEBUG_OBJECT (mix,
-          "calling propose allocation with query %" GST_PTR_FORMAT,
-          decide_query);
-
-      /* pass the query to the propose_allocation vmethod if any */
-      if (mix_class->propose_allocation)
-        ret = mix_class->propose_allocation (mix, pad, decide_query, query);
-      else
-        ret = FALSE;
-
-      if (decide_query)
-        gst_query_unref (decide_query);
-
-      GST_DEBUG_OBJECT (mix, "ALLOCATION ret %d, %" GST_PTR_FORMAT, ret, query);
-      return ret;
-    }
     case GST_QUERY_CONTEXT:
     {
       if (gst_gl_handle_context_query ((GstElement *) mix, query,
@@ -335,8 +297,7 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
   agg_class->stop = gst_gl_base_mixer_stop;
   agg_class->start = gst_gl_base_mixer_start;
   agg_class->decide_allocation = gst_gl_base_mixer_decide_allocation;
-
-  klass->propose_allocation = _default_propose_allocation;
+  agg_class->propose_allocation = gst_gl_base_mixer_propose_allocation;
 
   g_object_class_install_property (gobject_class, PROP_CONTEXT,
       g_param_spec_object ("context",
@@ -499,16 +460,6 @@ static gboolean
 gst_gl_base_mixer_stop (GstAggregator * agg)
 {
   GstGLBaseMixer *mix = GST_GL_BASE_MIXER (agg);
-
-  if (mix->priv->query) {
-    gst_query_unref (mix->priv->query);
-    mix->priv->query = NULL;
-  }
-
-  if (mix->priv->pool) {
-    gst_object_unref (mix->priv->pool);
-    mix->priv->pool = NULL;
-  }
 
   if (mix->context) {
     gst_object_unref (mix->context);
