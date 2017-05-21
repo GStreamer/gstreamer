@@ -1,4 +1,4 @@
-project('gst-plugins-base', 'c', 'cpp',
+project('gst-plugins-base', 'c',
   version : '1.13.0.1',
   meson_version : '>= 0.36.0',
   default_options : [ 'warning_level=1',
@@ -14,6 +14,8 @@ if version_arr.length() == 4
 else
   gst_version_nano = 0
 endif
+
+have_cxx = add_languages('cpp', required : false)
 
 glib_req = '>= 2.40.0'
 orc_req = '>= 0.4.24'

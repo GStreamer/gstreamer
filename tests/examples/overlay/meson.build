@@ -7,7 +7,7 @@ if x11_dep.found() # FIXME: originally if USE_X
       install: false)
   endif
 
-  if add_languages('cpp')                          # check for C++ support
+  if have_cxx                                      # check for C++ support
     qt5_mod = import('qt5')
     qt5widgets_dep = dependency('qt5', modules : ['Gui', 'Widgets'], required: false)
 

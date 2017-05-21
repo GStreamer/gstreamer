@@ -64,8 +64,14 @@ base_tests = [
   [ 'pipelines/theoraenc.c', not theoraenc_dep.found(), [ theoraenc_dep ] ],
   [ 'pipelines/vorbisenc.c', not vorbisenc_dep.found() ],
   [ 'pipelines/vorbisdec.c', not vorbisenc_dep.found(),],
-  [ 'libs/gstlibscpp.cc', false, [  ] ],
 ]
+
+# Make sure our headers are C++ clean
+if add_languages('cpp', required : false)
+  base_tests += [
+    [ 'libs/gstlibscpp.cc', false, [  ] ],
+  ]
+endif
 
 # FIXME: enable orc testing
 #orc_tests = [
