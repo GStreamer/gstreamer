@@ -116,6 +116,23 @@ typedef enum {
 } GstBaseTextOverlayLineAlign;
 
 /**
+ * GstBaseTextOverlayScaleMode:
+ * @GST_BASE_TEXT_OVERLAY_SCALE_MODE_NONE: no compensation
+ * @GST_BASE_TEXT_OVERLAY_SCALE_MODE_PAR: compensate pixel-aspect-ratio scaling
+ * @GST_BASE_TEXT_OVERLAY_SCALE_MODE_DISPLAY: compensate for scaling to display (as determined by overlay allocation meta)
+ * @GST_BASE_TEXT_OVERLAY_SCALE_MODE_USER: compensate scaling set by #GstBaseTextOverlay:scale-pixel-aspect-ratio property
+ *
+ * Scale text to compensate for and avoid aspect distortion by subsequent
+ * scaling of video
+ */
+typedef enum {
+    GST_BASE_TEXT_OVERLAY_SCALE_MODE_NONE,
+    GST_BASE_TEXT_OVERLAY_SCALE_MODE_PAR,
+    GST_BASE_TEXT_OVERLAY_SCALE_MODE_DISPLAY,
+    GST_BASE_TEXT_OVERLAY_SCALE_MODE_USER
+} GstBaseTextOverlayScaleMode;
+
+/**
  * GstBaseTextOverlay:
  *
  * Opaque textoverlay object structure
@@ -170,6 +187,9 @@ struct _GstBaseTextOverlay {
     GstBaseTextOverlayHAlign     halign;
     GstBaseTextOverlayWrapMode   wrap_mode;
     GstBaseTextOverlayLineAlign  line_align;
+    GstBaseTextOverlayScaleMode  scale_mode;
+    gint                     scale_par_n;
+    gint                     scale_par_d;
 
     /* text pad format */
     gboolean                 have_pango_markup;

@@ -63,6 +63,9 @@ GST_DEBUG_CATEGORY (pango_debug);
 #define DEFAULT_PROP_WAIT_TEXT	TRUE
 #define DEFAULT_PROP_AUTO_ADJUST_SIZE TRUE
 #define DEFAULT_PROP_VERTICAL_RENDER  FALSE
+#define DEFAULT_PROP_SCALE_MODE GST_BASE_TEXT_OVERLAY_SCALE_MODE_NONE
+#define DEFAULT_PROP_SCALE_PAR_N 1
+#define DEFAULT_PROP_SCALE_PAR_D 1
 #define DEFAULT_PROP_DRAW_SHADOW TRUE
 #define DEFAULT_PROP_DRAW_OUTLINE TRUE
 #define DEFAULT_PROP_COLOR      0xffffffff
@@ -99,6 +102,8 @@ enum
   PROP_WAIT_TEXT,
   PROP_AUTO_ADJUST_SIZE,
   PROP_VERTICAL_RENDER,
+  PROP_SCALE_MODE,
+  PROP_SCALE_PAR,
   PROP_COLOR,
   PROP_DRAW_SHADOW,
   PROP_DRAW_OUTLINE,
@@ -221,6 +226,27 @@ gst_base_text_overlay_line_align_get_type (void)
         base_text_overlay_line_align);
   }
   return base_text_overlay_line_align_type;
+}
+
+#define GST_TYPE_BASE_TEXT_OVERLAY_SCALE_MODE (gst_base_text_overlay_scale_mode_get_type())
+static GType
+gst_base_text_overlay_scale_mode_get_type (void)
+{
+  static GType base_text_overlay_scale_mode_type = 0;
+  static const GEnumValue base_text_overlay_scale_mode[] = {
+    {GST_BASE_TEXT_OVERLAY_SCALE_MODE_NONE, "none", "none"},
+    {GST_BASE_TEXT_OVERLAY_SCALE_MODE_PAR, "par", "par"},
+    {GST_BASE_TEXT_OVERLAY_SCALE_MODE_DISPLAY, "display", "display"},
+    {GST_BASE_TEXT_OVERLAY_SCALE_MODE_USER, "user", "user"},
+    {0, NULL, NULL}
+  };
+
+  if (!base_text_overlay_scale_mode_type) {
+    base_text_overlay_scale_mode_type =
+        g_enum_register_static ("GstBaseTextOverlayScaleMode",
+        base_text_overlay_scale_mode);
+  }
+  return base_text_overlay_scale_mode_type;
 }
 
 #define GST_BASE_TEXT_OVERLAY_GET_LOCK(ov) (&GST_BASE_TEXT_OVERLAY (ov)->lock)
@@ -600,6 +626,33 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
       g_param_spec_boolean ("vertical-render", "vertical render",
           "Vertical Render.", DEFAULT_PROP_VERTICAL_RENDER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstBaseTextOverlay:scale-mode:
+   *
+   * Scale text to compensate for and avoid distortion by subsequent video scaling
+   *
+   * Since: 1.14
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SCALE_MODE,
+      g_param_spec_enum ("scale-mode", "scale mode",
+          "Scale text to compensate for and avoid distortion by subsequent video scaling.",
+          GST_TYPE_BASE_TEXT_OVERLAY_SCALE_MODE, DEFAULT_PROP_SCALE_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstBaseTextOverlay:scale-pixel-aspect-ratio:
+   *
+   * Video scaling pixel-aspect-ratio to compensate for in user scale-mode.
+   *
+   * Since: 1.14
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SCALE_PAR,
+      gst_param_spec_fraction ("scale-pixel-aspect-ratio",
+          "scale pixel aspect ratio",
+          "Pixel aspect ratio of video scale to compensate for in user scale-mode",
+          1, 100, 100, 1, DEFAULT_PROP_SCALE_PAR_N, DEFAULT_PROP_SCALE_PAR_D,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -717,6 +770,9 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   overlay->need_render = TRUE;
   overlay->text_image = NULL;
   overlay->use_vertical_render = DEFAULT_PROP_VERTICAL_RENDER;
+  overlay->scale_mode = DEFAULT_PROP_SCALE_MODE;
+  overlay->scale_par_n = DEFAULT_PROP_SCALE_PAR_N;
+  overlay->scale_par_d = DEFAULT_PROP_SCALE_PAR_D;
 
   overlay->line_align = DEFAULT_PROP_LINE_ALIGNMENT;
   pango_layout_set_alignment (overlay->layout,
@@ -1099,6 +1155,13 @@ gst_base_text_overlay_set_property (GObject * object, guint prop_id,
         g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       }
       break;
+    case PROP_SCALE_MODE:
+      overlay->scale_mode = g_value_get_enum (value);
+      break;
+    case PROP_SCALE_PAR:
+      overlay->scale_par_n = gst_value_get_fraction_numerator (value);
+      overlay->scale_par_d = gst_value_get_fraction_denominator (value);
+      break;
     case PROP_SHADING_VALUE:
       overlay->shading_value = g_value_get_uint (value);
       break;
@@ -1178,6 +1241,13 @@ gst_base_text_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VERTICAL_RENDER:
       g_value_set_boolean (value, overlay->use_vertical_render);
+      break;
+    case PROP_SCALE_MODE:
+      g_value_set_enum (value, overlay->scale_mode);
+      break;
+    case PROP_SCALE_PAR:
+      gst_value_set_fraction (value, overlay->scale_par_n,
+          overlay->scale_par_d);
       break;
     case PROP_COLOR:
       g_value_set_uint (value, overlay->color);
@@ -1677,7 +1747,7 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   gint unscaled_width, unscaled_height;
   gint width, height;
   gboolean full_width = FALSE;
-  double scalef = 1.0;
+  double scalef_x = 1.0, scalef_y = 1.0;
   double a, r, g, b;
   gdouble shadow_offset = 0.0;
   gdouble outline_offset = 0.0;
@@ -1689,7 +1759,44 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
 
   if (overlay->auto_adjust_size) {
     /* 640 pixel is default */
-    scalef = (double) (overlay->width) / DEFAULT_SCALE_BASIS;
+    scalef_x = scalef_y = (double) (overlay->width) / DEFAULT_SCALE_BASIS;
+  }
+
+  if (overlay->scale_mode != GST_BASE_TEXT_OVERLAY_SCALE_MODE_NONE) {
+    gint par_n = 1, par_d = 1;
+
+    switch (overlay->scale_mode) {
+      case GST_BASE_TEXT_OVERLAY_SCALE_MODE_PAR:
+        par_n = overlay->info.par_n;
+        par_d = overlay->info.par_d;
+        break;
+      case GST_BASE_TEXT_OVERLAY_SCALE_MODE_DISPLAY:
+        /* (width * par_n) / (height * par_d) = (display_w / display_h) */
+        gst_util_fraction_multiply (overlay->window_width,
+            overlay->window_height, overlay->height, overlay->width,
+            &par_n, &par_d);
+        break;
+      case GST_BASE_TEXT_OVERLAY_SCALE_MODE_USER:
+        par_n = overlay->scale_par_n;
+        par_d = overlay->scale_par_d;
+        break;
+      default:
+        break;
+    }
+    /* sanitize */
+    if (!par_n || !par_d)
+      par_n = par_d = 1;
+    /* compensate later scaling as would be done for a par_n / par_d p-a-r;
+     * apply all scaling to y so as to allow for predictable text width
+     * layout independent of the presentation aspect scaling */
+    if (overlay->use_vertical_render) {
+      scalef_y *= ((gdouble) par_d) / ((gdouble) par_n);
+    } else {
+      scalef_y *= ((gdouble) par_n) / ((gdouble) par_d);
+    }
+    GST_DEBUG_OBJECT (overlay,
+        "compensate scaling mode %d par %d/%d, scale %f, %f",
+        overlay->scale_mode, par_n, par_d, scalef_x, scalef_y);
   }
 
   if (overlay->draw_shadow)
@@ -1716,7 +1823,7 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   pango_layout_get_pixel_extents (overlay->layout, &ink_rect, &logical_rect);
 
   unscaled_width = ink_rect.width + shadow_offset + outline_offset;
-  width = ceil (unscaled_width * scalef);
+  width = ceil (unscaled_width * scalef_x);
 
   /*
    * subtitle image width can be larger then overlay width
@@ -1733,26 +1840,26 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   }
 
   if (full_width) {
-    unscaled_width = width / scalef;
+    unscaled_width = width / scalef_x;
     gst_base_text_overlay_set_wrap_mode (overlay,
         unscaled_width - shadow_offset - outline_offset);
     pango_layout_get_pixel_extents (overlay->layout, &ink_rect, &logical_rect);
 
     unscaled_width = ink_rect.width + shadow_offset + outline_offset;
-    width = ceil (unscaled_width * scalef);
+    width = ceil (unscaled_width * scalef_x);
   }
 
   unscaled_height = ink_rect.height + shadow_offset + outline_offset;
-  height = ceil (unscaled_height * scalef);
+  height = ceil (unscaled_height * scalef_y);
 
   if (overlay->use_vertical_render) {
     if (height + xpad > overlay->width) {
       height = overlay->width - xpad;
-      unscaled_height = width / scalef;
+      unscaled_height = width / scalef_y;
     }
   } else if (height + ypad > overlay->height) {
     height = overlay->height - ypad;
-    unscaled_height = height / scalef;
+    unscaled_height = height / scalef_y;
   }
 
   GST_DEBUG_OBJECT (overlay, "Rendering with ink rect (%d, %d) %dx%d and "
@@ -1766,20 +1873,20 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
 
   /* Save and scale the rectangles so get_pos() can place the text */
   overlay->ink_rect.x =
-      ceil ((ink_rect.x - ceil (outline_offset / 2.0l)) * scalef);
+      ceil ((ink_rect.x - ceil (outline_offset / 2.0l)) * scalef_x);
   overlay->ink_rect.y =
-      ceil ((ink_rect.y - ceil (outline_offset / 2.0l)) * scalef);
+      ceil ((ink_rect.y - ceil (outline_offset / 2.0l)) * scalef_y);
   overlay->ink_rect.width = width;
   overlay->ink_rect.height = height;
 
   overlay->logical_rect.x =
-      ceil ((logical_rect.x - ceil (outline_offset / 2.0l)) * scalef);
+      ceil ((logical_rect.x - ceil (outline_offset / 2.0l)) * scalef_x);
   overlay->logical_rect.y =
-      ceil ((logical_rect.y - ceil (outline_offset / 2.0l)) * scalef);
+      ceil ((logical_rect.y - ceil (outline_offset / 2.0l)) * scalef_y);
   overlay->logical_rect.width =
-      ceil ((logical_rect.width + shadow_offset + outline_offset) * scalef);
+      ceil ((logical_rect.width + shadow_offset + outline_offset) * scalef_x);
   overlay->logical_rect.height =
-      ceil ((logical_rect.height + shadow_offset + outline_offset) * scalef);
+      ceil ((logical_rect.height + shadow_offset + outline_offset) * scalef_y);
 
   /* flip the rectangle if doing vertical render */
   if (overlay->use_vertical_render) {
@@ -1803,7 +1910,8 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   /* scale to reported window size */
   width = ceil (width * overlay->render_scale);
   height = ceil (height * overlay->render_scale);
-  scalef *= overlay->render_scale;
+  scalef_x *= overlay->render_scale;
+  scalef_y *= overlay->render_scale;
 
   if (width <= 0 || height <= 0) {
     g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
@@ -1821,7 +1929,17 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   /* Prepare the transformation matrix. Note that the transformation happens
    * in reverse order. So for horizontal text, we will translate and then
    * scale. This is important to understand which scale shall be used. */
-  cairo_matrix_init_scale (&cairo_matrix, scalef, scalef);
+  /* So, as this init'ed scale happens last, when the rectangle has already
+   * been rotated, the scaling applied to text height (up to now),
+   * has to be applied along the x-axis */
+  if (overlay->use_vertical_render) {
+    double tmp;
+
+    tmp = scalef_x;
+    scalef_x = scalef_y;
+    scalef_y = tmp;
+  }
+  cairo_matrix_init_scale (&cairo_matrix, scalef_x, scalef_y);
 
   if (overlay->use_vertical_render) {
     gint tmp;
