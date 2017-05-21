@@ -355,8 +355,6 @@ gst_gl_window_x11_show (GstGLWindow * window)
 static void
 _context_draw (GstGLContext * context, GstGLWindow * window)
 {
-  GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
-
   window->draw (window->draw_data);
   gst_gl_context_swap_buffers (context);
 
