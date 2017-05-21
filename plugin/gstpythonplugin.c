@@ -146,7 +146,9 @@ gst_python_plugin_load (GstPlugin * plugin)
   /* Mimic the order in which the registry is checked in core */
 
   /* 1. check env_variable GST_PLUGIN_PATH */
-  plugin_path = g_getenv ("GST_PLUGIN_PATH");
+  plugin_path = g_getenv ("GST_PLUGIN_PATH_1_0");
+  if (plugin_path == NULL)
+    plugin_path = g_getenv ("GST_PLUGIN_PATH");
   if (plugin_path) {
     char **list;
     int i;
@@ -164,7 +166,9 @@ gst_python_plugin_load (GstPlugin * plugin)
   }
 
   /* 2. Check for GST_PLUGIN_SYSTEM_PATH */
-  plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH");
+  plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH_1_0");
+  if (plugin_path == NULL)
+    plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH");
   if (plugin_path == NULL) {
     char *home_plugins;
 
