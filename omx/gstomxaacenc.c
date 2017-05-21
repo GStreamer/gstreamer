@@ -469,7 +469,7 @@ gst_omx_aac_enc_get_caps (GstOMXAudioEnc * enc, GstOMXPort * port,
   if (mpegversion != 0)
     gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT, mpegversion,
         "stream-format", G_TYPE_STRING, stream_format, NULL);
-  if (profile != NULL && mpegversion == 2)
+  if (profile != NULL && (mpegversion == 2 || mpegversion == 4))
     gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
   if (profile != NULL && mpegversion == 4)
     gst_caps_set_simple (caps, "base-profile", G_TYPE_STRING, profile, NULL);
