@@ -25,15 +25,20 @@
 #define __TYPES_COMPAT_H__
 
 /* From linux/types.h */
-#ifdef __CHECKER__
-#define __bitwise__ __attribute__((bitwise))
-#else
-#define __bitwise__
+#ifndef __bitwise__
+#  ifdef __CHECKER__
+#    define __bitwise__ __attribute__((bitwise))
+#  else
+#    define __bitwise__
+#  endif
 #endif
-#ifdef __CHECK_ENDIAN__
-#define __bitwise __bitwise__
-#else
-#define __bitwise
+
+#ifndef __bitwise
+#  ifdef __CHECK_ENDIAN__
+#    define __bitwise __bitwise__
+#  else
+#    define __bitwise
+#  endif
 #endif
 
 #define __u64 guint64
