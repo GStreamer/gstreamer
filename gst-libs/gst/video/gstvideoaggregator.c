@@ -1445,7 +1445,6 @@ gst_video_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
   GST_VIDEO_AGGREGATOR_LOCK (vagg);
 
-restart:
   if (GST_VIDEO_INFO_FORMAT (&vagg->info) == GST_VIDEO_FORMAT_UNKNOWN) {
     if (timeout)
       gst_video_aggregator_advance_on_timeout (vagg);
@@ -1510,7 +1509,8 @@ restart:
    */
   if (gst_pad_needs_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg))) {
     GST_DEBUG_OBJECT (vagg, "Need reconfigure");
-    goto restart;
+    flow_ret = GST_AGGREGATOR_FLOW_NEED_DATA;
+    goto unlock_and_return;
   }
 
   GST_DEBUG_OBJECT (vagg,
