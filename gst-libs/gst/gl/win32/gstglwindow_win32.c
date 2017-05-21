@@ -408,12 +408,10 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   } else if (GetProp (hWnd, "gl_window")) {
     GstGLWindow *window;
     GstGLContext *context;
-    GstGLContextClass *context_class;
 
     window_win32 = GST_GL_WINDOW_WIN32 (GetProp (hWnd, "gl_window"));
     window = GST_GL_WINDOW (window_win32);
     context = gst_gl_window_get_context (window);
-    context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
     g_assert (window_win32->internal_win_id == hWnd);
 
@@ -433,7 +431,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           PAINTSTRUCT ps;
           BeginPaint (hWnd, &ps);
           window->draw (window->draw_data);
-          context_class->swap_buffers (context);
+          gst_gl_context_swap_buffers (context);
           EndPaint (hWnd, &ps);
         }
         break;

@@ -1767,6 +1767,25 @@ gst_gl_context_get_gl_platform_version (GstGLContext * context, gint * major,
   context_class->get_gl_platform_version (context, major, minor);
 }
 
+/**
+ * gst_gl_context_swap_buffers:
+ * @context: a #GstGLContext
+ *
+ * Swap the front and back buffers on the window attached to @context.
+ * This will display the frame on the next refresh cycle.
+ */
+void
+gst_gl_context_swap_buffers (GstGLContext * context)
+{
+  GstGLContextClass *context_class;
+
+  g_return_if_fail (GST_IS_GL_CONTEXT (context));
+  context_class = GST_GL_CONTEXT_GET_CLASS (context);
+  g_return_if_fail (context_class->swap_buffers != NULL);
+
+  context_class->swap_buffers (context);
+}
+
 static GstGLAPI
 gst_gl_wrapped_context_get_gl_api (GstGLContext * context)
 {

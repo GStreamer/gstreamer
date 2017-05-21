@@ -34,7 +34,7 @@ static guintptr gst_gl_context_cocoa_get_gl_context (GstGLContext * window);
 static gboolean gst_gl_context_cocoa_activate (GstGLContext * context, gboolean activate);
 static GstGLAPI gst_gl_context_cocoa_get_gl_api (GstGLContext * context);
 static GstGLPlatform gst_gl_context_cocoa_get_gl_platform (GstGLContext * context);
-static void gst_gl_context_cocoa_swap_buffer (GstGLContext * context);
+static void gst_gl_context_cocoa_swap_buffers (GstGLContext * context);
 
 #define GST_GL_CONTEXT_COCOA_GET_PRIVATE(o)  \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_CONTEXT_COCOA, GstGLContextCocoaPrivate))
@@ -53,7 +53,7 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
   g_type_class_add_private (klass, sizeof (GstGLContextCocoaPrivate));
 
   context_class->swap_buffers =
-    GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_swap_buffer);
+    GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_swap_buffers);
   context_class->destroy_context =
       GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_destroy_context);
   context_class->create_context =
@@ -290,7 +290,7 @@ error:
 }
 
 static void
-gst_gl_context_cocoa_swap_buffer (GstGLContext * context)
+gst_gl_context_cocoa_swap_buffers (GstGLContext * context)
 {
 }
 

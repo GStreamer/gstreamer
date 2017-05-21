@@ -358,7 +358,7 @@ _context_draw (GstGLContext * context, GstGLWindow * window)
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
   window->draw (window->draw_data);
-  context_class->swap_buffers (context);
+  gst_gl_context_swap_buffers (context);
 
   gst_object_unref (context);
 }

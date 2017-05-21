@@ -107,7 +107,6 @@ draw_cb (gpointer data)
   GstGLWindow *window = GST_GL_WINDOW (window_egl);
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextEGL *context_egl = GST_GL_CONTEXT_EGL (context);
-  GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
   if (context_egl->egl_surface) {
     gint width, height;
@@ -128,7 +127,7 @@ draw_cb (gpointer data)
   if (window->draw)
     window->draw (window->draw_data);
 
-  context_class->swap_buffers (context);
+  gst_gl_context_swap_buffers (context);
 
   gst_object_unref (context);
 }
