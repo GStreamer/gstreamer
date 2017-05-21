@@ -1,4 +1,4 @@
-gst_elements_shared = shared_library('gstpythonplugin',
+gst_elements_shared = shared_library('gstpython',
     ['gstpythonplugin.c'],
     c_args : '-DHAVE_CONFIG_H -DPY_LIB_LOC=@0@'.format(pylib_loc),
     include_directories : [configinc],

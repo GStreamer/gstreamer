@@ -1,4 +1,4 @@
-plugin_LTLIBRARIES = libgstpythonplugin.la
+plugin_LTLIBRARIES = libgstpython.la
 
 INCLUDES = $(PYGOBJECT_CFLAGS) $(GST_CFLAGS)\
 -DPYTHON_VERSION=\"$(PYTHON_VERSION)\"		\
@@ -7,7 +7,7 @@ INCLUDES = $(PYGOBJECT_CFLAGS) $(GST_CFLAGS)\
 	-DPY_LIB_SUFFIX=$(PYTHON_LIB_SUFFIX) \
 	$(PYTHON_INCLUDES)
 
-libgstpythonplugin_la_SOURCES = gstpythonplugin.c 
-libgstpythonplugin_la_LDFLAGS = -avoid-version -shrext $(PYTHON_SO)
-libgstpythonplugin_la_LIBADD =  $(PYTHON_LIBS) $(PYGOBJECT_LIBS) $(GST_LIBS)
-libgstpythonplugin_la_CFLAGS = $(GST_CFLAGS) $(PYGOBJECT_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(PYTHON_INCLUDES)
+libgstpython_la_SOURCES = gstpythonplugin.c
+libgstpython_la_LDFLAGS = -avoid-version -shrext $(PYTHON_SO)
+libgstpython_la_LIBADD =  $(PYTHON_LIBS) $(PYGOBJECT_LIBS) $(GST_LIBS)
+libgstpython_la_CFLAGS = $(GST_CFLAGS) $(PYGOBJECT_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(PYTHON_INCLUDES)
