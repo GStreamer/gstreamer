@@ -23,6 +23,8 @@ overrides_hack
 
 from common import TestCase
 
+import unittest, sys
+
 import gi
 gi.require_version("Gst", "1.0")
 from gi.repository import Gst
@@ -31,6 +33,7 @@ Gst.init(None)
 R = Gst.IntRange
 
 class TestIntRange(TestCase):
+    @unittest.skipUnless(sys.version_info >= (3, 0), "requires Python 3")
     def testConstructor(self):
         Gst.init(None)
 
@@ -42,11 +45,13 @@ class TestIntRange(TestCase):
         self.assertRaises(TypeError, R, 1)
         self.assertRaises(TypeError, R)
 
+    @unittest.skipUnless(sys.version_info >= (3, 0), "requires Python 3")
     def testRepr(self):
         Gst.init(None)
 
         self.assertEquals(repr(R(range(0, 10, 2))), '<Gst.IntRange [0,10,2]>')
 
+    @unittest.skipUnless(sys.version_info >= (3, 0), "requires Python 3")
     def testGetValue(self):
         Gst.init(None)
 

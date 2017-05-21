@@ -348,8 +348,9 @@ class IntRange(Gst.IntRange):
             return '[%d,%d,%d]' % (self.range.start, self.range.stop,
                     self.range.step)
 
-IntRange = override(IntRange)
-__all__.append('IntRange')
+if sys.version_info >= (3, 0):
+    IntRange = override(IntRange)
+    __all__.append('IntRange')
 
 
 class Int64Range(Gst.Int64Range):
@@ -380,8 +381,9 @@ class Int64Range(Gst.Int64Range):
                     self.range.step)
 
 
-Int64Range = override(Int64Range)
-__all__.append('Int64Range')
+if sys.version_info >= (3, 0):
+    Int64Range = override(Int64Range)
+    __all__.append('Int64Range')
 
 
 class DoubleRange(Gst.DoubleRange):
