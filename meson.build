@@ -1,4 +1,4 @@
-project('gstreamer', 'c', 'cpp',
+project('gstreamer', 'c',
   version : '1.13.0.1',
   meson_version : '>= 0.40.1',
   default_options : [ 'warning_level=1',

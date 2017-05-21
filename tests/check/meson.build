@@ -105,9 +105,15 @@ core_tests = [
   [ 'gst/gstevent.c', not have_registry ],
   [ 'pipelines/stress.c', not have_registry ],
   [ 'generic/sinks.c', not have_registry ],
-  [ 'gst/gstcpp.cc', not have_registry ],
-  [ 'libs/gstlibscpp.cc', false ],
 ]
+
+# Make sure our headers are C++ clean
+if add_languages('cpp', required : false)
+  core_tests += [
+    [ 'gst/gstcpp.cc', not have_registry ],
+    [ 'libs/gstlibscpp.cc', false ],
+  ]
+endif
 
 test_defines = [
   '-UG_DISABLE_ASSERT',
