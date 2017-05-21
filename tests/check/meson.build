@@ -67,7 +67,7 @@ base_tests = [
 ]
 
 # Make sure our headers are C++ clean
-if add_languages('cpp', required : false)
+if have_cxx
   base_tests += [
     [ 'libs/gstlibscpp.cc', false, [  ] ],
   ]
