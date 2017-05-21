@@ -77,6 +77,9 @@ public:
     /* private for C interface ... */
     QtGLVideoItemPrivate *priv;
 
+Q_SIGNALS:
+    void itemInitialized();
+
 private Q_SLOTS:
     void handleWindowChanged(QQuickWindow * win);
     void onSceneGraphInitialized();
