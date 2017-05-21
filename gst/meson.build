@@ -162,10 +162,17 @@ configure_file(input : 'gstconfig.h.in',
   output : 'gstconfig.h',
   install_dir : 'include/gstreamer-1.0/gst',
   configuration : gst_cdata)
+
+version_cdata = configuration_data()
+version_cdata.set('GST_VERSION_MAJOR', gst_version_major)
+version_cdata.set('GST_VERSION_MINOR', gst_version_minor)
+version_cdata.set('GST_VERSION_MICRO', gst_version_micro)
+version_cdata.set('GST_VERSION_NANO', gst_version_nano)
+
 gst_version_h = configure_file(input : 'gstversion.h.in',
   output : 'gstversion.h',
   install_dir : 'include/gstreamer-1.0/gst',
-  configuration : gst_cdata)
+  configuration : version_cdata)
 
 gst_enums = gnome.mkenums('gstenumtypes',
   sources : gst_headers,

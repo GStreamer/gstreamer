@@ -49,10 +49,6 @@ elif cc.has_argument('-Wl,-Bsymbolic-functions')
 endif
 
 cdata = configuration_data()
-cdata.set('GST_VERSION_MAJOR', gst_version_major)
-cdata.set('GST_VERSION_MINOR', gst_version_minor)
-cdata.set('GST_VERSION_MICRO', gst_version_micro)
-cdata.set('GST_VERSION_NANO', gst_version_nano)
 cdata.set('GST_API_VERSION', '"@0@"'.format(apiversion))
 cdata.set('GST_DATADIR', '"@0@/@1@"'.format(prefix, get_option('datadir')))
 cdata.set('LOCALEDIR', '"@0@/@1@"'.format(prefix, get_option('localedir')))
@@ -430,9 +426,7 @@ subdir('tests')
 subdir('po')
 subdir('data')
 
-configure_file(input : 'config.h.meson',
-  output : 'config.h',
-  configuration : cdata)
+configure_file(output : 'config.h', configuration : cdata)
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
