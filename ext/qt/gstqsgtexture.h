@@ -51,6 +51,7 @@ private:
     GstBuffer * sync_buffer_;
     GstGLContext * qt_context_;
     GstMemory * mem_;
+    GLuint dummy_tex_id_;
     GstVideoInfo v_info;
     GstVideoFrame v_frame;
 };

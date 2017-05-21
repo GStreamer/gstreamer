@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include <vector>
 #include <stdio.h>
 
 #include <gst/video/video.h>
@@ -47,12 +48,17 @@ GstQSGTexture::GstQSGTexture ()
   this->buffer_ = NULL;
   this->qt_context_ = NULL;
   this->sync_buffer_ = gst_buffer_new ();
+  this->dummy_tex_id_ = 0;
 }
 
 GstQSGTexture::~GstQSGTexture ()
 {
   gst_buffer_replace (&this->buffer_, NULL);
   gst_buffer_replace (&this->sync_buffer_, NULL);
+  if (this->dummy_tex_id_ && QOpenGLContext::currentContext ()) {
+    QOpenGLContext::currentContext ()->functions ()->glDeleteTextures (1,
+        &this->dummy_tex_id_);
+  }
 }
 
 /* only called from the streaming thread with scene graph thread blocked */
@@ -87,6 +93,7 @@ GstQSGTexture::bind ()
   GstGLSyncMeta *sync_meta;
   GstMemory *mem;
   guint tex_id;
+  gboolean use_dummy_tex = TRUE;
 
   if (!this->qt_context_)
     return;
@@ -132,7 +139,41 @@ GstQSGTexture::bind ()
 
   gst_video_frame_unmap (&this->v_frame);
 
+  /* Texture was successfully bound, so we do not need
+   * to use the dummy texture */
+  use_dummy_tex = FALSE;
+
 out:
+  if (G_UNLIKELY (use_dummy_tex)) {
+    QOpenGLContext *qglcontext = QOpenGLContext::currentContext ();
+    QOpenGLFunctions *funcs = qglcontext->functions ();
+
+    /* Create dummy texture if not already present.
+     * Use the Qt OpenGL functions instead of the GstGL ones,
+     * since we are using the Qt OpenGL context here, and we must
+     * be able to delete the texture in the destructor. */
+    if (this->dummy_tex_id_ == 0) {
+      /* Make this a black 64x64 pixel RGBA texture.
+       * This size and format is supported pretty much everywhere, so these
+       * are a safe pick. (64 pixel sidelength must be supported according
+       * to the GLES2 spec, table 6.18.)
+       * Set min/mag filters to GL_LINEAR to make sure no mipmapping is used. */
+      const int tex_sidelength = 64;
+      std::vector < guint8 > dummy_data (tex_sidelength * tex_sidelength * 4, 0);
+
+      funcs->glGenTextures (1, &this->dummy_tex_id_);
+      funcs->glBindTexture (GL_TEXTURE_2D, this->dummy_tex_id_);
+      funcs->glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      funcs->glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      funcs->glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, tex_sidelength,
+          tex_sidelength, 0, GL_RGBA, GL_UNSIGNED_BYTE, &dummy_data[0]);
+    }
+
+    g_assert (this->dummy_tex_id_ != 0);
+
+    funcs->glBindTexture (GL_TEXTURE_2D, this->dummy_tex_id_);
+  }
+
   gst_gl_context_activate (this->qt_context_, FALSE);
 }
 
