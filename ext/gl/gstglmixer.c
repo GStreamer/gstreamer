@@ -131,16 +131,24 @@ _find_best_format (GstVideoAggregator * vagg, GstCaps * downstream_caps,
 }
 
 static gboolean
-gst_gl_mixer_propose_allocation (GstGLBaseMixer * base_mix,
-    GstGLBaseMixerPad * base_pad, GstQuery * decide_query, GstQuery * query)
+gst_gl_mixer_propose_allocation (GstAggregator * agg,
+    GstAggregatorPad * agg_pad, GstQuery * decide_query, GstQuery * query)
 {
-  GstGLMixer *mix = GST_GL_MIXER (base_mix);
-  GstGLContext *context = base_mix->context;
+  GstGLMixer *mix = GST_GL_MIXER (agg);
+  GstGLBaseMixer *base_mix = GST_GL_BASE_MIXER (agg);
+  GstGLContext *context;
   GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
   guint size = 0;
   gboolean need_pool;
+
+
+  if (!GST_AGGREGATOR_CLASS (gst_gl_mixer_parent_class)->propose_allocation
+      (agg, agg_pad, decide_query, query))
+    return FALSE;
+
+  context = base_mix->context;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
@@ -347,7 +355,6 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   GstVideoAggregatorClass *videoaggregator_class =
       (GstVideoAggregatorClass *) klass;
   GstAggregatorClass *agg_class = (GstAggregatorClass *) klass;
-  GstGLBaseMixerClass *mix_class = GST_GL_BASE_MIXER_CLASS (klass);;
 
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "glmixer", 0, "OpenGL mixer");
 
@@ -368,11 +375,11 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   agg_class->start = gst_gl_mixer_start;
   agg_class->negotiated_src_caps = _negotiated_caps;
   agg_class->decide_allocation = gst_gl_mixer_decide_allocation;
+  agg_class->propose_allocation = gst_gl_mixer_propose_allocation;
 
   videoaggregator_class->aggregate_frames = gst_gl_mixer_aggregate_frames;
   videoaggregator_class->find_best_format = _find_best_format;
 
-  mix_class->propose_allocation = gst_gl_mixer_propose_allocation;
 
   /* Register the pad class */
   g_type_class_ref (GST_TYPE_GL_MIXER_PAD);
