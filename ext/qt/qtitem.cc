@@ -289,6 +289,8 @@ QtGLVideoItem::onSceneGraphInitialized ()
 
   GST_DEBUG ("%p created wrapped GL context %" GST_PTR_FORMAT, this,
       this->priv->other_context);
+
+  emit itemInitialized();
 }
 
 void
