@@ -2606,12 +2606,10 @@ gst_aggregator_pad_event_func (GstPad * pad, GstObject * parent,
   }
 
   if (event) {
-    gboolean is_caps = (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
-
     if (!klass->sink_event (self, aggpad, event)) {
       /* Copied from GstPad to convert boolean to a GstFlowReturn in
        * the event handling func */
-      ret = is_caps ? GST_FLOW_NOT_NEGOTIATED : GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
     }
   }
 
