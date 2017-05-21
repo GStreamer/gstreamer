@@ -385,9 +385,7 @@ else
     endif
 endif
 
-configure_file(input : 'config.h.meson',
-  output : 'config.h',
-  configuration : cdata)
+configure_file(output : 'config.h', configuration : cdata)
 
 gst_plugins_bad_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
