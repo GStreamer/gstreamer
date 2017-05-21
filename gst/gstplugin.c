@@ -700,7 +700,7 @@ extract_symname (const char *filename)
   else if (g_str_has_prefix (bname, "lib"))
     prefix_len += 3;
 
-  dot = g_utf8_strrchr (bname, -1, '.');
+  dot = g_utf8_strchr (bname, -1, '.');
   if (dot)
     len = dot - bname - prefix_len;
   else
