@@ -634,7 +634,8 @@ gst_wildmidi_dec_decode (GstNonstreamAudioDecoder * dec, GstBuffer ** buffer,
   /* The actual decoding */
   gst_buffer_map (outbuf, &info, GST_MAP_WRITE);
   decoded_size_in_bytes =
-      WildMidi_GetOutput (wildmidi_dec->song, (char *) (info.data), info.size);
+      WildMidi_GetOutput (wildmidi_dec->song, (int8_t *) (info.data),
+      info.size);
   gst_buffer_unmap (outbuf, &info);
 
   if (decoded_size_in_bytes == 0) {
