@@ -1330,7 +1330,7 @@ gst_object_get_value (GstObject * object, const gchar * property_name,
 }
 
 /**
- * gst_object_get_value_array:
+ * gst_object_get_value_array: (skip)
  * @object: the object that has controlled properties
  * @property_name: the name of the property to get
  * @timestamp: the time that should be processed
@@ -1381,7 +1381,7 @@ gst_object_get_value_array (GstObject * object, const gchar * property_name,
  * @timestamp: the time that should be processed
  * @interval: the time spacing between subsequent values
  * @n_values: the number of values
- * @values: array to put control-values in
+ * @values: (array length=n_values): array to put control-values in
  *
  * Gets a number of #GValues for the given controlled property starting at the
  * requested time. The array @values need to hold enough space for @n_values of
