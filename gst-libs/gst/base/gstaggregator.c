@@ -1493,7 +1493,9 @@ gst_aggregator_stop_pad (GstAggregator * self, GstAggregatorPad * pad,
   gst_aggregator_pad_flush (pad, self);
 
   PAD_LOCK (pad);
+  pad->priv->flow_return = GST_FLOW_FLUSHING;
   pad->priv->negotiated = FALSE;
+  PAD_BROADCAST_EVENT (pad);
   PAD_UNLOCK (pad);
 
   return TRUE;
