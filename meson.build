@@ -233,6 +233,8 @@ elif omx_target == 'rpi'
   endif
 elif omx_target == 'bellagio'
   cdata.set('USE_OMX_TARGET_BELLAGIO', 1)
+elif omx_target == 'zynqultrascaleplus'
+  cdata.set('USE_OMX_TARGET_ZYNQ_USCALE_PLUS', 1)
 else
   error ('Unsupported omx target specified. Use the -Dwith_omx_target option')
 endif
