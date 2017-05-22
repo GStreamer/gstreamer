@@ -980,7 +980,6 @@ GST_START_TEST (test_audiointerleave_2ch_smallbuf)
   GstHarness *h;
   GstHarness *h2;
   GstBuffer *buffer;
-  GstQuery *q;
   gint i;
   GstEvent *ev;
   GstCaps *ecaps, *caps;
@@ -1049,11 +1048,6 @@ GST_START_TEST (test_audiointerleave_2ch_smallbuf)
     gst_harness_crank_single_clock_wait (h);
   fail_unless_equals_uint64 (gst_clock_get_time (GST_ELEMENT_CLOCK
           (h->element)), 750 * GST_MSECOND);
-
-  /*  Check that the queue is really empty */
-  q = gst_query_new_drain ();
-  gst_pad_peer_query (h->srcpad, q);
-  gst_query_unref (q);
 
   buffer = gst_harness_pull (h);
   sink_handoff_float32 (NULL, buffer, NULL, GUINT_TO_POINTER (3));
