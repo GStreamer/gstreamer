@@ -263,6 +263,9 @@ ensure_misc_params (GstVaapiEncoderVP8 * encoder, GstVaapiEncPicture * picture)
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   GstVaapiEncMiscParam *misc;
 
+  if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
+    return FALSE;
+
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) != GST_VAAPI_RATECONTROL_CBR)
     return TRUE;
 
@@ -313,8 +316,6 @@ ensure_misc_params (GstVaapiEncoderVP8 * encoder, GstVaapiEncPicture * picture)
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
   gst_vaapi_codec_object_replace (&misc, NULL);
 
-  if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
-    return FALSE;
   return TRUE;
 }
 
