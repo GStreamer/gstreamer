@@ -3664,7 +3664,9 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
       bclass->unlock_stop (basesrc);
 
     /* for live sources we restart the timestamp correction */
+    GST_OBJECT_LOCK (basesrc);
     basesrc->priv->latency = -1;
+    GST_OBJECT_UNLOCK (basesrc);
     /* have to restart the task in case it stopped because of the unlock when
      * we went to PAUSED. Only do this if we operating in push mode. */
     GST_OBJECT_LOCK (basesrc->srcpad);
