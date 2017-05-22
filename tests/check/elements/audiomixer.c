@@ -901,8 +901,9 @@ handoff_buffer_cb (GstElement * fakesink, GstBuffer * buffer, GstPad * pad,
     gpointer user_data)
 {
   GST_DEBUG ("got buffer -- SIZE: %" G_GSIZE_FORMAT
-      " -- %p DURATION is %" GST_TIME_FORMAT,
+      " -- %p PTS is %" GST_TIME_FORMAT " END is %" GST_TIME_FORMAT,
       gst_buffer_get_size (buffer), buffer,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
       GST_TIME_ARGS (GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer)));
 
   gst_buffer_replace (&handoff_buffer, buffer);
@@ -936,6 +937,7 @@ GST_START_TEST (test_clip)
 
   /* just an audiomixer and a fakesink */
   audiomixer = gst_element_factory_make ("audiomixer", "audiomixer");
+  g_object_set (audiomixer, "output-buffer-duration", 50 * GST_MSECOND, NULL);
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
   g_signal_connect (sink, "handoff", (GCallback) handoff_buffer_cb, NULL);
@@ -992,6 +994,7 @@ GST_START_TEST (test_clip)
   buffer = gst_buffer_new_and_alloc (44100);
   GST_BUFFER_TIMESTAMP (buffer) = 900 * GST_MSECOND;
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
 
   GST_DEBUG ("pushing buffer %p START %" GST_TIME_FORMAT " -- DURATION is %"
       GST_TIME_FORMAT, buffer, GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
@@ -1002,11 +1005,13 @@ GST_START_TEST (test_clip)
   gst_pad_query (sinkpad, drain);
 
   fail_unless (handoff_buffer != NULL);
+  ck_assert_int_eq (GST_BUFFER_PTS (handoff_buffer) +
+      GST_BUFFER_DURATION (handoff_buffer), 150 * GST_MSECOND);
   gst_buffer_replace (&handoff_buffer, NULL);
 
   /* should not be clipped */
   buffer = gst_buffer_new_and_alloc (44100);
-  GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
+  GST_BUFFER_TIMESTAMP (buffer) = 1150 * GST_MSECOND;
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
 
   GST_DEBUG ("pushing buffer %p END is %" GST_TIME_FORMAT,
@@ -1016,6 +1021,8 @@ GST_START_TEST (test_clip)
   ck_assert_int_eq (ret, GST_FLOW_OK);
   gst_pad_query (sinkpad, drain);
   fail_unless (handoff_buffer != NULL);
+  ck_assert_int_eq (GST_BUFFER_PTS (handoff_buffer) +
+      GST_BUFFER_DURATION (handoff_buffer), 400 * GST_MSECOND);
   gst_buffer_replace (&handoff_buffer, NULL);
   fail_unless (handoff_buffer == NULL);
 
@@ -1024,8 +1031,11 @@ GST_START_TEST (test_clip)
   buffer = gst_buffer_new_and_alloc (44100);
   GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  GST_DEBUG ("pushing buffer %p END is %" GST_TIME_FORMAT,
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+  GST_DEBUG ("pushing buffer %p PTS is %" GST_TIME_FORMAT
+      " END is %" GST_TIME_FORMAT,
       buffer,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
       GST_TIME_ARGS (GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer)));
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
