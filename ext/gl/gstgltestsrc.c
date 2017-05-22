@@ -487,7 +487,7 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 gl_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (_("failed to draw pattern")),
-        (_("A GL error occured")));
+        (_("A GL error occurred")));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 not_negotiated:
