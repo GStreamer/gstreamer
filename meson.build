@@ -223,7 +223,6 @@ check_functions = [
 # check token HAVE_WAYLAND
 # check token HAVE_WEBP
 # check token HAVE_WILDMIDI
-# check token HAVE_WILDMIDI_0_2_2
 # check token HAVE_WIN32
 # check token HAVE_WININET
 # check token HAVE_WINKS

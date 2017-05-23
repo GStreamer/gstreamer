@@ -3032,16 +3032,23 @@ AG_GST_CHECK_FEATURE(WILDMIDI, [wildmidi midi soft synth plugin], wildmidi, [
                          WildMidi_Init, ,
                          wildmidi_lib.h,
                          WILDMIDI_LIBS="-lWildMidi")
-  AC_CHECK_LIB(WildMidi, WildMidi_LoadSamples, AC_DEFINE(HAVE_WILDMIDI_0_2_2, [1], [Have WildMidi 0.2.2 or earlier library]))
-
+  WILDMIDI_CFLAGS=
+  WILDMIDI_LIBS=
   if test "x$HAVE_WILDMIDI" = "xyes"; then
-	 WILDMIDI_CFLAGS=
-	 WILDMIDI_LIBS=-lWildMidi
-	 AC_MSG_NOTICE(compiling gstWildMidi)
+    AC_MSG_CHECKING([for wildmidi >= 4.0])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <wildmidi_lib.h>]], [[
+        #if LIBWILDMIDI_VER_MAJOR == 0 && LIBWILDMIDI_VER_MINOR < 4
+        #error "wildmidi too old"
+        #endif
+    ]])], [ AC_MSG_RESULT(yes)
+      HAVE_WILDMIDI="yes"
+      WILDMIDI_CFLAGS=
+      WILDMIDI_LIBS=-lWildMidi
+    ], [ AC_MSG_RESULT(no)
+      HAVE_WILDMIDI="no"
+    ])
   else
-	 WILDMIDI_CFLAGS=
-	 WILDMIDI_LIBS=
-	 AC_MSG_WARN(no WildMidi library found (libWildMidi))
+    AC_MSG_WARN([WildMidi library or development headers not found])
   fi
   AC_SUBST(WILDMIDI_CFLAGS)
   AC_SUBST(WILDMIDI_LIBS)
