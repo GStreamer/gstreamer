@@ -32,6 +32,7 @@ libgstomx_la_SOURCES = \
 	gstomxh263enc.c \
 	gstomxaacdec.c \
 	gstomxmp3dec.c \
+	gstomxmp3enc.c \
 	gstomxaacenc.c \
 	gstomxamrdec.c \
 	gstomxaudiosink.c \
@@ -60,6 +61,7 @@ noinst_HEADERS = \
 	gstomxh263enc.h \
 	gstomxaacdec.h \
 	gstomxmp3dec.h \
+	gstomxmp3enc.h \
 	gstomxaacenc.h \
 	gstomxamrdec.h \
 	gstomxaudiosink.h \
