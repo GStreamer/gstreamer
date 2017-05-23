@@ -874,6 +874,8 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
+  GST_OBJECT_LOCK (videotestsrc);
+
   if (gst_structure_has_name (structure, "video/x-raw")) {
     /* we can use the parsing code */
     if (!gst_video_info_from_caps (&info, caps))
@@ -946,16 +948,20 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   videotestsrc->running_time = 0;
   videotestsrc->n_frames = 0;
 
+  GST_OBJECT_UNLOCK (videotestsrc);
+
   return TRUE;
 
   /* ERRORS */
 parse_failed:
   {
+    GST_OBJECT_UNLOCK (videotestsrc);
     GST_DEBUG_OBJECT (bsrc, "failed to parse caps");
     return FALSE;
   }
 unsupported_caps:
   {
+    GST_OBJECT_UNLOCK (videotestsrc);
     GST_DEBUG_OBJECT (bsrc, "unsupported caps: %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
@@ -975,27 +981,33 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
+      GST_OBJECT_LOCK (src);
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       res =
           gst_video_info_convert (&src->info, src_fmt, src_val, dest_fmt,
           &dest_val);
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      GST_OBJECT_UNLOCK (src);
       break;
     }
     case GST_QUERY_LATENCY:
     {
+      GST_OBJECT_LOCK (src);
       if (src->info.fps_n > 0) {
         GstClockTime latency;
 
         latency =
             gst_util_uint64_scale (GST_SECOND, src->info.fps_d,
             src->info.fps_n);
+        GST_OBJECT_UNLOCK (src);
         gst_query_set_latency (query,
             gst_base_src_is_live (GST_BASE_SRC_CAST (src)), latency,
             GST_CLOCK_TIME_NONE);
         GST_DEBUG_OBJECT (src, "Reporting latency of %" GST_TIME_FORMAT,
             GST_TIME_ARGS (latency));
         res = TRUE;
+      } else {
+        GST_OBJECT_UNLOCK (src);
       }
       break;
     }
@@ -1006,16 +1018,22 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
         gst_query_parse_duration (query, &format, NULL);
         switch (format) {
           case GST_FORMAT_TIME:{
-            gint64 dur = gst_util_uint64_scale_int_round (bsrc->num_buffers
+            gint64 dur;
+
+            GST_OBJECT_LOCK (src);
+            dur = gst_util_uint64_scale_int_round (bsrc->num_buffers
                 * GST_SECOND, src->info.fps_d, src->info.fps_n);
             res = TRUE;
             gst_query_set_duration (query, GST_FORMAT_TIME, dur);
+            GST_OBJECT_UNLOCK (src);
             goto done;
           }
           case GST_FORMAT_BYTES:
+            GST_OBJECT_LOCK (src);
             res = TRUE;
             gst_query_set_duration (query, GST_FORMAT_BYTES,
                 bsrc->num_buffers * src->info.size);
+            GST_OBJECT_UNLOCK (src);
             goto done;
           default:
             break;
@@ -1192,12 +1210,14 @@ gst_video_test_src_start (GstBaseSrc * basesrc)
 {
   GstVideoTestSrc *src = GST_VIDEO_TEST_SRC (basesrc);
 
+  GST_OBJECT_LOCK (src);
   src->running_time = 0;
   src->n_frames = 0;
   src->accum_frames = 0;
   src->accum_rtime = 0;
 
   gst_video_info_init (&src->info);
+  GST_OBJECT_UNLOCK (src);
 
   return TRUE;
 }
