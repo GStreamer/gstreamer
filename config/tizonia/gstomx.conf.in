@@ -5,3 +5,11 @@ component-name=OMX.Aratelia.audio_decoder.mp3
 rank=257
 in-port-index=0
 out-port-index=1
+
+[omxmp3enc]
+type-name=GstOMXMP3Enc
+core-name=@TIZONIA_LIBDIR@/libtizcore.so
+component-name=OMX.Aratelia.audio_encoder.mp3
+rank=0
+in-port-index=0
+out-port-index=1
