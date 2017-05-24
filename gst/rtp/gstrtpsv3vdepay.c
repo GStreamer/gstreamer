@@ -265,8 +265,7 @@ gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       avail = gst_adapter_available (rtpsv3vdepay->adapter);
       GST_DEBUG ("Returning completed output buffer [%d bytes]", avail);
       outbuf = gst_adapter_take_buffer (rtpsv3vdepay->adapter, avail);
-      gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpsv3vdepay), outbuf,
-          g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+      gst_rtp_drop_non_video_meta (rtpsv3vdepay, outbuf);
     }
   }
 

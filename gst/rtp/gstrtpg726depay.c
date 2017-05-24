@@ -228,8 +228,7 @@ gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     outbuf = gst_rtp_buffer_get_payload_buffer (rtp);
     if (!outbuf)
       goto bad_len;
-    gst_rtp_drop_meta (GST_ELEMENT_CAST (depay), outbuf,
-        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+    gst_rtp_drop_non_audio_meta (depay, outbuf);
   } else {
     guint8 *in, *out, tmp;
     guint len;
@@ -243,8 +242,7 @@ gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       goto bad_len;
     outbuf = gst_buffer_make_writable (outbuf);
 
-    gst_rtp_drop_meta (GST_ELEMENT_CAST (depay), outbuf,
-        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+    gst_rtp_drop_non_audio_meta (depay, outbuf);
 
     gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
     out = map.data;

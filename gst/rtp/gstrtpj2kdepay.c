@@ -431,8 +431,7 @@ gst_rtp_j2k_depay_flush_frame (GstRTPBaseDepayload * depayload)
 
     GST_DEBUG_OBJECT (rtpj2kdepay, "pushing buffer of %u bytes", avail);
     outbuf = gst_adapter_take_buffer (rtpj2kdepay->f_adapter, avail);
-    gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload),
-        outbuf, g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+    gst_rtp_drop_non_video_meta (depayload, outbuf);
     ret = gst_rtp_base_depayload_push (depayload, outbuf);
   } else {
     GST_WARNING_OBJECT (rtpj2kdepay, "empty packet");

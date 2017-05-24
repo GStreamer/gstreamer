@@ -23,6 +23,8 @@
 
 #include <gst/tag/tag.h>
 
+#include "gstrtputils.h"
+
 #include "gstrtpac3depay.h"
 #include "gstrtpac3pay.h"
 #include "gstrtpbvdepay.h"
@@ -114,6 +116,11 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gst_tag_image_type_get_type ();
+
+  rtp_quark_meta_tag_video =
+      g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
+  rtp_quark_meta_tag_audio =
+      g_quark_from_static_string (GST_META_TAG_AUDIO_STR);
 
   if (!gst_rtp_ac3_depay_plugin_init (plugin))
     return FALSE;

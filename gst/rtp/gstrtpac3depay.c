@@ -156,8 +156,7 @@ gst_rtp_ac3_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   outbuf = gst_rtp_buffer_get_payload_subbuffer (rtp, 2, -1);
 
   if (outbuf) {
-    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpac3depay), outbuf,
-        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+    gst_rtp_drop_non_audio_meta (rtpac3depay, outbuf);
     GST_DEBUG_OBJECT (rtpac3depay, "pushing buffer of size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (outbuf));
   }

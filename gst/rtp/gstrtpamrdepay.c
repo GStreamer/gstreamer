@@ -427,8 +427,7 @@ gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     GST_DEBUG_OBJECT (depayload, "pushing buffer of size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (outbuf));
 
-    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpamrdepay), outbuf, rtp->buffer,
-        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+    gst_rtp_copy_audio_meta (rtpamrdepay, outbuf, rtp->buffer);
   }
 
   return outbuf;

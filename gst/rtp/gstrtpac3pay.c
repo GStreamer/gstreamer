@@ -323,8 +323,8 @@ gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay)
 
     payload_buffer =
         gst_adapter_take_buffer_fast (rtpac3pay->adapter, payload_len);
-    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpac3pay), outbuf, payload_buffer,
-        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+
+    gst_rtp_copy_audio_meta (rtpac3pay, outbuf, payload_buffer);
 
     outbuf = gst_buffer_append (outbuf, payload_buffer);
 

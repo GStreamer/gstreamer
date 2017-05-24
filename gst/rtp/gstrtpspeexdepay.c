@@ -212,8 +212,7 @@ gst_rtp_speex_depay_process (GstRTPBaseDepayload * depayload,
 
   if (outbuf) {
     GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
-    gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload), outbuf,
-        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+    gst_rtp_drop_non_audio_meta (depayload, outbuf);
   }
 
   return outbuf;

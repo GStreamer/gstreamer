@@ -895,8 +895,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
         jpeg_header_size + offset, payload_size);
 
     /* join memory parts */
-    gst_rtp_copy_meta (GST_ELEMENT_CAST (pay), outbuf, paybuf,
-        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+    gst_rtp_copy_video_meta (pay, outbuf, paybuf);
     outbuf = gst_buffer_append (outbuf, paybuf);
 
     GST_BUFFER_PTS (outbuf) = timestamp;

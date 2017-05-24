@@ -387,8 +387,7 @@ skip:
 
       GST_DEBUG ("Pushing out a buffer of %d bytes", avail);
 
-      gst_rtp_drop_meta (GST_ELEMENT_CAST (rtph263depay), outbuf,
-          g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+      gst_rtp_drop_non_video_meta (rtph263depay, outbuf);
 
       gst_rtp_base_depayload_push (depayload, outbuf);
       rtph263depay->offset = 0;

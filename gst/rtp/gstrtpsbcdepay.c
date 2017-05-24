@@ -245,8 +245,7 @@ gst_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
     if (last) {
       data = gst_adapter_take_buffer (depay->adapter,
           gst_adapter_available (depay->adapter));
-      gst_rtp_drop_meta (GST_ELEMENT_CAST (depay), data,
-          g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+      gst_rtp_drop_non_audio_meta (depay, data);
     } else
       data = NULL;
 

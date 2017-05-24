@@ -212,8 +212,7 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   gst_rtp_buffer_unmap (&rtp);
 
   paybuf = gst_adapter_take_buffer_fast (sbcpay->adapter, payload_length);
-  gst_rtp_copy_meta (GST_ELEMENT_CAST (sbcpay), outbuf, paybuf,
-      g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+  gst_rtp_copy_audio_meta (sbcpay, outbuf, paybuf);
   outbuf = gst_buffer_append (outbuf, paybuf);
 
   GST_BUFFER_PTS (outbuf) = sbcpay->last_timestamp;

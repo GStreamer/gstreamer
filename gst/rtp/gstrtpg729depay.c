@@ -202,8 +202,7 @@ gst_rtp_g729_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
   }
 
-  gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload), outbuf,
-      g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+  gst_rtp_drop_non_audio_meta (depayload, outbuf);
 
   GST_LOG_OBJECT (depayload, "pushing buffer of size %" G_GSIZE_FORMAT,
       gst_buffer_get_size (outbuf));

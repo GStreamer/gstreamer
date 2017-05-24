@@ -240,8 +240,7 @@ gst_rtp_g722_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   }
 
   if (outbuf) {
-    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpg722depay), outbuf,
-        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+    gst_rtp_drop_non_audio_meta (rtpg722depay, outbuf);
   }
 
   return outbuf;

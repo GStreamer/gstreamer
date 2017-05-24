@@ -164,8 +164,7 @@ gst_rtp_g723_pay_flush (GstRTPG723Pay * pay)
     pay->discont = FALSE;
   }
   gst_rtp_buffer_unmap (&rtp);
-  gst_rtp_copy_meta (GST_ELEMENT_CAST (pay), outbuf, payload_buf,
-      g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+  gst_rtp_copy_audio_meta (pay, outbuf, payload_buf);
 
   outbuf = gst_buffer_append (outbuf, payload_buf);
 

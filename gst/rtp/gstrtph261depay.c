@@ -170,8 +170,7 @@ skip:
 
       avail = gst_adapter_available (depay->adapter);
       outbuf = gst_adapter_take_buffer (depay->adapter, avail);
-      gst_rtp_drop_meta (GST_ELEMENT_CAST (depay), outbuf,
-          g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+      gst_rtp_drop_non_video_meta (depay, outbuf);
 
       /* Note that the I flag does not mean intra frame, but that the entire
        * stream is intra coded. */

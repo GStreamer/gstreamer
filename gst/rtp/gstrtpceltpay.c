@@ -362,8 +362,7 @@ gst_rtp_celt_pay_flush_queued (GstRtpCELTPay * rtpceltpay)
     gst_buffer_extract (buf, 0, payload, size);
     payload += size;
 
-    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpceltpay), outbuf, buf,
-        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+    gst_rtp_copy_audio_meta (rtpceltpay, outbuf, buf);
 
     gst_buffer_unref (buf);
   }

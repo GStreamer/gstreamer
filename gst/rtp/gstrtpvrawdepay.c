@@ -409,8 +409,7 @@ gst_rtp_vraw_depay_process_packet (GstRTPBaseDepayload * depayload,
   /* remember header position */
   headers = payload;
 
-  gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpvrawdepay), frame->buffer,
-      rtp->buffer, g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+  gst_rtp_copy_video_meta (rtpvrawdepay, frame->buffer, rtp->buffer);
 
   /* find data start */
   do {

@@ -1320,9 +1320,8 @@ gst_rtp_h263_pay_push (GstRtpH263Pay * rtph263pay,
   gst_buffer_copy_into (package->outbuf, rtph263pay->current_buffer,
       GST_BUFFER_COPY_MEMORY, package->payload_start - rtph263pay->map.data,
       package->payload_len);
-  gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph263pay), package->outbuf,
-      rtph263pay->current_buffer,
-      g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+  gst_rtp_copy_video_meta (rtph263pay, package->outbuf,
+      rtph263pay->current_buffer);
 
   ret =
       gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtph263pay),

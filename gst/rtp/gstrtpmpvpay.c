@@ -228,8 +228,7 @@ gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
     gst_rtp_buffer_unmap (&rtp);
 
     paybuf = gst_adapter_take_buffer_fast (rtpmpvpay->adapter, payload_len);
-    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpmpvpay), outbuf, paybuf,
-        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+    gst_rtp_copy_video_meta (rtpmpvpay, outbuf, paybuf);
     outbuf = gst_buffer_append (outbuf, paybuf);
 
     GST_BUFFER_PTS (outbuf) = rtpmpvpay->first_ts;

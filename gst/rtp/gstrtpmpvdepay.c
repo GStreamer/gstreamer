@@ -174,8 +174,7 @@ gst_rtp_mpv_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       GST_DEBUG_OBJECT (rtpmpvdepay,
           "gst_rtp_mpv_depay_chain: pushing buffer of size %" G_GSIZE_FORMAT,
           gst_buffer_get_size (outbuf));
-      gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpmpvdepay), outbuf,
-          g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+      gst_rtp_drop_non_video_meta (rtpmpvdepay, outbuf);
 
     }
   }

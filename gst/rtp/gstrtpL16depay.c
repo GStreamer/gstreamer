@@ -258,8 +258,7 @@ gst_rtp_L16_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     goto reorder_failed;
   }
 
-  gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpL16depay), outbuf,
-      g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+  gst_rtp_drop_non_audio_meta (rtpL16depay, outbuf);
 
   return outbuf;
 

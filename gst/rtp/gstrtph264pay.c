@@ -891,8 +891,7 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     gst_rtp_buffer_unmap (&rtp);
 
     /* insert payload memory block */
-    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph264pay), outbuf, paybuf,
-        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+    gst_rtp_copy_video_meta (rtph264pay, outbuf, paybuf);
     outbuf = gst_buffer_append (outbuf, paybuf);
 
     /* push the buffer to the next element */
@@ -952,8 +951,7 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
       gst_rtp_buffer_unmap (&rtp);
 
       /* insert payload memory block */
-      gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph264pay), outbuf, paybuf,
-          g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+      gst_rtp_copy_video_meta (rtph264pay, outbuf, paybuf);
       gst_buffer_copy_into (outbuf, paybuf, GST_BUFFER_COPY_MEMORY, pos,
           limitedSize);
 

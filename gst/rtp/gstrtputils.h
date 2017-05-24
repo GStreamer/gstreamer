@@ -29,10 +29,25 @@ G_GNUC_INTERNAL
 void gst_rtp_copy_meta (GstElement * element, GstBuffer *outbuf, GstBuffer *inbuf, GQuark copy_tag);
 
 G_GNUC_INTERNAL
+void gst_rtp_copy_audio_meta (gpointer element, GstBuffer *outbuf, GstBuffer *inbuf);
+
+G_GNUC_INTERNAL
+void gst_rtp_copy_video_meta (gpointer element, GstBuffer *outbuf, GstBuffer *inbuf);
+
+G_GNUC_INTERNAL
 void gst_rtp_drop_meta (GstElement * element, GstBuffer *buf, GQuark keep_tag);
 
 G_GNUC_INTERNAL
+void gst_rtp_drop_non_audio_meta (gpointer element, GstBuffer * buf);
+
+G_GNUC_INTERNAL
+void gst_rtp_drop_non_video_meta (gpointer element, GstBuffer * buf);
+
+G_GNUC_INTERNAL
 gboolean gst_rtp_read_golomb (GstBitReader * br, guint32 * value);
+
+G_GNUC_INTERNAL extern GQuark rtp_quark_meta_tag_video;
+G_GNUC_INTERNAL extern GQuark rtp_quark_meta_tag_audio;
 
 G_END_DECLS
 

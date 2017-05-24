@@ -335,8 +335,7 @@ gst_rtp_theora_pay_flush_packet (GstRtpTheoraPay * rtptheorapay)
 
   for (l = g_list_last (rtptheorapay->packet_buffers); l; l = l->prev) {
     GstBuffer *buf = GST_BUFFER_CAST (l->data);
-    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtptheorapay), rtptheorapay->packet,
-        buf, g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+    gst_rtp_copy_video_meta (rtptheorapay, rtptheorapay->packet, buf);
     gst_buffer_unref (buf);
   }
   g_list_free (rtptheorapay->packet_buffers);

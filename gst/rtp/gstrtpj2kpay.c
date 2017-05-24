@@ -506,8 +506,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
       /* make subbuffer of j2k data */
       paybuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL,
           offset, data_size);
-      gst_rtp_copy_meta (GST_ELEMENT_CAST (basepayload), outbuf, paybuf,
-          g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+      gst_rtp_copy_video_meta (basepayload, outbuf, paybuf);
       outbuf = gst_buffer_append (outbuf, paybuf);
 
       gst_buffer_list_add (list, outbuf);

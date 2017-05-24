@@ -753,8 +753,7 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     gst_rtp_buffer_unmap (&rtp);
 
     payload_buf = gst_adapter_take_buffer_fast (rtph263ppay->adapter, towrite);
-    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtph263ppay), outbuf, payload_buf,
-        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+    gst_rtp_copy_video_meta (rtph263ppay, outbuf, payload_buf);
     outbuf = gst_buffer_append (outbuf, payload_buf);
     avail -= towrite;
 

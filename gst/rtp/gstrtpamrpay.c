@@ -392,8 +392,7 @@ gst_rtp_amr_pay_handle_buffer (GstRTPBasePayload * basepayload,
   gst_buffer_unmap (buffer, &map);
   gst_rtp_buffer_unmap (&rtp);
 
-  gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpamrpay), outbuf, buffer,
-      g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+  gst_rtp_copy_audio_meta (rtpamrpay, outbuf, buffer);
 
   gst_buffer_unref (buffer);
 

@@ -357,8 +357,7 @@ gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload,
     GST_BUFFER_PTS (outbuf) = timestamp;
     GST_BUFFER_DURATION (outbuf) = FRAME_DURATION;
 
-    gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload), outbuf,
-        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+    gst_rtp_drop_non_audio_meta (depayload, outbuf);
 
     if (!depay->interleaved || index == 0) {
       /* not interleaved or first frame in packet, just push */

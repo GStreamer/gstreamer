@@ -435,8 +435,7 @@ gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
         offset, payload_len);
 
     /* join memory parts */
-    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpmp4apay), outbuf, paybuf,
-        g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+    gst_rtp_copy_audio_meta (rtpmp4apay, outbuf, paybuf);
     outbuf = gst_buffer_append (outbuf, paybuf);
     gst_buffer_list_add (list, outbuf);
     offset += payload_len;

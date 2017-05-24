@@ -26,6 +26,9 @@ typedef struct
   GQuark copy_tag;
 } CopyMetaData;
 
+GQuark rtp_quark_meta_tag_video;
+GQuark rtp_quark_meta_tag_audio;
+
 static gboolean
 foreach_metadata_copy (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
 {
@@ -61,6 +64,20 @@ gst_rtp_copy_meta (GstElement * element, GstBuffer * outbuf, GstBuffer * inbuf,
   gst_buffer_foreach_meta (inbuf, foreach_metadata_copy, &data);
 }
 
+void
+gst_rtp_copy_video_meta (gpointer element, GstBuffer * outbuf,
+    GstBuffer * inbuf)
+{
+  gst_rtp_copy_meta (element, outbuf, inbuf, rtp_quark_meta_tag_video);
+}
+
+void
+gst_rtp_copy_audio_meta (gpointer element, GstBuffer * outbuf,
+    GstBuffer * inbuf)
+{
+  gst_rtp_copy_meta (element, outbuf, inbuf, rtp_quark_meta_tag_audio);
+}
+
 typedef struct
 {
   GstElement *element;
@@ -94,6 +111,18 @@ gst_rtp_drop_meta (GstElement * element, GstBuffer * buf, GQuark keep_tag)
   DropMetaData data = { element, keep_tag };
 
   gst_buffer_foreach_meta (buf, foreach_metadata_drop, &data);
+}
+
+void
+gst_rtp_drop_non_audio_meta (gpointer element, GstBuffer * buf)
+{
+  gst_rtp_drop_meta (element, buf, rtp_quark_meta_tag_audio);
+}
+
+void
+gst_rtp_drop_non_video_meta (gpointer element, GstBuffer * buf)
+{
+  gst_rtp_drop_meta (element, buf, rtp_quark_meta_tag_video);
 }
 
 /* Stolen from bad/gst/mpegtsdemux/payloader_parsers.c */

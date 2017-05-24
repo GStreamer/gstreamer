@@ -330,8 +330,7 @@ gst_rtp_vorbis_pay_flush_packet (GstRtpVorbisPay * rtpvorbispay)
 
   for (l = g_list_last (rtpvorbispay->packet_buffers); l; l = l->prev) {
     GstBuffer *buf = GST_BUFFER_CAST (l->data);
-    gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpvorbispay), rtpvorbispay->packet,
-        buf, g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+    gst_rtp_copy_audio_meta (rtpvorbispay, rtpvorbispay->packet, buf);
     gst_buffer_unref (buf);
   }
   g_list_free (rtpvorbispay->packet_buffers);

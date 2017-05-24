@@ -331,8 +331,7 @@ gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload,
       outbuf = gst_buffer_append (outbuf, padbuf);
     }
 
-    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtph263pdepay), outbuf,
-        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+    gst_rtp_drop_non_video_meta (rtph263pdepay, outbuf);
 
     return outbuf;
   } else {

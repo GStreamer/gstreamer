@@ -394,8 +394,7 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       avail -= skip;
 
       GST_BUFFER_PTS (tmp) = timestamp;
-      gst_rtp_drop_meta (GST_ELEMENT_CAST (depayload), tmp,
-          g_quark_from_static_string (GST_META_TAG_AUDIO_STR));
+      gst_rtp_drop_non_audio_meta (depayload, tmp);
       gst_rtp_base_depayload_push (depayload, tmp);
 
       /* shift ts for next buffers */

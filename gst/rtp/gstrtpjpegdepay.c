@@ -721,8 +721,7 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       rtpjpegdepay->discont = FALSE;
     }
 
-    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpjpegdepay), outbuf,
-        g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+    gst_rtp_drop_non_video_meta (rtpjpegdepay, outbuf);
 
     GST_DEBUG_OBJECT (rtpjpegdepay, "returning %u bytes", avail);
   }

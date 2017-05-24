@@ -454,8 +454,8 @@ gst_rtp_vp9_payload_next (GstRtpVP9Pay * self, GstBufferList * list,
   header = gst_rtp_vp9_create_header_buffer (self, offset == 0, mark, buffer);
   sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset, available);
 
-  gst_rtp_copy_meta (GST_ELEMENT_CAST (self), header, buffer,
-      g_quark_from_static_string (GST_META_TAG_VIDEO_STR));
+  gst_rtp_copy_video_meta (self, header, buffer);
+
   out = gst_buffer_append (header, sub);
 
   gst_buffer_list_insert (list, -1, out);
