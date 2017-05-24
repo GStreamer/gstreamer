@@ -28,6 +28,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/audio/audio.h>
 #include "gstrtpopusdepay.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpopusdepay_debug);
 #define GST_CAT_DEFAULT (rtpopusdepay_debug)
@@ -138,25 +139,6 @@ gst_rtp_opus_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   return ret;
 }
 
-static gboolean
-foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
-{
-  GstRTPOpusDepay *depay = user_data;
-  const GstMetaInfo *info = (*meta)->info;
-  const gchar *const *tags = gst_meta_api_type_get_tags (info->api);
-
-  if (!tags || (g_strv_length ((gchar **) tags) == 1
-          && gst_meta_api_type_has_tag (info->api,
-              g_quark_from_string (GST_META_TAG_AUDIO_STR)))) {
-    GST_DEBUG_OBJECT (depay, "keeping metadata %s", g_type_name (info->api));
-  } else {
-    GST_DEBUG_OBJECT (depay, "dropping metadata %s", g_type_name (info->api));
-    *meta = NULL;
-  }
-
-  return TRUE;
-}
-
 static GstBuffer *
 gst_rtp_opus_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
@@ -168,8 +150,7 @@ gst_rtp_opus_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   gst_rtp_buffer_unmap (&rtpbuf);
 
   outbuf = gst_buffer_make_writable (outbuf);
-  /* Filter away all metas that are not sensible to copy */
-  gst_buffer_foreach_meta (outbuf, foreach_metadata, depayload);
+  gst_rtp_drop_non_audio_meta (depayload, outbuf);
 
   return outbuf;
 }
