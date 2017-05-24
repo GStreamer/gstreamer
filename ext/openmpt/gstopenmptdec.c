@@ -43,6 +43,9 @@
 
 #include "gstopenmptdec.h"
 
+#ifndef OPENMPT_API_VERSION_AT_LEAST
+#define OPENMPT_API_VERSION_AT_LEAST(x, y, z) (FALSE)
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (openmptdec_debug);
 #define GST_CAT_DEFAULT openmptdec_debug
