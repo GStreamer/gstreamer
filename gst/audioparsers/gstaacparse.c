@@ -1499,6 +1499,12 @@ gst_aac_parse_start (GstBaseParse * parse)
   aacparse->sent_codec_tag = FALSE;
   aacparse->last_parsed_channels = 0;
   aacparse->last_parsed_sample_rate = 0;
+  aacparse->object_type = 0;
+  aacparse->bitrate = 0;
+  aacparse->header_type = DSPAAC_HEADER_NOT_PARSED;
+  aacparse->output_header_type = DSPAAC_HEADER_NOT_PARSED;
+  aacparse->channels = 0;
+  aacparse->sample_rate = 0;
   return TRUE;
 }
 
