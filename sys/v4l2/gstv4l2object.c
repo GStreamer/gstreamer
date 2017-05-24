@@ -4092,14 +4092,16 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   if (pushing_from_our_pool) {
     /* When pushing from our own pool, we need what downstream one, to be able
      * to fill the pipeline, the minimum required to decoder according to the
-     * driver and 1 more, so we don't endup up with everything downstream or
-     * held by the decoder. */
-    own_min = min + obj->min_buffers + 1;
+     * driver and 2 more, so we don't endup up with everything downstream or
+     * held by the decoder. We account 2 buffers for v4l2 so when one is being
+     * pushed downstream the other one can already be queued for the next
+     * frame. */
+    own_min = min + obj->min_buffers + 2;
 
     /* If no allocation parameters where provided, allow for a little more
      * buffers and enable copy threshold */
     if (!update) {
-      own_min += 3;
+      own_min += 2;
       gst_v4l2_buffer_pool_copy_at_threshold (GST_V4L2_BUFFER_POOL (pool),
           TRUE);
     } else {
