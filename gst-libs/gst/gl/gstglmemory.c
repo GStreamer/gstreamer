@@ -684,7 +684,8 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
     gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         gst_gl_texture_target_to_gl (src->tex_target), src_tex_id, 0);
 
-    if (!gst_gl_context_check_framebuffer_status (src->mem.context, GL_FRAMEBUFFER))
+    if (!gst_gl_context_check_framebuffer_status (src->mem.context,
+            GL_FRAMEBUFFER))
       goto fbo_error;
 
     gl->BindTexture (out_tex_target, tex_id);
@@ -713,7 +714,8 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
     gl->FramebufferTexture2D (GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         gst_gl_texture_target_to_gl (src->tex_target), src_tex_id, 0);
 
-    if (!gst_gl_context_check_framebuffer_status (src->mem.context, GL_READ_FRAMEBUFFER))
+    if (!gst_gl_context_check_framebuffer_status (src->mem.context,
+            GL_READ_FRAMEBUFFER))
       goto fbo_error;
 
     gl->BindFramebuffer (GL_DRAW_FRAMEBUFFER, fbo[1]);
@@ -721,7 +723,8 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
     gl->FramebufferTexture2D (GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         gst_gl_texture_target_to_gl (src->tex_target), tex_id, 0);
 
-    if (!gst_gl_context_check_framebuffer_status (src->mem.context, GL_DRAW_FRAMEBUFFER))
+    if (!gst_gl_context_check_framebuffer_status (src->mem.context,
+            GL_DRAW_FRAMEBUFFER))
       goto fbo_error;
 
     gl->BindTexture (out_tex_target, tex_id);
