@@ -419,8 +419,10 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   gl = context->gl_vtable;
   out_gl_format = copy_params->out_format;
   out_gl_type = GL_UNSIGNED_BYTE;
-  if (copy_params->out_format == GST_GL_RGB565)
+  if (copy_params->out_format == GST_GL_RGB565) {
+    out_gl_format = GST_GL_RGB;
     out_gl_type = GL_UNSIGNED_SHORT_5_6_5;
+  }
   in_gl_format = src->mem.tex_format;
   in_gl_type = GL_UNSIGNED_BYTE;
   if (src->mem.tex_format == GST_GL_RGB565)
