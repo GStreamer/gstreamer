@@ -2513,7 +2513,7 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
   gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
       viewport_dim[3]);
 
-  if (!gst_gl_context_check_framebuffer_status (context))
+  if (!gst_gl_context_check_framebuffer_status (context, GL_FRAMEBUFFER))
     ret = FALSE;
 
   gst_gl_context_clear_framebuffer (context);
