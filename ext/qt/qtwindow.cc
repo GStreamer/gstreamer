@@ -217,7 +217,7 @@ QtGLWindow::afterRendering()
 
   gl->BindFramebuffer (GL_READ_FRAMEBUFFER, this->source->renderTargetId());
 
-  ret = gst_gl_context_check_framebuffer_status (context);
+  ret = gst_gl_context_check_framebuffer_status (context, GL_READ_FRAMEBUFFER);
   if (!ret) {
     GST_ERROR ("FBO errors");
     goto errors;
@@ -233,7 +233,7 @@ QtGLWindow::afterRendering()
     gl->FramebufferTexture2D (GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
               GL_TEXTURE_2D, dst_tex, 0);
 
-    ret = gst_gl_context_check_framebuffer_status (context);
+    ret = gst_gl_context_check_framebuffer_status (context, GL_DRAW_FRAMEBUFFER);
     if (!ret) {
       GST_ERROR ("FBO errors");
       goto errors;
