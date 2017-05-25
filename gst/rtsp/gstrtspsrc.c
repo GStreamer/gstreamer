@@ -2428,6 +2428,9 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     stop_type = GST_SEEK_TYPE_SET;
   }
 
+  if (flags & GST_SEEK_FLAG_SEGMENT)
+    goto invalid_segment_flag;
+
   /* get flush flag */
   flush = flags & GST_SEEK_FLAG_FLUSH;
   skip = flags & GST_SEEK_FLAG_SKIP;
@@ -2555,6 +2558,11 @@ no_format:
 not_seekable:
   {
     GST_DEBUG_OBJECT (src, "stream is not seekable");
+    return FALSE;
+  }
+invalid_segment_flag:
+  {
+    GST_WARNING_OBJECT (src, "Segment seeks not supported");
     return FALSE;
   }
 }
