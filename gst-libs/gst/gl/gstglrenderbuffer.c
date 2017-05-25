@@ -86,8 +86,10 @@ _gl_rbo_create (GstGLRenderbuffer * gl_mem, GError ** error)
 
     tex_format = gl_mem->renderbuffer_format;
     renderbuffer_type = GL_UNSIGNED_BYTE;
-    if (gl_mem->renderbuffer_format == GST_GL_RGB565)
+    if (gl_mem->renderbuffer_format == GST_GL_RGB565) {
+      tex_format = GST_GL_RGB;
       renderbuffer_type = GL_UNSIGNED_SHORT_5_6_5;
+    }
 
     internal_format =
         gst_gl_sized_gl_format_from_gl_format_type (context, tex_format,

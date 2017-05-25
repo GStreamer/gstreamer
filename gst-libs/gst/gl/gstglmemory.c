@@ -245,8 +245,10 @@ _gl_tex_create (GstGLMemory * gl_mem, GError ** error)
 
   tex_format = gl_mem->tex_format;
   tex_type = GL_UNSIGNED_BYTE;
-  if (gl_mem->tex_format == GST_GL_RGB565)
+  if (gl_mem->tex_format == GST_GL_RGB565) {
+    tex_format = GST_GL_RGB;
     tex_type = GL_UNSIGNED_SHORT_5_6_5;
+  }
 
   internal_format =
       gst_gl_sized_gl_format_from_gl_format_type (context, tex_format,
@@ -779,8 +781,10 @@ _gl_tex_copy_thread (GstGLContext * context, gpointer data)
     out_tex_target = gst_gl_texture_target_to_gl (copy_params->tex_target);
     out_gl_format = copy_params->src->tex_format;
     out_gl_type = GL_UNSIGNED_BYTE;
-    if (copy_params->out_format == GST_GL_RGB565)
+    if (copy_params->out_format == GST_GL_RGB565) {
+      out_gl_format = GST_GL_RGB;
       out_gl_type = GL_UNSIGNED_SHORT_5_6_5;
+    }
 
     internal_format =
         gst_gl_sized_gl_format_from_gl_format_type (context, out_gl_format,
