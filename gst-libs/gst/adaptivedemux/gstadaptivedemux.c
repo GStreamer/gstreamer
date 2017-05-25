@@ -2364,7 +2364,8 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
       gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
           GST_TAG_NOMINAL_BITRATE, stream->fragment.bitrate, NULL);
     }
-    pending_tags = gst_event_new_tag (tags);
+    if (tags)
+      pending_tags = gst_event_new_tag (tags);
   }
   if (G_UNLIKELY (stream->pending_events)) {
     pending_events = stream->pending_events;
