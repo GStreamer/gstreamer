@@ -1441,6 +1441,25 @@ gst_adaptive_demux_get_live_seek_range (GstAdaptiveDemux * demux,
 
 /* must be called with manifest_lock taken */
 static gboolean
+gst_adaptive_demux_stream_in_live_seek_range (GstAdaptiveDemux * demux,
+    GstAdaptiveDemuxStream * stream)
+{
+  gint64 range_start, range_stop;
+  if (gst_adaptive_demux_get_live_seek_range (demux, &range_start, &range_stop)) {
+    GST_LOG_OBJECT (stream->pad,
+        "stream position %" GST_STIME_FORMAT "  live seek range %"
+        GST_STIME_FORMAT " - %" GST_STIME_FORMAT,
+        GST_STIME_ARGS (stream->segment.position), GST_STIME_ARGS (range_start),
+        GST_STIME_ARGS (range_stop));
+    return (stream->segment.position >= range_start
+        && stream->segment.position <= range_stop);
+  }
+
+  return FALSE;
+}
+
+/* must be called with manifest_lock taken */
+static gboolean
 gst_adaptive_demux_can_seek (GstAdaptiveDemux * demux)
 {
   GstAdaptiveDemuxClass *klass;
@@ -3567,7 +3586,8 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
     case GST_FLOW_EOS:
       GST_DEBUG_OBJECT (stream->pad, "EOS, checking to stop download loop");
       /* we push the EOS after releasing the object lock */
-      if (gst_adaptive_demux_is_live (demux)) {
+      if (gst_adaptive_demux_is_live (demux)
+          && gst_adaptive_demux_stream_in_live_seek_range (demux, stream)) {
         GstAdaptiveDemuxClass *demux_class =
             GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
 
@@ -3974,7 +3994,15 @@ gst_adaptive_demux_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
   }
   GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
 
-  if (gst_adaptive_demux_is_live (demux)
+  /* When advancing with a non 1.0 rate on live streams, we need to check
+   * the live seeking range again to make sure we can still advance to
+   * that position */
+  if (demux->segment.rate != 1.0 && gst_adaptive_demux_is_live (demux)) {
+    if (!gst_adaptive_demux_stream_in_live_seek_range (demux, stream))
+      ret = GST_FLOW_EOS;
+    else
+      ret = klass->stream_advance_fragment (stream);
+  } else if (gst_adaptive_demux_is_live (demux)
       || gst_adaptive_demux_stream_has_next_fragment (demux, stream)) {
     ret = klass->stream_advance_fragment (stream);
   } else {
