@@ -1675,6 +1675,21 @@ class Scenario(object):
 
         return False
 
+    def needs_live_content(self):
+        # Scenarios that can only be used on live content
+        if hasattr(self, "live_content_required"):
+            return bool(self.live_content_required)
+        return False
+
+    def compatible_with_live_content(self):
+        # if a live content is required it's implicitely compatible with
+        # live content
+        if self.needs_live_content():
+            return True
+        if hasattr(self, "live_content_compatible"):
+            return bool(self.live_content_compatible)
+        return False
+
     def get_min_media_duration(self):
         if hasattr(self, "min_media_duration"):
             return float(self.min_media_duration)
@@ -1874,6 +1889,9 @@ class MediaDescriptor(Loggable):
     def is_seekable(self):
         raise NotImplemented
 
+    def is_live(self):
+        raise NotImplemented
+
     def is_image(self):
         raise NotImplemented
 
@@ -1898,6 +1916,15 @@ class MediaDescriptor(Loggable):
             return False
 
         if not self.can_play_reverse() and scenario.does_reverse_playback():
+            return False
+
+        if not self.is_live() and scenario.needs_live_content():
+            self.debug("Do not run %s as %s is not a live content",
+                       scenario, self.get_uri())
+            return False
+
+        if self.is_live() and not scenario.compatible_with_live_content():
+            self.debug("Do not run %s as %s is a live content", scenario, self.get_uri())
             return False
 
         if self.get_duration() and self.get_duration() / GST_SECOND < scenario.get_min_media_duration():
@@ -2037,6 +2064,9 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
     def is_seekable(self):
         return self.media_xml.attrib["seekable"].lower() == "true"
+
+    def is_live(self):
+        return self.media_xml.get("live", "false").lower() == "true"
 
     def can_play_reverse(self):
         return True
