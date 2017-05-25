@@ -508,11 +508,17 @@ gst_gl_framebuffer_get_effective_dimensions (GstGLFramebuffer * fb,
  * Since: 1.10
  */
 gboolean
-gst_gl_context_check_framebuffer_status (GstGLContext * context)
+gst_gl_context_check_framebuffer_status (GstGLContext * context, GLenum fbo_target)
 {
   g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
 
-  switch (context->gl_vtable->CheckFramebufferStatus (GL_FRAMEBUFFER)) {
+  if (fbo_target != GL_FRAMEBUFFER && fbo_target != GL_READ_FRAMEBUFFER
+      && fbo_target != GL_DRAW_FRAMEBUFFER) {
+    GST_ERROR_OBJECT (context, "fbo target is invalid");
+    return FALSE;
+  }
+
+  switch (context->gl_vtable->CheckFramebufferStatus (fbo_target)) {
     case GL_FRAMEBUFFER_COMPLETE:
       return TRUE;
       break;

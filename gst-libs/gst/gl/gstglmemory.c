@@ -373,7 +373,7 @@ gst_gl_memory_read_pixels (GstGLMemory * gl_mem, gpointer read_pointer)
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       gst_gl_texture_target_to_gl (gl_mem->tex_target), gl_mem->tex_id, 0);
 
-  if (!gst_gl_context_check_framebuffer_status (context)) {
+  if (!gst_gl_context_check_framebuffer_status (context, GL_FRAMEBUFFER)) {
     GST_CAT_WARNING (GST_CAT_GL_MEMORY,
         "Could not create framebuffer to read pixels for memory %p", gl_mem);
     gl->DeleteFramebuffers (1, &fbo);
@@ -682,7 +682,7 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
     gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         gst_gl_texture_target_to_gl (src->tex_target), src_tex_id, 0);
 
-    if (!gst_gl_context_check_framebuffer_status (src->mem.context))
+    if (!gst_gl_context_check_framebuffer_status (src->mem.context, GL_FRAMEBUFFER))
       goto fbo_error;
 
     gl->BindTexture (out_tex_target, tex_id);
@@ -711,7 +711,7 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
     gl->FramebufferTexture2D (GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         gst_gl_texture_target_to_gl (src->tex_target), src_tex_id, 0);
 
-    if (!gst_gl_context_check_framebuffer_status (src->mem.context))
+    if (!gst_gl_context_check_framebuffer_status (src->mem.context, GL_READ_FRAMEBUFFER))
       goto fbo_error;
 
     gl->BindFramebuffer (GL_DRAW_FRAMEBUFFER, fbo[1]);
@@ -719,7 +719,7 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
     gl->FramebufferTexture2D (GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         gst_gl_texture_target_to_gl (src->tex_target), tex_id, 0);
 
-    if (!gst_gl_context_check_framebuffer_status (src->mem.context))
+    if (!gst_gl_context_check_framebuffer_status (src->mem.context, GL_DRAW_FRAMEBUFFER))
       goto fbo_error;
 
     gl->BindTexture (out_tex_target, tex_id);
