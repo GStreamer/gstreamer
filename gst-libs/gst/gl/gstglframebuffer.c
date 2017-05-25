@@ -65,6 +65,13 @@
 #define GL_DEPTH_STENCIL_ATTACHMENT 0x821A
 #endif
 
+#ifndef GL_READ_FRAMEBUFFER
+#define GL_READ_FRAMEBUFFER 0x8CA8
+#endif
+#ifndef GL_DRAW_FRAMEBUFFER
+#define GL_DRAW_FRAMEBUFFER 0x8CA9
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_gl_framebuffer_debug);
 #define GST_CAT_DEFAULT gst_gl_framebuffer_debug
 
