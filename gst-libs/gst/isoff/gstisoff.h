@@ -193,4 +193,3 @@ GstIsoffParserResult gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, G
 G_END_DECLS
 
 #endif /* __GST_ISOFF_H__ */
-

@@ -26,11 +26,20 @@
 #include <gst/base/gstbytereader.h>
 
 #include <string.h>
-#include "gstdash_debug.h"
 
-#define GST_CAT_DEFAULT gst_dash_demux_debug
+GST_DEBUG_CATEGORY (gst_isoff_debug);
+#define GST_CAT_DEFAULT gst_isoff_debug
 
-/* gst_isoff_parse_box:
+static gboolean initialized = FALSE;
+
+#define INITIALIZE_DEBUG_CATEGORY \
+  if (!initialized) { \
+  GST_DEBUG_CATEGORY_INIT (gst_isoff_debug, "isoff", 0, \
+      "ISO File Format parsing library"); \
+    initialized = TRUE; \
+  }
+
+/* gst_isoff_parse_box_header:
  * @reader:
  * @type: type that was found at the current position
  * @extended_type: (allow-none): extended type if type=='uuid'
@@ -49,6 +58,7 @@ gst_isoff_parse_box_header (GstByteReader * reader, guint32 * type,
   guint header_start_offset;
   guint32 size_field;
 
+  INITIALIZE_DEBUG_CATEGORY;
   header_start_offset = gst_byte_reader_get_pos (reader);
 
   if (gst_byte_reader_get_remaining (reader) < 8)
@@ -288,6 +298,8 @@ gst_isoff_moof_box_parse (GstByteReader * reader)
   GstMoofBox *moof;
   gboolean had_mfhd = FALSE;
 
+
+  INITIALIZE_DEBUG_CATEGORY;
   moof = g_new0 (GstMoofBox, 1);
   moof->traf = g_array_new (FALSE, FALSE, sizeof (GstTrafBox));
   g_array_set_clear_func (moof->traf,
@@ -390,6 +402,7 @@ gst_isoff_sidx_parser_parse (GstSidxParser * parser,
   GstIsoffParserResult res = GST_ISOFF_PARSER_OK;
   gsize remaining;
 
+  INITIALIZE_DEBUG_CATEGORY;
   switch (parser->status) {
     case GST_ISOFF_SIDX_PARSER_INIT:
       /* Try again once we have enough data for the FullBox header */
@@ -492,6 +505,7 @@ gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buffer,
   GstMapInfo info;
   guint32 fourcc;
 
+  INITIALIZE_DEBUG_CATEGORY;
   if (!gst_buffer_map (buffer, &info, GST_MAP_READ)) {
     *consumed = 0;
     return GST_ISOFF_PARSER_ERROR;

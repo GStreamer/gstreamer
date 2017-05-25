@@ -1,14 +1,10 @@
-#include "../../ext/dash/gstisoff.c"
-#undef GST_CAT_DEFAULT
-
 #include <gst/check/gstcheck.h>
 #include <gst/base/base.h>
+#include <gst/isoff/gstisoff.h>
 
-GST_DEBUG_CATEGORY (gst_dash_demux_debug);
+#include "isoff.h"
 
-#include "dash_isoff.h"
-
-GST_START_TEST (dash_isoff_box_header_minimal)
+GST_START_TEST (isoff_box_header_minimal)
 {
   /* INDENT-OFF */
   static const guint8 data[] = {
@@ -31,7 +27,7 @@ GST_START_TEST (dash_isoff_box_header_minimal)
 
 GST_END_TEST;
 
-GST_START_TEST (dash_isoff_box_header_long_size)
+GST_START_TEST (isoff_box_header_long_size)
 {
   /* INDENT-OFF */
   static const guint8 data[] = {
@@ -55,7 +51,7 @@ GST_START_TEST (dash_isoff_box_header_long_size)
 
 GST_END_TEST;
 
-GST_START_TEST (dash_isoff_box_header_uuid_type)
+GST_START_TEST (isoff_box_header_uuid_type)
 {
   /* INDENT-OFF */
   static const guint8 data[] = {
@@ -83,7 +79,7 @@ GST_START_TEST (dash_isoff_box_header_uuid_type)
 
 GST_END_TEST;
 
-GST_START_TEST (dash_isoff_box_header_uuid_type_long_size)
+GST_START_TEST (isoff_box_header_uuid_type_long_size)
 {
   /* INDENT-OFF */
   static const guint8 data[] = {
@@ -112,7 +108,7 @@ GST_START_TEST (dash_isoff_box_header_uuid_type_long_size)
 
 GST_END_TEST;
 
-GST_START_TEST (dash_isoff_moof_parse)
+GST_START_TEST (isoff_moof_parse)
 {
   /* INDENT-ON */
   GstByteReader reader = GST_BYTE_READER_INIT (moof1, sizeof (moof1));
@@ -187,22 +183,19 @@ GST_END_TEST;
 static Suite *
 dash_isoff_suite (void)
 {
-  Suite *s = suite_create ("dash-isoff");
+  Suite *s = suite_create ("isoff");
   TCase *tc_isoff_box = tcase_create ("isoff-box-parsing");
   TCase *tc_moof = tcase_create ("moof");
 
-  GST_DEBUG_CATEGORY_INIT (gst_dash_demux_debug, "gst_dash_demux_debug", 0,
-      "mpeg dash tests");
-
-  tcase_add_test (tc_isoff_box, dash_isoff_box_header_minimal);
-  tcase_add_test (tc_isoff_box, dash_isoff_box_header_long_size);
-  tcase_add_test (tc_isoff_box, dash_isoff_box_header_uuid_type);
-  tcase_add_test (tc_isoff_box, dash_isoff_box_header_uuid_type_long_size);
+  tcase_add_test (tc_isoff_box, isoff_box_header_minimal);
+  tcase_add_test (tc_isoff_box, isoff_box_header_long_size);
+  tcase_add_test (tc_isoff_box, isoff_box_header_uuid_type);
+  tcase_add_test (tc_isoff_box, isoff_box_header_uuid_type_long_size);
 
   suite_add_tcase (s, tc_isoff_box);
 
 
-  tcase_add_test (tc_moof, dash_isoff_moof_parse);
+  tcase_add_test (tc_moof, isoff_moof_parse);
   suite_add_tcase (s, tc_moof);
 
   return s;

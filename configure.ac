@@ -3656,6 +3656,7 @@ gst-libs/gst/gl/x11/Makefile
 gst-libs/gst/gl/viv-fb/Makefile
 gst-libs/gst/insertbin/Makefile
 gst-libs/gst/interfaces/Makefile
+gst-libs/gst/isoff/Makefile
 gst-libs/gst/codecparsers/Makefile
 gst-libs/gst/mpegts/Makefile
 gst-libs/gst/uridownloader/Makefile
