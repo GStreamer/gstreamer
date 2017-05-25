@@ -1714,6 +1714,8 @@ class Scenario(object):
         except AttributeError:
             return 0
 
+    def __repr__(self):
+        return "<Scenario %s>" % self.name
 
 class ScenarioManager(Loggable):
     _instance = None
