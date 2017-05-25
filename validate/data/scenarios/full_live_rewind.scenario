@@ -1,0 +1,9 @@
+# Rewinds a live source completely
+# The goal is to check for proper EOS handling when going back to the
+# beginning of the live cache
+description, seek=true, live_content_required=true, duration=14.0
+# Wait for 5s (can't use playback-time since we don't know the position(live))
+wait, duration=5.0
+# Seek back all the way as fast as possible (from the end, i.e. 'now')
+seek, name=End-seek, rate=-16.0, stop=0.0, stop_type=end, start=0.0, start_type=set, flags=flush+trickmode-key-units+trickmode-no-audio
+#eos

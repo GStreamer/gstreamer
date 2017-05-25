@@ -1,0 +1,17 @@
+#FIXME : Rename to seek_end_live
+description, seek=true, live_content_required=true, duration=14.0
+# Wait for 5s (can't use playback-time since we don't know the position(live))
+wait, duration=5.0
+# Seek back 1min (from the end, i.e. 'now')
+seek, name=End-seek, rate=1.0, start=-60.0, start_type=end, flags=flush
+wait, duration=5.0
+# go back to live !
+seek, name=End-seek, rate=1.0, start=0.0, start_type=end, flags=flush
+wait, duration=5.0
+# Now seek backwards from the end
+seek, name=End-seek, rate=-1.0, start=0.0, start_type=none, stop=0.0, stop_type=end, flags=flush
+wait, duration=5.0
+# Try a simple seek (without setting the stop)
+seek, name=End-seek, rate=1.0, start_type=end, start=0.0, flags=flush
+wait, duration=5.0
+stop
