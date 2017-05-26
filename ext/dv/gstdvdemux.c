@@ -354,7 +354,7 @@ gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template,
     dvdemux->tag_event = gst_dvdemux_create_global_tag_event (dvdemux);
   }
 
-  if (pad && dvdemux->tag_event) {
+  if (dvdemux->tag_event) {
     gst_pad_push_event (pad, gst_event_ref (dvdemux->tag_event));
   }
 
