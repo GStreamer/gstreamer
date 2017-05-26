@@ -1023,7 +1023,6 @@ gst_nonstream_audio_decoder_src_query (GstPad * pad, GstObject * parent,
   gboolean res = FALSE;
   GstNonstreamAudioDecoder *dec;
   GstNonstreamAudioDecoderClass *klass;
-  GstFormat format;
 
   dec = GST_NONSTREAM_AUDIO_DECODER (parent);
   klass = GST_NONSTREAM_AUDIO_DECODER_GET_CLASS (dec);
@@ -1031,6 +1030,7 @@ gst_nonstream_audio_decoder_src_query (GstPad * pad, GstObject * parent,
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
     {
+      GstFormat format;
       GST_TRACE_OBJECT (parent, "duration query");
 
       if (!(dec->loaded_mode)) {
@@ -1064,6 +1064,7 @@ gst_nonstream_audio_decoder_src_query (GstPad * pad, GstObject * parent,
 
     case GST_QUERY_POSITION:
     {
+      GstFormat format;
       if (!(dec->loaded_mode)) {
         GST_DEBUG_OBJECT (parent,
             "cannot respond to position query: nothing is loaded yet");
@@ -1100,13 +1101,10 @@ gst_nonstream_audio_decoder_src_query (GstPad * pad, GstObject * parent,
 
     case GST_QUERY_SEEKING:
     {
-      gboolean b;
       GstFormat fmt;
       GstClockTime duration;
 
-      b = dec->loaded_mode;
-
-      if (!b) {
+      if (!dec->loaded_mode) {
         GST_DEBUG_OBJECT (parent,
             "cannot respond to seeking query: nothing is loaded yet");
         break;
@@ -1132,7 +1130,7 @@ gst_nonstream_audio_decoder_src_query (GstPad * pad, GstObject * parent,
       } else {
         GST_DEBUG_OBJECT (parent,
             "seeking query received with unsupported format %s -> can seek: no",
-            gst_format_get_name (format));
+            gst_format_get_name (fmt));
         gst_query_set_seeking (query, fmt, FALSE, 0, -1);
         res = TRUE;
       }
