@@ -1886,7 +1886,7 @@ ttml_join_region_tree_inline_elements (GNode * tree)
       n2 = n1->next;
     } else {
       n1 = n2;
-      n2 = n2 ? n2->next : NULL;
+      n2 = n2->next;
     }
   }
 }
