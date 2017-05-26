@@ -800,17 +800,31 @@ dpb_find_nearest_prev_poc (GstVaapiDecoderH264 * decoder,
 
 /* Finds the picture with the lowest POC that needs to be output */
 static gint
-dpb_find_lowest_poc (GstVaapiDecoderH264 * decoder,
-    GstVaapiPictureH264 * picture, GstVaapiPictureH264 ** found_picture_ptr)
+dpb_find_lowest_poc_for_output (GstVaapiDecoderH264 * decoder,
+    GstVaapiPictureH264 * picture, GstVaapiPictureH264 ** found_picture_ptr,
+    gboolean * can_be_output)
 {
   GstVaapiDecoderH264Private *const priv = &decoder->priv;
   GstVaapiPictureH264 *found_picture = NULL;
-  guint i, j, found_index = -1;
+  guint i, j, found_index = -1, found_poc = -1;
+  gboolean is_first = TRUE;
+  gint last_output_poc = -1;
 
   for (i = 0; i < priv->dpb_count; i++) {
     GstVaapiFrameStore *const fs = priv->dpb[i];
-    if (!fs->output_needed)
+    if (!fs->output_needed) {
+      /* find the maximum poc of any previously output frames that are
+       * still held in the DPB. */
+      if (can_be_output != NULL) {
+        for (j = 0; j < fs->num_buffers; j++) {
+          if (is_first || fs->buffers[j]->base.poc > last_output_poc) {
+            is_first = FALSE;
+            last_output_poc = fs->buffers[j]->base.poc;
+          }
+        }
+      }
       continue;
+    }
     if (picture && picture->base.view_id != fs->view_id)
       continue;
     for (j = 0; j < fs->num_buffers; j++) {
@@ -820,7 +834,27 @@ dpb_find_lowest_poc (GstVaapiDecoderH264 * decoder,
       if (!found_picture || found_picture->base.poc > pic->base.poc ||
           (found_picture->base.poc == pic->base.poc &&
               found_picture->base.voc > pic->base.voc))
-        found_picture = pic, found_index = i;
+        found_picture = pic, found_index = i, found_poc = pic->base.poc;
+    }
+  }
+
+  if (can_be_output != NULL) {
+    /* found_picture can be output if it's the first frame in the DPB,
+     * or if there's no gap between it and the most recently output
+     * frame. */
+    *can_be_output = FALSE;
+    if (found_picture &&
+        gst_vaapi_frame_store_is_complete (priv->dpb[found_index])) {
+      if (is_first) {
+        *can_be_output = TRUE;
+      } else if (((int) (found_poc)) > ((int) (last_output_poc))) {
+        *can_be_output = (found_poc - last_output_poc) <= 2;
+      } else {
+        /* A frame with a higher poc has already been sent.  No choice
+         * now but to drop this frame */
+        GST_WARNING ("dropping out-of-sequence frame");
+        priv->dpb[found_index]->output_needed = FALSE;
+      }
     }
   }
 
@@ -828,6 +862,16 @@ dpb_find_lowest_poc (GstVaapiDecoderH264 * decoder,
     *found_picture_ptr = found_picture;
   return found_index;
 }
+
+/* Finds the picture with the lowest POC that needs to be output */
+static gint
+dpb_find_lowest_poc (GstVaapiDecoderH264 * decoder,
+    GstVaapiPictureH264 * picture, GstVaapiPictureH264 ** found_picture_ptr)
+{
+  return dpb_find_lowest_poc_for_output (decoder, picture, found_picture_ptr,
+      NULL);
+}
+
 
 /* Finds the picture with the lowest VOC that needs to be output */
 static gint
@@ -906,6 +950,22 @@ dpb_bump (GstVaapiDecoderH264 * decoder, GstVaapiPictureH264 * picture)
   if (picture && picture->base.poc != found_picture->base.poc)
     dpb_output_other_views (decoder, found_picture, G_MAXUINT32);
   return success;
+}
+
+static void
+dpb_output_ready_frames (GstVaapiDecoderH264 * decoder)
+{
+  GstVaapiDecoderH264Private *const priv = &decoder->priv;
+  gboolean can_output = FALSE;
+  gint found_index;
+
+  while (TRUE) {
+    found_index = dpb_find_lowest_poc_for_output (decoder,
+        priv->current_picture, NULL, &can_output);
+    if (found_index < 0 || !can_output)
+      break;
+    dpb_output (decoder, priv->dpb[found_index]);
+  }
 }
 
 static void
@@ -1662,6 +1722,9 @@ decode_current_picture (GstVaapiDecoderH264 * decoder)
     goto error;
   if (!dpb_add (decoder, picture))
     goto error;
+
+  if (priv->force_low_latency)
+    dpb_output_ready_frames (decoder);
   gst_vaapi_picture_replace (&priv->current_picture, NULL);
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
