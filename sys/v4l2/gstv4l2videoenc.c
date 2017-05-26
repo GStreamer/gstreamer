@@ -305,6 +305,7 @@ gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstCaps *outcaps;
+  GstVideoCodecState *output;
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
@@ -323,7 +324,8 @@ gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
 
   outcaps = gst_pad_get_pad_template_caps (encoder->srcpad);
   outcaps = gst_caps_make_writable (outcaps);
-  gst_video_encoder_set_output_state (encoder, outcaps, state);
+  output = gst_video_encoder_set_output_state (encoder, outcaps, state);
+  gst_video_codec_state_unref (output);
 
   if (!gst_video_encoder_negotiate (encoder))
     return FALSE;
