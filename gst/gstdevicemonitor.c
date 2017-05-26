@@ -362,13 +362,13 @@ gst_device_monitor_get_devices (GstDeviceMonitor * monitor)
   if (monitor->priv->filters->len == 0) {
     GST_OBJECT_UNLOCK (monitor);
     GST_WARNING_OBJECT (monitor, "No filters have been set");
-    return FALSE;
+    return NULL;
   }
 
   if (monitor->priv->providers->len == 0) {
     GST_OBJECT_UNLOCK (monitor);
     GST_WARNING_OBJECT (monitor, "No providers match the current filters");
-    return FALSE;
+    return NULL;
   }
 
 again:
