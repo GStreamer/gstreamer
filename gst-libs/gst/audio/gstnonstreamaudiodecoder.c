@@ -593,9 +593,11 @@ gst_nonstream_audio_decoder_set_property (GObject * object, guint prop_id,
               proceed = FALSE;
               GST_WARNING_OBJECT (dec, "switching to new output mode failed");
             }
-          } else
+          } else {
             GST_DEBUG_OBJECT (dec,
                 "cannot call set_output_mode, since it is NULL");
+            proceed = FALSE;
+          }
 
           if (proceed) {
             gst_nonstream_audio_decoder_output_new_segment (dec, cur_position);
@@ -639,9 +641,11 @@ gst_nonstream_audio_decoder_set_property (GObject * object, guint prop_id,
               proceed = FALSE;
               GST_WARNING_OBJECT (dec, "switching to new subsong mode failed");
             }
-          } else
+          } else {
             GST_DEBUG_OBJECT (dec,
                 "cannot call set_subsong_mode, since it is NULL");
+            proceed = FALSE;
+          }
 
           if (proceed) {
             if (GST_CLOCK_TIME_IS_VALID (cur_position))
