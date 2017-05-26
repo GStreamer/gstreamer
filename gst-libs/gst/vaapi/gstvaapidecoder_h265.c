@@ -615,7 +615,7 @@ get_max_dec_frame_buffering (GstH265SPS * sps)
     max_dec_frame_buffering = 16;
   }
 
-  /* Fixme: Add limit check based on Annex A */
+  /* FIXME: Add limit check based on Annex A */
 
   /* Assuming HighestTid as sps_max_sub_layers_minus1 */
   return MAX (1,
@@ -1134,7 +1134,7 @@ ensure_context (GstVaapiDecoderH265 * decoder, GstH265SPS * sps)
     priv->pic_height_in_luma_samples = sps->pic_height_in_luma_samples;
   }
 
-  priv->progressive_sequence = 1;       /*Fixme */
+  priv->progressive_sequence = 1;       /* FIXME */
   gst_vaapi_decoder_set_interlaced (base_decoder, !priv->progressive_sequence);
   gst_vaapi_decoder_set_pixel_aspect_ratio (base_decoder,
       sps->vui_params.par_n, sps->vui_params.par_d);
@@ -1297,7 +1297,7 @@ decode_current_picture (GstVaapiDecoderH265 * decoder)
   }
 
   priv->decoder_state = 0;
-  /*Fixme: Use SEI header values */
+  /* FIXME: Use SEI header values */
   priv->pic_structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
 
   if (!picture)
@@ -1465,8 +1465,8 @@ decode_sps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
         sps->max_latency_increase_plus1[sps->max_sub_layers_minus1] - 1;
 
   /* Calculate WpOffsetHalfRangeC: (7-34)
-   * Fixme: We don't have parser API for sps_range_extension, so assuming
-   * high_precision_offsets_enabled_flag as zero */
+   * FIXME: We don't have parser API for sps_range_extension, so
+   * assuming high_precision_offsets_enabled_flag as zero */
   bitdepthC = sps->bit_depth_chroma_minus8 + 8;
   priv->WpOffsetHalfRangeC =
       1 << (high_precision_offsets_enabled_flag ? (bitdepthC - 1) : 7);
@@ -1698,7 +1698,7 @@ init_picture (GstVaapiDecoderH265 * decoder,
       pi->nalu.type <= GST_H265_NAL_SLICE_CRA_NUT)
     picture->RapPicFlag = TRUE;
 
-  /*Fixme: Use SEI header values */
+  /* FIXME: Use SEI header values */
   base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
   picture->structure = base_picture->structure;
 
@@ -1917,7 +1917,7 @@ fill_picture (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture)
   pic_param->pps_tc_offset_div2 = pps->tc_offset_div2;
   COPY_FIELD (pps, num_extra_slice_header_bits);
 
-  /*Fixme: Set correct value as mentioned in va_dec_hevc.h */
+  /* FIXME: Set correct value as mentioned in va_dec_hevc.h */
   pic_param->st_rps_bits = 0;
   return TRUE;
 }
@@ -2306,7 +2306,7 @@ fill_pred_weight_table (GstVaapiDecoderH265 * decoder,
   if ((pps->weighted_pred_flag && GST_H265_IS_P_SLICE (slice_hdr)) ||
       (pps->weighted_bipred_flag && GST_H265_IS_B_SLICE (slice_hdr))) {
 
-    /* Fixme: This should be done in parser apis */
+    /* FIXME: This should be done in parser apis */
     memset (slice_param->delta_luma_weight_l0, 0,
         sizeof (slice_param->delta_luma_weight_l0));
     memset (slice_param->luma_offset_l0, 0,

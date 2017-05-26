@@ -152,7 +152,7 @@ set_context_info (GstVaapiEncoder * base_encoder)
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   const guint DEFAULT_SURFACES_COUNT = 2;
 
-  /*Fixme:  Maximum sizes for common headers (in bytes) */
+  /* FIXME: Maximum sizes for common headers (in bytes) */
 
   if (!ensure_hw_profile (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;

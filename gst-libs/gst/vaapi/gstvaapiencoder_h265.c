@@ -671,7 +671,7 @@ bs_write_slice (GstBitWriter * bs,
   /* first_slice_segment_in_pic_flag */
   WRITE_UINT32 (bs, encoder->first_slice_segment_in_pic_flag, 1);
 
-  /* Fixme: For all IRAP pics */
+  /* FIXME: For all IRAP pics */
   /* no_output_of_prior_pics_flag */
   if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture))
     WRITE_UINT32 (bs, no_output_of_prior_pics_flag, 1);
@@ -957,7 +957,8 @@ ensure_tier (GstVaapiEncoderH265 * encoder)
 {
 
   encoder->tier = GST_VAAPI_TIER_H265_MAIN;
-  /*Fixme: Derive proper tier based on upstream caps or limits, coding tools etc */
+  /* FIXME: Derive proper tier based on upstream caps or limits, coding
+   * tools etc */
 
   return TRUE;
 }
@@ -976,8 +977,8 @@ ensure_level (GstVaapiEncoderH265 * encoder)
     const GstVaapiH265LevelLimits *const limits = &limits_table[i];
     if (PicSizeInSamplesY <= limits->MaxLumaPs)
       break;
-    /* Fixme: Add more constraint checking:tier (extracted from caps), cpb size,
-     * bitrate, num_tile_columns and num_tile_rows */
+    /* FIXME: Add more constraint checking:tier (extracted from caps),
+     * cpb size, bitrate, num_tile_columns and num_tile_rows */
   }
   if (i == num_limits)
     goto error_unsupported_level;
@@ -1448,7 +1449,9 @@ fill_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncSequence * sequence)
 
   seq_param->general_profile_idc = encoder->profile_idc;
   seq_param->general_level_idc = encoder->level_idc;
-  seq_param->general_tier_flag = 0;     /* Fixme: use the tier flag extracted from upstream caps or calcuted one */
+  seq_param->general_tier_flag = 0;     /* FIXME: use the tier flag
+                                         * extracted from upstream
+                                         * caps or calcuted one */
 
   seq_param->intra_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder);
   seq_param->intra_idr_period = encoder->idr_period;
@@ -1881,9 +1884,9 @@ ensure_bitrate (GstVaapiEncoderH265 * encoder)
   switch (GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
     case GST_VAAPI_RATECONTROL_CBR:
       if (!base_encoder->bitrate) {
-        /* Fixme: Provide better estimation */
+        /* FIXME: Provide better estimation */
         /* Using a 1/6 compression ratio */
-        /* 12 bits per pixel fro yuv420 */
+        /* 12 bits per pixel for YUV420 */
         guint64 factor = encoder->luma_width * encoder->luma_height * 12 / 6;
         base_encoder->bitrate =
             gst_util_uint64_scale (factor, GST_VAAPI_ENCODER_FPS_N (encoder),
@@ -1951,7 +1954,7 @@ reset_properties (GstVaapiEncoderH265 * encoder)
   if (encoder->idr_period > MAX_IDR_PERIOD)
     encoder->idr_period = MAX_IDR_PERIOD;
 
-  /*Fixme: provide user control for idr_period ?? */
+  /* FIXME: provide user control for idr_period ?? */
   encoder->idr_period = base_encoder->keyframe_period * 2;
 
   if (encoder->min_qp > encoder->init_qp ||
@@ -2318,8 +2321,9 @@ set_context_info (GstVaapiEncoder * base_encoder)
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   const guint DEFAULT_SURFACES_COUNT = 3;
 
-  /* Fixme: Using only a rough approximation for bitstream headers..
-   * Fixme: Not taken into account: ScalingList, RefPicListModification, PredWeightTable */
+  /* FIXME: Using only a rough approximation for bitstream headers.
+   * Not taken into account: ScalingList, RefPicListModification,
+   * PredWeightTable */
   /* Maximum sizes for common headers (in bits) */
   enum
   {
@@ -2579,7 +2583,7 @@ gst_vaapi_encoder_h265_get_default_properties (void)
           "Minimum QP", "Minimum quantizer value", 1, 51, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /* Fixme: there seems to be issues with multi-slice encoding */
+  /* FIXME: there seems to be issues with multi-slice encoding */
   /**
    * GstVaapiEncoderH265:num-slices:
    *

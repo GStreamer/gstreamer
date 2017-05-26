@@ -573,7 +573,7 @@ decode_picture (GstVaapiDecoderMpeg4 * decoder, const guint8 * buf,
    *            |                                              |
    *  nearest I/P/S in the past with vop_coded ==1             |
    *                         nearest I/P/S in the future with any vop_coded
-   * fixme, it said that B frame shouldn't use backward reference frame
+   * FIXME: it said that B frame shouldn't use backward reference frame
    *        when backward reference frame coded is 0
    */
   if (priv->is_svh) {
