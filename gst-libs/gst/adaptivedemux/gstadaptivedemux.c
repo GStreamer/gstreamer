@@ -1447,9 +1447,9 @@ gst_adaptive_demux_stream_in_live_seek_range (GstAdaptiveDemux * demux,
   gint64 range_start, range_stop;
   if (gst_adaptive_demux_get_live_seek_range (demux, &range_start, &range_stop)) {
     GST_LOG_OBJECT (stream->pad,
-        "stream position %" GST_STIME_FORMAT "  live seek range %"
+        "stream position %" GST_TIME_FORMAT "  live seek range %"
         GST_STIME_FORMAT " - %" GST_STIME_FORMAT,
-        GST_STIME_ARGS (stream->segment.position), GST_STIME_ARGS (range_start),
+        GST_TIME_ARGS (stream->segment.position), GST_STIME_ARGS (range_start),
         GST_STIME_ARGS (range_stop));
     return (stream->segment.position >= range_start
         && stream->segment.position <= range_stop);
