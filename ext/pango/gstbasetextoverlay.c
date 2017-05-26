@@ -1772,9 +1772,13 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
         break;
       case GST_BASE_TEXT_OVERLAY_SCALE_MODE_DISPLAY:
         /* (width * par_n) / (height * par_d) = (display_w / display_h) */
-        gst_util_fraction_multiply (overlay->window_width,
-            overlay->window_height, overlay->height, overlay->width,
-            &par_n, &par_d);
+        if (!gst_util_fraction_multiply (overlay->window_width,
+                overlay->window_height, overlay->height, overlay->width,
+                &par_n, &par_d)) {
+          GST_WARNING_OBJECT (overlay,
+              "Can't figure out display ratio, defaulting to 1:1");
+          par_n = par_d = 1;
+        }
         break;
       case GST_BASE_TEXT_OVERLAY_SCALE_MODE_USER:
         par_n = overlay->scale_par_n;
