@@ -1,6 +1,6 @@
 # Dependencies
 
-> Why are there so many dependencies ?
+## Why are there so many dependencies ?
 
 Making a full-featured media framework is a huge undertaking in
 itself. By using the work done by others, we both reduce the amount of
@@ -10,14 +10,14 @@ be stupid not to reuse the code others have written.
 
 However, do realize that in no way you are forced to have all
 dependencies installed. None of the core developers has all of them
-installed. GStreamer has only a few obligate dependencies : GLib 2.0,
+installed. GStreamer has only a few mandatory dependencies : GLib 2.0,
 liborc, and very common stuff like glibc, a C compiler, and so on. All
-of the other dependencies are optional.
+other dependencies are optional.
 
-So, in closing, let's rephrase the question to “Why are you giving me so
+In closing, let's rephrase the question to “Why are you giving me so
 many choices and such a rich environment ?”
 
-> Is GStreamer X11 independent? Can it be used headless?
+## Is GStreamer X11 independent? Can it be used headless?
 
 Yes, we have no hard dependency on X11 or any other windowing system in
 any of our modules. There are many GStreamer applications that run fine
@@ -26,17 +26,17 @@ for example streaming servers, transcoding applications, or audio
 applications that don't output any video. Other applications output
 video to a framebuffer, custom-made hardware sinks, or via wayland.
 
-> What is GStreamer's position on efforts such as LADSPA or LV2?
+## What is GStreamer's position on efforts such as LADSPA or LV2?
 
 GStreamer actively supports such efforts, and in the case of [LADSPA][ladspa]
 or [LV2][lv2] we already have wrapper plugins. These wrapper plug-ins detect
-the LADSPA/LV2 plugins present on your system at run time and make them
+the LADSPA/LV2 plugins present on your system at run-time and make them
 available as GStreamer elements.
 
 [ladspa]: https://en.wikipedia.org/wiki/LADSPA
 [lv2]: http://lv2plug.in/
 
-> Does GStreamer support MIDI ?
+## Does GStreamer support MIDI ?
 
 There is some rudimentary MIDI support in GStreamer, but it's not complete yet.
 
@@ -54,7 +54,7 @@ MIDI playback is provided by plugins such as `midiparse`, `fluiddec`,
 
 [alsamidisrc]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/gst-plugins-base-plugins-alsamidisrc.html
 
-> Does GStreamer depend on GNOME or GTK+ ?
+## Does GStreamer depend on GNOME or GTK+ ?
 
 No, it's just that many of the applications developed for GStreamer happen to
 be GNOME or GTK+ applications, including some of our sample applications. There
