@@ -102,6 +102,10 @@ if build_gstgl and gstgl_dep.found()
     optional_deps += bcm_host_dep
   endif
 
+  if egl_dep.found() and cc.has_header('libdrm/drm_fourcc.h', required : false)
+    optional_deps += gstallocators_dep
+  endif
+
   gstopengl = library('gstopengl',
     opengl_sources,
     c_args : gst_plugins_bad_args + opengl_defines,
