@@ -1,6 +1,6 @@
 # Developing applications with GStreamer
 
-> How do I compile programs that use GStreamer ?
+## How do I compile programs that use GStreamer ?
 
 <!-- FIXME: update for windows, macOS, and meson build, get rid of libtool things -->
 
@@ -14,15 +14,17 @@ familiar with using it already then you're basically set.
 
 If you're not familiar with `pkg-config` to compile and link a small
 one-file program, pass the `--cflags` and `--libs` arguments to `pkg-config`.
-For
-    example:
+For example:
 
-    $ libtool --mode=link gcc `pkg-config --cflags --libs gstreamer-1.0` -o myprog myprog.c
-
+```
+$ libtool --mode=link gcc `pkg-config --cflags --libs gstreamer-1.0` -o myprog myprog.c
+```
 would be sufficient for a gstreamer-only program. If (for example) your
 application also used GTK+ 3.0, you could use
 
-    $ libtool --mode=link gcc `pkg-config --cflags --libs gstreamer-1.0 gtk+-3.0` -o myprog myprog.c
+```
+$ libtool --mode=link gcc `pkg-config --cflags --libs gstreamer-1.0 gtk+-3.0` -o myprog myprog.c
+```
 
 Those are back-ticks (on the same key with the tilde on US keyboards),
 not single quotes.
@@ -31,7 +33,7 @@ For bigger projects, you should integrate pkg-config use in your
 Makefile, or integrate with autoconf using the pkg.m4 macro (providing
 `PKG_CONFIG_CHECK`).
 
-> How do I develop against an uninstalled GStreamer copy ?
+## How do I develop against an uninstalled GStreamer copy ?
 
 It is possible to develop and compile against an uninstalled copy
 of gstreamer and gst-plugins-\* (for example, against git checkouts).
@@ -69,7 +71,7 @@ environment is used.
 [gst-uninstalled]: http://cgit.freedesktop.org/gstreamer/gstreamer/tree/scripts/gst-uninstalled
 [create-uninstalled]: http://cgit.freedesktop.org/gstreamer/gstreamer/tree/scripts/create-uninstalled-setup.sh
 
-> How can I use GConf to get the system-wide defaults ?
+## How can I use GConf to get the system-wide defaults ?
 
 For GNOME applications it's a good idea to use GConf to find the
 default ways of outputting audio and video. You can do this by using the
@@ -78,14 +80,16 @@ output. They will take care of everything GConf-related for you and
 automatically use the outputs that the user configured. If you are using
 gconfaudiosink, your application should set the 'profile' property.
 
-> How do I debug these funny shell scripts that libtool makes ?
+## How do I debug these funny shell scripts that libtool makes ?
 
 When you link a program against uninstalled GStreamer using
 libtool, funny shell scripts are made to modify your shared object
 search path and then run your program. For instance, to debug
 gst-launch, try
 
-    libtool --mode=execute gdb /path/to/gst-launch
+```
+libtool --mode=execute gdb /path/to/gst-launch
+```
 
 If this does not work, you're probably using a broken version of
 libtool.
@@ -95,7 +99,7 @@ be used and this is not a problem. You can run `gdb`, `valgrind` or any
 debugging tools directly on the binaries Meson creates in the build
 directory.
 
-> Why is mail traffic so low on gstreamer-devel ?
+## Why is mail traffic so low on gstreamer-devel ?
 
 Our main arena for coordination and discussion are IRC and bugzilla, not
 mailing lists. Join us in [`#gstreamer`][irc-gstreamer] on irc.freenode.net.
@@ -106,7 +110,7 @@ mailing list is never a bad idea, however.
 [irc-gstreamer]: irc://irc.freenode.net/#gstreamer
 [webchat-gstreamer]: https://webchat.freenode.net
 
-> What kind of versioning scheme does GStreamer use ?
+## What kind of versioning scheme does GStreamer use ?
 
 For public releases, GStreamer uses a standard MAJOR.MINOR.MICRO
 version scheme. If the release consists of mostly bug fixes or
@@ -129,7 +133,7 @@ not supported. Additionally, if you didn't get this package or tarball
 from the GStreamer team, don't have high hopes on it doing whatever you
 want it to do.
 
-> What is the coding style for GStreamer code?
+## What is the coding style for GStreamer code?
 
 The core and almost all plugin modules are basically coded in
 K\&R with 2-space indenting. Just follow what's already there and you'll
@@ -142,19 +146,21 @@ course, the goal.
 
 Simply run your code (only the \*.c files, not the header files) through
 
-    indent \
-      --braces-on-if-line \
-      --case-brace-indentation0 \
-      --case-indentation2 \
-      --braces-after-struct-decl-line \
-      --line-length80 \
-      --no-tabs \
-      --cuddle-else \
-      --dont-line-up-parentheses \
-      --continuation-indentation4 \
-      --honour-newlines \
-      --tab-size8 \
-      --indent-level2
+```
+indent \
+  --braces-on-if-line \
+  --case-brace-indentation0 \
+  --case-indentation2 \
+  --braces-after-struct-decl-line \
+  --line-length80 \
+  --no-tabs \
+  --cuddle-else \
+  --dont-line-up-parentheses \
+  --continuation-indentation4 \
+  --honour-newlines \
+  --tab-size8 \
+  --indent-level2
+```
 
 before submitting a patch. (This is using GNU indent.) There is also a
 `gst-indent` script in the GStreamer core source tree in the tools
@@ -179,7 +185,9 @@ See [How to submit patches][submit-patches] for more details.
 
 [submit-patches]: contribute/index.md#how-to-submit-patches
 
-> I have translated one of the module .po files into a new language. How do I get it included?
+## How do I get my translations included?
+
+I have translated one of the module .po files into a new language. How do I get it included?
 
 GStreamer translations are uniformly managed through the
 [Translation Project](http://translationproject.org). There are some
