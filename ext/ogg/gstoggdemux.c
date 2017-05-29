@@ -791,8 +791,9 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
 
   if (pad->map.audio_clipping && (clip_start || clip_end)) {
     GST_DEBUG_OBJECT (pad,
-        "Adding audio clipping %" G_GUINT64_FORMAT " %" G_GUINT64_FORMAT,
-        clip_start, clip_end);
+        "Clipping %" G_GUINT64_FORMAT " %" G_GUINT64_FORMAT " (%"
+        G_GUINT64_FORMAT " / %" G_GUINT64_FORMAT ")", clip_start, clip_end,
+        clip_start + clip_end, duration);
     gst_buffer_add_audio_clipping_meta (buf, GST_FORMAT_DEFAULT, clip_start,
         clip_end);
   }
@@ -4244,7 +4245,8 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
     chain->segment_stop = GST_CLOCK_TIME_NONE;
   }
 
-  GST_INFO ("segment stop %" G_GUINT64_FORMAT, chain->segment_stop);
+  GST_INFO ("segment stop %" G_GUINT64_FORMAT ", for last granule %"
+      G_GUINT64_FORMAT, chain->segment_stop, last_granule);
 
   return GST_FLOW_OK;
 }

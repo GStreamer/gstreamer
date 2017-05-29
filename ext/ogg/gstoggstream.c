@@ -2033,10 +2033,7 @@ granulepos_to_granule_opus (GstOggStream * pad, gint64 granulepos)
   if (pad->first_granpos < 0 || granulepos < pad->first_granpos)
     pad->first_granpos = granulepos;
 
-  if (granulepos < -pad->granule_offset)
-    return 0;
-
-  return granulepos + pad->granule_offset;
+  return granulepos;
 }
 
 static gint64
