@@ -242,6 +242,9 @@ class GstCheckTestsManager(MesonTestsManager):
                               "to run with the leak tracer activated, if 'known-not-leaky'"
                               " is specified, the testsuite will automatically activate"
                               " leak tracers on tests known to be not leaky.")
+        arggroup.add_argument("--gst-check-leak-options",
+                            default=None,
+                            help="Leak tracer options")
 
     def get_child_env(self, testname, check_name=None):
         child_env = {}
@@ -250,7 +253,10 @@ class GstCheckTestsManager(MesonTestsManager):
 
         if self.options.gst_check_leak_trace_testnames:
             if re.findall(self.options.gst_check_leak_trace_testnames, testname):
-                tracers = set(os.environ.get('GST_TRACERS', '').split(';')) | set(['leaks'])
+                leak_tracer = "leaks"
+                if self.options.gst_check_leak_options:
+                    leak_tracer += "(%s)" % self.options.gst_check_leak_options
+                tracers = set(os.environ.get('GST_TRACERS', '').split(';')) | set([leak_tracer])
                 child_env['GST_TRACERS'] = ';'.join(tracers)
 
         return child_env
