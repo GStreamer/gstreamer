@@ -253,6 +253,7 @@ gst_validate_action_serialize (GstValidateAction * action)
   g_free (action_args);
 
   node = json_node_init_object (node, jreport);
+  json_object_unref (jreport);
 
   return node;
 }

@@ -67,6 +67,7 @@ gst_validate_report_serialize (GstValidateReport * report)
   json_object_set_string_member (jreport, "details", report->message);
 
   node = json_node_init_object (node, jreport);
+  json_object_unref (jreport);
 
   return node;
 }
@@ -877,8 +878,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
       GstValidateActionParameter playback_time_param = {
         .name = "playback-time",
-        .description =
-            "The playback time at which the action will be executed",
+        .description = "The playback time at which the action will be executed",
         .mandatory = FALSE,
         .types = "double,string",
         .possible_variables =
@@ -923,8 +923,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
             "\n     optional                   : "
             "Don't raise an error if this action hasn't been executed or failed"
             "\n%-32s  Possible types:"
-            "\n%-32s    boolean"
-            "\n%-32s  Default: false","","","");
+            "\n%-32s    boolean" "\n%-32s  Default: false", "", "", "");
       }
 
       if (!has_parameters)
