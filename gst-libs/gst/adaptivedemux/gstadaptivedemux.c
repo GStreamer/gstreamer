@@ -283,7 +283,8 @@ static void gst_adaptive_demux_start_manifest_update_task (GstAdaptiveDemux *
 
 static void gst_adaptive_demux_start_tasks (GstAdaptiveDemux * demux,
     gboolean start_preroll_streams);
-static void gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux);
+static void gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux,
+    gboolean stop_updates);
 static GstFlowReturn gst_adaptive_demux_combine_flows (GstAdaptiveDemux *
     demux);
 static void
@@ -561,13 +562,7 @@ gst_adaptive_demux_change_state (GstElement * element,
       GST_MANIFEST_LOCK (demux);
       demux->running = FALSE;
       gst_adaptive_demux_reset (demux);
-      gst_adaptive_demux_stop_manifest_update_task (demux);
       GST_MANIFEST_UNLOCK (demux);
-
-      /* demux->priv->updates_task value never changes, so it is safe to read it
-       * outside critical section
-       */
-      gst_task_join (demux->priv->updates_task);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_MANIFEST_LOCK (demux);
@@ -774,7 +769,7 @@ gst_adaptive_demux_reset (GstAdaptiveDemux * demux)
   old_streams = demux->priv->old_streams;
   demux->priv->old_streams = NULL;
 
-  gst_adaptive_demux_stop_tasks (demux);
+  gst_adaptive_demux_stop_tasks (demux, TRUE);
 
   if (klass->reset)
     klass->reset (demux);
@@ -1577,11 +1572,11 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
     gst_adaptive_demux_push_src_event (demux, fevent);
     GST_MANIFEST_LOCK (demux);
 
-    gst_adaptive_demux_stop_tasks (demux);
+    gst_adaptive_demux_stop_tasks (demux, FALSE);
   } else if ((rate > 0 && start_type != GST_SEEK_TYPE_NONE) ||
       (rate < 0 && stop_type != GST_SEEK_TYPE_NONE)) {
 
-    gst_adaptive_demux_stop_tasks (demux);
+    gst_adaptive_demux_stop_tasks (demux, FALSE);
   }
 
   GST_ADAPTIVE_DEMUX_SEGMENT_LOCK (demux);
@@ -1961,12 +1956,14 @@ gst_adaptive_demux_start_manifest_update_task (GstAdaptiveDemux * demux)
  * the demux element.
  */
 static void
-gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
+gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux, gboolean stop_updates)
 {
   GList *iter;
 
   GST_LOG_OBJECT (demux, "Stopping tasks");
 
+  if (stop_updates)
+    gst_adaptive_demux_stop_manifest_update_task (demux);
   for (iter = demux->streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemuxStream *stream = iter->data;
 
@@ -2010,6 +2007,8 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux)
   }
 
   GST_MANIFEST_UNLOCK (demux);
+  if (stop_updates)
+    gst_task_join (demux->priv->updates_task);
 
   GST_MANIFEST_LOCK (demux);
 
