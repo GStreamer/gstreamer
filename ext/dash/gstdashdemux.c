@@ -2411,6 +2411,7 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
     guint period_idx;
     GList *iter;
     GList *streams_iter;
+    GList *streams;
 
     /* prepare the new manifest and try to transfer the stream position
      * status from the old manifest client  */
@@ -2449,8 +2450,18 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
       return GST_FLOW_ERROR;
     }
 
+    /* If no pads have been exposed yet, need to use those */
+    streams = NULL;
+    if (demux->streams == NULL) {
+      if (demux->prepared_streams) {
+        streams = demux->prepared_streams;
+      }
+    } else {
+      streams = demux->streams;
+    }
+
     /* update the streams to play from the next segment */
-    for (iter = demux->streams, streams_iter = new_client->active_streams;
+    for (iter = streams, streams_iter = new_client->active_streams;
         iter && streams_iter;
         iter = g_list_next (iter), streams_iter = g_list_next (streams_iter)) {
       GstDashDemuxStream *demux_stream = iter->data;
