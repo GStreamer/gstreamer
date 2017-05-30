@@ -205,7 +205,7 @@ enum
 #define DEFAULT_MAX_VIDEO_HEIGHT          0
 #define DEFAULT_MAX_VIDEO_FRAMERATE_N     0
 #define DEFAULT_MAX_VIDEO_FRAMERATE_D     1
-#define DEFAULT_PRESENTATION_DELAY     NULL     /* zero */
+#define DEFAULT_PRESENTATION_DELAY     "10s"    /* 10s */
 
 /* Clock drift compensation for live streams */
 #define SLOW_CLOCK_UPDATE_INTERVAL  (1000000 * 30 * 60) /* 30 minutes */
@@ -530,7 +530,7 @@ gst_dash_demux_init (GstDashDemux * demux)
   demux->max_video_height = DEFAULT_MAX_VIDEO_HEIGHT;
   demux->max_video_framerate_n = DEFAULT_MAX_VIDEO_FRAMERATE_N;
   demux->max_video_framerate_d = DEFAULT_MAX_VIDEO_FRAMERATE_D;
-  demux->default_presentation_delay = DEFAULT_PRESENTATION_DELAY;
+  demux->default_presentation_delay = g_strdup (DEFAULT_PRESENTATION_DELAY);
 
   g_mutex_init (&demux->client_lock);
 
