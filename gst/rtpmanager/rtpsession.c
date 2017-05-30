@@ -2859,7 +2859,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
         rtp_session_process_feedback (sess, &packet, &pinfo, current_time);
         break;
       default:
-        GST_WARNING ("got unknown RTCP packet");
+        GST_WARNING ("got unknown RTCP packet type: %d", type);
         break;
     }
     more = gst_rtcp_packet_move_to_next (&packet);
