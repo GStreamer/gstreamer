@@ -381,8 +381,6 @@ class Test(Loggable):
                         "--args"] + self.command
 
     def use_valgrind(self):
-        vglogsfile = self.logfile + '.valgrind'
-        self.extra_logfiles.append(vglogsfile)
 
         vg_args = []
 
@@ -394,10 +392,14 @@ class Test(Loggable):
                 #       and all false positives should be added to suppression files.
                 ('errors-for-leak-kinds', 'definite'),
                 ('num-callers', '20'),
-                ('log-file', vglogsfile),
                 ('error-exitcode', str(VALGRIND_ERROR_CODE)),
                 ('gen-suppressions', 'all')]:
             vg_args.append("--%s=%s" % (o, v))
+
+        if not self.options.redirect_logs:
+            vglogsfile = self.logfile + '.valgrind'
+            self.extra_logfiles.append(vglogsfile)
+            vg_args.append("--%s=%s" % ('log-file', vglogsfile))
 
         for supp in self.get_valgrind_suppressions():
             vg_args.append("--suppressions=%s" % supp)
