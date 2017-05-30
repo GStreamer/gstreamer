@@ -64,10 +64,10 @@ gst_validate_element_set_media_descriptor (GstValidateMonitor * monitor,
   GstPad *pad;
   GstValidateMonitor *pmonitor;
   GstIterator *iterator;
+  GstElement *elem = GST_ELEMENT (gst_validate_monitor_get_target (monitor));
 
-  iterator =
-      gst_element_iterate_pads (GST_ELEMENT (GST_VALIDATE_MONITOR_GET_OBJECT
-          (monitor)));
+  iterator = gst_element_iterate_pads (elem);
+  gst_object_unref (elem);
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
@@ -112,10 +112,14 @@ gst_validate_element_monitor_dispose (GObject * object)
 {
   GstValidateElementMonitor *monitor =
       GST_VALIDATE_ELEMENT_MONITOR_CAST (object);
+  GstObject *target =
+      gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
 
-  if (GST_VALIDATE_MONITOR_GET_OBJECT (monitor) && monitor->pad_added_id)
-    g_signal_handler_disconnect (GST_VALIDATE_MONITOR_GET_OBJECT (monitor),
-        monitor->pad_added_id);
+  if (target) {
+    if (monitor->pad_added_id)
+      g_signal_handler_disconnect (target, monitor->pad_added_id);
+    gst_object_unref (target);
+  }
 
   g_list_free_full (monitor->pad_monitors, purge_and_unref_reporter);
 
@@ -154,24 +158,30 @@ gst_validate_element_monitor_new (GstElement * element,
     GstValidateRunner * runner, GstValidateMonitor * parent)
 {
   GstValidateElementMonitor *monitor;
+  GstElement *target;
 
   g_return_val_if_fail (element != NULL, NULL);
 
   monitor = g_object_new (GST_TYPE_VALIDATE_ELEMENT_MONITOR, "object", element,
       "validate-runner", runner, "validate-parent", parent, NULL);
 
-  if (GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor) == NULL) {
+  target =
+      GST_ELEMENT (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
+
+  if (!target) {
     g_object_unref (monitor);
     return NULL;
   }
 
+  gst_object_unref (target);
   return monitor;
 }
 
 static GstElement *
 gst_validate_element_monitor_get_element (GstValidateMonitor * monitor)
 {
-  return GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor);
+  return GST_ELEMENT (gst_validate_monitor_get_target (monitor));
 }
 
 static void
@@ -181,7 +191,9 @@ gst_validate_element_monitor_inspect (GstValidateElementMonitor * monitor)
   GstElementClass *klass;
   const gchar *klassname;
 
-  element = GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor);
+  element =
+      GST_ELEMENT_CAST (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
   klass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
 
@@ -194,6 +206,9 @@ gst_validate_element_monitor_inspect (GstValidateElementMonitor * monitor)
     monitor->is_converter = strstr (klassname, "Converter") != NULL;
   } else
     GST_ERROR_OBJECT (element, "no klassname");
+
+  if (element)
+    gst_object_unref (element);
 }
 
 static void
@@ -237,8 +252,10 @@ gst_validate_element_monitor_do_setup (GstValidateMonitor * monitor)
   GstPad *pad;
   GstValidateElementMonitor *elem_monitor;
   GstElement *element;
+  GstObject *target = gst_validate_monitor_get_target (monitor);
 
-  if (!GST_IS_ELEMENT (GST_VALIDATE_MONITOR_GET_OBJECT (monitor))) {
+  if (!GST_IS_ELEMENT (target)) {
+    gst_object_unref (target);
     GST_WARNING_OBJECT (monitor, "Trying to create element monitor with other "
         "type of object");
     return FALSE;
@@ -247,12 +264,13 @@ gst_validate_element_monitor_do_setup (GstValidateMonitor * monitor)
   elem_monitor = GST_VALIDATE_ELEMENT_MONITOR_CAST (monitor);
 
   GST_DEBUG_OBJECT (monitor, "Setting up monitor for element %" GST_PTR_FORMAT,
-      GST_VALIDATE_MONITOR_GET_OBJECT (monitor));
-  element = GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor);
+      target);
+  element = GST_ELEMENT_CAST (target);
 
   if (g_object_get_data ((GObject *) element, "validate-monitor")) {
     GST_DEBUG_OBJECT (elem_monitor,
         "Pad already has a validate-monitor associated");
+    gst_object_unref (target);
     return FALSE;
   }
 
@@ -285,6 +303,7 @@ gst_validate_element_monitor_do_setup (GstValidateMonitor * monitor)
     }
   }
   gst_iterator_free (iterator);
+  gst_object_unref (target);
 
   set_config_properties (monitor, element);
 
@@ -313,7 +332,10 @@ static void
 _validate_element_pad_added (GstElement * element, GstPad * pad,
     GstValidateElementMonitor * monitor)
 {
-  g_return_if_fail (GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor) ==
-      element);
+  GstObject *target =
+      gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
+
+  g_return_if_fail (target == (GstObject *) element);
+  gst_object_unref (target);
   gst_validate_element_monitor_wrap_pad (monitor, pad);
 }

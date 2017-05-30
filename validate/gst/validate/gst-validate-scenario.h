@@ -235,7 +235,6 @@ struct _GstValidateScenarioClass
 
 /**
  * GstValidateScenario:
- * @pipeline: The #GstPipeline on which the scenario is being executed.
  */
 struct _GstValidateScenario
 {

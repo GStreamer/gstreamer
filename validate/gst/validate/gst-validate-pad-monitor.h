@@ -43,8 +43,6 @@ G_BEGIN_DECLS
 #define GST_VALIDATE_PAD_MONITOR_CAST(obj)            ((GstValidatePadMonitor*)(obj))
 #define GST_VALIDATE_PAD_MONITOR_CLASS_CAST(klass)    ((GstValidatePadMonitorClass*)(klass))
 
-#define GST_VALIDATE_PAD_MONITOR_GET_PAD(m) (GST_PAD_CAST (GST_VALIDATE_MONITOR_GET_OBJECT (m)))
-
 
 /**
  * GstValidatePadMonitor:
@@ -59,7 +57,6 @@ struct _GstValidatePadMonitor {
   GstValidateElementMonitor *element_monitor;
 
   gboolean       setup;
-  GstPad        *pad;
 
   GstPadChainFunction chain_func;
   GstPadEventFunction event_func;

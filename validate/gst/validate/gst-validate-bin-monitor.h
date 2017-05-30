@@ -39,8 +39,6 @@ G_BEGIN_DECLS
 #define GST_VALIDATE_BIN_MONITOR_CAST(obj)            ((GstValidateBinMonitor*)(obj))
 #define GST_VALIDATE_BIN_MONITOR_CLASS_CAST(klass)    ((GstValidateBinMonitorClass*)(klass))
 
-#define GST_VALIDATE_BIN_MONITOR_GET_BIN(m) (GST_BIN_CAST (GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (m)))
-
 typedef struct _GstValidateBinMonitor GstValidateBinMonitor;
 typedef struct _GstValidateBinMonitorClass GstValidateBinMonitorClass;
 

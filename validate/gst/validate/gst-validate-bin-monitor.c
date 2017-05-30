@@ -129,10 +129,15 @@ static void
 gst_validate_bin_monitor_dispose (GObject * object)
 {
   GstValidateBinMonitor *monitor = GST_VALIDATE_BIN_MONITOR_CAST (object);
-  GstElement *bin = GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor);
+  GstElement *bin =
+      GST_ELEMENT (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR_CAST
+          (monitor)));
 
-  if (bin && monitor->element_added_id)
-    g_signal_handler_disconnect (bin, monitor->element_added_id);
+  if (bin) {
+    if (monitor->element_added_id)
+      g_signal_handler_disconnect (bin, monitor->element_added_id);
+    gst_object_unref (bin);
+  }
 
   if (monitor->scenario) {
     gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER
@@ -186,11 +191,14 @@ gst_validate_bin_monitor_new (GstBin * bin, GstValidateRunner * runner,
   GstValidateBinMonitor *monitor =
       g_object_new (GST_TYPE_VALIDATE_BIN_MONITOR, "object",
       bin, "validate-runner", runner, "validate-parent", parent, NULL);
+  GstObject *target =
+      gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
 
-  if (GST_VALIDATE_MONITOR_GET_OBJECT (monitor) == NULL) {
+  if (target == NULL) {
     g_object_unref (monitor);
     return NULL;
   }
+  gst_object_unref (target);
 
   return monitor;
 }
@@ -202,12 +210,12 @@ gst_validate_bin_monitor_setup (GstValidateMonitor * monitor)
   gboolean done;
   GstElement *element;
   GstValidateBinMonitor *bin_monitor = GST_VALIDATE_BIN_MONITOR_CAST (monitor);
-  GstBin *bin = GST_VALIDATE_BIN_MONITOR_GET_BIN (bin_monitor);
+  GstBin *bin = GST_BIN_CAST (gst_validate_monitor_get_target (monitor));
 
   if (!GST_IS_BIN (bin)) {
     GST_WARNING_OBJECT (monitor, "Trying to create bin monitor with other "
         "type of object");
-    return FALSE;
+    goto fail;
   }
 
   GST_DEBUG_OBJECT (bin_monitor, "Setting up monitor for bin %" GST_PTR_FORMAT,
@@ -216,7 +224,7 @@ gst_validate_bin_monitor_setup (GstValidateMonitor * monitor)
   if (g_object_get_data ((GObject *) bin, "validate-monitor")) {
     GST_DEBUG_OBJECT (bin_monitor,
         "Bin already has a validate-monitor associated");
-    return FALSE;
+    goto fail;
   }
 
   bin_monitor->element_added_id =
@@ -247,8 +255,14 @@ gst_validate_bin_monitor_setup (GstValidateMonitor * monitor)
     }
   }
   gst_iterator_free (iterator);
+  gst_object_unref (bin);
 
   return TRUE;
+
+fail:
+  if (bin)
+    gst_object_unref (bin);
+  return FALSE;
 }
 
 static void
@@ -274,7 +288,11 @@ static void
 _validate_bin_element_added (GstBin * bin, GstElement * element,
     GstValidateBinMonitor * monitor)
 {
-  g_return_if_fail (GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor) ==
-      GST_ELEMENT_CAST (bin));
+  GstObject *target =
+      gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
+
+  g_return_if_fail (GST_ELEMENT_CAST (target) == GST_ELEMENT_CAST (bin));
+
+  gst_object_unref (target);
   gst_validate_bin_monitor_wrap_element (monitor, element);
 }

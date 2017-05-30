@@ -189,8 +189,12 @@ _find_master_report_for_sink_pad (GstValidatePadMonitor * pad_monitor,
 {
   GstPad *peerpad;
   gboolean result = FALSE;
+  GstPad *pad =
+      GST_PAD_CAST (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
 
-  peerpad = gst_pad_get_peer (pad_monitor->pad);
+  peerpad = gst_pad_get_peer (pad);
+  gst_object_unref (pad);
 
   /* If the peer src pad already has a similar report no need to look
    * any further */
@@ -209,18 +213,19 @@ _find_master_report_for_src_pad (GstValidatePadMonitor * pad_monitor,
 {
   GstIterator *iter;
   gboolean done;
-  GstPad *pad;
   gboolean result = FALSE;
+  GstPad *target =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
 
-  iter =
-      gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
-      (pad_monitor));
+  iter = gst_pad_iterate_internal_links (target);
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
     switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
-        pad = g_value_get_object (&value);
+      {
+        GstPad *pad = g_value_get_object (&value);
 
         if (_find_master_report_on_pad (pad, report)) {
           result = TRUE;
@@ -229,12 +234,12 @@ _find_master_report_for_src_pad (GstValidatePadMonitor * pad_monitor,
 
         g_value_reset (&value);
         break;
+      }
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
         break;
       case GST_ITERATOR_ERROR:
-        GST_WARNING_OBJECT (pad_monitor->pad,
-            "Internal links pad iteration error");
+        GST_WARNING_OBJECT (target, "Internal links pad iteration error");
         done = TRUE;
         break;
       case GST_ITERATOR_DONE:
@@ -242,6 +247,7 @@ _find_master_report_for_src_pad (GstValidatePadMonitor * pad_monitor,
         break;
     }
   }
+  gst_object_unref (target);
   gst_iterator_free (iter);
 
   return result;
@@ -251,13 +257,21 @@ static GstValidateInterceptionReturn
 _concatenate_issues (GstValidatePadMonitor * pad_monitor,
     GstValidateReport * report)
 {
-  if (GST_PAD_IS_SINK (pad_monitor->pad)
-      && _find_master_report_for_sink_pad (pad_monitor, report))
-    return GST_VALIDATE_REPORTER_KEEP;
-  else if (GST_PAD_IS_SRC (pad_monitor->pad)
-      && _find_master_report_for_src_pad (pad_monitor, report))
-    return GST_VALIDATE_REPORTER_KEEP;
+  GstPad *pad =
+      GST_PAD_CAST (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
 
+  if (GST_PAD_IS_SINK (pad)
+      && _find_master_report_for_sink_pad (pad_monitor, report)) {
+    gst_object_unref (pad);
+    return GST_VALIDATE_REPORTER_KEEP;
+  } else if (GST_PAD_IS_SRC (pad)
+      && _find_master_report_for_src_pad (pad_monitor, report)) {
+    gst_object_unref (pad);
+    return GST_VALIDATE_REPORTER_KEEP;
+  }
+
+  gst_object_unref (pad);
   return GST_VALIDATE_REPORTER_REPORT;
 }
 
@@ -441,7 +455,7 @@ gst_validate_pad_monitor_check_caps_complete (GstValidatePadMonitor * monitor,
   GstStructure *structure;
   gint i;
 
-  GST_DEBUG_OBJECT (monitor->pad, "Checking caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (monitor, "Checking caps %" GST_PTR_FORMAT, caps);
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
@@ -466,10 +480,11 @@ gst_validate_pad_monitor_get_othercaps (GstValidatePadMonitor * monitor,
   gboolean done;
   GstPad *otherpad;
   GstCaps *peercaps;
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
 
-  iter =
-      gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
-      (monitor));
+  iter = gst_pad_iterate_internal_links (pad);
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
@@ -491,7 +506,7 @@ gst_validate_pad_monitor_get_othercaps (GstValidatePadMonitor * monitor,
         caps = gst_caps_new_empty ();
         break;
       case GST_ITERATOR_ERROR:
-        GST_WARNING_OBJECT (monitor->pad, "Internal links pad iteration error");
+        GST_WARNING_OBJECT (pad, "Internal links pad iteration error");
         done = TRUE;
         break;
       case GST_ITERATOR_DONE:
@@ -499,9 +514,10 @@ gst_validate_pad_monitor_get_othercaps (GstValidatePadMonitor * monitor,
         break;
     }
   }
-  gst_iterator_free (iter);
+  GST_DEBUG_OBJECT (pad, "Otherpad caps: %" GST_PTR_FORMAT, caps);
 
-  GST_DEBUG_OBJECT (monitor->pad, "Otherpad caps: %" GST_PTR_FORMAT, caps);
+  gst_iterator_free (iter);
+  gst_object_unref (pad);
 
   return caps;
 }
@@ -673,17 +689,20 @@ gst_validate_pad_monitor_transform_caps (GstValidatePadMonitor * monitor,
   gboolean done;
   GstPad *otherpad;
   GstCaps *template_caps;
+  GstPad *pad;
 
-  GST_DEBUG_OBJECT (monitor->pad, "Transform caps %" GST_PTR_FORMAT, caps);
+
+  GST_DEBUG_OBJECT (monitor, "Transform caps %" GST_PTR_FORMAT, caps);
 
   if (caps == NULL)
     return NULL;
 
   othercaps = gst_caps_new_empty ();
 
-  iter =
-      gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
-      (monitor));
+  pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
+  iter = gst_pad_iterate_internal_links (pad);
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
@@ -709,7 +728,7 @@ gst_validate_pad_monitor_transform_caps (GstValidatePadMonitor * monitor,
         othercaps = gst_caps_new_empty ();
         break;
       case GST_ITERATOR_ERROR:
-        GST_WARNING_OBJECT (monitor->pad, "Internal links pad iteration error");
+        GST_WARNING_OBJECT (pad, "Internal links pad iteration error");
         done = TRUE;
         break;
       case GST_ITERATOR_DONE:
@@ -719,8 +738,8 @@ gst_validate_pad_monitor_transform_caps (GstValidatePadMonitor * monitor,
   }
   gst_iterator_free (iter);
 
-  GST_DEBUG_OBJECT (monitor->pad, "Transformed caps: %" GST_PTR_FORMAT,
-      othercaps);
+  GST_DEBUG_OBJECT (pad, "Transformed caps: %" GST_PTR_FORMAT, othercaps);
+  gst_object_unref (pad);
 
   return othercaps;
 }
@@ -805,18 +824,23 @@ gst_validate_pad_monitor_check_late_serialized_events (GstValidatePadMonitor *
     monitor, GstClockTime ts)
 {
   gint i;
+  GstPad *pad;
 
   if (!GST_CLOCK_TIME_IS_VALID (ts))
     return;
 
-  GST_DEBUG_OBJECT (monitor->pad, "Timestamp to check %" GST_TIME_FORMAT,
+  pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
+
+  GST_DEBUG_OBJECT (pad, "Timestamp to check %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ts));
 
   for (i = 0; i < monitor->serialized_events->len; i++) {
     SerializedEventData *data =
         g_ptr_array_index (monitor->serialized_events, i);
 
-    GST_DEBUG_OBJECT (monitor->pad, "Event #%d (%s) ts: %" GST_TIME_FORMAT,
+    GST_DEBUG_OBJECT (pad, "Event #%d (%s) ts: %" GST_TIME_FORMAT,
         i, GST_EVENT_TYPE_NAME (data->event), GST_TIME_ARGS (data->timestamp));
 
     if (GST_CLOCK_TIME_IS_VALID (data->timestamp) && data->timestamp < ts) {
@@ -825,8 +849,7 @@ gst_validate_pad_monitor_check_late_serialized_events (GstValidatePadMonitor *
       GST_VALIDATE_REPORT (monitor, SERIALIZED_EVENT_WASNT_PUSHED_IN_TIME,
           "Serialized event %s wasn't pushed before expected timestamp %"
           GST_TIME_FORMAT " on pad %s:%s", event_str,
-          GST_TIME_ARGS (data->timestamp),
-          GST_DEBUG_PAD_NAME (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor)));
+          GST_TIME_ARGS (data->timestamp), GST_DEBUG_PAD_NAME (pad));
 
       g_free (event_str);
     } else {
@@ -836,20 +859,25 @@ gst_validate_pad_monitor_check_late_serialized_events (GstValidatePadMonitor *
   }
 
   if (i) {
-    debug_pending_event (monitor->pad, monitor->serialized_events);
+    debug_pending_event (pad, monitor->serialized_events);
     g_ptr_array_remove_range (monitor->serialized_events, 0, i);
   }
+
+  gst_object_unref (pad);
 }
 
 static void
 gst_validate_pad_monitor_dispose (GObject * object)
 {
   GstValidatePadMonitor *monitor = GST_VALIDATE_PAD_MONITOR_CAST (object);
-  GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor);
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
 
   if (pad) {
     if (monitor->pad_probe_id)
       gst_pad_remove_probe (pad, monitor->pad_probe_id);
+    gst_object_unref (pad);
   }
 
   if (monitor->expected_segment)
@@ -910,20 +938,29 @@ gst_validate_pad_monitor_new (GstPad * pad, GstValidateRunner * runner,
   GstValidatePadMonitor *monitor = g_object_new (GST_TYPE_VALIDATE_PAD_MONITOR,
       "object", pad, "validate-runner", runner, "validate-parent",
       parent, NULL);
+  GstObject *target =
+      gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
 
-  if (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor) == NULL) {
+  if (target == NULL) {
     g_object_unref (monitor);
     return NULL;
   }
+
+  gst_object_unref (target);
   return monitor;
 }
 
 static GstElement *
 gst_validate_pad_monitor_get_element (GstValidateMonitor * monitor)
 {
-  GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor);
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
+  GstElement *parent = GST_ELEMENT (gst_pad_get_parent (pad));
 
-  return GST_PAD_PARENT (pad);
+  gst_object_unref (pad);
+
+  return parent;
 }
 
 static void
@@ -1016,13 +1053,19 @@ static gboolean
 gst_validate_pad_monitor_timestamp_is_in_received_range (GstValidatePadMonitor *
     monitor, GstClockTime ts, GstClockTime tolerance)
 {
-  GST_DEBUG_OBJECT (monitor->pad, "Checking if timestamp %" GST_TIME_FORMAT
-      " is in range: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT " for pad "
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
+
+  GST_DEBUG_OBJECT (pad,
+      "Checking if timestamp %" GST_TIME_FORMAT " is in range: %"
+      GST_TIME_FORMAT " - %" GST_TIME_FORMAT " for pad "
       "%s:%s with tolerance: %" GST_TIME_FORMAT, GST_TIME_ARGS (ts),
       GST_TIME_ARGS (monitor->timestamp_range_start),
-      GST_TIME_ARGS (monitor->timestamp_range_end),
-      GST_DEBUG_PAD_NAME (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor)),
+      GST_TIME_ARGS (monitor->timestamp_range_end), GST_DEBUG_PAD_NAME (pad),
       GST_TIME_ARGS (tolerance));
+  gst_object_unref (pad);
+
   return !GST_CLOCK_TIME_IS_VALID (monitor->timestamp_range_start) ||
       !GST_CLOCK_TIME_IS_VALID (monitor->timestamp_range_end) ||
       ((monitor->timestamp_range_start >= tolerance ?
@@ -1046,25 +1089,26 @@ static void
   gboolean done;
   GstPad *otherpad;
   GstValidatePadMonitor *othermonitor;
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
 
   if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))
       || !GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) {
-    GST_DEBUG_OBJECT (monitor->pad,
+    GST_DEBUG_OBJECT (pad,
         "Can't check buffer timestamps range as "
         "buffer has no valid timestamp/duration");
-    return;
+    goto done;
   }
+
   ts = GST_BUFFER_TIMESTAMP (buffer);
   ts_end = ts + GST_BUFFER_DURATION (buffer);
 
-  iter =
-      gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
-      (monitor));
+  iter = gst_pad_iterate_internal_links (pad);
 
   if (iter == NULL) {
-    GST_WARNING_OBJECT (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor),
-        "No iterator available");
-    return;
+    GST_WARNING_OBJECT (pad, "No iterator available");
+    goto done;
   }
 
   done = FALSE;
@@ -1073,7 +1117,7 @@ static void
     switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
         otherpad = g_value_get_object (&value);
-        GST_DEBUG_OBJECT (monitor->pad, "Checking pad %s:%s input timestamps",
+        GST_DEBUG_OBJECT (pad, "Checking pad %s:%s input timestamps",
             GST_DEBUG_PAD_NAME (otherpad));
         othermonitor =
             g_object_get_data ((GObject *) otherpad, "validate-monitor");
@@ -1096,7 +1140,7 @@ static void
         found = FALSE;
         break;
       case GST_ITERATOR_ERROR:
-        GST_WARNING_OBJECT (monitor->pad, "Internal links pad iteration error");
+        GST_WARNING_OBJECT (pad, "Internal links pad iteration error");
         done = TRUE;
         break;
       case GST_ITERATOR_DONE:
@@ -1107,9 +1151,9 @@ static void
   gst_iterator_free (iter);
 
   if (!has_one) {
-    GST_DEBUG_OBJECT (monitor->pad, "Skipping timestamp in range check as no "
+    GST_DEBUG_OBJECT (pad, "Skipping timestamp in range check as no "
         "internal linked pad was found");
-    return;
+    goto done;
   }
   if (!found) {
     GST_VALIDATE_REPORT (monitor, BUFFER_TIMESTAMP_OUT_OF_RECEIVED_RANGE,
@@ -1117,6 +1161,9 @@ static void
         " is out of range of received input", GST_TIME_ARGS (ts),
         GST_TIME_ARGS (ts_end));
   }
+done:
+  if (pad)
+    gst_object_unref (pad);
 }
 
 static void
@@ -1135,22 +1182,26 @@ static void
 gst_validate_pad_monitor_check_first_buffer (GstValidatePadMonitor *
     pad_monitor, GstBuffer * buffer)
 {
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
+
   if (G_UNLIKELY (pad_monitor->first_buffer)) {
     pad_monitor->first_buffer = FALSE;
 
-    if (!pad_monitor->has_segment
-        && PAD_IS_IN_PUSH_MODE (GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor)))
-    {
+    if (!pad_monitor->has_segment && PAD_IS_IN_PUSH_MODE (pad)) {
       GST_VALIDATE_REPORT (pad_monitor, BUFFER_BEFORE_SEGMENT,
           "Received buffer before Segment event");
     }
 
-    GST_DEBUG_OBJECT (pad_monitor->pad,
+    GST_DEBUG_OBJECT (pad,
         "Checking first buffer (pts:%" GST_TIME_FORMAT " dts:%" GST_TIME_FORMAT
         ")", GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
         GST_TIME_ARGS (GST_BUFFER_DTS (buffer)));
 
   }
+
+  gst_object_unref (pad);
 }
 
 static void
@@ -1167,6 +1218,9 @@ static void
 gst_validate_pad_monitor_update_buffer_data (GstValidatePadMonitor *
     pad_monitor, GstBuffer * buffer)
 {
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
   pad_monitor->current_timestamp = GST_BUFFER_TIMESTAMP (buffer);
   pad_monitor->current_duration = GST_BUFFER_DURATION (buffer);
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) {
@@ -1189,10 +1243,12 @@ gst_validate_pad_monitor_update_buffer_data (GstValidatePadMonitor *
       }
     }
   }
-  GST_DEBUG_OBJECT (pad_monitor->pad, "Current stored range: %" GST_TIME_FORMAT
+  GST_DEBUG_OBJECT (pad, "Current stored range: %" GST_TIME_FORMAT
       " - %" GST_TIME_FORMAT,
       GST_TIME_ARGS (pad_monitor->timestamp_range_start),
       GST_TIME_ARGS (pad_monitor->timestamp_range_end));
+
+  gst_object_unref (pad);
 }
 
 static GstFlowReturn
@@ -1222,7 +1278,9 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
   GstValidatePadMonitor *othermonitor;
   GstFlowReturn aggregated = GST_FLOW_NOT_LINKED;
   gboolean found_a_pad = FALSE;
-  GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor);
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
 
   iter = gst_pad_iterate_internal_links (pad);
   done = FALSE;
@@ -1251,7 +1309,7 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
         gst_iterator_resync (iter);
         break;
       case GST_ITERATOR_ERROR:
-        GST_WARNING_OBJECT (monitor->pad, "Internal links pad iteration error");
+        GST_WARNING_OBJECT (pad, "Internal links pad iteration error");
         done = TRUE;
         break;
       case GST_ITERATOR_DONE:
@@ -1262,7 +1320,7 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
   gst_iterator_free (iter);
   if (!found_a_pad) {
     /* no peer pad found, nothing to do */
-    return;
+    goto done;
   }
   if (aggregated == GST_FLOW_OK || aggregated == GST_FLOW_EOS) {
     GstState state, pending;
@@ -1270,7 +1328,7 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
     /* those are acceptable situations */
     if (GST_PAD_IS_FLUSHING (pad) && ret == GST_FLOW_FLUSHING) {
       /* pad is flushing, always acceptable to return flushing */
-      return;
+      goto done;
     }
 
     gst_element_get_state (GST_ELEMENT (parent), &state, &pending, 0);
@@ -1278,17 +1336,17 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
             || pending < GST_STATE_PAUSED)) {
       /* Element is being teared down, accept FLOW_FLUSHING */
 
-      return;
+      goto done;
     }
 
     if (monitor->is_eos && ret == GST_FLOW_EOS) {
       /* this element received eos and returned eos */
-      return;
+      goto done;
     }
 
     if (PAD_PARENT_IS_DEMUXER (monitor) && ret == GST_FLOW_EOS) {
       /* a demuxer can return EOS when the samples end */
-      return;
+      goto done;
     }
   }
 
@@ -1298,6 +1356,9 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
         gst_flow_get_name (ret), ret, gst_flow_get_name (aggregated),
         aggregated);
   }
+
+done:
+  gst_object_unref (pad);
 }
 
 static void
@@ -1308,19 +1369,23 @@ static void
   gboolean done;
   GstPad *otherpad;
   GstValidatePadMonitor *othermonitor;
+  GstPad *pad;
+
 
   if (!GST_EVENT_IS_SERIALIZED (event))
     return;
 
-  iter =
-      gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
-      (monitor));
+  pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
+  iter = gst_pad_iterate_internal_links (pad);
   if (iter == NULL) {
     /* inputselector will return NULL if the sinkpad is not the active one .... */
-    GST_FIXME_OBJECT (GST_VALIDATE_PAD_MONITOR_GET_PAD
-        (monitor), "No iterator");
+    GST_FIXME_OBJECT (pad, "No iterator");
+    gst_object_unref (pad);
     return;
   }
+
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
@@ -1334,7 +1399,7 @@ static void
           data->timestamp = last_ts;
           data->event = gst_event_ref (event);
           GST_VALIDATE_MONITOR_LOCK (othermonitor);
-          GST_DEBUG_OBJECT (monitor->pad, "Storing for pad %s:%s event %p %s",
+          GST_DEBUG_OBJECT (pad, "Storing for pad %s:%s event %p %s",
               GST_DEBUG_PAD_NAME (otherpad), event,
               GST_EVENT_TYPE_NAME (event));
           g_ptr_array_add (othermonitor->serialized_events, data);
@@ -1347,7 +1412,7 @@ static void
         gst_iterator_resync (iter);
         break;
       case GST_ITERATOR_ERROR:
-        GST_WARNING_OBJECT (monitor->pad, "Internal links pad iteration error");
+        GST_WARNING_OBJECT (pad, "Internal links pad iteration error");
         done = TRUE;
         break;
       case GST_ITERATOR_DONE:
@@ -1356,6 +1421,7 @@ static void
     }
   }
   gst_iterator_free (iter);
+  gst_object_unref (pad);
 }
 
 static void
@@ -1367,17 +1433,21 @@ gst_validate_pad_monitor_otherpad_add_pending_field (GstValidatePadMonitor *
   GstPad *otherpad;
   GstValidatePadMonitor *othermonitor;
   const GValue *v;
+  GstPad *pad;
 
   v = gst_structure_get_value (structure, field);
+  pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
+
   if (v == NULL) {
-    GST_DEBUG_OBJECT (monitor->pad, "Not adding pending field %s as it isn't "
+    GST_DEBUG_OBJECT (pad, "Not adding pending field %s as it isn't "
         "present on structure %" GST_PTR_FORMAT, field, structure);
+    gst_object_unref (pad);
     return;
   }
 
-  iter =
-      gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
-      (monitor));
+  iter = gst_pad_iterate_internal_links (pad);
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
@@ -1399,7 +1469,7 @@ gst_validate_pad_monitor_otherpad_add_pending_field (GstValidatePadMonitor *
         gst_iterator_resync (iter);
         break;
       case GST_ITERATOR_ERROR:
-        GST_WARNING_OBJECT (monitor->pad, "Internal links pad iteration error");
+        GST_WARNING_OBJECT (pad, "Internal links pad iteration error");
         done = TRUE;
         break;
       case GST_ITERATOR_DONE:
@@ -1408,6 +1478,7 @@ gst_validate_pad_monitor_otherpad_add_pending_field (GstValidatePadMonitor *
     }
   }
   gst_iterator_free (iter);
+  gst_object_unref (pad);
 }
 
 static void
@@ -1419,11 +1490,13 @@ gst_validate_pad_monitor_otherpad_clear_pending_fields (GstValidatePadMonitor *
   GstPad *otherpad;
   GstValidatePadMonitor *othermonitor;
 
-  iter =
-      gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
-      (monitor));
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
 
+  iter = gst_pad_iterate_internal_links (pad);
   if (iter == NULL) {
+    gst_object_unref (pad);
     GST_DEBUG_OBJECT (monitor, "No internally linked pad");
 
     return;
@@ -1451,7 +1524,7 @@ gst_validate_pad_monitor_otherpad_clear_pending_fields (GstValidatePadMonitor *
         gst_iterator_resync (iter);
         break;
       case GST_ITERATOR_ERROR:
-        GST_WARNING_OBJECT (monitor->pad, "Internal links pad iteration error");
+        GST_WARNING_OBJECT (pad, "Internal links pad iteration error");
         done = TRUE;
         break;
       case GST_ITERATOR_DONE:
@@ -1459,6 +1532,7 @@ gst_validate_pad_monitor_otherpad_clear_pending_fields (GstValidatePadMonitor *
         break;
     }
   }
+  gst_object_unref (pad);
   gst_iterator_free (iter);
 }
 
@@ -1470,13 +1544,14 @@ gst_validate_pad_monitor_add_expected_newsegment (GstValidatePadMonitor *
   gboolean done;
   GstPad *otherpad;
   GstValidatePadMonitor *othermonitor;
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
 
-  iter =
-      gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
-      (monitor));
-
+  iter = gst_pad_iterate_internal_links (pad);
   if (iter == NULL) {
     GST_DEBUG_OBJECT (monitor, "No internally linked pad");
+    gst_object_unref (pad);
     return;
   }
 
@@ -1499,7 +1574,7 @@ gst_validate_pad_monitor_add_expected_newsegment (GstValidatePadMonitor *
         gst_iterator_resync (iter);
         break;
       case GST_ITERATOR_ERROR:
-        GST_WARNING_OBJECT (monitor->pad, "Internal links pad iteration error");
+        GST_WARNING_OBJECT (pad, "Internal links pad iteration error");
         done = TRUE;
         break;
       case GST_ITERATOR_DONE:
@@ -1508,6 +1583,7 @@ gst_validate_pad_monitor_add_expected_newsegment (GstValidatePadMonitor *
     }
   }
   gst_iterator_free (iter);
+  gst_object_unref (pad);
 }
 
 static void
@@ -1600,9 +1676,13 @@ static void
 mark_pads_eos (GstValidatePadMonitor * pad_monitor)
 {
   GstValidatePadMonitor *peer_monitor;
-  GstPad *peer = gst_pad_get_peer (pad_monitor->pad);
   GstPad *real_peer;
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
+  GstPad *peer = gst_pad_get_peer (pad);
 
+  gst_object_unref (pad);
   pad_monitor->is_eos = TRUE;
   if (peer) {
     real_peer = _get_actual_pad (peer);
@@ -1619,7 +1699,9 @@ static inline gboolean
 _should_check_buffers (GstValidatePadMonitor * pad_monitor,
     gboolean force_checks)
 {
-  GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor);
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
   GstValidateMonitor *monitor = GST_VALIDATE_MONITOR (pad_monitor);
 
   if (pad_monitor->first_buffer || force_checks) {
@@ -1666,6 +1748,7 @@ _should_check_buffers (GstValidatePadMonitor * pad_monitor,
       pad_monitor->check_buffers = TRUE;
     }
   }
+  gst_object_unref (pad);
 
   return pad_monitor->check_buffers;
 }
@@ -1738,7 +1821,9 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
   GstFlowReturn ret = GST_FLOW_OK;
   const GstSegment *segment;
   guint32 seqnum = gst_event_get_seqnum (event);
-  GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor);
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
 
   gst_validate_pad_monitor_common_event_check (pad_monitor, event);
 
@@ -1752,8 +1837,7 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
       /* parse segment data to be used if event is handled */
       gst_event_parse_segment (event, &segment);
 
-      GST_DEBUG_OBJECT (pad_monitor->pad, "Got segment %" GST_SEGMENT_FORMAT,
-          segment);
+      GST_DEBUG_OBJECT (pad, "Got segment %" GST_SEGMENT_FORMAT, segment);
 
       /* Reset expected flush start/stop values, we have a segment */
       pad_monitor->pending_flush_start_seqnum = 0;
@@ -1904,6 +1988,7 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
 
   if (handler)
     gst_event_unref (event);
+  gst_object_unref (pad);
   return ret;
 }
 
@@ -1918,7 +2003,9 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
   GstSeekFlags seek_flags;
   GstSeekType start_type, stop_type;
   guint32 seqnum = gst_event_get_seqnum (event);
-  GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor);
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
 
   gst_validate_pad_monitor_common_event_check (pad_monitor, event);
 
@@ -1948,7 +2035,7 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
     /* Safely store pending accurate seek values */
     if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
       if (seek_flags & GST_SEEK_FLAG_ACCURATE) {
-        GST_DEBUG_OBJECT (pad_monitor->pad,
+        GST_DEBUG_OBJECT (pad,
             "Storing expected accurate seek time %" GST_TIME_FORMAT,
             GST_TIME_ARGS (start));
         pad_monitor->pending_seek_accurate_time = start;
@@ -1969,7 +2056,7 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
        * expected accurate seek value */
       if (ret && pad_monitor->has_segment
           && seqnum == pad_monitor->pending_eos_seqnum) {
-        GST_DEBUG_OBJECT (pad_monitor->pad,
+        GST_DEBUG_OBJECT (pad,
             "Resetting expected accurate seek value, was already handled");
         pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
       } else if (!ret) {
@@ -1999,6 +2086,7 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
 
   if (handler)
     gst_event_unref (event);
+  gst_object_unref (pad);
   return ret;
 }
 
@@ -2011,13 +2099,18 @@ gst_validate_pad_monitor_check_right_buffer (GstValidatePadMonitor *
   GstMapInfo map, wanted_map;
 
   gboolean ret = TRUE;
-  GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor);
+  GstPad *pad;
+
 
   if (_should_check_buffers (pad_monitor, FALSE) == FALSE)
     return FALSE;
 
+  pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
   if (pad_monitor->current_buf == NULL) {
     GST_INFO_OBJECT (pad, "No current buffer one pad, Why?");
+    gst_object_unref (pad);
     return FALSE;
   }
 
@@ -2081,6 +2174,7 @@ gst_validate_pad_monitor_check_right_buffer (GstValidatePadMonitor *
   gst_buffer_unmap (wanted_buf, &wanted_map);
   gst_buffer_unmap (buffer, &map);
   g_free (checksum);
+  gst_object_unref (pad);
 
   pad_monitor->current_buf = pad_monitor->current_buf->next;
 
@@ -2533,12 +2627,14 @@ gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
     GstCaps * caps)
 {
   GstStructure *structure;
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
 
   /* Check if caps are identical to last caps and complain if so
    * Only checked for sink pads as src pads might push the same caps
    * multiple times during unlinked/autoplugging scenarios */
-  if (GST_PAD_IS_SINK (GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor)) &&
-      pad_monitor->last_caps
+  if (GST_PAD_IS_SINK (pad) && pad_monitor->last_caps
       && gst_caps_is_equal (caps, pad_monitor->last_caps)) {
     gchar *caps_str = gst_caps_to_string (caps);
 
@@ -2586,10 +2682,10 @@ gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
       }
     }
 
-    if (GST_PAD_IS_SINK (GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor)) &&
+    if (GST_PAD_IS_SINK (pad) &&
         gst_validate_pad_monitor_pad_should_proxy_othercaps (pad_monitor)) {
       if (_structure_is_video (structure)) {
-        GST_DEBUG_OBJECT (GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor),
+        GST_DEBUG_OBJECT (pad,
             "Adding video common pending fields to other pad: %" GST_PTR_FORMAT,
             structure);
         gst_validate_pad_monitor_otherpad_add_pending_field (pad_monitor,
@@ -2601,7 +2697,7 @@ gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
         gst_validate_pad_monitor_otherpad_add_pending_field (pad_monitor,
             structure, "pixel-aspect-ratio");
       } else if (_structure_is_audio (structure)) {
-        GST_DEBUG_OBJECT (GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor),
+        GST_DEBUG_OBJECT (pad,
             "Adding audio common pending fields to other pad: %" GST_PTR_FORMAT,
             structure);
         gst_validate_pad_monitor_otherpad_add_pending_field (pad_monitor,
@@ -2615,6 +2711,7 @@ gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
   gst_structure_free (pad_monitor->pending_setcaps_fields);
   pad_monitor->pending_setcaps_fields =
       gst_structure_new_empty (PENDING_FIELDS);
+  gst_object_unref (pad);
 
   gst_validate_pad_monitor_setcaps_overrides (pad_monitor, caps);
 }
@@ -2638,24 +2735,23 @@ static gboolean
 gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
 {
   GstValidatePadMonitor *pad_monitor = GST_VALIDATE_PAD_MONITOR_CAST (monitor);
-  GstPad *pad;
-  if (!GST_IS_PAD (GST_VALIDATE_MONITOR_GET_OBJECT (monitor))) {
+  GstPad *pad = (gpointer) gst_validate_monitor_get_target (monitor);
+
+  if (!GST_IS_PAD (pad)) {
     GST_WARNING_OBJECT (monitor, "Trying to create pad monitor with other "
         "type of object");
+    gst_object_unref (pad);
     return FALSE;
   }
-
-  pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor);
 
   if (g_object_get_data ((GObject *) pad, "validate-monitor")) {
     GST_WARNING_OBJECT (pad_monitor,
         "Pad already has a validate-monitor associated");
+    gst_object_unref (pad);
     return FALSE;
   }
 
   g_object_set_data ((GObject *) pad, "validate-monitor", pad_monitor);
-
-  pad_monitor->pad = pad;
 
   pad_monitor->event_func = GST_PAD_EVENTFUNC (pad);
   pad_monitor->event_full_func = GST_PAD_EVENTFULLFUNC (pad);
@@ -2698,5 +2794,6 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
   if (G_UNLIKELY (GST_PAD_PARENT (pad) == NULL))
     GST_FIXME ("Saw a pad not belonging to any object");
 
+  gst_object_unref (pad);
   return TRUE;
 }

@@ -92,7 +92,7 @@ print_position (GstValidateMonitor * monitor)
   gint64 position, duration;
   JsonBuilder *jbuilder;
   GstElement *pipeline =
-      GST_ELEMENT (GST_VALIDATE_MONITOR_GET_OBJECT (monitor));
+      GST_ELEMENT (gst_validate_monitor_get_pipeline (monitor));
 
   gdouble rate = 1.0;
   GstFormat format = GST_FORMAT_TIME;
@@ -100,14 +100,14 @@ print_position (GstValidateMonitor * monitor)
   if (!gst_element_query_position (pipeline, format, &position)) {
     GST_DEBUG_OBJECT (monitor, "Could not query position");
 
-    return TRUE;
+    goto done;
   }
 
   format = GST_FORMAT_TIME;
   if (!gst_element_query_duration (pipeline, format, &duration)) {
     GST_DEBUG_OBJECT (monitor, "Could not query duration");
 
-    return TRUE;
+    goto done;
   }
 
   query = gst_query_new_segment (GST_FORMAT_DEFAULT);
@@ -134,6 +134,8 @@ print_position (GstValidateMonitor * monitor)
       "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
       " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
       rate);
+done:
+  gst_object_unref (pipeline);
 
   return TRUE;
 }
@@ -283,9 +285,12 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
   gint i, j;
   gboolean found = FALSE, empty_filter;
   GstCaps *filter = gst_caps_copy (monitor->last_query_filter);
-  GstCaps *possible_caps = gst_pad_query_caps (monitor->pad, NULL);
   const gchar *filter_name, *possible_name;
   GstStructure *filter_struct, *possible_struct;
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
+  GstCaps *possible_caps = gst_pad_query_caps (pad, NULL);
 
   g_string_append_printf (str,
       "\n Caps negotiation failed starting from pad '%s'"
@@ -294,7 +299,7 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
 
   empty_filter = gst_caps_is_empty (filter);
   if (empty_filter) {
-    GstPad *peer = _get_peer_pad (monitor->pad);
+    GstPad *peer = _get_peer_pad (pad);
     gchar *prev_path = NULL;
 
     if (peer) {
@@ -362,6 +367,7 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
 
   gst_caps_unref (possible_caps);
   gst_caps_unref (filter);
+  gst_object_unref (pad);
 
 }
 
@@ -371,7 +377,10 @@ _append_accept_caps_failure_details (GstValidatePadMonitor * monitor,
 {
   gint i, j;
   GstCaps *refused_caps = gst_caps_copy (monitor->last_refused_caps);
-  GstCaps *possible_caps = gst_pad_query_caps (monitor->pad, NULL);
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (monitor)));
+  GstCaps *possible_caps = gst_pad_query_caps (pad, NULL);
   gchar *caps_str = gst_caps_to_string (monitor->last_refused_caps);
   StructureIncompatibleFieldsInfo info = {
     .str = str,
@@ -409,6 +418,7 @@ _append_accept_caps_failure_details (GstValidatePadMonitor * monitor,
   }
 
   gst_caps_unref (possible_caps);
+  gst_object_unref (pad);
 
   return TRUE;
 }
@@ -494,7 +504,9 @@ _bus_handler (GstBus * bus, GstMessage * message,
       break;
     case GST_MESSAGE_STATE_CHANGED:
     {
-      if (GST_MESSAGE_SRC (message) == GST_VALIDATE_MONITOR (monitor)->target) {
+      GstObject *target =
+          gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
+      if (GST_MESSAGE_SRC (message) == target) {
         GstState oldstate, newstate, pending;
 
         gst_message_parse_state_changed (message, &oldstate, &newstate,
@@ -511,6 +523,9 @@ _bus_handler (GstBus * bus, GstMessage * message,
           monitor->got_error = FALSE;
         }
       }
+
+      if (target)
+        gst_object_unref (target);
 
       break;
     }
@@ -597,7 +612,9 @@ gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
 {
   /* scenarios currently only make sense for pipelines */
   const gchar *scenarios_names;
-  gchar **scenarios;
+  gchar **scenarios = NULL;
+  GstObject *target =
+      gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
 
   if ((scenarios_names = g_getenv ("GST_VALIDATE_SCENARIO"))) {
     gint i;
@@ -606,27 +623,24 @@ gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
     for (i = 0; scenarios[i]; i++) {
       gchar **scenario_v = g_strsplit (scenarios[i], "->", 2);
 
-      if (scenario_v[1] && GST_VALIDATE_MONITOR_GET_OBJECT (monitor)) {
-        if (!g_pattern_match_simple (scenario_v[1],
-                GST_OBJECT_NAME (GST_VALIDATE_MONITOR_GET_OBJECT (monitor)))) {
+      if (scenario_v[1] && target) {
+        if (!g_pattern_match_simple (scenario_v[1], GST_OBJECT_NAME (target))) {
           GST_INFO_OBJECT (monitor, "Not attaching to pipeline %" GST_PTR_FORMAT
-              " as not matching pattern %s",
-              GST_VALIDATE_MONITOR_GET_OBJECT (monitor), scenario_v[1]);
+              " as not matching pattern %s", target, scenario_v[1]);
 
-          g_strfreev (scenario_v);
-          return;
+          goto done;
         }
       }
       monitor->scenario =
           gst_validate_scenario_factory_create (GST_VALIDATE_MONITOR_GET_RUNNER
-          (monitor),
-          GST_ELEMENT_CAST (GST_VALIDATE_MONITOR_GET_OBJECT (monitor)),
-          scenario_v[0]);
+          (monitor), GST_ELEMENT_CAST (target), scenario_v[0]);
       g_strfreev (scenario_v);
     }
-
-    g_strfreev (scenarios);
   }
+done:
+  g_strfreev (scenarios);
+  if (target)
+    gst_object_unref (target);
 }
 
 /**
@@ -642,8 +656,10 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
       g_object_new (GST_TYPE_VALIDATE_PIPELINE_MONITOR, "object",
       pipeline, "validate-runner", runner, "validate-parent", parent,
       "pipeline", pipeline, NULL);
+  GstObject *target =
+      gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
 
-  if (GST_VALIDATE_MONITOR_GET_OBJECT (monitor) == NULL) {
+  if (target == NULL) {
     g_object_unref (monitor);
     return NULL;
   }
@@ -661,6 +677,7 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
     monitor->is_playbin = TRUE;
   else if (g_strcmp0 (G_OBJECT_TYPE_NAME (pipeline), "GstPlayBin3") == 0)
     monitor->is_playbin3 = TRUE;
+  gst_object_unref (target);
 
   return monitor;
 }

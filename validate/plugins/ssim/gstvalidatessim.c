@@ -25,7 +25,7 @@
  * @short_description: GstValidate plugin to detect frame corruptions
  *
  * GstValidate plugin to run the ssim algorithm on the buffers flowing in the
- * pipeline to find regressions and detect frame corruptions. 
+ * pipeline to find regressions and detect frame corruptions.
  * It allows you to generate image files from the buffers flowing in the pipeline
  * (either as raw in the many formats supported by GStreamer or as png) and then
  * check them against pre generated, reference images.
@@ -355,29 +355,30 @@ static gboolean
 _can_attach (GstValidateOverride * override, GstValidateMonitor * monitor)
 {
   guint i;
-  GstPad *pad;
+  GstPad *pad = NULL;
   GstCaps *template_caps;
-  GstElement *element;
+  GstElement *element = NULL;
   GstStructure *structure;
+  gboolean res = TRUE;
 
   if (VALIDATE_SSIM_OVERRIDE (override)->priv->is_attached) {
     GST_ERROR_OBJECT (override, "Already attached");
 
-    return FALSE;
+    goto fail;
   }
 
   if (!GST_IS_VALIDATE_PAD_MONITOR (monitor)) {
-    return FALSE;
+    goto fail;
   }
 
-  pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor);
+  pad = GST_PAD (gst_validate_monitor_get_target (monitor));
   element = gst_validate_monitor_get_element (monitor);
   if ((gst_validate_element_has_klass (element, "Converter") ||
           gst_validate_element_has_klass (element, "Filter")) &&
       GST_PAD_IS_SINK (pad)) {
     GST_INFO_OBJECT (override, "Not attaching on filter sinkpads");
 
-    return FALSE;
+    goto fail;
   }
 
   template_caps = GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
@@ -391,11 +392,20 @@ _can_attach (GstValidateOverride * override, GstValidateMonitor * monitor)
               gst_validate_reporter_get_name (GST_VALIDATE_REPORTER
                   (monitor))));
 
-      return TRUE;
+      goto done;
     }
   }
 
-  return FALSE;
+done:
+  if (pad)
+    gst_object_unref (pad);
+  if (element)
+    gst_object_unref (element);
+  return res;
+
+fail:
+  res = FALSE;
+  goto done;
 }
 
 static void
@@ -469,9 +479,12 @@ _set_videoconvert (ValidateSsimOverride * o,
   GstCaps *caps;
   GstVideoFormat format;
   ValidateSsimOverridePriv *priv = o->priv;
-  GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor);
+  GstPad *pad =
+      GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
+          (pad_monitor)));
 
   caps = gst_pad_get_current_caps (pad);
+  gst_object_unref (pad);
   gst_caps_replace (&priv->last_caps, caps);
 
   gst_video_info_init (&priv->in_info);

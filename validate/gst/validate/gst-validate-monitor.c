@@ -70,18 +70,35 @@ _get_reporting_level (GstValidateReporter * monitor)
   return GST_VALIDATE_MONITOR (monitor)->level;
 }
 
+/**
+ * gst_validate_monitor_get_pipeline:
+ * @monitor: The monitor to get the pipeline from
+ *
+ * Returns: (transfer full): The pipeline in which @monitor
+ * target is in.
+ */
+GstPipeline *
+gst_validate_monitor_get_pipeline (GstValidateMonitor * monitor)
+{
+  return g_weak_ref_get (&monitor->pipeline);
+}
+
+/**
+ * gst_validate_monitor_get_target:
+ * @monitor: The monitor to get the target from
+ *
+ * Returns: (transfer full): The target object
+ */
+GstObject *
+gst_validate_monitor_get_target (GstValidateMonitor * monitor)
+{
+  return g_weak_ref_get (&monitor->target);
+}
+
 static GstPipeline *
 _get_pipeline (GstValidateReporter * monitor)
 {
-  GstPipeline *pipeline;
-
-  GST_OBJECT_LOCK (monitor);
-  pipeline = GST_VALIDATE_MONITOR (monitor)->pipeline;
-  if (pipeline)
-    gst_object_ref (pipeline);
-  GST_OBJECT_UNLOCK (monitor);
-
-  return pipeline;
+  return g_weak_ref_get (&(GST_VALIDATE_MONITOR (monitor)->pipeline));
 }
 
 static void
@@ -97,26 +114,6 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstValidateMonitor, gst_validate_monitor,
     GST_TYPE_OBJECT, _do_init);
 
 static void
-_target_freed_cb (GstValidateMonitor * monitor, GObject * where_the_object_was)
-{
-  GST_DEBUG_OBJECT (monitor, "Target was freed");
-  monitor->target = NULL;
-  GST_OBJECT_LOCK (monitor);
-  monitor->pipeline = NULL;
-  GST_OBJECT_UNLOCK (monitor);
-}
-
-static void
-_pipeline_freed_cb (GstValidateMonitor * monitor,
-    GObject * where_the_object_was)
-{
-  GST_DEBUG_OBJECT (monitor, "Pipeline was freed");
-  GST_OBJECT_LOCK (monitor);
-  monitor->pipeline = NULL;
-  GST_OBJECT_UNLOCK (monitor);
-}
-
-static void
 gst_validate_monitor_dispose (GObject * object)
 {
   GstValidateMonitor *monitor = GST_VALIDATE_MONITOR_CAST (object);
@@ -125,13 +122,8 @@ gst_validate_monitor_dispose (GObject * object)
   g_mutex_clear (&monitor->overrides_mutex);
   g_queue_clear (&monitor->overrides);
 
-  if (monitor->target)
-    g_object_weak_unref (G_OBJECT (monitor->target),
-        (GWeakNotify) _target_freed_cb, monitor);
-
-  if (monitor->pipeline)
-    g_object_weak_unref (G_OBJECT (monitor->pipeline),
-        (GWeakNotify) _pipeline_freed_cb, monitor);
+  g_weak_ref_clear (&monitor->pipeline);
+  g_weak_ref_clear (&monitor->target);
 
   if (monitor->media_descriptor)
     gst_object_unref (monitor->media_descriptor);
@@ -195,16 +187,17 @@ gst_validate_monitor_constructor (GType type, guint n_construct_params,
           construct_params));
 
   if (monitor->parent) {
+    GstPipeline *parent_pipeline =
+        gst_validate_monitor_get_pipeline (monitor->parent);
+
     gst_validate_monitor_set_media_descriptor (monitor,
         monitor->parent->media_descriptor);
 
-    GST_OBJECT_LOCK (monitor);
-    if (monitor->parent->pipeline) {
-      g_object_weak_ref (G_OBJECT (monitor->parent->pipeline),
-          (GWeakNotify) _pipeline_freed_cb, monitor);
-      monitor->pipeline = monitor->parent->pipeline;
+    if (parent_pipeline) {
+      g_weak_ref_init (&monitor->pipeline, parent_pipeline);
+
+      gst_object_unref (parent_pipeline);
     }
-    GST_OBJECT_UNLOCK (monitor);
   }
 
   gst_validate_monitor_setup (monitor);
@@ -252,7 +245,7 @@ _determine_reporting_level (GstValidateMonitor * monitor)
   gchar *object_name;
   GstValidateReportingDetails level = GST_VALIDATE_SHOW_UNKNOWN;
 
-  object = gst_object_ref (monitor->target);
+  object = gst_validate_monitor_get_target (monitor);
   runner = gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
 
   do {
@@ -267,8 +260,8 @@ _determine_reporting_level (GstValidateMonitor * monitor)
     }
 
     object_name = gst_object_get_name (object);
-    level =
-        gst_validate_runner_get_reporting_level_for_name (runner, object_name);
+    level = gst_validate_runner_get_reporting_level_for_name (runner,
+        object_name);
     parent = gst_object_get_parent (object);
     gst_object_unref (object);
     object = parent;
@@ -309,15 +302,19 @@ gst_validate_monitor_get_element (GstValidateMonitor * monitor)
   return element;
 }
 
-const gchar *
+gchar *
 gst_validate_monitor_get_element_name (GstValidateMonitor * monitor)
 {
+  gchar *res = NULL;
   GstElement *element;
 
   element = gst_validate_monitor_get_element (monitor);
-  if (element)
-    return GST_ELEMENT_NAME (element);
-  return NULL;
+  if (element) {
+    res = g_strdup (GST_ELEMENT_NAME (element));
+    gst_object_unref (element);
+  }
+
+  return res;
 }
 
 /* Check if any of our overrides wants to change the report severity */
@@ -375,22 +372,22 @@ gst_validate_monitor_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_OBJECT:
-      g_assert (monitor->target == NULL);
-      monitor->target = g_value_get_object (value);
-      g_object_weak_ref (G_OBJECT (monitor->target),
-          (GWeakNotify) _target_freed_cb, monitor);
+    {
+      GstObject *target;
 
-      if (monitor->target)
+      target = g_value_get_object (value);
+
+      g_assert (gst_validate_monitor_get_target (monitor) == NULL);
+      g_weak_ref_init (&monitor->target, target);
+
+      if (target)
         gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (monitor),
-            g_strdup (GST_OBJECT_NAME (monitor->target)));
+            gst_object_get_name (target));
+
       break;
+    }
     case PROP_PIPELINE:
-      GST_OBJECT_LOCK (monitor);
-      monitor->pipeline = g_value_get_object (value);
-      if (monitor->pipeline)
-        g_object_weak_ref (G_OBJECT (monitor->pipeline),
-            (GWeakNotify) _pipeline_freed_cb, monitor);
-      GST_OBJECT_UNLOCK (monitor);
+      g_weak_ref_init (&monitor->pipeline, g_value_get_object (value));
     case PROP_RUNNER:
       gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (monitor),
           g_value_get_object (value));
@@ -414,10 +411,10 @@ gst_validate_monitor_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_OBJECT:
-      g_value_set_object (value, GST_VALIDATE_MONITOR_GET_OBJECT (monitor));
+      g_value_take_object (value, gst_validate_monitor_get_target (monitor));
       break;
     case PROP_PIPELINE:
-      g_value_set_object (value, monitor->pipeline);
+      g_value_take_object (value, gst_validate_monitor_get_pipeline (monitor));
       break;
     case PROP_RUNNER:
       g_value_set_object (value, GST_VALIDATE_MONITOR_GET_RUNNER (monitor));
@@ -437,7 +434,7 @@ gst_validate_monitor_set_media_descriptor (GstValidateMonitor * monitor,
 {
   GstValidateMonitorClass *klass = GST_VALIDATE_MONITOR_GET_CLASS (monitor);
 
-  GST_DEBUG_OBJECT (monitor->target, "Set media desc: %" GST_PTR_FORMAT,
+  GST_DEBUG_OBJECT (monitor, "Set media desc: %" GST_PTR_FORMAT,
       media_descriptor);
   if (monitor->media_descriptor)
     gst_object_unref (monitor->media_descriptor);

@@ -175,7 +175,7 @@ static void
 {
   GstValidateOverrideRegistryNameEntry *entry;
   GList *iter;
-  const gchar *name;
+  gchar *name;
 
   name = gst_validate_monitor_get_element_name (monitor);
   for (iter = registry->name_overrides.head; iter; iter = g_list_next (iter)) {
@@ -186,6 +186,8 @@ static void
       gst_validate_monitor_attach_override (monitor, entry->override);
     }
   }
+
+  g_free (name);
 }
 
 static void
@@ -206,6 +208,7 @@ static void
       gst_validate_monitor_attach_override (monitor, entry->override);
     }
   }
+  gst_object_unref (element);
 }
 
 static void
@@ -228,6 +231,7 @@ static void
       gst_validate_monitor_attach_override (monitor, entry->override);
     }
   }
+  gst_object_unref (element);
 }
 
 void

@@ -45,7 +45,6 @@ G_BEGIN_DECLS
 #define GST_VALIDATE_MONITOR_CAST(obj)                ((GstValidateMonitor*)(obj))
 #define GST_VALIDATE_MONITOR_CLASS_CAST(klass)        ((GstValidateMonitorClass*)(klass))
 
-#define GST_VALIDATE_MONITOR_GET_OBJECT(m) (GST_VALIDATE_MONITOR_CAST (m)->target)
 #define GST_VALIDATE_MONITOR_GET_RUNNER(m) (gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER_CAST (m)))
 #define GST_VALIDATE_MONITOR_GET_PARENT(m) (GST_VALIDATE_MONITOR_CAST (m)->parent)
 
@@ -83,8 +82,8 @@ G_BEGIN_DECLS
 struct _GstValidateMonitor {
   GstObject 	 object;
 
-  GstObject     *target;
-  GstPipeline   *pipeline;
+  GWeakRef       target;
+  GWeakRef       pipeline;
   GMutex         mutex;
   gchar         *target_name;
 
@@ -122,9 +121,11 @@ void            gst_validate_monitor_attach_override  (GstValidateMonitor * moni
                                                  GstValidateOverride * override);
 
 GstElement *    gst_validate_monitor_get_element (GstValidateMonitor * monitor);
-const gchar *   gst_validate_monitor_get_element_name (GstValidateMonitor * monitor);
+gchar *   gst_validate_monitor_get_element_name (GstValidateMonitor * monitor);
 void gst_validate_monitor_set_media_descriptor (GstValidateMonitor * monitor,
                                                 GstValidateMediaDescriptor *media_descriptor);
+GstPipeline * gst_validate_monitor_get_pipeline (GstValidateMonitor * monitor);
+GstObject * gst_validate_monitor_get_target (GstValidateMonitor * monitor);
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_MONITOR_H__ */
