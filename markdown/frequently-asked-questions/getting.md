@@ -1,6 +1,6 @@
 # Getting GStreamer
 
-> How do I get GStreamer ?
+## How do I get GStreamer ?
 
 Generally speaking, you have three options, ranging from easy to hard :
 
@@ -12,7 +12,9 @@ Generally speaking, you have three options, ranging from easy to hard :
 
   - [git](#getting-gstreamer-packages)
 
-> There seem to be different GStreamer versions, like 0.10 and 1.0? What's up with that?
+## What is the difference between versions 0.10 and 1.0?
+
+*There seem to be different GStreamer versions, like 0.10 and 1.0? What's up with that?*
 
 GStreamer-0.10 and GStreamer-1.0 are the main version 'series'
 currently in use. For all practical purposes you should think of them as
@@ -42,11 +44,11 @@ Applications will use either GStreamer-1.0 or GStreamer-0.10, since the
 Odd-numbered versions such as 0.9.x, 0.11.x, 1.3.x, 1.5.x, 1.7.x etc. are
 unstable developer releases that should generally not be used.
 
-> So which GStreamer version should I get?
+### So which GStreamer version should I get?
 
 You should download GStreamer 1.x. GStreamer-0.10 is no longer maintained.
 
-> How can I install GStreamer from source ?
+## How can I install GStreamer from source ?
 
 We provide tarballs of our releases on our own site, at
 <http://gstreamer.freedesktop.org/src/>
@@ -56,9 +58,11 @@ environment variable correctly to the pkgconfig subdir of your install
 prefix's libdir, to make sure your newly-installed GStreamer versions are
 picked up when building against GStreamer. For example, if you
 configured GStreamer with the default prefix (which is `/usr/local`), then
-you need to
+you need to:
 
-    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+```
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+```
 
 before building GStreamer plugin modules. After installing GStreamer from
 source on Linux, run `sudo ldconfig` to make sure your new libs will be found.
@@ -74,7 +78,7 @@ into one prefix with distro packages in another prefix can cause problems if
 it's not done right, and it is very difficult for anyone to provide help with
 such a setup.
 
-> Are there premade binaries available ?
+## Are there premade binaries available ?
 
 Yes, we currently provide [precompiled packages for Windows, OS/X,
 Android and iOS](http://gstreamer.freedesktop.org/pkg/).
@@ -83,9 +87,9 @@ We currently do not provide packages for Linux distributions, but rather
 rely on the distributions for that. GStreamer packages should be
 available for all major (and minor) distributions.
 
-> Why don't you provide premade binaries for distribution XY ?
+## Why don't you provide premade binaries for distribution XY ?
 
-GStreamer is run on a volunteer basis. The package that are
+GStreamer is run on a volunteer basis. The packages that are
 provided are made by non-paid people who do this on their own time. The
 distributions we support with binaries are the distributions that we
 have people who have volunteered to make binaries for. If you are
@@ -93,7 +97,7 @@ interested in maintaining GStreamer binaries for other distributions or
 Unices we would be happy to hear from you. Contact us through the
 GStreamer-devel mailing list.
 
-> I am having trouble compiling GStreamer on my LFS installation, why ?
+## I am having trouble compiling GStreamer on my LFS installation, why ?
 
 If you are running LFS our basic opinion is that you should be
 knowledgeable enough to solve any build issues you get on your own.
@@ -104,7 +108,7 @@ to be able to help you. That said, if you come to the \#gstreamer
 channel on irc.openprojects.net we might of course be able to give you
 some general hints and pointers.
 
-> How do I get GStreamer through git ?
+## How do I get GStreamer through git ?
 
 See this page : <http://gstreamer.freedesktop.org/dev/> for git
 access (anonymous and developer).
