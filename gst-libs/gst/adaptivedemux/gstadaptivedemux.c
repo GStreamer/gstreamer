@@ -810,6 +810,12 @@ gst_adaptive_demux_reset (GstAdaptiveDemux * demux)
         (GDestroyNotify) gst_adaptive_demux_stream_free);
   }
 
+  if (demux->priv->old_streams) {
+    g_list_free_full (demux->priv->old_streams,
+        (GDestroyNotify) gst_adaptive_demux_stream_free);
+    demux->priv->old_streams = NULL;
+  }
+
   g_free (demux->manifest_uri);
   g_free (demux->manifest_base_uri);
   demux->manifest_uri = NULL;
