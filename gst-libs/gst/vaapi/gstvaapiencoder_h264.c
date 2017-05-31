@@ -1050,13 +1050,13 @@ ensure_profile_limits (GstVaapiEncoderH264 * encoder)
   profile = GST_VAAPI_PROFILE_UNKNOWN;
 
   /* Try Main profile coding tools */
-  if (encoder->max_profile_idc < 100) {
+  if (encoder->max_profile_idc < GST_H264_PROFILE_HIGH) {
     encoder->use_dct8x8 = FALSE;
     profile = GST_VAAPI_PROFILE_H264_MAIN;
   }
 
   /* Try Constrained Baseline profile coding tools */
-  if (encoder->max_profile_idc < 77) {
+  if (encoder->max_profile_idc < GST_H264_PROFILE_MAIN) {
     encoder->num_bframes = 0;
     encoder->use_cabac = FALSE;
     profile = GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
@@ -1151,14 +1151,15 @@ ensure_tuning_high_compression (GstVaapiEncoderH264 * encoder)
     profile_idc = encoder->max_profile_idc;
 
   /* Tuning options to enable Main profile */
-  if (profile_idc >= 77 && profile_idc != 88) {
+  if (profile_idc >= GST_H264_PROFILE_MAIN
+      && profile_idc != GST_H264_PROFILE_EXTENDED) {
     encoder->use_cabac = TRUE;
     if (!encoder->num_bframes)
       encoder->num_bframes = 1;
   }
 
   /* Tuning options to enable High profile */
-  if (profile_idc >= 100) {
+  if (profile_idc >= GST_H264_PROFILE_HIGH) {
     encoder->use_dct8x8 = TRUE;
   }
   return TRUE;
