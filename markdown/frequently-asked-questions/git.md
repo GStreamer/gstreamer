@@ -1,13 +1,13 @@
 # Building GStreamer from git
 
-> Is there a way to test or develop against GStreamer from git without interfering with my system GStreamer installed from packages?
+## Is there a way to test or develop against GStreamer from git without interfering with my system GStreamer installed from packages?
 
 Yes! You have two options: you can either run GStreamer in an
 uninstalled setup (see [How do I develop against an uninstalled
-GStreamer copy ?](#developing-uninstalled-gstreamer)), or you can use
+GStreamer copy?](#developing-uninstalled-gstreamer)), or you can use
 GNOME's jhbuild.
 
-> How do I check out GStreamer from git ?
+## How do I check out GStreamer from git?
 
 GStreamer is hosted on Freedesktop.org. GStreamer consists of
 various parts. In the beginning, you will be interested in the
@@ -20,9 +20,9 @@ To check out the latest git version of the core and the basic modules,
 use
 
 ``` 
- for module in gstreamer gst-plugins-base gst-plugins-good; do
-   git clone git://anongit.freedesktop.org/git/gstreamer/$module ;
- done
+for module in gstreamer gst-plugins-base gst-plugins-good; do
+  git clone git://anongit.freedesktop.org/git/gstreamer/$module ;
+done
 ```
 
 This will create three directories in your current directory:
@@ -36,7 +36,7 @@ underneath each module checkout.
 The [modules page](http://gstreamer.freedesktop.org/modules/) has a list
 of active ones together with a short description.
 
-> How do I get developer access to GStreamer git ?
+## How do I get developer access to GStreamer git?
 
 If you want to gain developer access to GStreamer git, you should
 ask for it on the development lists, or ask one of the maintainers
@@ -62,14 +62,16 @@ Freedesktop.org, you will then have to provide them with:
 Once you have all these items, see
 <http://freedesktop.org/wiki/AccountRequests> for what to do with them.
 
-> I ran autogen.sh, but it fails with aclocal errors. What's wrong ?
+## I ran autogen.sh, but it fails with aclocal errors. What's wrong?
 
-    + running aclocal -I m4 -I common/m4 ...
-    aclocal: configure.ac: 8: macro `AM_DISABLE_STATIC' not found in library
-    aclocal: configure.ac: 17: macro `AM_PROG_LIBTOOL' not found in library
-    aclocal failed
+```
++ running aclocal -I m4 -I common/m4 ...
+aclocal: configure.ac: 8: macro `AM_DISABLE_STATIC' not found in library
+aclocal: configure.ac: 17: macro `AM_PROG_LIBTOOL' not found in library
+aclocal failed
+```
 
-What's wrong ?
+What's wrong?
 
 aclocal is unable to find two macros installed by libtool in a
 file called libtool.m4. Normally this would indicate that you don't have
@@ -95,7 +97,7 @@ You can do three things to fix this :
     where you replace prefix with the prefix where libtool was
     installed.
 
-## Why is "-Wall -Werror" being used ?
+## Why is "-Wall -Werror" being used?
 
 "-Wall" is being used because it finds a lot of possible problems
 with code. Not all of them are necessarily a problem, but it's better to
@@ -108,8 +110,10 @@ for git and prereleases so that people actually notice and fix problems
 found by "-Wall". We want people to actively hit and report or fix them.
 
 If for any reason you want to bypass these flags and you are certain
-it's the right thing to do, you can run
+it's the right thing to do, you can run:
 
-    make ERROR_CFLAGS=""
+```
+make ERROR_CFLAGS=""
+```
 
 to clear the CFLAGS for error checking.
