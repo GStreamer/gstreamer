@@ -142,6 +142,9 @@ class FakeMediaDescriptor(MediaDescriptor):
     def is_image(self):
         return self._infos.get('is-image', False)
 
+    def is_live(self):
+        return self._infos.get('is-live', False)
+
     def get_num_tracks(self, track_type):
         return self._infos.get('num-%s-tracks' % track_type,
                                self._pipeline_desc.count(track_type + "sink"))
