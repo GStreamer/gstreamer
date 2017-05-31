@@ -1493,7 +1493,7 @@ gst_bin_deep_element_removed_func (GstBin * bin, GstBin * sub_bin,
 /**
  * gst_bin_add:
  * @bin: a #GstBin
- * @element: (transfer full): the #GstElement to add
+ * @element: (transfer floating): the #GstElement to add
  *
  * Adds the given element to the bin.  Sets the element's parent, and thus
  * takes ownership of the element. An element can only be added to one bin.
