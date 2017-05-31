@@ -2061,9 +2061,11 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux, gboolean stop_updates)
     g_mutex_unlock (&stream->fragment_download_lock);
   }
 
+  GST_MANIFEST_UNLOCK (demux);
   g_mutex_lock (&demux->priv->preroll_lock);
   g_cond_broadcast (&demux->priv->preroll_cond);
   g_mutex_unlock (&demux->priv->preroll_lock);
+  GST_MANIFEST_LOCK (demux);
 
   g_mutex_lock (&demux->priv->manifest_update_lock);
   g_cond_broadcast (&demux->priv->manifest_cond);
