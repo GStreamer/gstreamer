@@ -1938,8 +1938,6 @@ gst_dash_demux_advance_period (GstAdaptiveDemux * demux)
 {
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
 
-  g_return_if_fail (gst_mpd_client_has_next_period (dashdemux->client));
-
   if (demux->segment.rate >= 0) {
     if (!gst_mpd_client_set_period_index (dashdemux->client,
             gst_mpd_client_get_period_index (dashdemux->client) + 1)) {
