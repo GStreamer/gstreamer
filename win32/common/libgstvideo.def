@@ -107,7 +107,6 @@ EXPORTS
 	gst_video_decoder_add_to_frame
 	gst_video_decoder_allocate_output_buffer
 	gst_video_decoder_allocate_output_frame
-	gst_video_decoder_allocate_output_frame_with_params
 	gst_video_decoder_drop_frame
 	gst_video_decoder_finish_frame
 	gst_video_decoder_get_allocator
@@ -137,7 +136,6 @@ EXPORTS
 	gst_video_decoder_set_output_state
 	gst_video_decoder_set_packetized
 	gst_video_decoder_set_use_default_pad_acceptcaps
-	gst_video_direction_get_type
 	gst_video_dither_flags_get_type
 	gst_video_dither_free
 	gst_video_dither_line
@@ -167,9 +165,6 @@ EXPORTS
 	gst_video_event_parse_downstream_force_key_unit
 	gst_video_event_parse_still_frame
 	gst_video_event_parse_upstream_force_key_unit
-	gst_video_field_order_from_string
-	gst_video_field_order_get_type
-	gst_video_field_order_to_string
 	gst_video_filter_get_type
 	gst_video_flags_get_type
 	gst_video_format_flags_get_type
@@ -231,7 +226,6 @@ EXPORTS
 	gst_video_orientation_get_type
 	gst_video_orientation_get_vcenter
 	gst_video_orientation_get_vflip
-	gst_video_orientation_method_get_type
 	gst_video_orientation_set_hcenter
 	gst_video_orientation_set_hflip
 	gst_video_orientation_set_vcenter
@@ -292,7 +286,6 @@ EXPORTS
 	gst_video_tile_mode_get_type
 	gst_video_tile_type_get_type
 	gst_video_time_code_add_frames
-	gst_video_time_code_add_interval
 	gst_video_time_code_clear
 	gst_video_time_code_compare
 	gst_video_time_code_copy
@@ -301,21 +294,11 @@ EXPORTS
 	gst_video_time_code_get_type
 	gst_video_time_code_increment_frame
 	gst_video_time_code_init
-	gst_video_time_code_init_from_date_time
-	gst_video_time_code_interval_clear
-	gst_video_time_code_interval_copy
-	gst_video_time_code_interval_free
-	gst_video_time_code_interval_get_type
-	gst_video_time_code_interval_init
-	gst_video_time_code_interval_new
-	gst_video_time_code_interval_new_from_string
 	gst_video_time_code_is_valid
 	gst_video_time_code_meta_api_get_type
 	gst_video_time_code_meta_get_info
 	gst_video_time_code_new
 	gst_video_time_code_new_empty
-	gst_video_time_code_new_from_date_time
-	gst_video_time_code_new_from_string
 	gst_video_time_code_nsec_since_daily_jam
 	gst_video_time_code_to_date_time
 	gst_video_time_code_to_string
