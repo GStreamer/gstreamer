@@ -718,6 +718,7 @@ gst_gl_value_set_texture_target_from_mask (GValue * value,
       ret = TRUE;
     }
 
+    g_value_unset(&item);
     return ret;
   }
 }
