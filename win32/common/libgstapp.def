@@ -1,4 +1,5 @@
 EXPORTS
+	gst_app_sink_get_buffer_list_support
 	gst_app_sink_get_caps
 	gst_app_sink_get_drop
 	gst_app_sink_get_emit_signals
@@ -8,6 +9,7 @@ EXPORTS
 	gst_app_sink_is_eos
 	gst_app_sink_pull_preroll
 	gst_app_sink_pull_sample
+	gst_app_sink_set_buffer_list_support
 	gst_app_sink_set_callbacks
 	gst_app_sink_set_caps
 	gst_app_sink_set_drop

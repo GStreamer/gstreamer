@@ -1,6 +1,7 @@
 EXPORTS
 	_gst_audio_decoder_error
 	gst_audio_base_sink_create_ringbuffer
+	gst_audio_base_sink_discont_reason_get_type
 	gst_audio_base_sink_get_alignment_threshold
 	gst_audio_base_sink_get_discont_wait
 	gst_audio_base_sink_get_drift_tolerance
@@ -56,6 +57,7 @@ EXPORTS
 	gst_audio_converter_new
 	gst_audio_converter_reset
 	gst_audio_converter_samples
+	gst_audio_converter_supports_inplace
 	gst_audio_converter_update_config
 	gst_audio_decoder_allocate_output_buffer
 	gst_audio_decoder_finish_frame
@@ -196,6 +198,7 @@ EXPORTS
 	gst_audio_ring_buffer_release
 	gst_audio_ring_buffer_samples_done
 	gst_audio_ring_buffer_set_callback
+	gst_audio_ring_buffer_set_callback_full
 	gst_audio_ring_buffer_set_channel_positions
 	gst_audio_ring_buffer_set_flushing
 	gst_audio_ring_buffer_set_sample

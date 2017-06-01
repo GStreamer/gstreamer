@@ -94,6 +94,7 @@ EXPORTS
 	gst_encoding_container_profile_new
 	gst_encoding_list_all_targets
 	gst_encoding_list_available_categories
+	gst_encoding_profile_copy
 	gst_encoding_profile_find
 	gst_encoding_profile_from_discoverer
 	gst_encoding_profile_get_allow_dynamic_output

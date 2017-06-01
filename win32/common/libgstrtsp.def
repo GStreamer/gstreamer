@@ -1,5 +1,8 @@
 EXPORTS
+	gst_rtsp_auth_credential_get_type
+	gst_rtsp_auth_credentials_free
 	gst_rtsp_auth_method_get_type
+	gst_rtsp_auth_param_get_type
 	gst_rtsp_connection_accept
 	gst_rtsp_connection_clear_auth_params
 	gst_rtsp_connection_close
@@ -54,6 +57,7 @@ EXPORTS
 	gst_rtsp_family_get_type
 	gst_rtsp_find_header_field
 	gst_rtsp_find_method
+	gst_rtsp_generate_digest_auth_response
 	gst_rtsp_header_allow_multiple
 	gst_rtsp_header_as_text
 	gst_rtsp_header_field_get_type
@@ -75,6 +79,7 @@ EXPORTS
 	gst_rtsp_message_new_data
 	gst_rtsp_message_new_request
 	gst_rtsp_message_new_response
+	gst_rtsp_message_parse_auth_credentials
 	gst_rtsp_message_parse_data
 	gst_rtsp_message_parse_request
 	gst_rtsp_message_parse_response
