@@ -64,7 +64,7 @@ _get_property (GObject * object,
 {
   switch (property_id) {
     case PROP_RUNNER:
-      g_value_set_object (value,
+      g_value_take_object (value,
           gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (object)));
       break;
     default:

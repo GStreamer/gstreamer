@@ -45,7 +45,6 @@ G_BEGIN_DECLS
 #define GST_VALIDATE_MONITOR_CAST(obj)                ((GstValidateMonitor*)(obj))
 #define GST_VALIDATE_MONITOR_CLASS_CAST(klass)        ((GstValidateMonitorClass*)(klass))
 
-#define GST_VALIDATE_MONITOR_GET_RUNNER(m) (gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER_CAST (m)))
 #define GST_VALIDATE_MONITOR_GET_PARENT(m) (GST_VALIDATE_MONITOR_CAST (m)->parent)
 
 #define GST_VALIDATE_MONITOR_LOCK(m)			\

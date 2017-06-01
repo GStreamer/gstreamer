@@ -270,18 +270,22 @@ gst_validate_bin_monitor_wrap_element (GstValidateBinMonitor * monitor,
     GstElement * element)
 {
   GstValidateElementMonitor *element_monitor;
+  GstValidateRunner *runner =
+      gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
+
   GST_DEBUG_OBJECT (monitor, "Wrapping element %s", GST_ELEMENT_NAME (element));
 
   element_monitor =
       GST_VALIDATE_ELEMENT_MONITOR_CAST (gst_validate_monitor_factory_create
-      (GST_OBJECT_CAST (element), GST_VALIDATE_MONITOR_GET_RUNNER (monitor),
-          GST_VALIDATE_MONITOR_CAST (monitor)));
+      (GST_OBJECT_CAST (element), runner, GST_VALIDATE_MONITOR_CAST (monitor)));
   g_return_if_fail (element_monitor != NULL);
 
   GST_VALIDATE_MONITOR_LOCK (monitor);
   monitor->element_monitors = g_list_prepend (monitor->element_monitors,
       element_monitor);
   GST_VALIDATE_MONITOR_UNLOCK (monitor);
+
+  gst_object_unref (runner);
 }
 
 static void

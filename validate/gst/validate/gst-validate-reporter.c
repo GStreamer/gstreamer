@@ -37,7 +37,7 @@
 
 typedef struct _GstValidateReporterPrivate
 {
-  GstValidateRunner *runner;
+  GWeakRef runner;
   GHashTable *reports;
   char *name;
   guint log_handler_id;
@@ -61,10 +61,6 @@ gst_validate_reporter_default_init (GstValidateReporterInterface * iface)
 static void
 _free_priv (GstValidateReporterPrivate * priv)
 {
-  if (priv->runner)
-    g_object_remove_weak_pointer (G_OBJECT (priv->runner),
-        (gpointer) & priv->runner);
-
   if (g_log_handler == priv) {
     g_log_set_default_handler (g_log_default_handler, NULL);
     g_log_handler = NULL;
@@ -73,6 +69,7 @@ _free_priv (GstValidateReporterPrivate * priv)
   g_hash_table_unref (priv->reports);
   g_free (priv->name);
   g_mutex_clear (&priv->reports_lock);
+  g_weak_ref_clear (&priv->runner);
   g_slice_free (GstValidateReporterPrivate, priv);
 }
 
@@ -177,6 +174,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   GstValidateIssue *issue;
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
   GstValidateInterceptionReturn int_ret;
+  GstValidateRunner *runner = NULL;
 
   issue = gst_validate_issue_from_id (issue_id);
 
@@ -216,14 +214,14 @@ gst_validate_report_valist (GstValidateReporter * reporter,
 
   prev_report = g_hash_table_lookup (priv->reports, (gconstpointer) issue_id);
 
+  runner = gst_validate_reporter_get_runner (reporter);
   if (prev_report) {
     GstValidateReportingDetails reporter_level =
         gst_validate_reporter_get_reporting_level (reporter);
     GstValidateReportingDetails runner_level = GST_VALIDATE_SHOW_UNKNOWN;
 
-    if (priv->runner)
-      runner_level =
-          gst_validate_runner_get_default_reporting_level (priv->runner);
+    if (runner)
+      runner_level = gst_validate_runner_get_default_reporting_level (runner);
 
     if (reporter_level == GST_VALIDATE_SHOW_ALL ||
         (runner_level == GST_VALIDATE_SHOW_ALL &&
@@ -238,19 +236,22 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   g_hash_table_insert (priv->reports, (gpointer) issue_id, report);
   GST_VALIDATE_REPORTER_REPORTS_UNLOCK (reporter);
 
-  if (priv->runner && int_ret == GST_VALIDATE_REPORTER_REPORT) {
-    gst_validate_runner_add_report (priv->runner, report);
+  if (runner && int_ret == GST_VALIDATE_REPORTER_REPORT) {
+    gst_validate_runner_add_report (runner, report);
   }
 
   if (gst_validate_report_check_abort (report)) {
-    if (priv->runner)
-      gst_validate_runner_printf (priv->runner);
+    if (runner)
+      gst_validate_runner_printf (runner);
 
     g_error ("Fatal report received: %" GST_VALIDATE_ERROR_REPORT_PRINT_FORMAT,
         GST_VALIDATE_REPORT_PRINT_ARGS (report));
   }
 
 done:
+  if (runner)
+    gst_object_unref (runner);
+
   g_free (message);
 }
 
@@ -337,14 +338,14 @@ gst_validate_reporter_get_name (GstValidateReporter * reporter)
  * gst_validate_reporter_get_runner:
  * @reporter: The reporter to get the runner from
  *
- * Returns: (transfer none): The runner
+ * Returns: (transfer full): The runner
  */
 GstValidateRunner *
 gst_validate_reporter_get_runner (GstValidateReporter * reporter)
 {
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
 
-  return priv->runner;
+  return g_weak_ref_get (&priv->runner);
 }
 
 void
@@ -353,14 +354,7 @@ gst_validate_reporter_set_runner (GstValidateReporter * reporter,
 {
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
 
-  priv->runner = runner;
-
-  /* The runner is supposed to stay alive during the whole scenario but if
-   * we are using another tracer we may have messages catched after it has been
-   * destroyed. This may happen if the 'leaks' tracer detected leaks for
-   * example. */
-  if (runner)
-    g_object_add_weak_pointer (G_OBJECT (runner), (gpointer) & priv->runner);
+  g_weak_ref_set (&priv->runner, runner);
 
   g_object_notify (G_OBJECT (reporter), "validate-runner");
 }

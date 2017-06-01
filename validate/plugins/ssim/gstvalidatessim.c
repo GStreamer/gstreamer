@@ -267,11 +267,13 @@ static void
 _runner_set (GObject * object, GParamSpec * pspec, gpointer user_data)
 {
   ValidateSsimOverride *self = VALIDATE_SSIM_OVERRIDE (object);
+  GstValidateRunner *runner =
+      gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (self));
 
   self->priv->is_attached = TRUE;
 
-  g_signal_connect (gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER
-          (self)), "stopping", G_CALLBACK (runner_stopping), self);
+  g_signal_connect (runner, "stopping", G_CALLBACK (runner_stopping), self);
+  gst_object_unref (runner);
 }
 
 static ValidateSsimOverride *

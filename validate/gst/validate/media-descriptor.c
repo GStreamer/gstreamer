@@ -175,7 +175,7 @@ _get_property (GObject * object, guint prop_id,
     case PROP_RUNNER:
       /* we assume the runner is valid as long as this scenario is,
        * no ref taken */
-      g_value_set_object (value,
+      g_value_take_object (value,
           gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (object)));
       break;
     default:

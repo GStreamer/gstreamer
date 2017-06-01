@@ -315,17 +315,21 @@ gst_validate_element_monitor_wrap_pad (GstValidateElementMonitor * monitor,
     GstPad * pad)
 {
   GstValidatePadMonitor *pad_monitor;
+  GstValidateRunner *runner =
+      gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
+
   GST_DEBUG_OBJECT (monitor, "Wrapping pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   pad_monitor =
       GST_VALIDATE_PAD_MONITOR (gst_validate_monitor_factory_create (GST_OBJECT
-          (pad), GST_VALIDATE_MONITOR_GET_RUNNER (monitor),
-          GST_VALIDATE_MONITOR (monitor)));
+          (pad), runner, GST_VALIDATE_MONITOR (monitor)));
   g_return_if_fail (pad_monitor != NULL);
 
   GST_VALIDATE_MONITOR_LOCK (monitor);
   monitor->pad_monitors = g_list_prepend (monitor->pad_monitors, pad_monitor);
   GST_VALIDATE_MONITOR_UNLOCK (monitor);
+
+  gst_object_unref (runner);
 }
 
 static void

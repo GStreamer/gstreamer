@@ -698,6 +698,7 @@ gst_validate_report_new (GstValidateIssue * issue,
   issue_type_details = gst_validate_runner_get_reporting_level_for_name (runner,
       g_quark_to_string (issue->issue_id));
   default_details = gst_validate_runner_get_default_reporting_details (runner);
+  gst_object_unref (runner);
   if (reporter_details != GST_VALIDATE_SHOW_ALL &&
       reporter_details != GST_VALIDATE_SHOW_UNKNOWN)
     return report;

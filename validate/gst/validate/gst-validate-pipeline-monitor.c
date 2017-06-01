@@ -615,6 +615,9 @@ gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
   gchar **scenarios = NULL;
   GstObject *target =
       gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
+  GstValidateRunner *runner =
+      gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
+
 
   if ((scenarios_names = g_getenv ("GST_VALIDATE_SCENARIO"))) {
     gint i;
@@ -632,8 +635,8 @@ gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
         }
       }
       monitor->scenario =
-          gst_validate_scenario_factory_create (GST_VALIDATE_MONITOR_GET_RUNNER
-          (monitor), GST_ELEMENT_CAST (target), scenario_v[0]);
+          gst_validate_scenario_factory_create (runner,
+          GST_ELEMENT_CAST (target), scenario_v[0]);
       g_strfreev (scenario_v);
     }
   }
@@ -641,6 +644,8 @@ done:
   g_strfreev (scenarios);
   if (target)
     gst_object_unref (target);
+  if (runner)
+    gst_object_unref (runner);
 }
 
 /**

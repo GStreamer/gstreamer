@@ -271,6 +271,9 @@ _determine_reporting_level (GstValidateMonitor * monitor)
   if (object)
     gst_object_unref (object);
 
+  if (runner)
+    gst_object_unref (runner);
+
   monitor->level = level;
 }
 
@@ -341,6 +344,7 @@ gst_validate_monitor_attach_override (GstValidateMonitor * monitor,
     GstValidateOverride * override)
 {
   GstValidateRunner *runner;
+  GstValidateRunner *mrunner;
 
   if (!gst_validate_override_can_attach (override, monitor)) {
     GST_INFO_OBJECT (monitor, "Can not attach override %s",
@@ -350,16 +354,20 @@ gst_validate_monitor_attach_override (GstValidateMonitor * monitor,
   }
 
   runner = gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (override));
-
+  mrunner = gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
   GST_VALIDATE_MONITOR_OVERRIDES_LOCK (monitor);
-  if (runner)
-    g_assert (runner ==
-        gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor)));
-  else
+  if (runner) {
+    g_assert (runner == mrunner);
+  } else
     gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (override),
-        gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor)));
+        mrunner);
   g_queue_push_tail (&monitor->overrides, override);
   GST_VALIDATE_MONITOR_OVERRIDES_UNLOCK (monitor);
+
+  if (runner)
+    gst_object_unref (runner);
+  if (mrunner)
+    gst_object_unref (mrunner);
 }
 
 static void
@@ -417,7 +425,8 @@ gst_validate_monitor_get_property (GObject * object, guint prop_id,
       g_value_take_object (value, gst_validate_monitor_get_pipeline (monitor));
       break;
     case PROP_RUNNER:
-      g_value_set_object (value, GST_VALIDATE_MONITOR_GET_RUNNER (monitor));
+      g_value_take_object (value,
+          gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor)));
       break;
     case PROP_VALIDATE_PARENT:
       g_value_set_object (value, GST_VALIDATE_MONITOR_GET_PARENT (monitor));
