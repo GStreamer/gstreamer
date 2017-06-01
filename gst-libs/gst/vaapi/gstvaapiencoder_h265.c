@@ -40,8 +40,9 @@
 
 /* Supported set of VA rate controls, within this implementation */
 #define SUPPORTED_RATECONTROLS                          \
-  (GST_VAAPI_RATECONTROL_MASK (CQP)) |                  \
-  GST_VAAPI_RATECONTROL_MASK (CBR)
+  (GST_VAAPI_RATECONTROL_MASK (CQP) |                   \
+   GST_VAAPI_RATECONTROL_MASK (CBR) |                   \
+   GST_VAAPI_RATECONTROL_MASK (VBR))
 
 /* Supported set of tuning options, within this implementation */
 #define SUPPORTED_TUNE_OPTIONS                          \
@@ -1576,8 +1577,9 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   pic_param->pic_fields.bits.transform_skip_enabled_flag = TRUE;
   /* it seems driver requires enablement of cu_qp_delta_enabled_flag
    * to modifiy QP values in CBR mode encoding */
-  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR)
-    pic_param->pic_fields.bits.cu_qp_delta_enabled_flag = TRUE;
+  pic_param->pic_fields.bits.cu_qp_delta_enabled_flag =
+      GST_VAAPI_ENCODER_RATE_CONTROL (encoder) != GST_VAAPI_RATECONTROL_CQP;
+
   pic_param->pic_fields.bits.pps_loop_filter_across_slices_enabled_flag = TRUE;
 
   if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture))
@@ -1904,6 +1906,7 @@ ensure_bitrate (GstVaapiEncoderH265 * encoder)
 
   switch (GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
     case GST_VAAPI_RATECONTROL_CBR:
+    case GST_VAAPI_RATECONTROL_VBR:
       if (!base_encoder->bitrate) {
         /* FIXME: Provide better estimation */
         /* Using a 1/6 compression ratio */
