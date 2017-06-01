@@ -1420,11 +1420,23 @@ gst_base_src_default_alloc (GstBaseSrc * src, guint64 offset,
 {
   GstFlowReturn ret;
   GstBaseSrcPrivate *priv = src->priv;
+  GstBufferPool *pool = NULL;
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params;
 
+  GST_OBJECT_LOCK (src);
   if (priv->pool) {
-    ret = gst_buffer_pool_acquire_buffer (priv->pool, buffer, NULL);
+    pool = gst_object_ref (priv->pool);
+  } else if (priv->allocator) {
+    allocator = gst_object_ref (priv->allocator);
+  }
+  params = priv->params;
+  GST_OBJECT_UNLOCK (src);
+
+  if (pool) {
+    ret = gst_buffer_pool_acquire_buffer (pool, buffer, NULL);
   } else if (size != -1) {
-    *buffer = gst_buffer_new_allocate (priv->allocator, size, &priv->params);
+    *buffer = gst_buffer_new_allocate (allocator, size, &params);
     if (G_UNLIKELY (*buffer == NULL))
       goto alloc_failed;
 
@@ -1434,13 +1446,21 @@ gst_base_src_default_alloc (GstBaseSrc * src, guint64 offset,
         size);
     goto alloc_failed;
   }
+
+done:
+  if (pool)
+    gst_object_unref (pool);
+  if (allocator)
+    gst_object_unref (allocator);
+
   return ret;
 
   /* ERRORS */
 alloc_failed:
   {
     GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", size);
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 }
 
@@ -3866,12 +3886,16 @@ failure:
 GstBufferPool *
 gst_base_src_get_buffer_pool (GstBaseSrc * src)
 {
+  GstBufferPool *ret = NULL;
+
   g_return_val_if_fail (GST_IS_BASE_SRC (src), NULL);
 
+  GST_OBJECT_LOCK (src);
   if (src->priv->pool)
-    return gst_object_ref (src->priv->pool);
+    ret = gst_object_ref (src->priv->pool);
+  GST_OBJECT_UNLOCK (src);
 
-  return NULL;
+  return ret;
 }
 
 /**
@@ -3893,10 +3917,12 @@ gst_base_src_get_allocator (GstBaseSrc * src,
 {
   g_return_if_fail (GST_IS_BASE_SRC (src));
 
+  GST_OBJECT_LOCK (src);
   if (allocator)
     *allocator = src->priv->allocator ?
         gst_object_ref (src->priv->allocator) : NULL;
 
   if (params)
     *params = src->priv->params;
+  GST_OBJECT_UNLOCK (src);
 }
