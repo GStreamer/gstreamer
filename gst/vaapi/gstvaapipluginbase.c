@@ -569,6 +569,31 @@ get_dmabuf_surface_allocation_flags (void)
   return GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE;
 }
 
+static inline GstAllocator *
+create_dmabuf_srcpad_allocator (GstVaapiPluginBase * plugin,
+    GstVideoInfo * vinfo, gboolean check_for_map)
+{
+  GstAllocator *allocator;
+
+  if (!GST_IS_VIDEO_DECODER (plugin) && !GST_IS_BASE_TRANSFORM (plugin))
+    return NULL;
+
+  allocator = gst_vaapi_dmabuf_allocator_new (plugin->display, vinfo,
+      get_dmabuf_surface_allocation_flags (), GST_PAD_SRC);
+  if (!allocator || !check_for_map)
+    return allocator;
+
+  /* the dmabuf allocator *must* be capable to map a buffer with raw
+   * caps and the there's no evidence of downstream dmabuf
+   * importation */
+  if (!gst_vaapi_dmabuf_can_map (plugin->display, allocator)) {
+    GST_INFO_OBJECT (plugin, "dmabuf allocator generates unmappable buffers");
+    gst_object_replace ((GstObject **) & allocator, NULL);
+  }
+
+  return allocator;
+}
+
 static gboolean
 ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
     GstCaps * caps)
@@ -583,16 +608,13 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
 
   plugin->srcpad_allocator = NULL;
   if (caps && gst_caps_is_video_raw (caps)) {
-    if (plugin->srcpad_can_dmabuf) {
-      if (GST_IS_VIDEO_DECODER (plugin) || GST_IS_BASE_TRANSFORM (plugin)) {
-        plugin->srcpad_allocator =
-            gst_vaapi_dmabuf_allocator_new (plugin->display, vinfo,
-            get_dmabuf_surface_allocation_flags (), GST_PAD_SRC);
-      }
-    } else if (plugin->enable_direct_rendering) {
+    GstAllocator *allocator = create_dmabuf_srcpad_allocator (plugin, vinfo,
+        !plugin->srcpad_can_dmabuf);
+    if (!allocator && plugin->enable_direct_rendering) {
       usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
       GST_INFO_OBJECT (plugin, "enabling direct rendering in source allocator");
     }
+    plugin->srcpad_allocator = allocator;
   }
 
   if (!plugin->srcpad_allocator) {
