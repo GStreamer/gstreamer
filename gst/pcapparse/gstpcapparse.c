@@ -550,14 +550,15 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
       magic = *((guint32 *) data);
       major_version = *((guint16 *) (data + 4));
-      linktype = gst_pcap_parse_read_uint32 (self, data + 20);
+      linktype = *((guint32 *) (data + 20));
       gst_adapter_unmap (self->adapter);
 
       if (magic == 0xa1b2c3d4) {
         self->swap_endian = FALSE;
       } else if (magic == 0xd4c3b2a1) {
         self->swap_endian = TRUE;
-        major_version = major_version << 8 | major_version >> 8;
+        major_version = GUINT16_SWAP_LE_BE (major_version);
+        linktype = GUINT32_SWAP_LE_BE (linktype);
       } else {
         GST_ELEMENT_ERROR (self, STREAM, WRONG_TYPE, (NULL),
             ("File is not a libpcap file, magic is %X", magic));
