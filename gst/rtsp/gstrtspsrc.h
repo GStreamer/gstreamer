@@ -158,6 +158,9 @@ struct _GstRTSPStream {
   gboolean      is_multicast;
   guint         ttl;
 
+  /* A unique and stable id we will use for the stream start event */
+  gchar *stream_id;
+
   GstStructure     *rtx_pt_map;
 };
 

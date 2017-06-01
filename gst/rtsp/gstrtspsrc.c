@@ -1503,6 +1503,17 @@ gst_rtspsrc_collect_connections (GstRTSPSrc * src, const GstSDPMessage * sdp,
   }
 }
 
+static gchar *
+make_stream_id (GstRTSPStream * stream, const GstSDPMedia * media)
+{
+  gchar *stream_id = g_strdup_printf ("%s%d%d%s%d", media->media, media->port,
+      media->num_ports, media->proto, stream->default_pt);
+  gchar *res = g_compute_checksum_for_string (G_CHECKSUM_MD5, stream_id, -1);
+
+  g_free (stream_id);
+  return res;
+}
+
 /*   m=<media> <UDP port> RTP/AVP <payload>
  */
 static void
@@ -1583,6 +1594,8 @@ gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
     g_array_append_val (stream->ptmap, item);
   }
 
+  stream->stream_id = make_stream_id (stream, media);
+
   gst_caps_unref (global_caps);
   return;
 
@@ -1652,6 +1665,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
   stream->profile = GST_RTSP_PROFILE_AVP;
   stream->ptmap = g_array_new (FALSE, FALSE, sizeof (PtMapItem));
   stream->mikey = NULL;
+  stream->stream_id = NULL;
   g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
 
   /* collect bandwidth information for this steam. FIXME, configure in the RTP
@@ -1734,6 +1748,7 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
   g_free (stream->destination);
   g_free (stream->control_url);
   g_free (stream->conninfo.location);
+  g_free (stream->stream_id);
 
   for (i = 0; i < 2; i++) {
     if (stream->udpsrc[i]) {
@@ -2298,6 +2313,33 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstObject * parent,
   return res;
 }
 
+static gboolean
+gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  GstRTSPStream *stream;
+
+  stream = gst_pad_get_element_private (pad);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:{
+      const gchar *upstream_id;
+      gchar *stream_id;
+
+      gst_event_parse_stream_start (event, &upstream_id);
+      stream_id = g_strdup_printf ("%s/%s", upstream_id, stream->stream_id);
+
+      gst_event_unref (event);
+      event = gst_event_new_stream_start (stream_id);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_push_event (stream->srcpad, event);
+}
+
 /* this is the final event function we receive on the internal source pad when
  * we deal with TCP connections */
 static gboolean
@@ -2544,6 +2586,7 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
   GList *ostreams;
   GstRTSPStream *stream;
   gboolean all_added;
+  GstPad *internal_src;
 
   GST_DEBUG_OBJECT (src, "got new manager pad %" GST_PTR_FORMAT, pad);
 
@@ -2587,6 +2630,13 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
   stream->srcpad = gst_ghost_pad_new_from_template (name, pad, template);
   gst_object_unref (template);
   g_free (name);
+
+  /* We intercept and modify the stream start event */
+  internal_src =
+      GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (stream->srcpad)));
+  gst_pad_set_element_private (internal_src, stream);
+  gst_pad_set_event_function (internal_src, gst_rtspsrc_handle_src_sink_event);
+  gst_object_unref (internal_src);
 
   gst_pad_set_event_function (stream->srcpad, gst_rtspsrc_handle_src_event);
   gst_pad_set_query_function (stream->srcpad, gst_rtspsrc_handle_src_query);
