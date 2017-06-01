@@ -40,7 +40,8 @@
 /* Supported set of VA rate controls, within this implementation */
 #define SUPPORTED_RATECONTROLS                  \
   (GST_VAAPI_RATECONTROL_MASK (CQP) |           \
-   GST_VAAPI_RATECONTROL_MASK (CBR))
+   GST_VAAPI_RATECONTROL_MASK (CBR) |           \
+   GST_VAAPI_RATECONTROL_MASK (VBR))
 
 /* Supported set of tuning options, within this implementation */
 #define SUPPORTED_TUNE_OPTIONS \
@@ -125,6 +126,7 @@ ensure_bitrate (GstVaapiEncoderVP8 * encoder)
   /* Default compression: 64 bits per macroblock  */
   switch (GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
     case GST_VAAPI_RATECONTROL_CBR:
+    case GST_VAAPI_RATECONTROL_VBR:
       if (!base_encoder->bitrate) {
         base_encoder->bitrate =
             gst_util_uint64_scale (GST_VAAPI_ENCODER_WIDTH (encoder) *
@@ -220,7 +222,8 @@ fill_sequence (GstVaapiEncoderVP8 * encoder, GstVaapiEncSequence * sequence)
   seq_param->frame_width = GST_VAAPI_ENCODER_WIDTH (encoder);
   seq_param->frame_height = GST_VAAPI_ENCODER_HEIGHT (encoder);
 
-  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) & GST_VAAPI_RATECONTROL_CBR)
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR ||
+      GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_VBR)
     seq_param->bits_per_second = base_encoder->bitrate * 1000;
 
   seq_param->intra_period = base_encoder->keyframe_period;
