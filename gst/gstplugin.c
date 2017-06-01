@@ -699,6 +699,8 @@ extract_symname (const char *filename)
     prefix_len += 6;
   else if (g_str_has_prefix (bname, "lib"))
     prefix_len += 3;
+  else if (g_str_has_prefix(bname, "gst"))
+    prefix_len += 3;
 
   dot = g_utf8_strchr (bname, -1, '.');
   if (dot)
