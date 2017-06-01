@@ -1328,7 +1328,11 @@ unpack_ABGR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
   s += x * 4;
 
-  video_orc_unpack_ABGR (dest, s, width);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_unpack_ABGR_le (dest, s, width);
+#else
+  video_orc_unpack_ABGR_be (dest, s, width);
+#endif
 }
 
 static void
@@ -1339,7 +1343,11 @@ pack_ABGR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   guint8 *restrict d = GET_LINE (y);
 
-  video_orc_pack_ABGR (d, src, width);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_pack_ABGR_le (d, src, width);
+#else
+  video_orc_pack_ABGR_be (d, src, width);
+#endif
 }
 
 #define PACK_RGBA GST_VIDEO_FORMAT_ARGB, unpack_RGBA, 1, pack_RGBA
@@ -1352,7 +1360,11 @@ unpack_RGBA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
   s += x * 4;
 
-  video_orc_unpack_RGBA (dest, s, width);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_unpack_RGBA_le (dest, s, width);
+#else
+  video_orc_unpack_RGBA_be (dest, s, width);
+#endif
 }
 
 static void
@@ -1363,7 +1375,11 @@ pack_RGBA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 {
   guint8 *restrict d = GET_LINE (y);
 
-  video_orc_pack_RGBA (d, src, width);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_pack_RGBA_le (d, src, width);
+#else
+  video_orc_pack_RGBA_be (d, src, width);
+#endif
 }
 
 #define PACK_RGB GST_VIDEO_FORMAT_ARGB, unpack_RGB, 1, pack_RGB

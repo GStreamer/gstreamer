@@ -333,7 +333,7 @@ swapl argb, bgra
 
 swapl bgra, argb
 
-.function video_orc_pack_RGBA
+.function video_orc_pack_RGBA_le
 .dest 4 rgba guint8
 .source 4 argb guint8
 .temp 4 a
@@ -344,7 +344,7 @@ shrul a, r, 8
 shll r, r, 24
 orl rgba, r, a
 
-.function video_orc_unpack_RGBA
+.function video_orc_unpack_RGBA_le
 .dest 4 argb guint8
 .source 4 rgba guint8
 .temp 4 a
@@ -355,7 +355,30 @@ shll a, r, 8
 shrul r, r, 24
 orl argb, r, a
 
-.function video_orc_unpack_ABGR
+.function video_orc_pack_RGBA_be
+.dest 4 rgba guint8
+.source 4 argb guint8
+.temp 4 a
+.temp 4 r
+
+loadl r, argb
+shrul a, r, 24
+shll r, r, 8
+orl rgba, r, a
+
+.function video_orc_unpack_RGBA_be
+.dest 4 argb guint8
+.source 4 rgba guint8
+.temp 4 a
+.temp 4 r
+
+loadl r, rgba
+shll a, r, 24
+shrul r, r, 8
+orl argb, r, a
+
+
+.function video_orc_unpack_ABGR_le
 .dest 4 argb guint8
 .source 4 abgr guint8
 .temp 4 a
@@ -366,7 +389,7 @@ shll a, r, 8
 shrul r, r, 24
 orl argb, r, a
 
-.function video_orc_pack_ABGR
+.function video_orc_pack_ABGR_le
 .dest 4 abgr guint8
 .source 4 argb guint8
 .temp 4 a
@@ -376,6 +399,29 @@ swapl r, argb
 shll a, r, 8
 shrul r, r, 24
 orl abgr, r, a
+
+.function video_orc_unpack_ABGR_be
+.dest 4 argb guint8
+.source 4 abgr guint8
+.temp 4 a
+.temp 4 r
+
+swapl r, abgr
+shll a, r, 24
+shrul r, r, 8
+orl argb, r, a
+
+.function video_orc_pack_ABGR_be
+.dest 4 abgr guint8
+.source 4 argb guint8
+.temp 4 a
+.temp 4 r
+
+swapl r, argb
+shll a, r, 24
+shrul r, r, 8
+orl abgr, r, a
+
 
 .function video_orc_unpack_NV12
 .dest 8 d guint8
