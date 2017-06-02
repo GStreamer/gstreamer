@@ -136,6 +136,17 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
    * GstVaapiEncoder:bitrate:
    *
    * The desired bitrate, expressed in kbps.
+   * This is available when rate-control is CBR or VBR.
+   *
+   * CBR: This applies equally to minimum, maximum and target bitrate in the driver.
+   * VBR: This applies to maximum bitrate in the driver.
+   *      Minimum bitrate will be calculated like the following in the driver.
+   *          if (target percentage < 50) minimum bitrate = 0
+   *          else minimum bitrate = maximum bitrate * (2 * target percentage -100) / 100
+   *      Target bitrate will be calculated like the following in the driver.
+   *          target bitrate = maximum bitrate * target percentage / 100
+   *
+   * Note that target percentage is set as 70 currently in GStreamer VA-API.
    */
   GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
       GST_VAAPI_ENCODER_PROP_BITRATE,
