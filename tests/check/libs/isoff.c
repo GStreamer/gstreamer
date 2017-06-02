@@ -180,12 +180,110 @@ GST_START_TEST (isoff_moof_parse)
 
 GST_END_TEST;
 
+GST_START_TEST (isoff_moof_parse_with_tfdt)
+{
+  /* INDENT-ON */
+  GstByteReader reader = GST_BYTE_READER_INIT (seg_2_m4f, sizeof (seg_2_m4f));
+  guint32 type;
+  guint8 extended_type[16];
+  guint header_size;
+  guint64 size;
+  GstMoofBox *moof;
+  GstTrafBox *traf;
+  GstTrunBox *trun;
+  guint i;
+
+  fail_unless (gst_isoff_parse_box_header (&reader, &type, extended_type,
+          &header_size, &size));
+  fail_unless (type == GST_ISOFF_FOURCC_MOOF);
+  fail_unless_equals_int (header_size, 8);
+  fail_unless_equals_uint64 (size, seg_2_m4f_len);
+
+  moof = gst_isoff_moof_box_parse (&reader);
+  fail_unless (moof != NULL);
+
+  fail_unless_equals_int (moof->mfhd.sequence_number, 4);
+  fail_unless_equals_int (moof->traf->len, 1);
+
+  traf = &g_array_index (moof->traf, GstTrafBox, 0);
+  fail_unless_equals_int (traf->tfhd.version, 0);
+  fail_unless_equals_int (traf->tfhd.flags,
+      GST_TFHD_FLAGS_DEFAULT_BASE_IS_MOOF);
+  fail_unless_equals_int (traf->tfhd.track_id, 2);
+  fail_unless_equals_uint64 (traf->tfhd.base_data_offset, 0);
+  fail_unless_equals_int (traf->tfhd.sample_description_index, 0);
+  fail_unless_equals_int (traf->tfhd.default_sample_duration, 0);
+  fail_unless_equals_int (traf->tfhd.default_sample_size, 0);
+  fail_unless_equals_int (traf->tfhd.default_sample_flags, 0);
+
+  fail_unless_equals_uint64 (traf->tfdt.decode_time, 132096);
+
+  fail_unless_equals_int (traf->trun->len, 1);
+  trun = &g_array_index (traf->trun, GstTrunBox, 0);
+
+  fail_unless_equals_int (trun->version, 0);
+  fail_unless_equals_int (trun->flags,
+      GST_TRUN_FLAGS_SAMPLE_SIZE_PRESENT |
+      GST_TRUN_FLAGS_SAMPLE_DURATION_PRESENT |
+      GST_TRUN_FLAGS_DATA_OFFSET_PRESENT);
+  fail_unless_equals_int (trun->sample_count, 129);
+  fail_unless_equals_int (trun->data_offset, size + header_size);
+  fail_unless_equals_int (trun->first_sample_flags, 0);
+
+  fail_unless_equals_int (trun->samples->len, 129);
+
+  for (i = 0; i < 129; i++) {
+    GstTrunSample *sample = &g_array_index (trun->samples, GstTrunSample, i);
+
+    fail_unless_equals_int (sample->sample_duration, seg_sample_duration);
+    fail_unless_equals_int (sample->sample_flags, 0x00000000);
+    fail_unless_equals_int (sample->sample_size, seg_2_sample_sizes[i]);
+  }
+
+  gst_isoff_moof_box_free (moof);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (isoff_moov_parse)
+{
+  /* INDENT-ON */
+  GstByteReader reader = GST_BYTE_READER_INIT (init_mp4, sizeof (init_mp4));
+  guint32 type;
+  guint8 extended_type[16];
+  guint header_size;
+  guint64 size;
+  GstMoovBox *moov;
+  GstTrakBox *trak;
+
+  fail_unless (gst_isoff_parse_box_header (&reader, &type, extended_type,
+          &header_size, &size));
+  fail_unless (type == GST_ISOFF_FOURCC_MOOV);
+  fail_unless_equals_int (header_size, 8);
+  fail_unless_equals_uint64 (size, sizeof (init_mp4));
+
+  moov = gst_isoff_moov_box_parse (&reader);
+  fail_unless (moov != NULL);
+
+  fail_unless_equals_int (moov->trak->len, 1);
+
+  trak = &g_array_index (moov->trak, GstTrakBox, 0);
+  fail_unless_equals_int (trak->tkhd.track_id, 2);
+  fail_unless (trak->mdia.hdlr.handler_type, GST_ISOFF_FOURCC_SOUN);
+  fail_unless_equals_int (trak->mdia.mdhd.timescale, seg_timescale);
+
+  gst_isoff_moov_box_free (moov);
+}
+
+GST_END_TEST;
+
 static Suite *
 dash_isoff_suite (void)
 {
   Suite *s = suite_create ("isoff");
   TCase *tc_isoff_box = tcase_create ("isoff-box-parsing");
   TCase *tc_moof = tcase_create ("moof");
+  TCase *tc_moov = tcase_create ("moov");
 
   tcase_add_test (tc_isoff_box, isoff_box_header_minimal);
   tcase_add_test (tc_isoff_box, isoff_box_header_long_size);
@@ -194,9 +292,12 @@ dash_isoff_suite (void)
 
   suite_add_tcase (s, tc_isoff_box);
 
-
   tcase_add_test (tc_moof, isoff_moof_parse);
+  tcase_add_test (tc_moof, isoff_moof_parse_with_tfdt);
   suite_add_tcase (s, tc_moof);
+
+  tcase_add_test (tc_moov, isoff_moov_parse);
+  suite_add_tcase (s, tc_moov);
 
   return s;
 }

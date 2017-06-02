@@ -45,8 +45,19 @@ gboolean gst_isoff_parse_box_header (GstByteReader * reader, guint32 * type, gui
 #define GST_ISOFF_FOURCC_TFHD GST_MAKE_FOURCC('t','f','h','d')
 #define GST_ISOFF_FOURCC_TRUN GST_MAKE_FOURCC('t','r','u','n')
 #define GST_ISOFF_FOURCC_TRAF GST_MAKE_FOURCC('t','r','a','f')
+#define GST_ISOFF_FOURCC_TFDT GST_MAKE_FOURCC('t','f','d','t')
 #define GST_ISOFF_FOURCC_MDAT GST_MAKE_FOURCC('m','d','a','t')
+#define GST_ISOFF_FOURCC_MOOV GST_MAKE_FOURCC('m','o','o','v')
+#define GST_ISOFF_FOURCC_TRAK GST_MAKE_FOURCC('t','r','a','k')
+#define GST_ISOFF_FOURCC_TKHD GST_MAKE_FOURCC('t','k','h','d')
+#define GST_ISOFF_FOURCC_MDIA GST_MAKE_FOURCC('m','d','i','a')
+#define GST_ISOFF_FOURCC_MDHD GST_MAKE_FOURCC('m','d','h','d')
+#define GST_ISOFF_FOURCC_HDLR GST_MAKE_FOURCC('h','d','l','r')
 #define GST_ISOFF_FOURCC_SIDX GST_MAKE_FOURCC('s','i','d','x')
+
+/* handler type */
+#define GST_ISOFF_FOURCC_SOUN GST_MAKE_FOURCC('s','o','u','n')
+#define GST_ISOFF_FOURCC_VIDE GST_MAKE_FOURCC('v','i','d','e')
 
 #define GST_ISOFF_SAMPLE_FLAGS_IS_LEADING(flags)                   (((flags) >> 26) & 0x03)
 #define GST_ISOFF_SAMPLE_FLAGS_SAMPLE_DEPENDS_ON(flags)            (((flags) >> 24) & 0x03)
@@ -122,9 +133,15 @@ typedef struct _GstTrunSample
   } sample_composition_time_offset;
 } GstTrunSample;
 
+typedef struct _GstTdftBox
+{
+  guint64 decode_time;
+} GstTfdtBox;
+
 typedef struct _GstTrafBox
 {
   GstTfhdBox tfhd;
+  GstTfdtBox tfdt;
   GArray *trun;
 } GstTrafBox;
 
@@ -136,6 +153,41 @@ typedef struct _GstMoofBox
 
 GstMoofBox * gst_isoff_moof_box_parse (GstByteReader *reader);
 void gst_isoff_moof_box_free (GstMoofBox *moof);
+
+typedef struct _GstTkhdBox
+{
+  guint32 track_id;
+} GstTkhdBox;
+
+typedef struct _GstMdhdBox
+{
+  guint32 timescale;
+} GstMdhdBox;
+
+typedef struct _GstHdlrBox
+{
+  guint32 handler_type;
+} GstHdlrBox;
+
+typedef struct _GstMdiaBox
+{
+  GstMdhdBox mdhd;
+  GstHdlrBox hdlr;
+} GstMdiaBox;
+
+typedef struct _GstTrakBox
+{
+  GstTkhdBox tkhd;
+  GstMdiaBox mdia;
+} GstTrakBox;
+
+typedef struct _GstMoovBox
+{
+  GArray *trak;
+} GstMoovBox;
+
+GstMoovBox * gst_isoff_moov_box_parse (GstByteReader *reader);
+void gst_isoff_moov_box_free (GstMoovBox *moov);
 
 typedef struct _GstSidxBoxEntry
 {

@@ -232,6 +232,34 @@ error:
 }
 
 static gboolean
+gst_isoff_tfdt_box_parse (GstTfdtBox * tfdt, GstByteReader * reader)
+{
+  gint8 version;
+
+  memset (tfdt, 0, sizeof (*tfdt));
+
+  if (gst_byte_reader_get_remaining (reader) < 4)
+    return FALSE;
+
+  version = gst_byte_reader_get_uint8_unchecked (reader);
+
+  if (!gst_byte_reader_skip (reader, 3))
+    return FALSE;
+
+  if (version == 1) {
+    if (!gst_byte_reader_get_uint64_be (reader, &tfdt->decode_time))
+      return FALSE;
+  } else {
+    guint32 dec_time = 0;
+    if (!gst_byte_reader_get_uint32_be (reader, &dec_time))
+      return FALSE;
+    tfdt->decode_time = dec_time;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_isoff_traf_box_parse (GstTrafBox * traf, GstByteReader * reader)
 {
   gboolean had_tfhd = FALSE;
@@ -241,10 +269,13 @@ gst_isoff_traf_box_parse (GstTrafBox * traf, GstByteReader * reader)
   g_array_set_clear_func (traf->trun,
       (GDestroyNotify) gst_isoff_trun_box_clear);
 
+  traf->tfdt.decode_time = GST_CLOCK_TIME_NONE;
+
   while (gst_byte_reader_get_remaining (reader) > 0) {
     guint32 fourcc;
     guint header_size;
     guint64 size;
+    GstByteReader sub_reader;
 
     if (!gst_isoff_parse_box_header (reader, &fourcc, NULL, &header_size,
             &size))
@@ -254,8 +285,6 @@ gst_isoff_traf_box_parse (GstTrafBox * traf, GstByteReader * reader)
 
     switch (fourcc) {
       case GST_ISOFF_FOURCC_TFHD:{
-        GstByteReader sub_reader;
-
         gst_byte_reader_get_sub_reader (reader, &sub_reader,
             size - header_size);
         if (!gst_isoff_tfhd_box_parse (&traf->tfhd, &sub_reader))
@@ -263,8 +292,14 @@ gst_isoff_traf_box_parse (GstTrafBox * traf, GstByteReader * reader)
         had_tfhd = TRUE;
         break;
       }
+      case GST_ISOFF_FOURCC_TFDT:{
+        gst_byte_reader_get_sub_reader (reader, &sub_reader,
+            size - header_size);
+        if (!gst_isoff_tfdt_box_parse (&traf->tfdt, &sub_reader))
+          goto error;
+        break;
+      }
       case GST_ISOFF_FOURCC_TRUN:{
-        GstByteReader sub_reader;
         GstTrunBox trun;
 
         gst_byte_reader_get_sub_reader (reader, &sub_reader,
@@ -297,6 +332,7 @@ gst_isoff_moof_box_parse (GstByteReader * reader)
 {
   GstMoofBox *moof;
   gboolean had_mfhd = FALSE;
+  GstByteReader sub_reader;
 
 
   INITIALIZE_DEBUG_CATEGORY;
@@ -318,8 +354,6 @@ gst_isoff_moof_box_parse (GstByteReader * reader)
 
     switch (fourcc) {
       case GST_ISOFF_FOURCC_MFHD:{
-        GstByteReader sub_reader;
-
         gst_byte_reader_get_sub_reader (reader, &sub_reader,
             size - header_size);
         if (!gst_isoff_mfhd_box_parse (&moof->mfhd, &sub_reader))
@@ -328,7 +362,6 @@ gst_isoff_moof_box_parse (GstByteReader * reader)
         break;
       }
       case GST_ISOFF_FOURCC_TRAF:{
-        GstByteReader sub_reader;
         GstTrafBox traf;
 
         gst_byte_reader_get_sub_reader (reader, &sub_reader,
@@ -360,6 +393,239 @@ gst_isoff_moof_box_free (GstMoofBox * moof)
 {
   g_array_free (moof->traf, TRUE);
   g_free (moof);
+}
+
+static gboolean
+gst_isoff_mdhd_box_parse (GstMdhdBox * mdhd, GstByteReader * reader)
+{
+  guint8 version;
+
+  memset (mdhd, 0, sizeof (*mdhd));
+
+  if (gst_byte_reader_get_remaining (reader) < 4)
+    return FALSE;
+
+  version = gst_byte_reader_get_uint8_unchecked (reader);
+
+  if (!gst_byte_reader_skip (reader, 3))
+    return FALSE;
+
+  /* skip {creation, modification}_time, we don't have interest */
+  if (version == 1) {
+    if (!gst_byte_reader_skip (reader, 16))
+      return FALSE;
+  } else {
+    if (!gst_byte_reader_skip (reader, 8))
+      return FALSE;
+  }
+
+  if (!gst_byte_reader_get_uint32_be (reader, &mdhd->timescale))
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_isoff_hdlr_box_parse (GstHdlrBox * hdlr, GstByteReader * reader)
+{
+  memset (hdlr, 0, sizeof (*hdlr));
+
+  if (gst_byte_reader_get_remaining (reader) < 4)
+    return FALSE;
+
+  /* version & flag */
+  if (!gst_byte_reader_skip (reader, 4))
+    return FALSE;
+
+  /* pre_defined = 0 */
+  if (!gst_byte_reader_skip (reader, 4))
+    return FALSE;
+
+  if (!gst_byte_reader_get_uint32_le (reader, &hdlr->handler_type))
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_isoff_mdia_box_parse (GstMdiaBox * mdia, GstByteReader * reader)
+{
+  gboolean had_mdhd = FALSE, had_hdlr = FALSE;
+  while (gst_byte_reader_get_remaining (reader) > 0) {
+    guint32 fourcc;
+    guint header_size;
+    guint64 size;
+    GstByteReader sub_reader;
+
+    if (!gst_isoff_parse_box_header (reader, &fourcc, NULL, &header_size,
+            &size))
+      return FALSE;
+    if (gst_byte_reader_get_remaining (reader) < size - header_size)
+      return FALSE;
+
+    switch (fourcc) {
+      case GST_ISOFF_FOURCC_MDHD:{
+        gst_byte_reader_get_sub_reader (reader, &sub_reader,
+            size - header_size);
+        if (!gst_isoff_mdhd_box_parse (&mdia->mdhd, &sub_reader))
+          return FALSE;
+
+        had_mdhd = TRUE;
+        break;
+      }
+      case GST_ISOFF_FOURCC_HDLR:{
+        gst_byte_reader_get_sub_reader (reader, &sub_reader,
+            size - header_size);
+        if (!gst_isoff_hdlr_box_parse (&mdia->hdlr, &sub_reader))
+          return FALSE;
+
+        had_hdlr = TRUE;
+        break;
+      }
+      default:
+        gst_byte_reader_skip (reader, size - header_size);
+        break;
+    }
+  }
+
+  if (!had_mdhd || !had_hdlr)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_isoff_tkhd_box_parse (GstTkhdBox * tkhd, GstByteReader * reader)
+{
+  guint8 version;
+
+  memset (tkhd, 0, sizeof (*tkhd));
+
+  if (gst_byte_reader_get_remaining (reader) < 4)
+    return FALSE;
+
+  if (!gst_byte_reader_get_uint8 (reader, &version))
+    return FALSE;
+
+  if (!gst_byte_reader_skip (reader, 3))
+    return FALSE;
+
+  /* skip {creation, modification}_time, we don't have interest */
+  if (version == 1) {
+    if (!gst_byte_reader_skip (reader, 16))
+      return FALSE;
+  } else {
+    if (!gst_byte_reader_skip (reader, 8))
+      return FALSE;
+  }
+
+  if (!gst_byte_reader_get_uint32_be (reader, &tkhd->track_id))
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_isoff_trak_box_parse (GstTrakBox * trak, GstByteReader * reader)
+{
+  gboolean had_mdia = FALSE, had_tkhd = FALSE;
+  while (gst_byte_reader_get_remaining (reader) > 0) {
+    guint32 fourcc;
+    guint header_size;
+    guint64 size;
+    GstByteReader sub_reader;
+
+    if (!gst_isoff_parse_box_header (reader, &fourcc, NULL, &header_size,
+            &size))
+      return FALSE;
+    if (gst_byte_reader_get_remaining (reader) < size - header_size)
+      return FALSE;
+
+    switch (fourcc) {
+      case GST_ISOFF_FOURCC_MDIA:{
+        gst_byte_reader_get_sub_reader (reader, &sub_reader,
+            size - header_size);
+        if (!gst_isoff_mdia_box_parse (&trak->mdia, &sub_reader))
+          return FALSE;
+
+        had_mdia = TRUE;
+        break;
+      }
+      case GST_ISOFF_FOURCC_TKHD:{
+        gst_byte_reader_get_sub_reader (reader, &sub_reader,
+            size - header_size);
+        if (!gst_isoff_tkhd_box_parse (&trak->tkhd, &sub_reader))
+          return FALSE;
+
+        had_tkhd = TRUE;
+        break;
+      }
+      default:
+        gst_byte_reader_skip (reader, size - header_size);
+        break;
+    }
+  }
+
+  if (!had_tkhd || !had_mdia)
+    return FALSE;
+
+  return TRUE;
+}
+
+GstMoovBox *
+gst_isoff_moov_box_parse (GstByteReader * reader)
+{
+  GstMoovBox *moov;
+  gboolean had_trak = FALSE;
+  moov = g_new0 (GstMoovBox, 1);
+  moov->trak = g_array_new (FALSE, FALSE, sizeof (GstTrakBox));
+
+  while (gst_byte_reader_get_remaining (reader) > 0) {
+    guint32 fourcc;
+    guint header_size;
+    guint64 size;
+
+    if (!gst_isoff_parse_box_header (reader, &fourcc, NULL, &header_size,
+            &size))
+      goto error;
+    if (gst_byte_reader_get_remaining (reader) < size - header_size)
+      goto error;
+
+    switch (fourcc) {
+      case GST_ISOFF_FOURCC_TRAK:{
+        GstByteReader sub_reader;
+        GstTrakBox trak;
+
+        gst_byte_reader_get_sub_reader (reader, &sub_reader,
+            size - header_size);
+        if (!gst_isoff_trak_box_parse (&trak, &sub_reader))
+          goto error;
+
+        had_trak = TRUE;
+        g_array_append_val (moov->trak, trak);
+        break;
+      }
+      default:
+        gst_byte_reader_skip (reader, size - header_size);
+        break;
+    }
+  }
+
+  if (!had_trak)
+    goto error;
+
+  return moov;
+
+error:
+  gst_isoff_moov_box_free (moov);
+  return NULL;
+}
+
+void
+gst_isoff_moov_box_free (GstMoovBox * moov)
+{
+  g_array_free (moov->trak, TRUE);
+  g_free (moov);
 }
 
 void

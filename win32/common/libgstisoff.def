@@ -1,6 +1,8 @@
 EXPORTS
 	gst_isoff_moof_box_free
 	gst_isoff_moof_box_parse
+	gst_isoff_moov_box_free
+	gst_isoff_moov_box_parse
 	gst_isoff_parse_box_header
 	gst_isoff_sidx_parser_add_buffer
 	gst_isoff_sidx_parser_clear
