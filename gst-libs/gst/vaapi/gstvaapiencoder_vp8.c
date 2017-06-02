@@ -289,6 +289,23 @@ ensure_control_rate_params (GstVaapiEncoderVP8 * encoder,
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
   gst_vaapi_codec_object_replace (&misc, NULL);
 
+  /* HRD params */
+  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
+  if (!misc)
+    return FALSE;
+
+  {
+    VAEncMiscParameterHRD hrd = {
+      .buffer_size = base_encoder->bitrate * 1000 * 2,
+      .initial_buffer_fullness = base_encoder->bitrate * 1000,
+    };
+
+    memcpy (misc->data, &hrd, sizeof (hrd));
+  }
+
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+
   return TRUE;
 }
 
@@ -315,23 +332,6 @@ ensure_misc_params (GstVaapiEncoderVP8 * encoder, GstVaapiEncPicture * picture)
     param->framerate =
         GST_VAAPI_ENCODER_FPS_N (encoder) / GST_VAAPI_ENCODER_FPS_D (encoder);
   }
-  gst_vaapi_enc_picture_add_misc_param (picture, misc);
-  gst_vaapi_codec_object_replace (&misc, NULL);
-
-  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
-  if (!misc)
-    return FALSE;
-  {
-    VAEncMiscParameterHRD *hrd = misc->data;
-    if (base_encoder->bitrate > 0) {
-      hrd->buffer_size = base_encoder->bitrate * 1000 * 2;
-      hrd->initial_buffer_fullness = base_encoder->bitrate * 1000;
-    } else {
-      hrd->buffer_size = 0;
-      hrd->initial_buffer_fullness = 0;
-    }
-  }
-
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
   gst_vaapi_codec_object_replace (&misc, NULL);
 

@@ -1766,21 +1766,37 @@ error_create_packed_seq_hdr:
 }
 
 static gboolean
+ensure_control_rate_params (GstVaapiEncoderH265 * encoder,
+    GstVaapiEncPicture * picture)
+{
+  GstVaapiEncMiscParam *misc;
+
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
+    return TRUE;
+
+  /* HRD params */
+  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
+  if (!misc)
+    return FALSE;
+
+  {
+    fill_hrd_params (encoder, misc->data);
+  }
+
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+
+  return TRUE;
+}
+
+
+static gboolean
 ensure_misc_params (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
-  GstVaapiEncMiscParam *misc = NULL;
 
-  /* HRD params for rate control */
-  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR) {
-    misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
-    if (!misc)
-      return FALSE;
-    fill_hrd_params (encoder, misc->data);
-    gst_vaapi_enc_picture_add_misc_param (picture, misc);
-    gst_vaapi_codec_object_replace (&misc, NULL);
-  }
-
+  if (!ensure_control_rate_params (encoder, picture))
+    return FALSE;
   if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
     return FALSE;
   return TRUE;
