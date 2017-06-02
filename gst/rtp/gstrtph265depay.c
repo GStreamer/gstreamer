@@ -541,6 +541,7 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
 
       gst_caps_unref (tmp_caps);
     }
+    gst_caps_unref (old_caps);
   } else {
     res =
         gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph265depay),
