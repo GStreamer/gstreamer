@@ -3852,7 +3852,20 @@ gst_rtsp_stream_query_stop (GstRTSPStream * stream, gint64 * stop)
     if (format != GST_FORMAT_TIME)
       *stop = -1;
   }
+
   gst_query_unref (query);
+  if (!GST_CLOCK_TIME_IS_VALID (*stop)) {
+    query = gst_query_new_duration (GST_FORMAT_TIME);
+    if ((ret = gst_element_query (sink, query))) {
+      GstFormat format;
+
+      gst_query_parse_duration (query, &format, stop);
+      if (format != GST_FORMAT_TIME)
+        *stop = -1;
+    }
+    gst_query_unref (query);
+  }
+
   gst_object_unref (sink);
 
   return ret;
