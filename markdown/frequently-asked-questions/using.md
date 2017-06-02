@@ -1,6 +1,6 @@
 # Using GStreamer
 
-## Ok, I've installed GStreamer. What can I do next ?
+## Ok, I've installed GStreamer. What can I do next?
 
 First of all, verify that you have a working installation and that
 you can inspect plugins by typing
@@ -42,7 +42,7 @@ If `autovideosink` doesn't work, try an element that's specific for your
 operating system and windowing system, such as `ximagesink` or `glimagesink`
 or (on windows) `d3dvideosink`.
 
-## Can my system play sound through GStreamer ?
+## Can my system play sound through GStreamer?
 
 You can test this by trying to play a sine tone. For this, you
 need to link the audiotestsrc element to an output element that matches
@@ -75,7 +75,7 @@ and see if you hear something. Make sure your volume is turned up, but
 also make sure it is not too loud and you are not wearing your
 headphones.
 
-## How can I see what GStreamer plugins I have on my system ?
+## How can I see what GStreamer plugins I have on my system?
 
 To do this you use the gst-inspect command-line tool, which comes
 standard with GStreamer. Invoked without any arguments,
@@ -89,7 +89,7 @@ particular plugin, pass its name on the command line. For example,
 
 will give you information about the volume plugin.
 
-## Where should I report bugs ?
+## Where should I report bugs?
 
 Bugs are tracked in GNOME's Bugzilla at <http://bugzilla.gnome.org>, under
 the product GStreamer. Using bugzilla you can view past bug history, report
@@ -97,13 +97,13 @@ new bugs, submit patches etc. Bugzilla requires you to create an account there,
 which might seem cumbersome, but allows us to at least have a chance at
 contacting you for further information, as we will often have to do.
 
-## How should I report bugs ?
+## How should I report bugs?
 
 When doing a bug report, you should at least describe
 
   - your distribution, distribution version and GStreamer version
 
-  - how you installed GStreamer (from git, source, packages, which ?)
+  - how you installed GStreamer (from git, source, packages, which?)
 
   - if you installed GStreamer before
 
@@ -111,7 +111,7 @@ If the application you are having problems with is segfaulting, then
 provide us with the necessary gdb output. See
 [???](#troubleshooting-segfault)
 
-## How do I use the GStreamer command line interface ?
+## How do I use the GStreamer command line interface?
 
 You access the GStreamer command line interface using the command
 `gst-launch-1.0`. To play a file you could just use

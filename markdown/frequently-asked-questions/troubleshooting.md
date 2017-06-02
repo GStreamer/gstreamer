@@ -1,6 +1,6 @@
 # Troubleshooting GStreamer
 
-> Some application is telling me that I am missing a plug-in. What do I do ?
+> Some application is telling me that I am missing a plug-in. What do I do?
 
 Well, start by checking if you really are missing the plug-in.
 
@@ -41,7 +41,7 @@ if your application does not support installation of missing plugins.
     why it doesn't get built if you're sure you have the library needed
     installed in a sane place.
 
-> The GStreamer application I used stops with a segmentation fault. What can I do ?
+> The GStreamer application I used stops with a segmentation fault. What can I do?
 
 The first point of contact for any problems with a GStreamer application
 should be the developers of that application. They will be able to investigate

@@ -1,6 +1,6 @@
 # Dependencies
 
-## Why are there so many dependencies ?
+## Why are there so many dependencies?
 
 Making a full-featured media framework is a huge undertaking in
 itself. By using the work done by others, we both reduce the amount of
@@ -15,7 +15,7 @@ liborc, and very common stuff like glibc, a C compiler, and so on. All
 other dependencies are optional.
 
 In closing, let's rephrase the question to “Why are you giving me so
-many choices and such a rich environment ?”
+many choices and such a rich environment?”
 
 ## Is GStreamer X11 independent? Can it be used headless?
 
@@ -36,7 +36,7 @@ available as GStreamer elements.
 [ladspa]: https://en.wikipedia.org/wiki/LADSPA
 [lv2]: http://lv2plug.in/
 
-## Does GStreamer support MIDI ?
+## Does GStreamer support MIDI?
 
 There is some rudimentary MIDI support in GStreamer, but it's not complete yet.
 
@@ -54,7 +54,7 @@ MIDI playback is provided by plugins such as `midiparse`, `fluiddec`,
 
 [alsamidisrc]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/gst-plugins-base-plugins-alsamidisrc.html
 
-## Does GStreamer depend on GNOME or GTK+ ?
+## Does GStreamer depend on GNOME or GTK+?
 
 No, it's just that many of the applications developed for GStreamer happen to
 be GNOME or GTK+ applications, including some of our sample applications. There

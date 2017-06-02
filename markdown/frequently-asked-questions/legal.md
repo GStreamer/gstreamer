@@ -17,8 +17,8 @@ verified by FSF lawyer and law professor Eben Moglen.
 >  - MyPlayer, a GPL playback application
 >  - The binary-only Sorenson decoder
 >
-> together in one distribution/operating system ? If not, what needs to be
-> changed to make this possible ?
+> together in one distribution/operating system? If not, what needs to be
+> changed to make this possible?
 
 This would be a problem, because the GStreamer and MyPlayer
 licenses would forbid it. In order to link GStreamer to MyPlayer, you
@@ -38,14 +38,14 @@ writing.
 >
 > .. to decode Sorenson video, which will be shipped stand-alone,
 > not part of a package like in the question above. Can Apple distribute
-> this binary-only plugin ?
+> this binary-only plugin?
 
 Yes, modulo certain reverse engineering requirements in section 6
 of the LGPL.
 
 > If a program released under the GPL uses a library that is LGPL, and
 > this library can dlopen plug-ins at runtime, what are the requirements
-> for the license of the plug-in ?
+> for the license of the plug-in?
 
 You may not distribute the plug-in with the GPL application.
 Distributing the plug-in alone, with the knowledge that it will be used
@@ -55,13 +55,13 @@ it would be absolutely forbidden.
 
 > Can someone in a country that does not have software patents
 > distribute code covered by US patents under the GPL to people in, for
-> example, Norway ? If he/she visits the US, can he/she be arrested ?
+> example, Norway? If he/she visits the US, can he/she be arrested?
 
 Yes, he can. No, there are no criminal penalties for patent
 infringement in the US.
 
 > Can someone from the US distribute software covered by US patents
-> under the GPL to people in Norway ? To people in the US ?
+> under the GPL to people in Norway? To people in the US?
 
 This might infringe some patents, but the GPL would not forbid it
 absent some actual restriction, such as a court judgement or agreement.
@@ -71,7 +71,7 @@ infringing devices, including software.
 > There are a lot of GPL- or LGPL-licensed libraries that handle media
 > codecs which have patents. Take mad, an mp3 decoding library, as an
 > example. It is licensed under the GPL. In countries where patents are
-> valid, does this invalidate the GPL license for this project ?
+> valid, does this invalidate the GPL license for this project?
 
 The mere existence of a patent which might read on the program
 does not change anything. However, if a court judgement or other
@@ -85,7 +85,7 @@ distribute the Library at all.”
 
 > So let's say there is a court judgement. Does this mean that the GPL
 > license is invalid for the project everywhere, or only in the
-> countries where it conflicts with the applicable patents ?
+> countries where it conflicts with the applicable patents?
 
 The GPL operates on a per-action, not per-program basis. That is,
 if you are in a country which has software patents, and a court tells
@@ -101,7 +101,7 @@ No.
 
 > Is it correct that you cannot distribute the GPL mad library to decode
 > mp3's, *even* in the case where you have obtained a valid license for
-> decoding mp3 ?
+> decoding mp3?
 
 The only GPL-compatible patent licenses are those which are open
 to all parties posessing copies of GPL software which practices the

@@ -1,6 +1,6 @@
 # General
 
-## Is GStreamer a media player ?
+## Is GStreamer a media player?
 
 No, GStreamer is a development framework for creating applications like
 media players, video editors, streaming media broadcasters and so on.
@@ -8,7 +8,7 @@ That said, very good media players can easily be built on top of GStreamer
 especially when using the high-level APIs we provide such as `GstPlayer` or
 the `playbin` and `playbin3` elements.
 
-## Why is GStreamer written in C ? Why not C++/Objective-C/... ?
+## Why is GStreamer written in C? Why not C++/Objective-C/...?
 
 We like C. Aside from "personal preference", there are a number
 of technical reasons why C is nice in this project:
@@ -96,7 +96,7 @@ You can see the effective license of a plugin as license field in
 `gst-inspect-1.0`. In the future we might have the application enforce a
 stricter policy (much like tainting in the kernel).
 
-## Is GStreamer a sound server ?
+## Is GStreamer a sound server?
 
 No, GStreamer is not a sound server. GStreamer does, however, have
 plugins supporting most of the major sound servers available today,
@@ -110,7 +110,7 @@ Linux, Android, iOS, macOS, Windows, and *BSD, and there are official
 SDK binary packages for Android, iOS, macOS and Windows made available
 with every GStreamer release.
 
-## What is GStreamer's relationship with the GNOME community ?
+## What is GStreamer's relationship with the GNOME community?
 
 GStreamer is an independent project, but we do traditionally have
 a close relationship with the GNOME community. Many of our hackers
@@ -119,7 +119,7 @@ is officially bundled with the GNOME desktop, as lots of GNOME applications
 are using it. This does not exclude use of GStreamer by other communities
 at all, of course.
 
-## What is GStreamer's relationship with the KDE community ?
+## What is GStreamer's relationship with the KDE community?
 
 The GStreamer community wants to have as good a relationship as
 possible with KDE, and we hope that someday KDE decides to adopt
