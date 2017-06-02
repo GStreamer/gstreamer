@@ -126,7 +126,7 @@ management (See [miniobject](design/miniobject.md)).
 
 ## Data Access
 
-Access to the memory region is always controlled with a map and unmap method
+Access to the memory region is always controlled with a `map()` and `unmap()` method
 call. This allows the implementation to monitor the access patterns or set up
 the required memory mappings when needed.
 
