@@ -728,6 +728,8 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   if (insize == 0 || outsize == 0)
     return GST_FLOW_OK;
 
+  gst_buffer_resize (outbuf, 0, outsize);
+
   /* get src and dst data */
   if (inbuf != outbuf) {
     inbuf_writable = gst_buffer_is_writable (inbuf)
