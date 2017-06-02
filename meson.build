@@ -168,8 +168,10 @@ have_external_omx = cc.has_header(
     args : gst_omx_args,
     required : false)
 extra_video_headers = ''
-# Our internal OpenMAX IL headers have OMX_VideoExt.h
+# Our internal OpenMAX IL headers have OMX_VideoExt.h, OMX_IndexExt.h and OMX_ComponentExt.h
 have_video_ext = true
+have_index_ext = true
+have_component_ext = true
 
 if have_external_omx
   have_video_ext = cc.has_header (
@@ -180,10 +182,28 @@ if have_external_omx
     extra_video_headers += '''
 #include <OMX_VideoExt.h>'''
   endif
+
+  have_index_ext = cc.has_header (
+      'OMX_IndexExt.h',
+      args : gst_omx_args,
+      required : false)
+
+  have_component_ext = cc.has_header (
+      'OMX_ComponentExt.h',
+      args : gst_omx_args,
+      required : false)
 endif
 
 if have_video_ext
   cdata.set ('HAVE_VIDEO_EXT', 1)
+endif
+
+if have_index_ext
+  cdata.set ('HAVE_INDEX_EXT', 1)
+endif
+
+if have_component_ext
+  cdata.set ('HAVE_COMPONENT_EXT', 1)
 endif
 
 have_omx_vp8 = cc.has_header_symbol(

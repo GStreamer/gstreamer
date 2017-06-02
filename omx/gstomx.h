@@ -61,6 +61,14 @@
 #include <OMX_VideoExt.h>
 #endif
 
+#ifdef HAVE_INDEX_EXT
+#include <OMX_IndexExt.h>
+#endif
+
+#ifdef HAVE_COMPONENT_EXT
+#include <OMX_ComponentExt.h>
+#endif
+
 #ifdef GST_OMX_STRUCT_PACKING
 #pragma pack()
 #endif

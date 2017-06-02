@@ -242,10 +242,14 @@ dnl Check for external OpenMAX IL headers
 AC_CHECK_HEADER([OMX_Core.h], [HAVE_EXTERNAL_OMX=yes], [HAVE_EXTERNAL_OMX=no], [AC_INCLUDES_DEFAULT])
 AM_CONDITIONAL(HAVE_EXTERNAL_OMX, test "x$HAVE_EXTERNAL_OMX" = "xyes")
 
-dnl Our internal OpenMAX IL headers have OMX_VideoExt.h
+dnl Our internal OpenMAX IL headers have OMX_VideoExt.h, OMX_IndexExt.h and OMX_ComponentExt.h
 HAVE_VIDEO_EXT=yes
+HAVE_INDEX_EXT=yes
+HAVE_COMPONENT_EXT=yes
 if test "x$HAVE_EXTERNAL_OMX" = "xyes"; then
     AC_CHECK_HEADER([OMX_VideoExt.h], [HAVE_VIDEO_EXT=yes], [HAVE_VIDEO_EXT=no], [AC_INCLUDES_DEFAULT])
+    AC_CHECK_HEADER([OMX_IndexExt.h], [HAVE_INDEX_EXT=yes], [HAVE_INDEX_EXT=no], [AC_INCLUDES_DEFAULT])
+    AC_CHECK_HEADER([OMX_ComponentExt.h], [HAVE_COMPONENT_EXT=yes], [HAVE_COMPONENT_EXT=no], [AC_INCLUDES_DEFAULT])
 fi
 
 VIDEO_HEADERS="#include <OMX_Video.h>"
@@ -254,6 +258,14 @@ if test "x$HAVE_VIDEO_EXT" = "xyes"; then
     VIDEO_HEADERS="$VIDEO_HEADERS
 #include <OMX_VideoExt.h>
 "
+fi
+
+if test "x$HAVE_INDEX_EXT" = "xyes"; then
+    AC_DEFINE(HAVE_INDEX_EXT, 1, [OpenMAX IL has OMX_IndexExt.h header])
+fi
+
+if test "x$HAVE_COMPONENT_EXT" = "xyes"; then
+    AC_DEFINE(HAVE_COMPONENT_EXT, 1, [OpenMAX IL has OMX_ComponentExt.h header])
 fi
 
 AC_CHECK_DECLS([OMX_VIDEO_CodingVP8],
