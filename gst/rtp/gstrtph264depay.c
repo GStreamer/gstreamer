@@ -137,7 +137,7 @@ gst_rtp_h264_depay_init (GstRtpH264Depay * rtph264depay)
 }
 
 static void
-gst_rtp_h264_depay_reset (GstRtpH264Depay * rtph264depay)
+gst_rtp_h264_depay_reset (GstRtpH264Depay * rtph264depay, gboolean hard)
 {
   gst_adapter_clear (rtph264depay->adapter);
   rtph264depay->wait_start = TRUE;
@@ -149,6 +149,14 @@ gst_rtp_h264_depay_reset (GstRtpH264Depay * rtph264depay)
   rtph264depay->new_codec_data = FALSE;
   g_ptr_array_set_size (rtph264depay->sps, 0);
   g_ptr_array_set_size (rtph264depay->pps, 0);
+
+  if (hard) {
+    if (rtph264depay->allocator != NULL) {
+      gst_object_unref (rtph264depay->allocator);
+      rtph264depay->allocator = NULL;
+    }
+    gst_allocation_params_init (&rtph264depay->params);
+  }
 }
 
 static void
@@ -261,6 +269,44 @@ parse_pps (GstMapInfo * map, guint32 * sps_id, guint32 * pps_id)
   return TRUE;
 }
 
+static gboolean
+gst_rtp_h264_depay_set_output_caps (GstRtpH264Depay * rtph264depay,
+    GstCaps * caps)
+{
+  GstAllocationParams params;
+  GstAllocator *allocator = NULL;
+  GstPad *srcpad;
+  gboolean res;
+
+  gst_allocation_params_init (&params);
+
+  srcpad = GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph264depay);
+
+  res = gst_pad_set_caps (srcpad, caps);
+
+  if (res) {
+    GstQuery *query;
+
+    query = gst_query_new_allocation (caps, TRUE);
+    if (!gst_pad_peer_query (srcpad, query)) {
+      GST_DEBUG_OBJECT (rtph264depay, "downstream ALLOCATION query failed");
+    }
+
+    if (gst_query_get_n_allocation_params (query) > 0) {
+      gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    }
+
+    gst_query_unref (query);
+  }
+
+  if (rtph264depay->allocator)
+    gst_object_unref (rtph264depay->allocator);
+
+  rtph264depay->allocator = allocator;
+  rtph264depay->params = params;
+
+  return res;
+}
 
 static gboolean
 gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
@@ -428,7 +474,7 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
   }
 
   if (update_caps) {
-    res = gst_pad_set_caps (srcpad, srccaps);
+    res = gst_rtp_h264_depay_set_output_caps (rtph264depay, srccaps);
   } else {
     res = TRUE;
   }
@@ -1203,7 +1249,7 @@ gst_rtp_h264_depay_handle_event (GstRTPBaseDepayload * depay, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      gst_rtp_h264_depay_reset (rtph264depay);
+      gst_rtp_h264_depay_reset (rtph264depay, FALSE);
       break;
     default:
       break;
@@ -1226,7 +1272,7 @@ gst_rtp_h264_depay_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_rtp_h264_depay_reset (rtph264depay);
+      gst_rtp_h264_depay_reset (rtph264depay, TRUE);
       break;
     default:
       break;
@@ -1235,6 +1281,9 @@ gst_rtp_h264_depay_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_rtp_h264_depay_reset (rtph264depay, TRUE);
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
