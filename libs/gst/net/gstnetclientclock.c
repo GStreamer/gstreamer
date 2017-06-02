@@ -58,6 +58,14 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
+#ifndef G_OS_WIN32
+#include <netinet/in.h>
+#endif
+
 #include "gstnettimepacket.h"
 #include "gstntppacket.h"
 #include "gstnetclientclock.h"
@@ -105,6 +113,7 @@ G_GNUC_INTERNAL GType gst_net_client_internal_clock_get_type (void);
  * more often than 1/20th second (arbitrarily, to spread observations a little) */
 #define DEFAULT_MINIMUM_UPDATE_INTERVAL (GST_SECOND / 20)
 #define DEFAULT_BASE_TIME       0
+#define DEFAULT_QOS_DSCP        -1
 
 /* Maximum number of clock updates we can skip before updating */
 #define MAX_SKIPPED_UPDATES 5
@@ -121,7 +130,8 @@ enum
   PROP_BUS,
   PROP_BASE_TIME,
   PROP_INTERNAL_CLOCK,
-  PROP_IS_NTP
+  PROP_IS_NTP,
+  PROP_QOS_DSCP
 };
 
 struct _GstNetClientInternalClock
@@ -147,6 +157,7 @@ struct _GstNetClientInternalClock
   gchar *address;
   gint port;
   gboolean is_ntp;
+  gint qos_dscp;
 
   /* Protected by OBJECT_LOCK */
   GList *busses;
@@ -211,6 +222,7 @@ gst_net_client_internal_clock_init (GstNetClientInternalClock * self)
   self->port = DEFAULT_PORT;
   self->address = g_strdup (DEFAULT_ADDRESS);
   self->is_ntp = FALSE;
+  self->qos_dscp = DEFAULT_QOS_DSCP;
 
   gst_clock_set_timeout (GST_CLOCK (self), DEFAULT_TIMEOUT);
 
@@ -635,6 +647,7 @@ gst_net_client_internal_clock_thread (gpointer data)
   GstNetClientInternalClock *self = data;
   GSocket *socket = self->socket;
   GError *err = NULL;
+  gint cur_qos_dscp = DEFAULT_QOS_DSCP;
 
   GST_INFO_OBJECT (self, "net client clock thread running, socket=%p", socket);
 
@@ -662,8 +675,28 @@ gst_net_client_internal_clock_thread (gpointer data)
         g_clear_error (&err);
         break;
       } else if (err->code == G_IO_ERROR_TIMED_OUT) {
+        gint new_qos_dscp;
+
         /* timed out, let's send another packet */
         GST_DEBUG_OBJECT (self, "timed out");
+
+        /* before next sending check if need to change QoS */
+        new_qos_dscp = self->qos_dscp;
+        if (cur_qos_dscp != new_qos_dscp) {
+          gint tos, fd;
+          fd = g_socket_get_fd (socket);
+
+          /* Extract and shift 6 bits of DSFIELD */
+          tos = (new_qos_dscp & 0x3f) << 2;
+
+          if (setsockopt (fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos)) < 0) {
+            GST_ERROR_OBJECT (self, "could not set TOS: %s",
+                g_strerror (errno));
+          }
+
+          GST_DEBUG_OBJECT (self, "changed QoS DSCP to: %d", new_qos_dscp);
+          cur_qos_dscp = new_qos_dscp;
+        }
 
         if (self->is_ntp) {
           GstNtpPacket *packet;
@@ -965,6 +998,7 @@ struct _GstNetClientClockPrivate
 
   gchar *address;
   gint port;
+  gint qos_dscp;
 
   GstBus *bus;
 
@@ -1052,6 +1086,12 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
           "Internal clock that directly slaved to the remote clock",
           GST_TYPE_CLOCK, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_QOS_DSCP,
+      g_param_spec_int ("qos-dscp", "QoS diff srv code point",
+          "Quality of Service, differentiated services code point (-1 default)",
+          -1, 63, DEFAULT_QOS_DSCP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   clock_class->get_internal_time = gst_net_client_clock_get_internal_time;
 }
 
@@ -1068,6 +1108,7 @@ gst_net_client_clock_init (GstNetClientClock * self)
 
   priv->port = DEFAULT_PORT;
   priv->address = g_strdup (DEFAULT_ADDRESS);
+  priv->qos_dscp = DEFAULT_QOS_DSCP;
 
   priv->roundtrip_limit = DEFAULT_ROUNDTRIP_LIMIT;
   priv->minimum_update_interval = DEFAULT_MINIMUM_UPDATE_INTERVAL;
@@ -1084,6 +1125,7 @@ update_clock_cache (ClockCache * cache)
 {
   GstClockTime roundtrip_limit = 0, minimum_update_interval = 0;
   GList *l, *busses = NULL;
+  gint qos_dscp = DEFAULT_QOS_DSCP;
 
   GST_OBJECT_LOCK (cache->clock);
   g_list_free_full (GST_NET_CLIENT_INTERNAL_CLOCK (cache->clock)->busses,
@@ -1105,12 +1147,15 @@ update_clock_cache (ClockCache * cache)
     else
       minimum_update_interval =
           MIN (minimum_update_interval, clock->priv->minimum_update_interval);
+
+    qos_dscp = MAX (qos_dscp, clock->priv->qos_dscp);
   }
   GST_NET_CLIENT_INTERNAL_CLOCK (cache->clock)->busses = busses;
   GST_NET_CLIENT_INTERNAL_CLOCK (cache->clock)->roundtrip_limit =
       roundtrip_limit;
   GST_NET_CLIENT_INTERNAL_CLOCK (cache->clock)->minimum_update_interval =
       minimum_update_interval;
+  GST_NET_CLIENT_INTERNAL_CLOCK (cache->clock)->qos_dscp = qos_dscp;
 
   GST_OBJECT_UNLOCK (cache->clock);
 }
@@ -1228,6 +1273,12 @@ gst_net_client_clock_set_property (GObject * object, guint prop_id,
       gst_object_unref (clock);
       break;
     }
+    case PROP_QOS_DSCP:
+      GST_OBJECT_LOCK (self);
+      self->priv->qos_dscp = g_value_get_int (value);
+      GST_OBJECT_UNLOCK (self);
+      update = TRUE;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1283,6 +1334,11 @@ gst_net_client_clock_get_property (GObject * object, guint prop_id,
       break;
     case PROP_INTERNAL_CLOCK:
       g_value_set_object (value, self->priv->internal_clock);
+      break;
+    case PROP_QOS_DSCP:
+      GST_OBJECT_LOCK (self);
+      g_value_set_int (value, self->priv->qos_dscp);
+      GST_OBJECT_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
