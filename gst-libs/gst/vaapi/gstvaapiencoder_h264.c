@@ -2153,13 +2153,44 @@ error_create_packed_seq_hdr:
   }
 }
 
+static gboolean
+ensure_control_rate_params (GstVaapiEncoderH264 * encoder,
+    GstVaapiEncPicture * picture)
+{
+  GstVaapiEncMiscParam *misc;
+
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
+    return TRUE;
+
+  /* RateControl params */
+  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (RateControl, encoder);
+  if (!misc)
+    return FALSE;
+
+  {
+    VAEncMiscParameterRateControl rate_control = {
+      .bits_per_second = encoder->bitrate_bits,
+      .target_percentage = 70,
+      .window_size = encoder->cpb_length,
+      .initial_qp = encoder->init_qp,
+      .min_qp = encoder->min_qp,
+    };
+
+    memcpy (misc->data, &rate_control, sizeof (rate_control));
+  }
+
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+
+  return TRUE;
+}
+
 /* Generates additional control parameters */
 static gboolean
 ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
-  GstVaapiEncMiscParam *misc = NULL;
-  VAEncMiscParameterRateControl *rate_control;
+  GstVaapiEncMiscParam *misc;
   guint num_roi;
 
   /* HRD params */
@@ -2170,23 +2201,11 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
   gst_vaapi_codec_object_replace (&misc, NULL);
 
-  /* RateControl params */
+  if (!ensure_control_rate_params (encoder, picture))
+    return FALSE;
+
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR ||
       GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_VBR) {
-    misc = GST_VAAPI_ENC_MISC_PARAM_NEW (RateControl, encoder);
-    if (!misc)
-      return FALSE;
-    rate_control = misc->data;
-    memset (rate_control, 0, sizeof (VAEncMiscParameterRateControl));
-    rate_control->bits_per_second = encoder->bitrate_bits;
-    rate_control->target_percentage = 70;
-    rate_control->window_size = encoder->cpb_length;
-    rate_control->initial_qp = encoder->init_qp;
-    rate_control->min_qp = encoder->min_qp;
-    rate_control->basic_unit_size = 0;
-    gst_vaapi_enc_picture_add_misc_param (picture, misc);
-    gst_vaapi_codec_object_replace (&misc, NULL);
-
     if (!encoder->view_idx) {
       if ((GST_VAAPI_ENC_PICTURE_IS_IDR (picture)) &&
           (GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &

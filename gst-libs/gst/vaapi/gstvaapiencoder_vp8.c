@@ -258,12 +258,50 @@ error:
 }
 
 static gboolean
+ensure_control_rate_params (GstVaapiEncoderVP8 * encoder,
+    GstVaapiEncPicture * picture)
+{
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
+  GstVaapiEncMiscParam *misc;
+
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
+    return TRUE;
+
+  /* RateControl params */
+  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (RateControl, encoder);
+  if (!misc)
+    return FALSE;
+
+  {
+    VAEncMiscParameterRateControl rate_control = {
+      .bits_per_second = base_encoder->bitrate * 1000,
+      .target_percentage = 70,
+      /* CPB (Coded picture buffer) length in milliseconds, which
+       * could be provided as a property */
+      .window_size = 500,
+      .initial_qp = encoder->yac_qi,
+      .min_qp = 1,
+    };
+
+    memcpy (misc->data, &rate_control, sizeof (rate_control));
+  }
+
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+
+  return TRUE;
+}
+
+static gboolean
 ensure_misc_params (GstVaapiEncoderVP8 * encoder, GstVaapiEncPicture * picture)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   GstVaapiEncMiscParam *misc;
 
   if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
+    return FALSE;
+
+  if (!ensure_control_rate_params (encoder, picture))
     return FALSE;
 
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) != GST_VAAPI_RATECONTROL_CBR)
@@ -292,25 +330,6 @@ ensure_misc_params (GstVaapiEncoderVP8 * encoder, GstVaapiEncPicture * picture)
       hrd->buffer_size = 0;
       hrd->initial_buffer_fullness = 0;
     }
-  }
-
-  gst_vaapi_enc_picture_add_misc_param (picture, misc);
-  gst_vaapi_codec_object_replace (&misc, NULL);
-
-  /* RateControl params */
-  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (RateControl, encoder);
-  if (!misc)
-    return FALSE;
-  {
-    VAEncMiscParameterRateControl *rate_control;
-    rate_control = misc->data;
-    rate_control->bits_per_second = base_encoder->bitrate * 1000;
-    rate_control->target_percentage = 70;
-    /* CPB (Coded picture buffer) length in milliseconds, which could
-     * be provided as a property */
-    rate_control->window_size = 500;
-    rate_control->initial_qp = encoder->yac_qi;
-    rate_control->min_qp = 1;
   }
 
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
