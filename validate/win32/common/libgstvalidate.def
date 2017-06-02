@@ -62,6 +62,8 @@ EXPORTS
 	gst_validate_monitor_factory_create
 	gst_validate_monitor_get_element
 	gst_validate_monitor_get_element_name
+	gst_validate_monitor_get_pipeline
+	gst_validate_monitor_get_target
 	gst_validate_monitor_get_type
 	gst_validate_monitor_set_media_descriptor
 	gst_validate_monitor_setup
@@ -146,6 +148,7 @@ EXPORTS
 	gst_validate_scenario_execute_seek
 	gst_validate_scenario_factory_create
 	gst_validate_scenario_get_actions
+	gst_validate_scenario_get_pipeline
 	gst_validate_scenario_get_target_state
 	gst_validate_scenario_get_type
 	gst_validate_structs_parse_from_gfile
