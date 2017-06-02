@@ -99,13 +99,14 @@ Stream selection in GStreamer is implemented in several parts:
 
 ##  GstStream objects
 
-```
 API:
 
+```
 GstStream
-gst_stream_new(..)
-gst_stream_get_\*(...)
-gst_stream_set_\*()
+
+gst_stream_new(...)
+gst_stream_get_*(...)
+gst_stream_set_*(...)
 gst_event_set_stream(...)
 gst_event_parse_stream(...)
 ```
@@ -130,16 +131,17 @@ The various properties of a `GstStream` object are:
 elements already using the notion of stream (which is common for
 example in demuxers).
 
-Elements that create GstStream should also set it on the
+Elements that create `GstStream` should also set it on the
 `GST_EVENT_STREAM_START` event of the relevant pad. This helps
 downstream elements to have all information in one location.
 
 ## Exposing collections of streams
 
-```
 API:
 
+```
 GstStreamCollection
+
 gst_stream_collection_new(...)
 gst_stream_collection_add_stream(...)
 gst_stream_collection_get_size(...)
@@ -154,7 +156,7 @@ gst_event_parse_stream_collection(...)
 
 Elements that create new streams (such as demuxers) or can create
 new streams (like the HLS/DASH alternative streams) can list the
-streams they can make available with the GstStreamCollection object.
+streams they can make available with the `GstStreamCollection` object.
 
 Other elements that might generate `GstStreamCollections` are the
 DVD-VM, which handles internal switching of tracks, or parsebin and
@@ -202,11 +204,11 @@ referencing problems.
 ### Usage from elements
 
 When a demuxer knows the list of streams it can expose, it
-creates a new GstStream for each stream it can provide with the
+creates a new `GstStream` for each stream it can provide with the
 appropriate information (stream id, flag, tags, caps, ...).
 
-The demuxer then creates a GstStreamCollection object in which it
-will put the list of GstStream it can expose.  That collection is
+The demuxer then creates a `GstStreamCollection` object in which it
+will put the list of `GstStream` it can expose.  That collection is
 then both posted on the bus (via a `GST_MESSAGE_COLLECTION`) and on
 each pad (via a `GST_EVENT_STREAM_COLLECTION`).
 
@@ -244,8 +246,9 @@ element even if it doesn't implement the `GstStreamCollection` usage.
 
 ## Stream selection event
 
-```
 API:
+
+```
 
 GST_EVENT_SELECT_STREAMS
 gst_event_new_select_streams(...)
@@ -315,7 +318,7 @@ pre-roll before a pipeline is completely linked down to sinks.
 This is an example of how decodebin3 works by using the
 above-mentioned objects/events/messages.
 
-For clarity/completeness, we will consider a mpeg-ts stream that has
+For clarity/completeness, we will consider a MPEG-TS stream that has
 multiple audio streams. Furthermore that stream might have changes
 at some point (switching video codec, or adding/removing audio
 streams).
@@ -462,10 +465,10 @@ through the same pad as the previous video stream in a gapless fashion.
 ##### HLS alternates
 
 There is a main (multi-bitrate or not) stream with audio and
-video interleaved in mpeg-ts. The manifest also indicates the
+video interleaved in MPEG-TS. The manifest also indicates the
 presence of alternate language audio-only streams.
 HLS would expose one collection containing:
-1) The main A+V CONTAINER stream (mpeg-ts), initially active,
+1) The main A+V CONTAINER stream (MPEG-TS), initially active,
  downloaded and exposed as a pad
 2) The alternate A-only streams, initially inactive and not exposed as pads
 the tsdemux element connected to the first stream will also expose
@@ -504,7 +507,7 @@ default english one.
 
 #### multi-program MPEG-TS
 
-Assuming the case of a mpeg-ts stream which contains multiple
+Assuming the case of a MPEG-TS stream which contains multiple
 programs.
 There would be three "levels" of collection:
    1) The collection of programs presents in the stream
@@ -570,17 +573,17 @@ another or not.
 
 ### OPEN QUESTIONS
 
-- Is a `FLUSHING` flag for stream-selection required or not ? This would
+- Is a `FLUSHING` flag for stream-selection required or not? This would
 make the handler of the `SELECT_STREAMS` event send `FLUSH START/STOP`
 before switching to the other streams. This is tricky when dealing
 where situations where we keep some streams and only switch some
-others. Do we flush all streams ? Do we only flush the new streams,
-potentially resulting in delay to fully switch ? Furthermore, due to
+others. Do we flush all streams? Do we only flush the new streams,
+potentially resulting in delay to fully switch? Furthermore, due to
 efficient buffering in decodebin3, the switching time has been
 minimized extensively, to the point where flushing might not bring a
 noticeable improvement.
 
-- Store the stream collection in bins/pipelines ? A Bin/Pipeline could
+- Store the stream collection in bins/pipelines? A Bin/Pipeline could
 store all active collection internally, so that it could be queried
 later on. This could be useful to then get, on any pipeline, at any
 point in time, the full list of collections available without having
@@ -591,4 +594,4 @@ fixing the "is a collection a replacement or not" issue first.
 to *map* corresponding streams from the old to new PMT - that is,
 try and stick to the *english* language audio track, for example?
 Alternatively, rely on the app to do such smarts with stream-select
-messages ?
+messages?
