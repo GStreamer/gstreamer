@@ -306,6 +306,20 @@ ensure_control_rate_params (GstVaapiEncoderVP8 * encoder,
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
   gst_vaapi_codec_object_replace (&misc, NULL);
 
+  /* FrameRate params */
+  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (FrameRate, encoder);
+  if (!misc)
+    return FALSE;
+  {
+    VAEncMiscParameterFrameRate fr = {
+      .framerate =
+          GST_VAAPI_ENCODER_FPS_N (encoder) / GST_VAAPI_ENCODER_FPS_D (encoder),
+    };
+    memcpy (misc->data, &fr, sizeof (fr));
+  }
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+
   return TRUE;
 }
 
@@ -313,27 +327,12 @@ static gboolean
 ensure_misc_params (GstVaapiEncoderVP8 * encoder, GstVaapiEncPicture * picture)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
-  GstVaapiEncMiscParam *misc;
 
   if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
     return FALSE;
 
   if (!ensure_control_rate_params (encoder, picture))
     return FALSE;
-
-  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) != GST_VAAPI_RATECONTROL_CBR)
-    return TRUE;
-
-  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (FrameRate, encoder);
-  if (!misc)
-    return FALSE;
-  {
-    VAEncMiscParameterFrameRate *param = misc->data;
-    param->framerate =
-        GST_VAAPI_ENCODER_FPS_N (encoder) / GST_VAAPI_ENCODER_FPS_D (encoder);
-  }
-  gst_vaapi_enc_picture_add_misc_param (picture, misc);
-  gst_vaapi_codec_object_replace (&misc, NULL);
 
   return TRUE;
 }
