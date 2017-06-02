@@ -2164,7 +2164,6 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 
   /* HRD params */
   misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
-  g_assert (misc);
   if (!misc)
     return FALSE;
   fill_hrd_params (encoder, misc->data);
@@ -2175,7 +2174,6 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR ||
       GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_VBR) {
     misc = GST_VAAPI_ENC_MISC_PARAM_NEW (RateControl, encoder);
-    g_assert (misc);
     if (!misc)
       return FALSE;
     rate_control = misc->data;

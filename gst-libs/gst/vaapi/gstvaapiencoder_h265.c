@@ -1774,7 +1774,6 @@ ensure_misc_params (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture)
   /* HRD params for rate control */
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR) {
     misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
-    g_assert (misc);
     if (!misc)
       return FALSE;
     fill_hrd_params (encoder, misc->data);

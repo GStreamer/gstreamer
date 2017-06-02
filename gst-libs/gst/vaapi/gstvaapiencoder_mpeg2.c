@@ -462,7 +462,6 @@ set_misc_parameters (GstVaapiEncoderMpeg2 * encoder,
 
   /* add hrd */
   misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
-  g_assert (misc);
   if (!misc)
     return FALSE;
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
@@ -479,7 +478,6 @@ set_misc_parameters (GstVaapiEncoderMpeg2 * encoder,
   /* add ratecontrol */
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR) {
     misc = GST_VAAPI_ENC_MISC_PARAM_NEW (RateControl, encoder);
-    g_assert (misc);
     if (!misc)
       return FALSE;
     gst_vaapi_enc_picture_add_misc_param (picture, misc);
