@@ -567,6 +567,9 @@ gst_adaptive_demux_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_MANIFEST_LOCK (demux);
       gst_adaptive_demux_reset (demux);
+      /* Clear "cancelled" flag in uridownloader since subclass might want to
+       * use uridownloader to fetch another manifest */
+      gst_uri_downloader_reset (demux->downloader);
       if (demux->priv->have_manifest)
         gst_adaptive_demux_start_manifest_update_task (demux);
       demux->running = TRUE;
