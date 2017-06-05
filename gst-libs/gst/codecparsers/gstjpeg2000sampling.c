@@ -46,7 +46,8 @@ GstJPEG2000Sampling
 gst_jpeg2000_sampling_from_string (const gchar * sampling_string)
 {
   GstJPEG2000Sampling i;
-  g_return_val_if_fail (sampling_string != NULL, GST_JPEG2000_SAMPLING_NONE);
+  if (sampling_string == NULL)
+    return GST_JPEG2000_SAMPLING_NONE;
   for (i = 0; i < G_N_ELEMENTS (gst_jpeg2000_sampling_strings); ++i) {
     if (!g_strcmp0 (sampling_string, gst_jpeg2000_sampling_strings[i]))
       return (i + 1);
