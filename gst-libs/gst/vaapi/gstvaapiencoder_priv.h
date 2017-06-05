@@ -173,7 +173,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_ENCODER_QUALITY_LEVEL
 #define GST_VAAPI_ENCODER_QUALITY_LEVEL(encoder) \
-  (GST_VAAPI_ENCODER_CAST (encoder)->quality_level)
+  (GST_VAAPI_ENCODER_CAST (encoder)->va_quality_level.quality_level)
 
 /* Generate a mask for the supplied tuning option (internal) */
 #define GST_VAAPI_ENCODER_TUNE_MASK(TUNE) \
@@ -227,7 +227,9 @@ struct _GstVaapiEncoder
   guint32 rate_control_mask;
   guint bitrate; /* kbps */
   guint keyframe_period;
-  guint quality_level;
+
+  /* parameters */
+  VAEncMiscParameterBufferQualityLevel va_quality_level;
 
   GMutex mutex;
   GCond surface_free;

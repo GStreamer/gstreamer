@@ -190,7 +190,6 @@ gst_vaapi_encoder_ensure_param_quality_level (GstVaapiEncoder * encoder,
 {
 #if VA_CHECK_VERSION(0,36,0)
   GstVaapiEncMiscParam *misc;
-  VAEncMiscParameterBufferQualityLevel *quality_level;
 
   /* quality level param is not supported */
   if (GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder) == 0)
@@ -199,9 +198,8 @@ gst_vaapi_encoder_ensure_param_quality_level (GstVaapiEncoder * encoder,
   misc = GST_VAAPI_ENC_QUALITY_LEVEL_MISC_PARAM_NEW (encoder);
   if (!misc)
     return FALSE;
-  quality_level = misc->data;
-  memset (quality_level, 0, sizeof (VAEncMiscParameterBufferQualityLevel));
-  quality_level->quality_level = encoder->quality_level;
+  memcpy (misc->data, &encoder->va_quality_level,
+      sizeof (encoder->va_quality_level));
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
   gst_vaapi_codec_object_replace (&misc, NULL);
 #endif
@@ -767,13 +765,14 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
 #if VA_CHECK_VERSION(0,36,0)
   if (get_config_attribute (encoder, VAConfigAttribEncQualityRange,
           &quality_level_max) && quality_level_max > 0) {
-    encoder->quality_level =
-        gst_util_uint64_scale_int_ceil (encoder->quality_level,
-        quality_level_max, 8);
+    GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder) =
+        gst_util_uint64_scale_int_ceil (GST_VAAPI_ENCODER_QUALITY_LEVEL
+        (encoder), quality_level_max, 8);
   } else {
-    encoder->quality_level = 0;
+    GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder) = 0;
   }
-  GST_INFO ("Quality level is fixed to %d", encoder->quality_level);
+  GST_INFO ("Quality level is fixed to %d",
+      GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder));
 #endif
 
   codedbuf_size = encoder->codedbuf_pool ?
@@ -1137,11 +1136,11 @@ gst_vaapi_encoder_set_quality_level (GstVaapiEncoder * encoder,
 {
   g_return_val_if_fail (encoder != NULL, 0);
 
-  if (encoder->quality_level != quality_level
+  if (GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder) != quality_level
       && encoder->num_codedbuf_queued > 0)
     goto error_operation_failed;
 
-  encoder->quality_level = quality_level;
+  GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder) = quality_level;
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
   /* ERRORS */
