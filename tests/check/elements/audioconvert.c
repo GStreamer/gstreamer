@@ -467,8 +467,9 @@ verify_convert (const gchar * which, void *in, int inlength,
     /* positions for 1 and 2 channels are implicit if not provided */
     if (out_chans > 2 && gst_structure_has_field (in_s, "channel-positions")) {
       if (!gst_structure_has_field (out_s, "channel-positions")) {
-        g_error ("Channel layout got lost somewhere:\n\nIns : %s\nOuts: %s\n",
-            gst_structure_to_string (in_s), gst_structure_to_string (out_s));
+        gst_printerrln ("In  : %" GST_PTR_FORMAT, in_s);
+        gst_printerrln ("Out : %" GST_PTR_FORMAT, out_s);
+        g_error ("Channel layout got lost somewhere\n");
       }
     }
     gst_caps_unref (ccaps);
