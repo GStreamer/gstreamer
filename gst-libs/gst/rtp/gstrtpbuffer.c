@@ -1252,18 +1252,21 @@ gst_rtp_buffer_compare_seqnum (guint16 seqnum1, guint16 seqnum2)
  * @exttimestamp: a previous extended timestamp
  * @timestamp: a new timestamp
  *
- * Update the @exttimestamp field with @timestamp. For the first call of the
- * method, @exttimestamp should point to a location with a value of -1.
+ * Update the @exttimestamp field with the extended timestamp of @timestamp
+ * For the first call of the method, @exttimestamp should point to a location
+ * with a value of -1.
  *
- * This function makes sure that the returned value is a constantly increasing
- * value even in the case where there is a timestamp wraparound.
+ * This function is able to handle both forward and backward timestamps taking
+ * into account:
+ *   - timestamp wraparound making sure that the returned value is properly increased.
+ *   - timestamp unwraparound making sure that the returned value is properly decreased.
  *
- * Returns: The extended timestamp of @timestamp.
+ * Returns: The extended timestamp of @timestamp or 0 if the result can't go anywhere backwards.
  */
 guint64
 gst_rtp_buffer_ext_timestamp (guint64 * exttimestamp, guint32 timestamp)
 {
-  guint64 result, diff, ext;
+  guint64 result, ext;
 
   g_return_val_if_fail (exttimestamp != NULL, -1);
 
@@ -1276,17 +1279,33 @@ gst_rtp_buffer_ext_timestamp (guint64 * exttimestamp, guint32 timestamp)
     result = timestamp + (ext & ~(G_GUINT64_CONSTANT (0xffffffff)));
 
     /* check for timestamp wraparound */
-    if (result < ext)
-      diff = ext - result;
-    else
-      diff = result - ext;
+    if (result < ext) {
+      guint64 diff = ext - result;
 
-    if (diff > G_MAXINT32) {
-      /* timestamp went backwards more than allowed, we wrap around and get
-       * updated extended timestamp. */
-      result += (G_GUINT64_CONSTANT (1) << 32);
+      if (diff > G_MAXINT32) {
+        /* timestamp went backwards more than allowed, we wrap around and get
+         * updated extended timestamp. */
+        result += (G_GUINT64_CONSTANT (1) << 32);
+      }
+    } else {
+      guint64 diff = result - ext;
+
+      if (diff > G_MAXINT32) {
+        if (result < (G_GUINT64_CONSTANT (1) << 32)) {
+          GST_WARNING
+              ("Cannot unwrap, any wrapping took place yet. Returning 0 without updating extended timestamp.");
+          return 0;
+        } else {
+          /* timestamp went forwards more than allowed, we unwrap around and get
+           * updated extended timestamp. */
+          result -= (G_GUINT64_CONSTANT (1) << 32);
+          /* We don't want the extended timestamp storage to go back, ever */
+          return result;
+        }
+      }
     }
   }
+
   *exttimestamp = result;
 
   return result;
