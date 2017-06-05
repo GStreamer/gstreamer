@@ -1772,6 +1772,17 @@ ensure_control_rate_params (GstVaapiEncoderH265 * encoder)
     return TRUE;
 
   /* *INDENT-OFF* */
+  /* RateControl params */
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder) = (VAEncMiscParameterRateControl) {
+    .bits_per_second = encoder->bitrate_bits,
+    .target_percentage = 70,
+    /* CPB (Coded picture buffer) length in milliseconds, which could
+     * be provided as a property */
+    .window_size = encoder->cpb_length,
+    .initial_qp = encoder->init_qp,
+    .min_qp = encoder->min_qp,
+  };
+
   /* HRD params */
   fill_hrd_params (encoder, &GST_VAAPI_ENCODER_VA_HRD (encoder));
 
