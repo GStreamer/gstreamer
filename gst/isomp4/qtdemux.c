@@ -906,10 +906,9 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstObject * parent,
 
       res = gst_qtdemux_src_convert (qtdemux, pad,
           src_fmt, src_value, dest_fmt, &dest_value);
-      if (res) {
+      if (res)
         gst_query_set_convert (query, src_fmt, src_value, dest_fmt, dest_value);
-        res = TRUE;
-      }
+
       break;
     }
     case GST_QUERY_FORMATS:
