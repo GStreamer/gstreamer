@@ -312,8 +312,8 @@ ensure_control_rate_params (GstVaapiEncoderVP8 * encoder,
     return FALSE;
   {
     VAEncMiscParameterFrameRate fr = {
-      .framerate =
-          GST_VAAPI_ENCODER_FPS_N (encoder) / GST_VAAPI_ENCODER_FPS_D (encoder),
+      .framerate = (guint) GST_VAAPI_ENCODER_FPS_D (encoder) << 16 |
+          GST_VAAPI_ENCODER_FPS_N (encoder),
     };
     memcpy (misc->data, &fr, sizeof (fr));
   }
