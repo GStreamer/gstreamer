@@ -258,8 +258,7 @@ error:
 }
 
 static gboolean
-ensure_control_rate_params (GstVaapiEncoderVP8 * encoder,
-    GstVaapiEncPicture * picture)
+ensure_control_rate_params (GstVaapiEncoderVP8 * encoder)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
 
@@ -291,7 +290,7 @@ ensure_control_rate_params (GstVaapiEncoderVP8 * encoder,
   };
   /* *INDENT-ON* */
 
-  return gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture);
+  return TRUE;
 }
 
 static gboolean
@@ -302,7 +301,7 @@ ensure_misc_params (GstVaapiEncoderVP8 * encoder, GstVaapiEncPicture * picture)
   if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
     return FALSE;
 
-  if (!ensure_control_rate_params (encoder, picture))
+  if (!gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture))
     return FALSE;
 
   return TRUE;
@@ -510,6 +509,7 @@ gst_vaapi_encoder_vp8_reconfigure (GstVaapiEncoder * base_encoder)
   if (!ensure_bitrate (encoder))
     goto error;
 
+  ensure_control_rate_params (encoder);
   return set_context_info (base_encoder);
 
   /* ERRORS */

@@ -452,8 +452,7 @@ ensure_picture (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncPicture * picture,
 }
 
 static gboolean
-ensure_control_rate_params (GstVaapiEncoderMpeg2 * encoder,
-    GstVaapiEncPicture * picture)
+ensure_control_rate_params (GstVaapiEncoderMpeg2 * encoder)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
 
@@ -476,7 +475,7 @@ ensure_control_rate_params (GstVaapiEncoderMpeg2 * encoder,
   };
   /* *INDENT-ON* */
 
-  return gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture);
+  return TRUE;
 }
 
 static gboolean
@@ -485,7 +484,7 @@ set_misc_parameters (GstVaapiEncoderMpeg2 * encoder,
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
 
-  if (!ensure_control_rate_params (encoder, picture))
+  if (!gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture))
     return FALSE;
   if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
     return FALSE;
@@ -713,6 +712,7 @@ gst_vaapi_encoder_mpeg2_reconfigure (GstVaapiEncoder * base_encoder)
 
   if (!ensure_bitrate (encoder))
     goto error;
+  ensure_control_rate_params (encoder);
   return set_context_info (base_encoder);
 
   /* ERRORS */

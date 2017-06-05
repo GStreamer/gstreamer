@@ -2154,11 +2154,8 @@ error_create_packed_seq_hdr:
 }
 
 static gboolean
-ensure_control_rate_params (GstVaapiEncoderH264 * encoder,
-    GstVaapiEncPicture * picture)
+ensure_control_rate_params (GstVaapiEncoderH264 * encoder)
 {
-  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
-
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
     return TRUE;
 
@@ -2176,7 +2173,7 @@ ensure_control_rate_params (GstVaapiEncoderH264 * encoder,
   fill_hrd_params (encoder, &GST_VAAPI_ENCODER_VA_HRD (encoder));
   /* *INDENT-ON* */
 
-  return gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture);
+  return TRUE;
 }
 
 /* Generates additional control parameters */
@@ -2187,7 +2184,7 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
   GstVaapiEncMiscParam *misc;
   guint num_roi;
 
-  if (!ensure_control_rate_params (encoder, picture))
+  if (!gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture))
     return FALSE;
 
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR ||
@@ -2848,6 +2845,7 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
     return status;
 
   reset_properties (encoder);
+  ensure_control_rate_params (encoder);
   return set_context_info (base_encoder);
 }
 
