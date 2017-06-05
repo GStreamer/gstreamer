@@ -1,7 +1,7 @@
 # GStreamer Plug-ins splitup
 
 Here is some explanation regarding the split-up of plug-ins into separate
-modules.  Without further ado ...
+modules. Without further ado ...
 
 ## GStreamer - Hung by a Thread
 
@@ -10,7 +10,7 @@ Starring
   GSTREAMER
 
 
-The core around which all other modules revolve.  Base functionality and
+The core around which all other modules revolve. Base functionality and
 libraries, some essential elements, documentation, and testing.
 
   BASE
@@ -24,13 +24,13 @@ And introducing, for the first time ever, on the development screen ...
 
   THE GOOD
 
-<div align="right"><i>Such ingratitude.  After all the times I've saved your life.</i></div>
+<div align="right"><i>Such ingratitude. After all the times I've saved your life.</i></div>
 
 
 A collection of plug-ins you'd want to have right next to you on the
-battlefield.  Shooting sharp and making no mistakes, these plug-ins have it
-all: good looks, good code, and good licensing.  Documented and dressed up
-in tests.  If you're looking for a role model to base your own plug-in on,
+battlefield. Shooting sharp and making no mistakes, these plug-ins have it
+all: good looks, good code, and good licensing. Documented and dressed up
+in tests. If you're looking for a role model to base your own plug-in on,
 here it is.
 
 If you find a plot hole or a badly lip-synced line of code in them,
@@ -39,17 +39,17 @@ like he's been walking 100 miles through the desert without water.
 
   THE UGLY
 
-<div align="right"><i>When you have to shoot, shoot.  Don't talk.</i></div>
+<div align="right"><i>When you have to shoot, shoot. Don't talk.</i></div>
 
 There are times when the world needs a color between black and white.
 Quality code to match the good's, but two-timing, backstabbing and ready to
-sell your freedom down the river.  These plug-ins might have a patent noose
+sell your freedom down the river. These plug-ins might have a patent noose
 around their neck, or a lock-up license, or any other problem that makes you
 think twice about shipping them.
 
-We don't call them ugly because we like them less.  Does a mother love her
-son less because he's not as pretty as the other ones ? No  - she commends
-him on his great personality.  These plug-ins are the life of the party.
+We don't call them ugly because we like them less. Does a mother love her
+son less because he's not as pretty as the other ones? No - she commends
+him on his great personality. These plug-ins are the life of the party.
 And we'll still step in and set them straight if you report any unacceptable
 behaviour - because there are two kinds of people in the world, my friend:
 those with a rope around their neck and the people who do the cutting.
@@ -77,8 +77,8 @@ You dig.
 <div align="right"><i>I've never seen so many plug-ins wasted so badly.</i></div>
 
 GStreamer Plugins has grown so big that it's hard to separate the wheat from
-the chaff.  Also, distributors have brought up issues about the legal status
-of some of the plug-ins we ship.  To remedy this, we've divided the previous
+the chaff. Also, distributors have brought up issues about the legal status
+of some of the plug-ins we ship. To remedy this, we've divided the previous
 set of available plug-ins into four modules:
 
 ### gst-plugins-base
@@ -101,7 +101,7 @@ code, LGPL or LGPL-compatible for the supporting library).
 ### gst-plugins-ugly
 
 a set of plug-ins that have good quality and correct
-functionality, but distributing them might pose problems.  The license
+functionality, but distributing them might pose problems. The license
 on either the plug-ins or the supporting libraries might not be how we'd
 like. The code might be widely known to present patent problems.
 * Distributors should check if they want/can ship these plug-ins
@@ -110,7 +110,7 @@ like. The code might be widely known to present patent problems.
 ### gst-plugins-bad
 
 a set of plug-ins that aren't up to par compared to the
-rest.  They might be close to being good quality, but they're missing
+rest. They might be close to being good quality, but they're missing
 something - be it a good code review, some documentation, a set of tests,
 a real live maintainer, or some actual wide use.
 
