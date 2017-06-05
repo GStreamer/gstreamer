@@ -143,18 +143,12 @@ gio_dep = dependency('gio-2.0', version : glib_req)
 core_conf.set('HAVE_X', x11_dep.found())
 core_conf.set('HAVE_GIO_UNIX_2_0', giounix_dep.found())
 
-runcmd = run_command('pkg-config', '--variable=giomoduledir', 'gio-2.0')
-if runcmd.returncode() == 0
-  core_conf.set('GIO_MODULE_DIR', '"@0@"'.format(runcmd.stdout().strip()))
-endif
-runcmd = run_command('pkg-config', '--variable=libdir', 'gio-2.0')
-if runcmd.returncode() == 0
-  core_conf.set('GIO_LIBDIR', '"@0@"'.format(runcmd.stdout().strip()))
-endif
-runcmd = run_command('pkg-config', '--variable=prefix', 'gio-2.0')
-if runcmd.returncode() == 0
-  core_conf.set('GIO_PREFIX', '"@0@"'.format(runcmd.stdout().strip()))
-endif
+core_conf.set_quoted('GIO_MODULE_DIR',
+  gio_dep.get_pkgconfig_variable('giomoduledir'))
+core_conf.set_quoted('GIO_LIBDIR',
+  gio_dep.get_pkgconfig_variable('libdir'))
+core_conf.set_quoted('GIO_PREFIX',
+  gio_dep.get_pkgconfig_variable('prefix'))
 
 configinc = include_directories('.')
 libsinc = include_directories('gst-libs')
