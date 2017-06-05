@@ -87,7 +87,7 @@ static void stop_feed (GstElement *source, CustomData *data) {
 }
 
 /* The appsink has received a buffer */
-static void new_sample (GstElement *sink, CustomData *data) {
+static GstFlowReturn new_sample (GstElement *sink, CustomData *data) {
   GstSample *sample;
 
   /* Retrieve the buffer */
@@ -97,6 +97,8 @@ static void new_sample (GstElement *sink, CustomData *data) {
     g_print ("*");
     gst_sample_unref (sample);
   }
+
+  return GST_FLOW_OK;
 }
 
 /* This function is called when an error message is posted on the bus */
