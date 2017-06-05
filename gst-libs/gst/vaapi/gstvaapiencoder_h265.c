@@ -1769,26 +1769,16 @@ static gboolean
 ensure_control_rate_params (GstVaapiEncoderH265 * encoder,
     GstVaapiEncPicture * picture)
 {
-  GstVaapiEncMiscParam *misc;
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
 
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
     return TRUE;
 
   /* HRD params */
-  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
-  if (!misc)
-    return FALSE;
+  fill_hrd_params (encoder, &GST_VAAPI_ENCODER_VA_HRD (encoder));
 
-  {
-    fill_hrd_params (encoder, misc->data);
-  }
-
-  gst_vaapi_enc_picture_add_misc_param (picture, misc);
-  gst_vaapi_codec_object_replace (&misc, NULL);
-
-  return TRUE;
+  return gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture);
 }
-
 
 static gboolean
 ensure_misc_params (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture)

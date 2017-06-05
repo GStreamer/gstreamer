@@ -262,65 +262,36 @@ ensure_control_rate_params (GstVaapiEncoderVP8 * encoder,
     GstVaapiEncPicture * picture)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
-  GstVaapiEncMiscParam *misc;
 
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
     return TRUE;
 
+  /* *INDENT-OFF* */
   /* RateControl params */
-  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (RateControl, encoder);
-  if (!misc)
-    return FALSE;
-
-  {
-    VAEncMiscParameterRateControl rate_control = {
-      .bits_per_second = base_encoder->bitrate * 1000,
-      .target_percentage = 70,
-      /* CPB (Coded picture buffer) length in milliseconds, which
-       * could be provided as a property */
-      .window_size = 500,
-      .initial_qp = encoder->yac_qi,
-      .min_qp = 1,
-    };
-
-    memcpy (misc->data, &rate_control, sizeof (rate_control));
-  }
-
-  gst_vaapi_enc_picture_add_misc_param (picture, misc);
-  gst_vaapi_codec_object_replace (&misc, NULL);
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder) = (VAEncMiscParameterRateControl) {
+    .bits_per_second = base_encoder->bitrate * 1000,
+    .target_percentage = 70,
+    /* CPB (Coded picture buffer) length in milliseconds, which
+     * could be provided as a property */
+    .window_size = 500,
+    .initial_qp = encoder->yac_qi,
+    .min_qp = 1,
+  };
 
   /* HRD params */
-  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
-  if (!misc)
-    return FALSE;
-
-  {
-    VAEncMiscParameterHRD hrd = {
-      .buffer_size = base_encoder->bitrate * 1000 * 2,
-      .initial_buffer_fullness = base_encoder->bitrate * 1000,
-    };
-
-    memcpy (misc->data, &hrd, sizeof (hrd));
-  }
-
-  gst_vaapi_enc_picture_add_misc_param (picture, misc);
-  gst_vaapi_codec_object_replace (&misc, NULL);
+  GST_VAAPI_ENCODER_VA_HRD (encoder) = (VAEncMiscParameterHRD) {
+    .buffer_size = base_encoder->bitrate * 1000 * 2,
+    .initial_buffer_fullness = base_encoder->bitrate * 1000,
+  };
 
   /* FrameRate params */
-  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (FrameRate, encoder);
-  if (!misc)
-    return FALSE;
-  {
-    VAEncMiscParameterFrameRate fr = {
-      .framerate = (guint) GST_VAAPI_ENCODER_FPS_D (encoder) << 16 |
-          GST_VAAPI_ENCODER_FPS_N (encoder),
-    };
-    memcpy (misc->data, &fr, sizeof (fr));
-  }
-  gst_vaapi_enc_picture_add_misc_param (picture, misc);
-  gst_vaapi_codec_object_replace (&misc, NULL);
+  GST_VAAPI_ENCODER_VA_FRAME_RATE (encoder) = (VAEncMiscParameterFrameRate) {
+    .framerate = (guint) GST_VAAPI_ENCODER_FPS_D (encoder) << 16 |
+        GST_VAAPI_ENCODER_FPS_N (encoder),
+  };
+  /* *INDENT-ON* */
 
-  return TRUE;
+  return gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture);
 }
 
 static gboolean

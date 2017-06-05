@@ -175,6 +175,39 @@ G_BEGIN_DECLS
 #define GST_VAAPI_ENCODER_QUALITY_LEVEL(encoder) \
   (GST_VAAPI_ENCODER_CAST (encoder)->va_quality_level.quality_level)
 
+/**
+ * GST_VAAPI_ENCODER_VA_RATE_CONTROL:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to #VAEncMiscParameterRateControl
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_VA_RATE_CONTROL
+#define GST_VAAPI_ENCODER_VA_RATE_CONTROL(encoder) \
+  (GST_VAAPI_ENCODER_CAST (encoder)->va_ratecontrol)
+
+/**
+ * GST_VAAPI_ENCODER_VA_FRAME_RATE:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to #VAEncMiscParameterFrameRate
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_VA_FRAME_RATE
+#define GST_VAAPI_ENCODER_VA_FRAME_RATE(encoder) \
+  (GST_VAAPI_ENCODER_CAST (encoder)->va_framerate)
+
+/**
+ * GST_VAAPI_ENCODER_VA_HRD:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to #VAEncMiscParameterHRD
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_VA_HRD
+#define GST_VAAPI_ENCODER_VA_HRD(encoder) \
+  (GST_VAAPI_ENCODER_CAST (encoder)->va_hrd)
+
 /* Generate a mask for the supplied tuning option (internal) */
 #define GST_VAAPI_ENCODER_TUNE_MASK(TUNE) \
   (1U << G_PASTE (GST_VAAPI_ENCODER_TUNE_, TUNE))
@@ -244,6 +277,11 @@ struct _GstVaapiEncoder
 
   /* Region of Interest */
   GList *roi_regions;
+
+  /* miscellaneous buffer parameters */
+  VAEncMiscParameterRateControl va_ratecontrol;
+  VAEncMiscParameterFrameRate va_framerate;
+  VAEncMiscParameterHRD va_hrd;
 };
 
 struct _GstVaapiEncoderClassData
@@ -360,6 +398,11 @@ gst_vaapi_encoder_release_surface (GstVaapiEncoder * encoder,
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_encoder_ensure_param_quality_level (GstVaapiEncoder * encoder,
+    GstVaapiEncPicture * picture);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_encoder_ensure_param_control_rate (GstVaapiEncoder * encoder,
     GstVaapiEncPicture * picture);
 
 G_GNUC_INTERNAL

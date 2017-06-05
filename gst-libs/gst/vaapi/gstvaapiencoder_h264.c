@@ -2157,44 +2157,26 @@ static gboolean
 ensure_control_rate_params (GstVaapiEncoderH264 * encoder,
     GstVaapiEncPicture * picture)
 {
-  GstVaapiEncMiscParam *misc;
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
 
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
     return TRUE;
 
+  /* *INDENT-OFF* */
   /* RateControl params */
-  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (RateControl, encoder);
-  if (!misc)
-    return FALSE;
-
-  {
-    VAEncMiscParameterRateControl rate_control = {
-      .bits_per_second = encoder->bitrate_bits,
-      .target_percentage = 70,
-      .window_size = encoder->cpb_length,
-      .initial_qp = encoder->init_qp,
-      .min_qp = encoder->min_qp,
-    };
-
-    memcpy (misc->data, &rate_control, sizeof (rate_control));
-  }
-
-  gst_vaapi_enc_picture_add_misc_param (picture, misc);
-  gst_vaapi_codec_object_replace (&misc, NULL);
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder) = (VAEncMiscParameterRateControl) {
+    .bits_per_second = encoder->bitrate_bits,
+    .target_percentage = 70,
+    .window_size = encoder->cpb_length,
+    .initial_qp = encoder->init_qp,
+    .min_qp = encoder->min_qp,
+  };
 
   /* HRD params */
-  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
-  if (!misc)
-    return FALSE;
+  fill_hrd_params (encoder, &GST_VAAPI_ENCODER_VA_HRD (encoder));
+  /* *INDENT-ON* */
 
-  {
-    fill_hrd_params (encoder, misc->data);
-  }
-
-  gst_vaapi_enc_picture_add_misc_param (picture, misc);
-  gst_vaapi_codec_object_replace (&misc, NULL);
-
-  return TRUE;
+  return gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture);
 }
 
 /* Generates additional control parameters */
