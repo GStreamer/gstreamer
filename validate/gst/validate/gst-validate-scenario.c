@@ -432,6 +432,7 @@ _find_action_type (const gchar * type_name)
 static gboolean
 _set_variable_func (const gchar * name, double *value, gpointer user_data)
 {
+  gboolean res;
   GstValidateScenario *scenario = GST_VALIDATE_SCENARIO (user_data);
   GstElement *pipeline = gst_validate_scenario_get_pipeline (scenario);
 
@@ -444,7 +445,9 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
   if (!g_strcmp0 (name, "duration")) {
     gint64 duration;
 
-    if (!gst_element_query_duration (pipeline, GST_FORMAT_TIME, &duration)) {
+    if (!(res =
+            gst_element_query_duration (pipeline, GST_FORMAT_TIME, &duration))
+        || !GST_CLOCK_TIME_IS_VALID (duration)) {
       GstValidateMonitor *monitor =
           (GstValidateMonitor *) (g_object_get_data ((GObject *)
               pipeline, "validate-monitor"));
@@ -456,7 +459,8 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
             (monitor->media_descriptor);
       else {
         GST_ERROR_OBJECT (scenario, "Media-info not set");
-        goto fail;
+        if (!res)
+          goto fail;
       }
     }
 
