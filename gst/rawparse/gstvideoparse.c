@@ -248,7 +248,7 @@ gst_video_parse_set_property (GObject * object, guint prop_id,
     }
 
     case PROP_FRAMESIZE:
-      g_object_set (G_OBJECT (vp->rawvideoparse), "frame-stride",
+      g_object_set (G_OBJECT (vp->rawvideoparse), "frame-size",
           g_value_get_uint (value), NULL);
       break;
 
@@ -319,30 +319,32 @@ gst_video_parse_get_property (GObject * object, guint prop_id, GValue * value,
     }
 
     case PROP_STRIDES:{
-      GValue array;
+      GValue array = { 0, };
 
-      g_object_get (G_OBJECT (vp->rawvideoparse), "plane-strides", &array,
-          NULL);
+      g_value_init (&array, GST_TYPE_ARRAY);
+      g_object_get_property (G_OBJECT (vp->rawvideoparse), "plane-strides",
+          &array);
       g_value_take_string (value,
           gst_video_parse_int_valarray_to_string (&array));
       break;
     }
 
     case PROP_OFFSETS:{
-      GValue array;
+      GValue array = { 0, };
 
-      g_object_get (G_OBJECT (vp->rawvideoparse), "plane-offsets", &array,
-          NULL);
+      g_value_init (&array, GST_TYPE_ARRAY);
+      g_object_get_property (G_OBJECT (vp->rawvideoparse), "plane-offsets",
+          &array);
       g_value_take_string (value,
           gst_video_parse_int_valarray_to_string (&array));
       break;
     }
 
     case PROP_FRAMESIZE:{
-      guint frame_stride;
-      g_object_get (G_OBJECT (vp->rawvideoparse), "frame-stride", &frame_stride,
+      guint frame_size;
+      g_object_get (G_OBJECT (vp->rawvideoparse), "frame-size", &frame_size,
           NULL);
-      g_value_set_uint (value, frame_stride);
+      g_value_set_uint (value, frame_size);
       break;
     }
 
@@ -401,7 +403,9 @@ gst_video_parse_int_valarray_to_string (GValue * valarray)
 
   for (i = 0; i < gst_value_array_get_size (valarray); i++) {
     const GValue *gvalue = gst_value_array_get_value (valarray, i);
-    guint val = g_value_get_uint (gvalue);
+    guint val;
+
+    val = g_value_get_int (gvalue);
     g_snprintf (stride_str, sizeof (stride_str), "%u", val);
 
     if (str == NULL) {
