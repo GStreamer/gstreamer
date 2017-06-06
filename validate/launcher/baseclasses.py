@@ -416,10 +416,18 @@ class Test(Loggable):
     def launch_server(self):
         return None
 
+    def get_logfile_repr(self):
+        message = "    Logs:\n" \
+                  "         - %s" % (self.logfile)
+        for log in self.extra_logfiles:
+            message += "\n         - %s" % log
+
+        return message
+
     def test_start(self, queue):
         self.open_logfile()
 
-        server_command = self.launch_server()
+        self.server_command = self.launch_server()
         self.queue = queue
         self.command = [self.application]
         self._starting_time = time.time()
@@ -438,16 +446,13 @@ class Test(Loggable):
 
         message = "Launching: %s%s\n" \
                   "    Command: '%s & %s %s'\n" % (
-                      Colors.ENDC, self.classname, server_command,
+                      Colors.ENDC, self.classname, self.server_command,
                       self._env_variable, ' '.join(self.command))
-        if server_command:
-            message += "    Server command: %s\n" % server_command
+        if self.server_command:
+            message += "    Server command: %s\n" % self.server_command
 
         if not self.options.redirect_logs:
-            message += "    Logs:\n" \
-                       "         - %s" % (self.logfile)
-            for log in self.extra_logfiles:
-                message += "\n         - %s" % log
+            message += self.get_logfile_repr()
 
             self.out.write("=================\n"
                            "Test name: %s\n"
@@ -483,9 +488,12 @@ class Test(Loggable):
         self.thread.join()
         self.time_taken = time.time() - self._starting_time
 
-        printc("%s: %s%s\n" % (self.classname, self.result,
-               " (" + self.message + ")" if self.message else ""),
-               color=utils.get_color_for_result(self.result))
+        message = "%s: %s%s\n" % (self.classname, self.result,
+               " (" + self.message + ")" if self.message else "")
+        if not self.options.redirect_logs:
+            message += self.get_logfile_repr()
+
+        printc(message, color=utils.get_color_for_result(self.result))
 
         self.close_logfile()
 
