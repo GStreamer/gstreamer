@@ -1544,19 +1544,26 @@ class _TestsLauncher(Loggable):
                 except IOError:
                     continue
 
+                optional_out = []
                 for test in know_tests:
                     if test and test.strip('~') not in tests_names:
                         if not test.startswith('~'):
                             testlist_changed = True
                             printc("Test %s Not in testsuite %s anymore"
                                 % (test, testsuite.__file__), Colors.FAIL)
+                        else:
+                            optional_out.append((test, None))
 
-                for test in tests:
-                    testlist_file.write("%s%s\n" % ('~' if test.optional else '',
-                                                    test.classname))
-                    if test and test not in know_tests:
+                tests_names = sorted([(test.classname, test) for test in tests] + optional_out,
+                                     key=lambda x: x[0].strip('~'))
+
+                for tname, test in tests_names:
+                    if test and test.optional:
+                        tname = '~' + tname
+                    testlist_file.write("%s\n" % (tname))
+                    if tname and tname not in know_tests:
                         printc("Test %s is NEW in testsuite %s"
-                               % (test, testsuite.__file__), Colors.OKGREEN)
+                               % (tname, testsuite.__file__), Colors.OKGREEN)
                         testlist_changed = True
 
                 testlist_file.close()
