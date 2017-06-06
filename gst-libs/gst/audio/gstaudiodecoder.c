@@ -1231,8 +1231,10 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
   if (buf) {
     ret = check_pending_reconfigure (dec);
-    if (ret == GST_FLOW_FLUSHING || ret == GST_FLOW_NOT_NEGOTIATED)
+    if (ret == GST_FLOW_FLUSHING || ret == GST_FLOW_NOT_NEGOTIATED) {
+      gst_buffer_unref (buf);
       goto exit;
+    }
 
     if (priv->pending_events)
       send_pending_events (dec);
