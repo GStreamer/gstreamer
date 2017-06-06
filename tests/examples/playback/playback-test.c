@@ -310,14 +310,29 @@ format_value (GtkScale * scale, gdouble value, PlaybackApp * app)
 {
   gint64 real;
   gint64 seconds;
-  gint64 subseconds;
 
   real = value * app->duration / N_GRAD;
   seconds = (gint64) real / GST_SECOND;
-  subseconds = (gint64) real / (GST_MSECOND);
+  /* Use two different formatting depending on the amount */
+  if (seconds < 60 * 60) {
+    gint64 subseconds = (gint64) real / (GST_MSECOND);
 
-  return g_strdup_printf ("%02" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT ":%03"
-      G_GINT64_FORMAT, seconds / 60, seconds % 60, subseconds % 1000);
+    /* Sub hour positioning */
+    return g_strdup_printf ("%02" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT ":%03"
+        G_GINT64_FORMAT, seconds / 60, seconds % 60, subseconds % 1000);
+  } else {
+    gint64 days = seconds / (24 * 60 * 60);
+    gint64 hours = (seconds / (60 * 60)) % 60;
+    gint64 minutes = (seconds / 60) % 60;
+
+    if (days) {
+      return g_strdup_printf ("%02" G_GINT64_FORMAT "d%02" G_GINT64_FORMAT
+          "h%02" G_GINT64_FORMAT "m", days, hours, minutes);
+    } else {
+      return g_strdup_printf ("%02" G_GINT64_FORMAT "h%02" G_GINT64_FORMAT
+          "m%02" G_GINT64_FORMAT "s", hours, minutes, seconds % 60);
+    }
+  }
 }
 
 static gchar *
