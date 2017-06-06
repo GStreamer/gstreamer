@@ -22,9 +22,6 @@
  *
  * TODO:
  * - handle stream status and switch capture thread to SCHED_RR/FIFO
- * - the queue-size controls the controler offset
- *   - right now we work with 1 queued picture and thus active settings for next
- *     frame
  * - we want some feedback about how precisely a program can be realized
  *   - we might want to adjust the framerate to handle hardware limmits
  * - we e.g. can't change resolution per frame right now
@@ -118,7 +115,7 @@ gint
 main (gint argc, gchar ** argv)
 {
   GstElement *bin;
-  GstElement *src, *fmt, *enc, *sink;
+  GstElement *src, *cvt, *fmt, *enc, *sink;
   GstCaps *caps;
   GstStructure *prog;
 
@@ -149,17 +146,21 @@ main (gint argc, gchar ** argv)
       ("video/x-raw, width=640, height=480, framerate=(fraction)15/1");
   g_object_set (fmt, "caps", caps, NULL);
 
+  if (!(cvt = gst_element_factory_make ("videoconvert", NULL))) {
+    GST_WARNING ("Can't create element \"videoconvert\"");
+    return -1;
+  }
+
   if (!(src = gst_element_factory_make ("v4l2src", NULL))) {
     GST_WARNING ("Can't create element \"v4l2src\"");
     return -1;
   }
-  g_object_set (src, "queue-size", 1, NULL);
 
   /* add objects to the main bin */
-  gst_bin_add_many (GST_BIN (bin), src, fmt, enc, sink, NULL);
+  gst_bin_add_many (GST_BIN (bin), src, cvt, fmt, enc, sink, NULL);
 
   /* link elements */
-  if (!gst_element_link_many (src, fmt, enc, sink, NULL)) {
+  if (!gst_element_link_many (src, cvt, fmt, enc, sink, NULL)) {
     GST_WARNING ("Can't link elements");
     return -1;
   }
@@ -181,7 +182,8 @@ main (gint argc, gchar ** argv)
       NULL);
 #endif
   set_program (GST_OBJECT (src), prog);
-  g_object_set (src, "num-buffers", gst_structure_n_fields (prog), NULL);
+  g_object_set (src, "num-buffers", gst_structure_n_fields (prog),
+      "device", argv[1] ? argv[1] : "/dev/video0", NULL);
 
   /* prepare playback */
   gst_element_set_state (bin, GST_STATE_PAUSED);
