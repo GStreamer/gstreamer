@@ -122,6 +122,9 @@ void
 gst_navigation_send_key_event (GstNavigation * navigation, const char *event,
     const char *key)
 {
+  g_return_if_fail (g_strcmp0 (event, "key-press") == 0 ||
+      g_strcmp0 (event, "key-release") == 0);
+
   gst_navigation_send_event (navigation,
       gst_structure_new (GST_NAVIGATION_EVENT_NAME, "event", G_TYPE_STRING,
           event, "key", G_TYPE_STRING, key, NULL));
@@ -147,6 +150,10 @@ void
 gst_navigation_send_mouse_event (GstNavigation * navigation, const char *event,
     int button, double x, double y)
 {
+  g_return_if_fail (g_strcmp0 (event, "mouse-button-press") == 0 ||
+      g_strcmp0 (event, "mouse-button-release") == 0 ||
+      g_strcmp0 (event, "mouse-move") == 0);
+
   gst_navigation_send_event (navigation,
       gst_structure_new (GST_NAVIGATION_EVENT_NAME, "event", G_TYPE_STRING,
           event, "button", G_TYPE_INT, button, "pointer_x", G_TYPE_DOUBLE, x,
