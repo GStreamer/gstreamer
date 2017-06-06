@@ -194,9 +194,13 @@ gst_validate_plugin_get_config (GstPlugin * plugin)
     if (confs) {
       gint i;
 
-      for (i = 0; i < gst_caps_get_size (confs); i++)
-        plugin_conf = g_list_append (plugin_conf,
-            gst_structure_copy (gst_caps_get_structure (confs, i)));
+      for (i = 0; i < gst_caps_get_size (confs); i++) {
+        GstStructure *structure = gst_caps_get_structure (confs, i);
+
+        if (gst_structure_has_name (structure, suffix))
+          plugin_conf =
+              g_list_append (plugin_conf, gst_structure_copy (structure));
+      }
 
       gst_caps_unref (confs);
     }

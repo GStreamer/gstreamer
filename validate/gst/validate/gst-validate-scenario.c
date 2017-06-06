@@ -1737,8 +1737,8 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
       (gst_structure_get_boolean (action->structure, "as-config",
               &is_config) && is_config == TRUE)) {
 
-    gst_validate_print_action (action, NULL);
     res = action_type->execute (scenario, action);
+    gst_validate_print_action (action, NULL);
 
     return res;
   }
@@ -2449,6 +2449,7 @@ _execute_disable_plugin (GstValidateScenario * scenario,
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
 
+  gst_validate_printf (action, "Disabling plugin \"%s\"\n", plugin_name);
   gst_registry_remove_plugin (gst_registry_get (), plugin);
 
   return GST_VALIDATE_EXECUTE_ACTION_OK;
@@ -2783,6 +2784,22 @@ done:
     _check_waiting_for_message (scenario, message);
 
   return TRUE;
+}
+
+static gboolean
+_action_type_has_parameter (GstValidateActionType * atype,
+    const gchar * paramname)
+{
+  gint i;
+
+  if (!atype->parameters)
+    return FALSE;
+
+  for (i = 0; atype->parameters[i].name; i++)
+    if (g_strcmp0 (atype->parameters[i].name, paramname) == 0)
+      return TRUE;
+
+  return FALSE;
 }
 
 static gboolean
@@ -3830,6 +3847,7 @@ gst_validate_scenario_get_target_state (GstValidateScenario * scenario)
 void
 init_scenarios (void)
 {
+  GList *tmp;
   GST_DEBUG_CATEGORY_INIT (gst_validate_scenario_debug, "gstvalidatescenario",
       GST_DEBUG_FG_YELLOW, "Gst validate scenarios");
 
@@ -4222,6 +4240,33 @@ init_scenarios (void)
       GST_VALIDATE_ACTION_TYPE_NONE);
   /*  *INDENT-ON* */
 
+  for (tmp = gst_validate_plugin_get_config (NULL); tmp; tmp = tmp->next) {
+    const gchar *action_typename;
+
+    if ((action_typename = gst_structure_get_string (tmp->data, "action"))) {
+      GstValidateAction *action;
+      GstValidateActionType *atype = _find_action_type (action_typename);
+
+      if (!atype) {
+        g_error ("[CONFIG ERROR] Action type %s not found", action_typename);
+
+        continue;
+      }
+
+      if (!(atype->flags & GST_VALIDATE_ACTION_TYPE_CONFIG) &&
+          !(_action_type_has_parameter (atype, "as-config"))) {
+        g_error ("[CONFIG ERROR] Action is not a config action");
+
+        continue;
+      }
+
+      gst_structure_set (tmp->data, "as-config", G_TYPE_BOOLEAN, TRUE, NULL);
+      gst_structure_set_name (tmp->data, action_typename);
+
+      action = gst_validate_action_new (NULL, tmp->data);
+      _fill_action (NULL, action, tmp->data, FALSE);
+    }
+  }
 }
 
 void
