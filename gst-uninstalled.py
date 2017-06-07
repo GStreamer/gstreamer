@@ -70,7 +70,8 @@ def get_subprocess_env(options):
         elif sharedlib_reg.search(filename):
             if target.get('type') != "shared library":
                 continue
-            if pluginpath_reg.search(os.path.normpath(target.get('install_filename'))):
+
+            if target.get('installed') and pluginpath_reg.search(os.path.normpath(target.get('install_filename'))):
                 prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(options.builddir, root))
                 continue
 
