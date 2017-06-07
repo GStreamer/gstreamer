@@ -24,7 +24,8 @@ if not meson.is_subproject()
 endif
 
 foreach t : validate_tests
-  test_name = t.get(0)
+  fname = '@0@.c'.format(t.get(0))
+  test_name = t.get(0).underscorify()
   if t.length() == 2
     skip_test = t.get(1)
   else
@@ -32,7 +33,7 @@ foreach t : validate_tests
   endif
 
   if not skip_test
-    exe = executable(test_name, '@0@.c'.format(test_name),
+    exe = executable(test_name, fname,
         'validate/test-utils.c',
         c_args : gst_c_args + test_defines,
         include_directories : [inc_dirs],
