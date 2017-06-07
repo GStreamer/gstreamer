@@ -1,1 +1,1 @@
-#subdir('check') # FIXME
+subdir('check')

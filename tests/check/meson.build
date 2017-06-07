@@ -2,41 +2,23 @@
 gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_check_dep'])
 
-test_plugins_modules = [
-  ['gstreamer-1.0', true],
-  ['gstreamer-plugins-base-1.0', true],
-  ['gstreamer-plugins-good-1.0', false],
-  ['gstreamer-plugins-bad-1.0', false],
-]
-test_plugin_path = ''
-foreach m : test_plugins_modules
-  m_name = m[0]
-  m_required = m[1]
-  runcmd = run_command('pkg-config', '--variable=pluginsdir', m_name + ' ' + gst_req)
-  if runcmd.returncode() == 0
-    module_plugin_path = runcmd.stdout().strip()
-    message('Using '+ m_name + ' plugins in ' + module_plugin_path)
-    if test_plugin_path == ''
-      test_plugin_path = module_plugin_path
-    elif module_plugin_path != test_plugin_path
-      test_plugin_path = test_plugin_path + ':' + module_plugin_path
-    endif
-  elif m_required
-    error('Could not determine ' + m_name + ' plugins directory for unit tests.')
-  endif
-endforeach
+
+pluginsdirs = []
+if gst_dep.type_name() == 'pkgconfig'
+  pbase = dependency('gstreamer-plugins-base-' + api_version, required : false)
+  pbad = dependency('gstreamer-plugins-bad-' + api_version, required : false)
+  pgood = dependency('gstreamer-plugins-good-' + api_version, required : false)
+
+  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir'),
+                 pbase.get_pkgconfig_variable('pluginsdir'),
+                 pbad.get_pkgconfig_variable('pluginsdir'),
+                 pgood.get_pkgconfig_variable('pluginsdir')]
+endif
 
 test_c_args = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_PLUGIN_LOADING_WHITELIST"',
-]
-
-test_env = [
-  'GST_PLUGIN_SYSTEM_PATH_1_0=',
-  'GST_PLUGIN_PATH_1_0=' + meson.build_root() + '/gst/rtsp-sink:' + test_plugin_path,
-  'GST_PLUGIN_LOADING_WHITELIST=gstreamer:gst-plugins-base:gst-plugins-good:gst-plugins-bad:gst-rtsp-server',
-  'CK_DEFAULT_TIMEOUT=120',
 ]
 
 rtsp_server_tests = [
@@ -55,13 +37,15 @@ rtsp_server_tests = [
   'gst/token',
 ]
 
-all_env = ''
-foreach e : test_env
-  all_env = all_env + ' ' + e
-endforeach
-message('test env:' + all_env)
-
 foreach test_name : rtsp_server_tests
+    env = environment()
+    env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
+    env.set('GST_STATE_IGNORE_ELEMENTS', '')
+    env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer:gst-plugins-base:gst-plugins-good:gst-plugins-bad:gst-rtsp-server')
+    env.set('CK_DEFAULT_TIMEOUT', '120')
+    env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
+    env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
+
   fname = '@0@.c'.format(test_name)
   test_name = test_name.underscorify()
   exe = executable(test_name, fname,
@@ -70,7 +54,8 @@ foreach test_name : rtsp_server_tests
     dependencies : [gstcheck_dep, gstrtsp_dep, gstrtp_dep, gst_rtsp_server_dep]
   )
   test(test_name, exe,
-    env : test_env + [ 'GST_REGISTRY=@0@/@1@.registry'.format(meson.current_build_dir(), test_name) ],
+    env : env,
     timeout : 120,
+    is_parallel: false
   )
 endforeach
