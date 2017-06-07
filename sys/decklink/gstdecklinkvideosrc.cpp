@@ -748,7 +748,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   gboolean caps_changed = FALSE;
   const GstDecklinkMode *mode;
   static GstStaticCaps stream_reference =
-      GST_STATIC_CAPS ("timestamp/x-stream");
+      GST_STATIC_CAPS ("timestamp/x-decklink-stream");
 
   g_mutex_lock (&self->lock);
   while (gst_queue_array_is_empty (self->current_frames) && !self->flushing) {

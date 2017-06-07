@@ -558,7 +558,7 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   guint64 start_offset, end_offset;
   gboolean discont = FALSE;
   static GstStaticCaps stream_reference =
-      GST_STATIC_CAPS ("timestamp/x-stream");
+      GST_STATIC_CAPS ("timestamp/x-decklink-stream");
 
 retry:
   g_mutex_lock (&self->lock);
