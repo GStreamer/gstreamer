@@ -201,6 +201,14 @@ if test "x$HAVE_CAIRO" != "xyes"; then
   AC_MSG_NOTICE([Cairo is needed for the gst-validate-images-tool])
 fi
 
+PKG_CHECK_MODULES(GST_RTSP_SERVER, "gstreamer-rtsp-server-1.0", HAVE_GST_RTSP_SERVER=yes, HAVE_GST_RTSP_SERVER=no)
+AC_SUBST(GST_RTSP_SERVER_CFLAGS)
+AC_SUBST(GST_RTSP_SERVER_LIBS)
+AM_CONDITIONAL(HAVE_GST_RTSP_SERVER, test ! "x$HAVE_GST_RTSP_SERVER" = "xno")
+if test "x$HAVE_GST_RTSP_SERVER" != "xyes"; then
+  AC_MSG_NOTICE([GstRtspServer is needed for the gst-validate-rtsp-server])
+fi
+
 PKG_CHECK_MODULES(JSON_GLIB, json-glib-1.0)
 AC_SUBST(JSON_GLIB_LIBS)
 AC_SUBST(JSON_GLIB_CFLAGS)

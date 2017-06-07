@@ -22,6 +22,20 @@ executable('gst-validate-media-check-' + apiversion,
             link_with : [gstvalidate]
         )
 
+rtsp_server_dep = dependency('gstreamer-rtsp-server-' + apiversion,
+  fallback: ['gst-rtsp-server', 'gst_rtsp_server_dep'])
+
+if rtsp_server_dep.found()
+    executable('gst-validate-rtsp-server-' + apiversion,
+               'gst-validate-rtsp-server.c',
+               install: true,
+               include_directories: inc_dirs,
+               dependencies: [rtsp_server_dep],
+               c_args: [gst_c_args],
+               link_with: [gstvalidate]
+    )
+endif
+
 if cairo_dep.found()
     executable('gst-validate-image-check-' + apiversion,
             'gst-validate-images-check.c',

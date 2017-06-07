@@ -49,13 +49,14 @@ parser.add_argument("--validate-tools-path", dest="validate_tools_path",
 options, args = parser.parse_known_args()
 
 GST_VALIDATE_COMMAND = which("gst-validate-1.0", options.validate_tools_path)
-GST_VALIDATE_TRANSCODING_COMMAND = which(
-    "gst-validate-transcoding-1.0", options.validate_tools_path)
-G_V_DISCOVERER_COMMAND = which(
-    "gst-validate-media-check-1.0", options.validate_tools_path)
-ScenarioManager.GST_VALIDATE_COMMAND = GST_VALIDATE_COMMAND
-RTSP_SERVER_COMMAND = "gst-rtsp-server-example-uri-1.0"
+GST_VALIDATE_TRANSCODING_COMMAND = which("gst-validate-transcoding-1.0",
+                                         options.validate_tools_path)
+G_V_DISCOVERER_COMMAND = which("gst-validate-media-check-1.0",
+                               options.validate_tools_path)
+GST_VALIDATE_RTSP_SERVER_COMMAND = which("gst-validate-rtsp-server-1.0",
+                                         options.validate_tools_path)
 
+ScenarioManager.GST_VALIDATE_COMMAND = GST_VALIDATE_COMMAND
 AUDIO_ONLY_FILE_TRANSCODING_RATIO = 5
 
 #
@@ -289,10 +290,10 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                           os.path.basename(minfo.media_descriptor.get_clean_name()))
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
-        test_rtsp = which(RTSP_SERVER_COMMAND)
+        test_rtsp = which(GST_VALIDATE_RTSP_SERVER_COMMAND)
         if not test_rtsp:
             printc("\n\nRTSP server not available, you should make sure"
-                   " that %s is available in your $PATH." % RTSP_SERVER_COMMAND,
+                   " that %s is available in your $PATH." % GST_VALIDATE_RTSP_SERVER_COMMAND,
                    Colors.FAIL)
         elif self.test_manager.options.disable_rtsp:
             printc("\n\nRTSP tests are disabled")
@@ -625,7 +626,7 @@ class GstValidateBaseRTSPTest:
             self.rtspserver_logs = sys.stderr
 
         self.server_port = self.__get_open_port()
-        command = [RTSP_SERVER_COMMAND, self._local_uri, '--port', str(self.server_port)]
+        command = [GST_VALIDATE_RTSP_SERVER_COMMAND, self._local_uri, '--port', str(self.server_port)]
 
         if self.options.validate_gdb_server:
             command = self.use_gdb(command)
