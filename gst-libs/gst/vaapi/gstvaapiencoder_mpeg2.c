@@ -473,12 +473,6 @@ ensure_control_rate_params (GstVaapiEncoderMpeg2 * encoder)
     .buffer_size = base_encoder->bitrate * 1000 * 8,
     .initial_buffer_fullness = base_encoder->bitrate * 1000 * 4,
   };
-
-  /* FrameRate params */
-  GST_VAAPI_ENCODER_VA_FRAME_RATE (encoder) = (VAEncMiscParameterFrameRate) {
-    .framerate = (guint) GST_VAAPI_ENCODER_FPS_D (encoder) << 16 |
-        GST_VAAPI_ENCODER_FPS_N (encoder),
-  };
   /* *INDENT-ON* */
 
   return TRUE;

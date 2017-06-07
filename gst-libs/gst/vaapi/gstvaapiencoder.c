@@ -808,6 +808,10 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   if (!encoder->keyframe_period)
     encoder->keyframe_period = (vip->fps_n + vip->fps_d - 1) / vip->fps_d;
 
+  /* Default frame rate parameter */
+  GST_VAAPI_ENCODER_VA_FRAME_RATE (encoder).framerate =
+      (guint) GST_VIDEO_INFO_FPS_D (vip) << 16 | GST_VIDEO_INFO_FPS_N (vip);
+
   status = klass->reconfigure (encoder);
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return status;

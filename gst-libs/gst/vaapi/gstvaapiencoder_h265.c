@@ -1787,12 +1787,6 @@ ensure_control_rate_params (GstVaapiEncoderH265 * encoder)
 
   /* HRD params */
   fill_hrd_params (encoder, &GST_VAAPI_ENCODER_VA_HRD (encoder));
-
-  /* FrameRate params */
-  GST_VAAPI_ENCODER_VA_FRAME_RATE (encoder) = (VAEncMiscParameterFrameRate) {
-    .framerate = (guint) GST_VAAPI_ENCODER_FPS_D (encoder) << 16 |
-        GST_VAAPI_ENCODER_FPS_N (encoder),
-  };
   /* *INDENT-ON* */
 
   return TRUE;
