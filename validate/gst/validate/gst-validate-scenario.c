@@ -4046,7 +4046,7 @@ init_scenarios (void)
         },
         {NULL}
       }),
-      "The 'switch-track' command can be used to switch tracks.\n"
+      "The 'switch-track' command can be used to switch tracks."
       , GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("wait", _execute_wait,
@@ -4085,7 +4085,7 @@ init_scenarios (void)
   REGISTER_ACTION_TYPE ("dot-pipeline", _execute_dot_pipeline, NULL,
       "Dots the pipeline (the 'name' property will be used in the dot filename).\n"
       "For more information have a look at the GST_DEBUG_BIN_TO_DOT_FILE documentation.\n"
-      "Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set\n",
+      "Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("set-feature-rank", _execute_set_rank,
