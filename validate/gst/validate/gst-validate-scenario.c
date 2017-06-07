@@ -3861,7 +3861,7 @@ init_scenarios (void)
         .def = "false"},
       {
         .name = "seek",
-        .description = "Whether the scenario executes seek action or not",
+        .description = "Whether the scenario executes seek actions or not",
         .mandatory = FALSE,
         .types = "boolean",
         .possible_variables = NULL,
@@ -3984,8 +3984,8 @@ init_scenarios (void)
         },
         {NULL}
       }),
-      "Seeks into the stream, example of a seek happening when the stream reaches 5 seconds\n"
-      "or 1 eighth of its duration and seeks at 10sec or 2 eighth of its duration:\n"
+      "Seeks into the stream. This is an example of a seek happening when the stream reaches 5 seconds\n"
+      "or 1 eighth of its duration and seeks to 10s or 2 eighths of its duration:\n"
       "  seek, playback-time=\"min(5.0, (duration/8))\", start=\"min(10, 2*(duration/8))\", flags=accurate+flush",
       GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK
   );
@@ -4014,7 +4014,7 @@ init_scenarios (void)
       "Stops the execution of the scenario. It will post a 'request-state'"
       " message on the bus with NULL as a requested state"
       " and the application is responsible for stopping itself."
-      " if you override that action type, make sure to link up.",
+      " If you override that action type, make sure to link up.",
       GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL);
 
   REGISTER_ACTION_TYPE ("eos", _execute_eos, NULL,
