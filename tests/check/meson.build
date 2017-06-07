@@ -62,7 +62,9 @@ endforeach
 message('test env:' + all_env)
 
 foreach test_name : rtsp_server_tests
-  exe = executable(test_name, '@0@.c'.format(test_name),
+  fname = '@0@.c'.format(test_name)
+  test_name = test_name.underscorify()
+  exe = executable(test_name, fname,
     include_directories : rtspserver_incs,
     c_args : rtspserver_args + test_c_args,
     dependencies : [gstcheck_dep, gstrtsp_dep, gstrtp_dep, gst_rtsp_server_dep]
