@@ -533,7 +533,7 @@ _check_scenario_is_done (GstValidateScenario * scenario)
  *
  *
  * Get a time value for the @name parameter of an action. This
- * method should be called to retrieved and compute a timed value of a given
+ * method should be called to retrieve and compute a timed value of a given
  * action. It will first try to retrieve the value as a double,
  * then get it as a string and execute any formula taking into account
  * the 'position' and 'duration' variables. And it will always convert that
@@ -588,8 +588,8 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
  * @stop_type: The #GstSeekType of the stop value of the seek
  * @stop: The stop time of the seek
  *
- * Executes a seek event on the scenario' pipeline. You should always use
- * that method when you want to execute a seek inside a new action types
+ * Executes a seek event on the scenario's pipeline. You should always use
+ * this method when you want to execute a seek inside a new action type
  * so that the scenario state is updated taking into account that seek.
  *
  * For more information you should have a look at #gst_event_new_seek
@@ -2249,7 +2249,7 @@ cmp_klass_name (gconstpointer a, gconstpointer b)
  * @scenario: a #GstValidateScenario
  * @action: a #GstValidateAction
  *
- * Returns all the elements in the pipeline whose the GST_ELEMENT_METADATA_KLASS
+ * Returns all the elements in the pipeline whose GST_ELEMENT_METADATA_KLASS
  * matches the 'target-element-klass' of @action.
  *
  * Returns: (transfer full) (element-type GstElement): a list of #GstElement
@@ -3540,7 +3540,7 @@ _action_set_done (GstValidateAction * action)
 /* gst_validate_action_set_done:
  * @action: The action that is done executing
  *
- * Sets @action as "done" meaning that the next action can
+ * Sets @action as "done", meaning that the next action can
  * now be executed.
  */
 void
@@ -3572,7 +3572,7 @@ gst_validate_action_set_done (GstValidateAction * action)
 
 /**
  * gst_validate_action_get_scenario:
- * @action: The action from which to retrieve the scenario
+ * @action: The action for which to retrieve the scenario
  *
  * Retrieve the scenario from which @action is executed.
  *
@@ -3590,7 +3590,7 @@ gst_validate_action_get_scenario (GstValidateAction * action)
  * @implementer_namespace: The namespace of the implementer of the action type.
  *                         That should always be the name of the GstPlugin as
  *                         retrieved with #gst_plugin_get_name when the action type
- *                         is register inside a plugin.
+ *                         is registered inside a plugin.
  * @function: (scope notified): The function to be called to execute the action
  * @parameters: (allow-none) (array zero-terminated=1) (element-type GstValidateActionParameter): The #GstValidateActionParameter usable as parameter of the type
  * @description: A description of the new type
