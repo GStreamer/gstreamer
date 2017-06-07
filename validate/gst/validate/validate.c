@@ -278,8 +278,8 @@ gst_validate_init_plugins (void)
 /**
  * gst_validate_init:
  *
- * Initializes GstValidate, call that before any usage of GstValidate.
- * You should take care of initilizing GStreamer before calling this
+ * Initializes GstValidate. Call this before any usage of GstValidate.
+ * You should take care of initializing GStreamer before calling this
  * function.
  */
 void
