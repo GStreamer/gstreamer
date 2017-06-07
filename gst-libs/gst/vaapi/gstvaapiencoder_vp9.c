@@ -269,14 +269,12 @@ ensure_control_rate_params (GstVaapiEncoderVP9 * encoder)
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
     return TRUE;
 
-  /* *INDENT-OFF* */
   /* RateControl params */
-  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder) = (VAEncMiscParameterRateControl) {
-    .bits_per_second = encoder->bitrate_bits,
-    .target_percentage = 70,
-    .window_size = encoder->cpb_length,
-  };
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).bits_per_second =
+      encoder->bitrate_bits;
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).window_size = encoder->cpb_length;
 
+  /* *INDENT-OFF* */
   /* HRD params */
   GST_VAAPI_ENCODER_VA_HRD (encoder) = (VAEncMiscParameterHRD) {
     .buffer_size = encoder->bitrate_bits * 2,

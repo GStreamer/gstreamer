@@ -1773,21 +1773,17 @@ ensure_control_rate_params (GstVaapiEncoderH265 * encoder)
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
     return TRUE;
 
-  /* *INDENT-OFF* */
   /* RateControl params */
-  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder) = (VAEncMiscParameterRateControl) {
-    .bits_per_second = encoder->bitrate_bits,
-    .target_percentage = 70,
-    /* CPB (Coded picture buffer) length in milliseconds, which could
-     * be provided as a property */
-    .window_size = encoder->cpb_length,
-    .initial_qp = encoder->init_qp,
-    .min_qp = encoder->min_qp,
-  };
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).bits_per_second =
+      encoder->bitrate_bits;
+  /* CPB (Coded picture buffer) length in milliseconds, which could be
+   * provided as a property */
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).window_size = encoder->cpb_length;
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).initial_qp = encoder->init_qp;
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).min_qp = encoder->min_qp;
 
   /* HRD params */
   fill_hrd_params (encoder, &GST_VAAPI_ENCODER_VA_HRD (encoder));
-  /* *INDENT-ON* */
 
   return TRUE;
 }

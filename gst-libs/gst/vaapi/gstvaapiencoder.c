@@ -812,6 +812,15 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   GST_VAAPI_ENCODER_VA_FRAME_RATE (encoder).framerate =
       (guint) GST_VIDEO_INFO_FPS_D (vip) << 16 | GST_VIDEO_INFO_FPS_N (vip);
 
+  /* *INDENT-OFF* */
+  /* Default values for rate control parameter */
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder) = (VAEncMiscParameterRateControl) {
+    .bits_per_second = encoder->bitrate * 1000,
+    .target_percentage = 70,
+    .window_size = 500,
+  };
+  /* *INDENT-ON* */
+
   status = klass->reconfigure (encoder);
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return status;
