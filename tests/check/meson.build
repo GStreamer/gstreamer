@@ -102,7 +102,7 @@ endif
 
 foreach t : base_tests
   fname = t.get(0)
-  test_name = fname.split('.').get(0)
+  test_name = fname.split('.').get(0).underscorify()
   skip_test = false
   extra_deps = [ ]
 
@@ -139,7 +139,7 @@ endforeach
 
 # videoscale tests (split in groups)
 foreach group : [1, 2, 3, 4, 5, 6]
-  vscale_test_name = 'elements/videoscale-@0@'.format(group)
+  vscale_test_name = 'elements-videoscale-@0@'.format(group)
   exe = executable(vscale_test_name, 'elements/videoscale.c',
       include_directories : [configinc],
       c_args : ['-DHAVE_CONFIG_H=1', '-DVSCALE_TEST_GROUP=@0@'.format(group) ] + test_defines,
