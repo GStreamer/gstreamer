@@ -285,6 +285,7 @@ gst_validate_reporter_g_log_func (const gchar * log_domain,
  * @issue_id: The #GstValidateIssueId of the issue
  * @format: The format of the message describing the issue in a printf
  *       format followed by the parameters.
+ * @...: Substitution arguments for @format
  *
  * Reports a new issue in the GstValidate reporting system with @m
  * as the source of that issue.
