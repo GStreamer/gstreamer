@@ -1012,6 +1012,9 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
   if (!gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ))
     goto map_read_error;
 
+  if (self->is_jp2c && map.size < 8)
+    goto open_error;
+
 #ifdef HAVE_OPENJPEG_1
   io = opj_cio_open ((opj_common_ptr) dec, map.data + (self->is_jp2c ? 8 : 0),
       map.size - (self->is_jp2c ? 8 : 0));
