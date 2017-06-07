@@ -31,7 +31,8 @@ libm = cc.find_library('m', required : false)
 # FIXME: valgrind_args: add suppressions $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-ugly.supp
 
 foreach t : ugly_tests
-  test_name = t.get(0)
+  fname = '@0@.c'.format(t.get(0))
+  test_name = t.get(0).underscorify()
   extra_deps = [ ]
   if t.length() == 3
     extra_deps = t.get(2)
@@ -42,7 +43,7 @@ foreach t : ugly_tests
     skip_test = false
   endif
   if not skip_test
-    exe = executable(test_name, '@0@.c'.format(test_name),
+    exe = executable(test_name, fname,
       include_directories : [configinc],
       c_args : ['-DHAVE_CONFIG_H=1' ] + test_defines,
       dependencies : [libm] + test_deps + extra_deps,
