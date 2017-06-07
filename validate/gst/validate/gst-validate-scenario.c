@@ -4123,8 +4123,6 @@ init_scenarios (void)
 
   REGISTER_ACTION_TYPE ("set-property", _execute_set_property,
       ((GstValidateActionParameter []) {
-        /* Either 'target-element-name' or 'target-element-klass' needs to be
-         * defined */
         {
           .name = "target-element-name",
           .description = "The name of the GstElement to set a property on",
@@ -4155,7 +4153,9 @@ init_scenarios (void)
         },
         {NULL}
       }),
-      "Sets a property of any element in the pipeline",
+      "Sets a property of an element or klass of elements in the pipeline.\n"
+      "Besides property-name and value, either 'target-element-name' or\n"
+      "'target-element-klass' needs to be defined",
       GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION |
           GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL);
 
