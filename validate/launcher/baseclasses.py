@@ -65,7 +65,7 @@ class Test(Loggable):
     def __init__(self, application_name, classname, options,
                  reporter, duration=0, timeout=DEFAULT_TIMEOUT,
                  hard_timeout=None, extra_env_variables=None,
-                 expected_failures=None):
+                 expected_failures=None, is_parallel=True):
         """
         @timeout: The timeout during which the value return by get_current_value
                   keeps being exactly equal
@@ -100,6 +100,7 @@ class Test(Loggable):
         extra_env_variables = extra_env_variables or {}
         self.extra_env_variables = extra_env_variables
         self.optional = False
+        self.is_parallel = is_parallel
 
         self.clean()
 
@@ -1268,26 +1269,35 @@ class TestsManager(Loggable):
         self.total_num_tests = total_num_tests
         self.starting_test_num = starting_test_num
 
-        num_jobs = min(self.options.num_jobs, len(self.tests))
-        tests_left = list(self.tests)
+        alone_tests = []
+        tests = []
+        for test in self.tests:
+            if test.is_parallel:
+                tests.append(test)
+            else:
+                alone_tests.append(test)
+
+        max_num_jobs = min(self.options.num_jobs, len(tests))
         jobs_running = 0
 
-        for i in range(num_jobs):
-            if not self.start_new_job(tests_left):
-                break
-            jobs_running += 1
-
-        while jobs_running != 0:
-            test = self.tests_wait()
-            jobs_running -= 1
-            self.print_test_num(test)
-            res = test.test_end()
-            self.reporter.after_test(test)
-            if res != Result.PASSED and (self.options.forever or
-                                         self.options.fatal_error):
-                return test.result
-            if self.start_new_job(tests_left):
+        for num_jobs, tests in [(max_num_jobs, tests), (1, alone_tests)]:
+            tests_left = list(tests)
+            for i in range(num_jobs):
+                if not self.start_new_job(tests_left):
+                    break
                 jobs_running += 1
+
+            while jobs_running != 0:
+                test = self.tests_wait()
+                jobs_running -= 1
+                self.print_test_num(test)
+                res = test.test_end()
+                self.reporter.after_test(test)
+                if res != Result.PASSED and (self.options.forever or
+                                            self.options.fatal_error):
+                    return test.result
+                if self.start_new_job(tests_left):
+                    jobs_running += 1
 
         return Result.PASSED
 
