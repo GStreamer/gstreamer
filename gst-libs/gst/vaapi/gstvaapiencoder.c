@@ -802,7 +802,7 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   GstVaapiEncoderStatus status;
   GstVaapiVideoPool *pool;
-  guint codedbuf_size, quality_level_max = 0;
+  guint codedbuf_size, target_percentage, quality_level_max = 0;
 
   /* Generate a keyframe every second */
   if (!encoder->keyframe_period)
@@ -812,11 +812,15 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   GST_VAAPI_ENCODER_VA_FRAME_RATE (encoder).framerate =
       (guint) GST_VIDEO_INFO_FPS_D (vip) << 16 | GST_VIDEO_INFO_FPS_N (vip);
 
+  target_percentage =
+      (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR) ?
+      100 : 70;
+
   /* *INDENT-OFF* */
   /* Default values for rate control parameter */
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder) = (VAEncMiscParameterRateControl) {
     .bits_per_second = encoder->bitrate * 1000,
-    .target_percentage = 70,
+    .target_percentage = target_percentage,
     .window_size = 500,
   };
   /* *INDENT-ON* */
