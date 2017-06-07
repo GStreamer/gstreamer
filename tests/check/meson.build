@@ -45,7 +45,8 @@ if gst_dep.type_name() == 'pkgconfig'
 endif
 
 foreach t : ges_tests
-  test_name = t.get(0)
+  fname = '@0@.c'.format(t.get(0))
+  test_name = t.get(0).underscorify()
   if t.length() == 2
     skip_test = t.get(1)
   else
@@ -60,7 +61,7 @@ foreach t : ges_tests
     env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
     env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
 
-    exe = executable(test_name, '@0@.c'.format(test_name),
+    exe = executable(test_name, fname,
         'ges/test-utils.c', 'nle/common.c',
         c_args : ges_c_args + test_defines,
         include_directories : [configinc],
