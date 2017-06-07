@@ -65,12 +65,19 @@ test_defines = [
   '-DGST_USE_UNSTABLE_API',
 ]
 
-test_deps = [gst_dep, gstapp_dep, gstbase_dep, gstbasecamerabin_dep, gstphotography_dep, gstpbutils_dep, gstcontroller_dep, gstaudio_dep, gstvideo_dep, gstrtp_dep, gsturidownloader_dep, gstcheck_dep, gio_dep, glib_dep, libparser_dep]
+test_deps = [gst_dep, gstapp_dep, gstbase_dep,
+             gstbasecamerabin_dep, gstphotography_dep,
+             gstpbutils_dep, gstcontroller_dep, gstaudio_dep,
+             gstvideo_dep, gstrtp_dep, gsturidownloader_dep,
+             gstcheck_dep, gio_dep, glib_dep, libparser_dep,
+             gsttag_dep]
 
 pluginsdirs = [  ]
 
 if gst_dep.type_name() == 'pkgconfig'
-  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir')] + [gst_base_dep.get_pkgconfig_variable('pluginsdir')]
+  pbase = dependency('gstreamer-plugins-base-' + api_version)
+
+  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir')] + [pbase.get_pkgconfig_variable('pluginsdir')]
 endif
 
 foreach t : base_tests
@@ -100,10 +107,7 @@ foreach t : base_tests
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('CK_DEFAULT_TIMEOUT', '20')
     env.set('GST_STATE_IGNORE_ELEMENTS', '')
-
-    foreach plugindir: pluginsdirs
-      env.append('GST_PLUGIN_PATH_1_0', plugindir)
-    endforeach
+    env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
     env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
     test(test_name, exe, env: env, timeout: 3 * 60)
   endif
