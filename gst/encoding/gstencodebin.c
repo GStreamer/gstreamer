@@ -1530,11 +1530,11 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     GST_LOG ("Adding conversion elements for audio stream");
 
     arate = gst_element_factory_make ("audiorate", NULL);
-    g_object_set (arate, "tolerance", (guint64) ebin->tolerance, NULL);
     if (!arate) {
       missing_element_name = "audiorate";
       goto missing_element;
     }
+    g_object_set (arate, "tolerance", (guint64) ebin->tolerance, NULL);
     aconv = gst_element_factory_make ("audioconvert", NULL);
     aconv2 = gst_element_factory_make ("audioconvert", NULL);
     ares = gst_element_factory_make ("audioresample", NULL);
