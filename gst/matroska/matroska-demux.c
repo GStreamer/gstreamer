@@ -1659,7 +1659,7 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
   gint64 newpos = *pos;
   gint64 orig_offset;
   GstFlowReturn ret = GST_FLOW_OK;
-  const guint chunk = 64 * 1024;
+  const guint chunk = 128 * 1024;
   GstBuffer *buf = NULL;
   GstMapInfo map;
   gpointer data = NULL;
