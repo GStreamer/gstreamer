@@ -1811,6 +1811,7 @@ gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
   GstClockTime otime, prev_cluster_time, current_cluster_time, cluster_time;
   gint64 opos, newpos, startpos = 0, current_offset;
   gint64 prev_cluster_offset = -1, current_cluster_offset, cluster_offset;
+  guint64 cluster_size = 0;
   const guint chunk = 64 * 1024;
   GstFlowReturn ret;
   guint64 length;
@@ -1901,9 +1902,8 @@ retry:
    * re-estimate if overshoot, otherwise next cluster and so on */
   demux->common.offset = newpos;
   demux->cluster_time = cluster_time = GST_CLOCK_TIME_NONE;
+  cluster_size = 0;
   while (1) {
-    guint64 cluster_size = 0;
-
     /* peek and parse some elements */
     ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
         GST_ELEMENT_CAST (demux), &id, &length, &needed);
