@@ -54,6 +54,9 @@ gst_omx_video_enc_control_rate_get_type (void)
           "variable-skip-frames"},
       {OMX_Video_ControlRateConstantSkipFrames, "Constant Skip Frames",
           "constant-skip-frames"},
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+      {OMX_ALG_Video_ControlRateLowLatency, "Low Latency", "low-latency"},
+#endif
       {0xffffffff, "Component Default", "default"},
       {0, NULL, NULL}
     };
@@ -62,6 +65,118 @@ gst_omx_video_enc_control_rate_get_type (void)
   }
   return qtype;
 }
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+#define GST_TYPE_OMX_VIDEO_ENC_QP_MODE (gst_omx_video_enc_qp_mode_get_type ())
+static GType
+gst_omx_video_enc_qp_mode_get_type (void)
+{
+  static GType qtype = 0;
+
+  if (qtype == 0) {
+    static const GEnumValue values[] = {
+      {OMX_ALG_UNIFORM_QP, "Use the same QP for all coding units of the frame",
+          "uniform"},
+      {OMX_ALG_AUTO_QP,
+            "Let the VCU encoder change the QP for each coding unit according to its content",
+          "auto"},
+      {0xffffffff, "Component Default", "default"},
+      {0, NULL, NULL}
+    };
+
+    qtype = g_enum_register_static ("GstOMXVideoEncQpMode", values);
+  }
+  return qtype;
+}
+
+#define GST_TYPE_OMX_VIDEO_ENC_GOP_MODE (gst_omx_video_enc_gop_mode_get_type ())
+static GType
+gst_omx_video_enc_gop_mode_get_type (void)
+{
+  static GType qtype = 0;
+
+  if (qtype == 0) {
+    static const GEnumValue values[] = {
+      {OMX_ALG_GOP_MODE_DEFAULT, "Basic GOP settings", "basic"},
+      {OMX_ALG_GOP_MODE_PYRAMIDAL,
+          "Advanced GOP pattern with hierarchical B-frames", "pyramidal"},
+      {OMX_ALG_GOP_MODE_LOW_DELAY_P, "Single I-frame followed by P-frames only",
+          "low-delay-p"},
+      {OMX_ALG_GOP_MODE_LOW_DELAY_B, "Single I-frame followed by B-frames only",
+          "low-delay-b"},
+      {0, NULL, NULL}
+    };
+
+    qtype = g_enum_register_static ("GstOMXVideoEncGopMode", values);
+  }
+  return qtype;
+}
+
+#define GST_TYPE_OMX_VIDEO_ENC_GDR_MODE (gst_omx_video_enc_gdr_mode_get_type ())
+static GType
+gst_omx_video_enc_gdr_mode_get_type (void)
+{
+  static GType qtype = 0;
+
+  if (qtype == 0) {
+    static const GEnumValue values[] = {
+      {OMX_ALG_GDR_OFF, "No GDR", "disabled"},
+      {OMX_ALG_GDR_VERTICAL,
+            "Gradual refresh using a vertical bar moving from left to right",
+          "vertical"},
+      {OMX_ALG_GDR_HORIZONTAL,
+            "Gradual refresh using a horizontal bar moving from top to bottom",
+          "horizontal"},
+      {0, NULL, NULL}
+    };
+
+    qtype = g_enum_register_static ("GstOMXVideoEncGdrMode", values);
+  }
+  return qtype;
+}
+
+#define GST_TYPE_OMX_VIDEO_ENC_SCALING_LIST (gst_omx_video_enc_scaling_list_get_type ())
+static GType
+gst_omx_video_enc_scaling_list_get_type (void)
+{
+  static GType qtype = 0;
+
+  if (qtype == 0) {
+    static const GEnumValue values[] = {
+      {OMX_ALG_SCL_DEFAULT, "Default scaling list mode", "default"},
+      {OMX_ALG_SCL_FLAT, "Flat scaling list mode", "flat"},
+      {0, NULL, NULL}
+    };
+
+    qtype = g_enum_register_static ("GstOMXVideoEncScalingList", values);
+  }
+  return qtype;
+}
+
+#define GST_TYPE_OMX_VIDEO_ENC_ASPECT_RATIO (gst_omx_video_enc_aspect_ratio_get_type ())
+static GType
+gst_omx_video_enc_aspect_ratio_get_type (void)
+{
+  static GType qtype = 0;
+
+  if (qtype == 0) {
+    static const GEnumValue values[] = {
+      {OMX_ALG_ASPECT_RATIO_AUTO,
+            "4:3 for SD video,16:9 for HD video,unspecified for unknown format",
+          "auto"},
+      {OMX_ALG_ASPECT_RATIO_4_3, "4:3 aspect ratio", "4-3"},
+      {OMX_ALG_ASPECT_RATIO_16_9, "16:9 aspect ratio", "16-9"},
+      {OMX_ALG_ASPECT_RATIO_NONE,
+          "Aspect ratio information is not present in the stream", "none"},
+      {0, NULL, NULL}
+    };
+
+    qtype = g_enum_register_static ("GstOMXVideoEncAspectRatio", values);
+  }
+  return qtype;
+}
+
+#endif
 
 /* prototypes */
 static void gst_omx_video_enc_finalize (GObject * object);
@@ -102,7 +217,22 @@ enum
   PROP_TARGET_BITRATE,
   PROP_QUANT_I_FRAMES,
   PROP_QUANT_P_FRAMES,
-  PROP_QUANT_B_FRAMES
+  PROP_QUANT_B_FRAMES,
+  PROP_QP_MODE,
+  PROP_MIN_QP,
+  PROP_MAX_QP,
+  PROP_GOP_MODE,
+  PROP_GDR_MODE,
+  PROP_INITIAL_DELAY,
+  PROP_CPB_SIZE,
+  PROP_SCALING_LIST,
+  PROP_LOW_BANDWIDTH,
+  PROP_MAX_BITRATE,
+  PROP_ASPECT_RATIO,
+  PROP_FILLER_DATA,
+  PROP_NUM_SLICES,
+  PROP_SLICE_SIZE,
+  PROP_DEPENDENT_SLICE,
 };
 
 /* FIXME: Better defaults */
@@ -111,6 +241,21 @@ enum
 #define GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT (0xffffffff)
 #define GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT (0xffffffff)
 #define GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT (0xffffffff)
+#define GST_OMX_VIDEO_ENC_QP_MODE_DEFAULT (0xffffffff)
+#define GST_OMX_VIDEO_ENC_MIN_QP_DEFAULT (10)
+#define GST_OMX_VIDEO_ENC_MAX_QP_DEFAULT (51)
+#define GST_OMX_VIDEO_ENC_GOP_MODE_DEFAULT (OMX_ALG_GOP_MODE_DEFAULT)
+#define GST_OMX_VIDEO_ENC_GDR_MODE_DEFAULT (OMX_ALG_GDR_OFF)
+#define GST_OMX_VIDEO_ENC_INITIAL_DELAY_DEFAULT (1500)
+#define GST_OMX_VIDEO_ENC_CPB_SIZE_DEFAULT (3000)
+#define GST_OMX_VIDEO_ENC_SCALING_LIST_DEFAULT (OMX_ALG_SCL_DEFAULT)
+#define GST_OMX_VIDEO_ENC_LOW_BANDWIDTH_DEFAULT (FALSE)
+#define GST_OMX_VIDEO_ENC_MAX_BITRATE_DEFAULT (0xffffffff)
+#define GST_OMX_VIDEO_ENC_ASPECT_RATIO_DEFAULT (OMX_ALG_ASPECT_RATIO_AUTO)
+#define GST_OMX_VIDEO_ENC_FILLER_DATA_DEFAULT (TRUE)
+#define GST_OMX_VIDEO_ENC_NUM_SLICES_DEFAULT (0xffffffff)
+#define GST_OMX_VIDEO_ENC_SLICE_SIZE_DEFAULT (0)
+#define GST_OMX_VIDEO_ENC_DEPENDENT_SLICE_DEFAULT (FALSE)
 
 /* class initialization */
 #define do_init \
@@ -171,6 +316,124 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  g_object_class_install_property (gobject_class, PROP_QP_MODE,
+      g_param_spec_enum ("qp-mode", "QP mode",
+          "QP control mode used by the VCU encoder",
+          GST_TYPE_OMX_VIDEO_ENC_QP_MODE,
+          GST_OMX_VIDEO_ENC_QP_MODE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_MIN_QP,
+      g_param_spec_uint ("min-qp", "min Quantization value",
+          "Minimum QP value allowed for the rate control",
+          0, 51, GST_OMX_VIDEO_ENC_MIN_QP_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_QP,
+      g_param_spec_uint ("max-qp", "max Quantization value",
+          "Maximum QP value allowed for the rate control",
+          0, 51, GST_OMX_VIDEO_ENC_MAX_QP_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_GOP_MODE,
+      g_param_spec_enum ("gop-mode", "GOP mode",
+          "Group Of Pictures mode",
+          GST_TYPE_OMX_VIDEO_ENC_GOP_MODE,
+          GST_OMX_VIDEO_ENC_GOP_MODE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_GDR_MODE,
+      g_param_spec_enum ("gdr-mode", "GDR mode",
+          "Gradual Decoder Refresh scheme mode. Only used if gop-mode=low-delay-p",
+          GST_TYPE_OMX_VIDEO_ENC_GDR_MODE,
+          GST_OMX_VIDEO_ENC_GDR_MODE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_INITIAL_DELAY,
+      g_param_spec_uint ("initial-delay", "Initial Delay",
+          "The initial removal delay as specified in the HRD model in msec. "
+          "Not used when control-rate=disable",
+          0, G_MAXUINT, GST_OMX_VIDEO_ENC_INITIAL_DELAY_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_CPB_SIZE,
+      g_param_spec_uint ("cpb-size", "CPB size",
+          "Coded Picture Buffer as specified in the HRD model in msec. "
+          "Not used when control-rate=disable",
+          0, G_MAXUINT, GST_OMX_VIDEO_ENC_CPB_SIZE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_SCALING_LIST,
+      g_param_spec_enum ("scaling-list", "Scaling List",
+          "Scaling list mode",
+          GST_TYPE_OMX_VIDEO_ENC_SCALING_LIST,
+          GST_OMX_VIDEO_ENC_SCALING_LIST_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_LOW_BANDWIDTH,
+      g_param_spec_boolean ("low-bandwidth", "Low bandwidth mode",
+          "If enabled, decrease the vertical search range "
+          "used for P-frame motion estimation to reduce the bandwidth",
+          GST_OMX_VIDEO_ENC_LOW_BANDWIDTH_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
+      g_param_spec_uint ("max-bitrate", "Max Bitrate",
+          "Max bitrate in bits per second, only used if control-rate=variable (0xffffffff=component default)",
+          0, G_MAXUINT, GST_OMX_VIDEO_ENC_MAX_BITRATE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
+
+  g_object_class_install_property (gobject_class, PROP_ASPECT_RATIO,
+      g_param_spec_enum ("aspect-ratio", "Aspect ratio",
+          "Display aspect ratio of the video sequence to be written in SPS/VUI",
+          GST_TYPE_OMX_VIDEO_ENC_ASPECT_RATIO,
+          GST_OMX_VIDEO_ENC_ASPECT_RATIO_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_FILLER_DATA,
+      g_param_spec_boolean ("filler-data", "Filler Data",
+          "Enable/Disable Filler Data NAL units for CBR rate control",
+          GST_OMX_VIDEO_ENC_FILLER_DATA_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_NUM_SLICES,
+      g_param_spec_uint ("num-slices", "Number of slices",
+          "Number of slices produced for each frame. Each slice contains one or more complete macroblock/CTU row(s). "
+          "Slices are distributed over the frame as regularly as possible. If slice-size is defined as well more slices "
+          "may be produced to fit the slice-size requirement (0xffffffff=component default)",
+          1, G_MAXUINT, GST_OMX_VIDEO_ENC_NUM_SLICES_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_SLICE_SIZE,
+      g_param_spec_uint ("slice-size", "Target slice size",
+          "Target slice size (in bytes) that the encoder uses to "
+          "automatically split the bitstream into approximately equally-sized slices",
+          0, 65535, GST_OMX_VIDEO_ENC_SLICE_SIZE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_DEPENDENT_SLICE,
+      g_param_spec_boolean ("dependent-slice", "Dependent slice",
+          "If encoding with multiple slices, specify whether the additional slices are "
+          "dependent slice segments or regular slices",
+          GST_OMX_VIDEO_ENC_DEPENDENT_SLICE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
+
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_omx_video_enc_change_state);
 
@@ -205,10 +468,238 @@ gst_omx_video_enc_init (GstOMXVideoEnc * self)
   self->quant_i_frames = GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT;
   self->quant_p_frames = GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT;
   self->quant_b_frames = GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT;
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  self->qp_mode = GST_OMX_VIDEO_ENC_QP_MODE_DEFAULT;
+  self->min_qp = GST_OMX_VIDEO_ENC_MIN_QP_DEFAULT;
+  self->max_qp = GST_OMX_VIDEO_ENC_MAX_QP_DEFAULT;
+  self->gop_mode = GST_OMX_VIDEO_ENC_GOP_MODE_DEFAULT;
+  self->gdr_mode = GST_OMX_VIDEO_ENC_GDR_MODE_DEFAULT;
+  self->initial_delay = GST_OMX_VIDEO_ENC_INITIAL_DELAY_DEFAULT;
+  self->cpb_size = GST_OMX_VIDEO_ENC_CPB_SIZE_DEFAULT;
+  self->scaling_list = GST_OMX_VIDEO_ENC_SCALING_LIST_DEFAULT;
+  self->low_bandwidth = GST_OMX_VIDEO_ENC_LOW_BANDWIDTH_DEFAULT;
+  self->max_bitrate = GST_OMX_VIDEO_ENC_MAX_BITRATE_DEFAULT;
+  self->aspect_ratio = GST_OMX_VIDEO_ENC_ASPECT_RATIO_DEFAULT;
+  self->filler_data = GST_OMX_VIDEO_ENC_FILLER_DATA_DEFAULT;
+  self->num_slices = GST_OMX_VIDEO_ENC_NUM_SLICES_DEFAULT;
+  self->slice_size = GST_OMX_VIDEO_ENC_SLICE_SIZE_DEFAULT;
+  self->dependent_slice = GST_OMX_VIDEO_ENC_DEPENDENT_SLICE_DEFAULT;
+#endif
 
   g_mutex_init (&self->drain_lock);
   g_cond_init (&self->drain_cond);
 }
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+
+#define CHECK_ERR(setting) \
+  if (err == OMX_ErrorUnsupportedIndex || err == OMX_ErrorUnsupportedSetting) { \
+    GST_WARNING_OBJECT (self, \
+        "Setting " setting " parameters not supported by the component"); \
+  } else if (err != OMX_ErrorNone) { \
+    GST_ERROR_OBJECT (self, \
+        "Failed to set " setting " parameters: %s (0x%08x)", \
+        gst_omx_error_to_string (err), err); \
+    return FALSE; \
+  }
+
+static gboolean
+set_zynqultrascaleplus_props (GstOMXVideoEnc * self)
+{
+  OMX_ERRORTYPE err;
+
+  if (self->qp_mode != GST_OMX_VIDEO_ENC_QP_MODE_DEFAULT) {
+    OMX_ALG_VIDEO_PARAM_QUANTIZATION_CONTROL quant;
+
+    GST_OMX_INIT_STRUCT (&quant);
+    quant.nPortIndex = self->enc_out_port->index;
+    quant.eQpControlMode = self->qp_mode;
+
+    GST_DEBUG_OBJECT (self, "setting QP mode to %d", self->qp_mode);
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoQuantizationControl, &quant);
+    CHECK_ERR ("quantization");
+  }
+
+  {
+    OMX_ALG_VIDEO_PARAM_QUANTIZATION_EXTENSION qp_values;
+
+    GST_OMX_INIT_STRUCT (&qp_values);
+    qp_values.nPortIndex = self->enc_out_port->index;
+    qp_values.nQpMin = self->min_qp;
+    qp_values.nQpMax = self->max_qp;
+
+    GST_DEBUG_OBJECT (self, "setting min QP as %d and max QP as %d",
+        self->min_qp, self->max_qp);
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoQuantizationExtension,
+        &qp_values);
+    CHECK_ERR ("min-qp and max-qp");
+  }
+
+  {
+    OMX_ALG_VIDEO_PARAM_GOP_CONTROL gop_mode;
+
+    if (self->gdr_mode != OMX_ALG_GDR_OFF &&
+        self->gop_mode != OMX_ALG_GOP_MODE_LOW_DELAY_P) {
+      GST_ERROR_OBJECT (self,
+          "gdr-mode mode only can be set if gop-mode=low-delay-p");
+      return FALSE;
+    }
+
+    GST_OMX_INIT_STRUCT (&gop_mode);
+    gop_mode.nPortIndex = self->enc_out_port->index;
+    gop_mode.eGopControlMode = self->gop_mode;
+    gop_mode.eGdrMode = self->gdr_mode;
+
+    GST_DEBUG_OBJECT (self, "setting GOP mode to %d and GDR mode to %d",
+        self->gop_mode, self->gdr_mode);
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoGopControl, &gop_mode);
+    CHECK_ERR ("GOP & GDR");
+  }
+
+  if (self->control_rate != OMX_Video_ControlRateDisable) {
+    OMX_ALG_VIDEO_PARAM_CODED_PICTURE_BUFFER cpb;
+
+    GST_OMX_INIT_STRUCT (&cpb);
+    cpb.nPortIndex = self->enc_out_port->index;
+    cpb.nCodedPictureBufferSize = self->cpb_size;
+    cpb.nInitialRemovalDelay = self->initial_delay;
+
+    GST_DEBUG_OBJECT (self, "setting cpb size to %d and initial delay to %d",
+        self->cpb_size, self->initial_delay);
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoCodedPictureBuffer, &cpb);
+    CHECK_ERR ("cpb size & initial delay");
+  }
+
+  {
+    OMX_ALG_VIDEO_PARAM_SCALING_LIST scaling_list;
+
+    GST_OMX_INIT_STRUCT (&scaling_list);
+    scaling_list.nPortIndex = self->enc_out_port->index;
+    scaling_list.eScalingListMode = self->scaling_list;
+
+    GST_DEBUG_OBJECT (self, "setting scaling list mode as %d",
+        self->scaling_list);
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoScalingList, &scaling_list);
+    CHECK_ERR ("scaling-list");
+  }
+
+  {
+    OMX_ALG_VIDEO_PARAM_LOW_BANDWIDTH low_bw;
+
+    GST_OMX_INIT_STRUCT (&low_bw);
+    low_bw.nPortIndex = self->enc_out_port->index;
+    low_bw.bEnableLowBandwidth = self->low_bandwidth;
+
+    GST_DEBUG_OBJECT (self, "%s low bandwith moded",
+        self->low_bandwidth ? "Enable" : "Disable");
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoLowBandwidth, &low_bw);
+    CHECK_ERR ("low-bandwidth");
+  }
+
+  if (self->max_bitrate != GST_OMX_VIDEO_ENC_MAX_BITRATE_DEFAULT) {
+    OMX_ALG_VIDEO_PARAM_MAX_BITRATE max_bitrate;
+
+    GST_OMX_INIT_STRUCT (&max_bitrate);
+    max_bitrate.nPortIndex = self->enc_out_port->index;
+    /* nMaxBitrate is in kbps while max-bitrate is in bps */
+    max_bitrate.nMaxBitrate = self->max_bitrate / 1000;
+
+    GST_DEBUG_OBJECT (self, "setting max bitrate to %d", self->max_bitrate);
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoMaxBitrate, &max_bitrate);
+    CHECK_ERR ("max-bitrate");
+  }
+
+  {
+    OMX_ALG_VIDEO_PARAM_ASPECT_RATIO aspect_ratio;
+
+    GST_OMX_INIT_STRUCT (&aspect_ratio);
+    aspect_ratio.nPortIndex = self->enc_out_port->index;
+    aspect_ratio.eAspectRatio = self->aspect_ratio;
+
+    GST_DEBUG_OBJECT (self, "setting aspect ratio to %d", self->aspect_ratio);
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoAspectRatio, &aspect_ratio);
+    CHECK_ERR ("aspect-ratio");
+  }
+
+  {
+    OMX_ALG_VIDEO_PARAM_FILLER_DATA filler_data;
+
+    GST_OMX_INIT_STRUCT (&filler_data);
+    filler_data.nPortIndex = self->enc_out_port->index;
+    filler_data.bDisableFillerData = !(self->filler_data);
+
+    GST_DEBUG_OBJECT (self, "%s filler data",
+        self->filler_data ? "Enable" : "Disable");
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoFillerData, &filler_data);
+    CHECK_ERR ("filler-data");
+  }
+
+  if (self->num_slices != GST_OMX_VIDEO_ENC_NUM_SLICES_DEFAULT ||
+      self->slice_size != GST_OMX_VIDEO_ENC_SLICE_SIZE_DEFAULT) {
+    OMX_ALG_VIDEO_PARAM_SLICES slices;
+
+    GST_OMX_INIT_STRUCT (&slices);
+    slices.nPortIndex = self->enc_out_port->index;
+
+    err = gst_omx_component_get_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoSlices, &slices);
+    if (err != OMX_ErrorNone) {
+      GST_WARNING_OBJECT (self, "Error getting slice parameters: %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+      return FALSE;
+    }
+
+    if (self->num_slices != GST_OMX_VIDEO_ENC_NUM_SLICES_DEFAULT) {
+      slices.nNumSlices = self->num_slices;
+      GST_DEBUG_OBJECT (self,
+          "setting number of slices to %d (dependent slices: %d)",
+          self->num_slices, self->dependent_slice);
+    }
+
+    if (self->slice_size != GST_OMX_VIDEO_ENC_SLICE_SIZE_DEFAULT) {
+      slices.nSlicesSize = self->slice_size;
+      GST_DEBUG_OBJECT (self, "setting slice size to %d (dependent slices: %d)",
+          self->slice_size, self->dependent_slice);
+    }
+
+    slices.bDependentSlices = self->dependent_slice;
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoSlices, &slices);
+    CHECK_ERR ("slices");
+  }
+
+  return TRUE;
+}
+#endif
 
 static gboolean
 gst_omx_video_enc_open (GstVideoEncoder * encoder)
@@ -354,6 +845,10 @@ gst_omx_video_enc_open (GstVideoEncoder * encoder)
       }
     }
   }
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  if (!set_zynqultrascaleplus_props (self))
+    return FALSE;
+#endif
 
   return TRUE;
 }
@@ -450,6 +945,53 @@ gst_omx_video_enc_set_property (GObject * object, guint prop_id,
     case PROP_QUANT_B_FRAMES:
       self->quant_b_frames = g_value_get_uint (value);
       break;
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+    case PROP_QP_MODE:
+      self->qp_mode = g_value_get_enum (value);
+      break;
+    case PROP_MIN_QP:
+      self->min_qp = g_value_get_uint (value);
+      break;
+    case PROP_MAX_QP:
+      self->max_qp = g_value_get_uint (value);
+      break;
+    case PROP_GOP_MODE:
+      self->gop_mode = g_value_get_enum (value);
+      break;
+    case PROP_GDR_MODE:
+      self->gdr_mode = g_value_get_enum (value);
+      break;
+    case PROP_INITIAL_DELAY:
+      self->initial_delay = g_value_get_uint (value);
+      break;
+    case PROP_CPB_SIZE:
+      self->cpb_size = g_value_get_uint (value);
+      break;
+    case PROP_SCALING_LIST:
+      self->scaling_list = g_value_get_enum (value);
+      break;
+    case PROP_LOW_BANDWIDTH:
+      self->low_bandwidth = g_value_get_boolean (value);
+      break;
+    case PROP_MAX_BITRATE:
+      self->max_bitrate = g_value_get_uint (value);
+      break;
+    case PROP_ASPECT_RATIO:
+      self->aspect_ratio = g_value_get_enum (value);
+      break;
+    case PROP_FILLER_DATA:
+      self->filler_data = g_value_get_boolean (value);
+      break;
+    case PROP_NUM_SLICES:
+      self->num_slices = g_value_get_uint (value);
+      break;
+    case PROP_SLICE_SIZE:
+      self->slice_size = g_value_get_uint (value);
+      break;
+    case PROP_DEPENDENT_SLICE:
+      self->dependent_slice = g_value_get_boolean (value);
+      break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -478,6 +1020,53 @@ gst_omx_video_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_QUANT_B_FRAMES:
       g_value_set_uint (value, self->quant_b_frames);
       break;
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+    case PROP_QP_MODE:
+      g_value_set_enum (value, self->qp_mode);
+      break;
+    case PROP_MIN_QP:
+      g_value_set_uint (value, self->min_qp);
+      break;
+    case PROP_MAX_QP:
+      g_value_set_uint (value, self->max_qp);
+      break;
+    case PROP_GOP_MODE:
+      g_value_set_enum (value, self->gop_mode);
+      break;
+    case PROP_GDR_MODE:
+      g_value_set_enum (value, self->gdr_mode);
+      break;
+    case PROP_INITIAL_DELAY:
+      g_value_set_uint (value, self->initial_delay);
+      break;
+    case PROP_CPB_SIZE:
+      g_value_set_uint (value, self->cpb_size);
+      break;
+    case PROP_SCALING_LIST:
+      g_value_set_enum (value, self->scaling_list);
+      break;
+    case PROP_LOW_BANDWIDTH:
+      g_value_set_boolean (value, self->low_bandwidth);
+      break;
+    case PROP_MAX_BITRATE:
+      g_value_set_uint (value, self->max_bitrate);
+      break;
+    case PROP_ASPECT_RATIO:
+      g_value_set_enum (value, self->aspect_ratio);
+      break;
+    case PROP_FILLER_DATA:
+      g_value_set_boolean (value, self->filler_data);
+      break;
+    case PROP_NUM_SLICES:
+      g_value_set_uint (value, self->num_slices);
+      break;
+    case PROP_SLICE_SIZE:
+      g_value_set_uint (value, self->slice_size);
+      break;
+    case PROP_DEPENDENT_SLICE:
+      g_value_set_boolean (value, self->dependent_slice);
+      break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
