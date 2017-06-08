@@ -290,7 +290,7 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                           os.path.basename(minfo.media_descriptor.get_clean_name()))
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
-        test_rtsp = which(GST_VALIDATE_RTSP_SERVER_COMMAND)
+        test_rtsp = GST_VALIDATE_RTSP_SERVER_COMMAND
         if not test_rtsp:
             printc("\n\nRTSP server not available, you should make sure"
                    " that %s is available in your $PATH." % GST_VALIDATE_RTSP_SERVER_COMMAND,
