@@ -40,9 +40,9 @@ noinst_PROGRAMS += gst-validate-rtsp-server-@GST_API_VERSION@-debug
 
 gst_validate_rtsp_server_@GST_API_VERSION@_SOURCES = gst-validate-rtsp-server.c
 gst_validate_rtsp_server_@GST_API_VERSION@_CFLAGS = $(GST_RTSP_SERVER_CFLAGS)
-gst_validate_rtsp_server_@GST_API_VERSION@_LDADD = $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la $(LDADD) $(GST_RTSP_SERVER_LIBS)
+gst_validate_rtsp_server_@GST_API_VERSION@_LDADD = $(LDADD) $(GST_RTSP_SERVER_LIBS)
 gst_validate_rtsp_server_@GST_API_VERSION@_debug_SOURCES = gst-validate-rtsp-server.c
-gst_validate_rtsp_server_@GST_API_VERSION@_debug_LDADD = $(top_builddir)/gst-libs/gst/video/libgstvalidatevideo-@GST_API_VERSION@.la $(LDADD) $(GST_RTSP_SERVER_LIBS)
+gst_validate_rtsp_server_@GST_API_VERSION@_debug_LDADD = $(LDADD) $(GST_RTSP_SERVER_LIBS)
 gst_validate_rtsp_server_@GST_API_VERSION@_debug_LDFLAGS = -no-install
 gst_validate_rtsp_server_@GST_API_VERSION@_debug_CFLAGS = $(GST_RTSP_SERVER_CFLAGS)
 endif
