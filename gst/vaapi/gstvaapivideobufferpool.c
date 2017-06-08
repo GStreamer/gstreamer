@@ -44,9 +44,9 @@ enum
 
 struct _GstVaapiVideoBufferPoolPrivate
 {
-  GstVideoInfo video_info;
+  GstVideoInfo allocation_vinfo;
   GstAllocator *allocator;
-  GstVideoInfo alloc_info;
+  GstVideoInfo vmeta_vinfo;
   GstVaapiDisplay *display;
   guint options;
   guint use_dmabuf_memory:1;
@@ -105,7 +105,7 @@ gst_vaapi_video_buffer_pool_get_property (GObject * object, guint prop_id,
 static void
 fill_video_alignment (GstVaapiVideoBufferPool * pool, GstVideoAlignment * align)
 {
-  GstVideoInfo *const vip = &pool->priv->alloc_info;
+  GstVideoInfo *const vip = &pool->priv->vmeta_vinfo;
   guint i;
 
   gst_video_alignment_reset (align);
@@ -157,9 +157,9 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, NULL))
     goto error_invalid_allocator;
 
-  if (gst_video_info_changed (&priv->video_info, &new_vip))
+  if (gst_video_info_changed (&priv->allocation_vinfo, &new_vip))
     gst_object_replace ((GstObject **) & priv->allocator, NULL);
-  priv->video_info = new_vip;
+  priv->allocation_vinfo = new_vip;
 
   {
     guint surface_alloc_flags;
@@ -199,11 +199,12 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
       alloc_vip = gst_allocator_get_vaapi_video_info (priv->allocator, NULL);
       if (!alloc_vip)
         goto error_create_allocator_info;
-      priv->alloc_info = *alloc_vip;
+      priv->vmeta_vinfo = *alloc_vip;
     }
-    if (GST_VIDEO_INFO_SIZE (&priv->alloc_info) != size) {
+    if (GST_VIDEO_INFO_SIZE (&priv->vmeta_vinfo) != size) {
       gst_buffer_pool_config_set_params (config, caps,
-          GST_VIDEO_INFO_SIZE (&priv->alloc_info), min_buffers, max_buffers);
+          GST_VIDEO_INFO_SIZE (&priv->vmeta_vinfo), min_buffers,
+          max_buffers);
     }
   }
   if (!priv->allocator)
@@ -215,11 +216,11 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
     priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
   else {
     gint i;
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->video_info); i++) {
-      if (GST_VIDEO_INFO_PLANE_OFFSET (&priv->video_info, i) !=
-          GST_VIDEO_INFO_PLANE_OFFSET (&priv->alloc_info, i) ||
-          GST_VIDEO_INFO_PLANE_STRIDE (&priv->video_info, i) !=
-          GST_VIDEO_INFO_PLANE_STRIDE (&priv->alloc_info, i)) {
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->allocation_vinfo); i++) {
+      if (GST_VIDEO_INFO_PLANE_OFFSET (&priv->allocation_vinfo, i) !=
+          GST_VIDEO_INFO_PLANE_OFFSET (&priv->vmeta_vinfo, i) ||
+          GST_VIDEO_INFO_PLANE_STRIDE (&priv->allocation_vinfo, i) !=
+          GST_VIDEO_INFO_PLANE_STRIDE (&priv->vmeta_vinfo, i)) {
         priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
         gst_buffer_pool_config_add_option (config,
             GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -327,7 +328,7 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
   gst_buffer_append_memory (buffer, mem);
 
   if (priv->options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META) {
-    GstVideoInfo *const vip = &priv->alloc_info;
+    GstVideoInfo *const vip = &priv->vmeta_vinfo;
     GstVideoMeta *vmeta;
 
     vmeta = gst_buffer_add_video_meta_full (buffer, 0,
@@ -500,7 +501,7 @@ gst_vaapi_video_buffer_pool_init (GstVaapiVideoBufferPool * pool)
 
   pool->priv = priv;
 
-  gst_video_info_init (&priv->video_info);
+  gst_video_info_init (&priv->allocation_vinfo);
 }
 
 GstBufferPool *
