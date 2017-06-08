@@ -1159,27 +1159,27 @@ gst_vaapi_video_info_quark_get (void)
   return g_quark;
 }
 
-#define INFO_QUARK info_quark_get ()
+#define ALLOCATION_VINFO_QUARK allocation_vinfo_quark_get ()
 static GQuark
-info_quark_get (void)
+allocation_vinfo_quark_get (void)
 {
   static gsize g_quark;
 
   if (g_once_init_enter (&g_quark)) {
-    gsize quark = (gsize) g_quark_from_static_string ("info");
+    gsize quark = (gsize) g_quark_from_static_string ("allocation-vinfo");
     g_once_init_leave (&g_quark, quark);
   }
   return g_quark;
 }
 
-#define FLAGS_QUARK flags_quark_get ()
+#define SURFACE_ALLOC_FLAGS_QUARK surface_alloc_flags_quark_get ()
 static GQuark
-flags_quark_get (void)
+surface_alloc_flags_quark_get (void)
 {
   static gsize g_quark;
 
   if (g_once_init_enter (&g_quark)) {
-    gsize quark = (gsize) g_quark_from_static_string ("flags");
+    gsize quark = (gsize) g_quark_from_static_string ("surface-alloc-flags");
     g_once_init_leave (&g_quark, quark);
   }
   return g_quark;
@@ -1188,10 +1188,14 @@ flags_quark_get (void)
 /**
  * gst_allocator_get_vaapi_video_info:
  * @allocator: a #GstAllocator
- * @out_flags_ptr: (out): the stored flags
+ * @out_flags_ptr: (out): the stored surface allocation flags
  *
  * Will get the @allocator qdata to fetch the flags and the
- * #GstVideoInfo stored in it.
+ * allocation's #GstVideoInfo stored in it.
+ *
+ * The allocation video info, is the image video info in the case of
+ * the #GstVaapiVideoAllocator; and the allocation video info in the
+ * case of #GstVaapiDmaBufAllocator.
  *
  * Returns: the stored #GstVideoInfo
  **/
@@ -1210,13 +1214,13 @@ gst_allocator_get_vaapi_video_info (GstAllocator * allocator,
     return NULL;
 
   if (out_flags_ptr) {
-    value = gst_structure_id_get_value (structure, FLAGS_QUARK);
+    value = gst_structure_id_get_value (structure, SURFACE_ALLOC_FLAGS_QUARK);
     if (!value)
       return NULL;
     *out_flags_ptr = g_value_get_uint (value);
   }
 
-  value = gst_structure_id_get_value (structure, INFO_QUARK);
+  value = gst_structure_id_get_value (structure, ALLOCATION_VINFO_QUARK);
   if (!value)
     return NULL;
   return g_value_get_boxed (value);
@@ -1225,24 +1229,26 @@ gst_allocator_get_vaapi_video_info (GstAllocator * allocator,
 /**
  * gst_allocator_set_vaapi_video_info:
  * @allocator: a #GstAllocator
- * @vip: the #GstVideoInfo to store
- * @flags: the flags to store
+ * @alloc_info: the allocation #GstVideoInfo to store
+ * @surface_alloc_flags: the flags to store
  *
- * Stores as GObject's qdata the @vip and the @flags in the
- * allocator. This will "decorate" the allocator as a GstVaapi one.
+ * Stores as GObject's qdata the @alloc_info and the
+ * @surface_alloc_flags in the allocator. This will "decorate" the
+ * allocator as a GstVaapi one.
  *
  * Returns: always %TRUE
  **/
 gboolean
 gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
-    const GstVideoInfo * vip, guint flags)
+    const GstVideoInfo * alloc_info, guint surface_alloc_flags)
 {
   g_return_val_if_fail (GST_IS_ALLOCATOR (allocator), FALSE);
-  g_return_val_if_fail (vip != NULL, FALSE);
+  g_return_val_if_fail (alloc_info != NULL, FALSE);
 
   g_object_set_qdata_full (G_OBJECT (allocator), GST_VAAPI_VIDEO_INFO_QUARK,
-      gst_structure_new_id (GST_VAAPI_VIDEO_INFO_QUARK, INFO_QUARK,
-          GST_TYPE_VIDEO_INFO, vip, FLAGS_QUARK, G_TYPE_UINT, flags, NULL),
+      gst_structure_new_id (GST_VAAPI_VIDEO_INFO_QUARK,
+          ALLOCATION_VINFO_QUARK, GST_TYPE_VIDEO_INFO, alloc_info,
+          SURFACE_ALLOC_FLAGS_QUARK, G_TYPE_UINT, surface_alloc_flags, NULL),
       (GDestroyNotify) gst_structure_free);
 
   return TRUE;

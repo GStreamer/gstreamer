@@ -276,7 +276,7 @@ gst_allocator_get_vaapi_video_info (GstAllocator * allocator,
 G_GNUC_INTERNAL
 gboolean
 gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
-    const GstVideoInfo * vip, guint flags);
+    const GstVideoInfo * alloc_info, guint surface_alloc_flags);
 
 G_GNUC_INTERNAL
 gboolean
