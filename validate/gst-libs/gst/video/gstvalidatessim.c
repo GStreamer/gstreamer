@@ -898,30 +898,30 @@ static gpointer
 _register_issues (gpointer data)
 {
   gst_validate_issue_register (gst_validate_issue_new (SIMILARITY_ISSUE,
-          "Compared images where not similar enough",
+          "Compared images were not similar enough",
           "The images checker detected that the images"
-          " it is comparing did not have the similarity"
-          " level as defined with min-avg-similarity or"
+          " it is comparing do not have the similarity"
+          " level defined with min-avg-similarity or"
           " min-lowest-similarity", GST_VALIDATE_REPORT_LEVEL_CRITICAL));
 
   gst_validate_issue_register (gst_validate_issue_new
       (SIMILARITY_ISSUE_WITH_PREVIOUS,
-          "Comparison with theoretically reference  image failed",
-          " In a case were we have reference frames with the following"
-          " timestamps: [0.00, 0.10, 0.20, 0.30] comparing a frame with"
-          " 0.05 as a timestamp will be done with the first frame. "
-          " If that fails, it will report a ssim::image-not-similar-enough-with-theoretical-reference"
-          " warning and try with the second reference frame.",
+          "Comparison with theoretical reference image failed",
+          " In a case where we have reference frames with the following"
+          " timestamps: [0.00, 0.10, 0.20, 0.30], comparing a frame with"
+          " 0.05 as a timestamp will be done with the first frame."
+          " If this fails, a ssim::image-not-similar-enough-with-theoretical-reference"
+          " warning is issued and the system then tries with the second reference frame.",
           GST_VALIDATE_REPORT_LEVEL_WARNING));
 
   gst_validate_issue_register (gst_validate_issue_new (GENERAL_INPUT_ERROR,
           "Something went wrong handling image files",
-          "An error accured when working with input files",
+          "An error occurred when working with input files",
           GST_VALIDATE_REPORT_LEVEL_CRITICAL));
 
   gst_validate_issue_register (gst_validate_issue_new (WRONG_FORMAT,
-          "The format or dimensions of the compared images do not match ",
-          "The format or dimensions of the compared images do not match ",
+          "The format or dimensions of the compared images do not match",
+          "The format or dimensions of the compared images do not match",
           GST_VALIDATE_REPORT_LEVEL_CRITICAL));
 
   return NULL;
