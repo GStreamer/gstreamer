@@ -4,29 +4,33 @@ short-description: Contributing to GStreamer
 
 # How to Contribute to GStreamer
 
-## How to File Bug Reports and Request for Enhancements
+This document provides instructions and guidelines for submitting bug reports
+, feature requests and patches to GStreamer. The following applies to all
+these operations:
 
-### Where to File Bug Reports and Feature Requests
-
-Please file bug reports and feature requests for GStreamer in
-[GNOME bugzilla][bugzilla]:
-
-- You will need to create a GNOME bugzilla account if you don't have one yet
-  (yep, that's just how it is, sorry for the inconvenience)
+- Please use the [GNOME bugzilla][bugzilla] to perform any of the aforementioned
+  operations. You will need to create a GNOME bugzilla account if you don't have
+  one yet (yep, that's just how it is. Sorry for the inconvenience).
 
 - Create a new bug if there is no bug report for this issue yet. Bugzilla will
-  show you a list of existing bugs that look similar when you file your bug, so
-  please have a look at the list to see if anything looks like it matches.
+  show you a list of existing and similar-looking issues when you file your
+  bug. Please have a look at the list to see if anything looks like it matches.
   The GStreamer [bugs page][bugs] also has shortcuts for the major components
   and simple search functionality if you'd like to browse or search for
   existing bugs.
 
+## How to File Bug Reports and Request for Enhancements
+
+### Where to File Bug Reports and Feature Requests
+
+After completing the common steps:
+
 - If you are filing a feature request (i.e. anything that is not supposed to
   work already, that is anything not a bug), please set your bug's severity
   to *enhancement*. This won't affect the way we prioritise the issue, but
-  it does make triaging easier for us.
+  it will make triaging easier for us.
 
-- If your bug is about a specific plugin or element or utility library,
+- If your bug is about a specific plugin, element or utility library,
   please prefix the bug summary with `element-name:`, `plugin-name:` or `lib:`
   and keep the rest of the description as short and precise as possible.
 
@@ -67,10 +71,10 @@ Please file bug reports and feature requests for GStreamer in
 
 - If the application errors out, please provide a gst debug log. You can get
   one by setting the `GST_DEBUG=*:6` environment variable, combined with
-  `GST_DEBUG_FILE=/tmp/dbg.log`. This is going to be very large, so it's
-  advisable to compress it with `xz -9 /tmp/dbg.log` before sharing it. You
-  may be asked to provide one for specific debug categories rather than
-  everything (`*:6`).
+  `GST_DEBUG_FILE=/tmp/dbg.log`. The resulting file might end up being very
+  large, so it's advisable to compress it with `xz -9 /tmp/dbg.log` before
+  sharing. You may also be asked to provide debug logs for specific debug
+  categories rather than everything (`*:6`).
 
 [stack-trace]: https://wiki.gnome.org/Community/GettingInTouch/Bugzilla/GettingTraces/Details
 
@@ -78,17 +82,7 @@ Please file bug reports and feature requests for GStreamer in
 
 ### Where to Submit Patches
 
-Please submit patches for GStreamer through [GNOME bugzilla][bugzilla]:
-
-- You will need to create a GNOME bugzilla account if you don't have one yet
-  (yep, that's just how it is, sorry for the inconvenience)
-
-- Create a new bug if there is no bug report for this issue yet. Bugzilla will
-  show you a list of existing bugs that look similar when you file your bug, so
-  please have a look at the list to see if anything looks like it matches.
-  The GStreamer [bugs page][bugs] also has shortcuts for the major components
-  and simple search functionality if you'd like to browse or search for
-  existing bugs.
+After completing the common steps:
 
 - Once you have created a bug you can attach your patch(es) to the bug report,
   see below for more details. You can add one attachment when you file the bug,
@@ -237,7 +231,7 @@ that does not contain any functional changes.
 Try to stick to the GStreamer indentation and coding style. There is a script
 called [`gst-indent`][gst-indent] which you can run over your `.c` or `.cpp`
 files if you want your code auto-indented before making the patch. The script
-requires GNU indent to be installed already. Please do _not_ run gst-indent on
+requires GNU indent to be installed already. Please do _not_ run `gst-indent` on
 header files, our header file indentation is free-form. If you build GStreamer
 from git, a local commit hook will be installed that checks if your commit
 conforms to the required style (also using GNU indent).
