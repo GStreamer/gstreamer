@@ -803,14 +803,18 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   GstVaapiEncoderStatus status;
   GstVaapiVideoPool *pool;
   guint codedbuf_size, target_percentage, quality_level_max = 0;
+  guint fps_d, fps_n;
+
+  fps_d = GST_VIDEO_INFO_FPS_D (vip);
+  fps_n = GST_VIDEO_INFO_FPS_N (vip);
 
   /* Generate a keyframe every second */
   if (!encoder->keyframe_period)
-    encoder->keyframe_period = (vip->fps_n + vip->fps_d - 1) / vip->fps_d;
+    encoder->keyframe_period = (fps_n + fps_d - 1) / fps_d;
 
   /* Default frame rate parameter */
-  GST_VAAPI_ENCODER_VA_FRAME_RATE (encoder).framerate =
-      (guint) GST_VIDEO_INFO_FPS_D (vip) << 16 | GST_VIDEO_INFO_FPS_N (vip);
+  if (fps_d > 0 && fps_n > 0)
+    GST_VAAPI_ENCODER_VA_FRAME_RATE (encoder).framerate = fps_d << 16 | fps_n;
 
   target_percentage =
       (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR) ?
