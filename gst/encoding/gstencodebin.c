@@ -1504,6 +1504,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
         missing_element_name = "videorate";
         goto missing_element;
       }
+      g_object_set (vrate, "skip-to-first", TRUE, NULL);
 
       gst_bin_add ((GstBin *) ebin, vrate);
       tosync = g_list_prepend (tosync, vrate);
@@ -1535,6 +1536,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
       goto missing_element;
     }
     g_object_set (arate, "tolerance", (guint64) ebin->tolerance, NULL);
+    g_object_set (arate, "skip-to-first", TRUE, NULL);
+
     aconv = gst_element_factory_make ("audioconvert", NULL);
     aconv2 = gst_element_factory_make ("audioconvert", NULL);
     ares = gst_element_factory_make ("audioresample", NULL);
