@@ -47,7 +47,6 @@ cdata.set('PACKAGE_NAME', '"GStreamer Editing Services"')
 cdata.set('GST_PACKAGE_NAME', '"GStreamer Editing Services"')
 cdata.set('GST_PACKAGE_ORIGIN', '"Unknown package origin"')
 cdata.set('GST_LICENSE', '"LGPL"')
-cdata.set('LIBDIR', '"@0@"'.format(get_option('libdir')))
 
 # Mandatory GST deps
 gst_dep = dependency('gstreamer-' + apiversion, version : gst_req,
@@ -81,9 +80,7 @@ if gstvalidate_dep.found()
     cdata.set('HAVE_GST_VALIDATE', 1)
 endif
 
-configure_file(input : 'config.h.meson',
-  output : 'config.h',
-  configuration : cdata)
+configure_file(output : 'config.h', configuration : cdata)
 
 
 gir = find_program('g-ir-scanner', required : false)
