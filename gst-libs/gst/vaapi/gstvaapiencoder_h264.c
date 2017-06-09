@@ -2790,12 +2790,14 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
       g_queue_foreach (&reorder_pool->reorder_frame_list,
           (GFunc) set_b_frame, encoder);
       ++reorder_pool->cur_frame_num;
-      set_key_frame (picture, encoder, is_idr);
+      set_key_frame (picture, encoder,
+          is_idr | GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame));
       g_queue_push_tail (&reorder_pool->reorder_frame_list, picture);
       picture = p_pic;
       reorder_pool->reorder_state = GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES;
     } else {                    /* no b frames in queue */
-      set_key_frame (picture, encoder, is_idr);
+      set_key_frame (picture, encoder,
+          is_idr | GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame));
       g_assert (g_queue_is_empty (&reorder_pool->reorder_frame_list));
       if (encoder->num_bframes)
         reorder_pool->reorder_state = GST_VAAPI_ENC_H264_REORD_WAIT_FRAMES;
