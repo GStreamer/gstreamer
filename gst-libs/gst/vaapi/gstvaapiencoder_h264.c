@@ -2175,8 +2175,11 @@ ensure_sequence (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
       goto error_create_packed_au_delimiter;
   }
 
-  /* submit an SPS header before every new I-frame, if codec config changed */
-  if (!encoder->config_changed || picture->type != GST_VAAPI_PICTURE_TYPE_I)
+  /* submit an SPS header before every new I-frame, if codec config changed
+   * or if the picture is IDR.
+   */
+  if ((!encoder->config_changed || picture->type != GST_VAAPI_PICTURE_TYPE_I)
+      && !GST_VAAPI_ENC_PICTURE_IS_IDR (picture))
     return TRUE;
 
   sequence = GST_VAAPI_ENC_SEQUENCE_NEW (H264, encoder);
