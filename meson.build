@@ -26,12 +26,16 @@ libversion = '@0@.@1@.0'.format(soversion, gst_version_minor.to_int() * 100 + gs
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 cdata = configuration_data()
-cdata.set('GETTEXT_PACKAGE', '"gst-rtsp-server-1.0"')
-cdata.set('PACKAGE', '"gst-rtsp-server"')
-cdata.set('VERSION', '"@0@"'.format(gst_version))
-cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
-#cdata.set('GST_API_VERSION', '"@0@"'.format(api_version))
-cdata.set('GST_LICENSE', '"LGPL"')
+cdata.set_quoted('GETTEXT_PACKAGE', 'gst-rtsp-server-1.0')
+cdata.set_quoted('PACKAGE', 'gst-rtsp-server')
+cdata.set_quoted('VERSION', gst_version)
+cdata.set_quoted('PACKAGE_VERSION', gst_version)
+cdata.set_quoted('GST_API_VERSION', api_version)
+cdata.set_quoted('GST_LICENSE', 'LGPL')
+
+# FIXME: ENABLE_NLS (currently also missing from autotools build)
+# cdata.set('ENABLE_NLS', true)
+# cdata.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
 
 # GStreamer package name and origin url
 gst_package_name = get_option('with-package-name')
@@ -46,9 +50,7 @@ if gst_package_name == ''
 endif
 cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
 
-configure_file(input : 'config.h.meson',
-  output : 'config.h',
-  configuration : cdata)
+configure_file(output : 'config.h', configuration : cdata)
 
 rtspserver_args = ['-DHAVE_CONFIG_H']
 
