@@ -188,9 +188,10 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
   GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
       GST_VAAPI_ENCODER_PROP_QUALITY_LEVEL,
       g_param_spec_uint ("quality-level",
-          "Quality Level",
-          "Encoding Quality Level ", 1, 8,
-          4, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Quality Level", "Encoding Quality Level "
+          "(lower value means higher-quality/slow-encode, "
+          " higher value means lower-quality/fast-encode)",
+          1, 7, 4, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }
@@ -840,8 +841,7 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   if (get_config_attribute (encoder, VAConfigAttribEncQualityRange,
           &quality_level_max) && quality_level_max > 0) {
     GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder) =
-        gst_util_uint64_scale_int_ceil (GST_VAAPI_ENCODER_QUALITY_LEVEL
-        (encoder), quality_level_max, 8);
+        CLAMP (GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder), 1, quality_level_max);
   } else {
     GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder) = 0;
   }
