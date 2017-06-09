@@ -142,6 +142,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   GstAllocator *allocator;
   gboolean ret, updated = FALSE;
   guint size, min_buffers, max_buffers;
+  guint surface_alloc_flags;
 
   GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
 
@@ -158,62 +159,83 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, NULL))
     goto error_invalid_allocator;
 
-  if (gst_video_info_changed (&priv->allocation_vinfo, &new_allocation_vinfo))
+  /* it is a valid allocator? */
+  if (allocator
+      && (g_strcmp0 (allocator->mem_type, GST_VAAPI_VIDEO_MEMORY_NAME) != 0
+          && g_strcmp0 (allocator->mem_type,
+              GST_VAAPI_DMABUF_ALLOCATOR_NAME) != 0))
+    allocator = NULL;
+
+  /* get the allocator properties */
+  if (allocator) {
+    priv->use_dmabuf_memory = gst_vaapi_is_dmabuf_allocator (allocator);
+    negotiated_vinfo =
+        gst_allocator_get_vaapi_negotiated_video_info (allocator);
+    allocator_vinfo =
+        gst_allocator_get_vaapi_video_info (allocator, &surface_alloc_flags);
+  } else {
+    priv->use_dmabuf_memory = FALSE;
+    negotiated_vinfo = NULL;
+    allocator_vinfo = NULL;
+    surface_alloc_flags = 0;
+  }
+
+  /* reset or update the allocator if video resolution changed */
+  if (gst_video_info_changed (&priv->allocation_vinfo, &new_allocation_vinfo)
+      || gst_video_info_changed (allocator_vinfo, &new_allocation_vinfo)) {
     gst_object_replace ((GstObject **) & priv->allocator, NULL);
-  priv->allocation_vinfo = new_allocation_vinfo;
 
-  {
-    guint surface_alloc_flags;
-    gboolean vinfo_changed = FALSE;
-
-    if (allocator) {
-      allocator_vinfo =
-          gst_allocator_get_vaapi_video_info (allocator, &surface_alloc_flags);
-      vinfo_changed =
-          gst_video_info_changed (allocator_vinfo, &new_allocation_vinfo);
-    }
-
-    if (vinfo_changed && allocator && priv->use_dmabuf_memory) {
+    if (allocator && priv->use_dmabuf_memory) {
       gst_allocator_set_vaapi_video_info (allocator, &new_allocation_vinfo,
           surface_alloc_flags);
-    } else if (!priv->use_dmabuf_memory && (vinfo_changed || !allocator)) {
-       negotiated_vinfo =
-          gst_allocator_get_vaapi_negotiated_video_info (allocator);
-
-      /* let's destroy the other allocator and create a new one */
-      allocator = gst_vaapi_video_allocator_new (priv->display,
-          &new_allocation_vinfo, surface_alloc_flags, 0);
-      if (negotiated_vinfo) {
-        gst_allocator_set_vaapi_negotiated_video_info (allocator,
-            negotiated_vinfo);
-      }
-      gst_buffer_pool_config_set_allocator (config, allocator, NULL);
-      gst_object_unref (allocator);
+    } else {
+      allocator = NULL;
     }
   }
+  priv->allocation_vinfo = new_allocation_vinfo;
 
   if (!gst_buffer_pool_config_has_option (config,
           GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META))
     goto error_no_vaapi_video_meta_option;
 
-  /* not our allocator, not our buffers */
-  if (allocator) {
-    priv->use_dmabuf_memory = gst_vaapi_is_dmabuf_allocator (allocator);
-    if (priv->use_dmabuf_memory ||
-        g_strcmp0 (allocator->mem_type, GST_VAAPI_VIDEO_MEMORY_NAME) == 0) {
-      if (priv->allocator)
-        gst_object_unref (priv->allocator);
-      if ((priv->allocator = allocator))
-        gst_object_ref (allocator);
-      negotiated_vinfo =
-          gst_allocator_get_vaapi_negotiated_video_info (priv->allocator);
-      priv->vmeta_vinfo = (negotiated_vinfo) ?
-          *negotiated_vinfo : priv->allocation_vinfo;
+  /* create a new allocator if needed */
+  if (!allocator) {
+    if (priv->use_dmabuf_memory) {
+      allocator = gst_vaapi_dmabuf_allocator_new (priv->display,
+          &new_allocation_vinfo, /* FIXME: */ 0, GST_PAD_SRC);
+    } else {
+      allocator = gst_vaapi_video_allocator_new (priv->display,
+          &new_allocation_vinfo, surface_alloc_flags, 0);
     }
+
+    if (!allocator)
+      goto error_no_allocator;
+
+    if (negotiated_vinfo) {
+      gst_allocator_set_vaapi_negotiated_video_info (allocator,
+          negotiated_vinfo);
+    }
+
+    GST_INFO_OBJECT (pool, "created new allocator %" GST_PTR_FORMAT, allocator);
+    gst_buffer_pool_config_set_allocator (config, allocator, NULL);
+    gst_object_unref (allocator);
+  }
+
+  /* use the allocator and set the video info for the vmeta */
+  if (allocator) {
+    if (priv->allocator)
+      gst_object_unref (priv->allocator);
+    if ((priv->allocator = allocator))
+      gst_object_ref (allocator);
+
+    negotiated_vinfo =
+        gst_allocator_get_vaapi_negotiated_video_info (priv->allocator);
+    priv->vmeta_vinfo = (negotiated_vinfo) ?
+        *negotiated_vinfo : priv->allocation_vinfo;
+
     if (GST_VIDEO_INFO_SIZE (&priv->vmeta_vinfo) != size) {
       gst_buffer_pool_config_set_params (config, caps,
-          GST_VIDEO_INFO_SIZE (&priv->vmeta_vinfo), min_buffers,
-          max_buffers);
+          GST_VIDEO_INFO_SIZE (&priv->vmeta_vinfo), min_buffers, max_buffers);
     }
   }
   if (!priv->allocator)
@@ -221,9 +243,9 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
 
   priv->options = 0;
   if (gst_buffer_pool_config_has_option (config,
-          GST_BUFFER_POOL_OPTION_VIDEO_META))
+          GST_BUFFER_POOL_OPTION_VIDEO_META)) {
     priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
-  else {
+  } else {
     gint i;
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->allocation_vinfo); i++) {
       if (GST_VIDEO_INFO_PLANE_OFFSET (&priv->allocation_vinfo, i) !=
