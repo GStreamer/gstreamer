@@ -44,7 +44,6 @@ enum
 
 struct _GstVaapiVideoBufferPoolPrivate
 {
-  GstVideoInfo allocation_vinfo;
   GstAllocator *allocator;
   GstVideoInfo vmeta_vinfo;
   GstVaapiDisplay *display;
@@ -181,8 +180,8 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   }
 
   /* reset or update the allocator if video resolution changed */
-  if (gst_video_info_changed (&priv->allocation_vinfo, &new_allocation_vinfo)
-      || gst_video_info_changed (allocator_vinfo, &new_allocation_vinfo)) {
+  if (allocator_vinfo
+      && gst_video_info_changed (allocator_vinfo, &new_allocation_vinfo)) {
     gst_object_replace ((GstObject **) & priv->allocator, NULL);
 
     if (allocator && priv->use_dmabuf_memory) {
@@ -192,7 +191,6 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
       allocator = NULL;
     }
   }
-  priv->allocation_vinfo = new_allocation_vinfo;
 
   if (!gst_buffer_pool_config_has_option (config,
           GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META))
@@ -231,7 +229,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
     negotiated_vinfo =
         gst_allocator_get_vaapi_negotiated_video_info (priv->allocator);
     priv->vmeta_vinfo = (negotiated_vinfo) ?
-        *negotiated_vinfo : priv->allocation_vinfo;
+        *negotiated_vinfo : new_allocation_vinfo;
 
     if (GST_VIDEO_INFO_SIZE (&priv->vmeta_vinfo) != size) {
       gst_buffer_pool_config_set_params (config, caps,
@@ -247,10 +245,10 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
     priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
   } else {
     gint i;
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->allocation_vinfo); i++) {
-      if (GST_VIDEO_INFO_PLANE_OFFSET (&priv->allocation_vinfo, i) !=
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&new_allocation_vinfo); i++) {
+      if (GST_VIDEO_INFO_PLANE_OFFSET (&new_allocation_vinfo, i) !=
           GST_VIDEO_INFO_PLANE_OFFSET (&priv->vmeta_vinfo, i) ||
-          GST_VIDEO_INFO_PLANE_STRIDE (&priv->allocation_vinfo, i) !=
+          GST_VIDEO_INFO_PLANE_STRIDE (&new_allocation_vinfo, i) !=
           GST_VIDEO_INFO_PLANE_STRIDE (&priv->vmeta_vinfo, i)) {
         priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
         gst_buffer_pool_config_add_option (config,
@@ -525,8 +523,6 @@ gst_vaapi_video_buffer_pool_init (GstVaapiVideoBufferPool * pool)
       GST_VAAPI_VIDEO_BUFFER_POOL_GET_PRIVATE (pool);
 
   pool->priv = priv;
-
-  gst_video_info_init (&priv->allocation_vinfo);
 }
 
 GstBufferPool *
