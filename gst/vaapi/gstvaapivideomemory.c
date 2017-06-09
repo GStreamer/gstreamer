@@ -1185,6 +1185,19 @@ surface_alloc_flags_quark_get (void)
   return g_quark;
 }
 
+#define NEGOTIATED_VINFO_QUARK negotiated_vinfo_quark_get ()
+static GQuark
+negotiated_vinfo_quark_get (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark = (gsize) g_quark_from_static_string ("negotiated-vinfo");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
+
 /**
  * gst_allocator_get_vaapi_video_info:
  * @allocator: a #GstAllocator
@@ -1252,6 +1265,44 @@ gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
       (GDestroyNotify) gst_structure_free);
 
   return TRUE;
+}
+
+/**
+ * gst_allocator_set_vaapi_negotiated_video_info:
+ * @allocator: a #GstAllocator
+ * @negotiated_vinfo: the negotiated #GstVideoInfo to store
+ *
+ * Stores as GObject's qdata the @negotiated_vinfo in the allocator
+ * instance.
+ *
+ * The @negotiated_vinfo is different of the @alloc_info from
+ * gst_allocator_set_vaapi_video_info(), and might not be set.
+ **/
+void
+gst_allocator_set_vaapi_negotiated_video_info (GstAllocator * allocator,
+    const GstVideoInfo * negotiated_vinfo)
+{
+  g_return_if_fail (allocator && GST_IS_ALLOCATOR (allocator));
+  g_return_if_fail (negotiated_vinfo);
+
+  g_object_set_qdata_full (G_OBJECT (allocator), NEGOTIATED_VINFO_QUARK,
+      gst_video_info_copy (negotiated_vinfo),
+      (GDestroyNotify) gst_video_info_free);
+}
+
+/**
+ * gst_allocator_get_vaapi_negotiated_video_info:
+ * @allocator: a #GstAllocator
+ *
+ * Returns: the stored negotiation #GstVideoInfo, if it was stored
+ * previously. Otherwise, %NULL
+ **/
+GstVideoInfo *
+gst_allocator_get_vaapi_negotiated_video_info (GstAllocator * allocator)
+{
+  g_return_val_if_fail (GST_IS_ALLOCATOR (allocator), NULL);
+
+  return g_object_get_qdata (G_OBJECT (allocator), NEGOTIATED_VINFO_QUARK);
 }
 
 /**

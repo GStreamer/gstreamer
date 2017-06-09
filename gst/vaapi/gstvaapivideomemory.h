@@ -279,6 +279,15 @@ gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
     const GstVideoInfo * alloc_info, guint surface_alloc_flags);
 
 G_GNUC_INTERNAL
+void
+gst_allocator_set_vaapi_negotiated_video_info (GstAllocator * allocator,
+    const GstVideoInfo * negotiated_vinfo);
+
+G_GNUC_INTERNAL
+GstVideoInfo *
+gst_allocator_get_vaapi_negotiated_video_info (GstAllocator * allocator);
+
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_is_dmabuf_allocator (GstAllocator * allocator);
 

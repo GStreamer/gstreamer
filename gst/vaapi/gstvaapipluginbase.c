@@ -567,24 +567,10 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
     GstCaps * caps)
 {
   gboolean different_caps;
-  GstVideoInfo vi;
   GstVaapiImageUsageFlags usage_flag =
       GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
 
-  /* the received caps are the "allocation caps" which may be
-   * different from the "negotiation caps". In this case, we should
-   * indicate the allocator to store the negotiation caps since they
-   * are the one should be used for frame mapping with GstVideoMeta */
-  different_caps = GST_IS_VIDEO_DECODER (plugin) && plugin->srcpad_caps &&
-      !gst_caps_is_strictly_equal (plugin->srcpad_caps, caps);
-
-  if (different_caps) {
-    vi = plugin->srcpad_info;
-  } else {
-    vi = *vinfo;
-  }
-
-  if (!reset_allocator (plugin->srcpad_allocator, &vi))
+  if (!reset_allocator (plugin->srcpad_allocator, vinfo))
     return TRUE;
 
   plugin->srcpad_allocator = NULL;
@@ -609,22 +595,33 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
   if (!plugin->srcpad_allocator)
     goto error_create_allocator;
 
+  /* the received caps are the "allocation caps" which may be
+   * different from the "negotiation caps". In this case, we should
+   * indicate the allocator to store the negotiation caps since they
+   * are the one should be used for frame mapping with GstVideoMeta */
+  different_caps = GST_IS_VIDEO_DECODER (plugin) && plugin->srcpad_caps &&
+      !gst_caps_is_strictly_equal (plugin->srcpad_caps, caps);
+
   if (different_caps) {
-    guint i, flags = 0;
-    const GstVideoInfo *alloc_vi =
-        gst_allocator_get_vaapi_video_info (plugin->srcpad_allocator, &flags);
-    /* update the planes and the size with the allocator image info,
-     * but not the resolution */
-    if (alloc_vi) {
-      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (alloc_vi); i++) {
-        GST_VIDEO_INFO_PLANE_OFFSET (&vi, i) =
-            GST_VIDEO_INFO_PLANE_OFFSET (alloc_vi, i);
-        GST_VIDEO_INFO_PLANE_STRIDE (&vi, i) =
-            GST_VIDEO_INFO_PLANE_STRIDE (alloc_vi, i);
-      }
-      GST_VIDEO_INFO_SIZE (&vi) = GST_VIDEO_INFO_SIZE (alloc_vi);
-      gst_allocator_set_vaapi_video_info (plugin->srcpad_allocator, &vi, flags);
+    guint i;
+    GstVideoInfo vi = plugin->srcpad_info;
+    const GstVideoInfo *image_info =
+        gst_allocator_get_vaapi_video_info (plugin->srcpad_allocator, NULL);
+
+    g_assert (image_info);      /* both allocators should set its video
+                                 * info */
+
+    /* update the planes and the size with the allocator image/surface
+     * info, but not the resolution */
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (image_info); i++) {
+      GST_VIDEO_INFO_PLANE_OFFSET (&vi, i) =
+          GST_VIDEO_INFO_PLANE_OFFSET (image_info, i);
+      GST_VIDEO_INFO_PLANE_STRIDE (&vi, i) =
+          GST_VIDEO_INFO_PLANE_STRIDE (image_info, i);
     }
+    GST_VIDEO_INFO_SIZE (&vi) = GST_VIDEO_INFO_SIZE (image_info);
+    gst_allocator_set_vaapi_negotiated_video_info (plugin->srcpad_allocator,
+        &vi);
   }
 
   return TRUE;

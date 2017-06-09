@@ -137,6 +137,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   GstCaps *caps;
   GstVideoInfo new_allocation_vinfo;
   const GstVideoInfo *allocator_vinfo;
+  const GstVideoInfo *negotiated_vinfo;
   GstVideoAlignment align;
   GstAllocator *allocator;
   gboolean ret, updated = FALSE;
@@ -176,9 +177,16 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
       gst_allocator_set_vaapi_video_info (allocator, &new_allocation_vinfo,
           surface_alloc_flags);
     } else if (!priv->use_dmabuf_memory && (vinfo_changed || !allocator)) {
+       negotiated_vinfo =
+          gst_allocator_get_vaapi_negotiated_video_info (allocator);
+
       /* let's destroy the other allocator and create a new one */
       allocator = gst_vaapi_video_allocator_new (priv->display,
           &new_allocation_vinfo, surface_alloc_flags, 0);
+      if (negotiated_vinfo) {
+        gst_allocator_set_vaapi_negotiated_video_info (allocator,
+            negotiated_vinfo);
+      }
       gst_buffer_pool_config_set_allocator (config, allocator, NULL);
       gst_object_unref (allocator);
     }
@@ -197,11 +205,10 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
         gst_object_unref (priv->allocator);
       if ((priv->allocator = allocator))
         gst_object_ref (allocator);
-      allocator_vinfo =
-          gst_allocator_get_vaapi_video_info (priv->allocator, NULL);
-      if (!allocator_vinfo)
-        goto error_create_allocator_info;
-      priv->vmeta_vinfo = *allocator_vinfo;
+      negotiated_vinfo =
+          gst_allocator_get_vaapi_negotiated_video_info (priv->allocator);
+      priv->vmeta_vinfo = (negotiated_vinfo) ?
+          *negotiated_vinfo : priv->allocation_vinfo;
     }
     if (GST_VIDEO_INFO_SIZE (&priv->vmeta_vinfo) != size) {
       gst_buffer_pool_config_set_params (config, caps,
@@ -271,12 +278,6 @@ error_invalid_allocator:
 error_no_vaapi_video_meta_option:
   {
     GST_ERROR_OBJECT (pool, "no GstVaapiVideoMeta option in config");
-    return FALSE;
-  }
-error_create_allocator_info:
-  {
-    GST_ERROR_OBJECT (pool,
-        "failed to create GstVaapiVideoAllocator `video-info'");
     return FALSE;
   }
 error_no_allocator:
