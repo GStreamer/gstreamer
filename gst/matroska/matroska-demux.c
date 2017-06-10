@@ -1654,7 +1654,8 @@ gst_matroska_cluster_compare (gint64 * i1, gint64 * i2)
 /* searches for a cluster start from @pos,
  * return GST_FLOW_OK and cluster position in @pos if found */
 static GstFlowReturn
-gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
+gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos,
+    gboolean forward)
 {
   gint64 newpos = *pos;
   gint64 orig_offset;
@@ -1671,8 +1672,8 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
 
   orig_offset = demux->common.offset;
 
-  GST_LOG_OBJECT (demux, "searching cluster following offset %" G_GINT64_FORMAT,
-      *pos);
+  GST_LOG_OBJECT (demux, "searching cluster %s offset %" G_GINT64_FORMAT,
+      forward ? "following" : "preceding", *pos);
 
   if (demux->clusters) {
     gint64 *cpos;
@@ -1680,7 +1681,7 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     cpos = gst_util_array_binary_search (demux->clusters->data,
         demux->clusters->len, sizeof (gint64),
         (GCompareDataFunc) gst_matroska_cluster_compare,
-        GST_SEARCH_MODE_AFTER, pos, NULL);
+        forward ? GST_SEARCH_MODE_AFTER : GST_SEARCH_MODE_BEFORE, pos, NULL);
     /* sanity check */
     if (cpos) {
       GST_DEBUG_OBJECT (demux,
@@ -1701,6 +1702,8 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     GstByteReader reader;
     gint cluster_pos;
 
+    if (!forward)
+      newpos = MAX (0, newpos - chunk);
     if (buf != NULL) {
       gst_buffer_unmap (buf, &map);
       gst_buffer_unref (buf);
@@ -1725,16 +1728,25 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     }
 
     gst_byte_reader_init (&reader, data, size);
-  resume:
-    cluster_pos = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
-        GST_MATROSKA_ID_CLUSTER, 0, gst_byte_reader_get_remaining (&reader));
+    cluster_pos = -1;
+    while (1) {
+      gint found = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
+          GST_MATROSKA_ID_CLUSTER, 0, gst_byte_reader_get_remaining (&reader));
+      if (forward) {
+        cluster_pos = found;
+        break;
+      }
+      /* need last occurrence when searching backwards */
+      if (found >= 0) {
+        cluster_pos = gst_byte_reader_get_pos (&reader) + found;
+        gst_byte_reader_skip (&reader, found + 4);
+      } else {
+        break;
+      }
+    }
+
     if (cluster_pos >= 0) {
       newpos += cluster_pos;
-      /* prepare resuming at next byte */
-      if (!gst_byte_reader_skip (&reader, cluster_pos + 1)) {
-        GST_DEBUG_OBJECT (demux, "Need more data -> continue");
-        continue;
-      }
       GST_DEBUG_OBJECT (demux,
           "found cluster ebml id at offset %" G_GINT64_FORMAT, newpos);
       /* extra checks whether we really sync'ed to a cluster:
@@ -1752,7 +1764,7 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
           GST_ELEMENT_CAST (demux), &id, &length, &needed);
       if (ret != GST_FLOW_OK) {
         GST_DEBUG_OBJECT (demux, "need more data -> continue");
-        continue;
+        goto next;
       }
       g_assert (id == GST_MATROSKA_ID_CLUSTER);
       GST_DEBUG_OBJECT (demux, "cluster size %" G_GUINT64_FORMAT ", prefix %d",
@@ -1766,26 +1778,19 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
       demux->common.offset += length + needed;
       ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
           GST_ELEMENT_CAST (demux), &id, &length, &needed);
-      if (ret != GST_FLOW_OK) {
-        /* we skipped one byte in the reader above, need to accomodate for
-         * that when resuming skipping from the reader instead of reading a
-         * new chunk */
-        newpos += 1;
-        goto resume;
-      }
+      if (ret != GST_FLOW_OK)
+        goto next;
       GST_DEBUG_OBJECT (demux, "next element is %scluster",
           id == GST_MATROSKA_ID_CLUSTER ? "" : "not ");
       if (id == GST_MATROSKA_ID_CLUSTER)
         break;
-      /* not ok, resume
-       * we skipped one byte in the reader above, need to accomodate for
-       * that when resuming skipping from the reader instead of reading a
-       * new chunk */
-      newpos += 1;
-      goto resume;
+    next:
+      if (forward)
+        newpos += 1;
     } else {
       /* partial cluster id may have been in tail of buffer */
-      newpos += MAX (gst_byte_reader_get_remaining (&reader), 4) - 3;
+      newpos +=
+          forward ? MAX (gst_byte_reader_get_remaining (&reader), 4) - 3 : 3;
     }
   }
 
@@ -1809,20 +1814,18 @@ gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
   GstMatroskaIndex *entry = NULL;
   GstMatroskaReadState current_state;
   GstClockTime otime, prev_cluster_time, current_cluster_time, cluster_time;
-  gint64 opos, newpos, startpos = 0, current_offset;
+  GstClockTime atime;
+  gint64 opos, newpos, current_offset;
   gint64 prev_cluster_offset = -1, current_cluster_offset, cluster_offset;
+  gint64 apos, maxpos;
   guint64 cluster_size = 0;
-  const guint chunk = 64 * 1024;
   GstFlowReturn ret;
   guint64 length;
   guint32 id;
   guint needed;
 
-  /* (under)estimate new position, resync using cluster ebml id,
-   * and scan forward to appropriate cluster
-   * (and re-estimate if need to go backward) */
-
-  prev_cluster_time = GST_CLOCK_TIME_NONE;
+  /* estimate new position, resync using cluster ebml id,
+   * and bisect further or scan forward to appropriate cluster */
 
   /* store some current state */
   current_state = demux->common.state;
@@ -1836,73 +1839,75 @@ gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
 
   /* estimate using start and current position */
   GST_OBJECT_LOCK (demux);
-  opos = demux->common.offset - demux->common.ebml_segment_start;
+  apos = demux->first_cluster_offset;
+  atime = demux->stream_start_time;
+  opos = demux->common.offset;
   otime = demux->common.segment.position;
   GST_OBJECT_UNLOCK (demux);
 
   /* sanitize */
-  time = MAX (time, demux->stream_start_time);
+  time = MAX (time, atime);
+  otime = MAX (otime, atime);
+  opos = MAX (opos, apos);
 
-  /* avoid division by zero in first estimation below */
-  if (otime <= demux->stream_start_time)
-    otime = time;
+  maxpos = gst_matroska_read_common_get_length (&demux->common);
+
+  /* invariants;
+   * apos <= opos
+   * atime <= otime
+   * apos always refer to a cluster before target time;
+   * opos may or may not be after target time, but if it is once so,
+   * then also in next iteration
+   * */
 
 retry:
   GST_LOG_OBJECT (demux,
+      "apos: %" G_GUINT64_FORMAT ", atime: %" GST_TIME_FORMAT ", %"
+      GST_TIME_FORMAT " in stream time, "
       "opos: %" G_GUINT64_FORMAT ", otime: %" GST_TIME_FORMAT ", %"
       GST_TIME_FORMAT " in stream time (start %" GST_TIME_FORMAT "), time %"
-      GST_TIME_FORMAT, opos, GST_TIME_ARGS (otime),
-      GST_TIME_ARGS (otime - demux->stream_start_time),
+      GST_TIME_FORMAT, apos, GST_TIME_ARGS (atime),
+      GST_TIME_ARGS (atime - demux->stream_start_time), opos,
+      GST_TIME_ARGS (otime), GST_TIME_ARGS (otime - demux->stream_start_time),
       GST_TIME_ARGS (demux->stream_start_time), GST_TIME_ARGS (time));
 
-  if (otime <= demux->stream_start_time) {
-    newpos = 0;
+  g_assert (atime <= otime);
+  g_assert (apos <= opos);
+  if (time == GST_CLOCK_TIME_NONE) {
+    GST_DEBUG_OBJECT (demux, "searching last cluster");
+    newpos = maxpos;
+    if (newpos == -1) {
+      GST_DEBUG_OBJECT (demux, "unknown file size; bailing out");
+      goto exit;
+    }
+  } else if (otime <= atime) {
+    newpos = apos;
   } else {
-    newpos =
-        gst_util_uint64_scale (opos - demux->common.ebml_segment_start,
-        time - demux->stream_start_time,
-        otime - demux->stream_start_time) - chunk;
-    if (newpos < 0)
-      newpos = 0;
+    newpos = apos +
+        gst_util_uint64_scale (opos - apos, time - atime, otime - atime);
+    if (maxpos != -1 && newpos > maxpos)
+      newpos = maxpos;
   }
-  /* favour undershoot */
-  newpos = newpos * 90 / 100;
-  newpos += demux->common.ebml_segment_start;
 
   GST_DEBUG_OBJECT (demux,
       "estimated offset for %" GST_TIME_FORMAT ": %" G_GINT64_FORMAT,
       GST_TIME_ARGS (time), newpos);
 
-  /* and at least start scanning before previous scan start to avoid looping */
-  startpos = startpos * 90 / 100;
-  if (startpos && startpos < newpos)
-    newpos = startpos;
-
-  /* read in at newpos and scan for ebml cluster id */
-  startpos = newpos;
-  while (1) {
-
-    ret = gst_matroska_demux_search_cluster (demux, &newpos);
-    if (ret == GST_FLOW_EOS) {
-      /* heuristic HACK */
-      newpos = startpos * 80 / 100;
-      GST_DEBUG_OBJECT (demux, "EOS; "
-          "new estimated offset for %" GST_TIME_FORMAT ": %" G_GINT64_FORMAT,
-          GST_TIME_ARGS (time), newpos);
-      startpos = newpos;
-      continue;
-    } else if (ret != GST_FLOW_OK) {
+  /* search backwards */
+  if (newpos > apos) {
+    ret = gst_matroska_demux_search_cluster (demux, &newpos, FALSE);
+    if (ret != GST_FLOW_OK)
       goto exit;
-    } else {
-      break;
-    }
   }
 
   /* then start scanning and parsing for cluster time,
-   * re-estimate if overshoot, otherwise next cluster and so on */
+   * re-estimate if possible, otherwise next cluster and so on */
+  /* note that each re-estimate is entered with a change in apos or opos,
+   * avoiding infinite loop */
   demux->common.offset = newpos;
   demux->cluster_time = cluster_time = GST_CLOCK_TIME_NONE;
   cluster_size = 0;
+  prev_cluster_time = GST_CLOCK_TIME_NONE;
   while (1) {
     /* peek and parse some elements */
     ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
@@ -1930,6 +1935,12 @@ retry:
       GST_DEBUG_OBJECT (demux, "found cluster at offset %" G_GINT64_FORMAT
           " with time %" GST_TIME_FORMAT, cluster_offset,
           GST_TIME_ARGS (cluster_time));
+      if (time == GST_CLOCK_TIME_NONE) {
+        GST_DEBUG_OBJECT (demux, "found last cluster");
+        prev_cluster_time = cluster_time;
+        prev_cluster_offset = cluster_offset;
+        break;
+      }
       if (cluster_time > time) {
         GST_DEBUG_OBJECT (demux, "overshot target");
         /* cluster overshoots */
@@ -1950,6 +1961,30 @@ retry:
           goto retry;
         }
       } else {
+        /* cluster undershoots */
+        GST_DEBUG_OBJECT (demux, "undershot target");
+        /* ok if close enough */
+        if (GST_CLOCK_DIFF (cluster_time, time) < 5 * GST_SECOND) {
+          GST_DEBUG_OBJECT (demux, "target close enough");
+          prev_cluster_time = cluster_time;
+          prev_cluster_offset = cluster_offset;
+          break;
+        }
+        if (otime > time) {
+          /* we are in between atime and otime => can bisect if worthwhile */
+          if (prev_cluster_time != GST_CLOCK_TIME_NONE &&
+              cluster_time > prev_cluster_time &&
+              (GST_CLOCK_DIFF (prev_cluster_time, cluster_time) * 10 <
+                  GST_CLOCK_DIFF (cluster_time, time))) {
+            /* we moved at least one cluster forward,
+             * and it looks like target is still far away,
+             * let's estimate again */
+            GST_DEBUG_OBJECT (demux, "bisecting with new apos");
+            apos = cluster_offset;
+            atime = cluster_time;
+            goto retry;
+          }
+        }
         /* cluster undershoots, goto next one */
         prev_cluster_time = cluster_time;
         prev_cluster_offset = cluster_offset;
@@ -4176,7 +4211,8 @@ gst_matroska_demux_check_parse_error (GstMatroskaDemux * demux)
      * search for cluster mark following current pos */
     pos = demux->common.offset;
     GST_WARNING_OBJECT (demux, "parse error, looking for next cluster");
-    if ((ret = gst_matroska_demux_search_cluster (demux, &pos)) != GST_FLOW_OK) {
+    if ((ret = gst_matroska_demux_search_cluster (demux, &pos, TRUE)) !=
+        GST_FLOW_OK) {
       /* did not work, give up */
       return ret;
     } else {
