@@ -307,6 +307,8 @@ gst_matroska_demux_reset (GstElement * element)
   demux->cluster_time = GST_CLOCK_TIME_NONE;
   demux->cluster_offset = 0;
   demux->next_cluster_offset = 0;
+  demux->stream_last_time = GST_CLOCK_TIME_NONE;
+  demux->last_cluster_offset = 0;
   demux->index_offset = 0;
   demux->seekable = FALSE;
   demux->need_segment = FALSE;
@@ -1837,12 +1839,12 @@ gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
 
   demux->common.state = GST_MATROSKA_READ_STATE_SCANNING;
 
-  /* estimate using start and current position */
+  /* estimate using start and last known cluster */
   GST_OBJECT_LOCK (demux);
   apos = demux->first_cluster_offset;
   atime = demux->stream_start_time;
-  opos = demux->common.offset;
-  otime = demux->common.segment.position;
+  opos = demux->last_cluster_offset;
+  otime = demux->stream_last_time;
   GST_OBJECT_UNLOCK (demux);
 
   /* sanitize */
@@ -4492,6 +4494,26 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
                   == GST_MATROSKA_READ_STATE_HEADER)) {
             demux->common.state = GST_MATROSKA_READ_STATE_DATA;
             demux->first_cluster_offset = demux->common.offset;
+            if (!demux->streaming &&
+                !GST_CLOCK_TIME_IS_VALID (demux->common.segment.duration)) {
+              GstMatroskaIndex *last = NULL;
+
+              GST_DEBUG_OBJECT (demux,
+                  "estimating duration using last cluster");
+              if ((last = gst_matroska_demux_search_pos (demux,
+                          GST_CLOCK_TIME_NONE)) != NULL) {
+                demux->last_cluster_offset =
+                    last->pos + demux->common.ebml_segment_start;
+                demux->stream_last_time = last->time;
+                demux->common.segment.duration =
+                    demux->stream_last_time - demux->stream_start_time;
+                /* above estimate should not be taken all too strongly */
+                demux->invalid_duration = TRUE;
+                GST_DEBUG_OBJECT (demux,
+                    "estimated duration as %" GST_TIME_FORMAT,
+                    GST_TIME_ARGS (demux->common.segment.duration));
+              }
+            }
             GST_DEBUG_OBJECT (demux, "signaling no more pads");
             gst_element_no_more_pads (GST_ELEMENT (demux));
             /* send initial segment - we wait till we know the first
@@ -4523,6 +4545,12 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
             goto parse_failed;
           GST_DEBUG_OBJECT (demux, "ClusterTimeCode: %" G_GUINT64_FORMAT, num);
           demux->cluster_time = num;
+          /* track last cluster */
+          if (demux->cluster_offset > demux->last_cluster_offset) {
+            demux->last_cluster_offset = demux->cluster_offset;
+            demux->stream_last_time =
+                demux->cluster_time * demux->common.time_scale;
+          }
 #if 0
           if (demux->common.element_index) {
             if (demux->common.element_index_writer_id == -1)

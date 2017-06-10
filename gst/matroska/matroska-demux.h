@@ -89,6 +89,10 @@ typedef struct _GstMatroskaDemux {
   GstClockTime             requested_seek_time;
   guint64                  seek_offset;
 
+  /* alternative duration; optionally obtained from last cluster */
+  guint64                  last_cluster_offset;
+  GstClockTime             stream_last_time;
+
   /* index stuff */
   gboolean                 seekable;
   gboolean                 building_index;
