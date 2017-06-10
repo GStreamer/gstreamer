@@ -25,8 +25,7 @@ EXTRA_DIST = \
 	docs/design/gst-rtp-server-design \
 	gst-rtsp-server.doap \
 	$(win32) \
-	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
-	config.h.meson
+	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" )
 
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
