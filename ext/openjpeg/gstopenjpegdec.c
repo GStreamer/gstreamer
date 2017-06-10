@@ -307,14 +307,13 @@ fill_frame_packed8_3 (GstVideoFrame * frame, opj_image_t * image)
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
-      tmp[1] = off[0] + *data_in[0];
-      tmp[2] = off[1] + *data_in[1];
-      tmp[3] = off[2] + *data_in[2];
-
-      tmp += 4;
+      tmp[0] = off[0] + *data_in[0];
+      tmp[1] = off[1] + *data_in[1];
+      tmp[2] = off[2] + *data_in[2];
       data_in[0]++;
       data_in[1]++;
       data_in[2]++;
+      tmp += 3;
     }
     data_out += dstride;
   }
