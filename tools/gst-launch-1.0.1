@@ -434,6 +434,10 @@ These can then later be converted into an image using the 'dot' utility from
 the graphviz set of tools, like this: dot foo.dot \-Tsvg \-o foo.svg (png or jpg
 are also possible as output format). There is also a utility called 'xdot'
 which allows you to view the .dot file directly without converting it first.
+.br
+When the pipeline changes state through NULL to PLAYING and back to NULL, a
+dot file is generated on each state change. To write a snapshot of the
+pipeline state, send a SIGHUP to the process.
 .TP
 \fBGST_REGISTRY\fR
 Path of the plugin registry file. Default is

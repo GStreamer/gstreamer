@@ -357,6 +357,12 @@ strategic places (like when the pipeline state changes or an error occurs).
 gst-launch-&GST_API_VERSION; is one such application.
   </para>
   <para>
+When gst-launch-&GST_API_VERSION; changes state through NULL to PLAYING
+and back to NULL, a dot file is generated on each state change. To have
+gst-launch-&GST_API_VERSION; write a snapshot of the pipeline state, send
+a SIGHUP to the gst-launch-&GST_API_VERSION; process.
+  </para>
+  <para>
 These .dot files can then be turned into images using the 'dot' utility
 from the graphviz set of tools, like this:
   <command>dot foo.dot -Tsvg -o foo.svg</command> or

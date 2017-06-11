@@ -467,7 +467,8 @@ print_toc_entry (gpointer data, gpointer user_data)
 }
 
 #if defined(G_OS_UNIX) || defined(G_OS_WIN32)
-static guint signal_watch_id;
+static guint signal_watch_intr_id;
+static guint signal_watch_hup_id;
 #if defined(G_OS_WIN32)
 static GstElement *intr_pipeline;
 #endif
@@ -490,8 +491,27 @@ intr_handler (gpointer user_data)
               "message", G_TYPE_STRING, "Pipeline interrupted", NULL)));
 
   /* remove signal handler */
-  signal_watch_id = 0;
-  return FALSE;
+  signal_watch_intr_id = 0;
+  return G_SOURCE_REMOVE;
+}
+
+static gboolean
+hup_handler (gpointer user_data)
+{
+  GstElement *pipeline = (GstElement *) user_data;
+
+  if (g_getenv ("GST_DEBUG_DUMP_DOT_DIR") != NULL) {
+    PRINT ("SIGHUP: dumping dot file snapshot ...\n");
+  } else {
+    PRINT ("SIGHUP: not dumping dot file snapshot, GST_DEBUG_DUMP_DOT_DIR "
+        "environment variable not set.\n");
+  }
+
+  /* dump graph on hup */
+  GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+      GST_DEBUG_GRAPH_SHOW_ALL, "gst-launch.snapshot");
+
+  return G_SOURCE_CONTINUE;
 }
 
 #if defined(G_OS_WIN32)         /* G_OS_UNIX */
@@ -521,8 +541,10 @@ event_loop (GstElement * pipeline, gboolean blocking, gboolean do_progress,
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
 #ifdef G_OS_UNIX
-  signal_watch_id =
+  signal_watch_intr_id =
       g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
+  signal_watch_hup_id =
+      g_unix_signal_add (SIGHUP, (GSourceFunc) hup_handler, pipeline);
 #elif defined(G_OS_WIN32)
   intr_pipeline = NULL;
   if (SetConsoleCtrlHandler (w32_intr_handler, TRUE))
@@ -893,8 +915,10 @@ exit:
       gst_message_unref (message);
     gst_object_unref (bus);
 #ifdef G_OS_UNIX
-    if (signal_watch_id > 0)
-      g_source_remove (signal_watch_id);
+    if (signal_watch_intr_id > 0)
+      g_source_remove (signal_watch_intr_id);
+    if (signal_watch_hup_id > 0)
+      g_source_remove (signal_watch_hup_id);
 #elif defined(G_OS_WIN32)
     intr_pipeline = NULL;
     SetConsoleCtrlHandler (w32_intr_handler, FALSE);
