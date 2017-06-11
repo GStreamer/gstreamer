@@ -576,6 +576,8 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
     gst_video_codec_state_unref (state);
     if (!gst_video_encoder_negotiate (GST_VIDEO_ENCODER (self))) {
       gst_video_codec_frame_unref (frame);
+      GST_ERROR_OBJECT (self,
+          "Downstream element refused to negotiate codec_data in the caps");
       return GST_FLOW_NOT_NEGOTIATED;
     }
     flow_ret = GST_FLOW_OK;
