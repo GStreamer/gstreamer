@@ -1194,11 +1194,9 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
   }
 
   /* Otherwise create the new slot */
-#if 0                           /* There's no downloadbuffer in 1.2 */
   if (do_download)
     elem_name = "downloadbuffer";
   else
-#endif
     elem_name = "queue2";
 
   queue = gst_element_factory_make (elem_name, NULL);
@@ -1246,6 +1244,11 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
         urisrc->ring_buffer_max_size, NULL);
     /* Disable max-size-buffers - queue based on data rate to the default time limit */
     g_object_set (queue, "max-size-buffers", 0, NULL);
+
+    /* Don't start buffering until the queue is empty (< 1%).
+     * Start playback when the queue is 60% full, leaving a bit more room
+     * for upstream to push more without getting bursty */
+    g_object_set (queue, "low-percent", 1, "high-percent", 60, NULL);
   }
 
   /* If buffer size or duration are set, set them on the element */
@@ -1261,11 +1264,6 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
     //g_object_set (queue, "max-size-time", 4 * GST_SECOND, NULL);
   }
 #endif
-
-  /* Don't start buffering until the queue is empty (< 1%).
-   * Start playback when the queue is 60% full, leaving a bit more room
-   * for upstream to push more without getting bursty */
-  g_object_set (queue, "low-percent", 1, "high-percent", 60, NULL);
 
   /* save queue pointer so we can remove it later */
   urisrc->out_slots = g_slist_prepend (urisrc->out_slots, slot);
