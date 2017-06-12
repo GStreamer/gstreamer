@@ -172,9 +172,6 @@ static GstRawVideoParseConfig
     * gst_raw_video_parse_get_config_ptr (GstRawVideoParse * raw_video_parse,
     GstRawBaseParseConfig config);
 
-static gint gst_raw_video_parse_get_alignment (GstRawBaseParse * raw_base_parse,
-    GstRawBaseParseConfig config);
-
 static void gst_raw_video_parse_init_config (GstRawVideoParseConfig * config);
 static void gst_raw_video_parse_update_info (GstRawVideoParseConfig * config);
 
@@ -227,8 +224,6 @@ gst_raw_video_parse_class_init (GstRawVideoParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_raw_video_parse_get_units_per_second);
   rawbaseparse_class->get_overhead_size =
       GST_DEBUG_FUNCPTR (gst_raw_video_parse_get_overhead_size);
-  rawbaseparse_class->get_alignment =
-      GST_DEBUG_FUNCPTR (gst_raw_video_parse_get_alignment);
 
   g_object_class_install_property (object_class,
       PROP_WIDTH,
@@ -890,38 +885,37 @@ gst_raw_video_parse_is_config_ready (GstRawBaseParse * raw_base_parse,
   return gst_raw_video_parse_get_config_ptr (raw_video_parse, config)->ready;
 }
 
-static gint
-gst_raw_video_parse_get_alignment (GstRawBaseParse * raw_base_parse,
-    GstRawBaseParseConfig config)
-{
-  return 32;
-}
-
 static gboolean
 gst_raw_video_parse_process (GstRawBaseParse * raw_base_parse,
     GstRawBaseParseConfig config, GstBuffer * in_data,
     G_GNUC_UNUSED gsize total_num_in_bytes,
     G_GNUC_UNUSED gsize num_valid_in_bytes, GstBuffer ** processed_data)
 {
+  GstAllocationParams alloc_params = { 0, 31, 0, 0 };
+  GstMapInfo map_info;
   GstRawVideoParse *raw_video_parse = GST_RAW_VIDEO_PARSE (raw_base_parse);
   GstRawVideoParseConfig *config_ptr =
       gst_raw_video_parse_get_config_ptr (raw_video_parse, config);
   guint frame_flags = 0;
   GstVideoInfo *video_info = &(config_ptr->info);
-  GstVideoMeta *videometa;
   GstBuffer *out_data;
 
-  /* In case of extra padding bytes, get a subbuffer without the padding bytes.
-   * Otherwise, just add the video meta. */
-  if (GST_VIDEO_INFO_SIZE (video_info) < config_ptr->frame_size) {
-    *processed_data = out_data =
-        gst_buffer_copy_region (in_data,
-        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
-        GST_BUFFER_COPY_MEMORY, 0, GST_VIDEO_INFO_SIZE (video_info));
-  } else {
-    out_data = in_data;
-    *processed_data = NULL;
+  if (!gst_buffer_map (in_data, &map_info, GST_MAP_READ)) {
+    GST_WARNING_OBJECT (raw_video_parse, "Failed to map input data");
+    return FALSE;
   }
+
+  /* Allocate the output memory our required alignment */
+  *processed_data = out_data = gst_buffer_new_allocate (NULL,
+      GST_VIDEO_INFO_SIZE (video_info), &alloc_params);
+  gst_buffer_fill (*processed_data, 0, map_info.data,
+      GST_VIDEO_INFO_SIZE (video_info));
+  gst_buffer_unmap (in_data, &map_info);
+
+  /* And copy the metadata */
+  gst_buffer_copy_into (*processed_data, in_data,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0,
+      GST_VIDEO_INFO_SIZE (video_info));
 
   if (config_ptr->interlaced) {
     GST_BUFFER_FLAG_SET (out_data, GST_VIDEO_BUFFER_FLAG_INTERLACED);
@@ -932,13 +926,6 @@ gst_raw_video_parse_process (GstRawBaseParse * raw_base_parse,
       frame_flags |= GST_VIDEO_FRAME_FLAG_TFF;
     } else
       GST_BUFFER_FLAG_UNSET (out_data, GST_VIDEO_BUFFER_FLAG_TFF);
-  }
-
-  /* Remove any existing videometa - it will be replaced by the new videometa
-   * from here */
-  while ((videometa = gst_buffer_get_video_meta (out_data))) {
-    GST_LOG_OBJECT (raw_base_parse, "removing existing videometa from buffer");
-    gst_buffer_remove_meta (out_data, (GstMeta *) videometa);
   }
 
   gst_buffer_add_video_meta_full (out_data,
