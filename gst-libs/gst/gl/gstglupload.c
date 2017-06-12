@@ -1446,10 +1446,16 @@ _directviv_upload_perform_gl_thread (GstGLContext * context,
   vmeta = gst_buffer_get_video_meta (directviv->inbuf);
   if (vmeta) {
     width = vmeta->stride[0];
-    height = vmeta->offset[1] / width;
+    if (GST_VIDEO_INFO_N_PLANES (in_info) == 1)
+      height = gst_memory_get_sizes (in_mem, NULL, NULL) / width;
+    else
+      height = vmeta->offset[1] / width;
   } else {
     width = GST_VIDEO_INFO_PLANE_STRIDE (in_info, 0);
-    height = GST_VIDEO_INFO_PLANE_OFFSET (in_info, 1) / width;
+    if (GST_VIDEO_INFO_N_PLANES (in_info) == 1)
+      height = gst_memory_get_sizes (in_mem, NULL, NULL) / width;
+    else
+      height = GST_VIDEO_INFO_PLANE_OFFSET (in_info, 1) / width;
   }
   width /= GST_VIDEO_INFO_COMP_PSTRIDE (in_info, 0);
 
