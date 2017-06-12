@@ -125,6 +125,9 @@ GST_EXPORT
 guint gst_discoverer_audio_info_get_channels(const GstDiscovererAudioInfo* info);
 
 GST_EXPORT
+guint64 gst_discoverer_audio_info_get_channel_mask(const GstDiscovererAudioInfo* info);
+
+GST_EXPORT
 guint gst_discoverer_audio_info_get_sample_rate(const GstDiscovererAudioInfo* info);
 
 GST_EXPORT

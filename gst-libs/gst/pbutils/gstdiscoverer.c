@@ -868,6 +868,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   if (g_str_has_prefix (name, "audio/")) {
     GstDiscovererAudioInfo *info;
     const gchar *format_str;
+    guint64 channel_mask;
 
     info = (GstDiscovererAudioInfo *) make_info (parent,
         GST_TYPE_DISCOVERER_AUDIO_INFO, caps);
@@ -877,6 +878,13 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
 
     if (gst_structure_get_int (caps_st, "channels", &tmp))
       info->channels = (guint) tmp;
+
+    if (gst_structure_get (caps_st, "channel-mask", GST_TYPE_BITMASK,
+            &channel_mask, NULL)) {
+      info->channel_mask = channel_mask;
+    } else if (info->channels) {
+      info->channel_mask = gst_audio_channel_get_fallback_mask (info->channels);
+    }
 
     /* FIXME: we only want to extract depth if raw audio is what's in the
      * container (i.e. not if there is a decoder involved) */
@@ -1836,10 +1844,11 @@ _serialize_info (GstDiscovererInfo * info, GstDiscovererSerializeFlags flags)
 static GVariant *
 _serialize_audio_stream_info (GstDiscovererAudioInfo * ainfo)
 {
-  return g_variant_new ("(uuuuums)",
+  return g_variant_new ("(uuuuumst)",
       ainfo->channels,
       ainfo->sample_rate,
-      ainfo->bitrate, ainfo->max_bitrate, ainfo->depth, ainfo->language);
+      ainfo->bitrate, ainfo->max_bitrate, ainfo->depth, ainfo->language,
+      ainfo->channel_mask);
 }
 
 static GVariant *
@@ -1993,6 +2002,8 @@ _parse_audio_stream_info (GstDiscovererAudioInfo * ainfo, GVariant * specific)
 
   if (str)
     ainfo->language = g_strdup (str);
+
+  GET_FROM_TUPLE (specific, uint64, 6, &ainfo->channel_mask);
 
   g_variant_unref (specific);
 }

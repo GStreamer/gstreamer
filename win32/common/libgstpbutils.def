@@ -27,6 +27,7 @@ EXPORTS
 	gst_codec_utils_opus_parse_header
 	gst_discoverer_audio_info_get_bitrate
 	gst_discoverer_audio_info_get_channels
+	gst_discoverer_audio_info_get_channel_mask
 	gst_discoverer_audio_info_get_depth
 	gst_discoverer_audio_info_get_language
 	gst_discoverer_audio_info_get_max_bitrate

@@ -248,6 +248,7 @@ gst_discoverer_audio_info_copy_int (GstDiscovererAudioInfo * ptr)
   ret = gst_discoverer_audio_info_new ();
 
   ret->channels = ptr->channels;
+  ret->channel_mask = ptr->channel_mask;
   ret->sample_rate = ptr->sample_rate;
   ret->depth = ptr->depth;
   ret->bitrate = ptr->bitrate;
@@ -747,6 +748,19 @@ gst_discoverer_container_info_get_streams (GstDiscovererContainerInfo * info)
  */
 
 AUDIO_INFO_ACCESSOR_CODE (channels, guint, 0);
+
+/**
+ * gst_discoverer_audio_info_get_channel_mask:
+ * @info: a #GstDiscovererAudioInfo
+ *
+ * Returns: the channel-mask of the stream, refer to
+ * gst_audio_channel_positions_from_mask() for more
+ * information.
+ *
+ * Since: 1.14
+ */
+
+AUDIO_INFO_ACCESSOR_CODE (channel_mask, guint64, G_MAXUINT64);
 
 /**
  * gst_discoverer_audio_info_get_sample_rate:

@@ -18,6 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "gstdiscoverer.h"
+
 struct _GstDiscovererStreamInfo {
   GObject                parent;
 
@@ -44,6 +46,7 @@ struct _GstDiscovererContainerInfo {
 struct _GstDiscovererAudioInfo {
   GstDiscovererStreamInfo parent;
 
+  guint64 channel_mask;
   guint channels;
   guint sample_rate;
   guint depth;
