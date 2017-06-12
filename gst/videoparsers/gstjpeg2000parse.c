@@ -108,13 +108,7 @@ static GstStaticPadTemplate srctemplate =
 static GstStaticPadTemplate sinktemplate =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/x-jpc,"
-        GST_JPEG2000_SAMPLING_LIST ";"
-        "image/x-jpc, "
-        GST_JPEG2000_COLORSPACE_LIST ";"
-        "image/x-j2c,"
-        GST_JPEG2000_SAMPLING_LIST ";"
-        "image/x-j2c, " GST_JPEG2000_COLORSPACE_LIST)
+    GST_STATIC_CAPS ("image/x-jpc;image/x-j2c")
     );
 
 #define parent_class gst_jpeg2000_parse_parent_class
@@ -250,16 +244,11 @@ gst_jpeg2000_parse_negotiate (GstJPEG2000Parse * parse, GstCaps * in_caps)
     }
   }
 
-  /* FIXME We could fail the negotiation immediatly if caps are empty */
   if (caps && !gst_caps_is_empty (caps)) {
     /* fixate to avoid ambiguity with lists when parsing */
     caps = gst_caps_fixate (caps);
     codec_format = format_from_media_type (gst_caps_get_structure (caps, 0));
   }
-
-  /* default */
-  if (codec_format == GST_JPEG2000_PARSE_NO_CODEC)
-    codec_format = GST_JPEG2000_PARSE_J2C;
 
   GST_DEBUG_OBJECT (parse, "selected codec format %d", codec_format);
 
@@ -296,7 +285,6 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   guint eoc_offset = 0;
   GstCaps *current_caps = NULL;
   GstStructure *current_caps_struct = NULL;
-  const gchar *colorspace_string = NULL;
   GstJPEG2000Colorspace colorspace = GST_JPEG2000_COLORSPACE_NONE;
   guint x0, y0, x1, y1;
   guint width = 0, height = 0;
@@ -319,27 +307,45 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   GstCaps *src_caps = NULL;
   guint frame_size = 0;
   gboolean is_j2c;
+  gboolean parsed_j2c_4cc = FALSE;
 
   if (!gst_buffer_map (frame->buffer, &map, GST_MAP_READ)) {
     GST_ERROR_OBJECT (jpeg2000parse, "Unable to map buffer");
     return GST_FLOW_ERROR;
   }
+  gst_byte_reader_init (&reader, map.data, map.size);
 
+  /* try to get from caps */
   if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_NO_CODEC)
     gst_jpeg2000_parse_negotiate (jpeg2000parse, NULL);
 
-  is_j2c = jpeg2000parse->codec_format == GST_JPEG2000_PARSE_J2C;
-
-  gst_byte_reader_init (&reader, map.data, map.size);
-  num_prefix_bytes = GST_JPEG2000_MARKER_SIZE;
-
-  if (is_j2c) {
-    num_prefix_bytes +=
-        GST_JPEG2000_JP2_SIZE_OF_BOX_LEN + GST_JPEG2000_JP2_SIZE_OF_BOX_ID;
+  /* if we can't get from caps, then try to parse */
+  if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_NO_CODEC) {
     /* check for "jp2c" */
     j2c_box_id_offset = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
         GST_MAKE_FOURCC ('j', 'p', '2', 'c'), 0,
         gst_byte_reader_get_remaining (&reader));
+    parsed_j2c_4cc = TRUE;
+    is_j2c = j2c_box_id_offset != -1;
+    /* since we only support j2c and jpc at the moment, we can deduce the codec format */
+    jpeg2000parse->codec_format =
+        is_j2c ? GST_JPEG2000_PARSE_J2C : GST_JPEG2000_PARSE_JPC;
+
+  } else {
+    is_j2c = jpeg2000parse->codec_format == GST_JPEG2000_PARSE_J2C;
+  }
+
+  num_prefix_bytes = GST_JPEG2000_MARKER_SIZE;
+  if (is_j2c) {
+    num_prefix_bytes +=
+        GST_JPEG2000_JP2_SIZE_OF_BOX_LEN + GST_JPEG2000_JP2_SIZE_OF_BOX_ID;
+    /* check for "jp2c" (may have already parsed j2c_box_id_offset if caps are empty) */
+    if (!parsed_j2c_4cc) {
+      j2c_box_id_offset =
+          gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
+          GST_MAKE_FOURCC ('j', 'p', '2', 'c'), 0,
+          gst_byte_reader_get_remaining (&reader));
+    }
 
     if (j2c_box_id_offset == -1) {
       GST_ELEMENT_ERROR (jpeg2000parse, STREAM, DECODE, NULL,
@@ -480,28 +486,46 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   }
 
   current_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (parse));
-  if (!current_caps) {
-    GST_ERROR_OBJECT (jpeg2000parse, "Unable to get current caps");
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto beach;
-  }
+  if (current_caps) {
+    const gchar *colorspace_string = NULL;
+    current_caps_struct = gst_caps_get_structure (current_caps, 0);
+    if (!current_caps_struct) {
+      GST_ERROR_OBJECT (jpeg2000parse,
+          "Unable to get structure of current caps struct");
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto beach;
+    }
 
-  current_caps_struct = gst_caps_get_structure (current_caps, 0);
-  if (!current_caps_struct) {
-    GST_ERROR_OBJECT (jpeg2000parse,
-        "Unable to get structure of current caps struct");
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto beach;
-  }
+    colorspace_string = gst_structure_get_string
+        (current_caps_struct, "colorspace");
+    if (colorspace_string)
+      colorspace = gst_jpeg2000_colorspace_from_string (colorspace_string);
+    sink_sampling_string = gst_structure_get_string
+        (current_caps_struct, "sampling");
+    if (sink_sampling_string)
+      sink_sampling = gst_jpeg2000_sampling_from_string (sink_sampling_string);
 
-  colorspace_string = gst_structure_get_string
-      (current_caps_struct, "colorspace");
-  if (colorspace_string)
-    colorspace = gst_jpeg2000_colorspace_from_string (colorspace_string);
-  sink_sampling_string = gst_structure_get_string
-      (current_caps_struct, "sampling");
-  if (sink_sampling_string)
-    sink_sampling = gst_jpeg2000_sampling_from_string (sink_sampling_string);
+  } else {
+    /* guess color space based on number of components       */
+    if (numcomps == 0 || numcomps > 4) {
+      GST_ERROR_OBJECT (jpeg2000parse,
+          "Unable to guess color space from number of components %d", numcomps);
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto beach;
+    }
+    colorspace =
+        (numcomps >=
+        3) ? GST_JPEG2000_COLORSPACE_RGB : GST_JPEG2000_COLORSPACE_GRAY;
+    if (numcomps == 4) {
+      GST_WARNING_OBJECT (jpeg2000parse, "No caps available: assuming RGBA");
+    } else if (numcomps == 3) {
+      GST_WARNING_OBJECT (jpeg2000parse, "No caps available: assuming RGB");
+    } else if (numcomps == 2) {
+      GST_WARNING_OBJECT (jpeg2000parse,
+          "No caps available: assuming grayscale with alpha");
+    }
+
+  }
 
   for (compno = 0; compno < numcomps; ++compno) {
 
@@ -651,13 +675,15 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
       }
     }
 
-    if (gst_structure_get_fraction (current_caps_struct, "framerate", &fr_num,
+    if (current_caps_struct &&
+        gst_structure_get_fraction (current_caps_struct, "framerate", &fr_num,
             &fr_denom)) {
       gst_caps_set_simple (src_caps, "framerate", GST_TYPE_FRACTION, fr_num,
           fr_denom, NULL);
     } else {
       GST_WARNING_OBJECT (jpeg2000parse, "No framerate set");
     }
+
     if (!gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), src_caps)) {
       GST_ERROR_OBJECT (jpeg2000parse, "Unable to set source caps");
       ret = GST_FLOW_NOT_NEGOTIATED;
@@ -690,6 +716,8 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
           frame_size, eoc_frame_size);
     }
     frame_size = eoc_frame_size;
+  } else {
+    goto beach;
   }
 
   /* clean up and finish frame */
