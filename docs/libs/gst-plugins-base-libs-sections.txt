@@ -3250,6 +3250,7 @@ gst_discoverer_info_get_tags
 gst_discoverer_info_get_toc
 gst_discoverer_info_get_uri
 gst_discoverer_info_get_seekable
+gst_discoverer_info_get_live
 gst_discoverer_info_ref
 gst_discoverer_info_unref
 gst_discoverer_info_to_variant

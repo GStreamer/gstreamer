@@ -1344,6 +1344,11 @@ discoverer_collect (GstDiscoverer * dc)
       }
     }
 
+    if (dc->priv->target_state == GST_STATE_PAUSED)
+      dc->priv->current_info->live = FALSE;
+    else
+      dc->priv->current_info->live = TRUE;
+
     if (dc->priv->current_topology)
       dc->priv->current_info->stream_info = parse_stream_topology (dc,
           dc->priv->current_topology, NULL);
@@ -1833,8 +1838,8 @@ _serialize_info (GstDiscovererInfo * info, GstDiscovererSerializeFlags flags)
     tags_str = gst_tag_list_to_string (info->tags);
 
   ret =
-      g_variant_new ("(mstbms)", info->uri, info->duration, info->seekable,
-      tags_str);
+      g_variant_new ("(mstbmsb)", info->uri, info->duration, info->seekable,
+      tags_str, info->live);
 
   g_free (tags_str);
 
@@ -1961,6 +1966,8 @@ _parse_info (GstDiscovererInfo * info, GVariant * info_variant)
   str = _maybe_get_string_from_tuple (info_variant, 3);
   if (str)
     info->tags = gst_tag_list_new_from_string (str);
+
+  GET_FROM_TUPLE (info_variant, boolean, 4, &info->live);
 }
 
 static void

@@ -47,6 +47,7 @@ EXPORTS
 	gst_discoverer_info_get_missing_elements_installer_details
 	gst_discoverer_info_get_result
 	gst_discoverer_info_get_seekable
+	gst_discoverer_info_get_live
 	gst_discoverer_info_get_stream_info
 	gst_discoverer_info_get_stream_list
 	gst_discoverer_info_get_streams

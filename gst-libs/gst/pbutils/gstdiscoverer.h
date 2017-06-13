@@ -300,6 +300,9 @@ GST_EXPORT
 gboolean                  gst_discoverer_info_get_seekable(const GstDiscovererInfo* info);
 
 GST_EXPORT
+gboolean                  gst_discoverer_info_get_live(const GstDiscovererInfo* info);
+
+GST_EXPORT
 const GstStructure*       gst_discoverer_info_get_misc(const GstDiscovererInfo* info);
 
 GST_EXPORT

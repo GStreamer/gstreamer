@@ -413,6 +413,7 @@ gst_discoverer_info_copy (GstDiscovererInfo * ptr)
   ret->duration = ptr->duration;
   ret->result = ptr->result;
   ret->seekable = ptr->seekable;
+  ret->live = ptr->live;
   if (ptr->misc)
     ret->misc = gst_structure_copy (ptr->misc);
 
@@ -1026,6 +1027,17 @@ DISCOVERER_INFO_ACCESSOR_CODE (duration, GstClockTime, GST_CLOCK_TIME_NONE);
  */
 
 DISCOVERER_INFO_ACCESSOR_CODE (seekable, gboolean, FALSE);
+
+/**
+ * gst_discoverer_info_get_live:
+ * @info: a #GstDiscovererInfo
+ *
+ * Returns: whether the URI is live.
+ *
+ * Since: 1.14
+ */
+
+DISCOVERER_INFO_ACCESSOR_CODE (live, gboolean, FALSE);
 
 /**
  * gst_discoverer_info_get_misc:

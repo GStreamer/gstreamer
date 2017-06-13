@@ -102,6 +102,7 @@ struct _GstDiscovererInfo {
   GstStructure *misc;
   GstTagList *tags;
   GstToc *toc;
+  gboolean live;
   gboolean seekable;
   GPtrArray *missing_elements_details;
 
