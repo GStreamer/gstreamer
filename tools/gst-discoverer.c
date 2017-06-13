@@ -27,6 +27,7 @@
 #include <glib.h>
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/audio/audio.h>
 
 #define MAX_INDENT 40
 
@@ -145,6 +146,33 @@ print_tags_topology (guint depth, const GstTagList * tags)
 }
 
 static gchar *
+format_channel_mask (GstDiscovererAudioInfo * ainfo)
+{
+  GString *s = g_string_sized_new (32);
+  GstAudioChannelPosition position[64];
+  guint channels = gst_discoverer_audio_info_get_channels (ainfo);
+  GEnumClass *enum_class = g_type_class_ref (GST_TYPE_AUDIO_CHANNEL_POSITION);
+  guint i;
+
+  if (channels == 0)
+    goto done;
+
+  gst_audio_channel_positions_from_mask (channels,
+      gst_discoverer_audio_info_get_channel_mask (ainfo), position);
+
+  for (i = 0; i < channels; i++) {
+    GEnumValue *value = g_enum_get_value (enum_class, position[i]);
+    my_g_string_append_printf (s, 0, "%s%s", value->value_nick,
+        i + 1 == channels ? "" : ", ");
+  }
+
+  g_type_class_unref (enum_class);
+
+done:
+  return g_string_free (s, FALSE);
+}
+
+static gchar *
 gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
     guint depth)
 {
@@ -153,6 +181,7 @@ gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
   const gchar *ctmp;
   int len = 400;
   const GstTagList *tags;
+  gchar *channel_positions;
 
   g_return_val_if_fail (info != NULL, NULL);
 
@@ -164,8 +193,12 @@ gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
   ctmp = gst_discoverer_audio_info_get_language (audio_info);
   my_g_string_append_printf (s, depth, "Language: %s\n",
       ctmp ? ctmp : "<unknown>");
-  my_g_string_append_printf (s, depth, "Channels: %u\n",
-      gst_discoverer_audio_info_get_channels (audio_info));
+
+  channel_positions = format_channel_mask (audio_info);
+  my_g_string_append_printf (s, depth, "Channels: %u (%s)\n",
+      gst_discoverer_audio_info_get_channels (audio_info), channel_positions);
+  g_free (channel_positions);
+
   my_g_string_append_printf (s, depth, "Sample rate: %u\n",
       gst_discoverer_audio_info_get_sample_rate (audio_info));
   my_g_string_append_printf (s, depth, "Depth: %u\n",
