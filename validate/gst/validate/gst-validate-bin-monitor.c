@@ -203,6 +203,22 @@ gst_validate_bin_monitor_new (GstBin * bin, GstValidateRunner * runner,
   return monitor;
 }
 
+static void
+gst_validate_bin_child_added_overrides (GstValidateMonitor * monitor,
+    GstElement * element)
+{
+  GList *iter;
+
+  GST_VALIDATE_MONITOR_OVERRIDES_LOCK (monitor);
+  for (iter = GST_VALIDATE_MONITOR_OVERRIDES (monitor).head; iter;
+      iter = g_list_next (iter)) {
+    GstValidateOverride *override = iter->data;
+
+    gst_validate_override_element_added_handler (override, monitor, element);
+  }
+  GST_VALIDATE_MONITOR_OVERRIDES_UNLOCK (monitor);
+}
+
 static gboolean
 gst_validate_bin_monitor_setup (GstValidateMonitor * monitor)
 {
@@ -279,6 +295,8 @@ gst_validate_bin_monitor_wrap_element (GstValidateBinMonitor * monitor,
       GST_VALIDATE_ELEMENT_MONITOR_CAST (gst_validate_monitor_factory_create
       (GST_OBJECT_CAST (element), runner, GST_VALIDATE_MONITOR_CAST (monitor)));
   g_return_if_fail (element_monitor != NULL);
+  gst_validate_bin_child_added_overrides (GST_VALIDATE_MONITOR (monitor),
+      element);
 
   GST_VALIDATE_MONITOR_LOCK (monitor);
   monitor->element_monitors = g_list_prepend (monitor->element_monitors,

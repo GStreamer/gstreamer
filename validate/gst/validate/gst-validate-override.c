@@ -289,6 +289,27 @@ gst_validate_override_setcaps_handler (GstValidateOverride * override,
 }
 
 /**
+ * gst_validate_override_element_added_handler: (skip):
+ */
+void
+gst_validate_override_element_added_handler (GstValidateOverride * override,
+    GstValidateMonitor * monitor, GstElement * child)
+{
+  if (override->element_added_handler)
+    override->element_added_handler (override, monitor, child);
+}
+
+/**
+ * gst_validate_override_set_element_added_handler: (skip):
+ */
+void
+gst_validate_override_set_element_added_handler (GstValidateOverride * override,
+    GstValidateOverrideElementAddedHandler func)
+{
+  override->element_added_handler = func;
+}
+
+/**
  * gst_validate_override_can_attach: (skip):
  */
 gboolean
