@@ -2328,8 +2328,7 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
     /* MP1 : Use MP3 for decoding */
     /* MP2 : Use MP3 for decoding */
     /* Theora: Use libtheora based theoradec */
-    if (!strcmp (in_plugin->name, "gif") ||
-        !strcmp (in_plugin->name, "theora") ||
+    if (!strcmp (in_plugin->name, "theora") ||
         !strcmp (in_plugin->name, "mpeg1video") ||
         strstr (in_plugin->name, "crystalhd") != NULL ||
         !strcmp (in_plugin->name, "ass") ||

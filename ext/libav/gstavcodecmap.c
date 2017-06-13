@@ -1621,8 +1621,8 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
 
     case AV_CODEC_ID_GIF:
       caps =
-          gst_ff_vid_caps_new (context, NULL, codec_id, encode, "image/gif",
-          NULL);
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode,
+          "image/gst-libav-gif", "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
 
     case AV_CODEC_ID_PNG:
