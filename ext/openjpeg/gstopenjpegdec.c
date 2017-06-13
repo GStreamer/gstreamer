@@ -228,7 +228,9 @@ fill_frame_packed8_4 (GstVideoFrame * frame, opj_image_t * image)
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
+      /* alpha, from 4'th input channel */
       tmp[0] = off[3] + *data_in[3];
+      /* colour channels */
       tmp[1] = off[0] + *data_in[0];
       tmp[2] = off[1] + *data_in[1];
       tmp[3] = off[2] + *data_in[2];
@@ -269,7 +271,9 @@ fill_frame_packed16_4 (GstVideoFrame * frame, opj_image_t * image)
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
+      /* alpha, from 4'th input channel */
       tmp[0] = off[3] + (*data_in[3] << shift[3]);
+      /* colour channels */
       tmp[1] = off[0] + (*data_in[0] << shift[0]);
       tmp[2] = off[1] + (*data_in[1] << shift[1]);
       tmp[3] = off[2] + (*data_in[2] << shift[2]);
@@ -357,6 +361,86 @@ fill_frame_packed16_3 (GstVideoFrame * frame, opj_image_t * image)
     data_out += dstride;
   }
 }
+
+/* for grayscale with alpha */
+static void
+fill_frame_packed8_2 (GstVideoFrame * frame, opj_image_t * image)
+{
+  gint x, y, w, h, c;
+  guint8 *data_out, *tmp;
+  const gint *data_in[2];
+  gint dstride;
+  gint off[2];
+
+  w = GST_VIDEO_FRAME_WIDTH (frame);
+  h = GST_VIDEO_FRAME_HEIGHT (frame);
+  data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+  for (c = 0; c < 2; c++) {
+    data_in[c] = image->comps[c].data;
+    off[c] = 0x80 * image->comps[c].sgnd;
+  };
+
+  for (y = 0; y < h; y++) {
+    tmp = data_out;
+
+    for (x = 0; x < w; x++) {
+      /* alpha, from 2nd input channel */
+      tmp[0] = off[1] + *data_in[1];
+      /* luminance, from first input channel */
+      tmp[1] = off[0] + *data_in[0];
+      tmp[2] = tmp[1];
+      tmp[3] = tmp[1];
+      data_in[0]++;
+      data_in[1]++;
+      tmp += 4;
+    }
+    data_out += dstride;
+  }
+}
+
+/* for grayscale with alpha */
+static void
+fill_frame_packed16_2 (GstVideoFrame * frame, opj_image_t * image)
+{
+  gint x, y, w, h, c;
+  guint16 *data_out, *tmp;
+  const gint *data_in[2];
+  gint dstride;
+  gint shift[2], off[2];
+
+  w = GST_VIDEO_FRAME_WIDTH (frame);
+  h = GST_VIDEO_FRAME_HEIGHT (frame);
+  data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
+
+  for (c = 0; c < 2; c++) {
+    data_in[c] = image->comps[c].data;
+    off[c] = (1 << (image->comps[c].prec - 1)) * image->comps[c].sgnd;
+    shift[c] =
+        MAX (MIN (GST_VIDEO_FRAME_COMP_DEPTH (frame, c) - image->comps[c].prec,
+            8), 0);
+  }
+
+  for (y = 0; y < h; y++) {
+    tmp = data_out;
+
+    for (x = 0; x < w; x++) {
+      /* alpha, from 2nd input channel */
+      tmp[0] = off[1] + (*data_in[1] << shift[1]);
+      /* luminance, from first input channel  */
+      tmp[1] = off[0] + (*data_in[0] << shift[0]);
+      tmp[2] = tmp[1];
+      tmp[3] = tmp[1];
+      tmp += 4;
+      data_in[0]++;
+      data_in[1]++;
+    }
+    data_out += dstride;
+  }
+}
+
 
 static void
 fill_frame_planar8_1 (GstVideoFrame * frame, opj_image_t * image)
@@ -642,6 +726,12 @@ get_highest_prec (opj_image_t * image)
   return ret;
 }
 
+/* note on handling alpha channel:
+ *
+ *  image->comps[c].alpha:  value of 0 indicates that c is a colour channel,
+ *  value of 1 indicates that c is a non-pre-multiplied alpha channel
+ *  and value of 2 indicates that c is a  pre-multiplied alpha channel
+ *  Also, we only support single alpha channel, as last component */
 static GstFlowReturn
 gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
 {
@@ -654,19 +744,44 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
   switch (image->color_space) {
     case OPJ_CLRSPC_SRGB:
       if (image->numcomps == 4) {
+        guint8 i = 0;
+        guint32 num_alpha = 0;
+        guint8 alpha_channel = 0;
+        guint8 alpha_val = 0;
+        for (i = 0; i < 4; ++i) {
+          if (image->comps[i].alpha) {
+            num_alpha++;
+            alpha_channel = i;
+            alpha_val = image->comps[i].alpha;
+          }
+        }
+        if (num_alpha != 1) {
+          GST_ERROR_OBJECT (self, "Unsupported number of alpha channels %d",
+              num_alpha);
+          return GST_FLOW_NOT_NEGOTIATED;
+        }
+        if (alpha_channel != 3) {
+          GST_ERROR_OBJECT (self, "Alpha channel must be last channel");
+          return GST_FLOW_NOT_NEGOTIATED;
+        }
+        if (alpha_val != 1) {
+          GST_WARNING_OBJECT (self,
+              "Alpha channel is pre-multiplied, currently not supported. Will be treated as non-pre-multiplied");
+        }
+
         if (image->comps[0].dx != 1 || image->comps[0].dy != 1 ||
             image->comps[1].dx != 1 || image->comps[1].dy != 1 ||
             image->comps[2].dx != 1 || image->comps[2].dy != 1 ||
             image->comps[3].dx != 1 || image->comps[3].dy != 1) {
-          GST_ERROR_OBJECT (self, "Sub-sampling for RGB not supported");
+          GST_ERROR_OBJECT (self, "Sub-sampling for RGBA not supported");
           return GST_FLOW_NOT_NEGOTIATED;
         }
 
         if (get_highest_prec (image) == 8) {
           self->fill_frame = fill_frame_packed8_4;
           format =
-              reverse_rgb_channels (self->sampling) ? GST_VIDEO_FORMAT_BGRA :
-              GST_VIDEO_FORMAT_RGBA;
+              reverse_rgb_channels (self->sampling) ? GST_VIDEO_FORMAT_ABGR :
+              GST_VIDEO_FORMAT_ARGB;
 
         } else if (get_highest_prec (image) <= 16) {
           self->fill_frame = fill_frame_packed16_4;
@@ -724,6 +839,49 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
               get_highest_prec (image));
           return GST_FLOW_NOT_NEGOTIATED;
         }
+      } else if (image->numcomps == 2) {
+        guint8 i = 0;
+        guint32 num_alpha = 0;
+        guint8 alpha_channel = 0;
+        guint8 alpha_val = 0;
+        for (i = 0; i < 2; ++i) {
+          if (image->comps[i].alpha) {
+            num_alpha++;
+            alpha_channel = i;
+            alpha_val = image->comps[i].alpha;
+          }
+        }
+        if (num_alpha != 1) {
+          GST_ERROR_OBJECT (self, "Unsupported number of alpha channels %d",
+              num_alpha);
+          return GST_FLOW_NOT_NEGOTIATED;
+        }
+        if (alpha_channel != 1) {
+          GST_ERROR_OBJECT (self, "Alpha channel must be last channel");
+          return GST_FLOW_NOT_NEGOTIATED;
+        }
+        if (alpha_val != 1) {
+          GST_WARNING_OBJECT (self,
+              "Alpha channel is pre-multiplied, currently not supported. Will be treated as non-pre-multiplied");
+        }
+
+
+        if ((image->comps[0].dx != 1 && image->comps[0].dy != 1) ||
+            (image->comps[1].dx != 1 && image->comps[1].dy != 1)) {
+          GST_ERROR_OBJECT (self, "Sub-sampling for GRAY not supported");
+          return GST_FLOW_NOT_NEGOTIATED;
+        }
+        if (get_highest_prec (image) == 8) {
+          self->fill_frame = fill_frame_packed8_2;
+          format = GST_VIDEO_FORMAT_ARGB;
+        } else if (get_highest_prec (image) <= 16) {
+          self->fill_frame = fill_frame_packed16_2;
+          format = GST_VIDEO_FORMAT_ARGB64;
+        } else {
+          GST_ERROR_OBJECT (self, "Unsupported depth %d",
+              get_highest_prec (image));
+          return GST_FLOW_NOT_NEGOTIATED;
+        }
       } else {
         GST_ERROR_OBJECT (self, "Unsupported number of GRAY components: %d",
             image->numcomps);
@@ -750,6 +908,31 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
       }
 
       if (image->numcomps == 4) {
+        guint8 i = 0;
+        guint32 num_alpha = 0;
+        guint8 alpha_val = 0;
+        guint8 alpha_channel = 0;
+        for (i = 0; i < 4; ++i) {
+          if (image->comps[i].alpha) {
+            num_alpha++;
+            alpha_channel = i;
+            alpha_val = image->comps[i].alpha;
+          }
+        }
+        if (num_alpha != 1) {
+          GST_ERROR_OBJECT (self, "Unsupported number of alpha channels %d",
+              num_alpha);
+          return GST_FLOW_NOT_NEGOTIATED;
+        }
+        if (alpha_channel != 3) {
+          GST_ERROR_OBJECT (self, "Alpha channel must be last channel");
+          return GST_FLOW_NOT_NEGOTIATED;
+        }
+        if (alpha_val != 1) {
+          GST_WARNING_OBJECT (self,
+              "Alpha channel is pre-multiplied, currently not supported. Will be treated as non-pre-multiplied");
+        }
+
         if (image->comps[3].dx != 1 || image->comps[3].dy != 1) {
           GST_ERROR_OBJECT (self, "Sub-sampling of alpha plane not supported");
           return GST_FLOW_NOT_NEGOTIATED;
