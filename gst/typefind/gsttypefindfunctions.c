@@ -3189,6 +3189,100 @@ jp2_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+
+static GstStaticCaps jpc_caps = GST_STATIC_CAPS ("image/x-jpc");
+
+#define JPC_CAPS gst_static_caps_get(&jpc_caps)
+
+static void
+jpc_type_find (GstTypeFind * tf, gpointer unused)
+{
+  gboolean found_cod = FALSE;
+  gboolean found_qcd = FALSE;
+  gboolean found_sot = FALSE;
+  const guint8 *data;
+  gint offset = 0;
+  const guint8 soc_siz[] = { 0xff, 0x4f, 0xff, 0x51 };
+
+#define GST_TYPE_FIND_JPC_MARKER_SOT  0xFF90
+#define GST_TYPE_FIND_JPC_MARKER_COD  0xFF52
+#define GST_TYPE_FIND_JPC_MARKER_QCD  0xFF5C
+#define GST_TYPE_FIND_JPC_MARKER_COC  0xFF53
+#define GST_TYPE_FIND_JPC_MARKER_RGN  0xFF5E
+#define GST_TYPE_FIND_JPC_MARKER_QCC  0xFF5D
+#define GST_TYPE_FIND_JPC_MARKER_POC  0xFF5F
+#define GST_TYPE_FIND_JPC_MARKER_PLM  0xFF57
+#define GST_TYPE_FIND_JPC_MARKER_PPM  0xFF60
+#define GST_TYPE_FIND_JPC_MARKER_TLM  0xFF55
+#define GST_TYPE_FIND_JPC_MARKER_CRG  0xFF63
+#define GST_TYPE_FIND_JPC_MARKER_COM  0xFF64
+#define GST_TYPE_FIND_JPC_MARKER_CBD  0xFF78
+#define GST_TYPE_FIND_JPC_MARKER_MCC  0xFF75
+#define GST_TYPE_FIND_JPC_MARKER_MCT  0xFF74
+#define GST_TYPE_FIND_JPC_MARKER_MCO  0xFF77
+
+
+  /* SOC marker + SIZ marker */
+  if ((data = gst_type_find_peek (tf, 0, 4)) != NULL) {
+    if (memcmp (data, soc_siz, 4) != 0)
+      return;
+    offset += 4;
+  } else {
+    return;
+  }
+
+  while (!found_sot) {
+
+    /* skip actual marker data */
+    if ((data = gst_type_find_peek (tf, offset, 2)) != NULL) {
+      offset += GST_READ_UINT16_BE (data);
+    } else {
+      return;
+    }
+
+    /* read marker */
+    if ((data = gst_type_find_peek (tf, offset, 2)) != NULL) {
+      guint16 marker = GST_READ_UINT16_BE (data);
+      switch (marker) {
+        case GST_TYPE_FIND_JPC_MARKER_SOT:
+          found_sot = TRUE;
+          break;
+        case GST_TYPE_FIND_JPC_MARKER_COD:
+          found_cod = TRUE;
+          break;
+        case GST_TYPE_FIND_JPC_MARKER_QCD:
+          found_qcd = TRUE;
+          break;
+          /* optional header markers */
+        case GST_TYPE_FIND_JPC_MARKER_COC:
+        case GST_TYPE_FIND_JPC_MARKER_RGN:
+        case GST_TYPE_FIND_JPC_MARKER_QCC:
+        case GST_TYPE_FIND_JPC_MARKER_POC:
+        case GST_TYPE_FIND_JPC_MARKER_PLM:
+        case GST_TYPE_FIND_JPC_MARKER_PPM:
+        case GST_TYPE_FIND_JPC_MARKER_TLM:
+        case GST_TYPE_FIND_JPC_MARKER_CRG:
+        case GST_TYPE_FIND_JPC_MARKER_COM:
+        case GST_TYPE_FIND_JPC_MARKER_CBD:
+        case GST_TYPE_FIND_JPC_MARKER_MCC:
+        case GST_TYPE_FIND_JPC_MARKER_MCT:
+        case GST_TYPE_FIND_JPC_MARKER_MCO:
+          break;
+          /* unrecognized marker */
+        default:
+          return;
+      }
+      offset += 2;
+    } else {
+      return;
+    }
+  }
+
+  if (found_cod && found_qcd && found_sot)
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, JPC_CAPS);
+}
+
+
 /*** video/quicktime ***/
 
 static GstStaticCaps qt_caps = GST_STATIC_CAPS ("video/quicktime");
@@ -5729,6 +5823,8 @@ plugin_init (GstPlugin * plugin)
       qtif_type_find, "qif,qtif,qti", QTIF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "image/jp2", GST_RANK_PRIMARY,
       jp2_type_find, "jp2", JP2_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "image/x-jpc", GST_RANK_PRIMARY,
+      jpc_type_find, "jpc,j2k", JPC_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mj2", GST_RANK_PRIMARY,
       jp2_type_find, "mj2", MJ2_CAPS, NULL, NULL);
 
