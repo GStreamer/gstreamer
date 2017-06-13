@@ -122,7 +122,7 @@ gst_structure_validate_name (const gchar * name)
   g_return_val_if_fail (name != NULL, FALSE);
 
   if (G_UNLIKELY (!g_ascii_isalpha (*name))) {
-    GST_WARNING ("Invalid character '%c' at offset 0 in structure name: %s",
+    GST_INFO ("Invalid character '%c' at offset 0 in structure name: %s",
         *name, name);
     return FALSE;
   }
@@ -131,8 +131,11 @@ gst_structure_validate_name (const gchar * name)
   s = &name[1];
   while (*s && (g_ascii_isalnum (*s) || strchr ("/-_.:+", *s) != NULL))
     s++;
+  if (*s == ',')
+    return TRUE;
+
   if (G_UNLIKELY (*s != '\0')) {
-    GST_WARNING ("Invalid character '%c' at offset %" G_GUINTPTR_FORMAT " in"
+    GST_INFO ("Invalid character '%c' at offset %" G_GUINTPTR_FORMAT " in"
         " structure name: %s", *s, ((guintptr) s - (guintptr) name), name);
     return FALSE;
   }
