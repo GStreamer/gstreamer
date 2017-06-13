@@ -365,6 +365,8 @@ print_properties (GstDiscovererInfo * info, gint tab)
       GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
   g_print ("%*sSeekable: %s\n", tab + 1, " ",
       (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
+  g_print ("%*sLive: %s\n", tab + 1, " ",
+      (gst_discoverer_info_get_live (info) ? "yes" : "no"));
   if ((tags = gst_discoverer_info_get_tags (info))) {
     g_print ("%*sTags: \n", tab + 1, " ");
     gst_tag_list_foreach (tags, print_tag_foreach, GUINT_TO_POINTER (tab + 2));
