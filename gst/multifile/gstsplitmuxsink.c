@@ -1448,6 +1448,13 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
         break;
     }
     return GST_PAD_PROBE_PASS;
+  } else if (info->type & GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM) {
+    switch (GST_QUERY_TYPE (GST_QUERY (info->data))) {
+      case GST_QUERY_ALLOCATION:
+        return GST_PAD_PROBE_DROP;
+      default:
+        return GST_PAD_PROBE_PASS;
+    }
   }
 
   buf = gst_pad_probe_info_get_buffer (info);
@@ -1823,7 +1830,8 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
   mq_stream_ctx_ref (ctx);
   ctx->sink_pad_block_id =
       gst_pad_add_probe (q_sink,
-      GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH,
+      GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH |
+      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM,
       (GstPadProbeCallback) handle_mq_input, ctx, (GDestroyNotify)
       _pad_block_destroy_sink_notify);
 
