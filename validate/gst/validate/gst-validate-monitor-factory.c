@@ -85,7 +85,5 @@ gst_validate_monitor_factory_create (GstObject * target,
     g_assert_not_reached ();
   }
 
-  g_object_set_data ((GObject *) target, "validate-monitor", monitor);
-  gst_validate_override_registry_attach_overrides (monitor);
   return monitor;
 }

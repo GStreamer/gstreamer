@@ -27,6 +27,7 @@
 
 #include "gst-validate-internal.h"
 #include "gst-validate-monitor.h"
+#include "gst-validate-override-registry.h"
 
 /**
  * SECTION:gst-validate-monitor
@@ -180,6 +181,7 @@ static GObject *
 gst_validate_monitor_constructor (GType type, guint n_construct_params,
     GObjectConstructParam * construct_params)
 {
+  GstObject *target;
   GstValidateMonitor *monitor =
       GST_VALIDATE_MONITOR_CAST (G_OBJECT_CLASS (parent_class)->constructor
       (type,
@@ -200,7 +202,13 @@ gst_validate_monitor_constructor (GType type, guint n_construct_params,
     }
   }
 
+  gst_validate_override_registry_attach_overrides (monitor);
   gst_validate_monitor_setup (monitor);
+
+  target = gst_validate_monitor_get_target (monitor);
+  g_object_set_data ((GObject *) target, "validate-monitor", monitor);
+  gst_object_unref (target);
+
   return (GObject *) monitor;
 }
 
