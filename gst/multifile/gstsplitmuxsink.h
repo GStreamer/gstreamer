@@ -75,12 +75,14 @@ typedef struct _MqStreamCtx
   guint q_overrun_id;
   guint sink_pad_block_id;
   guint src_pad_block_id;
+  gulong fragment_block_id;
 
   gboolean is_reference;
 
   gboolean flushing;
   gboolean in_eos;
   gboolean out_eos;
+  gboolean out_eos_async_done;
   gboolean need_unblock;
   gboolean caps_change;
 
@@ -172,6 +174,13 @@ struct _GstSplitMuxSink
   gboolean muxer_has_reserved_props;
 
   gboolean split_now;
+
+  /* Async finalize options */
+  gboolean async_finalize;
+  gchar *muxer_factory;
+  GstStructure *muxer_properties;
+  gchar *sink_factory;
+  GstStructure *sink_properties;
 };
 
 struct _GstSplitMuxSinkClass
