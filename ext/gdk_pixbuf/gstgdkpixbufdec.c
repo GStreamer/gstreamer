@@ -38,7 +38,7 @@ static GstStaticPadTemplate gst_gdk_pixbuf_dec_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/png; "
         /* "image/jpeg; " disabled because we can't handle MJPEG */
-        "image/gif; "
+        /*"image/gif; " disabled because we can't handle animated gifs */
         "image/x-icon; "
         "application/x-navi-animation; "
         "image/x-cmu-raster; "
