@@ -155,6 +155,9 @@ gst_uri_error_quark (void)
   return g_quark_from_static_string ("gst-uri-error-quark");
 }
 
+#define HEX_ESCAPE '%'
+
+#ifndef GST_REMOVE_DEPRECATED
 static const guchar acceptable[96] = {  /* X0   X1   X2   X3   X4   X5   X6   X7   X8   X9   XA   XB   XC   XD   XE   XF */
   0x00, 0x3F, 0x20, 0x20, 0x20, 0x00, 0x2C, 0x3F, 0x3F, 0x3F, 0x3F, 0x22, 0x20, 0x3F, 0x3F, 0x1C,       /* 2X  !"#$%&'()*+,-./   */
   0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x38, 0x20, 0x20, 0x2C, 0x20, 0x2C,       /* 3X 0123456789:;<=>?   */
@@ -173,8 +176,6 @@ typedef enum
   UNSAFE_HOST = 0x10,           /* Allows '/' and ':' and '@' */
   UNSAFE_SLASHES = 0x20         /* Allows all characters except for '/' and '%' */
 } UnsafeCharacterSet;
-
-#define HEX_ESCAPE '%'
 
 /*  Escape undesirable characters using %
  *  -------------------------------------
@@ -248,21 +249,7 @@ escape_string_internal (const gchar * string, UnsafeCharacterSet mask)
 
   return result;
 }
-
-/* escape_string:
- * @string: string to be escaped
- *
- * Escapes @string, replacing any and all special characters
- * with equivalent escape sequences.
- *
- * Return value: a newly allocated string equivalent to @string
- * but with all special characters escaped
- **/
-static gchar *
-escape_string (const gchar * string)
-{
-  return escape_string_internal (string, UNSAFE_ALL);
-}
+#endif
 
 static int
 hex_to_int (gchar c)
@@ -500,6 +487,10 @@ gst_uri_get_location (const gchar * uri)
   return unescaped;
 }
 
+#ifdef GST_DISABLE_DEPRECATED
+gchar *gst_uri_construct (const gchar * protocol, const gchar * location);
+#endif
+
 /**
  * gst_uri_construct:
  * @protocol: Protocol for URI
@@ -512,6 +503,7 @@ gst_uri_get_location (const gchar * uri)
  * Returns: (transfer full): a new string for this URI. Returns %NULL if the
  *     given URI protocol is not valid, or the given location is %NULL.
  */
+#ifndef GST_REMOVE_DEPRECATED
 gchar *
 gst_uri_construct (const gchar * protocol, const gchar * location)
 {
@@ -522,13 +514,14 @@ gst_uri_construct (const gchar * protocol, const gchar * location)
   g_return_val_if_fail (location != NULL, NULL);
 
   proto_lowercase = g_ascii_strdown (protocol, -1);
-  escaped = escape_string (location);
+  escaped = escape_string_internal (location, UNSAFE_PATH);
   retval = g_strdup_printf ("%s://%s", proto_lowercase, escaped);
   g_free (escaped);
   g_free (proto_lowercase);
 
   return retval;
 }
+#endif
 
 typedef struct
 {

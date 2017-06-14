@@ -75,6 +75,43 @@ GST_START_TEST (test_uri_get_location)
 
 GST_END_TEST;
 
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gchar *gst_uri_construct (const gchar * protocol, const gchar * location);
+#endif
+
+GST_START_TEST (test_gst_uri_construct)
+{
+  gchar *l;
+
+  /* URI with no protocol or empty protocol should return empty string */
+  ASSERT_CRITICAL (l = gst_uri_construct (NULL, "/path/to/file"));
+  fail_unless (l == NULL);
+  ASSERT_CRITICAL (l = gst_uri_construct ("", "/path/to/file"));
+  fail_unless (l == NULL);
+
+  /* URI with no location should return empty string */
+  ASSERT_CRITICAL (l = gst_uri_construct ("protocol", NULL));
+  fail_unless (l == NULL);
+
+  /* check the protocol for validity */
+  l = gst_uri_construct ("protocol1234567890+-.", "somefile");
+  fail_unless (l != NULL);
+  fail_unless_equals_string (l, "protocol1234567890+-.://somefile");
+  g_free (l);
+
+  /* check the location for correct handling */
+  l = gst_uri_construct ("aprotocol",
+      "/path+ to/some/file%d?akey=aval&key2=val2");
+  fail_unless (l != NULL);
+  fail_unless_equals_string (l,
+      "aprotocol:///path%2B%20to/some/file%25d?akey=aval&key2=val2");
+  g_free (l);
+}
+
+GST_END_TEST;
+#endif
+
 #ifdef G_OS_WIN32
 
 GST_START_TEST (test_win32_uri)
@@ -1065,6 +1102,9 @@ gst_uri_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_protocol_case);
   tcase_add_test (tc_chain, test_uri_get_location);
+#ifndef GST_REMOVE_DEPRECATED
+  tcase_add_test (tc_chain, test_gst_uri_construct);
+#endif
   tcase_add_test (tc_chain, test_uri_misc);
   tcase_add_test (tc_chain, test_element_make_from_uri);
 #ifdef G_OS_WIN32
