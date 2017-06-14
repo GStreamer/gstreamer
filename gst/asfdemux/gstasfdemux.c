@@ -1648,7 +1648,7 @@ gst_asf_demux_find_stream_with_complete_payload (GstASFDemux * demux)
 
         if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (payload->ts) &&
                 (payload->ts < demux->segment.start))) {
-          if (G_UNLIKELY ((!demux->keyunit_sync) && (!demux->accurate)
+          if (G_UNLIKELY ((demux->keyunit_sync) && (!demux->accurate)
                   && payload->keyframe)) {
             GST_DEBUG_OBJECT (stream->pad,
                 "Found keyframe, updating segment start to %" GST_TIME_FORMAT,
@@ -1732,7 +1732,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
       }
 
       /* FIXME : only if ACCURATE ! */
-      if (G_LIKELY (!demux->keyunit_sync && !demux->accurate
+      if (G_LIKELY (demux->keyunit_sync && !demux->accurate
               && (GST_CLOCK_TIME_IS_VALID (payload->ts)))
           && !GST_ASF_DEMUX_IS_REVERSE_PLAYBACK (demux->segment)) {
         GST_DEBUG ("Adjusting newsegment start to %" GST_TIME_FORMAT,
