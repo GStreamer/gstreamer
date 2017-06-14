@@ -966,6 +966,9 @@ GST_EXPORT
 const gchar *           gst_element_state_change_return_get_name (GstStateChangeReturn state_ret);
 
 GST_EXPORT
+const gchar *           gst_state_change_get_name       (GstStateChange transition);
+
+GST_EXPORT
 gboolean                gst_element_link                (GstElement *src, GstElement *dest);
 
 GST_EXPORT

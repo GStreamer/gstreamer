@@ -1257,6 +1257,46 @@ gst_element_state_change_return_get_name (GstStateChangeReturn state_ret)
   }
 }
 
+/**
+ * gst_state_change_get_name:
+ * @transition: a #GstStateChange to get the name of.
+ *
+ * Gets a string representing the given state transition.
+ *
+ * Returns: (transfer none): a string with the name of the state
+ *    result.
+ *
+ * Since: 1.14
+ */
+const gchar *
+gst_state_change_get_name (GstStateChange transition)
+{
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      return "NULL->READY";
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      return "READY->PAUSED";
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      return "PAUSED->PLAYING";
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      return "PLAYING->PAUSED";
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      return "PAUSED->READY";
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      return "READY->NULL";
+    case GST_STATE_CHANGE_NULL_TO_NULL:
+      return "NULL->NULL";
+    case GST_STATE_CHANGE_READY_TO_READY:
+      return "READY->READY";
+    case GST_STATE_CHANGE_PAUSED_TO_PAUSED:
+      return "PAUSED->PAUSED";
+    case GST_STATE_CHANGE_PLAYING_TO_PLAYING:
+      return "PLAYING->PLAYING";
+  }
+
+  return "Unknown state return";
+}
+
 
 static gboolean
 gst_element_factory_can_accept_all_caps_in_direction (GstElementFactory *

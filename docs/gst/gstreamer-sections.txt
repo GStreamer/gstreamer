@@ -929,6 +929,7 @@ gst_element_state_get_name
 gst_element_state_change_return_get_name
 gst_element_sync_state_with_parent
 gst_element_change_state
+gst_state_change_get_name
 
 <SUBSECTION element-messages>
 gst_element_message_full
