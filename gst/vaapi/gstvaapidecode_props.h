@@ -28,8 +28,18 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstVaapiDecodeH264Private GstVaapiDecodeH264Private;
+
+struct _GstVaapiDecodeH264Private
+{
+  gboolean is_low_latency;
+};
+
 void
 gst_vaapi_decode_h264_install_properties (GObjectClass * klass);
+
+GstVaapiDecodeH264Private *
+gst_vaapi_decode_h264_get_instance_private (gpointer self);
 
 G_END_DECLS
 
