@@ -1278,6 +1278,8 @@ gst_vaapi_decoder_h264_reset (GstVaapiDecoder * base_decoder)
   g_free (priv->prev_frames);
   priv->prev_frames = NULL;
   priv->prev_frames_alloc = 0;
+  gst_vaapi_parser_info_h264_replace (&priv->active_pps, NULL);
+  gst_vaapi_parser_info_h264_replace (&priv->active_sps, NULL);
 
   priv->profile = GST_VAAPI_PROFILE_UNKNOWN;
   priv->entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
