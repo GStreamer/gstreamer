@@ -1023,7 +1023,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_BFRAMES,
       g_param_spec_uint ("bframes", "B-Frames",
           "Number of B-frames between I and P",
-          0, 4, ARG_BFRAMES_DEFAULT,
+          0, 16, ARG_BFRAMES_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":bframes=%d", ARG_BFRAMES_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_B_ADAPT,
