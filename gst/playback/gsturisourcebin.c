@@ -2945,8 +2945,11 @@ gst_uri_source_bin_change_state (GstElement * element,
         ret = gst_element_set_state (urisrc->source, GST_STATE_PAUSED);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto setup_failed;
+
       if (ret == GST_STATE_CHANGE_SUCCESS)
         ret = GST_STATE_CHANGE_ASYNC;
+      else if (ret == GST_STATE_CHANGE_NO_PREROLL)
+        do_async_done (urisrc);
 
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
