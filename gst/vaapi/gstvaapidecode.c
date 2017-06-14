@@ -104,31 +104,33 @@ struct _GstVaapiDecoderMap
   guint rank;
   const gchar *name;
   const gchar *caps_str;
+
+  void (*install_properties) (GObjectClass * klass);
 };
 
 static const GstVaapiDecoderMap vaapi_decode_map[] = {
 #if USE_JPEG_DECODER
-  {GST_VAAPI_CODEC_JPEG, GST_RANK_MARGINAL, "jpeg", "image/jpeg"},
+  {GST_VAAPI_CODEC_JPEG, GST_RANK_MARGINAL, "jpeg", "image/jpeg", NULL},
 #endif
   {GST_VAAPI_CODEC_MPEG2, GST_RANK_PRIMARY, "mpeg2",
-      "video/mpeg, mpegversion=2, systemstream=(boolean)false"},
+      "video/mpeg, mpegversion=2, systemstream=(boolean)false", NULL},
   {GST_VAAPI_CODEC_MPEG4, GST_RANK_PRIMARY, "mpeg4",
-      "video/mpeg, mpegversion=4"},
-  {GST_VAAPI_CODEC_H263, GST_RANK_PRIMARY, "h263", "video/x-h263"},
-  {GST_VAAPI_CODEC_H264, GST_RANK_PRIMARY, "h264", "video/x-h264"},
+      "video/mpeg, mpegversion=4", NULL},
+  {GST_VAAPI_CODEC_H263, GST_RANK_PRIMARY, "h263", "video/x-h263", NULL},
+  {GST_VAAPI_CODEC_H264, GST_RANK_PRIMARY, "h264", "video/x-h264", NULL},
   {GST_VAAPI_CODEC_VC1, GST_RANK_PRIMARY, "vc1",
-      "video/x-wmv, wmvversion=3, format={WMV3,WVC1}"},
+      "video/x-wmv, wmvversion=3, format={WMV3,WVC1}", NULL},
 #if USE_VP8_DECODER
-  {GST_VAAPI_CODEC_VP8, GST_RANK_PRIMARY, "vp8", "video/x-vp8"},
+  {GST_VAAPI_CODEC_VP8, GST_RANK_PRIMARY, "vp8", "video/x-vp8", NULL},
 #endif
 #if USE_VP9_DECODER
-  {GST_VAAPI_CODEC_VP9, GST_RANK_PRIMARY, "vp9", "video/x-vp9"},
+  {GST_VAAPI_CODEC_VP9, GST_RANK_PRIMARY, "vp9", "video/x-vp9", NULL},
 #endif
 #if USE_H265_DECODER
-  {GST_VAAPI_CODEC_H265, GST_RANK_PRIMARY, "h265", "video/x-h265"},
+  {GST_VAAPI_CODEC_H265, GST_RANK_PRIMARY, "h265", "video/x-h265", NULL},
 #endif
   {0 /* the rest */ , GST_RANK_PRIMARY + 1, NULL,
-      gst_vaapidecode_sink_caps_str},
+      gst_vaapidecode_sink_caps_str, NULL},
 };
 
 static GstElementClass *parent_class = NULL;
@@ -1364,6 +1366,9 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
 
   g_free (longname);
   g_free (description);
+
+  if (map->install_properties)
+    map->install_properties (object_class);
 
   /* sink pad */
   caps = gst_caps_from_string (map->caps_str);
