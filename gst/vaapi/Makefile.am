@@ -56,6 +56,7 @@ libgstvaapi_source_c = \
 	gstvaapivideobufferpool.c \
 	gstvaapivideomemory.c	\
 	gstvaapivideometa_texture.c \
+	gstvaapidecode_props.c	\
 	$(NULL)
 
 libgstvaapi_source_h = \
@@ -73,6 +74,7 @@ libgstvaapi_source_h = \
 	gstvaapivideobufferpool.h \
 	gstvaapivideomemory.h	\
 	gstvaapivideometa_texture.h \
+	gstvaapidecode_props.h	\
 	$(NULL)
 
 libgstvaapi_enc_source_c =	\

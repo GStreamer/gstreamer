@@ -14,6 +14,7 @@ vaapi_sources = [
   'gstvaapivideobufferpool.c',
   'gstvaapivideomemory.c',
   'gstvaapivideometa_texture.c',
+  'gstvaapidecode_props.c',
 ]
 
 if USE_ENCODERS

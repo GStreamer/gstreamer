@@ -26,6 +26,7 @@
 #include <gst/vaapi/gstvaapidisplay.h>
 
 #include "gstvaapidecode.h"
+#include "gstvaapidecode_props.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideobuffer.h"
 #if (USE_GLX || USE_EGL)
@@ -117,7 +118,8 @@ static const GstVaapiDecoderMap vaapi_decode_map[] = {
   {GST_VAAPI_CODEC_MPEG4, GST_RANK_PRIMARY, "mpeg4",
       "video/mpeg, mpegversion=4", NULL},
   {GST_VAAPI_CODEC_H263, GST_RANK_PRIMARY, "h263", "video/x-h263", NULL},
-  {GST_VAAPI_CODEC_H264, GST_RANK_PRIMARY, "h264", "video/x-h264", NULL},
+  {GST_VAAPI_CODEC_H264, GST_RANK_PRIMARY, "h264", "video/x-h264",
+      gst_vaapi_decode_h264_install_properties},
   {GST_VAAPI_CODEC_VC1, GST_RANK_PRIMARY, "vc1",
       "video/x-wmv, wmvversion=3, format={WMV3,WVC1}", NULL},
 #if USE_VP8_DECODER
