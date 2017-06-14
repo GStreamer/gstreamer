@@ -528,6 +528,8 @@ struct _GstVaapiDecoderH264Private
   guint has_context:1;
   guint progressive_sequence:1;
   guint top_field_first:1;
+
+  gboolean force_low_latency;
 };
 
 /**
@@ -4730,6 +4732,42 @@ gst_vaapi_decoder_h264_set_alignment (GstVaapiDecoderH264 * decoder,
   g_return_if_fail (decoder != NULL);
 
   decoder->priv.stream_alignment = alignment;
+}
+
+/**
+ * gst_vaapi_decoder_h264_set_low_latency:
+ * @decoder: a #GstVaapiDecoderH264
+ * @force_low_latency: %TRUE if force low latency
+ *
+ * if @force_low_latency is %TRUE the decoded frames are pushed soon
+ * as possible, instead of to wait until decoded picture buffer (DPB)
+ * release them.
+ *
+ * This violate the H.264 specification but it is useful for some live
+ * sources.
+ **/
+void
+gst_vaapi_decoder_h264_set_low_latency (GstVaapiDecoderH264 * decoder,
+    gboolean force_low_latency)
+{
+  g_return_if_fail (decoder != NULL);
+
+  decoder->priv.force_low_latency = force_low_latency;
+}
+
+/**
+ * gst_vaapi_decoder_h264_get_low_latency:
+ * @decoder: a #GstVaapiDecoderH264
+ *
+ * Returns: %TRUE if the low latency mode is enabled; otherwise
+ * %FALSE.
+ **/
+gboolean
+gst_vaapi_decoder_h264_get_low_latency (GstVaapiDecoderH264 * decoder)
+{
+  g_return_val_if_fail (decoder != NULL, FALSE);
+
+  return decoder->priv.force_low_latency;
 }
 
 /**

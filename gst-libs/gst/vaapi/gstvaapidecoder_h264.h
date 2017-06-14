@@ -55,6 +55,13 @@ void
 gst_vaapi_decoder_h264_set_alignment(GstVaapiDecoderH264 *decoder,
     GstVaapiStreamAlignH264 alignment);
 
+gboolean
+gst_vaapi_decoder_h264_get_low_latency(GstVaapiDecoderH264 * decoder);
+
+void
+gst_vaapi_decoder_h264_set_low_latency(GstVaapiDecoderH264 * decoder,
+    gboolean force_low_latency);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DECODER_H264_H */
