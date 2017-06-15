@@ -192,6 +192,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             COMMON_VIDEO_CAPS "; "
             "image/jpeg, "
             COMMON_VIDEO_CAPS_NO_FRAMERATE "; "
+            "image/png, "
+            COMMON_VIDEO_CAPS_NO_FRAMERATE "; "
             "video/x-vp8, "
             COMMON_VIDEO_CAPS "; "
             "video/x-dirac, "

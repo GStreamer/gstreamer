@@ -186,6 +186,7 @@ G_BEGIN_DECLS
 #define FOURCC_fiel     GST_MAKE_FOURCC('f','i','e','l')
 #define FOURCC_pcst     GST_MAKE_FOURCC('p','c','s','t')
 #define FOURCC_pgap     GST_MAKE_FOURCC('p','g','a','p')
+#define FOURCC_png      GST_MAKE_FOURCC('p','n','g',' ')
 #define FOURCC_pnot     GST_MAKE_FOURCC('p','n','o','t')
 #define FOURCC_qt__     GST_MAKE_FOURCC('q','t',' ',' ')
 #define FOURCC_qtim     GST_MAKE_FOURCC('q','t','i','m')

@@ -13568,7 +13568,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
 
   switch (fourcc) {
-    case GST_MAKE_FOURCC ('p', 'n', 'g', ' '):
+    case FOURCC_png:
       _codec ("PNG still images");
       caps = gst_caps_new_empty_simple ("image/png");
       break;

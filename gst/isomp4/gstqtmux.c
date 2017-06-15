@@ -5280,6 +5280,9 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   } else if (strcmp (mimetype, "image/jpeg") == 0) {
     entry.fourcc = FOURCC_jpeg;
     sync = FALSE;
+  } else if (strcmp (mimetype, "image/png") == 0) {
+    entry.fourcc = FOURCC_png;
+    sync = FALSE;
   } else if (strcmp (mimetype, "image/x-j2c") == 0 ||
       strcmp (mimetype, "image/x-jpc") == 0) {
     const gchar *colorspace;
