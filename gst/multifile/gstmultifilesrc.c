@@ -59,6 +59,8 @@ static void gst_multi_file_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstCaps *gst_multi_file_src_getcaps (GstBaseSrc * src, GstCaps * filter);
 static gboolean gst_multi_file_src_query (GstBaseSrc * src, GstQuery * query);
+static void gst_multi_file_src_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
 
 
 static GstStaticPadTemplate gst_multi_file_src_pad_template =
@@ -85,7 +87,9 @@ enum
 #define DEFAULT_INDEX 0
 
 #define gst_multi_file_src_parent_class parent_class
-G_DEFINE_TYPE (GstMultiFileSrc, gst_multi_file_src, GST_TYPE_PUSH_SRC);
+G_DEFINE_TYPE_WITH_CODE (GstMultiFileSrc, gst_multi_file_src, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_multi_file_src_uri_handler_init));
 
 
 static gboolean
@@ -481,4 +485,66 @@ handle_error:
     g_free (filename);
     return GST_FLOW_ERROR;
   }
+}
+
+static GstURIType
+gst_multi_file_src_uri_get_type (GType type)
+{
+  return GST_URI_SRC;
+}
+
+static const gchar *const *
+gst_multi_file_src_uri_get_protocols (GType type)
+{
+  static const gchar *protocols[] = { "multifile", NULL };
+
+  return (const gchar * const *) protocols;
+}
+
+static gchar *
+gst_multi_file_src_uri_get_uri (GstURIHandler * handler)
+{
+  GstMultiFileSrc *src = GST_MULTI_FILE_SRC (handler);
+  gchar *ret;
+
+  GST_OBJECT_LOCK (src);
+  if (src->filename != NULL)
+    ret = g_strdup_printf ("multifile://%s", src->filename);
+  else
+    ret = NULL;
+  GST_OBJECT_UNLOCK (src);
+
+  return ret;
+}
+
+static gboolean
+gst_multi_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
+{
+  GstMultiFileSrc *src = GST_MULTI_FILE_SRC (handler);
+
+  GstUri *gsturi;
+
+  gsturi = gst_uri_from_string (uri);
+  g_free (src->filename);
+  src->filename = NULL;
+  if (gsturi) {
+    gchar *turi = gst_uri_get_path (gsturi);
+    gst_multi_file_src_set_location (src, turi);
+    g_free (turi);
+    gst_uri_unref (gsturi);
+  }
+
+  return TRUE;
+}
+
+static void
+gst_multi_file_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_multi_file_src_uri_get_type;
+  iface->get_protocols = gst_multi_file_src_uri_get_protocols;
+  iface->get_uri = gst_multi_file_src_uri_get_uri;
+  iface->set_uri = gst_multi_file_src_uri_set_uri;
 }
