@@ -147,12 +147,9 @@ gboolean        gst_uri_has_protocol            (const gchar * uri,
 GST_EXPORT
 gchar *         gst_uri_get_location            (const gchar * uri) G_GNUC_MALLOC;
 
-#ifndef GST_DISABLE_DEPRECATED
 GST_DEPRECATED_FOR(gst_uri_new)
 gchar *         gst_uri_construct               (const gchar * protocol,
                                                  const gchar * location) G_GNUC_MALLOC;
-#endif
-
 GST_EXPORT
 gchar *         gst_filename_to_uri             (const gchar * filename,
                                                  GError     ** error) G_GNUC_MALLOC;

@@ -76,10 +76,6 @@ GST_START_TEST (test_uri_get_location)
 GST_END_TEST;
 
 #ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-gchar *gst_uri_construct (const gchar * protocol, const gchar * location);
-#endif
-
 GST_START_TEST (test_gst_uri_construct)
 {
   gchar *l;

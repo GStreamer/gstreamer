@@ -487,10 +487,6 @@ gst_uri_get_location (const gchar * uri)
   return unescaped;
 }
 
-#ifdef GST_DISABLE_DEPRECATED
-gchar *gst_uri_construct (const gchar * protocol, const gchar * location);
-#endif
-
 /**
  * gst_uri_construct:
  * @protocol: Protocol for URI
