@@ -1,12 +1,11 @@
 
-Release notes for GStreamer Good Plugins 1.10.4
+Release notes for GStreamer Good Plugins 1.10.5
 
-The GStreamer team is proud to announce the fourth bugfix release in the stable
+The GStreamer team is proud to announce the fifth bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
-This release only contains bugfixes and it is safe to update from 1.10.x. For a
-full list of bugfixes see Bugzilla.
+This release only contains bugfixes and it is safe to update from 1.10.x.
 
 
 See /releases/1.10/ for the full release notes.
@@ -56,15 +55,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 Bugs fixed in this release
      
       * 778341 : rtpjitterbuffer: resetting pts to 0 after gap
-      * 775702 : v4l2object: Don't set empty interlace-mode list
-      * 776106 : v4l2object: Don't check size in a non-list value
-      * 777399 : v4l2allocator: memory referenced too late
-      * 777940 : qtdemux: huge memory allocation
-      * 778428 : souphttpsrc: Original connection does not cleared if the uri is redirected
-      * 778437 : icydemux: reset tags on empty StreamTitle value
-      * 778453 : v4l2videodec: Makes singleton caps ref increase on every access
-      * 778815 : typo in gstv4l2object's  _acquire_format() set of error messages
-      * 775564 : v4l2 1.10 Regression: white pixels with camera on Raspberry Pi & gstgl
+      * 779858 : rtph264depay: mute annoying log msg
+      * 780040 : rtph264depay: segfault if empty sprop-parameters are provided in caps
+      * 780410 : qtdemux: distinguish TFDT with value 0 from no TFDT at all
+      * 780478 : v4l2object: add videometa if there is padding to the right and bottom
 
 ==== Download ====
 
@@ -101,16 +95,15 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arun Raghavan
-      * Jan Schmidt
-      * Jean-Christophe Trotin
-      * Juan Pablo Ugarte
-      * Nicolas Dufresne
-      * Reynaldo H. Verdejo Pinochet
+      * Andrew
+      * Carlos Rafael Giani
+      * Enrique Ocaña González
+      * Michael Dutka
+      * Nirbheek Chauhan
+      * Scott D Phillips
       * Sebastian Dröge
       * Seungha Yang
-      * Søren Juul
-      * Thibault Saunier
+      * Thiago Santos
       * Tim-Philipp Müller
-      * Víctor Manuel Jáquez Leal
+      * Vivia Nikolaidou
  
