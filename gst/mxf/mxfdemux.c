@@ -4387,7 +4387,9 @@ gst_mxf_demux_get_property (GObject * object, guint prop_id,
       GstStructure *s;
 
       g_rw_lock_reader_lock (&demux->metadata_lock);
-      if (demux->preface)
+      if (demux->preface &&
+          MXF_METADATA_BASE (demux->preface)->resolved ==
+          MXF_METADATA_BASE_RESOLVE_STATE_SUCCESS)
         s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (demux->preface));
       else
         s = NULL;
