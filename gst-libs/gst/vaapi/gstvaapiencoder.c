@@ -803,8 +803,11 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   GstVaapiEncoderStatus status;
   GstVaapiVideoPool *pool;
-  guint codedbuf_size, target_percentage, quality_level_max = 0;
+  guint codedbuf_size, target_percentage;
   guint fps_d, fps_n;
+#if VA_CHECK_VERSION(0,36,0)
+  guint quality_level_max = 0;
+#endif
 
   fps_d = GST_VIDEO_INFO_FPS_D (vip);
   fps_n = GST_VIDEO_INFO_FPS_N (vip);

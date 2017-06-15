@@ -2179,8 +2179,10 @@ static gboolean
 ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
+#if VA_CHECK_VERSION(0,39,1)
   GstVaapiEncMiscParam *misc;
   guint num_roi;
+#endif
 
   if (!gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture))
     return FALSE;
@@ -2203,11 +2205,10 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
         goto error_create_packed_sei_hdr;
     }
   }
-
+#if VA_CHECK_VERSION(0,39,1)
   /* region-of-interest params */
   num_roi = base_encoder->roi_regions ?
       g_list_length (base_encoder->roi_regions) : 0;
-#if VA_CHECK_VERSION(0,39,1)
   if (num_roi > 0) {
     /* ROI(Region of Interest) params */
     VAEncMiscParameterBufferROI *roi_param;
