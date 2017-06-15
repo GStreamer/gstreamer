@@ -1,8 +1,8 @@
 # GStreamer 1.10 Release Notes
 
 GStreamer 1.10.0 was originally released on 1st November 2016.
-The latest bug-fix release in the 1.10 series is [1.10.4](#1.10.4) and was
-released on 23 February 2017.
+The latest bug-fix release in the 1.10 series is [1.10.5](#1.10.5) and was
+released on 15 June 2017.
 
 The GStreamer team is proud to announce a new major feature release in the
 stable 1.x API series of your favourite cross-platform multimedia framework!
@@ -13,7 +13,7 @@ improvements.
 See [https://gstreamer.freedesktop.org/releases/1.10/][latest] for the latest
 version of this document.
 
-*Last updated: Thursday 23 Feb 2017, 15:00 UTC [(log)][gitlog]*
+*Last updated: Thursday 15 Jun 2017, 09:30 UTC [(log)][gitlog]*
 
 [latest]: https://gstreamer.freedesktop.org/releases/1.10/
 [gitlog]: https://cgit.freedesktop.org/gstreamer/www/log/src/htdocs/releases/1.10/release-notes-1.10.md
@@ -1159,7 +1159,7 @@ GIT logs or ChangeLogs of the particular modules.
 
 ### 1.10.4
 
-The third 1.10 bug-fix release (1.10.4) was released on 23 February 2017.
+The fourth 1.10 bug-fix release (1.10.4) was released on 23 February 2017.
 This release only contains bugfixes and it should be safe to update from 1.10.x.
 
 #### Major bugfixes in 1.10.4
@@ -1180,6 +1180,32 @@ not the full list of changes. For the full list of changes please refer to the
 GIT logs or ChangeLogs of the particular modules.
 
 [buglist-1.10.4]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=187054&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.10.4
+
+<a name="1.10.5"></a>
+
+### 1.10.5
+
+The fifth 1.10 bug-fix release (1.10.5) was released on 15 June 2017.
+This release only contains bugfixes and it should be safe to update from 1.10.x.
+
+This is most likely the last release in the stable 1.10 release series.
+
+#### Major bugfixes in 1.10.5
+
+ - Various fixes for crashes, assertions, deadlocks and memory leaks
+ - Fix for regression in rtpjitterbuffer that caused PTS to be reset to 0 on
+ - Fix detection of some HLS streams
+ - Various fixes to the MOV/MP4 muxer and demuxer
+   gaps in the input
+ - gst-libav was updated to ffmpeg 3.2.5, fixing a couple of CVEs
+ - ... and many, many more!
+
+For a full list of bugfixes see [Bugzilla][buglist-1.10.5]. Note that this is
+not the full list of changes and also does not include bug reports that were
+closed after the 1.12.0 release. For the full list of changes please refer to
+the GIT logs or ChangeLogs of the particular modules.
+
+[buglist-1.10.5]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=187054&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.10.5
 
 ## Known Issues
 
