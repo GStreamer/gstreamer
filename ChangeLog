@@ -1,9 +1,20 @@
-=== release 1.10.4 ===
+=== release 1.10.5 ===
 
-2017-02-23  Sebastian Dröge <slomo@coaxion.net>
+2017-06-15  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.4
+	  releasing 1.10.5
+
+=== release 1.10.4 ===
+
+2017-02-23 16:05:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 1.10.4
 
 === release 1.10.3 ===
 
