@@ -1506,12 +1506,13 @@ gst_rtspsrc_collect_connections (GstRTSPSrc * src, const GstSDPMessage * sdp,
 static gchar *
 make_stream_id (GstRTSPStream * stream, const GstSDPMedia * media)
 {
-  gchar *stream_id = g_strdup_printf ("%s%d%d%s%d", media->media, media->port,
+  gchar *stream_id =
+      g_strdup_printf ("%s:%d:%d:%s:%d", media->media, media->port,
       media->num_ports, media->proto, stream->default_pt);
-  gchar *res = g_compute_checksum_for_string (G_CHECKSUM_MD5, stream_id, -1);
 
-  g_free (stream_id);
-  return res;
+  g_strcanon (stream_id, G_CSET_a_2_z G_CSET_A_2_Z G_CSET_DIGITS, ':');
+
+  return stream_id;
 }
 
 /*   m=<media> <UDP port> RTP/AVP <payload>
