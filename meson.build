@@ -1,5 +1,5 @@
 project('gst-editing-services', 'c',
-  version : '1.10.4',
+  version : '1.10.5',
   meson_version : '>= 0.35.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
