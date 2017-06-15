@@ -230,6 +230,14 @@ typedef enum {
  * @GST_STATE_CHANGE_READY_TO_NULL    : state change from READY to NULL.
  *   * Elements close devices
  *   * Elements reset any internal state.
+ * @GST_STATE_CHANGE_NULL_TO_NULL       : state change from NULL to NULL. (Since 1.14)
+ * @GST_STATE_CHANGE_READY_TO_READY     : state change from READY to READY,
+ * This might happen when going to PAUSED asynchronously failed, in that case
+ * elements should make sure they are in a proper, coherent READY state. (Since 1.14)
+ * @GST_STATE_CHANGE_PAUSED_TO_PAUSED   : state change from PAUSED to PAUSED.
+ * This might happen when elements were in PLAYING state and 'lost state',
+ * they should make sure to go back to real 'PAUSED' state (prerolling for example). (Since 1.14)
+ * @GST_STATE_CHANGE_PLAYING_TO_PLAYING : state change from PLAYING to PLAYING. (Since 1.14)
  *
  * These are the different state changes an element goes through.
  * %GST_STATE_NULL &rArr; %GST_STATE_PLAYING is called an upwards state change
@@ -242,7 +250,11 @@ typedef enum /*< flags=0 >*/
   GST_STATE_CHANGE_PAUSED_TO_PLAYING    = (GST_STATE_PAUSED<<3) | GST_STATE_PLAYING,
   GST_STATE_CHANGE_PLAYING_TO_PAUSED    = (GST_STATE_PLAYING<<3) | GST_STATE_PAUSED,
   GST_STATE_CHANGE_PAUSED_TO_READY      = (GST_STATE_PAUSED<<3) | GST_STATE_READY,
-  GST_STATE_CHANGE_READY_TO_NULL        = (GST_STATE_READY<<3) | GST_STATE_NULL
+  GST_STATE_CHANGE_READY_TO_NULL        = (GST_STATE_READY<<3) | GST_STATE_NULL,
+  GST_STATE_CHANGE_NULL_TO_NULL         = (GST_STATE_NULL<<3) | GST_STATE_NULL,
+  GST_STATE_CHANGE_READY_TO_READY       = (GST_STATE_READY<<3) | GST_STATE_READY,
+  GST_STATE_CHANGE_PAUSED_TO_PAUSED     = (GST_STATE_PAUSED<<3) | GST_STATE_PAUSED,
+  GST_STATE_CHANGE_PLAYING_TO_PLAYING   = (GST_STATE_PLAYING<<3) | GST_STATE_PLAYING
 } GstStateChange;
 
 /**

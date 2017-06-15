@@ -381,6 +381,14 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
   GstClock *clock;
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_NULL:
+      break;
+    case GST_STATE_CHANGE_READY_TO_READY:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PLAYING_TO_PLAYING:
+      break;
     case GST_STATE_CHANGE_NULL_TO_READY:
       GST_OBJECT_LOCK (element);
       if (element->bus)
@@ -500,6 +508,14 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_NULL:
+      break;
+    case GST_STATE_CHANGE_READY_TO_READY:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PLAYING_TO_PLAYING:
+      break;
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
