@@ -86,6 +86,9 @@ struct _GstRTSPConnInfo {
   GstRTSPConnection  *connection;
   gboolean            connected;
   gboolean            flushing;
+
+  GMutex              send_lock;
+  GMutex              recv_lock;
 };
 
 typedef struct _GstRTSPStream GstRTSPStream;
