@@ -237,8 +237,11 @@ gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
+    case GST_STATE_CHANGE_NULL_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PLAYING:
       break;
-
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       alsa->driver_timestamps = FALSE;
 
