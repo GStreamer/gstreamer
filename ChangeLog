@@ -1,9 +1,195 @@
-=== release 1.10.4 ===
+=== release 1.10.5 ===
 
-2017-02-23  Sebastian Dröge <slomo@coaxion.net>
+2017-06-15  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.4
+	  releasing 1.10.5
+
+2017-05-12 13:08:30 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: keep handle_events flag except that if user want to set
+	  When state of vaapisink is changed from PLAYING to NULL, the handle_events
+	  flag is set to FALSE, and never recovered, and then event thread is never
+	  going to run.
+	  So we should allow to set the flag only when users try it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782543
+
+2017-04-28 15:20:01 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: remove par from caps negotiation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781759
+
+2017-04-26 15:48:01 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostprocutil.c:
+	* gst/vaapi/gstvaapisink.c:
+	  plugins: handle pixel-aspect-ratio with value 0/1
+	  When downstream negotiates a pixel-aspect-ratio of 0/1, the
+	  calculations for resizing and formatting in vaapipostproc and
+	  vaapisink, respectively, failed, and thus the pipeline.
+	  This patch handles this situation by converting p-a-r of 0/1 to
+	  1/1. This is how other sinks, such as glimagesink, work.
+
+2017-04-27 14:42:55 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: fix leak of created allocator
+	  Since it's created by itself, it should be unref-counted
+	  after gst_buffer_pool_config_set_allocator call. Afterwards,
+	  this allocator will be ref-counted again when assigning to priv->allocator.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781577
+
+2017-04-21 19:07:18 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: create or reconfig allocator
+	  Sometimes a video decoder could set different buffer pool
+	  configurations, because their frame size changes. In this case we
+	  did not reconfigure the allocator.
+	  This patch enables this use case, creating a new allocator inside
+	  the VAAPI buffer pool if the caps changed, if it is not dmabuf-based.
+	  If so, it is just reconfigured, since it doesn't have a surface pool.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781577
+
+2017-04-05 11:15:41 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: vp9: Fix initialization of ref_list
+	  gcc 7.0.1 gives a memset-elt-size warning in gst_vaapi_encoder_vp9_init:
+	  'memset' used with length equal to number of elements without
+	  multiplication by element size [-Werror=memset-elt-size]
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780947
+
+2017-03-31 14:12:43 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  encoder: h264: Fix Backward ReferencePicture flag setting
+	  This is a regression introduced by e829b62 which
+	  override the reference flags and caused issues with
+	  latest intel-vaapi-driver.
+
+2017-03-28 10:53:20 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  encoder: h264: Fix B frame encoding artifacts
+	  The current implementation is updating the POC values only
+	  in Slice parameter Buffer.But we are not filling the
+	  picture order count and reference flags in VAPictureH264
+	  while populating VA Picture/Slice structures.The latest
+	  intel-vaapi-driver is directly accessing the above fields
+	  from VAPicutreH264 provided as RefPicLists, which resulted
+	  some wrong maths and prediction errors in driver.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780620
+
+2017-03-21 17:39:28 +0100  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* meson.build:
+	  meson.build: update version
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780363
+
+2017-02-08 10:17:40 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* configure.ac:
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapiversion.h.in:
+	  make: remove gstvaapiversion.h generation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778250
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780363
+
+2017-02-15 19:14:59 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: gstreamer-codecparsers is a required dep
+	  Just like in configure.ac.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780363
+
+2017-02-06 15:46:20 -0800  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst-libs/gst/base/meson.build:
+	* gst-libs/gst/meson.build:
+	* gst-libs/gst/vaapi/meson.build:
+	* gst-libs/meson.build:
+	* gst/meson.build:
+	* gst/vaapi/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	  vaapi: add meson build
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778250
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780363
+
+2017-03-13 17:29:59 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  docs: h264/h265: put parser to the example pipeline
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778749
+
+2017-03-13 16:20:59 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: fix reserved length of bits
+	  Fix reserved length of bits for bit_depth_luma_minus8 and bit_depth_chroma_minus8
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778749
+
+2017-03-12 18:59:42 +0100  Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	* tests/test-display.c:
+	  O_CLOEXEC needs _GNU_SOURCE defined
+	  From man open(2):
+	  The O_CLOEXEC, O_DIRECTORY, and O_NOFOLLOW flags are not specified
+	  in POSIX.1-2001, but are specified in POSIX.1-2008.  Since glibc
+	  2.12, one can obtain their definitions by defining either
+	  _POSIX_C_SOURCE with a value greater than or equal to 200809L or
+	  _XOPEN_SOURCE with a value greater than or equal to 700.  In glibc
+	  2.11 and earlier, one obtains the definitions by defining
+	  _GNU_SOURCE.
+	  And indeed, with the uClibc C library, O_CLOEXEC is not exposed if
+	  _GNU_SOURCE is not defined. Therefore, this commit fixes the build of
+	  gstreamer-vaapi with the uClibc C library.
+	  Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779953
+
+2017-03-14 16:07:08 +0100  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* README:
+	  README: fix "Sources" section
+	  Update the URL where the release source tarballs can be downloaded.
+
+2017-03-12 21:39:53 +0100  Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+
+	* README:
+	  README: fix "Reporting bugs" section
+	  The "Reporting bugs" section gives
+	  https://bugzilla.gnome.org/enter_bug.cgi?product=gstreamer-vaapi as the
+	  link to report a bug, but this link says "Sorry, entering a bug into the
+	  product gstreamer-vaapi has been disabled.".
+	  This commit fixes the URL to point to the proper location, and also
+	  removes the following paragraph that is no longer correct.
+	  Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779954
+
+2017-02-22 15:02:01 -0800  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* configure.ac:
+	  configure: Add missing compiler flags
+	  The AC_CHECK_HEADERS macro was failing to locate some headers, in
+	  particular the va_enc_* headers due to missing compiler flags.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779101
+	  Signed-off-by: Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+=== release 1.10.4 ===
+
+2017-02-23 16:13:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	  Release 1.10.4
 
 2017-02-07 16:17:39 +0900  Hyunjun Ko <zzoon@igalia.com>
 
