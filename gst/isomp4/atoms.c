@@ -2221,6 +2221,7 @@ atom_stsc_copy_data (AtomSTSC * stsc, guint8 ** buffer, guint64 * size,
 {
   guint64 original_offset = *offset;
   guint i, len;
+  gboolean last_entries_merged = FALSE;
 
   if (!atom_full_copy_data (&stsc->header, buffer, size, offset)) {
     return 0;
@@ -2232,6 +2233,7 @@ atom_stsc_copy_data (AtomSTSC * stsc, guint8 ** buffer, guint64 * size,
       ((atom_array_index (&stsc->entries, len - 1)).samples_per_chunk ==
           (atom_array_index (&stsc->entries, len - 2)).samples_per_chunk)) {
     stsc->entries.len--;
+    last_entries_merged = TRUE;
   }
 
   prop_copy_uint32 (atom_array_get_len (&stsc->entries), buffer, size, offset);
@@ -2248,6 +2250,15 @@ atom_stsc_copy_data (AtomSTSC * stsc, guint8 ** buffer, guint64 * size,
   }
 
   atom_write_size (buffer, size, offset, original_offset);
+
+  /* Need to add the last entry again as in "robust" muxing mode we will most
+   * likely add new samples to the last chunk, thus making the
+   * samples_per_chunk in the last one different to the second to last one,
+   * and thus making it wrong to keep them merged
+   */
+  if (last_entries_merged)
+    stsc->entries.len++;
+
   return *offset - original_offset;
 }
 
