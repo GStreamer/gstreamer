@@ -249,21 +249,6 @@ escape_string_internal (const gchar * string, UnsafeCharacterSet mask)
   return result;
 }
 
-/* escape_string:
- * @string: string to be escaped
- *
- * Escapes @string, replacing any and all special characters
- * with equivalent escape sequences.
- *
- * Return value: a newly allocated string equivalent to @string
- * but with all special characters escaped
- **/
-static gchar *
-escape_string (const gchar * string)
-{
-  return escape_string_internal (string, UNSAFE_ALL);
-}
-
 static int
 hex_to_int (gchar c)
 {
@@ -522,7 +507,7 @@ gst_uri_construct (const gchar * protocol, const gchar * location)
   g_return_val_if_fail (location != NULL, NULL);
 
   proto_lowercase = g_ascii_strdown (protocol, -1);
-  escaped = escape_string (location);
+  escaped = escape_string_internal (location, UNSAFE_PATH);
   retval = g_strdup_printf ("%s://%s", proto_lowercase, escaped);
   g_free (escaped);
   g_free (proto_lowercase);
