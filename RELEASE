@@ -1,15 +1,15 @@
 
-Release notes for GStreamer 1.10.4
+Release notes for GStreamer 1.10.5
 
-The GStreamer team is proud to announce the fourth bugfix release in the stable
+The GStreamer team is proud to announce the fifth bugfix release in the stable
 1.10 release series of your favourite cross-platform multimedia framework!
 
 
-This release only contains bugfixes and it is safe to update from 1.10.x. For a
-full list of bugfixes see Bugzilla.
+This release only contains bugfixes and it is safe to update from 1.10.x.
 
 
 See /releases/1.10/ for the full release notes.
+
 
 
 This module, gstreamer, only contains core functionality.
@@ -32,11 +32,6 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 
   
-
-Bugs fixed in this release
-     
-      * 777998 : Bins can not be parsed when system language is German
-      * 778365 : bytereader: offset accounted twice in _masked_scan_uint32_peek for H264 special case
 
 ==== Download ====
 
@@ -73,7 +68,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Jan Schmidt
+      * Nirbheek Chauhan
       * Sebastian Dröge
       * Tim-Philipp Müller
-      * Wim Taymans
  

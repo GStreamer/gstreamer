@@ -1,9 +1,139 @@
-=== release 1.10.4 ===
+=== release 1.10.5 ===
 
-2017-02-23  Sebastian Dröge <slomo@coaxion.net>
+2017-06-15  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.10.4
+	  releasing 1.10.5
+
+2017-06-15 12:56:18 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
+
+2017-05-02 14:35:50 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstmessage.c:
+	  message: Don't pass a NULL debug string to g_utf8_validate()
+	  g_utf8_validate() crashes on NULL, but NULL is valid for the debug
+	  string nonetheless.
+
+2016-12-21 00:40:10 +1100  Jan Schmidt <jan@centricular.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Switch to normal mode before have-type
+	  Before emitting have-type, switch to NORMAL
+	  mode, as part of the have-type processing sends
+	  the caps event downstream, which might trigger
+	  actions like downstream autoplugging or
+	  flushing seeks - and the latter are only
+	  passed upstream if we've set typefind to NORMAL
+	  mode.
+
+2017-02-23 17:22:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
+2017-02-18 16:49:40 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/meson.build:
+	  meson: Fix build with latest upstream git
+	  Trivial incorrect include_directories() call
+
+=== release 1.10.4 ===
+
+2017-02-23 15:51:57 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.10.4
+
+2017-02-23 15:12:42 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2017-02-21 20:23:51 +0000  Tim-Philipp Müller <tim@centricular.com>
 
