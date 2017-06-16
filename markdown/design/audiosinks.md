@@ -27,41 +27,45 @@
 The design is based on a set of base classes and the concept of a
 ringbuffer of samples.
 
-    +-----------+   - provide preroll, rendering, timing
-    + basesink  +   - caps nego
-    +-----+-----+
-          |
-    +-----V----------+   - manages ringbuffer
-    + audiobasesink  +   - manages scheduling (push/pull)
-    +-----+----------+   - manages clock/query/seek
-          |              - manages scheduling of samples in the ringbuffer
-          |              - manages caps parsing
-          |
-    +-----V------+   - default ringbuffer implementation with a GThread
-    + audiosink  +   - subclasses provide open/read/close methods
-    +------------+
+```
++-----------+   - provide preroll, rendering, timing
++ basesink  +   - caps nego
++-----+-----+
+      |
++-----V----------+   - manages ringbuffer
++ audiobasesink  +   - manages scheduling (push/pull)
++-----+----------+   - manages clock/query/seek
+      |              - manages scheduling of samples in the ringbuffer
+      |              - manages caps parsing
+      |
++-----V------+   - default ringbuffer implementation with a GThread
++ audiosink  +   - subclasses provide open/read/close methods
++------------+
+```
 
 The ringbuffer is a contiguous piece of memory divided into segtotal
 pieces of segments. Each segment has segsize bytes.
 
-          play position 
-            v          
-    +---+---+---+-------------------------------------+----------+
-    + 0 | 1 | 2 | ....                                | segtotal |
-    +---+---+---+-------------------------------------+----------+
-    <--->
-      segsize bytes = N samples * bytes_per_sample.
-  
+```
+      play position
+        v
++---+---+---+-------------------------------------+----------+
++ 0 | 1 | 2 | ....                                | segtotal |
++---+---+---+-------------------------------------+----------+
+<--->
+  segsize bytes = N samples * bytes_per_sample.
+```
+
 The ringbuffer has a play position, which is expressed in segments. The
 play position is where the device is currently reading samples from the
 buffer.
 
-The ringbuffer can be put to the PLAYING or STOPPED state.
+The ringbuffer can be put to the `PLAYING` or `STOPPED` state.
 
-In the STOPPED state no samples are played to the device and the play
+In the `STOPPED` state no samples are played to the device and the play
 pointer does not advance.
 
-In the PLAYING state samples are written to the device and the
+In the `PLAYING` state samples are written to the device and the
 ringbuffer should call a configurable callback after each segment is
 written to the device. In this state the play pointer is advanced after
 each segment is written.
@@ -79,7 +83,7 @@ possible.
 Whenever new samples are to be put into the ringbuffer, the position of
 the read pointer is taken. The required write position is taken and the
 diff is made between the required and actual position. If the difference
-is \<0, the sample is too late. If the difference is bigger than
+is `< 0`, the sample is too late. If the difference is bigger than
 segtotal, the writing part has to wait for the play pointer to advance.
 
 ### Scheduling
@@ -107,7 +111,7 @@ element. These samples will then be placed in the ringbuffer at the
 next play position. It is assumed that the getrange function returns
 fast enough to fill the ringbuffer before the play pointer reaches
 the write pointer.
-    
+
 In this mode, the ringbuffer is usually kept as empty as possible.
 There is no context switch needed between the elements that create
 the samples and the actual writing of the samples to the device.
@@ -115,15 +119,15 @@ the samples and the actual writing of the samples to the device.
 #### DMA mode
 
 Elements that can do DMA based access to the audio device have to
-subclass from the GstAudioBaseSink class and wrap the DMA ringbuffer
-in a subclass of GstRingBuffer.
-    
+subclass from the `GstAudioBaseSink` class and wrap the DMA ringbuffer
+in a subclass of `GstRingBuffer`.
+
 The ringbuffer subclass should trigger a callback after writing or
 playing each sample to the device. This callback can be triggered
 from a thread or from a signal from the audio device.
 
 ### Clocks
 
-The GstAudioBaseSink class will use the ringbuffer to act as a clock
+The `GstAudioBaseSink` class will use the ringbuffer to act as a clock
 provider. It can do this by using the play pointer and the delay to
 calculate the clock time.
