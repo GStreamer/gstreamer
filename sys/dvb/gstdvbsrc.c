@@ -1005,7 +1005,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
    * Signal emited from the application to the element, instructing it
    * to tune.
    */
-  gst_dvbsrc_signals[SIGNAL_TUNING_FAIL] =
+  gst_dvbsrc_signals[SIGNAL_TUNE] =
       g_signal_new ("tune", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstDvbSrcClass, do_tune),
