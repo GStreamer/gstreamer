@@ -12,7 +12,7 @@
 
 ### Contents
 
- - a GstTypeFindElement connected to the single sink pad
+ - a `GstTypeFindElement` connected to the single sink pad
 
  - optionally a demuxer/parser
 
@@ -58,7 +58,7 @@ to assist or fine-tune the process.
     GValueArray user_function (GstElement* decodebin, GstPad* pad, GstCaps* caps);
 ```
 
-    Get a list of elementfactories for @pad with @caps. This function is
+    Get a list of elementfactories for `@pad` with `@caps`. This function is
     used to instruct decodebin2 of the elements it should try to
     autoplug. The default behaviour when this function is not overriden
     is to get all elements that can handle @caps from the registry
@@ -101,7 +101,7 @@ When autoplugging, all streams coming out of a demuxer will be grouped
 in a `DecodeGroup`.
 
 All new source pads created on that demuxer after it has emitted the
-'no-more-pads' signal will be put in another DecodeGroup.
+'no-more-pads' signal will be put in another `DecodeGroup`.
 
 Only one decodegroup can be active at any given time. If a new
 decodegroup is created while another one exists, that `DecodeGroup` will
@@ -125,7 +125,7 @@ The DecodeGroup contains:
 ### Proper group draining
 
 The `DecodeGroup` takes care that all the streams in the group are
-completely drained (EOS has come through all source ghost pads).
+completely drained (`EOS` has come through all source ghost pads).
 
 ### Pre-roll and block
 
@@ -158,7 +158,7 @@ few differences:
     any given time there are at least N bytes queued and available for
     each individual stream.
 
-    If an EOS event comes through a srcpad, the associated queue should
+    If an `EOS` event comes through a srcpad, the associated queue should
     be considered as 'not-empty' in the queue-size-growing algorithm.
 
   - Non-linked srcpads graceful handling.
@@ -221,7 +221,7 @@ be able to convert between the different formats. This will, if
 implemented correctly, work as expected in a static pipeline such as
 
 ```
-    ... ! parser ! decoder ! sink
+... ! parser ! decoder ! sink
 ```
 
 where the parser can query the decoder's capabilities even before
