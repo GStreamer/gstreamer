@@ -931,16 +931,70 @@ incomplete_caps:
 }
 
 static GstBuffer *
+gst_rtp_h265_depay_allocate_output_buffer (GstRtpH265Depay * depay, gsize size)
+{
+  GstBuffer *buffer = NULL;
+
+  g_return_val_if_fail (size > 0, NULL);
+
+  GST_LOG_OBJECT (depay, "want output buffer of %u bytes", (guint) size);
+
+  buffer = gst_buffer_new_allocate (depay->allocator, size, &depay->params);
+  if (buffer == NULL) {
+    GST_INFO_OBJECT (depay, "couldn't allocate output buffer");
+    buffer = gst_buffer_new_allocate (NULL, size, NULL);
+  }
+
+  return buffer;
+}
+
+static GstBuffer *
 gst_rtp_h265_complete_au (GstRtpH265Depay * rtph265depay,
     GstClockTime * out_timestamp, gboolean * out_keyframe)
 {
-  guint outsize;
+  GstBufferList *list;
+  GstMapInfo outmap;
   GstBuffer *outbuf;
+  guint outsize, offset = 0;
+  gint b, n_bufs, m, n_mem;
 
   /* we had a picture in the adapter and we completed it */
   GST_DEBUG_OBJECT (rtph265depay, "taking completed AU");
   outsize = gst_adapter_available (rtph265depay->picture_adapter);
-  outbuf = gst_adapter_take_buffer (rtph265depay->picture_adapter, outsize);
+
+  outbuf = gst_rtp_h265_depay_allocate_output_buffer (rtph265depay, outsize);
+
+  if (outbuf == NULL)
+    return NULL;
+
+  if (!gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE))
+    return NULL;
+
+  list = gst_adapter_take_buffer_list (rtph265depay->picture_adapter, outsize);
+
+  n_bufs = gst_buffer_list_length (list);
+  for (b = 0; b < n_bufs; ++b) {
+    GstBuffer *buf = gst_buffer_list_get (list, b);
+
+    n_mem = gst_buffer_n_memory (buf);
+    for (m = 0; m < n_mem; ++m) {
+      GstMemory *mem = gst_buffer_peek_memory (buf, m);
+      gsize mem_size = gst_memory_get_sizes (mem, NULL, NULL);
+      GstMapInfo mem_map;
+
+      if (gst_memory_map (mem, &mem_map, GST_MAP_READ)) {
+        memcpy (outmap.data + offset, mem_map.data, mem_size);
+        gst_memory_unmap (mem, &mem_map);
+      } else {
+        memset (outmap.data + offset, 0, mem_size);
+      }
+      offset += mem_size;
+    }
+
+    gst_rtp_copy_video_meta (rtph265depay, outbuf, buf);
+  }
+  gst_buffer_list_unref (list);
+  gst_buffer_unmap (outbuf, &outmap);
 
   *out_timestamp = rtph265depay->last_ts;
   *out_keyframe = rtph265depay->last_keyframe;
