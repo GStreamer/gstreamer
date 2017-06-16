@@ -49,7 +49,7 @@ Only two introspectable property (i.e. usable without extra API):
 
 When a profile is selected, encodebin will:
 
- - Add REQUEST sinkpads for all the GstStreamProfile
+ - Add REQUEST sinkpads for all the `GstStreamProfile`
  - Create the muxer and expose the source pad
 
 Whenever a request pad is created, encodebin will:
@@ -207,7 +207,7 @@ A Stream Profile consists of:
     the raw audio media type will be used.
   - Encoding preset This is an optional string describing the preset(s)
     to use on the encoder.
-  - Restriction This is an optional GstCaps containing the restriction
+  - Restriction This is an optional `GstCaps` containing the restriction
     of the stream that can be fed to the encoder. This will generally
     containing restrictions in video width/heigh/framerate or audio
     depth.
@@ -233,7 +233,7 @@ made as to which formatting to use for storing targets and profiles.
         <profile>Nokia N900/AAC</profile>
       </profiles>
     </gst-encoding-target>
-    
+
     <gst-encoding-profile>
       <name>Nokia N900/H264 HQ</name>
       <description>
@@ -258,7 +258,7 @@ made as to which formatting to use for storing targets and profiles.
           </restriction>
           <presence>1</presence>
         </stream-profile>
-      </streams>  
+      </streams>
     </gst-encoding-profile>
 ```
 
@@ -290,9 +290,9 @@ In order to programmatically know which presets exclude each other, we
 here propose the categorisation of these presets.
 
 This can be done in one of two ways 1. in the name (by making the name
-be \[<category>:\]<name>) This would give for example: "Quality:High",
-"Profile:Baseline" 2. by adding a new \_meta key This would give for
-example: \_meta/category:quality
+be `[<category>:]<name>`) This would give for example: "Quality:High",
+"Profile:Baseline" 2. by adding a new `_meta` key This would give for
+example: `_meta/category:quality`
 
 #### Aggregation of presets.
 
@@ -328,22 +328,23 @@ to have some profiles limited to their own usage.
 ## Helper library for profiles
 
 These helper methods could also be added to existing libraries (like
-`GstPreset`, GstPbUtils, ..).
+`GstPreset`, `GstPbUtils`, ..).
 
 The various API proposed are in the accompanying gstprofile.h file.
 
 ### Getting user-readable names for formats
 
-This is already provided by GstPbUtils.
+This is already provided by `GstPbUtils`.
 
 ### Hierarchy of profiles
 
 The goal is for applications to be able to present to the user a list of
 combo-boxes for choosing their output profile:
 
-\[ Category \] \# optional, depends on the application \[ Device/Site/..
-\] \# optional, depends on the application \[ Profile \]
-
+```
+[ Category ] # optional, depends on the application [ Device/Site/..
+] # optional, depends on the application [ Profile ]
+```
 Convenience methods are offered to easily get lists of categories,
 devices, and profiles.
 
@@ -363,7 +364,7 @@ The remaining parts concern the restrictions to encoder input.
 When an application wishes to use a Profile, it should be able to query
 whether it has all the needed plugins to use it.
 
-This part will use GstPbUtils to query, and if needed install the
+This part will use `GstPbUtils` to query, and if needed install the
 missing plugins through the installed distribution plugin installer.
 
 ## Use-cases researched
