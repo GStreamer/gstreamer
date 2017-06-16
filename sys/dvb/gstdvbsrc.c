@@ -2095,6 +2095,8 @@ gst_dvbsrc_is_valid_trans_mode (guint delsys, guint mode)
           "delivery system");
       return TRUE;
   }
+  GST_WARNING ("Invalid transmission-mode '%d' for delivery system '%d'", mode,
+      delsys);
   return FALSE;
 }
 
@@ -2125,6 +2127,7 @@ gst_dvbsrc_is_valid_modulation (guint delsys, guint mod)
           "system: '%d'", delsys);
       return TRUE;
   }
+  GST_WARNING ("Invalid modulation '%d' for delivery system '%d'", mod, delsys);
   return FALSE;
 }
 
@@ -2156,6 +2159,7 @@ gst_dvbsrc_is_valid_bandwidth (guint delsys, guint bw)
           "delivery system");
       return TRUE;
   }
+  GST_WARNING ("Invalid bandwidth '%d' for delivery system '%d'", bw, delsys);
   return FALSE;
 }
 
