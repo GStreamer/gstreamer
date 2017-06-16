@@ -318,7 +318,7 @@ little driver * <https://github.com/dkogan/feedgnuplot>
   - worse performance (we’re writing two logs at the same time)
 
   - need to be careful when people to `GST_DEBUG_CHANNEL=stderr` and
-    GST_TRACE_CHANNEL=stderr (use a shared channel, but what about the
+    `GST_TRACE_CHANNEL=stderr` (use a shared channel, but what about the
     formats?)
 
   - debug log
@@ -341,8 +341,8 @@ little driver * <https://github.com/dkogan/feedgnuplot>
     trace log
 
   - we could maintain a list of log functions, where
-    gst_tracer_log_trace() is the default one. This way e.g.
-    gst-validate could consume the traces directly.
+    `gst_tracer_log_trace()` is the default one. This way e.g.
+    `gst-validate` could consume the traces directly.
 
   - when hooking into a timer, should we just have some predefined
     intervals?
