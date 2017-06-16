@@ -280,6 +280,51 @@ get_level_from_str (const gchar * level)
   return OMX_VIDEO_AVCLevelMax;
 }
 
+/* Update OMX_VIDEO_PARAM_PROFILELEVELTYPE.{eProfile,eLevel}
+ *
+ * Returns TRUE if succeeded or if not supported, FALSE if failed */
+static gboolean
+update_param_profile_level (GstOMXH264Enc * self,
+    OMX_VIDEO_AVCPROFILETYPE profile, OMX_VIDEO_AVCLEVELTYPE level)
+{
+  OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
+  OMX_ERRORTYPE err;
+
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
+
+  err =
+      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexParamVideoProfileLevelCurrent, &param);
+  if (err != OMX_ErrorNone) {
+    GST_WARNING_OBJECT (self,
+        "Getting OMX_IndexParamVideoProfileLevelCurrent not supported by component");
+    return TRUE;
+  }
+
+  if (profile != OMX_VIDEO_AVCProfileMax)
+    param.eProfile = profile;
+  if (level != OMX_VIDEO_AVCLevelMax)
+    param.eLevel = level;
+
+  err =
+      gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexParamVideoProfileLevelCurrent, &param);
+  if (err == OMX_ErrorUnsupportedIndex) {
+    GST_WARNING_OBJECT (self,
+        "Setting OMX_IndexParamVideoProfileLevelCurrent not supported by component");
+    return TRUE;
+  } else if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "Error setting profile %u and level %u: %s (0x%08x)",
+        (guint) param.eProfile, (guint) param.eLevel,
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static gboolean
 set_avc_intra_perdiod (GstOMXH264Enc * self)
 {
@@ -379,12 +424,13 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   GstOMXH264Enc *self = GST_OMX_H264_ENC (enc);
   GstCaps *peercaps;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
-  OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
 #ifdef USE_OMX_TARGET_RPI
   OMX_CONFIG_PORTBOOLEANTYPE config_inline_header;
 #endif
   OMX_ERRORTYPE err;
   const gchar *profile_string, *level_string;
+  OMX_VIDEO_AVCPROFILETYPE profile = OMX_VIDEO_AVCProfileMax;
+  OMX_VIDEO_AVCLEVELTYPE level = OMX_VIDEO_AVCLevelMax;
 
 #ifdef USE_OMX_TARGET_RPI
   GST_OMX_INIT_STRUCT (&config_inline_header);
@@ -440,18 +486,6 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   if (err != OMX_ErrorNone)
     return FALSE;
 
-  GST_OMX_INIT_STRUCT (&param);
-  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
-
-  err =
-      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
-      OMX_IndexParamVideoProfileLevelCurrent, &param);
-  if (err != OMX_ErrorNone) {
-    GST_WARNING_OBJECT (self,
-        "Setting profile/level not supported by component");
-    return TRUE;
-  }
-
   peercaps = gst_pad_peer_query_caps (GST_VIDEO_ENCODER_SRC_PAD (enc),
       gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (enc)));
   if (peercaps) {
@@ -466,31 +500,23 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     s = gst_caps_get_structure (peercaps, 0);
     profile_string = gst_structure_get_string (s, "profile");
     if (profile_string) {
-      param.eProfile = get_profile_from_str (profile_string);
-      if (param.eProfile == OMX_VIDEO_AVCProfileMax)
+      profile = get_profile_from_str (profile_string);
+      if (profile == OMX_VIDEO_AVCProfileMax)
         goto unsupported_profile;
     }
     level_string = gst_structure_get_string (s, "level");
     if (level_string) {
-      param.eLevel = get_level_from_str (level_string);
-      if (param.eLevel == OMX_VIDEO_AVCLevelMax)
+      level = get_level_from_str (level_string);
+      if (level == OMX_VIDEO_AVCLevelMax)
         goto unsupported_level;
     }
-    gst_caps_unref (peercaps);
-  }
 
-  err =
-      gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
-      OMX_IndexParamVideoProfileLevelCurrent, &param);
-  if (err == OMX_ErrorUnsupportedIndex) {
-    GST_WARNING_OBJECT (self,
-        "Setting profile/level not supported by component");
-  } else if (err != OMX_ErrorNone) {
-    GST_ERROR_OBJECT (self,
-        "Error setting profile %u and level %u: %s (0x%08x)",
-        (guint) param.eProfile, (guint) param.eLevel,
-        gst_omx_error_to_string (err), err);
-    return FALSE;
+    gst_caps_unref (peercaps);
+
+    if (profile != OMX_VIDEO_AVCProfileMax || level != OMX_VIDEO_AVCLevelMax) {
+      if (!update_param_profile_level (self, profile, level))
+        return FALSE;
+    }
   }
 
   return TRUE;
