@@ -73,7 +73,7 @@ environment is used.
 
 ## How can I use GConf to get the system-wide defaults?
 
-For GNOME applications it's a good idea to use GConf to find the
+For GNOME applications it's a good idea to use `GConf` to find the
 default ways of outputting audio and video. You can do this by using the
 'gconfaudiosink' and 'gconfvideosink' elements for audio and video
 output. They will take care of everything GConf-related for you and
@@ -85,7 +85,7 @@ gconfaudiosink, your application should set the 'profile' property.
 When you link a program against uninstalled GStreamer using
 libtool, funny shell scripts are made to modify your shared object
 search path and then run your program. For instance, to debug
-gst-launch, try
+`gst-launch`, try:
 
 ```
 libtool --mode=execute gdb /path/to/gst-launch
