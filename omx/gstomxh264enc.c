@@ -325,6 +325,56 @@ update_param_profile_level (GstOMXH264Enc * self,
   return TRUE;
 }
 
+/* Update OMX_VIDEO_PARAM_AVCTYPE
+ *
+ * Returns TRUE if succeeded or if not supported, FALSE if failed */
+static gboolean
+update_param_avc (GstOMXH264Enc * self,
+    OMX_VIDEO_AVCPROFILETYPE profile, OMX_VIDEO_AVCLEVELTYPE level)
+{
+  OMX_VIDEO_PARAM_AVCTYPE param;
+  OMX_ERRORTYPE err;
+
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
+
+  /* On Android the param struct is initialized manually with default
+   * settings rather than using GetParameter() to retrieve them.
+   * We should probably do the same when we'll add Android as target.
+   * See bgo#783862 for details. */
+
+  err =
+      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexParamVideoAvc, &param);
+  if (err != OMX_ErrorNone) {
+    GST_WARNING_OBJECT (self,
+        "Getting OMX_IndexParamVideoAvc not supported by component");
+    return TRUE;
+  }
+
+  if (profile != OMX_VIDEO_AVCProfileMax)
+    param.eProfile = profile;
+  if (level != OMX_VIDEO_AVCLevelMax)
+    param.eLevel = level;
+
+  err =
+      gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexParamVideoAvc, &param);
+  if (err == OMX_ErrorUnsupportedIndex) {
+    GST_WARNING_OBJECT (self,
+        "Setting OMX_IndexParamVideoAvc not supported by component");
+    return TRUE;
+  } else if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "Error setting AVC settings (profile %u and level %u): %s (0x%08x)",
+        (guint) param.eProfile, (guint) param.eLevel,
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static gboolean
 set_avc_intra_perdiod (GstOMXH264Enc * self)
 {
@@ -486,6 +536,7 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   if (err != OMX_ErrorNone)
     return FALSE;
 
+  /* Set profile and level */
   peercaps = gst_pad_peer_query_caps (GST_VIDEO_ENCODER_SRC_PAD (enc),
       gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (enc)));
   if (peercaps) {
@@ -514,7 +565,11 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     gst_caps_unref (peercaps);
 
     if (profile != OMX_VIDEO_AVCProfileMax || level != OMX_VIDEO_AVCLevelMax) {
+      /* OMX provides 2 API to set the profile and level so try using both */
       if (!update_param_profile_level (self, profile, level))
+        return FALSE;
+
+      if (!update_param_avc (self, profile, level))
         return FALSE;
     }
   }
