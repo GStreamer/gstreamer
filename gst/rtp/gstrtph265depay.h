@@ -80,6 +80,10 @@ struct _GstRtpH265Depay
   GPtrArray *sps;
   GPtrArray *pps;
   gboolean new_codec_data;
+
+  /* downstream allocator */
+  GstAllocator *allocator;
+  GstAllocationParams params;
 };
 
 struct _GstRtpH265DepayClass
