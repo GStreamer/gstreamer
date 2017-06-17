@@ -3198,7 +3198,7 @@ GST_START_TEST (dash_mpdparser_adaptationSet_handling)
 {
   const gchar *periodName;
   guint adaptation_sets_count;
-  GList *adaptationSets;
+  GList *adaptationSets, *it;
   guint count = 0;
 
   const gchar *xml =
@@ -3241,7 +3241,7 @@ GST_START_TEST (dash_mpdparser_adaptationSet_handling)
   adaptationSets = gst_mpd_client_get_adaptation_sets (mpdclient);
   fail_if (adaptationSets == NULL);
 
-  for (GList * it = adaptationSets; it; it = g_list_next (it)) {
+  for (it = adaptationSets; it; it = g_list_next (it)) {
     GstAdaptationSetNode *adapt_set;
     adapt_set = (GstAdaptationSetNode *) it->data;
     fail_if (adapt_set == NULL);

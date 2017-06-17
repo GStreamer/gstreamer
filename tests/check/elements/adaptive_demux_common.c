@@ -130,10 +130,11 @@ gst_adaptive_demux_test_find_test_data_by_stream (GstAdaptiveDemuxTestCase *
   gchar *pad_name;
   GstAdaptiveDemuxTestExpectedOutput *ret = NULL;
   guint count = 0;
+  GList *walk;
 
   pad_name = gst_pad_get_name (stream->pad);
   fail_unless (pad_name != NULL);
-  for (GList * walk = testData->output_streams; walk; walk = g_list_next (walk)) {
+  for (walk = testData->output_streams; walk; walk = g_list_next (walk)) {
     GstAdaptiveDemuxTestExpectedOutput *td = walk->data;
     if (strcmp (td->name, pad_name) == 0) {
       ret = td;
@@ -463,8 +464,10 @@ static void
 testSeekPostTestCallback (GstAdaptiveDemuxTestEngine * engine,
     gpointer user_data)
 {
+  GList *walk;
+
   GstAdaptiveDemuxTestCase *testData = GST_ADAPTIVE_DEMUX_TEST_CASE (user_data);
-  for (GList * walk = testData->output_streams; walk; walk = g_list_next (walk)) {
+  for (walk = testData->output_streams; walk; walk = g_list_next (walk)) {
     GstAdaptiveDemuxTestExpectedOutput *td = walk->data;
 
     fail_if (td->segment_verification_needed);
