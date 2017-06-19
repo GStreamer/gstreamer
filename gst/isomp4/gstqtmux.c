@@ -3037,14 +3037,24 @@ gst_qt_mux_update_global_statistics (GstQTMux * qtmux)
 
     /* having flushed above, can check for buffers now */
     if (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts)) {
+      GstClockTime first_pts_in = qtpad->first_ts;
+      /* it should be, since we got first_ts by adding adjustment
+       * to a positive incoming PTS */
+      if (qtpad->dts_adjustment <= first_pts_in)
+        first_pts_in -= qtpad->dts_adjustment;
       /* determine max stream duration */
       if (!GST_CLOCK_TIME_IS_VALID (qtmux->last_dts)
           || qtpad->last_dts > qtmux->last_dts) {
         qtmux->last_dts = qtpad->last_dts;
       }
       if (!GST_CLOCK_TIME_IS_VALID (qtmux->first_ts)
-          || qtpad->first_ts < qtmux->first_ts) {
-        qtmux->first_ts = qtpad->first_ts;
+          || first_pts_in < qtmux->first_ts) {
+        /* we need the original incoming PTS here, as this first_ts
+         * is used in update_edit_lists to construct the edit list that arrange
+         * for sync'ed streams.  The first_ts is most likely obtained from
+         * some (audio) stream with 0 dts_adjustment and initial 0 PTS,
+         * so it makes no difference, though it matters in other cases */
+        qtmux->first_ts = first_pts_in;
       }
     }
 

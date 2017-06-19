@@ -118,6 +118,7 @@ struct _GstQTPad
 
   /* store the first timestamp for comparing with other streams and
    * know if there are late streams */
+  /* subjected to dts adjustment */
   GstClockTime first_ts;
   GstClockTime first_dts;
 
@@ -205,7 +206,8 @@ struct _GstQTMux
   /* keep track of the largest chunk to fine-tune brands */
   GstClockTime longest_chunk;
 
-  /* Earliest timestamp across all pads/traks */
+  /* Earliest timestamp across all pads/traks
+   * (unadjusted incoming PTS) */
   GstClockTime first_ts;
   /* Last DTS across all pads (= duration) */
   GstClockTime last_dts;
