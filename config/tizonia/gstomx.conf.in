@@ -13,3 +13,11 @@ component-name=OMX.Aratelia.audio_encoder.mp3
 rank=0
 in-port-index=0
 out-port-index=1
+
+[omxvp8dec]
+type-name=GstOMXVP8Dec
+core-name=@TIZONIA_LIBDIR@/libtizcore.so
+component-name=OMX.Aratelia.video_decoder.vp8
+rank=0
+in-port-index=0
+out-port-index=1
