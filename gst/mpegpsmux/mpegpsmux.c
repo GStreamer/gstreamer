@@ -229,7 +229,6 @@ mpegpsmux_create_stream (MpegPsMux * mux, MpegPsPadData * ps_data, GstPad * pad)
   }
 
   s = gst_caps_get_structure (caps, 0);
-  g_return_val_if_fail (s != NULL, FALSE);
 
   if (gst_structure_has_name (s, "video/x-dirac")) {
     GST_DEBUG_OBJECT (pad, "Creating Dirac stream");
