@@ -1849,6 +1849,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (bsink));
     if (!gst_video_info_from_caps (&src_info, caps)) {
       GST_WARNING_OBJECT (dfbvideosink, "failed getting video info");
+      gst_caps_unref (caps);
       ret = GST_FLOW_ERROR;
       goto beach;
     }
@@ -1856,6 +1857,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     str = gst_structure_get_string (structure, "format");
     if (str == NULL) {
       GST_WARNING ("failed grabbing fourcc from caps %" GST_PTR_FORMAT, caps);
+      gst_caps_unref (caps);
       ret = GST_FLOW_ERROR;
       goto beach;
     }
