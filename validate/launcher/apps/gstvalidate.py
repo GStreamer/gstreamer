@@ -638,7 +638,6 @@ class GstValidateBaseRTSPTest:
             self.extra_logfiles.append(self.rtspserver_logs.name)
 
         server_env = os.environ.copy()
-        server_env['GST_TRACERS'] = 'validate'
 
         self.rtsp_server = subprocess.Popen(command,
                                             stderr=self.rtspserver_logs,
@@ -661,7 +660,7 @@ class GstValidateBaseRTSPTest:
         self.pipeline_desc = self._unsetport_pipeline_desc.replace(
             "<RTSPPORTNUMBER>", str(self.server_port))
 
-        return 'GST_TRACERS=validate ' + ' '.join(command)
+        return ' '.join(command)
 
     def close_logfile(self):
         super().close_logfile()
