@@ -123,14 +123,10 @@ class Test(Loggable):
             string += ": " + self.result
             if self.result in [Result.FAILED, Result.TIMEOUT]:
                 string += " '%s'\n" \
-                          "       You can reproduce with: %s %s\n" \
-                    % (self.message, self._env_variable, ' '.join(self.command))
+                          "       You can reproduce with: %s\n" \
+                    % (self.message, self.get_command_repr())
 
-                if not self.options.redirect_logs:
-                    string += "       You can find logs in:\n" \
-                              "             - %s" % (self.logfile)
-                for log in self.extra_logfiles:
-                    string += "\n             - %s" % log
+                string += self.get_logfile_repr()
 
         return string
 
@@ -418,12 +414,23 @@ class Test(Loggable):
         return None
 
     def get_logfile_repr(self):
-        message = "    Logs:\n" \
-                  "         - %s" % (self.logfile)
-        for log in self.extra_logfiles:
+        message = "    Logs:\n"
+        logfiles = self.extra_logfiles.copy()
+
+        if not self.options.redirect_logs:
+            logfiles.insert(0, self.logfile)
+
+        for log in logfiles:
             message += "\n         - %s" % log
 
         return message
+
+    def get_command_repr(self):
+        message = "%s %s" % (self._env_variable, ' '.join(self.command))
+        if self.server_command:
+            message = "%s & %s" % (self.server_command, message)
+
+        return "'%s'" % message
 
     def test_start(self, queue):
         self.open_logfile()
@@ -446,11 +453,8 @@ class Test(Loggable):
             self.command = self.use_valgrind(self.command, self.proc_env)
 
         message = "Launching: %s%s\n" \
-                  "    Command: '%s & %s %s'\n" % (
-                      Colors.ENDC, self.classname, self.server_command,
-                      self._env_variable, ' '.join(self.command))
-        if self.server_command:
-            message += "    Server command: %s\n" % self.server_command
+                  "    Command: %s\n" % (Colors.ENDC, self.classname,
+                                         self.get_command_repr())
 
         if not self.options.redirect_logs:
             message += self.get_logfile_repr()
