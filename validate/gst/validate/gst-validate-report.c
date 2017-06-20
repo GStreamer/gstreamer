@@ -316,7 +316,7 @@ gst_validate_report_load_issues (void)
           "received."));
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_NEW_SEGMENT_MISMATCH,
       _("a new segment event has different value than the received one"),
-      _("when receiving a new segment, an element should push an equivalent"
+      _("when receiving a new segment, an element should push an equivalent "
           "segment downstream"));
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_FLUSH_START_UNEXPECTED,
       _("received an unexpected flush start event"), NULL);
