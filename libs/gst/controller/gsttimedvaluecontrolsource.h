@@ -148,6 +148,12 @@ gint            gst_timed_value_control_source_get_count      (GstTimedValueCont
 GST_EXPORT
 void            gst_timed_value_control_invalidate_cache      (GstTimedValueControlSource * self);
 
+GST_EXPORT
+void            gst_control_point_free (GstControlPoint * cp);
+
+GST_EXPORT
+GstControlPoint * gst_control_point_copy (GstControlPoint * cp);
+
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTimedValueControlSource, gst_object_unref)
 #endif
