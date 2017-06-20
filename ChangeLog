@@ -1,9 +1,52 @@
-=== release 1.12.0 ===
+=== release 1.12.1 ===
 
-2017-05-04  Sebastian Dröge <slomo@coaxion.net>
+2017-06-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.0
+	  releasing 1.12.1
+
+2017-06-20 10:50:24 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.3.2
+
+2017-05-16 18:54:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Don't expose NVIDIA CUVID decoder
+	  It's not working without further changes on our side, like all hardware
+	  decoders in ffmpeg.
+
+2017-05-20 20:02:39 +1000  Jan Schmidt <jan@centricular.com>
+
+	* .gitmodules:
+	* configure.ac:
+	* gst-libs/ext/gas-preprocessor:
+	  Pass $CC as AS, unless $AS is provided. Add gas-preprocessor
+	  Add gas-preprocessor.pl as a git submodule, and put it in the
+	  path so that it is available if libav wants it.
+	  Switch back to providing $CC as $AS by default, but
+	  respect an external $AS setting so that it can be
+	  overridden in cerbero
+	  https://bugzilla.gnome.org/show_bug.cgi?id=694416
+
+2017-05-17 10:41:57 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.3.1
+
+=== release 1.12.0 ===
+
+2017-05-04 15:39:47 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.12.0
 
 === release 1.11.91 ===
 
