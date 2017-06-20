@@ -99,6 +99,7 @@ typedef struct _GstInstallPluginsContext GstInstallPluginsContext;
 
 GstInstallPluginsContext * gst_install_plugins_context_new (void);
 
+GstInstallPluginsContext * gst_install_plugins_context_copy (GstInstallPluginsContext * ctx);
 void   gst_install_plugins_context_free    (GstInstallPluginsContext * ctx);
 
 void   gst_install_plugins_context_set_confirm_search (GstInstallPluginsContext * ctx,

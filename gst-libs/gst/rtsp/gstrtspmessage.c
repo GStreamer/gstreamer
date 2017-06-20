@@ -1214,7 +1214,7 @@ gst_rtsp_message_parse_auth_credentials (GstRTSPMessage * msg,
   return (GstRTSPAuthCredential **) g_ptr_array_free (auth_credentials, FALSE);
 }
 
-static GstRTSPAuthParam *
+GstRTSPAuthParam *
 gst_rtsp_auth_param_copy (GstRTSPAuthParam * param)
 {
   GstRTSPAuthParam *copy;
@@ -1229,7 +1229,7 @@ gst_rtsp_auth_param_copy (GstRTSPAuthParam * param)
   return copy;
 }
 
-static void
+void
 gst_rtsp_auth_param_free (GstRTSPAuthParam * param)
 {
   if (param != NULL) {

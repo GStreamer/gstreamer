@@ -218,6 +218,9 @@ struct _GstRTSPAuthParam {
   gchar *value;
 };
 
+GstRTSPAuthParam *       gst_rtsp_auth_param_copy (GstRTSPAuthParam * param);
+void                     gst_rtsp_auth_param_free (GstRTSPAuthParam * param);
+
 GstRTSPAuthCredential ** gst_rtsp_message_parse_auth_credentials (GstRTSPMessage * msg, GstRTSPHeaderField field);
 void                     gst_rtsp_auth_credentials_free (GstRTSPAuthCredential ** credentials);
 
