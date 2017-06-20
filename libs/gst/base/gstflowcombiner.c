@@ -72,9 +72,6 @@ struct _GstFlowCombiner
   volatile gint ref_count;
 };
 
-static GstFlowCombiner *gst_flow_combiner_ref (GstFlowCombiner * combiner);
-static void gst_flow_combiner_unref (GstFlowCombiner * combiner);
-
 GST_DEBUG_CATEGORY_STATIC (flowcombiner_dbg);
 #define GST_CAT_DEFAULT flowcombiner_dbg
 
@@ -121,7 +118,7 @@ gst_flow_combiner_free (GstFlowCombiner * combiner)
   gst_flow_combiner_unref (combiner);
 }
 
-static GstFlowCombiner *
+GstFlowCombiner *
 gst_flow_combiner_ref (GstFlowCombiner * combiner)
 {
   g_return_val_if_fail (combiner != NULL, NULL);
@@ -131,7 +128,7 @@ gst_flow_combiner_ref (GstFlowCombiner * combiner)
   return combiner;
 }
 
-static void
+void
 gst_flow_combiner_unref (GstFlowCombiner * combiner)
 {
   g_return_if_fail (combiner != NULL);

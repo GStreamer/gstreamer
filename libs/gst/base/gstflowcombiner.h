@@ -45,6 +45,12 @@ GST_EXPORT
 GstFlowCombiner * gst_flow_combiner_new (void);
 
 GST_EXPORT
+GstFlowCombiner * gst_flow_combiner_ref (GstFlowCombiner * combiner);
+
+GST_EXPORT
+void              gst_flow_combiner_unref (GstFlowCombiner * combiner);
+
+GST_EXPORT
 void              gst_flow_combiner_free (GstFlowCombiner * combiner);
 
 GST_EXPORT

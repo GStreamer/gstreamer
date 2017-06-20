@@ -289,6 +289,8 @@ GST_EXPORT
 void            gst_base_parse_frame_init      (GstBaseParseFrame * frame);
 
 GST_EXPORT
+GstBaseParseFrame * gst_base_parse_frame_copy  (GstBaseParseFrame * frame);
+GST_EXPORT
 void            gst_base_parse_frame_free      (GstBaseParseFrame * frame);
 
 GST_EXPORT
