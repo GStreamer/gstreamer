@@ -3,11 +3,11 @@
   <description>Voice pre-processing using WebRTC Audio Processing Library</description>
   <filename>../../ext/webrtcdsp/.libs/libgstwebrtcdsp.so</filename>
   <basename>libgstwebrtcdsp.so</basename>
-  <version>1.12.0</version>
+  <version>1.12.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>WebRTCDsp</package>
-  <origin>http://git.collabora.com</origin>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>webrtcdsp</name>
