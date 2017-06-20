@@ -285,6 +285,7 @@ GstBaseParseFrame * gst_base_parse_frame_new  (GstBuffer              * buffer,
 
 void            gst_base_parse_frame_init      (GstBaseParseFrame * frame);
 
+GstBaseParseFrame * gst_base_parse_frame_copy  (GstBaseParseFrame * frame);
 void            gst_base_parse_frame_free      (GstBaseParseFrame * frame);
 
 GstFlowReturn   gst_base_parse_push_frame      (GstBaseParse      * parse,

@@ -43,6 +43,10 @@ typedef struct _GstFlowCombiner GstFlowCombiner;
 
 GstFlowCombiner * gst_flow_combiner_new (void);
 
+GstFlowCombiner * gst_flow_combiner_ref (GstFlowCombiner * combiner);
+
+void              gst_flow_combiner_unref (GstFlowCombiner * combiner);
+
 void              gst_flow_combiner_free (GstFlowCombiner * combiner);
 
 GstFlowReturn     gst_flow_combiner_update_flow (GstFlowCombiner * combiner, GstFlowReturn fret);

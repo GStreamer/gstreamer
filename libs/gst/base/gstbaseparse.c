@@ -655,7 +655,7 @@ gst_base_parse_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstBaseParseFrame *
+GstBaseParseFrame *
 gst_base_parse_frame_copy (GstBaseParseFrame * frame)
 {
   GstBaseParseFrame *copy;

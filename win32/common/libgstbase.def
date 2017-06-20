@@ -34,6 +34,7 @@ EXPORTS
 	gst_base_parse_convert_default
 	gst_base_parse_drain
 	gst_base_parse_finish_frame
+	gst_base_parse_frame_copy
 	gst_base_parse_frame_free
 	gst_base_parse_frame_get_type
 	gst_base_parse_frame_init
@@ -285,8 +286,10 @@ EXPORTS
 	gst_flow_combiner_free
 	gst_flow_combiner_get_type
 	gst_flow_combiner_new
+	gst_flow_combiner_ref
 	gst_flow_combiner_remove_pad
 	gst_flow_combiner_reset
+	gst_flow_combiner_unref
 	gst_flow_combiner_update_flow
 	gst_flow_combiner_update_pad_flow
 	gst_push_src_get_type
