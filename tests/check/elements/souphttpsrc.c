@@ -52,6 +52,9 @@ static const char *realm = "SOUPHTTPSRC_REALM";
 static const char *basic_auth_path = "/basic_auth";
 static const char *digest_auth_path = "/digest_auth";
 
+static const char *ssl_cert_file = GST_TEST_FILES_PATH "/test-cert.pem";
+static const char *ssl_key_file = GST_TEST_FILES_PATH "/test-key.pem";
+
 static guint get_port_from_server (SoupServer * server);
 static SoupServer *run_server (gboolean use_https);
 
@@ -123,7 +126,7 @@ run_test (gboolean use_https, const gchar * path, gint expected)
   g_free (url);
 
   g_object_set (src, "automatic-redirect", redirect, NULL);
-  g_object_set (src, "ssl-ca-file", GST_TEST_FILES_PATH "/test-cert.pem", NULL);
+  g_object_set (src, "ssl-ca-file", ssl_cert_file, NULL);
   if (cookies != NULL)
     g_object_set (src, "cookies", cookies, NULL);
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
@@ -572,8 +575,6 @@ run_server (gboolean use_https)
 
 
   if (use_https) {
-    const char *ssl_cert_file = GST_TEST_FILES_PATH "/test-cert.pem";
-    const char *ssl_key_file = GST_TEST_FILES_PATH "/test-key.pem";
     GTlsBackend *backend = g_tls_backend_get_default ();
 
     if (backend == NULL || !g_tls_backend_supports_tls (backend)) {
