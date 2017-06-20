@@ -1,6 +1,8 @@
 # GStreamer 1.12 Release Notes
 
 GStreamer 1.12.0 was originally released on 4th May 2017.
+The latest bug-fix release in the 1.12 series is [1.12.1](#1.12.1) and was
+released on 20 June 2017.
 
 The GStreamer team is proud to announce a new major feature release in the
 stable 1.x API series of your favourite cross-platform multimedia framework!
@@ -11,7 +13,7 @@ improvements.
 See [https://gstreamer.freedesktop.org/releases/1.12/][latest] for the latest
 version of this document.
 
-*Last updated: Thursday 4 May 2017, 11:00 UTC [(log)][gitlog]*
+*Last updated: Tuesday 20 June 2017, 07:30 UTC [(log)][gitlog]*
 
 [latest]: https://gstreamer.freedesktop.org/releases/1.12/
 [gitlog]: https://cgit.freedesktop.org/gstreamer/www/log/src/htdocs/releases/1.12/release-notes-1.12.md
@@ -228,7 +230,8 @@ improvements.
 
 - `waylandsink` can now take DMAbuf buffers as input in the presence
   of a compatible Wayland compositor. This enables zero-copy transfer
-  from a decoder or source that outputs DMAbuf.
+  from a decoder or source that outputs DMAbuf. It will also set surface
+  opacity hint to allow better rendering optimization in the compositor.
 
 - `udpsrc` can be bound to more than one interface when joining a
   multicast group, this is done by giving a comma separate list of
@@ -453,6 +456,11 @@ New API has been added to:
 
 - `interleave` now supports > 64 channels.
 
+- OpenCV elements, `grabcut` and `retinex` has been ported to use
+  `GstOpencvVideoFilter` base class, increasing code reuse and fixing buffer
+  map/unmap issues. Redundant copie of images has been removed in `edgedetect`,
+  `cvlaplace` and `cvsobel`. This comes with various cleanup and Meson support.
+
 ### OpenGL integration
 
 - As usual the GStreamer OpenGL integration library has seen numerous
@@ -586,6 +594,12 @@ New API has been added to:
 
 - New testsuite for running various test scenarios on the DASH-IF test vectors
 
+## GStreamer Python Bindings
+
+- Overrides has been added for IntRange, Int64Range, DoubleRange,
+  FractionRange, Array and List. This finally enables Python programmers
+  to fully read and write GstCaps objects.
+
 ## Build and Dependencies
 
 - Meson build files are now disted in tarballs, for jhbuild and so distro
@@ -595,7 +609,7 @@ New API has been added to:
 - Some plugin filenames have been changed to match the plugin names: for example
   the file name of the `encoding` plugin in gst-plugins-base containing the
   `encodebin` element was `libgstencodebin.so` and has been changed to
-  `libgstencodebin.so`. This affects only a handful of plugins across modules.
+  `libgstencoding.so`. This affects only a handful of plugins across modules.
 
   **Developers who install GStreamer from source and just do `make install`**
   **after updating the source code, without doing `make uninstall` first, will**
@@ -705,6 +719,38 @@ is a stable branch.
 
 1.12.0 was released on 4th May 2017.
 
+<a name="1.12.1"></a>
+
+### 1.12.1
+
+The first 1.10 bug-fix release (1.12.1) was released on 20 June 2017.
+This release only contains bugfixes and it should be safe to update from 1.12.x.
+
+#### Major bugfixes in 1.12.1
+
+ - Various fixes for crashes, assertions, deadlocks and memory leaks
+ - Fix for regression when seeking to the end of ASF files
+ - Fix for regression in (raw)videoparse that caused it to omit video metadata
+ - Fix for regression in discoverer that made it show more streams than
+   actually available
+ - Numerous bugfixes to the adaptive demuxer base class and the DASH demuxer
+ - Various playbin3/urisourcebin related bugfixes
+ - Vivante DirectVIV (imx6) texture uploader works with single-plane (e.g.
+   RGB) video formats now
+ - Intel Media SDK encoder now outputs valid PTS and keyframe flags
+ - OpenJPEG2000 plugin can be loaded again on MacOS and correctly displays
+   8 bit RGB images now
+ - Fixes to DirectSound source/sink for high CPU usage and wrong
+   latency/buffer size calculations
+ - gst-libav was updated to ffmpeg n3.3.2
+ - ... and many, many more!
+
+For a full list of bugfixes see [Bugzilla][buglist-1.12.1]. Note that this is
+not the full list of changes. For the full list of changes please refer to the
+GIT logs or ChangeLogs of the particular modules.
+
+[buglist-1.12.1]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=225693&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.12.1
+
 ## Known Issues
 
 - The `webrtcdsp` element is currently not shipped as part of the Windows
@@ -714,8 +760,8 @@ is a stable branch.
 
 ## Schedule for 1.14
 
-Our next major feature release will be 1.14, and 1.11 will be the unstable
-development version leading up to the stable 1.12 release. The development
+Our next major feature release will be 1.14, and 1.13 will be the unstable
+development version leading up to the stable 1.14 release. The development
 of 1.13/1.14 will happen in the git master branch.
 
 The plan for the 1.14 development cycle is yet to be confirmed, but it is

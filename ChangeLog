@@ -1,9 +1,61 @@
-=== release 1.12.0 ===
+=== release 1.12.1 ===
 
-2017-05-04  Sebastian Dröge <slomo@coaxion.net>
+2017-06-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.0
+	  releasing 1.12.1
+
+2017-06-14 21:40:33 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: initialize active_sps/pps in reset
+	  Since commits in https://bugzilla.gnome.org/show_bug.cgi?id=781142 landed,
+	  they introduced regression in seek.
+	  Formerly, once seek is done, decoder drops P-frames until I-frame arrives.
+	  But since the commits landed, it doesn't drop P-frame and does try to
+	  decode it continuously because active_sps is still alive. See ensure_sps function.
+	  But there are prev_frames and prev_ref_frames reset already, then it
+	  causes assertion.
+	  So it's necessary to reset active_sps/pps also in reset method.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783726
+
+2017-05-12 13:08:30 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: keep handle_events flag except that if user want to set
+	  When state of vaapisink is changed from PLAYING to NULL, the handle_events
+	  flag is set to FALSE, and never recovered, and then event thread is never
+	  going to run.
+	  So we should allow to set the flag only when users try it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782543
+
+2017-05-12 13:06:24 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_x11.c:
+	  libs: window: x11: fix src rect info when using vpp
+	  Since we started using VPP in VaapiWindowX11, we need to care about
+	  the case that src rect and window's size are different.
+	  So, once VPP has converted to other format, we should honor the
+	  size of the VPP's surface as source rect. Otherwise, it is cropped
+	  according the previous size of the source rect.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782542
+
+2017-04-28 15:20:01 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: remove par from caps negotiation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781759
+
+=== release 1.12.0 ===
+
+2017-05-04 15:46:03 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.12.0
 
 2017-05-04 11:49:33 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
