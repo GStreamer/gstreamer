@@ -1,136 +1,175 @@
-# translation of gst-plugins-bad-0.10.21.2.po to Turkish
+# translation of gst-plugins-bad-1.12.0.po to Turkish
 # This file is put in the public domain.
 # This file is distributed under the same license as the gst-plugins-bad package.
-#
 # Server Acim <serveracim@gmail.com>, 2009, 2015.
+# Mehmet Kececi <mkececi@mehmetkececi.com>, 2017.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.4.1\n"
+"Project-Id-Version: gst-plugins-bad-1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2017-05-04 15:09+0300\n"
-"PO-Revision-Date: 2015-01-10 21:07+0100\n"
-"Last-Translator: Volkan Gezer <volkangezer@gmail.com>\n"
+"PO-Revision-Date: 2017-05-05 11:07+0300\n"
+"Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.5\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Virtaal 0.7.1\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Project-Style: gnome\n"
 
+#: ext/gl/gstgltestsrc.c:489
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "desen çizimi başarısız oldu"
 
+#: ext/gl/gstgltestsrc.c:490
 msgid "A GL error occured"
-msgstr ""
+msgstr "Bir GL hatası oluştu"
 
+#: ext/gl/gstgltestsrc.c:496
 msgid "format wasn't negotiated before get function"
 msgstr "get fonksiyonundan önce biçim görüşülemedi"
 
+#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
-msgstr ""
+msgstr "OpenCV şablon görüntüsü yüklenemedi"
 
+#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "DVD'deki başlık bilgisi okunamıyor."
 
+#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "DVD aygıtı açılamadı '%s'."
 
+#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "PGC temelli arama ayarı yapılamadı."
 
-msgid ""
-"Could not read DVD. This may be because the DVD is encrypted and a DVD "
-"decryption library is not installed."
-msgstr ""
-"DVD okunamıyor. DVD şifrelenmiş veya DVD şifre çözme kitaplığı kurulmamış "
-"olabilir."
+#: ext/resindvd/resindvdsrc.c:1164
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "DVD okunamıyor. DVD şifrelenmiş veya DVD şifre çözme kitaplığı kurulmamış olabilir."
 
+#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "DVD okunamıyor."
 
+#: ext/smoothstreaming/gstmssdemux.c:421
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:722
 msgid "This file contains no playable streams."
 msgstr "Dosya çalınabilir akışlar içermiyor."
 
+#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Sndfile akışı okumak için açamıyor."
 
+#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr ""
-"Oluşturlmuş dosya, akışlarının süresinden daha büyük preroll zamanına sahip"
+msgstr "Oluşturlmuş dosya, akışlarının süresinden daha büyük preroll zamanına sahip"
 
+#: gst/camerabin2/camerabingeneral.c:167 gst/camerabin2/gstcamerabin2.c:1859
+#: gst/camerabin2/gstdigitalzoom.c:283 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Eksik öge '%s' - GStreamer kurulumunuzu kontrol ediniz."
 
+#: gst/camerabin2/gstcamerabin2.c:347
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr ""
-"Dosya konumunuz BOŞ bir değere ayarlı, lütfen geçerli bir dosya adı için "
-"ayarlayın"
+msgstr "Dosya konumunuz BOŞ bir değere ayarlı, lütfen geçerli bir dosya adı için ayarlayın"
 
+#: gst/camerabin2/gstwrappercamerabinsrc.c:585
 msgid "Digitalzoom element couldn't be created"
-msgstr ""
+msgstr "Digitalzoom öğesi oluşturulamadı"
 
+#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "Alt resim biçimi, veri  akışından önce yapılandırılmış"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3352
 msgid "Failed to get fragment URL."
 msgstr "Parça adresi alınamadı."
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3724
 msgid "Couldn't download fragments"
 msgstr "Parçalar indirilemedi"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3813
+#: gst/mpegtsdemux/mpegtsbase.c:1610
 msgid "Internal data stream error."
 msgstr "İç veri akım hatası."
 
+#: sys/dvb/gstdvbsrc.c:1579 sys/dvb/gstdvbsrc.c:1793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Aygıt  \"%s\" bulunamadı."
 
+#: sys/dvb/gstdvbsrc.c:1583
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Aygıt açılamaz durumda \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:1602
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Aygıt ayarları bulunamadı \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:1619
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "\"%s\" ön yüz aygıtından iletim sistemleri numaralandırılanamıyor"
 
+#: sys/dvb/gstdvbsrc.c:1797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Dosyayı \"%s\" okumak için açamıyor."
 
-#, fuzzy
+#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
-msgstr "DVB kanal yapılandırma dosyası bulunamadı"
+msgstr "Kanal yapılandırma dosyası bulamadım"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
+#, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "DVB kanal yapılandırma dosyası yüklenemedi: %s"
+msgstr "Kanal yapılandırma dosyası yüklenemedi: '%s'"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
+#, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr "DVB kanalı %s için ayrıntılar bulunamadı"
+msgstr "Ayrıntılar için kanal '%s' bulamıyor"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:430
+#, c-format
 msgid "No properties for channel '%s'"
-msgstr "DVB kanalı %s için ayrıntılar bulunamadı"
+msgstr "Kanal '%s' için hiçbir özellikleri yok"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:439
+#, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "DVB kanalı %s için ayrıntılar bulunamadı"
+msgstr "'%s' kanal özelliklerini ayarlama başarısız oldu"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:560
+#, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "DVB kanal yapılandırma dosyası bulunamadı"
+msgstr "Kanal yapılandırma dosyası bulamadı: '%s'"
 
-#, fuzzy
+#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
-msgstr "DVB kanal yapılandırma dosyası herhangi bir kanal içermiyor"
+msgstr "Kanal yapılandırma dosyası herhangi bir kanal içermez"
+
+#~ msgid "Couldn't get the Manifest's URI"
+#~ msgstr "Manifest URI alınamadı"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Yazmak için dosya adı belirtilmedi."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Dosyayı \"%s\" yazmak için açamıyor."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Dosya yazılamıyor \"%s\"."
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Sndio ile bağlantı kurulamadı"
@@ -144,25 +183,11 @@ msgstr "DVB kanal yapılandırma dosyası herhangi bir kanal içermiyor"
 #~ msgid "Could not start sndio"
 #~ msgstr "Sndio başlatılamadı"
 
-#~ msgid "No file name specified for writing."
-#~ msgstr "Yazmak için dosya adı belirtilmedi."
-
-#~ msgid ""
-#~ "Given file name \"%s\" can't be converted to local file name encoding."
-#~ msgstr ""
-#~ "Verilen dosya adı \"%s\" yerel dosya adı kodlamasına dönüştürülemiyor."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Dosyayı \"%s\" yazmak için açamıyor."
-
 #~ msgid "Internal data flow error."
 #~ msgstr "İç veri akış hatası."
 
-#~ msgid "Couldn't get the Manifest's URI"
-#~ msgstr "Manifest URI alınamadı"
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Dosya yazılamıyor \"%s\"."
+#~ msgid "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr "Verilen dosya adı \"%s\" yerel dosya adı kodlamasına dönüştürülemiyor."
 
 #~ msgid "Internal clock error."
 #~ msgstr "İç saat hatası."
@@ -170,12 +195,8 @@ msgstr "DVB kanal yapılandırma dosyası herhangi bir kanal içermiyor"
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "Karıştırıcı işlemi için ses aygıtı açılamıyor."
 
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Karıştırıcı işlemi için ses aygıtı açılamıyor. Bu öğe tarafından Açık Ses "
-#~ "Sistemi'nin bu sürümü desteklenmiyor."
+#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
+#~ msgstr "Karıştırıcı işlemi için ses aygıtı açılamıyor. Bu öğe tarafından Açık Ses Sistemi'nin bu sürümü desteklenmiyor."
 
 #~ msgid "Volume"
 #~ msgstr "Gürlük"
@@ -480,27 +501,17 @@ msgstr "DVB kanal yapılandırma dosyası herhangi bir kanal içermiyor"
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 
-#~ msgid ""
-#~ "Could not open audio device for playback. Device is being used by another "
-#~ "application."
-#~ msgstr ""
-#~ "Çalmak için ses aygıtı açılamıyor. Aygıt başka bir uygulama tarafından "
-#~ "kullanılıyor."
+#~ msgid "Could not open audio device for playback. Device is being used by another application."
+#~ msgstr "Çalmak için ses aygıtı açılamıyor. Aygıt başka bir uygulama tarafından kullanılıyor."
 
-#~ msgid ""
-#~ "Could not open audio device for playback. You don't have permission to "
-#~ "open the device."
+#~ msgid "Could not open audio device for playback. You don't have permission to open the device."
 #~ msgstr "Çalmak için ses aygıtı açılamıyor. Aygıtı açma izniniz bulunmuyor."
 
 #~ msgid "Could not open audio device for playback."
 #~ msgstr "Çalmak için ses aygıtı açılamıyor."
 
-#~ msgid ""
-#~ "Could not open audio device for playback. This version of the Open Sound "
-#~ "System is not supported by this element."
-#~ msgstr ""
-#~ "Çalmak için ses aygıtı açılamıyor. Açık Ses Sistemi'nin bu sürümü bu öğe "
-#~ "tarafından desteklenmiyor."
+#~ msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+#~ msgstr "Çalmak için ses aygıtı açılamıyor. Açık Ses Sistemi'nin bu sürümü bu öğe tarafından desteklenmiyor."
 
 #~ msgid "Playback is not supported by this audio device."
 #~ msgstr "Bu ses aygıtı çalma işlevini desteklemiyor."
