@@ -268,6 +268,11 @@ struct _GstRTSPAuthParam {
 };
 
 GST_EXPORT
+GstRTSPAuthParam *       gst_rtsp_auth_param_copy (GstRTSPAuthParam * param);
+GST_EXPORT
+void                     gst_rtsp_auth_param_free (GstRTSPAuthParam * param);
+
+GST_EXPORT
 GstRTSPAuthCredential ** gst_rtsp_message_parse_auth_credentials (GstRTSPMessage * msg, GstRTSPHeaderField field);
 
 GST_EXPORT

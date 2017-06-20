@@ -2,6 +2,8 @@ EXPORTS
 	gst_rtsp_auth_credential_get_type
 	gst_rtsp_auth_credentials_free
 	gst_rtsp_auth_method_get_type
+	gst_rtsp_auth_param_copy
+	gst_rtsp_auth_param_free
 	gst_rtsp_auth_param_get_type
 	gst_rtsp_connection_accept
 	gst_rtsp_connection_clear_auth_params

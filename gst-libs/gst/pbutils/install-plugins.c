@@ -444,7 +444,7 @@ gst_install_plugins_context_free (GstInstallPluginsContext * ctx)
   g_free (ctx);
 }
 
-static GstInstallPluginsContext *
+GstInstallPluginsContext *
 gst_install_plugins_context_copy (GstInstallPluginsContext * ctx)
 {
   GstInstallPluginsContext *ret;

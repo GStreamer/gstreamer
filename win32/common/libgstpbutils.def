@@ -139,6 +139,7 @@ EXPORTS
 	gst_encoding_video_profile_set_pass
 	gst_encoding_video_profile_set_variableframerate
 	gst_install_plugins_async
+	gst_install_plugins_context_copy
 	gst_install_plugins_context_free
 	gst_install_plugins_context_get_type
 	gst_install_plugins_context_new

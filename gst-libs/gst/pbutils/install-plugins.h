@@ -101,6 +101,8 @@ GST_EXPORT
 GstInstallPluginsContext * gst_install_plugins_context_new (void);
 
 GST_EXPORT
+GstInstallPluginsContext * gst_install_plugins_context_copy (GstInstallPluginsContext * ctx);
+GST_EXPORT
 void   gst_install_plugins_context_free    (GstInstallPluginsContext * ctx);
 
 GST_EXPORT
