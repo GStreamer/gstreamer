@@ -1236,6 +1236,7 @@ EXPORTS
 	gst_segtrap_is_enabled
 	gst_segtrap_set_enabled
 	gst_stack_trace_flags_get_type
+	gst_state_change_get_name
 	gst_state_change_get_type
 	gst_state_change_return_get_type
 	gst_state_get_type
