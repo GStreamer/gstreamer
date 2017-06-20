@@ -84,7 +84,7 @@ endif
 
 foreach t : base_tests
   fnames = t.get(0)
-  test_name = fnames[0].split('.').get(0)
+  test_name = fnames[0].split('.').get(0).underscorify()
   skip_test = false
   extra_deps = [ ]
 
