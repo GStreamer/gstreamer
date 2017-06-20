@@ -1,16 +1,15 @@
 
-Release notes for GStreamer 1.12.0
+Release notes for GStreamer 1.12.1
 
-The GStreamer team is pleased to announce the first release in the stable 1.12
-release series. The 1.12 release series is adding new features on top of the
-1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable
-1.x release series of the GStreamer multimedia framework.
+The GStreamer team is proud to announce the first bugfix release in the stable
+1.12 release series of your favourite cross-platform multimedia framework!
 
 
-Full release notes can be found here
+This release only contains bugfixes and it is safe to update from 1.12.x. For a
+full list of bugfixes see Bugzilla.
 
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
+See /releases/1.12/ for the full release notes.
 
 
 This module, gstreamer, only contains core functionality.
@@ -36,7 +35,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 782050 : basetransform/adapter: Check if meta transform_func is NULL before using it
+      * 782174 : meson: gst-element-check-1.0.m4
+      * 783787 : gsturi: Fixed incorrect escaping of path in gst_uri_construct
+      * 783864 : gstptpclock: Memory leak on delay request message release. Timeout source is left referenced.
+      * 783978 : utils/registrychunks: Fix leaks in failed cases
 
 ==== Download ====
 
@@ -73,8 +75,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Frédéric Dalleau
-      * Nicola Murino
+      * Andrejs Vasiljevs
+      * Heekyoung Seo
+      * Matthew Waters
+      * Olivier Crête
       * Sebastian Dröge
-      * Víctor Manuel Jáquez Leal
+      * Tim-Philipp Müller
  
