@@ -125,8 +125,29 @@ run_test (gboolean use_https, const gchar * path, gint expected)
   g_object_set (src, "location", url, NULL);
   g_free (url);
 
+  if (use_https) {
+    GTlsDatabase *tlsdb;
+    GError *error = NULL;
+    gchar *path;
+
+    /* GTlsFileDatabase needs an absolute path. Using a relative one
+     * causes a warning from GLib-Net followed by a segfault in GnuTLS */
+    if (g_path_is_absolute (ssl_cert_file)) {
+      path = g_strdup (ssl_cert_file);
+    } else {
+      path = g_build_filename (g_get_current_dir (), ssl_cert_file, NULL);
+    }
+
+    tlsdb = g_tls_file_database_new (path, &error);
+    fail_unless (tlsdb, "Failed to load certificate: %s", error->message);
+
+    g_object_set (src, "tls-database", tlsdb, NULL);
+
+    g_object_unref (tlsdb);
+    g_free (path);
+  }
+
   g_object_set (src, "automatic-redirect", redirect, NULL);
-  g_object_set (src, "ssl-ca-file", ssl_cert_file, NULL);
   if (cookies != NULL)
     g_object_set (src, "cookies", cookies, NULL);
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
