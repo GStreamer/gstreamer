@@ -3,7 +3,7 @@
   <description>DTMF plugins</description>
   <filename>../../gst/dtmf/.libs/libgstdtmf.so</filename>
   <basename>libgstdtmf.so</basename>
-  <version>1.12.0</version>
+  <version>1.12.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
