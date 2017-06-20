@@ -1,9 +1,29 @@
-=== release 1.12.0 ===
+=== release 1.12.1 ===
 
-2017-05-04  Sebastian Dröge <slomo@coaxion.net>
+2017-06-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.0
+	  releasing 1.12.1
+
+2017-05-04 13:47:36 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/configure.ac:
+	  validate: Target the 1.12 integration testsuite
+
+2017-05-04 19:01:52 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  Fixup version in meson.build
+
+=== release 1.12.0 ===
+
+2017-05-04 15:48:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.12.0
 
 2017-04-30 14:35:29 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
 
