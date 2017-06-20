@@ -1,6 +1,8 @@
 EXPORTS
 	gst_argb_control_binding_get_type
 	gst_argb_control_binding_new
+	gst_control_point_copy
+	gst_control_point_free
 	gst_control_point_get_type
 	gst_direct_control_binding_get_type
 	gst_direct_control_binding_new
