@@ -4252,6 +4252,8 @@ gst_calculate_linear_regression (const GstClockTime * xy,
           G_GUINT64_FORMAT " newx[j] %" G_GUINT64_FORMAT " ybar %"
           G_GUINT64_FORMAT " newy[j] %" G_GUINT64_FORMAT, xbar, newx[j], ybar,
           newy[j]);
+      if (temp == NULL && n > 64)
+        g_free (newx);
       return FALSE;
     }
 
