@@ -569,25 +569,30 @@ get_port_from_server (SoupServer * server)
 static SoupServer *
 run_server (gboolean use_https)
 {
-  SoupServer *server;
-  SoupServerListenOptions listen_flags;
+  SoupServer *server = soup_server_new (NULL, NULL);
+  SoupServerListenOptions listen_flags = 0;
   guint port;
 
 
   if (use_https) {
     GTlsBackend *backend = g_tls_backend_get_default ();
+    GError *err = NULL;
 
     if (backend == NULL || !g_tls_backend_supports_tls (backend)) {
       GST_INFO ("No TLS support");
+      g_object_unref (server);
       return NULL;
     }
 
-    server = soup_server_new (SOUP_SERVER_SSL_CERT_FILE, ssl_cert_file,
-        SOUP_SERVER_SSL_KEY_FILE, ssl_key_file, NULL);
-    listen_flags = SOUP_SERVER_LISTEN_HTTPS;
-  } else {
-    server = soup_server_new (NULL, NULL);
-    listen_flags = 0;
+    if (!soup_server_set_ssl_cert_file (server, ssl_cert_file, ssl_key_file,
+          &err)) {
+      GST_INFO ("Failed to load certificate: %s", err->message);
+      g_object_unref (server);
+      g_error_free (err);
+      return NULL;
+    }
+
+    listen_flags |= SOUP_SERVER_LISTEN_HTTPS;
   }
 
   soup_server_add_handler (server, NULL, server_callback, NULL, NULL);
