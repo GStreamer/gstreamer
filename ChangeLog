@@ -1,9 +1,185 @@
-=== release 1.12.0 ===
+=== release 1.12.1 ===
 
-2017-05-04  Sebastian Dröge <slomo@coaxion.net>
+2017-06-20  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.0
+	  releasing 1.12.1
+
+2017-06-20 11:07:10 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/sv.po:
+	  po: Update translations
+
+2017-06-20 10:06:01 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/pbutils/install-plugins.c:
+	* gst-libs/gst/pbutils/install-plugins.h:
+	* gst-libs/gst/rtsp/gstrtspmessage.c:
+	* gst-libs/gst/rtsp/gstrtspmessage.h:
+	* win32/common/libgstpbutils.def:
+	* win32/common/libgstrtsp.def:
+	  libs: Export boxed type copy/free functions for the remaining types
+
+2017-06-02 09:41:59 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	  audioconvert: resize output buffer to correct size
+	  If we are using a downstream bufferpool we need to set the size of the
+	  buffer to our output size.
+
+2017-06-01 13:01:03 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst-libs/gst/video/navigation.c:
+	  navigation: Add introspection annotations for some output parameters
+	  The missing annotations prevented proper usage from introspected
+	  bindings like python.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783330
+
+2017-06-12 10:24:43 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gsturisourcebin.c:
+	  urisourcebin: Use downloadbuffer element
+	  And only set low-percent/high-percent if not using downloadbuffer, just
+	  like in old uridecodebin. using the watermark based buffering causes
+	  playback to hang never finish buffering with downloadbuffer.
+
+2017-06-14 17:04:18 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst/playback/gsturisourcebin.c:
+	  urisourcebin: Call do_async_done when source state change returns NO_PREROLL
+	  Otherwise for RTSP streams for example, the pipeline will never go to
+	  PLAYING as it will be missing an ASYNC_DONE message.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780099
+
+2017-06-12 15:38:53 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/rawparse/gstrawvideoparse.c:
+	  rawvideoparse: Fix missing VideoMeta
+	  The base class is trying to align the processed data, but it endup
+	  removing the GstVideoMeta. That caused wrong result. Instead, just copy
+	  from the process function with the appropriate alignment.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781204
+
+2017-06-01 13:28:42 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* gst-libs/gst/video/video-orc-dist.c:
+	* gst-libs/gst/video/video-orc-dist.h:
+	  video: update orc generated files
+	  Includes updates from:
+	  103d265 Fix RGBA and ABGR pack/unpack on big endian cpu
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783328
+
+2017-06-01 17:45:41 +0200  Wim Taymans <wtaymans@redhat.com>
+
+	* gst-libs/gst/video/video-format.c:
+	* gst-libs/gst/video/video-orc.orc:
+	  Fix RGBA and ABGR pack/unpack on big endian cpu
+	  The pack and unpack functions for RGBA and ABGR only work for little
+	  endian cpus. Add variants for big endian as well.
+
+2017-05-18 13:24:19 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  discoverer: Clean up more fields to decide if parent/child streams are equivalent
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782780
+
+2017-05-23 08:43:26 +0200  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	  videotestsrc: Protect videoinfo with object lock
+	  The videoinfo is set in the streaming thread, but can be read by any
+	  thread from the various queries, so protect it with the object lock.
+
+2017-05-18 11:02:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gsturisourcebin.c:
+	  urisourcebin: Unref query with gst_query_unref()
+	  Not gst_object_unref().
+
+=== release 1.12.0 ===
+
+2017-05-04 15:37:27 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-pbtypes.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* meson.build:
+	  Release 1.12.0
+
+2017-05-04 15:04:19 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/fur.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2017-05-03 16:02:19 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
 
