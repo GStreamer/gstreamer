@@ -758,6 +758,7 @@ gst_registry_chunks_load_plugin_dep_strv (gchar ** in, gchar * end, guint n)
   return arr;
 fail:
   GST_INFO ("Reading plugin dependency strings failed");
+  g_strfreev (arr);
   return NULL;
 }
 
