@@ -47,6 +47,7 @@ base_tests = [
   [['elements/pcapparse.c']],
   [['elements/pnm.c']],
   [['elements/schroenc.c'], not schro_dep.found(), [schro_dep]],
+  [['elements/shm.c'], not shm_enabled, shm_deps],
   [['elements/rtponvifparse.c']],
   [['elements/rtponviftimestamp.c']],
   [['elements/videoframe-audiolevel.c']],
