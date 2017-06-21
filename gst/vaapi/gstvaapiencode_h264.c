@@ -281,17 +281,33 @@ find_best_profile (GstCaps * caps)
 static gboolean
 gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
 {
+  GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (base_encode);
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264 (base_encode->encoder);
   GstCaps *allowed_caps;
   GstVaapiProfile profile;
+  const char *stream_format = NULL;
+  GstStructure *structure;
+  guint i, num_structures;
 
-  /* Check for the largest profile that is supported */
   allowed_caps =
       gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (base_encode));
   if (!allowed_caps)
     return TRUE;
 
+  /* Check whether "stream-format" is avcC mode */
+  num_structures = gst_caps_get_size (allowed_caps);
+  for (i = 0; !stream_format && i < num_structures; i++) {
+    structure = gst_caps_get_structure (allowed_caps, i);
+    if (!gst_structure_has_field_typed (structure, "stream-format",
+            G_TYPE_STRING))
+      continue;
+    stream_format = gst_structure_get_string (structure, "stream-format");
+  }
+  encode->is_avc = stream_format && strcmp (stream_format, "avc") == 0;
+  base_encode->need_codec_data = encode->is_avc;
+
+  /* Check for the largest profile that is supported */
   profile = find_best_profile (allowed_caps);
   gst_caps_unref (allowed_caps);
   if (profile) {
@@ -307,33 +323,12 @@ static GstCaps *
 gst_vaapiencode_h264_get_caps (GstVaapiEncode * base_encode)
 {
   GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (base_encode);
-  GstCaps *caps, *allowed_caps;
+  GstCaps *caps;
 
   caps = gst_caps_from_string (GST_CODEC_CAPS);
 
-  /* Check whether "stream-format" is avcC mode */
-  allowed_caps =
-      gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
-  if (allowed_caps) {
-    const char *stream_format = NULL;
-    GstStructure *structure;
-    guint i, num_structures;
-
-    num_structures = gst_caps_get_size (allowed_caps);
-    for (i = 0; !stream_format && i < num_structures; i++) {
-      structure = gst_caps_get_structure (allowed_caps, i);
-      if (!gst_structure_has_field_typed (structure, "stream-format",
-              G_TYPE_STRING))
-        continue;
-      stream_format = gst_structure_get_string (structure, "stream-format");
-    }
-    encode->is_avc = stream_format && strcmp (stream_format, "avc") == 0;
-    gst_caps_unref (allowed_caps);
-  }
   gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING,
       encode->is_avc ? "avc" : "byte-stream", NULL);
-
-  base_encode->need_codec_data = encode->is_avc;
 
   /* XXX: update profile and level information */
   return caps;
