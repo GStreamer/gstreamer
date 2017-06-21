@@ -530,6 +530,8 @@ static GstIndex *gst_qtdemux_get_index (GstElement * element);
 #endif
 static GstStateChangeReturn gst_qtdemux_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_qtdemux_set_context (GstElement * element,
+    GstContext * context);
 static gboolean qtdemux_sink_activate (GstPad * sinkpad, GstObject * parent);
 static gboolean qtdemux_sink_activate_mode (GstPad * sinkpad,
     GstObject * parent, GstPadMode mode, gboolean active);
@@ -619,6 +621,7 @@ gst_qtdemux_class_init (GstQTDemuxClass * klass)
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_qtdemux_set_index);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_qtdemux_get_index);
 #endif
+  gstelement_class->set_context = GST_DEBUG_FUNCPTR (gst_qtdemux_set_context);
 
   gst_tag_register_musicbrainz_tags ();
 
@@ -2181,6 +2184,11 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->streams_aware = GST_OBJECT_PARENT (qtdemux)
         && GST_OBJECT_FLAG_IS_SET (GST_OBJECT_PARENT (qtdemux),
         GST_BIN_FLAG_STREAMS_AWARE);
+
+    if (qtdemux->preferred_protection_system_id) {
+      g_free (qtdemux->preferred_protection_system_id);
+      qtdemux->preferred_protection_system_id = NULL;
+    }
   } else if (qtdemux->mss_mode) {
     gst_flow_combiner_reset (qtdemux->flowcombiner);
     g_list_foreach (qtdemux->active_streams,
@@ -2682,6 +2690,28 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
   }
 
   return result;
+}
+
+static void
+gst_qtdemux_set_context (GstElement * element, GstContext * context)
+{
+  GstQTDemux *qtdemux = GST_QTDEMUX (element);
+
+  g_return_if_fail (GST_IS_CONTEXT (context));
+
+  if (gst_context_has_context_type (context,
+          "drm-preferred-decryption-system-id")) {
+    const GstStructure *s;
+
+    s = gst_context_get_structure (context);
+    g_free (qtdemux->preferred_protection_system_id);
+    qtdemux->preferred_protection_system_id =
+        g_strdup (gst_structure_get_string (s, "decryption-system-id"));
+    GST_DEBUG_OBJECT (element, "set preferred decryption system to %s",
+        qtdemux->preferred_protection_system_id);
+  }
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 static void
@@ -3918,6 +3948,9 @@ qtdemux_parse_pssh (GstQTDemux * qtdemux, GNode * node)
       (parent_box_type == FOURCC_moov) ? "isobmff/moov" : "isobmff/moof");
   for (iter = qtdemux->active_streams; iter; iter = g_list_next (iter)) {
     QtDemuxStream *stream = QTDEMUX_STREAM (iter->data);
+    GST_TRACE_OBJECT (qtdemux,
+        "adding protection event for stream %s and system %s",
+        stream->stream_id, sysid_string);
     g_queue_push_tail (&stream->protection_scheme_event_queue,
         gst_event_ref (event));
   }
@@ -5779,6 +5812,8 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
     GstEvent *event;
 
     while ((event = g_queue_pop_head (&stream->protection_scheme_event_queue))) {
+      GST_TRACE_OBJECT (stream->pad, "pushing protection event: %"
+          GST_PTR_FORMAT, event);
       gst_pad_push_event (stream->pad, event);
     }
 
@@ -7979,11 +8014,141 @@ qtdemux_do_allocation (GstQTDemux * qtdemux, QtDemuxStream * stream)
 }
 
 static gboolean
+pad_query (const GValue * item, GValue * value, gpointer user_data)
+{
+  GstPad *pad = g_value_get_object (item);
+  GstQuery *query = user_data;
+  gboolean res;
+
+  res = gst_pad_peer_query (pad, query);
+
+  if (res) {
+    g_value_set_boolean (value, TRUE);
+    return FALSE;
+  }
+
+  GST_INFO_OBJECT (pad, "pad peer query failed");
+  return TRUE;
+}
+
+static gboolean
+gst_qtdemux_run_query (GstElement * element, GstQuery * query,
+    GstPadDirection direction)
+{
+  GstIterator *it;
+  GstIteratorFoldFunction func = pad_query;
+  GValue res = { 0, };
+
+  g_value_init (&res, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&res, FALSE);
+
+  /* Ask neighbor */
+  if (direction == GST_PAD_SRC)
+    it = gst_element_iterate_src_pads (element);
+  else
+    it = gst_element_iterate_sink_pads (element);
+
+  while (gst_iterator_fold (it, func, &res, query) == GST_ITERATOR_RESYNC)
+    gst_iterator_resync (it);
+
+  gst_iterator_free (it);
+
+  return g_value_get_boolean (&res);
+}
+
+static void
+gst_qtdemux_request_protection_context (GstQTDemux * qtdemux,
+    QtDemuxStream * stream)
+{
+  GstQuery *query;
+  GstContext *ctxt;
+  GstElement *element = GST_ELEMENT (qtdemux);
+  GstStructure *st;
+  gchar **filtered_sys_ids;
+  GValue event_list = G_VALUE_INIT;
+  GList *walk;
+
+  /* 1. Check if we already have the context. */
+  if (qtdemux->preferred_protection_system_id != NULL) {
+    GST_LOG_OBJECT (element,
+        "already have the protection context, no need to request it again");
+    return;
+  }
+
+  g_ptr_array_add (qtdemux->protection_system_ids, NULL);
+  filtered_sys_ids = gst_protection_filter_systems_by_available_decryptors (
+      (const gchar **) qtdemux->protection_system_ids->pdata);
+  g_ptr_array_remove_index (qtdemux->protection_system_ids,
+      qtdemux->protection_system_ids->len - 1);
+  GST_TRACE_OBJECT (qtdemux, "detected %u protection systems, we have "
+      "decryptors for %u of them, running context request",
+      qtdemux->protection_system_ids->len, g_strv_length (filtered_sys_ids));
+
+  if (stream->protection_scheme_event_queue.length) {
+    GST_TRACE_OBJECT (qtdemux, "using stream event queue, length %u",
+        stream->protection_scheme_event_queue.length);
+    walk = stream->protection_scheme_event_queue.tail;
+  } else {
+    GST_TRACE_OBJECT (qtdemux, "using demuxer event queue, length %u",
+        qtdemux->protection_event_queue.length);
+    walk = qtdemux->protection_event_queue.tail;
+  }
+
+  g_value_init (&event_list, GST_TYPE_LIST);
+  for (; walk; walk = g_list_previous (walk)) {
+    GValue *event_value = g_new0 (GValue, 1);
+    g_value_init (event_value, GST_TYPE_EVENT);
+    g_value_set_boxed (event_value, walk->data);
+    gst_value_list_append_and_take_value (&event_list, event_value);
+  }
+
+  /*  2a) Query downstream with GST_QUERY_CONTEXT for the context and
+   *      check if downstream already has a context of the specific type
+   *  2b) Query upstream as above.
+   */
+  query = gst_query_new_context ("drm-preferred-decryption-system-id");
+  st = gst_query_writable_structure (query);
+  gst_structure_set (st, "track-id", G_TYPE_UINT, stream->track_id,
+      "stream-encryption-systems", G_TYPE_STRV, filtered_sys_ids, NULL);
+  gst_structure_set_value (st, "stream-encryption-events", &event_list);
+  if (gst_qtdemux_run_query (element, query, GST_PAD_SRC)) {
+    gst_query_parse_context (query, &ctxt);
+    GST_INFO_OBJECT (element, "found context (%p) in downstream query", ctxt);
+    gst_element_set_context (element, ctxt);
+  } else if (gst_qtdemux_run_query (element, query, GST_PAD_SINK)) {
+    gst_query_parse_context (query, &ctxt);
+    GST_INFO_OBJECT (element, "found context (%p) in upstream query", ctxt);
+    gst_element_set_context (element, ctxt);
+  } else {
+    /* 3) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with
+     *    the required context type and afterwards check if a
+     *    usable context was set now as in 1). The message could
+     *    be handled by the parent bins of the element and the
+     *    application.
+     */
+    GstMessage *msg;
+
+    GST_INFO_OBJECT (element, "posting need context message");
+    msg = gst_message_new_need_context (GST_OBJECT_CAST (element),
+        "drm-preferred-decryption-system-id");
+    st = (GstStructure *) gst_message_get_structure (msg);
+    gst_structure_set (st, "track-id", G_TYPE_UINT, stream->track_id,
+        "stream-encryption-systems", G_TYPE_STRV, filtered_sys_ids, NULL);
+    gst_structure_set_value (st, "stream-encryption-events", &event_list);
+    gst_element_post_message (element, msg);
+  }
+
+  g_strfreev (filtered_sys_ids);
+  g_value_unset (&event_list);
+  gst_query_unref (query);
+}
+
+static gboolean
 gst_qtdemux_configure_protected_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream)
 {
   GstStructure *s;
-  const gchar *selected_system;
+  const gchar *selected_system = NULL;
 
   g_return_val_if_fail (qtdemux != NULL, FALSE);
   g_return_val_if_fail (stream != NULL, FALSE);
@@ -7999,16 +8164,40 @@ gst_qtdemux_configure_protected_caps (GstQTDemux * qtdemux,
         "cenc protection system information has been found");
     return FALSE;
   }
-  g_ptr_array_add (qtdemux->protection_system_ids, NULL);
-  selected_system = gst_protection_select_system ((const gchar **)
-      qtdemux->protection_system_ids->pdata);
-  g_ptr_array_remove_index (qtdemux->protection_system_ids,
-      qtdemux->protection_system_ids->len - 1);
+
+  gst_qtdemux_request_protection_context (qtdemux, stream);
+  if (qtdemux->preferred_protection_system_id != NULL) {
+    const gchar *preferred_system_array[] =
+        { qtdemux->preferred_protection_system_id, NULL };
+
+    selected_system = gst_protection_select_system (preferred_system_array);
+
+    if (selected_system) {
+      GST_TRACE_OBJECT (qtdemux, "selected preferred system %s",
+          qtdemux->preferred_protection_system_id);
+    } else {
+      GST_WARNING_OBJECT (qtdemux, "could not select preferred system %s "
+          "because there is no available decryptor",
+          qtdemux->preferred_protection_system_id);
+    }
+  }
+
+  if (!selected_system) {
+    g_ptr_array_add (qtdemux->protection_system_ids, NULL);
+    selected_system = gst_protection_select_system ((const gchar **)
+        qtdemux->protection_system_ids->pdata);
+    g_ptr_array_remove_index (qtdemux->protection_system_ids,
+        qtdemux->protection_system_ids->len - 1);
+  }
+
   if (!selected_system) {
     GST_ERROR_OBJECT (qtdemux, "stream is protected, but no "
         "suitable decryptor element has been found");
     return FALSE;
   }
+
+  GST_DEBUG_OBJECT (qtdemux, "selected protection system is %s",
+      selected_system);
 
   s = gst_caps_get_structure (CUR_STREAM (stream)->caps, 0);
   if (!gst_structure_has_name (s, "application/x-cenc")) {
@@ -12170,7 +12359,7 @@ qtdemux_update_streams (GstQTDemux * qtdemux)
   /* Count n_streams again */
   qtdemux->n_streams = 0;
 
-  for (iter = qtdemux->active_streams;iter; iter = next) {
+  for (iter = qtdemux->active_streams; iter; iter = next) {
     GList *tmp;
     QtDemuxStream *stream = QTDEMUX_STREAM (iter->data);
 

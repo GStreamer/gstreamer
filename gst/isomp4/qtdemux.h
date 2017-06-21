@@ -155,6 +155,7 @@ struct _GstQTDemux {
   guint64 cenc_aux_info_offset;
   guint8 *cenc_aux_info_sizes;
   guint32 cenc_aux_sample_count;
+  gchar *preferred_protection_system_id;
 
   /* Whether the parent bin is streams-aware, meaning we can
    * add/remove streams at any point in time */
