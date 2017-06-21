@@ -151,6 +151,7 @@ struct _GstQTDemux {
   guint64 cenc_aux_info_offset;
   guint8 *cenc_aux_info_sizes;
   guint32 cenc_aux_sample_count;
+  gchar *preferred_protection_system_id;
 
 
   /*
