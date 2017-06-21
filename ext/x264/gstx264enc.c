@@ -2204,6 +2204,7 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
         "downstream has ANY caps, outputting byte-stream");
     encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_BYTE_STREAM;
     g_string_append_printf (encoder->option_string, ":annexb=1");
+    gst_caps_unref (allowed_caps);
   } else if (allowed_caps) {
     GstStructure *s;
     const gchar *profile;
