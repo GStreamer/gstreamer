@@ -1084,7 +1084,8 @@ gst_base_parse_negotiate_default_caps (GstBaseParse * parse)
   GST_INFO_OBJECT (parse,
       "Chose default caps %" GST_PTR_FORMAT " for initial gap", default_caps);
 
-  gst_caps_unref (sinkcaps);
+  if (sinkcaps)
+    gst_caps_unref (sinkcaps);
   gst_caps_unref (caps);
 
   return default_caps;
