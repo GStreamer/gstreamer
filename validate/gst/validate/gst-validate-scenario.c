@@ -1276,12 +1276,19 @@ execute_switch_track_pb3 (GstValidateScenario * scenario,
           pipeline, "validate-monitor"));
 
   if (!monitor->stream_collection) {
-    GST_ERROR ("No stream collection message received on the bus");
+    GST_VALIDATE_REPORT (scenario,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "No stream collection message received on the bus, "
+        "can not switch track.");
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     goto done;
   }
 
   if (!monitor->streams_selected) {
-    GST_ERROR ("No streams selected message received on the bus");
+    GST_VALIDATE_REPORT (scenario,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "No streams selected message received on the bus");
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     goto done;
   }
 
@@ -1314,7 +1321,9 @@ execute_switch_track_pb3 (GstValidateScenario * scenario,
 
   if (!gst_element_send_event (pipeline,
           gst_event_new_select_streams (new_streams))) {
-    GST_ERROR ("select-streams event not handled");
+    GST_VALIDATE_REPORT (scenario,
+        SCENARIO_ACTION_EXECUTION_ERROR, "select-streams event not handled");
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     goto done;
   }
 
