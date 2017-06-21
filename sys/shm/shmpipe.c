@@ -942,7 +942,7 @@ sp_get_fd (ShmPipe * self)
   return self->main_socket;
 }
 
-const gchar *
+const char *
 sp_get_shm_area_name (ShmPipe * self)
 {
   if (self->shm_area)
