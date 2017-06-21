@@ -516,7 +516,7 @@ endif
 
 bcm_host_dep = unneeded_dep
 if need_win_dispmanx != 'no'
-  bcm_host_dep = dependency('bcm_host', required : false)
+  bcm_host_dep = cc.find_library('bcm_host', required : false)
   if bcm_host_dep.found()
     if not egl_dep.found()
       error('dispmanx requires the use of egl')
