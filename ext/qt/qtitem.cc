@@ -39,14 +39,11 @@
  * @short_description: a #GtkGLArea that renders GStreamer video #GstBuffers
  * @see_also: #GtkGLArea, #GstBuffer
  *
- * #QtGLVideoItem is an #GtkWidget that renders GStreamer video buffers.
+ * #QtGLVideoItem is an #QQuickItem that renders GStreamer video buffers.
  */
 
 #define GST_CAT_DEFAULT qt_item_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
-
-#define GTK_GST_GL_WIDGET_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
-    GTK_TYPE_GST_GL_WIDGET, QtGLVideoItemPrivate))
 
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
 #define DEFAULT_PAR_N               0
