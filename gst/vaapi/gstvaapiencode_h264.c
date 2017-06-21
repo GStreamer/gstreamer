@@ -284,39 +284,59 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
   GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (base_encode);
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264 (base_encode->encoder);
-  GstCaps *allowed_caps;
-  GstVaapiProfile profile;
-  const char *stream_format = NULL;
-  GstStructure *structure;
-  guint i, num_structures;
+  GstCaps *template_caps, *allowed_caps;
+  gboolean ret = TRUE;
 
+  template_caps =
+      gst_static_pad_template_get_caps (&gst_vaapiencode_h264_src_factory);
   allowed_caps =
-      gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (base_encode));
-  if (!allowed_caps)
-    return TRUE;
+      gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
 
-  /* Check whether "stream-format" is avcC mode */
-  num_structures = gst_caps_get_size (allowed_caps);
-  for (i = 0; !stream_format && i < num_structures; i++) {
-    structure = gst_caps_get_structure (allowed_caps, i);
-    if (!gst_structure_has_field_typed (structure, "stream-format",
-            G_TYPE_STRING))
-      continue;
-    stream_format = gst_structure_get_string (structure, "stream-format");
+  if (allowed_caps == template_caps) {
+    GST_INFO_OBJECT (encode, "downstream has ANY caps, outputting byte-stream");
+    encode->is_avc = FALSE;
+    gst_caps_unref (allowed_caps);
+  } else if (!allowed_caps) {
+    GST_INFO_OBJECT (encode,
+        "downstream has NULL caps, outputting byte-stream");
+    encode->is_avc = FALSE;
+  } else if (gst_caps_is_empty (allowed_caps)) {
+    GST_INFO_OBJECT (encode, "downstream has EMPTY caps");
+    gst_caps_unref (template_caps);
+    gst_caps_unref (allowed_caps);
+    return FALSE;
+  } else {
+    const char *stream_format = NULL;
+    GstStructure *structure;
+    guint i, num_structures;
+    GstVaapiProfile profile;
+
+    /* Check whether "stream-format" is avcC mode */
+    num_structures = gst_caps_get_size (allowed_caps);
+    for (i = 0; !stream_format && i < num_structures; i++) {
+      structure = gst_caps_get_structure (allowed_caps, i);
+      if (!gst_structure_has_field_typed (structure, "stream-format",
+              G_TYPE_STRING))
+        continue;
+      stream_format = gst_structure_get_string (structure, "stream-format");
+    }
+    encode->is_avc = stream_format && strcmp (stream_format, "avc") == 0;
+
+    /* Check for the largest profile that is supported */
+    profile = find_best_profile (allowed_caps);
+    if (profile != GST_VAAPI_PROFILE_UNKNOWN) {
+      GST_INFO ("using %s profile as target decoder constraints",
+          gst_vaapi_utils_h264_get_profile_string (profile));
+      ret = gst_vaapi_encoder_h264_set_max_profile (encoder, profile);
+    }
+
+    gst_caps_unref (allowed_caps);
   }
-  encode->is_avc = stream_format && strcmp (stream_format, "avc") == 0;
+  gst_caps_unref (template_caps);
+
   base_encode->need_codec_data = encode->is_avc;
 
-  /* Check for the largest profile that is supported */
-  profile = find_best_profile (allowed_caps);
-  gst_caps_unref (allowed_caps);
-  if (profile) {
-    GST_INFO ("using %s profile as target decoder constraints",
-        gst_vaapi_utils_h264_get_profile_string (profile));
-    if (!gst_vaapi_encoder_h264_set_max_profile (encoder, profile))
-      return FALSE;
-  }
-  return TRUE;
+  return ret;
 }
 
 static GstCaps *
