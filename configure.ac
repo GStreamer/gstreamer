@@ -2915,9 +2915,18 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
   PKG_CHECK_MODULES(QT, Qt5Core Qt5Gui Qt5Qml Qt5Quick >= 5.4.0, [
       QT_PATH=`$PKG_CONFIG --variable=exec_prefix Qt5Core`
       QT_HOST_PATH=`$PKG_CONFIG --variable=host_bins Qt5Core`
-      AC_PATH_PROGS(MOC, [moc-qt5 moc], moc, ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
-      AC_PATH_PROGS(RCC, [rcc-qt5 rcc], rcc, ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
-      AC_PATH_PROGS(UIC, [uic-qt5 uic], uic, ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
+      AC_ARG_WITH([moc],
+           AS_HELP_STRING([--with-moc], [Set location of qt moc tool]),
+           [MOC=$withval])
+      AC_PATH_PROGS(MOC, [moc-qt5 moc], [moc], ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
+      AC_ARG_WITH([rcc],
+           AS_HELP_STRING([--with-rcc], [Set location of qt rcc tool]),
+           [RCC=$withval])
+      AC_PATH_PROGS(RCC, [rcc-qt5 rcc], [rcc], ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
+      AC_ARG_WITH([uic],
+               AS_HELP_STRING([--with-uic], [Set location of qt uic tool]),
+               [UIC=$withval])
+      AC_PATH_PROGS(UIC, [uic-qt5 uic], [uic], ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
       if test "x$MOC" = "x" || test "x$UIC" = "x" || test "x$RCC" = "x"; then
         AC_MSG_WARN([One of the required qt build programs was not found])
         HAVE_QT="no"
