@@ -3018,13 +3018,29 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
       GstCaps *caps;
       GstBuffer *buffer;
       GstSegment *segment;
+      GstStructure *s;
       GstRTPBuffer rtp_buffer = GST_RTP_BUFFER_INIT;
 
       caps = gst_sample_get_caps (last_sample);
       buffer = gst_sample_get_buffer (last_sample);
       segment = gst_sample_get_segment (last_sample);
+      s = gst_caps_get_structure (caps, 0);
 
       if (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp_buffer)) {
+        guint ssrc_buf = gst_rtp_buffer_get_ssrc (&rtp_buffer);
+        guint ssrc_stream = 0;
+        if (gst_structure_has_field_typed (s, "ssrc", G_TYPE_UINT) &&
+            gst_structure_get_uint (s, "ssrc", &ssrc_stream) &&
+            ssrc_buf != ssrc_stream) {
+          /* Skip buffers from auxiliary streams. */
+          GST_DEBUG_OBJECT (stream,
+              "not a buffer from the payloader, SSRC: %08x", ssrc_buf);
+
+          gst_rtp_buffer_unmap (&rtp_buffer);
+          gst_sample_unref (last_sample);
+          goto stats;
+        }
+
         if (seq) {
           *seq = gst_rtp_buffer_get_seq (&rtp_buffer);
         }
@@ -3042,8 +3058,6 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
         }
 
         if (clock_rate) {
-          GstStructure *s = gst_caps_get_structure (caps, 0);
-
           gst_structure_get_int (s, "clock-rate", (gint *) clock_rate);
 
           if (*clock_rate == 0 && running_time)
@@ -3058,6 +3072,7 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
     }
   }
 
+stats:
   if (g_object_class_find_property (payobjclass, "stats")) {
     g_object_get (priv->payloader, "stats", &stats, NULL);
     if (stats == NULL)
