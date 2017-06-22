@@ -332,8 +332,8 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                               )
 
                 if test_rtsp and protocol == Protocols.FILE and not minfo.media_descriptor.is_image():
-                    rtspminfo = copy.deepcopy(minfo)
-                    rtspminfo.media_descriptor = GstValidateRTSPMediaDesciptor(minfo.media_descriptor.get_path())
+                    rtspminfo = NamedDic({"path": minfo.media_descriptor.get_path(),
+                                          "media_descriptor": GstValidateRTSPMediaDesciptor(minfo.media_descriptor.get_path())})
                     if not rtspminfo.media_descriptor.is_compatible(scenario):
                         continue
 
