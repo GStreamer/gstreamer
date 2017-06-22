@@ -2075,9 +2075,9 @@ gst_rtspsrc_connection_receive (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
   GstRTSPResult ret;
 
   if (conninfo->connection) {
-    g_mutex_lock (&conninfo->send_lock);
+    g_mutex_lock (&conninfo->recv_lock);
     ret = gst_rtsp_connection_receive (conninfo->connection, message, timeout);
-    g_mutex_unlock (&conninfo->send_lock);
+    g_mutex_unlock (&conninfo->recv_lock);
   } else {
     ret = GST_RTSP_ERROR;
   }
