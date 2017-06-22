@@ -39,7 +39,11 @@ import xml
 from . import reporters
 from . import loggable
 from .loggable import Loggable
-import xml.etree.cElementTree as ET
+
+try:
+    from lxml import etree as ET
+except (ModuleNotFoundError, ImportError):
+    import xml.etree.cElementTree as ET
 
 from .utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
     Protocols, look_for_file_in_source_dir, get_data_file, BackTraceGenerator, \
