@@ -170,6 +170,9 @@ gst_vaapiencode_h264_init (GstVaapiEncodeH264 * encode)
 static void
 gst_vaapiencode_h264_finalize (GObject * object)
 {
+  GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (object);
+
+  gst_caps_replace (&encode->available_caps, NULL);
   G_OBJECT_CLASS (gst_vaapiencode_h264_parent_class)->finalize (object);
 }
 
@@ -278,6 +281,51 @@ find_best_profile (GstCaps * caps)
   return data.best_profile;
 }
 
+static GstCaps *
+get_available_caps (GstVaapiEncodeH264 * encode)
+{
+  GstCaps *out_caps;
+  GArray *profiles;
+  GstVaapiProfile profile;
+  const gchar *profile_str;
+  GValue profile_v = G_VALUE_INIT;
+  GValue profile_list = G_VALUE_INIT;
+  guint i;
+
+  if (encode->available_caps)
+    return encode->available_caps;
+
+  g_value_init (&profile_list, GST_TYPE_LIST);
+  g_value_init (&profile_v, G_TYPE_STRING);
+
+  profiles =
+      gst_vaapi_display_get_encode_profiles
+      (GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
+  if (!profiles)
+    return NULL;
+
+  for (i = 0; i < profiles->len; i++) {
+    profile = g_array_index (profiles, GstVaapiProfile, i);
+    if (gst_vaapi_profile_get_codec (profile) != GST_VAAPI_CODEC_H264)
+      continue;
+    profile_str = gst_vaapi_profile_get_name (profile);
+    if (!profile_str)
+      continue;
+    g_value_set_string (&profile_v, profile_str);
+    gst_value_list_append_value (&profile_list, &profile_v);
+  }
+  g_array_unref (profiles);
+
+  out_caps = gst_caps_from_string (GST_CODEC_CAPS);
+  gst_caps_set_value (out_caps, "profile", &profile_list);
+  g_value_unset (&profile_list);
+  g_value_unset (&profile_v);
+
+  encode->available_caps = out_caps;
+
+  return encode->available_caps;
+}
+
 static gboolean
 gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
 {
@@ -310,6 +358,18 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
     GstStructure *structure;
     guint i, num_structures;
     GstVaapiProfile profile;
+    GstCaps *available_caps;
+
+    available_caps = get_available_caps (encode);
+    if (!available_caps) {
+      gst_caps_unref (template_caps);
+      gst_caps_unref (allowed_caps);
+      return FALSE;
+    }
+    if (!gst_caps_can_intersect (allowed_caps, available_caps)) {
+      GST_INFO_OBJECT (encode, "downstream requested an unsupported profile, "
+          "but encoder will output a compatible one");
+    }
 
     /* Check whether "stream-format" is avcC mode */
     num_structures = gst_caps_get_size (allowed_caps);
