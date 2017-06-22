@@ -149,6 +149,7 @@ enum
 #define DEFAULT_MAX_DROPOUT_TIME    60000
 #define DEFAULT_MAX_MISORDER_TIME   2000
 #define DEFAULT_RFC7273_SYNC        FALSE
+#define DEFAULT_FASTSTART_MIN_PACKETS 0
 
 #define DEFAULT_AUTO_RTX_DELAY (20 * GST_MSECOND)
 #define DEFAULT_AUTO_RTX_TIMEOUT (40 * GST_MSECOND)
@@ -177,7 +178,8 @@ enum
   PROP_MAX_RTCP_RTP_TIME_DIFF,
   PROP_MAX_DROPOUT_TIME,
   PROP_MAX_MISORDER_TIME,
-  PROP_RFC7273_SYNC
+  PROP_RFC7273_SYNC,
+  PROP_FASTSTART_MIN_PACKETS
 };
 
 #define JBUF_LOCK(priv)   G_STMT_START {			\
@@ -294,6 +296,7 @@ struct _GstRtpJitterBufferPrivate
   gint max_rtcp_rtp_time_diff;
   guint32 max_dropout_time;
   guint32 max_misorder_time;
+  guint faststart_min_packets;
 
   /* the last seqnum we pushed out */
   guint32 last_popped_seqnum;
@@ -852,6 +855,23 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtpJitterBuffer:faststart-min-packets
+   *
+   * The number of consecutive packets needed to start (set to 0 to
+   * disable faststart. The jitterbuffer will by default start after the
+   * latency has elapsed)
+   *
+   * Since: 1.14
+   */
+  g_object_class_install_property (gobject_class, PROP_FASTSTART_MIN_PACKETS,
+      g_param_spec_uint ("faststart-min-packets", "Faststart minimum packets",
+          "The number of consecutive packets needed to start (set to 0 to "
+          "disable faststart. The jitterbuffer will by default start after "
+          "the latency has elapsed)",
+          0, G_MAXUINT, DEFAULT_FASTSTART_MIN_PACKETS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
    * @pt: the pt
@@ -975,6 +995,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->max_rtcp_rtp_time_diff = DEFAULT_MAX_RTCP_RTP_TIME_DIFF;
   priv->max_dropout_time = DEFAULT_MAX_DROPOUT_TIME;
   priv->max_misorder_time = DEFAULT_MAX_MISORDER_TIME;
+  priv->faststart_min_packets = DEFAULT_FASTSTART_MIN_PACKETS;
 
   priv->last_dts = -1;
   priv->last_rtptime = -1;
@@ -2784,6 +2805,37 @@ gst_rtp_jitter_buffer_reset (GstRtpJitterBuffer * jitterbuffer,
   return ret;
 }
 
+static gboolean
+gst_rtp_jitter_buffer_fast_start (GstRtpJitterBuffer * jitterbuffer)
+{
+  GstRtpJitterBufferPrivate *priv;
+  RTPJitterBufferItem *item;
+  TimerData *timer;
+
+  priv = jitterbuffer->priv;
+
+  if (priv->faststart_min_packets == 0)
+    return FALSE;
+
+  item = rtp_jitter_buffer_peek (priv->jbuf);
+  if (!item)
+    return FALSE;
+
+  timer = find_timer (jitterbuffer, item->seqnum);
+  if (!timer || timer->type != TIMER_TYPE_DEADLINE)
+    return FALSE;
+
+  if (rtp_jitter_buffer_can_fast_start (priv->jbuf,
+          priv->faststart_min_packets)) {
+    GST_INFO_OBJECT (jitterbuffer, "We found %i consecutive packet, start now",
+        priv->faststart_min_packets);
+    timer->timeout = -1;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static GstFlowReturn
 gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -3095,6 +3147,10 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
       update_rtx_stats (jitterbuffer, timer, dts, FALSE);
     goto duplicate;
   }
+
+  /* Trigger fast start if needed */
+  if (gst_rtp_jitter_buffer_fast_start (jitterbuffer))
+    head = TRUE;
 
   /* update timers */
   update_timers (jitterbuffer, seqnum, dts, pts, do_next_seqnum,
@@ -4514,6 +4570,11 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
           g_value_get_boolean (value));
       JBUF_UNLOCK (priv);
       break;
+    case PROP_FASTSTART_MIN_PACKETS:
+      JBUF_LOCK (priv);
+      priv->faststart_min_packets = g_value_get_uint (value);
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -4648,6 +4709,11 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
       JBUF_LOCK (priv);
       g_value_set_boolean (value,
           rtp_jitter_buffer_get_rfc7273_sync (priv->jbuf));
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_FASTSTART_MIN_PACKETS:
+      JBUF_LOCK (priv);
+      g_value_set_uint (value, priv->faststart_min_packets);
       JBUF_UNLOCK (priv);
       break;
     default:

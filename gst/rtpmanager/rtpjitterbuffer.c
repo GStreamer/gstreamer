@@ -1257,3 +1257,41 @@ rtp_jitter_buffer_get_sync (RTPJitterBuffer * jbuf, guint64 * rtptime,
   if (last_rtptime)
     *last_rtptime = jbuf->last_rtptime;
 }
+
+/**
+ * rtp_jitter_buffer_can_fast_start:
+ * @jbuf: an #RTPJitterBuffer
+ * @num_packets: Number of consecutive packets needed
+ *
+ * Check if in the queue if there is enough packets with consecutive seqnum in
+ * order to start delivering them.
+ *
+ * Returns: %TRUE if the required number of consecutive packets was found.
+ */
+gboolean
+rtp_jitter_buffer_can_fast_start (RTPJitterBuffer * jbuf, gint num_packet)
+{
+  gboolean ret = TRUE;
+  RTPJitterBufferItem *last_item = NULL, *item;
+  gint i;
+
+  if (rtp_jitter_buffer_num_packets (jbuf) < num_packet)
+    return FALSE;
+
+  item = rtp_jitter_buffer_peek (jbuf);
+  for (i = 0; i < num_packet; i++) {
+    if (G_LIKELY (last_item)) {
+      guint16 expected_seqnum = last_item->seqnum + 1;
+
+      if (expected_seqnum != item->seqnum) {
+        ret = FALSE;
+        break;
+      }
+    }
+
+    last_item = item;
+    item = (RTPJitterBufferItem *) last_item->next;
+  }
+
+  return ret;
+}
