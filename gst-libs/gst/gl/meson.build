@@ -516,7 +516,14 @@ endif
 
 bcm_host_dep = unneeded_dep
 if need_win_dispmanx != 'no'
-  bcm_host_dep = cc.find_library('bcm_host', required : false)
+
+  # Try pkg-config for bcm_host then fallback to find_library to also
+  # support older distribution
+  bcm_host_dep = dependency('bcm_host', required : false)
+  if not bcm_host_dep.found()
+    bcm_host_dep = cc.find_library('bcm_host', required : false)
+  endif
+
   if bcm_host_dep.found()
     if not egl_dep.found()
       error('dispmanx requires the use of egl')
