@@ -44,6 +44,7 @@ base_tests = [
   [['elements/mssdemux.c', 'elements/test_http_src.c', 'elements/adaptive_demux_engine.c', 'elements/adaptive_demux_common.c'], not xml28_dep.found(), [xml28_dep]],
   [['elements/mxfdemux.c']],
   [['elements/mxfmux.c']],
+  [['elements/netsim.c']],
   [['elements/pcapparse.c']],
   [['elements/pnm.c']],
   [['elements/schroenc.c'], not schro_dep.found(), [schro_dep]],
