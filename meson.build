@@ -340,13 +340,20 @@ libsinc = include_directories('libs')
 privinc = include_directories('gst')
 
 # Find dependencies
-glib_dep = dependency('glib-2.0', version : '>=2.32.0')
-gobject_dep = dependency('gobject-2.0')
-gmodule_dep = dependency('gmodule-2.0')
+glib_dep = dependency('glib-2.0', version : '>=2.32.0',
+  fallback: ['glib', 'libglib_dep'])
+gobject_dep = dependency('gobject-2.0',
+  fallback: ['glib', 'libgobject_dep'])
+gmodule_dep = dependency('gmodule-2.0',
+  fallback: ['glib', 'libgmodule_dep'])
 if host_machine.system() == 'windows'
-    gio_dep = dependency('gio-2.0')
+    gio_dep = dependency('gio-2.0',
+        fallback: ['glib', 'libgio_dep'])
 else
-    gio_dep = [dependency('gio-2.0'), dependency('gio-unix-2.0')]
+    gio_dep = [dependency('gio-2.0',
+                  fallback: ['glib', 'libgio_dep']),
+               dependency('gio-unix-2.0',
+                  fallback: ['glib', 'libgio_dep'])]
 endif
 
 mathlib = cc.find_library('m', required : false)
