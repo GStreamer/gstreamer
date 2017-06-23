@@ -7,5 +7,4 @@ subdir('ximage')
 # FIXME: Implement these
 #subdir('osxaudio')
 #subdir('osxvideo')
-#subdir('sunaudio')
 #subdir('waveform')

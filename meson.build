@@ -100,16 +100,10 @@ check_functions = [
   ['HAVE_ISINF', 'isinf', '#include<math.h>'],
 # check token HAVE_LIBV4L2
   ['HAVE_MMAP', 'mmap', '#include<sys/mman.h>'],
-# check token HAVE_OSS
-# check token HAVE_OSS4
-# check token HAVE_OSS_INCLUDE_IN_MACHINE
-# check token HAVE_OSS_INCLUDE_IN_ROOT
-# check token HAVE_OSS_INCLUDE_IN_SYS
 # check token HAVE_OSX_AUDIO
 # check token HAVE_OSX_VIDEO
 # check token HAVE_RDTSC
   ['HAVE_SINH', 'sinh', '#include<math.h>'],
-# check token HAVE_SUNAUDIO
 # check token HAVE_WAVEFORM
 ]
 

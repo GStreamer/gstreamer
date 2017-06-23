@@ -138,7 +138,7 @@ PLATFORMS
 
 - Linux is of course fully supported
 - FreeBSD is reported to work; other BSDs should work too
-- Solaris is reported to work; a specific sunaudiosink plugin has been written
+- Solaris is reported to work
 - MacOSX works, binary 1.x packages can be built using the cerbero build tool
 - Windows works; binary 1.x packages can be built using the cerbero build tool
   - MSys/MinGW builds

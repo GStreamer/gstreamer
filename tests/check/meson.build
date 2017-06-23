@@ -80,7 +80,6 @@ good_tests = [
   [ 'elements/rtpsession' ],
   [ 'elements/souphttpsrc', not libsoup_dep.found(), [libsoup_dep] ],
   [ 'elements/spectrum' ],
-#  [ 'elements/sunaudio' ],
   [ 'elements/shapewipe' ],
   [ 'elements/id3v2mux', not taglib_dep.found() ],
   [ 'elements/apev2mux', not taglib_dep.found() ],

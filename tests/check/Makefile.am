@@ -255,12 +255,6 @@ else
 check_spectrum =
 endif
 
-if USE_SUNAUDIO
-check_sunaudio = elements/sunaudio
-else
-check_sunaudio =
-endif
-
 if USE_PLUGIN_SHAPEWIPE
 check_shapewipe = elements/shapewipe
 else
@@ -382,7 +376,6 @@ check_PROGRAMS = \
 	$(check_shapewipe) \
 	$(check_soup) \
 	$(check_spectrum) \
-	$(check_sunaudio) \
 	$(check_taglib) \
 	$(check_udp) \
 	$(check_videobox) \
@@ -551,13 +544,6 @@ elements_rtpmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VERSION) $(G
 
 elements_souphttpsrc_CFLAGS = $(SOUP_CFLAGS) $(AM_CFLAGS)
 elements_souphttpsrc_LDADD = $(SOUP_LIBS) $(LDADD)
-
-elements_sunaudio_CFLAGS = \
-	$(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) \
-	$(AM_CFLAGS)
-elements_sunaudio_LDADD = \
-	$(GST_PLUGINS_BASE_LIBS) \
-	$(LDADD)
 
 elements_udpsrc_CFLAGS = $(AM_CFLAGS) $(GIO_CFLAGS)
 elements_udpsrc_LDADD = $(LDADD) $(GIO_LIBS)

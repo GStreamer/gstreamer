@@ -454,12 +454,6 @@ AG_GST_CHECK_FEATURE(OSS4, [Open Sound System 4], oss4, [
       [OSS4_MISSING_HEADER="yes";HAVE_OSS4="no"])
 ])
 
-dnl *** Sun Audio ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SUNAUDIO, true)
-AG_GST_CHECK_FEATURE(SUNAUDIO, [Sun Audio], sunaudio, [
-  AC_CHECK_HEADER(sys/audioio.h, HAVE_SUNAUDIO="yes", HAVE_SUNAUDIO="no")
-])
-
 dnl *** OSX Audio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_AUDIO, true)
 HAVE_IOS="no"
@@ -888,7 +882,6 @@ AM_CONDITIONAL(USE_PULSE, false)
 AM_CONDITIONAL(USE_SHOUT2, false)
 AM_CONDITIONAL(USE_SOUP, false)
 AM_CONDITIONAL(USE_SPEEX, false)
-AM_CONDITIONAL(USE_SUNAUDIO, false)
 AM_CONDITIONAL(USE_TAGLIB, false)
 AM_CONDITIONAL(USE_VPX, false)
 AM_CONDITIONAL(USE_WAVEFORM, false)
@@ -1035,7 +1028,6 @@ sys/oss/Makefile
 sys/oss4/Makefile
 sys/osxaudio/Makefile
 sys/osxvideo/Makefile
-sys/sunaudio/Makefile
 sys/v4l2/Makefile
 sys/waveform/Makefile
 sys/ximage/Makefile
