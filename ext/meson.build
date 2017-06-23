@@ -6,6 +6,6 @@ subdir('dvdread')
 subdir('lame')
 subdir('mpeg2dec')
 subdir('mpg123')
-#subdir('sidplay') # FIXME
+subdir('sidplay')
 subdir('twolame')
 subdir('x264')
