@@ -1,4 +1,4 @@
-# subdir('aalib')
+subdir('aalib')
 subdir('cairo')
 subdir('flac')
 subdir('gdk_pixbuf')
