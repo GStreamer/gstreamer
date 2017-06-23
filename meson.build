@@ -184,9 +184,9 @@ gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
 
 zlib_dep = dependency('zlib')
 bz2lib = cc.find_library('bz2', required : false)
-gio_dep = dependency('gio-2.0', version : glib_req)
-glib_deps = [dependency('glib-2.0', version : glib_req),
-	     dependency('gobject-2.0', version : glib_req)]
+glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep']),
+             dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])]
+gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
 
 cdata.set('HAVE_ZLIB', 1)
 if bz2lib.found()
