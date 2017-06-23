@@ -8,7 +8,7 @@ if add_languages('cpp')
                   void somefunc (void) {
                     sidTune tune = sidTune(0);
                   }'''
-    sidplay_dep = cxx.find_library('sidplay')
+    sidplay_dep = cxx.find_library('sidplay', required: false)
     if sidplay_dep.found()
       have_sidplay = cxx.compiles(sid_code, dependencies: sidplay_dep, name : 'sidplay')
     endif
