@@ -228,11 +228,11 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
 
     negotiated_vinfo =
         gst_allocator_get_vaapi_negotiated_video_info (priv->allocator);
+    allocator_vinfo = gst_allocator_get_vaapi_video_info (allocator, NULL);
     priv->vmeta_vinfo = (negotiated_vinfo) ?
-        *negotiated_vinfo : new_allocation_vinfo;
+        *negotiated_vinfo : *allocator_vinfo;
 
     /* last resource to set the correct buffer size */
-    allocator_vinfo = gst_allocator_get_vaapi_video_info (allocator, NULL);
     if (GST_VIDEO_INFO_SIZE (allocator_vinfo) != size) {
       gst_buffer_pool_config_set_params (config, caps,
           GST_VIDEO_INFO_SIZE (allocator_vinfo), min_buffers, max_buffers);
