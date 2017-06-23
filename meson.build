@@ -137,19 +137,29 @@ x11_dep = dependency('x11', required : false)
 # GLib checks are for the entire project
 giounix_dep = dependency('gio-unix-2.0', version : glib_req, required : false)
 # Almost everything that uses glib also uses gobject
-glib_deps = [dependency('glib-2.0', version : glib_req),
-	     dependency('gobject-2.0', version : glib_req)]
-gio_dep = dependency('gio-2.0', version : glib_req)
+glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep']),
+             dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])]
+gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
 
 core_conf.set('HAVE_X', x11_dep.found())
-core_conf.set('HAVE_GIO_UNIX_2_0', giounix_dep.found())
+core_conf.set('HAVE_GIO_UNIX_2_0',
+    (gio_dep.type_name() != 'pkgconfig' and host_machine.system() != 'windows')
+    or giounix_dep.found())
 
-core_conf.set_quoted('GIO_MODULE_DIR',
-  gio_dep.get_pkgconfig_variable('giomoduledir'))
-core_conf.set_quoted('GIO_LIBDIR',
-  gio_dep.get_pkgconfig_variable('libdir'))
-core_conf.set_quoted('GIO_PREFIX',
-  gio_dep.get_pkgconfig_variable('prefix'))
+if gio_dep.type_name() == 'pkgconfig'
+    core_conf.set_quoted('GIO_MODULE_DIR',
+        gio_dep.get_pkgconfig_variable('giomoduledir'))
+    core_conf.set_quoted('GIO_LIBDIR',
+        gio_dep.get_pkgconfig_variable('libdir'))
+    core_conf.set_quoted('GIO_PREFIX',
+        gio_dep.get_pkgconfig_variable('prefix'))
+else
+    core_conf.set_quoted('GIO_MODULE_DIR', join_paths(get_option('prefix'),
+      get_option('libdir'), 'gio/modules'))
+    core_conf.set_quoted('GIO_LIBDIR', join_paths(get_option('prefix'),
+      get_option('libdir')))
+    core_conf.set_quoted('GIO_PREFIX', get_option('prefix'))
+endif
 
 configinc = include_directories('.')
 libsinc = include_directories('gst-libs')
