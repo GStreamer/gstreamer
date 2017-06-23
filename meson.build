@@ -59,9 +59,14 @@ if host_machine.system() != 'windows'
   gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
     fallback : ['gstreamer', 'gst_check_dep'])
 endif
-glib_dep = dependency('glib-2.0', version: glib_req)
-gio_dep = dependency('gio-2.0', version: glib_req)
-gmodule_dep = dependency('gmodule-2.0', version: glib_req)
+
+glib_dep = dependency('glib-2.0', version : '>=2.32.0',
+  fallback: ['glib', 'libglib_dep'])
+gmodule_dep = dependency('gmodule-2.0',
+  fallback: ['glib', 'libgmodule_dep'])
+gio_dep = dependency('gio-2.0',
+  fallback: ['glib', 'libgio_dep'])
+
 gtk_dep = dependency('gtk+-3.0', required: false)
 mathlib = cc.find_library('m', required : false)
 dl = cc.find_library('dl', required : false)
