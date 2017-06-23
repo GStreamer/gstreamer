@@ -1015,7 +1015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.12.0"</DEFAULT>
+<DEFAULT>"GStreamer/1.13.0.1"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1376,6 +1376,16 @@
 <NICK>public</NICK>
 <BLURB>If the stream should be listed on the server's stream directory.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstShout2send::timeout</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>timeout</NICK>
+<BLURB>Max amount of time to wait for network activity, in milliseconds.</BLURB>
+<DEFAULT>10000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3455,7 +3465,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>Value of the User-Agent HTTP request header field.</BLURB>
-<DEFAULT>"GStreamer souphttpsrc 1.12.0 "</DEFAULT>
+<DEFAULT>"GStreamer souphttpsrc 1.13.0.1 "</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3555,7 +3565,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>keep-alive</NICK>
 <BLURB>Use HTTP persistent connections.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21739,6 +21749,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstQTMux::max-raw-audio-drift</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Raw Audio Drift</NICK>
+<BLURB>Maximum allowed drift of raw audio samples vs. timestamps in nanoseconds.</BLURB>
+<DEFAULT>40000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::reserved-prefill</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reserved Prefill Samples Table</NICK>
+<BLURB>Prefill samples table of reserved duration.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQTMoovRecover::broken-input</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -21929,6 +21959,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstMP4Mux::max-raw-audio-drift</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Raw Audio Drift</NICK>
+<BLURB>Maximum allowed drift of raw audio samples vs. timestamps in nanoseconds.</BLURB>
+<DEFAULT>40000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::reserved-prefill</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reserved Prefill Samples Table</NICK>
+<BLURB>Prefill samples table of reserved duration.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstMJ2Mux::dts-method</NAME>
 <TYPE>GstQTMuxDtsMethods</TYPE>
 <RANGE></RANGE>
@@ -22076,6 +22126,26 @@
 <NICK>Interleave (time)</NICK>
 <BLURB>Interleave between streams in nanoseconds.</BLURB>
 <DEFAULT>250000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::max-raw-audio-drift</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Raw Audio Drift</NICK>
+<BLURB>Maximum allowed drift of raw audio samples vs. timestamps in nanoseconds.</BLURB>
+<DEFAULT>40000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::reserved-prefill</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reserved Prefill Samples Table</NICK>
+<BLURB>Prefill samples table of reserved duration.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22229,6 +22299,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstISMLMux::max-raw-audio-drift</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Raw Audio Drift</NICK>
+<BLURB>Maximum allowed drift of raw audio samples vs. timestamps in nanoseconds.</BLURB>
+<DEFAULT>40000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstISMLMux::reserved-prefill</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reserved Prefill Samples Table</NICK>
+<BLURB>Prefill samples table of reserved duration.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>Gst3GPPMux::dts-method</NAME>
 <TYPE>GstQTMuxDtsMethods</TYPE>
 <RANGE></RANGE>
@@ -22376,6 +22466,26 @@
 <NICK>Interleave (time)</NICK>
 <BLURB>Interleave between streams in nanoseconds.</BLURB>
 <DEFAULT>250000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Gst3GPPMux::max-raw-audio-drift</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Raw Audio Drift</NICK>
+<BLURB>Maximum allowed drift of raw audio samples vs. timestamps in nanoseconds.</BLURB>
+<DEFAULT>40000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Gst3GPPMux::reserved-prefill</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Reserved Prefill Samples Table</NICK>
+<BLURB>Prefill samples table of reserved duration.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -24106,6 +24216,16 @@
 <NICK>Maximum timecode difference</NICK>
 <BLURB>Maximum difference in timecode between first and last frame. Separator is assumed to be ":" everywhere (e.g. 01:00:00:00). Will only be effective if a timecode track is present.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::alignment-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alignment threshold (ns)</NICK>
+<BLURB>Allow non-reference streams to be that many ns before the reference stream.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
