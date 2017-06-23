@@ -615,6 +615,12 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
       GST_INFO_OBJECT (plugin, "enabling direct rendering in source allocator");
     }
     plugin->srcpad_allocator = allocator;
+  } else if (caps && gst_vaapi_caps_feature_contains (caps,
+          GST_VAAPI_CAPS_FEATURE_DMABUF)) {
+    plugin->srcpad_allocator =
+        create_dmabuf_srcpad_allocator (plugin, vinfo, FALSE);
+    if (!plugin->srcpad_allocator)
+      goto error_create_allocator;
   }
 
   if (!plugin->srcpad_allocator) {
