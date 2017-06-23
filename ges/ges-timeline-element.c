@@ -1132,7 +1132,31 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
     }
   }
 
+#if GLIB_CHECK_VERSION(2, 53, 1)
+  {
+    gint i;
+    GValue *values;
+    const gchar **names;
+    values = g_malloc0 (sizeof (GValue) * n_specs);
+    names = g_malloc0 (sizeof (gchar **) * n_specs);
+
+    for (i = 0; i < n_params; i++) {
+      values[i] = params[i].value;
+      names[i] = params[i].name;
+    }
+
+    ret =
+        GES_TIMELINE_ELEMENT (g_object_new_with_properties (G_OBJECT_TYPE
+            (self), n_params, names, values));
+    g_free (names);
+    g_free (values);
+  }
+#else
   ret = g_object_newv (G_OBJECT_TYPE (self), n_params, params);
+#endif
+
+  while (n_params--)
+    g_value_unset (&params[n_params].value);
 
   g_free (specs);
   g_free (params);
