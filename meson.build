@@ -66,7 +66,7 @@ gstcontroller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
 gstvalidate_dep = dependency('gst-validate-1.0', version : gst_req, required : false,
   fallback : ['gst-devtools', 'validate_dep'])
 
-gio_dep = dependency('gio-2.0', version : glib_req)
+gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
 libxml_dep = dependency('libxml-2.0')
 
 # TODO Properly port to Gtk 3
