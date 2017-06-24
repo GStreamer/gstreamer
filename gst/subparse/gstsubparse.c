@@ -284,7 +284,9 @@ gst_sub_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_DEBUG_OBJECT (self, "segment after seek: %" GST_SEGMENT_FORMAT,
             &self->segment);
 
-        self->need_segment = TRUE;
+        /* will mark need_segment when receiving segment from upstream,
+         * after FLUSH and all that has happened,
+         * rather than racing with chain */
       } else {
         GST_WARNING_OBJECT (self, "seek to 0 bytes failed");
       }
@@ -1881,6 +1883,10 @@ gst_sub_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
        * it received via its video pads instead, so all is fine then too) */
       ret = TRUE;
       gst_event_unref (event);
+      /* in either case, let's not simply discard this event;
+       * trigger sending of the saved requested seek segment
+       * or the one taken here from upstream */
+      self->need_segment = TRUE;
       break;
     }
     case GST_EVENT_FLUSH_START:
