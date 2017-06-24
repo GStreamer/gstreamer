@@ -108,8 +108,7 @@ static GstStaticPadTemplate srctemplate =
 static GstStaticPadTemplate sinktemplate =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/x-jpc;image/x-j2c")
-    );
+    GST_STATIC_CAPS ("image/jp2;image/x-jpc;image/x-j2c"));
 
 #define parent_class gst_jpeg2000_parse_parent_class
 G_DEFINE_TYPE (GstJPEG2000Parse, gst_jpeg2000_parse, GST_TYPE_BASE_PARSE);
@@ -321,17 +320,21 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
 
   /* if we can't get from caps, then try to parse */
   if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_NO_CODEC) {
-    /* check for "jp2c" */
+    /* check for "jp2c" box */
+    /* both jp2 and j2c will be found with this scan, and both will be treated as j2c format */
     j2c_box_id_offset = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
         GST_MAKE_FOURCC ('j', 'p', '2', 'c'), 0,
         gst_byte_reader_get_remaining (&reader));
     parsed_j2c_4cc = TRUE;
     is_j2c = j2c_box_id_offset != -1;
-    /* since we only support j2c and jpc at the moment, we can deduce the codec format */
     jpeg2000parse->codec_format =
         is_j2c ? GST_JPEG2000_PARSE_J2C : GST_JPEG2000_PARSE_JPC;
 
   } else {
+    /* for now, just treat JP2 as J2C */
+    if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_JP2) {
+      jpeg2000parse->codec_format = GST_JPEG2000_PARSE_J2C;
+    }
     is_j2c = jpeg2000parse->codec_format == GST_JPEG2000_PARSE_J2C;
   }
 
