@@ -328,6 +328,7 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
   gint off = -1;
   GstMapInfo map;
   GstFlowReturn ret = GST_FLOW_EOS;
+  gsize extra_size = 0;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
@@ -448,8 +449,34 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
 cleanup:
   gst_buffer_unmap (buf, &map);
 
-  if (ret == GST_FLOW_OK && size <= map.size) {
-    ret = gst_base_parse_finish_frame (parse, frame, size);
+  /* it is possible that DTS HD substream after DTS core */
+  if (parse->flags & GST_BASE_PARSE_FLAG_DRAINING || map.size >= size + 9) {
+    extra_size = 0;
+    if (map.size >= size + 9) {
+      const guint8 *next = map.data + size;
+      /* Check for DTS_SYNCWORD_SUBSTREAM */
+      if (next[0] == 0x64 && next[1] == 0x58 && next[2] == 0x20
+          && next[3] == 0x25) {
+        /* 7.4.1 Extension Substream Header */
+        GstBitReader reader;
+        gst_bit_reader_init (&reader, next + 4, 5);
+        gst_bit_reader_skip (&reader, 8 + 2);   /* skip UserDefinedBits and nExtSSIndex) */
+        if (gst_bit_reader_get_bits_uint8_unchecked (&reader, 1) == 0) {
+          gst_bit_reader_skip (&reader, 8);
+          extra_size =
+              gst_bit_reader_get_bits_uint32_unchecked (&reader, 16) + 1;
+        } else {
+          gst_bit_reader_skip (&reader, 12);
+          extra_size =
+              gst_bit_reader_get_bits_uint32_unchecked (&reader, 20) + 1;
+        }
+      }
+    }
+    if (ret == GST_FLOW_OK && size + extra_size <= map.size) {
+      ret = gst_base_parse_finish_frame (parse, frame, size + extra_size);
+    } else {
+      ret = GST_FLOW_OK;
+    }
   } else {
     ret = GST_FLOW_OK;
   }
