@@ -3,4 +3,5 @@ if host_machine.system() != 'windows'
 subdir('check')
 endif
 
+subdir('icles')
 # TODO: Implement examples etc
