@@ -48,8 +48,6 @@
 G_DEFINE_TYPE_WITH_CODE (GstVaapiDisplayDRM, gst_vaapi_display_drm,
     GST_TYPE_VAAPI_DISPLAY, _do_init);
 
-static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_DRM;
-
 typedef enum
 {
   DRM_DEVICE_LEGACY = 1,
@@ -265,23 +263,15 @@ gst_vaapi_display_drm_open_display (GstVaapiDisplay * display,
 {
   GstVaapiDisplayDRMPrivate *const priv =
       GST_VAAPI_DISPLAY_DRM_PRIVATE (display);
-  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_CACHE (display);
-  const GstVaapiDisplayInfo *info;
 
   if (!set_device_path (display, name))
     return FALSE;
 
-  info = gst_vaapi_display_cache_lookup_by_name (cache, priv->device_path,
-      g_display_types);
-  if (info) {
-    priv->drm_device = GPOINTER_TO_INT (info->native_display);
-    priv->use_foreign_display = TRUE;
-  } else {
-    priv->drm_device = open (get_device_path (display), O_RDWR | O_CLOEXEC);
-    if (priv->drm_device < 0)
-      return FALSE;
-    priv->use_foreign_display = FALSE;
-  }
+  priv->drm_device = open (get_device_path (display), O_RDWR | O_CLOEXEC);
+  if (priv->drm_device < 0)
+    return FALSE;
+  priv->use_foreign_display = FALSE;
+
   return TRUE;
 }
 
@@ -314,18 +304,7 @@ gst_vaapi_display_drm_get_display_info (GstVaapiDisplay * display,
 {
   GstVaapiDisplayDRMPrivate *const priv =
       GST_VAAPI_DISPLAY_DRM_PRIVATE (display);
-  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_CACHE (display);
-  const GstVaapiDisplayInfo *cached_info;
 
-  /* Return any cached info even if child has its own VA display */
-  cached_info = gst_vaapi_display_cache_lookup_by_native_display (cache,
-      GINT_TO_POINTER (priv->drm_device), g_display_types);
-  if (cached_info) {
-    *info = *cached_info;
-    return TRUE;
-  }
-
-  /* Otherwise, create VA display if there is none already */
   info->native_display = GINT_TO_POINTER (priv->drm_device);
   info->display_name = priv->device_path;
   if (!info->va_display) {

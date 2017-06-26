@@ -42,8 +42,6 @@
 G_DEFINE_TYPE_WITH_CODE (GstVaapiDisplayWayland, gst_vaapi_display_wayland,
     GST_TYPE_VAAPI_DISPLAY, _do_init);
 
-static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_WAYLAND;
-
 static inline const gchar *
 get_default_display_name (void)
 {
@@ -52,39 +50,6 @@ get_default_display_name (void)
   if (!g_display_name)
     g_display_name = getenv ("WAYLAND_DISPLAY");
   return g_display_name;
-}
-
-static inline guint
-get_display_name_length (const gchar * display_name)
-{
-  const gchar *str;
-
-  str = strchr (display_name, '-');
-  if (str)
-    return str - display_name;
-  return strlen (display_name);
-}
-
-static gint
-compare_display_name (gconstpointer a, gconstpointer b)
-{
-  const GstVaapiDisplayInfo *const info = a;
-  const gchar *cached_name = info->display_name;
-  const gchar *tested_name = b;
-  guint cached_name_length, tested_name_length;
-
-  g_return_val_if_fail (cached_name, FALSE);
-  g_return_val_if_fail (tested_name, FALSE);
-
-  cached_name_length = get_display_name_length (cached_name);
-  tested_name_length = get_display_name_length (tested_name);
-
-  /* XXX: handle screen number and default WAYLAND_DISPLAY name */
-  if (cached_name_length != tested_name_length)
-    return FALSE;
-  if (strncmp (cached_name, tested_name, cached_name_length) != 0)
-    return FALSE;
-  return TRUE;
 }
 
 /* Mangle display name with our prefix */
@@ -211,29 +176,15 @@ gst_vaapi_display_wayland_open_display (GstVaapiDisplay * display,
 {
   GstVaapiDisplayWaylandPrivate *const priv =
       GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
-  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_CACHE (display);
-  const GstVaapiDisplayInfo *info;
-  int dsp_error = 0;
 
   if (!set_display_name (display, name))
     return FALSE;
 
-  info = gst_vaapi_display_cache_lookup_custom (cache, compare_display_name,
-      priv->display_name, g_display_types);
-  if (info) {
-    wl_display_roundtrip (info->native_display);
-    if ((dsp_error = wl_display_get_error (info->native_display)))
-      GST_ERROR ("wayland display error detected: %d", dsp_error);
-  }
-  if (info && !dsp_error) {
-    priv->wl_display = info->native_display;
-    priv->use_foreign_display = TRUE;
-  } else {
-    priv->wl_display = wl_display_connect (name);
-    if (!priv->wl_display)
-      return FALSE;
-    priv->use_foreign_display = FALSE;
-  }
+  priv->wl_display = wl_display_connect (name);
+  if (!priv->wl_display)
+    return FALSE;
+  priv->use_foreign_display = FALSE;
+
   return gst_vaapi_display_wayland_setup (display);
 }
 
@@ -281,18 +232,7 @@ gst_vaapi_display_wayland_get_display_info (GstVaapiDisplay * display,
 {
   GstVaapiDisplayWaylandPrivate *const priv =
       GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
-  GstVaapiDisplayCache *const cache = GST_VAAPI_DISPLAY_CACHE (display);
-  const GstVaapiDisplayInfo *cached_info;
 
-  /* Return any cached info even if child has its own VA display */
-  cached_info = gst_vaapi_display_cache_lookup_by_native_display (cache,
-      priv->wl_display, g_display_types);
-  if (cached_info) {
-    *info = *cached_info;
-    return TRUE;
-  }
-
-  /* Otherwise, create VA display if there is none already */
   info->native_display = priv->wl_display;
   info->display_name = priv->display_name;
   if (!info->va_display) {

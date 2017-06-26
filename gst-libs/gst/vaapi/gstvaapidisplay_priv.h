@@ -26,7 +26,6 @@
 #define GST_VAAPI_DISPLAY_PRIV_H
 
 #include <gst/vaapi/gstvaapidisplay.h>
-#include <gst/vaapi/gstvaapidisplaycache.h>
 #include <gst/vaapi/gstvaapiwindow.h>
 #include <gst/vaapi/gstvaapitexture.h>
 #include <gst/vaapi/gstvaapitexturemap.h>
@@ -108,21 +107,9 @@ typedef enum _GstVaapiDisplayInitType           GstVaapiDisplayInitType;
 #define GST_VAAPI_DISPLAY_HAS_VPP(display) \
   gst_vaapi_display_has_video_processing (GST_VAAPI_DISPLAY_CAST (display))
 
-/**
- * GST_VAAPI_DISPLAY_CACHE:
- * @display: a @GstVaapiDisplay
- *
- * Returns the #GstVaapiDisplayCache attached to the supplied @display object.
- * This is an internal macro that does not do any run-time type check.
- */
-#undef  GST_VAAPI_DISPLAY_CACHE
-#define GST_VAAPI_DISPLAY_CACHE(display) \
-  (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->cache)
-
 struct _GstVaapiDisplayPrivate
 {
   GstVaapiDisplay *parent;
-  GstVaapiDisplayCache *cache;
   GRecMutex mutex;
   GstVaapiDisplayType display_type;
   gchar *display_name;

@@ -58,7 +58,6 @@ libgstvaapi_source_c =				\
 	gstvaapidecoder_unit.c			\
 	gstvaapidecoder_vc1.c			\
 	gstvaapidisplay.c			\
-	gstvaapidisplaycache.c			\
 	gstvaapifilter.c			\
 	gstvaapiimage.c				\
 	gstvaapiimagepool.c			\
@@ -130,7 +129,6 @@ libgstvaapi_source_priv_h =			\
 	gstvaapidecoder_priv.h			\
 	gstvaapidecoder_unit.h			\
 	gstvaapidisplay_priv.h			\
-	gstvaapidisplaycache.h			\
 	gstvaapiimage_priv.h			\
 	gstvaapiminiobject.h			\
 	gstvaapiobject_priv.h			\

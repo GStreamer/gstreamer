@@ -95,9 +95,6 @@ enum
   N_PROPERTIES
 };
 
-static GstVaapiDisplayCache *g_display_cache;
-static GMutex g_display_cache_lock;
-
 static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
 
 static void gst_vaapi_display_properties_init (void);
@@ -128,29 +125,6 @@ libgstvaapi_init_once (void)
   gst_vaapi_display_properties_init ();
 
   g_once_init_leave (&g_once, TRUE);
-}
-
-static GstVaapiDisplayCache *
-get_display_cache (void)
-{
-  GstVaapiDisplayCache *cache = NULL;
-
-  g_mutex_lock (&g_display_cache_lock);
-  if (!g_display_cache)
-    g_display_cache = gst_vaapi_display_cache_new ();
-  if (g_display_cache)
-    cache = gst_vaapi_display_cache_ref (g_display_cache);
-  g_mutex_unlock (&g_display_cache_lock);
-  return cache;
-}
-
-static void
-free_display_cache (void)
-{
-  g_mutex_lock (&g_display_cache_lock);
-  if (g_display_cache && gst_vaapi_display_cache_is_empty (g_display_cache))
-    gst_vaapi_display_cache_replace (&g_display_cache, NULL);
-  g_mutex_unlock (&g_display_cache_lock);
 }
 
 /* GstVaapiDisplayType enumerations */
@@ -874,14 +848,6 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
   priv->vendor_string = NULL;
 
   gst_vaapi_display_replace_internal (&priv->parent, NULL);
-
-  if (priv->cache) {
-    gst_vaapi_display_cache_lock (priv->cache);
-    gst_vaapi_display_cache_remove (priv->cache, display);
-    gst_vaapi_display_cache_unlock (priv->cache);
-  }
-  gst_vaapi_display_cache_replace (&priv->cache, NULL);
-  free_display_cache ();
 }
 
 static gboolean
@@ -892,7 +858,6 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
   const GstVaapiDisplayClass *const klass =
       GST_VAAPI_DISPLAY_GET_CLASS (display);
   GstVaapiDisplayInfo info;
-  const GstVaapiDisplayInfo *cached_info = NULL;
 
   memset (&info, 0, sizeof (info));
   info.display = display;
@@ -928,20 +893,8 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
   if (!priv->display)
     return FALSE;
 
-  cached_info = gst_vaapi_display_cache_lookup_by_va_display (priv->cache,
-      info.va_display);
-  if (cached_info) {
-    gst_vaapi_display_replace_internal (&priv->parent, cached_info->display);
-    priv->display_type = cached_info->display_type;
-  }
-
   if (!priv->parent) {
     if (!vaapi_initialize (priv->display))
-      return FALSE;
-  }
-
-  if (!cached_info) {
-    if (!gst_vaapi_display_cache_add (priv->cache, &info))
       return FALSE;
   }
 
@@ -955,20 +908,7 @@ static gboolean
 gst_vaapi_display_create (GstVaapiDisplay * display,
     GstVaapiDisplayInitType init_type, gpointer init_value)
 {
-  GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
-  GstVaapiDisplayCache *cache;
-  gboolean success;
-
-  cache = get_display_cache ();
-  if (!cache)
-    return FALSE;
-  gst_vaapi_display_cache_replace (&priv->cache, cache);
-  gst_vaapi_display_cache_unref (cache);
-
-  gst_vaapi_display_cache_lock (cache);
-  success = gst_vaapi_display_create_unlocked (display, init_type, init_value);
-  gst_vaapi_display_cache_unlock (cache);
-  return success;
+  return gst_vaapi_display_create_unlocked (display, init_type, init_value);
 }
 
 static void
@@ -1128,16 +1068,6 @@ error:
 GstVaapiDisplay *
 gst_vaapi_display_new_with_display (VADisplay va_display)
 {
-  GstVaapiDisplayCache *const cache = get_display_cache ();
-  const GstVaapiDisplayInfo *info;
-
-  g_return_val_if_fail (va_display != NULL, NULL);
-  g_return_val_if_fail (cache != NULL, NULL);
-
-  info = gst_vaapi_display_cache_lookup_by_va_display (cache, va_display);
-  if (info)
-    return gst_vaapi_display_ref_internal (info->display);
-
   return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY, NULL),
       GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY, va_display);
 }
