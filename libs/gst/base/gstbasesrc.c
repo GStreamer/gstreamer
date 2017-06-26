@@ -317,8 +317,8 @@ static gboolean gst_base_src_default_event (GstBaseSrc * src, GstEvent * event);
 static gboolean gst_base_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
-static gboolean gst_base_src_activate_pool (GstBaseSrc * basesrc,
-    gboolean active);
+static void gst_base_src_set_pool_flushing (GstBaseSrc * basesrc,
+    gboolean flushing);
 static gboolean gst_base_src_default_negotiate (GstBaseSrc * basesrc);
 static gboolean gst_base_src_default_do_seek (GstBaseSrc * src,
     GstSegment * segment);
@@ -1876,13 +1876,14 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
         src->priv->pending_eos = event;
         GST_OBJECT_UNLOCK (src);
 
-        gst_base_src_activate_pool (src, FALSE);
+        gst_base_src_set_pool_flushing (src, TRUE);
         if (bclass->unlock)
           bclass->unlock (src);
 
         GST_PAD_STREAM_LOCK (src->srcpad);
         if (bclass->unlock_stop)
           bclass->unlock_stop (src);
+        gst_base_src_set_pool_flushing (src, TRUE);
         GST_PAD_STREAM_UNLOCK (src->srcpad);
       }
 
@@ -3072,12 +3073,11 @@ activate_failed:
   }
 }
 
-static gboolean
-gst_base_src_activate_pool (GstBaseSrc * basesrc, gboolean active)
+static void
+gst_base_src_set_pool_flushing (GstBaseSrc * basesrc, gboolean flushing)
 {
   GstBaseSrcPrivate *priv = basesrc->priv;
   GstBufferPool *pool;
-  gboolean res = TRUE;
 
   GST_OBJECT_LOCK (basesrc);
   if ((pool = priv->pool))
@@ -3085,10 +3085,9 @@ gst_base_src_activate_pool (GstBaseSrc * basesrc, gboolean active)
   GST_OBJECT_UNLOCK (basesrc);
 
   if (pool) {
-    res = gst_buffer_pool_set_active (pool, active);
+    gst_buffer_pool_set_flushing (pool, flushing);
     gst_object_unref (pool);
   }
-  return res;
 }
 
 
@@ -3637,7 +3636,7 @@ gst_base_src_set_flushing (GstBaseSrc * basesrc, gboolean flushing)
   GST_DEBUG_OBJECT (basesrc, "flushing %d", flushing);
 
   if (flushing) {
-    gst_base_src_activate_pool (basesrc, FALSE);
+    gst_base_src_set_pool_flushing (basesrc, TRUE);
     /* unlock any subclasses to allow turning off the streaming thread */
     if (bclass->unlock)
       bclass->unlock (basesrc);
@@ -3660,7 +3659,7 @@ gst_base_src_set_flushing (GstBaseSrc * basesrc, gboolean flushing)
     if (basesrc->clock_id)
       gst_clock_id_unschedule (basesrc->clock_id);
   } else {
-    gst_base_src_activate_pool (basesrc, TRUE);
+    gst_base_src_set_pool_flushing (basesrc, FALSE);
 
     /* Drop all delayed events */
     GST_OBJECT_LOCK (basesrc);
