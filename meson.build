@@ -41,13 +41,14 @@ cdata.set_quoted('GST_LICENSE', 'LGPL')
 gst_package_name = get_option('with-package-name')
 if gst_package_name == ''
   if gst_version_nano == 0
-    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer RTSP Server Library source release')
+    gst_package_name = 'GStreamer RTSP Server Library source release'
   elif gst_version_nano == 1
-    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer RTSP Server Library git')
+    gst_package_name = 'GStreamer RTSP Server Library git'
   else
-    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer RTSP Server Library prerelease')
+    gst_package_name = 'GStreamer RTSP Server Library prerelease'
   endif
 endif
+cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
 cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
 
 configure_file(output : 'config.h', configuration : cdata)
