@@ -40,13 +40,14 @@ cdata.set('PACKAGE', '"gst-libav"')
 gst_package_name = get_option('with-package-name')
 if gst_package_name == ''
   if gst_version_nano == 0
-    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer FFMPEG Plug-ins source release')
+    gst_package_name = 'GStreamer FFMPEG Plug-ins source release'
   elif gst_version_nano == 1
-    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer FFMPEG Plug-ins git')
+    gst_package_name = 'GStreamer FFMPEG Plug-ins git'
   else
-    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer FFMPEG Plug-ins prerelease')
+    gst_package_name = 'GStreamer FFMPEG Plug-ins prerelease'
   endif
 endif
+cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
 cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
 
 
