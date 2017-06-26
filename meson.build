@@ -257,13 +257,14 @@ cdata.set('LIBDIR', '"@0@"'.format(get_option('libdir')))
 gst_package_name = get_option('with-package-name')
 if gst_package_name == ''
   if gst_version_nano == 0
-    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Bad Plug-ins source release')
+    gst_package_name = 'GStreamer Bad Plug-ins source release'
   elif gst_version_nano == 1
-    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Bad Plug-ins git')
+    gst_package_name = 'GStreamer Bad Plug-ins git'
   else
-    cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Bad Plug-ins prerelease')
+    gst_package_name = 'GStreamer Bad Plug-ins prerelease'
   endif
 endif
+cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
 cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
 
 # FIXME: This should be exposed as a configuration option
