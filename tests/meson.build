@@ -4,4 +4,4 @@ subdir('check')
 endif
 
 subdir('icles')
-# TODO: Implement examples etc
+subdir('examples')
