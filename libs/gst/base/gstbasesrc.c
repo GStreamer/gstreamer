@@ -1895,6 +1895,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       /* sending random SEGMENT downstream can break sync. */
       break;
     case GST_EVENT_TAG:
+    case GST_EVENT_SINK_MESSAGE:
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     case GST_EVENT_CUSTOM_BOTH:
     case GST_EVENT_PROTECTION:
