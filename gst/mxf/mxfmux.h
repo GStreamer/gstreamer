@@ -70,6 +70,8 @@ typedef struct _GstMXFMux {
   gchar *application;
 
   GArray *index_table;
+  guint current_index_pos;
+  guint64 last_keyframe_pos;
 } GstMXFMux;
 
 typedef struct _GstMXFMuxClass {
