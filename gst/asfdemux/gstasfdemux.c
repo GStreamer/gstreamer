@@ -1090,9 +1090,12 @@ gst_asf_demux_pull_indices (GstASFDemux * demux)
     gst_buffer_map (buf, &map, GST_MAP_READ);
     g_assert (map.size >= 16 + 8);
     if (!asf_demux_peek_object (demux, map.data, 16 + 8, &obj, TRUE)) {
+      GST_DEBUG_OBJECT (demux, "No valid object, corrupted index, ignoring");
+      GST_MEMDUMP_OBJECT (demux, "Corrupted index ?", map.data, MIN (map.size,
+              64));
       gst_buffer_unmap (buf, &map);
       gst_buffer_replace (&buf, NULL);
-      ret = GST_FLOW_ERROR;
+      /* Non-fatal, return */
       break;
     }
     gst_buffer_unmap (buf, &map);
