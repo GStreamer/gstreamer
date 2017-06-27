@@ -3955,6 +3955,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
+      gint64 duration;
 
       ret = TRUE;
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
@@ -3963,8 +3964,13 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         goto done;
       }
 
+      if (!gst_pad_query_duration (pad, GST_FORMAT_TIME, &duration)) {
+        gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+        goto done;
+      }
+
       if (demux->random_access) {
-        gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, -1);
+        gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, duration);
       } else {
         GstQuery *peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
         gboolean seekable;
@@ -3973,7 +3979,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         if (seekable)
           gst_query_parse_seeking (peerquery, NULL, &seekable, NULL, NULL);
         if (seekable)
-          gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, -1);
+          gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, duration);
         else
           gst_query_set_seeking (query, GST_FORMAT_TIME, FALSE, -1, -1);
 
