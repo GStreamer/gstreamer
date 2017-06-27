@@ -207,7 +207,7 @@ typedef struct {
  */
 typedef struct {
   gboolean probed;
-  guint32 clock_rate;
+  gint clock_rate;
   guint16 last_seqnum;
   guint64 last_ts;
   guint32 avg_packet_rate;
