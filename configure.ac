@@ -2131,6 +2131,12 @@ AG_GST_CHECK_FEATURE(ASSRENDER, [ASS/SSA renderer], assrender, [
 AC_SUBST(ASSRENDER_CFLAGS)
 AC_SUBST(ASSRENDER_LIBS)
 
+dnl *** AOM ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_AOM, true)
+AG_GST_CHECK_FEATURE(AOM, [AV1 encoder/decoder], aom, [
+  AG_GST_PKG_CHECK_MODULES(AOM, aom)
+])
+
 dnl *** vo-amrwbenc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VOAMRWBENC, true)
 AG_GST_CHECK_FEATURE(VOAMRWBENC, [vo-amrwbenc library], vo-amrwbenc, [
@@ -3435,6 +3441,7 @@ dnl not building plugins with external dependencies,
 dnl but we still need to set the conditionals
 
 AM_CONDITIONAL(USE_ASSRENDER, false)
+AM_CONDITIONAL(USE_AOM, false)
 AM_CONDITIONAL(USE_VOAMRWBENC, false)
 AM_CONDITIONAL(USE_VOAACENC, false)
 AM_CONDITIONAL(USE_BS2B, false)
@@ -3760,6 +3767,7 @@ tests/icles/Makefile
 ext/voamrwbenc/Makefile
 ext/voaacenc/Makefile
 ext/assrender/Makefile
+ext/aom/Makefile
 ext/bs2b/Makefile
 ext/bz2/Makefile
 ext/chromaprint/Makefile

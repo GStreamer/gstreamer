@@ -1,0 +1,350 @@
+/* GStreamer
+ * Copyright (C) <2017> Sean DuBois <sean@siobud.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+/**
+ * SECTION:element-av1enc
+ *
+ * AV1 Encoder.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 videotestsrc num-buffers=50 ! av1enc ! webmmux ! filesink location=av1.webm
+ * ]|
+ * </refsect2>
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "gstav1enc.h"
+#include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/base/base.h>
+
+GST_DEBUG_CATEGORY_STATIC (av1_enc_debug);
+#define GST_CAT_DEFAULT av1_enc_debug
+
+enum
+{
+  LAST_SIGNAL
+};
+
+enum
+{
+  PROP_0
+};
+
+static void gst_av1_enc_finalize (GObject * object);
+
+static void gst_av1_enc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_av1_enc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
+static gboolean gst_av1_enc_start (GstVideoEncoder * benc);
+static gboolean gst_av1_enc_stop (GstVideoEncoder * benc);
+static gboolean gst_av1_enc_set_format (GstVideoEncoder * encoder,
+    GstVideoCodecState * state);
+static GstFlowReturn gst_av1_enc_handle_frame (GstVideoEncoder * encoder,
+    GstVideoCodecFrame * frame);
+static gboolean gst_av1_enc_propose_allocation (GstVideoEncoder * encoder,
+    GstQuery * query);
+
+#define gst_av1_enc_parent_class parent_class
+G_DEFINE_TYPE (GstAV1Enc, gst_av1_enc, GST_TYPE_VIDEO_ENCODER);
+
+/* *INDENT-OFF* */
+static GstStaticPadTemplate gst_av1_enc_sink_pad_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+        GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) \"I420\", "
+        "framerate = (fraction) [0, MAX], "
+        "width = (int) [ 4, MAX ], "
+        "height = (int) [ 4, MAX ]")
+    );
+/* *INDENT-ON* */
+
+static GstStaticPadTemplate gst_av1_enc_src_pad_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-av1")
+    );
+
+static void
+gst_av1_enc_class_init (GstAV1EncClass * klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+  GstVideoEncoderClass *venc_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
+  venc_class = (GstVideoEncoderClass *) klass;
+
+  parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->finalize = gst_av1_enc_finalize;
+  gobject_class->set_property = gst_av1_enc_set_property;
+  gobject_class->get_property = gst_av1_enc_get_property;
+
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_av1_enc_sink_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_av1_enc_src_pad_template);
+  gst_element_class_set_static_metadata (element_class, "AV1 Encoder",
+      "Codec/Encoder/Video", "Encode AV1 video streams",
+      "Sean DuBois <sean@siobud.com>");
+
+  venc_class->start = gst_av1_enc_start;
+  venc_class->stop = gst_av1_enc_stop;
+  venc_class->set_format = gst_av1_enc_set_format;
+  venc_class->handle_frame = gst_av1_enc_handle_frame;
+  venc_class->propose_allocation = gst_av1_enc_propose_allocation;
+
+  GST_DEBUG_CATEGORY_INIT (av1_enc_debug, "av1enc", 0, "AV1 encoding element");
+}
+
+static void
+gst_av1_codec_error (aom_codec_ctx_t * ctx, const char *s)
+{
+  const char *detail = aom_codec_error_detail (ctx);
+
+  g_print ("%s: %s\n", s, aom_codec_error (ctx));
+  if (detail) {
+    g_print ("    %s\n", detail);
+  }
+}
+
+static void
+gst_av1_enc_init (GstAV1Enc * av1enc)
+{
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (av1enc));
+}
+
+static void
+gst_av1_enc_finalize (GObject * object)
+{
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_av1_enc_set_latency (GstAV1Enc * encoder)
+{
+  GstAV1Enc *av1enc = GST_AV1_ENC (encoder);
+  GstClockTime latency =
+      gst_util_uint64_scale (av1enc->aom_cfg.g_lag_in_frames, 1 * GST_SECOND,
+      30);
+  gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder), latency, latency);
+
+  GST_WARNING_OBJECT (encoder, "Latency unimplemented");
+}
+
+static gboolean
+gst_av1_enc_init_aom (GstAV1Enc * av1enc)
+{
+  av1enc->codec_interface = &aom_codec_av1_cx_algo;
+
+  if (aom_codec_enc_config_default (av1enc->codec_interface, &av1enc->aom_cfg,
+          0)) {
+    gst_av1_codec_error (&av1enc->codec, "Failed to get default codec config.");
+    return FALSE;
+  }
+
+  av1enc->aom_cfg.g_w = av1enc->input_state->info.width;
+  av1enc->aom_cfg.g_h = av1enc->input_state->info.height;
+  av1enc->aom_cfg.g_timebase.num = av1enc->input_state->info.fps_d;
+  av1enc->aom_cfg.g_timebase.den = av1enc->input_state->info.fps_n;
+  av1enc->aom_cfg.rc_target_bitrate = 3000;
+  av1enc->aom_cfg.g_error_resilient = 0;
+
+  if (aom_codec_enc_init (&av1enc->codec, av1enc->codec_interface,
+          &av1enc->aom_cfg, 0)) {
+    gst_av1_codec_error (&av1enc->codec, "Failed to initialize encoder");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+
+static gboolean
+gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
+{
+  GstVideoCodecState *output_state;
+  GstAV1Enc *av1enc = GST_AV1_ENC (encoder);
+
+  av1enc->keyframe_dist = 30;
+
+  output_state =
+      gst_video_encoder_set_output_state (encoder,
+      gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder)),
+      state);
+  gst_video_codec_state_unref (output_state);
+
+  av1enc->input_state = gst_video_codec_state_ref (state);
+
+  gst_av1_enc_set_latency (av1enc);
+  return gst_av1_enc_init_aom (av1enc);
+}
+
+static GstFlowReturn
+gst_av1_enc_process (GstAV1Enc * encoder)
+{
+  aom_codec_iter_t iter = NULL;
+  const aom_codec_cx_pkt_t *pkt;
+  GstVideoCodecFrame *frame;
+  GstVideoEncoder *video_encoder;
+
+  video_encoder = GST_VIDEO_ENCODER (encoder);
+
+  while ((pkt = aom_codec_get_cx_data (&encoder->codec, &iter)) != NULL) {
+    if (pkt->kind == AOM_CODEC_STATS_PKT) {
+      GST_WARNING_OBJECT (encoder, "Unhandled stats packet");
+    } else if (pkt->kind == AOM_CODEC_FPMB_STATS_PKT) {
+      GST_WARNING_OBJECT (encoder, "Unhandled FPMB pkt");
+    } else if (pkt->kind == AOM_CODEC_PSNR_PKT) {
+      GST_WARNING_OBJECT (encoder, "Unhandled PSNR packet");
+    } else if (pkt->kind == AOM_CODEC_CX_FRAME_PKT) {
+      frame = gst_video_encoder_get_oldest_frame (video_encoder);
+      g_assert (frame != NULL);
+      if ((pkt->data.frame.flags & AOM_FRAME_IS_KEY) != 0) {
+        GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+      } else {
+        GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
+      }
+
+      frame->output_buffer =
+          gst_buffer_new_wrapped (g_memdup (pkt->data.frame.buf,
+              pkt->data.frame.sz), pkt->data.frame.sz);
+      gst_video_encoder_finish_frame (video_encoder, frame);
+    }
+  }
+
+  return GST_FLOW_OK;
+}
+
+static void
+gst_av1_enc_fill_image (GstAV1Enc * enc, GstVideoFrame * frame,
+    aom_image_t * image)
+{
+  image->planes[AOM_PLANE_Y] = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  image->planes[AOM_PLANE_U] = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
+  image->planes[AOM_PLANE_V] = GST_VIDEO_FRAME_COMP_DATA (frame, 2);
+
+  image->stride[AOM_PLANE_Y] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  image->stride[AOM_PLANE_U] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1);
+  image->stride[AOM_PLANE_V] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2);
+}
+
+static GstFlowReturn
+gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
+{
+  GstAV1Enc *av1enc = GST_AV1_ENC (encoder);
+  aom_image_t raw;
+  int flags = 0;
+  GstFlowReturn ret;
+  GstVideoFrame vframe;
+
+  if (!aom_img_alloc (&raw, AOM_IMG_FMT_I420, av1enc->aom_cfg.g_w,
+          av1enc->aom_cfg.g_h, 1)) {
+    GST_ERROR_OBJECT (encoder, "Failed to initialize encoder");
+    return FALSE;
+  }
+
+  gst_video_frame_map (&vframe, &av1enc->input_state->info,
+      frame->input_buffer, GST_MAP_READ);
+  gst_av1_enc_fill_image (av1enc, &vframe, &raw);
+  gst_video_frame_unmap (&vframe);
+
+  if (av1enc->keyframe_dist >= 30) {
+    av1enc->keyframe_dist = 0;
+    flags |= AOM_EFLAG_FORCE_KF;
+  }
+  av1enc->keyframe_dist++;
+
+  if (aom_codec_encode (&av1enc->codec, &raw, frame->pts, 1, flags,
+          AOM_DL_GOOD_QUALITY) != AOM_CODEC_OK) {
+    gst_av1_codec_error (&av1enc->codec, "Failed to encode frame");
+  }
+
+  ret = gst_av1_enc_process (av1enc);
+  aom_img_free (&raw);
+  return ret;
+}
+
+static gboolean
+gst_av1_enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
+{
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
+      query);
+}
+
+static void
+gst_av1_enc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAV1Enc *av1enc = GST_AV1_ENC (object);
+
+  GST_OBJECT_LOCK (av1enc);
+
+  switch (prop_id) {
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  GST_OBJECT_UNLOCK (av1enc);
+}
+
+static void
+gst_av1_enc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstAV1Enc *av1enc = GST_AV1_ENC (object);
+
+  GST_OBJECT_LOCK (av1enc);
+
+  switch (prop_id) {
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  GST_OBJECT_UNLOCK (av1enc);
+}
+
+static gboolean
+gst_av1_enc_start (GstVideoEncoder * encoder)
+{
+  return TRUE;
+}
+
+static gboolean
+gst_av1_enc_stop (GstVideoEncoder * benc)
+{
+  g_print ("AV1Enc Stop \n");
+  return TRUE;
+}

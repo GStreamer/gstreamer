@@ -4,6 +4,12 @@ else
 ASSRENDER_DIR =
 endif
 
+if USE_AOM
+AOM_DIR= aom
+else
+AOM_DIR=
+endif
+
 if USE_VOAMRWBENC
 VOAMRWBENC_DIR = voamrwbenc
 else
@@ -409,6 +415,7 @@ endif
 SUBDIRS=\
 	$(VOAACENC_DIR) \
 	$(ASSRENDER_DIR) \
+	$(AOM_DIR) \
 	$(VOAMRWBENC_DIR) \
 	$(AUDIOFILE_DIR) \
 	$(BS2B_DIR) \
@@ -479,6 +486,7 @@ SUBDIRS=\
 
 DIST_SUBDIRS = \
 	assrender \
+	aom \
 	bs2b \
 	bz2 \
 	colormanagement \
