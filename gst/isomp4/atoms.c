@@ -1112,7 +1112,11 @@ atom_mdhd_init (AtomMDHD * mdhd)
 
   atom_full_init (&mdhd->header, FOURCC_mdhd, 0, 0, 0, flags);
   common_time_info_init (&mdhd->time_info);
-  mdhd->language_code = 0;
+  /* tempting as it may be to simply 0-initialize,
+   * that will have the demuxer (correctly) come up with 'eng' as language
+   * so explicitly specify undefined instead */
+  mdhd->language_code =
+      ('u' - 0x60) * 0x400 + ('n' - 0x60) * 0x20 + ('d' - 0x60);
   mdhd->quality = 0;
 }
 
