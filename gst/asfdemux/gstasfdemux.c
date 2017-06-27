@@ -1124,13 +1124,21 @@ gst_asf_demux_pull_indices (GstASFDemux * demux)
     gst_buffer_unmap (buf, &map);
     gst_buffer_replace (&buf, NULL);
 
+    if (ret == ASF_FLOW_NEED_MORE_DATA) {
+      /* Since indices are at the end of the file, if we need more data,
+       * we consider it as a non-fatal corrupted index */
+      ret = GST_FLOW_OK;
+      break;
+    }
+
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       break;
 
     ++num_read;
   }
 
-  GST_DEBUG_OBJECT (demux, "read %u index objects", num_read);
+  GST_DEBUG_OBJECT (demux, "read %u index objects , returning %s", num_read,
+      gst_flow_get_name (ret));
   return ret;
 }
 
