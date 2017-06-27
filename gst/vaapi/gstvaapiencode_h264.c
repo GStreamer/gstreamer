@@ -399,10 +399,61 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
   return ret;
 }
 
+static void
+set_compatible_profile (GstVaapiEncodeH264 * encode, GstCaps * caps,
+    GstVaapiProfile profile)
+{
+  GstCaps *allowed_caps, *tmp_caps;
+  gboolean ret = FALSE;
+
+  allowed_caps =
+      gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
+  if (!allowed_caps || gst_caps_is_empty (allowed_caps)) {
+    if (allowed_caps)
+      gst_caps_unref (allowed_caps);
+    return;
+  }
+
+  tmp_caps = gst_caps_from_string (GST_CODEC_CAPS);
+
+  /* If profile doesn't exist in the allowed caps, let's find
+   * compatible profile in the caps.
+   *
+   * If there is one, we can set it as a compatible profile and make
+   * the negotiation.  We consider baseline compatible with
+   * constrained-baseline, which is a strict subset of baseline
+   * profile.
+   */
+retry:
+  gst_caps_set_simple (tmp_caps, "profile", G_TYPE_STRING,
+      gst_vaapi_utils_h264_get_profile_string (profile), NULL);
+
+  if (!gst_caps_can_intersect (allowed_caps, tmp_caps)) {
+    if (profile == GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE) {
+      profile = GST_VAAPI_PROFILE_H264_BASELINE;
+      goto retry;
+    }
+  } else {
+    gst_caps_set_simple (caps, "profile", G_TYPE_STRING,
+        gst_vaapi_utils_h264_get_profile_string (profile), NULL);
+    ret = TRUE;
+  }
+
+  if (!ret)
+    GST_LOG ("There is no compatible profile in the requested caps.");
+
+  gst_caps_unref (tmp_caps);
+  gst_caps_unref (allowed_caps);
+  return;
+}
+
 static GstCaps *
 gst_vaapiencode_h264_get_caps (GstVaapiEncode * base_encode)
 {
   GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (base_encode);
+  GstVaapiEncoderH264 *const encoder =
+      GST_VAAPI_ENCODER_H264 (base_encode->encoder);
+  GstVaapiProfile profile;
   GstCaps *caps;
 
   caps = gst_caps_from_string (GST_CODEC_CAPS);
@@ -410,7 +461,12 @@ gst_vaapiencode_h264_get_caps (GstVaapiEncode * base_encode)
   gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING,
       encode->is_avc ? "avc" : "byte-stream", NULL);
 
-  /* XXX: update profile and level information */
+  /* Update profile determined by encoder */
+  gst_vaapi_encoder_h264_get_profile_and_level (encoder, &profile, NULL);
+  if (profile != GST_VAAPI_PROFILE_UNKNOWN)
+    set_compatible_profile (encode, caps, profile);
+
+  /* XXX: update level information */
   return caps;
 }
 
