@@ -240,7 +240,8 @@ mxf_up_get_track_wrapping (const MXFMetadataTimelineTrack * track)
 static GstCaps *
 mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
     MXFMetadataRGBAPictureEssenceDescriptor * d, GstTagList ** tags,
-    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
+    gboolean * intra_only, MXFEssenceElementHandleFunc * handler,
+    gpointer * mapping_data)
 {
   GstCaps *caps = NULL;
   guint i;
@@ -280,6 +281,7 @@ mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
         ((MXFMetadataGenericPictureEssenceDescriptor *) d)->image_end_offset;
 
     *mapping_data = data;
+    *intra_only = TRUE;
   } else {
     GST_WARNING ("Unsupported pixel layout");
   }
@@ -290,7 +292,8 @@ mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
 static GstCaps *
 mxf_up_cdci_create_caps (MXFMetadataTimelineTrack * track,
     MXFMetadataCDCIPictureEssenceDescriptor * d, GstTagList ** tags,
-    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
+    gboolean * intra_only, MXFEssenceElementHandleFunc * handler,
+    gpointer * mapping_data)
 {
   GstCaps *caps = NULL;
   guint i;
@@ -326,6 +329,7 @@ mxf_up_cdci_create_caps (MXFMetadataTimelineTrack * track,
         ((MXFMetadataGenericPictureEssenceDescriptor *) d)->image_end_offset;
 
     *mapping_data = data;
+    *intra_only = TRUE;
   } else {
     GST_WARNING ("Unsupported CDCI format");
   }
@@ -335,7 +339,8 @@ mxf_up_cdci_create_caps (MXFMetadataTimelineTrack * track,
 
 static GstCaps *
 mxf_up_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
+    gboolean * intra_only, MXFEssenceElementHandleFunc * handler,
+    gpointer * mapping_data)
 {
   MXFMetadataGenericPictureEssenceDescriptor *p = NULL;
   MXFMetadataCDCIPictureEssenceDescriptor *c = NULL;
@@ -378,9 +383,13 @@ mxf_up_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   *handler = mxf_up_handle_essence_element;
 
   if (r) {
-    caps = mxf_up_rgba_create_caps (track, r, tags, handler, mapping_data);
+    caps =
+        mxf_up_rgba_create_caps (track, r, tags, intra_only, handler,
+        mapping_data);
   } else if (c) {
-    caps = mxf_up_cdci_create_caps (track, c, tags, handler, mapping_data);
+    caps =
+        mxf_up_cdci_create_caps (track, c, tags, intra_only, handler,
+        mapping_data);
   } else {
     return NULL;
   }

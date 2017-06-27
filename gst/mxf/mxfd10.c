@@ -174,7 +174,8 @@ mxf_d10_get_track_wrapping (const MXFMetadataTimelineTrack * track)
 
 static GstCaps *
 mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
+    gboolean * intra_only, MXFEssenceElementHandleFunc * handler,
+    gpointer * mapping_data)
 {
   MXFMetadataGenericPictureEssenceDescriptor *p = NULL;
   MXFMetadataGenericSoundEssenceDescriptor *s = NULL;
@@ -247,6 +248,8 @@ mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
 
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "SMPTE D-10 Audio", NULL);
+
+    *intra_only = TRUE;
   } else if (p) {
     caps =
         gst_caps_new_simple ("video/mpeg", "systemstream", G_TYPE_BOOLEAN,
@@ -256,6 +259,9 @@ mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     *handler = mxf_d10_picture_handle_essence_element;
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "SMPTE D-10 Video", NULL);
+
+    /* Does not allow temporal reordering */
+    *intra_only = TRUE;
   }
 
   return caps;

@@ -140,7 +140,8 @@ mxf_dv_dif_get_track_wrapping (const MXFMetadataTimelineTrack * track)
 
 static GstCaps *
 mxf_dv_dif_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
+    gboolean * intra_only, MXFEssenceElementHandleFunc * handler,
+    gpointer * mapping_data)
 {
   GstCaps *caps = NULL;
   guint i;
@@ -180,6 +181,8 @@ mxf_dv_dif_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     *tags = gst_tag_list_new_empty ();
 
   gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_CODEC, "DV-DIF", NULL);
+
+  *intra_only = TRUE;
 
   return caps;
 }

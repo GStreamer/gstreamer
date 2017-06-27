@@ -37,7 +37,7 @@ typedef GstFlowReturn (*MXFEssenceElementHandleFunc) (const MXFUL *key, GstBuffe
 typedef struct {
   gboolean (*handles_track) (const MXFMetadataTimelineTrack *track);
   MXFEssenceWrapping (*get_track_wrapping) (const MXFMetadataTimelineTrack *track);
-  GstCaps * (*create_caps) (MXFMetadataTimelineTrack *track, GstTagList **tags, MXFEssenceElementHandleFunc *handler, gpointer *mapping_data);
+  GstCaps * (*create_caps) (MXFMetadataTimelineTrack *track, GstTagList **tags, gboolean * intra_only, MXFEssenceElementHandleFunc *handler, gpointer *mapping_data);
 } MXFEssenceElementHandler;
 
 typedef GstFlowReturn (*MXFEssenceElementWriteFunc) (GstBuffer *buffer, gpointer mapping_data, GstAdapter *adapter, GstBuffer **outbuf, gboolean flush);

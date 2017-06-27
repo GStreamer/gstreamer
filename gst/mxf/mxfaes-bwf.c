@@ -1233,6 +1233,7 @@ static const MXFUL mxf_sound_essence_compression_alaw =
 static GstCaps *
 mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
     MXFMetadataGenericSoundEssenceDescriptor * descriptor, GstTagList ** tags,
+    gboolean * intra_only,
     MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
   GstCaps *ret = NULL;
@@ -1348,13 +1349,16 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_BITRATE,
         wa_descriptor->avg_bps * 8, NULL);
 
+  *intra_only = TRUE;
+
   return ret;
 }
 
 static GstCaps *
 mxf_aes3_create_caps (MXFMetadataTimelineTrack * track,
     MXFMetadataGenericSoundEssenceDescriptor * descriptor, GstTagList ** tags,
-    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
+    gboolean * intra_only, MXFEssenceElementHandleFunc * handler,
+    gpointer * mapping_data)
 {
   GstCaps *ret = NULL;
   MXFMetadataWaveAudioEssenceDescriptor *wa_descriptor = NULL;
@@ -1404,13 +1408,15 @@ mxf_aes3_create_caps (MXFMetadataTimelineTrack * track,
   g_free (codec_name);
 
   *handler = mxf_aes3_handle_essence_element;
+  *intra_only = TRUE;
 
   return ret;
 }
 
 static GstCaps *
 mxf_aes_bwf_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
+    gboolean * intra_only, MXFEssenceElementHandleFunc * handler,
+    gpointer * mapping_data)
 {
   MXFMetadataGenericSoundEssenceDescriptor *s = NULL;
   gboolean bwf = FALSE;
@@ -1454,9 +1460,11 @@ mxf_aes_bwf_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     GST_ERROR ("No descriptor found for this track");
     return NULL;
   } else if (bwf) {
-    return mxf_bwf_create_caps (track, s, tags, handler, mapping_data);
+    return mxf_bwf_create_caps (track, s, tags, intra_only, handler,
+        mapping_data);
   } else {
-    return mxf_aes3_create_caps (track, s, tags, handler, mapping_data);
+    return mxf_aes3_create_caps (track, s, tags, intra_only, handler,
+        mapping_data);
   }
 
   return NULL;

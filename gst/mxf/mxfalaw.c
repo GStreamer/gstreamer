@@ -119,7 +119,8 @@ mxf_alaw_get_track_wrapping (const MXFMetadataTimelineTrack * track)
 
 static GstCaps *
 mxf_alaw_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
+    gboolean * intra_only, MXFEssenceElementHandleFunc * handler,
+    gpointer * mapping_data)
 {
   MXFMetadataGenericSoundEssenceDescriptor *s = NULL;
   guint i;
@@ -166,6 +167,8 @@ mxf_alaw_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
         "A-law encoded audio", NULL);
 
   }
+
+  *intra_only = TRUE;
 
   return caps;
 }
