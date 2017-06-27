@@ -627,8 +627,8 @@ static const MXFUL sound_essence_compression_aac = { {
 
 static GstCaps *
 mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data,
-    MXFMetadataGenericPictureEssenceDescriptor * p,
+    gboolean * intra_only, MXFEssenceElementHandleFunc * handler,
+    gpointer * mapping_data, MXFMetadataGenericPictureEssenceDescriptor * p,
     MXFMetadataGenericSoundEssenceDescriptor * s)
 {
   GstCaps *caps = NULL;
@@ -648,6 +648,7 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       codec_name = "MPEG-2 Video";
       t = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2;
       memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
+      *intra_only = FALSE;
     } else if (p->picture_essence_coding.u[0] != 0x06
         || p->picture_essence_coding.u[1] != 0x0e
         || p->picture_essence_coding.u[2] != 0x2b
@@ -669,12 +670,14 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       codec_name = "MPEG-2 Video";
       t = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2;
       memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
+      *intra_only = FALSE;
     } else if (p->picture_essence_coding.u[13] == 0x10) {
       caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       codec_name = "MPEG-1 Video";
       t = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2;
       memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
+      *intra_only = TRUE;
     } else if (p->picture_essence_coding.u[13] == 0x20) {
       MXFLocalTag *local_tag =
           (((MXFMetadataBase *) p)->other_tags) ?
@@ -698,6 +701,7 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       codec_name = "MPEG-4 Video";
       t = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG4;
       memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
+      *intra_only = FALSE;
     } else if ((p->picture_essence_coding.u[13] >> 4) == 0x03) {
       /* RP 2008 */
 
@@ -707,6 +711,7 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       codec_name = "h.264 Video";
       t = MXF_MPEG_ESSENCE_TYPE_VIDEO_AVC;
       memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
+      *intra_only = FALSE;
     } else {
       GST_ERROR ("Unsupported MPEG picture essence coding 0x%02x",
           p->picture_essence_coding.u[13]);
@@ -764,6 +769,7 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       mxf_metadata_generic_sound_essence_descriptor_set_caps (s, caps);
       *handler = mxf_mpeg_audio_handle_essence_element;
     }
+    *intra_only = TRUE;
   }
 
   if (caps) {
@@ -823,7 +829,8 @@ mxf_mpeg_get_track_wrapping (const MXFMetadataTimelineTrack * track)
 
 static GstCaps *
 mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
+    gboolean * intra_only, MXFEssenceElementHandleFunc * handler,
+    gpointer * mapping_data)
 {
   MXFMetadataFileDescriptor *f = NULL;
   MXFMetadataGenericPictureEssenceDescriptor *p = NULL;
@@ -866,7 +873,9 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   if (f->essence_container.u[13] == 0x04) {
     GST_DEBUG ("Found MPEG ES stream");
 
-    caps = mxf_mpeg_es_create_caps (track, tags, handler, mapping_data, p, s);
+    caps =
+        mxf_mpeg_es_create_caps (track, tags, intra_only, handler, mapping_data,
+        p, s);
   } else if (f->essence_container.u[13] == 0x07) {
     GST_ERROR ("MPEG PES streams not supported yet");
     return NULL;
@@ -880,6 +889,7 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       *tags = gst_tag_list_new_empty ();
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "MPEG PS", NULL);
+    *intra_only = FALSE;
   } else if (f->essence_container.u[13] == 0x09) {
     GST_DEBUG ("Found MPEG TS stream");
     caps = gst_caps_new_empty_simple ("video/mpegts");
@@ -888,6 +898,7 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       *tags = gst_tag_list_new_empty ();
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "MPEG TS", NULL);
+    *intra_only = FALSE;
   } else if (f->essence_container.u[13] == 0x0f) {
     GST_DEBUG ("Found h264 NAL unit stream");
     /* RP 2008 */
@@ -899,6 +910,7 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       *tags = gst_tag_list_new_empty ();
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "h.264 Video", NULL);
+    *intra_only = FALSE;
   } else if (f->essence_container.u[13] == 0x10) {
     GST_DEBUG ("Found h264 byte-stream stream");
     /* RP 2008 */
@@ -910,6 +922,7 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       *tags = gst_tag_list_new_empty ();
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "h.264 Video", NULL);
+    *intra_only = FALSE;
   }
 
   if (p && caps)

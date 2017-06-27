@@ -821,10 +821,11 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
 
         caps = gst_caps_new_empty_simple (name);
         g_free (name);
+        etrack->intra_only = FALSE;
       } else {
         caps =
             etrack->handler->create_caps (track, &etrack->tags,
-            &etrack->handle_func, &etrack->mapping_data);
+            &etrack->intra_only, &etrack->handle_func, &etrack->mapping_data);
       }
 
       GST_DEBUG_OBJECT (demux, "Created caps %" GST_PTR_FORMAT, caps);
@@ -1622,6 +1623,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   GstBuffer *outbuf = NULL;
   GstMXFDemuxEssenceTrack *etrack = NULL;
   gboolean keyframe = TRUE;
+  /* As in GstMXFDemuxIndex */
+  guint64 pts = G_MAXUINT64, dts = G_MAXUINT64;
 
   GST_DEBUG_OBJECT (demux,
       "Handling generic container essence element of size %" G_GSIZE_FORMAT
@@ -1680,7 +1683,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         GstMXFDemuxIndex *idx =
             &g_array_index (etrack->offsets, GstMXFDemuxIndex, i);
 
-        if (idx->offset != 0 && idx->offset == demux->offset - demux->run_in) {
+        if (idx->initialized && idx->offset != 0
+            && idx->offset == demux->offset - demux->run_in) {
           etrack->position = i;
           break;
         }
@@ -1696,8 +1700,12 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   if (etrack->offsets && etrack->offsets->len > etrack->position) {
     GstMXFDemuxIndex *index =
         &g_array_index (etrack->offsets, GstMXFDemuxIndex, etrack->position);
-    if (index->offset != 0)
+    if (index->initialized && index->offset != 0)
       keyframe = index->keyframe;
+    if (index->initialized && index->pts != G_MAXUINT64)
+      pts = index->pts;
+    if (index->initialized && index->dts != G_MAXUINT64)
+      dts = index->dts;
   }
 
   /* Create subbuffer to be able to change metadata */
@@ -1733,7 +1741,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     keyframe = !GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   /* Prefer keyframe information from index tables over everything else */
-  if (demux->index_tables && outbuf) {
+  if (demux->index_tables) {
     GList *l;
     GstMXFDemuxIndexTable *index_table = NULL;
 
@@ -1751,14 +1759,21 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       GstMXFDemuxIndex *index =
           &g_array_index (index_table->offsets, GstMXFDemuxIndex,
           etrack->position);
-      if (index->offset != 0) {
+      if (index->initialized && index->offset != 0) {
         keyframe = index->keyframe;
 
-        if (keyframe)
-          GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-        else
-          GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+        if (outbuf) {
+          if (keyframe)
+            GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+          else
+            GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+        }
       }
+
+      if (index->initialized && index->pts != G_MAXUINT64)
+        pts = index->pts;
+      if (index->initialized && index->dts != G_MAXUINT64)
+        dts = index->dts;
     }
   }
 
@@ -1776,6 +1791,9 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       GstMXFDemuxIndex index;
 
       index.offset = demux->offset - demux->run_in;
+      index.initialized = TRUE;
+      index.pts = pts;
+      index.dts = dts;
       index.keyframe = keyframe;
       if (etrack->offsets->len < etrack->position)
         g_array_set_size (etrack->offsets, etrack->position);
@@ -1826,7 +1844,15 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         gst_buffer_get_size (inbuf));
 
     GST_BUFFER_DTS (outbuf) = pad->position;
-    GST_BUFFER_PTS (outbuf) = pad->position;
+    if (pts != G_MAXUINT64)
+      GST_BUFFER_PTS (outbuf) = gst_util_uint64_scale (pts * GST_SECOND,
+          pad->current_essence_track->source_track->edit_rate.d,
+          pad->current_essence_track->source_track->edit_rate.n);
+    else if (etrack->intra_only)
+      GST_BUFFER_PTS (outbuf) = pad->position;
+    else
+      GST_BUFFER_PTS (outbuf) = GST_CLOCK_TIME_NONE;
+
     GST_BUFFER_DURATION (outbuf) =
         gst_util_uint64_scale (GST_SECOND,
         pad->current_essence_track->source_track->edit_rate.d,
@@ -3575,8 +3601,6 @@ collect_index_table_segments (GstMXFDemux * demux)
 
     for (i = 0; i < segment->n_index_entries && start + i < t->offsets->len;
         i++) {
-      GstMXFDemuxIndex *index =
-          &g_array_index (t->offsets, GstMXFDemuxIndex, start + i);
       guint64 offset = segment->index_entries[i].stream_offset;
       GList *m;
       GstMXFDemuxPartition *offset_partition = NULL, *next_partition = NULL;
@@ -3596,8 +3620,7 @@ collect_index_table_segments (GstMXFDemux * demux)
         next_partition = NULL;
       }
 
-      if (offset_partition && offset >= offset_partition->partition.body_offset
-          && (offset - offset_partition->partition.body_offset)) {
+      if (offset_partition && offset >= offset_partition->partition.body_offset) {
         offset =
             offset_partition->partition.this_partition +
             offset_partition->essence_container_offset + (offset -
@@ -3608,9 +3631,42 @@ collect_index_table_segments (GstMXFDemux * demux)
           GST_ERROR_OBJECT (demux,
               "Invalid index table segment going into next unrelated partition");
         } else {
+          GstMXFDemuxIndex *index;
+          gint8 temporal_offset = segment->index_entries[i].temporal_offset;
+          guint64 pts_i = G_MAXUINT64;
+
+          if (temporal_offset > 0 ||
+              (temporal_offset < 0 && start + i >= -(gint) temporal_offset)) {
+            pts_i = start + i + temporal_offset;
+
+            if (t->offsets->len < pts_i)
+              g_array_set_size (t->offsets, pts_i);
+
+            index = &g_array_index (t->offsets, GstMXFDemuxIndex, pts_i);
+            if (!index->initialized) {
+              index->initialized = TRUE;
+              index->offset = 0;
+              index->pts = G_MAXUINT64;
+              index->dts = G_MAXUINT64;
+              index->keyframe = FALSE;
+            }
+
+            index->pts = start + i;
+          }
+
+          index = &g_array_index (t->offsets, GstMXFDemuxIndex, start + i);
+          if (!index->initialized) {
+            index->initialized = TRUE;
+            index->offset = 0;
+            index->pts = G_MAXUINT64;
+            index->dts = G_MAXUINT64;
+            index->keyframe = FALSE;
+          }
+
           index->offset = offset;
           index->keyframe = ! !(segment->index_entries[i].flags & 0x80)
               || (segment->index_entries[i].key_frame_offset == 0);
+          index->dts = pts_i;
         }
       }
     }

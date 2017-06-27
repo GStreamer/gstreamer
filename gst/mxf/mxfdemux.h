@@ -58,12 +58,6 @@ typedef struct
 
 typedef struct
 {
-  guint64 offset;
-  gboolean keyframe;
-} GstMXFDemuxIndex;
-
-typedef struct
-{
   guint32 body_sid;
   guint32 index_sid;
   guint32 track_number;
@@ -86,12 +80,30 @@ typedef struct
   GstTagList *tags;
 
   GstCaps *caps;
+  gboolean intra_only;
 } GstMXFDemuxEssenceTrack;
+
+typedef struct
+{
+  /* 0 if uninitialized */
+  guint64 offset;
+
+  /* PTS edit unit number or G_MAXUINT64 */
+  guint64 pts;
+
+  /* DTS edit unit number if we got here via PTS */
+  guint64 dts;
+
+  gboolean keyframe;
+  gboolean initialized;
+} GstMXFDemuxIndex;
 
 typedef struct
 {
   guint32 body_sid;
   guint32 index_sid;
+
+  /* offsets indexed by DTS */
   GArray *offsets;
 } GstMXFDemuxIndexTable;
 
