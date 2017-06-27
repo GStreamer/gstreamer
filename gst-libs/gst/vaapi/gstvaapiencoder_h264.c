@@ -1043,24 +1043,34 @@ ensure_profile_limits (GstVaapiEncoderH264 * encoder)
   GstVaapiProfile profile;
 
   if (!encoder->max_profile_idc
-      || encoder->profile_idc <= encoder->max_profile_idc)
+      || encoder->profile_idc == encoder->max_profile_idc)
     return TRUE;
 
-  GST_WARNING ("lowering coding tools to meet target decoder constraints");
+  /* Give an error if the given parameters are invalid for requested
+   * profile rather than lowering profile.
+   */
+  if (encoder->profile_idc > encoder->max_profile_idc) {
+    GST_WARNING ("Invalid parameter for maximum profile");
+    return FALSE;
+  }
 
   profile = GST_VAAPI_PROFILE_UNKNOWN;
 
-  /* Try Main profile coding tools */
-  if (encoder->max_profile_idc < GST_H264_PROFILE_HIGH) {
-    encoder->use_dct8x8 = FALSE;
-    profile = GST_VAAPI_PROFILE_H264_MAIN;
-  }
+  if (encoder->profile_idc < encoder->max_profile_idc) {
+    /* Let profile be higher to fit in the maximum profile
+     * without changing parameters */
+    if (encoder->max_profile_idc > GST_H264_PROFILE_BASELINE)
+      profile = GST_VAAPI_PROFILE_H264_MAIN;
 
-  /* Try Constrained Baseline profile coding tools */
-  if (encoder->max_profile_idc < GST_H264_PROFILE_MAIN) {
-    encoder->num_bframes = 0;
-    encoder->use_cabac = FALSE;
-    profile = GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
+    if (encoder->max_profile_idc > GST_H264_PROFILE_MAIN)
+      profile = GST_VAAPI_PROFILE_H264_HIGH;
+
+    if (encoder->max_profile_idc > GST_H264_PROFILE_HIGH) {
+      if (encoder->num_views > 2)
+        profile = GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH;
+      else if (encoder->num_views == 2)
+        profile = GST_VAAPI_PROFILE_H264_STEREO_HIGH;
+    }
   }
 
   if (profile) {
