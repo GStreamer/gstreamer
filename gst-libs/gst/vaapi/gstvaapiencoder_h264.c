@@ -3046,7 +3046,7 @@ gst_vaapi_encoder_h264_get_default_properties (void)
   GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
       GST_VAAPI_ENCODER_H264_PROP_MAX_BFRAMES,
       g_param_spec_uint ("max-bframes",
-          "Max B-Frames", "Number of B-frames between I and P", 0, 10, 1,
+          "Max B-Frames", "Number of B-frames between I and P", 0, 10, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -3095,7 +3095,7 @@ gst_vaapi_encoder_h264_get_default_properties (void)
       g_param_spec_boolean ("cabac",
           "Enable CABAC",
           "Enable CABAC entropy coding mode",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstVaapiEncoderH264:dct8x8:
@@ -3109,7 +3109,7 @@ gst_vaapi_encoder_h264_get_default_properties (void)
       g_param_spec_boolean ("dct8x8",
           "Enable 8x8 DCT",
           "Enable adaptive use of 8x8 transforms in I-frames",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstVaapiEncoderH264:cpb-length:
