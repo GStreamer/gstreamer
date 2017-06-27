@@ -888,6 +888,8 @@ gst_v4l2_allocator_alloc_dmabuf (GstV4l2Allocator * allocator,
       gst_object_ref (allocator);
     }
 
+    group->mems_allocated++;
+
     g_assert (gst_is_v4l2_memory (group->mem[i]));
     mem = (GstV4l2Memory *) group->mem[i];
 
@@ -901,7 +903,6 @@ gst_v4l2_allocator_alloc_dmabuf (GstV4l2Allocator * allocator,
         GST_V4L2_MEMORY_QUARK, mem, (GDestroyNotify) gst_memory_unref);
 
     group->mem[i] = dma_mem;
-    group->mems_allocated++;
   }
 
   gst_v4l2_allocator_reset_size (allocator, group);
