@@ -265,6 +265,8 @@ gst_mxf_mux_reset (GstMXFMux * mux)
       g_free (g_array_index (mux->index_table, MXFIndexTableSegment,
               n).index_entries);
   g_array_set_size (mux->index_table, 0);
+  mux->current_index_pos = 0;
+  mux->last_keyframe_pos = 0;
 }
 
 static gboolean
@@ -1216,6 +1218,8 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
       && !pad->have_complete_edit_unit && buf == NULL;
   gboolean is_keyframe = buf ?
       !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) : TRUE;
+  GstClockTime pts = buf ? GST_BUFFER_PTS (buf) : GST_CLOCK_TIME_NONE;
+  GstClockTime dts = buf ? GST_BUFFER_DTS (buf) : GST_CLOCK_TIME_NONE;
 
   if (pad->have_complete_edit_unit) {
     GST_DEBUG_OBJECT (pad,
@@ -1268,35 +1272,124 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
 
     if (mux->index_table->len == 0 ||
         g_array_index (mux->index_table, MXFIndexTableSegment,
-            mux->index_table->len - 1).index_duration >= max_segment_size) {
-      MXFIndexTableSegment s;
+            mux->current_index_pos).index_duration >= max_segment_size) {
 
-      memset (&segment, 0, sizeof (segment));
+      if (mux->index_table->len > 0)
+        mux->current_index_pos++;
 
-      mxf_uuid_init (&s.instance_id, mux->metadata);
-      memcpy (&s.index_edit_rate, &pad->source_track->edit_rate,
-          sizeof (s.index_edit_rate));
-      s.index_start_position = pad->pos;
-      s.index_duration = 0;
-      s.edit_unit_byte_count = 0;
-      s.index_sid =
-          mux->preface->content_storage->essence_container_data[0]->index_sid;
-      s.body_sid =
-          mux->preface->content_storage->essence_container_data[0]->body_sid;
-      s.slice_count = 0;
-      s.pos_table_count = 0;
-      s.n_delta_entries = 0;
-      s.delta_entries = NULL;
-      s.n_index_entries = 0;
-      s.index_entries = g_new0 (MXFIndexEntry, max_segment_size);
-      g_array_append_val (mux->index_table, s);
+      if (mux->index_table->len <= mux->current_index_pos) {
+        MXFIndexTableSegment s;
+
+        memset (&segment, 0, sizeof (segment));
+
+        mxf_uuid_init (&s.instance_id, mux->metadata);
+        memcpy (&s.index_edit_rate, &pad->source_track->edit_rate,
+            sizeof (s.index_edit_rate));
+        if (mux->index_table->len > 0)
+          s.index_start_position =
+              g_array_index (mux->index_table, MXFIndexTableSegment,
+              mux->index_table->len - 1).index_start_position;
+        else
+          s.index_start_position = 0;
+        s.index_duration = 0;
+        s.edit_unit_byte_count = 0;
+        s.index_sid =
+            mux->preface->content_storage->essence_container_data[0]->index_sid;
+        s.body_sid =
+            mux->preface->content_storage->essence_container_data[0]->body_sid;
+        s.slice_count = 0;
+        s.pos_table_count = 0;
+        s.n_delta_entries = 0;
+        s.delta_entries = NULL;
+        s.n_index_entries = 0;
+        s.index_entries = g_new0 (MXFIndexEntry, max_segment_size);
+        g_array_append_val (mux->index_table, s);
+      }
     }
     segment =
         &g_array_index (mux->index_table, MXFIndexTableSegment,
-        mux->index_table->len - 1);
+        mux->current_index_pos);
 
-    segment->index_entries[segment->n_index_entries].temporal_offset = 0;
-    segment->index_entries[segment->n_index_entries].key_frame_offset = 0;
+    if (dts != GST_CLOCK_TIME_NONE && pts != GST_CLOCK_TIME_NONE) {
+      guint64 pts_pos;
+      guint64 pts_index_pos, pts_segment_pos;
+      gint64 index_pos_diff;
+      MXFIndexTableSegment *pts_segment;
+
+      pts =
+          gst_segment_to_running_time (&pad->parent.segment, GST_FORMAT_TIME,
+          pts);
+      pts_pos =
+          gst_util_uint64_scale_round (pts, pad->source_track->edit_rate.n,
+          pad->source_track->edit_rate.d * GST_SECOND);
+
+      index_pos_diff = pts_pos - pad->pos;
+      pts_index_pos = mux->current_index_pos;
+      pts_segment_pos = segment->n_index_entries;
+      if (index_pos_diff >= 0) {
+        while (pts_segment_pos + index_pos_diff >= max_segment_size) {
+          index_pos_diff -= max_segment_size - pts_segment_pos;
+          pts_segment_pos = 0;
+          pts_index_pos++;
+
+          if (pts_index_pos >= mux->index_table->len) {
+            MXFIndexTableSegment s;
+
+            memset (&segment, 0, sizeof (segment));
+
+            mxf_uuid_init (&s.instance_id, mux->metadata);
+            memcpy (&s.index_edit_rate, &pad->source_track->edit_rate,
+                sizeof (s.index_edit_rate));
+            if (mux->index_table->len > 0)
+              s.index_start_position =
+                  g_array_index (mux->index_table, MXFIndexTableSegment,
+                  mux->index_table->len - 1).index_start_position;
+            else
+              s.index_start_position = 0;
+            s.index_duration = 0;
+            s.edit_unit_byte_count = 0;
+            s.index_sid =
+                mux->preface->content_storage->
+                essence_container_data[0]->index_sid;
+            s.body_sid =
+                mux->preface->content_storage->
+                essence_container_data[0]->body_sid;
+            s.slice_count = 0;
+            s.pos_table_count = 0;
+            s.n_delta_entries = 0;
+            s.delta_entries = NULL;
+            s.n_index_entries = 0;
+            s.index_entries = g_new0 (MXFIndexEntry, max_segment_size);
+            g_array_append_val (mux->index_table, s);
+          }
+        }
+      } else {
+        while (pts_segment_pos + index_pos_diff <= 0) {
+          if (pts_index_pos == 0) {
+            pts_index_pos = G_MAXUINT64;
+            break;
+          }
+          index_pos_diff += pts_segment_pos;
+          pts_segment_pos = max_segment_size;
+          pts_index_pos--;
+        }
+      }
+      if (pts_index_pos != G_MAXUINT64) {
+        g_assert (index_pos_diff < 127 && index_pos_diff >= -127);
+        pts_segment =
+            &g_array_index (mux->index_table, MXFIndexTableSegment,
+            pts_index_pos);
+        pts_segment->index_entries[pts_segment_pos +
+            index_pos_diff].temporal_offset = -index_pos_diff;
+      }
+    }
+
+    /* Leave temporal offset initialized at 0, above code will set it as necessary */
+    ;
+    if (is_keyframe)
+      mux->last_keyframe_pos = pad->pos;
+    segment->index_entries[segment->n_index_entries].key_frame_offset =
+        MIN (pad->pos - mux->last_keyframe_pos, 127);
     segment->index_entries[segment->n_index_entries].flags = is_keyframe ? 0x80 : 0x20; /* FIXME: Need to distinguish all the cases */
     segment->index_entries[segment->n_index_entries].stream_offset =
         mux->partition.body_offset;
