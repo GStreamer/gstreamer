@@ -263,6 +263,52 @@ set_avc_intra_perdiod (GstOMXH264Enc * self)
   return TRUE;
 }
 
+#ifdef USE_OMX_TARGET_RPI
+static gboolean
+set_brcm_video_intra_period (GstOMXH264Enc * self)
+{
+  OMX_PARAM_U32TYPE intra_period;
+  OMX_ERRORTYPE err;
+
+  GST_OMX_INIT_STRUCT (&intra_period);
+
+  intra_period.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
+  err =
+      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexConfigBrcmVideoIntraPeriod, &intra_period);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "can't get OMX_IndexConfigBrcmVideoIntraPeriod %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (self, "default OMX_IndexConfigBrcmVideoIntraPeriod: %u",
+      (guint) intra_period.nU32);
+
+  if (self->interval_intraframes ==
+      GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT)
+    return TRUE;
+
+  intra_period.nU32 = self->interval_intraframes;
+
+  err =
+      gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexConfigBrcmVideoIntraPeriod, &intra_period);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "can't set OMX_IndexConfigBrcmVideoIntraPeriod %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (self, "OMX_IndexConfigBrcmVideoIntraPeriod set to %u",
+      (guint) intra_period.nU32);
+
+  return TRUE;
+}
+#endif
+
 static gboolean
 gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     GstVideoCodecState * state)
@@ -315,6 +361,12 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
       GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT) {
     set_avc_intra_perdiod (self);
   }
+#ifdef USE_OMX_TARGET_RPI
+  /* The Pi uses a specific OMX setting to configure the intra period */
+
+  if (self->interval_intraframes)
+    set_brcm_video_intra_period (self);
+#endif
 
   gst_omx_port_get_port_definition (GST_OMX_VIDEO_ENC (self)->enc_out_port,
       &port_def);
