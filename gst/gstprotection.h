@@ -71,5 +71,9 @@ GstProtectionMeta * gst_buffer_add_protection_meta (GstBuffer * buffer,
 GST_EXPORT
 const gchar * gst_protection_select_system (const gchar ** system_identifiers);
 
+GST_EXPORT
+gchar ** gst_protection_filter_systems_by_available_decryptors (
+    const gchar ** system_identifiers);
+
 G_END_DECLS
 #endif /* __GST_PROTECTION_META_H__ */

@@ -1078,6 +1078,7 @@ EXPORTS
 	gst_printerrln
 	gst_println
 	gst_progress_type_get_type
+	gst_protection_filter_systems_by_available_decryptors
 	gst_protection_meta_api_get_type
 	gst_protection_meta_get_info
 	gst_protection_select_system

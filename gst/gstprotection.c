@@ -193,6 +193,66 @@ gst_protection_select_system (const gchar ** system_identifiers)
   return retval;
 }
 
+/**
+ * gst_protection_filter_systems_by_available_decryptors:
+ * @system_identifiers: (transfer none): A null terminated array of strings
+ * that contains the UUID values of each protection system that is to be
+ * checked.
+ *
+ * Iterates the supplied list of UUIDs and checks the GstRegistry for
+ * all the decryptors supporting one of the supplied UUIDs.
+ *
+ * Returns: (transfer full): A null terminated array containing all the
+ * @system_identifiers supported by the set of available decryptors, or %NULL
+ * if no matches were found.
+ *
+ * Since: 1.14
+ */
+gchar **
+gst_protection_filter_systems_by_available_decryptors (const gchar **
+    system_identifiers)
+{
+  GList *decryptors, *walk;
+  gchar **retval;
+  guint i = 0, decryptors_number;
+
+  decryptors =
+      gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_DECRYPTOR,
+      GST_RANK_MARGINAL);
+
+  decryptors_number = g_list_length (decryptors);
+
+  GST_TRACE ("found %u decrytors", decryptors_number);
+
+  if (decryptors_number == 0)
+    return NULL;
+
+  retval = g_new (gchar *, decryptors_number + 1);
+
+  for (walk = decryptors; walk; walk = g_list_next (walk)) {
+    GstElementFactory *fact = (GstElementFactory *) walk->data;
+    const char *found_sys_id =
+        gst_protection_factory_check (fact, system_identifiers);
+
+    GST_DEBUG ("factory %s is valid for %s", GST_OBJECT_NAME (fact),
+        found_sys_id);
+
+    if (found_sys_id) {
+      retval[i++] = g_strdup (found_sys_id);
+    }
+  }
+  retval[i] = NULL;
+
+  if (retval[0] == NULL) {
+    g_free (retval);
+    retval = NULL;
+  }
+
+  gst_plugin_feature_list_free (decryptors);
+
+  return retval;
+}
+
 static const gchar *
 gst_protection_factory_check (GstElementFactory * fact,
     const gchar ** system_identifiers)
