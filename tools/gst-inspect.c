@@ -572,8 +572,11 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
       n_print ("    Availability: UNKNOWN!!!\n");
 
     if (padtemplate->static_caps.string) {
+      GstCaps *caps = gst_static_caps_get (&padtemplate->static_caps);
+
       n_print ("    Capabilities:\n");
-      print_caps (gst_static_caps_get (&padtemplate->static_caps), "      ");
+      print_caps (caps, "      ");
+      gst_caps_unref (caps);
     }
 
     n_print ("\n");
