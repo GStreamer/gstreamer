@@ -743,7 +743,7 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
     gl->DeleteFramebuffers (n_fbos, &fbo[0]);
 
     if (gl->DrawBuffer)
-      gl->DrawBuffer (GL_NONE);
+      gl->DrawBuffer (GL_BACK);
   }
 
   gst_memory_unmap (GST_MEMORY_CAST (src), &sinfo);
