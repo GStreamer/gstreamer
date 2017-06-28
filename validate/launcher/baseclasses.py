@@ -42,7 +42,7 @@ from .loggable import Loggable
 
 try:
     from lxml import etree as ET
-except (ModuleNotFoundError, ImportError):
+except ImportError:
     import xml.etree.cElementTree as ET
 
 from .utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
