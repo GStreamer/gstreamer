@@ -1061,6 +1061,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             # RTSP known issues
             ('validate.rtsp.playback.reverse.*',
              'https://bugzilla.gnome.org/show_bug.cgi?id=626811'),
+            ('validate.rtsp.playback.seek_with_stop.*',
+             'https://bugzilla.gnome.org/show_bug.cgi?id=784298'),
             ('validate.rtsp.playback.fast_*',
              'https://bugzilla.gnome.org/show_bug.cgi?id=754575'),
         ])
