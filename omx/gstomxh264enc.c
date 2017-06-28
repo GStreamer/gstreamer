@@ -218,6 +218,52 @@ gst_omx_h264_enc_stop (GstVideoEncoder * enc)
 }
 
 static gboolean
+set_avc_intra_perdiod (GstOMXH264Enc * self)
+{
+  OMX_VIDEO_CONFIG_AVCINTRAPERIOD config_avcintraperiod;
+  OMX_ERRORTYPE err;
+
+  GST_OMX_INIT_STRUCT (&config_avcintraperiod);
+  config_avcintraperiod.nPortIndex =
+      GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
+  err =
+      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexConfigVideoAVCIntraPeriod, &config_avcintraperiod);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "can't get OMX_IndexConfigVideoAVCIntraPeriod %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (self, "default nPFrames:%u, nIDRPeriod:%u",
+      (guint) config_avcintraperiod.nPFrames,
+      (guint) config_avcintraperiod.nIDRPeriod);
+
+  if (self->periodicty_idr !=
+      GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT) {
+    config_avcintraperiod.nIDRPeriod = self->periodicty_idr;
+  }
+
+  if (self->interval_intraframes !=
+      GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT) {
+    config_avcintraperiod.nPFrames = self->interval_intraframes;
+  }
+
+  err =
+      gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexConfigVideoAVCIntraPeriod, &config_avcintraperiod);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "can't set OMX_IndexConfigVideoAVCIntraPeriod %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     GstVideoCodecState * state)
 {
@@ -225,7 +271,6 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   GstCaps *peercaps;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
-  OMX_VIDEO_CONFIG_AVCINTRAPERIOD config_avcintraperiod;
 #ifdef USE_OMX_TARGET_RPI
   OMX_CONFIG_PORTBOOLEANTYPE config_inline_header;
 #endif
@@ -263,48 +308,12 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   }
 #endif
 
+  /* Configure GOP pattern */
   if (self->periodicty_idr !=
       GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT
       || self->interval_intraframes !=
       GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT) {
-
-
-    GST_OMX_INIT_STRUCT (&config_avcintraperiod);
-    config_avcintraperiod.nPortIndex =
-        GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
-    err =
-        gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
-        OMX_IndexConfigVideoAVCIntraPeriod, &config_avcintraperiod);
-    if (err != OMX_ErrorNone) {
-      GST_ERROR_OBJECT (self,
-          "can't get OMX_IndexConfigVideoAVCIntraPeriod %s (0x%08x)",
-          gst_omx_error_to_string (err), err);
-      return FALSE;
-    }
-
-    GST_DEBUG_OBJECT (self, "default nPFrames:%u, nIDRPeriod:%u",
-        (guint) config_avcintraperiod.nPFrames,
-        (guint) config_avcintraperiod.nIDRPeriod);
-
-    if (self->periodicty_idr !=
-        GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT) {
-      config_avcintraperiod.nIDRPeriod = self->periodicty_idr;
-    }
-
-    if (self->interval_intraframes !=
-        GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT) {
-      config_avcintraperiod.nPFrames = self->interval_intraframes;
-    }
-
-    err =
-        gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
-        OMX_IndexConfigVideoAVCIntraPeriod, &config_avcintraperiod);
-    if (err != OMX_ErrorNone) {
-      GST_ERROR_OBJECT (self,
-          "can't set OMX_IndexConfigVideoAVCIntraPeriod %s (0x%08x)",
-          gst_omx_error_to_string (err), err);
-      return FALSE;
-    }
+    set_avc_intra_perdiod (self);
   }
 
   gst_omx_port_get_port_definition (GST_OMX_VIDEO_ENC (self)->enc_out_port,
