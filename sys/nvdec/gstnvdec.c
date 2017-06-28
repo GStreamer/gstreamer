@@ -112,180 +112,96 @@ gst_nvdec_cuda_context_init (GstNvDecCudaContext * self)
     GST_ERROR ("failed to create CUDA context lock");
 }
 
-typedef struct _GstNvDecCudaGraphicsResourcesMeta
+typedef struct _GstNvDecCudaGraphicsResourceInfo
 {
-  GstMeta meta;
-
+  GstGLContext *gl_context;
   GstNvDecCudaContext *cuda_context;
-  CUgraphicsResource *resources;
-  guint num_resources;
-} GstNvDecCudaGraphicsResourcesMeta;
-
-GType gst_nvdec_cuda_graphics_resources_meta_api_get_type (void);
-#define GST_NVDEC_CUDA_GRAPHICS_RESOURCES_META_API_TYPE (gst_nvdec_cuda_graphics_resources_meta_api_get_type())
-#define gst_buffer_get_nvdec_cuda_graphics_resources_meta(b) \
-    ((GstNvDecCudaGraphicsResourcesMeta *)gst_buffer_get_meta((b), GST_NVDEC_CUDA_GRAPHICS_RESOURCES_META_API_TYPE))
-
-GType
-gst_nvdec_cuda_graphics_resources_meta_api_get_type (void)
-{
-  static volatile GType type;
-  static const gchar *tags[] = { GST_META_TAG_MEMORY_STR, NULL };
-
-  if (g_once_init_enter (&type)) {
-    GType _type =
-        gst_meta_api_type_register ("GstNvDecCudaGraphicsResourcesMetaAPI",
-        tags);
-    g_once_init_leave (&type, _type);
-  }
-
-  return type;
-}
-
-const GstMetaInfo *gst_nvdec_cuda_graphics_resources_meta_get_info (void);
-#define GST_NVDEC_CUDA_GRAPHICS_RESOURCES_META_INFO (gst_nvdec_cuda_graphics_resources_meta_get_info())
-
-GstNvDecCudaGraphicsResourcesMeta
-    * gst_buffer_add_nvdec_cuda_graphics_resources_meta (GstBuffer * buffer,
-    GstNvDecCudaContext * cuda_context);
+  CUgraphicsResource resource;
+} GstNvDecCudaGraphicsResourceInfo;
 
 static void
-add_cgr_meta (GstGLContext * context, GstBuffer * buffer)
+register_cuda_resource (GstGLContext * context, gpointer * args)
 {
-  GstNvDecCudaGraphicsResourcesMeta *meta;
-  GstMemory *mem;
+  GstMemory *mem = GST_MEMORY_CAST (args[0]);
+  GstNvDecCudaGraphicsResourceInfo *cgr_info =
+      (GstNvDecCudaGraphicsResourceInfo *) args[1];
   GstMapInfo map_info = GST_MAP_INFO_INIT;
-  CUgraphicsResource *resources;
-  guint n, i, texture_id;
+  guint texture_id;
 
-  meta = gst_buffer_get_nvdec_cuda_graphics_resources_meta (buffer);
-  n = gst_buffer_n_memory (buffer);
-  resources = g_new0 (CUgraphicsResource, n);
-
-  if (!cuda_OK (cuvidCtxLock (meta->cuda_context->lock, 0)))
+  if (!cuda_OK (cuvidCtxLock (cgr_info->cuda_context->lock, 0)))
     GST_WARNING ("failed to lock CUDA context");
 
-  for (i = 0; i < n; i++) {
-    mem = gst_buffer_get_memory (buffer, i);
+  if (gst_memory_map (mem, &map_info, GST_MAP_READ | GST_MAP_GL)) {
+    texture_id = *(guint *) map_info.data;
 
-    if (gst_memory_map (mem, &map_info, GST_MAP_READ | GST_MAP_GL)) {
-      texture_id = *(guint *) map_info.data;
+    if (!cuda_OK (cuGraphicsGLRegisterImage (&cgr_info->resource, texture_id,
+                GL_TEXTURE_2D, CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD)))
+      GST_WARNING ("failed to register texture with CUDA");
 
-      if (!cuda_OK (cuGraphicsGLRegisterImage (&resources[i], texture_id,
-                  GL_TEXTURE_2D, CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD)))
-        GST_WARNING ("failed to register texture with CUDA");
+    gst_memory_unmap (mem, &map_info);
+  } else
+    GST_WARNING ("failed to map memory");
 
-      gst_memory_unmap (mem, &map_info);
-    } else
-      GST_WARNING ("failed to map memory");
-
-    gst_memory_unref (mem);
-  }
-
-  if (!cuda_OK (cuvidCtxUnlock (meta->cuda_context->lock, 0)))
+  if (!cuda_OK (cuvidCtxUnlock (cgr_info->cuda_context->lock, 0)))
     GST_WARNING ("failed to unlock CUDA context");
-
-  meta->resources = resources;
-  meta->num_resources = n;
 }
 
 static void
-free_cgr_meta (GstGLContext * context, GstNvDecCudaGraphicsResourcesMeta * meta)
+unregister_cuda_resource (GstGLContext * context,
+    GstNvDecCudaGraphicsResourceInfo * cgr_info)
 {
-  guint i;
-
-  if (!cuda_OK (cuvidCtxLock (meta->cuda_context->lock, 0)))
+  if (!cuda_OK (cuvidCtxLock (cgr_info->cuda_context->lock, 0)))
     GST_WARNING ("failed to lock CUDA context");
 
-  for (i = 0; i < meta->num_resources; i++) {
-    if (!cuda_OK (cuGraphicsUnregisterResource ((const CUgraphicsResource)
-                meta->resources[i])))
-      GST_WARNING ("failed to unregister resource");
-  }
+  if (!cuda_OK (cuGraphicsUnregisterResource ((const CUgraphicsResource)
+              cgr_info->resource)))
+    GST_WARNING ("failed to unregister resource");
 
-  if (!cuda_OK (cuvidCtxUnlock (meta->cuda_context->lock, 0)))
+  if (!cuda_OK (cuvidCtxUnlock (cgr_info->cuda_context->lock, 0)))
     GST_WARNING ("failed to unlock CUDA context");
-
-  meta->num_resources = 0;
-  g_free (meta->resources);
-  meta->resources = NULL;
-  g_object_unref (meta->cuda_context);
-  meta->cuda_context = NULL;
-}
-
-static gboolean
-gst_nvdec_cuda_graphics_resources_meta_init (GstMeta * meta, gpointer params,
-    GstBuffer * buffer)
-{
-  GstNvDecCudaGraphicsResourcesMeta *cgrmeta =
-      (GstNvDecCudaGraphicsResourcesMeta *) meta;
-  cgrmeta->cuda_context = NULL;
-  cgrmeta->resources = NULL;
-  cgrmeta->num_resources = 0;
-
-  return TRUE;
-}
-
-static gboolean
-gst_nvdec_cuda_graphics_resources_meta_transform (GstBuffer * transbuf,
-    GstMeta * meta, GstBuffer * buffer, GQuark type, gpointer data)
-{
-  return FALSE;
 }
 
 static void
-gst_nvdec_cuda_graphics_resources_meta_free (GstMeta * meta, GstBuffer * buffer)
+free_cgr_info (GstNvDecCudaGraphicsResourceInfo * cgr_info)
 {
-  GstMemory *mem = gst_buffer_get_memory (buffer, 0);
-  gst_gl_context_thread_add (GST_GL_BASE_MEMORY_CAST (mem)->context,
-      (GstGLContextThreadFunc) free_cgr_meta, meta);
-  gst_memory_unref (mem);
+  gst_gl_context_thread_add (cgr_info->gl_context,
+      (GstGLContextThreadFunc) unregister_cuda_resource, cgr_info);
+  gst_object_unref (cgr_info->gl_context);
+  g_object_unref (cgr_info->cuda_context);
+  g_slice_free (GstNvDecCudaGraphicsResourceInfo, cgr_info);
 }
 
-const GstMetaInfo *
-gst_nvdec_cuda_graphics_resources_meta_get_info (void)
-{
-  static const GstMetaInfo *meta_info = NULL;
-
-  if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
-    const GstMetaInfo *mi =
-        gst_meta_register (GST_NVDEC_CUDA_GRAPHICS_RESOURCES_META_API_TYPE,
-        "GstNvDecCudaGraphicsResourcesMeta",
-        sizeof (GstNvDecCudaGraphicsResourcesMeta),
-        gst_nvdec_cuda_graphics_resources_meta_init,
-        gst_nvdec_cuda_graphics_resources_meta_free,
-        gst_nvdec_cuda_graphics_resources_meta_transform);
-    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
-  }
-
-  return meta_info;
-}
-
-GstNvDecCudaGraphicsResourcesMeta *
-gst_buffer_add_nvdec_cuda_graphics_resources_meta (GstBuffer * buffer,
+static CUgraphicsResource
+ensure_cuda_graphics_resource (GstMemory * mem,
     GstNvDecCudaContext * cuda_context)
 {
-  GstNvDecCudaGraphicsResourcesMeta *meta;
-  GstMemory *mem;
+  static GQuark quark = 0;
+  GstNvDecCudaGraphicsResourceInfo *cgr_info;
+  gpointer args[2];
 
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-  g_return_val_if_fail (gst_buffer_n_memory (buffer) > 0, NULL);
-
-  mem = gst_buffer_get_memory (buffer, 0);
-  if (!gst_is_gl_memory (mem)) {
-    GST_WARNING ("memory is not GL memory");
-    gst_memory_unref (mem);
+  if (!gst_is_gl_base_memory (mem)) {
+    GST_WARNING ("memory is not GL base memory");
     return NULL;
   }
 
-  meta = (GstNvDecCudaGraphicsResourcesMeta *) gst_buffer_add_meta (buffer,
-      GST_NVDEC_CUDA_GRAPHICS_RESOURCES_META_INFO, NULL);
-  meta->cuda_context = g_object_ref (cuda_context);
-  gst_gl_context_thread_add (GST_GL_BASE_MEMORY_CAST (mem)->context,
-      (GstGLContextThreadFunc) add_cgr_meta, buffer);
-  gst_memory_unref (mem);
+  if (!quark)
+    quark = g_quark_from_static_string ("GstNvDecCudaGraphicsResourceInfo");
 
-  return meta;
+  cgr_info = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem), quark);
+  if (!cgr_info) {
+    cgr_info = g_slice_new (GstNvDecCudaGraphicsResourceInfo);
+    cgr_info->gl_context =
+        gst_object_ref (GST_GL_BASE_MEMORY_CAST (mem)->context);
+    cgr_info->cuda_context = g_object_ref (cuda_context);
+    args[0] = mem;
+    args[1] = cgr_info;
+    gst_gl_context_thread_add (cgr_info->gl_context,
+        (GstGLContextThreadFunc) register_cuda_resource, args);
+    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem), quark, cgr_info,
+        (GDestroyNotify) free_cgr_info);
+  }
+
+  return cgr_info->resource;
 }
 
 static gboolean gst_nvdec_start (GstVideoDecoder * decoder);
@@ -647,8 +563,8 @@ copy_video_frame_to_gl_textures (GstGLContext * context, gpointer * args)
 {
   GstNvDec *nvdec = GST_NVDEC (args[0]);
   CUVIDPARSERDISPINFO *dispinfo = (CUVIDPARSERDISPINFO *) args[1];
-  GstNvDecCudaGraphicsResourcesMeta *meta =
-      (GstNvDecCudaGraphicsResourcesMeta *) args[2];
+  CUgraphicsResource *resources = (CUgraphicsResource *) args[2];
+  guint num_resources = GPOINTER_TO_UINT (args[3]);
   CUVIDPROCPARAMS proc_params = { 0, };
   CUdeviceptr dptr;
   CUarray array;
@@ -672,8 +588,7 @@ copy_video_frame_to_gl_textures (GstGLContext * context, gpointer * args)
     goto unlock_cuda_context;
   }
 
-  if (!cuda_OK (cuGraphicsMapResources (meta->num_resources, meta->resources,
-              NULL))) {
+  if (!cuda_OK (cuGraphicsMapResources (num_resources, resources, NULL))) {
     GST_WARNING_OBJECT (nvdec, "failed to map CUDA resources");
     goto unmap_video_frame;
   }
@@ -684,9 +599,9 @@ copy_video_frame_to_gl_textures (GstGLContext * context, gpointer * args)
   mcpy2d.dstPitch = nvdec->width;
   mcpy2d.WidthInBytes = nvdec->width;
 
-  for (i = 0; i < meta->num_resources; i++) {
-    if (!cuda_OK (cuGraphicsSubResourceGetMappedArray (&array,
-                meta->resources[i], 0, 0))) {
+  for (i = 0; i < num_resources; i++) {
+    if (!cuda_OK (cuGraphicsSubResourceGetMappedArray (&array, resources[i], 0,
+                0))) {
       GST_WARNING_OBJECT (nvdec, "failed to map CUDA array");
       break;
     }
@@ -699,8 +614,7 @@ copy_video_frame_to_gl_textures (GstGLContext * context, gpointer * args)
       GST_WARNING_OBJECT (nvdec, "memcpy to mapped array failed");
   }
 
-  if (!cuda_OK (cuGraphicsUnmapResources (meta->num_resources, meta->resources,
-              NULL)))
+  if (!cuda_OK (cuGraphicsUnmapResources (num_resources, resources, NULL)))
     GST_WARNING_OBJECT (nvdec, "failed to unmap CUDA resources");
 
 unmap_video_frame:
@@ -723,11 +637,11 @@ handle_pending_frames (GstNvDec * nvdec)
   GstNvDecQueueItem *item;
   CUVIDEOFORMAT *format;
   GstVideoCodecState *state;
-  guint width, height, fps_n, fps_d, i;
+  guint width, height, fps_n, fps_d, i, num_resources;
   CUVIDPICPARAMS *decode_params;
   CUVIDPARSERDISPINFO *dispinfo;
-  GstNvDecCudaGraphicsResourcesMeta *meta;
-  gpointer args[3];
+  CUgraphicsResource *resources;
+  gpointer args[4];
   GstMemory *mem;
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -850,31 +764,25 @@ handle_pending_frames (GstNvDec * nvdec)
           break;
         }
 
-        meta = gst_buffer_get_nvdec_cuda_graphics_resources_meta
-            (pending_frame->output_buffer);
-        if (!meta) {
-          meta = gst_buffer_add_nvdec_cuda_graphics_resources_meta
-              (pending_frame->output_buffer, nvdec->cuda_context);
-          if (!meta) {
-            GST_WARNING_OBJECT (nvdec,
-                "failed to add CUDA graphics resources meta");
-            break;
-          }
-          GST_META_FLAG_SET (meta, GST_META_FLAG_POOLED);
-        }
+        num_resources = gst_buffer_n_memory (pending_frame->output_buffer);
+        resources = g_new (CUgraphicsResource, num_resources);
 
-        args[0] = nvdec;
-        args[1] = dispinfo;
-        args[2] = meta;
-        gst_gl_context_thread_add (nvdec->gl_context,
-            (GstGLContextThreadFunc) copy_video_frame_to_gl_textures, args);
-
-        for (i = gst_buffer_n_memory (pending_frame->output_buffer); i;) {
-          mem = gst_buffer_get_memory (pending_frame->output_buffer, --i);
+        for (i = 0; i < num_resources; i++) {
+          mem = gst_buffer_get_memory (pending_frame->output_buffer, i);
+          resources[i] =
+              ensure_cuda_graphics_resource (mem, nvdec->cuda_context);
           GST_MINI_OBJECT_FLAG_SET (mem,
               GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD);
           gst_memory_unref (mem);
         }
+
+        args[0] = nvdec;
+        args[1] = dispinfo;
+        args[2] = resources;
+        args[3] = GUINT_TO_POINTER (num_resources);
+        gst_gl_context_thread_add (nvdec->gl_context,
+            (GstGLContextThreadFunc) copy_video_frame_to_gl_textures, args);
+        g_free (resources);
 
         if (!dispinfo->progressive_frame) {
           GST_BUFFER_FLAG_SET (pending_frame->output_buffer,
