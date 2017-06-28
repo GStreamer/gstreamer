@@ -770,7 +770,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_TUNING_TIMEOUT,
       g_param_spec_uint64 ("tuning-timeout", "Tuning Timeout",
-          "Milliseconds to wait before giving up tuning/locking on a signal",
+          "Microseconds to wait before giving up tuning/locking on a signal",
           0, G_MAXUINT64, DEFAULT_TUNING_TIMEOUT,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
