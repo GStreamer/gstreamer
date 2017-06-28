@@ -143,6 +143,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_keyw, "Keywords", QT_FLAG_CONTAINER,},
   {FOURCC_kywd, "Keywords", QT_FLAG_CONTAINER,},
   {FOURCC__too, "Encoder", QT_FLAG_CONTAINER,},
+  {FOURCC__swr, "Application Name", QT_FLAG_CONTAINER,},
   {FOURCC_____, "----", QT_FLAG_CONTAINER,},
   {FOURCC_data, "data", 0, qtdemux_dump_unknown},
   {FOURCC_free, "free", 0,},
