@@ -680,6 +680,9 @@ gst_v4l2_buffer_pool_resurect_buffer (GstV4l2BufferPool * pool)
 
   GST_DEBUG_OBJECT (pool, "A buffer was lost, reallocating it");
 
+  /* block recursive calls to this function */
+  g_signal_handler_block (pool->vallocator, pool->group_released_handler);
+
   params.flags =
       (GstBufferPoolAcquireFlags) GST_V4L2_BUFFER_POOL_ACQUIRE_FLAG_RESURRECT |
       GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
@@ -688,6 +691,8 @@ gst_v4l2_buffer_pool_resurect_buffer (GstV4l2BufferPool * pool)
 
   if (ret == GST_FLOW_OK)
     gst_buffer_unref (buffer);
+
+  g_signal_handler_unblock (pool->vallocator, pool->group_released_handler);
 
   return ret;
 }
