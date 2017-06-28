@@ -573,7 +573,9 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
 
     if (padtemplate->static_caps.string) {
       n_print ("    Capabilities:\n");
-      print_caps (gst_static_caps_get (&padtemplate->static_caps), "      ");
+      GstCaps *temp;
+      print_caps ((temp = gst_static_caps_get (&padtemplate->static_caps)), "      ");
+      gst_caps_unref(temp);
     }
 
     n_print ("\n");
