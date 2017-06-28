@@ -2504,7 +2504,7 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
   _unbind_buffer (convert);
 
   if (gl->DrawBuffer)
-    gl->DrawBuffer (GL_NONE);
+    gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
 
   /* we are done with the shader */
   gst_gl_context_clear_shader (context);

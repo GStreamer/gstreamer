@@ -288,7 +288,7 @@ gst_gl_framebuffer_draw_to_texture (GstGLFramebuffer * fb, GstGLMemory * mem,
 
   if (gst_gl_context_get_gl_api (fb->context) & (GST_GL_API_OPENGL |
           GST_GL_API_OPENGL3))
-    gl->DrawBuffer (GL_NONE);
+    gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
   gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
       viewport_dim[3]);
   gst_gl_context_clear_framebuffer (fb->context);

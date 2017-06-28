@@ -1946,7 +1946,7 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
     gl->BindVertexArray (0);
   _unbind_buffer (viewconvert);
   if (gl->DrawBuffer)
-    gl->DrawBuffer (GL_NONE);
+    gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
   /* we are done with the shader */
   gst_gl_context_clear_shader (context);
   gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
