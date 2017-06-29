@@ -637,7 +637,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
     GST_DEBUG_OBJECT (self, "Trying to allocate %d EGLImages", min);
 
     for (i = 0; i < min; i++) {
-      GstBuffer *buffer;
+      GstBuffer *buffer = NULL;
       GstMemory *mem;
       GstGLMemoryEGL *gl_mem;
 
@@ -646,6 +646,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
           || !(mem = gst_buffer_peek_memory (buffer, 0))
           || !GST_IS_GL_MEMORY_EGL_ALLOCATOR (mem->allocator)) {
         GST_INFO_OBJECT (self, "Failed to allocated %d-th EGLImage", i);
+        gst_buffer_replace (&buffer, NULL);
         g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
         g_list_free (images);
         buffers = NULL;
