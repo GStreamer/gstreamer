@@ -75,6 +75,11 @@ struct _GstOMXVideoDec
   gboolean draining;
 
   GstFlowReturn downstream_flow_ret;
+  /* Initially FALSE. Switched to TRUE when all requirements
+   * are met to try setting up the decoder with OMX_UseBuffer.
+   * Switched to FALSE if this trial fails so that the decoder
+   * can fallback to OMX_AllocateBuffer. */
+  gboolean use_buffers;
 #ifdef USE_OMX_TARGET_RPI
   GstOMXComponent *egl_render;
   GstOMXPort *egl_in_port, *egl_out_port;

@@ -358,6 +358,7 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
       self->downstream_flow_ret = GST_FLOW_OK;
       self->draining = FALSE;
       self->started = FALSE;
+      self->use_buffers = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -757,6 +758,8 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
   /* If not using EGLImage or trying to use EGLImage failed */
   if (!eglimage) {
     gboolean was_enabled = TRUE;
+    GList *buffers = NULL;
+    GList *l = NULL;
 
     if (min != port->port_def.nBufferCountActual) {
       err = gst_omx_port_update_port_definition (port, NULL);
@@ -784,7 +787,86 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
       was_enabled = FALSE;
     }
 
-    err = gst_omx_port_allocate_buffers (port);
+    if (self->use_buffers) {
+      GList *images = NULL;
+      GList *frames = NULL;
+      GstVideoInfo v_info;
+      gint i;
+      GstBufferPoolAcquireParams params = { 0, };
+
+      if (!gst_video_info_from_caps (&v_info, caps)) {
+        GST_INFO_OBJECT (self,
+            "Failed to get video info from caps %" GST_PTR_FORMAT, caps);
+        err = OMX_ErrorUndefined;
+        self->use_buffers = FALSE;
+      }
+
+      GST_DEBUG_OBJECT (self, "Trying to use %d buffers", min);
+
+      for (i = 0; i < min && self->use_buffers; i++) {
+        GstBuffer *buffer = NULL;
+        GstMemory *mem = NULL;
+        GstVideoFrame *frame = g_slice_new0 (GstVideoFrame);
+        GstMapFlags flags = GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF;
+        gboolean is_mapped = FALSE;
+
+        if (gst_buffer_pool_acquire_buffer (pool, &buffer,
+                &params) != GST_FLOW_OK || gst_buffer_n_memory (buffer) != 1
+            || !(mem = gst_buffer_peek_memory (buffer, 0))
+            || !(is_mapped =
+                gst_video_frame_map (frame, &v_info, buffer, flags))
+            || GST_VIDEO_FRAME_SIZE (frame) < port->port_def.nBufferSize) {
+          /* buffer does not match minimal requirement to try OMX_UseBuffer */
+          GST_INFO_OBJECT (self,
+              "Failed to allocated %d-th buffer of type %s, n_mem: %d, "
+              "is mapped: %d, frame size: %" G_GSIZE_FORMAT, i,
+              mem ? mem->allocator->mem_type : "(null)",
+              buffer ? gst_buffer_n_memory (buffer) : -1, is_mapped,
+              is_mapped ? GST_VIDEO_FRAME_SIZE (frame) : 0);
+          if (is_mapped)
+            gst_video_frame_unmap (frame);
+          g_slice_free (GstVideoFrame, frame);
+          gst_buffer_replace (&buffer, NULL);
+          g_list_free (images);
+          g_list_free_full (frames, (GDestroyNotify) gst_video_frame_unmap);
+          g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+          buffers = NULL;
+          images = NULL;
+          err = OMX_ErrorUndefined;
+          self->use_buffers = FALSE;
+          break;
+        } else {
+          /* if downstream pool is 1 n_mem then always try to use buffers
+           * and retry without using them if it fails */
+          buffers = g_list_append (buffers, buffer);
+          frames = g_list_append (frames, frame);
+          images =
+              g_list_append (images, GST_VIDEO_FRAME_PLANE_DATA (frame, 0));
+        }
+      }
+
+      /* buffers match minimal requirements then
+       * now try to actually use them */
+      if (images) {
+        err = gst_omx_port_use_buffers (port, images);
+        g_list_free (images);
+        g_list_free_full (frames, (GDestroyNotify) gst_video_frame_unmap);
+
+        if (err == OMX_ErrorNone) {
+          GST_DEBUG_OBJECT (self, "Using %d buffers", min);
+        } else {
+          GST_INFO_OBJECT (self,
+              "Failed to OMX_UseBuffer on port: %s (0x%08x)",
+              gst_omx_error_to_string (err), err);
+          g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+          self->use_buffers = FALSE;
+        }
+      }
+    }
+
+    if (!self->use_buffers)
+      err = gst_omx_port_allocate_buffers (port);
+
     if (err != OMX_ErrorNone && min > port->port_def.nBufferCountMin) {
       GST_ERROR_OBJECT (self,
           "Failed to allocate required number of buffers %d, trying less and copying",
@@ -838,6 +920,16 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
       }
     }
 
+    if (self->use_buffers) {
+      GST_DEBUG_OBJECT (self, "Populating internal buffer pool");
+      GST_OMX_BUFFER_POOL (self->out_port_pool)->other_pool =
+          GST_BUFFER_POOL (gst_object_ref (pool));
+      for (l = buffers; l; l = l->next) {
+        g_ptr_array_add (GST_OMX_BUFFER_POOL (self->out_port_pool)->buffers,
+            l->data);
+      }
+      g_list_free (buffers);
+    }
 
   }
 
@@ -1667,6 +1759,7 @@ gst_omx_video_dec_start (GstVideoDecoder * decoder)
 
   self->last_upstream_ts = 0;
   self->downstream_flow_ret = GST_FLOW_OK;
+  self->use_buffers = FALSE;
 
   return TRUE;
 }
@@ -2527,6 +2620,7 @@ gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
 {
   GstBufferPool *pool;
   GstStructure *config;
+  GstOMXVideoDec *self = GST_OMX_VIDEO_DEC (bdec);
 
 #if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   {
@@ -2571,6 +2665,12 @@ gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
     }
   }
 #endif
+
+  self->use_buffers = FALSE;
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    GST_DEBUG_OBJECT (self, "Try using downstream buffers with OMX_UseBuffer");
+    self->use_buffers = TRUE;
+  }
 
   if (!GST_VIDEO_DECODER_CLASS
       (gst_omx_video_dec_parent_class)->decide_allocation (bdec, query))
