@@ -162,6 +162,7 @@ check_functions = [
   'fseeko',
   'ftello',
   'poll',
+  'ppoll',
   'pselect',
   'getpagesize',
   'clock_gettime',
