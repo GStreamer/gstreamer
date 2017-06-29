@@ -913,6 +913,9 @@ gst_rtspsrc_init (GstRTSPSrc * src)
 
   src->state = GST_RTSP_STATE_INVALID;
 
+  g_mutex_init (&src->conninfo.send_lock);
+  g_mutex_init (&src->conninfo.recv_lock);
+
   GST_OBJECT_FLAG_SET (src, GST_ELEMENT_FLAG_SOURCE);
   gst_bin_set_suppressed_flags (GST_BIN (src),
       GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK);
@@ -953,6 +956,9 @@ gst_rtspsrc_finalize (GObject * object)
   /* free locks */
   g_rec_mutex_clear (&rtspsrc->stream_rec_lock);
   g_rec_mutex_clear (&rtspsrc->state_rec_lock);
+
+  g_mutex_clear (&rtspsrc->conninfo.send_lock);
+  g_mutex_clear (&rtspsrc->conninfo.recv_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1667,6 +1673,8 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
   stream->ptmap = g_array_new (FALSE, FALSE, sizeof (PtMapItem));
   stream->mikey = NULL;
   stream->stream_id = NULL;
+  g_mutex_init (&stream->conninfo.send_lock);
+  g_mutex_init (&stream->conninfo.recv_lock);
   g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
 
   /* collect bandwidth information for this steam. FIXME, configure in the RTP
@@ -1790,6 +1798,10 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
     g_object_unref (stream->session);
   if (stream->rtx_pt_map)
     gst_structure_free (stream->rtx_pt_map);
+
+  g_mutex_clear (&stream->conninfo.send_lock);
+  g_mutex_clear (&stream->conninfo.recv_lock);
+
   g_free (stream);
 }
 
@@ -4221,9 +4233,6 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
     }
   } while (!info->connected && retry);
 
-  g_mutex_init (&info->send_lock);
-  g_mutex_init (&info->recv_lock);
-
   gst_rtsp_message_unset (&response);
   return GST_RTSP_OK;
 
@@ -4268,9 +4277,6 @@ gst_rtsp_conninfo_close (GstRTSPSrc * src, GstRTSPConnInfo * info,
     gst_rtsp_connection_free (info->connection);
     info->connection = NULL;
     info->flushing = FALSE;
-
-    g_mutex_clear (&info->send_lock);
-    g_mutex_clear (&info->recv_lock);
   }
   GST_RTSP_STATE_UNLOCK (src);
   return GST_RTSP_OK;
