@@ -552,6 +552,30 @@ overflow_error:
 }
 
 static gboolean
+_set_multiview_mode (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
+    GstStructure * outs)
+{
+  const gchar *caps_str;
+
+  caps_str =
+      gst_video_multiview_mode_to_caps_string (GST_VIDEO_INFO_MULTIVIEW_MODE
+      (vinfo));
+  if (!caps_str)
+    return TRUE;
+
+  gst_structure_set (outs, "multiview-mode", G_TYPE_STRING, caps_str,
+      "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET,
+      GST_VIDEO_INFO_MULTIVIEW_FLAGS (vinfo), GST_FLAG_SET_MASK_EXACT, NULL);
+
+  if (GST_VIDEO_INFO_VIEWS (vinfo) > 1) {
+    gst_structure_set (outs, "views", G_TYPE_INT, GST_VIDEO_INFO_VIEWS (vinfo),
+        NULL);
+  }
+
+  return TRUE;
+}
+
+static gboolean
 _set_colorimetry (GstVaapiPostproc * postproc, GstVideoFormat format,
     GstStructure * outs)
 {
@@ -670,6 +694,7 @@ _get_preferred_caps (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
     goto fixate_failed;
   if (!_fixate_frame_rate (postproc, vinfo, structure))
     goto fixate_failed;
+  _set_multiview_mode (postproc, vinfo, structure);
 
   if (f == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)
     _set_colorimetry (postproc, format, structure);
