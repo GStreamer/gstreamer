@@ -2971,7 +2971,7 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
       GValueArray *view_ids = g_value_get_boxed (value);
 
       if (view_ids == NULL) {
-        for (i = 0; i < encoder->num_views; i++)
+        for (i = 0; i < MAX_NUM_VIEWS; i++)
           encoder->view_ids[i] = i;
       } else {
         g_assert (view_ids->n_values <= encoder->num_views);
