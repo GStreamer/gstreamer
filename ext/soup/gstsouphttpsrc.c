@@ -2098,7 +2098,7 @@ gst_soup_http_src_set_proxy (GstSoupHTTPSrc * src, const gchar * uri)
   if (uri == NULL || *uri == '\0')
     return TRUE;
 
-  if (g_str_has_prefix (uri, "http://")) {
+  if (g_strstr_len (uri, -1, "://")) {
     src->proxy = soup_uri_new (uri);
   } else {
     gchar *new_uri = g_strconcat ("http://", uri, NULL);
