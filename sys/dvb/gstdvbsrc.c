@@ -253,7 +253,8 @@ enum
 #define DEFAULT_INTERLEAVING 0
 #endif
 
-static void gst_dvbsrc_output_frontend_stats (GstDvbSrc * src);
+static gboolean gst_dvbsrc_output_frontend_stats (GstDvbSrc * src,
+    fe_status_t * status);
 
 #define GST_TYPE_DVBSRC_CODE_RATE (gst_dvbsrc_code_rate_get_type ())
 static GType
@@ -1931,6 +1932,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
   gint buffer_size;
   GstFlowReturn retval = GST_FLOW_ERROR;
   GstDvbSrc *object;
+  fe_status_t status;
 
   object = GST_DVBSRC (element);
   GST_LOG ("fd_dvr: %d", object->fd_dvr);
@@ -1948,7 +1950,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
 
     if (object->stats_interval &&
         ++object->stats_counter == object->stats_interval) {
-      gst_dvbsrc_output_frontend_stats (object);
+      gst_dvbsrc_output_frontend_stats (object, &status);
       object->stats_counter = 0;
     }
   }
@@ -2178,54 +2180,59 @@ gst_dvbsrc_do_tune (GstDvbSrc * src)
     gst_dvbsrc_tune (src);
 }
 
-static void
-gst_dvbsrc_output_frontend_stats (GstDvbSrc * src)
+static gboolean
+gst_dvbsrc_output_frontend_stats (GstDvbSrc * src, fe_status_t * status)
 {
-  fe_status_t status;
   guint16 snr, signal;
   guint32 ber, bad_blks;
   GstMessage *message;
   GstStructure *structure;
-  int fe_fd = src->fd_frontend;
   gint err;
 
-  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_STATUS, &status));
-  if (!err) {
-    structure = gst_structure_new ("dvb-frontend-stats",
-        "status", G_TYPE_INT, status,
-        "lock", G_TYPE_BOOLEAN, status & FE_HAS_LOCK, NULL);
-  } else {
-    GST_ERROR_OBJECT (src, "Error getting frontend status: '%s'",
-        g_strerror (errno));
-    return;
+  errno = 0;
+
+  LOOP_WHILE_EINTR (err, ioctl (src->fd_frontend, FE_READ_STATUS, status));
+  if (err) {
+    GST_ERROR_OBJECT (src, "Failed querying frontend for tuning status"
+        " %s (%d)", g_strerror (errno), errno);
+    return FALSE;
   }
 
-  errno = 0;
-  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_SIGNAL_STRENGTH, &signal));
+  structure = gst_structure_new ("dvb-frontend-stats",
+      "status", G_TYPE_INT, status,
+      "lock", G_TYPE_BOOLEAN, *status & FE_HAS_LOCK, NULL);
+
+  LOOP_WHILE_EINTR (err, ioctl (src->fd_frontend, FE_READ_SIGNAL_STRENGTH,
+          &signal));
   if (!err)
     gst_structure_set (structure, "signal", G_TYPE_INT, signal, NULL);
 
-  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_SNR, &snr));
+  LOOP_WHILE_EINTR (err, ioctl (src->fd_frontend, FE_READ_SNR, &snr));
   if (!err)
     gst_structure_set (structure, "snr", G_TYPE_INT, snr, NULL);
 
-  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_BER, &ber));
+  LOOP_WHILE_EINTR (err, ioctl (src->fd_frontend, FE_READ_BER, &ber));
   if (!err)
     gst_structure_set (structure, "ber", G_TYPE_INT, ber, NULL);
 
-  LOOP_WHILE_EINTR (err, ioctl (fe_fd, FE_READ_UNCORRECTED_BLOCKS, &bad_blks));
+  LOOP_WHILE_EINTR (err, ioctl (src->fd_frontend, FE_READ_UNCORRECTED_BLOCKS,
+          &bad_blks));
   if (!err)
     gst_structure_set (structure, "unc", G_TYPE_INT, bad_blks, NULL);
 
-  if (errno)
+  if (errno) {
     GST_WARNING_OBJECT (src,
         "There were errors getting frontend status information: '%s'",
         g_strerror (errno));
+  }
 
   GST_INFO_OBJECT (src, "Frontend stats: %" GST_PTR_FORMAT, structure);
   message = gst_message_new_element (GST_OBJECT (src), structure);
   gst_element_post_message (GST_ELEMENT (src), message);
+
+  return TRUE;
 }
+
 
 static void
 diseqc_send_msg (int fd, fe_sec_voltage_t v, struct dvb_diseqc_master_cmd *cmd,
@@ -2374,14 +2381,10 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
 
   /* signal locking loop */
   do {
-    LOOP_WHILE_EINTR (err, ioctl (object->fd_frontend, FE_READ_STATUS,
-            &status));
-    if (err) {
-      GST_WARNING_OBJECT (object, "Failed querying frontend for tuning status"
-          " %s (%d)", g_strerror (errno), errno);
+
+    if (!gst_dvbsrc_output_frontend_stats (object, &status))
       goto fail_with_signal;
-    }
-    gst_dvbsrc_output_frontend_stats (object);
+
     /* keep retrying forever if tuning_timeout = 0 */
     if (object->tuning_timeout)
       elapsed_time = GST_CLOCK_DIFF (start, gst_util_get_timestamp ());
