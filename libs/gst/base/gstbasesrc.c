@@ -253,7 +253,6 @@ struct _GstBaseSrcPrivate
   volatile gint have_events;    /* OBJECT_LOCK */
 
   /* QoS *//* with LOCK */
-  gboolean qos_enabled;         /* unused */
   gdouble proportion;           /* OBJECT_LOCK */
   GstClockTime earliest_time;   /* OBJECT_LOCK */
 
