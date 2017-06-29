@@ -594,13 +594,10 @@ static inline gboolean
 are_raw_caps (const GstCaps * caps)
 {
   GstCaps *raw = gst_static_caps_get (&default_raw_caps);
+  gboolean res = gst_caps_can_intersect (caps, raw);
 
-  if (gst_caps_can_intersect (caps, raw)) {
-    gst_caps_unref (raw);
-    return TRUE;
-  }
   gst_caps_unref (raw);
-  return FALSE;
+  return res;
 }
 
 /* Returns the number of time a given stream profile is currently used
