@@ -55,7 +55,8 @@ enum
   PROP_INLINESPSPPSHEADERS,
 #endif
   PROP_PERIODICITYOFIDRFRAMES,
-  PROP_INTERVALOFCODINGINTRAFRAMES
+  PROP_INTERVALOFCODINGINTRAFRAMES,
+  PROP_B_FRAMES,
 };
 
 #ifdef USE_OMX_TARGET_RPI
@@ -63,6 +64,7 @@ enum
 #endif
 #define GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT    (0xffffffff)
 #define GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT (0xffffffff)
+#define GST_OMX_H264_VIDEO_ENC_B_FRAMES_DEFAULT (0xffffffff)
 
 
 /* class initialization */
@@ -117,6 +119,13 @@ gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  g_object_class_install_property (gobject_class, PROP_B_FRAMES,
+      g_param_spec_uint ("b-frames", "Number of B-frames",
+          "Number of B-frames between two consecutive I-frames (0xffffffff=component default)",
+          0, G_MAXUINT, GST_OMX_H264_VIDEO_ENC_B_FRAMES_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
   basevideoenc_class->flush = gst_omx_h264_enc_flush;
   basevideoenc_class->stop = gst_omx_h264_enc_stop;
 
@@ -152,6 +161,9 @@ gst_omx_h264_enc_set_property (GObject * object, guint prop_id,
     case PROP_INTERVALOFCODINGINTRAFRAMES:
       self->interval_intraframes = g_value_get_uint (value);
       break;
+    case PROP_B_FRAMES:
+      self->b_frames = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -176,6 +188,9 @@ gst_omx_h264_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_INTERVALOFCODINGINTRAFRAMES:
       g_value_set_uint (value, self->interval_intraframes);
       break;
+    case PROP_B_FRAMES:
+      g_value_set_uint (value, self->b_frames);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -193,6 +208,7 @@ gst_omx_h264_enc_init (GstOMXH264Enc * self)
       GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT;
   self->interval_intraframes =
       GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT;
+  self->b_frames = GST_OMX_H264_VIDEO_ENC_B_FRAMES_DEFAULT;
 }
 
 static gboolean
@@ -357,6 +373,37 @@ update_param_avc (GstOMXH264Enc * self,
   if (level != OMX_VIDEO_AVCLevelMax)
     param.eLevel = level;
 
+  /* GOP pattern */
+  if (self->interval_intraframes !=
+      GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT) {
+    param.nPFrames = self->interval_intraframes;
+
+    /* If user specified a specific number of B-frames, reduce the number of
+     * P-frames by this amount. If not ensure there is no B-frame to have the
+     * requested GOP length. */
+    if (self->b_frames != GST_OMX_H264_VIDEO_ENC_B_FRAMES_DEFAULT) {
+      if (self->b_frames > self->interval_intraframes) {
+        GST_ERROR_OBJECT (self,
+            "The interval_intraframes perdiod (%u) needs to be higher than the number of B-frames (%u)",
+            self->interval_intraframes, self->b_frames);
+        return FALSE;
+      }
+      param.nPFrames -= self->b_frames;
+    } else {
+      param.nBFrames = 0;
+    }
+  }
+
+  if (self->b_frames != GST_OMX_H264_VIDEO_ENC_B_FRAMES_DEFAULT) {
+    if (profile == OMX_VIDEO_AVCProfileBaseline && self->b_frames > 0) {
+      GST_ERROR_OBJECT (self,
+          "Baseline profile doesn't support B-frames (%u requested)",
+          self->b_frames);
+      return FALSE;
+    }
+    param.nBFrames = self->b_frames;
+  }
+
   err =
       gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
       OMX_IndexParamVideoAvc, &param);
@@ -405,7 +452,12 @@ set_avc_intra_period (GstOMXH264Enc * self)
 
   if (self->interval_intraframes !=
       GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT) {
-    config_avcintraperiod.nPFrames = self->interval_intraframes;
+    /* This OMX API doesn't allow us to specify the number of B-frames.
+     * So if user requested one we have to rely on update_param_avc()
+     * to configure the intraframes interval so it can take the
+     * B-frames into account. */
+    if (self->b_frames == GST_OMX_H264_VIDEO_ENC_B_FRAMES_DEFAULT)
+      config_avcintraperiod.nPFrames = self->interval_intraframes;
   }
 
   err =
@@ -565,14 +617,16 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     gst_caps_unref (peercaps);
 
     if (profile != OMX_VIDEO_AVCProfileMax || level != OMX_VIDEO_AVCLevelMax) {
-      /* OMX provides 2 API to set the profile and level so try using both */
+      /* OMX provides 2 API to set the profile and level. We try using the
+       * generic on here and the H264 specific when calling
+       * update_param_avc() */
       if (!update_param_profile_level (self, profile, level))
-        return FALSE;
-
-      if (!update_param_avc (self, profile, level))
         return FALSE;
     }
   }
+
+  if (!update_param_avc (self, profile, level))
+    return FALSE;
 
   return TRUE;
 
