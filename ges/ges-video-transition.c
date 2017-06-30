@@ -350,7 +350,6 @@ ges_video_transition_create_element (GESTrackElement * object)
       oconv, NULL);
 
   mixer = ges_smart_mixer_new (NULL);
-  g_object_set (GES_SMART_MIXER (mixer)->mixer, "background", 3, NULL);
   GES_SMART_MIXER (mixer)->disable_zorder_alpha = TRUE;
   gst_bin_add (GST_BIN (topbin), mixer);
 
