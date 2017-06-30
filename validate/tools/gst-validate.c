@@ -95,6 +95,9 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       break;
     case GST_MESSAGE_ASYNC_DONE:
       break;
+    case GST_MESSAGE_LATENCY:
+      gst_bin_recalculate_latency (GST_BIN (pipeline));
+      break;
     case GST_MESSAGE_STATE_CHANGED:
       if (GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline)) {
         GstState oldstate, newstate, pending;
