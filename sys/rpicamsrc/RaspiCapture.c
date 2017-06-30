@@ -929,6 +929,7 @@ GstFlowReturn
 raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
     GstClock *clock, GstClockTime base_time)
 {
+  RASPIVID_CONFIG *config = &state->config;
   GstBuffer *buf;
   MMAL_BUFFER_HEADER_T *buffer;
   GstFlowReturn ret = GST_FLOW_ERROR;
@@ -939,7 +940,7 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
   buffer = mmal_queue_wait(state->encoded_buffer_q);
 
 
-  if (G_LIKELY (clock)) {
+  if (G_LIKELY (config->useSTC && clock)) {
     MMAL_PARAMETER_INT64_T param;
     GstClockTime runtime;
 
@@ -951,7 +952,7 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
 
     mmal_port_parameter_get(state->encoder_output_port, &param.hdr);
 
-    if (param.value != -1 && param.value >= buffer->pts) {
+    if (buffer->pts != -1 && param.value != -1 && param.value >= buffer->pts) {
       /* Convert microsecond RPi TS to GStreamer clock: */
       GstClockTime offset = (param.value - buffer->pts) * 1000;
       if (runtime >= offset)
@@ -963,13 +964,16 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
         buffer->pts, buffer->dts, param.value, param.value - buffer->pts,
         GST_TIME_ARGS (gst_pts));
   }
-
+  else {
+    GST_LOG ("use-stc=false. Not applying STC to buffer");
+  }
 
   mmal_buffer_header_mem_lock(buffer);
   buf = gst_buffer_new_allocate(NULL, buffer->length, NULL);
   if (buf) {
+    if (config->useSTC)
+        GST_BUFFER_DTS(buf) = GST_BUFFER_PTS(buf) = gst_pts;
     /* FIXME: Can we avoid copies and give MMAL our own buffers to fill? */
-    GST_BUFFER_PTS(buf) = gst_pts;
     gst_buffer_fill(buf, 0, buffer->data, buffer->length);
     ret = GST_FLOW_OK;
   }

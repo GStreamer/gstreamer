@@ -116,6 +116,8 @@ typedef struct
 
    int jpegQuality;
    int jpegRestartInterval;
+
+   int useSTC;
 } RASPIVID_CONFIG;
 
 typedef struct RASPIVID_STATE_T RASPIVID_STATE;

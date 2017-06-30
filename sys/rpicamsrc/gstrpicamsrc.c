@@ -138,7 +138,8 @@ enum
 #ifdef GST_RPI_CAM_SRC_ENABLE_VIDEO_DIRECTION
   PROP_VIDEO_DIRECTION,
 #endif
-  PROP_JPEG_QUALITY
+  PROP_JPEG_QUALITY,
+  PROP_USE_STC
 };
 
 #define CAMERA_DEFAULT 0
@@ -488,6 +489,10 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   g_object_class_override_property (gobject_class, PROP_VIDEO_DIRECTION,
       "video-direction");
 #endif
+  g_object_class_install_property (gobject_class, PROP_USE_STC,
+      g_param_spec_boolean ("use-stc", "Use System Time Clock",
+          "Use the camera STC for timestamping buffers", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Raspberry Pi Camera Source", "Source/Video",
@@ -517,12 +522,12 @@ gst_rpi_cam_src_init (GstRpiCamSrc * src)
   raspicapture_default_config (&src->capture_config);
   src->capture_config.intraperiod = KEYFRAME_INTERVAL_DEFAULT;
   src->capture_config.verbose = 1;
+  src->capture_config.useSTC = TRUE;
 
   g_mutex_init (&src->config_lock);
 
-  /* Don't let basesrc set timestamps, we'll do it using
-   * buffer PTS and system times */
-  gst_base_src_set_do_timestamp (GST_BASE_SRC (src), FALSE);
+  /* basesrc will generate timestamps if use-stc = false */
+  gst_base_src_set_do_timestamp (GST_BASE_SRC (src), TRUE);
 
   /* Generate the channels list */
   channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
@@ -1006,6 +1011,9 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       gst_rpi_cam_src_set_orientation (src, g_value_get_enum (value));
       break;
 #endif
+    case PROP_USE_STC:
+      src->capture_config.useSTC = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1170,6 +1178,9 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, src->orientation);
       break;
 #endif
+    case PROP_USE_STC:
+      g_value_set_boolean (value, src->capture_config.useSTC);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1182,6 +1193,9 @@ gst_rpi_cam_src_start (GstBaseSrc * parent)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC (parent);
   GST_LOG_OBJECT (src, "In src_start()");
+  /* Ensure basesrc timestamping is off is use-stc is on */
+  if (src->capture_config.useSTC)
+    gst_base_src_set_do_timestamp (GST_BASE_SRC (src), FALSE);
   g_mutex_lock (&src->config_lock);
   src->capture_state = raspi_capture_setup (&src->capture_config);
   /* Clear all capture flags */
@@ -1417,7 +1431,10 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
   if (*buf) {
     GST_LOG_OBJECT (src, "Made buffer of size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (*buf));
-    GST_BUFFER_DURATION (*buf) = src->duration;
+    /* Only set the duration when we have a PTS update from the rpi encoder.
+     * not every buffer is a frame */
+    if (GST_BUFFER_PTS_IS_VALID (*buf))
+      GST_BUFFER_DURATION (*buf) = src->duration;
   }
 
   if (clock)
