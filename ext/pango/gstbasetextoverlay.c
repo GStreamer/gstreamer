@@ -2562,10 +2562,9 @@ gst_base_text_overlay_video_event (GstPad * pad, GstObject * parent,
       gst_event_parse_segment (event, &segment);
 
       if (segment->format == GST_FORMAT_TIME) {
+        gst_segment_copy_into (segment, &overlay->segment);
         GST_DEBUG_OBJECT (overlay, "VIDEO SEGMENT now: %" GST_SEGMENT_FORMAT,
             &overlay->segment);
-
-        gst_segment_copy_into (segment, &overlay->segment);
       } else {
         GST_ELEMENT_WARNING (overlay, STREAM, MUX, (NULL),
             ("received non-TIME newsegment event on video input"));
