@@ -129,7 +129,7 @@ gst_omx_h265_enc_class_init (GstOMXH265EncClass * klass)
 
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
   g_object_class_install_property (gobject_class, PROP_PERIODICITYOFIDRFRAMES,
-      g_param_spec_uint ("periodicty-idr", "Target Bitrate",
+      g_param_spec_uint ("periodicity-idr", "IDR periodicity",
           "Periodicity of IDR frames (0xffffffff=component default)",
           0, G_MAXUINT,
           GST_OMX_H265_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT,
