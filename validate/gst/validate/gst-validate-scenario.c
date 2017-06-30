@@ -2243,37 +2243,24 @@ _get_target_element (GstValidateScenario * scenario, GstValidateAction * action)
   return target;
 }
 
-static gint
-cmp_klass_name (gconstpointer a, gconstpointer b)
-{
-  const GValue *v = a;
-  const GValue *param = b;
-  GstElement *element = g_value_get_object (v);
-  const gchar *klass = g_value_get_string (param);
-
-  if (gst_validate_element_has_klass (element, klass))
-    return 0;
-
-  return 1;
-}
-
 /**
  * _get_target_elements_by_klass:
  * @scenario: a #GstValidateScenario
  * @action: a #GstValidateAction
  *
  * Returns all the elements in the pipeline whose GST_ELEMENT_METADATA_KLASS
- * matches the 'target-element-klass' of @action.
+ * matches the 'target-element-klass' of @action and the factory name matches
+ * the 'target-element-factory-name'.
  *
  * Returns: (transfer full) (element-type GstElement): a list of #GstElement
  */
 static GList *
-_get_target_elements_by_klass (GstValidateScenario * scenario,
+_get_target_elements_by_klass_or_factory_name (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
   GList *result = NULL;
-  GstIterator *it, *filtered;
-  const gchar *klass;
+  GstIterator *it;
+  const gchar *klass, *fname;
   GValue v = G_VALUE_INIT, param = G_VALUE_INIT;
   gboolean done = FALSE;
   GstElement *pipeline = gst_validate_scenario_get_pipeline (scenario);
@@ -2285,13 +2272,20 @@ _get_target_elements_by_klass (GstValidateScenario * scenario,
   }
 
   klass = gst_structure_get_string (action->structure, "target-element-klass");
-  if (klass == NULL) {
+  fname =
+      gst_structure_get_string (action->structure,
+      "target-element-factory-name");
+  if (!klass && !fname) {
     gst_object_unref (pipeline);
 
     return NULL;
   }
 
-  if (gst_validate_element_has_klass (pipeline, klass))
+  if (klass && gst_validate_element_has_klass (pipeline, klass))
+    result = g_list_prepend (result, gst_object_ref (pipeline));
+
+  if (fname && !g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (pipeline)),
+          fname))
     result = g_list_prepend (result, gst_object_ref (pipeline));
 
   it = gst_bin_iterate_recurse (GST_BIN (pipeline));
@@ -2299,15 +2293,24 @@ _get_target_elements_by_klass (GstValidateScenario * scenario,
   g_value_init (&param, G_TYPE_STRING);
   g_value_set_string (&param, klass);
 
-  filtered = gst_iterator_filter (it, cmp_klass_name, &param);
-
   while (!done) {
-    switch (gst_iterator_next (filtered, &v)) {
+    switch (gst_iterator_next (it, &v)) {
       case GST_ITERATOR_OK:{
         GstElement *child = g_value_get_object (&v);
 
-        if (g_list_find (result, child) == NULL)
+        if (g_list_find (result, child))
+          goto next;
+
+        if (klass && gst_validate_element_has_klass (child, klass)) {
           result = g_list_prepend (result, gst_object_ref (child));
+          goto next;
+        }
+
+        if (fname
+            && !g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (child)),
+                fname))
+          result = g_list_prepend (result, gst_object_ref (child));
+      next:
         g_value_reset (&v);
       }
         break;
@@ -2322,7 +2325,7 @@ _get_target_elements_by_klass (GstValidateScenario * scenario,
 
   g_value_reset (&v);
   g_value_reset (&param);
-  gst_iterator_free (filtered);
+  gst_iterator_free (it);
   gst_object_unref (pipeline);
 
   return result;
@@ -2407,13 +2410,15 @@ _execute_set_property (GstValidateScenario * scenario,
    */
   if (gst_structure_get_string (action->structure, "target-element-name")) {
     target = _get_target_element (scenario, action);
-    if (target == NULL) {
+    if (target == NULL)
       return FALSE;
-    }
+
     targets = g_list_append (targets, target);
   } else if (gst_structure_get_string (action->structure,
-          "target-element-klass")) {
-    targets = _get_target_elements_by_klass (scenario, action);
+          "target-element-klass") ||
+      gst_structure_get_string (action->structure,
+          "target-element-factory-name")) {
+    targets = _get_target_elements_by_klass_or_factory_name (scenario, action);
   } else {
     g_assert_not_reached ();
   }
@@ -3249,6 +3254,13 @@ should_execute_action (GstElement * element, GstValidateAction * action)
 
   tmp = gst_structure_get_string (action->structure, "target-element-klass");
   if (tmp != NULL && gst_validate_element_has_klass (element, tmp))
+    return TRUE;
+
+  tmp =
+      gst_structure_get_string (action->structure,
+      "target-element-factory-name");
+  if (tmp != NULL
+      && !g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (element)), tmp))
     return TRUE;
 
   return FALSE;
@@ -4202,6 +4214,13 @@ init_scenarios (void)
         {
           .name = "target-element-name",
           .description = "The name of the GstElement to set a property on",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "target-element-factory-name",
+          .description = "The name factory for which to set a property on built elements",
           .mandatory = FALSE,
           .types = "string",
           NULL
