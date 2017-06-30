@@ -376,7 +376,7 @@ update_param_avc (GstOMXH264Enc * self,
 }
 
 static gboolean
-set_avc_intra_perdiod (GstOMXH264Enc * self)
+set_avc_intra_period (GstOMXH264Enc * self)
 {
   OMX_VIDEO_CONFIG_AVCINTRAPERIOD config_avcintraperiod;
   OMX_ERRORTYPE err;
@@ -518,7 +518,7 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
       GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT
       || self->interval_intraframes !=
       GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT) {
-    set_avc_intra_perdiod (self);
+    set_avc_intra_period (self);
   }
 #ifdef USE_OMX_TARGET_RPI
   /* The Pi uses a specific OMX setting to configure the intra period */
