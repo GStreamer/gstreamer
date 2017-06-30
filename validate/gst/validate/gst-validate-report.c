@@ -861,6 +861,7 @@ void
 gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 {
   gint i;
+  gchar *tmp;
   GString *string = g_string_new (NULL);
 
   if (source) {
@@ -941,7 +942,9 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
     }
   }
 
-  g_string_append_vprintf (string, format, args);
+  tmp = gst_info_strdup_vprintf (format, args);
+  g_string_append (string, tmp);
+  g_free (tmp);
 
   if (!newline_regex)
     newline_regex =
