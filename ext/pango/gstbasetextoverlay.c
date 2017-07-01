@@ -2704,7 +2704,7 @@ gst_base_text_overlay_text_chain (GstPad * pad, GstObject * parent,
   if (in_seg) {
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
       GST_BUFFER_TIMESTAMP (buffer) = clip_start;
-    else if (GST_BUFFER_DURATION_IS_VALID (buffer))
+    if (GST_BUFFER_DURATION_IS_VALID (buffer))
       GST_BUFFER_DURATION (buffer) = clip_stop - clip_start;
 
     /* Wait for the previous buffer to go away */
