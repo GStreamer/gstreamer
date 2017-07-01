@@ -3901,6 +3901,23 @@ gst_qt_mux_register_and_push_sample (GstQTMux * qtmux, GstQTPad * pad,
   return ret;
 }
 
+static void
+gst_qt_mux_register_buffer_in_chunk (GstQTMux * qtmux, GstQTPad * pad,
+    guint buffer_size, GstClockTime duration)
+{
+  /* not that much happens here,
+   * but updating any of this very likely needs to happen all in sync,
+   * unless there is a very good reason not to */
+
+  /* for computing the avg bitrate */
+  pad->total_bytes += buffer_size;
+  pad->total_duration += duration;
+  /* for keeping track of where we are in chunk;
+   * ensures that data really is located as recorded in atoms */
+  qtmux->current_chunk_size += buffer_size;
+  qtmux->current_chunk_duration += duration;
+}
+
 static GstFlowReturn
 gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
     GstBuffer * buf, GstFlowReturn ret)
@@ -4237,11 +4254,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     }
   }
 
-  /* for computing the avg bitrate */
-  pad->total_bytes += buffer_size;
-  pad->total_duration += duration;
-  qtmux->current_chunk_size += buffer_size;
-  qtmux->current_chunk_duration += duration;
+  gst_qt_mux_register_buffer_in_chunk (qtmux, pad, buffer_size, duration);
 
   chunk_offset = qtmux->current_chunk_offset;
 
@@ -4338,19 +4351,21 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       gint64 empty_duration =
           GST_BUFFER_PTS (buf) - (GST_BUFFER_PTS (last_buf) + duration);
       gint64 empty_duration_scaled;
+      guint empty_size;
 
       empty_buf = pad->create_empty_buffer (pad, empty_duration);
 
       empty_duration_scaled = gst_util_uint64_scale_round (empty_duration,
           atom_trak_get_timescale (pad->trak), GST_SECOND);
+      empty_size = gst_buffer_get_size (empty_buf);
 
-      pad->total_bytes += gst_buffer_get_size (empty_buf);
-      pad->total_duration += duration;
+      gst_qt_mux_register_buffer_in_chunk (qtmux, pad, empty_size,
+          empty_duration);
 
       ret =
           gst_qt_mux_register_and_push_sample (qtmux, pad, empty_buf, FALSE, 1,
           last_dts + scaled_duration, empty_duration_scaled,
-          gst_buffer_get_size (empty_buf), chunk_offset, sync, TRUE, 0);
+          empty_size, chunk_offset, sync, TRUE, 0);
     } else {
       /* our only case currently is tx3g subtitles, so there is no reason to fill this yet */
       g_assert_not_reached ();
