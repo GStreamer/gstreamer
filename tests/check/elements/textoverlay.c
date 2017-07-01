@@ -894,7 +894,7 @@ GST_START_TEST (test_video_waits_for_text)
   fail_unless_equals_int (g_list_length (buffers), 1);
 
   /* text should still be stuck in textoverlay */
-  ASSERT_BUFFER_REFCOUNT (tbuf, "tbuf", 2);
+  ASSERT_MINI_OBJECT_REFCOUNT (gst_buffer_peek_memory (tbuf, 0), "tbuf-mem", 2);
 
   /* there should be no text rendered */
   outbuffer = GST_BUFFER_CAST (buffers->data);
@@ -917,7 +917,7 @@ GST_START_TEST (test_video_waits_for_text)
   fail_unless_equals_int (g_list_length (buffers), 2);
 
   /* text should still be stuck in textoverlay */
-  ASSERT_BUFFER_REFCOUNT (tbuf, "tbuf", 2);
+  ASSERT_MINI_OBJECT_REFCOUNT (gst_buffer_peek_memory (tbuf, 0), "tbuf-mem", 2);
 
   /* there should be text rendered */
   outbuffer = GST_BUFFER_CAST (buffers->next->data);
@@ -945,7 +945,7 @@ GST_START_TEST (test_video_waits_for_text)
   fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_OK);
 
   /* but the text should no longer be stuck in textoverlay */
-  ASSERT_BUFFER_REFCOUNT (tbuf, "tbuf", 1);
+  ASSERT_MINI_OBJECT_REFCOUNT (gst_buffer_peek_memory (tbuf, 0), "tbuf-mem", 1);
 
   /* video buffer should have gone through after newsegment event */
   fail_unless_equals_int (g_list_length (buffers), 3);

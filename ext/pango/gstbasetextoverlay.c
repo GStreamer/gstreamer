@@ -2581,6 +2581,8 @@ gst_base_text_overlay_text_chain (GstPad * pad, GstObject * parent,
   }
 
   if (in_seg) {
+    /* about to change metadata */
+    buffer = gst_buffer_make_writable (buffer);
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
       GST_BUFFER_TIMESTAMP (buffer) = clip_start;
     else if (GST_BUFFER_DURATION_IS_VALID (buffer))
