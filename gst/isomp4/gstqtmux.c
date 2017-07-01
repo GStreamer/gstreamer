@@ -4226,8 +4226,8 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   } else {
     nsamples = 1;
     sample_size = buffer_size;
-    if ((buf && GST_BUFFER_DTS_IS_VALID (buf))
-        || GST_BUFFER_DTS_IS_VALID (last_buf)) {
+    if (!pad->sparse && ((buf && GST_BUFFER_DTS_IS_VALID (buf))
+            || GST_BUFFER_DTS_IS_VALID (last_buf))) {
       gint64 scaled_dts;
       if (buf && GST_BUFFER_DTS_IS_VALID (buf)) {
         pad->last_dts = GST_BUFFER_DTS (buf);
@@ -4355,8 +4355,10 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
       empty_buf = pad->create_empty_buffer (pad, empty_duration);
 
-      empty_duration_scaled = gst_util_uint64_scale_round (empty_duration,
-          atom_trak_get_timescale (pad->trak), GST_SECOND);
+      pad->last_dts = GST_BUFFER_PTS (buf);
+      empty_duration_scaled = gst_util_uint64_scale_round (pad->last_dts,
+          atom_trak_get_timescale (pad->trak), GST_SECOND)
+          - (last_dts + scaled_duration);
       empty_size = gst_buffer_get_size (empty_buf);
 
       gst_qt_mux_register_buffer_in_chunk (qtmux, pad, empty_size,
