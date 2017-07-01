@@ -2855,7 +2855,7 @@ static void
 gst_aggregator_pad_clip_buffer_unlocked (GstAggregatorPad * pad)
 {
   GstAggregator *self = NULL;
-  GstAggregatorClass *aggclass;
+  GstAggregatorClass *aggclass = NULL;
   GstBuffer *buffer = NULL;
 
   while (pad->priv->clipped_buffer == NULL &&
