@@ -39,6 +39,16 @@ static gboolean initialized = FALSE;
     initialized = TRUE; \
   }
 
+static const guint8 tfrf_uuid[] = {
+  0xd4, 0x80, 0x7e, 0xf2, 0xca, 0x39, 0x46, 0x95,
+  0x8e, 0x54, 0x26, 0xcb, 0x9e, 0x46, 0xa7, 0x9f
+};
+
+static const guint8 tfxd_uuid[] = {
+  0x6d, 0x1d, 0x9b, 0x05, 0x42, 0xd5, 0x44, 0xe6,
+  0x80, 0xe2, 0x14, 0x1d, 0xaf, 0xf7, 0x57, 0xb2
+};
+
 /* gst_isoff_parse_box_header:
  * @reader:
  * @type: type that was found at the current position
@@ -102,10 +112,27 @@ gst_isoff_trun_box_clear (GstTrunBox * trun)
 }
 
 static void
+gst_isoff_tfrf_box_free (GstTfrfBox * tfrf)
+{
+  if (tfrf->entries)
+    g_array_free (tfrf->entries, TRUE);
+
+  g_free (tfrf);
+}
+
+static void
 gst_isoff_traf_box_clear (GstTrafBox * traf)
 {
   if (traf->trun)
     g_array_free (traf->trun, TRUE);
+
+  if (traf->tfrf)
+    gst_isoff_tfrf_box_free (traf->tfrf);
+
+  g_free (traf->tfxd);
+  traf->trun = NULL;
+  traf->tfrf = NULL;
+  traf->tfxd = NULL;
 }
 
 static gboolean
@@ -260,6 +287,118 @@ gst_isoff_tfdt_box_parse (GstTfdtBox * tfdt, GstByteReader * reader)
 }
 
 static gboolean
+gst_isoff_tfxd_box_parse (GstTfxdBox * tfxd, GstByteReader * reader)
+{
+  guint8 version;
+  guint32 flags = 0;
+  guint64 absolute_time = 0;
+  guint64 absolute_duration = 0;
+
+  memset (tfxd, 0, sizeof (*tfxd));
+
+  if (gst_byte_reader_get_remaining (reader) < 4)
+    return FALSE;
+
+  if (!gst_byte_reader_get_uint8 (reader, &version)) {
+    GST_ERROR ("Error getting box's version field");
+    return FALSE;
+  }
+
+  if (!gst_byte_reader_get_uint24_be (reader, &flags)) {
+    GST_ERROR ("Error getting box's flags field");
+    return FALSE;
+  }
+
+  tfxd->version = version;
+  tfxd->flags = flags;
+
+  if (gst_byte_reader_get_remaining (reader) < ((version & 0x01) ? 16 : 8))
+    return FALSE;
+
+  if (version & 0x01) {
+    gst_byte_reader_get_uint64_be (reader, &absolute_time);
+    gst_byte_reader_get_uint64_be (reader, &absolute_duration);
+  } else {
+    guint32 time = 0;
+    guint32 duration = 0;
+    gst_byte_reader_get_uint32_be (reader, &time);
+    gst_byte_reader_get_uint32_be (reader, &duration);
+    absolute_time = time;
+    absolute_duration = duration;
+  }
+
+  tfxd->time = absolute_time;
+  tfxd->duration = absolute_duration;
+
+  return TRUE;
+}
+
+static gboolean
+gst_isoff_tfrf_box_parse (GstTfrfBox * tfrf, GstByteReader * reader)
+{
+  guint8 version;
+  guint32 flags = 0;
+  guint8 fragment_count = 0;
+  guint8 index = 0;
+
+  memset (tfrf, 0, sizeof (*tfrf));
+
+  if (gst_byte_reader_get_remaining (reader) < 4)
+    return FALSE;
+
+  if (!gst_byte_reader_get_uint8 (reader, &version)) {
+    GST_ERROR ("Error getting box's version field");
+    return FALSE;
+  }
+
+  if (!gst_byte_reader_get_uint24_be (reader, &flags)) {
+    GST_ERROR ("Error getting box's flags field");
+    return FALSE;
+  }
+
+  tfrf->version = version;
+  tfrf->flags = flags;
+
+  if (!gst_byte_reader_get_uint8 (reader, &fragment_count))
+    return FALSE;
+
+  tfrf->entries_count = fragment_count;
+  tfrf->entries =
+      g_array_sized_new (FALSE, FALSE, sizeof (GstTfrfBoxEntry),
+      tfrf->entries_count);
+
+  for (index = 0; index < fragment_count; index++) {
+    GstTfrfBoxEntry entry = { 0, };
+    guint64 absolute_time = 0;
+    guint64 absolute_duration = 0;
+    if (gst_byte_reader_get_remaining (reader) < ((version & 0x01) ? 16 : 8))
+      return FALSE;
+
+    if (version & 0x01) {
+      if (!gst_byte_reader_get_uint64_be (reader, &absolute_time) ||
+          !gst_byte_reader_get_uint64_be (reader, &absolute_duration)) {
+        return FALSE;
+      }
+    } else {
+      guint32 time = 0;
+      guint32 duration = 0;
+      if (!gst_byte_reader_get_uint32_be (reader, &time) ||
+          !gst_byte_reader_get_uint32_be (reader, &duration)) {
+        return FALSE;
+      }
+      absolute_time = time;
+      absolute_duration = duration;
+    }
+    entry.time = absolute_time;
+    entry.duration = absolute_duration;
+
+    g_array_append_val (tfrf->entries, entry);
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_isoff_traf_box_parse (GstTrafBox * traf, GstByteReader * reader)
 {
   gboolean had_tfhd = FALSE;
@@ -276,9 +415,10 @@ gst_isoff_traf_box_parse (GstTrafBox * traf, GstByteReader * reader)
     guint header_size;
     guint64 size;
     GstByteReader sub_reader;
+    guint8 extended_type[16] = { 0, };
 
-    if (!gst_isoff_parse_box_header (reader, &fourcc, NULL, &header_size,
-            &size))
+    if (!gst_isoff_parse_box_header (reader, &fourcc, extended_type,
+            &header_size, &size))
       goto error;
     if (gst_byte_reader_get_remaining (reader) < size - header_size)
       goto error;
@@ -308,6 +448,27 @@ gst_isoff_traf_box_parse (GstTrafBox * traf, GstByteReader * reader)
           goto error;
 
         g_array_append_val (traf->trun, trun);
+        break;
+      }
+      case GST_ISOFF_FOURCC_UUID:{
+        /* smooth-streaming specific */
+        if (memcmp (extended_type, tfrf_uuid, 16) == 0) {
+          traf->tfrf = g_new0 (GstTfrfBox, 1);
+          gst_byte_reader_get_sub_reader (reader, &sub_reader,
+              size - header_size);
+
+          if (!gst_isoff_tfrf_box_parse (traf->tfrf, &sub_reader))
+            goto error;
+        } else if (memcmp (extended_type, tfxd_uuid, 16) == 0) {
+          traf->tfxd = g_new0 (GstTfxdBox, 1);
+          gst_byte_reader_get_sub_reader (reader, &sub_reader,
+              size - header_size);
+
+          if (!gst_isoff_tfxd_box_parse (traf->tfxd, &sub_reader))
+            goto error;
+        } else {
+          gst_byte_reader_skip (reader, size - header_size);
+        }
         break;
       }
       default:

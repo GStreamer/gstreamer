@@ -67,6 +67,32 @@ gboolean gst_isoff_parse_box_header (GstByteReader * reader, guint32 * type, gui
 #define GST_ISOFF_SAMPLE_FLAGS_SAMPLE_IS_NON_SYNC_SAMPLE(flags)    (((flags) >> 16) & 0x01)
 #define GST_ISOFF_SAMPLE_FLAGS_SAMPLE_DEGRADATION_PRIORITY(flags)  (((flags) >>  0) & 0x0f)
 
+/* Smooth-Streaming specific boxes */
+typedef struct _GstTfxdBox
+{
+  guint8 version;
+  guint32 flags;
+
+  guint64 time;
+  guint64 duration;
+} GstTfxdBox;
+
+typedef struct _GstTfrfBoxEntry
+{
+  guint64 time;
+  guint64 duration;
+} GstTfrfBoxEntry;
+
+typedef struct _GstTfrfBox
+{
+  guint8 version;
+  guint32 flags;
+
+  gint entries_count;
+  GArray *entries;
+} GstTfrfBox;
+
+/* Common boxes */
 typedef struct _GstMfhdBox
 {
   guint32 sequence_number;
@@ -143,6 +169,10 @@ typedef struct _GstTrafBox
   GstTfhdBox tfhd;
   GstTfdtBox tfdt;
   GArray *trun;
+
+  /* smooth-streaming specific */
+  GstTfrfBox *tfrf;
+  GstTfxdBox *tfxd;
 } GstTrafBox;
 
 typedef struct _GstMoofBox

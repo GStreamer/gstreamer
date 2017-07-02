@@ -245,6 +245,67 @@ GST_START_TEST (isoff_moof_parse_with_tfdt)
 
 GST_END_TEST;
 
+GST_START_TEST (isoff_moof_parse_with_tfxd_tfrf)
+{
+  GstByteReader reader =
+      GST_BYTE_READER_INIT (Fragments_audio, sizeof (Fragments_audio));
+  guint32 type;
+  guint8 extended_type[16];
+  guint header_size;
+  guint64 size;
+  GstMoofBox *moof;
+  GstTrafBox *traf;
+  GstTfxdBox *tfxd;
+  GstTfrfBox *tfrf;
+  GstTfrfBoxEntry *tfrf_entry;
+
+  fail_unless (gst_isoff_parse_box_header (&reader, &type, extended_type,
+          &header_size, &size));
+  fail_unless (type == GST_ISOFF_FOURCC_MOOF);
+  fail_unless_equals_int (header_size, 8);
+  fail_unless_equals_uint64 (size, Fragments_audio_len);
+
+  moof = gst_isoff_moof_box_parse (&reader);
+  fail_unless (moof != NULL);
+
+  fail_unless_equals_int (moof->mfhd.sequence_number, 124);
+  fail_unless_equals_int (moof->traf->len, 1);
+
+  traf = &g_array_index (moof->traf, GstTrafBox, 0);
+  fail_unless_equals_int (traf->tfhd.version, 0);
+  fail_unless_equals_int (traf->tfhd.flags,
+      GST_TFHD_FLAGS_DEFAULT_SAMPLE_FLAGS_PRESENT);
+  fail_unless_equals_int (traf->tfhd.track_id, 1);
+  fail_unless_equals_uint64 (traf->tfhd.base_data_offset, 0);
+  fail_unless_equals_int (traf->tfhd.sample_description_index, 0);
+  fail_unless_equals_int (traf->tfhd.default_sample_duration, 0);
+  fail_unless_equals_int (traf->tfhd.default_sample_size, 0);
+
+  tfxd = traf->tfxd;
+  fail_unless (tfxd != NULL);
+  fail_unless_equals_uint64 (tfxd->time, 1188108174758706);
+  fail_unless_equals_uint64 (tfxd->duration, 19969161);
+
+  tfrf = traf->tfrf;
+  fail_unless (tfrf != NULL);
+  fail_unless_equals_int (tfrf->entries_count, 2);
+  fail_unless_equals_int (tfrf->entries->len, 2);
+
+  tfrf_entry = &g_array_index (tfrf->entries, GstTfrfBoxEntry, 0);
+  fail_unless (tfrf_entry != NULL);
+  fail_unless_equals_uint64 (tfrf_entry->time, 1188108194727867);
+  fail_unless_equals_uint64 (tfrf_entry->duration, 19969160);
+
+  tfrf_entry = &g_array_index (tfrf->entries, GstTfrfBoxEntry, 1);
+  fail_unless (tfrf_entry != NULL);
+  fail_unless_equals_uint64 (tfrf_entry->time, 1188108214697027);
+  fail_unless_equals_uint64 (tfrf_entry->duration, 19969162);
+
+  gst_isoff_moof_box_free (moof);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (isoff_moov_parse)
 {
   /* INDENT-ON */
@@ -294,6 +355,7 @@ dash_isoff_suite (void)
 
   tcase_add_test (tc_moof, isoff_moof_parse);
   tcase_add_test (tc_moof, isoff_moof_parse_with_tfdt);
+  tcase_add_test (tc_moof, isoff_moof_parse_with_tfxd_tfrf);
   suite_add_tcase (s, tc_moof);
 
   tcase_add_test (tc_moov, isoff_moov_parse);
