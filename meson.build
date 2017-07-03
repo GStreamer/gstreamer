@@ -17,7 +17,7 @@ endif
 
 glib_req = '>= 2.40.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
-
+tizil_req = '>= 0.1.0'
 api_version = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
@@ -235,6 +235,12 @@ elif omx_target == 'bellagio'
   cdata.set('USE_OMX_TARGET_BELLAGIO', 1)
 elif omx_target == 'zynqultrascaleplus'
   cdata.set('USE_OMX_TARGET_ZYNQ_USCALE_PLUS', 1)
+elif omx_target == 'tizonia'
+  cdata.set('USE_OMX_TARGET_TIZONIA', 1)
+  tizil_dep = dependency('tizilheaders', version : tizil_req)
+  cdata.set('TIZONIA_LIBDIR', tizil_dep.get_pkgconfig_variable('libdir'))
+  tizil_includedir = tizil_dep.get_pkgconfig_variable('includedir')
+  add_global_arguments('-I' + tizil_includedir + '/tizonia', language : 'C')
 else
   error ('Unsupported omx target specified. Use the -Dwith_omx_target option')
 endif
