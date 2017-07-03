@@ -168,7 +168,8 @@ struct _GstSingleQueue
   GstQuery *last_handled_query;
 
   /* For interleave calculation */
-  GThread *thread;
+  GThread *thread;              /* Streaming thread of SingleQueue */
+  GstClockTime interleave;      /* Calculated interleve within the thread */
 };
 
 
@@ -203,7 +204,7 @@ static void recheck_buffering_status (GstMultiQueue * mq);
 
 static void gst_single_queue_flush_queue (GstSingleQueue * sq, gboolean full);
 
-static void calculate_interleave (GstMultiQueue * mq);
+static void calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq);
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
@@ -806,7 +807,7 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       mq->min_interleave_time = g_value_get_uint64 (value);
       if (mq->use_interleave)
-        calculate_interleave (mq);
+        calculate_interleave (mq, NULL);
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       break;
     default:
@@ -1259,41 +1260,49 @@ recheck_buffering_status (GstMultiQueue * mq)
 }
 
 static void
-calculate_interleave (GstMultiQueue * mq)
+calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
 {
   GstClockTimeDiff low, high;
-  GstClockTime interleave;
+  GstClockTime interleave, other_interleave = 0;
   GList *tmp;
 
   low = high = GST_CLOCK_STIME_NONE;
   interleave = mq->interleave;
   /* Go over all single queues and calculate lowest/highest value */
   for (tmp = mq->queues; tmp; tmp = tmp->next) {
-    GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
+    GstSingleQueue *oq = (GstSingleQueue *) tmp->data;
     /* Ignore sparse streams for interleave calculation */
-    if (sq->is_sparse)
+    if (oq->is_sparse)
       continue;
     /* If a stream is not active yet (hasn't received any buffers), set
      * a maximum interleave to allow it to receive more data */
-    if (!sq->active) {
+    if (!oq->active) {
       GST_LOG_OBJECT (mq,
-          "queue %d is not active yet, forcing interleave to 5s", sq->id);
+          "queue %d is not active yet, forcing interleave to 5s", oq->id);
       mq->interleave = 5 * GST_SECOND;
       /* Update max-size time */
       mq->max_size.time = mq->interleave;
       SET_CHILD_PROPERTY (mq, time);
       goto beach;
     }
-    if (GST_CLOCK_STIME_IS_VALID (sq->cached_sinktime)) {
-      if (low == GST_CLOCK_STIME_NONE || sq->cached_sinktime < low)
-        low = sq->cached_sinktime;
-      if (high == GST_CLOCK_STIME_NONE || sq->cached_sinktime > high)
-        high = sq->cached_sinktime;
+
+    /* Calculate within each streaming thread */
+    if (sq && sq->thread != oq->thread) {
+      if (oq->interleave > other_interleave)
+        other_interleave = oq->interleave;
+      continue;
+    }
+
+    if (GST_CLOCK_STIME_IS_VALID (oq->cached_sinktime)) {
+      if (low == GST_CLOCK_STIME_NONE || oq->cached_sinktime < low)
+        low = oq->cached_sinktime;
+      if (high == GST_CLOCK_STIME_NONE || oq->cached_sinktime > high)
+        high = oq->cached_sinktime;
     }
     GST_LOG_OBJECT (mq,
         "queue %d , sinktime:%" GST_STIME_FORMAT " low:%" GST_STIME_FORMAT
         " high:%" GST_STIME_FORMAT, sq->id,
-        GST_STIME_ARGS (sq->cached_sinktime), GST_STIME_ARGS (low),
+        GST_STIME_ARGS (oq->cached_sinktime), GST_STIME_ARGS (low),
         GST_STIME_ARGS (high));
   }
 
@@ -1301,6 +1310,9 @@ calculate_interleave (GstMultiQueue * mq)
     interleave = high - low;
     /* Padding of interleave and minimum value */
     interleave = (150 * interleave / 100) + mq->min_interleave_time;
+    sq->interleave = interleave;
+
+    interleave = MAX (interleave, other_interleave);
 
     /* Update the stored interleave if:
      * * No data has arrived yet (high == low)
@@ -1359,7 +1371,7 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
       sq->sink_tainted = FALSE;
       if (mq->use_interleave) {
         sq->cached_sinktime = sink_time;
-        calculate_interleave (mq);
+        calculate_interleave (mq, sq);
       }
     }
   } else
@@ -2101,7 +2113,7 @@ gst_multi_queue_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           "Queue %d cached sink time now %" G_GINT64_FORMAT " %"
           GST_STIME_FORMAT, sq->id, sq->cached_sinktime,
           GST_STIME_ARGS (sq->cached_sinktime));
-      calculate_interleave (mq);
+      calculate_interleave (mq, sq);
     }
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
   }
@@ -2260,7 +2272,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           stime = my_segment_to_running_time (&sq->sink_segment, val);
           if (GST_CLOCK_STIME_IS_VALID (stime)) {
             sq->cached_sinktime = stime;
-            calculate_interleave (mq);
+            calculate_interleave (mq, sq);
           }
           GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
         }
