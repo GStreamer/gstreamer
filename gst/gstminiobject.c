@@ -338,6 +338,8 @@ gst_mini_object_make_writable (GstMiniObject * mini_object)
 GstMiniObject *
 gst_mini_object_ref (GstMiniObject * mini_object)
 {
+  gint old_refcount, new_refcount;
+
   g_return_val_if_fail (mini_object != NULL, NULL);
   /* we can't assert that the refcount > 0 since the _free functions
    * increments the refcount from 0 to 1 again to allow resurecting
@@ -345,12 +347,13 @@ gst_mini_object_ref (GstMiniObject * mini_object)
    g_return_val_if_fail (mini_object->refcount > 0, NULL);
    */
 
-  GST_TRACER_MINI_OBJECT_REFFED (mini_object, mini_object->refcount + 1);
-  GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p ref %d->%d", mini_object,
-      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object),
-      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) + 1);
+  old_refcount = g_atomic_int_add (&mini_object->refcount, 1);
+  new_refcount = old_refcount + 1;
 
-  g_atomic_int_inc (&mini_object->refcount);
+  GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p ref %d->%d", mini_object,
+      old_refcount, new_refcount);
+
+  GST_TRACER_MINI_OBJECT_REFFED (mini_object, new_refcount);
 
   return mini_object;
 }
@@ -423,19 +426,23 @@ call_finalize_notify (GstMiniObject * obj)
 void
 gst_mini_object_unref (GstMiniObject * mini_object)
 {
+  gint old_refcount, new_refcount;
+
   g_return_if_fail (mini_object != NULL);
 
+  old_refcount = g_atomic_int_add (&mini_object->refcount, -1);
+  new_refcount = old_refcount - 1;
+
+  g_return_if_fail (old_refcount > 0);
+
   GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p unref %d->%d",
-      mini_object,
-      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object),
-      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) - 1);
+      mini_object, old_refcount, new_refcount);
 
-  g_return_if_fail (mini_object->refcount > 0);
+  GST_TRACER_MINI_OBJECT_UNREFFED (mini_object, new_refcount);
 
-  if (G_UNLIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
+  if (new_refcount == 0) {
     gboolean do_free;
 
-    GST_TRACER_MINI_OBJECT_UNREFFED (mini_object, mini_object->refcount);
     if (mini_object->dispose)
       do_free = mini_object->dispose (mini_object);
     else
@@ -456,8 +463,6 @@ gst_mini_object_unref (GstMiniObject * mini_object)
       if (mini_object->free)
         mini_object->free (mini_object);
     }
-  } else {
-    GST_TRACER_MINI_OBJECT_UNREFFED (mini_object, mini_object->refcount);
   }
 }
 
