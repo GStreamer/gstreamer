@@ -19,9 +19,10 @@ libgstttmlsubs_la_CFLAGS = \
 	$(TTML_CFLAGS)
 
 libgstttmlsubs_la_LIBADD = \
+	$(GST_PLUGINS_BASE_LIBS) \
+	-lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
-	-lgstvideo-$(GST_API_VERSION) \
 	$(TTML_LIBS) \
 	$(LIBM)
 
