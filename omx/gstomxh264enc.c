@@ -434,7 +434,11 @@ set_avc_intra_period (GstOMXH264Enc * self)
   err =
       gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
       OMX_IndexConfigVideoAVCIntraPeriod, &config_avcintraperiod);
-  if (err != OMX_ErrorNone) {
+  if (err == OMX_ErrorUnsupportedIndex) {
+    GST_WARNING_OBJECT (self,
+        "OMX_IndexConfigVideoAVCIntraPeriod  not supported by component");
+    return TRUE;
+  } else if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self,
         "can't get OMX_IndexConfigVideoAVCIntraPeriod %s (0x%08x)",
         gst_omx_error_to_string (err), err);
