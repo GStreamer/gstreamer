@@ -573,6 +573,7 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gboolean flush;
       guint32 seqnum;
 
+      seqnum = gst_event_get_seqnum (event);
       gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
           &stop_type, &stop);
       gst_event_unref (event);
@@ -600,7 +601,6 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
       }
 
-      seqnum = gst_event_get_seqnum (event);
       if (flush) {
         GstEvent *e;
 
