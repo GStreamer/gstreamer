@@ -100,6 +100,13 @@ struct _GESTimelineElementPrivate
   GESTimelineElement *copied_from;
 };
 
+typedef struct
+{
+  GObject *child;
+  GParamSpec *arg;
+  GESTimelineElement *self;
+} EmitDeepNotifyInIdleData;
+
 static gboolean
 _lookup_child (GESTimelineElement * self, const gchar * prop_name,
     GObject ** child, GParamSpec ** pspec)
@@ -1268,12 +1275,41 @@ had_timeline:
   }
 }
 
+static gboolean
+emit_deep_notify_in_idle (EmitDeepNotifyInIdleData * data)
+{
+  g_signal_emit (data->self, ges_timeline_element_signals[DEEP_NOTIFY], 0,
+      data->child, data->arg);
+
+  gst_object_unref (data->child);
+  g_param_spec_unref (data->arg);
+  gst_object_unref (data->self);
+  g_slice_free (EmitDeepNotifyInIdleData, data);
+
+  return FALSE;
+}
+
 static void
 child_prop_changed_cb (GObject * child, GParamSpec * arg
     G_GNUC_UNUSED, GESTimelineElement * self)
 {
-  g_signal_emit (self, ges_timeline_element_signals[DEEP_NOTIFY], 0,
-      child, arg);
+  EmitDeepNotifyInIdleData *data;
+
+  /* Emit "deep-notify" right away if in main thread */
+  if (g_main_context_acquire (g_main_context_default ())) {
+    g_main_context_release (g_main_context_default ());
+    g_signal_emit (self, ges_timeline_element_signals[DEEP_NOTIFY], 0,
+        child, arg);
+    return;
+  }
+
+  data = g_slice_new (EmitDeepNotifyInIdleData);
+
+  data->child = gst_object_ref (child);
+  data->arg = g_param_spec_ref (arg);
+  data->self = gst_object_ref (self);
+
+  g_idle_add ((GSourceFunc) emit_deep_notify_in_idle, data);
 }
 
 gboolean
