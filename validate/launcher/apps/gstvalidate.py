@@ -346,6 +346,13 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                         cpipe, uri, scenario=scenario,
                         media_descriptor=rtspminfo.media_descriptor))
 
+                    fname = self._get_name(scenario, Protocols.RTSP + '2', rtspminfo)
+                    self.add_test(GstValidateRTSPTest(
+                        fname, self.test_manager.options, self.test_manager.reporter,
+                        cpipe, uri, scenario=scenario,
+                        media_descriptor=rtspminfo.media_descriptor,
+                        rtsp2=True))
+
 
 class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
 
@@ -680,11 +687,19 @@ class GstValidateRTSPTest(GstValidateBaseRTSPTest, GstValidateLaunchTest):
 
     def __init__(self, classname, options, reporter, pipeline_desc,
                  local_uri, timeout=DEFAULT_TIMEOUT, scenario=None,
-                 media_descriptor=None):
+                 media_descriptor=None, rtsp2=False):
         GstValidateLaunchTest.__init__(self, classname, options, reporter,
                                        pipeline_desc, timeout, scenario,
                                        media_descriptor)
         GstValidateBaseRTSPTest.__init__(self, local_uri)
+        self.rtsp2 = rtsp2
+
+    def get_subproc_env(self):
+        env = super().get_subproc_env()
+        if self.rtsp2:
+            env['GST_VALIDATE_SCENARIO'] = env.get('GST_VALIDATE_SCENARIO', '') + ':' + 'force_rtsp2'
+
+        return env
 
 
 class GstValidateRTSPMediaDesciptor(GstValidateMediaDescriptor):
@@ -1051,11 +1066,11 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             ("http.playback.seek.*vorbis_theora_1_ogg",
              "https://bugzilla.gnome.org/show_bug.cgi?id=769545"),
             # RTSP known issues
-            ('rtsp.playback.reverse.*',
+            ('rtsp.*playback.reverse.*',
              'https://bugzilla.gnome.org/show_bug.cgi?id=626811'),
-            ('rtsp.playback.seek_with_stop.*',
+            ('rtsp.*playback.seek_with_stop.*',
              'https://bugzilla.gnome.org/show_bug.cgi?id=784298'),
-            ('rtsp.playback.fast_*',
+            ('rtsp.*playback.fast_*',
              'https://bugzilla.gnome.org/show_bug.cgi?id=754575'),
         ])
 
