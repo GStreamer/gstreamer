@@ -513,18 +513,35 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   guint16 seqnum = 0;
   guint16 orign_seqnum = 0;
   guint8 payload_type = 0;
+  gpointer payload = NULL;
   guint8 origin_payload_type = 0;
   gboolean is_rtx;
   gboolean drop = FALSE;
 
   /* map current rtp packet to parse its header */
-  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+  if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
+    goto invalid_buffer;
+
   ssrc = gst_rtp_buffer_get_ssrc (&rtp);
   seqnum = gst_rtp_buffer_get_seq (&rtp);
   payload_type = gst_rtp_buffer_get_payload_type (&rtp);
 
   /* check if we have a retransmission packet (this information comes from SDP) */
   GST_OBJECT_LOCK (rtx);
+
+  is_rtx =
+      g_hash_table_lookup_extended (rtx->rtx_pt_map,
+      GUINT_TO_POINTER (payload_type), NULL, NULL);
+
+  if (is_rtx) {
+    payload = gst_rtp_buffer_get_payload (&rtp);
+
+    if (!payload || gst_rtp_buffer_get_payload_len (&rtp) < 2) {
+      GST_OBJECT_UNLOCK (rtx);
+      gst_rtp_buffer_unmap (&rtp);
+      goto invalid_buffer;
+    }
+  }
 
   rtx->last_time = GST_BUFFER_PTS (buffer);
 
@@ -544,10 +561,6 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       }
     }
   }
-
-  is_rtx =
-      g_hash_table_lookup_extended (rtx->rtx_pt_map,
-      GUINT_TO_POINTER (payload_type), NULL, NULL);
 
   /* if the current packet is from a retransmission stream */
   if (is_rtx) {
@@ -650,6 +663,14 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   return ret;
+
+invalid_buffer:
+  {
+    GST_ELEMENT_WARNING (rtx, STREAM, DECODE, (NULL),
+        ("Received invalid RTP payload, dropping"));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
 }
 
 static void
