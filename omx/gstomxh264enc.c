@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 
 #include "gstomxh264enc.h"
+#include "gstomxh264utils.h"
 
 #ifdef USE_OMX_TARGET_RPI
 #include <OMX_Broadcom.h>
@@ -231,69 +232,6 @@ gst_omx_h264_enc_stop (GstVideoEncoder * enc)
   self->headers = NULL;
 
   return GST_VIDEO_ENCODER_CLASS (parent_class)->stop (enc);
-}
-
-static OMX_VIDEO_AVCPROFILETYPE
-get_profile_from_str (const gchar * profile)
-{
-  if (g_str_equal (profile, "baseline")) {
-    return OMX_VIDEO_AVCProfileBaseline;
-  } else if (g_str_equal (profile, "main")) {
-    return OMX_VIDEO_AVCProfileMain;
-  } else if (g_str_equal (profile, "extended")) {
-    return OMX_VIDEO_AVCProfileExtended;
-  } else if (g_str_equal (profile, "high")) {
-    return OMX_VIDEO_AVCProfileHigh;
-  } else if (g_str_equal (profile, "high-10")) {
-    return OMX_VIDEO_AVCProfileHigh10;
-  } else if (g_str_equal (profile, "high-4:2:2")) {
-    return OMX_VIDEO_AVCProfileHigh422;
-  } else if (g_str_equal (profile, "high-4:4:4")) {
-    return OMX_VIDEO_AVCProfileHigh444;
-  }
-
-  return OMX_VIDEO_AVCProfileMax;
-}
-
-
-static OMX_VIDEO_AVCLEVELTYPE
-get_level_from_str (const gchar * level)
-{
-  if (g_str_equal (level, "1")) {
-    return OMX_VIDEO_AVCLevel1;
-  } else if (g_str_equal (level, "1b")) {
-    return OMX_VIDEO_AVCLevel1b;
-  } else if (g_str_equal (level, "1.1")) {
-    return OMX_VIDEO_AVCLevel11;
-  } else if (g_str_equal (level, "1.2")) {
-    return OMX_VIDEO_AVCLevel12;
-  } else if (g_str_equal (level, "1.3")) {
-    return OMX_VIDEO_AVCLevel13;
-  } else if (g_str_equal (level, "2")) {
-    return OMX_VIDEO_AVCLevel2;
-  } else if (g_str_equal (level, "2.1")) {
-    return OMX_VIDEO_AVCLevel21;
-  } else if (g_str_equal (level, "2.2")) {
-    return OMX_VIDEO_AVCLevel22;
-  } else if (g_str_equal (level, "3")) {
-    return OMX_VIDEO_AVCLevel3;
-  } else if (g_str_equal (level, "3.1")) {
-    return OMX_VIDEO_AVCLevel31;
-  } else if (g_str_equal (level, "3.2")) {
-    return OMX_VIDEO_AVCLevel32;
-  } else if (g_str_equal (level, "4")) {
-    return OMX_VIDEO_AVCLevel4;
-  } else if (g_str_equal (level, "4.1")) {
-    return OMX_VIDEO_AVCLevel41;
-  } else if (g_str_equal (level, "4.2")) {
-    return OMX_VIDEO_AVCLevel42;
-  } else if (g_str_equal (level, "5")) {
-    return OMX_VIDEO_AVCLevel5;
-  } else if (g_str_equal (level, "5.1")) {
-    return OMX_VIDEO_AVCLevel51;
-  }
-
-  return OMX_VIDEO_AVCLevelMax;
 }
 
 /* Update OMX_VIDEO_PARAM_PROFILELEVELTYPE.{eProfile,eLevel}
@@ -607,13 +545,13 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     s = gst_caps_get_structure (peercaps, 0);
     profile_string = gst_structure_get_string (s, "profile");
     if (profile_string) {
-      profile = get_profile_from_str (profile_string);
+      profile = gst_omx_h264_utils_get_profile_from_str (profile_string);
       if (profile == OMX_VIDEO_AVCProfileMax)
         goto unsupported_profile;
     }
     level_string = gst_structure_get_string (s, "level");
     if (level_string) {
-      level = get_level_from_str (level_string);
+      level = gst_omx_h264_utils_get_level_from_str (level_string);
       if (level == OMX_VIDEO_AVCLevelMax)
         goto unsupported_level;
     }

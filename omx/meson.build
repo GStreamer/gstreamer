@@ -10,6 +10,7 @@ omx_sources = [
   'gstomxmpeg4videodec.c',
   'gstomxmpeg2videodec.c',
   'gstomxh264dec.c',
+  'gstomxh264utils.c',
   'gstomxh263dec.c',
   'gstomxwmvdec.c',
   'gstomxmpeg4videoenc.c',
