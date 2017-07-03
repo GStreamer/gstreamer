@@ -578,11 +578,11 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
       goto done;
     }
 
-    /* Need at least 2 buffers for anything meaningful */
-    min = MAX (MAX (min, port->port_def.nBufferCountMin), 4);
+    /* Need at least 4 buffers for anything meaningful */
+    min = MAX (min + port->port_def.nBufferCountMin, 4);
     if (max == 0) {
       max = min;
-    } else if (max < port->port_def.nBufferCountMin || max < 2) {
+    } else if (max < min) {
       /* Can't use pool because can't have enough buffers */
       gst_caps_replace (&caps, NULL);
     } else {
