@@ -39,8 +39,6 @@
 #endif
 
 #include <string.h>
-#include <sys/time.h>
-
 #include "gstcacasink.h"
 
 
