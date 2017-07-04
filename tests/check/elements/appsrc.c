@@ -419,6 +419,70 @@ GST_START_TEST (test_appsrc_caps_in_push_modes)
 
 GST_END_TEST;
 
+/* This test simulates a pipeline blocked pushing caps using a blocking pad
+ * probe. This state is seen if the application push buffers and later change
+ * the caps on one stream before the other stream have prerolled. In this
+ * state, GStreamer 1.12 and previous would deadlock inside GstBaseSrc as
+ * it was holding the live lock while calling create(). AppSrc serialize the
+ * caps event into it's queue and then push it downstream when create() is
+ * called. */
+
+static GstPadProbeReturn
+caps_event_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GMainLoop *loop = user_data;
+
+  if (GST_EVENT_TYPE (info->data) == GST_EVENT_CAPS) {
+    g_main_loop_quit (loop);
+    return GST_PAD_PROBE_OK;
+  }
+
+  return GST_PAD_PROBE_PASS;
+}
+
+GST_START_TEST (test_appsrc_blocked_on_caps)
+{
+  GstElement *pipeline = NULL, *app = NULL;
+  GstPad *pad = NULL;
+  GstCaps *caps = NULL;
+  GError *error = NULL;
+  GMainLoop *loop;
+
+  loop = g_main_loop_new (NULL, FALSE);
+
+  pipeline = gst_parse_launch ("appsrc is-live=1 name=app ! fakesink", &error);
+  g_assert_no_error (error);
+
+  app = gst_bin_get_by_name (GST_BIN (pipeline), "app");
+  pad = gst_element_get_static_pad (app, "src");
+
+  gst_pad_add_probe (pad,
+      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      caps_event_probe_cb, loop, NULL);
+  gst_object_unref (app);
+  gst_object_unref (pad);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  caps = gst_caps_from_string ("application/x-test");
+  gst_app_src_set_caps (GST_APP_SRC (app), caps);
+  gst_caps_unref (caps);
+
+  g_main_loop_run (loop);
+
+#if 0
+  /* This would work around the issue by deblocking the source on older
+   * version of GStreamer */
+  gst_element_send_event (app, gst_event_new_flush_start ());
+#endif
+
+  /* As appsrc change the caps GstBaseSrc::create() virtual function, the live
+   * lock use to remains held and prevented the state change from happening. */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+}
+
+GST_END_TEST;
+
 static Suite *
 appsrc_suite (void)
 {
@@ -428,6 +492,7 @@ appsrc_suite (void)
   tcase_add_test (tc_chain, test_appsrc_non_null_caps);
   tcase_add_test (tc_chain, test_appsrc_set_caps_twice);
   tcase_add_test (tc_chain, test_appsrc_caps_in_push_modes);
+  tcase_add_test (tc_chain, test_appsrc_blocked_on_caps);
 
   if (RUNNING_ON_VALGRIND)
     tcase_add_loop_test (tc_chain, test_appsrc_block_deadlock, 0, 5);
