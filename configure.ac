@@ -155,6 +155,7 @@ PKG_CHECK_MODULES([GST_GL], [gstreamer-gl-1.0 >= $GST_REQ], [
   GST_GL=yes
 ], [GST_GL=no])
 AM_CONDITIONAL(HAVE_GST_GL, test "x$GST_GL" = "xyes")
+PKG_CHECK_MODULES([GST_ALLOCATORS], [gstreamer-allocators-1.0])
 
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"

@@ -85,6 +85,9 @@ struct _GstOMXVideoDec
   GstOMXPort *egl_in_port, *egl_out_port;
   gboolean eglimage;
 #endif
+
+  /* TRUE if decoder is producing dmabuf */
+  gboolean dmabuf;
 };
 
 struct _GstOMXVideoDecClass

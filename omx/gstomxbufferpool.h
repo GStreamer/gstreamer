@@ -43,6 +43,11 @@ G_BEGIN_DECLS
 typedef struct _GstOMXBufferPool GstOMXBufferPool;
 typedef struct _GstOMXBufferPoolClass GstOMXBufferPoolClass;
 
+typedef enum {
+  GST_OMX_BUFFER_MODE_SYSTEM_MEMORY,
+  GST_OMX_BUFFER_MODE_DMABUF,
+} GstOMXBufferMode;
+
 struct _GstOMXBufferPool
 {
   GstVideoBufferPool parent;
@@ -78,6 +83,9 @@ struct _GstOMXBufferPool
    * wrapped
    */
   gint current_buffer_index;
+
+  /* The type of buffers produced by the decoder */
+  GstOMXBufferMode output_mode;
 };
 
 struct _GstOMXBufferPoolClass
@@ -87,7 +95,7 @@ struct _GstOMXBufferPoolClass
 
 GType gst_omx_buffer_pool_get_type (void);
 
-GstBufferPool *gst_omx_buffer_pool_new (GstElement * element, GstOMXComponent * component, GstOMXPort * port);
+GstBufferPool *gst_omx_buffer_pool_new (GstElement * element, GstOMXComponent * component, GstOMXPort * port, GstOMXBufferMode output_mode);
 
 G_END_DECLS
 

@@ -79,6 +79,7 @@ libgstomx_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
+	$(GST_ALLOCATORS_CFLAGS) \
 	$(GMODULE_NO_EXPORT_CFLAGS)
 libgstomx_la_LIBADD = \
 	$(GST_GL_LIBS) \
@@ -88,6 +89,7 @@ libgstomx_la_LIBADD = \
 	-lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
+	$(GST_ALLOCATORS_LIBS) \
 	$(GMODULE_NO_EXPORT_LIBS)
 libgstomx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 

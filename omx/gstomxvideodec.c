@@ -25,6 +25,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/allocators/gstdmabuf.h>
 
 #if defined (USE_OMX_TARGET_RPI) && defined(__GNUC__)
 #ifndef __VCCOREVER__
@@ -137,6 +138,8 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
 static void
 gst_omx_video_dec_init (GstOMXVideoDec * self)
 {
+  self->dmabuf = FALSE;
+
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
   gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
       (self), TRUE);
@@ -195,6 +198,29 @@ gst_omx_video_dec_open (GstVideoDecoder * decoder)
   }
   self->dec_in_port = gst_omx_component_add_port (self->dec, in_port_index);
   self->dec_out_port = gst_omx_component_add_port (self->dec, out_port_index);
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  {
+    /* Configure OMX decoder to produce dmabuf */
+    OMX_ALG_PORT_PARAM_BUFFER_MODE buffer_mode;
+    OMX_ERRORTYPE err;
+
+    GST_OMX_INIT_STRUCT (&buffer_mode);
+    buffer_mode.nPortIndex = self->dec_out_port->index;
+    buffer_mode.eMode = OMX_ALG_BUF_DMA;
+
+    GST_DEBUG_OBJECT (self, "Configure decoder to produce dmabuf");
+
+    err =
+        gst_omx_component_set_parameter (self->dec,
+        (OMX_INDEXTYPE) OMX_ALG_IndexPortParamBufferMode, &buffer_mode);
+    if (err != OMX_ErrorNone)
+      GST_WARNING_OBJECT (self, "Failed to set output buffer mode: %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+    else
+      self->dmabuf = TRUE;
+  }
+#endif
 
   if (!self->dec_in_port || !self->dec_out_port)
     return FALSE;
@@ -624,8 +650,8 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
 
   if (caps)
     self->out_port_pool =
-        gst_omx_buffer_pool_new (GST_ELEMENT_CAST (self), self->dec, port);
-
+        gst_omx_buffer_pool_new (GST_ELEMENT_CAST (self), self->dec, port,
+        self->dmabuf);
 #if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   if (eglimage) {
     GList *buffers = NULL;
@@ -1941,6 +1967,14 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   klass = GST_OMX_VIDEO_DEC_GET_CLASS (decoder);
 
   GST_DEBUG_OBJECT (self, "Setting new caps %" GST_PTR_FORMAT, state->caps);
+
+  if (!self->dmabuf
+      && gst_caps_features_contains (gst_caps_get_features (state->caps, 0),
+          GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+    GST_WARNING_OBJECT (self,
+        "caps has the 'memory:DMABuf' feature but decoder cannot produce dmabuf");
+    return FALSE;
+  }
 
   gst_omx_port_get_port_definition (self->dec_in_port, &port_def);
 
