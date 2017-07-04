@@ -3958,7 +3958,7 @@ rtp_session_are_all_sources_bye (RTPSession * sess)
 
   g_hash_table_iter_init (&iter, sess->ssrcs[sess->mask_idx]);
   while (g_hash_table_iter_next (&iter, NULL, (gpointer *) & src)) {
-    if (!src->marked_bye)
+    if (src->internal && !src->sent_bye)
       return FALSE;
   }
 
