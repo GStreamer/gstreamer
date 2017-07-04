@@ -979,6 +979,10 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
           GST_DEBUG_OBJECT (src, "Sharing session %p", src->session);
           src->session_is_shared = TRUE;
 
+          /* Unset the limit the number of maximum allowed connection */
+          g_object_set (src->session, SOUP_SESSION_MAX_CONNS, G_MAXINT,
+              SOUP_SESSION_MAX_CONNS_PER_HOST, G_MAXINT, NULL);
+
           context = gst_context_new (GST_SOUP_SESSION_CONTEXT, TRUE);
           s = gst_context_writable_structure (context);
           gst_structure_set (s, "session", SOUP_TYPE_SESSION, src->session,
