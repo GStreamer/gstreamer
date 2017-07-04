@@ -184,6 +184,15 @@ typedef enum
  * @GST_H264_PARSER_ERROR: An error occurred when parsing
  * @GST_H264_PARSER_NO_NAL: No NAL unit found during the parsing
  * @GST_H264_PARSER_NO_NAL_END: Start of the NAL unit found, but not the end.
+ *     This will be returned if no start/sync marker for the next NAL unit was
+ *     found. In this case the parser will assume that the end of the data is
+ *     also the end of the NAL unit. Whether this assumption is correct or not
+ *     depends on the context, which only the caller can know, which is why a
+ *     special result value is returned in this case. If the data is NAL-aligned
+ *     then #GST_H264_PARSER_NO_NAL_END can be treated just like
+ *     #GST_H264_PARSER_OK. If the data is not guaranteed to be NAL-aligned,
+ *     then the caller probably wants to collect more data until there's another
+ *     sync marker or the end of the stream has been reached.
  *
  * The result of parsing H264 data.
  */
