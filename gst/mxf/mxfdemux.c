@@ -2016,21 +2016,32 @@ read_partition_header (GstMXFDemux * demux)
       return;
   }
 
-  while (demux->offset <
-      demux->run_in +
-      demux->current_partition->partition.this_partition +
-      demux->current_partition->partition.header_byte_count +
-      demux->current_partition->partition.index_byte_count) {
-    if (mxf_is_index_table_segment (&key)) {
-      gst_mxf_demux_handle_index_table_segment (demux, &key, buf,
-          demux->offset);
-    }
+  while (mxf_is_fill (&key)) {
     demux->offset += read;
-
     gst_buffer_unref (buf);
     if (gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buf, &read)
         != GST_FLOW_OK)
       return;
+  }
+
+  if (demux->current_partition->partition.index_byte_count
+      && mxf_is_index_table_segment (&key)) {
+    guint64 index_end_offset =
+        demux->offset + demux->current_partition->partition.index_byte_count;
+
+    while (demux->offset < index_end_offset) {
+      if (mxf_is_index_table_segment (&key)) {
+        gst_mxf_demux_handle_index_table_segment (demux, &key, buf,
+            demux->offset);
+      }
+      demux->offset += read;
+
+      gst_buffer_unref (buf);
+      if (gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buf,
+              &read)
+          != GST_FLOW_OK)
+        return;
+    }
   }
 
   while (mxf_is_fill (&key)) {
