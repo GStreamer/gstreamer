@@ -3950,6 +3950,21 @@ update_generation (const gchar * key, RTPSource * source, ReportData * data)
   }
 }
 
+static gboolean
+rtp_session_are_all_sources_bye (RTPSession * sess)
+{
+  GHashTableIter iter;
+  RTPSource *src;
+
+  g_hash_table_iter_init (&iter, sess->ssrcs[sess->mask_idx]);
+  while (g_hash_table_iter_next (&iter, NULL, (gpointer *) & src)) {
+    if (!src->marked_bye)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 /**
  * rtp_session_on_timeout:
  * @sess: an #RTPSession
@@ -4106,8 +4121,8 @@ done:
       GST_DEBUG ("%p, sending RTCP packet, avg size %u, %u", &sess->stats,
           sess->stats.avg_rtcp_packet_size, packet_size);
       result =
-          sess->callbacks.send_rtcp (sess, source, buffer, output->is_bye,
-          sess->send_rtcp_user_data);
+          sess->callbacks.send_rtcp (sess, source, buffer,
+          rtp_session_are_all_sources_bye (sess), sess->send_rtcp_user_data);
 
       RTP_SESSION_LOCK (sess);
       sess->stats.nacks_sent += data.nacked_seqnums;
