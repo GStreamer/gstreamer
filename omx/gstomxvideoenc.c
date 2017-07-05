@@ -989,6 +989,9 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
       if (!gst_omx_video_enc_open (GST_VIDEO_ENCODER (self)))
         return FALSE;
       needs_disable = FALSE;
+
+      /* The local port_def is now obsolete so get it again. */
+      gst_omx_port_get_port_definition (self->enc_in_port, &port_def);
     } else {
       if (gst_omx_port_set_enabled (self->enc_in_port, FALSE) != OMX_ErrorNone)
         return FALSE;
