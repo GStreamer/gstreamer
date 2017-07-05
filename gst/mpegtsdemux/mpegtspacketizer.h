@@ -355,8 +355,6 @@ G_GNUC_INTERNAL GstMpegtsSection *mpegts_packetizer_push_section (MpegTSPacketiz
 								  MpegTSPacketizerPacket *packet, GList **remaining);
 
 /* Only valid if calculate_offset is TRUE */
-G_GNUC_INTERNAL guint mpegts_packetizer_get_seen_pcr (MpegTSPacketizer2 *packetizer);
-
 G_GNUC_INTERNAL GstClockTime
 mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer,
 				guint64 offset, guint16 pcr_pid);
