@@ -727,7 +727,7 @@ typedef void (*GstTracerHookObjectDestroyed) (GObject *self, GstClockTime ts,
 #define GST_TRACER_MINI_OBJECT_CREATED(object)
 #define GST_TRACER_MINI_OBJECT_DESTROYED(object)
 #define GST_TRACER_MINI_OBJECT_REFFED(object, new_refcount)
-#define GST_TRACER_MINI_OBJECT_UNREF(object, new_refcount)
+#define GST_TRACER_MINI_OBJECT_UNREFFED(object, new_refcount)
 #define GST_TRACER_OBJECT_CREATED(object)
 #define GST_TRACER_OBJECT_DESTROYED(object)
 #define GST_TRACER_OBJECT_REFFED(object, new_refcount)
