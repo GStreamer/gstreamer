@@ -30,6 +30,7 @@
 #include <gst/vaapi/gstvaapidisplay.h>
 
 #define GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME "gst.vaapi.Display"
+#define GST_VAAPI_DISPLAY_APP_CONTEXT_TYPE_NAME "gst.vaapi.app.Display"
 
 G_GNUC_INTERNAL
 void

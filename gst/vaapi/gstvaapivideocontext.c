@@ -28,6 +28,9 @@
 #if USE_GST_GL_HELPERS
 # include <gst/gl/gl.h>
 #endif
+#if USE_X11
+#include <gst/vaapi/gstvaapidisplay_x11.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
@@ -78,12 +81,31 @@ gst_vaapi_video_context_get_display (GstContext * context,
   g_return_val_if_fail (GST_IS_CONTEXT (context), FALSE);
 
   type = gst_context_get_context_type (context);
-  if (g_strcmp0 (type, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME))
-    return FALSE;
 
-  structure = gst_context_get_structure (context);
-  return gst_structure_get (structure, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME,
-      GST_TYPE_VAAPI_DISPLAY, display_ptr, NULL);
+  if (!g_strcmp0 (type, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME)) {
+    structure = gst_context_get_structure (context);
+    return gst_structure_get (structure, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME,
+        GST_TYPE_VAAPI_DISPLAY, display_ptr, NULL);
+  } else if (!g_strcmp0 (type, GST_VAAPI_DISPLAY_APP_CONTEXT_TYPE_NAME)) {
+    VADisplay va_display = NULL;
+    structure = gst_context_get_structure (context);
+
+    if (gst_structure_get (structure, "va-display", G_TYPE_POINTER, &va_display,
+            NULL)) {
+#if USE_X11
+      Display *x11_display = NULL;
+      if (gst_structure_get (structure, "x11-display", G_TYPE_POINTER,
+              &x11_display, NULL)) {
+        *display_ptr =
+            gst_vaapi_display_x11_new_with_va_display (va_display, x11_display);
+        return TRUE;
+      }
+#endif
+      GST_WARNING ("Not support if only VADisplay provided");
+    }
+  }
+
+  return FALSE;
 }
 
 static gboolean
@@ -204,8 +226,16 @@ gst_vaapi_video_context_prepare (GstElement * element,
 
   _gst_context_query (element, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME);
 
-  if (*display_ptr)
+  if (*display_ptr) {
     GST_LOG_OBJECT (element, "found a display (%p)", *display_ptr);
+    return TRUE;
+  }
+
+  _gst_context_query (element, GST_VAAPI_DISPLAY_APP_CONTEXT_TYPE_NAME);
+
+  if (*display_ptr)
+    GST_LOG_OBJECT (element, "got a display with va display from app (%p)",
+        *display_ptr);
 
   return *display_ptr != NULL;
 }
