@@ -1136,26 +1136,12 @@ wrap_mem:
 }
 
 static GstBuffer *
-gst_kms_sink_get_input_buffer (GstKMSSink * self, GstBuffer * inbuf)
+gst_kms_sink_copy_to_dumb_buffer (GstKMSSink * self, GstBuffer * inbuf)
 {
-  GstMemory *mem;
-  GstBuffer *buf;
   GstFlowReturn ret;
   GstVideoFrame inframe, outframe;
   gboolean success;
-
-  mem = gst_buffer_peek_memory (inbuf, 0);
-  if (!mem)
-    return NULL;
-
-  if (gst_is_kms_memory (mem))
-    return gst_buffer_ref (inbuf);
-
-  buf = NULL;
-  if (gst_kms_sink_import_dmabuf (self, inbuf, &buf))
-    return buf;
-
-  GST_CAT_INFO_OBJECT (CAT_PERFORMANCE, self, "frame copy");
+  GstBuffer *buf;
 
   if (!gst_buffer_pool_set_active (self->pool, TRUE))
     goto activate_pool_failed;
@@ -1213,6 +1199,27 @@ error_map_src_buffer:
     GST_WARNING_OBJECT (self, "failed to map buffer");
     goto bail;
   }
+}
+
+static GstBuffer *
+gst_kms_sink_get_input_buffer (GstKMSSink * self, GstBuffer * inbuf)
+{
+  GstMemory *mem;
+  GstBuffer *buf = NULL;
+
+  mem = gst_buffer_peek_memory (inbuf, 0);
+  if (!mem)
+    return NULL;
+
+  if (gst_is_kms_memory (mem))
+    return gst_buffer_ref (inbuf);
+
+  if (gst_kms_sink_import_dmabuf (self, inbuf, &buf))
+    return buf;
+
+  GST_CAT_INFO_OBJECT (CAT_PERFORMANCE, self, "frame copy");
+
+  return gst_kms_sink_copy_to_dumb_buffer (self, inbuf);
 }
 
 static GstFlowReturn
