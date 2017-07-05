@@ -272,6 +272,7 @@ check_PROGRAMS = \
 	elements/rtponviftimestamp \
 	elements/id3mux \
 	pipelines/mxf \
+	pipelines/ipcpipeline \
 	libs/mpegvideoparser \
 	libs/mpegts \
 	libs/h264parser \
@@ -475,6 +476,9 @@ elements_mssdemux_SOURCES = elements/test_http_src.c elements/test_http_src.h el
 
 pipelines_streamheader_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 pipelines_streamheader_LDADD = $(GIO_LIBS) $(LDADD)
+
+pipelines_ipcpipeline_CFLAGS = $(GST_VALIDATE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS) $(AM_CFLAGS)
+pipelines_ipcpipeline_LDADD = $(GST_VALIDATE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS) $(LDADD)
 
 libs_insertbin_LDADD = \
 	$(top_builddir)/gst-libs/gst/insertbin/libgstinsertbin-@GST_API_VERSION@.la \
