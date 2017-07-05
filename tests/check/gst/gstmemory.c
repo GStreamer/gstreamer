@@ -683,6 +683,7 @@ _custom_log_func (GstDebugCategory * category,
   fail_unless (dbg_msg == NULL);
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
 GST_START_TEST (test_no_error_and_no_warning_on_map_failure)
 {
   GstAllocator *alloc;
@@ -735,6 +736,7 @@ GST_START_TEST (test_no_error_and_no_warning_on_map_failure)
 }
 
 GST_END_TEST;
+#endif /* !GST_DISABLE_GST_DEBUG */
 
 static Suite *
 gst_memory_suite (void)
@@ -755,7 +757,9 @@ gst_memory_suite (void)
   tcase_add_test (tc_chain, test_map_resize);
   tcase_add_test (tc_chain, test_alloc_params);
   tcase_add_test (tc_chain, test_lock);
+#ifndef GST_DISABLE_GST_DEBUG
   tcase_add_test (tc_chain, test_no_error_and_no_warning_on_map_failure);
+#endif
 
   return s;
 }
