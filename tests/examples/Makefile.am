@@ -61,6 +61,6 @@ playout_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(GST_LIB
 SUBDIRS= codecparsers mpegts $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES) \
         $(GL_DIR) $(GTK3_DIR) $(AVSAMPLE_DIR) $(WAYLAND_DIR) $(MATRIXMIX_DIR)
 DIST_SUBDIRS= codecparsers mpegts camerabin2 directfb mxf opencv uvch264 gl gtk \
-        avsamplesink waylandsink audiomixmatrix
+        avsamplesink waylandsink audiomixmatrix ipcpipeline
 
 include $(top_srcdir)/common/parallel-subdirs.mak

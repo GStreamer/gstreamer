@@ -55,6 +55,8 @@ gst*orc.h
 /tests/check/pipelines/simple-launch-lines
 /tests/check/pipelines/ipcpipeline
 /tests/examples/audiomixmatrix/test-audiomixmatrix
+/tests/examples/ipcpipeline/ipc-play
+/tests/examples/ipcpipeline/ipcpipeline1
 /tests/examples/codecparsers/parse-jpeg
 /tests/examples/codecparsers/parse-vp8
 /tests/examples/gtk/gtkglsink

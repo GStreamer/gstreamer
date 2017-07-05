@@ -3702,6 +3702,7 @@ tests/examples/gl/gtk/switchvideooverlay/Makefile
 tests/examples/gl/qt/Makefile
 tests/examples/gl/sdl/Makefile
 tests/examples/gtk/Makefile
+tests/examples/ipcpipeline/Makefile
 tests/examples/mpegts/Makefile
 tests/examples/mxf/Makefile
 tests/examples/opencv/Makefile
