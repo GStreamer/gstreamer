@@ -4968,6 +4968,14 @@ void mxf_metadata_generic_picture_essence_descriptor_set_caps
       || self->frame_layout == 4) {
     height *= 2;
     gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
+
+    if (self->field_dominance == 2) {
+      gst_caps_set_simple (caps, "field-order", G_TYPE_STRING,
+          "bottom-field-first", NULL);
+    } else {
+      gst_caps_set_simple (caps, "field-order", G_TYPE_STRING,
+          "top-field-first", NULL);
+    }
   }
 
   if (width == 0 || height == 0) {
@@ -5014,6 +5022,7 @@ gboolean
   MXFMetadataFileDescriptor *f = (MXFMetadataFileDescriptor *) self;
   GstStructure *s;
   gboolean interlaced = FALSE;
+  const gchar *field_order = NULL;
 
   g_return_val_if_fail (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR
       (self), FALSE);
@@ -5021,10 +5030,16 @@ gboolean
 
   s = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_boolean (s, "interlaced", &interlaced) || !interlaced)
+  if (!gst_structure_get_boolean (s, "interlaced", &interlaced) || !interlaced) {
     self->frame_layout = 0;
-  else
+  } else {
     self->frame_layout = 3;
+    field_order = gst_structure_get_string (s, "field-order");
+    if (!field_order || strcmp (field_order, "top-field-first") == 0)
+      self->field_dominance = 1;
+    else
+      self->field_dominance = 2;
+  }
 
   if (!gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)) {
     GST_ERROR ("Invalid framerate");
