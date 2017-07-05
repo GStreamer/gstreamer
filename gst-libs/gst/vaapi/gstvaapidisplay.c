@@ -852,29 +852,38 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
 
 static gboolean
 gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
-    GstVaapiDisplayInitType init_type, gpointer init_value)
+    GstVaapiDisplayInitType init_type, gpointer data)
 {
   GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
   const GstVaapiDisplayClass *const klass =
       GST_VAAPI_DISPLAY_GET_CLASS (display);
-  GstVaapiDisplayInfo info;
-
-  memset (&info, 0, sizeof (info));
-  info.display = display;
-  info.display_type = priv->display_type;
+  GstVaapiDisplayInfo info = {
+    .display = display,
+    .display_type = priv->display_type,
+  };
 
   switch (init_type) {
-    case GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY:
-      info.va_display = init_value;
-      priv->display = init_value;
+    case GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY:{
+      GstVaapiDisplayInfo *p_info = data;
+
+      info.va_display = p_info->va_display;
+      info.display_type = p_info->display_type;
+      priv->display = p_info->va_display;
       priv->use_foreign_display = TRUE;
-      break;
+
+      if (!klass->bind_display)
+        break;
+
+      data = p_info->native_display;
+      goto bind_display;
+    }
     case GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME:
-      if (klass->open_display && !klass->open_display (display, init_value))
+      if (klass->open_display && !klass->open_display (display, data))
         return FALSE;
       goto create_display;
     case GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY:
-      if (klass->bind_display && !klass->bind_display (display, init_value))
+    bind_display:
+      if (klass->bind_display && !klass->bind_display (display, data))
         return FALSE;
       // fall-through
     create_display:
@@ -1068,8 +1077,13 @@ error:
 GstVaapiDisplay *
 gst_vaapi_display_new_with_display (VADisplay va_display)
 {
+  GstVaapiDisplayInfo info = {
+    .va_display = va_display,
+    .display_type = GST_VAAPI_DISPLAY_TYPE_ANY,
+  };
+
   return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY, NULL),
-      GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY, va_display);
+      GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY, &info);
 }
 
 /**
