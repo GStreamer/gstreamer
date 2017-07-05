@@ -4949,6 +4949,14 @@ void mxf_metadata_generic_picture_essence_descriptor_set_caps
 
   width = self->stored_width;
   height = self->stored_height;
+  if (self->sampled_width && self->sampled_height) {
+    width = self->sampled_width;
+    height = self->sampled_height;
+  }
+  if (self->display_width && self->display_height) {
+    width = self->display_width;
+    height = self->display_height;
+  }
 
   /* If the video is stored as separate fields the
    * height is only the height of one field, i.e.
