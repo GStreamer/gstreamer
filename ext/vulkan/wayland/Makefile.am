@@ -14,6 +14,7 @@ noinst_HEADERS = \
 
 libgstvulkan_wayland_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
+	-I$(top_builddir)/ext/vulkan \
 	-I$(top_srcdir)/ext/vulkan \
 	-I$(top_builddir)/gst-libs \
 	$(GST_PLUGINS_BASE_CFLAGS) \

@@ -23,7 +23,7 @@
 
 #define VK_PROTOTYPES
 
-#include "vkconfig.h"
+#include <vkconfig.h>
 #include "vk_fwd.h"
 #include "vkmacros.h"
 
