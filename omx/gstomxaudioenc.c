@@ -690,6 +690,9 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
       if (!gst_omx_audio_enc_open (GST_AUDIO_ENCODER (self)))
         return FALSE;
       needs_disable = FALSE;
+
+      /* The local port_def is now obsolete so get it again. */
+      gst_omx_port_get_port_definition (self->enc_in_port, &port_def);
     } else {
       if (gst_omx_port_set_enabled (self->enc_in_port, FALSE) != OMX_ErrorNone)
         return FALSE;
