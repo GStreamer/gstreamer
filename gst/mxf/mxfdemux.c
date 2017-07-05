@@ -1849,12 +1849,12 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         gst_buffer_get_size (inbuf));
 
     GST_BUFFER_DTS (outbuf) = pad->position;
-    if (pts != G_MAXUINT64)
+    if (etrack->intra_only)
+      GST_BUFFER_PTS (outbuf) = pad->position;
+    else if (pts != G_MAXUINT64)
       GST_BUFFER_PTS (outbuf) = gst_util_uint64_scale (pts * GST_SECOND,
           pad->current_essence_track->source_track->edit_rate.d,
           pad->current_essence_track->source_track->edit_rate.n);
-    else if (etrack->intra_only)
-      GST_BUFFER_PTS (outbuf) = pad->position;
     else
       GST_BUFFER_PTS (outbuf) = GST_CLOCK_TIME_NONE;
 
