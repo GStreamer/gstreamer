@@ -155,6 +155,11 @@ AC_ARG_WITH([glapi],
     [build with the specified OpenGL APIs @<:@default=default_glapi@:>@]),
   [GLAPI="$with_glapi"], [GLAPI=default_glapi])
 
+AC_ARG_WITH([gtk],
+  [AS_HELP_STRING([--with-gtk],
+    [compile GTK3 based test apps @<:@default=check@:>@])],
+  [], [with_gtk="check"])
+
 dnl *** checks for platform ***
 
 dnl * hardware/architecture *
@@ -478,6 +483,22 @@ if test "x$enable_wayland" = "xyes"; then
       CPPFLAGS="$saved_CPPFLAGS"
     ], [:])
 fi
+
+dnl Check for GTK for tests
+USE_GTK=0
+AS_IF([test "x$BUILD_EXAMPLES" = "xyes" -a $USE_X11 -eq 1],
+  [AS_CASE([$with_gtk],
+    [yes], [PKG_CHECK_MODULES([GTK3], [gtk+-3.0], [USE_GTK=1])],
+    [no], [],
+    [PKG_CHECK_MODULES([GTK3], [gtk+-3.0], [USE_GTK=1])])])
+AS_IF([test $USE_GTK -eq 1],
+  [
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GTK3_CFLAGS"
+    AC_CHECK_HEADERS([gtk/gtk.h], [], [USE_GTK=0])
+    CPPFLAGS="$saved_CPPFLAGS"
+  ])
+AM_CONDITIONAL([USE_GTK], [test $USE_GTK -eq 1])
 
 dnl ---------------------------------------------------------------------------
 dnl -- VA-API                                                                --

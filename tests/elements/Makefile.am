@@ -27,4 +27,24 @@ test_roi_SOURCES = test-roi.c
 test_roi_CFLAGS  = $(TEST_CFLAGS)
 test_roi_LDADD   = $(TEST_LIBS)
 
+if USE_GTK
+noinst_PROGRAMS += test-vaapicontext
+
+test_vaapicontext_SOURCES = test-vaapicontext.c
+test_vaapicontext_CFLAGS = \
+	$(TEST_CFLAGS) 		\
+	$(GTK3_CFLAGS) 		\
+	$(X11_CFLAGS)  		\
+	$(LIBVA_CFLAGS)		\
+	$(LIBVA_X11_CFLAGS)	\
+	$(NULL)
+test_vaapicontext_LDADD = \
+	$(TEST_LIBS) 		\
+	$(GTK3_LIBS) 		\
+	$(X11_LIBS) 		\
+	$(LIBVA_LIBS)		\
+	$(LIBVA_X11_LIBS)	\
+	$(NULL)
+endif
+
 -include $(top_srcdir)/git.mk
