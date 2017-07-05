@@ -374,7 +374,12 @@ static gint
 gst_mxf_demux_partition_compare (GstMXFDemuxPartition * a,
     GstMXFDemuxPartition * b)
 {
-  return (a->partition.this_partition - b->partition.this_partition);
+  if (a->partition.this_partition < b->partition.this_partition)
+    return -1;
+  else if (a->partition.this_partition > b->partition.this_partition)
+    return 1;
+  else
+    return 0;
 }
 
 static GstFlowReturn
