@@ -373,6 +373,22 @@ gst_vaapi_display_x11_new_with_display (Display * x11_display)
       GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, x11_display);
 }
 
+GstVaapiDisplay *
+gst_vaapi_display_x11_new_with_va_display (VADisplay va_display,
+    Display * x11_display)
+{
+  GstVaapiDisplayInfo info = {
+    .va_display = va_display,
+    .native_display = x11_display,
+    .display_type = GST_VAAPI_DISPLAY_TYPE_X11,
+  };
+
+  g_return_val_if_fail (x11_display, NULL);
+
+  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_X11, NULL),
+      GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY, &info);
+}
+
 /**
  * gst_vaapi_display_x11_get_display:
  * @display: a #GstVaapiDisplayX11

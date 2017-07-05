@@ -42,6 +42,9 @@ gst_vaapi_display_x11_new (const gchar * display_name);
 GstVaapiDisplay *
 gst_vaapi_display_x11_new_with_display (Display * x11_display);
 
+GstVaapiDisplay *
+gst_vaapi_display_x11_new_with_va_display (VADisplay va_display, Display * x11_display);
+
 Display *
 gst_vaapi_display_x11_get_display (GstVaapiDisplayX11 * display);
 
