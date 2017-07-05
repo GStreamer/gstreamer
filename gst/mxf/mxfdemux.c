@@ -1895,11 +1895,12 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     pad->position += GST_BUFFER_DURATION (outbuf);
 
     GST_DEBUG_OBJECT (demux,
-        "Pushing buffer of size %" G_GSIZE_FORMAT " for track %u: timestamp %"
-        GST_TIME_FORMAT " duration %" GST_TIME_FORMAT " position %"
-        G_GUINT64_FORMAT, gst_buffer_get_size (outbuf),
+        "Pushing buffer of size %" G_GSIZE_FORMAT " for track %u: pts %"
+        GST_TIME_FORMAT " dts %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT
+        " position %" G_GUINT64_FORMAT, gst_buffer_get_size (outbuf),
         pad->material_track->parent.track_id,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DTS (outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
         pad->current_essence_track_position);
 
