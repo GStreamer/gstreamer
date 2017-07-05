@@ -37,6 +37,7 @@ static GstStaticPadTemplate gst_dvdlpcmdec_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-private1-lpcm; "
         "audio/x-private2-lpcm; "
+        "audio/x-private-ts-lpcm; "
         "audio/x-lpcm, "
         "width = (int) { 16, 20, 24 }, "
         "rate = (int) { 32000, 44100, 48000, 96000 }, "
@@ -152,6 +153,74 @@ static const GstAudioChannelPosition channel_positions[][8] = {
   {GST_AUDIO_CHANNEL_POSITION_INVALID}
 };
 
+static const GstAudioChannelPosition bluray_channel_positions[][8] = {
+  /* invalid */
+  {GST_AUDIO_CHANNEL_POSITION_INVALID},
+  /* mono */
+  {GST_AUDIO_CHANNEL_POSITION_MONO},
+  /* invalid */
+  {GST_AUDIO_CHANNEL_POSITION_INVALID},
+  /* stereo */
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  /* surround */
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER},
+  /* 2.1 */
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
+  /* 4.0 */
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
+  /* 2.2 */
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT},
+  /* 5.0 */
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT},
+  /* 5.1 */
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_LFE1},
+  /* 7.0 */
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+  /* 7.1 */
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_LFE1},
+  /* invalid */
+  {GST_AUDIO_CHANNEL_POSITION_INVALID},
+  /* invalid */
+  {GST_AUDIO_CHANNEL_POSITION_INVALID},
+  /* invalid */
+  {GST_AUDIO_CHANNEL_POSITION_INVALID},
+  /* invalid */
+  {GST_AUDIO_CHANNEL_POSITION_INVALID}
+};
+
 static void
 gst_dvdlpcmdec_send_tags (GstDvdLpcmDec * dvdlpcmdec)
 {
@@ -192,20 +261,21 @@ gst_dvdlpcmdec_set_output_format (GstDvdLpcmDec * dvdlpcmdec)
 
 static void
 gst_dvdlpcmdec_update_audio_formats (GstDvdLpcmDec * dec, gint channels,
-    gint rate, GstAudioFormat format)
+    gint rate, GstAudioFormat format, guint8 channel_indicator,
+    const GstAudioChannelPosition positions[][8])
 {
-  GST_DEBUG_OBJECT (dec, "got channles = %d, rate = %d, format = %d", channels,
+  GST_DEBUG_OBJECT (dec, "got channels = %d, rate = %d, format = %d", channels,
       rate, format);
 
   /* Reorder the channel positions and set the default into for the audio */
   if (channels < 9
-      && channel_positions[channels - 1][0] !=
+      && positions[channel_indicator][0] !=
       GST_AUDIO_CHANNEL_POSITION_INVALID) {
     const GstAudioChannelPosition *position;
     GstAudioChannelPosition sorted_position[8];
     guint c;
 
-    position = channel_positions[channels - 1];
+    position = positions[channel_indicator];
     for (c = 0; c < channels; ++c)
       sorted_position[c] = position[c];
     gst_audio_channel_positions_to_valid_order (sorted_position, channels);
@@ -244,6 +314,10 @@ gst_dvdlpcmdec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
     dvdlpcmdec->mode = GST_LPCM_1394;
     goto done;
   }
+  if (gst_structure_has_name (structure, "audio/x-private-ts-lpcm")) {
+    dvdlpcmdec->mode = GST_LPCM_BLURAY;
+    goto done;
+  }
 
   dvdlpcmdec->mode = GST_LPCM_RAW;
 
@@ -272,7 +346,8 @@ gst_dvdlpcmdec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
       break;
   }
 
-  gst_dvdlpcmdec_update_audio_formats (dvdlpcmdec, channels, rate, format);
+  gst_dvdlpcmdec_update_audio_formats (dvdlpcmdec, channels, rate, format,
+      channels - 1, channel_positions);
 
   dvdlpcmdec->width = width;
 
@@ -344,7 +419,8 @@ parse_header (GstDvdLpcmDec * dec, guint32 header)
   /* And, of course, the number of channels (up to 8) */
   channels = ((header >> 8) & 0x7) + 1;
 
-  gst_dvdlpcmdec_update_audio_formats (dec, channels, rate, format);
+  gst_dvdlpcmdec_update_audio_formats (dec, channels, rate, format,
+      channels - 1, channel_positions);
 }
 
 static GstFlowReturn
@@ -506,6 +582,131 @@ negotiation_failed:
 }
 
 static GstFlowReturn
+gst_dvdlpcmdec_parse_bluray (GstDvdLpcmDec * dvdlpcmdec, GstAdapter * adapter,
+    gint * offset, gint * len)
+{
+  guint32 header;
+  const guint8 *data;
+  guint8 channel_indicator;
+
+  data = (const guint8 *) gst_adapter_map (adapter, 4);
+  if (!data)
+    goto too_small;
+
+  header = GST_READ_UINT32_BE (data);
+
+  gst_adapter_unmap (adapter);
+
+  /* see if we have a new header */
+  if (header != dvdlpcmdec->header) {
+    GstAudioFormat format;
+    gint rate, channels;
+
+    switch ((header >> 6) & 0x3) {
+      case 0x1:
+        format = GST_AUDIO_FORMAT_S16BE;
+        dvdlpcmdec->width = 16;
+        break;
+      case 0x2:
+        format = GST_AUDIO_FORMAT_S24BE;
+        dvdlpcmdec->width = 20;
+        break;
+      case 0x3:
+        format = GST_AUDIO_FORMAT_S24BE;
+        dvdlpcmdec->width = 24;
+        break;
+      default:
+        format = GST_AUDIO_FORMAT_UNKNOWN;
+        dvdlpcmdec->width = 0;
+        GST_WARNING ("Invalid sample depth!");
+        break;
+    }
+
+    switch ((header >> 8) & 0xf) {
+      case 0x1:
+        rate = 48000;
+        break;
+      case 0x4:
+        rate = 96000;
+        break;
+      case 0x5:
+        rate = 192000;
+        break;
+      default:
+        rate = 0;
+        GST_WARNING ("Invalid audio sampling frequency!");
+        break;
+    }
+    channel_indicator = (header >> 12) & 0xf;
+    switch (channel_indicator) {
+      case 0x1:
+        channels = 1;
+        break;
+      case 0x3:
+        channels = 2;
+        break;
+      case 0x4:
+      case 0x5:
+        channels = 3;
+        break;
+      case 0x6:
+      case 0x7:
+        channels = 4;
+        break;
+      case 0x8:
+        channels = 5;
+        break;
+      case 0x9:
+        channels = 6;
+        break;
+      case 0xa:
+        channels = 7;
+        break;
+      case 0xb:
+        channels = 8;
+        break;
+      default:
+        channels = 0;
+        GST_WARNING ("Invalid number of audio channels!");
+        break;
+    }
+    GST_DEBUG_OBJECT (dvdlpcmdec, "got channels %d rate %d format %s",
+        channels, rate, gst_audio_format_to_string (format));
+
+    gst_dvdlpcmdec_update_audio_formats (dvdlpcmdec, channels, rate, format,
+        channel_indicator, bluray_channel_positions);
+
+    if (!gst_dvdlpcmdec_set_output_format (dvdlpcmdec))
+      goto negotiation_failed;
+
+    dvdlpcmdec->header = header;
+  }
+
+  *offset = 4;
+  *len = gst_adapter_available (adapter) - 4;
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+too_small:
+  {
+    /* Buffer is too small */
+    GST_ELEMENT_WARNING (dvdlpcmdec, STREAM, DECODE,
+        ("Invalid data found parsing LPCM packet"),
+        ("LPCM packet was too small. Dropping"));
+    *offset = gst_adapter_available (adapter);
+    return GST_FLOW_EOS;
+  }
+negotiation_failed:
+  {
+    GST_ELEMENT_ERROR (dvdlpcmdec, STREAM, FORMAT, (NULL),
+        ("Failed to configure output format"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+
+}
+
+static GstFlowReturn
 gst_dvdlpcmdec_parse_1394 (GstDvdLpcmDec * dvdlpcmdec, GstAdapter * adapter,
     gint * offset, gint * len)
 {
@@ -563,7 +764,8 @@ gst_dvdlpcmdec_parse_1394 (GstDvdLpcmDec * dvdlpcmdec, GstAdapter * adapter,
         break;
     }
 
-    gst_dvdlpcmdec_update_audio_formats (dvdlpcmdec, channels, rate, format);
+    gst_dvdlpcmdec_update_audio_formats (dvdlpcmdec, channels, rate, format,
+        channels - 1, channel_positions);
 
     if (!gst_dvdlpcmdec_set_output_format (dvdlpcmdec))
       goto negotiation_failed;
@@ -621,6 +823,9 @@ gst_dvdlpcmdec_parse (GstAudioDecoder * bdec, GstAdapter * adapter,
 
     case GST_LPCM_1394:
       return gst_dvdlpcmdec_parse_1394 (dvdlpcmdec, adapter, offset, len);
+
+    case GST_LPCM_BLURAY:
+      return gst_dvdlpcmdec_parse_bluray (dvdlpcmdec, adapter, offset, len);
   }
   return GST_FLOW_ERROR;
 }

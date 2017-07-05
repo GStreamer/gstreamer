@@ -45,7 +45,8 @@ typedef enum {
   GST_LPCM_UNKNOWN,
   GST_LPCM_RAW,
   GST_LPCM_DVD,
-  GST_LPCM_1394
+  GST_LPCM_1394,
+  GST_LPCM_BLURAY
 } GstDvdLpcmMode;
 
 struct _GstDvdLpcmDec {
