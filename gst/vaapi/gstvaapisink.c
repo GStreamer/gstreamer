@@ -1408,8 +1408,9 @@ gst_vaapisink_show_frame_unlocked (GstVaapiSink * sink, GstBuffer * src_buffer)
     return ret;
 
   meta = gst_buffer_get_vaapi_video_meta (buffer);
-  GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE (sink,
-      gst_vaapi_video_meta_get_display (meta));
+  if (gst_vaapi_video_meta_get_display (meta) !=
+      GST_VAAPI_PLUGIN_BASE_DISPLAY (sink))
+    goto different_display;
 
   proxy = gst_vaapi_video_meta_get_surface_proxy (meta);
   if (!proxy)
@@ -1488,6 +1489,13 @@ no_surface:
   {
     /* No surface or surface proxy. That's very bad! */
     GST_WARNING_OBJECT (sink, "could not get surface");
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+different_display:
+  {
+    GST_WARNING_OBJECT (sink, "incoming surface has different VAAPI Display");
     ret = GST_FLOW_ERROR;
     goto done;
   }
