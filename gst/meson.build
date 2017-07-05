@@ -195,6 +195,11 @@ libgst_c_args = gst_c_args + [
   '-DGST_DISABLE_DEPRECATED',
 ]
 
+disable_tracer_hooks = get_option('disable_tracer_hooks')
+if disable_tracer_hooks
+  libgst_c_args += ['-DGST_DISABLE_GST_TRACER_HOOKS']
+endif
+
 # Make it possible to build both static and shared versions
 # at the same time. By default use shared for unit tests etc.
 # This choice is arbitrary.
