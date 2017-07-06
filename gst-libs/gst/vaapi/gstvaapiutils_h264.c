@@ -76,24 +76,24 @@ static const struct map gst_vaapi_h264_level_map[] = {
 /* Table A-1 - Level limits */
 /* *INDENT-OFF* */
 static const GstVaapiH264LevelLimits gst_vaapi_h264_level_limits[] = {
-  /* level                     idc   MaxMBPS   MaxFS MaxDpbMbs  MaxBR MaxCPB */
-  { GST_VAAPI_LEVEL_H264_L1,    10,     1485,     99,    396,     64,    175 },
-  { GST_VAAPI_LEVEL_H264_L1b,   11,     1485,     99,    396,    128,    350 },
-  { GST_VAAPI_LEVEL_H264_L1_1,  11,     3000,    396,    900,    192,    500 },
-  { GST_VAAPI_LEVEL_H264_L1_2,  12,     6000,    396,   2376,    384,   1000 },
-  { GST_VAAPI_LEVEL_H264_L1_3,  13,    11880,    396,   2376,    768,   2000 },
-  { GST_VAAPI_LEVEL_H264_L2,    20,    11880,    396,   2376,   2000,   2000 },
-  { GST_VAAPI_LEVEL_H264_L2_1,  21,    19800,    792,   4752,   4000,   4000 },
-  { GST_VAAPI_LEVEL_H264_L2_2,  22,    20250,   1620,   8100,   4000,   4000 },
-  { GST_VAAPI_LEVEL_H264_L3,    30,    40500,   1620,   8100,  10000,  10000 },
-  { GST_VAAPI_LEVEL_H264_L3_1,  31,   108000,   3600,  18000,  14000,  14000 },
-  { GST_VAAPI_LEVEL_H264_L3_2,  32,   216000,   5120,  20480,  20000,  20000 },
-  { GST_VAAPI_LEVEL_H264_L4,    40,   245760,   8192,  32768,  20000,  25000 },
-  { GST_VAAPI_LEVEL_H264_L4_1,  41,   245760,   8192,  32768,  50000,  62500 },
-  { GST_VAAPI_LEVEL_H264_L4_2,  42,   522240,   8704,  34816,  50000,  62500 },
-  { GST_VAAPI_LEVEL_H264_L5,    50,   589824,  22080, 110400, 135000, 135000 },
-  { GST_VAAPI_LEVEL_H264_L5_1,  51,   983040,  36864, 184320, 240000, 240000 },
-  { GST_VAAPI_LEVEL_H264_L5_2,  52,  2073600,  36864, 184320, 240000, 240000 },
+  /* level                     idc   MaxMBPS   MaxFS MaxDpbMbs  MaxBR MaxCPB  MinCr */
+  { GST_VAAPI_LEVEL_H264_L1,    10,     1485,     99,    396,     64,    175, 2 },
+  { GST_VAAPI_LEVEL_H264_L1b,   11,     1485,     99,    396,    128,    350, 2 },
+  { GST_VAAPI_LEVEL_H264_L1_1,  11,     3000,    396,    900,    192,    500, 2 },
+  { GST_VAAPI_LEVEL_H264_L1_2,  12,     6000,    396,   2376,    384,   1000, 2 },
+  { GST_VAAPI_LEVEL_H264_L1_3,  13,    11880,    396,   2376,    768,   2000, 2 },
+  { GST_VAAPI_LEVEL_H264_L2,    20,    11880,    396,   2376,   2000,   2000, 2 },
+  { GST_VAAPI_LEVEL_H264_L2_1,  21,    19800,    792,   4752,   4000,   4000, 2 },
+  { GST_VAAPI_LEVEL_H264_L2_2,  22,    20250,   1620,   8100,   4000,   4000, 2 },
+  { GST_VAAPI_LEVEL_H264_L3,    30,    40500,   1620,   8100,  10000,  10000, 2 },
+  { GST_VAAPI_LEVEL_H264_L3_1,  31,   108000,   3600,  18000,  14000,  14000, 4 },
+  { GST_VAAPI_LEVEL_H264_L3_2,  32,   216000,   5120,  20480,  20000,  20000, 4 },
+  { GST_VAAPI_LEVEL_H264_L4,    40,   245760,   8192,  32768,  20000,  25000, 4 },
+  { GST_VAAPI_LEVEL_H264_L4_1,  41,   245760,   8192,  32768,  50000,  62500, 2 },
+  { GST_VAAPI_LEVEL_H264_L4_2,  42,   522240,   8704,  34816,  50000,  62500, 2 },
+  { GST_VAAPI_LEVEL_H264_L5,    50,   589824,  22080, 110400, 135000, 135000, 2 },
+  { GST_VAAPI_LEVEL_H264_L5_1,  51,   983040,  36864, 184320, 240000, 240000, 2 },
+  { GST_VAAPI_LEVEL_H264_L5_2,  52,  2073600,  36864, 184320, 240000, 240000, 2 },
   { 0, }
 };
 /* *INDENT-ON* */

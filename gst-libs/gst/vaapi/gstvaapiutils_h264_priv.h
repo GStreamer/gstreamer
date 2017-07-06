@@ -37,6 +37,7 @@ G_BEGIN_DECLS
  * @MaxDpbMbs: the maxium decoded picture buffer size (MBs)
  * @MaxBR: the maximum video bit rate (kbps)
  * @MaxCPB: the maximum CPB size (kbits)
+ * @MinCR: the minimum Compression Ratio
  *
  * The data structure that describes the limits of an H.264 level.
  */
@@ -48,6 +49,7 @@ typedef struct {
   guint32 MaxDpbMbs;
   guint32 MaxBR;
   guint32 MaxCPB;
+  guint32 MinCR;
 } GstVaapiH264LevelLimits;
 
 /* Returns GstVaapiProfile from H.264 profile_idc value */
