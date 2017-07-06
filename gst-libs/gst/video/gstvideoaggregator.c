@@ -521,7 +521,18 @@ gst_video_aggregator_find_best_format (GstVideoAggregator * vagg,
         GINT_TO_POINTER (format_number));
 
     /* If that pad is the first with alpha, set it as the new best format */
-    if (!need_alpha && (pad->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)) {
+    if (!need_alpha && (pad->ABI.needs_alpha
+            && (!GST_VIDEO_FORMAT_INFO_HAS_ALPHA (pad->info.finfo)))) {
+      need_alpha = TRUE;
+      /* Just fallback to ARGB in case we require alpha but the input pad
+       * does not have alpha.
+       * Do not increment best_format_number in that case. */
+      gst_video_info_set_format (best_info,
+          GST_VIDEO_FORMAT_ARGB,
+          GST_VIDEO_INFO_HEIGHT (&pad->info),
+          GST_VIDEO_INFO_WIDTH (&pad->info));
+    } else if (!need_alpha
+        && (pad->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)) {
       need_alpha = TRUE;
       *best_info = pad->info;
       best_format_number = format_number;

@@ -17,7 +17,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
- 
+
 #ifndef __GST_COMPOSITOR_H__
 #define __GST_COMPOSITOR_H__
 
@@ -57,8 +57,7 @@ typedef enum
   COMPOSITOR_BACKGROUND_BLACK,
   COMPOSITOR_BACKGROUND_WHITE,
   COMPOSITOR_BACKGROUND_TRANSPARENT,
-}
-GstCompositorBackground;
+} GstCompositorBackground;
 
 /**
  * GstCompositor:

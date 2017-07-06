@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
@@ -23,7 +23,21 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-typedef void (*BlendFunction) (GstVideoFrame *srcframe, gint xpos, gint ypos, gdouble src_alpha, GstVideoFrame * destframe);
+/**
+ * GstCompositorBlendMode:
+ * @COMPOSITOR_BLEND_MODE_NORMAL: Normal blending
+ * @COMPOSITOR_BLEND_MODE_ADDITIVE: Alphas are simply added,
+ *
+ * The different modes compositor can use for blending.
+ */
+typedef enum
+{
+  COMPOSITOR_BLEND_MODE_NORMAL,
+  COMPOSITOR_BLEND_MODE_ADDITIVE,
+} GstCompositorBlendMode;
+
+typedef void (*BlendFunction) (GstVideoFrame *srcframe, gint xpos, gint ypos, gdouble src_alpha, GstVideoFrame * destframe,
+    GstCompositorBlendMode mode);
 typedef void (*FillCheckerFunction) (GstVideoFrame * frame);
 typedef void (*FillColorFunction) (GstVideoFrame * frame, gint c1, gint c2, gint c3);
 
@@ -32,9 +46,15 @@ extern BlendFunction gst_compositor_blend_bgra;
 #define gst_compositor_blend_ayuv gst_compositor_blend_argb
 #define gst_compositor_blend_abgr gst_compositor_blend_argb
 #define gst_compositor_blend_rgba gst_compositor_blend_bgra
+#define gst_compositor_blend_ayuv_addition gst_compositor_blend_argb_addition
+#define gst_compositor_blend_abgr_addition gst_compositor_blend_argb_addition
+#define gst_compositor_blend_rgba_addition gst_compositor_blend_bgra_addition
+
+
 extern BlendFunction gst_compositor_overlay_argb;
 extern BlendFunction gst_compositor_overlay_bgra;
 #define gst_compositor_overlay_ayuv gst_compositor_overlay_argb
+#define gst_compositor_overlay_abgr gst_compositor_overlay_argb
 #define gst_compositor_overlay_abgr gst_compositor_overlay_argb
 #define gst_compositor_overlay_rgba gst_compositor_overlay_bgra
 extern BlendFunction gst_compositor_blend_i420;
