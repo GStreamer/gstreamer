@@ -70,7 +70,12 @@ struct _GstVideoAggregatorPad
 
   /* < private > */
   GstVideoAggregatorPadPrivate *priv;
-  gpointer          _gst_reserved[GST_PADDING];
+  union {
+    /* Subclasses can force an alpha channel in the (input thus output)
+     * colorspace format */
+    gboolean needs_alpha;
+    gpointer          _gst_reserved[GST_PADDING];
+  } ABI;
 };
 
 /**

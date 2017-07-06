@@ -44,7 +44,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_compositor_blend_debug);
 #define BLEND_A32(name, method, LOOP)		\
 static void \
 method##_ ##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
-    gdouble src_alpha, GstVideoFrame * destframe) \
+    gdouble src_alpha, GstVideoFrame * destframe, GstCompositorBlendMode mode) \
 { \
   guint s_alpha; \
   gint src_stride, dest_stride; \
@@ -89,24 +89,45 @@ method##_ ##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   if (src_height > 0 && src_width > 0) { \
     dest = dest + 4 * xpos + (ypos * dest_stride); \
   \
-    LOOP (dest, src, src_height, src_width, src_stride, dest_stride, s_alpha); \
+    LOOP (dest, src, src_height, src_width, src_stride, dest_stride, s_alpha, \
+        mode); \
   } \
 }
 
-#define BLEND_A32_LOOP(name, method)			\
+#define OVERLAY_A32_LOOP(name)			\
 static inline void \
-_##method##_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
-    gint src_width, gint src_stride, gint dest_stride, guint s_alpha) \
+_overlay_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
+    gint src_width, gint src_stride, gint dest_stride, guint s_alpha, \
+    GstCompositorBlendMode mode) \
 { \
   s_alpha = MIN (255, s_alpha); \
-  compositor_orc_##method##_##name (dest, dest_stride, src, src_stride, \
-      s_alpha, src_width, src_height); \
+  switch (mode) { \
+    case COMPOSITOR_BLEND_MODE_NORMAL:\
+      compositor_orc_overlay_##name (dest, dest_stride, src, src_stride, \
+        s_alpha, src_width, src_height); \
+        break;\
+    case COMPOSITOR_BLEND_MODE_ADDITIVE:\
+      compositor_orc_overlay_##name##_addition (dest, dest_stride, src, src_stride, \
+        s_alpha, src_width, src_height); \
+        break;\
+  }\
 }
 
-BLEND_A32_LOOP (argb, blend);
-BLEND_A32_LOOP (bgra, blend);
-BLEND_A32_LOOP (argb, overlay);
-BLEND_A32_LOOP (bgra, overlay);
+#define BLEND_A32_LOOP_WITH_MODE(name)			\
+static inline void \
+_blend_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
+    gint src_width, gint src_stride, gint dest_stride, guint s_alpha, \
+    GstCompositorBlendMode mode) \
+{ \
+  s_alpha = MIN (255, s_alpha); \
+  compositor_orc_blend_##name (dest, dest_stride, src, src_stride, \
+    s_alpha, src_width, src_height); \
+}
+
+OVERLAY_A32_LOOP (argb);
+OVERLAY_A32_LOOP (bgra);
+BLEND_A32_LOOP_WITH_MODE (argb);
+BLEND_A32_LOOP_WITH_MODE (bgra);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 BLEND_A32 (argb, blend, _blend_loop_argb);
@@ -228,12 +249,12 @@ _blend_##format_name (const guint8 * src, guint8 * dest, \
   \
   b_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
   \
-  BLENDLOOP(dest, dest_stride, src, src_stride, b_alpha, src_width, src_height); \
+  BLENDLOOP(dest, dest_stride, src, src_stride, b_alpha, src_width, src_height);\
 } \
 \
 static void \
 blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
-    gdouble src_alpha, GstVideoFrame * destframe) \
+    gdouble src_alpha, GstVideoFrame * destframe, GstCompositorBlendMode mode) \
 { \
   const guint8 *b_src; \
   guint8 *b_dest; \
@@ -478,7 +499,7 @@ _blend_##format_name (const guint8 * src, guint8 * dest, \
 \
 static void \
 blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
-    gdouble src_alpha, GstVideoFrame * destframe)                    \
+    gdouble src_alpha, GstVideoFrame * destframe, GstCompositorBlendMode mode)                    \
 { \
   const guint8 *b_src; \
   guint8 *b_dest; \
@@ -649,7 +670,7 @@ NV_YUV_FILL_CHECKER (nv21, memset);
 #define RGB_BLEND(name, bpp, MEMCPY, BLENDLOOP) \
 static void \
 blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
-    gdouble src_alpha, GstVideoFrame * destframe) \
+    gdouble src_alpha, GstVideoFrame * destframe, GstCompositorBlendMode mode) \
 { \
   gint b_alpha; \
   gint i; \
@@ -815,7 +836,7 @@ RGB_FILL_COLOR (bgrx, 4, _memset_bgrx);
 #define PACKED_422_BLEND(name, MEMCPY, BLENDLOOP) \
 static void \
 blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
-    gdouble src_alpha, GstVideoFrame * destframe) \
+    gdouble src_alpha, GstVideoFrame * destframe, GstCompositorBlendMode mode) \
 { \
   gint b_alpha; \
   gint i; \
@@ -1010,52 +1031,52 @@ gst_compositor_init_blend (void)
   GST_DEBUG_CATEGORY_INIT (gst_compositor_blend_debug, "compositor_blend", 0,
       "video compositor blending functions");
 
-  gst_compositor_blend_argb = blend_argb;
-  gst_compositor_blend_bgra = blend_bgra;
-  gst_compositor_overlay_argb = overlay_argb;
-  gst_compositor_overlay_bgra = overlay_bgra;
-  gst_compositor_blend_i420 = blend_i420;
-  gst_compositor_blend_nv12 = blend_nv12;
-  gst_compositor_blend_nv21 = blend_nv21;
-  gst_compositor_blend_y444 = blend_y444;
-  gst_compositor_blend_y42b = blend_y42b;
-  gst_compositor_blend_y41b = blend_y41b;
-  gst_compositor_blend_rgb = blend_rgb;
-  gst_compositor_blend_xrgb = blend_xrgb;
-  gst_compositor_blend_yuy2 = blend_yuy2;
+  gst_compositor_blend_argb = GST_DEBUG_FUNCPTR (blend_argb);
+  gst_compositor_blend_bgra = GST_DEBUG_FUNCPTR (blend_bgra);
+  gst_compositor_overlay_argb = GST_DEBUG_FUNCPTR (overlay_argb);
+  gst_compositor_overlay_bgra = GST_DEBUG_FUNCPTR (overlay_bgra);
+  gst_compositor_blend_i420 = GST_DEBUG_FUNCPTR (blend_i420);
+  gst_compositor_blend_nv12 = GST_DEBUG_FUNCPTR (blend_nv12);
+  gst_compositor_blend_nv21 = GST_DEBUG_FUNCPTR (blend_nv21);
+  gst_compositor_blend_y444 = GST_DEBUG_FUNCPTR (blend_y444);
+  gst_compositor_blend_y42b = GST_DEBUG_FUNCPTR (blend_y42b);
+  gst_compositor_blend_y41b = GST_DEBUG_FUNCPTR (blend_y41b);
+  gst_compositor_blend_rgb = GST_DEBUG_FUNCPTR (blend_rgb);
+  gst_compositor_blend_xrgb = GST_DEBUG_FUNCPTR (blend_xrgb);
+  gst_compositor_blend_yuy2 = GST_DEBUG_FUNCPTR (blend_yuy2);
 
-  gst_compositor_fill_checker_argb = fill_checker_argb_c;
-  gst_compositor_fill_checker_bgra = fill_checker_bgra_c;
-  gst_compositor_fill_checker_ayuv = fill_checker_ayuv_c;
-  gst_compositor_fill_checker_i420 = fill_checker_i420;
-  gst_compositor_fill_checker_nv12 = fill_checker_nv12;
-  gst_compositor_fill_checker_nv21 = fill_checker_nv21;
-  gst_compositor_fill_checker_y444 = fill_checker_y444;
-  gst_compositor_fill_checker_y42b = fill_checker_y42b;
-  gst_compositor_fill_checker_y41b = fill_checker_y41b;
-  gst_compositor_fill_checker_rgb = fill_checker_rgb_c;
-  gst_compositor_fill_checker_xrgb = fill_checker_xrgb_c;
-  gst_compositor_fill_checker_yuy2 = fill_checker_yuy2_c;
-  gst_compositor_fill_checker_uyvy = fill_checker_uyvy_c;
+  gst_compositor_fill_checker_argb = GST_DEBUG_FUNCPTR (fill_checker_argb_c);
+  gst_compositor_fill_checker_bgra = GST_DEBUG_FUNCPTR (fill_checker_bgra_c);
+  gst_compositor_fill_checker_ayuv = GST_DEBUG_FUNCPTR (fill_checker_ayuv_c);
+  gst_compositor_fill_checker_i420 = GST_DEBUG_FUNCPTR (fill_checker_i420);
+  gst_compositor_fill_checker_nv12 = GST_DEBUG_FUNCPTR (fill_checker_nv12);
+  gst_compositor_fill_checker_nv21 = GST_DEBUG_FUNCPTR (fill_checker_nv21);
+  gst_compositor_fill_checker_y444 = GST_DEBUG_FUNCPTR (fill_checker_y444);
+  gst_compositor_fill_checker_y42b = GST_DEBUG_FUNCPTR (fill_checker_y42b);
+  gst_compositor_fill_checker_y41b = GST_DEBUG_FUNCPTR (fill_checker_y41b);
+  gst_compositor_fill_checker_rgb = GST_DEBUG_FUNCPTR (fill_checker_rgb_c);
+  gst_compositor_fill_checker_xrgb = GST_DEBUG_FUNCPTR (fill_checker_xrgb_c);
+  gst_compositor_fill_checker_yuy2 = GST_DEBUG_FUNCPTR (fill_checker_yuy2_c);
+  gst_compositor_fill_checker_uyvy = GST_DEBUG_FUNCPTR (fill_checker_uyvy_c);
 
-  gst_compositor_fill_color_argb = fill_color_argb;
-  gst_compositor_fill_color_bgra = fill_color_bgra;
-  gst_compositor_fill_color_abgr = fill_color_abgr;
-  gst_compositor_fill_color_rgba = fill_color_rgba;
-  gst_compositor_fill_color_ayuv = fill_color_ayuv;
-  gst_compositor_fill_color_i420 = fill_color_i420;
-  gst_compositor_fill_color_yv12 = fill_color_yv12;
-  gst_compositor_fill_color_nv12 = fill_color_nv12;
-  gst_compositor_fill_color_y444 = fill_color_y444;
-  gst_compositor_fill_color_y42b = fill_color_y42b;
-  gst_compositor_fill_color_y41b = fill_color_y41b;
-  gst_compositor_fill_color_rgb = fill_color_rgb_c;
-  gst_compositor_fill_color_bgr = fill_color_bgr_c;
-  gst_compositor_fill_color_xrgb = fill_color_xrgb;
-  gst_compositor_fill_color_xbgr = fill_color_xbgr;
-  gst_compositor_fill_color_rgbx = fill_color_rgbx;
-  gst_compositor_fill_color_bgrx = fill_color_bgrx;
-  gst_compositor_fill_color_yuy2 = fill_color_yuy2;
-  gst_compositor_fill_color_yvyu = fill_color_yvyu;
-  gst_compositor_fill_color_uyvy = fill_color_uyvy;
+  gst_compositor_fill_color_argb = GST_DEBUG_FUNCPTR (fill_color_argb);
+  gst_compositor_fill_color_bgra = GST_DEBUG_FUNCPTR (fill_color_bgra);
+  gst_compositor_fill_color_abgr = GST_DEBUG_FUNCPTR (fill_color_abgr);
+  gst_compositor_fill_color_rgba = GST_DEBUG_FUNCPTR (fill_color_rgba);
+  gst_compositor_fill_color_ayuv = GST_DEBUG_FUNCPTR (fill_color_ayuv);
+  gst_compositor_fill_color_i420 = GST_DEBUG_FUNCPTR (fill_color_i420);
+  gst_compositor_fill_color_yv12 = GST_DEBUG_FUNCPTR (fill_color_yv12);
+  gst_compositor_fill_color_nv12 = GST_DEBUG_FUNCPTR (fill_color_nv12);
+  gst_compositor_fill_color_y444 = GST_DEBUG_FUNCPTR (fill_color_y444);
+  gst_compositor_fill_color_y42b = GST_DEBUG_FUNCPTR (fill_color_y42b);
+  gst_compositor_fill_color_y41b = GST_DEBUG_FUNCPTR (fill_color_y41b);
+  gst_compositor_fill_color_rgb = GST_DEBUG_FUNCPTR (fill_color_rgb_c);
+  gst_compositor_fill_color_bgr = GST_DEBUG_FUNCPTR (fill_color_bgr_c);
+  gst_compositor_fill_color_xrgb = GST_DEBUG_FUNCPTR (fill_color_xrgb);
+  gst_compositor_fill_color_xbgr = GST_DEBUG_FUNCPTR (fill_color_xbgr);
+  gst_compositor_fill_color_rgbx = GST_DEBUG_FUNCPTR (fill_color_rgbx);
+  gst_compositor_fill_color_bgrx = GST_DEBUG_FUNCPTR (fill_color_bgrx);
+  gst_compositor_fill_color_yuy2 = GST_DEBUG_FUNCPTR (fill_color_yuy2);
+  gst_compositor_fill_color_yvyu = GST_DEBUG_FUNCPTR (fill_color_yvyu);
+  gst_compositor_fill_color_uyvy = GST_DEBUG_FUNCPTR (fill_color_uyvy);
 }

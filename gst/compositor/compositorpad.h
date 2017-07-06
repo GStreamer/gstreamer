@@ -52,10 +52,13 @@ struct _GstCompositorPad
   gint xpos, ypos;
   gint width, height;
   gdouble alpha;
+  gdouble crossfade;
 
   GstVideoConverter *convert;
   GstVideoInfo conversion_info;
   GstBuffer *converted_buffer;
+
+  gboolean crossfaded;
 };
 
 struct _GstCompositorPadClass
