@@ -675,13 +675,44 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
       }
     }
 
-    if (current_caps_struct &&
-        gst_structure_get_fraction (current_caps_struct, "framerate", &fr_num,
-            &fr_denom)) {
-      gst_caps_set_simple (src_caps, "framerate", GST_TYPE_FRACTION, fr_num,
-          fr_denom, NULL);
-    } else {
-      GST_WARNING_OBJECT (jpeg2000parse, "No framerate set");
+    if (current_caps_struct) {
+      const gchar *caps_string = gst_structure_get_string
+          (current_caps_struct, "colorimetry");
+      if (caps_string) {
+        gst_caps_set_simple (src_caps, "colorimetry", G_TYPE_STRING,
+            caps_string, NULL);
+      }
+      caps_string = gst_structure_get_string
+          (current_caps_struct, "interlace-mode");
+      if (caps_string) {
+        gst_caps_set_simple (src_caps, "interlace-mode", G_TYPE_STRING,
+            caps_string, NULL);
+      }
+      caps_string = gst_structure_get_string
+          (current_caps_struct, "field-order");
+      if (caps_string) {
+        gst_caps_set_simple (src_caps, "field-order", G_TYPE_STRING,
+            caps_string, NULL);
+      }
+      caps_string = gst_structure_get_string
+          (current_caps_struct, "multiview-mode");
+      if (caps_string) {
+        gst_caps_set_simple (src_caps, "multiview-mode", G_TYPE_STRING,
+            caps_string, NULL);
+      }
+      caps_string = gst_structure_get_string
+          (current_caps_struct, "chroma-site");
+      if (caps_string) {
+        gst_caps_set_simple (src_caps, "chroma-site", G_TYPE_STRING,
+            caps_string, NULL);
+      }
+      if (gst_structure_get_fraction (current_caps_struct, "framerate", &fr_num,
+              &fr_denom)) {
+        gst_caps_set_simple (src_caps, "framerate", GST_TYPE_FRACTION, fr_num,
+            fr_denom, NULL);
+      } else {
+        GST_WARNING_OBJECT (jpeg2000parse, "No framerate set");
+      }
     }
 
     if (!gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), src_caps)) {
