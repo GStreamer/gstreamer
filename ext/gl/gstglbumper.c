@@ -280,6 +280,8 @@ gst_gl_bumper_class_init (GstGLBumperClass * klass)
   gobject_class->set_property = gst_gl_bumper_set_property;
   gobject_class->get_property = gst_gl_bumper_get_property;
 
+  gst_gl_filter_add_rgba_pad_templates (GST_GL_FILTER_CLASS (klass));
+
   GST_GL_FILTER_CLASS (klass)->filter_texture = gst_gl_bumper_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_init_cb = gst_gl_bumper_init_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_bumper_reset_resources;

@@ -119,6 +119,9 @@ struct _GstGLFilterClass
 };
 
 GST_EXPORT
+void gst_gl_filter_add_rgba_pad_templates (GstGLFilterClass *klass);
+
+GST_EXPORT
 gboolean gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
                                        GstBuffer * outbuf);
 

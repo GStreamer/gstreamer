@@ -101,6 +101,8 @@ gst_gl_view_convert_element_class_init (GstGLViewConvertElementClass * klass)
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
 
+  gst_gl_filter_add_rgba_pad_templates (GST_GL_FILTER_CLASS (klass));
+
   gobject_class->set_property = gst_gl_view_convert_element_set_property;
   gobject_class->get_property = gst_gl_view_convert_element_get_property;
   gobject_class->dispose = gst_gl_view_convert_dispose;

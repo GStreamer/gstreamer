@@ -241,6 +241,8 @@ gst_gl_deinterlace_class_init (GstGLDeinterlaceClass * klass)
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
 
+  gst_gl_filter_add_rgba_pad_templates (GST_GL_FILTER_CLASS (klass));
+
   gobject_class->set_property = gst_gl_deinterlace_set_property;
   gobject_class->get_property = gst_gl_deinterlace_get_property;
 

@@ -327,6 +327,8 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
+  gst_gl_filter_add_rgba_pad_templates (GST_GL_FILTER_CLASS (klass));
+
   GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_effects_init_resources;
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_effects_reset_resources;
 
