@@ -944,6 +944,35 @@ gst_omx_video_enc_stop (GstVideoEncoder * encoder)
   return TRUE;
 }
 
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+static void
+gst_omx_video_enc_set_latency (GstOMXVideoEnc * self)
+{
+  GstClockTime latency;
+  OMX_ALG_PARAM_REPORTED_LATENCY param;
+  OMX_ERRORTYPE err;
+
+  GST_OMX_INIT_STRUCT (&param);
+  err =
+      gst_omx_component_get_parameter (self->enc,
+      (OMX_INDEXTYPE) OMX_ALG_IndexParamReportedLatency, &param);
+
+  if (err != OMX_ErrorNone) {
+    GST_WARNING_OBJECT (self, "Couldn't retrieve latency: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    return;
+  }
+
+  GST_DEBUG_OBJECT (self, "retrieved latency of %d ms",
+      (guint32) param.nLatency);
+
+  /* Convert to ns */
+  latency = param.nLatency * GST_MSECOND;
+
+  gst_video_encoder_set_latency (GST_VIDEO_ENCODER (self), latency, latency);
+}
+#endif
+
 static gboolean
 gst_omx_video_enc_disable (GstOMXVideoEnc * self)
 {
@@ -1328,6 +1357,10 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
   self->input_state = gst_video_codec_state_ref (state);
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  gst_omx_video_enc_set_latency (self);
+#endif
 
   self->downstream_flow_ret = GST_FLOW_OK;
   return TRUE;
