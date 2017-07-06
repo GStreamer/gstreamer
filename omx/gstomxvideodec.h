@@ -95,6 +95,11 @@ struct _GstOMXVideoDec
   /* TRUE if decoder is producing dmabuf */
   gboolean dmabuf;
   GstOMXBufferAllocation input_allocation;
+
+  /* properties */
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  guint32 internal_entropy_buffers;
+#endif
 };
 
 struct _GstOMXVideoDecClass
