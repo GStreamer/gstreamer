@@ -478,6 +478,18 @@ gst_kms_allocator_dmabuf_import (GstAllocator * allocator, gint * prime_fds,
   if (!gst_kms_allocator_add_fb (alloc, tmp, offsets, vinfo))
     goto failed;
 
+  for (i = 0; i < n_planes; i++) {
+    struct drm_gem_close arg = { tmp->gem_handle[i], };
+    gint err;
+
+    err = drmIoctl (alloc->priv->fd, DRM_IOCTL_GEM_CLOSE, &arg);
+    if (err)
+      GST_WARNING_OBJECT (allocator,
+          "Failed to close GEM handle: %s %d", strerror (errno), errno);
+
+    tmp->gem_handle[i] = 0;
+  }
+
   return tmp;
 
   /* ERRORS */
