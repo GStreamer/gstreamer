@@ -852,6 +852,8 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
 
       /* Set the stream buffer alignment for better optimizations */
       if (decode->decoder && caps) {
+        GstVaapiDecodeH264Private *priv =
+            gst_vaapi_decode_h264_get_instance_private (decode);
         GstStructure *const structure = gst_caps_get_structure (caps, 0);
         const gchar *str = NULL;
 
@@ -865,6 +867,11 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
             alignment = GST_VAAPI_STREAM_ALIGN_H264_NONE;
           gst_vaapi_decoder_h264_set_alignment (GST_VAAPI_DECODER_H264
               (decode->decoder), alignment);
+        }
+
+        if (priv) {
+          gst_vaapi_decoder_h264_set_low_latency (GST_VAAPI_DECODER_H264
+              (decode->decoder), priv->is_low_latency);
         }
       }
       break;
