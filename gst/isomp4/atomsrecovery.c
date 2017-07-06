@@ -1030,8 +1030,8 @@ moov_recov_write_file (MoovRecovFile * moovrf, MdatRecovFile * mdatrf,
   /* add chunks offsets */
   for (i = 0; i < moovrf->num_traks; i++) {
     TrakRecovData *trak = &(moovrf->traks_rd[i]);
-    /* 16 for the mdat header */
-    gint64 offset = moov_size + ftell (outf) + 16;
+    /* 8 or 16 for the mdat header */
+    gint64 offset = moov_size + ftell (outf) + mdatrf->mdat_header_size;
     atom_stco64_chunks_set_offset (&trak->stbl.stco64, offset);
   }
 
@@ -1135,10 +1135,21 @@ moov_recov_write_file (MoovRecovFile * moovrf, MdatRecovFile * mdatrf,
 
   /* write the mdat */
   /* write the header first */
-  GST_WRITE_UINT32_BE (auxdata, 1);
-  GST_WRITE_UINT32_LE (auxdata + 4, FOURCC_mdat);
-  GST_WRITE_UINT64_BE (auxdata + 8, mdatrf->mdat_size);
-  if (fwrite (auxdata, 1, 16, outf) != 16) {
+  if (mdatrf->mdat_header_size == 16) {
+    GST_WRITE_UINT32_BE (auxdata, 1);
+    GST_WRITE_UINT32_LE (auxdata + 4, FOURCC_mdat);
+    GST_WRITE_UINT64_BE (auxdata + 8, mdatrf->mdat_size);
+  } else if (mdatrf->mdat_header_size == 8) {
+    GST_WRITE_UINT32_BE (auxdata, mdatrf->mdat_size);
+    GST_WRITE_UINT32_LE (auxdata + 4, FOURCC_mdat);
+  } else {
+    GST_ERROR ("Unexpected atom size: %u", mdatrf->mdat_header_size);
+    g_assert_not_reached ();
+    goto fail;
+  }
+
+  if (fwrite (auxdata, 1, mdatrf->mdat_header_size,
+          outf) != mdatrf->mdat_header_size) {
     ATOMS_RECOV_OUTPUT_WRITE_ERROR (err);
     goto fail;
   }
