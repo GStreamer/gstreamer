@@ -118,14 +118,22 @@ static void gst_gl_filter_gl_stop (GstGLBaseFilter * filter);
 static gboolean gst_gl_filter_gl_set_caps (GstGLBaseFilter * bt,
     GstCaps * incaps, GstCaps * outcaps);
 
+void
+gst_gl_filter_add_rgba_pad_templates (GstGLFilterClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_gl_filter_src_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_gl_filter_sink_pad_template);
+}
+
 static void
 gst_gl_filter_class_init (GstGLFilterClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
-  element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->set_property = gst_gl_filter_set_property;
   gobject_class->get_property = gst_gl_filter_get_property;
@@ -146,11 +154,6 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   GST_GL_BASE_FILTER_CLASS (klass)->gl_set_caps = gst_gl_filter_gl_set_caps;
 
   klass->transform_internal_caps = default_transform_internal_caps;
-
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_gl_filter_src_pad_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_gl_filter_sink_pad_template);
 }
 
 static void
@@ -618,7 +621,6 @@ gst_gl_filter_set_caps_features (const GstCaps * caps,
         gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
   }
 
-  gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
   return ret;
 }
 

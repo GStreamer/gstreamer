@@ -129,6 +129,8 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
   element_class = GST_ELEMENT_CLASS (klass);
   base_transform_class = GST_BASE_TRANSFORM_CLASS (klass);
 
+  gst_gl_filter_add_rgba_pad_templates (GST_GL_FILTER_CLASS (klass));
+
   gobject_class->set_property = gst_gl_transformation_set_property;
   gobject_class->get_property = gst_gl_transformation_get_property;
 

@@ -89,6 +89,8 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
   base_filter_class = GST_GL_BASE_FILTER_CLASS (klass);
   filter_class = GST_GL_FILTER_CLASS (klass);
 
+  gst_gl_filter_add_rgba_pad_templates (GST_GL_FILTER_CLASS (klass));
+
   gobject_class->set_property = gst_gl_colorscale_set_property;
   gobject_class->get_property = gst_gl_colorscale_get_property;
 
