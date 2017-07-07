@@ -375,7 +375,8 @@ struct _GstGLBaseMemoryAllocatorClass
   gpointer                                      _padding[GST_PADDING];
 };
 
-#include <gst/gl/gl.h>
+#include <gst/gl/gstglconfig.h>
+#include <gst/gl/gstglformat.h>
 
 /**
  * GST_GL_BASE_MEMORY_ALLOCATOR_NAME:

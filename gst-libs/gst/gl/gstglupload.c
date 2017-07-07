@@ -29,6 +29,7 @@
 #include "gstglupload.h"
 
 #if GST_GL_HAVE_PLATFORM_EGL
+#include "egl/gsteglimage.h"
 #include "egl/gstglmemoryegl.h"
 #include "egl/gstglcontext_egl.h"
 #endif

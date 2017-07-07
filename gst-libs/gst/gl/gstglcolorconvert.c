@@ -25,8 +25,10 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "gl.h"
 #include "gstglcolorconvert.h"
+
+#include "gl.h"
+#include "gstglfuncs.h"
 #include "gstglsl_private.h"
 
 /**

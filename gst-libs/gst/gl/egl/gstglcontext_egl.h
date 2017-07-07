@@ -21,10 +21,7 @@
 #ifndef __GST_GL_EGL_H__
 #define __GST_GL_EGL_H__
 
-#include <gst/gst.h>
-#include <gst/gl/gl.h>
-#include <gst/gl/egl/gstegl.h>
-
+#include <gst/gl/gstglcontext.h>
 #include <gst/gl/egl/gstgldisplay_egl.h>
 
 G_BEGIN_DECLS
@@ -57,10 +54,10 @@ struct _GstGLContextEGL
 
   GstGLDisplayEGL *display_egl;
 
-  EGLContext egl_context;
-  EGLDisplay egl_display;
-  EGLSurface egl_surface;
-  EGLConfig  egl_config;
+  gpointer egl_context;
+  gpointer egl_display;
+  gpointer egl_surface;
+  gpointer egl_config;
 
   gint egl_major;
   gint egl_minor;
@@ -70,7 +67,7 @@ struct _GstGLContextEGL
   const gchar *egl_exts;
 
   /* Cached handle */
-  EGLNativeWindowType window_handle;
+  guintptr window_handle;
 };
 
 /**

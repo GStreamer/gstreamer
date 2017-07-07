@@ -39,6 +39,8 @@
 #include <stdlib.h>
 #include <png.h>
 
+#include <gst/gl/gstglfuncs.h>
+
 #include "gstgldifferencematte.h"
 #include "effects/gstgleffectssources.h"
 

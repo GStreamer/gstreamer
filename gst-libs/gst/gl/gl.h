@@ -27,11 +27,11 @@
 #endif
 
 #include <gst/gl/gstgl_fwd.h>
-#include <gst/gl/gstglconfig.h>
 #include <gst/gl/gstglapi.h>
-#include <gst/gl/gstgldisplay.h>
+#include <gst/gl/gstglconfig.h>
 #include <gst/gl/gstglcontext.h>
 #include <gst/gl/gstgldebug.h>
+#include <gst/gl/gstgldisplay.h>
 #include <gst/gl/gstglfeature.h>
 #include <gst/gl/gstglformat.h>
 #include <gst/gl/gstglutils.h>

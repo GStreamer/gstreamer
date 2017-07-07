@@ -36,7 +36,6 @@
 #include "config.h"
 #endif
 
-#include <gst/gl/gstglconfig.h>
 #include "gstgleffects.h"
 
 #define GST_CAT_DEFAULT gst_gl_effects_debug

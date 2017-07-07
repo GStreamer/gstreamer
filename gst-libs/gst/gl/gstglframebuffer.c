@@ -42,8 +42,12 @@
 #include "config.h"
 #endif
 
-#include "gl.h"
 #include "gstglframebuffer.h"
+
+#include "gstglcontext.h"
+#include "gstglfuncs.h"
+#include "gstglmemory.h"
+#include "gstglrenderbuffer.h"
 
 #ifndef GL_FRAMEBUFFER_UNDEFINED
 #define GL_FRAMEBUFFER_UNDEFINED          0x8219
@@ -518,7 +522,7 @@ gst_gl_framebuffer_get_effective_dimensions (GstGLFramebuffer * fb,
  */
 gboolean
 gst_gl_context_check_framebuffer_status (GstGLContext * context,
-    GLenum fbo_target)
+    guint fbo_target)
 {
   g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
 

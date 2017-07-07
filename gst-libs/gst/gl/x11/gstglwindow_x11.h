@@ -24,7 +24,10 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#include <gst/gl/gl.h>
+#include <gst/video/video.h>
+
+#include <gst/gl/gstgl_fwd.h>
+#include <gst/gl/gstglwindow.h>
 
 G_BEGIN_DECLS
 

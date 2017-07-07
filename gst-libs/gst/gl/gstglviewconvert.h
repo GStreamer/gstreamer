@@ -22,7 +22,10 @@
 #ifndef _GST_GL_VIEW_CONVERT_H_
 #define _GST_GL_VIEW_CONVERT_H_
 
-#include <gst/gl/gl.h>
+#include <gst/gstmemory.h>
+#include <gst/video/video.h>
+
+#include <gst/gl/gstgl_fwd.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_GL_VIEW_CONVERT            (gst_gl_view_convert_get_type())

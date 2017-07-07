@@ -104,7 +104,7 @@ void                    gst_gl_framebuffer_get_effective_dimensions (GstGLFrameb
 
 GST_EXPORT
 gboolean                gst_gl_context_check_framebuffer_status     (GstGLContext * context,
-                                                                     GLenum fbo_target);
+                                                                     guint fbo_target);
 
 GST_EXPORT
 gboolean                gst_gl_framebuffer_draw_to_texture          (GstGLFramebuffer * fb,

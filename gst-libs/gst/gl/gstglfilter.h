@@ -79,11 +79,11 @@ struct _GstGLFilter
   GstGLShader       *default_shader;
   gboolean           valid_attributes;
 
-  GLuint             vao;
-  GLuint             vbo_indices;
-  GLuint             vertex_buffer;
-  GLint              draw_attr_position_loc;
-  GLint              draw_attr_texture_loc;
+  guint              vao;
+  guint              vbo_indices;
+  guint              vertex_buffer;
+  gint               draw_attr_position_loc;
+  gint               draw_attr_texture_loc;
 
   gpointer          _padding[GST_PADDING];
 };

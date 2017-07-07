@@ -24,8 +24,7 @@
 
 #include <gst/check/gstcheck.h>
 
-#include <gst/gl/gstglcontext.h>
-#include <gst/gl/gstglupload.h>
+#include <gst/gl/gl.h>
 
 #include <stdio.h>
 

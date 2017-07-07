@@ -24,7 +24,10 @@
 
 #include <string.h>
 
-#include <gst/gl/gstglbasememory.h>
+#include "gstglbasememory.h"
+
+#include "gstglcontext.h"
+#include "gstglquery.h"
 
 /**
  * SECTION:gstglbasememory

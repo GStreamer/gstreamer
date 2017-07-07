@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 #include "gstglbasemixer.h"
 
 G_BEGIN_DECLS

@@ -47,7 +47,6 @@
 
 #include "gstglcolorscale.h"
 
-
 #define GST_CAT_DEFAULT gst_gl_colorscale_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 

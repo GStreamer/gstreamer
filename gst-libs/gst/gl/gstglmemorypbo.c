@@ -25,9 +25,12 @@
 
 #include <string.h>
 
-#include <gst/video/video.h>
+#include "gstglmemorypbo.h"
 
-#include <gst/gl/gstglmemorypbo.h>
+#include "gstglbuffer.h"
+#include "gstglcontext.h"
+#include "gstglfuncs.h"
+#include "gstglutils.h"
 
 /**
  * SECTION:gstglmemorypbo

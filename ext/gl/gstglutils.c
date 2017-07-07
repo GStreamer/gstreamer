@@ -22,7 +22,8 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
+#include <gst/gl/gstglfuncs.h>
+
 #include "gstglutils.h"
 
 struct _compile_shader

@@ -23,11 +23,9 @@
 #ifndef _GST_GL_BASE_FILTER_H_
 #define _GST_GL_BASE_FILTER_H_
 
-#include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
-#include <gst/video/video.h>
 
-#include <gst/gl/gl.h>
+#include <gst/gl/gstgl_fwd.h>
 
 G_BEGIN_DECLS
 

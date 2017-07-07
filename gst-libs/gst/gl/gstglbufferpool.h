@@ -21,11 +21,10 @@
 #ifndef _GST_GL_BUFFER_POOL_H_
 #define _GST_GL_BUFFER_POOL_H_
 
-#include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
-#include <gst/gl/gl.h>
+#include <gst/gl/gstglbasememory.h>
 
 G_BEGIN_DECLS
 

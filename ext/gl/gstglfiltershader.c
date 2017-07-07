@@ -56,7 +56,7 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
+#include <gst/gl/gstglfuncs.h>
 
 #include "gstglfiltershader.h"
 #if HAVE_GRAPHENE

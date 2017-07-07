@@ -37,8 +37,13 @@
 
 #include <string.h>
 
-#include <gst/gl/egl/gstglmemoryegl.h>
-#include <gst/gl/egl/gstglcontext_egl.h>
+#include "gstglmemoryegl.h"
+
+#include <gst/gl/gstglfuncs.h>
+
+#include "gstegl.h"
+#include "gsteglimage.h"
+#include "gstglcontext_egl.h"
 
 static GstAllocator *_gl_memory_egl_allocator;
 
@@ -80,7 +85,7 @@ _gl_mem_get_parent (GstGLMemoryEGL * gl_mem)
  *
  * Since: 1.10
  */
-EGLImageKHR
+gpointer
 gst_gl_memory_egl_get_image (GstGLMemoryEGL * mem)
 {
   g_return_val_if_fail (gst_is_gl_memory_egl (GST_MEMORY_CAST (mem)),
@@ -96,7 +101,7 @@ gst_gl_memory_egl_get_image (GstGLMemoryEGL * mem)
  *
  * Since: 1.10
  */
-EGLDisplay
+gpointer
 gst_gl_memory_egl_get_display (GstGLMemoryEGL * mem)
 {
   g_return_val_if_fail (gst_is_gl_memory_egl (GST_MEMORY_CAST (mem)), NULL);

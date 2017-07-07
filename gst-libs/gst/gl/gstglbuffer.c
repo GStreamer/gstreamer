@@ -25,6 +25,9 @@
 #include <string.h>
 
 #include "gstglbuffer.h"
+
+#include "gstglcontext.h"
+#include "gstglfuncs.h"
 #include "gstglutils.h"
 
 /**

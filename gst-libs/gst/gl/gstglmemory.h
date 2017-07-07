@@ -21,12 +21,8 @@
 #ifndef _GST_GL_MEMORY_H_
 #define _GST_GL_MEMORY_H_
 
-#include <gst/gst.h>
-#include <gst/gstallocator.h>
-#include <gst/gstmemory.h>
-#include <gst/video/video.h>
-
 #include <gst/gl/gstglbasememory.h>
+#include <gst/gl/gstglformat.h>
 
 G_BEGIN_DECLS
 

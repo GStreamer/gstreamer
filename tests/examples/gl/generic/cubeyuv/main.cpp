@@ -20,6 +20,7 @@
 
 #include <gst/gst.h>
 #include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 
 #include <iostream>
 #include <sstream>

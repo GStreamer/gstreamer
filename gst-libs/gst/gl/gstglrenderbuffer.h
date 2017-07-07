@@ -21,10 +21,6 @@
 #ifndef _GST_GL_RENDERBUFFER_H_
 #define _GST_GL_RENDERBUFFER_H_
 
-#include <gst/gst.h>
-#include <gst/gstallocator.h>
-#include <gst/gstmemory.h>
-
 #include <gst/gl/gstglbasememory.h>
 
 G_BEGIN_DECLS

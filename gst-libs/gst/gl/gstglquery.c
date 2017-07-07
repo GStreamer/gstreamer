@@ -34,11 +34,12 @@
 #include "config.h"
 #endif
 
-#include <gst/gl/gl.h>
-
 #include <string.h>
 
 #include "gstglquery.h"
+
+#include "gstglcontext.h"
+#include "gstglfuncs.h"
 
 #ifndef GL_TIME_ELAPSED
 #define GL_TIME_ELAPSED 0x88BF

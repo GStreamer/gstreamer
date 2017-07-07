@@ -32,8 +32,10 @@
 #include "config.h"
 #endif
 
-#include "gl.h"
 #include "gstglsyncmeta.h"
+
+#include "gstglcontext.h"
+#include "gstglfuncs.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_sync_meta_debug);
 #define GST_CAT_DEFAULT gst_gl_sync_meta_debug

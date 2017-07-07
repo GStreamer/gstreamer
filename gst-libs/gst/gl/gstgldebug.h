@@ -21,7 +21,7 @@
 #ifndef __GST_GL_DEBUG_H__
 #define __GST_GL_DEBUG_H__
 
-#include <gst/gl/gl.h>
+#include <gst/gl/gstgl_fwd.h>
 
 G_BEGIN_DECLS
 
