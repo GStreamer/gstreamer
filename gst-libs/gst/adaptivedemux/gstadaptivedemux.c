@@ -1567,6 +1567,14 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
     return FALSE;
   }
 
+  if (flags & GST_SEEK_FLAG_SEGMENT) {
+    GST_FIXME_OBJECT (demux, "Handle segment seeks");
+    GST_MANIFEST_UNLOCK (demux);
+    GST_API_UNLOCK (demux);
+    gst_event_unref (event);
+    return FALSE;
+  }
+
   seqnum = gst_event_get_seqnum (event);
 
   if (gst_adaptive_demux_is_live (demux)) {
