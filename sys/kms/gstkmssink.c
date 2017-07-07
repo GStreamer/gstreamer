@@ -488,6 +488,21 @@ ensure_allowed_caps (GstKMSSink * self, drmModeConnector * conn,
   return (self->allowed_caps && !gst_caps_is_empty (self->allowed_caps));
 }
 
+static GstMemory *
+get_cached_kmsmem (GstMemory * mem)
+{
+  return gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+      g_quark_from_static_string ("kmsmem"));
+}
+
+static void
+set_cached_kmsmem (GstMemory * mem, GstMemory * kmsmem)
+{
+  return gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
+      g_quark_from_static_string ("kmsmem"), kmsmem,
+      (GDestroyNotify) gst_memory_unref);
+}
+
 static gboolean
 gst_kms_sink_start (GstBaseSink * bsink)
 {
@@ -1031,21 +1046,6 @@ event_failed:
         ret);
     return FALSE;
   }
-}
-
-static GstMemory *
-get_cached_kmsmem (GstMemory * mem)
-{
-  return gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-      g_quark_from_static_string ("kmsmem"));
-}
-
-static void
-set_cached_kmsmem (GstMemory * mem, GstMemory * kmsmem)
-{
-  return gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
-      g_quark_from_static_string ("kmsmem"), kmsmem,
-      (GDestroyNotify) gst_memory_unref);
 }
 
 static gboolean
