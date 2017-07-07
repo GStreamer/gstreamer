@@ -403,6 +403,8 @@ vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
 # Used by the *_mkenum.py helper scripts
 glib_mkenums = find_program('glib-mkenums')
 
+python3 = import('python3').find_python()
+
 gir = find_program('g-ir-scanner', required : false)
 gnome = import('gnome')
 build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
@@ -418,5 +420,4 @@ subdir('ext')
 subdir('tests')
 subdir('pkgconfig')
 
-python3 = import('python3').find_python()
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
