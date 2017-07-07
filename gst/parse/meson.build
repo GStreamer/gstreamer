@@ -72,12 +72,12 @@ gen_grammar = configure_file(input : 'gen_grammar.py.in',
 parser = custom_target('parselex',
   input : 'parse.l',
   output : ['lex.priv_gst_parse_yy.c', 'parse_lex.h'],
-  command : [py3, gen_lex, '@OUTPUT0@', '@OUTPUT1@', '@INPUT@', 'DUMMY']
+  command : [python3, gen_lex, '@OUTPUT0@', '@OUTPUT1@', '@INPUT@', 'DUMMY']
 )
 
 grammar = custom_target('parsegrammar',
   input : 'grammar.y',
   output : ['grammar.tab.c', 'grammar.tab.h'],
-  command : [py3, gen_grammar, '@OUTPUT0@', '@OUTPUT1@', '@INPUT@'],
+  command : [python3, gen_grammar, '@OUTPUT0@', '@OUTPUT1@', '@INPUT@'],
   depends : [parser],
 )

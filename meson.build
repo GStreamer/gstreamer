@@ -385,11 +385,7 @@ if libtype == 'static'
 endif
 
 # Used in gst/parse/meson.build and below
-py3 = find_program('python3', required : false)
-if not py3.found()
-  # Maybe 'python' is Python 3
-  py3 = find_program('python')
-endif
+python3 = import('python3').find_python()
 
 bashcomp_dep = dependency('bash-completion', version : '>= 2.0', required : false)
 
@@ -449,6 +445,6 @@ else
   endif
 endif
 
-run_command(py3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
+run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
 
 install_data('gst-element-check-1.0.m4', install_dir : join_paths(get_option('datadir'), 'aclocal'))
