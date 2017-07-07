@@ -26,6 +26,7 @@
 
 #include "gtkgstglwidget.h"
 #include "gstgtkutils.h"
+#include <gst/gl/gstglfuncs.h>
 #include <gst/video/video.h>
 
 #if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (GDK_WINDOWING_X11)

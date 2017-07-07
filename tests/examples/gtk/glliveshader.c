@@ -20,6 +20,7 @@
 
 #include <gst/gst.h>
 #include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 #include <gtk/gtk.h>
 #if GST_GL_HAVE_WINDOW_X11
 #include <X11/Xlib.h>

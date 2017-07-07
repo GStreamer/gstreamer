@@ -27,6 +27,8 @@
 #include "config.h"
 #endif
 
+#include <gst/gl/gstglfuncs.h>
+
 #include "gstgtkglsink.h"
 #include "gtkgstglwidget.h"
 
