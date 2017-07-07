@@ -119,6 +119,7 @@ build_convert_frame_pipeline (GstElement ** src_element,
 
   if (cmeta) {
     if (!create_element ("videocrop", &vcrop, &error)) {
+      g_error_free (error);
       g_warning
           ("build_convert_frame_pipeline: Buffer has crop metadata but videocrop element is not found. Cropping will be disabled");
     } else {
