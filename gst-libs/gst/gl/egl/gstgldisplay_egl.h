@@ -21,9 +21,7 @@
 #ifndef __GST_GL_DISPLAY_EGL_H__
 #define __GST_GL_DISPLAY_EGL_H__
 
-#include <gst/gst.h>
 #include <gst/gl/gstgldisplay.h>
-#include <gst/gl/egl/gstegl.h>
 
 G_BEGIN_DECLS
 
@@ -51,7 +49,7 @@ struct _GstGLDisplayEGL
   GstGLDisplay          parent;
 
   /* <private> */
-  EGLDisplay display;
+  gpointer display;
 
   gboolean foreign_display;
 
@@ -69,13 +67,13 @@ GST_EXPORT
 GstGLDisplayEGL *gst_gl_display_egl_new (void);
 
 GST_EXPORT
-GstGLDisplayEGL *gst_gl_display_egl_new_with_egl_display (EGLDisplay display);
+GstGLDisplayEGL *gst_gl_display_egl_new_with_egl_display (gpointer display);
 
 GST_EXPORT
 GstGLDisplayEGL *gst_gl_display_egl_from_gl_display (GstGLDisplay * display);
 
 GST_EXPORT
-EGLDisplay       gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display);
+gpointer         gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display);
 
 #define GST_GL_DISPLAY_EGL_NAME "gst.gl.display.egl"
 

@@ -47,6 +47,7 @@
 #endif
 
 #include <gst/base/gstbasetransform.h>
+
 #include "gstglviewconvert.h"
 
 #define GST_CAT_DEFAULT gst_gl_view_convert_element_debug

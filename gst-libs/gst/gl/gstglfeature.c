@@ -24,9 +24,11 @@
 
 #include <string.h>
 
-#include "gl.h"
 #include "gstglfeature.h"
+
+#include "gstglcontext.h"
 #include "gstglfeature_private.h"
+#include "gstglfuncs.h"
 
 #define GST_CAT_DEFAULT gl_feature
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);

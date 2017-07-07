@@ -23,66 +23,6 @@
 
 #include <gst/gl/gstglconfig.h>
 
-/* This mimic GCC behaviour with system headers files even if GL headers may
- * not be in the system header path. */
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#endif
-
-/* OpenGL 2.0 for Embedded Systems */
-#if GST_GL_HAVE_GLES2
-# if GST_GL_HAVE_PLATFORM_EAGL
-#  include <OpenGLES/ES2/gl.h>
-#  include <OpenGLES/ES2/glext.h>
-# else
-#  if GST_GL_HAVE_GLES3
-#   include <GLES3/gl3.h>
-#   if GST_GL_HAVE_GLES3EXT3_H
-#    include <GLES3/gl3ext.h>
-#   endif
-#   include <GLES2/gl2ext.h>
-#  else
-#   include <GLES2/gl2.h>
-#   include <GLES2/gl2ext.h>
-#  endif
-# endif
-# if !GST_GL_HAVE_OPENGL
-#  include <gst/gl/glprototypes/gstgl_gles2compat.h>
-# endif
-#endif
-
-/* OpenGL for desktop systems */
-#if GST_GL_HAVE_OPENGL
-# ifdef __APPLE__
-#  include <OpenGL/OpenGL.h>
-#  include <OpenGL/gl.h>
-#  if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
-#   define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
-#   include <OpenGL/gl3.h>
-#  endif
-# else
-#  if defined(_MSC_VER)
-#   include <windows.h>
-#  endif
-#  include <GL/gl.h>
-#  if defined(__WIN32__) || defined(_WIN32)
-#   include <GL/glext.h>
-#  endif
-# endif
-#endif
-
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-
-#if defined(WINAPI)
-#define GSTGLAPI WINAPI
-#else
-#define GSTGLAPI
-#endif
-#include <gst/gl/glprototypes/gstgl_compat.h>
-
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
@@ -157,22 +97,6 @@ typedef enum
 
   GST_GL_PLATFORM_ANY = G_MAXUINT32
 } GstGLPlatform;
-
-#define GST_GL_EXT_BEGIN(name, gl_availability, min_gl, maj_gl, gles_maj, \
-    gles_min, ext_suf, ext_name)
-#define GST_GL_EXT_FUNCTION(ret, name, args) \
-  ret (GSTGLAPI *name) args;
-#define GST_GL_EXT_END()
-
-typedef struct _GstGLFuncs
-{
-#include <gst/gl/glprototypes/all_functions.h>
-  gpointer padding[GST_PADDING_LARGE*6];
-} GstGLFuncs;
-
-#undef GST_GL_EXT_BEGIN
-#undef GST_GL_EXT_FUNCTION
-#undef GST_GL_EXT_END
 
 GST_EXPORT
 gchar * gst_gl_api_to_string (GstGLAPI api);

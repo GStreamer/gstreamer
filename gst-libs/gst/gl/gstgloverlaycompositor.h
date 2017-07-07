@@ -54,8 +54,8 @@ struct _GstGLOverlayCompositor
   GList * overlays;
  
   GstGLShader *shader;
-  GLint  position_attrib;
-  GLint  texcoord_attrib;
+  gint  position_attrib;
+  gint  texcoord_attrib;
 
   gpointer _padding[GST_PADDING];
 };

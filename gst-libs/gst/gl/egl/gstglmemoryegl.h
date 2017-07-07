@@ -23,15 +23,9 @@
 #ifndef _GST_GL_MEMORY_EGL_H_
 #define _GST_GL_MEMORY_EGL_H_
 
-#include <gst/gst.h>
-#include <gst/gstallocator.h>
-#include <gst/gstmemory.h>
-#include <gst/video/video.h>
-
-#include <gst/gl/gl.h>
-#include <gst/gl/egl/gsteglimage.h>
-
 #include <gst/gl/gstglmemory.h>
+#include <gst/gl/egl/gsteglimage.h>
+#include <gst/gl/egl/gstgldisplay_egl.h>
 
 G_BEGIN_DECLS
 
@@ -74,10 +68,10 @@ GST_EXPORT
 gboolean      gst_is_gl_memory_egl                      (GstMemory * mem);
 
 GST_EXPORT
-EGLImageKHR   gst_gl_memory_egl_get_image               (GstGLMemoryEGL * mem);
+gpointer      gst_gl_memory_egl_get_image               (GstGLMemoryEGL * mem);
 
 GST_EXPORT
-EGLDisplay    gst_gl_memory_egl_get_display             (GstGLMemoryEGL * mem);
+gpointer      gst_gl_memory_egl_get_display             (GstGLMemoryEGL * mem);
 
 /**
  * GstGLMemoryEGLAllocator

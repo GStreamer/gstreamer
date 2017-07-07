@@ -22,6 +22,8 @@
 #include "config.h"
 #endif
 
+#include <gst/gl/gstglfuncs.h>
+
 #include "gltestsrc.h"
 
 #define MAX_ATTRIBUTES 4

@@ -22,9 +22,13 @@
 #include "config.h"
 #endif
 
-#include <gst/gl/egl/gstgldisplay_egl.h>
-#include <gst/gl/egl/gsteglimage.h>
-#include <gst/gl/egl/gstglmemoryegl.h>
+#include "gstgldisplay_egl.h"
+
+#include <gst/gl/gstglfeature.h>
+
+#include "gstegl.h"
+#include "gsteglimage.h"
+#include "gstglmemoryegl.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 #define GST_CAT_DEFAULT gst_gl_display_debug
@@ -92,7 +96,7 @@ gst_gl_display_egl_finalize (GObject * object)
  *
  * Since: 1.12
  */
-EGLDisplay
+gpointer
 gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
 {
   const gchar *egl_exts;
@@ -107,7 +111,7 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
 
   /* given an EGLDisplay already */
   if (type == GST_GL_DISPLAY_TYPE_EGL)
-    return (EGLDisplay) display;
+    return (gpointer) display;
 
   if (type == GST_GL_DISPLAY_TYPE_NONE)
     type = GST_GL_DISPLAY_TYPE_ANY;
@@ -158,7 +162,7 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
   /* otherwise rely on the implementation to choose the correct display
    * based on the pointer */
 default_display:
-  return eglGetDisplay ((EGLNativeDisplayType) display);
+  return (gpointer) eglGetDisplay ((EGLNativeDisplayType) display);
 }
 
 /**
@@ -198,7 +202,7 @@ gst_gl_display_egl_new (void)
  * Since: 1.12
  */
 GstGLDisplayEGL *
-gst_gl_display_egl_new_with_egl_display (EGLDisplay display)
+gst_gl_display_egl_new_with_egl_display (gpointer display)
 {
   GstGLDisplayEGL *ret;
 

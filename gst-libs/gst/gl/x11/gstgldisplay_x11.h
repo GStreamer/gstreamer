@@ -25,7 +25,6 @@
 
 #include <X11/Xlib-xcb.h>
 
-#include <gst/gl/gstgl_fwd.h>
 #include <gst/gl/gstgldisplay.h>
 
 G_BEGIN_DECLS

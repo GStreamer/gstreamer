@@ -41,7 +41,10 @@
 #endif
 
 #include <math.h>
+#include <gst/gl/gstglfuncs.h>
+
 #include "gstglfilterglass.h"
+
 #include "gstglutils.h"
 
 #define GST_CAT_DEFAULT gst_gl_filter_glass_debug

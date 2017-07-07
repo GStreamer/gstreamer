@@ -211,6 +211,7 @@ check_gl=libs/gstglcontext \
     libs/gstglcolorconvert \
     libs/gstglquery \
     libs/gstglsl \
+    libs/gstglheaders \
     elements/glimagesink \
     pipelines/simple-launch-lines
 else
@@ -555,7 +556,7 @@ libs_gstglcontext_LDADD = \
 libs_gstglcontext_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
 
 libs_gstglmemory_LDADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
@@ -565,12 +566,12 @@ libs_gstglmemory_LDADD = \
 libs_gstglmemory_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
 
 libs_gstglupload_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
 
 libs_gstglupload_LDADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
@@ -580,7 +581,7 @@ libs_gstglupload_LDADD = \
 libs_gstglcolorconvert_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
 
 libs_gstglcolorconvert_LDADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
@@ -594,7 +595,7 @@ libs_gstglquery_LDADD = \
 libs_gstglquery_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
 
 libs_gstglsl_LDADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
@@ -603,7 +604,16 @@ libs_gstglsl_LDADD = \
 libs_gstglsl_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
+
+libs_gstglheaders_LDADD = \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
+libs_gstglheaders_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
 
 elements_glimagesink_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \

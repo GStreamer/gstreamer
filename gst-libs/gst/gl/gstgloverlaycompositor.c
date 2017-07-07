@@ -31,8 +31,13 @@
 
 #include <stdio.h>
 
-#include "gl.h"
 #include "gstgloverlaycompositor.h"
+
+#include "gstglcontext.h"
+#include "gstglfuncs.h"
+#include "gstglmemory.h"
+#include "gstglshader.h"
+#include "gstglslstage.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_overlay_compositor_debug);
 #define GST_CAT_DEFAULT gst_gl_overlay_compositor_debug

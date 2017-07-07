@@ -22,8 +22,10 @@
 #include "config.h"
 #endif
 
-#include "gl.h"
 #include "gstglbufferpool.h"
+
+#include "gstglmemory.h"
+#include "gstglsyncmeta.h"
 #include "gstglutils.h"
 
 /**

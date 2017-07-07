@@ -21,7 +21,7 @@
 #ifndef __GST_GL_SHADER_STRINGS_H__
 #define __GST_GL_SHADER_STRINGS_H__
 
-#include <gst/gl/gl.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 

@@ -22,7 +22,7 @@
 #ifndef _GST_GL_VIEW_CONVERT_ELEMENT_H_
 #define _GST_GL_VIEW_CONVERT_ELEMENT_H_
 
-#include <gst/gl/gstglviewconvert.h>
+#include <gst/gl/gstglfilter.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_GL_VIEW_CONVERT_ELEMENT            (gst_gl_view_convert_element_get_type())

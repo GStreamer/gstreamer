@@ -22,11 +22,14 @@
 #include "config.h"
 #endif
 
-#include "gl.h"
 #include "gstgldebug.h"
-#include "gstglcontext_private.h"
+
 #include <glib/gprintf.h>
 #include <string.h>
+
+#include "gstglcontext.h"
+#include "gstglcontext_private.h"
+#include "gstglfuncs.h"
 
 /**
  * SECTION:gstgldebug

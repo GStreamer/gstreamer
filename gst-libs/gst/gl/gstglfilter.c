@@ -38,6 +38,8 @@
 
 #include "gstglfilter.h"
 
+#include "gstglfuncs.h"
+
 #define GST_CAT_DEFAULT gst_gl_filter_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 

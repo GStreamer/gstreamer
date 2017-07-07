@@ -39,8 +39,15 @@
 #endif
 
 #include "gsteglimage.h"
-#include <gst/gl/egl/gstgldisplay_egl.h>
+
 #include <string.h>
+
+#include <gst/gl/gstglfeature.h>
+#include <gst/gl/gstglmemory.h>
+
+#include "gst/gl/egl/gstegl.h"
+#include "gst/gl/egl/gstglcontext_egl.h"
+#include "gst/gl/egl/gstgldisplay_egl.h"
 
 #if GST_GL_HAVE_DMABUF
 #include <gst/allocators/gstdmabuf.h>
@@ -107,7 +114,7 @@ gst_egl_image_ensure_debug_category (void)
  *
  * Returns: the #EGLImageKHR of @image
  */
-EGLImageKHR
+gpointer
 gst_egl_image_get_image (GstEGLImage * image)
 {
   g_return_val_if_fail (GST_IS_EGL_IMAGE (image), EGL_NO_IMAGE_KHR);
@@ -151,7 +158,7 @@ _gst_egl_image_copy (GstMiniObject * obj)
  * Returns: a new #GstEGLImage wrapping @image
  */
 GstEGLImage *
-gst_egl_image_new_wrapped (GstGLContext * context, EGLImageKHR image,
+gst_egl_image_new_wrapped (GstGLContext * context, gpointer image,
     GstGLFormat format, gpointer user_data,
     GstEGLImageDestroyNotify user_data_destroy)
 {

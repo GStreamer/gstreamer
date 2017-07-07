@@ -102,6 +102,10 @@ typedef struct _GstGLOverlayCompositorClass GstGLOverlayCompositorClass;
 
 typedef struct _GstGLQuery GstGLQuery;
 
+typedef struct _GstGLFuncs GstGLFuncs;
+
+typedef struct _GstGLAsyncDebug GstGLAsyncDebug;
+
 #include <gst/gl/gstgl_enums.h>
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

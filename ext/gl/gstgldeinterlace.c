@@ -36,6 +36,8 @@
 #include "config.h"
 #endif
 
+#include <gst/gl/gstglfuncs.h>
+
 #include "gstgldeinterlace.h"
 
 #define GST_CAT_DEFAULT gst_gl_deinterlace_debug

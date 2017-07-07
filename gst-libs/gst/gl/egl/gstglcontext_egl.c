@@ -29,10 +29,13 @@
  */
 
 #include "gstglcontext_egl.h"
-#include <gst/gl/egl/gstegl.h>
+
+#include <gst/gl/gstglcontext_private.h>
+#include <gst/gl/gstglfeature.h>
+
+#include "gstegl.h"
 #include "../utils/opengl_versions.h"
 #include "../utils/gles_versions.h"
-#include "../gstglcontext_private.h"
 
 #if GST_GL_HAVE_WINDOW_X11
 #include "../x11/gstglwindow_x11.h"
@@ -281,7 +284,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 {
   GstGLContextEGL *egl;
   GstGLWindow *window = NULL;
-  EGLNativeWindowType window_handle = (EGLNativeWindowType) 0;
+  guintptr window_handle = 0;
   EGLint egl_major;
   EGLint egl_minor;
   gboolean need_surface = TRUE;
@@ -520,15 +523,14 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   }
 
   if (window)
-    window_handle =
-        (EGLNativeWindowType) gst_gl_window_get_window_handle (window);
+    window_handle = gst_gl_window_get_window_handle (window);
 
   if (window_handle) {
     GST_DEBUG ("Creating EGLSurface from window_handle %p",
         (void *) window_handle);
     egl->egl_surface =
         eglCreateWindowSurface (egl->egl_display, egl->egl_config,
-        window_handle, NULL);
+        (EGLNativeWindowType) window_handle, NULL);
     /* Store window handle for later comparision */
     egl->window_handle = window_handle;
   } else if (!gst_gl_check_extension ("EGL_KHR_surfaceless_context",
@@ -619,10 +621,10 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
 
   if (activate) {
     GstGLWindow *window = gst_gl_context_get_window (context);
-    EGLNativeWindowType handle = 0;
+    guintptr handle = 0;
     /* Check if the backing handle changed */
     if (window) {
-      handle = (EGLNativeWindowType) gst_gl_window_get_window_handle (window);
+      handle = gst_gl_window_get_window_handle (window);
       gst_object_unref (window);
     }
     if (handle && handle != egl->window_handle) {
@@ -639,8 +641,8 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
         }
       }
       egl->egl_surface =
-          eglCreateWindowSurface (egl->egl_display, egl->egl_config, handle,
-          NULL);
+          eglCreateWindowSurface (egl->egl_display, egl->egl_config,
+          (EGLNativeWindowType) handle, NULL);
       egl->window_handle = handle;
 
       if (egl->egl_surface == EGL_NO_SURFACE) {

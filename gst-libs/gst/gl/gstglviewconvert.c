@@ -34,9 +34,18 @@
 #endif
 
 #include "gstglviewconvert.h"
-#include "gstglsl_private.h"
-#include "gstglutils_private.h"
+
 #include <gst/video/gstvideoaffinetransformationmeta.h>
+
+#include "gstglcontext.h"
+#include "gstglframebuffer.h"
+#include "gstglmemory.h"
+#include "gstglshader.h"
+#include "gstglshaderstrings.h"
+#include "gstglsl.h"
+#include "gstglsl_private.h"
+#include "gstglslstage.h"
+#include "gstglutils_private.h"
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
 #define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))

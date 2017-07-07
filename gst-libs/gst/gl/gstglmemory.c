@@ -24,10 +24,10 @@
 
 #include <string.h>
 
-#include <gst/video/video.h>
+#include "gstglmemory.h"
 
-#include <gst/gl/gstglbasememory.h>
-#include <gst/gl/gstglmemory.h>
+#include "gl.h"
+#include "gstglfuncs.h"
 
 /**
  * SECTION:gstglmemory

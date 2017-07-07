@@ -22,6 +22,7 @@
 #define __GST_GL_QUERY_H__
 
 #include <gst/gl/gstgl_fwd.h>
+#include <gst/gl/gstgldebug.h>
 
 G_BEGIN_DECLS
 

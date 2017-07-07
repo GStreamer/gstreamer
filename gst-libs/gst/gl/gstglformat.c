@@ -32,8 +32,10 @@
 #include "config.h"
 #endif
 
-#include <gst/gl/gstglformat.h>
-#include <gst/gl/gstglcontext.h>
+#include "gstglformat.h"
+
+#include "gstglcontext.h"
+#include "gstglfuncs.h"
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
 #define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))

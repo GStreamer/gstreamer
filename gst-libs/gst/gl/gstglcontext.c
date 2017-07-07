@@ -40,14 +40,16 @@
 #define _GNU_SOURCE
 #endif
 
+#include "gstglcontext.h"
+
 #include <gmodule.h>
 #include <string.h>
 #include <stdio.h>
 
-#include "gl.h"
-#include "gstglcontext.h"
 #include "gstglcontext_private.h"
+#include "gstglfeature.h"
 #include "gstglfeature_private.h"
+#include "gstglfuncs.h"
 
 #ifndef GL_NUM_EXTENSIONS
 #define GL_NUM_EXTENSIONS 0x0000821d

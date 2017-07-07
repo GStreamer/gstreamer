@@ -22,9 +22,10 @@
 #include "config.h"
 #endif
 
-#include <gst/gl/gl.h>
-
 #include "gstglslstage.h"
+
+#include "gl.h"
+#include "gstglfuncs.h"
 #include "gstglsl_private.h"
 
 #ifndef GL_GEOMETRY_SHADER

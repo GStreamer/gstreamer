@@ -27,7 +27,8 @@ libgstgtk_la_CFLAGS = \
 	$(GTK3_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS)
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GL_CFLAGS)
 libgstgtk_la_LIBADD = \
 	$(GTK3_LIBS) \
 	$(GST_BASE_LIBS) \

@@ -23,11 +23,8 @@
 #ifndef _GST_EGL_IMAGE_H_
 #define _GST_EGL_IMAGE_H_
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
-
-#include <gst/gl/gl.h>
-#include <gst/gl/egl/gstegl.h>
+#include <gst/gl/gstgl_fwd.h>
+#include <gst/gl/gstglformat.h>
 
 G_BEGIN_DECLS
 
@@ -61,7 +58,7 @@ struct _GstEGLImage
   GstMiniObject parent;
 
   GstGLContext *context;
-  EGLImageKHR image;
+  gpointer image;
   GstGLFormat format;
 
   /* <private> */
@@ -73,12 +70,12 @@ struct _GstEGLImage
 
 GST_EXPORT
 GstEGLImage *             gst_egl_image_new_wrapped             (GstGLContext * context,
-                                                                 EGLImageKHR image,
+                                                                 gpointer image,
                                                                  GstGLFormat format,
                                                                  gpointer user_data,
                                                                  GstEGLImageDestroyNotify user_data_destroy);
 GST_EXPORT
-EGLImageKHR             gst_egl_image_get_image                 (GstEGLImage * image);
+gpointer                gst_egl_image_get_image                 (GstEGLImage * image);
 
 GST_EXPORT
 GstEGLImage *           gst_egl_image_from_texture              (GstGLContext * context,

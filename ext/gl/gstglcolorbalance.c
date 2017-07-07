@@ -38,12 +38,12 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+#include <gst/gl/gstglfuncs.h>
 #include <gst/math-compat.h>
+#include <gst/video/colorbalance.h>
 
 #include "gstglcolorbalance.h"
-#include <string.h>
-
-#include <gst/video/colorbalance.h>
 
 GST_DEBUG_CATEGORY_STATIC (glcolorbalance_debug);
 #define GST_CAT_DEFAULT glcolorbalance_debug

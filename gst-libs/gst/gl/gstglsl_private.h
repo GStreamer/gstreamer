@@ -22,6 +22,7 @@
 #define __GST_GLSL_PRIVATE_H__
 
 #include <gst/gl/gstgl_fwd.h>
+#include <gst/gl/gstglfuncs.h>
 
 G_BEGIN_DECLS
 
