@@ -19,7 +19,6 @@ else
   msdk_sources += 'msdk_libva.c'
 endif
 
-python3 = find_program('python3')
 msdk_root = run_command(python3, '-c', 'import os; print(os.environ.get("INTELMEDIASDKROOT", os.environ.get("MFX_HOME", "")))').stdout().strip()
 
 if msdk_root != ''
