@@ -71,6 +71,7 @@ struct _GstKMSSink {
   GstAllocator *allocator;
   GstBuffer *last_buffer;
   GstMemory *tmp_kmsmem;
+  GList *mem_cache;
 
   gchar *devname;
 

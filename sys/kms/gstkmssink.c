@@ -496,8 +496,45 @@ get_cached_kmsmem (GstMemory * mem)
 }
 
 static void
-set_cached_kmsmem (GstMemory * mem, GstMemory * kmsmem)
+cached_kmsmem_disposed_cb (GstKMSSink * self, GstMiniObject * obj)
 {
+  GST_OBJECT_LOCK (self);
+  self->mem_cache = g_list_remove (self->mem_cache, obj);
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
+clear_cached_kmsmem (GstKMSSink * self)
+{
+  GList *iter;
+
+  GST_OBJECT_LOCK (self);
+
+  iter = self->mem_cache;
+  while (iter) {
+    GstMiniObject *obj = iter->data;
+    gst_mini_object_weak_unref (obj,
+        (GstMiniObjectNotify) cached_kmsmem_disposed_cb, self);
+    gst_mini_object_set_qdata (obj,
+        g_quark_from_static_string ("kmsmem"), NULL, NULL);
+    iter = iter->next;
+  }
+
+  g_list_free (self->mem_cache);
+  self->mem_cache = NULL;
+
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
+set_cached_kmsmem (GstKMSSink * self, GstMemory * mem, GstMemory * kmsmem)
+{
+  GST_OBJECT_LOCK (self);
+  gst_mini_object_weak_ref (GST_MINI_OBJECT (mem),
+      (GstMiniObjectNotify) cached_kmsmem_disposed_cb, self);
+  self->mem_cache = g_list_prepend (self->mem_cache, mem);
+  GST_OBJECT_UNLOCK (self);
+
   return gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
       g_quark_from_static_string ("kmsmem"), kmsmem,
       (GDestroyNotify) gst_memory_unref);
@@ -692,6 +729,8 @@ gst_kms_sink_stop (GstBaseSink * bsink)
   GstKMSSink *self;
 
   self = GST_KMS_SINK (bsink);
+
+  clear_cached_kmsmem (self);
 
   gst_buffer_replace (&self->last_buffer, NULL);
   gst_caps_replace (&self->allowed_caps, NULL);
@@ -1130,7 +1169,7 @@ gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
 
   GST_LOG_OBJECT (self, "setting KMS mem %p to DMABuf mem %p with fb id = %d",
       kmsmem, mems[0], kmsmem->fb_id);
-  set_cached_kmsmem (mems[0], GST_MEMORY_CAST (kmsmem));
+  set_cached_kmsmem (self, mems[0], GST_MEMORY_CAST (kmsmem));
 
 wrap_mem:
   *outbuf = gst_buffer_new ();
@@ -1359,6 +1398,7 @@ gst_kms_sink_drain (GstKMSSink * self)
   if (parent_meta) {
     GstBuffer *dumb_buf;
     dumb_buf = gst_kms_sink_copy_to_dumb_buffer (self, parent_meta->buffer);
+    clear_cached_kmsmem (self);
     gst_kms_sink_show_frame (GST_VIDEO_SINK (self), dumb_buf);
   }
 }
