@@ -147,5 +147,5 @@ else
   endif
 endif
 
-python3 = find_program('python3')
+python3 = import('python3').find_python()
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
