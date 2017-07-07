@@ -324,6 +324,8 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   GstCapsFeatures *features;
 
   gst_query_parse_allocation (query, &caps, NULL);
+  if (caps == NULL)
+    goto invalid_caps;
   features = gst_caps_get_features (caps, 0);
 
   /* Only offer our custom allocator if that type of memory was negotiated. */
