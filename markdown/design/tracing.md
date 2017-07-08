@@ -136,25 +136,23 @@ a message, a query or a measurement. Every tracer should describe the
 data format. This way tools that process tracer logs can show the data
 in a meaningful way without having to know about the tracer plugin.
 
-One way would be to introspect the data from the plugin. This has the
-disadvantage that the postprocessing app needs to load the plugins or
-talk to the gstreamer registry. An alternative is to also log the format
-description into the log. Right now we’re logging several nested
-`GstStructure` from the `tracer_class_init()` function (except in the
-log tracer).
+Tracers can use `gst_tracer_record_new` in their `tracer_class_init()`
+to describe their format:
 
-```
-gst_tracer_record_new ("thread-rusage.class",
+``` c
+fmt = gst_tracer_record_new ("thread-rusage.class",
     // value in the log record (order does not matter)
     // *thread-id* is a *key* to related the record to something as indicated
-    // by *scope* substructure "thread-id",
-    GST_TYPE_STRUCTURE, gst_structure_new ("scope", "type",
-        G_TYPE_GTYPE, G_TYPE_GUINT64, "related-to",
-        GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
+    // by *scope* substructure
+    "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+        "type", G_TYPE_GTYPE, G_TYPE_GUINT64,
+        "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_THREAD,
         NULL),
-        // next value in the record // *average-cpuload* is a measurement as indicated by the *value*
-        // substructure "average-cpuload",
-    GST_TYPE_STRUCTURE, gst_structure_new ("value", // value type
+    // next value in the record
+    // *average-cpuload* is a measurement as indicated by the *value*
+    // substructure
+    "average-cpuload", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+        // value type
         "type", G_TYPE_GTYPE, G_TYPE_UINT,
         // human readable description, that can be used as a graph label
         "description", G_TYPE_STRING, "average cpu usage per thread",
@@ -162,8 +160,41 @@ gst_tracer_record_new ("thread-rusage.class",
         // flags { aggregated, windowed, cumulative, … }
         "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_AGGREGATED,
         // value range
-        "min", G_TYPE_UINT, 0, "max", G_TYPE_UINT, 100, NULL),
-    … NULL);
+        "min", G_TYPE_UINT, 0,
+        "max", G_TYPE_UINT, 100,
+        NULL),
+    …
+    NULL);
+```
+
+Later tracers can use the `GstTracerRecord` instance to log values efficiently:
+
+``` c
+gst_tracer_record_log (fmt, (guint64) (guintptr) thread_id, avg_cpuload);
+```
+
+Below a few more example for parts of tracer classes:
+
+An optional value. Since the PTS can be GST_CLOCK_TIME_NONE and that is (-1),
+we don't want to log this.
+``` c
+"buffer-pts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+    "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+    "description", G_TYPE_STRING, "presentation timestamp of the buffer in ns",
+    "flags", GST_TYPE_TRACER_VALUE_FLAGS, GST_TRACER_VALUE_FLAGS_OPTIONAL,
+    "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+    "max", G_TYPE_UINT64, G_MAXUINT64,
+    NULL),
+```
+
+In the tracer code an optional value is logged using a boolean + the value,
+where the boolean indicated the presence:
+
+``` c
+GstClockTime pts = GST_BUFFER_PTS (buf);
+
+gst_tracer_record_log (fmt, ..., GST_CLOCK_TIME_IS_VALID (pts), pts, ...);
+
 ```
 
 
@@ -176,10 +207,19 @@ A few ideas that are not yet in the above spec:
 - we’d like to have some metadata on scopes
     - e.g. we’d like to log the thread-names, so that a UI can show
       that instead of thread-ids
+    - ordering: e.g. in the latency tracer we'd like to order by 'sink'
+      and then by 'src'
+
+- unique instance ids
     - the stats tracer logs *new-element* and *new-pad* messages
-    - they add a unique *ix* to each instance as the memory ptr can be
-      reused for new instances, the data is attached to the objects as qdata
+    - they add a unique *ix* to each instance as the memory ptr or the object
+      name can be reused for new instances, the data is attached to the
+      objects as qdata
     - the latency tracer would like to also reference this metadata
+      (right now, it relies on unique element names)
+    - the relationship between a scope 'element-ix' ('related-to'=_ELEMENT)
+      and an earlier message 'new-element' that has scope 'ix'
+      ('related-to'=_ELEMENT) and value 'name' is not obvious
 
 Right now we log the classes as structures, this is important so that the log
 is self contained. It would be nice to add them to the registry, so that
