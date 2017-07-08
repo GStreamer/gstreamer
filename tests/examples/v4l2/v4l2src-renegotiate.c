@@ -27,17 +27,17 @@
 #include <gst/gst.h>
 
 /* Options */
-static gchar *device = "/dev/video0";
-static gchar *videosink = "autovideosink";
+static const gchar *device = "/dev/video0";
+static const gchar *videosink = "autovideosink";
 static gboolean enable_dmabuf = FALSE;
-static gchar *def_resolutions[] = {
+static const gchar *def_resolutions[] = {
   "320x240",
   "1280x720",
   "640x480",
   NULL
 };
 
-static gchar **resolutions = def_resolutions;
+static const gchar **resolutions = def_resolutions;
 
 static GOptionEntry entries[] = {
   {"device", 'd', 0, G_OPTION_ARG_STRING, &device, "V4L2 Camera Device",
