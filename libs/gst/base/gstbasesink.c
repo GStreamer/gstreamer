@@ -1953,7 +1953,7 @@ again:
         }
 
         rstart = rstop = rnext = priv->eos_rtime;
-        *do_sync = rstart != -1;
+        *do_sync = GST_CLOCK_TIME_IS_VALID (rstart);
         GST_DEBUG_OBJECT (basesink, "sync times for EOS %" GST_TIME_FORMAT,
             GST_TIME_ARGS (rstart));
         /* if we are stepping, we end now */
@@ -1986,8 +1986,8 @@ again:
     /* else do buffer sync code */
     GstBuffer *buffer = GST_BUFFER_CAST (obj);
 
-    /* just get the times to see if we need syncing, if the start returns -1 we
-     * don't sync. */
+    /* just get the times to see if we need syncing, if the retuned start is -1
+     * we don't sync. */
     if (bclass->get_times)
       bclass->get_times (basesink, buffer, &start, &stop);
 
@@ -2536,7 +2536,8 @@ do_step:
   priv->eos_rtime = (do_sync ? rnext : GST_CLOCK_TIME_NONE);
 
   /* calculate inter frame spacing */
-  if (G_UNLIKELY (priv->prev_rstart != -1 && priv->prev_rstart < rstart)) {
+  if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (priv->prev_rstart) &&
+          priv->prev_rstart < rstart)) {
     GstClockTime in_diff;
 
     in_diff = rstart - priv->prev_rstart;
@@ -2552,8 +2553,8 @@ do_step:
   }
   priv->prev_rstart = rstart;
 
-  if (G_UNLIKELY (priv->earliest_in_time != -1
-          && rstart < priv->earliest_in_time))
+  if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (priv->earliest_in_time) &&
+          rstart < priv->earliest_in_time))
     goto qos_dropped;
 
 again:
