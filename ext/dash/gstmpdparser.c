@@ -2383,7 +2383,7 @@ gst_mpdparser_representation_get_mimetype (GstAdaptationSetNode * adapt_set,
     return GST_STREAM_AUDIO;
   if (strncmp_ext (mime, "video") == 0)
     return GST_STREAM_VIDEO;
-  if (strncmp_ext (mime, "application") == 0)
+  if (strncmp_ext (mime, "application") == 0 || strncmp_ext (mime, "text") == 0)
     return GST_STREAM_APPLICATION;
 
   return GST_STREAM_UNKNOWN;
@@ -5726,7 +5726,8 @@ gst_mpd_client_active_stream_contains_subtitles (GstActiveStream * stream)
   if (!mimeType)
     mimeType = stream->cur_adapt_set->RepresentationBase->mimeType;
 
-  if (g_strcmp0 (mimeType, "application/ttml+xml") == 0)
+  if (g_strcmp0 (mimeType, "application/ttml+xml") == 0 ||
+      g_strcmp0 (mimeType, "text/vtt") == 0)
     return TRUE;
 
   adapt_set_codecs = stream->cur_adapt_set->RepresentationBase->codecs;
@@ -5747,6 +5748,8 @@ gst_mpdparser_mimetype_to_caps (const gchar * mimeType)
     return "video/quicktime";
   } else if (strcmp (mimeType, "audio/mp4") == 0) {
     return "audio/x-m4a";
+  } else if (strcmp (mimeType, "text/vtt") == 0) {
+    return "application/x-subtitle-vtt";
   } else
     return mimeType;
 }
