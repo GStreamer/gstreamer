@@ -1479,6 +1479,16 @@ gst_avi_demux_do_index_stats (GstAviDemux * avi)
         stream->n_keyframes, (guint) sizeof (GstAviIndexEntry),
         (guint) (stream->idx_n * sizeof (GstAviIndexEntry)),
         (guint) (stream->idx_max * sizeof (GstAviIndexEntry)));
+
+    /* knowing all that we do, that also includes avg bitrate */
+    if (!stream->taglist) {
+      stream->taglist = gst_tag_list_new_empty ();
+    }
+    if (stream->total_bytes && stream->idx_duration)
+      gst_tag_list_add (stream->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_BITRATE,
+          (guint) gst_util_uint64_scale (stream->total_bytes * 8,
+              GST_SECOND, stream->idx_duration), NULL);
   }
   total_idx *= sizeof (GstAviIndexEntry);
 #ifndef GST_DISABLE_GST_DEBUG
