@@ -35,7 +35,7 @@ main (gint argc, gchar * argv[])
   gst_init (&argc, &argv);
 
   if (argc != 3) {
-    g_print ("usage: %s COMPLEXITY_ORDER N_ELEMENTS\n", argv[0]);
+    g_print ("Usage: %s COMPLEXITY_ORDER N_ELEMENTS\n", argv[0]);
     return 1;
   }
 
@@ -76,7 +76,7 @@ main (gint argc, gchar * argv[])
       e = gst_element_factory_make ("tee", NULL);
     } else {
       e = gst_element_factory_make ("fakesink", NULL);
-      g_object_set (e, "preroll-queue-len", 1, NULL);
+      g_object_set (e, "async", FALSE, NULL);
     }
     g_object_set (e, "silent", TRUE, NULL);
     new_src_list = g_slist_prepend (new_src_list, e);

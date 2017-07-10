@@ -20,12 +20,13 @@ exec guile -s $0 "$@"
 ;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 ;; Quick hack to make some data files that gnuplot can read from
-;; complexity. Guile 1.6.
+;; complexity. Guile 1.8.
 
 (use-modules (srfi srfi-13)
              (srfi srfi-1)
              (ice-9 optargs)
-             (ice-9 popen))
+             (ice-9 popen)
+             (ice-9 rdelim))
 
 (define *phases* '(create set run destroy))
 
