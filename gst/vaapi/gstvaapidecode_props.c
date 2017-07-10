@@ -22,6 +22,9 @@
  */
 
 #include "gstvaapidecode_props.h"
+#include "gstvaapidecode.h"
+
+#include <gst/vaapi/gstvaapidecoder_h264.h>
 
 enum
 {
@@ -53,12 +56,16 @@ gst_vaapi_decode_h264_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVaapiDecodeH264Private *priv;
+  GstVaapiDecoderH264 *decoder;
 
   priv = gst_vaapi_decode_h264_get_instance_private (object);
 
   switch (prop_id) {
     case GST_VAAPI_DECODER_H264_PROP_FORCE_LOW_LATENCY:
       priv->is_low_latency = g_value_get_boolean (value);
+      decoder = GST_VAAPI_DECODER_H264 (GST_VAAPIDECODE (object)->decoder);
+      if (decoder)
+        gst_vaapi_decoder_h264_set_low_latency (decoder, priv->is_low_latency);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
