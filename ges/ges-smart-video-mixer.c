@@ -104,6 +104,8 @@ parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info,
   if (!self->disable_zorder_alpha) {
     g_object_set (mixer_pad, "alpha", meta->alpha,
         "zorder", meta->zorder, NULL);
+  } else {
+    g_object_set (mixer_pad, "alpha", meta->alpha, NULL);
   }
 
   g_object_set (mixer_pad, "xpos", meta->posx, "ypos",

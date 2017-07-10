@@ -50,8 +50,7 @@ struct _GESVideoTransitionPrivate
   GESVideoStandardTransitionType pending_type;
 
   /* these enable video interpolation */
-  GstTimedValueControlSource *fade_in_control_source;
-  GstTimedValueControlSource *fade_out_control_source;
+  GstTimedValueControlSource *crossfade_control_source;
   GstTimedValueControlSource *smpte_control_source;
 
   /* so we can support changing between wipes */
@@ -193,8 +192,7 @@ ges_video_transition_init (GESVideoTransition * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_VIDEO_TRANSITION, GESVideoTransitionPrivate);
 
-  self->priv->fade_in_control_source = NULL;
-  self->priv->fade_out_control_source = NULL;
+  self->priv->crossfade_control_source = NULL;
   self->priv->smpte_control_source = NULL;
   self->priv->smpte = NULL;
   self->priv->mixer_sink = NULL;
@@ -232,14 +230,9 @@ ges_video_transition_dispose (GObject * object)
 
   GST_DEBUG ("disposing");
 
-  if (priv->fade_in_control_source) {
-    gst_object_unref (priv->fade_in_control_source);
-    priv->fade_in_control_source = NULL;
-  }
-
-  if (priv->fade_out_control_source) {
-    gst_object_unref (priv->fade_out_control_source);
-    priv->fade_out_control_source = NULL;
+  if (priv->crossfade_control_source) {
+    gst_object_unref (priv->crossfade_control_source);
+    priv->crossfade_control_source = NULL;
   }
 
   if (priv->smpte_control_source) {
@@ -307,14 +300,17 @@ ges_video_transition_set_property (GObject * object,
 
 static GstTimedValueControlSource *
 set_interpolation (GstObject * element, GESVideoTransitionPrivate * priv,
-    const gchar * propname)
+    const gchar * propname, gboolean absolute)
 {
   GstControlSource *control_source;
 
   g_object_set (element, propname, (gfloat) 0.0, NULL);
 
   control_source = gst_interpolation_control_source_new ();
+
   gst_object_add_control_binding (GST_OBJECT (element),
+      absolute ? gst_direct_control_binding_new_absolute (GST_OBJECT (element),
+          propname, control_source) :
       gst_direct_control_binding_new (GST_OBJECT (element), propname,
           control_source));
   g_object_set (control_source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
@@ -338,8 +334,14 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   topbin = gst_bin_new ("transition-bin");
 
-  iconva = gst_element_factory_make ("videoconvert", "tr-csp-a");
-  iconvb = gst_element_factory_make ("videoconvert", "tr-csp-b");
+  iconva =
+      gst_parse_bin_from_description
+      ("videoconvert ! capsfilter caps=\"video/x-raw,format=BGRA\"", TRUE,
+      NULL);
+  iconvb =
+      gst_parse_bin_from_description
+      ("videoconvert ! capsfilter caps=\"video/x-raw,format=BGRA\"", TRUE,
+      NULL);
   priv->positioner =
       gst_element_factory_make ("framepositioner", "frame_tagger");
   g_object_set (priv->positioner, "zorder",
@@ -349,7 +351,10 @@ ges_video_transition_create_element (GESTrackElement * object)
   gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, priv->positioner,
       oconv, NULL);
 
-  mixer = ges_smart_mixer_new (NULL);
+  mixer =
+      g_object_new (GES_TYPE_SMART_MIXER, "name",
+      GES_TIMELINE_ELEMENT_NAME (self), NULL);
+  g_object_set (GES_SMART_MIXER (mixer)->mixer, "background", 3, NULL);
   GES_SMART_MIXER (mixer)->disable_zorder_alpha = TRUE;
   gst_bin_add (GST_BIN (topbin), mixer);
 
@@ -385,12 +390,11 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   /* set up interpolation */
 
-  priv->fade_out_control_source =
-      set_interpolation (GST_OBJECT (priv->mixer_sinka), priv, "alpha");
-  priv->fade_in_control_source =
-      set_interpolation (GST_OBJECT (priv->mixer_sinkb), priv, "alpha");
+  priv->crossfade_control_source =
+      set_interpolation (GST_OBJECT (priv->mixer_sinka), priv,
+      "crossfade-ratio", TRUE);
   priv->smpte_control_source =
-      set_interpolation (GST_OBJECT (priv->smpte), priv, "position");
+      set_interpolation (GST_OBJECT (priv->smpte), priv, "position", FALSE);
   priv->mixer = gst_object_ref (mixer);
 
   if (priv->pending_type)
@@ -458,16 +462,12 @@ ges_video_transition_update_control_sources (GESVideoTransition * self,
   GST_LOG ("updating controller");
   if (type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
     ges_video_transition_update_control_source
-        (priv->fade_in_control_source, duration, 0.0, 1.0);
-    ges_video_transition_update_control_source
-        (priv->fade_out_control_source, duration, 1.0, 0.0);
+        (priv->crossfade_control_source, duration, 1.0, 0.0);
     ges_video_transition_update_control_source (priv->smpte_control_source,
         duration, 0.0, 0.0);
   } else {
     ges_video_transition_update_control_source
-        (priv->fade_in_control_source, duration, 1.0, 1.0);
-    ges_video_transition_update_control_source
-        (priv->fade_out_control_source, duration, 1.0, 1.0);
+        (priv->crossfade_control_source, duration, 1.0, 1.0);
     ges_video_transition_update_control_source (priv->smpte_control_source,
         duration, 1.0, 0.0);
   }
