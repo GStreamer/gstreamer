@@ -40,6 +40,21 @@
 
 static GMainLoop *main_loop;
 
+/* fixtures */
+
+static void
+test_setup (void)
+{
+  main_loop = g_main_loop_new (NULL, FALSE);
+}
+
+static void
+test_teardown (void)
+{
+  g_main_loop_unref (main_loop);
+  main_loop = NULL;
+}
+
 /* make sure downstream gets a CAPS event before buffers are sent */
 GST_START_TEST (test_caps)
 {
@@ -261,7 +276,6 @@ GST_START_TEST (test_event)
   format = GST_FORMAT_UNDEFINED;
   position = -1;
 
-  main_loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (bus, "message::segment-done",
       (GCallback) test_event_message_received, bin);
   g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
@@ -293,7 +307,6 @@ GST_START_TEST (test_event)
   ck_assert_int_eq (position, 2 * GST_SECOND);
 
   /* cleanup */
-  g_main_loop_unref (main_loop);
   gst_consistency_checker_free (chk_1);
   gst_consistency_checker_free (chk_2);
   gst_consistency_checker_free (chk_3);
@@ -394,7 +407,6 @@ GST_START_TEST (test_play_twice)
 
   play_count = 0;
 
-  main_loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (bus, "message::segment-done",
       (GCallback) test_play_twice_message_received, bin);
   g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
@@ -429,7 +441,6 @@ GST_START_TEST (test_play_twice)
   ck_assert_int_eq (play_count, 2);
 
   /* cleanup */
-  g_main_loop_unref (main_loop);
   gst_consistency_checker_free (consist);
   gst_event_unref (play_seek_event);
   gst_bus_remove_signal_watch (bus);
@@ -480,7 +491,6 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
       GST_SEEK_TYPE_SET, (GstClockTime) 0,
       GST_SEEK_TYPE_SET, (GstClockTime) 2 * GST_SECOND);
 
-  main_loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (bus, "message::segment-done",
       (GCallback) test_play_twice_message_received, bin);
   g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
@@ -535,7 +545,6 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
   /* cleanup */
-  g_main_loop_unref (main_loop);
   gst_event_unref (play_seek_event);
   gst_consistency_checker_free (consist);
   gst_bus_remove_signal_watch (bus);
@@ -606,7 +615,6 @@ GST_START_TEST (test_live_seeking)
   };
 
   GST_INFO ("preparing test");
-  main_loop = NULL;
   play_seek_event = NULL;
 
   /* build pipeline */
@@ -671,7 +679,6 @@ GST_START_TEST (test_live_seeking)
       GST_SEEK_TYPE_SET, (GstClockTime) 0,
       GST_SEEK_TYPE_SET, (GstClockTime) 2 * GST_SECOND);
 
-  main_loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
   g_signal_connect (bus, "message::warning", (GCallback) message_received, bin);
   g_signal_connect (bus, "message::eos",
@@ -719,8 +726,6 @@ GST_START_TEST (test_live_seeking)
   /* cleanup */
   GST_INFO ("cleaning up");
   gst_consistency_checker_free (consist);
-  if (main_loop)
-    g_main_loop_unref (main_loop);
   if (play_seek_event)
     gst_event_unref (play_seek_event);
   gst_bus_remove_signal_watch (bus);
@@ -765,7 +770,6 @@ GST_START_TEST (test_add_pad)
   srcpad = gst_element_get_static_pad (audiomixer, "src");
   gst_object_unref (srcpad);
 
-  main_loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (bus, "message::segment-done", (GCallback) message_received,
       bin);
   g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
@@ -804,7 +808,6 @@ GST_START_TEST (test_add_pad)
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
   /* cleanup */
-  g_main_loop_unref (main_loop);
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
@@ -847,7 +850,6 @@ GST_START_TEST (test_remove_pad)
   srcpad = gst_element_get_static_pad (audiomixer, "src");
   gst_object_unref (srcpad);
 
-  main_loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (bus, "message::segment-done", (GCallback) message_received,
       bin);
   g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
@@ -885,7 +887,6 @@ GST_START_TEST (test_remove_pad)
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
   /* cleanup */
-  g_main_loop_unref (main_loop);
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (G_OBJECT (bus));
   gst_object_unref (G_OBJECT (bin));
@@ -1228,7 +1229,6 @@ GST_START_TEST (test_loop)
       GST_SEEK_TYPE_SET, (GstClockTime) 0,
       GST_SEEK_TYPE_SET, (GstClockTime) 1 * GST_SECOND);
 
-  main_loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (bus, "message::segment-done",
       (GCallback) loop_segment_done, bin);
   g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
@@ -1257,7 +1257,6 @@ GST_START_TEST (test_loop)
   state_res = gst_element_set_state (bin, GST_STATE_NULL);
 
   /* cleanup */
-  g_main_loop_unref (main_loop);
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
@@ -1361,8 +1360,6 @@ run_sync_test (SendBuffersFunction send_buffers,
 
   GST_INFO ("preparing test");
 
-  main_loop = g_main_loop_new (NULL, FALSE);
-
   /* build pipeline */
   bin = gst_pipeline_new ("pipeline");
   bus = gst_element_get_bus (bin);
@@ -1451,7 +1448,6 @@ run_sync_test (SendBuffersFunction send_buffers,
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
-  g_main_loop_unref (main_loop);
 }
 
 static void
@@ -1946,6 +1942,7 @@ audiomixer_suite (void)
   tcase_add_test (tc_chain, test_sync_unaligned);
   tcase_add_test (tc_chain, test_segment_base_handling);
   tcase_add_test (tc_chain, test_sinkpad_property_controller);
+  tcase_add_checked_fixture (tc_chain, test_setup, test_teardown);
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
