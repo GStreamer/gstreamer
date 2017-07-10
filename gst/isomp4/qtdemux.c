@@ -10317,7 +10317,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                   /* parse, if found */
                   GstBuffer *buf;
 
-                  GST_DEBUG_OBJECT (qtdemux, "found avcC codec_data in stsd");
+                  GST_DEBUG_OBJECT (qtdemux, "found hvcC codec_data in stsd");
 
                   /* First 4 bytes are the length of the atom, the next 4 bytes
                    * are the fourcc, the next 1 byte is the version, and the
