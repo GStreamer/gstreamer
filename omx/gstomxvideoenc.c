@@ -1775,7 +1775,17 @@ static gboolean
 gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query)
 {
+  GstOMXVideoEnc *self = GST_OMX_VIDEO_ENC (encoder);
+  guint num_buffers;
+  gsize size = self->input_state->info.size;
+
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  num_buffers = self->enc_in_port->port_def.nBufferCountMin + 1;
+  GST_DEBUG_OBJECT (self,
+      "request at least %d buffers of size %" G_GSIZE_FORMAT, num_buffers,
+      size);
+  gst_query_add_allocation_pool (query, NULL, size, num_buffers, 0);
 
   return
       GST_VIDEO_ENCODER_CLASS
