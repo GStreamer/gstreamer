@@ -2228,6 +2228,7 @@ gst_adaptive_demux_stream_update_current_bitrate (GstAdaptiveDemux * demux,
   if (demux->connection_speed) {
     GST_LOG_OBJECT (demux, "Connection-speed is set to %u kbps, using it",
         demux->connection_speed / 1000);
+    stream->current_download_rate = demux->connection_speed;
     return demux->connection_speed;
   }
 
