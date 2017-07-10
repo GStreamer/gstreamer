@@ -867,7 +867,7 @@ gst_directsound_src_reset (GstAudioSrc * asrc)
     /*reset the buffer */
     hRes = IDirectSoundCaptureBuffer_Lock (dsoundsrc->pDSBSecondary,
         dsoundsrc->current_circular_offset, dsoundsrc->buffer_size,
-        pLockedBuffer, &dwSizeBuffer, NULL, NULL, 0L);
+        &pLockedBuffer, &dwSizeBuffer, NULL, NULL, 0L);
 
     if (SUCCEEDED (hRes)) {
       memset (pLockedBuffer, 0, dwSizeBuffer);
