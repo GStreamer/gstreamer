@@ -47,7 +47,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>text/vtt</details>
+          <details>application/x-subtitle-vtt</details>
         </caps>
       </pads>
     </element>
