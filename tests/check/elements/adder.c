@@ -117,6 +117,7 @@ play_and_wait (GstElement * pipeline)
   state_res = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
+  GST_INFO ("running main loop");
   g_main_loop_run (main_loop);
 
   state_res = gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -244,7 +245,6 @@ GST_START_TEST (test_event)
   GstElement *bin, *src1, *src2, *adder, *sink;
   GstBus *bus;
   GstEvent *seek_event;
-  GstStateChangeReturn state_res;
   gboolean res;
   GstPad *srcpad, *sinkpad;
   GstStreamConsistency *chk_1, *chk_2, *chk_3;
@@ -313,14 +313,7 @@ GST_START_TEST (test_event)
   fail_unless (res == TRUE, NULL);
 
   /* run pipeline */
-  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
-  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
-
-  GST_INFO ("running main loop");
-  g_main_loop_run (main_loop);
-
-  state_res = gst_element_set_state (bin, GST_STATE_NULL);
-  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+  play_and_wait (bin);
 
   ck_assert_int_eq (position, 2 * GST_SECOND);
 
@@ -550,6 +543,9 @@ GST_START_TEST (test_live_seeking)
     "pulseaudiosrc"
   };
 
+  GST_INFO ("preparing test");
+  play_seek_event = NULL;
+
   /* build pipeline */
   bin = gst_pipeline_new ("pipeline");
   bus = gst_element_get_bus (bin);
@@ -621,7 +617,8 @@ GST_START_TEST (test_live_seeking)
   /* cleanup */
   GST_INFO ("cleaning up");
   gst_consistency_checker_free (consist);
-  gst_event_unref (play_seek_event);
+  if (play_seek_event)
+    gst_event_unref (play_seek_event);
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
