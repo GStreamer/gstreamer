@@ -1189,6 +1189,7 @@ gst_kms_sink_copy_to_dumb_buffer (GstKMSSink * self, GstBuffer * inbuf)
   gboolean success;
   GstBuffer *buf;
 
+  buf = NULL;
   if (!gst_buffer_pool_set_active (self->pool, TRUE))
     goto activate_pool_failed;
 
