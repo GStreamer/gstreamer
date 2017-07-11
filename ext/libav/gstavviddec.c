@@ -614,7 +614,6 @@ gst_ffmpegvideodec_prepare_dr_pool (GstFFMpegVidDec * ffmpegdec,
   gint width, height;
   gint linesize_align[4];
   gint i;
-  guint edge;
   gsize max_align;
 
   width = GST_VIDEO_INFO_WIDTH (info);
@@ -624,22 +623,10 @@ gst_ffmpegvideodec_prepare_dr_pool (GstFFMpegVidDec * ffmpegdec,
   avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
       linesize_align);
 
-  if (ffmpegdec->context->flags & CODEC_FLAG_EMU_EDGE)
-    edge = 0;
-  else
-    edge = avcodec_get_edge_width ();
-
-  /* increase the size for the padding */
-  width += edge << 1;
-  height += edge << 1;
-
-  align.padding_top = edge;
-  align.padding_left = edge;
-  align.padding_right = width - GST_VIDEO_INFO_WIDTH (info) - edge;
-  align.padding_bottom = height - GST_VIDEO_INFO_HEIGHT (info) - edge;
-
-  /* add extra padding to match libav buffer allocation sizes */
-  align.padding_bottom++;
+  align.padding_top = 0;
+  align.padding_left = 0;
+  align.padding_right = width - GST_VIDEO_INFO_WIDTH (info);
+  align.padding_bottom = height - GST_VIDEO_INFO_HEIGHT (info);
 
   gst_buffer_pool_config_get_allocator (config, &allocator, &params);
 
@@ -2077,6 +2064,7 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
         gst_buffer_unref (tmp);
 
         if (same_stride) {
+          GST_DEBUG_OBJECT (ffmpegdec, "Using downstream pool.");
           if (ffmpegdec->internal_pool)
             gst_object_unref (ffmpegdec->internal_pool);
           ffmpegdec->internal_pool = gst_object_ref (pool);
@@ -2091,6 +2079,7 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   if (have_videometa && ffmpegdec->internal_pool
       && ffmpegdec->pool_width == state->info.width
       && ffmpegdec->pool_height == state->info.height) {
+    GST_DEBUG_OBJECT (ffmpegdec, "Pushing from internal pool");
     update_pool = TRUE;
     gst_object_unref (pool);
     pool = gst_object_ref (ffmpegdec->internal_pool);
