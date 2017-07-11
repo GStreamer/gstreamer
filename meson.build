@@ -15,6 +15,7 @@ else
   gst_version_nano = 0
 endif
 
+libva_req = ['>= 0.30.4', '!= 0.99.0']
 glib_req = '>= 2.40.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
@@ -37,7 +38,7 @@ gstcodecparsers_dep = dependency('gstreamer-codecparsers-1.0', version : gst_req
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
     fallback : ['gst-plugins-bad', 'gstgl_dep'], required: false)
 gmodule_dep = dependency('gmodule-2.0', required: false)
-libva_dep = dependency('libva', version: ['>= 0.30.4', '< 0.99.0'])
+libva_dep = dependency('libva', version: libva_req)
 
 libva_drm_dep = dependency('libva-drm', version: '>= 0.33.0', required: false)
 libva_wayland_dep = dependency('libva-wayland', version: '>= 0.33.0', required: false)
