@@ -87,11 +87,11 @@ configured the device with the samplerate in the caps.
 is not prerolled. The sink will commit state to `PLAYING` when it prerolls.
 * src: *PAUSED→PLAYING*: starts pushing buffers.
 
-- since the sink is still performing a state change from `READY→PAUSED`, it remains ASYNC. The pending state will be set to
-PLAYING.
+- since the sink is still performing a state change from `READY→PAUSED`, it remains `ASYNC`. The pending state will be set to
+`PLAYING`.
 
 - The clock starts running as soon as all the elements have been
-set to PLAYING.
+set to `PLAYING`.
 
 - the source is a live source with a latency. Since it is
 synchronized with the clock, it will produce a buffer with
@@ -99,13 +99,13 @@ timestamp 0 and duration D after time D, ie. it will only be
 able to produce the last sample of the buffer (with timestamp D)
 at time D. This latency depends on the size of the buffer.
 
-- the sink will receive the buffer with timestamp 0 at time \>= D.
+- the sink will receive the buffer with timestamp 0 at time `>= D`.
 At this point the buffer is too late already and might be
 dropped. This state of constantly dropping data will not change
 unless a constant latency correction is added to the incoming
 buffer timestamps.
 
-The problem is due to the fact that the sink is set to (pending) PLAYING
+The problem is due to the fact that the sink is set to (pending) `PLAYING`
 without being prerolled, which only happens in live pipelines.
 
 ### Example 2
@@ -133,7 +133,7 @@ have them played back synchronized again.
 ```
 
 The state changes happen in the same way as example 1. Both sinks end up with
-pending state of `PLAYING` and a return value of ASYNC until they receive the
+pending state of `PLAYING` and a return value of `ASYNC` until they receive the
 first buffer.
 
 For audio and video to be played in sync, both sinks must compensate for the
@@ -141,7 +141,7 @@ latency of its source but must also use exactly the same latency correction.
 
 Suppose asrc has a latency of 20ms and vsrc a latency of 33ms, the total
 latency in the pipeline has to be at least 33ms. This also means that the
-pipeline must have at least a 33 - 20 = 13ms buffering on the audio stream or
+pipeline must have at least a `33 - 20 = 13ms` buffering on the audio stream or
 else the audio src will underrun while the audiosink waits for the previous
 sample to play.
 
@@ -165,7 +165,7 @@ connected to live sinks (vsink, sink).
 ```
 
 The state changes happen in the same way as example 1. Except sink will be
-able to preroll (commit its state to PAUSED).
+able to preroll (commit its state to `PAUSED`).
 
 In this case sink will have no latency but vsink will. The total latency
 should be that of vsink.
@@ -173,7 +173,7 @@ should be that of vsink.
 Note that because of the presence of a live source (vsrc), the pipeline can be
 set to playing before the sink is able to preroll. Without compensation for the
 live source, this might lead to synchronisation problems because the latency
-should be configured in the element before it can go to PLAYING.
+should be configured in the element before it can go to `PLAYING`.
 
 ### Example 4
 
@@ -195,7 +195,7 @@ source is connected to a live sink and the live source to a non-live sink.
 ```
 
 The state changes happen in the same way as example 3. Sink will be
-able to preroll (commit its state to PAUSED). files will not be able to
+able to preroll (commit its state to `PAUSED`). files will not be able to
 preroll.
 
 sink will have no latency since it is not connected to a live source. files
@@ -211,7 +211,7 @@ prerolled.
 
 A sink is never set to `PLAYING` before it is prerolled. In order to do
 this, the pipeline (at the `GstBin` level) keeps track of all elements
-that require preroll (the ones that return ASYNC from the state change).
+that require preroll (the ones that return `ASYNC` from the state change).
 These elements posted an `ASYNC_START` message without a matching
 `ASYNC_DONE` one.
 
@@ -236,9 +236,9 @@ currently used for going from `PAUSED→PLAYING` in a non-live pipeline).
 
 The pipeline latency is queried with the `LATENCY` query.
 
-* **`live`** `G_TYPE_BOOLEAN` (default FALSE): - if a live element is found upstream
+* **`live`** `G_TYPE_BOOLEAN` (default `FALSE`): - if a live element is found upstream
 
-* **`min-latency`** `G_TYPE_UINT64` (default 0, must not be NONE): - the minimum
+* **`min-latency`** `G_TYPE_UINT64` (default 0, must not be `NONE`): - the minimum
 latency in the pipeline, meaning the minimum time downstream elements
 synchronizing to the clock have to wait until they can be sure all data
 for the current running time has been received.
@@ -257,7 +257,7 @@ current element:
 min_latency = upstream_min_latency + own_min_latency
 ```
 
-* **`max-latency`** `G_TYPE_UINT64` (default 0, NONE meaning infinity): - the
+* **`max-latency`** `G_TYPE_UINT64` (default 0, `NONE` meaning infinity): - the
 maximum latency in the pipeline, meaning the maximum time an element
 synchronizing to the clock is allowed to wait for receiving all data for the
 current running time. Waiting for a longer time will result in data loss,
@@ -311,7 +311,7 @@ max_latency = MIN (upstream_max_latency, own_max_latency)
 
 ## Event
 
-The latency in the pipeline is configured with the LATENCY event, which
+The latency in the pipeline is configured with the `LATENCY` event, which
 contains the following fields:
 
 * **`latency`** `G_TYPE_UINT64`: the configured latency in the pipeline
@@ -328,13 +328,13 @@ the global latency as follows:
 - sources set their minimum and maximum latency
 - other elements add their own values as described above
 - latency = MAX (all min latencies)
-- if MIN (all max latencies) \< latency, we have an impossible
+- `if MIN (all max latencies) < latency`, we have an impossible
 situation and we must generate an error indicating that this
 pipeline cannot be played. This usually means that there is not
 enough buffering in some chain of the pipeline. A queue can be added
 to those chains.
 
-The sinks gather this information with a LATENCY query upstream.
+The sinks gather this information with a `LATENCY` query upstream.
 Intermediate elements pass the query upstream and add the amount of
 latency they add to the result.
 
@@ -350,15 +350,15 @@ ex2: sink1: [20 - 50] sink2: [33 - 40]
     MIN (50, 40) = 40 >= 33 -> latency = 33
 ```
 
-The latency is set on the pipeline by sending a LATENCY event to the
+The latency is set on the pipeline by sending a `LATENCY` event to the
 sinks in the pipeline. This event configures the total latency on the
-sinks. The sink forwards this LATENCY event upstream so that
+sinks. The sink forwards this `LATENCY` event upstream so that
 intermediate elements can configure themselves as well.
 
 After this step, the pipeline continues setting the pending state on its
 elements.
 
-A sink adds the latency value, received in the LATENCY event, to the
+A sink adds the latency value, received in the `LATENCY` event, to the
 times used for synchronizing against the clock. This will effectively
 delay the rendering of the buffer with the required latency. Since this
 delay is the same for all sinks, all sinks will render data relatively
@@ -366,9 +366,9 @@ synchronised.
 
 ## Flushing a playing pipeline
 
-We can implement resynchronisation after an uncontrolled FLUSH in (part
+We can implement resynchronisation after an uncontrolled `FLUSH` in (part
 of) a pipeline in the same way. Indeed, when a flush is performed on a
-PLAYING live element, a new base time must be distributed to this
+`PLAYING` live element, a new base time must be distributed to this
 element.
 
 A flush in a pipeline can happen in the following cases:
