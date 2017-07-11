@@ -76,25 +76,22 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   /* register clip classes with the system */
 
-  GES_TYPE_TEST_CLIP;
-  GES_TYPE_URI_CLIP;
-  GES_TYPE_TITLE_CLIP;
-  GES_TYPE_TRANSITION_CLIP;
-  GES_TYPE_OVERLAY_CLIP;
-  GES_TYPE_OVERLAY_TEXT_CLIP;
+  g_type_class_ref (GES_TYPE_TEST_CLIP);
+  g_type_class_ref (GES_TYPE_URI_CLIP);
+  g_type_class_ref (GES_TYPE_TITLE_CLIP);
+  g_type_class_ref (GES_TYPE_TRANSITION_CLIP);
+  g_type_class_ref (GES_TYPE_OVERLAY_CLIP);
+  g_type_class_ref (GES_TYPE_OVERLAY_TEXT_CLIP);
 
-  GES_TYPE_GROUP;
+  g_type_class_ref (GES_TYPE_GROUP);
 
   /* register formatter types with the system */
-  GES_TYPE_PITIVI_FORMATTER;
-  GES_TYPE_COMMAND_LINE_FORMATTER;
-  GES_TYPE_XML_FORMATTER;
+  g_type_class_ref (GES_TYPE_PITIVI_FORMATTER);
+  g_type_class_ref (GES_TYPE_COMMAND_LINE_FORMATTER);
+  g_type_class_ref (GES_TYPE_XML_FORMATTER);
 
   /* Register track elements */
-  GES_TYPE_EFFECT;
-
-  /* Register interfaces */
-  GES_TYPE_META_CONTAINER;
+  g_type_class_ref (GES_TYPE_EFFECT);
 
   ges_asset_cache_init ();
 
@@ -149,6 +146,23 @@ void
 ges_deinit (void)
 {
   _ges_uri_asset_cleanup ();
+
+  g_type_class_unref (g_type_class_peek (GES_TYPE_TEST_CLIP));
+  g_type_class_unref (g_type_class_peek (GES_TYPE_URI_CLIP));
+  g_type_class_unref (g_type_class_peek (GES_TYPE_TITLE_CLIP));
+  g_type_class_unref (g_type_class_peek (GES_TYPE_TRANSITION_CLIP));
+  g_type_class_unref (g_type_class_peek (GES_TYPE_OVERLAY_CLIP));
+  g_type_class_unref (g_type_class_peek (GES_TYPE_OVERLAY_TEXT_CLIP));
+
+  g_type_class_unref (g_type_class_peek (GES_TYPE_GROUP));
+
+  /* register formatter types with the system */
+  g_type_class_unref (g_type_class_peek (GES_TYPE_PITIVI_FORMATTER));
+  g_type_class_unref (g_type_class_peek (GES_TYPE_COMMAND_LINE_FORMATTER));
+  g_type_class_unref (g_type_class_peek (GES_TYPE_XML_FORMATTER));
+
+  /* Register track elements */
+  g_type_class_unref (g_type_class_peek (GES_TYPE_EFFECT));
 }
 
 #ifndef GST_DISABLE_OPTION_PARSING
