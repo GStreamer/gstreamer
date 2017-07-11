@@ -7,6 +7,10 @@ pkgconf.set('includedir', '${prefix}/@0@'.format(get_option('includedir')))
 pkgconf.set('GST_API_VERSION', apiversion)
 pkgconf.set('VERSION', gst_version)
 
+# Requires.private
+pkgconf.set('UNWIND_REQUIRE', cdata.has('HAVE_UNWIND') ? 'libunwind' : '')
+pkgconf.set('DW_REQUIRE', cdata.has('HAVE_DW') ? 'libdw' : '')
+
 # needed for generating -uninstalled.pc files
 pkgconf.set('abs_top_builddir', join_paths(meson.current_build_dir(), '..'))
 pkgconf.set('abs_top_srcdir', join_paths(meson.current_source_dir(), '..'))
