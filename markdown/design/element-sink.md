@@ -15,24 +15,24 @@ treated specially by the GStreamer core.
 
 ## state changes
 
-A sink always returns ASYNC from the state change to PAUSED, this
-includes a state change from READY→PAUSED and PLAYING→PAUSED. The reason
+A sink always returns `ASYNC` from the state change to `PAUSED`, this
+includes a state change from `READY→PAUSED` and `PLAYING→PAUSED`. The reason
 for this is that this way we can detect when the first buffer or event
 arrives in the sink when the state change completes.
 
-A sink should block on the first EOS event or buffer received in the
-READY→PAUSED state before commiting the state to PAUSED.
+A sink should block on the first `EOS` event or buffer received in the
+`READY→PAUSED` state before commiting the state to `PAUSED`.
 
-FLUSHING events have to be handled out of sync with the buffer flow and
+`FLUSHING` events have to be handled out of sync with the buffer flow and
 take no part in the preroll procedure.
 
-Events other than EOS do not complete the preroll stage.
+Events other than `EOS` do not complete the preroll stage.
 
 ## sink overview
 
   - TODO: `PREROLL_LOCK` can be removed and we can safely use the `STREAM_LOCK`.
 
-``````
+```c
   # Commit the state. We return TRUE if we can continue
   # streaming, FALSE in the case we go to a READY or NULL state.
   # if we go to PLAYING, we don't need to block on preroll.
