@@ -30,8 +30,6 @@ GST_START_TEST (test_object_properties)
   GESLayer *layer;
   GESTrackElement *trackelement;
 
-  ges_init ();
-
   track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
 
@@ -115,8 +113,6 @@ GST_START_TEST (test_split_direct_bindings)
   GESAsset *asset;
 
   GESTrackElement *element;
-
-  ges_init ();
 
   fail_unless ((timeline = ges_timeline_new ()));
   fail_unless ((layer = ges_layer_new ()));
@@ -202,8 +198,6 @@ GST_START_TEST (test_split_direct_absolute_bindings)
 
   GESTrackElement *element;
 
-  ges_init ();
-
   fail_unless ((timeline = ges_timeline_new ()));
   fail_unless ((layer = ges_layer_new ()));
   fail_unless (ges_timeline_add_track (timeline,
@@ -283,8 +277,6 @@ GST_START_TEST (test_split_object)
   GESClip *clip, *splitclip;
   GList *splittrackelements;
   GESTrackElement *trackelement, *splittrackelement;
-
-  ges_init ();
 
   layer = ges_layer_new ();
   fail_unless (layer != NULL);
@@ -376,8 +368,6 @@ GST_START_TEST (test_clip_group_ungroup)
   GESLayer *layer;
   GESContainer *regrouped_clip;
   GESTrack *audio_track, *video_track;
-
-  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -509,8 +499,6 @@ GST_START_TEST (test_clip_refcount_remove_child)
   gboolean called;
   GESTrackElement *effect;
 
-  ges_init ();
-
   clip = GES_CLIP (ges_test_clip_new ());
   track = GES_TRACK (ges_audio_track_new ());
   effect = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
@@ -543,8 +531,6 @@ GST_START_TEST (test_clip_find_track_element)
   GESTrack *track, *track1, *track2;
 
   GESTrackElement *effect, *effect1, *effect2, *foundelem;
-
-  ges_init ();
 
   clip = GES_CLIP (ges_test_clip_new ());
   track = GES_TRACK (ges_audio_track_new ());
@@ -609,8 +595,6 @@ GST_START_TEST (test_effects_priorities)
   GESLayer *layer, *layer1;
 
   GESTrackElement *effect, *effect1, *effect2;
-
-  ges_init ();
 
   clip = GES_CLIP (ges_test_clip_new ());
   audio_track = GES_TRACK (ges_audio_track_new ());
@@ -698,6 +682,8 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges-clip");
   TCase *tc_chain = tcase_create ("clip");
+
+  ges_init ();
 
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");

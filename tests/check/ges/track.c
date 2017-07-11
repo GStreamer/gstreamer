@@ -41,7 +41,6 @@ GST_START_TEST (test_update_restriction_caps)
   GstCaps *new;
   GstCaps *current;
 
-  ges_init ();
   track = GES_TRACK (ges_audio_track_new ());
 
   original = gst_caps_from_string ("audio/x-raw, format=S32LE");
@@ -94,6 +93,7 @@ ges_suite (void)
   Suite *s = suite_create ("ges-track");
   TCase *tc_chain = tcase_create ("track");
 
+  ges_init ();
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");
   }

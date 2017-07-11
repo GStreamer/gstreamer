@@ -27,8 +27,6 @@ GST_START_TEST (test_test_source_basic)
 {
   GESTestClip *source;
 
-  ges_init ();
-
   source = ges_test_clip_new ();
   fail_unless (source != NULL);
 
@@ -44,8 +42,6 @@ GST_START_TEST (test_test_source_properties)
   GESTimeline *timeline;
   GESLayer *layer;
   GESTrackElement *trackelement;
-
-  ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
@@ -128,8 +124,6 @@ GST_START_TEST (test_test_source_in_layer)
   GESTestClip *source;
   GESVideoTestPattern ptrn;
   gdouble freq, volume;
-
-  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -258,8 +252,6 @@ GST_START_TEST (test_gap_filling_basic)
   GstElement *nlesrc, *nlesrc1, *gap = NULL;
   GESTrackElement *trackelement, *trackelement1, *trackelement2;
 
-  ges_init ();
-
   track = GES_TRACK (ges_audio_track_new ());
   fail_unless (track != NULL);
 
@@ -362,8 +354,6 @@ GST_START_TEST (test_gap_filling_empty_track)
   GESLayer *layer;
   GESClip *clip;
 
-  ges_init ();
-
   track = GES_TRACK (ges_audio_track_new ());
 
   layer = ges_layer_new ();
@@ -405,6 +395,7 @@ ges_suite (void)
   Suite *s = suite_create ("ges-backgroundsource");
   TCase *tc_chain = tcase_create ("backgroundsource");
 
+  ges_init ();
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");
   }

@@ -25,8 +25,6 @@ GST_START_TEST (test_overlay_basic)
 {
   GESTextOverlayClip *source;
 
-  ges_init ();
-
   source = ges_text_overlay_clip_new ();
   fail_unless (source != NULL);
 
@@ -42,8 +40,6 @@ GST_START_TEST (test_overlay_properties)
   GESTimeline *timeline;
   GESLayer *layer;
   GESTrackElement *trackelement;
-
-  ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_VIDEO, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
@@ -117,8 +113,6 @@ GST_START_TEST (test_overlay_in_layer)
   guint32 color;
   gdouble xpos;
   gdouble ypos;
-
-  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = (GESLayer *) ges_layer_new ();
@@ -206,6 +200,8 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges-overlays");
   TCase *tc_chain = tcase_create ("overlays");
+
+  ges_init ();
 
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");

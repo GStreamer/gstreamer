@@ -31,8 +31,6 @@ GST_START_TEST (test_layer_properties)
   GESTrackElement *trackelement;
   GESClip *clip;
 
-  ges_init ();
-
   /* Timeline and 1 Layer */
   timeline = ges_timeline_new ();
   layer = (GESLayer *) ges_layer_new ();
@@ -120,8 +118,6 @@ GST_START_TEST (test_layer_priorities)
   GstElement *nleobj1, *nleobj2, *nleobj3;
   guint prio1, prio2, prio3;
   GList *objs;
-
-  ges_init ();
 
   /* Timeline and 3 Layer */
   timeline = ges_timeline_new ();
@@ -252,8 +248,6 @@ GST_START_TEST (test_timeline_auto_transition)
   GESTimeline *timeline;
   GESLayer *layer, *layer1, *layer2;
 
-  ges_init ();
-
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   fail_unless (GES_IS_ASSET (asset));
 
@@ -315,8 +309,6 @@ GST_START_TEST (test_single_layer_automatic_transition)
   GESClip *transition;
   GESLayer *layer;
   GESTimelineElement *src, *src1, *src2;
-
-  ges_init ();
 
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   fail_unless (GES_IS_ASSET (asset));
@@ -711,8 +703,6 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GESClip *transition;
   GESLayer *layer, *layer1;
   GESTimelineElement *src, *src1, *src2, *src3;
-
-  ges_init ();
 
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   fail_unless (GES_IS_ASSET (asset));
@@ -1201,8 +1191,6 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   GESClip *transition;
   GESTimelineElement *src, *src1, *src2, *src3;
 
-  ges_init ();
-
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   transition_asset =
       ges_asset_request (GES_TYPE_TRANSITION_CLIP, "crossfade", NULL);
@@ -1429,8 +1417,6 @@ GST_START_TEST (test_layer_meta_string)
   GESLayer *layer;
   const gchar *result;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
@@ -1452,8 +1438,6 @@ GST_START_TEST (test_layer_meta_boolean)
   GESLayer *layer;
   gboolean result;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
@@ -1473,8 +1457,6 @@ GST_START_TEST (test_layer_meta_int)
   GESTimeline *timeline;
   GESLayer *layer;
   gint result;
-
-  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
@@ -1496,8 +1478,6 @@ GST_START_TEST (test_layer_meta_uint)
   GESLayer *layer;
   guint result;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
@@ -1517,8 +1497,6 @@ GST_START_TEST (test_layer_meta_int64)
   GESTimeline *timeline;
   GESLayer *layer;
   gint64 result;
-
-  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
@@ -1540,8 +1518,6 @@ GST_START_TEST (test_layer_meta_uint64)
   GESLayer *layer;
   guint64 result;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
@@ -1561,8 +1537,6 @@ GST_START_TEST (test_layer_meta_float)
   GESTimeline *timeline;
   GESLayer *layer;
   gfloat result;
-
-  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
@@ -1584,8 +1558,6 @@ GST_START_TEST (test_layer_meta_double)
   GESTimeline *timeline;
   GESLayer *layer;
   gdouble result;
-
-  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
@@ -1610,8 +1582,6 @@ GST_START_TEST (test_layer_meta_date)
   GESLayer *layer;
   GDate *input;
   GDate *result;
-
-  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
@@ -1638,8 +1608,6 @@ GST_START_TEST (test_layer_meta_date_time)
   GESLayer *layer;
   GstDateTime *input;
   GstDateTime *result = NULL;
-
-  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
@@ -1672,8 +1640,6 @@ GST_START_TEST (test_layer_meta_value)
   GValue data = G_VALUE_INIT;
   const GValue *result;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
@@ -1699,8 +1665,6 @@ GST_START_TEST (test_layer_meta_register)
   GESTimeline *timeline;
   GESLayer *layer;
   const gchar *result;
-
-  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
@@ -1736,8 +1700,6 @@ GST_START_TEST (test_layer_meta_foreach)
   GESTimeline *timeline;
   GESLayer *layer;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
@@ -1759,8 +1721,6 @@ GST_START_TEST (test_layer_get_clips_in_interval)
   GESLayer *layer;
   GESClip *clip, *clip2, *clip3;
   GList *objects, *current;
-
-  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
@@ -1865,6 +1825,8 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges-layer");
   TCase *tc_chain = tcase_create ("timeline-layer");
+
+  ges_init ();
 
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");

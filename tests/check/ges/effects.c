@@ -29,8 +29,6 @@ GST_START_TEST (test_effect_basic)
 {
   GESEffect *effect;
 
-  ges_init ();
-
   effect = ges_effect_new ("agingtv");
   fail_unless (effect != NULL);
   gst_object_unref (effect);
@@ -45,8 +43,6 @@ GST_START_TEST (test_add_effect_to_clip)
   GESTrack *track_audio, *track_video;
   GESEffect *effect;
   GESTestClip *source;
-
-  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -92,8 +88,6 @@ GST_START_TEST (test_get_effects_from_tl)
   GESTestClip *source;
   GList *effects, *tmp = NULL;
   gint effect_prio = -1;
-
-  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -186,8 +180,6 @@ GST_START_TEST (test_effect_clip)
     GES_TRACK_TYPE_AUDIO
   };
 
-  ges_init ();
-
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
   track_audio = GES_TRACK (ges_audio_track_new ());
@@ -253,8 +245,6 @@ GST_START_TEST (test_priorities_clip)
   GESEffect *effect, *effect1, *audio_effect = NULL, *video_effect = NULL;
 
   gint effect_prio = -1;
-
-  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -369,8 +359,6 @@ GST_START_TEST (test_effect_set_properties)
   GValue val = { 0 };
   GValue nval = { 0 };
 
-  ges_init ();
-
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
   track_video = GES_TRACK (ges_video_track_new ());
@@ -456,8 +444,6 @@ GST_START_TEST (test_clip_signals)
   GValue val = { 0, };
   gboolean effect_added = FALSE;
 
-  ges_init ();
-
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
   track_video = GES_TRACK (ges_video_track_new ());
@@ -509,8 +495,6 @@ GST_START_TEST (test_split_clip_effect_priorities)
   GESEffect *effect;
   GESTrackElement *source, *nsource, *neffect;
 
-  ges_init ();
-
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
   track_video = GES_TRACK (ges_video_track_new ());
@@ -560,6 +544,8 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges");
   TCase *tc_chain = tcase_create ("effect");
+
+  ges_init ();
 
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");
