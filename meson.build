@@ -49,26 +49,26 @@ elif cc.has_argument('-Wl,-Bsymbolic-functions')
 endif
 
 cdata = configuration_data()
-cdata.set('GST_API_VERSION', '"@0@"'.format(apiversion))
-cdata.set('GST_DATADIR', '"@0@/@1@"'.format(prefix, get_option('datadir')))
-cdata.set('LOCALEDIR', '"@0@/@1@"'.format(prefix, get_option('localedir')))
-cdata.set('LIBDIR', '"@0@/@1@"'.format(prefix, get_option('libdir')))
-cdata.set('GST_API_VERSION', '"1.0"')
-cdata.set('GETTEXT_PACKAGE', '"gstreamer-1.0"')
-cdata.set('GST_LICENSE', '"LGPL"')
-cdata.set('PACKAGE', '"gstreamer"')
-cdata.set('PACKAGE_NAME', '"GStreamer"')
-cdata.set('PACKAGE_STRING', '"GStreamer @0@"'.format(gst_version))
-cdata.set('PACKAGE_TARNAME', '"gstreamer"')
-cdata.set('PACKAGE_BUGREPORT', '"http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer"')
-cdata.set('PACKAGE_URL', '""')
-cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
-cdata.set('PLUGINDIR', '"@0@/@1@/gstreamer-1.0"'.format(get_option('prefix'),get_option('libdir')))
-cdata.set('VERSION', '"@0@"'.format(gst_version))
+cdata.set_quoted('GST_API_VERSION', apiversion)
+cdata.set_quoted('GST_DATADIR', join_paths(prefix, get_option('datadir')))
+cdata.set_quoted('LOCALEDIR', join_paths(prefix, get_option('localedir')))
+cdata.set_quoted('LIBDIR', join_paths(prefix, get_option('libdir')))
+cdata.set_quoted('GST_API_VERSION', '1.0')
+cdata.set_quoted('GETTEXT_PACKAGE', 'gstreamer-1.0')
+cdata.set_quoted('GST_LICENSE', 'LGPL')
+cdata.set_quoted('PACKAGE', 'gstreamer')
+cdata.set_quoted('PACKAGE_NAME', 'GStreamer')
+cdata.set_quoted('PACKAGE_STRING', 'GStreamer @0@'.format(gst_version))
+cdata.set_quoted('PACKAGE_TARNAME', 'gstreamer')
+cdata.set_quoted('PACKAGE_BUGREPORT', 'http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer')
+cdata.set_quoted('PACKAGE_URL', '')
+cdata.set_quoted('PACKAGE_VERSION', gst_version)
+cdata.set_quoted('PLUGINDIR', join_paths(get_option('prefix'), get_option('libdir'), 'gstreamer-1.0'))
+cdata.set_quoted('VERSION', gst_version)
 # FIXME: --with-memory-alignment],[8,N,malloc,pagesize (default is 32)]) option
 cdata.set('MEMORY_ALIGNMENT_MALLOC', 1)
-cdata.set('GST_PLUGIN_SCANNER_INSTALLED', '"@0@/@1@/gst-plugin-scanner"'.format(prefix, helpers_install_dir))
-cdata.set('GST_PTP_HELPER_INSTALLED', '"@0@/@1@/gst-ptp-helper"'.format(prefix, helpers_install_dir))
+cdata.set_quoted('GST_PLUGIN_SCANNER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-plugin-scanner'))
+cdata.set_quoted('GST_PTP_HELPER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-ptp-helper'))
 
 if gst_version_nano > 0
     # Have GST_ERROR message printed when running from git
@@ -113,7 +113,7 @@ foreach h : host_defines
   endif
 endforeach
 # FIXME: should really be called HOST_CPU or such
-cdata.set('TARGET_CPU', '"@0@"'.format(host_machine.cpu()))
+cdata.set_quoted('TARGET_CPU', host_machine.cpu())
 
 check_headers = [
   'dlfcn.h',

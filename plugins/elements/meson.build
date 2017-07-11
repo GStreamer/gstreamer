@@ -32,7 +32,7 @@ if libtype != 'shared'
     include_directories : [configinc],
     dependencies : [gobject_dep, glib_dep, gst_dep, gst_base_dep],
     install : true,
-    install_dir : '@0@/gstreamer-1.0'.format(get_option('libdir')),
+    install_dir : join_paths(get_option('libdir'), 'gstreamer-1.0'),
   )
   gst_elements = gst_elements_static
 endif
@@ -44,7 +44,7 @@ if libtype != 'static'
     include_directories : [configinc],
     dependencies : [gobject_dep, glib_dep, gst_dep, gst_base_dep],
     install : true,
-    install_dir : '@0@/gstreamer-1.0'.format(get_option('libdir')),
+    install_dir : join_paths(get_option('libdir'), 'gstreamer-1.0'),
   )
   gst_elements = gst_elements_shared
 endif
