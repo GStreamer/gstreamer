@@ -594,8 +594,10 @@ gst_ffmpegscale_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     goto invalid_buffer;
 
   if (!gst_video_frame_map (&out_frame, &scale->out_info, outbuf,
-          GST_MAP_WRITE))
+          GST_MAP_WRITE)) {
+    gst_video_frame_unmap (&in_frame);
     goto invalid_buffer;
+  }
 
   sws_scale (scale->ctx, (const guint8 **) in_frame.data, in_frame.info.stride,
       0, scale->in_info.height, (guint8 **) out_frame.data,
