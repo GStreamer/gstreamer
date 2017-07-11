@@ -398,7 +398,7 @@ if bashcomp_found
   pkgconfig = find_program('pkg-config')
 
   runcmd = run_command(pkgconfig,
-      '--define-variable=prefix="."',
+      '--define-variable=prefix=.',
       '--variable=completionsdir',
       'bash-completion')
 
@@ -410,7 +410,7 @@ if bashcomp_found
   endif
 
   runcmd = run_command(pkgconfig,
-      '--define-variable=prefix="."',
+      '--define-variable=prefix=.',
       '--variable=helpersdir',
       'bash-completion')
 
