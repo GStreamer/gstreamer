@@ -46,15 +46,43 @@
 #define STRCASE(x)      case x: return STRINGIFY(x)
 
 #if VA_CHECK_VERSION (0,40,0)
-static void
-gst_vaapi_log (const char *message)
+static gchar *
+strip_msg (const char *message)
 {
   gchar *msg;
 
   msg = g_strdup (message);
   if (!msg)
+    return NULL;
+  return g_strstrip (msg);
+}
+
+#if VA_CHECK_VERSION (1,0,0)
+static void
+gst_vaapi_err (void *data, const char *message)
+{
+  gchar *msg;
+
+  msg = strip_msg (message);
+  if (!msg)
     return;
-  g_strchomp (msg);
+  GST_ERROR ("%s", msg);
+  g_free (msg);
+}
+#endif
+
+static void
+gst_vaapi_log (
+#if VA_CHECK_VERSION (1,0,0)
+    void *data,
+#endif
+    const char *message)
+{
+  gchar *msg;
+
+  msg = strip_msg (message);
+  if (!msg)
+    return;
   GST_INFO ("%s", msg);
   g_free (msg);
 }
@@ -66,7 +94,10 @@ vaapi_initialize (VADisplay dpy)
   gint major_version, minor_version;
   VAStatus status;
 
-#if VA_CHECK_VERSION (0,40,0)
+#if VA_CHECK_VERSION (1,0,0)
+  vaSetErrorCallback (dpy, gst_vaapi_err, NULL);
+  vaSetInfoCallback (dpy, gst_vaapi_log, NULL);
+#elif VA_CHECK_VERSION (0,40,0)
   vaSetInfoCallback (gst_vaapi_log);
 #endif
 
