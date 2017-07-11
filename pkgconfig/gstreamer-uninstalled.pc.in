@@ -15,6 +15,6 @@ Name: GStreamer Uninstalled
 Description: Streaming media framework, Not Installed
 Version: @VERSION@
 Requires: glib-2.0, gobject-2.0
-Requires.private: gmodule-no-export-2.0
+Requires.private: gmodule-no-export-2.0 @UNWIND_REQUIRE@ @DW_REQUIRE@
 Libs: -L${libdir} -lgstreamer-@GST_API_VERSION@
 Cflags: -I@abs_top_srcdir@ -I@abs_top_srcdir@/libs -I@abs_top_builddir@ -I@abs_top_builddir@/libs
