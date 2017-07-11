@@ -481,7 +481,7 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   if (!gst_byte_reader_get_uint16_be (&reader, &numcomps))
     goto beach;
 
-  if (numcomps == 2 || numcomps > GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS) {
+  if (numcomps == 0 || numcomps > GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS) {
     GST_ELEMENT_ERROR (jpeg2000parse, STREAM, DECODE, NULL,
         ("Unsupported number of components %d", numcomps));
     ret = GST_FLOW_NOT_NEGOTIATED;
