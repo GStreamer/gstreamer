@@ -668,7 +668,7 @@ gst_dvdlpcmdec_parse_bluray (GstDvdLpcmDec * dvdlpcmdec, GstAdapter * adapter,
       default:
         channels = 0;
         GST_WARNING ("Invalid number of audio channels!");
-        break;
+        goto negotiation_failed;
     }
     GST_DEBUG_OBJECT (dvdlpcmdec, "got channels %d rate %d format %s",
         channels, rate, gst_audio_format_to_string (format));
@@ -761,7 +761,7 @@ gst_dvdlpcmdec_parse_1394 (GstDvdLpcmDec * dvdlpcmdec, GstAdapter * adapter,
       default:
         channels = 0;
         GST_WARNING ("Invalid number of audio channels!");
-        break;
+        goto negotiation_failed;
     }
 
     gst_dvdlpcmdec_update_audio_formats (dvdlpcmdec, channels, rate, format,
