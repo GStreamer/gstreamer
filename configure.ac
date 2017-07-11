@@ -802,12 +802,16 @@ dnl libunwind is optionally used by the leaks tracer
 PKG_CHECK_MODULES(UNWIND, libunwind, HAVE_UNWIND=yes, HAVE_UNWIND=no)
 if test "x$HAVE_UNWIND" = "xyes"; then
   AC_DEFINE(HAVE_UNWIND, 1, [libunwind available])
+  UNWIND_REQUIRE=libunwind
+  AC_SUBST(UNWIND_REQUIRE)
 fi
 
 dnl libdw is optionally used to add source lines and numbers to backtraces
 PKG_CHECK_MODULES(DW, libdw, HAVE_DW=yes, HAVE_DW=no)
 if test "x$HAVE_DW" = "xyes"; then
   AC_DEFINE(HAVE_DW, 1, [libdw available])
+  DW_REQUIRE=libdw
+  AC_SUBST(DW_REQUIRE)
 fi
 
 dnl Check for backtrace() from libc
