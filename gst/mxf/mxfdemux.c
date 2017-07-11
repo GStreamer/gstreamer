@@ -1804,7 +1804,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       index.dts = dts;
       index.keyframe = keyframe;
       if (etrack->offsets->len < etrack->position)
-        g_array_set_size (etrack->offsets, etrack->position);
+        g_array_set_size (etrack->offsets, etrack->position + 1);
       g_array_insert_val (etrack->offsets, etrack->position, index);
     }
   }
@@ -3666,7 +3666,7 @@ collect_index_table_segments (GstMXFDemux * demux)
             pts_i = start + i + temporal_offset;
 
             if (t->offsets->len < pts_i)
-              g_array_set_size (t->offsets, pts_i);
+              g_array_set_size (t->offsets, pts_i + 1);
 
             index = &g_array_index (t->offsets, GstMXFDemuxIndex, pts_i);
             if (!index->initialized) {
