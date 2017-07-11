@@ -205,6 +205,9 @@ gst_ffmpegdata_close (AVIOContext * h)
 {
   GstProtocolInfo *info;
 
+  if (h == NULL)
+    return 0;
+
   info = (GstProtocolInfo *) h->opaque;
   if (info == NULL)
     return 0;
@@ -265,6 +268,11 @@ gst_ffmpegdata_open (GstPad * pad, int flags, AVIOContext ** context)
   *context =
       avio_alloc_context (buffer, buffer_size, flags, (void *) info,
       gst_ffmpegdata_read, gst_ffmpegdata_write, gst_ffmpegdata_seek);
+  if (*context == NULL) {
+    GST_WARNING ("Failed to allocate memory");
+    av_free (buffer);
+    return -ENOMEM;
+  }
   (*context)->seekable = AVIO_SEEKABLE_NORMAL;
   if (!(flags & AVIO_FLAG_WRITE)) {
     (*context)->buf_ptr = (*context)->buf_end;
@@ -318,6 +326,9 @@ gst_ffmpeg_pipe_close (AVIOContext * h)
 {
   GST_LOG ("Closing pipe");
 
+  if (h == NULL)
+    return 0;
+
   h->opaque = NULL;
   av_freep (&h->buffer);
   av_free (h);
@@ -343,6 +354,11 @@ gst_ffmpeg_pipe_open (GstFFMpegPipe * ffpipe, int flags, AVIOContext ** context)
   *context =
       avio_alloc_context (buffer, buffer_size, 0, (void *) ffpipe,
       gst_ffmpeg_pipe_read, NULL, NULL);
+  if (*context == NULL) {
+    GST_WARNING ("Failed to allocate memory");
+    av_free (buffer);
+    return -ENOMEM;
+  }
   (*context)->seekable = 0;
   (*context)->buf_ptr = (*context)->buf_end;
 
