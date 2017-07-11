@@ -47,7 +47,10 @@ typedef struct _GstAllocator GstAllocator;
  * @GST_MEMORY_FLAG_READONLY: memory is readonly. It is not allowed to map the
  * memory with #GST_MAP_WRITE.
  * @GST_MEMORY_FLAG_NO_SHARE: memory must not be shared. Copies will have to be
- * made when this memory needs to be shared between buffers.
+ * made when this memory needs to be shared between buffers. (DEPRECATED:
+ *  do not use in new code, instead you should create a custom GstAllocator for
+ *  memory pooling instead of relying on the GstBuffer they were originally
+ *  attached to.)
  * @GST_MEMORY_FLAG_ZERO_PREFIXED: the memory prefix is filled with 0 bytes
  * @GST_MEMORY_FLAG_ZERO_PADDED: the memory padding is filled with 0 bytes
  * @GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS: the memory is physically contiguous. (Since: 1.2)
