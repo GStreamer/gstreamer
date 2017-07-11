@@ -505,7 +505,7 @@ dnl -- VA-API                                                                --
 dnl ---------------------------------------------------------------------------
 
 dnl Core API
-PKG_CHECK_MODULES([LIBVA], [libva >= $VAAPI_REQ libva < 0.99.0])
+PKG_CHECK_MODULES([LIBVA], [libva >= $VAAPI_REQ libva != 0.99.0])
 VA_VERSION_STR=`$PKG_CONFIG --modversion libva`
 VA_DRIVERS_PATH=`$PKG_CONFIG --variable=driverdir libva`
 AC_DEFINE_UNQUOTED([VA_DRIVERS_PATH], ["$VA_DRIVERS_PATH"],
