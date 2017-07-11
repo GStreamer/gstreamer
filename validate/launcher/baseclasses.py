@@ -154,7 +154,7 @@ class Test(Loggable):
             if res:
                 res += " "
             value = self.proc_env.get(var, None)
-            if value:
+            if value is not None:
                 res += "%s='%s'" % (var, value)
 
         return res

@@ -64,6 +64,7 @@ class MesonTest(Test):
         # No reason to fork since we are launching
         # each test individually
         env['CK_FORK'] = 'no'
+        self.add_env_variable('CK_FORK', 'no')
         for var, val in self.child_env.items():
             self.add_env_variable(var, val)
 
