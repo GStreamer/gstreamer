@@ -32,8 +32,6 @@ GST_START_TEST (test_move_group)
 
   GList *clips = NULL;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
 
   layer = ges_timeline_append_layer (timeline);
@@ -334,8 +332,6 @@ GST_START_TEST (test_group_in_group)
   guint nb_layer_notifies = 0;
   GList *clips = NULL;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
 
   /* Our timeline
@@ -515,8 +511,6 @@ GST_START_TEST (test_group_in_group_layer_moving)
 
   GList *clips = NULL;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
 
   /* Our timeline
@@ -643,8 +637,6 @@ GST_START_TEST (test_group_in_self)
 
   GList *clips = NULL;
 
-  ges_init ();
-
   timeline = ges_timeline_new_audio_video ();
 
   layer = ges_timeline_append_layer (timeline);
@@ -692,8 +684,6 @@ GST_START_TEST (test_group_serialization)
 
   GError *err = NULL;
   GList *tmp, *clips = NULL;
-
-  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
 
@@ -764,6 +754,7 @@ ges_suite (void)
   Suite *s = suite_create ("ges-group");
   TCase *tc_chain = tcase_create ("group");
 
+  ges_init ();
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");
   }

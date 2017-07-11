@@ -25,8 +25,6 @@ GST_START_TEST (test_title_source_basic)
 {
   GESTitleClip *source;
 
-  ges_init ();
-
   source = ges_title_clip_new ();
   fail_unless (source != NULL);
 
@@ -42,8 +40,6 @@ GST_START_TEST (test_title_source_properties)
   GESTimeline *timeline;
   GESLayer *layer;
   GESTrackElement *trackelement;
-
-  ges_init ();
 
   track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
@@ -117,8 +113,6 @@ GST_START_TEST (test_title_source_in_layer)
   guint32 color;
   gdouble xpos;
   gdouble ypos;
-
-  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -210,6 +204,8 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges-titles");
   TCase *tc_chain = tcase_create ("titles");
+
+  ges_init ();
 
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");

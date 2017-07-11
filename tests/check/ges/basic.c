@@ -24,13 +24,6 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
-GST_START_TEST (test_ges_init)
-{
-  /* Yes, I know.. minimalistic... */
-  ges_init ();
-}
-
-GST_END_TEST;
 
 GST_START_TEST (test_ges_scenario)
 {
@@ -274,8 +267,6 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   GESTestClip *s1, *s2, *s3;
   GList *trackelements, *tmp, *layers;
 
-  ges_init ();
-
   /* Timeline and 1 Layer */
   GST_DEBUG ("Create a timeline");
   timeline = ges_timeline_new ();
@@ -375,8 +366,6 @@ GST_START_TEST (test_ges_timeline_remove_track)
   GESTestClip *s1, *s2, *s3;
   GESTrackElement *t1, *t2, *t3;
   GList *trackelements, *tmp, *layers;
-
-  ges_init ();
 
   /* Timeline and 1 Layer */
   GST_DEBUG ("Create a timeline");
@@ -536,8 +525,6 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   GList *trackelements, *tmp, *layers;
   SelectTracksData st_data = { &s1, &s2, &s3, &track1, &track2 };
 
-  ges_init ();
-
   /* Timeline and 1 Layer */
   GST_DEBUG ("Create a timeline");
   timeline = ges_timeline_new ();
@@ -680,8 +667,6 @@ GST_START_TEST (test_ges_pipeline_change_state)
   GESTimeline *timeline;
   GESPipeline *pipeline;
 
-  ges_init ();
-
   layer = ges_layer_new ();
   timeline = ges_timeline_new_audio_video ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
@@ -712,8 +697,6 @@ GST_START_TEST (test_ges_timeline_element_name)
   GESAsset *asset;
   GESTimeline *timeline;
   GESLayer *layer;
-
-  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
@@ -776,13 +759,14 @@ ges_suite (void)
   Suite *s = suite_create ("ges-basic");
   TCase *tc_chain = tcase_create ("basic");
 
+  ges_init ();
+
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");
   }
 
   suite_add_tcase (s, tc_chain);
 
-  tcase_add_test (tc_chain, test_ges_init);
   tcase_add_test (tc_chain, test_ges_scenario);
   tcase_add_test (tc_chain, test_ges_timeline_add_layer);
   tcase_add_test (tc_chain, test_ges_timeline_add_layer_first);

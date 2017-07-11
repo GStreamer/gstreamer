@@ -84,8 +84,6 @@ GST_START_TEST (test_filesource_basic)
   GESTimeline *timeline;
   GESLayer *layer;
 
-  fail_unless (ges_init ());
-
   mainloop = g_main_loop_new (NULL, FALSE);
 
   timeline = ges_timeline_new_audio_video ();
@@ -124,8 +122,6 @@ GST_START_TEST (test_filesource_properties)
   GESUriClipAsset *asset;
   GESLayer *layer;
   GESTrackElement *trackelement;
-
-  ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
@@ -214,8 +210,6 @@ GST_START_TEST (test_filesource_images)
   GESLayer *layer;
   GESTrackElement *track_element;
 
-  ges_init ();
-
   a = GES_TRACK (ges_audio_track_new ());
   v = GES_TRACK (ges_video_track_new ());
 
@@ -289,6 +283,8 @@ main (int argc, char **argv)
   Suite *s;
 
   gst_check_init (&argc, &argv);
+
+  ges_init ();
 
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");
