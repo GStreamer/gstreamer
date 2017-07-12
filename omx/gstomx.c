@@ -39,6 +39,7 @@
 #include "gstomxmpeg4videoenc.h"
 #include "gstomxh264enc.h"
 #include "gstomxh263enc.h"
+#include "gstomxh265enc.h"
 #include "gstomxaacdec.h"
 #include "gstomxmp3dec.h"
 #include "gstomxmp3enc.h"
@@ -2306,6 +2307,9 @@ static const GGetTypeFunction types[] = {
 #endif
 #ifdef HAVE_THEORA
       , gst_omx_theora_dec_get_type
+#endif
+#ifdef HAVE_HEVC
+      , gst_omx_h265_enc_get_type
 #endif
 };
 

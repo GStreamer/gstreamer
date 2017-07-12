@@ -10,6 +10,15 @@ THEORA_C_FILES=gstomxtheoradec.c
 THEORA_H_FILES=gstomxtheoradec.h
 endif
 
+if HAVE_HEVC
+H265_C_FILES = \
+	gstomxh265enc.c \
+	gstomxh265utils.c
+H265_H_FILES = \
+	gstomxh265enc.h \
+	gstomxh265utils.h
+endif
+
 libgstomx_la_SOURCES = \
 	gstomx.c \
 	gstomxbufferpool.c \
@@ -27,6 +36,7 @@ libgstomx_la_SOURCES = \
 	gstomxwmvdec.c \
 	$(VP8_C_FILES) \
 	$(THEORA_C_FILES) \
+	$(H265_C_FILES) \
 	gstomxmpeg4videoenc.c \
 	gstomxh264enc.c \
 	gstomxh263enc.c \
@@ -56,6 +66,7 @@ noinst_HEADERS = \
 	gstomxwmvdec.h \
 	$(VP8_H_FILES) \
 	$(THEORA_H_FILES) \
+	$(H265_H_FILES) \
 	gstomxmpeg4videoenc.h \
 	gstomxh264enc.h \
 	gstomxh263enc.h \

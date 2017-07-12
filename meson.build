@@ -228,6 +228,16 @@ if have_omx_theora
   cdata.set('HAVE_THEORA', 1)
 endif
 
+have_omx_hevc = cc.has_header_symbol(
+    'OMX_Video.h',
+    'OMX_VIDEO_CodingHEVC',
+    prefix : extra_video_headers,
+    args : gst_omx_args,
+    required : false)
+if have_omx_hevc
+  cdata.set('HAVE_HEVC', 1)
+endif
+
 default_omx_struct_packing = 0
 omx_target = get_option ('with_omx_target')
 if omx_target == 'generic'

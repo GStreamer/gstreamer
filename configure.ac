@@ -287,6 +287,15 @@ AC_CHECK_DECLS([OMX_VIDEO_CodingTheora],
   ], [[$VIDEO_HEADERS]])
 AM_CONDITIONAL(HAVE_THEORA, test "x$HAVE_THEORA" = "xyes")
 
+AC_CHECK_DECLS([OMX_VIDEO_CodingHEVC],
+  [
+    AC_DEFINE(HAVE_HEVC, 1, [OpenMAX IL has HEVC support])
+    HAVE_HEVC=yes
+  ], [
+    HAVE_HEVC=no
+  ], [[$VIDEO_HEADERS]])
+AM_CONDITIONAL(HAVE_HEVC, test "x$HAVE_HEVC" = "xyes")
+
 dnl *** set variables based on configure arguments ***
 
 dnl set license and copyright notice

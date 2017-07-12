@@ -37,6 +37,11 @@ if have_omx_theora
   omx_sources += 'gstomxtheoradec.c'
 endif
 
+if have_omx_hevc
+  omx_sources += 'gstomxh265utils.c'
+  omx_sources += 'gstomxh265enc.c'
+endif
+
 if not have_external_omx
   extra_inc += include_directories ('openmax')
 endif
