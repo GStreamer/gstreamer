@@ -30,6 +30,7 @@
 #include "gstqtglutility.h"
 
 #include <QtCore/QRunnable>
+#include <QtCore/QMutexLocker>
 #include <QtGui/QGuiApplication>
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/QSGSimpleTextureNode>
@@ -123,11 +124,21 @@ QtGLVideoItem::QtGLVideoItem()
   connect(this, SIGNAL(windowChanged(QQuickWindow*)), this,
           SLOT(handleWindowChanged(QQuickWindow*)));
 
+  this->proxy = QSharedPointer<QtGLVideoItemInterface>(new QtGLVideoItemInterface(this));
+
   GST_DEBUG ("%p init Qt Video Item", this);
 }
 
 QtGLVideoItem::~QtGLVideoItem()
 {
+  /* Before destroying the priv info, make sure
+   * no qmlglsink's will call in again, and that
+   * any ongoing calls are done by invalidating the proxy
+   * pointer */
+  GST_INFO ("Destroying QtGLVideoItem and invalidating the proxy");
+  proxy->invalidateRef();
+  proxy.clear();
+
   g_mutex_clear (&this->priv->lock);
   if (this->priv->context)
     gst_object_unref(this->priv->context);
@@ -237,18 +248,25 @@ _reset (QtGLVideoItem * qt_item)
 }
 
 void
-qt_item_set_buffer (QtGLVideoItem * widget, GstBuffer * buffer)
+QtGLVideoItemInterface::setBuffer (GstBuffer * buffer)
 {
-  g_return_if_fail (widget != NULL);
-  g_return_if_fail (widget->priv->negotiated);
+  QMutexLocker locker(&lock);
 
-  g_mutex_lock (&widget->priv->lock);
+  if (qt_item == NULL)
+    return;
 
-  gst_buffer_replace (&widget->priv->buffer, buffer);
+  if (!qt_item->priv->negotiated) {
+    GST_WARNING ("Got buffer on unnegotiated QtGLVideoItem. Dropping");
+    return;
+  }
 
-  QMetaObject::invokeMethod(widget, "update", Qt::QueuedConnection);
+  g_mutex_lock (&qt_item->priv->lock);
 
-  g_mutex_unlock (&widget->priv->lock);
+  gst_buffer_replace (&qt_item->priv->buffer, buffer);
+
+  QMetaObject::invokeMethod(qt_item, "update", Qt::QueuedConnection);
+
+  g_mutex_unlock (&qt_item->priv->lock);
 }
 
 void
@@ -280,50 +298,53 @@ QtGLVideoItem::onSceneGraphInvalidated ()
 }
 
 gboolean
-qt_item_init_winsys (QtGLVideoItem * widget)
+QtGLVideoItemInterface::initWinSys ()
 {
+  QMutexLocker locker(&lock);
+
   GError *error = NULL;
 
-  g_return_val_if_fail (widget != NULL, FALSE);
+  if (qt_item == NULL)
+    return FALSE;
 
-  g_mutex_lock (&widget->priv->lock);
+  g_mutex_lock (&qt_item->priv->lock);
 
-  if (widget->priv->display && widget->priv->qt_context
-      && widget->priv->other_context && widget->priv->context) {
+  if (qt_item->priv->display && qt_item->priv->qt_context
+      && qt_item->priv->other_context && qt_item->priv->context) {
     /* already have the necessary state */
-    g_mutex_unlock (&widget->priv->lock);
+    g_mutex_unlock (&qt_item->priv->lock);
     return TRUE;
   }
 
-  if (!GST_IS_GL_DISPLAY (widget->priv->display)) {
+  if (!GST_IS_GL_DISPLAY (qt_item->priv->display)) {
     GST_ERROR ("%p failed to retrieve display connection %" GST_PTR_FORMAT,
-        widget, widget->priv->display);
-    g_mutex_unlock (&widget->priv->lock);
+        qt_item, qt_item->priv->display);
+    g_mutex_unlock (&qt_item->priv->lock);
     return FALSE;
   }
 
-  if (!GST_IS_GL_CONTEXT (widget->priv->other_context)) {
-    GST_ERROR ("%p failed to retrieve wrapped context %" GST_PTR_FORMAT, widget,
-        widget->priv->other_context);
-    g_mutex_unlock (&widget->priv->lock);
+  if (!GST_IS_GL_CONTEXT (qt_item->priv->other_context)) {
+    GST_ERROR ("%p failed to retrieve wrapped context %" GST_PTR_FORMAT, qt_item,
+        qt_item->priv->other_context);
+    g_mutex_unlock (&qt_item->priv->lock);
     return FALSE;
   }
 
-  widget->priv->context = gst_gl_context_new (widget->priv->display);
+  qt_item->priv->context = gst_gl_context_new (qt_item->priv->display);
 
-  if (!widget->priv->context) {
-    g_mutex_unlock (&widget->priv->lock);
+  if (!qt_item->priv->context) {
+    g_mutex_unlock (&qt_item->priv->lock);
     return FALSE;
   }
 
-  if (!gst_gl_context_create (widget->priv->context, widget->priv->other_context,
+  if (!gst_gl_context_create (qt_item->priv->context, qt_item->priv->other_context,
         &error)) {
     GST_ERROR ("%s", error->message);
-    g_mutex_unlock (&widget->priv->lock);
+    g_mutex_unlock (&qt_item->priv->lock);
     return FALSE;
   }
 
-  g_mutex_unlock (&widget->priv->lock);
+  g_mutex_unlock (&qt_item->priv->lock);
   return TRUE;
 }
 
@@ -403,68 +424,115 @@ _calculate_par (QtGLVideoItem * widget, GstVideoInfo * info)
 }
 
 gboolean
-qt_item_set_caps (QtGLVideoItem * widget, GstCaps * caps)
+QtGLVideoItemInterface::setCaps (GstCaps * caps)
 {
+  QMutexLocker locker(&lock);
   GstVideoInfo v_info;
 
-  g_return_val_if_fail (widget != NULL, FALSE);
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
-  if (widget->priv->caps && gst_caps_is_equal_fixed (widget->priv->caps, caps))
+  if (qt_item == NULL)
+    return FALSE;
+
+  if (qt_item->priv->caps && gst_caps_is_equal_fixed (qt_item->priv->caps, caps))
     return TRUE;
 
   if (!gst_video_info_from_caps (&v_info, caps))
     return FALSE;
 
-  g_mutex_lock (&widget->priv->lock);
+  g_mutex_lock (&qt_item->priv->lock);
 
-  _reset (widget);
+  _reset (qt_item);
 
-  gst_caps_replace (&widget->priv->caps, caps);
+  gst_caps_replace (&qt_item->priv->caps, caps);
 
-  if (!_calculate_par (widget, &v_info)) {
-    g_mutex_unlock (&widget->priv->lock);
+  if (!_calculate_par (qt_item, &v_info)) {
+    g_mutex_unlock (&qt_item->priv->lock);
     return FALSE;
   }
 
-  widget->priv->v_info = v_info;
-  widget->priv->negotiated = TRUE;
+  qt_item->priv->v_info = v_info;
+  qt_item->priv->negotiated = TRUE;
 
-  g_mutex_unlock (&widget->priv->lock);
+  g_mutex_unlock (&qt_item->priv->lock);
 
   return TRUE;
 }
 
 GstGLContext *
-qt_item_get_qt_context (QtGLVideoItem * qt_item)
+QtGLVideoItemInterface::getQtContext ()
 {
-  g_return_val_if_fail (qt_item != NULL, NULL);
+  QMutexLocker locker(&lock);
 
-  if (!qt_item->priv->other_context)
+  if (!qt_item || !qt_item->priv->other_context)
     return NULL;
 
   return (GstGLContext *) gst_object_ref (qt_item->priv->other_context);
 }
 
 GstGLContext *
-qt_item_get_context (QtGLVideoItem * qt_item)
+QtGLVideoItemInterface::getContext ()
 {
-  g_return_val_if_fail (qt_item != NULL, NULL);
+  QMutexLocker locker(&lock);
 
-  if (!qt_item->priv->context)
+  if (!qt_item || !qt_item->priv->context)
     return NULL;
 
   return (GstGLContext *) gst_object_ref (qt_item->priv->context);
 }
 
 GstGLDisplay *
-qt_item_get_display (QtGLVideoItem * qt_item)
+QtGLVideoItemInterface::getDisplay() 
 {
-  g_return_val_if_fail (qt_item != NULL, NULL);
+  QMutexLocker locker(&lock);
 
-  if (!qt_item->priv->display)
+  if (!qt_item || !qt_item->priv->display)
     return NULL;
 
   return (GstGLDisplay *) gst_object_ref (qt_item->priv->display);
 }
+
+void
+QtGLVideoItemInterface::setDAR(gint num, gint den)
+{
+  QMutexLocker locker(&lock);
+  if (!qt_item)
+    return;
+  qt_item->setDAR(num, den);
+}
+
+void
+QtGLVideoItemInterface::getDAR(gint * num, gint * den)
+{
+  QMutexLocker locker(&lock);
+  if (!qt_item)
+    return;
+  qt_item->getDAR (num, den);
+}
+
+void
+QtGLVideoItemInterface::setForceAspectRatio(bool force_aspect_ratio)
+{
+  QMutexLocker locker(&lock);
+  if (!qt_item)
+    return;
+  qt_item->setForceAspectRatio(force_aspect_ratio);
+}
+
+bool
+QtGLVideoItemInterface::getForceAspectRatio()
+{
+  QMutexLocker locker(&lock);
+  if (!qt_item)
+    return FALSE;
+  return qt_item->getForceAspectRatio();
+}
+
+void
+QtGLVideoItemInterface::invalidateRef()
+{
+  QMutexLocker locker(&lock);
+  qt_item = NULL;
+}
+

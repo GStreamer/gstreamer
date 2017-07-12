@@ -51,8 +51,6 @@ struct _GstQtSink
   /* <private> */
   GstVideoSink          parent;
 
-  QtGLVideoItem        *widget;
-
   GstVideoInfo          v_info;
   GstBufferPool        *pool;
 
@@ -60,7 +58,7 @@ struct _GstQtSink
   GstGLContext         *context;
   GstGLContext         *qt_context;
 
-  GstQtSinkPrivate  *priv;
+  QSharedPointer<QtGLVideoItemInterface> widget;
 };
 
 /**

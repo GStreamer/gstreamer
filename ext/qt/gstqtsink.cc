@@ -143,6 +143,7 @@ gst_qt_sink_class_init (GstQtSinkClass * klass)
 static void
 gst_qt_sink_init (GstQtSink * qt_sink)
 {
+  qt_sink->widget = QSharedPointer<QtGLVideoItemInterface>();
 }
 
 static void
@@ -152,9 +153,14 @@ gst_qt_sink_set_property (GObject * object, guint prop_id,
   GstQtSink *qt_sink = GST_QT_SINK (object);
 
   switch (prop_id) {
-    case PROP_WIDGET:
-      qt_sink->widget = static_cast<QtGLVideoItem *> (g_value_get_pointer (value));
+    case PROP_WIDGET: {
+      QtGLVideoItem *qt_item = static_cast<QtGLVideoItem *> (g_value_get_pointer (value));
+      if (qt_item)
+        qt_sink->widget = qt_item->getInterface();
+      else
+        qt_sink->widget.clear();
       break;
+    }
     case PROP_FORCE_ASPECT_RATIO:
       g_return_if_fail (qt_sink->widget);
       qt_sink->widget->setForceAspectRatio (g_value_get_boolean (value));
@@ -196,6 +202,8 @@ gst_qt_sink_finalize (GObject * object)
 
   _reset (qt_sink);
 
+  qt_sink->widget.clear();
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -207,7 +215,13 @@ gst_qt_sink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_WIDGET:
-      g_value_set_pointer (value, qt_sink->widget);
+      /* This is not really safe - the app needs to be
+       * sure the widget is going to be kept alive or
+       * this can crash */
+      if (qt_sink->widget)
+        g_value_set_pointer (value, qt_sink->widget->videoItem());
+      else
+        g_value_set_pointer (value, NULL);
       break;
     case PROP_FORCE_ASPECT_RATIO:
       if (qt_sink->widget)
@@ -287,16 +301,16 @@ gst_qt_sink_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       }
 
-      if (!qt_item_init_winsys (qt_sink->widget)) {
+      if (!qt_sink->widget->initWinSys()) {
         GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
             ("%s", "Could not initialize window system"),
             (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
 
-      qt_sink->display = qt_item_get_display (qt_sink->widget);
-      qt_sink->context = qt_item_get_context (qt_sink->widget);
-      qt_sink->qt_context = qt_item_get_qt_context (qt_sink->widget);
+      qt_sink->display = qt_sink->widget->getDisplay();
+      qt_sink->context = qt_sink->widget->getContext();
+      qt_sink->qt_context = qt_sink->widget->getQtContext();
 
       if (!qt_sink->display || !qt_sink->context || !qt_sink->qt_context) {
         GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
@@ -321,7 +335,8 @@ gst_qt_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      qt_item_set_buffer (qt_sink->widget, NULL);
+      if (qt_sink->widget)
+        qt_sink->widget->setBuffer(NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -365,10 +380,10 @@ gst_qt_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_video_info_from_caps (&qt_sink->v_info, caps))
     return FALSE;
 
-  if (!qt_item_set_caps (qt_sink->widget, caps))
+  if (!qt_sink->widget)
     return FALSE;
 
-  return TRUE;
+  return qt_sink->widget->setCaps(caps);
 }
 
 static GstFlowReturn
@@ -380,7 +395,8 @@ gst_qt_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   qt_sink = GST_QT_SINK (vsink);
 
-  qt_item_set_buffer (qt_sink->widget, buf);
+  if (qt_sink->widget)
+    qt_sink->widget->setBuffer(buf);
 
   return GST_FLOW_OK;
 }

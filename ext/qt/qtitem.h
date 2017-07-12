@@ -25,11 +25,39 @@
 #include <gst/gl/gl.h>
 
 #include "gstqtgl.h"
+#include <QtCore/QMutex>
 #include <QtQuick/QQuickItem>
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLFunctions>
 
 typedef struct _QtGLVideoItemPrivate QtGLVideoItemPrivate;
+
+class QtGLVideoItem;
+
+class QtGLVideoItemInterface : public QObject
+{
+    Q_OBJECT
+public:
+    QtGLVideoItemInterface (QtGLVideoItem *w) : qt_item (w), lock() {};
+
+    void invalidateRef();
+
+    void setBuffer (GstBuffer * buffer);
+    gboolean setCaps (GstCaps *caps);
+    gboolean initWinSys ();
+    GstGLContext *getQtContext();
+    GstGLContext *getContext();
+    GstGLDisplay *getDisplay();
+    QtGLVideoItem *videoItem () { return qt_item; };
+
+    void setDAR(gint, gint);
+    void getDAR(gint *, gint *);
+    void setForceAspectRatio(bool);
+    bool getForceAspectRatio();
+private:
+    QtGLVideoItem *qt_item;
+    QMutex lock;
+};
 
 class InitializeSceneGraph;
 
@@ -45,6 +73,7 @@ public:
     void setForceAspectRatio(bool);
     bool getForceAspectRatio();
 
+    QSharedPointer<QtGLVideoItemInterface> getInterface() { return proxy; };
     /* private for C interface ... */
     QtGLVideoItemPrivate *priv;
 
@@ -57,22 +86,15 @@ protected:
     QSGNode * updatePaintNode (QSGNode * oldNode, UpdatePaintNodeData * updatePaintNodeData);
 
 private:
+
     friend class InitializeSceneGraph;
     void setViewportSize(const QSize &size);
     void shareContext();
 
     QSize m_viewportSize;
     bool m_openGlContextInitialized;
-};
 
-extern "C"
-{
-void            qt_item_set_buffer (QtGLVideoItem * widget, GstBuffer * buffer);
-gboolean        qt_item_set_caps (QtGLVideoItem * widget, GstCaps * caps);
-gboolean        qt_item_init_winsys (QtGLVideoItem * widget);
-GstGLContext *  qt_item_get_qt_context (QtGLVideoItem * qt_item);
-GstGLContext *  qt_item_get_context (QtGLVideoItem * qt_item);
-GstGLDisplay *  qt_item_get_display (QtGLVideoItem * qt_item);
-}
+    QSharedPointer<QtGLVideoItemInterface> proxy;
+};
 
 #endif /* __QT_ITEM_H__ */
