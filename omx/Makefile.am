@@ -12,9 +12,11 @@ endif
 
 if HAVE_HEVC
 H265_C_FILES = \
+	gstomxh265dec.c \
 	gstomxh265enc.c \
 	gstomxh265utils.c
 H265_H_FILES = \
+	gstomxh265dec.h \
 	gstomxh265enc.h \
 	gstomxh265utils.h
 endif
