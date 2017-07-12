@@ -23,6 +23,7 @@ omx_sources = [
   'gstomxaudiosink.c',
   'gstomxanalogaudiosink.c',
   'gstomxhdmiaudiosink.c',
+  'gstomxmp3enc.c',
 ]
 
 extra_inc = []
