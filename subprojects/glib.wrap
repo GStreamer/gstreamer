@@ -1,4 +1,5 @@
 [wrap-git]
 directory=glib
-url=https://github.com/centricular/glib.git
-revision=meson
+url=git://git.gnome.org/glib
+push-url=ssh://git.gnome.org/git/glib
+revision=wip/meson
