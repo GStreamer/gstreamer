@@ -1687,8 +1687,13 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port,
       buf->eglimage = FALSE;
     }
 
+    /* Let the caller decide to print an error when OMX_UseBuffer or
+     * OMX_UseEGLImage fail. Indeed it can be part of a trial path. So
+     * it is not necessary to warn the user if the fallback path succeeds.
+     */
     if (err != OMX_ErrorNone) {
-      GST_ERROR_OBJECT (comp->parent,
+      GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, (buffers
+              || images) ? GST_LEVEL_INFO : GST_LEVEL_ERROR, comp->parent,
           "Failed to allocate buffer for %s port %u: %s (0x%08x)", comp->name,
           port->index, gst_omx_error_to_string (err), err);
       gst_omx_port_deallocate_buffers_unlocked (port);
