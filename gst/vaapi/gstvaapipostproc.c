@@ -1430,6 +1430,7 @@ gst_vaapipostproc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (object);
+  gboolean do_reconf = FALSE;
 
   g_mutex_lock (&postproc->postproc_lock);
   switch (prop_id) {
@@ -1437,11 +1438,19 @@ gst_vaapipostproc_set_property (GObject * object,
       postproc->format = g_value_get_enum (value);
       break;
     case PROP_WIDTH:
+    {
+      guint prev_width = postproc->width;
       postproc->width = g_value_get_uint (value);
+      do_reconf = (prev_width != postproc->width);
       break;
+    }
     case PROP_HEIGHT:
+    {
+      guint prev_height = postproc->height;
       postproc->height = g_value_get_uint (value);
+      do_reconf = (prev_height != postproc->height);
       break;
+    }
     case PROP_FORCE_ASPECT_RATIO:
       postproc->keep_aspect = g_value_get_boolean (value);
       break;
@@ -1489,7 +1498,7 @@ gst_vaapipostproc_set_property (GObject * object,
   }
   g_mutex_unlock (&postproc->postproc_lock);
 
-  if (check_filter_update (postproc))
+  if (do_reconf || check_filter_update (postproc))
     gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (postproc));
 }
 
