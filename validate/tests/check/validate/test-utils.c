@@ -388,9 +388,6 @@ fake_mixer_init (FakeMixer * self, FakeMixerClass * g_class)
   pad = gst_pad_new_from_template (pad_template, "src");
   gst_element_add_pad (element, pad);
 
-  pad_template =
-      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
-
   self->return_value = GST_FLOW_OK;
 }
 
@@ -465,9 +462,6 @@ fake_src_init (FakeSrc * self, FakeSrcClass * g_class)
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
   pad = gst_pad_new_from_template (pad_template, "src");
   gst_element_add_pad (element, pad);
-
-  pad_template =
-      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
 
   self->return_value = GST_FLOW_OK;
 }
