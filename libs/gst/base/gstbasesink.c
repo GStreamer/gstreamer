@@ -3657,6 +3657,7 @@ dropped:
 preroll_failed:
   {
     GST_DEBUG_OBJECT (basesink, "preroll failed: %s", gst_flow_get_name (ret));
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
     return ret;
   }
 }
