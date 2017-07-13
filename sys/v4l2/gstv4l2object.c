@@ -47,8 +47,6 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define DEFAULT_PROP_DEVICE_FD          -1
 #define DEFAULT_PROP_FLAGS              0
 #define DEFAULT_PROP_TV_NORM            0
-#define DEFAULT_PROP_CHANNEL            NULL
-#define DEFAULT_PROP_FREQUENCY          0
 #define DEFAULT_PROP_IO_MODE            GST_V4L2_IO_AUTO
 
 #define ENCODED_BUFFER_SIZE             (2 * 1024 * 1024)
