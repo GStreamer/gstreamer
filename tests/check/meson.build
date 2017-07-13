@@ -74,6 +74,7 @@ good_tests = [
       '../../gst/rtpmanager/rtpstats.c',
       '../../gst/rtpmanager/rtptimerqueue.c']],
   [ 'elements/rtpmux' ],
+  [ 'elements/rtpptdemux' ],
   [ 'elements/rtprtx' ],
   [ 'elements/rtpsession' ],
   [ 'elements/rtpstorage', false, [],  ['../../gst/rtp/gstrtpstorage.c',
