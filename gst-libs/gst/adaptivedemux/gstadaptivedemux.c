@@ -3606,9 +3606,12 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
       break;                    /* all is good, let's go */
     case GST_FLOW_EOS:
       GST_DEBUG_OBJECT (stream->pad, "EOS, checking to stop download loop");
+
       /* we push the EOS after releasing the object lock */
       if (gst_adaptive_demux_is_live (demux)
-          && gst_adaptive_demux_stream_in_live_seek_range (demux, stream)) {
+          && (demux->segment.rate == 1.0
+              || gst_adaptive_demux_stream_in_live_seek_range (demux,
+                  stream))) {
         GstAdaptiveDemuxClass *demux_class =
             GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
 
