@@ -105,6 +105,7 @@ class Test(Loggable):
         self.extra_env_variables = extra_env_variables
         self.optional = False
         self.is_parallel = is_parallel
+        self.generator = None
 
         self.clean()
 
@@ -1040,6 +1041,7 @@ class TestsManager(Loggable):
     """ A class responsible for managing tests. """
 
     name = "base"
+    loading_testsuite = None
 
     def __init__(self):
 
@@ -1080,6 +1082,8 @@ class TestsManager(Loggable):
         self.expected_failures.update(expected_failures_re)
 
     def add_test(self, test):
+        if test.generator is None:
+            test.classname = self.loading_testsuite + '.' + test.classname
         for regex, failures in list(self.expected_failures.items()):
             if regex.findall(test.classname):
                 test.expected_failures.extend(failures)
@@ -1103,10 +1107,11 @@ class TestsManager(Loggable):
         """
         @generators: A list of, or one single #TestsGenerator to be used to generate tests
         """
-        if isinstance(generators, list):
-            self._generators.extend(generators)
-        else:
-            self._generators.append(generators)
+        if not isinstance(generators, list):
+            generators = [generators]
+        self._generators.extend(generators)
+        for generator in generators:
+            generator.testsuite = self.loading_testsuite
 
         self._generators = list(set(self._generators))
 
@@ -1122,7 +1127,10 @@ class TestsManager(Loggable):
                 self.blacklisted_tests_patterns.append(re.compile(pattern))
 
     def set_default_blacklist(self, default_blacklist):
-        self.blacklisted_tests += default_blacklist
+        for test_regex, reason in default_blacklist:
+            if not test_regex.startswith(self.loading_testsuite + '.'):
+                test_regex = self.loading_testsuite + '.' + test_regex
+            self.blacklisted_tests.append((test_regex, reason))
 
     def add_options(self, parser):
         """ Add more arguments. """
@@ -1330,6 +1338,7 @@ class TestsGenerator(Loggable):
         Loggable.__init__(self)
         self.name = name
         self.test_manager = test_manager
+        self.testsuite = None
         self._tests = {}
         for test in tests:
             self._tests[test.classname] = test
@@ -1341,6 +1350,8 @@ class TestsGenerator(Loggable):
         return list(self._tests.values())
 
     def add_test(self, test):
+        test.generator = self
+        test.classname = self.testsuite + '.' + test.classname
         self._tests[test.classname] = test
 
 
@@ -1438,8 +1449,13 @@ class _TestsLauncher(Loggable):
 
             module = loaded_module[0]
             if not loaded_module[0]:
-                printc("Could not load testsuite: %s, reasons: %s" % (
-                    testsuite, loaded_module[1]), Colors.FAIL)
+                if "." in testsuite:
+                    self.options.testsuites.append(testsuite.split('.')[0])
+                    self.info("%s looks like a test name, trying that" % testsuite)
+                    self.options.wanted_tests.append(testsuite)
+                else:
+                    printc("Could not load testsuite: %s, reasons: %s" % (
+                        testsuite, loaded_module[1]), Colors.FAIL)
                 continue
 
             testsuites.append(module)
@@ -1465,10 +1481,14 @@ class _TestsLauncher(Loggable):
                     continue
 
                 if self.options.user_paths:
+                    TestsManager.loading_testsuite = tester.name
                     tester.register_defaults()
                     loaded = True
-                elif testsuite.setup_tests(tester, self.options):
-                    loaded = True
+                else:
+                    TestsManager.loading_testsuite = testsuite.__name__
+                    if testsuite.setup_tests(tester, self.options):
+                        loaded = True
+                    TestsManager.loading_testsuite = None
 
             if not loaded:
                 printc("Could not load testsuite: %s"

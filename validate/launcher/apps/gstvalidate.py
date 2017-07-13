@@ -87,8 +87,8 @@ class GstValidateMediaCheckTestsGenerator(GstValidateTestsGenerator):
             except KeyError:
                 timeout = DEFAULT_TIMEOUT
 
-            classname = "validate.%s.media_check.%s" % (protocol,
-                                                        os.path.basename(url2path(uri)).replace(".", "_"))
+            classname = "%s.media_check.%s" % (protocol,
+                                               os.path.basename(url2path(uri)).replace(".", "_"))
             self.add_test(GstValidateMediaCheckTest(classname,
                                                     self.test_manager.options,
                                                     self.test_manager.reporter,
@@ -113,10 +113,10 @@ class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
                 continue
 
             for comb in self.test_manager.get_encoding_formats():
-                classname = "validate.%s.transcode.to_%s.%s" % (mediainfo.media_descriptor.get_protocol(),
-                                                                str(comb).replace(
-                                                                    ' ', '_'),
-                                                                mediainfo.media_descriptor.get_clean_name())
+                classname = "%s.transcode.to_%s.%s" % (mediainfo.media_descriptor.get_protocol(),
+                                                       str(comb).replace(
+                                                       ' ', '_'),
+                                                       mediainfo.media_descriptor.get_clean_name())
                 self.add_test(GstValidateTranscodingTest(classname,
                                                          self.test_manager.options,
                                                          self.test_manager.reporter,
@@ -199,9 +199,9 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
             protocol_str = ""
 
         if scenario is not None and scenario.name.lower() != "none":
-            return "%s.%s%s.%s" % ("validate", protocol_str, name, scenario.name)
+            return "%s%s.%s" % (protocol_str, name, scenario.name)
 
-        return ("%s.%s.%s.%s" % ("validate", protocol_str, self.name, name)).replace("..", ".")
+        return ("%s.%s.%s" % (protocol_str, self.name, name)).replace("..", ".")
 
     def generate_tests(self, uri_minfo_special_scenarios, scenarios):
         if self._valid_scenarios is None:
@@ -1002,60 +1002,60 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
     def register_default_blacklist(self):
         self.set_default_blacklist([
             # hls known issues
-            ("validate.hls.playback.seek_with_stop.*",
+            ("hls.playback.seek_with_stop.*",
              "https://bugzilla.gnome.org/show_bug.cgi?id=753689"),
 
             # dash known issues
-            ("validate.dash.media_check.*",
+            ("dash.media_check.*",
              "Caps are different depending on selected bitrates, etc"),
 
             # Matroska/WEBM known issues:
-            ("validate.*.reverse_playback.*webm$",
+            ("*.reverse_playback.*webm$",
              "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
-            ("validate.*.reverse_playback.*mkv$",
+            ("*.reverse_playback.*mkv$",
              "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
-            ("validate.http.playback.seek_with_stop.*webm",
+            ("http.playback.seek_with_stop.*webm",
              "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
-            ("validate.http.playback.seek_with_stop.*mkv",
+            ("http.playback.seek_with_stop.*mkv",
              "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
 
             # MPEG TS known issues:
-            ('(?i)validate.*.playback.reverse_playback.*(?:_|.)(?:|m)ts$',
+            ('(?i)*playback.reverse_playback.*(?:_|.)(?:|m)ts$',
              "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
 
             # Fragmented MP4 disabled tests:
-            ('validate.*.playback..*seek.*.fragmented_nonseekable_sink_mp4',
+            ('*.playback..*seek.*.fragmented_nonseekable_sink_mp4',
              "Seeking on fragmented files without indexes isn't implemented"),
-            ('validate.*.playback.reverse_playback.fragmented_nonseekable_sink_mp4',
+            ('*.playback.reverse_playback.fragmented_nonseekable_sink_mp4',
              "Seeking on fragmented files without indexes isn't implemented"),
 
             # HTTP known issues:
-            ("validate.http.*scrub_forward_seeking.*",
+            ("http.*scrub_forward_seeking.*",
              "This is not stable enough for now."),
-            ("validate.http.playback.change_state_intensive.raw_video_mov",
+            ("http.playback.change_state_intensive.raw_video_mov",
              "This is not stable enough for now. (flow return from pad push doesn't match expected value)"),
 
             # MXF known issues"
-            (".*reverse_playback.*mxf",
+            ("*reverse_playback.*mxf",
              "Reverse playback is not handled in MXF"),
-            ("validate\.file\.transcode.*mxf",
+            ("file\.transcode.*mxf",
              "FIXME: Transcoding and mixing tests need to be tested"),
 
             # WMV known issues"
-            (".*reverse_playback.*wmv",
+            ("*reverse_playback.*wmv",
              "Reverse playback is not handled in wmv"),
             (".*reverse_playback.*asf",
              "Reverse playback is not handled in asf"),
 
             # ogg known issues
-            ("validate.http.playback.seek.*vorbis_theora_1_ogg",
+            ("http.playback.seek.*vorbis_theora_1_ogg",
              "https://bugzilla.gnome.org/show_bug.cgi?id=769545"),
             # RTSP known issues
-            ('validate.rtsp.playback.reverse.*',
+            ('rtsp.playback.reverse.*',
              'https://bugzilla.gnome.org/show_bug.cgi?id=626811'),
-            ('validate.rtsp.playback.seek_with_stop.*',
+            ('rtsp.playback.seek_with_stop.*',
              'https://bugzilla.gnome.org/show_bug.cgi?id=784298'),
-            ('validate.rtsp.playback.fast_*',
+            ('rtsp.playback.fast_*',
              'https://bugzilla.gnome.org/show_bug.cgi?id=754575'),
         ])
 

@@ -161,8 +161,6 @@ class MesonTestsManager(TestsManager):
         if test.suite:
             name = '.'.join(test.suite) + '.' + name
 
-        name = self.name + '.' + name
-
         return name.replace('..', '.').replace(' ', '-')
 
     def list_tests(self):

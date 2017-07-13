@@ -353,7 +353,7 @@ def main(libsdir):
         prog='gst-validate-launcher', description=_help_message)
 
     parser.add_argument('testsuites', metavar='N', nargs='*',
-                        help="""Lets you specify a file where the testsuite to execute is defined.
+                        help="""Lets you specify a test to run, a testsuite name or a file where the testsuite to execute is defined.
 
 In the module if you want to work with a specific test manager(s) (for example,
 'ges' or 'validate'), you should define the TEST_MANAGER variable in the
