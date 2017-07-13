@@ -812,12 +812,6 @@ check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
       PAD_BROADCAST_EVENT (pad);
       PAD_UNLOCK (pad);
     }
-    if (query) {
-      if (processed_event)
-        *processed_event = TRUE;
-      if (klass == NULL)
-        klass = GST_AGGREGATOR_GET_CLASS (self);
-    }
   } while (event != NULL);
 
   return TRUE;
