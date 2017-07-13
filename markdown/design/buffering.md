@@ -44,7 +44,7 @@ buffer uses the watermarks as follows:
 
 - The buffer element will post `BUFFERING` messages until the high
 watermark is hit. This instructs the application to keep the
-pipeline PAUSED, which will eventually block the srcpad from
+pipeline `PAUSED`, which will eventually block the srcpad from
 pushing while data is prerolled in the sinks.
 
 - When the high watermark is hit, a `BUFFERING` message with 100%
@@ -161,13 +161,13 @@ GUI about the estimated remaining time that buffering will take.
 
 ## Application
 
-While data is buffered the pipeline should remain in the PAUSED state.
+While data is buffered the pipeline should remain in the `PAUSED` state.
 It is also possible that more data should be buffered while the pipeline
-is PLAYING, in which case the pipeline should be PAUSED until the
+is `PLAYING`, in which case the pipeline should be `PAUSED` until the
 buffering finishes.
 
 `BUFFERING` messages can be posted while the pipeline is prerolling. The
-application should not set the pipeline to PLAYING before a `BUFFERING`
+application should not set the pipeline to `PLAYING` before a `BUFFERING`
 message with a 100 percent value is received, which might only happen
 after the pipeline prerolls.
 
@@ -178,7 +178,7 @@ Usually these buffering messages contain the "buffering-mode" = "live".
 The buffering message can also instruct the application to switch to a
 periodical `BUFFERING` query instead, so it can more precisely control the
 buffering process. The application can, for example, choose not to act
-on the `BUFFERING` complete message (buffer-percent = 100) to resume
+on the `BUFFERING` complete message (`buffer-percent = 100`) to resume
 playback but use the estimated download time instead, resuming playback
 when it has determined that it should be able to provide uninterrupted
 playback.
@@ -221,11 +221,11 @@ optionally the downloaded areas in the format given above. One of the ranges
 contains the same start/stop position as above:
 
 ```
-    typedef struct
-    {
-      gint64 start;
-      gint64 stop;
-    } GstQueryBufferingRange;
+typedef struct
+{
+  gint64 start;
+  gint64 stop;
+} GstQueryBufferingRange;
 ```
 
 For the `download` and `timeshift` buffering-modes, the start and stop
@@ -242,29 +242,33 @@ Some defaults for common elements:
 
 A `GstBaseSrc` with random access replies to the `BUFFERING` query with:
 
-    "buffer-percent" = 100
-    "buffering-mode" = "stream"
-    "avg-in-rate" = -1
-    "avg-out-rate" = -1
-    "buffering-left" = 0
-    "format" = GST_FORMAT_BYTES
-    "start" = 0
-    "stop" = the total filesize
-    "estimated-total" = 0
-    "buffering-ranges" = NULL
+```
+"buffer-percent" = 100
+"buffering-mode" = "stream"
+"avg-in-rate" = -1
+"avg-out-rate" = -1
+"buffering-left" = 0
+"format" = GST_FORMAT_BYTES
+"start" = 0
+"stop" = the total filesize
+"estimated-total" = 0
+"buffering-ranges" = NULL
+```
 
 A `GstBaseSrc` in push mode replies to the `BUFFERING` query with:
 
-    "buffer-percent" = 100
-    "buffering-mode" = "stream"
-    "avg-in-rate" = -1
-    "avg-out-rate" = -1
-    "buffering-left" = 0
-    "format" = a valid GST_TYPE_FORMAT
-    "start" = current position
-    "stop" = current position
-    "estimated-total" = -1
-    "buffering-ranges" = NULL
+```
+"buffer-percent" = 100
+"buffering-mode" = "stream"
+"avg-in-rate" = -1
+"avg-out-rate" = -1
+"buffering-left" = 0
+"format" = a valid GST_TYPE_FORMAT
+"start" = current position
+"stop" = current position
+"estimated-total" = -1
+"buffering-ranges" = NULL
+```
 
 ## Buffering strategies
 
