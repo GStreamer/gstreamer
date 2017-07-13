@@ -1130,16 +1130,9 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
     return GST_FLOW_OK;
   }
 
-  if (msg->status_code == SOUP_STATUS_UNAUTHORIZED) {
-    /* force an error */
-    return gst_soup_http_src_parse_status (msg, src);
-  }
-
-  src->got_headers = TRUE;
-  g_cond_broadcast (&src->have_headers_cond);
-
   http_headers = gst_structure_new_empty ("http-headers");
-  gst_structure_set (http_headers, "uri", G_TYPE_STRING, src->location, NULL);
+  gst_structure_set (http_headers, "uri", G_TYPE_STRING, src->location,
+      "http-status-code", G_TYPE_UINT, msg->status_code, NULL);
   if (src->redirection_uri)
     gst_structure_set (http_headers, "redirection-uri", G_TYPE_STRING,
         src->redirection_uri, NULL);
@@ -1155,6 +1148,19 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
   gst_structure_set (http_headers, "response-headers", GST_TYPE_STRUCTURE,
       headers, NULL);
   gst_structure_free (headers);
+
+  gst_element_post_message (GST_ELEMENT_CAST (src),
+      gst_message_new_element (GST_OBJECT_CAST (src),
+          gst_structure_copy (http_headers)));
+
+  if (msg->status_code == SOUP_STATUS_UNAUTHORIZED) {
+    /* force an error */
+    gst_structure_free (http_headers);
+    return gst_soup_http_src_parse_status (msg, src);
+  }
+
+  src->got_headers = TRUE;
+  g_cond_broadcast (&src->have_headers_cond);
 
   http_headers_event =
       gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY, http_headers);
