@@ -394,7 +394,7 @@ gst_audio_aggregator_src_event (GstAggregator * agg, GstEvent * event)
       gst_event_parse_seek (event, &rate, &seek_format, &flags, &start_type,
           &start, &stop_type, &stop);
 
-      /* Check the seeking parametters before linking up */
+      /* Check the seeking parameters before linking up */
       if ((start_type != GST_SEEK_TYPE_NONE)
           && (start_type != GST_SEEK_TYPE_SET)) {
         result = FALSE;
