@@ -179,7 +179,7 @@ gst_gsmenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buffer)
 
   GST_LOG_OBJECT (gsmenc, "encoded to %d bytes", (gint) omap.size);
   gst_buffer_unmap (buffer, &map);
-  gst_buffer_unmap (buffer, &omap);
+  gst_buffer_unmap (outbuf, &omap);
 
   ret = gst_audio_encoder_finish_frame (benc, outbuf, 160);
 
