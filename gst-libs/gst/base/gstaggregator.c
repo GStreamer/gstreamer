@@ -2497,7 +2497,7 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
       aggpad->priv->first_buffer = FALSE;
     }
 
-    if (gst_aggregator_pad_has_space (self, aggpad)
+    if ((gst_aggregator_pad_has_space (self, aggpad) || !head)
         && aggpad->priv->flow_return == GST_FLOW_OK) {
       if (head)
         g_queue_push_head (&aggpad->priv->data, buffer);
