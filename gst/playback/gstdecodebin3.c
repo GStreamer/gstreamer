@@ -496,8 +496,7 @@ static void free_multiqueue_slot_async (GstDecodebin3 * dbin,
     MultiQueueSlot * slot);
 
 static GstStreamCollection *get_merged_collection (GstDecodebin3 * dbin);
-static void update_requested_selection (GstDecodebin3 * dbin,
-    GstStreamCollection * collection);
+static void update_requested_selection (GstDecodebin3 * dbin);
 
 /* FIXME: Really make all the parser stuff a self-contained helper object */
 #include "gstdecodebin3-parse.c"
@@ -834,6 +833,7 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
       input->collection = NULL;
     }
 
+    SELECTION_LOCK (dbin);
     collection = get_merged_collection (dbin);
     if (collection && collection != dbin->collection) {
       GstMessage *msg;
@@ -847,9 +847,11 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
           gst_message_new_stream_collection ((GstObject *) dbin,
           dbin->collection);
 
+      SELECTION_UNLOCK (dbin);
       gst_element_post_message (GST_ELEMENT_CAST (dbin), msg);
-      update_requested_selection (dbin, dbin->collection);
-    }
+      update_requested_selection (dbin);
+    } else
+      SELECTION_UNLOCK (dbin);
 
     gst_bin_remove (GST_BIN (dbin), input->parsebin);
     gst_element_set_state (input->parsebin, GST_STATE_NULL);
@@ -1011,14 +1013,12 @@ stream_in_list (GList * list, const gchar * sid)
 }
 
 static void
-update_requested_selection (GstDecodebin3 * dbin,
-    GstStreamCollection * collection)
+update_requested_selection (GstDecodebin3 * dbin)
 {
   guint i, nb;
   GList *tmp = NULL;
   GstStreamType used_types = 0;
-
-  nb = gst_stream_collection_get_size (collection);
+  GstStreamCollection *collection;
 
   /* 1. Is there a pending SELECT_STREAMS we can return straight away since
    *  the switch handler will take care of the pending selection */
@@ -1028,6 +1028,13 @@ update_requested_selection (GstDecodebin3 * dbin,
         "No need to create pending selection, SELECT_STREAMS underway");
     goto beach;
   }
+
+  collection = dbin->collection;
+  if (G_UNLIKELY (collection == NULL)) {
+    GST_DEBUG_OBJECT (dbin, "No current GstStreamCollection");
+    goto beach;
+  }
+  nb = gst_stream_collection_get_size (collection);
 
   /* 2. If not, are we in EXPOSE_ALL_MODE ? If so, match everything */
   GST_FIXME_OBJECT (dbin, "Implement EXPOSE_ALL_MODE");
@@ -1294,6 +1301,7 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
         posting_collection = TRUE;
         INPUT_UNLOCK (dbin);
       }
+      SELECTION_LOCK (dbin);
       if (dbin->collection && collection != dbin->collection) {
         /* Replace collection message, we most likely aggregated it */
         GstMessage *new_msg;
@@ -1303,6 +1311,7 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
         gst_message_unref (message);
         message = new_msg;
       }
+      SELECTION_UNLOCK (dbin);
       if (collection)
         gst_object_unref (collection);
       break;
@@ -1315,7 +1324,7 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
 
   if (posting_collection) {
     /* Figure out a selection for that collection */
-    update_requested_selection (dbin, dbin->collection);
+    update_requested_selection (dbin);
   }
 }
 
