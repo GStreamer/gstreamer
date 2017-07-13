@@ -79,14 +79,14 @@ The blocking flags must match the triggered probe exactly.
 The probe callback is defined as:
 
 ``` c
-    GstPadProbeReturn (*GstPadProbeCallback) (GstPad *pad, GstPadProbeInfo *info,
-                                           gpointer user_data);
+GstPadProbeReturn (*GstPadProbeCallback) (GstPad *pad, GstPadProbeInfo *info,
+    gpointer user_data);
 ```
 
 A probe info structure is passed as an argument and its type is guaranteed
 to match the mask that was used to register the callback. The data item in the
 info contains type specific data, which is usually the data item that is blocked
-or NULL when no data item is present.
+or `NULL` when no data item is present.
 
 The probe can return any of the following return values:
 
@@ -97,11 +97,12 @@ typedef enum
   GST_PAD_PROBE_OK,
   GST_PAD_PROBE_REMOVE,
   GST_PAD_PROBE_PASS,
+  GST_PAD_PROBE_HANDLED
 } GstPadProbeReturn;
 ```
 
-`GST_PAD_PROBE_OK` is the normal return value. DROP will drop the item that is
-currently being probed. `GST_PAD_PROBE_REMOVE` the currently executing probe from the
+`GST_PAD_PROBE_OK` is the normal return value. `_DROP` will drop the item that is
+currently being probed. `GST_PAD_PROBE_REMOVE`: remove the currently executing probe from the
 list of probes.
 
 `GST_PAD_PROBE_PASS` is relevant for blocking probes and will temporarily unblock the
@@ -109,21 +110,21 @@ pad and let the item trough, it will then block again on the next item.
 
 ## Blocking probes
 
-Blocking probes are probes with BLOCK or IDLE flags set. They will always
+Blocking probes are probes with `BLOCK` or `IDLE` flags set. They will always
 block the dataflow and trigger the callback according to the following rules:
 
-When the IDLE flag is set, the probe callback is called as soon as no data is
+When the `IDLE` flag is set, the probe callback is called as soon as no data is
 flowing over the pad. If at the time of probe registration, the pad is idle,
 the callback will be called immediately from the current thread. Otherwise,
 the callback will be called as soon as the pad becomes idle in the streaming
 thread.
 
-The IDLE probe is useful to perform dynamic linking, it allows to wait for for
+The `IDLE` probe is useful to perform dynamic linking, it allows to wait for for
 a safe moment when an unlink/link operation can be done. Since the probe is a
 blocking probe, it will also make sure that the pad stays idle until the probe
 is removed.
 
-When the BLOCK flag is set, the probe callback will be called when new data
+When the `BLOCK` flag is set, the probe callback will be called when new data
 arrives on the pad and right before the pad goes into the blocking state. This
 callback is thus only called when there is new data on the pad.
 
@@ -152,7 +153,7 @@ for linking the pad in either the BLOCK or DATA probes on the pad.
 Before the peerpad chain or event function is called, the peer pad block
 and data probes are called.
 
-Finally, the IDLE probe is called on the pad after the data was sent to
+Finally, the `IDLE` probe is called on the pad after the data was sent to
 the peer pad.
 
 The push dataflow probe behavior is the same for buffers and
@@ -199,19 +200,19 @@ gst_pad_push_event() |                               |
 Pull probes have the `GST_PAD_PROBE_TYPE_PULL` flag set in the
 callbacks.
 
-The `gst_pad_pull_range()` call will first trigger the BLOCK probes
-without a DATA item. This allows the pad to be linked before the peer
+The `gst_pad_pull_range()` call will first trigger the `BLOCK` probes
+without a `DATA` item. This allows the pad to be linked before the peer
 pad is resolved. It also allows the callback to set a data item in the
 probe info.
 
 After the blocking probe and the getrange function is called on the peer
 pad and there is a data item, the DATA probes are called.
 
-When control returns to the sinkpad, the IDLE callbacks are called. The
-IDLE callback is called without a data item so that it will also be
+When control returns to the sinkpad, the `IDLE` callbacks are called. The
+`IDLE` callback is called without a data item so that it will also be
 called when there was an error.
 
-If there is a valid DATA item, the DATA probes are called for the item.
+If there is a valid `DATA` item, the `DATA` probes are called for the item.
 
 ```
                 srcpad                          sinkpad
@@ -286,8 +287,8 @@ gst_pad_peer_query() |                               |
                      |                               |
 ```
 
-For queries, the PUSH ProbeType is set when the query is traveling to
-the object that will answer the query and the PULL type is set when the
+For queries, the `PUSH` `ProbeType` is set when the query is traveling to
+the object that will answer the query and the `PULL` type is set when the
 query contains the answer.
 
 ## Use-cases
@@ -338,7 +339,7 @@ prerolled pipeline:
                    '----------'
 ```
 
-The purpose is to replace element2 with element4 in the PLAYING
+The purpose is to replace element2 with element4 in the `PLAYING`
 pipeline.
 
 1) block element1 src pad.
@@ -347,17 +348,17 @@ pipeline.
 3) unlink element1 and element2
 4) optional step: make sure data is flushed out of element2:
    4a) pad event probe on element2 src
-   4b) send EOS to element2, this makes sure that element2 flushes out the last bits of data it holds.
-   4c) wait for EOS to appear in the probe, drop the EOS.
-   4d) remove the EOS pad event probe.
+   4b) send `EOS` to element2, this makes sure that element2 flushes out the last bits of data it holds.
+   4c) wait for `EOS` to appear in the probe, drop the `EOS`.
+   4d) remove the `EOS` pad event probe.
 5) unlink element2 and element3
-   5a) optionally element2 can now be set to NULL and/or removed from the pipeline.
+   5a) optionally element2 can now be set to `NULL` and/or removed from the pipeline.
 6) link element4 and element3
 7) link element1 and element4
 8) make sure element4 is in the same state as the rest of the elements. The
-   element should at least be PAUSED.
+   element should at least be `PAUSED`.
 9) unblock element1 src
 
-The same flow can be used to replace an element in a PAUSED pipeline. Of
-course in a PAUSED pipeline there might not be dataflow so the block
+The same flow can be used to replace an element in a `PAUSED` pipeline. Of
+course in a `PAUSED` pipeline there might not be dataflow so the block
 might not immediately happen.
