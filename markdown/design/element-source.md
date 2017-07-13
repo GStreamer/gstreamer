@@ -121,7 +121,7 @@ A non-live source should timestamp the buffers it produces starting from
 0. If it is not possible to timestamp every buffer (filesrc), the source
 is allowed to only timestamp the first buffer (as 0).
 
-Live sources only produce data in the PLAYING state, when the clock is
+Live sources only produce data in the `PLAYING` state, when the clock is
 running. They should timestamp each buffer they produce with the current
 `running_time` of the pipeline, which is expressed as:
 
@@ -131,4 +131,4 @@ absolute_time - base_time
 
 With `absolute_time` being the time obtained from the global pipeline with
 `gst_clock_get_time()` and `base_time` being the time of that clock when
-the pipeline was last set to PLAYING.
+the pipeline was last set to `PLAYING`.
