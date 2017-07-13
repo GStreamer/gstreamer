@@ -303,7 +303,7 @@ Available options:""")
                 if scenario.get_min_media_duration() >= (project.get_duration() / utils.GST_SECOND):
                     continue
 
-                classname = "ges.playback.%s.%s" % (scenario.name,
+                classname = "playback.%s.%s" % (scenario.name,
                                                     os.path.basename(proj_uri).replace(".xges", ""))
                 self.add_test(GESPlaybackTest(classname,
                                               self.options,
@@ -314,7 +314,7 @@ Available options:""")
 
             # And now rendering casses
             for comb in GES_ENCODING_TARGET_COMBINATIONS:
-                classname = "ges.render.%s.%s" % (str(comb).replace(' ', '_'),
+                classname = "render.%s.%s" % (str(comb).replace(' ', '_'),
                                                   os.path.splitext(os.path.basename(proj_uri))[0])
                 self.add_test(GESRenderTest(classname, self.options,
                                             self.reporter, project,
