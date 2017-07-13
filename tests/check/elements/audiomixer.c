@@ -1174,9 +1174,8 @@ GST_START_TEST (test_flush_start_flush_stop)
 
   gst_element_link (audiomixer, sink);
 
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  fail_unless (gst_element_get_state (pipeline, NULL, NULL,
-          GST_CLOCK_TIME_NONE) == GST_STATE_CHANGE_SUCCESS);
+  /* prepare playing */
+  set_state_and_wait (pipeline, GST_STATE_PLAYING);
 
   audiomixer_src = gst_element_get_static_pad (audiomixer, "src");
   fail_if (GST_PAD_IS_FLUSHING (audiomixer_src));
