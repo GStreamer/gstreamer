@@ -10636,7 +10636,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           case FOURCC_WRLE:
           {
             gst_caps_set_simple (entry->caps,
-                "depth", G_TYPE_INT, QT_UINT16 (stsd_entry_data + offset + 82),
+                "depth", G_TYPE_INT, QT_UINT16 (stsd_entry_data + offset + 66),
                 NULL);
             break;
           }
