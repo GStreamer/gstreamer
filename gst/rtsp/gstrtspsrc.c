@@ -6082,10 +6082,14 @@ gst_rtspsrc_prepare_transports (GstRTSPStream * stream, gchar ** transports,
         g_string_append_printf (str, "%d", src->free_channel);
       else if (next[3] == '2')
         g_string_append_printf (str, "%d", src->free_channel + 1);
+
     }
 
     p = next + 4;
   }
+  if (src->version >= GST_RTSP_VERSION_2_0)
+    src->free_channel += 2;
+
   /* append final part */
   g_string_append (str, p);
 
@@ -6202,10 +6206,12 @@ gst_rtsp_src_setup_stream_from_response (GstRTSPSrc * src,
       if (protocols)
         *protocols = GST_RTSP_LOWER_TRANS_TCP;
       src->interleaved = TRUE;
-      /* update free channels */
-      src->free_channel = MAX (transport.interleaved.min, src->free_channel);
-      src->free_channel = MAX (transport.interleaved.max, src->free_channel);
-      src->free_channel++;
+      if (src->version < GST_RTSP_VERSION_2_0) {
+        /* update free channels */
+        src->free_channel = MAX (transport.interleaved.min, src->free_channel);
+        src->free_channel = MAX (transport.interleaved.max, src->free_channel);
+        src->free_channel++;
+      }
       break;
     case GST_RTSP_LOWER_TRANS_UDP_MCAST:
       /* only allow multicast for other streams */
@@ -6331,7 +6337,7 @@ gst_rtspsrc_setup_streams_end (GstRTSPSrc * src, gboolean async)
     gst_rtsp_src_receive_response (src, conninfo, &response, NULL);
 
     gst_rtsp_src_setup_stream_from_response (src, stream,
-        &response, NULL, 1, NULL, NULL);
+        &response, NULL, 0, NULL, NULL);
   }
 
   return GST_RTSP_OK;
@@ -6505,7 +6511,6 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
     }
 
     GST_DEBUG_OBJECT (src, "transport is now %s", GST_STR_NULL (transports));
-
     /* create SETUP request */
     res =
         gst_rtspsrc_init_request (src, &request, GST_RTSP_SETUP,
