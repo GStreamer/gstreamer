@@ -56,6 +56,7 @@ enum
   PROP_INLINESPSPPSHEADERS,
 #endif
   PROP_PERIODICITYOFIDRFRAMES,
+  PROP_PERIODICITYOFIDRFRAMES_COMPAT,
   PROP_INTERVALOFCODINGINTRAFRAMES,
   PROP_B_FRAMES,
 };
@@ -111,6 +112,15 @@ gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
           GST_PARAM_MUTABLE_READY));
 
   g_object_class_install_property (gobject_class,
+      PROP_PERIODICITYOFIDRFRAMES_COMPAT, g_param_spec_uint ("periodicty-idr",
+          "IDR periodicity",
+          "Periodicity of IDR frames (0xffffffff=component default) DEPRECATED - only for backwards compat",
+          0, G_MAXUINT,
+          GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class,
       PROP_INTERVALOFCODINGINTRAFRAMES,
       g_param_spec_uint ("interval-intraframes",
           "Interval of coding Intra frames",
@@ -157,6 +167,7 @@ gst_omx_h264_enc_set_property (GObject * object, guint prop_id,
       break;
 #endif
     case PROP_PERIODICITYOFIDRFRAMES:
+    case PROP_PERIODICITYOFIDRFRAMES_COMPAT:
       self->periodicty_idr = g_value_get_uint (value);
       break;
     case PROP_INTERVALOFCODINGINTRAFRAMES:
@@ -184,6 +195,7 @@ gst_omx_h264_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
 #endif
     case PROP_PERIODICITYOFIDRFRAMES:
+    case PROP_PERIODICITYOFIDRFRAMES_COMPAT:
       g_value_set_uint (value, self->periodicty_idr);
       break;
     case PROP_INTERVALOFCODINGINTRAFRAMES:
