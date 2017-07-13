@@ -791,6 +791,18 @@ gst_audio_aggregator_queue_new_buffer (GstAudioAggregator * aagg,
   pad->priv->position = 0;
   pad->priv->size = gst_buffer_get_size (inbuf) / bpf;
 
+  if (pad->priv->size == 0) {
+    if (!GST_BUFFER_DURATION_IS_VALID (inbuf) ||
+        !GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
+      GST_WARNING_OBJECT (pad, "Dropping 0-sized buffer missing either a"
+          " duration or a GAP flag: %" GST_PTR_FORMAT, inbuf);
+      return FALSE;
+    }
+
+    pad->priv->size = gst_util_uint64_scale (GST_BUFFER_DURATION (inbuf), rate,
+        GST_SECOND);
+  }
+
   if (!GST_BUFFER_PTS_IS_VALID (inbuf)) {
     if (pad->priv->output_offset == -1)
       pad->priv->output_offset = aagg->priv->offset;
