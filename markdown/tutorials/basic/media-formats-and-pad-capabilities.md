@@ -169,7 +169,7 @@ static void print_pad_templates_information (GstElementFactory * factory) {
 
   pads = gst_element_factory_get_static_pad_templates (factory);
   while (pads) {
-    padtemplate = pads->data
+    padtemplate = pads->data;
     pads = g_list_next (pads);
 
     if (padtemplate->direction == GST_PAD_SRC)
