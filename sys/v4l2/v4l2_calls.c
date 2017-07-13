@@ -56,7 +56,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
  *   get the device's capturing capabilities
  * return value: TRUE on success, FALSE on error
  ******************************************************/
-gboolean
+static gboolean
 gst_v4l2_get_capabilities (GstV4l2Object * v4l2object)
 {
   GstElement *e;
