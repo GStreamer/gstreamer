@@ -27,6 +27,31 @@
  *
  * Encodes raw video streams into H.264 bitstreams.
  *
+ * The #GstVaapiEncodeH264:rate-control property controls the type of
+ * encoding.  In case of Constant Bitrate Encoding (CBR), the
+ * #GstVaapiEncodeH264:bitrate will determine the quality of the
+ * encoding.  Alternatively, one may choose to perform Constant
+ * Quantizer or Variable Bitrate Encoding (VBR), in which case the
+ * #GstVaapiEncodeH264:bitrate is the maximum bitrate.
+ *
+ * The H264 profile that is eventually used depends on a few settings.
+ * If #GstVaapiEncodeH264:dct8x8 is enabled, then High profile is
+ * used.  Otherwise, if #GstVaapiEncodeH264:cabac entropy coding is
+ * enabled or #GstVaapiEncodeH264:max-bframes are allowed, then Main
+ * Profile is in effect, and otherwise Baseline profile applies.  The
+ * high profile is imposed by default, which is fine for most software
+ * players and settings, but in some cases (e.g. hardware platforms) a
+ * more restricted profile/level may be necessary. The recommended way
+ * to set a profile is to set it in the downstream caps.
+ *
+ * You can also set parameters to adjust the latency of encoding:
+ * #GstVaapiEncodeH264:quality-level is a number between 1-7, in the
+ * case of the Intel VAAPI driver, where a lower value will produce a
+ * higher quality output but with more latency; meanwhile a hihg
+ * number will produce a lower quality output with less latency. Also
+ * you can set #GstVaapiEncodeH264:tune, if your backend supports it,
+ * for low-power mode or high compression.
+ *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
