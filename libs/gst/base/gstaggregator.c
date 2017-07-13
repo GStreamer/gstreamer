@@ -2467,6 +2467,12 @@ apply_buffer (GstAggregatorPad * aggpad, GstBuffer * buffer, gboolean head)
   update_time_level (aggpad, head);
 }
 
+/*
+ * Can be called either from the sinkpad's chain function or from the srcpad's
+ * thread in the case of a buffer synthetized from a GAP event.
+ * Because of this second case, FLUSH_LOCK can't be used here.
+ */
+
 static GstFlowReturn
 gst_aggregator_pad_chain_internal (GstAggregator * self,
     GstAggregatorPad * aggpad, GstBuffer * buffer, gboolean head)
@@ -2475,8 +2481,6 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
   GstClockTime buf_pts;
 
   GST_DEBUG_OBJECT (aggpad, "Start chaining a buffer %" GST_PTR_FORMAT, buffer);
-
-  PAD_FLUSH_LOCK (aggpad);
 
   PAD_LOCK (aggpad);
   flow_return = aggpad->priv->flow_return;
@@ -2573,15 +2577,12 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
   GST_OBJECT_UNLOCK (self);
   SRC_UNLOCK (self);
 
-  PAD_FLUSH_UNLOCK (aggpad);
-
   GST_DEBUG_OBJECT (aggpad, "Done chaining");
 
   return flow_return;
 
 flushing:
   PAD_UNLOCK (aggpad);
-  PAD_FLUSH_UNLOCK (aggpad);
 
   GST_DEBUG_OBJECT (aggpad, "Pad is %s, dropping buffer",
       gst_flow_get_name (flow_return));
@@ -2594,8 +2595,17 @@ flushing:
 static GstFlowReturn
 gst_aggregator_pad_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
 {
-  return gst_aggregator_pad_chain_internal (GST_AGGREGATOR_CAST (object),
-      GST_AGGREGATOR_PAD_CAST (pad), buffer, TRUE);
+  GstFlowReturn ret;
+  GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
+
+  PAD_FLUSH_LOCK (aggpad);
+
+  ret = gst_aggregator_pad_chain_internal (GST_AGGREGATOR_CAST (object),
+      aggpad, buffer, TRUE);
+
+  PAD_FLUSH_UNLOCK (aggpad);
+
+  return ret;
 }
 
 static gboolean
