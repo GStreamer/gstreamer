@@ -1,5 +1,6 @@
 noinst_PROGRAMS = \
 	test-vaapisink  \
+	test-vaapipostproc  \
 	$(NULL)
 
 TEST_CFLAGS = \
@@ -16,5 +17,9 @@ TEST_LIBS = \
 test_vaapisink_SOURCES	= test-vaapisink.c
 test_vaapisink_CFLAGS	= $(TEST_CFLAGS)
 test_vaapisink_LDADD	= $(TEST_LIBS)
+
+test_vaapipostproc_SOURCES	= test-vaapipostproc.c
+test_vaapipostproc_CFLAGS	= $(TEST_CFLAGS)
+test_vaapipostproc_LDADD	= $(TEST_LIBS)
 
 -include $(top_srcdir)/git.mk
