@@ -356,6 +356,8 @@ static GstFlowReturn gst_aggregator_pad_chain_internal (GstAggregator * self,
  *
  * This method guarantees that @func will be called only once for each
  * sink pad.
+ *
+ * Returns: %FALSE if there are no sinkpads or if @func returned %FALSE
  */
 gboolean
 gst_aggregator_iterate_sinkpads (GstAggregator * self,
@@ -779,9 +781,8 @@ check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
       if (klass == NULL)
         klass = GST_AGGREGATOR_GET_CLASS (self);
 
-      GST_LOG_OBJECT (pad, "Processing %" GST_PTR_FORMAT, event);
-
       if (event) {
+        GST_LOG_OBJECT (pad, "Processing %" GST_PTR_FORMAT, event);
         gst_event_ref (event);
         ret = klass->sink_event (self, pad, event);
 
@@ -794,7 +795,7 @@ check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
       }
 
       if (query) {
-        GST_LOG_OBJECT (pad, "Processing %" GST_PTR_FORMAT, event);
+        GST_LOG_OBJECT (pad, "Processing %" GST_PTR_FORMAT, query);
         ret = klass->sink_query (self, pad, query);
 
         PAD_LOCK (pad);
