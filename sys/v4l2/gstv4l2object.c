@@ -32,7 +32,7 @@
 #include <gudev/gudev.h>
 #endif
 
-#include "v4l2_calls.h"
+#include "gstv4l2object.h"
 #include "gstv4l2tuner.h"
 #include "gstv4l2colorbalance.h"
 

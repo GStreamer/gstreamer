@@ -26,7 +26,8 @@
 
 #include <gst/gst.h>
 #include <gst/video/colorbalance.h>
-#include "v4l2_calls.h"
+
+#include "gstv4l2object.h"
 
 G_BEGIN_DECLS
 

@@ -29,8 +29,8 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "gstv4l2object.h"
 #include "gstv4l2videodec.h"
-#include "v4l2_calls.h"
 
 #include <string.h>
 #include <gst/gst-i18n-plugin.h>

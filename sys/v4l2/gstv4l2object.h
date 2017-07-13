@@ -24,6 +24,22 @@
 #ifndef __GST_V4L2_OBJECT_H__
 #define __GST_V4L2_OBJECT_H__
 
+#ifdef HAVE_LIBV4L2
+#  include <libv4l2.h>
+#else
+#  include "ext/videodev2.h"
+#  include <sys/ioctl.h>
+#  include <sys/mman.h>
+#  include <unistd.h>
+#  define v4l2_fd_open(fd, flags) (fd)
+#  define v4l2_close    close
+#  define v4l2_dup      dup
+#  define v4l2_ioctl    ioctl
+#  define v4l2_read     read
+#  define v4l2_mmap     mmap
+#  define v4l2_munmap   munmap
+#endif
+
 #include "ext/videodev2.h"
 #include "v4l2-utils.h"
 
@@ -77,6 +93,34 @@ typedef gboolean  (*GstV4l2UpdateFpsFunction) (GstV4l2Object * v4l2object);
 #define GST_V4L2_IS_ACTIVE(o)    ((o)->active)
 #define GST_V4L2_SET_ACTIVE(o)   ((o)->active = TRUE)
 #define GST_V4L2_SET_INACTIVE(o) ((o)->active = FALSE)
+
+/* checks whether the current v4lv4l2object has already been open()'ed or not */
+#define GST_V4L2_CHECK_OPEN(v4l2object)				\
+  if (!GST_V4L2_IS_OPEN(v4l2object))				\
+  {								\
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,	\
+      (_("Device is not open.")), (NULL));                      \
+    return FALSE;						\
+  }
+
+/* checks whether the current v4lv4l2object is close()'ed or whether it is still open */
+#define GST_V4L2_CHECK_NOT_OPEN(v4l2object)			\
+  if (GST_V4L2_IS_OPEN(v4l2object))				\
+  {								\
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,	\
+      (_("Device is open.")), (NULL));                          \
+    return FALSE;						\
+  }
+
+/* checks whether we're out of capture mode or not */
+#define GST_V4L2_CHECK_NOT_ACTIVE(v4l2object)			\
+  if (GST_V4L2_IS_ACTIVE(v4l2object))				\
+  {								\
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS, \
+      (NULL), ("Device is in streaming mode"));                 \
+    return FALSE;						\
+  }
+
 
 struct _GstV4l2Object {
   GstElement * element;
@@ -208,7 +252,7 @@ GstV4l2Object*  gst_v4l2_object_new       (GstElement * element,
                                            GstV4l2SetInOutFunction set_in_out_func,
                                            GstV4l2UpdateFpsFunction update_fps_func);
 
-void            gst_v4l2_object_destroy   (GstV4l2Object * v4l2object);
+void         gst_v4l2_object_destroy   (GstV4l2Object * v4l2object);
 
 /* properties */
 
@@ -225,48 +269,69 @@ gboolean     gst_v4l2_object_get_property_helper       (GstV4l2Object *v4l2objec
                                                         guint prop_id, GValue * value,
                                                         GParamSpec * pspec);
 /* open/close */
-gboolean     gst_v4l2_object_open            (GstV4l2Object *v4l2object);
-gboolean     gst_v4l2_object_open_shared     (GstV4l2Object *v4l2object, GstV4l2Object *other);
-gboolean     gst_v4l2_object_close           (GstV4l2Object *v4l2object);
+gboolean     gst_v4l2_object_open            (GstV4l2Object * v4l2object);
+gboolean     gst_v4l2_object_open_shared     (GstV4l2Object * v4l2object, GstV4l2Object * other);
+gboolean     gst_v4l2_object_close           (GstV4l2Object * v4l2object);
 
 /* probing */
 
-GstCaps*      gst_v4l2_object_get_all_caps (void);
+GstCaps*     gst_v4l2_object_get_all_caps (void);
 
-GstCaps*      gst_v4l2_object_get_raw_caps (void);
+GstCaps*     gst_v4l2_object_get_raw_caps (void);
 
-GstCaps*      gst_v4l2_object_get_codec_caps (void);
+GstCaps*     gst_v4l2_object_get_codec_caps (void);
 
-gint          gst_v4l2_object_extrapolate_stride (const GstVideoFormatInfo * finfo,
+gint         gst_v4l2_object_extrapolate_stride (const GstVideoFormatInfo * finfo,
                                                   gint plane, gint stride);
 
-gboolean      gst_v4l2_object_set_format  (GstV4l2Object * v4l2object, GstCaps * caps, GstV4l2Error *error);
-gboolean      gst_v4l2_object_try_format  (GstV4l2Object * v4l2object, GstCaps * caps, GstV4l2Error *error);
+gboolean     gst_v4l2_object_set_format  (GstV4l2Object * v4l2object, GstCaps * caps, GstV4l2Error * error);
+gboolean     gst_v4l2_object_try_format  (GstV4l2Object * v4l2object, GstCaps * caps, GstV4l2Error * error);
 
-gboolean      gst_v4l2_object_caps_equal  (GstV4l2Object * v4l2object, GstCaps * caps);
+gboolean     gst_v4l2_object_caps_equal  (GstV4l2Object * v4l2object, GstCaps * caps);
 
-gboolean      gst_v4l2_object_unlock      (GstV4l2Object * v4l2object);
-gboolean      gst_v4l2_object_unlock_stop (GstV4l2Object * v4l2object);
+gboolean     gst_v4l2_object_unlock      (GstV4l2Object * v4l2object);
+gboolean     gst_v4l2_object_unlock_stop (GstV4l2Object * v4l2object);
 
-gboolean      gst_v4l2_object_stop        (GstV4l2Object * v4l2object);
+gboolean     gst_v4l2_object_stop        (GstV4l2Object * v4l2object);
 
-GstCaps *     gst_v4l2_object_probe_caps  (GstV4l2Object * v4l2object,
-                                           GstCaps * filter);
-GstCaps *     gst_v4l2_object_get_caps    (GstV4l2Object * v4l2object,
-                                           GstCaps * filter);
+GstCaps *    gst_v4l2_object_probe_caps  (GstV4l2Object * v4l2object, GstCaps * filter);
+GstCaps *    gst_v4l2_object_get_caps    (GstV4l2Object * v4l2object, GstCaps * filter);
 
-gboolean      gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object,
-                                              GstVideoInfo * info);
+gboolean     gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info);
 
-gboolean      gst_v4l2_object_set_crop    (GstV4l2Object * obj);
+gboolean     gst_v4l2_object_set_crop    (GstV4l2Object * obj);
 
-gboolean      gst_v4l2_object_decide_allocation (GstV4l2Object * v4l2object,
-                                                 GstQuery * query);
+gboolean     gst_v4l2_object_decide_allocation (GstV4l2Object * v4l2object, GstQuery * query);
 
-gboolean      gst_v4l2_object_propose_allocation (GstV4l2Object * obj,
-                                                  GstQuery * query);
+gboolean     gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query);
 
 GstStructure * gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
+
+/* TODO Move to proper namespace */
+/* open/close the device */
+gboolean     gst_v4l2_open           (GstV4l2Object * v4l2object);
+gboolean     gst_v4l2_dup            (GstV4l2Object * v4l2object, GstV4l2Object * other);
+gboolean     gst_v4l2_close          (GstV4l2Object * v4l2object);
+
+/* norm/input/output */
+gboolean     gst_v4l2_get_norm       (GstV4l2Object * v4l2object, v4l2_std_id * norm);
+gboolean     gst_v4l2_set_norm       (GstV4l2Object * v4l2object, v4l2_std_id norm);
+gboolean     gst_v4l2_get_input      (GstV4l2Object * v4l2object, gint * input);
+gboolean     gst_v4l2_set_input      (GstV4l2Object * v4l2object, gint input);
+gboolean     gst_v4l2_get_output     (GstV4l2Object * v4l2object, gint * output);
+gboolean     gst_v4l2_set_output     (GstV4l2Object * v4l2object, gint output);
+
+/* frequency control */
+gboolean     gst_v4l2_get_frequency   (GstV4l2Object * v4l2object, gint tunernum, gulong * frequency);
+gboolean     gst_v4l2_set_frequency   (GstV4l2Object * v4l2object, gint tunernum, gulong frequency);
+gboolean     gst_v4l2_signal_strength (GstV4l2Object * v4l2object, gint tunernum, gulong * signal);
+
+/* attribute control */
+gboolean     gst_v4l2_get_attribute   (GstV4l2Object * v4l2object, int attribute, int * value);
+gboolean     gst_v4l2_set_attribute   (GstV4l2Object * v4l2object, int attribute, const int value);
+gboolean     gst_v4l2_set_controls    (GstV4l2Object * v4l2object, GstStructure * controls);
+
+gboolean     gst_v4l2_get_capabilities (GstV4l2Object * v4l2object);
 
 G_END_DECLS
 

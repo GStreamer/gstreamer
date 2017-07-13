@@ -42,7 +42,7 @@
 
 #include <gstv4l2bufferpool.h>
 
-#include "v4l2_calls.h"
+#include "gstv4l2object.h"
 #include "gst/gst-i18n-plugin.h"
 #include <gst/glib-compat-private.h>
 

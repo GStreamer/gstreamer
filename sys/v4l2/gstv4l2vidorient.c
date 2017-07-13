@@ -26,9 +26,9 @@
 
 #include <gst/gst.h>
 
+#include "gstv4l2object.h"
 #include "gstv4l2vidorient.h"
 #include "gstv4l2object.h"
-#include "v4l2_calls.h"
 
 GST_DEBUG_CATEGORY_STATIC (v4l2vo_debug);
 #define GST_CAT_DEFAULT v4l2vo_debug

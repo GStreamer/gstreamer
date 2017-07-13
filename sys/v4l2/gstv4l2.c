@@ -51,7 +51,7 @@
 #include "gstv4l2deviceprovider.h"
 #include "gstv4l2transform.h"
 
-/* used in v4l2_calls.c and v4l2src_calls.c */
+/* used in gstv4l2object.c and v4l2_calls.c */
 GST_DEBUG_CATEGORY (v4l2_debug);
 #define GST_CAT_DEFAULT v4l2_debug
 

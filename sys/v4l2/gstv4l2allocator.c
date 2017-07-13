@@ -26,8 +26,9 @@
 #endif
 
 #include "ext/videodev2.h"
+
+#include "gstv4l2object.h"
 #include "gstv4l2allocator.h"
-#include "v4l2_calls.h"
 
 #include <gst/allocators/gstdmabuf.h>
 

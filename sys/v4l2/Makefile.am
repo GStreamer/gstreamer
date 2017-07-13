@@ -59,7 +59,6 @@ noinst_HEADERS = \
 	gstv4l2videoenc.h \
 	gstv4l2h264enc.h \
 	gstv4l2vidorient.h \
-	v4l2_calls.h \
 	v4l2-utils.h \
 	tuner.h \
 	tunerchannel.h \

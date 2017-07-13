@@ -31,7 +31,6 @@
 #include <gst/gst.h>
 
 #include "gstv4l2object.h"
-#include "v4l2_calls.h"
 #include "v4l2-utils.h"
 
 #ifdef HAVE_GUDEV
