@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2014 Collabora Ltd.
- *     Author: Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+ *     Author: Nicolas Dufresne <nicolas.dufresne@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -43,6 +43,8 @@ typedef struct
   gchar *device;
   GstCaps *sink_caps;
   GstCaps *src_caps;
+  const gchar *longname;
+  const gchar *description;
 } GstV4l2VideoDecCData;
 
 enum
@@ -916,12 +918,6 @@ gst_v4l2_video_dec_class_init (GstV4l2VideoDecClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_v4l2_video_dec_debug, "v4l2videodec", 0,
       "V4L2 Video Decoder");
 
-  gst_element_class_set_static_metadata (element_class,
-      "V4L2 Video Decoder",
-      "Codec/Decoder/Video",
-      "Decode video streams via V4L2 API",
-      "Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>");
-
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_finalize);
   gobject_class->set_property =
@@ -974,6 +970,10 @@ gst_v4l2_video_dec_subclass_init (gpointer g_class, gpointer data)
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
           cdata->src_caps));
 
+  gst_element_class_set_static_metadata (element_class, cdata->longname,
+      "Codec/Decoder/Video", cdata->description,
+      "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
+
   g_free (cdata);
 }
 
@@ -990,36 +990,112 @@ gst_v4l2_is_video_dec (GstCaps * sink_caps, GstCaps * src_caps)
   return ret;
 }
 
+static gchar *
+gst_v4l2_video_dec_set_metadata (GstStructure * s, GstV4l2VideoDecCData * cdata,
+    const gchar * basename)
+{
+  gchar *codec_name = NULL;
+  gchar *type_name = NULL;
+
+#define SET_META(codec) \
+G_STMT_START { \
+  cdata->longname = "V4L2 " codec " Decoder"; \
+  cdata->description = "Decodes " codec " streams via V4L2 API"; \
+  codec_name = g_ascii_strdown (codec, -1); \
+} G_STMT_END
+
+  if (gst_structure_has_name (s, "image/jpeg")) {
+    SET_META ("JPEG");
+  } else if (gst_structure_has_name (s, "video/mpeg")) {
+    gint mpegversion = 0;
+    gst_structure_get_int (s, "mpegversion", &mpegversion);
+
+    if (mpegversion == 2) {
+      SET_META ("MPEG2");
+    } else {
+      SET_META ("MPEG4");
+    }
+  } else if (gst_structure_has_name (s, "video/x-h263")) {
+    SET_META ("H263");
+  } else if (gst_structure_has_name (s, "video/x-h264")) {
+    SET_META ("H264");
+  } else if (gst_structure_has_name (s, "video/x-wmv")) {
+    SET_META ("VC1");
+  } else if (gst_structure_has_name (s, "video/x-vp8")) {
+    SET_META ("VP8");
+  } else if (gst_structure_has_name (s, "video/x-bayer")) {
+    SET_META ("BAYER");
+  } else if (gst_structure_has_name (s, "video/x-sonix")) {
+    SET_META ("SONIX");
+  } else if (gst_structure_has_name (s, "video/x-pwc1")) {
+    SET_META ("PWC1");
+  } else if (gst_structure_has_name (s, "video/x-pwc2")) {
+    SET_META ("PWC2");
+  } else {
+    /* This code should be kept on sync with the exposed CODEC type of format
+     * from gstv4l2object.c. This warning will only occure in case we forget
+     * to also add a format here. */
+    gchar *s_str = gst_structure_to_string (s);
+    g_warning ("Missing fixed name mapping for caps '%s', this is a GStreamer "
+        "bug, please report at https://bugs.gnome.org", s_str);
+    g_free (s_str);
+  }
+
+  if (codec_name) {
+    type_name = g_strdup_printf ("v4l2%sdec", codec_name);
+    if (g_type_from_name (type_name) != 0) {
+      g_free (type_name);
+      type_name = g_strdup_printf ("v4l2%s%sdec", basename, codec_name);
+    }
+  }
+
+  return type_name;
+#undef SET_META
+}
+
 gboolean
 gst_v4l2_video_dec_register (GstPlugin * plugin, const gchar * basename,
     const gchar * device_path, GstCaps * sink_caps, GstCaps * src_caps)
 {
-  GTypeQuery type_query;
-  GTypeInfo type_info = { 0, };
-  GType type, subtype;
-  gchar *type_name;
-  GstV4l2VideoDecCData *cdata;
+  gint i;
 
-  cdata = g_new0 (GstV4l2VideoDecCData, 1);
-  cdata->device = g_strdup (device_path);
-  cdata->sink_caps = gst_caps_ref (sink_caps);
-  cdata->src_caps = gst_caps_ref (src_caps);
+  for (i = 0; i < gst_caps_get_size (sink_caps); i++) {
+    GstV4l2VideoDecCData *cdata;
+    GstStructure *s;
+    GTypeQuery type_query;
+    GTypeInfo type_info = { 0, };
+    GType type, subtype;
+    gchar *type_name;
 
-  type = gst_v4l2_video_dec_get_type ();
-  g_type_query (type, &type_query);
-  memset (&type_info, 0, sizeof (type_info));
-  type_info.class_size = type_query.class_size;
-  type_info.instance_size = type_query.instance_size;
-  type_info.class_init = gst_v4l2_video_dec_subclass_init;
-  type_info.class_data = cdata;
-  type_info.instance_init = gst_v4l2_video_dec_subinstance_init;
+    s = gst_caps_get_structure (sink_caps, i);
 
-  type_name = g_strdup_printf ("v4l2%sdec", basename);
-  subtype = g_type_register_static (type, type_name, &type_info, 0);
+    cdata = g_new0 (GstV4l2VideoDecCData, 1);
+    cdata->device = g_strdup (device_path);
+    cdata->sink_caps = gst_caps_new_empty ();
+    gst_caps_append_structure (cdata->sink_caps, gst_structure_copy (s));
+    cdata->src_caps = gst_caps_ref (src_caps);
+    type_name = gst_v4l2_video_dec_set_metadata (s, cdata, basename);
 
-  gst_element_register (plugin, type_name, GST_RANK_PRIMARY + 1, subtype);
+    /* Skip over if we hit an unmapped type */
+    if (!type_name) {
+      g_free (cdata);
+      continue;
+    }
 
-  g_free (type_name);
+    type = gst_v4l2_video_dec_get_type ();
+    g_type_query (type, &type_query);
+    memset (&type_info, 0, sizeof (type_info));
+    type_info.class_size = type_query.class_size;
+    type_info.instance_size = type_query.instance_size;
+    type_info.class_init = gst_v4l2_video_dec_subclass_init;
+    type_info.class_data = cdata;
+    type_info.instance_init = gst_v4l2_video_dec_subinstance_init;
+
+    subtype = g_type_register_static (type, type_name, &type_info, 0);
+    gst_element_register (plugin, type_name, GST_RANK_PRIMARY + 1, subtype);
+
+    g_free (type_name);
+  }
 
   return TRUE;
 }
