@@ -1,7 +1,7 @@
 
-Release notes for GStreamer 1.12.1
+Release notes for GStreamer 1.12.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -35,10 +35,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 782174 : meson: gst-element-check-1.0.m4
-      * 783787 : gsturi: Fixed incorrect escaping of path in gst_uri_construct
-      * 783864 : gstptpclock: Memory leak on delay request message release. Timeout source is left referenced.
-      * 783978 : utils/registrychunks: Fix leaks in failed cases
+      * 784041 : baseparse: sinkcaps can be NULL in default caps negotiation
+      * 784932 : basesink: buffer leaks if preroll failed
 
 ==== Download ====
 
@@ -75,10 +73,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andrejs Vasiljevs
-      * Heekyoung Seo
-      * Matthew Waters
-      * Olivier Crête
-      * Sebastian Dröge
+      * Jason Lin
+      * Nicolas Dufresne
+      * Thibault Saunier
       * Tim-Philipp Müller
  
