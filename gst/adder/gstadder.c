@@ -34,6 +34,12 @@
  * audio mixing element: It will sync input streams correctly and also handle
  * live inputs properly.
  *
+ * Caps negotiation is inherently racy with the adder element. You can set
+ * the "caps" property property to force adder to operate in a specific audio
+ * format, sample rate and channel count. In this case you may also need
+ * audioconvert and/or audioresample elements for each input stream before the
+ * adder element to make sure the input branch can produce the forced format.
+ *
  * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc freq=100 ! adder name=mix ! audioconvert ! autoaudiosink audiotestsrc freq=500 ! mix.
