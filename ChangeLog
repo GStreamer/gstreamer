@@ -1,9 +1,21 @@
-=== release 1.12.1 ===
+=== release 1.12.2 ===
 
-2017-06-20  Sebastian Dröge <slomo@coaxion.net>
+2017-07-14  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.1
+	  releasing 1.12.2
+
+=== release 1.12.1 ===
+
+2017-06-20 12:08:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.12.1
 
 === release 1.12.0 ===
 
