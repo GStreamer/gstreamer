@@ -1326,52 +1326,45 @@ run_sync_test (SendBuffersFunction send_buffers,
   gst_object_unref (bin);
 }
 
+static GstBuffer *
+new_buffer (gsize num_bytes, gint data, GstClockTime ts, GstClockTime dur,
+    GstBufferFlags flags)
+{
+  GstMapInfo map;
+  GstBuffer *buffer = gst_buffer_new_and_alloc (num_bytes);
+
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  memset (map.data, data, map.size);
+  gst_buffer_unmap (buffer, &map);
+  GST_BUFFER_TIMESTAMP (buffer) = ts;
+  GST_BUFFER_DURATION (buffer) = dur;
+  if (flags)
+    GST_BUFFER_FLAG_SET (buffer, flags);
+  GST_DEBUG ("created buffer %p", buffer);
+  return buffer;
+}
+
 static void
 send_buffers_sync (GstPad * pad1, GstPad * pad2)
 {
   GstBuffer *buffer;
-  GstMapInfo map;
   GstFlowReturn ret;
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 1, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 1, 1 * GST_SECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (pad1, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 1, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 1, 2 * GST_SECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (pad1, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
   gst_pad_send_event (pad1, gst_event_new_eos ());
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 2, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 2, 2 * GST_SECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (pad2, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 2, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = 3 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 2, 3 * GST_SECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (pad2, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
@@ -1437,49 +1430,24 @@ static void
 send_buffers_sync_discont (GstPad * pad1, GstPad * pad2)
 {
   GstBuffer *buffer;
-  GstMapInfo map;
   GstFlowReturn ret;
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 1, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 1, 1 * GST_SECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (pad1, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 1, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-  GST_BUFFER_TIMESTAMP (buffer) = 3 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 1, 3 * GST_SECOND, 1 * GST_SECOND,
+      GST_BUFFER_FLAG_DISCONT);
   ret = gst_pad_chain (pad1, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
   gst_pad_send_event (pad1, gst_event_new_eos ());
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 2, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 2, 2 * GST_SECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (pad2, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 2, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = 3 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 2, 3 * GST_SECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (pad2, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
@@ -1545,48 +1513,23 @@ static void
 send_buffers_sync_unaligned (GstPad * pad1, GstPad * pad2)
 {
   GstBuffer *buffer;
-  GstMapInfo map;
   GstFlowReturn ret;
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 1, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = 750 * GST_MSECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 1, 750 * GST_MSECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (pad1, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 1, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = 1750 * GST_MSECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 1, 1750 * GST_MSECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (pad1, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
   gst_pad_send_event (pad1, gst_event_new_eos ());
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 2, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = 1750 * GST_MSECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 2, 1750 * GST_MSECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (pad2, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
-  buffer = gst_buffer_new_and_alloc (2000);
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, 2, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = 2750 * GST_MSECOND;
-  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (2000, 2, 2750 * GST_MSECOND, 1 * GST_SECOND, 0);
   ret = gst_pad_chain (pad2, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
