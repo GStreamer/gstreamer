@@ -3925,8 +3925,9 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
     template = gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat);
 
     if (!template) {
-      GST_DEBUG_OBJECT (v4l2object->element, "unknown format %u",
-          format->pixelformat);
+      GST_DEBUG_OBJECT (v4l2object->element,
+          "unknown format %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (format->pixelformat));
       continue;
     }
 
