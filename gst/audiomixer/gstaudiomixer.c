@@ -28,7 +28,15 @@
  * The audiomixer allows to mix several streams into one by adding the data.
  * Mixed data is clamped to the min/max values of the data format.
  *
- * Unlike the adder element audiomixer properly synchronises all input streams.
+ * Unlike the adder element audiomixer properly synchronises all input streams
+ * and also handles live inputs such as capture sources or RTP properly.
+ *
+ * Caps negotiation is inherently racy with the audiomixer element. You can set
+ * the "caps" property to force audiomixer to operate in a specific audio
+ * format, sample rate and channel count. In this case you may also need
+ * audioconvert and/or audioresample elements for each input stream before the
+ * audiomixer element to make sure the input branch can produce the forced
+ * format.
  *
  * The input pads are from a GstPad subclass and have additional
  * properties to mute each pad individually and set the volume:
