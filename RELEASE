@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Good Plugins 1.12.1
+Release notes for GStreamer Good Plugins 1.12.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -55,12 +55,11 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 782684 : qtmux: Do not check timecode data for mp4 container
-      * 783027 : aacparse: fix negotiation error when reusing element
-      * 783248 : rtpsession: print value of unknown RTCP Payload Type
-      * 783345 : rtph265depay: caps leak
-      * 783753 : splitmux: Drop allocation queries
-      * 783760 : wavparse: Processing wav file with blanck tag in metadata causes SIGSEGV
+      * 783778 : Missing souphttpsrc plugin on Windows
+      * 784282 : rtspsrc crash when HTTP tunneling with digest authentication
+      * 784486 : imagefreeze: use after free in seek handler causes criticals
+      * 784616 : rtpgsmpay: GSM over RTP gives bad result / broken payload data
+      * 784812 : Can't play quicktime animation files (RLE) in Windows 64bit
 
 ==== Download ====
 
@@ -97,11 +96,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Dustin Spicuzza
-      * Juan Navarro
-      * Nirbheek Chauhan
+      * Josep Torra
+      * Nicolas Dufresne
       * Sebastian Dröge
       * Tim-Philipp Müller
-      * Vivia Nikolaidou
-      * vijay
+      * Yasushi SHOJI
  
