@@ -3918,24 +3918,39 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
   for (walk = formats; walk; walk = walk->next) {
     struct v4l2_fmtdesc *format;
     GstStructure *template;
+    GstCaps *tmp;
 
     format = (struct v4l2_fmtdesc *) walk->data;
 
     template = gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat);
 
-    if (template) {
-      GstCaps *tmp;
-
-      tmp = gst_v4l2_object_probe_caps_for_format (v4l2object,
-          format->pixelformat, template);
-      if (tmp)
-        gst_caps_append (ret, tmp);
-
-      gst_structure_free (template);
-    } else {
+    if (!template) {
       GST_DEBUG_OBJECT (v4l2object->element, "unknown format %u",
           format->pixelformat);
+      continue;
     }
+
+    /* If we have a filter, check if we need to probe this format or not */
+    if (filter) {
+      GstCaps *format_caps = gst_caps_new_empty ();
+
+      gst_caps_append_structure (format_caps, gst_structure_copy (template));
+
+      if (!gst_caps_can_intersect (format_caps, filter)) {
+        gst_caps_unref (format_caps);
+        gst_structure_free (template);
+        continue;
+      }
+
+      gst_caps_unref (format_caps);
+    }
+
+    tmp = gst_v4l2_object_probe_caps_for_format (v4l2object,
+        format->pixelformat, template);
+    if (tmp)
+      gst_caps_append (ret, tmp);
+
+    gst_structure_free (template);
   }
 
   if (filter) {
@@ -3945,6 +3960,8 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
     ret = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (tmp);
   }
+
+  GST_INFO_OBJECT (v4l2object->element, "probed caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
 }
@@ -3963,8 +3980,6 @@ gst_v4l2_object_get_caps (GstV4l2Object * v4l2object, GstCaps * filter)
   } else {
     ret = gst_caps_ref (v4l2object->probed_caps);
   }
-
-  GST_INFO_OBJECT (v4l2object->element, "probed caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
 }

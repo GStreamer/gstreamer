@@ -113,6 +113,7 @@ static gboolean
 gst_v4l2_video_dec_open (GstVideoDecoder * decoder)
 {
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
+  GstCaps *codec_caps;
 
   GST_DEBUG_OBJECT (self, "Opening");
 
@@ -122,13 +123,15 @@ gst_v4l2_video_dec_open (GstVideoDecoder * decoder)
   if (!gst_v4l2_object_open_shared (self->v4l2capture, self->v4l2output))
     goto failure;
 
-  self->probed_sinkcaps = gst_v4l2_object_get_caps (self->v4l2output,
-      gst_v4l2_object_get_codec_caps ());
+  codec_caps = gst_pad_get_pad_template_caps (decoder->sinkpad);
+  self->probed_sinkcaps = gst_v4l2_object_probe_caps (self->v4l2output,
+      codec_caps);
+  gst_caps_unref (codec_caps);
 
   if (gst_caps_is_empty (self->probed_sinkcaps))
     goto no_encoded_format;
 
-  self->probed_srccaps = gst_v4l2_object_get_caps (self->v4l2capture,
+  self->probed_srccaps = gst_v4l2_object_probe_caps (self->v4l2capture,
       gst_v4l2_object_get_raw_caps ());
 
   if (gst_caps_is_empty (self->probed_srccaps))
