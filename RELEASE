@@ -1,7 +1,7 @@
 
-Release notes for GStreamer libav Plugins 1.12.1
+Release notes for GStreamer libav Plugins 1.12.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -34,11 +34,6 @@ contains a set of less supported plugins that haven't passed the
 
 
   
-
-Bugs fixed in this release
-     
-      * 694416 : Passing of $AS, etc to libav configure breaks on some platforms
-      * 782700 : mpg file fails to play if system ffmpeg is compiled with nvcuid support.
 
 ==== Download ====
 
@@ -75,6 +70,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jan Schmidt
       * Sebastian Dröge
  

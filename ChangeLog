@@ -1,9 +1,29 @@
-=== release 1.12.1 ===
+=== release 1.12.2 ===
 
-2017-06-20  Sebastian Dröge <slomo@coaxion.net>
+2017-07-14  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.1
+	  releasing 1.12.2
+
+2017-07-10 10:33:03 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Blacklist scc muxer
+	  We have no codec mappings for it and it's a subtitle/closed caption
+	  "muxer" anyway.
+
+=== release 1.12.1 ===
+
+2017-06-20 12:07:33 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.12.1
 
 2017-06-20 10:50:24 +0300  Sebastian Dröge <sebastian@centricular.com>
 

@@ -3,7 +3,7 @@
   <description>All libav codecs and formats (local snapshot)</description>
   <filename>../../ext/libav/.libs/libgstlibav.so</filename>
   <basename>libgstlibav.so</basename>
-  <version>1.12.1</version>
+  <version>1.12.2</version>
   <license>LGPL</license>
   <source>gst-libav</source>
   <package>libav</package>
@@ -11305,15 +11305,6 @@
           <presence>always</presence>
           <details>application/x-gst-av-rso</details>
         </caps>
-      </pads>
-    </element>
-    <element>
-      <name>avmux_scc</name>
-      <longname>libav Scenarist Closed Captions muxer</longname>
-      <class>Codec/Muxer</class>
-      <description>libav Scenarist Closed Captions muxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
-      <pads>
       </pads>
     </element>
     <element>
