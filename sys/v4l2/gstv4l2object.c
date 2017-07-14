@@ -1821,42 +1821,8 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
 static void
 gst_v4l2_object_add_aspect_ratio (GstV4l2Object * v4l2object, GstStructure * s)
 {
-  struct v4l2_cropcap cropcap;
-  int num = 1, den = 1;
-
-  if (!v4l2object->keep_aspect)
-    return;
-
-  if (v4l2object->par) {
-    num = gst_value_get_fraction_numerator (v4l2object->par);
-    den = gst_value_get_fraction_denominator (v4l2object->par);
-    goto done;
-  }
-
-  memset (&cropcap, 0, sizeof (cropcap));
-
-  cropcap.type = v4l2object->type;
-  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_CROPCAP, &cropcap) < 0)
-    goto cropcap_failed;
-
-  num = cropcap.pixelaspect.numerator;
-  den = cropcap.pixelaspect.denominator;
-
-  /* Ignore PAR that are 0/0 */
-  if (den == 0)
-    return;
-
-done:
-  gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, num, den,
-      NULL);
-  return;
-
-cropcap_failed:
-  if (errno != ENOTTY)
-    GST_WARNING_OBJECT (v4l2object->element,
-        "Failed to probe pixel aspect ratio with VIDIOC_CROPCAP: %s",
-        g_strerror (errno));
-  goto done;
+  if (v4l2object->keep_aspect && v4l2object->par)
+    gst_structure_set_value (s, "pixel-aspect-ratio", v4l2object->par);
 }
 
 /* returns TRUE if the value was changed in place, otherwise FALSE */
@@ -3912,6 +3878,25 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
   formats = gst_v4l2_object_get_format_list (v4l2object);
 
   ret = gst_caps_new_empty ();
+
+  if (v4l2object->keep_aspect && !v4l2object->par) {
+    struct v4l2_cropcap cropcap;
+
+    memset (&cropcap, 0, sizeof (cropcap));
+
+    cropcap.type = v4l2object->type;
+    if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_CROPCAP, &cropcap) < 0) {
+      if (errno != ENOTTY)
+        GST_WARNING_OBJECT (v4l2object->element,
+            "Failed to probe pixel aspect ratio with VIDIOC_CROPCAP: %s",
+            g_strerror (errno));
+    } else {
+      v4l2object->par = g_new0 (GValue, 1);
+      g_value_init (v4l2object->par, GST_TYPE_FRACTION);
+      gst_value_set_fraction (v4l2object->par, cropcap.pixelaspect.numerator,
+          cropcap.pixelaspect.denominator);
+    }
+  }
 
   for (walk = formats; walk; walk = walk->next) {
     struct v4l2_fmtdesc *format;
