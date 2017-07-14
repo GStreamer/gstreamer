@@ -63,6 +63,8 @@ struct _GstGLWindowX11Private
   gint preferred_height;
 
   gboolean handle_events;
+
+  GstVideoRectangle render_rect;
 };
 
 guintptr gst_gl_window_x11_get_display (GstGLWindow * window);
@@ -70,6 +72,8 @@ guintptr gst_gl_window_x11_get_gl_context (GstGLWindow * window);
 gboolean gst_gl_window_x11_activate (GstGLWindow * window, gboolean activate);
 void gst_gl_window_x11_set_window_handle (GstGLWindow * window,
     guintptr handle);
+static gboolean gst_gl_window_x11_set_render_rectangle (GstGLWindow * window,
+    int x, int y, int width, int height);
 guintptr gst_gl_window_x11_get_window_handle (GstGLWindow * window);
 static void gst_gl_window_x11_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
@@ -101,6 +105,8 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
   window_class->get_display = GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_display);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_set_window_handle);
+  window_class->set_render_rectangle =
+      GST_DEBUG_FUNCPTR (gst_gl_window_x11_set_render_rectangle);
   window_class->get_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_window_handle);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_x11_draw);
@@ -281,30 +287,95 @@ void
 gst_gl_window_x11_set_window_handle (GstGLWindow * window, guintptr id)
 {
   GstGLWindowX11 *window_x11;
-  gint width, height;
+  gint x, y, width, height;
 
   window_x11 = GST_GL_WINDOW_X11 (window);
 
   window_x11->parent_win = (Window) id;
 
-  if (window_x11->parent_win) {
-    XWindowAttributes attr;
-
-    XGetWindowAttributes (window_x11->device, window_x11->parent_win, &attr);
-    width = attr.width;
-    height = attr.height;
+  if (window_x11->priv->render_rect.w > 0 &&
+      window_x11->priv->render_rect.h > 0) {
+    x = window_x11->priv->render_rect.x;
+    y = window_x11->priv->render_rect.y;
+    width = window_x11->priv->render_rect.w;
+    height = window_x11->priv->render_rect.h;
   } else {
-    width = window_x11->priv->preferred_width;
-    height = window_x11->priv->preferred_height;
+    x = y = 0;
+    if (window_x11->parent_win) {
+      XWindowAttributes attr;
+
+      XGetWindowAttributes (window_x11->device, window_x11->parent_win, &attr);
+      width = attr.width;
+      height = attr.height;
+    } else {
+      width = window_x11->priv->preferred_width;
+      height = window_x11->priv->preferred_height;
+    }
   }
 
   XResizeWindow (window_x11->device, window_x11->internal_win_id,
       width, height);
 
   XReparentWindow (window_x11->device, window_x11->internal_win_id,
-      window_x11->parent_win, 0, 0);
+      window_x11->parent_win, x, y);
 
   XSync (window_x11->device, FALSE);
+}
+
+struct SetRenderRectangle
+{
+  GstGLWindowX11 *window_x11;
+  GstVideoRectangle rect;
+};
+
+static void
+_free_set_render_rectangle (struct SetRenderRectangle *render)
+{
+  if (render) {
+    if (render->window_x11)
+      gst_object_unref (render->window_x11);
+    g_free (render);
+  }
+}
+
+static void
+_set_render_rectangle (gpointer data)
+{
+  struct SetRenderRectangle *render = data;
+
+  GST_LOG_OBJECT (render->window_x11, "setting render rectangle %i,%i+%ix%i",
+      render->rect.x, render->rect.y, render->rect.w, render->rect.h);
+
+  if (render->window_x11->internal_win_id)
+    XMoveResizeWindow (render->window_x11->device,
+        render->window_x11->internal_win_id, render->rect.x, render->rect.y,
+        render->rect.w, render->rect.h);
+
+  if (render->window_x11->device)
+    XSync (render->window_x11->device, FALSE);
+
+  render->window_x11->priv->render_rect = render->rect;
+}
+
+static gboolean
+gst_gl_window_x11_set_render_rectangle (GstGLWindow * window,
+    int x, int y, int width, int height)
+{
+  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
+  struct SetRenderRectangle *render;
+
+  render = g_new0 (struct SetRenderRectangle, 1);
+  render->window_x11 = gst_object_ref (window_x11);
+  render->rect.x = x;
+  render->rect.y = y;
+  render->rect.w = width;
+  render->rect.h = height;
+
+  gst_gl_window_send_message_async (window,
+      (GstGLWindowCB) _set_render_rectangle, render,
+      (GDestroyNotify) _free_set_render_rectangle);
+
+  return TRUE;
 }
 
 guintptr
@@ -370,11 +441,15 @@ draw_cb (gpointer data)
   XWindowAttributes attr;
 
   if (window_x11->internal_win_id) {
+    gboolean need_resize = FALSE;
+
     XGetWindowAttributes (window_x11->device, window_x11->internal_win_id,
         &attr);
     GST_TRACE_OBJECT (window, "window size %ux%u", attr.width, attr.height);
 
-    if (window_x11->parent_win) {
+    if (window_x11->parent_win &&
+        (window_x11->priv->render_rect.w < 0 ||
+            window_x11->priv->render_rect.h < 0)) {
       XWindowAttributes attr_parent;
       XGetWindowAttributes (window_x11->device, window_x11->parent_win,
           &attr_parent);
@@ -391,15 +466,16 @@ draw_cb (gpointer data)
 
         GST_LOG ("parent resize:  %d, %d",
             attr_parent.width, attr_parent.height);
+        need_resize = TRUE;
       }
     }
 
     gst_gl_window_get_surface_dimensions (window, &width, &height);
-    if (attr.width != width || attr.height != height) {
-      width = attr.width;
-      height = attr.height;
+    if (attr.width != width || attr.height != height)
+      need_resize = TRUE;
+
+    if (need_resize)
       gst_gl_window_queue_resize (window);
-    }
 
     if (window_x11->allow_extra_expose_events) {
       if (window->queue_resize)
