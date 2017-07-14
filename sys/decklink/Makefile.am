@@ -32,8 +32,16 @@ if DECKLINK_OSX
 libgstdecklink_la_SOURCES += \
 	osx/DeckLinkAPIDispatch.cpp
 else
+
+if DECKLINK_WIN
+libgstdecklink_la_SOURCES += \
+	win/DeckLinkAPIDispatch.cpp \
+	win/DeckLinkAPI_i.c
+else
 libgstdecklink_la_SOURCES += \
 	linux/DeckLinkAPIDispatch.cpp
+endif
+
 endif
 
 noinst_HEADERS = \
@@ -62,6 +70,7 @@ noinst_HEADERS = \
 EXTRA_DIST = \
 	linux/DeckLinkAPIDispatch.cpp \
 	osx/DeckLinkAPIDispatch.cpp \
-	win/DeckLinkAPIDispatch.cpp
+	win/DeckLinkAPIDispatch.cpp \
+	win/DeckLinkAPI_i.c
 
 
