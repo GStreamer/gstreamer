@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Bad Plugins 1.12.1
+Release notes for GStreamer Bad Plugins 1.12.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -60,28 +60,18 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
+      * 764025 : mxfdemux: Two consecutive seek on a file leads to 'No valid frames decoded before end of stream'
+      * 773159 : hlsdemux: Errors and timeouts with scrubbing and fast forward/reverse
+      * 782774 : kmssink: drop last rendered buffer on ALLOCATION and DRAIN queries
       * 783028 : gstmpdparser : Crash when playing some of the Dash LIVE URL's with Gstreamer v1.12
-      * 773681 : directsoundsink: High cpu usage on windows x86
-      * 776609 : adaptivedemux: actually retry on download errors
-      * 779202 : ref counting issue fix for Context in gst-libs/gst/gl/gstglcontext.c
-      * 781249 : directsoundsrc: Correctly calculate segsize and segtotal
-      * 781561 : msdk: meson build fails
-      * 782221 : jpeg2000parse does not play nice with rtpj2kpay
-      * 782352 : openjpeg: macOS dependencies not found / plugin is not loading
-      * 782376 : glmemory: Only use glDrawBuffer if available
-      * 782693 : dashdemux: Initialize sidx_position to GST_CLOCK_TIME_NONE
-      * 782697 : h265parse: Trailing zeroes in generated codec_data
-      * 782736 : glformat: Add missing GST_GL_RGB565 in some switch statement
-      * 782771 : gstamcvideodec: Memory leak on video decoder format set
-      * 782801 : msdk: enc: pts from the encoder are bogus, sync_point flag is bogus
-      * 782921 : gl: Fix viv-fb user_choice check
-      * 783066 : glformat: fix the usage of GST_GL_RGB565
       * 783075 : adaptivedemux: Check live seeking range more often
-      * 783255 : adaptivedemux: release the manifest lock ...
-      * 783256 : adaptivedemux: make sure to free all " old streams " 
-      * 783401 : adaptivedemux: Clear " cancelled " on uridownloader before processing manifest
-      * 783626 : openjpegdec: artifacts when displaying RGB 8 bit images
-      * 781204 : rawvideoparse: Looses GstVideoMeta while doing memory alignment
+      * 783244 : dashdemux: Implement a default presentation delay
+      * 784027 : mxfdemux/mux: Does not handle frame reordering correctly
+      * 784059 : gstglwindow_cocoa.h is missing from tar ball in gst-plugins-bad 1.12.1
+      * 784210 : gl: [regression] GstGLUploadMeta feature doesn't show frame in GLX
+      * 784439 : homebrew fails to build ttmp plugin: library not found for -lgstvideo-1.0
+      * 784510 : HLS/playbin: bus receives EOS on potential re-buffering
+      * 784755 : directsoundsrc: fails to compile with gcc 7.1.0
 
 ==== Download ====
 
@@ -118,23 +108,13 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aaron Boxer
-      * Carlos Rafael Giani
       * Edward Hervey
-      * Haihua Hu
-      * Jeremy Hiatt
-      * Mathieu Duponchelle
+      * Hyunjun Ko
+      * Jan Schmidt
       * Matthew Waters
-      * Nirbheek Chauhan
-      * Reynaldo H. Verdejo Pinochet
-      * Scott D Phillips
+      * Nicolas Dufresne
+      * Philippe Renon
       * Sebastian Dröge
-      * Seungha Yang
-      * Simon Himmelbauer
       * Thiago Santos
-      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Wim Taymans
-      * fvanzile
  

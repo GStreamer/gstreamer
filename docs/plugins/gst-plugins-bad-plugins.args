@@ -60055,7 +60055,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Presentation delay</NICK>
 <BLURB>Default presentation delay (in seconds, milliseconds or fragments) (e.g. 12s, 2500ms, 3f).</BLURB>
-<DEFAULT>NULL</DEFAULT>
+<DEFAULT>"10s"</DEFAULT>
 </ARG>
 
 <ARG>
