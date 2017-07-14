@@ -1613,11 +1613,10 @@ class _TestsLauncher(Loggable):
         cur_test_num = 0
 
         if not self.all_tests:
-            total_num_tests = 1
-            self.all_tests = []
-            for tester in self.testers:
-                if self._tester_needed(tester):
-                    self.all_tests.extend(tester.list_tests())
+            all_tests = self.list_tests()
+            if all_tests == -1:
+                return False
+            self.all_tests = all_tests
         total_num_tests = len(self.all_tests)
 
         self.reporter.init_timer()
