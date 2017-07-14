@@ -1,7 +1,7 @@
 
-Release notes for GStreamer OpenMAX IL wrapper plugin 1.12.1
+Release notes for GStreamer OpenMAX IL wrapper plugin 1.12.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -15,6 +15,7 @@ See /releases/1.12/ for the full release notes.
 This module contains a plugin that wraps available OpenMAX IL
 components and makes them available as standard GStreamer
 elements.
+
 
 
 Other modules containing plugins are:
@@ -35,12 +36,6 @@ contains a set of less supported plugins that haven't passed the
 
 
   
-
-Bugs fixed in this release
-     
-      * 782382 : gst-omx: missing config.h.meson
-      * 782387 : gst-omx: fix linking issue when building with meson
-      * 783346 : meson: define HAVE_VIDEO_EXT if OMX_VideoExt.h is present
 
 ==== Download ====
 
@@ -78,5 +73,6 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Guillaume Desmottes
+      * Sebastian Dröge
       * Tim-Philipp Müller
  

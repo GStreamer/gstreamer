@@ -1,8 +1,8 @@
 # GStreamer 1.12 Release Notes
 
 GStreamer 1.12.0 was originally released on 4th May 2017.
-The latest bug-fix release in the 1.12 series is [1.12.1](#1.12.1) and was
-released on 20 June 2017.
+The latest bug-fix release in the 1.12 series is [1.12.2](#1.12.2) and was
+released on 14 July 2017.
 
 The GStreamer team is proud to announce a new major feature release in the
 stable 1.x API series of your favourite cross-platform multimedia framework!
@@ -13,7 +13,7 @@ improvements.
 See [https://gstreamer.freedesktop.org/releases/1.12/][latest] for the latest
 version of this document.
 
-*Last updated: Tuesday 20 June 2017, 07:30 UTC [(log)][gitlog]*
+*Last updated: Friday 14 July 2017, 10:00 UTC [(log)][gitlog]*
 
 [latest]: https://gstreamer.freedesktop.org/releases/1.12/
 [gitlog]: https://cgit.freedesktop.org/gstreamer/www/log/src/htdocs/releases/1.12/release-notes-1.12.md
@@ -723,7 +723,7 @@ is a stable branch.
 
 ### 1.12.1
 
-The first 1.10 bug-fix release (1.12.1) was released on 20 June 2017.
+The first 1.12 bug-fix release (1.12.1) was released on 20 June 2017.
 This release only contains bugfixes and it should be safe to update from 1.12.x.
 
 #### Major bugfixes in 1.12.1
@@ -751,6 +751,34 @@ GIT logs or ChangeLogs of the particular modules.
 
 [buglist-1.12.1]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=225693&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.12.1
 
+<a name="1.12.2"></a>
+
+### 1.12.2
+
+The second 1.12 bug-fix release (1.12.2) was released on 14 July 2017.
+This release only contains bugfixes and it should be safe to update from 1.12.x.
+
+#### Major bugfixes in 1.12.2
+
+ - Various fixes for crashes, assertions, deadlocks and memory leaks
+ - Regression fix for playback of live HLS streams
+ - Regression fix for crash when playing back a tunneled RTSP stream
+ - Regression fix for playback of RLE animations in MOV containers
+ - Regression fix for RTP GSM payloading producing corrupted output
+ - Major bugfixes to the MXF demuxer, mostly related to seeking and
+   fixes to the frame reordering handling in the MXF muxer and demuxer
+ - Fix for playback of mono streams on MacOS
+ - More fixes for index handling of ASF containers
+ - Various fixes to adaptivedemux, DASH and HLS demuxers
+ - Fix deadlock in gstreamer-editing-services during class initialization
+ - ... and many, many more!
+
+For a full list of bugfixes see [Bugzilla][buglist-1.12.2]. Note that this is
+not the full list of changes. For the full list of changes please refer to the
+GIT logs or ChangeLogs of the particular modules.
+
+[buglist-1.12.2]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=225693&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.12.2
+
 ## Known Issues
 
 - The `webrtcdsp` element is currently not shipped as part of the Windows
@@ -774,7 +802,8 @@ in October.
 
 - - -
 
-*These release notes have been prepared by Sebastian Dröge, Tim-Philipp Müller
-and Víctor Manuel Jáquez Leal.*
+*These release notes have been prepared by Olivier Crête, Sebastian Dröge,
+Nicolas Dufresne, Víctor Manuel Jáquez Leal, Tim-Philipp Müller, Philippe
+Normand and Thibault Saunier.*
 
 *License: [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/)*
