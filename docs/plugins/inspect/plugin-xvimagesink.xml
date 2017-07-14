@@ -3,7 +3,7 @@
   <description>XFree86 video output plugin using Xv extension</description>
   <filename>../../sys/xvimage/.libs/libgstxvimagesink.so</filename>
   <basename>libgstxvimagesink.so</basename>
-  <version>1.12.1</version>
+  <version>1.12.2</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

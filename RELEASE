@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Base Plugins 1.12.1
+Release notes for GStreamer Base Plugins 1.12.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -58,9 +58,7 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 780099 : Playbin3 RTSP Freeze at First Frame
-      * 782780 : discoverer: Child/parent stream equivalence detection is too strict
-      * 783330 : navigation: Add introspection annotations for some output parameters
+      * 784639 : convertframe: Fix leak in case of vcrop is disalbed
 
 ==== Download ====
 
@@ -97,10 +95,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Nicolas Dufresne
-      * Olivier Crête
-      * Scott D Phillips
+      * Heekyoung Seo
+      * Mark Nauwelaerts
       * Sebastian Dröge
-      * Thibault Saunier
-      * Wim Taymans
  
