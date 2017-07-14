@@ -1,9 +1,47 @@
-=== release 1.12.1 ===
+=== release 1.12.2 ===
 
-2017-06-20  Sebastian Dröge <slomo@coaxion.net>
+2017-07-14  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.1
+	  releasing 1.12.2
+
+2017-07-11 11:40:55 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/effects.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/tempochange.c:
+	* tests/check/ges/titles.c:
+	* tests/check/ges/track.c:
+	* tests/check/ges/transition.c:
+	* tests/check/ges/uriclip.c:
+	  tests: Initialize GES only once in the main process
+	  Fixing calling deinit in a process where init was not called
+	  when libcheck is forking.
+
+2017-07-10 21:42:21 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ges/ges.c:
+	  ges: Ref the GES class to avoid later deadlock
+	  This ensure that that all class are initialized from the main thread,
+	  avoid class initialization in random thread, which may cause deadlocks.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784769
+
+=== release 1.12.1 ===
+
+2017-06-20 12:09:02 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.12.1
 
 === release 1.12.0 ===
 
