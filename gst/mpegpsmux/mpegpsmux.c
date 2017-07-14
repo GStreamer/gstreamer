@@ -650,9 +650,9 @@ mpegpsmux_release_pad (GstElement * element, GstPad * pad)
       gst_buffer_unref (pad_data->codec_data);
       pad_data->codec_data = NULL;
     }
+    if (pad_data->stream_id == mux->video_stream_id)
+      mux->video_stream_id = 0;
   }
-  if (pad_data->stream_id == mux->video_stream_id)
-    mux->video_stream_id = 0;
   GST_OBJECT_UNLOCK (pad);
 
   gst_collect_pads_remove_pad (mux->collect, pad);
