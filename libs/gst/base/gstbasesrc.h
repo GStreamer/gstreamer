@@ -100,7 +100,10 @@ struct _GstBaseSrc {
   gint           num_buffers;
   gint           num_buffers_left;
 
-  gboolean       typefind;
+#ifndef GST_REMOVE_DEPRECATED
+  gboolean       typefind;      /* unused */
+#endif
+
   gboolean       running;
   GstEvent      *pending_seek;
 

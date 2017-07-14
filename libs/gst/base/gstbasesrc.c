@@ -152,7 +152,6 @@
 #include <gst/glib-compat-private.h>
 
 #include "gstbasesrc.h"
-#include "gsttypefindhelper.h"
 #include <gst/gst-i18n-lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_src_debug);
@@ -189,7 +188,6 @@ enum
 
 #define DEFAULT_BLOCKSIZE       4096
 #define DEFAULT_NUM_BUFFERS     -1
-#define DEFAULT_TYPEFIND        FALSE
 #define DEFAULT_DO_TIMESTAMP    FALSE
 
 enum
@@ -197,7 +195,9 @@ enum
   PROP_0,
   PROP_BLOCKSIZE,
   PROP_NUM_BUFFERS,
+#ifndef GST_REMOVE_DEPRECATED
   PROP_TYPEFIND,
+#endif
   PROP_DO_TIMESTAMP
 };
 
@@ -378,10 +378,12 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
           "Number of buffers to output before sending EOS (-1 = unlimited)",
           -1, G_MAXINT, DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_TYPEFIND,
       g_param_spec_boolean ("typefind", "Typefind",
-          "Run typefind before negotiating", DEFAULT_TYPEFIND,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Run typefind before negotiating (deprecated, non-functional)", FALSE,
+          G_PARAM_READWRITE | G_PARAM_DEPRECATED | G_PARAM_STATIC_STRINGS));
+#endif
   g_object_class_install_property (gobject_class, PROP_DO_TIMESTAMP,
       g_param_spec_boolean ("do-timestamp", "Do timestamp",
           "Apply current stream time to buffers", DEFAULT_DO_TIMESTAMP,
@@ -451,7 +453,6 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->clock_id = NULL;
   /* we operate in BYTES by default */
   gst_base_src_set_format (basesrc, GST_FORMAT_BYTES);
-  basesrc->typefind = DEFAULT_TYPEFIND;
   basesrc->priv->do_timestamp = DEFAULT_DO_TIMESTAMP;
   g_atomic_int_set (&basesrc->priv->have_events, FALSE);
 
@@ -2109,9 +2110,11 @@ gst_base_src_set_property (GObject * object, guint prop_id,
     case PROP_NUM_BUFFERS:
       src->num_buffers = g_value_get_int (value);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_TYPEFIND:
       src->typefind = g_value_get_boolean (value);
       break;
+#endif
     case PROP_DO_TIMESTAMP:
       gst_base_src_set_do_timestamp (src, g_value_get_boolean (value));
       break;
@@ -2136,9 +2139,11 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_NUM_BUFFERS:
       g_value_set_int (value, src->num_buffers);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_TYPEFIND:
       g_value_set_boolean (value, src->typefind);
       break;
+#endif
     case PROP_DO_TIMESTAMP:
       g_value_set_boolean (value, gst_base_src_get_do_timestamp (src));
       break;
