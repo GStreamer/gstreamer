@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Ugly Plugins 1.12.1
+Release notes for GStreamer Ugly Plugins 1.12.2
 
-The GStreamer team is proud to announce the first bugfix release in the stable
+The GStreamer team is proud to announce the second bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -55,10 +55,6 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Bugs fixed in this release
-     
-      * 783100 : asfdemux: Seek to end of the file is failing with error msg
-
 ==== Download ====
 
 You can find source releases of gst-plugins-ugly in the download
@@ -94,6 +90,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Edward Hervey
       * Sebastian Dröge
-      * Thiago Santos
  
