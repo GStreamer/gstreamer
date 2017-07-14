@@ -1,9 +1,31 @@
-=== release 1.12.1 ===
+=== release 1.12.2 ===
 
-2017-06-20  Sebastian Dröge <slomo@coaxion.net>
+2017-07-14  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.1
+	  releasing 1.12.2
+
+2017-07-14 10:36:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Un-blacklist scrub_forward_seeking.op2b-mpeg2-wave_hd_mxf
+	  It works now after various mxfdemux changes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764025
+
+2017-07-13 08:45:28 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  gstvalidate: Re-allow tests that should be fixed
+
+=== release 1.12.1 ===
+
+2017-06-20 12:09:26 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.12.1
 
 2017-05-04 13:47:36 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
 
