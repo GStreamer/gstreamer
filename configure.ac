@@ -998,6 +998,23 @@ AC_DEFINE_UNQUOTED(GST_PLUGIN_SCANNER_INSTALLED,
     "$GST_PLUGIN_SCANNER_INSTALLED", [location of the installed gst-plugin-scanner])
 AC_SUBST(GST_PLUGIN_SCANNER_INSTALLED)
 
+case "${libexecdir}" in
+  *libexec)
+    GST_PLUGIN_SCANNER_SUBDIR="libexec";;
+  *lib)
+    GST_PLUGIN_SCANNER_SUBDIR="lib";;
+  *)
+    GST_PLUGIN_SCANNER_SUBDIR=`basename ${libexecdir}`;
+    if test -z "$GST_PLUGIN_SCANNER_SUBDIR"; then
+      AC_MSG_WARN([Couldn't determined libexecdir suffix, using "lib"])
+      GST_PLUGIN_SCANNER_SUBDIR="lib";
+    fi
+    ;;
+esac
+AC_DEFINE_UNQUOTED(GST_PLUGIN_SCANNER_SUBDIR,
+    "$GST_PLUGIN_SCANNER_SUBDIR", [libexecdir path component, used to find plugin-scanner on relocatable builds on windows])
+
+
 dnl completion helper locations
 AS_AC_EXPAND(GST_COMPLETION_HELPER_INSTALLED,${libexecdir}/gstreamer-$GST_API_VERSION/gst-completion-helper)
 AC_DEFINE_UNQUOTED(GST_COMPLETION_HELPER_INSTALLED,

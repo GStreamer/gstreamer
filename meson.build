@@ -69,6 +69,8 @@ cdata.set_quoted('VERSION', gst_version)
 cdata.set('MEMORY_ALIGNMENT_MALLOC', 1)
 cdata.set_quoted('GST_PLUGIN_SCANNER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-plugin-scanner'))
 cdata.set_quoted('GST_PTP_HELPER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-ptp-helper'))
+cdata.set_quoted('GST_PLUGIN_SCANNER_SUBDIR', libexecdir,
+  description: 'libexecdir path component, used to find plugin-scanner on relocatable builds on windows')
 
 if gst_version_nano > 0
     # Have GST_ERROR message printed when running from git
