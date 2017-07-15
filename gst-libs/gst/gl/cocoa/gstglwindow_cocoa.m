@@ -189,6 +189,11 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
 
   g_atomic_int_set (&window_cocoa->priv->view_ready, 1);
 
+  /* Set the window handle for real now that the NSWindow has been created. */
+  if (priv->external_view)
+    gst_gl_window_cocoa_set_window_handle (window,
+        (guintptr) priv->external_view);
+
   return TRUE;
 }
 
