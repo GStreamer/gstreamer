@@ -175,9 +175,16 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
   NSRect rect = NSMakeRect (0, y, priv->preferred_width, priv->preferred_height);
   NSRect windowRect = NSMakeRect (0, y, priv->preferred_width, priv->preferred_height);
   GstGLContext *context = gst_gl_window_get_context (window);
-  GstGLContextCocoa *context_cocoa = GST_GL_CONTEXT_COCOA (context);
-  GstGLCAOpenGLLayer *layer = [[GstGLCAOpenGLLayer alloc] initWithGstGLContext:context_cocoa];
-  GstGLNSView *glView = [[GstGLNSView alloc] initWithFrameLayer:window_cocoa rect:windowRect layer:layer];
+  GstGLContextCocoa *context_cocoa;
+  GstGLCAOpenGLLayer *layer;
+  GstGLNSView *glView;
+
+  if (!context)
+    return FALSE;
+
+  context_cocoa = GST_GL_CONTEXT_COCOA (context);
+  layer = [[GstGLCAOpenGLLayer alloc] initWithGstGLContext:context_cocoa];
+  glView = [[GstGLNSView alloc] initWithFrameLayer:window_cocoa rect:windowRect layer:layer];
 
   gst_object_unref (context);
 
@@ -296,7 +303,8 @@ gst_gl_window_cocoa_show (GstGLWindow * window)
     }
 
     if (!priv->external_view && !priv->visible)
-      _invoke_on_main ((GstGLWindowCB) _show_window, window);
+      _invoke_on_main ((GstGLWindowCB) _show_window, gst_object_ref (window),
+          (GDestroyNotify) gst_object_unref);
   }
 }
 
@@ -575,13 +583,17 @@ close_window_cb (gpointer data)
 @end
 
 void
-_invoke_on_main (GstGLWindowCB func, gpointer data)
+_invoke_on_main (GstGLWindowCB func, gpointer data, GDestroyNotify notify)
 {
   if ([NSThread isMainThread]) {
     func (data);
+    if (notify)
+      notify (data);
   } else {
     dispatch_async (dispatch_get_main_queue (), ^{
       func (data);
+      if (notify)
+        notify (data);
     });
   }
 }
