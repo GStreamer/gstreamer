@@ -653,12 +653,10 @@ GST_START_TEST (test_add_pad)
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
   src1 = gst_element_factory_make ("audiotestsrc", "src1");
-  g_object_set (src1, "num-buffers", 4, NULL);
-  g_object_set (src1, "wave", 4, NULL); /* silence */
+  g_object_set (src1, "num-buffers", 4, "wave", /* silence */ 4, NULL);
   src2 = gst_element_factory_make ("audiotestsrc", "src2");
   /* one buffer less, we connect with 1 buffer of delay */
-  g_object_set (src2, "num-buffers", 3, NULL);
-  g_object_set (src2, "wave", 4, NULL); /* silence */
+  g_object_set (src2, "num-buffers", 3, "wave", /* silence */ 4, NULL);
   adder = gst_element_factory_make ("adder", "adder");
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src1, adder, sink, NULL);
@@ -721,8 +719,7 @@ GST_START_TEST (test_remove_pad)
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
   src = gst_element_factory_make ("audiotestsrc", "src");
-  g_object_set (src, "num-buffers", 4, NULL);
-  g_object_set (src, "wave", 4, NULL);
+  g_object_set (src, "num-buffers", 4, "wave", 4, NULL);
   adder = gst_element_factory_make ("adder", "adder");
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src, adder, sink, NULL);
