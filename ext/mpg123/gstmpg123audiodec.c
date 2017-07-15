@@ -167,6 +167,7 @@ gst_mpg123_audio_dec_class_init (GstMpg123AudioDecClass * klass)
     src_template_caps = gst_caps_from_string (s->str);
     src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         src_template_caps);
+    gst_caps_unref (src_template_caps);
 
     g_string_free (s, TRUE);
   }
