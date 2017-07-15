@@ -160,6 +160,16 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
   }
 }
 
+static GstBuffer *
+new_buffer (gsize num_bytes, GstClockTime ts, GstClockTime dur)
+{
+  GstBuffer *buffer = gst_buffer_new_and_alloc (num_bytes);
+
+  GST_BUFFER_TIMESTAMP (buffer) = ts;
+  GST_BUFFER_DURATION (buffer) = dur;
+  GST_DEBUG ("created buffer %p", buffer);
+  return buffer;
+}
 
 /* make sure downstream gets a CAPS event before buffers are sent */
 GST_START_TEST (test_caps)
@@ -845,39 +855,27 @@ GST_START_TEST (test_clip)
   gst_pad_send_event (sinkpad, event);
 
   /* should be clipped and ok */
-  buffer = gst_buffer_new_and_alloc (44100);
-  GST_BUFFER_TIMESTAMP (buffer) = 0;
-  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (44100, 0, 250 * GST_MSECOND);
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer == NULL);
 
   /* should be partially clipped */
-  buffer = gst_buffer_new_and_alloc (44100);
-  GST_BUFFER_TIMESTAMP (buffer) = 900 * GST_MSECOND;
-  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (44100, 900 * GST_MSECOND, 250 * GST_MSECOND);
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer != NULL);
   gst_buffer_replace (&handoff_buffer, NULL);
 
   /* should not be clipped */
-  buffer = gst_buffer_new_and_alloc (44100);
-  GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (44100, 1 * GST_SECOND, 250 * GST_MSECOND);
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer != NULL);
   gst_buffer_replace (&handoff_buffer, NULL);
 
   /* should be clipped and ok */
-  buffer = gst_buffer_new_and_alloc (44100);
-  GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  GST_DEBUG ("pushing buffer %p", buffer);
+  buffer = new_buffer (44100, 2 * GST_SECOND, 250 * GST_MSECOND);
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer == NULL);
