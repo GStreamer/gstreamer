@@ -429,6 +429,7 @@ gst_mini_object_unref (GstMiniObject * mini_object)
   gint old_refcount, new_refcount;
 
   g_return_if_fail (mini_object != NULL);
+  g_return_if_fail (GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) > 0);
 
   old_refcount = g_atomic_int_add (&mini_object->refcount, -1);
   new_refcount = old_refcount - 1;
