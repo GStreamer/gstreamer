@@ -419,5 +419,6 @@ subdir('sys')
 subdir('ext')
 subdir('tests')
 subdir('pkgconfig')
+subdir('po')
 
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
