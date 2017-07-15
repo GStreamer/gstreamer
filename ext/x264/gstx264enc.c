@@ -140,7 +140,6 @@ struct _GstX264EncVTable
 static GstX264EncVTable default_vtable;
 
 static GstX264EncVTable *vtable_8bit = NULL, *vtable_10bit = NULL;
-static GstCaps *supported_sinkcaps = NULL;
 
 #define LOAD_SYMBOL(name) G_STMT_START { \
   if (!g_module_symbol (module, #name, (gpointer *) &vtable->name)) { \
@@ -323,14 +322,6 @@ load_x264_libraries (void)
 
   if (!vtable_8bit && !vtable_10bit)
     return FALSE;
-
-  supported_sinkcaps = gst_caps_new_simple ("video/x-raw",
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
-      "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
-
-  gst_x264_enc_add_x264_chroma_format (gst_caps_get_structure
-      (supported_sinkcaps, 0), TRUE, TRUE, TRUE);
 
   return TRUE;
 }
@@ -874,6 +865,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   GstVideoEncoderClass *gstencoder_class;
   const gchar *partitions = NULL;
   GstPadTemplate *sink_templ;
+  GstCaps *supported_sinkcaps;
 
   x264enc_defaults = g_string_new ("");
 
@@ -1134,8 +1126,18 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       "Josef Zlomek <josef.zlomek@itonis.tv>, "
       "Mark Nauwelaerts <mnauw@users.sf.net>");
 
+  supported_sinkcaps = gst_caps_new_simple ("video/x-raw",
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+      "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
+
+  gst_x264_enc_add_x264_chroma_format (gst_caps_get_structure
+      (supported_sinkcaps, 0), TRUE, TRUE, TRUE);
+
   sink_templ = gst_pad_template_new ("sink",
       GST_PAD_SINK, GST_PAD_ALWAYS, supported_sinkcaps);
+
+  gst_caps_unref (supported_sinkcaps);
 
   gst_element_class_add_pad_template (element_class, sink_templ);
   gst_element_class_add_static_pad_template (element_class, &src_factory);
