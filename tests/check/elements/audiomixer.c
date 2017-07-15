@@ -173,6 +173,23 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
   }
 }
 
+static GstBuffer *
+new_buffer (gsize num_bytes, gint data, GstClockTime ts, GstClockTime dur,
+    GstBufferFlags flags)
+{
+  GstMapInfo map;
+  GstBuffer *buffer = gst_buffer_new_and_alloc (num_bytes);
+
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  memset (map.data, data, map.size);
+  gst_buffer_unmap (buffer, &map);
+  GST_BUFFER_TIMESTAMP (buffer) = ts;
+  GST_BUFFER_DURATION (buffer) = dur;
+  if (flags)
+    GST_BUFFER_FLAG_SET (buffer, flags);
+  GST_DEBUG ("created buffer %p", buffer);
+  return buffer;
+}
 
 /* make sure downstream gets a CAPS event before buffers are sent */
 GST_START_TEST (test_caps)
@@ -890,15 +907,12 @@ GST_START_TEST (test_clip)
   gst_pad_send_event (sinkpad, event);
 
   /* should be clipped and ok */
-  buffer = gst_buffer_new_and_alloc (44100);
-  GST_BUFFER_TIMESTAMP (buffer) = 0;
-  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
+  buffer = new_buffer (44100, 0, 0, 250 * GST_MSECOND, 0);
   GST_DEBUG ("pushing buffer %p END is %" GST_TIME_FORMAT,
       buffer,
       GST_TIME_ARGS (GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer)));
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
-
   /* The aggregation is done in a dedicated thread, so we can't
    * know when it is actually going to happen, so we use a DRAIN query
    * to wait for it to complete.
@@ -907,15 +921,11 @@ GST_START_TEST (test_clip)
   fail_unless (handoff_buffer == NULL);
 
   /* should be partially clipped */
-  buffer = gst_buffer_new_and_alloc (44100);
-  GST_BUFFER_TIMESTAMP (buffer) = 900 * GST_MSECOND;
-  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-
+  buffer = new_buffer (44100, 0, 900 * GST_MSECOND, 250 * GST_MSECOND,
+      GST_BUFFER_FLAG_DISCONT);
   GST_DEBUG ("pushing buffer %p START %" GST_TIME_FORMAT " -- DURATION is %"
       GST_TIME_FORMAT, buffer, GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
-
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
   gst_pad_query (sinkpad, drain);
@@ -926,10 +936,7 @@ GST_START_TEST (test_clip)
   gst_buffer_replace (&handoff_buffer, NULL);
 
   /* should not be clipped */
-  buffer = gst_buffer_new_and_alloc (44100);
-  GST_BUFFER_TIMESTAMP (buffer) = 1150 * GST_MSECOND;
-  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-
+  buffer = new_buffer (44100, 0, 1150 * GST_MSECOND, 250 * GST_MSECOND, 0);
   GST_DEBUG ("pushing buffer %p END is %" GST_TIME_FORMAT,
       buffer,
       GST_TIME_ARGS (GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer)));
@@ -943,11 +950,8 @@ GST_START_TEST (test_clip)
   fail_unless (handoff_buffer == NULL);
 
   /* should be clipped and ok */
-
-  buffer = gst_buffer_new_and_alloc (44100);
-  GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
-  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
-  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+  buffer = new_buffer (44100, 0, 2 * GST_SECOND, 250 * GST_MSECOND,
+      GST_BUFFER_FLAG_DISCONT);
   GST_DEBUG ("pushing buffer %p PTS is %" GST_TIME_FORMAT
       " END is %" GST_TIME_FORMAT,
       buffer,
@@ -1324,24 +1328,6 @@ run_sync_test (SendBuffersFunction send_buffers,
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
-}
-
-static GstBuffer *
-new_buffer (gsize num_bytes, gint data, GstClockTime ts, GstClockTime dur,
-    GstBufferFlags flags)
-{
-  GstMapInfo map;
-  GstBuffer *buffer = gst_buffer_new_and_alloc (num_bytes);
-
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  memset (map.data, data, map.size);
-  gst_buffer_unmap (buffer, &map);
-  GST_BUFFER_TIMESTAMP (buffer) = ts;
-  GST_BUFFER_DURATION (buffer) = dur;
-  if (flags)
-    GST_BUFFER_FLAG_SET (buffer, flags);
-  GST_DEBUG ("created buffer %p", buffer);
-  return buffer;
 }
 
 static void
