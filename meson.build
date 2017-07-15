@@ -261,6 +261,7 @@ subdir('sys')
 subdir('tools')
 subdir('tests')
 subdir('pkgconfig')
+subdir('po')
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
