@@ -2905,11 +2905,13 @@ plugin_init (GstPlugin * plugin)
   default_vtable.x264_encoder_encode = x264_encoder_encode;
   default_vtable.x264_encoder_headers = x264_encoder_headers;
   default_vtable.x264_encoder_intra_refresh = x264_encoder_intra_refresh;
-  default_vtable.x264_encoder_maximum_delayed_frames = x264_encoder_maximum_delayed_frames;
+  default_vtable.x264_encoder_maximum_delayed_frames =
+      x264_encoder_maximum_delayed_frames;
   default_vtable.x264_encoder_open = x264_encoder_open;
   default_vtable.x264_encoder_reconfig = x264_encoder_reconfig;
   default_vtable.x264_levels = &x264_levels;
-  default_vtable.x264_param_apply_fastfirstpass = x264_param_apply_fastfirstpass;
+  default_vtable.x264_param_apply_fastfirstpass =
+      x264_param_apply_fastfirstpass;
   default_vtable.x264_param_apply_profile = x264_param_apply_profile;
   default_vtable.x264_param_default = x264_param_default;
   default_vtable.x264_param_default_preset = x264_param_default_preset;
