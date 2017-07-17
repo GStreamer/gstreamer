@@ -1154,6 +1154,7 @@ gst_omx_audio_enc_drain (GstOMXAudioEnc * self)
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self, "Failed to drain component: %s (0x%08x)",
         gst_omx_error_to_string (err), err);
+    g_mutex_unlock (&self->drain_lock);
     GST_AUDIO_ENCODER_STREAM_LOCK (self);
     return GST_FLOW_ERROR;
   }
