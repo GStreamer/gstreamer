@@ -550,90 +550,121 @@ typedef struct _GstPhotographyInterface
   gpointer _gst_reserved[GST_PADDING];
 } GstPhotographyInterface;
 
+GST_EXPORT
 GType gst_photography_get_type (void);
 
 /* virtual class function wrappers */
+
+GST_EXPORT
 gboolean gst_photography_get_ev_compensation (GstPhotography * photo,
                                               gfloat * ev_comp);
 
+GST_EXPORT
 gboolean gst_photography_get_iso_speed       (GstPhotography * photo,
                                               guint * iso_speed);
 
+GST_EXPORT
 gboolean gst_photography_get_aperture        (GstPhotography * photo,
                                               guint * aperture);
 
+GST_EXPORT
 gboolean gst_photography_get_exposure        (GstPhotography * photo,
                                               guint32 * exposure);
 
+GST_EXPORT
 gboolean gst_photography_get_white_balance_mode (GstPhotography * photo,
                                                  GstPhotographyWhiteBalanceMode * wb_mode);
 
+GST_EXPORT
 gboolean gst_photography_get_color_tone_mode (GstPhotography * photo,
                                               GstPhotographyColorToneMode * tone_mode);
 
+GST_EXPORT
 gboolean gst_photography_get_scene_mode      (GstPhotography * photo,
                                               GstPhotographySceneMode * scene_mode);
 
+GST_EXPORT
 gboolean gst_photography_get_flash_mode      (GstPhotography * photo,
                                               GstPhotographyFlashMode * flash_mode);
 
+GST_EXPORT
 gboolean gst_photography_get_noise_reduction (GstPhotography * photo,
                                               GstPhotographyNoiseReduction * noise_reduction);
 
+GST_EXPORT
 gboolean gst_photography_get_zoom            (GstPhotography * photo, gfloat * zoom);
 
+GST_EXPORT
 gboolean gst_photography_get_flicker_mode    (GstPhotography * photo,
                                               GstPhotographyFlickerReductionMode * mode);
 
+GST_EXPORT
 gboolean gst_photography_get_focus_mode      (GstPhotography * photo,
                                               GstPhotographyFocusMode * mode);
 
+GST_EXPORT
 gboolean gst_photography_set_ev_compensation (GstPhotography * photo,
                                               gfloat ev_comp);
 
+GST_EXPORT
 gboolean gst_photography_set_iso_speed       (GstPhotography * photo,
                                               guint iso_speed);
 
+GST_EXPORT
 gboolean gst_photography_set_aperture        (GstPhotography * photo, guint aperture);
 
+GST_EXPORT
 gboolean gst_photography_set_exposure        (GstPhotography * photo, guint exposure);
 
+GST_EXPORT
 gboolean gst_photography_set_white_balance_mode (GstPhotography * photo,
                                                  GstPhotographyWhiteBalanceMode wb_mode);
 
+GST_EXPORT
 gboolean gst_photography_set_color_tone_mode (GstPhotography * photo,
                                               GstPhotographyColorToneMode tone_mode);
 
+GST_EXPORT
 gboolean gst_photography_set_scene_mode      (GstPhotography * photo,
                                               GstPhotographySceneMode scene_mode);
 
+GST_EXPORT
 gboolean gst_photography_set_flash_mode      (GstPhotography * photo,
                                               GstPhotographyFlashMode flash_mode);
 
+GST_EXPORT
 gboolean gst_photography_set_noise_reduction (GstPhotography * photo,
                                               GstPhotographyNoiseReduction noise_reduction);
 
+GST_EXPORT
 gboolean gst_photography_set_zoom            (GstPhotography * photo, gfloat zoom);
 
+GST_EXPORT
 gboolean gst_photography_set_flicker_mode    (GstPhotography * photo,
                                               GstPhotographyFlickerReductionMode mode);
 
+GST_EXPORT
 gboolean gst_photography_set_focus_mode      (GstPhotography * photo,
                                               GstPhotographyFocusMode mode);
 
+GST_EXPORT
 GstPhotographyCaps gst_photography_get_capabilities (GstPhotography * photo);
 
+GST_EXPORT
 gboolean gst_photography_prepare_for_capture (GstPhotography * photo,
                                               GstPhotographyCapturePrepared func,
                                               GstCaps *capture_caps,
                                               gpointer user_data);
 
+GST_EXPORT
 gboolean gst_photography_set_config    (GstPhotography         * photo,
                                         GstPhotographySettings * config);
 
+GST_EXPORT
 gboolean gst_photography_get_config    (GstPhotography         * photo,
                                         GstPhotographySettings * config);
 
+GST_EXPORT
 void     gst_photography_set_autofocus (GstPhotography * photo, gboolean on);
 
 G_END_DECLS

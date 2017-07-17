@@ -10,6 +10,7 @@ glib_enum_headers=$(headers_photography)
 glib_enum_define=GST_PHOTOGRAPHY
 glib_gen_prefix=gst_photography
 glib_gen_basename=photography
+glib_gen_decl_banner=GST_EXPORT
 
 built_sources = \
 	photography-enumtypes.c
