@@ -161,6 +161,10 @@ struct _GstRTSPConnection
   GTlsDatabase *tls_database;
   GTlsInteraction *tls_interaction;
 
+  GstRTSPConnectionAcceptCertificateFunc accept_certificate_func;
+  GDestroyNotify accept_certificate_destroy_notify;
+  gpointer accept_certificate_user_data;
+
   DecodeCtx ctx;
   DecodeCtx *ctxp;
 
@@ -242,6 +246,14 @@ tls_accept_certificate (GTlsConnection * conn, GTlsCertificate * peer_cert,
       GST_DEBUG ("Peer certificate accepted");
     else
       GST_DEBUG ("Peer certificate not accepted (errors: 0x%08X)", errors);
+  }
+
+  if (!accept && rtspconn->accept_certificate_func) {
+    accept =
+        rtspconn->accept_certificate_func (conn, peer_cert, errors,
+        rtspconn->accept_certificate_user_data);
+    GST_DEBUG ("Peer certificate %saccepted by accept-certificate function",
+        accept ? "" : "not ");
   }
 
   return accept;
@@ -685,6 +697,35 @@ gst_rtsp_connection_get_tls_interaction (GstRTSPConnection * conn)
     g_object_ref (result);
 
   return result;
+}
+
+/**
+ * gst_rtsp_connection_set_accept_certificate_func:
+ * @conn: a #GstRTSPConnection
+ * @func: a #GstRTSPConnectionAcceptCertificateFunc to check certificates
+ * @destroy_notify: #GDestroyNotify for @user_data
+ * @user_data: User data passed to @func
+ *
+ * Sets a custom accept-certificate function for checking certificates for
+ * validity. This will directly map to #GTlsConnection 's "accept-certificate"
+ * signal and be performed after the default checks of #GstRTSPConnection
+ * (checking against the #GTlsDatabase with the given #GTlsCertificateFlags)
+ * have failed. If no #GTlsDatabase is set on this connection, only @func will
+ * be called.
+ *
+ * Since: 1.14
+ */
+void
+gst_rtsp_connection_set_accept_certificate_func (GstRTSPConnection * conn,
+    GstRTSPConnectionAcceptCertificateFunc func,
+    gpointer user_data, GDestroyNotify destroy_notify)
+{
+  if (conn->accept_certificate_destroy_notify)
+    conn->
+        accept_certificate_destroy_notify (conn->accept_certificate_user_data);
+  conn->accept_certificate_func = func;
+  conn->accept_certificate_user_data = user_data;
+  conn->accept_certificate_destroy_notify = destroy_notify;
 }
 
 static GstRTSPResult
@@ -2380,6 +2421,9 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
     g_object_unref (conn->tls_database);
   if (conn->tls_interaction)
     g_object_unref (conn->tls_interaction);
+  if (conn->accept_certificate_destroy_notify)
+    conn->
+        accept_certificate_destroy_notify (conn->accept_certificate_user_data);
 
   g_timer_destroy (conn->timer);
   gst_rtsp_url_free (conn->url);

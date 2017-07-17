@@ -110,6 +110,16 @@ void                 gst_rtsp_connection_set_tls_interaction (GstRTSPConnection 
 GST_EXPORT
 GTlsInteraction *    gst_rtsp_connection_get_tls_interaction (GstRTSPConnection * conn);
 
+typedef gboolean (*GstRTSPConnectionAcceptCertificateFunc) (GTlsConnection *conn,
+                                                            GTlsCertificate *peer_cert,
+                                                            GTlsCertificateFlags errors,
+                                                            gpointer user_data);
+GST_EXPORT
+void                 gst_rtsp_connection_set_accept_certificate_func (GstRTSPConnection * conn,
+                                                                      GstRTSPConnectionAcceptCertificateFunc func,
+                                                                      gpointer user_data,
+                                                                      GDestroyNotify destroy_notify);
+
 /* sending/receiving raw bytes */
 
 GST_EXPORT
