@@ -96,15 +96,23 @@ struct _GstAggregatorPadClass
   gpointer      _gst_reserved[GST_PADDING_LARGE];
 };
 
+GST_EXPORT
 GType gst_aggregator_pad_get_type           (void);
 
 /****************************
  * GstAggregatorPad methods *
  ***************************/
 
+GST_EXPORT
 GstBuffer * gst_aggregator_pad_steal_buffer (GstAggregatorPad *  pad);
+
+GST_EXPORT
 GstBuffer * gst_aggregator_pad_get_buffer   (GstAggregatorPad *  pad);
+
+GST_EXPORT
 gboolean    gst_aggregator_pad_drop_buffer  (GstAggregatorPad *  pad);
+
+GST_EXPORT
 gboolean    gst_aggregator_pad_is_eos       (GstAggregatorPad *  pad);
 
 /*********************
@@ -302,15 +310,20 @@ struct _GstAggregatorClass {
  * GstAggregator methods *
  ************************/
 
+GST_EXPORT
 GstFlowReturn  gst_aggregator_finish_buffer         (GstAggregator                *  self,
                                                      GstBuffer                    *  buffer);
+
+GST_EXPORT
 void           gst_aggregator_set_src_caps          (GstAggregator                *  self,
                                                      GstCaps                      *  caps);
 
+GST_EXPORT
 void           gst_aggregator_set_latency           (GstAggregator                *  self,
                                                      GstClockTime                    min_latency,
                                                      GstClockTime                    max_latency);
 
+GST_EXPORT
 GType gst_aggregator_get_type(void);
 
 /* API that should eventually land in GstElement itself (FIXME) */
@@ -318,13 +331,18 @@ typedef gboolean (*GstAggregatorPadForeachFunc)    (GstAggregator               
                                                     GstAggregatorPad              *  aggregator_pad,
                                                     gpointer                         user_data);
 
+GST_EXPORT
 gboolean gst_aggregator_iterate_sinkpads           (GstAggregator                 *  self,
                                                     GstAggregatorPadForeachFunc      func,
                                                     gpointer                         user_data);
 
+GST_EXPORT
 GstClockTime  gst_aggregator_get_latency           (GstAggregator                 *  self);
 
+GST_EXPORT
 GstBufferPool * gst_aggregator_get_buffer_pool     (GstAggregator                 * self);
+
+GST_EXPORT
 void          gst_aggregator_get_allocator         (GstAggregator                 * self,
                                                     GstAllocator
  ** allocator,
