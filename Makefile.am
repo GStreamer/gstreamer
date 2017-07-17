@@ -135,6 +135,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/ext/amrwbenc \
 	$(top_srcdir)/ext/cog \
 	$(top_srcdir)/ext/eglgles \
+	$(top_srcdir)/ext/gsettings \
 	$(top_srcdir)/ext/ivorbis \
 	$(top_srcdir)/ext/jack \
 	$(top_srcdir)/ext/metadata \
