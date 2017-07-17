@@ -80,9 +80,13 @@ struct _GstOMXVideoDec
    * Switched to FALSE if this trial fails so that the decoder
    * can fallback to OMX_AllocateBuffer. */
   gboolean use_buffers;
-#ifdef USE_OMX_TARGET_RPI
+
+#if defined (USE_OMX_TARGET_RPI)
   GstOMXComponent *egl_render;
   GstOMXPort *egl_in_port, *egl_out_port;
+#endif
+
+#if defined (HAVE_GST_GL)
   gboolean eglimage;
 #endif
 
