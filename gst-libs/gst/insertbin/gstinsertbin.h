@@ -84,20 +84,31 @@ struct _GstInsertBinClass
   GstBinClass parent_class;
 };
 
+GST_EXPORT
 GType gst_insert_bin_get_type (void);
 
+GST_EXPORT
 GstElement *gst_insert_bin_new (const gchar * name);
 
+GST_EXPORT
 void gst_insert_bin_prepend (GstInsertBin * self, GstElement * element,
     GstInsertBinCallback callback, gpointer user_data);
+
+GST_EXPORT
 void gst_insert_bin_append (GstInsertBin * self, GstElement * element,
     GstInsertBinCallback callback, gpointer user_data);
+
+GST_EXPORT
 void gst_insert_bin_insert_before (GstInsertBin * self,
     GstElement * element, GstElement * sibling,
     GstInsertBinCallback callback, gpointer user_data);
+
+GST_EXPORT
 void gst_insert_bin_insert_after (GstInsertBin * self,
     GstElement * element, GstElement * sibling,
     GstInsertBinCallback callback, gpointer user_data);
+
+GST_EXPORT
 void gst_insert_bin_remove (GstInsertBin * self, GstElement * element,
     GstInsertBinCallback callback, gpointer user_data);
 
