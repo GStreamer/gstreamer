@@ -108,7 +108,8 @@ gst_openh264enc_slice_mode_get_type (void)
 {
   static const GEnumValue types[] = {
     {GST_OPENH264_SLICE_MODE_N_SLICES, "Fixed number of slices", "n-slices"},
-    {GST_OPENH264_SLICE_MODE_AUTO, "Number of slices equal to number of threads", "auto"},
+    {GST_OPENH264_SLICE_MODE_AUTO,
+        "Number of slices equal to number of threads", "auto"},
     {0, NULL, NULL},
   };
   static gsize id = 0;
@@ -502,7 +503,8 @@ gst_openh264enc_set_property (GObject * object, guint property_id,
       break;
 
     case PROP_SLICE_MODE:
-      openh264enc->slice_mode = (GstOpenh264EncSliceMode) g_value_get_enum (value);
+      openh264enc->slice_mode =
+          (GstOpenh264EncSliceMode) g_value_get_enum (value);
       break;
 
     case PROP_NUM_SLICES:
@@ -741,7 +743,7 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
       slice_mode = SM_SINGLE_SLICE;
     else
       slice_mode = SM_FIXEDSLCNUM_SLICE;
-     n_slices = openh264enc->num_slices;
+    n_slices = openh264enc->num_slices;
   } else if (openh264enc->slice_mode == GST_OPENH264_SLICE_MODE_AUTO) {
 #if OPENH264_MAJOR == 1 && OPENH264_MINOR < 6
     slice_mode = SM_AUTO_SLICE;
@@ -830,7 +832,7 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
     } else {
       openh264enc->time_per_frame = (guint64)
           (openh264enc->time_per_frame * 0.8 + (frame->pts -
-          openh264enc->previous_timestamp) * 0.2);
+              openh264enc->previous_timestamp) * 0.2);
       openh264enc->previous_timestamp = frame->pts;
       if (openh264enc->frame_count % 10 == 0) {
         fps = GST_SECOND / (gdouble) openh264enc->time_per_frame;
