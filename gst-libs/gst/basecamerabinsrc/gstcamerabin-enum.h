@@ -55,6 +55,7 @@ typedef enum
 
 
 #define GST_TYPE_CAMERABIN_MODE (gst_camerabin_mode_get_type ())
+GST_EXPORT
 GType gst_camerabin_mode_get_type (void);
 
 G_END_DECLS

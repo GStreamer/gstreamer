@@ -47,10 +47,19 @@ typedef struct
 
 } GstCameraBinPreviewPipelineData;
 
+GST_EXPORT
 GstCameraBinPreviewPipelineData *gst_camerabin_create_preview_pipeline (GstElement * element, GstElement * filter);
+
+GST_EXPORT
 void gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData * preview);
+
+GST_EXPORT
 gboolean gst_camerabin_preview_pipeline_post (GstCameraBinPreviewPipelineData * preview, GstSample * sample);
+
+GST_EXPORT
 void gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview, GstCaps * caps);
+
+GST_EXPORT
 gboolean gst_camerabin_preview_set_filter (GstCameraBinPreviewPipelineData * preview, GstElement * filter);
 
 #endif /* #ifndef __CAMERABIN_PREVIEW_H_ */

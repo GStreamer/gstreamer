@@ -49,6 +49,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_CAMERA_SRC))
 #define GST_BASE_CAMERA_SRC_CAST(obj) \
   ((GstBaseCameraSrc *) (obj))
+GST_EXPORT
 GType gst_base_camera_src_get_type (void);
 
 typedef struct _GstBaseCameraSrc GstBaseCameraSrc;
@@ -132,12 +133,20 @@ struct _GstBaseCameraSrcClass
 #define MAX_ZOOM 10.0f
 #define ZOOM_1X MIN_ZOOM
 
+GST_EXPORT
 gboolean gst_base_camera_src_set_mode (GstBaseCameraSrc *self, GstCameraBinMode mode);
+
+GST_EXPORT
 void gst_base_camera_src_setup_zoom (GstBaseCameraSrc * self);
+
+GST_EXPORT
 void gst_base_camera_src_setup_preview (GstBaseCameraSrc * self, GstCaps * preview_caps);
+
+GST_EXPORT
 void gst_base_camera_src_finish_capture (GstBaseCameraSrc *self);
 
 
+GST_EXPORT
 void gst_base_camera_src_post_preview (GstBaseCameraSrc *self, GstSample * sample);
 // XXX add methods to get/set img capture and vid capture caps..
 
