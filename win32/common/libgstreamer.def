@@ -397,6 +397,7 @@ EXPORTS
 	gst_date_time_to_iso8601_string
 	gst_date_time_unref
 	gst_debug_add_log_function
+	gst_debug_add_ring_buffer_logger
 	gst_debug_bin_to_dot_data
 	gst_debug_bin_to_dot_file
 	gst_debug_bin_to_dot_file_with_ts
@@ -427,6 +428,8 @@ EXPORTS
 	gst_debug_print_stack_trace
 	gst_debug_remove_log_function
 	gst_debug_remove_log_function_by_data
+	gst_debug_remove_ring_buffer_logger
+	gst_debug_ring_buffer_logger_get_logs
 	gst_debug_set_active
 	gst_debug_set_color_mode
 	gst_debug_set_color_mode_from_string

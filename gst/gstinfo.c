@@ -2806,3 +2806,268 @@ gst_debug_print_stack_trace (void)
 
   g_free (trace);
 }
+
+typedef struct
+{
+  guint max_size_per_thread;
+  guint thread_timeout;
+  GQueue threads;
+  GHashTable *thread_index;
+} GstRingBufferLogger;
+
+typedef struct
+{
+  GList *link;
+  gint64 last_use;
+  GThread *thread;
+
+  GQueue log;
+  gsize log_size;
+} GstRingBufferLog;
+
+G_LOCK_DEFINE_STATIC (ring_buffer_logger);
+static GstRingBufferLogger *ring_buffer_logger = NULL;
+
+static void
+gst_ring_buffer_logger_log (GstDebugCategory * category,
+    GstDebugLevel level,
+    const gchar * file,
+    const gchar * function,
+    gint line, GObject * object, GstDebugMessage * message, gpointer user_data)
+{
+  GstRingBufferLogger *logger = user_data;
+  gint pid;
+  GThread *thread;
+  GstClockTime elapsed;
+  gchar *obj = NULL;
+  gchar c;
+  gchar *output;
+  gsize output_len;
+  GstRingBufferLog *log;
+  gint64 now = g_get_monotonic_time ();
+  const gchar *message_str = gst_debug_message_get (message);
+
+  G_LOCK (ring_buffer_logger);
+
+  if (logger->thread_timeout > 0) {
+    /* Remove all threads that saw no output since thread_timeout seconds.
+     * By construction these are all at the tail of the queue, and the queue
+     * is ordered by last use, so we just need to look at the tail.
+     */
+    while (logger->threads.tail) {
+      log = logger->threads.tail->data;
+      if (log->last_use + logger->thread_timeout * G_USEC_PER_SEC >= now)
+        break;
+
+      g_hash_table_remove (logger->thread_index, log->thread);
+      while ((output = g_queue_pop_head (&log->log)))
+        g_free (output);
+      g_free (log);
+      g_queue_pop_tail (&logger->threads);
+    }
+  }
+
+  /* Get logger for this thread, and put it back at the
+   * head of the threads queue */
+  thread = g_thread_self ();
+  log = g_hash_table_lookup (logger->thread_index, thread);
+  if (!log) {
+    log = g_new0 (GstRingBufferLog, 1);
+    g_queue_init (&log->log);
+    log->log_size = 0;
+    g_queue_push_head (&logger->threads, log);
+    log->link = logger->threads.head;
+    log->thread = thread;
+    g_hash_table_insert (logger->thread_index, thread, log);
+  } else {
+    g_queue_unlink (&logger->threads, log->link);
+    g_queue_push_head_link (&logger->threads, log->link);
+  }
+  log->last_use = now;
+
+  /* __FILE__ might be a file name or an absolute path or a
+   * relative path, irrespective of the exact compiler used,
+   * in which case we want to shorten it to the filename for
+   * readability. */
+  c = file[0];
+  if (c == '.' || c == '/' || c == '\\' || (c != '\0' && file[1] == ':')) {
+    file = gst_path_basename (file);
+  }
+
+  pid = getpid ();
+
+  if (object) {
+    obj = gst_debug_print_object (object);
+  } else {
+    obj = (gchar *) "";
+  }
+
+  elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
+
+  /* no color, all platforms */
+#define PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
+  output =
+      g_strdup_printf ("%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
+      pid, thread, gst_debug_level_get_name (level),
+      gst_debug_category_get_name (category), file, line, function, obj,
+      message_str);
+#undef PRINT_FMT
+
+  output_len = strlen (output);
+
+  if (output_len < logger->max_size_per_thread) {
+    gchar *buf;
+
+    /* While using a GQueue here is not the most efficient thing to do, we
+     * have to allocate a string for every output anyway and could just store
+     * that instead of copying it to an actual ringbuffer.
+     * Better than GQueue would be GstQueueArray, but that one is in
+     * libgstbase and we can't use it here. That one allocation will not make
+     * much of a difference anymore, considering the number of allocations
+     * needed to get to this point...
+     */
+    while (log->log_size + output_len > logger->max_size_per_thread) {
+      buf = g_queue_pop_head (&log->log);
+      log->log_size -= strlen (buf);
+      g_free (buf);
+    }
+    g_queue_push_tail (&log->log, output);
+    log->log_size += output_len;
+  } else {
+    gchar *buf;
+
+    /* Can't really write anything as the line is bigger than the maximum
+     * allowed log size already, so just remove everything */
+
+    while ((buf = g_queue_pop_head (&log->log)))
+      g_free (buf);
+    g_free (output);
+    log->log_size = 0;
+  }
+
+  if (object != NULL)
+    g_free (obj);
+
+  G_UNLOCK (ring_buffer_logger);
+}
+
+/**
+ * gst_debug_ring_buffer_logger_get_logs:
+ *
+ * Fetches the current logs per thread from the ring buffer logger. See
+ * gst_debug_add_ring_buffer_logger() for details.
+ *
+ * Returns: (transfer full) (array zero-terminated): NULL-terminated array of
+ * strings with the debug output per thread
+ *
+ * Since: 1.14
+ */
+gchar **
+gst_debug_ring_buffer_logger_get_logs (void)
+{
+  gchar **logs, **tmp;
+  GList *l;
+
+  g_return_val_if_fail (ring_buffer_logger != NULL, NULL);
+
+  G_LOCK (ring_buffer_logger);
+
+  tmp = logs = g_new0 (gchar *, ring_buffer_logger->threads.length + 1);
+  for (l = ring_buffer_logger->threads.head; l; l = l->next) {
+    GstRingBufferLog *log = l->data;
+    GList *l;
+    gchar *p;
+    gsize len;
+
+    *tmp = p = g_new0 (gchar, log->log_size + 1);
+
+    for (l = log->log.head; l; l = l->next) {
+      len = strlen (l->data);
+      memcpy (p, l->data, len);
+      p += len;
+    }
+
+    tmp++;
+  }
+
+  G_UNLOCK (ring_buffer_logger);
+
+  return logs;
+}
+
+static void
+gst_ring_buffer_logger_free (GstRingBufferLogger * logger)
+{
+  G_LOCK (ring_buffer_logger);
+  if (ring_buffer_logger == logger) {
+    GstRingBufferLog *log;
+
+    while ((log = g_queue_pop_head (&logger->threads))) {
+      gchar *buf;
+      while ((buf = g_queue_pop_head (&log->log)))
+        g_free (buf);
+      g_free (log);
+    }
+
+    g_hash_table_unref (logger->thread_index);
+
+    g_free (logger);
+    ring_buffer_logger = NULL;
+  }
+  G_UNLOCK (ring_buffer_logger);
+}
+
+/**
+ * gst_debug_add_ring_buffer_logger:
+ * @max_size_per_thread: Maximum size of log per thread in bytes
+ * @thread_timeout: Timeout for threads in seconds
+ *
+ * Adds a memory ringbuffer based debug logger that stores up to
+ * @max_size_per_thread bytes of logs per thread and times out threads after
+ * @thread_timeout seconds of inactivity.
+ *
+ * Logs can be fetched with gst_debug_ring_buffer_logger_get_logs() and the
+ * logger can be removed again with gst_debug_remove_ring_buffer_logger().
+ * Only one logger at a time is possible.
+ *
+ * Since: 1.14
+ */
+void
+gst_debug_add_ring_buffer_logger (guint max_size_per_thread,
+    guint thread_timeout)
+{
+  GstRingBufferLogger *logger;
+
+  G_LOCK (ring_buffer_logger);
+
+  if (ring_buffer_logger) {
+    g_warn_if_reached ();
+    G_UNLOCK (ring_buffer_logger);
+    return;
+  }
+
+  logger = ring_buffer_logger = g_new0 (GstRingBufferLogger, 1);
+
+  logger->max_size_per_thread = max_size_per_thread;
+  logger->thread_timeout = thread_timeout;
+  logger->thread_index = g_hash_table_new (g_direct_hash, g_direct_equal);
+  g_queue_init (&logger->threads);
+
+  gst_debug_add_log_function (gst_ring_buffer_logger_log, logger,
+      (GDestroyNotify) gst_ring_buffer_logger_free);
+  G_UNLOCK (ring_buffer_logger);
+}
+
+/**
+ * gst_debug_remove_ring_buffer_logger:
+ *
+ * Removes any previously added ring buffer logger with
+ * gst_debug_add_ring_buffer_logger().
+ *
+ * Since: 1.14
+ */
+void
+gst_debug_remove_ring_buffer_logger (void)
+{
+  gst_debug_remove_log_function (gst_ring_buffer_logger_log);
+}

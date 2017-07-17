@@ -1744,6 +1744,13 @@ void gst_debug_print_stack_trace (void);
 GST_EXPORT
 gchar * gst_debug_get_stack_trace (GstStackTraceFlags flags);
 
+GST_EXPORT
+void                  gst_debug_add_ring_buffer_logger      (guint max_size_per_thread, guint thread_timeout);
+GST_EXPORT
+void                  gst_debug_remove_ring_buffer_logger   (void);
+GST_EXPORT
+gchar **              gst_debug_ring_buffer_logger_get_logs (void);
+
 G_END_DECLS
 
 #endif /* __GSTINFO_H__ */
