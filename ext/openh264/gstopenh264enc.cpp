@@ -296,13 +296,15 @@ gst_openh264enc_class_init (GstOpenh264EncClass * klass)
       g_param_spec_uint ("bitrate", "Bitrate",
           "Bitrate (in bits per second)",
           0, G_MAXUINT, DEFAULT_BITRATE,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              GST_PARAM_MUTABLE_PLAYING)));
 
   g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
       g_param_spec_uint ("max-bitrate", "Max Bitrate",
           "Maximum Bitrate (in bits per second)",
           0, G_MAXUINT, DEFAULT_MAX_BITRATE,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              GST_PARAM_MUTABLE_PLAYING)));
 
   g_object_class_install_property (gobject_class, PROP_QP_MIN,
       g_param_spec_uint ("qp-min", "Minimum Quantizer",
