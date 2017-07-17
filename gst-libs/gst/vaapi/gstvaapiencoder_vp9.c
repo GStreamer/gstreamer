@@ -79,7 +79,8 @@ gst_vaapi_encoder_vp9_ref_pic_mode_type (void)
           "mode-0"},
       {GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_1,
             "Use last three frames for prediction (n:Last n-1:Gold n-2:Alt)",
-          "mode-1"}
+          "mode-1"},
+      {0, NULL, NULL},
     };
 
     gtype = g_enum_register_static ("GstVaapiEncoderVP9RefPicMode", values);
