@@ -49,9 +49,13 @@ struct _GstPhysMemoryAllocatorInterface
   guintptr (*get_phys_addr) (GstPhysMemoryAllocator * allocator, GstMemory * mem);
 };
 
+GST_EXPORT
 GType gst_phys_memory_allocator_get_type (void);
 
+GST_EXPORT
 gboolean gst_is_phys_memory (GstMemory *mem);
+
+GST_EXPORT
 guintptr gst_phys_memory_get_phys_addr (GstMemory * mem);
 
 G_END_DECLS
