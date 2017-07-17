@@ -2611,6 +2611,7 @@ _class_init (gpointer g_class, gpointer data)
     templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
     g_free (template_caps);
     gst_element_class_add_pad_template (element_class, templ);
+    gst_caps_unref (caps);
   }
 
   err = NULL;
@@ -2637,6 +2638,7 @@ _class_init (gpointer g_class, gpointer data)
     templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
     g_free (template_caps);
     gst_element_class_add_pad_template (element_class, templ);
+    gst_caps_unref (caps);
   }
 
   if ((hacks =
