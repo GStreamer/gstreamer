@@ -134,7 +134,8 @@ gst_jpegenc_class_init (GstJpegEncClass * klass)
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_int ("quality", "Quality", "Quality of encoding",
           0, 100, JPEG_DEFAULT_QUALITY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
 
 #ifdef ENABLE_SMOOTHING
   /* disabled, since it doesn't seem to work */
@@ -474,9 +475,13 @@ gst_jpegenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 #if JPEG_LIB_VERSION >= 70
   jpegenc->cinfo.do_fancy_downsampling = FALSE;
 #endif
+
+  GST_OBJECT_LOCK (jpegenc);
   jpegenc->cinfo.smoothing_factor = jpegenc->smoothing;
   jpegenc->cinfo.dct_method = jpegenc->idct_method;
   jpeg_set_quality (&jpegenc->cinfo, jpegenc->quality, TRUE);
+  GST_OBJECT_UNLOCK (jpegenc);
+
   jpeg_start_compress (&jpegenc->cinfo, TRUE);
 
   GST_LOG_OBJECT (jpegenc, "compressing");
