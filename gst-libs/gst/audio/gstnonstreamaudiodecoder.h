@@ -377,24 +377,31 @@ struct _GstNonstreamAudioDecoderClass
 };
 
 
+GST_EXPORT
 GType gst_nonstream_audio_decoder_get_type (void);
 
 
+GST_EXPORT
 void gst_nonstream_audio_decoder_handle_loop (GstNonstreamAudioDecoder * dec,
                                               GstClockTime new_position);
 
+GST_EXPORT
 gboolean gst_nonstream_audio_decoder_set_output_format (GstNonstreamAudioDecoder * dec,
                                                         GstAudioInfo const *audio_info);
+
+GST_EXPORT
 gboolean gst_nonstream_audio_decoder_set_output_format_simple (GstNonstreamAudioDecoder * dec,
                                                                guint sample_rate,
                                                                GstAudioFormat sample_format,
                                                                guint num_channels);
 
+GST_EXPORT
 void gst_nonstream_audio_decoder_get_downstream_info (GstNonstreamAudioDecoder * dec,
                                                       GstAudioFormat * format,
                                                       gint * sample_rate,
                                                       gint * num_channels);
 
+GST_EXPORT
 GstBuffer *gst_nonstream_audio_decoder_allocate_output_buffer (GstNonstreamAudioDecoder * dec,
                                                                gsize size);
 
