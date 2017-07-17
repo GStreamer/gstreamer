@@ -33,8 +33,8 @@ There are two different ways to use a bus:
     using `gst_bus_add_watch ()`. This handler will be called whenever
     the pipeline emits a message to the bus. In this handler, check the
     signal type (see next section) and do something accordingly. The
-    return value of the handler should be TRUE to keep the handler
-    attached to the bus, return FALSE to remove it.
+    return value of the handler should be `TRUE` to keep the handler
+    attached to the bus, return `FALSE` to remove it.
 
   - Check for messages on the bus yourself. This can be done using
     `gst_bus_peek ()` and/or `gst_bus_poll ()`.
@@ -58,7 +58,7 @@ Note that if you're using the default GLib mainloop integration, you
 can, instead of attaching a watch, connect to the “message” signal on
 the bus. This way you don't have to `switch()` on all possible message
 types; just connect to the interesting signals in form of
-“message::\<type\>”, where \<type\> is a specific message type (see
+`message::<type>`, where `<type>` is a specific message type (see
 the next section for an explanation of message types).
 
 The above snippet could then also be written as:

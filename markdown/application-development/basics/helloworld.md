@@ -48,8 +48,8 @@ the pipeline bus so we can retrieve errors and detect the end-of-stream.
 
 Let's now add all the code together to get our very first audio player:
 
-``` c
 
+``` c
 #include <gst/gst.h>
 #include <glib.h>
 
@@ -196,7 +196,6 @@ main (int   argc,
   return 0;
 }
 
-
 ```
 
 We now have created a complete pipeline. We can visualise the pipeline
@@ -212,11 +211,14 @@ as follows:
 
 ## Compiling and Running helloworld.c
 
-To compile the helloworld example, use: `gcc -Wall
-helloworld.c -o helloworld
-$(pkg-config --cflags --libs gstreamer-1.0)`. GStreamer makes use of
-`pkg-config` to get compiler and linker flags needed to compile this
-application.
+To compile the helloworld example, use:
+
+```
+gcc -Wall helloworld.c -o helloworld $(pkg-config --cflags --libs gstreamer-1.0)
+```
+
+GStreamer makes use of `pkg-config` to get compiler and linker
+flags needed to compile this application.
 
 If you're running a non-standard installation (ie. you've installed
 GStreamer from source yourself instead of using pre-built packages),
@@ -225,9 +227,11 @@ correct location (`$libdir/pkgconfig`).
 
 In the unlikely case that you are using an uninstalled GStreamer setup
 (ie. gst-uninstalled), you will need to use libtool to build the hello
-world program, like this: `libtool --mode=link gcc -Wall
-helloworld.c -o helloworld
-$(pkg-config --cflags --libs gstreamer-1.0)`.
+world program, like this:
+
+```
+libtool --mode=link gcc -Wall helloworld.c -o helloworld $(pkg-config --cflags --libs gstreamer-1.0)
+```
 
 You can run this example application with `./helloworld
 file.ogg`. Substitute `file.ogg` with your favourite Ogg/Vorbis file.

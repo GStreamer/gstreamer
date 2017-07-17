@@ -18,8 +18,8 @@ command line options.
 A typical program \[1\] would have code to initialize GStreamer that
 looks like this:
 
-``` c
 
+``` c
 #include <stdio.h>
 #include <gst/gst.h>
 
@@ -46,15 +46,13 @@ main (int   argc,
 
   return 0;
 }
-
-
 ```
 
 Use the `GST_VERSION_MAJOR`, `GST_VERSION_MINOR` and `GST_VERSION_MICRO`
 macros to get the GStreamer version you are building against, or use the
 function `gst_version` to get the version your application is linked
 against. GStreamer currently uses a scheme where versions with the same
-major and minor versions are API-/ and ABI-compatible.
+major and minor versions are API- and ABI-compatible.
 
 It is also possible to call the `gst_init` function with two `NULL`
 arguments, in which case no command line options will be parsed by
@@ -62,11 +60,11 @@ GStreamer.
 
 ## The GOption interface
 
-You can also use a GOption table to initialize your own parameters as
+You can also use a `GOption` table to initialize your own parameters as
 shown in the next example:
 
-``` c
 
+``` c
 #include <gst/gst.h>
 
 int
@@ -100,8 +98,6 @@ main (int   argc,
 
   return 0;
 }
-
-
 ```
 
 As shown in this fragment, you can use a

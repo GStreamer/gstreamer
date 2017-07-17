@@ -179,7 +179,6 @@ the audio samplerate and the amount of channels, plus some more that you
 don't need to worry about for now.
 
 ```
-
 Pad Templates:
   SRC template: 'src'
     Availability: Always
@@ -193,7 +192,6 @@ Pad Templates:
     Availability: Always
     Capabilities:
       audio/x-vorbis
-
 ```
 
 ### Properties and values
@@ -209,8 +207,8 @@ possible value types that can be used:
       - An integer value (`G_TYPE_INT`): the property has this exact
         value.
 
-      - A boolean value (`G_TYPE_BOOLEAN`): the property is either TRUE
-        or FALSE.
+      - A boolean value (`G_TYPE_BOOLEAN`): the property is either `TRUE`
+        or `FALSE`.
 
       - A float value (`G_TYPE_FLOAT`): the property has this exact
         floating point value.

@@ -417,8 +417,8 @@ Those four states are:
     allowed to play the data which would make the clock run. In summary,
     PAUSED is the same as PLAYING but without a running clock.
 
-    Elements going into the PAUSED state should prepare themselves for
-    moving over to the PLAYING state as soon as possible. Video or audio
+    Elements going into the `PAUSED` state should prepare themselves for
+    moving over to the `PLAYING` state as soon as possible. Video or audio
     outputs would, for example, wait for data to arrive and queue it so
     they can play it right after the state change. Also, video sinks can
     already play the first frame (since this does not affect the clock
@@ -427,14 +427,14 @@ Those four states are:
     filters, do not need to explicitly do anything in this state,
     however.
 
-  - `GST_STATE_PLAYING`: in the PLAYING state, an element does exactly
-    the same as in the PAUSED state, except that the clock now runs.
+  - `GST_STATE_PLAYING`: in the `PLAYING` state, an element does exactly
+    the same as in the `PAUSED` state, except that the clock now runs.
 
 You can change the state of an element using the function
 `gst_element_set_state ()`. If you set an element to another state,
 GStreamer will internally traverse all intermediate states. So if you
-set an element from NULL to PLAYING, GStreamer will internally set the
-element to READY and PAUSED in between.
+set an element from `NULL` to `PLAYING`, GStreamer will internally set the
+element to `READY` and `PAUSED` in between.
 
 When moved to `GST_STATE_PLAYING`, pipelines will process data
 automatically. They do not need to be iterated in any form. Internally,

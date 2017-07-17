@@ -44,7 +44,7 @@ take ownership of that element. If you destroy the bin, the element will
 be dereferenced with it. If you remove an element from a bin, it will be
 dereferenced automatically.
 
-```
+```c
 #include <gst/gst.h>
 
 int
@@ -89,7 +89,7 @@ The application programmer can create custom bins packed with elements
 to perform a specific task. This allows you, for example, to write an
 Ogg/Vorbis decoder with just the following lines of code:
 
-```
+```c
 int
 main (int   argc,
       char *argv[])
@@ -133,11 +133,11 @@ pipeline to start up the pipeline or shut it down.
 
 The bin will perform the state changes on all its children from the sink
 element to the source element. This ensures that the downstream element
-is ready to receive data when the upstream element is brought to PAUSED
-or PLAYING. Similarly when shutting down, the sink elements will be set
-to READY or NULL first, which will cause the upstream elements to
-receive a FLUSHING error and stop the streaming threads before the
-elements are set to the READY or NULL state.
+is ready to receive data when the upstream element is brought to `PAUSED`
+or `PLAYING`. Similarly when shutting down, the sink elements will be set
+to `READY` or `NULL` first, which will cause the upstream elements to
+receive a `FLUSHING` error and stop the streaming threads before the
+elements are set to the `READY` or `NULL` state.
 
 Note, however, that if elements are added to a bin or pipeline that's
 already running, , e.g. from within a "pad-added" signal callback, its
