@@ -116,6 +116,7 @@ enum
   SIGNAL_NEW_MANAGER,
   SIGNAL_NEW_PAYLOADER,
   SIGNAL_REQUEST_RTCP_KEY,
+  SIGNAL_ACCEPT_CERTIFICATE,
   LAST_SIGNAL
 };
 
@@ -604,6 +605,27 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
   gst_rtsp_client_sink_signals[SIGNAL_REQUEST_RTCP_KEY] =
       g_signal_new ("request-rtcp-key", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_CAPS, 1, G_TYPE_UINT);
+
+  /**
+   * GstRTSPClientSink::accept-certificate:
+   * @rtsp_client_sink: a #GstRTSPClientSink
+   * @peer_cert: the peer's #GTlsCertificate
+   * @errors: the problems with @peer_cert
+   * @user_data: user data set when the signal handler was connected.
+   *
+   * This will directly map to #GTlsConnection 's "accept-certificate"
+   * signal and be performed after the default checks of #GstRTSPConnection
+   * (checking against the #GTlsDatabase with the given #GTlsCertificateFlags)
+   * have failed. If no #GTlsDatabase is set on this connection, only this
+   * signal will be emitted.
+   *
+   * Since: 1.14
+   */
+  gst_rtsp_client_sink_signals[SIGNAL_ACCEPT_CERTIFICATE] =
+      g_signal_new ("accept-certificate", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, g_signal_accumulator_true_handled, NULL, NULL,
+      G_TYPE_BOOLEAN, 3, G_TYPE_TLS_CONNECTION, G_TYPE_TLS_CERTIFICATE,
+      G_TYPE_TLS_CERTIFICATE_FLAGS);
 
   gstelement_class->provide_clock = gst_rtsp_client_sink_provide_clock;
   gstelement_class->change_state = gst_rtsp_client_sink_change_state;
@@ -1647,6 +1669,19 @@ gst_rtsp_client_sink_connection_receive (GstRTSPClientSink * sink,
   return ret;
 }
 
+static gboolean
+accept_certificate_cb (GTlsConnection * conn, GTlsCertificate * peer_cert,
+    GTlsCertificateFlags errors, gpointer user_data)
+{
+  GstRTSPClientSink *sink = user_data;
+  gboolean accept = FALSE;
+
+  g_signal_emit (sink, gst_rtsp_client_sink_signals[SIGNAL_ACCEPT_CERTIFICATE],
+      0, conn, peer_cert, errors, &accept);
+
+  return accept;
+}
+
 static GstRTSPResult
 gst_rtsp_conninfo_connect (GstRTSPClientSink * sink, GstRTSPConnInfo * info,
     gboolean async)
@@ -1683,6 +1718,9 @@ gst_rtsp_conninfo_connect (GstRTSPClientSink * sink, GstRTSPConnInfo * info,
       if (sink->tls_interaction)
         gst_rtsp_connection_set_tls_interaction (info->connection,
             sink->tls_interaction);
+
+      gst_rtsp_connection_set_accept_certificate_func (info->connection,
+          accept_certificate_cb, sink, NULL);
     }
 
     if (info->url->transports & GST_RTSP_LOWER_TRANS_HTTP)
