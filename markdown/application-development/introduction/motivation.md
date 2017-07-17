@@ -20,21 +20,21 @@ GStreamer provides a clean interface to:
 
 ## Object oriented
 
-GStreamer adheres to GObject, the GLib 2.0 object model. A programmer
-familiar with GLib 2.0 or GTK+ will be comfortable with GStreamer.
+GStreamer adheres to `GObject`, the `GLib 2.0` object model. A programmer
+familiar with `GLib 2.0` or `GTK+` will be comfortable with GStreamer.
 
 GStreamer uses the mechanism of signals and object properties.
 
 All objects can be queried at runtime for their various properties and
 capabilities.
 
-GStreamer intends to be similar in programming methodology to GTK+. This
+GStreamer intends to be similar in programming methodology to `GTK+`. This
 applies to the object model, ownership of objects, reference counting,
 etc.
 
 ## Extensible
 
-All GStreamer Objects can be extended using the GObject inheritance
+All GStreamer Objects can be extended using the `GObject` inheritance
 methods.
 
 All plugins are loaded dynamically and can be extended and upgraded
@@ -43,7 +43,7 @@ independently.
 ## Allow binary-only plugins
 
 Plugins are shared libraries that are loaded at runtime. Since all the
-properties of the plugin can be set using the GObject properties, there
+properties of the plugin can be set using the `GObject` properties, there
 is no need (and in fact no way) to have any header files installed for
 the plugins.
 

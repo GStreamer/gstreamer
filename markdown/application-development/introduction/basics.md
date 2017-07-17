@@ -64,11 +64,11 @@ were an element, thereby abstracting away a lot of complexity for your
 application. You can, for example change state on all elements in a bin
 by changing the state of that bin itself. Bins also forward bus messages
 from their contained children (such as error messages, tag messages or
-EOS messages).
+`EOS` messages).
 
 A *pipeline* is a top-level bin. It provides a bus for the application
 and manages the synchronization for its children. As you set it to
-PAUSED or PLAYING state, data flow will start and media processing will
+`PAUSED` or `PLAYING` state, data flow will start and media processing will
 take place. Once started, pipelines will run in a separate thread until
 you stop them or the end of the data stream is reached.
 
