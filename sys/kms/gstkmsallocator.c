@@ -49,8 +49,6 @@ struct kms_bo
 {
   void *ptr;
   size_t size;
-  size_t offset;
-  size_t pitch;
   unsigned handle;
   unsigned int refs;
 };
@@ -130,13 +128,39 @@ gst_kms_allocator_memory_reset (GstKMSAllocator * allocator, GstKMSMemory * mem)
   mem->bo = NULL;
 }
 
+/* Copied from gst_v4l2_object_extrapolate_stride() */
+static gint
+extrapolate_stride (const GstVideoFormatInfo * finfo, gint plane, gint stride)
+{
+  gint estride;
+
+  switch (finfo->format) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV12_64Z32:
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV61:
+    case GST_VIDEO_FORMAT_NV24:
+      estride = (plane == 0 ? 1 : 2) *
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
+      break;
+    default:
+      estride = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
+      break;
+  }
+
+  return estride;
+}
+
 static gboolean
 gst_kms_allocator_memory_create (GstKMSAllocator * allocator,
     GstKMSMemory * kmsmem, GstVideoInfo * vinfo)
 {
-  gint ret;
+  gint i, ret, h;
   struct drm_mode_create_dumb arg = { 0, };
   guint32 fmt;
+  gint num_planes = GST_VIDEO_INFO_N_PLANES (vinfo);
+  gsize offs = 0;
 
   if (kmsmem->bo)
     return TRUE;
@@ -151,15 +175,51 @@ gst_kms_allocator_memory_create (GstKMSAllocator * allocator,
   fmt = gst_drm_format_from_video (GST_VIDEO_INFO_FORMAT (vinfo));
   arg.bpp = gst_drm_bpp_from_drm (fmt);
   arg.width = GST_VIDEO_INFO_WIDTH (vinfo);
-  arg.height = gst_drm_height_from_drm (fmt, GST_VIDEO_INFO_HEIGHT (vinfo));
+  h = GST_VIDEO_INFO_HEIGHT (vinfo);
+  arg.height = gst_drm_height_from_drm (fmt, h);
 
   ret = drmIoctl (allocator->priv->fd, DRM_IOCTL_MODE_CREATE_DUMB, &arg);
   if (ret)
     goto create_failed;
 
+  if (!arg.pitch)
+    goto done;
+
+  for (i = 0; i < num_planes; i++) {
+    guint32 pitch;
+
+    if (!arg.pitch)
+      continue;
+
+    /* Overwrite the video info's stride and offset using the pitch calculcated
+     * by the kms driver. */
+    pitch = extrapolate_stride (vinfo->finfo, i, arg.pitch);
+    GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i) = pitch;
+    GST_VIDEO_INFO_PLANE_OFFSET (vinfo, i) = offs;
+
+    /* Note that we cannot negotiate special padding betweem each planes,
+     * hence using the display height here. */
+    offs += pitch * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo->finfo, i, h);
+
+    GST_DEBUG_OBJECT (allocator, "Created BO plane %i with stride %i and "
+        "offset %" G_GSIZE_FORMAT, i,
+        GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i),
+        GST_VIDEO_INFO_PLANE_OFFSET (vinfo, i));
+  }
+
+done:
   kmsmem->bo->handle = arg.handle;
+  /* will be used a memory maxsize */
   kmsmem->bo->size = arg.size;
-  kmsmem->bo->pitch = arg.pitch;
+
+  /* Validate the size to prevent overflow */
+  if (kmsmem->bo->size < GST_VIDEO_INFO_SIZE (vinfo)) {
+    GST_ERROR_OBJECT (allocator,
+        "DUMB buffer has a size of %" G_GSIZE_FORMAT
+        " but we require at least %" G_GSIZE_FORMAT " to hold a frame",
+        kmsmem->bo->size, GST_VIDEO_INFO_SIZE (vinfo));
+    return FALSE;
+  }
 
   return TRUE;
 
@@ -359,13 +419,13 @@ gst_kms_allocator_new (int fd)
  * which are relative to the GstBuffer start. */
 static gboolean
 gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
-    gsize mem_offsets[GST_VIDEO_MAX_PLANES], GstVideoInfo * vinfo)
+    gsize in_offsets[GST_VIDEO_MAX_PLANES], GstVideoInfo * vinfo)
 {
-  int i, ret;
+  gint i, ret;
   gint num_planes = GST_VIDEO_INFO_N_PLANES (vinfo);
-  guint32 w, h, fmt, pitch = 0, bo_handles[4] = { 0, };
-  guint32 offsets[4] = { 0, };
+  guint32 w, h, fmt, bo_handles[4] = { 0, };
   guint32 pitches[4] = { 0, };
+  guint32 offsets[4] = { 0, };
 
   if (kmsmem->fb_id)
     return TRUE;
@@ -374,34 +434,18 @@ gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
   h = GST_VIDEO_INFO_HEIGHT (vinfo);
   fmt = gst_drm_format_from_video (GST_VIDEO_INFO_FORMAT (vinfo));
 
-  if (kmsmem->bo) {
-    bo_handles[0] = kmsmem->bo->handle;
-    for (i = 1; i < num_planes; i++)
-      bo_handles[i] = bo_handles[0];
-
-    /* Get the bo pitch calculated by the kms driver.
-     * If it's defined, it will overwrite the video info's stride.
-     * Since the API is completely undefined for planar formats,
-     * only do this for interleaved formats.
-     */
-    if (num_planes == 1)
-      pitch = kmsmem->bo->pitch;
-  } else {
-    for (i = 0; i < num_planes; i++)
+  for (i = 0; i < num_planes; i++) {
+    if (kmsmem->bo)
+      bo_handles[i] = kmsmem->bo->handle;
+    else
       bo_handles[i] = kmsmem->gem_handle[i];
+
+    pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i);
+    offsets[i] = in_offsets[i];
   }
 
   GST_DEBUG_OBJECT (alloc, "bo handles: %d, %d, %d, %d", bo_handles[0],
       bo_handles[1], bo_handles[2], bo_handles[3]);
-
-  for (i = 0; i < num_planes; i++) {
-    offsets[i] = mem_offsets[i];
-    if (pitch)
-      GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i) = pitch;
-    pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i);
-    GST_DEBUG_OBJECT (alloc, "Create FB plane %i with stride %u and offset %u",
-        i, pitches[i], offsets[i]);
-  }
 
   ret = drmModeAddFB2 (alloc->priv->fd, w, h, fmt, bo_handles, pitches,
       offsets, &kmsmem->fb_id, 0);
@@ -410,6 +454,7 @@ gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
         strerror (-ret), ret);
     return FALSE;
   }
+
   return TRUE;
 }
 
@@ -427,11 +472,15 @@ gst_kms_allocator_bo_alloc (GstAllocator * allocator, GstVideoInfo * vinfo)
   alloc = GST_KMS_ALLOCATOR (allocator);
 
   mem = GST_MEMORY_CAST (kmsmem);
-  gst_memory_init (mem, GST_MEMORY_FLAG_NO_SHARE, allocator, NULL,
-      GST_VIDEO_INFO_SIZE (vinfo), 0, 0, GST_VIDEO_INFO_SIZE (vinfo));
 
-  if (!gst_kms_allocator_memory_create (alloc, kmsmem, vinfo))
-    goto fail;
+  if (!gst_kms_allocator_memory_create (alloc, kmsmem, vinfo)) {
+    g_slice_free (GstKMSMemory, kmsmem);
+    return NULL;
+  }
+
+  gst_memory_init (mem, GST_MEMORY_FLAG_NO_SHARE, allocator, NULL,
+      kmsmem->bo->size, 0, 0, GST_VIDEO_INFO_SIZE (vinfo));
+
   if (!gst_kms_allocator_add_fb (alloc, kmsmem, vinfo->offset, vinfo))
     goto fail;
 
