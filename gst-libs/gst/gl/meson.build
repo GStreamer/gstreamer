@@ -315,6 +315,10 @@ if need_api_gles2 != 'no'
       gles2_dep = cc.find_library('GLESv2', required : false)
 #    endif
 
+     if not cc.has_header('GLES2/gl2.h', required : false)
+       gles2_dep = unneeded_dep
+     endif
+
     if not gles2_dep.found() and need_api_gles2 == 'yes'
       error ('Could not find requested OpenGL ES library')
     endif
