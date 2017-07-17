@@ -91,6 +91,8 @@ struct _GstOpenh264Enc
   GstOpenh264EncSliceMode slice_mode;
   guint num_slices;
   ECOMPLEXITY_MODE complexity;
+  gboolean bitrate_changed;
+  gboolean max_bitrate_changed;
 };
 
 struct _GstOpenh264EncClass
