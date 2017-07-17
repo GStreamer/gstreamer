@@ -1751,6 +1751,7 @@ gst_omx_video_enc_drain (GstOMXVideoEnc * self)
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self, "Failed to drain component: %s (0x%08x)",
         gst_omx_error_to_string (err), err);
+    g_mutex_unlock (&self->drain_lock);
     GST_VIDEO_ENCODER_STREAM_LOCK (self);
     return GST_FLOW_ERROR;
   }
