@@ -836,7 +836,7 @@ _execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
   ret = gst_element_send_event (pipeline, gst_event_new_eos ());
   gst_object_unref (pipeline);
 
-  return ret ? GST_VALIDATE_EXECUTE_ACTION_OK : GST_VALIDATE_EXECUTE_ACTION_OK;
+  return ret ? GST_VALIDATE_EXECUTE_ACTION_OK : GST_VALIDATE_EXECUTE_ACTION_ERROR;
 }
 
 static int
