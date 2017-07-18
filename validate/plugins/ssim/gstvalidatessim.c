@@ -597,7 +597,8 @@ _should_dump_buffer (ValidateSsimOverride * self,
   if (priv->recurrence == 0)
     return FALSE;
 
-  if (ABS (position - priv->last_dump_position) >= priv->recurrence)
+  if (position > priv->last_dump_position ?
+      position - priv->last_dump_position : 0 >= priv->recurrence)
     return TRUE;
 
   return FALSE;
