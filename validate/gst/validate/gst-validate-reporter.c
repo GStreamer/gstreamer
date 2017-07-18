@@ -204,6 +204,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
         GST_FUNCTION, __LINE__, NULL, combo, vacopy);
   g_free (combo);
 #endif
+  va_end (vacopy);
 
   int_ret = gst_validate_reporter_intercept_report (reporter, report);
 
