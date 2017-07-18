@@ -800,9 +800,13 @@ _check_directory (GstValidateSsim * self, const gchar * ref_dir,
     g_object_unref (info);
   }
 
-  gst_validate_printf (NULL,
-      "\nAverage similarity: %f, min_avg: %f, min_min: %f\n",
-      total_avg / nfiles, min_avg, min_min);
+  if (nfiles == 0) {
+    gst_validate_printf (NULL, "\nNo files to verify.\n");
+  } else {
+    gst_validate_printf (NULL,
+        "\nAverage similarity: %f, min_avg: %f, min_min: %f\n",
+        total_avg / nfiles, min_avg, min_min);
+  }
 
 done:
   gst_object_unref (file);
