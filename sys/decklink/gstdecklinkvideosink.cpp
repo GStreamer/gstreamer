@@ -38,12 +38,12 @@ public:
     g_mutex_init (&m_mutex);
   }
 
-  virtual HRESULT QueryInterface (REFIID, LPVOID *)
+  virtual HRESULT WINAPI QueryInterface (REFIID, LPVOID *)
   {
     return E_NOINTERFACE;
   }
 
-  virtual ULONG AddRef (void)
+  virtual ULONG WINAPI AddRef (void)
   {
     ULONG ret;
 
@@ -55,7 +55,7 @@ public:
     return ret;
   }
 
-  virtual ULONG Release (void)
+  virtual ULONG WINAPI Release (void)
   {
     ULONG ret;
 
@@ -71,7 +71,8 @@ public:
     return ret;
   }
 
-  virtual HRESULT ScheduledFrameCompleted (IDeckLinkVideoFrame * completedFrame,
+  virtual HRESULT WINAPI ScheduledFrameCompleted (
+      IDeckLinkVideoFrame * completedFrame,
       BMDOutputFrameCompletionResult result)
   {
     switch (result) {
@@ -96,7 +97,7 @@ public:
     return S_OK;
   }
 
-  virtual HRESULT ScheduledPlaybackHasStopped (void)
+  virtual HRESULT WINAPI ScheduledPlaybackHasStopped (void)
   {
     GST_LOG_OBJECT (m_sink, "Scheduled playback stopped");
 

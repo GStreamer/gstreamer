@@ -152,12 +152,12 @@ public:
     g_mutex_init (&m_mutex);
   }
 
-  virtual HRESULT QueryInterface (REFIID, LPVOID *)
+  virtual HRESULT WINAPI QueryInterface (REFIID, LPVOID *)
   {
     return E_NOINTERFACE;
   }
 
-  virtual ULONG AddRef (void)
+  virtual ULONG WINAPI AddRef (void)
   {
     ULONG ret;
 
@@ -169,7 +169,7 @@ public:
     return ret;
   }
 
-  virtual ULONG Release (void)
+  virtual ULONG WINAPI Release (void)
   {
     ULONG ret;
 
@@ -190,7 +190,7 @@ public:
     g_mutex_clear (&m_mutex);
   }
 
-  virtual HRESULT RenderAudioSamples (bool preroll)
+  virtual HRESULT WINAPI RenderAudioSamples (bool preroll)
   {
     guint8 *ptr;
     gint seg;
