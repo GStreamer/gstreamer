@@ -207,8 +207,7 @@ gst_validate_element_monitor_inspect (GstValidateElementMonitor * monitor)
   } else
     GST_ERROR_OBJECT (element, "no klassname");
 
-  if (element)
-    gst_object_unref (element);
+  gst_object_unref (element);
 }
 
 static void
