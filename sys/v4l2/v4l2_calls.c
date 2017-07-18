@@ -597,7 +597,8 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
   /* UVC devices are never interlaced, and doing VIDIOC_TRY_FMT on them
    * causes expensive and slow USB IO, so don't probe them for interlaced
    */
-  if (!strcmp ((char *) v4l2object->vcap.driver, "uvcusb")) {
+  if (!strcmp ((char *) v4l2object->vcap.driver, "uvcusb") ||
+      !strcmp ((char *) v4l2object->vcap.driver, "uvcvideo")) {
     v4l2object->never_interlaced = TRUE;
   }
 
