@@ -46,11 +46,12 @@
 # else
 #  define CONVERT_COM_STRING(s) BSTR _s = (BSTR)s; s = _com_util::ConvertBSTRToString(_s); ::SysFreeString(_s);
 #  define FREE_COM_STRING(s) delete[] s;
-# endif
+# endif /* __MINGW32__ */
 #else
 #define COMSTR_T const char*
 #define CONVERT_COM_STRING(s)
 #define FREE_COM_STRING(s)
+#define WINAPI
 #endif /* G_OS_WIN32 */
 
 typedef enum {
