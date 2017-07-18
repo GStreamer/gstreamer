@@ -1960,7 +1960,7 @@ gst_v4l2_object_get_colorspace (struct v4l2_format *fmt,
     case V4L2_COLORSPACE_BT2020:
       cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
       cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
-      cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
+      cinfo->transfer = GST_VIDEO_TRANSFER_BT2020_12;
       cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
       break;
     case V4L2_COLORSPACE_SMPTE240M:
@@ -2062,7 +2062,10 @@ gst_v4l2_object_get_colorspace (struct v4l2_format *fmt,
 
   switch (transfer) {
     case V4L2_XFER_FUNC_709:
-      cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
+      if (fmt->fmt.pix.height > 2160)
+        cinfo->transfer = GST_VIDEO_TRANSFER_BT2020_12;
+      else
+        cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
       break;
     case V4L2_XFER_FUNC_SRGB:
       cinfo->transfer = GST_VIDEO_TRANSFER_SRGB;
