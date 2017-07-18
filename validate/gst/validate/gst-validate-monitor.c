@@ -404,6 +404,7 @@ gst_validate_monitor_set_property (GObject * object, guint prop_id,
     }
     case PROP_PIPELINE:
       g_weak_ref_init (&monitor->pipeline, g_value_get_object (value));
+      break;
     case PROP_RUNNER:
       gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (monitor),
           g_value_get_object (value));
