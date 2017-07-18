@@ -101,10 +101,13 @@ struct _GstOpencvVideoFilterClass
   GstOpencvVideoFilterSetCaps cv_set_caps;
 };
 
+GST_EXPORT
 GType gst_opencv_video_filter_get_type (void);
 
+GST_EXPORT
 void gst_opencv_video_filter_set_in_place (GstOpencvVideoFilter * transform,
-    gboolean ip);
+                                           gboolean ip);
 
 G_END_DECLS
+
 #endif /* __GST_OPENCV_VIDEO_FILTER_H__ */
