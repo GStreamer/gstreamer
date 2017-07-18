@@ -583,10 +583,13 @@ _get_lines (const gchar * scenario_file)
 
 /* Returns: (transfer full): a #GList of #GstStructure */
 static GList *
-_lines_get_strutures (gchar ** lines)
+_lines_get_structures (gchar ** lines)
 {
   gint i;
   GList *structures = NULL;
+
+  if (lines == NULL)
+    return NULL;
 
   for (i = 0; lines[i]; i++) {
     GstStructure *structure;
@@ -604,8 +607,7 @@ _lines_get_strutures (gchar ** lines)
   }
 
 done:
-  if (lines)
-    g_strfreev (lines);
+  g_strfreev (lines);
 
   return structures;
 
@@ -632,7 +634,7 @@ gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file)
     return NULL;
   }
 
-  return _lines_get_strutures (lines);
+  return _lines_get_structures (lines);
 }
 
 /**
@@ -648,7 +650,7 @@ gst_validate_structs_parse_from_gfile (GFile * scenario_file)
   if (lines == NULL)
     return NULL;
 
-  return _lines_get_strutures (lines);
+  return _lines_get_structures (lines);
 }
 
 static gboolean
