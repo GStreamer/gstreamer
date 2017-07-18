@@ -234,10 +234,10 @@ parse_chain_output_probe (GstPad * pad, GstPadProbeInfo * info,
               gst_object_unref (input->active_stream);
             input->active_stream = stream;
             /* We have the beginning of a stream, get a multiqueue slot and link to it */
-            g_mutex_lock (&input->dbin->selection_lock);
+            SELECTION_LOCK (input->dbin);
             slot = get_slot_for_input (input->dbin, input);
             link_input_to_slot (input, slot);
-            g_mutex_unlock (&input->dbin->selection_lock);
+            SELECTION_UNLOCK (input->dbin);
           } else
             gst_object_unref (stream);
         }
@@ -448,10 +448,10 @@ parsebin_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
       /* See if we can link it straight away */
       input_stream->active_stream = stream;
 
-      g_mutex_lock (&dbin->selection_lock);
+      SELECTION_LOCK (dbin);
       slot = get_slot_for_input (dbin, input_stream);
       link_input_to_slot (input_stream, slot);
-      g_mutex_unlock (&dbin->selection_lock);
+      SELECTION_UNLOCK (dbin);
 
       /* Remove the buffer and event probe */
       gst_pad_remove_probe (ppad->pad, ppad->buffer_probe);
@@ -464,7 +464,7 @@ parsebin_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
   input->pending_pads = NULL;
 
   /* Weed out unused multiqueue slots */
-  g_mutex_lock (&dbin->selection_lock);
+  SELECTION_LOCK (dbin);
   for (tmp = dbin->slots; tmp; tmp = tmp->next) {
     MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
     GST_LOG_OBJECT (dbin, "Slot %d input:%p", slot->id, slot->input);
@@ -473,7 +473,7 @@ parsebin_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
           g_list_append (unused_slot, gst_object_ref (slot->sink_pad));
     }
   }
-  g_mutex_unlock (&dbin->selection_lock);
+  SELECTION_UNLOCK (dbin);
 
   for (tmp = unused_slot; tmp; tmp = tmp->next) {
     GstPad *sink_pad = (GstPad *) tmp->data;
