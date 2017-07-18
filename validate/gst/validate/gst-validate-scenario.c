@@ -2534,7 +2534,7 @@ gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
 
   if (stop_type == GST_SEEK_TYPE_SET) {
     priv->segment_stop = stop;
-  } else if (start_type == GST_SEEK_TYPE_END) {
+  } else if (stop_type == GST_SEEK_TYPE_END) {
     /* TODO fill me */
   }
 }
