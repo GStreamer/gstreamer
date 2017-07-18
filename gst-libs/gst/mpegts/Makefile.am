@@ -48,6 +48,7 @@ glib_enum_headers=gstmpegtssection.h	\
 glib_enum_define=GST_MPEGTS
 glib_gen_prefix=gst_mpegts
 glib_gen_basename=gstmpegts
+glib_gen_decl_banner=GST_EXPORT
 
 BUILT_SOURCES = gstmpegts-enumtypes.c gstmpegts-enumtypes.h
 nodist_libgstmpegts_@GST_API_VERSION@_la_SOURCES = gstmpegts-enumtypes.c

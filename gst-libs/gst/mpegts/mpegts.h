@@ -39,6 +39,7 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 void gst_mpegts_initialize (void);
 
 G_END_DECLS

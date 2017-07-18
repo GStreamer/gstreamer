@@ -162,13 +162,22 @@ struct _GstMpegtsNIT
   GPtrArray *streams;
 };
 
+GST_EXPORT
 GType gst_mpegts_nit_get_type (void);
+
+GST_EXPORT
 GType gst_mpegts_nit_stream_get_type (void);
 
+GST_EXPORT
 const GstMpegtsNIT *gst_mpegts_section_get_nit (GstMpegtsSection *section);
+
+GST_EXPORT
 GstMpegtsSection *gst_mpegts_section_from_nit (GstMpegtsNIT *nit);
 
+GST_EXPORT
 GstMpegtsNIT *gst_mpegts_nit_new (void);
+
+GST_EXPORT
 GstMpegtsNITStream *gst_mpegts_nit_stream_new (void);
 
 
@@ -202,9 +211,13 @@ struct _GstMpegtsBAT
   GPtrArray  *streams;
 };
 
+GST_EXPORT
 GType gst_mpegts_bat_get_type (void);
+
+GST_EXPORT
 GType gst_mpegts_bat_stream_get_type (void);
 
+GST_EXPORT
 const GstMpegtsBAT *gst_mpegts_section_get_bat (GstMpegtsSection *section);
 
 /* SDT */
@@ -255,14 +268,22 @@ struct _GstMpegtsSDT
   GPtrArray *services;
 };
 
+GST_EXPORT
 GType gst_mpegts_sdt_get_type (void);
+
+GST_EXPORT
 GType gst_mpegts_sdt_service_get_type (void);
 
+GST_EXPORT
 const GstMpegtsSDT *gst_mpegts_section_get_sdt (GstMpegtsSection *section);
 
+GST_EXPORT
 GstMpegtsSection *gst_mpegts_section_from_sdt (GstMpegtsSDT * sdt);
 
+GST_EXPORT
 GstMpegtsSDT *gst_mpegts_sdt_new (void);
+
+GST_EXPORT
 GstMpegtsSDTService *gst_mpegts_sdt_service_new (void);
 
 /* EIT */
@@ -312,12 +333,18 @@ struct _GstMpegtsEIT
   GPtrArray     *events;
 };
 
+GST_EXPORT
 GType gst_mpegts_eit_get_type (void);
+
+GST_EXPORT
 GType gst_mpegts_eit_event_get_type (void);
 
+GST_EXPORT
 const GstMpegtsEIT *gst_mpegts_section_get_eit (GstMpegtsSection *section);
 
 /* TDT */
+
+GST_EXPORT
 GstDateTime *gst_mpegts_section_get_tdt (GstMpegtsSection *section);
 
 /* TOT */
@@ -338,7 +365,10 @@ struct _GstMpegtsTOT
   GPtrArray     *descriptors;
 };
 
+GST_EXPORT
 GType gst_mpegts_tot_get_type (void);
+
+GST_EXPORT
 const GstMpegtsTOT *gst_mpegts_section_get_tot (GstMpegtsSection *section);
 
 G_END_DECLS
