@@ -157,8 +157,13 @@ gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
   GstValidateIssue *issue = g_slice_new (GstValidateIssue);
   gchar **area_name = g_strsplit (g_quark_to_string (issue_id), "::", 2);
 
-  g_return_val_if_fail (area_name[0] != NULL && area_name[1] != 0 &&
-      area_name[2] == NULL, NULL);
+  if (!(area_name[0] != NULL && area_name[1] != NULL && area_name[2] == NULL)) {
+    g_warning ("Wrong issue ID: %s (should be in the form: area::name)",
+        g_quark_to_string (issue_id));
+    g_strfreev (area_name);
+
+    return NULL;
+  }
 
   issue->issue_id = issue_id;
   issue->summary = g_strdup (summary);
