@@ -2955,6 +2955,9 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
   GstStreamType stream_type = GST_STREAM_TYPE_UNKNOWN;
   gchar *pad_name;
 
+  if (GST_PAD_IS_SINK (pad))
+    return;
+
   GST_DEBUG_OBJECT (playbin,
       "decoded pad %s:%s removed", GST_DEBUG_PAD_NAME (pad));
 
