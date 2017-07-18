@@ -272,6 +272,7 @@ _find_structure_incompatible_fields (GQuark field_id, const GValue * value,
 
   if (gst_value_intersect (&intersect, value, filter_value)) {
     g_value_reset (&intersect);
+    g_free (value_str);
 
     return TRUE;
   }
