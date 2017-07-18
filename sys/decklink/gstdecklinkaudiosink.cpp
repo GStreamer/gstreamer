@@ -276,7 +276,7 @@ public:
     } while (len > 0 && res == S_OK);
 
     GST_LOG_OBJECT (m_ringbuffer->sink, "Wrote %u samples: 0x%08lx", written_sum,
-        res);
+        (unsigned long) res);
 
     gst_audio_ring_buffer_clear (GST_AUDIO_RING_BUFFER_CAST (m_ringbuffer),
         seg);
@@ -319,7 +319,8 @@ gst_decklink_audio_sink_ringbuffer_delay (GstAudioRingBuffer * rb)
       ret = 0;
   }
 
-  GST_DEBUG_OBJECT (self->sink, "Delay: %u (0x%08lx)", ret, res);
+  GST_DEBUG_OBJECT (self->sink, "Delay: %u (0x%08lx)", ret,
+      (unsigned long) res);
 
   return ret;
 }
@@ -415,7 +416,7 @@ gst_decklink_audio_sink_ringbuffer_acquire (GstAudioRingBuffer * rb,
       sample_depth, spec->info.channels, bmdAudioOutputStreamContinuous);
   if (ret != S_OK) {
     GST_WARNING_OBJECT (self->sink, "Failed to enable audio output 0x%08lx",
-        ret);
+        (unsigned long) ret);
     return FALSE;
   }
 
@@ -424,7 +425,7 @@ gst_decklink_audio_sink_ringbuffer_acquire (GstAudioRingBuffer * rb,
       output->SetAudioCallback (new GStreamerAudioOutputCallback (self));
   if (ret != S_OK) {
     GST_WARNING_OBJECT (self->sink,
-        "Failed to set audio output callback 0x%08lx", ret);
+        "Failed to set audio output callback 0x%08lx", (unsigned long) ret);
     return FALSE;
   }
 
