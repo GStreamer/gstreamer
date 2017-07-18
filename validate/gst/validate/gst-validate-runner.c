@@ -642,6 +642,7 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
           synthesize_reports (runner, report);
           return;
         }
+        break;
       case GST_VALIDATE_SHOW_SYNTHETIC:
         if (!report->trace) {
           synthesize_reports (runner, report);
