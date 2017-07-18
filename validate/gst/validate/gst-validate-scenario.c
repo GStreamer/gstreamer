@@ -3568,7 +3568,9 @@ done:
   g_print ("All scenarios available:\n%s", result);
 
   if (output_file && !err)
-    g_file_set_contents (output_file, result, datalength, &err);
+    if (!g_file_set_contents (output_file, result, datalength, &err)) {
+      GST_WARNING ("Error writing to file '%s'", output_file);
+    }
 
   if (env_scenariodir)
     g_strfreev (env_scenariodir);
