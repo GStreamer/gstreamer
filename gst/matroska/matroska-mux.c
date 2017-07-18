@@ -2723,7 +2723,8 @@ gst_matroska_mux_write_chapter_edition (GstMatroskaMux * mux,
  * Start a new matroska file (write headers etc...)
  */
 static void
-gst_matroska_mux_start (GstMatroskaMux * mux)
+gst_matroska_mux_start (GstMatroskaMux * mux, GstMatroskaPad * first_pad,
+    GstBuffer * first_pad_buf)
 {
   GstEbmlWrite *ebml = mux->ebml_write;
   const gchar *doctype;
@@ -2893,12 +2894,30 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   for (collected = mux->collect->data; collected;
       collected = g_slist_next (collected)) {
     GstMatroskaPad *collect_pad;
+    GstBuffer *buf;
 
     collect_pad = (GstMatroskaPad *) collected->data;
 
     /* This will cause an error at a later time */
     if (collect_pad->track->codec_id == NULL)
       continue;
+
+    /* For audio tracks, use the first buffers duration as the default
+     * duration if we didn't get any better idea from the caps event already
+     */
+    if (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_AUDIO &&
+        collect_pad->track->default_duration == 0) {
+      if (collect_pad == first_pad)
+        buf = first_pad_buf ? gst_buffer_ref (first_pad_buf) : NULL;
+      else
+        buf = gst_collect_pads_peek (mux->collect, collected->data);
+
+      if (buf && GST_BUFFER_DURATION_IS_VALID (buf))
+        collect_pad->track->default_duration =
+            GST_BUFFER_DURATION (buf) + collect_pad->track->codec_delay;
+      if (buf)
+        gst_buffer_unref (buf);
+    }
 
     collect_pad->track->num = tracknum++;
     child = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TRACKENTRY);
@@ -3814,7 +3833,7 @@ gst_matroska_mux_handle_buffer (GstCollectPads * pads, GstCollectData * data,
   GstClockTime buffer_timestamp;
   GstMatroskaMux *mux = GST_MATROSKA_MUX (user_data);
   GstEbmlWrite *ebml = mux->ebml_write;
-  GstMatroskaPad *best;
+  GstMatroskaPad *best = (GstMatroskaPad *) data;
   GstFlowReturn ret = GST_FLOW_OK;
   GST_DEBUG_OBJECT (mux, "Collected pads");
 
@@ -3827,13 +3846,10 @@ gst_matroska_mux_handle_buffer (GstCollectPads * pads, GstCollectData * data,
     }
     mux->state = GST_MATROSKA_MUX_STATE_HEADER;
     gst_ebml_start_streamheader (ebml);
-    gst_matroska_mux_start (mux);
+    gst_matroska_mux_start (mux, best, buf);
     gst_matroska_mux_stop_streamheader (mux);
     mux->state = GST_MATROSKA_MUX_STATE_DATA;
   }
-
-  /* provided with stream to write from */
-  best = (GstMatroskaPad *) data;
 
   /* if there is no best pad, we have reached EOS */
   if (best == NULL) {
