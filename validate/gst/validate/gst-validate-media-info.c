@@ -158,8 +158,7 @@ gst_validate_media_info_save (GstValidateMediaInfo * mi, const gchar * path,
 
   data = gst_validate_media_info_to_string (mi, &datalength);
 
-  g_file_set_contents (path, data, datalength, err);
-  if (err)
+  if (!g_file_set_contents (path, data, datalength, err))
     return FALSE;
   return TRUE;
 }
