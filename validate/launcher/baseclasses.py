@@ -1533,6 +1533,9 @@ class _TestsLauncher(Loggable):
             self._load_config(options)
 
         self._load_testsuites()
+        if not self.options.testsuites:
+            printc("Not testsuite loaded!", Colors.FAIL)
+            return False
 
         for tester in self.testers:
             tester.set_settings(options, args, self.reporter)
