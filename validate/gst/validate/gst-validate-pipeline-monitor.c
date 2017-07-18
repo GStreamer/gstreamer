@@ -158,7 +158,6 @@ _check_pad_query_failures (GstPad * pad, GString * str,
     GstValidatePadMonitor ** last_refused_caps_monitor)
 {
   GstValidatePadMonitor *monitor;
-  GstPad *ghost_target = NULL;
 
   monitor = g_object_get_data (G_OBJECT (pad), "validate-monitor");
 
@@ -170,9 +169,6 @@ _check_pad_query_failures (GstPad * pad, GString * str,
   if (monitor->last_refused_caps)
     gst_object_replace ((GstObject **) last_refused_caps_monitor,
         (GstObject *) monitor);
-
-  if (ghost_target)
-    gst_object_unref (ghost_target);
 }
 
 static GstPad *
