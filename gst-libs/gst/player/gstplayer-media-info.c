@@ -858,14 +858,6 @@ guint gst_player_media_info_get_number_of_subtitle_streams
   return g_list_length (info->subtitle_stream_list);
 }
 
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-/* Forward declarations */
-GList *gst_player_get_video_streams (const GstPlayerMediaInfo * info);
-GList *gst_player_get_audio_streams (const GstPlayerMediaInfo * info);
-GList *gst_player_get_subtitle_streams (const GstPlayerMediaInfo * info);
-#endif
-
 /**
  * gst_player_get_video_streams:
  * @info: a #GstPlayerMediaInfo
@@ -873,11 +865,13 @@ GList *gst_player_get_subtitle_streams (const GstPlayerMediaInfo * info);
  * Returns: (transfer none) (element-type GstPlayerVideoInfo): A #GList of
  * matching #GstPlayerVideoInfo.
  */
+#ifndef GST_REMOVE_DEPRECATED
 GList *
 gst_player_get_video_streams (const GstPlayerMediaInfo * info)
 {
   return gst_player_media_info_get_video_streams (info);
 }
+#endif
 
 /**
  * gst_player_get_audio_streams:
@@ -886,11 +880,13 @@ gst_player_get_video_streams (const GstPlayerMediaInfo * info)
  * Returns: (transfer none) (element-type GstPlayerAudioInfo): A #GList of
  * matching #GstPlayerAudioInfo.
  */
+#ifndef GST_REMOVE_DEPRECATED
 GList *
 gst_player_get_audio_streams (const GstPlayerMediaInfo * info)
 {
   return gst_player_media_info_get_audio_streams (info);
 }
+#endif
 
 /**
  * gst_player_get_subtitle_streams:
@@ -899,6 +895,7 @@ gst_player_get_audio_streams (const GstPlayerMediaInfo * info)
  * Returns: (transfer none) (element-type GstPlayerSubtitleInfo): A #GList of
  * matching #GstPlayerSubtitleInfo.
  */
+#ifndef GST_REMOVE_DEPRECATED
 GList *
 gst_player_get_subtitle_streams (const GstPlayerMediaInfo * info)
 {

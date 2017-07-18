@@ -30,6 +30,7 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GType        gst_player_state_get_type                (void);
 #define      GST_TYPE_PLAYER_STATE                    (gst_player_state_get_type ())
 
@@ -49,9 +50,13 @@ typedef enum
   GST_PLAYER_STATE_PLAYING
 } GstPlayerState;
 
+GST_EXPORT
 const gchar *gst_player_state_get_name                (GstPlayerState state);
 
+GST_EXPORT
 GQuark       gst_player_error_quark                   (void);
+
+GST_EXPORT
 GType        gst_player_error_get_type                (void);
 #define      GST_PLAYER_ERROR                         (gst_player_error_quark ())
 #define      GST_TYPE_PLAYER_ERROR                    (gst_player_error_get_type ())
@@ -64,8 +69,10 @@ typedef enum {
   GST_PLAYER_ERROR_FAILED = 0
 } GstPlayerError;
 
+GST_EXPORT
 const gchar *gst_player_error_get_name                (GstPlayerError error);
 
+GST_EXPORT
 GType gst_player_color_balance_type_get_type          (void);
 #define GST_TYPE_PLAYER_COLOR_BALANCE_TYPE            (gst_player_color_balance_type_get_type ())
 
@@ -85,6 +92,7 @@ typedef enum
   GST_PLAYER_COLOR_BALANCE_HUE,
 } GstPlayerColorBalanceType;
 
+GST_EXPORT
 const gchar *gst_player_color_balance_type_get_name   (GstPlayerColorBalanceType type);
 
 #define GST_TYPE_PLAYER             (gst_player_get_type ())
@@ -96,113 +104,177 @@ const gchar *gst_player_color_balance_type_get_name   (GstPlayerColorBalanceType
 #define GST_PLAYER_CAST(obj)        ((GstPlayer*)(obj))
 
 
+GST_EXPORT
 GType        gst_player_get_type                      (void);
 
+GST_EXPORT
 GstPlayer *  gst_player_new                           (GstPlayerVideoRenderer * video_renderer, GstPlayerSignalDispatcher * signal_dispatcher);
 
+GST_EXPORT
 void         gst_player_play                          (GstPlayer    * player);
+
+GST_EXPORT
 void         gst_player_pause                         (GstPlayer    * player);
+
+GST_EXPORT
 void         gst_player_stop                          (GstPlayer    * player);
 
+GST_EXPORT
 void         gst_player_seek                          (GstPlayer    * player,
                                                        GstClockTime   position);
+
+GST_EXPORT
 void         gst_player_set_rate                      (GstPlayer    * player,
                                                        gdouble        rate);
+
+GST_EXPORT
 gdouble      gst_player_get_rate                      (GstPlayer    * player);
 
+GST_EXPORT
 gchar *      gst_player_get_uri                       (GstPlayer    * player);
+
+GST_EXPORT
 void         gst_player_set_uri                       (GstPlayer    * player,
                                                        const gchar  * uri);
 
+GST_EXPORT
 gchar *      gst_player_get_subtitle_uri              (GstPlayer    * player);
+
+GST_EXPORT
 void         gst_player_set_subtitle_uri              (GstPlayer    * player,
                                                        const gchar *uri);
 
+GST_EXPORT
 GstClockTime gst_player_get_position                  (GstPlayer    * player);
+
+GST_EXPORT
 GstClockTime gst_player_get_duration                  (GstPlayer    * player);
 
+GST_EXPORT
 gdouble      gst_player_get_volume                    (GstPlayer    * player);
+
+GST_EXPORT
 void         gst_player_set_volume                    (GstPlayer    * player,
                                                        gdouble        val);
 
+GST_EXPORT
 gboolean     gst_player_get_mute                      (GstPlayer    * player);
+
+GST_EXPORT
 void         gst_player_set_mute                      (GstPlayer    * player,
                                                        gboolean       val);
 
+GST_EXPORT
 GstElement * gst_player_get_pipeline                  (GstPlayer    * player);
 
+GST_EXPORT
 void         gst_player_set_video_track_enabled       (GstPlayer    * player,
                                                        gboolean enabled);
 
+GST_EXPORT
 void         gst_player_set_audio_track_enabled       (GstPlayer    * player,
                                                        gboolean enabled);
 
+GST_EXPORT
 void         gst_player_set_subtitle_track_enabled    (GstPlayer    * player,
                                                        gboolean enabled);
 
+GST_EXPORT
 gboolean     gst_player_set_audio_track               (GstPlayer    *player,
                                                        gint stream_index);
 
+GST_EXPORT
 gboolean     gst_player_set_video_track               (GstPlayer    *player,
                                                        gint stream_index);
 
+GST_EXPORT
 gboolean     gst_player_set_subtitle_track            (GstPlayer    *player,
                                                        gint stream_index);
 
-GstPlayerMediaInfo * gst_player_get_media_info        (GstPlayer    * player);
+GST_EXPORT
+GstPlayerMediaInfo *    gst_player_get_media_info     (GstPlayer * player);
 
-GstPlayerAudioInfo * gst_player_get_current_audio_track
-                                                      (GstPlayer    * player);
+GST_EXPORT
+GstPlayerAudioInfo *    gst_player_get_current_audio_track (GstPlayer * player);
 
-GstPlayerVideoInfo * gst_player_get_current_video_track
-                                                      (GstPlayer    * player);
+GST_EXPORT
+GstPlayerVideoInfo *    gst_player_get_current_video_track (GstPlayer * player);
 
-GstPlayerSubtitleInfo * gst_player_get_current_subtitle_track
-                                                      (GstPlayer    * player);
+GST_EXPORT
+GstPlayerSubtitleInfo * gst_player_get_current_subtitle_track (GstPlayer * player);
 
+GST_EXPORT
 gboolean     gst_player_set_visualization             (GstPlayer    * player,
                                                        const gchar *name);
 
+GST_EXPORT
 void         gst_player_set_visualization_enabled     (GstPlayer    * player,
                                                        gboolean enabled);
 
+GST_EXPORT
 gchar *      gst_player_get_current_visualization     (GstPlayer    * player);
 
+GST_EXPORT
 gboolean     gst_player_has_color_balance             (GstPlayer    * player);
+
+GST_EXPORT
 void         gst_player_set_color_balance             (GstPlayer    * player,
                                                        GstPlayerColorBalanceType type,
                                                        gdouble value);
+
+GST_EXPORT
 gdouble      gst_player_get_color_balance             (GstPlayer    * player,
                                                        GstPlayerColorBalanceType type);
 
 
+GST_EXPORT
 GstVideoMultiviewMode	 gst_player_get_multiview_mode (GstPlayer    * player);
+
+GST_EXPORT
 void                     gst_player_set_multiview_mode (GstPlayer    * player,
                                                         GstVideoMultiviewMode mode);
 
+GST_EXPORT
 GstVideoMultiviewFlags  gst_player_get_multiview_flags  (GstPlayer  * player);
+
+GST_EXPORT
 void                    gst_player_set_multiview_flags  (GstPlayer  * player,
                                                          GstVideoMultiviewFlags flags);
 
+GST_EXPORT
 gint64       gst_player_get_audio_video_offset        (GstPlayer    * player);
+
+GST_EXPORT
 void         gst_player_set_audio_video_offset        (GstPlayer    * player,
                                                        gint64 offset);
 
+GST_EXPORT
 gboolean       gst_player_set_config                  (GstPlayer * player,
                                                        GstStructure * config);
+
+GST_EXPORT
 GstStructure * gst_player_get_config                  (GstPlayer * player);
 
 /* helpers for configuring the config structure */
 
+GST_EXPORT
 void           gst_player_config_set_user_agent       (GstStructure * config,
                                                        const gchar * agent);
+
+GST_EXPORT
 gchar *        gst_player_config_get_user_agent       (const GstStructure * config);
 
+GST_EXPORT
 void           gst_player_config_set_position_update_interval  (GstStructure * config,
                                                                 guint          interval);
+
+GST_EXPORT
 guint          gst_player_config_get_position_update_interval  (const GstStructure * config);
 
+GST_EXPORT
 void           gst_player_config_set_seek_accurate (GstPlayer * player, gboolean accurate);
+
+GST_EXPORT
 gboolean       gst_player_config_get_seek_accurate (const GstStructure * config);
 
 typedef enum
@@ -214,6 +286,7 @@ typedef enum
   GST_PLAYER_THUMBNAIL_PNG
 } GstPlayerSnapshotFormat;
 
+GST_EXPORT
 GstSample * gst_player_get_video_snapshot (GstPlayer * player,
     GstPlayerSnapshotFormat format, GstStructure * config);
 

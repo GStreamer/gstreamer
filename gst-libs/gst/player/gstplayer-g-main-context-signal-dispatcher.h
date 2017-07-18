@@ -39,8 +39,10 @@ typedef struct _GstPlayerGMainContextSignalDispatcherClass
 #define GST_PLAYER_G_MAIN_CONTEXT_SIGNAL_DISPATCHER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PLAYER_G_MAIN_CONTEXT_SIGNAL_DISPATCHER, GstPlayerGMainContextSignalDispatcherClass))
 #define GST_PLAYER_G_MAIN_CONTEXT_SIGNAL_DISPATCHER_CAST(obj)        ((GstPlayerGMainContextSignalDispatcher*)(obj))
 
+GST_EXPORT
 GType gst_player_g_main_context_signal_dispatcher_get_type (void);
 
+GST_EXPORT
 GstPlayerSignalDispatcher * gst_player_g_main_context_signal_dispatcher_new (GMainContext * application_context);
 
 G_END_DECLS

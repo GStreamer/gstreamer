@@ -39,12 +39,19 @@ struct _GstPlayerVisualization {
   gchar *description;
 };
 
+GST_EXPORT
 GType                     gst_player_visualization_get_type (void);
 
+GST_EXPORT
 GstPlayerVisualization *  gst_player_visualization_copy  (const GstPlayerVisualization *vis);
+
+GST_EXPORT
 void                      gst_player_visualization_free  (GstPlayerVisualization *vis);
 
+GST_EXPORT
 GstPlayerVisualization ** gst_player_visualizations_get  (void);
+
+GST_EXPORT
 void                      gst_player_visualizations_free (GstPlayerVisualization **viss);
 
 G_END_DECLS
