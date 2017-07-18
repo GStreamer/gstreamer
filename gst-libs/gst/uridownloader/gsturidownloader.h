@@ -58,15 +58,26 @@ struct _GstUriDownloaderClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
 GType gst_uri_downloader_get_type (void);
 
+GST_EXPORT
 GstUriDownloader * gst_uri_downloader_new (void);
+
+GST_EXPORT
 void gst_uri_downloader_set_parent (GstUriDownloader * downloader, GstElement * parent);
+
+GST_EXPORT
 GstFragment * gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri, const gchar * referer, gboolean compress, gboolean refresh, gboolean allow_cache, GError ** err);
+
+GST_EXPORT
 GstFragment * gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader, const gchar * uri, const gchar * referer, gboolean compress, gboolean refresh, gboolean allow_cache, gint64 range_start, gint64 range_end, GError ** err);
+
+GST_EXPORT
 void gst_uri_downloader_reset (GstUriDownloader *downloader);
+
+GST_EXPORT
 void gst_uri_downloader_cancel (GstUriDownloader *downloader);
-void gst_uri_downloader_free (GstUriDownloader *downloader);
 
 G_END_DECLS
 #endif /* __GSTURIDOWNLOADER_H__ */

@@ -65,12 +65,22 @@ struct _GstFragmentClass
   GObjectClass parent_class;
 };
 
+GST_EXPORT
 GType gst_fragment_get_type (void);
 
+GST_EXPORT
 GstBuffer * gst_fragment_get_buffer (GstFragment *fragment);
+
+GST_EXPORT
 void gst_fragment_set_caps (GstFragment * fragment, GstCaps * caps);
+
+GST_EXPORT
 GstCaps * gst_fragment_get_caps (GstFragment * fragment);
+
+GST_EXPORT
 gboolean gst_fragment_add_buffer (GstFragment *fragment, GstBuffer *buffer);
+
+GST_EXPORT
 GstFragment * gst_fragment_new (void);
 
 G_END_DECLS
