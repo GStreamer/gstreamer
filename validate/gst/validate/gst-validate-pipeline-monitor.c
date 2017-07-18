@@ -647,9 +647,13 @@ gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
           goto done;
         }
       }
-      monitor->scenario =
-          gst_validate_scenario_factory_create (runner,
-          GST_ELEMENT_CAST (target), scenario_v[0]);
+      if (target)
+        monitor->scenario =
+            gst_validate_scenario_factory_create (runner,
+            GST_ELEMENT_CAST (target), scenario_v[0]);
+      else
+        GST_INFO_OBJECT (monitor, "Not creating scenario as monitor"
+            " already does not have a target.");
       g_strfreev (scenario_v);
     }
   }
