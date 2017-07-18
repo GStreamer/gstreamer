@@ -836,7 +836,8 @@ _execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
   ret = gst_element_send_event (pipeline, gst_event_new_eos ());
   gst_object_unref (pipeline);
 
-  return ret ? GST_VALIDATE_EXECUTE_ACTION_OK : GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  return ret ? GST_VALIDATE_EXECUTE_ACTION_OK :
+      GST_VALIDATE_EXECUTE_ACTION_ERROR;
 }
 
 static int
@@ -3439,7 +3440,7 @@ _parse_scenario (GFile * f, GKeyFile * kf)
       GstValidateActionType *type =
           _find_action_type (gst_structure_get_name (tmp->data));
 
-      if (gst_structure_has_name (tmp->data, "description"))
+      if (!desc && gst_structure_has_name (tmp->data, "description"))
         desc = gst_structure_copy (tmp->data);
       else if (type && type->flags & GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK)
         needs_clock_sync = TRUE;
