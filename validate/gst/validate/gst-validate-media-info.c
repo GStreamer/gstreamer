@@ -818,15 +818,6 @@ find_next_pad (GstElement * element, GstPad * pad)
         g_value_reset (&value);
         break;
       case GST_ITERATOR_RESYNC:
-        if (next) {
-          gst_object_unref (next);
-          next = NULL;
-          if (first) {
-            gst_object_unref (first);
-            first = NULL;
-          }
-          pick = FALSE;
-        }
         gst_iterator_resync (iterator);
         break;
       case GST_ITERATOR_ERROR:
