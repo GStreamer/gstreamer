@@ -999,8 +999,9 @@ execute_switch_track_default (GstValidateScenario * scenario,
     GstPad *pad, *cpad, *srcpad;
 
     ret = GST_VALIDATE_EXECUTE_ACTION_OK;
+    str_index = gst_structure_get_string (action->structure, "index");
 
-    if ((str_index = gst_structure_get_string (action->structure, "index"))) {
+    if (str_index == NULL) {
       if (!gst_structure_get_uint (action->structure, "index", &index)) {
         GST_WARNING ("No index given, defaulting to +1");
         index = 1;
