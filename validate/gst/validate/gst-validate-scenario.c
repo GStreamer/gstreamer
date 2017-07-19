@@ -1684,6 +1684,8 @@ _set_action_playback_time (GstValidateScenario * scenario,
   return TRUE;
 }
 
+/* scenario can be NULL **only** if the action is a CONFIG action and
+ * add_to_lists is FALSE */
 static GstValidateExecuteActionReturn
 _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
     GstStructure * structure, gboolean add_to_lists)
@@ -1692,7 +1694,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   gboolean is_config = FALSE;
   GstValidateActionType *action_type;
   const gchar *str_playback_time = NULL;
-  GstValidateScenarioPrivate *priv = scenario->priv;
+  GstValidateScenarioPrivate *priv = scenario ? scenario->priv : NULL;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
   gboolean optional;
 
