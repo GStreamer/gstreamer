@@ -39,7 +39,6 @@ gstcontroller_c = custom_target('gstcontrollerenum_c',
   input : controller_mkenum_headers,
   depends : [gstcontroller_h],
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
-controller_gen_sources = [gstcontroller_h]
 
 if libtype != 'shared'
   gst_controller_static = static_library('gstcontroller-@0@'.format(apiversion),
