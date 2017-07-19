@@ -1,5 +1,5 @@
 /* GStreamer JPEG 2000 Parser
- * Copyright (C) <2016> Grok Image Compession Inc.
+ * Copyright (C) <2016-2017> Grok Image Compression Inc.
  *  @author Aaron Boxer <boxerab@gmail.com>
  *
  * This library is free software; you can redistribute it and/or

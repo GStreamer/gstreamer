@@ -48,6 +48,7 @@
 #include "pesparse.h"
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/codecparsers/gstmpegvideoparser.h>
+#include <gst/video/video-color.h>
 
 #include <math.h>
 
@@ -112,6 +113,7 @@ typedef struct
 typedef struct _TSDemuxStream TSDemuxStream;
 
 typedef struct _TSDemuxH264ParsingInfos TSDemuxH264ParsingInfos;
+typedef struct _TSDemuxJP2KParsingInfos TSDemuxJP2KParsingInfos;
 
 /* Returns TRUE if a keyframe was found */
 typedef gboolean (*GstTsDemuxKeyFrameScanFunction) (TSDemuxStream * stream,
@@ -133,6 +135,11 @@ struct _TSDemuxH264ParsingInfos
   SimpleBuffer framedata;
 };
 
+struct _TSDemuxJP2KParsingInfos
+{
+  /* J2K parsing data */
+  gboolean interlace;
+};
 struct _TSDemuxStream
 {
   MpegTSBaseStream stream;
@@ -200,6 +207,7 @@ struct _TSDemuxStream
 
   GstTsDemuxKeyFrameScanFunction scan_function;
   TSDemuxH264ParsingInfos h264infos;
+  TSDemuxJP2KParsingInfos jp2kInfos;
 };
 
 #define VIDEO_CAPS \
@@ -215,8 +223,9 @@ struct _TSDemuxStream
     "video/x-cavs;" \
     "video/x-wmv," \
       "wmvversion = (int) 3, " \
-      "format = (string) WVC1" \
-  )
+      "format = (string) WVC1;" \
+      "image/x-jpc;" \
+)
 
 #define AUDIO_CAPS \
   GST_STATIC_CAPS ( \
@@ -1449,6 +1458,83 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           "stream-format", G_TYPE_STRING, "byte-stream",
           "alignment", G_TYPE_STRING, "nal", NULL);
       break;
+    case GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K:
+      is_video = TRUE;
+      desc =
+          mpegts_get_descriptor_from_stream (bstream, GST_MTS_DESC_J2K_VIDEO);
+      if (desc == NULL) {
+        caps = gst_caps_new_empty_simple ("image/x-jpc");
+        break;
+      } else {
+        GstByteReader br;
+        guint16 DEN_frame_rate = 0;
+        guint16 NUM_frame_rate = 0;
+        guint8 color_specification = 0;
+        guint8 remaining_8b = 0;
+        gboolean interlaced_video = 0;
+        const gchar *interlace_mode = NULL;
+        const gchar *colorspace = NULL;
+        const gchar *colorimetry_mode = NULL;
+        guint16 profile_and_level G_GNUC_UNUSED;
+        guint32 horizontal_size G_GNUC_UNUSED;
+        guint32 vertical_size G_GNUC_UNUSED;
+        guint32 max_bit_rate G_GNUC_UNUSED;
+        guint32 max_buffer_size G_GNUC_UNUSED;
+        const guint desc_min_length = 24;
+
+        if (desc->length < desc_min_length) {
+          GST_ERROR
+              ("GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K: descriptor length %d too short",
+              desc->length);
+          return NULL;
+        }
+
+        /* Skip the descriptor tag and length */
+        gst_byte_reader_init (&br, desc->data + 2, desc->length);
+
+        profile_and_level = gst_byte_reader_get_uint16_be_unchecked (&br);
+        horizontal_size = gst_byte_reader_get_uint32_be_unchecked (&br);
+        vertical_size = gst_byte_reader_get_uint32_be_unchecked (&br);
+        max_bit_rate = gst_byte_reader_get_uint32_be_unchecked (&br);
+        max_buffer_size = gst_byte_reader_get_uint32_be_unchecked (&br);
+        DEN_frame_rate = gst_byte_reader_get_uint16_be_unchecked (&br);
+        NUM_frame_rate = gst_byte_reader_get_uint16_be_unchecked (&br);
+        color_specification = gst_byte_reader_get_uint8_unchecked (&br);
+        remaining_8b = gst_byte_reader_get_uint8_unchecked (&br);
+        interlaced_video = remaining_8b & 0x40;
+        /* we don't support demuxing interlaced at the moment */
+        if (interlaced_video) {
+          GST_ERROR
+              ("GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K: interlaced video not supported");
+          return NULL;
+        } else {
+          interlace_mode = "progressive";
+          stream->jp2kInfos.interlace = FALSE;
+        }
+        switch (color_specification) {
+          case GST_MPEGTSDEMUX_JPEG2000_COLORSPEC_SRGB:
+            colorspace = "sRGB";
+            colorimetry_mode = GST_VIDEO_COLORIMETRY_SRGB;
+            break;
+          case GST_MPEGTSDEMUX_JPEG2000_COLORSPEC_REC601:
+            colorspace = "sYUV";
+            colorimetry_mode = GST_VIDEO_COLORIMETRY_BT601;
+            break;
+          case GST_MPEGTSDEMUX_JPEG2000_COLORSPEC_REC709:
+          case GST_MPEGTSDEMUX_JPEG2000_COLORSPEC_CIELUV:
+            colorspace = "sYUV";
+            colorimetry_mode = GST_VIDEO_COLORIMETRY_BT709;
+            break;
+          default:
+            break;
+        }
+        caps = gst_caps_new_simple ("image/x-jpc",
+            "framerate", GST_TYPE_FRACTION, NUM_frame_rate, DEN_frame_rate,
+            "interlace-mode", G_TYPE_STRING, interlace_mode,
+            "colorimetry", G_TYPE_STRING, colorimetry_mode,
+            "colorspace", G_TYPE_STRING, colorspace, NULL);
+      }
+      break;
     case ST_VIDEO_DIRAC:
       if (bstream->registration_id == 0x64726163) {
         GST_LOG ("dirac");
@@ -2553,9 +2639,148 @@ error:
     g_free (stream->data);
     stream->data = NULL;
     stream->current_size = 0;
-    gst_buffer_list_unref (buffer_list);
+    if (buffer_list)
+      gst_buffer_list_unref (buffer_list);
     return NULL;
   }
+}
+
+/* interlaced mode is disabled at the moment */
+/*#define TSDEMUX_JP2K_SUPPORT_INTERLACE */
+static GstBuffer *
+parse_jp2k_access_unit (TSDemuxStream * stream)
+{
+  GstByteReader reader;
+  /* header tag */
+  guint32 header_tag;
+  /* Framerate box */
+  guint16 den G_GNUC_UNUSED;
+  guint16 num G_GNUC_UNUSED;
+  /* Maximum bitrate box */
+  guint32 MaxBr G_GNUC_UNUSED;
+  guint32 AUF[2] = { 0, 0 };
+#ifdef TSDEMUX_JP2K_SUPPORT_INTERLACE
+  /* Field Coding Box */
+  guint8 Fic G_GNUC_UNUSED = 1;
+  guint8 Fio G_GNUC_UNUSED = 0;
+  /* header size equals 38 for non-interlaced, and 48 for interlaced */
+  guint header_size = stream->jp2kInfos.interlace ? 48 : 38;
+#else
+  /* header size equals 38 for non-interlaced, and 48 for interlaced */
+  guint header_size = 38;
+#endif
+  /* Time Code box */
+  guint32 HHMMSSFF G_GNUC_UNUSED;
+  /* Broadcast color box */
+  guint8 CollC G_GNUC_UNUSED;
+  guint8 b G_GNUC_UNUSED;
+
+  guint8 *packet_data = NULL;
+  guint packet_size;
+  guint remaining = 0;
+
+  if (stream->current_size < header_size) {
+    GST_ERROR_OBJECT (stream->pad, "Not enough data for header");
+    goto error;
+  }
+
+  gst_byte_reader_init (&reader, stream->data, stream->current_size);
+
+  /* Elementary stream header box 'elsm' == 0x656c736d */
+  header_tag = gst_byte_reader_get_uint32_be_unchecked (&reader);
+  if (header_tag != 0x656c736d) {
+    GST_ERROR_OBJECT (stream->pad, "Expected ELSM box but found box %x instead",
+        header_tag);
+    goto error;
+  }
+  /* Frame rate box 'frat' == 0x66726174 */
+  header_tag = gst_byte_reader_get_uint32_be_unchecked (&reader);
+  if (header_tag != 0x66726174) {
+    GST_ERROR_OBJECT (stream->pad,
+        "Expected frame rate box, but found box %x instead", header_tag);
+    goto error;
+
+  }
+  den = gst_byte_reader_get_uint16_be_unchecked (&reader);
+  num = gst_byte_reader_get_uint16_be_unchecked (&reader);
+  /* Maximum bit rate box 'brat' == 0x62726174 */
+  header_tag = gst_byte_reader_get_uint32_be_unchecked (&reader);
+  if (header_tag != 0x62726174) {
+    GST_ERROR_OBJECT (stream->pad, "Expected brat box but read box %x instead",
+        header_tag);
+    goto error;
+
+  }
+  MaxBr = gst_byte_reader_get_uint32_be_unchecked (&reader);
+  AUF[0] = gst_byte_reader_get_uint32_be_unchecked (&reader);
+  if (stream->jp2kInfos.interlace) {
+#ifdef TSDEMUX_JP2K_SUPPORT_INTERLACE
+    AUF[1] = gst_byte_reader_get_uint32_be_unchecked (&reader);
+    /*  Field Coding Box 'fiel' == 0x6669656c */
+    header_tag = gst_byte_reader_get_uint32_be_unchecked (&reader);
+    if (header_tag != 0x6669656c) {
+      GST_ERROR_OBJECT (stream->pad,
+          "Expected Field Coding box but found box %x instead", header_tag);
+      goto error;
+    }
+    Fic = gst_byte_reader_get_uint8_unchecked (&reader);
+    Fio = gst_byte_reader_get_uint8_unchecked (&reader);
+#else
+    GST_ERROR_OBJECT (stream->pad, "interlaced mode not supported");
+    goto error;
+#endif
+  }
+  /* Time Code Box 'tcod' == 0x74636f64 */
+  header_tag = gst_byte_reader_get_uint32_be_unchecked (&reader);
+  if (header_tag != 0x74636f64) {
+    GST_ERROR_OBJECT (stream->pad,
+        "Expected Time code box but found %d box instead", header_tag);
+    goto error;
+  }
+  HHMMSSFF = gst_byte_reader_get_uint32_be_unchecked (&reader);
+  /* Broadcast Color Box 'bcol' == 0x6263686c */
+  header_tag = gst_byte_reader_get_uint32_be_unchecked (&reader);
+  if (header_tag != 0x62636f6c) {
+    GST_ERROR_OBJECT (stream->pad,
+        "Expected Broadcast color box but found %x box instead", header_tag);
+    goto error;
+  }
+  CollC = gst_byte_reader_get_uint8_unchecked (&reader);
+  b = gst_byte_reader_get_uint8_unchecked (&reader);
+  remaining = gst_byte_reader_get_remaining (&reader);
+  packet_size = remaining;
+
+  GST_DEBUG_OBJECT (stream->pad,
+      "Size of first codestream in TS stream: %d; bytes remaining: %d", AUF[0],
+      remaining);
+
+  if (!gst_byte_reader_dup_data (&reader, packet_size, &packet_data)) {
+    GST_ERROR ("Required size %d > %d than remaining size in buffer", AUF[0],
+        packet_size);
+    goto error;
+  }
+#ifdef TSDEMUX_JP2K_SUPPORT_INTERLACE
+  if (stream->jp2kInfos.interlace) {
+    remaining = gst_byte_reader_get_remaining (&reader);
+    if (!gst_byte_reader_dup_data (&reader, AUF[1], &packet_data)) {
+      GST_ERROR ("Required size %d > %d than remaining size in buffer", AUF[1],
+          remaining);
+      goto error;
+    }
+
+  }
+#endif
+  g_free (stream->data);
+  stream->data = NULL;
+  stream->current_size = 0;
+  return gst_buffer_new_wrapped (packet_data, packet_size);
+
+error:
+  GST_ERROR ("Failed to parse JP2K access unit");
+  g_free (stream->data);
+  stream->data = NULL;
+  stream->current_size = 0;
+  return NULL;
 }
 
 static GstFlowReturn
@@ -2615,6 +2840,8 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
           gst_buffer_list_unref (buffer_list);
           buffer_list = NULL;
         }
+      } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
+        buffer = parse_jp2k_access_unit (stream);
       } else {
         buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
       }
@@ -2649,6 +2876,8 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
         gst_buffer_list_unref (buffer_list);
         buffer_list = NULL;
       }
+    } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
+      buffer = parse_jp2k_access_unit (stream);
     } else {
       buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
     }

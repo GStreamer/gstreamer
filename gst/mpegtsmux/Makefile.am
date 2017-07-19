@@ -6,7 +6,8 @@ libgstmpegtsmux_la_SOURCES = \
 	mpegtsmux.c \
 	mpegtsmux_aac.c \
 	mpegtsmux_ttxt.c \
-	mpegtsmux_opus.c
+	mpegtsmux_opus.c \
+	mpegtsmux_jpeg2000.c
 
 libgstmpegtsmux_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 			    $(GST_BASE_CFLAGS) $(GST_CFLAGS)
@@ -21,4 +22,5 @@ noinst_HEADERS = \
 	mpegtsmux.h \
 	mpegtsmux_aac.h \
 	mpegtsmux_ttxt.h \
-	mpegtsmux_opus.h
+	mpegtsmux_opus.h \
+	mpegtsmux_jpeg2000.h

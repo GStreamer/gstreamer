@@ -98,6 +98,9 @@
 #include "mpegtsmux_aac.h"
 #include "mpegtsmux_ttxt.h"
 #include "mpegtsmux_opus.h"
+#include "mpegtsmux_jpeg2000.h"
+#include <gst/videoparsers/gstjpeg2000parse.h>
+#include <gst/video/video-color.h>
 
 GST_DEBUG_CATEGORY (mpegtsmux_debug);
 #define GST_CAT_DEFAULT mpegtsmux_debug
@@ -125,6 +128,7 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
         "mpegversion = (int) { 1, 2, 4 }, "
         "systemstream = (boolean) false; "
         "video/x-dirac;"
+        "image/x-jpc;"
         "video/x-h264,stream-format=(string)byte-stream,"
         "alignment=(string){au, nal}; "
         "video/x-h265,stream-format=(string)byte-stream,"
@@ -149,7 +153,8 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
         "audio/x-opus, "
         "channels = (int) [1, 8], "
         "channel-mapping-family = (int) {0, 1};"
-        "subpicture/x-dvb; application/x-teletext; meta/x-klv, parsed=true"));
+        "subpicture/x-dvb; application/x-teletext; meta/x-klv, parsed=true;"
+        "image/x-jpc, profile = (int)[0, 49151];"));
 
 static GstStaticPadTemplate mpegtsmux_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -588,6 +593,11 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
   const GValue *value = NULL;
   GstBuffer *codec_data = NULL;
   guint8 opus_channel_config_code = 0;
+  guint16 profile = 0;
+  guint8 main_level = 0;
+  guint32 max_rate = 0;
+  guint8 color_spec = 0;
+  j2k_private_data *private_data = NULL;
 
   pad = ts_data->collect.pad;
   caps = gst_pad_get_current_caps (pad);
@@ -739,6 +749,94 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
     ts_data->prepare_func = mpegtsmux_prepare_opus;
   } else if (strcmp (mt, "meta/x-klv") == 0) {
     st = TSMUX_ST_PS_KLV;
+  } else if (strcmp (mt, "image/x-jpc") == 0) {
+    /*
+     * See this document for more details on standard:
+     *
+     * https://www.itu.int/rec/T-REC-H.222.0-201206-S/en
+     *  Annex S describes J2K details
+     *  Page 104 of this document describes J2k video descriptor
+     */
+
+    const GValue *vProfile = gst_structure_get_value (s, "profile");
+    const GValue *vMainlevel = gst_structure_get_value (s, "main-level");
+    const GValue *vFramerate = gst_structure_get_value (s, "framerate");
+    const GValue *vColorimetry = gst_structure_get_value (s, "colorimetry");
+    private_data = g_new0 (j2k_private_data, 1);
+    profile = g_value_get_uint (vProfile);
+    if (profile != GST_JPEG2000_PARSE_PROFILE_BC_SINGLE) {
+      /* for now, we will relax the condition that the profile must equal GST_JPEG2000_PARSE_PROFILE_BC_SINGLE */
+      /*GST_ERROR_OBJECT (pad, "Invalid JPEG 2000 profile %d", profile);
+         goto not_negotiated; */
+    }
+    /* for now, we will relax the condition that the main level must be present */
+    if (vMainlevel) {
+      main_level = g_value_get_uint (vMainlevel);
+      if (main_level > 11) {
+        GST_ERROR_OBJECT (pad, "Invalid main level %d", main_level);
+        goto not_negotiated;
+      }
+      if (main_level >= 6) {
+        max_rate = 2 ^ (main_level - 6) * 1600 * 1000000;
+      } else {
+        switch (main_level) {
+          case 0:
+          case 1:
+          case 2:
+          case 3:
+            max_rate = 200 * 1000000;
+            break;
+          case 4:
+            max_rate = 400 * 1000000;
+            break;
+          case 5:
+            max_rate = 800 * 1000000;
+            break;
+          default:
+            break;
+        }
+      }
+    } else {
+      /*GST_ERROR_OBJECT (pad, "Missing main level");
+         goto not_negotiated; */
+    }
+    /* We always mux video in J2K-over-MPEG-TS non-interlaced mode */
+    private_data->interlace = FALSE;
+    private_data->den = 0;
+    private_data->num = 0;
+    private_data->max_bitrate = max_rate;
+    private_data->color_spec = 1;
+    /* these two fields are not used, since we always mux as non-interlaced */
+    private_data->Fic = 1;
+    private_data->Fio = 0;
+
+    /* Get Framerate */
+    if (vFramerate != NULL) {
+      /* Data for ELSM header */
+      private_data->num = gst_value_get_fraction_numerator (vFramerate);
+      private_data->den = gst_value_get_fraction_denominator (vFramerate);
+    }
+    /* Get Colorimetry */
+    if (vColorimetry) {
+      const char *colorimetry = g_value_get_string (vColorimetry);
+      color_spec = GST_MPEGTS_JPEG2000_COLORSPEC_SRGB;  /* RGB as default */
+      if (g_str_equal (colorimetry, GST_VIDEO_COLORIMETRY_BT601)) {
+        color_spec = GST_MPEGTS_JPEG2000_COLORSPEC_REC601;
+      } else {
+        if (g_str_equal (colorimetry, GST_VIDEO_COLORIMETRY_BT709)
+            || g_str_equal (colorimetry, GST_VIDEO_COLORIMETRY_SMPTE240M)) {
+          color_spec = GST_MPEGTS_JPEG2000_COLORSPEC_REC709;
+        }
+      }
+      private_data->color_spec = color_spec;
+    } else {
+      GST_ERROR_OBJECT (pad, "Colorimetry not present in caps");
+      goto not_negotiated;
+    }
+    st = TSMUX_ST_VIDEO_JP2K;
+    ts_data->prepare_func = mpegtsmux_prepare_jpeg2000;
+    ts_data->prepare_data = private_data;
+    ts_data->free_func = mpegtsmux_free_jpeg2000;
   }
 
   if (st != TSMUX_ST_RESERVED) {
@@ -749,9 +847,28 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
   }
 
   if (ts_data->stream != NULL) {
+    const char *interlace_mode = gst_structure_get_string (s, "interlace-mode");
     gst_structure_get_int (s, "rate", &ts_data->stream->audio_sampling);
     gst_structure_get_int (s, "channels", &ts_data->stream->audio_channels);
     gst_structure_get_int (s, "bitrate", &ts_data->stream->audio_bitrate);
+
+    /* frame rate */
+    gst_structure_get_fraction (s, "framerate", &ts_data->stream->num,
+        &ts_data->stream->den);
+
+    /* Interlace mode */
+    ts_data->stream->interlace_mode = FALSE;
+    if (interlace_mode) {
+      ts_data->stream->interlace_mode =
+          g_str_equal (interlace_mode, "interleaved");
+    }
+    /* Width and Height */
+    gst_structure_get_int (s, "width", &ts_data->stream->horizontal_size);
+    gst_structure_get_int (s, "height", &ts_data->stream->vertical_size);
+
+    ts_data->stream->color_spec = color_spec;
+    ts_data->stream->max_bitrate = max_rate;
+    ts_data->stream->profile_and_level = profile | main_level;
 
     ts_data->stream->opus_channel_config_code = opus_channel_config_code;
 
@@ -784,13 +901,12 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
   }
   GST_OBJECT_UNLOCK (mux);
 #endif
-
   gst_caps_unref (caps);
   return ret;
-
   /* ERRORS */
 not_negotiated:
   {
+    g_free (private_data);
     GST_DEBUG_OBJECT (pad, "Sink pad caps were not set before pushing");
     if (caps)
       gst_caps_unref (caps);
