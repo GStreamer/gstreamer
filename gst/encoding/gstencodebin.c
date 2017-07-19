@@ -1209,7 +1209,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     const gchar * sinkpadname, GstCaps * sinkcaps, gboolean * encoder_not_found)
 {
   StreamGroup *sgroup = NULL;
-  GstPad *sinkpad, *srcpad, *muxerpad = NULL;
+  GstPad *sinkpad, *srcpad = NULL, *muxerpad = NULL;
   /* Element we will link to the encoder */
   GstElement *last = NULL;
   GstElement *encoder = NULL;
@@ -1268,6 +1268,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), srcpad);
   }
   gst_object_unref (srcpad);
+  srcpad = NULL;
 
   /* Check if we need a formatter
    * If we have no muxer or
@@ -1395,7 +1396,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     goto passthrough_link_failure;
   g_object_unref (sinkpad);
   g_object_unref (srcpad);
-
+  srcpad = NULL;
 
   /* Path 2 : Conversion / Encoding */
 
@@ -1416,6 +1417,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
       goto encoder_link_failure;
     g_object_unref (sinkpad);
     g_object_unref (srcpad);
+    srcpad = NULL;
   } else if (gst_encoding_profile_get_preset (sgroup->profile)
       || gst_encoding_profile_get_preset_name (sgroup->profile)) {
 
@@ -1575,6 +1577,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     goto splitter_encoding_failure;
   g_object_unref (sinkpad);
   g_object_unref (srcpad);
+  srcpad = NULL;
 
   /* End of Stream 2 setup */
 
@@ -1671,6 +1674,8 @@ cleanup:
     gst_caps_unref (format);
   if (restriction)
     gst_caps_unref (restriction);
+  if (srcpad)
+    gst_object_unref (srcpad);
   stream_group_free (ebin, sgroup);
   g_list_free (tosync);
   return NULL;
