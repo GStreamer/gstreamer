@@ -279,6 +279,7 @@ static void gst_parse_pad_update_stream_collection (GstParsePad * parsepad,
     GstStreamCollection * collection);
 
 static GstCaps *get_pad_caps (GstPad * pad);
+static GstStreamType guess_stream_type_from_caps (GstCaps * caps);
 
 #define EXPOSE_LOCK(parsebin) G_STMT_START {				\
     GST_LOG_OBJECT (parsebin,						\
@@ -3707,6 +3708,20 @@ build_fallback_collection (GstParseChain * chain,
 
     if (p->active_stream != NULL && p->active_collection == NULL) {
       GST_DEBUG_OBJECT (p, "Adding stream to fallback collection");
+      if (G_UNLIKELY (gst_stream_get_stream_type (p->active_stream) ==
+              GST_STREAM_TYPE_UNKNOWN)) {
+        GstCaps *caps;
+        caps = get_pad_caps (GST_PAD_CAST (p));
+
+        if (caps) {
+          GstStreamType type = guess_stream_type_from_caps (caps);
+          if (type != GST_STREAM_TYPE_UNKNOWN) {
+            gst_stream_set_stream_type (p->active_stream, type);
+            gst_stream_set_caps (p->active_stream, caps);
+          }
+          gst_caps_unref (caps);
+        }
+      }
       gst_stream_collection_add_stream (collection,
           gst_object_ref (p->active_stream));
       p->in_a_fallback_collection = TRUE;
