@@ -3053,7 +3053,11 @@ check_update_duration (GstQTDemux * qtdemux, GstClockTime duration)
             "Updating stream #%d duration to %" GST_TIME_FORMAT, i,
             GST_TIME_ARGS (duration));
         stream->duration = movdur;
-        if (stream->dummy_segment) {
+        /* internal duration tracking state has been updated above, so */
+        /* preserve an open-ended dummy segment rather than repeatedly updating
+         * it and spamming downstream accordingly with segment events */
+        if (stream->dummy_segment &&
+            GST_CLOCK_TIME_IS_VALID (stream->segments[0].duration)) {
           /* Update all dummy values to new duration */
           stream->segments[0].stop_time = duration;
           stream->segments[0].duration = duration;
