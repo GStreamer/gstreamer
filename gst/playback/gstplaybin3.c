@@ -2907,7 +2907,10 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
 
   /* If we're expecting either audio or video,
    * wait for them to appear before configuring playsink */
-  if ((playbin->selected_stream_types & ~playbin->active_stream_types &
+  if ((playbin->active_stream_types & GST_STREAM_TYPE_TEXT) &&
+      !(playbin->active_stream_types & GST_STREAM_TYPE_VIDEO)) {
+    GST_LOG_OBJECT (playbin, "Have text stream but no video yet, Wating");
+  } else if ((playbin->selected_stream_types & ~playbin->active_stream_types &
           (GST_STREAM_TYPE_VIDEO | GST_STREAM_TYPE_AUDIO))
       == 0) {
     no_more_pads_cb (decodebin, playbin);
