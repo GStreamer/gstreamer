@@ -4816,9 +4816,15 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
    * (FIXME: doesn't seem to work so well with ismv and wmv, as no parser; the
    * tfra entries tells us which trun/sample the key unit is in, but we don't
    * make use of this additional information at the moment) */
-  if (qtdemux->fragmented) {
+  if (qtdemux->fragmented && !qtdemux->fragmented_seek_pending) {
     stream->to_sample = G_MAXUINT32;
     return TRUE;
+  } else {
+    /* well, it will be taken care of below */
+    qtdemux->fragmented_seek_pending = FALSE;
+    /* FIXME ideally the do_fragmented_seek can be done right here,
+     * rather than at loop level
+     * (which might even allow handling edit lists in a fragmented file) */
   }
 
   /* We don't need to look for a sample in push-based */
@@ -5604,30 +5610,14 @@ gst_qtdemux_do_fragmented_seek (GstQTDemux * qtdemux)
 
   g_assert (qtdemux->n_streams > 0);
 
+  /* first see if we can determine where to go to using mfra,
+   * before we start clearing things */
   for (i = 0; i < qtdemux->n_streams; i++) {
     const QtDemuxRandomAccessEntry *entry;
     QtDemuxStream *stream;
     gboolean is_audio_or_video;
 
     stream = qtdemux->streams[i];
-
-    g_free (stream->samples);
-    stream->samples = NULL;
-    stream->n_samples = 0;
-    stream->stbl_index = -1;    /* no samples have yet been parsed */
-    stream->sample_index = -1;
-
-    if (stream->protection_scheme_info) {
-      /* Clear out any old cenc crypto info entries as we'll move to a new moof */
-      if (stream->protection_scheme_type == FOURCC_cenc) {
-        QtDemuxCencSampleSetInfo *info =
-            (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
-        if (info->crypto_info) {
-          g_ptr_array_free (info->crypto_info, TRUE);
-          info->crypto_info = NULL;
-        }
-      }
-    }
 
     if (stream->ra_entries == NULL)
       continue;
@@ -5654,9 +5644,35 @@ gst_qtdemux_do_fragmented_seek (GstQTDemux * qtdemux)
       best_entry = entry;
   }
 
+  /* no luck, will handle seek otherwise */
   if (best_entry == NULL) {
     GST_OBJECT_UNLOCK (qtdemux);
     return FALSE;
+  }
+
+  /* ok, now we can prepare for processing as of located moof */
+  for (i = 0; i < qtdemux->n_streams; i++) {
+    QtDemuxStream *stream;
+
+    stream = qtdemux->streams[i];
+
+    g_free (stream->samples);
+    stream->samples = NULL;
+    stream->n_samples = 0;
+    stream->stbl_index = -1;    /* no samples have yet been parsed */
+    stream->sample_index = -1;
+
+    if (stream->protection_scheme_info) {
+      /* Clear out any old cenc crypto info entries as we'll move to a new moof */
+      if (stream->protection_scheme_type == FOURCC_cenc) {
+        QtDemuxCencSampleSetInfo *info =
+            (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
+        if (info->crypto_info) {
+          g_ptr_array_free (info->crypto_info, TRUE);
+          info->crypto_info = NULL;
+        }
+      }
+    }
   }
 
   GST_INFO_OBJECT (qtdemux, "seek to %" GST_TIME_FORMAT ", best fragment "
@@ -5694,9 +5710,12 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
   if (qtdemux->fragmented_seek_pending) {
     GST_INFO_OBJECT (qtdemux, "pending fragmented seek");
-    gst_qtdemux_do_fragmented_seek (qtdemux);
-    GST_INFO_OBJECT (qtdemux, "fragmented seek done!");
-    qtdemux->fragmented_seek_pending = FALSE;
+    if (gst_qtdemux_do_fragmented_seek (qtdemux)) {
+      GST_INFO_OBJECT (qtdemux, "fragmented seek done!");
+      qtdemux->fragmented_seek_pending = FALSE;
+    } else {
+      GST_INFO_OBJECT (qtdemux, "fragmented seek still pending");
+    }
   }
 
   /* Figure out the next stream sample to output, min_time is expressed in
