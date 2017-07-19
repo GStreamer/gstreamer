@@ -667,7 +667,7 @@ static void delete_event_cb (GtkWidget *widget, GdkEvent *event, CustomData *dat
 }
 ```
 
-gtk_main_quit() will eventually make the call to to gtk_main_run()
+`gtk_main_quit()` will eventually make the call to to `gtk_main_run()`
 in `main` to terminate, which, in this case, finishes the program. Here,
 we call it when the main window is closed, after stopping the pipeline
 (just for the sake of tidiness).
@@ -778,8 +778,8 @@ requested them, we disable the `value-changed` signal emission during
 this operation with `g_signal_handler_block()` and
 `g_signal_handler_unblock()`.
 
-Returning TRUE from this function will keep it called in the future. If
-we return FALSE, the timer will be
+Returning `TRUE` from this function will keep it called in the future. If
+we return `FALSE`, the timer will be
 removed.
 
 ``` c

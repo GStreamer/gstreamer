@@ -70,10 +70,10 @@ number of times. The disadvantage is that linking elements with Request
 Pads is not as automatic, as linking Always Pads, as the walkthrough for
 this example will show.
 
-Also, to request (or release) pads in the PLAYING or PAUSED states, you
+Also, to request (or release) pads in the `PLAYING` or `PAUSED` states, you
 need to take additional cautions (Pad blocking) which are not described
-in this tutorial. It is safe to request (or release) pads in the NULL or
-READY states, though.
+in this tutorial. It is safe to request (or release) pads in the `NULL` or
+`READY` states, though.
 
 Without further delay, let's see the code.
 

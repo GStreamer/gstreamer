@@ -340,8 +340,8 @@ documentation or using the `gst-inspect-1.0` tool as described in [Basic
 tutorial 10: GStreamer
 tools](tutorials/basic/gstreamer-tools.md).
 
-We are now ready to go! Just set the pipeline to the PLAYING state and
-start listening to the bus for interesting messages (like ERROR or EOS),
+We are now ready to go! Just set the pipeline to the `PLAYING` state and
+start listening to the bus for interesting messages (like `ERROR` or `EOS`),
 just like in the previous tutorials.
 
 ### The callback
@@ -446,20 +446,22 @@ from this tutorial by also introducing the concept of State.
 ### GStreamer States
 
 We already talked a bit about states when we said that playback does not
-start until you bring the pipeline to the PLAYING state. We will
+start until you bring the pipeline to the `PLAYING` state. We will
 introduce here the rest of states and their meaning. There are 4 states
 in GStreamer:
 
+```
 | State     | Description |
 |-----------|--------------------|
 | `NULL`    | the NULL state or initial state of an element. |
 | `READY`   | the element is ready to go to PAUSED. |
 | `PAUSED`  | the element is PAUSED, it is ready to accept and process data. Sink elements however only accept one buffer and then block. |
 | `PLAYING` | the element is PLAYING, the clock is running and the data is flowing. |
+```
 
-You can only move between adjacent ones, this is, you can't go from NULL
-to PLAYING, you have to go through the intermediate READY and PAUSED
-states. If you set the pipeline to PLAYING, though, GStreamer will make
+You can only move between adjacent ones, this is, you can't go from `NULL`
+to `PLAYING`, you have to go through the intermediate `READY` and `PAUSED`
+states. If you set the pipeline to `PLAYING`, though, GStreamer will make
 the intermediate transitions for you.
 
 ``` c
@@ -480,8 +482,8 @@ transitions. Every element puts messages on the bus regarding its
 current state, so we filter them out and only listen to messages coming
 from the pipeline.
 
-Most applications only need to worry about going to PLAYING to start
-playback, then to PAUSE to perform a pause, and then back to NULL at
+Most applications only need to worry about going to `PLAYING` to start
+playback, then to `PAUSED` to perform a pause, and then back to `NULL` at
 program exit to free all resources.
 
 ## Exercise

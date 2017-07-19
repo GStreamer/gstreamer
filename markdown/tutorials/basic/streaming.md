@@ -43,7 +43,7 @@ process is explained in this tutorial.
 
 When the clock is lost, the application receives a message on the bus;
 to select a new one, the application just needs to set the pipeline to
-PAUSED and then to PLAYING again.
+`PAUSED` and then to `PLAYING` again.
 
 ## A network-resilient example
 
@@ -185,13 +185,13 @@ if (ret == GST_STATE_CHANGE_FAILURE) {
 }
 ```
 
-Live streams cannot be paused, so they behave in PAUSED state as if they
-were in the PLAYING state. Setting live streams to PAUSED succeeds, but
+Live streams cannot be paused, so they behave in `PAUSED` state as if they
+were in the `PLAYING` state. Setting live streams to `PAUSED` succeeds, but
 returns `GST_STATE_CHANGE_NO_PREROLL`, instead of
 `GST_STATE_CHANGE_SUCCESS` to indicate that this is a live stream. We
-are receiving the NO\_PROROLL return code even though we are trying to
-set the pipeline to PLAYING, because state changes happen progressively
-(from NULL to READY, to PAUSED and then to PLAYING).
+are receiving the `NO_PREROLL` return code even though we are trying to
+set the pipeline to `PLAYING`, because state changes happen progressively
+(from NULL to READY, to `PAUSED` and then to `PLAYING`).
 
 We care about live streams because we want to disable buffering for
 them, so we take note of the result of `gst_element_set_state()` in the
@@ -223,8 +223,8 @@ We parse the buffering message with `gst_message_parse_buffering()` to
 retrieve the buffering level.
 
 Then, we print the buffering level on the console and set the pipeline
-to PAUSED if it is below 100%. Otherwise, we set the pipeline to
-PLAYING.
+to `PAUSED` if it is below 100%. Otherwise, we set the pipeline to
+`PLAYING`.
 
 At startup, we will see the buffering level rise up to 100% before
 playback starts, which is what we wanted to achieve. If, later on, the
@@ -241,7 +241,7 @@ case GST_MESSAGE_CLOCK_LOST:
 ```
 
 For the second network issue, the loss of clock, we simply set the
-pipeline to PAUSED and back to PLAYING, so a new clock is selected,
+pipeline to `PAUSED` and back to `PLAYING`, so a new clock is selected,
 waiting for new media chunks to be received if necessary.
 
 ## Conclusion

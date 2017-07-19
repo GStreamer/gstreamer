@@ -209,7 +209,7 @@ static void handle_message (CustomData *data, GstMessage *msg) {
 
 ## Walkthrough
 
-```
+``` c
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
   GstElement *playbin;  /* Our one and only element */
@@ -237,7 +237,7 @@ element in the pipeline, so we use directly the `playbin` element. We
 will skip the details: the URI of the clip is given to `playbin` via
 the URI property and the pipeline is set to the playing state.
 
-```
+``` c
 msg = gst_bus_timed_pop_filtered (bus, 100 * GST_MSECOND,
     GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS | GST_MESSAGE_DURATION);
 ```
@@ -256,12 +256,12 @@ If we got a message, we process it in the `handle_message`` `function
 
 ### User interface resfreshing
 
-```
+``` c
 /* We got no message, this means the timeout expired */
 if (data.playing) {
 ```
 
-First off, if we are not in the PLAYING state, we do not want to do
+First off, if we are not in the `PLAYING` state, we do not want to do
 anything here, since most queries would fail. Otherwise, it is time to
 refresh the screen.
 
@@ -272,7 +272,7 @@ few steps that will be shown in the next subsection, but, since position
 and duration are common enough queries, `GstElement` offers easier,
 ready-made alternatives:
 
-```
+``` c
 /* Query the current position of the stream */
 if (!gst_element_query_position (data.pipeline, GST_FORMAT_TIME, &current)) {
   g_printerr ("Could not query current position.\n");
@@ -282,7 +282,7 @@ if (!gst_element_query_position (data.pipeline, GST_FORMAT_TIME, &current)) {
 `gst_element_query_position()` hides the management of the query object
 and directly provides us with the result.
 
-```
+``` c
 /* If we didn't know it yet, query the stream duration */
 if (!GST_CLOCK_TIME_IS_VALID (data.duration)) {
   if (!gst_element_query_duration (data.pipeline, GST_FORMAT_TIME, &data.duration)) {
@@ -294,7 +294,7 @@ if (!GST_CLOCK_TIME_IS_VALID (data.duration)) {
 Now is a good moment to know the length of the stream, with
 another `GstElement` helper function: `gst_element_query_duration()`
 
-```
+``` c
 /* Print current position and total duration */
 g_print ("Position %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "\r",
     GST_TIME_ARGS (current), GST_TIME_ARGS (data.duration));
@@ -304,7 +304,7 @@ Note the usage of the `GST_TIME_FORMAT` and `GST_TIME_ARGS` macros to
 provide user-friendly representation of GStreamer
 times.
 
-```
+``` c
 /* If seeking is enabled, we have not done it yet, and the time is right, seek */
 if (data.seek_enabled && !data.seek_done && current > 10 * GST_SECOND) {
   g_print ("\nReached 10s, performing seek...\n");
@@ -360,7 +360,7 @@ The `handle_message` function processes all messages received through
 the pipeline's bus. ERROR and EOS handling is the same as in previous
 tutorials, so we skip to the interesting part:
 
-```
+``` c
 case GST_MESSAGE_DURATION:
   /* The duration has changed, mark the current one as invalid */
   data->duration = GST_CLOCK_TIME_NONE;
@@ -371,7 +371,7 @@ This message is posted on the bus whenever the duration of the stream
 changes. Here we simply mark the current duration as invalid, so it gets
 re-queried later.
 
-```
+``` c
 case GST_MESSAGE_STATE_CHANGED: {
   GstState old_state, new_state, pending_state;
   gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
@@ -392,7 +392,7 @@ variable.
 Also, if we have just entered the PLAYING state, we do our first query.
 We ask the pipeline if seeking is allowed on this stream:
 
-```
+``` c
 if (data->playing) {
   /* We just moved to PLAYING. Check if seeking is possible */
   GstQuery *query;

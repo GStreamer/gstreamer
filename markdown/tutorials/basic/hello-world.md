@@ -141,10 +141,10 @@ This line highlights another interesting concept: the state. Every
 GStreamer element has an associated state, which you can more or less
 think of as the Play/Pause button in your regular DVD player. For now,
 suffice to say that playback will not start unless you set the pipeline
-to the PLAYING state.
+to the `PLAYING` state.
 
 In this line, `gst_element_set_state()` is setting `pipeline` (our only
-element, remember) to the PLAYING state, thus initiating playback.
+element, remember) to the `PLAYING` state, thus initiating playback.
 
 ``` c
 /* Wait until error or EOS */
@@ -155,7 +155,7 @@ gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_ME
 These lines will wait until an error occurs or the end of the stream is
 found. `gst_element_get_bus()` retrieves the pipeline's bus, and
 `gst_bus_timed_pop_filtered()` will block until you receive either an
-ERROR or an EOS (End-Of-Stream) through that bus. Do not worry much
+ERROR or an `EOS` (End-Of-Stream) through that bus. Do not worry much
 about this line, the GStreamer bus is explained in [Basic tutorial 2:
 GStreamer concepts].
 

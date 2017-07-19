@@ -324,7 +324,7 @@ the Event is sent to only one sink, in this case, the video sink. It is
 obtained from `playbin` through the `video-sink` property. It is read
 at this time instead at initialization time because the actual sink may
 change depending on the media contents, and this won’t be known until
-the pipeline is PLAYING and some media has been read.
+the pipeline is `PLAYING` and some media has been read.
 
 ``` c
 /* Send the event */
