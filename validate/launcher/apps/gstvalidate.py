@@ -1040,6 +1040,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
              "Reverse playback is not handled in MXF"),
             ("file\.transcode.*mxf",
              "FIXME: Transcoding and mixing tests need to be tested"),
+            ("*playback.*op2b-mpeg2-wave_hd_mxf",
+             "https://bugzilla.gnome.org/show_bug.cgi?id=785119"),
 
             # WMV known issues"
             ("*reverse_playback.*wmv",
