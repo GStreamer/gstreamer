@@ -479,6 +479,8 @@ GST_START_TEST (test_appsrc_blocked_on_caps)
   /* As appsrc change the caps GstBaseSrc::create() virtual function, the live
    * lock use to remains held and prevented the state change from happening. */
   gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+  g_main_loop_unref (loop);
 }
 
 GST_END_TEST;
