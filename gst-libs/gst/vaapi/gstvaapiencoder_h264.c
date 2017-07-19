@@ -76,6 +76,37 @@
 #define GST_H264_NAL_REF_IDC_MEDIUM      2
 #define GST_H264_NAL_REF_IDC_HIGH        3
 
+typedef enum
+{
+  GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_STRICT = 0,
+  GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_RESTRICT_CODED_BUFFER_ALLOC = 1,
+} GstVaapiEnoderH264ComplianceMode;
+
+static GType
+gst_vaapi_encoder_h264_compliance_mode_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_STRICT,
+            "Strict compliance to the H264 Specification ",
+          "strict"},
+      /* The main intention is to reduce the CodedBuffer Size allocation.
+       * This will help to get better performance in some of the Intel
+       * platforms which has LLC restirictions */
+      {GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_RESTRICT_CODED_BUFFER_ALLOC,
+            "Restict the allocation size of coded-buffer",
+          "restrict-buf-alloc"},
+      {0, NULL, NULL},
+    };
+
+    gtype =
+        g_enum_register_static ("GstVaapiEncoderH264ComplianceMode", values);
+  }
+  return gtype;
+}
+
 /* only for internal usage, values won't be equal to actual payload type */
 typedef enum
 {
@@ -717,6 +748,10 @@ struct _GstVaapiEncoderH264
   GstVaapiH264ViewReorderPool reorder_pools[MAX_NUM_VIEWS];
 
   gboolean use_aud;
+
+  /* Complance mode */
+  GstVaapiEnoderH264ComplianceMode compliance_mode;
+  guint min_cr;                 // Minimum Compression Ratio (A.3.1)
 };
 
 /* Write a SEI buffering period payload */
@@ -1140,6 +1175,7 @@ ensure_level (GstVaapiEncoderH264 * encoder)
 
   encoder->level = limits_table[i].level;
   encoder->level_idc = limits_table[i].level_idc;
+  encoder->min_cr = limits_table[i].MinCR;
   return TRUE;
 
   /* ERRORS */
@@ -2880,6 +2916,17 @@ set_context_info (GstVaapiEncoder * base_encoder)
   /* Account for slice header */
   base_encoder->codedbuf_size += encoder->num_slices * (4 +
       GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE) / 8);
+  /* Some of the Intel Platforms(eg: APL) doesn't have LLC so
+   * the driver call cflush to ensure data consistency which is an
+   * expensive operation but we can still reduce the impact by
+   * limitting the pre-calculated coded_buffer size. This is not
+   * strictly following the h264 specification, but should be safe
+   * enough with intel-vaapi-driver. Our test cases showing significat
+   * performance improvement on APL platfrom with small coded-buffer size */
+  if (encoder->compliance_mode ==
+      GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_RESTRICT_CODED_BUFFER_ALLOC)
+    base_encoder->codedbuf_size /= encoder->min_cr;
+
 
   base_encoder->context_info.entrypoint = encoder->entrypoint;
 
@@ -2958,6 +3005,9 @@ gst_vaapi_encoder_h264_init (GstVaapiEncoder * base_encoder)
     ref_pool->max_reflist0_count = 1;
     ref_pool->max_reflist1_count = 1;
   }
+
+  encoder->compliance_mode = GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_STRICT;
+  encoder->min_cr = 1;
 
   return TRUE;
 }
@@ -3051,6 +3101,10 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_PROP_AUD:
       encoder->use_aud = g_value_get_boolean (value);
       break;
+    case GST_VAAPI_ENCODER_H264_PROP_COMPLIANCE_MODE:
+      encoder->compliance_mode = g_value_get_enum (value);
+      break;
+
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -3227,6 +3281,21 @@ gst_vaapi_encoder_h264_get_default_properties (void)
       g_param_spec_boolean ("aud", "AU delimiter",
           "Use AU (Access Unit) delimeter", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:Compliance Mode:
+   *
+   * Encode Tuning(Tweaking) with different compliance modes .
+   *
+   *
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_COMPLIANCE_MODE,
+      g_param_spec_enum ("compliance-mode",
+          "Spec Compliance Mode",
+          "Tune Encode quality/performance by relaxing specification compliance restrictions",
+          gst_vaapi_encoder_h264_compliance_mode_type (),
+          GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_STRICT, G_PARAM_READWRITE));
 
   return props;
 }

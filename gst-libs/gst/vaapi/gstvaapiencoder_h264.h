@@ -48,6 +48,7 @@ typedef struct _GstVaapiEncoderH264 GstVaapiEncoderH264;
  *   in milliseconds (uint).
  * @GST_VAAPI_ENCODER_H264_PROP_NUM_VIEWS: Number of views per frame.
  * @GST_VAAPI_ENCODER_H264_PROP_VIEW_IDS: View IDs
+ * @GST_VAAPI_ENCODER_H264_PROP_COMPLIANCE_MODE: Relax Compliance restrictions
  *
  * The set of H.264 encoder specific configurable properties.
  */
@@ -62,6 +63,7 @@ typedef enum {
   GST_VAAPI_ENCODER_H264_PROP_NUM_VIEWS = -8,
   GST_VAAPI_ENCODER_H264_PROP_VIEW_IDS = -9,
   GST_VAAPI_ENCODER_H264_PROP_AUD = -10,
+  GST_VAAPI_ENCODER_H264_PROP_COMPLIANCE_MODE = -11,
 } GstVaapiEncoderH264Prop;
 
 GstVaapiEncoder *
