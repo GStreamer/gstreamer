@@ -1,3 +1,0 @@
-description, is-config=true
-set-property, target-element-klass=Sink/Video, property-name=max-lateness, property-value=600, optional=true
-set-property, target-element-klass=Sink/Audio, property-name=max-lateness, property-value=600, optional=true

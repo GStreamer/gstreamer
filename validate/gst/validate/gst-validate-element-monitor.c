@@ -219,6 +219,7 @@ set_config_properties (GstValidateMonitor * monitor, GstElement * element)
   for (l = config; l != NULL; l = g_list_next (l)) {
     GstStructure *s = l->data;
     const gchar *klass;
+    gchar *tmp;
     const gchar *prop_name;
     const GValue *prop_value;
 
@@ -239,7 +240,11 @@ set_config_properties (GstValidateMonitor * monitor, GstElement * element)
     if (!prop_value)
       continue;
 
-    g_object_set_property (G_OBJECT (element), prop_name, prop_value);
+    tmp = gst_value_serialize (prop_value);
+    gst_validate_printf (monitor, "Setting %s to %s", prop_name, tmp);
+    g_free (tmp);
+    gst_validate_object_set_property (GST_VALIDATE_REPORTER (monitor),
+        G_OBJECT (element), prop_name, prop_value, FALSE);
   }
 }
 

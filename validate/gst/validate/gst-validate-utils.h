@@ -28,6 +28,8 @@
 #include<glib.h>
 #include<gio/gio.h>
 #include <gst/gst.h>
+#include "gst-validate-scenario.h"
+#include "gst-validate-reporter.h"
 
 typedef int (*GstValidateParseVariableFunc) (const gchar *name,
     double *value, gpointer user_data);
@@ -47,5 +49,11 @@ GList * gst_validate_structs_parse_from_gfile            (GFile * scenario_file)
 gboolean gst_validate_element_has_klass (GstElement * element, const gchar * klass);
 gboolean gst_validate_utils_get_clocktime (GstStructure *structure, const gchar * name,
         GstClockTime * retval);
+
+GstValidateActionReturn gst_validate_object_set_property (GstValidateReporter * reporter,
+                                                          GObject * object,
+                                                          const gchar * property,
+                                                          const GValue * value,
+                                                          gboolean optional);
 
 #endif

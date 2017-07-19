@@ -2337,69 +2337,6 @@ _get_target_elements_by_klass_or_factory_name (GstValidateScenario * scenario,
   return result;
 }
 
-static GstValidateActionReturn
-_object_set_property (GstValidateScenario * scenario,
-    GObject * object, const gchar * property,
-    const GValue * value, gboolean optional)
-{
-  GParamSpec *paramspec;
-  GObjectClass *klass = G_OBJECT_GET_CLASS (object);
-  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
-  GValue cvalue = G_VALUE_INIT, nvalue = G_VALUE_INIT;
-
-  paramspec = g_object_class_find_property (klass, property);
-  if (paramspec == NULL) {
-    if (optional)
-      return TRUE;
-    GST_ERROR ("Target doesn't have property %s", property);
-    return FALSE;
-  }
-
-  g_value_init (&cvalue, paramspec->value_type);
-  if (paramspec->value_type != G_VALUE_TYPE (value) &&
-      (G_VALUE_TYPE (value) == G_TYPE_STRING)) {
-    if (!gst_value_deserialize (&cvalue, g_value_get_string (value))) {
-      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-          "Could not set %" GST_PTR_FORMAT "::%s as value %s"
-          " could not be deserialize to %s", object, property,
-          g_value_get_string (value), G_PARAM_SPEC_TYPE_NAME (paramspec));
-
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-    }
-  } else {
-    if (!g_value_transform (value, &cvalue)) {
-      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-          "Could not set %" GST_PTR_FORMAT " property %s to type %s"
-          " (wanted type %s)", object, property, G_VALUE_TYPE_NAME (value),
-          G_PARAM_SPEC_TYPE_NAME (paramspec));
-
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-    }
-
-  }
-
-  g_object_set_property (object, property, &cvalue);
-
-  g_value_init (&nvalue, paramspec->value_type);
-  g_object_get_property (object, property, &nvalue);
-
-  if (gst_value_compare (&cvalue, &nvalue) != GST_VALUE_EQUAL) {
-    gchar *nvalstr = gst_value_serialize (&nvalue);
-    gchar *cvalstr = gst_value_serialize (&cvalue);
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "Setting value %" GST_PTR_FORMAT "::%s failed, expected value: %s"
-        " value after setting %s", object, property, cvalstr, nvalstr);
-
-    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-    g_free (nvalstr);
-    g_free (cvalstr);
-  }
-
-  g_value_reset (&cvalue);
-  g_value_reset (&nvalue);
-  return res;
-}
-
 static gboolean
 _execute_set_property (GstValidateScenario * scenario,
     GstValidateAction * action)
@@ -2434,8 +2371,10 @@ _execute_set_property (GstValidateScenario * scenario,
       "property-value");
 
   for (l = targets; l != NULL; l = g_list_next (l)) {
-    GstValidateActionReturn tmpres = _object_set_property (scenario,
-        G_OBJECT (l->data), property, property_value, action->priv->optional);
+    GstValidateActionReturn tmpres =
+        gst_validate_object_set_property (GST_VALIDATE_REPORTER (scenario),
+        G_OBJECT (l->data), property,
+        property_value, action->priv->optional);
 
     if (!tmpres)
       ret = tmpres;
