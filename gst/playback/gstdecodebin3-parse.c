@@ -412,6 +412,11 @@ parsebin_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
     DecodebinInputStream *input_stream = (DecodebinInputStream *) tmp->data;
     GList *next = tmp->next;
 
+    if (input_stream->input != input) {
+      tmp = next;
+      continue;
+    }
+
     GST_DEBUG_OBJECT (dbin, "Checking input stream %p", input_stream);
     if (input_stream->input_buffer_probe_id) {
       GST_DEBUG_OBJECT (dbin,
@@ -542,11 +547,11 @@ parsebin_pad_added_cb (GstElement * demux, GstPad * pad, DecodebinInput * input)
 
   input->pending_pads = g_list_append (input->pending_pads, ppad);
 
-  /* FIXME : ONLY DO FOR THIS PARSEBIN/INPUT ! */
   /* Check if all existing input streams have a buffer probe set */
   for (tmp = dbin->input_streams; tmp; tmp = tmp->next) {
     DecodebinInputStream *input_stream = (DecodebinInputStream *) tmp->data;
-    if (input_stream->input_buffer_probe_id == 0) {
+    if (input_stream->input == input &&
+        input_stream->input_buffer_probe_id == 0) {
       GST_DEBUG_OBJECT (input_stream->srcpad, "Adding blocking buffer probe");
       input_stream->input_buffer_probe_id =
           gst_pad_add_probe (input_stream->srcpad,
