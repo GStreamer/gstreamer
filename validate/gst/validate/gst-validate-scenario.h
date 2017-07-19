@@ -140,6 +140,8 @@ GType gst_validate_action_get_type (void);
  * @GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL: The action can use the 'optional' keyword. Such action
  *                                            instances will have the #GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL
  *                                            flag set and won't be considered as fatal if they fail.
+ * @GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG: The action can be used in config files even if it is not strictly a config
+ *                                              action (ie. it needs a scenario to run).
  */
 typedef enum
 {
@@ -152,6 +154,7 @@ typedef enum
     GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL = 1 << 6,
     GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL = 1 << 7,
     GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE = 1 << 8,
+    GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG = 1 << 9,
 } GstValidateActionTypeFlags;
 
 /**

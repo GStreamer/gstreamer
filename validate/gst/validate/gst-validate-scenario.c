@@ -4260,7 +4260,8 @@ init_scenarios (void)
       "Besides property-name and value, either 'target-element-name' or\n"
       "'target-element-klass' needs to be defined",
       GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION |
-          GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL);
+          GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL |
+          GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG);
 
   REGISTER_ACTION_TYPE ("set-debug-threshold",
       _execute_set_debug_threshold,
@@ -4332,6 +4333,13 @@ init_scenarios (void)
       if (!atype) {
         g_error ("[CONFIG ERROR] Action type %s not found", action_typename);
 
+        continue;
+      }
+
+
+      if (atype->flags & GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG) {
+        GST_INFO ("Action type %s from configuration files"
+            " is handled.", action_typename);
         continue;
       }
 
