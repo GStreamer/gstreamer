@@ -29,4 +29,5 @@ KNOWN_NOT_LEAKY = r'^check.gst-devtools.*|^check.gstreamer.*|^check-gst-plugins-
 def setup_tests(test_manager, options):
     if options.gst_check_leak_trace_testnames == 'known-not-leaky':
         options.gst_check_leak_trace_testnames = KNOWN_NOT_LEAKY
+    test_manager.register_tests()
     return True

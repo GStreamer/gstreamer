@@ -261,7 +261,7 @@ class GstCheckTestsManager(MesonTestsManager):
 
         return child_env
 
-    def list_tests(self):
+    def register_tests(self):
         if self.tests:
             return self.tests
 
