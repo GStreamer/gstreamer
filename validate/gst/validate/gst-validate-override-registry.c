@@ -360,8 +360,9 @@ _load_text_override_file (const gchar * filename)
     GList *tmp;
 
     for (tmp = structs; tmp; tmp = tmp->next) {
-      if (!_add_override_from_struct (tmp->data)) {
-        GST_ERROR ("Wrong overrides %" GST_PTR_FORMAT, tmp->data);
+      GstStructure *_struct = (GstStructure *) tmp->data;
+      if (!_add_override_from_struct (_struct)) {
+        GST_ERROR ("Wrong overrides %" GST_PTR_FORMAT, _struct);
         ret = WRONG_OVERRIDES;
       }
     }

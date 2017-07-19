@@ -682,8 +682,10 @@ gst_validate_runner_get_reports_count (GstValidateRunner * runner)
 
   GST_VALIDATE_RUNNER_LOCK (runner);
   l = g_list_length (runner->priv->reports);
-  for (tmp = runner->priv->reports; tmp; tmp = tmp->next)
-    l += g_list_length (((GstValidateReport *) tmp->data)->repeated_reports);
+  for (tmp = runner->priv->reports; tmp; tmp = tmp->next) {
+    GstValidateReport *report = (GstValidateReport *) tmp->data;
+    l += g_list_length (report->repeated_reports);
+  }
   l += g_hash_table_size (runner->priv->reports_by_type);
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 
@@ -740,7 +742,7 @@ _do_report_synthesis (GstValidateRunner * runner)
     }
 
     for (tmp = g_list_next (reports); tmp; tmp = tmp->next) {
-      report = (GstValidateReport *) (tmp->data);
+      report = (GstValidateReport *) tmp->data;
       gst_validate_report_print_detected_on (report);
 
       if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
@@ -780,22 +782,20 @@ gst_validate_runner_printf (GstValidateRunner * runner)
   criticals = _do_report_synthesis (runner);
   reports = gst_validate_runner_get_reports (runner);
   for (tmp = reports; tmp; tmp = tmp->next) {
-    GstValidateReport *report = tmp->data;
+    GstValidateReport *report = (GstValidateReport *) tmp->data;
 
     if (gst_validate_report_should_print (report))
       gst_validate_report_printf (report);
 
     if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
-      criticals = g_list_append (criticals, tmp->data);
+      criticals = g_list_append (criticals, report);
     }
   }
 
   if (criticals) {
     GList *iter;
-
     g_printerr ("\n\n==== Got criticals. Return value set to 18 ====\n");
     ret = 18;
-
     for (iter = criticals; iter; iter = iter->next) {
       g_printerr ("     Critical error %s\n",
           ((GstValidateReport *) (iter->data))->message);
@@ -814,19 +814,14 @@ int
 gst_validate_runner_exit (GstValidateRunner * runner, gboolean print_result)
 {
   gint ret = 0;
-
   g_return_val_if_fail (GST_IS_VALIDATE_RUNNER (runner), 1);
-
   g_signal_emit (runner, _signals[STOPPING_SIGNAL], 0);
-
   if (print_result) {
     ret = gst_validate_runner_printf (runner);
   } else {
     GList *tmp;
-
     for (tmp = runner->priv->reports; tmp; tmp = tmp->next) {
-      GstValidateReport *report = tmp->data;
-
+      GstValidateReport *report = (GstValidateReport *) tmp->data;
       if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
         ret = 18;
     }

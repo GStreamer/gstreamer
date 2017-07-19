@@ -181,8 +181,9 @@ gst_validate_scenario_intercept_report (GstValidateReporter * reporter,
 
   for (tmp = GST_VALIDATE_SCENARIO (reporter)->priv->overrides; tmp;
       tmp = tmp->next) {
+    GstValidateOverride *override = (GstValidateOverride *) tmp->data;
     report->level =
-        gst_validate_override_get_severity (tmp->data,
+        gst_validate_override_get_severity (override,
         gst_validate_issue_get_id (report->issue), report->level);
   }
 
@@ -422,8 +423,9 @@ _find_action_type (const gchar * type_name)
   GList *tmp;
 
   for (tmp = action_types; tmp; tmp = tmp->next) {
-    if (g_strcmp0 (((GstValidateActionType *) tmp->data)->name, type_name) == 0)
-      return tmp->data;
+    GstValidateActionType *atype = (GstValidateActionType *) tmp->data;
+    if (g_strcmp0 (atype->name, type_name) == 0)
+      return atype;
   }
 
   return NULL;
@@ -1770,8 +1772,8 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
       GList *tmp;
 
       for (tmp = priv->actions; tmp; tmp = tmp->next) {
-        if (GST_CLOCK_TIME_IS_VALID (((GstValidateAction *) tmp->
-                    data)->playback_time)) {
+        GstValidateAction *act = (GstValidateAction *) tmp->data;
+        if (GST_CLOCK_TIME_IS_VALID (act->playback_time)) {
           can_execute_on_addition = FALSE;
           break;
         }
@@ -2651,7 +2653,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         GList *tmp;
 
         for (tmp = priv->needs_parsing; tmp; tmp = tmp->next) {
-          GstValidateAction *action = tmp->data;
+          GstValidateAction *action = (GstValidateAction *) tmp->data;
 
           if (!_set_action_playback_time (scenario, action))
             return FALSE;
@@ -2725,7 +2727,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
         for (tmp = all_actions; tmp; tmp = tmp->next) {
           gchar *action_string;
-          GstValidateAction *action = ((GstValidateAction *) tmp->data);
+          GstValidateAction *action = (GstValidateAction *) tmp->data;
           GstValidateActionType *type = _find_action_type (action->type);
 
           tmpconcat = actions;
@@ -2881,8 +2883,7 @@ _load_scenario_file (GstValidateScenario * scenario,
     GstValidateAction *action;
     GstValidateActionType *action_type;
     const gchar *type;
-
-    GstStructure *structure = tmp->data;
+    GstStructure *structure = (GstStructure *) tmp->data;
 
 
     type = gst_structure_get_name (structure);
@@ -3437,11 +3438,12 @@ _parse_scenario (GFile * f, GKeyFile * kf)
     GList *tmp, *structures = gst_validate_structs_parse_from_gfile (f);
 
     for (tmp = structures; tmp; tmp = tmp->next) {
+      GstStructure *_struct = (GstStructure *) tmp->data;
       GstValidateActionType *type =
-          _find_action_type (gst_structure_get_name (tmp->data));
+          _find_action_type (gst_structure_get_name (_struct));
 
-      if (!desc && gst_structure_has_name (tmp->data, "description"))
-        desc = gst_structure_copy (tmp->data);
+      if (!desc && gst_structure_has_name (_struct, "description"))
+        desc = gst_structure_copy (_struct);
       else if (type && type->flags & GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK)
         needs_clock_sync = TRUE;
     }
@@ -3835,7 +3837,7 @@ gst_validate_print_action_types (const gchar ** wanted_types,
   gint nfound = 0;
 
   for (tmp = gst_validate_list_action_types (); tmp; tmp = tmp->next) {
-    GstValidateActionType *atype = tmp->data;
+    GstValidateActionType *atype = (GstValidateActionType *) tmp->data;
     gboolean print = FALSE;
 
     if (num_wanted_types) {
@@ -3855,7 +3857,7 @@ gst_validate_print_action_types (const gchar ** wanted_types,
     }
 
     if (print && num_wanted_types) {
-      gst_validate_printf (tmp->data, "\n");
+      gst_validate_printf (atype, "\n");
     } else if (print) {
       gchar *desc =
           g_regex_replace (newline_regex, atype->description, -1, 0, "\n      ",
@@ -4319,8 +4321,9 @@ init_scenarios (void)
 
   for (tmp = gst_validate_plugin_get_config (NULL); tmp; tmp = tmp->next) {
     const gchar *action_typename;
+    GstStructure *plug_conf = (GstStructure *) tmp->data;
 
-    if ((action_typename = gst_structure_get_string (tmp->data, "action"))) {
+    if ((action_typename = gst_structure_get_string (plug_conf, "action"))) {
       GstValidateAction *action;
       GstValidateActionType *atype = _find_action_type (action_typename);
 
@@ -4332,16 +4335,17 @@ init_scenarios (void)
 
       if (!(atype->flags & GST_VALIDATE_ACTION_TYPE_CONFIG) &&
           !(_action_type_has_parameter (atype, "as-config"))) {
-        g_error ("[CONFIG ERROR] Action is not a config action");
+        g_error ("[CONFIG ERROR] Action '%s' is not a config action",
+            action_typename);
 
         continue;
       }
 
-      gst_structure_set (tmp->data, "as-config", G_TYPE_BOOLEAN, TRUE, NULL);
-      gst_structure_set_name (tmp->data, action_typename);
+      gst_structure_set (plug_conf, "as-config", G_TYPE_BOOLEAN, TRUE, NULL);
+      gst_structure_set_name (plug_conf, action_typename);
 
-      action = gst_validate_action_new (NULL, tmp->data);
-      _fill_action (NULL, action, tmp->data, FALSE);
+      action = gst_validate_action_new (NULL, atype);
+      _fill_action (NULL, action, plug_conf, FALSE);
     }
   }
 }

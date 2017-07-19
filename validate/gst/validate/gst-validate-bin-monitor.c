@@ -72,8 +72,10 @@ gst_validate_bin_set_media_descriptor (GstValidateMonitor * monitor,
 
   GST_VALIDATE_MONITOR_LOCK (monitor);
   for (tmp = GST_VALIDATE_BIN_MONITOR_CAST (monitor)->element_monitors; tmp;
-      tmp = tmp->next)
-    gst_validate_monitor_set_media_descriptor (tmp->data, media_descriptor);
+      tmp = tmp->next) {
+    GstValidateMonitor *sub_monitor = (GstValidateMonitor *) tmp->data;
+    gst_validate_monitor_set_media_descriptor (sub_monitor, media_descriptor);
+  }
   GST_VALIDATE_MONITOR_UNLOCK (monitor);
 
   GST_VALIDATE_MONITOR_CLASS (parent_class)->set_media_descriptor (monitor,

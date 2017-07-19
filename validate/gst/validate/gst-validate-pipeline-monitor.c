@@ -221,9 +221,11 @@ _gather_pad_negotiation_details (GstPad * pad, GString * str,
 
   next = GST_ELEMENT (gst_pad_get_parent (peer));
   GST_OBJECT_LOCK (next);
-  for (tmp = next->srcpads; tmp; tmp = tmp->next)
-    _gather_pad_negotiation_details (tmp->data, str,
+  for (tmp = next->srcpads; tmp; tmp = tmp->next) {
+    GstPad *to_check = (GstPad *) tmp->data;
+    _gather_pad_negotiation_details (to_check, str,
         last_query_caps_fail_monitor, last_refused_caps_monitor);
+  }
   GST_OBJECT_UNLOCK (next);
 
   gst_object_unref (peer);
@@ -447,9 +449,11 @@ _generate_not_negotiated_error_report (GstMessage * msg)
       GST_OBJECT_NAME (element));
 
   GST_OBJECT_LOCK (element);
-  for (tmp = element->srcpads; tmp; tmp = tmp->next)
-    _gather_pad_negotiation_details (tmp->data, str,
+  for (tmp = element->srcpads; tmp; tmp = tmp->next) {
+    GstPad *to_check = (GstPad *) tmp->data;
+    _gather_pad_negotiation_details (to_check, str,
         &last_query_caps_fail_monitor, &last_refused_caps_monitor);
+  }
   GST_OBJECT_UNLOCK (element);
 
   if (last_query_caps_fail_monitor)

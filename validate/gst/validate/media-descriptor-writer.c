@@ -344,9 +344,10 @@ _find_stream_id (GstPad * pad, GstEvent ** event,
     gst_event_parse_stream_start (*event, &stream_id);
     for (tmp = ((GstValidateMediaDescriptor *) writer)->filenode->streams; tmp;
         tmp = tmp->next) {
-      if (g_strcmp0 (((GstValidateMediaStreamNode *)
-                  tmp->data)->id, stream_id) == 0) {
-        snode = tmp->data;
+      GstValidateMediaStreamNode *subnode =
+          (GstValidateMediaStreamNode *) tmp->data;
+      if (g_strcmp0 (subnode->id, stream_id) == 0) {
+        snode = subnode;
 
         break;
       }
@@ -645,7 +646,9 @@ gst_validate_media_descriptor_writer_new_discover (GstValidateRunner * runner,
 
       streams = gst_discoverer_info_get_stream_list (info);
       for (tmp = streams; tmp; tmp = tmp->next) {
-        gst_validate_media_descriptor_writer_add_stream (writer, tmp->data);
+        GstDiscovererStreamInfo *streaminfo =
+            (GstDiscovererStreamInfo *) tmp->data;
+        gst_validate_media_descriptor_writer_add_stream (writer, streaminfo);
       }
     } else {
       gst_validate_media_descriptor_writer_add_stream (writer, streaminfo);
@@ -693,10 +696,10 @@ gst_validate_media_descriptor_writer_add_tags (GstValidateMediaDescriptorWriter
 
   for (tmp = ((GstValidateMediaDescriptor *) writer)->filenode->streams; tmp;
       tmp = tmp->next) {
-    if (g_strcmp0 ((
-                (GstValidateMediaStreamNode
-                    *) tmp->data)->id, stream_id) == 0) {
-      snode = tmp->data;
+    GstValidateMediaStreamNode *subnode =
+        (GstValidateMediaStreamNode *) tmp->data;
+    if (g_strcmp0 (subnode->id, stream_id) == 0) {
+      snode = subnode;
 
       break;
     }

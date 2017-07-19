@@ -1763,7 +1763,7 @@ gst_validate_monitor_find_next_buffer (GstValidatePadMonitor * pad_monitor)
     return;
 
   for (tmp = g_list_last (pad_monitor->all_bufs); tmp; tmp = tmp->prev) {
-    GstBuffer *cbuf = tmp->data;
+    GstBuffer *cbuf = (GstBuffer *) tmp->data;
     GstClockTime ts =
         GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (cbuf)) ? GST_BUFFER_DTS (cbuf)
         : GST_BUFFER_PTS (cbuf);
