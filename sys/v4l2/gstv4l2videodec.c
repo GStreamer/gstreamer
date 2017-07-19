@@ -580,12 +580,14 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     /* Create caps from the acquired format, remove the format field */
     acquired_caps = gst_video_info_to_caps (&info);
+    GST_DEBUG_OBJECT (self, "Acquired caps: %" GST_PTR_FORMAT, acquired_caps);
     st = gst_caps_get_structure (acquired_caps, 0);
     gst_structure_remove_field (st, "format");
 
     /* Probe currently available pixel formats */
     available_caps = gst_v4l2_object_probe_caps (self->v4l2capture, NULL);
     available_caps = gst_caps_make_writable (available_caps);
+    GST_DEBUG_OBJECT (self, "Available caps: %" GST_PTR_FORMAT, available_caps);
 
     /* Replace coded size with visible size, we want to negotiate visible size
      * with downstream, not coded size. */
@@ -593,6 +595,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     filter = gst_caps_intersect_full (available_caps, acquired_caps,
         GST_CAPS_INTERSECT_FIRST);
+    GST_DEBUG_OBJECT (self, "Filtered caps: %" GST_PTR_FORMAT, filter);
     gst_caps_unref (acquired_caps);
     gst_caps_unref (available_caps);
     caps = gst_pad_peer_query_caps (decoder->srcpad, filter);
