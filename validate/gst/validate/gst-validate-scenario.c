@@ -1716,7 +1716,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
       (str_playback_time =
           gst_structure_get_string (structure, "playback_time"))) {
 
-    if (add_to_lists)
+    if (add_to_lists && priv)
       priv->needs_parsing = g_list_append (priv->needs_parsing, action);
     else if (!_set_action_playback_time (scenario, action))
       return GST_VALIDATE_EXECUTE_ACTION_ERROR;
@@ -1767,7 +1767,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
         type->flags & GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION
         && !GST_CLOCK_TIME_IS_VALID (action->playback_time);
 
-    if (priv->needs_parsing)
+    if (priv && priv->needs_parsing)
       can_execute_on_addition = FALSE;
 
     if (can_execute_on_addition) {
@@ -1789,7 +1789,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
           action);
       SCENARIO_UNLOCK (scenario);
 
-    } else {
+    } else if (priv) {
       priv->actions = g_list_append (priv->actions, action);
     }
   }
