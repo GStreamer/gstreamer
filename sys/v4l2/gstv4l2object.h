@@ -218,6 +218,10 @@ struct _GstV4l2Object {
   /* Allow to skip reading initial format through G_FMT. Some devices
    * just fails if you don't call S_FMT first. (ex: M2M decoders) */
   gboolean no_initial_format;
+  /* Avoid any try_fmt probe. This is used by v4l2src to speedup start up time
+   * on slow USB firmwares. When this is set, gst_v4l2_set_format() will modify
+   * the caps to reflect what was negotiated during fixation */
+  gboolean skip_try_fmt_probes;
 };
 
 struct _GstV4l2ObjectClassHelper {
