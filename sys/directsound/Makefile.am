@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstdirectsound.la
 
-libgstdirectsound_la_SOURCES =  gstdirectsound.c gstdirectsoundplugin.c
+libgstdirectsound_la_SOURCES =  gstdirectsoundsink.c gstdirectsoundplugin.c
 libgstdirectsound_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
