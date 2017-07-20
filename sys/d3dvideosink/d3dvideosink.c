@@ -619,6 +619,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    d3dsinkwrapper,
-    "Direct3D sink wrapper plugin",
+    d3d,
+    "Direct3D plugin",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

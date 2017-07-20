@@ -82,6 +82,7 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/valve/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/videoparsers/.libs/libgsth263parse* \
 	$(top_builddir)/gst-libs/gst/baseparse/.libs/libgstbaseparse* \
+	$(top_builddir)/sys/d3dvideosink/.libs/libgstd3dvideosink.{dll,DLL} \
 	$(top_builddir)/sys/oss4/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/tests/check/elements/{aac,ac3,amr,flac,mpegaudio,dca}parse \
 	$(top_builddir)/tests/check/elements/autocolorspace \
