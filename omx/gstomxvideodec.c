@@ -2134,6 +2134,15 @@ gst_omx_video_dec_disable (GstOMXVideoDec * self)
 }
 
 static gboolean
+gst_omx_video_dec_allocate_in_buffers (GstOMXVideoDec * self)
+{
+  if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_omx_video_dec_enable (GstOMXVideoDec * self)
 {
   GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
@@ -2143,7 +2152,7 @@ gst_omx_video_dec_enable (GstOMXVideoDec * self)
   if (self->disabled) {
     if (gst_omx_port_set_enabled (self->dec_in_port, TRUE) != OMX_ErrorNone)
       return FALSE;
-    if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
+    if (!gst_omx_video_dec_allocate_in_buffers (self))
       return FALSE;
 
     if ((klass->cdata.hacks & GST_OMX_HACK_NO_DISABLE_OUTPORT)) {
@@ -2180,7 +2189,7 @@ gst_omx_video_dec_enable (GstOMXVideoDec * self)
         return FALSE;
 
       /* Need to allocate buffers to reach Idle state */
-      if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
+      if (!gst_omx_video_dec_allocate_in_buffers (self))
         return FALSE;
     } else {
       if (gst_omx_component_set_state (self->dec,
@@ -2188,7 +2197,7 @@ gst_omx_video_dec_enable (GstOMXVideoDec * self)
         return FALSE;
 
       /* Need to allocate buffers to reach Idle state */
-      if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
+      if (!gst_omx_video_dec_allocate_in_buffers (self))
         return FALSE;
       if (gst_omx_port_allocate_buffers (self->dec_out_port) != OMX_ErrorNone)
         return FALSE;
@@ -2511,8 +2520,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
         goto reconfigure_error;
       }
 
-      err = gst_omx_port_allocate_buffers (port);
-      if (err != OMX_ErrorNone) {
+      if (!gst_omx_video_dec_allocate_in_buffers (self)) {
         GST_VIDEO_DECODER_STREAM_LOCK (self);
         goto reconfigure_error;
       }

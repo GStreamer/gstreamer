@@ -1121,6 +1121,15 @@ gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self,
 }
 
 static gboolean
+gst_omx_video_enc_allocate_in_buffers (GstOMXVideoEnc * self)
+{
+  if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
 {
   GstOMXVideoEncClass *klass;
@@ -1134,7 +1143,7 @@ gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
   if (self->disabled) {
     if (gst_omx_port_set_enabled (self->enc_in_port, TRUE) != OMX_ErrorNone)
       return FALSE;
-    if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
+    if (!gst_omx_video_enc_allocate_in_buffers (self))
       return FALSE;
 
     if ((klass->cdata.hacks & GST_OMX_HACK_NO_DISABLE_OUTPORT)) {
@@ -1168,7 +1177,7 @@ gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
         return FALSE;
 
       /* Need to allocate buffers to reach Idle state */
-      if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
+      if (!gst_omx_video_enc_allocate_in_buffers (self))
         return FALSE;
     } else {
       if (gst_omx_component_set_state (self->enc,
@@ -1176,7 +1185,7 @@ gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
         return FALSE;
 
       /* Need to allocate buffers to reach Idle state */
-      if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
+      if (!gst_omx_video_enc_allocate_in_buffers (self))
         return FALSE;
       if (gst_omx_port_allocate_buffers (self->enc_out_port) != OMX_ErrorNone)
         return FALSE;
@@ -1664,8 +1673,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
         goto reconfigure_error;
       }
 
-      err = gst_omx_port_allocate_buffers (port);
-      if (err != OMX_ErrorNone) {
+      if (!gst_omx_video_enc_allocate_in_buffers (self)) {
         GST_VIDEO_ENCODER_STREAM_LOCK (self);
         goto reconfigure_error;
       }
