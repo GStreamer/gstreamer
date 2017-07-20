@@ -107,13 +107,13 @@ static gboolean gst_v4l2src_start (GstBaseSrc * src);
 static gboolean gst_v4l2src_unlock (GstBaseSrc * src);
 static gboolean gst_v4l2src_unlock_stop (GstBaseSrc * src);
 static gboolean gst_v4l2src_stop (GstBaseSrc * src);
-static gboolean gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps);
 static GstCaps *gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter);
 static gboolean gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query);
 static gboolean gst_v4l2src_decide_allocation (GstBaseSrc * src,
     GstQuery * query);
 static GstFlowReturn gst_v4l2src_create (GstPushSrc * src, GstBuffer ** out);
-static GstCaps *gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
+static GstCaps *gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps,
+    GstStructure * pref_s);
 static gboolean gst_v4l2src_negotiate (GstBaseSrc * basesrc);
 
 static void gst_v4l2src_set_property (GObject * object, guint prop_id,
@@ -174,13 +174,11 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
           gst_v4l2_object_get_all_caps ()));
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_get_caps);
-  basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_set_caps);
   basesrc_class->start = GST_DEBUG_FUNCPTR (gst_v4l2src_start);
   basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_v4l2src_unlock);
   basesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_v4l2src_unlock_stop);
   basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_v4l2src_stop);
   basesrc_class->query = GST_DEBUG_FUNCPTR (gst_v4l2src_query);
-  basesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_v4l2src_fixate);
   basesrc_class->negotiate = GST_DEBUG_FUNCPTR (gst_v4l2src_negotiate);
   basesrc_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2src_decide_allocation);
@@ -199,6 +197,9 @@ gst_v4l2src_init (GstV4l2Src * v4l2src)
   v4l2src->v4l2object = gst_v4l2_object_new (GST_ELEMENT (v4l2src),
       V4L2_BUF_TYPE_VIDEO_CAPTURE, DEFAULT_PROP_DEVICE,
       gst_v4l2_get_input, gst_v4l2_set_input, NULL);
+
+  /* Avoid the slow probes */
+  v4l2src->v4l2object->skip_try_fmt_probes = TRUE;
 
   gst_base_src_set_format (GST_BASE_SRC (v4l2src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (v4l2src), TRUE);
@@ -246,46 +247,211 @@ gst_v4l2src_get_property (GObject * object,
   }
 }
 
-/* this function is a bit of a last resort */
-static GstCaps *
-gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
+struct PreferedCapsInfo
 {
-  GstStructure *structure;
-  gint i;
+  gint width;
+  gint height;
+  gint fps_n;
+  gint fps_d;
+};
+
+static gboolean
+gst_vl42_src_fixate_fields (GQuark field_id, GValue * value, gpointer user_data)
+{
+  GstStructure *s = user_data;
+
+  if (field_id == g_quark_from_string ("interlace-mode"))
+    return TRUE;
+
+  if (field_id == g_quark_from_string ("colorimetry"))
+    return TRUE;
+
+  gst_structure_fixate_field (s, g_quark_to_string (field_id));
+
+  return TRUE;
+}
+
+static void
+gst_v4l2_src_fixate_struct_with_preference (GstStructure * s,
+    struct PreferedCapsInfo *pref, gint * width, gint * height,
+    gint * fps_n, gint * fps_d)
+{
+  if (gst_structure_has_field (s, "width")) {
+    gst_structure_fixate_field_nearest_int (s, "width", pref->width);
+
+    if (width)
+      gst_structure_get_int (s, "width", width);
+  }
+
+  if (gst_structure_has_field (s, "height")) {
+    gst_structure_fixate_field_nearest_int (s, "height", pref->height);
+
+    if (height)
+      gst_structure_get_int (s, "height", height);
+  }
+
+  if (gst_structure_has_field (s, "framerate")) {
+    gst_structure_fixate_field_nearest_fraction (s, "framerate", pref->fps_n,
+        pref->fps_d);
+
+    if (fps_n && fps_d)
+      gst_structure_get_fraction (s, "framerate", fps_n, fps_d);
+  }
+
+  /* Finally, fixate everything else except the interlace-mode and colorimetry
+   * which still need further negotiation as it wasn't probed */
+  gst_structure_map_in_place (s, gst_vl42_src_fixate_fields, s);
+}
+
+/* TODO Consider framerate */
+static gint
+gst_v4l2src_caps_fixate_and_compare (GstStructure * a, GstStructure * b,
+    struct PreferedCapsInfo *pref)
+{
+  gint aw = G_MAXINT, ah = G_MAXINT, ad = G_MAXINT;
+  gint bw = G_MAXINT, bh = G_MAXINT, bd = G_MAXINT;
+
+  gst_v4l2_src_fixate_struct_with_preference (a, pref, &aw, &ah, NULL, NULL);
+  gst_v4l2_src_fixate_struct_with_preference (b, pref, &bw, &bh, NULL, NULL);
+
+  /* When both are smaller then pref, just append to the end */
+  if ((bw < pref->width || bh < pref->height)
+      && (aw < pref->width || ah < pref->height))
+    return 1;
+
+  /* If a is smaller then pref and not b, then a goes after b */
+  if (aw < pref->width || ah < pref->height)
+    return 1;
+
+  /* If b is smaller then pref and not a, then a goes before b */
+  if (bw < pref->width || bh < pref->height)
+    return -1;
+
+  /* Both are strictly larger then the preference, prefer the smallest */
+  ad = (aw - pref->width) * (ah - pref->height);
+  bd = (bw - pref->width) * (bh - pref->height);
+
+  return ad - bd;
+}
+
+static gboolean
+gst_v4l2src_set_format (GstV4l2Src * v4l2src, GstCaps * caps,
+    GstV4l2Error * error)
+{
+  GstV4l2Object *obj;
+
+  obj = v4l2src->v4l2object;
+
+  /* make sure we stop capturing and dealloc buffers */
+  if (!gst_v4l2_object_stop (obj))
+    return FALSE;
+
+  g_signal_emit (v4l2src, gst_v4l2_signals[SIGNAL_PRE_SET_FORMAT], 0,
+      v4l2src->v4l2object->video_fd, caps);
+
+  return gst_v4l2_object_set_format (obj, caps, error);
+}
+
+static GstCaps *
+gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
+{
+  /* Let's prefer a good resolutiion as of today's standard. */
+  struct PreferedCapsInfo pref = {
+    3840, 2160, 120, 1
+  };
+  GstV4l2Src *v4l2src = GST_V4L2SRC (basesrc);
+  GstV4l2Object *obj = v4l2src->v4l2object;
+  GList *caps_list = NULL;
+  GstStructure *s;
+  gint i = G_MAXINT;
+  GstV4l2Error error = GST_V4L2_ERROR_INIT;
+  GstCaps *fcaps = NULL;
 
   GST_DEBUG_OBJECT (basesrc, "fixating caps %" GST_PTR_FORMAT, caps);
 
   caps = gst_caps_make_writable (caps);
 
-  for (i = 0; i < gst_caps_get_size (caps); ++i) {
-    structure = gst_caps_get_structure (caps, i);
-
-    /* We are fixating to a reasonable 320x200 resolution
-       and the maximum framerate resolution for that size */
-    if (gst_structure_has_field (structure, "width"))
-      gst_structure_fixate_field_nearest_int (structure, "width", 320);
-
-    if (gst_structure_has_field (structure, "height"))
-      gst_structure_fixate_field_nearest_int (structure, "height", 200);
-
-    if (gst_structure_has_field (structure, "framerate"))
-      gst_structure_fixate_field_nearest_fraction (structure, "framerate",
-          100, 1);
-
-    if (gst_structure_has_field (structure, "format"))
-      gst_structure_fixate_field (structure, "format");
-
-    if (gst_structure_has_field (structure, "interlace-mode"))
-      gst_structure_fixate_field (structure, "interlace-mode");
+  /* We consider the first structure from peercaps to be a preference. This is
+   * useful for matching a reported native display, or simply to avoid
+   * transformation to happen downstream. */
+  if (pref_s) {
+    pref_s = gst_structure_copy (pref_s);
+    gst_v4l2_src_fixate_struct_with_preference (pref_s, &pref, &pref.width,
+        &pref.height, &pref.fps_n, &pref.fps_d);
+    gst_structure_free (pref_s);
   }
 
-  GST_DEBUG_OBJECT (basesrc, "fixated caps %" GST_PTR_FORMAT, caps);
+  /* Sort the structures to get the caps that is nearest to our preferences,
+   * first */
+  while ((s = gst_caps_steal_structure (caps, 0)))
+    caps_list = g_list_insert_sorted_with_data (caps_list, s,
+        (GCompareDataFunc) gst_v4l2src_caps_fixate_and_compare, &pref);
 
-  caps = GST_BASE_SRC_CLASS (parent_class)->fixate (basesrc, caps);
+  while (caps_list) {
+    s = caps_list->data;
+    caps_list = g_list_delete_link (caps_list, caps_list);
+    gst_caps_append_structure (caps, s);
+  }
 
-  return caps;
+  GST_DEBUG_OBJECT (basesrc, "sorted and normalized caps %" GST_PTR_FORMAT,
+      caps);
+
+  /* Each structure in the caps has been fixated, except for the
+   * interlace-mode and colorimetry. Now normalize the caps so we can
+   * enumerate the possibilities */
+  caps = gst_caps_normalize (caps);
+
+  for (i = 0; i < gst_caps_get_size (caps); ++i) {
+    gst_v4l2_clear_error (&error);
+    if (fcaps)
+      gst_caps_unref (fcaps);
+
+    fcaps = gst_caps_copy_nth (caps, i);
+
+    /* make sure the caps changed before doing anything */
+    if (gst_v4l2_object_caps_equal (obj, fcaps))
+      break;
+
+    if (GST_V4L2_IS_ACTIVE (obj)) {
+      /* Just check if the format is acceptable, once we know
+       * no buffers should be outstanding we try S_FMT.
+       *
+       * Basesrc will do an allocation query that
+       * should indirectly reclaim buffers, after that we can
+       * set the format and then configure our pool */
+      if (gst_v4l2_object_try_format (obj, fcaps, &error)) {
+        v4l2src->renegotiation_adjust = v4l2src->offset + 1;
+        v4l2src->pending_set_fmt = TRUE;
+        break;
+      }
+    } else {
+      if (gst_v4l2src_set_format (v4l2src, fcaps, &error))
+        break;
+    }
+
+    /* Only EIVAL make sense, report any other errors, this way we don't keep
+     * probing if the device got disconnected, or if it's firmware stopped
+     * responding */
+    if (error.error->code != GST_RESOURCE_ERROR_SETTINGS) {
+      i = G_MAXINT;
+      break;
+    }
+  }
+
+  if (i >= gst_caps_get_size (caps)) {
+    gst_v4l2_error (v4l2src, &error);
+    if (fcaps)
+      gst_caps_unref (fcaps);
+    gst_caps_unref (caps);
+    return NULL;
+  }
+
+  gst_caps_unref (caps);
+
+  GST_DEBUG_OBJECT (basesrc, "fixated caps %" GST_PTR_FORMAT, fcaps);
+
+  return fcaps;
 }
-
 
 static gboolean
 gst_v4l2src_negotiate (GstBaseSrc * basesrc)
@@ -307,63 +473,34 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
   peercaps = gst_pad_peer_query_caps (GST_BASE_SRC_PAD (basesrc), NULL);
   GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
   if (peercaps && !gst_caps_is_any (peercaps)) {
-    GstCaps *icaps = NULL;
-
     /* Prefer the first caps we are compatible with that the peer proposed */
-    icaps = gst_caps_intersect_full (peercaps, thiscaps,
+    caps = gst_caps_intersect_full (peercaps, thiscaps,
         GST_CAPS_INTERSECT_FIRST);
 
-    GST_DEBUG_OBJECT (basesrc, "intersect: %" GST_PTR_FORMAT, icaps);
-    if (icaps) {
-      /* If there are multiple intersections pick the one with the smallest
-       * resolution strictly bigger then the first peer caps */
-      if (gst_caps_get_size (icaps) > 1) {
-        GstStructure *s = gst_caps_get_structure (peercaps, 0);
-        int best = 0;
-        int twidth, theight;
-        int width = G_MAXINT, height = G_MAXINT;
+    GST_DEBUG_OBJECT (basesrc, "intersect: %" GST_PTR_FORMAT, caps);
 
-        if (gst_structure_get_int (s, "width", &twidth)
-            && gst_structure_get_int (s, "height", &theight)) {
-          int i;
-
-          /* Walk the structure backwards to get the first entry of the
-           * smallest resolution bigger (or equal to) the preferred resolution)
-           */
-          for (i = gst_caps_get_size (icaps) - 1; i >= 0; i--) {
-            GstStructure *is = gst_caps_get_structure (icaps, i);
-            int w, h;
-
-            if (gst_structure_get_int (is, "width", &w)
-                && gst_structure_get_int (is, "height", &h)) {
-              if (w >= twidth && w <= width && h >= theight && h <= height) {
-                width = w;
-                height = h;
-                best = i;
-              }
-            }
-          }
-        }
-
-        caps = gst_caps_copy_nth (icaps, best);
-        gst_caps_unref (icaps);
-      } else {
-        caps = icaps;
-      }
-    }
     gst_caps_unref (thiscaps);
   } else {
     /* no peer or peer have ANY caps, work with our own caps then */
     caps = thiscaps;
   }
-  if (peercaps)
-    gst_caps_unref (peercaps);
-  if (caps) {
-    caps = gst_caps_truncate (caps);
 
+  if (caps) {
     /* now fixate */
     if (!gst_caps_is_empty (caps)) {
-      caps = gst_v4l2src_fixate (basesrc, caps);
+      GstStructure *pref = NULL;
+
+      if (peercaps && !gst_caps_is_any (peercaps))
+        pref = gst_caps_get_structure (peercaps, 0);
+
+      caps = gst_v4l2src_fixate (basesrc, caps, pref);
+
+      /* Fixating may fail as we now set the selected format */
+      if (!caps) {
+        result = FALSE;
+        goto done;
+      }
+
       GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
 
       if (gst_caps_is_any (caps)) {
@@ -377,6 +514,11 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
     }
     gst_caps_unref (caps);
   }
+
+done:
+  if (peercaps)
+    gst_caps_unref (peercaps);
+
   return result;
 
 no_nego_needed:
@@ -405,64 +547,6 @@ gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter)
 }
 
 static gboolean
-gst_v4l2src_set_format (GstV4l2Src * v4l2src, GstCaps * caps)
-{
-  GstV4l2Error error = GST_V4L2_ERROR_INIT;
-  GstV4l2Object *obj;
-
-  obj = v4l2src->v4l2object;
-
-  g_signal_emit (v4l2src, gst_v4l2_signals[SIGNAL_PRE_SET_FORMAT], 0,
-      v4l2src->v4l2object->video_fd, caps);
-
-  if (!gst_v4l2_object_set_format (obj, caps, &error)) {
-    gst_v4l2_error (v4l2src, &error);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
-{
-  GstV4l2Src *v4l2src;
-  GstV4l2Object *obj;
-
-  v4l2src = GST_V4L2SRC (src);
-  obj = v4l2src->v4l2object;
-
-  /* make sure the caps changed before doing anything */
-  if (gst_v4l2_object_caps_equal (obj, caps))
-    return TRUE;
-
-  if (GST_V4L2_IS_ACTIVE (obj)) {
-    GstV4l2Error error = GST_V4L2_ERROR_INIT;
-    /* Just check if the format is acceptable, once we know
-     * no buffers should be outstanding we try S_FMT.
-     *
-     * Basesrc will do an allocation query that
-     * should indirectly reclaim buffers, after that we can
-     * set the format and then configure our pool */
-    if (gst_v4l2_object_try_format (obj, caps, &error)) {
-      v4l2src->renegotiation_adjust = v4l2src->offset + 1;
-      v4l2src->pending_set_fmt = TRUE;
-    } else {
-      gst_v4l2_error (v4l2src, &error);
-      return FALSE;
-    }
-  } else {
-    /* make sure we stop capturing and dealloc buffers */
-    if (!gst_v4l2_object_stop (obj))
-      return FALSE;
-
-    return gst_v4l2src_set_format (v4l2src, caps);
-  }
-
-  return TRUE;
-}
-
-static gboolean
 gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 {
   GstV4l2Src *src = GST_V4L2SRC (bsrc);
@@ -470,10 +554,12 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
   if (src->pending_set_fmt) {
     GstCaps *caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (bsrc));
+    GstV4l2Error error = GST_V4L2_ERROR_INIT;
 
-    if (!gst_v4l2_object_stop (src->v4l2object))
-      return FALSE;
-    ret = gst_v4l2src_set_format (src, caps);
+    caps = gst_caps_make_writable (caps);
+    if (!(ret = gst_v4l2src_set_format (src, caps, &error)))
+      gst_v4l2_error (src, &error);
+
     gst_caps_unref (caps);
     src->pending_set_fmt = FALSE;
   } else if (gst_buffer_pool_is_active (src->v4l2object->pool)) {
