@@ -2256,7 +2256,7 @@ AG_GST_CHECK_FEATURE(DECKLINK, [decklink], decklink, [
      *-mingw*)
        HAVE_DECKLINK=yes
        DECKLINK_CXXFLAGS=
-       DECKLINK_LIBS="-loleaut32"
+       DECKLINK_LIBS="-lole32 -loleaut32"
        HAVE_DECKLINK_WIN=yes
        ;;
      *)

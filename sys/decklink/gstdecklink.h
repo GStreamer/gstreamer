@@ -34,10 +34,10 @@
 #ifdef G_OS_WIN32
 #include "win/DeckLinkAPI.h"
 
+#include <stdio.h>
 #include <comutil.h>
 
 #define bool BOOL
-
 #define COMSTR_T BSTR
 /* MinGW does not have comsuppw.lib, so no _com_util::ConvertBSTRToString */
 # ifdef __MINGW32__
