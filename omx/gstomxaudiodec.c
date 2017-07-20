@@ -843,22 +843,33 @@ gst_omx_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
         return FALSE;
       needs_disable = FALSE;
     } else {
+      /* Disabling at the same time input port and output port is only
+       * required when a buffer is shared between the ports. This cannot
+       * be the case for a decoder because its input and output buffers
+       * are of different nature. So let's disable ports sequencially.
+       * Starting from IL 1.2.0, this point has been clarified.
+       * OMX_SendCommand will return an error if the IL client attempts to
+       * call it when there is already an on-going command being processed.
+       * The exception is for buffer sharing above and the event
+       * OMX_EventPortNeedsDisable will be sent to request disabling the
+       * other port at the same time. */
       if (gst_omx_port_set_enabled (self->dec_in_port, FALSE) != OMX_ErrorNone)
-        return FALSE;
-      if (gst_omx_port_set_enabled (out_port, FALSE) != OMX_ErrorNone)
         return FALSE;
       if (gst_omx_port_wait_buffers_released (self->dec_in_port,
               5 * GST_SECOND) != OMX_ErrorNone)
         return FALSE;
-      if (gst_omx_port_wait_buffers_released (out_port,
-              1 * GST_SECOND) != OMX_ErrorNone)
-        return FALSE;
       if (gst_omx_port_deallocate_buffers (self->dec_in_port) != OMX_ErrorNone)
-        return FALSE;
-      if (gst_omx_port_deallocate_buffers (self->dec_out_port) != OMX_ErrorNone)
         return FALSE;
       if (gst_omx_port_wait_enabled (self->dec_in_port,
               1 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
+
+      if (gst_omx_port_set_enabled (out_port, FALSE) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_wait_buffers_released (out_port,
+              1 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_deallocate_buffers (out_port) != OMX_ErrorNone)
         return FALSE;
       if (gst_omx_port_wait_enabled (out_port, 1 * GST_SECOND) != OMX_ErrorNone)
         return FALSE;
