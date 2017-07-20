@@ -14,7 +14,7 @@ if xml28_dep.found()
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc],
     dependencies : [gst_dep, gstadaptivedemux_dep, gstcodecparsers_dep,
-		    gsturidownloader_dep, xml28_dep],
+		    gsturidownloader_dep, xml28_dep, gio_dep],
     install : true,
     install_dir : plugins_install_dir,
   )
