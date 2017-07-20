@@ -7,6 +7,7 @@ shm_sources = [
 ]
 
 shm_enabled = false
+shm_deps = []
 rt_dep = cc.find_library ('rt', required: false)
 
 if cc.has_header ('sys/socket.h') and (host_system == 'osx' or
