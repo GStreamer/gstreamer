@@ -417,9 +417,6 @@ gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' +
     'g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", "", TRUE);' + \
     'gst_init(NULL,NULL);' ]
 
-# Used by the *_mkenum.py helper scripts
-glib_mkenums = find_program('glib-mkenums')
-
 gst_c_args = ['-DHAVE_CONFIG_H']
 if libtype == 'static'
   gst_c_args += ['-DGST_STATIC_COMPILATION']

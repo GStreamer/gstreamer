@@ -37,7 +37,6 @@ EXTRA_DIST = \
 	scripts/gst-uninstalled \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/gstreamer-*" ) \
 	gst/gstenumtypes.c.template gst/gstenumtypes.h.template \
-	libs/gst/controller/controller_mkenum.py \
 	meson_options.txt \
 	gst/parse/gen_lex.py.in gst/parse/gen_grammar.py.in \
 	$(win32)
