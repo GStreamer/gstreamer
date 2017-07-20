@@ -1,6 +1,6 @@
 project('gst-plugins-base', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.36.0',
+  meson_version : '>= 0.42.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -238,9 +238,6 @@ if host_machine.system() != 'windows'
 endif
 gst_controller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_controller_dep'])
-
-# Used by the *_mkenum.py helper scripts
-glib_mkenums = find_program('glib-mkenums')
 
 have_orcc = false
 orcc_args = []

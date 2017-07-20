@@ -84,19 +84,14 @@ video_mkenum_headers = [
   'navigation.h',
 ]
 
-mkenums = find_program('video_mkenum.py')
-gstvideo_h = custom_target('gstvideoenum_h',
-  output : 'video-enumtypes.h',
-  input : video_mkenum_headers,
-  install : true,
-  install_dir : 'include/gstreamer-1.0/gst/video/',
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
-
-gstvideo_c = custom_target('gstvideoenum_c',
-  output : 'video-enumtypes.c',
-  input : video_mkenum_headers,
-  depends : [gstvideo_h],
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+video_enums = gnome.mkenums_simple('video-enumtypes',
+  sources : video_mkenum_headers,
+  header_prefix : '#include <gst/video/video-prelude.h>',
+  decorator : 'GST_VIDEO_API',
+  install_header: true,
+  install_dir : 'include/gstreamer-1.0/gst/video/')
+gstvideo_c = video_enums[0]
+gstvideo_h = video_enums[1]
 video_gen_sources = [gstvideo_h]
 
 orcsrc = 'video-orc'

@@ -7,19 +7,15 @@ app_mkenum_headers = [
 app_headers = app_mkenum_headers + [ 'app.h', 'app-prelude.h', 'gstappsink.h' ]
 install_headers(app_headers, subdir : 'gstreamer-1.0/gst/app/')
 
-mkenums = find_program('app_mkenum.py')
-gstapp_h = custom_target('gstappenum_h',
-  output : 'app-enumtypes.h',
-  input : app_mkenum_headers,
-  install : true,
-  install_dir : 'include/gstreamer-1.0/gst/app/',
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+app_enums = gnome.mkenums_simple('app-enumtypes',
+  sources : app_mkenum_headers,
+  header_prefix : '#include <gst/app/app-prelude.h>',
+  decorator : 'GST_APP_API',
+  install_header: true,
+  install_dir : 'include/gstreamer-1.0/gst/app/')
+gstapp_c = app_enums[0]
+gstapp_h = app_enums[1]
 
-gstapp_c = custom_target('gstappenum_c',
-  output : 'app-enumtypes.c',
-  input : app_mkenum_headers,
-  depends : [gstapp_h],
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
 app_gen_sources = [gstapp_h]
 
 gstapp = library('gstapp-@0@'.format(api_version),

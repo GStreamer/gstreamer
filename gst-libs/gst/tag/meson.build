@@ -26,19 +26,14 @@ tag_headers = tag_mkenum_headers + [
 ]
 install_headers(tag_headers, subdir : 'gstreamer-1.0/gst/tag/')
 
-mkenums = find_program('tag_mkenum.py')
-gsttag_h = custom_target('gsttagenum_h',
-  output : 'tag-enumtypes.h',
-  input : tag_mkenum_headers,
-  install : true,
-  install_dir : 'include/gstreamer-1.0/gst/tag/',
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
-
-gsttag_c = custom_target('gsttagenum_c',
-  output : 'tag-enumtypes.c',
-  input : tag_mkenum_headers,
-  depends : [gsttag_h],
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+tag_enums = gnome.mkenums_simple('tag-enumtypes',
+  sources : tag_mkenum_headers,
+  header_prefix : '#include <gst/tag/tag-prelude.h>',
+  decorator : 'GST_TAG_API',
+  install_header: true,
+  install_dir : 'include/gstreamer-1.0/gst/tag/')
+gsttag_c = tag_enums[0]
+gsttag_h = tag_enums[1]
 tag_gen_sources = [gsttag_h]
 
 tag_deps = [gst_base_dep, libm]
