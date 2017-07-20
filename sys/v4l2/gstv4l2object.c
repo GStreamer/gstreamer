@@ -3408,6 +3408,14 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       || format.fmt.pix.field != field)
     goto invalid_field;
 
+  gst_v4l2_object_get_colorspace (&format, &info.colorimetry);
+
+  s = gst_caps_get_structure (caps, 0);
+  if (gst_structure_has_field (s, "colorimetry") &&
+      !gst_video_colorimetry_matches (&info.colorimetry,
+          gst_structure_get_string (s, "colorimetry")))
+    goto invalid_colorimetry;
+
   if (try_only)                 /* good enough for trying only */
     return TRUE;
 
@@ -3620,6 +3628,20 @@ invalid_field:
             field == V4L2_FIELD_NONE ? "progressive" : "interleaved"),
         ("Device wants %s interlacing",
             wanted_field == V4L2_FIELD_NONE ? "progressive" : "interleaved"));
+    return FALSE;
+  }
+invalid_colorimetry:
+  {
+    gchar *wanted_colorimetry;
+
+    wanted_colorimetry = gst_video_colorimetry_to_string (&info.colorimetry);
+
+    GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
+        (_("Device '%s' does not support %s colorimetry"),
+            v4l2object->videodev, gst_structure_get_string (s, "colorimetry")),
+        ("Device wants %s colorimetry", wanted_colorimetry));
+
+    g_free (wanted_colorimetry);
     return FALSE;
   }
 get_parm_failed:
