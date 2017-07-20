@@ -18,23 +18,15 @@ mpegts_headers = [
 ]
 install_headers(mpegts_headers, subdir : 'gstreamer-1.0/gst/mpegts')
 
-mkenums = find_program('mpegts_enum.py')
-
-mpegts_h = custom_target('mpegtsenum_h',
-  output : 'gstmpegts-enumtypes.h',
-  input : mpegts_headers,
-  install : true,
-  install_dir : 'include/gstreamer-1.0/gst/mpegts',
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
-gen_sources = [mpegts_h]
-
-mpegts_c = custom_target('mpegtsenum_c',
-  output : 'gstmpegts-enumtypes.c',
-  input : mpegts_headers,
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+mpegts_enums = gnome.mkenums_simple('gstmpegts-enumtypes',
+  sources : mpegts_headers,
+  header_prefix : '#include <gst/mpegts/mpegts-prelude.h>',
+  decorator : 'GST_MPEGTS_API',
+  install_header: true,
+  install_dir : 'include/gstreamer-1.0/gst/mpegts/')
 
 gstmpegts = library('gstmpegts-' + api_version,
-  mpegts_sources, mpegts_h, mpegts_c,
+  mpegts_sources, mpegts_enums,
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
   include_directories : [configinc, libsinc],
   version : libversion,
