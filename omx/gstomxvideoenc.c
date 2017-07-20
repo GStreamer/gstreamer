@@ -1123,10 +1123,91 @@ gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self,
 static gboolean
 gst_omx_video_enc_allocate_in_buffers (GstOMXVideoEnc * self)
 {
-  if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
-    return FALSE;
+  switch (self->input_allocation) {
+    case GST_OMX_BUFFER_ALLOCATION_ALLOCATE_BUFFER:
+      if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
+        return FALSE;
+      break;
+    case GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC:
+      if (gst_omx_port_use_dynamic_buffers (self->enc_in_port) != OMX_ErrorNone)
+        return FALSE;
+      break;
+    case GST_OMX_BUFFER_ALLOCATION_USE_BUFFER:
+    default:
+      /* Not supported */
+      g_return_val_if_reached (FALSE);
+  }
 
   return TRUE;
+}
+
+static gboolean
+check_input_alignment (GstOMXVideoEnc * self, GstMapInfo * map)
+{
+  OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->enc_in_port->port_def;
+
+  if (map->size != port_def->nBufferSize) {
+    GST_DEBUG_OBJECT (self,
+        "input buffer has wrong size/stride (%" G_GSIZE_FORMAT
+        " expected: %u), can't use dynamic allocation",
+        map->size, (guint32) port_def->nBufferSize);
+    return FALSE;
+  }
+
+  if (port_def->nBufferAlignment &&
+      (GPOINTER_TO_UINT (map->data) & (port_def->nBufferAlignment - 1)) != 0) {
+    GST_DEBUG_OBJECT (self,
+        "input buffer is not properly aligned (address: %p alignment: %u bytes), can't use dynamic allocation",
+        map->data, (guint32) port_def->nBufferAlignment);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/* Check if @inbuf's alignment and stride matches the requirements to use the
+ * dynamic buffer mode. */
+static gboolean
+can_use_dynamic_buffer_mode (GstOMXVideoEnc * self, GstBuffer * inbuf)
+{
+  GstMapInfo map;
+  gboolean result = FALSE;
+
+  if (gst_buffer_n_memory (inbuf) > 1) {
+    GST_DEBUG_OBJECT (self,
+        "input buffer contains more than one memory, can't use dynamic allocation");
+    return FALSE;
+  }
+
+  if (!gst_buffer_map (inbuf, &map, GST_MAP_READ)) {
+    GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
+        ("failed to map input buffer"));
+    return FALSE;
+  }
+
+  result = check_input_alignment (self, &map);
+
+  gst_buffer_unmap (inbuf, &map);
+  return result;
+}
+
+/* Choose the allocation mode for input buffers depending of what's supported by
+ * the component and the size/alignment of the input buffer. */
+static GstOMXBufferAllocation
+gst_omx_video_enc_pick_input_allocation_mode (GstOMXVideoEnc * self,
+    GstBuffer * inbuf)
+{
+  if (!gst_omx_is_dynamic_allocation_supported ())
+    return GST_OMX_BUFFER_ALLOCATION_ALLOCATE_BUFFER;
+
+  if (can_use_dynamic_buffer_mode (self, inbuf)) {
+    GST_DEBUG_OBJECT (self,
+        "input buffer is properly aligned, use dynamic allocation");
+    return GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC;
+  }
+
+  GST_DEBUG_OBJECT (self, "let input buffer allocate its buffers");
+  return GST_OMX_BUFFER_ALLOCATION_ALLOCATE_BUFFER;
 }
 
 static gboolean
@@ -1138,6 +1219,9 @@ gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
 
   if (!gst_omx_video_enc_configure_input_buffer (self, input))
     return FALSE;
+
+  self->input_allocation = gst_omx_video_enc_pick_input_allocation_mode (self,
+      input);
 
   GST_DEBUG_OBJECT (self, "Enabling component");
   if (self->disabled) {
@@ -1434,6 +1518,35 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
   if (info->width != port_def->format.video.nFrameWidth ||
       info->height != port_def->format.video.nFrameHeight) {
     GST_ERROR_OBJECT (self, "Width or height do not match");
+    goto done;
+  }
+
+  if (self->enc_in_port->allocation ==
+      GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC) {
+    if (gst_buffer_n_memory (inbuf) > 1) {
+      GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
+          ("input buffer now has more than one memory, can't use dynamic allocation any more"));
+      return FALSE;
+    }
+
+    /* Map and keep a ref on the buffer while it's being processed
+     * by the OMX component. */
+    if (!gst_omx_buffer_map_frame (outbuf, inbuf, info)) {
+      GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
+          ("failed to map input buffer"));
+      return FALSE;
+    }
+
+    if (!check_input_alignment (self, &outbuf->input_frame.map[0])) {
+      GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
+          ("input buffer now has wrong alignment/stride, can't use dynamic allocation any more"));
+      return FALSE;
+    }
+
+    GST_LOG_OBJECT (self, "Transfer buffer of %" G_GSIZE_FORMAT " bytes",
+        gst_buffer_get_size (inbuf));
+
+    ret = TRUE;
     goto done;
   }
 
