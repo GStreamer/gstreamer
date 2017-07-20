@@ -1,17 +1,17 @@
-plugin_LTLIBRARIES = libgstdirectsoundsink.la
+plugin_LTLIBRARIES = libgstdirectsound.la
 
-libgstdirectsoundsink_la_SOURCES =  gstdirectsoundsink.c gstdirectsoundplugin.c
-libgstdirectsoundsink_la_CFLAGS = \
+libgstdirectsound_la_SOURCES =  gstdirectsound.c gstdirectsoundplugin.c
+libgstdirectsound_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(DIRECTSOUND_CFLAGS)
-libgstdirectsoundsink_la_LIBADD = \
+libgstdirectsound_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(DIRECTSOUND_LIBS)
-libgstdirectsoundsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DIRECTSOUND_LDFLAGS)
+libgstdirectsound_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DIRECTSOUND_LDFLAGS)
 
 noinst_HEADERS = gstdirectsoundsink.h

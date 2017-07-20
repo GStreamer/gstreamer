@@ -65,6 +65,7 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/videofilter/.libs/*videoflip.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/videofilter/.libs/*videobalance.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/videofilter/.libs/*gamma.{so,dll,DLL,dylib} \
+	$(top_builddir)/sys/directsound/.libs/libgstdirectsoundsink.{dll,DLL} \
 	$(top_builddir)/sys/oss4/.libs/libgstoss4audio.so
 
 CRUFT_DIRS = \
