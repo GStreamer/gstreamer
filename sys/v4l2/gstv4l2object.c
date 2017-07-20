@@ -3596,36 +3596,30 @@ set_fmt_failed:
   }
 invalid_dimensions:
   {
-    if (!try_only) {
-      GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
-          (_("Device '%s' cannot capture at %dx%d"),
-              v4l2object->videodev, width, height),
-          ("Tried to capture at %dx%d, but device returned size %dx%d",
-              width, height, format.fmt.pix.width, format.fmt.pix.height));
-    }
+    GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
+        (_("Device '%s' cannot capture at %dx%d"),
+            v4l2object->videodev, width, height),
+        ("Tried to capture at %dx%d, but device returned size %dx%d",
+            width, height, format.fmt.pix.width, format.fmt.pix.height));
     return FALSE;
   }
 invalid_pixelformat:
   {
-    if (!try_only) {
-      GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
-          (_("Device '%s' cannot capture in the specified format"),
-              v4l2object->videodev),
-          ("Tried to capture in %" GST_FOURCC_FORMAT
-              ", but device returned format" " %" GST_FOURCC_FORMAT,
-              GST_FOURCC_ARGS (pixelformat),
-              GST_FOURCC_ARGS (format.fmt.pix.pixelformat)));
-    }
+    GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
+        (_("Device '%s' cannot capture in the specified format"),
+            v4l2object->videodev),
+        ("Tried to capture in %" GST_FOURCC_FORMAT
+            ", but device returned format" " %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (pixelformat),
+            GST_FOURCC_ARGS (format.fmt.pix.pixelformat)));
     return FALSE;
   }
 invalid_planes:
   {
-    if (!try_only) {
-      GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
-          (_("Device '%s' does support non-contiguous planes"),
-              v4l2object->videodev),
-          ("Device wants %d planes", format.fmt.pix_mp.num_planes));
-    }
+    GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
+        (_("Device '%s' does support non-contiguous planes"),
+            v4l2object->videodev),
+        ("Device wants %d planes", format.fmt.pix_mp.num_planes));
     return FALSE;
   }
 invalid_field:
