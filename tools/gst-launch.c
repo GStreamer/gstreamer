@@ -466,9 +466,11 @@ print_toc_entry (gpointer data, gpointer user_data)
   g_list_foreach (subentries, print_toc_entry, GUINT_TO_POINTER (indent));
 }
 
+#ifdef G_OS_UNIX
+static guint signal_watch_hup_id;
+#endif
 #if defined(G_OS_UNIX) || defined(G_OS_WIN32)
 static guint signal_watch_intr_id;
-static guint signal_watch_hup_id;
 #if defined(G_OS_WIN32)
 static GstElement *intr_pipeline;
 #endif
@@ -495,6 +497,7 @@ intr_handler (gpointer user_data)
   return G_SOURCE_REMOVE;
 }
 
+#ifdef G_OS_UNIX
 static gboolean
 hup_handler (gpointer user_data)
 {
@@ -513,6 +516,7 @@ hup_handler (gpointer user_data)
 
   return G_SOURCE_CONTINUE;
 }
+#endif
 
 #if defined(G_OS_WIN32)         /* G_OS_UNIX */
 static BOOL WINAPI
