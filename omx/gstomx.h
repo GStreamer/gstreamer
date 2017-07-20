@@ -25,6 +25,7 @@
 
 #include <gmodule.h>
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <string.h>
 
 #ifdef HAVE_CONFIG_H
@@ -220,6 +221,13 @@ typedef enum {
   GST_OMX_COMPONENT_TYPE_FILTER
 } GstOmxComponentType;
 
+/* How the port's buffers are allocated */
+typedef enum {
+  GST_OMX_BUFFER_ALLOCATION_ALLOCATE_BUFFER,
+  GST_OMX_BUFFER_ALLOCATION_USE_BUFFER,
+  GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC, /* Only supported by OMX 1.2.0 */
+} GstOMXBufferAllocation;
+
 struct _GstOMXMessage {
   GstOMXMessageType type;
 
@@ -267,6 +275,7 @@ struct _GstOMXPort {
   gboolean enabled_pending;  /* TRUE after OMX_Command{En,Dis}able */
   gboolean disabled_pending; /* was done until it took effect */
   gboolean eos; /* TRUE after a buffer with EOS flag was received */
+  GstOMXBufferAllocation allocation;
 
   /* Increased whenever the settings of these port change.
    * If settings_cookie != configured_settings_cookie
@@ -323,6 +332,14 @@ struct _GstOMXBuffer {
 
   /* TRUE if this is an EGLImage */
   gboolean eglimage;
+
+  /* Used in dynamic buffer mode to keep track of the mapped content while it's
+   * being processed by the OMX component. */
+  GstVideoFrame input_frame;
+  gboolean input_frame_mapped; /* TRUE if input_frame is valid */
+  GstMemory *input_mem;
+  GstBuffer *input_buffer;
+  GstMapInfo map;
 };
 
 struct _GstOMXClassData {
@@ -397,6 +414,12 @@ OMX_ERRORTYPE     gst_omx_port_set_enabled (GstOMXPort * port, gboolean enabled)
 OMX_ERRORTYPE     gst_omx_port_wait_enabled (GstOMXPort * port, GstClockTime timeout);
 gboolean          gst_omx_port_is_enabled (GstOMXPort * port);
 
+/* OMX 1.2.0 dynamic allocation mode */
+gboolean          gst_omx_is_dynamic_allocation_supported (void);
+OMX_ERRORTYPE     gst_omx_port_use_dynamic_buffers (GstOMXPort * port);
+gboolean          gst_omx_buffer_map_frame (GstOMXBuffer * buffer, GstBuffer * input, GstVideoInfo * info);
+gboolean          gst_omx_buffer_map_memory (GstOMXBuffer * buffer, GstMemory * mem);
+gboolean          gst_omx_buffer_map_buffer (GstOMXBuffer * buffer, GstBuffer * input);
 
 void              gst_omx_set_default_role (GstOMXClassData *class_data, const gchar *default_role);
 

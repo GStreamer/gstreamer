@@ -609,6 +609,26 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
   return OMX_ErrorNone;
 }
 
+static void
+gst_omx_buffer_unmap (GstOMXBuffer * buffer)
+{
+  g_return_if_fail (buffer != NULL);
+
+  if (buffer->input_frame_mapped) {
+    g_assert (!buffer->input_mem);
+    g_assert (!buffer->input_buffer);
+    gst_video_frame_unmap (&buffer->input_frame);
+    buffer->input_frame_mapped = FALSE;
+  } else if (buffer->input_mem) {
+    g_assert (!buffer->input_buffer);
+    gst_memory_unmap (buffer->input_mem, &buffer->map);
+    g_clear_pointer (&buffer->input_mem, gst_memory_unref);
+  } else if (buffer->input_buffer) {
+    gst_buffer_unmap (buffer->input_buffer, &buffer->map);
+    g_clear_pointer (&buffer->input_buffer, gst_buffer_unref);
+  }
+}
+
 static OMX_ERRORTYPE
 EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
     OMX_BUFFERHEADERTYPE * pBuffer)
@@ -629,6 +649,9 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
     GST_ERROR ("EmptyBufferDone on tunneled port");
     return OMX_ErrorBadParameter;
   }
+
+  /* Release and unmap the parent buffer, if any */
+  gst_omx_buffer_unmap (buf);
 
   comp = buf->port->comp;
 
@@ -1751,6 +1774,7 @@ gst_omx_port_allocate_buffers (GstOMXPort * port)
 
   g_mutex_lock (&port->comp->lock);
   err = gst_omx_port_allocate_buffers_unlocked (port, NULL, NULL, -1);
+  port->allocation = GST_OMX_BUFFER_ALLOCATION_ALLOCATE_BUFFER;
   g_mutex_unlock (&port->comp->lock);
 
   return err;
@@ -1768,9 +1792,128 @@ gst_omx_port_use_buffers (GstOMXPort * port, const GList * buffers)
   g_mutex_lock (&port->comp->lock);
   n = g_list_length ((GList *) buffers);
   err = gst_omx_port_allocate_buffers_unlocked (port, buffers, NULL, n);
+  port->allocation = GST_OMX_BUFFER_ALLOCATION_USE_BUFFER;
   g_mutex_unlock (&port->comp->lock);
 
   return err;
+}
+
+gboolean
+gst_omx_is_dynamic_allocation_supported (void)
+{
+  /* The Zynqultrascaleplus stack implements OMX 1.1.0 but supports the dynamic
+   * allocation mode from 1.2.0 as an extension. */
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  return TRUE;
+#endif
+
+#if OMX_VERSION_MINOR == 2
+  return TRUE;
+#else
+  return FALSE;
+#endif
+}
+
+/* OMX 1.2.0 introduced a dynamic allocation mode where only buffer headers are
+ * being allocated during component's initialization. The actual buffers are
+ * allocated upstream and passed to OMX by setting the pBuffer dynamically
+ * for each input buffer.
+ *
+ * This function takes care of allocating the buffer headers. Element should
+ * then use one of the gst_omx_buffer_map_*() method to update buffer's pBuffer
+ * pointers for each incoming buffer.
+ *
+ * NOTE: Uses comp->lock and comp->messages_lock */
+OMX_ERRORTYPE
+gst_omx_port_use_dynamic_buffers (GstOMXPort * port)
+{
+  OMX_ERRORTYPE err;
+  GList *buffers = NULL;
+  guint i, n;
+
+  g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
+
+  n = port->port_def.nBufferCountActual;
+  for (i = 0; i < port->port_def.nBufferCountActual; i++)
+    /* Pass NULL to UseBuffer() as the buffer is dynamic and so its payload
+     * will be set each time before being passed to OMX. */
+    buffers = g_list_prepend (buffers, GUINT_TO_POINTER (NULL));
+
+  g_mutex_lock (&port->comp->lock);
+  err = gst_omx_port_allocate_buffers_unlocked (port, buffers, NULL, n);
+  port->allocation = GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC;
+  g_mutex_unlock (&port->comp->lock);
+
+  return err;
+}
+
+/* gst_omx_buffer_map_* methods are used in dynamic buffer mode to map
+ * a frame/memory/buffer and update @buffer so its pBuffer points to the
+ * mapped data. It also ensures that the input will stay alive until
+ * gst_omx_buffer_unmap() is called.
+ * This is used in OMX 1.2.0 dynamic allocation mode so an OMX component can
+ * safely process @buffer's content without having to copy it.
+ * The input will be automatically unmapped when @buffer is released by OMX.
+ */
+gboolean
+gst_omx_buffer_map_frame (GstOMXBuffer * buffer, GstBuffer * input,
+    GstVideoInfo * info)
+{
+  g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_val_if_fail (!buffer->input_frame_mapped, FALSE);
+  g_return_val_if_fail (!buffer->input_mem, FALSE);
+  g_return_val_if_fail (!buffer->input_buffer, FALSE);
+
+  if (!gst_video_frame_map (&buffer->input_frame, info, input, GST_MAP_READ))
+    return FALSE;
+
+  buffer->input_frame_mapped = TRUE;
+  buffer->omx_buf->pBuffer =
+      GST_VIDEO_FRAME_PLANE_DATA (&buffer->input_frame, 0);
+  buffer->omx_buf->nAllocLen = gst_buffer_get_size (input);
+  buffer->omx_buf->nFilledLen = buffer->omx_buf->nAllocLen;
+
+  return TRUE;
+}
+
+gboolean
+gst_omx_buffer_map_memory (GstOMXBuffer * buffer, GstMemory * mem)
+{
+  g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_val_if_fail (mem != NULL, FALSE);
+  g_return_val_if_fail (!buffer->input_frame_mapped, FALSE);
+  g_return_val_if_fail (!buffer->input_mem, FALSE);
+  g_return_val_if_fail (!buffer->input_buffer, FALSE);
+
+  if (!gst_memory_map (mem, &buffer->map, GST_MAP_READ))
+    return FALSE;
+
+  buffer->input_mem = gst_memory_ref (mem);
+  buffer->omx_buf->pBuffer = buffer->map.data;
+  buffer->omx_buf->nAllocLen = buffer->map.size;
+  buffer->omx_buf->nFilledLen = buffer->omx_buf->nAllocLen;
+
+  return TRUE;
+}
+
+gboolean
+gst_omx_buffer_map_buffer (GstOMXBuffer * buffer, GstBuffer * input)
+{
+  g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_val_if_fail (input != NULL, FALSE);
+  g_return_val_if_fail (!buffer->input_frame_mapped, FALSE);
+  g_return_val_if_fail (!buffer->input_mem, FALSE);
+  g_return_val_if_fail (!buffer->input_buffer, FALSE);
+
+  if (!gst_buffer_map (input, &buffer->map, GST_MAP_READ))
+    return FALSE;
+
+  buffer->input_buffer = gst_buffer_ref (input);
+  buffer->omx_buf->pBuffer = buffer->map.data;
+  buffer->omx_buf->nAllocLen = buffer->map.size;
+  buffer->omx_buf->nFilledLen = buffer->omx_buf->nAllocLen;
+
+  return TRUE;
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
