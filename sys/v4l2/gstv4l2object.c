@@ -3552,9 +3552,16 @@ invalid_caps:
   }
 try_fmt_failed:
   {
-    if (errno == EBUSY) {
-      GST_V4L2_ERROR (error, RESOURCE, BUSY,
-          (_("Device '%s' is busy"), v4l2object->videodev),
+    if (errno == EINVAL) {
+      GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
+          (_("Device '%s' has no supported format"), v4l2object->videodev),
+          ("Call to TRY_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
+              GST_FOURCC_ARGS (pixelformat), width, height,
+              g_strerror (errno)));
+    } else {
+      GST_V4L2_ERROR (error, RESOURCE, FAILED,
+          (_("Device '%s' failed during initialization"),
+              v4l2object->videodev),
           ("Call to TRY_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
               GST_FOURCC_ARGS (pixelformat), width, height,
               g_strerror (errno)));
@@ -3569,10 +3576,16 @@ set_fmt_failed:
           ("Call to S_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
               GST_FOURCC_ARGS (pixelformat), width, height,
               g_strerror (errno)));
-    } else {
+    } else if (errno == EINVAL) {
       GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
-          (_("Device '%s' cannot capture at %dx%d"),
-              v4l2object->videodev, width, height),
+          (_("Device '%s' has no supported format"), v4l2object->videodev),
+          ("Call to S_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
+              GST_FOURCC_ARGS (pixelformat), width, height,
+              g_strerror (errno)));
+    } else {
+      GST_V4L2_ERROR (error, RESOURCE, FAILED,
+          (_("Device '%s' failed during initialization"),
+              v4l2object->videodev),
           ("Call to S_FMT failed for %" GST_FOURCC_FORMAT " @ %dx%d: %s",
               GST_FOURCC_ARGS (pixelformat), width, height,
               g_strerror (errno)));
