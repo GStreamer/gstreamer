@@ -2077,6 +2077,7 @@ gst_v4l2_object_try_fmt (GstV4l2Object * v4l2object,
     r = v4l2_ioctl (fd, VIDIOC_S_FMT, &fmt);
   }
   memcpy (try_fmt, &fmt, sizeof (fmt));
+
   return r;
 
 error:
@@ -2413,6 +2414,7 @@ return_data:
   s = gst_structure_copy (template);
   gst_structure_set (s, "width", G_TYPE_INT, (gint) width,
       "height", G_TYPE_INT, (gint) height, NULL);
+
   gst_v4l2_object_add_aspect_ratio (v4l2object, s);
   gst_v4l2_object_add_interlace_mode (v4l2object, s, width, height,
       pixelformat);
@@ -3685,6 +3687,8 @@ gboolean
 gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps,
     GstV4l2Error * error)
 {
+  GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %" GST_PTR_FORMAT,
+      caps);
   return gst_v4l2_object_set_format_full (v4l2object, caps, FALSE, error);
 }
 
@@ -3692,6 +3696,8 @@ gboolean
 gst_v4l2_object_try_format (GstV4l2Object * v4l2object, GstCaps * caps,
     GstV4l2Error * error)
 {
+  GST_DEBUG_OBJECT (v4l2object->element, "Trying format %" GST_PTR_FORMAT,
+      caps);
   return gst_v4l2_object_set_format_full (v4l2object, caps, TRUE, error);
 }
 
