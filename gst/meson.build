@@ -196,10 +196,11 @@ gst_version_h = configure_file(input : 'gstversion.h.in',
   install_dir : 'include/gstreamer-1.0/gst',
   configuration : version_cdata)
 
-gst_enums = gnome.mkenums('gstenumtypes',
+gst_enums = gnome.mkenums_simple('gstenumtypes',
   sources : gst_headers,
-  h_template : 'gstenumtypes.h.template',
-  c_template : 'gstenumtypes.c.template',
+  header_prefix : '#include <gst/gstconfig.h>',
+  body_prefix : '#include "gst/gst_private.h"\n#include <gst/gst.h>',
+  decorator : 'GST_API',
   install_header : true,
   install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst'))
 
