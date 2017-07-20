@@ -1301,7 +1301,7 @@ calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
     }
     GST_LOG_OBJECT (mq,
         "queue %d , sinktime:%" GST_STIME_FORMAT " low:%" GST_STIME_FORMAT
-        " high:%" GST_STIME_FORMAT, sq->id,
+        " high:%" GST_STIME_FORMAT, oq->id,
         GST_STIME_ARGS (oq->cached_sinktime), GST_STIME_ARGS (low),
         GST_STIME_ARGS (high));
   }
@@ -1310,7 +1310,8 @@ calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
     interleave = high - low;
     /* Padding of interleave and minimum value */
     interleave = (150 * interleave / 100) + mq->min_interleave_time;
-    sq->interleave = interleave;
+    if (sq)
+      sq->interleave = interleave;
 
     interleave = MAX (interleave, other_interleave);
 
