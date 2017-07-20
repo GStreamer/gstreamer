@@ -3404,6 +3404,10 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   if (is_mplane && format.fmt.pix_mp.num_planes != n_v4l_planes)
     goto invalid_planes;
 
+  if ((is_mplane && format.fmt.pix_mp.field != field)
+      || format.fmt.pix.field != field)
+    goto invalid_field;
+
   if (try_only)                 /* good enough for trying only */
     return TRUE;
 
@@ -3599,6 +3603,23 @@ invalid_planes:
               v4l2object->videodev),
           ("Device wants %d planes", format.fmt.pix_mp.num_planes));
     }
+    return FALSE;
+  }
+invalid_field:
+  {
+    enum v4l2_field wanted_field;
+
+    if (is_mplane)
+      wanted_field = format.fmt.pix_mp.field;
+    else
+      wanted_field = format.fmt.pix.field;
+
+    GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
+        (_("Device '%s' does not support %s interlacing"),
+            v4l2object->videodev,
+            field == V4L2_FIELD_NONE ? "progressive" : "interleaved"),
+        ("Device wants %s interlacing",
+            wanted_field == V4L2_FIELD_NONE ? "progressive" : "interleaved"));
     return FALSE;
   }
 get_parm_failed:
