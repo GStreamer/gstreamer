@@ -9,7 +9,7 @@ operating systems is. The following is mostly aimed at Linux/unix setups.
 
 GStreamer uses the `pkg-config` utility to provide applications with the right
 compiler and linker flags. `pkg-config` is a standard build tool that is widely
-used unix systems to locate libraries and retrieve build settings, so if you're
+used in unix systems to locate libraries and retrieve build settings, so if you're
 familiar with using it already then you're basically set.
 
 If you're not familiar with `pkg-config` to compile and link a small
@@ -73,12 +73,13 @@ environment is used.
 
 ## How can I use GConf to get the system-wide defaults?
 
-For GNOME applications it's a good idea to use `GConf` to find the
-default ways of outputting audio and video. You can do this by using the
-'gconfaudiosink' and 'gconfvideosink' elements for audio and video
-output. They will take care of everything GConf-related for you and
-automatically use the outputs that the user configured. If you are using
-gconfaudiosink, your application should set the 'profile' property.
+<!-- FIXME: Consider removing. GConf was deprecated half a decade ago -->
+
+GStreamer used to have GConf-based elements but these were removed in 2011,
+after `GConf` itself was deprecated in favor of `GSettings`.
+
+If what you want is automatic audio/video sinks, consider using the
+`autovideosink` and `autoaudiosink` elements.
 
 ## How do I debug these funny shell scripts that libtool makes?
 
