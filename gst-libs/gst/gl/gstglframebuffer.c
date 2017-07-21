@@ -171,9 +171,9 @@ gst_gl_framebuffer_finalize (GObject * object)
  * gst_gl_framebuffer_new:
  * @context: a #GstGLContext
  *
- * Returns: a new #GstGLFramebuffer
+ * Returns: (transfer full): a new #GstGLFramebuffer
  *
- * Since: (transfer full): 1.10
+ * Since: 1.10
  */
 GstGLFramebuffer *
 gst_gl_framebuffer_new (GstGLContext * context)
