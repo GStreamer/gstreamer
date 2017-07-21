@@ -56,9 +56,9 @@ MIDI playback is provided by plugins such as `midiparse`, `fluiddec`,
 
 ## Does GStreamer depend on GNOME or GTK+?
 
-No, it's just that many of the applications developed for GStreamer happen to
-be GNOME or GTK+ applications, including some of our sample applications. There
-are just as many applications that use the Qt toolkit or that are written for
-Mac OS/X, Windows, Android or iOS. We aim to provide an API that is toolkit
-agnostic, so that GStreamer can be used from any toolkit, desktop environment
-or operating system.
+No, it's just that many GStreamer applications, including some of our sample
+ones, happen to be GNOME or GTK+ applications, but there are just as many
+using the Qt toolkit or written for Mac OS/X, Windows, Android or iOS.
+
+We aim to provide an API that is toolkit-agnostic, so that GStreamer can be used
+from any toolkit, desktop environment or operating system.
