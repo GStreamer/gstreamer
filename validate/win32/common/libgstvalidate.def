@@ -67,10 +67,12 @@ EXPORTS
 	gst_validate_monitor_get_type
 	gst_validate_monitor_set_media_descriptor
 	gst_validate_monitor_setup
+	gst_validate_object_set_property
 	gst_validate_override_buffer_handler
 	gst_validate_override_buffer_probe_handler
 	gst_validate_override_can_attach
 	gst_validate_override_change_severity
+	gst_validate_override_element_added_handler
 	gst_validate_override_event_handler
 	gst_validate_override_get_severity
 	gst_validate_override_get_type
@@ -86,6 +88,7 @@ EXPORTS
 	gst_validate_override_registry_preload
 	gst_validate_override_set_buffer_handler
 	gst_validate_override_set_buffer_probe_handler
+	gst_validate_override_set_element_added_handler
 	gst_validate_override_set_event_handler
 	gst_validate_override_set_getcaps_handler
 	gst_validate_override_set_query_handler
