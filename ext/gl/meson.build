@@ -89,10 +89,14 @@ if build_gstgl and gstgl_dep.found()
     endif
   endif
 
-  if false # have cocoa
-    opengl_sources += [
-      'caopengllayersink.m',
-    ]
+  if glconf.has('GST_GL_HAVE_WINDOW_COCOA')
+    quartzcore_dep = dependency('QuartzCore', required : false)
+    if quartzcore_dep.found() # have cocoa
+      opengl_sources += [
+        'caopengllayersink.m',
+      ]
+      optional_deps += quartzcore_dep
+    endif
   endif
 
   if x11_dep.found()

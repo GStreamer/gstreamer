@@ -16,6 +16,7 @@ else
 endif
 
 have_cxx = add_languages('cpp', required : false)
+have_objc = add_languages('objc', required : false)
 
 glib_req = '>= 2.40.0'
 orc_req = '>= 0.4.24'
