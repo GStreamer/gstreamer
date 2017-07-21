@@ -377,17 +377,17 @@ static gboolean
 gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
-  gboolean ret;
 
-  ret = GST_VIDEO_ENCODER_CLASS (parent_class)->negotiate (encoder);
+  if (!GST_VIDEO_ENCODER_CLASS (parent_class)->negotiate (encoder))
+    return FALSE;
 
   if (!gst_buffer_pool_set_active (GST_BUFFER_POOL (self->v4l2capture->pool),
           TRUE)) {
     GST_WARNING_OBJECT (self, "Could not activate capture buffer pool.");
-    ret = FALSE;
+    return FALSE;
   }
 
-  return ret;
+  return TRUE;
 }
 
 static GstVideoCodecFrame *
