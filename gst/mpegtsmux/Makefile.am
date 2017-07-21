@@ -10,6 +10,7 @@ libgstmpegtsmux_la_SOURCES = \
 	mpegtsmux_jpeg2000.c
 
 libgstmpegtsmux_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+			    -I$(top_srcdir) \
 			    $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstmpegtsmux_la_LIBADD = $(top_builddir)/gst/mpegtsmux/tsmux/libtsmux.la \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ \
