@@ -31,12 +31,12 @@
 
 #define SAMPLE_FREQ 44100
 
-void *
-_memmem (const void *haystack, size_t hlen, const void *needle, size_t nlen)
+static const guint8 *
+_memmem (const guint8 * haystack, gsize hlen, const guint8 * needle, gsize nlen)
 {
+  const guint8 *p = haystack;
   int needle_first;
-  const void *p = haystack;
-  size_t plen = hlen;
+  gsize plen = hlen;
 
   if (!nlen)
     return NULL;
@@ -45,7 +45,7 @@ _memmem (const void *haystack, size_t hlen, const void *needle, size_t nlen)
 
   while (plen >= nlen && (p = memchr (p, needle_first, plen - nlen + 1))) {
     if (!memcmp (p, needle, nlen))
-      return (void *) p;
+      return (guint8 *) p;
 
     p++;
     plen = hlen - (p - haystack);
@@ -231,6 +231,8 @@ test_seek_FORMAT_TIME_by_sample (const gchar * fn, GList * seek_positions)
 
     buf = gst_sample_get_buffer (sample);
     gst_buffer_map (buf, &map, GST_MAP_READ);
+    GST_MEMDUMP ("answer", answer, answer_size);
+    GST_MEMDUMP ("buffer", map.data, map.size);
     found = _memmem (answer, answer_size, map.data, map.size);
     gst_buffer_unmap (buf, &map);
 
