@@ -183,9 +183,9 @@ struct TsMuxStream {
   /* optional fixed PES size for stream type */
   guint16 pes_payload_size;
   /* current PES payload size being written */
-  guint16 cur_pes_payload_size;
+  guint32 cur_pes_payload_size;
   /* ... of which already this much written */
-  guint16 pes_bytes_written;
+  guint32 pes_bytes_written;
 
   /* PTS/DTS to write if the flags in the packet info are set */
   /* in MPEG PTS clock time */
