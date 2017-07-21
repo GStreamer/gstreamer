@@ -1399,8 +1399,10 @@ _save_encoding_profiles (GESXmlFormatter * self, GString * str,
   const gchar *profname, *profdesc, *profpreset, *proftype, *profpresetname;
 
   const GList *tmp;
+  GList *profiles = g_list_reverse (g_list_copy ((GList *)
+          ges_project_list_encoding_profiles (project)));
 
-  for (tmp = ges_project_list_encoding_profiles (project); tmp; tmp = tmp->next) {
+  for (tmp = profiles; tmp; tmp = tmp->next) {
     GstEncodingProfile *prof = GST_ENCODING_PROFILE (tmp->data);
 
     profname = gst_encoding_profile_get_name (prof);
@@ -1447,6 +1449,7 @@ _save_encoding_profiles (GESXmlFormatter * self, GString * str,
     append_escaped (str,
         g_markup_printf_escaped ("      </encoding-profile>\n"));
   }
+  g_list_free (profiles);
 }
 
 static GString *
