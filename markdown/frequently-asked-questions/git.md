@@ -19,7 +19,7 @@ may also be interested in "gst-plugins-ugly", "gst-plugins-bad" and
 To check out the latest git version of the core and the basic modules,
 use
 
-``` 
+```
 for module in gstreamer gst-plugins-base gst-plugins-good; do
   git clone git://anongit.freedesktop.org/git/gstreamer/$module ;
 done
@@ -91,9 +91,10 @@ You can do three things to fix this :
 
 3.  figure out what prefix libtool has been installed to and point
     aclocal to the right location by running
-    
-        export ACLOCAL_FLAGS="-I $(prefix)/share/aclocal"
-    
+
+```
+    export ACLOCAL_FLAGS="-I $(prefix)/share/aclocal"
+```
     where you replace prefix with the prefix where libtool was
     installed.
 
@@ -116,4 +117,4 @@ it's the right thing to do, you can run:
 make ERROR_CFLAGS=""
 ```
 
-to clear the CFLAGS for error checking.
+to clear the `CFLAGS` for error checking.
