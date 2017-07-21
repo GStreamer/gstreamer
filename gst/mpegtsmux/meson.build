@@ -3,6 +3,7 @@ tsmux_sources = [
   'mpegtsmux_aac.c',
   'mpegtsmux_opus.c',
   'mpegtsmux_ttxt.c',
+  'mpegtsmux_jpeg2000.c',
   'tsmux/tsmux.c',
   'tsmux/tsmuxstream.c',
 ]
