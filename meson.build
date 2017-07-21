@@ -113,7 +113,6 @@ check_functions = [
 # check token HAVE_APPLE_MEDIA
 # check token HAVE_ASSRENDER
 # check token HAVE_AVC
-# check token HAVE_AVFOUNDATION
 # check token HAVE_BLUEZ
 # check token HAVE_BZ2
 # check token HAVE_CFLOCALECOPYCURRENT
@@ -168,7 +167,6 @@ check_functions = [
 # check token HAVE_GUDEV
 # check token HAVE_HLS
 # check token HAVE_ICONV
-# check token HAVE_IOS
 # check token HAVE_JPEG
 # check token HAVE_KATE
 # check token HAVE_LADSPA
@@ -234,7 +232,6 @@ check_functions = [
 # check token HAVE_VCD
 # check token HAVE_VDPAU
 # check token HAVE_VIDEOTOOLBOX
-# check token HAVE_VIDEOTOOLBOX_10_9_6
 # check token HAVE_VOAACENC
 # check token HAVE_VOAMRWBENC
 # check token HAVE_WASAPI
@@ -432,6 +429,29 @@ if host_machine.system() == 'windows'
   winsock2 = [cc.find_library('ws2_32')]
 else
   winsock2 = []
+endif
+
+if host_machine.system() == 'darwin'
+  add_languages('objc')
+  mobilecoreservices_dep = dependency('MobileCoreServices', required : false)
+  if mobilecoreservices_dep.found()
+    cdata.set('HAVE_IOS', 1)
+  endif
+
+  avfoundation_dep = dependency('AVFoundation', required : false)
+  if avfoundation_dep.found()
+      cdata.set('HAVE_AVFOUNDATION', 1)
+  endif
+
+  videotoolbox_dep = dependency('VideoToolbox', required : false)
+  if videotoolbox_dep.found()
+      cdata.set('HAVE_VIDEOTOOLBOX', 1)
+  endif
+
+#  FIXME: framework.version() returns 'unknown'
+#  if videotoolbox_dep.version().version_compare('>=10.9.6')
+#    cdata.set('HAVE_VIDEOTOOLBOX_10_9_6', 1)
+#  endif
 endif
 
 have_orcc = false

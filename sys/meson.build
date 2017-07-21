@@ -2,7 +2,7 @@
 #subdir('acmenc')
 #subdir('acmmp3dec')
 #subdir('androidmedia')
-#subdir('applemedia')
+subdir('applemedia')
 subdir('bluez')
 subdir('d3dvideosink')
 subdir('decklink')
