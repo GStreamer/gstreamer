@@ -22,7 +22,6 @@
 # include "config.h"
 #endif
 
-#define _GNU_SOURCE             /* for memmem */
 #include <string.h>
 
 #include <gst/gst.h>
@@ -209,7 +208,10 @@ test_seek_FORMAT_TIME_by_sample (const gchar * fn, GList * seek_positions)
 
     buf = gst_sample_get_buffer (sample);
     gst_buffer_map (buf, &map, GST_MAP_READ);
-    found = memmem (answer, answer_size, map.data, map.size);
+    if (map.size > answer_size)
+      found = NULL;
+    else
+      found = g_strstr_len (answer, answer_size, (gchar *) map.data);
     gst_buffer_unmap (buf, &map);
 
     g_assert (found != NULL);
