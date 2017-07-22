@@ -3424,10 +3424,13 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   gst_v4l2_object_get_colorspace (&format, &info.colorimetry);
 
   s = gst_caps_get_structure (caps, 0);
-  if (gst_structure_has_field (s, "colorimetry") &&
-      !gst_video_colorimetry_matches (&info.colorimetry,
-          gst_structure_get_string (s, "colorimetry")))
-    goto invalid_colorimetry;
+  if (gst_structure_has_field (s, "colorimetry")) {
+    GstVideoColorimetry ci;
+    if (!gst_video_colorimetry_from_string (&ci,
+            gst_structure_get_string (s, "colorimetry"))
+        || !gst_video_colorimetry_is_equal (&ci, &info.colorimetry))
+      goto invalid_colorimetry;
+  }
 
   /* In case we have skipped the try_fmt probes, we'll need to set the
    * colorimetry and interlace-mode back into the caps. */
