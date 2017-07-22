@@ -50,9 +50,6 @@ typedef struct _GstAudioMixerPadClass GstAudioMixerPadClass;
  */
 struct _GstAudioMixer {
   GstAudioAggregator element;
-
-  /* target caps (set via property) */
-  GstCaps *filter_caps;
 };
 
 struct _GstAudioMixerClass {
@@ -69,7 +66,7 @@ GType    gst_audiomixer_get_type (void);
 #define GST_AUDIO_MIXER_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_MIXER_PAD,GstAudioMixerPadClass))
 
 struct _GstAudioMixerPad {
-  GstAudioAggregatorPad parent;
+  GstAudioAggregatorConvertPad parent;
 
   gdouble volume;
   gint volume_i32;
@@ -79,7 +76,7 @@ struct _GstAudioMixerPad {
 };
 
 struct _GstAudioMixerPadClass {
-  GstAudioAggregatorPadClass parent_class;
+  GstAudioAggregatorConvertPadClass parent_class;
 };
 
 GType gst_audiomixer_pad_get_type (void);

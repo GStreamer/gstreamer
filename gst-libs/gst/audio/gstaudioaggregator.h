@@ -67,7 +67,7 @@ typedef struct _GstAudioAggregatorPadPrivate GstAudioAggregatorPadPrivate;
  * @parent: The parent #GstAggregatorPad
  * @info: The audio info for this pad set from the incoming caps
  *
- * The implementation the GstPad to use with #GstAudioAggregator
+ * The default implementation of GstPad used with #GstAudioAggregator
  */
 struct _GstAudioAggregatorPad
 {
@@ -86,7 +86,7 @@ struct _GstAudioAggregatorPad
  *
  */
 struct _GstAudioAggregatorPadClass
-{
+  {
   GstAggregatorPadClass   parent_class;
 
   /*< private >*/
@@ -95,6 +95,54 @@ struct _GstAudioAggregatorPadClass
 
 GST_EXPORT
 GType gst_audio_aggregator_pad_get_type           (void);
+
+#define GST_TYPE_AUDIO_AGGREGATOR_CONVERT_PAD            (gst_audio_aggregator_convert_pad_get_type())
+#define GST_AUDIO_AGGREGATOR_CONVERT_PAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_AGGREGATOR_CONVERT_PAD, GstAudioAggregatorConvertPad))
+#define GST_AUDIO_AGGREGATOR_CONVERT_PAD_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_AGGREGATOR_CONVERT_PAD, GstAudioAggregatorConvertPadClass))
+#define GST_AUDIO_AGGREGATOR_CONVERT_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_AUDIO_AGGREGATOR_CONVERT_PAD, GstAudioAggregatorConvertPadClass))
+#define GST_IS_AUDIO_AGGREGATOR_CONVERT_PAD(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_AGGREGATOR_CONVERT_PAD))
+#define GST_IS_AUDIO_AGGREGATOR_CONVERT_PAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_AGGREGATOR_CONVERT_PAD))
+
+/****************************
+ * GstAudioAggregatorPad Structs *
+ ***************************/
+
+typedef struct _GstAudioAggregatorConvertPad GstAudioAggregatorConvertPad;
+typedef struct _GstAudioAggregatorConvertPadClass GstAudioAggregatorConvertPadClass;
+typedef struct _GstAudioAggregatorConvertPadPrivate GstAudioAggregatorConvertPadPrivate;
+
+/**
+ * GstAudioAggregatorConvertPad:
+ * @parent: The parent #GstAudioAggregatorPad
+ *
+ * An implementation of GstPad that can be used with #GstAudioAggregator.
+ *
+ * See #GstAudioAggregator for more details.
+ */
+struct _GstAudioAggregatorConvertPad
+{
+  GstAudioAggregatorPad                  parent;
+
+  /*< private >*/
+  GstAudioAggregatorConvertPadPrivate   *  priv;
+
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+/**
+ * GstAudioAggregatorConvertPadClass:
+ *
+ */
+struct _GstAudioAggregatorConvertPadClass
+{
+  GstAudioAggregatorPadClass   parent_class;
+
+  /*< private >*/
+  gpointer      _gst_reserved[GST_PADDING];
+};
+
+GST_EXPORT
+GType gst_audio_aggregator_convert_pad_get_type           (void);
 
 /**************************
  * GstAudioAggregator API *
@@ -137,6 +185,10 @@ struct _GstAudioAggregator
  *  buffer.  The in_offset and out_offset are in "frames", which is
  *  the size of a sample times the number of channels. Returns TRUE if
  *  any non-silence was added to the buffer
+ * @convert_buffer: Convert a buffer from one format to another. The pad
+ *  is either a sinkpad, when converting an input buffer, or the source pad,
+ *  when converting the output buffer after a downstream format change is
+ *  requested.
  */
 struct _GstAudioAggregatorClass {
   GstAggregatorClass   parent_class;
@@ -146,6 +198,11 @@ struct _GstAudioAggregatorClass {
   gboolean (* aggregate_one_buffer) (GstAudioAggregator * aagg,
       GstAudioAggregatorPad * pad, GstBuffer * inbuf, guint in_offset,
       GstBuffer * outbuf, guint out_offset, guint num_frames);
+  GstBuffer * (* convert_buffer) (GstAudioAggregator *aagg,
+                                  GstPad * pad,
+                                  GstAudioInfo *in_info,
+                                  GstAudioInfo *out_info,
+                                  GstBuffer * buffer);
 
   /*< private >*/
   gpointer          _gst_reserved[GST_PADDING_LARGE];
@@ -162,6 +219,9 @@ GST_EXPORT
 void  gst_audio_aggregator_set_sink_caps (GstAudioAggregator    * aagg,
                                           GstAudioAggregatorPad * pad,
                                           GstCaps               * caps);
+
+GST_EXPORT
+void gst_audio_aggregator_class_perform_conversion (GstAudioAggregatorClass * klass);
 
 G_END_DECLS
 
