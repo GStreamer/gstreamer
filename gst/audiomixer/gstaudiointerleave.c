@@ -580,7 +580,7 @@ gst_audio_interleave_class_init (GstAudioInterleaveClass * klass)
   agg_class->negotiated_src_caps = gst_audio_interleave_negotiated_src_caps;
 
   aagg_class->aggregate_one_buffer = gst_audio_interleave_aggregate_one_buffer;
-
+  aagg_class->convert_buffer = NULL;
 
   /**
    * GstInterleave:channel-positions

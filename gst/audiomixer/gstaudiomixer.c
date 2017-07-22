@@ -31,12 +31,17 @@
  * Unlike the adder element audiomixer properly synchronises all input streams
  * and also handles live inputs such as capture sources or RTP properly.
  *
- * Caps negotiation is inherently racy with the audiomixer element. You can set
- * the "caps" property to force audiomixer to operate in a specific audio
- * format, sample rate and channel count. In this case you may also need
- * audioconvert and/or audioresample elements for each input stream before the
- * audiomixer element to make sure the input branch can produce the forced
- * format.
+ * The audiomixer element can accept any sort of raw audio data, it will
+ * be converted to the target format if necessary, with the exception
+ * of the sample rate, which has to be identical to either what downstream
+ * expects, or the sample rate of the first configured pad. Use a capsfilter
+ * after the audiomixer element if you want to precisely control the format
+ * that comes out of the audiomixer, which supports changing the format of
+ * its output while playing.
+ *
+ * If you want to control the manner in which incoming data gets converted,
+ * see the #GstAudioAggregatorPad:converter-config property, which will let
+ * you for example change the way in which channels may get remapped.
  *
  * The input pads are from a GstPad subclass and have additional
  * properties to mute each pad individually and set the volume:
@@ -89,7 +94,7 @@ enum
 };
 
 G_DEFINE_TYPE (GstAudioMixerPad, gst_audiomixer_pad,
-    GST_TYPE_AUDIO_AGGREGATOR_PAD);
+    GST_TYPE_AUDIO_AGGREGATOR_CONVERT_PAD);
 
 static void
 gst_audiomixer_pad_get_property (GObject * object, guint prop_id,
@@ -163,20 +168,19 @@ gst_audiomixer_pad_init (GstAudioMixerPad * pad)
 
 enum
 {
-  PROP_0,
-  PROP_FILTER_CAPS
+  PROP_0
 };
 
-/* elementfactory information */
+/* These are the formats we can mix natively */
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define CAPS \
   GST_AUDIO_CAPS_MAKE ("{ S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }") \
-  ", layout = (string) { interleaved, non-interleaved }"
+  ", layout = interleaved"
 #else
 #define CAPS \
   GST_AUDIO_CAPS_MAKE ("{ S32BE, U32BE, S16BE, U16BE, S8, U8, F32BE, F64BE }") \
-  ", layout = (string) { interleaved, non-interleaved }"
+  ", layout = interleaved"
 #endif
 
 static GstStaticPadTemplate gst_audiomixer_src_template =
@@ -186,12 +190,15 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (CAPS)
     );
 
+#define SINK_CAPS \
+  GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL) \
+      ", layout=interleaved")
+
 static GstStaticPadTemplate gst_audiomixer_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS (CAPS)
-    );
+    SINK_CAPS);
 
 static void gst_audiomixer_child_proxy_init (gpointer g_iface,
     gpointer iface_data);
@@ -201,14 +208,6 @@ G_DEFINE_TYPE_WITH_CODE (GstAudioMixer, gst_audiomixer,
     GST_TYPE_AUDIO_AGGREGATOR, G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_audiomixer_child_proxy_init));
 
-static void gst_audiomixer_dispose (GObject * object);
-static void gst_audiomixer_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_audiomixer_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
-static gboolean gst_audiomixer_setcaps (GstAudioMixer * audiomixer,
-    GstPad * pad, GstCaps * caps);
 static GstPad *gst_audiomixer_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * req_name, const GstCaps * caps);
 static void gst_audiomixer_release_pad (GstElement * element, GstPad * pad);
@@ -219,286 +218,11 @@ gst_audiomixer_aggregate_one_buffer (GstAudioAggregator * aagg,
     GstBuffer * outbuf, guint out_offset, guint num_samples);
 
 
-/* we can only accept caps that we and downstream can handle.
- * if we have filtercaps set, use those to constrain the target caps.
- */
-static GstCaps *
-gst_audiomixer_sink_getcaps (GstAggregator * agg, GstPad * pad,
-    GstCaps * filter)
-{
-  GstAudioAggregator *aagg;
-  GstAudioMixer *audiomixer;
-  GstCaps *result, *peercaps, *current_caps, *filter_caps;
-  GstStructure *s;
-  gint i, n;
-
-  audiomixer = GST_AUDIO_MIXER (agg);
-  aagg = GST_AUDIO_AGGREGATOR (agg);
-
-  GST_OBJECT_LOCK (audiomixer);
-  /* take filter */
-  if ((filter_caps = audiomixer->filter_caps)) {
-    if (filter)
-      filter_caps =
-          gst_caps_intersect_full (filter, filter_caps,
-          GST_CAPS_INTERSECT_FIRST);
-    else
-      gst_caps_ref (filter_caps);
-  } else {
-    filter_caps = filter ? gst_caps_ref (filter) : NULL;
-  }
-  GST_OBJECT_UNLOCK (audiomixer);
-
-  if (filter_caps && gst_caps_is_empty (filter_caps)) {
-    GST_WARNING_OBJECT (pad, "Empty filter caps");
-    return filter_caps;
-  }
-
-  /* get the downstream possible caps */
-  peercaps = gst_pad_peer_query_caps (agg->srcpad, filter_caps);
-
-  /* get the allowed caps on this sinkpad */
-  GST_OBJECT_LOCK (audiomixer);
-  current_caps = aagg->current_caps ? gst_caps_ref (aagg->current_caps) : NULL;
-  if (current_caps == NULL) {
-    current_caps = gst_pad_get_pad_template_caps (pad);
-    if (!current_caps)
-      current_caps = gst_caps_new_any ();
-  }
-  GST_OBJECT_UNLOCK (audiomixer);
-
-  if (peercaps) {
-    /* if the peer has caps, intersect */
-    GST_DEBUG_OBJECT (audiomixer, "intersecting peer and our caps");
-    result =
-        gst_caps_intersect_full (peercaps, current_caps,
-        GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (peercaps);
-    gst_caps_unref (current_caps);
-  } else {
-    /* the peer has no caps (or there is no peer), just use the allowed caps
-     * of this sinkpad. */
-    /* restrict with filter-caps if any */
-    if (filter_caps) {
-      GST_DEBUG_OBJECT (audiomixer, "no peer caps, using filtered caps");
-      result =
-          gst_caps_intersect_full (filter_caps, current_caps,
-          GST_CAPS_INTERSECT_FIRST);
-      gst_caps_unref (current_caps);
-    } else {
-      GST_DEBUG_OBJECT (audiomixer, "no peer caps, using our caps");
-      result = current_caps;
-    }
-  }
-
-  result = gst_caps_make_writable (result);
-
-  n = gst_caps_get_size (result);
-  for (i = 0; i < n; i++) {
-    GstStructure *sref;
-
-    s = gst_caps_get_structure (result, i);
-    sref = gst_structure_copy (s);
-    gst_structure_set (sref, "channels", GST_TYPE_INT_RANGE, 0, 2, NULL);
-    if (gst_structure_is_subset (s, sref)) {
-      /* This field is irrelevant when in mono or stereo */
-      gst_structure_remove_field (s, "channel-mask");
-    }
-    gst_structure_free (sref);
-  }
-
-  if (filter_caps)
-    gst_caps_unref (filter_caps);
-
-  GST_LOG_OBJECT (audiomixer, "getting caps on pad %p,%s to %" GST_PTR_FORMAT,
-      pad, GST_PAD_NAME (pad), result);
-
-  return result;
-}
-
-static gboolean
-gst_audiomixer_sink_query (GstAggregator * agg, GstAggregatorPad * aggpad,
-    GstQuery * query)
-{
-  gboolean res = FALSE;
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CAPS:
-    {
-      GstCaps *filter, *caps;
-
-      gst_query_parse_caps (query, &filter);
-      caps = gst_audiomixer_sink_getcaps (agg, GST_PAD (aggpad), filter);
-      gst_query_set_caps_result (query, caps);
-      gst_caps_unref (caps);
-      res = TRUE;
-      break;
-    }
-    default:
-      res =
-          GST_AGGREGATOR_CLASS (parent_class)->sink_query (agg, aggpad, query);
-      break;
-  }
-
-  return res;
-}
-
-/* the first caps we receive on any of the sinkpads will define the caps for all
- * the other sinkpads because we can only mix streams with the same caps.
- */
-static gboolean
-gst_audiomixer_setcaps (GstAudioMixer * audiomixer, GstPad * pad,
-    GstCaps * orig_caps)
-{
-  GstAggregator *agg = GST_AGGREGATOR (audiomixer);
-  GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (audiomixer);
-  GstCaps *caps;
-  GstAudioInfo info;
-  GstStructure *s;
-  gint channels = 0;
-
-  caps = gst_caps_copy (orig_caps);
-
-  s = gst_caps_get_structure (caps, 0);
-  if (gst_structure_get_int (s, "channels", &channels))
-    if (channels <= 2)
-      gst_structure_remove_field (s, "channel-mask");
-
-  if (!gst_audio_info_from_caps (&info, caps))
-    goto invalid_format;
-
-  if (channels == 1) {
-    GstCaps *filter;
-    GstCaps *downstream_caps;
-
-    if (audiomixer->filter_caps)
-      filter = gst_caps_intersect_full (caps, audiomixer->filter_caps,
-          GST_CAPS_INTERSECT_FIRST);
-    else
-      filter = gst_caps_ref (caps);
-
-    downstream_caps = gst_pad_peer_query_caps (agg->srcpad, filter);
-    gst_caps_unref (filter);
-
-    if (downstream_caps) {
-      gst_caps_unref (caps);
-      caps = downstream_caps;
-
-      if (gst_caps_is_empty (caps)) {
-        gst_caps_unref (caps);
-        return FALSE;
-      }
-      caps = gst_caps_fixate (caps);
-    }
-  }
-
-  GST_OBJECT_LOCK (audiomixer);
-  /* don't allow reconfiguration for now; there's still a race between the
-   * different upstream threads doing query_caps + accept_caps + sending
-   * (possibly different) CAPS events, but there's not much we can do about
-   * that, upstream needs to deal with it. */
-  if (aagg->current_caps != NULL) {
-    if (gst_audio_info_is_equal (&info, &aagg->info)) {
-      GST_OBJECT_UNLOCK (audiomixer);
-      gst_caps_unref (caps);
-      gst_audio_aggregator_set_sink_caps (aagg, GST_AUDIO_AGGREGATOR_PAD (pad),
-          orig_caps);
-      return TRUE;
-    } else {
-      GST_DEBUG_OBJECT (pad, "got input caps %" GST_PTR_FORMAT ", but "
-          "current caps are %" GST_PTR_FORMAT, caps, aagg->current_caps);
-      GST_OBJECT_UNLOCK (audiomixer);
-      gst_pad_push_event (pad, gst_event_new_reconfigure ());
-      gst_caps_unref (caps);
-      return FALSE;
-    }
-  } else {
-    gst_caps_replace (&aagg->current_caps, caps);
-    aagg->info = info;
-    gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (agg));
-  }
-  GST_OBJECT_UNLOCK (audiomixer);
-
-  gst_audio_aggregator_set_sink_caps (aagg, GST_AUDIO_AGGREGATOR_PAD (pad),
-      orig_caps);
-
-  GST_INFO_OBJECT (pad, "handle caps change to %" GST_PTR_FORMAT, caps);
-
-  gst_caps_unref (caps);
-
-  return TRUE;
-
-  /* ERRORS */
-invalid_format:
-  {
-    gst_caps_unref (caps);
-    GST_WARNING_OBJECT (audiomixer, "invalid format set as caps");
-    return FALSE;
-  }
-}
-
-static GstFlowReturn
-gst_audiomixer_update_src_caps (GstAggregator * agg, GstCaps * caps,
-    GstCaps ** ret)
-{
-  GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (agg);
-
-  if (aagg->current_caps == NULL)
-    return GST_AGGREGATOR_FLOW_NEED_DATA;
-
-  *ret = gst_caps_ref (aagg->current_caps);
-
-  return GST_FLOW_OK;
-}
-
-static gboolean
-gst_audiomixer_sink_event (GstAggregator * agg, GstAggregatorPad * aggpad,
-    GstEvent * event)
-{
-  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (agg);
-  gboolean res = TRUE;
-
-  GST_DEBUG_OBJECT (aggpad, "Got %s event on sink pad",
-      GST_EVENT_TYPE_NAME (event));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
-      res = gst_audiomixer_setcaps (audiomixer, GST_PAD_CAST (aggpad), caps);
-      gst_event_unref (event);
-      event = NULL;
-      break;
-    }
-    default:
-      break;
-  }
-
-  if (event != NULL)
-    return GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, aggpad, event);
-
-  return res;
-}
-
 static void
 gst_audiomixer_class_init (GstAudioMixerClass * klass)
 {
-  GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-  GstAggregatorClass *agg_class = (GstAggregatorClass *) klass;
   GstAudioAggregatorClass *aagg_class = (GstAudioAggregatorClass *) klass;
-
-  gobject_class->set_property = gst_audiomixer_set_property;
-  gobject_class->get_property = gst_audiomixer_get_property;
-  gobject_class->dispose = gst_audiomixer_dispose;
-
-  g_object_class_install_property (gobject_class, PROP_FILTER_CAPS,
-      g_param_spec_boxed ("caps", "Target caps",
-          "Set target format for mixing (NULL means ANY). "
-          "Setting this property takes a reference to the supplied GstCaps "
-          "object", GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_audiomixer_src_template);
@@ -513,80 +237,12 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_audiomixer_release_pad);
 
-  agg_class->sink_query = GST_DEBUG_FUNCPTR (gst_audiomixer_sink_query);
-  agg_class->sink_event = GST_DEBUG_FUNCPTR (gst_audiomixer_sink_event);
-  agg_class->update_src_caps =
-      GST_DEBUG_FUNCPTR (gst_audiomixer_update_src_caps);
-
   aagg_class->aggregate_one_buffer = gst_audiomixer_aggregate_one_buffer;
 }
 
 static void
 gst_audiomixer_init (GstAudioMixer * audiomixer)
 {
-  audiomixer->filter_caps = NULL;
-}
-
-static void
-gst_audiomixer_dispose (GObject * object)
-{
-  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (object);
-
-  gst_caps_replace (&audiomixer->filter_caps, NULL);
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_audiomixer_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (object);
-
-  switch (prop_id) {
-    case PROP_FILTER_CAPS:{
-      GstCaps *new_caps = NULL;
-      GstCaps *old_caps;
-      const GstCaps *new_caps_val = gst_value_get_caps (value);
-
-      if (new_caps_val != NULL) {
-        new_caps = (GstCaps *) new_caps_val;
-        gst_caps_ref (new_caps);
-      }
-
-      GST_OBJECT_LOCK (audiomixer);
-      old_caps = audiomixer->filter_caps;
-      audiomixer->filter_caps = new_caps;
-      GST_OBJECT_UNLOCK (audiomixer);
-
-      if (old_caps)
-        gst_caps_unref (old_caps);
-
-      GST_DEBUG_OBJECT (audiomixer, "set new caps %" GST_PTR_FORMAT, new_caps);
-      break;
-    }
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_audiomixer_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstAudioMixer *audiomixer = GST_AUDIO_MIXER (object);
-
-  switch (prop_id) {
-    case PROP_FILTER_CAPS:
-      GST_OBJECT_LOCK (audiomixer);
-      gst_value_set_caps (value, audiomixer->filter_caps);
-      GST_OBJECT_UNLOCK (audiomixer);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static GstPad *
