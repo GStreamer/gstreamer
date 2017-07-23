@@ -1385,7 +1385,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
   GST_AUDIO_AGGREGATOR_UNLOCK (aagg);
 
-  ret = gst_aggregator_finish_buffer (agg, aagg->priv->current_buffer);
+  ret = gst_aggregator_finish_buffer (agg, outbuf);
   aagg->priv->current_buffer = NULL;
 
   GST_LOG_OBJECT (aagg, "pushed outbuf, result = %s", gst_flow_get_name (ret));
