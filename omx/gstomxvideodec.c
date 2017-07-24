@@ -2282,9 +2282,6 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   gst_buffer_replace (&self->codec_data, state->codec_data);
   self->input_state = gst_video_codec_state_ref (state);
 
-  if (!gst_omx_video_dec_enable (self))
-    return FALSE;
-
   self->downstream_flow_ret = GST_FLOW_OK;
   return TRUE;
 }
@@ -2404,6 +2401,12 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
       gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
       return GST_FLOW_OK;
     }
+
+    if (gst_omx_port_is_flushing (self->dec_out_port)) {
+      if (!gst_omx_video_dec_enable (self))
+        return FALSE;
+    }
+
     GST_DEBUG_OBJECT (self, "Starting task");
     gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (self),
         (GstTaskFunction) gst_omx_video_dec_loop, decoder, NULL);

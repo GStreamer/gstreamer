@@ -1283,9 +1283,6 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     gst_video_codec_state_unref (self->input_state);
   self->input_state = gst_video_codec_state_ref (state);
 
-  if (!gst_omx_video_enc_enable (self))
-    return FALSE;
-
   self->downstream_flow_ret = GST_FLOW_OK;
   return TRUE;
 }
@@ -1519,6 +1516,11 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
   }
 
   if (!self->started) {
+    if (gst_omx_port_is_flushing (self->enc_out_port)) {
+      if (!gst_omx_video_enc_enable (self))
+        return FALSE;
+    }
+
     GST_DEBUG_OBJECT (self, "Starting task");
     gst_pad_start_task (GST_VIDEO_ENCODER_SRC_PAD (self),
         (GstTaskFunction) gst_omx_video_enc_loop, self, NULL);
