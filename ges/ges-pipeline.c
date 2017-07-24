@@ -583,6 +583,8 @@ ges_pipeline_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
+    case GST_STATE_CHANGE_NULL_TO_NULL:
       _unlink_tracks (self);
       break;
     default:
