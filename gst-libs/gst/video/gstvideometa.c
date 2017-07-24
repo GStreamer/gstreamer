@@ -980,6 +980,8 @@ gst_buffer_add_video_time_code_meta_full (GstBuffer * buffer, guint fps_n,
 
   meta = (GstVideoTimeCodeMeta *) gst_buffer_add_meta (buffer,
       GST_VIDEO_TIME_CODE_META_INFO, NULL);
+  g_return_val_if_fail (meta != NULL, NULL);
+
   gst_video_time_code_init (&meta->tc, fps_n, fps_d, latest_daily_jam, flags,
       hours, minutes, seconds, frames, field_count);
 
