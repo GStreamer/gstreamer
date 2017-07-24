@@ -1867,8 +1867,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
           pad->current_essence_track->source_track->edit_rate.n);
       GST_BUFFER_PTS (outbuf) +=
           gst_util_uint64_scale (pad->current_component_start_position *
-          GST_SECOND, pad->current_essence_track->source_track->edit_rate.d,
-          pad->current_essence_track->source_track->edit_rate.n);
+          GST_SECOND, pad->material_track->edit_rate.d,
+          pad->material_track->edit_rate.n);
     } else {
       GST_BUFFER_PTS (outbuf) = GST_CLOCK_TIME_NONE;
     }
