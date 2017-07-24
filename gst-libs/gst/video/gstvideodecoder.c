@@ -3006,7 +3006,9 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
     goto done;
   }
 
-  output_buffer = frame->output_buffer;
+  /* We need a writable buffer for the metadata changes below */
+  output_buffer = frame->output_buffer =
+      gst_buffer_make_writable (frame->output_buffer);
 
   GST_BUFFER_FLAG_UNSET (output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
@@ -3036,9 +3038,7 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
 
   /* Get an additional ref to the buffer, which is going to be pushed
    * downstream, the original ref is owned by the frame
-   *
-   * FIXME: clip_and_push_buf() changes buffer metadata but the buffer
-   * might have a refcount > 1 */
+   */
   output_buffer = gst_buffer_ref (output_buffer);
 
   /* Release frame so the buffer is writable when we push it downstream
