@@ -58,6 +58,8 @@ struct _GstOMXVideoEnc
   /* TRUE if the component is configured and saw
    * the first buffer */
   gboolean started;
+   /* TRUE if the ports where disabled after being activated the first time. */
+  gboolean disabled;
 
   GstClockTime last_upstream_ts;
 
