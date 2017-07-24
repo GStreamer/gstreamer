@@ -1940,10 +1940,26 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     if (pad->material_track->parent.type == MXF_METADATA_TRACK_PICTURE_ESSENCE
         && pad->start_timecode.config.fps_n != 0
         && pad->start_timecode.config.fps_d != 0) {
-      GstVideoTimeCode timecode = pad->start_timecode;
-      gst_video_time_code_add_frames (&timecode,
-          pad->current_material_track_position);
-      gst_buffer_add_video_time_code_meta (outbuf, &timecode);
+      if (etrack->intra_only) {
+        GstVideoTimeCode timecode = pad->start_timecode;
+
+        gst_video_time_code_add_frames (&timecode,
+            pad->current_material_track_position);
+        gst_buffer_add_video_time_code_meta (outbuf, &timecode);
+      } else if (pts != G_MAXUINT64) {
+        GstVideoTimeCode timecode = pad->start_timecode;
+
+        gst_video_time_code_add_frames (&timecode,
+            pad->current_component_start_position);
+        gst_video_time_code_add_frames (&timecode,
+            gst_util_uint64_scale (pts,
+                pad->material_track->edit_rate.n *
+                pad->current_essence_track->source_track->edit_rate.d,
+                pad->material_track->edit_rate.d *
+                pad->current_essence_track->source_track->edit_rate.n));
+        gst_buffer_add_video_time_code_meta (outbuf, &timecode);
+      }
+
     }
 
     /* Update accumulated error and compensate */
