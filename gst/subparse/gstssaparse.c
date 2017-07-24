@@ -169,8 +169,10 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
 
   gst_buffer_ref (priv);
 
-  if (!gst_buffer_map (priv, &map, GST_MAP_READ))
+  if (!gst_buffer_map (priv, &map, GST_MAP_READ)) {
+    gst_buffer_unref (priv);
     return FALSE;
+  }
 
   GST_MEMDUMP_OBJECT (parse, "init section", map.data, map.size);
 
