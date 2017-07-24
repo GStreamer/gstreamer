@@ -86,7 +86,7 @@ gst_v4l2radio_fill_channel_list (GstV4l2Radio * radio)
 
   memset (&vc, 0, sizeof (vc));
 
-  res = v4l2_ioctl (v4l2object->video_fd, VIDIOC_QUERYCAP, &vc);
+  res = v4l2object->ioctl (v4l2object->video_fd, VIDIOC_QUERYCAP, &vc);
   if (res < 0)
     goto caps_failed;
 
@@ -102,7 +102,7 @@ gst_v4l2radio_fill_channel_list (GstV4l2Radio * radio)
   memset (&vtun, 0, sizeof (vtun));
   vtun.index = 0;
 
-  res = v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_TUNER, &vtun);
+  res = v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_TUNER, &vtun);
   if (res < 0)
     goto tuner_failed;
 

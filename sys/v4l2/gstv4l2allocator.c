@@ -241,9 +241,9 @@ gst_v4l2_memory_group_free (GstV4l2MemoryGroup * group)
 static GstV4l2MemoryGroup *
 gst_v4l2_memory_group_new (GstV4l2Allocator * allocator, guint32 index)
 {
-  gint video_fd = allocator->video_fd;
+  GstV4l2Object *obj = allocator->obj;
   guint32 memory = allocator->memory;
-  struct v4l2_format *format = &allocator->format;
+  struct v4l2_format *format = &obj->format;
   GstV4l2MemoryGroup *group;
   gsize img_size, buf_size;
 
@@ -260,7 +260,7 @@ gst_v4l2_memory_group_new (GstV4l2Allocator * allocator, guint32 index)
     group->n_mem = 1;
   }
 
-  if (v4l2_ioctl (video_fd, VIDIOC_QUERYBUF, &group->buffer) < 0)
+  if (obj->ioctl (obj->video_fd, VIDIOC_QUERYBUF, &group->buffer) < 0)
     goto querybuf_failed;
 
   if (group->buffer.index != index) {
@@ -273,17 +273,17 @@ gst_v4l2_memory_group_new (GstV4l2Allocator * allocator, guint32 index)
 
   /* Check that provided size matches the format we have negotiation. Failing
    * there usually means a driver of libv4l bug. */
-  if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
+  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
     gint i;
 
     for (i = 0; i < group->n_mem; i++) {
-      img_size = allocator->format.fmt.pix_mp.plane_fmt[i].sizeimage;
+      img_size = obj->format.fmt.pix_mp.plane_fmt[i].sizeimage;
       buf_size = group->planes[i].length;
       if (buf_size < img_size)
         goto buffer_too_short;
     }
   } else {
-    img_size = allocator->format.fmt.pix.sizeimage;
+    img_size = obj->format.fmt.pix.sizeimage;
     buf_size = group->buffer.length;
     if (buf_size < img_size)
       goto buffer_too_short;
@@ -378,6 +378,7 @@ static void
 gst_v4l2_allocator_free (GstAllocator * gallocator, GstMemory * gmem)
 {
   GstV4l2Allocator *allocator = (GstV4l2Allocator *) gallocator;
+  GstV4l2Object *obj = allocator->obj;
   GstV4l2Memory *mem = (GstV4l2Memory *) gmem;
   GstV4l2MemoryGroup *group = mem->group;
 
@@ -388,7 +389,7 @@ gst_v4l2_allocator_free (GstAllocator * gallocator, GstMemory * gmem)
 
     if (allocator->memory == V4L2_MEMORY_MMAP) {
       if (mem->data)
-        v4l2_munmap (mem->data, group->planes[mem->plane].length);
+        obj->munmap (mem->data, group->planes[mem->plane].length);
     }
 
     /* This apply for both mmap with expbuf, and dmabuf imported memory */
@@ -424,7 +425,6 @@ gst_v4l2_allocator_finalize (GObject * obj)
 
   GST_LOG_OBJECT (obj, "called");
 
-  v4l2_close (allocator->video_fd);
   gst_atomic_queue_unref (allocator->free_queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
@@ -478,22 +478,23 @@ static guint32
 gst_v4l2_allocator_probe (GstV4l2Allocator * allocator, guint32 memory,
     guint32 breq_flag, guint32 bcreate_flag)
 {
+  GstV4l2Object *obj = allocator->obj;
   struct v4l2_requestbuffers breq = { 0 };
   guint32 flags = 0;
 
-  breq.type = allocator->type;
+  breq.type = obj->type;
   breq.count = 0;
   breq.memory = memory;
 
-  if (v4l2_ioctl (allocator->video_fd, VIDIOC_REQBUFS, &breq) == 0) {
+  if (obj->ioctl (obj->video_fd, VIDIOC_REQBUFS, &breq) == 0) {
     struct v4l2_create_buffers bcreate = { 0 };
 
     flags |= breq_flag;
 
     bcreate.memory = memory;
-    bcreate.format = allocator->format;
+    bcreate.format = obj->format;
 
-    if ((v4l2_ioctl (allocator->video_fd, VIDIOC_CREATE_BUFS, &bcreate) == 0))
+    if ((obj->ioctl (obj->video_fd, VIDIOC_CREATE_BUFS, &bcreate) == 0))
       flags |= bcreate_flag;
   }
 
@@ -503,6 +504,7 @@ gst_v4l2_allocator_probe (GstV4l2Allocator * allocator, guint32 memory,
 static GstV4l2MemoryGroup *
 gst_v4l2_allocator_create_buf (GstV4l2Allocator * allocator)
 {
+  GstV4l2Object *obj = allocator->obj;
   struct v4l2_create_buffers bcreate = { 0 };
   GstV4l2MemoryGroup *group = NULL;
 
@@ -512,13 +514,13 @@ gst_v4l2_allocator_create_buf (GstV4l2Allocator * allocator)
     goto done;
 
   bcreate.memory = allocator->memory;
-  bcreate.format = allocator->format;
+  bcreate.format = obj->format;
   bcreate.count = 1;
 
   if (!allocator->can_allocate)
     goto done;
 
-  if (v4l2_ioctl (allocator->video_fd, VIDIOC_CREATE_BUFS, &bcreate) < 0)
+  if (obj->ioctl (obj->video_fd, VIDIOC_CREATE_BUFS, &bcreate) < 0)
     goto create_bufs_failed;
 
   if (allocator->groups[bcreate.index] != NULL)
@@ -577,6 +579,7 @@ static void
 gst_v4l2_allocator_reset_size (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup * group)
 {
+  GstV4l2Object *obj = allocator->obj;
   gsize size;
   gboolean imported = FALSE;
 
@@ -587,11 +590,11 @@ gst_v4l2_allocator_reset_size (GstV4l2Allocator * allocator,
       break;
   }
 
-  if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
+  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
     gint i;
 
     for (i = 0; i < group->n_mem; i++) {
-      size = allocator->format.fmt.pix_mp.plane_fmt[i].sizeimage;
+      size = obj->format.fmt.pix_mp.plane_fmt[i].sizeimage;
 
       if (imported)
         group->mem[i]->maxsize = size;
@@ -600,7 +603,7 @@ gst_v4l2_allocator_reset_size (GstV4l2Allocator * allocator,
     }
 
   } else {
-    size = allocator->format.fmt.pix.sizeimage;
+    size = obj->format.fmt.pix.sizeimage;
 
     if (imported)
       group->mem[0]->maxsize = size;
@@ -628,8 +631,7 @@ _cleanup_failed_alloc (GstV4l2Allocator * allocator, GstV4l2MemoryGroup * group)
 
 
 GstV4l2Allocator *
-gst_v4l2_allocator_new (GstObject * parent, gint video_fd,
-    struct v4l2_format *format)
+gst_v4l2_allocator_new (GstObject * parent, GstV4l2Object * v4l2object)
 {
   GstV4l2Allocator *allocator;
   guint32 flags = 0;
@@ -644,9 +646,7 @@ gst_v4l2_allocator_new (GstObject * parent, gint video_fd,
   g_free (name);
 
   /* Save everything */
-  allocator->video_fd = v4l2_dup (video_fd);
-  allocator->type = format->type;
-  allocator->format = *format;
+  allocator->obj = v4l2object;
 
   flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, MMAP);
   flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, USERPTR);
@@ -672,7 +672,8 @@ guint
 gst_v4l2_allocator_start (GstV4l2Allocator * allocator, guint32 count,
     guint32 memory)
 {
-  struct v4l2_requestbuffers breq = { count, allocator->type, memory };
+  GstV4l2Object *obj = allocator->obj;
+  struct v4l2_requestbuffers breq = { count, obj->type, memory };
   gboolean can_allocate;
   gint i;
 
@@ -683,7 +684,7 @@ gst_v4l2_allocator_start (GstV4l2Allocator * allocator, guint32 count,
   if (g_atomic_int_get (&allocator->active))
     goto already_active;
 
-  if (v4l2_ioctl (allocator->video_fd, VIDIOC_REQBUFS, &breq) < 0)
+  if (obj->ioctl (obj->video_fd, VIDIOC_REQBUFS, &breq) < 0)
     goto reqbufs_failed;
 
   if (breq.count < 1)
@@ -752,7 +753,8 @@ error:
 GstV4l2Return
 gst_v4l2_allocator_stop (GstV4l2Allocator * allocator)
 {
-  struct v4l2_requestbuffers breq = { 0, allocator->type, allocator->memory };
+  GstV4l2Object *obj = allocator->obj;
+  struct v4l2_requestbuffers breq = { 0, obj->type, allocator->memory };
   gint i = 0;
   GstV4l2Return ret = GST_V4L2_OK;
 
@@ -781,7 +783,7 @@ gst_v4l2_allocator_stop (GstV4l2Allocator * allocator)
   }
 
   /* Not all drivers support rebufs(0), so warn only */
-  if (v4l2_ioctl (allocator->video_fd, VIDIOC_REQBUFS, &breq) < 0)
+  if (obj->ioctl (obj->video_fd, VIDIOC_REQBUFS, &breq) < 0)
     GST_WARNING_OBJECT (allocator,
         "error releasing buffers buffers: %s", g_strerror (errno));
 
@@ -797,6 +799,7 @@ done:
 GstV4l2MemoryGroup *
 gst_v4l2_allocator_alloc_mmap (GstV4l2Allocator * allocator)
 {
+  GstV4l2Object *obj = allocator->obj;
   GstV4l2MemoryGroup *group;
   gint i;
 
@@ -810,8 +813,8 @@ gst_v4l2_allocator_alloc_mmap (GstV4l2Allocator * allocator)
   for (i = 0; i < group->n_mem; i++) {
     if (group->mem[i] == NULL) {
       gpointer data;
-      data = v4l2_mmap (NULL, group->planes[i].length, PROT_READ | PROT_WRITE,
-          MAP_SHARED, allocator->video_fd, group->planes[i].m.mem_offset);
+      data = obj->mmap (NULL, group->planes[i].length, PROT_READ | PROT_WRITE,
+          MAP_SHARED, obj->video_fd, group->planes[i].m.mem_offset);
 
       if (data == MAP_FAILED)
         goto mmap_failed;
@@ -852,6 +855,7 @@ GstV4l2MemoryGroup *
 gst_v4l2_allocator_alloc_dmabuf (GstV4l2Allocator * allocator,
     GstAllocator * dmabuf_allocator)
 {
+  GstV4l2Object *obj = allocator->obj;
   GstV4l2MemoryGroup *group;
   gint i;
 
@@ -870,12 +874,12 @@ gst_v4l2_allocator_alloc_dmabuf (GstV4l2Allocator * allocator,
     if (group->mem[i] == NULL) {
       struct v4l2_exportbuffer expbuf = { 0 };
 
-      expbuf.type = allocator->type;
+      expbuf.type = obj->type;
       expbuf.index = group->buffer.index;
       expbuf.plane = i;
       expbuf.flags = O_CLOEXEC | O_RDWR;
 
-      if (v4l2_ioctl (allocator->video_fd, VIDIOC_EXPBUF, &expbuf) < 0)
+      if (obj->ioctl (obj->video_fd, VIDIOC_EXPBUF, &expbuf) < 0)
         goto expbuf_failed;
 
       GST_LOG_OBJECT (allocator, "exported DMABUF as fd %i plane %d",
@@ -933,6 +937,7 @@ static void
 gst_v4l2_allocator_clear_dmabufin (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup * group)
 {
+  GstV4l2Object *obj = allocator->obj;
   GstV4l2Memory *mem;
   gint i;
 
@@ -961,7 +966,7 @@ gst_v4l2_allocator_clear_dmabufin (GstV4l2Allocator * allocator,
     group->planes[i].data_offset = 0;
   }
 
-  if (!V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
+  if (!V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
     group->buffer.bytesused = 0;
     group->buffer.length = 0;
     group->buffer.m.fd = -1;
@@ -1004,6 +1009,7 @@ static void
 gst_v4l2_allocator_clear_userptr (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup * group)
 {
+  GstV4l2Object *obj = allocator->obj;
   GstV4l2Memory *mem;
   gint i;
 
@@ -1024,7 +1030,7 @@ gst_v4l2_allocator_clear_userptr (GstV4l2Allocator * allocator,
     group->planes[i].m.userptr = 0;
   }
 
-  if (!V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
+  if (!V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
     group->buffer.bytesused = 0;
     group->buffer.length = 0;
     group->buffer.m.userptr = 0;
@@ -1068,6 +1074,7 @@ gboolean
 gst_v4l2_allocator_import_dmabuf (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup * group, gint n_mem, GstMemory ** dma_mem)
 {
+  GstV4l2Object *obj = allocator->obj;
   GstV4l2Memory *mem;
   gint i;
 
@@ -1106,7 +1113,7 @@ gst_v4l2_allocator_import_dmabuf (GstV4l2Allocator * allocator,
   }
 
   /* Copy into buffer structure if not using planes */
-  if (!V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
+  if (!V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
     group->buffer.bytesused = group->planes[0].bytesused;
     group->buffer.length = group->planes[0].length;
     group->buffer.m.fd = group->planes[0].m.userptr;
@@ -1140,24 +1147,25 @@ gst_v4l2_allocator_import_userptr (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup * group, gsize img_size, int n_planes,
     gpointer * data, gsize * size)
 {
+  GstV4l2Object *obj = allocator->obj;
   GstV4l2Memory *mem;
   gint i;
 
   g_return_val_if_fail (allocator->memory == V4L2_MEMORY_USERPTR, FALSE);
 
   /* TODO Support passing N plane from 1 memory to MPLANE v4l2 format */
-  if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type) && n_planes != group->n_mem)
+  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type) && n_planes != group->n_mem)
     goto n_mem_missmatch;
 
   for (i = 0; i < group->n_mem; i++) {
     gsize maxsize, psize;
 
-    if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
-      struct v4l2_pix_format_mplane *pix = &allocator->format.fmt.pix_mp;
+    if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
+      struct v4l2_pix_format_mplane *pix = &obj->format.fmt.pix_mp;
       maxsize = pix->plane_fmt[i].sizeimage;
       psize = size[i];
     } else {
-      maxsize = allocator->format.fmt.pix.sizeimage;
+      maxsize = obj->format.fmt.pix.sizeimage;
       psize = img_size;
     }
 
@@ -1179,7 +1187,7 @@ gst_v4l2_allocator_import_userptr (GstV4l2Allocator * allocator,
   }
 
   /* Copy into buffer structure if not using planes */
-  if (!V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
+  if (!V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
     group->buffer.bytesused = group->planes[0].bytesused;
     group->buffer.length = group->planes[0].length;
     group->buffer.m.userptr = group->planes[0].m.userptr;
@@ -1229,13 +1237,14 @@ gboolean
 gst_v4l2_allocator_qbuf (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup * group)
 {
+  GstV4l2Object *obj = allocator->obj;
   gboolean ret = TRUE;
   gint i;
 
   g_return_val_if_fail (g_atomic_int_get (&allocator->active), FALSE);
 
   /* update sizes */
-  if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
+  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
     for (i = 0; i < group->n_mem; i++)
       group->planes[i].bytesused =
           gst_memory_get_sizes (group->mem[i], NULL, NULL);
@@ -1247,7 +1256,7 @@ gst_v4l2_allocator_qbuf (GstV4l2Allocator * allocator,
   for (i = 0; i < group->n_mem; i++)
     gst_memory_ref (group->mem[i]);
 
-  if (v4l2_ioctl (allocator->video_fd, VIDIOC_QBUF, &group->buffer) < 0) {
+  if (obj->ioctl (obj->video_fd, VIDIOC_QBUF, &group->buffer) < 0) {
     GST_ERROR_OBJECT (allocator, "failed queueing buffer %i: %s",
         group->buffer.index, g_strerror (errno));
 
@@ -1281,6 +1290,7 @@ GstFlowReturn
 gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup ** group_out)
 {
+  GstV4l2Object *obj = allocator->obj;
   struct v4l2_buffer buffer = { 0 };
   struct v4l2_plane planes[VIDEO_MAX_PLANES] = { {0} };
   gint i;
@@ -1289,15 +1299,15 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator,
 
   g_return_val_if_fail (g_atomic_int_get (&allocator->active), GST_FLOW_ERROR);
 
-  buffer.type = allocator->type;
+  buffer.type = obj->type;
   buffer.memory = allocator->memory;
 
-  if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
-    buffer.length = allocator->format.fmt.pix_mp.num_planes;
+  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
+    buffer.length = obj->format.fmt.pix_mp.num_planes;
     buffer.m.planes = planes;
   }
 
-  if (v4l2_ioctl (allocator->video_fd, VIDIOC_DQBUF, &buffer) < 0)
+  if (obj->ioctl (obj->video_fd, VIDIOC_DQBUF, &buffer) < 0)
     goto error;
 
   group = allocator->groups[buffer.index];
@@ -1319,7 +1329,7 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator,
     UNSET_QUEUED (group->buffer);
   }
 
-  if (V4L2_TYPE_IS_MULTIPLANAR (allocator->type)) {
+  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
     group->buffer.m.planes = group->planes;
     memcpy (group->planes, buffer.m.planes, sizeof (planes));
   } else {
@@ -1330,7 +1340,7 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator,
   }
 
   /* And update memory size */
-  if (V4L2_TYPE_IS_OUTPUT (allocator->type)) {
+  if (V4L2_TYPE_IS_OUTPUT (obj->type)) {
     gst_v4l2_allocator_reset_size (allocator, group);
   } else {
     /* for capture, simply read the size */

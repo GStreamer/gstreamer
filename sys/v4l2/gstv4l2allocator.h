@@ -50,6 +50,7 @@ typedef struct _GstV4l2MemoryGroup GstV4l2MemoryGroup;
 typedef struct _GstV4l2Memory GstV4l2Memory;
 typedef enum _GstV4l2Capabilities GstV4l2Capabilities;
 typedef enum _GstV4l2Return GstV4l2Return;
+typedef struct _GstV4l2Object GstV4l2Object;
 
 enum _GstV4l2AllocatorFlags
 {
@@ -89,11 +90,9 @@ struct _GstV4l2MemoryGroup
 struct _GstV4l2Allocator
 {
   GstAllocator parent;
-  gint video_fd;
+  GstV4l2Object *obj;
   guint32 count;
-  guint32 type;
   guint32 memory;
-  struct v4l2_format format;
   gboolean can_allocate;
   gboolean active;
 
@@ -117,8 +116,7 @@ gboolean             gst_v4l2_allocator_is_active      (GstV4l2Allocator * alloc
 
 guint                gst_v4l2_allocator_get_size       (GstV4l2Allocator * allocator);
 
-GstV4l2Allocator*    gst_v4l2_allocator_new            (GstObject *parent, gint video_fd,
-                                                        struct v4l2_format * format);
+GstV4l2Allocator*    gst_v4l2_allocator_new            (GstObject *parent, GstV4l2Object * obj);
 
 guint                gst_v4l2_allocator_start          (GstV4l2Allocator * allocator,
                                                         guint32 count, guint32 memory);

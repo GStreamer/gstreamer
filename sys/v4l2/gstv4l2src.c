@@ -38,6 +38,10 @@
  * ]| This pipeline shows the video captured from a webcam that delivers jpeg
  * images.
  * </refsect2>
+ *
+ * Since 1.14, the use of libv4l2 has been disabled due to major bugs in the
+ * emulation layer. To enable usage of this library, set the environment
+ * variable GST_V4L2_USE_LIBV4L2=1.
  */
 
 #ifdef HAVE_CONFIG_H

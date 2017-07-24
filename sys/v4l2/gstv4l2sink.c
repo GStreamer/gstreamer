@@ -246,16 +246,16 @@ gst_v4l2sink_sync_overlay_fields (GstV4l2Sink * v4l2sink)
 
   if (GST_V4L2_IS_OPEN (v4l2sink->v4l2object)) {
 
-    gint fd = v4l2sink->v4l2object->video_fd;
+    GstV4l2Object *obj = v4l2sink->v4l2object;
     struct v4l2_format format;
 
     memset (&format, 0x00, sizeof (struct v4l2_format));
-    if (v4l2sink->v4l2object->device_caps & V4L2_CAP_VIDEO_OUTPUT_OVERLAY)
+    if (obj->device_caps & V4L2_CAP_VIDEO_OUTPUT_OVERLAY)
       format.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_OVERLAY;
     else
       format.type = V4L2_BUF_TYPE_VIDEO_OVERLAY;
 
-    if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0) {
+    if (obj->ioctl (obj->video_fd, VIDIOC_G_FMT, &format) < 0) {
       GST_WARNING_OBJECT (v4l2sink, "VIDIOC_G_FMT failed");
       return;
     }
@@ -275,7 +275,7 @@ gst_v4l2sink_sync_overlay_fields (GstV4l2Sink * v4l2sink)
     if (v4l2sink->overlay_fields_set & RECT_HEIGHT_SET)
       format.fmt.win.w.height = v4l2sink->overlay.height;
 
-    if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0) {
+    if (obj->ioctl (obj->video_fd, VIDIOC_S_FMT, &format) < 0) {
       GST_WARNING_OBJECT (v4l2sink, "VIDIOC_S_FMT failed");
       return;
     }
@@ -293,13 +293,13 @@ gst_v4l2sink_sync_crop_fields (GstV4l2Sink * v4l2sink)
 
   if (GST_V4L2_IS_OPEN (v4l2sink->v4l2object)) {
 
-    gint fd = v4l2sink->v4l2object->video_fd;
+    GstV4l2Object *obj = v4l2sink->v4l2object;
     struct v4l2_crop crop;
 
     memset (&crop, 0x00, sizeof (struct v4l2_crop));
     crop.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
 
-    if (v4l2_ioctl (fd, VIDIOC_G_CROP, &crop) < 0) {
+    if (obj->ioctl (obj->video_fd, VIDIOC_G_CROP, &crop) < 0) {
       GST_WARNING_OBJECT (v4l2sink, "VIDIOC_G_CROP failed");
       return;
     }
@@ -319,12 +319,12 @@ gst_v4l2sink_sync_crop_fields (GstV4l2Sink * v4l2sink)
     if (v4l2sink->crop_fields_set & RECT_HEIGHT_SET)
       crop.c.height = v4l2sink->crop.height;
 
-    if (v4l2_ioctl (fd, VIDIOC_S_CROP, &crop) < 0) {
+    if (obj->ioctl (obj->video_fd, VIDIOC_S_CROP, &crop) < 0) {
       GST_WARNING_OBJECT (v4l2sink, "VIDIOC_S_CROP failed");
       return;
     }
 
-    if (v4l2_ioctl (fd, VIDIOC_G_CROP, &crop) < 0) {
+    if (obj->ioctl (obj->video_fd, VIDIOC_G_CROP, &crop) < 0) {
       GST_WARNING_OBJECT (v4l2sink, "VIDIOC_G_CROP failed");
       return;
     }

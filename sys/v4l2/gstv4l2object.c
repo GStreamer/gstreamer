@@ -27,6 +27,9 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/mman.h>
+#include <sys/ioctl.h>
+
 
 #ifdef HAVE_GUDEV
 #include <gudev/gudev.h>
@@ -490,6 +493,28 @@ gst_v4l2_object_new (GstElement * element,
 
   v4l2object->no_initial_format = FALSE;
 
+  /* We now disable libv4l2 by default, but have an env to enable it. */
+#ifdef HAVE_LIBV4L2
+  if (g_getenv ("GST_V4L2_USE_LIBV4L2")) {
+    v4l2object->fd_open = v4l2_fd_open;
+    v4l2object->close = v4l2_close;
+    v4l2object->dup = v4l2_dup;
+    v4l2object->ioctl = v4l2_ioctl;
+    v4l2object->read = v4l2_read;
+    v4l2object->mmap = v4l2_mmap;
+    v4l2object->munmap = v4l2_munmap;
+  } else
+#endif
+  {
+    v4l2object->fd_open = NULL;
+    v4l2object->close = close;
+    v4l2object->dup = dup;
+    v4l2object->ioctl = ioctl;
+    v4l2object->read = read;
+    v4l2object->mmap = mmap;
+    v4l2object->munmap = munmap;
+  }
+
   return v4l2object;
 }
 
@@ -775,7 +800,7 @@ gst_v4l2_get_driver_min_buffers (GstV4l2Object * v4l2object)
   else
     control.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
 
-  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_CTRL, &control) == 0) {
+  if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_CTRL, &control) == 0) {
     GST_DEBUG_OBJECT (v4l2object->element,
         "driver requires a minimum of %d buffers", control.value);
     v4l2object->min_buffers = control.value;
@@ -1113,7 +1138,7 @@ gst_v4l2_object_fill_format_list (GstV4l2Object * v4l2object,
     format->index = n;
     format->type = type;
 
-    if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_ENUM_FMT, format) < 0) {
+    if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_ENUM_FMT, format) < 0) {
       if (errno == EINVAL) {
         g_free (format);
         break;                  /* end of enumeration */
@@ -2065,7 +2090,7 @@ gst_v4l2_object_try_fmt (GstV4l2Object * v4l2object,
   int r;
 
   memcpy (&fmt, try_fmt, sizeof (fmt));
-  r = v4l2_ioctl (fd, VIDIOC_TRY_FMT, &fmt);
+  r = v4l2object->ioctl (fd, VIDIOC_TRY_FMT, &fmt);
 
   if (r < 0 && errno == ENOTTY) {
     /* The driver might not implement TRY_FMT, in which case we will try
@@ -2074,7 +2099,7 @@ gst_v4l2_object_try_fmt (GstV4l2Object * v4l2object,
       goto error;
 
     memcpy (&fmt, try_fmt, sizeof (fmt));
-    r = v4l2_ioctl (fd, VIDIOC_S_FMT, &fmt);
+    r = v4l2object->ioctl (fd, VIDIOC_S_FMT, &fmt);
   }
   memcpy (try_fmt, &fmt, sizeof (fmt));
 
@@ -2269,7 +2294,7 @@ gst_v4l2_object_probe_caps_for_format_and_size (GstV4l2Object * v4l2object,
 
   /* keep in mind that v4l2 gives us frame intervals (durations); we invert the
    * fraction to get framerate */
-  if (v4l2_ioctl (fd, VIDIOC_ENUM_FRAMEINTERVALS, &ival) < 0)
+  if (v4l2object->ioctl (fd, VIDIOC_ENUM_FRAMEINTERVALS, &ival) < 0)
     goto enum_frameintervals_failed;
 
   if (ival.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
@@ -2296,7 +2321,7 @@ gst_v4l2_object_probe_caps_for_format_and_size (GstV4l2Object * v4l2object,
       gst_value_list_append_value (&rates, &rate);
 
       ival.index++;
-    } while (v4l2_ioctl (fd, VIDIOC_ENUM_FRAMEINTERVALS, &ival) >= 0);
+    } while (v4l2object->ioctl (fd, VIDIOC_ENUM_FRAMEINTERVALS, &ival) >= 0);
   } else if (ival.type == V4L2_FRMIVAL_TYPE_STEPWISE) {
     GValue min = { 0, };
     GValue step = { 0, };
@@ -2535,7 +2560,7 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
       "Enumerating frame sizes for %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (pixelformat));
 
-  if (v4l2_ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) < 0)
+  if (v4l2object->ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) < 0)
     goto enum_framesizes_failed;
 
   if (size.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
@@ -2556,7 +2581,7 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
       }
 
       size.index++;
-    } while (v4l2_ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) >= 0);
+    } while (v4l2object->ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) >= 0);
     GST_DEBUG_OBJECT (v4l2object->element,
         "done iterating discrete frame sizes");
   } else if (size.type == V4L2_FRMSIZE_TYPE_STEPWISE) {
@@ -3369,10 +3394,10 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   }
 
   if (try_only) {
-    if (v4l2_ioctl (fd, VIDIOC_TRY_FMT, &format) < 0)
+    if (v4l2object->ioctl (fd, VIDIOC_TRY_FMT, &format) < 0)
       goto try_fmt_failed;
   } else {
-    if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
+    if (v4l2object->ioctl (fd, VIDIOC_S_FMT, &format) < 0)
       goto set_fmt_failed;
   }
 
@@ -3454,7 +3479,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     ctl.id = V4L2_CID_ALPHA_COMPONENT;
     ctl.value = 0xff;
 
-    if (v4l2_ioctl (fd, VIDIOC_S_CTRL, &ctl) < 0)
+    if (v4l2object->ioctl (fd, VIDIOC_S_CTRL, &ctl) < 0)
       GST_WARNING_OBJECT (v4l2object->element,
           "Failed to set alpha component value");
   }
@@ -3466,7 +3491,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   memset (&streamparm, 0x00, sizeof (struct v4l2_streamparm));
   streamparm.type = v4l2object->type;
 
-  if (v4l2_ioctl (fd, VIDIOC_G_PARM, &streamparm) < 0)
+  if (v4l2object->ioctl (fd, VIDIOC_G_PARM, &streamparm) < 0)
     goto get_parm_failed;
 
   if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
@@ -3500,7 +3525,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     streamparm.parm.capture.timeperframe.denominator = fps_n;
 
     /* some cheap USB cam's won't accept any change */
-    if (v4l2_ioctl (fd, VIDIOC_S_PARM, &streamparm) < 0)
+    if (v4l2object->ioctl (fd, VIDIOC_S_PARM, &streamparm) < 0)
       goto set_parm_failed;
 
     if (streamparm.parm.capture.timeperframe.numerator > 0 &&
@@ -3542,7 +3567,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     streamparm.parm.output.timeperframe.numerator = fps_d;
     streamparm.parm.output.timeperframe.denominator = fps_n;
 
-    if (v4l2_ioctl (fd, VIDIOC_S_PARM, &streamparm) < 0)
+    if (v4l2object->ioctl (fd, VIDIOC_S_PARM, &streamparm) < 0)
       goto set_parm_failed;
 
     if (streamparm.parm.output.timeperframe.numerator > 0 &&
@@ -3750,7 +3775,7 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
 
   memset (&fmt, 0x00, sizeof (struct v4l2_format));
   fmt.type = v4l2object->type;
-  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_FMT, &fmt) < 0)
+  if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_FMT, &fmt) < 0)
     goto get_fmt_failed;
 
   fmtdesc = gst_v4l2_object_get_format_from_fourcc (v4l2object,
@@ -3775,13 +3800,13 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
   memset (&sel, 0, sizeof (struct v4l2_selection));
   sel.type = v4l2object->type;
   sel.target = V4L2_SEL_TGT_COMPOSE_DEFAULT;
-  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_SELECTION, &sel) >= 0) {
+  if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_SELECTION, &sel) >= 0) {
     r = &sel.r;
   } else {
     /* For ancient kernels, fall back to G_CROP */
     memset (&crop, 0, sizeof (struct v4l2_crop));
     crop.type = v4l2object->type;
-    if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_CROP, &crop) >= 0)
+    if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_CROP, &crop) >= 0)
       r = &crop.c;
   }
   if (r) {
@@ -3869,12 +3894,12 @@ gst_v4l2_object_set_crop (GstV4l2Object * obj)
       "Desired cropping left %u, top %u, size %ux%u", crop.c.left, crop.c.top,
       crop.c.width, crop.c.height);
 
-  if (v4l2_ioctl (obj->video_fd, VIDIOC_S_CROP, &crop) < 0) {
+  if (obj->ioctl (obj->video_fd, VIDIOC_S_CROP, &crop) < 0) {
     GST_WARNING_OBJECT (obj->element, "VIDIOC_S_CROP failed");
     return FALSE;
   }
 
-  if (v4l2_ioctl (obj->video_fd, VIDIOC_G_CROP, &crop) < 0) {
+  if (obj->ioctl (obj->video_fd, VIDIOC_G_CROP, &crop) < 0) {
     GST_WARNING_OBJECT (obj->element, "VIDIOC_G_CROP failed");
     return FALSE;
   }
@@ -3972,7 +3997,7 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
     memset (&cropcap, 0, sizeof (cropcap));
 
     cropcap.type = v4l2object->type;
-    if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_CROPCAP, &cropcap) < 0) {
+    if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_CROPCAP, &cropcap) < 0) {
       if (errno != ENOTTY)
         GST_WARNING_OBJECT (v4l2object->element,
             "Failed to probe pixel aspect ratio with VIDIOC_CROPCAP: %s",

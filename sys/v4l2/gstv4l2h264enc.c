@@ -329,7 +329,7 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
       if (control.value < 0)
         continue;
 
-      if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_S_CTRL, &control) < 0) {
+      if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_S_CTRL, &control) < 0) {
         GST_WARNING_OBJECT (ctx->self, "Failed to set H264 profile: '%s'",
             g_strerror (errno));
         break;
@@ -371,7 +371,7 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
       if (control.value < 0)
         continue;
 
-      if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_S_CTRL, &control) < 0) {
+      if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_S_CTRL, &control) < 0) {
         GST_WARNING_OBJECT (ctx->self, "Failed to set H264 level: '%s'",
             g_strerror (errno));
         break;
@@ -436,7 +436,7 @@ gst_v4l2_h264_enc_negotiate (GstVideoEncoder * encoder)
 
     control.id = V4L2_CID_MPEG_VIDEO_H264_PROFILE;
 
-    if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_CTRL, &control) < 0)
+    if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_CTRL, &control) < 0)
       goto g_ctrl_failed;
 
     ctx.profile = v4l2_profile_to_string (control.value);
@@ -447,7 +447,7 @@ gst_v4l2_h264_enc_negotiate (GstVideoEncoder * encoder)
 
     control.id = V4L2_CID_MPEG_VIDEO_H264_LEVEL;
 
-    if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_CTRL, &control) < 0)
+    if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_CTRL, &control) < 0)
       goto g_ctrl_failed;
 
     ctx.level = v4l2_level_to_string (control.value);

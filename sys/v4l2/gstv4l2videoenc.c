@@ -241,7 +241,7 @@ gst_v4l2_encoder_cmd (GstV4l2Object * v4l2object, guint cmd, guint flags)
 
   ecmd.cmd = cmd;
   ecmd.flags = flags;
-  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_ENCODER_CMD, &ecmd) < 0)
+  if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_ENCODER_CMD, &ecmd) < 0)
     goto ecmd_failed;
 
   return TRUE;

@@ -24,23 +24,11 @@
 #ifndef __GST_V4L2_OBJECT_H__
 #define __GST_V4L2_OBJECT_H__
 
+#include "ext/videodev2.h"
 #ifdef HAVE_LIBV4L2
 #  include <libv4l2.h>
-#else
-#  include "ext/videodev2.h"
-#  include <sys/ioctl.h>
-#  include <sys/mman.h>
-#  include <unistd.h>
-#  define v4l2_fd_open(fd, flags) (fd)
-#  define v4l2_close    close
-#  define v4l2_dup      dup
-#  define v4l2_ioctl    ioctl
-#  define v4l2_read     read
-#  define v4l2_mmap     mmap
-#  define v4l2_munmap   munmap
 #endif
 
-#include "ext/videodev2.h"
 #include "v4l2-utils.h"
 
 #include <gst/gst.h>
@@ -211,6 +199,16 @@ struct _GstV4l2Object {
   GstV4l2GetInOutFunction  get_in_out_func;
   GstV4l2SetInOutFunction  set_in_out_func;
   GstV4l2UpdateFpsFunction update_fps_func;
+
+  /* syscalls */
+  int (*fd_open) (int fd, int v4l2_flags);
+  int (*close) (int fd);
+  int (*dup) (int fd);
+  int (*ioctl) (int fd, unsigned long int request, ...);
+  ssize_t (*read) (int fd, void *buffer, size_t n);
+  void * (*mmap) (void *start, size_t length, int prot, int flags,
+      int fd, int64_t offset);
+  int (*munmap) (void *_start, size_t length);
 
   /* Quirks */
   /* Skips interlacing probes */

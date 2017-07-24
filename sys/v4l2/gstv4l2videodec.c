@@ -311,7 +311,7 @@ gst_v4l2_decoder_cmd (GstV4l2Object * v4l2object, guint cmd, guint flags)
 
   dcmd.cmd = cmd;
   dcmd.flags = flags;
-  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_DECODER_CMD, &dcmd) < 0)
+  if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_DECODER_CMD, &dcmd) < 0)
     goto dcmd_failed;
 
   return TRUE;

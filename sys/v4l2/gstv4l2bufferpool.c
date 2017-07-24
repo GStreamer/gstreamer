@@ -621,7 +621,7 @@ gst_v4l2_buffer_pool_streamon (GstV4l2BufferPool * pool)
     case GST_V4L2_IO_DMABUF:
     case GST_V4L2_IO_DMABUF_IMPORT:
       if (!pool->streaming) {
-        if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMON, &obj->type) < 0)
+        if (obj->ioctl (pool->video_fd, VIDIOC_STREAMON, &obj->type) < 0)
           goto streamon_failed;
 
         pool->streaming = TRUE;
@@ -654,7 +654,7 @@ gst_v4l2_buffer_pool_streamoff (GstV4l2BufferPool * pool)
     case GST_V4L2_IO_DMABUF:
     case GST_V4L2_IO_DMABUF_IMPORT:
       if (pool->streaming) {
-        if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMOFF, &obj->type) < 0)
+        if (obj->ioctl (pool->video_fd, VIDIOC_STREAMOFF, &obj->type) < 0)
           GST_WARNING_OBJECT (pool, "STREAMOFF failed with errno %d (%s)",
               errno, g_strerror (errno));
 
@@ -728,7 +728,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
        * queue to be initialized now. We only do this if we have a streaming
        * driver. */
       if (obj->device_caps & V4L2_CAP_STREAMING)
-        v4l2_read (obj->video_fd, NULL, 0);
+        obj->read (obj->video_fd, NULL, 0);
 #endif
       break;
     case GST_V4L2_IO_DMABUF:
@@ -1609,8 +1609,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   pool->obj = obj;
   pool->can_poll_device = TRUE;
 
-  pool->vallocator =
-      gst_v4l2_allocator_new (GST_OBJECT (pool), obj->video_fd, &obj->format);
+  pool->vallocator = gst_v4l2_allocator_new (GST_OBJECT (pool), obj);
   if (pool->vallocator == NULL)
     goto allocator_failed;
 
@@ -1657,7 +1656,7 @@ gst_v4l2_do_read (GstV4l2BufferPool * pool, GstBuffer * buf)
     if ((res = gst_v4l2_buffer_pool_poll (pool)) != GST_FLOW_OK)
       goto poll_error;
 
-    amount = v4l2_read (obj->video_fd, map.data, toread);
+    amount = obj->read (obj->video_fd, map.data, toread);
 
     if (amount == toread) {
       break;
