@@ -137,13 +137,21 @@ static PyObject *
 gi_gst_int_range_from_value (const GValue * value)
 {
   gint min, max, step;
+  PyObject *int_range_type, *int_range, *range;
 
   min = gst_value_get_int_range_min (value);
   max = gst_value_get_int_range_max (value);
   step = gst_value_get_int_range_step (value);
 
-  return PyObject_CallFunction ((PyObject *) & PyRange_Type, "iii",
+  int_range_type = gi_gst_get_type ("IntRange");
+  range = PyObject_CallFunction ((PyObject *) & PyRange_Type, "iii",
       min, max, step);
+  int_range = PyObject_CallFunction (int_range_type, "O", range);
+
+  Py_DECREF (int_range_type);
+  Py_DECREF (range);
+
+  return int_range;
 }
 
 static int
@@ -182,13 +190,21 @@ static PyObject *
 gi_gst_int64_range_from_value (const GValue * value)
 {
   gint64 min, max, step;
+  PyObject *int64_range_type, *int64_range, *range;
 
   min = gst_value_get_int64_range_min (value);
   max = gst_value_get_int64_range_max (value);
   step = gst_value_get_int64_range_step (value);
 
-  return PyObject_CallFunction ((PyObject *) & PyRange_Type, "LLL",
+  range = PyObject_CallFunction ((PyObject *) & PyRange_Type, "LLL",
       min, max, step);
+  int64_range_type = gi_gst_get_type ("Int64Range");
+  int64_range = PyObject_CallFunction (int64_range_type, "O", range);
+
+  Py_DECREF (int64_range_type);
+  Py_DECREF (range);
+
+  return int64_range;
 }
 
 static int
