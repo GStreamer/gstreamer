@@ -248,6 +248,7 @@ class Structure(Gst.Structure):
     def __getitem__(self, key):
         return self.get_value(key)
 
+
     def __setitem__(self, key, value):
         return self.set_value(key, value)
 
@@ -369,6 +370,13 @@ class IntRange(Gst.IntRange):
             return '[%d,%d,%d]' % (self.range.start, self.range.stop,
                     self.range.step)
 
+    def __eq__(self, other):
+        if isinstance(other, range):
+            return self.range == other
+        elif isinstance(other, IntRange):
+            return self.range == other.range
+        return False
+
 if sys.version_info >= (3, 0):
     IntRange = override(IntRange)
     __all__.append('IntRange')
@@ -401,6 +409,12 @@ class Int64Range(Gst.Int64Range):
             return '(int64)[%d,%d,%d]' % (self.range.start, self.range.stop,
                     self.range.step)
 
+    def __eq__(self, other):
+        if isinstance(other, range):
+            return self.range == other
+        elif isinstance(other, IntRange):
+            return self.range == other.range
+        return False
 
 if sys.version_info >= (3, 0):
     Int64Range = override(Int64Range)
