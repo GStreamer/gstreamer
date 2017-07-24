@@ -224,6 +224,27 @@ Pipeline = override(Pipeline)
 __all__.append('Pipeline')
 
 class Structure(Gst.Structure):
+    def __new__(cls, *args, **kwargs):
+        if not args:
+            if kwargs:
+                raise TypeError("wrong arguments when creating GstStructure, first argument"
+                                " must be the structure name.")
+            return Structure.new_empty()
+        elif len(args) > 1:
+            raise TypeError("wrong arguments when creating GstStructure object")
+        elif isinstance(args[0], str):
+            if not kwargs:
+                return Structure.from_string(args[0])[0]
+            struct = Structure.new_empty(args[0])
+            for k, v in kwargs.items():
+                struct[k] = v
+
+            return struct
+        elif isinstance(args[0], Structure):
+            return args[0].copy()
+
+        raise TypeError("wrong arguments when creating GstStructure object")
+
     def __getitem__(self, key):
         return self.get_value(key)
 

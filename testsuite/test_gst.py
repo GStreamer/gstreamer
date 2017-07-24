@@ -76,5 +76,15 @@ class TestNotInitialized(TestCase):
             Gst.ElementFactory.make("identity", None)
 
 
+class TestStructure(TestCase):
+
+    def test_new(self):
+        Gst.init(None)
+        test = Gst.Structure('test', test=1)
+        self.assertEqual(test['test'], 1)
+
+        test = Gst.Structure('test,test=1')
+        self.assertEqual(test['test'], 1)
+
 if __name__ == "__main__":
     unittest.main()
