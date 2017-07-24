@@ -649,7 +649,7 @@ get_compatible_unlinked_pad (GstElement * element, GESTrack * track)
   pads = gst_element_iterate_sink_pads (element);
   srccaps = ges_track_get_caps (track);
 
-  GST_DEBUG ("srccaps %" GST_PTR_FORMAT, srccaps);
+  GST_DEBUG_OBJECT (track, "srccaps %" GST_PTR_FORMAT, srccaps);
 
   while (!done) {
     switch (gst_iterator_next (pads, &paditem)) {
@@ -660,7 +660,7 @@ get_compatible_unlinked_pad (GstElement * element, GESTrack * track)
         if (!gst_pad_is_linked (testpad)) {
           GstCaps *sinkcaps = gst_pad_query_caps (testpad, NULL);
 
-          GST_DEBUG ("sinkccaps %" GST_PTR_FORMAT, sinkcaps);
+          GST_DEBUG_OBJECT (track, "sinkccaps %" GST_PTR_FORMAT, sinkcaps);
 
           if (gst_caps_can_intersect (srccaps, sinkcaps)) {
             res = gst_object_ref (testpad);
@@ -746,7 +746,8 @@ _link_track (GESPipeline * self, GESTrack * track)
     chain = new_output_chain_for_track (self, track);
 
   if (chain->tee) {
-    GST_INFO_OBJECT (self, "Chain is already built");
+    GST_INFO_OBJECT (self, "Chain is already built (%" GST_PTR_FORMAT ")",
+        chain->encodebinpad ? chain->encodebinpad : chain->playsinkpad);
 
     return;
   }
@@ -840,10 +841,11 @@ _link_track (GESPipeline * self, GESTrack * track)
         /* If no compatible static pad is available, request a pad */
         g_signal_emit_by_name (self->priv->encodebin, "request-pad", caps,
             &sinkpad);
-        gst_caps_unref (caps);
 
         if (G_UNLIKELY (sinkpad == NULL)) {
-          GST_INFO_OBJECT (self, "Couldn't get a pad from encodebin !");
+          GST_INFO_OBJECT (self, "Couldn't get a pad from encodebin for: %"
+              GST_PTR_FORMAT, caps);
+          gst_caps_unref (caps);
           gst_element_set_locked_state (GST_ELEMENT (track), TRUE);
 
           self->priv->not_rendered_tracks =
@@ -852,8 +854,11 @@ _link_track (GESPipeline * self, GESTrack * track)
 
           goto error;
         }
+
+        gst_caps_unref (caps);
       }
       chain->encodebinpad = sinkpad;
+      GST_INFO_OBJECT (track, "Linked to %" GST_PTR_FORMAT, sinkpad);
     }
 
     tmppad = gst_element_get_request_pad (chain->tee, "src_%u");
