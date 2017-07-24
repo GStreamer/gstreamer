@@ -262,9 +262,10 @@ gst_video_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       goto invalid_buffer;
 
     if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
-            GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
+            GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
+      gst_video_frame_unmap (&in_frame);
       goto invalid_buffer;
-
+    }
     res = fclass->transform_frame (filter, &in_frame, &out_frame);
 
     gst_video_frame_unmap (&out_frame);
