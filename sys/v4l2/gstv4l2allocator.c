@@ -37,6 +37,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 #define GST_V4L2_MEMORY_TYPE "V4l2Memory"
 

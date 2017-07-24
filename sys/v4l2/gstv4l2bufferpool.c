@@ -1517,7 +1517,7 @@ gst_v4l2_buffer_pool_finalize (GObject * object)
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (object);
 
   if (pool->video_fd >= 0)
-    v4l2_close (pool->video_fd);
+    pool->obj->close (pool->video_fd);
 
   gst_poll_free (pool->poll);
 
@@ -1581,7 +1581,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   gchar *name, *parent_name;
   gint fd;
 
-  fd = v4l2_dup (obj->video_fd);
+  fd = obj->dup (obj->video_fd);
   if (fd < 0)
     goto dup_failed;
 

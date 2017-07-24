@@ -187,14 +187,14 @@ struct _GstV4l2Object {
   GstV4l2UpdateFpsFunction update_fps_func;
 
   /* syscalls */
-  int (*fd_open) (int fd, int v4l2_flags);
-  int (*close) (int fd);
-  int (*dup) (int fd);
-  int (*ioctl) (int fd, unsigned long int request, ...);
-  ssize_t (*read) (int fd, void *buffer, size_t n);
-  void * (*mmap) (void *start, size_t length, int prot, int flags,
-      int fd, int64_t offset);
-  int (*munmap) (void *_start, size_t length);
+  gint (*fd_open) (gint fd, gint v4l2_flags);
+  gint (*close) (gint fd);
+  gint (*dup) (gint fd);
+  gint (*ioctl) (gint fd, gulong request, ...);
+  gssize (*read) (gint fd, gpointer buffer, gsize n);
+  gpointer (*mmap) (gpointer start, gsize length, gint prot, gint flags,
+      gint fd, gint64 offset);
+  gint (*munmap) (gpointer _start, gsize length);
 
   /* Quirks */
   /* Skips interlacing probes */
