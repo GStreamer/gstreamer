@@ -1476,6 +1476,10 @@ gst_aggregator_default_sink_event (GstAggregator * self,
       GST_BUFFER_FLAG_SET (gapbuf, GST_BUFFER_FLAG_GAP);
       GST_BUFFER_FLAG_SET (gapbuf, GST_BUFFER_FLAG_DROPPABLE);
 
+      /* Remove GAP event so we can replace it with the buffer */
+      if (g_queue_peek_tail (&aggpad->priv->buffers) == event)
+        gst_event_unref (g_queue_pop_tail (&aggpad->priv->buffers));
+
       if (gst_aggregator_pad_chain_internal (self, aggpad, gapbuf, FALSE) !=
           GST_FLOW_OK) {
         GST_WARNING_OBJECT (self, "Failed to chain gap buffer");
