@@ -581,13 +581,10 @@ ges_pipeline_change_state (GstElement * element, GstStateChange transition)
       GST_ELEMENT_CLASS (ges_pipeline_parent_class)->change_state
       (element, transition);
 
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      _unlink_tracks (self);
-      break;
-    default:
-      break;
-  }
+  if (transition == ((GST_STATE_READY << 3) | GST_STATE_READY) ||       /* READY_TO_READY */
+      transition == ((GST_STATE_NULL << 3) | GST_STATE_NULL) || /* NULL_TO_NULL */
+      transition == GST_STATE_CHANGE_PAUSED_TO_READY)
+    _unlink_tracks (self);
 
 done:
   return ret;
