@@ -38,7 +38,6 @@
 
 typedef struct _GstV4l2Object GstV4l2Object;
 typedef struct _GstV4l2ObjectClassHelper GstV4l2ObjectClassHelper;
-typedef struct _GstV4l2Xv GstV4l2Xv;
 
 #include <gstv4l2bufferpool.h>
 
@@ -154,9 +153,6 @@ struct _GstV4l2Object {
    * calculate the minimum latency. */
   guint32 min_buffers;
 
-  /* This will be set if supported in propose allocation. */
-  guint32 min_buffers_for_output;
-
   /* wanted mode */
   GstV4l2IOMode req_mode;
 
@@ -167,12 +163,6 @@ struct _GstV4l2Object {
   struct v4l2_capability vcap;
   /* opened device specific capabilities */
   guint32 device_caps;
-
-  /* the video device's window properties */
-  struct v4l2_window vwin;
-
-  /* some more info about the current input's capabilities */
-  struct v4l2_input vinput;
 
   /* lists... */
   GSList *formats;              /* list of available capture formats */
@@ -190,10 +180,6 @@ struct _GstV4l2Object {
   GstStructure *extra_controls;
   gboolean keep_aspect;
   GValue *par;
-
-  /* X-overlay */
-  GstV4l2Xv *xv;
-  gulong xwindow_id;
 
   /* funcs */
   GstV4l2GetInOutFunction  get_in_out_func;

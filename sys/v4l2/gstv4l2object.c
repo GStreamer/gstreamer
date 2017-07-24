@@ -485,8 +485,6 @@ gst_v4l2_object_new (GstElement * element,
   v4l2object->channels = NULL;
   v4l2object->colors = NULL;
 
-  v4l2object->xwindow_id = 0;
-
   v4l2object->keep_aspect = TRUE;
 
   v4l2object->n_v4l2_planes = 0;
