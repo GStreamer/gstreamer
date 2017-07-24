@@ -426,6 +426,7 @@ gst_v4l2_allocator_finalize (GObject * obj)
   GST_LOG_OBJECT (obj, "called");
 
   gst_atomic_queue_unref (allocator->free_queue);
+  gst_object_unref (allocator->obj->element);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -647,6 +648,9 @@ gst_v4l2_allocator_new (GstObject * parent, GstV4l2Object * v4l2object)
 
   /* Save everything */
   allocator->obj = v4l2object;
+
+  /* Keep a ref on the elemnt so obj does not disapear */
+  gst_object_ref (allocator->obj->element);
 
   flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, MMAP);
   flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, USERPTR);

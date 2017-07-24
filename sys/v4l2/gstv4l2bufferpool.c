@@ -1521,8 +1521,7 @@ gst_v4l2_buffer_pool_finalize (GObject * object)
 
   gst_poll_free (pool->poll);
 
-  /* FIXME Is this required to keep around ?
-   * This can't be done in dispose method because we must not set pointer
+  /* This can't be done in dispose method because we must not set pointer
    * to NULL as it is part of the v4l2object and dispose could be called
    * multiple times */
   gst_object_unref (pool->obj->element);
