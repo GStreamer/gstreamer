@@ -130,6 +130,7 @@ main (int argc, char *argv[])
 
   if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
     g_print ("File %s does not exist\n", filename);
+    g_free (filename);
     return -1;
   }
 
@@ -149,6 +150,8 @@ main (int argc, char *argv[])
 
   if (data->source == NULL) {
     g_print ("Bad source\n");
+    g_main_loop_unref (data->loop);
+    g_free (data);
     return -1;
   }
 
@@ -178,6 +181,9 @@ main (int argc, char *argv[])
 
   if (data->sink == NULL) {
     g_print ("Bad sink\n");
+    gst_object_unref (data->source);
+    g_main_loop_unref (data->loop);
+    g_free (data);
     return -1;
   }
 
