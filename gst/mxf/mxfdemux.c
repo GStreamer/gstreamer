@@ -108,6 +108,7 @@ static void
 gst_mxf_demux_pad_init (GstMXFDemuxPad * pad)
 {
   pad->position = 0;
+  pad->current_material_track_position = 0;
 }
 
 enum
@@ -1010,7 +1011,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
           MXF_METADATA_SOURCE_CLIP (sequence->structural_components
           [component_index]);
       if (!component) {
-        GST_WARNING_OBJECT (demux, "NULL conponent in non source package");
+        GST_WARNING_OBJECT (demux, "NULL component in non-source package");
         if (!pad) {
           continue;
         } else {
@@ -1160,6 +1161,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
     if (first_run && MXF_IS_METADATA_MATERIAL_PACKAGE (current_package)) {
       pad->current_component_index = 0;
       pad->current_component_start = source_track->origin;
+      pad->current_component_start_position = 0;
 
       if (component->parent.duration >= -1)
         pad->current_component_duration = component->parent.duration;
@@ -1569,7 +1571,13 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
     return GST_FLOW_ERROR;
   }
 
-  pad->current_component_start = source_track->origin;
+  pad->current_component_start_position = 0;
+  for (k = 0; k < i; k++) {
+    pad->current_component_start_position +=
+        MXF_METADATA_SOURCE_CLIP (sequence->structural_components[k])->
+        parent.duration;
+  }
+
   if (pad->current_component->parent.duration >= -1)
     pad->current_component_duration = pad->current_component->parent.duration;
   else
@@ -1591,7 +1599,6 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
     pad->current_component_start += pad->current_component->start_position;
   }
   pad->current_essence_track_position = pad->current_component_start;
-
 
   pad_caps = gst_pad_get_current_caps (GST_PAD_CAST (pad));
   if (!gst_caps_is_equal (pad_caps, pad->current_essence_track->caps)) {
@@ -1852,14 +1859,19 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         gst_buffer_get_size (inbuf));
 
     GST_BUFFER_DTS (outbuf) = pad->position;
-    if (etrack->intra_only)
+    if (etrack->intra_only) {
       GST_BUFFER_PTS (outbuf) = pad->position;
-    else if (pts != G_MAXUINT64)
+    } else if (pts != G_MAXUINT64) {
       GST_BUFFER_PTS (outbuf) = gst_util_uint64_scale (pts * GST_SECOND,
           pad->current_essence_track->source_track->edit_rate.d,
           pad->current_essence_track->source_track->edit_rate.n);
-    else
+      GST_BUFFER_PTS (outbuf) +=
+          gst_util_uint64_scale (pad->current_component_start_position *
+          GST_SECOND, pad->current_essence_track->source_track->edit_rate.d,
+          pad->current_essence_track->source_track->edit_rate.n);
+    } else {
       GST_BUFFER_PTS (outbuf) = GST_CLOCK_TIME_NONE;
+    }
 
     GST_BUFFER_DURATION (outbuf) =
         gst_util_uint64_scale (GST_SECOND,
@@ -1901,6 +1913,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     }
 
     pad->position += GST_BUFFER_DURATION (outbuf);
+    pad->current_material_track_position++;
 
     GST_DEBUG_OBJECT (demux,
         "Pushing buffer of size %" G_GSIZE_FORMAT " for track %u: pts %"
@@ -3350,7 +3363,7 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
     GstClockTime start)
 {
   guint i;
-  GstClockTime sum = 0;
+  guint64 sum = 0;
   MXFMetadataSourceClip *clip = NULL;
 
   if (!p->current_component) {
@@ -3369,6 +3382,7 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
       p->position = start;
     }
     p->position_accumulated_error = 0.0;
+    p->current_material_track_position = p->current_essence_track_position;
 
     return;
   }
@@ -3382,30 +3396,30 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
     if (clip->parent.duration <= 0)
       break;
 
-    sum +=
-        gst_util_uint64_scale (clip->parent.duration,
-        p->material_track->edit_rate.d * GST_SECOND,
-        p->material_track->edit_rate.n);
+    sum += clip->parent.duration;
 
-    if (sum > start)
+    if (gst_util_uint64_scale (sum, p->material_track->edit_rate.d * GST_SECOND,
+            p->material_track->edit_rate.n) > start)
       break;
   }
 
   if (i == p->material_track->parent.sequence->n_structural_components) {
-    p->position = sum;
+    p->position =
+        gst_util_uint64_scale (sum, p->material_track->edit_rate.d * GST_SECOND,
+        p->material_track->edit_rate.n);
     p->position_accumulated_error = 0.0;
+    p->current_material_track_position = sum;
 
     gst_mxf_demux_pad_set_component (demux, p, i);
     return;
   }
 
   if (clip->parent.duration > 0)
-    sum -=
-        gst_util_uint64_scale (clip->parent.duration,
-        p->material_track->edit_rate.d * GST_SECOND,
-        p->material_track->edit_rate.n);
+    sum -= clip->parent.duration;
 
-  start -= sum;
+  start -=
+      gst_util_uint64_scale (sum, p->material_track->edit_rate.d * GST_SECOND,
+      p->material_track->edit_rate.n);
 
   gst_mxf_demux_pad_set_component (demux, p, i);
 
@@ -3416,19 +3430,25 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
 
     p->current_essence_track_position += essence_offset;
 
-    p->position = sum + gst_util_uint64_scale (essence_offset,
+    p->position = gst_util_uint64_scale (sum,
         GST_SECOND * p->material_track->edit_rate.d,
-        p->material_track->edit_rate.n);
+        p->material_track->edit_rate.n) + gst_util_uint64_scale (essence_offset,
+        GST_SECOND * p->current_essence_track->source_track->edit_rate.d,
+        p->current_essence_track->source_track->edit_rate.n);
     p->position_accumulated_error = 0.0;
+    p->current_material_track_position = sum + essence_offset;
   }
 
   if (p->current_essence_track_position >= p->current_essence_track->duration
       && p->current_essence_track->duration > 0) {
     p->current_essence_track_position = p->current_essence_track->duration;
     p->position =
-        sum + gst_util_uint64_scale (p->current_component->parent.duration,
+        gst_util_uint64_scale (sum + p->current_component->parent.duration,
         p->material_track->edit_rate.d * GST_SECOND,
         p->material_track->edit_rate.n);
+    p->position_accumulated_error = 0.0;
+    p->current_material_track_position =
+        sum + p->current_component->parent.duration;
   }
 }
 
@@ -3823,6 +3843,14 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
               position,
               GST_SECOND * p->current_essence_track->source_track->edit_rate.d,
               p->current_essence_track->source_track->edit_rate.n);
+          p->position_accumulated_error = 0.0;
+          p->current_material_track_position -=
+              gst_util_uint64_scale (p->current_essence_track_position -
+              position,
+              p->material_track->edit_rate.n *
+              p->current_essence_track->source_track->edit_rate.d,
+              p->material_track->edit_rate.d *
+              p->current_essence_track->source_track->edit_rate.n);
         }
         p->current_essence_track_position = position;
 
@@ -3970,22 +3998,10 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT)
         goto error;
 
-      pos = mxfpad->position;
-
-      g_rw_lock_reader_lock (&demux->metadata_lock);
-      if (format == GST_FORMAT_DEFAULT && pos != GST_CLOCK_TIME_NONE) {
-        if (!mxfpad->material_track || mxfpad->material_track->edit_rate.n == 0
-            || mxfpad->material_track->edit_rate.d == 0) {
-          g_rw_lock_reader_unlock (&demux->metadata_lock);
-          goto error;
-        }
-
-        pos =
-            gst_util_uint64_scale (pos,
-            mxfpad->material_track->edit_rate.n,
-            mxfpad->material_track->edit_rate.d * GST_SECOND);
-      }
-      g_rw_lock_reader_unlock (&demux->metadata_lock);
+      pos =
+          format ==
+          GST_FORMAT_DEFAULT ? mxfpad->current_material_track_position :
+          mxfpad->position;
 
       GST_DEBUG_OBJECT (pad,
           "Returning position %" G_GINT64_FORMAT " in format %s", pos,

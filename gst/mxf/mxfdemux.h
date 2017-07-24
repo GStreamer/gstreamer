@@ -116,6 +116,9 @@ struct _GstMXFDemuxPad
 
   GstClockTime position;
   gdouble position_accumulated_error;
+  /* Current position in the material track */
+  gint64 current_material_track_position;
+
   gboolean eos, discont;
 
   GstTagList *tags;
@@ -126,6 +129,10 @@ struct _GstMXFDemuxPad
   guint current_component_index;
   MXFMetadataSourceClip *current_component;
 
+  /* Position in the material track where this component started */
+  gint64 current_component_start_position;
+
+  /* Position/duration in the source track */
   gint64 current_component_start;
   gint64 current_component_duration;
 
