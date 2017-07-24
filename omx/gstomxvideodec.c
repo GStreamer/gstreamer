@@ -1988,198 +1988,112 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
 }
 
 static gboolean
-gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
-    GstVideoCodecState * state)
+gst_omx_video_dec_disable (GstOMXVideoDec * self)
 {
-  GstOMXVideoDec *self;
-  GstOMXVideoDecClass *klass;
-  GstVideoInfo *info = &state->info;
-  gboolean is_format_change = FALSE;
-  gboolean needs_disable = FALSE;
-  OMX_PARAM_PORTDEFINITIONTYPE port_def;
+  GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
 
-  self = GST_OMX_VIDEO_DEC (decoder);
-  klass = GST_OMX_VIDEO_DEC_GET_CLASS (decoder);
-
-  GST_DEBUG_OBJECT (self, "Setting new caps %" GST_PTR_FORMAT, state->caps);
-
-  if (!self->dmabuf
-      && gst_caps_features_contains (gst_caps_get_features (state->caps, 0),
-          GST_CAPS_FEATURE_MEMORY_DMABUF)) {
-    GST_WARNING_OBJECT (self,
-        "caps has the 'memory:DMABuf' feature but decoder cannot produce dmabuf");
-    return FALSE;
-  }
-
-  gst_omx_port_get_port_definition (self->dec_in_port, &port_def);
-
-  /* Check if the caps change is a real format change or if only irrelevant
-   * parts of the caps have changed or nothing at all.
-   */
-  is_format_change |= port_def.format.video.nFrameWidth != info->width;
-  is_format_change |= port_def.format.video.nFrameHeight != info->height;
-  is_format_change |= (port_def.format.video.xFramerate == 0
-      && info->fps_n != 0)
-      || (port_def.format.video.xFramerate !=
-      (info->fps_n << 16) / (info->fps_d));
-  is_format_change |= (self->codec_data != state->codec_data);
-  if (klass->is_format_change)
-    is_format_change |=
-        klass->is_format_change (self, self->dec_in_port, state);
-
-  needs_disable =
-      gst_omx_component_get_state (self->dec,
-      GST_CLOCK_TIME_NONE) != OMX_StateLoaded;
-  /* If the component is not in Loaded state and a real format change happens
-   * we have to disable the port and re-allocate all buffers. If no real
-   * format change happened we can just exit here.
-   */
-  if (needs_disable && !is_format_change) {
-    GST_DEBUG_OBJECT (self,
-        "Already running and caps did not change the format");
-    if (self->input_state)
-      gst_video_codec_state_unref (self->input_state);
-    self->input_state = gst_video_codec_state_ref (state);
-    return TRUE;
-  }
-
-  if (needs_disable && is_format_change) {
 #if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
-    GstOMXPort *out_port =
-        self->eglimage ? self->egl_out_port : self->dec_out_port;
+  GstOMXPort *out_port =
+      self->eglimage ? self->egl_out_port : self->dec_out_port;
 #else
-    GstOMXPort *out_port = self->dec_out_port;
+  GstOMXPort *out_port = self->dec_out_port;
 #endif
 
-    GST_DEBUG_OBJECT (self, "Need to disable and drain decoder");
+  GST_DEBUG_OBJECT (self, "Need to disable and drain decoder");
 
-    gst_omx_video_dec_drain (decoder);
-    gst_omx_port_set_flushing (out_port, 5 * GST_SECOND, TRUE);
+  gst_omx_video_dec_drain (GST_VIDEO_DECODER (self));
+  gst_omx_port_set_flushing (out_port, 5 * GST_SECOND, TRUE);
 
-    if (klass->cdata.hacks & GST_OMX_HACK_NO_COMPONENT_RECONFIGURE) {
-      GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-      gst_omx_video_dec_stop (GST_VIDEO_DECODER (self));
-      gst_omx_video_dec_close (GST_VIDEO_DECODER (self));
-      GST_VIDEO_DECODER_STREAM_LOCK (self);
+  if (klass->cdata.hacks & GST_OMX_HACK_NO_COMPONENT_RECONFIGURE) {
+    GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+    gst_omx_video_dec_stop (GST_VIDEO_DECODER (self));
+    gst_omx_video_dec_close (GST_VIDEO_DECODER (self));
+    GST_VIDEO_DECODER_STREAM_LOCK (self);
 
-      if (!gst_omx_video_dec_open (GST_VIDEO_DECODER (self)))
-        return FALSE;
-      needs_disable = FALSE;
-
-      /* The local port_def is now obsolete so get it again. */
-      gst_omx_port_get_port_definition (self->dec_in_port, &port_def);
-    } else {
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
-      if (self->eglimage) {
-        gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, TRUE);
-        gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
-        gst_omx_port_set_flushing (self->egl_in_port, 5 * GST_SECOND, TRUE);
-        gst_omx_port_set_flushing (self->egl_out_port, 5 * GST_SECOND, TRUE);
-      }
-#endif
-
-      if (gst_omx_port_set_enabled (self->dec_in_port, FALSE) != OMX_ErrorNone)
-        return FALSE;
-      if (gst_omx_port_set_enabled (out_port, FALSE) != OMX_ErrorNone)
-        return FALSE;
-      if (gst_omx_port_wait_buffers_released (self->dec_in_port,
-              5 * GST_SECOND) != OMX_ErrorNone)
-        return FALSE;
-      if (gst_omx_port_wait_buffers_released (out_port,
-              1 * GST_SECOND) != OMX_ErrorNone)
-        return FALSE;
-      if (gst_omx_port_deallocate_buffers (self->dec_in_port) != OMX_ErrorNone)
-        return FALSE;
-      if (gst_omx_video_dec_deallocate_output_buffers (self) != OMX_ErrorNone)
-        return FALSE;
-      if (gst_omx_port_wait_enabled (self->dec_in_port,
-              1 * GST_SECOND) != OMX_ErrorNone)
-        return FALSE;
-      if (gst_omx_port_wait_enabled (out_port, 1 * GST_SECOND) != OMX_ErrorNone)
-        return FALSE;
-
-#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
-      if (self->eglimage) {
-        OMX_STATETYPE egl_state;
-
-        egl_state = gst_omx_component_get_state (self->egl_render, 0);
-        if (egl_state > OMX_StateLoaded || egl_state == OMX_StateInvalid) {
-
-          if (egl_state > OMX_StateIdle) {
-            gst_omx_component_set_state (self->egl_render, OMX_StateIdle);
-            gst_omx_component_set_state (self->dec, OMX_StateIdle);
-            egl_state = gst_omx_component_get_state (self->egl_render,
-                5 * GST_SECOND);
-            gst_omx_component_get_state (self->dec, 1 * GST_SECOND);
-          }
-          gst_omx_component_set_state (self->egl_render, OMX_StateLoaded);
-          gst_omx_component_set_state (self->dec, OMX_StateLoaded);
-
-          gst_omx_close_tunnel (self->dec_out_port, self->egl_in_port);
-
-          if (egl_state > OMX_StateLoaded) {
-            gst_omx_component_get_state (self->egl_render, 5 * GST_SECOND);
-          }
-
-          gst_omx_component_set_state (self->dec, OMX_StateIdle);
-
-          gst_omx_component_set_state (self->dec, OMX_StateExecuting);
-          gst_omx_component_get_state (self->dec, GST_CLOCK_TIME_NONE);
-        }
-        self->eglimage = FALSE;
-      }
-#endif
-    }
-    if (self->input_state)
-      gst_video_codec_state_unref (self->input_state);
-    self->input_state = NULL;
-
-    GST_DEBUG_OBJECT (self, "Decoder drained and disabled");
-  }
-
-  port_def.format.video.nFrameWidth = info->width;
-  port_def.format.video.nFrameHeight = info->height;
-  if (info->fps_n == 0)
-    port_def.format.video.xFramerate = 0;
-  else
-    port_def.format.video.xFramerate = (info->fps_n << 16) / (info->fps_d);
-
-  GST_DEBUG_OBJECT (self, "Setting inport port definition");
-
-  if (gst_omx_port_update_port_definition (self->dec_in_port,
-          &port_def) != OMX_ErrorNone)
-    return FALSE;
-
-  if (klass->set_format) {
-    if (!klass->set_format (self, self->dec_in_port, state)) {
-      GST_ERROR_OBJECT (self, "Subclass failed to set the new format");
+    if (!gst_omx_video_dec_open (GST_VIDEO_DECODER (self)))
       return FALSE;
+
+    self->disabled = FALSE;
+  } else {
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
+    if (self->eglimage) {
+      gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, TRUE);
+      gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
+      gst_omx_port_set_flushing (self->egl_in_port, 5 * GST_SECOND, TRUE);
+      gst_omx_port_set_flushing (self->egl_out_port, 5 * GST_SECOND, TRUE);
     }
-  }
-#if OMX_VERSION_MINOR == 2
-  /* In OMX-IL 1.2.0, the nFrameWidth/Height changes are propagated to the
-   * the output port upon call to the SetParameter on in port above. This
-   * propagation triggers a SettingsChanged event. It is up to the client
-   * to decide if this event should lead to reconfigure the port. Here
-   * this is clearly informal so lets just acknowledge the event to avoid
-   * output port reconfiguration. Note that the SettingsChanged event will
-   * be sent in-context of the SetParameter call above. So the event is
-   * garantie to be proceeded in the handle_message call below. */
-  if (gst_omx_port_mark_reconfigured (self->dec_out_port) != OMX_ErrorNone)
-    return FALSE;
-#else
-  GST_DEBUG_OBJECT (self, "Updating outport port definition");
-  if (gst_omx_port_update_port_definition (self->dec_out_port,
-          NULL) != OMX_ErrorNone)
-    return FALSE;
 #endif
 
-  gst_buffer_replace (&self->codec_data, state->codec_data);
-  self->input_state = gst_video_codec_state_ref (state);
+    if (gst_omx_port_set_enabled (self->dec_in_port, FALSE) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_set_enabled (out_port, FALSE) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_wait_buffers_released (self->dec_in_port,
+            5 * GST_SECOND) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_wait_buffers_released (out_port,
+            1 * GST_SECOND) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_deallocate_buffers (self->dec_in_port) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_video_dec_deallocate_output_buffers (self) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_wait_enabled (self->dec_in_port,
+            1 * GST_SECOND) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_wait_enabled (out_port, 1 * GST_SECOND) != OMX_ErrorNone)
+      return FALSE;
+
+#if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
+    if (self->eglimage) {
+      OMX_STATETYPE egl_state;
+
+      egl_state = gst_omx_component_get_state (self->egl_render, 0);
+      if (egl_state > OMX_StateLoaded || egl_state == OMX_StateInvalid) {
+
+        if (egl_state > OMX_StateIdle) {
+          gst_omx_component_set_state (self->egl_render, OMX_StateIdle);
+          gst_omx_component_set_state (self->dec, OMX_StateIdle);
+          egl_state = gst_omx_component_get_state (self->egl_render,
+              5 * GST_SECOND);
+          gst_omx_component_get_state (self->dec, 1 * GST_SECOND);
+        }
+        gst_omx_component_set_state (self->egl_render, OMX_StateLoaded);
+        gst_omx_component_set_state (self->dec, OMX_StateLoaded);
+
+        gst_omx_close_tunnel (self->dec_out_port, self->egl_in_port);
+
+        if (egl_state > OMX_StateLoaded) {
+          gst_omx_component_get_state (self->egl_render, 5 * GST_SECOND);
+        }
+
+        gst_omx_component_set_state (self->dec, OMX_StateIdle);
+
+        gst_omx_component_set_state (self->dec, OMX_StateExecuting);
+        gst_omx_component_get_state (self->dec, GST_CLOCK_TIME_NONE);
+      }
+      self->eglimage = FALSE;
+    }
+#endif
+
+    self->disabled = TRUE;
+  }
+  if (self->input_state)
+    gst_video_codec_state_unref (self->input_state);
+  self->input_state = NULL;
+
+  GST_DEBUG_OBJECT (self, "Decoder drained and disabled");
+  return TRUE;
+}
+
+static gboolean
+gst_omx_video_dec_enable (GstOMXVideoDec * self)
+{
+  GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
 
   GST_DEBUG_OBJECT (self, "Enabling component");
 
-  if (needs_disable) {
+  if (self->disabled) {
     if (gst_omx_port_set_enabled (self->dec_in_port, TRUE) != OMX_ErrorNone)
       return FALSE;
     if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
@@ -2256,6 +2170,120 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
         gst_omx_component_get_last_error (self->dec));
     return FALSE;
   }
+
+  self->disabled = FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
+    GstVideoCodecState * state)
+{
+  GstOMXVideoDec *self;
+  GstOMXVideoDecClass *klass;
+  GstVideoInfo *info = &state->info;
+  gboolean is_format_change = FALSE;
+  gboolean needs_disable = FALSE;
+  OMX_PARAM_PORTDEFINITIONTYPE port_def;
+
+  self = GST_OMX_VIDEO_DEC (decoder);
+  klass = GST_OMX_VIDEO_DEC_GET_CLASS (decoder);
+
+  GST_DEBUG_OBJECT (self, "Setting new caps %" GST_PTR_FORMAT, state->caps);
+
+  if (!self->dmabuf
+      && gst_caps_features_contains (gst_caps_get_features (state->caps, 0),
+          GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+    GST_WARNING_OBJECT (self,
+        "caps has the 'memory:DMABuf' feature but decoder cannot produce dmabuf");
+    return FALSE;
+  }
+
+  gst_omx_port_get_port_definition (self->dec_in_port, &port_def);
+
+  /* Check if the caps change is a real format change or if only irrelevant
+   * parts of the caps have changed or nothing at all.
+   */
+  is_format_change |= port_def.format.video.nFrameWidth != info->width;
+  is_format_change |= port_def.format.video.nFrameHeight != info->height;
+  is_format_change |= (port_def.format.video.xFramerate == 0
+      && info->fps_n != 0)
+      || (port_def.format.video.xFramerate !=
+      (info->fps_n << 16) / (info->fps_d));
+  is_format_change |= (self->codec_data != state->codec_data);
+  if (klass->is_format_change)
+    is_format_change |=
+        klass->is_format_change (self, self->dec_in_port, state);
+
+  needs_disable =
+      gst_omx_component_get_state (self->dec,
+      GST_CLOCK_TIME_NONE) != OMX_StateLoaded;
+  /* If the component is not in Loaded state and a real format change happens
+   * we have to disable the port and re-allocate all buffers. If no real
+   * format change happened we can just exit here.
+   */
+  if (needs_disable && !is_format_change) {
+    GST_DEBUG_OBJECT (self,
+        "Already running and caps did not change the format");
+    if (self->input_state)
+      gst_video_codec_state_unref (self->input_state);
+    self->input_state = gst_video_codec_state_ref (state);
+    return TRUE;
+  }
+
+  if (needs_disable && is_format_change) {
+    if (!gst_omx_video_dec_disable (self))
+      return FALSE;
+
+    if (!self->disabled) {
+      /* The local port_def is now obsolete so get it again. */
+      gst_omx_port_get_port_definition (self->dec_in_port, &port_def);
+    }
+  }
+
+  port_def.format.video.nFrameWidth = info->width;
+  port_def.format.video.nFrameHeight = info->height;
+  if (info->fps_n == 0)
+    port_def.format.video.xFramerate = 0;
+  else
+    port_def.format.video.xFramerate = (info->fps_n << 16) / (info->fps_d);
+
+  GST_DEBUG_OBJECT (self, "Setting inport port definition");
+
+  if (gst_omx_port_update_port_definition (self->dec_in_port,
+          &port_def) != OMX_ErrorNone)
+    return FALSE;
+
+  if (klass->set_format) {
+    if (!klass->set_format (self, self->dec_in_port, state)) {
+      GST_ERROR_OBJECT (self, "Subclass failed to set the new format");
+      return FALSE;
+    }
+  }
+#if OMX_VERSION_MINOR == 2
+  /* In OMX-IL 1.2.0, the nFrameWidth/Height changes are propagated to the
+   * the output port upon call to the SetParameter on in port above. This
+   * propagation triggers a SettingsChanged event. It is up to the client
+   * to decide if this event should lead to reconfigure the port. Here
+   * this is clearly informal so lets just acknowledge the event to avoid
+   * output port reconfiguration. Note that the SettingsChanged event will
+   * be sent in-context of the SetParameter call above. So the event is
+   * garantie to be proceeded in the handle_message call below. */
+  if (gst_omx_port_mark_reconfigured (self->dec_out_port) != OMX_ErrorNone)
+    return FALSE;
+#else
+  GST_DEBUG_OBJECT (self, "Updating outport port definition");
+  if (gst_omx_port_update_port_definition (self->dec_out_port,
+          NULL) != OMX_ErrorNone)
+    return FALSE;
+#endif
+
+  gst_buffer_replace (&self->codec_data, state->codec_data);
+  self->input_state = gst_video_codec_state_ref (state);
+
+  if (!gst_omx_video_dec_enable (self))
+    return FALSE;
 
   self->downstream_flow_ret = GST_FLOW_OK;
   return TRUE;
