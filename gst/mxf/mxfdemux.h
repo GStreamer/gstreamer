@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstflowcombiner.h>
+#include <gst/video/video.h>
 
 #include "mxfessence.h"
 
@@ -125,6 +126,8 @@ struct _GstMXFDemuxPad
 
   MXFMetadataGenericPackage *material_package;
   MXFMetadataTimelineTrack *material_track;
+
+  GstVideoTimeCode start_timecode;
 
   guint current_component_index;
   MXFMetadataSourceClip *current_component;
