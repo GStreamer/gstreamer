@@ -244,7 +244,7 @@ static GstCaps *
 gst_audio_convert_caps_remove_format_info (GstCaps * caps, gboolean channels)
 {
   GstStructure *st;
-  gint i, n;
+  gint i, n, n_channels;
   GstCaps *res;
   guint64 channel_mask;
 
@@ -267,7 +267,9 @@ gst_audio_convert_caps_remove_format_info (GstCaps * caps, gboolean channels)
     /* Only remove the channels and channel-mask for non-NONE layouts */
     if (gst_structure_get (st, "channel-mask", GST_TYPE_BITMASK, &channel_mask,
             NULL)) {
-      if (channel_mask != 0)
+      if (channel_mask != 0
+          || (gst_structure_get_int (st, "channels", &n_channels)
+              && (n_channels == 1)))
         remove_channels = TRUE;
     } else {
       remove_channels = TRUE;
