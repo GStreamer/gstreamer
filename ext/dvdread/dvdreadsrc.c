@@ -559,6 +559,7 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
       lang_code[0] = (u->lang_code >> 8) & 0xff;
       lang_code[1] = u->lang_code & 0xff;
       gst_structure_set (s, t, G_TYPE_STRING, lang_code, NULL);
+      g_free (t);
       t = g_strdup_printf ("subpicture-%d-stream", i);
       gst_structure_set (s, t, G_TYPE_INT, (int) sid, NULL);
       g_free (t);
