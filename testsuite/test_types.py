@@ -36,8 +36,8 @@ class TestDoubleRange(TestCase):
         Gst.init(None)
 
         Gst.DoubleRange = Gst.DoubleRange(1.2, 3.4)
-        self.assertEquals(r.start, 1.2)
-        self.assertEquals(r.stop, 3.4)
+        self.assertEqual(r.start, 1.2)
+        self.assertEqual(r.stop, 3.4)
         self.assertRaises(TypeError, Gst.DoubleRange, {}, 2)
         self.assertRaises(TypeError, Gst.DoubleRange, 2, ())
         self.assertRaises(TypeError, Gst.DoubleRange, 2, 1)
@@ -46,7 +46,7 @@ class TestDoubleRange(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEquals(repr(Gst.DoubleRange(1,2)), '<Gst.DoubleRange [1.0,2.0]>')
+        self.assertEqual(repr(Gst.DoubleRange(1,2)), '<Gst.DoubleRange [1.0,2.0]>')
 
     def testGetValue(self):
         Gst.init(None)
@@ -55,8 +55,8 @@ class TestDoubleRange(TestCase):
         st["range"] = Gst.DoubleRange(1,2)
         value = st["range"]
 
-        self.failUnlessEqual(value.start, 1.0)
-        self.failUnlessEqual(value.stop, 2.0)
+        self.assertEqual(value.start, 1.0)
+        self.assertEqual(value.stop, 2.0)
 
 
 class TestFraction(TestCase):
@@ -64,67 +64,67 @@ class TestFraction(TestCase):
         Gst.init(None)
 
         frac = Gst.Fraction(1, 2)
-        self.assertEquals(frac.num, 1)
-        self.assertEquals(frac.denom, 2)
+        self.assertEqual(frac.num, 1)
+        self.assertEqual(frac.denom, 2)
 
         frac = Gst.Fraction(1)
-        self.assertEquals(frac.num, 1)
-        self.assertEquals(frac.denom, 1)
+        self.assertEqual(frac.num, 1)
+        self.assertEqual(frac.denom, 1)
 
         self.assertRaises(TypeError, Gst.Fraction)
 
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEquals(repr(Gst.Fraction(1, 2)), '<Gst.Fraction 1/2>')
+        self.assertEqual(repr(Gst.Fraction(1, 2)), '<Gst.Fraction 1/2>')
 
     def testEqNe(self):
         Gst.init(None)
 
         frac = Gst.Fraction(1, 2)
-        self.assertEquals(frac, frac)
-        self.assertEquals(Gst.Fraction(1, 2), Gst.Fraction(1, 2))
-        self.assertEquals(Gst.Fraction(2, 4), Gst.Fraction(1, 2))
+        self.assertEqual(frac, frac)
+        self.assertEqual(Gst.Fraction(1, 2), Gst.Fraction(1, 2))
+        self.assertEqual(Gst.Fraction(2, 4), Gst.Fraction(1, 2))
 
-        self.assertNotEquals(Gst.Fraction(1, 3), Gst.Fraction(1, 2))
-        self.assertNotEquals(Gst.Fraction(2, 1), Gst.Fraction(1, 2))
+        self.assertNotEqual(Gst.Fraction(1, 3), Gst.Fraction(1, 2))
+        self.assertNotEqual(Gst.Fraction(2, 1), Gst.Fraction(1, 2))
 
     def testMul(self):
         Gst.init(None)
 
-        self.assertEquals(Gst.Fraction(1, 2) * Gst.Fraction(1, 2), Gst.Fraction(1, 4))
-        self.assertEquals(Gst.Fraction(2, 3) * Gst.Fraction(4, 5), Gst.Fraction(8, 15))
-        self.assertEquals(Gst.Fraction(1, 3) * Gst.Fraction(4), Gst.Fraction(4, 3))
-        self.assertEquals(Gst.Fraction(1, 3) * 4, Gst.Fraction(4, 3))
+        self.assertEqual(Gst.Fraction(1, 2) * Gst.Fraction(1, 2), Gst.Fraction(1, 4))
+        self.assertEqual(Gst.Fraction(2, 3) * Gst.Fraction(4, 5), Gst.Fraction(8, 15))
+        self.assertEqual(Gst.Fraction(1, 3) * Gst.Fraction(4), Gst.Fraction(4, 3))
+        self.assertEqual(Gst.Fraction(1, 3) * 4, Gst.Fraction(4, 3))
 
     def testRMul(self):
         Gst.init(None)
 
-        self.assertEquals(2 * Gst.Fraction(1, 2), Gst.Fraction(1))
-        self.assertEquals(4 * Gst.Fraction(1, 2), Gst.Fraction(2))
-        self.assertEquals(-10 * Gst.Fraction(1, 2), Gst.Fraction(-5))
+        self.assertEqual(2 * Gst.Fraction(1, 2), Gst.Fraction(1))
+        self.assertEqual(4 * Gst.Fraction(1, 2), Gst.Fraction(2))
+        self.assertEqual(-10 * Gst.Fraction(1, 2), Gst.Fraction(-5))
 
     def testDiv(self):
         Gst.init(None)
 
-        self.assertEquals(Gst.Fraction(1, 3) / Gst.Fraction(1, 4), Gst.Fraction(4, 3))
-        self.assertEquals(Gst.Fraction(2, 3) / Gst.Fraction(4, 5), Gst.Fraction(10, 12))
+        self.assertEqual(Gst.Fraction(1, 3) / Gst.Fraction(1, 4), Gst.Fraction(4, 3))
+        self.assertEqual(Gst.Fraction(2, 3) / Gst.Fraction(4, 5), Gst.Fraction(10, 12))
 
-        self.assertEquals(Gst.Fraction(1, 3) / Gst.Fraction(4), Gst.Fraction(1, 12))
-        self.assertEquals(Gst.Fraction(1, 3) / 4, Gst.Fraction(1, 12))
-        self.assertEquals(Gst.Fraction(1, 3) / 2, Gst.Fraction(1, 6))
-        self.assertEquals(Gst.Fraction(1, 5) / -4, Gst.Fraction(1, -20))
+        self.assertEqual(Gst.Fraction(1, 3) / Gst.Fraction(4), Gst.Fraction(1, 12))
+        self.assertEqual(Gst.Fraction(1, 3) / 4, Gst.Fraction(1, 12))
+        self.assertEqual(Gst.Fraction(1, 3) / 2, Gst.Fraction(1, 6))
+        self.assertEqual(Gst.Fraction(1, 5) / -4, Gst.Fraction(1, -20))
 
     def testRDiv(self):
         Gst.init(None)
 
-        self.assertEquals(2 / Gst.Fraction(1, 3), Gst.Fraction(6, 1))
-        self.assertEquals(-4 / Gst.Fraction(1, 5), Gst.Fraction(-20, 1))
+        self.assertEqual(2 / Gst.Fraction(1, 3), Gst.Fraction(6, 1))
+        self.assertEqual(-4 / Gst.Fraction(1, 5), Gst.Fraction(-20, 1))
 
     def testFloat(self):
         Gst.init(None)
 
-        self.assertEquals(float(Gst.Fraction(1, 2)), 0.5)
+        self.assertEqual(float(Gst.Fraction(1, 2)), 0.5)
 
     def testPropertyMarshalling(self):
         Gst.init(None)
@@ -139,21 +139,21 @@ class TestFraction(TestCase):
             return
 
         value = obj.props.framerate
-        self.failUnlessEqual(value.num, 25)
-        self.failUnlessEqual(value.denom, 1)
+        self.assertEqual(value.num, 25)
+        self.assertEqual(value.denom, 1)
 
         obj.props.framerate = Gst.Fraction(2, 1)
         value = obj.props.framerate
-        self.failUnlessEqual(value.num, 2)
-        self.failUnlessEqual(value.denom, 1)
+        self.assertEqual(value.num, 2)
+        self.assertEqual(value.denom, 1)
 
         def bad():
             obj.props.framerate = 1
-        self.failUnlessRaises(TypeError, bad)
+        self.assertRaises(TypeError, bad)
 
         value = obj.props.framerate
-        self.failUnlessEqual(value.num, 2)
-        self.failUnlessEqual(value.denom, 1)
+        self.assertEqual(value.num, 2)
+        self.assertEqual(value.denom, 1)
 
     def testGetFractionValue(self):
         Gst.init(None)
@@ -161,8 +161,8 @@ class TestFraction(TestCase):
         st = Gst.Structure.from_string("video/x-raw,framerate=10/1")[0]
         value = st["framerate"]
 
-        self.failUnlessEqual(value.num, 10)
-        self.failUnlessEqual(value.denom, 1)
+        self.assertEqual(value.num, 10)
+        self.assertEqual(value.denom, 1)
 
 
 class TestFractionRange(TestCase):
@@ -170,8 +170,8 @@ class TestFractionRange(TestCase):
         Gst.init(None)
 
         r = Gst.FractionRange(Gst.Fraction(1, 30), Gst.Fraction(1, 2))
-        self.assertEquals(r.start, Gst.Fraction(1, 30))
-        self.assertEquals(r.stop, Gst.Fraction(1, 2))
+        self.assertEqual(r.start, Gst.Fraction(1, 30))
+        self.assertEqual(r.stop, Gst.Fraction(1, 2))
         self.assertRaises(TypeError, Gst.FractionRange, Gst.Fraction(1, 2), Gst.Fraction(1, 30))
         self.assertRaises(TypeError, Gst.FractionRange, 2, Gst.Fraction(1, 2))
         self.assertRaises(TypeError, Gst.FractionRange, Gst.Fraction(1, 2), 2)
@@ -180,7 +180,7 @@ class TestFractionRange(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEquals(repr(Gst.FractionRange(Gst.Fraction(1,30), Gst.Fraction(1,2))),
+        self.assertEqual(repr(Gst.FractionRange(Gst.Fraction(1,30), Gst.Fraction(1,2))),
                 '<Gst.FractionRange [1/30,1/2]>')
 
     def testGetValue(self):
@@ -190,16 +190,16 @@ class TestFractionRange(TestCase):
         st["range"] = Gst.FractionRange(Gst.Fraction(1, 30), Gst.Fraction(1, 2))
         value = st["range"]
 
-        self.failUnlessEqual(value.start, Gst.Fraction(1, 30))
-        self.failUnlessEqual(value.stop, Gst.Fraction(1, 2))
+        self.assertEqual(value.start, Gst.Fraction(1, 30))
+        self.assertEqual(value.stop, Gst.Fraction(1, 2))
 
 class TestDoubleRange(TestCase):
     def testConstructor(self):
         Gst.init(None)
 
         r = Gst.DoubleRange(1.2, 3.4)
-        self.assertEquals(r.start, 1.2)
-        self.assertEquals(r.stop, 3.4)
+        self.assertEqual(r.start, 1.2)
+        self.assertEqual(r.stop, 3.4)
         self.assertRaises(TypeError, Gst.DoubleRange, {}, 2)
         self.assertRaises(TypeError, Gst.DoubleRange, 2, ())
         self.assertRaises(TypeError, Gst.DoubleRange, 2, 1)
@@ -208,7 +208,7 @@ class TestDoubleRange(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEquals(repr(Gst.DoubleRange(1,2)), '<Gst.DoubleRange [1.0,2.0]>')
+        self.assertEqual(repr(Gst.DoubleRange(1,2)), '<Gst.DoubleRange [1.0,2.0]>')
 
     def testGetValue(self):
         Gst.init(None)
@@ -217,8 +217,8 @@ class TestDoubleRange(TestCase):
         st["range"] = Gst.DoubleRange(1,2)
         value = st["range"]
 
-        self.failUnlessEqual(value.start, 1.0)
-        self.failUnlessEqual(value.stop, 2.0)
+        self.assertEqual(value.start, 1.0)
+        self.assertEqual(value.stop, 2.0)
 
 
 class TestInt64Range(TestCase):
@@ -227,7 +227,7 @@ class TestInt64Range(TestCase):
         Gst.init(None)
 
         r = Gst.Int64Range(range(0, 10, 2))
-        self.assertEquals(r.range, range(0, 10, 2))
+        self.assertEqual(r.range, range(0, 10, 2))
         self.assertRaises(TypeError, Gst.Int64Range, range(1, 10, 2))
         self.assertRaises(TypeError, Gst.Int64Range, range(0, 9, 2))
         self.assertRaises(TypeError, Gst.Int64Range, range(10, 0))
@@ -238,7 +238,7 @@ class TestInt64Range(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEquals(repr(Gst.Int64Range(range(0, 10, 2))), '<Gst.Int64Range [0,10,2]>')
+        self.assertEqual(repr(Gst.Int64Range(range(0, 10, 2))), '<Gst.Int64Range [0,10,2]>')
 
     @unittest.skipUnless(sys.version_info >= (3, 0), "requires Python 3")
     def testGetValue(self):
@@ -248,7 +248,7 @@ class TestInt64Range(TestCase):
         st["range"] = Gst.Int64Range(range(0, 10, 2))
         value = st["range"]
 
-        self.failUnlessEqual(value, range(0, 10, 2))
+        self.assertEqual(value, range(0, 10, 2))
 
 
 class TestValueArray(TestCase):
@@ -256,7 +256,7 @@ class TestValueArray(TestCase):
         Gst.init(None)
 
         a = Gst.ValueArray((1,2,3))
-        self.assertEquals(a.array, [1,2,3])
+        self.assertEqual(a.array, [1,2,3])
 
         self.assertRaises(TypeError, Gst.ValueArray, 1)
         self.assertRaises(TypeError, Gst.ValueArray)
@@ -264,7 +264,7 @@ class TestValueArray(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEquals(repr(Gst.ValueArray([1,2,3])), '<Gst.ValueArray <1,2,3>>')
+        self.assertEqual(repr(Gst.ValueArray([1,2,3])), '<Gst.ValueArray <1,2,3>>')
 
     def testPropertyMarshalling(self):
         Gst.init(None)
@@ -277,25 +277,25 @@ class TestValueArray(TestCase):
             return
 
         value = obj.props.plane_strides
-        self.failUnlessEqual(value[0], 320)
-        self.failUnlessEqual(value[1], 160)
-        self.failUnlessEqual(value[2], 160)
+        self.assertEqual(value[0], 320)
+        self.assertEqual(value[1], 160)
+        self.assertEqual(value[2], 160)
 
         obj.props.plane_strides = Gst.ValueArray([640,320,320])
 
         value = obj.props.plane_strides
-        self.failUnlessEqual(value[0], 640)
-        self.failUnlessEqual(value[1], 320)
-        self.failUnlessEqual(value[2], 320)
+        self.assertEqual(value[0], 640)
+        self.assertEqual(value[1], 320)
+        self.assertEqual(value[2], 320)
 
         def bad():
             obj.props.plane_strides = 1
-        self.failUnlessRaises(TypeError, bad)
+        self.assertRaises(TypeError, bad)
 
         value = obj.props.plane_strides
-        self.failUnlessEqual(value[0], 640)
-        self.failUnlessEqual(value[1], 320)
-        self.failUnlessEqual(value[2], 320)
+        self.assertEqual(value[0], 640)
+        self.assertEqual(value[1], 320)
+        self.assertEqual(value[2], 320)
 
     def testGetValue(self):
         Gst.init(None)
@@ -305,16 +305,16 @@ class TestValueArray(TestCase):
         value = st["array"]
         st["array"] = Gst.ValueArray(value)
 
-        self.failUnlessEqual(value[0], Gst.Fraction(1, 30))
-        self.failUnlessEqual(value[1], Gst.Fraction(1, 2))
+        self.assertEqual(value[0], Gst.Fraction(1, 30))
+        self.assertEqual(value[1], Gst.Fraction(1, 2))
 
         st["matrix"] = Gst.ValueArray([Gst.ValueArray([0, 1]), Gst.ValueArray([-1, 0])])
         value = st["matrix"]
 
-        self.failUnlessEqual(value[0][0], 0)
-        self.failUnlessEqual(value[0][1], 1)
-        self.failUnlessEqual(value[1][0], -1)
-        self.failUnlessEqual(value[1][1], 0)
+        self.assertEqual(value[0][0], 0)
+        self.assertEqual(value[0][1], 1)
+        self.assertEqual(value[1][0], -1)
+        self.assertEqual(value[1][1], 0)
 
 
 class TestValueList(TestCase):
@@ -322,7 +322,7 @@ class TestValueList(TestCase):
         Gst.init(None)
 
         a = Gst.ValueList((1,2,3))
-        self.assertEquals(a.array, [1,2,3])
+        self.assertEqual(a.array, [1,2,3])
 
         self.assertRaises(TypeError, Gst.ValueList, 1)
         self.assertRaises(TypeError, Gst.ValueList)
@@ -330,7 +330,7 @@ class TestValueList(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEquals(repr(Gst.ValueList([1,2,3])), '<Gst.ValueList {1,2,3}>')
+        self.assertEqual(repr(Gst.ValueList([1,2,3])), '<Gst.ValueList {1,2,3}>')
 
     def testGetValue(self):
         Gst.init(None)
@@ -339,16 +339,16 @@ class TestValueList(TestCase):
         st["framerate"] = Gst.ValueList([Gst.Fraction(1, 30), Gst.Fraction(1, 2)])
         value = st["framerate"]
 
-        self.failUnlessEqual(value[0], Gst.Fraction(1, 30))
-        self.failUnlessEqual(value[1], Gst.Fraction(1, 2))
+        self.assertEqual(value[0], Gst.Fraction(1, 30))
+        self.assertEqual(value[1], Gst.Fraction(1, 2))
 
         st["matrix"] = Gst.ValueList([Gst.ValueList([0, 1]), Gst.ValueList([-1 ,0])])
         value = st["matrix"]
 
-        self.failUnlessEqual(value[0][0], 0)
-        self.failUnlessEqual(value[0][1], 1)
-        self.failUnlessEqual(value[1][0], -1)
-        self.failUnlessEqual(value[1][1], 0)
+        self.assertEqual(value[0][0], 0)
+        self.assertEqual(value[0][1], 1)
+        self.assertEqual(value[1][0], -1)
+        self.assertEqual(value[1][1], 0)
 
 class TestIntRange(TestCase):
     @unittest.skipUnless(sys.version_info >= (3, 0), "requires Python 3")
@@ -356,7 +356,7 @@ class TestIntRange(TestCase):
         Gst.init(None)
 
         r = Gst.IntRange(range(0, 10, 2))
-        self.assertEquals(r.range, range(0, 10, 2))
+        self.assertEqual(r.range, range(0, 10, 2))
         self.assertRaises(TypeError, Gst.IntRange, range(1, 10, 2))
         self.assertRaises(TypeError, Gst.IntRange, range(0, 9, 2))
         self.assertRaises(TypeError, Gst.IntRange, range(10, 0))
@@ -367,7 +367,7 @@ class TestIntRange(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEquals(repr(Gst.IntRange(range(0, 10, 2))), '<Gst.IntRange [0,10,2]>')
+        self.assertEqual(repr(Gst.IntRange(range(0, 10, 2))), '<Gst.IntRange [0,10,2]>')
 
     @unittest.skipUnless(sys.version_info >= (3, 0), "requires Python 3")
     def testGetValue(self):
@@ -377,4 +377,4 @@ class TestIntRange(TestCase):
         st["range"] = Gst.IntRange(range(0, 10, 2))
         value = st["range"]
 
-        self.failUnlessEqual(value, range(0, 10, 2))
+        self.assertEqual(value, range(0, 10, 2))
