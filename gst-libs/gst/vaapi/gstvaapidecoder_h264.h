@@ -62,6 +62,10 @@ void
 gst_vaapi_decoder_h264_set_low_latency(GstVaapiDecoderH264 * decoder,
     gboolean force_low_latency);
 
+void
+gst_vaapi_decoder_h264_set_base_only(GstVaapiDecoderH264 * decoder,
+    gboolean base_only);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DECODER_H264_H */

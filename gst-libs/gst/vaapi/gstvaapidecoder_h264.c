@@ -530,6 +530,7 @@ struct _GstVaapiDecoderH264Private
   guint top_field_first:1;
 
   gboolean force_low_latency;
+  gboolean base_only;
 };
 
 /**
@@ -4798,6 +4799,24 @@ gst_vaapi_decoder_h264_set_alignment (GstVaapiDecoderH264 * decoder,
   g_return_if_fail (decoder != NULL);
 
   decoder->priv.stream_alignment = alignment;
+}
+
+/**
+ * gst_vaapi_decoder_h264_set_base_only:
+ * @decoder: a #GstVaapiDecoderH264
+ * @base_only: %TRUE to force decoding the base view only
+ *
+ * if @base_only is %TRUE only the base view of MVC encoded streams
+ * is decoded.
+ *
+ **/
+void
+gst_vaapi_decoder_h264_set_base_only (GstVaapiDecoderH264 * decoder,
+    gboolean base_only)
+{
+  g_return_if_fail (decoder != NULL);
+
+  decoder->priv.base_only = base_only;
 }
 
 /**
