@@ -29,6 +29,8 @@ import inspect
 from ..overrides import override
 from ..importer import modules
 
+from gi.repository import GLib
+
 
 if sys.version_info >= (3, 0):
     _basestring = str
@@ -245,12 +247,26 @@ class Structure(Gst.Structure):
 
         raise TypeError("wrong arguments when creating GstStructure object")
 
+    def __init__(self, *args, **kwargs):
+        pass
+
     def __getitem__(self, key):
         return self.get_value(key)
 
+    def keys(self):
+        keys = set()
+        def foreach(fid, value, unused1, udata):
+            keys.add(GLib.quark_to_string(fid))
+            return True
+
+        self.foreach(foreach, None, None)
+        return keys
 
     def __setitem__(self, key, value):
         return self.set_value(key, value)
+
+    def __str__(self):
+        return self.to_string()
 
 Structure = override(Structure)
 __all__.append('Structure')
