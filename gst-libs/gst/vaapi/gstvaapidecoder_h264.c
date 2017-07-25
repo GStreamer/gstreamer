@@ -4050,10 +4050,9 @@ decode_picture (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
   g_return_val_if_fail (sps != NULL, GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN);
 
   /* Only decode base stream for MVC */
-  switch (sps->profile_idc) {
-    case GST_H264_PROFILE_MULTIVIEW_HIGH:
-    case GST_H264_PROFILE_STEREO_HIGH:
-      break;
+  if (priv->base_only && is_mvc_profile (sps->profile_idc)) {
+    GST_DEBUG ("multiview sequence but base-only is set: dropping frame");
+    return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
   }
 
   status = ensure_context (decoder, sps);
