@@ -120,6 +120,7 @@ struct _GstVideoTimeCodeInterval {
   guint frames;
 };
 
+#define GST_VIDEO_TIME_CODE_INIT { {0, 0, 0, NULL}, 0, 0, 0, 0, 0 }
 
 #define GST_TYPE_VIDEO_TIME_CODE (gst_video_time_code_get_type())
 GST_EXPORT
