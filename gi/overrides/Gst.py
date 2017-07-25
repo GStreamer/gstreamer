@@ -432,6 +432,24 @@ class Int64Range(Gst.Int64Range):
             return self.range == other.range
         return False
 
+class Bitmask(Gst.Bitmask):
+    def __init__(self, v):
+        if not isinstance(v, int):
+            raise TypeError("%s is not an int." % (type(v)))
+
+        self.v = v
+
+    def __str__(self):
+        return hex(self.v)
+
+    def __eq__(self, other):
+        return self.v == other
+
+
+Bitmask = override(Bitmask)
+__all__.append('Bitmask')
+
+
 if sys.version_info >= (3, 0):
     Int64Range = override(Int64Range)
     __all__.append('Int64Range')
