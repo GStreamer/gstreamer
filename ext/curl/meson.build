@@ -8,6 +8,8 @@ curl_sources = [
   'gstcurlsmtpsink.c',
   'gstcurlsshsink.c',
   'gstcurltlssink.c',
+  'gstcurlhttpsrc.c',
+  'gstcurlqueue.c',
 ]
 
 curl_dep = dependency('libcurl', version : '>= 7.35.0', required : false)

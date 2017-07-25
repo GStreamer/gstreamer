@@ -714,7 +714,7 @@ gst_curl_base_sink_transfer_set_common_options_unlocked (GstCurlBaseSink * sink)
     return FALSE;
   }
   res = curl_easy_setopt (sink->curl, CURLOPT_LOW_SPEED_TIME,
-      (long)sink->timeout);
+      (long) sink->timeout);
   if (res != CURLE_OK) {
     sink->error = g_strdup_printf ("failed to set low speed time: %s",
         curl_easy_strerror (res));
