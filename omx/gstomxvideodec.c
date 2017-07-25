@@ -2394,6 +2394,11 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
+  if (self->downstream_flow_ret != GST_FLOW_OK) {
+    gst_video_codec_frame_unref (frame);
+    return self->downstream_flow_ret;
+  }
+
   if (!self->started) {
     if (!GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
       gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
@@ -2406,11 +2411,6 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
 
   timestamp = frame->pts;
   duration = frame->duration;
-
-  if (self->downstream_flow_ret != GST_FLOW_OK) {
-    gst_video_codec_frame_unref (frame);
-    return self->downstream_flow_ret;
-  }
 
   if (klass->prepare_frame) {
     GstFlowReturn ret;
