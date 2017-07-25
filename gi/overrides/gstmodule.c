@@ -401,6 +401,35 @@ fail:
 }
 
 static PyObject *
+gi_gst_bitmask_from_value (const GValue * value)
+{
+  PyObject *val, *bitmask_type;
+
+  bitmask_type = gi_gst_get_type ("Bitmask");
+  val = PyObject_CallFunction (bitmask_type, "L",
+      gst_value_get_bitmask (value));
+  Py_DECREF (bitmask_type);
+
+  return val;
+}
+
+static int
+gi_gst_bitmask_to_value (GValue * value, PyObject * object)
+{
+  PyObject *v = PyObject_GetAttrString (object, "v");
+  if (v == NULL)
+    goto fail;
+
+  gst_value_set_bitmask (value, PyLong_AsLong (v));
+
+  return 0;
+
+fail:
+  PyErr_SetString (PyExc_KeyError, "Object is not compatible with Gst.Bitmask");
+  return -1;
+}
+
+static PyObject *
 gi_gst_list_from_value (const GValue * value)
 {
   PyObject *list, *value_list_type, *value_list;
@@ -487,9 +516,9 @@ gi_gst_register_types (PyObject * d)
       gi_gst_date_time_from_value, gi_gst_date_time_to_value);
   pyg_register_gtype_custom (GST_TYPE_FLAG_SET,
       gi_gst_flag_set_from_value, gi_gst_flag_set_to_value);
+#endif
   pyg_register_gtype_custom (GST_TYPE_BITMASK,
       gi_gst_bitmask_from_value, gi_gst_bitmask_to_value);
-#endif
 }
 
 static int

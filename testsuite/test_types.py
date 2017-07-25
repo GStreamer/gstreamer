@@ -378,3 +378,22 @@ class TestIntRange(TestCase):
         value = st["range"]
 
         self.assertEqual(value, range(0, 10, 2))
+
+
+class TestBitmask(TestCase):
+    def testConstructor(self):
+        Gst.init(None)
+
+        r = Gst.Bitmask(1 << 5)
+        self.assertEqual(r, 1 << 5)
+
+    def testGetValue(self):
+        Gst.init(None)
+
+        self.assertEqual(Gst.Structure('test,test=(bitmask)0x20')['test'], 1 << 5)
+
+    def testStr(self):
+        Gst.init(None)
+
+        r = Gst.Bitmask(1 << 5)
+        self.assertEqual(str(r), '0x20')
