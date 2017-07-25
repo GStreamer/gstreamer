@@ -58,6 +58,7 @@ struct _GstValidateBinMonitor {
 
   /*< private >*/
   gulong element_added_id;
+  gulong element_removed_id;
   gboolean stateless;
 };
 

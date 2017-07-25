@@ -108,6 +108,10 @@ print_position (GstValidateMonitor * monitor)
   gdouble rate = 1.0;
   GstFormat format = GST_FORMAT_TIME;
 
+  if (!(GST_VALIDATE_MONITOR_CAST (monitor)->verbosity &
+          GST_VALIDATE_VERBOSITY_POSITION))
+    goto done;
+
   if (!gst_element_query_position (pipeline, format, &position)) {
     GST_DEBUG_OBJECT (monitor, "Could not query position");
 
@@ -481,6 +485,46 @@ _bus_handler (GstBus * bus, GstMessage * message,
   const GstStructure *details = NULL;
   gint error_flow = GST_FLOW_OK;
 
+  if (GST_VALIDATE_MONITOR_CAST (monitor)->verbosity &
+      GST_VALIDATE_VERBOSITY_MESSAGES
+      && GST_MESSAGE_TYPE (message) != GST_MESSAGE_PROPERTY_NOTIFY) {
+    GstObject *src_obj;
+    const GstStructure *s;
+    guint32 seqnum;
+    GString *str = g_string_new (NULL);
+
+    seqnum = gst_message_get_seqnum (message);
+    s = gst_message_get_structure (message);
+    src_obj = GST_MESSAGE_SRC (message);
+
+    if (GST_IS_ELEMENT (src_obj)) {
+      g_string_append_printf (str, "Got message #%u from element \"%s\" (%s): ",
+          (guint) seqnum, GST_ELEMENT_NAME (src_obj),
+          GST_MESSAGE_TYPE_NAME (message));
+    } else if (GST_IS_PAD (src_obj)) {
+      g_string_append_printf (str, "Got message #%u from pad \"%s:%s\" (%s): ",
+          (guint) seqnum, GST_DEBUG_PAD_NAME (src_obj),
+          GST_MESSAGE_TYPE_NAME (message));
+    } else if (GST_IS_OBJECT (src_obj)) {
+      g_string_append_printf (str, "Got message #%u from object \"%s\" (%s): ",
+          (guint) seqnum, GST_OBJECT_NAME (src_obj),
+          GST_MESSAGE_TYPE_NAME (message));
+    } else {
+      g_string_append_printf (str, "Got message #%u (%s): ", (guint) seqnum,
+          GST_MESSAGE_TYPE_NAME (message));
+    }
+    if (s) {
+      gchar *sstr;
+
+      sstr = gst_structure_to_string (s);
+      g_string_append_printf (str, "%s\n", sstr);
+      g_free (sstr);
+    } else {
+      g_string_append (str, "no message details\n");
+    }
+    gst_validate_printf (NULL, str->str);
+    g_string_free (str, TRUE);
+  }
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
       gst_message_parse_error (message, &err, &debug);
@@ -616,6 +660,43 @@ _bus_handler (GstBus * bus, GstMessage * message,
       }
       break;
     }
+    case GST_MESSAGE_PROPERTY_NOTIFY:
+    {
+      const GValue *val;
+      const gchar *name;
+      GstObject *obj;
+      gchar *val_str = NULL;
+      gchar *obj_name;
+
+      if (!(GST_VALIDATE_MONITOR_CAST (monitor)->verbosity &
+              GST_VALIDATE_VERBOSITY_PROPS_CHANGES))
+        return;
+
+      gst_message_parse_property_notify (message, &obj, &name, &val);
+
+      obj_name = gst_object_get_path_string (GST_OBJECT (obj));
+      if (val != NULL) {
+        if (G_VALUE_HOLDS_STRING (val))
+          val_str = g_value_dup_string (val);
+        else if (G_VALUE_TYPE (val) == GST_TYPE_CAPS)
+          val_str = gst_caps_to_string (g_value_get_boxed (val));
+        else if (G_VALUE_TYPE (val) == GST_TYPE_TAG_LIST)
+          val_str = gst_tag_list_to_string (g_value_get_boxed (val));
+        else if (G_VALUE_TYPE (val) == GST_TYPE_STRUCTURE)
+          val_str = gst_structure_to_string (g_value_get_boxed (val));
+        else
+          val_str = gst_value_serialize (val);
+      } else {
+        val_str = g_strdup ("(no value)");
+      }
+
+      gst_validate_printf (NULL, "%s: %s = %s\n", obj_name, name, val_str);
+      g_free (obj_name);
+      g_free (val_str);
+      break;
+
+      break;
+    }
     default:
       break;
   }
@@ -693,6 +774,10 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   gst_bus_enable_sync_message_emission (bus);
   g_signal_connect (bus, "sync-message", (GCallback) _bus_handler, monitor);
+
+  monitor->deep_notify_id =
+      gst_element_add_property_deep_notify_watch ((GstElement *) pipeline, NULL,
+      TRUE);
 
   gst_object_unref (bus);
 

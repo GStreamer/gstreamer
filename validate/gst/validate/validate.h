@@ -7,6 +7,7 @@
 
 #include <gst/validate/gst-validate-types.h>
 #include <gst/validate/gst-validate-enums.h>
+#include <gst/validate/gst-validate-scenario.h>
 
 #include <gst/validate/gst-validate-runner.h>
 #include <gst/validate/gst-validate-monitor-factory.h>

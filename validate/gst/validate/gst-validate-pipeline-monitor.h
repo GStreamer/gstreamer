@@ -68,6 +68,8 @@ struct _GstValidatePipelineMonitor {
   GstStreamCollection *stream_collection;
   /* Latest GstStream received from GST_MESSAGE_STREAMS_SELECTED */
   GList *streams_selected;
+
+  gulong deep_notify_id;
 };
 
 /**

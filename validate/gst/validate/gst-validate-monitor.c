@@ -25,6 +25,7 @@
 #  include "config.h"
 #endif
 
+#include "gst-validate-enum-types.h"
 #include "gst-validate-internal.h"
 #include "gst-validate-monitor.h"
 #include "gst-validate-override-registry.h"
@@ -43,6 +44,7 @@ enum
   PROP_PIPELINE,
   PROP_RUNNER,
   PROP_VALIDATE_PARENT,
+  PROP_VERBOSITY,
   PROP_LAST
 };
 
@@ -175,6 +177,12 @@ gst_validate_monitor_class_init (GstValidateMonitorClass * klass)
           "The Validate monitor that is the parent of this one",
           GST_TYPE_VALIDATE_MONITOR,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_VERBOSITY,
+      g_param_spec_flags ("verbosity", "Verbosity",
+          "The verbosity of GstValidate on the monitor",
+          GST_TYPE_VALIDATE_VERBOSITY_FLAGS,
+          GST_VALIDATE_VERBOSITY_POSITION, G_PARAM_READWRITE));
 }
 
 static GObject *
@@ -219,6 +227,8 @@ gst_validate_monitor_init (GstValidateMonitor * monitor)
 
   g_mutex_init (&monitor->overrides_mutex);
   g_queue_init (&monitor->overrides);
+
+  monitor->verbosity = GST_VALIDATE_VERBOSITY_POSITION;
 }
 
 static gboolean
@@ -288,7 +298,19 @@ _determine_reporting_level (GstValidateMonitor * monitor)
 gboolean
 gst_validate_monitor_setup (GstValidateMonitor * monitor)
 {
+  GList *config;
+
   GST_DEBUG_OBJECT (monitor, "Starting monitor setup");
+
+  for (config = gst_validate_plugin_get_config (NULL); config;
+      config = config->next) {
+    const gchar *verbosity =
+        gst_structure_get_string (GST_STRUCTURE (config->data),
+        "verbosity");
+
+    if (verbosity)
+      gst_util_set_object_arg (G_OBJECT (monitor), "verbosity", verbosity);
+  }
 
   /* For now we just need to do this at setup time */
   _determine_reporting_level (monitor);
@@ -412,6 +434,9 @@ gst_validate_monitor_set_property (GObject * object, guint prop_id,
     case PROP_VALIDATE_PARENT:
       monitor->parent = g_value_get_object (value);
       break;
+    case PROP_VERBOSITY:
+      monitor->verbosity = g_value_get_flags (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -439,6 +464,9 @@ gst_validate_monitor_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VALIDATE_PARENT:
       g_value_set_object (value, GST_VALIDATE_MONITOR_GET_PARENT (monitor));
+      break;
+    case PROP_VERBOSITY:
+      g_value_set_flags (value, monitor->verbosity);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

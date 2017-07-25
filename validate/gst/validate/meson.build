@@ -44,8 +44,15 @@ gstvalidate_headers = [
 
 install_headers(gstvalidate_headers, subdir : 'gstreamer-1.0/gst/validate')
 
+gst_validate_enums = gnome.mkenums('gstvalidateenumtypes',
+  sources : gstvalidate_headers,
+  h_template : 'gst-validate-enum-types.h.template',
+  c_template : 'gst-validate-enum-types.c.template',
+  install_header : true,
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/validate'))
+
 gstvalidate = shared_library('gstvalidate-1.0',
-    sources: gstvalidate_sources,
+    sources: gstvalidate_sources + gst_validate_enums,
     version : libversion,
     soversion : soversion,
     include_directories : [inc_dirs],
@@ -56,7 +63,7 @@ gstvalidate = shared_library('gstvalidate-1.0',
                     gst_pbutils_dep, mathlib, json_dep])
 
 gstvalidatetracer = shared_library('gstvalidatetracer',
-    sources: gstvalidate_sources,
+    sources: gstvalidate_sources + gst_validate_enums,
     include_directories : [inc_dirs],
     install: true,
     c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE'],
@@ -76,7 +83,7 @@ if build_gir
       '--cflags-end']
     endif
     validate_gen_sources = [gnome.generate_gir(gstvalidate,
-            sources : gstvalidate_sources + gstvalidate_headers,
+            sources : gstvalidate_sources + gstvalidate_headers + gst_validate_enums,
             nsversion : '1.0',
             namespace : 'GstValidate',
             symbol_prefix : 'gst_validate',

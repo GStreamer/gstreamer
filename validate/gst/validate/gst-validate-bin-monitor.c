@@ -65,6 +65,10 @@ _validate_bin_element_added (GstBin * bin, GstElement * pad,
     GstValidateBinMonitor * monitor);
 
 static void
+_validate_bin_element_removed (GstBin * bin, GstElement * element,
+    GstValidateBinMonitor * monitor);
+
+static void
 gst_validate_bin_set_media_descriptor (GstValidateMonitor * monitor,
     GstValidateMediaDescriptor * media_descriptor)
 {
@@ -138,6 +142,8 @@ gst_validate_bin_monitor_dispose (GObject * object)
   if (bin) {
     if (monitor->element_added_id)
       g_signal_handler_disconnect (bin, monitor->element_added_id);
+    if (monitor->element_removed_id)
+      g_signal_handler_disconnect (bin, monitor->element_removed_id);
     gst_object_unref (bin);
   }
 
@@ -249,6 +255,10 @@ gst_validate_bin_monitor_setup (GstValidateMonitor * monitor)
       g_signal_connect (bin, "element-added",
       G_CALLBACK (_validate_bin_element_added), monitor);
 
+  bin_monitor->element_removed_id =
+      g_signal_connect (bin, "element-removed",
+      G_CALLBACK (_validate_bin_element_removed), monitor);
+
   iterator = gst_bin_iterate_elements (bin);
   done = FALSE;
   while (!done) {
@@ -297,8 +307,17 @@ gst_validate_bin_monitor_wrap_element (GstValidateBinMonitor * monitor,
       GST_VALIDATE_ELEMENT_MONITOR_CAST (gst_validate_monitor_factory_create
       (GST_OBJECT_CAST (element), runner, GST_VALIDATE_MONITOR_CAST (monitor)));
   g_return_if_fail (element_monitor != NULL);
+
+  GST_VALIDATE_MONITOR_CAST (element_monitor)->verbosity =
+      GST_VALIDATE_MONITOR_CAST (monitor)->verbosity;
   gst_validate_bin_child_added_overrides (GST_VALIDATE_MONITOR (monitor),
       element);
+
+  if (GST_VALIDATE_MONITOR_CAST (monitor)->verbosity &
+      GST_VALIDATE_VERBOSITY_NEW_ELEMENTS)
+    gst_validate_printf (NULL, "(element-added) %s added to %s\n",
+        GST_ELEMENT_NAME (element),
+        gst_validate_reporter_get_name (GST_VALIDATE_REPORTER (monitor)));
 
   GST_VALIDATE_MONITOR_LOCK (monitor);
   monitor->element_monitors = g_list_prepend (monitor->element_monitors,
@@ -319,4 +338,15 @@ _validate_bin_element_added (GstBin * bin, GstElement * element,
 
   gst_object_unref (target);
   gst_validate_bin_monitor_wrap_element (monitor, element);
+}
+
+static void
+_validate_bin_element_removed (GstBin * bin, GstElement * element,
+    GstValidateBinMonitor * monitor)
+{
+  if (GST_VALIDATE_MONITOR_CAST (monitor)->verbosity &
+      GST_VALIDATE_VERBOSITY_NEW_ELEMENTS)
+    gst_validate_printf (NULL, "(element-removed) %s removed from %s\n",
+        GST_ELEMENT_NAME (element),
+        gst_validate_reporter_get_name (GST_VALIDATE_REPORTER (monitor)));
 }

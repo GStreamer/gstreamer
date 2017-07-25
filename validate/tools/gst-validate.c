@@ -305,7 +305,8 @@ int
 main (int argc, gchar ** argv)
 {
   GError *err = NULL;
-  gchar *scenario = NULL, *configs = NULL, *media_info = NULL;
+  gchar *scenario = NULL, *configs = NULL, *media_info = NULL,
+      *verbosity = NULL;
   gboolean list_scenarios = FALSE, monitor_handles_state,
       inspect_action_type = FALSE;
   GstStateChangeReturn sret;
@@ -324,6 +325,9 @@ main (int argc, gchar ** argv)
           " '.scenario' extension).", NULL},
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
         "List the available scenarios that can be run", NULL},
+    {"verbosity", 'v', 0, G_OPTION_ARG_STRING, &verbosity,
+        "Set overall verbosity as defined by GstValidateVerbosityFlags"
+          " as a string", NULL},
     {"scenarios-defs-output-file", '\0', 0, G_OPTION_ARG_FILENAME,
           &output_file, "The output file to store scenarios details. "
           "Implies --list-scenarios",
@@ -453,6 +457,8 @@ main (int argc, gchar ** argv)
 
   monitor = gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline),
       runner, NULL);
+  if (verbosity)
+    gst_util_set_object_arg (G_OBJECT (monitor), "verbosity", verbosity);
   gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
 
   if (media_info) {

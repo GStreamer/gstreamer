@@ -96,6 +96,8 @@ struct _GstValidateMonitor {
 
   /*< private >*/
   GHashTable *reports;
+
+  GstValidateVerbosityFlags verbosity;
 };
 
 /**
