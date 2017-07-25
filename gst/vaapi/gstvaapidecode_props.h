@@ -33,6 +33,7 @@ typedef struct _GstVaapiDecodeH264Private GstVaapiDecodeH264Private;
 struct _GstVaapiDecodeH264Private
 {
   gboolean is_low_latency;
+  gboolean base_only;
 };
 
 void

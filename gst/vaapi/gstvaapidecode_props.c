@@ -29,6 +29,7 @@
 enum
 {
   GST_VAAPI_DECODER_H264_PROP_FORCE_LOW_LATENCY = 1,
+  GST_VAAPI_DECODER_H264_PROP_BASE_ONLY
 };
 
 static gint h264_private_offset;
@@ -44,6 +45,9 @@ gst_vaapi_decode_h264_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case GST_VAAPI_DECODER_H264_PROP_FORCE_LOW_LATENCY:
       g_value_set_boolean (value, priv->is_low_latency);
+      break;
+    case GST_VAAPI_DECODER_H264_PROP_BASE_ONLY:
+      g_value_set_boolean (value, priv->base_only);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -67,6 +71,9 @@ gst_vaapi_decode_h264_set_property (GObject * object, guint prop_id,
       if (decoder)
         gst_vaapi_decoder_h264_set_low_latency (decoder, priv->is_low_latency);
       break;
+    case GST_VAAPI_DECODER_H264_PROP_BASE_ONLY:
+      priv->base_only = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -88,6 +95,11 @@ gst_vaapi_decode_h264_install_properties (GObjectClass * klass)
           "When enabled, frames will be pushed as soon as they are available. "
           "It might violate the H.264 spec.", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
+
+  g_object_class_install_property (klass, GST_VAAPI_DECODER_H264_PROP_BASE_ONLY,
+      g_param_spec_boolean ("base-only", "Decode base view only",
+          "Drop any NAL unit not defined in Annex.A", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 GstVaapiDecodeH264Private *
