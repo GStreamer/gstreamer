@@ -2,13 +2,7 @@ runtests = find_program('runtests.py')
 
 tests = [
     ['Test gst', 'test_gst.py'],
-    ['Test fractions', 'test_fraction.py'],
-    ['Test integer ranges', 'test_intrange.py'],
-    ['Test 64bit integer ranges', 'test_int64range.py'],
-    ['Test double ranges', 'test_doublerange.py'],
-    ['Test fraction ranges', 'test_fractionrange.py'],
-    ['Test value arrays', 'test_valuearray.py'],
-    ['Test value lists', 'test_valuelist.py']
+    ['Test fundamentals', 'test_types.py'],
 ]
 
 pluginsdirs = []
