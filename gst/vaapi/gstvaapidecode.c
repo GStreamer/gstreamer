@@ -1154,11 +1154,29 @@ gst_vaapidecode_parse (GstVideoDecoder * vdec,
 }
 
 static gboolean
+is_mvc_profile (GstVaapiProfile profile)
+{
+  return profile == GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH
+      || profile == GST_VAAPI_PROFILE_H264_STEREO_HIGH;
+}
+
+static GstCaps *
+add_h264_profile_in_caps (GstCaps * caps, const gchar * profile_name)
+{
+  GstCaps *caps_new =
+      gst_caps_new_simple ("video/x-h264", "profile", profile_name, NULL);
+  return gst_caps_merge (caps_new, caps);
+}
+
+static gboolean
 gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
 {
   GstCaps *caps, *allowed_sinkpad_caps;
   GArray *profiles;
   guint i;
+  gboolean base_only;
+  gboolean have_high = FALSE;
+  gboolean have_mvc = FALSE;
 
   profiles =
       gst_vaapi_display_get_decode_profiles (GST_VAAPI_PLUGIN_BASE_DISPLAY
@@ -1169,6 +1187,10 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
   allowed_sinkpad_caps = gst_caps_new_empty ();
   if (!allowed_sinkpad_caps)
     goto error_no_memory;
+
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (decode), "base-only")) {
+    g_object_get (decode, "base-only", &base_only, NULL);
+  }
 
   for (i = 0; i < profiles->len; i++) {
     const GstVaapiProfile profile =
@@ -1192,6 +1214,17 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
           profile_name, NULL);
 
     allowed_sinkpad_caps = gst_caps_merge (allowed_sinkpad_caps, caps);
+    have_mvc |= is_mvc_profile (profile);
+    have_high |= profile == GST_VAAPI_PROFILE_H264_HIGH;
+  }
+
+  if (base_only && !have_mvc && have_high) {
+    GST_DEBUG ("base_only: Force adding MVC profiles in caps");
+
+    allowed_sinkpad_caps =
+        add_h264_profile_in_caps (allowed_sinkpad_caps, "multiview-high");
+    allowed_sinkpad_caps =
+        add_h264_profile_in_caps (allowed_sinkpad_caps, "stereo-high");
   }
   decode->allowed_sinkpad_caps = gst_caps_simplify (allowed_sinkpad_caps);
 
