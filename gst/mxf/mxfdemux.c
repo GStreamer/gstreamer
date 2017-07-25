@@ -916,7 +916,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
   guint component_index;
   GstFlowReturn ret;
   GList *pads = NULL, *l;
-  GstVideoTimeCode start_timecode = { 0, };
+  GstVideoTimeCode start_timecode = GST_VIDEO_TIME_CODE_INIT;
 
   g_rw_lock_writer_lock (&demux->metadata_lock);
   GST_DEBUG_OBJECT (demux, "Updating tracks");
