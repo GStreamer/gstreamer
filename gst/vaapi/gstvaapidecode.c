@@ -872,6 +872,8 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
         if (priv) {
           gst_vaapi_decoder_h264_set_low_latency (GST_VAAPI_DECODER_H264
               (decode->decoder), priv->is_low_latency);
+          gst_vaapi_decoder_h264_set_base_only (GST_VAAPI_DECODER_H264
+              (decode->decoder), priv->base_only);
         }
       }
       break;
