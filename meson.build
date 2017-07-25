@@ -21,7 +21,7 @@ gmodule_dep = dependency('gmodule-2.0')
 pygobject_dep = dependency('pygobject-3.0', version : '>= 3.0')
 python_dep = dependency('python3')
 
-python = find_program('python3')
+python3 = import('python3').find_python()
 pythondetector = find_program('scripts/pythondetector')
 
 cres = run_command(pythondetector, '--sosuffix')
@@ -83,5 +83,4 @@ subdir('gi')
 subdir('plugin')
 subdir('testsuite')
 
-python3 = find_program('python3')
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')

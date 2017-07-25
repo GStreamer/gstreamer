@@ -17,6 +17,14 @@ if not meson.is_subproject()
   endif
 endif
 
+runcmd = run_command(python3, '-c', '''with open("@0@/mesonconfig.py", "w") as f:
+    f.write("path='@1@'")'''.format(
+  meson.current_source_dir(), join_paths(meson.current_build_dir(), '../')))
+
+if runcmd.returncode() != 0
+    error('Could not configure testsuite config file.' + runcmd.stderr())
+endif
+
 foreach i: tests
     test_name = i.get(0)
     env = environment()

@@ -12,7 +12,7 @@ gstpython = shared_library('_gi_gst',
 
 # Workaround to get uninstalled working.
 foreach source: pysources
-    run_command(python, '-c', 'import os; os.symlink("@0@/@1@", "@2@/@3@")'.format(
+    run_command(python3, '-c', 'import os; os.symlink("@0@/@1@", "@2@/@3@")'.format(
         meson.current_source_dir(), source,
         meson.current_build_dir(), source))
 endforeach

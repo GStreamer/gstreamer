@@ -7,6 +7,12 @@ import sys
 from distutils import sysconfig
 
 
+try:
+    sys.path.remove(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                                 '..')))
+except ValueError:
+    pass
+
 def get_python_abiflags():
     return sysconfig.get_config_var("ABIFLAGS")
 

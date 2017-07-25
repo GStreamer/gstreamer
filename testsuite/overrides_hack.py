@@ -1,6 +1,12 @@
 import os
 import gi.overrides
 
+try:
+    import mesonconfig
+except ImportError:
+    mesonconfig = None
+    pass
+
 FILE = os.path.realpath(__file__)
 if not gi.overrides.__path__[0].endswith("gst-python/gi/overrides"):
     local_overrides = None
@@ -16,6 +22,8 @@ if not gi.overrides.__path__[0].endswith("gst-python/gi/overrides"):
 
     gi.overrides.__path__.insert(0, local_overrides)
 
+if mesonconfig:
+    gi.overrides.__path__.insert(0, os.path.abspath(os.path.join(mesonconfig.path, "gi", "overrides")))
 # Execute previously set sitecustomize.py script if it existed
 if os.environ.get("GST_ENV"):
     old_sitecustomize = os.path.join(os.path.dirname(__file__),
