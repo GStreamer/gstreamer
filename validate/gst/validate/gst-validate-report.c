@@ -154,7 +154,7 @@ GstValidateIssue *
 gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
     const gchar * description, GstValidateReportLevel default_level)
 {
-  GstValidateIssue *issue = g_slice_new (GstValidateIssue);
+  GstValidateIssue *issue;
   gchar **area_name = g_strsplit (g_quark_to_string (issue_id), "::", 2);
 
   if (!(area_name[0] != NULL && area_name[1] != NULL && area_name[2] == NULL)) {
@@ -165,6 +165,7 @@ gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
     return NULL;
   }
 
+  issue = g_slice_new (GstValidateIssue);
   issue->issue_id = issue_id;
   issue->summary = g_strdup (summary);
   issue->description = g_strdup (description);
