@@ -1761,13 +1761,13 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   if (!add_to_lists)
     return res;
 
-  if (str_playback_time == NULL) {
+  if (str_playback_time == NULL && priv != NULL) {
     GstValidateActionType *type = _find_action_type (action->type);
     gboolean can_execute_on_addition =
         type->flags & GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION
         && !GST_CLOCK_TIME_IS_VALID (action->playback_time);
 
-    if (priv && priv->needs_parsing)
+    if (priv->needs_parsing)
       can_execute_on_addition = FALSE;
 
     if (can_execute_on_addition) {
@@ -1789,7 +1789,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
           action);
       SCENARIO_UNLOCK (scenario);
 
-    } else if (priv) {
+    } else {
       priv->actions = g_list_append (priv->actions, action);
     }
   }
