@@ -1103,11 +1103,11 @@ create_tracks_menu (GtkPlay * play, GstPlayerMediaInfo * media_info, GType type)
   current_index = get_current_track_index (play, type);
 
   if (type == GST_TYPE_PLAYER_VIDEO_INFO)
-    list = gst_player_get_video_streams (media_info);
+    list = gst_player_media_info_get_video_streams (media_info);
   else if (type == GST_TYPE_PLAYER_AUDIO_INFO)
-    list = gst_player_get_audio_streams (media_info);
+    list = gst_player_media_info_get_audio_streams (media_info);
   else
-    list = gst_player_get_subtitle_streams (media_info);
+    list = gst_player_media_info_get_subtitle_streams (media_info);
 
   menu = gtk_menu_new ();
 
@@ -1192,7 +1192,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
 
   media_info = gst_player_get_media_info (play->player);
 
-  if (media_info && !gst_player_get_video_streams (media_info))
+  if (media_info && !gst_player_media_info_get_video_streams (media_info))
     gtk_widget_set_sensitive (video, FALSE);
   else {
     submenu = create_tracks_menu (play, media_info, GST_TYPE_PLAYER_VIDEO_INFO);
@@ -1202,7 +1202,7 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
       gtk_widget_set_sensitive (video, FALSE);
   }
 
-  if (media_info && !gst_player_get_audio_streams (media_info))
+  if (media_info && !gst_player_media_info_get_audio_streams (media_info))
     gtk_widget_set_sensitive (audio, FALSE);
   else {
     submenu = create_tracks_menu (play, media_info, GST_TYPE_PLAYER_AUDIO_INFO);
@@ -1214,15 +1214,15 @@ gtk_player_popup_menu_create (GtkPlay * play, GdkEventButton * event)
 
   /* enable visualization menu for audio stream */
   if (media_info &&
-      gst_player_get_audio_streams (media_info) &&
-      !gst_player_get_video_streams (media_info)) {
+      gst_player_media_info_get_audio_streams (media_info) &&
+      !gst_player_media_info_get_video_streams (media_info)) {
     submenu = create_visualization_menu (play);
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (vis), submenu);
   } else {
     gtk_widget_set_sensitive (vis, FALSE);
   }
 
-  if (media_info && gst_player_get_video_streams (media_info)) {
+  if (media_info && gst_player_media_info_get_video_streams (media_info)) {
     submenu = create_tracks_menu (play, media_info,
         GST_TYPE_PLAYER_SUBTITLE_INFO);
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (sub), submenu);
