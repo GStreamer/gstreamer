@@ -70,6 +70,29 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstGLFormat:
+ * @GST_GL_LUMINANCE: Single component replicated across R, G, and B textures
+ *                    components
+ * @GST_GL_ALPHA: Single component stored in the A texture component
+ * @GST_GL_LUMINANCE_ALPHA: Combination of #GST_GL_LUMINANCE and #GST_GL_ALPHA
+ * @GST_GL_RED: Single component stored in the R texture component
+ * @GST_GL_R8: Single 8-bit component stored in the R texture component
+ * @GST_GL_RG: Two components stored in the R and G texture components
+ * @GST_GL_RG8: Two 8-bit components stored in the R and G texture components
+ * @GST_GL_RGB: Three components stored in the R, G, and B texture components
+ * @GST_GL_RGB8: Three 8-bit components stored in the R, G, and B
+ *               texture components
+ * @GST_GL_RGB565: Three components of bit depth 5, 6 and 5 stored in the R, G,
+ *                 and B texture components respectively.
+ * @GST_GL_RGBA: Four components stored in the R, G, B, and A texture
+ *               components respectively.
+ * @GST_GL_RGBA8: Four 8-bit components stored in the R, G, B, and A texture
+ *                components respectively.
+ * @GST_GL_DEPTH_COMPONENT16: A single 16-bit component for depth information.
+ * @GST_GL_DEPTH24_STENCIL8: A 24-bit component for depth information and
+ *                           a 8-bit component for stencil informat.
+ */
 typedef enum
 {
   /* values taken from the GL headers */
