@@ -79,6 +79,7 @@
 
 #include "gstcurlhttpsrc.h"
 #include "gstcurlqueue.h"
+#include "gstcurldefaults.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_curl_http_src_debug);
 #define GST_CAT_DEFAULT gst_curl_http_src_debug
@@ -137,6 +138,10 @@ static size_t gst_curl_http_src_get_chunks (void *chunk, size_t size,
 static void gst_curl_http_src_request_remove (GstCurlHttpSrc * src);
 static char *gst_curl_http_src_strcasestr (const char *haystack,
     const char *needle);
+
+curl_version_info_data *gst_curl_http_src_curl_capabilities;
+gfloat pref_http_ver;
+gchar *gst_curl_http_src_default_useragent;
 
 #define gst_curl_http_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstCurlHttpSrc, gst_curl_http_src, GST_TYPE_PUSH_SRC,

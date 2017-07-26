@@ -71,27 +71,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CURLHTTPSRC))
 #define GST_IS_CURLHTTPSRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CURLHTTPSRC))
-/* Because g_param_spec_int requires min/max bounding... */
-#define GSTCURL_MIN_REDIRECTIONS -1
-#define GSTCURL_MAX_REDIRECTIONS 255
-#define GSTCURL_MIN_CONNECTION_TIME 2
-#define GSTCURL_MAX_CONNECTION_TIME 60
-#define GSTCURL_MIN_CONNECTIONS_SERVER 1
-#define GSTCURL_MAX_CONNECTIONS_SERVER 60
-#define GSTCURL_MIN_CONNECTIONS_PROXY 1
-#define GSTCURL_MAX_CONNECTIONS_PROXY 60
-#define GSTCURL_MIN_CONNECTIONS_GLOBAL 1
-#define GSTCURL_MAX_CONNECTIONS_GLOBAL 255
-#define GSTCURL_DEFAULT_CONNECTION_TIME 30
-#define GSTCURL_DEFAULT_CONNECTIONS_SERVER 5
-#define GSTCURL_DEFAULT_CONNECTIONS_PROXY 30
-#define GSTCURL_DEFAULT_CONNECTIONS_GLOBAL 255
-#define GSTCURL_INFO_RESPONSE(x) ((x >= 100) && (x <= 199))
-#define GSTCURL_SUCCESS_RESPONSE(x) ((x >= 200) && (x <=299))
-#define GSTCURL_REDIRECT_RESPONSE(x) ((x >= 300) && (x <= 399))
-#define GSTCURL_CLIENT_ERR_RESPONSE(x) ((x >= 400) && (x <= 499))
-#define GSTCURL_SERVER_ERR_RESPONSE(x) ((x >= 500) && (x <= 599))
-#define GSTCURL_FUNCTIONTRACE 0
+
 #if GSTCURL_FUNCTIONTRACE
 #define GSTCURL_FUNCTION_ENTRY(x) GST_DEBUG_OBJECT(x, "Entering function");
 #define GSTCURL_FUNCTION_EXIT(x) GST_DEBUG_OBJECT(x, "Leaving function");
@@ -266,9 +246,6 @@ enum
   PROP_MAX
 };
 
-curl_version_info_data *gst_curl_http_src_curl_capabilities;
-gfloat pref_http_ver;
-gchar *gst_curl_http_src_default_useragent;
 GType gst_curl_http_src_get_type (void);
 
 G_END_DECLS

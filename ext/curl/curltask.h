@@ -47,7 +47,6 @@
 #define CURLTASK_H_
 
 #include <curl/curl.h>
-#include "gstcurldefaults.h"
 
 #define GSTCURL_ERROR_PRINT(...) GST_CAT_ERROR (gst_curl_loop_debug, __VA_ARGS__)
 #define GSTCURL_WARNING_PRINT(...) GST_CAT_WARNING (gst_curl_loop_debug, __VA_ARGS__)
