@@ -22,7 +22,7 @@
 
 /**
  * SECTION:gstglfilter
- * @title: GstGlFilter
+ * @title: GstGLFilter
  * @short_description: GstBaseTransform subclass for dealing with RGBA textures
  * @see_also: #GstBaseTransform, #GstGLContext, #GstGLFramebuffer
  *

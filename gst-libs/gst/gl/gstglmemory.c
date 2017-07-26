@@ -31,7 +31,7 @@
 
 /**
  * SECTION:gstglmemory
- * @title: GstGlMemory
+ * @title: GstGLMemory
  * @short_description: memory subclass for GL textures
  * @see_also: #GstMemory, #GstAllocator, #GstGLBufferPool
  *

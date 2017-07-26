@@ -28,7 +28,7 @@
 
 /**
  * SECTION:gstglbasememory
- * @title: GstGlBaseMemory
+ * @title: GstGLBaseMemory
  * @short_description: memory subclass for GL buffers
  * @see_also: #GstMemory, #GstAllocator
  *

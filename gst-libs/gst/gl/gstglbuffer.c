@@ -29,7 +29,7 @@
 
 /**
  * SECTION:gstglbuffer
- * @title: GstGlBuffer
+ * @title: GstGLBuffer
  * @short_description: memory subclass for GL buffers
  * @see_also: #GstMemory, #GstAllocator
  *
