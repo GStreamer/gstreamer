@@ -349,8 +349,10 @@ gst_curl_http_src_class_init (GstCurlHttpSrcClass * klass)
   /* Add a debugging task so it's easier to debug in the Multi worker thread */
   GST_DEBUG_CATEGORY_INIT (gst_curl_loop_debug, "curl_multi_loop", 0,
       "libcURL loop thread debugging");
+#ifndef GST_DISABLE_GST_DEBUG
   gst_debug_log (gst_curl_loop_debug, GST_LEVEL_INFO, __FILE__, __func__,
       __LINE__, NULL, "Testing the curl_multi_loop debugging prints");
+#endif
 
   g_mutex_init (&klass->multi_task_context.mutex);
   g_cond_init (&klass->multi_task_context.signal);
