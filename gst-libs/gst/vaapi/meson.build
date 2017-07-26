@@ -12,7 +12,6 @@ gstlibvaapi_sources = [
   'gstvaapidecoder_unit.c',
   'gstvaapidecoder_vc1.c',
   'gstvaapidisplay.c',
-  'gstvaapidisplaycache.c',
   'gstvaapifilter.c',
   'gstvaapiimage.c',
   'gstvaapiimagepool.c',
