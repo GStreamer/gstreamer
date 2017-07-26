@@ -112,8 +112,6 @@ struct _GstDownloadBuffer
 
   GstEvent *stream_start_event;
   GstEvent *segment_event;
-
-  volatile gint downstream_may_block;
 };
 
 struct _GstDownloadBufferClass
