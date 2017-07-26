@@ -28,7 +28,7 @@
 
 /**
  * SECTION:gstglbufferpool
- * @title: GstGlBufferPool
+ * @title: GstGLBufferPool
  * @short_description: buffer pool for #GstGLBaseMemory objects
  * @see_also: #GstBufferPool, #GstGLBaseMemory, #GstGLMemory
  *

@@ -31,7 +31,7 @@
 
 /**
  * SECTION:gstglcolorconvert
- * @title: GstGlColorConvert
+ * @title: GstGLColorConvert
  * @short_description: convert between video color spaces and formats
  * @see_also: #GstGLUpload, #GstGLMemory, #GstGLBaseMemory
  *
