@@ -2402,6 +2402,8 @@ _priv_gst_element_state_changed (GstElement * element, GstState oldstate,
  * This method is used internally and should normally not be called by plugins
  * or applications.
  *
+ * This function must be called with STATE_LOCK held.
+ *
  * Returns: The result of the commit state change.
  *
  * MT safe.
