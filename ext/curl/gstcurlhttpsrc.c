@@ -380,39 +380,27 @@ gst_curl_http_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_URI:
-      if (source->uri != NULL) {
-        g_free (source->uri);
-      }
+      g_free (source->uri);
       source->uri = g_value_dup_string (value);
       break;
     case PROP_USERNAME:
-      if (source->username != NULL) {
-        g_free (source->username);
-      }
+      g_free (source->username);
       source->username = g_value_dup_string (value);
       break;
     case PROP_PASSWORD:
-      if (source->password != NULL) {
-        g_free (source->password);
-      }
+      g_free (source->password);
       source->password = g_value_dup_string (value);
       break;
     case PROP_PROXYURI:
-      if (source->proxy_uri != NULL) {
-        g_free (source->proxy_uri);
-      }
+      g_free (source->proxy_uri);
       source->proxy_uri = g_value_dup_string (value);
       break;
     case PROP_PROXYUSERNAME:
-      if (source->proxy_user != NULL) {
-        g_free (source->proxy_user);
-      }
+      g_free (source->proxy_user);
       source->proxy_user = g_value_dup_string (value);
       break;
     case PROP_PROXYPASSWORD:
-      if (source->proxy_pass != NULL) {
-        g_free (source->proxy_pass);
-      }
+      g_free (source->proxy_pass);
       source->proxy_pass = g_value_dup_string (value);
       break;
     case PROP_COOKIES:
@@ -421,9 +409,7 @@ gst_curl_http_src_set_property (GObject * object, guint prop_id,
       source->number_cookies = g_strv_length (source->cookies);
       break;
     case PROP_USERAGENT:
-      if (source->user_agent != NULL) {
-        g_free (source->user_agent);
-      }
+      g_free (source->user_agent);
       source->user_agent = g_value_dup_string (value);
       break;
     case PROP_HEADERS:
