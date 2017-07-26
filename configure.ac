@@ -490,7 +490,7 @@ AS_IF([test "x$BUILD_EXAMPLES" = "xyes" -a $USE_X11 -eq 1],
   [AS_CASE([$with_gtk],
     [yes], [PKG_CHECK_MODULES([GTK3], [gtk+-3.0], [USE_GTK=1])],
     [no], [],
-    [PKG_CHECK_MODULES([GTK3], [gtk+-3.0], [USE_GTK=1])])])
+    [PKG_CHECK_MODULES([GTK3], [gtk+-3.0], [USE_GTK=1], [USE_GTK=0])])])
 AS_IF([test $USE_GTK -eq 1],
   [
     saved_CPPFLAGS="$CPPFLAGS"
