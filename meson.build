@@ -38,11 +38,30 @@ gstcodecparsers_dep = dependency('gstreamer-codecparsers-1.0', version : gst_req
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
     fallback : ['gst-plugins-bad', 'gstgl_dep'], required: false)
 gmodule_dep = dependency('gmodule-2.0', required: false)
-libva_dep = dependency('libva', version: libva_req)
 
-libva_drm_dep = dependency('libva-drm', version: '>= 0.33.0', required: false)
-libva_wayland_dep = dependency('libva-wayland', version: '>= 0.33.0', required: false)
-libva_x11_dep = dependency('libva-x11', version: '>= 0.31.0', required: false)
+libva_version = ''
+if get_option('with_libva') == 'auto'
+  libva_dep = dependency('libva-2.0', required : false)
+  if not libva_dep.found()
+    libva_dep = dependency('libva', version: libva_req)
+  else
+    libva_version = '-2.0'
+  endif
+else
+  if get_option('with_libva') == '2'
+    libva_dep = dependency('libva-2.0')
+    libva_version = '-2.0'
+  else
+    libva_dep = dependency('libva', version: libva_req)
+  endif
+endif
+
+libva_drm_dep = dependency('libva-drm' + libva_version, version: '>= 0.33.0',
+    required: false)
+libva_wayland_dep = dependency('libva-wayland' + libva_version,
+    version: '>= 0.33.0', required: false)
+libva_x11_dep = dependency('libva-x11' + libva_version, version: '>= 0.31.0',
+    required: false)
 libdrm_dep = dependency('libdrm', required: false)
 libudev_dep = dependency('libudev', required: false)
 egl_dep = dependency('egl', required: false)

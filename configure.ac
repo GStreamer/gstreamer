@@ -120,6 +120,11 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
   ["${srcdir}/gstreamer-vaapi.doap"],
   [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
 
+AC_ARG_WITH([libva],
+  [AS_HELP_STRING([--with-libva[[=VERSION]]],
+    [which version of libva use (1 or 2) @<:@default=check@:>@])],
+  [], [with_libva="check"])
+
 AC_ARG_ENABLE([encoders],
   AS_HELP_STRING([--enable-encoders],
     [enable video encoders @<:@default=yes@:>@]),
@@ -505,15 +510,23 @@ dnl -- VA-API                                                                --
 dnl ---------------------------------------------------------------------------
 
 dnl Core API
-PKG_CHECK_MODULES([LIBVA], [libva >= $VAAPI_REQ libva != 0.99.0])
-VA_VERSION_STR=`$PKG_CONFIG --modversion libva`
-VA_DRIVERS_PATH=`$PKG_CONFIG --variable=driverdir libva`
+LIBVA_VERSION=
+AS_CASE([$with_libva],
+  [2], [PKG_CHECK_MODULES([LIBVA], [libva-2.0 >= 1.0.0],
+          [LIBVA_VERSION="-2.0"])],
+  [1], [PKG_CHECK_MODULES([LIBVA], [libva >= $VAAPI_REQ libva != 0.99.0])],
+  [PKG_CHECK_MODULES([LIBVA], [libva-2.0 >= 1.0.0],
+          [LIBVA_VERSION="-2.0"],
+          [PKG_CHECK_MODULES([LIBVA], [libva >= $VAAPI_REQ libva != 0.99.0])])])
+
+VA_VERSION_STR=`$PKG_CONFIG --modversion libva$LIBVA_VERSION`
+VA_DRIVERS_PATH=`$PKG_CONFIG --variable=driverdir libva$LIBVA_VERSION`
 AC_DEFINE_UNQUOTED([VA_DRIVERS_PATH], ["$VA_DRIVERS_PATH"],
   [VA drivers path])
 
 dnl VA/DRM API
 if test $USE_DRM -eq 1; then
-  PKG_CHECK_MODULES([LIBVA_DRM], [libva-drm >= $VAAPI_DRM_REQ],
+  PKG_CHECK_MODULES([LIBVA_DRM], [libva-drm$LIBVA_VERSION >= $VAAPI_DRM_REQ],
     [
       saved_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$CPPFLAGS $LIBVA_DRM_CFLAGS"
@@ -524,7 +537,7 @@ fi
 
 dnl VA/X11 API
 if test $USE_X11 -eq 1; then
-  PKG_CHECK_MODULES(LIBVA_X11, [libva-x11 >= $VAAPI_X11_REQ],
+  PKG_CHECK_MODULES(LIBVA_X11, [libva-x11$LIBVA_VERSION >= $VAAPI_X11_REQ],
     [], [USE_X11=0])
 fi
 
@@ -884,7 +897,7 @@ fi
 
 dnl VA/Wayland API
 if test $USE_WAYLAND -eq 1; then
-  PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= $VAAPI_WLD_REQ],
+  PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland$LIBVA_VERSION >= $VAAPI_WLD_REQ],
     [], [USE_WAYLAND=0])
 fi
 
