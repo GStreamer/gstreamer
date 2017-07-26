@@ -1,3 +1,6 @@
+built_header_make = gst-validate-enum-types.h
+built_source_make = gst-validate-enum-types.c
+
 source_c = \
 	gst-validate-runner.c \
 	gst-validate-reporter.c \
@@ -39,6 +42,25 @@ source_h = \
 	gst-validate-scenario.h \
 	gst-validate-utils.h \
 	gst-validate-media-info.h
+#
+# do not put files in the distribution that are generated
+nodist_libgstvalidate_@GST_API_VERSION@_la_SOURCES = $(built_source_make)
+nodist_libgstvalidate_@GST_API_VERSION@include_HEADERS = $(built_header_make)
+
+gst-validate-enum-types.h: $(source_h)
+	$(AM_V_GEN)$(GLIB_MKENUMS) \
+	--template gst-validate-enum-types.h.template \
+	$^ > gst-validate-enum-types.h
+
+gst-validate-enum-types.c: $(source_h)
+	$(AM_V_GEN)$(GLIB_MKENUMS) \
+	--template gst-validate-enum-types.c.template \
+	$^ > gst-validate-enum-types.c
+
+# BUILT_SOURCES are built on make all/check/install before all other targets
+BUILT_SOURCES = \
+        $(built_header_make)		\
+        $(built_source_make)
 
 noinst_HEADERS = 		\
 	gettext.h \
@@ -75,7 +97,7 @@ libgstvalidatetracer_la_LIBADD = \
 	$(GST_ALL_LIBS) $(GIO_LIBS) $(GST_PBUTILS_LIBS) \
 	$(JSON_GLIB_LIBS) $(GLIB_LIBS) $(LIBM)
 
-CLEANFILES =
+CLEANFILES = $(built_header_make) $(built_source_make) $(as_dll_cleanfiles) *.gcno *.gcda *.gcov *.gcov.out
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstValidate-@GST_API_VERSION@.gir

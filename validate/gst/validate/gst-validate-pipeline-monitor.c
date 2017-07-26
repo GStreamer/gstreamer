@@ -522,7 +522,7 @@ _bus_handler (GstBus * bus, GstMessage * message,
     } else {
       g_string_append (str, "no message details\n");
     }
-    gst_validate_printf (NULL, str->str);
+    gst_validate_printf (NULL, "%s", str->str);
     g_string_free (str, TRUE);
   }
   switch (GST_MESSAGE_TYPE (message)) {

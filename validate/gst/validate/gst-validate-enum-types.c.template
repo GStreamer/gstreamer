@@ -1,4 +1,5 @@
 /*** BEGIN file-header ***/
+#include "gst-validate-enum-types.h"
 #include <gst/validate/validate.h>
 #define C_ENUM(v) ((gint) v)
 #define C_FLAGS(v) ((guint) v)
