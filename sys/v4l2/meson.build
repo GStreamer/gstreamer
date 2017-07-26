@@ -13,6 +13,7 @@ v4l2_sources = [
   'gstv4l2videodec.c',
   'gstv4l2videoenc.c',
   'gstv4l2h264enc.c',
+  'gstv4l2mpeg4enc.c',
   'gstv4l2vidorient.c',
   'v4l2_calls.c',
   'v4l2-utils.c',
