@@ -100,13 +100,13 @@ gst_curl_http_src_remove_queue_item (GstCurlHttpSrcQueueElement ** queue,
 
   prev_qelement = NULL;
   this_qelement = *queue;
-  while (this_qelement->p != s) {
-    if (this_qelement == NULL) {
-      /* Reached end of list without finding anything */
-      return FALSE;
-    }
+  while (this_qelement && (this_qelement->p != s)) {
     prev_qelement = this_qelement;
     this_qelement = this_qelement->next;
+  }
+  if (this_qelement == NULL) {
+    /* Reached end of list without finding anything */
+    return FALSE;
   }
 
   /* First queue item matched. */
@@ -144,13 +144,13 @@ gst_curl_http_src_remove_queue_handle (GstCurlHttpSrcQueueElement ** queue,
 
   prev_qelement = NULL;
   this_qelement = *queue;
-  while (this_qelement->p->curl_handle != handle) {
-    if (this_qelement == NULL) {
-      /* Reached end of list without finding anything */
-      return FALSE;
-    }
+  while (this_qelement && (this_qelement->p->curl_handle != handle)) {
     prev_qelement = this_qelement;
     this_qelement = this_qelement->next;
+  }
+  if (this_qelement == NULL) {
+    /* Reached end of list without finding anything */
+    return FALSE;
   }
 
   /*GST_DEBUG_OBJECT (this_qelement->p,

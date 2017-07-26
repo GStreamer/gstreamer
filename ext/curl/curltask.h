@@ -68,6 +68,11 @@
     } \
   } \
 
+#define gst_curl_setopt_bool(s,handle, type, option) \
+  if(curl_easy_setopt(handle,type,((option != 0)?1L:0L)) != CURLE_OK) { \
+    GST_WARNING_OBJECT (s, "Cannot set unsupported option %s", #type ); \
+  } \
+
 #define gst_curl_setopt_str_default(s,handle,type,option) \
   if((option == NULL) && (GSTCURL_HANDLE_DEFAULT_##type != NULL)) { \
     if(curl_easy_setopt(handle,type,GSTCURL_HANDLE_DEFAULT_##type) != CURLE_OK) { \
@@ -92,6 +97,11 @@
     if(curl_easy_setopt(handle,type,option) != CURLE_OK) { \
       GST_WARNING_OBJECT (s, "Cannot set unsupported option %s", #type ); \
     } \
+  } \
+
+#define gst_curl_setopt_generic(s, handle, type, option) \
+  if (curl_easy_setopt (handle, type, option) != CURLE_OK) { \
+    GST_WARNING_OBJECT (s, "Cannot set unsupported option %s", #type ); \
   } \
 
 #define GSTCURL_ASSERT_MUTEX(x) if(g_atomic_pointer_get(&x->p) == NULL) GSTCURL_DEBUG_PRINT("ASSERTION: No valid mutex handle in GMutex %p", x);

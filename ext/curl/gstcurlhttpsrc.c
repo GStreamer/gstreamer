@@ -329,7 +329,7 @@ gst_curl_http_src_class_init (GstCurlHttpSrcClass * klass)
           GSTCURL_DEFAULT_CONNECTIONS_GLOBAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #ifdef CURL_VERSION_HTTP2
-  if (gst_curl_http_src_curl_capabilities->features && CURL_VERSION_HTTP2) {
+  if (gst_curl_http_src_curl_capabilities->features & CURL_VERSION_HTTP2) {
     GST_INFO_OBJECT (klass, "Our curl version (%s) supports HTTP2!",
         gst_curl_http_src_curl_capabilities->version);
     g_object_class_install_property (gobject_class, PROP_HTTPVERSION,
@@ -399,7 +399,7 @@ gst_curl_http_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PROXYURI:
       if (source->proxy_uri != NULL) {
-        g_free (source->uri);
+        g_free (source->proxy_uri);
       }
       source->proxy_uri = g_value_dup_string (value);
       break;
@@ -756,6 +756,7 @@ gst_curl_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GstFlowReturn ret;
   GstCurlHttpSrc *src = GST_CURLHTTPSRC (psrc);
   GstCurlHttpSrcClass *klass;
+  GstStructure *empty_headers;
 
   klass = G_TYPE_INSTANCE_GET_CLASS (src, GST_TYPE_CURL_HTTP_SRC,
       GstCurlHttpSrcClass);
@@ -774,13 +775,18 @@ retry:
     GST_DEBUG_OBJECT (src, "Starting new request for URI %s", src->uri);
     /* Create the Easy Handle and set up the session. */
     src->curl_handle = gst_curl_http_src_create_easy_handle (src);
+    if (src->curl_handle == NULL) {
+      ret = GST_FLOW_ERROR;
+      goto escape;
+    }
 
     g_mutex_lock (&klass->multi_task_context.mutex);
 
     if (gst_curl_http_src_add_queue_item (&klass->multi_task_context.queue, src)
         == FALSE) {
       GST_ERROR_OBJECT (src, "Couldn't create new queue item! Aborting...");
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      goto escape;
     }
 
     /* Signal the worker thread */
@@ -794,11 +800,12 @@ retry:
 
     GST_DEBUG_OBJECT (src, "Submitted request for URI %s to curl", src->uri);
 
+    empty_headers = gst_structure_new_empty (RESPONSE_HEADERS_NAME);
     src->http_headers = gst_structure_new (HTTP_HEADERS_NAME,
         URI_NAME, G_TYPE_STRING, src->uri,
         REQUEST_HEADERS_NAME, GST_TYPE_STRUCTURE, src->request_headers,
-        RESPONSE_HEADERS_NAME, GST_TYPE_STRUCTURE,
-        gst_structure_new_empty (RESPONSE_HEADERS_NAME), NULL);
+        RESPONSE_HEADERS_NAME, GST_TYPE_STRUCTURE, empty_headers, NULL);
+    gst_structure_free (empty_headers);
     GST_INFO_OBJECT (src, "Created a new headers object");
   }
 
@@ -953,7 +960,11 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
 
   /* This is mandatory and yet not default option, so if this is NULL
    * then something very bad is going on. */
-  curl_easy_setopt (handle, CURLOPT_URL, s->uri);
+  if (s->uri == NULL) {
+    GST_ERROR_OBJECT (s, "No URI for curl!");
+    return NULL;
+  }
+  gst_curl_setopt_str (s, handle, CURLOPT_URL, s->uri);
 
   gst_curl_setopt_str (s, handle, CURLOPT_USERNAME, s->username);
   gst_curl_setopt_str (s, handle, CURLOPT_PASSWORD, s->password);
@@ -970,7 +981,9 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
   if (s->request_headers != NULL) {
     gst_structure_foreach (s->request_headers, _headers_to_curl_slist,
         &s->slist);
-    curl_easy_setopt (handle, CURLOPT_HTTPHEADER, s->slist);
+    if (curl_easy_setopt (handle, CURLOPT_HTTPHEADER, s->slist) != CURLE_OK) {
+      GST_WARNING_OBJECT (s, "Failed to set HTTP headers!");
+    }
   }
 
   gst_curl_setopt_str_default (s, handle, CURLOPT_USERAGENT, s->user_agent);
@@ -981,20 +994,18 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
    * zlib compression methods.
    */
   if (s->accept_compressed_encodings == TRUE) {
-    curl_easy_setopt (handle, CURLOPT_ACCEPT_ENCODING, "");
+    gst_curl_setopt_str (s, handle, CURLOPT_ACCEPT_ENCODING, "");
   } else {
-    curl_easy_setopt (handle, CURLOPT_ACCEPT_ENCODING, "identity");
+    gst_curl_setopt_str (s, handle, CURLOPT_ACCEPT_ENCODING, "identity");
   }
 
   gst_curl_setopt_int (s, handle, CURLOPT_FOLLOWLOCATION,
       s->allow_3xx_redirect);
   gst_curl_setopt_int_default (s, handle, CURLOPT_MAXREDIRS,
       s->max_3xx_redirects);
-  gst_curl_setopt_int (s, handle, CURLOPT_TCP_KEEPALIVE,
-      GSTCURL_BINARYBOOL (s->keep_alive));
+  gst_curl_setopt_bool (s, handle, CURLOPT_TCP_KEEPALIVE, s->keep_alive);
   gst_curl_setopt_int (s, handle, CURLOPT_TIMEOUT, s->timeout_secs);
-  gst_curl_setopt_int (s, handle, CURLOPT_SSL_VERIFYPEER,
-      GSTCURL_BINARYBOOL (s->strict_ssl));
+  gst_curl_setopt_bool (s, handle, CURLOPT_SSL_VERIFYPEER, s->strict_ssl);
   gst_curl_setopt_str (s, handle, CURLOPT_CAINFO, s->custom_ca_file);
 
   switch (s->preferred_http_version) {
@@ -1011,7 +1022,8 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
 #ifdef CURL_VERSION_HTTP2
     case GSTCURL_HTTP_VERSION_2_0:
       GST_DEBUG_OBJECT (s, "Setting version as HTTP/2.0");
-      curl_easy_setopt (handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+      gst_curl_setopt_int (s, handle, CURLOPT_HTTP_VERSION,
+          CURL_HTTP_VERSION_2_0);
       break;
 #endif
     default:
@@ -1019,14 +1031,14 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
           "Supplied a bogus HTTP version, using curl default!");
   }
 
-  curl_easy_setopt (handle, CURLOPT_HEADERFUNCTION,
+  gst_curl_setopt_generic (s, handle, CURLOPT_HEADERFUNCTION,
       gst_curl_http_src_get_header);
-  curl_easy_setopt (handle, CURLOPT_HEADERDATA, s);
-  curl_easy_setopt (handle, CURLOPT_WRITEFUNCTION,
+  gst_curl_setopt_str (s, handle, CURLOPT_HEADERDATA, s);
+  gst_curl_setopt_generic (s, handle, CURLOPT_WRITEFUNCTION,
       gst_curl_http_src_get_chunks);
-  curl_easy_setopt (handle, CURLOPT_WRITEDATA, s);
+  gst_curl_setopt_str (s, handle, CURLOPT_WRITEDATA, s);
 
-  curl_easy_setopt (handle, CURLOPT_ERRORBUFFER, s->curl_errbuf);
+  gst_curl_setopt_str (s, handle, CURLOPT_ERRORBUFFER, s->curl_errbuf);
 
   GSTCURL_FUNCTION_EXIT (s);
   return handle;
@@ -1154,6 +1166,7 @@ gst_curl_http_src_handle_response (GstCurlHttpSrc * src)
       RESPONSE_HEADERS_NAME);
   if (gst_structure_n_fields (gst_value_get_structure (response_headers)) > 0) {
     GstEvent *hdrs_event;
+    GstStructure *empty_headers;
 
     gst_element_post_message (GST_ELEMENT_CAST (src),
         gst_message_new_element (GST_OBJECT_CAST (src),
@@ -1164,11 +1177,13 @@ gst_curl_http_src_handle_response (GstCurlHttpSrc * src)
         src->http_headers);
     gst_pad_push_event (GST_BASE_SRC_PAD (src), hdrs_event);
     GST_INFO_OBJECT (src, "Pushed headers downstream");
+    empty_headers = gst_structure_new_empty (RESPONSE_HEADERS_NAME);
     src->http_headers = gst_structure_new (HTTP_HEADERS_NAME,
         URI_NAME, G_TYPE_STRING, src->uri,
         REQUEST_HEADERS_NAME, GST_TYPE_STRUCTURE, src->request_headers,
         RESPONSE_HEADERS_NAME, GST_TYPE_STRUCTURE,
         gst_structure_new_empty (RESPONSE_HEADERS_NAME), NULL);
+    gst_structure_free (empty_headers);
   }
 
   src->hdrs_updated = FALSE;
@@ -1646,8 +1661,8 @@ gst_curl_http_src_curl_multi_loop (gpointer thread_data)
           qelement->p->state = GSTCURL_REMOVED;
         }
         g_cond_signal (&qelement->p->signal);
-        gst_curl_http_src_remove_queue_item (&context->queue, qelement->p);
         g_mutex_unlock (&qelement->p->buffer_mutex);
+        gst_curl_http_src_remove_queue_item (&context->queue, qelement->p);
       }
     }
     context->request_removal_element = NULL;
@@ -1700,10 +1715,13 @@ gst_curl_http_src_get_header (void *header, size_t size, size_t nmemb,
 
     /* Have we already seen a status line? If so, delete any response headers */
     if (s->status_code > 0) {
+      GstStructure *empty_headers =
+          gst_structure_new_empty (RESPONSE_HEADERS_NAME);
       gst_structure_remove_field (s->http_headers, RESPONSE_HEADERS_NAME);
       gst_structure_set (s->http_headers, RESPONSE_HEADERS_NAME,
-          GST_TYPE_STRUCTURE, gst_structure_new_empty (RESPONSE_HEADERS_NAME),
-          NULL);
+          GST_TYPE_STRUCTURE, empty_headers, NULL);
+      gst_structure_free (empty_headers);
+
     }
 
     /* Process the status line */
