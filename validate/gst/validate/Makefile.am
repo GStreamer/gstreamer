@@ -85,6 +85,7 @@ libgstvalidate_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VE
 
 # GstValidate GStreamer plugin
 plugin_LTLIBRARIES = libgstvalidatetracer.la
+nodist_libgstvalidatetracer_la_SOURCES = $(built_source_make)
 libgstvalidatetracer_la_SOURCES = $(source_c)
 libgstvalidatetracer_la_CFLAGS = $(GST_ALL_CFLAGS)\
 	$(JSON_GLIB_CFLAGS) $(GIO_CFLAGS) $(GST_PBUTILS_CFLAGS) \
