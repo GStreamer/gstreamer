@@ -1668,6 +1668,7 @@ gst_vpx_enc_process (GstVPXEnc * encoder)
   GstVideoCodecFrame *frame;
   GstFlowReturn ret = GST_FLOW_OK;
   GstVPXEncClass *vpx_enc_class;
+  vpx_codec_pts_t pts;
 
   video_encoder = GST_VIDEO_ENCODER (encoder);
   vpx_enc_class = GST_VPX_ENC_GET_CLASS (encoder);
@@ -1707,7 +1708,21 @@ gst_vpx_enc_process (GstVPXEnc * encoder)
     }
 
     invisible = (pkt->data.frame.flags & VPX_FRAME_IS_INVISIBLE) != 0;
-    frame = gst_video_encoder_get_oldest_frame (video_encoder);
+
+    /* discard older frames that were dropped by libvpx */
+    frame = NULL;
+    do {
+      if (frame)
+        gst_video_encoder_finish_frame (video_encoder, frame);
+      frame = gst_video_encoder_get_oldest_frame (video_encoder);
+      pts =
+          gst_util_uint64_scale (frame->pts,
+          encoder->cfg.g_timebase.den,
+          encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND);
+      GST_TRACE_OBJECT (encoder, "vpx pts: %" G_GINT64_FORMAT
+          ", gst frame pts: %" G_GINT64_FORMAT, pkt->data.frame.pts, pts);
+    } while (pkt->data.frame.pts > pts);
+
     g_assert (frame != NULL);
     if ((pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0)
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
