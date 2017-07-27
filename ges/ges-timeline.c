@@ -1401,7 +1401,8 @@ ges_move_context_set_objects (GESTimeline * timeline, GESTrackElement * obj,
         tmptrackelement = GES_TRACK_ELEMENT (g_sequence_get (iter));
         tmpend = _START (tmptrackelement) + _DURATION (tmptrackelement);
 
-        if (tmpend <= start) {
+        if (tmpend <= start && GES_TIMELINE_ELEMENT_PARENT (tmptrackelement)
+            != GES_TIMELINE_ELEMENT_PARENT (obj)) {
           mv_ctx->max_trim_pos =
               MAX (mv_ctx->max_trim_pos, _START (tmptrackelement));
           mv_ctx->min_trim_pos = MAX (mv_ctx->min_trim_pos,
@@ -1428,7 +1429,9 @@ ges_move_context_set_objects (GESTimeline * timeline, GESTrackElement * obj,
           iter = g_sequence_iter_next (iter)) {
         tmptrackelement = GES_TRACK_ELEMENT (g_sequence_get (iter));
 
-        if (_START (tmptrackelement) >= moving_point) {
+        if (_START (tmptrackelement) >= moving_point &&
+            GES_TIMELINE_ELEMENT_PARENT (tmptrackelement) !=
+            GES_TIMELINE_ELEMENT_PARENT (obj)) {
           tmpend = _START (tmptrackelement) + _DURATION (tmptrackelement);
           mv_ctx->max_trim_pos = MIN (mv_ctx->max_trim_pos, tmpend);
           mv_ctx->moving_trackelements =
