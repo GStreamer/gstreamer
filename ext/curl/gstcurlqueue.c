@@ -46,6 +46,8 @@
 #include "gstcurlqueue.h"
 
 /**
+ * gst_curl_http_src_add_queue_item:
+ *
  * Function to add an item to a queue. If the queue is empty (i.e. NULL), then
  * it creates the new head of the queue, otherwise it scans to the end and adds
  * the entry there.
@@ -87,6 +89,8 @@ gst_curl_http_src_add_queue_item (GstCurlHttpSrcQueueElement ** queue,
 }
 
 /**
+ * gst_curl_http_src_remove_queue_item:
+ *
  * Function to remove an item from a queue.
  * @param queue The queue to remove an item from.
  * @param s The item to be removed.
@@ -127,6 +131,8 @@ gst_curl_http_src_remove_queue_item (GstCurlHttpSrcQueueElement ** queue,
 }
 
 /**
+ * gst_curl_http_src_remove_queue_handle:
+ *
  * Convenience function to remove an item from a queue by it's contained curl
  * handle. Only ever called from within the multi loop when the CURL handle
  * returns, so it's safe to assume that the transfer completed and the result
