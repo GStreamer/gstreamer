@@ -7,8 +7,7 @@ particular:
 
   - How to query the pipeline for information like stream position or
     duration.
-
-  - How to seek (jump) to a different position (time instant) inside the
+  - How to seek (jump) to a different position (time) inside the
     stream.
 
 ## Introduction
@@ -20,11 +19,11 @@ is allowed, then, once the movie has been running for ten seconds, we
 skip to a different position using a seek.
 
 In the previous tutorials, once we had the pipeline setup and running,
-our main function just sat and waited to receive an ERROR or an EOS
-through the bus. Here we modify this function to periodically wake up
+our main function just sat and waited to receive an `ERROR` or an `EOS`
+through the bus. Here, we modify this function to periodically wake up
 and query the pipeline for the stream position, so we can print it on
-screen. This is similar to what a media player would do, updating the
-User Interface on a periodic basis.
+the screen. This is similar to what a media player would do, updating the
+user Interface on a periodic basis.
 
 Finally, the stream duration is queried and updated whenever it changes.
 
@@ -229,11 +228,11 @@ can pass it around to other functions. In particular, in this example we
 move the message handling code to its own function
 `handle_message` because it is growing a bit too big.
 
-We would then build a pipeline composed of a single element, a
+We then build a pipeline composed of a single element, a
 `playbin`, which we already saw in [Basic tutorial 1: Hello
 world!](tutorials/basic/hello-world.md). However,
 `playbin` is in itself a pipeline, and in this case it is the only
-element in the pipeline, so we use directly the `playbin` element. We
+element in the pipeline, so we directly use the `playbin` element. We
 will skip the details: the URI of the clip is given to `playbin` via
 the URI property and the pipeline is set to the playing state.
 
@@ -245,11 +244,13 @@ msg = gst_bus_timed_pop_filtered (bus, 100 * GST_MSECOND,
 Previously we did not provide a timeout to
 `gst_bus_timed_pop_filtered()`, meaning that it didn't return until a
 message was received. Now we use a timeout of 100 milliseconds, so, if
-no message is received, 10 times per second the function will return
-with a NULL instead of a `GstMessage`. We are going to use this to
-update our “UI”. Note that the timeout period is specified in
-nanoseconds, so usage of the `GST_SECOND` or `GST_MSECOND` macros is
-highly recommended.
+no message is received during one tenth of a second, the function will return
+`NULL`. We are going to use this logic to update our “UI”.
+
+Note that the desired timeout must be specified as a `GstClockTime`, hence,
+in nanoseconds. Numbers expressing different time units then, should be
+multiplied by macros like `GST_SECOND` or `GST_MSECOND`. This also makes
+your code more readable.
 
 If we got a message, we process it in the `handle_message`` `function
 (next subsection), otherwise:
@@ -261,9 +262,9 @@ If we got a message, we process it in the `handle_message`` `function
 if (data.playing) {
 ```
 
-First off, if we are not in the `PLAYING` state, we do not want to do
-anything here, since most queries would fail. Otherwise, it is time to
-refresh the screen.
+If the pipeline is in `PLAYING` state, it is time to refresh the screen.
+We don't want to do anything if we are not in `PLAYING` state, because
+most queries would fail.
 
 We get here approximately 10 times per second, a good enough refresh
 rate for our UI. We are going to print on screen the current media
@@ -301,8 +302,7 @@ g_print ("Position %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "\r",
 ```
 
 Note the usage of the `GST_TIME_FORMAT` and `GST_TIME_ARGS` macros to
-provide user-friendly representation of GStreamer
-times.
+provide a user-friendly representation of GStreamer times.
 
 ``` c
 /* If seeking is enabled, we have not done it yet, and the time is right, seek */
@@ -322,9 +322,9 @@ thing!
 Let's review the parameters:
 
 `GST_FORMAT_TIME` indicates that we are specifying the destination in
-time, as opposite to bytes (and other more obscure mechanisms).
+time units. Other seek-formats use different units.
 
-Then come the GstSeekFlags, let's review the most common:
+Then come the `GstSeekFlags`, let's review the most common:
 
 `GST_SEEK_FLAG_FLUSH`: This discards all data currently in the pipeline
 before doing the seek. Might pause a bit while the pipeline is refilled
@@ -333,14 +333,13 @@ and the new data starts to show up, but greatly increases the
 “stale” data might be shown for a while until the new position appears
 at the end of the pipeline.
 
-`GST_SEEK_FLAG_KEY_UNIT`: Most encoded video streams cannot seek to
-arbitrary positions, only to certain frames called Key Frames. When this
+`GST_SEEK_FLAG_KEY_UNIT`: With most encoded video streams, seeking to
+arbitrary positions is not possible but only to certain frames called Key Frames. When this
 flag is used, the seek will actually move to the closest key frame and
 start producing data straight away. If this flag is not used, the
 pipeline will move internally to the closest key frame (it has no other
 alternative) but data will not be shown until it reaches the requested
-position. Not providing the flag is more accurate, but might take longer
-to react.
+position. This last alternative is more accurate, but might take longer.
 
 `GST_SEEK_FLAG_ACCURATE`: Some media clips do not provide enough
 indexing information, meaning that seeking to arbitrary positions is
@@ -350,14 +349,14 @@ enough for your case (you see seeks not going to the exact time you
 asked for), then provide this flag. Be warned that it might take longer
 to calculate the seeking position (very long, on some files).
 
-And finally we provide the position to seek to. Since we asked
-for `GST_FORMAT_TIME` , this position is in nanoseconds, so we use
-the `GST_SECOND` macro for simplicity.
+Finally, we provide the position to seek to. Since we asked
+for `GST_FORMAT_TIME`, the value must be in nanoseconds so we express
+the time in seconds, for simplicity, and then multiply by `GST_SECOND`.
 
 ### Message Pump
 
 The `handle_message` function processes all messages received through
-the pipeline's bus. ERROR and EOS handling is the same as in previous
+the pipeline's bus. `ERROR` and `EOS` handling is the same as in previous
 tutorials, so we skip to the interesting part:
 
 ``` c
@@ -384,12 +383,10 @@ case GST_MESSAGE_STATE_CHANGED: {
 ```
 
 Seeks and time queries generally only get a valid reply when in the
-PAUSED or PLAYING state, since all elements have had a chance to
-receive information and configure themselves. Here we take note of
-whether we are in the PLAYING state or not with the `playing`
-variable.
-
-Also, if we have just entered the PLAYING state, we do our first query.
+`PAUSED` or `PLAYING` state, since all elements have had a chance to
+receive information and configure themselves. Here, we use the `playing`
+variable to keep track of whether the pipeline is in `PLAYING` state.
+Also, if we have just entered the `PLAYING` state, we do our first query.
 We ask the pipeline if seeking is allowed on this stream:
 
 ``` c
