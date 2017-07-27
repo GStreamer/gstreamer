@@ -130,6 +130,7 @@ gst_mulawdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 
 error_failed_map_output_buffer:
   gst_buffer_unref (outbuf);
+  gst_buffer_unmap (buffer, &inmap);
 
 error_failed_map_input_buffer:
   return GST_FLOW_ERROR;
