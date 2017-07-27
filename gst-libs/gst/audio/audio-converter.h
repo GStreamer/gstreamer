@@ -64,6 +64,38 @@ typedef struct _GstAudioConverter GstAudioConverter;
  */
 #define GST_AUDIO_CONVERTER_OPT_QUANTIZATION   "GstAudioConverter.quantization"
 
+/**
+ * GST_AUDIO_CONVERTER_OPT_MIX_MATRIX:
+ *
+ * #GST_TYPE_VALUE_LIST, The channel mapping matrix.
+ *
+ * The matrix coefficients must be between -1 and 1: the number of rows is equal
+ * to the number of output channels and the number of columns is equal to the
+ * number of input channels.
+ *
+ * ## Example matrix generation code
+ * To generate the matrix using code:
+ *
+ * |[
+ * GValue v = G_VALUE_INIT;
+ * GValue v2 = G_VALUE_INIT;
+ * GValue v3 = G_VALUE_INIT;
+ *
+ * g_value_init (&v2, GST_TYPE_ARRAY);
+ * g_value_init (&v3, G_TYPE_DOUBLE);
+ * g_value_set_double (&v3, 1);
+ * gst_value_array_append_value (&v2, &v3);
+ * g_value_unset (&v3);
+ * [ Repeat for as many double as your input channels - unset and reinit v3 ]
+ * g_value_init (&v, GST_TYPE_ARRAY);
+ * gst_value_array_append_value (&v, &v2);
+ * g_value_unset (&v2);
+ * [ Repeat for as many v2's as your output channels - unset and reinit v2]
+ * g_object_set_property (G_OBJECT (audiomixmatrix), "matrix", &v);
+ * g_value_unset (&v);
+ * ]|
+ */
+#define GST_AUDIO_CONVERTER_OPT_MIX_MATRIX   "GstAudioConverter.mix-matrix"
 
 /**
  * GstAudioConverterFlags:

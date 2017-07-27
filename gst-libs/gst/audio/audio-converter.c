@@ -120,6 +120,7 @@ struct _GstAudioConverter
 
   /* channel mix */
   gboolean mix_passthrough;
+  gfloat **mix_matrix;
   GstAudioChannelMixer *mix;
 
   /* resample */
@@ -263,6 +264,12 @@ get_opt_enum (GstAudioConverter * convert, const gchar * opt, GType type,
   return res;
 }
 
+static const GValue *
+get_opt_value (GstAudioConverter * convert, const gchar * opt)
+{
+  return gst_structure_get_value (convert->config, opt);
+}
+
 #define DEFAULT_OPT_RESAMPLER_METHOD GST_AUDIO_RESAMPLER_METHOD_BLACKMAN_NUTTALL
 #define DEFAULT_OPT_DITHER_METHOD GST_AUDIO_DITHER_NONE
 #define DEFAULT_OPT_NOISE_SHAPING_METHOD GST_AUDIO_NOISE_SHAPING_NONE
@@ -279,6 +286,8 @@ get_opt_enum (GstAudioConverter * convert, const gchar * opt, GType type,
     DEFAULT_OPT_NOISE_SHAPING_METHOD)
 #define GET_OPT_QUANTIZATION(c) get_opt_uint(c, \
     GST_AUDIO_CONVERTER_OPT_QUANTIZATION, DEFAULT_OPT_QUANTIZATION)
+#define GET_OPT_MIX_MATRIX(c) get_opt_value(c, \
+    GST_AUDIO_CONVERTER_OPT_MIX_MATRIX)
 
 static gboolean
 copy_config (GQuark field_id, const GValue * value, gpointer user_data)
@@ -624,26 +633,99 @@ chain_convert_in (GstAudioConverter * convert, AudioChain * prev)
   return prev;
 }
 
+static gboolean
+check_mix_matrix (guint in_channels, guint out_channels, const GValue * value)
+{
+  guint i, j;
+
+  if (gst_value_array_get_size (value) != out_channels) {
+    GST_ERROR ("Invalid mix matrix size, should be %d", out_channels);
+    goto fail;
+  }
+
+  for (j = 0; j < out_channels; j++) {
+    const GValue *row = gst_value_array_get_value (value, j);
+
+    if (gst_value_array_get_size (row) != in_channels) {
+      GST_ERROR ("Invalid mix matrix row size, should be %d", in_channels);
+      goto fail;
+    }
+
+    for (i = 0; i < in_channels; i++) {
+      const GValue *itm;
+
+      itm = gst_value_array_get_value (row, i);
+      if (!G_VALUE_HOLDS_FLOAT (itm)) {
+        GST_ERROR ("Invalid mix matrix element type, should be float");
+        goto fail;
+      }
+    }
+  }
+
+  return TRUE;
+
+fail:
+  return FALSE;
+}
+
+static gfloat **
+mix_matrix_from_g_value (guint in_channels, guint out_channels,
+    const GValue * value)
+{
+  guint i, j;
+  gfloat **matrix = g_new (gfloat *, in_channels);
+
+  for (i = 0; i < in_channels; i++)
+    matrix[i] = g_new (gfloat, out_channels);
+
+  for (j = 0; j < out_channels; j++) {
+    const GValue *row = gst_value_array_get_value (value, j);
+
+    for (i = 0; i < in_channels; i++) {
+      const GValue *itm;
+      gfloat coefficient;
+
+      itm = gst_value_array_get_value (row, i);
+      coefficient = g_value_get_float (itm);
+      matrix[i][j] = coefficient;
+    }
+  }
+
+  return matrix;
+}
+
 static AudioChain *
 chain_mix (GstAudioConverter * convert, AudioChain * prev)
 {
-  GstAudioChannelMixerFlags flags;
   GstAudioInfo *in = &convert->in;
   GstAudioInfo *out = &convert->out;
   GstAudioFormat format = convert->current_format;
-
-  flags =
-      GST_AUDIO_INFO_IS_UNPOSITIONED (in) ?
-      GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_IN : 0;
-  flags |=
-      GST_AUDIO_INFO_IS_UNPOSITIONED (out) ?
-      GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_OUT : 0;
+  const GValue *opt_matrix = GET_OPT_MIX_MATRIX (convert);
 
   convert->current_channels = out->channels;
 
-  convert->mix =
-      gst_audio_channel_mixer_new (flags, format, in->channels, in->position,
-      out->channels, out->position);
+  if (opt_matrix) {
+    gfloat **matrix =
+        mix_matrix_from_g_value (in->channels, out->channels, opt_matrix);
+
+    convert->mix =
+        gst_audio_channel_mixer_new_with_matrix (0, format, in->channels,
+        out->channels, matrix);
+  } else {
+    GstAudioChannelMixerFlags flags;
+
+    flags =
+        GST_AUDIO_INFO_IS_UNPOSITIONED (in) ?
+        GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_IN : 0;
+    flags |=
+        GST_AUDIO_INFO_IS_UNPOSITIONED (out) ?
+        GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_OUT : 0;
+
+    convert->mix =
+        gst_audio_channel_mixer_new (flags, format, in->channels, in->position,
+        out->channels, out->position);
+  }
+
   convert->mix_passthrough =
       gst_audio_channel_mixer_is_passthrough (convert->mix);
   GST_INFO ("mix format %s, passthrough %d, in_channels %d, out_channels %d",
@@ -1077,15 +1159,25 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
 {
   GstAudioConverter *convert;
   AudioChain *prev;
+  const GValue *opt_matrix = NULL;
 
   g_return_val_if_fail (in_info != NULL, FALSE);
   g_return_val_if_fail (out_info != NULL, FALSE);
   g_return_val_if_fail (in_info->layout == GST_AUDIO_LAYOUT_INTERLEAVED, FALSE);
   g_return_val_if_fail (in_info->layout == out_info->layout, FALSE);
 
+  if (config)
+    opt_matrix =
+        gst_structure_get_value (config, GST_AUDIO_CONVERTER_OPT_MIX_MATRIX);
+
+  if (opt_matrix
+      && !check_mix_matrix (in_info->channels, out_info->channels, opt_matrix))
+    goto invalid_mix_matrix;
+
   if ((GST_AUDIO_INFO_CHANNELS (in_info) != GST_AUDIO_INFO_CHANNELS (out_info))
       && (GST_AUDIO_INFO_IS_UNPOSITIONED (in_info)
-          || GST_AUDIO_INFO_IS_UNPOSITIONED (out_info)))
+          || GST_AUDIO_INFO_IS_UNPOSITIONED (out_info))
+      && !opt_matrix)
     goto unpositioned;
 
   convert = g_slice_new0 (GstAudioConverter);
@@ -1173,6 +1265,12 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
 unpositioned:
   {
     GST_WARNING ("unpositioned channels");
+    return NULL;
+  }
+
+invalid_mix_matrix:
+  {
+    GST_WARNING ("Invalid mix matrix");
     return NULL;
   }
 }
