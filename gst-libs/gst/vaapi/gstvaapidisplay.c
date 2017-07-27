@@ -209,13 +209,13 @@ append_formats (GArray * formats, const VAImageFormat * va_formats,
     guint * flags, guint n)
 {
   GstVideoFormat format;
-  const GstVaapiFormatInfo *YV12_fip = NULL;
-  const GstVaapiFormatInfo *I420_fip = NULL;
+  int YV12_idx = -1;
+  int I420_idx = -1;
+  const GstVaapiFormatInfo *fip;
   guint i;
 
   for (i = 0; i < n; i++) {
     const VAImageFormat *const va_format = &va_formats[i];
-    const GstVaapiFormatInfo **fipp;
 
     format = gst_vaapi_video_format_from_va_format (va_format);
     if (format == GST_VIDEO_FORMAT_UNKNOWN) {
@@ -227,25 +227,25 @@ append_formats (GArray * formats, const VAImageFormat * va_formats,
 
     switch (format) {
       case GST_VIDEO_FORMAT_YV12:
-        fipp = &YV12_fip;
+        YV12_idx = formats->len - 1;
         break;
       case GST_VIDEO_FORMAT_I420:
-        fipp = &I420_fip;
+        I420_idx = formats->len - 1;
         break;
       default:
-        fipp = NULL;
         break;
     }
-    if (fipp)
-      *fipp = &g_array_index (formats, GstVaapiFormatInfo, formats->len - 1);
   }
 
   /* Append I420 (resp. YV12) format if YV12 (resp. I420) is not
      supported by the underlying driver */
-  if (YV12_fip && !I420_fip)
-    append_format (formats, GST_VIDEO_FORMAT_I420, YV12_fip->flags);
-  else if (I420_fip && !YV12_fip)
-    append_format (formats, GST_VIDEO_FORMAT_YV12, I420_fip->flags);
+  if ((YV12_idx != -1) && (I420_idx == -1)) {
+    fip = &g_array_index (formats, GstVaapiFormatInfo, YV12_idx);
+    append_format (formats, GST_VIDEO_FORMAT_I420, fip->flags);
+  } else if ((I420_idx != -1) && (YV12_idx == -1)) {
+    fip = &g_array_index (formats, GstVaapiFormatInfo, I420_idx);
+    append_format (formats, GST_VIDEO_FORMAT_YV12, fip->flags);
+  }
 }
 
 /* Sort image formats. Prefer YUV formats first */
