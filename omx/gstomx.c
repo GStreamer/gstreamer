@@ -2078,9 +2078,11 @@ gst_omx_port_populate_unlocked (GstOMXPort * port)
 
       /* Reset all flags, some implementations don't
        * reset them themselves and the flags are not
-       * valid anymore after the buffer was consumed
+       * valid anymore after the buffer was consumed.
+       * Also reset nFilledLen as FillThisBuffer() expects an empty buffer.
        */
       buf->omx_buf->nFlags = 0;
+      buf->omx_buf->nFilledLen = 0;
 
       err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
 
