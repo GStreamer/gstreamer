@@ -903,7 +903,7 @@ gst_v4l2_video_enc_subclass_init (gpointer g_class, gpointer data)
 }
 
 /* Probing functions */
-gboolean
+void
 gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
     const char *codec, const gchar * basename, const gchar * device_path,
     GstCaps * sink_caps, GstCaps * codec_caps, GstCaps * src_caps)
@@ -942,9 +942,9 @@ gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
   }
 
   subtype = g_type_register_static (type, type_name, &type_info, 0);
-  gst_element_register (plugin, type_name, GST_RANK_PRIMARY + 1, subtype);
+
+  if (!gst_element_register (plugin, type_name, GST_RANK_PRIMARY + 1, subtype))
+    GST_WARNING ("Failed to register plugin '%s'", type_name);
 
   g_free (type_name);
-
-  return TRUE;
 }

@@ -74,7 +74,7 @@ struct _GstV4l2TransformClass
 GType gst_v4l2_transform_get_type (void);
 
 gboolean gst_v4l2_is_transform       (GstCaps * sink_caps, GstCaps * src_caps);
-gboolean gst_v4l2_transform_register (GstPlugin * plugin,
+void     gst_v4l2_transform_register (GstPlugin * plugin,
                                       const gchar *basename,
                                       const gchar *device_path,
                                       GstCaps * sink_caps, GstCaps * src_caps);

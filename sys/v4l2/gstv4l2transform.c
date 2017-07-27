@@ -1166,7 +1166,7 @@ gst_v4l2_is_transform (GstCaps * sink_caps, GstCaps * src_caps)
   return ret;
 }
 
-gboolean
+void
 gst_v4l2_transform_register (GstPlugin * plugin, const gchar * basename,
     const gchar * device_path, GstCaps * sink_caps, GstCaps * src_caps)
 {
@@ -1193,9 +1193,8 @@ gst_v4l2_transform_register (GstPlugin * plugin, const gchar * basename,
   type_name = g_strdup_printf ("v4l2%sconvert", basename);
   subtype = g_type_register_static (type, type_name, &type_info, 0);
 
-  gst_element_register (plugin, type_name, GST_RANK_NONE, subtype);
+  if (!gst_element_register (plugin, type_name, GST_RANK_NONE, subtype))
+    GST_WARNING ("Failed to register plugin '%s'", type_name);
 
   g_free (type_name);
-
-  return TRUE;
 }

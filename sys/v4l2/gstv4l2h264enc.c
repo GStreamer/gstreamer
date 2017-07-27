@@ -531,11 +531,11 @@ gst_v4l2_is_h264_enc (GstCaps * sink_caps, GstCaps * src_caps)
   return ret;
 }
 
-gboolean
+void
 gst_v4l2_h264_enc_register (GstPlugin * plugin, const gchar * basename,
     const gchar * device_path, GstCaps * sink_caps, GstCaps * src_caps)
 {
-  return gst_v4l2_video_enc_register (plugin, GST_TYPE_V4L2_H264_ENC,
+  gst_v4l2_video_enc_register (plugin, GST_TYPE_V4L2_H264_ENC,
       "h264", basename, device_path, sink_caps,
       gst_static_caps_get (&src_template_caps), src_caps);
 }

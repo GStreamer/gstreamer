@@ -79,7 +79,7 @@ struct _GstV4l2VideoEncClass
 GType gst_v4l2_video_enc_get_type (void);
 
 
-gboolean gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
+void gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
     const char *codec, const gchar * basename, const gchar * device_path,
     GstCaps * sink_caps, GstCaps *codec_caps, GstCaps * src_caps);
 

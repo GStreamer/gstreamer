@@ -1059,7 +1059,7 @@ G_STMT_START { \
 #undef SET_META
 }
 
-gboolean
+void
 gst_v4l2_video_dec_register (GstPlugin * plugin, const gchar * basename,
     const gchar * device_path, GstCaps * sink_caps, GstCaps * src_caps)
 {
@@ -1098,10 +1098,10 @@ gst_v4l2_video_dec_register (GstPlugin * plugin, const gchar * basename,
     type_info.instance_init = gst_v4l2_video_dec_subinstance_init;
 
     subtype = g_type_register_static (type, type_name, &type_info, 0);
-    gst_element_register (plugin, type_name, GST_RANK_PRIMARY + 1, subtype);
+    if (!gst_element_register (plugin, type_name, GST_RANK_PRIMARY + 1,
+            subtype))
+      GST_WARNING ("Failed to register plugin '%s'", type_name);
 
     g_free (type_name);
   }
-
-  return TRUE;
 }
