@@ -24,6 +24,8 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstvideometa.h>
+#include <gst/allocators/gstdmabuf.h>
+
 #include <string.h>
 
 #include "gstomxvideo.h"
@@ -1222,6 +1224,36 @@ gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
 
   self->input_allocation = gst_omx_video_enc_pick_input_allocation_mode (self,
       input);
+  self->input_dmabuf = FALSE;
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  if (gst_is_dmabuf_memory (gst_buffer_peek_memory (input, 0))) {
+    if (self->input_allocation == GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC) {
+      OMX_ALG_PORT_PARAM_BUFFER_MODE buffer_mode;
+      OMX_ERRORTYPE err;
+
+      GST_OMX_INIT_STRUCT (&buffer_mode);
+      buffer_mode.nPortIndex = self->enc_in_port->index;
+      buffer_mode.eMode = OMX_ALG_BUF_DMA;
+
+      GST_DEBUG_OBJECT (self, "Configure encoder to import dmabuf");
+
+      err =
+          gst_omx_component_set_parameter (self->enc,
+          (OMX_INDEXTYPE) OMX_ALG_IndexPortParamBufferMode, &buffer_mode);
+      if (err != OMX_ErrorNone)
+        GST_WARNING_OBJECT (self,
+            "Failed to set output buffer mode: %s (0x%08x)",
+            gst_omx_error_to_string (err), err);
+    } else {
+      GST_DEBUG_OBJECT (self,
+          "Wrong input allocation mode (%d); dynamic buffers are required to use dmabuf import",
+          self->input_allocation);
+    }
+
+    self->input_dmabuf = TRUE;
+  }
+#endif
 
   GST_DEBUG_OBJECT (self, "Enabling component");
   if (self->disabled) {
@@ -1529,22 +1561,34 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
       return FALSE;
     }
 
-    /* Map and keep a ref on the buffer while it's being processed
-     * by the OMX component. */
-    if (!gst_omx_buffer_map_frame (outbuf, inbuf, info)) {
-      GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
-          ("failed to map input buffer"));
-      return FALSE;
-    }
+    if (!self->input_dmabuf) {
+      /* Map and keep a ref on the buffer while it's being processed
+       * by the OMX component. */
+      if (!gst_omx_buffer_map_frame (outbuf, inbuf, info)) {
+        GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
+            ("failed to map input buffer"));
+        return FALSE;
+      }
 
-    if (!check_input_alignment (self, &outbuf->input_frame.map[0])) {
-      GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
-          ("input buffer now has wrong alignment/stride, can't use dynamic allocation any more"));
-      return FALSE;
-    }
+      if (!check_input_alignment (self, &outbuf->input_frame.map[0])) {
+        GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
+            ("input buffer now has wrong alignment/stride, can't use dynamic allocation any more"));
+        return FALSE;
+      }
 
-    GST_LOG_OBJECT (self, "Transfer buffer of %" G_GSIZE_FORMAT " bytes",
-        gst_buffer_get_size (inbuf));
+      GST_LOG_OBJECT (self, "Transfer buffer of %" G_GSIZE_FORMAT " bytes",
+          gst_buffer_get_size (inbuf));
+    } else {
+      /* dmabuf input */
+      if (!gst_omx_buffer_import_fd (outbuf, inbuf)) {
+        GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
+            ("failed to import dmabuf"));
+        return FALSE;
+      }
+
+      GST_LOG_OBJECT (self, "Import dmabuf of %" G_GSIZE_FORMAT " bytes",
+          gst_buffer_get_size (inbuf));
+    }
 
     ret = TRUE;
     goto done;

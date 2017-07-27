@@ -25,6 +25,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/allocators/gstdmabuf.h>
 #include <string.h>
 
 #include "gstomx.h"
@@ -617,14 +618,18 @@ gst_omx_buffer_unmap (GstOMXBuffer * buffer)
   if (buffer->input_frame_mapped) {
     g_assert (!buffer->input_mem);
     g_assert (!buffer->input_buffer);
+    g_assert (!buffer->input_buffer_mapped);
     gst_video_frame_unmap (&buffer->input_frame);
     buffer->input_frame_mapped = FALSE;
   } else if (buffer->input_mem) {
     g_assert (!buffer->input_buffer);
+    g_assert (!buffer->input_buffer_mapped);
     gst_memory_unmap (buffer->input_mem, &buffer->map);
     g_clear_pointer (&buffer->input_mem, gst_memory_unref);
   } else if (buffer->input_buffer) {
-    gst_buffer_unmap (buffer->input_buffer, &buffer->map);
+    if (buffer->input_buffer_mapped)
+      gst_buffer_unmap (buffer->input_buffer, &buffer->map);
+    buffer->input_buffer_mapped = FALSE;
     g_clear_pointer (&buffer->input_buffer, gst_buffer_unref);
   }
 }
@@ -1863,6 +1868,7 @@ gst_omx_buffer_map_frame (GstOMXBuffer * buffer, GstBuffer * input,
   g_return_val_if_fail (!buffer->input_frame_mapped, FALSE);
   g_return_val_if_fail (!buffer->input_mem, FALSE);
   g_return_val_if_fail (!buffer->input_buffer, FALSE);
+  g_return_val_if_fail (!buffer->input_buffer_mapped, FALSE);
 
   if (!gst_video_frame_map (&buffer->input_frame, info, input, GST_MAP_READ))
     return FALSE;
@@ -1884,6 +1890,7 @@ gst_omx_buffer_map_memory (GstOMXBuffer * buffer, GstMemory * mem)
   g_return_val_if_fail (!buffer->input_frame_mapped, FALSE);
   g_return_val_if_fail (!buffer->input_mem, FALSE);
   g_return_val_if_fail (!buffer->input_buffer, FALSE);
+  g_return_val_if_fail (!buffer->input_buffer_mapped, FALSE);
 
   if (!gst_memory_map (mem, &buffer->map, GST_MAP_READ))
     return FALSE;
@@ -1897,6 +1904,32 @@ gst_omx_buffer_map_memory (GstOMXBuffer * buffer, GstMemory * mem)
 }
 
 gboolean
+gst_omx_buffer_import_fd (GstOMXBuffer * buffer, GstBuffer * input)
+{
+  gint fd;
+  GstMemory *mem;
+
+  g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_val_if_fail (input != NULL, FALSE);
+  g_return_val_if_fail (!buffer->input_frame_mapped, FALSE);
+  g_return_val_if_fail (!buffer->input_mem, FALSE);
+  g_return_val_if_fail (!buffer->input_buffer, FALSE);
+  g_return_val_if_fail (!buffer->input_buffer_mapped, FALSE);
+
+  mem = gst_buffer_peek_memory (input, 0);
+  g_return_val_if_fail (gst_is_dmabuf_memory (mem), FALSE);
+
+  fd = gst_dmabuf_memory_get_fd (mem);
+
+  buffer->input_buffer = gst_buffer_ref (input);
+  buffer->omx_buf->pBuffer = GUINT_TO_POINTER (fd);
+  buffer->omx_buf->nAllocLen = gst_memory_get_sizes (mem, NULL, NULL);
+  buffer->omx_buf->nFilledLen = buffer->omx_buf->nAllocLen;
+
+  return TRUE;
+}
+
+gboolean
 gst_omx_buffer_map_buffer (GstOMXBuffer * buffer, GstBuffer * input)
 {
   g_return_val_if_fail (buffer != NULL, FALSE);
@@ -1904,10 +1937,12 @@ gst_omx_buffer_map_buffer (GstOMXBuffer * buffer, GstBuffer * input)
   g_return_val_if_fail (!buffer->input_frame_mapped, FALSE);
   g_return_val_if_fail (!buffer->input_mem, FALSE);
   g_return_val_if_fail (!buffer->input_buffer, FALSE);
+  g_return_val_if_fail (!buffer->input_buffer_mapped, FALSE);
 
   if (!gst_buffer_map (input, &buffer->map, GST_MAP_READ))
     return FALSE;
 
+  buffer->input_buffer_mapped = TRUE;
   buffer->input_buffer = gst_buffer_ref (input);
   buffer->omx_buf->pBuffer = buffer->map.data;
   buffer->omx_buf->nAllocLen = buffer->map.size;

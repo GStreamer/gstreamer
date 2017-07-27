@@ -79,6 +79,8 @@ struct _GstOMXVideoEnc
   GstFlowReturn downstream_flow_ret;
 
   GstOMXBufferAllocation input_allocation;
+  /* TRUE if encoder is passing dmabuf's fd directly to the OMX component */
+  gboolean input_dmabuf;
 };
 
 struct _GstOMXVideoEncClass

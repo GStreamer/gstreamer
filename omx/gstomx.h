@@ -339,6 +339,7 @@ struct _GstOMXBuffer {
   gboolean input_frame_mapped; /* TRUE if input_frame is valid */
   GstMemory *input_mem;
   GstBuffer *input_buffer;
+  gboolean input_buffer_mapped;
   GstMapInfo map;
 };
 
@@ -420,6 +421,7 @@ OMX_ERRORTYPE     gst_omx_port_use_dynamic_buffers (GstOMXPort * port);
 gboolean          gst_omx_buffer_map_frame (GstOMXBuffer * buffer, GstBuffer * input, GstVideoInfo * info);
 gboolean          gst_omx_buffer_map_memory (GstOMXBuffer * buffer, GstMemory * mem);
 gboolean          gst_omx_buffer_map_buffer (GstOMXBuffer * buffer, GstBuffer * input);
+gboolean          gst_omx_buffer_import_fd (GstOMXBuffer * buffer, GstBuffer * input);
 
 void              gst_omx_set_default_role (GstOMXClassData *class_data, const gchar *default_role);
 
