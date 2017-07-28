@@ -140,13 +140,18 @@ struct _NleCompositionPrivate
   /* List of NleObject whose start/duration will be the same as the composition */
   GList *expandables;
 
-  /* current configured stack seek start/stop time.
+  /* currently configured stack seek start/stop time.
+   * In forward playback:
+   *   - current_stack_start: The start of the current stack or the start value
+   *     of the seek if the stack has been seeked 'in the middle'
+   *   - current_stack_stop: The stop time of the current stack
+   *
    * Reconstruct pipeline ONLY if seeking outside of those values
-   * FIXME : segment_start isn't always the earliest time before which the
+   * FIXME : current_stack_start isn't always the earliest time before which the
    * timeline doesn't need to be modified
    */
-  GstClockTime segment_start;
-  GstClockTime segment_stop;
+  GstClockTime current_stack_start;
+  GstClockTime current_stack_stop;
 
   /* Seek segment handler */
   /* Represents the current segment that is being played,
@@ -204,8 +209,8 @@ static guint _signals[LAST_SIGNAL] = { 0 };
 static GParamSpec *nleobject_properties[NLEOBJECT_PROP_LAST];
 
 #define OBJECT_IN_ACTIVE_SEGMENT(comp,element)      \
-  ((NLE_OBJECT_START(element) < comp->priv->segment_stop) &&  \
-   (NLE_OBJECT_STOP(element) >= comp->priv->segment_start))
+  ((NLE_OBJECT_START(element) < comp->priv->current_stack_stop) &&  \
+   (NLE_OBJECT_STOP(element) >= comp->priv->current_stack_start))
 
 static void nle_composition_dispose (GObject * object);
 static void nle_composition_finalize (GObject * object);
@@ -1190,8 +1195,8 @@ nle_composition_reset (NleComposition * comp)
 
   _assert_proper_thread (comp);
 
-  priv->segment_start = GST_CLOCK_TIME_NONE;
-  priv->segment_stop = GST_CLOCK_TIME_NONE;
+  priv->current_stack_start = GST_CLOCK_TIME_NONE;
+  priv->current_stack_stop = GST_CLOCK_TIME_NONE;
   priv->next_base_time = 0;
 
   gst_segment_init (priv->segment, GST_FORMAT_TIME);
@@ -1377,12 +1382,13 @@ have_to_update_pipeline (NleComposition * comp,
       GST_TIME_FORMAT "--%" GST_TIME_FORMAT "]",
       GST_TIME_ARGS (priv->segment->start),
       GST_TIME_ARGS (priv->segment->stop),
-      GST_TIME_ARGS (priv->segment_start), GST_TIME_ARGS (priv->segment_stop));
+      GST_TIME_ARGS (priv->current_stack_start),
+      GST_TIME_ARGS (priv->current_stack_stop));
 
-  if (priv->segment->start < priv->segment_start)
+  if (priv->segment->start < priv->current_stack_start)
     return TRUE;
 
-  if (priv->segment->start >= priv->segment_stop)
+  if (priv->segment->start >= priv->current_stack_stop)
     return TRUE;
 
   return FALSE;
@@ -1403,7 +1409,7 @@ nle_composition_commit_func (NleObject * object, gboolean recurse)
  * Returns a seek event for the currently configured segment
  * and start/stop values
  *
- * The GstSegment and segment_start|stop must have been configured
+ * The GstSegment and current_stack_start|stop must have been configured
  * before calling this function.
  */
 static GstEvent *
@@ -1421,21 +1427,21 @@ get_new_seek_event (NleComposition * comp, gboolean initial,
     flags |= (GstSeekFlags) priv->segment->flags;
 
   GST_DEBUG_OBJECT (comp,
-      "private->segment->start:%" GST_TIME_FORMAT " segment_start%"
+      "private->segment->start:%" GST_TIME_FORMAT " current_stack_start%"
       GST_TIME_FORMAT, GST_TIME_ARGS (priv->segment->start),
-      GST_TIME_ARGS (priv->segment_start));
+      GST_TIME_ARGS (priv->current_stack_start));
 
   GST_DEBUG_OBJECT (comp,
-      "private->segment->stop:%" GST_TIME_FORMAT " segment_stop%"
+      "private->segment->stop:%" GST_TIME_FORMAT " current_stack_stop%"
       GST_TIME_FORMAT, GST_TIME_ARGS (priv->segment->stop),
-      GST_TIME_ARGS (priv->segment_stop));
+      GST_TIME_ARGS (priv->current_stack_stop));
 
   start = GST_CLOCK_TIME_IS_VALID (priv->segment->start)
-      ? MAX (priv->segment->start, priv->segment_start)
-      : priv->segment_start;
+      ? MAX (priv->segment->start, priv->current_stack_start)
+      : priv->current_stack_start;
   stop = GST_CLOCK_TIME_IS_VALID (priv->segment->stop)
-      ? MIN (priv->segment->stop, priv->segment_stop)
-      : priv->segment_stop;
+      ? MIN (priv->segment->stop, priv->current_stack_stop)
+      : priv->current_stack_stop;
 
   if (updatestoponly) {
     starttype = GST_SEEK_TYPE_NONE;
@@ -1513,8 +1519,8 @@ get_current_position (NleComposition * comp)
 beach:
 
   if (!GST_CLOCK_TIME_IS_VALID (value)) {
-    if (GST_CLOCK_TIME_IS_VALID (comp->priv->segment_start)) {
-      value = comp->priv->segment_start;
+    if (GST_CLOCK_TIME_IS_VALID (comp->priv->current_stack_start)) {
+      value = comp->priv->current_stack_start;
     } else {
       GST_INFO_OBJECT (comp, "Current position is unknown, " "setting it to 0");
 
@@ -1665,12 +1671,13 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
 
       GST_DEBUG_OBJECT (comp,
           "timestamp:%" GST_TIME_FORMAT " segment.start:%" GST_TIME_FORMAT
-          " segment.stop:%" GST_TIME_FORMAT " segment_start%" GST_TIME_FORMAT
-          " segment_stop:%" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
+          " segment.stop:%" GST_TIME_FORMAT " current_stack_start%"
+          GST_TIME_FORMAT " current_stack_stop:%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (timestamp),
           GST_TIME_ARGS (priv->outside_segment->start),
           GST_TIME_ARGS (priv->outside_segment->stop),
-          GST_TIME_ARGS (priv->segment_start),
-          GST_TIME_ARGS (priv->segment_stop));
+          GST_TIME_ARGS (priv->current_stack_start),
+          GST_TIME_ARGS (priv->current_stack_stop));
 
       /* The problem with QoS events is the following:
        * At each new internal segment (i.e. when we re-arrange our internal
@@ -1706,9 +1713,9 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
         gst_event_unref (event);
 
         if (priv->segment->rate < 0.0)
-          curdiff = priv->outside_segment->stop - priv->segment_stop;
+          curdiff = priv->outside_segment->stop - priv->current_stack_stop;
         else
-          curdiff = priv->segment_start - priv->outside_segment->start;
+          curdiff = priv->current_stack_start - priv->outside_segment->start;
         GST_DEBUG ("curdiff %" GST_TIME_FORMAT, GST_TIME_ARGS (curdiff));
         if ((curdiff != 0) && ((timestamp < curdiff)
                 || (curdiff > timestamp + diff))) {
@@ -2266,8 +2273,8 @@ _is_ready_to_restart_task (NleComposition * comp, GstEvent * event)
   if (comp->priv->seqnum_to_restart_task == seqnum) {
     gchar *name = g_strdup_printf ("%s-new-stack__%" GST_TIME_FORMAT "--%"
         GST_TIME_FORMAT "", GST_OBJECT_NAME (comp),
-        GST_TIME_ARGS (comp->priv->segment_start),
-        GST_TIME_ARGS (comp->priv->segment_stop));
+        GST_TIME_ARGS (comp->priv->current_stack_start),
+        GST_TIME_ARGS (comp->priv->current_stack_stop));
 
     GST_INFO_OBJECT (comp, "Got %s with proper seqnum"
         " done with stack reconfiguration %" GST_PTR_FORMAT,
@@ -2361,18 +2368,18 @@ _update_pipeline_func (NleComposition * comp, UpdateCompositionData * ucompo)
 
   _post_start_composition_update (comp, ucompo->seqnum, ucompo->reason);
 
-  /* Set up a non-initial seek on segment_stop */
+  /* Set up a non-initial seek on current_stack_stop */
   reverse = (priv->segment->rate < 0.0);
   if (!reverse) {
     GST_DEBUG_OBJECT (comp,
-        "Setting segment->start to segment_stop:%" GST_TIME_FORMAT,
-        GST_TIME_ARGS (priv->segment_stop));
-    priv->segment->start = priv->segment_stop;
+        "Setting segment->start to current_stack_stop:%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (priv->current_stack_stop));
+    priv->segment->start = priv->current_stack_stop;
   } else {
     GST_DEBUG_OBJECT (comp,
-        "Setting segment->stop to segment_start:%" GST_TIME_FORMAT,
-        GST_TIME_ARGS (priv->segment_start));
-    priv->segment->stop = priv->segment_start;
+        "Setting segment->stop to current_stack_start:%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (priv->current_stack_start));
+    priv->segment->stop = priv->current_stack_start;
   }
 
   seek_handling (comp, ucompo->seqnum, COMP_UPDATE_STACK_ON_EOS);
@@ -2841,8 +2848,8 @@ _activate_new_stack (NleComposition * comp)
   if (!priv->current) {
     if ((!priv->objects_start)) {
       nle_composition_reset_target_pad (comp);
-      priv->segment_start = 0;
-      priv->segment_stop = GST_CLOCK_TIME_NONE;
+      priv->current_stack_start = 0;
+      priv->current_stack_stop = GST_CLOCK_TIME_NONE;
     }
 
     GST_DEBUG_OBJECT (comp, "Nothing else in the composition"
@@ -2882,9 +2889,9 @@ _set_real_eos_seqnum_from_seek (NleComposition * comp, GstEvent * event)
   gboolean reverse = (priv->segment->rate < 0);
   gint stack_seqnum = gst_event_get_seqnum (event);
 
-  if (reverse && GST_CLOCK_TIME_IS_VALID (priv->segment_start))
+  if (reverse && GST_CLOCK_TIME_IS_VALID (priv->current_stack_start))
     should_check_objects = TRUE;
-  else if (!reverse && GST_CLOCK_TIME_IS_VALID (priv->segment_stop))
+  else if (!reverse && GST_CLOCK_TIME_IS_VALID (priv->current_stack_stop))
     should_check_objects = TRUE;
 
   if (should_check_objects) {
@@ -2894,8 +2901,8 @@ _set_real_eos_seqnum_from_seek (NleComposition * comp, GstEvent * event)
       if (!NLE_IS_SOURCE (object))
         continue;
 
-      if ((!reverse && priv->segment_stop < object->stop) ||
-          (reverse && priv->segment_start > object->start)) {
+      if ((!reverse && priv->current_stack_stop < object->stop) ||
+          (reverse && priv->current_stack_start > object->start)) {
         priv->next_eos_seqnum = stack_seqnum;
         g_atomic_int_set (&priv->real_eos_seqnum, 0);
         return FALSE;
@@ -2970,14 +2977,14 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
   stack = get_clean_toplevel_stack (comp, &currenttime, &new_start, &new_stop);
   samestack = are_same_stacks (priv->current, stack);
 
-  /* set new segment_start/stop (the current zone over which the new stack
+  /* set new current_stack_start/stop (the current zone over which the new stack
    * is valid) */
   if (priv->segment->rate >= 0.0) {
-    priv->segment_start = currenttime;
-    priv->segment_stop = new_stop;
+    priv->current_stack_start = currenttime;
+    priv->current_stack_stop = new_stop;
   } else {
-    priv->segment_start = new_start;
-    priv->segment_stop = currenttime;
+    priv->current_stack_start = new_start;
+    priv->current_stack_stop = currenttime;
   }
 
 # if 0
@@ -2988,11 +2995,11 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
   gboolean startchanged, stopchanged;
 
   if (priv->segment->rate >= 0.0) {
-    startchanged = priv->segment_start != currenttime;
-    stopchanged = priv->segment_stop != new_stop;
+    startchanged = priv->current_stack_start != currenttime;
+    stopchanged = priv->current_stack_stop != new_stop;
   } else {
-    startchanged = priv->segment_start != new_start;
-    stopchanged = priv->segment_stop != currenttime;
+    startchanged = priv->current_stack_start != new_start;
+    stopchanged = priv->current_stack_stop != currenttime;
   }
 
   if (samestack) {
@@ -3018,8 +3025,8 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
 
   /* Unlock all elements in new stack */
   GST_INFO_OBJECT (comp, "Setting current stack [%" GST_TIME_FORMAT " - %"
-      GST_TIME_FORMAT "]", GST_TIME_ARGS (priv->segment_start),
-      GST_TIME_ARGS (priv->segment_stop));
+      GST_TIME_FORMAT "]", GST_TIME_ARGS (priv->current_stack_start),
+      GST_TIME_ARGS (priv->current_stack_stop));
   priv->current = stack;
 
   if (priv->current) {
