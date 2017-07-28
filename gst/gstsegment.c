@@ -190,7 +190,7 @@ gst_segment_init (GstSegment * segment, GstFormat format)
  * @start: the seek start value
  * @stop_type: the seek method
  * @stop: the seek stop value
- * @update: boolean holding whether position was updated.
+ * @update: (out) (allow-none): boolean holding whether position was updated.
  *
  * Update the segment structure with the field values of a seek event (see
  * gst_event_new_seek()).
@@ -379,7 +379,7 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
  * @segment: a #GstSegment structure.
  * @format: the format of the segment.
  * @position: the position in the segment
- * @stream_time: result stream-time
+ * @stream_time: (out): result stream-time
  *
  * Translate @position to the total stream time using the currently configured
  * segment. Compared to gst_segment_to_stream_time() this function can return
@@ -537,7 +537,7 @@ gst_segment_to_stream_time (const GstSegment * segment, GstFormat format,
  * @segment: a #GstSegment structure.
  * @format: the format of the segment.
  * @stream_time: the stream-time
- * @position: the resulting position in the segment
+ * @position: (out): the resulting position in the segment
  *
  * Translate @stream_time to the segment position using the currently configured
  * segment. Compared to gst_segment_position_from_stream_time() this function can
@@ -696,7 +696,7 @@ gst_segment_position_from_stream_time (const GstSegment * segment,
  * @segment: a #GstSegment structure.
  * @format: the format of the segment.
  * @position: the position in the segment
- * @running_time: result running-time
+ * @running_time: (out) (allow-none): result running-time
  *
  * Translate @position to the total running time using the currently configured
  * segment. Compared to gst_segment_to_running_time() this function can return
@@ -971,7 +971,7 @@ gst_segment_position_from_running_time (const GstSegment * segment,
  * @segment: a #GstSegment structure.
  * @format: the format of the segment.
  * @running_time: the running-time
- * @position: the resulting position in the segment
+ * @position: (out): the resulting position in the segment
  *
  * Translate @running_time to the segment position using the currently configured
  * segment. Compared to gst_segment_position_from_running_time() this function can
