@@ -509,6 +509,8 @@ gst_gl_framebuffer_get_effective_dimensions (GstGLFramebuffer * fb,
 /**
  * gst_gl_context_check_framebuffer_status:
  * @context: a #GstGLContext
+ * @fbo_target: the GL value of the framebuffer target, GL_FRAMEBUFFER,
+ *              GL_READ_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER
  *
  * Returns: whether whether the current framebuffer is complete
  *

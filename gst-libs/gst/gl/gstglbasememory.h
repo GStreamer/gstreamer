@@ -29,6 +29,12 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_GL_BASE_MEMORY_ERROR:
+ *
+ * Error domain for GStreamer's GL memory module. Errors in this domain will be
+ * from the #GstGLBaseMemoryError enumeration
+ */
 #define GST_TYPE_GL_BASE_MEMORY (gst_gl_base_memory_get_type())
 GST_EXPORT
 GType gst_gl_base_memory_get_type(void);
@@ -145,9 +151,34 @@ typedef void    (*GstGLAllocationParamsFreeFunc)    (gpointer params);
 GST_EXPORT
 GType gst_gl_allocation_params_get_type (void);
 
+/**
+ * GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_ALLOC:
+ *
+ * GL Allocation flag indicating that the implementation should allocate the
+ * necessary resources.
+ */
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_ALLOC (1 << 0)
+
+/**
+ * GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM:
+ *
+ * GL Allocation flag for using the provided system memory data as storage.
+ */
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_SYSMEM (1 << 1)
+
+/**
+ * GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE:
+ *
+ * GL Allocation flag for using the provided GPU handle as storage.
+ */
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE (1 << 2)
+
+/**
+ * GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_USER:
+ *
+ * Values >= than #GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_USER can be used for
+ * user-defined purposes.
+ */
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_USER (1 << 16)
 
 /**

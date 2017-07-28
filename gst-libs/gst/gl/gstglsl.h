@@ -27,6 +27,13 @@ G_BEGIN_DECLS
 
 GST_EXPORT
 GQuark gst_glsl_error_quark (void);
+
+/**
+ * GST_GLSL_ERROR:
+ *
+ * Error domain for GStreamer's GLSL module. Errors in this domain will be
+ * from the #GstGLSLError enumeration
+ */
 #define GST_GLSL_ERROR (gst_glsl_error_quark ())
 
 /**

@@ -50,6 +50,12 @@ GType gst_gl_window_get_type       (void);
 
 GST_EXPORT
 GQuark gst_gl_window_error_quark (void);
+/**
+ * GST_GL_WINDOW_ERROR:
+ *
+ * Error domain for GStreamer's GL window module. Errors in this domain will be
+ * from the #GstGLWindowError enumeration
+ */
 #define GST_GL_WINDOW_ERROR (gst_gl_window_error_quark ())
 
 /**
@@ -68,7 +74,20 @@ typedef enum
 typedef void (*GstGLWindowCB) (gpointer data);
 typedef void (*GstGLWindowResizeCB) (gpointer data, guint width, guint height);
 
+/**
+ * GST_GL_WINDOW_CB:
+ * @f: the function to cast
+ *
+ * Cast to the currect function type for generic window callbacks
+ */
 #define	GST_GL_WINDOW_CB(f)			 ((GstGLWindowCB) (f))
+
+/**
+ * GST_GL_WINDOW_RESIZE_CB:
+ * @f: the function to cast
+ *
+ * Cast to the currect function type for window resize callbacks
+ */
 #define	GST_GL_WINDOW_RESIZE_CB(f)		 ((GstGLWindowResizeCB) (f))
 
 /**

@@ -41,6 +41,7 @@ GType gst_gl_upload_get_type (void);
  * @GST_GL_UPLOAD_DONE: No further processing required
  * @GST_GL_UPLOAD_ERROR: An unspecified error occured
  * @GST_GL_UPLOAD_UNSUPPORTED: The configuration is unsupported.
+ * @GST_GL_UPLOAD_RECONFIGURE: This element requires a reconfiguration.
  */
 typedef enum
 {

@@ -43,6 +43,13 @@ GType gst_gl_context_get_type       (void);
 
 GST_EXPORT
 GQuark gst_gl_context_error_quark (void);
+
+/**
+ * GST_GL_CONTEXT_ERROR:
+ *
+ * Error domain for GStreamer's GL context module. Errors in this domain will
+ * be from the #GstGLContextError enumeration
+ */
 #define GST_GL_CONTEXT_ERROR (gst_gl_context_error_quark ())
 
 /**

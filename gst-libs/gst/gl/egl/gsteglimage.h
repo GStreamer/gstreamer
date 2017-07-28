@@ -39,6 +39,14 @@ GType gst_egl_image_get_type (void);
 
 typedef struct _GstEGLImage GstEGLImage;
 
+/**
+ * GstEGLImageDestroyNotify:
+ * @image: a #GstEGLImage
+ * @data: user data passed to gst_egl_image_new_wrapped()
+ *
+ * Function to be called when the GstEGLImage is destroyed. It should free
+ * the associated #EGLImage if necessary
+ */
 typedef void (*GstEGLImageDestroyNotify) (GstEGLImage * image,
     gpointer data);
 

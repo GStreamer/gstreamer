@@ -64,6 +64,11 @@ typedef struct _GstGLBufferAllocationParams GstGLBufferAllocationParams;
 GST_EXPORT
 GType gst_gl_buffer_allocation_params_get_type (void);
 
+/**
+ * GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_BUFFER:
+ *
+ * GL allocation flag indicating the allocation of a GL buffer.
+ */
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_BUFFER (1 << 4)
 
 /**
@@ -116,6 +121,11 @@ struct _GstGLBufferAllocatorClass
   gpointer _padding[GST_PADDING];
 };
 
+/**
+ * GST_CAPS_FEATURE_MEMORY_GL_BUFFER:
+ *
+ * Name of the caps feature indicating the use of GL buffers
+ */
 #define GST_CAPS_FEATURE_MEMORY_GL_BUFFER "memory:GLBuffer"
 
 /**

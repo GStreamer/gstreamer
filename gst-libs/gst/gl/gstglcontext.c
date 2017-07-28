@@ -838,7 +838,11 @@ gst_gl_context_get_gl_api (GstGLContext * context)
  * Note: On success, you need to cast the returned function pointer to the
  * correct type to be able to call it correctly.  On 32-bit Windows, this will
  * include the %GSTGLAPI identifier to use the correct calling convention.
- * e.g. void (GSTGLAPI *PFN_glGetIntegerv) (GLenum name, GLint * ret)
+ * e.g.
+ *
+ * |[<!-- language="C" -->
+ * void (GSTGLAPI *PFN_glGetIntegerv) (GLenum name, GLint * ret)
+ * ]|
  *
  * Returns: a function pointer or %NULL
  *

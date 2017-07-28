@@ -43,7 +43,17 @@ GType gst_gl_memory_allocator_get_type(void);
 
 #define GST_GL_MEMORY_CAST(obj) ((GstGLMemory *) obj)
 
+/**
+ * GST_CAPS_FEATURE_MEMORY_GL_MEMORY:
+ *
+ * Name of the caps feature for indicating the use of #GstGLMemory
+ */
 #define GST_CAPS_FEATURE_MEMORY_GL_MEMORY "memory:GLMemory"
+/**
+ * GST_GL_MEMORY_VIDEO_FORMATS_STR:
+ *
+ * List of video formats that are supported by #GstGLMemory
+ */
 #define GST_GL_MEMORY_VIDEO_FORMATS_STR \
     "{ RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, " \
     "AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, " \
@@ -90,6 +100,11 @@ GType gst_gl_video_allocation_params_get_type (void);
 
 typedef struct _GstGLVideoAllocationParams GstGLVideoAllocationParams;
 
+/**
+ * GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO:
+ *
+ * GL allocation flag indicating the allocation of 2D video frames
+ */
 #define GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_VIDEO (1 << 3)
 
 /**
@@ -99,7 +114,7 @@ typedef struct _GstGLVideoAllocationParams GstGLVideoAllocationParams;
  * @plane: the video plane index to allocate
  * @valign: the #GstVideoAlignment to align the system representation to (may be %NULL for the default)
  * @target: the #GstGLTextureTarget to allocate
- * @tex_fomrat: the #GstGLFormat to allocate
+ * @tex_format: the #GstGLFormat to allocate
  */
 struct _GstGLVideoAllocationParams
 {

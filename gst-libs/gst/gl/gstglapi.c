@@ -20,7 +20,7 @@
 
 /**
  * SECTION:gstglapi
- * @title: GstGLApi
+ * @title: GstGLAPI
  * @short_description: OpenGL API specific functionality
  * @see_also: #GstGLDisplay, #GstGLContext
  *
