@@ -94,6 +94,12 @@ static const struct glsl_profile_string glsl_profiles[] = {
   {GST_GLSL_PROFILE_COMPATIBILITY, "compatibility"},
 };
 
+/**
+ * gst_glsl_version_to_string:
+ * @version: a #GstGLSLVersion
+ *
+ * Returns: (nullable): the name of @version or %NULL on error
+ */
 const gchar *
 gst_glsl_version_to_string (GstGLSLVersion version)
 {
@@ -110,6 +116,12 @@ gst_glsl_version_to_string (GstGLSLVersion version)
   return NULL;
 }
 
+/**
+ * gst_glsl_version_from_string:
+ * @string: a GLSL version string
+ *
+ * Returns: the #GstGLSLVersion of @string or %GST_GLSL_VERSION_NONE on error
+ */
 GstGLSLVersion
 gst_glsl_version_from_string (const gchar * string)
 {
@@ -133,6 +145,12 @@ gst_glsl_version_from_string (const gchar * string)
   return 0;
 }
 
+/**
+ * gst_glsl_profile_to_string:
+ * @profile: a #GstGLSLProfile
+ *
+ * Returns: (nullable): the name for @profile or %NULL on error
+ */
 const gchar *
 gst_glsl_profile_to_string (GstGLSLProfile profile)
 {
@@ -153,6 +171,12 @@ gst_glsl_profile_to_string (GstGLSLProfile profile)
   return NULL;
 }
 
+/**
+ * gst_glsl_profile_from_string:
+ * @string: a GLSL version string
+ *
+ * Returns: the #GstGLSLProfile of @string or %GST_GLSL_PROFILE_NONE on error
+ */
 GstGLSLProfile
 gst_glsl_profile_from_string (const gchar * string)
 {
@@ -203,6 +227,13 @@ _is_valid_version_profile (GstGLSLVersion version, GstGLSLProfile profile)
   return FALSE;
 }
 
+/**
+ * gst_glsl_version_profile_to_string:
+ * @version: a #GstGLSLVersion
+ * @profile: a #GstGLSLVersion
+ *
+ * Returns: the combined GLSL #version string for @version and @profile
+ */
 gchar *
 gst_glsl_version_profile_to_string (GstGLSLVersion version,
     GstGLSLProfile profile)
@@ -262,6 +293,17 @@ _check_valid_version_preprocessor_string (const gchar * str)
   return NULL;
 }
 
+/**
+ * gst_glsl_version_profile_from_string:
+ * @string: a valid GLSL #version string
+ * @version_ret: (out): resulting #GstGLSLVersion
+ * @profile_ret: (out): resulting #GstGLSLVersion
+ *
+ * Note: this function expects either a #version GLSL preprocesser directive
+ * or a valid GLSL version and/or profile.
+ *
+ * Returns: TRUE if a valid #version string was found, FALSE otherwise
+ */
 gboolean
 gst_glsl_version_profile_from_string (const gchar * string,
     GstGLSLVersion * version_ret, GstGLSLProfile * profile_ret)
@@ -417,6 +459,17 @@ _gst_glsl_shader_string_find_version (const gchar * str)
   return NULL;
 }
 
+/**
+ * gst_glsl_string_get_version_profile:
+ * @s: string to search for a valid #version string
+ * @version: (out): resulting #GstGLSLVersion
+ * @profile: (out): resulting #GstGLSLProfile
+ *
+ * Note: this function first searches the first 1 kilobytes for a #version
+ * preprocessor directive and then executes gst_glsl_version_profile_from_string().
+ *
+ * Returns: TRUE if a valid #version string was found, FALSE otherwise
+ */
 gboolean
 gst_glsl_string_get_version_profile (const gchar * s, GstGLSLVersion * version,
     GstGLSLProfile * profile)
@@ -443,6 +496,14 @@ error:
   }
 }
 
+/**
+ * gst_gl_version_to_glsl_version:
+ * @gl_api: the #GstGLAPI
+ * @maj: the major GL version
+ * @min: the minor GL version
+ *
+ * Returns: The minimum supported #GstGLSLVersion available for @gl_api, @maj and @min
+ */
 GstGLSLVersion
 gst_gl_version_to_glsl_version (GstGLAPI gl_api, gint maj, gint min)
 {
@@ -485,6 +546,14 @@ gst_gl_version_to_glsl_version (GstGLAPI gl_api, gint maj, gint min)
   return 0;
 }
 
+/**
+ * gst_gl_context_supports_glsl_profile_version:
+ * @context: a #GstGLContext
+ * @version: a #GstGLSLVersion
+ * @profile: a #GstGLSLProfile
+ *
+ * Returns: Whether @context supports the combination of @version with @profile
+ */
 gboolean
 gst_gl_context_supports_glsl_profile_version (GstGLContext * context,
     GstGLSLVersion version, GstGLSLProfile profile)

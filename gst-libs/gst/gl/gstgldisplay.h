@@ -50,6 +50,7 @@ GType gst_gl_display_get_type (void);
  * @GST_GL_DISPLAY_TYPE_WIN32: Win32 display
  * @GST_GL_DISPLAY_TYPE_DISPMANX: Dispmanx display
  * @GST_GL_DISPLAY_TYPE_EGL: EGL display
+ * @GST_GL_DISPLAY_TYPE_VIV_FB: Vivante Framebuffer display
  * @GST_GL_DISPLAY_TYPE_ANY: any display type
  */
 typedef enum
@@ -117,6 +118,11 @@ GstGLAPI         gst_gl_display_get_gl_api             (GstGLDisplay * display);
 GST_EXPORT
 GstGLAPI         gst_gl_display_get_gl_api_unlocked    (GstGLDisplay * display);
 
+/**
+ * GST_GL_DISPLAY_CONTEXT_TYPE:
+ *
+ * The name used in #GstContext queries for requesting a #GstGLDisplay
+ */
 #define GST_GL_DISPLAY_CONTEXT_TYPE "gst.gl.GLDisplay"
 GST_EXPORT
 void     gst_context_set_gl_display (GstContext * context, GstGLDisplay * display);

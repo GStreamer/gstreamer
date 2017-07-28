@@ -618,7 +618,7 @@ _gl_tex_unmap (GstGLMemory * gl_mem, GstMapInfo * info)
 }
 
 /**
- * gst_gl_memory_copy_texiamge:
+ * gst_gl_memory_copy_teximage:
  * @gl_mem: the source #GstGLMemory
  * @tex_id: the destination texture id
  * @out_target: the destination #GstGLTextureTarget

@@ -58,7 +58,7 @@ struct _GstGLMemoryPBO
 };
 
 /**
- * GST_GL_MEMORY_PBO_ALLOCATOR:
+ * GST_GL_MEMORY_PBO_ALLOCATOR_NAME:
  *
  * The name of the GL Memory PBO allocator
  */

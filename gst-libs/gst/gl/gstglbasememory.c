@@ -192,6 +192,16 @@ _align_data (gpointer data, gsize align)
 }
 
 /* subclass usage only */
+/**
+ * gst_gl_base_memory_alloc_data:
+ * @gl_mem: a #GstGLBaseMemory
+ *
+ * Note: only intended for subclass usage to allocate the sytem memory buffer
+ * on demand.  If there is already a non-NULL data pointer in @gl_mem->data,
+ * then this function imply returns TRUE.
+ *
+ * Returns: whether the system memory could be allocated
+ */
 gboolean
 gst_gl_base_memory_alloc_data (GstGLBaseMemory * gl_mem)
 {

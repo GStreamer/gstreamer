@@ -896,8 +896,7 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
  * @inbuf: an input buffer
  * @outbuf: an output buffer
  *
- * Perform automatic upload if needed, call filter_texture vfunc and then an
- * automatic download if needed.
+ * Calls filter_texture vfunc with correctly mapped #GstGLMemorys
  *
  * Returns: whether the transformation succeeded
  *
