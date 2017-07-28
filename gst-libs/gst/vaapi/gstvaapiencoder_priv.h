@@ -261,6 +261,11 @@ struct _GstVaapiEncoder
   guint bitrate; /* kbps */
   guint keyframe_period;
 
+  /* Maximum number of reference frames supported
+   * for the reference picture list 0 and list 2 */
+  guint max_num_ref_frames_0;
+  guint max_num_ref_frames_1;
+
   /* parameters */
   VAEncMiscParameterBufferQualityLevel va_quality_level;
 
@@ -410,6 +415,11 @@ gboolean
 gst_vaapi_encoder_ensure_num_slices (GstVaapiEncoder * encoder,
     GstVaapiProfile profile, GstVaapiEntrypoint entrypoint,
     guint media_max_slices, guint * num_slices);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_encoder_ensure_max_num_ref_frames (GstVaapiEncoder * encoder,
+    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint);
 
 G_END_DECLS
 

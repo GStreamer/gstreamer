@@ -1512,6 +1512,49 @@ gst_vaapi_encoder_ensure_num_slices (GstVaapiEncoder * encoder,
 }
 
 /**
+ * gst_vaapi_encoder_ensure_max_num_ref_frames:
+ * @encoder: a #GstVaapiEncoder
+ * @profile: a #GstVaapiProfile
+ * @entrypoint: a #GstVaapiEntrypoint
+ *
+ * This function will query VAConfigAttribEncMaxRefFrames to get the
+ * maximum number of reference frames in the driver,
+ * for both the reference picture list 0 (bottom 16 bits) and
+ * the reference picture list 1 (top 16 bits).
+ *
+ * We need to pass the @profile and the @entrypoint, because at the
+ * moment the encoder base class, still doesn't have them assigned,
+ * and this function is meant to be called by the derived classes
+ * while they are configured.
+ *
+ * Returns: %TRUE if the number of reference frames is different than zero.
+ **/
+gboolean
+gst_vaapi_encoder_ensure_max_num_ref_frames (GstVaapiEncoder * encoder,
+    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint)
+{
+  VAProfile va_profile;
+  VAEntrypoint va_entrypoint;
+  guint max_ref_frames;
+
+  va_profile = gst_vaapi_profile_get_va_profile (profile);
+  va_entrypoint = gst_vaapi_entrypoint_get_va_entrypoint (entrypoint);
+
+  if (!gst_vaapi_get_config_attribute (encoder->display, va_profile,
+          va_entrypoint, VAConfigAttribEncMaxRefFrames, &max_ref_frames)) {
+    /* Set the default the number of reference frames */
+    encoder->max_num_ref_frames_0 = 1;
+    encoder->max_num_ref_frames_1 = 0;
+    return TRUE;
+  }
+
+  encoder->max_num_ref_frames_0 = max_ref_frames & 0xffff;
+  encoder->max_num_ref_frames_1 = (max_ref_frames >> 16) & 0xffff;
+
+  return TRUE;
+}
+
+/**
  * gst_vaapi_encoder_add_roi:
  * @encoder: a #GstVaapiEncoder
  * @roi: (transfer none): a #GstVaapiROI
