@@ -343,12 +343,9 @@ GST_EXPORT
 GstBufferPool * gst_aggregator_get_buffer_pool     (GstAggregator                 * self);
 
 GST_EXPORT
-void          gst_aggregator_get_allocator         (GstAggregator                 * self,
-                                                    GstAllocator
- ** allocator,
-                                                    GstAllocationParams
-  * params);
-
+void            gst_aggregator_get_allocator       (GstAggregator                 * self,
+                                                    GstAllocator                 ** allocator,
+                                                    GstAllocationParams           * params);
 
 G_END_DECLS
 
