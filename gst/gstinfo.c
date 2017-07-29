@@ -2807,6 +2807,7 @@ gst_debug_print_stack_trace (void)
   g_free (trace);
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
 typedef struct
 {
   guint max_size_per_thread;
@@ -3071,3 +3072,26 @@ gst_debug_remove_ring_buffer_logger (void)
 {
   gst_debug_remove_log_function (gst_ring_buffer_logger_log);
 }
+
+#else /* GST_DISABLE_GST_DEBUG */
+#ifndef GST_REMOVE_DISABLED
+
+gchar **
+gst_debug_ring_buffer_logger_get_logs (void)
+{
+  return NULL;
+}
+
+void
+gst_debug_add_ring_buffer_logger (guint max_size_per_thread,
+    guint thread_timeout)
+{
+}
+
+void
+gst_debug_remove_ring_buffer_logger (void)
+{
+}
+
+#endif /* GST_REMOVE_DISABLED */
+#endif /* GST_DISABLE_GST_DEBUG */
