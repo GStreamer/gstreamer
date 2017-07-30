@@ -1358,6 +1358,8 @@ gst_aggregator_default_sink_event (GstAggregator * self,
   GstPad *pad = GST_PAD (aggpad);
   GstAggregatorPrivate *priv = self->priv;
 
+  GST_DEBUG_OBJECT (aggpad, "Got event: %" GST_PTR_FORMAT, event);
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
     {
@@ -1368,8 +1370,6 @@ gst_aggregator_default_sink_event (GstAggregator * self,
     }
     case GST_EVENT_FLUSH_STOP:
     {
-      GST_DEBUG_OBJECT (aggpad, "Got FLUSH_STOP");
-
       gst_aggregator_pad_flush (aggpad, self);
       GST_OBJECT_LOCK (self);
       if (priv->flush_seeking) {
@@ -1401,8 +1401,6 @@ gst_aggregator_default_sink_event (GstAggregator * self,
     }
     case GST_EVENT_EOS:
     {
-      GST_DEBUG_OBJECT (aggpad, "EOS");
-
       /* We still have a buffer, and we don't want the subclass to have to
        * check for it. Mark pending_eos, eos will be set when steal_buffer is
        * called
