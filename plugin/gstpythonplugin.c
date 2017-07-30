@@ -208,7 +208,7 @@ gst_python_plugin_load (GstPlugin * plugin)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  PyGILState_STATE state;
+  PyGILState_STATE state = 0;
   PyObject *gi, *require_version, *args, *gst, *dict, *pyplugin;
   gboolean we_initialized = FALSE;
   GModule *libpython;
