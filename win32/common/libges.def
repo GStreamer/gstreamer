@@ -16,6 +16,7 @@ EXPORTS
 	ges_asset_request_finish
 	ges_asset_set_proxy
 	ges_asset_try_proxy
+	ges_asset_unproxy
 	ges_audio_source_get_type
 	ges_audio_test_source_get_freq
 	ges_audio_test_source_get_type
