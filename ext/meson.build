@@ -54,6 +54,7 @@ if cc.get_id() != 'msvc'
   subdir('spandsp')
 endif
 #subdir('spc')
+subdir('srt')
 subdir('srtp')
 #subdir('teletextdec')
 #subdir('wildmidi')
