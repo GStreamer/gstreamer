@@ -1182,6 +1182,7 @@ ges_asset_needs_reload (GType extractable_type, const gchar * id)
         "Asset with id %s switch state to ASSET_NEEDS_RELOAD",
         ges_asset_get_id (asset));
     asset->priv->state = ASSET_NEEDS_RELOAD;
+    g_clear_error (&asset->priv->error);
     return TRUE;
   }
 
