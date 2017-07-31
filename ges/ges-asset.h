@@ -107,6 +107,7 @@ GList * ges_list_assets              (GType filter);
 
 
 gboolean ges_asset_set_proxy         (GESAsset *asset, GESAsset *proxy);
+gboolean ges_asset_unproxy           (GESAsset *asset, GESAsset * proxy);
 GList * ges_asset_list_proxies       (GESAsset *asset);
 GESAsset * ges_asset_get_proxy_target(GESAsset *proxy);
 GESAsset * ges_asset_get_proxy       (GESAsset *asset);

@@ -119,7 +119,7 @@ struct _GESAssetPrivate
   GESAssetState state;
   GType extractable_type;
 
-  /* When an asset is proxied, instanciating it will
+  /* When an asset is proxied, instantiating it will
    * return the asset it points to */
   char *proxied_asset_id;
 
@@ -750,6 +750,37 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
 
   asset->priv->state = ASSET_PROXIED;
   g_object_notify_by_pspec (G_OBJECT (asset), _properties[PROP_PROXY]);
+
+  return TRUE;
+}
+
+/**
+ * ges_asset_unproxy:
+ * @asset: The #GESAsset to stop proxying with @proxy
+ * @proxy: The #GESAsset to stop considering as a proxy for @asset
+ *
+ * Removes @proxy from the list of known proxies for @asset.
+ * If @proxy was the current proxy for @asset, stop using it.
+ *
+ * Returns: %TRUE if @proxy was a known proxy for @asset, %FALSE otherwise.
+ */
+gboolean
+ges_asset_unproxy (GESAsset * asset, GESAsset * proxy)
+{
+  g_return_val_if_fail (GES_IS_ASSET (asset), FALSE);
+  g_return_val_if_fail (GES_IS_ASSET (proxy), FALSE);
+  g_return_val_if_fail (asset != proxy, FALSE);
+
+  if (!g_list_find (asset->priv->proxies, proxy)) {
+    GST_INFO_OBJECT (asset, "%s is not a proxy.", proxy->priv->id);
+
+    return FALSE;
+  }
+
+  if (asset->priv->proxies->data == proxy)
+    ges_asset_set_proxy (asset, NULL);
+
+  asset->priv->proxies = g_list_remove (asset->priv->proxies, proxy);
 
   return TRUE;
 }
