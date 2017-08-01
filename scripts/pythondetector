@@ -58,9 +58,16 @@ if __name__ == "__main__":
 
         # If we are installing in the same prefix as PyGobject
         # make sure to install in the right place.
-        import gi
-        if os.path.commonprefix([gi._overridesdir, prefix]) == prefix:
-            print(gi._overridesdir)
+        import gi.overrides
+
+        try:
+            gi.overrides.__path__.remove(os.path.abspath(os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), '..', 'gi')))
+        except ValueError:
+            pass
+        overrides_path = gi.overrides.__path__[0]
+        if os.path.commonprefix([overrides_path, prefix]) == prefix:
+            print(overrides_path)
             exit(0)
 
         # Otherwise follow python's way of install site packages inside
