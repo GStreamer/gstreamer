@@ -1253,8 +1253,7 @@ gst_vaapisink_get_caps_impl (GstBaseSink * base_sink)
       GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE
       "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
       "{ ENCODED, NV12, I420, YV12 }");
-  GstCapsFeatures *const features = gst_caps_features_new
-      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
+  GstCapsFeatures *features;
 
   if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (sink))
     return gst_static_pad_template_get_caps (&gst_vaapisink_sink_factory);
@@ -1269,6 +1268,8 @@ gst_vaapisink_get_caps_impl (GstBaseSink * base_sink)
   gst_caps_append (out_caps, gst_caps_copy (raw_caps));
 
   feature_caps = gst_caps_copy (raw_caps);
+  features = gst_caps_features_new
+      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
   gst_caps_set_features (feature_caps, 0, features);
   gst_caps_append (out_caps, feature_caps);
 
