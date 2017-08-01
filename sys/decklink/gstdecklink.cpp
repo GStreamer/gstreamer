@@ -30,6 +30,8 @@
 #include "gstdecklinkaudiosrc.h"
 #include "gstdecklinkvideosrc.h"
 
+#define GST_DECKLINK_MAX_DEVICES 16
+
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_debug);
 #define GST_CAT_DEFAULT gst_decklink_debug
 
@@ -1059,7 +1061,7 @@ gst_decklink_com_thread (gpointer data)
 
 static GOnce devices_once = G_ONCE_INIT;
 static int n_devices;
-static Device devices[10];
+static Device devices[GST_DECKLINK_MAX_DEVICES];
 
 static gpointer
 init_devices (gpointer data)
@@ -1184,7 +1186,7 @@ init_devices (gpointer data)
     ret = iterator->Next (&decklink);
     i++;
 
-    if (i == 10) {
+    if (i == GST_DECKLINK_MAX_DEVICES) {
       GST_WARNING ("this hardware has more then 10 devices");
       break;
     }
