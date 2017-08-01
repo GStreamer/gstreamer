@@ -1247,6 +1247,121 @@ gst_element_iterate_sink_pads (GstElement * element)
   return gst_element_iterate_pad_list (element, &element->sinkpads);
 }
 
+static gboolean
+gst_element_do_foreach_pad (GstElement * element,
+    GstElementForeachPadFunc func, gpointer user_data,
+    GList ** p_pads, guint16 * p_npads)
+{
+  gboolean ret = TRUE;
+  GstPad **pads;
+  guint n_pads, i;
+  GList *l;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (func != NULL, FALSE);
+
+  GST_OBJECT_LOCK (element);
+  n_pads = *p_npads;
+  pads = g_newa (GstPad *, n_pads + 1);
+  for (l = *p_pads, i = 0; l != NULL; l = l->next) {
+    g_assert (i < n_pads);
+    pads[i++] = gst_object_ref (l->data);
+  }
+  GST_OBJECT_UNLOCK (element);
+
+  if (n_pads == 0)
+    return FALSE;
+
+  for (i = 0; i < n_pads; ++i) {
+    ret = func (element, pads[i], user_data);
+    if (!ret)
+      break;
+  }
+
+  for (i = 0; i < n_pads; ++i)
+    gst_object_unref (pads[i]);
+
+  return ret;
+}
+
+/**
+ * gst_element_foreach_sink_pad:
+ * @element: a #GstElement to iterate sink pads of
+ * @func: (scope call): function to call for each sink pad
+ * @user_data: (closure): user data passed to @func
+ *
+ * Call @func with @user_data for each of @element's sink pads. @func will be
+ * called exactly once for each sink pad that exists at the time of this call,
+ * unless one of the calls to @func returns %FALSE in which case we will stop
+ * iterating pads and return early. If new sink pads are added or sink pads
+ * are removed while the sink pads are being iterated, this will not be taken
+ * into account until next time this function is used.
+ *
+ * Returns: %FALSE if @element had no sink pads or if one of the calls to @func
+ *   returned %FALSE.
+ *
+ * Since: 1.14
+ */
+gboolean
+gst_element_foreach_sink_pad (GstElement * element,
+    GstElementForeachPadFunc func, gpointer user_data)
+{
+  return gst_element_do_foreach_pad (element, func, user_data,
+      &element->sinkpads, &element->numsinkpads);
+}
+
+/**
+ * gst_element_foreach_src_pad:
+ * @element: a #GstElement to iterate source pads of
+ * @func: (scope call): function to call for each source pad
+ * @user_data: (closure): user data passed to @func
+ *
+ * Call @func with @user_data for each of @element's source pads. @func will be
+ * called exactly once for each source pad that exists at the time of this call,
+ * unless one of the calls to @func returns %FALSE in which case we will stop
+ * iterating pads and return early. If new source pads are added or source pads
+ * are removed while the source pads are being iterated, this will not be taken
+ * into account until next time this function is used.
+ *
+ * Returns: %FALSE if @element had no source pads or if one of the calls
+ *   to @func returned %FALSE.
+ *
+ * Since: 1.14
+ */
+gboolean
+gst_element_foreach_src_pad (GstElement * element,
+    GstElementForeachPadFunc func, gpointer user_data)
+{
+  return gst_element_do_foreach_pad (element, func, user_data,
+      &element->srcpads, &element->numsrcpads);
+}
+
+/**
+ * gst_element_foreach_pad:
+ * @element: a #GstElement to iterate pads of
+ * @func: (scope call): function to call for each pad
+ * @user_data: (closure): user data passed to @func
+ *
+ * Call @func with @user_data for each of @element's pads. @func will be called
+ * exactly once for each pad that exists at the time of this call, unless
+ * one of the calls to @func returns %FALSE in which case we will stop
+ * iterating pads and return early. If new pads are added or pads are removed
+ * while pads are being iterated, this will not be taken into account until
+ * next time this function is used.
+ *
+ * Returns: %FALSE if @element had no pads or if one of the calls to @func
+ *   returned %FALSE.
+ *
+ * Since: 1.14
+ */
+gboolean
+gst_element_foreach_pad (GstElement * element, GstElementForeachPadFunc func,
+    gpointer user_data)
+{
+  return gst_element_do_foreach_pad (element, func, user_data,
+      &element->pads, &element->numpads);
+}
+
 /**
  * gst_element_class_add_pad_template:
  * @klass: the #GstElementClass to add the pad template to.

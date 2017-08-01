@@ -789,6 +789,124 @@ GST_START_TEST (test_request_pad_templates)
 
 GST_END_TEST;
 
+static gboolean run_foreach_thread;
+
+/* thread function that just adds/removes pads while main thread iterates pads */
+static gpointer
+thread_add_remove_pads (GstElement * e)
+{
+  GPtrArray *pads;
+  guint n, c = 0;
+
+  pads = g_ptr_array_new ();
+
+  THREAD_START ();
+
+  while (g_atomic_int_get (&run_foreach_thread)) {
+    GstPad *p;
+    gchar name[16];
+
+    /* add a new pad */
+    g_snprintf (name, 16, "pad_%u", c++);
+    p = gst_pad_new (name, g_random_boolean ()? GST_PAD_SRC : GST_PAD_SINK);
+    g_ptr_array_add (pads, p);
+    gst_element_add_pad (e, p);
+
+    THREAD_SWITCH ();
+
+    /* and remove a random pad */
+    if (g_random_boolean () || pads->len > 100) {
+      n = g_random_int_range (0, pads->len);
+      p = g_ptr_array_remove_index (pads, n);
+      gst_element_remove_pad (e, p);
+    }
+
+    THREAD_SWITCH ();
+  }
+
+  g_ptr_array_free (pads, TRUE);
+  return NULL;
+}
+
+typedef struct
+{
+  GQuark q;
+  GstPadDirection dir;          /* GST_PAD_UNKNOWN = both are allowed */
+  gboolean func_called;
+} PadChecks;
+
+static gboolean
+pad_foreach_func (GstElement * e, GstPad * pad, gpointer user_data)
+{
+  PadChecks *checks = user_data;
+
+  /* check we haven't visited this pad already */
+  fail_if (g_object_get_qdata (G_OBJECT (pad), checks->q) != NULL);
+
+  g_object_set_qdata (G_OBJECT (pad), checks->q, GINT_TO_POINTER (1));
+
+  if (checks->dir != GST_PAD_UNKNOWN) {
+    fail_unless_equals_int (checks->dir, GST_PAD_DIRECTION (pad));
+  }
+  checks->func_called = TRUE;
+  return TRUE;
+}
+
+GST_START_TEST (test_foreach_pad)
+{
+  PadChecks checks = { 0, GST_PAD_UNKNOWN, FALSE };
+  GstElement *e;
+  gint i;
+
+  e = gst_bin_new ("testbin");
+
+  /* function should not be called if there are no pads! */
+  gst_element_foreach_pad (e, pad_foreach_func, &checks);
+  fail_if (checks.func_called);
+
+  g_atomic_int_set (&run_foreach_thread, TRUE);
+
+  MAIN_INIT ();
+  MAIN_START_THREAD_FUNCTION (0, thread_add_remove_pads, e);
+  MAIN_SYNCHRONIZE ();
+
+  for (i = 0; i < 10000; ++i) {
+    gchar num[32];
+
+    g_snprintf (num, 32, "foreach-test-%u", i);
+
+    checks.q = g_quark_from_string (num);
+    checks.func_called = FALSE;
+    if (g_random_boolean ()) {
+      checks.dir = GST_PAD_UNKNOWN;
+      gst_element_foreach_pad (e, pad_foreach_func, &checks);
+    } else if (g_random_boolean ()) {
+      checks.dir = GST_PAD_SRC;
+      gst_element_foreach_src_pad (e, pad_foreach_func, &checks);
+    } else {
+      checks.dir = GST_PAD_SINK;
+      gst_element_foreach_sink_pad (e, pad_foreach_func, &checks);
+    }
+
+    THREAD_SWITCH ();
+  }
+
+  g_atomic_int_set (&run_foreach_thread, FALSE);
+
+  MAIN_STOP_THREADS ();
+
+  /* function should be called if there are pads */
+  checks.q = g_quark_from_string ("fini");
+  checks.dir = GST_PAD_UNKNOWN;
+  checks.func_called = FALSE;
+  gst_element_foreach_pad (e, pad_foreach_func, &checks);
+  fail_if (e->numpads > 0 && !checks.func_called);
+
+  gst_object_unref (e);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_element_suite (void)
 {
@@ -804,6 +922,7 @@ gst_element_suite (void)
   tcase_add_test (tc_chain, test_pad_templates);
   tcase_add_test (tc_chain, test_property_notify_message);
   tcase_add_test (tc_chain, test_request_pad_templates);
+  tcase_add_test (tc_chain, test_foreach_pad);
 
   return s;
 }

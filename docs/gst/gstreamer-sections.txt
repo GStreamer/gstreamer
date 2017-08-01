@@ -886,6 +886,9 @@ gst_element_remove_pad
 gst_element_iterate_pads
 gst_element_iterate_sink_pads
 gst_element_iterate_src_pads
+gst_element_foreach_pad
+gst_element_foreach_sink_pad
+gst_element_foreach_src_pad
 
 <SUBSECTION element-linking>
 gst_element_link

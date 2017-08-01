@@ -909,6 +909,35 @@ GstIterator *           gst_element_iterate_src_pads    (GstElement * element);
 GST_EXPORT
 GstIterator *           gst_element_iterate_sink_pads   (GstElement * element);
 
+/**
+ * GstElementForeachPadFunc:
+ * @element: the #GstElement
+ * @pad: a #GstPad
+ * @user_data: user data passed to the foreach function
+ *
+ * Function called for each pad when using gst_element_foreach_sink_pad(),
+ * gst_element_foreach_src_pad(), or gst_element_foreach_pad().
+ *
+ * Returns: %FALSE to stop iterating pads, %TRUE to continue
+ *
+ * Since: 1.14
+ */
+typedef gboolean (*GstElementForeachPadFunc) (GstElement * element,
+                                              GstPad     * pad,
+                                              gpointer     user_data);
+
+GST_EXPORT
+gboolean                gst_element_foreach_sink_pad    (GstElement * element,
+                                                         GstElementForeachPadFunc func,
+                                                         gpointer     user_data);
+GST_EXPORT
+gboolean                gst_element_foreach_src_pad     (GstElement * element,
+                                                         GstElementForeachPadFunc func,
+                                                         gpointer     user_data);
+GST_EXPORT
+gboolean                gst_element_foreach_pad         (GstElement * element,
+                                                         GstElementForeachPadFunc func,
+                                                         gpointer     user_data);
 /* event/query/format stuff */
 
 GST_EXPORT
