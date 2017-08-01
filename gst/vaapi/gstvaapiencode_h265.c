@@ -281,7 +281,7 @@ _h265_byte_stream_next_nal (guint8 * buffer, guint32 len, guint32 * nal_size)
   guint32 flag = 0xFFFFFFFF;
   guint32 nal_start_len = 0;
 
-  g_assert (len >= 0 && buffer && nal_size);
+  g_assert (len != 0U && buffer && nal_size);
   if (len < 3) {
     *nal_size = len;
     nal_start = (len ? buffer : NULL);
