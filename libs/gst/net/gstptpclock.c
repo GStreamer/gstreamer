@@ -1403,7 +1403,7 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
   GST_DEBUG ("Delay request delay for domain %u: %" GST_TIME_FORMAT,
       domain->domain, GST_TIME_ARGS (delay_req_delay));
 
-#ifdef USE_MEASUREMENT_FILTERING
+#if defined(USE_MEASUREMENT_FILTERING) || defined(USE_MEDIAN_PRE_FILTERING)
 out:
 #endif
   if (g_atomic_int_get (&domain_stats_n_hooks)) {
