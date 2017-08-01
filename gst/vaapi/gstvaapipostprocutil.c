@@ -256,8 +256,10 @@ _fixate_frame_size (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
       /* Might have failed but try to keep the DAR nonetheless by
        * adjusting the PAR */
       if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, h, set_w,
-              &to_par_n, &to_par_d))
+              &to_par_n, &to_par_d)) {
+        gst_structure_free (tmp);
         goto overflow_error;
+      }
 
       if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
         gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
@@ -328,8 +330,10 @@ _fixate_frame_size (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
       /* Might have failed but try to keep the DAR nonetheless by
        * adjusting the PAR */
       if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_h, w,
-              &to_par_n, &to_par_d))
+              &to_par_n, &to_par_d)) {
+        gst_structure_free (tmp);
         goto overflow_error;
+      }
 
       if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
         gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
@@ -439,8 +443,10 @@ _fixate_frame_size (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
       gst_structure_get_int (tmp, "width", &set_w);
 
       if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_h, set_w,
-              &to_par_n, &to_par_d))
+              &to_par_n, &to_par_d)) {
+        gst_structure_free (tmp);
         goto overflow_error;
+      }
 
       if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
         gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
