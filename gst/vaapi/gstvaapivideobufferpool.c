@@ -107,11 +107,14 @@ fill_video_alignment (GstVaapiVideoBufferPool * pool, GstVideoAlignment * align)
 {
   GstVideoInfo *const vip = &pool->priv->alloc_info;
   guint i;
+  gint nth_bit;
 
   gst_video_alignment_reset (align);
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (vip); i++)
-    align->stride_align[i] =
-        (1U << g_bit_nth_lsf (GST_VIDEO_INFO_PLANE_STRIDE (vip, i), 0)) - 1;
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (vip); i++) {
+    nth_bit = g_bit_nth_lsf (GST_VIDEO_INFO_PLANE_STRIDE (vip, i), 0);
+    if (nth_bit >= 0)
+      align->stride_align[i] = (1U << nth_bit) - 1;
+  }
 }
 
 static const gchar **
