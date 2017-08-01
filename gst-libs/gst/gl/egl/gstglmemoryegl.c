@@ -155,6 +155,11 @@ _gl_mem_egl_alloc (GstGLBaseMemoryAllocator * allocator,
       params->parent.alloc_params, params->v_info, params->plane,
       params->valign, params->parent.user_data, params->parent.notify);
 
+  if (!mem->image) {
+    gst_allocator_free (GST_ALLOCATOR_CAST (allocator), GST_MEMORY_CAST (mem));
+    return NULL;
+  }
+
   return mem;
 }
 
