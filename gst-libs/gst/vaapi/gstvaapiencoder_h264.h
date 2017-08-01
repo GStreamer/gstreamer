@@ -48,6 +48,7 @@ typedef struct _GstVaapiEncoderH264 GstVaapiEncoderH264;
  *   in milliseconds (uint).
  * @GST_VAAPI_ENCODER_H264_PROP_NUM_VIEWS: Number of views per frame.
  * @GST_VAAPI_ENCODER_H264_PROP_VIEW_IDS: View IDs
+ * @GST_VAAPI_ENCODER_H264_PROP_AUD: Insert AUD as first NAL per frame.
  * @GST_VAAPI_ENCODER_H264_PROP_COMPLIANCE_MODE: Relax Compliance restrictions
  * @GST_VAAPI_ENCODER_H264_PROP_NUM_REF_FRAMES: Maximum number of reference frames.
  *
