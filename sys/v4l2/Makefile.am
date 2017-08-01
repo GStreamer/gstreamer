@@ -19,6 +19,8 @@ libgstvideo4linux2_la_SOURCES = gstv4l2.c \
 				gstv4l2h264enc.c \
 				gstv4l2mpeg4enc.c \
 				gstv4l2vidorient.c \
+				gstv4l2vp8enc.c \
+				gstv4l2vp9enc.c \
 				v4l2_calls.c \
 				v4l2-utils.c \
 				tuner.c \
@@ -63,6 +65,8 @@ noinst_HEADERS = \
 	gstv4l2h264enc.h \
 	gstv4l2mpeg4enc.h \
 	gstv4l2vidorient.h \
+	gstv4l2vp8enc.h \
+	gstv4l2vp9enc.h \
 	v4l2-utils.h \
 	tuner.h \
 	tunerchannel.h \
