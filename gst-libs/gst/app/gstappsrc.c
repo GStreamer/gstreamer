@@ -1605,8 +1605,8 @@ gst_app_src_set_latency (GstAppSrc * appsrc, guint64 min, guint64 max)
 /**
  * gst_app_src_get_latency:
  * @appsrc: a #GstAppSrc
- * @min: the min latency
- * @max: the min latency
+ * @min: (out): the min latency
+ * @max: (out): the min latency
  *
  * Retrieve the min and max latencies in @min and @max respectively.
  */
