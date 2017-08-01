@@ -1823,12 +1823,20 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
         case GST_V4L2_IO_USERPTR:
         {
           struct UserPtrData *data;
+          GstBuffer *tmp;
 
           /* Replace our buffer with downstream allocated buffer */
           data = gst_mini_object_steal_qdata (GST_MINI_OBJECT (*buf),
               GST_V4L2_IMPORT_QUARK);
-          gst_buffer_replace (buf, data->buffer);
+          tmp = gst_buffer_ref (data->buffer);
           _unmap_userptr_frame (data);
+
+          /* Now tmp is writable, copy the flags and timestamp */
+          gst_buffer_copy_into (tmp, *buf,
+              GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+
+          gst_buffer_replace (buf, tmp);
+          gst_buffer_unref (tmp);
           break;
         }
 
@@ -1839,6 +1847,10 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
           /* Replace our buffer with downstream allocated buffer */
           tmp = gst_mini_object_steal_qdata (GST_MINI_OBJECT (*buf),
               GST_V4L2_IMPORT_QUARK);
+
+          gst_buffer_copy_into (tmp, *buf,
+              GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+
           gst_buffer_replace (buf, tmp);
           gst_buffer_unref (tmp);
           break;
