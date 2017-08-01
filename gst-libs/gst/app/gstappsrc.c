@@ -1591,7 +1591,7 @@ gst_app_src_set_latencies (GstAppSrc * appsrc, gboolean do_min, guint64 min,
  * gst_app_src_set_latency:
  * @appsrc: a #GstAppSrc
  * @min: the min latency
- * @max: the min latency
+ * @max: the max latency
  *
  * Configure the @min and @max latency in @src. If @min is set to -1, the
  * default latency calculations for pseudo-live sources will be used.
@@ -1606,7 +1606,7 @@ gst_app_src_set_latency (GstAppSrc * appsrc, guint64 min, guint64 max)
  * gst_app_src_get_latency:
  * @appsrc: a #GstAppSrc
  * @min: (out): the min latency
- * @max: (out): the min latency
+ * @max: (out): the max latency
  *
  * Retrieve the min and max latencies in @min and @max respectively.
  */
