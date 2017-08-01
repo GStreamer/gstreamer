@@ -1213,16 +1213,14 @@ gst_vaapi_plugin_base_create_gl_context (GstVaapiPluginBase * plugin)
   GstGLContext *gl_other_context, *gl_context = NULL;
   GstGLDisplay *gl_display;
 
-  gst_gl_ensure_element_data (plugin, (GstGLDisplay **) & plugin->gl_display,
-      (GstGLContext **) & plugin->gl_other_context);
+  if (!gst_gl_ensure_element_data (plugin,
+          (GstGLDisplay **) & plugin->gl_display,
+          (GstGLContext **) & plugin->gl_other_context))
+    goto no_valid_gl_display;
 
   gl_display = (GstGLDisplay *) plugin->gl_display;
-  if (!gl_display ||
-      gst_gl_display_get_handle_type (gl_display) == GST_GL_DISPLAY_TYPE_ANY) {
-    gst_object_replace (&plugin->gl_display, NULL);
-    gst_object_replace (&plugin->gl_other_context, NULL);
-    return NULL;
-  }
+  if (gst_gl_display_get_handle_type (gl_display) == GST_GL_DISPLAY_TYPE_ANY)
+    goto no_valid_gl_display;
   gl_other_context = (GstGLContext *) plugin->gl_other_context;
 
   GST_INFO_OBJECT (plugin, "creating a new GstGL context");
@@ -1241,6 +1239,14 @@ gst_vaapi_plugin_base_create_gl_context (GstVaapiPluginBase * plugin)
   GST_OBJECT_UNLOCK (gl_display);
 
   return GST_OBJECT_CAST (gl_context);
+
+  /* ERRORS */
+no_valid_gl_display:
+  {
+    gst_object_replace (&plugin->gl_display, NULL);
+    gst_object_replace (&plugin->gl_other_context, NULL);
+    return NULL;
+  }
 #else
   return NULL;
 #endif
