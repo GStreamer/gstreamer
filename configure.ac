@@ -469,7 +469,6 @@ AG_GST_CHECK_PLUGIN(gdp)
 AG_GST_CHECK_PLUGIN(id3tag)
 AG_GST_CHECK_PLUGIN(inter)
 AG_GST_CHECK_PLUGIN(interlace)
-AG_GST_CHECK_PLUGIN(ipcpipeline)
 AG_GST_CHECK_PLUGIN(ivfparse)
 AG_GST_CHECK_PLUGIN(ivtc)
 AG_GST_CHECK_PLUGIN(jp2kdecimator)
@@ -1873,6 +1872,20 @@ AG_GST_CHECK_FEATURE(SHM, [POSIX shared memory source and sink], shm, [
         esac
     else
         HAVE_SHM=no
+    fi
+])
+
+dnl check for unix sockets (ipcpipeline plugin)
+translit(dnm, m, l) AM_CONDITIONAL(USE_IPCPIPELINE, true)
+AG_GST_CHECK_FEATURE(IPCPIPELINE, [Unix sockets], ipcpipeline, [
+    if test "x$HAVE_SYS_SOCKET_H" = "xyes"; then
+        AC_CHECK_FUNC(pipe, [
+          AC_CHECK_FUNC(socketpair, [HAVE_IPCPIPELINE=yes], [HAVE_IPCPIPELINE=no])
+          ], [
+          HAVE_IPCPIPELINE=no
+        ])
+    else
+        HAVE_IPCPIPELINE=no
     fi
 ])
 
@@ -3588,7 +3601,6 @@ gst/gdp/Makefile
 gst/id3tag/Makefile
 gst/inter/Makefile
 gst/interlace/Makefile
-gst/ipcpipeline/Makefile
 gst/ivfparse/Makefile
 gst/ivtc/Makefile
 gst/jp2kdecimator/Makefile
@@ -3663,6 +3675,7 @@ sys/dshowsrcwrapper/Makefile
 sys/dshowvideosink/Makefile
 sys/dvb/Makefile
 sys/fbdev/Makefile
+sys/ipcpipeline/Makefile
 sys/kms/Makefile
 sys/msdk/Makefile
 sys/nvdec/Makefile

@@ -198,6 +198,12 @@ else
 check_shm=
 endif
 
+if USE_IPCPIPELINE
+check_ipcpipeline=pipelines/ipcpipeline
+else
+check_ipcpipeline=
+endif
+
 if USE_GL
 check_gl=libs/gstglcontext \
     libs/gstglmemory \
@@ -272,7 +278,7 @@ check_PROGRAMS = \
 	elements/rtponviftimestamp \
 	elements/id3mux \
 	pipelines/mxf \
-	pipelines/ipcpipeline \
+	$(check_ipcpipeline) \
 	libs/mpegvideoparser \
 	libs/mpegts \
 	libs/h264parser \
