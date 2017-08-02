@@ -102,18 +102,8 @@ gst_v4l2_h263_enc_class_init (GstV4l2H263EncClass * klass)
 gboolean
 gst_v4l2_is_h263_enc (GstCaps * sink_caps, GstCaps * src_caps)
 {
-  gboolean ret = FALSE;
-  GstCaps *codec_caps;
-
-  codec_caps = gst_static_caps_get (&src_template_caps);
-
-  if (gst_caps_is_subset (sink_caps, gst_v4l2_object_get_raw_caps ())
-      && gst_caps_can_intersect (src_caps, codec_caps))
-    ret = TRUE;
-
-  gst_caps_unref (codec_caps);
-
-  return ret;
+  return gst_v4l2_is_video_enc (sink_caps, src_caps,
+      gst_static_caps_get (&src_template_caps));
 }
 
 void

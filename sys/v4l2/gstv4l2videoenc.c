@@ -904,12 +904,21 @@ gst_v4l2_video_enc_subclass_init (gpointer g_class, gpointer data)
 
 /* Probing functions */
 gboolean
-gst_v4l2_is_video_enc (GstCaps * sink_caps, GstCaps * src_caps)
+gst_v4l2_is_video_enc (GstCaps * sink_caps, GstCaps * src_caps,
+    GstCaps * codec_caps)
 {
   gboolean ret = FALSE;
+  gboolean (*check_caps) (const GstCaps *, const GstCaps *);
+
+  if (codec_caps) {
+    check_caps = gst_caps_can_intersect;
+  } else {
+    codec_caps = gst_v4l2_object_get_codec_caps ();
+    check_caps = gst_caps_is_subset;
+  }
 
   if (gst_caps_is_subset (sink_caps, gst_v4l2_object_get_raw_caps ())
-      && gst_caps_is_subset (src_caps, gst_v4l2_object_get_codec_caps ()))
+      && check_caps (src_caps, gst_v4l2_object_get_codec_caps ()))
     ret = TRUE;
 
   return ret;
