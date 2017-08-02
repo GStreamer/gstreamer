@@ -275,8 +275,8 @@ public:
       written_sum += written;
     } while (len > 0 && res == S_OK);
 
-    GST_LOG_OBJECT (m_ringbuffer->sink, "Wrote %u samples: 0x%08lx", written_sum,
-        (unsigned long) res);
+    GST_LOG_OBJECT (m_ringbuffer->sink, "Wrote %u samples: 0x%08lx",
+        written_sum, (unsigned long) res);
 
     gst_audio_ring_buffer_clear (GST_AUDIO_RING_BUFFER_CAST (m_ringbuffer),
         seg);
