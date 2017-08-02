@@ -730,6 +730,7 @@ struct _GstVaapiEncoderH264
   guint32 idr_num;
   guint8 pic_order_cnt_type;
   guint8 delta_pic_order_always_zero_flag;
+  guint num_ref_frames;
 
   GstBuffer *sps_data;
   GstBuffer *subset_sps_data;
@@ -3104,6 +3105,9 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_PROP_COMPLIANCE_MODE:
       encoder->compliance_mode = g_value_get_enum (value);
       break;
+    case GST_VAAPI_ENCODER_H264_PROP_NUM_REF_FRAMES:
+      encoder->num_ref_frames = g_value_get_uint (value);
+      break;
 
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
@@ -3169,6 +3173,18 @@ gst_vaapi_encoder_h264_get_default_properties (void)
       GST_VAAPI_ENCODER_H264_PROP_MAX_BFRAMES,
       g_param_spec_uint ("max-bframes",
           "Max B-Frames", "Number of B-frames between I and P", 0, 10, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:refs:
+   *
+   * The number of reference frames.
+   * If B frame is encoded, it will add 1 reference frame more.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_NUM_REF_FRAMES,
+      g_param_spec_uint ("refs", "Number of Reference Frames",
+          "Number of reference frames", 1, 8, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
