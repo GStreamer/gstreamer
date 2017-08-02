@@ -331,11 +331,6 @@ typedef gboolean (*GstAggregatorPadForeachFunc)    (GstAggregator               
                                                     gpointer                         user_data);
 
 GST_EXPORT
-gboolean gst_aggregator_iterate_sinkpads           (GstAggregator                 *  self,
-                                                    GstAggregatorPadForeachFunc      func,
-                                                    gpointer                         user_data);
-
-GST_EXPORT
 GstClockTime  gst_aggregator_get_latency           (GstAggregator                 *  self);
 
 GST_EXPORT
