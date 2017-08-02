@@ -255,7 +255,7 @@ your code more readable.
 If we got a message, we process it in the `handle_message`` `function
 (next subsection), otherwise:
 
-### User interface resfreshing
+### User interface refreshing
 
 ``` c
 /* We got no message, this means the timeout expired */
