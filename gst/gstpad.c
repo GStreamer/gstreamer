@@ -4446,6 +4446,10 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   /* do post-blocking probes */
   PROBE_HANDLE (pad, type, data, probe_stopped, probe_handled);
 
+  /* recheck sticky events because the probe might have cause a relink */
+  if (G_UNLIKELY ((ret = check_sticky (pad, NULL))) != GST_FLOW_OK)
+    goto events_error;
+
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;
 
@@ -5230,6 +5234,17 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
       }
       PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH |
           GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
+      /* recheck sticky events because the probe might have cause a relink */
+      if (GST_PAD_HAS_PENDING_EVENTS (pad) && GST_PAD_IS_SRC (pad)
+          && (GST_EVENT_IS_SERIALIZED (event)
+              || GST_EVENT_IS_STICKY (event))) {
+        PushStickyData data = { GST_FLOW_OK, FALSE, event };
+        GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+
+        /* Push all sticky events before our current one
+         * that have changed */
+        events_foreach (pad, sticky_changed, &data);
+      }
       break;
     }
   }
