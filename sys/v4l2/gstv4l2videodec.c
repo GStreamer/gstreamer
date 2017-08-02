@@ -1029,6 +1029,8 @@ G_STMT_START { \
     SET_META ("VC1");
   } else if (gst_structure_has_name (s, "video/x-vp8")) {
     SET_META ("VP8");
+  } else if (gst_structure_has_name (s, "video/x-vp9")) {
+    SET_META ("VP9");
   } else if (gst_structure_has_name (s, "video/x-bayer")) {
     SET_META ("BAYER");
   } else if (gst_structure_has_name (s, "video/x-sonix")) {
