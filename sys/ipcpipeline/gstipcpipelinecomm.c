@@ -2305,7 +2305,8 @@ gst_value_deserialize_event (GValue * dest, const gchar * s)
     goto fail;
   gst_event_set_running_time_offset (ev, g_value_get_int64 (&val));
 
-  g_value_take_boxed (dest, g_steal_pointer (&ev));
+  g_value_take_boxed (dest, ev);
+  ev = NULL;
   ret = TRUE;
 
 fail:
