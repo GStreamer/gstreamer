@@ -2086,7 +2086,7 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     /* only works for B frames */
     slice_param->direct_spatial_mv_pred_flag = FALSE;
     /* default equal to picture parameters */
-    slice_param->num_ref_idx_active_override_flag = FALSE;
+    slice_param->num_ref_idx_active_override_flag = TRUE;
     if (picture->type != GST_VAAPI_PICTURE_TYPE_I && reflist_0_count > 0)
       slice_param->num_ref_idx_l0_active_minus1 = reflist_0_count - 1;
     else
@@ -2095,8 +2095,6 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
       slice_param->num_ref_idx_l1_active_minus1 = reflist_1_count - 1;
     else
       slice_param->num_ref_idx_l1_active_minus1 = 0;
-    g_assert (slice_param->num_ref_idx_l0_active_minus1 == 0);
-    g_assert (slice_param->num_ref_idx_l1_active_minus1 == 0);
 
     i_ref = 0;
     if (picture->type != GST_VAAPI_PICTURE_TYPE_I) {
@@ -2109,10 +2107,10 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
             VA_PICTURE_H264_SHORT_TERM_REFERENCE;
         slice_param->RefPicList0[i_ref].frame_idx = reflist_0[i_ref]->frame_num;
       }
-      g_assert (i_ref == 1);
     }
     for (; i_ref < G_N_ELEMENTS (slice_param->RefPicList0); ++i_ref) {
       slice_param->RefPicList0[i_ref].picture_id = VA_INVALID_SURFACE;
+      slice_param->RefPicList0[i_ref].flags = VA_PICTURE_H264_INVALID;
     }
 
     i_ref = 0;
@@ -2127,10 +2125,10 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
         slice_param->RefPicList1[i_ref].frame_idx |=
             reflist_1[i_ref]->frame_num;
       }
-      g_assert (i_ref == 1);
     }
     for (; i_ref < G_N_ELEMENTS (slice_param->RefPicList1); ++i_ref) {
       slice_param->RefPicList1[i_ref].picture_id = VA_INVALID_SURFACE;
+      slice_param->RefPicList0[i_ref].flags = VA_PICTURE_H264_INVALID;
     }
 
     /* not used if  pic_param.pic_fields.bits.weighted_pred_flag == FALSE */
@@ -2551,18 +2549,18 @@ reset_properties (GstVaapiEncoderH264 * encoder)
   if (encoder->num_bframes > (base_encoder->keyframe_period + 1) / 2)
     encoder->num_bframes = (base_encoder->keyframe_period + 1) / 2;
 
-  /* Workaround : vaapi-intel-driver doesn't have support for
-   * B-frame encode when utilizing low-power encode hardware block.
-   * So Disabling b-frame encoding in low-pwer encode.
-   *
-   * Fixme :We should query the VAConfigAttribEncMaxRefFrames
-   * instead of blindly disabling b-frame support and set b/p frame count,
-   * buffer pool size etc based on that.*/
-  if ((encoder->num_bframes > 0)
-      && (encoder->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP)) {
-    GST_WARNING
-        ("Disabling b-frame since the driver doesn't supporting it in low-power encode");
+  gst_vaapi_encoder_ensure_max_num_ref_frames (base_encoder, encoder->profile,
+      encoder->entrypoint);
+
+  if (base_encoder->max_num_ref_frames_1 < 1 && encoder->num_bframes > 0) {
+    GST_WARNING ("Disabling b-frame since the driver doesn't support it");
     encoder->num_bframes = 0;
+  }
+
+  if (encoder->num_ref_frames > base_encoder->max_num_ref_frames_0) {
+    GST_INFO ("Lowering the number of reference frames to %d",
+        base_encoder->max_num_ref_frames_0);
+    encoder->num_ref_frames = base_encoder->max_num_ref_frames_0;
   }
 
   if (encoder->num_bframes > 0 && GST_VAAPI_ENCODER_FPS_N (encoder) > 0)
@@ -2585,7 +2583,7 @@ reset_properties (GstVaapiEncoderH264 * encoder)
     GstVaapiH264ViewReorderPool *const reorder_pool =
         &encoder->reorder_pools[i];
 
-    ref_pool->max_reflist0_count = 1;
+    ref_pool->max_reflist0_count = encoder->num_ref_frames;
     ref_pool->max_reflist1_count = encoder->num_bframes > 0;
     ref_pool->max_ref_frames = ref_pool->max_reflist0_count
         + ref_pool->max_reflist1_count;
@@ -2895,8 +2893,8 @@ set_context_info (GstVaapiEncoder * base_encoder)
   if (!ensure_hw_profile (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
 
-  base_encoder->num_ref_frames =
-      ((encoder->num_bframes ? 2 : 1) + DEFAULT_SURFACES_COUNT)
+  base_encoder->num_ref_frames = (encoder->num_ref_frames
+      + (encoder->num_bframes > 0 ? 1 : 0) + DEFAULT_SURFACES_COUNT)
       * encoder->num_views;
 
   /* Only YUV 4:2:0 formats are supported for now. This means that we
