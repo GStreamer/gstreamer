@@ -29,9 +29,6 @@
 #include <gstv4l2object.h>
 #include <gstv4l2bufferpool.h>
 
-GST_DEBUG_CATEGORY_EXTERN (v4l2sink_debug);
-
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_V4L2SINK \

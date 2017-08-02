@@ -30,8 +30,6 @@
 #include <gstv4l2object.h>
 #include <gstv4l2bufferpool.h>
 
-GST_DEBUG_CATEGORY_EXTERN (v4l2videodec_debug);
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_V4L2_VIDEO_DEC \

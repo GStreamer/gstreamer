@@ -34,10 +34,7 @@ typedef struct _GstV4l2Meta GstV4l2Meta;
 #include "gstv4l2object.h"
 #include "gstv4l2allocator.h"
 
-GST_DEBUG_CATEGORY_EXTERN (v4l2buffer_debug);
-
 G_BEGIN_DECLS
-
 
 #define GST_TYPE_V4L2_BUFFER_POOL      (gst_v4l2_buffer_pool_get_type())
 #define GST_IS_V4L2_BUFFER_POOL(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_BUFFER_POOL))

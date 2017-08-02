@@ -25,8 +25,6 @@
 #include <gst/gst.h>
 #include "gstv4l2videoenc.h"
 
-GST_DEBUG_CATEGORY_EXTERN (v4l2mpeg4enc_debug);
-
 G_BEGIN_DECLS
 #define GST_TYPE_V4L2_MPEG4_ENC \
   (gst_v4l2_mpeg4_enc_get_type())
