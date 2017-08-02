@@ -3081,7 +3081,7 @@ gst_ad_stream_src_to_ready_cb (GstPad * pad, GstPadProbeInfo * info,
   g_cond_signal (&stream->fragment_download_cond);
   g_mutex_unlock (&stream->fragment_download_lock);
 
-  return GST_PAD_PROBE_OK;
+  return GST_PAD_PROBE_REMOVE;
 }
 
 #ifndef GST_DISABLE_GST_DEBUG
