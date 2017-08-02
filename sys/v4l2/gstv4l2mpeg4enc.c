@@ -163,218 +163,6 @@ v4l2_level_to_string (gint v4l2_level)
   return NULL;
 }
 
-struct ProfileLevelCtx
-{
-  GstV4l2Mpeg4Enc *self;
-  const gchar *profile;
-  const gchar *level;
-};
-
-static gboolean
-get_string_list (GstStructure * s, const gchar * field, GQueue * queue)
-{
-  const GValue *value;
-
-  value = gst_structure_get_value (s, field);
-
-  if (!value)
-    return FALSE;
-
-  if (GST_VALUE_HOLDS_LIST (value)) {
-    guint i;
-
-    if (gst_value_list_get_size (value) == 0)
-      return FALSE;
-
-    for (i = 0; i < gst_value_list_get_size (value); i++) {
-      const GValue *item = gst_value_list_get_value (value, i);
-
-      if (G_VALUE_HOLDS_STRING (item))
-        g_queue_push_tail (queue, g_value_dup_string (item));
-    }
-  } else if (G_VALUE_HOLDS_STRING (value)) {
-    g_queue_push_tail (queue, g_value_dup_string (value));
-  }
-
-  return TRUE;
-}
-
-static gboolean
-negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
-    gpointer user_data)
-{
-  struct ProfileLevelCtx *ctx = user_data;
-  GstV4l2Object *v4l2object = GST_V4L2_VIDEO_ENC (ctx->self)->v4l2output;
-  GQueue profiles = G_QUEUE_INIT;
-  GQueue levels = G_QUEUE_INIT;
-  gboolean failed = FALSE;
-
-  if (get_string_list (s, "profile", &profiles)) {
-    GList *l;
-
-    for (l = profiles.head; l; l = l->next) {
-      struct v4l2_control control = { 0, };
-      gint v4l2_profile;
-      const gchar *profile = l->data;
-
-      GST_TRACE_OBJECT (ctx->self, "Trying profile %s", profile);
-
-      control.id = V4L2_CID_MPEG_VIDEO_MPEG4_PROFILE;
-      control.value = v4l2_profile = v4l2_profile_from_string (profile);
-
-      if (control.value < 0)
-        continue;
-
-      if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_S_CTRL, &control) < 0) {
-        GST_WARNING_OBJECT (ctx->self, "Failed to set MPEG4 profile: '%s'",
-            g_strerror (errno));
-        break;
-      }
-
-      profile = v4l2_profile_to_string (control.value);
-
-      if (control.value == v4l2_profile) {
-        ctx->profile = profile;
-        break;
-      }
-
-      if (g_list_find_custom (l, profile, g_str_equal)) {
-        ctx->profile = profile;
-        break;
-      }
-    }
-
-    if (profiles.length && !ctx->profile)
-      failed = TRUE;
-
-    g_queue_foreach (&profiles, (GFunc) g_free, NULL);
-    g_queue_clear (&profiles);
-  }
-
-  if (!failed && get_string_list (s, "level", &levels)) {
-    GList *l;
-
-    for (l = levels.head; l; l = l->next) {
-      struct v4l2_control control = { 0, };
-      gint v4l2_level;
-      const gchar *level = l->data;
-
-      GST_TRACE_OBJECT (ctx->self, "Trying level %s", level);
-
-      control.id = V4L2_CID_MPEG_VIDEO_MPEG4_LEVEL;
-      control.value = v4l2_level = v4l2_level_from_string (level);
-
-      if (control.value < 0)
-        continue;
-
-      if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_S_CTRL, &control) < 0) {
-        GST_WARNING_OBJECT (ctx->self, "Failed to set MPEG4 level: '%s'",
-            g_strerror (errno));
-        break;
-      }
-
-      level = v4l2_level_to_string (control.value);
-
-      if (control.value == v4l2_level) {
-        ctx->level = level;
-        break;
-      }
-
-      if (g_list_find_custom (l, level, g_str_equal)) {
-        ctx->level = level;
-        break;
-      }
-    }
-
-    if (levels.length && !ctx->level)
-      failed = TRUE;
-
-    g_queue_foreach (&levels, (GFunc) g_free, NULL);
-    g_queue_clear (&levels);
-  }
-
-  /* If it failed, we continue */
-  return failed;
-}
-
-static gboolean
-gst_v4l2_mpeg4_enc_negotiate (GstVideoEncoder * encoder)
-{
-  GstV4l2Mpeg4Enc *self = GST_V4L2_MPEG4_ENC (encoder);
-  GstV4l2VideoEnc *venc = GST_V4L2_VIDEO_ENC (encoder);
-  GstV4l2Object *v4l2object = venc->v4l2output;
-  GstCaps *allowed_caps;
-  struct ProfileLevelCtx ctx = { self, NULL, NULL };
-  GstVideoCodecState *state;
-  GstStructure *s;
-
-  GST_DEBUG_OBJECT (self, "Negotiating MPEG4 profile and level.");
-
-  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
-
-  if (allowed_caps) {
-
-    if (gst_caps_is_empty (allowed_caps))
-      goto not_negotiated;
-
-    allowed_caps = gst_caps_make_writable (allowed_caps);
-
-    /* negotiate_profile_and_level() will return TRUE on failure to keep
-     * iterating, if gst_caps_foreach() returns TRUE it means there was no
-     * compatible profile and level in any of the structure */
-    if (gst_caps_foreach (allowed_caps, negotiate_profile_and_level, &ctx)) {
-      goto no_profile_level;
-    }
-  }
-
-  if (!ctx.profile) {
-    struct v4l2_control control = { 0, };
-
-    control.id = V4L2_CID_MPEG_VIDEO_MPEG4_PROFILE;
-
-    if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_CTRL, &control) < 0)
-      goto g_ctrl_failed;
-
-    ctx.profile = v4l2_profile_to_string (control.value);
-  }
-
-  if (!ctx.level) {
-    struct v4l2_control control = { 0, };
-
-    control.id = V4L2_CID_MPEG_VIDEO_MPEG4_LEVEL;
-
-    if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_CTRL, &control) < 0)
-      goto g_ctrl_failed;
-
-    ctx.level = v4l2_level_to_string (control.value);
-  }
-
-  GST_DEBUG_OBJECT (self, "Selected MPEG4 profile %s at level %s",
-      ctx.profile, ctx.level);
-
-  state = gst_video_encoder_get_output_state (encoder);
-  s = gst_caps_get_structure (state->caps, 0);
-  gst_structure_set (s, "profile", G_TYPE_STRING, ctx.profile,
-      "level", G_TYPE_STRING, ctx.level, NULL);
-
-  return GST_VIDEO_ENCODER_CLASS (parent_class)->negotiate (encoder);
-
-g_ctrl_failed:
-  GST_WARNING_OBJECT (self, "Failed to get MPEG4 profile and level: '%s'",
-      g_strerror (errno));
-  goto not_negotiated;
-
-no_profile_level:
-  GST_WARNING_OBJECT (self, "No compatible level and profiled in caps: %"
-      GST_PTR_FORMAT, allowed_caps);
-  goto not_negotiated;
-
-not_negotiated:
-  if (allowed_caps)
-    gst_caps_unref (allowed_caps);
-  return FALSE;
-}
-
 static void
 gst_v4l2_mpeg4_enc_init (GstV4l2Mpeg4Enc * self)
 {
@@ -385,13 +173,13 @@ gst_v4l2_mpeg4_enc_class_init (GstV4l2Mpeg4EncClass * klass)
 {
   GstElementClass *element_class;
   GObjectClass *gobject_class;
-  GstVideoEncoderClass *baseclass;
+  GstV4l2VideoEncClass *baseclass;
 
   parent_class = g_type_class_peek_parent (klass);
 
   element_class = (GstElementClass *) klass;
   gobject_class = (GObjectClass *) klass;
-  baseclass = GST_VIDEO_ENCODER_CLASS (klass);
+  baseclass = (GstV4l2VideoEncClass *) (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_v4l2_mpeg4_enc_debug, "v4l2mpeg4enc", 0,
       "V4L2 MPEG4 Encoder");
@@ -406,7 +194,14 @@ gst_v4l2_mpeg4_enc_class_init (GstV4l2Mpeg4EncClass * klass)
       GST_DEBUG_FUNCPTR (gst_v4l2_mpeg4_enc_set_property);
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_v4l2_mpeg4_enc_get_property);
-  baseclass->negotiate = GST_DEBUG_FUNCPTR (gst_v4l2_mpeg4_enc_negotiate);
+
+  baseclass->codec_name = "MPEG4";
+  baseclass->profile_cid = V4L2_CID_MPEG_VIDEO_MPEG4_PROFILE;
+  baseclass->profile_to_string = v4l2_profile_to_string;
+  baseclass->profile_from_string = v4l2_profile_from_string;
+  baseclass->level_cid = V4L2_CID_MPEG_VIDEO_MPEG4_LEVEL;
+  baseclass->level_to_string = v4l2_level_to_string;
+  baseclass->level_from_string = v4l2_level_from_string;
 }
 
 /* Probing functions */

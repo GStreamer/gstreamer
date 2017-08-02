@@ -43,6 +43,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4L2_VIDEO_ENC))
 #define GST_IS_V4L2_VIDEO_ENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4L2_VIDEO_ENC))
+#define GST_V4L2_VIDEO_ENC_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4L2_VIDEO_ENC, GstV4l2VideoEncClass))
+
 typedef struct _GstV4l2VideoEnc GstV4l2VideoEnc;
 typedef struct _GstV4l2VideoEncClass GstV4l2VideoEncClass;
 
@@ -71,9 +74,15 @@ struct _GstV4l2VideoEncClass
   GstVideoEncoderClass parent_class;
 
   gchar *default_device;
+  const char *codec_name;
 
-  GstFlowReturn (*get_output_caps) (GstVideoEncoder * encoder,
-      GstCaps ** outcaps);
+  guint32 profile_cid;
+  const gchar * (*profile_to_string) (gint v4l2_profile);
+  gint (*profile_from_string) (const gchar * profile);
+
+  guint32 level_cid;
+  const gchar * (*level_to_string) (gint v4l2_level);
+  gint (*level_from_string) (const gchar * level);
 };
 
 GType gst_v4l2_video_enc_get_type (void);
