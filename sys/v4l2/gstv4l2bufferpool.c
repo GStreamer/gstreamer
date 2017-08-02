@@ -1080,9 +1080,8 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
   gint index;
 
   if (!gst_v4l2_is_buffer_valid (buf, &group)) {
-    GST_LOG_OBJECT (pool, "unref copied/invalid buffer %p", buf);
-    gst_buffer_unref (buf);
-    return GST_FLOW_OK;
+    GST_ERROR_OBJECT (pool, "invalid buffer %p", buf);
+    return GST_FLOW_ERROR;
   }
 
   index = group->buffer.index;
