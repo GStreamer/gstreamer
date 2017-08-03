@@ -341,7 +341,9 @@ gst_pcap_parse_read_uint32 (GstPcapParse * self, const guint8 * p)
   }
 }
 
+#define ETH_MAC_ADDRESSES_LEN    12
 #define ETH_HEADER_LEN    14
+#define ETH_VLAN_HEADER_LEN    4
 #define SLL_HEADER_LEN    16
 #define IP_HEADER_MIN_LEN 20
 #define UDP_HEADER_LEN     8
@@ -371,9 +373,20 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
     case LINKTYPE_ETHER:
       if (buf_size < ETH_HEADER_LEN + IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
         return FALSE;
-
-      eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 12)));
-      buf_ip = buf + ETH_HEADER_LEN;
+      eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + ETH_MAC_ADDRESSES_LEN)));
+      /* check for vlan 802.1q header (4 bytes, with first two bytes equal to 0x8100)  */
+      if (eth_type == 0x8100) {
+        if (buf_size <
+            ETH_HEADER_LEN + ETH_VLAN_HEADER_LEN + IP_HEADER_MIN_LEN +
+            UDP_HEADER_LEN)
+          return FALSE;
+        eth_type =
+            GUINT16_FROM_BE (*((guint16 *) (buf + ETH_MAC_ADDRESSES_LEN +
+                    ETH_VLAN_HEADER_LEN)));
+        buf_ip = buf + ETH_HEADER_LEN + ETH_VLAN_HEADER_LEN;
+      } else {
+        buf_ip = buf + ETH_HEADER_LEN;
+      }
       break;
     case LINKTYPE_SLL:
       if (buf_size < SLL_HEADER_LEN + IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
@@ -394,8 +407,12 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
       return FALSE;
   }
 
-  if (eth_type != 0x800)
+  if (eth_type != 0x800) {
+    GST_ERROR_OBJECT (self,
+        "Link type %d: Ethernet type %d is not supported; only type 0x800",
+        (gint) self->linktype, (gint) eth_type);
     return FALSE;
+  }
 
   b = *buf_ip;
   if (((b >> 4) & 0x0f) != 4)
