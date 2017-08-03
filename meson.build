@@ -76,7 +76,11 @@ if not get_option('disable_gst_devtools')
 endif
 
 if not get_option('disable_gst_editing_services')
+  if dependency('libxml-2.0').found()
     subprojects += ['gst-editing-services']
+  else
+    message('WARNING: not building gst-editing-services module, missing libxml-2.0')
+  endif
 endif
 
 if not get_option('disable_rtsp_server')
