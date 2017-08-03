@@ -725,3 +725,25 @@ GstDtlsDec *gstdtlsdec
 GstGLFilterShader *gstglfiltershader
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstIpcPipelineSrc::disconnect</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstIpcPipelineSrc *gstipcpipelinesrc
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstIpcPipelineSrc::forward-message</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>la</FLAGS>
+GstIpcPipelineSrc *gstipcpipelinesrc
+GstMessage *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstIpcPipelineSink::disconnect</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstIpcPipelineSink *gstipcpipelinesink
+</SIGNAL>
+

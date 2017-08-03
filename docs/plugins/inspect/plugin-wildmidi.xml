@@ -1,20 +1,20 @@
 <plugin>
   <name>wildmidi</name>
-  <description>Wildmidi Plugin</description>
+  <description>WildMidi-based MIDI playback plugin</description>
   <filename>../../ext/wildmidi/.libs/libgstwildmidi.so</filename>
   <basename>libgstwildmidi.so</basename>
-  <version>1.12.0</version>
-  <license>GPL</license>
+  <version>1.13.0.1</version>
+  <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>wildmidi</name>
-      <longname>WildMidi</longname>
+      <name>wildmididec</name>
+      <longname>WildMidi-based MIDI music decoder</longname>
       <class>Codec/Decoder/Audio</class>
-      <description>Midi Synthesizer Element</description>
-      <author>Wouter Paesen &lt;wouter@blue-gate.be&gt;</author>
+      <description>Decodes MIDI music using WildMidi</description>
+      <author>Carlos Rafael Giani &lt;dv@pseudoterminal.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string)S16LE, rate=(int)44100, channels=(int)2, layout=(string)interleaved</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)2</details>
         </caps>
       </pads>
     </element>

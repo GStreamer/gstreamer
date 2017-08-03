@@ -20,6 +20,7 @@ GstCameraBin GstChildProxy GstTagSetter
 GstCameraBin2 GstChildProxy GstTagSetter
 GstCeltEnc GstPreset GstTagSetter
 GstCompositor GstChildProxy
+GstCurlHttpSrc GstURIHandler
 GstDaalaEnc GstPreset
 GstDashDemux GstChildProxy
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
@@ -57,9 +58,12 @@ GstGtkSink GstNavigation
 GstHLSDemux GstChildProxy
 GstHanddetect GstNavigation
 GstHlsSink GstChildProxy
+GstHlsSink2 GstChildProxy
 GstId3BaseMux GstTagSetter
 GstId3Mux GstTagSetter
+GstIpcSlavePipeline GstChildProxy
 GstJifMux GstTagSetter GstTagXmpWriter
+GstKMSSink GstVideoOverlay
 GstKateEnc GstTagSetter
 GstKateTag GstTagSetter
 GstLiveAdder GstChildProxy

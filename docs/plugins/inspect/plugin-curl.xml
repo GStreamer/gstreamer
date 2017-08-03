@@ -3,10 +3,10 @@
   <description>libcurl-based elements</description>
   <filename>../../ext/curl/.libs/libgstcurl.so</filename>
   <basename>libgstcurl.so</basename>
-  <version>1.12.0</version>
+  <version>1.13.0.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -45,6 +45,36 @@
       <class>Sink/Network</class>
       <description>Upload data over HTTP/HTTPS protocol using libcurl</description>
       <author>Patricia Muscalu &lt;patricia@axis.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>curlhttpsrc</name>
+      <longname>HTTP Client Source using libcURL</longname>
+      <class>Source/Network</class>
+      <description>Receiver data as a client over a network via HTTP using cURL</description>
+      <author>Sam Hurst &lt;samuelh@rd.bbc.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>curlsftpsink</name>
+      <longname>Curl sftp sink</longname>
+      <class>Sink/Network</class>
+      <description>Upload data over the SFTP protocol using libcurl</description>
+      <author>Sorin L. &lt;sorin@axis.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

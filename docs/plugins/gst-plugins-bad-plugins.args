@@ -2004,7 +2004,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Tuning Timeout</NICK>
-<BLURB>Milliseconds to wait before giving up tuning/locking on a signal.</BLURB>
+<BLURB>Microseconds to wait before giving up tuning/locking on a signal.</BLURB>
 <DEFAULT>10000000000</DEFAULT>
 </ARG>
 
@@ -18234,7 +18234,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Tuning Timeout</NICK>
-<BLURB>Milliseconds to wait before giving up tuning/locking on a signal.</BLURB>
+<BLURB>Microseconds to wait before giving up tuning/locking on a signal.</BLURB>
 <DEFAULT>10000000000</DEFAULT>
 </ARG>
 
@@ -58955,7 +58955,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Eyes profile</NICK>
 <BLURB>Location of Haar cascade file to use for eye-pair detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_eyepair_small.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_eyepair_small.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59005,7 +59005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mouth profile</NICK>
 <BLURB>Location of Haar cascade file to use for mouth detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_mouth.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_mouth.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59015,7 +59015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Nose profile</NICK>
 <BLURB>Location of Haar cascade file to use for nose detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_mcs_nose.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_nose.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59025,7 +59025,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Face profile</NICK>
 <BLURB>Location of Haar cascade file to use for face detection.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59065,7 +59065,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Profile</NICK>
 <BLURB>Location of Haar cascade file to use for face blurion.</BLURB>
-<DEFAULT>"/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -60055,7 +60055,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Presentation delay</NICK>
 <BLURB>Default presentation delay (in seconds, milliseconds or fragments) (e.g. 12s, 2500ms, 3f).</BLURB>
-<DEFAULT>NULL</DEFAULT>
+<DEFAULT>"10s"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -72978,5 +72978,405 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Pixel Aspect Ratio</NICK>
 <BLURB>The pixel aspect ratio of the device.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIpcPipelineSrc::ack-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ack time</NICK>
+<BLURB>Maximum time to wait for a response to a message.</BLURB>
+<DEFAULT>10000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIpcPipelineSrc::fdin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Input file descriptor</NICK>
+<BLURB>File descriptor to read data from.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIpcPipelineSrc::fdout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output file descriptor</NICK>
+<BLURB>File descriptor to write data through.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIpcPipelineSrc::read-chunk-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,16777216]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Read chunk size</NICK>
+<BLURB>Read chunk size.</BLURB>
+<DEFAULT>65536</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIpcPipelineSink::ack-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ack time</NICK>
+<BLURB>Maximum time to wait for a response to a message.</BLURB>
+<DEFAULT>10000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIpcPipelineSink::fdin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Input file descriptor</NICK>
+<BLURB>File descriptor to received data from.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIpcPipelineSink::fdout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output file descriptor</NICK>
+<BLURB>File descriptor to send data through.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIpcPipelineSink::read-chunk-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,16777216]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Read chunk size</NICK>
+<BLURB>Read chunk size.</BLURB>
+<DEFAULT>4096</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::automatic-redirect</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>automatic-redirect</NICK>
+<BLURB>Allow HTTP Redirections (HTTP Status Code 300 series).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::compress</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Compress</NICK>
+<BLURB>Allow compressed content encodings.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::cookies</NAME>
+<TYPE>GStrv</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Cookies</NICK>
+<BLURB>List of HTTP Cookies.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::extra-headers</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Extra Headers</NICK>
+<BLURB>Extra headers to append to the HTTP request.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::http-version</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,2]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>HTTP-Version</NICK>
+<BLURB>The preferred HTTP protocol version (Supported 1.0, 1.1, 2.0).</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::keep-alive</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keep-Alive</NICK>
+<BLURB>Toggle keep-alive for connection reuse.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>URI of resource to read.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::max-connection-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[2,60]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max-Connection-Time</NICK>
+<BLURB>Maximum amount of time to keep-alive HTTP connections.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::max-connections</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max-Connections</NICK>
+<BLURB>Maximum number of concurrent connections allowed for HTTP/1.x.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::max-connections-per-proxy</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,60]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max-Connections-Per-Proxy</NICK>
+<BLURB>Maximum number of concurrent connections allowed per proxy for HTTP/1.x.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::max-connections-per-server</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,60]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max-Connections-Per-Server</NICK>
+<BLURB>Maximum number of connections allowed per server for HTTP/1.x.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::max-redirect</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max-Redirect</NICK>
+<BLURB>Maximum number of permitted redirections. -1 is unlimited.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::proxy</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy</NICK>
+<BLURB>URI of HTTP proxy server.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::proxy-id</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>proxy-id</NICK>
+<BLURB>HTTP proxy URI user id for authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::proxy-pw</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>proxy-pw</NICK>
+<BLURB>HTTP proxy URI password for authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::retries</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,9999]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Retries</NICK>
+<BLURB>Maximum number of retries until giving up (-1=infinite).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::ssl-ca-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SSL CA File</NICK>
+<BLURB>Location of an SSL CA file to use for checking SSL certificates.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::ssl-strict</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SSL Strict</NICK>
+<BLURB>Strict SSL certificate checking.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,3600]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timeout</NICK>
+<BLURB>Value in seconds before timeout a blocking request (0 = no timeout).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::user-agent</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>User-Agent</NICK>
+<BLURB>URI of resource requested.</BLURB>
+<DEFAULT>"GStreamer curlhttpsrc libcurl/7.52.1"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::user-id</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>user-id</NICK>
+<BLURB>HTTP location URI user id for authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSrc::user-pw</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>user-pw</NICK>
+<BLURB>HTTP location URI password for authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWildmidiDec::enhanced-resampling</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Enhanced resampling</NICK>
+<BLURB>Use enhanced resampling if set to TRUE, or linear interpolation if set to FALSE.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWildmidiDec::log-volume-scale</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Logarithmic volume scale</NICK>
+<BLURB>Use a logarithmic volume scale if set to TRUE, or a linear scale if set to FALSE.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWildmidiDec::output-buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,1073741823]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output buffer size</NICK>
+<BLURB>Size of each output buffer, in samples (actual size can be smaller than this during flush or EOS).</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWildmidiDec::reverb</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reverb</NICK>
+<BLURB>Whether or not to enable the WildMidi 8 reflection reverb engine to add more depth to the sound.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink2::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Location</NICK>
+<BLURB>Location of the file to write.</BLURB>
+<DEFAULT>"segment%05d.ts"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink2::max-files</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max files</NICK>
+<BLURB>Maximum number of files to keep on disk. Once the maximum is reached,old files start to be deleted to make room for new ones.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink2::playlist-length</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Playlist length</NICK>
+<BLURB>Length of HLS playlist. To allow players to conform to section 6.3.3 of the HLS specification, this should be at least 3. If set to 0, the playlist will be infinite.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink2::playlist-location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Playlist Location</NICK>
+<BLURB>Location of the playlist to write.</BLURB>
+<DEFAULT>"playlist.m3u8"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink2::playlist-root</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Playlist Root</NICK>
+<BLURB>Location of the playlist to write.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink2::target-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target duration</NICK>
+<BLURB>The target duration in seconds of a segment/file. (0 - disabled, useful for management of segment duration by the streaming server).</BLURB>
+<DEFAULT>15</DEFAULT>
 </ARG>
 

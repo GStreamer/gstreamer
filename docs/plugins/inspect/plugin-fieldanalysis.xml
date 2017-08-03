@@ -3,11 +3,11 @@
   <description>Video field analysis</description>
   <filename>../../gst/fieldanalysis/.libs/libgstfieldanalysis.so</filename>
   <basename>libgstfieldanalysis.so</basename>
-  <version>1.12.0</version>
+  <version>1.13.0.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer</package>
-  <origin>http://gstreamer.net/</origin>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>fieldanalysis</name>

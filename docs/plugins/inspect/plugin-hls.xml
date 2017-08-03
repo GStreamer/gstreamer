@@ -3,7 +3,7 @@
   <description>HTTP Live Streaming (HLS)</description>
   <filename>../../ext/hls/.libs/libgsthls.so</filename>
   <basename>libgsthls.so</basename>
-  <version>1.12.0</version>
+  <version>1.13.0.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>
@@ -42,6 +42,27 @@ Andoni Morales Alastruey &lt;ylatuya@gmail.com&gt;</author>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>hlssink2</name>
+      <longname>HTTP Live Streaming sink</longname>
+      <class>Sink</class>
+      <description>HTTP Live Streaming sink</description>
+      <author>Alessandro Decina &lt;alessandro.d@gmail.com&gt;, Sebastian Dröge &lt;sebastian@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>audio</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video</name>
+          <direction>sink</direction>
+          <presence>request</presence>
           <details>ANY</details>
         </caps>
       </pads>
