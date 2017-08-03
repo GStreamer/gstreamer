@@ -467,7 +467,7 @@ ges_video_transition_update_control_sources (GESVideoTransition * self,
         duration, 0.0, 0.0);
   } else {
     ges_video_transition_update_control_source
-        (priv->crossfade_control_source, duration, 1.0, 1.0);
+        (priv->crossfade_control_source, duration, -1.0, -1.0);
     ges_video_transition_update_control_source (priv->smpte_control_source,
         duration, 1.0, 0.0);
   }
