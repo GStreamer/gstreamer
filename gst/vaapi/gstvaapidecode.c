@@ -1164,7 +1164,8 @@ static GstCaps *
 add_h264_profile_in_caps (GstCaps * caps, const gchar * profile_name)
 {
   GstCaps *caps_new =
-      gst_caps_new_simple ("video/x-h264", "profile", profile_name, NULL);
+      gst_caps_new_simple ("video/x-h264", "profile", G_TYPE_STRING,
+      profile_name, NULL);
   return gst_caps_merge (caps_new, caps);
 }
 
