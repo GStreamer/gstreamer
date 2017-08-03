@@ -78,6 +78,7 @@ struct _GstPcapParse
   GstAdapter * adapter;
   gboolean initialized;
   gboolean swap_endian;
+  gboolean nanosecond_timestamp;
   gint64 cur_packet_size;
   GstClockTime cur_ts;
   GstClockTime base_ts;

@@ -55,6 +55,13 @@
 #include <winsock2.h>
 #endif
 
+
+const guint GST_PCAPPARSE_MAGIC_MILLISECOND_NO_SWAP_ENDIAN = 0xa1b2c3d4;
+const guint GST_PCAPPARSE_MAGIC_NANOSECOND_NO_SWAP_ENDIAN = 0xa1b23c4d;
+const guint GST_PCAPPARSE_MAGIC_MILLISECOND_SWAP_ENDIAN = 0xd4c3b2a1;
+const guint GST_PCAPPARSE_MAGIC_NANOSECOND_SWAP_ENDIAN = 0x4d3cb2a1;
+
+
 enum
 {
   PROP_0,
@@ -309,6 +316,7 @@ gst_pcap_parse_reset (GstPcapParse * self)
 {
   self->initialized = FALSE;
   self->swap_endian = FALSE;
+  self->nanosecond_timestamp = FALSE;
   self->cur_packet_size = -1;
   self->cur_ts = GST_CLOCK_TIME_NONE;
   self->base_ts = GST_CLOCK_TIME_NONE;
@@ -535,7 +543,9 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         gst_adapter_unmap (self->adapter);
         gst_adapter_flush (self->adapter, 16);
 
-        self->cur_ts = ts_sec * GST_SECOND + ts_usec * GST_USECOND;
+        self->cur_ts =
+            ts_sec * GST_SECOND +
+            ts_usec * (self->nanosecond_timestamp ? 1 : GST_USECOND);
         self->cur_packet_size = incl_len;
       }
     } else {
@@ -553,10 +563,16 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       linktype = *((guint32 *) (data + 20));
       gst_adapter_unmap (self->adapter);
 
-      if (magic == 0xa1b2c3d4) {
+      if (magic == GST_PCAPPARSE_MAGIC_MILLISECOND_NO_SWAP_ENDIAN ||
+          magic == GST_PCAPPARSE_MAGIC_NANOSECOND_NO_SWAP_ENDIAN) {
         self->swap_endian = FALSE;
-      } else if (magic == 0xd4c3b2a1) {
+        if (magic == GST_PCAPPARSE_MAGIC_NANOSECOND_NO_SWAP_ENDIAN)
+          self->nanosecond_timestamp = TRUE;
+      } else if (magic == GST_PCAPPARSE_MAGIC_MILLISECOND_SWAP_ENDIAN ||
+          magic == GST_PCAPPARSE_MAGIC_NANOSECOND_SWAP_ENDIAN) {
         self->swap_endian = TRUE;
+        if (magic == GST_PCAPPARSE_MAGIC_NANOSECOND_SWAP_ENDIAN)
+          self->nanosecond_timestamp = TRUE;
         major_version = GUINT16_SWAP_LE_BE (major_version);
         linktype = GUINT32_SWAP_LE_BE (linktype);
       } else {
