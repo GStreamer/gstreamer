@@ -529,8 +529,8 @@ gst_video_aggregator_find_best_format (GstVideoAggregator * vagg,
        * Do not increment best_format_number in that case. */
       gst_video_info_set_format (best_info,
           GST_VIDEO_FORMAT_ARGB,
-          GST_VIDEO_INFO_HEIGHT (&pad->info),
-          GST_VIDEO_INFO_WIDTH (&pad->info));
+          GST_VIDEO_INFO_WIDTH (&pad->info),
+          GST_VIDEO_INFO_HEIGHT (&pad->info));
     } else if (!need_alpha
         && (pad->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)) {
       need_alpha = TRUE;
