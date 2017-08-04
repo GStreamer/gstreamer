@@ -485,7 +485,8 @@ deserialize_exif_gps_coordinate (XmpTag * xmptag, GstTagList * taglist,
 
   /* check if it uses ,SS or .mm */
   if (strchr (current, ',') != NULL) {
-    sscanf (current, "%d,%d%c", &m, &s, &c);
+    if (!sscanf (current, "%d,%d%c", &m, &s, &c))
+      goto error;
   } else {
     gchar *copy = g_strdup (current);
     gint len = strlen (copy);
