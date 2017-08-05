@@ -107,6 +107,8 @@ void                gst_v4l2_buffer_pool_set_other_pool (GstV4l2BufferPool * poo
 void                gst_v4l2_buffer_pool_copy_at_threshold (GstV4l2BufferPool * pool,
                                                             gboolean copy);
 
+gboolean            gst_v4l2_buffer_pool_flush   (GstBufferPool *pool);
+
 G_END_DECLS
 
 #endif /*__GST_V4L2_BUFFER_POOL_H__ */

@@ -282,6 +282,9 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
   gst_v4l2_object_unlock_stop (self->v4l2output);
   gst_v4l2_object_unlock_stop (self->v4l2capture);
 
+  gst_v4l2_buffer_pool_flush (self->v4l2output->pool);
+  gst_v4l2_buffer_pool_flush (self->v4l2capture->pool);
+
   return TRUE;
 }
 
