@@ -148,7 +148,8 @@ gst_headers = [
 ]
 install_headers(gst_headers, subdir : 'gstreamer-1.0/gst')
 
-if not get_option('disable_registry')
+disable_registry = get_option('disable_registry')
+if not disable_registry
   gst_registry = ['gstregistrybinary.c']
 else
   gst_registry = []
@@ -157,6 +158,25 @@ endif
 # Make copy so configure_file consumes the copy and we can
 # still add to the original cdata later.
 gst_cdata = cdata
+
+if disable_gst_debug
+  gst_cdata.set('GST_DISABLE_GST_DEBUG_DEFINE', '#define GST_DISABLE_GST_DEBUG 1')
+else
+  gst_cdata.set('GST_DISABLE_GST_DEBUG_DEFINE', '#undef GST_DISABLE_GST_DEBUG')
+endif
+
+if disable_registry
+  gst_cdata.set('GST_DISABLE_REGISTRY_DEFINE', '#define GST_DISABLE_REGISTRY 1')
+else
+  gst_cdata.set('GST_DISABLE_REGISTRY_DEFINE', '#undef GST_DISABLE_REGISTRY')
+endif
+
+# FIXME: add --disable-parse option? (but autotools doesn't seem to set this
+# define properly at all either even though it does expose the option)
+gst_cdata.set('GST_DISABLE_PARSE_DEFINE', '#undef GST_DISABLE_PARSE')
+
+# FIXME: add --disable-plugin option?
+gst_cdata.set('GST_DISABLE_PLUGIN_DEFINE', '#undef GST_DISABLE_PLUGIN')
 
 configure_file(input : 'gstconfig.h.in',
   output : 'gstconfig.h',
