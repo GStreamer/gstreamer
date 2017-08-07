@@ -958,11 +958,11 @@ get_buffering_level (GstQueue2 * queue, gboolean * is_buffering,
 #define GET_BUFFER_LEVEL_FOR_QUANTITY(format,alt_max) \
     normalize_to_buffering_level (queue->cur_level.format,queue->max_level.format,(alt_max))
 
-  if (queue->is_eos) {
-    /* on EOS we are always 100% full, we set the var here so that it we can
-     * reuse the logic below to stop buffering */
+  if (queue->is_eos || queue->srcresult == GST_FLOW_NOT_LINKED) {
+    /* on EOS and NOT_LINKED we are always 100% full, we set the var
+     * here so that we can reuse the logic below to stop buffering */
     buflevel = MAX_BUFFERING_LEVEL;
-    GST_LOG_OBJECT (queue, "we are EOS");
+    GST_LOG_OBJECT (queue, "we are %s", queue->is_eos ? "EOS" : "NOT_LINKED");
   } else {
     GST_LOG_OBJECT (queue,
         "Cur level bytes/time/buffers %u/%" GST_TIME_FORMAT "/%u",
@@ -3064,6 +3064,12 @@ out_flushing:
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "pause task, reason:  %s", gst_flow_get_name (queue->srcresult));
+    /* Recalculate buffering levels before stopping since the source flow
+     * might cause a different buffering level (like NOT_LINKED making
+     * the queue appear as full) */
+    if (queue->use_buffering)
+      update_buffering (queue);
+    gst_queue2_post_buffering (queue);
     /* let app know about us giving up if upstream is not expected to do so */
     /* EOS is already taken care of elsewhere */
     if (eos && (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS)) {
