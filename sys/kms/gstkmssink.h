@@ -79,18 +79,6 @@ struct _GstKMSSink {
 
   GstPoll *poll;
   GstPollFD pollfd;
-
-  /* preferred video rectangle */
-  GstVideoRectangle preferred_rect;
-
-  /* reconfigure info if driver doesn't scale */
-  GstVideoRectangle pending_rect;
-  gboolean reconfigure;
-
-  /* kept original video size */
-  gint original_width;
-  gint original_heigth;
-
 };
 
 struct _GstKMSSinkClass {
