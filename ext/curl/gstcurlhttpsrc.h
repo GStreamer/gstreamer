@@ -91,6 +91,24 @@ typedef struct _GstCurlHttpSrcQueueElement GstCurlHttpSrcQueueElement;
 #define RESPONSE_HEADERS_NAME   "response-headers"
 #define REDIRECT_URI_NAME       "redirection-uri"
 
+typedef enum
+  {
+    GSTCURL_HTTP_VERSION_1_0,
+    GSTCURL_HTTP_VERSION_1_1,
+#ifdef CURL_VERSION_HTTP2
+    GSTCURL_HTTP_VERSION_2_0,
+#endif
+    GSTCURL_HTTP_NOT,           /* For future use, incase not HTTP protocol! */
+    GSTCURL_HTTP_VERSION_MAX
+  } GstCurlHttpVersion;
+
+#ifdef CURL_VERSION_HTTP2
+#define DEFAULT_HTTP_VERSION GSTCURL_HTTP_VERSION_2_0
+#else
+#define DEFAULT_HTTP_VERSION GSTCURL_HTTP_VERSION_1_1
+#endif
+
+
 struct _GstCurlHttpSrcMultiTaskContext
 {
   GstTask     *task;
@@ -173,16 +191,7 @@ struct _GstCurlHttpSrc
   /* END multi options */
 
   /* Some stuff for HTTP/2 */
-  enum
-  {
-    GSTCURL_HTTP_VERSION_1_0,
-    GSTCURL_HTTP_VERSION_1_1,
-#ifdef CURL_VERSION_HTTP2
-    GSTCURL_HTTP_VERSION_2_0,
-#endif
-    GSTCURL_HTTP_NOT,           /* For future use, incase not HTTP protocol! */
-    GSTCURL_HTTP_VERSION_MAX
-  } preferred_http_version;     /* CURLOPT_HTTP_VERSION */
+  GstCurlHttpVersion preferred_http_version;
 
   enum
   {
