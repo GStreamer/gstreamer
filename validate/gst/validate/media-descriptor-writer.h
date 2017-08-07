@@ -30,6 +30,7 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GType gst_validate_media_descriptor_writer_get_type (void);
 
 #define GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_WRITER            (gst_validate_media_descriptor_writer_get_type ())
@@ -55,12 +56,14 @@ typedef struct {
 
 } GstValidateMediaDescriptorWriterClass;
 
+GST_EXPORT
 GstValidateMediaDescriptorWriter * gst_validate_media_descriptor_writer_new_discover (GstValidateRunner *runner,
                                                                      const gchar *uri,
                                                                      gboolean full,
                                                                      gboolean handle_g_logs,
                                                                      GError **err);
 
+GST_EXPORT
 GstValidateMediaDescriptorWriter * gst_validate_media_descriptor_writer_new          (GstValidateRunner *runner,
                                                                      const gchar *location,
                                                                      GstClockTime duration,
@@ -72,18 +75,24 @@ gboolean gst_validate_media_descriptor_writer_detects_frames     (GstValidateMed
 GstClockTime gst_validate_media_descriptor_writer_get_duration   (GstValidateMediaDescriptorWriter *writer);
 gboolean gst_validate_media_descriptor_writer_get_seekable       (GstValidateMediaDescriptorWriter * writer);
 
+GST_EXPORT
 gboolean gst_validate_media_descriptor_writer_add_pad            (GstValidateMediaDescriptorWriter *writer,
                                                          GstPad *pad);
+GST_EXPORT
 gboolean gst_validate_media_descriptor_writer_add_taglist        (GstValidateMediaDescriptorWriter *writer,
                                                          const GstTagList *taglist);
+GST_EXPORT
 gboolean gst_validate_media_descriptor_writer_add_frame          (GstValidateMediaDescriptorWriter *writer,
                                                          GstPad *pad,
                                                          GstBuffer *buf);
+GST_EXPORT
 gboolean gst_validate_media_descriptor_writer_add_tags           (GstValidateMediaDescriptorWriter *writer,
                                                          const gchar *stream_id,
                                                          const GstTagList *taglist);
+GST_EXPORT
 gboolean gst_validate_media_descriptor_writer_write              (GstValidateMediaDescriptorWriter * writer,
                                                          const gchar * filename);
+GST_EXPORT
 gchar * gst_validate_media_descriptor_writer_serialize           (GstValidateMediaDescriptorWriter *writer);
 
 

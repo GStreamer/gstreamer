@@ -112,11 +112,14 @@ typedef struct
   gchar *str_close;
 } GstValidateMediaFrameNode;
 
+GST_EXPORT
 void gst_validate_filenode_free (GstValidateMediaFileNode *
     filenode);
+GST_EXPORT
 gboolean gst_validate_tag_node_compare (GstValidateMediaTagNode *
     tnode, const GstTagList * tlist);
 
+GST_EXPORT
 GType gst_validate_media_descriptor_get_type (void);
 
 #define GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR (gst_validate_media_descriptor_get_type ())
@@ -150,20 +153,24 @@ typedef struct
 
 } GstValidateMediaDescriptorClass;
 
+GST_EXPORT
 gboolean gst_validate_media_descriptors_compare (GstValidateMediaDescriptor *
     ref, GstValidateMediaDescriptor * compared);
-gboolean
+GST_EXPORT gboolean
 gst_validate_media_descriptor_detects_frames (GstValidateMediaDescriptor *
     self);
+GST_EXPORT
 gboolean gst_validate_media_descriptor_get_buffers (GstValidateMediaDescriptor *
     self, GstPad * pad, GCompareFunc compare_func, GList ** bufs);
-gboolean
+GST_EXPORT gboolean
 gst_validate_media_descriptor_has_frame_info (GstValidateMediaDescriptor *
     self);
-GstClockTime
+GST_EXPORT GstClockTime
 gst_validate_media_descriptor_get_duration (GstValidateMediaDescriptor * self);
+GST_EXPORT
 gboolean gst_validate_media_descriptor_get_seekable (GstValidateMediaDescriptor
     * self);
+GST_EXPORT
 GList *gst_validate_media_descriptor_get_pads (GstValidateMediaDescriptor *
     self);
 G_END_DECLS

@@ -34,22 +34,30 @@
 typedef int (*GstValidateParseVariableFunc) (const gchar *name,
     double *value, gpointer user_data);
 
+GST_EXPORT
 gdouble gst_validate_utils_parse_expression (const gchar *expr,
                                              GstValidateParseVariableFunc variable_func,
                                              gpointer user_data,
                                              gchar **error);
+GST_EXPORT
 guint gst_validate_utils_flags_from_str     (GType type, const gchar * str_flags);
+GST_EXPORT
 gboolean gst_validate_utils_enum_from_str   (GType type,
                                              const gchar * str_enum,
                                              guint * enum_value);
 
+GST_EXPORT
 GList * gst_validate_utils_structs_parse_from_filename         (const gchar * scenario_file);
+GST_EXPORT
 GList * gst_validate_structs_parse_from_gfile            (GFile * scenario_file);
 
+GST_EXPORT
 gboolean gst_validate_element_has_klass (GstElement * element, const gchar * klass);
+GST_EXPORT
 gboolean gst_validate_utils_get_clocktime (GstStructure *structure, const gchar * name,
         GstClockTime * retval);
 
+GST_EXPORT
 GstValidateActionReturn gst_validate_object_set_property (GstValidateReporter * reporter,
                                                           GObject * object,
                                                           const gchar * property,

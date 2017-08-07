@@ -58,7 +58,7 @@ gst_validate_monitor_set_property (GObject * object, guint prop_id,
 static GObject *gst_validate_monitor_constructor (GType type,
     guint n_construct_params, GObjectConstructParam * construct_params);
 
-gboolean gst_validate_monitor_setup (GstValidateMonitor * monitor);
+static gboolean gst_validate_monitor_setup (GstValidateMonitor * monitor);
 
 static GstValidateInterceptionReturn
 gst_validate_monitor_intercept_report (GstValidateReporter * reporter,

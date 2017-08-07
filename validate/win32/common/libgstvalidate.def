@@ -66,7 +66,6 @@ EXPORTS
 	gst_validate_monitor_get_target
 	gst_validate_monitor_get_type
 	gst_validate_monitor_set_media_descriptor
-	gst_validate_monitor_setup
 	gst_validate_object_set_property
 	gst_validate_override_buffer_handler
 	gst_validate_override_buffer_probe_handler

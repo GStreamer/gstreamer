@@ -77,8 +77,10 @@ struct _GstValidateElementMonitorClass {
 };
 
 /* normal GObject stuff */
+GST_EXPORT
 GType		gst_validate_element_monitor_get_type		(void);
 
+GST_EXPORT
 GstValidateElementMonitor *   gst_validate_element_monitor_new      (GstElement * element, GstValidateRunner * runner, GstValidateMonitor * parent);
 
 G_END_DECLS

@@ -29,6 +29,7 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GType gst_validate_media_descriptor_parser_get_type (void);
 
 #define GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER            (gst_validate_media_descriptor_parser_get_type ())
@@ -54,19 +55,25 @@ typedef struct {
 
 } GstValidateMediaDescriptorParserClass;
 
+GST_EXPORT
 GstValidateMediaDescriptorParser * gst_validate_media_descriptor_parser_new (GstValidateRunner *runner,
                                                             const gchar * xmlpath,
                                                             GError **error);
-GstValidateMediaDescriptorParser *
+GST_EXPORT GstValidateMediaDescriptorParser *
 gst_validate_media_descriptor_parser_new_from_xml                   (GstValidateRunner * runner,
                                                             const gchar * xml,
                                                             GError ** error);
+GST_EXPORT
 gchar * gst_validate_media_descriptor_parser_get_xml_path        (GstValidateMediaDescriptorParser *parser);
+GST_EXPORT
 gboolean gst_validate_media_descriptor_parser_add_stream         (GstValidateMediaDescriptorParser *parser,
                                                                   GstPad *pad);
+GST_EXPORT
 gboolean gst_validate_media_descriptor_parser_add_taglist        (GstValidateMediaDescriptorParser *parser,
                                                                   GstTagList *taglist);
+GST_EXPORT
 gboolean gst_validate_media_descriptor_parser_all_stream_found   (GstValidateMediaDescriptorParser *parser);
+GST_EXPORT
 gboolean gst_validate_media_descriptor_parser_all_tags_found     (GstValidateMediaDescriptorParser *parser);
 
 G_END_DECLS

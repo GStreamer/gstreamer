@@ -138,8 +138,10 @@ struct _GstValidatePadMonitorClass {
 };
 
 /* normal GObject stuff */
+GST_EXPORT
 GType		gst_validate_pad_monitor_get_type		(void);
 
+GST_EXPORT
 GstValidatePadMonitor *   gst_validate_pad_monitor_new      (GstPad * pad, GstValidateRunner * runner, GstValidateElementMonitor *element_monitor);
 
 G_END_DECLS

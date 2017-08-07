@@ -16,9 +16,13 @@
 #include <gst/validate/gst-validate-reporter.h>
 #include <gst/validate/gst-validate-media-info.h>
 
+GST_EXPORT
 void gst_validate_init (void);
+GST_EXPORT
 void gst_validate_deinit (void);
+GST_EXPORT
 GList * gst_validate_plugin_get_config (GstPlugin * plugin);
+GST_EXPORT
 gboolean gst_validate_is_initialized (void);
 
 #endif /* _GST_VALIDATE_H */

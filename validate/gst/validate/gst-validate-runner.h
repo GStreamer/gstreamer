@@ -71,19 +71,28 @@ struct _GstValidateRunnerClass {
 };
 
 /* normal GObject stuff */
+GST_EXPORT
 GType		gst_validate_runner_get_type		(void);
 
+GST_EXPORT
 GstValidateRunner *   gst_validate_runner_new               (void);
 
+GST_EXPORT
 void            gst_validate_runner_add_report  (GstValidateRunner * runner, GstValidateReport * report);
 
+GST_EXPORT
 guint           gst_validate_runner_get_reports_count (GstValidateRunner * runner);
+GST_EXPORT
 GList *         gst_validate_runner_get_reports (GstValidateRunner * runner);
 
+GST_EXPORT
 int             gst_validate_runner_printf (GstValidateRunner * runner);
+GST_EXPORT
 int             gst_validate_runner_exit (GstValidateRunner * runner, gboolean print_result);
 
+GST_EXPORT
 GstValidateReportingDetails gst_validate_runner_get_default_reporting_level (GstValidateRunner *runner);
+GST_EXPORT
 GstValidateReportingDetails gst_validate_runner_get_reporting_level_for_name (GstValidateRunner *runner,
                                                                             const gchar *name);
 

@@ -116,16 +116,23 @@ struct _GstValidateMonitorClass {
 };
 
 /* normal GObject stuff */
+GST_EXPORT
 GType		gst_validate_monitor_get_type		(void);
 
+GST_EXPORT
 void            gst_validate_monitor_attach_override  (GstValidateMonitor * monitor,
                                                  GstValidateOverride * override);
 
+GST_EXPORT
 GstElement *    gst_validate_monitor_get_element (GstValidateMonitor * monitor);
+GST_EXPORT
 gchar *   gst_validate_monitor_get_element_name (GstValidateMonitor * monitor);
+GST_EXPORT
 void gst_validate_monitor_set_media_descriptor (GstValidateMonitor * monitor,
                                                 GstValidateMediaDescriptor *media_descriptor);
+GST_EXPORT
 GstPipeline * gst_validate_monitor_get_pipeline (GstValidateMonitor * monitor);
+GST_EXPORT
 GstObject * gst_validate_monitor_get_target (GstValidateMonitor * monitor);
 G_END_DECLS
 
