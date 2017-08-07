@@ -565,11 +565,6 @@ gst_rtmp_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   return TRUE;
 }
 
-#define STR2AVAL(av,str) G_STMT_START { \
-  av.av_val = str; \
-  av.av_len = strlen(av.av_val); \
-} G_STMT_END;
-
 /* open the file, do stuff necessary to go to PAUSED state */
 static gboolean
 gst_rtmp_src_start (GstBaseSrc * basesrc)
@@ -621,8 +616,6 @@ error:
   }
   return FALSE;
 }
-
-#undef STR2AVAL
 
 static gboolean
 gst_rtmp_src_unlock (GstBaseSrc * basesrc)
