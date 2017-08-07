@@ -38,7 +38,8 @@
 
 #include <string.h>
 
-GList *ges_clip_create_track_elements_func (GESClip * clip, GESTrackType type);
+static GList *ges_clip_create_track_elements_func (GESClip * clip,
+    GESTrackType type);
 static gboolean _ripple (GESTimelineElement * element, GstClockTime start);
 static gboolean _ripple_end (GESTimelineElement * element, GstClockTime end);
 static gboolean _roll_start (GESTimelineElement * element, GstClockTime start);

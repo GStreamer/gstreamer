@@ -74,6 +74,7 @@ struct _GESBaseTransitionClipClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_base_transition_clip_get_type (void);
 
 G_END_DECLS

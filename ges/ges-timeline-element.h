@@ -201,63 +201,88 @@ struct _GESTimelineElementClass
   gpointer _ges_reserved[GES_PADDING_LARGE - 2];
 };
 
+GST_EXPORT
 GType ges_timeline_element_get_type (void) G_GNUC_CONST;
 
-GESTimelineElement *
+GST_EXPORT GESTimelineElement *
 ges_timeline_element_get_toplevel_parent             (GESTimelineElement *self);
+GST_EXPORT
 GESTimelineElement * ges_timeline_element_get_parent (GESTimelineElement * self);
+GST_EXPORT
 gboolean ges_timeline_element_set_parent             (GESTimelineElement *self, GESTimelineElement *parent);
+GST_EXPORT
 gboolean ges_timeline_element_set_timeline           (GESTimelineElement *self, GESTimeline *timeline);
+GST_EXPORT
 void ges_timeline_element_set_start                  (GESTimelineElement *self, GstClockTime start);
+GST_EXPORT
 void ges_timeline_element_set_inpoint                (GESTimelineElement *self, GstClockTime inpoint);
+GST_EXPORT
 void ges_timeline_element_set_duration               (GESTimelineElement *self, GstClockTime duration);
+GST_EXPORT
 void ges_timeline_element_set_max_duration           (GESTimelineElement *self, GstClockTime maxduration);
+GST_EXPORT
 void ges_timeline_element_set_priority               (GESTimelineElement *self, guint32 priority);
 
+GST_EXPORT
 GstClockTime ges_timeline_element_get_start          (GESTimelineElement *self);
+GST_EXPORT
 GstClockTime ges_timeline_element_get_inpoint        (GESTimelineElement *self);
+GST_EXPORT
 GstClockTime ges_timeline_element_get_duration       (GESTimelineElement *self);
+GST_EXPORT
 GstClockTime ges_timeline_element_get_max_duration   (GESTimelineElement *self);
+GST_EXPORT
 GESTimeline * ges_timeline_element_get_timeline      (GESTimelineElement *self);
+GST_EXPORT
 guint32 ges_timeline_element_get_priority            (GESTimelineElement *self);
 
+GST_EXPORT
 gboolean ges_timeline_element_ripple                 (GESTimelineElement *self, GstClockTime  start);
+GST_EXPORT
 gboolean ges_timeline_element_ripple_end             (GESTimelineElement *self, GstClockTime  end);
+GST_EXPORT
 gboolean ges_timeline_element_roll_start             (GESTimelineElement *self, GstClockTime  start);
+GST_EXPORT
 gboolean ges_timeline_element_roll_end               (GESTimelineElement *self, GstClockTime  end);
+GST_EXPORT
 gboolean ges_timeline_element_trim                   (GESTimelineElement *self, GstClockTime  start);
+GST_EXPORT
 GESTimelineElement * ges_timeline_element_copy       (GESTimelineElement *self, gboolean deep);
+GST_EXPORT
 gchar  * ges_timeline_element_get_name               (GESTimelineElement *self);
+GST_EXPORT
 gboolean  ges_timeline_element_set_name              (GESTimelineElement *self, const gchar *name);
-GParamSpec **
+GST_EXPORT GParamSpec **
 ges_timeline_element_list_children_properties        (GESTimelineElement *self,
                                                       guint *n_properties);
 
+GST_EXPORT
 gboolean ges_timeline_element_lookup_child           (GESTimelineElement *self,
                                                       const gchar *prop_name,
                                                       GObject  **child,
                                                       GParamSpec **pspec);
 
-void
+GST_EXPORT void
 ges_timeline_element_get_child_property_by_pspec     (GESTimelineElement * self,
                                                       GParamSpec * pspec,
                                                       GValue * value);
 
-void
+GST_EXPORT void
 ges_timeline_element_get_child_property_valist       (GESTimelineElement * self,
                                                       const gchar * first_property_name,
                                                       va_list var_args);
 
-void ges_timeline_element_get_child_properties       (GESTimelineElement *self,
+GST_EXPORT void
+ges_timeline_element_get_child_properties           (GESTimelineElement *self,
                                                       const gchar * first_property_name,
                                                       ...) G_GNUC_NULL_TERMINATED;
 
-void
+GST_EXPORT void
 ges_timeline_element_set_child_property_valist      (GESTimelineElement * self,
                                                      const gchar * first_property_name,
                                                      va_list var_args);
 
-void
+GST_EXPORT void
 ges_timeline_element_set_child_property_by_pspec    (GESTimelineElement * self,
                                                      GParamSpec * pspec,
                                                      GValue * value);
@@ -266,24 +291,30 @@ void ges_timeline_element_set_child_properties     (GESTimelineElement * self,
                                                      const gchar * first_property_name,
                                                      ...) G_GNUC_NULL_TERMINATED;
 
+GST_EXPORT
 gboolean ges_timeline_element_set_child_property   (GESTimelineElement *self,
                                                     const gchar *property_name,
                                                     GValue * value);
 
+GST_EXPORT
 gboolean ges_timeline_element_get_child_property   (GESTimelineElement *self,
                                                     const gchar *property_name,
                                                     GValue * value);
 
+GST_EXPORT
 gboolean ges_timeline_element_add_child_property   (GESTimelineElement * self,
                                                     GParamSpec *pspec,
                                                     GObject *child);
 
+GST_EXPORT
 gboolean ges_timeline_element_remove_child_property(GESTimelineElement * self,
                                                     GParamSpec *pspec);
 
+GST_EXPORT
 GESTimelineElement * ges_timeline_element_paste    (GESTimelineElement * self,
                                                     GstClockTime paste_position);
 
+GST_EXPORT
 GESTrackType ges_timeline_element_get_track_types  (GESTimelineElement * self);
 
 G_END_DECLS

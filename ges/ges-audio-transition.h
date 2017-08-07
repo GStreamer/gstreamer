@@ -68,8 +68,10 @@ struct _GESAudioTransitionClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_audio_transition_get_type (void);
 
+GST_EXPORT
 GESAudioTransition* ges_audio_transition_new (void);
 
 G_END_DECLS

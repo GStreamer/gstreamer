@@ -62,8 +62,10 @@ struct _GESMultiFileSourceClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_multi_file_source_get_type (void);
 
+GST_EXPORT
 GESMultiFileSource *ges_multi_file_source_new (gchar * uri);
 
 #define GES_MULTI_FILE_URI_PREFIX "multifile://"

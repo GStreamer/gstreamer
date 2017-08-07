@@ -73,7 +73,7 @@ static GList *ges_uri_clip_create_track_elements (GESClip *
     clip, GESTrackType type);
 static GESTrackElement
     * ges_uri_clip_create_track_element (GESClip * clip, GESTrackType type);
-void ges_uri_clip_set_uri (GESUriClip * self, gchar * uri);
+static void ges_uri_clip_set_uri (GESUriClip * self, gchar * uri);
 
 gboolean
 uri_clip_set_max_duration (GESTimelineElement * element,

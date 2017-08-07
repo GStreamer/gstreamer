@@ -78,9 +78,12 @@ struct _GESTransitionClipClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_transition_clip_get_type (void);
 
+GST_EXPORT
 GESTransitionClip *ges_transition_clip_new (GESVideoStandardTransitionType vtype);
+GST_EXPORT
 GESTransitionClip *ges_transition_clip_new_for_nick (char *nick);
 
 G_END_DECLS

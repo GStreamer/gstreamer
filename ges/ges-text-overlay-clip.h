@@ -69,56 +69,60 @@ struct _GESTextOverlayClipClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_text_overlay_clip_get_type (void);
 
-void
+GST_EXPORT void
 ges_text_overlay_clip_set_text (GESTextOverlayClip * self,
     const gchar * text);
 
-void
+GST_EXPORT void
 ges_text_overlay_clip_set_font_desc (GESTextOverlayClip * self,
     const gchar * font_desc);
 
-void
+GST_EXPORT void
 ges_text_overlay_clip_set_valign (GESTextOverlayClip * self,
     GESTextVAlign valign);
 
-void
+GST_EXPORT void
 ges_text_overlay_clip_set_halign (GESTextOverlayClip * self,
     GESTextHAlign halign);
 
-void
+GST_EXPORT void
 ges_text_overlay_clip_set_color (GESTextOverlayClip * self,
     guint32 color);
 
-void
+GST_EXPORT void
 ges_text_overlay_clip_set_xpos (GESTextOverlayClip * self,
     gdouble position);
 
-void
+GST_EXPORT void
 ges_text_overlay_clip_set_ypos (GESTextOverlayClip * self,
     gdouble position);
 
+GST_EXPORT
 const gchar *ges_text_overlay_clip_get_text (GESTextOverlayClip * self);
 
+GST_EXPORT
 const gchar *ges_text_overlay_clip_get_font_desc (GESTextOverlayClip *
     self);
 
-GESTextVAlign
+GST_EXPORT GESTextVAlign
 ges_text_overlay_clip_get_valignment (GESTextOverlayClip * self);
 
-const guint32
+GST_EXPORT const guint32
 ges_text_overlay_clip_get_color (GESTextOverlayClip * self);
 
-const gdouble
+GST_EXPORT const gdouble
 ges_text_overlay_clip_get_xpos (GESTextOverlayClip * self);
 
-const gdouble
+GST_EXPORT const gdouble
 ges_text_overlay_clip_get_ypos (GESTextOverlayClip * self);
 
-GESTextHAlign
+GST_EXPORT GESTextHAlign
 ges_text_overlay_clip_get_halignment (GESTextOverlayClip * self);
 
+GST_EXPORT
 GESTextOverlayClip *ges_text_overlay_clip_new (void);
 
 G_END_DECLS

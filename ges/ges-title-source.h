@@ -73,36 +73,53 @@ struct _GESTitleSourceClass {
   gpointer _ges_reserved[GES_PADDING - 1];
 };
 
+GST_EXPORT
 GType ges_title_source_get_type (void);
 
+GST_EXPORT
 void ges_title_source_set_text (GESTitleSource *self,
 				     const gchar *text);
 
+GST_EXPORT
 void ges_title_source_set_font_desc (GESTitleSource *self,
 					  const gchar *font_desc);
 
+GST_EXPORT
 void ges_title_source_set_halignment (GESTitleSource *self,
 					   GESTextHAlign halign);
 
+GST_EXPORT
 void ges_title_source_set_valignment (GESTitleSource *self,
 					   GESTextVAlign valign);
 
+GST_EXPORT
 void ges_title_source_set_text_color (GESTitleSource *self,
 					   guint32 color);
+GST_EXPORT
 void ges_title_source_set_background_color (GESTitleSource *self,
 					   guint32 color);
+GST_EXPORT
 void ges_title_source_set_xpos (GESTitleSource *self,
 					   gdouble position);
+GST_EXPORT
 void ges_title_source_set_ypos (GESTitleSource *self,
 					   gdouble position);
 
+GST_EXPORT
 const gchar *ges_title_source_get_text (GESTitleSource *source);
+GST_EXPORT
 const gchar *ges_title_source_get_font_desc (GESTitleSource *source);
+GST_EXPORT
 GESTextHAlign ges_title_source_get_halignment (GESTitleSource *source);
+GST_EXPORT
 GESTextVAlign ges_title_source_get_valignment (GESTitleSource *source);
+GST_EXPORT
 const guint32 ges_title_source_get_text_color (GESTitleSource *source);
+GST_EXPORT
 const guint32 ges_title_source_get_background_color (GESTitleSource *source);
+GST_EXPORT
 const gdouble ges_title_source_get_xpos (GESTitleSource *source);
+GST_EXPORT
 const gdouble ges_title_source_get_ypos (GESTitleSource *source);
 
 G_END_DECLS

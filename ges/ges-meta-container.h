@@ -118,185 +118,186 @@ struct _GESMetaContainerInterface {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_meta_container_get_type (void);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_set_boolean     (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         gboolean value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_set_int         (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         gint value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_set_uint        (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         guint value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_set_int64       (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         gint64 value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_set_uint64      (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         guint64 value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_set_float       (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         gfloat value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_set_double      (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         gdouble value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_set_date        (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         const GDate* value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_set_date_time   (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         const GstDateTime* value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_set_string      (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         const gchar* value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_set_meta            (GESMetaContainer * container,
                                         const gchar* meta_item,
                                         const GValue *value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_register_meta_boolean (GESMetaContainer *container,
                                           GESMetaFlag flags,
                                           const gchar* meta_item,
                                           gboolean value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_register_meta_int     (GESMetaContainer *container,
                                           GESMetaFlag flags,
                                           const gchar* meta_item,
                                           gint value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_register_meta_uint    (GESMetaContainer *container,
                                           GESMetaFlag flags,
                                           const gchar* meta_item,
                                           guint value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_register_meta_int64   (GESMetaContainer *container,
                                           GESMetaFlag flags,
                                           const gchar* meta_item,
                                           gint64 value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_register_meta_uint64  (GESMetaContainer *container,
                                           GESMetaFlag flags,
                                           const gchar* meta_item,
                                           guint64 value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_register_meta_float   (GESMetaContainer *container,
                                           GESMetaFlag flags,
                                           const gchar* meta_item,
                                           gfloat value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_register_meta_double  (GESMetaContainer *container,
                                           GESMetaFlag flags,
                                           const gchar* meta_item,
                                           gdouble value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_register_meta_date    (GESMetaContainer *container,
                                           GESMetaFlag flags,
                                           const gchar* meta_item,
                                           const GDate* value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_register_meta_date_time  (GESMetaContainer *container,
                                              GESMetaFlag flags,
                                              const gchar* meta_item,
                                              const GstDateTime* value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_register_meta_string     (GESMetaContainer *container,
                                              GESMetaFlag flags,
                                              const gchar* meta_item,
                                              const gchar* value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_register_meta            (GESMetaContainer *container,
                                              GESMetaFlag flags,
                                              const gchar* meta_item,
                                              const GValue * value);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_check_meta_registered    (GESMetaContainer *container,
                                              const gchar * meta_item,
                                              GESMetaFlag * flags,
                                              GType * type);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_get_boolean     (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         gboolean* dest);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_get_int         (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         gint* dest);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_get_uint        (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         guint* dest);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_get_int64       (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         gint64* dest);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_get_uint64      (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         guint64* dest);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_get_float       (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         gfloat* dest);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_get_double      (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         gdouble* dest);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_get_date        (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         GDate** dest);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_get_date_time   (GESMetaContainer *container,
                                         const gchar* meta_item,
                                         GstDateTime** dest);
 
-const gchar *
+GST_EXPORT const gchar *
 ges_meta_container_get_string      (GESMetaContainer * container,
                                         const gchar * meta_item);
 
-const GValue *
+GST_EXPORT const GValue *
 ges_meta_container_get_meta            (GESMetaContainer * container,
                                         const gchar * key);
 
@@ -306,15 +307,15 @@ typedef void
                                         const GValue *value,
                                         gpointer user_data);
 
-void
+GST_EXPORT void
 ges_meta_container_foreach             (GESMetaContainer *container,
                                         GESMetaForeachFunc func,
                                         gpointer user_data);
 
-gchar *
+GST_EXPORT gchar *
 ges_meta_container_metas_to_string     (GESMetaContainer *container);
 
-gboolean
+GST_EXPORT gboolean
 ges_meta_container_add_metas_from_string (GESMetaContainer *container,
                                           const gchar *str);
 

@@ -81,6 +81,7 @@ struct _GESTransitionClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_transition_get_type (void);
 
 G_END_DECLS

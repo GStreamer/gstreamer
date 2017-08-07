@@ -138,8 +138,10 @@ struct _GESFormatterClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_formatter_get_type (void);
 
+GST_EXPORT
 void ges_formatter_class_register_metas (GESFormatterClass * klass,
                                          const gchar *name,
                                          const gchar *description,
@@ -148,20 +150,25 @@ void ges_formatter_class_register_metas (GESFormatterClass * klass,
                                          gdouble version,
                                          GstRank rank);
 
+GST_EXPORT
 gboolean ges_formatter_can_load_uri     (const gchar * uri, GError **error);
+GST_EXPORT
 gboolean ges_formatter_can_save_uri     (const gchar * uri, GError **error);
 
+GST_EXPORT
 gboolean ges_formatter_load_from_uri    (GESFormatter * formatter,
                                          GESTimeline  *timeline,
                                          const gchar *uri,
                                          GError **error);
 
+GST_EXPORT
 gboolean ges_formatter_save_to_uri      (GESFormatter * formatter,
                                          GESTimeline *timeline,
                                          const gchar *uri,
                                          gboolean overwrite,
                                          GError **error);
 
+GST_EXPORT
 GESAsset *ges_formatter_get_default    (void);
 
 G_END_DECLS

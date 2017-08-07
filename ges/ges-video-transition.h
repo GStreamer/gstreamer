@@ -75,20 +75,27 @@ struct _GESVideoTransitionClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_video_transition_get_type               (void);
+GST_EXPORT
 GESVideoTransition* ges_video_transition_new (void);
 
+GST_EXPORT
 gboolean ges_video_transition_set_transition_type (GESVideoTransition * self,
                                                          GESVideoStandardTransitionType type);
-GESVideoStandardTransitionType
+GST_EXPORT GESVideoStandardTransitionType
 ges_video_transition_get_transition_type          (GESVideoTransition * trans);
 
+GST_EXPORT
 void ges_video_transition_set_border              (GESVideoTransition * self,
                                                          guint value);
+GST_EXPORT
 gint ges_video_transition_get_border              (GESVideoTransition * self);
 
+GST_EXPORT
 void ges_video_transition_set_inverted            (GESVideoTransition * self,
                                                          gboolean inverted);
+GST_EXPORT
 gboolean ges_video_transition_is_inverted        (GESVideoTransition * self);
 
 G_END_DECLS

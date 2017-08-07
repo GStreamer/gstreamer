@@ -77,6 +77,7 @@ struct _GESSourceClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_source_get_type (void);
 
 G_END_DECLS

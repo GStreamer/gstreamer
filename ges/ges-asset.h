@@ -51,6 +51,7 @@ typedef enum
 
 typedef struct _GESAssetPrivate GESAssetPrivate;
 
+GST_EXPORT
 GType ges_asset_get_type (void);
 
 struct _GESAsset
@@ -88,29 +89,43 @@ struct _GESAssetClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_asset_get_extractable_type (GESAsset * self);
+GST_EXPORT
 void ges_asset_request_async         (GType extractable_type,
                                       const gchar * id,
                                       GCancellable *cancellable,
                                       GAsyncReadyCallback callback,
                                       gpointer user_data);
+GST_EXPORT
 GESAsset * ges_asset_request         (GType extractable_type,
                                       const gchar * id,
                                       GError **error);
+GST_EXPORT
 const gchar * ges_asset_get_id       (GESAsset* self);
+GST_EXPORT
 GESAsset * ges_asset_request_finish  (GAsyncResult *res,
                                       GError **error);
+GST_EXPORT
 GError * ges_asset_get_error         (GESAsset * self);
+GST_EXPORT
 GESExtractable * ges_asset_extract   (GESAsset * self,
                                       GError **error);
+GST_EXPORT
 GList * ges_list_assets              (GType filter);
 
 
+GST_EXPORT
 gboolean ges_asset_set_proxy         (GESAsset *asset, GESAsset *proxy);
+GST_EXPORT
 gboolean ges_asset_unproxy           (GESAsset *asset, GESAsset * proxy);
+GST_EXPORT
 GList * ges_asset_list_proxies       (GESAsset *asset);
+GST_EXPORT
 GESAsset * ges_asset_get_proxy_target(GESAsset *proxy);
+GST_EXPORT
 GESAsset * ges_asset_get_proxy       (GESAsset *asset);
+GST_EXPORT
 gboolean ges_asset_needs_reload 	 (GType extractable_type,
 									  const gchar * id);
 

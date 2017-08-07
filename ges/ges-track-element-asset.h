@@ -36,6 +36,7 @@ G_BEGIN_DECLS
 
 typedef struct _GESTrackElementAssetPrivate GESTrackElementAssetPrivate;
 
+GST_EXPORT
 GType ges_track_element_asset_get_type (void);
 
 struct _GESTrackElementAsset
@@ -56,7 +57,9 @@ struct _GESTrackElementAssetClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 const GESTrackType ges_track_element_asset_get_track_type (GESTrackElementAsset *asset);
+GST_EXPORT
 void ges_track_element_asset_set_track_type               (GESTrackElementAsset * asset, GESTrackType type);
 
 G_END_DECLS

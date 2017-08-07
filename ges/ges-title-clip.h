@@ -71,63 +71,66 @@ struct _GESTitleClipClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_title_clip_get_type (void);
 
-void
+GST_EXPORT void
 ges_title_clip_set_text( GESTitleClip * self,
     const gchar * text);
 
-void
+GST_EXPORT void
 ges_title_clip_set_font_desc (GESTitleClip * self,
     const gchar * font_desc);
 
-void
+GST_EXPORT void
 ges_title_clip_set_valignment (GESTitleClip * self,
     GESTextVAlign valign);
 
-void
+GST_EXPORT void
 ges_title_clip_set_halignment (GESTitleClip * self,
     GESTextHAlign halign);
 
-void
+GST_EXPORT void
 ges_title_clip_set_color (GESTitleClip * self,
     guint32 color);
 
-void
+GST_EXPORT void
 ges_title_clip_set_background (GESTitleClip * self,
     guint32 background);
 
-void
+GST_EXPORT void
 ges_title_clip_set_xpos (GESTitleClip * self,
     gdouble position);
 
-void
+GST_EXPORT void
 ges_title_clip_set_ypos (GESTitleClip * self,
     gdouble position);
 
-const gchar*
+GST_EXPORT const gchar*
 ges_title_clip_get_font_desc (GESTitleClip * self);
 
-GESTextVAlign
+GST_EXPORT GESTextVAlign
 ges_title_clip_get_valignment (GESTitleClip * self);
 
-GESTextHAlign
+GST_EXPORT GESTextHAlign
 ges_title_clip_get_halignment (GESTitleClip * self);
 
-const guint32
+GST_EXPORT const guint32
 ges_title_clip_get_text_color (GESTitleClip * self);
 
-const guint32
+GST_EXPORT const guint32
 ges_title_clip_get_background_color (GESTitleClip * self);
 
-const gdouble
+GST_EXPORT const gdouble
 ges_title_clip_get_xpos (GESTitleClip * self);
 
-const gdouble
+GST_EXPORT const gdouble
 ges_title_clip_get_ypos (GESTitleClip * self);
 
+GST_EXPORT
 const gchar* ges_title_clip_get_text (GESTitleClip * self);
 
+GST_EXPORT
 GESTitleClip* ges_title_clip_new (void);
 
 G_END_DECLS

@@ -137,39 +137,53 @@ struct _GESClipClass
 /****************************************************
  *                  Standard                        *
  ****************************************************/
+GST_EXPORT
 GType ges_clip_get_type (void);
 
 /****************************************************
  *                TrackElement handling             *
  ****************************************************/
+GST_EXPORT
 GESTrackType      ges_clip_get_supported_formats  (GESClip *clip);
+GST_EXPORT
 void              ges_clip_set_supported_formats  (GESClip *clip, GESTrackType       supportedformats);
+GST_EXPORT
 GESTrackElement*  ges_clip_add_asset              (GESClip *clip, GESAsset *asset);
+GST_EXPORT
 GESTrackElement*  ges_clip_find_track_element     (GESClip *clip, GESTrack *track,
                                                    GType type);
+GST_EXPORT
 GList *           ges_clip_find_track_elements    (GESClip * clip, GESTrack * track,
                                                    GESTrackType track_type, GType type);
 
 /****************************************************
  *                     Layer                        *
  ****************************************************/
+GST_EXPORT
 GESLayer* ges_clip_get_layer              (GESClip *clip);
+GST_EXPORT
 gboolean          ges_clip_move_to_layer          (GESClip *clip, GESLayer  *layer);
 
 /****************************************************
  *                   Effects                        *
  ****************************************************/
+GST_EXPORT
 GList*   ges_clip_get_top_effects           (GESClip *clip);
+GST_EXPORT
 gint     ges_clip_get_top_effect_position   (GESClip *clip, GESBaseEffect *effect);
+GST_EXPORT
 gint     ges_clip_get_top_effect_index   (GESClip *clip, GESBaseEffect *effect);
+GST_EXPORT
 gboolean ges_clip_set_top_effect_priority   (GESClip *clip, GESBaseEffect *effect,
                                              guint newpriority);
+GST_EXPORT
 gboolean ges_clip_set_top_effect_index   (GESClip *clip, GESBaseEffect *effect,
                                              guint newindex);
 
 /****************************************************
  *                   Editing                        *
  ****************************************************/
+GST_EXPORT
 GESClip* ges_clip_split  (GESClip *clip, guint64  position);
 
 G_END_DECLS

@@ -70,6 +70,7 @@ struct _GESBaseEffectClipClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_base_effect_clip_get_type (void);
 
 G_END_DECLS

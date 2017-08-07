@@ -75,31 +75,37 @@ struct _GESTestClipClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_test_clip_get_type (void);
 
-void
+GST_EXPORT void
 ges_test_clip_set_mute (GESTestClip * self, gboolean mute);
 
-void
+GST_EXPORT void
 ges_test_clip_set_vpattern (GESTestClip * self,
     GESVideoTestPattern vpattern);
 
-void
+GST_EXPORT void
 ges_test_clip_set_frequency (GESTestClip * self, gdouble freq);
 
-void
+GST_EXPORT void
 ges_test_clip_set_volume (GESTestClip * self,
     gdouble volume);
 
 
-GESVideoTestPattern
+GST_EXPORT GESVideoTestPattern
 ges_test_clip_get_vpattern (GESTestClip * self);
 
+GST_EXPORT
 gboolean ges_test_clip_is_muted (GESTestClip * self);
+GST_EXPORT
 gdouble ges_test_clip_get_frequency (GESTestClip * self);
+GST_EXPORT
 gdouble ges_test_clip_get_volume (GESTestClip * self);
 
+GST_EXPORT
 GESTestClip* ges_test_clip_new (void);
+GST_EXPORT
 GESTestClip* ges_test_clip_new_for_nick(gchar * nick);
 
 G_END_DECLS

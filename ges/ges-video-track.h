@@ -55,6 +55,7 @@ struct _GESVideoTrack
 };
 
 GType ges_video_track_get_type (void) G_GNUC_CONST;
+GST_EXPORT
 GESVideoTrack * ges_video_track_new (void);
 
 G_END_DECLS

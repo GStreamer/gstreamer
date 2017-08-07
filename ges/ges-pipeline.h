@@ -75,44 +75,50 @@ struct _GESPipelineClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_pipeline_get_type (void);
 
+GST_EXPORT
 GESPipeline* ges_pipeline_new (void);
 
+GST_EXPORT
 gboolean ges_pipeline_set_timeline (GESPipeline * pipeline,
 					     GESTimeline * timeline);
 
+GST_EXPORT
 gboolean ges_pipeline_set_render_settings (GESPipeline *pipeline,
 						    const gchar * output_uri,
 						    GstEncodingProfile *profile);
+GST_EXPORT
 gboolean ges_pipeline_set_mode (GESPipeline *pipeline,
 					 GESPipelineFlags mode);
 
+GST_EXPORT
 GESPipelineFlags ges_pipeline_get_mode (GESPipeline *pipeline);
 
-GstSample *
+GST_EXPORT GstSample *
 ges_pipeline_get_thumbnail(GESPipeline *self, GstCaps *caps);
 
-GstSample *
+GST_EXPORT GstSample *
 ges_pipeline_get_thumbnail_rgb24(GESPipeline *self,
     gint width, gint height);
 
-gboolean
+GST_EXPORT gboolean
 ges_pipeline_save_thumbnail(GESPipeline *self,
     int width, int height, const gchar *format, const gchar *location,
     GError **error);
 
-GstElement *
+GST_EXPORT GstElement *
 ges_pipeline_preview_get_video_sink (GESPipeline * self);
 
-void
+GST_EXPORT void
 ges_pipeline_preview_set_video_sink (GESPipeline * self,
     GstElement * sink);
 
-GstElement *
+GST_EXPORT GstElement *
 ges_pipeline_preview_get_audio_sink (GESPipeline * self);
 
-void
+GST_EXPORT void
 ges_pipeline_preview_set_audio_sink (GESPipeline * self,
     GstElement * sink);
 

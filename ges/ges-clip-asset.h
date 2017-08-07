@@ -55,9 +55,12 @@ struct _GESClipAssetClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_clip_asset_get_type (void);
+GST_EXPORT
 void ges_clip_asset_set_supported_formats         (GESClipAsset *self,
                                                               GESTrackType supportedformats);
+GST_EXPORT
 GESTrackType ges_clip_asset_get_supported_formats (GESClipAsset *self);
 
 G_END_DECLS

@@ -70,16 +70,21 @@ struct _GESAudioTestSourceClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_audio_test_source_get_type (void);
 
 
+GST_EXPORT
 void ges_audio_test_source_set_freq(GESAudioTestSource *self,
                                           gdouble freq);
 
+GST_EXPORT
 void ges_audio_test_source_set_volume(GESAudioTestSource *self,
                                             gdouble volume);
 
+GST_EXPORT
 double ges_audio_test_source_get_freq(GESAudioTestSource *self);
+GST_EXPORT
 double ges_audio_test_source_get_volume(GESAudioTestSource *self);
 G_END_DECLS
 

@@ -26,8 +26,11 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GESTimeline * ges_timeline_new_audio_video (void);
+GST_EXPORT
 gboolean ges_pspec_equal (gconstpointer key_spec_1, gconstpointer key_spec_2);
+GST_EXPORT
 guint ges_pspec_hash (gconstpointer key_spec);
 
 

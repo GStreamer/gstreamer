@@ -99,39 +99,64 @@ struct _GESTimelineClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_timeline_get_type (void);
 
+GST_EXPORT
 GESTimeline* ges_timeline_new (void);
+GST_EXPORT
 GESTimeline* ges_timeline_new_from_uri (const gchar *uri, GError **error);
 
+GST_EXPORT
 gboolean ges_timeline_load_from_uri (GESTimeline *timeline, const gchar *uri, GError **error);
+GST_EXPORT
 gboolean ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
     GESAsset *formatter_asset, gboolean overwrite, GError ** error);
+GST_EXPORT
 gboolean ges_timeline_add_layer (GESTimeline *timeline, GESLayer *layer);
+GST_EXPORT
 GESLayer * ges_timeline_append_layer (GESTimeline * timeline);
+GST_EXPORT
 gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESLayer *layer);
+GST_EXPORT
 GList* ges_timeline_get_layers (GESTimeline *timeline);
+GST_EXPORT
 GESLayer* ges_timeline_get_layer (GESTimeline *timeline, guint priority);
 
+GST_EXPORT
 gboolean ges_timeline_add_track (GESTimeline *timeline, GESTrack *track);
+GST_EXPORT
 gboolean ges_timeline_remove_track (GESTimeline *timeline, GESTrack *track);
 
+GST_EXPORT
 GESTrack * ges_timeline_get_track_for_pad (GESTimeline *timeline, GstPad *pad);
+GST_EXPORT
 GstPad * ges_timeline_get_pad_for_track (GESTimeline * timeline, GESTrack *track);
+GST_EXPORT
 GList *ges_timeline_get_tracks (GESTimeline *timeline);
 
+GST_EXPORT
 GList* ges_timeline_get_groups (GESTimeline * timeline);
 
+GST_EXPORT
 gboolean ges_timeline_commit (GESTimeline * timeline);
+GST_EXPORT
 gboolean ges_timeline_commit_sync (GESTimeline * timeline);
 
+GST_EXPORT
 GstClockTime ges_timeline_get_duration (GESTimeline *timeline);
 
+GST_EXPORT
 gboolean ges_timeline_get_auto_transition (GESTimeline * timeline);
+GST_EXPORT
 void ges_timeline_set_auto_transition (GESTimeline * timeline, gboolean auto_transition);
+GST_EXPORT
 GstClockTime ges_timeline_get_snapping_distance (GESTimeline * timeline);
+GST_EXPORT
 void ges_timeline_set_snapping_distance (GESTimeline * timeline, GstClockTime snapping_distance);
+GST_EXPORT
 GESTimelineElement * ges_timeline_get_element (GESTimeline * timeline, const gchar *name);
+GST_EXPORT
 gboolean ges_timeline_is_empty (GESTimeline * timeline);
 
 G_END_DECLS

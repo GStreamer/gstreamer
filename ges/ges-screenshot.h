@@ -25,7 +25,7 @@
 
 G_BEGIN_DECLS
 
-GstSample *
+GST_EXPORT GstSample *
 ges_play_sink_convert_frame (GstElement * playsink, GstCaps * caps);
 
 G_END_DECLS

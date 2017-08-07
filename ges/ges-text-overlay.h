@@ -64,35 +64,51 @@ struct _GESTextOverlayClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_text_overlay_get_type (void);
 
+GST_EXPORT
 void ges_text_overlay_set_text (GESTextOverlay * self,
     const gchar * text);
+GST_EXPORT
 void ges_text_overlay_set_font_desc (GESTextOverlay * self,
     const gchar * font_desc);
 
+GST_EXPORT
 void ges_text_overlay_set_halignment (GESTextOverlay * self,
     GESTextHAlign halign);
 
+GST_EXPORT
 void ges_text_overlay_set_valignment (GESTextOverlay * self,
     GESTextVAlign valign);
+GST_EXPORT
 void ges_text_overlay_set_color (GESTextOverlay * self,
     guint32 color);
+GST_EXPORT
 void ges_text_overlay_set_xpos (GESTextOverlay * self,
     gdouble position);
+GST_EXPORT
 void ges_text_overlay_set_ypos (GESTextOverlay * self,
     gdouble position);
 
+GST_EXPORT
 const gchar *ges_text_overlay_get_text (GESTextOverlay * self);
+GST_EXPORT
 const char *ges_text_overlay_get_font_desc (GESTextOverlay * self);
+GST_EXPORT
 GESTextHAlign ges_text_overlay_get_halignment (GESTextOverlay *
     self);
+GST_EXPORT
 GESTextVAlign ges_text_overlay_get_valignment (GESTextOverlay *
     self);
+GST_EXPORT
 const guint32 ges_text_overlay_get_color (GESTextOverlay * self);
+GST_EXPORT
 const gdouble ges_text_overlay_get_xpos (GESTextOverlay * self);
+GST_EXPORT
 const gdouble ges_text_overlay_get_ypos (GESTextOverlay * self);
 
+GST_EXPORT
 GESTextOverlay *ges_text_overlay_new (void);
 
 G_END_DECLS
