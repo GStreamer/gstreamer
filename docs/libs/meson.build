@@ -9,7 +9,7 @@ gnome.gtkdoc('gstreamer-libs',
             '--ignore-decorators=GST_EXPORT',
             '--ignore-headers=gettext.h glib-compat-private.h glib-compat.h gst-i18n-app.h gst-i18n-lib.h gst_private.h gstelementdetails.h gstmacros.h grammar.tab.h grammar.tab.pre.h math-compat.h types.h'
             ],
-  scanobj_args : ['--type-init-func="gst_init(NULL,NULL)'],
+  scanobjs_args : ['--type-init-func="gst_init(NULL,NULL)"'],
   gobject_typesfile : types,
   content_files : [version_entities],
   dependencies : [gst_base_dep, gst_check_dep,  gst_controller_dep, gst_net_dep],
