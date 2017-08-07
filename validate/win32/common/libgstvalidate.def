@@ -5,10 +5,13 @@ EXPORTS
 	gst_validate_action_get_clocktime
 	gst_validate_action_get_scenario
 	gst_validate_action_get_type
+	gst_validate_action_return_get_type
 	gst_validate_action_set_done
+	gst_validate_action_type_flags_get_type
 	gst_validate_action_type_get_type
 	gst_validate_bin_monitor_get_type
 	gst_validate_bin_monitor_new
+	gst_validate_debug_flags_get_type
 	gst_validate_deinit
 	gst_validate_element_has_klass
 	gst_validate_element_monitor_get_type
@@ -17,6 +20,7 @@ EXPORTS
 	gst_validate_filenode_free
 	gst_validate_get_action_type
 	gst_validate_init
+	gst_validate_interception_return_get_type
 	gst_validate_is_initialized
 	gst_validate_issue_from_id
 	gst_validate_issue_get_id
@@ -112,6 +116,7 @@ EXPORTS
 	gst_validate_report_init
 	gst_validate_report_level_from_name
 	gst_validate_report_level_get_name
+	gst_validate_report_level_get_type
 	gst_validate_report_new
 	gst_validate_report_print_description
 	gst_validate_report_print_details
@@ -137,6 +142,7 @@ EXPORTS
 	gst_validate_reporter_set_handle_g_logs
 	gst_validate_reporter_set_name
 	gst_validate_reporter_set_runner
+	gst_validate_reporting_details_get_type
 	gst_validate_runner_add_report
 	gst_validate_runner_exit
 	gst_validate_runner_get_default_reporting_level
@@ -160,3 +166,4 @@ EXPORTS
 	gst_validate_utils_get_clocktime
 	gst_validate_utils_parse_expression
 	gst_validate_utils_structs_parse_from_filename
+	gst_validate_verbosity_flags_get_type
