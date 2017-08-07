@@ -1003,11 +1003,64 @@ gst_omx_video_enc_disable (GstOMXVideoEnc * self)
 }
 
 static gboolean
+gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self)
+{
+  GstOMXVideoEncClass *klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
+  GstVideoInfo *info = &self->input_state->info;
+  OMX_PARAM_PORTDEFINITIONTYPE port_def;
+
+  gst_omx_port_get_port_definition (self->enc_in_port, &port_def);
+
+  if (port_def.nBufferAlignment)
+    port_def.format.video.nStride =
+        GST_ROUND_UP_N (info->width, port_def.nBufferAlignment);
+  else
+    port_def.format.video.nStride = GST_ROUND_UP_4 (info->width);       /* safe (?) default */
+
+  if (klass->cdata.hacks & GST_OMX_HACK_HEIGHT_MULTIPLE_16)
+    port_def.format.video.nSliceHeight = GST_ROUND_UP_16 (info->height);
+  else
+    port_def.format.video.nSliceHeight = info->height;
+
+  switch (port_def.format.video.eColorFormat) {
+    case OMX_COLOR_FormatYUV420Planar:
+    case OMX_COLOR_FormatYUV420PackedPlanar:
+      port_def.nBufferSize =
+          (port_def.format.video.nStride * port_def.format.video.nFrameHeight) +
+          2 * ((port_def.format.video.nStride / 2) *
+          ((port_def.format.video.nFrameHeight + 1) / 2));
+      break;
+
+    case OMX_COLOR_FormatYUV420PackedSemiPlanar:
+    case OMX_COLOR_FormatYUV420SemiPlanar:
+      port_def.nBufferSize =
+          (port_def.format.video.nStride * port_def.format.video.nFrameHeight) +
+          (port_def.format.video.nStride *
+          ((port_def.format.video.nFrameHeight + 1) / 2));
+      break;
+
+    default:
+      GST_ERROR_OBJECT (self, "Unsupported port format %x",
+          port_def.format.video.eColorFormat);
+      g_assert_not_reached ();
+  }
+
+  if (gst_omx_port_update_port_definition (self->enc_in_port,
+          &port_def) != OMX_ErrorNone)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_omx_video_enc_enable (GstOMXVideoEnc * self)
 {
   GstOMXVideoEncClass *klass;
 
   klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
+
+  if (!gst_omx_video_enc_configure_input_buffer (self))
+    return FALSE;
 
   GST_DEBUG_OBJECT (self, "Enabling component");
   if (self->disabled) {
@@ -1164,41 +1217,7 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   }
 
   port_def.format.video.nFrameWidth = info->width;
-  if (port_def.nBufferAlignment)
-    port_def.format.video.nStride =
-        GST_ROUND_UP_N (info->width, port_def.nBufferAlignment);
-  else
-    port_def.format.video.nStride = GST_ROUND_UP_4 (info->width);       /* safe (?) default */
-
   port_def.format.video.nFrameHeight = info->height;
-
-  if (klass->cdata.hacks & GST_OMX_HACK_HEIGHT_MULTIPLE_16)
-    port_def.format.video.nSliceHeight = GST_ROUND_UP_16 (info->height);
-  else
-    port_def.format.video.nSliceHeight = info->height;
-
-  switch (port_def.format.video.eColorFormat) {
-    case OMX_COLOR_FormatYUV420Planar:
-    case OMX_COLOR_FormatYUV420PackedPlanar:
-      port_def.nBufferSize =
-          (port_def.format.video.nStride * port_def.format.video.nFrameHeight) +
-          2 * ((port_def.format.video.nStride / 2) *
-          ((port_def.format.video.nFrameHeight + 1) / 2));
-      break;
-
-    case OMX_COLOR_FormatYUV420PackedSemiPlanar:
-    case OMX_COLOR_FormatYUV420SemiPlanar:
-      port_def.nBufferSize =
-          (port_def.format.video.nStride * port_def.format.video.nFrameHeight) +
-          (port_def.format.video.nStride *
-          ((port_def.format.video.nFrameHeight + 1) / 2));
-      break;
-
-    default:
-      GST_ERROR_OBJECT (self, "Unsupported port format %x",
-          port_def.format.video.eColorFormat);
-      g_assert_not_reached ();
-  }
 
   if (info->fps_n == 0) {
     port_def.format.video.xFramerate = 0;
