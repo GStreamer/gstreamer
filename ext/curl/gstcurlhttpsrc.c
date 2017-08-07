@@ -1003,8 +1003,15 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
 #ifdef CURL_VERSION_HTTP2
     case GSTCURL_HTTP_VERSION_2_0:
       GST_DEBUG_OBJECT (s, "Setting version as HTTP/2.0");
-      gst_curl_setopt_int (s, handle, CURLOPT_HTTP_VERSION,
-          CURL_HTTP_VERSION_2_0);
+      if (curl_easy_setopt (handle, CURLOPT_HTTP_VERSION,
+              CURL_HTTP_VERSION_2_0) != CURLE_OK) {
+        if (gst_curl_http_src_curl_capabilities->features & CURL_VERSION_HTTP2) {
+          GST_WARNING_OBJECT (s,
+              "Cannot set unsupported option CURLOPT_HTTP_VERSION");
+        } else {
+          GST_INFO_OBJECT (s, "HTTP/2 unsupported by libcurl at this time");
+        }
+      }
       break;
 #endif
     default:
