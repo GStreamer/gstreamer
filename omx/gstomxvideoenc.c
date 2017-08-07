@@ -1003,24 +1003,51 @@ gst_omx_video_enc_disable (GstOMXVideoEnc * self)
 }
 
 static gboolean
-gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self)
+gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self,
+    GstBuffer * input)
 {
   GstOMXVideoEncClass *klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
   GstVideoInfo *info = &self->input_state->info;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
+  GstVideoMeta *meta;
+  guint stride, slice_height;
 
   gst_omx_port_get_port_definition (self->enc_in_port, &port_def);
 
+  meta = gst_buffer_get_video_meta (input);
+  if (meta) {
+    /* Use the stride and slice height of the first plane */
+    stride = meta->stride[0];
+    g_assert (stride != 0);
+    slice_height = (meta->offset[1] - meta->offset[0]) / stride;
+
+    GST_DEBUG_OBJECT (self,
+        "adjusting stride (%d) and slice-height (%d) using input buffer meta",
+        stride, slice_height);
+  } else {
+    GST_WARNING_OBJECT (self,
+        "input buffer doesn't provide video meta, can't adjust stride and slice height");
+
+    stride = info->stride[0];
+    slice_height = info->height;
+  }
+
   if (port_def.nBufferAlignment)
     port_def.format.video.nStride =
-        GST_ROUND_UP_N (info->width, port_def.nBufferAlignment);
+        GST_ROUND_UP_N (stride, port_def.nBufferAlignment);
   else
-    port_def.format.video.nStride = GST_ROUND_UP_4 (info->width);       /* safe (?) default */
+    port_def.format.video.nStride = GST_ROUND_UP_4 (stride);    /* safe (?) default */
 
   if (klass->cdata.hacks & GST_OMX_HACK_HEIGHT_MULTIPLE_16)
-    port_def.format.video.nSliceHeight = GST_ROUND_UP_16 (info->height);
+    port_def.format.video.nSliceHeight = GST_ROUND_UP_16 (slice_height);
   else
-    port_def.format.video.nSliceHeight = info->height;
+    port_def.format.video.nSliceHeight = slice_height;
+
+  GST_DEBUG_OBJECT (self,
+      "setting input nStride=%d and nSliceHeight=%d (nBufferAlignment=%d)",
+      (guint) port_def.format.video.nStride,
+      (guint) port_def.format.video.nSliceHeight,
+      (guint) port_def.nBufferAlignment);
 
   switch (port_def.format.video.eColorFormat) {
     case OMX_COLOR_FormatYUV420Planar:
@@ -1053,13 +1080,13 @@ gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self)
 }
 
 static gboolean
-gst_omx_video_enc_enable (GstOMXVideoEnc * self)
+gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
 {
   GstOMXVideoEncClass *klass;
 
   klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
 
-  if (!gst_omx_video_enc_configure_input_buffer (self))
+  if (!gst_omx_video_enc_configure_input_buffer (self, input))
     return FALSE;
 
   GST_DEBUG_OBJECT (self, "Enabling component");
@@ -1536,7 +1563,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
 
   if (!self->started) {
     if (gst_omx_port_is_flushing (self->enc_out_port)) {
-      if (!gst_omx_video_enc_enable (self))
+      if (!gst_omx_video_enc_enable (self, frame->input_buffer))
         return FALSE;
     }
 
