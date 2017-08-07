@@ -88,6 +88,7 @@ static void gst_rtmp_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_rtmp_src_finalize (GObject * object);
 
+static gboolean gst_rtmp_src_connect (GstRTMPSrc * src);
 static gboolean gst_rtmp_src_unlock (GstBaseSrc * src);
 static gboolean gst_rtmp_src_stop (GstBaseSrc * src);
 static gboolean gst_rtmp_src_start (GstBaseSrc * src);
@@ -330,6 +331,12 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 
   g_return_val_if_fail (src->rtmp != NULL, GST_FLOW_ERROR);
 
+  if (!RTMP_IsConnected (src->rtmp)) {
+    GST_DEBUG_OBJECT (src, "reconnecting");
+    if (!gst_rtmp_src_connect (src))
+      return GST_FLOW_ERROR;
+  }
+
   size = GST_BASE_SRC_CAST (pushsrc)->blocksize;
 
   GST_DEBUG ("reading from %" G_GUINT64_FORMAT
@@ -541,15 +548,22 @@ gst_rtmp_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
     return FALSE;
   }
 
-  src->discont = TRUE;
-
   /* Initial seek */
   if (src->cur_offset == 0 && segment->start == 0)
-    return TRUE;
+    goto success;
 
   if (!src->seekable) {
     GST_LOG_OBJECT (src, "Not a seekable stream");
     return FALSE;
+  }
+
+  /* If we have just disconnected in unlock(), we need to re-connect
+   * and also let librtmp read some data before sending a seek,
+   * otherwise it will stall. Calling create() does both. */
+  if (!RTMP_IsConnected (src->rtmp)) {
+    GstBuffer *buffer = NULL;
+    gst_rtmp_src_create (GST_PUSH_SRC (basesrc), &buffer);
+    gst_buffer_replace (&buffer, NULL);
   }
 
   src->last_timestamp = GST_CLOCK_TIME_NONE;
@@ -559,8 +573,37 @@ gst_rtmp_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
     return FALSE;
   }
 
+success:
+  /* This is set here so that the call to create() above doesn't clear it */
+  src->discont = TRUE;
+
   GST_DEBUG_OBJECT (src, "Seek to %" GST_TIME_FORMAT " successfull",
       GST_TIME_ARGS (segment->start));
+
+  return TRUE;
+}
+
+static gboolean
+gst_rtmp_src_connect (GstRTMPSrc * src)
+{
+  RTMP_Init (src->rtmp);
+  src->rtmp->Link.timeout = src->timeout;
+  if (!RTMP_SetupURL (src->rtmp, src->uri)) {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("Failed to setup URL '%s'", src->uri));
+    return FALSE;
+  }
+  src->seekable = !(src->rtmp->Link.lFlags & RTMP_LF_LIVE);
+  GST_INFO_OBJECT (src, "seekable %d", src->seekable);
+
+  /* open if required */
+  if (!RTMP_IsConnected (src->rtmp)) {
+    if (!RTMP_Connect (src->rtmp, NULL)) {
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+          ("Could not connect to RTMP stream \"%s\" for reading", src->uri));
+      return FALSE;
+    }
+  }
 
   return TRUE;
 }
@@ -593,24 +636,8 @@ gst_rtmp_src_start (GstBaseSrc * basesrc)
     goto error;
   }
 
-  RTMP_Init (src->rtmp);
-  src->rtmp->Link.timeout = src->timeout;
-  if (!RTMP_SetupURL (src->rtmp, src->uri)) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-        ("Failed to setup URL '%s'", src->uri));
+  if (!gst_rtmp_src_connect (src))
     goto error;
-  }
-  src->seekable = !(src->rtmp->Link.lFlags & RTMP_LF_LIVE);
-  GST_INFO_OBJECT (src, "seekable %d", src->seekable);
-
-  /* open if required */
-  if (!RTMP_IsConnected (src->rtmp)) {
-    if (!RTMP_Connect (src->rtmp, NULL)) {
-      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-          ("Could not connect to RTMP stream \"%s\" for reading", src->uri));
-      goto error;
-    }
-  }
 
   return TRUE;
 
