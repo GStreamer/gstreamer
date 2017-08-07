@@ -4570,6 +4570,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   GstAVElement *ave = NULL;
   GSequence *ave_seq = NULL;
   GSequenceIter *seq_iter;
+  gboolean created_sink = FALSE;
 
   playbin = group->playbin;
 
@@ -4635,8 +4636,6 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
     /* if it is a decoder and we don't have a fixed sink, then find out
      * the matching audio/video sink from GstAVElements list */
     for (l = ave_list; l; l = l->next) {
-      gboolean created_sink = FALSE;
-
       ave = (GstAVElement *) l->data;
 
       if (((isaudiodec && !group->audio_sink) ||
@@ -4652,6 +4651,10 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
                 gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (ave->sink)));
             continue;
           } else {
+            /* The sink is ours now, don't leak the floating reference in the
+             * state-changed messages */
+            gst_object_ref_sink (*sinkp);
+
             if (!activate_sink (playbin, *sinkp, NULL)) {
               gst_object_unref (*sinkp);
               *sinkp = NULL;
@@ -4725,6 +4728,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
           gst_element_set_state (*sinkp, GST_STATE_NULL);
           gst_object_unref (*sinkp);
           *sinkp = NULL;
+          created_sink = FALSE;
         } else {
           g_mutex_unlock (&playbin->elements_lock);
           GST_SOURCE_GROUP_UNLOCK (group);
@@ -4799,6 +4803,12 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
     return GST_AUTOPLUG_SELECT_SKIP;
   }
 
+  /* The sink is ours now, don't leak floating references in the state-changed
+   * messages, but only do that if we didn't just create the sink above and
+   * already ref_sink'd it there */
+  if (!created_sink)
+    gst_object_ref_sink (sinkp);
+
   element = *sinkp;
 
   if (!activate_sink (playbin, element, NULL)) {
@@ -4820,13 +4830,11 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
     return GST_AUTOPLUG_SELECT_SKIP;
   }
 
-  /* remember the sink in the group now, the element is floating, we take
-   * ownership now
+  /* remember the sink in the group now
    *
    * store the sink in the group, we will configure it later when we
    * reconfigure the sink */
   GST_DEBUG_OBJECT (playbin, "remember sink");
-  gst_object_ref_sink (element);
   GST_SOURCE_GROUP_UNLOCK (group);
 
   /* tell decodebin to expose the pad because we are going to use this
