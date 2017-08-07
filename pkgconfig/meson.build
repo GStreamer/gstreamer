@@ -6,6 +6,7 @@ pkgconf.set('libdir', '${prefix}/@0@'.format(get_option('libdir')))
 pkgconf.set('includedir', '${prefix}/@0@'.format(get_option('includedir')))
 pkgconf.set('GST_API_VERSION', apiversion)
 pkgconf.set('VERSION', gst_version)
+pkgconf.set('LIBM', mathlib.found() ? '-lm' : '')
 
 # Requires.private
 pkgconf.set('UNWIND_REQUIRE', cdata.has('HAVE_UNWIND') ? 'libunwind' : '')
