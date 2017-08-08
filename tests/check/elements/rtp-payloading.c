@@ -743,6 +743,32 @@ GST_START_TEST (rtp_h264depay_avc)
   fail_unless (gst_structure_has_field (st, "profile"));
   val = gst_structure_get_value (st, "codec_data");
   fail_unless (val != NULL);
+  fail_unless (GST_VALUE_HOLDS_BUFFER (val));
+  /* check codec_data, shouldn't contain trailing zeros */
+  buf = gst_value_get_buffer (val);
+  fail_unless (gst_buffer_map (buf, &map, GST_MAP_READ));
+  {
+    guint num_sps, num_pps, len;
+    guint8 *data;
+
+    GST_MEMDUMP ("H.264 codec_data", map.data, map.size);
+    fail_unless_equals_int (map.data[0], 1);
+    num_sps = map.data[5] & 0x1f;
+    data = map.data + 6;
+    fail_unless_equals_int (num_sps, 1);
+    len = GST_READ_UINT16_BE (data);
+    data += 2;
+    /* make sure there are no trailing zeros in the SPS */
+    fail_unless (data[len - 1] != 0);
+    data += len;
+    num_pps = *data++;
+    fail_unless_equals_int (num_pps, 1);
+    len = GST_READ_UINT16_BE (data);
+    data += 2;
+    /* make sure there are no trailing zeros in the PPS */
+    fail_unless (data[len - 1] != 0);
+  }
+  gst_buffer_unmap (buf, &map);
 
   buf = gst_sample_get_buffer (s);
   fail_unless (gst_buffer_map (buf, &map, GST_MAP_READ));
