@@ -2128,7 +2128,7 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     }
     for (; i_ref < G_N_ELEMENTS (slice_param->RefPicList1); ++i_ref) {
       slice_param->RefPicList1[i_ref].picture_id = VA_INVALID_SURFACE;
-      slice_param->RefPicList0[i_ref].flags = VA_PICTURE_H264_INVALID;
+      slice_param->RefPicList1[i_ref].flags = VA_PICTURE_H264_INVALID;
     }
 
     /* not used if  pic_param.pic_fields.bits.weighted_pred_flag == FALSE */
