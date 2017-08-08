@@ -3186,7 +3186,7 @@ fill_picture_gaps (GstVaapiDecoderH264 * decoder, GstVaapiPictureH264 * picture,
     return TRUE;
 
   prev_frame = priv->prev_ref_frames[picture->base.voc];
-  g_assert (prev_frame != NULL);
+  g_assert (prev_frame != NULL && prev_frame->buffers[0] != NULL);
   prev_picture = gst_vaapi_picture_ref (prev_frame->buffers[0]);
   gst_vaapi_picture_ref (picture);
 
@@ -3220,10 +3220,7 @@ fill_picture_gaps (GstVaapiDecoderH264 * decoder, GstVaapiPictureH264 * picture,
       break;
 
     /* Create new picture */
-    if (prev_picture)
-      lost_picture = gst_vaapi_picture_h264_new_clone (prev_picture);
-    else
-      lost_picture = gst_vaapi_picture_h264_new (decoder);
+    lost_picture = gst_vaapi_picture_h264_new_clone (prev_picture);
     if (!lost_picture)
       goto error_allocate_picture;
 
