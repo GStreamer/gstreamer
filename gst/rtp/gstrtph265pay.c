@@ -733,7 +733,7 @@ next_start_code (const guint8 * data, guint size)
    * sense because our search 'alphabet' is binary - 0 & 1 only.
    * This allow us to simplify the general BM algorithm to a very
    * simple form. */
-  /* assume 1 is in the 3th byte */
+  /* assume 1 is in the 3rd byte */
   guint offset = 2;
 
   while (offset < size) {
@@ -784,6 +784,10 @@ gst_rtp_h265_pay_decode_nal (GstRtpH265Pay * payloader,
   if (GST_H265_NAL_VPS == type || GST_H265_NAL_SPS == type
       || GST_H265_NAL_PPS == type) {
     GstBuffer *nal;
+
+    /* trailing 0x0 are not part of the VPS/SPS/PPS */
+    while (size > 0 && data[size - 1] == 0x0)
+      size--;
 
     /* encode the entire NAL in base64 */
     GST_DEBUG_OBJECT (payloader, "found %s (type 0x%x), size %u",
