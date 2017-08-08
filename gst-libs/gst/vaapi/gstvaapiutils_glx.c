@@ -1163,7 +1163,7 @@ GstVaapiGLApi
 gl_get_current_api (guint * major, guint * minor)
 {
   const gchar *version;
-  gint maj, min, n;
+  gint maj, min, n, sret;
   GstVaapiGLApi ret = (1 << 31);
 
   while (ret != GST_VAAPI_GL_API_NONE) {
@@ -1181,7 +1181,9 @@ gl_get_current_api (guint * major, guint * minor)
       if (n < 13)
         goto next;
 
-      sscanf (&version[10], "%d.%d", &maj, &min);
+      sret = sscanf (&version[10], "%d.%d", &maj, &min);
+      if (sret != 2)
+        goto next;
 
       if (maj <= 0 || min < 0)
         goto next;
@@ -1196,7 +1198,9 @@ gl_get_current_api (guint * major, guint * minor)
 
       goto next;
     } else {
-      sscanf (version, "%d.%d", &maj, &min);
+      sret = sscanf (version, "%d.%d", &maj, &min);
+      if (sret != 2)
+        goto next;
 
       if (maj <= 0 || min < 0)
         goto next;
