@@ -229,9 +229,9 @@ config_create (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
-  VAConfigAttrib attribs[4], *attrib = attribs;
+  VAConfigAttrib attribs[6], *attrib;
   VAStatus status;
-  guint value, va_chroma_format;
+  guint value, va_chroma_format, attrib_index;
 
   /* Reset profile and entrypoint */
   if (!cip->profile || !cip->entrypoint)
@@ -239,6 +239,10 @@ config_create (GstVaapiContext * context)
   context->va_profile = gst_vaapi_profile_get_va_profile (cip->profile);
   context->va_entrypoint =
       gst_vaapi_entrypoint_get_va_entrypoint (cip->entrypoint);
+
+  attrib_index = 0;
+  attrib = &attribs[attrib_index++];
+  g_assert (attrib_index < G_N_ELEMENTS (attribs));
 
   /* Validate VA surface format */
   va_chroma_format = from_GstVaapiChromaType (cip->chroma_type);
@@ -253,7 +257,8 @@ config_create (GstVaapiContext * context)
     goto cleanup;
   }
   attrib->value = va_chroma_format;
-  attrib++;
+  attrib = &attribs[attrib_index++];
+  g_assert (attrib_index < G_N_ELEMENTS (attribs));
 
   switch (cip->usage) {
 #if USE_ENCODERS
@@ -275,7 +280,8 @@ config_create (GstVaapiContext * context)
           goto cleanup;
         }
         attrib->value = va_rate_control;
-        attrib++;
+        attrib = &attribs[attrib_index++];
+        g_assert (attrib_index < G_N_ELEMENTS (attribs));
       }
       /* Packed headers */
       if (config->packed_headers) {
@@ -289,7 +295,8 @@ config_create (GstVaapiContext * context)
           goto cleanup;
         }
         attrib->value = config->packed_headers;
-        attrib++;
+        attrib = &attribs[attrib_index++];
+        g_assert (attrib_index < G_N_ELEMENTS (attribs));
       }
 #if VA_CHECK_VERSION(0,37,0)
       if (cip->profile == GST_VAAPI_PROFILE_JPEG_BASELINE) {
@@ -297,18 +304,18 @@ config_create (GstVaapiContext * context)
         if (!context_get_attribute (context, attrib->type, &value))
           goto cleanup;
         attrib->value = value;
-        attrib++;
+        attrib = &attribs[attrib_index++];
+        g_assert (attrib_index < G_N_ELEMENTS (attribs));
       }
 #endif
 #if VA_CHECK_VERSION(0,39,1)
       if (config->roi_capability) {
         VAConfigAttribValEncROI *roi_config;
+
         attrib->type = VAConfigAttribEncROI;
         if (!context_get_attribute (context, attrib->type, &value))
           goto cleanup;
-
         roi_config = (VAConfigAttribValEncROI *) & value;
-
         if (roi_config->bits.num_roi_regions != config->roi_num_supported ||
             roi_config->bits.roi_rc_qp_delat_support == 0) {
           GST_ERROR ("ROI unsupported - number of regions supported: %d"
@@ -317,7 +324,8 @@ config_create (GstVaapiContext * context)
           goto cleanup;
         }
         attrib->value = value;
-        attrib++;
+        attrib = &attribs[attrib_index++];
+        g_assert (attrib_index < G_N_ELEMENTS (attribs));
       }
 #endif
       break;
@@ -329,7 +337,7 @@ config_create (GstVaapiContext * context)
 
   GST_VAAPI_DISPLAY_LOCK (display);
   status = vaCreateConfig (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      context->va_profile, context->va_entrypoint, attribs, attrib - attribs,
+      context->va_profile, context->va_entrypoint, attribs, attrib_index,
       &context->va_config);
   GST_VAAPI_DISPLAY_UNLOCK (display);
   if (!vaapi_check_status (status, "vaCreateConfig()"))
