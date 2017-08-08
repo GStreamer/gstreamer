@@ -381,14 +381,16 @@ frame_done (FrameState * frame)
       GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE (frame->window);
 
   g_atomic_int_set (&frame->done, TRUE);
-  g_atomic_pointer_compare_and_exchange (&priv->last_frame, frame, NULL);
-  return g_atomic_int_dec_and_test (&priv->num_frames_pending);
+  if (g_atomic_pointer_compare_and_exchange (&priv->last_frame, frame, NULL))
+    return g_atomic_int_dec_and_test (&priv->num_frames_pending);
+  return FALSE;
 }
 
 static void
 frame_done_callback (void *data, struct wl_callback *callback, uint32_t time)
 {
-  frame_done (data);
+  if (!frame_done (data))
+    GST_INFO ("cannot remove last frame because it didn't match or empty");
 }
 
 static const struct wl_callback_listener frame_callback_listener = {
@@ -401,7 +403,8 @@ frame_release_callback (void *data, struct wl_buffer *wl_buffer)
   FrameState *const frame = data;
 
   if (!frame->done)
-    frame_done (frame);
+    if (!frame_done (frame))
+      GST_INFO ("cannot remove last frame because it didn't match or empty");
   wl_buffer_destroy (wl_buffer);
   frame_state_free (frame);
 }
