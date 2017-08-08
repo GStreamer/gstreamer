@@ -717,8 +717,10 @@ dpb_find_lowest_poc (GstVaapiDecoderH265 * decoder,
     GstVaapiPictureH265 *const picture = priv->dpb[i]->buffer;
     if (picture && !picture->output_needed)
       continue;
-    if (!found_picture || found_picture->poc > picture->poc)
-      found_picture = picture, found_index = i;
+    if (picture && (!found_picture || found_picture->poc > picture->poc)) {
+      found_picture = picture;
+      found_index = i;
+    }
   }
 
   if (found_picture_ptr)
