@@ -98,7 +98,7 @@ gst_vaapi_object_new (const GstVaapiObjectClass * klass,
   if (sub_size > 0)
     memset (((guchar *) object) + sizeof (*object), 0, sub_size);
 
-  if (klass && klass->init)
+  if (klass->init)
     klass->init (object);
   return object;
 }
