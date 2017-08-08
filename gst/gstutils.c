@@ -2605,10 +2605,10 @@ gst_object_default_error (GstObject * source, const GError * error,
 }
 
 /**
- * gst_bin_add_many:
+ * gst_bin_add_many: (skip)
  * @bin: a #GstBin
  * @element_1: (transfer floating): the #GstElement element to add to the bin
- * @...: (transfer floating): additional elements to add to the bin
+ * @...: additional elements to add to the bin
  *
  * Adds a %NULL-terminated list of elements to a bin.  This function is
  * equivalent to calling gst_bin_add() for each member of the list. The return
@@ -2634,7 +2634,7 @@ gst_bin_add_many (GstBin * bin, GstElement * element_1, ...)
 }
 
 /**
- * gst_bin_remove_many:
+ * gst_bin_remove_many: (skip)
  * @bin: a #GstBin
  * @element_1: (transfer none): the first #GstElement to remove from the bin
  * @...: (transfer none): %NULL-terminated list of elements to remove from the bin
