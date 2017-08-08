@@ -1902,7 +1902,9 @@ ensure_bitrate (GstVaapiEncoderH265 * encoder)
         /* FIXME: Provide better estimation */
         /* Using a 1/6 compression ratio */
         /* 12 bits per pixel for YUV420 */
-        guint64 factor = encoder->luma_width * encoder->luma_height * 12 / 6;
+        guint64 factor;
+
+        factor = (guint64) encoder->luma_width * encoder->luma_height * 12 / 6;
         base_encoder->bitrate =
             gst_util_uint64_scale (factor, GST_VAAPI_ENCODER_FPS_N (encoder),
             GST_VAAPI_ENCODER_FPS_D (encoder)) / 1000;
