@@ -2059,20 +2059,27 @@ gst_adaptive_demux_start_manifest_update_task (GstAdaptiveDemux * demux)
 static void
 gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux, gboolean stop_updates)
 {
+  int i;
   GList *iter;
+  GList *list_to_process;
 
   GST_LOG_OBJECT (demux, "Stopping tasks");
 
   if (stop_updates)
     gst_adaptive_demux_stop_manifest_update_task (demux);
-  for (iter = demux->streams; iter; iter = g_list_next (iter)) {
-    GstAdaptiveDemuxStream *stream = iter->data;
 
-    g_mutex_lock (&stream->fragment_download_lock);
-    stream->cancelled = TRUE;
-    gst_task_stop (stream->download_task);
-    g_cond_signal (&stream->fragment_download_cond);
-    g_mutex_unlock (&stream->fragment_download_lock);
+  list_to_process = demux->streams;
+  for (i = 0; i < 2; ++i) {
+    for (iter = list_to_process; iter; iter = g_list_next (iter)) {
+      GstAdaptiveDemuxStream *stream = iter->data;
+
+      g_mutex_lock (&stream->fragment_download_lock);
+      stream->cancelled = TRUE;
+      gst_task_stop (stream->download_task);
+      g_cond_signal (&stream->fragment_download_cond);
+      g_mutex_unlock (&stream->fragment_download_lock);
+    }
+    list_to_process = demux->prepared_streams;
   }
 
   GST_MANIFEST_UNLOCK (demux);
@@ -2090,23 +2097,27 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux, gboolean stop_updates)
    * object. Even if we temporarily release manifest_lock, the demux->streams
    * cannot change and iter cannot be invalidated.
    */
-  for (iter = demux->streams; iter; iter = g_list_next (iter)) {
-    GstAdaptiveDemuxStream *stream = iter->data;
-    GstElement *src = stream->src;
+  list_to_process = demux->streams;
+  for (i = 0; i < 2; ++i) {
+    for (iter = list_to_process; iter; iter = g_list_next (iter)) {
+      GstAdaptiveDemuxStream *stream = iter->data;
+      GstElement *src = stream->src;
 
-    GST_MANIFEST_UNLOCK (demux);
+      GST_MANIFEST_UNLOCK (demux);
 
-    if (src) {
-      gst_element_set_locked_state (src, TRUE);
-      gst_element_set_state (src, GST_STATE_READY);
+      if (src) {
+        gst_element_set_locked_state (src, TRUE);
+        gst_element_set_state (src, GST_STATE_READY);
+      }
+
+      /* stream->download_task value never changes, so it is safe to read it
+       * outside critical section
+       */
+      gst_task_join (stream->download_task);
+
+      GST_MANIFEST_LOCK (demux);
     }
-
-    /* stream->download_task value never changes, so it is safe to read it
-     * outside critical section
-     */
-    gst_task_join (stream->download_task);
-
-    GST_MANIFEST_LOCK (demux);
+    list_to_process = demux->prepared_streams;
   }
 
   GST_MANIFEST_UNLOCK (demux);
@@ -2115,12 +2126,16 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux, gboolean stop_updates)
 
   GST_MANIFEST_LOCK (demux);
 
-  for (iter = demux->streams; iter; iter = g_list_next (iter)) {
-    GstAdaptiveDemuxStream *stream = iter->data;
+  list_to_process = demux->streams;
+  for (i = 0; i < 2; ++i) {
+    for (iter = list_to_process; iter; iter = g_list_next (iter)) {
+      GstAdaptiveDemuxStream *stream = iter->data;
 
-    stream->download_error_count = 0;
-    stream->need_header = TRUE;
-    stream->qos_earliest_time = GST_CLOCK_TIME_NONE;
+      stream->download_error_count = 0;
+      stream->need_header = TRUE;
+      stream->qos_earliest_time = GST_CLOCK_TIME_NONE;
+    }
+    list_to_process = demux->prepared_streams;
   }
 }
 
