@@ -240,7 +240,7 @@ print_all_video_stream (GstPlayerMediaInfo * media_info)
 {
   GList *list, *l;
 
-  list = gst_player_get_video_streams (media_info);
+  list = gst_player_media_info_get_video_streams (media_info);
   if (!list)
     return;
 
@@ -259,7 +259,7 @@ print_all_subtitle_stream (GstPlayerMediaInfo * media_info)
 {
   GList *list, *l;
 
-  list = gst_player_get_subtitle_streams (media_info);
+  list = gst_player_media_info_get_subtitle_streams (media_info);
   if (!list)
     return;
 
@@ -278,7 +278,7 @@ print_all_audio_stream (GstPlayerMediaInfo * media_info)
 {
   GList *list, *l;
 
-  list = gst_player_get_audio_streams (media_info);
+  list = gst_player_media_info_get_audio_streams (media_info);
   if (!list)
     return;
 
