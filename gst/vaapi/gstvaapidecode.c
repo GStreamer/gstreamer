@@ -1175,7 +1175,7 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
   GstCaps *caps, *allowed_sinkpad_caps;
   GArray *profiles;
   guint i;
-  gboolean base_only;
+  gboolean base_only = FALSE;
   gboolean have_high = FALSE;
   gboolean have_mvc = FALSE;
 
