@@ -22,7 +22,7 @@
 #include "rtpstats.h"
 
 void
-gst_rtp_packet_rate_ctx_reset (RTPPacketRateCtx * ctx, guint32 clock_rate)
+gst_rtp_packet_rate_ctx_reset (RTPPacketRateCtx * ctx, gint32 clock_rate)
 {
   ctx->clock_rate = clock_rate;
   ctx->probed = FALSE;
@@ -36,7 +36,7 @@ gst_rtp_packet_rate_ctx_update (RTPPacketRateCtx * ctx, guint16 seqnum,
 {
   guint64 new_ts, diff_ts;
   gint diff_seqnum;
-  guint32 new_packet_rate;
+  gint32 new_packet_rate;
 
   if (ctx->clock_rate <= 0) {
     return ctx->avg_packet_rate;
