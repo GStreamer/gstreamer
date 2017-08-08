@@ -1457,7 +1457,6 @@ fill_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncSequence * sequence)
 
   seq_param->intra_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder);
   seq_param->intra_idr_period = encoder->idr_period;
-  seq_param->ip_period = 1 + encoder->num_bframes;
   seq_param->ip_period = seq_param->intra_period > 1 ?
       (1 + encoder->num_bframes) : 0;
   seq_param->bits_per_second = encoder->bitrate_bits;
