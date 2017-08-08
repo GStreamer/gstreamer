@@ -2664,7 +2664,17 @@ gst_vaapi_decoder_h265_decode_codec_data (GstVaapiDecoder *
   num_nal_arrays = buf[22];
   ofs = 23;
   for (i = 0; i < num_nal_arrays; i++) {
-    num_nals = GST_READ_UINT16_BE (buf + ofs + 1);
+    const guchar *data;
+
+    if (ofs + 1 > buf_size)
+      return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+    data = buf + ofs + 1;
+    if (!data)
+      return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+    num_nals = GST_READ_UINT16_BE (data);
+    /* the max number of nals is GST_H265_MAX_PPS_COUNT (64) */
+    if (num_nals > 64)
+      return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     ofs += 3;
 
     for (j = 0; j < num_nals; j++) {
