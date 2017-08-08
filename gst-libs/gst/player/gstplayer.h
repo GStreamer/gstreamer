@@ -288,7 +288,7 @@ typedef enum
 
 GST_EXPORT
 GstSample * gst_player_get_video_snapshot (GstPlayer * player,
-    GstPlayerSnapshotFormat format, GstStructure * config);
+    GstPlayerSnapshotFormat format, const GstStructure * config);
 
 G_END_DECLS
 
