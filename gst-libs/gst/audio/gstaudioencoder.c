@@ -1325,7 +1325,18 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     }
     if (discont) {
       /* now re-sync ts */
-      priv->base_ts += diff;
+      GstClockTime shift =
+          gst_util_uint64_scale (gst_adapter_available (priv->adapter),
+          GST_SECOND, ctx->info.rate * ctx->info.bpf);
+
+      if (G_UNLIKELY (shift > GST_BUFFER_TIMESTAMP (buffer))) {
+        /* ERROR */
+        goto wrong_time;
+      }
+      /* arrange for newly added samples to come out with the ts
+       * of the incoming buffer that adds these */
+      priv->base_ts = GST_BUFFER_TIMESTAMP (buffer) - shift;
+      priv->samples = 0;
       gst_audio_encoder_set_base_gp (enc);
       priv->discont |= discont;
     }
@@ -1358,6 +1369,14 @@ wrong_buffer:
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
         ("buffer size %" G_GSIZE_FORMAT " not a multiple of %d",
             gst_buffer_get_size (buffer), ctx->info.bpf));
+    gst_buffer_unref (buffer);
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+wrong_time:
+  {
+    GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
+        ("buffer going too far back in time"));
     gst_buffer_unref (buffer);
     ret = GST_FLOW_ERROR;
     goto done;
