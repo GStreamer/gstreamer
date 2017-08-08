@@ -900,6 +900,8 @@ decode_packet (GstVaapiDecoderMpeg4 * decoder, GstMpeg4Packet packet)
 
         if (first_slice) {
           status = decode_slice (decoder, _data, video_packet.size, FALSE);
+          if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
           first_slice = FALSE;
         } else {
           _data += video_packet.offset;
@@ -909,9 +911,13 @@ decode_packet (GstVaapiDecoderMpeg4 * decoder, GstMpeg4Packet packet)
               gst_mpeg4_parse_video_packet_header (&priv->packet_hdr,
               &priv->vol_hdr, &priv->vop_hdr, &priv->sprite_trajectory, _data,
               _data_size);
+          if (ret != GST_MPEG4_PARSER_OK)
+            return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
           status =
               decode_slice (decoder, _data + priv->packet_hdr.size / 8,
               video_packet.size - priv->packet_hdr.size / 8, TRUE);
+          if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
         }
 
         _data += video_packet.size;
