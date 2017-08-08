@@ -1264,7 +1264,10 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   }
 
   if (GST_VIDEO_INFO_FORMAT (&obj->info) == GST_VIDEO_FORMAT_ENCODED) {
-    if (group->buffer.flags & V4L2_BUF_FLAG_KEYFRAME)
+    if ((group->buffer.flags & V4L2_BUF_FLAG_KEYFRAME) ||
+        GST_V4L2_PIXELFORMAT (obj) == V4L2_PIX_FMT_MJPEG ||
+        GST_V4L2_PIXELFORMAT (obj) == V4L2_PIX_FMT_JPEG ||
+        GST_V4L2_PIXELFORMAT (obj) == V4L2_PIX_FMT_PJPG)
       GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
     else
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
