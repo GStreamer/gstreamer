@@ -2325,7 +2325,7 @@ ensure_bitrate (GstVaapiEncoderH264 * encoder)
         if (!encoder->use_dct8x8)
           bits_per_mb += (bits_per_mb * 10) / 100;
 
-        factor = encoder->mb_width * encoder->mb_height * bits_per_mb;
+        factor = (guint64) encoder->mb_width * encoder->mb_height * bits_per_mb;
         base_encoder->bitrate =
             gst_util_uint64_scale (factor, GST_VAAPI_ENCODER_FPS_N (encoder),
             GST_VAAPI_ENCODER_FPS_D (encoder)) / 1000;
