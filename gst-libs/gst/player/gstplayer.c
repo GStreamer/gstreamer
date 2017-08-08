@@ -4681,7 +4681,7 @@ gst_player_config_get_seek_accurate (const GstStructure * config)
  */
 GstSample *
 gst_player_get_video_snapshot (GstPlayer * self,
-    GstPlayerSnapshotFormat format, GstStructure * config)
+    GstPlayerSnapshotFormat format, const GstStructure * config)
 {
   gint video_tracks = 0;
   GstSample *sample = NULL;
