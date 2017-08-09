@@ -843,6 +843,13 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   if (!gst_vaapi_encoder_ensure_context (encoder))
     goto error_reset_context;
 
+  /* Currently only FEI entrypoint needed this.
+   * FEI ENC+PAK requires two contexts where the first one is for ENC
+   * and the second one is for PAK */
+  if (klass->ensure_secondary_context
+      && !klass->ensure_secondary_context (encoder))
+    goto error_reset_secondary_context;
+
 #if VA_CHECK_VERSION(0,36,0)
   if (get_config_attribute (encoder, VAConfigAttribEncQualityRange,
           &quality_level_max) && quality_level_max > 0) {
@@ -877,6 +884,11 @@ error_alloc_codedbuf_pool:
 error_reset_context:
   {
     GST_ERROR ("failed to update VA context");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
+error_reset_secondary_context:
+  {
+    GST_ERROR ("failed to create/update secondary VA context");
     return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
   }
 }
