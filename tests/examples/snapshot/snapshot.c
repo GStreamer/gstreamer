@@ -18,7 +18,7 @@
  */
 
 #include <gst/gst.h>
-#include <gtk/gtk.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <stdlib.h>
 
