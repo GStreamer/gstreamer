@@ -636,13 +636,16 @@ gst_video_aggregator_default_update_caps (GstVideoAggregator * vagg,
   }
 
   GST_DEBUG_OBJECT (vagg,
-      "The output format will now be : %d with chroma : %s",
-      best_format, gst_video_chroma_to_string (best_info.chroma_site));
+      "The output format will now be : %d with chroma : %s and colorimetry %s",
+      best_format, gst_video_chroma_to_string (best_info.chroma_site),
+      gst_video_colorimetry_to_string (&best_info.colorimetry));
 
   best_format_caps = gst_caps_copy (caps);
   gst_caps_set_simple (best_format_caps, "format", G_TYPE_STRING,
       gst_video_format_to_string (best_format), "chroma-site", G_TYPE_STRING,
-      gst_video_chroma_to_string (best_info.chroma_site), NULL);
+      gst_video_chroma_to_string (best_info.chroma_site), "colorimetry",
+      G_TYPE_STRING, gst_video_colorimetry_to_string (&best_info.colorimetry),
+      NULL);
   ret = gst_caps_merge (best_format_caps, gst_caps_ref (caps));
 
   return ret;
