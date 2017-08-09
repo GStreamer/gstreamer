@@ -514,7 +514,7 @@ gst_video_aggregator_find_best_format (GstVideoAggregator * vagg,
     format_number =
         GPOINTER_TO_INT (g_hash_table_lookup (formats_table,
             GINT_TO_POINTER (GST_VIDEO_INFO_FORMAT (&pad->info))));
-    format_number += 1;
+    format_number += pad->info.width * pad->info.height;
 
     g_hash_table_replace (formats_table,
         GINT_TO_POINTER (GST_VIDEO_INFO_FORMAT (&pad->info)),
