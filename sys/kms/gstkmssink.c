@@ -1433,6 +1433,7 @@ gst_kms_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DRIVER_NAME:
+      g_free (sink->devname);
       sink->devname = g_value_dup_string (value);
       break;
     case PROP_CONNECTOR_ID:
