@@ -1692,6 +1692,14 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   encoder->x264param.analyse.b_psnr = 0;
 
+  /* FIXME 2.0 make configuration more sane and consistent with x264 cmdline:
+   * + split pass property into a pass property (pass1/2/3 enum) and rc-method
+   * + bitrate property should only be used in case of CBR method
+   * + vbv bitrate/buffer should have separate configuration that is then
+   *   applied independently of the mode:
+   *    + either using properties (new) vbv-maxrate and (renamed) vbv-bufsize
+   *    + or dropping vbv-buf-capacity altogether and simply using option-string
+   */
   switch (encoder->pass) {
     case GST_X264_ENC_PASS_QUANT:
       encoder->x264param.rc.i_rc_method = X264_RC_CQP;
