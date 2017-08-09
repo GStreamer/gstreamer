@@ -190,6 +190,7 @@ typedef enum {
  * @GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE: Encode Picture
  * @GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP: Encode Slice low power/
  *                                        high performace varient
+ * @GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI: FEI Encode
  *
  * The set of all entrypoints for #GstVaapiEntrypoint
  */
@@ -199,7 +200,8 @@ typedef enum {
     GST_VAAPI_ENTRYPOINT_MOCO,
     GST_VAAPI_ENTRYPOINT_SLICE_ENCODE,
     GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE,
-    GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP
+    GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP,
+    GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI
 } GstVaapiEntrypoint;
 
 const gchar *
