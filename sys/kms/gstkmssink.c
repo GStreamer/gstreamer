@@ -75,6 +75,7 @@ static void gst_kms_sink_drain (GstKMSSink * self);
 enum
 {
   PROP_DRIVER_NAME = 1,
+  PROP_BUS_ID,
   PROP_CONNECTOR_ID,
   PROP_PLANE_ID,
   PROP_FORCE_MODESETTING,
@@ -561,8 +562,8 @@ gst_kms_sink_start (GstBaseSink * bsink)
   pres = NULL;
   plane = NULL;
 
-  if (self->devname)
-    self->fd = drmOpen (self->devname, NULL);
+  if (self->devname || self->bus_id)
+    self->fd = drmOpen (self->devname, self->bus_id);
   else
     self->fd = kms_open (&self->devname);
   if (self->fd < 0)
@@ -1436,6 +1437,10 @@ gst_kms_sink_set_property (GObject * object, guint prop_id,
       g_free (sink->devname);
       sink->devname = g_value_dup_string (value);
       break;
+    case PROP_BUS_ID:
+      g_free (sink->bus_id);
+      sink->bus_id = g_value_dup_string (value);
+      break;
     case PROP_CONNECTOR_ID:
       sink->conn_id = g_value_get_int (value);
       break;
@@ -1463,6 +1468,9 @@ gst_kms_sink_get_property (GObject * object, guint prop_id,
     case PROP_DRIVER_NAME:
       g_value_take_string (value, sink->devname);
       break;
+    case PROP_BUS_ID:
+      g_value_take_string (value, sink->bus_id);
+      break;
     case PROP_CONNECTOR_ID:
       g_value_set_int (value, sink->conn_id);
       break;
@@ -1485,6 +1493,7 @@ gst_kms_sink_finalize (GObject * object)
 
   sink = GST_KMS_SINK (object);
   g_clear_pointer (&sink->devname, g_free);
+  g_clear_pointer (&sink->bus_id, g_free);
   gst_poll_free (sink->poll);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -1545,6 +1554,17 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
    */
   g_properties[PROP_DRIVER_NAME] = g_param_spec_string ("driver-name",
       "device name", "DRM device driver name", NULL,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  /**
+   * kmssink:bus-id:
+   *
+   * If you have a system with multiple displays for the same driver-name,
+   * you can choose which display to use by setting the DRM bus ID. Otherwise,
+   * the driver decides which one.
+   */
+  g_properties[PROP_BUS_ID] = g_param_spec_string ("bus-id",
+      "Bus ID", "DRM bus ID", NULL,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**

@@ -74,6 +74,7 @@ struct _GstKMSSink {
   GList *mem_cache;
 
   gchar *devname;
+  gchar *bus_id;
 
   guint32 mm_width, mm_height;
 
