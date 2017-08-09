@@ -48,6 +48,15 @@ struct _GstVaapiSurfaceProxy
   gpointer destroy_data;
   GstVaapiRectangle crop_rect;
   guint has_crop_rect:1;
+
+#if USE_H264_FEI_ENCODER
+  GstVaapiEncFeiMvPredictor *mvpred;
+  GstVaapiEncFeiMbControl *mbcntrl;
+  GstVaapiEncFeiQp *qp;
+  GstVaapiEncFeiMbCode *mbcode;
+  GstVaapiEncFeiMv *mv;
+  GstVaapiEncFeiDistortion *dist;
+#endif
 };
 
 #define GST_VAAPI_SURFACE_PROXY_FLAGS       GST_VAAPI_MINI_OBJECT_FLAGS

@@ -28,6 +28,10 @@
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
 
+#if USE_H264_FEI_ENCODER
+#include <gst/vaapi/gstvaapifei_objects.h>
+#endif
+
 G_BEGIN_DECLS
 
 /**
@@ -151,6 +155,46 @@ gst_vaapi_surface_proxy_get_crop_rect (GstVaapiSurfaceProxy * proxy);
 void
 gst_vaapi_surface_proxy_set_crop_rect (GstVaapiSurfaceProxy * proxy,
     const GstVaapiRectangle * crop_rect);
+
+#if USE_H264_FEI_ENCODER
+
+GstVaapiEncFeiMbCode *
+gst_vaapi_surface_proxy_get_fei_mb_code (GstVaapiSurfaceProxy * proxy);
+
+GstVaapiEncFeiMv *
+gst_vaapi_surface_proxy_get_fei_mv (GstVaapiSurfaceProxy * proxy);
+
+GstVaapiEncFeiDistortion *
+gst_vaapi_surface_proxy_get_fei_distortion (GstVaapiSurfaceProxy * proxy);
+
+GstVaapiEncFeiQp *
+gst_vaapi_surface_proxy_get_fei_qp (GstVaapiSurfaceProxy * proxy);
+
+GstVaapiEncFeiMvPredictor *
+gst_vaapi_surface_proxy_get_fei_mv_predictor (GstVaapiSurfaceProxy * proxy);
+
+GstVaapiEncFeiMbControl *
+gst_vaapi_surface_proxy_get_fei_mb_control (GstVaapiSurfaceProxy * proxy);
+
+void
+gst_vaapi_surface_proxy_set_fei_mb_code (GstVaapiSurfaceProxy * proxy,
+                                        GstVaapiEncFeiMbCode *mbcode);
+void
+gst_vaapi_surface_proxy_set_fei_mv (GstVaapiSurfaceProxy * proxy,
+                                        GstVaapiEncFeiMv *mv);
+void
+gst_vaapi_surface_proxy_set_fei_distortion (GstVaapiSurfaceProxy * proxy,
+                                        GstVaapiEncFeiDistortion *dist);
+void
+gst_vaapi_surface_proxy_set_fei_qp (GstVaapiSurfaceProxy * proxy,
+                                    GstVaapiEncFeiQp *mbcode);
+void
+gst_vaapi_surface_proxy_set_fei_mv_predictor (GstVaapiSurfaceProxy * proxy,
+                                              GstVaapiEncFeiMvPredictor *mvpred);
+void
+gst_vaapi_surface_proxy_set_fei_mb_control (GstVaapiSurfaceProxy * proxy,
+                                            GstVaapiEncFeiMbControl *mbcntrl);
+#endif
 
 G_END_DECLS
 
