@@ -1506,7 +1506,7 @@ check_all_slot_for_eos (GstDecodebin3 * dbin)
       continue;
 
     if (slot->is_drained) {
-      GST_DEBUG_OBJECT (slot->sink_pad, "slot %p is draned", slot);
+      GST_LOG_OBJECT (slot->sink_pad, "slot %p is drained", slot);
       continue;
     }
 
@@ -1538,11 +1538,17 @@ check_all_slot_for_eos (GstDecodebin3 * dbin)
       DecodebinInputStream *input = (DecodebinInputStream *) iter->data;
       GstPad *peer = gst_pad_get_peer (input->srcpad);
 
-      /* Send EOS and then remove elements */
+      /* Send EOS to all slots */
       if (peer) {
+        GstEvent *stream_start =
+            gst_pad_get_sticky_event (input->srcpad, GST_EVENT_STREAM_START, 0);
+        /* First forward the STREAM_START event to reset the EOS status (if any) */
+        if (stream_start)
+          gst_pad_send_event (peer, stream_start);
         gst_pad_send_event (peer, gst_event_new_eos ());
         gst_object_unref (peer);
-      }
+      } else
+        GST_DEBUG_OBJECT (dbin, "no output");
     }
   }
 }
@@ -1627,10 +1633,36 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
       }
         break;
       case GST_EVENT_EOS:
-        /* FIXME : Figure out */
+      {
+        const GstStructure *s = gst_event_get_structure (ev);
+        slot->is_drained = TRUE;
+
+        /* Custom EOS handling first */
+        if (s && gst_structure_has_field (s, "decodebin3-custom-eos")) {
+          ret = GST_PAD_PROBE_DROP;
+          SELECTION_LOCK (dbin);
+          if (slot->input == NULL) {
+            GST_DEBUG_OBJECT (pad,
+                "Got custom-eos from null input stream, remove output stream");
+            /* Remove the output */
+            if (slot->output) {
+              DecodebinOutputStream *output = slot->output;
+              dbin->output_streams =
+                  g_list_remove (dbin->output_streams, output);
+              free_output_stream (dbin, output);
+            }
+            slot->probe_id = 0;
+            dbin->slots = g_list_remove (dbin->slots, slot);
+            free_multiqueue_slot_async (dbin, slot);
+            ret = GST_PAD_PROBE_REMOVE;
+          } else {
+            check_all_slot_for_eos (dbin);
+          }
+          SELECTION_UNLOCK (dbin);
+          break;
+        }
         GST_FIXME_OBJECT (pad, "EOS on multiqueue source pad. input:%p",
             slot->input);
-        slot->is_drained = TRUE;
         if (slot->input == NULL) {
           GstPad *peer;
           GST_DEBUG_OBJECT (pad,
@@ -1657,32 +1689,13 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
 
           free_multiqueue_slot_async (dbin, slot);
           ret = GST_PAD_PROBE_REMOVE;
-        }
-        break;
-      case GST_EVENT_CUSTOM_DOWNSTREAM:
-        if (gst_event_has_name (ev, "decodebin3-custom-eos")) {
-          slot->is_drained = TRUE;
-          ret = GST_PAD_PROBE_DROP;
+        } else {
+          GST_DEBUG_OBJECT (pad, "What happens with event ?");
           SELECTION_LOCK (dbin);
-          if (slot->input == NULL) {
-            GST_DEBUG_OBJECT (pad,
-                "Got custom-eos from null input stream, remove output stream");
-            /* Remove the output */
-            if (slot->output) {
-              DecodebinOutputStream *output = slot->output;
-              dbin->output_streams =
-                  g_list_remove (dbin->output_streams, output);
-              free_output_stream (dbin, output);
-            }
-            slot->probe_id = 0;
-            dbin->slots = g_list_remove (dbin->slots, slot);
-            free_multiqueue_slot_async (dbin, slot);
-            ret = GST_PAD_PROBE_REMOVE;
-          } else {
-            check_all_slot_for_eos (dbin);
-          }
+          check_all_slot_for_eos (dbin);
           SELECTION_UNLOCK (dbin);
         }
+      }
         break;
       default:
         break;
