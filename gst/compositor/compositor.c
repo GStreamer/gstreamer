@@ -314,9 +314,13 @@ gst_compositor_pad_set_info (GstVideoAggregatorPad * pad,
     tmp_info.flags = current_info->flags;
     tmp_info.interlace_mode = current_info->interlace_mode;
 
-    GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
-        GST_VIDEO_INFO_FORMAT (current_info),
-        GST_VIDEO_INFO_FORMAT (&tmp_info));
+    GST_DEBUG_OBJECT (pad, "This pad will be converted from format %s to %s, "
+        "colorimetry %s to %s, chroma-site %s to %s, "
+        "width/height %d/%d to %d/%d",
+        current_info->finfo->name, tmp_info.finfo->name,
+        colorimetry, best_colorimetry,
+        chroma, best_chroma,
+        current_info->width, current_info->height, width, height);
 
     cpad->convert = gst_video_converter_new (current_info, &tmp_info, NULL);
     cpad->conversion_info = tmp_info;
