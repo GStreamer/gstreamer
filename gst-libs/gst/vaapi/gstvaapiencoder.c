@@ -730,7 +730,8 @@ init_context_info (GstVaapiEncoder * encoder, GstVaapiContextInfo * cip,
   if (cdata->codec == GST_VAAPI_CODEC_JPEG) {
     cip->entrypoint = GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE;
   } else {
-    if (cip->entrypoint != GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP)
+    if (cip->entrypoint != GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP &&
+        cip->entrypoint != GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI)
       cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
   }
   cip->chroma_type = get_default_chroma_type (encoder, cip);
