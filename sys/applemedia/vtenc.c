@@ -1054,8 +1054,15 @@ gst_vtenc_update_latency (GstVTEnc * self)
   CFNumberGetValue (value, kCFNumberSInt32Type, &frames);
   if (self->latency_frames == -1 || self->latency_frames != frames) {
     self->latency_frames = frames;
-    frame_duration = gst_util_uint64_scale (GST_SECOND,
-        self->video_info.fps_d, self->video_info.fps_n);
+    if (self->video_info.fps_d == 0 || self->video_info.fps_n == 0) {
+      /* FIXME: Assume 25fps. This is better than reporting no latency at
+       * all and then later failing in live pipelines
+       */
+      frame_duration = gst_util_uint64_scale (GST_SECOND, 1, 25);
+    } else {
+      frame_duration = gst_util_uint64_scale (GST_SECOND,
+          self->video_info.fps_d, self->video_info.fps_n);
+    }
     latency = frame_duration * frames;
     GST_INFO_OBJECT (self,
         "latency status %d frames %d fps %d/%d time %" GST_TIME_FORMAT, status,
