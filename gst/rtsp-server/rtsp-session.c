@@ -69,6 +69,7 @@ struct _GstRTSPSessionPrivate
 #undef DEBUG
 
 #define DEFAULT_TIMEOUT	       60
+#define NO_TIMEOUT              -1
 #define DEFAULT_ALWAYS_VISIBLE  FALSE
 
 enum
@@ -633,6 +634,14 @@ gst_rtsp_session_next_timeout_usec (GstRTSPSession * session, gint64 now)
   g_return_val_if_fail (GST_IS_RTSP_SESSION (session), -1);
 
   priv = session->priv;
+
+  g_mutex_lock (&priv->lock);
+  /* If timeout is set to 0, we never timeout */
+  if (priv->timeout == 0) {
+    g_mutex_unlock (&priv->lock);
+    return NO_TIMEOUT;
+  }
+  g_mutex_unlock (&priv->lock);
 
   g_mutex_lock (&priv->last_access_lock);
   if (g_atomic_int_get (&priv->expire_count) != 0) {

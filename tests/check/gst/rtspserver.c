@@ -1559,6 +1559,27 @@ GST_START_TEST (test_play_multithreaded_timeout_session)
 GST_END_TEST;
 
 
+GST_START_TEST (test_no_session_timeout)
+{
+  GstRTSPSession *session;
+  gint64 now;
+  gboolean is_expired;
+
+  session = gst_rtsp_session_new ("test-session");
+  gst_rtsp_session_set_timeout (session, 0);
+
+  now = g_get_monotonic_time ();
+  /* add more than the extra 5 seconds that are usually added in
+   * gst_rtsp_session_next_timeout_usec */
+  now += 7000000;
+
+  is_expired = gst_rtsp_session_is_expired_usec (session, now);
+  fail_unless (is_expired == FALSE);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_play_disconnect)
 {
   GstRTSPConnection *conn;
@@ -2118,6 +2139,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_play_multithreaded_block_in_describe);
   tcase_add_test (tc, test_play_multithreaded_timeout_client);
   tcase_add_test (tc, test_play_multithreaded_timeout_session);
+  tcase_add_test (tc, test_no_session_timeout);
   tcase_add_test (tc, test_play_disconnect);
   tcase_add_test (tc, test_play_specific_server_port);
   tcase_add_test (tc, test_play_smpte_range);
