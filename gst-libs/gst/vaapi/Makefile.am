@@ -237,6 +237,17 @@ libgstvaapi_source_c += $(libgstvaapi_vp9enc_source_c)
 libgstvaapi_source_h += $(libgstvaapi_vp9enc_source_h)
 endif
 
+libgstvaapi_h264feienc_source_c =		\
+	gstvaapifeiutils_h264.c			\
+	$(NULL)
+libgstvaapi_h264feienc_source_h =		\
+	gstvaapifeiutils_h264.h			\
+	$(NULL)
+if USE_H264_FEI_ENCODER
+libgstvaapi_source_c += $(libgstvaapi_h264feienc_source_c)
+libgstvaapi_source_h += $(libgstvaapi_h264feienc_source_h)
+endif
+
 libgstvaapi_drm_source_c =			\
 	gstvaapidisplay_drm.c			\
 	gstvaapiwindow_drm.c			\
@@ -523,6 +534,8 @@ EXTRA_DIST = \
 	$(libgstvaapi_egl_source_c)		\
 	$(libgstvaapi_egl_source_h)		\
 	$(libgstvaapi_egl_source_priv_h)	\
+	$(libgstvaapi_h264feienc_source_h)      \
+	$(libgstvaapi_h264feienc_source_c)      \
 	$(NULL)
 
 -include $(top_srcdir)/git.mk
