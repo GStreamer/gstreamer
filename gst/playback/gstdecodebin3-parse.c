@@ -263,8 +263,11 @@ parse_chain_output_probe (GstPad * pad, GstPadProbeInfo * info,
 
             GST_DEBUG_OBJECT (pad,
                 "Got EOS end of input stream, post custom-eos");
-            s = gst_structure_new_empty ("decodebin3-custom-eos");
-            event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+            event = gst_event_new_eos ();
+            gst_event_set_seqnum (event, gst_event_get_seqnum (ev));
+            s = gst_event_writable_structure (event);
+            gst_structure_set (s, "decodebin3-custom-eos", G_TYPE_BOOLEAN, TRUE,
+                NULL);
             gst_pad_send_event (peer, event);
             gst_object_unref (peer);
           } else {
