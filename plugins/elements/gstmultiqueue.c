@@ -1618,6 +1618,11 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
         if (G_UNLIKELY (*allow_drop))
           *allow_drop = FALSE;
         break;
+      case GST_EVENT_STREAM_START:
+        result = GST_FLOW_OK;
+        if (G_UNLIKELY (*allow_drop))
+          *allow_drop = FALSE;
+        break;
       case GST_EVENT_SEGMENT:
         apply_segment (mq, sq, event, &sq->src_segment);
         /* Applying the segment may have made the queue non-full again, unblock it if needed */

@@ -2859,7 +2859,8 @@ gst_queue2_dequeue_on_eos (GstQueue2 * queue, GstQueue2ItemType * item_type)
       GstEvent *event = GST_EVENT_CAST (data);
       GstEventType type = GST_EVENT_TYPE (event);
 
-      if (type == GST_EVENT_EOS || type == GST_EVENT_SEGMENT) {
+      if (type == GST_EVENT_EOS || type == GST_EVENT_SEGMENT
+          || type == GST_EVENT_STREAM_START) {
         /* we found a pushable item in the queue, push it out */
         GST_CAT_LOG_OBJECT (queue_dataflow, queue,
             "pushing pushable event %s after EOS", GST_EVENT_TYPE_NAME (event));
