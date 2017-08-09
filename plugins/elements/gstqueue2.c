@@ -2463,10 +2463,12 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
 
   queue = GST_QUEUE2 (parent);
 
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "Received event '%s'",
+      GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
     {
-      GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received flush start event");
       if (GST_PAD_MODE (queue->srcpad) == GST_PAD_MODE_PUSH) {
         /* forward event */
         ret = gst_pad_push_event (queue->srcpad, event);
@@ -2504,8 +2506,6 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
     }
     case GST_EVENT_FLUSH_STOP:
     {
-      GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received flush stop event");
-
       if (GST_PAD_MODE (queue->srcpad) == GST_PAD_MODE_PUSH) {
         /* forward event */
         ret = gst_pad_push_event (queue->srcpad, event);
@@ -2556,6 +2556,14 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
     default:
       if (GST_EVENT_IS_SERIALIZED (event)) {
         /* serialized events go in the queue */
+
+        /* STREAM_START and SEGMENT reset the EOS status of a
+         * pad. Change the cached sinkpad flow result accordingly */
+        if (queue->sinkresult == GST_FLOW_EOS
+            && (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START
+                || GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT))
+          queue->sinkresult = GST_FLOW_OK;
+
         GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->sinkresult, out_flushing);
         if (queue->srcresult != GST_FLOW_OK) {
           /* Errors in sticky event pushing are no problem and ignored here
@@ -2573,9 +2581,36 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
             goto out_flow_error;
           }
         }
-        /* refuse more events on EOS */
-        if (queue->is_eos)
-          goto out_eos;
+
+        /* refuse more events on EOS unless they unset the EOS status */
+        if (queue->is_eos) {
+          switch (GST_EVENT_TYPE (event)) {
+            case GST_EVENT_STREAM_START:
+            case GST_EVENT_SEGMENT:
+              /* Restart the loop */
+              if (GST_PAD_MODE (queue->srcpad) == GST_PAD_MODE_PUSH) {
+                queue->srcresult = GST_FLOW_OK;
+                queue->is_eos = FALSE;
+                queue->unexpected = FALSE;
+                queue->seeking = FALSE;
+                queue->src_tags_bitrate = queue->sink_tags_bitrate = 0;
+                /* reset rate counters */
+                reset_rate_timer (queue);
+                gst_pad_start_task (queue->srcpad,
+                    (GstTaskFunction) gst_queue2_loop, queue->srcpad, NULL);
+              } else {
+                queue->is_eos = FALSE;
+                queue->unexpected = FALSE;
+                queue->seeking = FALSE;
+                queue->src_tags_bitrate = queue->sink_tags_bitrate = 0;
+              }
+
+              break;
+            default:
+              goto out_eos;
+          }
+        }
+
         gst_queue2_locked_enqueue (queue, event, GST_QUEUE2_ITEM_TYPE_EVENT);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
         gst_queue2_post_buffering (queue);
