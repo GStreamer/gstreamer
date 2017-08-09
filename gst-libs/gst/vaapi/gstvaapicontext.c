@@ -229,7 +229,7 @@ config_create (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
-  VAConfigAttrib attribs[6], *attrib;
+  VAConfigAttrib attribs[7], *attrib;
   VAStatus status;
   guint value, va_chroma_format, attrib_index;
 
@@ -326,6 +326,14 @@ config_create (GstVaapiContext * context)
         attrib->value = value;
         attrib = &attribs[attrib_index++];
         g_assert (attrib_index < G_N_ELEMENTS (attribs));
+      }
+#endif
+#if USE_H264_FEI_ENCODER
+      if (cip->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI) {
+        attrib->type = (VAConfigAttribType) VAConfigAttribFEIFunctionType;
+        attrib = &attribs[attrib_index++];
+        g_assert (attrib_index < G_N_ELEMENTS (attribs));
+        /* FIXME: Query the read-only supported MV predictors */
       }
 #endif
       break;

@@ -747,6 +747,7 @@ set_context_info (GstVaapiEncoder * encoder)
   GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;
   const GstVideoFormat format =
       GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
+  guint fei_function = config->fei_function;
 
   init_context_info (encoder, cip, get_profile (encoder));
 
@@ -762,6 +763,7 @@ set_context_info (GstVaapiEncoder * encoder)
   config->packed_headers = get_packed_headers (encoder);
   config->roi_capability =
       get_roi_capability (encoder, &config->roi_num_supported);
+  config->fei_function = fei_function;
 
   return TRUE;
 
