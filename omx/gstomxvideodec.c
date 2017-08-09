@@ -2136,18 +2136,94 @@ gst_omx_video_dec_disable (GstOMXVideoDec * self)
 static gboolean
 gst_omx_video_dec_allocate_in_buffers (GstOMXVideoDec * self)
 {
-  if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
-    return FALSE;
+  switch (self->input_allocation) {
+    case GST_OMX_BUFFER_ALLOCATION_ALLOCATE_BUFFER:
+      if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
+        return FALSE;
+      break;
+    case GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC:
+      if (gst_omx_port_use_dynamic_buffers (self->dec_in_port) != OMX_ErrorNone)
+        return FALSE;
+      break;
+    case GST_OMX_BUFFER_ALLOCATION_USE_BUFFER:
+    default:
+      /* Not supported */
+      g_return_val_if_reached (FALSE);
+  }
 
   return TRUE;
 }
 
 static gboolean
-gst_omx_video_dec_enable (GstOMXVideoDec * self)
+check_input_alignment (GstOMXVideoDec * self, GstMapInfo * map)
+{
+  OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->dec_in_port->port_def;
+
+  if (port_def->nBufferAlignment &&
+      (GPOINTER_TO_UINT (map->data) & (port_def->nBufferAlignment - 1)) != 0) {
+    GST_DEBUG_OBJECT (self,
+        "input buffer is not properly aligned (address: %p alignment: %u bytes), can't use dynamic allocation",
+        map->data, (guint32) port_def->nBufferAlignment);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/* Check if @inbuf's alignment matches the requirements to use the
+ * dynamic buffer mode. */
+static gboolean
+can_use_dynamic_buffer_mode (GstOMXVideoDec * self, GstBuffer * inbuf)
+{
+  gboolean result = TRUE;
+  guint i;
+
+  for (i = 0; i < gst_buffer_n_memory (inbuf) && result; i++) {
+    GstMemory *mem = gst_buffer_peek_memory (inbuf, i);
+    GstMapInfo map;
+
+    if (!gst_memory_map (mem, &map, GST_MAP_READ)) {
+      GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
+          ("failed to map input buffer"));
+      return FALSE;
+    }
+
+    result = check_input_alignment (self, &map);
+
+    gst_memory_unmap (mem, &map);
+  }
+
+  return result;
+}
+
+/* Choose the allocation mode for input buffers depending of what's supported by
+ * the component and the size/alignment of the input buffer. */
+static GstOMXBufferAllocation
+gst_omx_video_dec_pick_input_allocation_mode (GstOMXVideoDec * self,
+    GstBuffer * inbuf)
+{
+  if (!gst_omx_is_dynamic_allocation_supported ())
+    return GST_OMX_BUFFER_ALLOCATION_ALLOCATE_BUFFER;
+
+  if (can_use_dynamic_buffer_mode (self, inbuf)) {
+    GST_DEBUG_OBJECT (self,
+        "input buffer is properly aligned, use dynamic allocation");
+    return GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC;
+  }
+
+  GST_DEBUG_OBJECT (self, "let input buffer allocate its buffers");
+  return GST_OMX_BUFFER_ALLOCATION_ALLOCATE_BUFFER;
+}
+
+static gboolean
+gst_omx_video_dec_enable (GstOMXVideoDec * self, GstBuffer * input)
 {
   GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
 
   GST_DEBUG_OBJECT (self, "Enabling component");
+
+  self->input_allocation = gst_omx_video_dec_pick_input_allocation_mode (self,
+      input);
 
   if (self->disabled) {
     if (gst_omx_port_set_enabled (self->dec_in_port, TRUE) != OMX_ErrorNone)
@@ -2430,6 +2506,9 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
   guint offset = 0, size;
   GstClockTime timestamp, duration;
   OMX_ERRORTYPE err;
+  gboolean done = FALSE;
+  gboolean first_ouput_buffer = TRUE;
+  guint memory_idx = 0;         /* only used in dynamic buffer mode */
 
   self = GST_OMX_VIDEO_DEC (decoder);
   klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
@@ -2448,7 +2527,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
     }
 
     if (gst_omx_port_is_flushing (self->dec_out_port)) {
-      if (!gst_omx_video_dec_enable (self))
+      if (!gst_omx_video_dec_enable (self, frame->input_buffer))
         return FALSE;
     }
 
@@ -2475,7 +2554,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
   port = self->dec_in_port;
 
   size = gst_buffer_get_size (frame->input_buffer);
-  while (offset < size) {
+  while (!done) {
     /* Make sure to release the base class stream lock, otherwise
      * _loop() can't call _finish_frame() and we might block forever
      * because no input buffers are released */
@@ -2560,18 +2639,28 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
 
       codec_data = self->codec_data;
 
-      if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <
-          gst_buffer_get_size (codec_data)) {
-        gst_omx_port_release_buffer (port, buf);
-        goto too_large_codec_data;
+      if (self->input_allocation ==
+          GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC) {
+        /* Map the full buffer, this may lead to copying if for some reason its
+         * content is split on more than one memory but that seems unlikely and
+         * the codec data aren't supposed to be that big anyway. */
+        if (!gst_omx_buffer_map_buffer (buf, codec_data))
+          goto map_failed;
+      } else {
+        if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <
+            gst_buffer_get_size (codec_data)) {
+          gst_omx_port_release_buffer (port, buf);
+          goto too_large_codec_data;
+        }
+
+        buf->omx_buf->nFilledLen = gst_buffer_get_size (codec_data);;
+        gst_buffer_extract (codec_data, 0,
+            buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+            buf->omx_buf->nFilledLen);
       }
 
       buf->omx_buf->nFlags |= OMX_BUFFERFLAG_CODECCONFIG;
       buf->omx_buf->nFlags |= OMX_BUFFERFLAG_ENDOFFRAME;
-      buf->omx_buf->nFilledLen = gst_buffer_get_size (codec_data);;
-      gst_buffer_extract (codec_data, 0,
-          buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-          buf->omx_buf->nFilledLen);
 
       if (GST_CLOCK_TIME_IS_VALID (timestamp))
         GST_OMX_SET_TICKS (buf->omx_buf->nTimeStamp,
@@ -2591,15 +2680,46 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
     }
 
     /* Now handle the frame */
-    GST_DEBUG_OBJECT (self, "Passing frame offset %d to the component", offset);
 
-    /* Copy the buffer content in chunks of size as requested
-     * by the port */
-    buf->omx_buf->nFilledLen =
-        MIN (size - offset, buf->omx_buf->nAllocLen - buf->omx_buf->nOffset);
-    gst_buffer_extract (frame->input_buffer, offset,
-        buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-        buf->omx_buf->nFilledLen);
+    if (self->input_allocation == GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC) {
+      /* Transfer the buffer content per memory rather than mapping the full
+       * buffer to prevent copies. */
+      GstMemory *mem = gst_buffer_peek_memory (frame->input_buffer, memory_idx);
+
+      GST_LOG_OBJECT (self,
+          "Transferring %" G_GSIZE_FORMAT " bytes to the component",
+          gst_memory_get_sizes (mem, NULL, NULL));
+
+      if (!gst_omx_buffer_map_memory (buf, mem))
+        goto map_failed;
+
+      if (!check_input_alignment (self, &buf->map)) {
+        GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
+            ("input buffer now has wrong alignment/stride, can't use dynamic allocation any more"));
+        return FALSE;
+      }
+
+      memory_idx++;
+      if (memory_idx == gst_buffer_n_memory (frame->input_buffer))
+        done = TRUE;
+    } else {
+      /* Copy the buffer content in chunks of size as requested
+       * by the port */
+      buf->omx_buf->nFilledLen =
+          MIN (size - offset, buf->omx_buf->nAllocLen - buf->omx_buf->nOffset);
+
+      GST_LOG_OBJECT (self,
+          "Copying %d bytes (frame offset %d) to the component",
+          (guint) buf->omx_buf->nFilledLen, offset);
+
+      gst_buffer_extract (frame->input_buffer, offset,
+          buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+          buf->omx_buf->nFilledLen);
+
+      offset += buf->omx_buf->nFilledLen;
+      if (offset == size)
+        done = TRUE;
+    }
 
     if (timestamp != GST_CLOCK_TIME_NONE) {
       GST_OMX_SET_TICKS (buf->omx_buf->nTimeStamp,
@@ -2609,7 +2729,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
       GST_OMX_SET_TICKS (buf->omx_buf->nTimeStamp, G_GUINT64_CONSTANT (0));
     }
 
-    if (duration != GST_CLOCK_TIME_NONE && offset == 0) {
+    if (duration != GST_CLOCK_TIME_NONE && first_ouput_buffer) {
       buf->omx_buf->nTickCount =
           gst_util_uint64_scale (duration, OMX_TICKS_PER_SECOND, GST_SECOND);
       self->last_upstream_ts += duration;
@@ -2617,7 +2737,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
       buf->omx_buf->nTickCount = 0;
     }
 
-    if (offset == 0 && GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame))
+    if (first_ouput_buffer && GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame))
       buf->omx_buf->nFlags |= OMX_BUFFERFLAG_SYNCFRAME;
 
     /* TODO: Set flags
@@ -2625,15 +2745,15 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
      *     the segment
      */
 
-    offset += buf->omx_buf->nFilledLen;
-
-    if (offset == size)
+    if (done)
       buf->omx_buf->nFlags |= OMX_BUFFERFLAG_ENDOFFRAME;
 
     self->started = TRUE;
     err = gst_omx_port_release_buffer (port, buf);
     if (err != OMX_ErrorNone)
       goto release_error;
+
+    first_ouput_buffer = FALSE;
   }
 
   gst_video_codec_frame_unref (frame);
@@ -2665,6 +2785,14 @@ too_large_codec_data:
         ("codec_data larger than supported by OpenMAX port "
             "(%" G_GSIZE_FORMAT " > %u)", gst_buffer_get_size (codec_data),
             (guint) self->dec_in_port->port_def.nBufferSize));
+    return GST_FLOW_ERROR;
+  }
+
+map_failed:
+  {
+    gst_video_codec_frame_unref (frame);
+    GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
+        ("failed to map input buffer"));
     return GST_FLOW_ERROR;
   }
 

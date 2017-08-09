@@ -94,6 +94,7 @@ struct _GstOMXVideoDec
 
   /* TRUE if decoder is producing dmabuf */
   gboolean dmabuf;
+  GstOMXBufferAllocation input_allocation;
 };
 
 struct _GstOMXVideoDecClass
