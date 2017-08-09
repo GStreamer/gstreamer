@@ -176,6 +176,7 @@ gst_curl_http_src_class_init (GstCurlHttpSrcClass * klass)
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
   const gchar *http_env;
+  GstCurlHttpVersion default_http_version;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -201,6 +202,13 @@ gst_curl_http_src_class_init (GstCurlHttpSrcClass * klass)
       gst_static_pad_template_get (&srcpadtemplate));
 
   gst_curl_http_src_curl_capabilities = curl_version_info (CURLVERSION_NOW);
+#ifdef CURL_VERSION_HTTP2
+  if (gst_curl_http_src_curl_capabilities->features & CURL_VERSION_HTTP2) {
+    default_http_version = GSTCURL_HTTP_VERSION_2_0;
+  } else
+#endif
+    default_http_version = GSTCURL_HTTP_VERSION_1_1;
+
   http_env = g_getenv ("GST_CURL_HTTP_VER");
   if (http_env != NULL) {
     GST_INFO_OBJECT (klass, "Seen env var GST_CURL_HTTP_VER with value %s",
@@ -221,10 +229,10 @@ gst_curl_http_src_class_init (GstCurlHttpSrcClass * klass)
     unsupported_http_version:
       GST_WARNING_OBJECT (klass,
           "Unsupported HTTP version: %s. Fallback to default", http_env);
-      pref_http_ver = DEFAULT_HTTP_VERSION;
+      pref_http_ver = default_http_version;
     }
   } else {
-    pref_http_ver = DEFAULT_HTTP_VERSION;
+    pref_http_ver = default_http_version;
   }
 
   gst_curl_http_src_default_useragent =

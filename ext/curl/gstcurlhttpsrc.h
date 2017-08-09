@@ -102,13 +102,6 @@ typedef enum
     GSTCURL_HTTP_VERSION_MAX
   } GstCurlHttpVersion;
 
-#ifdef CURL_VERSION_HTTP2
-#define DEFAULT_HTTP_VERSION GSTCURL_HTTP_VERSION_2_0
-#else
-#define DEFAULT_HTTP_VERSION GSTCURL_HTTP_VERSION_1_1
-#endif
-
-
 struct _GstCurlHttpSrcMultiTaskContext
 {
   GstTask     *task;
