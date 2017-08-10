@@ -278,6 +278,7 @@ GstAudioFormat gst_audio_format_from_string      (const gchar *format) G_GNUC_CO
 GST_EXPORT
 const gchar *  gst_audio_format_to_string        (GstAudioFormat format) G_GNUC_CONST;
 
+GST_EXPORT
 const GstAudioFormatInfo *
                gst_audio_format_get_info         (GstAudioFormat format) G_GNUC_CONST;
 

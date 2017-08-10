@@ -108,6 +108,7 @@ GST_EXPORT
 gint    gst_color_balance_get_value     (GstColorBalance        *balance,
                                          GstColorBalanceChannel *channel);
 
+GST_EXPORT
 GstColorBalanceType
         gst_color_balance_get_balance_type (GstColorBalance        *balance);
 
