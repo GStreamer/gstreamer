@@ -23,7 +23,6 @@
 #ifndef GST_VAAPI_UTILS_H264_H
 #define GST_VAAPI_UTILS_H264_H
 
-#include <va/va.h>
 #include <gst/vaapi/gstvaapiprofile.h>
 #include <gst/vaapi/gstvaapisurface.h>
 
