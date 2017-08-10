@@ -89,7 +89,7 @@ mxf_vc3_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   *outbuf = buffer;
 
   /* SMPTE 2019-4 6.1 */
-  if (key->u[12] != 0x15 || (key->u[14] != 0x05 && key->u[14] != 0x06)) {
+  if (key->u[12] != 0x15 || (key->u[14] != 0x0C && key->u[14] != 0x0D)) {
     GST_ERROR ("Invalid VC-3 essence element");
     return GST_FLOW_ERROR;
   }
@@ -261,7 +261,7 @@ static guint32
 mxf_vc3_get_track_number_template (MXFMetadataFileDescriptor * a,
     GstCaps * caps, gpointer mapping_data)
 {
-  return (0x15 << 24) | (0x05 << 8);
+  return (0x15 << 24) | (0x0C << 8);
 }
 
 static MXFEssenceElementWriter mxf_vc3_essence_element_writer = {
