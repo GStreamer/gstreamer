@@ -1,7 +1,7 @@
 have_registry = true # FIXME not get_option('disable_registry')
 
-libparser = library('parser',
-  'elements/parser.c', 'elements/parser.h',
+libparser = static_library('parser',
+  'elements/parser.c',
   install : false,
   dependencies : [gst_dep, gstcheck_dep],
 )
@@ -32,20 +32,20 @@ base_tests = [
   [['elements/faad.c'], not faad_dep.found() or not have_faad_2_7, [faad_dep]],
   [['elements/gdpdepay.c']],
   [['elements/gdppay.c']],
-  [['elements/h263parse.c']],
-  [['elements/h264parse.c']],
+  [['elements/h263parse.c'], false, [libparser_dep]],
+  [['elements/h264parse.c'], false, [libparser_dep]],
   [['elements/id3mux.c']],
   [['elements/jifmux.c'], not exif_dep.found(), [exif_dep]],
   [['elements/jpegparse.c']],
   [['elements/kate.c'], not kate_dep.found(), [kate_dep]],
-  [['elements/mpeg4videoparse.c']],
+  [['elements/mpeg4videoparse.c'], false, [libparser_dep]],
   [['elements/mpegtsmux.c']],
-  [['elements/mpegvideoparse.c']],
+  [['elements/mpegvideoparse.c'], false, [libparser_dep]],
   [['elements/mssdemux.c', 'elements/test_http_src.c', 'elements/adaptive_demux_engine.c', 'elements/adaptive_demux_common.c'], not xml28_dep.found(), [xml28_dep]],
   [['elements/mxfdemux.c']],
   [['elements/mxfmux.c']],
   [['elements/netsim.c']],
-  [['elements/pcapparse.c']],
+  [['elements/pcapparse.c'], false, [libparser_dep]],
   [['elements/pnm.c']],
   [['elements/schroenc.c'], not schro_dep.found(), [schro_dep]],
   [['elements/shm.c'], not shm_enabled, shm_deps],
@@ -71,8 +71,7 @@ test_deps = [gst_dep, gstapp_dep, gstbase_dep,
              gstbasecamerabin_dep, gstphotography_dep,
              gstpbutils_dep, gstcontroller_dep, gstaudio_dep,
              gstvideo_dep, gstrtp_dep, gsturidownloader_dep,
-             gstcheck_dep, gio_dep, glib_dep, libparser_dep,
-             gsttag_dep]
+             gstcheck_dep, gio_dep, glib_dep, gsttag_dep]
 
 pluginsdirs = [  ]
 
