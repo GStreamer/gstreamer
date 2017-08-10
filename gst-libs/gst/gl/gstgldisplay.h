@@ -139,8 +139,11 @@ GST_EXPORT
 gboolean gst_gl_display_add_context (GstGLDisplay * display,
     GstGLContext * context);
 
+GST_EXPORT
 GstGLWindow *   gst_gl_display_create_window    (GstGLDisplay * display);
+GST_EXPORT
 gboolean        gst_gl_display_remove_window    (GstGLDisplay * display, GstGLWindow * window);
+GST_EXPORT
 GstGLWindow *   gst_gl_display_find_window      (GstGLDisplay * display, gpointer data, GCompareFunc compare_func);
 
 G_END_DECLS
