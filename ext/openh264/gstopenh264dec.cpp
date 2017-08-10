@@ -234,6 +234,9 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
     }
 
     gst_buffer_unmap (frame->input_buffer, &map_info);
+    if (ret != dsErrorFree)
+      return gst_video_decoder_drop_frame (decoder, frame);
+
     gst_video_codec_frame_unref (frame);
     frame = NULL;
   } else {
