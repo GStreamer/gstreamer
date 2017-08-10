@@ -709,6 +709,15 @@ slice_param.slice_data_flag = 0;
   ])
 AS_IF([test "x$ac_cv_have_h265_decoding_api" = "xyes"], [USE_H265_DECODER=1])
 
+dnl Check for va_vpp.h header
+saved_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+AC_CHECK_HEADERS([va/va_vpp.h], [], [],
+  [
+#include <va/va.h>
+  ])
+CPPFLAGS="$saved_CPPFLAGS"
+
 dnl Check for vpp (video post-processing) support
 USE_VA_VPP=0
 AC_CACHE_CHECK([for video post-postprocessing API],
@@ -723,7 +732,9 @@ AC_CACHE_CHECK([for video post-postprocessing API],
         AC_LANG_PROGRAM(
           [[
 #include <va/va.h>
-#include <va/va_vpp.h>
+#ifdef HAVE_VA_VA_VPP_H
+# include <va/va_vpp.h>
+#endif
           ]],
           [[
 VADisplay va_dpy;

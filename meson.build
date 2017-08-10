@@ -94,6 +94,8 @@ USE_VP8_ENCODER = USE_ENCODERS and cc.has_header('va/va_enc_vp8.h', dependencies
 USE_VP9_DECODER = cc.has_header('va/va_dec_vp9.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
 USE_VP9_ENCODER = USE_ENCODERS and cc.has_header('va/va_enc_vp9.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
 
+USE_VPP = cc.has_header('va/va_vpp.h', dependencies: libva_dep, prefix: '#include <va/va_vpp.h>')
+
 USE_DRM = libva_drm_dep.found() and libdrm_dep.found() and libudev_dep.found() and get_option('with_drm') != 'no'
 USE_EGL = gmodule_dep.found() and egl_dep.found() and GLES_VERSION_MASK != 0 and get_option('with_egl') != 'no'
 USE_GLX = libva_x11_dep.found() and x11_dep.found() and gl_dep.found() and libdl_dep.found() and get_option('with_glx') != 'no'
@@ -125,7 +127,7 @@ cdata.set10('USE_X11', USE_X11)
 cdata.set10('HAVE_XKBLIB', cc.has_header('X11/XKBlib.h', dependencies: x11_dep))
 cdata.set10('HAVE_XRANDR', xrandr_dep.found())
 cdata.set10('HAVE_XRENDER', xrender_dep.found())
-cdata.set10('USE_VA_VPP', true)
+cdata.set10('USE_VA_VPP', USE_VPP)
 cdata.set10('USE_GST_GL_HELPERS', gstgl_dep.found())
 cdata.set('GLES_VERSION_MASK', GLES_VERSION_MASK)
 runcmd = run_command('pkg-config', '--variable=driverdir', 'libva')
