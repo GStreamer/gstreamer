@@ -25,6 +25,7 @@
 
 #include "gstvaapiutils_h264.h"
 #include "libgstvaapi_priv_check.h"
+#include "gstvaapisurface.h"
 
 G_BEGIN_DECLS
 

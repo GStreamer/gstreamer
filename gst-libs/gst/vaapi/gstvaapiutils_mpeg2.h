@@ -24,7 +24,6 @@
 #define GST_VAAPI_UTILS_MPEG2_H
 
 #include <gst/vaapi/gstvaapiprofile.h>
-#include <gst/vaapi/gstvaapisurface.h>
 
 G_BEGIN_DECLS
 
