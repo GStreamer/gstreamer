@@ -24,7 +24,6 @@
 #define GST_VAAPI_MINI_OBJECT_H
 
 #include <glib.h>
-#include "libgstvaapi_priv_check.h"
 
 G_BEGIN_DECLS
 

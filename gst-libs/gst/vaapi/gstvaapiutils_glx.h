@@ -26,7 +26,6 @@
 #define GST_VAAPI_UTILS_GLX_H
 
 #include "config.h"
-#include "libgstvaapi_priv_check.h"
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <glib.h>

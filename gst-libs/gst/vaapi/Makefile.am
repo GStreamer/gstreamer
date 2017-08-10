@@ -21,7 +21,6 @@ noinst_LTLIBRARIES += libgstvaapi-wayland.la
 endif
 
 libgstvaapi_cflags =				\
-	-DIN_LIBGSTVAAPI			\
 	-DIN_LIBGSTVAAPI_CORE			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
@@ -146,7 +145,6 @@ libgstvaapi_source_priv_h =			\
 	gstvaapivideopool_priv.h		\
 	gstvaapiwindow_priv.h			\
 	gstvaapiworkarounds.h			\
-	libgstvaapi_priv_check.h		\
 	sysdeps.h				\
 	$(NULL)
 
@@ -358,7 +356,6 @@ libgstvaapi_drm_la_SOURCES =			\
 	$(NULL)
 
 libgstvaapi_drm_la_CFLAGS =			\
-	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
@@ -388,7 +385,6 @@ libgstvaapi_x11_la_SOURCES =			\
 	$(NULL)
 
 libgstvaapi_x11_la_CFLAGS =			\
-	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
@@ -420,7 +416,6 @@ libgstvaapi_glx_la_SOURCES =			\
 	$(NULL)
 
 libgstvaapi_glx_la_CFLAGS =			\
-	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
@@ -452,7 +447,6 @@ libgstvaapi_egl_la_SOURCES =			\
 	$(NULL)
 
 libgstvaapi_egl_la_CFLAGS =			\
-	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
@@ -484,7 +478,6 @@ libgstvaapi_wayland_la_SOURCES = 		\
 	$(NULL)
 
 libgstvaapi_wayland_la_CFLAGS = 		\
-	-DIN_LIBGSTVAAPI			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\

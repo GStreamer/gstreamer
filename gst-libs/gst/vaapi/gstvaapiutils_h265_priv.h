@@ -24,7 +24,6 @@
 #define GST_VAAPI_UTILS_H265_PRIV_H
 
 #include "gstvaapiutils_h265.h"
-#include "libgstvaapi_priv_check.h"
 #include "gstvaapisurface.h"
 
 G_BEGIN_DECLS

@@ -26,7 +26,6 @@
 #define GST_VAAPI_UTILS_X11_H
 
 #include "config.h"
-#include "libgstvaapi_priv_check.h"
 #include <X11/Xlib.h>
 #include <glib.h>
 
