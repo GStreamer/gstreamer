@@ -10853,6 +10853,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           case FOURCC_twos:
           case FOURCC_sowt:
           case FOURCC_raw_:
+          case FOURCC_lpcm:
             break;
           default:
           {
@@ -11475,6 +11476,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             }
             break;
           }
+          case FOURCC_lpcm:
+            /* Fully handled elsewhere */
+            break;
           default:
             GST_INFO_OBJECT (qtdemux,
                 "unhandled type %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
@@ -14252,7 +14256,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("Opus");
       caps = gst_caps_new_empty_simple ("audio/x-opus");
       break;
-    case GST_MAKE_FOURCC ('l', 'p', 'c', 'm'):
+    case FOURCC_lpcm:
     {
       guint32 flags = 0;
       guint32 depth = 0;
@@ -14269,23 +14273,29 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       };
       _codec ("Raw LPCM audio");
 
-      if (data && len >= 56) {
-        depth = QT_UINT32 (data + 40);
-        flags = QT_UINT32 (data + 44);
-        width = QT_UINT32 (data + 48) * 8 / entry->n_channels;
+      if (data && len >= 36) {
+        depth = QT_UINT32 (data + 24);
+        flags = QT_UINT32 (data + 28);
+        width = QT_UINT32 (data + 32) * 8 / entry->n_channels;
       }
       if ((flags & FLAG_IS_FLOAT) == 0) {
         if (depth == 0)
           depth = 16;
         if (width == 0)
           width = 16;
+        if ((flags & FLAG_IS_ALIGNED_HIGH))
+          depth = width;
+
         format = gst_audio_format_build_integer ((flags & FLAG_IS_SIGNED) ?
             TRUE : FALSE, (flags & FLAG_IS_BIG_ENDIAN) ?
             G_BIG_ENDIAN : G_LITTLE_ENDIAN, width, depth);
         caps = gst_caps_new_simple ("audio/x-raw",
-            "format", G_TYPE_STRING, gst_audio_format_to_string (format),
-            "layout", G_TYPE_STRING, (flags & FLAG_IS_NON_INTERLEAVED) ?
-            "non-interleaved" : "interleaved", NULL);
+            "format", G_TYPE_STRING,
+            format !=
+            GST_AUDIO_FORMAT_UNKNOWN ? gst_audio_format_to_string (format) :
+            "UNKNOWN", "layout", G_TYPE_STRING,
+            (flags & FLAG_IS_NON_INTERLEAVED) ? "non-interleaved" :
+            "interleaved", NULL);
         stream->alignment = GST_ROUND_UP_8 (depth);
         stream->alignment = round_up_pow2 (stream->alignment);
       } else {
