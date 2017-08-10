@@ -74,46 +74,60 @@ struct _GstTestClockClass
   GstClockClass parent_class;
 };
 
+GST_EXPORT
 GType         gst_test_clock_get_type (void);
 
+GST_EXPORT
 GstClock *    gst_test_clock_new (void);
 
+GST_EXPORT
 GstClock *    gst_test_clock_new_with_start_time (GstClockTime start_time);
 
+GST_EXPORT
 void          gst_test_clock_set_time (GstTestClock * test_clock,
                                       GstClockTime   new_time);
 
+GST_EXPORT
 void          gst_test_clock_advance_time (GstTestClock *   test_clock,
                                           GstClockTimeDiff delta);
 
+GST_EXPORT
 guint         gst_test_clock_peek_id_count (GstTestClock * test_clock);
 
+GST_EXPORT
 gboolean      gst_test_clock_has_id (GstTestClock * test_clock, GstClockID id);
 
+GST_EXPORT
 gboolean      gst_test_clock_peek_next_pending_id (GstTestClock * test_clock,
                                                    GstClockID   * pending_id);
 
+GST_EXPORT
 void          gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
                                                        GstClockID   * pending_id);
 
-#ifndef GST_DISABLE_DEPRECATED
+GST_DEPRECATED_FOR(gst_test_clock_wait_for_multiple_pending_ids)
 void          gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
                                                         guint          count);
-#endif
 
+GST_EXPORT
 GstClockID    gst_test_clock_process_next_clock_id (GstTestClock * test_clock);
 
+GST_EXPORT
 GstClockTime  gst_test_clock_get_next_entry_time   (GstTestClock * test_clock);
 
+GST_EXPORT
 void          gst_test_clock_wait_for_multiple_pending_ids (GstTestClock * test_clock,
                                                             guint          count,
                                                             GList       ** pending_list);
 
+GST_EXPORT
 guint         gst_test_clock_process_id_list (GstTestClock * test_clock,
                                               const GList  * pending_list);
 
+GST_EXPORT
 GstClockTime  gst_test_clock_id_list_get_latest_time (const GList * pending_list);
 
+GST_EXPORT
 gboolean      gst_test_clock_crank (GstTestClock * test_clock);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

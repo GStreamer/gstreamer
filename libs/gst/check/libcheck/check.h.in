@@ -65,15 +65,15 @@ CK_CPPSTART
  * on the command line.
  */
 #ifndef CK_DLL_EXP
-#define CK_DLL_EXP
+#define CK_DLL_EXP extern
 #endif
 /* check version numbers */
 #define CHECK_MAJOR_VERSION (@CHECK_MAJOR_VERSION@)
 #define CHECK_MINOR_VERSION (@CHECK_MINOR_VERSION@)
 #define CHECK_MICRO_VERSION (@CHECK_MICRO_VERSION@)
-CK_DLL_EXP extern int CK_EXPORT check_major_version;
-CK_DLL_EXP extern int CK_EXPORT check_minor_version;
-CK_DLL_EXP extern int CK_EXPORT check_micro_version;
+CK_DLL_EXP /*extern*/ int CK_EXPORT check_major_version;
+CK_DLL_EXP /*extern*/ int CK_EXPORT check_minor_version;
+CK_DLL_EXP /*extern*/ int CK_EXPORT check_micro_version;
 
 #ifndef NULL
 #define NULL ((void*)0)

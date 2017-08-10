@@ -63,8 +63,10 @@ struct _GstHarness {
 
 /* Harness creation */
 
+GST_EXPORT
 GstHarness * gst_harness_new_empty (void);
 
+GST_EXPORT
 void         gst_harness_add_element_full (GstHarness           * h,
                                            GstElement           * element,
                                            GstStaticPadTemplate * hsrc,
@@ -72,190 +74,256 @@ void         gst_harness_add_element_full (GstHarness           * h,
                                            GstStaticPadTemplate * hsink,
                                            const gchar          * element_srcpad_name);
 
+GST_EXPORT
 GstHarness * gst_harness_new_full (GstElement * element,
                                    GstStaticPadTemplate * hsrc,
                                    const gchar          * element_sinkpad_name,
                                    GstStaticPadTemplate * hsink,
                                    const gchar          * element_srcpad_name);
 
+GST_EXPORT
 GstHarness * gst_harness_new_with_element  (GstElement  * element,
                                             const gchar * element_sinkpad_name,
                                             const gchar * element_srcpad_name);
 
+GST_EXPORT
 GstHarness * gst_harness_new_with_padnames (const gchar * element_name,
                                             const gchar * element_sinkpad_name,
                                             const gchar * element_srcpad_name);
 
+GST_EXPORT
 GstHarness * gst_harness_new_with_templates (const gchar * element_name,
                                              GstStaticPadTemplate * hsrc,
                                              GstStaticPadTemplate * hsink);
 
+GST_EXPORT
 GstHarness * gst_harness_new (const gchar * element_name);
 
+GST_EXPORT
 GstHarness * gst_harness_new_parse (const gchar * launchline);
 
+GST_EXPORT
 void         gst_harness_add_parse (GstHarness * h, const gchar * launchline);
 
+GST_EXPORT
 void         gst_harness_teardown (GstHarness * h);
 
+GST_EXPORT
 void         gst_harness_add_element_src_pad  (GstHarness * h, GstPad * srcpad);
 
+GST_EXPORT
 void         gst_harness_add_element_sink_pad (GstHarness * h, GstPad * sinkpad);
 
 /* Caps Functions */
 
+GST_EXPORT
 void         gst_harness_set_src_caps  (GstHarness * h, GstCaps * caps);
 
+GST_EXPORT
 void         gst_harness_set_sink_caps (GstHarness * h, GstCaps * caps);
 
+GST_EXPORT
 void         gst_harness_set_caps (GstHarness * h, GstCaps * in, GstCaps * out);
 
+GST_EXPORT
 void         gst_harness_set_src_caps_str  (GstHarness * h, const gchar * str);
 
+GST_EXPORT
 void         gst_harness_set_sink_caps_str (GstHarness * h, const gchar * str);
 
+GST_EXPORT
 void         gst_harness_set_caps_str (GstHarness  * h,
                                        const gchar * in,
                                        const gchar * out);
 
 /* Clock Functions */
 
+GST_EXPORT
 void           gst_harness_use_systemclock (GstHarness * h);
 
+GST_EXPORT
 void           gst_harness_use_testclock (GstHarness * h);
 
+GST_EXPORT
 GstTestClock * gst_harness_get_testclock (GstHarness * h);
 
+GST_EXPORT
 gboolean       gst_harness_set_time (GstHarness * h, GstClockTime time);
 
+GST_EXPORT
 gboolean       gst_harness_wait_for_clock_id_waits (GstHarness * h,
                                                     guint waits,
                                                     guint timeout);
 
+GST_EXPORT
 gboolean       gst_harness_crank_single_clock_wait (GstHarness * h);
 
+GST_EXPORT
 gboolean       gst_harness_crank_multiple_clock_waits (GstHarness * h,
                                                        guint waits);
 
 /* misc */
+
+GST_EXPORT
 void           gst_harness_play (GstHarness * h);
 
+GST_EXPORT
 void           gst_harness_set_blocking_push_mode (GstHarness * h);
 
+GST_EXPORT
 void           gst_harness_set_forwarding (GstHarness * h, gboolean forwarding);
 
 /* buffers */
 
+GST_EXPORT
 GstBuffer *    gst_harness_create_buffer (GstHarness * h, gsize size);
 
+GST_EXPORT
 GstFlowReturn  gst_harness_push (GstHarness * h, GstBuffer * buffer);
 
+GST_EXPORT
 GstBuffer *    gst_harness_pull (GstHarness * h);
 
+GST_EXPORT
 GstBuffer *    gst_harness_try_pull (GstHarness * h);
 
+GST_EXPORT
 GstBuffer *    gst_harness_push_and_pull (GstHarness * h, GstBuffer * buffer);
 
+GST_EXPORT
 guint          gst_harness_buffers_received (GstHarness * h);
 
+GST_EXPORT
 guint          gst_harness_buffers_in_queue (GstHarness * h);
 
+GST_EXPORT
 void           gst_harness_set_drop_buffers (GstHarness * h, gboolean drop_buffers);
 
+GST_EXPORT
 void           gst_harness_dump_to_file (GstHarness * h, const gchar * filename);
 
+GST_EXPORT
 GstClockTime   gst_harness_get_last_pushed_timestamp (GstHarness * h);
 
 /* downstream events */
 
+GST_EXPORT
 gboolean       gst_harness_push_event (GstHarness * h, GstEvent * event);
 
+GST_EXPORT
 GstEvent *     gst_harness_pull_event (GstHarness * h);
 
+GST_EXPORT
 GstEvent *     gst_harness_try_pull_event  (GstHarness * h);
 
+GST_EXPORT
 guint          gst_harness_events_received (GstHarness * h);
 
+GST_EXPORT
 guint          gst_harness_events_in_queue (GstHarness * h);
 
 /* upstream events */
 
+GST_EXPORT
 gboolean   gst_harness_push_upstream_event (GstHarness * h, GstEvent * event);
 
+GST_EXPORT
 GstEvent * gst_harness_pull_upstream_event (GstHarness * h);
 
+GST_EXPORT
 GstEvent * gst_harness_try_pull_upstream_event  (GstHarness * h);
 
+GST_EXPORT
 guint      gst_harness_upstream_events_received (GstHarness * h);
 
+GST_EXPORT
 guint      gst_harness_upstream_events_in_queue (GstHarness * h);
 
 /* latency */
 
+GST_EXPORT
 GstClockTime gst_harness_query_latency (GstHarness * h);
 
+GST_EXPORT
 void         gst_harness_set_upstream_latency (GstHarness * h, GstClockTime latency);
 
 /* allocator and allocation params */
 
+GST_EXPORT
 void         gst_harness_set_propose_allocator (GstHarness                * h,
                                                 GstAllocator              * allocator,
                                                 const GstAllocationParams * params);
 
+GST_EXPORT
 void         gst_harness_get_allocator         (GstHarness          * h,
                                                 GstAllocator       ** allocator,
                                                 GstAllocationParams * params);
 
 /* src-harness */
 
+GST_EXPORT
 void          gst_harness_add_src_harness (GstHarness * h,
                                            GstHarness * src_harness,
                                            gboolean has_clock_wait);
 
+GST_EXPORT
 void          gst_harness_add_src (GstHarness  * h,
                                    const gchar * src_element_name,
                                    gboolean      has_clock_wait);
 
+GST_EXPORT
 void          gst_harness_add_src_parse (GstHarness  * h,
                                          const gchar * launchline,
                                          gboolean      has_clock_wait);
 
+GST_EXPORT
 GstFlowReturn gst_harness_push_from_src (GstHarness * h);
 
+GST_EXPORT
 GstFlowReturn gst_harness_src_crank_and_push_many (GstHarness * h,
                                                    gint         cranks,
                                                    gint         pushes);
 
+GST_EXPORT
 gboolean      gst_harness_src_push_event (GstHarness * h);
 
 /* sink-harness */
 
+GST_EXPORT
 void          gst_harness_add_sink_harness (GstHarness * h,
                                             GstHarness * sink_harness);
 
+GST_EXPORT
 void          gst_harness_add_sink (GstHarness  * h,
                                     const gchar * sink_element_name);
 
+GST_EXPORT
 void          gst_harness_add_sink_parse (GstHarness  * h,
                                           const gchar * launchline);
 
+GST_EXPORT
 GstFlowReturn gst_harness_push_to_sink   (GstHarness * h);
 
+GST_EXPORT
 GstFlowReturn gst_harness_sink_push_many (GstHarness * h, gint pushes);
 
 /* convenience functions */
 
+GST_EXPORT
 GstElement *  gst_harness_find_element (GstHarness * h,
                                        const gchar * element_name);
 
+GST_EXPORT
 void          gst_harness_set (GstHarness  * h,
                                const gchar * element_name,
                                const gchar * first_property_name, ...);
 
+GST_EXPORT
 void          gst_harness_get (GstHarness  * h,
                                const gchar * element_name,
                                const gchar * first_property_name, ...);
 
+GST_EXPORT
 void          gst_harness_add_probe (GstHarness        * h,
                                      const gchar       * element_name,
                                      const gchar       * pad_name,
@@ -266,8 +334,10 @@ void          gst_harness_add_probe (GstHarness        * h,
 
 /* Stress */
 
+GST_EXPORT
 guint              gst_harness_stress_thread_stop  (GstHarnessThread * t);
 
+GST_EXPORT
 GstHarnessThread * gst_harness_stress_custom_start (GstHarness * h,
                                                     GFunc        init,
                                                     GFunc        callback,
@@ -277,12 +347,14 @@ GstHarnessThread * gst_harness_stress_custom_start (GstHarness * h,
 #define gst_harness_stress_statechange_start(h)                                \
   gst_harness_stress_statechange_start_full (h, G_USEC_PER_SEC / 100)
 
+GST_EXPORT
 GstHarnessThread * gst_harness_stress_statechange_start_full (GstHarness * h,
                                                               gulong       sleep);
 
 #define gst_harness_stress_push_buffer_start(h, c, s, b)                       \
   gst_harness_stress_push_buffer_start_full (h, c, s, b, 0)
 
+GST_EXPORT
 GstHarnessThread * gst_harness_stress_push_buffer_start_full (GstHarness * h,
                                                               GstCaps    * caps,
                                                               const GstSegment * segment,
@@ -301,6 +373,7 @@ typedef GstBuffer * (*GstHarnessPrepareBufferFunc) (GstHarness * h, gpointer dat
 #define gst_harness_stress_push_buffer_with_cb_start(h, c, s, f, d, n)         \
   gst_harness_stress_push_buffer_with_cb_start_full (h, c, s, f, d, n, 0)
 
+GST_EXPORT
 GstHarnessThread * gst_harness_stress_push_buffer_with_cb_start_full (GstHarness   * h,
                                                                       GstCaps      * caps,
                                                                       const GstSegment * segment,
@@ -312,6 +385,7 @@ GstHarnessThread * gst_harness_stress_push_buffer_with_cb_start_full (GstHarness
 #define gst_harness_stress_push_event_start(h, e)                              \
   gst_harness_stress_push_event_start_full (h, e, 0)
 
+GST_EXPORT
 GstHarnessThread * gst_harness_stress_push_event_start_full (GstHarness * h,
                                                              GstEvent   * event,
                                                              gulong       sleep);
@@ -328,6 +402,7 @@ typedef GstEvent * (*GstHarnessPrepareEventFunc) (GstHarness * h, gpointer data)
 #define gst_harness_stress_push_event_with_cb_start(h, f, d, n)                \
   gst_harness_stress_push_event_with_cb_start_full (h, f, d, n, 0)
 
+GST_EXPORT
 GstHarnessThread * gst_harness_stress_push_event_with_cb_start_full (GstHarness   * h,
                                                                      GstHarnessPrepareEventFunc func,
                                                                      gpointer       data,
@@ -337,6 +412,7 @@ GstHarnessThread * gst_harness_stress_push_event_with_cb_start_full (GstHarness 
 #define gst_harness_stress_send_upstream_event_start(h, e)                     \
   gst_harness_stress_push_upstream_event_start_full (h, e, 0)
 
+GST_EXPORT
 GstHarnessThread * gst_harness_stress_push_upstream_event_start_full (GstHarness * h,
                                                                       GstEvent   * event,
                                                                       gulong       sleep);
@@ -344,6 +420,7 @@ GstHarnessThread * gst_harness_stress_push_upstream_event_start_full (GstHarness
 #define gst_harness_stress_send_upstream_event_with_cb_start(h, f, d, n)       \
   gst_harness_stress_push_upstream_event_with_cb_start_full (h, f, d, n, 0)
 
+GST_EXPORT
 GstHarnessThread * gst_harness_stress_push_upstream_event_with_cb_start_full (GstHarness   * h,
                                                                               GstHarnessPrepareEventFunc func,
                                                                               gpointer       data,
@@ -354,6 +431,7 @@ GstHarnessThread * gst_harness_stress_push_upstream_event_with_cb_start_full (Gs
 #define gst_harness_stress_property_start(h, n, v)                             \
   gst_harness_stress_property_start_full (h, n, v, G_USEC_PER_SEC / 1000)
 
+GST_EXPORT
 GstHarnessThread * gst_harness_stress_property_start_full (GstHarness   * h,
                                                            const gchar  * name,
                                                            const GValue * value,
@@ -362,6 +440,7 @@ GstHarnessThread * gst_harness_stress_property_start_full (GstHarness   * h,
 #define gst_harness_stress_requestpad_start(h, t, n, c, r)                     \
   gst_harness_stress_requestpad_start_full (h, t, n, c, r, G_USEC_PER_SEC / 100)
 
+GST_EXPORT
 GstHarnessThread * gst_harness_stress_requestpad_start_full (GstHarness     * h,
                                                              GstPadTemplate * templ,
                                                              const gchar    * name,

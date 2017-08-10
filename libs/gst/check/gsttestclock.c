@@ -911,10 +911,6 @@ gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
  * Deprecated: use gst_test_clock_wait_for_multiple_pending_ids() instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-void gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
-    guint count);
-#endif
 void
 gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
     guint count)

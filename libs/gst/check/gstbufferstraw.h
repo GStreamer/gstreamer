@@ -26,8 +26,13 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 void        gst_buffer_straw_start_pipeline (GstElement * bin, GstPad * pad);
+
+GST_EXPORT
 GstBuffer * gst_buffer_straw_get_buffer     (GstElement * bin, GstPad * pad);
+
+GST_EXPORT
 void        gst_buffer_straw_stop_pipeline  (GstElement * bin, GstPad * pad);
 
 G_END_DECLS
