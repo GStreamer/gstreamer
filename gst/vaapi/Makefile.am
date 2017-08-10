@@ -122,6 +122,18 @@ libgstvaapi_source_c += $(libgstvaapi_vp9enc_source_c)
 libgstvaapi_source_h += $(libgstvaapi_vp9enc_source_h)
 endif
 
+libgstvaapi_h264feienc_source_c = 	   \
+		 gstvaapifeivideometa.c    \
+		 $(NULL)
+libgstvaapi_h264feienc_source_h =	   \
+		 gstvaapifeivideometa.h    \
+                 $(NULL)
+
+if USE_H264_FEI_ENCODER
+libgstvaapi_source_c += $(libgstvaapi_h264feienc_source_c)
+libgstvaapi_source_h += $(libgstvaapi_h264feienc_source_h)
+endif
+
 libgstvaapi_la_SOURCES		= $(libgstvaapi_source_c)
 noinst_HEADERS			= $(libgstvaapi_source_h)
 
@@ -161,6 +173,8 @@ EXTRA_DIST = \
 	$(libgstvaapi_h265enc_source_h)  \
 	$(libgstvaapi_vp9enc_source_c)   \
 	$(libgstvaapi_vp9enc_source_h)   \
+	$(libgstvaapi_h264feienc_source_c) \
+	$(libgstvaapi_h264feienc_source_h) \
 	$(libgstvaapi_egl_source_c)	\
 	$(libgstvaapi_egl_source_h)	\
 	$(libgstvaapi_1_2p_source_c)	 \
