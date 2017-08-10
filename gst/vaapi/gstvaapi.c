@@ -47,6 +47,11 @@
 #if USE_VP9_ENCODER
 #include "gstvaapiencode_vp9.h"
 #endif
+
+#if USE_H264_FEI_ENCODER
+#include "gstvaapiencode_h264_fei.h"
+#endif
+
 #endif
 
 #define PLUGIN_NAME     "vaapi"
@@ -185,6 +190,14 @@ gst_vaapiencode_register (GstPlugin * plugin, GstVaapiDisplay * display)
       }
     }
   }
+
+#if USE_H264_FEI_ENCODER
+  if (gst_vaapi_display_has_encoder (display,
+          GST_VAAPI_PROFILE_H264_MAIN, GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI)) {
+    gst_element_register (plugin, "vaapih264feienc",
+        GST_RANK_SECONDARY, GST_TYPE_VAAPIENCODE_H264_FEI);
+  }
+#endif
 
   g_array_unref (codecs);
 }

@@ -122,12 +122,14 @@ libgstvaapi_source_c += $(libgstvaapi_vp9enc_source_c)
 libgstvaapi_source_h += $(libgstvaapi_vp9enc_source_h)
 endif
 
-libgstvaapi_h264feienc_source_c = 	   \
-		 gstvaapifeivideometa.c    \
-		 $(NULL)
-libgstvaapi_h264feienc_source_h =	   \
-		 gstvaapifeivideometa.h    \
-                 $(NULL)
+libgstvaapi_h264feienc_source_c =	  \
+		gstvaapifeivideometa.c    \
+		gstvaapiencode_h264_fei.c \
+		$(NULL)
+libgstvaapi_h264feienc_source_h =	  \
+		gstvaapifeivideometa.h    \
+		gstvaapiencode_h264_fei.h \
+		$(NULL)
 
 if USE_H264_FEI_ENCODER
 libgstvaapi_source_c += $(libgstvaapi_h264feienc_source_c)
