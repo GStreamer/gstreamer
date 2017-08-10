@@ -196,7 +196,7 @@ class GESRenderTest(GESTest, GstValidateEncodingTestInterface):
                     pass
 
                 if missing_eos is True:
-                    self.set_result(utils.Result.TIMEOUT, "The rendered file add right duration, MISSING EOS?\n",
+                    self.set_result(utils.Result.TIMEOUT, "The rendered file had right duration, MISSING EOS?\n",
                                     "failure")
             else:
                 GstValidateTest.check_results(self)
