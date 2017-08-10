@@ -194,6 +194,22 @@ gst_wavparse_class_init (GstWavParseClass * klass)
 }
 
 static void
+gst_wavparse_notes_free (GstWavParseNote * note)
+{
+  if (note)
+    g_free (note->text);
+  g_free (note);
+}
+
+static void
+gst_wavparse_labls_free (GstWavParseLabl * labl)
+{
+  if (labl)
+    g_free (labl->text);
+  g_free (labl);
+}
+
+static void
 gst_wavparse_reset (GstWavParse * wav)
 {
   wav->state = GST_WAVPARSE_START;
@@ -233,8 +249,11 @@ gst_wavparse_reset (GstWavParse * wav)
     g_list_free_full (wav->cues, g_free);
   wav->cues = NULL;
   if (wav->labls)
-    g_list_free_full (wav->labls, g_free);
+    g_list_free_full (wav->labls, (GDestroyNotify) gst_wavparse_labls_free);
   wav->labls = NULL;
+  if (wav->notes)
+    g_list_free_full (wav->notes, (GDestroyNotify) gst_wavparse_notes_free);
+  wav->notes = NULL;
   if (wav->caps)
     gst_caps_unref (wav->caps);
   wav->caps = NULL;
