@@ -135,6 +135,37 @@ if runcmd.returncode() == 0
   cdata.set('VA_DRIVERS_PATH', '"@0@"'.format(runcmd.stdout().strip()))
 endif
 
+if libva_dep.version().version_compare('< 0.38.0')
+  check_headers = [
+    [USE_H265_DECODER, 'HAVE_VA_VA_DEC_HEVC_H'],
+    [USE_H265_ENCODER, 'HAVE_VA_VA_ENC_HEVC_H'],
+    [USE_JPEG_DECODER, 'HAVE_VA_VA_DEC_JPEG_H'],
+    [USE_JPEG_ENCODER, 'HAVE_VA_VA_ENC_JPEG_H'],
+    [USE_VP8_DECODER, 'HAVE_VA_VA_DEC_VP8_H'],
+    [USE_VP8_ENCODER, 'HAVE_VA_VA_ENC_VP8_H'],
+    [USE_VP9_DECODER, 'HAVE_VA_VA_DEC_VP9_H'],
+    [USE_VP9_ENCODER, 'HAVE_VA_VA_DEC_VP9_H'],
+    [USE_VPP, 'HAVE_VA_VA_VPP_H'],
+  ]
+  foreach h : check_headers
+    if h.get(0)
+      cdata.set(h.get(1), 1)
+    endif
+  endforeach
+
+  if USE_ENCODERS
+    check_headers = [
+      ['HAVE_VA_VA_ENC_MPEG2_H', 'va/va_enc_mpeg2.h'],
+      ['HAVE_VA_VA_ENC_H264_H', 'va/va_enc_h264.h'],
+    ]
+    foreach h : check_headers
+      if cc.has_header(h.get(1), dependencies: libva_dep, prefix: '#include <va/va.h>')
+        cdata.set(h.get(0), 1)
+      endif
+    endforeach
+  endif
+endif
+
 api_version = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning

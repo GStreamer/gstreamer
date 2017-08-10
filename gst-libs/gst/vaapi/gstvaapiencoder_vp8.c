@@ -22,7 +22,6 @@
 
 #include "sysdeps.h"
 #include <va/va.h>
-#include <va/va_enc_vp8.h>
 #include <gst/base/gstbitwriter.h>
 #include <gst/codecparsers/gstvp8parser.h>
 #include "gstvaapicompat.h"

@@ -22,7 +22,6 @@
 
 #include "sysdeps.h"
 #include <va/va.h>
-#include <va/va_enc_jpeg.h>
 #include <gst/base/gstbitwriter.h>
 #include <gst/codecparsers/gstjpegparser.h>
 #include "gstvaapicompat.h"

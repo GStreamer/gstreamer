@@ -46,8 +46,41 @@
 #include <va/va_drmcommon.h>
 #endif
 
+/* VA-API < 0.37 doesn't include sub core APIs in va.h */
+#if !VA_CHECK_VERSION(0,37,0)
 #ifdef HAVE_VA_VA_DEC_HEVC_H
 # include <va/va_dec_hevc.h>
+#endif
+#ifdef HAVE_VA_VA_DEC_JPEG_H
+# include <va/va_dec_jpeg.h>
+#endif
+#ifdef HAVE_VA_VA_DEC_VP8_H
+# include <va/va_dec_vp8.h>
+#endif
+#ifdef HAVE_VA_VA_DEC_VP9_H
+# include <va/va_dec_vp9.h>
+#endif
+#ifdef HAVE_VA_VA_ENC_HEVC_H
+# include <va/va_enc_hevc.h>
+#endif
+#ifdef HAVE_VA_VA_ENC_H264_H
+# include <va/va_enc_h264.h>
+#endif
+#ifdef HAVE_VA_VA_ENC_JPEG_H
+# include <va/va_enc_jpeg.h>
+#endif
+#ifdef HAVE_VA_VA_ENC_MPEG2_H
+# include <va/va_enc_mpeg2.h>
+#endif
+#ifdef HAVE_VA_VA_ENC_VP8_H
+# include <va/va_enc_vp8.h>
+#endif
+#ifdef HAVE_VA_VA_ENC_VP9_H
+# include <va/va_enc_vp9.h>
+#endif
+#ifdef HAVE_VA_VA_VPP_H
+# include <va/va_vpp.h>
+#endif
 #endif
 
 #endif /* GST_VAAPI_COMPAT_H */

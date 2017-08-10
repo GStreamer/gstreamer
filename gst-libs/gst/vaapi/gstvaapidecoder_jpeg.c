@@ -36,10 +36,6 @@
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
 
-#ifdef HAVE_VA_VA_DEC_JPEG_H
-# include <va/va_dec_jpeg.h>
-#endif
-
 #define DEBUG 1
 #include "gstvaapidebug.h"
 

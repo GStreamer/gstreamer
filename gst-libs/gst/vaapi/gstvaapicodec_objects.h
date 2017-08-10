@@ -27,9 +27,6 @@
 
 #include <gst/vaapi/gstvaapiminiobject.h>
 #include <gst/vaapi/gstvaapidecoder.h>
-#if USE_VP8_DECODER
-#include <va/va_dec_vp8.h>
-#endif
 
 G_BEGIN_DECLS
 

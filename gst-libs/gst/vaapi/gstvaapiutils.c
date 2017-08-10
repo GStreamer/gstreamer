@@ -31,10 +31,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#if USE_VA_VPP
-# include <va/va_vpp.h>
-#endif
-
 #define DEBUG 1
 #include "gstvaapidebug.h"
 

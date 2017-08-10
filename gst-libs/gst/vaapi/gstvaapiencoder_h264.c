@@ -28,7 +28,6 @@
 
 #include "sysdeps.h"
 #include <va/va.h>
-#include <va/va_enc_h264.h>
 #include <gst/base/gstbitwriter.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include "gstvaapicompat.h"

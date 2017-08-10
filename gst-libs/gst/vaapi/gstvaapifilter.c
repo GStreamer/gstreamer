@@ -21,6 +21,7 @@
  */
 
 #include "sysdeps.h"
+#include "gstvaapicompat.h"
 #include "gstvaapifilter.h"
 #include "gstvaapiutils.h"
 #include "gstvaapivalue.h"
@@ -28,10 +29,6 @@
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapisurface_priv.h"
 #include "gstvaapiutils_core.h"
-
-#if USE_VA_VPP
-# include <va/va_vpp.h>
-#endif
 
 #define DEBUG 1
 #include "gstvaapidebug.h"

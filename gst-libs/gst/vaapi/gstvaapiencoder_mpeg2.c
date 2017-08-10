@@ -24,7 +24,6 @@
 #include "sysdeps.h"
 #include <math.h>
 #include <va/va.h>
-#include <va/va_enc_mpeg2.h>
 #include <gst/base/gstbitwriter.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiencoder_mpeg2.h"

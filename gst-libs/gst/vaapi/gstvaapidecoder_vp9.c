@@ -34,9 +34,6 @@
 #include "gstvaapiobject_priv.h"
 
 #include "gstvaapicompat.h"
-#ifdef HAVE_VA_VA_DEC_VP9_H
-#include <va/va_dec_vp9.h>
-#endif
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
