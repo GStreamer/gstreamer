@@ -50,6 +50,11 @@ else
   noseh_link_args = []
 endif
 
+# Symbol visibility
+if cc.has_argument('-fvisibility=hidden')
+  add_project_arguments('-fvisibility=hidden', language: 'c')
+endif
+
 core_conf = configuration_data()
 check_headers = [
   ['HAVE_DLFCN_H', 'dlfcn.h'],
