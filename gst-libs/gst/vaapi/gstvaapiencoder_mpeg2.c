@@ -21,16 +21,14 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "sysdeps.h"
 #include <math.h>
-#include <va/va.h>
+#include "sysdeps.h"
 #include <gst/base/gstbitwriter.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiencoder_mpeg2.h"
 #include "gstvaapiencoder_mpeg2_priv.h"
 #include "gstvaapiutils_mpeg2_priv.h"
 #include "gstvaapicodedbufferproxy_priv.h"
-
 #include "gstvaapicontext.h"
 #include "gstvaapisurface.h"
 #include "gstvaapidisplay_priv.h"

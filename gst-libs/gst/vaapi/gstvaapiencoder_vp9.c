@@ -21,7 +21,6 @@
  */
 
 #include "sysdeps.h"
-#include <va/va.h>
 #include <gst/base/gstbitwriter.h>
 #include <gst/codecparsers/gstvp9parser.h>
 #include "gstvaapicompat.h"

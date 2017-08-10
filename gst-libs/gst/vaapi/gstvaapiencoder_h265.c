@@ -22,7 +22,6 @@
 
 #include "sysdeps.h"
 #include <math.h>
-#include <va/va.h>
 #include <gst/base/gstbitwriter.h>
 #include <gst/codecparsers/gsth265parser.h>
 #include "gstvaapicompat.h"

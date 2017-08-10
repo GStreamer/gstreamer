@@ -27,7 +27,6 @@
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include "sysdeps.h"
-#include <va/va.h>
 #include <gst/base/gstbitwriter.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include "gstvaapicompat.h"
