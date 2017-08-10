@@ -2012,7 +2012,7 @@ gst_omx_video_dec_set_latency (GstOMXVideoDec * self)
   /* Convert to ns */
   latency = param.nLatency * GST_MSECOND;
 
-  gst_video_encoder_set_latency (GST_VIDEO_ENCODER (self), latency, latency);
+  gst_video_decoder_set_latency (GST_VIDEO_DECODER (self), latency, latency);
 }
 #endif
 
