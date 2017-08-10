@@ -48,6 +48,12 @@ elif cc.has_argument('-Wl,-Bsymbolic-functions')
   # FIXME: Add FATAL_WARNINGS from configure.ac
 endif
 
+# Symbol visibility
+have_visibility_hidden = cc.has_argument('-fvisibility=hidden')
+if have_visibility_hidden
+  add_project_arguments('-fvisibility=hidden', language: 'c')
+endif
+
 cdata = configuration_data()
 cdata.set_quoted('GST_API_VERSION', apiversion)
 cdata.set_quoted('GST_DATADIR', join_paths(prefix, get_option('datadir')))

@@ -54,11 +54,18 @@ configure_file(input : 'check.h.in',
 
 internal_check_h_inc = include_directories('..')
 
+# Must explicitly make symbols public if default visibility is hidden
+if have_visibility_hidden
+  libcheck_visibility_args = ['-DCK_DLL_EXP=extern __attribute__ ((visibility ("default")))']
+else
+  libcheck_visibility_args = ['-DCK_DLL_EXP=extern']
+endif
+
 libcheck = static_library('check',
   libcheck_files,
   include_directories : [configinc, internal_check_h_inc],
   dependencies : [rt_lib, mathlib],
-  c_args: gst_c_args +
+  c_args: gst_c_args + libcheck_visibility_args +
 	  # Don't want libcompat to think we don't have these and substitute
 	  # replacements since we don't check for or define these. See libcompat.h
 	  ['-DHAVE_VSNPRINTF', '-DHAVE_SNPRINTF', '-DHAVE_MALLOC', '-DHAVE_REALLOC'],
