@@ -23,7 +23,7 @@ gnome.gtkdoc('ges',
             '--ignore-decorators=GST_EXPORT',
             '--ignore-headers=gesmarshal.h ges-internal.h ges-auto-transition.h ges-structured-interface.h ges-structure-parser.h ges-smart-video-mixer.h gstframepositioner.h'
             ],
-  scanobj_args : ['--type-init-func="gst_init(NULL,NULL)'],
+  scanobjs_args : ['--type-init-func="gst_init(NULL,NULL)"'],
   gobject_typesfile : types,
   dependencies : [ges_dep],
   fixxref_args: doc_deps + ['--html-dir=' + get_option('prefix') + '/share/gtk-doc/html/'],
