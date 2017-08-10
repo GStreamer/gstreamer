@@ -271,6 +271,9 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
   GstVaapiEncoderStatus status;
   GstBuffer *out_buffer;
   GstFlowReturn ret;
+#if USE_H264_FEI_ENCODER
+  GstVaapiFeiVideoMeta *feimeta = NULL;
+#endif
 
   status = gst_vaapi_encoder_get_buffer_with_timeout (encode->encoder,
       &codedbuf_proxy, timeout);
@@ -295,6 +298,15 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
   out_buffer = NULL;
   ret = klass->alloc_buffer (encode,
       GST_VAAPI_CODED_BUFFER_PROXY_BUFFER (codedbuf_proxy), &out_buffer);
+
+#if USE_H264_FEI_ENCODER
+  if (klass->save_stats_to_meta) {
+    feimeta = klass->save_stats_to_meta (encode, codedbuf_proxy);
+    if (feimeta != NULL)
+      gst_buffer_set_vaapi_fei_video_meta (out_buffer, feimeta);
+  }
+#endif
+
   gst_vaapi_coded_buffer_proxy_replace (&codedbuf_proxy, NULL);
   if (ret != GST_FLOW_OK)
     goto error_allocate_buffer;
@@ -617,6 +629,10 @@ gst_vaapiencode_handle_frame (GstVideoEncoder * venc,
   GstVaapiSurfaceProxy *proxy;
   GstFlowReturn ret;
   GstBuffer *buf;
+#if USE_H264_FEI_ENCODER
+  GstVaapiFeiVideoMeta *feimeta = NULL;
+  GstVaapiEncodeClass *const klass = GST_VAAPIENCODE_GET_CLASS (venc);
+#endif
 
   buf = NULL;
   ret = gst_vaapi_plugin_base_get_input_buffer (GST_VAAPI_PLUGIN_BASE (encode),
@@ -634,6 +650,12 @@ gst_vaapiencode_handle_frame (GstVideoEncoder * venc,
   proxy = gst_vaapi_video_meta_get_surface_proxy (meta);
   if (!proxy)
     goto error_buffer_no_surface_proxy;
+
+#if USE_H264_FEI_ENCODER
+  feimeta = gst_buffer_get_vaapi_fei_video_meta (buf);
+  if (feimeta && klass->load_control_data)
+    klass->load_control_data (encode, feimeta, proxy);
+#endif
 
   gst_video_codec_frame_set_user_data (frame,
       gst_vaapi_surface_proxy_ref (proxy),
