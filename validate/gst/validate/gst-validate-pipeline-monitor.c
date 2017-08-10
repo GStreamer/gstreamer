@@ -186,13 +186,13 @@ _get_peer_pad (GstPad * pad)
   while (GST_IS_PROXY_PAD (peer)) {
     GstPad *next_pad;
 
-    if (GST_IS_GHOST_PAD (peer)) {
-      next_pad = gst_pad_get_peer (peer);
-
-      if (next_pad == pad)
+    if (GST_PAD_IS_SINK (peer)) {
+      if (GST_IS_GHOST_PAD (peer))
         next_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (peer));
+      else
+        next_pad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (peer)));
     } else {
-      next_pad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (peer)));
+      next_pad = gst_pad_get_peer (peer);
     }
 
     if (!next_pad)
