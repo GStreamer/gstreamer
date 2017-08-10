@@ -351,6 +351,15 @@ gst_vaapi_enc_picture_destroy (GstVaapiEncPicture * picture)
 
   gst_vaapi_codec_object_replace (&picture->sequence, NULL);
 
+#if USE_H264_FEI_ENCODER
+  gst_vaapi_codec_object_replace (&picture->mvpred, NULL);
+  gst_vaapi_codec_object_replace (&picture->mbcntrl, NULL);
+  gst_vaapi_codec_object_replace (&picture->qp, NULL);
+  gst_vaapi_codec_object_replace (&picture->mbcode, NULL);
+  gst_vaapi_codec_object_replace (&picture->mv, NULL);
+  gst_vaapi_codec_object_replace (&picture->dist, NULL);
+#endif
+
   gst_vaapi_surface_proxy_replace (&picture->proxy, NULL);
   picture->surface_id = VA_INVALID_ID;
   picture->surface = NULL;
