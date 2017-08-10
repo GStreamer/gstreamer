@@ -2745,7 +2745,7 @@ _deactivate_stack (NleComposition * comp, gboolean flush_downstream)
 {
   GstPad *ptarget;
 
-  GST_INFO_OBJECT (comp, "Deactivating current stack (flushing downstream: %d",
+  GST_INFO_OBJECT (comp, "Deactivating current stack (flushing downstream: %d)",
       flush_downstream);
   _set_current_bin_to_ready (comp, flush_downstream);
 
