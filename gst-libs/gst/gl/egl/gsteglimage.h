@@ -31,7 +31,8 @@
 
 G_BEGIN_DECLS
 
-GType gst_egl_image_get_type (void);
+GST_EXPORT GType gst_egl_image_get_type (void);
+
 #define GST_TYPE_EGL_IMAGE                         (gst_egl_image_get_type())
 #define GST_IS_EGL_IMAGE(obj)                      (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_EGL_IMAGE))
 #define GST_EGL_IMAGE_CAST(obj)                    ((GstEGLImage *)(obj))
@@ -70,17 +71,21 @@ struct _GstEGLImage
   gpointer _padding[GST_PADDING];
 };
 
+GST_EXPORT
 GstEGLImage *             gst_egl_image_new_wrapped             (GstGLContext * context,
                                                                  EGLImageKHR image,
                                                                  GstGLFormat format,
                                                                  gpointer user_data,
                                                                  GstEGLImageDestroyNotify user_data_destroy);
+GST_EXPORT
 EGLImageKHR             gst_egl_image_get_image                 (GstEGLImage * image);
 
+GST_EXPORT
 GstEGLImage *           gst_egl_image_from_texture              (GstGLContext * context,
                                                                  GstGLMemory * gl_mem,
                                                                  guintptr * attribs);
 #if GST_GL_HAVE_DMABUF
+GST_EXPORT
 GstEGLImage *           gst_egl_image_from_dmabuf               (GstGLContext * context,
                                                                  gint dmabuf,
                                                                  GstVideoInfo * in_info,

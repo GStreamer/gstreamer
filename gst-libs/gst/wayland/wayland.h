@@ -35,9 +35,14 @@ G_BEGIN_DECLS
  * from the application to the sink */
 #define GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE "GstWaylandDisplayHandleContextType"
 
+GST_EXPORT
 gboolean gst_is_wayland_display_handle_need_context_message (GstMessage * msg);
+
+GST_EXPORT
 GstContext *
 gst_wayland_display_handle_context_new (struct wl_display * display);
+
+GST_EXPORT
 struct wl_display *
 gst_wayland_display_handle_context_get_handle (GstContext * context);
 
@@ -74,10 +79,14 @@ struct _GstWaylandVideoInterface {
   void (*end_geometry_change)     (GstWaylandVideo *video);
 };
 
+GST_EXPORT
 GType   gst_wayland_video_get_type (void);
 
 /* virtual function wrappers */
+GST_EXPORT
 void gst_wayland_video_begin_geometry_change (GstWaylandVideo * video);
+
+GST_EXPORT
 void gst_wayland_video_end_geometry_change (GstWaylandVideo * video);
 
 G_END_DECLS
