@@ -58,6 +58,10 @@ __gst_video_element_proxy_caps (GstElement * element, GstCaps * templ_caps,
         gst_structure_set_value (s, "framerate", val);
       if ((val = gst_structure_get_value (caps_s, "pixel-aspect-ratio")))
         gst_structure_set_value (s, "pixel-aspect-ratio", val);
+      if ((val = gst_structure_get_value (caps_s, "colorimetry")))
+        gst_structure_set_value (s, "colorimetry", val);
+      if ((val = gst_structure_get_value (caps_s, "chroma-site")))
+        gst_structure_set_value (s, "chroma-site", val);
 
       gst_caps_append_structure_full (tmp, s,
           gst_caps_features_copy (features));
