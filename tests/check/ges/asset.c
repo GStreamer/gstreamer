@@ -20,7 +20,6 @@
  */
 
 #include "test-utils.h"
-#undef GST_CAT_DEFAULT
 #include "../../../ges/ges-internal.h"
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>

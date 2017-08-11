@@ -34,7 +34,9 @@
 G_BEGIN_DECLS
 
 GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
+#ifndef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT _ges_debug
+#endif
 
 /*  The first 2 NLE priorities are used for:
  *    0- The Mixing element
