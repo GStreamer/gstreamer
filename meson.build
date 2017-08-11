@@ -91,6 +91,11 @@ else
       language : 'c')
 endif
 
+# Symbol visibility
+if cc.has_argument('-fvisibility=hidden')
+  add_project_arguments('-fvisibility=hidden', language: 'c')
+endif
+
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
 
