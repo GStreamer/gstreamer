@@ -25,6 +25,13 @@ libversion = '@0@.@1@.0'.format(soversion, gst_version_minor.to_int() * 100 + gs
 
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
+cc = meson.get_compiler('c')
+
+# Symbol visibility
+if cc.has_argument('-fvisibility=hidden')
+  add_project_arguments('-fvisibility=hidden', language: 'c')
+endif
+
 cdata = configuration_data()
 cdata.set_quoted('GETTEXT_PACKAGE', 'gst-rtsp-server-1.0')
 cdata.set_quoted('PACKAGE', 'gst-rtsp-server')
