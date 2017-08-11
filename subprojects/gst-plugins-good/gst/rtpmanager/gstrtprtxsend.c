@@ -747,18 +747,24 @@ gst_rtp_rtx_send_get_ts_diff (SSRCRtxData * data)
   if (!high_buf || !low_buf || high_buf == low_buf)
     return 0;
 
-  high_ts = high_buf->timestamp;
-  low_ts = low_buf->timestamp;
+  if (data->clock_rate) {
+    high_ts = high_buf->timestamp;
+    low_ts = low_buf->timestamp;
 
-  /* it needs to work if ts wraps */
-  if (high_ts >= low_ts) {
-    result = (guint32) (high_ts - low_ts);
+    /* it needs to work if ts wraps */
+    if (high_ts >= low_ts) {
+      result = (guint32) (high_ts - low_ts);
+    } else {
+      result = (guint32) (high_ts + G_MAXUINT32 + 1 - low_ts);
+    }
+    result = gst_util_uint64_scale_int (result, 1000, data->clock_rate);
   } else {
-    result = (guint32) (high_ts + G_MAXUINT32 + 1 - low_ts);
+    high_ts = GST_BUFFER_PTS (high_buf->buffer);
+    low_ts = GST_BUFFER_PTS (low_buf->buffer);
+    result = gst_util_uint64_scale_int_round (high_ts - low_ts, 1, GST_MSECOND);
   }
 
-  /* return value in ms instead of clock ticks */
-  return (guint32) gst_util_uint64_scale_int (result, 1000, data->clock_rate);
+  return result;
 }
 
 /* Must be called with lock */
