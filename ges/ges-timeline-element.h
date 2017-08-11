@@ -286,7 +286,7 @@ GST_EXPORT void
 ges_timeline_element_set_child_property_by_pspec    (GESTimelineElement * self,
                                                      GParamSpec * pspec,
                                                      GValue * value);
-
+GST_EXPORT
 void ges_timeline_element_set_child_properties     (GESTimelineElement * self,
                                                      const gchar * first_property_name,
                                                      ...) G_GNUC_NULL_TERMINATED;

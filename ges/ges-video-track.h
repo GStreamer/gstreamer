@@ -54,7 +54,9 @@ struct _GESVideoTrack
   gpointer    _ges_reserved[GES_PADDING];
 };
 
+GST_EXPORT
 GType ges_video_track_get_type (void) G_GNUC_CONST;
+
 GST_EXPORT
 GESVideoTrack * ges_video_track_new (void);
 

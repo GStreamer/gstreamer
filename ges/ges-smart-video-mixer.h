@@ -59,7 +59,8 @@ struct _GESSmartMixer
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType         ges_smart_mixer_get_type (void) G_GNUC_CONST;
+GST_EXPORT
+GType ges_smart_mixer_get_type (void) G_GNUC_CONST;
 GST_EXPORT GstPad *
 ges_smart_mixer_get_mixer_pad (GESSmartMixer *self, GstPad **mixerpad);
 GST_EXPORT
