@@ -41,7 +41,7 @@ rendering.
 > ![Information](images/icons/emoticons/information.png)
 > **GObject interfaces**
 >
-> A GObject *interface* (which GStreamer uses) is a set of functions that an element can implement. If it does, then it is said to support that particular interface. For example, video sinks usually create their own windows to display video, but, if they are also capable of rendering to an external window, they can choose to implement the `GstVideoOverlay` interface and provide functions to specify this external window. From the application developer point of view, if a certain interface is supported, you can use it and forget about which kind of element is implementing it. Moreover, if you are using `playbin`, it will automatically expose some of the interfaces supported by its internal elements: You can use your interface functions directly on `playbin` without knowing who is implementing them!
+> A `GObject` *interface* (which GStreamer uses) is a set of functions that an element can implement. If it does, then it is said to support that particular interface. For example, video sinks usually create their own windows to display video, but, if they are also capable of rendering to an external window, they can choose to implement the `GstVideoOverlay` interface and provide functions to specify this external window. From the application developer point of view, if a certain interface is supported, you can use it and forget about which kind of element is implementing it. Moreover, if you are using `playbin`, it will automatically expose some of the interfaces supported by its internal elements: You can use your interface functions directly on `playbin` without knowing who is implementing them!
 
 Another issue is that GUI toolkits usually only allow manipulation of
 the graphical “widgets” through the main (or application) thread,
@@ -810,7 +810,7 @@ found in the `GstMessageType` documentation.
 
 Messages can deliver additional information through their embedded
 `GstStructure`, which is a very flexible data container. Here, we create
-a new structure with `gst_structure_new`, and name it `tags-changed`, to
+a new structure with `gst_structure_new()`, and name it `tags-changed`, to
 avoid confusion in case we wanted to send other application messages.
 
 Later, once in the main thread, the bus will receive this message and
