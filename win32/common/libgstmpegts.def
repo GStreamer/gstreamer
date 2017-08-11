@@ -22,7 +22,6 @@ EXPORTS
 	gst_mpegts_component_descriptor_get_type
 	gst_mpegts_component_stream_content_get_type
 	gst_mpegts_content_nibble_hi_get_type
-	gst_mpegts_debug DATA
 	gst_mpegts_descriptor_free
 	gst_mpegts_descriptor_from_custom
 	gst_mpegts_descriptor_from_custom_with_extension

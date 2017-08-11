@@ -64,7 +64,7 @@
  *   * TSDT
  */
 
-GST_DEBUG_CATEGORY (gst_mpegts_debug);
+GST_DEBUG_CATEGORY (mpegts_debug);
 
 static GQuark QUARK_PAT;
 static GQuark QUARK_CAT;
@@ -995,8 +995,7 @@ gst_mpegts_initialize (void)
   if (_gst_mpegts_section_type)
     return;
 
-  GST_DEBUG_CATEGORY_INIT (gst_mpegts_debug, "mpegts", 0,
-      "MPEG-TS helper library");
+  GST_DEBUG_CATEGORY_INIT (mpegts_debug, "mpegts", 0, "MPEG-TS helper library");
 
   /* FIXME : Temporary hack to initialize section gtype */
   _gst_mpegts_section_type = gst_mpegts_section_get_type ();
