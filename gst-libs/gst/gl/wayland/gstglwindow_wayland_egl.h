@@ -95,10 +95,13 @@ struct _GstGLWindowWaylandEGLClass {
   gpointer _reserved[GST_PADDING];
 };
 
-GType gst_gl_window_wayland_egl_get_type     (void);
+G_GNUC_INTERNAL
+GType                   gst_gl_window_wayland_egl_get_type (void);
 
+G_GNUC_INTERNAL
 GstGLWindowWaylandEGL * gst_gl_window_wayland_egl_new  (GstGLDisplay * display);
 
+G_GNUC_INTERNAL
 void gst_gl_window_wayland_egl_create_window (GstGLWindowWaylandEGL * window_egl);
 
 G_END_DECLS

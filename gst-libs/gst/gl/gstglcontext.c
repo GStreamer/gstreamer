@@ -234,7 +234,7 @@ typedef struct
 } GstGLWrappedContextClass;
 
 #define GST_TYPE_GL_WRAPPED_CONTEXT (gst_gl_wrapped_context_get_type())
-GType gst_gl_wrapped_context_get_type (void);
+static GType gst_gl_wrapped_context_get_type (void);
 G_DEFINE_TYPE (GstGLWrappedContext, gst_gl_wrapped_context,
     GST_TYPE_GL_CONTEXT);
 

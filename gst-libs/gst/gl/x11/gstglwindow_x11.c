@@ -41,7 +41,8 @@
 #define gst_gl_window_x11_parent_class parent_class
 G_DEFINE_TYPE (GstGLWindowX11, gst_gl_window_x11, GST_TYPE_GL_WINDOW);
 
-gboolean gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11,
+G_GNUC_INTERNAL
+    gboolean gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11,
     xcb_generic_event_t * event);
 
 /* X error trap */
@@ -67,23 +68,23 @@ struct _GstGLWindowX11Private
   GstVideoRectangle render_rect;
 };
 
-guintptr gst_gl_window_x11_get_display (GstGLWindow * window);
+static guintptr gst_gl_window_x11_get_display (GstGLWindow * window);
 guintptr gst_gl_window_x11_get_gl_context (GstGLWindow * window);
 gboolean gst_gl_window_x11_activate (GstGLWindow * window, gboolean activate);
-void gst_gl_window_x11_set_window_handle (GstGLWindow * window,
+static void gst_gl_window_x11_set_window_handle (GstGLWindow * window,
     guintptr handle);
 static gboolean gst_gl_window_x11_set_render_rectangle (GstGLWindow * window,
     int x, int y, int width, int height);
-guintptr gst_gl_window_x11_get_window_handle (GstGLWindow * window);
+static guintptr gst_gl_window_x11_get_window_handle (GstGLWindow * window);
 static void gst_gl_window_x11_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
-void gst_gl_window_x11_show (GstGLWindow * window);
-void gst_gl_window_x11_draw (GstGLWindow * window);
+static void gst_gl_window_x11_show (GstGLWindow * window);
+static void gst_gl_window_x11_draw (GstGLWindow * window);
 gboolean gst_gl_window_x11_create_context (GstGLWindow * window,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
-gboolean gst_gl_window_x11_open (GstGLWindow * window, GError ** error);
-void gst_gl_window_x11_close (GstGLWindow * window);
-void gst_gl_window_x11_handle_events (GstGLWindow * window,
+static gboolean gst_gl_window_x11_open (GstGLWindow * window, GError ** error);
+static void gst_gl_window_x11_close (GstGLWindow * window);
+static void gst_gl_window_x11_handle_events (GstGLWindow * window,
     gboolean handle_events);
 
 static void
@@ -144,7 +145,7 @@ gst_gl_window_x11_new (GstGLDisplay * display)
   return window;
 }
 
-gboolean
+static gboolean
 gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
 {
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
@@ -261,7 +262,7 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
   return TRUE;
 }
 
-void
+static void
 gst_gl_window_x11_close (GstGLWindow * window)
 {
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
@@ -283,7 +284,7 @@ gst_gl_window_x11_close (GstGLWindow * window)
 }
 
 /* called by the gl thread */
-void
+static void
 gst_gl_window_x11_set_window_handle (GstGLWindow * window, guintptr id)
 {
   GstGLWindowX11 *window_x11;
@@ -378,7 +379,7 @@ gst_gl_window_x11_set_render_rectangle (GstGLWindow * window,
   return TRUE;
 }
 
-guintptr
+static guintptr
 gst_gl_window_x11_get_window_handle (GstGLWindow * window)
 {
   GstGLWindowX11 *window_x11;
@@ -417,7 +418,7 @@ _show_window (GstGLWindow * window)
   }
 }
 
-void
+static void
 gst_gl_window_x11_show (GstGLWindow * window)
 {
   gst_gl_window_send_message (window, (GstGLWindowCB) _show_window, window);
@@ -491,13 +492,13 @@ draw_cb (gpointer data)
 }
 
 /* Not called by the gl thread */
-void
+static void
 gst_gl_window_x11_draw (GstGLWindow * window)
 {
   gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, window);
 }
 
-void
+static void
 gst_gl_window_x11_handle_events (GstGLWindow * window, gboolean handle_events)
 {
   GstGLWindowX11 *window_x11;
@@ -657,7 +658,7 @@ gst_gl_window_x11_untrap_x_errors (void)
   return TrappedErrorCode;
 }
 
-guintptr
+static guintptr
 gst_gl_window_x11_get_display (GstGLWindow * window)
 {
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);

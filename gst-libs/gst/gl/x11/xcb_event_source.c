@@ -29,7 +29,9 @@
 #include "gstgldisplay_x11.h"
 #include "gstglwindow_x11.h"
 
-extern gboolean gst_gl_display_x11_handle_event (GstGLDisplayX11 * display_x11);
+G_GNUC_INTERNAL
+    extern gboolean gst_gl_display_x11_handle_event (GstGLDisplayX11 *
+    display_x11);
 
 typedef struct _XCBEventSource
 {

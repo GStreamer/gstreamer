@@ -55,7 +55,7 @@ static gboolean gst_gl_context_glx_create_context (GstGLContext *
 static void gst_gl_context_glx_destroy_context (GstGLContext * context);
 static gboolean gst_gl_context_glx_choose_format (GstGLContext *
     context, GError ** error);
-GstGLAPI gst_gl_context_glx_get_gl_api (GstGLContext * context);
+static GstGLAPI gst_gl_context_glx_get_gl_api (GstGLContext * context);
 static GstGLPlatform gst_gl_context_glx_get_gl_platform (GstGLContext *
     context);
 static void gst_gl_context_glx_get_gl_platform_version (GstGLContext * context,
