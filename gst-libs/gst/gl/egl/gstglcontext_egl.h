@@ -32,7 +32,7 @@ G_BEGIN_DECLS
 typedef struct _GstGLContextEGL GstGLContextEGL;
 typedef struct _GstGLContextEGLClass GstGLContextEGLClass;
 
-GType gst_gl_context_egl_get_type     (void);
+G_GNUC_INTERNAL GType gst_gl_context_egl_get_type (void);
 #define GST_TYPE_GL_CONTEXT_EGL         (gst_gl_context_egl_get_type())
 
 /* FIXME: remove this when moving to -base */
@@ -84,8 +84,13 @@ struct _GstGLContextEGLClass
   GstGLContextClass parent;
 };
 
+G_GNUC_INTERNAL
 GstGLContextEGL *   gst_gl_context_egl_new                  (GstGLDisplay * display);
+
+G_GNUC_INTERNAL
 guintptr            gst_gl_context_egl_get_current_context  (void);
+
+G_GNUC_INTERNAL
 gpointer            gst_gl_context_egl_get_proc_address     (GstGLAPI gl_api, const gchar * name);
 
 G_END_DECLS

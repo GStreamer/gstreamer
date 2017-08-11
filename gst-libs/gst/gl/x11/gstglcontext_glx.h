@@ -28,7 +28,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_GL_CONTEXT_GLX         (gst_gl_context_glx_get_type())
-GType gst_gl_context_glx_get_type     (void);
+G_GNUC_INTERNAL GType gst_gl_context_glx_get_type (void);
 
 /* FIXME: remove this when moving to -base */
 #ifndef GST_DISABLE_DEPRECATED
@@ -63,8 +63,13 @@ struct _GstGLContextGLXClass {
   gpointer _reserved[GST_PADDING];
 };
 
+G_GNUC_INTERNAL
 GstGLContextGLX *   gst_gl_context_glx_new                  (GstGLDisplay * display);
+
+G_GNUC_INTERNAL
 guintptr            gst_gl_context_glx_get_current_context  (void);
+
+G_GNUC_INTERNAL
 gpointer            gst_gl_context_glx_get_proc_address     (GstGLAPI gl_api, const gchar * name);
 
 G_END_DECLS

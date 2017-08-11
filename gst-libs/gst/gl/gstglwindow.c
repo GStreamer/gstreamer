@@ -115,7 +115,7 @@ typedef struct _GstGLDummyWindowCass
   GstGLWindowClass parent;
 } GstGLDummyWindowClass;
 
-GstGLDummyWindow *gst_gl_dummy_window_new (void);
+static GstGLDummyWindow *gst_gl_dummy_window_new (void);
 
 enum
 {
@@ -964,7 +964,7 @@ gst_gl_window_resize (GstGLWindow * window, guint width, guint height)
   window->queue_resize = FALSE;
 }
 
-GType gst_gl_dummy_window_get_type (void);
+static GType gst_gl_dummy_window_get_type (void);
 
 G_DEFINE_TYPE (GstGLDummyWindow, gst_gl_dummy_window, GST_TYPE_GL_WINDOW);
 
@@ -1009,7 +1009,7 @@ gst_gl_dummy_window_init (GstGLDummyWindow * dummy)
   dummy->handle = 0;
 }
 
-GstGLDummyWindow *
+static GstGLDummyWindow *
 gst_gl_dummy_window_new (void)
 {
   GstGLDummyWindow *window;

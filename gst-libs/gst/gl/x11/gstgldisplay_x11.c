@@ -34,7 +34,9 @@ G_DEFINE_TYPE (GstGLDisplayX11, gst_gl_display_x11, GST_TYPE_GL_DISPLAY);
 static void gst_gl_display_x11_finalize (GObject * object);
 static guintptr gst_gl_display_x11_get_handle (GstGLDisplay * display);
 
-gboolean gst_gl_display_x11_handle_event (GstGLDisplayX11 * display_x11);
+G_GNUC_INTERNAL
+    gboolean gst_gl_display_x11_handle_event (GstGLDisplayX11 * display_x11);
+
 extern gboolean gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11,
     xcb_generic_event_t * event);
 

@@ -29,7 +29,8 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_GL_WINDOW_X11         (gst_gl_window_x11_get_type())
-GType gst_gl_window_x11_get_type     (void);
+G_GNUC_INTERNAL GType gst_gl_window_x11_get_type (void);
+
 #define GST_GL_WINDOW_X11(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_WINDOW_X11, GstGLWindowX11))
 #define GST_GL_WINDOW_X11_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_WINDOW_X11, GstGLWindowX11Class))
 #define GST_IS_GL_WINDOW_X11(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_WINDOW_X11))
@@ -93,11 +94,16 @@ struct _GstGLWindowX11Class {
   gpointer _reserved[GST_PADDING_LARGE];
 };
 
+G_GNUC_INTERNAL
 GstGLWindowX11 * gst_gl_window_x11_new (GstGLDisplay * display);
 
+G_GNUC_INTERNAL
 void gst_gl_window_x11_trap_x_errors (void);
+
+G_GNUC_INTERNAL
 gint gst_gl_window_x11_untrap_x_errors (void);
 
+G_GNUC_INTERNAL
 gboolean gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11);
 
 G_END_DECLS
