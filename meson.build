@@ -38,6 +38,11 @@ if cc.get_id() == 'msvc'
       language : 'c')
 endif
 
+# Symbol visibility
+if cc.has_argument('-fvisibility=hidden')
+  add_project_arguments('-fvisibility=hidden', language: 'c')
+endif
+
 cdata = configuration_data()
 cdata.set('VERSION', '"@0@"'.format(gst_version))
 cdata.set('PACKAGE', '"gst-editing-services"')
