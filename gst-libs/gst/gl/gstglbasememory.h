@@ -219,6 +219,7 @@ struct _GstGLAllocationParams
   gpointer                          _padding[GST_PADDING];
 };
 
+GST_EXPORT
 gboolean                gst_gl_allocation_params_init       (GstGLAllocationParams * params,
                                                              gsize struct_size,
                                                              guint alloc_flags,
@@ -235,12 +236,14 @@ gboolean                gst_gl_allocation_params_init       (GstGLAllocationPara
 /* free with gst_gl_allocation_params_free */
 GST_EXPORT
 GstGLAllocationParams * gst_gl_allocation_params_copy       (GstGLAllocationParams * src);
+
 GST_EXPORT
 void                    gst_gl_allocation_params_free       (GstGLAllocationParams * params);
 
 /* subclass usage */
 GST_EXPORT
 void                    gst_gl_allocation_params_free_data  (GstGLAllocationParams * params);
+
 /* subclass usage */
 GST_EXPORT
 void                    gst_gl_allocation_params_copy_data  (GstGLAllocationParams * src,
@@ -385,6 +388,7 @@ struct _GstGLBaseMemoryAllocatorClass
 
 GST_EXPORT
 void          gst_gl_base_memory_init_once (void);
+
 GST_EXPORT
 gboolean      gst_is_gl_base_memory        (GstMemory * mem);
 
@@ -400,6 +404,7 @@ void          gst_gl_base_memory_init      (GstGLBaseMemory * mem,
 
 GST_EXPORT
 gboolean      gst_gl_base_memory_alloc_data (GstGLBaseMemory * gl_mem);
+
 GST_EXPORT
 gboolean      gst_gl_base_memory_memcpy     (GstGLBaseMemory * src,
                                              GstGLBaseMemory * dest,
