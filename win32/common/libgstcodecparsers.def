@@ -115,7 +115,6 @@ EXPORTS
 	gst_vp8_range_decoder_init
 	gst_vp8_range_decoder_read
 	gst_vp8_range_decoder_read_literal
-	gst_vp9_parser_debug DATA
 	gst_vp9_parser_free
 	gst_vp9_parser_new
 	gst_vp9_parser_parse_frame_header

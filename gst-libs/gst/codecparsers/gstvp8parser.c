@@ -39,7 +39,7 @@
 #include "gstvp8rangedecoder.h"
 #include "vp8utils.h"
 
-GST_DEBUG_CATEGORY (vp8_parser_debug);
+GST_DEBUG_CATEGORY_STATIC (vp8_parser_debug);
 #define GST_CAT_DEFAULT vp8_parser_debug
 
 #define INITIALIZE_DEBUG_CATEGORY ensure_debug_category ()

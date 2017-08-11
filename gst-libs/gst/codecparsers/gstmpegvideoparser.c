@@ -119,7 +119,7 @@ static const VLCTable mpeg2_mbaddr_vlc_table[] = {
   {GST_MPEG_VIDEO_MACROBLOCK_ESCAPE, 0x08, 11}
 };
 
-GST_DEBUG_CATEGORY (mpegvideo_parser_debug);
+GST_DEBUG_CATEGORY_STATIC (mpegvideo_parser_debug);
 #define GST_CAT_DEFAULT mpegvideo_parser_debug
 
 #define INITIALIZE_DEBUG_CATEGORY \

@@ -45,7 +45,7 @@
 /* order of sb64, where sb64 = 64x64 */
 #define ALIGN_SB64(w) ((w + 63) >> 6)
 
-GST_DEBUG_CATEGORY (gst_vp9_parser_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_vp9_parser_debug);
 #define GST_CAT_DEFAULT gst_vp9_parser_debug
 
 static gboolean initialized = FALSE;

@@ -80,7 +80,7 @@
 #include <gst/base/gstbitreader.h>
 #include <string.h>
 
-GST_DEBUG_CATEGORY (h264_parser_debug);
+GST_DEBUG_CATEGORY_STATIC (h264_parser_debug);
 #define GST_CAT_DEFAULT h264_parser_debug
 
 static gboolean initialized = FALSE;

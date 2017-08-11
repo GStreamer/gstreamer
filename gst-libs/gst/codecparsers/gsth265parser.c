@@ -72,7 +72,7 @@
 #include <string.h>
 #include <math.h>
 
-GST_DEBUG_CATEGORY (h265_parser_debug);
+GST_DEBUG_CATEGORY_STATIC (h265_parser_debug);
 #define GST_CAT_DEFAULT h265_parser_debug
 
 static gboolean initialized = FALSE;

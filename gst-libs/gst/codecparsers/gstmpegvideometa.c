@@ -24,7 +24,7 @@
 
 #include "gstmpegvideometa.h"
 
-GST_DEBUG_CATEGORY (mpegv_meta_debug);
+GST_DEBUG_CATEGORY_STATIC (mpegv_meta_debug);
 #define GST_CAT_DEFAULT mpegv_meta_debug
 
 static gboolean
