@@ -195,10 +195,10 @@ _get_peer_pad (GstPad * pad)
       next_pad = gst_pad_get_peer (peer);
     }
 
+    gst_object_unref (peer);
     if (!next_pad)
       return NULL;
 
-    gst_object_unref (peer);
     peer = next_pad;
   }
 
