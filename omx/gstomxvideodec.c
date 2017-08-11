@@ -2301,23 +2301,11 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
       return FALSE;
     }
   }
-#if OMX_VERSION_MINOR == 2
-  /* In OMX-IL 1.2.0, the nFrameWidth/Height changes are propagated to the
-   * the output port upon call to the SetParameter on in port above. This
-   * propagation triggers a SettingsChanged event. It is up to the client
-   * to decide if this event should lead to reconfigure the port. Here
-   * this is clearly informal so lets just acknowledge the event to avoid
-   * output port reconfiguration. Note that the SettingsChanged event will
-   * be sent in-context of the SetParameter call above. So the event is
-   * garantie to be proceeded in the handle_message call below. */
-  if (gst_omx_port_mark_reconfigured (self->dec_out_port) != OMX_ErrorNone)
-    return FALSE;
-#else
+
   GST_DEBUG_OBJECT (self, "Updating outport port definition");
   if (gst_omx_port_update_port_definition (self->dec_out_port,
           NULL) != OMX_ErrorNone)
     return FALSE;
-#endif
 
   gst_buffer_replace (&self->codec_data, state->codec_data);
   self->input_state = gst_video_codec_state_ref (state);
