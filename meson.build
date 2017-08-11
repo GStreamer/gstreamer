@@ -19,9 +19,14 @@ libva_req = ['>= 0.30.4', '!= 0.99.0']
 glib_req = '>= 2.40.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
-# Mandatory GST deps
 cc = meson.get_compiler('c')
 
+# Symbol visibility
+if cc.has_argument('-fvisibility=hidden')
+  add_project_arguments('-fvisibility=hidden', language: 'c')
+endif
+
+# Mandatory GST deps
 libm = cc.find_library('m', required : false)
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_dep'])
