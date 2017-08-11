@@ -184,6 +184,9 @@ class GESRenderTest(GESTest, GstValidateEncodingTestInterface):
 
     def check_results(self):
         if self.result in [Result.PASSED, Result.NOT_RUN] and self.scenario is None:
+            if self.process.returncode != 0:
+                return super().check_results()
+
             res, msg = self.check_encoded_file()
             self.set_result(res, msg)
         else:
