@@ -49,6 +49,11 @@ else
   noseh_link_args = []
 endif
 
+# Symbol visibility
+if cc.has_argument('-fvisibility=hidden')
+  add_project_arguments('-fvisibility=hidden', language: 'c')
+endif
+
 gst_dep = dependency('gstreamer-' + apiversion, version : gst_req,
     fallback : ['gstreamer', 'gst_dep'])
 gst_pbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_req,
