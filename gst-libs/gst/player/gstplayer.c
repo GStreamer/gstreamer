@@ -1507,6 +1507,11 @@ emit_duration_changed (GstPlayer * self, GstClockTime duration)
       GST_TIME_ARGS (duration));
 
   self->cached_duration = duration;
+  g_mutex_lock (&self->lock);
+  if (self->media_info) {
+    self->media_info->duration = duration;
+  }
+  g_mutex_unlock (&self->lock);
 
   if (g_signal_handler_find (self, G_SIGNAL_MATCH_ID,
           signals[SIGNAL_DURATION_CHANGED], 0, NULL, NULL, NULL) != 0) {
