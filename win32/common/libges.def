@@ -179,9 +179,6 @@ EXPORTS
 	ges_pspec_hash
 	ges_smart_adder_get_type
 	ges_smart_adder_new
-	ges_smart_mixer_get_mixer_pad
-	ges_smart_mixer_get_type
-	ges_smart_mixer_new
 	ges_source_clip_get_type
 	ges_source_get_type
 	ges_test_clip_get_frequency
