@@ -938,8 +938,12 @@ gst_app_src_query (GstBaseSrc * src, GstQuery * query)
         gst_query_set_duration (query, format, priv->size);
         res = TRUE;
       } else if (format == GST_FORMAT_TIME) {
-        gst_query_set_duration (query, format, priv->duration);
-        res = TRUE;
+        if (priv->duration != GST_CLOCK_TIME_NONE) {
+          gst_query_set_duration (query, format, priv->duration);
+          res = TRUE;
+        } else {
+          res = FALSE;
+        }
       } else {
         res = FALSE;
       }
