@@ -1,7 +1,4 @@
 EXPORTS
-	_gst_validate_action_type DATA
-	_gst_validate_action_type_type DATA
-	_gst_validate_report_type DATA
 	gst_validate_action_get_clocktime
 	gst_validate_action_get_scenario
 	gst_validate_action_get_type

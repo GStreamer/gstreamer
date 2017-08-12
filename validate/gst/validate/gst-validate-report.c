@@ -49,7 +49,7 @@ GSocketClient *socket_client = NULL;
 GSocketConnection *server_connection = NULL;
 GOutputStream *server_ostream = NULL;
 
-GType _gst_validate_report_type = 0;
+static GType _gst_validate_report_type = 0;
 
 static JsonNode *
 gst_validate_report_serialize (GstValidateReport * report)

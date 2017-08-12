@@ -223,7 +223,7 @@ G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
         _reporter_iface_init));
 
 /* GstValidateAction implementation */
-GType _gst_validate_action_type = 0;
+static GType _gst_validate_action_type = 0;
 
 struct _GstValidateActionPrivate
 {

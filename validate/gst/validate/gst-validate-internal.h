@@ -27,17 +27,17 @@
 #include "gst-validate-monitor.h"
 #include <json-glib/json-glib.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
+extern G_GNUC_INTERNAL GstDebugCategory *gstvalidate_debug;
 #define GST_CAT_DEFAULT gstvalidate_debug
 
-extern GRegex *newline_regex;
-extern GstClockTime _priv_start_time;
+extern G_GNUC_INTERNAL GRegex *newline_regex;
+extern G_GNUC_INTERNAL GstClockTime _priv_start_time;
 
 
 /* If an action type is 1 (TRUE) we also consider it is a config to keep backward compatibility */
 #define IS_CONFIG_ACTION_TYPE(type) (((type) & GST_VALIDATE_ACTION_TYPE_CONFIG) || ((type) == TRUE))
 
-extern GType _gst_validate_action_type_type;
+extern G_GNUC_INTERNAL GType _gst_validate_action_type_type;
 
 void init_scenarios (void);
 
