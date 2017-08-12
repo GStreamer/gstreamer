@@ -111,13 +111,13 @@ static void create_ui (CustomData *data) {
   g_signal_connect (video_window, "realize", G_CALLBACK (realize_cb), data);
   g_signal_connect (video_window, "draw", G_CALLBACK (draw_cb), data);
 
-  play_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_PLAY);
+  play_button = gtk_button_new_from_icon_name ("media-playback-start", GTK_ICON_SIZE_SMALL_TOOLBAR);
   g_signal_connect (G_OBJECT (play_button), "clicked", G_CALLBACK (play_cb), data);
 
-  pause_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_PAUSE);
+  pause_button = gtk_button_new_from_icon_name ("media-playback-pause", GTK_ICON_SIZE_SMALL_TOOLBAR);
   g_signal_connect (G_OBJECT (pause_button), "clicked", G_CALLBACK (pause_cb), data);
 
-  stop_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_STOP);
+  stop_button = gtk_button_new_from_icon_name ("media-playback-stop", GTK_ICON_SIZE_SMALL_TOOLBAR);
   g_signal_connect (G_OBJECT (stop_button), "clicked", G_CALLBACK (stop_cb), data);
 
   data->slider = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 0, 100, 1);
