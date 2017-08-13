@@ -51,7 +51,7 @@
  * on the command line.
  */
 #ifndef CK_DLL_EXP
-#define CK_DLL_EXP
+#define CK_DLL_EXP extern
 #endif
 
 #if _MSC_VER
