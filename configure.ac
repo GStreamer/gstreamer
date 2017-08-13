@@ -2813,8 +2813,13 @@ AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
   if test x"$HAVE_OPENJPEG" = x"yes"; then
     dnl minor API changes in v2.1
     AG_GST_PKG_CHECK_MODULES(OPENJPEG_2_1, libopenjp2 >= 2.1)
-    if test x"$HAVE_OPENJPEG" = x"yes"; then
+    if test x"$HAVE_OPENJPEG_2_1" = x"yes"; then
       AC_DEFINE([HAVE_OPENJPEG_2_1], 1, [Define if OpenJPEG 2.1 is used])
+        dnl include paths changed for v2.2
+        AG_GST_PKG_CHECK_MODULES(OPENJPEG_2_2, libopenjp2 >= 2.2)
+        if test x"$HAVE_OPENJPEG_2_2" = x"yes"; then
+          AC_DEFINE([HAVE_OPENJPEG_2_2], 1, [Define if OpenJPEG 2.2 is used])
+        fi
     fi
   else
     # Fallback to v1.5
