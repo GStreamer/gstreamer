@@ -239,49 +239,29 @@ parse_error:
   }
 }
 
-/* copies the given caps */
-static GstCaps *
-gst_audio_convert_caps_remove_format_info (GstCaps * caps, gboolean channels)
+static gboolean
+remove_format_from_structure (GstCapsFeatures * features,
+    GstStructure * structure, gpointer user_data G_GNUC_UNUSED)
 {
-  GstStructure *st;
-  gint i, n, n_channels;
-  GstCaps *res;
-  guint64 channel_mask;
+  gst_structure_remove_field (structure, "format");
+  return TRUE;
+}
 
-  res = gst_caps_new_empty ();
+static gboolean
+remove_channels_from_structure (GstCapsFeatures * features, GstStructure * s,
+    gpointer user_data G_GNUC_UNUSED)
+{
+  guint64 mask;
+  gint channels;
 
-  n = gst_caps_get_size (caps);
-  for (i = 0; i < n; i++) {
-    gboolean remove_channels = FALSE;
-
-    st = gst_caps_get_structure (caps, i);
-
-    /* If this is already expressed by the existing caps
-     * skip this structure */
-    if (i > 0 && gst_caps_is_subset_structure (res, st))
-      continue;
-
-    st = gst_structure_copy (st);
-    gst_structure_remove_field (st, "format");
-
-    /* Only remove the channels and channel-mask for non-NONE layouts */
-    if (gst_structure_get (st, "channel-mask", GST_TYPE_BITMASK, &channel_mask,
-            NULL)) {
-      if (channel_mask != 0
-          || (gst_structure_get_int (st, "channels", &n_channels)
-              && (n_channels == 1)))
-        remove_channels = TRUE;
-    } else {
-      remove_channels = TRUE;
-    }
-
-    if (remove_channels && channels)
-      gst_structure_remove_fields (st, "channel-mask", "channels", NULL);
-
-    gst_caps_append_structure (res, st);
+  /* Only remove the channels and channel-mask for non-NONE layouts */
+  if (!gst_structure_get (s, "channel-mask", GST_TYPE_BITMASK, &mask, NULL) ||
+      (mask != 0 || (gst_structure_get_int (s, "channels", &channels)
+              && channels == 1))) {
+    gst_structure_remove_fields (s, "channel-mask", "channels", NULL);
   }
 
-  return res;
+  return TRUE;
 }
 
 /* The caps can be transformed into any other caps with format info removed.
@@ -294,8 +274,10 @@ gst_audio_convert_transform_caps (GstBaseTransform * btrans,
   GstCaps *tmp, *tmp2;
   GstCaps *result;
 
-  /* Get all possible caps that we can transform to */
-  tmp = gst_audio_convert_caps_remove_format_info (caps, TRUE);
+  tmp = gst_caps_copy (caps);
+
+  gst_caps_map_in_place (tmp, remove_format_from_structure, NULL);
+  gst_caps_map_in_place (tmp, remove_channels_from_structure, NULL);
 
   if (filter) {
     tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
@@ -610,12 +592,11 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
 
   result = gst_caps_intersect (othercaps, caps);
   if (gst_caps_is_empty (result)) {
-    GstCaps *removed;
+    GstCaps *removed = gst_caps_copy (caps);
 
     if (result)
       gst_caps_unref (result);
-    /* try to preserve channels */
-    removed = gst_audio_convert_caps_remove_format_info (caps, FALSE);
+    gst_caps_map_in_place (removed, remove_format_from_structure, NULL);
     result = gst_caps_intersect (othercaps, removed);
     gst_caps_unref (removed);
     if (gst_caps_is_empty (result)) {
