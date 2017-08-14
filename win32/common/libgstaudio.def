@@ -33,6 +33,7 @@ EXPORTS
 	gst_audio_channel_mixer_free
 	gst_audio_channel_mixer_is_passthrough
 	gst_audio_channel_mixer_new
+	gst_audio_channel_mixer_new_with_matrix
 	gst_audio_channel_mixer_samples
 	gst_audio_channel_position_get_type
 	gst_audio_channel_positions_from_mask

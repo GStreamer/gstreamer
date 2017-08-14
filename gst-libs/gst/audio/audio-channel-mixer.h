@@ -55,6 +55,13 @@ GstAudioChannelMixer * gst_audio_channel_mixer_new   (GstAudioChannelMixerFlags 
                                                       GstAudioChannelPosition *out_position);
 
 GST_EXPORT
+GstAudioChannelMixer * gst_audio_channel_mixer_new_with_matrix (GstAudioChannelMixerFlags flags,
+                                                                GstAudioFormat format,
+                                                                gint in_channels,
+                                                                gint out_channels,
+                                                                gfloat **matrix);
+
+GST_EXPORT
 void                   gst_audio_channel_mixer_free  (GstAudioChannelMixer *mix);
 
 /*
