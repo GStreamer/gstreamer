@@ -2027,6 +2027,7 @@ gst_adaptive_demux_stop_manifest_update_task (GstAdaptiveDemux * demux)
   gst_task_stop (demux->priv->updates_task);
 
   g_mutex_lock (&demux->priv->updates_timed_lock);
+  GST_DEBUG_OBJECT (demux, "requesting stop of the manifest update task");
   demux->priv->stop_updates_task = TRUE;
   g_cond_signal (&demux->priv->updates_timed_cond);
   g_mutex_unlock (&demux->priv->updates_timed_lock);
@@ -2045,6 +2046,7 @@ gst_adaptive_demux_start_manifest_update_task (GstAdaptiveDemux * demux)
     g_mutex_unlock (&demux->priv->updates_timed_lock);
     /* Task to periodically update the manifest */
     if (demux_class->requires_periodical_playlist_update (demux)) {
+      GST_DEBUG_OBJECT (demux, "requesting start of the manifest update task");
       gst_task_start (demux->priv->updates_task);
     }
   }
@@ -4360,6 +4362,18 @@ gst_adaptive_demux_update_manifest (GstAdaptiveDemux * demux)
     } else {
       GST_DEBUG_OBJECT (demux,
           "Duration unknown, can not send the duration message");
+    }
+
+    /* If a manifest changes it's liveness or periodic updateness, we need
+     * to start/stop the manifest update task appropriately */
+    /* Keep this condition in sync with the one in
+     * gst_adaptive_demux_start_manifest_update_task()
+     */
+    if (gst_adaptive_demux_is_live (demux) &&
+        klass->requires_periodical_playlist_update (demux)) {
+      gst_adaptive_demux_start_manifest_update_task (demux);
+    } else {
+      gst_adaptive_demux_stop_manifest_update_task (demux);
     }
   }
 
