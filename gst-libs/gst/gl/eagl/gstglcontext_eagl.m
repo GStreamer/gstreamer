@@ -28,6 +28,7 @@
 #include <OpenGLES/ES2/gl.h>
 
 #include "gstglcontext_eagl.h"
+#include "../gstglcontext_private.h"
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
 

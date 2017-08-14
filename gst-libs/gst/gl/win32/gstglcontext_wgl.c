@@ -32,6 +32,7 @@
 #include <GL/wglext.h>
 
 #include "../utils/opengl_versions.h"
+#include "../gstglcontext_private.h"
 
 struct _GstGLContextWGLPrivate
 {

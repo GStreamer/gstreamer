@@ -25,6 +25,7 @@
 #include <gst/gl/gstglcontext.h>
 
 #include "gstglwindow_viv_fb_egl.h"
+#include "../gstglwindow_private.h"
 
 #define GST_CAT_DEFAULT gst_gl_window_debug
 
