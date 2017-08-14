@@ -2077,7 +2077,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
         try:
             return GstValidateMediaDescriptor(descriptor_path)
-        except FileNotFoundError:
+        except (IOError, xml.etree.ElementTree.ParseError):
             return None
 
     def get_path(self):
