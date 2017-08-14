@@ -227,7 +227,7 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
     res = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (sbcpay), outbuf);
 
     /* try to send another RTP buffer if available data exceeds MTU size */
-  } while (res == GST_FLOW_OK)
+  } while (res == GST_FLOW_OK);
 
   return res;
 }
