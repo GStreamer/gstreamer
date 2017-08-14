@@ -728,7 +728,7 @@ gst_ac3_parse_chain_priv (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GST_BUFFER_DTS (subbuf) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_PTS (subbuf) = GST_CLOCK_TIME_NONE;
     ret = ac3parse->baseparse_chainfunc (pad, parent, subbuf);
-    if (ret != GST_FLOW_OK) {
+    if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED) {
       gst_buffer_unref (buf);
       goto done;
     }
