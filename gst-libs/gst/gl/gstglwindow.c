@@ -37,6 +37,7 @@
 
 #include "gl.h"
 #include "gstglwindow.h"
+#include "gstglwindow_private.h"
 
 /* FIXME make this work with windowless contexts */
 

@@ -35,6 +35,8 @@
 #include "gstgldisplay_wayland.h"
 #include "gstglwindow_wayland_egl.h"
 
+#include "../gstglwindow_private.h"
+
 const gchar *WlEGLErrorString ();
 
 #define GST_CAT_DEFAULT gst_gl_window_debug

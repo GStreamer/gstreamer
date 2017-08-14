@@ -69,8 +69,10 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gl.h
 
 noinst_HEADERS = \
+	gstglcontext_private.h \
 	gstglfeature_private.h \
 	gstglsl_private.h \
+	gstglwindow_private.h \
 	gstglutils_private.h \
 	utils/opengl_versions.h \
 	utils/gles_versions.h

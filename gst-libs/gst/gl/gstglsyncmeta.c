@@ -35,8 +35,8 @@
 #include "gl.h"
 #include "gstglsyncmeta.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_gl_sync_meta_debug);
 #define GST_CAT_DEFAULT gst_gl_sync_meta_debug
-GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 #ifndef GL_SYNC_GPU_COMMANDS_COMPLETE
 #define GL_SYNC_GPU_COMMANDS_COMPLETE 0x9117

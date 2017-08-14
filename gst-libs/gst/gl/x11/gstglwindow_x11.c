@@ -30,6 +30,9 @@
 
 #include "gstglwindow_x11.h"
 #include "gstgldisplay_x11.h"
+
+#include "../gstglwindow_private.h"
+
 /* for XkbKeycodeToKeysym */
 #include <X11/XKBlib.h>
 

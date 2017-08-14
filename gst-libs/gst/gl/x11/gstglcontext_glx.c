@@ -37,6 +37,7 @@
 #include <gst/gl/gl.h>
 #include "gstglcontext_glx.h"
 #include "../utils/opengl_versions.h"
+#include "../gstglcontext_private.h"
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
 

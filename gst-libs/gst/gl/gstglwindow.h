@@ -264,8 +264,6 @@ GstGLContext * gst_gl_window_get_context    (GstGLWindow *window);
 GST_EXPORT
 guintptr       gst_gl_window_get_display    (GstGLWindow *window);
 
-GST_DEBUG_CATEGORY_EXTERN (gst_gl_window_debug);
-
 G_END_DECLS
 
 #endif /* __GST_GL_WINDOW_H__ */
