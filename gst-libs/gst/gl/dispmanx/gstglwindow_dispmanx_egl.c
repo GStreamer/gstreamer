@@ -28,6 +28,7 @@
 #include <gst/gl/gstglcontext.h>
 
 #include "gstglwindow_dispmanx_egl.h"
+#include "../gstglwindow_private.h"
 
 
 #ifndef ELEMENT_CHANGE_LAYER
