@@ -178,51 +178,58 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   guint frame_count;
   guint payload_length;
   struct rtp_payload *payload;
+  GstFlowReturn res;
 
   if (sbcpay->frame_length == 0) {
     GST_ERROR_OBJECT (sbcpay, "Frame length is 0");
     return GST_FLOW_ERROR;
   }
 
-  available = gst_adapter_available (sbcpay->adapter);
+  do {
+    available = gst_adapter_available (sbcpay->adapter);
 
-  max_payload =
-      gst_rtp_buffer_calc_payload_len (GST_RTP_BASE_PAYLOAD_MTU (sbcpay) -
-      RTP_SBC_PAYLOAD_HEADER_SIZE, 0, 0);
+    max_payload =
+        gst_rtp_buffer_calc_payload_len (GST_RTP_BASE_PAYLOAD_MTU (sbcpay) -
+        RTP_SBC_PAYLOAD_HEADER_SIZE, 0, 0);
 
-  max_payload = MIN (max_payload, available);
-  frame_count = max_payload / sbcpay->frame_length;
-  payload_length = frame_count * sbcpay->frame_length;
-  if (payload_length == 0)      /* Nothing to send */
-    return GST_FLOW_OK;
+    max_payload = MIN (max_payload, available);
+    frame_count = max_payload / sbcpay->frame_length;
+    payload_length = frame_count * sbcpay->frame_length;
+    if (payload_length == 0)    /* Nothing to send */
+      return GST_FLOW_OK;
 
-  outbuf = gst_rtp_buffer_new_allocate (RTP_SBC_PAYLOAD_HEADER_SIZE, 0, 0);
+    outbuf = gst_rtp_buffer_new_allocate (RTP_SBC_PAYLOAD_HEADER_SIZE, 0, 0);
 
-  /* get payload */
-  gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+    /* get payload */
+    gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
-  gst_rtp_buffer_set_payload_type (&rtp, GST_RTP_BASE_PAYLOAD_PT (sbcpay));
+    gst_rtp_buffer_set_payload_type (&rtp, GST_RTP_BASE_PAYLOAD_PT (sbcpay));
 
-  /* write header and copy data into payload */
-  payload_data = gst_rtp_buffer_get_payload (&rtp);
-  payload = (struct rtp_payload *) payload_data;
-  memset (payload, 0, sizeof (struct rtp_payload));
-  payload->frame_count = frame_count;
+    /* write header and copy data into payload */
+    payload_data = gst_rtp_buffer_get_payload (&rtp);
+    payload = (struct rtp_payload *) payload_data;
+    memset (payload, 0, sizeof (struct rtp_payload));
+    payload->frame_count = frame_count;
 
-  gst_rtp_buffer_unmap (&rtp);
+    gst_rtp_buffer_unmap (&rtp);
 
-  paybuf = gst_adapter_take_buffer_fast (sbcpay->adapter, payload_length);
-  gst_rtp_copy_audio_meta (sbcpay, outbuf, paybuf);
-  outbuf = gst_buffer_append (outbuf, paybuf);
+    paybuf = gst_adapter_take_buffer_fast (sbcpay->adapter, payload_length);
+    gst_rtp_copy_audio_meta (sbcpay, outbuf, paybuf);
+    outbuf = gst_buffer_append (outbuf, paybuf);
 
-  GST_BUFFER_PTS (outbuf) = sbcpay->last_timestamp;
-  GST_BUFFER_DURATION (outbuf) = frame_count * sbcpay->frame_duration;
-  GST_DEBUG_OBJECT (sbcpay, "Pushing %d bytes: %" GST_TIME_FORMAT,
-      payload_length, GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)));
+    GST_BUFFER_PTS (outbuf) = sbcpay->last_timestamp;
+    GST_BUFFER_DURATION (outbuf) = frame_count * sbcpay->frame_duration;
+    GST_DEBUG_OBJECT (sbcpay, "Pushing %d bytes: %" GST_TIME_FORMAT,
+        payload_length, GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)));
 
-  sbcpay->last_timestamp += frame_count * sbcpay->frame_duration;
+    sbcpay->last_timestamp += frame_count * sbcpay->frame_duration;
 
-  return gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (sbcpay), outbuf);
+    res = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (sbcpay), outbuf);
+
+    /* try to send another RTP buffer if available data exceeds MTU size */
+  } while (res == GST_FLOW_OK)
+
+  return res;
 }
 
 static GstFlowReturn
