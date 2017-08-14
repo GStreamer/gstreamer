@@ -122,6 +122,9 @@ struct _GstWavParse {
   gboolean discont;
 
   gboolean ignore_length;
+
+  /* Size of the data as written in the chunk size */
+  guint32 chunk_size;
 };
 
 struct _GstWavParseClass {
