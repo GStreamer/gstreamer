@@ -24,6 +24,7 @@
 
 #include "gl.h"
 #include "gstgldebug.h"
+#include "gstglcontext_private.h"
 #include <glib/gprintf.h>
 #include <string.h>
 

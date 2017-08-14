@@ -46,6 +46,7 @@
 
 #include "gl.h"
 #include "gstglcontext.h"
+#include "gstglcontext_private.h"
 #include "gstglfeature_private.h"
 
 #ifndef GL_NUM_EXTENSIONS
