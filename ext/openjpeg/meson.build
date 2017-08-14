@@ -9,7 +9,7 @@ openjpeg_cargs = []
 # Check for 2.2, 2.1, then 2.0
 openjpeg_dep = dependency('libopenjp2', version : '>=2.2', required : false)
 if openjpeg_dep.found()
-  openjpeg_cargs += ['-DHAVE_OPENJPEG_2_2']
+  openjpeg_cargs += ['-DHAVE_OPENJPEG_2_2', '-DHAVE_OPENJPEG_2_1']
 else
   openjpeg_dep = dependency('libopenjp2', version : '>=2.1', required : false)
   if openjpeg_dep.found()
