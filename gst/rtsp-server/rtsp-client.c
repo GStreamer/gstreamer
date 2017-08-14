@@ -1412,7 +1412,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* ERRORS */
 no_session:
   {
-    GST_ERROR ("client %p: no seesion", client);
+    GST_ERROR ("client %p: no session", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
     return FALSE;
   }
