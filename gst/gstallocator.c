@@ -361,7 +361,7 @@ typedef struct
   GstAllocatorClass parent_class;
 } GstAllocatorSysmemClass;
 
-GType gst_allocator_sysmem_get_type (void);
+static GType gst_allocator_sysmem_get_type (void);
 G_DEFINE_TYPE (GstAllocatorSysmem, gst_allocator_sysmem, GST_TYPE_ALLOCATOR);
 
 /* initialize the fields */
