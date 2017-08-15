@@ -47,6 +47,7 @@ struct _GstAudioConvert
   /* properties */
   GstAudioDitherMethod dither;
   GstAudioNoiseShapingMethod ns;
+  GValue mix_matrix;
 
   GstAudioInfo in_info;
   GstAudioInfo out_info;
