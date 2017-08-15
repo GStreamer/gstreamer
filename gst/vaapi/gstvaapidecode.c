@@ -984,7 +984,8 @@ gst_vaapidecode_reset (GstVaapiDecode * decode, GstCaps * caps,
           return TRUE;
       }
     }
-    return gst_vaapi_decoder_reset (decode->decoder);
+    return (gst_vaapi_decoder_reset (decode->decoder) ==
+        GST_VAAPI_DECODER_STATUS_SUCCESS);
   }
 
   return gst_vaapidecode_create (decode, caps);
