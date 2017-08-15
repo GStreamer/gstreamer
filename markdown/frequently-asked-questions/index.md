@@ -6,14 +6,14 @@ render-subpages: false
 
 ## Getting Started
 
-So you're eager to get started learning about GStreamer. There's a few
-ways you can get started.
+So you're eager to start learning about GStreamer? There's a few
+ways you can get started:
 
-  - If you want to learn by reading about it, start with
-    [General](frequently-asked-questions/general.md)
+  - If you want to learn by reading about GStreamer, start with
+    the [General FAQ](frequently-asked-questions/general.md)
 
-  - If you'd rather learn by trying it out, start with
+  - If you'd rather learn by trying GStreamer out, start with
     [Getting GStreamer](frequently-asked-questions/getting.md)
 
-  - If you want to live on the bleeding edge and develop and use git,
-    see [Building GStreamer from git](frequently-asked-questions/git.md)
+  - If you want to live on the bleeding edge and develop using
+    GStreamer from git, take a look at [Building GStreamer from git](frequently-asked-questions/git.md)
