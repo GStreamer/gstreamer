@@ -5,7 +5,9 @@
 First of all, verify that you have a working installation and that
 you can inspect plugins by typing
 
-    $ gst-inspect-1.0 fakesrc
+```
+$ gst-inspect-1.0 fakesrc
+```
 
 This should print out a bunch of information about this particular
 element. If this tells you that there is "no such element or plugin",
@@ -15,28 +17,33 @@ would appreciate a [bug report](#using-bugs-where).
 
 It's time to try out a few things. Start with gst-launch and two
 plug-ins that you really should have : fakesrc and fakesink. They do
-nothing except pass empty buffers. Type this at the command-line
-    :
+nothing except pass empty buffers. Type this at the command-line:
 
-    $ gst-launch-1.0 -v fakesrc silent=false num-buffers=3 ! fakesink silent=false
+```
+$ gst-launch-1.0 -v fakesrc silent=false num-buffers=3 ! fakesink silent=false
+```
 
-This will print out output that looks similar to this :
+This will print out output that looks similar to this:
 
-    RUNNING pipeline ...
-    fakesrc0: last-message = "get      ******* (fakesrc0:src)gt; (0 bytes, 0) 0x8057510"
-    fakesink0: last-message = "chain   ******* (fakesink0:sink)lt; (0 bytes, 0) 0x8057510"
-    fakesrc0: last-message = "get      ******* (fakesrc0:src)gt; (0 bytes, 1) 0x8057510"
-    fakesink0: last-message = "chain   ******* (fakesink0:sink)lt; (0 bytes, 1) 0x8057510"
-    fakesrc0: last-message = "get      ******* (fakesrc0:src)gt; (0 bytes, 2) 0x8057510"
-    fakesink0: last-message = "chain   ******* (fakesink0:sink)lt; (0 bytes, 2) 0x8057510"
-    execution ended after 5 iterations (sum 301479000 ns, average 60295800 ns, min 3000 ns, max 105482000 ns)
+```
+RUNNING pipeline ...
+fakesrc0: last-message = "get      ******* (fakesrc0:src)gt; (0 bytes, 0) 0x8057510"
+fakesink0: last-message = "chain   ******* (fakesink0:sink)lt; (0 bytes, 0) 0x8057510"
+fakesrc0: last-message = "get      ******* (fakesrc0:src)gt; (0 bytes, 1) 0x8057510"
+fakesink0: last-message = "chain   ******* (fakesink0:sink)lt; (0 bytes, 1) 0x8057510"
+fakesrc0: last-message = "get      ******* (fakesrc0:src)gt; (0 bytes, 2) 0x8057510"
+fakesink0: last-message = "chain   ******* (fakesink0:sink)lt; (0 bytes, 2) 0x8057510"
+execution ended after 5 iterations (sum 301479000 ns, average 60295800 ns, min 3000 ns, max 105482000 ns)
+```
 
 (Some parts of output have been removed for clarity) If it looks
 similar, then GStreamer itself is running correctly.
 
 To get a test video displayed, try:
 
-    $ gst-launch-1.0 videotestsrc ! videoconvert ! autovideosink
+```
+$ gst-launch-1.0 videotestsrc ! videoconvert ! autovideosink
+```
 
 If `autovideosink` doesn't work, try an element that's specific for your
 operating system and windowing system, such as `ximagesink` or `glimagesink`
@@ -62,14 +69,17 @@ First of all, run gst-inspect-1.0 on the output plug-in you want to use
 to make sure you have it installed. For example, if you use Pulseaudio,
 run
 
-    $ gst-inspect-1.0 pulsesink
-
+```
+$ gst-inspect-1.0 pulsesink
+```
 and see if that prints out a bunch of properties for the plug-in.
 
 Then try to play the sine tone by
     running
 
-    $ gst-launch-1.0 audiotestsrc ! audioconvert ! audioresample ! pulsesink
+```
+$ gst-launch-1.0 audiotestsrc ! audioconvert ! audioresample ! pulsesink
+```
 
 and see if you hear something. Make sure your volume is turned up, but
 also make sure it is not too loud and you are not wearing your
@@ -80,12 +90,16 @@ headphones.
 To do this you use the gst-inspect command-line tool, which comes
 standard with GStreamer. Invoked without any arguments,
 
-    $ gst-inspect-1.0
+```
+$ gst-inspect-1.0
+```
 
 will print out a listing of installed plugins. To learn more about a
 particular plugin, pass its name on the command line. For example,
 
-    $ gst-inspect-1.0 volume
+```
+$ gst-inspect-1.0 volume
+```
 
 will give you information about the volume plugin.
 
