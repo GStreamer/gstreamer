@@ -120,7 +120,9 @@ enum
   PROP_MODE,
   PROP_DEVICE_NUMBER,
   PROP_VIDEO_FORMAT,
-  PROP_TIMECODE_FORMAT
+  PROP_TIMECODE_FORMAT,
+  PROP_KEYER_MODE,
+  PROP_KEYER_LEVEL
 };
 
 static void gst_decklink_video_sink_set_property (GObject * object,
@@ -227,6 +229,20 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property (gobject_class, PROP_KEYER_MODE,
+      g_param_spec_enum ("keyer-mode", "Keyer mode",
+          "Keyer mode to be enabled",
+          GST_TYPE_DECKLINK_KEYER_MODE,
+          GST_DECKLINK_KEYER_MODE_OFF,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class, PROP_KEYER_LEVEL,
+      g_param_spec_int ("keyer-level", "Keyer level",
+          "Keyer level", 0, 255, 255,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   templ_caps = gst_decklink_mode_get_template_caps (FALSE);
   templ_caps = gst_caps_make_writable (templ_caps);
   /* For output we support any framerate and only really care about timestamps */
@@ -289,6 +305,14 @@ gst_decklink_video_sink_set_property (GObject * object, guint property_id,
           gst_decklink_timecode_format_from_enum ((GstDecklinkTimecodeFormat)
           g_value_get_enum (value));
       break;
+    case PROP_KEYER_MODE:
+      self->keyer_mode =
+          gst_decklink_keyer_mode_from_enum ((GstDecklinkKeyerMode)
+          g_value_get_enum (value));
+      break;
+    case PROP_KEYER_LEVEL:
+      self->keyer_level = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -314,6 +338,13 @@ gst_decklink_video_sink_get_property (GObject * object, guint property_id,
     case PROP_TIMECODE_FORMAT:
       g_value_set_enum (value,
           gst_decklink_timecode_format_to_enum (self->timecode_format));
+      break;
+    case PROP_KEYER_MODE:
+      g_value_set_enum (value,
+          gst_decklink_keyer_mode_to_enum (self->keyer_mode));
+      break;
+    case PROP_KEYER_LEVEL:
+      g_value_set_int (value, self->keyer_level);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -386,6 +417,24 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     mode = gst_decklink_get_mode (self->mode);
     g_assert (mode != NULL);
   };
+
+  /* enable or disable keyer */
+  if (self->output->keyer != NULL) {
+    if (self->keyer_mode == bmdKeyerModeOff) {
+      self->output->keyer->Disable ();
+    } else if (self->keyer_mode == bmdKeyerModeInternal) {
+      self->output->keyer->Enable (false);
+      self->output->keyer->SetLevel (self->keyer_level);
+    } else if (self->keyer_mode == bmdKeyerModeExternal) {
+      self->output->keyer->Enable (true);
+      self->output->keyer->SetLevel (self->keyer_level);
+    } else {
+      g_assert_not_reached ();
+    }
+  } else if (self->keyer_mode != bmdKeyerModeOff) {
+    GST_WARNING_OBJECT (self, "Failed to set keyer to mode %d",
+        self->keyer_mode);
+  }
 
   /* The timecode_format itself is used when we embed the actual timecode data
    * into the frame. Now we only need to know which of the two standards the

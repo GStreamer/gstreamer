@@ -169,6 +169,25 @@ gst_decklink_timecode_format_get_type (void)
 }
 
 GType
+gst_decklink_keyer_mode_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue keyermodes[] = {
+    {GST_DECKLINK_KEYER_MODE_OFF, "Off", "off"},
+    {GST_DECKLINK_KEYER_MODE_INTERNAL, "Internal", "internal"},
+    {GST_DECKLINK_KEYER_MODE_EXTERNAL, "External", "external"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstDecklinkKeyerMode", keyermodes);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
 gst_decklink_audio_connection_get_type (void)
 {
   static gsize id = 0;
@@ -295,6 +314,18 @@ static const struct
   {bmdTimecodeVITC, GST_DECKLINK_TIMECODE_FORMAT_VITC},
   {bmdTimecodeVITCField2, GST_DECKLINK_TIMECODE_FORMAT_VITCFIELD2},
   {bmdTimecodeSerial, GST_DECKLINK_TIMECODE_FORMAT_SERIAL}
+  /* *INDENT-ON* */
+};
+
+static const struct
+{
+  BMDKeyerMode keymode;
+  GstDecklinkKeyerMode gstkeymode;
+} kmodes[] = {
+  /* *INDENT-OFF* */
+  {bmdKeyerModeOff, GST_DECKLINK_KEYER_MODE_OFF},
+  {bmdKeyerModeInternal, GST_DECKLINK_KEYER_MODE_INTERNAL},
+  {bmdKeyerModeExternal, GST_DECKLINK_KEYER_MODE_EXTERNAL}
   /* *INDENT-ON* */
 };
 
@@ -450,6 +481,25 @@ gst_decklink_timecode_format_to_enum (BMDTimecodeFormat f)
   }
   g_assert_not_reached ();
   return GST_DECKLINK_TIMECODE_FORMAT_RP188ANY;
+}
+
+const BMDKeyerMode
+gst_decklink_keyer_mode_from_enum (GstDecklinkKeyerMode m)
+{
+  return kmodes[m].keymode;
+}
+
+const GstDecklinkKeyerMode
+gst_decklink_keyer_mode_to_enum (BMDKeyerMode m)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (kmodes); i++) {
+    if (kmodes[i].keymode == m)
+      return (GstDecklinkKeyerMode) i;
+  }
+  g_assert_not_reached ();
+  return GST_DECKLINK_KEYER_MODE_OFF;
 }
 
 static const BMDVideoConnection connections[] = {
@@ -1176,6 +1226,13 @@ init_devices (gpointer data)
       GST_WARNING ("selected device does not have attributes interface: "
           "0x%08lx", (unsigned long) ret);
     }
+
+    ret = decklink->QueryInterface (IID_IDeckLinkKeyer,
+        (void **) &devices[i].output.keyer);
+
+    /* We only warn of failure to obtain the keyer interface if the keyer
+     * is enabled by keyer_mode
+     */
 
     ret = iterator->Next (&decklink);
     i++;

@@ -53,6 +53,8 @@ struct _GstDecklinkVideoSink
   gint device_number;
   GstDecklinkVideoFormat video_format;
   BMDTimecodeFormat timecode_format;
+  BMDKeyerMode keyer_mode;
+  gint keyer_level;
 
   GstVideoInfo info;
 

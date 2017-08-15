@@ -156,11 +156,32 @@ typedef enum {
 #define GST_TYPE_DECKLINK_TIMECODE_FORMAT (gst_decklink_timecode_format_get_type ())
 GType gst_decklink_timecode_format_get_type (void);
 
+typedef enum
+{
+  GST_DECKLINK_KEYER_MODE_OFF,
+  GST_DECKLINK_KEYER_MODE_INTERNAL,
+  GST_DECKLINK_KEYER_MODE_EXTERNAL
+} GstDecklinkKeyerMode;
+#define GST_TYPE_DECKLINK_KEYER_MODE (gst_decklink_keyer_mode_get_type ())
+GType gst_decklink_keyer_mode_get_type (void);
+
+/* Enum BMDKeyerMode options of off, internal and external @@@ DJ @@@ */
+
+typedef uint32_t BMDKeyerMode;
+enum _BMDKeyerMode
+{
+  bmdKeyerModeOff = /* 'off' */ 0,
+  bmdKeyerModeInternal = /* 'int' */ 1,
+  bmdKeyerModeExternal = /* 'ext' */ 2
+};
+
 const BMDPixelFormat gst_decklink_pixel_format_from_type (GstDecklinkVideoFormat t);
 const gint gst_decklink_bpp_from_type (GstDecklinkVideoFormat t);
 const GstDecklinkVideoFormat gst_decklink_type_from_video_format (GstVideoFormat f);
 const BMDTimecodeFormat gst_decklink_timecode_format_from_enum (GstDecklinkTimecodeFormat f);
 const GstDecklinkTimecodeFormat gst_decklink_timecode_format_to_enum (BMDTimecodeFormat f);
+const BMDKeyerMode gst_decklink_keyer_mode_from_enum (GstDecklinkKeyerMode m);
+const GstDecklinkKeyerMode gst_decklink_keyer_mode_to_enum (BMDKeyerMode m);
 
 typedef struct _GstDecklinkMode GstDecklinkMode;
 struct _GstDecklinkMode {
@@ -187,6 +208,7 @@ struct _GstDecklinkOutput {
   IDeckLink *device;
   IDeckLinkOutput *output;
   IDeckLinkAttributes *attributes;
+  IDeckLinkKeyer *keyer;
   GstClock *clock;
   GstClockTime clock_start_time, clock_last_time, clock_epoch;
   GstClockTimeDiff clock_offset;
