@@ -85,16 +85,16 @@ however under the GPL, which means that those plugins can not be used by
 a non-GPL-compatible application. Those are few and far between though
 and there are usually non-GPL alternatives available for those GPL libraries.
 
-As part of the GStreamer source download you find a file called
-LICENSE\_readme in gst-plugins package. That file contains information
-in the exact licensing terms of the libraries we use. As a general rule,
-GStreamer aims at using only LGPL or BSD licensed libraries if available
-and only use GPL or proprietary libraries where no good LGPL or BSD
+As a general rule, GStreamer aims at using only LGPL or BSD licensed
+libraries and only use GPL or proprietary libraries when no good LGPL or BSD
 alternatives are available.
 
-You can see the effective license of a plugin as license field in
-`gst-inspect-1.0`. In the future we might have the application enforce a
-stricter policy (much like tainting in the kernel).
+You can see the effective license of a plugin as the **License** field in
+the output of the following command:
+
+```
+gst-inspect-1.0 <plugin name>
+```
 
 ## Is GStreamer a sound server?
 
