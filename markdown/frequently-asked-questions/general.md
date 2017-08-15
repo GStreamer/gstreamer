@@ -19,7 +19,7 @@ of technical reasons why C is nice in this project:
 
   - It is easy to make language bindings for libraries written in C.
 
-  - The GObject object system provided by GLib implements objects in C,
+  - The `GObject` object system provided by `GLib` implements objects in C,
     in a portable and powerful way. This library provides for introspection
     and runtime dynamic typing. It is a full OO system, but without the
     syntactic sugar. If you want sugar, take a look at
