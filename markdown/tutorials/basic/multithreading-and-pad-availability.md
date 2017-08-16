@@ -92,7 +92,6 @@ int main(int argc, char *argv[]) {
   GstElement *video_queue, *visual, *video_convert, *video_sink;
   GstBus *bus;
   GstMessage *msg;
-  GstPadTemplate *tee_src_pad_template;
   GstPad *tee_audio_pad, *tee_video_pad;
   GstPad *queue_audio_pad, *queue_video_pad;
 
@@ -136,11 +135,10 @@ int main(int argc, char *argv[]) {
   }
 
   /* Manually link the Tee, which has "Request" pads */
-  tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (tee), "src_%d");
-  tee_audio_pad = gst_element_request_pad (tee, tee_src_pad_template, NULL, NULL);
+  tee_audio_pad = gst_element_get_request_pad (tee, "src_%u");
   g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (tee_audio_pad));
   queue_audio_pad = gst_element_get_static_pad (audio_queue, "sink");
-  tee_video_pad = gst_element_request_pad (tee, tee_src_pad_template, NULL, NULL);
+  tee_video_pad = gst_element_get_request_pad (tee, "src_%u");
   g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (tee_video_pad));
   queue_video_pad = gst_element_get_static_pad (video_queue, "sink");
   if (gst_pad_link (tee_audio_pad, queue_audio_pad) != GST_PAD_LINK_OK ||
@@ -257,11 +255,10 @@ comment says).
 
 ``` c
 /* Manually link the Tee, which has "Request" pads */
-tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (tee), "src_%d");
-tee_audio_pad = gst_element_request_pad (tee, tee_src_pad_template, NULL, NULL);
+tee_audio_pad = gst_element_get_request_pad (tee, "src_%u");
 g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (tee_audio_pad));
 queue_audio_pad = gst_element_get_static_pad (audio_queue, "sink");
-tee_video_pad = gst_element_request_pad (tee, tee_src_pad_template, NULL, NULL);
+tee_video_pad = gst_element_get_request_pad (tee, "src_%u");
 g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (tee_video_pad));
 queue_video_pad = gst_element_get_static_pad (video_queue, "sink");
 if (gst_pad_link (tee_audio_pad, queue_audio_pad) != GST_PAD_LINK_OK ||
@@ -276,15 +273,12 @@ gst_object_unref (queue_video_pad);
 
 To link Request Pads, they need to be obtained by “requesting” them to
 the element. An element might be able to produce different kinds of
-Request Pads, so, when requesting them, the desired Pad Template must be
-provided. Pad templates are obtained with
-`gst_element_class_get_pad_template()` and are identified by their name.
+Request Pads, so, when requesting them, the desired Pad Template name must be
+provided.
 In the documentation for the `tee` element we see that it has two pad
-templates named “sink” (for its sink Pads) and “src_%d” (for the Request
-Pads).
-
-Once we have the Pad template, we request two Pads from the tee (for the
-audio and video branches) with `gst_element_request_pad()`.
+templates named “sink” (for its sink Pads) and “src_%u” (for the Request
+Pads). We request two Pads from the tee (for the
+audio and video branches) with `gst_element_get_request_pad()`.
 
 We then obtain the Pads from the downstream elements to which these
 Request Pads need to be linked. These are normal Always Pads, so we
@@ -320,7 +314,7 @@ it still needs to be unreferenced (freed) with `gst_object_unref()`.
     `queue` elements.
 
   - What is a Request Pad and how to link elements with request pads,
-    with `gst_element_class_get_pad_template()`, `gst_element_request_pad()`, `gst_pad_link()` and
+    with `gst_element_get_request_pad()`, `gst_pad_link()` and
      `gst_element_release_request_pad()`.
 
   - How to have the same stream available in different branches by using
