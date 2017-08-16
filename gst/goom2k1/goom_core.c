@@ -38,7 +38,7 @@ goom_init (GoomData * goomdata, guint32 resx, guint32 resy)
   goomdata->cycle = 0;
 
 
-  goomdata->goomlimit = 2;      /* sensibilité du goom */
+  goomdata->goomlimit = 2;      /* sensibilitÃ© du goom */
   goomdata->zfd = zoomFilterNew ();
   goomdata->lockvar = 0;        /* pour empecher de nouveaux changements */
   goomdata->goomvar = 0;        /* boucle des gooms */
@@ -86,7 +86,7 @@ goom_update (GoomData * goomdata, gint16 data[2][512])
   int incvar;                   /* volume du son */
   int accelvar;                 /* acceleration des particules */
   int i;
-  float largfactor;             /* elargissement de l'intervalle d'évolution des points */
+  float largfactor;             /* elargissement de l'intervalle d'Ã©volution des points */
   int zfd_update = 0;
   int resolx = goomdata->resolx;
   int resoly = goomdata->resoly;
@@ -355,7 +355,7 @@ goom_update (GoomData * goomdata, gint16 data[2][512])
     pzfd->vitesse++;
   }
 
-  /* arreter de decrémenter au bout d'un certain temps */
+  /* arreter de decrÃ©menter au bout d'un certain temps */
   if ((goomdata->cycle % 101 == 0) && (pzfd->pertedec == 7)) {
     zfd_update = 1;
     pzfd->pertedec = 8;
@@ -380,7 +380,7 @@ goom_update (GoomData * goomdata, gint16 data[2][512])
   /* affichage et swappage des buffers.. */
   goomdata->cycle++;
 
-  /* tous les 100 cycles : vérifier si le taux de goom est correct */
+  /* tous les 100 cycles : vÃ©rifier si le taux de goom est correct */
   /* et le modifier sinon.. */
   if (!(goomdata->cycle % 100)) {
     if (goomdata->totalgoom > 15) {

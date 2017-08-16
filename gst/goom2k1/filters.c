@@ -3,10 +3,10 @@
  * creation : 01/10/2000
  *  -ajout de sinFilter()
  *  -ajout de zoomFilter()
- *  -copie de zoomFilter() en zoomFilterRGB(), gérant les 3 couleurs
+ *  -copie de zoomFilter() en zoomFilterRGB(), gÃ©rant les 3 couleurs
  *  -optimisation de sinFilter (utilisant une table de sin)
  *      -asm
- *      -optimisation de la procedure de génération du buffer de transformation
+ *      -optimisation de la procedure de gÃ©nÃ©ration du buffer de transformation
  *              la vitesse est maintenant comprise dans [0..128] au lieu de [0..100]
 */
 
