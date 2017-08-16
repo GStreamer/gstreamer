@@ -305,9 +305,18 @@ gst_identity_do_sync (GstIdentity * identity, GstClockTime running_time)
 
     GST_OBJECT_LOCK (identity);
 
+    if (identity->flushing) {
+      GST_OBJECT_UNLOCK (identity);
+      return GST_FLOW_FLUSHING;
+    }
+
     while (identity->blocked)
       g_cond_wait (&identity->blocked_cond, GST_OBJECT_GET_LOCK (identity));
 
+    if (identity->flushing) {
+      GST_OBJECT_UNLOCK (identity);
+      return GST_FLOW_FLUSHING;
+    }
 
     if ((clock = GST_ELEMENT (identity)->clock)) {
       GstClockReturn cret;
@@ -336,8 +345,8 @@ gst_identity_do_sync (GstIdentity * identity, GstClockTime running_time)
         gst_clock_id_unref (identity->clock_id);
         identity->clock_id = NULL;
       }
-      if (cret == GST_CLOCK_UNSCHEDULED)
-        ret = GST_FLOW_EOS;
+      if (cret == GST_CLOCK_UNSCHEDULED || identity->flushing)
+        ret = GST_FLOW_FLUSHING;
     }
     GST_OBJECT_UNLOCK (identity);
   }
@@ -430,10 +439,15 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
   } else {
     if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START) {
       GST_OBJECT_LOCK (identity);
+      identity->flushing = TRUE;
       if (identity->clock_id) {
         GST_DEBUG_OBJECT (identity, "unlock clock wait");
         gst_clock_id_unschedule (identity->clock_id);
       }
+      GST_OBJECT_UNLOCK (identity);
+    } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+      GST_OBJECT_LOCK (identity);
+      identity->flushing = FALSE;
       GST_OBJECT_UNLOCK (identity);
     }
 
@@ -917,6 +931,7 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_OBJECT_LOCK (identity);
+      identity->flushing = FALSE;
       identity->blocked = TRUE;
       GST_OBJECT_UNLOCK (identity);
       if (identity->sync)
@@ -930,6 +945,7 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_OBJECT_LOCK (identity);
+      identity->flushing = TRUE;
       if (identity->clock_id) {
         GST_DEBUG_OBJECT (identity, "unlock clock wait");
         gst_clock_id_unschedule (identity->clock_id);

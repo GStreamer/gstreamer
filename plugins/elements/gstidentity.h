@@ -55,6 +55,7 @@ struct _GstIdentity {
 
   /*< private >*/
   GstClockID     clock_id;
+  gboolean       flushing;
   gint 	 	 error_after;
   gfloat 	 drop_probability;
   gint		 datarate;
