@@ -45,7 +45,7 @@ void pointFilter(GoomData *goomdata, Color c,
                                  guint32 cycle);
 
 /* filtre de zoom :
- le contenu de pix1 est copie dans pix2, avec l'effet appliqué
+ le contenu de pix1 est copie dans pix2, avec l'effet appliquÃ©
  midx et midy represente le centre du zoom
 
 void zoomFilter(Uint *pix1, Uint *pix2, Uint middleX, Uint middleY);
@@ -61,10 +61,10 @@ void zoomFilterFastRGB (GoomData *goomdata, ZoomFilterData *zf,
                            int zfd_update);
 
 /* filtre sin :
- le contenu de pix1 est copie dans pix2, avec l'effet appliqué
+ le contenu de pix1 est copie dans pix2, avec l'effet appliquÃ©
  cycle est la variable de temps.
  mode vaut SIN_MUL ou SIN_ADD
- rate est le pourcentage de l'effet appliqué
+ rate est le pourcentage de l'effet appliquÃ©
  lenght : la longueur d'onde (1..10) [5]
  speed : la vitesse (1..100) [10]
 */
