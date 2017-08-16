@@ -2,7 +2,7 @@
  * GStreamer
  * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
- * Copyright 2005 Sébastien Moutte <sebastien@moutte.net>
+ * Copyright 2005 SÃ©bastien Moutte <sebastien@moutte.net>
  * Copyright 2006 Joni Valtanen <joni.valtanen@movial.fi>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a

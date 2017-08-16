@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2007 Haakon Sporsheim <hakon.sporsheim@tandberg.com>
- *               2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+ *               2008 Ole AndrÃ© Vadla RavnÃ¥s <ole.andre.ravnas@tandberg.com>
  *               2009 Knut Inge Hvidsten <knut.inge.hvidsten@tandberg.com>
  *
  * This library is free software; you can redistribute it and/or
