@@ -253,7 +253,7 @@ gst_gl_transformation_init (GstGLTransformation * filter)
   filter->fov = 90;
   filter->aspect = 1.0;
   filter->znear = 0.1f;
-  filter->zfar = 100;
+  filter->zfar = 100.0;
 
   filter->xscale = 1.0;
   filter->yscale = 1.0;
@@ -853,7 +853,7 @@ gst_gl_transformation_filter_texture (GstGLFilter * filter,
   return TRUE;
 }
 
-static const GLushort indices[] = { 0, 1, 2, 3, 0 };
+static const GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
 static void
 _upload_vertices (GstGLTransformation * transformation)
@@ -863,10 +863,10 @@ _upload_vertices (GstGLTransformation * transformation)
 
 /* *INDENT-OFF* */
   GLfloat vertices[] = {
-     -transformation->aspect,  1.0,  0.0, 1.0, 0.0, 1.0,
-      transformation->aspect,  1.0,  0.0, 1.0, 1.0, 1.0,
+     -transformation->aspect, -1.0,  0.0, 1.0, 0.0, 0.0,
       transformation->aspect, -1.0,  0.0, 1.0, 1.0, 0.0,
-     -transformation->aspect, -1.0,  0.0, 1.0, 0.0, 0.0
+      transformation->aspect,  1.0,  0.0, 1.0, 1.0, 1.0,
+     -transformation->aspect,  1.0,  0.0, 1.0, 0.0, 1.0,
   };
   /* *INDENT-ON* */
 
@@ -966,7 +966,7 @@ gst_gl_transformation_callback (gpointer stuff)
     _upload_vertices (transformation);
   _bind_buffer (transformation);
 
-  gl->DrawElements (GL_TRIANGLE_STRIP, 5, GL_UNSIGNED_SHORT, 0);
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
