@@ -651,12 +651,19 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
 
           if (gst_audio_channel_positions_to_mask (pos, nbits_set, FALSE,
                   &mask)) {
-            GstCaps *tmp =
-                gst_caps_new_simple (mimetype, "channel-mask", GST_TYPE_BITMASK,
-                mask,
-                "channels", G_TYPE_INT, nbits_set, NULL);
+            GstStructure *s =
+                gst_structure_new (mimetype, "channels", G_TYPE_INT, nbits_set,
+                NULL);
 
-            gst_caps_append (caps, tmp);
+            /* No need to require a channel mask for mono or stereo */
+            if (!(nbits_set == 1 && pos[0] == GST_AUDIO_CHANNEL_POSITION_MONO)
+                && !(nbits_set == 2
+                    && pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT
+                    && pos[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT))
+              gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK, mask,
+                  NULL);
+
+            gst_caps_append_structure (caps, s);
           }
         }
         layouts++;
