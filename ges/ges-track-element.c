@@ -1489,13 +1489,8 @@ ges_track_element_set_control_source (GESTrackElement * object,
 
   if (direct || direct_absolute) {
     /* First remove existing binding */
-    binding =
-        (GstControlBinding *) g_hash_table_lookup (priv->bindings_hashtable,
-        property_name);
-    if (binding) {
-      GST_LOG ("Removing old binding %p for property %s", binding,
-          property_name);
-      gst_object_remove_control_binding (GST_OBJECT (element), binding);
+    if (ges_track_element_remove_control_binding (object, property_name)) {
+      GST_LOG ("Removed old binding for property %s", property_name);
     }
 
     if (direct_absolute)
