@@ -1008,6 +1008,14 @@ GST_EXPORT
 void                    gst_element_remove_property_notify_watch (GstElement * element,
                                                                   gulong       watch_id);
 
+GST_EXPORT
+GstPadTemplate*         gst_element_get_pad_template           (GstElement *element, const gchar *name);
+
+GST_EXPORT
+GList*                  gst_element_get_pad_template_list      (GstElement *element);
+GST_EXPORT
+const gchar *           gst_element_get_metadata               (GstElement * element, const gchar * key);
+
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstElement, gst_object_unref)
 #endif

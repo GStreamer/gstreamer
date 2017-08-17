@@ -1462,6 +1462,26 @@ gst_element_class_get_metadata (GstElementClass * klass, const gchar * key)
 }
 
 /**
+ * gst_element_get_metadata:
+ * @element: class to get metadata for
+ * @key: the key to get
+ *
+ * Get metadata with @key in @klass.
+ *
+ * Returns: the metadata for @key.
+ *
+ * Since: 1.14
+ */
+const gchar *
+gst_element_get_metadata (GstElement * element, const gchar * key)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (key != NULL, NULL);
+
+  return gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (element), key);
+}
+
+/**
  * gst_element_class_get_pad_template_list:
  * @element_class: a #GstElementClass to get pad templates of.
  *
@@ -1480,6 +1500,27 @@ gst_element_class_get_pad_template_list (GstElementClass * element_class)
   g_return_val_if_fail (GST_IS_ELEMENT_CLASS (element_class), NULL);
 
   return element_class->padtemplates;
+}
+
+/**
+ * gst_element_get_pad_template_list:
+ * @element: a #GstElement to get pad templates of.
+ *
+ * Retrieves a list of the pad templates associated with @element. The
+ * list must not be modified by the calling code.
+ *
+ * Returns: (transfer none) (element-type Gst.PadTemplate): the #GList of
+ *     pad templates.
+ *
+ * Since: 1.14
+ */
+GList *
+gst_element_get_pad_template_list (GstElement * element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  return
+      gst_element_class_get_pad_template_list (GST_ELEMENT_GET_CLASS (element));
 }
 
 /**
@@ -1517,6 +1558,29 @@ gst_element_class_get_pad_template (GstElementClass *
   }
 
   return NULL;
+}
+
+/**
+ * gst_element_get_pad_template:
+ * @element: a #GstElement to get the pad template of.
+ * @name: the name of the #GstPadTemplate to get.
+ *
+ * Retrieves a padtemplate from @element with the given name.
+ *
+ * Returns: (transfer none) (nullable): the #GstPadTemplate with the
+ *     given name, or %NULL if none was found. No unreferencing is
+ *     necessary.
+ *
+ * Since: 1.14
+ */
+GstPadTemplate *
+gst_element_get_pad_template (GstElement * element, const gchar * name)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  return gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
+      name);
 }
 
 static GstPadTemplate *

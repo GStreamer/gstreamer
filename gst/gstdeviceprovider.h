@@ -134,6 +134,9 @@ GST_EXPORT
 void        gst_device_provider_unhide_provider      (GstDeviceProvider * provider,
                                                       const gchar       * name);
 
+GST_EXPORT
+const gchar * gst_device_provider_get_metadata       (GstDeviceProvider * provider,
+                                                      const gchar * key);
 
 /* device provider class meta data */
 

@@ -479,6 +479,7 @@ EXPORTS
 	gst_device_provider_get_devices
 	gst_device_provider_get_factory
 	gst_device_provider_get_hidden_providers
+	gst_device_provider_get_metadata
 	gst_device_provider_get_type
 	gst_device_provider_hide_provider
 	gst_device_provider_register
@@ -536,6 +537,9 @@ EXPORTS
 	gst_element_get_context_unlocked
 	gst_element_get_contexts
 	gst_element_get_factory
+	gst_element_get_metadata
+	gst_element_get_pad_template
+	gst_element_get_pad_template_list
 	gst_element_get_request_pad
 	gst_element_get_start_time
 	gst_element_get_state

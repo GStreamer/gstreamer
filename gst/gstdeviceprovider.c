@@ -352,6 +352,29 @@ gst_device_provider_class_get_metadata (GstDeviceProviderClass * klass,
 }
 
 /**
+ * gst_device_provider_get_metadata:
+ * @provider: provider to get metadata for
+ * @key: the key to get
+ *
+ * Get metadata with @key in @provider.
+ *
+ * Returns: the metadata for @key.
+ *
+ * Since: 1.14
+ */
+const gchar *
+gst_device_provider_get_metadata (GstDeviceProvider * provider,
+    const gchar * key)
+{
+  g_return_val_if_fail (GST_IS_DEVICE_PROVIDER (provider), NULL);
+  g_return_val_if_fail (key != NULL, NULL);
+
+  return
+      gst_device_provider_class_get_metadata (GST_DEVICE_PROVIDER_GET_CLASS
+      (provider), key);
+}
+
+/**
  * gst_device_provider_get_devices:
  * @provider: A #GstDeviceProvider
  *
