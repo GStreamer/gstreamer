@@ -37,6 +37,12 @@
 #define vaAssociateSubpicture   vaAssociateSubpicture2
 #endif
 
+#if VA_CHECK_VERSION(1,0,0)
+#define VA_ROI_RC_QP_DELTA_SUPPORT(x) x->bits.roi_rc_qp_delta_support
+#else
+#define VA_ROI_RC_QP_DELTA_SUPPORT(x) x->bits.roi_rc_qp_delat_support
+#endif
+
 /* Compatibility glue with VA-API 0.34 */
 #if VA_CHECK_VERSION(0,34,0)
 # include <va/va_compat.h>

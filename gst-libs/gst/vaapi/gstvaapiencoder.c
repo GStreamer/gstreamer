@@ -657,7 +657,7 @@ get_roi_capability (GstVaapiEncoder * encoder, guint * num_roi_supported)
   roi_config = (VAConfigAttribValEncROI *) & value;
 
   if (roi_config->bits.num_roi_regions == 0 ||
-      roi_config->bits.roi_rc_qp_delat_support == 0)
+      VA_ROI_RC_QP_DELTA_SUPPORT (roi_config) == 0)
     return FALSE;
 
   GST_INFO ("Support for ROI - number of regions supported: %d",
