@@ -5,22 +5,22 @@
 <!-- FIXME: update for windows, macOS, and meson build, get rid of libtool things -->
 
 This depends all a bit on what your development environment and target
-operating systems is. The following is mostly aimed at Linux/unix setups.
+operating system is. The following is mostly aimed at Linux/unix setups.
 
 GStreamer uses the `pkg-config` utility to provide applications with the right
 compiler and linker flags. `pkg-config` is a standard build tool that is widely
 used in unix systems to locate libraries and retrieve build settings, so if you're
 familiar with using it already then you're basically set.
 
-If you're not familiar with `pkg-config` to compile and link a small
+If you're not familiar with `pkg-config`, to compile and link a small
 one-file program, pass the `--cflags` and `--libs` arguments to `pkg-config`.
-For example:
+The following should be sufficient for a gstreamer-only program:
 
 ```
 $ libtool --mode=link gcc `pkg-config --cflags --libs gstreamer-1.0` -o myprog myprog.c
 ```
-would be sufficient for a gstreamer-only program. If (for example) your
-application also used GTK+ 3.0, you could use
+
+If your application also used GTK+ 3.0, you could use
 
 ```
 $ libtool --mode=link gcc `pkg-config --cflags --libs gstreamer-1.0 gtk+-3.0` -o myprog myprog.c
@@ -35,31 +35,29 @@ Makefile, or integrate with autoconf using the pkg.m4 macro (providing
 
 ## How do I develop against an uninstalled GStreamer copy?
 
-It is possible to develop and compile against an uninstalled copy
-of gstreamer and gst-plugins-\* (for example, against git checkouts).
-This allows you to develop against and test the latest GStreamer version
-without having to install it and without interfering with your
-system-wide GStreamer setup.
+It is possible to develop and compile against an uninstalled copy of GStreamer
+and its plugins, for example, against git checkouts. This enables you to test
+the latest version of GStreamer without interfering with your system-wide
+GStreamer installation.
 
 There are two ways to achieve such a setup:
 
 1. [`gst-build`][gst-build] is our new meta-build module based on the
-   [Meson build system][meson]. This is the shiny new thing. It's fast and
+   [Meson build system][meson]. This is the shiny new option. It's fast and
    simple to get started with, but you will need a recent version of Meson
    installed. Just check out the git repository and run the `setup.py` script.
    Once the initial meson configure stage has passed, you can enter an
    uninstalled environment by running `ninja uninstalled` in the build
-   directory. This will make sure tools and plugin from the uninstalled build
-   tree will be used. Any problems, let us know.
+   directory. This will make sure tools and plugins from the uninstalled build
+   tree are used. Any problems, let us know.
 
 2. [`gst-uninstalled`][gst-uninstalled] is our traditional autotools-
-   and libtool-based build setup. The easiest way too create such a setup
-   is using the [latest version of the `create-uninstalled-setup.sh`
-   script][create-uninstalled]. This setup makes use of the [latest version of
-   the `gst-uninstalled` script][gst-uninstalled]. Running this script, you'll
-   be in an environment where the uninstalled tools and plugins will be used by
-   default. Also, `pkg-config` will detect the uninstalled copies before (and
-   prefer them to) any installed copies.
+   and libtool-based, uninstalled setup tool, but it requires a few extra steps
+   like manually downloading the needed GStreamer repositories. The [`create-uninstalled-setup.sh`][create-uninstalled]
+   script automates this process. Run `create-uninstalled.sh` and
+   follow its instructions to gain access to an environment where
+   uninstalled GStreamer tools and plugins are used by default. Also,
+   `pkg-config` will prefer uninstalled library copies over installed ones.
 
 Multiple uninstalled setups can be used in parallel, e.g. one for the
 latest stable branch and one for git master. Have a look at the
@@ -102,8 +100,8 @@ directory.
 
 ## Why is mail traffic so low on gstreamer-devel?
 
-Our main arena for coordination and discussion are IRC and bugzilla, not
-mailing lists. Join us in [`#gstreamer`][irc-gstreamer] on irc.freenode.net.
+Our main arenas for coordination and discussion are IRC and bugzilla, not
+the mailing lists. Join us in [`#gstreamer`][irc-gstreamer] on irc.freenode.net.
 There is also a [webchat interface][webchat-gstreamer]. For larger picture
 questions or getting more input from more people, a mail to the gstreamer-devel
 mailing list is never a bad idea, however.
@@ -136,16 +134,18 @@ want it to do.
 
 ## What is the coding style for GStreamer code?
 
-The core and almost all plugin modules are basically coded in
-K\&R with 2-space indenting. Just follow what's already there and you'll
-be fine.
+Basically, the core and almost all plugin modules use K\&R with 2-space
+indenting. Just follow what's already there and you'll be fine. We only require
+code files to be indented, header may be indented manually for better
+readability. Please use spaces for indenting, not tabs, even in header files.
 
 Individual plugins in gst-plugins-\* or plugins that you want considered
-for addition to one of the gst-plugins-\* modules should be coded in the
-same style. It's easier if everything is consistent. Consistency is, of
-course, the goal.
+for addition to these modules should use the same style. It's easier if
+everything is consistent. Consistency is, of course, the goal.
 
-Simply run your code (only the \*.c files, not the header files) through
+One way to make sure you are following our coding style is to run your code
+(remember, only the `*.c` files, not the headers) through GNU Indent using the
+following options:
 
 ```
 indent \
@@ -163,24 +163,21 @@ indent \
   --indent-level2
 ```
 
-before submitting a patch. (This is using GNU indent.) There is also a
-`gst-indent` script in the GStreamer core source tree in the tools
-directory which wraps this and contains the latest option. The easiest
-way to get the indenting right is probably to develop against a git
-checkout. The local git commit hook will ensure correct indentation. We
-only require code files to be indented, header files may be indented
-manually for better readability (however, please use spaces for
-indenting, not tabs, even in header files).
+There is also a `gst-indent` script in the GStreamer core source tree in the
+tools directory which wraps GNU Indent and uses the right options.
+
+The easiest way to get the indenting right is probably to develop against a git
+checkout. The local git commit hook will ensure correct indentation.
 
 Comments should be in `/* ANSI C comment style */` and code should generally
 be compatible with ANSI C89, so please declare all variables at the beginning
-of the block etc.
+of the block, etc.
 
 Patches should ideally be made against git master or a recent release and
 should be created using `git format-patch` format. They should then be
 attached individually to a bug report or feature request in
 [bugzilla](http://bugzilla.gnome.org). Please don't send patches to the
-mailing list, they will likely get lost there.
+mailing list. They will likely get lost there.
 
 See [How to submit patches][submit-patches] for more details.
 
@@ -199,5 +196,5 @@ New translations submitted via the Translation Project are merged
 periodically into git by the maintainers by running `make download-po`
 in the various modules when preparing a new release.
 
-We won't merge new translations or translation fixes directly, everything
+We don't merge new translations or translation fixes directly, everything
 must go via the Translation Project.
