@@ -770,20 +770,6 @@ gst_gl_transformation_gl_start (GstGLBaseFilter * base_filter)
   return TRUE;
 }
 
-static const gfloat from_ndc_matrix[] = {
-  0.5f, 0.0f, 0.0, 0.5f,
-  0.0f, 0.5f, 0.0, 0.5f,
-  0.0f, 0.0f, 0.5, 0.5f,
-  0.0f, 0.0f, 0.0, 1.0f,
-};
-
-static const gfloat to_ndc_matrix[] = {
-  2.0f, 0.0f, 0.0, -1.0f,
-  0.0f, 2.0f, 0.0, -1.0f,
-  0.0f, 0.0f, 2.0, -1.0f,
-  0.0f, 0.0f, 0.0, 1.0f,
-};
-
 static GstFlowReturn
 gst_gl_transformation_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf)
@@ -794,7 +780,8 @@ gst_gl_transformation_prepare_output_buffer (GstBaseTransform * trans,
   if (transformation->downstream_supports_affine_meta &&
       gst_video_info_is_equal (&filter->in_info, &filter->out_info)) {
     GstVideoAffineTransformationMeta *af_meta;
-    graphene_matrix_t upstream_matrix, from_ndc, to_ndc, tmp, tmp2, inv_aspect;
+    graphene_matrix_t upstream_matrix, tmp, tmp2, inv_aspect, yflip;
+    float upstream[16], downstream[16];
 
     *outbuf = gst_buffer_make_writable (inbuf);
 
@@ -805,19 +792,23 @@ gst_gl_transformation_prepare_output_buffer (GstBaseTransform * trans,
     GST_LOG_OBJECT (trans, "applying transformation to existing affine "
         "transformation meta");
 
+    gst_gl_get_affine_transformation_meta_as_ndc_ext (af_meta, upstream);
+
     /* apply the transformation to the existing affine meta */
-    graphene_matrix_init_from_float (&from_ndc, from_ndc_matrix);
-    graphene_matrix_init_from_float (&to_ndc, to_ndc_matrix);
-    graphene_matrix_init_from_float (&upstream_matrix, af_meta->matrix);
+    graphene_matrix_init_from_float (&upstream_matrix, upstream);
+    graphene_matrix_init_scale (&inv_aspect, transformation->aspect, -1., 1.);
+    graphene_matrix_init_scale (&yflip, 1., -1., 1.);
 
-    graphene_matrix_init_scale (&inv_aspect, transformation->aspect, 1., 1.);
+    /* invert the aspect effects */
+    graphene_matrix_multiply (&upstream_matrix, &inv_aspect, &tmp2);
+    /* apply the transformation */
+    graphene_matrix_multiply (&tmp2, &transformation->mvp_matrix, &tmp);
+    /* and undo yflip */
+    graphene_matrix_multiply (&tmp, &yflip, &tmp2);
 
-    graphene_matrix_multiply (&from_ndc, &upstream_matrix, &tmp);
-    graphene_matrix_multiply (&tmp, &transformation->mvp_matrix, &tmp2);
-    graphene_matrix_multiply (&tmp2, &inv_aspect, &tmp);
-    graphene_matrix_multiply (&tmp, &to_ndc, &tmp2);
+    graphene_matrix_to_float (&tmp2, downstream);
+    gst_gl_set_affine_transformation_meta_from_ndc_ext (af_meta, downstream);
 
-    graphene_matrix_to_float (&tmp2, af_meta->matrix);
     return GST_FLOW_OK;
   }
 

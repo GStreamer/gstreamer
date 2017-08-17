@@ -209,6 +209,7 @@ check_gl=libs/gstglcontext \
     libs/gstglmemory \
     libs/gstglupload \
     libs/gstglcolorconvert \
+    libs/gstglmatrix \
     libs/gstglquery \
     libs/gstglsl \
     libs/gstglheaders \
@@ -584,6 +585,16 @@ libs_gstglcolorconvert_CFLAGS = \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
 
 libs_gstglcolorconvert_LDADD = \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) \
+	$(GST_LIBS) $(LDADD)
+
+libs_gstglmatrix_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+
+libs_gstglmatrix_LDADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) \
 	$(GST_LIBS) $(LDADD)

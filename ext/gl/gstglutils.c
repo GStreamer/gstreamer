@@ -108,24 +108,24 @@ gst_gl_context_gen_shader (GstGLContext * context, const gchar * vert_src,
 }
 
 static const gfloat identity_matrix[] = {
-  1.0f, 0.0f, 0.0, 0.0f,
-  0.0f, 1.0f, 0.0, 0.0f,
-  0.0f, 0.0f, 1.0, 0.0f,
-  0.0f, 0.0f, 0.0, 1.0f,
+  1.0, 0.0, 0.0, 0.0,
+  0.0, 1.0, 0.0, 0.0,
+  0.0, 0.0, 1.0, 0.0,
+  0.0, 0.0, 0.0, 1.0,
 };
 
 static const gfloat from_ndc_matrix[] = {
-  0.5f, 0.0f, 0.0, 0.5f,
-  0.0f, 0.5f, 0.0, 0.5f,
-  0.0f, 0.0f, 0.5, 0.5f,
-  0.0f, 0.0f, 0.0, 1.0f,
+  0.5, 0.0, 0.0, 0.0,
+  0.0, 0.5, 0.0, 0.0,
+  0.0, 0.0, 0.5, 0.0,
+  0.5, 0.5, 0.5, 1.0,
 };
 
 static const gfloat to_ndc_matrix[] = {
-  2.0f, 0.0f, 0.0, -1.0f,
-  0.0f, 2.0f, 0.0, -1.0f,
-  0.0f, 0.0f, 2.0, -1.0f,
-  0.0f, 0.0f, 0.0, 1.0f,
+  2.0, 0.0, 0.0, 0.0,
+  0.0, 2.0, 0.0, 0.0,
+  0.0, 0.0, 2.0, 0.0,
+  -1.0, -1.0, -1.0, 1.0,
 };
 
 void
@@ -137,10 +137,10 @@ gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result)
   if (!a || !b || !result)
     return;
 
-  for (i = 0; i < 4; i++) {
-    for (j = 0; j < 4; j++) {
+  for (i = 0; i < 4; i++) {     /* column */
+    for (j = 0; j < 4; j++) {   /* row */
       for (k = 0; k < 4; k++) {
-        tmp[i + (j * 4)] += a[i + (k * 4)] * b[k + (j * 4)];
+        tmp[j + (i * 4)] += a[k + (i * 4)] * b[j + (k * 4)];
       }
     }
   }
@@ -159,9 +159,20 @@ void gst_gl_get_affine_transformation_meta_as_ndc_ext
       matrix[i] = identity_matrix[i];
     }
   } else {
-    gfloat tmp[16] = { 0.0f };
+    float tmp[16];
 
-    gst_gl_multiply_matrix4 (from_ndc_matrix, meta->matrix, tmp);
-    gst_gl_multiply_matrix4 (tmp, to_ndc_matrix, matrix);
+    gst_gl_multiply_matrix4 (to_ndc_matrix, meta->matrix, tmp);
+    gst_gl_multiply_matrix4 (tmp, from_ndc_matrix, matrix);
   }
+}
+
+void gst_gl_set_affine_transformation_meta_from_ndc_ext
+    (GstVideoAffineTransformationMeta * meta, const gfloat * matrix)
+{
+  float tmp[16];
+
+  g_return_if_fail (meta != NULL);
+
+  gst_gl_multiply_matrix4 (from_ndc_matrix, matrix, tmp);
+  gst_gl_multiply_matrix4 (tmp, to_ndc_matrix, meta->matrix);
 }
