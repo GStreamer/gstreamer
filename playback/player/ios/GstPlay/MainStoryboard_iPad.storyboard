@@ -99,6 +99,7 @@
                             <constraint firstItem="MUi-CE-Ydy" firstAttribute="leading" secondItem="CqS-Gu-I1O" secondAttribute="leading" constant="20" symbolic="YES" id="OM9-gE-OVP"/>
                             <constraint firstItem="xWd-bg-0b6" firstAttribute="leading" secondItem="CqS-Gu-I1O" secondAttribute="leading" id="XO5-WJ-Y3R"/>
                             <constraint firstItem="MUi-CE-Ydy" firstAttribute="bottom" secondItem="CqS-Gu-I1O" secondAttribute="bottom" constant="20" symbolic="YES" id="w6K-xy-EJe"/>
+                            <constraint firstItem="xWd-bg-0b6" firstAttribute="bottom" secondItem="MUi-CE-Ydy" secondAttribute="top" id="qLn-h6-10Z"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="fGF-kQ-bge"/>
