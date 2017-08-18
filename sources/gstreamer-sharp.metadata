@@ -123,6 +123,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/boxed[@cname='GstMessage']/method[@cname='gst_message_set_stream_status_object']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_init']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_init_check']" name="hidden">true</attr>
+	<attr path="//method[contains(@cname, 'gst_element_class_*')]" name="hidden">true</attr>
+
+	<attr path="/api/namespace/object/method[starts-with(@cname, 'gst_element_class')]" name="hidden">true</attr>
+	<attr path="/api/namespace/object/method[starts-with(@cname, 'gst_device_provider_class')]" name="hidden">true</attr>
 
 
 	<!-- GstVideo -->
