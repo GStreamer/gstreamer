@@ -1632,7 +1632,7 @@ class _TestsLauncher(Loggable):
             return self._run_tests()
 
     def final_report(self):
-        self.reporter.final_report()
+        return self.reporter.final_report()
 
     def needs_http_server(self):
         for tester in self.testers:

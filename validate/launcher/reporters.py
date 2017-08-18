@@ -125,6 +125,8 @@ class Reporter(Loggable):
 
         printc("%sTotal: %d" % (lenstat * " ", total), color)
 
+        return self.stats["failures"]
+
 
 class XunitReporter(Reporter):
 
@@ -139,7 +141,7 @@ class XunitReporter(Reporter):
 
     def final_report(self):
         self.report()
-        super(XunitReporter, self).final_report()
+        return super(XunitReporter, self).final_report()
 
     def _get_captured(self, test):
         captured = ""
