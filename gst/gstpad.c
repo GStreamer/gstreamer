@@ -1303,11 +1303,19 @@ gst_pad_activate_mode (GstPad * pad, GstPadMode mode, gboolean active)
 {
   GstObject *parent;
   gboolean res;
+  GstPadMode old, new;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_OBJECT_LOCK (pad);
+
+  old = GST_PAD_MODE (pad);
+  new = active ? mode : GST_PAD_MODE_NONE;
+  if (old == new)
+    goto was_ok;
+
   ACQUIRE_PARENT (pad, parent, no_parent);
+
   GST_OBJECT_UNLOCK (pad);
 
   res = activate_mode_internal (pad, parent, mode, active);
@@ -1316,6 +1324,13 @@ gst_pad_activate_mode (GstPad * pad, GstPadMode mode, gboolean active)
 
   return res;
 
+was_ok:
+  {
+    GST_OBJECT_UNLOCK (pad);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "already %s in %s mode",
+        active ? "activated" : "deactivated", gst_pad_mode_get_name (mode));
+    return TRUE;
+  }
 no_parent:
   {
     GST_WARNING_OBJECT (pad, "no parent");
