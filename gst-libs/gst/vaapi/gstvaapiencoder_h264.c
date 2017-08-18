@@ -78,7 +78,7 @@ typedef enum
 {
   GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_STRICT = 0,
   GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_RESTRICT_CODED_BUFFER_ALLOC = 1,
-} GstVaapiEnoderH264ComplianceMode;
+} GstVaapiEncoderH264ComplianceMode;
 
 static GType
 gst_vaapi_encoder_h264_compliance_mode_type (void)
@@ -749,7 +749,7 @@ struct _GstVaapiEncoderH264
   gboolean use_aud;
 
   /* Complance mode */
-  GstVaapiEnoderH264ComplianceMode compliance_mode;
+  GstVaapiEncoderH264ComplianceMode compliance_mode;
   guint min_cr;                 // Minimum Compression Ratio (A.3.1)
 };
 
