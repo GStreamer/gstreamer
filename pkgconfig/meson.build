@@ -17,11 +17,8 @@ pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
 configure_file(input : 'gstreamer-rtsp-server.pc.in',
   output : 'gstreamer-rtsp-server-1.0.pc',
   configuration : pkgconf,
-  install_dir : pkg_install_dir,
-)
+  install_dir : pkg_install_dir)
 
 configure_file(input : 'gstreamer-rtsp-server-uninstalled.pc.in',
   output : 'gstreamer-rtsp-server-1.0-uninstalled.pc',
-  configuration : pkgconf,
-  install_dir : pkg_install_dir
-)
+  configuration : pkgconf)
