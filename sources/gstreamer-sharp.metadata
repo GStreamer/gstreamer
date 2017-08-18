@@ -133,6 +133,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<remove-node path="/api/namespace//struct[@cname='GstByteReader']//method"/>
 	<attr path="//struct[@name='VideoGLTextureUploadMeta']//field[@cname='user_data_copy' or @cname='user_data_free']" name="hidden">true</attr>
 	<attr path="//interface[@cname='GstVideoOverlay']//parameter[@type='guintptr']" name="type">gpointer</attr>
+	<attr path="//method[@cname='gst_video_scaler_2d']" name="name">TwoD</attr>
 
 	<!-- FIXME: remove when https://bugzilla.gnome.org/show_bug.cgi?id=709938 is fixed -->
 	<attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_parse_commands_length']/parameters/parameter[@name='n_cmds']" name="pass_as">out</attr>
@@ -141,7 +142,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<!-- GstAudio -->
 	<attr path="/api/namespace/object[@cname='GstAudioClock']/field[@cname='destroy_notify']" name="hidden">1</attr>
 	<attr path="/api/namespace/interface[@cname='GstStreamVolume']/property[@cname='volume']" name="hidden">1</attr>
+	<attr path="//method[@cname='gst_audio_filter_class_add_pad_templates']" name="name">AddAudioPadTemplate</attr> <!-- FIXME This should probably be usable -->
+
 	<!-- Name clashes -->
+	<attr path="//method[@cname='gst_buffer_foreach_meta']" name="hidden">true</attr> <!-- FIXME This should probably be usable -->
+	<attr path="//method[@cname='gst_clock_set_synced']" name="name">is_synced</attr>
+	<attr path="//method[@cname='gst_control_source_get_value']" name="name">GetValueAt</attr>
+	<attr path="//method[@cname='gst_control_source_get_value_array']" name="name">GetValues</attr>
+
 	<attr path="/api/namespace/struct[@cname='GstRTCPBuffer']/field[@cname='map']" name="name">MapInfo</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTPBuffer']/field[@cname='map']" name="name">MapInfo</attr>
 	<!-- Namespace switches -->
