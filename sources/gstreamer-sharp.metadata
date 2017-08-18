@@ -233,6 +233,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//method[@cname='gst_buffer_memcmp']/parameters/parameter[@name='mem']" name="type">guint8*</attr>
 	<attr path="//method[@cname='gst_buffer_memcmp']/parameters/parameter[@name='size']" name="name">n_length</attr>
 	<!-- array fixes -->
+	<attr path="//method[@cname='gst_rtcp_packet_copy_profile_specific_ext']" name="hidden">true</attr>
+	<attr path="//method[@cname='gst_rtcp_packet_get_profile_specific_ext']" name="hidden">true</attr>
 	<attr path="//method[@cname='gst_rtp_buffer_new_copy_data']/parameters/parameter[@name='data']" name="type">guint8*</attr>
 	<attr path="//method[@cname='gst_rtp_buffer_new_copy_data']/parameters/parameter[@name='len']" name="name">n_length</attr>
 	<attr path="//method[@cname='gst_rtp_buffer_new_take_data']/parameters/parameter[@name='data']" name="type">guint8*</attr>
@@ -260,9 +262,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/object[@cname='GstObject']/field[@cname='flags']" name="writeable">true</attr>
 	<!-- No way to correctly generate these without the element type -->
 	<attr path="//boxed[@cname='GstMpegtsDescriptor']//method[parameters/parameter[@type='GArray***']]" name="hidden">true</attr>
-	
+
 	<!-- Fixed in 1.4.1 -->
 	<attr path="//callback[@cname='GstPadEventFunction']/parameters/parameter[@name='event']" name="owned">true</attr>
 	<attr path="//callback[@cname='GstPadChainListFunction']/parameters/parameter[@name='list']" name="owned">true</attr>
 	<attr path="//callback[@cname='GstPadChainFunction']/parameters/parameter[@name='buffer']" name="owned">true</attr>
+
+	<!-- Mark reserved fields as padding -->
+	<attr path="/api/namespace/struct/field[contains(@cname, 'gst_reserved')]" name="is-padding">true</attr>
+	<attr path="/api/namespace/struct/field[contains(@cname, 'gst_reserved2')]" name="is-padding">true</attr>
+	<attr path="/api/namespace/boxed/field[contains(@cname, 'gst_reserved')]" name="is-padding">true</attr>
+	<attr path="/api/namespace/boxed/field[contains(@cname, 'gst_reserved_p')]" name="is-padding">true</attr>
+	<attr path="/api/namespace/boxed/field[contains(@cname, 'gst_reserved_i')]" name="is-padding">true</attr>
 </metadata>
+
+
