@@ -594,11 +594,11 @@ Note that all testsuite should be inside python modules, so the directory should
         exception = e
         pass
     finally:
-        tests_launcher.final_report()
+        res = tests_launcher.final_report()
         tests_launcher.clean_tests()
         httpsrv.stop()
         vfb_server.stop()
         if exception is not None:
             raise exception
 
-    return 0
+    return res
