@@ -216,6 +216,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//*[@type='const GSList*']" name="type">GSList*</attr>
 	<attr path="//object/field[@cname='object' and @type='GstObject*']" name="hidden">true</attr>
 	<attr path="//constant[@name='CLOCK_TIME_NONE']" name="ctype">guint64</attr>
+	<attr path="//constant[@name='SECOND']" name="ctype">gint64</attr>
+	<attr path="//constant[@name='MSECOND']" name="ctype">gint64</attr>
 	<attr path="//method[parameters/parameter[contains(@type, 'Class*')]]" name="hidden">true</attr>
 	<attr path="//struct[@cname='GstMapInfo']/field[@name='Data']" name="type">gpointer</attr>
 	<attr path="//struct[@cname='GstMapInfo']/field[@name='Data']" name="array">false</attr>
