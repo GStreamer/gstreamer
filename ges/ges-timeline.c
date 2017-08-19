@@ -1378,7 +1378,7 @@ ges_move_context_set_objects (GESTimeline * timeline, GESTrackElement * obj,
   TrackObjIters *iters;
   GESTrackElement *tmptrackelement;
   guint64 start, tmpend, moving_point = _START (obj);
-  GSequenceIter *iter, *trackelement_iter;
+  GSequenceIter *iter, *trackelement_iter, *tmpiter;
 
   MoveContext *mv_ctx = &timeline->priv->movecontext;
   iters = g_hash_table_lookup (timeline->priv->obj_iters, obj);
@@ -1423,9 +1423,26 @@ ges_move_context_set_objects (GESTimeline * timeline, GESTrackElement * obj,
     case GES_EDGE_NONE:        /* In this case only works for ripple */
       mv_ctx->max_trim_pos = G_MAXUINT64;
 
+      iter = trackelement_iter;
+      tmpiter = g_sequence_iter_prev (iter);
+
+      /* Make sure to get the first TimelineElement starting at
+       * @moving_point */
+      while (tmpiter && !g_sequence_iter_is_end (tmpiter)) {
+        tmptrackelement = GES_TRACK_ELEMENT (g_sequence_get (iter));
+
+        if (GES_TIMELINE_ELEMENT_START (tmptrackelement) != moving_point)
+          break;
+
+        iter = tmpiter;
+        tmpiter = g_sequence_iter_prev (tmpiter);
+
+        if (g_sequence_iter_is_begin (tmpiter))
+          break;
+      }
+
       /* Look for folowing objects */
-      for (iter = g_sequence_iter_next (trackelement_iter);
-          iter && !g_sequence_iter_is_end (iter);
+      for (; iter && !g_sequence_iter_is_end (iter);
           iter = g_sequence_iter_next (iter)) {
         tmptrackelement = GES_TRACK_ELEMENT (g_sequence_get (iter));
 
