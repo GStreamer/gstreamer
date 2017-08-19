@@ -467,6 +467,35 @@ _container_remove_child (GstValidateScenario * scenario,
 }
 
 static gboolean
+_ungroup (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GESContainer *container;
+  gboolean recursive = FALSE;
+  const gchar *container_name;
+
+  gboolean res = TRUE;
+
+  DECLARE_AND_GET_TIMELINE (scenario, action);
+
+  container_name =
+      gst_structure_get_string (action->structure, "container-name");
+  container =
+      GES_CONTAINER (ges_timeline_get_element (timeline, container_name));
+  g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
+
+  gst_validate_printf (action, "Ungrouping children from container %s\n",
+      GES_TIMELINE_ELEMENT_NAME (container));
+
+  gst_structure_get_boolean (action->structure, "recursive", &recursive);
+
+  g_list_free (ges_container_ungroup (container, recursive));
+
+  gst_object_unref (timeline);
+
+  return res;
+}
+
+static gboolean
 _set_control_source (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GESTrackElement *element;
@@ -984,6 +1013,23 @@ ges_validate_register_action_types (void)
         },
         {NULL}
       }, "Remove a child from @container-name.", FALSE);
+
+  gst_validate_register_action_type ("ungroup-container", "ges", _ungroup,
+      (GstValidateActionParameter []) {
+        {
+          .name = "container-name",
+          .description = "The name of the GESContainer to ungroup children from",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "recursive",
+          .description = "Wether to recurse ungrouping or not.",
+          .types = "boolean",
+          .mandatory = FALSE,
+        },
+        {NULL}
+      }, "Ungroup children of @container-name.", FALSE);
 
   gst_validate_register_action_type ("set-control-source", "ges", _set_control_source,
       (GstValidateActionParameter []) {
