@@ -573,6 +573,21 @@ ges_pipeline_change_state (GstElement * element, GstStateChange transition)
         gst_element_set_locked_state (tmp->data, FALSE);
     }
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    {
+      GstElement *queue = gst_bin_get_by_name (GST_BIN (self->priv->playsink),
+          "vqueue");
+
+      if (queue) {
+        GST_INFO_OBJECT (self, "Setting playsink video queue max-size-time to"
+            " 2 seconds.");
+        g_object_set (G_OBJECT (queue), "max-size-buffers", 0,
+            "max-size-bytes", 0, "max-size-time", (gint64) 2 * GST_SECOND,
+            NULL);
+        gst_object_unref (queue);
+      }
+      break;
+    }
     default:
       break;
   }
