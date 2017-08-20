@@ -179,7 +179,7 @@ AC_ARG_ENABLE(Bsymbolic,
                LDFLAGS="${SAVED_LDFLAGS}" LIBS="${SAVED_LIBS}"])
 
 AC_ARG_WITH([omx-target],
-        AS_HELP_STRING([--with-omx-target],[Use this OpenMAX IL target (generic, bellagio, rpi, zynqultrascaleplus)]),
+        AS_HELP_STRING([--with-omx-target],[Use this OpenMAX IL target (generic, bellagio, rpi, tizonia, zynqultrascaleplus)]),
         [ac_cv_omx_target="$withval"], [ac_cv_omx_target="none"])
 
 ac_cv_omx_target_struct_packing="none"
