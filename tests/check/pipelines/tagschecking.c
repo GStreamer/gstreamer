@@ -19,6 +19,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <glib/gstdio.h>
 
 static GstTagList *received_tags = NULL;
 
@@ -257,16 +258,19 @@ test_tags (const gchar * tag_str, const gchar * caps, const gchar * muxer,
     const gchar * demuxer)
 {
   gchar *tmpfile;
-  gchar *tmp;
+  gchar *tmpdir;
 
-  tmp = g_strdup_printf ("%s%d", "gst-check-xmp-test-", g_random_int ());
-  tmpfile = g_build_filename (g_get_tmp_dir (), tmp, NULL);
-  g_free (tmp);
+  tmpdir = g_dir_make_tmp ("gst-check-good-XXXXXX", NULL);
+  fail_unless (tmpdir != NULL);
+  tmpfile = g_build_filename (tmpdir, "tagschecking-xmp", NULL);
 
   GST_DEBUG ("testing tags : %s", tag_str);
   test_mux_tags (tag_str, caps, muxer, tmpfile);
   test_demux_tags (tag_str, demuxer, tmpfile);
+  g_unlink (tmpfile);
+  g_rmdir (tmpdir);
   g_free (tmpfile);
+  g_free (tmpdir);
 }
 
 #define H264_CAPS "video/x-h264, width=(int)320, height=(int)240," \
