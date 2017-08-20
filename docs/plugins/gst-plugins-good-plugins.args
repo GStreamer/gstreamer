@@ -2019,6 +2019,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstMatroskaMux::max-cluster-duration</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum cluster duration</NICK>
+<BLURB>A new cluster will be created if its duration exceeds this value. 0 means no maximum duration.</BLURB>
+<DEFAULT>65535000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMatroskaMux::min-cluster-duration</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum cluster duration</NICK>
+<BLURB>Desidered cluster duration as nanoseconds. A new cluster will be created irrespective of this property if a force key unit event is received. 0 means create a new cluster for each video keyframe or for each audio buffer in audio only streams.</BLURB>
+<DEFAULT>500000000</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstTest::allowed-timestamp-deviation</NAME>
 <TYPE>gint64</TYPE>
 <RANGE>>= G_MAXULONG</RANGE>
@@ -20816,6 +20836,16 @@
 <NICK>RTX Statistics Timeout</NICK>
 <BLURB>The time to wait for a retransmitted packet after it has been considered lost in order to collect statistics (ms).</BLURB>
 <DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::faststart-min-packets</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Faststart minimum packets</NICK>
+<BLURB>The number of consecutive packets needed to start (set to 0 to disable faststart. The jitterbuffer will by default start after the latency has elapsed).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
