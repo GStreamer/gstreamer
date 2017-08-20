@@ -10,6 +10,7 @@ if cc.get_id() != 'msvc'
   subdir('dv')
 endif
 subdir('libpng')
+subdir('mpg123')
 subdir('raw1394')
 subdir('pulse')
 subdir('shout2')

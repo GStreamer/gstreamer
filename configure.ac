@@ -683,6 +683,14 @@ AG_GST_CHECK_FEATURE(LIBPNG, [Portable Network Graphics library], png, [
   AG_GST_PKG_CHECK_MODULES(LIBPNG, libpng >= 1.2)
 ])
 
+dnl *** mpg123 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MPG123, true)
+AG_GST_CHECK_FEATURE(MPG123, [mpg123 audio decoder], mpg123, [
+  PKG_CHECK_MODULES(MPG123, libmpg123 >= 1.13, HAVE_MPG123="yes", HAVE_MPG123="no")
+  AC_SUBST(MPG123_CFLAGS)
+  AC_SUBST(MPG123_LIBS)
+])
+
 dnl *** pulseaudio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PULSE, true)
 AG_GST_CHECK_FEATURE(PULSE, [pulseaudio plug-in], pulseaudio, [
@@ -874,6 +882,7 @@ AM_CONDITIONAL(USE_LIBCACA, false)
 AM_CONDITIONAL(USE_LIBDV, false)
 AM_CONDITIONAL(USE_LIBIEC61883, false)
 AM_CONDITIONAL(USE_LIBPNG, false)
+AM_CONDITIONAL(USE_MPG123, false)
 AM_CONDITIONAL(USE_OSS, false)
 AM_CONDITIONAL(USE_OSS4, false)
 AM_CONDITIONAL(USE_OSX_AUDIO, false)
@@ -1014,6 +1023,7 @@ ext/jack/Makefile
 ext/jpeg/Makefile
 ext/libcaca/Makefile
 ext/libpng/Makefile
+ext/mpg123/Makefile
 ext/pulse/Makefile
 ext/raw1394/Makefile
 ext/shout2/Makefile

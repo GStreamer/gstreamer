@@ -125,6 +125,12 @@ DebianPackage:  libdv4-dev
 Plugins:        dv (dvdec)
 URL:            http://libdv.sourceforge.net/
 
+Package:	libmpg123
+Version:        >= 1.3
+DebianPackage:  libpng12-dev
+Plugins:        mpg123 (mpg123audiodec)
+URL:		https://www.mpg123.de/api/
+
 Package:        Libpng
 Version:        >= 1.2
 DebianPackage:  libpng12-dev

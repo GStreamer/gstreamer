@@ -42,6 +42,7 @@ matroskademux
 matroskamux
 matroskaparse
 mpegaudioparse
+mpg123audiodec
 mulawdec
 mulawenc
 multifile

@@ -203,6 +203,12 @@ else
 check_matroska =
 endif
 
+if USE_MPG123
+check_mpg123 = elements/mpg123audiodec
+else
+check_mpg123 =
+endif
+
 if USE_PLUGIN_MULTIFILE
 check_multifile = elements/multifile elements/splitmux
 else
@@ -369,6 +375,7 @@ check_PROGRAMS = \
 	$(check_law) \
 	$(check_level) \
 	$(check_matroska) \
+	$(check_mpg123) \
 	$(check_multifile) \
 	$(check_replaygain) \
 	$(check_rtp) \
@@ -511,6 +518,11 @@ elements_jpegenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFL
 elements_jpegenc_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstapp-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)
 
 elements_matroskamux_LDADD = $(GST_BASE_LIBS) $(LDADD) $(LIBM)
+
+elements_mpg123audiodec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_mpg123audiodec_LDADD = \
+	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_API_VERSION@ -lgstfft-@GST_API_VERSION@ \
+	-lgstapp-@GST_API_VERSION@ $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 
 elements_mulawdec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 
