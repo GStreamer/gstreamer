@@ -60,7 +60,7 @@ good_tests = [
   [ 'elements/matroskademux' ],
   [ 'elements/matroskamux' ],
   [ 'elements/matroskaparse' ],
-  [ 'elements/mpg123audiodec', not mpg123_dep.found() ],
+  [ 'elements/mpg123audiodec', not mpg123_dep.found(),  [gstfft_dep]],
   [ 'elements/multifile' ],
   [ 'elements/splitmux' ],
   [ 'elements/rganalysis' ],
