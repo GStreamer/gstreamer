@@ -26,6 +26,7 @@ GObject
         GstAudioDecoder
           GstALawDec
           GstFlacDec
+          GstMpg123AudioDec
           GstMuLawDec
           GstSpeexDec
           GstWavpackDec
