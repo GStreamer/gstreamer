@@ -9,7 +9,7 @@ Required tools:
 ===============
 
 An extra set of tools is required if you wish to build GStreamer out of
-CVS (using autogen.sh):
+git (using autogen.sh):
 
 autoconf 2.52 or better 
 automake 1.5
@@ -34,8 +34,6 @@ a52dec		(for the a52dec AC-3 decoder)
 			http://liba52.sourceforge.net/
 opencore-amr (for the AMR-NB decoder and encoder and the AMR-WB decoder)
 			http://sourceforge.net/projects/opencore-amr/
-libmpg123      (for the mpg123 mp3 decoder plugin)
-			https://www.mpg123.de/api/
 liblame		(for lame mp3 encoder)
 			http://www.mp3dev.org/mp3/
 libdvdread	(for the dvdreadsrc)

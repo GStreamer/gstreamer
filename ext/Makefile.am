@@ -40,12 +40,6 @@ else
 MPEG2DEC_DIR =
 endif
 
-if USE_MPG123
-MPG123_DIR=mpg123
-else
-MPG123_DIR=
-endif
-
 if USE_SIDPLAY
 SIDPLAY_DIR = sidplay
 else
@@ -72,7 +66,6 @@ SUBDIRS = \
 	$(DVDREAD_DIR) \
 	$(LAME_DIR) \
 	$(MPEG2DEC_DIR) \
-	$(MPG123_DIR) \
 	$(SIDPLAY_DIR) \
 	$(TWOLAME_DIR) \
 	$(X264_DIR)
@@ -85,7 +78,6 @@ DIST_SUBDIRS = \
 	dvdread \
 	lame \
 	mpeg2dec \
-	mpg123 \
 	sidplay \
 	twolame \
 	x264
