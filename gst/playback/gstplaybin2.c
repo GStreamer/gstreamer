@@ -4807,7 +4807,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
    * messages, but only do that if we didn't just create the sink above and
    * already ref_sink'd it there */
   if (!created_sink)
-    gst_object_ref_sink (sinkp);
+    gst_object_ref_sink (*sinkp);
 
   element = *sinkp;
 
