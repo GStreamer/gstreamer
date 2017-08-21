@@ -26,3 +26,4 @@ subprojects/gst-rtsp-server/
 subprojects/gstreamer/
 subprojects/gstreamer-vaapi/
 subprojects/glib/
+prefix/

@@ -14,6 +14,7 @@ import tempfile
 from common import get_meson
 
 SCRIPTDIR = os.path.abspath(os.path.dirname(__file__))
+PREFIX_DIR = os.path.join(SCRIPTDIR, 'prefix')
 
 
 def prepend_env_var(env, var, value):
@@ -56,6 +57,14 @@ def get_subprocess_env(options):
 
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(SCRIPTDIR, 'subprojects',
                                                         'gst-python', 'plugin'))
+    prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(PREFIX_DIR, 'lib',
+                                                        'gstreamer-1.0'))
+    prepend_env_var(env, "PATH", os.path.join(PREFIX_DIR, 'bin'))
+    prepend_env_var(env, lib_path_envvar, os.path.join(PREFIX_DIR, 'lib'))
+    prepend_env_var(env, "GST_VALIDATE_SCENARIOS_PATH", os.path.join(
+        PREFIX_DIR, 'share', 'gstreamer-1.0', 'validate', 'scenarios'))
+    prepend_env_var(env, "GI_TYPELIB_PATH", os.path.join(PREFIX_DIR, 'lib',
+                                                         'lib', 'girepository-1.0'))
 
     meson, mesonconf, mesonintrospect = get_meson()
     targets_s = subprocess.check_output([sys.executable, mesonintrospect, options.builddir, '--targets'])

@@ -43,6 +43,9 @@ available at the root of `gst-build/` for example GStreamer core will be in
 `gstreamer/`. Otherwise they will be present in `subprojects/`. You can simply
 hack in there and to rebuild you just need to rerun `ninja -C build/`.
 
+NOTE: In the uninstalled environment, a fully usable prefix is also configured
+in `gst-build/prefix` where you can install any extra dependency/project.
+
 ## Update git subprojects
 
 We added a special `update` target to update subprojects (it uses `git pull
