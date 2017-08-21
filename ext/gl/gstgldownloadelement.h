@@ -43,6 +43,8 @@ struct _GstGLDownloadElement
 {
   /* <private> */
   GstGLBaseFilter  parent;
+
+  gboolean do_pbo_transfers;
 };
 
 struct _GstGLDownloadElementClass

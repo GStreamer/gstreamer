@@ -94,10 +94,17 @@ static gboolean
 gst_gl_download_element_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
     GstCaps * out_caps)
 {
+  GstGLDownloadElement *dl = GST_GL_DOWNLOAD_ELEMENT (bt);
   GstVideoInfo out_info;
+  GstCapsFeatures *features = NULL;
 
   if (!gst_video_info_from_caps (&out_info, out_caps))
     return FALSE;
+
+  features = gst_caps_get_features (out_caps, 0);
+
+  dl->do_pbo_transfers = (!features || gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY));
 
   return TRUE;
 }
@@ -160,30 +167,20 @@ static GstFlowReturn
 gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer ** outbuf)
 {
-  GstCaps *src_caps = gst_pad_get_current_caps (bt->srcpad);
-  GstCapsFeatures *features = NULL;
+  GstGLDownloadElement *dl = GST_GL_DOWNLOAD_ELEMENT (bt);
   gint i, n;
 
   *outbuf = inbuf;
 
-  if (src_caps)
-    features = gst_caps_get_features (src_caps, 0);
+  if (dl->do_pbo_transfers) {
+    n = gst_buffer_n_memory (*outbuf);
+    for (i = 0; i < n; i++) {
+      GstMemory *mem = gst_buffer_peek_memory (*outbuf, i);
 
-  n = gst_buffer_n_memory (*outbuf);
-  for (i = 0; i < n; i++) {
-    GstMemory *mem = gst_buffer_peek_memory (*outbuf, i);
-
-    if (gst_is_gl_memory (mem)) {
-      if (!features || gst_caps_features_contains (features,
-              GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY)) {
-        if (gst_is_gl_memory_pbo (mem))
-          gst_gl_memory_pbo_download_transfer ((GstGLMemoryPBO *) mem);
-      }
+      if (gst_is_gl_memory_pbo (mem))
+        gst_gl_memory_pbo_download_transfer ((GstGLMemoryPBO *) mem);
     }
   }
-
-  if (src_caps)
-    gst_caps_unref (src_caps);
 
   return GST_FLOW_OK;
 }
