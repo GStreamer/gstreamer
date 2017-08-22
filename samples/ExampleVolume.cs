@@ -13,7 +13,7 @@ namespace GstreamerSharp
     {
         static void Main(string[] args)
         {
-            Application.Init(ref args);
+            Gst.Application.Init(ref args);
 
             Element src = ElementFactory.Make("audiotestsrc");
             Element convert = ElementFactory.Make("audioconvert");
