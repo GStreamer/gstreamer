@@ -22,6 +22,7 @@
 #define __GST_GL_COCOA_PRIVATE_H__
 
 #include <gst/gst.h>
+#include <gst/gl/gstglfuncs.h>
 
 #include <Cocoa/Cocoa.h>
 
