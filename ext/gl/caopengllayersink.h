@@ -26,6 +26,7 @@
 #include <gst/video/video.h>
 
 #include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 #include <gst/gl/cocoa/gstglcaopengllayer.h>
 
 G_BEGIN_DECLS
