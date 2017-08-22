@@ -1,4 +1,9 @@
-if omx_target == 'rpi'
+optional_deps = []
+if x11_dep.found()
+  optional_deps += x11_dep
+endif
+
+if x11_dep.found() or omx_target == 'rpi'
   egl_sources = ['testegl.c']
 
   egl_dep = dependency('egl', required : false)
@@ -15,5 +20,7 @@ if omx_target == 'rpi'
       sources : egl_sources,
       c_args : gst_omx_args,
       include_directories : [configinc],
-      dependencies : [libm, gst_dep, gstvideo_dep, gstgl_dep, egl_dep, gles2_dep])
+      dependencies : [libm, gst_dep, gstvideo_dep, gstgl_dep, egl_dep,
+                      gles2_dep] + optional_deps
+  )
 endif

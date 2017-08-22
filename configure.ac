@@ -163,6 +163,27 @@ GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
 AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
 
+dnl *** EGL ***
+PKG_CHECK_MODULES([EGL], [egl], [
+  AC_DEFINE(HAVE_EGL, 1, [Have egl])
+  HAVE_EGL=yes
+], [HAVE_EGL=no])
+AM_CONDITIONAL(HAVE_EGL, test "x$HAVE_EGL" = "xyes")
+
+dnl *** GLESv2 ***
+PKG_CHECK_MODULES([GLES2], [glesv2], [
+  AC_DEFINE(HAVE_EGL, 1, [Have glesv2])
+  HAVE_GLES2=yes
+], [HAVE_GLES2=no])
+AM_CONDITIONAL(HAVE_GLES2, test "x$HAVE_GLES2" = "xyes")
+
+dnl *** X11 ***
+PKG_CHECK_MODULES([X11], [x11], [
+  AC_DEFINE(HAVE_X11, 1, [Have x11])
+  HAVE_X11=yes
+], [HAVE_X11=no])
+AM_CONDITIONAL(HAVE_X11, test "x$HAVE_X11" = "xyes")
+
 dnl Check for -Bsymbolic-functions linker flag used to avoid
 dnl intra-library PLT jumps, if available.
 AC_ARG_ENABLE(Bsymbolic,
