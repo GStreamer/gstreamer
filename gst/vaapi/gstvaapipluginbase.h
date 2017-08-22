@@ -31,10 +31,6 @@
 #include <gst/video/gstvideosink.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 
-#if USE_GST_GL_HELPERS
-# include <gst/gl/gstglcontext.h>
-#endif
-
 G_BEGIN_DECLS
 
 typedef struct _GstVaapiPluginBase GstVaapiPluginBase;

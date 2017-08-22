@@ -39,6 +39,9 @@
 #if USE_WAYLAND
 # include <gst/vaapi/gstvaapidisplay_wayland.h>
 #endif
+#if USE_GST_GL_HELPERS
+# include <gst/gl/gl.h>
+#endif
 #include "gstvaapipluginutil.h"
 #include "gstvaapipluginbase.h"
 
