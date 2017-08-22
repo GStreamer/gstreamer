@@ -27,6 +27,7 @@
 
 #include <gst/video/video.h>
 #include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 #include "gstqsgtexture.h"
 
 #define GST_CAT_DEFAULT gst_qsg_texture_debug
