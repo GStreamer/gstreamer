@@ -82,6 +82,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<!-- hide user data; FIXME: already removed in 1.2 GIR file, remove when we update to this version -->
 	<attr path="/api/namespace/object[@cname='GstBus']/method[@cname='gst_bus_sync_signal_handler']/parameters/parameter[@name='data']" name="hidden">1</attr>
 
+	<!-- FIXME Check why this is badly handled in bindinator -->
+	<remove-node path="/api/namespace/object[@cname='GstElementFactory']/method[@cname='gst_element_factory_get_static_pad_templates']/return-type"/>
+	<add-node path="/api/namespace/object[@cname='GstElementFactory']/method[@cname='gst_element_factory_get_static_pad_templates']">
+		<return-type type="const GList*" element_type="GstStaticPadTemplate"/>
+	</add-node>
+
 	<!-- API improvements -->
 	<add-node path="/api/namespace[@name='Gst']">
 		<class name="Parse" cname="GstParse" disable_void_ctor="1"/>
