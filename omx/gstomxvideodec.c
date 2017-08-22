@@ -657,7 +657,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
     GList *images = NULL;
     gint i;
     GstBufferPoolAcquireParams params = { 0, };
-    EGLDisplay egl_display = 0;
+    gpointer egl_display = 0;
 
     GST_DEBUG_OBJECT (self, "Trying to allocate %d EGLImages", min);
 
