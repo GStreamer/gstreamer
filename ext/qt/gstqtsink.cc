@@ -30,6 +30,8 @@
 #include "gstqtsink.h"
 #include <QtGui/QGuiApplication>
 
+#include <gst/gl/gstglfuncs.h>
+
 #define GST_CAT_DEFAULT gst_debug_qt_gl_sink
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 

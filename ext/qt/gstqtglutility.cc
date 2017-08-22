@@ -45,6 +45,7 @@
 #include <qpa/qplatformnativeinterface.h>
 #include <gst/gl/viv-fb/gstgldisplay_viv_fb.h>
 #else
+#include <gst/gl/egl/gstegl.h>
 #include <gst/gl/egl/gstgldisplay_egl.h>
 #endif
 #include <gst/gl/egl/gstglcontext_egl.h>
