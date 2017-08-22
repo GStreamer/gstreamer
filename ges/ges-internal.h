@@ -20,8 +20,8 @@
 
 #ifndef __GES_INTERNAL_H__
 #define __GES_INTERNAL_H__
-
 #include <gst/gst.h>
+#include <gst/pbutils/encoding-profile.h>
 #include <gio/gio.h>
 
 #include "ges-timeline.h"
@@ -256,6 +256,7 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_encoding_profile(GESBaseXmlForma
                                                                  const gchar * description,
                                                                  GstCaps * format,
                                                                  const gchar * preset,
+                                                                 GstStructure * preset_properties,
                                                                  const gchar * preset_name,
                                                                  guint id,
                                                                  guint presence,
@@ -297,7 +298,10 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_binding (GESBaseXmlForma
 
 G_GNUC_INTERNAL gboolean set_property_foreach                   (GQuark field_id,
                                                                  const GValue * value,
-                                                                 GObject * object);;
+                                                                 GObject * object);
+
+G_GNUC_INTERNAL GstElement * get_element_for_encoding_profile   (GstEncodingProfile *prof,
+                                                                 GstElementFactoryListType type);
 
 /* Function to initialise GES */
 G_GNUC_INTERNAL void _init_standard_transition_assets        (void);

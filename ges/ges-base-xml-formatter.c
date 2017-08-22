@@ -792,12 +792,49 @@ done:
     _loading_done (self);
 }
 
+GstElement *
+get_element_for_encoding_profile (GstEncodingProfile * prof,
+    GstElementFactoryListType type)
+{
+  GstEncodingProfile *prof_copy;
+  GstElement *encodebin;
+  GList *tmp;
+  GstElement *element = NULL;
+
+  prof_copy = gst_encoding_profile_copy (prof);
+
+  gst_encoding_profile_set_presence (prof_copy, 1);
+  gst_encoding_profile_set_preset (prof_copy, NULL);
+
+  encodebin = gst_element_factory_make ("encodebin", NULL);
+  g_object_set (encodebin, "profile", prof_copy, NULL);
+
+  GST_OBJECT_LOCK (encodebin);
+  for (tmp = GST_BIN (encodebin)->children; tmp; tmp = tmp->next) {
+    GstElementFactory *factory;
+    factory = gst_element_get_factory (GST_ELEMENT (tmp->data));
+
+    if (factory && gst_element_factory_list_is_type (factory, type)) {
+      element = GST_ELEMENT (tmp->data);
+      gst_object_ref (element);
+      break;
+    }
+  }
+  GST_OBJECT_UNLOCK (encodebin);
+  gst_object_unref (encodebin);
+
+  gst_encoding_profile_unref (prof_copy);
+
+  return element;
+}
+
 static GstEncodingProfile *
 _create_profile (GESBaseXmlFormatter * self,
     const gchar * type, const gchar * parent, const gchar * name,
     const gchar * description, GstCaps * format, const gchar * preset,
-    const gchar * preset_name, gint id, guint presence, GstCaps * restriction,
-    guint pass, gboolean variableframerate, gboolean enabled)
+    GstStructure * preset_properties, const gchar * preset_name, gint id,
+    guint presence, GstCaps * restriction, guint pass,
+    gboolean variableframerate, gboolean enabled)
 {
   GstEncodingProfile *profile = NULL;
 
@@ -805,8 +842,6 @@ _create_profile (GESBaseXmlFormatter * self,
     profile = GST_ENCODING_PROFILE (gst_encoding_container_profile_new (name,
             description, format, preset));
     gst_encoding_profile_set_preset_name (profile, preset_name);
-
-    return profile;
   } else if (!g_strcmp0 (type, "video")) {
     GstEncodingVideoProfile *sprof = gst_encoding_video_profile_new (format,
         preset, restriction, presence);
@@ -824,10 +859,43 @@ _create_profile (GESBaseXmlFormatter * self,
     return NULL;
   }
 
-  gst_encoding_profile_set_name (profile, name);
-  gst_encoding_profile_set_enabled (profile, enabled);
-  gst_encoding_profile_set_description (profile, description);
-  gst_encoding_profile_set_preset_name (profile, preset_name);
+  if (!g_strcmp0 (type, "video") || !g_strcmp0 (type, "audio")) {
+    gst_encoding_profile_set_name (profile, name);
+    gst_encoding_profile_set_enabled (profile, enabled);
+    gst_encoding_profile_set_description (profile, description);
+    gst_encoding_profile_set_preset_name (profile, preset_name);
+  }
+
+  if (preset && preset_properties) {
+    GstElement *element;
+
+    if (!g_strcmp0 (type, "container")) {
+      element = get_element_for_encoding_profile (profile,
+          GST_ELEMENT_FACTORY_TYPE_MUXER);
+    } else {
+      element = get_element_for_encoding_profile (profile,
+          GST_ELEMENT_FACTORY_TYPE_ENCODER);
+    }
+
+    if (G_UNLIKELY (!element || !GST_IS_PRESET (element))) {
+      GST_WARNING_OBJECT (element, "Element is not a GstPreset");
+      goto done;
+    }
+
+    /* If the preset doesn't exist on the system, create it */
+    if (!gst_preset_load_preset (GST_PRESET (element), preset)) {
+      gst_structure_foreach (preset_properties,
+          (GstStructureForeachFunc) set_property_foreach, element);
+
+      if (!gst_preset_save_preset (GST_PRESET (element), preset)) {
+        GST_WARNING_OBJECT (element, "Could not save preset %s", preset);
+      }
+    }
+
+  done:
+    if (element)
+      gst_object_unref (element);
+  }
 
   return profile;
 }
@@ -1236,9 +1304,10 @@ void
 ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
     const gchar * type, const gchar * parent, const gchar * name,
     const gchar * description, GstCaps * format, const gchar * preset,
-    const gchar * preset_name, guint id, guint presence, GstCaps * restriction,
-    guint pass, gboolean variableframerate, GstStructure * properties,
-    gboolean enabled, GError ** error)
+    GstStructure * preset_properties, const gchar * preset_name, guint id,
+    guint presence, GstCaps * restriction, guint pass,
+    gboolean variableframerate, GstStructure * properties, gboolean enabled,
+    GError ** error)
 {
   const GList *tmp;
   GstEncodingProfile *profile;
@@ -1251,8 +1320,8 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
   if (parent == NULL) {
     profile =
         _create_profile (self, type, parent, name, description, format, preset,
-        preset_name, id, presence, restriction, pass, variableframerate,
-        enabled);
+        preset_properties, preset_name, id, presence, restriction, pass,
+        variableframerate, enabled);
     ges_project_add_encoding_profile (GES_FORMATTER (self)->project, profile);
     gst_object_unref (profile);
 
@@ -1285,7 +1354,8 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
 
   profile =
       _create_profile (self, type, parent, name, description, format, preset,
-      preset_name, id, presence, restriction, pass, variableframerate, enabled);
+      preset_properties, preset_name, id, presence, restriction, pass,
+      variableframerate, enabled);
 
   if (profile == NULL)
     goto done;
