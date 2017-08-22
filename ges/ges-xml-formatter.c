@@ -141,8 +141,9 @@ _parse_encoding_profile (GMarkupParseContext * context,
     const gchar ** attribute_values, GESXmlFormatter * self, GError ** error)
 {
   GstCaps *capsformat = NULL;
-  const gchar *name, *description, *type, *preset = NULL, *preset_name =
-      NULL, *format;
+  GstStructure *preset_properties = NULL;
+  const gchar *name, *description, *type, *preset = NULL,
+      *str_preset_properties = NULL, *preset_name = NULL, *format;
 
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error,
@@ -150,6 +151,7 @@ _parse_encoding_profile (GMarkupParseContext * context,
           G_MARKUP_COLLECT_STRING, "description", &description,
           G_MARKUP_COLLECT_STRING, "type", &type,
           COLLECT_STR_OPT, "preset", &preset,
+          COLLECT_STR_OPT, "preset-properties", &str_preset_properties,
           COLLECT_STR_OPT, "preset-name", &preset_name,
           COLLECT_STR_OPT, "format", &format, G_MARKUP_COLLECT_INVALID))
     return;
@@ -157,9 +159,18 @@ _parse_encoding_profile (GMarkupParseContext * context,
   if (format)
     capsformat = gst_caps_from_string (format);
 
+  if (str_preset_properties) {
+    preset_properties = gst_structure_from_string (str_preset_properties, NULL);
+    if (preset_properties == NULL) {
+      g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
+          "element '%s', Wrong preset-properties format.", element_name);
+      return;
+    }
+  }
+
   ges_base_xml_formatter_add_encoding_profile (GES_BASE_XML_FORMATTER (self),
-      type, NULL, name, description, capsformat, preset, preset_name, 0, 0,
-      NULL, 0, FALSE, NULL, TRUE, error);
+      type, NULL, name, description, capsformat, preset, preset_properties,
+      preset_name, 0, 0, NULL, 0, FALSE, NULL, TRUE, error);
 }
 
 static inline void
@@ -170,10 +181,11 @@ _parse_stream_profile (GMarkupParseContext * context,
   gboolean variableframerate = FALSE, enabled = TRUE;
   guint id = 0, presence = 0, pass = 0;
   GstCaps *format_caps = NULL, *restriction_caps = NULL;
+  GstStructure *preset_properties = NULL;
   const gchar *parent, *strid, *type, *strpresence, *format = NULL,
-      *name = NULL, *description = NULL, *preset, *preset_name =
-      NULL, *restriction = NULL, *strpass = NULL, *strvariableframerate = NULL,
-      *strenabled = NULL;
+      *name = NULL, *description = NULL, *preset,
+      *str_preset_properties = NULL, *preset_name = NULL, *restriction = NULL,
+      *strpass = NULL, *strvariableframerate = NULL, *strenabled = NULL;
 
   /* FIXME Looks like there is a bug in that function, if we put the parent
    * at the beginning it set %NULL and not the real value... :/ */
@@ -186,6 +198,7 @@ _parse_stream_profile (GMarkupParseContext * context,
           COLLECT_STR_OPT, "name", &name,
           COLLECT_STR_OPT, "description", &description,
           COLLECT_STR_OPT, "preset", &preset,
+          COLLECT_STR_OPT, "preset-properties", &str_preset_properties,
           COLLECT_STR_OPT, "preset-name", &preset_name,
           COLLECT_STR_OPT, "restriction", &restriction,
           COLLECT_STR_OPT, "pass", &strpass,
@@ -202,6 +215,12 @@ _parse_stream_profile (GMarkupParseContext * context,
   if (strpresence) {
     presence = g_ascii_strtoll (strpresence, NULL, 10);
     if (errno)
+      goto convertion_failed;
+  }
+
+  if (str_preset_properties) {
+    preset_properties = gst_structure_from_string (str_preset_properties, NULL);
+    if (preset_properties == NULL)
       goto convertion_failed;
   }
 
@@ -230,9 +249,12 @@ _parse_stream_profile (GMarkupParseContext * context,
     restriction_caps = gst_caps_from_string (restriction);
 
   ges_base_xml_formatter_add_encoding_profile (GES_BASE_XML_FORMATTER (self),
-      type, parent, name, description, format_caps, preset, preset_name, id,
-      presence, restriction_caps, pass, variableframerate, NULL, enabled,
-      error);
+      type, parent, name, description, format_caps, preset, preset_properties,
+      preset_name, id, presence, restriction_caps, pass, variableframerate,
+      NULL, enabled, error);
+
+  if (preset_properties)
+    gst_structure_free (preset_properties);
 
   return;
 
@@ -1363,8 +1385,25 @@ _save_stream_profiles (GESXmlFormatter * self, GString * str,
             description));
 
   preset = gst_encoding_profile_get_preset (sprof);
-  if (preset)
+  if (preset) {
+    GstElement *encoder;
+
     append_escaped (str, g_markup_printf_escaped ("preset='%s' ", preset));
+
+    encoder = get_element_for_encoding_profile (sprof,
+        GST_ELEMENT_FACTORY_TYPE_ENCODER);
+    if (encoder) {
+      if (GST_IS_PRESET (encoder) &&
+          gst_preset_load_preset (GST_PRESET (encoder), preset)) {
+
+        gchar *settings = _serialize_properties (G_OBJECT (encoder), NULL);
+        append_escaped (str,
+            g_markup_printf_escaped ("preset-properties='%s' ", settings));
+        g_free (settings);
+      }
+      gst_object_unref (encoder);
+    }
+  }
 
   preset_name = gst_encoding_profile_get_preset_name (sprof);
   if (preset_name)
@@ -1416,9 +1455,32 @@ _save_encoding_profiles (GESXmlFormatter * self, GString * str,
         ("      <encoding-profile name='%s' description='%s' type='%s' ",
             profname, profdesc, proftype));
 
-    if (profpreset)
+    if (profpreset) {
+      GstElement *element;
+
       append_escaped (str, g_markup_printf_escaped ("preset='%s' ",
               profpreset));
+
+      if (GST_IS_ENCODING_CONTAINER_PROFILE (prof)) {
+        element = get_element_for_encoding_profile (prof,
+            GST_ELEMENT_FACTORY_TYPE_MUXER);
+      } else {
+        element = get_element_for_encoding_profile (prof,
+            GST_ELEMENT_FACTORY_TYPE_ENCODER);
+      }
+
+      if (element) {
+        if (GST_IS_PRESET (element) &&
+            gst_preset_load_preset (GST_PRESET (element), profpreset)) {
+          gchar *settings = _serialize_properties (G_OBJECT (element), NULL);
+          append_escaped (str,
+              g_markup_printf_escaped ("preset-properties='%s' ", settings));
+          g_free (settings);
+        }
+        gst_object_unref (element);
+      }
+
+    }
 
     if (profpresetname)
       append_escaped (str, g_markup_printf_escaped ("preset-name='%s' ",
