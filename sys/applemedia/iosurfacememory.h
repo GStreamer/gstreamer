@@ -26,6 +26,7 @@
 #include <gst/gstallocator.h>
 #include <gst/video/video.h>
 #include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 
 G_BEGIN_DECLS
 
