@@ -7,6 +7,7 @@ option('disable_gst_editing_services', type : 'boolean', value : false)
 option('disable_rtsp_server', type : 'boolean', value : false)
 option('disable_gst_omx', type : 'boolean', value : true)
 option('disable_gstreamer_vaapi', type : 'boolean', value : false)
+option('disable_gstreamer_sharp', type : 'boolean', value : false)
 option('disable_introspection',
         type : 'boolean', value : false,
         description : 'Whether to disable the introspection generation')

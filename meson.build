@@ -87,6 +87,18 @@ if not get_option('disable_rtsp_server')
     subprojects += ['gst-rtsp-server']
 endif
 
+if not get_option('disable_gstreamer_sharp')
+  if add_languages('cs')
+    if meson.version().version_compare('>=0.43')
+      subprojects += ['gstreamer-sharp']
+    else
+      message('WARNING: Not building gstramer-sharp as meson >=0.43 not found.')
+    endif
+  else
+    message('WARNING: Not building gstramer-sharp as no CS compiler found.')
+  endif
+endif
+
 python3 = find_program('python3')
 symlink = '''
 import os
@@ -102,6 +114,7 @@ foreach custom_subproj: get_option('custom_subprojects').split(',')
     endif
 endforeach
 
+message('Building subprojects: ' + ', '.join(subprojects))
 foreach subproj: subprojects
     default_options = []
     if get_option('disable_introspection')

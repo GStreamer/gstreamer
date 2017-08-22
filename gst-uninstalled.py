@@ -61,9 +61,12 @@ def get_subprocess_env(options):
     targets_s = subprocess.check_output([sys.executable, mesonintrospect, options.builddir, '--targets'])
     targets = json.loads(targets_s.decode())
     paths = set()
+    mono_paths = set()
     for target in targets:
         filename = target['filename']
         root = os.path.dirname(filename)
+        if filename.endswith('.dll'):
+            mono_paths.add(os.path.join(options.builddir, root))
         if typelib_reg.search(filename):
             prepend_env_var(env, "GI_TYPELIB_PATH",
                             os.path.join(options.builddir, root))
@@ -82,6 +85,10 @@ def get_subprocess_env(options):
 
     for p in paths:
         prepend_env_var(env, 'PATH', p)
+
+    if os.name != 'nt':
+        for p in mono_paths:
+            prepend_env_var(env, "MONO_PATH", p)
 
     presets = set()
     encoding_targets = set()
