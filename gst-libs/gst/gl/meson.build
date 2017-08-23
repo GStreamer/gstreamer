@@ -272,6 +272,10 @@ if need_api_opengl != 'no' or need_platform_glx != 'no'
       gl_dep = cc.find_library('GL', required : false)
     endif
 
+    if not cc.has_header('GL/gl.h', required : false)
+      gl_dep = unneeded_dep
+    endif
+
     if not gl_dep.found() and need_api_opengl == 'yes'
       error ('Could not find requested OpenGL library')
     endif
