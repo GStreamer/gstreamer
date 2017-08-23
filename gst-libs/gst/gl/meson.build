@@ -221,6 +221,7 @@ if gl_winsys_s == 'auto'
   need_win_cocoa = 'auto'
   need_win_eagl = 'auto'
   need_win_dispmanx = 'auto'
+  need_win_viv_fb = 'auto'
 else
   need_win_x11 = 'no'
   need_win_wayland = 'no'
@@ -228,6 +229,7 @@ else
   need_win_cocoa = 'no'
   need_win_eagl = 'no'
   need_win_dispmanx = 'no'
+  need_win_viv_fb = 'no'
   gl_winsys = gl_winsys_s.split(',')
   foreach winsys : gl_winsys
     if winsys == 'x11'
@@ -242,6 +244,8 @@ else
 #      need_win_eagl = 'yes'
     elif winsys == 'dispmanx'
       need_win_dispmanx = 'yes'
+    elif winsys == 'viv-fb'
+      need_win_viv_fb = 'yes'
     else
       error('Unsupported GL winsys provided ' + winsys)
     endif
@@ -587,6 +591,21 @@ if host_machine.system() == 'darwin'
 #  ]
 endif
 
+if need_platform_egl != 'no' and need_win_viv_fb != 'no'
+  if egl_dep.found() and cc.has_function ('fbGetDisplay', dependencies : egl_dep)
+    if cc.has_function ('glTexDirectVIV', dependencies : gles2_dep)
+      enabled_gl_winsys += 'viv-fb'
+      glconf.set10('GST_GL_HAVE_WINDOW_VIV_FB', 1)
+      glconf.set10('GST_GL_HAVE_VIV_DIRECTVIV', 1)
+      gl_sources += [
+        'viv-fb/gstgldisplay_viv_fb.c',
+        'viv-fb/gstglwindow_viv_fb_egl.c',
+      ]
+      gl_cpp_args += ['-DEGL_API_FB']
+    endif
+  endif
+endif
+
 # TODO: Add rest of gl config here.
 # iOS, OS X, win32 specific support
 
@@ -654,7 +673,7 @@ if build_gstgl
     version : libversion,
     soversion : soversion,
     install : true,
-    dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep,
+    dependencies : [gstbase_dep, gstvideo_dep, gstbadallocators_dep, gmodule_dep,
                     gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps],
     # Don't need vs_module_defs for gstgl because we do symbol exporting in the
     # function definitions via __declspec(dllexport/import)
