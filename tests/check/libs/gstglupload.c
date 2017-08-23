@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/gl/gstglfuncs.h>
 
 #include <gst/gl/gl.h>
 
