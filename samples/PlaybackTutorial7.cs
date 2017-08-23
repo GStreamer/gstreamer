@@ -48,7 +48,7 @@ namespace GstreamerSharp
 			equalizer ["band1"] = (double)-24.0;
 			equalizer ["band2"] = (double)-24.0;
 
-			// Set playbin2's audio sink to be our sink bin
+			// Set playbin's audio sink to be our sink bin
 			pipeline ["audio-sink"] = bin;
 
 			// Wait until error or EOS 
