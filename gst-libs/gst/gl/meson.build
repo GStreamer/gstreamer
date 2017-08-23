@@ -591,15 +591,15 @@ endif
 # iOS, OS X, win32 specific support
 
 build_gstgl = true
-if gl_lib_deps.length() == 0
+if enabled_gl_apis.length() == 0
   message('No OpenGL API libraries found or requested')
   build_gstgl = false
 endif
-if gl_platform_deps.length() == 0
+if enabled_gl_platforms.length() == 0
   message('No OpenGL Platforms found or requested')
   build_gstgl = false
 endif
-if gl_winsys_deps.length() == 0
+if enabled_gl_winsys.length() == 0
   message('No OpenGL Window systems found or requested')
   build_gstgl = false
 endif
