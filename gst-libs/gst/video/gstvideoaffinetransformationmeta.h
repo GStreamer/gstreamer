@@ -37,7 +37,7 @@ typedef gboolean (*GstVideoAffineTransformationGetMatrix) (GstVideoAffineTransfo
 #define GST_BUFFER_POOL_OPTION_VIDEO_AFFINE_TRANSFORMATION_META "GstBufferPoolOptionVideoAffineTransformation"
 
 /**
- * GstVideoAffineTransformation:
+ * GstVideoAffineTransformationMeta:
  * @meta: parent #GstMeta
  * @matrix: the column-major 4x4 transformation matrix
  *
@@ -54,7 +54,6 @@ typedef gboolean (*GstVideoAffineTransformationGetMatrix) (GstVideoAffineTransfo
  *
  * Since: 1.8
  */
-
 struct _GstVideoAffineTransformationMeta
 {
   GstMeta meta;
