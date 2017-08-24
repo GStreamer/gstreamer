@@ -464,11 +464,11 @@ Note that all testsuite should be inside python modules, so the directory should
                              " in a virtual framebuffer."
                              " Note that it is currently implemented only"
                              " for the X  server thanks to Xvfb (which is requeried in that case)")
+    parser.add_argument('--xunit-file', dest='xunit_file',
+                        action='store', metavar="FILE",
+                        help=("Path to xml file to store the xunit report in."))
     dir_group = parser.add_argument_group(
         "Directories and files to be used by the launcher")
-    parser.add_argument('--xunit-file', action='store',
-                        dest='xunit_file', metavar="FILE",
-                        help=("Path to xml file to store the xunit report in."))
     dir_group.add_argument("-M", "--main-dir", dest="main_dir",
                            help="Main directory where to put files. Default is %s" % DEFAULT_MAIN_DIR)
     dir_group.add_argument("--testsuites-dir", dest="testsuites_dirs", action='append',
