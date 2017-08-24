@@ -777,8 +777,10 @@ gst_srtp_dec_clear_streams (GstSrtpDec * filter)
 
   GST_OBJECT_LOCK (filter);
 
-  if (!filter->first_session)
+  if (!filter->first_session) {
     srtp_dealloc (filter->session);
+    filter->session = NULL;
+  }
 
   if (filter->streams)
     nb = g_hash_table_foreach_remove (filter->streams, remove_yes, NULL);

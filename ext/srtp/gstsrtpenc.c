@@ -447,8 +447,10 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
 static void
 gst_srtp_enc_reset_no_lock (GstSrtpEnc * filter)
 {
-  if (!filter->first_session)
+  if (!filter->first_session) {
     srtp_dealloc (filter->session);
+    filter->session = NULL;
+  }
 
   filter->first_session = TRUE;
   filter->key_changed = FALSE;
