@@ -1182,10 +1182,8 @@ gst_vaapi_decoder_update_caps (GstVaapiDecoder * decoder, GstCaps * caps)
   if (!decoder_caps)
     return FALSE;
 
-  if (gst_caps_is_always_compatible (caps, decoder_caps)) {
-    set_caps (decoder, caps);
-    return TRUE;
-  }
+  if (gst_caps_is_always_compatible (caps, decoder_caps))
+    return set_caps (decoder, caps);
 
   profile = gst_vaapi_profile_from_caps (caps);
   if (profile == GST_VAAPI_PROFILE_UNKNOWN)
@@ -1194,8 +1192,11 @@ gst_vaapi_decoder_update_caps (GstVaapiDecoder * decoder, GstCaps * caps)
   if (codec == 0)
     return FALSE;
   if (codec == decoder->codec) {
-    set_caps (decoder, caps);
-    return TRUE;
+    if (set_caps (decoder, caps)) {
+      return
+          gst_vaapi_decoder_decode_codec_data (decoder) ==
+          GST_VAAPI_DECODER_STATUS_SUCCESS;
+    }
   }
 
   return FALSE;
