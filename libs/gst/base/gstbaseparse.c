@@ -1823,7 +1823,8 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
   if (parse->priv->bitrate) {
     parse->priv->avg_bitrate = parse->priv->bitrate;
     /* spread this (confirmed) info ASAP */
-    if (parse->priv->posted_avg_bitrate != parse->priv->avg_bitrate)
+    if (parse->priv->post_avg_bitrate &&
+        parse->priv->posted_avg_bitrate != parse->priv->avg_bitrate)
       parse->priv->tags_changed = TRUE;
   }
 
