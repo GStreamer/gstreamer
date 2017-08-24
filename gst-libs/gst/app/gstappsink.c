@@ -965,9 +965,21 @@ gst_app_sink_getcaps (GstBaseSink * psink, GstCaps * filter)
 static gboolean
 gst_app_sink_query (GstBaseSink * bsink, GstQuery * query)
 {
+  GstAppSink *appsink = GST_APP_SINK_CAST (bsink);
+  GstAppSinkPrivate *priv = appsink->priv;
   gboolean ret;
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_DRAIN:
+    {
+      g_mutex_lock (&priv->mutex);
+      GST_DEBUG_OBJECT (appsink, "waiting buffers to be consumed");
+      while (priv->num_buffers > 0 && priv->preroll_buffer)
+        g_cond_wait (&priv->cond, &priv->mutex);
+      g_mutex_unlock (&priv->mutex);
+      ret = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
+      break;
+    }
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
 
