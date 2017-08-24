@@ -4193,7 +4193,8 @@ remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session)
  * RTP_BIN_LOCK.
  */
 static GstPad *
-create_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
+create_send_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
+    const gchar * name)
 {
   guint sessid;
   GstPad *encsrc;
@@ -4206,8 +4207,13 @@ create_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
 
   /* get or create session */
   session = find_session_by_id (rtpbin, sessid);
-  if (!session)
-    goto no_session;
+  if (!session) {
+    GST_DEBUG_OBJECT (rtpbin, "creating session %u", sessid);
+    /* create session now */
+    session = create_session (rtpbin, sessid);
+    if (session == NULL)
+      goto create_error;
+  }
 
   /* check if pad was requested */
   if (session->send_rtcp_src_ghost != NULL)
@@ -4264,9 +4270,9 @@ no_name:
     g_warning ("rtpbin: invalid name given");
     return NULL;
   }
-no_session:
+create_error:
   {
-    g_warning ("rtpbin: session with id %d does not exist", sessid);
+    /* create_session already warned */
     return NULL;
   }
 pad_failed:
@@ -4408,7 +4414,7 @@ gst_rtp_bin_request_new_pad (GstElement * element,
     result = create_send_rtp (rtpbin, templ, pad_name);
   } else if (templ == gst_element_class_get_pad_template (klass,
           "send_rtcp_src_%u")) {
-    result = create_rtcp (rtpbin, templ, pad_name);
+    result = create_send_rtcp (rtpbin, templ, pad_name);
   } else
     goto wrong_template;
 
