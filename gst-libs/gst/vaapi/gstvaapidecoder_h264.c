@@ -1581,8 +1581,8 @@ ensure_context (GstVaapiDecoderH264 * decoder, GstH264SPS * sps)
   }
 
   mb_width = sps->pic_width_in_mbs_minus1 + 1;
-  mb_height = (sps->pic_height_in_map_units_minus1 + 1) <<
-      !sps->frame_mbs_only_flag;
+  mb_height =
+      (sps->pic_height_in_map_units_minus1 + 1) << !sps->frame_mbs_only_flag;
   if (priv->mb_width != mb_width || priv->mb_height != mb_height) {
     GST_DEBUG ("size changed");
     reset_context = TRUE;
