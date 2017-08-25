@@ -94,8 +94,10 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
   {GST_VAAPI_PROFILE_H263_BASELINE, VAProfileH263Baseline,
       "video/x-h263, variant=itu, h263version=h263", "baseline"},
 #endif
+#if !VA_CHECK_VERSION(1,0,0)
   {GST_VAAPI_PROFILE_H264_BASELINE, VAProfileH264Baseline,
       "video/x-h264", "baseline"},
+#endif
 #if VA_CHECK_VERSION(0,31,1)
   {GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE,
         VAProfileH264ConstrainedBaseline,

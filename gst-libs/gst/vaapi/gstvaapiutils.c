@@ -202,7 +202,9 @@ string_of_VAProfile (VAProfile profile)
       MAP (H263Baseline);
       MAP (H264ConstrainedBaseline);
 #endif
+#if !VA_CHECK_VERSION(1,0,0)
       MAP (H264Baseline);
+#endif
       MAP (H264Main);
       MAP (H264High);
 #if VA_CHECK_VERSION(0,35,2)
