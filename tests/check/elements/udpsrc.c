@@ -165,7 +165,7 @@ GST_START_TEST (test_udpsrc)
   if (g_socket_send_to (socket, sa, data, 1600, NULL, NULL) != 1600)
     goto send_failure;
 
-  if (g_socket_send_to (socket, sa, data, 1600, NULL, NULL) != 1400)
+  if (g_socket_send_to (socket, sa, data, 1400, NULL, NULL) != 1400)
     goto send_failure;
 
   GST_INFO ("sent some packets");
@@ -217,6 +217,8 @@ GST_START_TEST (test_udpsrc)
   g_list_foreach (buffers, (GFunc) gst_buffer_unref, NULL);
   g_list_free (buffers);
   buffers = NULL;
+
+  g_mutex_unlock (&check_mutex);
 
 no_socket:
 send_failure:
