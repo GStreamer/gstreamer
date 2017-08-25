@@ -683,6 +683,28 @@ GST_START_TEST (test_ignore_suspicious_bye)
 
 GST_END_TEST;
 
+GST_START_TEST (test_illegal_rtcp_fb_packet)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  /* Zero length RTCP feedback packet (reduced size) */
+  const guint8 rtcp_zero_fb_pkt[] = { 0x8f, 0xce, 0x00, 0x00 };
+
+  g_object_set (h->internal_session, "internal-ssrc", 0xDEADBEEF, NULL);
+
+  buf = gst_buffer_new_and_alloc (sizeof (rtcp_zero_fb_pkt));
+  gst_buffer_fill (buf, 0, rtcp_zero_fb_pkt, sizeof (rtcp_zero_fb_pkt));
+  GST_BUFFER_DTS (buf) = GST_BUFFER_PTS (buf) = G_GUINT64_CONSTANT (0);
+
+  /* Push the packet, this did previously crash because length of packet was
+   * never validated. */
+  fail_unless_equals_int (GST_FLOW_OK, session_harness_recv_rtcp (h, buf));
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpsession_suite (void)
 {
@@ -697,6 +719,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_dont_lock_on_stats);
   tcase_add_test (tc_chain, test_ignore_suspicious_bye);
 
+  tcase_add_test (tc_chain, test_illegal_rtcp_fb_packet);
   return s;
 }
 
