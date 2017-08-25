@@ -2709,19 +2709,30 @@ static void
 rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
     RTPPacketInfo * pinfo, GstClockTime current_time)
 {
-  GstRTCPType type = gst_rtcp_packet_get_type (packet);
-  GstRTCPFBType fbtype = gst_rtcp_packet_fb_get_type (packet);
-  guint32 sender_ssrc = gst_rtcp_packet_fb_get_sender_ssrc (packet);
-  guint32 media_ssrc = gst_rtcp_packet_fb_get_media_ssrc (packet);
-  guint8 *fci_data = gst_rtcp_packet_fb_get_fci (packet);
-  guint fci_length = 4 * gst_rtcp_packet_fb_get_fci_length (packet);
+  GstRTCPType type;
+  GstRTCPFBType fbtype;
+  guint32 sender_ssrc, media_ssrc;
+  guint8 *fci_data;
+  guint fci_length;
   RTPSource *src;
+
+  /* The feedback packet must include both sender SSRC and media SSRC */
+  if (packet->length < 2)
+    return;
+
+  type = gst_rtcp_packet_get_type (packet);
+  fbtype = gst_rtcp_packet_fb_get_type (packet);
+  sender_ssrc = gst_rtcp_packet_fb_get_sender_ssrc (packet);
+  media_ssrc = gst_rtcp_packet_fb_get_media_ssrc (packet);
 
   src = find_source (sess, media_ssrc);
 
   /* skip non-bye packets for sources that are marked BYE */
   if (sess->scheduled_bye && src && RTP_SOURCE_IS_MARKED_BYE (src))
     return;
+
+  fci_data = gst_rtcp_packet_fb_get_fci (packet);
+  fci_length = gst_rtcp_packet_fb_get_fci_length (packet) * sizeof (guint32);
 
   GST_DEBUG ("received feedback %d:%d from %08X about %08X with FCI of "
       "length %d", type, fbtype, sender_ssrc, media_ssrc, fci_length);
