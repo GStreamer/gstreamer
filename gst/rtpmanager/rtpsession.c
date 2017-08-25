@@ -1114,6 +1114,10 @@ rtp_session_set_callbacks (RTPSession * sess, RTPSessionCallbacks * callbacks,
     sess->callbacks.reconfigure = callbacks->reconfigure;
     sess->reconfigure_user_data = user_data;
   }
+  if (callbacks->notify_early_rtcp) {
+    sess->callbacks.notify_early_rtcp = callbacks->notify_early_rtcp;
+    sess->notify_early_rtcp_user_data = user_data;
+  }
 }
 
 /**
@@ -4370,6 +4374,10 @@ rtp_session_send_rtcp (RTPSession * sess, GstClockTime max_delay)
     return FALSE;
 
   now = sess->callbacks.request_time (sess, sess->request_time_user_data);
+
+  /* notify the application that we intend to send early RTCP */
+  if (sess->callbacks.notify_early_rtcp)
+    sess->callbacks.notify_early_rtcp (sess, sess->notify_early_rtcp_user_data);
 
   return rtp_session_request_early_rtcp (sess, now, max_delay);
 }

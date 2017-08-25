@@ -699,43 +699,33 @@ stats_test_cb (GObject * object, GParamSpec * spec, gpointer data)
   guint num_sources = 0;
   gboolean *cb_called = data;
   g_assert (*cb_called == FALSE);
-  *cb_called = TRUE;
 
   /* We should be able to get a rtpsession property
      without introducing the deadlock */
   g_object_get (object, "num-sources", &num_sources, NULL);
+
+  *cb_called = TRUE;
 }
 
 GST_START_TEST (test_dont_lock_on_stats)
 {
-  GstHarness *h_rtcp;
-  GstHarness *h_send;
-  GstClock *clock = gst_test_clock_new ();
-  GstTestClock *testclock = GST_TEST_CLOCK (clock);
+  SessionHarness *h = session_harness_new ();
   gboolean cb_called = FALSE;
 
-  /* use testclock as the systemclock to capture the rtcp thread waits */
-  gst_system_clock_set_default (GST_CLOCK (testclock));
-
-  h_rtcp =
-      gst_harness_new_with_padnames ("rtpsession", "recv_rtcp_sink",
-      "send_rtcp_src");
-  h_send =
-      gst_harness_new_with_element (h_rtcp->element, "send_rtp_sink",
-      "send_rtp_src");
-
   /* connect to the stats-reporting */
-  g_signal_connect (h_rtcp->element, "notify::stats",
+  g_signal_connect (h->session, "notify::stats",
       G_CALLBACK (stats_test_cb), &cb_called);
 
-  /* "crank" and check the stats */
-  g_assert (gst_test_clock_crank (testclock));
-  gst_buffer_unref (gst_harness_pull (h_rtcp));
+  /* Push RTP buffer to make sure RTCP-thread have started */
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_send_rtp (h, generate_test_buffer (0, 0xDEADBEEF)));
+
+  /* crank the RTCP-thread and pull out rtcp, generating a stats-callback */
+  session_harness_crank_clock (h);
+  gst_buffer_unref (session_harness_pull_rtcp (h));
   fail_unless (cb_called);
 
-  gst_harness_teardown (h_send);
-  gst_harness_teardown (h_rtcp);
-  gst_object_unref (clock);
+  session_harness_free (h);
 }
 
 GST_END_TEST;
@@ -1205,6 +1195,45 @@ GST_START_TEST (test_feedback_rtcp_race)
 
 GST_END_TEST;
 
+GST_START_TEST (test_dont_send_rtcp_while_idle)
+{
+  SessionHarness *h = session_harness_new ();
+
+  /* verify the RTCP thread has not started */
+  fail_unless_equals_int (0, gst_test_clock_peek_id_count (h->testclock));
+  /* and that no RTCP has been pushed */
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->rtcp_h));
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_send_rtcp_when_signalled)
+{
+  SessionHarness *h = session_harness_new ();
+  gboolean ret;
+
+  /* verify the RTCP thread has not started */
+  fail_unless_equals_int (0, gst_test_clock_peek_id_count (h->testclock));
+  /* and that no RTCP has been pushed */
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->rtcp_h));
+
+  /* then ask explicitly to send RTCP */
+  g_signal_emit_by_name (h->internal_session,
+      "send-rtcp-full", GST_SECOND, &ret);
+  /* this is FALSE due to no next RTCP check time */
+  fail_unless (ret == FALSE);
+
+  /* "crank" and verify RTCP now was sent */
+  session_harness_crank_clock (h);
+  gst_buffer_unref (session_harness_pull_rtcp (h));
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpsession_suite (void)
 {
@@ -1226,6 +1255,8 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_feedback_rtcp_race);
   tcase_add_test (tc_chain, test_receive_regular_pli);
   tcase_add_test (tc_chain, test_receive_pli_no_sender_ssrc);
+  tcase_add_test (tc_chain, test_dont_send_rtcp_while_idle);
+  tcase_add_test (tc_chain, test_send_rtcp_when_signalled);
   return s;
 }
 
