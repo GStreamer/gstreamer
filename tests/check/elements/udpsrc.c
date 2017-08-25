@@ -79,16 +79,17 @@ GST_START_TEST (test_udpsrc_empty_packet)
     if (g_socket_send_to (socket, sa, "HeLL0", 6, NULL, NULL) == 6) {
       GstMapInfo map;
       GstBuffer *buf;
-      guint len;
+      guint len = 0;
 
       GST_INFO ("sent 6 bytes");
 
       g_mutex_lock (&check_mutex);
-      do {
+      len = g_list_length (buffers);
+      while (len < 1) {
         g_cond_wait (&check_cond, &check_mutex);
         len = g_list_length (buffers);
         GST_INFO ("%u buffers", len);
-      } while (len < 1);
+      }
 
       /* wait a bit more for a second buffer */
       if (len < 2) {
@@ -145,7 +146,7 @@ GST_START_TEST (test_udpsrc)
   GstMemory *mem;
   gchar data[48000];
   gsize max_size;
-  int i, len;
+  int i, len = 0;
 
   for (i = 0; i < G_N_ELEMENTS (data); ++i)
     data[i] = i & 0xff;
@@ -171,11 +172,12 @@ GST_START_TEST (test_udpsrc)
   GST_INFO ("sent some packets");
 
   g_mutex_lock (&check_mutex);
-  do {
+  len = g_list_length (buffers);
+  while (len < 5) {
     g_cond_wait (&check_cond, &check_mutex);
     len = g_list_length (buffers);
     GST_INFO ("%u buffers", len);
-  } while (len < 5);
+  }
 
   /* check that large packets are made up of multiple memory chunks and that
    * the first one is fairly small */
