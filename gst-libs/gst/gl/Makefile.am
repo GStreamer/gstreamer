@@ -49,6 +49,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglbufferpool.h \
 	gstglfilter.h \
 	gstglformat.h \
+	gstglfuncs.h \
 	gstglbasefilter.h \
 	gstglshader.h \
 	gstglshaderstrings.h \

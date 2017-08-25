@@ -44,6 +44,7 @@ gl_headers = [
   'gstglfeature.h',
   'gstglfilter.h',
   'gstglformat.h',
+  'gstglfuncs.h',
   'gstglframebuffer.h',
   'gstglmemory.h',
   'gstglmemorypbo.h',
