@@ -37,6 +37,12 @@
 #define vaAssociateSubpicture   vaAssociateSubpicture2
 #endif
 
+#if VA_CHECK_VERSION(1,0,0)
+#define VA_ENC_PACKED_HEADER_H264_SEI VAEncPackedHeaderRawData
+#else
+#define VA_ENC_PACKED_HEADER_H264_SEI VAEncPackedHeaderH264_SEI
+#endif
+
 /* Compatibility glue with VA-API 0.34 */
 #if VA_CHECK_VERSION(0,34,0)
 # include <va/va_compat.h>
