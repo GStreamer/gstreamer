@@ -3380,8 +3380,8 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
     return;
   }
 
-  /* only report about other sender */
-  if (source == data->source)
+  /* only report about remote sources */
+  if (source->internal)
     goto reported;
 
   if (!RTP_SOURCE_IS_SENDER (source)) {

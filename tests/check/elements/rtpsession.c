@@ -343,6 +343,126 @@ GST_START_TEST (test_multiple_senders_roundrobin_rbs)
 
 GST_END_TEST;
 
+GST_START_TEST (test_no_rbs_for_internal_senders)
+{
+  SessionHarness *h = session_harness_new ();
+  GstFlowReturn res;
+  GstBuffer *buf;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket rtcp_packet;
+  gint i, j, k;
+  guint32 ssrc;
+  GHashTable *sr_ssrcs;
+  GHashTable *rb_ssrcs, *tmp_set;
+
+  /* Push RTP from our send SSRCs */
+  for (j = 0; j < 5; j++) {     /* packets per ssrc */
+    for (k = 0; k < 2; k++) {   /* number of ssrcs */
+      buf = generate_test_buffer (j, 10000 + k);
+      res = session_harness_send_rtp (h, buf);
+      fail_unless_equals_int (GST_FLOW_OK, res);
+    }
+  }
+
+  /* crank the RTCP pad thread */
+  session_harness_crank_clock (h);
+
+  sr_ssrcs = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+  /* verify the rtcp packets */
+  for (i = 0; i < 2; i++) {
+    buf = session_harness_pull_rtcp (h);
+    g_assert (buf != NULL);
+    g_assert (gst_rtcp_buffer_validate (buf));
+
+    gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcp);
+    g_assert (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
+    fail_unless_equals_int (GST_RTCP_TYPE_SR,
+        gst_rtcp_packet_get_type (&rtcp_packet));
+
+    gst_rtcp_packet_sr_get_sender_info (&rtcp_packet, &ssrc, NULL, NULL,
+        NULL, NULL);
+    g_assert_cmpint (ssrc, >=, 10000);
+    g_assert_cmpint (ssrc, <=, 10001);
+    g_hash_table_add (sr_ssrcs, GUINT_TO_POINTER (ssrc));
+
+    /* There should be no RBs as there are no remote senders */
+    fail_unless_equals_int (0, gst_rtcp_packet_get_rb_count (&rtcp_packet));
+
+    gst_rtcp_buffer_unmap (&rtcp);
+    gst_buffer_unref (buf);
+  }
+
+  /* Ensure both internal senders generated RTCP */
+  fail_unless_equals_int (2, g_hash_table_size (sr_ssrcs));
+  g_hash_table_unref (sr_ssrcs);
+
+  /* Generate RTP from remote side */
+  for (j = 0; j < 5; j++) {     /* packets per ssrc */
+    for (k = 0; k < 2; k++) {   /* number of ssrcs */
+      buf = generate_test_buffer (j, 20000 + k);
+      res = session_harness_recv_rtp (h, buf);
+      fail_unless_equals_int (GST_FLOW_OK, res);
+    }
+  }
+
+  sr_ssrcs = g_hash_table_new (g_direct_hash, g_direct_equal);
+  rb_ssrcs = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
+      (GDestroyNotify) g_hash_table_unref);
+
+  /* verify the rtcp packets */
+  for (i = 0; i < 2; i++) {
+    session_harness_produce_rtcp (h, 1);
+    buf = session_harness_pull_rtcp (h);
+    g_assert (buf != NULL);
+    g_assert (gst_rtcp_buffer_validate (buf));
+
+    gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcp);
+    g_assert (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
+    fail_unless_equals_int (GST_RTCP_TYPE_SR,
+        gst_rtcp_packet_get_type (&rtcp_packet));
+
+    gst_rtcp_packet_sr_get_sender_info (&rtcp_packet, &ssrc, NULL, NULL,
+        NULL, NULL);
+    g_assert_cmpint (ssrc, >=, 10000);
+    g_assert_cmpint (ssrc, <=, 10001);
+    g_hash_table_add (sr_ssrcs, GUINT_TO_POINTER (ssrc));
+
+    /* There should be 2 RBs: one for each remote sender */
+    fail_unless_equals_int (2, gst_rtcp_packet_get_rb_count (&rtcp_packet));
+
+    tmp_set = g_hash_table_new (g_direct_hash, g_direct_equal);
+    g_hash_table_insert (rb_ssrcs, GUINT_TO_POINTER (ssrc), tmp_set);
+
+    for (j = 0; j < 2; j++) {
+      gst_rtcp_packet_get_rb (&rtcp_packet, j, &ssrc, NULL, NULL,
+          NULL, NULL, NULL, NULL);
+      g_assert_cmpint (ssrc, >=, 20000);
+      g_assert_cmpint (ssrc, <=, 20001);
+      g_hash_table_add (tmp_set, GUINT_TO_POINTER (ssrc));
+    }
+
+    gst_rtcp_buffer_unmap (&rtcp);
+    gst_buffer_unref (buf);
+  }
+
+  /* now verify all received ssrcs have been reported */
+  fail_unless_equals_int (2, g_hash_table_size (sr_ssrcs));
+  fail_unless_equals_int (2, g_hash_table_size (rb_ssrcs));
+  for (i = 10000; i < 10002; i++) {
+    tmp_set = g_hash_table_lookup (rb_ssrcs, GUINT_TO_POINTER (i));
+    g_assert (tmp_set);
+    fail_unless_equals_int (2, g_hash_table_size (tmp_set));
+  }
+
+  g_hash_table_unref (rb_ssrcs);
+  g_hash_table_unref (sr_ssrcs);
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_internal_sources_timeout)
 {
   SessionHarness *h = session_harness_new ();
@@ -712,6 +832,7 @@ rtpsession_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_multiple_ssrc_rr);
   tcase_add_test (tc_chain, test_multiple_senders_roundrobin_rbs);
+  tcase_add_test (tc_chain, test_no_rbs_for_internal_senders);
   tcase_add_test (tc_chain, test_internal_sources_timeout);
   tcase_add_test (tc_chain, test_receive_rtcp_app_packet);
   tcase_add_test (tc_chain, test_dont_lock_on_stats);
