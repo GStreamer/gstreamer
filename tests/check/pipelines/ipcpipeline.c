@@ -5853,8 +5853,8 @@ ipcpipeline_suite (void)
   if (1) {
     tcase_add_test (tc_chain, test_empty_tags);
     tcase_add_test (tc_chain, test_wavparse_tags);
-    tcase_add_test (tc_chain, test_mpegts_tags);
-    tcase_add_test (tc_chain, test_mpegts_2_tags);
+    tcase_skip_broken_test (tc_chain, test_mpegts_tags);
+    tcase_skip_broken_test (tc_chain, test_mpegts_2_tags);
     tcase_add_test (tc_chain, test_live_a_tags);
     tcase_add_test (tc_chain, test_live_av_tags);
     tcase_add_test (tc_chain, test_live_av_2_tags);
@@ -5878,7 +5878,7 @@ ipcpipeline_suite (void)
     tcase_add_test (tc_chain, test_empty_state_changes);
     tcase_add_test (tc_chain, test_wavparse_state_changes);
     tcase_add_test (tc_chain, test_mpegts_state_changes);
-    tcase_add_test (tc_chain, test_mpegts_2_state_changes);
+    tcase_skip_broken_test (tc_chain, test_mpegts_2_state_changes);
     /* live scenarios skipped: live sources will cause no buffer
      * to flow in PAUSED, so the pipeline will only finish READY->PAUSED
      * once switching to PLAYING */
@@ -5899,8 +5899,8 @@ ipcpipeline_suite (void)
      handled by the slave pipeline. */
   if (1) {
     tcase_add_test (tc_chain, test_empty_serialized_query);
-    tcase_add_test (tc_chain, test_wavparse_serialized_query);
-    tcase_add_test (tc_chain, test_mpegts_serialized_query);
+    tcase_skip_broken_test (tc_chain, test_wavparse_serialized_query);
+    tcase_skip_broken_test (tc_chain, test_mpegts_serialized_query);
     tcase_add_test (tc_chain, test_mpegts_2_serialized_query);
     tcase_add_test (tc_chain, test_live_a_serialized_query);
     tcase_add_test (tc_chain, test_live_av_serialized_query);
