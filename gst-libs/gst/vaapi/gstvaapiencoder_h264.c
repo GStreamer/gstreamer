@@ -1601,7 +1601,7 @@ add_packed_sei_header (GstVaapiEncoderH264 * encoder,
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
   data = GST_BIT_WRITER_DATA (&bs);
 
-  packed_sei_param.type = VAEncPackedHeaderH264_SEI;
+  packed_sei_param.type = VA_ENC_PACKED_HEADER_H264_SEI;
   packed_sei_param.bit_length = data_bit_size;
   packed_sei_param.has_emulation_bytes = 0;
 
