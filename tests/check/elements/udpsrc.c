@@ -147,6 +147,8 @@ GST_START_TEST (test_udpsrc)
   gchar data[48000];
   gsize max_size;
   int i, len = 0;
+  gssize sent;
+  GError *err = NULL;
 
   for (i = 0; i < G_N_ELEMENTS (data); ++i)
     data[i] = i & 0xff;
@@ -154,20 +156,25 @@ GST_START_TEST (test_udpsrc)
   if (!udpsrc_setup (&udpsrc, &socket, &sinkpad, &sa))
     goto no_socket;
 
-  if (g_socket_send_to (socket, sa, data, 48000, NULL, NULL) != 48000)
+  if ((sent = g_socket_send_to (socket, sa, data, 48000, NULL, &err)) == -1)
     goto send_failure;
+  fail_unless_equals_int (sent, 48000);
 
-  if (g_socket_send_to (socket, sa, data, 21000, NULL, NULL) != 21000)
+  if ((sent = g_socket_send_to (socket, sa, data, 21000, NULL, &err)) == -1)
     goto send_failure;
+  fail_unless_equals_int (sent, 21000);
 
-  if (g_socket_send_to (socket, sa, data, 500, NULL, NULL) != 500)
+  if ((sent = g_socket_send_to (socket, sa, data, 500, NULL, &err)) == -1)
     goto send_failure;
+  fail_unless_equals_int (sent, 500);
 
-  if (g_socket_send_to (socket, sa, data, 1600, NULL, NULL) != 1600)
+  if ((sent = g_socket_send_to (socket, sa, data, 1600, NULL, &err)) == -1)
     goto send_failure;
+  fail_unless_equals_int (sent, 1600);
 
-  if (g_socket_send_to (socket, sa, data, 1400, NULL, NULL) != 1400)
+  if ((sent = g_socket_send_to (socket, sa, data, 1400, NULL, &err)) == -1)
     goto send_failure;
+  fail_unless_equals_int (sent, 1400);
 
   GST_INFO ("sent some packets");
 
@@ -224,6 +231,10 @@ GST_START_TEST (test_udpsrc)
 
 no_socket:
 send_failure:
+  if (err) {
+    GST_WARNING ("Socket send error, skipping test: %s", err->message);
+    g_clear_error (&err);
+  }
 
   gst_element_set_state (udpsrc, GST_STATE_NULL);
 
