@@ -11,8 +11,10 @@ EXTRA_DIST = \
 	image.jpg \
 	pcm16sine.flv \
 	pinknoise-vorbis.mkv \
+	stream.mp2 \
+	cbr_stream.mp3 \
+	vbr_stream.mp3 \
 	test-cert.pem \
 	test-key.pem \
 	splitvideo00.ogg splitvideo01.ogg \
 	splitvideo02.ogg
-
