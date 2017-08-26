@@ -155,3 +155,11 @@
    fun:gst_lamemp3enc_sink_event
 }
 
+{
+   <twolame Conditional jump or move depends on uninitialised values>
+   Memcheck:Cond
+   ...
+   fun:psycho_3
+   fun:encode_frame
+}
+

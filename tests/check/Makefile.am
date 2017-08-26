@@ -281,6 +281,12 @@ else
 check_taglib =
 endif
 
+if USE_TWOLAME
+check_twolame = pipelines/twolame
+else
+check_twolame =
+endif
+
 if USE_PLUGIN_UDP
 check_udp = \
         elements/udpsink \
@@ -391,6 +397,7 @@ check_PROGRAMS = \
 	$(check_soup) \
 	$(check_spectrum) \
 	$(check_taglib) \
+	$(check_twolame) \
 	$(check_udp) \
 	$(check_videobox) \
 	$(check_videocrop) \

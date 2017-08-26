@@ -23,6 +23,10 @@
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstbufferstraw.h>
 
+#ifndef ENCODER
+#define ENCODER "lamemp3enc"
+#endif
+
 #ifndef GST_DISABLE_PARSE
 
 GST_START_TEST (test_format)
@@ -35,7 +39,7 @@ GST_START_TEST (test_format)
 
   pipe_str = g_strdup_printf ("audiotestsrc num-buffers=1 "
       "! audio/x-raw, rate=22050, channels=1 "
-      "! lamemp3enc bitrate=24 ! audio/mpeg,rate=22050 ! fakesink");
+      "! " ENCODER " bitrate=24 ! audio/mpeg,rate=22050 ! fakesink");
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
@@ -76,7 +80,7 @@ GST_START_TEST (test_caps_proxy)
   pipe_str = g_strdup_printf ("audiotestsrc num-buffers=1 "
       "! audio/x-raw,rate=48000,channels=1 "
       "! audioresample "
-      "! lamemp3enc ! audio/mpeg,rate=(int){22050,44100} ! fakesink");
+      "! " ENCODER " ! audio/mpeg,rate=(int){22050,44100} ! fakesink");
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
@@ -111,7 +115,7 @@ GST_END_TEST;
 static Suite *
 lame_suite (void)
 {
-  Suite *s = suite_create ("lame");
+  Suite *s = suite_create (ENCODER);
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
