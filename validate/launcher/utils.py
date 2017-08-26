@@ -72,6 +72,16 @@ class Protocols(object):
         return False
 
 
+def supports_ansi_colors():
+    platform = sys.platform
+    supported_platform = platform != 'win32' or 'ANSICON' in os.environ
+    # isatty is not always implemented, #6223.
+    is_a_tty = hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()
+    if not supported_platform or not is_a_tty:
+        return False
+    return True
+
+
 class Colors(object):
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -88,6 +98,9 @@ def desactivate_colors():
     Colors.WARNING = ''
     Colors.FAIL = ''
     Colors.ENDC = ''
+
+if not supports_ansi_colors():
+    desactivate_colors()
 
 
 def mkdir(directory):
