@@ -26,7 +26,6 @@ base_tests = [
   [['elements/curlfilesink.c'], not curl_dep.found(), [curl_dep]],
   [['elements/curlftpsink.c'], not curl_dep.found(), [curl_dep]],
   [['elements/curlsmtpsink.c'], not curl_dep.found(), [curl_dep]],
-  [['elements/dash_isoff.c'], not xml2_dep.found(), [xml2_dep]],
   [['elements/dash_mpd.c'], not xml2_dep.found(), [xml2_dep]],
   [['elements/faac.c'], not faac_dep.found() or not cc.has_header_symbol('faac.h', 'faacEncOpen'), [faac_dep]],
   [['elements/faad.c'], not faad_dep.found() or not have_faad_2_7, [faad_dep]],
@@ -56,6 +55,7 @@ base_tests = [
   [['elements/voaacenc.c'], not voaac_dep.found(), [voaac_dep]],
   [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
   [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
+  [['libs/isoff.c'], not xml2_dep.found(), [gstisoff_dep, xml2_dep]],
 ]
 
 test_defines = [
