@@ -276,7 +276,10 @@ _gst_value_serialize_g_value_array (const GValue * value, const gchar * begin,
   GString *s;
   GValue *v;
   gchar *s_val;
-  guint alen = array->n_values;
+  guint alen = 0;
+
+  if (array)
+    alen = array->n_values;
 
   /* estimate minimum string length to minimise re-allocs in GString */
   s = g_string_sized_new (2 + (6 * alen) + 2);
