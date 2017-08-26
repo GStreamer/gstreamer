@@ -3408,6 +3408,22 @@ GST_START_TEST (test_transform_list)
 
 GST_END_TEST;
 
+GST_START_TEST (test_serialize_null_aray)
+{
+  gchar *serialized;
+  GValue v = G_VALUE_INIT;
+
+  g_value_init (&v, G_TYPE_VALUE_ARRAY);
+
+  g_value_set_boxed (&v, NULL);
+  serialized = gst_value_serialize (&v);
+  fail_unless_equals_string (serialized, "<  >");
+  g_value_unset (&v);
+  g_free (serialized);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_value_suite (void)
 {
@@ -3459,6 +3475,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_structure_ops);
   tcase_add_test (tc_chain, test_transform_array);
   tcase_add_test (tc_chain, test_transform_list);
+  tcase_add_test (tc_chain, test_serialize_null_aray);
 
   return s;
 }
