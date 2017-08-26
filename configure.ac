@@ -289,17 +289,6 @@ AG_GST_CHECK_FEATURE(SIDPLAY, [libsidplay], sid, [
   GST_PATH_SIDPLAY()
 ])
 
-dnl *** twolame ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_TWOLAME, true)
-AG_GST_CHECK_FEATURE(TWOLAME, [twolame], twolame, [
-  PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.10, [
-      HAVE_TWOLAME="yes"], [
-      HAVE_TWOLAME="no"
-  ])
-  AC_SUBST(TWOLAME_CFLAGS)
-  AC_SUBST(TWOLAME_LIBS)
-])
-
 dnl *** x264 (MPEG-4 part 10/h.264/AVC encoder) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_X264, true)
 AG_GST_CHECK_FEATURE(X264, [x264 plug-in], x264, [
@@ -329,7 +318,6 @@ AM_CONDITIONAL(USE_CDIO, false)
 AM_CONDITIONAL(USE_DVDREAD, false)
 AM_CONDITIONAL(USE_MPEG2DEC, false)
 AM_CONDITIONAL(USE_SIDPLAY, false)
-AM_CONDITIONAL(USE_TWOLAME, false)
 AM_CONDITIONAL(USE_X264, false)
 
 fi dnl of EXT plugins
@@ -411,7 +399,6 @@ ext/cdio/Makefile
 ext/dvdread/Makefile
 ext/mpeg2dec/Makefile
 ext/sidplay/Makefile
-ext/twolame/Makefile
 ext/x264/Makefile
 docs/Makefile
 docs/plugins/Makefile

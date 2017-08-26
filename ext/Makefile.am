@@ -40,12 +40,6 @@ else
 SIDPLAY_DIR =
 endif
 
-if USE_TWOLAME
-TWOLAME_DIR = twolame
-else
-TWOLAME_DIR =
-endif
-
 if USE_X264
 X264_DIR=x264
 else
@@ -60,7 +54,6 @@ SUBDIRS = \
 	$(DVDREAD_DIR) \
 	$(MPEG2DEC_DIR) \
 	$(SIDPLAY_DIR) \
-	$(TWOLAME_DIR) \
 	$(X264_DIR)
 
 DIST_SUBDIRS = \
@@ -71,7 +64,6 @@ DIST_SUBDIRS = \
 	dvdread \
 	mpeg2dec \
 	sidplay \
-	twolame \
 	x264
 
 include $(top_srcdir)/common/parallel-subdirs.mak

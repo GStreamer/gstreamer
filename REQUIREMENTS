@@ -45,6 +45,4 @@ cdio		(for the cdio CDDA CD audio source)
 			http://savannah.gnu.org/projects/libcdio/
 x264		(for the x264enc H.264 encoder)
 			http://www.videolan.org/developers/x264.html
-twolame		(for the twolame mp2 encoder)
-			http://www.twolame.org/
 sidplay		FIXME

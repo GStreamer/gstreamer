@@ -188,21 +188,6 @@ gst_siddec_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-twolamemp2enc</FILE>
-<TITLE>twolame</TITLE>
-GstTwoLame
-<SUBSECTION Standard>
-GstTwoLameClass
-GST_TWO_LAME
-GST_TWO_LAME_CLASS
-GST_IS_TWO_LAME
-GST_IS_TWO_LAME_CLASS
-GST_TYPE_TWO_LAME
-gst_two_lame_get_type
-</SECTION>
-
-
-<SECTION>
 <FILE>element-x264enc</FILE>
 <TITLE>x264enc</TITLE>
 GstX264Enc
