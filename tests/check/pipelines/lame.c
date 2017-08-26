@@ -108,7 +108,7 @@ GST_END_TEST;
 
 #endif /* #ifndef GST_DISABLE_PARSE */
 
-Suite *
+static Suite *
 lame_suite (void)
 {
   Suite *s = suite_create ("lame");
