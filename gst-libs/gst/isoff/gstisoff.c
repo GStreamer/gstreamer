@@ -27,7 +27,7 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY (gst_isoff_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_isoff_debug);
 #define GST_CAT_DEFAULT gst_isoff_debug
 
 static gboolean initialized = FALSE;
