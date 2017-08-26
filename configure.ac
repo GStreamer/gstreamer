@@ -665,6 +665,26 @@ AG_GST_CHECK_FEATURE(JPEG, [jpeg library], jpeg, [
   AC_SUBST(JPEG_LIBS)
 ])
 
+dnl *** lame ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
+AG_GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
+  AG_GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, $LIBM, lame/lame.h,
+  [
+    HAVE_LAME="yes"
+    LAME_LIBS="-lmp3lame $LIBM"
+    dnl is lame presets available
+    LAME_CFLAGS=""
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <lame/lame.h>]], [[ int preset = MEDIUM ]])],[LAME_CFLAGS="-DGSTLAME_PRESET"],[LAME_CFLAGS=""
+    ])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <lame/lame.h>]], [[
+        void *ptr = &lame_set_VBR_quality
+      ]])],[LAME_CFLAGS="$LAME_CFLAGS -DHAVE_LAME_SET_VBR_QUALITY"],[LAME_CFLAGS="$LAME_CFLAGS"
+    ])
+  AC_SUBST(LAME_CFLAGS)
+  AC_SUBST(LAME_LIBS)
+  ])
+])
+
 dnl *** libcaca ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
 AG_GST_CHECK_FEATURE(LIBCACA, [libcaca coloured ASCII art], cacasink, [
@@ -878,6 +898,7 @@ AM_CONDITIONAL(USE_FLAC, false)
 AM_CONDITIONAL(USE_GDK_PIXBUF, false)
 AM_CONDITIONAL(USE_JACK, false)
 AM_CONDITIONAL(USE_JPEG, false)
+AM_CONDITIONAL(USE_LAME, false)
 AM_CONDITIONAL(USE_LIBCACA, false)
 AM_CONDITIONAL(USE_LIBDV, false)
 AM_CONDITIONAL(USE_LIBIEC61883, false)
@@ -1021,6 +1042,7 @@ ext/flac/Makefile
 ext/gdk_pixbuf/Makefile
 ext/jack/Makefile
 ext/jpeg/Makefile
+ext/lame/Makefile
 ext/libcaca/Makefile
 ext/libpng/Makefile
 ext/mpg123/Makefile

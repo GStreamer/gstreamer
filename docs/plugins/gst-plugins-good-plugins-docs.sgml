@@ -99,6 +99,7 @@
     <xi:include href="xml/element-jackaudiosrc.xml" />
     <xi:include href="xml/element-jpegdec.xml" />
     <xi:include href="xml/element-jpegenc.xml" />
+    <xi:include href="xml/element-lamemp3enc.xml" />
     <xi:include href="xml/element-level-example.xml" />
     <xi:include href="xml/element-level.xml" />
     <xi:include href="xml/element-matroskademux.xml" />
@@ -326,6 +327,7 @@
     <xi:include href="xml/plugin-isomp4.xml" />
     <xi:include href="xml/plugin-jack.xml" />
     <xi:include href="xml/plugin-jpeg.xml" />
+    <xi:include href="xml/plugin-lame.xml" />
     <xi:include href="xml/plugin-level.xml" />
     <xi:include href="xml/plugin-matroska.xml" />
     <xi:include href="xml/plugin-monoscope.xml" />

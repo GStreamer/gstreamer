@@ -45,6 +45,7 @@ GstIirEqualizer3Bands GstChildProxy GstPreset
 GstIirEqualizerNBands GstChildProxy
 GstIirEqualizerNBands GstChildProxy GstPreset
 GstJpegEnc GstPreset
+GstLameMP3Enc GstPreset
 GstMJ2Mux GstTagSetter GstTagXmpWriter
 GstMJ2Mux GstTagSetter GstTagXmpWriter GstPreset
 GstMP4Mux GstTagSetter GstTagXmpWriter

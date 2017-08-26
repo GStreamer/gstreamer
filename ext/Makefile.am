@@ -34,6 +34,12 @@ else
 JPEG_DIR =
 endif
 
+if USE_LAME
+LAME_DIR = lame
+else
+LAME_DIR =
+endif
+
 if USE_LIBCACA
 LIBCACA_DIR = libcaca
 else
@@ -115,6 +121,7 @@ SUBDIRS = \
 	$(GDK_PIXBUF_DIR) \
 	$(JACK_DIR) \
 	$(JPEG_DIR) \
+	$(LAME_DIR) \
 	$(LIBCACA_DIR) \
 	$(LIBDV_DIR) \
 	$(LIBMNG_DIR) \
@@ -136,6 +143,7 @@ DIST_SUBDIRS = \
 	gdk_pixbuf \
 	jack \
 	jpeg \
+	lame \
 	libcaca \
 	libpng \
 	mpg123 \

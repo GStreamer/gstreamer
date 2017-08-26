@@ -2,6 +2,7 @@ ext/flac/gstflacdec.c
 ext/jack/gstjackaudiosink.c
 ext/jack/gstjackaudiosrc.c
 ext/jpeg/gstjpegdec.c
+ext/lame/gstlamemp3enc.c
 ext/libpng/gstpngdec.c
 ext/pulse/pulsesink.c
 ext/shout2/gstshout2.c

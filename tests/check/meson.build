@@ -94,6 +94,7 @@ good_tests = [
   [ 'elements/vp8enc', not vpx_dep.found() or not have_vp8_encoder ],
   [ 'elements/vp8dec', not vpx_dep.found() or not have_vp8_decoder ],
   [ 'elements/vp9enc', not vpx_dep.found() or not have_vp9_encoder ],
+  [ 'pipelines/lame', not lame_dep.found() ],
   [ 'pipelines/wavenc' ],
   [ 'elements/wavpackdec', not wavpack_dep.found() ],
   [ 'elements/wavpackenc', not wavpack_dep.found() ],

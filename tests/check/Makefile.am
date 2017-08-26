@@ -188,6 +188,12 @@ else
 check_jpeg =
 endif
 
+if USE_LAME
+check_lame = pipelines/lame
+else
+check_lame =
+endif
+
 if USE_PLUGIN_LEVEL
 check_level = elements/level
 else
@@ -372,6 +378,7 @@ check_PROGRAMS = \
 	$(check_imagefreeze) \
 	$(check_interleave) \
 	$(check_jpeg) \
+	$(check_lame) \
 	$(check_law) \
 	$(check_level) \
 	$(check_matroska) \

@@ -1284,6 +1284,21 @@ gst_jpeg_enc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-lamemp3enc</FILE>
+<TITLE>lamemp3enc</TITLE>
+GstLameMP3Enc
+<SUBSECTION Standard>
+GstLameMP3EncClass
+GST_LAMEMP3ENC
+GST_LAMEMP3ENC_CLASS
+GST_IS_LAMEMP3ENC
+GST_IS_LAMEMP3ENC_CLASS
+GST_TYPE_LAMEMP3ENC
+gst_lamemp3enc_get_type
+gst_lamemp3enc_register
+</SECTION>
+
+<SECTION>
 <FILE>element-level</FILE>
 <TITLE>level</TITLE>
 GstLevel

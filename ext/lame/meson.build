@@ -10,7 +10,7 @@ if lame_dep.found() and cc.has_header_symbol('lame/lame.h', 'lame_init')
   endif
   lame = library('gstlame',
     ['gstlamemp3enc.c', 'plugin.c'],
-    c_args : ugly_args + lame_extra_c_args,
+    c_args : gst_plugins_good_args + lame_extra_c_args,
     include_directories : [configinc, libsinc],
     dependencies : [gstaudio_dep, lame_dep],
     install : true,

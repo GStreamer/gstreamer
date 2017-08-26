@@ -33,6 +33,7 @@ GObject
         GstAudioEncoder
           GstALawEnc
           GstFlacEnc
+          GstLameMP3Enc
           GstMuLawEnc
           GstSpeexEnc
           GstWavpackEnc

@@ -24288,3 +24288,63 @@
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstLameMP3Enc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[8,320]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bitrate (kb/s)</NICK>
+<BLURB>Bitrate in kbit/sec (Only valid if target is bitrate, for CBR one of 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256 or 320).</BLURB>
+<DEFAULT>128</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::cbr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>CBR</NICK>
+<BLURB>Enforce constant bitrate encoding (Only valid if target is bitrate).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::encoding-engine-quality</NAME>
+<TYPE>GstLameMP3EncEncodingEngineQuality</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Encoding Engine Quality</NICK>
+<BLURB>Quality/speed of the encoding engine, this does not affect the bitrate!.</BLURB>
+<DEFAULT>Standard</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::mono</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Mono</NICK>
+<BLURB>Enforce mono encoding.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::quality</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,9.999]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>VBR Quality from 0 to 10, 0 being the best (Only valid if target is quality).</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::target</NAME>
+<TYPE>GstLameMP3EncTarget</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Target</NICK>
+<BLURB>Optimize for quality or bitrate.</BLURB>
+<DEFAULT>Quality</DEFAULT>
+</ARG>
+
