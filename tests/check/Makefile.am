@@ -26,12 +26,6 @@ else
 AMRNB =
 endif
 
-if USE_LAME
-LAME = pipelines/lame
-else
-LAME =
-endif
-
 if USE_MPEG2DEC
 MPEG2DEC = elements/mpeg2dec
 else
@@ -54,7 +48,6 @@ endif
 check_PROGRAMS = \
 	generic/states \
 	$(AMRNB) \
-	$(LAME) \
 	$(MPEG2DEC) \
 	$(check_x264enc) \
 	$(check_xingmux)

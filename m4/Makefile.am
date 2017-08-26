@@ -19,7 +19,6 @@ GETTEXT_M4 = \
 EXTRA_DIST = \
 	a52.m4 \
 	aalib.m4 \
-	as-liblame.m4 \
 	as-slurp-ffmpeg.m4 \
 	check-libheader.m4 \
 	freetype2.m4 \

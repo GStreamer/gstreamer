@@ -16,7 +16,6 @@ GObject
           GstDvdLpcmDec
         GstAudioEncoder
           GstAmrnbEnc
-          GstLameMP3Enc
           GstTwoLame
         GstBaseSrc
           GstPushSrc

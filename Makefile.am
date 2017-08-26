@@ -41,11 +41,14 @@ CRUFT_FILES = \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
 	$(top_builddir)/ext/mpg123/.libs/libgstmpg123.so \
+	$(top_builddir)/ext/lame/.libs/libgstlame.so \
 	$(top_builddir)/gst/realmedia/.libs/libgstrmdemux.so
 
 CRUFT_DIRS = \
+	$(top_builddir)/tests/check/pipelines \
 	$(top_srcdir)/docs/plugins/tmpl \
 	$(top_srcdir)/ext/mpg123/ \
+	$(top_srcdir)/ext/lame/ \
 	$(top_builddir)/win32 \
 	$(top_srcdir)/win32
 

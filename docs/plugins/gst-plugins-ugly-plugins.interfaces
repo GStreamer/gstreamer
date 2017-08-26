@@ -5,8 +5,6 @@ GstBin GstChildProxy
 GstCddaBaseSrc GstURIHandler
 GstCdioCddaSrc GstURIHandler
 GstDvdReadSrc GstURIHandler
-GstLame GstTagSetter GstPreset
-GstLameMP3Enc GstPreset
 GstPNMSrc GstURIHandler
 GstPipeline GstChildProxy
 GstRTSPReal GstRTSPExtension

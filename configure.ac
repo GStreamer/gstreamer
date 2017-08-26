@@ -277,26 +277,6 @@ AG_GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
   AC_SUBST(DVDREAD_LIBS)
 ])
 
-dnl *** lame ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
-AG_GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
-  AG_GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, $LIBM, lame/lame.h,
-  [
-    HAVE_LAME="yes"
-    LAME_LIBS="-lmp3lame $LIBM"
-    dnl is lame presets available
-    LAME_CFLAGS=""
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <lame/lame.h>]], [[ int preset = MEDIUM ]])],[LAME_CFLAGS="-DGSTLAME_PRESET"],[LAME_CFLAGS=""
-    ])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <lame/lame.h>]], [[
-        void *ptr = &lame_set_VBR_quality
-      ]])],[LAME_CFLAGS="$LAME_CFLAGS -DHAVE_LAME_SET_VBR_QUALITY"],[LAME_CFLAGS="$LAME_CFLAGS"
-    ])
-  AC_SUBST(LAME_CFLAGS)
-  AC_SUBST(LAME_LIBS)
-  ])
-])
-
 dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
 AG_GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
@@ -347,7 +327,6 @@ AM_CONDITIONAL(USE_AMRNB, false)
 AM_CONDITIONAL(USE_AMRWB, false)
 AM_CONDITIONAL(USE_CDIO, false)
 AM_CONDITIONAL(USE_DVDREAD, false)
-AM_CONDITIONAL(USE_LAME, false)
 AM_CONDITIONAL(USE_MPEG2DEC, false)
 AM_CONDITIONAL(USE_SIDPLAY, false)
 AM_CONDITIONAL(USE_TWOLAME, false)
@@ -430,7 +409,6 @@ ext/amrnb/Makefile
 ext/amrwbdec/Makefile
 ext/cdio/Makefile
 ext/dvdread/Makefile
-ext/lame/Makefile
 ext/mpeg2dec/Makefile
 ext/sidplay/Makefile
 ext/twolame/Makefile

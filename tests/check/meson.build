@@ -5,7 +5,6 @@ ugly_tests = [
   [ 'elements/x264enc', not x264_dep.found() ],
   [ 'elements/xingmux' ],
   [ 'generic/states' ],
-  [ 'pipelines/lame', not lame_dep.found() ],
 ]
 
 test_defines = [

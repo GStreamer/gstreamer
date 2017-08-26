@@ -188,16 +188,3 @@
    fun:Speech_Encode_Frame
    fun:Encoder_Interface_Encode
 }
-
-## lame
-
-{
-   <lame Conditional jump or move depends on uninitialised values>
-   Memcheck:Cond
-   fun:L3psycho_anal_vbr
-   fun:lame_encode_mp3_frame
-   ...
-   fun:lame_encode_flush
-   fun:gst_lamemp3enc_sink_event
-}
-

@@ -28,12 +28,6 @@ else
  DVDREAD_DIR =
 endif
 
-if USE_LAME
-LAME_DIR = lame
-else
-LAME_DIR =
-endif
-
 if USE_MPEG2DEC
 MPEG2DEC_DIR = mpeg2dec
 else
@@ -64,7 +58,6 @@ SUBDIRS = \
 	$(AMRWB_DIR) \
 	$(CDIO_DIR) \
 	$(DVDREAD_DIR) \
-	$(LAME_DIR) \
 	$(MPEG2DEC_DIR) \
 	$(SIDPLAY_DIR) \
 	$(TWOLAME_DIR) \
@@ -76,7 +69,6 @@ DIST_SUBDIRS = \
 	amrwbdec \
 	cdio \
 	dvdread \
-	lame \
 	mpeg2dec \
 	sidplay \
 	twolame \
