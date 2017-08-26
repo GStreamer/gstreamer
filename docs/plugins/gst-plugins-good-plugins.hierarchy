@@ -36,6 +36,7 @@ GObject
           GstLameMP3Enc
           GstMuLawEnc
           GstSpeexEnc
+          GstTwoLame
           GstWavpackEnc
         GstAudioVisualizer
           GstGoom

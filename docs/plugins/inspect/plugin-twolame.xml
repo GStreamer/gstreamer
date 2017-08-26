@@ -1,0 +1,34 @@
+<plugin>
+  <name>twolame</name>
+  <description>Encode MP2s with TwoLAME</description>
+  <filename>../../ext/twolame/.libs/libgsttwolame.so</filename>
+  <basename>libgsttwolame.so</basename>
+  <version>1.13.0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>twolamemp2enc</name>
+      <longname>TwoLAME mp2 encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>High-quality free MP2 encoder</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ F32LE, S16LE }, layout=(string)interleaved, rate=(int){ 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)1; audio/x-raw, format=(string){ F32LE, S16LE }, layout=(string)interleaved, rate=(int){ 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)2, channel-mask=(bitmask)0x0000000000000003</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)2, rate=(int){ 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

@@ -7,6 +7,7 @@ ext/libpng/gstpngdec.c
 ext/pulse/pulsesink.c
 ext/shout2/gstshout2.c
 ext/soup/gstsouphttpsrc.c
+ext/twolame/gsttwolamemp2enc.c
 gst/audioparsers/gstwavpackparse.c
 gst/avi/gstavidemux.c
 gst/avi/gstavimux.c

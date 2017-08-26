@@ -263,6 +263,7 @@
     <xi:include href="xml/element-streaktv.xml" />
     <xi:include href="xml/element-taginject.xml" />
     <xi:include href="xml/element-testsink.xml" />
+    <xi:include href="xml/element-twolamemp2enc.xml" />
     <xi:include href="xml/element-udpsink.xml" />
     <xi:include href="xml/element-udpsrc.xml" />
     <xi:include href="xml/element-v4l2radio.xml" />
@@ -353,6 +354,7 @@
     <xi:include href="xml/plugin-spectrum.xml" />
     <xi:include href="xml/plugin-speex.xml" />
     <xi:include href="xml/plugin-taglib.xml" />
+    <xi:include href="xml/plugin-twolame.xml" />
     <xi:include href="xml/plugin-udp.xml" />
     <xi:include href="xml/plugin-video4linux2.xml" />
     <xi:include href="xml/plugin-videobox.xml" />

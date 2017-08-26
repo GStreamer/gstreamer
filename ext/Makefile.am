@@ -101,6 +101,12 @@ else
 TAGLIB_DIR =
 endif
 
+if USE_TWOLAME
+TWOLAME_DIR = twolame
+else
+TWOLAME_DIR =
+endif
+
 if USE_VPX
 VPX_DIR=vpx
 else
@@ -132,6 +138,7 @@ SUBDIRS = \
 	$(SOUP_DIR) \
 	$(SPEEX_DIR) \
 	$(TAGLIB_DIR) \
+	$(TWOLAME_DIR) \
 	$(VPX_DIR) \
 	$(WAVPACK_DIR)
 
@@ -153,6 +160,7 @@ DIST_SUBDIRS = \
 	soup \
 	speex \
 	taglib \
+	twolame \
 	vpx \
 	wavpack
 

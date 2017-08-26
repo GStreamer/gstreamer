@@ -810,6 +810,18 @@ AG_GST_CHECK_FEATURE(TAGLIB, [taglib tagging library], taglib, [
   fi
 ])
 
+dnl *** twolame ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_TWOLAME, true)
+AG_GST_CHECK_FEATURE(TWOLAME, [twolame], twolame, [
+  PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.10, [
+      HAVE_TWOLAME="yes"], [
+      HAVE_TWOLAME="no"
+  ])
+  AC_SUBST(TWOLAME_CFLAGS)
+  AC_SUBST(TWOLAME_LIBS)
+])
+
+
 dnl *** vpx ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VPX, vpx)
 AG_GST_CHECK_FEATURE(VPX, [VPX decoder], vpx, [
@@ -913,6 +925,7 @@ AM_CONDITIONAL(USE_SHOUT2, false)
 AM_CONDITIONAL(USE_SOUP, false)
 AM_CONDITIONAL(USE_SPEEX, false)
 AM_CONDITIONAL(USE_TAGLIB, false)
+AM_CONDITIONAL(USE_TWOLAME, false)
 AM_CONDITIONAL(USE_VPX, false)
 AM_CONDITIONAL(USE_WAVEFORM, false)
 AM_CONDITIONAL(USE_WAVPACK, false)
@@ -1052,6 +1065,7 @@ ext/shout2/Makefile
 ext/soup/Makefile
 ext/speex/Makefile
 ext/taglib/Makefile
+ext/twolame/Makefile
 ext/vpx/Makefile
 ext/wavpack/Makefile
 sys/Makefile

@@ -164,6 +164,12 @@ DebianPackage:  libtag1-dev
 Plugins:        taglib (id3v2mux)
 URL:            http://taglib.github.io/
 
+Package:	twolame
+Version:	>= 0.3.13
+DebianPackage:	libtwolame-dev
+Plugins:	twolame (twolamemp2enc)
+URL:		http://www.twolame.org
+
 Package:        zlib
 DebianPackage:  zlib1g-dev
 Plugins:        isomp4 (qtdemux), matroska (matroskademux)

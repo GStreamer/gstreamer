@@ -23,5 +23,6 @@ if cc.get_id() == 'msvc'
 else
   subdir('taglib')
 endif
+subdir('twolame')
 subdir('vpx')
 subdir('wavpack')
