@@ -27,9 +27,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_ENCODER_VP9(encoder) \
-  ((GstVaapiEncoderVP9 *) (encoder))
-
 typedef struct _GstVaapiEncoderVP9 GstVaapiEncoderVP9;
 
 /**
