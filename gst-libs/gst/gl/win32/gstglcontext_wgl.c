@@ -25,8 +25,8 @@
 
 #include <gst/gst.h>
 
-#include "../gstgl_fwd.h"
-#include <gst/gl/gstglcontext.h>
+#include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 
 #include "gstglcontext_wgl.h"
 #include <GL/wglext.h>
