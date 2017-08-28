@@ -694,9 +694,6 @@ bs_error:
 /* --- H.264 Encoder                                                     --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_ENCODER_H264_CAST(encoder) \
-    ((GstVaapiEncoderH264 *)(encoder))
-
 struct _GstVaapiEncoderH264
 {
   GstVaapiEncoder parent_instance;
@@ -2593,8 +2590,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_h264_encode (GstVaapiEncoder * base_encoder,
     GstVaapiEncPicture * picture, GstVaapiCodedBufferProxy * codedbuf)
 {
-  GstVaapiEncoderH264 *const encoder =
-      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
   GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
   GstVaapiSurfaceProxy *reconstruct = NULL;
 
@@ -2631,8 +2627,7 @@ error:
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_h264_flush (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderH264 *const encoder =
-      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
   GstVaapiH264ViewReorderPool *reorder_pool;
   GstVaapiEncPicture *pic;
   guint i;
@@ -2659,8 +2654,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_h264_get_codec_data (GstVaapiEncoder * base_encoder,
     GstBuffer ** out_buffer_ptr)
 {
-  GstVaapiEncoderH264 *const encoder =
-      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
   const guint32 configuration_version = 0x01;
   const guint32 nal_length_size = 4;
   guint8 profile_idc, profile_comp, level_idc;
@@ -2759,8 +2753,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base_encoder,
     GstVideoCodecFrame * frame, GstVaapiEncPicture ** output)
 {
-  GstVaapiEncoderH264 *const encoder =
-      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
   GstVaapiH264ViewReorderPool *reorder_pool = NULL;
   GstVaapiEncPicture *picture;
   gboolean is_idr = FALSE;
@@ -2872,8 +2865,7 @@ end:
 static GstVaapiEncoderStatus
 set_context_info (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderH264 *const encoder =
-      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   const guint DEFAULT_SURFACES_COUNT = 3;
 
@@ -2932,8 +2924,7 @@ set_context_info (GstVaapiEncoder * base_encoder)
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderH264 *const encoder =
-      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   GstVaapiEncoderStatus status;
   guint mb_width, mb_height;
@@ -2969,8 +2960,7 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
 static gboolean
 gst_vaapi_encoder_h264_init (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderH264 *const encoder =
-      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
   guint32 i;
 
   /* Default encoding entrypoint */
@@ -3012,8 +3002,7 @@ static void
 gst_vaapi_encoder_h264_finalize (GstVaapiEncoder * base_encoder)
 {
   /*free private buffers */
-  GstVaapiEncoderH264 *const encoder =
-      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
   GstVaapiEncPicture *pic;
   GstVaapiEncoderH264Ref *ref;
   guint32 i;
@@ -3049,8 +3038,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
 {
-  GstVaapiEncoderH264 *const encoder =
-      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
 
   switch (prop_id) {
     case GST_VAAPI_ENCODER_H264_PROP_MAX_BFRAMES:

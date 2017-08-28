@@ -85,9 +85,6 @@ typedef struct _GstVaapiH265ReorderPool
 /* --- H.265 Encoder                                                     --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_ENCODER_H265_CAST(encoder) \
-    ((GstVaapiEncoderH265 *)(encoder))
-
 struct _GstVaapiEncoderH265
 {
   GstVaapiEncoder parent_instance;
@@ -2021,8 +2018,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_h265_encode (GstVaapiEncoder * base_encoder,
     GstVaapiEncPicture * picture, GstVaapiCodedBufferProxy * codedbuf)
 {
-  GstVaapiEncoderH265 *const encoder =
-      GST_VAAPI_ENCODER_H265_CAST (base_encoder);
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
   GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
   GstVaapiSurfaceProxy *reconstruct = NULL;
 
@@ -2059,8 +2055,7 @@ error:
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_h265_flush (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderH265 *const encoder =
-      GST_VAAPI_ENCODER_H265_CAST (base_encoder);
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
   GstVaapiH265ReorderPool *reorder_pool;
   GstVaapiEncPicture *pic;
 
@@ -2083,8 +2078,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_h265_get_codec_data (GstVaapiEncoder * base_encoder,
     GstBuffer ** out_buffer_ptr)
 {
-  GstVaapiEncoderH265 *const encoder =
-      GST_VAAPI_ENCODER_H265_CAST (base_encoder);
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
   const guint32 configuration_version = 0x01;
   const guint32 nal_length_size = 4;
   GstMapInfo vps_info, sps_info, pps_info;
@@ -2230,8 +2224,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_h265_reordering (GstVaapiEncoder * base_encoder,
     GstVideoCodecFrame * frame, GstVaapiEncPicture ** output)
 {
-  GstVaapiEncoderH265 *const encoder =
-      GST_VAAPI_ENCODER_H265_CAST (base_encoder);
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
   GstVaapiH265ReorderPool *reorder_pool = NULL;
   GstVaapiEncPicture *picture;
   gboolean is_idr = FALSE;
@@ -2330,8 +2323,7 @@ end:
 static GstVaapiEncoderStatus
 set_context_info (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderH265 *const encoder =
-      GST_VAAPI_ENCODER_H265_CAST (base_encoder);
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   const guint DEFAULT_SURFACES_COUNT = 3;
 
@@ -2383,8 +2375,7 @@ set_context_info (GstVaapiEncoder * base_encoder)
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_h265_reconfigure (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderH265 *const encoder =
-      GST_VAAPI_ENCODER_H265_CAST (base_encoder);
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
   GstVaapiEncoderStatus status;
   guint luma_width, luma_height;
 
@@ -2429,8 +2420,7 @@ gst_vaapi_encoder_h265_reconfigure (GstVaapiEncoder * base_encoder)
 static gboolean
 gst_vaapi_encoder_h265_init (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderH265 *const encoder =
-      GST_VAAPI_ENCODER_H265_CAST (base_encoder);
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
   GstVaapiH265ReorderPool *reorder_pool;
   GstVaapiH265RefPool *ref_pool;
 
@@ -2458,8 +2448,7 @@ static void
 gst_vaapi_encoder_h265_finalize (GstVaapiEncoder * base_encoder)
 {
   /*free private buffers */
-  GstVaapiEncoderH265 *const encoder =
-      GST_VAAPI_ENCODER_H265_CAST (base_encoder);
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
   GstVaapiEncPicture *pic;
   GstVaapiEncoderH265Ref *ref;
   GstVaapiH265RefPool *ref_pool;
@@ -2491,8 +2480,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_h265_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
 {
-  GstVaapiEncoderH265 *const encoder =
-      GST_VAAPI_ENCODER_H265_CAST (base_encoder);
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
 
   switch (prop_id) {
     case GST_VAAPI_ENCODER_H265_PROP_MAX_BFRAMES:

@@ -56,9 +56,6 @@
 /* --- JPEG Encoder                                                      --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_ENCODER_JPEG_CAST(encoder) \
-    ((GstVaapiEncoderJpeg *)(encoder))
-
 struct _GstVaapiEncoderJpeg
 {
   GstVaapiEncoder parent_instance;
@@ -175,7 +172,7 @@ error_unsupported_profile:
 static GstVaapiEncoderStatus
 set_context_info (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderJpeg *encoder = GST_VAAPI_ENCODER_JPEG_CAST (base_encoder);
+  GstVaapiEncoderJpeg *encoder = GST_VAAPI_ENCODER_JPEG (base_encoder);
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
 
   /* Maximum sizes for common headers (in bytes) */
@@ -662,8 +659,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_jpeg_encode (GstVaapiEncoder * base_encoder,
     GstVaapiEncPicture * picture, GstVaapiCodedBufferProxy * codedbuf)
 {
-  GstVaapiEncoderJpeg *const encoder =
-      GST_VAAPI_ENCODER_JPEG_CAST (base_encoder);
+  GstVaapiEncoderJpeg *const encoder = GST_VAAPI_ENCODER_JPEG (base_encoder);
   GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
   GstVaapiSurfaceProxy *reconstruct = NULL;
 
@@ -709,8 +705,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_jpeg_reordering (GstVaapiEncoder * base_encoder,
     GstVideoCodecFrame * frame, GstVaapiEncPicture ** output)
 {
-  GstVaapiEncoderJpeg *const encoder =
-      GST_VAAPI_ENCODER_JPEG_CAST (base_encoder);
+  GstVaapiEncoderJpeg *const encoder = GST_VAAPI_ENCODER_JPEG (base_encoder);
   GstVaapiEncPicture *picture = NULL;
   GstVaapiEncoderStatus status = GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
@@ -731,8 +726,7 @@ gst_vaapi_encoder_jpeg_reordering (GstVaapiEncoder * base_encoder,
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_jpeg_reconfigure (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderJpeg *const encoder =
-      GST_VAAPI_ENCODER_JPEG_CAST (base_encoder);
+  GstVaapiEncoderJpeg *const encoder = GST_VAAPI_ENCODER_JPEG (base_encoder);
   GstVaapiEncoderStatus status;
 
   status = ensure_profile (encoder);
@@ -748,8 +742,7 @@ gst_vaapi_encoder_jpeg_reconfigure (GstVaapiEncoder * base_encoder)
 static gboolean
 gst_vaapi_encoder_jpeg_init (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderJpeg *const encoder =
-      GST_VAAPI_ENCODER_JPEG_CAST (base_encoder);
+  GstVaapiEncoderJpeg *const encoder = GST_VAAPI_ENCODER_JPEG (base_encoder);
 
   encoder->has_quant_tables = FALSE;
   memset (&encoder->quant_tables, 0, sizeof (encoder->quant_tables));
@@ -770,8 +763,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_jpeg_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
 {
-  GstVaapiEncoderJpeg *const encoder =
-      GST_VAAPI_ENCODER_JPEG_CAST (base_encoder);
+  GstVaapiEncoderJpeg *const encoder = GST_VAAPI_ENCODER_JPEG (base_encoder);
 
   switch (prop_id) {
     case GST_VAAPI_ENCODER_JPEG_PROP_QUALITY:

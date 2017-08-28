@@ -57,9 +57,6 @@
 /* --- VP8 Encoder                                                      --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_ENCODER_VP8_CAST(encoder) \
-    ((GstVaapiEncoderVP8 *)(encoder))
-
 struct _GstVaapiEncoderVP8
 {
   GstVaapiEncoder parent_instance;
@@ -145,7 +142,7 @@ ensure_bitrate (GstVaapiEncoderVP8 * encoder)
 static GstVaapiEncoderStatus
 set_context_info (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderVP8 *encoder = GST_VAAPI_ENCODER_VP8_CAST (base_encoder);
+  GstVaapiEncoderVP8 *encoder = GST_VAAPI_ENCODER_VP8 (base_encoder);
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
 
   /* Maximum sizes for common headers (in bytes) */
@@ -409,7 +406,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_vp8_encode (GstVaapiEncoder * base_encoder,
     GstVaapiEncPicture * picture, GstVaapiCodedBufferProxy * codedbuf)
 {
-  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8_CAST (base_encoder);
+  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8 (base_encoder);
   GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
   GstVaapiSurfaceProxy *reconstruct = NULL;
 
@@ -455,7 +452,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_vp8_reordering (GstVaapiEncoder * base_encoder,
     GstVideoCodecFrame * frame, GstVaapiEncPicture ** output)
 {
-  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8_CAST (base_encoder);
+  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8 (base_encoder);
   GstVaapiEncPicture *picture = NULL;
   GstVaapiEncoderStatus status = GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
@@ -488,7 +485,7 @@ gst_vaapi_encoder_vp8_reordering (GstVaapiEncoder * base_encoder,
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_vp8_reconfigure (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8_CAST (base_encoder);
+  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8 (base_encoder);
   GstVaapiEncoderStatus status;
 
   status = ensure_profile (encoder);
@@ -511,7 +508,7 @@ error:
 static gboolean
 gst_vaapi_encoder_vp8_init (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8_CAST (base_encoder);
+  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8 (base_encoder);
 
   encoder->frame_num = 0;
   encoder->last_ref = NULL;
@@ -524,7 +521,7 @@ gst_vaapi_encoder_vp8_init (GstVaapiEncoder * base_encoder)
 static void
 gst_vaapi_encoder_vp8_finalize (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8_CAST (base_encoder);
+  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8 (base_encoder);
   clear_references (encoder);
 }
 
@@ -532,7 +529,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_vp8_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
 {
-  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8_CAST (base_encoder);
+  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8 (base_encoder);
 
   switch (prop_id) {
     case GST_VAAPI_ENCODER_VP8_PROP_LOOP_FILTER_LEVEL:

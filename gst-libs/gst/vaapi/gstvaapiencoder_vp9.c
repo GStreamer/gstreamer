@@ -91,9 +91,6 @@ gst_vaapi_encoder_vp9_ref_pic_mode_type (void)
 /* --- VP9 Encoder                                                      --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_ENCODER_VP9_CAST(encoder) \
-    ((GstVaapiEncoderVP9 *)(encoder))
-
 struct _GstVaapiEncoderVP9
 {
   GstVaapiEncoder parent_instance;
@@ -195,7 +192,7 @@ error_unsupported_profile:
 static GstVaapiEncoderStatus
 set_context_info (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderVP9 *encoder = GST_VAAPI_ENCODER_VP9_CAST (base_encoder);
+  GstVaapiEncoderVP9 *encoder = GST_VAAPI_ENCODER_VP9 (base_encoder);
   GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   const guint DEFAULT_SURFACES_COUNT = 2;
 
@@ -431,7 +428,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_vp9_encode (GstVaapiEncoder * base_encoder,
     GstVaapiEncPicture * picture, GstVaapiCodedBufferProxy * codedbuf)
 {
-  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9_CAST (base_encoder);
+  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9 (base_encoder);
   GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
   GstVaapiSurfaceProxy *reconstruct = NULL;
 
@@ -472,7 +469,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_vp9_reordering (GstVaapiEncoder * base_encoder,
     GstVideoCodecFrame * frame, GstVaapiEncPicture ** output)
 {
-  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9_CAST (base_encoder);
+  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9 (base_encoder);
   GstVaapiEncPicture *picture = NULL;
   GstVaapiEncoderStatus status = GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
@@ -504,7 +501,7 @@ gst_vaapi_encoder_vp9_reordering (GstVaapiEncoder * base_encoder,
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_vp9_reconfigure (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9_CAST (base_encoder);
+  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9 (base_encoder);
   GstVaapiEncoderStatus status;
 
   status = ensure_profile (encoder);
@@ -518,7 +515,7 @@ gst_vaapi_encoder_vp9_reconfigure (GstVaapiEncoder * base_encoder)
 static gboolean
 gst_vaapi_encoder_vp9_init (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9_CAST (base_encoder);
+  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9 (base_encoder);
 
   encoder->frame_num = 0;
   encoder->loop_filter_level = DEFAULT_LOOP_FILTER_LEVEL;
@@ -542,7 +539,7 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_vp9_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
 {
-  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9_CAST (base_encoder);
+  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9 (base_encoder);
 
   switch (prop_id) {
     case GST_VAAPI_ENCODER_VP9_PROP_LOOP_FILTER_LEVEL:
