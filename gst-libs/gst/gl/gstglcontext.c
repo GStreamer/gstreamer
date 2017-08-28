@@ -41,6 +41,7 @@
 #endif
 
 #include "gstglcontext.h"
+#include <gst/gl/gl.h>
 
 #include <gmodule.h>
 #include <string.h>

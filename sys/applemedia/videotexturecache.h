@@ -21,7 +21,7 @@
 #define __GST_CORE_VIDEO_TEXTURE_CACHE_H__
 
 #include <gst/video/gstvideometa.h>
-#include <gst/gl/gstglcontext.h>
+#include <gst/gl/gl.h>
 #include "corevideomemory.h"
 
 G_BEGIN_DECLS
