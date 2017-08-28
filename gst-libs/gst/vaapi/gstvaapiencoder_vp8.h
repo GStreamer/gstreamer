@@ -27,6 +27,9 @@
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_ENCODER_VP8(encoder) \
+  ((GstVaapiEncoderVP8 *) (encoder))
+
 typedef struct _GstVaapiEncoderVP8 GstVaapiEncoderVP8;
 
 /**

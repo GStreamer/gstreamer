@@ -27,6 +27,9 @@
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_ENCODER_JPEG(encoder) \
+  ((GstVaapiEncoderJpeg *) (encoder))
+
 typedef struct _GstVaapiEncoderJpeg GstVaapiEncoderJpeg;
 
 /**

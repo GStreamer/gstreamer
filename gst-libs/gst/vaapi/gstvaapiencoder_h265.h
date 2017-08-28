@@ -28,6 +28,9 @@
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_ENCODER_H265(encoder) \
+  ((GstVaapiEncoderH265 *) (encoder))
+
 typedef struct _GstVaapiEncoderH265 GstVaapiEncoderH265;
 
 /**
