@@ -28,10 +28,6 @@ G_BEGIN_DECLS
 gboolean gst_gl_context_gen_shader (GstGLContext * context,
     const gchar * shader_vertex_source,
     const gchar * shader_fragment_source, GstGLShader ** shader);
-void gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result);
-void gst_gl_get_affine_transformation_meta_as_ndc_ext (GstVideoAffineTransformationMeta *
-    meta, gfloat * matrix);
-void gst_gl_set_affine_transformation_meta_from_ndc_ext (GstVideoAffineTransformationMeta * meta, const gfloat * matrix);
 
 G_END_DECLS
 

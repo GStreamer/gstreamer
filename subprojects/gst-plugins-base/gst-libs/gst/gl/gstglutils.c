@@ -810,17 +810,28 @@ static const gfloat to_ndc_matrix[] = {
   -1.0, -1.0, -1.0, 1.0,
 };
 
-/* multiplies two 4x4 matrices, @a X @b, and stores the result in @result
- * https://en.wikipedia.org/wiki/Matrix_multiplication
+/**
+ * gst_gl_multiply_matrix4:
+ * @a: (array fixed-size=16): a 2-dimensional 4x4 array of #gfloat
+ * @b: (array fixed-size=16): another 2-dimensional 4x4 array of #gfloat
+ * @result: (out) (array fixed-size=16): the result of the multiplication
+ *
+ * Multiplies two 4x4 matrices, @a and @b, and stores the result, a
+ * 2-dimensional array of #gfloat, in @result.
+ *
+ * Since: 1.20
  */
-static void
+/* https://en.wikipedia.org/wiki/Matrix_multiplication */
+void
 gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result)
 {
   int i, j, k;
   gfloat tmp[16] = { 0.0f };
 
-  if (!a || !b || !result)
-    return;
+  g_return_if_fail (a != NULL);
+  g_return_if_fail (b != NULL);
+  g_return_if_fail (result != NULL);
+
   for (i = 0; i < 4; i++) {     /* column */
     for (j = 0; j < 4; j++) {   /* row */
       for (k = 0; k < 4; k++) {
@@ -833,7 +844,7 @@ gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result)
     result[i] = tmp[i];
 }
 
-/*
+/**
  * gst_gl_get_affine_transformation_meta_as_ndc:
  * @meta: (nullable): a #GstVideoAffineTransformationMeta
  * @matrix: (out): result of the 4x4 matrix
@@ -845,11 +856,15 @@ gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result)
  * - x - [-1, 1] - +ve X moves right
  * - y - [-1, 1] - +ve Y moves up
  * - z - [-1, 1] - +ve Z moves into
+ *
+ * Since: 1.20
  */
 void
 gst_gl_get_affine_transformation_meta_as_ndc (GstVideoAffineTransformationMeta *
     meta, gfloat * matrix)
 {
+  g_return_if_fail (matrix != NULL);
+
   if (!meta) {
     int i;
 
@@ -865,12 +880,23 @@ gst_gl_get_affine_transformation_meta_as_ndc (GstVideoAffineTransformationMeta *
   }
 }
 
+/**
+ * gst_gl_set_affine_transformation_meta_from_ndc:
+ * @meta: a #GstVideoAffineTransformationMeta
+ * @matrix: a 4x4 matrix
+ *
+ * Set the 4x4 affine transformation matrix stored in @meta from the
+ * NDC coordinates in @matrix.
+ *
+ * Since: 1.20
+ */
 void gst_gl_set_affine_transformation_meta_from_ndc
     (GstVideoAffineTransformationMeta * meta, const gfloat * matrix)
 {
   float tmp[16];
 
   g_return_if_fail (meta != NULL);
+  g_return_if_fail (matrix != NULL);
 
   /* change of basis multiplications */
   gst_gl_multiply_matrix4 (to_ndc_matrix, matrix, tmp);

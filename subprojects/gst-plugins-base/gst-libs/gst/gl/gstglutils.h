@@ -59,6 +59,15 @@ gboolean gst_gl_value_set_texture_target (GValue * value, GstGLTextureTarget tar
 GST_GL_API
 GstGLTextureTarget gst_gl_value_get_texture_target_mask (const GValue * value);
 
+GST_GL_API
+void gst_gl_get_affine_transformation_meta_as_ndc (GstVideoAffineTransformationMeta * meta, gfloat * matrix);
+GST_GL_API
+void gst_gl_set_affine_transformation_meta_from_ndc (GstVideoAffineTransformationMeta * meta, const gfloat * matrix);
+
+GST_GL_API
+void gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result);
+
+
 G_END_DECLS
 
 #endif /* __GST_GL_UTILS_H__ */

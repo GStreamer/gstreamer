@@ -26,8 +26,6 @@
 G_BEGIN_DECLS
 
 G_GNUC_INTERNAL gboolean gst_gl_run_query (GstElement * element, GstQuery * query, GstPadDirection direction);
-G_GNUC_INTERNAL void gst_gl_get_affine_transformation_meta_as_ndc (GstVideoAffineTransformationMeta * meta, gfloat * matrix);
-G_GNUC_INTERNAL void gst_gl_set_affine_transformation_meta_from_ndc (GstVideoAffineTransformationMeta * meta, const gfloat * matrix);
 
 G_END_DECLS
 

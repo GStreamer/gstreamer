@@ -2409,10 +2409,10 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
       if (gl_sink->transform_matrix) {
         gfloat tmp[16];
 
-        gst_gl_get_affine_transformation_meta_as_ndc_ext (af_meta, tmp);
+        gst_gl_get_affine_transformation_meta_as_ndc (af_meta, tmp);
         gst_gl_multiply_matrix4 (tmp, gl_sink->transform_matrix, matrix);
       } else {
-        gst_gl_get_affine_transformation_meta_as_ndc_ext (af_meta, matrix);
+        gst_gl_get_affine_transformation_meta_as_ndc (af_meta, matrix);
       }
 
       gst_gl_shader_set_uniform_matrix_4fv (gl_sink->redisplay_shader,

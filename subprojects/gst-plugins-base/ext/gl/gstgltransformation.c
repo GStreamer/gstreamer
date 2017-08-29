@@ -807,7 +807,7 @@ gst_gl_transformation_prepare_output_buffer (GstBaseTransform * trans,
     GST_LOG_OBJECT (trans, "applying transformation to existing affine "
         "transformation meta");
 
-    gst_gl_get_affine_transformation_meta_as_ndc_ext (af_meta, upstream);
+    gst_gl_get_affine_transformation_meta_as_ndc (af_meta, upstream);
 
     /* apply the transformation to the existing affine meta */
     graphene_matrix_init_from_float (&upstream_matrix, upstream);
@@ -822,7 +822,7 @@ gst_gl_transformation_prepare_output_buffer (GstBaseTransform * trans,
     graphene_matrix_multiply (&tmp, &yflip, &tmp2);
 
     graphene_matrix_to_float (&tmp2, downstream);
-    gst_gl_set_affine_transformation_meta_from_ndc_ext (af_meta, downstream);
+    gst_gl_set_affine_transformation_meta_from_ndc (af_meta, downstream);
 
     return GST_FLOW_OK;
   }
