@@ -33,3 +33,10 @@ foreach example: examples
                 cs_args: ['-unsafe'], dependencies: deps)
     endif
 endforeach
+
+if ges_dep.found()
+    executable('ges-example', 'GESExample.cs',
+            cs_args: ['-unsafe'],
+            dependencies: [gst_sharp_dep],
+            link_with: ges_sharp)
+endif

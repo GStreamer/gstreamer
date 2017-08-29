@@ -80,7 +80,14 @@ foreach dep: [
     fallback: dep.get(1))]
 endforeach
 
+ges_dep = dependency('gst-editing-services-' + apiversion, version: gst_required_version,
+    fallback: ['gst-editing-services', 'ges_dep'])
+
 subdir('sources')
+if ges_dep.found()
+  subdir('ges')
+endif
+
 subdir('samples')
 
 bindinate = find_program('bindinate', required: false)
@@ -92,4 +99,11 @@ if bindinate.found()
       '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstFft-1.0,GstNet-1.0,GstPbutils-1.0,GstRiff-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0',
       '--gir=Gst-1.0']
     )
+  python3 = import('python3').find_python()
+  run_target('update-ges-bindings',
+    command: ['sh', '-c',
+      '''bindinate --name=gst-editing-services --regenerate=true --gir=GES-1.0 && mv @0@/sources/gst-editing-services-sharp-api.raw @0@/ges/gst-editing-services-api.raw '''.format(
+        meson.current_source_dir())
+    ]
+  )
 endif

@@ -713,7 +713,7 @@ generated_sources = [
     'Gst.Rtp_RTPBaseAudioPayload.cs'
 ]
 
-source_gen = custom_target('gst_codegen',
+gst_source_gen = custom_target('gst_codegen',
     input: raw_api_fname,
     output: generated_sources,
     command: [
@@ -734,3 +734,4 @@ source_gen = custom_target('gst_codegen',
     depend_files: [raw_api_fname],
     depends: codegen_dependencies)
 
+gst_api_includes = join_paths(meson.current_build_dir(), 'gstreamer-sharp-api.xml')

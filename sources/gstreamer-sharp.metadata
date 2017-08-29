@@ -102,7 +102,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<add-node path="/api/namespace[@name='Gst']">
 		<class name="Application" cname="GstApplication" disable_void_ctor="1"/>
 	</add-node>
-	<move-node path="/api/namespace//object[@name='Global']//method[contains(@cname, 'init') or starts-with(@cname, 'gst_version')]">/api/namespace/class[@cname='GstApplication']</move-node>
+	<move-node path="/api/namespace//object[@name='Global']//method[contains(@cname, 'gst_init') or starts-with(@cname, 'gst_version')]">/api/namespace/class[@cname='GstApplication']</move-node>
 
 	<add-node path="/api/namespace[@name='Gst']">
 		<class name="Value" cname="GstValue" disable_void_ctor="1"/>

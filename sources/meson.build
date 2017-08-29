@@ -36,7 +36,7 @@ sources = [
 subdir('generated')
 
 # Install with gacutil_install.py from gtk-sharp.
-gst_sharp = library('gstreamer-sharp', source_gen, sources,
+gst_sharp = library('gstreamer-sharp', gst_source_gen, sources,
         cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114', '-unsafe',
             '-keyfile:' + snk],
         dependencies: [glib_sharp_dep, gio_sharp_dep])
@@ -45,7 +45,7 @@ gluegen = custom_target('gluegen',
         input: raw_api_fname,
         output: 'generate.c',
         command: [generate_api, '--fakeglue'],
-        depends: [source_gen])
+        depends: [gst_source_gen])
 
 library('gstreamersharpglue-1.0.0', gluegen, 'glue/gobject.c', dependencies: gst_deps)
 
