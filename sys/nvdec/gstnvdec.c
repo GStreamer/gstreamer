@@ -31,6 +31,7 @@
 
 #include "gstnvdec.h"
 
+#include <gst/gl/gstglfuncs.h>
 #include <cudaGL.h>
 
 typedef enum
