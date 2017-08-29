@@ -1419,6 +1419,9 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
         "local NTP time %" G_GUINT64_FORMAT ", SR NTP time %" G_GUINT64_FORMAT,
         local_ntpnstime, ntpnstime);
     GST_DEBUG_OBJECT (bin,
+        "local running time %" G_GUINT64_FORMAT ", SR RTP running time %"
+        G_GUINT64_FORMAT, local_running_time, running_time);
+    GST_DEBUG_OBJECT (bin,
         "NTP diff %" G_GINT64_FORMAT ", RT diff %" G_GINT64_FORMAT, ntpdiff,
         rtdiff);
 
