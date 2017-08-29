@@ -2842,6 +2842,10 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
         }
       } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
         buffer = parse_jp2k_access_unit (stream);
+        if (!buffer) {
+          res = GST_FLOW_ERROR;
+          goto beach;
+        }
       } else {
         buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
       }
@@ -2878,6 +2882,10 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
       }
     } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
       buffer = parse_jp2k_access_unit (stream);
+      if (!buffer) {
+        res = GST_FLOW_ERROR;
+        goto beach;
+      }
     } else {
       buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
     }
