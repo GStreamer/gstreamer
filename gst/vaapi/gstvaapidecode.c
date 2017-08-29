@@ -1161,6 +1161,14 @@ is_mvc_profile (GstVaapiProfile profile)
       || profile == GST_VAAPI_PROFILE_H264_STEREO_HIGH;
 }
 
+static gboolean
+is_svc_profile (GstVaapiProfile profile)
+{
+  return profile == GST_VAAPI_PROFILE_H264_SCALABLE_BASELINE
+      || profile == GST_VAAPI_PROFILE_H264_SCALABLE_HIGH;
+}
+
+
 static GstCaps *
 add_h264_profile_in_caps (GstCaps * caps, const gchar * profile_name)
 {
@@ -1179,6 +1187,7 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
   gboolean base_only = FALSE;
   gboolean have_high = FALSE;
   gboolean have_mvc = FALSE;
+  gboolean have_svc = FALSE;
 
   profiles =
       gst_vaapi_display_get_decode_profiles (GST_VAAPI_PLUGIN_BASE_DISPLAY
@@ -1217,16 +1226,37 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
 
     allowed_sinkpad_caps = gst_caps_merge (allowed_sinkpad_caps, caps);
     have_mvc |= is_mvc_profile (profile);
+    have_svc |= is_svc_profile (profile);
     have_high |= profile == GST_VAAPI_PROFILE_H264_HIGH;
   }
 
-  if (base_only && !have_mvc && have_high) {
-    GST_DEBUG ("base_only: Force adding MVC profiles in caps");
+  if (base_only && (!have_mvc || !have_svc) && have_high) {
+    if (!have_mvc) {
+      GST_DEBUG ("base_only: force adding MVC profiles in caps");
 
-    allowed_sinkpad_caps =
-        add_h264_profile_in_caps (allowed_sinkpad_caps, "multiview-high");
-    allowed_sinkpad_caps =
-        add_h264_profile_in_caps (allowed_sinkpad_caps, "stereo-high");
+      allowed_sinkpad_caps =
+          add_h264_profile_in_caps (allowed_sinkpad_caps, "multiview-high");
+      allowed_sinkpad_caps =
+          add_h264_profile_in_caps (allowed_sinkpad_caps, "stereo-high");
+    }
+
+    if (!have_svc) {
+      GST_DEBUG ("base_only: force adding SVC profiles in caps");
+
+      allowed_sinkpad_caps =
+          add_h264_profile_in_caps (allowed_sinkpad_caps,
+          "scalable-constrained-baseline");
+      allowed_sinkpad_caps =
+          add_h264_profile_in_caps (allowed_sinkpad_caps, "scalable-baseline");
+      allowed_sinkpad_caps =
+          add_h264_profile_in_caps (allowed_sinkpad_caps,
+          "scalable-high-intra");
+      allowed_sinkpad_caps =
+          add_h264_profile_in_caps (allowed_sinkpad_caps,
+          "scalable-constrained-high");
+      allowed_sinkpad_caps =
+          add_h264_profile_in_caps (allowed_sinkpad_caps, "scalable-high");
+    }
   }
   decode->allowed_sinkpad_caps = gst_caps_simplify (allowed_sinkpad_caps);
 
