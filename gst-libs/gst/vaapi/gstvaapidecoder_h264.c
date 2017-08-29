@@ -1805,8 +1805,6 @@ parse_pps (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
 
   GST_DEBUG ("parse PPS");
 
-  priv->parser_state &= GST_H264_VIDEO_STATE_GOT_SPS;
-
   /* Variables that don't have inferred values per the H.264
      standard but that should get a default value anyway */
   pps->slice_group_map_type = 0;
@@ -1814,6 +1812,15 @@ parse_pps (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
   pps->slice_group_id = NULL;
 
   result = gst_h264_parser_parse_pps (priv->parser, &pi->nalu, pps);
+
+  /* PPS's sps id might be an ignored subset sps in SVC streams */
+  if (priv->base_only && result == GST_H264_PARSER_BROKEN_LINK) {
+    pi->nalu.valid = FALSE;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+  }
+
+  priv->parser_state &= GST_H264_VIDEO_STATE_GOT_SPS;
+
   if (result != GST_H264_PARSER_OK)
     return get_status (result);
 
@@ -4049,12 +4056,6 @@ decode_picture (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
   g_return_val_if_fail (pps != NULL, GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN);
   g_return_val_if_fail (sps != NULL, GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN);
 
-  /* Only decode base stream for MVC */
-  if (priv->base_only && is_mvc_profile (sps->profile_idc)) {
-    GST_DEBUG ("multiview sequence but base-only is set: dropping frame");
-    return (GstVaapiDecoderStatus) GST_VAAPI_DECODER_STATUS_DROP_FRAME;
-  }
-
   status = ensure_context (decoder, sps);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
     return status;
@@ -4593,6 +4594,13 @@ gst_vaapi_decoder_h264_parse (GstVaapiDecoder * base_decoder,
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
     goto exit;
 
+  if (priv->base_only && (pi->nalu.type == GST_H264_NAL_PREFIX_UNIT
+          || pi->nalu.type == GST_H264_NAL_SUBSET_SPS
+          || pi->nalu.type == GST_H264_NAL_SLICE_EXT)) {
+    GST_VAAPI_DECODER_UNIT_FLAG_SET (unit, GST_VAAPI_DECODER_UNIT_FLAG_SKIP);
+    pi->nalu.valid = FALSE;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+  }
   switch (pi->nalu.type) {
     case GST_H264_NAL_SPS:
       status = parse_sps (decoder, unit);
@@ -4805,7 +4813,7 @@ gst_vaapi_decoder_h264_set_alignment (GstVaapiDecoderH264 * decoder,
  * @decoder: a #GstVaapiDecoderH264
  * @base_only: %TRUE to force decoding the base view only
  *
- * if @base_only is %TRUE only the base view of MVC encoded streams
+ * if @base_only is %TRUE only the base view of MVC or SVC encoded streams
  * is decoded.
  *
  **/
