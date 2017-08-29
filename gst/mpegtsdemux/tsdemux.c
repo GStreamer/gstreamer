@@ -2730,8 +2730,20 @@ parse_jp2k_access_unit (TSDemuxStream * stream)
     goto error;
 #endif
   }
+
   /* Time Code Box 'tcod' == 0x74636f64 */
+  /* Some progressive streams might have a AUF[1] of value 0 present */
   header_tag = gst_byte_reader_get_uint32_be_unchecked (&reader);
+  if (header_tag == 0 && !stream->jp2kInfos.interlace) {
+    AUF[1] = header_tag;
+    header_tag = gst_byte_reader_get_uint32_be_unchecked (&reader);
+    /* Bump up header size and recheck */
+    header_size += 4;
+    if (stream->current_size < header_size) {
+      GST_ERROR_OBJECT (stream->pad, "Not enough data for header");
+      goto error;
+    }
+  }
   if (header_tag != 0x74636f64) {
     GST_ERROR_OBJECT (stream->pad,
         "Expected Time code box but found %d box instead", header_tag);
