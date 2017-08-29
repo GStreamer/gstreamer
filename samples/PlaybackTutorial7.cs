@@ -16,7 +16,7 @@ namespace GstreamerSharp
 			Application.Init (ref args);
 
 			// Build the pipeline
-			var pipeline = Parse.Launch ("playbin uri=http://docs.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm");
+			var pipeline = Parse.Launch ("playbin uri=http://freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm");
 
 			// Create the elements inside the sink bin
 			var equalizer = ElementFactory.Make ("equalizer-3bands", "equalizer");

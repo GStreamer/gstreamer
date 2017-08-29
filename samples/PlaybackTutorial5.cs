@@ -102,7 +102,7 @@ namespace GstreamerSharp
 			Console.WriteLine (" 'Q' to quit");
 
 			// Build the pipeline 
-			Pipeline = Parse.Launch ("playbin uri=http://docs.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm");
+			Pipeline = Parse.Launch ("playbin uri=http://freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm");
 
 			// Add a keyboard watch so we get notified of keystrokes 
 
