@@ -302,12 +302,14 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * @appsink: the appsink element to emit this signal on
    *
    * Get the last preroll sample in @appsink. This was the sample that caused the
-   * appsink to preroll in the PAUSED state. This sample can be pulled many times
-   * and remains available to the application even after EOS.
+   * appsink to preroll in the PAUSED state.
    *
    * This function is typically used when dealing with a pipeline in the PAUSED
    * state. Calling this function after doing a seek will give the sample right
    * after the seek position.
+   *
+   * Calling this function will clear the internal reference to the preroll
+   * buffer.
    *
    * Note that the preroll sample will also be returned as the first sample
    * when calling gst_app_sink_pull_sample() or the "pull-sample" action signal.
@@ -355,12 +357,14 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * @timeout: the maximum amount of time to wait for the preroll sample
    *
    * Get the last preroll sample in @appsink. This was the sample that caused the
-   * appsink to preroll in the PAUSED state. This sample can be pulled many times
-   * and remains available to the application even after EOS.
+   * appsink to preroll in the PAUSED state.
    *
    * This function is typically used when dealing with a pipeline in the PAUSED
    * state. Calling this function after doing a seek will give the sample right
    * after the seek position.
+   *
+   * Calling this function will clear the internal reference to the preroll
+   * buffer.
    *
    * Note that the preroll sample will also be returned as the first sample
    * when calling gst_app_sink_pull_sample() or the "pull-sample" action signal.
@@ -1357,12 +1361,14 @@ gst_app_sink_get_wait_on_eos (GstAppSink * appsink)
  * @appsink: a #GstAppSink
  *
  * Get the last preroll sample in @appsink. This was the sample that caused the
- * appsink to preroll in the PAUSED state. This sample can be pulled many times
- * and remains available to the application even after EOS.
+ * appsink to preroll in the PAUSED state.
  *
  * This function is typically used when dealing with a pipeline in the PAUSED
  * state. Calling this function after doing a seek will give the sample right
  * after the seek position.
+ *
+ * Calling this function will clear the internal reference to the preroll
+ * buffer.
  *
  * Note that the preroll sample will also be returned as the first sample
  * when calling gst_app_sink_pull_sample().
@@ -1413,12 +1419,14 @@ gst_app_sink_pull_sample (GstAppSink * appsink)
  * @timeout: the maximum amount of time to wait for the preroll sample
  *
  * Get the last preroll sample in @appsink. This was the sample that caused the
- * appsink to preroll in the PAUSED state. This sample can be pulled many times
- * and remains available to the application even after EOS.
+ * appsink to preroll in the PAUSED state.
  *
  * This function is typically used when dealing with a pipeline in the PAUSED
  * state. Calling this function after doing a seek will give the sample right
  * after the seek position.
+ *
+ * Calling this function will clear the internal reference to the preroll
+ * buffer.
  *
  * Note that the preroll sample will also be returned as the first sample
  * when calling gst_app_sink_pull_sample().
@@ -1478,6 +1486,7 @@ gst_app_sink_try_pull_preroll (GstAppSink * appsink, GstClockTime timeout)
   sample =
       gst_sample_new (priv->preroll_buffer, priv->preroll_caps,
       &priv->preroll_segment, NULL);
+  gst_buffer_replace (&priv->preroll_buffer, NULL);
   GST_DEBUG_OBJECT (appsink, "we have the preroll sample %p", sample);
   g_mutex_unlock (&priv->mutex);
 
